@@ -23,7 +23,6 @@ import {
   DatabaseService,
   ILogger,
   Logger,
-  matchSession,
   OnIndex,
 } from '../../core';
 import {
@@ -31,6 +30,7 @@ import {
   createNode,
   createRelationships,
   matchProps,
+  matchSession,
   merge,
   paginate,
   sorting,

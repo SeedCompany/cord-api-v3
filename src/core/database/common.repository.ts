@@ -2,10 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
+  getDbClassLabels,
   getDbPropertyUnique,
   ID,
   isIdLike,
-  Many,
   ResourceShape,
   ServerException,
   Session,
@@ -22,13 +22,27 @@ import { BaseNode } from './results';
 export class CommonRepository {
   constructor(protected db: DatabaseService) {}
 
+  async isUnique(value: string, label: string) {
+    const exists = await this.db
+      .query()
+      .matchNode('node', label, { value })
+      .return('node')
+      .first();
+    return !exists;
+  }
+
   async getBaseNode(
     id: ID,
-    label?: Many<string>
+    label?: string | ResourceShape<any>
   ): Promise<BaseNode | undefined> {
+    const resolvedLabel = label
+      ? typeof label === 'string'
+        ? label
+        : getDbClassLabels(label)[0]
+      : 'BaseNode';
     return await this.db
       .query()
-      .matchNode('node', label ?? 'BaseNode', { id })
+      .matchNode('node', resolvedLabel, { id })
       .return<{ node: BaseNode }>('node')
       .map('node')
       .first();

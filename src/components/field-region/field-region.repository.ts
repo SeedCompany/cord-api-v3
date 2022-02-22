@@ -1,12 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { inArray, node, Query, relation } from 'cypher-query-builder';
-import { ID, NotFoundException, Session, UnsecuredDto } from '../../common';
-import { DtoRepository, matchRequestingUser } from '../../core';
+import { node, Query, relation } from 'cypher-query-builder';
+import { ID, Session, UnsecuredDto } from '../../common';
+import { DtoRepository } from '../../core';
 import {
   ACTIVE,
   createNode,
   createRelationships,
   matchProps,
+  matchRequestingUser,
   merge,
   paginate,
   requestingUser,
@@ -16,14 +17,6 @@ import { CreateFieldRegion, FieldRegion, FieldRegionListInput } from './dto';
 
 @Injectable()
 export class FieldRegionRepository extends DtoRepository(FieldRegion) {
-  async checkName(name: string) {
-    return await this.db
-      .query()
-      .match([node('name', 'FieldRegionName', { value: name })])
-      .return('name')
-      .first();
-  }
-
   async create(input: CreateFieldRegion, session: Session) {
     const initialProps = {
       name: input.name,
@@ -44,34 +37,6 @@ export class FieldRegionRepository extends DtoRepository(FieldRegion) {
       .return<{ id: ID }>('node.id as id');
 
     return await query.first();
-  }
-
-  async readOne(id: ID, session: Session) {
-    const query = this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .match([node('node', 'FieldRegion', { id: id })])
-      .apply(this.hydrate());
-
-    const result = await query.first();
-    if (!result) {
-      throw new NotFoundException(
-        'Could not find field region',
-        'fieldRegion.id'
-      );
-    }
-    return result.dto;
-  }
-
-  async readMany(ids: readonly ID[], session: Session) {
-    return await this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .matchNode('node', 'FieldRegion')
-      .where({ 'node.id': inArray(ids) })
-      .apply(this.hydrate())
-      .map('dto')
-      .run();
   }
 
   protected hydrate() {

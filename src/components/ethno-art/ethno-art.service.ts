@@ -33,9 +33,7 @@ export class EthnoArtService {
   ) {}
 
   async create(input: CreateEthnoArt, session: Session): Promise<EthnoArt> {
-    const checkEthnoArt = await this.repo.checkEthnoArt(input.name);
-
-    if (checkEthnoArt) {
+    if (!(await this.repo.isUnique(input.name))) {
       throw new DuplicateException(
         'ethnoArt.name',
         'Ethno art with this name already exists'
@@ -71,12 +69,12 @@ export class EthnoArtService {
     session: Session,
     _view?: ObjectView
   ): Promise<EthnoArt> {
-    const result = await this.repo.readOne(id, session);
+    const result = await this.repo.readOne(id);
     return await this.secure(result, session);
   }
 
   async readMany(ids: readonly ID[], session: Session) {
-    const ethnoArt = await this.repo.readMany(ids, session);
+    const ethnoArt = await this.repo.readMany(ids);
     return await Promise.all(ethnoArt.map((dto) => this.secure(dto, session)));
   }
 

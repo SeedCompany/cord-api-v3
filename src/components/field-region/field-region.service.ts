@@ -35,9 +35,7 @@ export class FieldRegionService {
     input: CreateFieldRegion,
     session: Session
   ): Promise<FieldRegion> {
-    const checkName = await this.repo.checkName(input.name);
-
-    if (checkName) {
+    if (!(await this.repo.isUnique(input.name))) {
       throw new DuplicateException(
         'fieldRegion.name',
         'FieldRegion with this name already exists.'
@@ -71,12 +69,12 @@ export class FieldRegionService {
       userId: session.userId,
     });
 
-    const result = await this.repo.readOne(id, session);
+    const result = await this.repo.readOne(id);
     return await this.secure(result, session);
   }
 
   async readMany(ids: readonly ID[], session: Session) {
-    const fieldRegions = await this.repo.readMany(ids, session);
+    const fieldRegions = await this.repo.readMany(ids);
     return await Promise.all(
       fieldRegions.map((dto) => this.secure(dto, session))
     );

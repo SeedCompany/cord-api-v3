@@ -1,14 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { inArray, node, Query, relation } from 'cypher-query-builder';
+import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import {
-  ID,
-  NotFoundException,
-  ServerException,
-  Session,
-  UnsecuredDto,
-} from '../../common';
-import { DtoRepository, matchRequestingUser } from '../../core';
+import { ID, ServerException, Session, UnsecuredDto } from '../../common';
+import { DtoRepository } from '../../core';
 import {
   ACTIVE,
   createNode,
@@ -17,6 +11,7 @@ import {
   matchProjectSens,
   matchProjectSensToLimitedScopeMap,
   matchProps,
+  matchRequestingUser,
   merge,
   paginate,
   rankSens,
@@ -28,7 +23,10 @@ import { CreatePartner, Partner, PartnerListInput } from './dto';
 import { partnerListFilter } from './query.helpers';
 
 @Injectable()
-export class PartnerRepository extends DtoRepository(Partner) {
+export class PartnerRepository extends DtoRepository<
+  typeof Partner,
+  [session: Session]
+>(Partner) {
   async partnerIdByOrg(organizationId: ID) {
     const result = await this.db
       .query()
@@ -69,32 +67,6 @@ export class PartnerRepository extends DtoRepository(Partner) {
       throw new ServerException('Failed to create partner');
     }
     return result.id;
-  }
-
-  async readOne(id: ID, session: Session) {
-    const query = this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .match([node('node', 'Partner', { id: id })])
-      .apply(this.hydrate(session));
-
-    const result = await query.first();
-    if (!result) {
-      throw new NotFoundException('Could not find partner');
-    }
-
-    return result.dto;
-  }
-
-  async readMany(ids: readonly ID[], session: Session) {
-    return await this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .matchNode('node', 'Partner')
-      .where({ 'node.id': inArray(ids) })
-      .apply(this.hydrate(session))
-      .map('dto')
-      .run();
   }
 
   protected hydrate(session: Session) {
@@ -139,15 +111,13 @@ export class PartnerRepository extends DtoRepository(Partner) {
           relation('out', '', 'pointOfContact', ACTIVE),
           node('pointOfContact', 'User'),
         ])
-        .raw('', { requestingUserId: session.userId })
         .return<{ dto: UnsecuredDto<Partner> }>(
           merge('props', {
             sensitivity: 'sensitivity',
             organization: 'organization.id',
             pointOfContact: 'pointOfContact.id',
             scope: 'scopedRoles',
-            pinned:
-              'exists((:User { id: $requestingUserId })-[:pinned]->(node))',
+            pinned: 'exists((:User { id: $requestingUser })-[:pinned]->(node))',
           }).as('dto')
         );
   }

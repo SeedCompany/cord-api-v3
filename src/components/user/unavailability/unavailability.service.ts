@@ -62,12 +62,12 @@ export class UnavailabilityService {
     session: Session,
     _view?: ObjectView
   ): Promise<Unavailability> {
-    const result = await this.repo.readOne(id, session);
+    const result = await this.repo.readOne(id);
     return await this.secure(result, session);
   }
 
   async readMany(ids: readonly ID[], session: Session) {
-    const unavailabilities = await this.repo.readMany(ids, session);
+    const unavailabilities = await this.repo.readMany(ids);
     return await Promise.all(
       unavailabilities.map((dto) => this.secure(dto, session))
     );
@@ -96,7 +96,7 @@ export class UnavailabilityService {
   ): Promise<Unavailability> {
     const unavailability = await this.readOne(input.id, session);
 
-    const result = await this.repo.getUserIdByUnavailability(session, input);
+    const result = await this.repo.getUserIdByUnavailability(input.id);
     if (!result) {
       throw new NotFoundException(
         'Could not find user associated with unavailability',

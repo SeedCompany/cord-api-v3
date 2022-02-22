@@ -1,5 +1,7 @@
 import { Query } from 'cypher-query-builder';
-import { Many } from '../../../common';
+import { compact, uniq } from 'lodash';
+import { many, Many } from '../../../common';
+import { Variable } from './condition-variables';
 import { SubClauseCollection } from './SubClauseCollection';
 
 declare module 'cypher-query-builder/dist/typings/query' {
@@ -27,7 +29,7 @@ declare module 'cypher-query-builder/dist/typings/query' {
       sub: (query: Query<Result>) => Query<SubResult>
     ): Query<Result & SubResult>;
     subQuery<SubResult>(
-      importVars: Many<string>,
+      importVars: Many<string | Variable | null | undefined>,
       sub: (query: Query<Result>) => Query<SubResult>
     ): Query<Result & SubResult>;
   }
@@ -35,7 +37,9 @@ declare module 'cypher-query-builder/dist/typings/query' {
 
 Query.prototype.subQuery = function subQuery(
   this: Query,
-  subOrImport: Many<string> | ((query: Query) => void),
+  subOrImport:
+    | Many<string | Variable | null | undefined>
+    | ((query: Query) => void),
   maybeSub?: (query: Query) => void
 ) {
   const subClause = new SubQueryClause();
@@ -43,7 +47,14 @@ Query.prototype.subQuery = function subQuery(
   if (typeof subOrImport === 'function') {
     subOrImport(subQ);
   } else {
-    subQ.with(subOrImport);
+    const imports = uniq(
+      compact(
+        many(subOrImport).flatMap((val) =>
+          val instanceof Variable ? varImport(val) : val
+        )
+      )
+    );
+    subQ.with(imports);
     maybeSub!(subQ);
   }
 
@@ -55,3 +66,9 @@ class SubQueryClause extends SubClauseCollection {
     return this.wrapBuild('CALL { ', ' }', super.build());
   }
 }
+
+// Try to pull the root variable referenced from expression https://regex101.com/r/atshF5
+const varImport = (variable: string | Variable) =>
+  variable.toString().startsWith('$')
+    ? ''
+    : /(?:.+\()?([^.]+)\.?.*/.exec(variable.toString())?.[1] ?? '';

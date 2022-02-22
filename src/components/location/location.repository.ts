@@ -1,19 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import { inArray, node, Query, relation } from 'cypher-query-builder';
+import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import {
-  ID,
-  NotFoundException,
-  ServerException,
-  Session,
-  UnsecuredDto,
-} from '../../common';
-import { DtoRepository, matchRequestingUser } from '../../core';
+import { ID, ServerException, Session, UnsecuredDto } from '../../common';
+import { DtoRepository } from '../../core';
 import {
   ACTIVE,
   createNode,
   createRelationships,
   matchProps,
+  matchRequestingUser,
   merge,
   paginate,
   permissionsOfNode,
@@ -59,31 +54,6 @@ export class LocationRepository extends DtoRepository(Location) {
     }
 
     return result.id;
-  }
-
-  async readOne(id: ID, session: Session) {
-    const query = this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .match([node('node', 'Location', { id: id })])
-      .apply(this.hydrate());
-
-    const result = await query.first();
-    if (!result) {
-      throw new NotFoundException('Could not find location');
-    }
-    return result.dto;
-  }
-
-  async readMany(ids: readonly ID[], session: Session) {
-    return await this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .matchNode('node', 'Location')
-      .where({ 'node.id': inArray(ids) })
-      .apply(this.hydrate())
-      .map('dto')
-      .run();
   }
 
   protected hydrate() {

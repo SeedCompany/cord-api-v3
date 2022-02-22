@@ -1,11 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { hasLabel, inArray, node, Query, relation } from 'cypher-query-builder';
+import { hasLabel, node, Query, relation } from 'cypher-query-builder';
 import { AndConditions } from 'cypher-query-builder/src/clauses/where-utils';
 import {
   CalendarDate,
   generateId,
   ID,
-  NotFoundException,
   Range,
   Session,
   UnsecuredDto,
@@ -35,7 +34,10 @@ import {
 } from './dto';
 
 @Injectable()
-export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
+export class PeriodicReportRepository extends DtoRepository<
+  typeof IPeriodicReport,
+  [session: Session]
+>(IPeriodicReport) {
   async merge(input: MergePeriodicReports) {
     const Report = resolveReportType(input);
 
@@ -132,30 +134,6 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
         'report.id as id, interval'
       );
     return await query.run();
-  }
-
-  async readOne(id: ID, session: Session) {
-    const query = this.db
-      .query()
-      .match([node('node', 'PeriodicReport', { id })])
-      .apply(this.hydrate(session));
-
-    const result = await query.first();
-    if (!result) {
-      throw new NotFoundException('Could not find periodic report');
-    }
-
-    return result.dto;
-  }
-
-  async readMany(ids: readonly ID[], session: Session) {
-    return await this.db
-      .query()
-      .matchNode('node', 'PeriodicReport')
-      .where({ 'node.id': inArray(ids) })
-      .apply(this.hydrate(session))
-      .map('dto')
-      .run();
   }
 
   async list(input: PeriodicReportListInput, session: Session) {

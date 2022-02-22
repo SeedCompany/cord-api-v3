@@ -1,13 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import { inArray, node, relation } from 'cypher-query-builder';
+import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { ID, NotFoundException, Session, UnsecuredDto } from '../../common';
-import { DtoRepository, matchRequestingUser } from '../../core';
+import { ID, Session } from '../../common';
+import { DtoRepository } from '../../core';
 import {
   ACTIVE,
   createNode,
   createRelationships,
   matchProps,
+  matchRequestingUser,
   paginate,
   sorting,
 } from '../../core/database/query';
@@ -38,41 +39,6 @@ export class PostRepository extends DtoRepository(Post) {
       .first();
   }
 
-  async checkParentIdValidity(parentId: string) {
-    return await this.db
-      .query()
-      .match([
-        node('baseNode', 'BaseNode', {
-          id: parentId,
-        }),
-      ])
-      .return('baseNode.id')
-      .first();
-  }
-
-  async readOne(postId: ID): Promise<UnsecuredDto<Post>> {
-    const query = this.db
-      .query()
-      .match([node('node', 'Post', { id: postId })])
-      .apply(this.hydrate());
-
-    const result = await query.first();
-    if (!result) {
-      throw new NotFoundException('Could not find post', 'post.id');
-    }
-    return result.dto;
-  }
-
-  async readMany(ids: readonly ID[]) {
-    return await this.db
-      .query()
-      .matchNode('node', 'Post')
-      .where({ 'node.id': inArray(ids) })
-      .apply(this.hydrate())
-      .map('dto')
-      .run();
-  }
-
   async securedList({ filter, ...input }: PostListInput, session: Session) {
     const result = await this.db
       .query()
@@ -99,10 +65,10 @@ export class PostRepository extends DtoRepository(Post) {
             ) OR (
               props.shareability = '${PostShareability.Membership}'
               AND
-              (node)<-[:post]-(:BaseNode)-[:member]-(:BaseNode)-[:user]->(:User { id: $requestingUserId })
+              (node)<-[:post]-(:BaseNode)-[:member]-(:BaseNode)-[:user]->(:User { id: $requestingUser })
             )
           `,
-        { requestingUserId: session.userId }
+        { requestingUser: session.userId }
       )
       .apply(sorting(Post, input))
       .apply(paginate(input, this.hydrate()))

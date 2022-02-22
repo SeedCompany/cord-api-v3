@@ -31,9 +31,7 @@ export class FieldZoneService {
   ) {}
 
   async create(input: CreateFieldZone, session: Session): Promise<FieldZone> {
-    const checkName = await this.repo.checkName(input.name);
-
-    if (checkName) {
+    if (!(await this.repo.isUnique(input.name))) {
       throw new DuplicateException(
         'fieldZone.name',
         'FieldZone with this name already exists.'
@@ -66,12 +64,12 @@ export class FieldZoneService {
       userId: session.userId,
     });
 
-    const result = await this.repo.readOne(id, session);
+    const result = await this.repo.readOne(id);
     return await this.secure(result, session);
   }
 
   async readMany(ids: readonly ID[], session: Session) {
-    const fieldZones = await this.repo.readMany(ids, session);
+    const fieldZones = await this.repo.readMany(ids);
     return await Promise.all(
       fieldZones.map((dto) => this.secure(dto, session))
     );

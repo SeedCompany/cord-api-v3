@@ -244,7 +244,7 @@ export class BudgetService {
       userId: session.userId,
     });
 
-    const result = await this.budgetRecordsRepo.readOne(id, session, view);
+    const result = await this.budgetRecordsRepo.readOne(id, { session, view });
 
     const securedProps = await this.authorizationService.secureProperties(
       BudgetRecord,

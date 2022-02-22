@@ -32,9 +32,7 @@ export class StoryService {
   ) {}
 
   async create(input: CreateStory, session: Session): Promise<Story> {
-    const checkStory = await this.repo.checkStory(input.name);
-
-    if (checkStory) {
+    if (!(await this.repo.isUnique(input.name))) {
       throw new DuplicateException(
         'story.name',
         'Story with this name already exists.'
@@ -78,12 +76,12 @@ export class StoryService {
       userId: session.userId,
     });
 
-    const result = await this.repo.readOne(id, session);
+    const result = await this.repo.readOne(id);
     return await this.secure(result, session);
   }
 
   async readMany(ids: readonly ID[], session: Session) {
-    const stories = await this.repo.readMany(ids, session);
+    const stories = await this.repo.readMany(ids);
     return await Promise.all(stories.map((dto) => this.secure(dto, session)));
   }
 

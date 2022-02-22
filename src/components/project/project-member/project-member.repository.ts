@@ -1,21 +1,25 @@
 import { Injectable } from '@nestjs/common';
-import { inArray, Node, node, Query, relation } from 'cypher-query-builder';
+import { Node, node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { CreateProjectMember, ProjectMember, ProjectMemberListInput } from '.';
-import { ID, NotFoundException, Session, UnsecuredDto } from '../../../common';
-import { DatabaseService, DtoRepository, property } from '../../../core';
+import { ID, Session, UnsecuredDto } from '../../../common';
+import { DatabaseService, DtoRepository } from '../../../core';
 import {
   ACTIVE,
   matchPropsAndProjectSensAndScopedRoles,
   merge,
   paginate,
+  property,
   requestingUser,
   sorting,
 } from '../../../core/database/query';
 import { UserRepository } from '../../user/user.repository';
 
 @Injectable()
-export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
+export class ProjectMemberRepository extends DtoRepository<
+  typeof ProjectMember,
+  [session: Session]
+>(ProjectMember) {
   constructor(private readonly users: UserRepository, db: DatabaseService) {
     super(db);
   }
@@ -82,33 +86,6 @@ export class ProjectMemberRepository extends DtoRepository(ProjectMember) {
       ])
       .return<{ id: ID }>('projectMember.id as id')
       .first();
-  }
-
-  async readOne(id: ID, session: Session) {
-    const query = this.db
-      .query()
-      .matchNode('node', 'ProjectMember', { id })
-      .apply(this.hydrate(session));
-
-    const result = await query.first();
-    if (!result) {
-      throw new NotFoundException(
-        'Could not find project member',
-        'projectMember.id'
-      );
-    }
-
-    return result.dto;
-  }
-
-  async readMany(ids: readonly ID[], session: Session) {
-    return await this.db
-      .query()
-      .matchNode('node', 'ProjectMember')
-      .where({ 'node.id': inArray(ids) })
-      .apply(this.hydrate(session))
-      .map('dto')
-      .run();
   }
 
   protected hydrate(session: Session) {

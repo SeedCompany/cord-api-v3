@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { ID, ServerException, Session } from '../../common';
-import { DatabaseService, matchRequestingUser } from '../../core';
-import { ACTIVE, variable } from '../../core/database/query';
+import { DatabaseService } from '../../core';
+import { ACTIVE, requestingUser, variable } from '../../core/database/query';
 import { LoginInput } from './dto';
 
 interface EmailToken {
@@ -194,9 +194,8 @@ export class AuthenticationRepository {
   ): Promise<void> {
     await this.db
       .query()
-      .apply(matchRequestingUser(session))
       .match([
-        node('requestingUser'),
+        requestingUser(session),
         relation('out', '', 'password', ACTIVE),
         node('password', 'Property'),
       ])
@@ -283,9 +282,8 @@ export class AuthenticationRepository {
   async deactivateAllOtherSessions(session: Session) {
     await this.db
       .query()
-      .apply(matchRequestingUser(session))
       .match([
-        node('requestingUser'),
+        requestingUser(session),
         relation('out', 'oldRel', 'token', ACTIVE),
         node('token', 'Token'),
       ])

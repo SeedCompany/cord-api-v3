@@ -167,7 +167,7 @@ export class EngagementService {
       if (!(e instanceof NotFoundException)) {
         throw e;
       }
-      if (mentorId && !(await this.repo.doesNodeExist(User, mentorId))) {
+      if (mentorId && !(await this.repo.getBaseNode(mentorId, User))) {
         throw new NotFoundException(
           'Could not find mentor',
           'engagement.mentorId'
@@ -175,7 +175,7 @@ export class EngagementService {
       }
       if (
         countryOfOriginId &&
-        !(await this.repo.doesNodeExist(Location, countryOfOriginId))
+        !(await this.repo.getBaseNode(countryOfOriginId, Location))
       ) {
         throw new NotFoundException(
           'Could not find country of origin',

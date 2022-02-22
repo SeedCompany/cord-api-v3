@@ -47,9 +47,7 @@ export class OrganizationService {
       session
     );
 
-    const checkOrg = await this.repo.checkOrg(input.name);
-
-    if (checkOrg) {
+    if (!(await this.repo.isUnique(input.name))) {
       throw new DuplicateException(
         'organization.name',
         'Organization with this name already exists'

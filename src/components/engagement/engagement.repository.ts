@@ -9,7 +9,6 @@ import {
   mapFromList,
   NotFoundException,
   ObjectView,
-  ResourceShape,
   ServerException,
   Session,
   simpleSwitch,
@@ -56,15 +55,6 @@ export type LanguageOrEngagementId = MergeExclusive<
 
 @Injectable()
 export class EngagementRepository extends CommonRepository {
-  async doesNodeExist(resource: ResourceShape<any>, id: ID) {
-    const result = await this.db
-      .query()
-      .match(node('node', resource.name, { id }))
-      .return('node.id')
-      .first();
-    return !!result;
-  }
-
   async readOne(id: ID, session: Session, view?: ObjectView) {
     const query = this.db
       .query()

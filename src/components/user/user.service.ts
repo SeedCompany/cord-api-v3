@@ -17,10 +17,10 @@ import {
   HandleIdLookup,
   ILogger,
   Logger,
-  property,
   Transactional,
   UniquenessError,
 } from '../../core';
+import { property } from '../../core/database/query';
 import { mapListResults } from '../../core/database/results';
 import { Role } from '../authorization';
 import { AuthorizationService } from '../authorization/authorization.service';
@@ -131,10 +131,7 @@ export class UserService {
     sessionOrUserId: Session | ID,
     _view?: ObjectView
   ): Promise<User> {
-    const requestingUser = isIdLike(sessionOrUserId)
-      ? sessionOrUserId
-      : sessionOrUserId.userId;
-    const user = await this.userRepo.readOne(id, requestingUser);
+    const user = await this.userRepo.readOne(id, sessionOrUserId);
     return await this.secure(user, sessionOrUserId);
   }
 

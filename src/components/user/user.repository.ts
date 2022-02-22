@@ -16,8 +16,6 @@ import {
   DtoRepository,
   ILogger,
   Logger,
-  matchSession,
-  property,
   UniquenessError,
 } from '../../core';
 import {
@@ -27,9 +25,11 @@ import {
   createProperty,
   deactivateProperty,
   matchProps,
+  matchSession,
   merge,
   paginate,
   permissionsOfNode,
+  property,
   requestingUser,
   sorting,
 } from '../../core/database/query';
@@ -47,7 +47,9 @@ import {
 import { userListFilter } from './query.helpers';
 
 @Injectable()
-export class UserRepository extends DtoRepository(User) {
+export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
+  User
+) {
   constructor(
     db: DatabaseService,
     private readonly config: ConfigService,
@@ -157,29 +159,7 @@ export class UserRepository extends DtoRepository(User) {
     return result.id;
   }
 
-  async readOne(id: ID, requestingUser: ID) {
-    const query = this.db
-      .query()
-      .match([node('node', 'User', { id })])
-      .apply(this.hydrate(requestingUser));
-    const result = await query.first();
-    if (!result) {
-      throw new NotFoundException('Could not find user', 'user.id');
-    }
-    return result.dto;
-  }
-
-  async readMany(ids: readonly ID[], session: Session) {
-    return await this.db
-      .query()
-      .matchNode('node', 'User')
-      .where({ 'node.id': inArray(ids) })
-      .apply(this.hydrate(session.userId))
-      .map('dto')
-      .run();
-  }
-
-  hydrate(requestingUser: ID) {
+  hydrate(requestingUserId: Session | ID) {
     return (query: Query) =>
       query
         .optionalMatch([
@@ -188,11 +168,11 @@ export class UserRepository extends DtoRepository(User) {
           node('role', 'Property'),
         ])
         .apply(matchProps())
-        .raw('', { requestingUser })
+        .match(requestingUser(requestingUserId))
         .return<{ dto: UnsecuredDto<User> }>(
           merge({ email: null }, 'props', {
             roles: collect('role.value'),
-            pinned: 'exists((:User { id: $requestingUser })-[:pinned]->(node))',
+            pinned: 'exists((requestingUser)-[:pinned]->(node))',
           }).as('dto')
         );
   }

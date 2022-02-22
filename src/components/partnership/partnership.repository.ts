@@ -5,13 +5,12 @@ import {
   generateId,
   ID,
   labelForView,
-  NotFoundException,
   ObjectView,
   ServerException,
   Session,
   UnsecuredDto,
 } from '../../common';
-import { DtoRepository, matchRequestingUser } from '../../core';
+import { DtoRepository } from '../../core';
 import {
   ACTIVE,
   coalesce,
@@ -22,6 +21,7 @@ import {
   matchProjectSensToLimitedScopeMap,
   matchProps,
   matchPropsAndProjectSensAndScopedRoles,
+  matchRequestingUser,
   merge,
   paginate,
   requestingUser,
@@ -37,7 +37,10 @@ import {
 } from './dto';
 
 @Injectable()
-export class PartnershipRepository extends DtoRepository(Partnership) {
+export class PartnershipRepository extends DtoRepository<
+  typeof Partnership,
+  [session: Session, view?: ObjectView]
+>(Partnership) {
   async create(input: CreatePartnership, session: Session, changeset?: ID) {
     const mouId = await generateId();
     const agreementId = await generateId();
@@ -77,15 +80,6 @@ export class PartnershipRepository extends DtoRepository(Partnership) {
       throw new ServerException('Failed to create partnership');
     }
     return { id: result.id, mouId, agreementId };
-  }
-
-  async readOne(id: ID, session: Session, view?: ObjectView) {
-    const results = await this.readMany([id], session, view);
-    if (!results[0]) {
-      throw new NotFoundException('Could not find partnership');
-    }
-
-    return results[0];
   }
 
   async readMany(ids: readonly ID[], session: Session, view?: ObjectView) {
