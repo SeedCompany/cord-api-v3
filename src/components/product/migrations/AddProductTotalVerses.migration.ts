@@ -7,12 +7,13 @@ import {
   createProperty,
   path,
 } from '../../../core/database/query';
-import { ScriptureRange, UnspecifiedScripturePortion } from '../../scripture';
 import {
   getTotalVerseEquivalents,
   getTotalVerses,
   getVerseEquivalentsFromUnspecified,
-} from '../../scripture/verse-equivalents';
+  ScriptureRange,
+  UnspecifiedScripturePortion,
+} from '../../scripture';
 import { DirectScriptureProduct } from '../dto';
 
 interface ProductRef {

@@ -14,7 +14,7 @@ import {
   ProductMethodology,
   ProductPurpose,
 } from '../src/components/product';
-import { ScriptureRange } from '../src/components/scripture/dto';
+import { ScriptureRange } from '../src/components/scripture';
 import { Story } from '../src/components/story';
 import {
   createDerivativeProduct,

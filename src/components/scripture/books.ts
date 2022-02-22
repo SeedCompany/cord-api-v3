@@ -1,10 +1,9 @@
 import { LazyGetter as Once } from 'lazy-get-decorator';
-import { differenceWith, random, range, sumBy } from 'lodash';
+import { random, range, sumBy } from 'lodash';
 import { inspect } from 'util';
-import { iterate, NotFoundException, Range } from '../../common';
-import { ScriptureRange, ScriptureReference } from './dto';
+import { iterate, NotFoundException } from '../../common';
+import { ScriptureReference } from './dto';
 import { BookDifficulty as Difficulty } from './dto/book-difficulty.enum';
-import { mergeScriptureRangesToMinimalIds } from './labels';
 
 const generateOrdinalNameVariations = (ordinal: 1 | 2 | 3, names: string[]) => {
   const ordinalMap = {
@@ -829,30 +828,3 @@ export class Verse {
     return `[Verse] ${this.label}`;
   }
 }
-
-export const isScriptureEqual = (
-  a: readonly ScriptureRange[],
-  b: readonly ScriptureRange[]
-) => {
-  if (
-    (a.length !== 0 && b.length === 0) ||
-    (a.length === 0 && b.length !== 0)
-  ) {
-    // If one is empty and the other is not, then we know they aren't equal
-    return false;
-  }
-  const av = mergeScriptureRangesToMinimalIds(a);
-  const bv = mergeScriptureRangesToMinimalIds(b);
-  if (av.length !== bv.length) {
-    // If the merged ranges are not the same length, we know they aren't equal
-    return false;
-  }
-  // Otherwise, compare actual verses
-  const comparator = (aa: Range<number>, bb: Range<number>) => {
-    return aa.start === bb.start && aa.end === bb.end;
-  };
-  return (
-    differenceWith(av, bv, comparator).length === 0 &&
-    differenceWith(bv, av, comparator).length === 0
-  );
-};

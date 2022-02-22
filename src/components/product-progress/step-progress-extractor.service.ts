@@ -6,7 +6,7 @@ import { Cell, Column } from '../../common/xlsx.util';
 import { Downloadable } from '../file';
 import { findStepColumns, isGoalRow, Pnp, ProgressSheet } from '../pnp';
 import { ProductStep as Step } from '../product';
-import { Book } from '../scripture/books';
+import { Book } from '../scripture';
 import { StepProgressInput } from './dto';
 
 type ExtractedRow = MergeExclusive<

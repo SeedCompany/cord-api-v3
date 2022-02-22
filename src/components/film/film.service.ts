@@ -14,8 +14,7 @@ import { HandleIdLookup, ILogger, Logger } from '../../core';
 import { ifDiff } from '../../core/database/changes';
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { ScriptureReferenceService } from '../scripture';
-import { isScriptureEqual } from '../scripture/books';
+import { isScriptureEqual, ScriptureReferenceService } from '../scripture';
 import {
   CreateFilm,
   Film,

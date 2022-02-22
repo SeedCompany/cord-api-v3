@@ -1,6 +1,6 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { AuthorizationModule } from '../authorization/authorization.module';
-import { ScriptureModule } from '../scripture/scripture.module';
+import { ScriptureModule } from '../scripture';
 import { StoryLoader } from './story.loader';
 import { StoryRepository } from './story.repository';
 import { StoryResolver } from './story.resolver';

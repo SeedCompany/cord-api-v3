@@ -14,8 +14,7 @@ import { ifDiff } from '../../core/database/changes';
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { LiteracyMaterial } from '../literacy-material/dto';
-import { ScriptureReferenceService } from '../scripture';
-import { isScriptureEqual } from '../scripture/books';
+import { isScriptureEqual, ScriptureReferenceService } from '../scripture';
 import { Song } from '../song/dto';
 import {
   CreateEthnoArt,

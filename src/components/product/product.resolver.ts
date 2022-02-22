@@ -28,8 +28,7 @@ import {
   UpdateDerivativeScriptureProduct,
   UpdateDirectScriptureProduct,
 } from '../product';
-import { Book } from '../scripture/books';
-import { labelOfScriptureRanges } from '../scripture/labels';
+import { Book, labelOfScriptureRanges } from '../scripture';
 import {
   AnyProduct,
   CreateOtherProduct,

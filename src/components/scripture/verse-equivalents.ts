@@ -7,7 +7,7 @@ import {
   ScriptureRange,
   UnspecifiedScripturePortion,
 } from './dto';
-import { mergeScriptureRanges } from './labels';
+import { mergeScriptureRanges } from './merge-to-minimal-set';
 
 export const getTotalVerseEquivalents = (
   ...refs: readonly ScriptureRange[]

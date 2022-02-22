@@ -18,16 +18,14 @@ import { compareNullable, ifDiff, isSame } from '../../core/database/changes';
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import {
+  getTotalVerseEquivalents,
+  getTotalVerses,
+  getVerseEquivalentsFromUnspecified,
+  isScriptureEqual,
   ScriptureRange,
   ScriptureReferenceService,
   UnspecifiedScripturePortion,
 } from '../scripture';
-import { isScriptureEqual } from '../scripture/books';
-import {
-  getTotalVerseEquivalents,
-  getTotalVerses,
-  getVerseEquivalentsFromUnspecified,
-} from '../scripture/verse-equivalents';
 import {
   AnyProduct,
   asProductType,

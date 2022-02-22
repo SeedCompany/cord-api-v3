@@ -3,7 +3,7 @@ import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
 import { times } from 'lodash';
 import { isValidId } from '../src/common';
-import { ScriptureRange } from '../src/components/scripture/dto';
+import { ScriptureRange } from '../src/components/scripture';
 import { Story } from '../src/components/story/dto';
 import {
   createSession,
