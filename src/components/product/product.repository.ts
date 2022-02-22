@@ -228,7 +228,7 @@ export class ProductRepository extends CommonRepository {
           ['node', 'produces'],
           this.scriptureRefs.list({
             relationName: oneLine`
-              CASE WHEN produces = null
+              CASE WHEN produces is null
                 THEN "scriptureReferences"
                 ELSE "scriptureReferencesOverride"
               END
