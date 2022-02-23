@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { oneLine } from 'common-tags';
 import {
   inArray,
   isNull,
@@ -13,13 +14,12 @@ import {
   getDbClassLabels,
   has,
   ID,
-  NotFoundException,
   Range,
   ServerException,
   Session,
   UnsecuredDto,
 } from '../../common';
-import { CommonRepository, OnIndex } from '../../core';
+import { CommonRepository, DatabaseService, OnIndex } from '../../core';
 import { DbChanges, getChanges } from '../../core/database/changes';
 import {
   ACTIVE,
@@ -29,6 +29,7 @@ import {
   deactivateProperty,
   escapeLuceneSyntax,
   fullTextQuery,
+  matchProps,
   matchPropsAndProjectSensAndScopedRoles,
   merge,
   paginate,
@@ -36,10 +37,10 @@ import {
   requestingUser,
   sorting,
 } from '../../core/database/query';
-import { BaseNode } from '../../core/database/results';
 import {
   ScriptureRange,
   ScriptureRangeInput,
+  ScriptureReferenceRepository,
   UnspecifiedScripturePortion,
   UnspecifiedScripturePortionInput,
 } from '../scripture';
@@ -51,6 +52,7 @@ import {
   DirectScriptureProduct,
   ProductMethodology as Methodology,
   OtherProduct,
+  ProducibleRef,
   ProducibleType,
   Product,
   ProductCompletionDescriptionSuggestionsInput,
@@ -60,24 +62,37 @@ import {
 } from './dto';
 import { productListFilter } from './query.helpers';
 
+export type HydratedProductRow = Merge<
+  Omit<
+    UnsecuredDto<
+      DirectScriptureProduct & DerivativeScriptureProduct & OtherProduct
+    >,
+    'scriptureReferencesOverride'
+  >,
+  {
+    isOverriding: boolean;
+    produces: Merge<ProducibleRef, { __typename: string[] }> | null;
+    unspecifiedScripture: UnspecifiedScripturePortion | null;
+  }
+>;
+
 @Injectable()
 export class ProductRepository extends CommonRepository {
-  async readOne(id: ID, session: Session) {
+  constructor(
+    private readonly scriptureRefs: ScriptureReferenceRepository,
+    db: DatabaseService
+  ) {
+    super(db);
+  }
+
+  async readMany(ids: readonly ID[], session: Session) {
     const query = this.db
       .query()
-      .match([
-        node('project', 'Project'),
-        relation('out', '', 'engagement', ACTIVE),
-        node('engagement', 'Engagement'),
-        relation('out', '', 'product', ACTIVE),
-        node('node', 'Product', { id }),
-      ])
-      .apply(this.hydrate(session));
-    const result = await query.first();
-    if (!result) {
-      throw new NotFoundException('Could not find product');
-    }
-    return result.dto;
+      .matchNode('node', 'Product')
+      .where({ 'node.id': inArray(ids) })
+      .apply(this.hydrate(session))
+      .map('dto');
+    return await query.run();
   }
 
   async listIdsAndScriptureRefs(engagementId: ID) {
@@ -174,39 +189,59 @@ export class ProductRepository extends CommonRepository {
   protected hydrate(session: Session) {
     return (query: Query) =>
       query
-        .apply(matchPropsAndProjectSensAndScopedRoles(session))
-        .optionalMatch([
+        .match([
+          node('project', 'Project'),
+          relation('out', '', 'engagement', ACTIVE),
+          node('engagement', 'Engagement'),
+          relation('out', '', 'product', ACTIVE),
           node('node'),
-          relation('out', '', 'produces', ACTIVE),
-          node('produces', 'Producible'),
         ])
+        .apply(matchPropsAndProjectSensAndScopedRoles(session))
         .optionalMatch([
           node('node'),
           relation('out', '', 'unspecifiedScripture', ACTIVE),
           node('unspecifiedScripture', 'UnspecifiedScripturePortion'),
         ])
-        .return<{
-          dto: Merge<
-            Omit<
-              UnsecuredDto<
-                DirectScriptureProduct &
-                  DerivativeScriptureProduct &
-                  OtherProduct
-              >,
-              'scriptureReferences' | 'scriptureReferencesOverride'
-            >,
-            {
-              isOverriding: boolean;
-              produces: BaseNode | null;
-              unspecifiedScripture: UnspecifiedScripturePortion | null;
-            }
-          >;
-        }>(
+        .subQuery('node', (sub) =>
+          sub
+            .match([
+              node('node'),
+              relation('out', '', 'produces', ACTIVE),
+              node('produces', 'Producible'),
+            ])
+            .apply(matchProps({ nodeName: 'produces' }))
+            .subQuery(
+              'produces',
+              this.scriptureRefs.list({
+                nodeName: 'produces',
+              })
+            )
+            .with(
+              merge('produces', 'props', {
+                __typename: 'labels(produces)',
+                scriptureReferences: 'scriptureReferences',
+              }).as('produces')
+            )
+            .return('collect(produces)[0] as produces')
+        )
+        .subQuery(
+          ['node', 'produces'],
+          this.scriptureRefs.list({
+            relationName: oneLine`
+              CASE WHEN produces is null
+                THEN "scriptureReferences"
+                ELSE "scriptureReferencesOverride"
+              END
+            `,
+          })
+        )
+        .return<{ dto: HydratedProductRow }>(
           merge('props', {
             engagement: 'engagement.id',
             produces: 'produces',
             unspecifiedScripture:
               'unspecifiedScripture { .book, .totalVerses }',
+            scriptureReferences: 'scriptureReferences',
           }).as('dto')
         );
   }
@@ -458,21 +493,10 @@ export class ProductRepository extends CommonRepository {
     const label = 'Product';
     const result = await this.db
       .query()
-      .match([
-        requestingUser(session),
-        ...permissionsOfNode(label),
-        ...(filter.engagementId
-          ? [
-              relation('in', '', 'product', ACTIVE),
-              node('engagement', 'Engagement', {
-                id: filter.engagementId,
-              }),
-            ]
-          : []),
-      ])
+      .match([requestingUser(session), ...permissionsOfNode(label)])
       .apply(productListFilter(filter))
       .apply(sorting(Product, input))
-      .apply(paginate(input))
+      .apply(paginate(input, this.hydrate(session)))
       .first();
     return result!; // result from paginate() will always have 1 row.
   }

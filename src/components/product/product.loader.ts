@@ -1,16 +1,16 @@
 import { Injectable, Scope } from '@nestjs/common';
 import { ID } from '../../common';
-import { SingleItemLoader } from '../../core';
+import { OrderedNestDataLoader } from '../../core';
 import { AnyProduct } from './dto';
 import { ProductService } from './product.service';
 
 @Injectable({ scope: Scope.REQUEST })
-export class ProductLoader extends SingleItemLoader<AnyProduct> {
+export class ProductLoader extends OrderedNestDataLoader<AnyProduct> {
   constructor(private readonly products: ProductService) {
     super();
   }
 
-  async loadOne(id: ID) {
-    return await this.products.readOne(id, this.session);
+  async loadMany(ids: readonly ID[]) {
+    return await this.products.readMany(ids, this.session);
   }
 }

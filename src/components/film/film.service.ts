@@ -11,9 +11,10 @@ import {
   UnsecuredDto,
 } from '../../common';
 import { HandleIdLookup, ILogger, Logger } from '../../core';
+import { ifDiff } from '../../core/database/changes';
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
+import { isScriptureEqual, ScriptureReferenceService } from '../scripture';
 import {
   CreateFilm,
   Film,
@@ -27,7 +28,7 @@ import { FilmRepository } from './film.repository';
 export class FilmService {
   constructor(
     @Logger('film:service') private readonly logger: ILogger,
-    private readonly scriptureRefService: ScriptureReferenceService,
+    private readonly scriptureRefs: ScriptureReferenceService,
     private readonly authorizationService: AuthorizationService,
     private readonly repo: FilmRepository
   ) {}
@@ -53,7 +54,7 @@ export class FilmService {
         session.userId
       );
 
-      await this.scriptureRefService.create(
+      await this.scriptureRefs.create(
         result.id,
         input.scriptureReferences,
         session
@@ -92,33 +93,35 @@ export class FilmService {
   ): Promise<Film> {
     const securedProps = await this.authorizationService.secureProperties(
       Film,
-      dto,
-      session
-    );
-
-    const scriptureReferences = await this.scriptureRefService.list(
-      dto.id,
+      {
+        ...dto,
+        scriptureReferences: this.scriptureRefs.parseList(
+          dto.scriptureReferences
+        ),
+      },
       session
     );
 
     return {
       ...dto,
       ...securedProps,
-      scriptureReferences: {
-        ...securedProps.scriptureReferences,
-        value: scriptureReferences,
-      },
       canDelete: await this.repo.checkDeletePermission(dto.id, session),
     };
   }
 
   async update(input: UpdateFilm, session: Session): Promise<Film> {
     const film = await this.readOne(input.id, session);
-    const changes = this.repo.getActualChanges(film, input);
+    const changes = {
+      ...this.repo.getActualChanges(film, input),
+      scriptureReferences: ifDiff(isScriptureEqual)(
+        input.scriptureReferences,
+        film.scriptureReferences.value
+      ),
+    };
     await this.authorizationService.verifyCanEditChanges(Film, film, changes);
     const { scriptureReferences, ...simpleChanges } = changes;
 
-    await this.scriptureRefService.update(input.id, scriptureReferences);
+    await this.scriptureRefs.update(input.id, scriptureReferences);
 
     await this.repo.updateProperties(film, simpleChanges);
 

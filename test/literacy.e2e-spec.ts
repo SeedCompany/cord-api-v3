@@ -5,7 +5,7 @@ import { times } from 'lodash';
 import { isValidId } from '../src/common';
 import { Powers } from '../src/components/authorization/dto/powers';
 import { LiteracyMaterial } from '../src/components/literacy-material';
-import { ScriptureRange } from '../src/components/scripture/dto';
+import { ScriptureRange } from '../src/components/scripture';
 import {
   createLiteracyMaterial,
   createSession,

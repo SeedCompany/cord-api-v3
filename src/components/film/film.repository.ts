@@ -1,18 +1,28 @@
 import { Injectable } from '@nestjs/common';
-import { node } from 'cypher-query-builder';
-import { ID, Session } from '../../common';
-import { DtoRepository } from '../../core';
+import { node, Query } from 'cypher-query-builder';
+import { ID, Session, UnsecuredDto } from '../../common';
+import { DatabaseService, DtoRepository } from '../../core';
 import {
   createNode,
+  matchProps,
   matchRequestingUser,
+  merge,
   paginate,
   requestingUser,
   sorting,
 } from '../../core/database/query';
+import { ScriptureReferenceRepository } from '../scripture';
 import { CreateFilm, Film, FilmListInput } from './dto';
 
 @Injectable()
 export class FilmRepository extends DtoRepository(Film) {
+  constructor(
+    private readonly scriptureRefs: ScriptureReferenceRepository,
+    db: DatabaseService
+  ) {
+    super(db);
+  }
+
   async createFilm(input: CreateFilm, session: Session) {
     const initialProps = {
       name: input.name,
@@ -35,5 +45,17 @@ export class FilmRepository extends DtoRepository(Film) {
       .apply(paginate(input, this.hydrate()))
       .first();
     return result!; // result from paginate() will always have 1 row.
+  }
+
+  protected hydrate() {
+    return (query: Query) =>
+      query
+        .apply(matchProps())
+        .subQuery('node', this.scriptureRefs.list())
+        .return<{ dto: UnsecuredDto<Film> }>(
+          merge('props', {
+            scriptureReferences: 'scriptureReferences',
+          }).as('dto')
+        );
   }
 }

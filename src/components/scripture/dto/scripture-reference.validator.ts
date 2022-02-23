@@ -19,7 +19,7 @@ export const IsValidBook = () =>
 const IsScriptureBook = createValidationDecorator({
   name: 'ScriptureBook',
   validator: {
-    validate: Book.isValid,
+    validate: (val) => Book.isValid(val),
     defaultMessage: () => 'Not a valid Bible book',
   },
 });

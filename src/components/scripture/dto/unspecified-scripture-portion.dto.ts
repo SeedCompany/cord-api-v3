@@ -31,7 +31,14 @@ export abstract class UnspecifiedScripturePortionInput {
 }
 
 @ObjectType()
-export abstract class UnspecifiedScripturePortion extends UnspecifiedScripturePortionInput {}
+export abstract class UnspecifiedScripturePortion extends UnspecifiedScripturePortionInput {
+  static isEqual(
+    a: UnspecifiedScripturePortion,
+    b: UnspecifiedScripturePortion
+  ) {
+    return a.book === b.book && a.totalVerses === b.totalVerses;
+  }
+}
 
 @ObjectType({
   description: SecuredProperty.descriptionFor('UnspecifiedScripturePortion'),

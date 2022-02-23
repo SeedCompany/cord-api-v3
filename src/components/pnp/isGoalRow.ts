@@ -1,5 +1,5 @@
 import { Cell } from '../../common/xlsx.util';
-import { Book } from '../scripture/books';
+import { Book } from '../scripture';
 import { PlanningSheet } from './planning-sheet';
 import { ProgressSheet } from './progress-sheet';
 

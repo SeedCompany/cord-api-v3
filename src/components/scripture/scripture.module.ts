@@ -11,6 +11,6 @@ import { ScriptureReferenceService } from './scripture-reference.service';
     ScriptureReferenceService,
     ScriptureReferenceRepository,
   ],
-  exports: [ScriptureReferenceService],
+  exports: [ScriptureReferenceService, ScriptureReferenceRepository],
 })
 export class ScriptureModule {}

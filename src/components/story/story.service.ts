@@ -10,9 +10,10 @@ import {
   UnsecuredDto,
 } from '../../common';
 import { HandleIdLookup, ILogger, Logger } from '../../core';
+import { ifDiff } from '../../core/database/changes';
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
+import { isScriptureEqual, ScriptureReferenceService } from '../scripture';
 import {
   CreateStory,
   Story,
@@ -26,7 +27,7 @@ import { StoryRepository } from './story.repository';
 export class StoryService {
   constructor(
     @Logger('story:service') private readonly logger: ILogger,
-    private readonly scriptureRefService: ScriptureReferenceService,
+    private readonly scriptureRefs: ScriptureReferenceService,
     private readonly authorizationService: AuthorizationService,
     private readonly repo: StoryRepository
   ) {}
@@ -52,7 +53,7 @@ export class StoryService {
         session.userId
       );
 
-      await this.scriptureRefService.create(
+      await this.scriptureRefs.create(
         result.id,
         input.scriptureReferences,
         session
@@ -91,32 +92,35 @@ export class StoryService {
   ): Promise<Story> {
     const securedProps = await this.authorizationService.secureProperties(
       Story,
-      dto,
+      {
+        ...dto,
+        scriptureReferences: this.scriptureRefs.parseList(
+          dto.scriptureReferences
+        ),
+      },
       session
     );
 
-    const scriptureReferences = await this.scriptureRefService.list(
-      dto.id,
-      session
-    );
     return {
       ...dto,
       ...securedProps,
-      scriptureReferences: {
-        ...securedProps.scriptureReferences,
-        value: scriptureReferences,
-      },
       canDelete: await this.repo.checkDeletePermission(dto.id, session),
     };
   }
 
   async update(input: UpdateStory, session: Session): Promise<Story> {
     const story = await this.readOne(input.id, session);
-    const changes = this.repo.getActualChanges(story, input);
+    const changes = {
+      ...this.repo.getActualChanges(story, input),
+      scriptureReferences: ifDiff(isScriptureEqual)(
+        input.scriptureReferences,
+        story.scriptureReferences.value
+      ),
+    };
     await this.authorizationService.verifyCanEditChanges(Story, story, changes);
     const { scriptureReferences, ...simpleChanges } = changes;
 
-    await this.scriptureRefService.update(input.id, scriptureReferences);
+    await this.scriptureRefs.update(input.id, scriptureReferences);
     await this.repo.updateProperties(story, simpleChanges);
 
     return await this.readOne(input.id, session);

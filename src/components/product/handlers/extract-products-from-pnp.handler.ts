@@ -14,8 +14,7 @@ import {
   EngagementUpdatedEvent,
 } from '../../engagement/events';
 import { FileService } from '../../file';
-import { ScriptureRangeInput } from '../../scripture';
-import { Book } from '../../scripture/books';
+import { Book, ScriptureRangeInput } from '../../scripture';
 import { StoryService } from '../../story';
 import {
   CreateDerivativeScriptureProduct,
