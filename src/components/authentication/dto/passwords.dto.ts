@@ -38,4 +38,4 @@ export abstract class ForgotPasswordArgs {
 }
 
 @ObjectType()
-export abstract class ForgotPasswordOutput extends MutationPlaceholderOutput {}
+export abstract class PasswordOutput extends MutationPlaceholderOutput {}

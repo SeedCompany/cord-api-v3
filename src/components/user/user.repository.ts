@@ -17,6 +17,7 @@ import {
   ILogger,
   Logger,
   matchSession,
+  Pg,
   property,
   UniquenessError,
 } from '../../core';
@@ -50,6 +51,7 @@ import { userListFilter } from './query.helpers';
 export class UserRepository extends DtoRepository(User) {
   constructor(
     db: DatabaseService,
+    private readonly pg: Pg,
     private readonly config: ConfigService,
     @Logger('user:repository') private readonly logger: ILogger
   ) {
@@ -170,13 +172,27 @@ export class UserRepository extends DtoRepository(User) {
   }
 
   async readMany(ids: readonly ID[], session: Session) {
-    return await this.db
-      .query()
-      .matchNode('node', 'User')
-      .where({ 'node.id': inArray(ids.slice()) })
-      .apply(this.hydrate(session.userId))
-      .map('dto')
-      .run();
+    const pgResult = (await this.pg.query(
+      `SELECT p.id, u.email as email, p.about, p.phone , p.picture , p.private_first_name as "realFirstName", p.private_last_name as "realLastName",
+      p.public_first_name as "displayFirstName", p.public_last_name as "displayLastName", p.primary_location , p.private_full_name , p.public_full_name ,
+      p.sensitivity_clearance , p.timezone , p.title  , p.status, p.created_at as "createdAt" FROM admin.people as p, admin.users u WHERE p.id=u.id AND p.id  = ANY($1::text[])`,
+      [ids]
+    )) as Array<UnsecuredDto<User>>;
+
+    // pgResult.map(function(user, indx){
+    //   userDto.email = user.email;
+    // })
+    if (pgResult) {
+      return pgResult;
+    } else {
+      return await this.db
+        .query()
+        .matchNode('node', 'User')
+        .where({ 'node.id': inArray(ids.slice()) })
+        .apply(this.hydrate(session.userId))
+        .map('dto')
+        .run();
+    }
   }
 
   hydrate(requestingUser: ID) {

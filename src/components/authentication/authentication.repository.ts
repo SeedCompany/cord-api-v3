@@ -12,6 +12,16 @@ interface EmailToken {
   createdOn: DateTime;
 }
 
+interface UserToken {
+  userId?: ID;
+  token?: string;
+}
+
+interface UserPash {
+  id?: ID;
+  pash?: string;
+}
+
 @Injectable()
 export class AuthenticationRepository {
   constructor(private readonly pg: Pg, private readonly db: DatabaseService) {}
@@ -21,29 +31,36 @@ export class AuthenticationRepository {
     //console.log(asdf)
 
     //console.log(token)
-    //const res = await this.pg.query("INSERT INTO admin.tokens (token, created_at) values ('"+token+"', now())")
-
-    const result = await this.db
-      .query()
-      .raw(
-        `
-    CREATE
-      (token:Token {
-        active: true,
-        createdAt: datetime(),
-        value: $token
-      })
-    RETURN
-      token.value as token
-    `,
-        {
-          token,
-        }
-      )
-      .first();
-    if (!result) {
+    const res = await this.pg.query(
+      "INSERT INTO admin.tokens (token, created_at) values ('" +
+        token +
+        "', now())"
+    );
+    if (!res) {
       throw new ServerException('Failed to save session token');
     }
+
+    // const result = await this.db
+    //   .query()
+    //   .raw(
+    //     `
+    // CREATE
+    //   (token:Token {
+    //     active: true,
+    //     createdAt: datetime(),
+    //     value: $token
+    //   })
+    // RETURN
+    //   token.value as token
+    // `,
+    //     {
+    //       token,
+    //     }
+    //   )
+    //   .first();
+    // if (!result) {
+    //   throw new ServerException('Failed to save session token');
+    // }
   }
 
   async getUserFromSession(session: Session) {
@@ -86,7 +103,20 @@ export class AuthenticationRepository {
   }
 
   async getPasswordHash(input: LoginInput, session: Session) {
-    const result = await this.db
+    let result: UserPash = {};
+    try {
+      const pgResult = await this.pg.query(
+        'SELECT id, password as pash FROM admin.users WHERE email=$1',
+        [input.email]
+      );
+      const res = pgResult[0] as UserPash;
+      result = { id: res.id, pash: res.pash };
+    } catch (error) {
+      // console.log(error)
+    }
+
+    // console.log(result)
+    const result2 = await this.db
       .query()
       .raw(
         `
@@ -111,37 +141,53 @@ export class AuthenticationRepository {
       )
       .asResult<{ pash: string }>()
       .first();
-    return result?.pash;
+    //console.log(result2)
+    if (result) {
+      return result.pash;
+    } else {
+      return result2?.pash;
+    }
   }
 
   async connectSessionToUser(input: LoginInput, session: Session) {
-    const result = await this.db
-      .query()
-      .raw(
-        `
-        MATCH
-          (token:Token {
-            active: true,
-            value: $token
-          }),
-          (:EmailAddress {value: $email})
-          <-[:email {active: true}]-
-          (user:User)
-        OPTIONAL MATCH
-          (token)-[r]-()
-        DELETE r
-        CREATE
-          (user)-[:token {active: true, createdAt: datetime()}]->(token)
-        RETURN
-          user.id as id
-      `,
-        {
-          token: session.token,
-          email: input.email,
-        }
-      )
-      .asResult<{ id: ID }>()
-      .first();
+    const pgResult = await this.pg.query(
+      'UPDATE admin.tokens set person=(SELECT id FROM admin.users WHERE email=$1) WHERE token=$2 RETURNING person as id',
+      [input.email, session.token]
+    );
+
+    const res = pgResult[0] as UserPash;
+    const result: UserPash = { id: res.id };
+    // result.id = res.id
+    // console.log(session.token)
+    // console.log(result)
+    // const result = await this.db
+    //   .query()
+    //   .raw(
+    //     `
+    //     MATCH
+    //       (token:Token {
+    //         active: true,
+    //         value: $token
+    //       }),
+    //       (:EmailAddress {value: $email})
+    //       <-[:email {active: true}]-
+    //       (user:User)
+    //     OPTIONAL MATCH
+    //       (token)-[r]-()
+    //     DELETE r
+    //     CREATE
+    //       (user)-[:token {active: true, createdAt: datetime()}]->(token)
+    //     RETURN
+    //       user.id as id
+    //   `,
+    //     {
+    //       token: session.token,
+    //       email: input.email,
+    //     }
+    //   )
+    //   .asResult<{ id: ID }>()
+    //   .first();
+
     return result?.id;
   }
 
@@ -165,17 +211,33 @@ export class AuthenticationRepository {
   }
 
   async findSessionToken(token: string) {
-    const result = await this.db
-      .query()
-      .raw('MATCH (token:Token { active: true, value: $token })', { token })
-      .optionalMatch([
-        node('token'),
-        relation('in', '', 'token', ACTIVE),
-        node('user', 'User'),
-      ])
-      .return('token, user.id AS userId')
-      .asResult<{ token: string; userId?: ID }>()
-      .first();
+    let result: UserToken = {};
+    try {
+      // console.log(token)
+      const pgResult = await this.pg.query(
+        'SELECT person as userId, token FROM admin.tokens WHERE token=$1',
+        [token]
+      );
+      const tokenData = pgResult[0] as { userid: ID; token: string };
+      result = { token: tokenData.token, userId: tokenData.userid };
+      // console.log(result)
+    } catch (e: unknown) {
+      // somthing
+    }
+
+    // console.log("findSessionToken")
+    // const result = await this.db
+    //   .query()
+    //   .raw('MATCH (token:Token { active: true, value: $token })', { token })
+    //   .optionalMatch([
+    //     node('token'),
+    //     relation('in', '', 'token', ACTIVE),
+    //     node('user', 'User'),
+    //   ])
+    //   .return('token, user.id AS userId')
+    //   .asResult<{ token: string; userId?: ID }>()
+    //   .first();
+    // console.log(result )
 
     return result;
   }
