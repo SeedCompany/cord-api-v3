@@ -25,6 +25,7 @@ describe('Location e2e', () => {
     await registerUserWithPower(app, [
       Powers.CreateLocation,
       Powers.CreateFundingAccount,
+      Powers.CreateFieldZone,
     ]);
   });
 

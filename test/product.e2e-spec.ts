@@ -47,7 +47,11 @@ describe('Product e2e', () => {
     await createSession(app);
     await registerUserWithPower(
       app,
-      [Powers.CreateLanguage, Powers.CreateEthnologueLanguage],
+      [
+        Powers.CreateLanguage,
+        Powers.CreateEthnologueLanguage,
+        Powers.CreateFieldZone,
+      ],
       {
         roles: [Role.ProjectManager, Role.FieldOperationsDirector],
       }

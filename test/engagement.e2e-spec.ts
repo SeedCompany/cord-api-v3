@@ -74,7 +74,12 @@ describe('Engagement e2e', () => {
 
     user = await registerUserWithPower(
       app,
-      [Powers.CreateLanguage, Powers.CreateEthnologueLanguage],
+      [
+        Powers.CreateLanguage,
+        Powers.CreateEthnologueLanguage,
+        Powers.CreateLocation,
+        Powers.CreateFundingAccount,
+      ],
       {
         roles: [
           Role.ProjectManager,

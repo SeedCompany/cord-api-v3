@@ -38,6 +38,7 @@ describe('Project-Workflow e2e', () => {
         Powers.CreateLanguage,
         Powers.CreateEthnologueLanguage,
         Powers.CreateOrganization,
+        Powers.CreateFieldZone,
       ],
       {
         roles: [Role.ProjectManager],

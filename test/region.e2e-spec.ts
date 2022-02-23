@@ -1,6 +1,7 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { isValidId } from '../src/common';
+import { Powers } from '../src/components/authorization/dto/powers';
 import { FieldRegion } from '../src/components/field-region';
 import { FieldZone } from '../src/components/field-zone';
 import { User } from '../src/components/user';
@@ -8,7 +9,7 @@ import {
   createSession,
   createTestApp,
   fragments,
-  registerUser,
+  registerUserWithPower,
   TestApp,
 } from './utility';
 import { createRegion } from './utility/create-region';
@@ -23,7 +24,7 @@ describe('Region e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    director = await registerUser(app);
+    director = await registerUserWithPower(app, [Powers.CreateFieldZone]);
     fieldZone = await createZone(app, { directorId: director.id });
   });
 

@@ -23,13 +23,17 @@ describe('ProjectMember e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    await registerUserWithPower(app, [Powers.GrantRole], {
-      roles: [
-        Role.ProjectManager,
-        Role.Consultant,
-        Role.FieldOperationsDirector,
-      ],
-    });
+    await registerUserWithPower(
+      app,
+      [Powers.GrantRole, Powers.CreateFieldZone],
+      {
+        roles: [
+          Role.ProjectManager,
+          Role.Consultant,
+          Role.FieldOperationsDirector,
+        ],
+      }
+    );
     project = await createProject(app);
   });
   afterAll(async () => {

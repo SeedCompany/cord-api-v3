@@ -85,7 +85,11 @@ describe('Project Changeset Aware e2e', () => {
 
     await registerUserWithPower(
       app,
-      [Powers.CreateOrganization, Powers.DeleteProject],
+      [
+        Powers.CreateOrganization,
+        Powers.DeleteProject,
+        Powers.CreateFundingAccount,
+      ],
       {
         roles: [Role.ProjectManager],
       }

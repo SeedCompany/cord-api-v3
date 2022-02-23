@@ -29,6 +29,7 @@ describe('Language e2e', () => {
       Powers.CreateEthnologueLanguage,
       Powers.CreateProject,
       Powers.CreateLanguageEngagement,
+      Powers.CreateFieldZone,
     ]);
   });
   afterAll(async () => {

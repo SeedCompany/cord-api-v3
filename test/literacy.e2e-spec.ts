@@ -20,7 +20,10 @@ describe('LiteracyMaterial e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    await registerUserWithPower(app, [Powers.CreateLiteracyMaterial]);
+    await registerUserWithPower(app, [
+      Powers.CreateLiteracyMaterial,
+      Powers.CreateEthnoArt,
+    ]);
   });
 
   afterAll(async () => {

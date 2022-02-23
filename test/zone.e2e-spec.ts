@@ -2,13 +2,14 @@ import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { times } from 'lodash';
 import { isValidId } from '../src/common';
+import { Powers } from '../src/components/authorization/dto/powers';
 import { FieldZone } from '../src/components/field-zone';
 import { User } from '../src/components/user';
 import {
   createPerson,
   createSession,
   createTestApp,
-  registerUser,
+  registerUserWithPower,
   TestApp,
 } from './utility';
 import { createZone } from './utility/create-zone';
@@ -22,7 +23,7 @@ describe('Field Zone e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    director = await registerUser(app);
+    director = await registerUserWithPower(app, [Powers.CreateFieldZone]);
     newDirector = await createPerson(app);
   });
 

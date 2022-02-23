@@ -2,14 +2,15 @@ import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { times } from 'lodash';
 import { isValidId } from '../src/common';
-import { ScriptureRange } from '../src/components/scripture';
+import { Powers } from '../src/components/authorization/dto/powers';
+import { ScriptureRange } from '../src/components/scripture/dto';
 import { Song } from '../src/components/song/dto';
 import {
   createSession,
   createSong,
   createTestApp,
   fragments,
-  registerUser,
+  registerUserWithPower,
   TestApp,
 } from './utility';
 
@@ -19,7 +20,7 @@ describe('Song e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    await registerUser(app);
+    await registerUserWithPower(app, [Powers.CreateEthnoArt]);
   });
 
   afterAll(async () => {
