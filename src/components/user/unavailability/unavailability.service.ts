@@ -9,6 +9,7 @@ import {
 } from '../../../common';
 import { HandleIdLookup, ILogger, Logger } from '../../../core';
 import { mapListResults } from '../../../core/database/results';
+import { Powers } from '../../authorization';
 import { AuthorizationService } from '../../authorization/authorization.service';
 import {
   CreateUnavailability,
@@ -33,6 +34,11 @@ export class UnavailabilityService {
     session: Session
   ): Promise<Unavailability> {
     try {
+      await this.authorizationService.checkPower(
+        Powers.CreateUnavailability,
+        session
+      );
+
       // create and connect the Unavailability to the User.
       const id = await this.repo.create(input, session);
 
@@ -40,12 +46,6 @@ export class UnavailabilityService {
         id,
         userId: input.userId,
       });
-
-      await this.authorizationService.processNewBaseNode(
-        Unavailability,
-        id,
-        input.userId
-      );
 
       return await this.readOne(id, session);
     } catch {

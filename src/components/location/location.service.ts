@@ -14,6 +14,7 @@ import {
 import { HandleIdLookup, ILogger, Logger } from '../../core';
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
+import { Powers } from '../authorization/dto/powers';
 import {
   CreateLocation,
   Location,
@@ -34,6 +35,7 @@ export class LocationService {
   ) {}
 
   async create(input: CreateLocation, session: Session): Promise<Location> {
+    await this.authorizationService.checkPower(Powers.CreateLocation, session);
     const checkName = await this.repo.doesNameExist(input.name);
     if (checkName) {
       throw new DuplicateException(
@@ -43,12 +45,6 @@ export class LocationService {
     }
 
     const id = await this.repo.create(input, session);
-
-    await this.authorizationService.processNewBaseNode(
-      Location,
-      id,
-      session.userId
-    );
 
     this.logger.debug(`location created`, { id: id });
     return await this.readOne(id, session);

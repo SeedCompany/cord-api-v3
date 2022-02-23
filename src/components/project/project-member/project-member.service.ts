@@ -27,7 +27,7 @@ import {
 } from '../../../core';
 import { ACTIVE } from '../../../core/database/query';
 import { mapListResults } from '../../../core/database/results';
-import { Role } from '../../authorization';
+import { Powers, Role } from '../../authorization';
 import { AuthorizationService } from '../../authorization/authorization.service';
 import { User, UserService } from '../../user';
 import {
@@ -88,6 +88,7 @@ export class ProjectMemberService {
     { userId, projectId, ...input }: CreateProjectMember,
     session: Session
   ): Promise<ProjectMember> {
+    await this.authorizationService.checkPower(Powers.CreateProject, session);
     const id = await generateId();
     const createdAt = DateTime.local();
 
@@ -107,15 +108,6 @@ export class ProjectMemberService {
       if (!memberQuery) {
         throw new ServerException('Failed to create project member');
       }
-
-      // creating user must be an admin, use role change event
-      await this.authorizationService.processNewBaseNode(
-        ProjectMember,
-        memberQuery.id,
-        session.userId
-      );
-
-      // await this.addProjectAdminsToUserSg(projectId, userId);
 
       return await this.readOne(id, session);
     } catch (exception) {

@@ -123,9 +123,6 @@ export class UserService {
     }
 
     const id = await this.userRepo.create(input);
-    input.roles &&
-      (await this.authorizationService.roleAddedToUser(id, input.roles));
-    await this.authorizationService.processNewBaseNode(User, id, id);
     return id;
   }
 
@@ -226,8 +223,6 @@ export class UserService {
       const removals = difference(user.roles.value, roles);
       const additions = difference(roles, user.roles.value);
       await this.userRepo.updateRoles(input, removals, additions);
-
-      await this.authorizationService.roleAddedToUser(input.id, roles);
     }
 
     return await this.readOne(input.id, session);

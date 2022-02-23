@@ -13,6 +13,7 @@ import {
 import { HandleIdLookup, ILogger, Logger } from '../../core';
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
+import { Powers } from '../authorization/dto/powers';
 import {
   CreateFieldRegion,
   FieldRegion,
@@ -35,6 +36,10 @@ export class FieldRegionService {
     input: CreateFieldRegion,
     session: Session
   ): Promise<FieldRegion> {
+    await this.authorizationService.checkPower(
+      Powers.CreateFieldRegion,
+      session
+    );
     if (!(await this.repo.isUnique(input.name))) {
       throw new DuplicateException(
         'fieldRegion.name',
@@ -47,12 +52,6 @@ export class FieldRegionService {
     if (!result) {
       throw new ServerException('failed to create field region');
     }
-
-    await this.authorizationService.processNewBaseNode(
-      FieldRegion,
-      result.id,
-      session.userId
-    );
 
     this.logger.debug(`field region created`, { id: result.id });
     return await this.readOne(result.id, session);

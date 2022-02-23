@@ -51,6 +51,7 @@ export class ProjectChangeRequestService {
     input: CreateProjectChangeRequest,
     session: Session
   ): Promise<ProjectChangeRequest> {
+    // TODO: add a checkPower call to check if session user can create a project change request
     const project = await this.projects.readOne(input.projectId, session);
     if (project.status !== ProjectStatus.Active) {
       throw new InputException(

@@ -151,12 +151,6 @@ export class ProjectService {
         session
       );
 
-      await this.authorizationService.processNewBaseNode(
-        IProject,
-        id,
-        session.userId
-      );
-
       const project = await this.readOneUnsecured(id, session);
 
       const event = new ProjectCreatedEvent(project, session);

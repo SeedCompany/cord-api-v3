@@ -13,6 +13,7 @@ import { HandleIdLookup, ILogger, Logger } from '../../core';
 import { ifDiff } from '../../core/database/changes';
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
+import { Powers } from '../authorization/dto/powers';
 import { LiteracyMaterial } from '../literacy-material/dto';
 import { isScriptureEqual, ScriptureReferenceService } from '../scripture';
 import { Song } from '../song/dto';
@@ -34,6 +35,7 @@ export class EthnoArtService {
   ) {}
 
   async create(input: CreateEthnoArt, session: Session): Promise<EthnoArt> {
+    await this.authorizationService.checkPower(Powers.CreateEthnoArt, session);
     if (!(await this.repo.isUnique(input.name))) {
       throw new DuplicateException(
         'ethnoArt.name',

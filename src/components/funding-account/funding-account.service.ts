@@ -13,6 +13,7 @@ import {
 import { HandleIdLookup, ILogger, Logger } from '../../core';
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
+import { Powers } from '../authorization/dto/powers';
 import {
   CreateFundingAccount,
   FundingAccount,
@@ -34,6 +35,10 @@ export class FundingAccountService {
     input: CreateFundingAccount,
     session: Session
   ): Promise<FundingAccount> {
+    await this.authorizationService.checkPower(
+      Powers.CreateFundingAccount,
+      session
+    );
     if (!(await this.repo.isUnique(input.name))) {
       throw new DuplicateException(
         'fundingAccount.name',
@@ -47,12 +52,6 @@ export class FundingAccountService {
       if (!result) {
         throw new ServerException('Failed to create funding account');
       }
-
-      await this.authorizationService.processNewBaseNode(
-        FundingAccount,
-        result.id,
-        session.userId
-      );
 
       this.logger.info(`funding account created`, { id: result.id });
 

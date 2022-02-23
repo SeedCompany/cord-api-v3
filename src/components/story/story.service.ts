@@ -12,6 +12,7 @@ import {
 import { HandleIdLookup, ILogger, Logger } from '../../core';
 import { ifDiff } from '../../core/database/changes';
 import { mapListResults } from '../../core/database/results';
+import { Powers } from '../authorization';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { isScriptureEqual, ScriptureReferenceService } from '../scripture';
 import {
@@ -33,6 +34,7 @@ export class StoryService {
   ) {}
 
   async create(input: CreateStory, session: Session): Promise<Story> {
+    await this.authorizationService.checkPower(Powers.CreateStory, session);
     if (!(await this.repo.isUnique(input.name))) {
       throw new DuplicateException(
         'story.name',
@@ -46,12 +48,6 @@ export class StoryService {
       if (!result) {
         throw new ServerException('failed to create a story');
       }
-
-      await this.authorizationService.processNewBaseNode(
-        Story,
-        result.id,
-        session.userId
-      );
 
       await this.scriptureRefs.create(
         result.id,

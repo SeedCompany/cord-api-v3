@@ -14,6 +14,7 @@ import {
 import { HandleIdLookup, IEventBus, ILogger, Logger } from '../../core';
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
+import { Powers } from '../authorization/dto/powers';
 import { FileService } from '../file';
 import { Partner, PartnerService, PartnerType } from '../partner';
 import { ProjectService } from '../project';
@@ -52,6 +53,10 @@ export class PartnershipService {
     session: Session,
     changeset?: ID
   ): Promise<Partnership> {
+    await this.authorizationService.checkPower(
+      Powers.CreatePartnership,
+      session
+    );
     const { projectId, partnerId } = input;
 
     await this.verifyRelationshipEligibility(projectId, partnerId, changeset);
@@ -97,12 +102,6 @@ export class PartnershipService {
         'agreement',
         input.agreement,
         'partnership.agreement'
-      );
-
-      await this.authorizationService.processNewBaseNode(
-        Partnership,
-        id,
-        session.userId
       );
 
       if (primary) {

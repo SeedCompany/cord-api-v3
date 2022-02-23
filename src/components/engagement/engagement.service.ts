@@ -22,6 +22,7 @@ import {
 } from '../../core';
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
+import { Powers } from '../authorization/dto/powers';
 import { CeremonyService } from '../ceremony';
 import { FileService } from '../file';
 import { Location } from '../location/dto';
@@ -81,6 +82,10 @@ export class EngagementService {
     session: Session,
     changeset?: ID
   ): Promise<LanguageEngagement> {
+    await this.authorizationService.checkPower(
+      Powers.CreateLanguageEngagement,
+      session
+    );
     const { languageId, projectId } = input;
     await this.verifyRelationshipEligibility(
       projectId,
@@ -116,12 +121,6 @@ export class EngagementService {
       'engagement.pnp'
     );
 
-    await this.authorizationService.processNewBaseNode(
-      LanguageEngagement,
-      id,
-      session.userId
-    );
-
     const engagement = await this.repo.readOne(
       id,
       session,
@@ -139,6 +138,10 @@ export class EngagementService {
     session: Session,
     changeset?: ID
   ): Promise<InternshipEngagement> {
+    await this.authorizationService.checkPower(
+      Powers.CreateInternshipEngagement,
+      session
+    );
     const { projectId, internId, mentorId, countryOfOriginId } = input;
     await this.verifyRelationshipEligibility(
       projectId,
@@ -193,12 +196,6 @@ export class EngagementService {
       'growthPlan',
       input.growthPlan,
       'engagement.growthPlan'
-    );
-
-    await this.authorizationService.processNewBaseNode(
-      InternshipEngagement,
-      id,
-      session.userId
     );
 
     const engagement = await this.repo.readOne(
