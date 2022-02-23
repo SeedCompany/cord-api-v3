@@ -48,30 +48,14 @@ export class AuthorizationRepository {
       .run();
   }
 
-  async hasPower(power: Powers, session: Session, id: ID) {
+  async hasPower(powers: Powers[], session: Session) {
     const query = this.db
       .query()
-      .match(
-        // if anonymous we check the public sg for public powers
-        session.anonymous
-          ? [
-              node('user', 'User', { id }),
-              relation('in', '', 'member'),
-              node('sg', 'SecurityGroup'),
-            ]
-          : [
-              node('sg', 'PublicSecurityGroup', {
-                id: this.config.publicSecurityGroup.id,
-              }),
-            ]
-      )
-      .raw('where $power IN sg.powers', { power })
-      .raw('return $power IN sg.powers as hasPower')
-      .union()
-      .match([node('user', 'User', { id })])
-      .raw('where $power IN user.powers')
-      .raw('return $power IN user.powers as hasPower')
-      .asResult<{ hasPower: boolean }>();
+      .match([node('user', 'User', { id: session.userId })])
+      .raw(`WHERE any(userPower in user.powers WHERE userPower IN $powers)`, {
+        powers: powers,
+      })
+      .return<{ hasPower: boolean }>('count(user) > 0 AS hasPower');
 
     const result = await query.first();
     return result?.hasPower ?? false;
@@ -80,12 +64,18 @@ export class AuthorizationRepository {
   async updateUserPowers(userId: ID | string, newPowers: Powers[]) {
     await this.db
       .query()
-      .optionalMatch([node('userOrSg', 'User', { id: userId })])
-      .setValues({ 'userOrSg.powers': newPowers })
-      .with('*')
-      .optionalMatch([node('userOrSg', 'SecurityGroup', { id: userId })])
-      .setValues({ 'userOrSg.powers': newPowers })
+      .optionalMatch([node('user', 'User', { id: userId })])
+      .setValues({ 'user.powers': newPowers })
       .run();
+  }
+
+  async getUserPowers(id: ID | string) {
+    const result = await this.db
+      .query()
+      .matchNode('user', 'User', { id })
+      .return<{ powers: Powers[] }>('user.powers as powers')
+      .first();
+    return result?.powers ?? [];
   }
 
   async getUserGlobalRoles(id: ID) {
@@ -100,18 +90,5 @@ export class AuthorizationRepository {
       .asResult<{ roles: Role[] }>()
       .first();
     return result?.roles ?? [];
-  }
-
-  async readPowerByUserId(id: ID | string) {
-    const result = await this.db
-      .query()
-      .match([node('user', 'User', { id })])
-      .raw('return user.powers as powers')
-      .unionAll()
-      .match([node('sg', 'SecurityGroup', { id })])
-      .raw('return sg.powers as powers')
-      .asResult<{ powers?: Powers[] }>()
-      .first();
-    return result?.powers ?? [];
   }
 }

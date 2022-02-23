@@ -84,6 +84,12 @@ export class AuthorizationService {
     @Logger('authorization:service') private readonly logger: ILogger
   ) {}
 
+  /**
+   * @deprecated We no longer use the procedure code for creates, reads, or listing
+   * @param resource The resource to process
+   * @param baseNodeId The node id
+   * @param creatorUserId The creator's user ID
+   */
   async processNewBaseNode(
     resource: ResourceShape<any>,
     baseNodeId: ID,
@@ -384,18 +390,11 @@ export class AuthorizationService {
   }
 
   private async doRoleAddedToUser(id: ID | string, roles: Role[]) {
-    // todo: this only applies to global roles, the only kind we have until next week
-    // iterate through all roles and assign to all SGs with that role
-
-    for (const role of roles.flatMap((role) => this.mapRoleToDbRoles(role))) {
-      await this.repo.addUserToSecurityGroup(id, role);
-    }
-
     const powers = getDbRoles(roles.map(rolesForScope('global'))).flatMap(
       (dbRole) => dbRole.powers
     );
     for (const power of powers) {
-      await this.grantPower(power, id);
+      await this.grantPower(power, id as ID);
     }
   }
 
@@ -405,18 +404,31 @@ export class AuthorizationService {
    */
   async hasPower(session: Session, ...powers: Powers[]) {
     const granted = getDbRoles(session.roles).flatMap((role) => role.powers);
-    return difference(powers, granted).length === 0;
+
+    return (
+      difference(powers, granted).length === 0 ||
+      (await this.repo.hasPower(powers, session))
+    );
+  }
+
+  async readPowerById(id: ID | string) {
+    const userPowers = await this.repo.getUserPowers(id);
+    const userRoles = await this.getUserGlobalRoles(id);
+    const powersFromRoles = getDbRoles(userRoles).flatMap(
+      (role) => role.powers
+    );
+    return union(userPowers, powersFromRoles);
   }
 
   async checkPower(power: Powers, session: Session): Promise<void> {
     const id = session.userId;
 
-    const hasPower = await this.repo.hasPower(power, session, id);
+    const hasPower = await this.hasPower(session, power);
     if (!hasPower) {
       throw new MissingPowerException(
         power,
         `user ${
-          session.anonymous ? id : 'anon'
+          session.anonymous ? 'anon' : id
         } does not have the requested power: ${power}`
       );
     }
@@ -426,15 +438,11 @@ export class AuthorizationService {
     if (session.anonymous) {
       return [];
     }
-    return await this.repo.readPowerByUserId(session.userId);
+    return await this.readPowerById(session.userId);
   }
 
-  async createPower(
-    userId: ID,
-    power: Powers,
-    session: Session
-  ): Promise<void> {
-    const powers = await this.repo.readPowerByUserId(session.userId);
+  async createPower(power: Powers, id: ID, session: Session): Promise<void> {
+    const powers = await this.readPowerById(session.userId);
     if (!powers.includes(Powers.GrantPower)) {
       throw new MissingPowerException(
         Powers.GrantPower,
@@ -442,15 +450,11 @@ export class AuthorizationService {
       );
     }
 
-    await this.grantPower(power, userId);
+    await this.grantPower(power, id);
   }
 
-  async deletePower(
-    userId: ID,
-    power: Powers,
-    session: Session
-  ): Promise<void> {
-    const powers = await this.repo.readPowerByUserId(session.userId);
+  async deletePower(power: Powers, id: ID, session: Session): Promise<void> {
+    const powers = await this.readPowerById(session.userId);
     if (!powers.includes(Powers.GrantPower)) {
       throw new MissingPowerException(
         Powers.GrantPower,
@@ -458,25 +462,25 @@ export class AuthorizationService {
       );
     }
 
-    await this.removePower(power, userId);
+    await this.removePower(power, id);
   }
 
-  async grantPower(power: Powers, userId: ID | string): Promise<void> {
-    const powers = await this.repo.readPowerByUserId(userId);
+  async grantPower(power: Powers, id: ID): Promise<void> {
+    const powers = await this.readPowerById(id);
 
     const newPowers = union(powers, [power]);
-    await this.repo.updateUserPowers(userId, newPowers);
+    await this.repo.updateUserPowers(id, newPowers);
   }
 
-  async removePower(power: Powers, userId: ID): Promise<void> {
-    const powers = await this.repo.readPowerByUserId(userId);
+  async removePower(power: Powers, id: ID): Promise<void> {
+    const powers = await this.readPowerById(id);
 
     const newPowers = without(powers, power);
-    await this.repo.updateUserPowers(userId, newPowers);
+    await this.repo.updateUserPowers(id, newPowers);
   }
 
-  async getUserGlobalRoles(id: ID): Promise<ScopedRole[]> {
-    const roles = await this.repo.getUserGlobalRoles(id);
+  async getUserGlobalRoles(id: ID | string): Promise<ScopedRole[]> {
+    const roles = await this.repo.getUserGlobalRoles(id as ID);
     const scopedRoles = compact(roles.map(rolesForScope('global')));
     return scopedRoles;
   }

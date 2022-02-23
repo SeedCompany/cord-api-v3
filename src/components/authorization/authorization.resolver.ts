@@ -45,7 +45,7 @@ export class AuthorizationResolver {
     @LoggedInSession() session: Session,
     @Args() { userId, power }: ModifyPowerArgs
   ): Promise<ModifyPowerOutput> {
-    await this.authorizationService.createPower(userId, power, session);
+    await this.authorizationService.createPower(power, userId, session);
     return { success: true };
   }
 
@@ -54,7 +54,7 @@ export class AuthorizationResolver {
     @LoggedInSession() session: Session,
     @Args() { userId, power }: ModifyPowerArgs
   ): Promise<DeletePowerOutput> {
-    await this.authorizationService.deletePower(userId, power, session);
+    await this.authorizationService.deletePower(power, userId, session);
     return { success: true };
   }
 }
