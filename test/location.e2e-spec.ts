@@ -26,6 +26,7 @@ describe('Location e2e', () => {
       Powers.CreateLocation,
       Powers.CreateFundingAccount,
       Powers.CreateFieldZone,
+      Powers.CreateFieldRegion,
     ]);
   });
 

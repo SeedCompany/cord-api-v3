@@ -37,7 +37,12 @@ describe('Partnership e2e', () => {
     await createSession(app);
     await registerUserWithPower(
       app,
-      [Powers.CreateOrganization, Powers.CreateProject, Powers.CreateFieldZone],
+      [
+        Powers.CreateOrganization,
+        Powers.CreateProject,
+        Powers.CreateFieldZone,
+        Powers.CreateFieldRegion,
+      ],
       {
         roles: [Role.Controller],
       }

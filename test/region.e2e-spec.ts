@@ -24,7 +24,10 @@ describe('Region e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    director = await registerUserWithPower(app, [Powers.CreateFieldZone]);
+    director = await registerUserWithPower(app, [
+      Powers.CreateFieldZone,
+      Powers.CreateFieldRegion,
+    ]);
     fieldZone = await createZone(app, { directorId: director.id });
   });
 

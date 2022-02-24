@@ -30,6 +30,7 @@ describe('Language e2e', () => {
       Powers.CreateProject,
       Powers.CreateLanguageEngagement,
       Powers.CreateFieldZone,
+      Powers.CreateFieldRegion,
     ]);
   });
   afterAll(async () => {

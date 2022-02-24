@@ -89,6 +89,11 @@ describe('Project Changeset Aware e2e', () => {
         Powers.CreateOrganization,
         Powers.DeleteProject,
         Powers.CreateFundingAccount,
+        Powers.CreateLocation,
+        Powers.CreateFieldRegion,
+        Powers.CreateFieldZone,
+        Powers.CreateProject,
+        Powers.CreatePartner,
       ],
       {
         roles: [Role.ProjectManager],

@@ -25,7 +25,12 @@ describe('ProjectMember e2e', () => {
     await createSession(app);
     await registerUserWithPower(
       app,
-      [Powers.GrantRole, Powers.CreateFieldZone],
+      [
+        Powers.GrantRole,
+        Powers.CreateFieldZone,
+        Powers.CreateFieldRegion,
+        Powers.CreateProject,
+      ],
       {
         roles: [
           Role.ProjectManager,

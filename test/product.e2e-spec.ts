@@ -51,6 +51,7 @@ describe('Product e2e', () => {
         Powers.CreateLanguage,
         Powers.CreateEthnologueLanguage,
         Powers.CreateFieldZone,
+        Powers.CreateFieldRegion,
       ],
       {
         roles: [Role.ProjectManager, Role.FieldOperationsDirector],

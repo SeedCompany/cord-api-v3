@@ -79,6 +79,8 @@ describe('Engagement e2e', () => {
         Powers.CreateEthnologueLanguage,
         Powers.CreateLocation,
         Powers.CreateFundingAccount,
+        Powers.CreateFieldZone,
+        Powers.CreateFieldRegion,
       ],
       {
         roles: [

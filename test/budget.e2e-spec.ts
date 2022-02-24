@@ -36,6 +36,8 @@ describe('Budget e2e', () => {
       Powers.CreatePartnership,
       Powers.CreateBudget,
       Powers.CreateFieldZone,
+      Powers.CreateFieldRegion,
+      Powers.CreatePartner,
     ]);
     project = await createProject(app);
     await createPartnership(app, {

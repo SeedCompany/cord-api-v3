@@ -25,7 +25,7 @@ import {
   stepsFromEarlyConversationToBeforeActive,
 } from './utility/transition-project';
 
-describe('Project-Workflow e2e', () => {
+describe('Engagement-Workflow e2e', () => {
   let app: TestApp;
 
   beforeAll(async () => {
@@ -39,6 +39,9 @@ describe('Project-Workflow e2e', () => {
         Powers.CreateEthnologueLanguage,
         Powers.CreateOrganization,
         Powers.CreateFieldZone,
+        Powers.CreateFieldRegion,
+        Powers.CreateProject,
+        Powers.CreateLocation,
       ],
       {
         roles: [Role.ProjectManager],

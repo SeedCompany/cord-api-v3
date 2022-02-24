@@ -57,6 +57,11 @@ describe('Project-Workflow e2e', () => {
         Powers.CreateEthnologueLanguage,
         Powers.CreateOrganization,
         Powers.CreateFieldZone,
+        Powers.CreateFieldRegion,
+        Powers.CreateFundingAccount,
+        Powers.CreateLocation,
+        Powers.CreatePartner,
+        Powers.CreateProject,
       ],
       {
         roles: [Role.ProjectManager],
@@ -256,12 +261,13 @@ describe('Project-Workflow e2e', () => {
         ProjectStep.PendingFinancialEndorsement
       );
 
-      await financialAnalyst.login();
+      await projectManager.login();
       await createProjectMember(app, {
         userId: financialAnalyst.id,
         projectId: project.id,
         roles: [Role.FinancialAnalyst],
       });
+      await financialAnalyst.login();
       await changeProjectStep(app, project.id, ProjectStep.FinalizingProposal);
 
       await director.login();

@@ -19,6 +19,7 @@ describe('Pin e2e', () => {
     await registerUserWithPower(app, [
       Powers.CreateProject,
       Powers.CreateFieldZone,
+      Powers.CreateFieldRegion,
     ]);
   });
 
