@@ -8,7 +8,14 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import { sumBy } from 'lodash';
-import { AnonSession, ID, IdArg, LoggedInSession, Session } from '../../common';
+import {
+  AnonSession,
+  ID,
+  IdArg,
+  ListArg,
+  LoggedInSession,
+  Session,
+} from '../../common';
 import { Loader, LoaderOf } from '../../core';
 import { BudgetLoader, BudgetService } from '../budget';
 import { IdsAndView, IdsAndViewArg } from '../changeset/dto';
@@ -43,12 +50,7 @@ export class BudgetResolver {
   })
   async budgets(
     @AnonSession() session: Session,
-    @Args({
-      name: 'input',
-      type: () => BudgetListInput,
-      defaultValue: BudgetListInput.defaultVal,
-    })
-    input: BudgetListInput,
+    @ListArg(BudgetListInput) input: BudgetListInput,
     @Loader(BudgetLoader) budgets: LoaderOf<BudgetLoader>
   ): Promise<BudgetListOutput> {
     const list = await this.service.list(input, session);

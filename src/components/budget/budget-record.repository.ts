@@ -23,8 +23,19 @@ import {
 } from '../../core/database/query';
 import { BudgetRecord, BudgetRecordListInput, CreateBudgetRecord } from './dto';
 
+interface BudgetRecordHydrateArgs {
+  recordVar?: string;
+  projectVar?: string;
+  outputVar?: string;
+  session: Session;
+  view?: ObjectView;
+}
+
 @Injectable()
-export class BudgetRecordRepository extends DtoRepository(BudgetRecord) {
+export class BudgetRecordRepository extends DtoRepository<
+  typeof BudgetRecord,
+  [BudgetRecordHydrateArgs]
+>(BudgetRecord) {
   async create(input: CreateBudgetRecord, changeset?: ID) {
     const result = await this.db
       .query()
@@ -75,7 +86,7 @@ export class BudgetRecordRepository extends DtoRepository(BudgetRecord) {
     return !!result;
   }
 
-  async readOne(id: ID, session: Session, view?: ObjectView) {
+  async readOne(id: ID, opts: BudgetRecordHydrateArgs) {
     const query = this.db
       .query()
       .match([
@@ -83,11 +94,11 @@ export class BudgetRecordRepository extends DtoRepository(BudgetRecord) {
         // omitting active checks on these two relations which could be either depending on changeset
         relation('out', '', 'budget'),
         // read deleted record in active or deleted budget
-        node('', labelForView('Budget', view)),
+        node('', labelForView('Budget', opts.view)),
         relation('out', '', 'record'),
-        node('node', labelForView('BudgetRecord', view), { id }),
+        node('node', labelForView('BudgetRecord', opts.view), { id }),
       ])
-      .apply(this.hydrate({ session, view }))
+      .apply(this.hydrate(opts))
       .return<{ dto: UnsecuredDto<BudgetRecord> }>('dto');
     const result = await query.first();
     if (!result) {
@@ -122,13 +133,7 @@ export class BudgetRecordRepository extends DtoRepository(BudgetRecord) {
     outputVar = 'dto',
     session,
     view,
-  }: {
-    recordVar?: string;
-    projectVar?: string;
-    outputVar?: string;
-    session: Session;
-    view?: ObjectView;
-  }) {
+  }: BudgetRecordHydrateArgs) {
     return (query: Query) =>
       query.subQuery((sub) =>
         sub

@@ -5819,6 +5819,7 @@ __metadata:
     fast-safe-stringify: ^2.1.1
     got: ^11.8.2
     graphql: ^15.8.0
+    graphql-parse-resolve-info: ^4.12.0
     highlightjs-cypher: ^1.1.1
     husky: ^4.3.8
     iso-3166-1: ^2.1.1
@@ -6042,7 +6043,7 @@ cypher-query-builder@6.0.4:
 
 "cypher-query-builder@patch:cypher-query-builder@6.0.4#./patches/cypher-query-builder.patch::locator=cord-api-v3%40workspace%3A.":
   version: 6.0.4
-  resolution: "cypher-query-builder@patch:cypher-query-builder@npm%3A6.0.4#./patches/cypher-query-builder.patch::version=6.0.4&hash=71a53a&locator=cord-api-v3%40workspace%3A."
+  resolution: "cypher-query-builder@patch:cypher-query-builder@npm%3A6.0.4#./patches/cypher-query-builder.patch::version=6.0.4&hash=aa989e&locator=cord-api-v3%40workspace%3A."
   dependencies:
     "@types/lodash": ^4.14.136
     "@types/node": ^12.6.1
@@ -6051,7 +6052,7 @@ cypher-query-builder@6.0.4:
     node-cleanup: ^2.1.2
     rxjs: ^6.5.2
     tslib: ^1.10.0
-  checksum: 68933affb1c66b93bdaba369cd7bb697476f97d81e7e607af591268b64717a4686c6a19609858ea17a790c090c15e4dfd631a5383d672ed693e303adbca57b66
+  checksum: cdb9a571160ae533c14e8f418b515fec1ab8600f878304428f38764999fae62f74f490a1e91f60aa51fc67d86ebe0130036f7acbab4949c8e11dbbc29a6a4475
   languageName: node
   linkType: hard
 
@@ -7632,12 +7633,12 @@ cypher-query-builder@6.0.4:
   linkType: hard
 
 "follow-redirects@npm:^1.14.0, follow-redirects@npm:^1.14.4":
-  version: 1.14.7
-  resolution: "follow-redirects@npm:1.14.7"
+  version: 1.14.9
+  resolution: "follow-redirects@npm:1.14.9"
   peerDependenciesMeta:
     debug:
       optional: true
-  checksum: f6d03e5e30877431065bca0d1b2e3db93949eb799d368a5c07ea8a4b71205f0349a3f8f0191bf13a07c93885522834dca1dc8e527dc99a772c6911fba24edc5f
+  checksum: f5982e0eb481818642492d3ca35a86989c98af1128b8e1a62911a3410621bc15d2b079e8170b35b19d3bdee770b73ed431a257ed86195af773771145baa57845
   languageName: node
   linkType: hard
 
@@ -8091,6 +8092,18 @@ cypher-query-builder@6.0.4:
   version: 4.2.9
   resolution: "graceful-fs@npm:4.2.9"
   checksum: 68ea4e07ff2c041ada184f9278b830375f8e0b75154e3f080af6b70f66172fabb4108d19b3863a96b53fc068a310b9b6493d86d1291acc5f3861eb4b79d26ad6
+  languageName: node
+  linkType: hard
+
+"graphql-parse-resolve-info@npm:^4.12.0":
+  version: 4.12.0
+  resolution: "graphql-parse-resolve-info@npm:4.12.0"
+  dependencies:
+    debug: ^4.1.1
+    tslib: ^2.0.1
+  peerDependencies:
+    graphql: ">=0.9 <0.14 || ^14.0.2 || ^15.4.0"
+  checksum: d15554985407b34150a36f8526d3ce63cd97a1fa898eadd74ba5e6d099984d13929de64924332832613d59fba7946222b0a07a127e93ad58bdb82f3548cc497b
   languageName: node
   linkType: hard
 
@@ -14441,7 +14454,7 @@ resolve@^2.0.0-next.3:
   languageName: node
   linkType: hard
 
-"tslib@npm:2.3.1, tslib@npm:^2.0.3, tslib@npm:^2.1.0, tslib@npm:^2.2.0, tslib@npm:^2.3.0, tslib@npm:~2.3.0":
+"tslib@npm:2.3.1, tslib@npm:^2.0.1, tslib@npm:^2.0.3, tslib@npm:^2.1.0, tslib@npm:^2.2.0, tslib@npm:^2.3.0, tslib@npm:~2.3.0":
   version: 2.3.1
   resolution: "tslib@npm:2.3.1"
   checksum: de17a98d4614481f7fcb5cd53ffc1aaf8654313be0291e1bfaee4b4bb31a20494b7d218ff2e15017883e8ea9626599b3b0e0229c18383ba9dce89da2adf15cb9

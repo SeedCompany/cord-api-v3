@@ -5,8 +5,7 @@ import { CalendarDate, entries, fullFiscalYear } from '../../common';
 import { Cell, Column } from '../../common/xlsx.util';
 import { Downloadable } from '../file';
 import { findStepColumns, isGoalRow, PlanningSheet, Pnp } from '../pnp';
-import { ScriptureRange } from '../scripture';
-import { parseScripture } from '../scripture/parser';
+import { parseScripture, ScriptureRange } from '../scripture';
 import { ProductStep as Step } from './dto';
 
 @Injectable()

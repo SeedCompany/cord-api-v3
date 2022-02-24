@@ -8,6 +8,7 @@ import {
 } from '@nestjs/graphql';
 import {
   AnonSession,
+  ListArg,
   LoggedInSession,
   mapSecuredValue,
   SecuredDateRange,
@@ -51,13 +52,7 @@ export class EngagementResolver {
     description: 'Look up engagements',
   })
   async engagements(
-    @Args({
-      name: 'input',
-      type: () => EngagementListInput,
-      nullable: true,
-      defaultValue: EngagementListInput.defaultVal,
-    })
-    input: EngagementListInput,
+    @ListArg(EngagementListInput) input: EngagementListInput,
     @AnonSession() session: Session,
     @Loader(EngagementLoader) engagements: LoaderOf<EngagementLoader>
   ): Promise<EngagementListOutput> {

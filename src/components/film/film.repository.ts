@@ -1,23 +1,26 @@
 import { Injectable } from '@nestjs/common';
-import { inArray, node } from 'cypher-query-builder';
-import { ID, NotFoundException, Session } from '../../common';
-import { DtoRepository, matchRequestingUser } from '../../core';
+import { node, Query } from 'cypher-query-builder';
+import { ID, Session, UnsecuredDto } from '../../common';
+import { DatabaseService, DtoRepository } from '../../core';
 import {
   createNode,
+  matchProps,
+  matchRequestingUser,
+  merge,
   paginate,
   requestingUser,
   sorting,
 } from '../../core/database/query';
+import { ScriptureReferenceRepository } from '../scripture';
 import { CreateFilm, Film, FilmListInput } from './dto';
 
 @Injectable()
 export class FilmRepository extends DtoRepository(Film) {
-  async checkFilm(name: string) {
-    return await this.db
-      .query()
-      .match([node('film', 'FilmName', { value: name })])
-      .return('film')
-      .first();
+  constructor(
+    private readonly scriptureRefs: ScriptureReferenceRepository,
+    db: DatabaseService
+  ) {
+    super(db);
   }
 
   async createFilm(input: CreateFilm, session: Session) {
@@ -33,31 +36,6 @@ export class FilmRepository extends DtoRepository(Film) {
       .first();
   }
 
-  async readOne(id: ID, session: Session) {
-    const query = this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .match([node('node', 'Film', { id })])
-      .apply(this.hydrate());
-
-    const result = await query.first();
-    if (!result) {
-      throw new NotFoundException('Could not find film', 'film.id');
-    }
-    return result.dto;
-  }
-
-  async readMany(ids: readonly ID[], session: Session) {
-    return await this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .matchNode('node', 'Film')
-      .where({ 'node.id': inArray(ids.slice()) })
-      .apply(this.hydrate())
-      .map('dto')
-      .run();
-  }
-
   async list({ filter, ...input }: FilmListInput, session: Session) {
     const result = await this.db
       .query()
@@ -67,5 +45,17 @@ export class FilmRepository extends DtoRepository(Film) {
       .apply(paginate(input, this.hydrate()))
       .first();
     return result!; // result from paginate() will always have 1 row.
+  }
+
+  protected hydrate() {
+    return (query: Query) =>
+      query
+        .apply(matchProps())
+        .subQuery('node', this.scriptureRefs.list())
+        .return<{ dto: UnsecuredDto<Film> }>(
+          merge('props', {
+            scriptureReferences: 'scriptureReferences',
+          }).as('dto')
+        );
   }
 }

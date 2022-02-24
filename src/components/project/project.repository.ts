@@ -83,7 +83,7 @@ export class ProjectRepository extends CommonRepository {
     return await this.db
       .query()
       .matchNode('node', 'Project')
-      .where({ 'node.id': inArray(ids.slice()) })
+      .where({ 'node.id': inArray(ids) })
       .apply(this.hydrate(session.userId, changeset))
       .map('dto')
       .run();
@@ -121,12 +121,10 @@ export class ProjectRepository extends CommonRepository {
           relation('out', '', 'owningOrganization', ACTIVE),
           node('organization', 'Organization'),
         ])
-        .raw('', { requestingUserId: userId })
         .return<{ dto: UnsecuredDto<Project> }>(
           merge('props', 'changedProps', {
             type: 'node.type',
-            pinned:
-              'exists((:User { id: $requestingUserId })-[:pinned]->(node))',
+            pinned: 'exists((:User { id: $requestingUser })-[:pinned]->(node))',
             rootDirectory: 'rootDirectory.id',
             primaryLocation: 'primaryLocation.id',
             marketingLocation: 'marketingLocation.id',
@@ -317,14 +315,6 @@ export class ProjectRepository extends CommonRepository {
         memberRoles: Role[][];
       }>();
     return await query.first();
-  }
-
-  async validateOtherResourceId(id: string, label: string) {
-    return await this.db
-      .query()
-      .match([node('node', label, { id })])
-      .return('node')
-      .first();
   }
 
   async getChangesetProps(changeset: ID) {

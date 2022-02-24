@@ -31,7 +31,7 @@ import { ProductModule } from './components/product/product.module';
 import { ProgressSummaryModule } from './components/progress-summary/progress-summary.module';
 import { ProjectChangeRequestModule } from './components/project-change-request/project-change-request.module';
 import { ProjectModule } from './components/project/project.module';
-import { ScriptureModule } from './components/scripture/scripture.module';
+import { ScriptureModule } from './components/scripture';
 import { SearchModule } from './components/search/search.module';
 import { SongModule } from './components/song/song.module';
 import { StoryModule } from './components/story/story.module';

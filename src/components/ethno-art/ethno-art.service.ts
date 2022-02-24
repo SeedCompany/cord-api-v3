@@ -10,10 +10,11 @@ import {
   UnsecuredDto,
 } from '../../common';
 import { HandleIdLookup, ILogger, Logger } from '../../core';
+import { ifDiff } from '../../core/database/changes';
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { LiteracyMaterial } from '../literacy-material/dto';
-import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
+import { isScriptureEqual, ScriptureReferenceService } from '../scripture';
 import { Song } from '../song/dto';
 import {
   CreateEthnoArt,
@@ -27,15 +28,13 @@ import { EthnoArtRepository } from './ethno-art.repository';
 export class EthnoArtService {
   constructor(
     @Logger('ethno-art:service') private readonly logger: ILogger,
-    private readonly scriptureRefService: ScriptureReferenceService,
+    private readonly scriptureRefs: ScriptureReferenceService,
     private readonly authorizationService: AuthorizationService,
     private readonly repo: EthnoArtRepository
   ) {}
 
   async create(input: CreateEthnoArt, session: Session): Promise<EthnoArt> {
-    const checkEthnoArt = await this.repo.checkEthnoArt(input.name);
-
-    if (checkEthnoArt) {
+    if (!(await this.repo.isUnique(input.name))) {
       throw new DuplicateException(
         'ethnoArt.name',
         'Ethno art with this name already exists'
@@ -49,7 +48,7 @@ export class EthnoArtService {
         throw new ServerException('Failed to create ethno art');
       }
 
-      await this.scriptureRefService.create(
+      await this.scriptureRefs.create(
         result.id,
         input.scriptureReferences,
         session
@@ -71,12 +70,12 @@ export class EthnoArtService {
     session: Session,
     _view?: ObjectView
   ): Promise<EthnoArt> {
-    const result = await this.repo.readOne(id, session);
+    const result = await this.repo.readOne(id);
     return await this.secure(result, session);
   }
 
   async readMany(ids: readonly ID[], session: Session) {
-    const ethnoArt = await this.repo.readMany(ids, session);
+    const ethnoArt = await this.repo.readMany(ids);
     return await Promise.all(ethnoArt.map((dto) => this.secure(dto, session)));
   }
 
@@ -86,22 +85,18 @@ export class EthnoArtService {
   ): Promise<EthnoArt> {
     const securedProps = await this.authorizationService.secureProperties(
       EthnoArt,
-      dto,
-      session
-    );
-
-    const scriptureReferences = await this.scriptureRefService.list(
-      dto.id,
+      {
+        ...dto,
+        scriptureReferences: this.scriptureRefs.parseList(
+          dto.scriptureReferences
+        ),
+      },
       session
     );
 
     return {
       ...dto,
       ...securedProps,
-      scriptureReferences: {
-        ...securedProps.scriptureReferences,
-        value: scriptureReferences,
-      },
       canDelete: await this.repo.checkDeletePermission(dto.id, session),
     };
   }
@@ -109,7 +104,14 @@ export class EthnoArtService {
   async update(input: UpdateEthnoArt, session: Session): Promise<EthnoArt> {
     const ethnoArt = await this.readOne(input.id, session);
 
-    const changes = this.repo.getActualChanges(ethnoArt, input);
+    const changes = {
+      ...this.repo.getActualChanges(ethnoArt, input),
+      scriptureReferences: ifDiff(isScriptureEqual)(
+        input.scriptureReferences,
+        ethnoArt.scriptureReferences.value
+      ),
+    };
+
     await this.authorizationService.verifyCanEditChanges(
       EthnoArt,
       ethnoArt,
@@ -118,7 +120,7 @@ export class EthnoArtService {
 
     const { scriptureReferences, ...simpleChanges } = changes;
 
-    await this.scriptureRefService.update(input.id, scriptureReferences);
+    await this.scriptureRefs.update(input.id, scriptureReferences);
 
     await this.repo.updateProperties(ethnoArt, simpleChanges);
 

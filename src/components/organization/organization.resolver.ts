@@ -13,6 +13,7 @@ import {
   ID,
   IdArg,
   IdField,
+  ListArg,
   LoggedInSession,
   Session,
 } from '../../common';
@@ -80,12 +81,7 @@ export class OrganizationResolver {
   })
   async organizations(
     @AnonSession() session: Session,
-    @Args({
-      name: 'input',
-      type: () => OrganizationListInput,
-      defaultValue: OrganizationListInput.defaultVal,
-    })
-    input: OrganizationListInput,
+    @ListArg(OrganizationListInput) input: OrganizationListInput,
     @Loader(OrganizationLoader) organizations: LoaderOf<OrganizationLoader>
   ): Promise<OrganizationListOutput> {
     const list = await this.orgs.list(input, session);
@@ -97,12 +93,7 @@ export class OrganizationResolver {
   async locations(
     @AnonSession() session: Session,
     @Parent() organization: Organization,
-    @Args({
-      name: 'input',
-      type: () => LocationListInput,
-      defaultValue: LocationListInput.defaultVal,
-    })
-    input: LocationListInput,
+    @ListArg(LocationListInput) input: LocationListInput,
     @Loader(LocationLoader) locations: LoaderOf<LocationLoader>
   ): Promise<SecuredLocationList> {
     const list = await this.orgs.listLocations(organization, input, session);

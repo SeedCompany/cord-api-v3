@@ -4,6 +4,7 @@ import {
   AnonSession,
   ID,
   IdArg,
+  ListArg,
   LoggedInSession,
   Session,
 } from '../../../common';
@@ -50,12 +51,7 @@ export class EducationResolver {
   })
   async educations(
     @AnonSession() session: Session,
-    @Args({
-      name: 'input',
-      type: () => EducationListInput,
-      defaultValue: EducationListInput.defaultVal,
-    })
-    input: EducationListInput,
+    @ListArg(EducationListInput) input: EducationListInput,
     @Loader(EducationLoader) educations: LoaderOf<EducationLoader>
   ): Promise<EducationListOutput> {
     const list = await this.service.list(input, session);

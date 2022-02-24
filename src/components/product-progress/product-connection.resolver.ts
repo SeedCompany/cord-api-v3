@@ -1,7 +1,9 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { AnonSession, ID, IdArg, Session } from '../../common';
+import { Loader, LoaderOf } from '../../core';
 import { Product } from '../product';
 import { ProductProgress } from './dto';
+import { ProductProgressByProductLoader } from './product-progress-by-product.loader';
 import { ProductProgressService } from './product-progress.service';
 
 @Resolver(Product)
@@ -13,9 +15,10 @@ export class ProductConnectionResolver {
   })
   async progressReports(
     @Parent() product: Product,
-    @AnonSession() session: Session
+    @Loader(ProductProgressByProductLoader)
+    loader: LoaderOf<ProductProgressByProductLoader>
   ): Promise<readonly ProductProgress[]> {
-    return await this.service.readAllByProduct(product, session);
+    return (await loader.load(product)).progress;
   }
 
   @ResolveField(() => ProductProgress, {

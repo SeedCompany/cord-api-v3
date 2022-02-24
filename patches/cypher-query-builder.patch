@@ -1,3 +1,23 @@
+diff --git a/dist/cjs5.js b/dist/cjs5.js
+index 2956424bcab153c6d7a6f24f80ae7aac6a82d62a..108858d5ac65801739a3f022b07113ebb0ef68d9 100644
+--- a/dist/cjs5.js
++++ b/dist/cjs5.js
+@@ -1006,10 +1006,13 @@ var comparisions = {
+ };
+ 
+ function compare(operator, value, variable, paramName) {
++  var applied = new Map();
+   return function (params, name) {
+     var baseParamName = paramName || _last(name.split('.'));
+-
+-    var parts = [name, operator, variable ? value : params.addParam(value, baseParamName)];
++    if (!variable && !applied.has(params)) {
++      applied.set(params, params.addParam(value, baseParamName));
++    }
++    var parts = [name, operator, variable ? value : applied.get(params)];
+     return parts.join(' ');
+   };
+ }
 diff --git a/dist/typings/builder.d.ts b/dist/typings/builder.d.ts
 index 1c17b5c3f0127cd5aaf03185120e7f72321e2805..b91875030036d20f47d4dda0d9e3eeb22bb9949d 100644
 --- a/dist/typings/builder.d.ts
@@ -24,6 +44,20 @@ index 1c17b5c3f0127cd5aaf03185120e7f72321e2805..b91875030036d20f47d4dda0d9e3eeb2
      /**
       * Adds a [skip]{@link https://neo4j.com/docs/developer-manual/current/cypher/clauses/skip}
       * clause to the query.
+diff --git a/dist/typings/clauses/where-comparators.d.ts b/dist/typings/clauses/where-comparators.d.ts
+index 386c07740c1a24bf3194e5fc59c390b3da500266..1a3027df7872fecbe7df4bd0f6d5c11bac637df6 100644
+--- a/dist/typings/clauses/where-comparators.d.ts
++++ b/dist/typings/clauses/where-comparators.d.ts
+@@ -178,7 +178,8 @@ export declare function contains(value: string, variable?: boolean): Comparator;
+  * @param {boolean} variable
+  * @returns {Comparator}
+  */
+-export declare function inArray(value: any[], variable?: boolean): Comparator;
++export declare function inArray(value: readonly any[]): Comparator;
++export declare function inArray(value: string, variable: true): Comparator;
+ /**
+  * Regexp comparator for use in where clauses. Also accepts a case insensitive
+  * to make it easier to add the `'(?i)'` flag to the start of your regexp.
 diff --git a/dist/typings/connection.d.ts b/dist/typings/connection.d.ts
 index ad53c58fc2a173403b0ad584ea95c1c26a579538..cc36d50cc8f577e2debe6043fa998e1e817f31ce 100644
 --- a/dist/typings/connection.d.ts

@@ -16,7 +16,7 @@ import {
 } from '../../../common';
 import { BaseMigration, Migration } from '../../../core';
 import { ACTIVE } from '../../../core/database/query';
-import { mapRange, ScriptureRange } from '../../scripture';
+import { DbScriptureReferences, mapRange } from '../../scripture';
 import { Book, Verse } from '../../scripture/books';
 import { labelOfScriptureRanges } from '../../scripture/labels';
 import {
@@ -132,7 +132,7 @@ export class SplitScriptureSpanningBooksMigration extends BaseMigration {
 
   private async splitProduct(product: UnsecuredDto<DirectScriptureProduct>) {
     this.logger.debug('Found product', {
-      refs: labelOfScriptureRanges(product.scriptureReferences),
+      // refs: labelOfScriptureRanges(product.scriptureReferences),
       product,
     });
     return ix(this.splitRefsByBook(product.scriptureReferences))
@@ -160,8 +160,10 @@ export class SplitScriptureSpanningBooksMigration extends BaseMigration {
       });
   }
 
-  private *splitRefsByBook(refs: readonly ScriptureRange[]) {
-    const verses = refs.map((range) => mapRange(range, Verse.fromRef));
+  private *splitRefsByBook(refs: DbScriptureReferences) {
+    const verses = refs.map((range) =>
+      mapRange(range.properties, Verse.fromId)
+    );
 
     // eslint-disable-next-line prefer-const
     for (let { start, end } of verses) {

@@ -4,6 +4,8 @@ import { PeriodicReportModule } from '../periodic-report/periodic-report.module'
 import { ProductModule } from '../product/product.module';
 import * as handlers from './handlers';
 import { ProductConnectionResolver } from './product-connection.resolver';
+import { ProductProgressByProductLoader } from './product-progress-by-product.loader';
+import { ProductProgressByReportLoader } from './product-progress-by-report.loader';
 import { ProductProgressRepository } from './product-progress.repository';
 import { ProductProgressResolver } from './product-progress.resolver';
 import { ProductProgressService } from './product-progress.service';
@@ -18,6 +20,8 @@ import { StepProgressResolver } from './step-progress.resolver';
     ProductProgressResolver,
     StepProgressResolver,
     ProductConnectionResolver,
+    ProductProgressByProductLoader,
+    ProductProgressByReportLoader,
     ProductProgressService,
     ProductProgressRepository,
     StepProgressExtractor,

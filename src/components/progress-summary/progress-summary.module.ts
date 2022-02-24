@@ -6,6 +6,7 @@ import * as migrations from './migrations';
 import { ProgressReportConnectionResolver } from './progress-report-connection.resolver';
 import { ProgressSummaryEngagementConnectionResolver } from './progress-summary-engagement-connection.resolver';
 import { ProgressSummaryExtractor } from './progress-summary.extractor';
+import { ProgressSummaryLoader } from './progress-summary.loader';
 import { ProgressSummaryRepository } from './progress-summary.repository';
 import { ProgressSummaryResolver } from './progress-summary.resolver';
 
@@ -15,6 +16,7 @@ import { ProgressSummaryResolver } from './progress-summary.resolver';
     ProgressReportConnectionResolver,
     ProgressSummaryEngagementConnectionResolver,
     ProgressSummaryResolver,
+    ProgressSummaryLoader,
     ProgressSummaryRepository,
     ProgressSummaryExtractor,
     ...Object.values(handlers),

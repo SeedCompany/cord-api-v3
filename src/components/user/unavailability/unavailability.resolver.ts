@@ -3,6 +3,7 @@ import {
   AnonSession,
   ID,
   IdArg,
+  ListArg,
   LoggedInSession,
   Session,
 } from '../../../common';
@@ -39,12 +40,7 @@ export class UnavailabilityResolver {
   })
   async unavailabilities(
     @AnonSession() session: Session,
-    @Args({
-      name: 'input',
-      type: () => UnavailabilityListInput,
-      defaultValue: UnavailabilityListInput.defaultVal,
-    })
-    input: UnavailabilityListInput,
+    @ListArg(UnavailabilityListInput) input: UnavailabilityListInput,
     @Loader(UnavailabilityLoader)
     unavailabilities: LoaderOf<UnavailabilityLoader>
   ): Promise<UnavailabilityListOutput> {

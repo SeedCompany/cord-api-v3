@@ -2,7 +2,7 @@ import { compact, parseInt } from 'lodash';
 import { InputException } from '../../common';
 import { Book, Verse } from './books';
 import { ScriptureRange } from './dto';
-import { mergeScriptureRanges } from './labels';
+import { mergeScriptureRanges } from './merge-to-minimal-set';
 
 /**
  * Example inputs:

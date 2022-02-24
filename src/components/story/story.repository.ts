@@ -1,24 +1,27 @@
 import { Injectable } from '@nestjs/common';
-import { inArray, node } from 'cypher-query-builder';
-import { ID, NotFoundException, Session } from '../../common';
-import { DtoRepository, matchRequestingUser } from '../../core';
+import { Query } from 'cypher-query-builder';
+import { ID, Session, UnsecuredDto } from '../../common';
+import { DatabaseService, DtoRepository } from '../../core';
 import {
   createNode,
+  matchProps,
+  matchRequestingUser,
+  merge,
   paginate,
   permissionsOfNode,
   requestingUser,
   sorting,
 } from '../../core/database/query';
+import { ScriptureReferenceRepository } from '../scripture';
 import { CreateStory, Story, StoryListInput } from './dto';
 
 @Injectable()
 export class StoryRepository extends DtoRepository(Story) {
-  async checkStory(name: string) {
-    return await this.db
-      .query()
-      .match([node('story', 'StoryName', { value: name })])
-      .return('story')
-      .first();
+  constructor(
+    private readonly scriptureRefs: ScriptureReferenceRepository,
+    db: DatabaseService
+  ) {
+    super(db);
   }
 
   async create(input: CreateStory, session: Session) {
@@ -34,31 +37,6 @@ export class StoryRepository extends DtoRepository(Story) {
       .first();
   }
 
-  async readOne(id: ID, session: Session) {
-    const query = this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .match([node('node', 'Story', { id })])
-      .apply(this.hydrate());
-
-    const result = await query.first();
-    if (!result) {
-      throw new NotFoundException('Could not find story', 'story.id');
-    }
-    return result.dto;
-  }
-
-  async readMany(ids: readonly ID[], session: Session) {
-    return await this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .matchNode('node', 'Story')
-      .where({ 'node.id': inArray(ids.slice()) })
-      .apply(this.hydrate())
-      .map('dto')
-      .run();
-  }
-
   async list({ filter, ...input }: StoryListInput, session: Session) {
     const result = await this.db
       .query()
@@ -67,5 +45,17 @@ export class StoryRepository extends DtoRepository(Story) {
       .apply(paginate(input, this.hydrate()))
       .first();
     return result!; // result from paginate() will always have 1 row.
+  }
+
+  protected hydrate() {
+    return (query: Query) =>
+      query
+        .apply(matchProps())
+        .subQuery('node', this.scriptureRefs.list())
+        .return<{ dto: UnsecuredDto<Story> }>(
+          merge('props', {
+            scriptureReferences: 'scriptureReferences',
+          }).as('dto')
+        );
   }
 }

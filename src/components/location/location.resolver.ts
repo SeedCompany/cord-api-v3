@@ -12,6 +12,7 @@ import {
   AnonSession,
   ID,
   IdArg,
+  ListArg,
   LoggedInSession,
   mapSecuredValue,
   Session,
@@ -55,12 +56,7 @@ export class LocationResolver {
   })
   async locations(
     @AnonSession() session: Session,
-    @Args({
-      name: 'input',
-      type: () => LocationListInput,
-      defaultValue: LocationListInput.defaultVal,
-    })
-    input: LocationListInput,
+    @ListArg(LocationListInput) input: LocationListInput,
     @Loader(LocationLoader) locations: LoaderOf<LocationLoader>
   ): Promise<LocationListOutput> {
     const list = await this.locationService.list(input, session);

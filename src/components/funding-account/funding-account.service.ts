@@ -34,9 +34,7 @@ export class FundingAccountService {
     input: CreateFundingAccount,
     session: Session
   ): Promise<FundingAccount> {
-    const checkFundingAccount = await this.repo.checkFundingAccount(input.name);
-
-    if (checkFundingAccount) {
+    if (!(await this.repo.isUnique(input.name))) {
       throw new DuplicateException(
         'fundingAccount.name',
         'FundingAccount with this name already exists.'
@@ -80,12 +78,12 @@ export class FundingAccountService {
       throw new NotFoundException('Invalid: Blank ID');
     }
 
-    const result = await this.repo.readOne(id, session);
+    const result = await this.repo.readOne(id);
     return await this.secure(result, session);
   }
 
   async readMany(ids: readonly ID[], session: Session) {
-    const fundingAccounts = await this.repo.readMany(ids, session);
+    const fundingAccounts = await this.repo.readMany(ids);
     return await Promise.all(
       fundingAccounts.map((dto) => this.secure(dto, session))
     );

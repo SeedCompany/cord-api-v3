@@ -1,15 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { oneLine } from 'common-tags';
 import { Connection, node, Query, relation } from 'cypher-query-builder';
-import { isEmpty, last, Many, mapKeys, pickBy, startCase, uniq } from 'lodash';
-import { DateTime } from 'luxon';
+import { isEmpty, last, mapKeys, pickBy, startCase } from 'lodash';
 import {
   entries,
   ID,
   InputException,
   isIdLike,
   isSecured,
-  many,
   MaybeUnsecuredInstance,
   ResourceShape,
   ServerException,
@@ -21,52 +19,6 @@ import { AbortError, retry, RetryOptions } from '../../common/retry';
 import { DbChanges } from './changes';
 import { ACTIVE, deleteBaseNode, exp, updateProperty } from './query';
 import { Transactional } from './transactional.decorator';
-
-export const property = (
-  prop: string,
-  value: any | null,
-  baseNode: string,
-  propVar = prop,
-  extraPropLabel?: Many<string>
-) => [
-  [
-    node(baseNode),
-    relation('out', '', prop, {
-      active: true,
-      createdAt: DateTime.local(),
-    }),
-    node(propVar, uniq(['Property', ...many(extraPropLabel ?? [])]), {
-      value,
-    }),
-  ],
-];
-
-export const matchSession = (
-  session: Session,
-  {
-    // eslint-disable-next-line @seedcompany/no-unused-vars
-    withAclEdit,
-    // eslint-disable-next-line @seedcompany/no-unused-vars
-    withAclRead,
-    requestingUserConditions = {},
-  }: {
-    withAclEdit?: string;
-    withAclRead?: string;
-    requestingUserConditions?: Record<string, any>;
-  } = {}
-) => [
-  node('token', 'Token', {
-    active: true,
-    value: session.token,
-  }),
-  relation('in', '', 'token', {
-    active: true,
-  }),
-  node('requestingUser', 'User', {
-    id: session.userId,
-    ...requestingUserConditions,
-  }),
-];
 
 export interface ServerInfo {
   name: string;

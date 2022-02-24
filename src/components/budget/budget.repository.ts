@@ -10,12 +10,7 @@ import {
   UnsecuredDto,
   viewOfChangeset,
 } from '../../common';
-import {
-  DatabaseService,
-  DtoRepository,
-  matchRequestingUser,
-  matchSession,
-} from '../../core';
+import { DatabaseService, DtoRepository } from '../../core';
 import {
   ACTIVE,
   createNode,
@@ -23,6 +18,8 @@ import {
   matchChangesetAndChangedProps,
   matchProjectSensToLimitedScopeMap,
   matchPropsAndProjectSensAndScopedRoles,
+  matchRequestingUser,
+  matchSession,
   merge,
   paginate,
   requestingUser,
@@ -39,7 +36,10 @@ import {
 } from './dto';
 
 @Injectable()
-export class BudgetRepository extends DtoRepository(Budget) {
+export class BudgetRepository extends DtoRepository<
+  typeof Budget,
+  [session: Session, view?: ObjectView]
+>(Budget) {
   constructor(
     db: DatabaseService,
     private readonly records: BudgetRecordRepository
@@ -87,31 +87,6 @@ export class BudgetRepository extends DtoRepository(Budget) {
     return result.id;
   }
 
-  async readOne(id: ID, session: Session, view?: ObjectView) {
-    const label = labelForView('Budget', view);
-    const result = await this.db
-      .query()
-      .match([
-        node('project', 'Project'),
-        relation('out', '', 'budget', ACTIVE),
-        node('node', label, { id }),
-      ])
-      .apply(matchPropsAndProjectSensAndScopedRoles(session, { view }))
-      .apply(matchChangesetAndChangedProps(view?.changeset))
-      .return<{ dto: UnsecuredDto<Budget> }>(
-        merge('props', 'changedProps', {
-          changeset: 'changeset.id',
-        }).as('dto')
-      )
-      .map((row) => row.dto)
-      .first();
-    if (!result) {
-      throw new NotFoundException('Could not find budget', 'budget.id');
-    }
-
-    return result;
-  }
-
   async readMany(ids: readonly ID[], session: Session, view?: ObjectView) {
     const label = labelForView('Budget', view);
     return await this.db
@@ -121,7 +96,7 @@ export class BudgetRepository extends DtoRepository(Budget) {
         relation('out', '', 'budget', ACTIVE),
         node('node', label),
       ])
-      .where({ 'node.id': inArray(ids.slice()) })
+      .where({ 'node.id': inArray(ids) })
       .apply(matchPropsAndProjectSensAndScopedRoles(session, { view }))
       .apply(matchChangesetAndChangedProps(view?.changeset))
       .return<{ dto: UnsecuredDto<Budget> }>(

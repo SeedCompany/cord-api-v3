@@ -3,12 +3,11 @@ import { inArray, node, Query, relation } from 'cypher-query-builder';
 import {
   ID,
   labelForView,
-  NotFoundException,
   ObjectView,
   Session,
   UnsecuredDto,
 } from '../../common';
-import { DtoRepository, matchRequestingUser } from '../../core';
+import { DtoRepository } from '../../core';
 import {
   ACTIVE,
   any,
@@ -21,6 +20,7 @@ import {
   matchProjectSens,
   matchProjectSensToLimitedScopeMap,
   matchProps,
+  matchRequestingUser,
   merge,
   paginate,
   rankSens,
@@ -34,7 +34,10 @@ import { CreateLanguage, Language, LanguageListInput } from './dto';
 import { languageListFilter } from './query.helpers';
 
 @Injectable()
-export class LanguageRepository extends DtoRepository(Language) {
+export class LanguageRepository extends DtoRepository<
+  typeof Language,
+  [session: Session, view?: ObjectView]
+>(Language) {
   async create(input: CreateLanguage, ethnologueId: ID, session: Session) {
     const initialProps = {
       name: input.name,
@@ -68,26 +71,11 @@ export class LanguageRepository extends DtoRepository(Language) {
     return await createLanguage.first();
   }
 
-  async readOne(langId: ID, session: Session, view?: ObjectView) {
-    const query = this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .match([node('node', labelForView('Language', view), { id: langId })])
-      .apply(this.hydrate(session, view));
-
-    const result = await query.first();
-    if (!result) {
-      throw new NotFoundException('Could not find language', 'language.id');
-    }
-    return result.dto;
-  }
-
   async readMany(ids: readonly ID[], session: Session, view?: ObjectView) {
     return await this.db
       .query()
-      .apply(matchRequestingUser(session))
-      .matchNode('node', 'Language')
-      .where({ 'node.id': inArray(ids.slice()) })
+      .matchNode('node', labelForView('Language', view))
+      .where({ 'node.id': inArray(ids) })
       .apply(this.hydrate(session, view))
       .map('dto')
       .run();
@@ -141,12 +129,10 @@ export class LanguageRepository extends DtoRepository(Language) {
           relation('out', '', 'firstScripture', ACTIVE),
           node('', 'Property', { value: variable('true') }),
         ])
-        .raw('', { requestingUserId: session.userId })
         .return<{ dto: UnsecuredDto<Language> }>(
           merge('props', 'changedProps', {
             ethnologue: 'ethProps',
-            pinned:
-              'exists((:User { id: $requestingUserId })-[:pinned]->(node))',
+            pinned: 'exists((:User { id: $requestingUser })-[:pinned]->(node))',
             presetInventory: 'presetInventory',
             firstScriptureEngagement: 'firstScriptureEngagement.id',
             scope: 'scopedRoles',
@@ -246,7 +232,7 @@ export class LanguageRepository extends DtoRepository(Language) {
           ])
           .where({
             'status.value': inArray(
-              `['${ProjectStatus.InDevelopment}', '${ProjectStatus.Active}']` as any,
+              `['${ProjectStatus.InDevelopment}', '${ProjectStatus.Active}']`,
               true
             ),
           })

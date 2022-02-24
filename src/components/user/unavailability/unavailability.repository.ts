@@ -1,16 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { inArray, node, relation } from 'cypher-query-builder';
-import {
-  ID,
-  NotFoundException,
-  ServerException,
-  Session,
-} from '../../../common';
-import { DtoRepository, matchRequestingUser } from '../../../core';
+import { node, relation } from 'cypher-query-builder';
+import { ID, ServerException, Session } from '../../../common';
+import { DtoRepository } from '../../../core';
 import {
   ACTIVE,
   createNode,
   createRelationships,
+  matchRequestingUser,
   paginate,
   permissionsOfNode,
   requestingUser,
@@ -20,7 +16,6 @@ import {
   CreateUnavailability,
   Unavailability,
   UnavailabilityListInput,
-  UpdateUnavailability,
 } from './dto';
 
 @Injectable()
@@ -48,43 +43,13 @@ export class UnavailabilityRepository extends DtoRepository(Unavailability) {
     return result.id;
   }
 
-  async readOne(id: ID, session: Session) {
-    const query = this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .match([node('node', 'Unavailability', { id })])
-      .apply(this.hydrate());
-
-    const result = await query.first();
-    if (!result) {
-      throw new NotFoundException('Could not find user', 'user.id');
-    }
-
-    return result.dto;
-  }
-
-  async readMany(ids: readonly ID[], session: Session) {
+  async getUserIdByUnavailability(id: ID) {
     return await this.db
       .query()
-      .apply(matchRequestingUser(session))
-      .matchNode('node', 'Unavailability')
-      .where({ 'node.id': inArray(ids.slice()) })
-      .apply(this.hydrate())
-      .map('dto')
-      .run();
-  }
-
-  async getUserIdByUnavailability(
-    session: Session,
-    input: UpdateUnavailability
-  ) {
-    return await this.db
-      .query()
-      .apply(matchRequestingUser(session))
       .match([
         node('user', 'User'),
         relation('out', '', 'unavailability', ACTIVE),
-        node('unavailability', 'Unavailability', { id: input.id }),
+        node('unavailability', 'Unavailability', { id }),
       ])
       .return<{ id: ID }>('user.id as id')
       .first();

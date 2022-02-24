@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { inArray, node, Query, relation } from 'cypher-query-builder';
+import { hasLabel, node, Query, relation } from 'cypher-query-builder';
+import { AndConditions } from 'cypher-query-builder/src/clauses/where-utils';
 import {
   CalendarDate,
   generateId,
   ID,
-  NotFoundException,
   Range,
   Session,
   UnsecuredDto,
@@ -18,6 +18,7 @@ import {
   matchPropsAndProjectSensAndScopedRoles,
   merge,
   paginate,
+  path,
   sorting,
   variable,
   Variable,
@@ -33,7 +34,10 @@ import {
 } from './dto';
 
 @Injectable()
-export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
+export class PeriodicReportRepository extends DtoRepository<
+  typeof IPeriodicReport,
+  [session: Session]
+>(IPeriodicReport) {
   async merge(input: MergePeriodicReports) {
     const Report = resolveReportType(input);
 
@@ -132,44 +136,32 @@ export class PeriodicReportRepository extends DtoRepository(IPeriodicReport) {
     return await query.run();
   }
 
-  async readOne(id: ID, session: Session) {
-    const query = this.db
-      .query()
-      .match([node('node', 'PeriodicReport', { id })])
-      .apply(this.hydrate(session));
-
-    const result = await query.first();
-    if (!result) {
-      throw new NotFoundException('Could not find periodic report');
-    }
-
-    return result.dto;
-  }
-
-  async readMany(ids: readonly ID[], session: Session) {
-    return await this.db
-      .query()
-      .matchNode('node', 'PeriodicReport')
-      .where({ 'node.id': inArray(ids.slice()) })
-      .apply(this.hydrate(session))
-      .map('dto')
-      .run();
-  }
-
-  async listReports(
-    parentId: ID,
-    type: ReportType,
-    input: PeriodicReportListInput,
-    session: Session
-  ) {
+  async list(input: PeriodicReportListInput, session: Session) {
+    const resource = input.type
+      ? resolveReportType({ type: input.type })
+      : IPeriodicReport;
     const result = await this.db
       .query()
-      .match([
-        node('parent', 'BaseNode', { id: parentId }),
-        relation('out', '', 'report', ACTIVE),
-        node('node', `${type}Report`),
-      ])
-      .apply(sorting(resolveReportType({ type }), input))
+      .matchNode('node', 'PeriodicReport')
+      .apply((q) => {
+        const conditions: AndConditions = {};
+
+        if (input.type) {
+          conditions.node = hasLabel(`${input.type}Report`);
+        }
+        if (input.parent) {
+          conditions.parent = path([
+            node('', 'BaseNode', { id: input.parent }),
+            relation('out', '', 'report', ACTIVE),
+            node('node'),
+          ]);
+        }
+
+        if (Object.keys(conditions).length > 0) {
+          q.where(conditions);
+        }
+      })
+      .apply(sorting(resource, input))
       .apply(paginate(input, this.hydrate(session)))
       .first();
     return result!; // result from paginate() will always have 1 row.

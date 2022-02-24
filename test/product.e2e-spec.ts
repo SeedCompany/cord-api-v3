@@ -1,16 +1,20 @@
 import { gql } from 'apollo-server-core';
 import { Connection } from 'cypher-query-builder';
 import { times } from 'lodash';
+import { Merge } from 'type-fest';
+import { Secured } from '../src/common';
 import { Powers, Role } from '../src/components/authorization';
 import { Film } from '../src/components/film';
 import {
   AnyProduct,
+  DerivativeScriptureProduct as InternalDerivativeScriptureProduct,
+  Producible,
   ProducibleType,
   ProductMedium,
   ProductMethodology,
   ProductPurpose,
 } from '../src/components/product';
-import { ScriptureRange } from '../src/components/scripture/dto';
+import { ScriptureRange } from '../src/components/scripture';
 import { Story } from '../src/components/story';
 import {
   createDerivativeProduct,
@@ -27,6 +31,12 @@ import {
 } from './utility';
 import { RawLanguageEngagement, RawProduct } from './utility/fragments';
 import { resetDatabase } from './utility/reset-database';
+
+// Shape for public API
+type DerivativeScriptureProduct = Merge<
+  InternalDerivativeScriptureProduct,
+  { produces: Secured<Producible & { __typename: string }> }
+>;
 
 describe('Product e2e', () => {
   let app: TestApp;
@@ -195,7 +205,7 @@ describe('Product e2e', () => {
         id: product.id,
       }
     );
-    const actual: AnyProduct = result.product;
+    const actual: DerivativeScriptureProduct = result.product;
     expect(actual.produces).toBeDefined();
     expect(actual.produces?.value).toBeDefined();
     expect(actual.produces?.value?.id).toBe(story.id);
@@ -274,7 +284,7 @@ describe('Product e2e', () => {
         id: product.id,
       }
     );
-    const actual: AnyProduct = result.product;
+    const actual: DerivativeScriptureProduct = result.product;
     expect(actual.scriptureReferencesOverride?.value).toBeDefined();
     expect(actual.scriptureReferencesOverride?.value).toEqual(
       expect.arrayContaining(randomScriptureReferences)
@@ -526,7 +536,8 @@ describe('Product e2e', () => {
       }
     );
 
-    const actual: AnyProduct = result.updateDerivativeScriptureProduct.product;
+    const actual: DerivativeScriptureProduct =
+      result.updateDerivativeScriptureProduct.product;
 
     expect(actual.scriptureReferencesOverride?.value).toEqual(
       expect.arrayContaining(override)
@@ -609,7 +620,8 @@ describe('Product e2e', () => {
       }
     );
 
-    const actual: AnyProduct = result.updateDerivativeScriptureProduct.product;
+    const actual: DerivativeScriptureProduct =
+      result.updateDerivativeScriptureProduct.product;
     expect(actual.scriptureReferencesOverride?.value).toBeNull();
     expect(actual.produces?.value?.scriptureReferences?.value).toEqual(
       actual.scriptureReferences.value

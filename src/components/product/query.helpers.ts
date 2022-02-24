@@ -1,11 +1,29 @@
-import { inArray, isNull, not, Query } from 'cypher-query-builder';
+import {
+  inArray,
+  isNull,
+  node,
+  not,
+  Query,
+  relation,
+} from 'cypher-query-builder';
 import { AndConditions } from 'cypher-query-builder/src/clauses/where-utils';
 import { identity, intersection } from 'lodash';
+import { ACTIVE, path } from '../../core/database/query';
 import { propMatch } from '../project';
 import { ApproachToMethodologies, ProductFilters } from './dto';
 
 export const productListFilter = (filter: ProductFilters) => (query: Query) => {
   const conditions: AndConditions = {};
+
+  if (filter.engagementId) {
+    conditions.engagement = path([
+      node('node'),
+      relation('in', '', 'product', ACTIVE),
+      node('', 'Engagement', {
+        id: filter.engagementId,
+      }),
+    ]);
+  }
 
   if (filter.approach || filter.methodology) {
     query.match(propMatch('methodology'));

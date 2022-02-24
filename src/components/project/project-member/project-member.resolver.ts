@@ -3,6 +3,7 @@ import {
   AnonSession,
   ID,
   IdArg,
+  ListArg,
   LoggedInSession,
   Session,
 } from '../../../common';
@@ -49,12 +50,7 @@ export class ProjectMemberResolver {
   })
   async projectMembers(
     @AnonSession() session: Session,
-    @Args({
-      name: 'input',
-      type: () => ProjectMemberListInput,
-      defaultValue: ProjectMemberListInput.defaultVal,
-    })
-    input: ProjectMemberListInput,
+    @ListArg(ProjectMemberListInput) input: ProjectMemberListInput,
     @Loader(ProjectMemberLoader) projectMembers: LoaderOf<ProjectMemberLoader>
   ): Promise<ProjectMemberListOutput> {
     const list = await this.service.list(input, session);

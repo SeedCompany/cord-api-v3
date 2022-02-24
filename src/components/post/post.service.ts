@@ -55,7 +55,7 @@ export class PostService {
         exception,
       });
 
-      if (!(await this.repo.checkParentIdValidity(input.parentId))) {
+      if (!(await this.repo.getBaseNode(input.parentId, 'BaseNode'))) {
         throw new InputException('parentId is invalid', 'post.parentId');
       }
 

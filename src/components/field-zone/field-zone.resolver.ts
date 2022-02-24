@@ -10,6 +10,7 @@ import {
   AnonSession,
   ID,
   IdArg,
+  ListArg,
   LoggedInSession,
   mapSecuredValue,
   Session,
@@ -48,12 +49,7 @@ export class FieldZoneResolver {
   })
   async fieldZones(
     @AnonSession() session: Session,
-    @Args({
-      name: 'input',
-      type: () => FieldZoneListInput,
-      defaultValue: FieldZoneListInput.defaultVal,
-    })
-    input: FieldZoneListInput,
+    @ListArg(FieldZoneListInput) input: FieldZoneListInput,
     @Loader(FieldZoneLoader) fieldZones: LoaderOf<FieldZoneLoader>
   ): Promise<FieldZoneListOutput> {
     const list = await this.fieldZoneService.list(input, session);

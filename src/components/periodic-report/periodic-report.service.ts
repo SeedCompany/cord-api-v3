@@ -144,17 +144,10 @@ export class PeriodicReportService {
   }
 
   async list(
-    parentId: ID,
-    reportType: ReportType,
-    input: PeriodicReportListInput,
-    session: Session
+    session: Session,
+    input: PeriodicReportListInput
   ): Promise<SecuredPeriodicReportList> {
-    const results = await this.repo.listReports(
-      parentId,
-      reportType,
-      input,
-      session
-    );
+    const results = await this.repo.list(input, session);
 
     return {
       ...(await mapListResults(results, (dto) => this.secure(dto, session))),

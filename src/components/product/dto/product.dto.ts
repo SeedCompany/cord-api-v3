@@ -6,6 +6,7 @@ import { MergeExclusive } from 'type-fest';
 import {
   DbLabel,
   ID,
+  Secured,
   SecuredBoolean,
   SecuredFloat,
   SecuredProps,
@@ -14,14 +15,17 @@ import {
   Sensitivity,
   SensitivityField,
   ServerException,
+  SetUnsecuredType,
   UnsecuredDto,
 } from '../../../common';
 import { SetChangeType } from '../../../core/database/changes';
 import {
+  DbScriptureReferences,
+  ScriptureRangeInput,
   SecuredScriptureRangesOverride,
   SecuredUnspecifiedScripturePortion,
 } from '../../scripture';
-import { Producible, SecuredProducible } from './producible.dto';
+import { Producible, ProducibleRef, SecuredProducible } from './producible.dto';
 import { SecuredProductMediums } from './product-medium';
 import { SecuredMethodology } from './product-methodology';
 import { SecuredProductPurposes } from './product-purpose';
@@ -159,9 +163,9 @@ export class DerivativeScriptureProduct extends Product {
       i.e. A film named "Jesus Film".
     `,
   })
-  readonly produces: SecuredProducible & SetChangeType<'produces', ID>;
+  readonly produces: Secured<ProducibleRef> & SetChangeType<'produces', ID>;
 
-  @Field({
+  @Field(() => SecuredScriptureRangesOverride, {
     description: stripIndent`
       The \`Producible\` defines a \`scriptureReferences\` list, and this is
       used by default in this product's \`scriptureReferences\` list.
@@ -169,7 +173,12 @@ export class DerivativeScriptureProduct extends Product {
       this property can be set (and read) to "override" the \`producible\`'s list.
     `,
   })
-  readonly scriptureReferencesOverride: SecuredScriptureRangesOverride;
+  readonly scriptureReferencesOverride: SecuredScriptureRangesOverride &
+    SetUnsecuredType<DbScriptureReferences | null> &
+    SetChangeType<
+      'scriptureReferencesOverride',
+      readonly ScriptureRangeInput[] | null
+    >;
 
   @Field({
     description: stripIndent`

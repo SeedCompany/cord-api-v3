@@ -1,5 +1,5 @@
-import { Args, Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { AnonSession, Session } from '../../common';
+import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
+import { AnonSession, ListArg, Session } from '../../common';
 import { Loader, LoaderOf } from '../../core';
 import { Engagement, LanguageEngagement } from '../engagement/dto';
 import {
@@ -21,21 +21,15 @@ export class PeriodicReportEngagementConnectionResolver {
   async progressReports(
     @AnonSession() session: Session,
     @Parent() engagement: Engagement,
-    @Args({
-      name: 'input',
-      type: () => PeriodicReportListInput,
-      defaultValue: PeriodicReportListInput.defaultVal,
-    })
-    input: PeriodicReportListInput,
+    @ListArg(PeriodicReportListInput) input: PeriodicReportListInput,
     @Loader(PeriodicReportLoader)
     periodicReports: LoaderOf<PeriodicReportLoader>
   ): Promise<SecuredPeriodicReportList> {
-    const list = await this.service.list(
-      engagement.id,
-      ReportType.Progress,
-      input,
-      session
-    );
+    const list = await this.service.list(session, {
+      ...input,
+      parent: engagement.id,
+      type: ReportType.Progress,
+    });
     periodicReports.primeAll(list.items);
     return list;
   }

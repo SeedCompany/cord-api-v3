@@ -1,6 +1,6 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { SecuredProps, SecuredString } from '../../../common';
+import { ID, SecuredProps, SecuredString } from '../../../common';
 import { Changeset } from '../../changeset/dto';
 import { SecuredProjectChangeRequestStatus } from './project-change-request-status.enum';
 import { SecuredProjectChangeRequestTypes } from './project-change-request-type.enum';
@@ -12,6 +12,8 @@ export abstract class ProjectChangeRequest extends Changeset {
   static readonly Props = keysOf<ProjectChangeRequest>();
   static readonly SecuredProps = keysOf<SecuredProps<ProjectChangeRequest>>();
   __typename: 'ProjectChangeRequest';
+
+  readonly project: ID;
 
   @Field()
   readonly types: SecuredProjectChangeRequestTypes;

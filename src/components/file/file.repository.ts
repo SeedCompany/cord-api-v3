@@ -23,7 +23,6 @@ import {
   DatabaseService,
   ILogger,
   Logger,
-  matchSession,
   OnIndex,
 } from '../../core';
 import {
@@ -31,6 +30,7 @@ import {
   createNode,
   createRelationships,
   matchProps,
+  matchSession,
   merge,
   paginate,
   sorting,
@@ -75,7 +75,7 @@ export class FileRepository extends CommonRepository {
     return await this.db
       .query()
       .matchNode('node', 'FileNode')
-      .where({ 'node.id': inArray(ids.slice()) })
+      .where({ 'node.id': inArray(ids) })
       .apply(this.hydrate())
       .map('dto')
       .run();

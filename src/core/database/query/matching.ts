@@ -1,15 +1,30 @@
 import { node, Query, relation } from 'cypher-query-builder';
-import { labelForView, Many, ObjectView, Session } from '../../../common';
+import { uniq } from 'lodash';
+import { DateTime } from 'luxon';
+import {
+  ID,
+  isIdLike,
+  labelForView,
+  many,
+  Many,
+  ObjectView,
+  Session,
+} from '../../../common';
 import { variable } from '../query-augmentation/condition-variables';
 import { apoc, collect, listConcat, merge } from './cypher-functions';
 
-export const requestingUser = (session: Session) => {
+export const requestingUser = (session: Session | ID) => {
   const n = node('requestingUser', 'User', {
     id: variable('$requestingUser'),
   });
-  n.addParam(session.userId, 'requestingUser');
+  n.addParam(isIdLike(session) ? session : session.userId, 'requestingUser');
   return n;
 };
+
+export const matchRequestingUser =
+  ({ userId }: Pick<Session, 'userId'>) =>
+  (query: Query) =>
+    query.match(requestingUser(userId));
 
 /**
  * @deprecated DB SecurityGroups are deprecated
@@ -101,3 +116,49 @@ export const matchProps = (options: MatchPropsOptions = {}) => {
     );
   };
 };
+
+export const property = (
+  prop: string,
+  value: any | null,
+  baseNode: string,
+  propVar = prop,
+  extraPropLabel?: Many<string>
+) => [
+  [
+    node(baseNode),
+    relation('out', '', prop, {
+      active: true,
+      createdAt: DateTime.local(),
+    }),
+    node(propVar, uniq(['Property', ...many(extraPropLabel ?? [])]), {
+      value,
+    }),
+  ],
+];
+
+export const matchSession = (
+  session: Session,
+  {
+    // eslint-disable-next-line @seedcompany/no-unused-vars
+    withAclEdit,
+    // eslint-disable-next-line @seedcompany/no-unused-vars
+    withAclRead,
+    requestingUserConditions = {},
+  }: {
+    withAclEdit?: string;
+    withAclRead?: string;
+    requestingUserConditions?: Record<string, any>;
+  } = {}
+) => [
+  node('token', 'Token', {
+    active: true,
+    value: session.token,
+  }),
+  relation('in', '', 'token', {
+    active: true,
+  }),
+  node('requestingUser', 'User', {
+    id: session.userId,
+    ...requestingUserConditions,
+  }),
+];

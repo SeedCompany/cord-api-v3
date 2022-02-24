@@ -14,12 +14,12 @@ import {
   EngagementUpdatedEvent,
 } from '../../engagement/events';
 import { FileService } from '../../file';
-import { ScriptureRangeInput } from '../../scripture';
-import { Book } from '../../scripture/books';
+import { Book, ScriptureRangeInput } from '../../scripture';
 import { StoryService } from '../../story';
 import {
   CreateDerivativeScriptureProduct,
   CreateDirectScriptureProduct,
+  DerivativeScriptureProduct,
   getAvailableSteps,
   ProducibleType,
   ProgressMeasurement,
@@ -191,7 +191,10 @@ export class ExtractProductsFromPnpHandler
       : [];
 
     const storyProducts = rows[0].story
-      ? await this.products.loadProductIdsByPnpIndex(engagement.id)
+      ? await this.products.loadProductIdsByPnpIndex(
+          engagement.id,
+          DerivativeScriptureProduct.name
+        )
       : {};
 
     if (rows[0].story) {

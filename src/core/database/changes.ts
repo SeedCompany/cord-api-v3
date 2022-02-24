@@ -129,13 +129,19 @@ export const isRelation = (prop: string, existingObject: Record<string, any>) =>
   prop.endsWith('Id') &&
   prop.slice(0, -2) in existingObject;
 
-export const isSame = (a: unknown, b: unknown) => {
-  if (a == null && b == null) {
-    return true;
-  }
-  if ((a == null && b) || (a && b == null)) {
-    return false;
-  }
+export const compareNullable =
+  <T>(fn: (a: T, b: T) => boolean) =>
+  (a: T | null | undefined, b: T | null | undefined) => {
+    if (a == null && b == null) {
+      return true;
+    }
+    if ((a == null && b) || (a && b == null)) {
+      return false;
+    }
+    return fn(a!, b!);
+  };
+
+export const isSame = compareNullable((a: unknown, b: unknown) => {
   if (DateTime.isDateTime(a) || DateTime.isDateTime(b)) {
     return +(a as number) === +(b as number);
   }
@@ -143,4 +149,13 @@ export const isSame = (a: unknown, b: unknown) => {
     return isEmpty(difference(a, b)) && isEmpty(difference(b, a));
   }
   return a === b;
-};
+});
+
+/**
+ * Given a comparator, return a function that returns the input value if it's
+ * different from the previous value, else undefined "as unchanged".
+ */
+export const ifDiff =
+  <T>(comparator: (a: T, b: T) => boolean) =>
+  (input: T | undefined, previous: T) =>
+    input !== undefined && !comparator(input, previous) ? input : undefined;

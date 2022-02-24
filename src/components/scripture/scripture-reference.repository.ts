@@ -1,10 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { Node, node, relation } from 'cypher-query-builder';
+import { Node, node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { ID, Range } from '../../common';
 import { DatabaseService } from '../../core';
-import { ACTIVE } from '../../core/database/query';
+import { ACTIVE, collect } from '../../core/database/query';
 import { ScriptureRange, ScriptureRangeInput } from './dto';
+
+export type DbScriptureReferences = ReadonlyArray<Node<Range<number>>>;
 
 @Injectable()
 export class ScriptureReferenceRepository {
@@ -34,7 +36,7 @@ export class ScriptureReferenceRepository {
   async update(
     isOverriding: boolean | undefined,
     producibleId: ID,
-    scriptureRefs: readonly ScriptureRangeInput[],
+    scriptureRefs: readonly ScriptureRangeInput[] | null,
     rel: 'scriptureReferencesOverride' | 'scriptureReferences'
   ) {
     if (isOverriding) {
@@ -87,28 +89,36 @@ export class ScriptureReferenceRepository {
       .run();
   }
 
-  async listScriptureRanges(
-    isOverriding: boolean | undefined,
-    producibleId: ID
-  ) {
-    return await this.db
-      .query()
-      .match([
-        node('node', 'BaseNode', {
-          id: producibleId,
-        }),
-        relation(
-          'out',
-          '',
-          isOverriding ? 'scriptureReferencesOverride' : 'scriptureReferences',
-          {
-            active: true,
-          }
-        ),
-        node('scriptureRanges', 'ScriptureRange'),
-      ])
-      .return('scriptureRanges')
-      .asResult<{ scriptureRanges: Node<Range<number>> }>()
-      .run();
+  list({
+    nodeName = 'node',
+    relationName = 'scriptureReferences',
+    outVar = 'scriptureReferences',
+  }: {
+    nodeName?: string;
+    relationName?: string;
+    outVar?: string;
+  } = {}) {
+    const dynamicRel = !!relationName.match(/['"]/);
+    return (query: Query) =>
+      query
+        .comment('ScriptureRefs.list()')
+        .match([
+          node(nodeName),
+          relation(
+            'out',
+            'scriptureRangeRel',
+            dynamicRel ? undefined : relationName,
+            ACTIVE
+          ),
+          node('scriptureRange', 'ScriptureRange'),
+        ])
+        .apply((q) =>
+          dynamicRel
+            ? q.raw(`WHERE type(scriptureRangeRel) = ${relationName}`)
+            : q
+        )
+        .return<{ scriptureReferences: DbScriptureReferences }>(
+          collect('scriptureRange').as(outVar)
+        );
   }
 }

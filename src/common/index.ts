@@ -8,6 +8,7 @@ export * from './db-sort.decorator';
 export * from './db-unique.decorator';
 export * from './mutation-placeholder.output';
 export * from './exceptions';
+export * from './fields.pipe';
 export * from './firstLettersOfWords';
 export * from './fiscal-year';
 export * from './generate-id';

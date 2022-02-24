@@ -1,6 +1,6 @@
-import { Args, Info, Parent, ResolveField, Resolver } from '@nestjs/graphql';
+import { Info, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { GraphQLResolveInfo } from 'graphql';
-import { LoggedInSession, Resource, Session } from '../../common';
+import { ListArg, LoggedInSession, Resource, Session } from '../../common';
 import { Loader, LoaderOf } from '../../core';
 import { resourceFromName } from '../authorization/model/resource-map';
 import { Postable } from './dto';
@@ -18,12 +18,7 @@ export class PostableResolver {
   async posts(
     @Info() info: GraphQLResolveInfo,
     @Parent() parent: Postable & Resource,
-    @Args({
-      name: 'input',
-      type: () => PostListInput,
-      defaultValue: PostListInput.defaultVal,
-    })
-    input: PostListInput,
+    @ListArg(PostListInput) input: PostListInput,
     @LoggedInSession() session: Session,
     @Loader(PostLoader) posts: LoaderOf<PostLoader>
   ): Promise<SecuredPostList> {

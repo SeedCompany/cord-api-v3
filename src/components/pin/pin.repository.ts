@@ -2,7 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { ID, Session } from '../../common';
-import { DatabaseService, matchRequestingUser } from '../../core';
+import { DatabaseService } from '../../core';
+import { matchRequestingUser, requestingUser } from '../../core/database/query';
 
 @Injectable()
 export class PinRepository {
@@ -11,23 +12,22 @@ export class PinRepository {
   async isPinned(id: ID, session: Session): Promise<boolean> {
     const result = await this.db
       .query()
-      .apply(matchRequestingUser(session))
       .match([
-        node('requestingUser'),
+        requestingUser(session),
         relation('out', '', 'pinned'),
         node('node', 'BaseNode', { id }),
       ])
       .return('node')
       .first();
-    return result ? true : false;
+    return !!result;
   }
 
   async add(id: ID, session: Session): Promise<void> {
     const createdAt = DateTime.local();
     await this.db
       .query()
+      .match(node('node', 'BaseNode', { id }))
       .apply(matchRequestingUser(session))
-      .match([node('node', 'BaseNode', { id })])
       .merge([
         node('requestingUser'),
         relation('out', 'rel', 'pinned'),
@@ -42,9 +42,8 @@ export class PinRepository {
   async remove(id: ID, session: Session): Promise<void> {
     await this.db
       .query()
-      .apply(matchRequestingUser(session))
-      .optionalMatch([
-        node('requestingUser'),
+      .match([
+        requestingUser(session),
         relation('out', 'rel', 'pinned'),
         node('node', 'BaseNode', { id }),
       ])

@@ -50,7 +50,7 @@ export class EthnologueLanguageService {
     sensitivity: Sensitivity,
     session: Session
   ): Promise<EthnologueLanguage> {
-    const dto = await this.repo.readOne(id, session);
+    const dto = await this.repo.readOne(id);
     return await this.secure(dto, sensitivity, session);
   }
 

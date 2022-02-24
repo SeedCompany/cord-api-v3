@@ -1,12 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { inArray, node, Query, relation } from 'cypher-query-builder';
-import {
-  ID,
-  NotFoundException,
-  ServerException,
-  Session,
-  UnsecuredDto,
-} from '../../common';
+import { node, Query, relation } from 'cypher-query-builder';
+import { ID, ServerException, Session, UnsecuredDto } from '../../common';
 import { DtoRepository } from '../../core';
 import {
   ACTIVE,
@@ -25,9 +19,10 @@ import {
 } from './dto';
 
 @Injectable()
-export class ProjectChangeRequestRepository extends DtoRepository(
-  ProjectChangeRequest
-) {
+export class ProjectChangeRequestRepository extends DtoRepository<
+  typeof ProjectChangeRequest,
+  [session?: Session]
+>(ProjectChangeRequest) {
   async create(input: CreateProjectChangeRequest) {
     const result = await this.db
       .query()
@@ -53,29 +48,6 @@ export class ProjectChangeRequestRepository extends DtoRepository(
     return result.id;
   }
 
-  async readOne(id: ID, session?: Session) {
-    const query = this.db
-      .query()
-      .matchNode('node', 'ProjectChangeRequest', { id })
-      .apply(this.hydrate(session));
-    const result = await query.first();
-    if (!result) {
-      throw new NotFoundException('Could not find project change request');
-    }
-
-    return result.dto;
-  }
-
-  async readMany(ids: readonly ID[], session: Session) {
-    return await this.db
-      .query()
-      .matchNode('node', 'ProjectChangeRequest')
-      .where({ 'node.id': inArray(ids.slice()) })
-      .apply(this.hydrate(session))
-      .map('dto')
-      .run();
-  }
-
   protected hydrate(session?: Session) {
     return (query: Query) =>
       query
@@ -88,6 +60,7 @@ export class ProjectChangeRequestRepository extends DtoRepository(
         .return<{ dto: UnsecuredDto<ProjectChangeRequest> }>(
           merge('props', {
             canEdit: `props.status = "${Status.Pending}"`,
+            project: 'project.id',
           }).as('dto')
         );
   }

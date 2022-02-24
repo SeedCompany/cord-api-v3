@@ -7,7 +7,7 @@ import { random, times } from 'lodash';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { Range, SecuredPropertyList, SecuredProps } from '../../../common';
 import { Verse } from '../books';
-import { mergeScriptureRanges } from '../labels';
+import { mergeScriptureRanges } from '../merge-to-minimal-set';
 import { IsValidOrder } from './scripture-range.validator';
 import {
   ScriptureReference,
