@@ -257,44 +257,6 @@ export class ProjectRepository extends CommonRepository {
     return result!; // result from paginate() will always have 1 row.
   }
 
-  async permissionsForListProp(prop: string, id: ID, session: Session) {
-    const result = await this.db
-      .query()
-      .match([requestingUser(session)])
-      .match([
-        [
-          node('requestingUser'),
-          relation('in', 'memberOfReadSecurityGroup', 'member'),
-          node('readSecurityGroup', 'SecurityGroup'),
-          relation('out', 'sgReadPerms', 'permission'),
-          node('canRead', 'Permission', {
-            property: prop,
-            read: true,
-          }),
-          relation('out', 'readPermsOfBaseNode', 'baseNode'),
-          node('project', 'Project', { id: id }),
-        ],
-      ])
-      .match([
-        [
-          node('requestingUser'),
-          relation('in', 'memberOfEditSecurityGroup', 'member'),
-          node('editSecurityGroup', 'SecurityGroup'),
-          relation('out', 'sgEditPerms', 'permission'),
-          node('canEdit', 'Permission', {
-            property: prop,
-            edit: true,
-          }),
-          relation('out', 'editPermsOfBaseNode', 'baseNode'),
-          node('project'),
-        ],
-      ])
-      .return(['canRead.read as canRead', 'canEdit.edit as canCreate'])
-      .asResult<{ canRead: boolean; canCreate: boolean }>()
-      .first();
-    return result ?? { canRead: false, canCreate: false };
-  }
-
   async getMembershipRoles(projectId: ID | Project, session: Session) {
     const query = this.db
       .query()
