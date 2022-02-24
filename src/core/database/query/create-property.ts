@@ -63,7 +63,7 @@ export const createProperty =
 
     return query.comment`
       createProperty(${nodeName}.${key})
-    `.subQuery([nodeName, variable], (sub) =>
+    `.subQuery([nodeName, variable ? varRef(variable) : null], (sub) =>
       sub
         .apply((q) =>
           changeset
