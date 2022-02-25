@@ -151,9 +151,7 @@ export class AuthenticationService {
       this.logger.warning('Email not found; Skipping reset email', { email });
       return;
     }
-
     const token = this.encodeJWT();
-
     await this.repo.saveEmailToken(email, token);
     await this.email.send(email, ForgotPassword, {
       token,

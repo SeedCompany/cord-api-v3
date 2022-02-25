@@ -78,6 +78,27 @@ export class UserRepository extends DtoRepository(User) {
       canDelete: true,
     };
 
+    // const pgResult = this.pg.query(`INSERT INTO admin.users (email, created_by, modified_by) VALUES ($1, (select admin.people.id as id 				from admin.people
+    //   inner join admin.role_memberships 	on admin.role_memberships.person = admin.people.id
+    //   inner join admin.roles 				on admin.role_memberships.role = admin.roles.id
+    //   where admin.roles.name = 'Administrator'), (select admin.people.id as id 				from admin.people
+    //     inner join admin.role_memberships 	on admin.role_memberships.person = admin.people.id
+    //     inner join admin.roles 				on admin.role_memberships.role = admin.roles.id
+    //     where admin.roles.name = 'Administrator')) returning id;`, [input.email]);
+
+    // this.pg.query(`insert into admin.people(id, about, phone, private_first_name, private_last_name, public_first_name, public_last_name,
+    //   timezone, title, status, sensitivity_clearance) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'Low')`, [
+    //     input.about,
+    //     input.phone,
+    //     input.realFirstName,
+    //     input.realLastName,
+    //     input.displayFirstName,
+    //     input.displayLastName,
+    //     input.timezone,
+    //     input.title,
+    //     input.status,
+    //   ])
+
     const query = this.db
       .query()
       .apply(await createNode(User, { initialProps }))

@@ -276,15 +276,27 @@ export class AuthenticationRepository {
   }
 
   async doesEmailAddressExist(email: string) {
-    const result = await this.db
-      .query()
-      .match([node('email', 'EmailAddress', { value: email })])
-      .return('email')
-      .first();
-    return !!result;
+    const pgResult = await this.pg.query(
+      'SELECT id, email FROM admin.users WHERE email=$1',
+      [email]
+    );
+    const resData = pgResult[0] as { id: ID; email: string };
+    // const result = await this.db
+    //   .query()
+    //   .match([node('email', 'EmailAddress', { value: email })])
+    //   .return('email')
+    //   .first();
+    return !!resData;
   }
 
   async saveEmailToken(email: string, token: string): Promise<void> {
+    await this.pg.query(
+      `
+      INSERT INTO admin.email_tokens (token, user_id) values ($1, (SELECT id FROM admin.users WHERE email=$2))
+    `,
+      [token, email]
+    );
+
     await this.db
       .query()
       .raw(
