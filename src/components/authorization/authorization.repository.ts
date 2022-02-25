@@ -3,7 +3,7 @@ import { node, relation } from 'cypher-query-builder';
 import { ID, Session } from '../../common';
 import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
 import { ACTIVE } from '../../core/database/query';
-import { InternalRole, Role } from './dto';
+import { Role } from './dto';
 import { Powers } from './dto/powers';
 
 @Injectable()
@@ -13,40 +13,6 @@ export class AuthorizationRepository {
     private readonly config: ConfigService,
     @Logger('user:repository') private readonly logger: ILogger
   ) {}
-
-  async processNewBaseNode(
-    label: string,
-    baseNodeId: ID,
-    creatorUserId: ID
-  ): Promise<void> {
-    await this.db
-      .query()
-      .raw(
-        `CALL cord.processNewBaseNode($baseNodeId, $label, $creatorUserId)`,
-        {
-          baseNodeId,
-          label,
-          creatorUserId,
-        }
-      )
-      .run();
-  }
-
-  async addUserToSecurityGroup(id: ID | string, role: InternalRole) {
-    await this.db
-      .query()
-      .raw(
-        `
-      call apoc.periodic.iterate(
-        "MATCH (u:User {id:'${id}'}), (sg:SecurityGroup {role:'${role}'})
-        WHERE NOT (u)<-[:member]-(sg)
-        RETURN u, sg",
-        "MERGE (u)<-[:member]-(sg)", {batchSize:1000})
-      yield batches, total return batches, total
-  `
-      )
-      .run();
-  }
 
   async hasPower(powers: Powers[], session: Session) {
     const query = this.db

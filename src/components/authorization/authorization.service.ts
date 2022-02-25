@@ -83,27 +83,6 @@ export class AuthorizationService {
     private readonly repo: AuthorizationRepository,
     @Logger('authorization:service') private readonly logger: ILogger
   ) {}
-
-  /**
-   * @deprecated We no longer use the procedure code for creates, reads, or listing
-   * @param resource The resource to process
-   * @param baseNodeId The node id
-   * @param creatorUserId The creator's user ID
-   */
-  async processNewBaseNode(
-    resource: ResourceShape<any>,
-    baseNodeId: ID,
-    creatorUserId: ID
-  ) {
-    await this.afterTransaction(async () => {
-      await this.repo.processNewBaseNode(
-        resource.name,
-        baseNodeId,
-        creatorUserId
-      );
-    });
-  }
-
   /**
    * Run code after current transaction finishes, if there is one.
    * This is a hack to allow our procedure and apoc.periodic.iterate to work

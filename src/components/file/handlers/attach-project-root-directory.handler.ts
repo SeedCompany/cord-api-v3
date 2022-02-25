@@ -8,7 +8,6 @@ import {
 } from '../../../core';
 import { AuthorizationService } from '../../authorization/authorization.service';
 import { ProjectCreatedEvent } from '../../project/events';
-import { Directory } from '../dto';
 import { FileService } from '../file.service';
 
 @EventsHandler(ProjectCreatedEvent)
@@ -51,12 +50,6 @@ export class AttachProjectRootDirectoryHandler
       ...event.project,
       rootDirectory: rootDir.id,
     };
-
-    await this.authorizationService.processNewBaseNode(
-      Directory,
-      rootDir.id,
-      session.userId
-    );
 
     const folders = [
       'Approval Documents',
