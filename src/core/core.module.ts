@@ -18,6 +18,7 @@ import { ExceptionFilter } from './exception.filter';
 import { GraphqlModule } from './graphql';
 import { PostgresModule } from './postgres/postgres.module';
 import { ResourceResolver } from './resources';
+import { TimeoutInterceptor } from './timeout.interceptor';
 import { TracingModule } from './tracing';
 import { ValidationPipe } from './validation.pipe';
 
@@ -39,6 +40,7 @@ import { ValidationPipe } from './validation.pipe';
     { provide: APP_FILTER, useClass: ExceptionFilter },
     { provide: APP_PIPE, useClass: ValidationPipe },
     { provide: APP_INTERCEPTOR, useClass: DataLoaderInterceptor },
+    { provide: APP_INTERCEPTOR, useClass: TimeoutInterceptor },
     ResourceResolver,
   ],
   controllers: [CoreController],
