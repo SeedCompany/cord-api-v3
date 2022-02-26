@@ -52,7 +52,7 @@ export class SessionInterceptor implements NestInterceptor {
     );
   }
 
-  private getTokenFromAuthHeader(req: Request): string | null {
+  private getTokenFromAuthHeader(req: Request | undefined): string | null {
     const header = req?.headers?.authorization;
 
     if (!header) {
@@ -65,7 +65,7 @@ export class SessionInterceptor implements NestInterceptor {
     return header.replace('Bearer ', '');
   }
 
-  private getTokenFromCookie(req: Request): string | null {
+  private getTokenFromCookie(req: Request | undefined): string | null {
     return req?.cookies?.[this.config.sessionCookie.name] || null;
   }
 }

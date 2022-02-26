@@ -8,7 +8,11 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
-import { GqlContextType, UnauthenticatedException } from '../../common';
+import {
+  GqlContextType,
+  ServerException,
+  UnauthenticatedException,
+} from '../../common';
 import { anonymousSession } from '../../common/session';
 import { ConfigService, ILogger, Loader, LoaderOf, Logger } from '../../core';
 import { AuthorizationService } from '../authorization/authorization.service';
@@ -71,6 +75,11 @@ export class SessionResolver {
 
     if (browser) {
       const { name, expires, ...options } = this.config.sessionCookie;
+      if (!context.response) {
+        throw new ServerException(
+          'Cannot use cookie session without a response object'
+        );
+      }
       context.response.cookie(name, token, {
         ...options,
         expires: expires
