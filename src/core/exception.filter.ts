@@ -12,11 +12,7 @@ import {
 } from '@nestjs/common';
 /* eslint-enable no-restricted-imports */
 import { BaseExceptionFilter } from '@nestjs/core';
-import {
-  GqlArgumentsHost,
-  GqlContextType,
-  GqlExceptionFilter,
-} from '@nestjs/graphql';
+import { GqlContextType, GqlExceptionFilter } from '@nestjs/graphql';
 import { compact, mapValues, uniq } from 'lodash';
 import { Neo4jError } from 'neo4j-driver';
 import {
@@ -40,7 +36,6 @@ export class ExceptionFilter implements GqlExceptionFilter {
   ) {}
 
   catch(exception: Error, restHost: ArgumentsHost): any {
-    const _host = GqlArgumentsHost.create(restHost); // when needed
     let ex: ExceptionInfo;
     try {
       ex = this.catchGql(exception);
