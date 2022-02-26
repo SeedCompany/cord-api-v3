@@ -8,7 +8,7 @@ export const maybeMany = <T>(
   item: Many<T> | null | undefined
 ): readonly T[] | undefined => (item != null ? many(item) : undefined);
 
-export const sleep = (duration: DurationLike) =>
+export const sleep = (duration: string | DurationLike) =>
   new Promise((resolve) =>
     setTimeout(resolve, Duration.from(duration).toMillis())
   );

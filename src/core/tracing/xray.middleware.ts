@@ -98,9 +98,9 @@ export class XRayMiddleware implements NestMiddleware, NestInterceptor {
       context.getType<GqlExeType>() === 'graphql'
         ? GqlExecutionContext.create(context).getContext<GqlContextType>()
             .response
-        : context.switchToHttp().getResponse();
+        : context.switchToHttp().getResponse<Response>();
 
-    if (root instanceof XRay.Segment) {
+    if (res && root instanceof XRay.Segment) {
       res.setHeader(
         'x-amzn-trace-id',
         `Root=${root.trace_id};Sampled=${sampled ? '1' : '0'}`

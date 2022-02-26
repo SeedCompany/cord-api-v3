@@ -89,7 +89,7 @@ export class GraphQLConfig implements GqlOptionsFactory {
             frame.startsWith('    at') &&
             !frame.includes('node_modules') &&
             !frame.includes('(internal/') &&
-            !frame.includes('(node:internal/') &&
+            !frame.includes('(node:') &&
             !frame.includes('(<anonymous>)')
         )
         .map((frame: string) =>
