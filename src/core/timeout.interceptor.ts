@@ -26,6 +26,10 @@ export class TimeoutInterceptor implements NestInterceptor {
         : GqlExecutionContext.create(context).getContext<GqlContextType>()
             .response;
 
+    if (!response) {
+      return next.handle();
+    }
+
     const timeout$ = fromEvent(response, 'timeout').pipe(
       map(() => {
         throw new ServiceUnavailableException(
