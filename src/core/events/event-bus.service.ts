@@ -3,6 +3,7 @@ import { Injectable, Type } from '@nestjs/common';
 import { EventBus, EventHandlerType, IEvent } from '@nestjs/cqrs';
 import { stripIndent } from 'common-tags';
 import { AnyFn, ServerException } from '../../common';
+import { ILogger, Logger } from '../logger';
 import { IEventHandler } from './event-handler.decorator';
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -17,9 +18,23 @@ export abstract class IEventBus<EventBase extends IEvent = IEvent> {
 @Injectable()
 export class SyncEventBus extends EventBus implements IEventBus {
   private readonly listenerMap = new Map<string, Set<AnyFn>>();
+  @Logger('event-bus') logger: ILogger;
 
   async publish<T extends IEvent>(event: T): Promise<void> {
-    const id = this.getEventId(event);
+    let id;
+    try {
+      id = this.getEventId(event);
+    } catch (e) {
+      // Fails when event doesn't have an ID in its metadata,
+      // which is created upon first registration with a handler.
+      if (process.env.NODE_ENV === 'production') {
+        return;
+      }
+      this.logger.warning(
+        `It appears that ${event.constructor.name} does not have any registered handlers. Are you sure this is right?`
+      );
+      return;
+    }
     for (const handler of this.listeners(id)) {
       await handler(event);
     }
