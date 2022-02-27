@@ -1,4 +1,3 @@
-import { Connection } from 'cypher-query-builder';
 import { CalendarDate, Sensitivity } from '../../src/common';
 import { Powers, Role, ScopedRole } from '../../src/components/authorization';
 import { Location } from '../../src/components/location';
@@ -25,7 +24,6 @@ import {
   runInIsolatedSession,
   TestApp,
 } from '../utility';
-import { resetDatabase } from '../utility/reset-database';
 import { testRole } from '../utility/roles';
 import {
   expectSensitiveProperty,
@@ -35,14 +33,12 @@ import { getPermissions } from './permissions';
 
 describe('Project Security e2e', () => {
   let app: TestApp;
-  let db: Connection;
   let testProject: Raw<Project>;
   let testLocation: Location;
   let primaryLocation: Location;
 
   beforeAll(async () => {
     app = await createTestApp();
-    db = app.get(Connection);
     await createSession(app);
     await registerUserWithPower(app, [
       Powers.CreateProject,
@@ -64,7 +60,6 @@ describe('Project Security e2e', () => {
   });
 
   afterAll(async () => {
-    await resetDatabase(db);
     await app.close();
   });
 

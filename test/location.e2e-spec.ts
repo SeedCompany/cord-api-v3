@@ -1,5 +1,4 @@
 import { gql } from 'apollo-server-core';
-import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
 import { times } from 'lodash';
 import { generateId, isValidId } from '../src/common';
@@ -16,15 +15,12 @@ import {
   runAsAdmin,
   TestApp,
 } from './utility';
-import { resetDatabase } from './utility/reset-database';
 
 describe('Location e2e', () => {
   let app: TestApp;
-  let db: Connection;
 
   beforeAll(async () => {
     app = await createTestApp();
-    db = app.get(Connection);
     await createSession(app);
     await registerUserWithPower(app, [
       Powers.CreateLocation,
@@ -33,7 +29,6 @@ describe('Location e2e', () => {
   });
 
   afterAll(async () => {
-    await resetDatabase(db);
     await app.close();
   });
 

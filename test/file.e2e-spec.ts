@@ -1,5 +1,4 @@
 import { gql } from 'apollo-server-core';
-import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
 import { startCase, times } from 'lodash';
 import {
@@ -44,7 +43,6 @@ import {
   RawFileNode,
   RawFileVersion,
 } from './utility/fragments';
-import { resetDatabase } from './utility/reset-database';
 
 export async function uploadFile(
   app: TestApp,
@@ -121,11 +119,9 @@ describe('File e2e', () => {
   let bucket: LocalBucket;
   let root: Directory;
   let me: User;
-  let db: Connection;
 
   beforeAll(async () => {
     app = await createTestApp();
-    db = app.get(Connection);
     bucket = app.get(FilesBucketToken);
     await createSession(app);
     me = await registerUser(app, {
@@ -134,7 +130,6 @@ describe('File e2e', () => {
   });
 
   afterAll(async () => {
-    await resetDatabase(db);
     await app.close();
   });
 

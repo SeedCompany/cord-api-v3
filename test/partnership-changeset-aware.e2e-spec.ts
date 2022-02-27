@@ -1,5 +1,4 @@
 import { gql } from 'apollo-server-core';
-import { Connection } from 'cypher-query-builder';
 import { Powers, Role } from '../src/components/authorization';
 import { PartnershipAgreementStatus } from '../src/components/partnership';
 import { ProjectStep } from '../src/components/project';
@@ -20,7 +19,6 @@ import {
   updateProject,
 } from './utility';
 import { fragments } from './utility/fragments';
-import { resetDatabase } from './utility/reset-database';
 import {
   changeProjectStep,
   stepsFromEarlyConversationToBeforeActive,
@@ -89,11 +87,9 @@ const activeProject = async (app: TestApp) => {
 
 describe('Partnership Changeset Aware e2e', () => {
   let app: TestApp;
-  let db: Connection;
 
   beforeAll(async () => {
     app = await createTestApp();
-    db = app.get(Connection);
     await createSession(app);
     await registerUserWithPower(
       app,
@@ -105,7 +101,6 @@ describe('Partnership Changeset Aware e2e', () => {
   });
 
   afterAll(async () => {
-    await resetDatabase(db);
     await app.close();
   });
 

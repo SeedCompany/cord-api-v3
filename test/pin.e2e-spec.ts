@@ -1,5 +1,4 @@
 import { gql } from 'apollo-server-core';
-import { Connection } from 'cypher-query-builder';
 import {
   createPin,
   createProject,
@@ -9,21 +8,17 @@ import {
   registerUser,
   TestApp,
 } from './utility';
-import { resetDatabase } from './utility/reset-database';
 
 describe('Pin e2e', () => {
   let app: TestApp;
-  let db: Connection;
 
   beforeAll(async () => {
     app = await createTestApp();
-    db = app.get(Connection);
     await createSession(app);
     await registerUser(app);
   });
 
   afterAll(async () => {
-    await resetDatabase(db);
     await app.close();
   });
 

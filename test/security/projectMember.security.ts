@@ -1,4 +1,3 @@
-import { Connection } from 'cypher-query-builder';
 import { Powers, Role } from '../../src/components/authorization';
 import { Project, ProjectMember } from '../../src/components/project';
 import { User } from '../../src/components/user/dto';
@@ -15,19 +14,16 @@ import {
   runInIsolatedSession,
   TestApp,
 } from '../utility';
-import { resetDatabase } from '../utility/reset-database';
 import { testRole } from '../utility/roles';
 
 describe('Project Member Security e2e', () => {
   let app: TestApp;
-  let db: Connection;
   let testProject: Raw<Project>;
   let testProjectMember: Raw<ProjectMember>;
   let testUser: User;
 
   beforeAll(async () => {
     app = await createTestApp();
-    db = app.get(Connection);
     await createSession(app);
     await registerUserWithPower(app, [
       Powers.CreateProject,
@@ -46,7 +42,6 @@ describe('Project Member Security e2e', () => {
   });
 
   afterAll(async () => {
-    await resetDatabase(db);
     await app.close();
   });
 

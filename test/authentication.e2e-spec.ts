@@ -14,7 +14,6 @@ import {
   TestApp,
 } from './utility';
 import { RawUser } from './utility/fragments';
-import { resetDatabase } from './utility/reset-database';
 
 describe('Authentication e2e', () => {
   let app: TestApp;
@@ -27,7 +26,6 @@ describe('Authentication e2e', () => {
   });
 
   afterAll(async () => {
-    await resetDatabase(db);
     await app.close();
   });
 

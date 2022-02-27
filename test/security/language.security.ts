@@ -1,4 +1,3 @@
-import { Connection } from 'cypher-query-builder';
 import {
   ResourceShape,
   SecuredListType,
@@ -32,21 +31,18 @@ import {
   runInIsolatedSession,
   TestApp,
 } from '../utility';
-import { resetDatabase } from '../utility/reset-database';
 import { testRole } from '../utility/roles';
 import { ReadOneFunction, ResourceArrayRelation } from '../utility/sensitivity';
 import { getPermissions } from './permissions';
 
 describe('Language Security e2e', () => {
   let app: TestApp;
-  let db: Connection;
   let testLanguage: Language;
   let testLocation: Location;
   let testProject: Raw<Project>;
 
   beforeAll(async () => {
     app = await createTestApp();
-    db = app.get(Connection);
     await createSession(app);
     await registerUserWithPower(app, [
       Powers.CreateLanguage,
@@ -63,7 +59,6 @@ describe('Language Security e2e', () => {
   });
 
   afterAll(async () => {
-    await resetDatabase(db);
     await app.close();
   });
 

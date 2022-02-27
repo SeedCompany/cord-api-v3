@@ -1,5 +1,4 @@
 import { gql } from 'apollo-server-core';
-import { Connection } from 'cypher-query-builder';
 import { times } from 'lodash';
 import {
   CalendarDate,
@@ -23,16 +22,13 @@ import {
   TestApp,
 } from './utility';
 import { createPartnership } from './utility/create-partnership';
-import { resetDatabase } from './utility/reset-database';
 
 describe('Budget e2e', () => {
   let app: TestApp;
   let project: Raw<Project>;
-  let db: Connection;
 
   beforeAll(async () => {
     app = await createTestApp();
-    db = app.get(Connection);
     await createSession(app);
     await registerUserWithPower(app, [
       Powers.CreateOrganization,
@@ -49,7 +45,6 @@ describe('Budget e2e', () => {
   });
 
   afterAll(async () => {
-    await resetDatabase(db);
     await app.close();
   });
 

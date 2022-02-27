@@ -1,5 +1,4 @@
 import { gql } from 'apollo-server-core';
-import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
 import { times } from 'lodash';
 import { isValidId } from '../src/common';
@@ -13,22 +12,18 @@ import {
   TestApp,
 } from './utility';
 import { fragments } from './utility/fragments';
-import { resetDatabase } from './utility/reset-database';
 
 describe('Unavailability e2e', () => {
   let app: TestApp;
   let user: User;
-  let db: Connection;
 
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
     user = await registerUser(app);
-    db = app.get(Connection);
   });
 
   afterAll(async () => {
-    await resetDatabase(db);
     await app.close();
   });
 

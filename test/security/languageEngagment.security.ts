@@ -1,4 +1,3 @@
-import { Connection } from 'cypher-query-builder';
 import { Sensitivity } from '../../src/common';
 import { Powers, Role, ScopedRole } from '../../src/components/authorization';
 import { LanguageEngagement } from '../../src/components/engagement';
@@ -21,20 +20,17 @@ import {
   TestApp,
 } from '../utility';
 import { RawLanguageEngagement } from '../utility/fragments';
-import { resetDatabase } from '../utility/reset-database';
 import { testRole } from '../utility/roles';
 import { expectSensitiveProperty } from '../utility/sensitivity';
 import { getPermissions } from './permissions';
 
 describe('Language Engagment Security e2e', () => {
   let app: TestApp;
-  let db: Connection;
   let testProject: Raw<Project>;
   let testLanguage: Language;
   let testLanguageEngagement: RawLanguageEngagement;
   beforeAll(async () => {
     app = await createTestApp();
-    db = app.get(Connection);
     await createSession(app);
     await registerUserWithPower(app, [
       Powers.CreateProject,
@@ -52,7 +48,6 @@ describe('Language Engagment Security e2e', () => {
   });
 
   afterAll(async () => {
-    await resetDatabase(db);
     await app.close();
   });
 

@@ -1,4 +1,3 @@
-import { Connection } from 'cypher-query-builder';
 import { Powers, Role } from '../src/components/authorization';
 import { EngagementStatus } from '../src/components/engagement';
 import { ProjectStep, ProjectType } from '../src/components/project';
@@ -17,7 +16,6 @@ import {
   TestApp,
   updateProject,
 } from './utility';
-import { resetDatabase } from './utility/reset-database';
 import {
   changeLanguageEngagementStatus,
   transitionEngagementToActive,
@@ -29,11 +27,9 @@ import {
 
 describe('Project-Workflow e2e', () => {
   let app: TestApp;
-  let db: Connection;
 
   beforeAll(async () => {
     app = await createTestApp();
-    db = app.get(Connection);
     await createSession(app);
 
     await registerUserWithPower(
@@ -49,7 +45,6 @@ describe('Project-Workflow e2e', () => {
     );
   });
   afterAll(async () => {
-    await resetDatabase(db);
     await app.close();
   });
 

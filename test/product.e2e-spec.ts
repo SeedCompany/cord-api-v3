@@ -1,5 +1,4 @@
 import { gql } from 'apollo-server-core';
-import { Connection } from 'cypher-query-builder';
 import { times } from 'lodash';
 import { Merge } from 'type-fest';
 import { Secured } from '../src/common';
@@ -30,7 +29,6 @@ import {
   TestApp,
 } from './utility';
 import { RawLanguageEngagement, RawProduct } from './utility/fragments';
-import { resetDatabase } from './utility/reset-database';
 
 // Shape for public API
 type DerivativeScriptureProduct = Merge<
@@ -43,11 +41,9 @@ describe('Product e2e', () => {
   let engagement: RawLanguageEngagement;
   let story: Story;
   let film: Film;
-  let db: Connection;
 
   beforeAll(async () => {
     app = await createTestApp();
-    db = app.get(Connection);
     await createSession(app);
     await registerUserWithPower(
       app,
@@ -62,7 +58,6 @@ describe('Product e2e', () => {
     engagement = await createLanguageEngagement(app);
   });
   afterAll(async () => {
-    await resetDatabase(db);
     await app.close();
   });
 
