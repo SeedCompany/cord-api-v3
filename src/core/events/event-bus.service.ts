@@ -19,8 +19,8 @@ export class SyncEventBus extends EventBus implements IEventBus {
   private readonly listenerMap = new Map<string, Set<AnyFn>>();
 
   async publish<T extends IEvent>(event: T): Promise<void> {
-    const name = this.getEventName(event);
-    for (const handler of this.listeners(name)) {
+    const id = this.getEventId(event);
+    for (const handler of this.listeners(id)) {
       await handler(event);
     }
   }
@@ -44,8 +44,8 @@ export class SyncEventBus extends EventBus implements IEventBus {
     super.register(handlers);
   }
 
-  bind(handler: IEventHandler<IEvent>, name: string) {
-    this.listeners(name).add((event) => handler.handle(event));
+  bind(handler: IEventHandler<IEvent>, id: string) {
+    this.listeners(id).add((event) => handler.handle(event));
   }
 
   registerSagas(types: Array<Type<unknown>>) {
@@ -54,8 +54,8 @@ export class SyncEventBus extends EventBus implements IEventBus {
     }
   }
 
-  private listeners(name: string) {
-    return mapGetOrCreate(this.listenerMap, name, () => new Set());
+  private listeners(id: string) {
+    return mapGetOrCreate(this.listenerMap, id, () => new Set());
   }
 }
 
