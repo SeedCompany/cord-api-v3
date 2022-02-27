@@ -1,4 +1,3 @@
-import { Connection } from 'cypher-query-builder';
 import { Powers, Role } from '../../src/components/authorization';
 import { FundingAccount } from '../../src/components/funding-account';
 import {
@@ -12,16 +11,13 @@ import {
   runInIsolatedSession,
   TestApp,
 } from '../utility';
-import { resetDatabase } from '../utility/reset-database';
 import { testRole } from '../utility/roles';
 
 describe('Funding Account Security e2e', () => {
   let app: TestApp;
-  let db: Connection;
   let testFundingAccount: FundingAccount;
   beforeAll(async () => {
     app = await createTestApp();
-    db = app.get(Connection);
     await createSession(app);
     await registerUserWithPower(app, [
       Powers.CreateFundingAccount,
@@ -31,7 +27,6 @@ describe('Funding Account Security e2e', () => {
   });
 
   afterAll(async () => {
-    await resetDatabase(db);
     await app.close();
   });
 

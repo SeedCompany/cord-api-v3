@@ -1,5 +1,4 @@
 import { gql } from 'apollo-server-core';
-import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
 import { times } from 'lodash';
 import { isValidId } from '../src/common';
@@ -14,21 +13,17 @@ import {
   registerUserWithPower,
   TestApp,
 } from './utility';
-import { resetDatabase } from './utility/reset-database';
 
 describe('LiteracyMaterial e2e', () => {
   let app: TestApp;
-  let db: Connection;
 
   beforeAll(async () => {
     app = await createTestApp();
-    db = app.get(Connection);
     await createSession(app);
     await registerUserWithPower(app, [Powers.CreateLiteracyMaterial]);
   });
 
   afterAll(async () => {
-    await resetDatabase(db);
     await app.close();
   });
 

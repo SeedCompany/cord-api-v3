@@ -1,5 +1,4 @@
 import { gql } from 'apollo-server-core';
-import { Connection } from 'cypher-query-builder';
 import { CalendarDate } from '../src/common';
 import { Powers, Role } from '../src/components/authorization';
 import { PartnerType } from '../src/components/partner';
@@ -29,7 +28,6 @@ import {
   updateProject,
 } from './utility';
 import { createProduct } from './utility/create-product';
-import { resetDatabase } from './utility/reset-database';
 import {
   changeProjectStep,
   stepsFromEarlyConversationToBeforeActive,
@@ -37,7 +35,6 @@ import {
 
 describe('Project-Workflow e2e', () => {
   let app: TestApp;
-  let db: Connection;
   let director: TestUser;
   let projectManager: TestUser;
   let consultantManager: TestUser;
@@ -47,7 +44,6 @@ describe('Project-Workflow e2e', () => {
 
   beforeAll(async () => {
     app = await createTestApp();
-    db = app.get(Connection);
     await createSession(app);
 
     // Register several testers with different roles
@@ -79,7 +75,6 @@ describe('Project-Workflow e2e', () => {
     await projectManager.login();
   });
   afterAll(async () => {
-    await resetDatabase(db);
     await app.close();
   });
 

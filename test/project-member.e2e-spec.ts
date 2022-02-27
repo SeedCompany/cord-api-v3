@@ -1,5 +1,4 @@
 import { gql } from 'apollo-server-core';
-import { Connection } from 'cypher-query-builder';
 import { times } from 'lodash';
 import { DateTime, Interval } from 'luxon';
 import { isValidId, NotFoundException } from '../src/common';
@@ -16,16 +15,13 @@ import {
   registerUserWithPower,
   TestApp,
 } from './utility';
-import { resetDatabase } from './utility/reset-database';
 
 describe('ProjectMember e2e', () => {
   let app: TestApp;
-  let db: Connection;
   let project: Raw<Project>;
 
   beforeAll(async () => {
     app = await createTestApp();
-    db = app.get(Connection);
     await createSession(app);
     await registerUserWithPower(app, [Powers.GrantRole], {
       roles: [
@@ -37,7 +33,6 @@ describe('ProjectMember e2e', () => {
     project = await createProject(app);
   });
   afterAll(async () => {
-    await resetDatabase(db);
     await app.close();
   });
 

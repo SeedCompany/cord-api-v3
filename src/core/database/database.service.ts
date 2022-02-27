@@ -14,22 +14,36 @@ import {
   Session,
   UnwrapSecured,
 } from '../../common';
-import { ILogger, Logger, ServiceUnavailableError, UniquenessError } from '..';
+import {
+  ConfigService,
+  ILogger,
+  Logger,
+  ServiceUnavailableError,
+  UniquenessError,
+} from '..';
 import { AbortError, retry, RetryOptions } from '../../common/retry';
 import { DbChanges } from './changes';
 import { ACTIVE, deleteBaseNode, exp, updateProperty } from './query';
-import { Transactional } from './transactional.decorator';
 
 export interface ServerInfo {
-  name: string;
   version: string;
   edition: string;
+  databases: DbInfo[];
+}
+
+interface DbInfo {
+  name: string;
+  status: string;
+  error?: string;
 }
 
 @Injectable()
 export class DatabaseService {
+  private attemptedDbCreation = false;
+
   constructor(
     private readonly db: Connection,
+    private readonly config: ConfigService,
     @Logger('database:service') private readonly logger: ILogger
   ) {}
 
@@ -38,7 +52,9 @@ export class DatabaseService {
    * If connection to database fails while executing function it will keep
    * retrying (after another successful connection) until the function finishes.
    */
-  async runOnceUntilCompleteAfterConnecting(run: () => Promise<void>) {
+  async runOnceUntilCompleteAfterConnecting(
+    run: (info: ServerInfo) => Promise<void>
+  ) {
     await this.waitForConnection(
       {
         forever: true,
@@ -53,11 +69,15 @@ export class DatabaseService {
    * Wait for database connection.
    * Optionally run a function in retry context after connecting.
    */
-  async waitForConnection(options?: RetryOptions, then?: () => Promise<void>) {
+  async waitForConnection(
+    options?: RetryOptions,
+    then?: (info: ServerInfo) => Promise<void>
+  ) {
     await retry(async () => {
       try {
-        await this.getServerInfo();
-        await then?.();
+        const info = await this.getServerInfo();
+        await this.createDbIfNeeded(info);
+        await then?.(info);
       } catch (e) {
         throw e instanceof ServiceUnavailableError ? e : new AbortError(e);
       }
@@ -81,22 +101,83 @@ export class DatabaseService {
     return q;
   }
 
-  @Transactional()
-  async getServerInfo() {
-    const info = await this.db
-      .query()
-      .raw(
-        `call dbms.components()
-         yield name, versions, edition
-         unwind versions as version
-         return name, version, edition`
-      )
-      .asResult<ServerInfo>()
-      .first();
-    if (!info) {
-      throw new ServerException('Unable to determine server info');
+  async getServerInfo(): Promise<ServerInfo> {
+    // @ts-expect-error Yes this is private, but we have a special use case.
+    // We need to run this query with a session that's not configured to use the
+    // database that may not exist.
+    const session = this.db.driver.session();
+    try {
+      const generalInfo = await session.readTransaction((tx) =>
+        tx.run(`
+          call dbms.components()
+          yield versions, edition
+          unwind versions as version
+          return version, edition
+        `)
+      );
+      const info = generalInfo.records[0];
+      if (!info) {
+        throw new ServerException('Unable to determine server info');
+      }
+      // "Administration" command doesn't work with read transactions
+      const dbs = await session.writeTransaction((tx) =>
+        tx.run(`
+          show databases
+          yield name, currentStatus, error
+        `)
+      );
+      return {
+        version: info.get('version'),
+        edition: info.get('edition'),
+        databases: dbs.records.map((r) => ({
+          name: r.get('name'),
+          status: r.get('currentStatus'),
+          error: r.get('error') || undefined,
+        })),
+      };
+    } finally {
+      await session.close();
     }
-    return info;
+  }
+
+  private async createDbIfNeeded(info: ServerInfo) {
+    if (this.attemptedDbCreation) {
+      return;
+    }
+    this.attemptedDbCreation = true;
+
+    const dbName = this.config.neo4j.database;
+    if (info.databases.some((db) => db.name === dbName)) {
+      return; // already exists
+    }
+    await this.runAdminCommand('CREATE', info);
+  }
+
+  async dropDb() {
+    await this.runAdminCommand('DROP', await this.getServerInfo());
+  }
+
+  private async runAdminCommand(action: string, info: ServerInfo) {
+    // @ts-expect-error Yes this is private, but we have a special use case.
+    // We need to run this query with a session that's not configured to use the
+    // database we are trying to create.
+    const session = this.db.driver.session();
+    const supportsWait = parseFloat(info.version.slice(0, 3)) >= 4.2;
+    const dbName = this.config.neo4j.database;
+    try {
+      await session.writeTransaction((tx) =>
+        tx.run(
+          `${action} DATABASE $name IF NOT EXISTS ${
+            supportsWait ? 'WAIT' : ''
+          }`,
+          {
+            name: dbName,
+          }
+        )
+      );
+    } finally {
+      await session.close();
+    }
   }
 
   async createFullTextIndex(

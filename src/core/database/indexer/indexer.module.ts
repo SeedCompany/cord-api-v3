@@ -34,13 +34,14 @@ export class IndexerModule implements OnModuleInit {
     this.logger.debug('Discovered indexers', { count: discovered.length });
     const groupedByMode = groupBy(discovered, (d) => d.meta);
 
-    const finishing = this.db.runOnceUntilCompleteAfterConnecting(async () => {
-      const serverInfo = await this.db.getServerInfo();
-      for (const [mode, discoveredOfMode] of Object.entries(groupedByMode)) {
-        await this.doIndexing(discoveredOfMode, serverInfo);
-        this.logger.debug(`Finished syncing ${mode} indexes`);
+    const finishing = this.db.runOnceUntilCompleteAfterConnecting(
+      async (serverInfo) => {
+        for (const [mode, discoveredOfMode] of Object.entries(groupedByMode)) {
+          await this.doIndexing(discoveredOfMode, serverInfo);
+          this.logger.debug(`Finished syncing ${mode} indexes`);
+        }
       }
-    });
+    );
     // Wait for indexing to finish when running tests, else just let it run in
     // background and allow webserver to start.
     if (this.config.jest) {
