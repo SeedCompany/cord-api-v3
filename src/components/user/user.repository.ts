@@ -549,11 +549,14 @@ export class PgUserRepository implements PublicOf<UserRepository> {
         p.phone,
         p.timezone, 
         p.about, 
-        p.status, 
+        p.status,
+        array_agg(r.name) as "roles",
         p.title,
         p.created_at as "createdAt"
-        FROM admin.people as p, admin.users as u
-        WHERE p.id = $1 AND p.id = u.id;
+        FROM admin.people as p, admin.users as u, admin.role_memberships rm
+        JOIN admin.roles r ON r.id = rm.role
+        WHERE rm.person = $1 AND p.id = $1 AND p.id = u.id
+        GROUP BY u.email, p.id;
         `,
       [id]
     );
