@@ -89,35 +89,21 @@ export class EngagementRules {
               to: EngagementStatus.DiscussingChangeToPlan,
               type: EngagementTransitionType.Neutral,
               label: 'Discuss Change to Plan',
-              projectStepRequirements: [ProjectStep.DiscussingChangeToPlan],
             },
             {
               to: EngagementStatus.DiscussingSuspension,
               type: EngagementTransitionType.Neutral,
               label: 'Discuss Suspension',
-              projectStepRequirements: [
-                ProjectStep.DiscussingChangeToPlan,
-                ProjectStep.DiscussingSuspension,
-              ],
             },
             {
               to: EngagementStatus.DiscussingTermination,
               type: EngagementTransitionType.Neutral,
               label: 'Discuss Termination',
-              projectStepRequirements: [
-                ProjectStep.DiscussingChangeToPlan,
-                ProjectStep.DiscussingSuspension,
-                ProjectStep.DiscussingTermination,
-              ],
             },
             {
               to: EngagementStatus.FinalizingCompletion,
               type: EngagementTransitionType.Approve,
               label: 'Finalize Completion',
-              projectStepRequirements: [
-                ProjectStep.Active,
-                ProjectStep.FinalizingCompletion,
-              ],
             },
           ],
         };
@@ -134,35 +120,21 @@ export class EngagementRules {
               to: EngagementStatus.DiscussingChangeToPlan,
               type: EngagementTransitionType.Neutral,
               label: 'Discuss Change to Plan',
-              projectStepRequirements: [ProjectStep.DiscussingChangeToPlan],
             },
             {
               to: EngagementStatus.DiscussingTermination,
               type: EngagementTransitionType.Neutral,
               label: 'Discuss Termination',
-              projectStepRequirements: [
-                ProjectStep.DiscussingChangeToPlan,
-                ProjectStep.DiscussingSuspension,
-                ProjectStep.DiscussingTermination,
-              ],
             },
             {
               to: EngagementStatus.DiscussingSuspension,
               type: EngagementTransitionType.Neutral,
               label: 'Discuss Suspension',
-              projectStepRequirements: [
-                ProjectStep.DiscussingChangeToPlan,
-                ProjectStep.DiscussingSuspension,
-              ],
             },
             {
               to: EngagementStatus.FinalizingCompletion,
               type: EngagementTransitionType.Approve,
               label: 'Finalize Completion',
-              projectStepRequirements: [
-                ProjectStep.Active,
-                ProjectStep.FinalizingCompletion,
-              ],
             },
           ],
         };
@@ -179,16 +151,11 @@ export class EngagementRules {
               to: EngagementStatus.DiscussingSuspension,
               type: EngagementTransitionType.Neutral,
               label: 'Discuss Suspension',
-              projectStepRequirements: [
-                ProjectStep.DiscussingChangeToPlan,
-                ProjectStep.DiscussingSuspension,
-              ],
             },
             {
               to: EngagementStatus.ActiveChangedPlan,
               type: EngagementTransitionType.Approve,
               label: 'Approve Change to Plan',
-              projectStepRequirements: [ProjectStep.DiscussingChangeToPlan],
             },
             {
               to: await mostRecentPreviousStatus([
@@ -197,7 +164,6 @@ export class EngagementRules {
               ]),
               type: EngagementTransitionType.Neutral,
               label: 'Will Not Change Plan',
-              projectStepRequirements: [ProjectStep.DiscussingChangeToPlan],
             },
           ],
         };
@@ -214,10 +180,6 @@ export class EngagementRules {
               to: EngagementStatus.Suspended,
               type: EngagementTransitionType.Approve,
               label: 'Approve Suspension',
-              projectStepRequirements: [
-                ProjectStep.DiscussingChangeToPlan,
-                ProjectStep.DiscussingSuspension,
-              ],
             },
             {
               to: await mostRecentPreviousStatus([
@@ -226,20 +188,11 @@ export class EngagementRules {
               ]),
               type: EngagementTransitionType.Neutral,
               label: 'Will Not Suspend',
-              projectStepRequirements: [
-                ProjectStep.DiscussingChangeToPlan,
-                ProjectStep.DiscussingSuspension,
-              ],
             },
             {
               to: EngagementStatus.DiscussingTermination,
               type: EngagementTransitionType.Neutral,
               label: 'Discussing Termination',
-              projectStepRequirements: [
-                ProjectStep.DiscussingChangeToPlan,
-                ProjectStep.DiscussingSuspension,
-                ProjectStep.DiscussingTermination,
-              ],
             },
           ],
         };
