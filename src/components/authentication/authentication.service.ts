@@ -85,7 +85,7 @@ export class AuthenticationService {
     if (!context.session) {
       throw new NoSessionException();
     }
-    const newSession = await this.createSession(context.session.token);
+    const newSession = await this.resumeSession(context.session.token);
     context.session = newSession; // replace session given with session pipe
     return newSession;
   }
@@ -94,7 +94,7 @@ export class AuthenticationService {
     await this.repo.deleteSessionToken(token);
   }
 
-  async createSession(token: string): Promise<RawSession> {
+  async resumeSession(token: string): Promise<RawSession> {
     this.logger.debug('Decoding token', { token });
 
     const { iat } = this.decodeJWT(token);
@@ -114,7 +114,7 @@ export class AuthenticationService {
       issuedAt: DateTime.fromMillis(iat),
       ...result,
     };
-    this.logger.debug('Created session', session);
+    this.logger.debug('Resumed session', session);
     return session;
   }
 

@@ -42,7 +42,7 @@ export class SessionInterceptor implements NestInterceptor {
     if (!token) {
       throw new UnauthenticatedException();
     }
-    return await this.auth.createSession(token);
+    return await this.auth.resumeSession(token);
   }
 
   getTokenFromContext(context: GqlContextType): string | null {

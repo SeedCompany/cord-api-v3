@@ -54,7 +54,7 @@ export class SessionResolver {
     let token = existingToken || (await this.authentication.createToken());
     let rawSession;
     try {
-      rawSession = await this.authentication.createSession(token);
+      rawSession = await this.authentication.resumeSession(token);
     } catch (exception) {
       if (!(exception instanceof UnauthenticatedException)) {
         throw exception;
@@ -64,7 +64,7 @@ export class SessionResolver {
         { exception }
       );
       token = await this.authentication.createToken();
-      rawSession = await this.authentication.createSession(token);
+      rawSession = await this.authentication.resumeSession(token);
     }
     context.session = rawSession; // Set for data loaders invoked later in operation
     const session = anonymousSession(rawSession);
