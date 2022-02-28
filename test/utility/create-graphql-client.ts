@@ -152,12 +152,15 @@ const reportError = (
   return err;
 };
 
-export const getGraphQLOptions = (): GqlModuleOptions => ({
-  path: '/graphql',
-  fieldResolverEnhancers: [],
-  autoSchemaFile: 'schema.graphql',
-  context: {},
-});
+export const getGraphQLOptions = (): GqlModuleOptions => {
+  const context: GqlContextType = {};
+  return {
+    path: '/graphql',
+    fieldResolverEnhancers: [],
+    autoSchemaFile: 'schema.graphql',
+    context,
+  };
+};
 
 const getServer = async (app: INestApplicationContext) => {
   const module = app.get(GraphQLModule);
