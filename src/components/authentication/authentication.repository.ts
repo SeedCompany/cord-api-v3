@@ -3,7 +3,13 @@ import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { ID, ServerException, Session } from '../../common';
 import { DatabaseService } from '../../core';
-import { ACTIVE, requestingUser, variable } from '../../core/database/query';
+import {
+  ACTIVE,
+  matchUserGloballyScopedRoles,
+  requestingUser,
+  variable,
+} from '../../core/database/query';
+import { ScopedRole } from '../authorization';
 import { LoginInput } from './dto';
 
 interface EmailToken {
@@ -158,7 +164,7 @@ export class AuthenticationRepository {
       .run();
   }
 
-  async findSessionToken(token: string) {
+  async resumeSession(token: string) {
     const result = await this.db
       .query()
       .raw('MATCH (token:Token { active: true, value: $token })', { token })
@@ -167,8 +173,11 @@ export class AuthenticationRepository {
         relation('in', '', 'token', ACTIVE),
         node('user', 'User'),
       ])
-      .return('token, user.id AS userId')
-      .asResult<{ token: string; userId?: ID }>()
+      .apply(matchUserGloballyScopedRoles('user', 'roles'))
+      .return<{ userId?: ID; roles: ScopedRole[] }>([
+        'user.id as userId',
+        'roles',
+      ])
       .first();
 
     return result;
