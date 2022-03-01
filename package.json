@@ -46,6 +46,7 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.13.2",
     "cli-highlight": "^2.1.11",
+    "colors": "^1.4.0",
     "commander": "^8.3.0",
     "common-tags": "^1.8.2",
     "cookie-parser": "^1.4.6",
