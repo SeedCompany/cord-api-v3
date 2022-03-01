@@ -1,5 +1,4 @@
 import { gql } from 'apollo-server-core';
-import { Connection } from 'cypher-query-builder';
 import { CalendarDate, ID, Sensitivity } from '../../src/common';
 import { Powers, Role, ScopedRole } from '../../src/components/authorization';
 import { Budget } from '../../src/components/budget';
@@ -27,7 +26,6 @@ import {
   runInIsolatedSession,
   TestApp,
 } from '../utility';
-import { resetDatabase } from '../utility/reset-database';
 import { testRole } from '../utility/roles';
 import {
   expectSensitiveProperty,
@@ -37,13 +35,11 @@ import { getPermissions } from './permissions';
 
 describe('Budget Security e2e', () => {
   let app: TestApp;
-  let db: Connection;
   let testProject: Raw<Project>;
   let testBudget: Budget;
 
   beforeAll(async () => {
     app = await createTestApp();
-    db = app.get(Connection);
     await createSession(app);
     await registerUserWithPower(app, [
       Powers.CreateOrganization,
@@ -74,7 +70,6 @@ describe('Budget Security e2e', () => {
   });
 
   afterAll(async () => {
-    await resetDatabase(db);
     await app.close();
   });
 

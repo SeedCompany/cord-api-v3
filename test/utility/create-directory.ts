@@ -12,7 +12,7 @@ export async function createRootDirectory(app: TestApp, name?: string) {
   name = name ?? startCase(faker.lorem.words());
   const rawSession = await app
     .get(AuthenticationService)
-    .createSession(app.graphql.authToken);
+    .resumeSession(app.graphql.authToken);
   const session = loggedInSession(rawSession);
   const actual = await app
     .get(FileService)

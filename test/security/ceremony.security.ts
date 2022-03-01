@@ -1,4 +1,3 @@
-import { Connection } from 'cypher-query-builder';
 import { Powers, Role } from '../../src/components/authorization';
 import { Ceremony } from '../../src/components/ceremony';
 import { Project } from '../../src/components/project';
@@ -17,18 +16,15 @@ import {
   runInIsolatedSession,
   TestApp,
 } from '../utility';
-import { resetDatabase } from '../utility/reset-database';
 import { testRole } from '../utility/roles';
 
 describe('Ceremony Security e2e', () => {
   let app: TestApp;
-  let db: Connection;
   let testProject: Raw<Project>;
   let testCeremony: Ceremony;
 
   beforeAll(async () => {
     app = await createTestApp();
-    db = app.get(Connection);
     await createSession(app);
     await registerUserWithPower(app, [
       Powers.CreateProject,
@@ -52,7 +48,6 @@ describe('Ceremony Security e2e', () => {
   });
 
   afterAll(async () => {
-    await resetDatabase(db);
     await app.close();
   });
 

@@ -6,6 +6,7 @@
   "testEnvironment": "node",
   "testRegex": ".e2e-spec.ts$",
   "setupFiles": ["reflect-metadata", "./src/app.module.ts", "./test/jest.d.ts"],
+  "forceExit": true,
   "globals": {
     "ts-jest": {
       "astTransformers": {

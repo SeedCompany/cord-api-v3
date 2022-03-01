@@ -142,7 +142,7 @@ export const matchProjectSens =
         .return<{ sensitivity: Sensitivity }>('"High" as sensitivity')
     );
 
-const matchUserGloballyScopedRoles =
+export const matchUserGloballyScopedRoles =
   <Output extends string = 'scopedRoles'>(
     userVar = 'requestingUser',
     outputVar = 'globalRoles' as Output
@@ -153,7 +153,7 @@ const matchUserGloballyScopedRoles =
         .with(userVar)
         .match([
           node(userVar),
-          relation('out', '', 'roles', { active: true }),
+          relation('out', '', 'roles', ACTIVE),
           node('role', 'Property'),
         ])
         .return<{ [K in Output]: GlobalScopedRole[] }>(

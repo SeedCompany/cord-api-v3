@@ -1,4 +1,3 @@
-import { Connection } from 'cypher-query-builder';
 import { Powers, Role } from '../../src/components/authorization';
 import { Film } from '../../src/components/film';
 import {
@@ -12,23 +11,19 @@ import {
   runInIsolatedSession,
   TestApp,
 } from '../utility';
-import { resetDatabase } from '../utility/reset-database';
 import { testRole } from '../utility/roles';
 
 describe('Film Security e2e', () => {
   let app: TestApp;
-  let db: Connection;
   let testFilm: Film;
   beforeAll(async () => {
     app = await createTestApp();
-    db = app.get(Connection);
     await createSession(app);
     await registerUserWithPower(app, [Powers.CreateFilm, Powers.CreateProject]);
     testFilm = await createFilm(app);
   });
 
   afterAll(async () => {
-    await resetDatabase(db);
     await app.close();
   });
 

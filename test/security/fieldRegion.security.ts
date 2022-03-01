@@ -1,4 +1,3 @@
-import { Connection } from 'cypher-query-builder';
 import { Powers, Role } from '../../src/components/authorization';
 import { FieldRegion } from '../../src/components/field-region';
 import {
@@ -12,16 +11,13 @@ import {
   runInIsolatedSession,
   TestApp,
 } from '../utility';
-import { resetDatabase } from '../utility/reset-database';
 import { testRole } from '../utility/roles';
 
 describe('Partnership Security e2e', () => {
   let app: TestApp;
-  let db: Connection;
   let testFieldRegion: FieldRegion;
   beforeAll(async () => {
     app = await createTestApp();
-    db = app.get(Connection);
     await createSession(app);
     await registerUserWithPower(app, [
       Powers.CreateRegion,
@@ -31,7 +27,6 @@ describe('Partnership Security e2e', () => {
   });
 
   afterAll(async () => {
-    await resetDatabase(db);
     await app.close();
   });
 

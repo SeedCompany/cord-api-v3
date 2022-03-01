@@ -1,5 +1,4 @@
 import { gql } from 'apollo-server-core';
-import { Connection } from 'cypher-query-builder';
 import * as faker from 'faker';
 import { intersection, times } from 'lodash';
 import { DateTime } from 'luxon';
@@ -54,7 +53,6 @@ import {
   runAsAdmin,
   TestApp,
 } from './utility';
-import { resetDatabase } from './utility/reset-database';
 import {
   changeProjectStep,
   stepsFromEarlyConversationToBeforeActive,
@@ -105,11 +103,9 @@ describe('Project e2e', () => {
   let fieldZone: FieldZone;
   let fieldRegion: FieldRegion;
   let location: Location;
-  let db: Connection;
 
   beforeAll(async () => {
     app = await createTestApp();
-    db = app.get(Connection);
     await createSession(app);
     director = await registerUserWithPower(
       app,
@@ -142,7 +138,6 @@ describe('Project e2e', () => {
   });
 
   afterAll(async () => {
-    await resetDatabase(db);
     await app.close();
   });
 

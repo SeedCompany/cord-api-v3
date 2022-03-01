@@ -8,6 +8,7 @@ import { CookieOptions } from 'express';
 import type { Server as HttpServer } from 'http';
 import { LazyGetter as Lazy } from 'lazy-get-decorator';
 import { Duration, DurationLike } from 'luxon';
+import { nanoid } from 'nanoid';
 import { Config as Neo4JDriverConfig } from 'neo4j-driver';
 import { join } from 'path';
 import { PoolConfig } from 'pg';
@@ -111,19 +112,27 @@ export class ConfigService implements EmailOptionsFactory {
     };
     let url = this.env.string('NEO4J_URL').optional('bolt://localhost');
     const parsed = new URL(url);
-    const username =
-      parsed.username || this.env.string('NEO4J_USERNAME').optional('neo4j');
-    const password =
-      parsed.password || this.env.string('NEO4J_PASSWORD').optional('admin');
-    if (parsed.username || parsed.password) {
+    const username = this.env
+      .string('NEO4J_USERNAME')
+      .optional(parsed.username || 'neo4j');
+    const password = this.env
+      .string('NEO4J_PASSWORD')
+      .optional(parsed.password || 'admin');
+    const database = this.env
+      .string('NEO4J_DBNAME')
+      .optional(parsed.pathname.slice(1) || undefined);
+    if (parsed.username || parsed.password || parsed.pathname) {
       parsed.username = '';
       parsed.password = '';
+      parsed.pathname = '';
       url = parsed.toString();
     }
     return {
       url,
       username,
       password,
+      database: this.jest ? `test.${nanoid().replace(/[-_]/g, '')}` : database,
+      ephemeral: this.jest,
       driverConfig,
     };
   }

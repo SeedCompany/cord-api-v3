@@ -14,7 +14,6 @@ import {
 import { RawSession } from '../../common/session';
 import { ConfigService, ILogger, Logger } from '../../core';
 import { ForgotPassword } from '../../core/email/templates';
-import { AuthorizationService } from '../authorization/authorization.service';
 import { UserService } from '../user';
 import { AuthenticationRepository } from './authentication.repository';
 import { CryptoService } from './crypto.service';
@@ -32,7 +31,6 @@ export class AuthenticationService {
     private readonly crypto: CryptoService,
     private readonly email: EmailService,
     private readonly userService: UserService,
-    private readonly authorizationService: AuthorizationService,
     @Logger('authentication:service') private readonly logger: ILogger,
     private readonly repo: AuthenticationRepository
   ) {}
@@ -87,7 +85,7 @@ export class AuthenticationService {
     if (!context.session) {
       throw new NoSessionException();
     }
-    const newSession = await this.createSession(context.session.token);
+    const newSession = await this.resumeSession(context.session.token);
     context.session = newSession; // replace session given with session pipe
     return newSession;
   }
@@ -96,12 +94,12 @@ export class AuthenticationService {
     await this.repo.deleteSessionToken(token);
   }
 
-  async createSession(token: string): Promise<RawSession> {
+  async resumeSession(token: string): Promise<RawSession> {
     this.logger.debug('Decoding token', { token });
 
     const { iat } = this.decodeJWT(token);
 
-    const result = await this.repo.findSessionToken(token);
+    const result = await this.repo.resumeSession(token);
 
     if (!result) {
       this.logger.debug('Failed to find active token in database', { token });
@@ -111,17 +109,12 @@ export class AuthenticationService {
       );
     }
 
-    const roles = result.userId
-      ? await this.authorizationService.getUserGlobalRoles(result.userId)
-      : [];
-
     const session = {
       token,
       issuedAt: DateTime.fromMillis(iat),
-      userId: result.userId,
-      roles: roles,
+      ...result,
     };
-    this.logger.debug('Created session', session);
+    this.logger.debug('Resumed session', session);
     return session;
   }
 
