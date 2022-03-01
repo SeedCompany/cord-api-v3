@@ -120,7 +120,7 @@ export class ConfigService implements EmailOptionsFactory {
       .optional(parsed.password || 'admin');
     const database = this.env
       .string('NEO4J_DBNAME')
-      .optional(parsed.pathname.slice(1) || undefined);
+      .optional<string | undefined>(parsed.pathname.slice(1) || undefined);
     if (parsed.username || parsed.password || parsed.pathname) {
       parsed.username = '';
       parsed.password = '';
