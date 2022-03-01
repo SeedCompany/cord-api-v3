@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { oneLine } from 'common-tags';
 import { Connection, node, Query, relation } from 'cypher-query-builder';
-import { isEmpty, last, mapKeys, pickBy, startCase } from 'lodash';
+import { compact, isEmpty, last, mapKeys, pickBy, startCase } from 'lodash';
 import {
   entries,
   ID,
@@ -147,29 +147,38 @@ export class DatabaseService {
     this.attemptedDbCreation = true;
 
     const dbName = this.config.neo4j.database;
-    if (info.databases.some((db) => db.name === dbName)) {
-      return; // already exists
+    if (!dbName || info.databases.some((db) => db.name === dbName)) {
+      return; // already exists or assuming default exists
     }
-    await this.runAdminCommand('CREATE', info);
+    await this.runAdminCommand('CREATE', dbName, info);
   }
 
   async dropDb() {
-    await this.runAdminCommand('DROP', await this.getServerInfo());
+    const dbName = this.config.neo4j.database;
+    if (!dbName) {
+      return; // don't drop the default db
+    }
+    await this.runAdminCommand('DROP', dbName, await this.getServerInfo());
   }
 
-  private async runAdminCommand(action: string, info: ServerInfo) {
+  private async runAdminCommand(
+    action: 'CREATE' | 'DROP',
+    dbName: string,
+    info: ServerInfo
+  ) {
     // @ts-expect-error Yes this is private, but we have a special use case.
     // We need to run this query with a session that's not configured to use the
     // database we are trying to create.
     const session = this.db.driver.session();
     const supportsWait = parseFloat(info.version.slice(0, 3)) >= 4.2;
-    const dbName = this.config.neo4j.database;
     try {
       await session.writeTransaction((tx) =>
         tx.run(
-          `${action} DATABASE $name IF NOT EXISTS ${
-            supportsWait ? 'WAIT' : ''
-          }`,
+          compact([
+            `${action} DATABASE $name`,
+            action === 'CREATE' ? 'IF NOT EXISTS' : 'IF EXISTS',
+            supportsWait ? 'WAIT' : '',
+          ]).join(' '),
           {
             name: dbName,
           }
