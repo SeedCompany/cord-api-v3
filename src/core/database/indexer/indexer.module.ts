@@ -93,11 +93,12 @@ export class IndexerModule implements OnModuleInit {
           continue;
         }
 
+        const q = this.db.query();
+        const name = `${parentClass.name}.${methodName}${
+          Number(i) > 0 ? ` #${Number(i) + 1}` : ''
+        }`;
+        (q as any).name = name;
         try {
-          const q = this.db.query();
-          (q as any).name = `${parentClass.name}.${methodName}${
-            Number(i) > 0 ? ` #${Number(i) + 1}` : ''
-          }`;
           await q.raw(statement).run();
         } catch (e) {
           if (
@@ -110,6 +111,10 @@ export class IndexerModule implements OnModuleInit {
               { constraint: statement }
             );
           } else {
+            this.logger.error('Failed to apply index', {
+              index: name,
+              exception: e,
+            });
             throw e;
           }
         }
