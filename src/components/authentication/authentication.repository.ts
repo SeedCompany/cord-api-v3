@@ -338,16 +338,15 @@ export class PgAuthenticationRepository
     const [{ roles }] = await this.pg.query<{ roles: string[] }>(
       `
       SELECT array_agg(r.name) as roles
-      FROM admin.role_memberships rm
-      JOIN admin.roles r ON r.id = rm.role
-      WHERE rm.person = $1
+      FROM admin.role_memberships rm, admin.roles r
+      WHERE rm.person = $1 AND r.id = rm.role
       GROUP BY rm.person
       `,
       [userId]
     );
 
     return {
-      userId: userId as ID,
+      userId: userId,
       roles: roles as unknown as ScopedRole[],
     };
   }
