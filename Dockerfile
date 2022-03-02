@@ -16,6 +16,8 @@ EXPOSE 80
 
 CMD ["yarn", "start:prod"]
 
+HEALTHCHECK CMD wget --no-verbose --tries=1 --spider http://localhost || exit 1
+
 ARG GIT_HASH
 ARG GIT_BRANCH
 RUN echo GIT_HASH=$GIT_HASH > .env
