@@ -21,6 +21,7 @@ import { ResourceResolver } from './resources';
 import { TimeoutInterceptor } from './timeout.interceptor';
 import { TracingModule } from './tracing';
 import { ValidationPipe } from './validation.pipe';
+import { WaitResolver } from './wait.resolver';
 
 @Global()
 @Module({
@@ -42,6 +43,7 @@ import { ValidationPipe } from './validation.pipe';
     { provide: APP_INTERCEPTOR, useClass: DataLoaderInterceptor },
     { provide: APP_INTERCEPTOR, useClass: TimeoutInterceptor },
     ResourceResolver,
+    WaitResolver,
   ],
   controllers: [CoreController],
   exports: [
