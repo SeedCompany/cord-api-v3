@@ -198,7 +198,7 @@ export class UserResolver {
     @ListArg(LocationListInput) input: LocationListInput,
     @Loader(LocationLoader) locations: LoaderOf<LocationLoader>
   ): Promise<SecuredLocationList> {
-    const list = await this.userService.listLocations(user.id, input, session);
+    const list = await this.userService.listLocations(user, input, session);
     locations.primeAll(list.items);
     return list;
   }

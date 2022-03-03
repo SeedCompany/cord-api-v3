@@ -10,11 +10,15 @@ import {
   createPartner,
   createPartnership,
   createProject,
+  createProjectMember,
   createSession,
   createTestApp,
+  listOrganizations,
   readOneOrganization,
   readOneOrgLocations,
+  registerUser,
   registerUserWithPower,
+  runInIsolatedSession,
   TestApp,
 } from '../utility';
 import {
@@ -93,6 +97,80 @@ describe('Organization Security e2e', () => {
   //     });
   //   });
   // });
+
+  describe('Listing (High sensitivity)', () => {
+    describe.each`
+      role                                      | globalCanList | projectCanList
+      ${Role.Administrator}                     | ${true}       | ${true}
+      ${Role.Consultant}                        | ${false}      | ${true}
+      ${Role.ConsultantManager}                 | ${true}       | ${true}
+      ${Role.Controller}                        | ${true}       | ${true}
+      ${Role.FieldOperationsDirector}           | ${true}       | ${true}
+      ${Role.FinancialAnalyst}                  | ${false}      | ${true}
+      ${Role.Fundraising}                       | ${false}      | ${true}
+      ${Role.Intern}                            | ${true}       | ${true}
+      ${Role.LeadFinancialAnalyst}              | ${true}       | ${true}
+      ${Role.Leadership}                        | ${true}       | ${true}
+      ${Role.Liaison}                           | ${false}      | ${false}
+      ${Role.Marketing}                         | ${false}      | ${true}
+      ${Role.Mentor}                            | ${true}       | ${true}
+      ${Role.ProjectManager}                    | ${true}       | ${true}
+      ${Role.RegionalCommunicationsCoordinator} | ${false}      | ${false}
+      ${Role.RegionalDirector}                  | ${true}       | ${true}
+      ${Role.StaffMember}                       | ${false}      | ${false}
+      ${Role.Translator}                        | ${false}      | ${false}
+    `('$role', ({ role, globalCanList, projectCanList }) => {
+      it('Global canList', async () => {
+        const read = await runInIsolatedSession(app, async () => {
+          await registerUser(app, { roles: role });
+          return await listOrganizations(app);
+        });
+        if (!globalCanList) {
+          expect(read).toHaveLength(0);
+        } else {
+          expect(read).not.toHaveLength(0);
+        }
+      });
+
+      it('Project member canList', async () => {
+        const user = await runInIsolatedSession(app, async () => {
+          return await registerUser(app, {
+            roles: [role],
+          });
+        });
+        const proj = await createProject(app);
+        const org1 = await createOrganization(app);
+        const partner1 = await createPartner(app, {
+          organizationId: org1.id,
+        });
+        await createPartnership(app, {
+          projectId: proj.id,
+          partnerId: partner1.id,
+        });
+        const org2 = await createOrganization(app);
+        const partner2 = await createPartner(app, {
+          organizationId: org2.id,
+        });
+        await createProjectMember(app, {
+          projectId: proj.id,
+          roles: role,
+          userId: user.id,
+        });
+        await createPartnership(app, {
+          projectId: proj.id,
+          partnerId: partner2.id,
+        });
+        const read = await user.runAs(() => {
+          return listOrganizations(app);
+        });
+        if (!projectCanList) {
+          expect(read).toHaveLength(0);
+        } else {
+          expect(read).not.toHaveLength(0);
+        }
+      });
+    });
+  });
 
   describe('Restricted by Sensitivity', () => {
     describe.each`

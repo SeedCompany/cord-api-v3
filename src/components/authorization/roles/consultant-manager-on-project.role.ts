@@ -280,6 +280,7 @@ export const ConsultantManagerOnProject = new DbRole({
     }),
     new DbBaseNodeGrant<DbOrganization>({
       __className: 'DbOrganization',
+      canList: true,
       properties: [
         { propertyName: 'name', permission: { read, }, },
         { propertyName: 'address', permission: { }, },
@@ -292,7 +293,7 @@ export const ConsultantManagerOnProject = new DbRole({
       canList: true,
       properties: [
         { propertyName: 'organization', permission: { read, }, },
-        { propertyName: 'pointOfContact', permission: { read, }, },
+        { propertyName: 'pointOfContact', permission: { }, },
         { propertyName: 'types', permission: { read, }, },
         { propertyName: 'financialReportingTypes', permission: { read, }, },
         { propertyName: 'pmcEntityCode', permission: { read, }, },
@@ -410,6 +411,7 @@ export const ConsultantManagerOnProject = new DbRole({
     }),
     new DbBaseNodeGrant<DbUser>({
       __className: 'DbUser',
+      canList: true,
       properties: [
         { propertyName: 'about', permission: { read, }, },
         { propertyName: 'displayFirstName', permission: { read, }, },
@@ -424,6 +426,7 @@ export const ConsultantManagerOnProject = new DbRole({
         { propertyName: 'title', permission: { read, }, },
         { propertyName: 'education', permission: { read, }, },
         { propertyName: 'organization', permission: { read, }, },
+        { propertyName: 'partner', permission: { read, }, },
         { propertyName: 'unavailability', permission: { read, }, },
         { propertyName: 'locations', permission: { read, }, },
         { propertyName: 'knownLanguage', permission: { read, }, },

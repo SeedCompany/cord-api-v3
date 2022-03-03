@@ -17,6 +17,7 @@ export class DbUser extends DbBaseNode {
   title: any = null;
   education: any = null;
   organization: any = null;
+  partner: any = null;
   unavailability: any = null;
   locations: any = null;
   knownLanguage: any = null;

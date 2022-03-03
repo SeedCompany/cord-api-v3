@@ -84,6 +84,7 @@ export class ProjectService {
     private readonly partnerships: PartnershipService,
     @Inject(forwardRef(() => EngagementService))
     private readonly engagementService: EngagementService,
+    @Inject(forwardRef(() => PartnerService))
     private readonly partnerService: PartnerService,
     private readonly config: ConfigService,
     private readonly eventBus: IEventBus,

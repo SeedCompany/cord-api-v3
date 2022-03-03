@@ -273,6 +273,8 @@ export const Marketing = new DbRole({
     }),
     new DbBaseNodeGrant<DbOrganization>({
       __className: 'DbOrganization',
+      canList: true,
+      sensitivityAccess: Sensitivity.Low,
       properties: [
         { propertyName: 'name', permission: { read, sensitivityAccess: Sensitivity.Low }, },
         { propertyName: 'address', permission: { }, },
@@ -402,6 +404,7 @@ export const Marketing = new DbRole({
     }),
     new DbBaseNodeGrant<DbUser>({
       __className: 'DbUser',
+      canList: true,
       properties: [
         { propertyName: 'about', permission: { read, }, },
         { propertyName: 'displayFirstName', permission: { read, }, },
@@ -416,6 +419,7 @@ export const Marketing = new DbRole({
         { propertyName: 'title', permission: { read, }, },
         { propertyName: 'education', permission: { read, }, },
         { propertyName: 'organization', permission: { read, }, },
+        { propertyName: 'partner', permission: { read, }, },
         { propertyName: 'unavailability', permission: { read, }, },
         { propertyName: 'locations', permission: { read, }, },
         { propertyName: 'knownLanguage', permission: { read, }, },

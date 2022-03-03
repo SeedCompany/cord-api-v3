@@ -135,6 +135,36 @@ export const user = gql`
       canEdit
       canRead
     }
+    roles {
+      value
+      canEdit
+      canRead
+    }
+    title {
+      value
+      canRead
+      canEdit
+    }
+    education {
+      canCreate
+      canRead
+    }
+    organizations {
+      canCreate
+      canRead
+    }
+    partners {
+      canCreate
+      canRead
+    }
+    unavailabilities {
+      canCreate
+      canRead
+    }
+    locations {
+      canCreate
+      canRead
+    }
   }
 `;
 export type RawUser = Merge<Raw<User>, { timezone: Secured<{ name: string }> }>;

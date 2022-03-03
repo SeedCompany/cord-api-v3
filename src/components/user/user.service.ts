@@ -9,6 +9,7 @@ import {
   ObjectView,
   SecuredList,
   SecuredProps,
+  SecuredResource,
   ServerException,
   Session,
   UnsecuredDto,
@@ -23,7 +24,10 @@ import {
 import { property } from '../../core/database/query';
 import { mapListResults } from '../../core/database/results';
 import { Role } from '../authorization';
-import { AuthorizationService } from '../authorization/authorization.service';
+import {
+  AuthorizationService,
+  PermissionsOf,
+} from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto/powers';
 import { LanguageService } from '../language';
 import {
@@ -239,8 +243,29 @@ export class UserService {
   }
 
   async list(input: UserListInput, session: Session): Promise<UserListOutput> {
-    const users = await this.userRepo.list(input, session);
-    return await mapListResults(users, (user) => this.secure(user, session));
+    if (await this.authorizationService.canList(User, session)) {
+      const results = await this.userRepo.list(input, session);
+      return await mapListResults(results, (dto) => this.secure(dto, session));
+    } else {
+      // return a list of one: the person's own user info if can't read others
+      const sessionUser = await this.readOne(session.userId, session);
+      return {
+        items: [sessionUser],
+        total: 1,
+        hasMore: false,
+      };
+    }
+  }
+
+  async permissionsForListProp(
+    prop: keyof PermissionsOf<SecuredResource<typeof User>>,
+    session: Session | ID
+  ) {
+    const perms = await this.authorizationService.getPermissions({
+      resource: User,
+      sessionOrUserId: session,
+    });
+    return { ...perms[prop], canCreate: perms[prop].canEdit };
   }
 
   async listEducations(
@@ -248,11 +273,7 @@ export class UserService {
     input: EducationListInput,
     session: Session
   ): Promise<SecuredEducationList> {
-    const perms = await this.userRepo.permissionsForListProp(
-      'education',
-      userId,
-      session
-    );
+    const perms = await this.permissionsForListProp('education', session);
 
     if (!perms.canRead) {
       return SecuredList.Redacted;
@@ -278,11 +299,7 @@ export class UserService {
     input: OrganizationListInput,
     session: Session
   ): Promise<SecuredOrganizationList> {
-    const perms = await this.userRepo.permissionsForListProp(
-      'organization',
-      userId,
-      session
-    );
+    const perms = await this.permissionsForListProp('organization', session);
 
     if (!perms.canRead) {
       return SecuredList.Redacted;
@@ -309,15 +326,7 @@ export class UserService {
     input: PartnerListInput,
     session: Session
   ): Promise<SecuredPartnerList> {
-    const perms = await this.userRepo.permissionsForListProp(
-      'partners',
-      userId,
-      session
-    );
-
-    if (!perms.canRead) {
-      return SecuredList.Redacted;
-    }
+    const perms = await this.permissionsForListProp('partner', session);
     const result = await this.partners.list(
       {
         ...input,
@@ -339,11 +348,7 @@ export class UserService {
     input: UnavailabilityListInput,
     session: Session
   ): Promise<SecuredUnavailabilityList> {
-    const perms = await this.userRepo.permissionsForListProp(
-      'unavailability',
-      userId,
-      session
-    );
+    const perms = await this.permissionsForListProp('unavailability', session);
 
     if (!perms.canRead) {
       return SecuredList.Redacted;
@@ -400,13 +405,13 @@ export class UserService {
   }
 
   async listLocations(
-    userId: ID,
+    user: User,
     input: LocationListInput,
     session: Session
   ): Promise<SecuredLocationList> {
-    return await this.locationService.listLocationsFromNode(
-      'User',
-      userId,
+    return await this.locationService.listLocationForResource(
+      User,
+      user,
       'locations',
       input,
       session
@@ -457,6 +462,10 @@ export class UserService {
     userId: ID,
     session: Session
   ): Promise<readonly KnownLanguage[]> {
+    const perms = await this.permissionsForListProp('knownLanguage', session);
+    if (!perms.canRead) {
+      return [];
+    }
     return await this.userRepo.listKnownLanguages(userId, session);
   }
 

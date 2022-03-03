@@ -270,6 +270,8 @@ export const StaffMember = new DbRole({
     }),
     new DbBaseNodeGrant<DbOrganization>({
       __className: 'DbOrganization',
+      sensitivityAccess: Sensitivity.Low,
+      canList: true,
       properties: [
         { propertyName: 'name', permission: { read, sensitivityAccess: Sensitivity.Low }, },
         { propertyName: 'address', permission: { }, },
@@ -399,6 +401,7 @@ export const StaffMember = new DbRole({
     }),
     new DbBaseNodeGrant<DbUser>({
       __className: 'DbUser',
+      canList: true,
       properties: [
         { propertyName: 'about', permission: { read, }, },
         { propertyName: 'displayFirstName', permission: { read, }, },
@@ -413,6 +416,7 @@ export const StaffMember = new DbRole({
         { propertyName: 'title', permission: { read, }, },
         { propertyName: 'education', permission: { read, }, },
         { propertyName: 'organization', permission: { read, }, },
+        { propertyName: 'partner', permission: { read, }, },
         { propertyName: 'unavailability', permission: { read, }, },
         { propertyName: 'locations', permission: { read, }, },
         { propertyName: 'knownLanguage', permission: { read, }, },

@@ -4,7 +4,6 @@ import { DateTime } from 'luxon';
 import {
   DuplicateException,
   ID,
-  NotFoundException,
   ServerException,
   Session,
   UnauthorizedException,
@@ -25,10 +24,8 @@ import {
   createProperty,
   deactivateProperty,
   matchProps,
-  matchSession,
   merge,
   paginate,
-  permissionsOfNode,
   property,
   requestingUser,
   sorting,
@@ -254,56 +251,12 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
   async list({ filter, ...input }: UserListInput, session: Session) {
     const result = await this.db
       .query()
-      .match([requestingUser(session), ...permissionsOfNode('User')])
+      .matchNode('node', 'User')
       .apply(userListFilter(filter))
       .apply(sorting(User, input))
       .apply(paginate(input, this.hydrate(session.userId)))
       .first();
     return result!; // result from paginate() will always have 1 row.
-  }
-
-  async permissionsForListProp(prop: string, userId: ID, session: Session) {
-    const result = await this.db
-      .query()
-      .match(matchSession(session)) // Michel Query Refactor Will Fix This
-      .match([node('user', 'User', { id: userId })])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', 'memberOfReadSecurityGroup', 'member'),
-        node('readSecurityGroup', 'SecurityGroup'),
-        relation('out', 'sgReadPerms', 'permission'),
-        node('canRead', 'Permission', {
-          property: prop,
-          read: true,
-        }),
-        relation('out', 'readPermsOfBaseNode', 'baseNode'),
-        node('user'),
-      ])
-      .optionalMatch([
-        node('requestingUser'),
-        relation('in', 'memberOfEditSecurityGroup', 'member'),
-        node('editSecurityGroup', 'SecurityGroup'),
-        relation('out', 'sgEditPerms', 'permission'),
-        node('canEdit', 'Permission', {
-          property: prop,
-          edit: true,
-        }),
-        relation('out', 'editPermsOfBaseNode', 'baseNode'),
-        node('user'),
-      ])
-      .return({
-        canRead: [{ read: 'canRead' }],
-        canEdit: [{ edit: 'canEdit' }],
-      })
-      .asResult<{ canRead?: boolean; canEdit?: boolean }>()
-      .first();
-    if (!result) {
-      throw new NotFoundException('Could not find user', 'userId');
-    }
-    return {
-      canRead: result.canRead ?? false,
-      canCreate: result.canEdit ?? false,
-    };
   }
 
   async createKnownLanguage(
@@ -352,12 +305,11 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
       .run();
   }
 
-  async listKnownLanguages(userId: ID, session: Session) {
+  async listKnownLanguages(userId: ID, _session: Session) {
     const results = await this.db
       .query()
       .match([
-        requestingUser(session),
-        ...permissionsOfNode('Language'),
+        node('node', 'Language'),
         relation('in', 'knownLanguageRel', 'knownLanguage', ACTIVE),
         node('user', 'User', { id: userId }),
       ])

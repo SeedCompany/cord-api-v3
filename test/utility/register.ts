@@ -9,6 +9,47 @@ import { fragments, RawUser } from './fragments';
 import { grantPower } from './grant-power';
 import { login, runAsAdmin, runInIsolatedSession } from './login';
 
+export async function readOneUser(app: TestApp, id: string) {
+  const result = await app.graphql.query(
+    gql`
+      query ReadUser($id: ID!) {
+        user(id: $id) {
+          ...user
+        }
+      }
+      ${fragments.user}
+    `,
+    { id }
+  );
+
+  const actual = result.user;
+  expect(actual).toBeTruthy();
+  expect(actual.id).toEqual(id);
+  // added because the permissions/dto are different from props read from graphql
+  actual.organization = actual.organizations;
+  actual.partner = actual.partners;
+  actual.unavailability = actual.unavailabilities;
+  return actual;
+}
+
+export async function listUsers(app: TestApp) {
+  const result = await app.graphql.mutate(
+    gql`
+      query {
+        users(input: {}) {
+          items {
+            ...user
+          }
+        }
+      }
+      ${fragments.user}
+    `
+  );
+  const users = result.users.items;
+  expect(users).toBeTruthy();
+  return users;
+}
+
 export const generateRegisterInput = async (): Promise<RegisterInput> => ({
   ...(await generateRequireFieldsRegisterInput()),
   phone: faker.phone.phoneNumber(),

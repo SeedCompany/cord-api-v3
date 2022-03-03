@@ -153,6 +153,7 @@ export class LocationService {
     input: LocationListInput,
     session: Session
   ): Promise<LocationListOutput> {
+    // no canList check needed because all roles can list
     const results = await this.repo.list(input, session);
 
     return await mapListResults(results, (dto) => this.secure(dto, session));
@@ -207,28 +208,6 @@ export class LocationService {
         : SecuredList.Redacted),
       canRead: perms[rel].canRead,
       canCreate: perms[rel].canEdit,
-    };
-  }
-
-  async listLocationsFromNode(
-    label: string,
-    id: ID,
-    rel: string,
-    input: LocationListInput,
-    session: Session
-  ): Promise<SecuredLocationList> {
-    const results = await this.repo.listLocationsFromNode(
-      label,
-      id,
-      rel,
-      input,
-      session
-    );
-
-    return {
-      ...(await mapListResults(results, (dto) => this.secure(dto, session))),
-      canRead: true, // TODO
-      canCreate: true, // TODO
     };
   }
 }
