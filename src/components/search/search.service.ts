@@ -102,19 +102,13 @@ export class SearchService {
             ? result
             : [
                 ...(inputTypes.includes('Organization') ? [result] : []),
+                // If matched Organization, include Partner implicitly
                 ...(inputTypes.includes('Partner')
-                  ? // partner hydrator will need to handle id of org and partner
-                    [
+                  ? [
                       {
-                        id: result.id,
+                        id: result.id, // hydrator knows this is an org id not partner
                         type: 'PartnerByOrg' as const,
-                        matchedProp:
-                          // have to change matchedProp to organization for perms of Partner -> Organization when
-                          // the prop is one of the props of organization
-                          result.matchedProp.valueOf() === 'locations' ||
-                          result.matchedProp.valueOf() === 'name'
-                            ? ('organization' as keyof SearchResult)
-                            : result.matchedProp,
+                        matchedProp: 'organization' as keyof SearchResult,
                       },
                     ]
                   : []),
