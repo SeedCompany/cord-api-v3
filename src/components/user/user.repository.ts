@@ -757,14 +757,6 @@ export class PgUserRepository implements PublicOf<UserRepository> {
   ): Promise<void> {
     throw new Error('Method not implemented.');
   }
-
-  permissionsForListProp(
-    _prop: string,
-    _userId: ID,
-    _session: Session
-  ): Promise<{ canRead: boolean; canCreate: boolean }> {
-    throw new Error('Method not implemented.');
-  }
   createKnownLanguage(
     _userId: ID,
     _languageId: ID,
