@@ -43,9 +43,10 @@ services:
       POSTGRES_DB: cord
 
   pgadmin:
-    container_name: pgadmin4_container
     image: dpage/pgadmin4
     restart: always
+    networks:
+      - cord
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@admin.com
       PGADMIN_DEFAULT_PASSWORD: postgres
