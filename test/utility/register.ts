@@ -6,7 +6,6 @@ import { Powers, Role } from '../../src/components/authorization';
 import { User, UserStatus } from '../../src/components/user';
 import { TestApp } from './create-app';
 import { fragments, RawUser } from './fragments';
-import { grantPower } from './grant-power';
 import { login, runAsAdmin, runInIsolatedSession } from './login';
 
 export async function readOneUser(app: TestApp, id: string) {
@@ -177,12 +176,14 @@ export async function registerUser(
   };
 }
 
+/**
+ * @deprecated Use {@see registerUser} instead
+ */
 export async function registerUserWithPower(
   app: TestApp,
   powers: Powers[],
   input: Partial<RegisterInput> = {}
 ): Promise<TestUser> {
   const user = await registerUser(app, input);
-  await grantPower(app, user.id, ...powers);
   return user;
 }

@@ -8,8 +8,6 @@ import {
   mapValues,
   pickBy,
   startCase,
-  union,
-  without,
 } from 'lodash';
 import {
   getParentTypes,
@@ -364,16 +362,17 @@ export class AuthorizationService {
     );
   }
 
-  async roleAddedToUser(id: ID | string, roles: Role[]) {
-    await this.afterTransaction(() => this.doRoleAddedToUser(id, roles));
-  }
+  async checkPower(power: Powers, session: Session): Promise<void> {
+    const id = session.userId;
 
-  private async doRoleAddedToUser(id: ID | string, roles: Role[]) {
-    const powers = getDbRoles(roles.map(rolesForScope('global'))).flatMap(
-      (dbRole) => dbRole.powers
-    );
-    for (const power of powers) {
-      await this.grantPower(power, id as ID);
+    const hasPower = await this.hasPower(session, power);
+    if (!hasPower) {
+      throw new MissingPowerException(
+        power,
+        `User ${
+          session.anonymous ? 'anon' : id
+        } does not have the requested power: ${power}`
+      );
     }
   }
 
@@ -383,79 +382,11 @@ export class AuthorizationService {
    */
   async hasPower(session: Session, ...powers: Powers[]) {
     const granted = getDbRoles(session.roles).flatMap((role) => role.powers);
-
-    return (
-      difference(powers, granted).length === 0 ||
-      (await this.repo.hasPower(powers, session))
-    );
-  }
-
-  async readPowerById(id: ID | string) {
-    const userPowers = await this.repo.getUserPowers(id);
-    const userRoles = await this.getUserGlobalRoles(id);
-    const powersFromRoles = getDbRoles(userRoles).flatMap(
-      (role) => role.powers
-    );
-    return union(userPowers, powersFromRoles);
-  }
-
-  async checkPower(power: Powers, session: Session): Promise<void> {
-    const id = session.userId;
-
-    const hasPower = await this.hasPower(session, power);
-    if (!hasPower) {
-      throw new MissingPowerException(
-        power,
-        `user ${
-          session.anonymous ? 'anon' : id
-        } does not have the requested power: ${power}`
-      );
-    }
+    return difference(powers, granted).length === 0;
   }
 
   async readPower(session: Session): Promise<Powers[]> {
-    if (session.anonymous) {
-      return [];
-    }
-    return await this.readPowerById(session.userId);
-  }
-
-  async createPower(power: Powers, id: ID, session: Session): Promise<void> {
-    const powers = await this.readPowerById(session.userId);
-    if (!powers.includes(Powers.GrantPower)) {
-      throw new MissingPowerException(
-        Powers.GrantPower,
-        'user does not have the power to grant power to others'
-      );
-    }
-
-    await this.grantPower(power, id);
-  }
-
-  async deletePower(power: Powers, id: ID, session: Session): Promise<void> {
-    const powers = await this.readPowerById(session.userId);
-    if (!powers.includes(Powers.GrantPower)) {
-      throw new MissingPowerException(
-        Powers.GrantPower,
-        'user does not have the power to remove power from others'
-      );
-    }
-
-    await this.removePower(power, id);
-  }
-
-  async grantPower(power: Powers, id: ID): Promise<void> {
-    const powers = await this.readPowerById(id);
-
-    const newPowers = union(powers, [power]);
-    await this.repo.updateUserPowers(id, newPowers);
-  }
-
-  async removePower(power: Powers, id: ID): Promise<void> {
-    const powers = await this.readPowerById(id);
-
-    const newPowers = without(powers, power);
-    await this.repo.updateUserPowers(id, newPowers);
+    return getDbRoles(session.roles).flatMap((role) => role.powers);
   }
 
   async getUserGlobalRoles(id: ID | string): Promise<ScopedRole[]> {
