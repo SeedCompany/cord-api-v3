@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { node, Query, relation } from 'cypher-query-builder';
+import { node, relation } from 'cypher-query-builder';
 import { ID, Session } from '../../common';
-import { DatabaseService, OnIndex, OnIndexParams } from '../../core';
+import { CommonRepository, OnIndex, OnIndexParams } from '../../core';
 import {
   ACTIVE,
   escapeLuceneSyntax,
@@ -11,9 +11,7 @@ import {
 import { SearchInput, SearchResult, SearchResultMap } from './dto';
 
 @Injectable()
-export class SearchRepository {
-  constructor(private readonly db: DatabaseService) {}
-
+export class SearchRepository extends CommonRepository {
   @OnIndex('schema')
   protected async applyIndexes({ db }: OnIndexParams) {
     await db.createFullTextIndex('propValue', ['Property'], ['value'], {
@@ -32,38 +30,37 @@ export class SearchRepository {
 
     const query = this.db
       .query()
-      .apply(matchRequestingUser(session))
-      .raw('', {
+      .subQuery((q) =>
+        q
+          .matchNode('node', 'BaseNode', { id: input.query })
+          .return(['node', '"id" as matchedProp'])
+
+          .union()
+
+          .apply(matchRequestingUser(session))
+          .raw('', { query: lucene })
+          .apply(fullTextQuery('propValue', '$query', ['node as property']))
+          .match([node('node'), relation('out', 'r', ACTIVE), node('property')])
+          .return(['node', 'type(r) as matchedProp'])
+          // The input.count is going to be applied once the results are 'filtered'
+          // according to what the user can read. This limit is just set to a bigger
+          // number, so we don't choke things without a limit.
+          .raw('LIMIT 100')
+      )
+      .with('node')
+      .raw('WHERE size([l in labels(node) where l in $types | 1]) > 0', {
         types: input.type ?? [],
-        query: lucene,
       })
-      .apply(fullTextQuery('propValue', '$query', ['node as property']))
-      .apply(propToBaseNode())
-      .apply(filterToRequested())
       .returnDistinct<{
         id: ID;
-        matchedProp: keyof SearchResult;
         type: keyof SearchResultMap;
+        matchedProp: keyof SearchResult;
       }>([
         'node.id as id',
-        'type(r) as matchedProp',
         `[l in labels(node) where l in $types][0] as type`,
-      ])
-      // The input.count is going to be applied once the results are 'filtered'
-      // according to what the user can read. This limit is just set to a bigger
-      // number, so we don't choke things without a limit.
-      .raw('LIMIT 100');
+        'matchedProp',
+      ]);
 
     return await query.run();
   }
 }
-
-const propToBaseNode = () => (query: Query) =>
-  query.match([node('node'), relation('out', 'r', ACTIVE), node('property')]);
-
-const filterToRequested = () => (query: Query) =>
-  query.raw(
-    `
-      WHERE size([l in labels(node) where l in $types | 1]) > 0
-    `
-  );
