@@ -1,12 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
-import { compact } from 'lodash';
+import { isEmpty, isNil, omitBy } from 'lodash';
 import {
   ID,
   MaybeUnsecuredInstance,
+  NotFoundException,
   PaginatedListType,
   PublicOf,
   ResourceShape,
+  ServerException,
   Session,
   UnsecuredDto,
 } from '../../common';
@@ -147,49 +149,38 @@ export class PgOrganizationRepository
   @PgTransaction()
   async create(input: CreateOrganization, _session: Session) {
     // TODO: Add primary_location
-    const orgId = await this.pg.query<{ id: ID; sensitivity: string }>(
+    const [id] = await this.pg.query<{ id: ID }>(
       `
-      INSERT INTO common.organizations(
-          name, 
-          created_by,
-          modified_by, 
-          owning_person, 
-          owning_group)
-      VALUES (
-          $1,
-          (SELECT person FROM admin.tokens WHERE token = 'public'), 
-          (SELECT person FROM admin.tokens WHERE token = 'public'), 
-          (SELECT person FROM admin.tokens WHERE token = 'public'), 
-          (SELECT id FROM admin.groups WHERE  name = 'Administrators'))
-      RETURNING id, sensitivity;
-      `,
-      [input.name]
-    );
-
-    const rows = await this.pg.query<{ id: ID }>(
-      `
+      WITH common_organization AS (
+        INSERT INTO common.organizations(
+            name, created_by, modified_by, owning_person, owning_group)
+        VALUES (
+            $1, (SELECT person FROM admin.tokens WHERE token = 'public'), 
+            (SELECT person FROM admin.tokens WHERE token = 'public'), 
+            (SELECT person FROM admin.tokens WHERE token = 'public'), 
+            (SELECT id FROM admin.groups WHERE  name = 'Administrators'))
+        RETURNING id AS common_id, sensitivity as common_sensitivity
+      )
       INSERT INTO sc.organizations(
-          id,
-          address,
-          sensitivity,
-          created_by, 
-          modified_by, 
-          owning_person, 
-          owning_group)
+          id, address, sensitivity, created_by, modified_by, 
+          owning_person, owning_group)
       VALUES (
-          $1,
-          $2,
-          $3,
+          (SELECT common_id FROM common_organization), $2,
+          (SELECT common_sensitivity FROM common_organization),
           (SELECT person FROM admin.tokens WHERE token = 'public'), 
           (SELECT person FROM admin.tokens WHERE token = 'public'), 
           (SELECT person FROM admin.tokens WHERE token = 'public'), 
           (SELECT id FROM admin.groups WHERE  name = 'Administrators'))
       RETURNING id;
-    `,
-      [orgId[0].id, input.address, orgId[0].sensitivity]
+      `,
+      [input.name, input.address]
     );
 
-    return rows[0];
+    if (!id) {
+      throw new ServerException('Failed to create organization');
+    }
+
+    return id;
   }
 
   async readOne(
@@ -204,6 +195,11 @@ export class PgOrganizationRepository
       `,
       [id]
     );
+
+    if (!rows[0]) {
+      throw new NotFoundException(`Could not find organization ${id}`);
+    }
+
     return rows[0];
   }
 
@@ -219,6 +215,7 @@ export class PgOrganizationRepository
       `,
       [ids]
     );
+
     return rows;
   }
 
@@ -257,12 +254,23 @@ export class PgOrganizationRepository
   }
 
   async update(input: UpdateOrganization) {
-    const { id, ...changes } = input;
-    compact(Object.keys(changes)).map(async (key) => {
+    const { id, ...rest } = input;
+    const changes = omitBy(rest, isNil);
+
+    if (isEmpty(changes)) {
+      return;
+    }
+
+    Object.keys(changes).forEach((key) => async () => {
       await this.pg.query(
-        `UPDATE ${key === 'name' ? 'common' : 'sc'}.organizations 
-         SET ${key} = $1 WHERE id = $2;`,
-        [changes[key as keyof Omit<UpdateOrganization, 'id'>], id]
+        `
+        UPDATE ${
+          key === 'name' ? 'common' : 'sc'
+        }.organizations, modified_at = CURRENT_TIMESTAMP, 
+        modified_by = (SELECT person FROM admin.tokens WHERE token = 'public') 
+        SET ${key} = $1 WHERE id = $2;
+        `,
+        [changes[key], id]
       );
     });
   }
@@ -277,7 +285,9 @@ export class PgOrganizationRepository
 
   async isUnique(orgName: string): Promise<boolean> {
     const rows = await this.pg.query(
-      'SELECT name FROM common.organizations WHERE name = $1',
+      `
+      SELECT c.name FROM common.organizations c, sc.organizations sc 
+      WHERE c.name = $1 OR sc.name = $1`,
       [orgName]
     );
     return !!rows[0];

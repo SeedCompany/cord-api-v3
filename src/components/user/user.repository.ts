@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { inArray, node, Query, relation } from 'cypher-query-builder';
-import { isNil, omitBy } from 'lodash';
+import { isEmpty, isNil, omitBy } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
@@ -471,18 +471,26 @@ export class PgUserRepository implements PublicOf<UserRepository> {
   async create(input: CreatePerson): Promise<ID> {
     const [{ id }] = await this.pg.query<{ id: ID }>(
       `
-      INSERT INTO admin.people(
-          about, phone, picture, private_first_name,
-          private_last_name, public_first_name, 
-          public_last_name, private_full_name,
-          public_full_name, timezone, title,
-          status, created_by, modified_by, 
-          owning_person, owning_group)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12,
-          (SELECT person FROM admin.tokens WHERE token = 'public'), 
-          (SELECT person FROM admin.tokens WHERE token = 'public'), 
-          (SELECT person FROM admin.tokens WHERE token = 'public'), 
-          (SELECT id FROM admin.groups WHERE  name = 'Administrators'))
+      WITH admin_people AS (
+        INSERT INTO admin.people(
+            about, phone, picture, private_first_name,
+            private_last_name, public_first_name, 
+            public_last_name, private_full_name,
+            public_full_name, timezone, title,
+            status, created_by, modified_by, 
+            owning_person, owning_group)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12,
+            (SELECT person FROM admin.tokens WHERE token = 'public'), 
+            (SELECT person FROM admin.tokens WHERE token = 'public'), 
+            (SELECT person FROM admin.tokens WHERE token = 'public'), 
+            (SELECT id FROM admin.groups WHERE  name = 'Administrators'))
+        RETURNING id as userId
+      )
+      INSERT INTO admin.users(id, email, created_by, modified_by, owning_person, owning_group)
+      VALUES ((SELECT userId FROM admin_people), $13, (SELECT person FROM admin.tokens WHERE token = 'public'), 
+              (SELECT person FROM admin.tokens WHERE token = 'public'), 
+              (SELECT person FROM admin.tokens WHERE token = 'public'), 
+              (SELECT id FROM admin.groups WHERE  name = 'Administrators'))
       RETURNING id;
       `,
       [
@@ -498,6 +506,7 @@ export class PgUserRepository implements PublicOf<UserRepository> {
         'timezone',
         input.title,
         input.status,
+        input.email,
       ]
     );
 
@@ -538,22 +547,11 @@ export class PgUserRepository implements PublicOf<UserRepository> {
       );
     }
 
-    const [userId] = await this.pg.query<{ id: ID }>(
-      `
-      INSERT INTO admin.users(id, email, created_by, modified_by, owning_person, owning_group)
-      VALUES ($1, $2, (SELECT person FROM admin.tokens WHERE token = 'public'), 
-              (SELECT person FROM admin.tokens WHERE token = 'public'), 
-              (SELECT person FROM admin.tokens WHERE token = 'public'), 
-              (SELECT id FROM admin.groups WHERE  name = 'Administrators'))
-      RETURNING id;
-      `,
-      [id, input.email]
-    );
-
-    if (!userId.id) {
+    if (!id) {
       throw new ServerException('Failed to create user');
     }
-    return userId.id;
+
+    return id;
   }
 
   async readOne(id: ID): Promise<UnsecuredDto<User>> {
@@ -615,7 +613,6 @@ export class PgUserRepository implements PublicOf<UserRepository> {
       throw new NotFoundException(`Could not find users`);
     }
 
-    // TODO: Merge this in a single query
     const roles = await this.pg.query<{ roles: string[]; id: string }>(
       `
       SELECT array_agg(r.name) as "roles", p.id as id
@@ -665,7 +662,6 @@ export class PgUserRepository implements PublicOf<UserRepository> {
       `
     );
 
-    // TODO: Merge this in a single query
     const roles = await this.pg.query<{ roles: string[]; id: string }>(
       `
       SELECT array_agg(r.name) as "roles", p.id as id
@@ -718,6 +714,10 @@ export class PgUserRepository implements PublicOf<UserRepository> {
     const { id, email, roles, ...rest } = input;
     type Changes = Omit<Required<UpdateUser>, 'email' | 'id' | 'roles'>;
     const changes = omitBy(rest, isNil) as Changes;
+
+    if (isEmpty(changes)) {
+      return;
+    }
 
     const updates = Object.keys(changes)
       .map((key) =>
