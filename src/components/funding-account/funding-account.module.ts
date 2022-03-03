@@ -1,7 +1,11 @@
 import { forwardRef, Module } from '@nestjs/common';
+import { splitDb } from '../../core';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { FundingAccountLoader } from './funding-account.loader';
-import { FundingAccountRepository } from './funding-account.repository';
+import {
+  FundingAccountRepository,
+  PgFundingAccountRepository,
+} from './funding-account.repository';
 import { FundingAccountResolver } from './funding-account.resolver';
 import { FundingAccountService } from './funding-account.service';
 
@@ -12,6 +16,8 @@ import { FundingAccountService } from './funding-account.service';
     FundingAccountService,
     FundingAccountRepository,
     FundingAccountLoader,
+    splitDb(FundingAccountRepository, PgFundingAccountRepository),
+    PgFundingAccountRepository,
   ],
   exports: [FundingAccountService],
 })
