@@ -1,6 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { compact } from 'lodash';
-import { ID, NotFoundException, ServerException, Session } from '../../common';
+import {
+  ID,
+  isSecured,
+  NotFoundException,
+  ServerException,
+  Session,
+} from '../../common';
 import { ResourceResolver } from '../../core';
 import { EthnoArtService } from '../ethno-art';
 import { FieldRegionService } from '../field-region';
@@ -98,18 +104,36 @@ export class SearchService {
                 ...(inputTypes.includes('Organization') ? [result] : []),
                 ...(inputTypes.includes('Partner')
                   ? // partner hydrator will need to handle id of org and partner
-                    [{ id: result.id, type: 'PartnerByOrg' as const }]
+                    [
+                      {
+                        id: result.id,
+                        type: 'PartnerByOrg' as const,
+                        matchedProp:
+                          // have to change matchedProp to organization for perms of Partner -> Organization when
+                          // the prop is one of the props of organization
+                          result.matchedProp.valueOf() === 'locations' ||
+                          result.matchedProp.valueOf() === 'name'
+                            ? ('organization' as keyof SearchResult)
+                            : result.matchedProp,
+                      },
+                    ]
                   : []),
               ]
         )
-        .map(async ({ id, type }): Promise<SearchResult | null> => {
-          const hydrator = this.hydrate(type);
-          return await hydrator(id, session);
-        })
+        .map(
+          async ({ id, matchedProp, type }): Promise<SearchResult | null> => {
+            const hydrator = this.hydrate(type);
+            const hydrated = await hydrator(id, session);
+
+            const prop = hydrated?.[matchedProp];
+            const result = isSecured(prop) && !prop.canRead ? null : hydrated;
+            return result;
+          }
+        )
     );
 
     return {
-      items: compact(hydrated),
+      items: compact(hydrated).slice(0, input.count),
     };
   }
 
