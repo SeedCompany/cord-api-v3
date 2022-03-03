@@ -8,18 +8,7 @@ import {
   Session,
 } from '../../common';
 import { ResourceResolver } from '../../core';
-import { EthnoArtService } from '../ethno-art';
-import { FieldRegionService } from '../field-region';
-import { FieldZoneService } from '../field-zone';
-import { FilmService } from '../film';
-import { FundingAccountService } from '../funding-account';
-import { LanguageService } from '../language';
-import { LocationService } from '../location';
-import { OrganizationService } from '../organization';
 import { PartnerService } from '../partner';
-import { ProjectService } from '../project';
-import { StoryService } from '../story';
-import { UserService } from '../user';
 import {
   SearchableMap,
   SearchInput,
@@ -41,39 +30,13 @@ export class SearchService {
   // given id & session, will return the object.
   /* eslint-disable @typescript-eslint/naming-convention */
   private readonly hydrators: HydratorMap = {
-    Organization: (...args) => this.orgs.readOne(...args),
-    User: (...args) => this.users.readOne(...args),
-    Partner: (...args) => this.partners.readOne(...args),
     PartnerByOrg: (...args) => this.partners.readOnePartnerByOrgId(...args),
-    Language: (...args) => this.language.readOne(...args),
-    TranslationProject: (...args) => this.projects.readOneTranslation(...args),
-    InternshipProject: (...args) => this.projects.readOneInternship(...args),
-    Film: (...args) => this.film.readOne(...args),
-    EthnoArt: (...args) => this.ethnoArt.readOne(...args),
-    Story: (...args) => this.story.readOne(...args),
-    LiteracyMaterial: (...args) => this.ethnoArt.readOne(...args),
-    Song: (...args) => this.ethnoArt.readOne(...args),
-    Location: (...args) => this.location.readOne(...args),
-    FieldZone: (...args) => this.zone.readOne(...args),
-    FieldRegion: (...args) => this.region.readOne(...args),
-    FundingAccount: (...args) => this.fundingAccount.readOne(...args),
   };
   /* eslint-enable @typescript-eslint/naming-convention */
 
   constructor(
     private readonly resources: ResourceResolver,
-    private readonly users: UserService,
-    private readonly orgs: OrganizationService,
     private readonly partners: PartnerService,
-    private readonly location: LocationService,
-    private readonly language: LanguageService,
-    private readonly projects: ProjectService,
-    private readonly film: FilmService,
-    private readonly story: StoryService,
-    private readonly ethnoArt: EthnoArtService,
-    private readonly zone: FieldZoneService,
-    private readonly region: FieldRegionService,
-    private readonly fundingAccount: FundingAccountService,
     private readonly repo: SearchRepository
   ) {}
 
@@ -138,19 +101,15 @@ export class SearchService {
     };
   }
 
-  private hydrate<K extends keyof SearchableMap>(type: K | null) {
+  private hydrate<K extends keyof SearchableMap>(type: K) {
     return async (
       ...args: Parameters<Hydrator<any>>
     ): Promise<SearchResult | null> => {
-      if (!type) {
-        return null;
-      }
       const hydrator = this.hydrators[type] as Hydrator<SearchResultMap[K]>;
-      if (!hydrator) {
-        return null;
-      }
       try {
-        const obj = await hydrator(...args);
+        const obj = hydrator
+          ? await hydrator(...args)
+          : await this.resources.lookup(type, ...args);
         return {
           ...obj,
           // @ts-expect-error Not sure why TS is failing here.
