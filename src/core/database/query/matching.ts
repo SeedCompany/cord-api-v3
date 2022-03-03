@@ -27,18 +27,6 @@ export const matchRequestingUser =
     query.match(requestingUser(userId));
 
 /**
- * @deprecated DB SecurityGroups are deprecated
- */
-export const permissionsOfNode = (nodeLabel: Many<string>) => [
-  relation('in', 'memberOfSecurityGroup', 'member'),
-  node('security', 'SecurityGroup'),
-  relation('out', 'sgPerms', 'permission'),
-  node('perms', 'Permission'),
-  relation('out', 'permsOfBaseNode', 'baseNode'),
-  node('node', nodeLabel),
-];
-
-/**
  * Same as `{ active: true }` but it doesn't create a bound parameter
  */
 export const ACTIVE = { active: variable('true') };

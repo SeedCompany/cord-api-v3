@@ -24,7 +24,6 @@ import {
   Session,
   UnauthorizedException,
 } from '../../common';
-import { retry } from '../../common/retry';
 import { ILogger, Logger } from '../../core';
 import { ChangesOf, isRelation } from '../../core/database/changes';
 import {
@@ -81,34 +80,6 @@ export class AuthorizationService {
     private readonly repo: AuthorizationRepository,
     @Logger('authorization:service') private readonly logger: ILogger
   ) {}
-  /**
-   * Run code after current transaction finishes, if there is one.
-   * This is a hack to allow our procedure and apoc.periodic.iterate to work
-   * without dead-locking. They use separate transactions so they need the
-   * resource being modified to be unlocked (which happens after the
-   * transaction commits/finishes).
-   */
-  private async afterTransaction(fn: () => Promise<void>) {
-    const process = async () => {
-      await retry(fn, {
-        retries: 3,
-      });
-    };
-
-    const tx = this.dbConn.currentTransaction;
-    if (!tx) {
-      await process();
-      return;
-    }
-
-    // run procedure after transaction finishes committing so data is actually
-    // available for procedure code to use.
-    const origCommit = tx.commit.bind(tx);
-    tx.commit = async () => {
-      await origCommit();
-      await process();
-    };
-  }
 
   async secureProperties<Resource extends ResourceShape<any>>(
     resource: Resource,
