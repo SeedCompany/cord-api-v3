@@ -167,7 +167,7 @@ export class PgLocationRepository implements PublicOf<LocationRepository> {
   async doesNameExist(name: string): Promise<boolean> {
     const rows = await this.pg.query(
       `
-      SELECT c.id
+      SELECT c.name
       FROM common.locations c, sc.locations sc 
       WHERE c.name = $1 OR sc.name = $1;
       `,
@@ -340,15 +340,6 @@ export class PgLocationRepository implements PublicOf<LocationRepository> {
     _rel: string,
     _locationId: ID
   ): Promise<void> {
-    throw new Error('Method not implemented.');
-  }
-  listLocationsFromNode(
-    _label: string,
-    _id: ID,
-    _rel: string,
-    _input: LocationListInput,
-    _session: Session
-  ): Promise<PaginatedListType<UnsecuredDto<Location>>> {
     throw new Error('Method not implemented.');
   }
   listLocationsFromNodeNoSecGroups(

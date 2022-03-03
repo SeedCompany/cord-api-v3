@@ -181,6 +181,15 @@ export class PgFundingAccountRepository
     await this.pg.query('DELETE FROM sc.funding_accounts WHERE id = $1', [id]);
   }
 
+  async isUnique(value: string, _label?: string): Promise<boolean> {
+    const [{ exists }] = await this.pg.query<{ exists: boolean }>(
+      'SELECT EXISTS(SELECT name FROM sc.funding_accounts WHERE name = $1)',
+      [value]
+    );
+
+    return !exists;
+  }
+
   getActualChanges: <
     TResource extends MaybeUnsecuredInstance<typeof FundingAccount>,
     Changes extends ChangesOf<TResource>
@@ -189,9 +198,6 @@ export class PgFundingAccountRepository
     changes: Changes & Record<any, any>
   ) => Partial<any>;
 
-  isUnique(_value: string, _label?: string): Promise<boolean> {
-    throw new Error('Method not implemented.');
-  }
   getBaseNode(
     _id: ID,
     _label?: string | ResourceShape<any>

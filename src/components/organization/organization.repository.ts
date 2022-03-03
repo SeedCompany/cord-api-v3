@@ -28,9 +28,9 @@ import {
   requestingUser,
   sorting,
 } from '../../core/database/query';
-import { AuthSensitivityMapping } from '../authorization/authorization.service';
 import { BaseNode } from '../../core/database/results';
 import { PgTransaction } from '../../core/postgres/transaction.decorator';
+import { AuthSensitivityMapping } from '../authorization/authorization.service';
 import {
   CreateOrganization,
   Organization,
@@ -284,13 +284,14 @@ export class PgOrganizationRepository
   }
 
   async isUnique(orgName: string): Promise<boolean> {
-    const rows = await this.pg.query(
+    const [{ exists }] = await this.pg.query<{ exists: boolean }>(
       `
-      SELECT c.name FROM common.organizations c, sc.organizations sc 
-      WHERE c.name = $1 OR sc.name = $1`,
+      SELECT EXISTS (SELECT c.name FROM common.organizations c, sc.organizations sc 
+      WHERE c.name = $1 OR sc.name = $1)`,
       [orgName]
     );
-    return !!rows[0];
+
+    return !exists;
   }
 
   getActualChanges: <
