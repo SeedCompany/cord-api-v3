@@ -1,12 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { Session } from '../../common';
 import { CommonRepository, OnIndex, OnIndexParams } from '../../core';
 import {
   ACTIVE,
   escapeLuceneSyntax,
   fullTextQuery,
-  matchRequestingUser,
 } from '../../core/database/query';
 import { BaseNode } from '../../core/database/results';
 import { SearchInput, SearchResult } from './dto';
@@ -24,7 +22,7 @@ export class SearchRepository extends CommonRepository {
    * Search for nodes based on input, only returning their id and "type"
    * which is based on their first valid search label.
    */
-  async search(input: SearchInput, session: Session) {
+  async search(input: SearchInput) {
     const escaped = escapeLuceneSyntax(input.query);
     // Emphasize exact matches but allow fuzzy as well
     const lucene = `"${escaped}"^2 ${escaped}*`;
@@ -38,7 +36,6 @@ export class SearchRepository extends CommonRepository {
 
           .union()
 
-          .apply(matchRequestingUser(session))
           .raw('', { query: lucene })
           .apply(fullTextQuery('propValue', '$query', ['node as property']))
           .match([node('node'), relation('out', 'r', ACTIVE), node('property')])

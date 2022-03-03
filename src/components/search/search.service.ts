@@ -90,7 +90,7 @@ export class SearchService {
 
     // Search for nodes based on input, only returning their id and "type"
     // which is based on their first valid search label.
-    const results = await this.repo.search({ ...input, type: types }, session);
+    const results = await this.repo.search({ ...input, type: types });
 
     // Individually convert each result (id & type) to its search result
     // based on this.hydrators
