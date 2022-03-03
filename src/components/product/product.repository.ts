@@ -33,7 +33,6 @@ import {
   matchPropsAndProjectSensAndScopedRoles,
   merge,
   paginate,
-  requestingUser,
   sorting,
 } from '../../core/database/query';
 import {
@@ -503,7 +502,6 @@ export class ProductRepository extends CommonRepository {
             ]
           : []),
       ])
-      .match(requestingUser(session))
       .apply(productListFilter(filter))
       .apply(sorting(Product, input))
       .apply(paginate(input, this.hydrate(session)))

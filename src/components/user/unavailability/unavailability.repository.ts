@@ -8,7 +8,6 @@ import {
   createRelationships,
   matchRequestingUser,
   paginate,
-  requestingUser,
   sorting,
 } from '../../../core/database/query';
 import {
@@ -54,11 +53,10 @@ export class UnavailabilityRepository extends DtoRepository(Unavailability) {
       .first();
   }
 
-  async list(input: UnavailabilityListInput, session: Session) {
+  async list(input: UnavailabilityListInput, _session: Session) {
     const result = await this.db
       .query()
       .matchNode('node', 'Unavailability')
-      .match(requestingUser(session))
       .apply(sorting(Unavailability, input))
       .apply(paginate(input, this.hydrate()))
       .first();

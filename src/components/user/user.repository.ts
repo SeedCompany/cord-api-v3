@@ -252,7 +252,6 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
     const result = await this.db
       .query()
       .matchNode('node', 'User')
-      .match(requestingUser(session))
       .apply(userListFilter(filter))
       .apply(sorting(User, input))
       .apply(paginate(input, this.hydrate(session.userId)))
@@ -306,11 +305,10 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
       .run();
   }
 
-  async listKnownLanguages(userId: ID, session: Session) {
+  async listKnownLanguages(userId: ID, _session: Session) {
     const results = await this.db
       .query()
       .match([
-        requestingUser(session),
         node('node', 'Language'),
         relation('in', 'knownLanguageRel', 'knownLanguage', ACTIVE),
         node('user', 'User', { id: userId }),

@@ -8,7 +8,6 @@ import {
   createRelationships,
   matchRequestingUser,
   paginate,
-  requestingUser,
   sorting,
 } from '../../../core/database/query';
 import { CreateEducation, Education, EducationListInput } from './dto';
@@ -48,7 +47,7 @@ export class EducationRepository extends DtoRepository(Education) {
       .first();
   }
 
-  async list({ filter, ...input }: EducationListInput, session: Session) {
+  async list({ filter, ...input }: EducationListInput, _session: Session) {
     const result = await this.db
       .query()
       .matchNode('node', 'Education')
@@ -63,7 +62,6 @@ export class EducationRepository extends DtoRepository(Education) {
             ]
           : []),
       ])
-      .match(requestingUser(session))
       .apply(sorting(Education, input))
       .apply(paginate(input, this.hydrate()))
       .first();

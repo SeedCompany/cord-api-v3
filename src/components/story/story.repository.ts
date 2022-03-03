@@ -8,7 +8,6 @@ import {
   matchRequestingUser,
   merge,
   paginate,
-  requestingUser,
   sorting,
 } from '../../core/database/query';
 import { ScriptureReferenceRepository } from '../scripture';
@@ -36,11 +35,10 @@ export class StoryRepository extends DtoRepository(Story) {
       .first();
   }
 
-  async list({ filter, ...input }: StoryListInput, session: Session) {
+  async list({ filter, ...input }: StoryListInput, _session: Session) {
     const result = await this.db
       .query()
       .matchNode('node', 'Story')
-      .match(requestingUser(session))
       .apply(sorting(Story, input))
       .apply(paginate(input, this.hydrate()))
       .first();

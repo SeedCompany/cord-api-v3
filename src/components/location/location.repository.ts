@@ -11,7 +11,6 @@ import {
   matchRequestingUser,
   merge,
   paginate,
-  requestingUser,
   sorting,
 } from '../../core/database/query';
 import { CreateLocation, Location, LocationListInput } from './dto';
@@ -77,11 +76,10 @@ export class LocationRepository extends DtoRepository(Location) {
         );
   }
 
-  async list({ filter, ...input }: LocationListInput, session: Session) {
+  async list({ filter, ...input }: LocationListInput, _session: Session) {
     const result = await this.db
       .query()
       .matchNode('node', 'Location')
-      .match(requestingUser(session))
       .apply(sorting(Location, input))
       .apply(paginate(input, this.hydrate()))
       .first();
