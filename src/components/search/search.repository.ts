@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { ID, Session } from '../../common';
+import { Session } from '../../common';
 import { CommonRepository, OnIndex, OnIndexParams } from '../../core';
 import {
   ACTIVE,
@@ -8,7 +8,8 @@ import {
   fullTextQuery,
   matchRequestingUser,
 } from '../../core/database/query';
-import { SearchInput, SearchResult, SearchResultMap } from './dto';
+import { BaseNode } from '../../core/database/results';
+import { SearchInput, SearchResult } from './dto';
 
 @Injectable()
 export class SearchRepository extends CommonRepository {
@@ -47,19 +48,20 @@ export class SearchRepository extends CommonRepository {
           // number, so we don't choke things without a limit.
           .raw('LIMIT 100')
       )
-      .with('node')
-      .raw('WHERE size([l in labels(node) where l in $types | 1]) > 0', {
-        types: input.type ?? [],
-      })
+      .apply((q) =>
+        input.type
+          ? q
+              .with(['node', 'matchedProp'])
+              .raw(
+                'WHERE size([l in labels(node) where l in $types | 1]) > 0',
+                { types: input.type }
+              )
+          : q
+      )
       .returnDistinct<{
-        id: ID;
-        type: keyof SearchResultMap;
+        node: BaseNode;
         matchedProp: keyof SearchResult;
-      }>([
-        'node.id as id',
-        `[l in labels(node) where l in $types][0] as type`,
-        'matchedProp',
-      ]);
+      }>(['node', 'matchedProp']);
 
     return await query.run();
   }

@@ -96,6 +96,13 @@ export class SearchService {
     // based on this.hydrators
     const hydrated = await Promise.all(
       results
+        .map(({ node, matchedProp }) => ({
+          type: this.resources.resolveTypeByBaseNode(
+            node
+          ) as keyof SearchableMap,
+          id: node.properties.id,
+          matchedProp,
+        }))
         // Map Org results to Org & Partner results based on types asked for
         .flatMap((result) =>
           result.type !== 'Organization'
