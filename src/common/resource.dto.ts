@@ -28,6 +28,7 @@ const hasTypename = (value: unknown): value is { __typename: string } =>
 @DbLabel('BaseNode')
 export abstract class Resource {
   static readonly Props: string[] = keysOf<Resource>();
+  static readonly SecuredProps: string[] = [];
 
   @IdField()
   readonly id: ID;

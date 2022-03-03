@@ -1,16 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { ID } from '../../common';
-import { DatabaseService, SyntaxError } from '../../core';
+import { ID, Resource } from '../../common';
+import { CommonRepository, OnIndex, SyntaxError } from '../../core';
 import { ACTIVE } from '../../core/database/query';
 
 @Injectable()
-export class AdminRepository {
-  constructor(private readonly db: DatabaseService) {}
-
+export class AdminRepository extends CommonRepository {
   finishing(callback: () => Promise<void>) {
     return this.db.runOnceUntilCompleteAfterConnecting(callback);
+  }
+
+  @OnIndex()
+  private applyIndexes() {
+    return this.getConstraintsFor(Resource);
   }
 
   async apocVersion() {
