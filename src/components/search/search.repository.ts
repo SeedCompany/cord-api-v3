@@ -8,7 +8,7 @@ import {
   fullTextQuery,
   matchRequestingUser,
 } from '../../core/database/query';
-import { SearchInput, SearchResultMap } from './dto';
+import { SearchInput, SearchResult, SearchResultMap } from './dto';
 
 @Injectable()
 export class SearchRepository {
@@ -39,18 +39,20 @@ export class SearchRepository {
       })
       .apply(fullTextQuery('propValue', '$query', ['node as property']))
       .apply(propToBaseNode())
-      .apply(
-        // Ignore authorization if only searching for EthnoArt or FundingAccounts
-        // This is a temporary fix while authorization refactor is in progress
-        ['EthnoArt', 'FundingAccount'].includes(input.type?.join(',') ?? '')
-          ? null
-          : filterToRequestedAndAllowed()
-      )
-      .returnDistinct<{ id: ID; type: keyof SearchResultMap }>([
+      .apply(filterToRequested())
+      .returnDistinct<{
+        id: ID;
+        matchedProp: keyof SearchResult;
+        type: keyof SearchResultMap;
+      }>([
         'node.id as id',
+        'type(r) as matchedProp',
         `[l in labels(node) where l in $types][0] as type`,
       ])
-      .limit(input.count);
+      // The input.count is going to be applied once the results are 'filtered'
+      // according to what the user can read. This limit is just set to a bigger
+      // number, so we don't choke things without a limit.
+      .raw('LIMIT 100');
 
     return await query.run();
   }
@@ -59,14 +61,9 @@ export class SearchRepository {
 const propToBaseNode = () => (query: Query) =>
   query.match([node('node'), relation('out', 'r', ACTIVE), node('property')]);
 
-const filterToRequestedAndAllowed = () => (query: Query) =>
+const filterToRequested = () => (query: Query) =>
   query.raw(
     `
       WHERE size([l in labels(node) where l in $types | 1]) > 0
-        AND exists(
-          (node)<-[:baseNode]-(:Permission { property: type(r), read: true })
-                <-[:permission]-(:SecurityGroup)
-                 -[:member]->(requestingUser)
-        )
     `
   );
