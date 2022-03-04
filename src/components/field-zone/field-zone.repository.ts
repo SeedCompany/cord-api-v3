@@ -26,6 +26,7 @@ import {
   sorting,
 } from '../../core/database/query';
 import { BaseNode } from '../../core/database/results';
+import { PgTransaction } from '../../core/postgres/transaction.decorator';
 import { CreateFieldZone, FieldZone, FieldZoneListInput } from './dto';
 
 @Injectable()
@@ -212,8 +213,16 @@ export class PgFieldZoneRepository implements PublicOf<FieldZoneRepository> {
     };
   }
 
+  @PgTransaction()
   async delete(id: ID) {
-    // delete from field regions
+    await this.pg.query(
+      `
+      UPDATE sc.field_regions
+      SET field_zone = (SELECT NULL FROM sc.field_zones WHERE id = $1)
+      WHERE field_zone = $1;
+      `,
+      [id]
+    );
     await this.pg.query('DELETE FROM sc.field_zones WHERE id = $1', [id]);
   }
 
