@@ -532,19 +532,20 @@ export class PgUserRepository implements PublicOf<UserRepository> {
     //  $$;
 
     if (input.roles) {
-      input.roles.forEach(
-        (role) => async () =>
+      input.roles.forEach((role) => {
+        void (async () => {
           await this.pg.query(
             `
-          INSERT INTO admin.role_memberships(person, role, created_by, modified_by, owning_person, owning_group) 
-          VALUES($1, (SELECT check_role($2)), (SELECT person FROM admin.tokens WHERE token = 'public'), 
-          (SELECT person FROM admin.tokens WHERE token = 'public'), 
-          (SELECT person FROM admin.tokens WHERE token = 'public'), 
-          (SELECT id FROM admin.groups WHERE  name = 'Administrators')) 
-          `,
+             INSERT INTO admin.role_memberships(person, role, created_by, modified_by, owning_person, owning_group) 
+             VALUES($1, (SELECT check_role($2)), (SELECT person FROM admin.tokens WHERE token = 'public'), 
+             (SELECT person FROM admin.tokens WHERE token = 'public'), 
+             (SELECT person FROM admin.tokens WHERE token = 'public'), 
+             (SELECT id FROM admin.groups WHERE  name = 'Administrators'));
+             `,
             [id, role]
-          )
-      );
+          );
+        })();
+      });
     }
 
     if (!id) {
