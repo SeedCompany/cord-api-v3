@@ -152,7 +152,7 @@ export class ConfigService implements EmailOptionsFactory {
         this.env.string('PGURI').optional() ??
         this.env
           .string('PGURL')
-          .optional('postgres://postgres:asdfasdf@localhost/cordfield'),
+          .optional('postgres://postgres:postgres@localhost/cord'),
     };
     /* eslint-enable @typescript-eslint/naming-convention */
     return config;
