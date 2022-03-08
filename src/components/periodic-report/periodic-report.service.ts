@@ -1,5 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import {
+  asyncPool,
   CalendarDate,
   DateInterval,
   ID,
@@ -120,8 +121,8 @@ export class PeriodicReportService {
 
   async readMany(ids: readonly ID[], session: Session) {
     const periodicReports = await this.repo.readMany(ids, session);
-    return await Promise.all(
-      periodicReports.map((dto) => this.secure(dto, session))
+    return await asyncPool(25, periodicReports, (dto) =>
+      this.secure(dto, session)
     );
   }
 
