@@ -104,6 +104,12 @@ export class StoryService {
     return {
       ...dto,
       ...securedProps,
+      scriptureReferences: {
+        ...securedProps.scriptureReferences,
+        value: securedProps.scriptureReferences.canRead
+          ? securedProps.scriptureReferences.value
+          : [],
+      },
       canDelete: await this.repo.checkDeletePermission(dto.id, session),
     };
   }

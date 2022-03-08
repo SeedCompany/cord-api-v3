@@ -478,6 +478,8 @@ export class EngagementService {
     session: Session,
     view?: ObjectView
   ): Promise<EngagementListOutput> {
+    // -- don't have to check if canList because all roles can see at least on prop of it
+    // if that ever changes, create a limitedScope and add to the list function.
     const results = await this.repo.list(input, session, view?.changeset);
 
     return await mapListResults(results, (dto) => this.secure(dto, session));

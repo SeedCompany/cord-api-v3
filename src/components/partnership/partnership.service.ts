@@ -38,6 +38,7 @@ export class PartnershipService {
     private readonly files: FileService,
     @Inject(forwardRef(() => ProjectService))
     private readonly projectService: ProjectService,
+    @Inject(forwardRef(() => PartnerService))
     private readonly partnerService: PartnerService,
     private readonly eventBus: IEventBus,
     @Inject(forwardRef(() => AuthorizationService))

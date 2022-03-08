@@ -1,6 +1,5 @@
 version: '3.7'
 services:
-
   api:
     # Use dev target locally since there's no need to save space and contains everything
     image: cord-api-v3:dev
@@ -28,7 +27,7 @@ services:
     networks:
       - cord
     environment:
-      NEO4J_ACCEPT_LICENSE_AGREEMENT: "yes"
+      NEO4J_ACCEPT_LICENSE_AGREEMENT: 'yes'
       NEO4J_AUTH: neo4j/admin
       NEO4JLABS_PLUGINS: '["apoc"]'
 
@@ -42,6 +41,19 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: cord
+
+  pgadmin:
+    image: dpage/pgadmin4
+    restart: always
+    networks:
+      - cord
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: postgres
+    ports:
+      - '5050:80'
+    depends_on:
+      - pg
 
 networks:
   cord:

@@ -1,6 +1,7 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { intersection, sumBy, uniq } from 'lodash';
 import {
+  asyncPool,
   has,
   ID,
   InputException,
@@ -199,7 +200,7 @@ export class ProductService {
     session: Session
   ): Promise<readonly AnyProduct[]> {
     const rows = await this.readManyUnsecured(ids, session);
-    return await Promise.all(rows.map((row) => this.secure(row, session)));
+    return await asyncPool(25, rows, (row) => this.secure(row, session));
   }
 
   async readManyUnsecured(
@@ -709,6 +710,7 @@ export class ProductService {
     input: ProductListInput,
     session: Session
   ): Promise<ProductListOutput> {
+    // all roles can list, so no need to check canList for now
     const results = await this.repo.list(input, session);
     return await mapListResults(results, (row) =>
       this.secure(this.mapDbRowToDto(row), session)

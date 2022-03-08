@@ -11,8 +11,6 @@ import {
   matchRequestingUser,
   merge,
   paginate,
-  permissionsOfNode,
-  requestingUser,
   sorting,
 } from '../../core/database/query';
 import { CreateLocation, Location, LocationListInput } from './dto';
@@ -78,10 +76,10 @@ export class LocationRepository extends DtoRepository(Location) {
         );
   }
 
-  async list({ filter, ...input }: LocationListInput, session: Session) {
+  async list({ filter, ...input }: LocationListInput, _session: Session) {
     const result = await this.db
       .query()
-      .match([requestingUser(session), ...permissionsOfNode('Location')])
+      .matchNode('node', 'Location')
       .apply(sorting(Location, input))
       .apply(paginate(input, this.hydrate()))
       .first();
@@ -123,27 +121,6 @@ export class LocationRepository extends DtoRepository(Location) {
         'rel.active': false,
       })
       .run();
-  }
-
-  async listLocationsFromNode(
-    label: string,
-    id: ID,
-    rel: string,
-    input: LocationListInput,
-    session: Session
-  ) {
-    const result = await this.db
-      .query()
-      .match([
-        requestingUser(session),
-        ...permissionsOfNode('Location'),
-        relation('in', '', rel, ACTIVE),
-        node(`${label.toLowerCase()}`, label, { id }),
-      ])
-      .apply(sorting(Location, input))
-      .apply(paginate(input, this.hydrate()))
-      .first();
-    return result!; // result from paginate() will always have 1 row.
   }
 
   async listLocationsFromNodeNoSecGroups(

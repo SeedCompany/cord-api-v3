@@ -292,6 +292,7 @@ export const RegionalDirectorOnProject = new DbRole({
     }),
     new DbBaseNodeGrant<DbOrganization>({
       __className: 'DbOrganization',
+      canList: true,
       properties: [
         { propertyName: 'name', permission: { read, }, },
         { propertyName: 'address', permission: { read, }, },
@@ -421,6 +422,7 @@ export const RegionalDirectorOnProject = new DbRole({
     }),
     new DbBaseNodeGrant<DbUser>({
       __className: 'DbUser',
+      canList: true,
       properties: [
         { propertyName: 'about', permission: { read, }, },
         { propertyName: 'displayFirstName', permission: { read, }, },
@@ -435,6 +437,7 @@ export const RegionalDirectorOnProject = new DbRole({
         { propertyName: 'title', permission: { read, }, },
         { propertyName: 'education', permission: { read, }, },
         { propertyName: 'organization', permission: { read, }, },
+        { propertyName: 'partner', permission: { read, }, },
         { propertyName: 'unavailability', permission: { read, }, },
         { propertyName: 'locations', permission: { read, }, },
         { propertyName: 'knownLanguage', permission: { read, }, },

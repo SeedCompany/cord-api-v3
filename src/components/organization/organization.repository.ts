@@ -7,15 +7,16 @@ import {
   createNode,
   matchProjectScopedRoles,
   matchProjectSens,
+  matchProjectSensToLimitedScopeMap,
   matchProps,
   matchRequestingUser,
   merge,
   paginate,
-  permissionsOfNode,
   rankSens,
   requestingUser,
   sorting,
 } from '../../core/database/query';
+import { AuthSensitivityMapping } from '../authorization/authorization.service';
 import { CreateOrganization, Organization, OrganizationListInput } from './dto';
 
 @Injectable()
@@ -81,22 +82,41 @@ export class OrganizationRepository extends DtoRepository<
         );
   }
 
-  async list({ filter, ...input }: OrganizationListInput, session: Session) {
-    const result = await this.db
+  async list(
+    { filter, ...input }: OrganizationListInput,
+    session: Session,
+    limitedScope?: AuthSensitivityMapping
+  ) {
+    const result = this.db
       .query()
+      .matchNode('node', 'Organization')
+      .optionalMatch([
+        ...(limitedScope
+          ? [
+              node('project', 'Project'),
+              relation('out', '', 'partnership'),
+              node('', 'Partnership'),
+              relation('out', '', 'partner'),
+              node('', 'Partner'),
+              relation('out', 'organization'),
+              node('node'),
+            ]
+          : []),
+      ])
       .match([
-        requestingUser(session),
-        ...permissionsOfNode('Organization'),
         ...(filter.userId && session.userId
           ? [
+              node('node'),
               relation('in', '', 'organization', ACTIVE),
               node('user', 'User', { id: filter.userId }),
             ]
           : []),
       ])
+      .match(requestingUser(session))
+      .apply(matchProjectSensToLimitedScopeMap(limitedScope))
       .apply(sorting(Organization, input))
       .apply(paginate(input, this.hydrate(session)))
-      .first();
-    return result!; // result from paginate() will always have 1 row.
+      .logIt();
+    return await result.first()!; // result from paginate() will always have 1 row.
   }
 }

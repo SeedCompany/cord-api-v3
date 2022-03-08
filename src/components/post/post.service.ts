@@ -42,13 +42,6 @@ export class PostService {
         throw new ServerException('Failed to create post');
       }
 
-      // FIXME: This is being refactored - leaving it commented out per Michael's instructions for now
-      // await this.authorizationService.processNewBaseNode(
-      //   new DbPost(),
-      //   postId,
-      //   session.userId
-      // );
-
       return await this.readOne(result.id, session);
     } catch (exception) {
       this.logger.warning('Failed to create post', {

@@ -15,6 +15,7 @@ export async function testRole<
   readOneFunction,
   propToTest,
   skipEditCheck = false,
+  isSecureList = false,
 }: {
   app: TestApp;
   resource: ResourceObj;
@@ -22,7 +23,8 @@ export async function testRole<
   role: Role;
   readOneFunction: ReadOneFunction<ResourceObj>;
   propToTest: keyof ResourceObj;
-  skipEditCheck: boolean;
+  skipEditCheck?: boolean;
+  isSecureList?: boolean;
 }): Promise<void> {
   const permissions = (await getPermissions({
     resource: staticResource,
@@ -33,12 +35,17 @@ export async function testRole<
     await registerUser(app, { roles: [role] });
     return await readOneFunction(app, resource.id);
   });
-
   expect(readResource[propToTest].canRead).toEqual(
     permissions[propToTest].canRead
   );
 
-  if (!skipEditCheck) {
+  if (isSecureList) {
+    if (!skipEditCheck) {
+      expect(readResource[propToTest].canCreate).toEqual(
+        permissions[propToTest].canEdit
+      );
+    }
+  } else if (!skipEditCheck) {
     expect(readResource[propToTest].canEdit).toEqual(
       permissions[propToTest].canEdit
     );

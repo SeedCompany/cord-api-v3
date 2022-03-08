@@ -219,13 +219,12 @@ export class AuthorizationService {
 
   async canList<Resource extends ResourceShape<any>>(
     resource: Resource,
-    sessionOrUserId: Session | ID,
-    otherRoles = [] as ScopedRole[]
+    sessionOrUserId: Session | ID
   ): Promise<boolean> {
     const userGlobalRoles = isIdLike(sessionOrUserId)
       ? await this.getUserGlobalRoles(sessionOrUserId)
       : sessionOrUserId.roles;
-    const roles = [...userGlobalRoles, ...otherRoles];
+    const roles = [...userGlobalRoles];
 
     // convert resource to a list of resource names to check
     const resources = getParentTypes(resource)
