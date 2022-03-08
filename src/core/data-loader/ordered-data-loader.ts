@@ -44,6 +44,7 @@ export abstract class OrderedNestDataLoader<T, Key = ID, CachedKey = Key>
     return {
       // Increase the batching timeframe from the same nodejs frame to 10ms
       batchScheduleFn: (cb) => setTimeout(cb, 10),
+      maxBatchSize: 100,
     };
   }
 
