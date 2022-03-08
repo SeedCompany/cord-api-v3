@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import {
+  asyncPool,
   ID,
   InputException,
   isIdLike,
@@ -39,20 +40,20 @@ export class ProductProgressService {
       await this.repo.readAllProgressReportsForManyReports(
         reports.map((report) => report.id)
       );
-    return await Promise.all(
-      progressForManyReports.map(async ({ reportId, progressList }) => {
+    return await asyncPool(
+      5,
+      progressForManyReports,
+      async ({ reportId, progressList }) => {
         const report = reportMap[reportId];
-        const progress = await Promise.all(
-          progressList.map((progress) =>
-            this.secure(
-              progress,
-              addScope(session, report.scope),
-              report.sensitivity
-            )
+        const progress = await asyncPool(5, progressList, (progress) =>
+          this.secure(
+            progress,
+            addScope(session, report.scope),
+            report.sensitivity
           )
         );
         return { report, progress };
-      })
+      }
     );
   }
 
@@ -65,20 +66,20 @@ export class ProductProgressService {
       await this.repo.readAllProgressReportsForManyProducts(
         products.map((product) => product.id)
       );
-    return await Promise.all(
-      progressForManyProducts.map(async ({ productId, progressList }) => {
+    return await asyncPool(
+      5,
+      progressForManyProducts,
+      async ({ productId, progressList }) => {
         const product = productMap[productId];
-        const progress = await Promise.all(
-          progressList.map((progress) =>
-            this.secure(
-              progress,
-              addScope(session, product.scope),
-              product.sensitivity
-            )
+        const progress = await asyncPool(5, progressList, (progress) =>
+          this.secure(
+            progress,
+            addScope(session, product.scope),
+            product.sensitivity
           )
         );
         return { product, progress };
-      })
+      }
     );
   }
 
