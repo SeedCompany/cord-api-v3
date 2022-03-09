@@ -236,6 +236,7 @@ export class ProductRepository extends CommonRepository {
         .return<{ dto: HydratedProductRow }>(
           merge('props', {
             engagement: 'engagement.id',
+            project: 'project.id',
             produces: 'produces',
             unspecifiedScripture:
               'unspecifiedScripture { .book, .totalVerses }',

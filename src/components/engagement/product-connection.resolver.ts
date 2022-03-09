@@ -1,4 +1,5 @@
-import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
+import { Info, Parent, ResolveField, Resolver } from '@nestjs/graphql';
+import { Fields, IsOnlyId } from '../../common';
 import { Loader, LoaderOf } from '../../core';
 import { Product } from '../product';
 import { LanguageEngagement } from './dto';
@@ -9,11 +10,14 @@ export class EngagementProductConnectionResolver {
   @ResolveField(() => LanguageEngagement)
   async engagement(
     @Parent() product: Product,
-    @Loader(EngagementLoader) engagements: LoaderOf<EngagementLoader>
+    @Loader(EngagementLoader) engagements: LoaderOf<EngagementLoader>,
+    @Info(Fields, IsOnlyId) onlyId: boolean
   ) {
-    return await engagements.load({
-      id: product.engagement,
-      view: { active: true },
-    });
+    return onlyId
+      ? { id: product.engagement }
+      : await engagements.load({
+          id: product.engagement,
+          view: { active: true },
+        });
   }
 }

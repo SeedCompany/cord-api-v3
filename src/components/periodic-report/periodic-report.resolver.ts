@@ -9,14 +9,13 @@ import {
 import {
   AnonSession,
   CalendarDate,
-  ID,
-  IdArg,
   ListArg,
   LoggedInSession,
   Session,
   UnauthorizedException,
 } from '../../common';
 import { Loader, LoaderOf } from '../../core';
+import { IdsAndView, IdsAndViewArg } from '../changeset/dto';
 import { FileNodeLoader, resolveDefinedFile, SecuredFile } from '../file';
 import {
   IPeriodicReport,
@@ -25,7 +24,7 @@ import {
   UpdatePeriodicReportInput,
   UploadPeriodicReportInput,
 } from './dto';
-import { PeriodicReportLoader } from './periodic-report.loader';
+import { PeriodicReportLoader as ReportLoader } from './periodic-report.loader';
 import { PeriodicReportService } from './periodic-report.service';
 
 @Resolver(IPeriodicReport)
@@ -36,11 +35,10 @@ export class PeriodicReportResolver {
     description: 'Read a periodic report by id.',
   })
   async periodicReport(
-    @Loader(PeriodicReportLoader)
-    periodicReports: LoaderOf<PeriodicReportLoader>,
-    @IdArg() id: ID
+    @Loader(ReportLoader) reports: LoaderOf<ReportLoader>,
+    @IdsAndViewArg() { id }: IdsAndView
   ): Promise<IPeriodicReport> {
-    return await periodicReports.load(id);
+    return await reports.load(id);
   }
 
   @Query(() => PeriodicReportListOutput, {
@@ -49,7 +47,7 @@ export class PeriodicReportResolver {
   async periodicReports(
     @AnonSession() session: Session,
     @ListArg(PeriodicReportListInput) input: PeriodicReportListInput,
-    @Loader(PeriodicReportLoader) loader: LoaderOf<PeriodicReportLoader>
+    @Loader(ReportLoader) loader: LoaderOf<ReportLoader>
   ): Promise<PeriodicReportListOutput> {
     // Only let admins do this for now.
     if (!session.roles.includes('global:Administrator')) {

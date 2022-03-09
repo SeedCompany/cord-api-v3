@@ -1,5 +1,6 @@
 import {
   Args,
+  Info,
   Mutation,
   Parent,
   Query,
@@ -10,13 +11,16 @@ import { stripIndent } from 'common-tags';
 import { startCase } from 'lodash';
 import {
   AnonSession,
+  Fields,
   ID,
   IdArg,
+  IsOnlyId,
   ListArg,
   LoggedInSession,
   Session,
 } from '../../common';
 import { Loader, LoaderOf } from '../../core';
+import { IdsAndView, IdsAndViewArg } from '../changeset/dto';
 import {
   AvailableStepsOptions,
   CreateDerivativeScriptureProduct,
@@ -28,6 +32,7 @@ import {
   UpdateDerivativeScriptureProduct,
   UpdateDirectScriptureProduct,
 } from '../product';
+import { ProjectLoader, TranslationProject } from '../project';
 import { Book, labelOfScriptureRanges } from '../scripture';
 import {
   AnyProduct,
@@ -56,7 +61,7 @@ export class ProductResolver {
   })
   async product(
     @Loader(ProductLoader) products: LoaderOf<ProductLoader>,
-    @IdArg() id: ID
+    @IdsAndViewArg() { id }: IdsAndView
   ): Promise<AnyProduct> {
     return await products.load(id);
   }
@@ -72,6 +77,17 @@ export class ProductResolver {
     const list = await this.productService.list(input, session);
     products.primeAll(list.items);
     return list;
+  }
+
+  @ResolveField(() => TranslationProject)
+  async project(
+    @Parent() product: AnyProduct,
+    @Loader(() => ProjectLoader) projects: LoaderOf<ProjectLoader>,
+    @Info(Fields, IsOnlyId) onlyId: boolean
+  ) {
+    return onlyId
+      ? { id: product.project }
+      : await projects.load({ id: product.project, view: { active: true } });
   }
 
   @ResolveField(() => ProductApproach, { nullable: true })

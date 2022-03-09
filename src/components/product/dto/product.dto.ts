@@ -48,6 +48,7 @@ export class Product extends Producible {
   static readonly SecuredProps: string[] = keysOf<SecuredProps<Product>>();
 
   readonly engagement: ID;
+  readonly project: ID;
 
   @Field()
   @DbLabel('ProductMedium')
