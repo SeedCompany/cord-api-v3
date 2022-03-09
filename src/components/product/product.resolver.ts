@@ -29,6 +29,7 @@ import {
   UpdateDerivativeScriptureProduct,
   UpdateDirectScriptureProduct,
 } from '../product';
+import { ProjectLoader, TranslationProject } from '../project';
 import { Book, labelOfScriptureRanges } from '../scripture';
 import {
   AnyProduct,
@@ -73,6 +74,14 @@ export class ProductResolver {
     const list = await this.productService.list(input, session);
     products.primeAll(list.items);
     return list;
+  }
+
+  @ResolveField(() => TranslationProject)
+  async project(
+    @Parent() product: AnyProduct,
+    @Loader(() => ProjectLoader) projects: LoaderOf<ProjectLoader>
+  ) {
+    return await projects.load({ id: product.project, view: { active: true } });
   }
 
   @ResolveField(() => ProductApproach, { nullable: true })
