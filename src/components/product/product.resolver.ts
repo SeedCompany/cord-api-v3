@@ -1,5 +1,6 @@
 import {
   Args,
+  Info,
   Mutation,
   Parent,
   Query,
@@ -10,8 +11,10 @@ import { stripIndent } from 'common-tags';
 import { startCase } from 'lodash';
 import {
   AnonSession,
+  Fields,
   ID,
   IdArg,
+  IsOnlyId,
   ListArg,
   LoggedInSession,
   Session,
@@ -79,9 +82,12 @@ export class ProductResolver {
   @ResolveField(() => TranslationProject)
   async project(
     @Parent() product: AnyProduct,
-    @Loader(() => ProjectLoader) projects: LoaderOf<ProjectLoader>
+    @Loader(() => ProjectLoader) projects: LoaderOf<ProjectLoader>,
+    @Info(Fields, IsOnlyId) onlyId: boolean
   ) {
-    return await projects.load({ id: product.project, view: { active: true } });
+    return onlyId
+      ? { id: product.project }
+      : await projects.load({ id: product.project, view: { active: true } });
   }
 
   @ResolveField(() => ProductApproach, { nullable: true })
