@@ -3,10 +3,8 @@ import { splitDb } from '../../core';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { LocationModule } from '../location/location.module';
 import { OrganizationLoader } from './organization.loader';
-import {
-  OrganizationRepository,
-  PgOrganizationRepository,
-} from './organization.repository';
+import { PgOrganizationRepository } from './organization.pg.repository';
+import { OrganizationRepository } from './organization.repository';
 import { OrganizationResolver } from './organization.resolver';
 import { OrganizationService } from './organization.service';
 
@@ -18,7 +16,6 @@ import { OrganizationService } from './organization.service';
     OrganizationRepository,
     OrganizationLoader,
     splitDb(OrganizationRepository, PgOrganizationRepository),
-    PgOrganizationRepository,
   ],
   exports: [OrganizationService],
 })

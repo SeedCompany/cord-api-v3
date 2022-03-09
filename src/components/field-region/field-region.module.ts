@@ -4,10 +4,8 @@ import { AuthorizationModule } from '../authorization/authorization.module';
 import { FieldZoneModule } from '../field-zone/field-zone.module';
 import { UserModule } from '../user/user.module';
 import { FieldRegionLoader } from './field-region.loader';
-import {
-  FieldRegionRepository,
-  PgFieldRegionRepository,
-} from './field-region.repository';
+import { PgFieldRegionRepository } from './field-region.pg.repository';
+import { FieldRegionRepository } from './field-region.repository';
 import { FieldRegionResolver } from './field-region.resolver';
 import { FieldRegionService } from './field-region.service';
 
@@ -23,7 +21,6 @@ import { FieldRegionService } from './field-region.service';
     FieldRegionRepository,
     FieldRegionLoader,
     splitDb(FieldRegionRepository, PgFieldRegionRepository),
-    PgFieldRegionRepository,
   ],
   exports: [FieldRegionService],
 })

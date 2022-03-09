@@ -11,7 +11,8 @@ import { EducationModule } from './education/education.module';
 import { KnownLanguageResolver } from './known-language.resolver';
 import { UnavailabilityModule } from './unavailability/unavailability.module';
 import { UserLoader } from './user.loader';
-import { PgUserRepository, UserRepository } from './user.repository';
+import { PgUserRepository } from './user.pg.repository';
+import { UserRepository } from './user.repository';
 import { UserResolver } from './user.resolver';
 import { UserService } from './user.service';
 
@@ -34,7 +35,6 @@ import { UserService } from './user.service';
     UserService,
     UserRepository,
     splitDb(UserRepository, PgUserRepository),
-    PgUserRepository,
   ],
   exports: [UserService, UserRepository, EducationModule, UnavailabilityModule],
 })
