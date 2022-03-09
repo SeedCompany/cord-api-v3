@@ -17,6 +17,7 @@ import {
   Session,
 } from '../../common';
 import { Loader, LoaderOf } from '../../core';
+import { IdsAndView, IdsAndViewArg } from '../changeset/dto';
 import {
   AvailableStepsOptions,
   CreateDerivativeScriptureProduct,
@@ -56,7 +57,7 @@ export class ProductResolver {
   })
   async product(
     @Loader(ProductLoader) products: LoaderOf<ProductLoader>,
-    @IdArg() id: ID
+    @IdsAndViewArg() { id }: IdsAndView
   ): Promise<AnyProduct> {
     return await products.load(id);
   }
