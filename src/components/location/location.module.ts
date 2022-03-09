@@ -4,10 +4,8 @@ import { AuthorizationModule } from '../authorization/authorization.module';
 import { FieldRegionModule } from '../field-region/field-region.module';
 import { FundingAccountModule } from '../funding-account/funding-account.module';
 import { LocationLoader } from './location.loader';
-import {
-  LocationRepository,
-  PgLocationRepository,
-} from './location.repository';
+import { PgLocationRepository } from './location.pg.repository';
+import { LocationRepository } from './location.repository';
 import { LocationResolver } from './location.resolver';
 import { LocationService } from './location.service';
 
@@ -23,7 +21,6 @@ import { LocationService } from './location.service';
     LocationRepository,
     LocationLoader,
     splitDb(LocationRepository, PgLocationRepository),
-    PgLocationRepository,
   ],
   exports: [LocationService],
 })
