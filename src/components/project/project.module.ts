@@ -1,4 +1,5 @@
 import { forwardRef, Module } from '@nestjs/common';
+import { splitDb } from '../../core';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { BudgetModule } from '../budget/budget.module';
 import { EngagementModule } from '../engagement/engagement.module';
@@ -16,6 +17,7 @@ import * as migrations from './migrations';
 import { ProjectMemberModule } from './project-member/project-member.module';
 import { ProjectStepResolver } from './project-step.resolver';
 import { ProjectLoader } from './project.loader';
+import { PgProjectRepository } from './project.pg.repository';
 import { ProjectRepository } from './project.repository';
 import { ProjectResolver } from './project.resolver';
 import { ProjectRules } from './project.rules';
@@ -48,6 +50,7 @@ import { TranslationProjectResolver } from './translation-project.resolver';
     ProjectLoader,
     ...Object.values(handlers),
     ...Object.values(migrations),
+    splitDb(ProjectRepository, PgProjectRepository),
   ],
   exports: [ProjectService, ProjectMemberModule, ProjectRules],
 })
