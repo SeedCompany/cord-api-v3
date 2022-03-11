@@ -49,13 +49,21 @@ export class PgUserRepository implements PublicOf<UserRepository> {
             (SELECT person FROM admin.tokens WHERE token = 'public'), 
             (SELECT person FROM admin.tokens WHERE token = 'public'), 
             (SELECT id FROM admin.groups WHERE  name = 'Administrators'))
-        RETURNING id as userId
-      )
-      INSERT INTO admin.users(id, email, created_by, modified_by, owning_person, owning_group)
-      VALUES ((SELECT userId FROM admin_people), $13, (SELECT person FROM admin.tokens WHERE token = 'public'), 
+        RETURNING id
+      ),
+      admin_users AS (
+        INSERT INTO admin.users(id, email, created_by, modified_by, owning_person, owning_group)
+        VALUES ((SELECT id FROM admin_people), $13, (SELECT person FROM admin.tokens WHERE token = 'public'), 
               (SELECT person FROM admin.tokens WHERE token = 'public'), 
               (SELECT person FROM admin.tokens WHERE token = 'public'), 
               (SELECT id FROM admin.groups WHERE  name = 'Administrators'))
+        RETURNING id
+      )
+      INSERT INTO sc.people(id, status, created_by, modified_by, owning_person, owning_group) 
+      VALUES((SELECT id FROM admin_users), $12, (SELECT person FROM admin.tokens WHERE token = 'public'), 
+		       (SELECT person FROM admin.tokens WHERE token = 'public'), 
+           (SELECT person FROM admin.tokens WHERE token = 'public'), 
+           (SELECT id FROM admin.groups WHERE  name = 'Administrators'))
       RETURNING id;
       `,
       [
