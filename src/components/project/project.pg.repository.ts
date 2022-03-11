@@ -100,8 +100,8 @@ export class PgProjectRepository implements PublicOf<ProjectRepository> {
              marketing_location as "marketingLocations", field_region as "fieldRegion",
              owning_organization as "owningOrganization", mou_start as "mouStart",
              mou_end as "mouEnd", step_changed_at as "stepChangedAt", 
-             estimated_submission as "estimatedSubmission",
-             modified_at as "modifiedAt", tags, preset_inventory as "presetInventory"
+             estimated_submission as "estimatedSubmission", modified_at as "modifiedAt",
+             tags, preset_inventory as "presetInventory", created_at as "createdAt"
       FROM sc.projects
       WHERE id = $1;
       `,
@@ -138,8 +138,8 @@ export class PgProjectRepository implements PublicOf<ProjectRepository> {
              marketing_location as "marketingLocations", field_region as "fieldRegion",
              owning_organization as "owningOrganization", mou_start as "mouStart",
              mou_end as "mouEnd", step_changed_at as "stepChangedAt", 
-             estimated_submission as "estimatedSubmission",
-             modified_at as "modifiedAt", tags, preset_inventory as "presetInventory"
+             estimated_submission as "estimatedSubmission", modified_at as "modifiedAt", 
+             tags, preset_inventory as "presetInventory", created_at as "createdAt"
       FROM sc.projects
       WHERE id = ANY($1::text[]);
       `,
@@ -183,8 +183,8 @@ export class PgProjectRepository implements PublicOf<ProjectRepository> {
              marketing_location as "marketingLocations", field_region as "fieldRegion",
              owning_organization as "owningOrganization", mou_start as "mouStart",
              mou_end as "mouEnd", step_changed_at as "stepChangedAt", 
-             estimated_submission as "estimatedSubmission",
-             modified_at as "modifiedAt", tags, preset_inventory as "presetInventory"
+             estimated_submission as "estimatedSubmission", modified_at as "modifiedAt", 
+             tags, preset_inventory as "presetInventory", created_at as "created_At"
       FROM sc.projects
       ORDER BY ${input.sort} ${input.order} 
       LIMIT ${limit ?? 25} OFFSET ${offset ?? 10};
