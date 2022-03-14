@@ -252,7 +252,7 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
     const result = await this.db
       .query()
       .matchNode('node', 'User')
-      .apply(userListFilter(filter))
+      .apply(userListFilter(filter, session))
       .apply(sorting(User, input))
       .apply(paginate(input, this.hydrate(session.userId)))
       .first();
