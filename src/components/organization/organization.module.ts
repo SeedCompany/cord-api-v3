@@ -13,9 +13,8 @@ import { OrganizationService } from './organization.service';
   providers: [
     OrganizationResolver,
     OrganizationService,
-    OrganizationRepository,
-    OrganizationLoader,
     splitDb(OrganizationRepository, PgOrganizationRepository),
+    OrganizationLoader,
   ],
   exports: [OrganizationService],
 })

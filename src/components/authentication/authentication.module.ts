@@ -25,11 +25,10 @@ import { SessionResolver } from './session.resolver';
     RegisterResolver,
     SessionResolver,
     AuthenticationService,
-    AuthenticationRepository,
+    splitDb(AuthenticationRepository, PgAuthenticationRepository),
     CryptoService,
     SessionInterceptor,
     { provide: APP_INTERCEPTOR, useExisting: SessionInterceptor },
-    splitDb(AuthenticationRepository, PgAuthenticationRepository),
   ],
   exports: [AuthenticationService, CryptoService, AuthenticationRepository],
 })

@@ -33,7 +33,6 @@ import { UserService } from './user.service';
     UserResolver,
     UserLoader,
     UserService,
-    UserRepository,
     splitDb(UserRepository, PgUserRepository),
   ],
   exports: [UserService, UserRepository, EducationModule, UnavailabilityModule],

@@ -46,11 +46,10 @@ import { TranslationProjectResolver } from './translation-project.resolver';
     ProjectService,
     ProjectStepResolver,
     ProjectRules,
-    ProjectRepository,
+    splitDb(ProjectRepository, PgProjectRepository),
     ProjectLoader,
     ...Object.values(handlers),
     ...Object.values(migrations),
-    splitDb(ProjectRepository, PgProjectRepository),
   ],
   exports: [ProjectService, ProjectMemberModule, ProjectRules],
 })

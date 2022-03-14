@@ -12,9 +12,8 @@ import { FundingAccountService } from './funding-account.service';
   providers: [
     FundingAccountResolver,
     FundingAccountService,
-    FundingAccountRepository,
-    FundingAccountLoader,
     splitDb(FundingAccountRepository, PgFundingAccountRepository),
+    FundingAccountLoader,
   ],
   exports: [FundingAccountService],
 })
