@@ -116,7 +116,7 @@ export class PgPartnerRepository implements PublicOf<PartnerRepository> {
     const [{ count }] = await this.pg.query<{ count: string }>(
       `
       SELECT count(*)
-      FROM sc.projects;
+      FROM sc.partners;
       `
     );
 
