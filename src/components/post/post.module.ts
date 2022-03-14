@@ -18,11 +18,10 @@ import { PostableResolver } from './postable.resolver';
   providers: [
     PostResolver,
     PostService,
-    PostRepository,
+    splitDb(PostRepository, PgPostRepository),
     PostableResolver,
     PostLoader,
     ...Object.values(migrations),
-    splitDb(PostRepository, PgPostRepository),
   ],
   exports: [PostService],
 })
