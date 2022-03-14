@@ -18,9 +18,8 @@ import { LocationService } from './location.service';
   providers: [
     LocationResolver,
     LocationService,
-    LocationRepository,
-    LocationLoader,
     splitDb(LocationRepository, PgLocationRepository),
+    LocationLoader,
   ],
   exports: [LocationService],
 })

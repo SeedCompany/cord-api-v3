@@ -18,9 +18,8 @@ import { FieldRegionService } from './field-region.service';
   providers: [
     FieldRegionResolver,
     FieldRegionService,
-    FieldRegionRepository,
-    FieldRegionLoader,
     splitDb(FieldRegionRepository, PgFieldRegionRepository),
+    FieldRegionLoader,
   ],
   exports: [FieldRegionService],
 })

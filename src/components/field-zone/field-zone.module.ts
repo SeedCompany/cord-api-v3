@@ -16,9 +16,8 @@ import { FieldZoneService } from './field-zone.service';
   providers: [
     FieldZoneResolver,
     FieldZoneService,
-    FieldZoneRepository,
-    FieldZoneLoader,
     splitDb(FieldZoneRepository, PgFieldZoneRepository),
+    FieldZoneLoader,
   ],
   exports: [FieldZoneService],
 })
