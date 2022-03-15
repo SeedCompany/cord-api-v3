@@ -23,7 +23,9 @@ import {
   createNode,
   createProperty,
   deactivateProperty,
+  filter,
   matchProps,
+  matchRequestingUser,
   merge,
   paginate,
   property,
@@ -41,7 +43,6 @@ import {
   User,
   UserListInput,
 } from './dto';
-import { userListFilter } from './query.helpers';
 
 @Injectable()
 export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
@@ -248,11 +249,16 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
     }
   }
 
-  async list({ filter, ...input }: UserListInput, session: Session) {
+  async list(input: UserListInput, session: Session) {
     const result = await this.db
       .query()
       .matchNode('node', 'User')
-      .apply(userListFilter(filter, session))
+      .apply(matchRequestingUser(session))
+      .apply(
+        filter.builder(input.filter, {
+          pinned: filter.isPinned,
+        })
+      )
       .apply(sorting(User, input))
       .apply(paginate(input, this.hydrate(session.userId)))
       .first();

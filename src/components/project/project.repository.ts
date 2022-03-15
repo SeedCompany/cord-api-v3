@@ -45,7 +45,7 @@ import {
   TranslationProject,
   UpdateProject,
 } from './dto';
-import { projectListFilter } from './query.helpers';
+import { projectListFilter } from './list-filter.query';
 
 @Injectable()
 export class ProjectRepository extends CommonRepository {
@@ -233,16 +233,16 @@ export class ProjectRepository extends CommonRepository {
   }
 
   async list(
-    { filter, ...input }: ProjectListInput,
+    input: ProjectListInput,
     session: Session,
     limitedScope?: AuthSensitivityMapping
   ) {
     const result = await this.db
       .query()
-      .matchNode('node', `${filter.type ?? ''}Project`)
+      .matchNode('node', `${input.filter.type ?? ''}Project`)
       .with('distinct(node) as node, node as project')
       .match(requestingUser(session))
-      .apply(projectListFilter(filter))
+      .apply(projectListFilter(input))
       .apply(matchProjectSensToLimitedScopeMap(limitedScope))
       .apply(
         sorting(IProject, input, {

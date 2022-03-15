@@ -13,3 +13,4 @@ export * from './match-changeset-and-changed-props';
 export * from './update-property';
 export * from '../query-augmentation/condition-variables';
 export * from './where-path';
+export * as filter from './filters';
