@@ -7,7 +7,6 @@ import {
   UnsecuredDto,
 } from '../../common';
 import { Pg } from '../../core';
-import { PgTransaction } from '../../core/postgres/transaction.decorator';
 import { CreatePost, Post } from './dto';
 import { PostRepository } from './post.repository';
 
@@ -55,7 +54,6 @@ export class PgPostRepository extends PostRepository {
     return rows[0];
   }
 
-  @PgTransaction()
   async delete(id: ID) {
     await this.pg.query('DELETE FROM sc.posts WHERE id = $1', [id]);
   }
