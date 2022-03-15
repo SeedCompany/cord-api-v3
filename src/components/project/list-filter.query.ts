@@ -14,7 +14,7 @@ export const projectListFilter = (input: ProjectListInput) =>
           relation('out', '', 'engagement', ACTIVE),
           node('engagement', 'Engagement'),
         ])
-        .with('node, count(engagement) as engagementCount');
+        .with('*, count(engagement) as engagementCount');
       return { engagementCount: greaterThan(1) };
     },
     step: filter.stringListProp(),
