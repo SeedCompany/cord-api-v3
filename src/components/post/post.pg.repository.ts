@@ -6,7 +6,8 @@ import {
   Session,
   UnsecuredDto,
 } from '../../common';
-import { ILogger, Logger, Pg } from '../../core';
+import { Pg } from '../../core';
+import { PgTransaction } from '../../core/postgres/transaction.decorator';
 import { CreatePost, Post } from './dto';
 import { PostRepository } from './post.repository';
 
@@ -14,7 +15,6 @@ import { PostRepository } from './post.repository';
 @Injectable()
 export class PgPostRepository extends PostRepository {
   @Inject(Pg) private readonly pg: Pg;
-  @Logger('post:pg.repository') private readonly logger: ILogger;
 
   async create(
     input: CreatePost,
@@ -53,5 +53,10 @@ export class PgPostRepository extends PostRepository {
     }
 
     return rows[0];
+  }
+
+  @PgTransaction()
+  async delete(id: ID) {
+    await this.pg.query('DELETE FROM sc.posts WHERE id = $1', [id]);
   }
 }
