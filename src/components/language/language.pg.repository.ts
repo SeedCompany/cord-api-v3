@@ -35,11 +35,12 @@ export class PgLanguageRepository implements PublicOf<LanguageRepository> {
   ): Promise<{ id: ID } | undefined> {
     const [id] = await this.pg.query<{ id: ID }>(
       `
-      INSERT INTO sc.languages(ethnologue, name, display_name, display_name_pronunciation,
-                                tags, is_dialect, is_sign_language, is_least_of_these, least_of_these_reason,
-                                population_override, registry_of_dialects_code, sensitivity, sign_language_code,
-                                sponsor_estimated_end_date, created_by, modified_by, owning_person, owning_group)
-      VALUES ((SELECT id FROM sc.ethnologue WHERE id = $1), $2, $3, $4, $5::text[], $6, $7, $8, $9, $10, $11, $12, $13, $14,   
+      INSERT INTO sc.languages(
+          ethnologue, name, display_name, display_name_pronunciation, tags, is_dialect, 
+          is_sign_language, is_least_of_these, least_of_these_reason, population_override, 
+          registry_of_dialects_code, sensitivity, sign_language_code, sponsor_estimated_end_date, 
+          has_external_first_scripture, created_by, modified_by, owning_person, owning_group)
+      VALUES ((SELECT id FROM sc.ethnologue WHERE id = $1), $2, $3, $4, $5::text[], $6, $7, $8, $9, $10, $11, $12, $13, $14, $15   
           (SELECT person FROM admin.tokens WHERE token = 'public'), 
           (SELECT person FROM admin.tokens WHERE token = 'public'), 
           (SELECT person FROM admin.tokens WHERE token = 'public'), 
@@ -60,6 +61,7 @@ export class PgLanguageRepository implements PublicOf<LanguageRepository> {
         input.sensitivity,
         input.signLanguageCode,
         input.sponsorEstimatedEndDate,
+        input.hasExternalFirstScripture ?? false,
       ]
     );
 
@@ -73,13 +75,14 @@ export class PgLanguageRepository implements PublicOf<LanguageRepository> {
   ): Promise<UnsecuredDto<Language>> {
     const rows = await this.pg.query<UnsecuredDto<Language>>(
       `
-      SELECT id, name, display_name as "displayName", sensitivity,
-            display_name_pronunciation as "displayNamePronunciation", 
-            is_dialect as "isDialect", is_sign_language as "isSignLanguage",
-            is_least_of_these as "leastOfThese", least_of_these_reason as "leastOfTheseReason",
-            sponsor_estimated_end_date as "sponsorEstimatedEndDate", sign_language_code as "signLanguageCode",
-            registry_of_dialects_code as "registryOfDialectsCode", population_override as "populationOverride",
-            tags, created_at as "createdAt"
+      SELECT 
+          id, name, display_name as "displayName", sensitivity, 
+          display_name_pronunciation as "displayNamePronunciation", 
+          is_dialect as "isDialect", is_sign_language as "isSignLanguage",
+          is_least_of_these as "leastOfThese", least_of_these_reason as "leastOfTheseReason",
+          sponsor_estimated_end_date as "sponsorEstimatedEndDate", sign_language_code as "signLanguageCode",
+          registry_of_dialects_code as "registryOfDialectsCode", population_override as "populationOverride",
+          tags, has_external_first_scripture as "hasExternalFirstScripture", created_at as "createdAt"
       FROM sc.languages
       WHERE id = $1;
       `,
@@ -100,13 +103,14 @@ export class PgLanguageRepository implements PublicOf<LanguageRepository> {
   ): Promise<ReadonlyArray<UnsecuredDto<Language>>> {
     const rows = await this.pg.query<UnsecuredDto<Language>>(
       `
-      SELECT id, name, display_name as "displayName", sensitivity,
-            display_name_pronunciation as "displayNamePronunciation", 
-            is_dialect as "isDialect", is_sign_language as "isSignLanguage",
-            is_least_of_these as "leastOfThese", least_of_these_reason as "leastOfTheseReason",
-            sponsor_estimated_end_date as "sponsorEstimatedEndDate", sign_language_code as "signLanguageCode",
-            registry_of_dialects_code as "registryOfDialectsCode", population_override as "populationOverride",
-            tags, created_at as "createdAt"
+      SELECT 
+          id, name, display_name as "displayName", sensitivity,
+          display_name_pronunciation as "displayNamePronunciation", 
+          is_dialect as "isDialect", is_sign_language as "isSignLanguage",
+          is_least_of_these as "leastOfThese", least_of_these_reason as "leastOfTheseReason",
+          sponsor_estimated_end_date as "sponsorEstimatedEndDate", sign_language_code as "signLanguageCode",
+          registry_of_dialects_code as "registryOfDialectsCode", population_override as "populationOverride",
+          tags, has_external_first_scripture as "hasExternalFirstScripture", created_at as "createdAt"
       FROM sc.languages
       WHERE id = ANY($1::text[]);
       `,
@@ -131,13 +135,14 @@ export class PgLanguageRepository implements PublicOf<LanguageRepository> {
 
     const rows = await this.pg.query<UnsecuredDto<Language>>(
       `
-      SELECT id, name, display_name as "displayName", sensitivity,
-            display_name_pronunciation as "displayNamePronunciation", 
-            is_dialect as "isDialect", is_sign_language as "isSignLanguage",
-            is_least_of_these as "leastOfThese", least_of_these_reason as "leastOfTheseReason",
-            sponsor_estimated_end_date as "sponsorEstimatedEndDate", sign_language_code as "signLanguageCode",
-            registry_of_dialects_code as "registryOfDialectsCode", population_override as "populationOverride",
-            tags, created_at as "createdAt"
+      SELECT 
+          id, name, display_name as "displayName", sensitivity,
+          display_name_pronunciation as "displayNamePronunciation", 
+          is_dialect as "isDialect", is_sign_language as "isSignLanguage",
+          is_least_of_these as "leastOfThese", least_of_these_reason as "leastOfTheseReason",
+          sponsor_estimated_end_date as "sponsorEstimatedEndDate", sign_language_code as "signLanguageCode",
+          registry_of_dialects_code as "registryOfDialectsCode", population_override as "populationOverride",
+          tags, has_external_first_scripture as "hasExternalFirstScripture", created_at as "createdAt"
       FROM sc.languages
       ORDER BY ${input.sort} ${input.order} 
       LIMIT ${limit ?? 10} OFFSET ${offset ?? 5};
