@@ -11,7 +11,6 @@ import { Partner } from './partner.dto';
 
 @InputType()
 export abstract class PartnerFilters {
-  readonly organizationId?: ID;
   readonly userId?: ID;
 
   @Field({

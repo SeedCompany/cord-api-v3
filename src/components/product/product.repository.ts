@@ -28,6 +28,7 @@ import {
   createRelationships,
   deactivateProperty,
   escapeLuceneSyntax,
+  filter,
   fullTextQuery,
   matchProps,
   matchPropsAndProjectSensAndScopedRoles,
@@ -43,6 +44,7 @@ import {
   UnspecifiedScripturePortionInput,
 } from '../scripture';
 import {
+  ApproachToMethodologies,
   CreateDerivativeScriptureProduct,
   CreateDirectScriptureProduct,
   CreateOtherProduct,
@@ -58,7 +60,6 @@ import {
   ProgressMeasurement,
   UpdateProduct,
 } from './dto';
-import { productListFilter } from './query.helpers';
 
 export type HydratedProductRow = Merge<
   Omit<
@@ -488,22 +489,36 @@ export class ProductRepository extends CommonRepository {
     });
   }
 
-  async list({ filter, ...input }: ProductListInput, session: Session) {
+  async list(input: ProductListInput, session: Session) {
     const result = await this.db
       .query()
       .matchNode('node', 'Product')
       .match([
-        ...(filter.engagementId
+        ...(input.filter.engagementId
           ? [
               node('node'),
               relation('in', '', 'product', ACTIVE),
               node('engagement', 'Engagement', {
-                id: filter.engagementId,
+                id: input.filter.engagementId,
               }),
             ]
           : []),
       ])
-      .apply(productListFilter(filter))
+      .apply((q) => {
+        const { approach, methodology, ...rest } = input.filter;
+        const merged = [
+          ...(approach ? ApproachToMethodologies[approach] : []),
+          ...(methodology ? [methodology] : []),
+        ];
+        filter.builder(
+          { ...rest, ...(merged.length ? { methodology: merged } : {}) },
+          {
+            engagementId: filter.skip,
+            placeholder: filter.isPropNotNull('placeholderDescription'),
+            methodology: filter.propVal(),
+          }
+        )(q);
+      })
       .apply(sorting(Product, input))
       .apply(paginate(input, this.hydrate(session)))
       .first();

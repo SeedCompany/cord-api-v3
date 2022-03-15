@@ -7,6 +7,7 @@ import {
   ACTIVE,
   createNode,
   createRelationships,
+  filter as filters,
   matchProjectScopedRoles,
   matchProjectSens,
   matchProjectSensToLimitedScopeMap,
@@ -20,7 +21,6 @@ import {
 } from '../../core/database/query';
 import { AuthSensitivityMapping } from '../authorization/authorization.service';
 import { CreatePartner, Partner, PartnerListInput } from './dto';
-import { partnerListFilter } from './query.helpers';
 
 @Injectable()
 export class PartnerRepository extends DtoRepository<
@@ -185,7 +185,12 @@ export class PartnerRepository extends DtoRepository<
       )
       // match requesting user once (instead of once per row)
       .match(requestingUser(session))
-      .apply(partnerListFilter(filter))
+      .apply(
+        filters.builder(filter, {
+          pinned: filters.isPinned,
+          userId: filters.skip, // already applied above
+        })
+      )
       .apply(matchProjectSensToLimitedScopeMap(limitedScope))
       .apply(
         sorting(Partner, input, {
