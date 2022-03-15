@@ -1,4 +1,4 @@
--- common schema. org specific schema should go in an org-specific file.
+-- common schema. common_organizations_id specific schema should go in an common_organizations_id-specific file.
 
 -- ENUMS ----
 
@@ -27,16 +27,16 @@ create type common.egids_scale as enum (
 		'10'
 );
 
--- meant to be extended by all orgs, so everyone has a globally unique id to reference within their language lists
+-- meant to be extended by all orgs, so everyone has a globally unique id to reference within their language_common_languages_id lists
 create table common.languages(
   id uuid primary key default common.uuid_generate_v4(),
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
   created_by_admin_people_id uuid not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by uuid not null references admin.people(id),
-  owning_person uuid not null references admin.people(id),
-  owning_group uuid not null references admin.groups(id)
+  modified_by_admin_people_id uuid not null references admin.people(id),
+  owning_person_admin_people_id uuid not null references admin.people(id),
+  owning_group_admin_groups_id uuid not null references admin.groups(id)
 );
 
 create table common.site_text_strings(
@@ -48,39 +48,39 @@ create table common.site_text_strings(
   created_at timestamp not null default CURRENT_TIMESTAMP,
   created_by_admin_people_id uuid not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by uuid not null references admin.people(id),
-  owning_person uuid not null references admin.people(id),
-  owning_group uuid not null references admin.groups(id)
+  modified_by_admin_people_id uuid not null references admin.people(id),
+  owning_person_admin_people_id uuid not null references admin.people(id),
+  owning_group_admin_groups_id uuid not null references admin.groups(id)
 );
 
 create table common.site_text_translations(
   id uuid primary key default common.uuid_generate_v4(),
 
-  language uuid not null references common.languages(id),
-  site_text uuid not null references common.site_text_strings(id) on delete cascade,
+  language_common_languages_id uuid not null references common.languages(id),
+  site_text_common_site_text_strings_id uuid not null references common.site_text_strings(id) on delete cascade,
   translation varchar(64) not null,
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
   created_by_admin_people_id uuid not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by uuid not null references admin.people(id),
-  owning_person uuid not null references admin.people(id),
-  owning_group uuid not null references admin.groups(id),
+  modified_by_admin_people_id uuid not null references admin.people(id),
+  owning_person_admin_people_id uuid not null references admin.people(id),
+  owning_group_admin_groups_id uuid not null references admin.groups(id),
 
-  unique (language, site_text)
+  unique (language_common_languages_id, site_text_common_site_text_strings_id)
 );
 
 create table common.site_text_languages(
   id uuid primary key default common.uuid_generate_v4(),
 
-  language uuid not null references common.languages(id),
+  language_common_languages_id uuid not null references common.languages(id),
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
   created_by_admin_people_id uuid not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by uuid not null references admin.people(id),
-  owning_person uuid not null references admin.people(id),
-  owning_group uuid not null references admin.groups(id)
+  modified_by_admin_people_id uuid not null references admin.people(id),
+  owning_person_admin_people_id uuid not null references admin.people(id),
+  owning_group_admin_groups_id uuid not null references admin.groups(id)
 );
 
 -- SCRIPTURE REFERENCE -----------------------------------------------------------------
@@ -164,9 +164,9 @@ create table common.scripture_references (
   created_at timestamp not null default CURRENT_TIMESTAMP,
   created_by_admin_people_id uuid not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by uuid not null references admin.people(id),
-  owning_person uuid not null references admin.people(id),
-  owning_group uuid not null references admin.groups(id)
+  modified_by_admin_people_id uuid not null references admin.people(id),
+  owning_person_admin_people_id uuid not null references admin.people(id),
+  owning_group_admin_groups_id uuid not null references admin.groups(id)
 );
 
 -- CHAT ------------------------------------------------------------
@@ -179,10 +179,10 @@ create table common.discussion_channels (
   created_at timestamp not null default CURRENT_TIMESTAMP,
   created_by_admin_people_id uuid not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by uuid not null references admin.people(id),
-  owning_person uuid not null references admin.people(id),
-  owning_group uuid not null references admin.groups(id),
-  unique (name, owning_group)
+  modified_by_admin_people_id uuid not null references admin.people(id),
+  owning_person_admin_people_id uuid not null references admin.people(id),
+  owning_group_admin_groups_id uuid not null references admin.groups(id),
+  unique (name, owning_group_admin_groups_id)
 );
 
 create table common.cell_channels (
@@ -195,9 +195,9 @@ create table common.cell_channels (
   created_at timestamp not null default CURRENT_TIMESTAMP,
   created_by_admin_people_id uuid not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by uuid not null references admin.people(id),
-  owning_person uuid not null references admin.people(id),
-  owning_group uuid not null references admin.groups(id),
+  modified_by_admin_people_id uuid not null references admin.people(id),
+  owning_person_admin_people_id uuid not null references admin.people(id),
+  owning_group_admin_groups_id uuid not null references admin.groups(id),
 
   unique (table_name, column_name, row)
 );
@@ -205,27 +205,27 @@ create table common.cell_channels (
 create table common.threads (
 	id uuid primary key default common.uuid_generate_v4(),
 
-	channel uuid not null references common.discussion_channels(id) on delete cascade,
+	channel_common_discussion_channels_id uuid not null references common.discussion_channels(id) on delete cascade,
 	content text not null,
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
   created_by_admin_people_id uuid not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by uuid not null references admin.people(id),
-  owning_person uuid not null references admin.people(id),
-  owning_group uuid not null references admin.groups(id)
+  modified_by_admin_people_id uuid not null references admin.people(id),
+  owning_person_admin_people_id uuid not null references admin.people(id),
+  owning_group_admin_groups_id uuid not null references admin.groups(id)
 );
 
 create table common.posts (
 	id uuid primary key default common.uuid_generate_v4(),
-	thread uuid not null references common.threads(id) on delete cascade,
+	thread_common_threads_id uuid not null references common.threads(id) on delete cascade,
 	content text not null,
   created_at timestamp not null default CURRENT_TIMESTAMP,
   created_by_admin_people_id uuid not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by uuid not null references admin.people(id),
-  owning_person uuid not null references admin.people(id),
-  owning_group uuid not null references admin.groups(id)
+  modified_by_admin_people_id uuid not null references admin.people(id),
+  owning_person_admin_people_id uuid not null references admin.people(id),
+  owning_group_admin_groups_id uuid not null references admin.groups(id)
 );
 
 -- BLOGS ---------------
@@ -238,25 +238,25 @@ create table common.blogs (
   created_at timestamp not null default CURRENT_TIMESTAMP,
   created_by_admin_people_id uuid not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by uuid not null references admin.people(id),
-  owning_person uuid not null references admin.people(id),
-  owning_group uuid not null references admin.groups(id),
+  modified_by_admin_people_id uuid not null references admin.people(id),
+  owning_person_admin_people_id uuid not null references admin.people(id),
+  owning_group_admin_groups_id uuid not null references admin.groups(id),
 
-  unique (title, owning_group)
+  unique (title, owning_group_admin_groups_id)
 );
 
 create table common.blog_posts (
 	id uuid primary key default common.uuid_generate_v4(),
 
-  blog uuid not null references common.blogs(id),
+  blog_common_blogs_id uuid not null references common.blogs(id),
 	content text not null,
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
   created_by_admin_people_id uuid not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by uuid not null references admin.people(id),
-  owning_person uuid not null references admin.people(id),
-  owning_group uuid not null references admin.groups(id)
+  modified_by_admin_people_id uuid not null references admin.people(id),
+  owning_person_admin_people_id uuid not null references admin.people(id),
+  owning_group_admin_groups_id uuid not null references admin.groups(id)
 );
 
 -- NOTES ----------------------------------------------------
@@ -272,12 +272,12 @@ create table common.notes (
   created_at timestamp not null default CURRENT_TIMESTAMP,
   created_by_admin_people_id uuid not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by uuid not null references admin.people(id),
-  owning_person uuid not null references admin.people(id),
-  owning_group uuid not null references admin.groups(id)
+  modified_by_admin_people_id uuid not null references admin.people(id),
+  owning_person_admin_people_id uuid not null references admin.people(id),
+  owning_group_admin_groups_id uuid not null references admin.groups(id)
 );
 
--- LOCATION -----------------------------------------------------------------
+-- common_locations_id -----------------------------------------------------------------
 
 create type common.location_type as enum (
   'City',
@@ -298,14 +298,14 @@ create table common.locations (
 	created_at timestamp not null default CURRENT_TIMESTAMP,
 	created_by_admin_people_id uuid not null references admin.people(id),
 	modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by uuid not null references admin.people(id),
-  owning_person uuid not null references admin.people(id),
-  owning_group uuid not null references admin.groups(id)
+  modified_by_admin_people_id uuid not null references admin.people(id),
+  owning_person_admin_people_id uuid not null references admin.people(id),
+  owning_group_admin_groups_id uuid not null references admin.groups(id)
 );
 
-ALTER TABLE admin.people ADD CONSTRAINT common_people_primary_location_fk foreign key (primary_location) references common.locations(id);
+ALTER TABLE admin.people ADD CONSTRAINT common_people_primary_location_fk foreign key (primary_location_common_locations_id) references common.locations(id);
 ALTER TABLE common.locations ADD CONSTRAINT common_locations_created_by_fk foreign key (created_by_admin_people_id) references admin.people(id);
-ALTER TABLE common.locations ADD CONSTRAINT common_locations_modified_by_fk foreign key (modified_by) references admin.people(id);
+ALTER TABLE common.locations ADD CONSTRAINT common_locations_modified_by_fk foreign key (modified_by_admin_people_id) references admin.people(id);
 
 create table common.language_locations (
   id uuid primary key default common.uuid_generate_v4(),
@@ -316,13 +316,13 @@ create table common.language_locations (
   created_at timestamp not null default CURRENT_TIMESTAMP,
   created_by_admin_people_id uuid not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by uuid not null references admin.people(id),
-  owning_person uuid not null references admin.people(id),
-  owning_group uuid not null references admin.groups(id),
+  modified_by_admin_people_id uuid not null references admin.people(id),
+  owning_person_admin_people_id uuid not null references admin.people(id),
+  owning_group_admin_groups_id uuid not null references admin.groups(id),
 
-	unique (language, location)
+	unique (language_common_languages_id, common_locations_id)
 );
--- Education
+-- education_common_education_entries_id
 
 create table common.education_entries (
   id uuid primary key default common.uuid_generate_v4(),
@@ -334,9 +334,9 @@ create table common.education_entries (
   created_at timestamp not null default CURRENT_TIMESTAMP,
   created_by_admin_people_id uuid not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by uuid not null references admin.people(id),
-  owning_person uuid not null references admin.people(id),
-  owning_group uuid not null references admin.groups(id),
+  modified_by_admin_people_id uuid not null references admin.people(id),
+  owning_person_admin_people_id uuid not null references admin.people(id),
+  owning_group_admin_groups_id uuid not null references admin.groups(id),
 
   unique (degree, institution, major)
 );
@@ -344,18 +344,18 @@ create table common.education_entries (
 create table common.education_by_person (
   id uuid primary key default common.uuid_generate_v4(),
 
-  person uuid unique not null references admin.people(id),
-  education uuid not null references common.education_entries(id),
+  admin_people_id uuid unique not null references admin.people(id),
+  education_common_education_entries_id uuid not null references common.education_entries(id),
   graduation_year int,
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
   created_by_admin_people_id uuid not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by uuid not null references admin.people(id),
-  owning_person uuid not null references admin.people(id),
-  owning_group uuid not null references admin.groups(id),
+  modified_by_admin_people_id uuid not null references admin.people(id),
+  owning_person_admin_people_id uuid not null references admin.people(id),
+  owning_group_admin_groups_id uuid not null references admin.groups(id),
 
-  unique (person, education)
+  unique (admin_people_id, education_common_education_entries_id)
 );
 
 -- ORGANIZATIONS ------------------------------------------------------------
@@ -365,33 +365,33 @@ create table common.organizations (
 
 	name varchar(255) unique, -- not null
 	sensitivity common.sensitivity default 'High',
-	primary_location uuid references common.locations(id),
+	primary_location_common_locations_id uuid references common.locations(id),
   street_address varchar(255),
   city varchar(255),
   state varchar(32),
   nation varchar(32),
-  root_directory uuid references common.directories(id),
+  root_directory_common_directories_id uuid references common.directories(id),
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
   created_by_admin_people_id uuid not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by uuid not null references admin.people(id),
-  owning_person uuid not null references admin.people(id),
-  owning_group uuid not null references admin.groups(id)
+  modified_by_admin_people_id uuid not null references admin.people(id),
+  owning_person_admin_people_id uuid not null references admin.people(id),
+  owning_group_admin_groups_id uuid not null references admin.groups(id)
 );
 
 create table common.organization_locations(
   id uuid primary key default common.uuid_generate_v4(),
 
-	organization_common_organizations_id uuid not null references sc.organizations(id),
-	location_common_locations_id uuid not null references sc.locations(id),
+	organization_common_organizations_id uuid not null references common.organizations(id),
+	location_common_locations_id uuid not null references common.locations(id),
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
   created_by_admin_people_id uuid not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by uuid not null references admin.people(id),
-  owning_person uuid not null references admin.people(id),
-  owning_group uuid not null references admin.groups(id),
+  modified_by_admin_people_id uuid not null references admin.people(id),
+  owning_person_admin_people_id uuid not null references admin.people(id),
+  owning_group_admin_groups_id uuid not null references admin.groups(id),
 
 	unique (organization_common_organizations_id, location_common_locations_id)
 );
@@ -399,17 +399,17 @@ create table common.organization_locations(
 create table common.org_chart_positions(
   id uuid primary key default common.uuid_generate_v4(),
 
-  organization uuid not null references common.organizations(id),
+  common_organizations_id uuid not null references common.organizations(id),
   name varchar(64) not null,
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
   created_by_admin_people_id uuid not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by uuid not null references admin.people(id),
-  owning_person uuid not null references admin.people(id),
-  owning_group uuid not null references admin.groups(id),
+  modified_by_admin_people_id uuid not null references admin.people(id),
+  owning_person_admin_people_id uuid not null references admin.people(id),
+  owning_group_admin_groups_id uuid not null references admin.groups(id),
 
-  unique (organization, name)
+  unique (common_organizations_id, name)
 );
 
 create type common.position_relationship_types as enum (
@@ -420,8 +420,8 @@ create type common.position_relationship_types as enum (
 create table common.org_chart_position_graph(
   id uuid primary key default common.uuid_generate_v4(),
 
-  from_position uuid not null references common.org_chart_positions(id),
-  to_position uuid not null references common.org_chart_positions(id),
+  from_position_common_org_chart_positions_id uuid not null references common.org_chart_positions(id),
+  to_position_common_org_chart_positions_id uuid not null references common.org_chart_positions(id),
   relationship_type common.position_relationship_types,
   position_start date,
   position_end date,
@@ -429,11 +429,11 @@ create table common.org_chart_position_graph(
   created_at timestamp not null default CURRENT_TIMESTAMP,
   created_by_admin_people_id uuid not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by uuid not null references admin.people(id),
-  owning_person uuid not null references admin.people(id),
-  owning_group uuid not null references admin.groups(id),
+  modified_by_admin_people_id uuid not null references admin.people(id),
+  owning_person_admin_people_id uuid not null references admin.people(id),
+  owning_group_admin_groups_id uuid not null references admin.groups(id),
 
-  unique (from_position, to_position, relationship_type)
+  unique (from_position_common_org_chart_positions_id, to_position_common_org_chart_positions_id, relationship_type)
 );
 
 -- COALITIONS ----------------------------------------------------------
@@ -451,27 +451,27 @@ create table common.coalitions(
   created_at timestamp not null default CURRENT_TIMESTAMP,
   created_by_admin_people_id uuid not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by uuid not null references admin.people(id),
-  owning_person uuid not null references admin.people(id),
-  owning_group uuid not null references admin.groups(id)
+  modified_by_admin_people_id uuid not null references admin.people(id),
+  owning_person_admin_people_id uuid not null references admin.people(id),
+  owning_group_admin_groups_id uuid not null references admin.groups(id)
 );
 
--- coalition memberships
+-- common_coalitions_id memberships
 
 create table common.coalition_memberships(
   id uuid primary key default common.uuid_generate_v4(),
 
-  coalition uuid not null references common.coalitions(id),
-  organization uuid not null references common.organizations(id),
+  common_coalitions_id uuid not null references common.coalitions(id),
+  common_organizations_id uuid not null references common.organizations(id),
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
   created_by_admin_people_id uuid not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by uuid not null references admin.people(id),
-  owning_person uuid not null references admin.people(id),
-  owning_group uuid not null references admin.groups(id),
+  modified_by_admin_people_id uuid not null references admin.people(id),
+  owning_person_admin_people_id uuid not null references admin.people(id),
+  owning_group_admin_groups_id uuid not null references admin.groups(id),
 
-  unique (coalition, organization)
+  unique (common_coalitions_id, common_organizations_id)
 );
 
 -- FILES & DIRECTORIES ----------------------------------------------------------
@@ -480,7 +480,7 @@ create table common.coalition_memberships(
 create table common.directories (
   id uuid primary key default common.uuid_generate_v4(),
 
-  parent_directories_id uuid references common.directories(id),
+  parent_common_directories_id uuid references common.directories(id),
   name varchar(255), -- not null
 
 	-- todo add triggers for derived data
@@ -493,15 +493,15 @@ create table common.directories (
   created_at timestamp not null default CURRENT_TIMESTAMP,
   created_by_admin_people_id uuid not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by uuid not null references admin.people(id),
-  owning_person uuid not null references admin.people(id),
-  owning_group uuid not null references admin.groups(id)
+  modified_by_admin_people_id uuid not null references admin.people(id),
+  owning_person_admin_people_id uuid not null references admin.people(id),
+  owning_group_admin_groups_id uuid not null references admin.groups(id)
 );
 
 create table common.files (
   id uuid primary key default common.uuid_generate_v4(),
 
-  parent_directories_id uuid references common.directories(id), --not null
+  parent_common_directories_id uuid references common.directories(id), --not null
 	name varchar(255), -- not null
 
   -- todo, derived data
@@ -509,9 +509,9 @@ create table common.files (
   created_at timestamp not null default CURRENT_TIMESTAMP,
   created_by_admin_people_id uuid not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by uuid not null references admin.people(id),
-  owning_person uuid not null references admin.people(id),
-  owning_group uuid not null references admin.groups(id)
+  modified_by_admin_people_id uuid not null references admin.people(id),
+  owning_person_admin_people_id uuid not null references admin.people(id),
+  owning_group_admin_groups_id uuid not null references admin.groups(id)
 );
 
 create table common.file_versions (
@@ -519,15 +519,15 @@ create table common.file_versions (
 
   mime_type varchar(96), -- not null, todo: common.mime_type filled in, but neo4j just has a dumb 'ole string
   name varchar(255), -- not null,
-  parent_files_id uuid references common.files(id), -- not null
+  parent_common_files_id uuid references common.files(id), -- not null
   file_size int, -- bytes
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
   created_by_admin_people_id uuid not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by uuid not null references admin.people(id),
-  owning_person uuid not null references admin.people(id),
-  owning_group uuid not null references admin.groups(id)
+  modified_by_admin_people_id uuid not null references admin.people(id),
+  owning_person_admin_people_id uuid not null references admin.people(id),
+  owning_group_admin_groups_id uuid not null references admin.groups(id)
 );
 
 -- TICKETS ----------------------------------------------------------------------
@@ -549,9 +549,9 @@ create table common.tickets (
   created_at timestamp not null default CURRENT_TIMESTAMP,
   created_by_admin_people_id uuid not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by uuid not null references admin.people(id),
-  owning_person uuid not null references admin.people(id),
-  owning_group uuid not null references admin.groups(id)
+  modified_by_admin_people_id uuid not null references admin.people(id),
+  owning_person_admin_people_id uuid not null references admin.people(id),
+  owning_group_admin_groups_id uuid not null references admin.groups(id)
 );
 
 ALTER TABLE common.tickets ADD CONSTRAINT common_tickets_parent_fk foreign key (parent) references common.tickets(id);
@@ -559,36 +559,36 @@ ALTER TABLE common.tickets ADD CONSTRAINT common_tickets_parent_fk foreign key (
 create table common.ticket_graph (
 	id uuid primary key default common.uuid_generate_v4(),
 
-	from_ticket uuid not null references common.tickets(id),
-	to_ticket uuid not null references common.tickets(id),
+	from_ticket_common_tickets_id uuid not null references common.tickets(id),
+	to_ticket_common_tickets_id uuid not null references common.tickets(id),
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
   created_by_admin_people_id uuid not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by uuid not null references admin.people(id),
-  owning_person uuid not null references admin.people(id),
-  owning_group uuid not null references admin.groups(id)
+  modified_by_admin_people_id uuid not null references admin.people(id),
+  owning_person_admin_people_id uuid not null references admin.people(id),
+  owning_group_admin_groups_id uuid not null references admin.groups(id)
 );
 
 create table common.ticket_assignments (
 	id uuid primary key default common.uuid_generate_v4(),
 
-	ticket uuid not null references common.tickets(id),
-	person uuid unique not null references admin.people(id),
+	common_tickets_id uuid not null references common.tickets(id),
+	admin_people_id uuid unique not null references admin.people(id),
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
   created_by_admin_people_id uuid not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by uuid not null references admin.people(id),
-  owning_person uuid not null references admin.people(id),
-  owning_group uuid not null references admin.groups(id)
+  modified_by_admin_people_id uuid not null references admin.people(id),
+  owning_person_admin_people_id uuid not null references admin.people(id),
+  owning_group_admin_groups_id uuid not null references admin.groups(id)
 );
 
 create table common.work_records(
 	id uuid primary key default common.uuid_generate_v4(),
 
-	person uuid not null references admin.people(id),
-	ticket uuid not null references common.tickets(id),
+	admin_people_id uuid not null references admin.people(id),
+	common_tickets_id uuid not null references common.tickets(id),
 	hours int not null,
 	minutes int default 0,
 	total_time decimal generated always as (
@@ -599,15 +599,15 @@ create table common.work_records(
   created_at timestamp not null default CURRENT_TIMESTAMP,
   created_by_admin_people_id uuid not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by uuid not null references admin.people(id),
-  owning_person uuid not null references admin.people(id),
-  owning_group uuid not null references admin.groups(id)
+  modified_by_admin_people_id uuid not null references admin.people(id),
+  owning_person_admin_people_id uuid not null references admin.people(id),
+  owning_group_admin_groups_id uuid not null references admin.groups(id)
 );
 
 create table common.work_estimates(
 	id uuid primary key default common.uuid_generate_v4(),
-    ticket uuid references common.tickets(id),
-	person uuid not null references admin.people(id),
+  common_tickets_id uuid references common.tickets(id),
+	admin_people_id uuid not null references admin.people(id),
 	hours int not null,
 	minutes int default 0,
 	total_time decimal generated always as (
@@ -618,9 +618,9 @@ create table common.work_estimates(
   created_at timestamp not null default CURRENT_TIMESTAMP,
   created_by_admin_people_id uuid not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by uuid not null references admin.people(id),
-  owning_person uuid not null references admin.people(id),
-  owning_group uuid not null references admin.groups(id)
+  modified_by_admin_people_id uuid not null references admin.people(id),
+  owning_person_admin_people_id uuid not null references admin.people(id),
+  owning_group_admin_groups_id uuid not null references admin.groups(id)
 );
 
 create type common.ticket_feedback_options as enum (
@@ -631,16 +631,16 @@ create type common.ticket_feedback_options as enum (
 create table common.ticket_feedback(
 	id uuid primary key default common.uuid_generate_v4(),
 
-	ticket uuid references common.tickets(id),
+	common_tickets_id uuid references common.tickets(id),
 	stakeholder uuid not null references admin.people(id),
 	feedback common.ticket_feedback_options not null,
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
   created_by_admin_people_id uuid not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by uuid not null references admin.people(id),
-  owning_person uuid not null references admin.people(id),
-  owning_group uuid not null references admin.groups(id)
+  modified_by_admin_people_id uuid not null references admin.people(id),
+  owning_person_admin_people_id uuid not null references admin.people(id),
+  owning_group_admin_groups_id uuid not null references admin.groups(id)
 );
 
 -- WORKFLOW -----------------------------------------------------------------
@@ -653,9 +653,9 @@ create table common.workflows(
   created_at timestamp not null default CURRENT_TIMESTAMP,
   created_by_admin_people_id uuid not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by uuid not null references admin.people(id),
-  owning_person uuid not null references admin.people(id),
-  owning_group uuid not null references admin.groups(id)
+  modified_by_admin_people_id uuid not null references admin.people(id),
+  owning_person_admin_people_id uuid not null references admin.people(id),
+  owning_group_admin_groups_id uuid not null references admin.groups(id)
 );
 
 create table common.stages(
@@ -666,9 +666,9 @@ create table common.stages(
   created_at timestamp not null default CURRENT_TIMESTAMP,
   created_by_admin_people_id uuid not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by uuid not null references admin.people(id),
-  owning_person uuid not null references admin.people(id),
-  owning_group uuid not null references admin.groups(id)
+  modified_by_admin_people_id uuid not null references admin.people(id),
+  owning_person_admin_people_id uuid not null references admin.people(id),
+  owning_group_admin_groups_id uuid not null references admin.groups(id)
 );
 
 create table common.stage_graph(
@@ -680,9 +680,9 @@ create table common.stage_graph(
   created_at timestamp not null default CURRENT_TIMESTAMP,
   created_by_admin_people_id uuid not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by uuid not null references admin.people(id),
-  owning_person uuid not null references admin.people(id),
-  owning_group uuid not null references admin.groups(id),
+  modified_by_admin_people_id uuid not null references admin.people(id),
+  owning_person_admin_people_id uuid not null references admin.people(id),
+  owning_group_admin_groups_id uuid not null references admin.groups(id),
 
   unique (from_stage, to_stage)
 );
@@ -690,8 +690,8 @@ create table common.stage_graph(
 create table common.stage_role_column_grants(
 	id uuid primary key default common.uuid_generate_v4(),
 
-  stage uuid not null references common.stages(id),
-	role uuid not null references admin.roles(id),
+  common_stages_id uuid not null references common.stages(id),
+	admin_role_id uuid not null references admin.roles(id),
 	table_name admin.table_name not null,
 	column_name varchar(64) not null,
 	access_level admin.access_level not null,
@@ -699,27 +699,27 @@ create table common.stage_role_column_grants(
 	created_at timestamp not null default CURRENT_TIMESTAMP,
 	created_by_admin_people_id uuid not null references admin.people(id),
 	modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by uuid not null references admin.people(id),
-  owning_person uuid not null references admin.people(id),
-  owning_group uuid not null references admin.groups(id),
+  modified_by_admin_people_id uuid not null references admin.people(id),
+  owning_person_admin_people_id uuid not null references admin.people(id),
+  owning_group_admin_groups_id uuid not null references admin.groups(id),
 
-	unique (role, table_name, column_name)
+	unique (admin_role_id, table_name, column_name)
 );
 
 create table common.stage_notifications(
 	id uuid primary key default common.uuid_generate_v4(),
 
-	stage uuid not null references common.stages(id),
+	common_stages_id uuid not null references common.stages(id),
 	on_enter bool default false,
 	on_exit bool default false,
-	person uuid unique references admin.people(id),
+	admin_people_id uuid unique references admin.people(id),
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
   created_by_admin_people_id uuid not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by uuid not null references admin.people(id),
-  owning_person uuid not null references admin.people(id),
-  owning_group uuid not null references admin.groups(id)
+  modified_by_admin_people_id uuid not null references admin.people(id),
+  owning_person_admin_people_id uuid not null references admin.people(id),
+  owning_group_admin_groups_id uuid not null references admin.groups(id)
 );
 
 -- SOCIAL GRAPH ----------------------------------------------------
@@ -741,8 +741,8 @@ create type common.people_to_org_relationship_type as enum (
 create table common.people_to_org_relationships (
   id uuid primary key default common.uuid_generate_v4(),
 
-	org uuid not null references common.organizations(id),
-	person uuid unique not null references admin.people(id),
+	common_organizations_id uuid not null references common.organizations(id),
+	admin_people_id uuid unique not null references admin.people(id),
 	relationship_type common.people_to_org_relationship_type,
   begin_at date,
   end_at date,
@@ -750,9 +750,9 @@ create table common.people_to_org_relationships (
   created_at timestamp not null default CURRENT_TIMESTAMP,
   created_by_admin_people_id uuid not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by uuid not null references admin.people(id),
-  owning_person uuid not null references admin.people(id),
-  owning_group uuid not null references admin.groups(id)
+  modified_by_admin_people_id uuid not null references admin.people(id),
+  owning_person_admin_people_id uuid not null references admin.people(id),
+  owning_group_admin_groups_id uuid not null references admin.groups(id)
 );
 
 create type common.people_to_people_relationship_types as enum (
@@ -764,14 +764,14 @@ create type common.people_to_people_relationship_types as enum (
 create table common.people_graph (
   id uuid primary key default common.uuid_generate_v4(),
 
-  from_person uuid unique not null references admin.people(id),
-  to_person uuid unique not null references admin.people(id),
+  from_admin_people_id uuid unique not null references admin.people(id),
+  to_admin_people_id uuid unique not null references admin.people(id),
   rel_type common.people_to_people_relationship_types not null,
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
   created_by_admin_people_id uuid not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by uuid not null references admin.people(id),
-  owning_person uuid not null references admin.people(id),
-  owning_group uuid not null references admin.groups(id)
+  modified_by_admin_people_id uuid not null references admin.people(id),
+  owning_person_admin_people_id uuid not null references admin.people(id),
+  owning_group_admin_groups_id uuid not null references admin.groups(id)
 );

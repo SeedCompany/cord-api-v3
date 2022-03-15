@@ -183,7 +183,7 @@ create table admin.groups(
   id uuid primary key default common.uuid_generate_v4(),
 
   name varchar(64) not null,
-  parent_group_row_access_groups_id uuid references admin.groups(id),
+  parent_group_row_access_admin_groups_id uuid references admin.groups(id),
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
   created_by_admin_people_id uuid not null references admin.people(id),
@@ -217,8 +217,8 @@ create table admin.group_row_access(
 create table admin.group_memberships(
   id uuid primary key default common.uuid_generate_v4(),
 
-  group_id uuid not null references admin.groups(id),
-  person uuid not null references admin.people(id),
+  admin_groups_id uuid not null references admin.groups(id),
+  admin_people_id uuid not null references admin.people(id),
 
 	created_at timestamp not null default CURRENT_TIMESTAMP,
 	created_by_admin_people_id uuid not null references admin.people(id),
@@ -227,7 +227,7 @@ create table admin.group_memberships(
   owning_person_admin_people_id uuid not null references admin.people(id),
   owning_group_admin_groups_id uuid not null references admin.groups(id),
 
-  unique (group_id, person)
+  unique (admin_groups_id, admin_people_id)
 );
 
 -- PEER to PEER -------------------------------------------------------------
@@ -235,7 +235,7 @@ create table admin.group_memberships(
 create table admin.peers (
   id uuid primary key default common.uuid_generate_v4(),
 
-  person uuid unique unique not null references admin.people(id),
+  admin_people_id uuid unique unique not null references admin.people(id),
   url varchar(128) unique not null,
   peer_approved bool not null default false,
   url_confirmed bool not null default false,
@@ -271,7 +271,7 @@ create table admin.roles (
 create table admin.role_column_grants(
 	id uuid primary key default common.uuid_generate_v4(),
 
-	role uuid not null references admin.roles(id),
+	admin_role_id uuid not null references admin.roles(id),
 	table_name admin.table_name not null,
 	column_name varchar(64) not null,
 	access_level admin.access_level not null,
@@ -283,7 +283,7 @@ create table admin.role_column_grants(
   owning_person_admin_people_id uuid not null references admin.people(id),
   owning_group_admin_groups_id uuid not null references admin.groups(id),
 
-	unique (role, table_name, column_name)
+	unique (admin_role_id, table_name, column_name)
 );
 
 create type admin.table_permission_grant_type as enum (
@@ -294,7 +294,7 @@ create type admin.table_permission_grant_type as enum (
 create table admin.role_table_permissions(
   id uuid primary key default common.uuid_generate_v4(),
 
-  role uuid not null references admin.roles(id),
+  admin_role_id uuid not null references admin.roles(id),
   table_name admin.table_name not null,
   table_permission admin.table_permission_grant_type not null,
 
@@ -305,14 +305,14 @@ create table admin.role_table_permissions(
   owning_person_admin_people_id uuid not null references admin.people(id),
   owning_group_admin_groups_id uuid not null references admin.groups(id),
 
-  unique (role, table_name, table_permission)
+  unique (admin_role_id, table_name, table_permission)
 );
 
 create table admin.role_memberships (
   id uuid primary key default common.uuid_generate_v4(),
 
-	role uuid not null references admin.roles(id),
-	person uuid unique not null references admin.people(id),
+	admin_role_id uuid not null references admin.roles(id),
+	admin_people_id uuid unique not null references admin.people(id),
 
 	created_at timestamp not null default CURRENT_TIMESTAMP,
 	created_by_admin_people_id uuid not null references admin.people(id),
@@ -321,7 +321,7 @@ create table admin.role_memberships (
   owning_person_admin_people_id uuid not null references admin.people(id),
   owning_group_admin_groups_id uuid not null references admin.groups(id),
 
-	unique(role, person)
+	unique(admin_role_id, admin_people_id)
 );
 
 -- USERS ---------------------------------------------------------------------
@@ -359,7 +359,7 @@ create table admin.user_phone_accounts(
 create table if not exists admin.tokens (
 	id uuid primary key default common.uuid_generate_v4(),
 	token varchar(64) unique not null,
-	person uuid references admin.people(id),
+	admin_people_id uuid references admin.people(id),
 	created_at timestamp not null default CURRENT_TIMESTAMP
 );
 
@@ -368,6 +368,6 @@ create table if not exists admin.tokens (
 create table admin.email_tokens (
 	id uuid primary key default common.uuid_generate_v4(),
 	token varchar(512) unique not null,
-	user_id uuid not null references admin.users(id),
+	admin_user_id uuid not null references admin.users(id),
 	created_at timestamp not null default CURRENT_TIMESTAMP
 );
