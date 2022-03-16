@@ -4,6 +4,11 @@ create schema sc;
 
 -- POSTS ----------------------------------------------------------
 
+create table sc.posts_directory ( -- does not need to be secure
+  id varchar(32) primary key default common.nanoid(),
+  created_at timestamp not null default CURRENT_TIMESTAMP
+);
+
 create type sc.post_shareability as enum (
   'sc_projects_id Team',
   'Internal',
@@ -17,11 +22,21 @@ create type sc.post_type as enum (
   'Prayer'
 );
 
+create type sc.post_parent_type_enum as enum (
+  'TranslationProject',
+  'InternshipProject',
+  'LanguageEngagement',
+  'InternshipEngagement',
+  'Partner',
+  'Language',
+  'User'
+);
+
 create table sc.posts (
   id uuid primary key default common.uuid_generate_v4(),
 
   parent uuid,
-  parent_type admin.table_name,
+  post_parent_type admin.table_name,
   common_directories_id uuid references common.directories(id), -- not null
   type sc.post_type, --not null,
   shareability sc.post_shareability, --not null,
@@ -167,7 +182,7 @@ create table sc.partners (
 	point_of_contact_people_id uuid references admin.people(id),
 	types sc.partner_types[],
 	address varchar(255),
-	sensitivity common.sensitivity,
+	sensitivity common.sensitivity not null default 'High',
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
   created_by_admin_people_id uuid not null references admin.people(id),
@@ -287,7 +302,7 @@ create table sc.languages(
   population_override int,
   provisional_code char(3),
   registry_of_dialects_code char(5),
-  sensitivity common.sensitivity,
+  sensitivity common.sensitivity not null default 'High',
   sign_language_code char(4),
   sponsor_start_date date, -- derived
   sponsor_estimated_end_date date, -- todo research this field. new?
@@ -583,7 +598,7 @@ create table sc.projects (
 	status sc.project_status, -- not null todo
 	step sc.project_step, -- not null todo
 	step_changed_at timestamp,
-	sensitivity common.sensitivity, -- not null todo
+	sensitivity common.sensitivity not null default 'High', -- not null todo
 	tags text[],
 	type sc.project_type,
 	financial_report_received_at timestamp, -- legacy, not in api
@@ -692,7 +707,7 @@ create table sc.partnerships (
   mou_end_override date,
   financial_reporting_type sc.financial_reporting_types,
   is_primary bool,
-  sensitivity common.sensitivity,
+  sensitivity common.sensitivity not null default 'High',
 
   types sc.partner_types[],  -- added because exists in neo4j
 
@@ -721,7 +736,7 @@ create table sc.budgets (
   sc_projects_id uuid references sc.projects(id), -- not null
   status common.budget_status,
   universal_template uuid references common.files(id),
-  sensitivity common.sensitivity, -- derived from sc.projects
+  sensitivity common.sensitivity not null default 'High', -- derived from sc.projects
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
   created_by_admin_people_id uuid not null references admin.people(id),
@@ -741,7 +756,7 @@ create table sc.budget_records (
   amount decimal,
   fiscal_year int,
   partnership uuid not null references sc.partnerships(id),
-  sensitivity common.sensitivity, -- derived from sc.projects
+  sensitivity common.sensitivity not null default 'High', -- derived from sc.projects
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
   created_by_admin_people_id uuid not null references admin.people(id),
@@ -821,6 +836,8 @@ create type common.product_purposes as enum (
 -- names and scripture references
 --create type sc.product_type as enum (
 --  'BibleStories',
+--  'DirectScriptureProduct',
+--  'DerivativeScriptureProduct',
 --  'EthnoArts',
 --  'Film',
 --  'FullBible',
@@ -833,6 +850,7 @@ create type common.product_purposes as enum (
 --  'OldTestamentPortions',
 --  'OldTestamentFull',
 --  'Songs',
+--  'OtherProduct',
 --  'Story'
 --);
 
@@ -872,7 +890,7 @@ create table sc.products (
   mediums common.product_mediums_enum[],
   purposes common.product_purposes[], -- todo may need for historical data, delete
   methodology common.product_methodologies,
-  sensitivity common.sensitivity,
+  sensitivity common.sensitivity not null default 'High',
   steps common.product_steps_enum[],
   describe_completion text,
   progress_step_measurement common.progress_measurement,

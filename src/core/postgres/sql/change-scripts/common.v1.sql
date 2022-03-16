@@ -2,11 +2,161 @@
 
 -- ENUMS ----
 
--- todo
 create type common.mime_type as enum (
-  'A',
-  'B',
-  'C'
+  'application/msword',
+  'application/pdf',
+  'application/postscript',
+  'application/rtf',
+  'application/vnd.ms-excel',
+  'application/vnd.ms-excel.sheet.macroenabled.12',
+  'application/vnd.ms-excel.sheet.binary.macroEnabled.12',
+  'application/vnd.ms-outlook',
+  'application/octet-stream',
+  'application/vnd.ms-powerpoint',
+  'application/vnd.ms-project',
+  'application/vnd.oasis.opendocument.chart',
+  'application/vnd.oasis.opendocument.chart-template',
+  'application/vnd.oasis.opendocument.database',
+  'application/vnd.oasis.opendocument.graphics',
+  'application/vnd.oasis.opendocument.graphics-template',
+  'application/vnd.oasis.opendocument.image',
+  'application/vnd.oasis.opendocument.image-template',
+  'application/vnd.oasis.opendocument.presentation',
+  'application/vnd.oasis.opendocument.presentation-template',
+  'application/vnd.oasis.opendocument.spreadsheet',
+  'application/vnd.oasis.opendocument.spreadsheet-template',
+  'application/vnd.oasis.opendocument.text',
+  'application/vnd.oasis.opendocument.text-master',
+  'application/vnd.oasis.opendocument.text-template',
+  'application/vnd.oasis.opendocument.text-web',
+
+-- This is a temporal fix for application/vnd.openxmlformats-officedocument mime types
+-- Since Postgres only accepts up to 63 byte chars for labels
+--  'app/vnd.openxmlformats-officedocument.presentationml.presentation',
+  'app/vnd.openxmlformats-officedocument.presentationml.slide',
+  'app/vnd.openxmlformats-officedocument.presentationml.slideshow',
+  'app/vnd.openxmlformats-officedocument.presentationml.template',
+  'app/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'app/vnd.openxmlformats-officedocument.spreadsheetml.template',
+  'app/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'app/vnd.openxmlformats-officedocument.wordprocessingml.template',
+
+
+  'application/vnd.visio',
+  'application/vnd.wordperfect',
+  'application/x-font-ghostscript',
+  'application/x-font-linux-psf',
+  'application/x-font-pcf',
+  'application/x-font-snf',
+  'application/x-font-type1',
+  'application/x-gtar',
+  'application/x-iso9660-image',
+  'application/x-ms-wmd',
+  'application/x-msaccess',
+  'application/x-mspublisher',
+  'application/x-mswrite',
+  'application/x-tar',
+  'application/x-tex',
+  'application/x-tex-tfm',
+  'application/x-texinfo',
+  'application/x-zip-compressed',
+  'application/zip',
+  'audio/adpcm',
+  'audio/basic',
+  'audio/midi',
+  'audio/mp4',
+  'audio/mpeg',
+  'audio/ogg',
+  'audio/s3m',
+  'audio/silk',
+  'audio/vnd.rip',
+  'audio/webm',
+  'audio/x-aac',
+  'audio/x-aiff',
+  'audio/x-caf',
+  'audio/x-flac',
+  'audio/x-matroska',
+  'audio/x-mpegurl',
+  'audio/x-ms-wax',
+  'audio/x-ms-wma',
+  'audio/xpn-realaudio',
+  'audio/x-wav',
+  'audio/xm',
+  'font/otf',
+  'font/ttf',
+  'font/woff',
+  'font/woff2',
+  'image/bmp',
+  'image/cgm',
+  'image/g3fax',
+  'image/gif',
+  'image/ief',
+  'image/jpeg',
+  'image/ktx',
+  'image/png',
+  'image/sgi',
+  'image/svg+xml',
+  'image/tiff',
+  'image/vnd.adobe.photoshop',
+  'image/vnd.dwg',
+  'image/vnd.dxf',
+  'image/x-3ds',
+  'image/x-cmu-raster',
+  'image/x-cmx',
+  'image/x-freehand',
+  'image/x-icon',
+  'image/x-mrsid-image',
+  'image/x-pcx',
+  'image/x-pict',
+  'image/x-portable-anymap',
+  'image/x-portable-bitmap',
+  'image/x-portable-graymap',
+  'image/x-portable-pixmap',
+  'image/x-rgb',
+  'image/x-tga',
+  'image/x-xbitmap',
+  'image/x-xpixmap',
+  'image/xwindowdump',
+  'message/rfc822',
+  'text/calendar',
+  'text/css',
+  'text/csv',
+  'text/html',
+  'text/plain',
+  'text/richtext',
+  'text/rtf',
+  'text/sgml',
+  'text/tab-separated-values',
+  'video/3gpp',
+  'video/3gp2',
+  'video/h261',
+  'video/h263',
+  'video/h264',
+  'video/jpeg',
+  'video/jpm',
+  'video/mj2',
+  'video/mp4',
+  'video/mpeg',
+  'video/ogg',
+  'video/quicktime',
+  'video/vnd.mpegurl',
+  'video/vnd.vivo',
+  'video/webm',
+  'video/x-f4v',
+  'video/x-fli',
+  'video/x-flv',
+  'video/x-m4v',
+  'video/x-matroska',
+  'video/x-mng',
+  'video/x-ms-asf',
+  'video/x-ms-vob',
+  'video/x-ms-wm',
+  'video/x-ms-wmv',
+  'video/x-ms-wmx',
+  'video/x-ms-wvx',
+  'video/x-msvideo',
+  'video/x-sgi-movie',
+  'video/x-smv'
 );
 
 -- SITE TEXT --------------------------------------------------------------------------------
@@ -42,7 +192,8 @@ create table common.languages(
 create table common.site_text_strings(
   id uuid primary key default common.uuid_generate_v4(),
 
-  english varchar(64) not null, -- US English, all translations including other English locales will be in the translation table
+  -- US English, all translations including other English locales will be in the translation table
+  english varchar(64), -- unique not null
   comment text,
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
@@ -68,19 +219,6 @@ create table common.site_text_translations(
   owning_group_admin_groups_id uuid not null references admin.groups(id),
 
   unique (language_common_languages_id, site_text_common_site_text_strings_id)
-);
-
-create table common.site_text_languages(
-  id uuid primary key default common.uuid_generate_v4(),
-
-  language_common_languages_id uuid not null references common.languages(id),
-
-  created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id uuid not null references admin.people(id),
-  modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id uuid not null references admin.people(id),
-  owning_person_admin_people_id uuid not null references admin.people(id),
-  owning_group_admin_groups_id uuid not null references admin.groups(id)
 );
 
 -- SCRIPTURE REFERENCE -----------------------------------------------------------------
@@ -324,10 +462,19 @@ create table common.language_locations (
 );
 -- education_common_education_entries_id
 
+create type common.education_degree as enum (
+  'Primary',
+  'Secondary',
+  'Associates',
+  'Bachelors',
+  'Masters',
+  'Doctorate'
+);
+
 create table common.education_entries (
   id uuid primary key default common.uuid_generate_v4(),
 
-  degree varchar(64),
+  degree common.education_degree,
   institution varchar(64),
   major varchar(64),
 
@@ -363,7 +510,7 @@ create table common.education_by_person (
 create table common.organizations (
 	id uuid primary key default common.uuid_generate_v4(),
 
-	name varchar(255) unique, -- not null
+	name varchar(255), -- unique not null
 	sensitivity common.sensitivity default 'High',
 	primary_location_common_locations_id uuid references common.locations(id),
   street_address varchar(255),
@@ -517,9 +664,10 @@ create table common.files (
 create table common.file_versions (
   id uuid primary key default common.uuid_generate_v4(),
 
-  mime_type varchar(96), -- not null, todo: common.mime_type filled in, but neo4j just has a dumb 'ole string
+  mime_type varchar(255), -- not null
   name varchar(255), -- not null,
   parent_common_files_id uuid references common.files(id), -- not null
+  file_url varchar(255), -- not null,
   file_size int, -- bytes
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
@@ -541,7 +689,7 @@ create type common.ticket_status as enum (
 create table common.tickets (
 	id uuid primary key default common.uuid_generate_v4(),
 
-  title text not null,
+  title varchar(64) not null,
 	ticket_status common.ticket_status not null default 'Open',
 	parent uuid,
 	content text not null,

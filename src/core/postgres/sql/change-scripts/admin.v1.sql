@@ -230,8 +230,25 @@ create table admin.group_memberships(
   unique (admin_groups_id, admin_people_id)
 );
 
+create table admin.organization_administrators(
+  id varchar(32) primary key default nanoid(),
+
+  admin_groups_id varchar(32) not null references admin.groups(id),
+  admin_people_id varchar(32) not null references admin.people(id),
+
+	created_at timestamp not null default CURRENT_TIMESTAMP,
+	created_by_admin_people_id uuid not null references admin.people(id),
+	modified_at timestamp not null default CURRENT_TIMESTAMP,
+  modified_by_admin_people_id uuid not null references admin.people(id),
+  owning_person_admin_people_id uuid not null references admin.people(id),
+  owning_group_admin_groups_id uuid not null references admin.groups(id),
+
+  unique (group_id, person)
+);
+
 -- PEER to PEER -------------------------------------------------------------
 
+-- not used right now
 create table admin.peers (
   id uuid primary key default common.uuid_generate_v4(),
 
@@ -324,12 +341,30 @@ create table admin.role_memberships (
 	unique(admin_role_id, admin_people_id)
 );
 
+create table admin.role_all_data_column_grants(
+	id varchar(32) primary key default nanoid(),
+
+	admin_roles_id varchar(32) not null references admin.roles(id),
+	table_name admin.table_name not null,
+	column_name varchar(64) not null,
+	access_level admin.access_level not null,
+
+	created_at timestamp not null default CURRENT_TIMESTAMP,
+	created_by_admin_people_id uuid not null references admin.people(id),
+	modified_at timestamp not null default CURRENT_TIMESTAMP,
+  modified_by_admin_people_id uuid not null references admin.people(id),
+  owning_person_admin_people_id uuid not null references admin.people(id),
+  owning_group_admin_groups_id uuid not null references admin.groups(id),
+
+	unique (admin_roles_id, table_name, column_name)
+);
+
 -- USERS ---------------------------------------------------------------------
 
 create table admin.user_email_accounts(
   id uuid primary key references admin.people(id), -- not null added in v2
 
-  email varchar(255) unique,
+  email varchar(255), -- unique not null
   password varchar(255),
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
