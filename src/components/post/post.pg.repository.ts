@@ -41,7 +41,7 @@ export class PgPostRepository extends PostRepository {
   async readOne(id: ID): Promise<UnsecuredDto<Post>> {
     const rows = await this.pg.query<UnsecuredDto<Post>>(
       `
-      SELECT id, directory, type, shareability, body, created_at as "createdAt", modified_at as "modifiedAt"
+      SELECT id, created_by as "creator", type, shareability, body, created_at as "createdAt", modified_at as "modifiedAt"
       FROM sc.posts
       WHERE id = $1;
       `,
