@@ -3,16 +3,16 @@ CREATE OR REPLACE PROCEDURE admin.roles_migration(
 LANGUAGE PLPGSQL
 AS $$
 DECLARE
-  vProjectManagerRoleId uuid;
-  vProjectManagersGroupId uuid;
-  vRegionalDirectorRoleId uuid;
-  vRegionalDirectorsGroupId uuid;
-  vFieldOperationsDirectorRoleId uuid;
-  vFieldOperationsDirectorsGroupId uuid;
-  vControllerRoleId uuid;
-  vControllersGroupId uuid;
-  vLeadFinancialAnalystRoleId uuid;
-  vLeadFinancialAnalystsGroupId uuid;
+  vProjectManagerRoleId varchar(32);
+  vProjectManagersGroupId varchar(32);
+  vRegionalDirectorRoleId varchar(32);
+  vRegionalDirectorsGroupId varchar(32);
+  vFieldOperationsDirectorRoleId varchar(32);
+  vFieldOperationsDirectorsGroupId varchar(32);
+  vControllerRoleId varchar(32);
+  vControllersGroupId varchar(32);
+  vLeadFinancialAnalystRoleId varchar(32);
+  vLeadFinancialAnalystsGroupId varchar(32);
   vRoleCount int;
 BEGIN
   -- create roles and groups to replicate the cord field permissions

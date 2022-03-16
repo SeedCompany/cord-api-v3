@@ -5,14 +5,34 @@ set schema 'common';
 
 CREATE EXTENSION if not exists hstore;
 create extension if not exists postgis;
-CREATE EXTENSION if not exists "uuid-ossp";
+
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+CREATE OR REPLACE FUNCTION nanoid(size int DEFAULT 11)
+RETURNS text AS $$
+DECLARE
+  id text := '';
+  i int := 0;
+  urlAlphabet char(64) := 'ModuleSymbhasOwnPr-0123456789ABCDEFGHNRVfgctiUvz_KqYTJkLxpZXIjQW';
+  bytes bytea := common.gen_random_bytes(size);
+  byte int;
+  pos int;
+BEGIN
+  WHILE i < size LOOP
+    byte := get_byte(bytes, i);
+    pos := (byte & 63) + 1; -- + 1 because substr starts at 1 for some reason
+    id := id || substr(urlAlphabet, pos, 1);
+    i = i + 1;
+  END LOOP;
+  RETURN id;
+END
+$$ LANGUAGE PLPGSQL STABLE;
 
 create type admin.history_event_type as enum (
   'INSERT',
   'UPDATE',
   'DELETE'
 );
-
 
 create type common.sensitivity as enum (
   'Low',
@@ -23,6 +43,22 @@ create type common.sensitivity as enum (
 create type admin.access_level as enum (
   'Read',
   'Write'
+);
+
+create table common_sensitivity_enum (
+  value varchar(32) primary key
+);
+
+insert into common_sensitivity_enum(value) values('Low'), ('Medium'), ('High');
+
+create table admin_access_level_enum(
+  value varchar(32) primary key
+);
+
+insert into admin_access_level_enum(value) values('Read'), ('Write');
+
+create table admin_table_name_enum (
+  value varchar(64) primary key
 );
 
 create type admin.table_name as enum (
@@ -143,7 +179,7 @@ create type admin.db_vc_status as enum (
 );
 
 create table admin.database_version_control (
-  id uuid primary key default common.uuid_generate_v4(),
+  id varchar(32) primary key default common.nanoid(),
   version int not null,
   status admin.db_vc_status default 'In Progress',
   started timestamp not null default CURRENT_TIMESTAMP,
@@ -153,7 +189,7 @@ create table admin.database_version_control (
 -- PEOPLE ------------------------------------------------------------
 
 create table admin.people (
-  id uuid primary key default common.uuid_generate_v4(),
+  id varchar(32) primary key default common.nanoid(),
 
   about text,
   picture_common_files_id varchar(32) references common.files(id),
@@ -161,16 +197,16 @@ create table admin.people (
   private_last_name varchar(32),
   public_first_name varchar(32),
   public_last_name varchar(32),
-  primary_location_common_locations_id uuid references common.locations(id),
+  primary_location_common_locations_id varchar(32) references common.locations(id),
   sensitivity_clearance common.sensitivity default 'Low',
   timezone varchar(64),
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id uuid, -- not null doesn't work here, on startup
+  created_by_admin_people_id varchar(32), -- not null doesn't work here, on startup
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id uuid, -- not null doesn't work here, on startup
-  owning_person_admin_people_id uuid, -- not null doesn't work here, on startup
-  owning_group_admin_groups_id uuid -- not null doesn't work here, on startup
+  modified_by_admin_people_id varchar(32), -- not null doesn't work here, on startup
+  owning_person_admin_people_id varchar(32), -- not null doesn't work here, on startup
+  owning_group_admin_groups_id varchar(32) -- not null doesn't work here, on startup
 );
 
 alter table admin.people add constraint admin_people_created_by_people_id_fk foreign key (created_by_admin_people_id) references admin.people(id);
@@ -180,17 +216,17 @@ alter table admin.people add constraint admin_people_owning_person_people_id_fk 
 -- GROUPS --------------------------------------------------------------------
 
 create table admin.groups(
-  id uuid primary key default common.uuid_generate_v4(),
+  id varchar(32) primary key default common.nanoid(),
 
   name varchar(64) not null,
-  parent_group_row_access_admin_groups_id uuid references admin.groups(id),
+  parent_group_row_access_admin_groups_id varchar(32) references admin.groups(id),
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id uuid not null references admin.people(id),
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id uuid not null references admin.people(id),
-  owning_person_admin_people_id uuid not null references admin.people(id),
-  owning_group_admin_groups_id uuid references admin.groups(id), -- not null doesn't work here, on startup
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) references admin.groups(id), -- not null doesn't work here, on startup
 
   unique (name, owning_group_admin_groups_id)
 );
@@ -198,34 +234,34 @@ create table admin.groups(
 alter table admin.people add constraint admin_people_owning_group_groups_id_fk foreign key (owning_group_admin_groups_id) references admin.groups(id);
 
 create table admin.group_row_access(
-  id uuid primary key default common.uuid_generate_v4(),
+  id varchar(32) primary key default common.nanoid(),
 
-  admin_groups_id uuid not null references admin.groups(id),
-  table_name admin.table_name not null,
-  row_id uuid not null,
+  admin_groups_id varchar(32) not null references admin.groups(id),
+  admin_table_name_enum_value varchar(64) not null references admin_table_name_enum(value),
+  row_id varchar(32) not null,
 
 	created_at timestamp not null default CURRENT_TIMESTAMP,
-	created_by_admin_people_id uuid not null references admin.people(id),
+	created_by_admin_people_id varchar(32) not null references admin.people(id),
 	modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id uuid not null references admin.people(id),
-  owning_person_admin_people_id uuid not null references admin.people(id),
-  owning_group_admin_groups_id uuid not null references admin.groups(id),
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id),
 
-  unique (admin_groups_id, table_name, row_id)
+  unique (admin_groups_id, admin_table_name_enum_value, row_id)
 );
 
 create table admin.group_memberships(
-  id uuid primary key default common.uuid_generate_v4(),
+  id varchar(32) primary key default common.nanoid(),
 
-  admin_groups_id uuid not null references admin.groups(id),
-  admin_people_id uuid not null references admin.people(id),
+  admin_groups_id varchar(32) not null references admin.groups(id),
+  admin_people_id varchar(32) not null references admin.people(id),
 
 	created_at timestamp not null default CURRENT_TIMESTAMP,
-	created_by_admin_people_id uuid not null references admin.people(id),
+	created_by_admin_people_id varchar(32) not null references admin.people(id),
 	modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id uuid not null references admin.people(id),
-  owning_person_admin_people_id uuid not null references admin.people(id),
-  owning_group_admin_groups_id uuid not null references admin.groups(id),
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id),
 
   unique (admin_groups_id, admin_people_id)
 );
@@ -237,70 +273,48 @@ create table admin.organization_administrators(
   admin_people_id varchar(32) not null references admin.people(id),
 
 	created_at timestamp not null default CURRENT_TIMESTAMP,
-	created_by_admin_people_id uuid not null references admin.people(id),
+	created_by_admin_people_id varchar(32) not null references admin.people(id),
 	modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id uuid not null references admin.people(id),
-  owning_person_admin_people_id uuid not null references admin.people(id),
-  owning_group_admin_groups_id uuid not null references admin.groups(id),
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id),
 
   unique (group_id, person)
-);
-
--- PEER to PEER -------------------------------------------------------------
-
--- not used right now
-create table admin.peers (
-  id uuid primary key default common.uuid_generate_v4(),
-
-  admin_people_id uuid unique unique not null references admin.people(id),
-  url varchar(128) unique not null,
-  peer_approved bool not null default false,
-  url_confirmed bool not null default false,
-  source_token varchar(64) unique,
-  target_token varchar(64) unique,
-  session_token varchar(64) unique,
-
-  created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id uuid not null references admin.people(id),
-  modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id uuid not null references admin.people(id),
-  owning_person_admin_people_id uuid not null references admin.people(id),
-  owning_group_admin_groups_id uuid not null references admin.groups(id)
 );
 
 -- ROLES --------------------------------------------------------------------
 
 create table admin.roles (
-	id uuid primary key default common.uuid_generate_v4(),
+	id varchar(32) primary key default common.nanoid(),
 
 	name varchar(255) not null,
 
 	created_at timestamp not null default CURRENT_TIMESTAMP,
-	created_by_admin_people_id uuid not null references admin.people(id),
+	created_by_admin_people_id varchar(32) not null references admin.people(id),
 	modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id uuid not null references admin.people(id),
-  owning_person_admin_people_id uuid not null references admin.people(id),
-  owning_group_admin_groups_id uuid not null references admin.groups(id),
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id),
 
 	unique (name, owning_group_admin_groups_id)
 );
 
 create table admin.role_column_grants(
-	id uuid primary key default common.uuid_generate_v4(),
+	id varchar(32) primary key default common.nanoid(),
 
-	admin_role_id uuid not null references admin.roles(id),
-	table_name admin.table_name not null,
+	admin_role_id varchar(32) not null references admin.roles(id),
+	admin_table_name_enum_value varchar(64) not null references admin_table_name_enum(value),
 	column_name varchar(64) not null,
 	access_level admin.access_level not null,
 
 	created_at timestamp not null default CURRENT_TIMESTAMP,
-	created_by_admin_people_id uuid not null references admin.people(id),
+	created_by_admin_people_id varchar(32) not null references admin.people(id),
 	modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id uuid not null references admin.people(id),
-  owning_person_admin_people_id uuid not null references admin.people(id),
-  owning_group_admin_groups_id uuid not null references admin.groups(id),
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id),
 
-	unique (admin_role_id, table_name, column_name)
+	unique (admin_role_id, admin_table_name_enum_value, column_name)
 );
 
 create type admin.table_permission_grant_type as enum (
@@ -309,34 +323,34 @@ create type admin.table_permission_grant_type as enum (
 );
 
 create table admin.role_table_permissions(
-  id uuid primary key default common.uuid_generate_v4(),
+  id varchar(32) primary key default common.nanoid(),
 
-  admin_role_id uuid not null references admin.roles(id),
-  table_name admin.table_name not null,
+  admin_role_id varchar(32) not null references admin.roles(id),
+  admin_table_name_enum_value varchar(64) not null references admin_table_name_enum(value),
   table_permission admin.table_permission_grant_type not null,
 
 	created_at timestamp not null default CURRENT_TIMESTAMP,
-	created_by_admin_people_id uuid not null references admin.people(id),
+	created_by_admin_people_id varchar(32) not null references admin.people(id),
 	modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id uuid not null references admin.people(id),
-  owning_person_admin_people_id uuid not null references admin.people(id),
-  owning_group_admin_groups_id uuid not null references admin.groups(id),
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id),
 
-  unique (admin_role_id, table_name, table_permission)
+  unique (admin_role_id, admin_table_name_enum_value, table_permission)
 );
 
 create table admin.role_memberships (
-  id uuid primary key default common.uuid_generate_v4(),
+  id varchar(32) primary key default common.nanoid(),
 
-	admin_role_id uuid not null references admin.roles(id),
-	admin_people_id uuid unique not null references admin.people(id),
+	admin_role_id varchar(32) not null references admin.roles(id),
+	admin_people_id varchar(32) unique not null references admin.people(id),
 
 	created_at timestamp not null default CURRENT_TIMESTAMP,
-	created_by_admin_people_id uuid not null references admin.people(id),
+	created_by_admin_people_id varchar(32) not null references admin.people(id),
 	modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id uuid not null references admin.people(id),
-  owning_person_admin_people_id uuid not null references admin.people(id),
-  owning_group_admin_groups_id uuid not null references admin.groups(id),
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id),
 
 	unique(admin_role_id, admin_people_id)
 );
@@ -345,64 +359,103 @@ create table admin.role_all_data_column_grants(
 	id varchar(32) primary key default nanoid(),
 
 	admin_roles_id varchar(32) not null references admin.roles(id),
-	table_name admin.table_name not null,
+	admin_table_name_enum_value varchar(64) not null references admin_table_name_enum(value),
 	column_name varchar(64) not null,
 	access_level admin.access_level not null,
 
 	created_at timestamp not null default CURRENT_TIMESTAMP,
-	created_by_admin_people_id uuid not null references admin.people(id),
+	created_by_admin_people_id varchar(32) not null references admin.people(id),
 	modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id uuid not null references admin.people(id),
-  owning_person_admin_people_id uuid not null references admin.people(id),
-  owning_group_admin_groups_id uuid not null references admin.groups(id),
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id),
 
-	unique (admin_roles_id, table_name, column_name)
+	unique (admin_roles_id, admin_table_name_enum_value, column_name)
 );
 
 -- USERS ---------------------------------------------------------------------
 
 create table admin.user_email_accounts(
-  id uuid primary key references admin.people(id), -- not null added in v2
+  id varchar(32) primary key references admin.people(id), -- not null added in v2
 
   email varchar(255), -- unique not null
   password varchar(255),
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id uuid not null references admin.people(id),
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id uuid not null references admin.people(id),
-  owning_person_admin_people_id uuid not null references admin.people(id),
-  owning_group_admin_groups_id uuid not null references admin.groups(id)
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id)
 );
 
 create table admin.user_phone_accounts(
-  id uuid primary key references admin.people(id), -- not null added in v2
+  id varchar(32) primary key references admin.people(id), -- not null added in v2
 
   phone varchar(64) unique,
   password varchar(255),
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id uuid not null references admin.people(id),
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id uuid not null references admin.people(id),
-  owning_person_admin_people_id uuid not null references admin.people(id),
-  owning_group_admin_groups_id uuid not null references admin.groups(id)
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id)
 );
 
 -- AUTHENTICATION ------------------------------------------------------------
 
 create table if not exists admin.tokens (
-	id uuid primary key default common.uuid_generate_v4(),
+	id varchar(32) primary key default common.nanoid(),
 	token varchar(64) unique not null,
-	admin_people_id uuid references admin.people(id),
+	admin_people_id varchar(32) references admin.people(id),
 	created_at timestamp not null default CURRENT_TIMESTAMP
 );
 
 -- email tokens
 
 create table admin.email_tokens (
-	id uuid primary key default common.uuid_generate_v4(),
+	id varchar(32) primary key default common.nanoid(),
 	token varchar(512) unique not null,
-	admin_user_id uuid not null references admin.users(id),
+	admin_user_id varchar(32) not null references admin.users(id),
 	created_at timestamp not null default CURRENT_TIMESTAMP
 );
+
+-- PEER to PEER -------------------------------------------------------------
+
+-- not used right now
+create table admin.peers (
+  id varchar(32) primary key default common.nanoid(),
+
+  admin_people_id varchar(32) unique unique not null references admin.people(id),
+  url varchar(128) unique not null,
+  peer_approved bool not null default false,
+  url_confirmed bool not null default false,
+  source_token varchar(64) unique,
+  target_token varchar(64) unique,
+  session_token varchar(64) unique,
+
+  created_at timestamp not null default CURRENT_TIMESTAMP,
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
+  modified_at timestamp not null default CURRENT_TIMESTAMP,
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id)
+);
+
+insert into admin_table_name_enum(value) values
+  ('admin_database_version_control'),
+  ('admin_email_tokens'),
+  ('admin_group_memberships'),
+  ('admin_group_row_access'),
+  ('admin_groups'),
+  ('admin_organization_administrators'),
+  ('admin_peers'),
+  ('admin_people'),
+  ('admin_role_all_data_column_grants'),
+  ('admin_role_column_grants'),
+  ('admin_role_memberships'),
+  ('admin_role_table_permissions'),
+  ('admin_roles'),
+  ('admin_tokens'),
+  ('admin_users');

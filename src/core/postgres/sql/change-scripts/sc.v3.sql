@@ -33,114 +33,114 @@ create type sc.post_parent_type_enum as enum (
 );
 
 create table sc.posts (
-  id uuid primary key default common.uuid_generate_v4(),
+  id varchar(32) primary key default common.nanoid(),
 
-  parent uuid,
-  post_parent_type admin.table_name,
-  common_directories_id uuid references common.directories(id), -- not null
+  parent_id varchar(32),
+  parent_type_admin_table_name_enum_value varchar(64) not null references admin_table_name_enum(value),
+  common_directories_id varchar(32) references common.directories(id), -- not null
   type sc.post_type, --not null,
   shareability sc.post_shareability, --not null,
   body text, --not null,
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id uuid not null references admin.people(id),
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id uuid not null references admin.people(id),
-  owning_person_admin_people_id uuid not null references admin.people(id),
-  owning_group_admin_groups_id uuid not null references admin.groups(id)
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id)
 );
 
 -- ACCOUNTING TABLES --------------------------------------------------------
 
 create table sc.funding_accounts (
-  id uuid primary key default common.uuid_generate_v4(),
+  id varchar(32) primary key default common.nanoid(),
 
 	account_number int unique, -- not null,
 	name varchar(255),
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id uuid not null references admin.people(id),
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id uuid not null references admin.people(id),
-  owning_person_admin_people_id uuid not null references admin.people(id),
-  owning_group_admin_groups_id uuid not null references admin.groups(id)
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id)
 );
 
 -- common_locations_id TABLES ----------------------------------------------------------
 
 -- todo Ken to review in DOMO
 create table sc.field_zones (
-	id uuid primary key default common.uuid_generate_v4(),
+	id varchar(32) primary key default common.nanoid(),
 
-	director_admin_people_id uuid references admin.people(id),
-	name varchar(32) unique, -- not null
+	director_admin_people_id varchar(32) references admin.people(id),
+	name varchar(64) unique, -- not null
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id uuid not null references admin.people(id),
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id uuid not null references admin.people(id),
-  owning_person_admin_people_id uuid not null references admin.people(id),
-  owning_group_admin_groups_id uuid not null references admin.groups(id)
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id)
 );
 
 -- todo Ken to review in DOMO
 create table sc.field_regions (
-	id uuid primary key default common.uuid_generate_v4(),
-	sc_field_zone_id uuid references sc.field_zones(id),
+	id varchar(32) primary key default common.nanoid(),
+	sc_field_zone_id varchar(32) references sc.field_zones(id),
 
-	director_admin_people_id uuid references admin.people(id),
+	director_admin_people_id varchar(32) references admin.people(id),
 	name varchar(32) unique, -- not null
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id uuid not null references admin.people(id),
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id uuid not null references admin.people(id),
-  owning_person_admin_people_id uuid not null references admin.people(id),
-  owning_group_admin_groups_id uuid not null references admin.groups(id)
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id)
 );
 
 create table sc.locations (
-	id uuid unique not null references common.locations(id),
+	id varchar(32) unique not null references common.locations(id),
 
   -- todo research using aliases
-	default_region uuid references sc.field_regions(id),
-	funding_account uuid references sc.funding_accounts(id),
+	default_region varchar(32) references sc.field_regions(id),
+	funding_account varchar(32) references sc.funding_accounts(id),
 	sensitivity common.sensitivity not null default 'High',
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id uuid not null references admin.people(id),
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id uuid not null references admin.people(id),
-  owning_person_admin_people_id uuid not null references admin.people(id),
-  owning_group_admin_groups_id uuid not null references admin.groups(id)
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id)
 );
 
 create table sc.field_region_locations (
-	id uuid unique not null references common.locations(id),
+	id varchar(32) unique not null references common.locations(id),
 
-	sc_field_regions_id uuid references sc.field_regions(id),
-	common_locations_id uuid references common.locations(id),
+	sc_field_regions_id varchar(32) references sc.field_regions(id),
+	common_locations_id varchar(32) references common.locations(id),
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id uuid not null references admin.people(id),
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id uuid not null references admin.people(id),
-  owning_person_admin_people_id uuid not null references admin.people(id),
-  owning_group_admin_groups_id uuid not null references admin.groups(id)
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id)
 );
 
 create table sc.field_zone_locations (
-	id uuid unique not null references common.locations(id),
+	id varchar(32) unique not null references common.locations(id),
 
-	sc_field_zones_id uuid references sc.field_zones(id),
-	common_locations_id uuid references common.locations(id),
+	sc_field_zones_id varchar(32) references sc.field_zones(id),
+	common_locations_id varchar(32) references common.locations(id),
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id uuid not null references admin.people(id),
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id uuid not null references admin.people(id),
-  owning_person_admin_people_id uuid not null references admin.people(id),
-  owning_group_admin_groups_id uuid not null references admin.groups(id)
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id)
 );
 
 -- common_organizations_id TABLES
@@ -173,42 +173,42 @@ DO $$ BEGIN
 END; $$;
 
 create table sc.partners (
-	id uuid primary key references common.organizations(id),
+	id varchar(32) primary key references common.organizations(id),
 
 	active bool,
 	financial_reporting_types sc.financial_reporting_types[],
 	is_innovations_client bool,
 	pmc_entity_code varchar(32),
-	point_of_contact_people_id uuid references admin.people(id),
+	point_of_contact_people_id varchar(32) references admin.people(id),
 	types sc.partner_types[],
 	address varchar(255),
 	sensitivity common.sensitivity not null default 'High',
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id uuid not null references admin.people(id),
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id uuid not null references admin.people(id),
-  owning_person_admin_people_id uuid not null references admin.people(id),
-  owning_group_admin_groups_id uuid not null references admin.groups(id)
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id)
 );
 
 -- language_common_languages_id TABLES ----------------------------------------------------------
 
 --create table sc.ethnologue (
---  id uuid primary key default common.uuid_generate_v4(),
+--  id varchar(32) primary key default common.nanoid(),
 --
---  language_index uuid not null references sil.language_index(id),
+--  language_index varchar(32) not null references sil.language_index(id),
 --  code varchar(32),
---  language_name varchar(64), -- override for language_index
+--  language_name varchar(75), -- override for language_index
 --  population int,
 --  provisional_code varchar(32),
 --
 --  created_at timestamp not null default CURRENT_TIMESTAMP,
---  created_by_admin_people_id uuid not null references admin.people(id),
+--  created_by_admin_people_id varchar(32) not null references admin.people(id),
 --  modified_at timestamp not null default CURRENT_TIMESTAMP,
---  modified_by_admin_people_id uuid not null references admin.people(id),
---  owning_person_admin_people_id uuid not null references admin.people(id),
---  owning_group_admin_groups_id uuid not null references admin.groups(id)
+--  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+--  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+--  owning_group_admin_groups_id varchar(32) not null references admin.groups(id)
 --);
 
 create type sc.least_reached_progress_scale as enum (
@@ -287,11 +287,11 @@ create type sc.begin_work_rel_pol_obstacles_scale as enum (
 );
 
 create table sc.languages(
-	id uuid primary key references common.languages(id),
+	id varchar(32) primary key references common.languages(id),
 
-  sc_ethnologue_id uuid references sc.ethnologue(id),
-  name varchar(255) unique, -- not null
-  display_name varchar(255) unique, -- not null
+  sc_ethnologue_id varchar(32) references sc.ethnologue(id),
+  name varchar(255), -- not null unique
+  display_name varchar(255), -- not null unique
   display_name_pronunciation varchar(255),
   tags text[],
   is_preset_inventory bool, -- if false = grandfathered
@@ -307,6 +307,7 @@ create table sc.languages(
   sponsor_start_date date, -- derived
   sponsor_estimated_end_date date, -- todo research this field. new?
   has_external_first_scripture bool,
+  first_scripture_engagement varchar(32) references sc.language_engagements(id);
 
 --	language_name varchar(32),
 --	iso varchar(4),
@@ -385,39 +386,39 @@ create table sc.languages(
 	comments text,
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id uuid not null references admin.people(id),
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id uuid not null references admin.people(id),
-  owning_person_admin_people_id uuid not null references admin.people(id),
-  owning_group_admin_groups_id uuid not null references admin.groups(id)
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id)
 );
 
 create table sc.language_goal_definitions (
-	id uuid primary key default common.uuid_generate_v4(),
+	id varchar(32) primary key default common.nanoid(),
 
 	-- todo
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id uuid not null references admin.people(id),
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id uuid not null references admin.people(id),
-  owning_person_admin_people_id uuid not null references admin.people(id),
-  owning_group_admin_groups_id uuid not null references admin.groups(id)
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id)
 );
 
 create table sc.language_goals (
-  id uuid primary key default common.uuid_generate_v4(),
+  id varchar(32) primary key default common.nanoid(),
 
-  common_languages_id uuid not null references common.languages(id),
-	sc_language_goal_definitions_id uuid not null references sc.language_goal_definitions(id),
+  common_languages_id varchar(32) not null references common.languages(id),
+	sc_language_goal_definitions_id varchar(32) not null references sc.language_goal_definitions(id),
 	-- todo
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id uuid not null references admin.people(id),
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id uuid not null references admin.people(id),
-  owning_person_admin_people_id uuid not null references admin.people(id),
-  owning_group_admin_groups_id uuid not null references admin.groups(id),
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id),
 
 	unique (common_languages_id, sc_language_goal_definitions_id)
 );
@@ -425,51 +426,51 @@ create table sc.language_goals (
 -- USER TABLES --------------------------------------------------------------
 
 create table sc.known_languages_by_person (
-  id uuid primary key default common.uuid_generate_v4(),
+  id varchar(32) primary key default common.nanoid(),
 
-  admin_people_id uuid unique not null references admin.people(id),
-  sc_languages_id uuid not null references common.languages(id),
+  admin_people_id varchar(32) unique not null references admin.people(id),
+  sc_languages_id varchar(32) not null references common.languages(id),
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id uuid not null references admin.people(id),
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id uuid not null references admin.people(id),
-  owning_person_admin_people_id uuid not null references admin.people(id),
-  owning_group_admin_groups_id uuid not null references admin.groups(id),
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id),
 
 	unique (admin_people_id, sc_languages_id)
 );
 
 -- extension table from commmon
 create table sc.people (
-  id uuid primary key references admin.people(id),
+  id varchar(32) primary key references admin.people(id),
 
 	skills varchar(32)[],
 	status varchar(32), -- todo might be an enum
 	title varchar(255),
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id uuid not null references admin.people(id),
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id uuid not null references admin.people(id),
-  owning_person_admin_people_id uuid not null references admin.people(id),
-  owning_group_admin_groups_id uuid not null references admin.groups(id)
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id)
 );
 
 create table sc.person_unavailabilities (
-  id uuid primary key default common.uuid_generate_v4(),
+  id varchar(32) primary key default common.nanoid(),
 
-  admin_people_id uuid references admin.people(id),
+  admin_people_id varchar(32) references admin.people(id),
 	period_start date not null,
 	period_end date not null,
 	description text,
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id uuid not null references admin.people(id),
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id uuid not null references admin.people(id),
-  owning_person_admin_people_id uuid not null references admin.people(id),
-  owning_group_admin_groups_id uuid not null references admin.groups(id)
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id)
 );
 
 
@@ -534,18 +535,18 @@ create type sc.change_set_status as enum (
 );
 
 create table sc.change_sets (
-  id uuid primary key default common.uuid_generate_v4(),
+  id varchar(32) primary key default common.nanoid(),
 
   status sc.change_set_status,
   summary text,
   type sc.change_set_type,
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id uuid not null references admin.people(id),
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id uuid not null references admin.people(id),
-  owning_person_admin_people_id uuid not null references admin.people(id),
-  owning_group_admin_groups_id uuid not null references admin.groups(id)
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id)
 );
 
 create type sc.periodic_report_parent_type as enum (
@@ -555,23 +556,23 @@ create type sc.periodic_report_parent_type as enum (
 );
 
 create table sc.periodic_reports (
-  id uuid primary key default common.uuid_generate_v4(),
+  id varchar(32) primary key default common.nanoid(),
 
-  parent uuid,
+  parent varchar(32),
   type sc.periodic_report_parent_type,
-  common_directories_id uuid references common.directories(id),
+  common_directories_id varchar(32) references common.directories(id),
   end_at date,
-  report_common_files_id uuid references common.files(id),
+  report_common_files_id varchar(32) references common.files(id),
   start_at date,
   type sc.periodic_report_type,
   skipped_reason text,
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id uuid not null references admin.people(id),
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id uuid not null references admin.people(id),
-  owning_person_admin_people_id uuid not null references admin.people(id),
-  owning_group_admin_groups_id uuid not null references admin.groups(id)
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id)
 );
 
 create type sc.financial_report_period_type as enum (
@@ -581,20 +582,20 @@ create type sc.financial_report_period_type as enum (
 
 -- extension table to common
 create table sc.projects (
-  id uuid primary key default common.uuid_generate_v4(),
+  id varchar(32) primary key default common.nanoid(),
 
-	name varchar(32), -- not null
-	sc_change_set_id uuid references sc.change_sets(id), -- not null
+	name varchar(64), -- not null
+	sc_change_set_id varchar(32) references sc.change_sets(id), -- not null
 	department_id varchar(5),
 	estimated_submission date,
-	sc_field_regions_id uuid references sc.field_regions(id),
+	sc_field_regions_id varchar(32) references sc.field_regions(id),
 	financial_report_period sc.financial_report_period_type default 'Quarterly',
 	initial_mou_end date,
-	marketing_common_locations_id uuid references common.locations(id),
+	marketing_common_locations_id varchar(32) references common.locations(id),
 	mou_start date,
 	mou_end date,
-	primary_common_locations_id uuid references common.locations(id),
-	root_directory_common_directories_id uuid references common.directories(id),
+	primary_common_locations_id varchar(32) references common.locations(id),
+	root_directory_common_directories_id varchar(32) references common.directories(id),
 	status sc.project_status, -- not null todo
 	step sc.project_step, -- not null todo
 	step_changed_at timestamp,
@@ -604,59 +605,59 @@ create table sc.projects (
 	financial_report_received_at timestamp, -- legacy, not in api
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id uuid not null references admin.people(id),
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id uuid not null references admin.people(id),
-  owning_person_admin_people_id uuid not null references admin.people(id),
-  owning_group_admin_groups_id uuid not null references admin.groups(id),
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id),
 
 	unique (id, sc_change_set_id)
 );
 
 create table sc.translation_projects (
-  id uuid primary key default sc.projects(),
-  sc_change_set_id uuid references sc.change_sets(id), -- not null
+  id varchar(32) primary key default sc.projects(),
+  sc_change_set_id varchar(32) references sc.change_sets(id), -- not null
 
 	preset_inventory bool,
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id uuid not null references admin.people(id),
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id uuid not null references admin.people(id),
-  owning_person_admin_people_id uuid not null references admin.people(id),
-  owning_group_admin_groups_id uuid not null references admin.groups(id),
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id),
 
 	unique (id, sc_change_set_id)
 );
 
 create table sc.internship_projects (
-  id uuid primary key default sc.projects(),
-  sc_change_set_id uuid references sc.change_sets(id), -- not null
+  id varchar(32) primary key default sc.projects(),
+  sc_change_set_id varchar(32) references sc.change_sets(id), -- not null
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id uuid not null references admin.people(id),
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id uuid not null references admin.people(id),
-  owning_person_admin_people_id uuid not null references admin.people(id),
-  owning_group_admin_groups_id uuid not null references admin.groups(id),
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id),
 
 	unique (id, sc_change_set_id)
 );
 
 create table sc.project_members (
-  id uuid primary key default common.uuid_generate_v4(),
+  id varchar(32) primary key default common.nanoid(),
 
-	sc_projects_id uuid references sc.projects(id), --not null
-	admin_people_id uuid references admin.people(id), --not null
-	admin_groups_id uuid unique references admin.groups(id), --not null
-	admin_role_id uuid references admin.roles(id), --not null
+	sc_projects_id varchar(32) references sc.projects(id), --not null
+	admin_people_id varchar(32) references admin.people(id), --not null
+	admin_groups_id varchar(32) unique references admin.groups(id), --not null
+	admin_role_id varchar(32) references admin.roles(id), --not null
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id uuid not null references admin.people(id),
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id uuid not null references admin.people(id),
-  owning_person_admin_people_id uuid not null references admin.people(id),
-  owning_group_admin_groups_id uuid not null references admin.groups(id),
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id),
 
   unique (sc_projects_id, admin_people_id, admin_groups_id, admin_role_id)
 );
@@ -672,17 +673,17 @@ create type sc.pinned_types as enum (
 );
 
 create table sc.pinned (
-  id uuid primary key default common.uuid_generate_v4(),
-	admin_people_id uuid unique references admin.people(id), -- not null
-	pinned uuid, -- not null
+  id varchar(32) primary key default common.nanoid(),
+	admin_people_id varchar(32) unique references admin.people(id), -- not null
+	pinned varchar(32), -- not null
 	type sc.pinned_types, -- not null
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id uuid not null references admin.people(id),
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id uuid not null references admin.people(id),
-  owning_person_admin_people_id uuid not null references admin.people(id),
-  owning_group_admin_groups_id uuid not null references admin.groups(id)
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id)
 );
 
 create type sc.partnership_agreement_status as enum (
@@ -692,14 +693,14 @@ create type sc.partnership_agreement_status as enum (
 );
 
 create table sc.partnerships (
-  id uuid primary key default common.uuid_generate_v4(),
+  id varchar(32) primary key default common.nanoid(),
 
-  sc_projects_id uuid references sc.projects(id), -- not null
-  partner_common_organizations_id uuid references common.organizations(id), -- not null
-  sc_change_set_id uuid references sc.change_sets(id), -- not null
+  sc_projects_id varchar(32) references sc.projects(id), -- not null
+  partner_common_organizations_id varchar(32) references common.organizations(id), -- not null
+  sc_change_set_id varchar(32) references sc.change_sets(id), -- not null
   agreement_status sc.partnership_agreement_status,
-  mou uuid references common.files(id),
-  agreement uuid references common.files(id),
+  mou varchar(32) references common.files(id),
+  agreement varchar(32) references common.files(id),
   mou_status sc.partnership_agreement_status,
   mou_start date, -- derived from sc.projects unless overridden
   mou_end date, -- derived from sc.projects unless overridden
@@ -712,11 +713,11 @@ create table sc.partnerships (
   types sc.partner_types[],  -- added because exists in neo4j
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id uuid not null references admin.people(id),
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id uuid not null references admin.people(id),
-  owning_person_admin_people_id uuid not null references admin.people(id),
-  owning_group_admin_groups_id uuid not null references admin.groups(id)
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id)
 
 );
 
@@ -730,59 +731,59 @@ create type common.budget_status as enum (
 );
 
 create table sc.budgets (
-  id uuid primary key default common.uuid_generate_v4(),
+  id varchar(32) primary key default common.nanoid(),
 
-  sc_change_set_id uuid, -- not null
-  sc_projects_id uuid references sc.projects(id), -- not null
+  sc_change_set_id varchar(32), -- not null
+  sc_projects_id varchar(32) references sc.projects(id), -- not null
   status common.budget_status,
-  universal_template uuid references common.files(id),
+  universal_template varchar(32) references common.files(id),
   sensitivity common.sensitivity not null default 'High', -- derived from sc.projects
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id uuid not null references admin.people(id),
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id uuid not null references admin.people(id),
-  owning_person_admin_people_id uuid not null references admin.people(id),
-  owning_group_admin_groups_id uuid not null references admin.groups(id),
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id),
 
   unique (id, sc_change_set_id)
 );
 
 create table sc.budget_records (
-  id uuid primary key default common.uuid_generate_v4(),
+  id varchar(32) primary key default common.nanoid(),
 
-  sc_budgets_id uuid references sc.budgets(id), -- not null
-  sc_change_set_id uuid references sc.change_sets(id), -- not null
+  sc_budgets_id varchar(32) references sc.budgets(id), -- not null
+  sc_change_set_id varchar(32) references sc.change_sets(id), -- not null
   amount decimal,
   fiscal_year int,
-  partnership uuid not null references sc.partnerships(id),
+  partnership varchar(32) not null references sc.partnerships(id),
   sensitivity common.sensitivity not null default 'High', -- derived from sc.projects
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id uuid not null references admin.people(id),
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id uuid not null references admin.people(id),
-  owning_person_admin_people_id uuid not null references admin.people(id),
-  owning_group_admin_groups_id uuid not null references admin.groups(id),
-  peer uuid references admin.peers(id)
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id),
+  peer varchar(32) references admin.peers(id)
 
 );
 
 -- sc_projects_id common_locations_id
 
 create table sc.project_locations (
-  id uuid primary key default common.uuid_generate_v4(),
+  id varchar(32) primary key default common.nanoid(),
 
-  sc_change_set_id uuid references sc.change_sets(id), -- not null
-  common_locations_id uuid references common.locations(id), -- not null
-  sc_projects_id uuid references sc.projects(id), -- not null
+  sc_change_set_id varchar(32) references sc.change_sets(id), -- not null
+  common_locations_id varchar(32) references common.locations(id), -- not null
+  sc_projects_id varchar(32) references sc.projects(id), -- not null
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id uuid not null references admin.people(id),
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id uuid not null references admin.people(id),
-  owning_person_admin_people_id uuid not null references admin.people(id),
-  owning_group_admin_groups_id uuid not null references admin.groups(id),
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id),
 
 	unique (sc_projects_id, common_locations_id, sc_change_set_id)
 );
@@ -797,7 +798,8 @@ create type common.product_mediums_enum as enum (
   'TrainedStoryTellers',
   'Audio',
   'Video',
-  'Other'
+  'Other',
+  'OralTranslation'
 );
 
 create type common.product_methodologies as enum (
@@ -883,10 +885,10 @@ create type sc.producible_types as enum (
 );
 
 create table sc.products (
-  id uuid primary key default common.uuid_generate_v4(),
+  id varchar(32) primary key default common.nanoid(),
 
-  sc_change_set_id uuid references sc.change_sets(id), -- not null
-  sc_language_engagements_id uuid references sc.language_engagements(id),
+  sc_change_set_id varchar(32) references sc.change_sets(id), -- not null
+  sc_language_engagements_id varchar(32) references sc.language_engagements(id),
   mediums common.product_mediums_enum[],
   purposes common.product_purposes[], -- todo may need for historical data, delete
   methodology common.product_methodologies,
@@ -907,110 +909,110 @@ create table sc.products (
   -- description text,
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id uuid not null references admin.people(id),
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id uuid not null references admin.people(id),
-  owning_person_admin_people_id uuid not null references admin.people(id),
-  owning_group_admin_groups_id uuid not null references admin.groups(id),
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id),
 
   unique (id, sc_change_set_id)
 );
 
 create table sc.direct_scripture_products (
-  id uuid references sc.products(id),
+  id varchar(32) references sc.products(id),
 
-  common_scripture_references_id uuid[],
+  common_scripture_references_id varchar(32)[],
   total_verses int,
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id uuid not null references admin.people(id),
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id uuid not null references admin.people(id),
-  owning_person_admin_people_id uuid not null references admin.people(id),
-  owning_group_admin_groups_id uuid not null references admin.groups(id),
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id),
 
   unique (id, sc_change_set_id)
 );
 
 create table sc.derivative_products (
-  id uuid references sc.products(id),
+  id varchar(32) references sc.products(id),
 
   composite bool,
-  producible uuid, -- not null
+  producible varchar(32), -- not null
   type sc.producible_types, -- not null,
-  scripture_reference_override_common_scripture_references_id uuid references common.scripture_references(id),
+  scripture_reference_override_common_scripture_references_id varchar(32) references common.scripture_references(id),
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id uuid not null references admin.people(id),
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id uuid not null references admin.people(id),
-  owning_person_admin_people_id uuid not null references admin.people(id),
-  owning_group_admin_groups_id uuid not null references admin.groups(id),
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id),
 
   unique (id, sc_change_set_id)
 );
 
 create table sc.other_products (
-  id uuid references sc.products(id),
+  id varchar(32) references sc.products(id),
 
   title varchar(128),
   description text,
-  common_scripture_references_id uuid[],
+  common_scripture_references_id varchar(32)[],
   total_verses int,
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id uuid not null references admin.people(id),
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id uuid not null references admin.people(id),
-  owning_person_admin_people_id uuid not null references admin.people(id),
-  owning_group_admin_groups_id uuid not null references admin.groups(id),
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id),
 
   unique (id, sc_change_set_id)
 );
 
 create table sc.product_scripture_references (
-  id uuid primary key default common.uuid_generate_v4(),
-  sc_products_id uuid references sc.products(id), -- not null
-  common_scripture_references_id uuid references common.scripture_references(id), -- not null
-  sc_change_set_id uuid references sc.change_sets(id), -- not null
+  id varchar(32) primary key default common.nanoid(),
+  sc_products_id varchar(32) references sc.products(id), -- not null
+  common_scripture_references_id varchar(32) references common.scripture_references(id), -- not null
+  sc_change_set_id varchar(32) references sc.change_sets(id), -- not null
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id uuid not null references admin.people(id),
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id uuid not null references admin.people(id),
-  owning_person_admin_people_id uuid not null references admin.people(id),
-  owning_group_admin_groups_id uuid not null references admin.groups(id),
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id),
 
   unique (id)
 );
 
 create table sc.product_progress (
-  id uuid primary key default common.uuid_generate_v4(),
+  id varchar(32) primary key default common.nanoid(),
 
-  sc_products_id uuid references sc.products(id),
-  sc_periodic_reports_id uuid references sc.periodic_reports(id),
+  sc_products_id varchar(32) references sc.products(id),
+  sc_periodic_reports_id varchar(32) references sc.periodic_reports(id),
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id uuid not null references admin.people(id),
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id uuid not null references admin.people(id),
-  owning_person_admin_people_id uuid not null references admin.people(id),
-  owning_group_admin_groups_id uuid not null references admin.groups(id)
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id)
 );
 
 create table sc.step_progress (
-  id uuid primary key default common.uuid_generate_v4(),
+  id varchar(32) primary key default common.nanoid(),
 
-  sc_product_progress_id uuid references sc.product_progress(id),
+  sc_product_progress_id varchar(32) references sc.product_progress(id),
   step common.product_steps_enum,
   completed decimal,
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id uuid not null references admin.people(id),
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id uuid not null references admin.people(id),
-  owning_person_admin_people_id uuid not null references admin.people(id),
-  owning_group_admin_groups_id uuid not null references admin.groups(id)
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id)
 );
 
 create type sc.report_period_enum as enum (
@@ -1021,18 +1023,18 @@ create type sc.report_period_enum as enum (
 );
 
 create table sc.progress_summary (
-  id uuid primary key default common.uuid_generate_v4(),
+  id varchar(32) primary key default common.nanoid(),
 
   actual decimal,
   planned decimal,
   report_period sc.report_period_enum, -- not null
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id uuid not null references admin.people(id),
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id uuid not null references admin.people(id),
-  owning_person_admin_people_id uuid not null references admin.people(id),
-  owning_group_admin_groups_id uuid not null references admin.groups(id)
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id)
 );
 
 -- INTERNSHIP ENGAGEMENTS
@@ -1070,9 +1072,9 @@ create type sc.engagement_types_enum as enum (
 );
 
 create table sc.engagements (
-  id uuid primary key default common.uuid_generate_v4(),
+  id varchar(32) primary key default common.nanoid(),
 
-	sc_projects_id uuid references sc.projects(id), -- not null
+	sc_projects_id varchar(32) references sc.projects(id), -- not null
 	engagement_type sc.engagement_types_enum, -- not null
   status common.engagement_status, not null
   ceremony id not null
@@ -1089,11 +1091,11 @@ create table sc.engagements (
   status_modified_at timestamp,
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id uuid not null references admin.people(id),
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id uuid not null references admin.people(id),
-  owning_person_admin_people_id uuid not null references admin.people(id),
-  owning_group_admin_groups_id uuid not null references admin.groups(id),
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id),
 
 	unique (sc_projects_id, language_common_languages_id, sc_change_set_id)
 );
@@ -1126,61 +1128,61 @@ create type common.project_engagement_tag as enum (
 );
 
 create table sc.language_engagements (
-  id uuid primary key references sc.engagements(id),
+  id varchar(32) primary key references sc.engagements(id),
 
-	common_languages_id uuid references common.languages(id), -- not null
-	sc_change_set_id uuid references sc.change_sets(id), -- not null
+	common_languages_id varchar(32) references common.languages(id), -- not null
+	sc_change_set_id varchar(32) references sc.change_sets(id), -- not null
   communications_complete_date date,
   is_open_to_investor_visit bool,
   is_first_scripture bool,
   is_luke_partnership bool,
   sent_printing_date date,
   paratext_registry varchar(64),
-  pnp_common_files_id uuid references common.files(id),
+  pnp_common_files_id varchar(32) references common.files(id),
   historic_goal varchar(255),
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id uuid not null references admin.people(id),
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id uuid not null references admin.people(id),
-  owning_person_admin_people_id uuid not null references admin.people(id),
-  owning_group_admin_groups_id uuid not null references admin.groups(id),
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id),
 
 	unique (sc_projects_id, language_common_languages_id, sc_change_set_id)
 );
 
 create table sc.internship_engagements (
-  id uuid primary key references sc.engagements(id),
+  id varchar(32) primary key references sc.engagements(id),
 
-	sc_change_set_id uuid references sc.change_sets(id), -- not null
-  country_of_origin_common_locations_id uuid references common.locations(id),
-  intern_admin_people_id uuid references admin.people(id), -- not null
-  mentor_admin_pepole_id uuid references admin.people(id),
+	sc_change_set_id varchar(32) references sc.change_sets(id), -- not null
+  country_of_origin_common_locations_id varchar(32) references common.locations(id),
+  intern_admin_people_id varchar(32) references admin.people(id), -- not null
+  mentor_admin_pepole_id varchar(32) references admin.people(id),
   methodologies common.product_methodologies[],
   position common.internship_position,
-  growth_plan_common_files_id uuid references common.files(id), --references files, not file-versions in neo4j
+  growth_plan_common_files_id varchar(32) references common.files(id), --references files, not file-versions in neo4j
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id uuid not null references admin.people(id),
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id uuid not null references admin.people(id),
-  owning_person_admin_people_id uuid not null references admin.people(id),
-  owning_group_admin_groups_id uuid not null references admin.groups(id)
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id)
 );
 
 create table sc.partnership_producing_mediums (
-  id uuid primary key references sc.engagements(id),
+  id varchar(32) primary key references sc.engagements(id),
 
-  engagement_sc_engagements_id uuid references sc.engagements(id), -- not null
-  partnership_sc_partnerships_id uuid references sc.partnerships(id), -- not null
+  engagement_sc_engagements_id varchar(32) references sc.engagements(id), -- not null
+  partnership_sc_partnerships_id varchar(32) references sc.partnerships(id), -- not null
   product_medium sc.product_mediums_enum, -- not null
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id uuid not null references admin.people(id),
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id uuid not null references admin.people(id),
-  owning_person_admin_people_id uuid not null references admin.people(id),
-  owning_group_admin_groups_id uuid not null references admin.groups(id)
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id)
 );
 
 -- CEREMONIES
@@ -1191,22 +1193,22 @@ create type common.ceremony_type as enum (
 );
 
 create table sc.ceremonies (
-  id uuid primary key default common.uuid_generate_v4(),
+  id varchar(32) primary key default common.nanoid(),
 
-  sc_language_engagements_id uuid, -- not null
+  sc_language_engagements_id varchar(32), -- not null
   engagement_type sc.engagement_types_enum, -- not null
-  ethnologue_sil_table_of_languages_id uuid references sil.table_of_languages(id),
+  ethnologue_sil_table_of_languages_id varchar(32) references sil.table_of_languages(id),
   actual_date date,
   estimated_date date,
   is_planned bool,
   type common.ceremony_type,
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id uuid not null references admin.people(id),
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id uuid not null references admin.people(id),
-  owning_person_admin_people_id uuid not null references admin.people(id),
-  owning_group_admin_groups_id uuid not null references admin.groups(id)
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id)
 );
 
 -- PARTNER CRM STUFF ---------------------------------------------------------------------------------------------------
@@ -1219,9 +1221,9 @@ create type sc.partner_maturity_scale as enum (
 );
 
 create table sc.global_partner_assessments (
-  id uuid primary key default common.uuid_generate_v4(),
+  id varchar(32) primary key default common.nanoid(),
 
-  partner_common_organizations_id uuid not null references common.organizations(id),
+  partner_common_organizations_id varchar(32) not null references common.organizations(id),
 
   governance_trans          sc.partner_maturity_scale,
   director_trans            sc.partner_maturity_scale,
@@ -1240,11 +1242,11 @@ create table sc.global_partner_assessments (
   tech_translation_opp      sc.partner_maturity_scale,
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id uuid not null references admin.people(id),
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id uuid not null references admin.people(id),
-  owning_person_admin_people_id uuid not null references admin.people(id),
-  owning_group_admin_groups_id uuid not null references admin.groups(id)
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id)
 );
 
 create type sc.partner_performance_options as enum(
@@ -1252,20 +1254,20 @@ create type sc.partner_performance_options as enum(
 );
 
 create table sc.global_partner_performance (
-  id uuid primary key default common.uuid_generate_v4(),
+  id varchar(32) primary key default common.nanoid(),
 
-  common_organizations_id uuid unique not null references common.organizations(id),
+  common_organizations_id varchar(32) unique not null references common.organizations(id),
 
   reporting_performance sc.partner_performance_options,
   financial_performance sc.partner_performance_options,
   translation_performance sc.partner_performance_options,
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id uuid not null references admin.people(id),
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id uuid not null references admin.people(id),
-  owning_person_admin_people_id uuid not null references admin.people(id),
-  owning_group_admin_groups_id uuid not null references admin.groups(id)
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id)
 );
 
 create type sc.global_partner_transition_options as enum(
@@ -1274,18 +1276,18 @@ create type sc.global_partner_transition_options as enum(
 );
 
  create table sc.global_partner_transitions (
-   id uuid primary key default common.uuid_generate_v4(),
+   id varchar(32) primary key default common.nanoid(),
 
-   common_organizations_id uuid unique not null references common.organizations(id),
+   common_organizations_id varchar(32) unique not null references common.organizations(id),
    transition_type sc.global_partner_transition_options not null,
    effective_date date,
 
    created_at timestamp not null default CURRENT_TIMESTAMP,
-   created_by_admin_people_id uuid not null references admin.people(id),
+   created_by_admin_people_id varchar(32) not null references admin.people(id),
    modified_at timestamp not null default CURRENT_TIMESTAMP,
-   modified_by_admin_people_id uuid not null references admin.people(id),
-   owning_person_admin_people_id uuid not null references admin.people(id),
-   owning_group_admin_groups_id uuid not null references admin.groups(id)
+   modified_by_admin_people_id varchar(32) not null references admin.people(id),
+   owning_person_admin_people_id varchar(32) not null references admin.people(id),
+   owning_group_admin_groups_id varchar(32) not null references admin.groups(id)
  );
 
 create type sc.global_partner_roles as enum (
@@ -1294,9 +1296,9 @@ create type sc.global_partner_roles as enum (
 );
 
 create table sc.global_partner_engagements (
-  id uuid primary key default common.uuid_generate_v4(),
+  id varchar(32) primary key default common.nanoid(),
 
-  common_organizations_id uuid not null references common.organizations(id),
+  common_organizations_id varchar(32) not null references common.organizations(id),
   type common.involvement_options not null,
   mou_start date,
   mou_end date,
@@ -1304,28 +1306,28 @@ create table sc.global_partner_engagements (
   partner_roles sc.global_partner_roles[],
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id uuid not null references admin.people(id),
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id uuid not null references admin.people(id),
-  owning_person_admin_people_id uuid not null references admin.people(id),
-  owning_group_admin_groups_id uuid not null references admin.groups(id),
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id),
 
   unique (common_organizations_id, type)
 );
 
 create table sc.global_partner_engagement_people (
-  id uuid primary key default common.uuid_generate_v4(),
+  id varchar(32) primary key default common.nanoid(),
 
-  sc_global_partner_engagements_id uuid not null references sc.global_partner_engagements(id),
-  admin_people_id uuid not null references admin.people(id),
+  sc_global_partner_engagements_id varchar(32) not null references sc.global_partner_engagements(id),
+  admin_people_id varchar(32) not null references admin.people(id),
   admin_role_id common.people_to_org_relationship_type not null,
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id uuid not null references admin.people(id),
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
   modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id uuid not null references admin.people(id),
-  owning_person_admin_people_id uuid not null references admin.people(id),
-  owning_group_admin_groups_id uuid not null references admin.groups(id),
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id),
 
   unique (sc_language_engagements_id, admin_people_id, admin_role_id)
 );

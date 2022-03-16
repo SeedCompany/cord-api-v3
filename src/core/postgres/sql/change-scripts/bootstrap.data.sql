@@ -7,17 +7,17 @@ LANGUAGE PLPGSQL
 AS $$
 DECLARE
   vPeopleCount int; -- if this is a fresh db or not
-  vPersonId uuid;
-  vOrgId uuid;
-  vAdminRoleId uuid;
-  vAdminGroupId uuid;
-  vNonAdminPersonId uuid;
-  vPublicPersonId uuid;
-  vPublicGroupId uuid;
-  vPublicRoleId uuid;
-  vTableOfLanguagesId uuid;
-  vCommonLanguagesId uuid;
-  vCommonSiteTextStringsId uuid;
+  vPersonId varchar(32);
+  vOrgId varchar(32);
+  vAdminRoleId varchar(32);
+  vAdminGroupId varchar(32);
+  vNonAdminPersonId varchar(32);
+  vPublicPersonId varchar(32);
+  vPublicGroupId varchar(32);
+  vPublicRoleId varchar(32);
+  vTableOfLanguagesId varchar(32);
+  vCommonLanguagesId varchar(32);
+  vCommonSiteTextStringsId varchar(32);
 BEGIN
   select count(id)
   from admin.people

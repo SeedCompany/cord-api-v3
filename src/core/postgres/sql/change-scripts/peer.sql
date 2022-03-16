@@ -24,7 +24,7 @@ begin
             raise info 'peer_table_name: % ', peer_table_name;
 
             -- HISTORY TABLE CREATION
-            execute format('create table if not exists %I.%I ( _peer_id uuid not null references admin.peers(id),
+            execute format('create table if not exists %I.%I ( _peer_id varchar(32) not null references admin.peers(id),
             _row_id serial primary key)', rec0.table_schema,peer_table_name);
 
             -- UPDATE BOTH SECURITY AND HISTORY TABLE (IDEMPOTENT MANNER)
