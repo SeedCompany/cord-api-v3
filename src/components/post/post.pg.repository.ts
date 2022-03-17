@@ -2,6 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import {
   ID,
   NotFoundException,
+  PaginatedListType,
   ServerException,
   Session,
   UnsecuredDto,
@@ -9,6 +10,7 @@ import {
 import { Pg } from '../../core';
 import { PgTransaction } from '../../core/postgres/transaction.decorator';
 import { CreatePost, Post } from './dto';
+import { PostListInput } from './dto/list-posts.dto';
 import { PostRepository } from './post.repository';
 
 //Adding PgPostRepository for the postgres migration effort
@@ -58,5 +60,31 @@ export class PgPostRepository extends PostRepository {
   @PgTransaction()
   async delete(id: ID) {
     await this.pg.query('DELETE FROM sc.posts WHERE id = $1', [id]);
+  }
+
+  async list(
+    input: PostListInput,
+    _session: Session
+  ): Promise<PaginatedListType<UnsecuredDto<Post>>> {
+    const limit = input.count;
+    const offset = (input.page - 1) * input.count;
+
+    const [{ count }] = await this.pg.query<{ count: string }>(
+      'SELECT count(*) FROM sc.posts;'
+    );
+
+    const rows = await this.pg.query<UnsecuredDto<Post>>(
+      `
+      SELECT id, created_by as "creator", type, shareability, body, created_at as "createdAt", modified_at as "modifiedAt"
+      FROM sc.posts
+      ORDER BY created_at ${input.order} 
+      LIMIT ${limit ?? 10} OFFSET ${offset ?? 5};
+      `
+    );
+    return {
+      items: rows,
+      total: +count,
+      hasMore: rows.length < +count,
+    };
   }
 }
