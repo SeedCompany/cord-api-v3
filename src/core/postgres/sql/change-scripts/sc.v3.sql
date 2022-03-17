@@ -2,6 +2,51 @@
 
 create schema sc;
 
+create type common.product_mediums_enum as enum (
+  'Print',
+  'Web',
+  'EBook',
+  'App',
+  'TrainedStoryTellers',
+  'Audio',
+  'Video',
+  'Other',
+  'OralTranslation'
+);
+
+create type common.product_methodologies as enum (
+  'AdobeAudition',
+  'Audacity',
+  'Craft2Tell',
+  'Film',
+  'OneStory',
+  'OtherOralStories',
+  'OtherOralTranslation',
+  'OtherWritten',
+  'OtherVisual',
+  'Paratext',
+  'Render',
+  'SeedCompanyMethod',
+  'SignLanguage',
+  'StoryTogether'
+ );
+
+create type common.product_approach as enum (
+  'OralStories',
+  'OralTranslation',
+  'Visual',
+  'Written'
+);
+
+create type common.product_purposes as enum (
+  'EvangelismChurchPlanting',
+  'ChurchLife',
+  'ChurchMaturity',
+  'SocialIssues',
+  'Discipleship'
+);
+
+
 -- POSTS ----------------------------------------------------------
 
 create table sc.posts_directory ( -- does not need to be secure
@@ -30,6 +75,36 @@ create type sc.post_parent_type_enum as enum (
   'Partner',
   'Language',
   'User'
+);
+
+-- CHANGE SETS --------------------------------------------------------------------
+-- todo
+create type sc.change_set_type as enum (
+		'a',
+		'b',
+		'c'
+);
+
+-- todo
+create type sc.change_set_status as enum (
+		'a',
+		'b',
+		'c'
+);
+
+create table sc.change_sets (
+  id varchar(32) primary key default common.nanoid(),
+
+  status sc.change_set_status,
+  summary text,
+  type sc.change_set_type,
+
+  created_at timestamp not null default CURRENT_TIMESTAMP,
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
+  modified_at timestamp not null default CURRENT_TIMESTAMP,
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id)
 );
 
 create table sc.posts (
@@ -192,6 +267,276 @@ create table sc.partners (
   owning_group_admin_groups_id varchar(32) not null references admin.groups(id)
 );
 
+-- PROJECTS ----------------------------------------------------------------------------------------------------------------
+
+create type sc.project_step as enum (
+		'EarlyConversations',
+		'PendingConceptApproval',
+		'PrepForConsultantEndorsement',
+		'PendingConsultantEndorsement',
+		'PrepForFinancialEndorsement',
+		'PendingFinancialEndorsement',
+		'FinalizingProposal',
+		'PendingRegionalDirectorApproval',
+		'PendingZoneDirectorApproval',
+		'PendingFinanceConfirmation',
+		'OnHoldFinanceConfirmation',
+		'DidNotDevelop',
+		'Rejected',
+		'Active',
+		'ActiveChangedPlan',
+		'DiscussingChangeToPlan',
+		'PendingChangeToPlanApproval',
+		'PendingChangeToPlanConfirmation',
+		'DiscussingSuspension',
+		'PendingSuspensionApproval',
+		'Suspended',
+		'DiscussingReactivation',
+		'PendingReactivationApproval',
+		'DiscussingTermination',
+		'PendingTerminationApproval',
+		'FinalizingCompletion',
+		'Terminated',
+		'Completed'
+);
+
+create type sc.project_status as enum (
+		'InDevelopment',
+		'Active',
+		'Terminated',
+		'Completed',
+		'DidNotDevelop'
+);
+
+create type sc.project_type as enum (
+        'Translation',
+        'Internship'
+);
+
+
+create type sc.financial_report_period_type as enum (
+		'Monthly',
+		'Quarterly'
+);
+
+-- extension table to common
+create table sc.projects (
+  id varchar(32) primary key default common.nanoid(),
+
+	name varchar(64), -- not null
+	sc_change_set_id varchar(32) references sc.change_sets(id), -- not null
+	department_id varchar(5),
+	estimated_submission date,
+	sc_field_regions_id varchar(32) references sc.field_regions(id),
+	financial_report_period sc.financial_report_period_type default 'Quarterly',
+	initial_mou_end date,
+	marketing_common_locations_id varchar(32) references common.locations(id),
+	mou_start date,
+	mou_end date,
+	primary_common_locations_id varchar(32) references common.locations(id),
+	root_directory_common_directories_id varchar(32) references common.directories(id),
+	status sc.project_status, -- not null todo
+	step sc.project_step, -- not null todo
+	step_changed_at timestamp,
+	sensitivity common.sensitivity not null default 'High', -- not null todo
+	tags text[],
+	type sc.project_type,
+	financial_report_received_at timestamp, -- legacy, not in api
+
+  created_at timestamp not null default CURRENT_TIMESTAMP,
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
+  modified_at timestamp not null default CURRENT_TIMESTAMP,
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id),
+
+	unique (id, sc_change_set_id)
+);
+
+create table sc.translation_projects (
+  id varchar(32) primary key references sc.projects(id),
+  sc_change_set_id varchar(32) references sc.change_sets(id), -- not null
+
+	preset_inventory bool,
+
+  created_at timestamp not null default CURRENT_TIMESTAMP,
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
+  modified_at timestamp not null default CURRENT_TIMESTAMP,
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id),
+
+	unique (id, sc_change_set_id)
+);
+
+create table sc.internship_projects (
+  id varchar(32) primary key references sc.projects(id),
+  sc_change_set_id varchar(32) references sc.change_sets(id), -- not null
+
+  created_at timestamp not null default CURRENT_TIMESTAMP,
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
+  modified_at timestamp not null default CURRENT_TIMESTAMP,
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id),
+
+	unique (id, sc_change_set_id)
+);
+
+create table sc.project_members (
+  id varchar(32) primary key default common.nanoid(),
+
+	sc_projects_id varchar(32) references sc.projects(id), --not null
+	admin_people_id varchar(32) references admin.people(id), --not null
+	admin_groups_id varchar(32) unique references admin.groups(id), --not null
+	admin_role_id varchar(32) references admin.roles(id), --not null
+
+  created_at timestamp not null default CURRENT_TIMESTAMP,
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
+  modified_at timestamp not null default CURRENT_TIMESTAMP,
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id),
+
+  unique (sc_projects_id, admin_people_id, admin_groups_id, admin_role_id)
+);
+
+-- ENGAGEMENTS
+
+-- todo
+create type common.internship_methodology as enum (
+  'A',
+  'B',
+  'C'
+);
+
+create type common.internship_position as enum (
+  'ConsultantInTraining',
+  'ExegeticalFacilitator',
+  'LeadershipDevelopment',
+  'Mobilization',
+  'Personnel',
+  'Communication',
+  'Administration',
+  'Technology',
+  'Finance',
+  'LanguageProgramManager',
+  'Literacy',
+  'TranslationFacilitator',
+  'OralityFacilitator',
+  'ScriptureEngagement',
+  'OtherAttached',
+  'OtherTranslationCapacity',
+  'OtherPartnershipCapacity'
+);
+
+create type sc.engagement_types_enum as enum (
+  'language_common_languages_id',
+  'Internship'
+);
+
+
+create type common.engagement_status as enum (
+		'InDevelopment',
+		'DidNotDevelop',
+		'Active',
+		'DiscussingTermination',
+		'DiscussingReactivation',
+		'DiscussingChangeToPlan',
+		'DiscussingSuspension',
+		'FinalizingCompletion',
+		'ActiveChangedPlan',
+		'Suspended',
+		'Terminated',
+		'Completed',
+		'Converted',
+		'Unapproved',
+		'Transferred',
+		'NotRenewed',
+		'Rejected'
+);
+
+create table sc.engagements (
+  id varchar(32) primary key default common.nanoid(),
+
+  sc_change_set_id varchar(32) references sc.change_sets(id), -- not null
+  sc_projects_id varchar(32) references sc.projects(id), -- not null
+  engagement_type sc.engagement_types_enum, -- not null
+  status common.engagement_status, -- not null
+  ceremony varchar(32), -- not null,
+  complete_date date,
+  disbursement_complete_date date,
+  end_date date,
+  end_date_override date,
+  start_date date,
+  start_date_override date,
+  sensitivity common.sensitivity not null default 'High',  initial_end_date date,
+  last_suspended_at timestamp,
+  last_reactivated_at timestamp,
+  status_modified_at timestamp,
+
+  created_at timestamp not null default CURRENT_TIMESTAMP,
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
+  modified_at timestamp not null default CURRENT_TIMESTAMP,
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id),
+
+  unique (sc_projects_id, sc_change_set_id)
+);
+
+
+-- todo
+create type common.project_engagement_tag as enum (
+		'A',
+		'B',
+		'C'
+);
+
+create table sc.language_engagements (
+  id varchar(32) primary key references sc.engagements(id),
+
+	common_languages_id varchar(32) references common.languages(id), -- not null
+	sc_change_set_id varchar(32) references sc.change_sets(id), -- not null
+  communications_complete_date date,
+  is_open_to_investor_visit bool,
+  is_first_scripture bool,
+  is_luke_partnership bool,
+  sent_printing_date date,
+  paratext_registry varchar(64),
+  pnp_common_files_id varchar(32) references common.files(id),
+  historic_goal varchar(255),
+
+  created_at timestamp not null default CURRENT_TIMESTAMP,
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
+  modified_at timestamp not null default CURRENT_TIMESTAMP,
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id),
+
+  unique (common_languages_id, sc_change_set_id)
+);
+
+create table sc.internship_engagements (
+  id varchar(32) primary key references sc.engagements(id),
+
+	sc_change_set_id varchar(32) references sc.change_sets(id), -- not null
+  country_of_origin_common_locations_id varchar(32) references common.locations(id),
+  intern_admin_people_id varchar(32) references admin.people(id), -- not null
+  mentor_admin_pepole_id varchar(32) references admin.people(id),
+  methodologies common.product_methodologies[],
+  position common.internship_position,
+  growth_plan_common_files_id varchar(32) references common.files(id), --references files, not file-versions in neo4j
+
+  created_at timestamp not null default CURRENT_TIMESTAMP,
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
+  modified_at timestamp not null default CURRENT_TIMESTAMP,
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id)
+);
+
+
 -- language_common_languages_id TABLES ----------------------------------------------------------
 
 --create table sc.ethnologue (
@@ -289,7 +634,7 @@ create type sc.begin_work_rel_pol_obstacles_scale as enum (
 create table sc.languages(
 	id varchar(32) primary key references common.languages(id),
 
-  sc_ethnologue_id varchar(32) references sc.ethnologue(id),
+  -- sc_ethnologue_id varchar(32) references sc.ethnologue(id), -- may not be needed
   name varchar(255), -- not null unique
   display_name varchar(255), -- not null unique
   display_name_pronunciation varchar(255),
@@ -307,7 +652,7 @@ create table sc.languages(
   sponsor_start_date date, -- derived
   sponsor_estimated_end_date date, -- todo research this field. new?
   has_external_first_scripture bool,
-  first_scripture_engagement varchar(32) references sc.language_engagements(id);
+  first_scripture_engagement varchar(32) references sc.language_engagements(id),
 
 --	language_name varchar(32),
 --	iso varchar(4),
@@ -476,78 +821,9 @@ create table sc.person_unavailabilities (
 
 -- sc_projects_id TABLES ----------------------------------------------------------
 
-create type sc.project_step as enum (
-		'EarlyConversations',
-		'PendingConceptApproval',
-		'PrepForConsultantEndorsement',
-		'PendingConsultantEndorsement',
-		'PrepForFinancialEndorsement',
-		'PendingFinancialEndorsement',
-		'FinalizingProposal',
-		'PendingRegionalDirectorApproval',
-		'PendingZoneDirectorApproval',
-		'PendingFinanceConfirmation',
-		'OnHoldFinanceConfirmation',
-		'DidNotDevelop',
-		'Rejected',
-		'Active',
-		'ActiveChangedPlan',
-		'DiscussingChangeToPlan',
-		'PendingChangeToPlanApproval',
-		'PendingChangeToPlanConfirmation',
-		'DiscussingSuspension',
-		'PendingSuspensionApproval',
-		'Suspended',
-		'DiscussingReactivation',
-		'PendingReactivationApproval',
-		'DiscussingTermination',
-		'PendingTerminationApproval',
-		'FinalizingCompletion',
-		'Terminated',
-		'Completed'
-);
 
-create type sc.project_status as enum (
-		'InDevelopment',
-		'Active',
-		'Terminated',
-		'Completed',
-		'DidNotDevelop'
-);
 
-create type sc.project_type as enum (
-        'Translation',
-        'Internship'
-);
 
--- todo
-create type sc.change_set_type as enum (
-		'a',
-		'b',
-		'c'
-);
-
--- todo
-create type sc.change_set_status as enum (
-		'a',
-		'b',
-		'c'
-);
-
-create table sc.change_sets (
-  id varchar(32) primary key default common.nanoid(),
-
-  status sc.change_set_status,
-  summary text,
-  type sc.change_set_type,
-
-  created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id varchar(32) not null references admin.people(id),
-  modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id varchar(32) not null references admin.people(id),
-  owning_person_admin_people_id varchar(32) not null references admin.people(id),
-  owning_group_admin_groups_id varchar(32) not null references admin.groups(id)
-);
 
 create type sc.periodic_report_parent_type as enum (
 		'a',
@@ -559,7 +835,7 @@ create table sc.periodic_reports (
   id varchar(32) primary key default common.nanoid(),
 
   parent varchar(32),
-  type sc.periodic_report_parent_type,
+  parent_type sc.periodic_report_parent_type,
   common_directories_id varchar(32) references common.directories(id),
   end_at date,
   report_common_files_id varchar(32) references common.files(id),
@@ -575,92 +851,8 @@ create table sc.periodic_reports (
   owning_group_admin_groups_id varchar(32) not null references admin.groups(id)
 );
 
-create type sc.financial_report_period_type as enum (
-		'Monthly',
-		'Quarterly'
-);
 
--- extension table to common
-create table sc.projects (
-  id varchar(32) primary key default common.nanoid(),
 
-	name varchar(64), -- not null
-	sc_change_set_id varchar(32) references sc.change_sets(id), -- not null
-	department_id varchar(5),
-	estimated_submission date,
-	sc_field_regions_id varchar(32) references sc.field_regions(id),
-	financial_report_period sc.financial_report_period_type default 'Quarterly',
-	initial_mou_end date,
-	marketing_common_locations_id varchar(32) references common.locations(id),
-	mou_start date,
-	mou_end date,
-	primary_common_locations_id varchar(32) references common.locations(id),
-	root_directory_common_directories_id varchar(32) references common.directories(id),
-	status sc.project_status, -- not null todo
-	step sc.project_step, -- not null todo
-	step_changed_at timestamp,
-	sensitivity common.sensitivity not null default 'High', -- not null todo
-	tags text[],
-	type sc.project_type,
-	financial_report_received_at timestamp, -- legacy, not in api
-
-  created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id varchar(32) not null references admin.people(id),
-  modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id varchar(32) not null references admin.people(id),
-  owning_person_admin_people_id varchar(32) not null references admin.people(id),
-  owning_group_admin_groups_id varchar(32) not null references admin.groups(id),
-
-	unique (id, sc_change_set_id)
-);
-
-create table sc.translation_projects (
-  id varchar(32) primary key default sc.projects(),
-  sc_change_set_id varchar(32) references sc.change_sets(id), -- not null
-
-	preset_inventory bool,
-
-  created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id varchar(32) not null references admin.people(id),
-  modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id varchar(32) not null references admin.people(id),
-  owning_person_admin_people_id varchar(32) not null references admin.people(id),
-  owning_group_admin_groups_id varchar(32) not null references admin.groups(id),
-
-	unique (id, sc_change_set_id)
-);
-
-create table sc.internship_projects (
-  id varchar(32) primary key default sc.projects(),
-  sc_change_set_id varchar(32) references sc.change_sets(id), -- not null
-
-  created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id varchar(32) not null references admin.people(id),
-  modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id varchar(32) not null references admin.people(id),
-  owning_person_admin_people_id varchar(32) not null references admin.people(id),
-  owning_group_admin_groups_id varchar(32) not null references admin.groups(id),
-
-	unique (id, sc_change_set_id)
-);
-
-create table sc.project_members (
-  id varchar(32) primary key default common.nanoid(),
-
-	sc_projects_id varchar(32) references sc.projects(id), --not null
-	admin_people_id varchar(32) references admin.people(id), --not null
-	admin_groups_id varchar(32) unique references admin.groups(id), --not null
-	admin_role_id varchar(32) references admin.roles(id), --not null
-
-  created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id varchar(32) not null references admin.people(id),
-  modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id varchar(32) not null references admin.people(id),
-  owning_person_admin_people_id varchar(32) not null references admin.people(id),
-  owning_group_admin_groups_id varchar(32) not null references admin.groups(id),
-
-  unique (sc_projects_id, admin_people_id, admin_groups_id, admin_role_id)
-);
 
 create type sc.pinned_types as enum (
 		'LanguageProject',
@@ -788,51 +980,25 @@ create table sc.project_locations (
 	unique (sc_projects_id, common_locations_id, sc_change_set_id)
 );
 
+
+create table sc.partnership_producing_mediums (
+  id varchar(32) primary key references sc.engagements(id),
+
+  engagement_sc_engagements_id varchar(32) references sc.engagements(id), -- not null
+  partnership_sc_partnerships_id varchar(32) references sc.partnerships(id), -- not null
+  product_medium common.product_mediums_enum, -- not null
+
+  created_at timestamp not null default CURRENT_TIMESTAMP,
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
+  modified_at timestamp not null default CURRENT_TIMESTAMP,
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id)
+);
+
 -- PRODUCTS
 
-create type common.product_mediums_enum as enum (
-  'Print',
-  'Web',
-  'EBook',
-  'App',
-  'TrainedStoryTellers',
-  'Audio',
-  'Video',
-  'Other',
-  'OralTranslation'
-);
 
-create type common.product_methodologies as enum (
-  'AdobeAudition',
-  'Audacity',
-  'Craft2Tell',
-  'Film',
-  'OneStory',
-  'OtherOralStories',
-  'OtherOralTranslation',
-  'OtherWritten',
-  'OtherVisual',
-  'Paratext',
-  'Render',
-  'SeedCompanyMethod',
-  'SignLanguage',
-  'StoryTogether'
- );
-
-create type common.product_approach as enum (
-  'OralStories',
-  'OralTranslation',
-  'Visual',
-  'Written'
-);
-
-create type common.product_purposes as enum (
-  'EvangelismChurchPlanting',
-  'ChurchLife',
-  'ChurchMaturity',
-  'SocialIssues',
-  'Discipleship'
-);
 
 -- move to table - films stories ethnoart
 -- names and scripture references
@@ -929,9 +1095,7 @@ create table sc.direct_scripture_products (
   modified_at timestamp not null default CURRENT_TIMESTAMP,
   modified_by_admin_people_id varchar(32) not null references admin.people(id),
   owning_person_admin_people_id varchar(32) not null references admin.people(id),
-  owning_group_admin_groups_id varchar(32) not null references admin.groups(id),
-
-  unique (id, sc_change_set_id)
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id)
 );
 
 create table sc.derivative_products (
@@ -947,9 +1111,7 @@ create table sc.derivative_products (
   modified_at timestamp not null default CURRENT_TIMESTAMP,
   modified_by_admin_people_id varchar(32) not null references admin.people(id),
   owning_person_admin_people_id varchar(32) not null references admin.people(id),
-  owning_group_admin_groups_id varchar(32) not null references admin.groups(id),
-
-  unique (id, sc_change_set_id)
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id)
 );
 
 create table sc.other_products (
@@ -965,9 +1127,7 @@ create table sc.other_products (
   modified_at timestamp not null default CURRENT_TIMESTAMP,
   modified_by_admin_people_id varchar(32) not null references admin.people(id),
   owning_person_admin_people_id varchar(32) not null references admin.people(id),
-  owning_group_admin_groups_id varchar(32) not null references admin.groups(id),
-
-  unique (id, sc_change_set_id)
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id)
 );
 
 create table sc.product_scripture_references (
@@ -1037,153 +1197,7 @@ create table sc.progress_summary (
   owning_group_admin_groups_id varchar(32) not null references admin.groups(id)
 );
 
--- INTERNSHIP ENGAGEMENTS
 
--- todo
-create type common.internship_methodology as enum (
-  'A',
-  'B',
-  'C'
-);
-
-create type common.internship_position as enum (
-  'ConsultantInTraining',
-  'ExegeticalFacilitator',
-  'LeadershipDevelopment',
-  'Mobilization',
-  'Personnel',
-  'Communication',
-  'Administration',
-  'Technology',
-  'Finance',
-  'LanguageProgramManager',
-  'Literacy',
-  'TranslationFacilitator',
-  'OralityFacilitator',
-  'ScriptureEngagement',
-  'OtherAttached',
-  'OtherTranslationCapacity',
-  'OtherPartnershipCapacity'
-);
-
-create type sc.engagement_types_enum as enum (
-  'language_common_languages_id',
-  'Internship'
-);
-
-create table sc.engagements (
-  id varchar(32) primary key default common.nanoid(),
-
-	sc_projects_id varchar(32) references sc.projects(id), -- not null
-	engagement_type sc.engagement_types_enum, -- not null
-  status common.engagement_status, not null
-  ceremony id not null
-  complete_date date,
-  disbursement_complete_date date,
-  end_date date,
-  end_date_override date,
-  start_date date,
-  start_date_override date,
-  sensitivity derived from sc.projects
-  initial_end_date date,
-  last_suspended_at timestamp,
-  last_reactivated_at timestamp,
-  status_modified_at timestamp,
-
-  created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id varchar(32) not null references admin.people(id),
-  modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id varchar(32) not null references admin.people(id),
-  owning_person_admin_people_id varchar(32) not null references admin.people(id),
-  owning_group_admin_groups_id varchar(32) not null references admin.groups(id),
-
-	unique (sc_projects_id, language_common_languages_id, sc_change_set_id)
-);
-
-create type common.engagement_status as enum (
-		'InDevelopment',
-		'DidNotDevelop',
-		'Active',
-		'DiscussingTermination',
-		'DiscussingReactivation',
-		'DiscussingChangeToPlan',
-		'DiscussingSuspension',
-		'FinalizingCompletion',
-		'ActiveChangedPlan',
-		'Suspended',
-		'Terminated',
-		'Completed',
-		'Converted',
-		'Unapproved',
-		'Transferred',
-		'NotRenewed',
-		'Rejected'
-);
-
--- todo
-create type common.project_engagement_tag as enum (
-		'A',
-		'B',
-		'C'
-);
-
-create table sc.language_engagements (
-  id varchar(32) primary key references sc.engagements(id),
-
-	common_languages_id varchar(32) references common.languages(id), -- not null
-	sc_change_set_id varchar(32) references sc.change_sets(id), -- not null
-  communications_complete_date date,
-  is_open_to_investor_visit bool,
-  is_first_scripture bool,
-  is_luke_partnership bool,
-  sent_printing_date date,
-  paratext_registry varchar(64),
-  pnp_common_files_id varchar(32) references common.files(id),
-  historic_goal varchar(255),
-
-  created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id varchar(32) not null references admin.people(id),
-  modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id varchar(32) not null references admin.people(id),
-  owning_person_admin_people_id varchar(32) not null references admin.people(id),
-  owning_group_admin_groups_id varchar(32) not null references admin.groups(id),
-
-	unique (sc_projects_id, language_common_languages_id, sc_change_set_id)
-);
-
-create table sc.internship_engagements (
-  id varchar(32) primary key references sc.engagements(id),
-
-	sc_change_set_id varchar(32) references sc.change_sets(id), -- not null
-  country_of_origin_common_locations_id varchar(32) references common.locations(id),
-  intern_admin_people_id varchar(32) references admin.people(id), -- not null
-  mentor_admin_pepole_id varchar(32) references admin.people(id),
-  methodologies common.product_methodologies[],
-  position common.internship_position,
-  growth_plan_common_files_id varchar(32) references common.files(id), --references files, not file-versions in neo4j
-
-  created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id varchar(32) not null references admin.people(id),
-  modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id varchar(32) not null references admin.people(id),
-  owning_person_admin_people_id varchar(32) not null references admin.people(id),
-  owning_group_admin_groups_id varchar(32) not null references admin.groups(id)
-);
-
-create table sc.partnership_producing_mediums (
-  id varchar(32) primary key references sc.engagements(id),
-
-  engagement_sc_engagements_id varchar(32) references sc.engagements(id), -- not null
-  partnership_sc_partnerships_id varchar(32) references sc.partnerships(id), -- not null
-  product_medium sc.product_mediums_enum, -- not null
-
-  created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id varchar(32) not null references admin.people(id),
-  modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id varchar(32) not null references admin.people(id),
-  owning_person_admin_people_id varchar(32) not null references admin.people(id),
-  owning_group_admin_groups_id varchar(32) not null references admin.groups(id)
-);
 
 -- CEREMONIES
 
@@ -1329,5 +1343,5 @@ create table sc.global_partner_engagement_people (
   owning_person_admin_people_id varchar(32) not null references admin.people(id),
   owning_group_admin_groups_id varchar(32) not null references admin.groups(id),
 
-  unique (sc_language_engagements_id, admin_people_id, admin_role_id)
+  unique (sc_global_partner_engagements_id, admin_people_id, admin_role_id)
 );

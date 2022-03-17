@@ -159,6 +159,63 @@ create type common.mime_type as enum (
   'video/x-smv'
 );
 
+-- FILES & DIRECTORIES ----------------------------------------------------------
+
+-- todo research cascading deletes
+create table common.directories (
+  id varchar(32) primary key default common.nanoid(),
+
+  parent_common_directories_id varchar(32) references common.directories(id),
+  name varchar(255), -- not null
+
+	-- todo add triggers for derived data
+	-- size
+	-- total files (not directories or versions)
+	-- id of first file created
+	-- modified at/by of most recent file version added in any dir/sub
+	-- add derived data from sub-directories/files
+
+  created_at timestamp not null default CURRENT_TIMESTAMP,
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
+  modified_at timestamp not null default CURRENT_TIMESTAMP,
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id)
+);
+
+create table common.files (
+  id varchar(32) primary key default common.nanoid(),
+
+  parent_common_directories_id varchar(32) references common.directories(id), --not null
+	name varchar(255), -- not null
+
+  -- todo, derived data
+
+  created_at timestamp not null default CURRENT_TIMESTAMP,
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
+  modified_at timestamp not null default CURRENT_TIMESTAMP,
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id)
+);
+
+create table common.file_versions (
+  id varchar(32) primary key default common.nanoid(),
+
+  mime_type varchar(255), -- not null
+  name varchar(255), -- not null,
+  parent_common_files_id varchar(32) references common.files(id), -- not null
+  file_url varchar(255), -- not null,
+  file_size int, -- bytes
+
+  created_at timestamp not null default CURRENT_TIMESTAMP,
+  created_by_admin_people_id varchar(32) not null references admin.people(id),
+  modified_at timestamp not null default CURRENT_TIMESTAMP,
+  modified_by_admin_people_id varchar(32) not null references admin.people(id),
+  owning_person_admin_people_id varchar(32) not null references admin.people(id),
+  owning_group_admin_groups_id varchar(32) not null references admin.groups(id)
+);
+
 -- SITE TEXT --------------------------------------------------------------------------------
 
 create type common.egids_scale as enum (
@@ -296,8 +353,8 @@ create type common.book_name as enum (
 create table common.scripture_references (
   id varchar(32) primary key default common.nanoid(),
 
-  start int, -- absolute verse
-  end int,
+  start_verse int, -- absolute verse
+  end_verse int,
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
   created_by_admin_people_id varchar(32) not null references admin.people(id),
@@ -448,8 +505,8 @@ ALTER TABLE common.locations ADD CONSTRAINT common_locations_modified_by_fk fore
 create table common.language_locations (
   id varchar(32) primary key default common.nanoid(),
 
-	language_common_languages_id varchar(32) not null references common.languages(id),
-	location_common_locations_id varchar(32) not null references common.locations(id),
+  common_languages_id varchar(32) not null references common.languages(id),
+  common_locations_id varchar(32) not null references common.locations(id),
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
   created_by_admin_people_id varchar(32) not null references admin.people(id),
@@ -458,7 +515,7 @@ create table common.language_locations (
   owning_person_admin_people_id varchar(32) not null references admin.people(id),
   owning_group_admin_groups_id varchar(32) not null references admin.groups(id),
 
-	unique (language_common_languages_id, common_locations_id)
+	unique (common_languages_id, common_locations_id)
 );
 -- education_common_education_entries_id
 
@@ -619,63 +676,6 @@ create table common.coalition_memberships(
   owning_group_admin_groups_id varchar(32) not null references admin.groups(id),
 
   unique (common_coalitions_id, common_organizations_id)
-);
-
--- FILES & DIRECTORIES ----------------------------------------------------------
-
--- todo research cascading deletes
-create table common.directories (
-  id varchar(32) primary key default common.nanoid(),
-
-  parent_common_directories_id varchar(32) references common.directories(id),
-  name varchar(255), -- not null
-
-	-- todo add triggers for derived data
-	-- size
-	-- total files (not directories or versions)
-	-- id of first file created
-	-- modified at/by of most recent file version added in any dir/sub
-	-- add derived data from sub-directories/files
-
-  created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id varchar(32) not null references admin.people(id),
-  modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id varchar(32) not null references admin.people(id),
-  owning_person_admin_people_id varchar(32) not null references admin.people(id),
-  owning_group_admin_groups_id varchar(32) not null references admin.groups(id)
-);
-
-create table common.files (
-  id varchar(32) primary key default common.nanoid(),
-
-  parent_common_directories_id varchar(32) references common.directories(id), --not null
-	name varchar(255), -- not null
-
-  -- todo, derived data
-
-  created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id varchar(32) not null references admin.people(id),
-  modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id varchar(32) not null references admin.people(id),
-  owning_person_admin_people_id varchar(32) not null references admin.people(id),
-  owning_group_admin_groups_id varchar(32) not null references admin.groups(id)
-);
-
-create table common.file_versions (
-  id varchar(32) primary key default common.nanoid(),
-
-  mime_type varchar(255), -- not null
-  name varchar(255), -- not null,
-  parent_common_files_id varchar(32) references common.files(id), -- not null
-  file_url varchar(255), -- not null,
-  file_size int, -- bytes
-
-  created_at timestamp not null default CURRENT_TIMESTAMP,
-  created_by_admin_people_id varchar(32) not null references admin.people(id),
-  modified_at timestamp not null default CURRENT_TIMESTAMP,
-  modified_by_admin_people_id varchar(32) not null references admin.people(id),
-  owning_person_admin_people_id varchar(32) not null references admin.people(id),
-  owning_group_admin_groups_id varchar(32) not null references admin.groups(id)
 );
 
 -- TICKETS ----------------------------------------------------------------------

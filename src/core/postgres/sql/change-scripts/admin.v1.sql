@@ -192,12 +192,12 @@ create table admin.people (
   id varchar(32) primary key default common.nanoid(),
 
   about text,
-  picture_common_files_id varchar(32) references common.files(id),
+  picture_common_files_id varchar(32), -- references common.files(id) add an alter statement after common schema loads
   private_first_name varchar(32),
   private_last_name varchar(32),
   public_first_name varchar(32),
   public_last_name varchar(32),
-  primary_location_common_locations_id varchar(32) references common.locations(id),
+  primary_location_common_locations_id varchar(32), -- references common.locations(id), add an alter statement after common schema loads
   sensitivity_clearance common.sensitivity default 'Low',
   timezone varchar(64),
 
@@ -279,7 +279,7 @@ create table admin.organization_administrators(
   owning_person_admin_people_id varchar(32) not null references admin.people(id),
   owning_group_admin_groups_id varchar(32) not null references admin.groups(id),
 
-  unique (group_id, person)
+  unique (admin_groups_id, admin_people_id)
 );
 
 -- ROLES --------------------------------------------------------------------
@@ -417,7 +417,7 @@ create table if not exists admin.tokens (
 create table admin.email_tokens (
 	id varchar(32) primary key default common.nanoid(),
 	token varchar(512) unique not null,
-	admin_user_id varchar(32) not null references admin.users(id),
+	admin_user_id varchar(32) not null references admin.user_email_accounts(id),
 	created_at timestamp not null default CURRENT_TIMESTAMP
 );
 
