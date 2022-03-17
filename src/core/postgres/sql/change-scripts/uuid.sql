@@ -1,1 +1,0 @@
-CREATE EXTENSION IF NOT EXISTS "varchar(32)-ossp";
