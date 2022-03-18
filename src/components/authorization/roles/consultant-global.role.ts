@@ -41,6 +41,7 @@ export const ConsultantGlobal = new DbRole({
   powers: [
     Powers.CreateDirectory,
     Powers.CreateEducation,
+    Powers.CreateEthnoArt,
     Powers.CreateFile,
     Powers.CreateFileVersion,
     Powers.CreateFilm,

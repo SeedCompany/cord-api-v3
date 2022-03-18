@@ -49,6 +49,7 @@ export const ControllerOnProject = new DbRole({
     Powers.CreateOrganization,
     Powers.CreatePartner,
     Powers.CreatePartnership,
+    Powers.CreatePost,
     Powers.CreateProjectMember,
     Powers.CreateUnavailability,
     Powers.CreateUser,
