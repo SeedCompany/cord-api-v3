@@ -1,7 +1,7 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { firstLettersOfWords, isValidId } from '../src/common';
-import { Powers } from '../src/components/authorization/dto/powers';
+import { Role } from '../src/components/authorization';
 import { SecuredTimeZone } from '../src/components/timezone';
 import { UpdateUser, User, UserStatus } from '../src/components/user';
 import {
@@ -17,7 +17,6 @@ import {
   login,
   loginAsAdmin,
   registerUser,
-  registerUserWithPower,
   registerUserWithStrictInput,
   TestApp,
 } from './utility';
@@ -193,9 +192,9 @@ describe('User e2e', () => {
   });
 
   it('assign organization to user', async () => {
-    const newUser = await registerUserWithPower(app, [
-      Powers.CreateOrganization,
-    ]);
+    const newUser = await registerUser(app, {
+      roles: [Role.FieldOperationsDirector, Role.LeadFinancialAnalyst],
+    });
     const org = await createOrganization(app);
     await app.graphql.mutate(
       gql`
@@ -215,9 +214,9 @@ describe('User e2e', () => {
   });
 
   it('remove organization from user', async () => {
-    const newUser = await registerUserWithPower(app, [
-      Powers.CreateOrganization,
-    ]);
+    const newUser = await registerUser(app, {
+      roles: [Role.FieldOperationsDirector, Role.LeadFinancialAnalyst],
+    });
     const org = await createOrganization(app);
 
     // assign organization to user
@@ -256,9 +255,9 @@ describe('User e2e', () => {
   });
 
   it('assign primary organization to user', async () => {
-    const newUser = await registerUserWithPower(app, [
-      Powers.CreateOrganization,
-    ]);
+    const newUser = await registerUser(app, {
+      roles: [Role.FieldOperationsDirector, Role.LeadFinancialAnalyst],
+    });
     const org = await createOrganization(app);
     await app.graphql.mutate(
       gql`
@@ -285,9 +284,9 @@ describe('User e2e', () => {
   });
 
   it('remove primary organization from user', async () => {
-    const newUser = await registerUserWithPower(app, [
-      Powers.CreateOrganization,
-    ]);
+    const newUser = await registerUser(app, {
+      roles: [Role.FieldOperationsDirector, Role.LeadFinancialAnalyst],
+    });
     const org = await createOrganization(app);
 
     // assign primary organization to user
@@ -335,9 +334,9 @@ describe('User e2e', () => {
   });
 
   it('read one users organizations', async () => {
-    const newUser = await registerUserWithPower(app, [
-      Powers.CreateOrganization,
-    ]);
+    const newUser = await registerUser(app, {
+      roles: [Role.FieldOperationsDirector, Role.LeadFinancialAnalyst],
+    });
 
     const org = await createOrganization(app);
     await app.graphql.mutate(
@@ -426,7 +425,9 @@ describe('User e2e', () => {
   });
 
   it('read one users unavailablity', async () => {
-    const newUser = await registerUser(app);
+    const newUser = await registerUser(app, {
+      roles: [Role.FieldOperationsDirector],
+    });
     const unavail = await createUnavailability(app, { userId: newUser.id });
 
     const result = await app.graphql.query(
@@ -482,9 +483,9 @@ describe('User e2e', () => {
   });
 
   it('list users with organizations', async () => {
-    const newUser = await registerUserWithPower(app, [
-      Powers.CreateOrganization,
-    ]);
+    const newUser = await registerUser(app, {
+      roles: [Role.FieldOperationsDirector, Role.LeadFinancialAnalyst],
+    });
     const org = await createOrganization(app);
 
     await app.graphql.mutate(

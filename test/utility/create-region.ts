@@ -1,6 +1,7 @@
 import { gql } from 'apollo-server-core';
-import { createPerson } from '.';
+import { createPerson, registerUser, runInIsolatedSession } from '.';
 import { generateId, isValidId } from '../../src/common';
+import { Role } from '../../src/components/authorization/dto/role.dto';
 import {
   CreateFieldRegion,
   FieldRegion,
@@ -51,11 +52,20 @@ export async function createRegion(
 ) {
   const fieldRegion: CreateFieldRegion = {
     name: 'Region' + (await generateId()),
-    fieldZoneId: input.fieldZoneId || (await createZone(app)).id,
+    fieldZoneId:
+      input.fieldZoneId ||
+      (await runInIsolatedSession(app, async () => {
+        await registerUser(app, { roles: [Role.Administrator] }); // only admin role can create a this for now
+        return (await createZone(app)).id;
+      })),
+
     directorId:
       input.directorId ||
       (await getUserFromSession(app)).id ||
-      (await createPerson(app)).id,
+      (await runInIsolatedSession(app, async () => {
+        await registerUser(app, { roles: [Role.Administrator] }); // don't want to have to declare the role at the top level. The person part doesn't really matter here.
+        return (await createPerson(app)).id;
+      })),
     ...input,
   };
 

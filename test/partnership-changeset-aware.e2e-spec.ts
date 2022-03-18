@@ -1,5 +1,5 @@
 import { gql } from 'apollo-server-core';
-import { Powers, Role } from '../src/components/authorization';
+import { Role } from '../src/components/authorization';
 import { PartnershipAgreementStatus } from '../src/components/partnership';
 import { ProjectStep } from '../src/components/project';
 import {
@@ -13,8 +13,9 @@ import {
   createRegion,
   createSession,
   createTestApp,
-  registerUserWithPower,
+  registerUser,
   runAsAdmin,
+  runInIsolatedSession,
   TestApp,
   updateProject,
 } from './utility';
@@ -62,11 +63,18 @@ const readPartnership = (app: TestApp, id: string, changeset?: string) =>
   );
 
 const activeProject = async (app: TestApp) => {
-  const fundingAccount = await createFundingAccount(app);
-  const location = await createLocation(app, {
-    fundingAccountId: fundingAccount.id,
+  const fundingAccount = await runInIsolatedSession(app, async () => {
+    await registerUser(app, { roles: [Role.Administrator] }); // only admin can create location for now
+    return await createFundingAccount(app);
   });
-  const fieldRegion = await createRegion(app);
+  const location = await runInIsolatedSession(app, async () => {
+    await registerUser(app, { roles: [Role.Administrator] }); // only admin can create location for now
+    return await createLocation(app, { fundingAccountId: fundingAccount.id });
+  });
+  const fieldRegion = await runInIsolatedSession(app, async () => {
+    await registerUser(app, { roles: [Role.Administrator] }); // only admin can create location for now
+    return await createRegion(app);
+  });
   const project = await createProject(app);
   await updateProject(app, {
     id: project.id,
@@ -91,13 +99,9 @@ describe('Partnership Changeset Aware e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    await registerUserWithPower(
-      app,
-      [Powers.CreateLanguage, Powers.CreateEthnologueLanguage],
-      {
-        roles: [Role.ProjectManager, Role.Administrator],
-      }
-    );
+    await registerUser(app, {
+      roles: [Role.ProjectManager, Role.Administrator],
+    });
   });
 
   afterAll(async () => {

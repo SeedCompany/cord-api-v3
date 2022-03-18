@@ -1,12 +1,12 @@
 import { gql } from 'apollo-server-core';
-import { sample, times } from 'lodash';
+import { sample } from 'lodash';
 import {
   CalendarDate,
   ID,
   InputException,
   NotFoundException,
 } from '../src/common';
-import { Powers, Role } from '../src/components/authorization';
+import { Role } from '../src/components/authorization';
 import { PartnerType } from '../src/components/partner';
 import {
   FinancialReportingType,
@@ -23,7 +23,7 @@ import {
   expectNotFound,
   fragments,
   Raw,
-  registerUserWithPower,
+  registerUser,
   TestApp,
 } from './utility';
 import { createPartnership } from './utility/create-partnership';
@@ -35,18 +35,9 @@ describe('Partnership e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    await registerUserWithPower(
-      app,
-      [
-        Powers.CreateOrganization,
-        Powers.CreateProject,
-        Powers.CreateFieldZone,
-        Powers.CreateFieldRegion,
-      ],
-      {
-        roles: [Role.Controller],
-      }
-    );
+    await registerUser(app, {
+      roles: [Role.FieldOperationsDirector, Role.Controller],
+    });
 
     project = await createProject(app);
   });
@@ -220,8 +211,9 @@ describe('Partnership e2e', () => {
 
   it('List view of partnerships', async () => {
     // create 2 partnerships
-    const numPartnerships = 2;
-    await Promise.all(times(numPartnerships).map(() => createPartnership(app)));
+    // have a runInIsolated session so can't put in a Promise.all without messing up the session logic
+    await createPartnership(app);
+    await createPartnership(app);
 
     const { partnerships } = await app.graphql.query(
       gql`
@@ -240,20 +232,17 @@ describe('Partnership e2e', () => {
       `
     );
 
-    expect(partnerships.items.length).toBeGreaterThanOrEqual(numPartnerships);
+    expect(partnerships.items.length).toBeGreaterThanOrEqual(2);
   });
 
   it('List view of partnerships by projectId', async () => {
     // create 2 partnerships
-    const numPartnerships = 2;
-
-    await Promise.all(
-      times(numPartnerships).map(() =>
-        createPartnership(app, {
-          projectId: project.id,
-        })
-      )
-    );
+    await createPartnership(app, {
+      projectId: project.id,
+    });
+    await createPartnership(app, {
+      projectId: project.id,
+    });
 
     const result = await app.graphql.query(
       gql`
@@ -277,9 +266,7 @@ describe('Partnership e2e', () => {
       }
     );
 
-    expect(result.project.partnerships.items.length).toBeGreaterThanOrEqual(
-      numPartnerships
-    );
+    expect(result.project.partnerships.items.length).toBeGreaterThanOrEqual(2);
   });
 
   it('create partnership does not create if organizationId is invalid', async () => {

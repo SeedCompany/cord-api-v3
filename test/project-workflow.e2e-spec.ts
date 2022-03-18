@@ -1,6 +1,6 @@
 import { gql } from 'apollo-server-core';
 import { CalendarDate } from '../src/common';
-import { Powers, Role } from '../src/components/authorization';
+import { Role } from '../src/components/authorization';
 import { PartnerType } from '../src/components/partner';
 import {
   ProjectStatus,
@@ -21,8 +21,8 @@ import {
   createTestApp,
   fragments,
   registerUser,
-  registerUserWithPower,
   runAsAdmin,
+  runInIsolatedSession,
   TestApp,
   TestUser,
   updateProject,
@@ -50,21 +50,14 @@ describe('Project-Workflow e2e', () => {
     director = await registerUser(app, {
       roles: [Role.RegionalDirector, Role.FieldOperationsDirector],
     });
-    projectManager = await registerUserWithPower(
+    projectManager = await registerUser(
       app,
-      [
-        Powers.CreateLanguage,
-        Powers.CreateEthnologueLanguage,
-        Powers.CreateOrganization,
-        Powers.CreateFieldZone,
-        Powers.CreateFieldRegion,
-        Powers.CreateFundingAccount,
-        Powers.CreateLocation,
-        Powers.CreatePartner,
-        Powers.CreateProject,
-      ],
+      // [
+      //   Powers.CreateFundingAccount,
+      //   Powers.CreateLocation,
+
       {
-        roles: [Role.ProjectManager],
+        roles: [Role.ProjectManager, Role.LeadFinancialAnalyst],
       }
     );
     consultantManager = await registerUser(app, {
@@ -146,11 +139,20 @@ describe('Project-Workflow e2e', () => {
       expect(languageEngagement.id).toBeDefined();
 
       // Enter location and field region
-      const fundingAccount = await createFundingAccount(app);
-      const location = await createLocation(app, {
-        fundingAccountId: fundingAccount.id,
+      const fundingAccount = await runInIsolatedSession(app, async () => {
+        await registerUser(app, { roles: [Role.Administrator] }); // only admin can create funding account for now
+        return await createFundingAccount(app);
       });
-      const fieldRegion = await createRegion(app);
+      const location = await runInIsolatedSession(app, async () => {
+        await registerUser(app, { roles: [Role.Administrator] }); // only admin can create funding account for now
+        return await createLocation(app, {
+          fundingAccountId: fundingAccount.id,
+        });
+      });
+      const fieldRegion = await runInIsolatedSession(app, async () => {
+        await registerUser(app, { roles: [Role.Administrator] }); // only admin can create funding account for now
+        return await createRegion(app);
+      });
       await updateProject(app, {
         id: project.id,
         primaryLocationId: location.id,
@@ -290,9 +292,15 @@ describe('Project-Workflow e2e', () => {
     });
 
     it('Step 2. Approval', async () => {
-      const fundingAccount = await createFundingAccount(app);
-      const location = await createLocation(app, {
-        fundingAccountId: fundingAccount.id,
+      const fundingAccount = await runInIsolatedSession(app, async () => {
+        await registerUser(app, { roles: [Role.Administrator] }); // only admin can create funding account for now
+        return await createFundingAccount(app);
+      });
+      const location = await runInIsolatedSession(app, async () => {
+        await registerUser(app, { roles: [Role.Administrator] }); // only admin can create funding account for now
+        return await createLocation(app, {
+          fundingAccountId: fundingAccount.id,
+        });
       });
       const project = await createProject(app, {
         primaryLocationId: location.id,
@@ -403,9 +411,15 @@ describe('Project-Workflow e2e', () => {
     });
 
     it('Suspension', async () => {
-      const fundingAccount = await createFundingAccount(app);
-      const location = await createLocation(app, {
-        fundingAccountId: fundingAccount.id,
+      const fundingAccount = await runInIsolatedSession(app, async () => {
+        await registerUser(app, { roles: [Role.Administrator] }); // only admin can create funding account for now
+        return await createFundingAccount(app);
+      });
+      const location = await runInIsolatedSession(app, async () => {
+        await registerUser(app, { roles: [Role.Administrator] }); // only admin can create funding account for now
+        return await createLocation(app, {
+          fundingAccountId: fundingAccount.id,
+        });
       });
       const project = await createProject(app, {
         primaryLocationId: location.id,
@@ -437,9 +451,16 @@ describe('Project-Workflow e2e', () => {
     });
 
     it('Termination', async () => {
-      const fundingAccount = await createFundingAccount(app);
-      const location = await createLocation(app, {
-        fundingAccountId: fundingAccount.id,
+      const fundingAccount = await runInIsolatedSession(app, async () => {
+        await registerUser(app, { roles: [Role.Administrator] }); // only admin can create funding account for now
+        return await createFundingAccount(app);
+      });
+
+      const location = await runInIsolatedSession(app, async () => {
+        await registerUser(app, { roles: [Role.Administrator] }); // only admin can create funding account for now
+        return await createLocation(app, {
+          fundingAccountId: fundingAccount.id,
+        });
       });
       const project = await createProject(app, {
         primaryLocationId: location.id,

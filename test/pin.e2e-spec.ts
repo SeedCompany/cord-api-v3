@@ -1,12 +1,12 @@
 import { gql } from 'apollo-server-core';
-import { Powers } from '../src/components/authorization/dto/powers';
+import { Role } from '../src/components/authorization';
 import {
   createPin,
   createProject,
   createSession,
   createTestApp,
   fragments,
-  registerUserWithPower,
+  registerUser,
   TestApp,
 } from './utility';
 
@@ -16,11 +16,7 @@ describe('Pin e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    await registerUserWithPower(app, [
-      Powers.CreateProject,
-      Powers.CreateFieldZone,
-      Powers.CreateFieldRegion,
-    ]);
+    await registerUser(app, { roles: [Role.FieldOperationsDirector] });
   });
 
   afterAll(async () => {

@@ -1,7 +1,9 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { DateTime } from 'luxon';
+import { registerUser, runInIsolatedSession } from '.';
 import { ID, isValidId } from '../../src/common';
+import { Role } from '../../src/components/authorization/dto/role.dto';
 import {
   CreateInternshipEngagement,
   CreateLanguageEngagement,
@@ -154,7 +156,12 @@ export async function createLanguageEngagement(
   input: Partial<CreateLanguageEngagement> = {}
 ) {
   const languageEngagement: CreateLanguageEngagement = {
-    languageId: input.languageId ?? (await createLanguage(app)).id,
+    languageId:
+      input.languageId ??
+      (await runInIsolatedSession(app, async () => {
+        await registerUser(app, { roles: [Role.Administrator] }); // only admin role can create a language for now
+        return (await createLanguage(app)).id;
+      })),
     projectId: input.projectId ?? (await createProject(app)).id,
     lukePartnership: true,
     disbursementCompleteDate: DateTime.local(),
@@ -201,7 +208,11 @@ export async function createInternshipEngagement(
   const internshipEngagement: CreateInternshipEngagement = {
     projectId: input.projectId || (await createProject(app)).id,
     countryOfOriginId:
-      input.countryOfOriginId || (await createLocation(app)).id,
+      input.countryOfOriginId ||
+      (await runInIsolatedSession(app, async () => {
+        await registerUser(app, { roles: [Role.Administrator] }); // only admin role can create a location for now
+        return (await createLocation(app)).id;
+      })),
     internId: input.internId || currentUserId || (await createPerson(app)).id,
     mentorId: input.mentorId || currentUserId || (await createPerson(app)).id,
     position: InternshipPosition.Administration,

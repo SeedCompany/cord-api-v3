@@ -1,10 +1,12 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
+import { registerUser, runInIsolatedSession } from '.';
 import {
   CalendarDate,
   isValidId,
   SecuredListType as SecuredList,
 } from '../../src/common';
+import { Role } from '../../src/components/authorization';
 import { SecuredBudget } from '../../src/components/budget';
 import { Location } from '../../src/components/location';
 import {
@@ -146,7 +148,12 @@ export async function createProject(
     mouEnd: CalendarDate.fromISO('1992-01-01'),
     step: ProjectStep.EarlyConversations,
     tags: ['tag1', 'tag2'],
-    fieldRegionId: input.fieldRegionId || (await createRegion(app)).id,
+    fieldRegionId:
+      input.fieldRegionId ||
+      (await runInIsolatedSession(app, async () => {
+        await registerUser(app, { roles: [Role.Administrator] }); // only admin role can create a region for now
+        return (await createRegion(app)).id;
+      })),
     presetInventory: true,
     ...input,
   };

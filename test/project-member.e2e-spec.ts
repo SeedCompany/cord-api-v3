@@ -2,7 +2,7 @@ import { gql } from 'apollo-server-core';
 import { times } from 'lodash';
 import { DateTime, Interval } from 'luxon';
 import { isValidId, NotFoundException } from '../src/common';
-import { Powers, Role } from '../src/components/authorization';
+import { Role } from '../src/components/authorization';
 import { Project, ProjectMember } from '../src/components/project';
 import {
   createPerson,
@@ -12,7 +12,8 @@ import {
   createTestApp,
   fragments,
   Raw,
-  registerUserWithPower,
+  registerUser,
+  runInIsolatedSession,
   TestApp,
 } from './utility';
 
@@ -23,22 +24,13 @@ describe('ProjectMember e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    await registerUserWithPower(
-      app,
-      [
-        Powers.GrantRole,
-        Powers.CreateFieldZone,
-        Powers.CreateFieldRegion,
-        Powers.CreateProject,
+    await registerUser(app, {
+      roles: [
+        Role.ProjectManager,
+        Role.Consultant,
+        Role.FieldOperationsDirector,
       ],
-      {
-        roles: [
-          Role.ProjectManager,
-          Role.Consultant,
-          Role.FieldOperationsDirector,
-        ],
-      }
-    );
+    });
     project = await createProject(app);
   });
   afterAll(async () => {
@@ -212,34 +204,41 @@ describe('ProjectMember e2e', () => {
   });
 
   it('update projectMember', async () => {
-    const member = await createPerson(app, {
-      roles: [Role.ProjectManager, Role.Consultant],
+    const member = await runInIsolatedSession(app, async () => {
+      await registerUser(app, { roles: [Role.Administrator] });
+      return await createPerson(app, {
+        roles: [Role.ProjectManager, Role.Consultant],
+      });
     });
+
     const projectMember = await createProjectMember(app, {
       userId: member.id,
       projectId: project.id,
     });
 
-    const result = await app.graphql.query(
-      gql`
-        mutation updateProjectMember($input: UpdateProjectMemberInput!) {
-          updateProjectMember(input: $input) {
-            projectMember {
-              ...projectMember
+    const result = await runInIsolatedSession(app, async () => {
+      await registerUser(app, { roles: [Role.Administrator] }); // only admin can grant roles to a user
+      return await app.graphql.query(
+        gql`
+          mutation updateProjectMember($input: UpdateProjectMemberInput!) {
+            updateProjectMember(input: $input) {
+              projectMember {
+                ...projectMember
+              }
             }
           }
-        }
-        ${fragments.projectMember}
-      `,
-      {
-        input: {
-          projectMember: {
-            id: projectMember.id,
-            roles: [Role.ProjectManager],
+          ${fragments.projectMember}
+        `,
+        {
+          input: {
+            projectMember: {
+              id: projectMember.id,
+              roles: [Role.ProjectManager],
+            },
           },
-        },
-      }
-    );
+        }
+      );
+    });
     expect(result.updateProjectMember.projectMember.id).toBe(projectMember.id);
     expect(result.updateProjectMember.projectMember.roles.value).toEqual(
       expect.arrayContaining([Role.ProjectManager])

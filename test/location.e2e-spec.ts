@@ -2,7 +2,7 @@ import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { times } from 'lodash';
 import { generateId, isValidId } from '../src/common';
-import { Powers } from '../src/components/authorization/dto/powers';
+import { Role } from '../src/components/authorization/dto/role.dto';
 import { Location } from '../src/components/location';
 import {
   createFundingAccount,
@@ -11,8 +11,9 @@ import {
   createSession,
   createTestApp,
   fragments,
-  registerUserWithPower,
+  registerUser,
   runAsAdmin,
+  runInIsolatedSession,
   TestApp,
 } from './utility';
 
@@ -22,12 +23,13 @@ describe('Location e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    await registerUserWithPower(app, [
-      Powers.CreateLocation,
-      Powers.CreateFundingAccount,
-      Powers.CreateFieldZone,
-      Powers.CreateFieldRegion,
-    ]);
+    await registerUser(app, { roles: [Role.FieldOperationsDirector] });
+    // [
+    //   Powers.CreateLocation,
+    //   Powers.CreateFundingAccount,
+    //   Powers.CreateFieldZone,
+    //   Powers.CreateFieldRegion,
+    // ]
   });
 
   afterAll(async () => {
@@ -37,12 +39,18 @@ describe('Location e2e', () => {
   // Create Location
   it('create location', async () => {
     const name = faker.company.companyName();
-    await createLocation(app, { name });
+    await runInIsolatedSession(app, async () => {
+      await registerUser(app, { roles: [Role.Administrator] }); // only admin can create location for now
+      return await createLocation(app, { name });
+    });
   });
 
   // Read Location
   it('create & read location by id', async () => {
-    const st = await createLocation(app);
+    const st = await runInIsolatedSession(app, async () => {
+      await registerUser(app, { roles: [Role.Administrator] }); // only admin can create location for now
+      return await createLocation(app);
+    });
 
     const { location: actual } = await app.graphql.query(
       gql`
@@ -65,7 +73,10 @@ describe('Location e2e', () => {
 
   // Update Location
   it('update location', async () => {
-    const st = await createLocation(app);
+    const st = await runInIsolatedSession(app, async () => {
+      await registerUser(app, { roles: [Role.Administrator] }); // only admin can create location for now
+      return await createLocation(app);
+    });
     const newName = faker.company.companyName();
     await runAsAdmin(app, async function () {
       const result = await app.graphql.mutate(
@@ -96,7 +107,10 @@ describe('Location e2e', () => {
 
   // Delete Location
   it.skip('delete location', async () => {
-    const st = await createLocation(app);
+    const st = await runInIsolatedSession(app, async () => {
+      await registerUser(app, { roles: [Role.Administrator] }); // only admin can create location for now
+      return await createLocation(app);
+    });
     const result = await app.graphql.mutate(
       gql`
         mutation deleteLocation($id: ID!) {
@@ -116,6 +130,7 @@ describe('Location e2e', () => {
   // List Locations
   it('list view of locations', async () => {
     // create a bunch of locations
+    await registerUser(app, { roles: [Role.Administrator] }); // only admin can create location for now
     const numLocations = 2;
     await Promise.all(
       times(numLocations).map(
@@ -125,6 +140,8 @@ describe('Location e2e', () => {
           })
       )
     );
+
+    await registerUser(app, { roles: [Role.FieldOperationsDirector] }); // only admin can create location for now
 
     const { locations } = await app.graphql.query(gql`
       query {
@@ -143,11 +160,20 @@ describe('Location e2e', () => {
   });
 
   it('update location with defaultFieldRegion', async () => {
-    const defaultFieldRegion = await createRegion(app);
-    const l = await createLocation(app, {
-      defaultFieldRegionId: defaultFieldRegion.id,
+    const defaultFieldRegion = await runInIsolatedSession(app, async () => {
+      await registerUser(app, { roles: [Role.Administrator] }); // only admin can create Region for now
+      return await createRegion(app);
     });
-    const newFieldRegion = await createRegion(app);
+    const l = await runInIsolatedSession(app, async () => {
+      await registerUser(app, { roles: [Role.Administrator] }); // only admin can create location for now
+      return await createLocation(app, {
+        defaultFieldRegionId: defaultFieldRegion.id,
+      });
+    });
+    const newFieldRegion = await runInIsolatedSession(app, async () => {
+      await registerUser(app, { roles: [Role.Administrator] });
+      return await createRegion(app);
+    });
     await runAsAdmin(app, async () => {
       const result = await app.graphql.mutate(
         gql`
@@ -176,11 +202,19 @@ describe('Location e2e', () => {
   });
 
   it('update location with funding account', async () => {
-    const fundingAccount = await createFundingAccount(app);
-    const st = await createLocation(app, {
-      fundingAccountId: fundingAccount.id,
+    const fundingAccount = await runInIsolatedSession(app, async () => {
+      await registerUser(app, { roles: [Role.Administrator] }); // only admin can create funding accounts for now
+      return await createFundingAccount(app);
     });
-    const newFundingAccount = await createFundingAccount(app);
+    const st = await runInIsolatedSession(app, async () => {
+      await registerUser(app, { roles: [Role.Administrator] }); // only admin can create location for now
+      return await createLocation(app, { fundingAccountId: fundingAccount.id });
+    });
+
+    const newFundingAccount = await runInIsolatedSession(app, async () => {
+      await registerUser(app, { roles: [Role.Administrator] }); // only admin can create location for now
+      return await createFundingAccount(app);
+    });
     await runAsAdmin(app, async () => {
       const result = await app.graphql.mutate(
         gql`

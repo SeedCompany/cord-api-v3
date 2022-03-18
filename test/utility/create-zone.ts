@@ -1,6 +1,12 @@
 import { gql } from 'apollo-server-core';
-import { createPerson, getUserFromSession } from '.';
+import {
+  createPerson,
+  getUserFromSession,
+  registerUser,
+  runInIsolatedSession,
+} from '.';
 import { generateId, isValidId } from '../../src/common';
+import { Role } from '../../src/components/authorization';
 import { CreateFieldZone, FieldZone } from '../../src/components/field-zone';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
@@ -49,7 +55,10 @@ export async function createZone(
     directorId:
       input.directorId ||
       (await getUserFromSession(app)).id ||
-      (await createPerson(app)).id,
+      (await runInIsolatedSession(app, async () => {
+        await registerUser(app, { roles: [Role.Administrator] }); // don't want to have to declare the role at the top level. The person part doesn't really matter here.
+        return (await createPerson(app)).id;
+      })),
     ...input,
   };
 

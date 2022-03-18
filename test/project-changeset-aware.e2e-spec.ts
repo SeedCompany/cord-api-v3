@@ -1,7 +1,7 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { CalendarDate } from '../src/common';
-import { Powers, Role } from '../src/components/authorization';
+import { Role } from '../src/components/authorization';
 import { PartnerType } from '../src/components/partner';
 import { ProjectStep } from '../src/components/project';
 import {
@@ -14,10 +14,10 @@ import {
   createRegion,
   createSession,
   createTestApp,
-  registerUserWithPower,
+  registerUser,
   runAsAdmin,
+  runInIsolatedSession,
   TestApp,
-  updateProject,
 } from './utility';
 import { fragments } from './utility/fragments';
 import {
@@ -50,20 +50,26 @@ const readProject = (app: TestApp, id: string, changeset?: string) =>
   );
 
 const activeProject = async (app: TestApp) => {
-  const fundingAccount = await createFundingAccount(app);
-  const location = await createLocation(app, {
-    fundingAccountId: fundingAccount.id,
+  const fundingAccount = await runInIsolatedSession(app, async () => {
+    await registerUser(app, { roles: [Role.Administrator] }); // only admin can create funding account for now
+    return await createFundingAccount(app);
   });
-  const fieldRegion = await createRegion(app);
+  const location = await runInIsolatedSession(app, async () => {
+    await registerUser(app, { roles: [Role.Administrator] }); // only admin can create Locations for now
+    return await createLocation(app, { fundingAccountId: fundingAccount.id });
+  });
+
+  const fieldRegion = await runInIsolatedSession(app, async () => {
+    await registerUser(app, { roles: [Role.Administrator] }); // only admin can create Region for now
+    return await createRegion(app);
+  });
   const project = await createProject(app, {
     mouStart: undefined,
     mouEnd: undefined,
-  });
-  await updateProject(app, {
-    id: project.id,
     primaryLocationId: location.id,
     fieldRegionId: fieldRegion.id,
   });
+
   await runAsAdmin(app, async () => {
     for (const next of [
       ...stepsFromEarlyConversationToBeforeActive,
@@ -83,22 +89,9 @@ describe('Project Changeset Aware e2e', () => {
     app = await createTestApp();
     await createSession(app);
 
-    await registerUserWithPower(
-      app,
-      [
-        Powers.CreateOrganization,
-        Powers.DeleteProject,
-        Powers.CreateFundingAccount,
-        Powers.CreateLocation,
-        Powers.CreateFieldRegion,
-        Powers.CreateFieldZone,
-        Powers.CreateProject,
-        Powers.CreatePartner,
-      ],
-      {
-        roles: [Role.ProjectManager],
-      }
-    );
+    await registerUser(app, {
+      roles: [Role.FieldOperationsDirector, Role.LeadFinancialAnalyst],
+    });
   });
 
   afterAll(async () => {

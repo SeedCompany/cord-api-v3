@@ -2,7 +2,7 @@ import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { times } from 'lodash';
 import { InputException, isValidId } from '../src/common';
-import { Powers } from '../src/components/authorization/dto/powers';
+import { Role } from '../src/components/authorization/dto/role.dto';
 import { UpdateLanguage } from '../src/components/language';
 import {
   createLanguage,
@@ -12,8 +12,9 @@ import {
   createSession,
   createTestApp,
   expectNotFound,
-  registerUserWithPower,
+  registerUser,
   runAsAdmin,
+  runInIsolatedSession,
   TestApp,
 } from './utility';
 import { fragments } from './utility/fragments';
@@ -24,26 +25,26 @@ describe('Language e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    await registerUserWithPower(app, [
-      Powers.CreateLanguage,
-      Powers.CreateEthnologueLanguage,
-      Powers.CreateProject,
-      Powers.CreateLanguageEngagement,
-      Powers.CreateFieldZone,
-      Powers.CreateFieldRegion,
-    ]);
+    await registerUser(app, { roles: [Role.FieldOperationsDirector] });
   });
+
   afterAll(async () => {
     await app.close();
   });
 
   it('create a language', async () => {
-    const language = await createLanguage(app);
+    const language = await runInIsolatedSession(app, async () => {
+      await registerUser(app, { roles: [Role.Administrator] }); // only admin can create language for now
+      return await createLanguage(app);
+    });
     expect(language.id).toBeDefined();
   });
 
   it('read one language by id', async () => {
-    const language = await createLanguage(app);
+    const language = await runInIsolatedSession(app, async () => {
+      await registerUser(app, { roles: [Role.Administrator] }); // only admin can create language for now
+      return await createLanguage(app);
+    });
 
     const { language: actual } = await app.graphql.query(
       gql`
@@ -69,7 +70,10 @@ describe('Language e2e', () => {
 
   describe('Updates', () => {
     it('simple', async () => {
-      const language = await createLanguage(app);
+      const language = await runInIsolatedSession(app, async () => {
+        await registerUser(app, { roles: [Role.Administrator] }); // only admin can create language for now
+        return await createLanguage(app);
+      });
       const newName = faker.company.companyName();
 
       // run as admin because only admin role can edit properties on language
@@ -83,7 +87,10 @@ describe('Language e2e', () => {
     });
 
     it('empty ethnologue', async () => {
-      const language = await createLanguage(app);
+      const language = await runInIsolatedSession(app, async () => {
+        await registerUser(app, { roles: [Role.Administrator] }); // only admin can create language for now
+        return await createLanguage(app);
+      });
       await runAsAdmin(app, async () => {
         await updateLanguage(app, {
           id: language.id,
@@ -94,7 +101,10 @@ describe('Language e2e', () => {
     });
 
     it('a single language ethnologue property when language is minimally defined', async () => {
-      const language = await createLanguageMinimal(app);
+      const language = await runInIsolatedSession(app, async () => {
+        await registerUser(app, { roles: [Role.Administrator] }); // only admin can create language for now
+        return await createLanguageMinimal(app);
+      });
       const newEthnologueCode = faker.helpers
         .replaceSymbols('???')
         .toLowerCase();
@@ -113,7 +123,10 @@ describe('Language e2e', () => {
 
   // DELETE LANGUAGE
   it('delete language', async () => {
-    const language = await createLanguage(app);
+    const language = await runInIsolatedSession(app, async () => {
+      await registerUser(app, { roles: [Role.Administrator] }); // only admin can create language for now
+      return await createLanguage(app);
+    });
 
     const result = await app.graphql.mutate(
       gql`
@@ -150,7 +163,13 @@ describe('Language e2e', () => {
   it('List view of languages', async () => {
     // create a bunch of languages
     const numLanguages = 2;
+
+    // get session problems if runInIsolatedSession used in the Promise.all block
+    await registerUser(app, { roles: [Role.Administrator] }); // only admin can create language for now
+
     await Promise.all(times(numLanguages).map(() => createLanguage(app)));
+    await registerUser(app, { roles: [Role.FieldOperationsDirector] });
+
     // test reading new lang
     const { languages } = await app.graphql.query(gql`
       query {
@@ -169,7 +188,10 @@ describe('Language e2e', () => {
   });
 
   it('List with projects -> engagements -> engagement status should not error', async () => {
-    const lang = await createLanguage(app);
+    const lang = await runInIsolatedSession(app, async () => {
+      await registerUser(app, { roles: [Role.Administrator] }); // only admin can create language for now
+      return await createLanguage(app);
+    });
     const project = await createProject(app);
     await app.graphql.mutate(
       gql`
@@ -225,7 +247,10 @@ describe('Language e2e', () => {
 
   it('The list of projects the language is engagement in', async () => {
     const numProjects = 1;
-    const language = await createLanguage(app);
+    const language = await runInIsolatedSession(app, async () => {
+      await registerUser(app, { roles: [Role.Administrator] }); // only admin can create language for now
+      return await createLanguage(app);
+    });
     const project = await createProject(app);
     const languageId = language.id;
     const projectId = project.id;
@@ -266,13 +291,18 @@ describe('Language e2e', () => {
 
   it('should throw error if signLanguageCode is not valid', async () => {
     const signLanguageCode = 'XXX1';
+    await registerUser(app, { roles: [Role.Administrator] }); // only admin can create language for now
     await expect(
       createLanguage(app, { signLanguageCode })
     ).rejects.toThrowError(new InputException('Input validation failed'));
+    await registerUser(app, { roles: [Role.FieldOperationsDirector] });
   });
 
   it('should throw error if trying to set hasExternalFirstScripture=true while language has engagements that have firstScripture=true', async () => {
-    const language = await createLanguage(app);
+    const language = await runInIsolatedSession(app, async () => {
+      await registerUser(app, { roles: [Role.Administrator] }); // only admin can create language for now
+      return await createLanguage(app);
+    });
     await createLanguageEngagement(app, {
       languageId: language.id,
       firstScripture: true,
@@ -307,7 +337,10 @@ describe('Language e2e', () => {
   });
 
   it('can set hasExternalFirstScripture=true if language has no engagements that have firstScripture=true', async () => {
-    const language = await createLanguage(app);
+    const language = await runInIsolatedSession(app, async () => {
+      await registerUser(app, { roles: [Role.Administrator] }); // only admin can create language for now
+      return await createLanguage(app);
+    });
     await createLanguageEngagement(app, {
       languageId: language.id,
       firstScripture: false,
@@ -324,7 +357,10 @@ describe('Language e2e', () => {
 
   it('presetInventory flag', async () => {
     const project = await createProject(app, { presetInventory: true });
-    const language = await createLanguage(app);
+    const language = await runInIsolatedSession(app, async () => {
+      await registerUser(app, { roles: [Role.Administrator] }); // only admin can create language for now
+      return await createLanguage(app);
+    });
     await createLanguageEngagement(app, {
       projectId: project.id,
       languageId: language.id,
@@ -349,10 +385,16 @@ describe('Language e2e', () => {
 
   it('List view of languages by presetInventory flag', async () => {
     const numLanguages = 2;
+
+    await registerUser(app, { roles: [Role.Administrator] }); // only admin can create language for now
     await Promise.all(times(numLanguages).map(() => createLanguage(app)));
+    await registerUser(app, { roles: [Role.FieldOperationsDirector] });
     // create presetInventory language
     const project = await createProject(app, { presetInventory: true });
-    const language = await createLanguage(app);
+    const language = await runInIsolatedSession(app, async () => {
+      await registerUser(app, { roles: [Role.Administrator] }); // only admin can create language for now
+      return await createLanguage(app);
+    });
     await createLanguageEngagement(app, {
       projectId: project.id,
       languageId: language.id,

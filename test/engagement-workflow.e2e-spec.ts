@@ -1,4 +1,4 @@
-import { Powers, Role } from '../src/components/authorization';
+import { Role } from '../src/components/authorization';
 import { EngagementStatus } from '../src/components/engagement';
 import { ProjectStep, ProjectType } from '../src/components/project';
 import {
@@ -11,7 +11,7 @@ import {
   createSession,
   createTestApp,
   getCurrentEngagementStatus,
-  registerUserWithPower,
+  registerUser,
   runAsAdmin,
   TestApp,
   updateProject,
@@ -32,21 +32,9 @@ describe('Engagement-Workflow e2e', () => {
     app = await createTestApp();
     await createSession(app);
 
-    await registerUserWithPower(
-      app,
-      [
-        Powers.CreateLanguage,
-        Powers.CreateEthnologueLanguage,
-        Powers.CreateOrganization,
-        Powers.CreateFieldZone,
-        Powers.CreateFieldRegion,
-        Powers.CreateProject,
-        Powers.CreateLocation,
-      ],
-      {
-        roles: [Role.ProjectManager],
-      }
-    );
+    await registerUser(app, {
+      roles: [Role.ProjectManager, Role.Controller],
+    });
   });
   afterAll(async () => {
     await app.close();
@@ -119,6 +107,7 @@ describe('Engagement-Workflow e2e', () => {
           fundingAccountId: fundingAccount.id,
         });
         const fieldRegion = await createRegion(app);
+
         await updateProject(app, {
           id: internProject.id,
           primaryLocationId: location.id,
