@@ -32,6 +32,7 @@ import {
   SecuredProductList,
 } from '../product';
 import { ProjectStatus } from '../project';
+import { ProjectChangeRequestListInput } from '../project-change-request/dto';
 import { ProjectType } from '../project/dto/type.enum';
 import { ProjectService } from '../project/project.service';
 import { User } from '../user/dto';
@@ -97,7 +98,7 @@ export class EngagementService {
     if (input.firstScripture) {
       await this.verifyFirstScripture({ languageId });
     }
-    await this.verifyProjectStatus(projectId, session);
+    await this.verifyProjectStatus(projectId, session, changeset);
 
     this.verifyCreationStatus(input.status);
 
@@ -593,9 +594,14 @@ export class EngagementService {
 
   /**
    * [BUSINESS RULE] Only Projects with a Status of 'In Development' can have Engagements created or deleted.
+   * [BUSINESS RULE] Only Projects with a Status of 'Active' and part of a changeset can have Engagements created or deleted.
    */
-  protected async verifyProjectStatus(projectId: ID, session: Session) {
-    if (session.roles.includes('global:Administrator')) {
+  protected async verifyProjectStatus(
+    projectId: ID,
+    session: Session,
+    changeset?: ID
+  ) {
+    if (changeset || session.roles.includes('global:Administrator')) {
       return;
     }
 
@@ -607,7 +613,15 @@ export class EngagementService {
         ? e.withField('engagement.projectId')
         : e;
     }
+
     if (project.status !== ProjectStatus.InDevelopment) {
+      const changeRequests = await this.projectService.listChangeRequests(
+        project,
+        ProjectChangeRequestListInput.defaultVal,
+        session
+      );
+      if (project.status === ProjectStatus.Active && changeRequests.total > 0)
+        return;
       throw new InputException(
         'The Project status is not in development',
         'project.status'
