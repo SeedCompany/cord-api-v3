@@ -647,7 +647,7 @@ create table sc.languages(
   least_of_these_reason varchar(255),
   population_override int,
   provisional_code char(3),
-  registry_of_dialects_code char(5),
+  registry_of_dialects_code char(5) unique,
   sensitivity common.sensitivity not null default 'High',
   sign_language_code char(4),
   sponsor_start_date date, -- derived
