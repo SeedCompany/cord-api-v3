@@ -39,18 +39,18 @@ BEGIN
     into vPublicPersonId;
 
     -- create token for the public 'person'
-    insert into admin.tokens(token, person) values ('public', vPublicPersonId);
+    insert into admin.tokens(token, admin_people_id) values ('public', vPublicPersonId);
 
     -- groups -------------------------------------------------------------------------------------
 
     -- Administrators Group
-    insert into admin.groups(name, created_by, modified_by, owning_person)
+    insert into admin.groups(name, created_by_admin_people_id, modified_by_admin_people_id, owning_person_admin_people_id)
     values ('Administrators', vPersonId, vPersonId, vPersonId)
     returning id
     into vAdminGroupId;
 
     -- Public Group
-    insert into admin.groups(name, created_by, modified_by, owning_person)
+    insert into admin.groups(name, created_by_admin_people_id, modified_by_admin_people_id, owning_person_admin_people_id)
     values ('Public', vPersonId, vPersonId, vPersonId)
     returning id
     into vPublicGroupId;
@@ -58,7 +58,7 @@ BEGIN
     -- organization ------------------------------------------------------------------------------------------
 
     -- Seed Company
-    insert into common.organizations(name, sensitivity, created_by, modified_by, owning_person, owning_group)
+    insert into common.organizations(name, sensitivity, created_by_admin_people_id, modified_by_admin_people_id, owning_person_admin_people_id, owning_group_admin_groups_id)
     values ('Seed Company', 'Low', vPersonId, vPersonId, vPersonId, vAdminGroupId)
     returning id
     into vOrgId;
@@ -66,19 +66,19 @@ BEGIN
     -- users ----------------------------------------------------------------------------------------------------
 
     -- Root user
-    insert into admin.users(id, email, password, created_by, modified_by, owning_person, owning_group)
+    insert into admin.user_email_accounts(id, email, password, created_by_admin_people_id, modified_by_admin_people_id, owning_person_admin_people_id, owning_group_admin_groups_id)
     values (vPersonId, p_email, p_password, vPersonId, vPersonId, vPersonId, vAdminGroupId);
 
     -- global roles ----------------------------------------------------------------------------------------------------
 
     -- Administrator role
-    insert into admin.roles(name, created_by, modified_by, owning_person, owning_group)
+    insert into admin.roles(name, created_by_admin_people_id, modified_by_admin_people_id, owning_person_admin_people_id, owning_group_admin_groups_id)
     values ('Administrator', vPersonId, vPersonId, vPersonId, vAdminGroupId)
     returning id
     into vAdminRoleId;
 
     -- Public role
-    insert into admin.roles(name, created_by, modified_by, owning_person, owning_group)
+    insert into admin.roles(name, created_by_admin_people_id, modified_by_admin_people_id, owning_person_admin_people_id, owning_group_admin_groups_id)
     values ('Public', vPersonId, vPersonId, vPersonId, vAdminGroupId)
     returning id
     into vPublicRoleId;
@@ -86,13 +86,13 @@ BEGIN
     -- global role memberships ------------------------------------------------------------------------------------------
 
     -- Give Root user the Administrator role
-    insert into admin.role_memberships(role, person, created_by, modified_by, owning_person, owning_group) values
+    insert into admin.role_memberships(admin_role_id, admin_people_id, created_by_admin_people_id, modified_by_admin_people_id, owning_person_admin_people_id, owning_group_admin_groups_id) values
     (vAdminRoleId, vPersonId, vPersonId, vPersonId, vPersonId, vAdminGroupId);
 
     -- role table grants ------------------------------------------------------------------------------------------
 
     -- group memberships ----------------------------------------------------------------------------------------------------
-    insert into admin.group_memberships(group_id, person, created_by, modified_by, owning_person, owning_group)
+    insert into admin.group_memberships(admin_groups_id, admin_people_id, created_by_admin_people_id, modified_by_admin_people_id, owning_person_admin_people_id, owning_group_admin_groups_id)
     values (vAdminGroupId, vPersonId, vPersonId, vPersonId, vPersonId, vAdminGroupId);
 
   end if;
