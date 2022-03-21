@@ -499,7 +499,6 @@ create table sc.language_engagements (
 
 	common_languages_id varchar(32) references common.languages(id), -- not null
 	sc_change_set_id varchar(32) references sc.change_sets(id), -- not null
-  communications_complete_date date,
   is_open_to_investor_visit bool,
   is_first_scripture bool,
   is_luke_partnership bool,
