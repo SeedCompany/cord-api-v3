@@ -249,8 +249,8 @@ DO $$ BEGIN
 END; $$;
 
 create table sc.partners (
-	id varchar(32) primary key references common.organizations(id),
-
+  id varchar(32) primary key default common.nanoid(),
+  common_organizations_id varchar(32) references common.organizations(id),
 	active bool,
 	financial_reporting_types sc.financial_reporting_types[],
 	is_innovations_client bool,
@@ -888,7 +888,7 @@ create table sc.partnerships (
   id varchar(32) primary key default common.nanoid(),
 
   sc_projects_id varchar(32) references sc.projects(id), -- not null
-  partner_common_organizations_id varchar(32) references common.organizations(id), -- not null
+  sc_partners_id varchar(32) references sc.partners(id), -- not null
   sc_change_set_id varchar(32) references sc.change_sets(id), -- not null
   agreement_status sc.partnership_agreement_status,
   mou varchar(32) references common.files(id),
