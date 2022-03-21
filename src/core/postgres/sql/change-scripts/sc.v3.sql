@@ -58,7 +58,8 @@ create type sc.post_shareability as enum (
   'sc_projects_id Team',
   'Internal',
   'Ask to Share Externally',
-  'External'
+  'External',
+  'Membership'
 );
 
 create type sc.post_type as enum (
