@@ -1210,7 +1210,7 @@ create type common.ceremony_type as enum (
 create table sc.ceremonies (
   id varchar(32) primary key default common.nanoid(),
 
-  sc_language_engagements_id varchar(32), -- not null
+  sc_engagements_id varchar(32) references sc.engagements(id), -- not null
   engagement_type sc.engagement_types_enum, -- not null
   ethnologue_sil_table_of_languages_id varchar(32) references sil.table_of_languages(id),
   actual_date date,
