@@ -1,6 +1,6 @@
 import { PipeTransform, Type } from '@nestjs/common';
 import { Args, ArgsOptions, Field, InputType, Int } from '@nestjs/graphql';
-import { Max, Min } from 'class-validator';
+import { Matches, Max, Min } from 'class-validator';
 import { stripIndent } from 'common-tags';
 import { Order } from './order.enum';
 import { AbstractClassType } from './types';
@@ -87,6 +87,7 @@ export const SortablePaginationInput = <SortKey extends string = string>({
       description: 'The field in which to sort on',
       defaultValue: defaultSort,
     })
+    @Matches(/^[A-Za-z0-9_]+$/)
     readonly sort: SortKey = defaultSort;
 
     @Field(() => Order, {
