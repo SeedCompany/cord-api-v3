@@ -106,7 +106,10 @@ export class StoryService {
           ? securedProps.scriptureReferences.value
           : [],
       },
-      canDelete: await this.repo.checkDeletePermission(dto.id, session),
+      canDelete: await this.authorizationService.hasPower(
+        session,
+        Powers.DeleteStory
+      ),
     };
   }
 
@@ -133,9 +136,7 @@ export class StoryService {
     if (!story) {
       throw new NotFoundException('Could not find Story');
     }
-    const canDelete = await this.repo.checkDeletePermission(id, session);
-
-    if (!canDelete)
+    if (!story.canDelete)
       throw new UnauthorizedException(
         'You do not have the permission to delete this Story'
       );

@@ -113,7 +113,10 @@ export class PartnerService {
         ...securedProps.financialReportingTypes,
         value: securedProps.financialReportingTypes.value || [],
       },
-      canDelete: await this.repo.checkDeletePermission(dto.id, session),
+      canDelete: await this.authorizationService.hasPower(
+        session,
+        Powers.DeletePartner
+      ),
     };
   }
 
@@ -161,9 +164,7 @@ export class PartnerService {
       throw new NotFoundException('Could not find Partner');
     }
 
-    const canDelete = await this.repo.checkDeletePermission(id, session);
-
-    if (!canDelete)
+    if (!object.canDelete)
       throw new UnauthorizedException(
         'You do not have the permission to delete this Partner'
       );

@@ -8,10 +8,12 @@ import {
   SecuredList,
   ServerException,
   Session,
+  UnauthorizedException,
   UnsecuredDto,
 } from '../../common';
 import { ILogger, Logger } from '../../core';
 import { mapListResults } from '../../core/database/results';
+import { Powers } from '../authorization';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { UserService } from '../user';
 import { CreatePost, Post, Postable, UpdatePost } from './dto';
@@ -80,7 +82,10 @@ export class PostService {
     return {
       ...dto,
       ...securedProps,
-      canDelete: await this.repo.checkDeletePermission(dto.id, session),
+      canDelete: await this.authorizationService.hasPower(
+        session,
+        Powers.DeletePost
+      ),
     };
   }
 
@@ -99,6 +104,10 @@ export class PostService {
     if (!object) {
       throw new NotFoundException('Could not find post', 'post.id');
     }
+    if (!object.canDelete)
+      throw new UnauthorizedException(
+        'You do not have the permission to delete this Post'
+      );
 
     try {
       await this.repo.deleteNode(object);

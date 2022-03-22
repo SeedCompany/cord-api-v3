@@ -5,6 +5,7 @@ import {
   ObjectView,
   ServerException,
   Session,
+  UnauthorizedException,
   UnsecuredDto,
 } from '../../../common';
 import { HandleIdLookup, ILogger, Logger } from '../../../core';
@@ -86,7 +87,10 @@ export class UnavailabilityService {
     return {
       ...dto,
       ...securedProps,
-      canDelete: await this.repo.checkDeletePermission(dto.id, session), // TODO
+      canDelete: await this.authorizationService.hasPower(
+        session,
+        Powers.DeleteUnavailability
+      ),
     };
   }
 
@@ -125,6 +129,10 @@ export class UnavailabilityService {
         'unavailability.id'
       );
     }
+    if (!ua.canDelete)
+      throw new UnauthorizedException(
+        'You do not have the permission to delete this Unavailability'
+      );
     await this.repo.deleteNode(ua);
   }
 

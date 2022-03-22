@@ -109,7 +109,10 @@ export class ProjectChangeRequestService {
         ...securedProps.types,
         value: securedProps.types.value ?? [],
       },
-      canDelete: await this.db.checkDeletePermission(dto.id, session),
+      canDelete: await this.authorizationService.hasPower(
+        session,
+        Powers.DeleteProjectChangeRequest
+      ),
     };
   }
 
@@ -145,11 +148,9 @@ export class ProjectChangeRequestService {
   async delete(id: ID, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
 
-    const canDelete = await this.db.checkDeletePermission(id, session);
-
-    if (!canDelete)
+    if (!object.canDelete)
       throw new UnauthorizedException(
-        'You do not have the permission to delete this project change request'
+        'You do not have the permission to delete this Project Change Request'
       );
 
     try {

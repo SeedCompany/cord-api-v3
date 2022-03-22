@@ -100,7 +100,10 @@ export class FundingAccountService {
     return {
       ...dto,
       ...securedProps,
-      canDelete: await this.repo.checkDeletePermission(dto.id, session),
+      canDelete: await this.authorizationService.hasPower(
+        session,
+        Powers.DeleteFundingAccount
+      ),
     };
   }
 
@@ -126,9 +129,7 @@ export class FundingAccountService {
       throw new NotFoundException('Could not find Funding Account');
     }
 
-    const canDelete = await this.repo.checkDeletePermission(id, session);
-
-    if (!canDelete)
+    if (!object.canDelete)
       throw new UnauthorizedException(
         'You do not have the permission to delete this Funding Account'
       );

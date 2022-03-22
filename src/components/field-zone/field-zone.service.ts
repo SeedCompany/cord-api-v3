@@ -84,7 +84,10 @@ export class FieldZoneService {
     return {
       ...dto,
       ...securedProps,
-      canDelete: await this.repo.checkDeletePermission(dto.id, session),
+      canDelete: await this.authorizationService.hasPower(
+        session,
+        Powers.DeleteFieldZone
+      ),
     };
   }
 
@@ -117,9 +120,7 @@ export class FieldZoneService {
       throw new NotFoundException('Could not find Field Zone');
     }
 
-    const canDelete = await this.repo.checkDeletePermission(id, session);
-
-    if (!canDelete)
+    if (!object.canDelete)
       throw new UnauthorizedException(
         'You do not have the permission to delete this Field Zone'
       );

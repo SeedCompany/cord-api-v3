@@ -92,7 +92,10 @@ export class FieldRegionService {
     return {
       ...dto,
       ...securedProps,
-      canDelete: await this.repo.checkDeletePermission(dto.id, session),
+      canDelete: await this.authorizationService.hasPower(
+        session,
+        Powers.DeleteFieldRegion
+      ),
     };
   }
 
@@ -121,9 +124,7 @@ export class FieldRegionService {
       throw new NotFoundException('Could not find Field Region');
     }
 
-    const canDelete = await this.repo.checkDeletePermission(id, session);
-
-    if (!canDelete)
+    if (!object.canDelete)
       throw new UnauthorizedException(
         'You do not have the permission to delete this Field Region'
       );

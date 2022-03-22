@@ -105,7 +105,10 @@ export class EthnoArtService {
           ? securedProps.scriptureReferences.value
           : [],
       },
-      canDelete: await this.repo.checkDeletePermission(dto.id, session),
+      canDelete: await this.authorizationService.hasPower(
+        session,
+        Powers.DeleteEthnoArt
+      ),
     };
   }
 
@@ -142,8 +145,7 @@ export class EthnoArtService {
       throw new NotFoundException('Could not find Ethno Art');
     }
 
-    const canDelete = await this.repo.checkDeletePermission(id, session);
-    if (!canDelete) {
+    if (!ethnoArt.canDelete) {
       throw new UnauthorizedException(
         'You do not have permissions to delete this Ethno Art'
       );

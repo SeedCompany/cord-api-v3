@@ -215,7 +215,10 @@ export class BudgetService {
       // if we are in an editable change request.
       status: changeRequest?.canEdit ? BudgetStatus.Pending : result.status,
       records: records?.items || [],
-      canDelete: await this.budgetRepo.checkDeletePermission(id, session),
+      canDelete: await this.authorizationService.hasPower(
+        session,
+        Powers.DeleteBudget
+      ),
     };
   }
 
@@ -248,7 +251,10 @@ export class BudgetService {
     return {
       ...result,
       ...securedProps,
-      canDelete: await this.budgetRepo.checkDeletePermission(id, session),
+      canDelete: await this.authorizationService.hasPower(
+        session,
+        Powers.DeleteBudgetRecord
+      ),
     };
   }
 
@@ -336,8 +342,7 @@ export class BudgetService {
       throw new NotFoundException('Could not find Budget');
     }
 
-    const canDelete = await this.budgetRepo.checkDeletePermission(id, session);
-    if (!canDelete)
+    if (!budget.canDelete)
       throw new UnauthorizedException(
         'You do not have the permission to delete this Budget'
       );
@@ -368,12 +373,7 @@ export class BudgetService {
       throw new NotFoundException('Could not find Budget Record');
     }
 
-    const canDelete = await this.budgetRecordsRepo.checkDeletePermission(
-      id,
-      session
-    );
-
-    if (!canDelete)
+    if (!br.canDelete)
       throw new UnauthorizedException(
         'You do not have the permission to delete this Budget Record'
       );

@@ -11,6 +11,7 @@ import {
 } from '../../common';
 import { HandleIdLookup, ILogger, Logger } from '../../core';
 import { mapListResults } from '../../core/database/results';
+import { Powers } from '../authorization';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { CeremonyRepository } from './ceremony.repository';
 import {
@@ -80,7 +81,10 @@ export class CeremonyService {
     return {
       ...dto,
       ...securedProps,
-      canDelete: await this.ceremonyRepo.checkDeletePermission(dto.id, session),
+      canDelete: await this.authorizationService.hasPower(
+        session,
+        Powers.DeleteCeremony
+      ),
     };
   }
 
@@ -101,13 +105,7 @@ export class CeremonyService {
     if (!object) {
       throw new NotFoundException('Could not find ceremony', 'ceremony.id');
     }
-
-    const canDelete = await this.ceremonyRepo.checkDeletePermission(
-      id,
-      session
-    );
-
-    if (!canDelete)
+    if (!object.canDelete)
       throw new UnauthorizedException(
         'You do not have the permission to delete this Ceremony'
       );

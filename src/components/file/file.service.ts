@@ -440,6 +440,7 @@ export class FileService {
 
   async delete(id: ID, session: Session): Promise<void> {
     const fileNode = await this.repo.getById(id, session);
-    await this.repo.delete(fileNode, session);
+    await this.authorizationService.checkPower(Powers.DeleteFile, session);
+    await this.repo.delete(fileNode);
   }
 }

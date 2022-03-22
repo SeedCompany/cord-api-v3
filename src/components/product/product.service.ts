@@ -253,7 +253,10 @@ export class ProductService {
     dto: UnsecuredDto<AnyProduct>,
     session: Session
   ): Promise<AnyProduct> {
-    const canDelete = await this.repo.checkDeletePermission(dto.id, session);
+    const canDelete = await this.authorizationService.hasPower(
+      session,
+      Powers.DeleteProduct
+    );
 
     const scriptureReferences = this.scriptureRefs.parseList(
       dto.scriptureReferences
@@ -687,9 +690,7 @@ export class ProductService {
       throw new NotFoundException('Could not find product', 'product.id');
     }
 
-    const canDelete = await this.repo.checkDeletePermission(id, session);
-
-    if (!canDelete)
+    if (!object.canDelete)
       throw new UnauthorizedException(
         'You do not have the permission to delete this Product'
       );

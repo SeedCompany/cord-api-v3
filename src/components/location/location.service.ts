@@ -83,7 +83,10 @@ export class LocationService {
     return {
       ...dto,
       ...securedProps,
-      canDelete: await this.repo.checkDeletePermission(dto.id, session),
+      canDelete: await this.authorizationService.hasPower(
+        session,
+        Powers.DeleteLocation
+      ),
     };
   }
 
@@ -130,9 +133,7 @@ export class LocationService {
       throw new NotFoundException('Could not find Location');
     }
 
-    const canDelete = await this.repo.checkDeletePermission(id, session);
-
-    if (!canDelete)
+    if (!object.canDelete)
       throw new UnauthorizedException(
         'You do not have the permission to delete this Location'
       );

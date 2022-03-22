@@ -140,7 +140,10 @@ export class LanguageService {
         ...securedProps.tags,
         value: securedProps.tags.value ?? [],
       },
-      canDelete: await this.repo.checkDeletePermission(dto.id, session),
+      canDelete: await this.authorizationService.hasPower(
+        session,
+        Powers.DeleteLanguage
+      ),
       presetInventory: {
         ...securedProps.presetInventory,
         canEdit: false, // calculated
@@ -188,9 +191,7 @@ export class LanguageService {
       throw new NotFoundException('Could not find language', 'language.id');
     }
 
-    const canDelete = await this.repo.checkDeletePermission(id, session);
-
-    if (!canDelete)
+    if (!object.canDelete)
       throw new UnauthorizedException(
         'You do not have the permission to delete this Language'
       );

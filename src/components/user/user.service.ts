@@ -12,6 +12,7 @@ import {
   SecuredResource,
   ServerException,
   Session,
+  UnauthorizedException,
   UnsecuredDto,
 } from '../../common';
 import {
@@ -176,10 +177,12 @@ export class UserService {
             ),
         value: securedProps.roles.value ?? [],
       },
-      canDelete: await this.userRepo.checkDeletePermission(
-        user.id,
-        sessionOrUserId
-      ),
+      canDelete: isIdLike(sessionOrUserId)
+        ? false
+        : await this.authorizationService.hasPower(
+            sessionOrUserId,
+            Powers.DeleteUser
+          ),
     };
   }
 
@@ -234,6 +237,12 @@ export class UserService {
     if (!object) {
       throw new NotFoundException('Could not find User');
     }
+
+    if (!object.canDelete)
+      throw new UnauthorizedException(
+        'You do not have the permission to delete this User'
+      );
+
     await this.userRepo.delete(id, session, object);
   }
 

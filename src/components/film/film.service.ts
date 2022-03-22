@@ -109,7 +109,10 @@ export class FilmService {
           ? securedProps.scriptureReferences.value
           : [],
       },
-      canDelete: await this.repo.checkDeletePermission(dto.id, session),
+      canDelete: await this.authorizationService.hasPower(
+        session,
+        Powers.DeleteFilm
+      ),
     };
   }
 
@@ -139,9 +142,7 @@ export class FilmService {
       throw new NotFoundException('Could not find Film');
     }
 
-    const canDelete = await this.repo.checkDeletePermission(id, session);
-
-    if (!canDelete)
+    if (!film.canDelete)
       throw new UnauthorizedException(
         'You do not have the permission to delete this Film'
       );

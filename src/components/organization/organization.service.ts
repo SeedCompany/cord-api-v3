@@ -102,7 +102,10 @@ export class OrganizationService {
     return {
       ...dto,
       ...securedProps,
-      canDelete: await this.repo.checkDeletePermission(dto.id, session),
+      canDelete: await this.authorizationService.hasPower(
+        session,
+        Powers.DeleteOrganization
+      ),
     };
   }
 
@@ -130,9 +133,7 @@ export class OrganizationService {
       throw new NotFoundException('Could not find Organization');
     }
 
-    const canDelete = await this.repo.checkDeletePermission(id, session);
-
-    if (!canDelete)
+    if (!object.canDelete)
       throw new UnauthorizedException(
         'You do not have the permission to delete this Organization'
       );

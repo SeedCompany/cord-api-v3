@@ -179,7 +179,10 @@ export class PartnershipService {
         ...securedProps.types,
         value: securedProps.types.value ?? [],
       },
-      canDelete: await this.repo.checkDeletePermission(dto.id, session),
+      canDelete: await this.authorizationService.hasPower(
+        session,
+        Powers.DeletePartnership
+      ),
     };
   }
 
@@ -263,9 +266,7 @@ export class PartnershipService {
         'partnership.id'
       );
     }
-    const canDelete = await this.repo.checkDeletePermission(id, session);
-
-    if (!canDelete)
+    if (!object.canDelete)
       throw new UnauthorizedException(
         'You do not have the permission to delete this Partnership'
       );

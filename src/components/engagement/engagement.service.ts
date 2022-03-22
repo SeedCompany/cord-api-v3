@@ -261,7 +261,16 @@ export class EngagementService {
       dto.status !== EngagementStatus.InDevelopment &&
       !session.roles.includes(`global:Administrator`)
         ? false
-        : await this.repo.checkDeletePermission(dto.id, session);
+        : isLanguageEngagement
+        ? await this.authorizationService.hasPower(
+            session,
+            Powers.DeleteLanguageEngagement
+          )
+        : await this.authorizationService.hasPower(
+            session,
+            Powers.DeleteInternshipEngagement
+          );
+
     if (isLanguageEngagement) {
       // help TS understand that the secured props are for a LanguageEngagement
       const secured = securedProperties as SecuredResource<

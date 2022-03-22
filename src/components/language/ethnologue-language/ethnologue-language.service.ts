@@ -66,7 +66,10 @@ export class EthnologueLanguageService {
       ...dto,
       ...secured,
       sensitivity,
-      canDelete: await this.repo.checkDeletePermission(dto.id, session),
+      canDelete: await this.authorizationService.hasPower(
+        session,
+        Powers.DeleteEthnologueLanguage
+      ),
     };
   }
 

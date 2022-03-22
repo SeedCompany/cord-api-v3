@@ -77,7 +77,10 @@ export class EducationService {
     return {
       ...dto,
       ...securedProps,
-      canDelete: await this.repo.checkDeletePermission(dto.id, session),
+      canDelete: await this.authorizationService.hasPower(
+        session,
+        Powers.DeleteEducation
+      ),
     };
   }
 

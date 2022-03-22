@@ -164,7 +164,10 @@ export class ProjectMemberService {
         ...securedProps.roles,
         value: securedProps.roles.value ?? [],
       },
-      canDelete: await this.repo.checkDeletePermission(dto.id, session), // TODO
+      canDelete: await this.authorizationService.hasPower(
+        session,
+        Powers.DeleteProjectMember
+      ),
     };
   }
 
