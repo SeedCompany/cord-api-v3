@@ -786,12 +786,17 @@ create table sc.known_languages_by_person (
 	unique (admin_people_id, sc_languages_id)
 );
 
+create type sc.user_status as enum (
+  'Active',
+  'Disabled'
+);
+
 -- extension table from commmon
 create table sc.people (
   id varchar(32) primary key references admin.people(id),
 
 	skills varchar(32)[],
-	status varchar(32), -- todo might be an enum
+	status sc.user_status,
 	title varchar(255),
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
