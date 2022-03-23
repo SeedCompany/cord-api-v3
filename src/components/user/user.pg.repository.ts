@@ -38,48 +38,58 @@ export class PgUserRepository implements PublicOf<UserRepository> {
       `
       WITH admin_people AS (
         INSERT INTO admin.people(
-            about, phone, picture, private_first_name,
-            private_last_name, public_first_name, 
-            public_last_name, private_full_name,
-            public_full_name, timezone, title,
-            status, created_by, modified_by, 
-            owning_person, owning_group)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12,
-            (SELECT person FROM admin.tokens WHERE token = 'public'), 
-            (SELECT person FROM admin.tokens WHERE token = 'public'), 
-            (SELECT person FROM admin.tokens WHERE token = 'public'), 
+            about, picture_common_files_id, private_first_name, private_last_name, 
+            public_first_name, public_last_name, timezone, created_by_admin_people_id, 
+            modified_by_admin_people_id, owning_person_admin_people_id, 
+            owning_group_admin_groups_id)
+        VALUES ($1, $2, $3, $4, $5, $6, $7,
+            (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
+            (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
+            (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
             (SELECT id FROM admin.groups WHERE  name = 'Administrators'))
         RETURNING id
       ),
-      admin_users AS (
-        INSERT INTO admin.users(id, email, created_by, modified_by, owning_person, owning_group)
-        VALUES ((SELECT id FROM admin_people), $13, (SELECT person FROM admin.tokens WHERE token = 'public'), 
-              (SELECT person FROM admin.tokens WHERE token = 'public'), 
-              (SELECT person FROM admin.tokens WHERE token = 'public'), 
+      admin_user_email AS (
+        INSERT INTO admin.user_email_accounts(
+            id, email, created_by_admin_people_id, modified_by_admin_people_id, 
+            owning_person_admin_people_id, owning_group_admin_groups_id)
+        VALUES ((SELECT id FROM admin_people), $8, (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
+              (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
+              (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
+              (SELECT id FROM admin.groups WHERE  name = 'Administrators'))
+        RETURNING id
+      ),
+      admin_user_phone AS (
+        INSERT INTO admin.user_phone_accounts(
+            id, phone, created_by_admin_people_id, modified_by_admin_people_id, 
+            owning_person_admin_people_id, owning_group_admin_groups_id)
+        VALUES ((SELECT id FROM admin_people), $9, (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
+              (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
+              (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
               (SELECT id FROM admin.groups WHERE  name = 'Administrators'))
         RETURNING id
       )
-      INSERT INTO sc.people(id, status, created_by, modified_by, owning_person, owning_group) 
-      VALUES((SELECT id FROM admin_users), $12, (SELECT person FROM admin.tokens WHERE token = 'public'), 
-		       (SELECT person FROM admin.tokens WHERE token = 'public'), 
-           (SELECT person FROM admin.tokens WHERE token = 'public'), 
+      INSERT INTO sc.people(
+          id, status, title, created_by_admin_people_id, modified_by_admin_people_id, 
+          owning_person_admin_people_id, owning_group_admin_groups_id) 
+      VALUES((SELECT id FROM admin_people), $10, $11, (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
+		       (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
+           (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
            (SELECT id FROM admin.groups WHERE  name = 'Administrators'))
       RETURNING id;
       `,
       [
         input.about,
-        input.phone,
-        'picture',
+        'pictureId',
         input.realFirstName,
         input.realLastName,
         input.displayFirstName,
         input.displayLastName,
-        `${input.realFirstName} ${input.realLastName}`,
-        `${input.displayFirstName} ${input.displayLastName}`,
-        'timezone',
-        input.title,
-        input.status,
+        input.timezone,
         input.email,
+        input.phone,
+        input.status,
+        input.title,
       ]
     );
 
@@ -91,10 +101,12 @@ export class PgUserRepository implements PublicOf<UserRepository> {
     // 	          SELECT r.id INTO roleId FROM admin.roles r WHERE r.name = role;
 
     //       ELSE
-    //          INSERT INTO admin.roles (name, created_by, modified_by, owning_person, owning_group)
-    //          VALUES(role,(SELECT person FROM admin.tokens WHERE token = 'public'),
-    //                      (SELECT person FROM admin.tokens WHERE token = 'public'),
-    //                      (SELECT person FROM admin.tokens WHERE token = 'public'),
+    //          INSERT INTO admin.roles (
+    //            name, created_by_admin_people_id, modified_by_admin_people_id,
+    //            owning_person_admin_people_id, owning_group_admin_groups_id)
+    //          VALUES(role,(SELECT admin_people_id FROM admin.tokens WHERE token = 'public'),
+    //                      (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'),
+    //                      (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'),
     //                      (SELECT id FROM admin.groups WHERE  name = 'Administrators'))
     //          RETURNING id INTO roleId;
     //       END IF;
@@ -109,10 +121,12 @@ export class PgUserRepository implements PublicOf<UserRepository> {
         void (async () => {
           await this.pg.query(
             `
-             INSERT INTO admin.role_memberships(person, role, created_by, modified_by, owning_person, owning_group) 
-             VALUES($1, (SELECT check_role($2)), (SELECT person FROM admin.tokens WHERE token = 'public'), 
-             (SELECT person FROM admin.tokens WHERE token = 'public'), 
-             (SELECT person FROM admin.tokens WHERE token = 'public'), 
+             INSERT INTO admin.role_memberships(
+                 admin_people_id, admin_role_id, created_by_admin_people_id,
+                 modified_by_admin_people_id, owning_person_admin_people_id, owning_group_admin_groups_id)
+             VALUES($1, (SELECT check_role($2)), (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'),
+             (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'),
+             (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'),
              (SELECT id FROM admin.groups WHERE  name = 'Administrators'));
              `,
             [id, role]
@@ -131,16 +145,19 @@ export class PgUserRepository implements PublicOf<UserRepository> {
   async readOne(id: ID): Promise<UnsecuredDto<User>> {
     const rows = await this.pg.query<UnsecuredDto<User>>(
       `
-        SELECT
-            p.id, u.email as "email", 
-            p.private_first_name as "realFirstName", 
-            p.private_last_name as "realLastName",
-            p.public_first_name as "publicFirstName", 
-            p.public_last_name as "publicLastName", 
-            p.phone, p.timezone, p.about, p.status,
-            p.title, p.created_at as "createdAt"
-        FROM admin.people as p, admin.users as u
-        WHERE p.id = $1 AND p.id = u.id;
+      SELECT
+          p.id, ue.email as "email", 
+          p.private_first_name as "realFirstName", 
+          p.private_last_name as "realLastName",
+          p.public_first_name as "displayFirstName", 
+          p.public_last_name as "displayLastName", 
+          pa.phone, p.timezone, p.about,
+          sp.status, sp.title,
+          p.created_at as "createdAt"
+      FROM admin.people as p
+		  JOIN admin.user_email_accounts as ue ON p.id = ue.id
+		  JOIN admin.user_phone_accounts as pa ON p.id = pa.id
+      JOIN sc.people as sp ON p.id = sp.id AND p.id = $1;
         `,
       [id]
     );
@@ -148,9 +165,10 @@ export class PgUserRepository implements PublicOf<UserRepository> {
     const [roles] = await this.pg.query<{ roles: Role[] }>(
       `
       SELECT array_agg(r.name) as "roles"
-      FROM admin.role_memberships rm, admin.roles r, admin.people p
-      WHERE rm.role = r.id AND rm.person = p.id AND p.id = $1
-      GROUP BY r.id
+      FROM admin.roles as r
+      JOIN admin.role_memberships as rm ON rm.admin_role_id = r.id
+      JOIN admin.people as p ON rm.admin_people_id = p.id AND p.id = $1
+      GROUP BY r.id;
       `,
       [id]
     );
@@ -158,9 +176,10 @@ export class PgUserRepository implements PublicOf<UserRepository> {
     if (!rows[0]) {
       throw new NotFoundException(`Could not find user ${id}`);
     }
+
     return {
       ...rows[0],
-      roles: roles ? roles.roles : [],
+      roles: roles.roles ?? [],
     };
   }
 
@@ -170,15 +189,18 @@ export class PgUserRepository implements PublicOf<UserRepository> {
     let rows = await this.pg.query<UnsecuredDto<User>>(
       `
       SELECT
-          p.id, u.email as "email", 
+          p.id, ue.email as "email", 
           p.private_first_name as "realFirstName", 
           p.private_last_name as "realLastName",
-          p.public_first_name as "publicFirstName", 
-          p.public_last_name as "publicLastName", 
-          p.phone, p.timezone, p.about,  
-          p.status, p.title, p.created_at as "createdAt"
-      FROM admin.people as p, admin.users as u
-      WHERE p.id = u.id AND p.id = ANY($1::text[])
+          p.public_first_name as "displayFirstName", 
+          p.public_last_name as "displayLastName", 
+          pa.phone, p.timezone, p.about,
+          sp.status, sp.title,
+          p.created_at as "createdAt"
+      FROM admin.people as p
+      JOIN admin.user_email_accounts as ue ON p.id = ue.id
+		  JOIN admin.user_phone_accounts as pa ON p.id = pa.id
+      JOIN sc.people as sp ON p.id = sp.id AND  p.id = ANY($1::text[]);
       `,
       [ids]
     );
@@ -190,8 +212,9 @@ export class PgUserRepository implements PublicOf<UserRepository> {
     const roles = await this.pg.query<{ roles: string[]; id: string }>(
       `
       SELECT array_agg(r.name) as "roles", p.id as id
-      FROM admin.role_memberships rm, admin.roles r, admin.people p
-      WHERE rm.role = r.id AND rm.person = p.id AND p.id = ANY($1::text[])
+      FROM admin.roles r
+      JOIN admin.role_memberships as rm ON rm.admin_role_id = r.id
+      JOIN admin.people as p ON rm.admin_people_id = p.id AND p.id = ANY($1::text[])
       GROUP BY p.id;
       `,
       [ids]
@@ -214,7 +237,7 @@ export class PgUserRepository implements PublicOf<UserRepository> {
     const [{ count }] = await this.pg.query<{ count: string }>(
       `
       SELECT count(*)
-      FROM admin.people p, admin.users u
+      FROM admin.people p, admin.user_email_accounts u
       WHERE u.id = p.id;
       `
     );
@@ -222,15 +245,18 @@ export class PgUserRepository implements PublicOf<UserRepository> {
     let rows = await this.pg.query<UnsecuredDto<User>>(
       `
       SELECT
-          p.id, u.email "email", 
-          p.private_first_name "realFirstName", 
-          p.private_last_name "realLastName",
-          p.public_first_name "displayFirstName", 
-          p.public_last_name "displayLastName", 
-          p.phone, p.timezone, p.about, 
-          p.status, p.title, p.created_at "createdAt"
-      FROM admin.people as p, admin.users as u
-      WHERE p.id = u.id
+          p.id, ue.email as "email", 
+          p.private_first_name as "realFirstName", 
+          p.private_last_name as "realLastName",
+          p.public_first_name as "displayFirstName", 
+          p.public_last_name as "displayLastName", 
+          pa.phone, p.timezone, p.about,
+          sp.status, sp.title,
+          p.created_at as "createdAt"
+      FROM admin.people as p
+      JOIN admin.user_email_accounts as ue ON p.id = ue.id
+		  JOIN admin.user_phone_accounts as pa ON p.id = pa.id
+      JOIN sc.people as sp ON p.id = sp.id
       ORDER BY ${input.sort} ${input.order} 
       LIMIT ${limit ?? 10} OFFSET ${offset ?? 5};
       `
@@ -239,8 +265,9 @@ export class PgUserRepository implements PublicOf<UserRepository> {
     const roles = await this.pg.query<{ roles: string[]; id: string }>(
       `
       SELECT array_agg(r.name) as "roles", p.id as id
-      FROM admin.role_memberships rm, admin.roles r, admin.people p
-      WHERE rm.role = r.id AND rm.person = p.id
+      FROM admin.roles r
+      JOIN admin.role_memberships as rm ON rm.admin_role_id = r.id
+      JOIN admin.people as p ON rm.admin_people_id = p.id
       GROUP BY p.id;
       `
     );
@@ -263,21 +290,29 @@ export class PgUserRepository implements PublicOf<UserRepository> {
     user: User,
     email: string | null | undefined
   ): Promise<void> {
-    await this.pg.query('UPDATE admin.users SET email = $1 WHERE id = $2;', [
-      email,
-      user.id,
-    ]);
+    await this.pg.query(
+      'UPDATE user_email_accounts SET email = $1 WHERE id = $2;',
+      [email, user.id]
+    );
   }
 
   @PgTransaction()
   async delete(id: ID): Promise<void> {
-    await this.pg.query('DELETE FROM admin.users WHERE id = $1;', [id]);
+    await this.pg.query(
+      'DELETE FROM admin.user_email_accounts WHERE id = $1;',
+      [id]
+    );
+    await this.pg.query(
+      'DELETE FROM admin.user_phone_accounts WHERE id = $1;',
+      [id]
+    );
+    await this.pg.query('DELETE FROM sc.people WHERE id = $1;', [id]);
     await this.pg.query('DELETE FROM admin.people WHERE id = $1;', [id]);
   }
 
   async doesEmailAddressExist(email: string): Promise<boolean> {
     const rows = await this.pg.query<{ exists: boolean }>(
-      'SELECT EXISTS(SELECT email FROM admin.users WHERE email = $1)',
+      'SELECT EXISTS(SELECT email FROM admin.user_email_accounts WHERE email = $1)',
       [email]
     );
 
@@ -311,7 +346,7 @@ export class PgUserRepository implements PublicOf<UserRepository> {
       `
       UPDATE admin.people
       SET ${updates}, modified_at = CURRENT_TIMESTAMP, 
-      modified_by = (SELECT person FROM admin.tokens WHERE token = 'public')
+      modified_by_admin_people_id = (SELECT person FROM admin.tokens WHERE token = 'public')
       WHERE id = '${id}'
       RETURNING id;
       `
