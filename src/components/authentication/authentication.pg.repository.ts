@@ -17,34 +17,34 @@ export class PgAuthenticationRepository
   async resumeSession(
     token: string
   ): Promise<{ userId?: ID; roles: ScopedRole[] } | undefined> {
-    const [{ userId }] = await this.pg.query<{ userId: ID }>(
-      'SELECT person as "userId" FROM admin.tokens WHERE token = $1',
+    const userId = await this.pg.query<{ userId: ID }>(
+      'SELECT admin_people_id as "userId" FROM admin.tokens WHERE token = $1',
       [token]
     );
 
-    if (!userId) {
+    if (!userId[0].userId) {
       throw new Error('Could not find user');
     }
 
-    const [{ roles }] = await this.pg.query<{ roles: string[] }>(
+    const roles = await this.pg.query<{ roles: string[] }>(
       `
       SELECT array_agg(r.name) as roles
       FROM admin.role_memberships rm, admin.roles r
-      WHERE rm.person = $1 AND r.id = rm.role
-      GROUP BY rm.person
+      WHERE rm.admin_people_id = $1 AND r.id = rm.admin_role_id
+      GROUP BY rm.admin_people_id;
       `,
-      [userId]
+      [userId[0].userId]
     );
 
     return {
-      userId: userId,
-      roles: roles as unknown as ScopedRole[],
+      userId: userId[0].userId,
+      roles: roles[0].roles as unknown as ScopedRole[],
     };
   }
 
   async saveSessionToken(token: string, userId?: ID) {
     const rows = await this.pg.query<{ token: string }>(
-      'INSERT INTO admin.tokens (token, person) VALUES ($1, $2) RETURNING token;',
+      'INSERT INTO admin.tokens (token, admin_people_id) VALUES ($1, $2) RETURNING token;',
       [token, userId]
     );
 
@@ -57,7 +57,7 @@ export class PgAuthenticationRepository
     token: string
   ): Promise<{ token: string; userId?: ID | undefined } | undefined> {
     const rows = await this.pg.query<{ token: string; userId: ID }>(
-      'SELECT person as userId, token FROM admin.tokens WHERE token = $1;',
+      'SELECT admin_people_id as "userId", token FROM admin.tokens WHERE token = $1;',
       [token]
     );
 
@@ -67,7 +67,8 @@ export class PgAuthenticationRepository
   async saveEmailToken(email: string, token: string) {
     const rows = await this.pg.query<{ token: string }>(
       `
-      INSERT INTO admin.email_tokens (token, user_id) VALUES ($1, (SELECT id FROM admin.users WHERE email = $2))
+      INSERT INTO admin.email_tokens (token, admin_user_id) 
+      VALUES ($1, (SELECT id FROM admin.user_email_accounts WHERE email = $2))
       RETURNING token;
       `,
       [token, email]
@@ -81,7 +82,8 @@ export class PgAuthenticationRepository
   async findEmailToken(token: string): Promise<EmailToken | undefined> {
     const rows = await this.pg.query<EmailToken>(
       `
-      SELECT u.email, e.token, e.created_at as "createdOn" FROM admin.email_tokens as e, admin.users as u
+      SELECT u.email, e.token, e.created_at as "createdOn" 
+      FROM admin.email_tokens as e, admin.user_email_accounts as u
       WHERE e.token = $1 AND e.user_id = u.id;
       `,
       [token]
@@ -90,17 +92,17 @@ export class PgAuthenticationRepository
   }
 
   async savePasswordHashOnUser(userId: ID, passwordHash: string) {
-    await this.pg.query('UPDATE admin.users SET password = $1 WHERE id = $2;', [
-      passwordHash,
-      userId,
-    ]);
+    await this.pg.query(
+      'UPDATE admin.user_email_accounts SET password = $1 WHERE id = $2;',
+      [passwordHash, userId]
+    );
   }
 
   async getPasswordHash(input: LoginInput, session: Session) {
     const rows = await this.pg.query<{ pash: string }>(
       `
-      SELECT u.password as pash FROM admin.users as u, admin.tokens as t 
-      WHERE u.email = $1 AND t.token = $2 AND t.person = u.id;
+      SELECT u.password as pash FROM admin.user_email_accounts as u, admin.tokens as t 
+      WHERE u.email = $1 AND t.token = $2 AND t.admin_people_id = u.id;
       `,
       [input.email, session.token]
     );
@@ -110,7 +112,10 @@ export class PgAuthenticationRepository
 
   async getCurrentPasswordHash(session: Session): Promise<string | undefined> {
     const rows = await this.pg.query<{ pash: string }>(
-      'SELECT password as pash FROM admin.users WHERE id = (SELECT person FROM admin.tokens WHERE token = $1);',
+      `
+      SELECT password as pash FROM admin.user_email_accounts 
+      WHERE id = (SELECT person FROM admin.tokens WHERE token = $1);
+      `,
       [session.token]
     );
 
@@ -119,7 +124,7 @@ export class PgAuthenticationRepository
 
   async doesEmailAddressExist(email: string): Promise<boolean> {
     const rows = await this.pg.query(
-      'SELECT email FROM admin.users WHERE email = $1;',
+      'SELECT email FROM admin.user_email_accounts WHERE email = $1;',
       [email]
     );
 
@@ -134,10 +139,10 @@ export class PgAuthenticationRepository
     newPasswordHash: string,
     session: Session
   ): Promise<void> {
-    await this.pg.query('UPDATE admin.users SET password = $1 WHERE id = $2;', [
-      newPasswordHash,
-      session.userId,
-    ]);
+    await this.pg.query(
+      'UPDATE admin.user_email_accounts SET password = $1 WHERE id = $2;',
+      [newPasswordHash, session.userId]
+    );
   }
 
   async updatePasswordViaEmailToken(
@@ -146,10 +151,10 @@ export class PgAuthenticationRepository
   ): Promise<void> {
     await this.pg.query(
       `
-      UPDATE admin.users SET password = $1 
+      UPDATE admin.user_email_accounts SET password = $1 
       WHERE id = (
-                    SELECT t.user_id FROM admin.email_tokens as t, admin.users as u
-                    WHERE t.token = $2 AND u.email = $3 AND t.user_id = u.id
+                    SELECT t.user_id FROM admin.email_tokens as t, admin.user_email_accounts as u
+                    WHERE t.token = $2 AND u.email = $3 AND t.admin_people_id = u.id
                  );
       `,
       [pash, token, email]
@@ -158,7 +163,7 @@ export class PgAuthenticationRepository
 
   async getUserFromSession(session: Session) {
     const rows = await this.pg.query<{ person: ID }>(
-      'SELECT person FROM admin.tokens WHERE token = $1;',
+      'SELECT admin_people_id FROM admin.tokens WHERE token = $1;',
       [session.token]
     );
     return rows[0].person;
@@ -169,7 +174,7 @@ export class PgAuthenticationRepository
     session: Session
   ): Promise<ID | undefined> {
     const rows = await this.pg.query<{ id: ID }>(
-      'SELECT id FROM admin.users WHERE email = $1;',
+      'SELECT id FROM admin.user_email_accounts WHERE email = $1;',
       [input.email]
     );
 
@@ -185,7 +190,7 @@ export class PgAuthenticationRepository
     await this.pg.query(
       `
       DELETE FROM admin.email_tokens 
-      WHERE user_id = (SELECT id FROM admin.users WHERE email = $1);
+      WHERE admin_user_id = (SELECT id FROM admin.user_email_accounts WHERE email = $1);
       `,
       [email]
     );
