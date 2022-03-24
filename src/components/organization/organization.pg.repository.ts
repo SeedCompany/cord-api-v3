@@ -34,27 +34,14 @@ export class PgOrganizationRepository
     // TODO: Add primary_location
     const [id] = await this.pg.query<{ id: ID }>(
       `
-      WITH common_organization AS (
-        INSERT INTO common.organizations(
-            name, created_by, modified_by, owning_person, owning_group)
-        VALUES (
-            $1, (SELECT person FROM admin.tokens WHERE token = 'public'), 
-            (SELECT person FROM admin.tokens WHERE token = 'public'), 
-            (SELECT person FROM admin.tokens WHERE token = 'public'), 
+      INSERT INTO common.organizations(
+          name, street_address, created_by_admin_people_id, modified_by_admin_people_id, 
+          owning_person_admin_people_id, owning_group_admin_groups_id)
+      VALUES ($1, $2, (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
+            (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
+            (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
             (SELECT id FROM admin.groups WHERE  name = 'Administrators'))
-        RETURNING id AS common_id, sensitivity as common_sensitivity
-      )
-      INSERT INTO sc.organizations(
-          id, address, sensitivity, created_by, modified_by, 
-          owning_person, owning_group)
-      VALUES (
-          (SELECT common_id FROM common_organization), $2,
-          (SELECT common_sensitivity FROM common_organization),
-          (SELECT person FROM admin.tokens WHERE token = 'public'), 
-          (SELECT person FROM admin.tokens WHERE token = 'public'), 
-          (SELECT person FROM admin.tokens WHERE token = 'public'), 
-          (SELECT id FROM admin.groups WHERE  name = 'Administrators'))
-      RETURNING id;
+        RETURNING id; 
       `,
       [input.name, input.address]
     );
@@ -72,9 +59,11 @@ export class PgOrganizationRepository
   ): Promise<UnsecuredDto<Organization>> {
     const rows = await this.pg.query<UnsecuredDto<Organization>>(
       `
-      SELECT c.id, c.name, s.address, c.sensitivity, c.created_at as "createdAt" 
-      FROM common.organizations c, sc.organizations s
-      WHERE c.id = s.id AND c.id = $1;
+      SELECT 
+        id, name, sensitivity, created_at as "createdAt",
+        concat_ws(', ', street_address, city, state, nation) as address
+      FROM common.organizations
+      WHERE id = $1;
       `,
       [id]
     );
@@ -92,9 +81,11 @@ export class PgOrganizationRepository
   ): Promise<ReadonlyArray<UnsecuredDto<Organization>>> {
     const rows = await this.pg.query<UnsecuredDto<Organization>>(
       `
-      SELECT c.id, c.name, s.address, c.sensitivity, c.created_at as "createdAt"
-      FROM common.organizations c, sc.organizations s
-      WHERE c.id = s.id AND c.id = ANY($1::text[])
+      SELECT 
+        id, name, sensitivity, created_at as "createdAt",
+        concat_ws(', ', street_address, city, state, nation) as address
+      FROM common.organizations
+      WHERE id = ANY($1::text[])
       `,
       [ids]
     );
@@ -113,16 +104,16 @@ export class PgOrganizationRepository
     const [{ count }] = await this.pg.query<{ count: string }>(
       `
       SELECT count(*)
-      FROM common.organizations c, sc.organizations s
-      WHERE c.id = s.id;
+      FROM common.organizations
       `
     );
 
     const rows = await this.pg.query<UnsecuredDto<Organization>>(
       `
-      SELECT c.id, c.name, s.address, c.sensitivity, c.created_at as "createdAt"
-      FROM common.organizations c, sc.organizations s
-      WHERE c.id = s.id
+      SELECT 
+        id, name, sensitivity, created_at as "createdAt",
+        concat_ws(', ', street_address, city, state, nation) as address
+      FROM common.organizations   
       ORDER BY ${input.sort} ${input.order} 
       LIMIT ${limit ?? 25} OFFSET ${offset ?? 10};
       `
@@ -145,23 +136,34 @@ export class PgOrganizationRepository
       return;
     }
 
-    Object.keys(changes).forEach((key) => async () => {
-      await this.pg.query(
-        `
-        UPDATE ${
-          key === 'name' ? 'common' : 'sc'
-        }.organizations, modified_at = CURRENT_TIMESTAMP, 
-        modified_by = (SELECT person FROM admin.tokens WHERE token = 'public') 
-        SET ${key} = $1 WHERE id = $2;
-        `,
-        [changes[key], id]
-      );
-    });
+    // Hardcoding updates only for `street_address` and  `name` for now
+    const updates = Object.entries(changes)
+      .map(([key, value]) => {
+        return key === 'address'
+          ? `street_address = '${value as string}'`
+          : `${key} = '${value as string}'`;
+      })
+      .join(', ');
+
+    const rows = await this.pg.query(
+      `
+      UPDATE common.organizations SET ${updates}, modified_at = CURRENT_TIMESTAMP, 
+      modified_by_admin_people_id = (SELECT admin_people_id FROM admin.tokens WHERE token = 'public')
+      WHERE id = $1
+      RETURNING id;
+      `,
+      [id]
+    );
+
+    if (!rows[0]) {
+      throw new ServerException(`Could not update location ${id}`);
+    }
+
+    return rows[0];
   }
 
   @PgTransaction()
   async delete(id: ID) {
-    await this.pg.query('DELETE FROM sc.organizations WHERE id = $1;', [id]);
     await this.pg.query('DELETE FROM common.organizations WHERE id = $1;', [
       id,
     ]);
@@ -170,8 +172,7 @@ export class PgOrganizationRepository
   async isUnique(orgName: string): Promise<boolean> {
     const [{ exists }] = await this.pg.query<{ exists: boolean }>(
       `
-      SELECT EXISTS (SELECT c.name FROM common.organizations c, sc.organizations sc 
-      WHERE c.name = $1 OR sc.name = $1)`,
+      SELECT EXISTS (SELECT name FROM common.organizations WHERE name = $1);`,
       [orgName]
     );
 
