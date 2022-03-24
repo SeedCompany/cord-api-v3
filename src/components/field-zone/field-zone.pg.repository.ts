@@ -27,10 +27,12 @@ export class PgFieldZoneRepository implements PublicOf<FieldZoneRepository> {
   ): Promise<{ id: ID } | undefined> {
     const [id] = await this.pg.query<{ id: ID }>(
       `
-      INSERT INTO sc.field_zones(name, director, created_by, modified_by, owning_person, owning_group)
-      VALUES($1, $2, (SELECT person FROM admin.tokens WHERE token = 'public'), 
-          (SELECT person FROM admin.tokens WHERE token = 'public'), 
-          (SELECT person FROM admin.tokens WHERE token = 'public'), 
+      INSERT INTO sc.field_zones(
+          name, director_admin_people_id, created_by_admin_people_id, modified_by_admin_people_id, 
+          owning_person_admin_people_id, owning_group_admin_groups_id)
+      VALUES($1, $2, (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'),
+          (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
+          (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
           (SELECT id FROM admin.groups WHERE  name = 'Administrators'))
       RETURNING id;
       `,
@@ -47,7 +49,7 @@ export class PgFieldZoneRepository implements PublicOf<FieldZoneRepository> {
   async readOne(id: ID): Promise<UnsecuredDto<FieldZone>> {
     const rows = await this.pg.query<UnsecuredDto<FieldZone>>(
       `
-      SELECT id, name, director, created_at as  "createdAt"
+      SELECT id, name, director_admin_people_id as director, created_at as  "createdAt"
       FROM sc.field_zones
       WHERE id = $1;
       `,
@@ -66,7 +68,7 @@ export class PgFieldZoneRepository implements PublicOf<FieldZoneRepository> {
   ): Promise<ReadonlyArray<UnsecuredDto<FieldZone>>> {
     const rows = await this.pg.query<UnsecuredDto<FieldZone>>(
       `
-      SELECT id, name, director, created_at as "createdAt"
+      SELECT id, name, director_admin_people_id as director, created_at as "createdAt"
       FROM sc.field_zones
       WHERE id = ANY($1::text[]);
       `,
@@ -79,7 +81,7 @@ export class PgFieldZoneRepository implements PublicOf<FieldZoneRepository> {
   async updateDirector(directorId: ID, id: ID): Promise<void> {
     await this.pg.query(
       `
-      UPDATE sc.field_zones SET director = (SELECT id FROM admin.people WHERE id = $1)
+      UPDATE sc.field_zones SET director_admin_people_id = (SELECT id FROM admin.people WHERE id = $1)
       WHERE id = $2;
       `,
       [directorId, id]
@@ -108,7 +110,7 @@ export class PgFieldZoneRepository implements PublicOf<FieldZoneRepository> {
 
     const rows = await this.pg.query<UnsecuredDto<FieldZone>>(
       `
-      SELECT id, name, director, created_at as "createdAt"
+      SELECT id, name, director_admin_people_id as director, created_at as "createdAt"
       FROM sc.field_zones
       ORDER BY ${input.sort} ${input.order} 
       LIMIT ${limit ?? 10} OFFSET ${offset ?? 5};
@@ -127,7 +129,7 @@ export class PgFieldZoneRepository implements PublicOf<FieldZoneRepository> {
     await this.pg.query(
       `
       UPDATE sc.field_regions
-      SET field_zone = (SELECT NULL FROM sc.field_zones WHERE id = $1)
+      SET sc_field_zone_id = (SELECT NULL FROM sc.field_zones WHERE id = $1)
       WHERE field_zone = $1;
       `,
       [id]
