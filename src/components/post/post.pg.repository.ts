@@ -9,7 +9,7 @@ import {
 } from '../../common';
 import { Pg } from '../../core';
 import { PgTransaction } from '../../core/postgres/transaction.decorator';
-import { CreatePost, Post } from './dto';
+import { CreatePost, Post, UpdatePost } from './dto';
 import { PostListInput } from './dto/list-posts.dto';
 import { PostRepository } from './post.repository';
 
@@ -86,5 +86,16 @@ export class PgPostRepository extends PostRepository {
       total: +count,
       hasMore: rows.length < +count,
     };
+  }
+
+  @PgTransaction()
+  async update(input: UpdatePost, _session: Session) {
+    await this.pg.query(
+      `
+      UPDATE sc.posts SET body = $2, type = $3, shareability = $4, modified_by = (SELECT person FROM admin.tokens WHERE token = 'public')
+      WHERE id = $1;
+      `,
+      [input.id, input.body, input.type, input.shareability]
+    );
   }
 }
