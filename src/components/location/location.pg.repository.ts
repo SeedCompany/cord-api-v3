@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { isEmpty, isNil, omitBy } from 'lodash';
+import { compact, isEmpty, isNil, omitBy } from 'lodash';
 import {
   ID,
   MaybeUnsecuredInstance,
@@ -28,9 +28,9 @@ export class PgLocationRepository implements PublicOf<LocationRepository> {
   async doesNameExist(name: string): Promise<boolean> {
     const rows = await this.pg.query(
       `
-      SELECT c.name
-      FROM common.locations c, sc.locations sc 
-      WHERE c.name = $1 OR sc.name = $1;
+      SELECT name
+      FROM common.locations
+      WHERE name = $1;
       `,
       [name]
     );
@@ -42,21 +42,22 @@ export class PgLocationRepository implements PublicOf<LocationRepository> {
       `
       WITH common_location AS (
         INSERT INTO common.locations(
-          name, type, iso_alpha3, created_by, 
-          modified_by, owning_person, owning_group)
-        VALUES($1, $2, $3, (SELECT person FROM admin.tokens WHERE token = 'public'), 
-          (SELECT person FROM admin.tokens WHERE token = 'public'), 
-          (SELECT person FROM admin.tokens WHERE token = 'public'), 
-          (SELECT id FROM admin.groups WHERE  name = 'Administrators'))
+          name, type, iso_3166_alpha_3, created_by_admin_people_id,  modified_by_admin_people_id, 
+          owning_person_admin_people_id, owning_group_admin_groups_id)
+        VALUES($1, $2, $3, (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
+          (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
+          (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
+          (SELECT id FROM admin.groups WHERE  name = 'Administrators')) 
         RETURNING id as common_location_id
       )
-      INSERT INTO sc.locations(id, name, type, 
-        iso_alpha_3, default_region, funding_account, 
-        created_by, modified_by, owning_person, owning_group)
-      VALUES((SELECT common_location_id FROM common_location), $1, $2, $3, $4, $5,
-          (SELECT person FROM admin.tokens WHERE token = 'public'), 
-          (SELECT person FROM admin.tokens WHERE token = 'public'), 
-          (SELECT person FROM admin.tokens WHERE token = 'public'), 
+      INSERT INTO sc.locations(
+        id, default_region, funding_account, 
+        created_by_admin_people_id, modified_by_admin_people_id, 
+        owning_person_admin_people_id, owning_group_admin_groups_id)
+      VALUES((SELECT common_location_id FROM common_location), $4, $5,
+          (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
+          (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
+          (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
           (SELECT id FROM admin.groups WHERE  name = 'Administrators'))
       RETURNING id
       `,
@@ -80,10 +81,10 @@ export class PgLocationRepository implements PublicOf<LocationRepository> {
     const rows = await this.pg.query<UnsecuredDto<Location>>(
       `
       SELECT 
-          id, name, type, iso_alpha_3 as "isoAlpha3", funding_account as "fundingAccount", 
-          default_region as "defaultFieldRegion", created_at as "createdAt" 
-      FROM sc.locations
-      WHERE id = $1;
+          s.id, c.name, c.type, c.iso_3166_alpha_3 as "isoAlpha3", s.funding_account as "fundingAccount", 
+          default_region as "defaultFieldRegion", s.created_at as "createdAt" 
+      FROM sc.locations s, common.locations c
+      WHERE c.id = $1 AND s.id = c.id;
       `,
       [id]
     );
@@ -97,10 +98,10 @@ export class PgLocationRepository implements PublicOf<LocationRepository> {
     const rows = await this.pg.query<UnsecuredDto<Location>>(
       `
       SELECT 
-          id, name, type, iso_alpha_3 as "ispAlpha3", funding_account as "fundingAccount",
-          default_region as "defaultFieldRegion", created_at as "createdAt"
-      FROM sc.locations
-      WHERE id = ANY($1::text[]);
+          c.id, c.name, c.type, c.iso_3166_alpha_3 as "isoAlpha3", s.funding_account as "fundingAccount",
+          s.default_region as "defaultFieldRegion", s.created_at as "createdAt"
+      FROM sc.locations s, common.locations c
+      WHERE c.id = ANY($1::text[]) AND s.id = c.id;
       `,
       [ids]
     );
@@ -121,8 +122,8 @@ export class PgLocationRepository implements PublicOf<LocationRepository> {
     const rows = await this.pg.query<UnsecuredDto<Location>>(
       `
       SELECT 
-          id, name, type, iso_alpha_3 as "ispAlpha3", funding_account as "fundingAccount",
-          default_region as "defaultFieldRegion", created_at as "createdAt"
+          c.id, c.name, c.type, c.iso_3166_alpha_3 as "isoAlpha3", s.funding_account as "fundingAccount",
+          s.default_region as "defaultFieldRegion", s.created_at as "createdAt"
       FROM sc.locations
       ORDER BY ${input.sort} ${input.order} 
       LIMIT ${limit ?? 10} OFFSET ${offset ?? 5};
@@ -146,8 +147,8 @@ export class PgLocationRepository implements PublicOf<LocationRepository> {
       return;
     }
 
-    const updates = Object.keys(changes)
-      .map((key) =>
+    const scUpdates = compact(
+      Object.keys(changes).map((key) =>
         key === 'defaultFieldRegionId'
           ? `default_region = (SELECT id FROM sc.field_regions WHERE id = '${
               changes.defaultFieldRegionId as string
@@ -156,35 +157,55 @@ export class PgLocationRepository implements PublicOf<LocationRepository> {
           ? `funding_account = (SELECT id FROM sc.funding_accounts WHERE id = '${
               changes.fundingAccountId as string
             }')`
-          : key === 'isoAlpha3'
-          ? `iso_alpha_3 = '${changes.isoAlpha3 as string}'`
+          : null
+      )
+    ).join(', ');
+
+    const commonUpdates = compact(
+      Object.keys(changes).map((key) =>
+        key === 'isoAlpha3'
+          ? `iso_3166_alpha_3 = '${changes.isoAlpha3 as string}'`
           : `${key} = '${
               changes[key as keyof Omit<UpdateLocation, 'id'>] as string
             }'`
       )
-      .join(', ');
+    ).join(', ');
 
-    const rows = await this.pg.query(
-      `
-      UPDATE sc.locations SET ${updates}, modified_at = CURRENT_TIMESTAMP, 
-      modified_by = (SELECT person FROM admin.tokens WHERE token = 'public')
-      WHERE id = $1
-      RETURNING id;
-      `,
-      [id]
-    );
+    commonUpdates &&
+      (await this.pg.query(
+        `
+        UPDATE common.locations SET ${commonUpdates}, modified_at = CURRENT_TIMESTAMP,
+        modified_by_admin_people_id = (SELECT admin_people_id FROM admin.tokens WHERE token = 'public')
+        WHERE id = $1
+        `,
+        [id]
+      ));
 
-    if (!rows[0]) {
-      throw new ServerException(`Could not update location ${id}`);
-    }
-
-    return rows[0];
+    scUpdates &&
+      (await this.pg.query(
+        `
+        UPDATE sc.locations SET ${scUpdates}, modified_at = CURRENT_TIMESTAMP,
+        modified_by_admin_people_id = (SELECT admin_people_id FROM admin.tokens WHERE token = 'public')
+        WHERE id = $1;
+        `,
+        [id]
+      ));
   }
 
   @PgTransaction()
   async delete(id: ID) {
     await this.pg.query('DELETE FROM sc.locations WHERE id = $1;', [id]);
     await this.pg.query('DELETE FROM common.locations WHERE id = $1;', [id]);
+  }
+
+  async isUnique(locationName: string, _label?: string): Promise<boolean> {
+    const [{ exists }] = await this.pg.query<{ exists: boolean }>(
+      `
+      SELECT EXISTS (SELECT name FROM common.locations WHERE name = $1);`,
+      [locationName]
+    );
+
+    return !exists;
   }
 
   addLocationToNode(
@@ -218,9 +239,6 @@ export class PgLocationRepository implements PublicOf<LocationRepository> {
     existingObject: TResource,
     changes: Changes & Record<any, any>
   ) => Partial<any>;
-  isUnique(_value: string, _label?: string): Promise<boolean> {
-    throw new Error('Method not implemented.');
-  }
   getBaseNode(
     _id: ID,
     _label?: string | ResourceShape<any>
