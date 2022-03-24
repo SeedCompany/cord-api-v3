@@ -34,12 +34,13 @@ export class PgFieldRegionRepository
   ): Promise<{ id: ID } | undefined> {
     const [id] = await this.pg.query<{ id: ID }>(
       `
-      INSERT INTO sc.field_regions(name, director, field_zone,
-          created_by, modified_by, owning_person, owning_group)
+      INSERT INTO sc.field_regions(
+          name, director_admin_people_id, sc_field_zone_id, created_by_admin_people_id, 
+          modified_by_admin_people_id, owning_person_admin_people_id, owning_group_admin_groups_id)
       VALUES($1, $2, (SELECT id FROM sc.field_zones WHERE id = $3),
-          (SELECT person FROM admin.tokens WHERE token = 'public'), 
-          (SELECT person FROM admin.tokens WHERE token = 'public'), 
-          (SELECT person FROM admin.tokens WHERE token = 'public'), 
+          (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
+          (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
+          (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
           (SELECT id FROM admin.groups WHERE  name = 'Administrators'))
       RETURNING id;
       `,
@@ -56,7 +57,9 @@ export class PgFieldRegionRepository
   async readOne(id: ID): Promise<UnsecuredDto<FieldRegion>> {
     const rows = await this.pg.query<UnsecuredDto<FieldRegion>>(
       `
-      SELECT id, name, director, field_zone as "fieldZone", created_at as "createdAt"
+      SELECT 
+          id, name, director_admin_people_id as director, 
+          sc_field_zone_id as "fieldZone", created_at as "createdAt"
       FROM sc.field_regions
       WHERE id = $1;
       `,
@@ -75,9 +78,11 @@ export class PgFieldRegionRepository
   ): Promise<ReadonlyArray<UnsecuredDto<FieldRegion>>> {
     const rows = await this.pg.query<UnsecuredDto<FieldRegion>>(
       `
-      SELECT id, name, director, field_zone as "fieldZone", created_at as "createdAt"
+      SELECT 
+          id, name, director_admin_people_id as director, 
+          sc_field_zone_id as "fieldZone", created_at as "createdAt"
       FROM sc.field_regions
-      WHERE id = ANY($1::text[])
+      WHERE id = ANY($1::text[]);
       `,
       [ids]
     );
@@ -98,7 +103,9 @@ export class PgFieldRegionRepository
 
     const rows = await this.pg.query<UnsecuredDto<FieldRegion>>(
       `
-      SELECT id, name, director, field_zone as "fieldZone", created_at as "createdAt"
+      SELECT 
+          id, name, director_admin_people_id as director, 
+          sc_field_zone_id as "fieldZone", created_at as "createdAt"
       FROM sc.field_regions
       ORDER BY ${input.sort} ${input.order} 
       LIMIT ${limit ?? 10} OFFSET ${offset ?? 5};
@@ -138,11 +145,11 @@ export class PgFieldRegionRepository
     const updates = Object.keys(changes)
       .map((key) =>
         key === 'directorId'
-          ? `director = (SELECT id FROM admin.people WHERE id = '${
+          ? `director_admin_people_id = (SELECT id FROM admin.people WHERE id = '${
               changes.directorId as string
             }')`
           : key === 'fieldZoneId'
-          ? `field_zone = (SELECT id FROM sc.field_zones WHERE id = '${
+          ? `sc_field_zone_id = (SELECT id FROM sc.field_zones WHERE id = '${
               changes.fieldZoneId as string
             }')`
           : `${key} = '${
@@ -154,7 +161,7 @@ export class PgFieldRegionRepository
     await this.pg.query(
       `
       UPDATE sc.field_regions SET ${updates}, modified_at = CURRENT_TIMESTAMP, 
-      modified_by = (SELECT person FROM admin.tokens WHERE token = 'public')
+      modified_by_admin_people_id = (SELECT admin_people_id FROM admin.tokens WHERE token = 'public')
       WHERE id = $1
       RETURNING id;
       `,
