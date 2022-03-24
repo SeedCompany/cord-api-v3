@@ -33,11 +33,12 @@ export class PgFundingAccountRepository
   ): Promise<{ id: ID } | undefined> {
     const [id] = await this.pg.query<{ id: ID }>(
       `
-      INSERT INTO sc.funding_accounts(account_number, name, 
-        created_by, modified_by, owning_person, owning_group)
-      VALUES($1, $2, (SELECT person FROM admin.tokens WHERE token = 'public'), 
-          (SELECT person FROM admin.tokens WHERE token = 'public'), 
-          (SELECT person FROM admin.tokens WHERE token = 'public'), 
+      INSERT INTO sc.funding_accounts(
+          account_number, name, created_by_admin_people_id, modified_by_admin_people_id, 
+          owning_person_admin_people_id, owning_group_admin_groups_id)
+      VALUES($1, $2, (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
+          (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
+          (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
           (SELECT id FROM admin.groups WHERE  name = 'Administrators')) 
       RETURNING id;
       `,
@@ -54,8 +55,8 @@ export class PgFundingAccountRepository
   async readOne(id: ID): Promise<UnsecuredDto<FundingAccount>> {
     const rows = await this.pg.query<UnsecuredDto<FundingAccount>>(
       `
-      SELECT id, name, account_number as accountNumber, created_at as "createdAt"
-      FROM sc.funding_accounts WHERE id = $1
+      SELECT id, name, account_number as "accountNumber", created_at as "createdAt"
+      FROM sc.funding_accounts WHERE id = $1;
       `,
       [id]
     );
@@ -72,8 +73,8 @@ export class PgFundingAccountRepository
   ): Promise<ReadonlyArray<UnsecuredDto<FundingAccount>>> {
     const rows = await this.pg.query<UnsecuredDto<FundingAccount>>(
       `
-      SELECT id, name, account_number as accountNumber, created_at as "createdAt"
-      FROM sc.funding_accounts WHERE id = ANY($1::text[])
+      SELECT id, name, account_number as "accountNumber", created_at as "createdAt"
+      FROM sc.funding_accounts WHERE id = ANY($1::text[]);
       `,
       [ids]
     );
@@ -94,7 +95,7 @@ export class PgFundingAccountRepository
 
     const rows = await this.pg.query<UnsecuredDto<FundingAccount>>(
       `
-      SELECT id, name, account_number as accountNumber, created_at as "createdAt"
+      SELECT id, name, account_number as "accountNumber", created_at as "createdAt"
       FROM sc.funding_accounts
       ORDER BY ${input.sort} ${input.order} 
       LIMIT ${limit ?? 25} OFFSET ${offset ?? 10};
@@ -127,7 +128,7 @@ export class PgFundingAccountRepository
     const rows = await this.pg.query<{ id: ID }>(
       `
       UPDATE sc.funding_accounts SET ${updates}, modified_at = CURRENT_TIMESTAMP, 
-      modified_by = (SELECT person FROM admin.tokens WHERE token = 'public')
+      modified_by_admin_people_id = (SELECT admin_people_id FROM admin.tokens WHERE token = 'public')
       WHERE id = $1
       RETURNING id;
       `,
