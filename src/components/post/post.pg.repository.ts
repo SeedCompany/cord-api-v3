@@ -57,6 +57,21 @@ export class PgPostRepository extends PostRepository {
     return rows[0];
   }
 
+  async readMany(
+    ids: readonly ID[]
+  ): Promise<ReadonlyArray<UnsecuredDto<Post>>> {
+    const rows = await this.pg.query<UnsecuredDto<Post>>(
+      `
+      SELECT id, created_by as "creator", type, shareability, body, created_at as "createdAt", modified_at as "modifiedAt"
+      FROM sc.posts
+      WHERE id = ANY($1::text[]);
+      `,
+      [ids]
+    );
+
+    return rows;
+  }
+
   @PgTransaction()
   async delete(id: ID) {
     await this.pg.query('DELETE FROM sc.posts WHERE id = $1', [id]);
