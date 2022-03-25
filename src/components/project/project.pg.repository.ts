@@ -41,20 +41,21 @@ export class PgProjectRepository implements PublicOf<ProjectRepository> {
     // TODO: Add ownning_organization
     const [{ id }] = await this.pg.query<{ id: ID }>(
       `
-      INSERT INTO sc.projects (name, type, primary_location, marketing_location,
-                              field_region, mou_start, mou_end, estimated_submission,
-                              step, step_changed_at, status, sensitivity, tags, preset_inventory, 
-                              created_by, modified_by, owning_person, owning_group)
-      VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, CURRENT_TIMESTAMP, $10, $11, $12, $13, 
-          (SELECT person FROM admin.tokens WHERE token = 'public'), 
-          (SELECT person FROM admin.tokens WHERE token = 'public'), 
-          (SELECT person FROM admin.tokens WHERE token = 'public'), 
+      INSERT INTO sc.projects (
+          name, primary_common_locations_id, marketing_common_locations_id,
+          sc_field_regions_id, mou_start, mou_end, estimated_submission,
+          step, step_changed_at, status, tags, type,
+          created_by_admin_people_id, modified_by_admin_people_id, 
+          owning_person_admin_people_id, owning_group_admin_groups_id)
+      VALUES($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP, $9, $10, $11,
+          (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
+          (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
+          (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
           (SELECT id FROM admin.groups WHERE  name = 'Administrators'))
       RETURNING id;
       `,
       [
         input.name,
-        input.type,
         input.primaryLocationId,
         input.marketingLocationId,
         input.fieldRegionId,
@@ -63,15 +64,41 @@ export class PgProjectRepository implements PublicOf<ProjectRepository> {
         input.estimatedSubmission,
         input.step,
         stepToStatus(input.step ?? ProjectStep.EarlyConversations),
-        input.sensitivity,
         input.tags,
-        input.presetInventory,
+        input.type,
       ]
     );
 
     if (!id) {
       throw new ServerException('Failed to create project');
     }
+
+    input.type === ProjectType.Translation
+      ? await this.pg.query(
+          `
+          INSERT INTO sc.translation_projects(
+              id, preset_inventory, created_by_admin_people_id, 
+              modified_by_admin_people_id, owning_person_admin_people_id, 
+              owning_group_admin_groups_id)
+          VALUES($1, $2, (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
+              (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
+              (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
+              (SELECT id FROM admin.groups WHERE  name = 'Administrators'))
+          `,
+          [id, input.presetInventory]
+        )
+      : await this.pg.query(
+          `
+          INSERT INTO sc.internship_projects(
+              id, created_by_admin_people_id, modified_by_admin_people_id, 
+              owning_person_admin_people_id, owning_group_admin_groups_id)
+          VALUES($1, (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
+              (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
+              (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
+              (SELECT id FROM admin.groups WHERE  name = 'Administrators'))
+          `,
+          [id]
+        );
 
     return id;
   }
@@ -96,12 +123,12 @@ export class PgProjectRepository implements PublicOf<ProjectRepository> {
       >
     >(
       `
-      SELECT id, type, sensitivity, step, status, primary_location as "primaryLocation", 
-             marketing_location as "marketingLocations", field_region as "fieldRegion",
-             owning_organization as "owningOrganization", mou_start as "mouStart",
-             mou_end as "mouEnd", step_changed_at as "stepChangedAt", 
-             estimated_submission as "estimatedSubmission", modified_at as "modifiedAt",
-             tags, preset_inventory as "presetInventory", created_at as "createdAt"
+      SELECT 
+          id, type, sensitivity, step, status, primary_common_locations_id as "primaryLocation", 
+          marketing_common_locations_id as "marketingLocation", sc_field_regions_id as "fieldRegion",
+          mou_start as "mouStart", mou_end as "mouEnd", step_changed_at as "stepChangedAt", 
+          estimated_submission as "estimatedSubmission", modified_at as "modifiedAt",
+          tags, created_at as "createdAt"
       FROM sc.projects
       WHERE id = $1;
       `,
@@ -134,12 +161,12 @@ export class PgProjectRepository implements PublicOf<ProjectRepository> {
       >
     >(
       `
-      SELECT id, type, sensitivity, step, status, primary_location as "primaryLocation", 
-             marketing_location as "marketingLocations", field_region as "fieldRegion",
-             owning_organization as "owningOrganization", mou_start as "mouStart",
-             mou_end as "mouEnd", step_changed_at as "stepChangedAt", 
-             estimated_submission as "estimatedSubmission", modified_at as "modifiedAt", 
-             tags, preset_inventory as "presetInventory", created_at as "createdAt"
+      SELECT 
+          id, type, sensitivity, step, status, primary_common_locations_id as "primaryLocation", 
+          marketing_common_locations_id as "marketingLocation", sc_field_regions_id as "fieldRegion",
+          mou_start as "mouStart", mou_end as "mouEnd", step_changed_at as "stepChangedAt", 
+          estimated_submission as "estimatedSubmission", modified_at as "modifiedAt",
+          tags, created_at as "createdAt"
       FROM sc.projects
       WHERE id = ANY($1::text[]);
       `,
@@ -179,12 +206,12 @@ export class PgProjectRepository implements PublicOf<ProjectRepository> {
       >
     >(
       `
-      SELECT id, type, sensitivity, step, status, primary_location as "primaryLocation", 
-             marketing_location as "marketingLocations", field_region as "fieldRegion",
-             owning_organization as "owningOrganization", mou_start as "mouStart",
-             mou_end as "mouEnd", step_changed_at as "stepChangedAt", 
-             estimated_submission as "estimatedSubmission", modified_at as "modifiedAt", 
-             tags, preset_inventory as "presetInventory", created_at as "created_At"
+     SELECT 
+        id, type, sensitivity, step, status, primary_common_locations_id as "primaryLocation", 
+        marketing_common_locations_id as "marketingLocation", sc_field_regions_id as "fieldRegion",
+        mou_start as "mouStart", mou_end as "mouEnd", step_changed_at as "stepChangedAt", 
+        estimated_submission as "estimatedSubmission", modified_at as "modifiedAt",
+        tags, created_at as "createdAt"
       FROM sc.projects
       ORDER BY ${input.sort} ${input.order} 
       LIMIT ${limit ?? 25} OFFSET ${offset ?? 10};
@@ -205,7 +232,7 @@ export class PgProjectRepository implements PublicOf<ProjectRepository> {
     return projectList;
   }
 
-  async update(input: UpdateProject) {
+  async update(input: UpdateProject, _type?: ProjectType) {
     const { id, ...changes } = input;
     const updates = Object.entries(changes)
       .map(([key, value]) => {
@@ -214,8 +241,12 @@ export class PgProjectRepository implements PublicOf<ProjectRepository> {
           .join('_')
           .toLowerCase();
 
-        return label.endsWith('_id')
-          ? `${label.replace('_id', '')} = '${value as string}'`
+        return label === 'field_region_id'
+          ? `sc_field_regions_id = '${value as string}'`
+          : label === 'primary_location_id'
+          ? `primary_common_locations_id = '${value as string}'`
+          : label === 'marketing_location_id'
+          ? `marketing_common_locations_id = '${value as string}'`
           : label === 'tags'
           ? `tags = ARRAY['${value.join("','") as string}']`
           : `${label} = '${value as string}'`;
@@ -225,7 +256,7 @@ export class PgProjectRepository implements PublicOf<ProjectRepository> {
     await this.pg.query(
       `
       UPDATE sc.projects SET ${updates}, modified_at = CURRENT_TIMESTAMP,
-      modified_by = (SELECT person FROM admin.tokens WHERE token = 'public')
+      modified_by_admin_people_id = (SELECT admin_people_id FROM admin.tokens WHERE token = 'public')
       WHERE id = $1
       `,
       [id]
@@ -234,7 +265,14 @@ export class PgProjectRepository implements PublicOf<ProjectRepository> {
 
   async delete(id: ID) {
     // TODO: Check project_members, partnerships, engagements, budgets and so on
-    await this.pg.query('DELETE FROM sc.projects WHERE id = $1', [id]);
+    const [{ type }] = await this.pg.query<{ type: ProjectType }>(
+      'SELECT type FROM sc.projects WHERE id = $1;',
+      [id]
+    );
+    await this.pg.query(
+      `DELETE FROM sc.${type.toLowerCase()}_projects WHERE id = $1;`,
+      [id]
+    );
   }
 
   async isUnique(value: string, _label?: string): Promise<boolean> {
