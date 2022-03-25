@@ -47,11 +47,13 @@ export class PgBudgetRepository implements PublicOf<BudgetRepository> {
     // TODO: Add universal_template
     const [{ id }] = await this.pg.query<{ id: ID }>(
       `
-      INSERT INTO sc.budgets(project, status, created_by, modified_by, 
-                            owning_person, owning_group)
-      VALUES ($1, $2, (SELECT person FROM admin.tokens WHERE token = 'public'), 
-          (SELECT person FROM admin.tokens WHERE token = 'public'), 
-          (SELECT person FROM admin.tokens WHERE token = 'public'), 
+      INSERT INTO sc.budgets(
+          sc_projects_id, status, created_by_admin_people_id, 
+          modified_by_admin_people_id, owning_person_admin_people_id, 
+          owning_group_admin_groups_id)
+      VALUES ($1, $2, (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
+          (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
+          (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
           (SELECT id FROM admin.groups WHERE  name = 'Administrators'))
       RETURNING id;
       `,
@@ -106,7 +108,7 @@ export class PgBudgetRepository implements PublicOf<BudgetRepository> {
       `
       SELECT b.status
       FROM sc.budgets b, sc.budget_records br
-      WHERE br.budget = b.id AND br.id = $1;
+      WHERE br.sc_budgets_id = b.id AND br.id = $1;
       `,
       [recordId]
     );
@@ -198,7 +200,7 @@ export class PgBudgetRepository implements PublicOf<BudgetRepository> {
     await this.pg.query(
       `
       UPDATE sc.budgets SET ${updates}, modified_at = CURRENT_TIMESTAMP,
-      modified_by = (SELECT person FROM admin.tokens WHERE token = 'public')
+      modified_by_admin_people_id = (SELECT admin_people_id FROM admin.tokens WHERE token = 'public')
       WHERE id = $1;
       `,
       [id]
@@ -207,9 +209,10 @@ export class PgBudgetRepository implements PublicOf<BudgetRepository> {
 
   @PgTransaction()
   async delete(id: ID) {
-    await this.pg.query('DELETE FROM sc.budget_records WHERE budget = $1;', [
-      id,
-    ]);
+    await this.pg.query(
+      'DELETE FROM sc.budget_records WHERE sc_budgets_id = $1;',
+      [id]
+    );
     await this.pg.query('DELETE FROM sc.budgets WHERE id = $1;', [id]);
   }
 
