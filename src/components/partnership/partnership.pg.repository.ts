@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { isNil, omitBy } from 'lodash';
 import {
   generateId,
   ID,
@@ -21,6 +22,7 @@ import {
   Partnership,
   PartnershipAgreementStatus,
   PartnershipListInput,
+  UpdatePartnership,
 } from './dto';
 import { PartnershipRepository } from './partnership.repository';
 
@@ -41,12 +43,13 @@ export class PgPartnershipRepository
     const [{ id }] = await this.pg.query<{ id: ID }>(
       // TODO: Add mou and agreement files
       `
-      INSERT INTO sc.partnerships(project, partner, agreement_status, mou_status, mou_start_override, 
-                                  mou_end_override, financial_reporting_type, types, is_primary,  
-                                  created_by, modified_by, owning_person, owning_group)
-      VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, (SELECT person FROM admin.tokens WHERE token = 'public'), 
-            (SELECT person FROM admin.tokens WHERE token = 'public'), 
-            (SELECT person FROM admin.tokens WHERE token = 'public'), 
+      INSERT INTO sc.partnerships(
+          sc_projects_id, sc_partners_id, agreement_status, mou_status, mou_start_override, 
+          mou_end_override, financial_reporting_type, types, is_primary, created_by_admin_people_id, 
+          modified_by_admin_people_id, owning_person_admin_people_id, owning_group_admin_groups_id)
+      VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
+            (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
+            (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
             (SELECT id FROM admin.groups WHERE  name = 'Administrators'))
       RETURNING id;
       `,
@@ -77,10 +80,12 @@ export class PgPartnershipRepository
   ): Promise<UnsecuredDto<Partnership>> {
     const rows = await this.pg.query<UnsecuredDto<Partnership>>(
       `
-      SELECT id, project, agreement_status as "agreementStatus", mou, mou_status as "mouStatus",
-             mou_start as "mouStart", mou_end as "mouEnd", mou_start_override as "mouStartOverride",
-             mou_end_override as "mouEndOverride", agreement, partner, types, is_primary as "primary",
-             financial_reporting_type as "financialReportingType", created_at as "createdAt"
+      SELECT 
+          id, sc_projects_id, sc_partners_id, agreement, agreement_status as "agreementStatus", 
+          mou, mou_status as "mouStatus", mou_start as "mouStart", mou_end as "mouEnd", 
+          mou_start_override as "mouStartOverride", mou_end_override as "mouEndOverride", 
+          types, is_primary as "primary", financial_reporting_type as "financialReportingType", 
+          created_at as "createdAt"
       FROM sc.partnerships
       WHERE id = $1;
       `,
@@ -101,10 +106,12 @@ export class PgPartnershipRepository
   ): Promise<ReadonlyArray<UnsecuredDto<Partnership>>> {
     const rows = await this.pg.query<UnsecuredDto<Partnership>>(
       `
-      SELECT id, project, agreement_status as "agreementStatus", mou, mou_status as "mouStatus",
-             mou_start as "mouStart", mou_end as "mouEnd", mou_start_override as "mouStartOverride",
-             mou_end_override as "mouEndOverride", agreement, partner, types, is_primary as "primary",
-             financial_reporting_type as "financialReportingType", created_at as "createdAt"
+      SELECT 
+          id, sc_projects_id, sc_partners_id, agreement, agreement_status as "agreementStatus", 
+          mou, mou_status as "mouStatus", mou_start as "mouStart", mou_end as "mouEnd", 
+          mou_start_override as "mouStartOverride", mou_end_override as "mouEndOverride", 
+          types, is_primary as "primary", financial_reporting_type as "financialReportingType", 
+          created_at as "createdAt"
       FROM sc.partnerships
       WHERE id = ANY($1::text[]);
       `,
@@ -153,7 +160,7 @@ export class PgPartnershipRepository
     // TODO: Add changeset matching
     const [{ isFirst }] = await this.pg.query<{ isFirst: boolean }>(
       `
-      SELECT count(id) = 1 as "isFirst" FROM sc.partnerships WHERE project = $1;
+      SELECT count(id) = 1 as "isFirst" FROM sc.partnerships WHERE sc_projects_id = $1;
       `,
       [projectId]
     );
@@ -166,7 +173,7 @@ export class PgPartnershipRepository
       `
       SELECT id 
       FROM sc.partnerships 
-      WHERE project = (SELECT project FROM sc.partnerships WHERE id = $1) 
+      WHERE sc_projects_id = (SELECT sc_projects_id FROM sc.partnerships WHERE id = $1) 
       AND id <> $1;
       `,
       [id]
@@ -179,7 +186,37 @@ export class PgPartnershipRepository
     await this.pg.query(
       `
       UPDATE sc.partnerships SET is_primary = false
-      WHERE project = (SELECT project FROM sc.partnerships WHERE id = $1) AND id <> $1;
+      WHERE sc_projects_id = (SELECT sc_projects_id FROM sc.partnerships WHERE id = $1) AND id <> $1;
+      `,
+      [id]
+    );
+  }
+
+  async update(input: UpdatePartnership) {
+    const { id, ...rest } = input;
+    const changes = omitBy(rest, isNil);
+    const updates = Object.entries(changes)
+      .map(([key, value]) => {
+        const label = key
+          .split(/(?=[A-Z])/)
+          .join('_')
+          .toLowerCase();
+
+        return label === 'primary'
+          ? `is_primary = '${value as string}'`
+          : label === 'types'
+          ? `types = ARRAY['${
+              value.join("','") as string
+            }']::sc.partner_types[]`
+          : `${label} = '${value as string}'`;
+      })
+      .join(', ');
+
+    await this.pg.query(
+      `
+      UPDATE sc.partnerships SET ${updates}, modified_at = CURRENT_TIMESTAMP,
+      modified_by_admin_people_id = (SELECT admin_people_id FROM admin.tokens WHERE token = 'public')
+      WHERE id = $1;
       `,
       [id]
     );
