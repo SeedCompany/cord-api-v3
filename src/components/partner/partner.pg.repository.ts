@@ -25,11 +25,14 @@ export class PgPartnerRepository implements PublicOf<PartnerRepository> {
   async create(input: CreatePartner, _session: Session): Promise<ID> {
     const [{ id }] = await this.pg.query<{ id: ID }>(
       `
-      INSERT INTO sc.partners(id, active, financial_reporting_types, is_innovations_client, pmc_entity_code,
-                              point_of_contact, types, address, created_by, modified_by, owning_person, owning_group)
-      VALUES($1, $2, $3, $4, $5, $6, $7, $8, (SELECT person FROM admin.tokens WHERE token = 'public'), 
-          (SELECT person FROM admin.tokens WHERE token = 'public'), 
-          (SELECT person FROM admin.tokens WHERE token = 'public'), 
+      INSERT INTO sc.partners(
+          common_organizations_id, active, financial_reporting_types, 
+          is_innovations_client, pmc_entity_code, point_of_contact_people_id, 
+          types, address, created_by_admin_people_id, modified_by_admin_people_id, 
+          owning_person_admin_people_id, owning_group_admin_groups_id)
+      VALUES($1, $2, $3, $4, $5, $6, $7, $8, (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
+          (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
+          (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
           (SELECT id FROM admin.groups WHERE  name = 'Administrators'))
       RETURNING id;
       `,
@@ -55,12 +58,13 @@ export class PgPartnerRepository implements PublicOf<PartnerRepository> {
   async readOne(id: ID, _session?: Session): Promise<UnsecuredDto<Partner>> {
     const rows = await this.pg.query<UnsecuredDto<Partner>>(
       `
-      SELECT id, id as "organization", point_of_contact as "pointOfContact", types, 
-            financial_reporting_types as "financialReportingTypes", pmc_entity_code as "pmcEntityCode",
-            is_innovations_client as "globalInnovationsClient", active, address, modified_at as "modifiedAt",
-            created_at as "createdAt"
+      SELECT 
+          id, common_organizations_id as "organization", point_of_contact_people_id as "pointOfContact",
+          types, financial_reporting_types as "financialReportingTypes", pmc_entity_code as "pmcEntityCode",
+          is_innovations_client as "globalInnovationsClient", active, address, modified_at as "modifiedAt",
+          created_at as "createdAt"
       FROM sc.partners
-      WHERE id = $1
+      WHERE id = $1;
       `,
       [id]
     );
@@ -78,12 +82,13 @@ export class PgPartnerRepository implements PublicOf<PartnerRepository> {
   ): Promise<ReadonlyArray<UnsecuredDto<Partner>>> {
     const rows = await this.pg.query<UnsecuredDto<Partner>>(
       `
-      SELECT id, id as "organization", point_of_contact as "pointOfContact", types, 
-            financial_reporting_types as "financialReportingTypes", pmc_entity_code as "pmcEntityCode",
-            is_innovations_client as "globalInnovationsClient", active, address, modified_at as "modifiedAt",
-            created_at as "createdAt"
+      SELECT
+          id, common_organizations_id as "organization", point_of_contact_people_id as "pointOfContact",
+          types, financial_reporting_types as "financialReportingTypes", pmc_entity_code as "pmcEntityCode",
+          is_innovations_client as "globalInnovationsClient", active, address, modified_at as "modifiedAt",
+          created_at as "createdAt"
       FROM sc.partners
-      WHERE id = ANY($1::text[])
+      WHERE id = ANY($1::text[]);
       `,
       [ids]
     );
@@ -122,10 +127,11 @@ export class PgPartnerRepository implements PublicOf<PartnerRepository> {
 
     const rows = await this.pg.query<UnsecuredDto<Partner>>(
       `
-      SELECT id, id as "organization", point_of_contact as "pointOfContact", types, 
-            financial_reporting_types as "financialReportingTypes", pmc_entity_code as "pmcEntityCode",
-            is_innovations_client as "globalInnovationsClient", active, address, modified_at as "modifiedAt",
-            created_at as "createdAt"
+      SELECT
+          id, common_organizations_id as "organization", point_of_contact_people_id as "pointOfContact",
+          types, financial_reporting_types as "financialReportingTypes", pmc_entity_code as "pmcEntityCode",
+          is_innovations_client as "globalInnovationsClient", active, address, modified_at as "modifiedAt",
+          created_at as "createdAt"
       FROM sc.partners
       ORDER BY created_at ${input.order} 
       LIMIT ${limit ?? 25} OFFSET ${offset ?? 10};
@@ -142,7 +148,7 @@ export class PgPartnerRepository implements PublicOf<PartnerRepository> {
   }
 
   async update(input: UpdatePartner) {
-    const { id, pointOfContactId, ...rest } = input;
+    const { id, ...rest } = input;
     const changes = omitBy(rest, isNil);
     const updates = Object.entries(changes)
       .map(([key, value]) => {
@@ -151,7 +157,11 @@ export class PgPartnerRepository implements PublicOf<PartnerRepository> {
           .join('_')
           .toLowerCase();
 
-        return label === 'global_innovations_client'
+        return label === 'point_of_contact_id'
+          ? `point_of_contact_people_id = (SELECT id FROM admin.people WHERE id = '${
+              value as string
+            }')`
+          : label === 'global_innovations_client'
           ? `is_innovations_client = ${value as string}`
           : label === 'types'
           ? `types = ARRAY['${
@@ -168,7 +178,7 @@ export class PgPartnerRepository implements PublicOf<PartnerRepository> {
     await this.pg.query(
       `
       UPDATE sc.partners SET ${updates}, modified_at = CURRENT_TIMESTAMP,
-      modified_by = (SELECT person FROM admin.tokens WHERE token = 'public')
+      modified_by_admin_people_id = (SELECT admin_people_id FROM admin.tokens WHERE token = 'public')
       WHERE id = $1;
       `,
       [id]
@@ -179,8 +189,13 @@ export class PgPartnerRepository implements PublicOf<PartnerRepository> {
     await this.pg.query('DELETE FROM sc.partners WHERE id = $1', [id]);
   }
 
-  partnerIdByOrg(_organizationId: ID): Promise<ID | undefined> {
-    throw new Error('Method not implemented.');
+  async partnerIdByOrg(organizationId: ID): Promise<ID | undefined> {
+    const id = await this.pg.query<ID>(
+      `SELECT id FROM sc.partners WHERE common_organizations_id = $1;`,
+      [organizationId]
+    );
+
+    return id[0];
   }
   getActualChanges: <
     TResource extends MaybeUnsecuredInstance<typeof Partner>,
