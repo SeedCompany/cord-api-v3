@@ -55,9 +55,9 @@ create table sc.posts_directory ( -- does not need to be secure
 );
 
 create type sc.post_shareability as enum (
-  'Project Team',
+  'ProjectTeam',
   'Internal',
-  'Ask to Share Externally',
+  'AskToShareExternally',
   'External',
   'Membership'
 );
