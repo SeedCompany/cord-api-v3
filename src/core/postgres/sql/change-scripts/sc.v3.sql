@@ -432,7 +432,7 @@ create type common.internship_position as enum (
 );
 
 create type sc.engagement_types_enum as enum (
-  'language_common_languages_id',
+  'Language',
   'Internship'
 );
 
