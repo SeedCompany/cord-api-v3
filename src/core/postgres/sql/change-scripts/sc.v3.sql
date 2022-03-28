@@ -523,7 +523,7 @@ create table sc.internship_engagements (
 	sc_change_set_id varchar(32) references sc.change_sets(id), -- not null
   country_of_origin_common_locations_id varchar(32) references common.locations(id),
   intern_admin_people_id varchar(32) references admin.people(id), -- not null
-  mentor_admin_pepole_id varchar(32) references admin.people(id),
+  mentor_admin_people_id varchar(32) references admin.people(id),
   methodologies common.product_methodologies[],
   position common.internship_position,
   growth_plan_common_files_id varchar(32) references common.files(id), --references files, not file-versions in neo4j
