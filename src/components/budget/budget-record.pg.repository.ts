@@ -32,15 +32,20 @@ export class PgBudgetRecordRepository
   async create(input: CreateBudgetRecord, _changeset?: ID): Promise<ID> {
     const [{ id }] = await this.pg.query<{ id: ID }>(
       `
-      INSERT INTO sc.budget_records(budget, organization, fiscal_year, created_by, 
-                                modified_by, owning_person, owning_group)
-      VALUES($1, $2, $3, (SELECT person FROM admin.tokens WHERE token = 'public'), 
-          (SELECT person FROM admin.tokens WHERE token = 'public'), 
-          (SELECT person FROM admin.tokens WHERE token = 'public'), 
+      INSERT INTO sc.budget_records(
+          sc_budgets_id, fiscal_year, partnership, created_by_admin_people_id, 
+          modified_by_admin_people_id, owning_person_admin_people_id, 
+          owning_group_admin_groups_id)
+      VALUES($1, $2, 
+          (SELECT pr.id FROM sc.partners p, sc.partnerships pr 
+            WHERE p.common_organizations_id = $3 AND p.id = pr.sc_partners_id), 
+          (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
+          (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
+          (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
           (SELECT id FROM admin.groups WHERE  name = 'Administrators'))
       RETURNING id;
       `,
-      [input.budgetId, input.organizationId, input.fiscalYear]
+      [input.budgetId, input.fiscalYear, input.organizationId]
     );
 
     if (!id) {
@@ -52,7 +57,7 @@ export class PgBudgetRecordRepository
 
   async doesRecordExist(input: CreateBudgetRecord): Promise<boolean> {
     const [{ id }] = await this.pg.query<{ id: ID }>(
-      `SELECT id FROM sc.budget_records WHERE budget = $1`,
+      `SELECT id FROM sc.budget_records WHERE sc_budgets_id = $1`,
       [input.budgetId]
     );
 
@@ -62,9 +67,12 @@ export class PgBudgetRecordRepository
   async readOne(id: ID): Promise<UnsecuredDto<BudgetRecord>> {
     const rows = await this.pg.query<UnsecuredDto<BudgetRecord>>(
       `
-      SELECT id, organization, fiscal_year as "fiscalYear", amount, created_at as "createdAt"
-      FROM sc.budget_records
-      WHERE id = $1
+      SELECT 
+          br.id, br.fiscal_year as "fiscalYear", br.amount, br.created_at as "createdAt", 
+          p.common_organizations_id as "organization"
+      FROM sc.budget_records br, sc.partnerships pr
+      JOIN sc.partners p ON pr.sc_partners_id = p.id
+      WHERE br.id = $1;
       `,
       [id]
     );
@@ -81,9 +89,12 @@ export class PgBudgetRecordRepository
   ): Promise<ReadonlyArray<UnsecuredDto<BudgetRecord>>> {
     const rows = await this.pg.query<UnsecuredDto<BudgetRecord>>(
       `
-      SELECT id, organization, fiscal_year as "fiscalYear", amount, created_at "createdAt"
-      FROM sc.budget_records
-      WHERE id = ANY($1::text[]);
+      SELECT DISTINCT 
+          br.id, br.fiscal_year as "fiscalYear", br.amount, br.created_at as "createdAt", 
+          p.common_organizations_id as "organization"
+      FROM sc.budget_records br, sc.partnerships pr
+      JOIN sc.partners p ON pr.sc_partners_id = p.id
+      WHERE br.id = ANY($1::text[]);
       `,
       [ids]
     );
@@ -126,14 +137,15 @@ export class PgBudgetRecordRepository
 
   async update(input: UpdateBudgetRecord) {
     const { id, amount } = input;
-    await this.pg.query(
-      `
-      UPDATE sc.budget_records SET amount = ${amount!}, modified_at = CURRENT_TIMESTAMP,
+    amount &&
+      (await this.pg.query(
+        `
+      UPDATE sc.budget_records SET amount = ${amount}, modified_at = CURRENT_TIMESTAMP,
       modified_by = (SELECT person FROM admin.tokens WHERE token = 'public')
       WHERE id = $1;
       `,
-      [id]
-    );
+        [id]
+      ));
   }
 
   async delete(id: ID) {
