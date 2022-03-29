@@ -32,7 +32,6 @@ import {
   SecuredProductList,
 } from '../product';
 import { ProjectStatus } from '../project';
-import { ProjectChangeRequestListInput } from '../project-change-request/dto';
 import { ProjectType } from '../project/dto/type.enum';
 import { ProjectService } from '../project/project.service';
 import { User } from '../user/dto';
@@ -455,7 +454,7 @@ export class EngagementService {
         'You do not have the permission to delete this Engagement'
       );
 
-    await this.verifyProjectStatus(object.project, session);
+    await this.verifyProjectStatus(object.project, session, changeset);
 
     await this.eventBus.publish(new EngagementWillDeleteEvent(object, session));
 
@@ -615,13 +614,6 @@ export class EngagementService {
     }
 
     if (project.status !== ProjectStatus.InDevelopment) {
-      const changeRequests = await this.projectService.listChangeRequests(
-        project,
-        ProjectChangeRequestListInput.defaultVal,
-        session
-      );
-      if (project.status === ProjectStatus.Active && changeRequests.total > 0)
-        return;
       throw new InputException(
         'The Project status is not in development',
         'project.status'
