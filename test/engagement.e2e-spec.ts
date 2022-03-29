@@ -79,13 +79,10 @@ describe('Engagement e2e', () => {
         Role.Consultant,
       ],
     });
-    language = await runInIsolatedSession(app, async () => {
-      await registerUser(app, { roles: [Role.Administrator] }); // only admin can create a language for now
-      return await createLanguage(app);
-    });
-    location = await runInIsolatedSession(app, async () => {
-      await registerUser(app, { roles: [Role.Administrator] }); // only admin can create funding account for now
-      return await createLocation(app);
+    [language, location] = await runAsAdmin(app, async () => {
+      const language = await createLanguage(app);
+      const location = await createLocation(app);
+      return [language, location];
     });
 
     intern = await getUserFromSession(app);
@@ -1002,16 +999,14 @@ describe('Engagement e2e', () => {
   });
 
   it('should not enable a Project step transition if the step is FinalizingCompletion and there are Engagements with non-terminal statuses', async () => {
-    const fundingAccount = await runInIsolatedSession(app, async () => {
-      await registerUser(app, { roles: [Role.Administrator] }); // only admin can create funding account for now
-      return await createFundingAccount(app);
-    });
-    const location = await runInIsolatedSession(app, async () => {
-      await registerUser(app, { roles: [Role.Administrator] }); // only admin can create funding account for now
-      return await createLocation(app, {
+    const location = await runAsAdmin(app, async () => {
+      const fundingAccount = await createFundingAccount(app);
+      const location = await createLocation(app, {
         fundingAccountId: fundingAccount.id,
       });
+      return location;
     });
+
     const project = await createProject(app, {
       step: ProjectStep.EarlyConversations,
       primaryLocationId: location.id,
@@ -1098,15 +1093,12 @@ describe('Engagement e2e', () => {
   ])(
     'should update Engagement status to match Project step when it becomes %s',
     async (newStatus: EngagementStatus, steps: ProjectStep[] | []) => {
-      const fundingAccount = await runInIsolatedSession(app, async () => {
-        await registerUser(app, { roles: [Role.Administrator] }); // only admin can create funding account for now
-        return await createFundingAccount(app);
-      });
-      const location = await runInIsolatedSession(app, async () => {
-        await registerUser(app, { roles: [Role.Administrator] }); // only admin can create funding account for now
-        return await createLocation(app, {
+      const location = await runAsAdmin(app, async () => {
+        const fundingAccount = await createFundingAccount(app);
+        const location = await createLocation(app, {
           fundingAccountId: fundingAccount.id,
         });
+        return location;
       });
       const project = await createProject(app, {
         step: ProjectStep.EarlyConversations,
@@ -1160,15 +1152,12 @@ describe('Engagement e2e', () => {
   /** Whenever an engagement's status gets changed to anything different the statusModifiedAt date should get set to now
    */
   it('should update Engagement statusModifiedAt if status is updated', async () => {
-    const fundingAccount = await runInIsolatedSession(app, async () => {
-      await registerUser(app, { roles: [Role.Administrator] }); // only admin can create funding account for now
-      return await createFundingAccount(app);
-    });
-    const location = await runInIsolatedSession(app, async () => {
-      await registerUser(app, { roles: [Role.Administrator] }); // only admin can create funding account for now
-      return await createLocation(app, {
+    const location = await runAsAdmin(app, async () => {
+      const fundingAccount = await createFundingAccount(app);
+      const location = await createLocation(app, {
         fundingAccountId: fundingAccount.id,
       });
+      return location;
     });
     const project = await createProject(app, {
       type: ProjectType.Internship,
@@ -1197,15 +1186,12 @@ describe('Engagement e2e', () => {
    * Whenever an engagement's status gets set to Suspended the lastSuspendedAt date should get set to now
    */
   it('should update Engagement lastSuspendedAt if status gets set to Suspended', async () => {
-    const fundingAccount = await runInIsolatedSession(app, async () => {
-      await registerUser(app, { roles: [Role.Administrator] }); // only admin can create funding account for now
-      return await createFundingAccount(app);
-    });
-    const location = await runInIsolatedSession(app, async () => {
-      await registerUser(app, { roles: [Role.Administrator] }); // only admin can create funding account for now
-      return await createLocation(app, {
+    const location = await runAsAdmin(app, async () => {
+      const fundingAccount = await createFundingAccount(app);
+      const location = await createLocation(app, {
         fundingAccountId: fundingAccount.id,
       });
+      return location;
     });
     const project = await createProject(app, {
       type: ProjectType.Internship,
@@ -1244,15 +1230,12 @@ describe('Engagement e2e', () => {
    * Whenever an engagement's status gets set to Active after previously being Suspended the lastReactivatedAt date should get set to now
    */
   it('should update Engagement lastReactivatedAt if status gets set to Active from Suspended', async () => {
-    const fundingAccount = await runInIsolatedSession(app, async () => {
-      await registerUser(app, { roles: [Role.Administrator] }); // only admin can create funding account for now
-      return await createFundingAccount(app);
-    });
-    const location = await runInIsolatedSession(app, async () => {
-      await registerUser(app, { roles: [Role.Administrator] }); // only admin can create funding account for now
-      return await createLocation(app, {
+    const location = await runAsAdmin(app, async () => {
+      const fundingAccount = await createFundingAccount(app);
+      const location = await createLocation(app, {
         fundingAccountId: fundingAccount.id,
       });
+      return location;
     });
     const project = await createProject(app, {
       type: ProjectType.Internship,
@@ -1301,15 +1284,12 @@ describe('Engagement e2e', () => {
   });
 
   it('should not Create/Delete Engagement if Project status is not InDevelopment', async () => {
-    const fundingAccount = await runInIsolatedSession(app, async () => {
-      await registerUser(app, { roles: [Role.Administrator] }); // only admin can create funding account for now
-      return await createFundingAccount(app);
-    });
-    const location = await runInIsolatedSession(app, async () => {
-      await registerUser(app, { roles: [Role.Administrator] }); // only admin can create funding account for now
-      return await createLocation(app, {
+    const location = await runAsAdmin(app, async () => {
+      const fundingAccount = await createFundingAccount(app);
+      const location = await createLocation(app, {
         fundingAccountId: fundingAccount.id,
       });
+      return location;
     });
     const project = await createProject(app, {
       step: ProjectStep.EarlyConversations,

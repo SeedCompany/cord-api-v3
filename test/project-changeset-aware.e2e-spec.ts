@@ -16,7 +16,6 @@ import {
   createTestApp,
   registerUser,
   runAsAdmin,
-  runInIsolatedSession,
   TestApp,
 } from './utility';
 import { fragments } from './utility/fragments';
@@ -50,18 +49,14 @@ const readProject = (app: TestApp, id: string, changeset?: string) =>
   );
 
 const activeProject = async (app: TestApp) => {
-  const fundingAccount = await runInIsolatedSession(app, async () => {
-    await registerUser(app, { roles: [Role.Administrator] }); // only admin can create funding account for now
-    return await createFundingAccount(app);
-  });
-  const location = await runInIsolatedSession(app, async () => {
-    await registerUser(app, { roles: [Role.Administrator] }); // only admin can create Locations for now
-    return await createLocation(app, { fundingAccountId: fundingAccount.id });
-  });
+  const [location, fieldRegion] = await runAsAdmin(app, async () => {
+    const fundingAccount = await createFundingAccount(app);
+    const location = await createLocation(app, {
+      fundingAccountId: fundingAccount.id,
+    });
+    const fieldRegion = await createRegion(app);
 
-  const fieldRegion = await runInIsolatedSession(app, async () => {
-    await registerUser(app, { roles: [Role.Administrator] }); // only admin can create Region for now
-    return await createRegion(app);
+    return [location, fieldRegion];
   });
   const project = await createProject(app, {
     mouStart: undefined,

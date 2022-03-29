@@ -16,7 +16,6 @@ import {
 import { Role } from '../src/components/authorization';
 import { BudgetStatus } from '../src/components/budget/dto';
 import { FieldRegion } from '../src/components/field-region';
-import { FieldZone } from '../src/components/field-zone';
 import { Location } from '../src/components/location';
 import { PartnerType } from '../src/components/partner';
 import { CreatePartnership } from '../src/components/partnership';
@@ -103,7 +102,6 @@ describe('Project e2e', () => {
   let mentor: Partial<User>;
   let director: Partial<User>;
   let admin: TestUser;
-  let fieldZone: FieldZone;
   let fieldRegion: FieldRegion;
   let location: Location;
 
@@ -126,20 +124,17 @@ describe('Project e2e', () => {
       }
     );
     director = await getUserFromSession(app);
-    fieldZone = await runInIsolatedSession(app, async () => {
-      await registerUser(app, { roles: [Role.Administrator] });
-      return await createZone(app, { directorId: director.id });
-    });
-    fieldRegion = await runInIsolatedSession(app, async () => {
-      await registerUser(app, { roles: [Role.Administrator] });
-      return await createRegion(app, {
-        directorId: director.id,
-        fieldZoneId: fieldZone.id,
+
+    [location, fieldRegion] = await runAsAdmin(app, async () => {
+      const fundingAccount = await createFundingAccount(app);
+      const location = await createLocation(app, {
+        fundingAccountId: fundingAccount.id,
       });
-    });
-    location = await runInIsolatedSession(app, async () => {
-      await registerUser(app, { roles: [Role.Administrator] }); // only admin can create funding account for now
-      return await createLocation(app);
+      const fieldRegion = await createRegion(app);
+
+      await createZone(app, { directorId: director.id });
+
+      return [location, fieldRegion];
     });
     intern = await getUserFromSession(app);
     mentor = await getUserFromSession(app);

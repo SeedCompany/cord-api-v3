@@ -15,7 +15,6 @@ import {
   createTestApp,
   registerUser,
   runAsAdmin,
-  runInIsolatedSession,
   TestApp,
   updateProject,
 } from './utility';
@@ -63,18 +62,16 @@ const readPartnership = (app: TestApp, id: string, changeset?: string) =>
   );
 
 const activeProject = async (app: TestApp) => {
-  const fundingAccount = await runInIsolatedSession(app, async () => {
-    await registerUser(app, { roles: [Role.Administrator] }); // only admin can create location for now
-    return await createFundingAccount(app);
+  const [location, fieldRegion] = await runAsAdmin(app, async () => {
+    const fundingAccount = await createFundingAccount(app);
+    const location = await createLocation(app, {
+      fundingAccountId: fundingAccount.id,
+    });
+    const fieldRegion = await createRegion(app);
+
+    return [location, fieldRegion];
   });
-  const location = await runInIsolatedSession(app, async () => {
-    await registerUser(app, { roles: [Role.Administrator] }); // only admin can create location for now
-    return await createLocation(app, { fundingAccountId: fundingAccount.id });
-  });
-  const fieldRegion = await runInIsolatedSession(app, async () => {
-    await registerUser(app, { roles: [Role.Administrator] }); // only admin can create location for now
-    return await createRegion(app);
-  });
+
   const project = await createProject(app);
   await updateProject(app, {
     id: project.id,
