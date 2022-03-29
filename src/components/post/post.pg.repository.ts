@@ -13,7 +13,6 @@ import { CreatePost, Post, UpdatePost } from './dto';
 import { PostListInput } from './dto/list-posts.dto';
 import { PostRepository } from './post.repository';
 
-//Adding PgPostRepository for the postgres migration effort
 @Injectable()
 export class PgPostRepository extends PostRepository {
   @Inject(Pg) private readonly pg: Pg;
@@ -24,10 +23,10 @@ export class PgPostRepository extends PostRepository {
   ): Promise<{ id: ID } | undefined> {
     const [id] = await this.pg.query<{ id: ID }>(
       `
-      INSERT INTO sc.posts(type, shareability, body, created_by, modified_by, owning_person, owning_group)
-      VALUES($1, $2, $3, (SELECT person FROM admin.tokens WHERE token = 'public'), 
-          (SELECT person FROM admin.tokens WHERE token = 'public'), 
-          (SELECT person FROM admin.tokens WHERE token = 'public'), 
+      INSERT INTO sc.posts(type, shareability, body, created_by_admin_people_id, modified_by_admin_people_id, owning_person_admin_people_id, owning_group_admin_groups_id)
+      VALUES($1, $2, $3, (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
+          (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
+          (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
           (SELECT id FROM admin.groups WHERE  name = 'Administrators'))
       RETURNING id;
       `,
@@ -43,7 +42,7 @@ export class PgPostRepository extends PostRepository {
   async readOne(id: ID): Promise<UnsecuredDto<Post>> {
     const rows = await this.pg.query<UnsecuredDto<Post>>(
       `
-      SELECT id, created_by as "creator", type, shareability, body, created_at as "createdAt", modified_at as "modifiedAt"
+      SELECT id, created_by_admin_people_id as "creator", type, shareability, body, created_at as "createdAt", modified_at as "modifiedAt"
       FROM sc.posts
       WHERE id = $1;
       `,
@@ -62,7 +61,7 @@ export class PgPostRepository extends PostRepository {
   ): Promise<ReadonlyArray<UnsecuredDto<Post>>> {
     const rows = await this.pg.query<UnsecuredDto<Post>>(
       `
-      SELECT id, created_by as "creator", type, shareability, body, created_at as "createdAt", modified_at as "modifiedAt"
+      SELECT id, created_by_admin_people_id as "creator", type, shareability, body, created_at as "createdAt", modified_at as "modifiedAt"
       FROM sc.posts
       WHERE id = ANY($1::text[]);
       `,
@@ -90,7 +89,7 @@ export class PgPostRepository extends PostRepository {
 
     const rows = await this.pg.query<UnsecuredDto<Post>>(
       `
-      SELECT id, created_by as "creator", type, shareability, body, created_at as "createdAt", modified_at as "modifiedAt"
+      SELECT id, created_by_admin_people_id as "creator", type, shareability, body, created_at as "createdAt", modified_at as "modifiedAt"
       FROM sc.posts
       ORDER BY created_at ${input.order} 
       LIMIT ${limit ?? 10} OFFSET ${offset ?? 5};
@@ -107,7 +106,7 @@ export class PgPostRepository extends PostRepository {
   async update(input: UpdatePost, _session: Session) {
     await this.pg.query(
       `
-      UPDATE sc.posts SET body = $2, type = $3, shareability = $4, modified_by = (SELECT person FROM admin.tokens WHERE token = 'public')
+      UPDATE sc.posts SET body = $2, type = $3, shareability = $4, modified_by_admin_people_id = (SELECT admin_people_id FROM admin.tokens WHERE token = 'public')
       WHERE id = $1;
       `,
       [input.id, input.body, input.type, input.shareability]
