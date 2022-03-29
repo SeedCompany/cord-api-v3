@@ -26,11 +26,11 @@ export const loginAsAdmin = async (app: TestApp) => {
 
 export const runAsAdmin = async (
   app: TestApp,
-  adminExecution: () => Promise<void> | void
+  adminExecution: () => Promise<any> | any
 ) =>
   await runInIsolatedSession(app, async () => {
     await loginAsAdmin(app);
-    await adminExecution();
+    return adminExecution();
   });
 
 export const runInIsolatedSession = async <R>(
