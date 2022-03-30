@@ -55,10 +55,11 @@ create table sc.posts_directory ( -- does not need to be secure
 );
 
 create type sc.post_shareability as enum (
-  'sc_projects_id Team',
+  'ProjectTeam',
   'Internal',
-  'Ask to Share Externally',
-  'External'
+  'AskToShareExternally',
+  'External',
+  'Membership'
 );
 
 create type sc.post_type as enum (
@@ -248,8 +249,8 @@ DO $$ BEGIN
 END; $$;
 
 create table sc.partners (
-	id varchar(32) primary key references common.organizations(id),
-
+  id varchar(32) primary key default common.nanoid(),
+  common_organizations_id varchar(32) references common.organizations(id),
 	active bool,
 	financial_reporting_types sc.financial_reporting_types[],
 	is_innovations_client bool,
@@ -431,7 +432,7 @@ create type common.internship_position as enum (
 );
 
 create type sc.engagement_types_enum as enum (
-  'language_common_languages_id',
+  'Language',
   'Internship'
 );
 
@@ -498,7 +499,6 @@ create table sc.language_engagements (
 
 	common_languages_id varchar(32) references common.languages(id), -- not null
 	sc_change_set_id varchar(32) references sc.change_sets(id), -- not null
-  communications_complete_date date,
   is_open_to_investor_visit bool,
   is_first_scripture bool,
   is_luke_partnership bool,
@@ -523,7 +523,7 @@ create table sc.internship_engagements (
 	sc_change_set_id varchar(32) references sc.change_sets(id), -- not null
   country_of_origin_common_locations_id varchar(32) references common.locations(id),
   intern_admin_people_id varchar(32) references admin.people(id), -- not null
-  mentor_admin_pepole_id varchar(32) references admin.people(id),
+  mentor_admin_people_id varchar(32) references admin.people(id),
   methodologies common.product_methodologies[],
   position common.internship_position,
   growth_plan_common_files_id varchar(32) references common.files(id), --references files, not file-versions in neo4j
@@ -646,7 +646,7 @@ create table sc.languages(
   least_of_these_reason varchar(255),
   population_override int,
   provisional_code char(3),
-  registry_of_dialects_code char(5),
+  registry_of_dialects_code char(5) unique,
   sensitivity common.sensitivity not null default 'High',
   sign_language_code char(4),
   sponsor_start_date date, -- derived
@@ -786,12 +786,17 @@ create table sc.known_languages_by_person (
 	unique (admin_people_id, sc_languages_id)
 );
 
+create type sc.user_status as enum (
+  'Active',
+  'Disabled'
+);
+
 -- extension table from commmon
 create table sc.people (
   id varchar(32) primary key references admin.people(id),
 
 	skills varchar(32)[],
-	status varchar(32), -- todo might be an enum
+	status sc.user_status,
 	title varchar(255),
 
   created_at timestamp not null default CURRENT_TIMESTAMP,
@@ -888,7 +893,7 @@ create table sc.partnerships (
   id varchar(32) primary key default common.nanoid(),
 
   sc_projects_id varchar(32) references sc.projects(id), -- not null
-  partner_common_organizations_id varchar(32) references common.organizations(id), -- not null
+  sc_partners_id varchar(32) references sc.partners(id), -- not null
   sc_change_set_id varchar(32) references sc.change_sets(id), -- not null
   agreement_status sc.partnership_agreement_status,
   mou varchar(32) references common.files(id),
@@ -1209,7 +1214,7 @@ create type common.ceremony_type as enum (
 create table sc.ceremonies (
   id varchar(32) primary key default common.nanoid(),
 
-  sc_language_engagements_id varchar(32), -- not null
+  sc_engagements_id varchar(32) references sc.engagements(id), -- not null
   engagement_type sc.engagement_types_enum, -- not null
   ethnologue_sil_table_of_languages_id varchar(32) references sil.table_of_languages(id),
   actual_date date,

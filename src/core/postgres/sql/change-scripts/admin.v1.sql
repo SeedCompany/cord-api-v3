@@ -407,7 +407,7 @@ create table admin.user_phone_accounts(
 
 create table if not exists admin.tokens (
 	id varchar(32) primary key default common.nanoid(),
-	token varchar(64) unique not null,
+	token varchar(512) unique not null,
 	admin_people_id varchar(32) references admin.people(id),
 	created_at timestamp not null default CURRENT_TIMESTAMP
 );
