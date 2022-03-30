@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Node } from 'cypher-query-builder';
-import { some } from 'lodash';
+import { isNil, omitBy, some } from 'lodash';
 import { DateTime } from 'luxon';
 import { Without } from 'type-fest/source/merge-exclusive';
 import {
@@ -30,6 +30,7 @@ import {
   InternshipEngagement,
   LanguageEngagement,
   OngoingEngagementStatuses,
+  UpdateEngagement,
   UpdateInternshipEngagement,
   UpdateLanguageEngagement,
 } from './dto';
@@ -38,39 +39,44 @@ import {
   LanguageOrEngagementId,
 } from './engagement.repository';
 
+type EngagementType = 'Language' | 'Internship';
+
 @Injectable()
 export class PgEngagementRepository implements PublicOf<EngagementRepository> {
   constructor(private readonly pg: Pg) {}
 
-  private getQueryByType(type: ProjectType, isProjectId: boolean) {
+  private getQueryByType(engType: EngagementType, isProjectId?: boolean) {
     const engagementDetails = `
-    SELECT
-        id, project, status, complete_date as "completeDate",
-        disbursement_complete_date as "disbursementCompleteDate", start_date as "startDate",
-        end_date as "endDate", start_date_override as "startDateOverride", 
-        end_date_override as "endDateOverride", initial_end_date as "initialEndDate", 
-        last_suspended_at as "lastSuspendedAt", last_reactivated_at as "lastReactivatedAt",
-        status_modified_at as "statusModifiedAt", modified_at as "modifiedAt",
+    SELECT 
+        e.id, e.sc_projects_id as "project", e.status, e.ceremony, e.complete_date as "completeDate",
+        e.disbursement_complete_date as "disbursementCompleteDate", e.start_date as "startDate",
+        e.end_date as "endDate", e.start_date_override as "startDateOverride", e.sensitivity,
+        e.end_date_override as "endDateOverride", e.initial_end_date as "initialEndDate",
+        e.last_suspended_at as "lastSuspendedAt", e.last_reactivated_at as "lastReactivatedAt",
+        e.status_modified_at as "statusModifiedAt", e.modified_at as "modifiedAt", 
     `;
 
     const languageEngagementQuery = `
     ${engagementDetails}
-        language, is_first_scripture as "firstScripture", is_luke_partnership as "lukePartnership",
-        is_open_to_investor_visit as "openToInvestorVisit", paratext_registry as "paratextRegistryId",
-        historic_goal as "historicGoal", pnp
-    FROM sc.language_engagements
-    WHERE ${isProjectId ? 'project' : 'id'} = $1; 
-    `;
+    le.common_languages_id as language, le.is_open_to_investor_visit as "openToInvestorVisit",
+    le.is_first_scripture as "firstScripture", le.is_luke_partnership as "lukePartnership",
+    le.paratext_registry as "paratextRegistryId", historic_goal as "historicGoal" 
+    FROM sc.engagements e
+	  JOIN sc.language_engagements le ON le.id = e.id AND ${
+      isProjectId ? 'e.sc_projects_id' : 'e.id'
+    } = $1`;
 
     const internshipEngagmentQuery = `
     ${engagementDetails}
-        country_of_origin as "countryOfOrigin", intern, mentor, position, methodologies, 
-        growth_plan as "growthPlan" 
-    FROM sc.internship_engagements
-    WHERE  ${isProjectId ? 'project' : 'id'} = $1;
+    ie.country_of_origin_common_locations_id as "countryOfOrigin", ie.intern_admin_people_id as intern, 
+    ie.position, ie.methodologies
+    FROM sc.engagements e
+	  JOIN sc.internship_engagements ie ON ie.id = e.id AND ${
+      isProjectId ? 'e.sc_projects_id' : 'e.id'
+    } = $1
     `;
 
-    return type === ProjectType.Translation
+    return engType === 'Language'
       ? languageEngagementQuery
       : internshipEngagmentQuery;
   }
@@ -86,8 +92,8 @@ export class PgEngagementRepository implements PublicOf<EngagementRepository> {
       | (Without<InternshipEngagement, LanguageEngagement> & LanguageEngagement)
     >
   > {
-    const type = await this.getProjectTypeByEngagement(id);
-    const query = this.getQueryByType(type, false);
+    const type = await this.getEngagementType(id);
+    const query = this.getQueryByType(type);
     const rows = await this.pg.query<
       UnsecuredDto<
         | (Without<LanguageEngagement, InternshipEngagement> &
@@ -116,8 +122,8 @@ export class PgEngagementRepository implements PublicOf<EngagementRepository> {
   > {
     const rows = await Promise.all(
       ids.map(async (id) => {
-        const type = await this.getProjectTypeByEngagement(id);
-        const query = this.getQueryByType(type, false);
+        const type = await this.getEngagementType(id);
+        const query = this.getQueryByType(type);
         return await this.pg.query<
           UnsecuredDto<
             | (Without<LanguageEngagement, InternshipEngagement> &
@@ -139,37 +145,50 @@ export class PgEngagementRepository implements PublicOf<EngagementRepository> {
     const type = await this.getProjectType(input.projectId);
 
     if (type !== ProjectType.Translation) {
-      throw new Error('Project must be of Translation type');
+      throw new Error('Project must be of Transalation type');
     }
-
     const pnpId = (await generateId()) as FileId;
     const [{ id }] = await this.pg.query<{ id: ID }>(
       `
+      WITH eng_id AS (
+        INSERT INTO sc.engagements(
+            sc_projects_id, engagement_type, status, status_modified_at, complete_date,
+            disbursement_complete_date, end_date_override, start_date_override,
+            created_by_admin_people_id, modified_by_admin_people_id, 
+            owning_person_admin_people_id, owning_group_admin_groups_id)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8,
+          (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
+          (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
+          (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
+          (SELECT id FROM admin.groups WHERE  name = 'Administrators'))
+        RETURNING id
+      )
       INSERT INTO sc.language_engagements(
-          project, language, is_open_to_investor_visit, disbursement_complete_date,
-          complete_date, end_date_override, is_first_scripture, is_luke_partnership, 
-          paratext_registry, start_date_override, status, status_modified_at,
-          historic_goal, created_by, modified_by, owning_person, owning_group)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13,
-          (SELECT person FROM admin.tokens WHERE token = 'public'), 
-          (SELECT person FROM admin.tokens WHERE token = 'public'), 
-          (SELECT person FROM admin.tokens WHERE token = 'public'), 
+          id, common_languages_id, is_open_to_investor_visit,
+          is_first_scripture, is_luke_partnership, paratext_registry,
+          historic_goal, created_by_admin_people_id, modified_by_admin_people_id, 
+          owning_person_admin_people_id, owning_group_admin_groups_id)
+      VALUES ((SELECT id FROM eng_id), $9, $10, $11, $12, $13, $14, 
+          (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
+          (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
+          (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
           (SELECT id FROM admin.groups WHERE  name = 'Administrators'))
       RETURNING id;
       `,
       [
         input.projectId,
+        'Language',
+        input.status || EngagementStatus.InDevelopment,
+        DateTime.local(),
+        input.completeDate,
+        input.disbursementCompleteDate,
+        input.endDateOverride,
+        input.startDateOverride,
         input.languageId,
         input.openToInvestorVisit,
-        input.disbursementCompleteDate,
-        input.completeDate,
-        input.endDateOverride,
         input.firstScripture,
         input.lukePartnership,
         input.paratextRegistryId,
-        input.startDateOverride,
-        input.status || EngagementStatus.InDevelopment,
-        DateTime.local(),
         input.historicGoal,
       ]
     );
@@ -194,31 +213,44 @@ export class PgEngagementRepository implements PublicOf<EngagementRepository> {
     const growthPlanId = (await generateId()) as FileId;
     const [{ id }] = await this.pg.query<{ id: ID }>(
       `
+      WITH eng_id AS (
+        INSERT INTO sc.engagements(
+            sc_projects_id, engagement_type, status, status_modified_at, complete_date,
+            disbursement_complete_date, end_date_override, start_date_override,
+            created_by_admin_people_id, modified_by_admin_people_id, 
+            owning_person_admin_people_id, owning_group_admin_groups_id)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8,
+          (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
+          (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
+          (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
+          (SELECT id FROM admin.groups WHERE  name = 'Administrators'))
+        RETURNING id
+      )
       INSERT INTO sc.internship_engagements(
-          project, complete_date, country_of_origin, disbursement_complete_date,
-          end_date_override, intern, mentor, methodologies, position, 
-          start_date_override, status, status_modified_at, created_by, 
-          modified_by, owning_person, owning_group)
-      VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12,
-          (SELECT person FROM admin.tokens WHERE token = 'public'), 
-          (SELECT person FROM admin.tokens WHERE token = 'public'), 
-          (SELECT person FROM admin.tokens WHERE token = 'public'), 
+        id, country_of_origin_common_locations_id, intern_admin_people_id,
+        mentor_admin_people_id, methodologies, position, created_by_admin_people_id, 
+        modified_by_admin_people_id, owning_person_admin_people_id, owning_group_admin_groups_id) 
+      VALUES((SELECT id FROM eng_id), $9, $10, $11, $12, $13,
+          (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
+          (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
+          (SELECT admin_people_id FROM admin.tokens WHERE token = 'public'), 
           (SELECT id FROM admin.groups WHERE  name = 'Administrators'))
       RETURNING id;
       `,
       [
         input.projectId,
+        'Internship',
+        input.status || EngagementStatus.InDevelopment,
+        DateTime.local(),
         input.completeDate,
-        input.countryOfOriginId,
         input.disbursementCompleteDate,
         input.endDateOverride,
+        input.startDateOverride,
+        input.countryOfOriginId,
         input.internId,
         input.mentorId,
         input.methodologies,
         input.position,
-        input.startDateOverride,
-        input.status || EngagementStatus.InDevelopment,
-        DateTime.local(),
       ]
     );
 
@@ -232,7 +264,7 @@ export class PgEngagementRepository implements PublicOf<EngagementRepository> {
   async updateMentor(id: ID, mentorId: ID): Promise<void> {
     await this.pg.query(
       `
-      UPDATE sc.internship_engagements SET mentor = (SELECT id FROM admin.people WHERE id = $1) 
+      UPDATE sc.internship_engagements SET mentor_admin_people_id = (SELECT id FROM admin.people WHERE id = $1) 
       WHERE id = $2;
       `,
       [mentorId, id]
@@ -242,7 +274,7 @@ export class PgEngagementRepository implements PublicOf<EngagementRepository> {
   async updateCountryOfOrigin(id: ID, countryOfOriginId: ID): Promise<void> {
     await this.pg.query(
       `
-      UPDATE sc.internship_engagements SET country_of_origin = (SELECT id FROM common.locations WHERE id = $1)
+      UPDATE sc.internship_engagements SET country_of_origin_common_locations_id = (SELECT id FROM common.locations WHERE id = $1)
       WHERE id = $2;
       `,
       [countryOfOriginId, id]
@@ -262,7 +294,7 @@ export class PgEngagementRepository implements PublicOf<EngagementRepository> {
       >
     >
   > {
-    const type = await this.getProjectType(projectId);
+    const type = await this.getEngagementTypeByProjectId(projectId);
 
     if (!type) {
       throw new NotFoundException('Could not find project');
@@ -292,13 +324,20 @@ export class PgEngagementRepository implements PublicOf<EngagementRepository> {
     return type;
   }
 
-  private async getProjectTypeByEngagement(id: ID) {
-    const [{ type }] = await this.pg.query<{ type: ProjectType }>(
+  private async getEngagementTypeByProjectId(projectId: ID) {
+    const [type] = await this.pg.query<EngagementType>(
       `
-      SELECT p.type 
-      FROM sc.language_engagements le, sc.internship_engagements ie, sc.projects p 
-      WHERE p.id = le.project AND le.id = $1 OR p.id = ie.project AND ie.id = $1;
+      SELECT DISTINCT engagement_type FROM sc.engagements WHERE sc_projects_id = $1;
       `,
+      [projectId]
+    );
+
+    return type;
+  }
+
+  private async getEngagementType(id: ID) {
+    const [{ type }] = await this.pg.query<{ type: EngagementType }>(
+      'SELECT engagement_type as type FROM sc.engagements WHERE id = $1;',
       [id]
     );
 
@@ -313,13 +352,7 @@ export class PgEngagementRepository implements PublicOf<EngagementRepository> {
 
     const rows = await this.pg.query<{ id: ID }>(
       `
-      SELECT id 
-      FROM ${
-        type === ProjectType.Translation
-          ? 'sc.language_engagements'
-          : 'sc.internship_engagements'
-      }
-      WHERE project = $1 AND status = ANY($2::common.engagement_status[]);
+      SELECT id FROM sc.engagements WHERE sc_projects_id = $1 AND status = ANY($2::common.engagement_status[]);
       `,
       [projectId, OngoingEngagementStatuses]
     );
@@ -334,11 +367,11 @@ export class PgEngagementRepository implements PublicOf<EngagementRepository> {
     const [{ hasExternalFirstScripture }] = engagementId
       ? await this.pg.query<{ hasExternalFirstScripture: boolean | null }>(
           `SELECT l.has_external_first_scripture as "hasExternalFirstScripture" 
-          FROM sc.language_engagements le, sc.languages l WHERE le.id = $1 AND le.language = l.id;`,
+          FROM sc.language_engagements le, sc.languages l WHERE le.id = $1 AND le.common_languages_id = l.id;`,
           [engagementId]
         )
       : await this.pg.query<{ hasExternalFirstScripture: boolean | null }>(
-          `SELECT has_external_first_scripture as "hasExternalFirstScripture" FROM sc.languages WHERE id = $1`,
+          `SELECT has_external_first_scripture as "hasExternalFirstScripture" FROM sc.languages WHERE id = $1;`,
           [languageId]
         );
 
@@ -353,14 +386,15 @@ export class PgEngagementRepository implements PublicOf<EngagementRepository> {
       ? await this.pg.query<{ firstScripture: boolean }>(
           `
           SELECT is_first_scripture as "firstScripture" FROM sc.language_engagements 
-          WHERE language = (SELECT l.id FROM sc.language_engagements le, sc.languages l 
-                            WHERE le.id = $1 AND le.language = l.id);`,
+          WHERE common_languages_id = 
+              (SELECT l.id FROM sc.language_engagements le, sc.languages l 
+               WHERE le.id = $1 AND le.common_languages_id = l.id);`,
           [engagementId]
         )
       : await this.pg.query<{ firstScripture: boolean }>(
           `
           SELECT is_first_scripture as "firstScripture" FROM sc.language_engagements
-          WHERE language = $1;
+          WHERE common_languages_id = $1;
 `,
           [languageId]
         );
@@ -388,54 +422,21 @@ export class PgEngagementRepository implements PublicOf<EngagementRepository> {
     const offset = (input.page - 1) * input.count;
 
     const [{ count }] = await this.pg.query<{ count: string }>(
-      `
-        SELECT sum(total) as count
-        FROM
-	        (SELECT count(*) as total
-		      FROM sc.language_engagements
-		      UNION 
-	        SELECT count(*) as total
-		      FROM sc.internship_engagements) engagements;
-        `
+      'SELECT count(*) FROM sc.engagements;'
     );
 
-    const rows = await this.pg.query<
-      UnsecuredDto<
-        | (Without<LanguageEngagement, InternshipEngagement> &
-            InternshipEngagement)
-        | (Without<InternshipEngagement, LanguageEngagement> &
-            LanguageEngagement)
-      >
-    >(
+    const engagements = await this.pg.query<{ id: ID }>(
       `
-      SELECT
-          id, project, status, complete_date as "completeDate",
-          disbursement_complete_date as "disbursementCompleteDate", start_date as "startDate",
-          end_date as "endDate", start_date_override as "startDateOverride",
-          end_date_override as "endDateOverride", initial_end_date as "initialEndDate",
-          last_suspended_at as "lastSuspendedAt", last_reactivated_at as "lastReactivatedAt",
-          status_modified_at as "statusModifiedAt", modified_at as "modifiedAt",
-          language, is_first_scripture as "firstScripture", is_luke_partnership as "lukePartnership",
-          is_open_to_investor_visit as "openToInvestorVisit", paratext_registry as "paratextRegistryId",
-          historic_goal as "historicGoal", pnp,
-		      null as "countryOfOrigin", null as intern, null as mentor, null as position, null as methodologies, 
-		      null as "growthPlan"
-      FROM sc.language_engagements
-      UNION
-      SELECT
-          id, project, status, complete_date as "completeDate",
-          disbursement_complete_date as "disbursementCompleteDate", start_date as "startDate",
-          end_date as "endDate", start_date_override as "startDateOverride",
-          end_date_override as "endDateOverride", initial_end_date as "initialEndDate",
-          last_suspended_at as "lastSuspendedAt", last_reactivated_at as "lastReactivatedAt",
-          status_modified_at as "statusModifiedAt", modified_at as "modifiedAt",
-          null, null, null, null, null, null, null,
-		      country_of_origin as "countryOfOrigin", intern, mentor, position, methodologies, 	
-		      growth_plan as "growthPlan"
-      FROM sc.internship_engagements
-      ORDER BY ${input.sort} ${input.order} 
-      LIMIT ${limit ?? 25} OFFSET ${offset ?? 10};
+      SELECT id FROM sc.engagements
+      ORDER BY created_at ${input.order}
+      LIMIT ${limit ?? 10} OFFSET ${offset ?? 5};
       `
+    );
+
+    const rows = await Promise.all(
+      engagements.map(async (row) => {
+        return await this.readOne(row.id);
+      })
     );
 
     const engagementList: PaginatedListType<
@@ -454,6 +455,35 @@ export class PgEngagementRepository implements PublicOf<EngagementRepository> {
     return engagementList;
   }
 
+  async update(input: UpdateEngagement) {
+    const { id, ...rest } = input;
+    const changes = omitBy(rest, isNil);
+
+    const updates = Object.entries(changes)
+      .map(([key, value]) => {
+        const label = key
+          .split(/(?=[A-Z])/)
+          .join('_')
+          .toLowerCase();
+
+        return label === 'status'
+          ? `status = '${
+              value as string
+            }', status_modified_at = CURRENT_TIMESTAMP`
+          : `${label} = '${value as string}'`;
+      })
+      .join(', ');
+
+    await this.pg.query(
+      `
+      UPDATE sc.engagements SET ${updates}, modified_at = CURRENT_TIMESTAMP,
+      modified_by_admin_people_id = (SELECT admin_people_id FROM admin.tokens WHERE token = 'public')
+      WHERE id = $1;
+      `,
+      [id]
+    );
+  }
+
   async updateLanguageProperties(
     object:
       | LanguageEngagement
@@ -462,15 +492,35 @@ export class PgEngagementRepository implements PublicOf<EngagementRepository> {
     _changes?: DbChanges<LanguageEngagement>,
     _changeset?: ID
   ): Promise<void> {
-    const { id, ...changes } = object;
+    const {
+      id,
+      completeDate,
+      disbursementCompleteDate,
+      startDateOverride,
+      endDateOverride,
+      initialEndDate,
+      status,
+      methodology,
+      ...changes
+    } = object as UpdateLanguageEngagement;
+    const regExpList = [/first/, /luke/, /open/];
+
+    await this.update({
+      id,
+      completeDate,
+      disbursementCompleteDate,
+      startDateOverride,
+      endDateOverride,
+      initialEndDate,
+      status,
+    });
+
     const updates = Object.entries(changes)
       .map(([key, value]) => {
         const label = key
           .split(/(?=[A-Z])/)
           .join('_')
           .toLowerCase();
-
-        const regExpList = [/first/, /luke/, /open/];
 
         return label.endsWith('_id')
           ? `${label.replace('_id', '')} = '${value as string}'`
@@ -483,8 +533,8 @@ export class PgEngagementRepository implements PublicOf<EngagementRepository> {
     await this.pg.query(
       `
       UPDATE sc.language_engagements SET ${updates}, modified_at = CURRENT_TIMESTAMP,
-      modified_by = (SELECT person FROM admin.tokens WHERE token = 'public')
-      WHERE id = $1
+      modified_by_admin_people_id = (SELECT admin_people_id FROM admin.tokens WHERE token = 'public')
+      WHERE id = $1;
       `,
       [id]
     );
@@ -498,7 +548,27 @@ export class PgEngagementRepository implements PublicOf<EngagementRepository> {
     _changes?: DbChanges<InternshipEngagement>,
     _changeset?: ID
   ): Promise<void> {
-    const { id, ...changes } = object;
+    const {
+      id,
+      completeDate,
+      disbursementCompleteDate,
+      startDateOverride,
+      endDateOverride,
+      initialEndDate,
+      status,
+      ...changes
+    } = object as UpdateLanguageEngagement;
+
+    await this.update({
+      id,
+      completeDate,
+      disbursementCompleteDate,
+      startDateOverride,
+      endDateOverride,
+      initialEndDate,
+      status,
+    });
+
     const updates = Object.entries(changes)
       .map(([key, value]) => {
         const label = key
@@ -506,8 +576,14 @@ export class PgEngagementRepository implements PublicOf<EngagementRepository> {
           .join('_')
           .toLowerCase();
 
-        return label.endsWith('_id')
-          ? `${label.replace('_id', '')} = '${value as string}'`
+        return label === 'mentor_id'
+          ? `mentor_admin_people_id = '${value as string}'`
+          : label === 'country_of_origin_id'
+          ? `country_of_origin_common_locations_id = '${value as string}'`
+          : label === 'methodologies'
+          ? `methodologies = ARRAY['${
+              value.join("','") as string
+            }']::common.product_methodologies[]`
           : `${label} = '${value as string}'`;
       })
       .join(', ');
@@ -515,8 +591,8 @@ export class PgEngagementRepository implements PublicOf<EngagementRepository> {
     await this.pg.query(
       `
       UPDATE sc.internship_engagements SET ${updates}, modified_at = CURRENT_TIMESTAMP,
-      modified_by = (SELECT person FROM admin.tokens WHERE token = 'public')
-      WHERE id = $1
+      modified_by_admin_people_id = (SELECT admin_people_id FROM admin.tokens WHERE token = 'public')
+      WHERE id = $1;
       `,
       [id]
     );
