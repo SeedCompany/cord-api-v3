@@ -21,6 +21,7 @@ import {
   RawInternshipEngagement,
   RawLanguageEngagement,
 } from './fragments';
+import { runAsAdmin } from './login';
 
 export async function listInternshipEngagements(app: TestApp) {
   const result = await app.graphql.mutate(
@@ -158,8 +159,7 @@ export async function createLanguageEngagement(
   const languageEngagement: CreateLanguageEngagement = {
     languageId:
       input.languageId ??
-      (await runInIsolatedSession(app, async () => {
-        await registerUser(app, { roles: [Role.Administrator] }); // only admin role can create a language for now
+      (await runAsAdmin(app, async () => {
         return (await createLanguage(app)).id;
       })),
     projectId: input.projectId ?? (await createProject(app)).id,

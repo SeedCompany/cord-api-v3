@@ -154,7 +154,7 @@ describe('Engagement Changeset Aware e2e', () => {
     await createSession(app);
 
     await registerUser(app, {
-      roles: [Role.ProjectManager],
+      roles: [Role.ProjectManager, Role.FieldOperationsDirector],
     });
 
     language = await runInIsolatedSession(app, async () => {
