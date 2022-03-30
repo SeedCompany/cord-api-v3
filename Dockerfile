@@ -29,6 +29,7 @@ FROM node as dev
 COPY .yarn .yarn
 COPY patches patches
 COPY package.json yarn.lock .yarnrc.yml ./
+ENV VERBOSE_YARN_LOG=discard
 RUN yarn install --immutable
 
 # Copy application code
