@@ -10,6 +10,7 @@ import {
   createTestApp,
   fragments,
   registerUser,
+  runAsAdmin,
   TestApp,
 } from './utility';
 
@@ -223,18 +224,20 @@ describe('Organization e2e', () => {
   it('delete organization', async () => {
     const org = await createOrganization(app);
 
-    const result = await app.graphql.mutate(
-      gql`
-        mutation deleteOrganization($id: ID!) {
-          deleteOrganization(id: $id) {
-            __typename
+    const result = await runAsAdmin(app, async () => {
+      return await app.graphql.mutate(
+        gql`
+          mutation deleteOrganization($id: ID!) {
+            deleteOrganization(id: $id) {
+              __typename
+            }
           }
+        `,
+        {
+          id: org.id,
         }
-      `,
-      {
-        id: org.id,
-      }
-    );
+      );
+    });
 
     const actual: Organization | undefined = result.deleteOrganization;
     expect(actual).toBeTruthy();
@@ -243,63 +246,65 @@ describe('Organization e2e', () => {
   it('delete organization with blank, mismatch, invalid id', async () => {
     const org = await createOrganization(app);
 
-    await expect(
-      app.graphql.mutate(
-        gql`
-          mutation deleteOrganization($id: ID!) {
-            deleteOrganization(id: $id) {
-              __typename
+    await runAsAdmin(app, async () => {
+      await expect(
+        app.graphql.mutate(
+          gql`
+            mutation deleteOrganization($id: ID!) {
+              deleteOrganization(id: $id) {
+                __typename
+              }
             }
+          `,
+          {
+            id: '',
           }
-        `,
-        {
-          id: '',
-        }
-      )
-    ).rejects.toThrow('Input validation failed');
+        )
+      ).rejects.toThrow('Input validation failed');
 
-    await expect(
-      app.graphql.mutate(
-        gql`
-          mutation deleteOrganization($id: ID!) {
-            deleteOrganization(id: $id) {
-              __typename
+      await expect(
+        app.graphql.mutate(
+          gql`
+            mutation deleteOrganization($id: ID!) {
+              deleteOrganization(id: $id) {
+                __typename
+              }
             }
-          }
-        `,
-        {}
-      )
-    ).rejects.toThrowError();
+          `,
+          {}
+        )
+      ).rejects.toThrowError();
 
-    await expect(
-      app.graphql.mutate(
-        gql`
-          mutation deleteOrganization($id: ID!) {
-            deleteOrganization(id: $id) {
-              __typename
+      await expect(
+        app.graphql.mutate(
+          gql`
+            mutation deleteOrganization($id: ID!) {
+              deleteOrganization(id: $id) {
+                __typename
+              }
             }
+          `,
+          {
+            id5: org.id,
           }
-        `,
-        {
-          id5: org.id,
-        }
-      )
-    ).rejects.toThrowError();
+        )
+      ).rejects.toThrowError();
 
-    await expect(
-      app.graphql.mutate(
-        gql`
-          mutation deleteOrganization($id: ID!) {
-            deleteOrganization(id: $id) {
-              __typename
+      await expect(
+        app.graphql.mutate(
+          gql`
+            mutation deleteOrganization($id: ID!) {
+              deleteOrganization(id: $id) {
+                __typename
+              }
             }
+          `,
+          {
+            id: '!@#$%',
           }
-        `,
-        {
-          id: '!@#$%',
-        }
-      )
-    ).rejects.toThrow('Input validation failed');
+        )
+      ).rejects.toThrow('Input validation failed');
+    });
   });
 
   it('shows canEdit true when it can be edited', async () => {

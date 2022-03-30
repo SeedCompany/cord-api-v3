@@ -29,6 +29,7 @@ import {
   getFileNodeChildren,
   registerUser,
   requestFileUpload,
+  runAsAdmin,
   runInIsolatedSession,
   TestApp,
   uploadFileContents,
@@ -64,18 +65,20 @@ export async function uploadFile(
 }
 
 async function deleteNode(app: TestApp, id: ID) {
-  await app.graphql.mutate(
-    gql`
-      mutation deleteFileNode($id: ID!) {
-        deleteFileNode(id: $id) {
-          __typename
+  await runAsAdmin(app, async () => {
+    await app.graphql.mutate(
+      gql`
+        mutation deleteFileNode($id: ID!) {
+          deleteFileNode(id: $id) {
+            __typename
+          }
         }
+      `,
+      {
+        id,
       }
-    `,
-    {
-      id,
-    }
-  );
+    );
+  });
 }
 
 async function expectNodeNotFound(app: TestApp, id: ID) {

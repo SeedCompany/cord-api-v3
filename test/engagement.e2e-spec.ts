@@ -440,18 +440,20 @@ describe('Engagement e2e', () => {
       languageId: language.id,
     });
 
-    const result = await app.graphql.mutate(
-      gql`
-        mutation deleteEngagement($id: ID!) {
-          deleteEngagement(id: $id) {
-            __typename
+    const result = await runAsAdmin(app, async () => {
+      await app.graphql.mutate(
+        gql`
+          mutation deleteEngagement($id: ID!) {
+            deleteEngagement(id: $id) {
+              __typename
+            }
           }
+        `,
+        {
+          id: languageEngagement.id,
         }
-      `,
-      {
-        id: languageEngagement.id,
-      }
-    );
+      );
+    });
 
     const actual: boolean | undefined = result.deleteEngagement;
     expect(actual).toBeTruthy();
@@ -719,18 +721,20 @@ describe('Engagement e2e', () => {
 
     const ceremonyId = languageEngagementRead?.engagement?.ceremony?.value?.id;
 
-    await app.graphql.mutate(
-      gql`
-        mutation deleteEngagement($id: ID!) {
-          deleteEngagement(id: $id) {
-            __typename
+    await runAsAdmin(app, async () => {
+      await app.graphql.mutate(
+        gql`
+          mutation deleteEngagement($id: ID!) {
+            deleteEngagement(id: $id) {
+              __typename
+            }
           }
+        `,
+        {
+          id: languageEngagement.id,
         }
-      `,
-      {
-        id: languageEngagement.id,
-      }
-    );
+      );
+    });
 
     await expectNotFound(
       app.graphql.query(

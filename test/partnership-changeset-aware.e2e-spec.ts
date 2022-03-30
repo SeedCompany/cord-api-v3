@@ -202,19 +202,21 @@ describe('Partnership Changeset Aware e2e', () => {
     });
 
     // Delete partnereship in changeset
-    let result = await app.graphql.mutate(
-      gql`
-        mutation deletePartnership($id: ID!, $changeset: ID) {
-          deletePartnership(id: $id, changeset: $changeset) {
-            __typename
+    let result = await runAsAdmin(app, async () => {
+      return await app.graphql.mutate(
+        gql`
+          mutation deletePartnership($id: ID!, $changeset: ID) {
+            deletePartnership(id: $id, changeset: $changeset) {
+              __typename
+            }
           }
+        `,
+        {
+          id: partnership.id,
+          changeset: changeset.id,
         }
-      `,
-      {
-        id: partnership.id,
-        changeset: changeset.id,
-      }
-    );
+      );
+    });
     const actual: boolean | undefined = result.deletePartnership;
     expect(actual).toBeTruthy();
 

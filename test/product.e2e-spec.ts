@@ -19,6 +19,7 @@ import {
   createDerivativeProduct,
   createDirectProduct,
   createFilm,
+  createLanguage,
   createLanguageEngagement,
   createSession,
   createStory,
@@ -26,6 +27,7 @@ import {
   expectNotFound,
   fragments,
   registerUser,
+  runAsAdmin,
   TestApp,
 } from './utility';
 import { RawLanguageEngagement, RawProduct } from './utility/fragments';
@@ -50,8 +52,12 @@ describe('Product e2e', () => {
     });
     story = await createStory(app);
     film = await createFilm(app);
-
-    engagement = await createLanguageEngagement(app);
+    const language = await runAsAdmin(app, async () => {
+      return await createLanguage(app);
+    });
+    engagement = await createLanguageEngagement(app, {
+      languageId: language.id,
+    });
   });
   afterAll(async () => {
     await app.close();

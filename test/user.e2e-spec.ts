@@ -18,6 +18,7 @@ import {
   loginAsAdmin,
   registerUser,
   registerUserWithStrictInput,
+  runAsAdmin,
   TestApp,
 } from './utility';
 
@@ -147,18 +148,20 @@ describe('User e2e', () => {
   it('delete user', async () => {
     // create user first
     const user = await registerUser(app);
-    const result = await app.graphql.query(
-      gql`
-        mutation deleteUser($id: ID!) {
-          deleteUser(id: $id) {
-            __typename
+    const result = await runAsAdmin(app, async () => {
+      return await app.graphql.query(
+        gql`
+          mutation deleteUser($id: ID!) {
+            deleteUser(id: $id) {
+              __typename
+            }
           }
+        `,
+        {
+          id: user.id,
         }
-      `,
-      {
-        id: user.id,
-      }
-    );
+      );
+    });
 
     const actual: User | undefined = result.deleteUser;
     expect(actual).toBeTruthy();

@@ -24,6 +24,7 @@ import {
   fragments,
   Raw,
   registerUser,
+  runAsAdmin,
   TestApp,
 } from './utility';
 import { createPartnership } from './utility/create-partnership';
@@ -474,18 +475,20 @@ describe('Partnership e2e', () => {
     };
 
     const deletePartnership = async (partnershipId: ID): Promise<void> => {
-      await app.graphql.mutate(
-        gql`
-          mutation deletePartnership($id: ID!) {
-            deletePartnership(id: $id) {
-              __typename
+      return await runAsAdmin(app, async () => {
+        return await app.graphql.mutate(
+          gql`
+            mutation deletePartnership($id: ID!) {
+              deletePartnership(id: $id) {
+                __typename
+              }
             }
+          `,
+          {
+            id: partnershipId,
           }
-        `,
-        {
-          id: partnershipId,
-        }
-      );
+        );
+      });
     };
 
     partnership1 = await getPartnershipById(partnership1.id);

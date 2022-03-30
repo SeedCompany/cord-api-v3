@@ -182,18 +182,20 @@ describe('ProjectMember e2e', () => {
       projectId: project.id,
     });
 
-    await app.graphql.mutate(
-      gql`
-        mutation deleteProjectMember($id: ID!) {
-          deleteProjectMember(id: $id) {
-            __typename
+    await runAsAdmin(app, async () => {
+      await app.graphql.mutate(
+        gql`
+          mutation deleteProjectMember($id: ID!) {
+            deleteProjectMember(id: $id) {
+              __typename
+            }
           }
+        `,
+        {
+          id: projectMember.id,
         }
-      `,
-      {
-        id: projectMember.id,
-      }
-    );
+      );
+    });
 
     const newProjectMember = await createProjectMember(app, {
       userId: member.id,
