@@ -42,6 +42,7 @@ export const ProjectManagerOnProject = new DbRole({
     Powers.CreateBudget,
     Powers.CreateBudgetRecord,
     Powers.CreateCeremony,
+    Powers.CreateChangeRequest,
     Powers.CreateDirectory,
     Powers.CreateEducation,
     Powers.CreateEthnoArt,
