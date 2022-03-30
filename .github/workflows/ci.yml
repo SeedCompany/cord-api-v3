@@ -81,7 +81,7 @@ jobs:
 
     services:
       neo4j:
-        image: ghcr.io/seedcompany/cord-procedures
+        image: neo4j:4.3-enterprise
         ports:
           - 7474:7474
           - 7687:7687
