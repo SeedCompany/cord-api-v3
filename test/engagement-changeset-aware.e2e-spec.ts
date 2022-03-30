@@ -171,6 +171,7 @@ describe('Engagement Changeset Aware e2e', () => {
     const project = await createProject(app);
     await createLanguageEngagement(app, {
       projectId: project.id,
+      languageId: language.id,
     });
     await activeProject(app, project.id);
     const changeset = await createProjectChangeRequest(app, {
