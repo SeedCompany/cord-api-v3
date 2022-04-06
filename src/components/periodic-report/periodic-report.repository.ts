@@ -36,7 +36,8 @@ import {
 @Injectable()
 export class PeriodicReportRepository extends DtoRepository<
   typeof IPeriodicReport,
-  [session: Session]
+  [session: Session],
+  PeriodicReport
 >(IPeriodicReport) {
   async merge(input: MergePeriodicReports) {
     const Report = resolveReportType(input);
