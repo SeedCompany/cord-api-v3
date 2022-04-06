@@ -37,7 +37,8 @@ import {
 @Injectable()
 export class PeriodicReportRepository extends DtoRepository<
   typeof IPeriodicReport,
-  [session: Session]
+  [session: Session],
+  PeriodicReport
 >(IPeriodicReport) {
   constructor(db: DatabaseService, private readonly files: FileService) { super(db); }
 
