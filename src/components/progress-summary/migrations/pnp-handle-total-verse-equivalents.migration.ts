@@ -4,7 +4,7 @@ import { BaseMigration, IEventBus, Migration } from '../../../core';
 import { ACTIVE } from '../../../core/database/query';
 import { FileService } from '../../file';
 import { PeriodicReportService } from '../../periodic-report';
-import { PeriodicReportUploadedEvent } from '../../periodic-report/events';
+import { PnpProgressUploadedEvent } from '../../periodic-report/events';
 
 @Migration('2021-10-05T09:53:22')
 export class PnpHandleTotalVerseEquivalentsMigration extends BaseMigration {
@@ -35,7 +35,7 @@ export class PnpHandleTotalVerseEquivalentsMigration extends BaseMigration {
         ]);
         const file = this.files.asDownloadable(fv);
 
-        const event = new PeriodicReportUploadedEvent(report, file, session);
+        const event = new PnpProgressUploadedEvent(report, file, session);
         await this.eventBus.publish(event);
       } catch (e) {
         this.logger.error('Failed to re-extract PnP', {

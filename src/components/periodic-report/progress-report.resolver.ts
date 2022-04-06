@@ -42,7 +42,9 @@ export class ProgressReportResolver {
     }
 
     return {
-      value: await this.files.getFile(report.pnp.value, session),
+      value: report.pnp.value
+        ? await this.files.getFile(report.pnp.value, session)
+        : undefined,
       ...rest,
     };
   }

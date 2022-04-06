@@ -1,19 +1,21 @@
 import { EventsHandler, ILogger, Logger } from '../../../core';
+import { FileService } from '../../file';
 import { ReportType } from '../../periodic-report/dto';
-import { PeriodicReportUploadedEvent } from '../../periodic-report/events';
+import { PnpProgressUploadedEvent } from '../../periodic-report/events';
 import { SummaryPeriod } from '../dto';
 import { ProgressSummaryExtractor } from '../progress-summary.extractor';
 import { ProgressSummaryRepository } from '../progress-summary.repository';
 
-@EventsHandler(PeriodicReportUploadedEvent)
+@EventsHandler(PnpProgressUploadedEvent)
 export class ExtractPnpFileOnUploadHandler {
   constructor(
     private readonly repo: ProgressSummaryRepository,
     private readonly extractor: ProgressSummaryExtractor,
+    private readonly files: FileService,
     @Logger('progress-summary:extractor') private readonly logger: ILogger
   ) {}
 
-  async handle(event: PeriodicReportUploadedEvent) {
+  async handle(event: PnpProgressUploadedEvent) {
     if (event.report.type !== ReportType.Progress) {
       return;
     }
@@ -26,7 +28,10 @@ export class ExtractPnpFileOnUploadHandler {
 
     let extracted;
     try {
-      extracted = await this.extractor.extract(event.file, event.report.start);
+      extracted = await this.extractor.extract(
+        this.files.asDownloadable(event.file),
+        event.report.start
+      );
     } catch (e) {
       this.logger.warning(e.message, {
         name: event.file.name,

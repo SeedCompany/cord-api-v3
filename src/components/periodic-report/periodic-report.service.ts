@@ -18,7 +18,6 @@ import { AuthorizationService } from '../authorization/authorization.service';
 import { FileService } from '../file';
 import {
   FinancialReport,
-  IPeriodicReport,
   MergePeriodicReports,
   NarrativeReport,
   PeriodicReport,
@@ -103,6 +102,7 @@ export class PeriodicReportService {
         session
       );
       const newVersion = await this.files.getFileVersion(pnp.uploadId, session);
+
       await this.eventBus.publish(
         new PnpProgressUploadedEvent(updated, newVersion, session)
       );
@@ -140,7 +140,7 @@ export class PeriodicReportService {
   }
 
   private async secure(
-    dto: UnsecuredDto<typeof IPeriodicReport>,
+    dto: UnsecuredDto<PeriodicReport>,
     session: Session
   ): Promise<PeriodicReport> {
     const securedProps = await this.authorizationService.secureProperties(

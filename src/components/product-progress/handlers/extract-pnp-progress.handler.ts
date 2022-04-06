@@ -1,20 +1,22 @@
 import { EventsHandler, ILogger, Logger } from '../../../core';
+import { FileService } from '../../file';
 import { ReportType } from '../../periodic-report/dto';
-import { PeriodicReportUploadedEvent } from '../../periodic-report/events';
+import { PnpProgressUploadedEvent } from '../../periodic-report/events';
 import { ProducibleType, ProductService } from '../../product';
 import { ProductProgressService } from '../product-progress.service';
 import { StepProgressExtractor } from '../step-progress-extractor.service';
 
-@EventsHandler(PeriodicReportUploadedEvent)
+@EventsHandler(PnpProgressUploadedEvent)
 export class ExtractPnpProgressHandler {
   constructor(
     private readonly extractor: StepProgressExtractor,
     private readonly progress: ProductProgressService,
     private readonly products: ProductService,
+    private readonly files: FileService,
     @Logger('step-progress:extractor') private readonly logger: ILogger
   ) {}
 
-  async handle(event: PeriodicReportUploadedEvent) {
+  async handle(event: PnpProgressUploadedEvent) {
     if (event.report.type !== ReportType.Progress) {
       return;
     }
@@ -22,7 +24,9 @@ export class ExtractPnpProgressHandler {
     // parse progress data from pnp spreadsheet
     let progressRows;
     try {
-      progressRows = await this.extractor.extract(event.file);
+      progressRows = await this.extractor.extract(
+        this.files.asDownloadable(event.file)
+      );
     } catch (e) {
       this.logger.warning(e.message, {
         name: event.file.name,

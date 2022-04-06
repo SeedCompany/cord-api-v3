@@ -32,12 +32,15 @@ export abstract class AbstractPeriodicReportSync {
     }
     await this.periodicReports.delete(parent, type, diff.removals);
 
-    await this.periodicReports.merge({
-      type,
-      parent,
-      intervals: diff.additions,
-      session,
-    });
+    await this.periodicReports.merge(
+      {
+        type,
+        parent,
+        intervals: diff.additions,
+        session,
+      },
+      session
+    );
 
     if (!finalAt) {
       return;
