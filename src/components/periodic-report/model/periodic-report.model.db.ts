@@ -8,6 +8,7 @@ export class DbPeriodicReport extends DbBaseNode {
   start: any = null;
   end: any = null;
   receivedDate: any = null;
-  reportFile: any = null;
+  directory: any = null;
+  pnp: any = null;
   skippedReason: any = null;
 }

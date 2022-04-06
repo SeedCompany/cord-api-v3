@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { hasLabel, node, Query, relation } from 'cypher-query-builder';
 import { AndConditions } from 'cypher-query-builder/src/clauses/where-utils';
+import { interval } from 'ix/asynciterable';
 import {
   CalendarDate,
   generateId,
@@ -9,7 +10,7 @@ import {
   Session,
   UnsecuredDto,
 } from '../../common';
-import { DtoRepository } from '../../core';
+import { DatabaseService, DtoRepository } from '../../core';
 import {
   ACTIVE,
   createNode,
@@ -23,7 +24,7 @@ import {
   variable,
   Variable,
 } from '../../core/database/query';
-import { File } from '../file';
+import { File, FileService } from '../file';
 import {
   IPeriodicReport,
   MergePeriodicReports,
@@ -38,7 +39,10 @@ export class PeriodicReportRepository extends DtoRepository<
   typeof IPeriodicReport,
   [session: Session]
 >(IPeriodicReport) {
-  async merge(input: MergePeriodicReports) {
+  constructor(db: DatabaseService, private readonly files: FileService) { super(db); }
+
+  async merge(input: MergePeriodicReports, session: Session) {
+    const directory = await this.files.createDirectory(undefined, 'Report Directory', session);
     const Report = resolveReportType(input);
 
     // Create IDs here that will feed into the reports that are new.
@@ -51,6 +55,13 @@ export class PeriodicReportRepository extends DtoRepository<
         tempFileId: await generateId(),
       }))
     );
+    
+    // Create all of the pnp files if it's a progress report.
+    if(input.type === ReportType.Progress) {
+      intervals.forEach(async interval => {
+        await this.files.createDefinedFile(interval.tempFileId, interval.end.toISODate(), session, interval.tempId, 'pnp');
+      })
+    }
 
     const query = this.db
       .query()
@@ -102,7 +113,8 @@ export class PeriodicReportRepository extends DtoRepository<
             end: variable('interval.end'),
             skippedReason: null,
             receivedDate: null,
-            reportFile: variable('interval.tempFileId'),
+            directory: directory.id,
+            ...(input.type === ReportType.Progress ? {pnp: variable('interval.tempFileId')} : {}),
           },
         })
       )
@@ -113,8 +125,10 @@ export class PeriodicReportRepository extends DtoRepository<
       )
       // rename node to report, so we can call create node again for the file
       .with('now, interval, node as report')
-      .apply(
-        await createNode(File, {
+      .apply(q => {
+        // create pnp if this is a progress report
+        if(input.type === ReportType.Progress) 
+        {q.createNode(File, {
           initialProps: {
             name: variable('apoc.temporal.format(interval.end, "date")'),
           },
@@ -122,7 +136,7 @@ export class PeriodicReportRepository extends DtoRepository<
             id: variable('interval.tempFileId'),
             createdAt: variable('now'),
           },
-        })
+        })} }
       )
       .apply(
         createRelationships(File, {
@@ -130,8 +144,8 @@ export class PeriodicReportRepository extends DtoRepository<
           out: { createdBy: ['User', input.session.userId] },
         })
       )
-      .return<{ id: ID; interval: Range<CalendarDate> }>(
-        'report.id as id, interval'
+      .return<{ id: ID; interval: Range<CalendarDate>; pnpId: ID }>(
+        'report.id as id, interval, interval.tempFileId'
       );
     return await query.run();
   }

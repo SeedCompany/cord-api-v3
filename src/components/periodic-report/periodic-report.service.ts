@@ -1,4 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { session } from 'neo4j-driver';
 import {
   asyncPool,
   CalendarDate,
@@ -29,7 +30,7 @@ import {
   SecuredPeriodicReportList,
   UpdatePeriodicReportInput,
 } from './dto';
-import { PeriodicReportUploadedEvent } from './events';
+import { PnpProgressUploadedEvent } from './events';
 import { PeriodicReportRepository } from './periodic-report.repository';
 
 @Injectable()
@@ -43,12 +44,14 @@ export class PeriodicReportService {
     private readonly repo: PeriodicReportRepository
   ) {}
 
-  async merge(input: MergePeriodicReports) {
+  async merge(input: MergePeriodicReports, session: Session) {
     if (input.intervals.length === 0) {
       return;
     }
     try {
-      const result = await this.repo.merge(input);
+      
+      const result = await this.repo.merge(input, session);
+
       this.logger.info(`Merged ${input.type.toLowerCase()} reports`, {
         existing: input.intervals.length - result.length,
         new: result.length,
@@ -64,39 +67,63 @@ export class PeriodicReportService {
 
   async update(input: UpdatePeriodicReportInput, session: Session) {
     const current = await this.readOne(input.id, session);
-    const changes = this.repo.getActualChanges(current, input);
-    await this.authorizationService.verifyCanEditChanges(
-      resolveReportType(current),
-      current,
-      changes
-    );
 
-    const { reportFile, ...simpleChanges } = changes;
+    if (current.type === ReportType.Progress) {
+      return await this.updateProgressReport(current, input, session);
+    } else {
 
-    const updated = await this.repo.updateProperties(current, simpleChanges);
-
-    if (reportFile) {
-      await this.files.updateDefinedFile(
-        current.reportFile,
-        'file',
-        input.reportFile,
-        session
+      const {pnp, ...rest} = input;
+      const changes = this.repo.getActualChanges(current, rest);
+      await this.authorizationService.verifyCanEditChanges(
+        resolveReportType(current),
+        current,
+        changes
       );
-      const newVersion = await this.files.getFileVersion(
-        reportFile.uploadId,
-        session
+
+      const updated = await this.repo.updateProperties(current, changes);
+      return updated;
+    }
+  }
+    
+    async updateProgressReport(
+      report: ProgressReport,
+      input: UpdatePeriodicReportInput,
+      session: Session,
+    ) {
+      const changes = this.repo.getActualChanges(report, input);
+      await this.authorizationService.verifyCanEditChanges(
+        resolveReportType(report),
+        report,
+        changes
       );
-      await this.eventBus.publish(
-        new PeriodicReportUploadedEvent(
-          updated,
-          this.files.asDownloadable(newVersion),
+      const {pnp, ...simpleChanges} = changes;
+      const updated = await this.repo.updateProperties(report, simpleChanges);
+      if (pnp) {
+        await this.files.updateDefinedFile(
+          report.pnp,
+          'file',
+          input.pnp,
           session
-        )
-      );
+        );
+        const newVersion = await this.files.getFileVersion(
+          pnp.uploadId,
+          session
+        );
+        await this.eventBus.publish(
+          new PnpProgressUploadedEvent(
+            updated,
+            newVersion,
+            session
+          )
+        );
+      }
+  
+      return updated;
     }
 
-    return updated;
-  }
+    
+
+
 
   @HandleIdLookup([FinancialReport, NarrativeReport, ProgressReport])
   async readOne(
@@ -116,13 +143,13 @@ export class PeriodicReportService {
     }
 
     const result = await this.repo.readOne(id, session);
-    return await this.secure(result, session);
+    return await this.secure(result as UnsecuredDto<PeriodicReport>, session);
   }
 
   async readMany(ids: readonly ID[], session: Session) {
     const periodicReports = await this.repo.readMany(ids, session);
     return await asyncPool(25, periodicReports, (dto) =>
-      this.secure(dto, session)
+      this.secure(dto as UnsecuredDto<PeriodicReport>, session)
     );
   }
 
@@ -131,7 +158,7 @@ export class PeriodicReportService {
     session: Session
   ): Promise<PeriodicReport> {
     const securedProps = await this.authorizationService.secureProperties(
-      IPeriodicReport,
+      resolveReportType(dto),
       dto,
       session,
       dto.scope
@@ -238,7 +265,8 @@ export class PeriodicReportService {
         type,
         parent: parentId,
         session,
-      });
+      },
+      session);
     }
   }
 }

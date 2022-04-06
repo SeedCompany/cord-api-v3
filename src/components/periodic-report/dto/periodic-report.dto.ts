@@ -40,8 +40,8 @@ export const resolveReportType = (report: Pick<PeriodicReport, 'type'>) => {
   implements: [Resource],
 })
 class PeriodicReport extends Resource {
-  static readonly Props = keysOf<PeriodicReport>();
-  static readonly SecuredProps = keysOf<SecuredProps<PeriodicReport>>();
+  static readonly Props: string[] = keysOf<PeriodicReport>();
+  static readonly SecuredProps: string[] = keysOf<SecuredProps<PeriodicReport>>();
 
   @Field(() => ReportType)
   readonly type: ReportType;
@@ -60,7 +60,7 @@ class PeriodicReport extends Resource {
   @Field()
   readonly skippedReason: SecuredStringNullable;
 
-  readonly reportFile: DefinedFile;
+  readonly directory: DefinedFile;
 
   @SensitivityField({
     description: "Based on the project's sensitivity",
@@ -105,6 +105,8 @@ export class ProgressReport extends PeriodicReport {
   static readonly SecuredProps = keysOf<SecuredProps<ProgressReport>>();
 
   readonly type: ReportType.Progress;
+
+  readonly pnp: DefinedFile;
 }
 
 @ObjectType({

@@ -11,6 +11,8 @@ export abstract class UploadPeriodicReportInput {
 
   @Field({
     description: 'New version of the report file',
+    deprecationReason: 
+      'Periodic report now uses directory for multiple files upload.'
   })
   @Type(() => CreateDefinedFileVersionInput)
   @ValidateNested()

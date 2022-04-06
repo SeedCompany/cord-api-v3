@@ -1,14 +1,14 @@
 import { Session } from '../../../common';
-import { Downloadable, FileNode } from '../../file';
+import { FileVersion } from '../../file';
 import { PeriodicReport } from '../dto';
 
 /**
  * Dispatched when a new file is uploaded for a periodic report
  */
-export class PeriodicReportUploadedEvent {
+export class PnpProgressUploadedEvent {
   constructor(
     readonly report: PeriodicReport,
-    readonly file: Downloadable<FileNode>,
+    readonly file: FileVersion,
     readonly session: Session
   ) {}
 }
