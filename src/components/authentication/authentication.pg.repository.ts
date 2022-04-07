@@ -22,10 +22,6 @@ export class PgAuthenticationRepository
       [token]
     );
 
-    if (!userId[0].userId) {
-      throw new Error('Could not find user');
-    }
-
     const roles = await this.pg.query<{ roles: string[] }>(
       `
       SELECT array_agg(r.name) as roles
@@ -38,14 +34,14 @@ export class PgAuthenticationRepository
 
     return {
       userId: userId[0].userId,
-      roles: roles[0].roles as unknown as ScopedRole[],
+      roles: roles.length ? (roles[0].roles as ScopedRole[]) : [],
     };
   }
 
-  async saveSessionToken(token: string, userId?: ID) {
+  async saveSessionToken(token: string) {
     const rows = await this.pg.query<{ token: string }>(
-      'INSERT INTO admin.tokens (token, admin_people_id) VALUES ($1, $2) RETURNING token;',
-      [token, userId]
+      'INSERT INTO admin.tokens (token) VALUES ($1) RETURNING token;',
+      [token]
     );
 
     if (!rows[0].token) {
@@ -102,7 +98,7 @@ export class PgAuthenticationRepository
     const rows = await this.pg.query<{ pash: string }>(
       `
       SELECT u.password as pash FROM admin.user_email_accounts as u, admin.tokens as t 
-      WHERE u.email = $1 AND t.token = $2 AND t.admin_people_id = u.id;
+      WHERE u.email = $1 AND t.token = $2;
       `,
       [input.email, session.token]
     );
@@ -132,7 +128,10 @@ export class PgAuthenticationRepository
   }
 
   async deleteSessionToken(token: string): Promise<void> {
-    await this.pg.query('DELETE FROM admin.tokens WHERE token = $1;', [token]);
+    await this.pg.query(
+      'UPDATE admin.tokens SET admin_people_id = NULL WHERE token = $1;',
+      [token]
+    );
   }
 
   async updatePassword(
@@ -174,15 +173,14 @@ export class PgAuthenticationRepository
     session: Session
   ): Promise<ID | undefined> {
     const rows = await this.pg.query<{ id: ID }>(
-      'SELECT id FROM admin.user_email_accounts WHERE email = $1;',
-      [input.email]
+      `
+      UPDATE admin.tokens SET admin_people_id = (SELECT id FROM admin.user_email_accounts WHERE email = $1)
+      WHERE token = $2
+      RETURNING (SELECT id FROM admin.user_email_accounts WHERE email = $1);
+      `,
+      [input.email, session.token]
     );
 
-    if (!rows[0].id) {
-      throw new ServerException('Could not find user');
-    }
-
-    await this.saveSessionToken(session.token, rows[0].id);
     return rows[0].id;
   }
 
