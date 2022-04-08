@@ -2,12 +2,12 @@ import { Inject, Injectable } from '@nestjs/common';
 import {
   ID,
   NotFoundException,
+  PaginatedListType,
   ServerException,
   Session,
   UnsecuredDto,
 } from '../../../common';
 import { DtoRepository, Pg } from '../../../core';
-import { paginate, sorting } from '../../../core/database/query';
 import { PgTransaction } from '../../../core/postgres/transaction.decorator';
 import {
   CreateUnavailability,
@@ -74,6 +74,48 @@ export class UnavailabilityPgRepository extends DtoRepository(Unavailability) {
     return rows;
   }
 
+  async getUserIdByUnavailability(id: ID) {
+    const rows = await this.pg.query<{ id: ID }>(
+      `
+      SELECT admin_people_id as "id"
+      FROM sc.person_unavailabilities
+      WHERE id = $1;
+      `,
+      [id]
+    );
+    if (!rows) {
+      throw new NotFoundException(`Could not find unavailability id ${id}`);
+    }
+    return rows[0];
+  }
+
+  async list(
+    input: UnavailabilityListInput,
+    _session: Session
+  ): Promise<PaginatedListType<UnsecuredDto<Unavailability>>> {
+    const limit = input.count;
+    const offset = (input.page - 1) * input.count;
+    const [{ count }] = await this.pg.query<{ count: string }>(
+      'SELECT count(*) FROM sc.person_unavailabilities;'
+    );
+
+    const rows = await this.pg.query<UnsecuredDto<Unavailability>>(
+      `
+      SELECT id, admin_people_id, period_start as "start", period_end as "end", description, 
+      created_at as "createdAt", created_by_admin_people_id as "creator",
+      modified_at as "modifiedAt", modified_by_admin_people_id
+      FROM sc.person_unavailabilities
+      ORDER BY created_at ${input.order} 
+      LIMIT ${limit ?? 10} OFFSET ${offset ?? 5};
+      `
+    );
+    return {
+      items: rows,
+      total: +count,
+      hasMore: rows.length < +count,
+    };
+  }
+
   @PgTransaction()
   async update(input: UpdateUnavailability, _session: Session) {
     await this.pg.query(
@@ -86,17 +128,11 @@ export class UnavailabilityPgRepository extends DtoRepository(Unavailability) {
     );
   }
 
-  async getUserIdByUnavailability(id: ID) {
-    return { id };
-  }
-
-  async list(input: UnavailabilityListInput, _session: Session) {
-    const result = await this.db
-      .query()
-      .matchNode('node', 'Unavailability')
-      .apply(sorting(Unavailability, input))
-      .apply(paginate(input, this.hydrate()))
-      .first();
-    return result!; // result from paginate will always have 1 row.
+  @PgTransaction()
+  async delete(id: ID) {
+    await this.pg.query(
+      'DELETE FROM sc.person_unavailabilities WHERE id = $1',
+      [id]
+    );
   }
 }
