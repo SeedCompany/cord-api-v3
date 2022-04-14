@@ -44,9 +44,7 @@ export class UnavailabilityPgRepository extends DtoRepository(Unavailability) {
   async readOne(id: ID): Promise<UnsecuredDto<Unavailability>> {
     const rows = await this.pg.query<UnsecuredDto<Unavailability>>(
       `
-      SELECT id, admin_people_id, period_start as "start", period_end as "end", description, 
-      created_at as "createdAt", created_by_admin_people_id as "creator",
-      modified_at as "modifiedAt", modified_by_admin_people_id
+      SELECT id, period_start as "start", period_end as "end", description, created_at as "createdAt"
       FROM sc.person_unavailabilities
       WHERE id = $1;
       `,
@@ -63,9 +61,7 @@ export class UnavailabilityPgRepository extends DtoRepository(Unavailability) {
   ): Promise<ReadonlyArray<UnsecuredDto<Unavailability>>> {
     const rows = await this.pg.query<UnsecuredDto<Unavailability>>(
       `
-      SELECT id, admin_people_id, period_start as "start", period_end as "end", description, 
-      created_at as "createdAt", created_by_admin_people_id as "creator",
-      modified_at as "modifiedAt", modified_by_admin_people_id
+      SELECT id, period_start as "start", period_end as "end", description, created_at as "createdAt" 
       FROM sc.person_unavailabilities
       WHERE id = ANY($1::text[]);
       `,
@@ -101,9 +97,7 @@ export class UnavailabilityPgRepository extends DtoRepository(Unavailability) {
 
     const rows = await this.pg.query<UnsecuredDto<Unavailability>>(
       `
-      SELECT id, admin_people_id, period_start as "start", period_end as "end", description, 
-      created_at as "createdAt", created_by_admin_people_id as "creator",
-      modified_at as "modifiedAt", modified_by_admin_people_id
+      SELECT id, period_start as "start", period_end as "end", description, created_at as "createdAt"
       FROM sc.person_unavailabilities
       ORDER BY created_at ${input.order} 
       LIMIT ${limit ?? 10} OFFSET ${offset ?? 5};
