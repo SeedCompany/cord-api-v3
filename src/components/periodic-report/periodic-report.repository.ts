@@ -114,22 +114,22 @@ export class PeriodicReportRepository extends DtoRepository<
             end: variable('interval.end'),
             skippedReason: null,
             receivedDate: null,
-            directory: directory.id,
             ...(input.type === ReportType.Progress ? {pnp: variable('interval.tempFileId')} : {}),
           },
         })
       )
+      .with(['now, interval, node, parent'])
       .apply(
         createRelationships(Report, 'in', {
           report: variable('parent'),
         })
       )
       // rename node to report, so we can call create node again for the file
-      .with('now, interval, node as report')
+      .with('now, interval, node, node as report')
       .apply(q => {
         // create pnp if this is a progress report
         if(input.type === ReportType.Progress) 
-        {q.createNode(File, {
+        createNode(File, {
           initialProps: {
             name: variable('apoc.temporal.format(interval.end, "date")'),
           },
@@ -137,7 +137,7 @@ export class PeriodicReportRepository extends DtoRepository<
             id: variable('interval.tempFileId'),
             createdAt: variable('now'),
           },
-        })} }
+        }) }
       )
       .apply(
         createRelationships(File, {
@@ -145,11 +145,17 @@ export class PeriodicReportRepository extends DtoRepository<
           out: { createdBy: ['User', input.session.userId] },
         })
       )
+      .apply(
+        createRelationships(Report as typeof IPeriodicReport, 'out', {
+          directory: ['Directory', directory.id]
+        })
+      )
       .return<{ id: ID; interval: Range<CalendarDate>; pnpId: ID }>(
         'report.id as id, interval, interval.tempFileId'
-      );
+      ).logIt();
     return await query.run();
   }
+
 
   async list(input: PeriodicReportListInput, session: Session) {
     const resource = input.type
@@ -356,9 +362,14 @@ export class PeriodicReportRepository extends DtoRepository<
           relation('out', '', 'report', ACTIVE),
           node('node'),
         ])
+        .match([
+          node('node'),
+          relation('out', '', 'directory', ACTIVE),
+          node('directory', 'Directory')
+        ])
         .apply(matchPropsAndProjectSensAndScopedRoles(session))
         .return<{ dto: UnsecuredDto<PeriodicReport> }>(
-          merge('props', { parent: 'parent' }).as('dto')
+          merge('props', { parent: 'parent', directory: 'directory.id' }).as('dto')
         );
   }
 }

@@ -130,6 +130,8 @@ export class PeriodicReportResolver {
     if(!rest.canRead || !directoryId) {
       return rest;
     }
+    console.log("getting directory")
+    console.log(directoryId)
     return {
       ...rest,
       value: await this.files.getDirectory(directoryId, session),

@@ -3,7 +3,9 @@ import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive } from 'type-fest';
 import {
   CalendarDate,
+  ID,
   Resource,
+  Secured,
   SecuredDateNullable,
   SecuredProperty,
   SecuredProps,
@@ -15,7 +17,7 @@ import {
 } from '../../../common';
 import { BaseNode as DbBaseNode } from '../../../core/database/results';
 import { ScopedRole } from '../../authorization';
-import { DefinedFile } from '../../file';
+import { CreateDefinedFileVersionInput, DefinedFile, Directory } from '../../file';
 import { ReportType } from './report-type.enum';
 
 type AnyPeriodicReport = MergeExclusive<
@@ -42,6 +44,9 @@ export const resolveReportType = (report: Pick<PeriodicReport, 'type'>) => {
 class PeriodicReport extends Resource {
   static readonly Props: string[] = keysOf<PeriodicReport>();
   static readonly SecuredProps: string[] = keysOf<SecuredProps<PeriodicReport>>();
+  static readonly Relations = {
+    directory: Directory,
+  }
 
   @Field(() => ReportType)
   readonly type: ReportType;
