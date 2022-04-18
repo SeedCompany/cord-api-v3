@@ -9,7 +9,7 @@ import {
   Session,
   UnsecuredDto,
 } from '../../common';
-import { DtoRepository } from '../../core';
+import { DatabaseService, DtoRepository } from '../../core';
 import {
   ACTIVE,
   createNode,
@@ -23,7 +23,7 @@ import {
   variable,
   Variable,
 } from '../../core/database/query';
-import { File } from '../file';
+import { File, FileService } from '../file';
 import {
   IPeriodicReport,
   MergePeriodicReports,
@@ -36,8 +36,12 @@ import {
 @Injectable()
 export class PeriodicReportRepository extends DtoRepository<
   typeof IPeriodicReport,
-  [session: Session]
+  [session: Session],
+  PeriodicReport
 >(IPeriodicReport) {
+  constructor(db: DatabaseService, private readonly files: FileService) {
+    super(db);
+  }
   async merge(input: MergePeriodicReports) {
     const Report = resolveReportType(input);
 
@@ -49,6 +53,13 @@ export class PeriodicReportRepository extends DtoRepository<
         start: interval.start,
         end: interval.end,
         tempFileId: await generateId(),
+        otherFiles: (
+          await this.files.createDirectory(
+            undefined,
+            `Other Files`,
+            input.session
+          )
+        ).id,
       }))
     );
 
@@ -106,6 +117,21 @@ export class PeriodicReportRepository extends DtoRepository<
           },
         })
       )
+      // trying this for now because createRelationships kept erroring out on me.
+      .subQuery(
+        'node, interval',
+        (sub) =>
+          sub
+            .matchNode('otherFiles', 'Directory', {
+              id: variable('interval.otherFiles'),
+            })
+            .create([
+              node('node'),
+              relation('out', '', 'otherFiles', ACTIVE),
+              node('otherFiles'),
+            ])
+            .return('true') //don't really care about getting anything back, just creating the relationship
+      )
       .apply(
         createRelationships(Report, 'in', {
           report: variable('parent'),
@@ -132,7 +158,8 @@ export class PeriodicReportRepository extends DtoRepository<
       )
       .return<{ id: ID; interval: Range<CalendarDate> }>(
         'report.id as id, interval'
-      );
+      )
+      .logIt();
     return await query.run();
   }
 
@@ -341,9 +368,16 @@ export class PeriodicReportRepository extends DtoRepository<
           relation('out', '', 'report', ACTIVE),
           node('node'),
         ])
+        .match([
+          node('node'),
+          relation('out', '', 'otherFiles', ACTIVE),
+          node('otherFiles'),
+        ])
         .apply(matchPropsAndProjectSensAndScopedRoles(session))
         .return<{ dto: UnsecuredDto<PeriodicReport> }>(
-          merge('props', { parent: 'parent' }).as('dto')
+          merge('props', { parent: 'parent', otherFiles: 'otherFiles.id' }).as(
+            'dto'
+          )
         );
   }
 }
