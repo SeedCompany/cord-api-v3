@@ -417,6 +417,7 @@ export const RegionalDirectorGlobal = new DbRole({
         { propertyName: 'receivedDate', permission: { read, write, }, },
         { propertyName: 'reportFile', permission: { read, write, }, },
         { propertyName: 'skippedReason', permission: { read, write }, },
+        { propertyName: 'otherFiles', permission: { read, write }, },
       ],
       canDelete: true,
     }),

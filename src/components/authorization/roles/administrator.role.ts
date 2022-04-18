@@ -391,6 +391,7 @@ export const Administrator = new DbRole({
         { propertyName: 'end', permission: { read, write, }, },
         { propertyName: 'receivedDate', permission: { read, write, }, },
         { propertyName: 'reportFile', permission: { read, write, }, },
+        { propertyName: 'otherFiles', permission: { read, write, }, },
         { propertyName: 'skippedReason', permission: { read, write }, },
       ],
       canDelete: true,

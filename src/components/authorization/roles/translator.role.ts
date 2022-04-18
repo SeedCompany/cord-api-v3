@@ -396,6 +396,7 @@ export const Translator = new DbRole({
         { propertyName: 'receivedDate', permission: { read, }, },
         { propertyName: 'reportFile', permission: { read, }, },
         { propertyName: 'skippedReason', permission: { read, }, },
+        { propertyName: 'otherFiles', permission: { read, }, },
       ],
       canDelete: true,
     }),

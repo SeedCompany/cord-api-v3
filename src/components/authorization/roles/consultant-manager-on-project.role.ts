@@ -405,6 +405,7 @@ export const ConsultantManagerOnProject = new DbRole({
         { propertyName: 'end', permission: { read, }, },
         { propertyName: 'receivedDate', permission: { read, }, },
         { propertyName: 'reportFile', permission: { read, }, },
+        { propertyName: 'otherFiles', permission: { read, }, },
         { propertyName: 'skippedReason', permission: { read, }, },
       ],
       canDelete: true,
