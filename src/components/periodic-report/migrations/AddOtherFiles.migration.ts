@@ -47,7 +47,7 @@ export class AddOtherFiles extends BaseMigration {
           ])
           .return('node as directory, report')
       )
-      .return<{ numDirsCreated: number }>('sum(directory.id) as numDirsCreated')
+      .return<{ numDirsCreated: number }>('count(directory) as numDirsCreated')
       .first();
     this.logger.info(`${res?.numDirsCreated ?? 0} directories created`);
   }
