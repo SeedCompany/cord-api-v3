@@ -1,51 +1,46 @@
 import { node, not, relation } from 'cypher-query-builder';
-import { BaseMigration, Migration } from '../../../core';
+import { initial } from 'lodash';
+import { DateTime } from 'luxon';
+import { BaseMigration, DatabaseService, Migration } from '../../../core';
 import {
   ACTIVE,
-  createRelationships,
   path,
 } from '../../../core/database/query';
-import { FileService } from '../../file';
-import { IPeriodicReport } from '../dto';
+import { Directory } from '../../file';
+import { IPeriodicReport, PeriodicReport } from '../dto';
 
-@Migration('2022-04-18T14:46:26')
+@Migration('2022-05-19T15:43:26')
 export class AddOtherFiles extends BaseMigration {
-  constructor(private readonly files: FileService) {
-    super();
-  }
+
   async up() {
     const res = await this.db
       .query()
-      .matchNode('node', 'PeriodicReport')
+      .matchNode('report', 'PeriodicReport')
       .where(
         not(
           path([
-            node('node'),
+            node('report'),
             relation('out', '', 'otherFiles', ACTIVE),
             node('', 'Directory'),
           ])
         )
       )
-      .apply(
-        createRelationships(IPeriodicReport, 'out', {
-          otherFiles: [
-            'Directory',
-            (
-              await this.files.createDirectory(
-                undefined,
-                `Other Files`,
-                this.fakeAdminSession
-              )
-            ).id,
-          ],
-        })
-      )
-      .return<{ numPropsCreated: number }>(
-        'sum(numPropsCreated) as numPropsCreated'
-      )
-      .first();
+      .subQuery('collect(report) as reports', (sub) => sub.with('reports')
+        .raw('UNWIND reports as report')
+        .create(node(['Directory'], { initialProps: { name: 'Other Directory' } }))
+          .match(node('user', 'RootUser'))
+          .create([node('node'), relation('out', '', 'createdBy', {
+            createdAt: DateTime.local(), active: true,
+          }), node('user')])
+          .create([node('report'), relation('out', '', 'otherFiles', ACTIVE), node('node')])
+          .return('node as directory')
+        )
+      .return<{report: IPeriodicReport, directory: Directory}>(
+        'report, directory'
+      ).run();
     this.logger.info(
-      `Created ${res?.numPropsCreated ?? 0} skippedReason default props`
+      `Created ${res}`
     );
   }
 }
+  
