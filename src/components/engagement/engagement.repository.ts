@@ -462,8 +462,10 @@ export class EngagementRepository extends CommonRepository {
       )
       .optionalMatch([
         node('project'),
-        relation('out', '', 'engagement', { active: !changeset }),
-        node('engagement'),
+        //  we want to check both active and current changeset to validate that a duplicate
+        //  won't be created in either view.
+        relation('out', '', 'engagement'),
+        node('engagement', 'Engagement'),
         relation('out', '', property, ACTIVE),
         node('other'),
       ])
