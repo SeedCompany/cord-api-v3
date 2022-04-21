@@ -24,13 +24,13 @@ export const loginAsAdmin = async (app: TestApp) => {
   await login(app, { email, password });
 };
 
-export const runAsAdmin = async (
+export const runAsAdmin = async <R>(
   app: TestApp,
-  adminExecution: () => Promise<any> | any
+  adminExecution: (app: TestApp) => Promise<R> | R
 ) =>
   await runInIsolatedSession(app, async () => {
     await loginAsAdmin(app);
-    return adminExecution();
+    return await adminExecution(app);
   });
 
 export const runInIsolatedSession = async <R>(

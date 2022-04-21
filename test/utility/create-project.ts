@@ -1,23 +1,21 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
-import { registerUser, runInIsolatedSession } from '.';
+import { runAsAdmin } from '.';
 import {
   CalendarDate,
   isValidId,
   SecuredListType as SecuredList,
 } from '../../src/common';
-import { Role } from '../../src/components/authorization';
 import { SecuredBudget } from '../../src/components/budget';
 import { Location } from '../../src/components/location';
 import {
   CreateProject,
-  Project,
   ProjectStep,
   ProjectType,
 } from '../../src/components/project';
 import { TestApp } from './create-app';
 import { createRegion } from './create-region';
-import { fragments } from './fragments';
+import { fragments, RawProject } from './fragments';
 import { Raw } from './raw.type';
 
 export async function listProjects(app: TestApp) {
@@ -33,7 +31,7 @@ export async function listProjects(app: TestApp) {
       ${fragments.project}
     `
   );
-  const projects = result.projects.items;
+  const projects: RawProject[] = result.projects.items;
   expect(projects).toBeTruthy();
   return projects;
 }
@@ -131,7 +129,7 @@ export async function readOneProject(app: TestApp, id: string) {
     { id }
   );
 
-  const actual: Raw<Project> = result.project;
+  const actual: RawProject = result.project;
   expect(actual).toBeTruthy();
   expect(actual.id).toEqual(id);
   return actual;
@@ -150,8 +148,7 @@ export async function createProject(
     tags: ['tag1', 'tag2'],
     fieldRegionId:
       input.fieldRegionId ||
-      (await runInIsolatedSession(app, async () => {
-        await registerUser(app, { roles: [Role.Administrator] }); // only admin role can create a region for now
+      (await runAsAdmin(app, async () => {
         return (await createRegion(app)).id;
       })),
     presetInventory: true,
@@ -176,7 +173,7 @@ export async function createProject(
     }
   );
 
-  const actual: Raw<Project> = result.createProject.project;
+  const actual: RawProject = result.createProject.project;
   expect(actual).toBeTruthy();
 
   expect(isValidId(actual.id)).toBe(true);

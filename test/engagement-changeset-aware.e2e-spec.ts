@@ -17,7 +17,6 @@ import {
   createTestApp,
   registerUser,
   runAsAdmin,
-  runInIsolatedSession,
   TestApp,
   updateProject,
 } from './utility';
@@ -157,10 +156,7 @@ describe('Engagement Changeset Aware e2e', () => {
       roles: [Role.ProjectManager, Role.FieldOperationsDirector],
     });
 
-    language = await runInIsolatedSession(app, async () => {
-      await registerUser(app, { roles: [Role.Administrator] }); // only admin can create funding account for now
-      return await createLanguage(app);
-    });
+    language = await runAsAdmin(app, createLanguage);
   });
 
   afterAll(async () => {

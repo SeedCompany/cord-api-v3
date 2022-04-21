@@ -1,9 +1,7 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { DateTime } from 'luxon';
-import { registerUser, runInIsolatedSession } from '.';
 import { ID, isValidId } from '../../src/common';
-import { Role } from '../../src/components/authorization/dto/role.dto';
 import {
   CreateInternshipEngagement,
   CreateLanguageEngagement,
@@ -209,8 +207,7 @@ export async function createInternshipEngagement(
     projectId: input.projectId || (await createProject(app)).id,
     countryOfOriginId:
       input.countryOfOriginId ||
-      (await runInIsolatedSession(app, async () => {
-        await registerUser(app, { roles: [Role.Administrator] }); // only admin role can create a location for now
+      (await runAsAdmin(app, async () => {
         return (await createLocation(app)).id;
       })),
     internId: input.internId || currentUserId || (await createPerson(app)).id,

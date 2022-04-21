@@ -40,7 +40,6 @@ import {
   registerUser,
   requestFileUpload,
   runAsAdmin,
-  runInIsolatedSession,
   TestApp,
   TestUser,
   uploadFileContents,
@@ -475,10 +474,7 @@ describe('Engagement e2e', () => {
 
   it('returns the correct products in language engagement', async () => {
     project = await createProject(app);
-    language = await runInIsolatedSession(app, async () => {
-      await registerUser(app, { roles: [Role.Administrator] }); // only admin can create a language for now
-      return await createLanguage(app);
-    });
+    language = await runAsAdmin(app, createLanguage);
     const languageEngagement = await createLanguageEngagement(app, {
       languageId: language.id,
       projectId: project.id,
@@ -522,10 +518,7 @@ describe('Engagement e2e', () => {
 
   it('creates ceremony upon engagement creation', async () => {
     project = await createProject(app);
-    language = await runInIsolatedSession(app, async () => {
-      await registerUser(app, { roles: [Role.Administrator] }); // only admin can create a language for now
-      return await createLanguage(app);
-    });
+    language = await runAsAdmin(app, createLanguage);
 
     const languageEngagement = await createLanguageEngagement(app, {
       languageId: language.id,
@@ -551,10 +544,7 @@ describe('Engagement e2e', () => {
 
   it('updates ceremony for language engagement', async () => {
     project = await createProject(app, { type: ProjectType.Translation });
-    language = await runInIsolatedSession(app, async () => {
-      await registerUser(app, { roles: [Role.Administrator] }); // only admin can create a language for now
-      return await createLanguage(app);
-    });
+    language = await runAsAdmin(app, createLanguage);
     const languageEngagement = await createLanguageEngagement(app, {
       languageId: language.id,
       projectId: project.id,
@@ -703,10 +693,7 @@ describe('Engagement e2e', () => {
 
   it.skip('delete ceremony upon engagement deletion', async () => {
     project = await createProject(app);
-    language = await runInIsolatedSession(app, async () => {
-      await registerUser(app, { roles: [Role.Administrator] }); // only admin can create a language for now
-      return await createLanguage(app);
-    });
+    language = await runAsAdmin(app, createLanguage);
     const languageEngagement = await createLanguageEngagement(app, {
       languageId: language.id,
       projectId: project.id,
@@ -922,10 +909,7 @@ describe('Engagement e2e', () => {
 
   it('should throw error if language engagement already exists with same project and language', async () => {
     const project = await createProject(app);
-    const language = await runInIsolatedSession(app, async () => {
-      await registerUser(app, { roles: [Role.Administrator] }); // only admin can create a language for now
-      return await createLanguage(app);
-    });
+    const language = await runAsAdmin(app, createLanguage);
 
     await createLanguageEngagement(app, {
       projectId: project.id,
@@ -964,8 +948,7 @@ describe('Engagement e2e', () => {
   });
 
   it('can not set firstScripture=true if the language has hasExternalFirstScripture=true', async () => {
-    language = await runInIsolatedSession(app, async () => {
-      await registerUser(app, { roles: [Role.Administrator] }); // only admin can create a language for now
+    language = await runAsAdmin(app, async () => {
       return await createLanguage(app, { hasExternalFirstScripture: true });
     });
     await expect(
@@ -979,10 +962,7 @@ describe('Engagement e2e', () => {
   });
 
   it('can not set firstScripture=true if it is not only engagement for the language that has firstScripture=true', async () => {
-    language = await runInIsolatedSession(app, async () => {
-      await registerUser(app, { roles: [Role.Administrator] }); // only admin can create a language for now
-      return await createLanguage(app);
-    });
+    language = await runAsAdmin(app, createLanguage);
     await createLanguageEngagement(app, {
       languageId: language.id,
       firstScripture: true,

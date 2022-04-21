@@ -6,12 +6,11 @@ import { FieldRegion } from '../src/components/field-region';
 import { FieldZone } from '../src/components/field-zone';
 import { User } from '../src/components/user';
 import {
+  createPerson,
   createSession,
   createTestApp,
   fragments,
-  getUserFromSession,
-  registerUser,
-  runInIsolatedSession,
+  loginAsAdmin,
   TestApp,
 } from './utility';
 import { createRegion } from './utility/create-region';
@@ -19,21 +18,21 @@ import { createZone } from './utility/create-zone';
 
 describe('Region e2e', () => {
   let app: TestApp;
-  let director: Partial<User>;
+  let director: User;
   let newDirector: User;
   let fieldZone: FieldZone;
 
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    await registerUser(app, {
+
+    // Only admins can modify Field Regions
+    await loginAsAdmin(app);
+
+    director = await createPerson(app, {
       roles: [Role.FieldOperationsDirector, Role.ProjectManager],
     });
-    director = await getUserFromSession(app);
-    fieldZone = await runInIsolatedSession(app, async () => {
-      await registerUser(app, { roles: [Role.Administrator] }); // only admin can create funding account for now
-      return await createZone(app, { directorId: director.id });
-    });
+    fieldZone = await createZone(app, { directorId: director.id });
   });
 
   afterAll(async () => {
@@ -41,12 +40,9 @@ describe('Region e2e', () => {
   });
 
   it('create a field region', async () => {
-    const region = await runInIsolatedSession(app, async () => {
-      await registerUser(app, { roles: [Role.Administrator] });
-      return await createRegion(app, {
-        directorId: director.id,
-        fieldZoneId: fieldZone.id,
-      });
+    const region = await createRegion(app, {
+      directorId: director.id,
+      fieldZoneId: fieldZone.id,
     });
     expect(region.id).toBeDefined();
   });
@@ -54,13 +50,10 @@ describe('Region e2e', () => {
   it.skip('should have unique name', async () => {
     // Old test.  Attempt to create a region with a name that is taken will return the existing region
     const name = faker.address.country() + ' Region';
-    await runInIsolatedSession(app, async () => {
-      await registerUser(app, { roles: [Role.Administrator] });
-      await createRegion(app, {
-        directorId: director.id,
-        name,
-        fieldZoneId: fieldZone.id,
-      });
+    await createRegion(app, {
+      directorId: director.id,
+      name,
+      fieldZoneId: fieldZone.id,
     });
     await expect(
       createRegion(app, {
@@ -72,12 +65,9 @@ describe('Region e2e', () => {
   });
 
   it('read one field region by id', async () => {
-    const fieldRegion = await runInIsolatedSession(app, async () => {
-      await registerUser(app, { roles: [Role.Administrator] });
-      return await createRegion(app, {
-        directorId: director.id,
-        fieldZoneId: fieldZone.id,
-      });
+    const fieldRegion = await createRegion(app, {
+      directorId: director.id,
+      fieldZoneId: fieldZone.id,
     });
 
     const { fieldRegion: actual } = await app.graphql.query(
@@ -117,12 +107,9 @@ describe('Region e2e', () => {
   });
 
   it('update field region', async () => {
-    const fieldRegion = await runInIsolatedSession(app, async () => {
-      await registerUser(app, { roles: [Role.Administrator] });
-      return await createRegion(app, {
-        directorId: director.id,
-        fieldZoneId: fieldZone.id,
-      });
+    const fieldRegion = await createRegion(app, {
+      directorId: director.id,
+      fieldZoneId: fieldZone.id,
     });
 
     const newName = faker.company.companyName();
@@ -171,18 +158,12 @@ describe('Region e2e', () => {
 
   // This test should be updated with refactoring of location service for zone
   it.skip('update field region`s zone', async () => {
-    const fieldRegion = await runInIsolatedSession(app, async () => {
-      await registerUser(app, { roles: [Role.Administrator] });
-      return await createRegion(app, {
-        directorId: director.id,
-      });
+    const fieldRegion = await createRegion(app, {
+      directorId: director.id,
     });
 
-    const newZone = await runInIsolatedSession(app, async () => {
-      await registerUser(app, { roles: [Role.Administrator] });
-      return await createZone(app, {
-        directorId: newDirector.id,
-      });
+    const newZone = await createZone(app, {
+      directorId: newDirector.id,
     });
 
     const result = await app.graphql.mutate(

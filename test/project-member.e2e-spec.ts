@@ -13,7 +13,7 @@ import {
   fragments,
   Raw,
   registerUser,
-  runInIsolatedSession,
+  runAsAdmin,
   TestApp,
 } from './utility';
 
@@ -204,21 +204,17 @@ describe('ProjectMember e2e', () => {
   });
 
   it('update projectMember', async () => {
-    const member = await runInIsolatedSession(app, async () => {
-      await registerUser(app, { roles: [Role.Administrator] });
-      return await createPerson(app, {
+    const { projectMember, result } = await runAsAdmin(app, async () => {
+      const member = await createPerson(app, {
         roles: [Role.ProjectManager, Role.Consultant],
       });
-    });
 
-    const projectMember = await createProjectMember(app, {
-      userId: member.id,
-      projectId: project.id,
-    });
+      const projectMember = await createProjectMember(app, {
+        userId: member.id,
+        projectId: project.id,
+      });
 
-    const result = await runInIsolatedSession(app, async () => {
-      await registerUser(app, { roles: [Role.Administrator] }); // only admin can grant roles to a user
-      return await app.graphql.query(
+      const result = await app.graphql.query(
         gql`
           mutation updateProjectMember($input: UpdateProjectMemberInput!) {
             updateProjectMember(input: $input) {
@@ -238,6 +234,7 @@ describe('ProjectMember e2e', () => {
           },
         }
       );
+      return { projectMember, result };
     });
     expect(result.updateProjectMember.projectMember.id).toBe(projectMember.id);
     expect(result.updateProjectMember.projectMember.roles.value).toEqual(

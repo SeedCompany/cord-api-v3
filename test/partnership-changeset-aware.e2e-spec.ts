@@ -1,7 +1,6 @@
 import { gql } from 'apollo-server-core';
 import { Role } from '../src/components/authorization';
 import { PartnershipAgreementStatus } from '../src/components/partnership';
-import { ProjectStep } from '../src/components/project';
 import {
   approveProjectChangeRequest,
   createFundingAccount,
@@ -16,13 +15,9 @@ import {
   registerUser,
   runAsAdmin,
   TestApp,
-  updateProject,
 } from './utility';
 import { fragments } from './utility/fragments';
-import {
-  changeProjectStep,
-  stepsFromEarlyConversationToBeforeActive,
-} from './utility/transition-project';
+import { transitionNewProjectToActive } from './utility/transition-project';
 
 const readPartnerships = (app: TestApp, id: string, changeset?: string) =>
   app.graphql.query(
@@ -72,19 +67,12 @@ const activeProject = async (app: TestApp) => {
     return [location, fieldRegion];
   });
 
-  const project = await createProject(app);
-  await updateProject(app, {
-    id: project.id,
+  const project = await createProject(app, {
     primaryLocationId: location.id,
     fieldRegionId: fieldRegion.id,
   });
   await runAsAdmin(app, async () => {
-    for (const next of [
-      ...stepsFromEarlyConversationToBeforeActive,
-      ProjectStep.Active,
-    ]) {
-      await changeProjectStep(app, project.id, next);
-    }
+    await transitionNewProjectToActive(app, project);
   });
 
   return project;

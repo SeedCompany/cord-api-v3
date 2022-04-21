@@ -26,7 +26,6 @@ import {
   ProjectStep,
   ProjectType,
 } from '../src/components/project';
-import { User } from '../src/components/user/dto/user.dto';
 import {
   createFundingAccount,
   createInternshipEngagement,
@@ -46,18 +45,13 @@ import {
   createZone,
   expectNotFound,
   fragments,
-  getUserFromSession,
   Raw,
   registerUser,
   runAsAdmin,
-  runInIsolatedSession,
   TestApp,
   TestUser,
 } from './utility';
-import {
-  changeProjectStep,
-  stepsFromEarlyConversationToBeforeActive,
-} from './utility/transition-project';
+import { transitionNewProjectToActive } from './utility/transition-project';
 
 const deleteProject =
   (app: TestApp) => async (id: ID | string | { id: ID | string }) =>
@@ -98,32 +92,22 @@ const listProjects = async (
 
 describe('Project e2e', () => {
   let app: TestApp;
-  let intern: Partial<User>;
-  let mentor: Partial<User>;
-  let director: Partial<User>;
-  let admin: TestUser;
+  let intern: TestUser;
+  let mentor: TestUser;
+  let director: TestUser;
   let fieldRegion: FieldRegion;
   let location: Location;
 
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    admin = await registerUser(app, { roles: [Role.Administrator] });
-    await registerUser(
-      app,
-      // [
-      //   Powers.CreateLanguage,
-      //   Powers.CreateEthnologueLanguage,
-      // ],
-      {
-        roles: [
-          Role.ProjectManager,
-          Role.LeadFinancialAnalyst,
-          Role.FieldOperationsDirector,
-        ],
-      }
-    );
-    director = await getUserFromSession(app);
+    director = await registerUser(app, {
+      roles: [
+        Role.ProjectManager,
+        Role.LeadFinancialAnalyst,
+        Role.FieldOperationsDirector,
+      ],
+    });
 
     [location, fieldRegion] = await runAsAdmin(app, async () => {
       const fundingAccount = await createFundingAccount(app);
@@ -136,8 +120,8 @@ describe('Project e2e', () => {
 
       return [location, fieldRegion];
     });
-    intern = await getUserFromSession(app);
-    mentor = await getUserFromSession(app);
+    intern = director;
+    mentor = director;
   });
 
   afterAll(async () => {
@@ -191,47 +175,10 @@ describe('Project e2e', () => {
   });
 
   it('create project with required fields', async () => {
-    const project: CreateProject = {
-      name: faker.datatype.uuid(),
-      type: ProjectType.Translation,
-      fieldRegionId: await runInIsolatedSession(app, async () => {
-        await registerUser(app, { roles: [Role.Administrator] }); // only admin can create funding account for now
-        return (await createRegion(app)).id;
-      }),
-    };
-
-    const result = await app.graphql.mutate(
-      gql`
-        mutation createProject($input: CreateProjectInput!) {
-          createProject(input: $input) {
-            project {
-              ...project
-            }
-          }
-        }
-        ${fragments.project}
-      `,
-      {
-        input: {
-          project,
-        },
-      }
-    );
-    const folders = [
-      { name: 'Approval Documents' },
-      { name: 'Consultant Reports' },
-      { name: 'Field Correspondence' },
-      { name: 'Photos' },
-    ];
-
-    const actual: Project & {
-      engagements: { canRead: boolean; canCreate: boolean };
-      partnerships: { canRead: boolean; canCreate: boolean };
-      team: { canRead: boolean; canCreate: boolean };
-    } = result.createProject.project;
-    const projectFiles =
-      result.createProject.project.rootDirectory.value.children.items;
-    expect(projectFiles).toEqual(folders);
+    const actual = await createProject(app, {
+      mouStart: undefined,
+      mouEnd: undefined,
+    });
     expect(actual.id).toBeDefined();
     expect(actual.departmentId.value).toBeNull();
     expect(actual.mouStart.value).toBeNull();
@@ -243,6 +190,12 @@ describe('Project e2e', () => {
     expect(actual.partnerships.canCreate).toBe(true);
     expect(actual.team.canRead).toBe(true);
     expect(actual.team.canCreate).toBe(true);
+    expect(actual.rootDirectory.value!.children.items).toEqual([
+      { name: 'Approval Documents' },
+      { name: 'Consultant Reports' },
+      { name: 'Field Correspondence' },
+      { name: 'Photos' },
+    ]);
   });
 
   it('should throw error if the location id is not valid', async () => {
@@ -364,7 +317,7 @@ describe('Project e2e', () => {
     expect(project.id).toBeTruthy();
 
     // Only for admins, but we'll just run it as one to test functionality.
-    await admin.runAs(() => {
+    await runAsAdmin(app, () => {
       return deleteProject(app)(project.id);
     });
 
@@ -502,14 +455,13 @@ describe('Project e2e', () => {
       fieldRegionId: fieldRegion.id,
     });
 
-    const medSensitivityLanguage = await runInIsolatedSession(app, async () => {
-      await registerUser(app, { roles: [Role.Administrator] }); // only admin can create funding account for now
-      return await createLanguage(app, { sensitivity: Sensitivity.Medium });
-    });
-    const lowSensitivityLanguage = await runInIsolatedSession(app, async () => {
-      await registerUser(app, { roles: [Role.Administrator] }); // only admin can create funding account for now
-      return await createLanguage(app, { sensitivity: Sensitivity.Low });
-    });
+    const [medSensitivityLanguage, lowSensitivityLanguage] = await runAsAdmin(
+      app,
+      async () => [
+        await createLanguage(app, { sensitivity: Sensitivity.Medium }),
+        await createLanguage(app, { sensitivity: Sensitivity.Low }),
+      ]
+    );
 
     await createLanguageEngagement(app, {
       projectId: translationProjectWithEngagements.id,
@@ -702,8 +654,7 @@ describe('Project e2e', () => {
     // create 1 engagements in a project
     const numEngagements = 1;
     const project = await createProject(app, { fieldRegionId: fieldRegion.id });
-    const language = await runInIsolatedSession(app, async () => {
-      await registerUser(app, { roles: [Role.Administrator] }); // only admin can create funding account for now
+    const language = await runAsAdmin(app, async () => {
       return await createLanguage(app, { sensitivity: Sensitivity.Medium });
     });
     await createLanguageEngagement(app, {
@@ -803,27 +754,18 @@ describe('Project e2e', () => {
     const project = await createProject(app, { fieldRegionId: fieldRegion.id });
     const projectId = project.id;
 
-    const userForList = await runInIsolatedSession(app, async () => {
-      await registerUser(app, { roles: [Role.Administrator] });
-      return await createPerson(app, { roles: [Role.Consultant] });
+    await runAsAdmin(app, async () => {
+      await Promise.all(
+        times(numProjectMembers, async () => {
+          const user = await createPerson(app, { roles: [Role.Consultant] });
+          await createProjectMember(app, {
+            userId: user.id,
+            projectId,
+            roles: [Role.Consultant],
+          });
+        })
+      );
     });
-    const userId = userForList.id;
-    const userForList2 = await runInIsolatedSession(app, async () => {
-      await registerUser(app, { roles: [Role.Administrator] });
-      return await createPerson(app, { roles: [Role.Consultant] });
-    });
-    const userId2 = userForList2.id;
-    const memberIds: ID[] = [userId, userId2];
-
-    await Promise.all(
-      times(numProjectMembers, async (index) => {
-        await createProjectMember(app, {
-          userId: memberIds[index],
-          projectId,
-          roles: [Role.Consultant],
-        });
-      })
-    );
 
     const queryProject = await app.graphql.query(
       gql`
@@ -908,9 +850,7 @@ describe('Project e2e', () => {
         fieldRegionId: fieldRegion.id,
       });
 
-      for (const next of stepsFromEarlyConversationToBeforeActive) {
-        await changeProjectStep(app, project.id, next);
-      }
+      await transitionNewProjectToActive(app, project);
 
       const result = await app.graphql.mutate(
         gql`

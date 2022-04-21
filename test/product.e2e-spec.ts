@@ -1,4 +1,5 @@
 import { gql } from 'apollo-server-core';
+import { times } from 'lodash';
 import { Merge } from 'type-fest';
 import { Secured } from '../src/common';
 import { Role } from '../src/components/authorization';
@@ -658,21 +659,13 @@ describe('Product e2e', () => {
   it('List view of products', async () => {
     // create 2 products
     const numProducts = 2;
-
-    // This messes with the session, so just going to create one after another
-    // await Promise.all(
-    //   times(numProducts).map(() =>
-    //     createDirectProduct(app, {
-    //       engagementId: engagement.id,
-    //     })
-    //   )
-    // );
-    await createDirectProduct(app, {
-      engagementId: engagement.id,
-    });
-    await createDirectProduct(app, {
-      engagementId: engagement.id,
-    });
+    await Promise.all(
+      times(numProducts).map(() =>
+        createDirectProduct(app, {
+          engagementId: engagement.id,
+        })
+      )
+    );
 
     const { products } = await app.graphql.query(
       gql`
@@ -695,14 +688,14 @@ describe('Product e2e', () => {
   it('List view of DirectScriptureProducts', async () => {
     // create 2 products
     const numProducts = 2;
-    await createDirectProduct(app, {
-      engagementId: engagement.id,
-      scriptureReferences: ScriptureRange.randomList(),
-    });
-    await createDirectProduct(app, {
-      engagementId: engagement.id,
-      scriptureReferences: ScriptureRange.randomList(),
-    });
+    await Promise.all(
+      times(numProducts).map(() =>
+        createDirectProduct(app, {
+          engagementId: engagement.id,
+          scriptureReferences: ScriptureRange.randomList(),
+        })
+      )
+    );
 
     const { products } = await app.graphql.query(
       gql`
@@ -735,16 +728,15 @@ describe('Product e2e', () => {
   it('List view of DerivativeScriptureProducts', async () => {
     // create 2 products
     const numProducts = 2;
-    await createDerivativeProduct(app, {
-      engagementId: engagement.id,
-      produces: story.id,
-      scriptureReferencesOverride: ScriptureRange.randomList(),
-    });
-    await createDerivativeProduct(app, {
-      engagementId: engagement.id,
-      produces: story.id,
-      scriptureReferencesOverride: ScriptureRange.randomList(),
-    });
+    await Promise.all(
+      times(numProducts).map(() =>
+        createDerivativeProduct(app, {
+          engagementId: engagement.id,
+          produces: story.id,
+          scriptureReferencesOverride: ScriptureRange.randomList(),
+        })
+      )
+    );
 
     const { products } = await app.graphql.query(
       gql`
@@ -795,12 +787,13 @@ describe('Product e2e', () => {
   it('should return list of products filtered by engagementId', async () => {
     // create 2 products
     const numProducts = 2;
-    await createDirectProduct(app, {
-      engagementId: engagement.id,
-    });
-    await createDirectProduct(app, {
-      engagementId: engagement.id,
-    });
+    await Promise.all(
+      times(numProducts).map(() =>
+        createDirectProduct(app, {
+          engagementId: engagement.id,
+        })
+      )
+    );
 
     const { engagement: actual } = await app.graphql.query(
       gql`

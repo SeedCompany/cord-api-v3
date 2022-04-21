@@ -2,14 +2,13 @@ import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { times } from 'lodash';
 import { isValidId } from '../src/common';
-import { Role } from '../src/components/authorization';
 import { FieldZone } from '../src/components/field-zone';
 import { User } from '../src/components/user';
 import {
   createPerson,
   createSession,
   createTestApp,
-  registerUser,
+  loginAsAdmin,
   TestApp,
 } from './utility';
 import { createZone } from './utility/create-zone';
@@ -24,7 +23,9 @@ describe('Field Zone e2e', () => {
     app = await createTestApp();
     await createSession(app);
     // Zones can only be created by admin
-    director = await registerUser(app, { roles: [Role.Administrator] });
+    await loginAsAdmin(app);
+
+    director = await createPerson(app);
     newDirector = await createPerson(app);
   });
 

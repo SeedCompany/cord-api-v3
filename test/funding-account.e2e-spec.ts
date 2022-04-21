@@ -11,7 +11,6 @@ import {
   fragments,
   registerUser,
   runAsAdmin,
-  runInIsolatedSession,
   TestApp,
 } from './utility';
 
@@ -32,19 +31,12 @@ describe('FundingAccount e2e', () => {
 
   // Create Funding Account
   it('create funding account', async () => {
-    const name = faker.company.companyName();
-    await runInIsolatedSession(app, async () => {
-      await registerUser(app, { roles: [Role.Administrator] }); // only admin can create funding account for now
-      return await createFundingAccount(app, { name: name });
-    });
+    await runAsAdmin(app, createFundingAccount);
   });
 
   // Read Funding Account
   it('create & read funding account by id', async () => {
-    const st = await runInIsolatedSession(app, async () => {
-      await registerUser(app, { roles: [Role.Administrator] }); // only admin can create funding account for now
-      return await createFundingAccount(app);
-    });
+    const st = await runAsAdmin(app, createFundingAccount);
 
     const { fundingAccount: actual } = await app.graphql.query(
       gql`
@@ -67,10 +59,7 @@ describe('FundingAccount e2e', () => {
 
   // Update FundingAccount
   it('update funding account', async () => {
-    const st = await runInIsolatedSession(app, async () => {
-      await registerUser(app, { roles: [Role.Administrator] }); // only admin can create funding account for now
-      return await createFundingAccount(app);
-    });
+    const st = await runAsAdmin(app, createFundingAccount);
     const newName = faker.company.companyName();
     const newAccountNumber = faker.datatype.number({ min: 0, max: 9 });
     await runAsAdmin(app, async () => {
@@ -104,10 +93,7 @@ describe('FundingAccount e2e', () => {
 
   // Delete FundingAccount
   it.skip('delete funding account', async () => {
-    const st = await runInIsolatedSession(app, async () => {
-      await registerUser(app, { roles: [Role.Administrator] }); // only admin can create funding account for now
-      return await createFundingAccount(app);
-    });
+    const st = await runAsAdmin(app, createFundingAccount);
     const result = await app.graphql.mutate(
       gql`
         mutation deleteFundingAccount($id: ID!) {

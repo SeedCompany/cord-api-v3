@@ -1,5 +1,5 @@
 import { gql } from 'apollo-server-core';
-import { sample } from 'lodash';
+import { sample, times } from 'lodash';
 import {
   CalendarDate,
   ID,
@@ -211,9 +211,8 @@ describe('Partnership e2e', () => {
 
   it('List view of partnerships', async () => {
     // create 2 partnerships
-    // have a runInIsolated session so can't put in a Promise.all without messing up the session logic
-    await createPartnership(app);
-    await createPartnership(app);
+    const numPartnerships = 2;
+    await Promise.all(times(numPartnerships).map(() => createPartnership(app)));
 
     const { partnerships } = await app.graphql.query(
       gql`
@@ -232,17 +231,19 @@ describe('Partnership e2e', () => {
       `
     );
 
-    expect(partnerships.items.length).toBeGreaterThanOrEqual(2);
+    expect(partnerships.items.length).toBeGreaterThanOrEqual(numPartnerships);
   });
 
   it('List view of partnerships by projectId', async () => {
     // create 2 partnerships
-    await createPartnership(app, {
-      projectId: project.id,
-    });
-    await createPartnership(app, {
-      projectId: project.id,
-    });
+    const numPartnerships = 2;
+    await Promise.all(
+      times(numPartnerships).map(() =>
+        createPartnership(app, {
+          projectId: project.id,
+        })
+      )
+    );
 
     const result = await app.graphql.query(
       gql`
@@ -266,7 +267,9 @@ describe('Partnership e2e', () => {
       }
     );
 
-    expect(result.project.partnerships.items.length).toBeGreaterThanOrEqual(2);
+    expect(result.project.partnerships.items.length).toBeGreaterThanOrEqual(
+      numPartnerships
+    );
   });
 
   it('create partnership does not create if organizationId is invalid', async () => {
