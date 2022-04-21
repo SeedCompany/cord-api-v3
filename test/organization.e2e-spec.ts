@@ -3,14 +3,13 @@ import * as faker from 'faker';
 import { orderBy, times } from 'lodash';
 import { generateId, InputException, isValidId } from '../src/common';
 import { Role } from '../src/components/authorization';
-import { Powers } from '../src/components/authorization/dto/powers';
 import { Organization } from '../src/components/organization';
 import {
   createOrganization,
   createSession,
   createTestApp,
   fragments,
-  registerUserWithPower,
+  registerUser,
   TestApp,
 } from './utility';
 
@@ -20,7 +19,7 @@ describe('Organization e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    await registerUserWithPower(app, [Powers.CreateOrganization], {
+    await registerUser(app, {
       roles: [Role.Controller],
     });
   });
@@ -58,21 +57,7 @@ describe('Organization e2e', () => {
     expect(actual.address.value).toBe(org.address.value);
   });
 
-  it('create & read organization by root security group member id', async () => {
-    // should not run queries. everything should be graphql.
-    // attach current user to rootsg
-    // const currentUser = await getUserFromSession(app);
-    // const db = app.get(DatabaseService);
-    // await db
-    //   .query()
-    //   .match([node('user', 'User', { active: true, id: currentUser.id })])
-    //   .create([
-    //     node('user'),
-    //     relation('in', '', 'member', { active: true }),
-    //     node('rsg', 'RootSecurityGroup', { active: true }),
-    //   ])
-    //   .return('user')
-    //   .first();
+  it('create & read organization', async () => {
     const org = await createOrganization(app);
     const { organization: actual } = await app.graphql.query(
       gql`
@@ -97,56 +82,6 @@ describe('Organization e2e', () => {
     await expect(
       createOrganization(app, { name: undefined })
     ).rejects.toThrowError();
-  });
-
-  it('read organization by root security group member id', async () => {
-    await expect(
-      app.graphql.query(
-        gql`
-          query org($id: ID!) {
-            organization(id: $id) {
-              ...org
-            }
-          }
-          ${fragments.org}
-        `,
-        {
-          id: '',
-        }
-      )
-    ).rejects.toThrow('Input validation failed');
-
-    await expect(
-      app.graphql.query(
-        gql`
-          query org($id: ID!) {
-            organization(id: $id) {
-              ...org
-            }
-          }
-          ${fragments.org}
-        `,
-        {
-          id2: 'lKEsNY9FS',
-        }
-      )
-    ).rejects.toThrowError();
-
-    await expect(
-      app.graphql.query(
-        gql`
-          query org($id: ID!) {
-            organization(id: $id) {
-              ...org
-            }
-          }
-          ${fragments.org}
-        `,
-        {
-          id: '!@#$%^&*(',
-        }
-      )
-    ).rejects.toThrowError(new InputException('Input validation failed'));
   });
 
   // UPDATE ORG
@@ -389,7 +324,8 @@ describe('Organization e2e', () => {
   });
 
   it.skip('List of organizations sorted by name to be alphabetical, ignoring case sensitivity. Order: ASCENDING', async () => {
-    await registerUserWithPower(app, [Powers.CreateOrganization], {
+    await registerUser(app, {
+      roles: [Role.FieldOperationsDirector],
       displayFirstName: 'Tammy',
     });
     //Create three projects, each beginning with lower or upper-cases
@@ -437,7 +373,8 @@ describe('Organization e2e', () => {
   });
 
   it.skip('List of organizations sorted by name to be alphabetical, ignoring case sensitivity. Order: DESCENDING', async () => {
-    await registerUserWithPower(app, [Powers.CreateOrganization], {
+    await registerUser(app, {
+      roles: [Role.FieldOperationsDirector],
       displayFirstName: 'Tammy',
     });
     //Create three projects, each beginning with lower or upper-cases

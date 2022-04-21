@@ -42,6 +42,7 @@ export const FundraisingOnProject = new DbRole({
   name: `project:${Role.Fundraising}` as const,
   powers: [
     Powers.CreateEducation,
+    Powers.CreatePost,
     Powers.CreateUnavailability,
     Powers.CreateUser,
   ],

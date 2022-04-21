@@ -30,6 +30,7 @@ export class PostService {
   ) {}
 
   async create(input: CreatePost, session: Session): Promise<Post> {
+    // TODO: need to check if have a CreatePost power.
     if (!input.parentId) {
       throw new ServerException(
         'A post must be associated with a parent node.'

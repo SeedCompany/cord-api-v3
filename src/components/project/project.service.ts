@@ -151,12 +151,6 @@ export class ProjectService {
         session
       );
 
-      await this.authorizationService.processNewBaseNode(
-        IProject,
-        id,
-        session.userId
-      );
-
       const project = await this.readOneUnsecured(id, session);
 
       const event = new ProjectCreatedEvent(project, session);
@@ -440,17 +434,18 @@ export class ProjectService {
       view
     );
 
-    const permissions = await this.repo.permissionsForListProp(
-      'engagement',
-      project.id,
-      session
-    );
+    const perms = await this.authorizationService.getPermissions({
+      resource: IProject,
+      sessionOrUserId: session,
+      sensitivity: project.sensitivity,
+      otherRoles: project.scope,
+    });
 
     return {
       ...result,
-      ...permissions,
+      canRead: perms.engagement.canRead,
       canCreate:
-        permissions.canCreate &&
+        perms.engagement.canEdit &&
         (project.status === ProjectStatus.InDevelopment ||
           session.roles.includes('global:Administrator')),
     };

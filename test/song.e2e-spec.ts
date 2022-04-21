@@ -2,7 +2,8 @@ import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { times } from 'lodash';
 import { isValidId } from '../src/common';
-import { ScriptureRange } from '../src/components/scripture';
+import { Role } from '../src/components/authorization';
+import { ScriptureRange } from '../src/components/scripture/dto';
 import { Song } from '../src/components/song/dto';
 import {
   createSession,
@@ -19,7 +20,7 @@ describe('Song e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    await registerUser(app);
+    await registerUser(app, { roles: [Role.FieldOperationsDirector] });
   });
 
   afterAll(async () => {

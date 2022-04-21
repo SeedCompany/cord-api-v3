@@ -1,6 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { compact } from 'lodash';
-import { ID, NotFoundException, ServerException, Session } from '../../common';
+import {
+  ID,
+  isSecured,
+  NotFoundException,
+  ServerException,
+  Session,
+} from '../../common';
 import { ResourceResolver } from '../../core';
 import { EthnoArtService } from '../ethno-art';
 import { FieldRegionService } from '../field-region';
@@ -96,20 +102,32 @@ export class SearchService {
             ? result
             : [
                 ...(inputTypes.includes('Organization') ? [result] : []),
+                // If matched Organization, include Partner implicitly
                 ...(inputTypes.includes('Partner')
-                  ? // partner hydrator will need to handle id of org and partner
-                    [{ id: result.id, type: 'PartnerByOrg' as const }]
+                  ? [
+                      {
+                        id: result.id, // hydrator knows this is an org id not partner
+                        type: 'PartnerByOrg' as const,
+                        matchedProp: 'organization' as keyof SearchResult,
+                      },
+                    ]
                   : []),
               ]
         )
-        .map(async ({ id, type }): Promise<SearchResult | null> => {
-          const hydrator = this.hydrate(type);
-          return await hydrator(id, session);
-        })
+        .map(
+          async ({ id, matchedProp, type }): Promise<SearchResult | null> => {
+            const hydrator = this.hydrate(type);
+            const hydrated = await hydrator(id, session);
+
+            const prop = hydrated?.[matchedProp];
+            const result = isSecured(prop) && !prop.canRead ? null : hydrated;
+            return result;
+          }
+        )
     );
 
     return {
-      items: compact(hydrated),
+      items: compact(hydrated).slice(0, input.count),
     };
   }
 

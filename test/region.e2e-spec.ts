@@ -1,14 +1,16 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { isValidId } from '../src/common';
+import { Role } from '../src/components/authorization/dto/role.dto';
 import { FieldRegion } from '../src/components/field-region';
 import { FieldZone } from '../src/components/field-zone';
 import { User } from '../src/components/user';
 import {
+  createPerson,
   createSession,
   createTestApp,
   fragments,
-  registerUser,
+  loginAsAdmin,
   TestApp,
 } from './utility';
 import { createRegion } from './utility/create-region';
@@ -23,7 +25,13 @@ describe('Region e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    director = await registerUser(app);
+
+    // Only admins can modify Field Regions
+    await loginAsAdmin(app);
+
+    director = await createPerson(app, {
+      roles: [Role.FieldOperationsDirector, Role.ProjectManager],
+    });
     fieldZone = await createZone(app, { directorId: director.id });
   });
 
@@ -103,6 +111,7 @@ describe('Region e2e', () => {
       directorId: director.id,
       fieldZoneId: fieldZone.id,
     });
+
     const newName = faker.company.companyName();
 
     const result = await app.graphql.mutate(
@@ -149,8 +158,13 @@ describe('Region e2e', () => {
 
   // This test should be updated with refactoring of location service for zone
   it.skip('update field region`s zone', async () => {
-    const fieldRegion = await createRegion(app, { directorId: director.id });
-    const newZone = await createZone(app, { directorId: newDirector.id });
+    const fieldRegion = await createRegion(app, {
+      directorId: director.id,
+    });
+
+    const newZone = await createZone(app, {
+      directorId: newDirector.id,
+    });
 
     const result = await app.graphql.mutate(
       gql`

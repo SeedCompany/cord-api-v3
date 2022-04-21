@@ -2,14 +2,14 @@ import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { times } from 'lodash';
 import { isValidId } from '../src/common';
-import { Powers } from '../src/components/authorization/dto/powers';
+import { Role } from '../src/components/authorization/dto/role.dto';
 import { User } from '../src/components/user';
 import { Education } from '../src/components/user/education';
 import {
   createEducation,
   createSession,
   createTestApp,
-  registerUserWithPower,
+  registerUser,
   TestApp,
 } from './utility';
 import { fragments } from './utility/fragments';
@@ -21,7 +21,7 @@ describe('Education e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    user = await registerUserWithPower(app, [Powers.CreateEducation]);
+    user = await registerUser(app, { roles: [Role.LeadFinancialAnalyst] });
   });
 
   afterAll(async () => {

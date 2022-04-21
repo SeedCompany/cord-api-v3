@@ -1,6 +1,6 @@
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
 import { DateTime } from 'luxon';
-import { generateId, ID, ServerException } from '../../common';
+import { ID, ServerException } from '../../common';
 import { ConfigService, ILogger, Logger, Transactional } from '../../core';
 import { AuthenticationService } from '../authentication';
 import { CryptoService } from '../authentication/crypto.service';
@@ -45,41 +45,17 @@ export class AdminService implements OnApplicationBootstrap {
 
     this.logger.debug('Setting up root objects');
 
-    await this.mergeRootSecurityGroup();
-
-    await this.mergePublicSecurityGroup();
-
     await this.mergeAnonUser();
 
     await this.mergeRootAdminUser();
 
-    await this.mergeRootAdminUserToSecurityGroup();
-
-    await this.mergePublicSecurityGroupWithRootSg();
-
     await this.mergeDefaultOrg();
-  }
-
-  private async mergeRootSecurityGroup() {
-    // merge root security group
-
-    const powers = Object.keys(Powers);
-    const id = this.config.rootSecurityGroup.id;
-
-    await this.repo.mergeRootSecurityGroup(powers, id);
-  }
-
-  private async mergePublicSecurityGroup() {
-    const id = this.config.publicSecurityGroup.id;
-    await this.repo.mergePublicSecurityGroup(id);
   }
 
   private async mergeAnonUser() {
     const createdAt = DateTime.local();
     const anonUserId = this.config.anonUser.id;
-    const publicSecurityGroupId = this.config.publicSecurityGroup.id;
-
-    await this.repo.mergeAnonUser(createdAt, anonUserId, publicSecurityGroupId);
+    await this.repo.mergeAnonUser(createdAt, anonUserId);
   }
 
   private async mergeRootAdminUser(): Promise<void> {
@@ -120,27 +96,6 @@ export class AdminService implements OnApplicationBootstrap {
     this.logger.notice('Setting actual root user id', { id });
   }
 
-  private async mergeRootAdminUserToSecurityGroup(): Promise<void> {
-    const id = this.config.rootSecurityGroup.id;
-    const makeAdmin = await this.repo.mergeRootAdminUserToSecurityGroup(id);
-
-    if (!makeAdmin) {
-      throw new ServerException(
-        'Could not merge root admin user to security group'
-      );
-    }
-  }
-
-  private async mergePublicSecurityGroupWithRootSg(): Promise<void> {
-    const publicSecurityGroupId = this.config.publicSecurityGroup.id;
-    const rootSecurityGroupId = this.config.rootSecurityGroup.id;
-
-    await this.repo.mergePublicSecurityGroupWithRootSg(
-      publicSecurityGroupId,
-      rootSecurityGroupId
-    );
-  }
-
   private async mergeDefaultOrg(): Promise<void> {
     // is there a default org
     const isDefaultOrgResult = await this.repo.checkDefaultOrg();
@@ -162,16 +117,12 @@ export class AdminService implements OnApplicationBootstrap {
         }
       } else {
         // create org
-        const orgSgId = await generateId();
         const createdAt = DateTime.local();
-        const publicSecurityGroupId = this.config.publicSecurityGroup.id;
         const defaultOrgId = this.config.defaultOrg.id;
         const defaultOrgName = this.config.defaultOrg.name;
 
         const createOrgResult = await this.repo.createOrgResult(
-          orgSgId,
           createdAt,
-          publicSecurityGroupId,
           defaultOrgId,
           defaultOrgName
         );

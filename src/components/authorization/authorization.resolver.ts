@@ -40,21 +40,23 @@ export class AuthorizationResolver {
     return await this.authorizationService.readPower(session);
   }
 
-  @Mutation(() => ModifyPowerOutput)
+  @Mutation(() => ModifyPowerOutput, {
+    deprecationReason: 'Add a user role instead',
+  })
   async grantPower(
-    @LoggedInSession() session: Session,
-    @Args() { userId, power }: ModifyPowerArgs
+    @LoggedInSession() _session: Session,
+    @Args() _args: ModifyPowerArgs
   ): Promise<ModifyPowerOutput> {
-    await this.authorizationService.createPower(userId, power, session);
     return { success: true };
   }
 
-  @Mutation(() => DeletePowerOutput)
+  @Mutation(() => DeletePowerOutput, {
+    deprecationReason: 'Remove a user role instead',
+  })
   async deletePower(
-    @LoggedInSession() session: Session,
-    @Args() { userId, power }: ModifyPowerArgs
+    @LoggedInSession() _session: Session,
+    @Args() _args: ModifyPowerArgs
   ): Promise<DeletePowerOutput> {
-    await this.authorizationService.deletePower(userId, power, session);
     return { success: true };
   }
 }

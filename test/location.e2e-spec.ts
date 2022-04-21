@@ -2,7 +2,6 @@ import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { times } from 'lodash';
 import { generateId, isValidId } from '../src/common';
-import { Powers } from '../src/components/authorization/dto/powers';
 import { Location } from '../src/components/location';
 import {
   createFundingAccount,
@@ -11,8 +10,7 @@ import {
   createSession,
   createTestApp,
   fragments,
-  registerUserWithPower,
-  runAsAdmin,
+  loginAsAdmin,
   TestApp,
 } from './utility';
 
@@ -22,20 +20,12 @@ describe('Location e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    await registerUserWithPower(app, [
-      Powers.CreateLocation,
-      Powers.CreateFundingAccount,
-    ]);
+    // Only admins can modify locations
+    await loginAsAdmin(app);
   });
 
   afterAll(async () => {
     await app.close();
-  });
-
-  // Create Location
-  it('create location', async () => {
-    const name = faker.company.companyName();
-    await createLocation(app, { name });
   });
 
   // Read Location
@@ -65,31 +55,29 @@ describe('Location e2e', () => {
   it('update location', async () => {
     const st = await createLocation(app);
     const newName = faker.company.companyName();
-    await runAsAdmin(app, async function () {
-      const result = await app.graphql.mutate(
-        gql`
-          mutation updateLocation($input: UpdateLocationInput!) {
-            updateLocation(input: $input) {
-              location {
-                ...location
-              }
+    const result = await app.graphql.mutate(
+      gql`
+        mutation updateLocation($input: UpdateLocationInput!) {
+          updateLocation(input: $input) {
+            location {
+              ...location
             }
           }
-          ${fragments.location}
-        `,
-        {
-          input: {
-            location: {
-              id: st.id,
-              name: newName,
-            },
-          },
         }
-      );
-      const updated = result.updateLocation.location;
-      expect(updated).toBeTruthy();
-      expect(updated.name.value).toBe(newName);
-    });
+        ${fragments.location}
+      `,
+      {
+        input: {
+          location: {
+            id: st.id,
+            name: newName,
+          },
+        },
+      }
+    );
+    const updated = result.updateLocation.location;
+    expect(updated).toBeTruthy();
+    expect(updated.name.value).toBe(newName);
   });
 
   // Delete Location
@@ -146,31 +134,30 @@ describe('Location e2e', () => {
       defaultFieldRegionId: defaultFieldRegion.id,
     });
     const newFieldRegion = await createRegion(app);
-    await runAsAdmin(app, async () => {
-      const result = await app.graphql.mutate(
-        gql`
-          mutation updateLocation($input: UpdateLocationInput!) {
-            updateLocation(input: $input) {
-              location {
-                ...location
-              }
+
+    const result = await app.graphql.mutate(
+      gql`
+        mutation updateLocation($input: UpdateLocationInput!) {
+          updateLocation(input: $input) {
+            location {
+              ...location
             }
           }
-          ${fragments.location}
-        `,
-        {
-          input: {
-            location: {
-              id: l.id,
-              defaultFieldRegionId: newFieldRegion.id,
-            },
-          },
         }
-      );
-      const updated = result.updateLocation.location;
-      expect(updated).toBeTruthy();
-      expect(updated.defaultFieldRegion.value.id).toBe(newFieldRegion.id);
-    });
+        ${fragments.location}
+      `,
+      {
+        input: {
+          location: {
+            id: l.id,
+            defaultFieldRegionId: newFieldRegion.id,
+          },
+        },
+      }
+    );
+    const updated = result.updateLocation.location;
+    expect(updated).toBeTruthy();
+    expect(updated.defaultFieldRegion.value.id).toBe(newFieldRegion.id);
   });
 
   it('update location with funding account', async () => {
@@ -179,30 +166,29 @@ describe('Location e2e', () => {
       fundingAccountId: fundingAccount.id,
     });
     const newFundingAccount = await createFundingAccount(app);
-    await runAsAdmin(app, async () => {
-      const result = await app.graphql.mutate(
-        gql`
-          mutation updateLocation($input: UpdateLocationInput!) {
-            updateLocation(input: $input) {
-              location {
-                ...location
-              }
+
+    const result = await app.graphql.mutate(
+      gql`
+        mutation updateLocation($input: UpdateLocationInput!) {
+          updateLocation(input: $input) {
+            location {
+              ...location
             }
           }
-          ${fragments.location}
-        `,
-        {
-          input: {
-            location: {
-              id: st.id,
-              fundingAccountId: newFundingAccount.id,
-            },
-          },
         }
-      );
-      const updated = result.updateLocation.location;
-      expect(updated).toBeTruthy();
-      expect(updated.fundingAccount.value.id).toBe(newFundingAccount.id);
-    });
+        ${fragments.location}
+      `,
+      {
+        input: {
+          location: {
+            id: st.id,
+            fundingAccountId: newFundingAccount.id,
+          },
+        },
+      }
+    );
+    const updated = result.updateLocation.location;
+    expect(updated).toBeTruthy();
+    expect(updated.fundingAccount.value.id).toBe(newFundingAccount.id);
   });
 });

@@ -52,6 +52,7 @@ export const Controller = new DbRole({
     Powers.CreateProjectMember,
     Powers.CreateUnavailability,
     Powers.CreateUser,
+    Powers.CreatePost,
   ],
   grants: [
     new DbBaseNodeGrant<DbBudget>({

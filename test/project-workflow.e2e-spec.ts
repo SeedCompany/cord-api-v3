@@ -1,6 +1,6 @@
 import { gql } from 'apollo-server-core';
 import { CalendarDate } from '../src/common';
-import { Powers, Role } from '../src/components/authorization';
+import { Role } from '../src/components/authorization';
 import { PartnerType } from '../src/components/partner';
 import {
   ProjectStatus,
@@ -21,7 +21,6 @@ import {
   createTestApp,
   fragments,
   registerUser,
-  registerUserWithPower,
   runAsAdmin,
   TestApp,
   TestUser,
@@ -50,15 +49,14 @@ describe('Project-Workflow e2e', () => {
     director = await registerUser(app, {
       roles: [Role.RegionalDirector, Role.FieldOperationsDirector],
     });
-    projectManager = await registerUserWithPower(
+    projectManager = await registerUser(
       app,
-      [
-        Powers.CreateLanguage,
-        Powers.CreateEthnologueLanguage,
-        Powers.CreateOrganization,
-      ],
+      // [
+      //   Powers.CreateFundingAccount,
+      //   Powers.CreateLocation,
+
       {
-        roles: [Role.ProjectManager],
+        roles: [Role.ProjectManager, Role.LeadFinancialAnalyst],
       }
     );
     consultantManager = await registerUser(app, {
@@ -140,11 +138,15 @@ describe('Project-Workflow e2e', () => {
       expect(languageEngagement.id).toBeDefined();
 
       // Enter location and field region
-      const fundingAccount = await createFundingAccount(app);
-      const location = await createLocation(app, {
-        fundingAccountId: fundingAccount.id,
+      const [location, fieldRegion] = await runAsAdmin(app, async () => {
+        const fundingAccount = await createFundingAccount(app);
+        const location = await createLocation(app, {
+          fundingAccountId: fundingAccount.id,
+        });
+        const fieldRegion = await createRegion(app);
+
+        return [location, fieldRegion];
       });
-      const fieldRegion = await createRegion(app);
       await updateProject(app, {
         id: project.id,
         primaryLocationId: location.id,
@@ -255,12 +257,13 @@ describe('Project-Workflow e2e', () => {
         ProjectStep.PendingFinancialEndorsement
       );
 
-      await financialAnalyst.login();
+      await projectManager.login();
       await createProjectMember(app, {
         userId: financialAnalyst.id,
         projectId: project.id,
         roles: [Role.FinancialAnalyst],
       });
+      await financialAnalyst.login();
       await changeProjectStep(app, project.id, ProjectStep.FinalizingProposal);
 
       await director.login();
@@ -283,9 +286,13 @@ describe('Project-Workflow e2e', () => {
     });
 
     it('Step 2. Approval', async () => {
-      const fundingAccount = await createFundingAccount(app);
-      const location = await createLocation(app, {
-        fundingAccountId: fundingAccount.id,
+      const location = await runAsAdmin(app, async () => {
+        const fundingAccount = await createFundingAccount(app);
+        const location = await createLocation(app, {
+          fundingAccountId: fundingAccount.id,
+        });
+
+        return location;
       });
       const project = await createProject(app, {
         primaryLocationId: location.id,
@@ -396,9 +403,13 @@ describe('Project-Workflow e2e', () => {
     });
 
     it('Suspension', async () => {
-      const fundingAccount = await createFundingAccount(app);
-      const location = await createLocation(app, {
-        fundingAccountId: fundingAccount.id,
+      const location = await runAsAdmin(app, async () => {
+        const fundingAccount = await createFundingAccount(app);
+        const location = await createLocation(app, {
+          fundingAccountId: fundingAccount.id,
+        });
+
+        return location;
       });
       const project = await createProject(app, {
         primaryLocationId: location.id,
@@ -430,9 +441,13 @@ describe('Project-Workflow e2e', () => {
     });
 
     it('Termination', async () => {
-      const fundingAccount = await createFundingAccount(app);
-      const location = await createLocation(app, {
-        fundingAccountId: fundingAccount.id,
+      const location = await runAsAdmin(app, async () => {
+        const fundingAccount = await createFundingAccount(app);
+        const location = await createLocation(app, {
+          fundingAccountId: fundingAccount.id,
+        });
+
+        return location;
       });
       const project = await createProject(app, {
         primaryLocationId: location.id,

@@ -45,6 +45,7 @@ export const ProjectManagerGlobal = new DbRole({
     Powers.CreateCeremony,
     Powers.CreateDirectory,
     Powers.CreateEducation,
+    Powers.CreateEthnoArt,
     Powers.CreateFile,
     Powers.CreateFileVersion,
     Powers.CreateFilm,

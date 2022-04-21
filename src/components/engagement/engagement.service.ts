@@ -22,6 +22,7 @@ import {
 } from '../../core';
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
+import { Powers } from '../authorization/dto/powers';
 import { CeremonyService } from '../ceremony';
 import { FileService } from '../file';
 import { Location } from '../location/dto';
@@ -81,6 +82,10 @@ export class EngagementService {
     session: Session,
     changeset?: ID
   ): Promise<LanguageEngagement> {
+    await this.authorizationService.checkPower(
+      Powers.CreateLanguageEngagement,
+      session
+    );
     const { languageId, projectId } = input;
     await this.verifyRelationshipEligibility(
       projectId,
@@ -92,7 +97,7 @@ export class EngagementService {
     if (input.firstScripture) {
       await this.verifyFirstScripture({ languageId });
     }
-    await this.verifyProjectStatus(projectId, session);
+    await this.verifyProjectStatus(projectId, session, changeset);
 
     this.verifyCreationStatus(input.status);
 
@@ -116,12 +121,6 @@ export class EngagementService {
       'engagement.pnp'
     );
 
-    await this.authorizationService.processNewBaseNode(
-      LanguageEngagement,
-      id,
-      session.userId
-    );
-
     const engagement = await this.repo.readOne(
       id,
       session,
@@ -139,6 +138,10 @@ export class EngagementService {
     session: Session,
     changeset?: ID
   ): Promise<InternshipEngagement> {
+    await this.authorizationService.checkPower(
+      Powers.CreateInternshipEngagement,
+      session
+    );
     const { projectId, internId, mentorId, countryOfOriginId } = input;
     await this.verifyRelationshipEligibility(
       projectId,
@@ -193,12 +196,6 @@ export class EngagementService {
       'growthPlan',
       input.growthPlan,
       'engagement.growthPlan'
-    );
-
-    await this.authorizationService.processNewBaseNode(
-      InternshipEngagement,
-      id,
-      session.userId
     );
 
     const engagement = await this.repo.readOne(
@@ -457,7 +454,7 @@ export class EngagementService {
         'You do not have the permission to delete this Engagement'
       );
 
-    await this.verifyProjectStatus(object.project, session);
+    await this.verifyProjectStatus(object.project, session, changeset);
 
     await this.eventBus.publish(new EngagementWillDeleteEvent(object, session));
 
@@ -596,9 +593,14 @@ export class EngagementService {
 
   /**
    * [BUSINESS RULE] Only Projects with a Status of 'In Development' can have Engagements created or deleted.
+   * [BUSINESS RULE] Only Projects with a Status of 'Active' and part of a changeset can have Engagements created or deleted.
    */
-  protected async verifyProjectStatus(projectId: ID, session: Session) {
-    if (session.roles.includes('global:Administrator')) {
+  protected async verifyProjectStatus(
+    projectId: ID,
+    session: Session,
+    changeset?: ID
+  ) {
+    if (changeset || session.roles.includes('global:Administrator')) {
       return;
     }
 
@@ -610,6 +612,7 @@ export class EngagementService {
         ? e.withField('engagement.projectId')
         : e;
     }
+
     if (project.status !== ProjectStatus.InDevelopment) {
       throw new InputException(
         'The Project status is not in development',

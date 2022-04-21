@@ -42,6 +42,7 @@ export class PartnerService {
   ) {}
 
   async create(input: CreatePartner, session: Session): Promise<Partner> {
+    await this.authorizationService.checkPower(Powers.CreatePartner, session);
     this.verifyFinancialReportingType(
       input.financialReportingTypes,
       input.types
@@ -56,12 +57,6 @@ export class PartnerService {
     }
 
     const id = await this.repo.create(input, session);
-
-    await this.authorizationService.processNewBaseNode(
-      Partner,
-      id,
-      session.userId
-    );
 
     this.logger.debug(`Partner created`, { id });
     return await this.readOne(id, session);

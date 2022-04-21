@@ -60,12 +60,6 @@ export class OrganizationService {
       throw new ServerException('failed to create default org');
     }
 
-    await this.authorizationService.processNewBaseNode(
-      Organization,
-      result.id,
-      session.userId
-    );
-
     const id = result.id;
 
     this.logger.debug(`organization created`, { id });

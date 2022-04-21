@@ -285,7 +285,7 @@ export const Marketing = new DbRole({
     new DbBaseNodeGrant<DbPartner>({
       __className: 'DbPartner',
       canList: true,
-      sensitivityAccess: Sensitivity.High,
+      sensitivityAccess: Sensitivity.Low,
       properties: [
         { propertyName: 'organization', permission: { read, sensitivityAccess: Sensitivity.Low }, },
         { propertyName: 'pointOfContact', permission: { }, },

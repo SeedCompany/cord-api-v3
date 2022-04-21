@@ -23,7 +23,7 @@ import {
   AuthorizationService,
   PermissionsOf,
 } from '../authorization/authorization.service';
-import { ScopedRole } from '../authorization/dto';
+import { Powers, ScopedRole } from '../authorization/dto';
 import { FileService } from '../file';
 import { ProjectChangeRequest } from '../project-change-request/dto';
 import { BudgetRecordRepository } from './budget-record.repository';
@@ -65,6 +65,7 @@ export class BudgetService {
     session: Session
   ): Promise<Budget> {
     this.logger.debug('Creating budget', { projectId });
+    await this.authorizationService.checkPower(Powers.CreateBudget, session);
 
     const projectExists = await this.budgetRepo.doesProjectExist(
       projectId,
@@ -98,12 +99,6 @@ export class BudgetService {
         'budget.universalTemplateFile'
       );
 
-      await this.authorizationService.processNewBaseNode(
-        Budget,
-        budgetId,
-        session.userId
-      );
-
       return await this.readOne(budgetId, session);
     } catch (exception) {
       this.logger.error(`Could not create budget`, {
@@ -130,15 +125,13 @@ export class BudgetService {
     await this.verifyRecordUniqueness(input);
 
     this.logger.debug('Creating BudgetRecord', input);
+    await this.authorizationService.checkPower(
+      Powers.CreateBudgetRecord,
+      session
+    );
 
     try {
       const recordId = await this.budgetRecordsRepo.create(input, changeset);
-
-      await this.authorizationService.processNewBaseNode(
-        BudgetRecord,
-        recordId,
-        session.userId
-      );
 
       this.logger.debug(`Created Budget Record`, {
         id: recordId,

@@ -1,5 +1,5 @@
 import { gql } from 'apollo-server-core';
-import { createPerson } from '.';
+import { createPerson, runAsAdmin } from '.';
 import { generateId, isValidId } from '../../src/common';
 import {
   CreateFieldRegion,
@@ -51,11 +51,18 @@ export async function createRegion(
 ) {
   const fieldRegion: CreateFieldRegion = {
     name: 'Region' + (await generateId()),
-    fieldZoneId: input.fieldZoneId || (await createZone(app)).id,
+    fieldZoneId:
+      input.fieldZoneId ||
+      (await runAsAdmin(app, async () => {
+        return (await createZone(app)).id;
+      })),
+
     directorId:
       input.directorId ||
       (await getUserFromSession(app)).id ||
-      (await createPerson(app)).id,
+      (await runAsAdmin(app, async () => {
+        return (await createPerson(app)).id;
+      })),
     ...input,
   };
 

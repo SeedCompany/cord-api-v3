@@ -1,4 +1,5 @@
 import { gql } from 'apollo-server-core';
+import { Role } from '../src/components/authorization';
 import {
   createPin,
   createProject,
@@ -15,7 +16,7 @@ describe('Pin e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    await registerUser(app);
+    await registerUser(app, { roles: [Role.FieldOperationsDirector] });
   });
 
   afterAll(async () => {
