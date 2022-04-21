@@ -3,35 +3,27 @@ import { BaseMigration, Migration } from '../../../core';
 @Migration('2022-04-21T15:30:05')
 export class DeleteSecurityGroups extends BaseMigration {
   async up() {
-    await this.deleteNode('SecurityGroup');
-    await this.deleteNode('Permission');
+    await this.deleteAllNodesByLabel('SecurityGroup');
+    await this.deleteAllNodesByLabel('Permission');
   }
-  async deleteNode(nodeName: string) {
+
+  async deleteAllNodesByLabel(nodeName: string) {
     const beforeDelete = await this.getTotalNodes(nodeName);
     this.logger.info(`Total ${nodeName} nodes before delete: ${beforeDelete}`);
-    await this.db
-      .query()
-      .raw(
+
+    const stats = await this.db
+      .query<Record<string, any>>(
         `
-        MATCH (n:${nodeName})
-        WITH collect(n) AS nn
-        CALL apoc.periodic.commit("
-        UNWIND $nodes AS n
-        WITH sum(size((n)--())) AS count_remaining,
-            collect(n) AS nn
-        UNWIND nn AS n
-        MATCH (n)-[r]-()
-        WITH n, r, count_remaining
-        LIMIT $limit
-        DELETE r
-        RETURN count_remaining
-        ",{limit:100, nodes:nn}) yield updates, executions, runtime, batches, failedBatches, batchErrors, failedCommits, commitErrors
-        UNWIND nn AS n
-        DELETE n   
-    `
+          CALL apoc.periodic.iterate(
+            'MATCH (n:${nodeName}) RETURN n',
+            'DETACH DELETE n',
+            { batchSize: 1000 }
+          )
+        `
       )
-      .return('updates, executions, runtime, batches')
-      .run();
+      .first();
+    this.logger.info('Stats', stats);
+
     const afterDelete = await this.getTotalNodes(nodeName);
     this.logger.info(`Total ${nodeName} nodes after delete: ${afterDelete}`);
   }
