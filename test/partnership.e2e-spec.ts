@@ -46,7 +46,7 @@ describe('Partnership e2e', () => {
   });
 
   it('create & read partnership by id', async () => {
-    const partnership = await createPartnership(app);
+    const partnership = await createPartnership(app, { projectId: project.id });
 
     const result = await app.graphql.query(
       gql`
@@ -81,7 +81,7 @@ describe('Partnership e2e', () => {
   });
 
   it('update partnership', async () => {
-    const partnership = await createPartnership(app);
+    const partnership = await createPartnership(app, { projectId: project.id });
 
     // lodash.sample used to grab a random enum value
     const newAgreementStatus = sample(
@@ -130,7 +130,7 @@ describe('Partnership e2e', () => {
   });
 
   it.skip('delete partnership', async () => {
-    const partnership = await createPartnership(app);
+    const partnership = await createPartnership(app, { projectId: project.id });
     expect(partnership.id).toBeTruthy();
     const result = await app.graphql.mutate(
       gql`
@@ -165,7 +165,7 @@ describe('Partnership e2e', () => {
   });
 
   it('update mou overrides partnership', async () => {
-    const partnership = await createPartnership(app);
+    const partnership = await createPartnership(app, { projectId: project.id });
 
     const mouStartOverride = '1981-01-01';
     const mouEndOverride = '2020-01-01';
@@ -212,7 +212,11 @@ describe('Partnership e2e', () => {
   it('List view of partnerships', async () => {
     // create 2 partnerships
     const numPartnerships = 2;
-    await Promise.all(times(numPartnerships).map(() => createPartnership(app)));
+    await Promise.all(
+      times(numPartnerships).map(() =>
+        createPartnership(app, { projectId: project.id })
+      )
+    );
 
     const { partnerships } = await app.graphql.query(
       gql`
