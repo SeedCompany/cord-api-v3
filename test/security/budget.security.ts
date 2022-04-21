@@ -1,7 +1,8 @@
 import { gql } from 'apollo-server-core';
 import { CalendarDate, ID, Sensitivity } from '../../src/common';
-import { Powers, Role, ScopedRole } from '../../src/components/authorization';
+import { Role, ScopedRole } from '../../src/components/authorization';
 import { Budget } from '../../src/components/budget';
+import { Location } from '../../src/components/location';
 import { PartnerType } from '../../src/components/partner';
 import { Project, ProjectType } from '../../src/components/project';
 import {
@@ -9,6 +10,7 @@ import {
   createBudget,
   createLanguage,
   createLanguageEngagement,
+  createLocation,
   createOrganization,
   createPartner,
   createPartnership,
@@ -22,7 +24,7 @@ import {
   readOneBudget,
   readOneProjectBudget,
   registerUser,
-  registerUserWithPower,
+  runAsAdmin,
   runInIsolatedSession,
   TestApp,
 } from '../utility';
@@ -37,20 +39,19 @@ describe('Budget Security e2e', () => {
   let app: TestApp;
   let testProject: Raw<Project>;
   let testBudget: Budget;
+  let location: Location;
 
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    await registerUserWithPower(app, [
-      Powers.CreateOrganization,
-      Powers.CreateProject,
-      Powers.CreatePartnership,
-      Powers.CreateBudget,
-      Powers.CreateLanguage,
-      Powers.CreateLanguageEngagement,
-      Powers.CreatePartner,
-      Powers.CreateEthnologueLanguage,
-    ]);
+    await registerUser(
+      app,
+      { roles: [Role.LeadFinancialAnalyst, Role.FieldOperationsDirector] }
+      // [
+      // Powers.CreateLanguage,
+      // Powers.CreateEthnologueLanguage,
+      // ]
+    );
     testProject = await createProject(app);
     testBudget = (await readOneProjectBudget(app, testProject.id)).budget
       .value!;
@@ -66,7 +67,10 @@ describe('Budget Security e2e', () => {
       mouStartOverride: CalendarDate.fromISO('2000-01-01'),
       mouEndOverride: CalendarDate.fromISO('2004-01-01'),
     });
-    await addLocationToOrganization({ app, orgId: org.id });
+    location = await runAsAdmin(app, async () => {
+      return await createLocation(app);
+    });
+    await addLocationToOrganization({ app, orgId: org.id, locId: location.id });
   });
 
   afterAll(async () => {
@@ -165,8 +169,10 @@ describe('Budget Security e2e', () => {
         }
 
         // Test if can list when the project is a medium sensitivity project
-        const medlang = await createLanguage(app, {
-          sensitivity: Sensitivity.Medium,
+        const medlang = await runAsAdmin(app, async () => {
+          return await createLanguage(app, {
+            sensitivity: Sensitivity.Medium,
+          });
         });
         const medLangEng = await createLanguageEngagement(app, {
           languageId: medlang.id,
@@ -196,8 +202,10 @@ describe('Budget Security e2e', () => {
         }
 
         // Test if can list when the project is a medium sensitivity project
-        const lang = await createLanguage(app, {
-          sensitivity: Sensitivity.Low,
+        const lang = await runAsAdmin(app, async () => {
+          return await createLanguage(app, {
+            sensitivity: Sensitivity.Low,
+          });
         });
         const lowLangEng = await createLanguageEngagement(app, {
           languageId: lang.id,
@@ -226,8 +234,10 @@ describe('Budget Security e2e', () => {
           }
         }
         //reset after each test so that we only have budgets associated with highly sensitive projects
-        await deleteEngagement(app, medLangEng.id);
-        await deleteEngagement(app, lowLangEng.id);
+        await runAsAdmin(app, async () => {
+          await deleteEngagement(app, medLangEng.id);
+          await deleteEngagement(app, lowLangEng.id);
+        });
       });
 
       it('Project canList', async () => {
@@ -298,7 +308,11 @@ describe('Budget Security e2e', () => {
             mouStartOverride: CalendarDate.fromISO('2000-01-01'),
             mouEndOverride: CalendarDate.fromISO('2004-01-01'),
           });
-          await addLocationToOrganization({ app, orgId: org.id });
+          await addLocationToOrganization({
+            app,
+            orgId: org.id,
+            locId: location.id,
+          });
           if (budget.budget.value) {
             await expectSensitiveRelationList({
               app,

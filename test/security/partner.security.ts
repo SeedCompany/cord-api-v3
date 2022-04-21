@@ -1,5 +1,5 @@
 import { CalendarDate, Sensitivity } from '../../src/common';
-import { Powers, Role, ScopedRole } from '../../src/components/authorization';
+import { Role, ScopedRole } from '../../src/components/authorization';
 import { Partner, PartnerType } from '../../src/components/partner';
 import { FinancialReportingType } from '../../src/components/partnership';
 import { Project, ProjectType } from '../../src/components/project';
@@ -15,7 +15,6 @@ import {
   Raw,
   readOnePartner,
   registerUser,
-  registerUserWithPower,
   runInIsolatedSession,
   TestApp,
 } from '../utility';
@@ -31,15 +30,9 @@ describe('Partner Security e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    await registerUserWithPower(app, [
-      Powers.CreateProject,
-      Powers.CreateLanguage,
-      Powers.CreateLanguageEngagement,
-      Powers.CreateEthnologueLanguage,
-      Powers.CreateOrganization,
-      Powers.CreatePartner,
-      Powers.CreatePartnership,
-    ]);
+    await registerUser(app, {
+      roles: [Role.FieldOperationsDirector, Role.LeadFinancialAnalyst],
+    });
     testProject = await createProject(app);
     const org = await createOrganization(app);
     testPartner = await createPartner(app, {
@@ -73,7 +66,7 @@ describe('Partner Security e2e', () => {
       ${Role.LeadFinancialAnalyst}              | ${true}       | ${true}
       ${Role.Leadership}                        | ${true}       | ${true}
       ${Role.Liaison}                           | ${false}      | ${false}
-      ${Role.Marketing}                         | ${true}       | ${true}
+      ${Role.Marketing}                         | ${false}      | ${true}
       ${Role.Mentor}                            | ${true}       | ${true}
       ${Role.ProjectManager}                    | ${true}       | ${true}
       ${Role.RegionalCommunicationsCoordinator} | ${false}      | ${false}

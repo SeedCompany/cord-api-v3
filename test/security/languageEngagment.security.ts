@@ -1,5 +1,5 @@
 import { Sensitivity } from '../../src/common';
-import { Powers, Role, ScopedRole } from '../../src/components/authorization';
+import { Role, ScopedRole } from '../../src/components/authorization';
 import { LanguageEngagement } from '../../src/components/engagement';
 import { Language } from '../../src/components/language';
 import { Project, ProjectType } from '../../src/components/project';
@@ -15,7 +15,7 @@ import {
   readOneLanguageEngagement,
   readOneLanguageEngagementParatextId,
   registerUser,
-  registerUserWithPower,
+  runAsAdmin,
   runInIsolatedSession,
   TestApp,
 } from '../utility';
@@ -32,15 +32,12 @@ describe('Language Engagment Security e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    await registerUserWithPower(app, [
-      Powers.CreateProject,
-      Powers.CreateLocation,
-      Powers.CreateLanguage,
-      Powers.CreateLanguageEngagement,
-      Powers.CreateEthnologueLanguage,
-    ]);
+    await registerUser(app, { roles: [Role.FieldOperationsDirector] });
     testProject = await createProject(app);
-    testLanguage = await createLanguage(app, { sensitivity: Sensitivity.High });
+    testLanguage = await runAsAdmin(
+      app,
+      async () => await createLanguage(app, { sensitivity: Sensitivity.High })
+    );
     testLanguageEngagement = await createLanguageEngagement(app, {
       projectId: testProject.id,
       languageId: testLanguage.id,
@@ -122,9 +119,13 @@ describe('Language Engagment Security e2e', () => {
           ' reading $type $resource.name $property',
           async ({ property, resource, readFunction, type }) => {
             const proj = await createProject(app);
-            const lang = await createLanguage(app, {
-              sensitivity: Sensitivity.Low, // setting to low because we don't want it to effect the other lang engagements for testing
-            });
+            const lang = await runAsAdmin(
+              app,
+              async () =>
+                await createLanguage(app, {
+                  sensitivity: Sensitivity.Low, // setting to low because we don't want it to effect the other lang engagements for testing
+                })
+            );
             const langEngagement = await createLanguageEngagement(app, {
               projectId: proj.id,
               languageId: lang.id,
@@ -174,9 +175,13 @@ describe('Language Engagment Security e2e', () => {
     `('$role', ({ role, globalCanList, projectCanList }) => {
       it('Global canList', async () => {
         const proj = await createProject(app);
-        const lang = await createLanguage(app, {
-          sensitivity: Sensitivity.Low, // setting to low because we don't want it to effect the other lang engagements for testing
-        });
+        const lang = await runAsAdmin(
+          app,
+          async () =>
+            await createLanguage(app, {
+              sensitivity: Sensitivity.Low, // setting to low because we don't want it to effect the other lang engagements for testing
+            })
+        );
         await createLanguageEngagement(app, {
           projectId: proj.id,
           languageId: lang.id,
@@ -199,9 +204,13 @@ describe('Language Engagment Security e2e', () => {
           });
         });
         const proj = await createProject(app);
-        const lang = await createLanguage(app, {
-          sensitivity: Sensitivity.Low, // setting to low because we don't want it to effect the other lang engagements for testing
-        });
+        const lang = await runAsAdmin(
+          app,
+          async () =>
+            await createLanguage(app, {
+              sensitivity: Sensitivity.Low, // setting to low because we don't want it to effect the other lang engagements for testing
+            })
+        );
         await createLanguageEngagement(app, {
           projectId: proj.id,
           languageId: lang.id,

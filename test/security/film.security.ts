@@ -1,4 +1,4 @@
-import { Powers, Role } from '../../src/components/authorization';
+import { Role } from '../../src/components/authorization';
 import { Film } from '../../src/components/film';
 import {
   createFilm,
@@ -7,7 +7,6 @@ import {
   listFilms,
   readOneFilm,
   registerUser,
-  registerUserWithPower,
   runInIsolatedSession,
   TestApp,
 } from '../utility';
@@ -19,7 +18,7 @@ describe('Film Security e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    await registerUserWithPower(app, [Powers.CreateFilm, Powers.CreateProject]);
+    await registerUser(app, { roles: [Role.FieldOperationsDirector] });
     testFilm = await createFilm(app);
   });
 

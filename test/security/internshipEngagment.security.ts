@@ -1,4 +1,4 @@
-import { Powers, Role } from '../../src/components/authorization';
+import { Role } from '../../src/components/authorization';
 import { InternshipEngagement } from '../../src/components/engagement';
 import { Project, ProjectType } from '../../src/components/project';
 import {
@@ -11,26 +11,20 @@ import {
   Raw,
   readOneInternshipEngagement,
   registerUser,
-  registerUserWithPower,
   runInIsolatedSession,
   TestApp,
 } from '../utility';
 import { RawInternshipEngagement } from '../utility/fragments';
 import { testRole } from '../utility/roles';
 
-describe('Language Engagment Security e2e', () => {
+describe('Internship Engagment Security e2e', () => {
   let app: TestApp;
   let testProject: Raw<Project>;
   let testInternshipEngagement: RawInternshipEngagement;
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    await registerUserWithPower(app, [
-      Powers.CreateProject,
-      Powers.CreateLocation,
-      Powers.CreateInternshipEngagement,
-      Powers.CreateEthnologueLanguage,
-    ]);
+    await registerUser(app, { roles: [Role.FieldOperationsDirector] });
     testProject = await createProject(app, { type: ProjectType.Internship });
     const intern = await runInIsolatedSession(app, async () => {
       return await registerUser(app, {

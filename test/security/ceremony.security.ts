@@ -1,4 +1,4 @@
-import { Powers, Role } from '../../src/components/authorization';
+import { Role } from '../../src/components/authorization';
 import { Ceremony } from '../../src/components/ceremony';
 import { Project } from '../../src/components/project';
 import {
@@ -12,7 +12,7 @@ import {
   Raw,
   readOneCeremony,
   registerUser,
-  registerUserWithPower,
+  runAsAdmin,
   runInIsolatedSession,
   TestApp,
 } from '../utility';
@@ -26,20 +26,13 @@ describe('Ceremony Security e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    await registerUserWithPower(app, [
-      Powers.CreateProject,
-      Powers.CreateLanguage,
-      Powers.CreateLanguageEngagement,
-      Powers.CreateCeremony,
-      Powers.CreateProjectMember,
-      Powers.CreateEthnologueLanguage,
-    ]);
+    await registerUser(app, { roles: [Role.FieldOperationsDirector] });
     await runInIsolatedSession(
       app,
       async () => await registerUser(app, { roles: [Role.Consultant] })
     );
     testProject = await createProject(app);
-    const lang = await createLanguage(app);
+    const lang = await runAsAdmin(app, async () => await createLanguage(app));
     const langEng = await createLanguageEngagement(app, {
       projectId: testProject.id,
       languageId: lang.id,
