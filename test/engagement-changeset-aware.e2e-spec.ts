@@ -4,6 +4,7 @@ import { Powers, Role } from '../src/components/authorization';
 import { EngagementStatus } from '../src/components/engagement';
 import { Language } from '../src/components/language';
 import { ProjectStep } from '../src/components/project';
+import { ProjectChangeRequestType } from '../src/components/project-change-request/dto';
 import {
   approveProjectChangeRequest,
   createFundingAccount,
@@ -395,6 +396,47 @@ describe('Engagement Changeset Aware e2e', () => {
     );
     expect(projectChangeset.project.changeset.difference.removed[0].id).toBe(
       le.id
+    );
+  });
+
+  it('Cannot create duplicate language engagements in a changeset', async () => {
+    const project = await activeProject(app);
+    await createLanguageEngagement(app, {
+      projectId: project.id,
+      languageId: language.id,
+    });
+    const changeset = await createProjectChangeRequest(app, {
+      projectId: project.id,
+      types: [ProjectChangeRequestType.Engagement],
+    });
+
+    // Create new engagement with changeset
+    await expect(
+      app.graphql.mutate(
+        gql`
+          mutation createLanguageEngagement(
+            $input: CreateLanguageEngagementInput!
+          ) {
+            createLanguageEngagement(input: $input) {
+              engagement {
+                ...languageEngagement
+              }
+            }
+          }
+          ${fragments.languageEngagement}
+        `,
+        {
+          input: {
+            engagement: {
+              languageId: language.id,
+              projectId: project.id,
+            },
+            changeset: changeset.id,
+          },
+        }
+      )
+    ).rejects.toThrowError(
+      'Engagement for this project and language already exists'
     );
   });
 });
