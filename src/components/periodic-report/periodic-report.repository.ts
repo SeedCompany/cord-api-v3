@@ -225,7 +225,7 @@ export class PeriodicReportRepository extends DtoRepository<
         relation('out', '', 'start', ACTIVE),
         node('sn', 'Property'),
       ])
-      .raw(`where (node)-->(:FileNode)<--(:FileVersion)`)
+      .raw(`where (node)-->(:FileNode)-->(:FileVersion)`)
       .with('node, sn')
       .orderBy('sn.value', 'desc')
       .limit(1)
@@ -294,7 +294,7 @@ export class PeriodicReportRepository extends DtoRepository<
       ])
       .raw(
         `
-          WHERE NOT (report)-[:reportFileNode]->(:File)<-[:parent { active: true }]-(:FileVersion)
+          WHERE NOT (report)-[:reportFileNode]->(:File)-[:child { active: true }]->(:FileVersion)
             AND CASE
               WHEN interval.start is null
                   THEN end.value <= interval.end

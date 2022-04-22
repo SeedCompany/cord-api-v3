@@ -90,7 +90,7 @@ export class FileRepository extends CommonRepository {
       .query()
       .match([
         node('parent', 'FileNode', { id: parentId }),
-        relation('in', '', 'parent', ACTIVE),
+        relation('out', '', 'child', ACTIVE),
         node('node', 'FileNode'),
         relation('out', '', 'name', ACTIVE),
         node('name', 'Property', { value: name }),
@@ -109,11 +109,11 @@ export class FileRepository extends CommonRepository {
       .query()
       .match([
         node('start', 'FileNode', { id }),
-        relation('out', 'parent', 'parent', ACTIVE, '*'),
+        relation('in', 'child', 'child', ACTIVE, '*'),
         node('node', 'FileNode'),
       ])
-      .with('node, parent')
-      .orderBy('size(parent)')
+      .with('node, child')
+      .orderBy('size(child)')
       // Using paginate to maintain order through hydration
       .apply(paginate({ page: 1, count: 100 }, this.hydrate()))
       .first();
@@ -126,7 +126,7 @@ export class FileRepository extends CommonRepository {
       .query()
       .match([
         node('start', 'FileNode', { id: parent.id }),
-        relation('in', '', 'parent', ACTIVE),
+        relation('out', '', 'child', ACTIVE),
         node('node', 'FileNode'),
       ])
       .apply((q) => {
@@ -216,9 +216,9 @@ export class FileRepository extends CommonRepository {
             // region Match all files (with active versions) from all subdirectories
             .optionalMatch([
               node('node'),
-              relation('in', '', 'parent', ACTIVE, '*'),
+              relation('out', '', 'child', ACTIVE, '*'),
               node('file', 'File'),
-              relation('in', '', 'parent', ACTIVE),
+              relation('out', '', 'child', ACTIVE),
               node('', 'FileVersion'),
             ])
             // endregion
@@ -227,7 +227,7 @@ export class FileRepository extends CommonRepository {
               sub
                 .match([
                   node('file'),
-                  relation('in', '', 'parent', ACTIVE),
+                  relation('out', '', 'child', ACTIVE),
                   node('version', 'FileVersion'),
                 ])
                 .with('version')
@@ -267,7 +267,7 @@ export class FileRepository extends CommonRepository {
             ])
             .optionalMatch([
               node('firstVersion'),
-              relation('out', '', 'parent', ACTIVE),
+              relation('in', '', 'child', ACTIVE),
               node('firstFile', 'File'),
             ])
             .return([
@@ -333,7 +333,7 @@ export class FileRepository extends CommonRepository {
         sub
           .match([
             node('node', 'FileNode'),
-            relation('in', '', 'parent', ACTIVE),
+            relation('out', '', 'child', ACTIVE),
             node('version', 'FileVersion'),
           ])
           .return('version')
@@ -365,9 +365,13 @@ export class FileRepository extends CommonRepository {
       .query()
       .apply(await createNode(Directory, { initialProps }))
       .apply(
-        createRelationships(Directory, 'out', {
-          createdBy: ['User', session.userId],
-          parent: ['Directory', parentId],
+        createRelationships(Directory, {
+          out: {
+            createdBy: ['User', session.userId],
+          },
+          in: {
+            child: ['Directory', parentId],
+          },
         })
       )
       .return<{ id: ID }>('node.id as id');
@@ -391,9 +395,13 @@ export class FileRepository extends CommonRepository {
         await createNode(File, { initialProps, baseNodeProps: { id: fileId } })
       )
       .apply(
-        createRelationships(File, 'out', {
-          createdBy: ['User', session.userId],
-          parent: ['Directory', parentId],
+        createRelationships(File, {
+          out: {
+            createdBy: ['User', session.userId],
+          },
+          in: {
+            child: ['Directory', parentId],
+          },
         })
       )
       .return<{ id: ID }>('node.id as id');
@@ -426,9 +434,13 @@ export class FileRepository extends CommonRepository {
         })
       )
       .apply(
-        createRelationships(FileVersion, 'out', {
-          createdBy: ['User', session.userId],
-          parent: ['File', fileId],
+        createRelationships(FileVersion, {
+          out: {
+            createdBy: ['User', session.userId],
+          },
+          in: {
+            child: ['File', fileId],
+          },
         })
       )
       .return<{ id: ID }>('node.id as id');
@@ -479,14 +491,14 @@ export class FileRepository extends CommonRepository {
           [node('newParent', [], { id: newParentId })],
           [
             node('file', 'FileNode', { id }),
-            relation('out', 'rel', 'parent', ACTIVE),
+            relation('in', 'rel', 'child', ACTIVE),
             node('oldParent', []),
           ],
         ])
         .delete('rel')
         .create([
           node('newParent'),
-          relation('in', '', 'parent', {
+          relation('out', '', 'child', {
             active: true,
             createdAt: DateTime.local(),
           }),

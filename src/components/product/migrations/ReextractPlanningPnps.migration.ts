@@ -70,7 +70,7 @@ export class ReextractPlanningPnpsMigration extends BaseMigration {
             node('eng'),
             relation('out', '', 'pnpNode', ACTIVE),
             node('', 'File'),
-            relation('in', '', 'parent', ACTIVE),
+            relation('out', '', 'child', ACTIVE),
             node('version', 'FileVersion'),
           ])
           .return('version')

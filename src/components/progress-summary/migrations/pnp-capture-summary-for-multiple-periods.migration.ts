@@ -67,7 +67,7 @@ export class PnpCaptureSummaryForMultiplePeriodsMigration extends BaseMigration 
             node('r'),
             relation('out', '', 'reportFileNode'),
             node('', 'File'),
-            relation('in', '', 'parent', ACTIVE),
+            relation('out', '', 'child', ACTIVE),
             node('version', 'FileVersion'),
           ])
           .return('version')
