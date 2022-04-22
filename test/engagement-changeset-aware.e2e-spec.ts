@@ -174,6 +174,7 @@ describe('Engagement Changeset Aware e2e', () => {
     const changeset = await createProjectChangeRequest(app, {
       projectId: project.id,
     });
+    const newLang = await runAsAdmin(app, createLanguage);
 
     // Create new engagement with changeset
     const changesetEngagement = await app.graphql.mutate(
@@ -192,7 +193,7 @@ describe('Engagement Changeset Aware e2e', () => {
       {
         input: {
           engagement: {
-            languageId: language.id,
+            languageId: newLang.id,
             projectId: project.id,
             status: EngagementStatus.InDevelopment,
           },
@@ -408,11 +409,12 @@ describe('Engagement Changeset Aware e2e', () => {
   });
 
   it('Cannot create duplicate language engagements in a changeset', async () => {
-    const project = await activeProject(app);
+    const project = await createProject(app);
     await createLanguageEngagement(app, {
       projectId: project.id,
       languageId: language.id,
     });
+    await activeProject(app, project.id);
     const changeset = await createProjectChangeRequest(app, {
       projectId: project.id,
       types: [ProjectChangeRequestType.Engagement],
