@@ -21,6 +21,7 @@ import {
   variable,
 } from '../../core/database/query';
 import { PeriodicReportService, ReportType } from '../periodic-report';
+import { ProductStep } from '../product';
 import {
   ProductProgress,
   ProductProgressInput,
@@ -315,15 +316,17 @@ export class ProductProgressRepository {
       .subQuery('product', (sub) =>
         sub
           .match([
+            node('steps', 'Property'),
+            relation('in', '', 'steps', ACTIVE),
             node('product'),
             relation('out', '', 'progressTarget', ACTIVE),
             node('progressTarget', 'Property'),
           ])
-          .return<{ progressTarget: number }>(
-            'progressTarget.value as progressTarget'
+          .return<{ progressTarget: number; steps: ProductStep[] }>(
+            'progressTarget.value as progressTarget, steps.value as steps'
           )
       )
-      .return(['sensitivity', 'scope', 'progressTarget']);
+      .return(['sensitivity', 'scope', 'progressTarget', 'steps']);
     const result = await query.first();
     if (!result) {
       throw new NotFoundException('Could not find product');
