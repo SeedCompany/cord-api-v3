@@ -1,15 +1,20 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
 import {
   ID,
   NotFoundException,
+  PaginatedListType,
   ServerException,
   Session,
   UnsecuredDto,
 } from '../../../common';
 import { DtoRepository, Pg } from '../../../core';
-import { ACTIVE, paginate, sorting } from '../../../core/database/query';
-import { CreateEducation, Education, EducationListInput } from './dto';
+import { PgTransaction } from '../../../core/postgres/transaction.decorator';
+import {
+  CreateEducation,
+  Education,
+  EducationListInput,
+  UpdateEducation,
+} from './dto';
 
 @Injectable()
 export class EducationPgRepository extends DtoRepository(Education) {
@@ -63,36 +68,83 @@ export class EducationPgRepository extends DtoRepository(Education) {
     return rows[0];
   }
 
-  async getUserIdByEducation(id: ID) {
-    return await this.db
-      .query()
-      .match([
-        node('user', 'User'),
-        relation('out', '', 'education', ACTIVE),
-        node('education', 'Education', { id }),
-      ])
-      .return<{ id: ID }>('user.id as id')
-      .first();
+  async readMany(
+    ids: readonly ID[]
+  ): Promise<ReadonlyArray<UnsecuredDto<Education>>> {
+    const rows = await this.pg.query<UnsecuredDto<Education>>(
+      `
+      SELECT id, degree, institution, major, created_at as "createdAt"
+      FROM common.education_entries
+      WHERE id = ANY($1::text[]);
+      `,
+      [ids]
+    );
+    return rows;
   }
 
-  async list({ filter, ...input }: EducationListInput, _session: Session) {
-    const result = await this.db
-      .query()
-      .matchNode('node', 'Education')
-      .match([
-        ...(filter.userId
-          ? [
-              node('node'),
-              relation('in', '', 'education', ACTIVE),
-              node('user', 'User', {
-                id: filter.userId,
-              }),
-            ]
-          : []),
-      ])
-      .apply(sorting(Education, input))
-      .apply(paginate(input, this.hydrate()))
-      .first();
-    return result!; // result from paginate() will always have 1 row.
+  async getUserIdByEducation(id: ID) {
+    const rows = await this.pg.query<{ id: ID }>(
+      `
+      SELECT admin_people_id as "id"
+      FROM common.education_by_person
+      WHERE education_common_education_entries_id = $1;
+      `,
+      [id]
+    );
+    if (!rows) {
+      throw new NotFoundException(
+        `Could not find education_by_person entry for education id: ${id}`
+      );
+    }
+    return rows[0];
+  }
+
+  async list(
+    input: EducationListInput,
+    _session: Session
+  ): Promise<PaginatedListType<UnsecuredDto<Education>>> {
+    const limit = input.count;
+    const offset = (input.page - 1) * input.count;
+    const [{ count }] = await this.pg.query<{ count: string }>(
+      'SELECT count(*) FROM common.education_entries;'
+    );
+
+    const rows = await this.pg.query<UnsecuredDto<Education>>(
+      `
+      SELECT id, degree, institution, major, created_at as "createdAt"
+      FROM common.education_entries
+      ORDER BY created_at ${input.order} 
+      LIMIT ${limit ?? 10} OFFSET ${offset ?? 5};
+      `
+    );
+    return {
+      items: rows,
+      total: +count,
+      hasMore: rows.length < +count,
+    };
+  }
+
+  @PgTransaction()
+  async update(input: UpdateEducation, _session: Session) {
+    await this.pg.query(
+      `
+      UPDATE common.education_entries SET degree = $2, institution = $3, 
+      major = $4, modified_by_admin_people_id = (SELECT admin_people_id FROM admin.tokens WHERE token = 'public')
+      WHERE id = $1;
+      `,
+      [input.id, input.degree, input.institution, input.major]
+    );
+  }
+
+  @PgTransaction()
+  async delete(id: ID) {
+    await this.pg.query(
+      `
+     WITH deleted_rows AS (
+        DELETE FROM common.education_by_person WHERE education_common_education_entries_id = $1
+     )
+     DELETE FROM common.education_entries WHERE id = $1`,
+      [id]
+    );
   }
 }
