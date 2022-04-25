@@ -285,7 +285,6 @@ export const Marketing = new DbRole({
     new DbBaseNodeGrant<DbPartner>({
       __className: 'DbPartner',
       canList: true,
-      sensitivityAccess: Sensitivity.Low,
       properties: [
         { propertyName: 'organization', permission: { read, sensitivityAccess: Sensitivity.Low }, },
         { propertyName: 'pointOfContact', permission: { }, },
@@ -296,6 +295,7 @@ export const Marketing = new DbRole({
         { propertyName: 'active', permission: { read, sensitivityAccess: Sensitivity.Low }, },
         { propertyName: 'address', permission: { read, sensitivityAccess: Sensitivity.Low}, },
         { propertyName: 'modifiedAt', permission: { read, sensitivityAccess: Sensitivity.Low}, },
+        { propertyName: 'posts', permission: { read, write, }, },
       ],
       canDelete: false,
     }),
