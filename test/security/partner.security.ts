@@ -66,7 +66,7 @@ describe('Partner Security e2e', () => {
       ${Role.LeadFinancialAnalyst}              | ${true}       | ${true}
       ${Role.Leadership}                        | ${true}       | ${true}
       ${Role.Liaison}                           | ${false}      | ${false}
-      ${Role.Marketing}                         | ${false}      | ${true}
+      ${Role.Marketing}                         | ${true}       | ${true}
       ${Role.Mentor}                            | ${true}       | ${true}
       ${Role.ProjectManager}                    | ${true}       | ${true}
       ${Role.RegionalCommunicationsCoordinator} | ${false}      | ${false}
