@@ -219,6 +219,13 @@ export class Cell<TSheet extends Sheet = Sheet> {
     return colHidden || rowHidden;
   }
 
+  moveX(step: number) {
+    return this.sheet.cell(this.column.move(step), this.row);
+  }
+  moveY(step: number) {
+    return this.sheet.cell(this.column, this.row.move(step));
+  }
+
   get exists() {
     return !!this.cell;
   }
@@ -265,7 +272,7 @@ abstract class Rangable<TSheet extends Sheet = Sheet> {
           if (cell.exists) {
             yield cell;
           }
-          current = current.next();
+          current = current.move(1);
         }
       }.call(this)
     );
@@ -284,7 +291,7 @@ abstract class Rangable<TSheet extends Sheet = Sheet> {
           if (cell.exists) {
             yield cell;
           }
-          current = current.next();
+          current = current.move(1);
         }
       }.call(this)
     );
@@ -330,8 +337,8 @@ export class Row<TSheet extends Sheet = Sheet> extends Rangable<TSheet> {
     return this.sheet.cell(column, this.a1);
   }
 
-  next(over = 1) {
-    return new Row(this.sheet, this.a1 + over);
+  move(step: number) {
+    return new Row(this.sheet, this.a1 + step);
   }
 
   /**
@@ -368,8 +375,8 @@ export class Column<TSheet extends Sheet = Sheet> extends Rangable<TSheet> {
     return this.sheet.cell(this.a1, row);
   }
 
-  next(over = 1) {
-    return new Column(this.sheet, utils.encode_col(this.index + over));
+  move(step: number) {
+    return new Column(this.sheet, utils.encode_col(this.index + step));
   }
 
   /**

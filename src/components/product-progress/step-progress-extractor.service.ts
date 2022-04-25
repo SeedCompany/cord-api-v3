@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { assert } from 'ts-essentials';
 import { MergeExclusive } from 'type-fest';
-import { entries } from '../../common';
+import { entries, fullFiscalQuarter } from '../../common';
 import { Cell, Column } from '../../common/xlsx.util';
 import { Downloadable } from '../file';
 import { findStepColumns, isGoalRow, Pnp, ProgressSheet } from '../pnp';
@@ -37,37 +37,47 @@ export class StepProgressExtractor {
     const sheet = pnp.progress;
 
     const stepColumns = findStepColumns(sheet);
+    const planningStepColumns = findStepColumns(pnp.planning);
 
     return sheet.goals
       .walkDown()
       .filter(isGoalRow)
-      .map(parseProgressRow(stepColumns))
+      .map(parseProgressRow(pnp, stepColumns, planningStepColumns))
+      .filter((row) => row.steps.length > 0)
       .toArray();
   }
 }
 
 const parseProgressRow =
-  (stepColumns: Record<Step, Column>) =>
+  (
+    pnp: Pnp,
+    stepColumns: Record<Step, Column>,
+    planningStepColumns: Record<Step, Column>
+  ) =>
   (cell: Cell<ProgressSheet>, index: number): ExtractedRow => {
     const sheet = cell.sheet;
     const row = cell.row;
-    const progress = (column: Column) => {
-      const cell = column.cell(row);
-      if (cell.asString?.startsWith('Q')) {
-        // Q# means completed that quarter
-        return 100;
+    const rowIndex = row.a1 - sheet.goals.start.row.a1;
+    const planningRow = pnp.planning.goals.start.row.a1 + rowIndex;
+
+    const steps = entries(stepColumns).flatMap<StepProgressInput>(
+      ([step, column]) => {
+        if (
+          !pnp.planning.cell(planningStepColumns[step], planningRow).asNumber
+        ) {
+          // Not planned, skip
+          return [];
+        }
+
+        const cell = sheet.cell(column, row);
+        if (isCompletedOutsideProject(pnp, cell)) {
+          return [];
+        }
+        return { step, completed: progress(cell) };
       }
-      const percentDecimal = cell.asNumber;
-      return percentDecimal ? percentDecimal * 100 : undefined;
-    };
-    const steps = entries(stepColumns).map(
-      ([step, column]): StepProgressInput => ({
-        step,
-        completed: progress(column),
-      })
     );
     const common = {
-      rowIndex: row.a1 - sheet.goals.start.row.a1 + 1,
+      rowIndex: rowIndex + 1,
       order: index + 1,
       steps,
     };
@@ -82,3 +92,30 @@ const parseProgressRow =
     const totalVerses = sheet.totalVerses(row)!; // Asserting bc loop verified this
     return { ...common, bookName, totalVerses };
   };
+
+const isCompletedOutsideProject = (pnp: Pnp, cell: Cell) => {
+  const completeDate = stepCompleteDate(cell);
+  return completeDate && !pnp.planning.projectDateRange.contains(completeDate);
+};
+
+/**
+ * Convert cell (and one to its right) to a calendar date.
+ * ['Q2', '2022'] -> 03/31/2022
+ */
+const stepCompleteDate = (cell: Cell) => {
+  const fiscalQuarter = Number(cell.asString?.slice(1));
+  const fiscalYear = cell.moveX(1).asNumber;
+  if (!fiscalQuarter || !fiscalYear) {
+    return null;
+  }
+  return fullFiscalQuarter(fiscalQuarter, fiscalYear).end;
+};
+
+const progress = (cell: Cell) => {
+  if (cell.asString?.startsWith('Q')) {
+    // Q# means completed that quarter
+    return 100;
+  }
+  const percentDecimal = cell.asNumber;
+  return percentDecimal ? percentDecimal * 100 : undefined;
+};
