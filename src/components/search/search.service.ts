@@ -1,13 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { compact } from 'lodash';
 import {
+  has,
   ID,
-  isSecured,
   NotFoundException,
   ServerException,
   Session,
 } from '../../common';
 import { ResourceResolver } from '../../core';
+import {
+  AuthorizationService,
+  Permission,
+} from '../authorization/authorization.service';
+import { ResourceMap } from '../authorization/model/resource-map';
 import { PartnerService } from '../partner';
 import {
   SearchableMap,
@@ -30,12 +35,16 @@ export class SearchService {
   // given id & session, will return the object.
   /* eslint-disable @typescript-eslint/naming-convention */
   private readonly hydrators: HydratorMap = {
-    PartnerByOrg: (...args) => this.partners.readOnePartnerByOrgId(...args),
+    PartnerByOrg: async (...args) => ({
+      ...(await this.partners.readOnePartnerByOrgId(...args)),
+      __typename: 'Partner',
+    }),
   };
   /* eslint-enable @typescript-eslint/naming-convention */
 
   constructor(
     private readonly resources: ResourceResolver,
+    private readonly auth: AuthorizationService,
     private readonly partners: PartnerService,
     private readonly repo: SearchRepository
   ) {}
@@ -88,12 +97,18 @@ export class SearchService {
           async ({ id, matchedProps, type }): Promise<SearchResult | null> => {
             const hydrator = this.hydrate(type);
             const hydrated = await hydrator(id, session);
+            if (!hydrated || !(hydrated.__typename in ResourceMap)) {
+              return null;
+            }
 
-            return matchedProps.some((key) => {
-              // @ts-expect-error TODO this restriction doesn't work for relationships
-              const prop = hydrated?.[key];
-              return !isSecured(prop) || prop.canRead;
-            })
+            const perms = await this.auth.getPermissions({
+              resource: ResourceMap[hydrated.__typename],
+              dto: hydrated,
+              sessionOrUserId: session,
+            });
+            return matchedProps.some((key) =>
+              has(key, perms) ? (perms[key] as Permission).canRead : true
+            )
               ? hydrated
               : null;
           }
@@ -114,11 +129,7 @@ export class SearchService {
         const obj = hydrator
           ? await hydrator(...args)
           : await this.resources.lookup(type, ...args);
-        return {
-          ...obj,
-          // @ts-expect-error Not sure why TS is failing here.
-          __typename: type,
-        };
+        return obj as SearchResult;
       } catch (err) {
         if (err instanceof NotFoundException) return null;
         else throw new ServerException(`Error searching on ${type}`, err);

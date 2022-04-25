@@ -1,6 +1,7 @@
 import { createUnionType, registerEnumType } from '@nestjs/graphql';
 import { mapValues, uniq } from 'lodash';
 import { keys, simpleSwitch } from '../../../common';
+import { ResourceMap } from '../../authorization/model/resource-map';
 import { EthnoArt } from '../../ethno-art/dto';
 import { FieldRegion } from '../../field-region/dto';
 import { FieldZone } from '../../field-zone/dto';
@@ -80,7 +81,10 @@ const searchableAbstracts = {
 const searchable = { ...publicSearchable, ...privateSearchable };
 
 export type SearchableMap = {
-  [K in keyof typeof searchable]: typeof searchable[K]['prototype'];
+  [K in keyof typeof searchable]: SearchItem<
+    typeof searchable[K]['prototype'],
+    keyof ResourceMap
+  >;
 };
 
 export const SearchResultTypes = keys(publicSearchable);
