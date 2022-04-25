@@ -317,7 +317,7 @@ export class ProductProgressRepository {
         sub
           .match([
             node('steps', 'Property'),
-            relation('in', '', 'steps'),
+            relation('in', '', 'steps', ACTIVE),
             node('product'),
             relation('out', '', 'progressTarget', ACTIVE),
             node('progressTarget', 'Property'),
