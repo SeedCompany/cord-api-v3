@@ -37,23 +37,38 @@ export class StepProgressExtractor {
     const sheet = pnp.progress;
 
     const stepColumns = findStepColumns(sheet);
+    const planningStepColumns = findStepColumns(pnp.planning);
 
     return sheet.goals
       .walkDown()
       .filter(isGoalRow)
-      .map(parseProgressRow(pnp, stepColumns))
+      .map(parseProgressRow(pnp, stepColumns, planningStepColumns))
       .filter((row) => row.steps.length > 0)
       .toArray();
   }
 }
 
 const parseProgressRow =
-  (pnp: Pnp, stepColumns: Record<Step, Column>) =>
+  (
+    pnp: Pnp,
+    stepColumns: Record<Step, Column>,
+    planningStepColumns: Record<Step, Column>
+  ) =>
   (cell: Cell<ProgressSheet>, index: number): ExtractedRow => {
     const sheet = cell.sheet;
     const row = cell.row;
+    const rowIndex = row.a1 - sheet.goals.start.row.a1;
+    const planningRow = pnp.planning.goals.start.row.a1 + rowIndex;
+
     const steps = entries(stepColumns).flatMap<StepProgressInput>(
       ([step, column]) => {
+        if (
+          !pnp.planning.cell(planningStepColumns[step], planningRow).asNumber
+        ) {
+          // Not planned, skip
+          return [];
+        }
+
         const cell = sheet.cell(column, row);
         if (isCompletedOutsideProject(pnp, cell)) {
           return [];
@@ -62,7 +77,7 @@ const parseProgressRow =
       }
     );
     const common = {
-      rowIndex: row.a1 - sheet.goals.start.row.a1 + 1,
+      rowIndex: rowIndex + 1,
       order: index + 1,
       steps,
     };
