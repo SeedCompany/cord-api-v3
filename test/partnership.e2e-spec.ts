@@ -474,7 +474,7 @@ describe('Partnership e2e', () => {
       return result.partnership;
     };
 
-    const deletePartnership = async (partnershipId: ID): Promise<void> => {
+    const deletePartnership = async (partnershipId: ID) => {
       return await runAsAdmin(app, async () => {
         return await app.graphql.mutate(
           gql`

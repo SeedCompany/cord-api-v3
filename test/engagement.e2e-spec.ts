@@ -441,7 +441,7 @@ describe('Engagement e2e', () => {
     });
 
     const result = await runAsAdmin(app, async () => {
-      await app.graphql.mutate(
+      return await app.graphql.mutate(
         gql`
           mutation deleteEngagement($id: ID!) {
             deleteEngagement(id: $id) {
