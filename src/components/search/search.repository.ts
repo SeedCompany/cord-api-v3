@@ -32,14 +32,14 @@ export class SearchRepository extends CommonRepository {
       .subQuery((q) =>
         q
           .matchNode('node', 'BaseNode', { id: input.query })
-          .return(['node', '"id" as matchedProp'])
+          .return(['node', '["id"] as matchedProps'])
 
           .union()
 
           .raw('', { query: lucene })
           .apply(fullTextQuery('propValue', '$query', ['node as property']))
           .match([node('node'), relation('out', 'r', ACTIVE), node('property')])
-          .return(['node', 'type(r) as matchedProp'])
+          .return(['node', 'collect(type(r)) as matchedProps'])
           // The input.count is going to be applied once the results are 'filtered'
           // according to what the user can read. This limit is just set to a bigger
           // number, so we don't choke things without a limit.
@@ -48,17 +48,17 @@ export class SearchRepository extends CommonRepository {
       .apply((q) =>
         input.type
           ? q
-              .with(['node', 'matchedProp'])
+              .with(['node', 'matchedProps'])
               .raw(
                 'WHERE size([l in labels(node) where l in $types | 1]) > 0',
                 { types: input.type }
               )
           : q
       )
-      .returnDistinct<{
+      .return<{
         node: BaseNode;
-        matchedProp: keyof SearchResult;
-      }>(['node', 'matchedProp']);
+        matchedProps: ReadonlyArray<keyof SearchResult>;
+      }>(['node', 'matchedProps']);
 
     return await query.run();
   }

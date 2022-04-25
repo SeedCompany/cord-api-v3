@@ -59,12 +59,12 @@ export class SearchService {
     // based on this.hydrators
     const hydrated = await Promise.all(
       results
-        .map(({ node, matchedProp }) => ({
+        .map(({ node, matchedProps }) => ({
           type: this.resources.resolveTypeByBaseNode(
             node
           ) as keyof SearchableMap,
           id: node.properties.id,
-          matchedProp,
+          matchedProps,
         }))
         // Map Org results to Org & Partner results based on types asked for
         .flatMap((result) =>
@@ -78,20 +78,24 @@ export class SearchService {
                       {
                         id: result.id, // hydrator knows this is an org id not partner
                         type: 'PartnerByOrg' as const,
-                        matchedProp: 'organization' as keyof SearchResult,
+                        matchedProps: ['organization' as const],
                       },
                     ]
                   : []),
               ]
         )
         .map(
-          async ({ id, matchedProp, type }): Promise<SearchResult | null> => {
+          async ({ id, matchedProps, type }): Promise<SearchResult | null> => {
             const hydrator = this.hydrate(type);
             const hydrated = await hydrator(id, session);
 
-            const prop = hydrated?.[matchedProp];
-            const result = isSecured(prop) && !prop.canRead ? null : hydrated;
-            return result;
+            return matchedProps.some((key) => {
+              // @ts-expect-error TODO this restriction doesn't work for relationships
+              const prop = hydrated?.[key];
+              return !isSecured(prop) || prop.canRead;
+            })
+              ? hydrated
+              : null;
           }
         )
     );
