@@ -4,6 +4,7 @@ import { BaseMigration, Migration } from '../../../core';
 @Migration('2022-04-25T14:46:26')
 export class ChangeFileToFileRels extends BaseMigration {
   async up() {
+    // first, invert the relationship from incoming to outgoing
     const res = await this.db
       .query()
       .match([
@@ -17,6 +18,8 @@ export class ChangeFileToFileRels extends BaseMigration {
     this.logger.info(
       `${res?.input ?? 0} FileNodes' parent relationships inverted`
     );
+
+    // next, rename 'parent' to 'child'
     const relNameChangeRes = await this.db
       .query()
       .match([
