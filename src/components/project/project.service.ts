@@ -20,6 +20,7 @@ import {
   IEventBus,
   ILogger,
   Logger,
+  Transactional,
   UniquenessError,
 } from '../../core';
 import { mapListResults } from '../../core/database/results';
@@ -260,6 +261,7 @@ export class ProjectService {
     return await this.secure(unsecured, sessionOrUserId);
   }
 
+  @Transactional()
   async update(
     input: UpdateProject,
     session: Session,

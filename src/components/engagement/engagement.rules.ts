@@ -145,6 +145,7 @@ export class EngagementRules {
             Role.ProjectManager,
             Role.RegionalDirector,
             Role.FieldOperationsDirector,
+            Role.Controller,
           ],
           transitions: [
             {
