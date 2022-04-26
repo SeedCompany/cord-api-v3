@@ -49,10 +49,9 @@ export class SearchRepository extends CommonRepository {
         input.type
           ? q
               .with(['node', 'matchedProps'])
-              .raw(
-                'WHERE size([l in labels(node) where l in $types | 1]) > 0',
-                { types: input.type }
-              )
+              .raw('WHERE any(l in labels(node) where l in $types)', {
+                types: input.type,
+              })
           : q
       )
       .return<{
