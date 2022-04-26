@@ -20,6 +20,11 @@ export enum ProductMedium {
 registerEnumType(ProductMedium, {
   name: 'ProductMedium',
   description: 'How the product is delivered',
+  valuesMap: {
+    EBook: {
+      description: `@label E-Book`,
+    },
+  },
 });
 
 @ObjectType({
