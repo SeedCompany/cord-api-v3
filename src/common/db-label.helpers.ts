@@ -1,4 +1,4 @@
-import { uniq, without } from 'lodash';
+import { uniq } from 'lodash';
 import { DbLabelSymbol } from './db-label.decorator';
 import { getParentTypes } from './parent-types';
 import { isResourceClass } from './resource.dto';
@@ -20,14 +20,18 @@ export const getDbPropertyLabels = (
 export const getDbClassLabels = (
   type: AbstractClassType<unknown>
 ): readonly string[] => {
-  const decorated: string[] | null = Reflect.getMetadata(DbLabelSymbol, type);
-  const labels =
-    decorated?.flatMap((l) => l.split(':')) ??
-    without(
-      getParentTypes(type)
-        .filter(isResourceClass)
-        .map((t) => t.name),
-      'Resource'
-    );
+  const labels = getParentTypes(type)
+    .filter(isResourceClass)
+    .flatMap(getDbClassOwnLabels);
   return uniq([...labels, 'BaseNode']);
+};
+
+const getDbClassOwnLabels = (
+  type: AbstractClassType<unknown>
+): readonly string[] => {
+  const decorated: string[] | null = Reflect.getOwnMetadata(
+    DbLabelSymbol,
+    type
+  );
+  return decorated?.flatMap((l) => l.split(':')) ?? [type.name];
 };
