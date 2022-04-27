@@ -24,7 +24,7 @@ export class RemoveDuplicatePeriodicReportsMigration extends BaseMigration {
             // for each report figure out if it has a file uploaded
             call {
               with report
-              match (report)-[:reportFileNode]->(:File)-[:child { active: true }]->(file:FileVersion)
+              match (report)-[:reportFileNode]->(:File)<-[:parent { active: true }]-(file:FileVersion)
               return count(file) > 0 as hasFile
             }
             // order reports with files first, then chronologically

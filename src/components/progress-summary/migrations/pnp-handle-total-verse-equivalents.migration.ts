@@ -65,7 +65,7 @@ export class PnpHandleTotalVerseEquivalentsMigration extends BaseMigration {
             node('r'),
             relation('out', '', 'reportFileNode'),
             node('', 'File'),
-            relation('out', '', 'child', ACTIVE),
+            relation('in', '', 'parent', ACTIVE),
             node('version', 'FileVersion'),
           ])
           .return('version')
