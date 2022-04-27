@@ -77,12 +77,6 @@ export class LanguageService {
         throw new ServerException('failed to create language');
       }
 
-      await this.authorizationService.processNewBaseNode(
-        Language,
-        resultLanguage.id,
-        session.userId
-      );
-
       const result = await this.readOne(resultLanguage.id, session);
 
       return result;

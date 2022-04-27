@@ -93,8 +93,11 @@ export class DatabaseService {
    * @example
    * query('match (n) return n').run();
    */
-  query(query?: string, parameters?: Record<string, any>): Query {
-    const q = this.db.query();
+  query<Result = unknown>(
+    query?: string,
+    parameters?: Record<string, any>
+  ): Query<Result> {
+    const q = this.db.query() as Query<Result>;
     if (query) {
       q.raw(query, parameters);
     }

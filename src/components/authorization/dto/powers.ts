@@ -7,6 +7,7 @@ export enum Powers {
   CreateBudget = 'CreateBudget',
   CreateBudgetRecord = 'CreateBudgetRecord',
   CreateCeremony = 'CreateCeremony',
+  CreateChangeRequest = 'CreateChangeRequest',
   CreateDirectory = 'CreateDirectory',
   CreateEducation = 'CreateEducation',
   CreateEthnoArt = 'CreateEthnoArt',
@@ -25,9 +26,11 @@ export enum Powers {
   CreateOrganization = 'CreateOrganization',
   CreatePartner = 'CreatePartner',
   CreatePartnership = 'CreatePartnership',
+  CreatePost = 'CreatePost',
   CreateProduct = 'CreateProduct',
   CreateProject = 'CreateProject',
-  CreateProjectEngagement = 'CreateProjectEngagement', // place holder if needed
+  CreateProjectEngagement = 'CreateProjectEngagement',
+  // place holder if needed
   CreateProjectMember = 'CreateProjectMember',
   CreateRegion = 'CreateRegion',
   CreateSong = 'CreateSong',

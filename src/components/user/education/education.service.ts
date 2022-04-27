@@ -9,6 +9,7 @@ import {
 } from '../../../common';
 import { HandleIdLookup, ILogger, Logger } from '../../../core';
 import { mapListResults } from '../../../core/database/results';
+import { Powers } from '../../authorization';
 import { AuthorizationService } from '../../authorization/authorization.service';
 import {
   CreateEducation,
@@ -29,18 +30,13 @@ export class EducationService {
   ) {}
 
   async create(input: CreateEducation, session: Session): Promise<Education> {
+    await this.authorizationService.checkPower(Powers.CreateEducation, session);
     // create education
     const result = await this.repo.create(input, session);
 
     if (!result) {
       throw new ServerException('failed to create education');
     }
-
-    await this.authorizationService.processNewBaseNode(
-      Education,
-      result.id,
-      input.userId
-    );
 
     this.logger.debug(`education created`, { id: result.id });
     return await this.readOne(result.id, session);

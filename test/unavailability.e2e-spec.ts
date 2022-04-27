@@ -2,6 +2,7 @@ import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { times } from 'lodash';
 import { isValidId } from '../src/common';
+import { Role } from '../src/components/authorization';
 import { User } from '../src/components/user';
 import { Unavailability } from '../src/components/user/unavailability';
 import {
@@ -20,7 +21,7 @@ describe('Unavailability e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    user = await registerUser(app);
+    user = await registerUser(app, { roles: [Role.FieldOperationsDirector] });
   });
 
   afterAll(async () => {

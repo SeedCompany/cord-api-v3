@@ -2,7 +2,7 @@ import { gql } from 'apollo-server-core';
 import { times } from 'lodash';
 import { DateTime, Interval } from 'luxon';
 import { isValidId, NotFoundException } from '../src/common';
-import { Powers, Role } from '../src/components/authorization';
+import { Role } from '../src/components/authorization';
 import { Project, ProjectMember } from '../src/components/project';
 import {
   createPerson,
@@ -12,7 +12,8 @@ import {
   createTestApp,
   fragments,
   Raw,
-  registerUserWithPower,
+  registerUser,
+  runAsAdmin,
   TestApp,
 } from './utility';
 
@@ -23,7 +24,7 @@ describe('ProjectMember e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    await registerUserWithPower(app, [Powers.GrantRole], {
+    await registerUser(app, {
       roles: [
         Role.ProjectManager,
         Role.Consultant,
@@ -203,34 +204,38 @@ describe('ProjectMember e2e', () => {
   });
 
   it('update projectMember', async () => {
-    const member = await createPerson(app, {
-      roles: [Role.ProjectManager, Role.Consultant],
-    });
-    const projectMember = await createProjectMember(app, {
-      userId: member.id,
-      projectId: project.id,
-    });
+    const { projectMember, result } = await runAsAdmin(app, async () => {
+      const member = await createPerson(app, {
+        roles: [Role.ProjectManager, Role.Consultant],
+      });
 
-    const result = await app.graphql.query(
-      gql`
-        mutation updateProjectMember($input: UpdateProjectMemberInput!) {
-          updateProjectMember(input: $input) {
-            projectMember {
-              ...projectMember
+      const projectMember = await createProjectMember(app, {
+        userId: member.id,
+        projectId: project.id,
+      });
+
+      const result = await app.graphql.query(
+        gql`
+          mutation updateProjectMember($input: UpdateProjectMemberInput!) {
+            updateProjectMember(input: $input) {
+              projectMember {
+                ...projectMember
+              }
             }
           }
-        }
-        ${fragments.projectMember}
-      `,
-      {
-        input: {
-          projectMember: {
-            id: projectMember.id,
-            roles: [Role.ProjectManager],
+          ${fragments.projectMember}
+        `,
+        {
+          input: {
+            projectMember: {
+              id: projectMember.id,
+              roles: [Role.ProjectManager],
+            },
           },
-        },
-      }
-    );
+        }
+      );
+      return { projectMember, result };
+    });
     expect(result.updateProjectMember.projectMember.id).toBe(projectMember.id);
     expect(result.updateProjectMember.projectMember.roles.value).toEqual(
       expect.arrayContaining([Role.ProjectManager])

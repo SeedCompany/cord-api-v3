@@ -13,6 +13,7 @@ import {
 import { HandleIdLookup, ILogger, Logger } from '../../core';
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
+import { Powers } from '../authorization/dto/powers';
 import {
   CreateFieldZone,
   FieldZone,
@@ -31,6 +32,7 @@ export class FieldZoneService {
   ) {}
 
   async create(input: CreateFieldZone, session: Session): Promise<FieldZone> {
+    await this.authorizationService.checkPower(Powers.CreateFieldZone, session);
     if (!(await this.repo.isUnique(input.name))) {
       throw new DuplicateException(
         'fieldZone.name',
@@ -42,12 +44,6 @@ export class FieldZoneService {
     if (!result) {
       throw new ServerException('failed to create field zone');
     }
-
-    await this.authorizationService.processNewBaseNode(
-      FieldZone,
-      result.id,
-      session.userId
-    );
 
     this.logger.debug(`field zone created`, { id: result.id });
     return await this.readOne(result.id, session);

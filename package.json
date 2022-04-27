@@ -19,7 +19,7 @@
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "lint": "eslint --ext .ts,.tsx --fix --max-warnings 0 .",
-    "test": "jest --forceExit",
+    "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest",
@@ -29,8 +29,8 @@
     "type-check": "tsc -p tsconfig.check.json"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.53.1",
-    "@aws-sdk/s3-request-presigner": "^3.53.1",
+    "@aws-sdk/client-s3": "^3.58.0",
+    "@aws-sdk/s3-request-presigner": "^3.58.0",
     "@golevelup/nestjs-discovery": "^3.0.0",
     "@nestjs/common": "^8.3.1",
     "@nestjs/core": "^8.3.1",
@@ -122,6 +122,7 @@
     "typescript": "4.5.*"
   },
   "resolutions": {
+    "@angular-devkit/schematics-cli/minimist": "^1",
     "@nestjs/graphql/@nestjs/mapped-types": "^1.0.0",
     "gonzales-pe/minimist": "^1.1.0",
     "request/http-signature": "^1.3.6"

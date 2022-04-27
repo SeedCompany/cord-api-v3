@@ -2,7 +2,7 @@ import { gql } from 'apollo-server-core';
 import { times } from 'lodash';
 import { Merge } from 'type-fest';
 import { Secured } from '../src/common';
-import { Powers, Role } from '../src/components/authorization';
+import { Role } from '../src/components/authorization';
 import { Film } from '../src/components/film';
 import {
   AnyProduct,
@@ -25,7 +25,7 @@ import {
   createTestApp,
   expectNotFound,
   fragments,
-  registerUserWithPower,
+  registerUser,
   TestApp,
 } from './utility';
 import { RawLanguageEngagement, RawProduct } from './utility/fragments';
@@ -45,13 +45,9 @@ describe('Product e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    await registerUserWithPower(
-      app,
-      [Powers.CreateLanguage, Powers.CreateEthnologueLanguage],
-      {
-        roles: [Role.ProjectManager, Role.FieldOperationsDirector],
-      }
-    );
+    await registerUser(app, {
+      roles: [Role.ProjectManager, Role.FieldOperationsDirector],
+    });
     story = await createStory(app);
     film = await createFilm(app);
 

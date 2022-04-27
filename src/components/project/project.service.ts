@@ -20,6 +20,7 @@ import {
   IEventBus,
   ILogger,
   Logger,
+  Transactional,
   UniquenessError,
 } from '../../core';
 import { mapListResults } from '../../core/database/results';
@@ -151,12 +152,6 @@ export class ProjectService {
         session
       );
 
-      await this.authorizationService.processNewBaseNode(
-        IProject,
-        id,
-        session.userId
-      );
-
       const project = await this.readOneUnsecured(id, session);
 
       const event = new ProjectCreatedEvent(project, session);
@@ -266,6 +261,7 @@ export class ProjectService {
     return await this.secure(unsecured, sessionOrUserId);
   }
 
+  @Transactional()
   async update(
     input: UpdateProject,
     session: Session,
@@ -440,17 +436,18 @@ export class ProjectService {
       view
     );
 
-    const permissions = await this.repo.permissionsForListProp(
-      'engagement',
-      project.id,
-      session
-    );
+    const perms = await this.authorizationService.getPermissions({
+      resource: IProject,
+      sessionOrUserId: session,
+      sensitivity: project.sensitivity,
+      otherRoles: project.scope,
+    });
 
     return {
       ...result,
-      ...permissions,
+      canRead: perms.engagement.canRead,
       canCreate:
-        permissions.canCreate &&
+        perms.engagement.canEdit &&
         (project.status === ProjectStatus.InDevelopment ||
           session.roles.includes('global:Administrator')),
     };
@@ -631,8 +628,8 @@ export class ProjectService {
       value: budgetToReturn,
       canRead: permsOfProject.budget.canRead,
       canEdit:
-        permsOfProject.budget.canEdit ||
-        budgetToReturn?.status === BudgetStatus.Pending ||
+        (permsOfProject.budget.canEdit &&
+          budgetToReturn?.status === BudgetStatus.Pending) ||
         this.budgetService.canEditFinalized(
           session.roles.concat(project.scope)
         ),

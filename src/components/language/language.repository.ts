@@ -1,5 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { inArray, node, Query, relation } from 'cypher-query-builder';
+import {
+  equals,
+  inArray,
+  node,
+  not,
+  Query,
+  relation,
+} from 'cypher-query-builder';
 import {
   ID,
   labelForView,
@@ -15,6 +22,7 @@ import {
   createNode,
   createRelationships,
   exp,
+  filter,
   matchChangesetAndChangedProps,
   matchProjectScopedRoles,
   matchProjectSens,
@@ -31,7 +39,6 @@ import {
 import { AuthSensitivityMapping } from '../authorization/authorization.service';
 import { ProjectStatus } from '../project';
 import { CreateLanguage, Language, LanguageListInput } from './dto';
-import { languageListFilter } from './query.helpers';
 
 @Injectable()
 export class LanguageRepository extends DtoRepository<
@@ -161,7 +168,20 @@ export class LanguageRepository extends DtoRepository<
       ])
       // match requesting user once (instead of once per row)
       .match(requestingUser(session))
-      .apply(languageListFilter(input.filter, this))
+      .apply(
+        filter.builder(input.filter, {
+          sensitivity: filter.stringListProp(),
+          leastOfThese: filter.propVal(),
+          isSignLanguage: filter.propVal(),
+          isDialect: filter.propVal(),
+          presetInventory: ({ value, query }) => {
+            query.apply(this.isPresetInventory()).with('*');
+            const condition = equals('true', true);
+            return { presetInventory: value ? condition : not(condition) };
+          },
+          pinned: filter.isPinned,
+        })
+      )
       .apply(matchProjectSensToLimitedScopeMap(limitedScope))
       .apply(sorting(Language, input))
       .apply(paginate(input, this.hydrate(session)))

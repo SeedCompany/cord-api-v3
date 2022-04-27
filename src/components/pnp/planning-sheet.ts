@@ -90,7 +90,7 @@ export class WrittenScripturePlanningSheet extends PlanningSheet {
       row < lastRow &&
       this.bookName(row) !== 'Other Goals and Milestones'
     ) {
-      row = row.next();
+      row = row.move(1);
     }
     return super.goalsEnd.column.cell(row);
   }

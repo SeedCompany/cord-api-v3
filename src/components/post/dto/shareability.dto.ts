@@ -13,6 +13,10 @@ registerEnumType(PostShareability, {
   valuesMap: {
     ProjectTeam: {
       deprecationReason: 'Use `Membership` instead',
+      description: `@label Team Members`,
+    },
+    Membership: {
+      description: `@label Team Members`,
     },
   },
 });

@@ -1,7 +1,6 @@
 import { gql } from 'apollo-server-core';
-import { Powers, Role } from '../src/components/authorization';
+import { Role } from '../src/components/authorization';
 import { PartnershipAgreementStatus } from '../src/components/partnership';
-import { ProjectStep } from '../src/components/project';
 import {
   approveProjectChangeRequest,
   createFundingAccount,
@@ -13,16 +12,12 @@ import {
   createRegion,
   createSession,
   createTestApp,
-  registerUserWithPower,
+  registerUser,
   runAsAdmin,
   TestApp,
-  updateProject,
 } from './utility';
 import { fragments } from './utility/fragments';
-import {
-  changeProjectStep,
-  stepsFromEarlyConversationToBeforeActive,
-} from './utility/transition-project';
+import { transitionNewProjectToActive } from './utility/transition-project';
 
 const readPartnerships = (app: TestApp, id: string, changeset?: string) =>
   app.graphql.query(
@@ -62,24 +57,22 @@ const readPartnership = (app: TestApp, id: string, changeset?: string) =>
   );
 
 const activeProject = async (app: TestApp) => {
-  const fundingAccount = await createFundingAccount(app);
-  const location = await createLocation(app, {
-    fundingAccountId: fundingAccount.id,
+  const [location, fieldRegion] = await runAsAdmin(app, async () => {
+    const fundingAccount = await createFundingAccount(app);
+    const location = await createLocation(app, {
+      fundingAccountId: fundingAccount.id,
+    });
+    const fieldRegion = await createRegion(app);
+
+    return [location, fieldRegion];
   });
-  const fieldRegion = await createRegion(app);
-  const project = await createProject(app);
-  await updateProject(app, {
-    id: project.id,
+
+  const project = await createProject(app, {
     primaryLocationId: location.id,
     fieldRegionId: fieldRegion.id,
   });
   await runAsAdmin(app, async () => {
-    for (const next of [
-      ...stepsFromEarlyConversationToBeforeActive,
-      ProjectStep.Active,
-    ]) {
-      await changeProjectStep(app, project.id, next);
-    }
+    await transitionNewProjectToActive(app, project);
   });
 
   return project;
@@ -91,13 +84,9 @@ describe('Partnership Changeset Aware e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    await registerUserWithPower(
-      app,
-      [Powers.CreateLanguage, Powers.CreateEthnologueLanguage],
-      {
-        roles: [Role.ProjectManager, Role.Administrator],
-      }
-    );
+    await registerUser(app, {
+      roles: [Role.ProjectManager, Role.Administrator],
+    });
   });
 
   afterAll(async () => {

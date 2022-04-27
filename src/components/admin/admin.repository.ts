@@ -1,16 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { ID } from '../../common';
-import { DatabaseService, SyntaxError } from '../../core';
+import { ID, Resource } from '../../common';
+import { CommonRepository, OnIndex, SyntaxError } from '../../core';
 import { ACTIVE } from '../../core/database/query';
 
 @Injectable()
-export class AdminRepository {
-  constructor(private readonly db: DatabaseService) {}
-
+export class AdminRepository extends CommonRepository {
   finishing(callback: () => Promise<void>) {
     return this.db.runOnceUntilCompleteAfterConnecting(callback);
+  }
+
+  @OnIndex()
+  private applyIndexes() {
+    return this.getConstraintsFor(Resource);
   }
 
   async apocVersion() {
@@ -29,44 +32,7 @@ export class AdminRepository {
     }
   }
 
-  async mergeRootSecurityGroup(powers: string[], id: string) {
-    await this.db
-      .query()
-      .merge([
-        node('sg', 'RootSecurityGroup', {
-          id,
-        }),
-      ])
-      .onCreate.setLabels({ sg: ['RootSecurityGroup', 'SecurityGroup'] })
-      .setValues({
-        sg: {
-          id,
-          powers,
-        },
-      })
-      .run();
-  }
-
-  async mergePublicSecurityGroup(id: string) {
-    await this.db
-      .query()
-      .merge([
-        node('sg', 'PublicSecurityGroup', {
-          id,
-        }),
-      ])
-      .onCreate.setLabels({ sg: ['PublicSecurityGroup', 'SecurityGroup'] })
-      .setValues({
-        'sg.id': id,
-      })
-      .run();
-  }
-
-  async mergeAnonUser(
-    createdAt: DateTime,
-    anonUserId: string,
-    publicSecurityGroupId: string
-  ) {
+  async mergeAnonUser(createdAt: DateTime, anonUserId: string) {
     await this.db
       .query()
       .merge([
@@ -79,13 +45,6 @@ export class AdminRepository {
         'anon.createdAt': createdAt,
         'anon.id': anonUserId,
       })
-      .with('*')
-      .match([
-        node('publicSg', 'PublicSecurityGroup', {
-          id: publicSecurityGroupId,
-        }),
-      ])
-      .merge([node('publicSg'), relation('out', '', 'member'), node('anon')])
       .run();
   }
 
@@ -130,58 +89,6 @@ export class AdminRepository {
       .run();
   }
 
-  async mergeRootAdminUserToSecurityGroup(id: string) {
-    return await this.db
-      .query()
-      .match([
-        [
-          node('sg', 'RootSecurityGroup', {
-            id,
-          }),
-        ],
-      ])
-      .with('*')
-      .match(node('newRootAdmin', 'RootUser'))
-      .with('*')
-      .merge([
-        [
-          node('sg'),
-          relation('out', 'adminLink', 'member'),
-          node('newRootAdmin'),
-        ],
-      ])
-      // .setValues({ sg: RootSecurityGroup })
-      .return('newRootAdmin')
-      .first();
-  }
-
-  async mergePublicSecurityGroupWithRootSg(
-    publicSecurityGroupId: string,
-    rootSecurityGroupId: string
-  ) {
-    await this.db
-      .query()
-      .merge([
-        node('publicSg', ['PublicSecurityGroup', 'SecurityGroup'], {
-          id: publicSecurityGroupId,
-        }),
-      ])
-      .onCreate.setValues({
-        publicSg: {
-          id: publicSecurityGroupId,
-        },
-      })
-      .setLabels({ publicSg: 'SecurityGroup' })
-      .with('*')
-      .match([
-        node('rootSg', 'RootSecurityGroup', {
-          id: rootSecurityGroupId,
-        }),
-      ])
-      .merge([node('publicSg'), relation('out', '', 'member'), node('rootSg')])
-      .run();
-  }
-
   async checkDefaultOrg() {
     return await this.db
       .query()
@@ -220,25 +127,14 @@ export class AdminRepository {
   }
 
   async createOrgResult(
-    orgSgId: ID,
     createdAt: DateTime,
-    publicSecurityGroupId: string,
     defaultOrgId: string,
     defaultOrgName: string
   ) {
     return await this.db
       .query()
-      .match(
-        node('publicSg', 'PublicSecurityGroup', {
-          id: publicSecurityGroupId,
-        })
-      )
       .match(node('rootuser', 'RootUser'))
       .create([
-        node('orgSg', ['OrgPublicSecurityGroup', 'SecurityGroup'], {
-          id: orgSgId,
-        }),
-        relation('out', '', 'organization'),
         node('org', ['DefaultOrganization', 'Organization'], {
           id: defaultOrgId,
           createdAt,
@@ -249,19 +145,6 @@ export class AdminRepository {
           value: defaultOrgName,
         }),
       ])
-      .with('*')
-      .create([
-        node('publicSg'),
-        relation('out', '', 'permission'),
-        node('perm', 'Permission', {
-          property: 'name',
-          read: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node('org'),
-      ])
-      .with('*')
-      .create([node('orgSg'), relation('out', '', 'member'), node('rootuser')])
       .return('org.id as id')
       .first();
   }

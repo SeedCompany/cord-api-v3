@@ -2,6 +2,7 @@ import { Field, InterfaceType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { ScopedRole } from '../components/authorization';
+import { DbLabel } from './db-label.decorator';
 import { ServerException } from './exceptions';
 import { ID, IdField } from './id-field';
 import { DateTimeField } from './luxon.graphql';
@@ -24,8 +25,10 @@ const hasTypename = (value: unknown): value is { __typename: string } =>
     throw new ServerException('Cannot resolve Resource type');
   },
 })
+@DbLabel('BaseNode')
 export abstract class Resource {
   static readonly Props: string[] = keysOf<Resource>();
+  static readonly SecuredProps: string[] = [];
 
   @IdField()
   readonly id: ID;

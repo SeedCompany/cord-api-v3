@@ -54,8 +54,6 @@ export abstract class ProjectFilters {
   })
   readonly pinned?: boolean;
 
-  readonly locationIds?: ID[];
-
   @Field({
     nullable: true,
     description: 'Only projects created within this time range',
@@ -71,9 +69,6 @@ export abstract class ProjectFilters {
   @Type(() => DateTimeFilter)
   @ValidateNested()
   readonly modifiedAt?: DateTimeFilter;
-
-  // User IDs ANY of which are team members
-  readonly userIds?: ID[];
 
   @Field({
     nullable: true,

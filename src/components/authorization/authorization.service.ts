@@ -8,8 +8,6 @@ import {
   mapValues,
   pickBy,
   startCase,
-  union,
-  without,
 } from 'lodash';
 import {
   getParentTypes,
@@ -26,7 +24,6 @@ import {
   Session,
   UnauthorizedException,
 } from '../../common';
-import { retry } from '../../common/retry';
 import { ILogger, Logger } from '../../core';
 import { ChangesOf, isRelation } from '../../core/database/changes';
 import {
@@ -83,49 +80,6 @@ export class AuthorizationService {
     private readonly repo: AuthorizationRepository,
     @Logger('authorization:service') private readonly logger: ILogger
   ) {}
-
-  async processNewBaseNode(
-    resource: ResourceShape<any>,
-    baseNodeId: ID,
-    creatorUserId: ID
-  ) {
-    await this.afterTransaction(async () => {
-      await this.repo.processNewBaseNode(
-        resource.name,
-        baseNodeId,
-        creatorUserId
-      );
-    });
-  }
-
-  /**
-   * Run code after current transaction finishes, if there is one.
-   * This is a hack to allow our procedure and apoc.periodic.iterate to work
-   * without dead-locking. They use separate transactions so they need the
-   * resource being modified to be unlocked (which happens after the
-   * transaction commits/finishes).
-   */
-  private async afterTransaction(fn: () => Promise<void>) {
-    const process = async () => {
-      await retry(fn, {
-        retries: 3,
-      });
-    };
-
-    const tx = this.dbConn.currentTransaction;
-    if (!tx) {
-      await process();
-      return;
-    }
-
-    // run procedure after transaction finishes committing so data is actually
-    // available for procedure code to use.
-    const origCommit = tx.commit.bind(tx);
-    tx.commit = async () => {
-      await origCommit();
-      await process();
-    };
-  }
 
   async secureProperties<Resource extends ResourceShape<any>>(
     resource: Resource,
@@ -379,23 +333,17 @@ export class AuthorizationService {
     );
   }
 
-  async roleAddedToUser(id: ID | string, roles: Role[]) {
-    await this.afterTransaction(() => this.doRoleAddedToUser(id, roles));
-  }
+  async checkPower(power: Powers, session: Session): Promise<void> {
+    const id = session.userId;
 
-  private async doRoleAddedToUser(id: ID | string, roles: Role[]) {
-    // todo: this only applies to global roles, the only kind we have until next week
-    // iterate through all roles and assign to all SGs with that role
-
-    for (const role of roles.flatMap((role) => this.mapRoleToDbRoles(role))) {
-      await this.repo.addUserToSecurityGroup(id, role);
-    }
-
-    const powers = getDbRoles(roles.map(rolesForScope('global'))).flatMap(
-      (dbRole) => dbRole.powers
-    );
-    for (const power of powers) {
-      await this.grantPower(power, id);
+    const hasPower = await this.hasPower(session, power);
+    if (!hasPower) {
+      throw new MissingPowerException(
+        power,
+        `User ${
+          session.anonymous ? 'anon' : id
+        } does not have the requested power: ${power}`
+      );
     }
   }
 
@@ -408,75 +356,12 @@ export class AuthorizationService {
     return difference(powers, granted).length === 0;
   }
 
-  async checkPower(power: Powers, session: Session): Promise<void> {
-    const id = session.userId;
-
-    const hasPower = await this.repo.hasPower(power, session, id);
-    if (!hasPower) {
-      throw new MissingPowerException(
-        power,
-        `user ${
-          session.anonymous ? id : 'anon'
-        } does not have the requested power: ${power}`
-      );
-    }
-  }
-
   async readPower(session: Session): Promise<Powers[]> {
-    if (session.anonymous) {
-      return [];
-    }
-    return await this.repo.readPowerByUserId(session.userId);
+    return getDbRoles(session.roles).flatMap((role) => role.powers);
   }
 
-  async createPower(
-    userId: ID,
-    power: Powers,
-    session: Session
-  ): Promise<void> {
-    const powers = await this.repo.readPowerByUserId(session.userId);
-    if (!powers.includes(Powers.GrantPower)) {
-      throw new MissingPowerException(
-        Powers.GrantPower,
-        'user does not have the power to grant power to others'
-      );
-    }
-
-    await this.grantPower(power, userId);
-  }
-
-  async deletePower(
-    userId: ID,
-    power: Powers,
-    session: Session
-  ): Promise<void> {
-    const powers = await this.repo.readPowerByUserId(session.userId);
-    if (!powers.includes(Powers.GrantPower)) {
-      throw new MissingPowerException(
-        Powers.GrantPower,
-        'user does not have the power to remove power from others'
-      );
-    }
-
-    await this.removePower(power, userId);
-  }
-
-  async grantPower(power: Powers, userId: ID | string): Promise<void> {
-    const powers = await this.repo.readPowerByUserId(userId);
-
-    const newPowers = union(powers, [power]);
-    await this.repo.updateUserPowers(userId, newPowers);
-  }
-
-  async removePower(power: Powers, userId: ID): Promise<void> {
-    const powers = await this.repo.readPowerByUserId(userId);
-
-    const newPowers = without(powers, power);
-    await this.repo.updateUserPowers(userId, newPowers);
-  }
-
-  async getUserGlobalRoles(id: ID): Promise<ScopedRole[]> {
-    const roles = await this.repo.getUserGlobalRoles(id);
+  async getUserGlobalRoles(id: ID | string): Promise<ScopedRole[]> {
+    const roles = await this.repo.getUserGlobalRoles(id as ID);
     const scopedRoles = compact(roles.map(rolesForScope('global')));
     return scopedRoles;
   }

@@ -4,7 +4,7 @@ import {
   SecuredResource,
   Sensitivity,
 } from '../../src/common';
-import { Powers, Role, ScopedRole } from '../../src/components/authorization';
+import { Role, ScopedRole } from '../../src/components/authorization';
 import { PermissionsOf } from '../../src/components/authorization/authorization.service';
 import {
   EthnologueLanguage,
@@ -27,7 +27,7 @@ import {
   readOneLanguageEthnologue,
   readOneLanguageLocation,
   registerUser,
-  registerUserWithPower,
+  runAsAdmin,
   runInIsolatedSession,
   TestApp,
 } from '../utility';
@@ -44,16 +44,12 @@ describe('Language Security e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    await registerUserWithPower(app, [
-      Powers.CreateLanguage,
-      Powers.CreateLocation,
-      Powers.CreateEthnologueLanguage,
-      Powers.CreateProject,
-      Powers.CreateProjectMember,
-      Powers.CreateLanguageEngagement,
-    ]);
-    testLocation = await createLocation(app);
-    testLanguage = await createLanguage(app, { sensitivity: Sensitivity.Low });
+    await registerUser(app, { roles: [Role.FieldOperationsDirector] });
+    [testLocation, testLanguage] = await runAsAdmin(app, async () => {
+      const loc = await createLocation(app);
+      const lang = await createLanguage(app, { sensitivity: Sensitivity.Low });
+      return [loc, lang];
+    });
     testProject = await createProject(app);
     await addLocationToLanguage(app, testLocation.id, testLanguage.id);
   });
@@ -293,12 +289,19 @@ async function testSensitivityHigherThan<
 ) {
   const isRelationList = resource.Relations && property in resource.Relations;
 
-  const medSenslanguage = await createLanguage(app, {
-    sensitivity: Sensitivity.Medium,
-  });
-  const highSenslanguage = await createLanguage(app, {
-    sensitivity: Sensitivity.High,
-  });
+  const [medSenslanguage, highSenslanguage] = await runAsAdmin(
+    app,
+    async () => {
+      return [
+        await createLanguage(app, {
+          sensitivity: Sensitivity.Medium,
+        }),
+        await createLanguage(app, {
+          sensitivity: Sensitivity.High,
+        }),
+      ];
+    }
+  );
 
   const [medRead, highRead] = await runInIsolatedSession(app, async () => {
     await registerUser(app, { roles: [role] });
@@ -387,26 +390,38 @@ async function testSensitivityLowerThanEqualTo<
   const isRelationList = resource.Relations && property in resource.Relations;
 
   //test languages with sensitivity lower than/equal to what we're testing.
-  const highSenslanguage = await createLanguage(app, {
-    sensitivity: Sensitivity.High,
-  });
+  const highSenslanguage = await runAsAdmin(
+    app,
+    async () =>
+      await createLanguage(app, {
+        sensitivity: Sensitivity.High,
+      })
+  );
   const highPerms = await getPermissions({
     resource: resource,
     userRole: `global:${role}` as ScopedRole,
     sensitivity: highSenslanguage.sensitivity,
   });
 
-  const medSenslanguage = await createLanguage(app, {
-    sensitivity: Sensitivity.Medium,
-  });
+  const medSenslanguage = await runAsAdmin(
+    app,
+    async () =>
+      await createLanguage(app, {
+        sensitivity: Sensitivity.Medium,
+      })
+  );
   const medPerms = await getPermissions({
     resource: resource,
     userRole: `global:${role}` as ScopedRole,
     sensitivity: medSenslanguage.sensitivity,
   });
-  const lowSenslanguage = await createLanguage(app, {
-    sensitivity: Sensitivity.Low,
-  });
+  const lowSenslanguage = await runAsAdmin(
+    app,
+    async () =>
+      await createLanguage(app, {
+        sensitivity: Sensitivity.Low,
+      })
+  );
   const lowPerms = await getPermissions({
     resource: resource,
     userRole: `global:${role}` as ScopedRole,

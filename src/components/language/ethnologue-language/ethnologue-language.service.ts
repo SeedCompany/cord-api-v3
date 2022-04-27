@@ -25,18 +25,15 @@ export class EthnologueLanguageService {
   ) {}
 
   async create(input: CreateEthnologueLanguage, session: Session): Promise<ID> {
-    await this.authorizationService.checkPower(Powers.CreateLanguage, session);
+    await this.authorizationService.checkPower(
+      Powers.CreateEthnologueLanguage,
+      session
+    );
 
     const result = await this.repo.create(input, session);
     if (!result) {
       throw new ServerException('Failed to create ethnologue language');
     }
-
-    await this.authorizationService.processNewBaseNode(
-      EthnologueLanguage,
-      result.id,
-      session.userId
-    );
 
     const id = result.id;
 

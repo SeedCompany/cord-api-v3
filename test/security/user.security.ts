@@ -1,4 +1,4 @@
-import { Powers, Role } from '../../src/components/authorization';
+import { Role } from '../../src/components/authorization';
 import { Project } from '../../src/components/project';
 import { User } from '../../src/components/user';
 import {
@@ -10,7 +10,6 @@ import {
   Raw,
   readOneUser,
   registerUser,
-  registerUserWithPower,
   runInIsolatedSession,
   TestApp,
   TestUser,
@@ -25,10 +24,9 @@ describe('Project Security e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    testUser = await registerUserWithPower(app, [
-      Powers.CreateUser,
-      Powers.CreateProject,
-    ]);
+    testUser = await registerUser(app, {
+      roles: [Role.FieldOperationsDirector],
+    });
     testProject = await createProject(app);
   });
 

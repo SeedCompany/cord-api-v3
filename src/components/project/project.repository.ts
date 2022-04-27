@@ -45,7 +45,7 @@ import {
   TranslationProject,
   UpdateProject,
 } from './dto';
-import { projectListFilter } from './query.helpers';
+import { projectListFilter } from './list-filter.query';
 
 @Injectable()
 export class ProjectRepository extends CommonRepository {
@@ -233,16 +233,16 @@ export class ProjectRepository extends CommonRepository {
   }
 
   async list(
-    { filter, ...input }: ProjectListInput,
+    input: ProjectListInput,
     session: Session,
     limitedScope?: AuthSensitivityMapping
   ) {
     const result = await this.db
       .query()
-      .matchNode('node', `${filter.type ?? ''}Project`)
+      .matchNode('node', `${input.filter.type ?? ''}Project`)
       .with('distinct(node) as node, node as project')
       .match(requestingUser(session))
-      .apply(projectListFilter(filter))
+      .apply(projectListFilter(input))
       .apply(matchProjectSensToLimitedScopeMap(limitedScope))
       .apply(
         sorting(IProject, input, {
@@ -255,44 +255,6 @@ export class ProjectRepository extends CommonRepository {
       .apply(paginate(input, this.hydrate(session.userId)))
       .first();
     return result!; // result from paginate() will always have 1 row.
-  }
-
-  async permissionsForListProp(prop: string, id: ID, session: Session) {
-    const result = await this.db
-      .query()
-      .match([requestingUser(session)])
-      .match([
-        [
-          node('requestingUser'),
-          relation('in', 'memberOfReadSecurityGroup', 'member'),
-          node('readSecurityGroup', 'SecurityGroup'),
-          relation('out', 'sgReadPerms', 'permission'),
-          node('canRead', 'Permission', {
-            property: prop,
-            read: true,
-          }),
-          relation('out', 'readPermsOfBaseNode', 'baseNode'),
-          node('project', 'Project', { id: id }),
-        ],
-      ])
-      .match([
-        [
-          node('requestingUser'),
-          relation('in', 'memberOfEditSecurityGroup', 'member'),
-          node('editSecurityGroup', 'SecurityGroup'),
-          relation('out', 'sgEditPerms', 'permission'),
-          node('canEdit', 'Permission', {
-            property: prop,
-            edit: true,
-          }),
-          relation('out', 'editPermsOfBaseNode', 'baseNode'),
-          node('project'),
-        ],
-      ])
-      .return(['canRead.read as canRead', 'canEdit.edit as canCreate'])
-      .asResult<{ canRead: boolean; canCreate: boolean }>()
-      .first();
-    return result ?? { canRead: false, canCreate: false };
   }
 
   async getMembershipRoles(projectId: ID | Project, session: Session) {

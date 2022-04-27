@@ -1,4 +1,4 @@
-import { Powers, Role } from '../../src/components/authorization';
+import { Role } from '../../src/components/authorization';
 import { FundingAccount } from '../../src/components/funding-account';
 import {
   createFundingAccount,
@@ -7,7 +7,7 @@ import {
   listFundingAccounts,
   readOneFundingAccount,
   registerUser,
-  registerUserWithPower,
+  runAsAdmin,
   runInIsolatedSession,
   TestApp,
 } from '../utility';
@@ -19,11 +19,11 @@ describe('Funding Account Security e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    await registerUserWithPower(app, [
-      Powers.CreateFundingAccount,
-      Powers.CreateProject,
-    ]);
-    testFundingAccount = await createFundingAccount(app);
+    await registerUser(app, { roles: [Role.FieldOperationsDirector] });
+    testFundingAccount = await runAsAdmin(
+      app,
+      async () => await createFundingAccount(app)
+    );
   });
 
   afterAll(async () => {

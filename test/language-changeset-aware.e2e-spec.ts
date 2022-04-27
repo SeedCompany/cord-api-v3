@@ -1,7 +1,5 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
-import { Powers, Role } from '../src/components/authorization';
-import { ProjectStep } from '../src/components/project';
 import {
   approveProjectChangeRequest,
   createFundingAccount,
@@ -13,16 +11,11 @@ import {
   createRegion,
   createSession,
   createTestApp,
-  registerUserWithPower,
-  runAsAdmin,
+  loginAsAdmin,
   TestApp,
-  updateProject,
 } from './utility';
 import { fragments } from './utility/fragments';
-import {
-  changeProjectStep,
-  stepsFromEarlyConversationToBeforeActive,
-} from './utility/transition-project';
+import { transitionNewProjectToActive } from './utility/transition-project';
 
 const readLanguage = (app: TestApp, id: string, changeset?: string) =>
   app.graphql.query(
@@ -46,20 +39,12 @@ const activeProject = async (app: TestApp) => {
     fundingAccountId: fundingAccount.id,
   });
   const fieldRegion = await createRegion(app);
-  const project = await createProject(app);
-  await updateProject(app, {
-    id: project.id,
+
+  const project = await createProject(app, {
     primaryLocationId: location.id,
     fieldRegionId: fieldRegion.id,
   });
-  await runAsAdmin(app, async () => {
-    for (const next of [
-      ...stepsFromEarlyConversationToBeforeActive,
-      ProjectStep.Active,
-    ]) {
-      await changeProjectStep(app, project.id, next);
-    }
-  });
+  await transitionNewProjectToActive(app, project);
 
   return project;
 };
@@ -71,13 +56,9 @@ describe.skip('Language Changeset Aware e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    await registerUserWithPower(
-      app,
-      [Powers.CreateLanguage, Powers.CreateEthnologueLanguage],
-      {
-        roles: [Role.ProjectManager, Role.Administrator],
-      }
-    );
+    // Only admins can modify languages. This will probably need changes in app code,
+    // to allow others to modify certain language props within changesets.
+    await loginAsAdmin(app);
   });
 
   afterAll(async () => {

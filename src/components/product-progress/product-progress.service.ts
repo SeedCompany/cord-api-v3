@@ -136,7 +136,11 @@ export class ProductProgressService {
         completed: sp.completed ?? sp.percentDone ?? null,
       })),
     };
+
     cleanedInput.steps.forEach((step, index) => {
+      if (!scope.steps.includes(step.step)) {
+        throw new InputException('Step is not planned', `steps.${index}.step`);
+      }
       if (step.completed && step.completed > scope.progressTarget) {
         throw new InputException(
           "Completed value cannot exceed product's progress target",

@@ -23,7 +23,9 @@ import {
   createNode,
   createProperty,
   deactivateProperty,
+  filter,
   matchProps,
+  matchRequestingUser,
   merge,
   paginate,
   property,
@@ -41,7 +43,6 @@ import {
   User,
   UserListInput,
 } from './dto';
-import { userListFilter } from './query.helpers';
 
 @Injectable()
 export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
@@ -99,59 +100,6 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
     }
     if (!result) {
       throw new ServerException('Failed to create user');
-    }
-    const id = result.id;
-    // attach user to publicSG
-    const attachUserToPublicSg = await this.db
-      .query()
-      .match(node('user', 'User', { id }))
-      .match(node('publicSg', 'PublicSecurityGroup'))
-      .create([node('publicSg'), relation('out', '', 'member'), node('user')])
-      .create([
-        node('publicSg'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          property: 'displayFirstName',
-          read: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node('user'),
-      ])
-      .create([
-        node('publicSg'),
-        relation('out', '', 'permission'),
-        node('', 'Permission', {
-          property: 'displayLastName',
-          read: true,
-        }),
-        relation('out', '', 'baseNode'),
-        node('user'),
-      ])
-      .return('user')
-      .first();
-    if (!attachUserToPublicSg) {
-      this.logger.error('failed to attach user to public securityGroup');
-    }
-    if (this.config.defaultOrg.id) {
-      const attachToOrgPublicSg = await this.db
-        .query()
-        .match(node('user', 'User', { id }))
-        .match([
-          node('orgPublicSg', 'OrgPublicSecurityGroup'),
-          relation('out', '', 'organization'),
-          node('defaultOrg', 'Organization', {
-            id: this.config.defaultOrg.id,
-          }),
-        ])
-        .create([
-          node('user'),
-          relation('in', '', 'member'),
-          node('orgPublicSg'),
-        ])
-        .run();
-      if (attachToOrgPublicSg) {
-        //
-      }
     }
     return result.id;
   }
@@ -248,11 +196,16 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
     }
   }
 
-  async list({ filter, ...input }: UserListInput, session: Session) {
+  async list(input: UserListInput, session: Session) {
     const result = await this.db
       .query()
       .matchNode('node', 'User')
-      .apply(userListFilter(filter, session))
+      .apply(matchRequestingUser(session))
+      .apply(
+        filter.builder(input.filter, {
+          pinned: filter.isPinned,
+        })
+      )
       .apply(sorting(User, input))
       .apply(paginate(input, this.hydrate(session.userId)))
       .first();

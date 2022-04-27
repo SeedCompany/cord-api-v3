@@ -19,6 +19,7 @@ import {
   RawInternshipEngagement,
   RawLanguageEngagement,
 } from './fragments';
+import { runAsAdmin } from './login';
 
 export async function listInternshipEngagements(app: TestApp) {
   const result = await app.graphql.mutate(
@@ -154,7 +155,11 @@ export async function createLanguageEngagement(
   input: Partial<CreateLanguageEngagement> = {}
 ) {
   const languageEngagement: CreateLanguageEngagement = {
-    languageId: input.languageId ?? (await createLanguage(app)).id,
+    languageId:
+      input.languageId ??
+      (await runAsAdmin(app, async () => {
+        return (await createLanguage(app)).id;
+      })),
     projectId: input.projectId ?? (await createProject(app)).id,
     lukePartnership: true,
     disbursementCompleteDate: DateTime.local(),
@@ -201,7 +206,10 @@ export async function createInternshipEngagement(
   const internshipEngagement: CreateInternshipEngagement = {
     projectId: input.projectId || (await createProject(app)).id,
     countryOfOriginId:
-      input.countryOfOriginId || (await createLocation(app)).id,
+      input.countryOfOriginId ||
+      (await runAsAdmin(app, async () => {
+        return (await createLocation(app)).id;
+      })),
     internId: input.internId || currentUserId || (await createPerson(app)).id,
     mentorId: input.mentorId || currentUserId || (await createPerson(app)).id,
     position: InternshipPosition.Administration,

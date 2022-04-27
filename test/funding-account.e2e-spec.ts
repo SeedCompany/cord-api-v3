@@ -1,15 +1,15 @@
 import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { times } from 'lodash';
-import { generateId, isValidId } from '../src/common';
-import { Powers } from '../src/components/authorization/dto/powers';
+import { isValidId } from '../src/common';
+import { Role } from '../src/components/authorization/dto/role.dto';
 import { FundingAccount } from '../src/components/funding-account';
 import {
   createFundingAccount,
   createSession,
   createTestApp,
   fragments,
-  registerUserWithPower,
+  registerUser,
   runAsAdmin,
   TestApp,
 } from './utility';
@@ -20,7 +20,9 @@ describe('FundingAccount e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    await registerUserWithPower(app, [Powers.CreateFundingAccount]);
+    await registerUser(app, { roles: [Role.LeadFinancialAnalyst] });
+    //todo
+    // [Powers.CreateFundingAccount]
   });
 
   afterAll(async () => {
@@ -29,13 +31,12 @@ describe('FundingAccount e2e', () => {
 
   // Create Funding Account
   it('create funding account', async () => {
-    const name = faker.company.companyName();
-    await createFundingAccount(app, { name });
+    await runAsAdmin(app, createFundingAccount);
   });
 
   // Read Funding Account
   it('create & read funding account by id', async () => {
-    const st = await createFundingAccount(app);
+    const st = await runAsAdmin(app, createFundingAccount);
 
     const { fundingAccount: actual } = await app.graphql.query(
       gql`
@@ -58,7 +59,7 @@ describe('FundingAccount e2e', () => {
 
   // Update FundingAccount
   it('update funding account', async () => {
-    const st = await createFundingAccount(app);
+    const st = await runAsAdmin(app, createFundingAccount);
     const newName = faker.company.companyName();
     const newAccountNumber = faker.datatype.number({ min: 0, max: 9 });
     await runAsAdmin(app, async () => {
@@ -92,7 +93,7 @@ describe('FundingAccount e2e', () => {
 
   // Delete FundingAccount
   it.skip('delete funding account', async () => {
-    const st = await createFundingAccount(app);
+    const st = await runAsAdmin(app, createFundingAccount);
     const result = await app.graphql.mutate(
       gql`
         mutation deleteFundingAccount($id: ID!) {
@@ -112,15 +113,14 @@ describe('FundingAccount e2e', () => {
   // List FundingAccounts
   it('list view of funding accounts', async () => {
     // create a bunch of funding accounts
+    await registerUser(app, { roles: [Role.Administrator] }); // only admin can create funding account for now
     const numFundingAccounts = 2;
     await Promise.all(
-      times(numFundingAccounts).map(
-        async () =>
-          await createFundingAccount(app, {
-            name: (await generateId()) + ' Funding',
-          })
-      )
+      times(numFundingAccounts).map(async () => {
+        return await createFundingAccount(app); // can't runInSession here, creates problems
+      })
     );
+    await registerUser(app, { roles: [Role.LeadFinancialAnalyst] });
 
     const { fundingAccounts } = await app.graphql.query(gql`
       query {

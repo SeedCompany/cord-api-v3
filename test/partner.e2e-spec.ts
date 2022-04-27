@@ -2,7 +2,6 @@ import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { DuplicateException, InputException } from '../src/common';
 import { Role } from '../src/components/authorization/dto';
-import { Powers } from '../src/components/authorization/dto/powers';
 import { Partner, PartnerType } from '../src/components/partner';
 import { FinancialReportingType } from '../src/components/partnership';
 import {
@@ -12,7 +11,7 @@ import {
   createSession,
   createTestApp,
   fragments,
-  registerUserWithPower,
+  registerUser,
   TestApp,
 } from './utility';
 
@@ -22,11 +21,7 @@ describe('Partner e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    await registerUserWithPower(
-      app,
-      [Powers.CreateOrganization, Powers.CreatePartner],
-      { roles: [Role.LeadFinancialAnalyst] }
-    );
+    await registerUser(app, { roles: [Role.LeadFinancialAnalyst] });
   });
 
   afterAll(async () => {

@@ -44,6 +44,7 @@ export const MarketingOnProject = new DbRole({
     Powers.CreateEducation,
     Powers.CreateFile,
     Powers.CreateFileVersion,
+    Powers.CreatePost,
     Powers.CreateUnavailability,
     Powers.CreateUser,
   ],

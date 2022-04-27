@@ -1,11 +1,13 @@
 import { gql } from 'apollo-server-core';
 import { ID } from '../../src/common';
 import {
+  Project,
   ProjectStep,
   ProjectStepTransition,
   SecuredProjectStep,
 } from '../../src/components/project/dto';
 import { TestApp } from './create-app';
+import { Raw } from './raw.type';
 
 export const stepsFromEarlyConversationToBeforeActive = [
   ProjectStep.PendingConceptApproval,
@@ -66,4 +68,16 @@ export const changeProjectStep = async (
     }
   );
   return result.updateProject.project.step.transitions;
+};
+
+export const transitionNewProjectToActive = async (
+  app: TestApp,
+  project: Raw<Project>
+) => {
+  for (const next of [
+    ...stepsFromEarlyConversationToBeforeActive,
+    ProjectStep.Active,
+  ]) {
+    await changeProjectStep(app, project.id, next);
+  }
 };

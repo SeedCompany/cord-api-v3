@@ -8,7 +8,7 @@ import {
   createPerson,
   createSession,
   createTestApp,
-  registerUser,
+  loginAsAdmin,
   TestApp,
 } from './utility';
 import { createZone } from './utility/create-zone';
@@ -22,7 +22,10 @@ describe('Field Zone e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    director = await registerUser(app);
+    // Zones can only be created by admin
+    await loginAsAdmin(app);
+
+    director = await createPerson(app);
     newDirector = await createPerson(app);
   });
 

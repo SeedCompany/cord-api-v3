@@ -14,7 +14,9 @@ import { HandleIdLookup, ILogger, Logger } from '../../core';
 import { ifDiff } from '../../core/database/changes';
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { isScriptureEqual, ScriptureReferenceService } from '../scripture';
+import { Powers } from '../authorization/dto/powers';
+import { isScriptureEqual } from '../scripture';
+import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
 import {
   CreateFilm,
   Film,
@@ -34,6 +36,8 @@ export class FilmService {
   ) {}
 
   async create(input: CreateFilm, session: Session): Promise<Film> {
+    await this.authorizationService.checkPower(Powers.CreateFilm, session);
+
     if (!(await this.repo.isUnique(input.name))) {
       throw new DuplicateException(
         'film.name',
@@ -47,12 +51,6 @@ export class FilmService {
       if (!result) {
         throw new ServerException('failed to create a film');
       }
-
-      await this.authorizationService.processNewBaseNode(
-        Film,
-        result.id,
-        session.userId
-      );
 
       await this.scriptureRefs.create(
         result.id,

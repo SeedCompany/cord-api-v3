@@ -15,6 +15,7 @@ import {
 } from '../../src/components/file';
 import { SecuredLanguage } from '../../src/components/language/dto';
 import { Product, ProductApproach } from '../../src/components/product/dto';
+import { Project } from '../../src/components/project';
 import { User } from '../../src/components/user';
 import { Raw } from './raw.type';
 
@@ -579,6 +580,19 @@ export const project = gql`
     }
   }
 `;
+export type RawProject = Raw<Project> & {
+  engagements: { canRead: boolean; canCreate: boolean };
+  partnerships: { canRead: boolean; canCreate: boolean };
+  team: { canRead: boolean; canCreate: boolean };
+  rootDirectory: Secured<{
+    id: ID;
+    children: {
+      items: {
+        name: string;
+      };
+    };
+  }>;
+};
 
 export const partner = gql`
   fragment partner on Partner {

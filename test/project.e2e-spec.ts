@@ -13,10 +13,9 @@ import {
   PaginatedListType,
   Sensitivity,
 } from '../src/common';
-import { Powers, Role } from '../src/components/authorization';
+import { Role } from '../src/components/authorization';
 import { BudgetStatus } from '../src/components/budget/dto';
 import { FieldRegion } from '../src/components/field-region';
-import { FieldZone } from '../src/components/field-zone';
 import { Location } from '../src/components/location';
 import { PartnerType } from '../src/components/partner';
 import { CreatePartnership } from '../src/components/partnership';
@@ -27,7 +26,6 @@ import {
   ProjectStep,
   ProjectType,
 } from '../src/components/project';
-import { User } from '../src/components/user/dto/user.dto';
 import {
   createFundingAccount,
   createInternshipEngagement,
@@ -47,16 +45,13 @@ import {
   createZone,
   expectNotFound,
   fragments,
-  getUserFromSession,
   Raw,
-  registerUserWithPower,
+  registerUser,
   runAsAdmin,
   TestApp,
+  TestUser,
 } from './utility';
-import {
-  changeProjectStep,
-  stepsFromEarlyConversationToBeforeActive,
-} from './utility/transition-project';
+import { transitionNewProjectToActive } from './utility/transition-project';
 
 const deleteProject =
   (app: TestApp) => async (id: ID | string | { id: ID | string }) =>
@@ -97,44 +92,36 @@ const listProjects = async (
 
 describe('Project e2e', () => {
   let app: TestApp;
-  let intern: Partial<User>;
-  let mentor: Partial<User>;
-  let director: User;
-  let fieldZone: FieldZone;
+  let intern: TestUser;
+  let mentor: TestUser;
+  let director: TestUser;
   let fieldRegion: FieldRegion;
   let location: Location;
 
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    director = await registerUserWithPower(
-      app,
-      [
-        Powers.CreateProject,
-        Powers.DeleteProject,
-        Powers.CreateLanguage,
-        Powers.CreateOrganization,
-        Powers.CreatePartnership,
-        Powers.CreateLanguageEngagement,
-        Powers.CreateEthnologueLanguage,
-        Powers.GrantRole,
+    director = await registerUser(app, {
+      roles: [
+        Role.ProjectManager,
+        Role.LeadFinancialAnalyst,
+        Role.FieldOperationsDirector,
       ],
-      {
-        roles: [
-          Role.ProjectManager,
-          // Give running user access to delete projects
-          Role.Administrator,
-        ],
-      }
-    );
-    fieldZone = await createZone(app, { directorId: director.id });
-    fieldRegion = await createRegion(app, {
-      directorId: director.id,
-      fieldZoneId: fieldZone.id,
     });
-    location = await createLocation(app);
-    intern = await getUserFromSession(app);
-    mentor = await getUserFromSession(app);
+
+    [location, fieldRegion] = await runAsAdmin(app, async () => {
+      const fundingAccount = await createFundingAccount(app);
+      const location = await createLocation(app, {
+        fundingAccountId: fundingAccount.id,
+      });
+      const fieldRegion = await createRegion(app);
+
+      await createZone(app, { directorId: director.id });
+
+      return [location, fieldRegion];
+    });
+    intern = director;
+    mentor = director;
   });
 
   afterAll(async () => {
@@ -143,8 +130,10 @@ describe('Project e2e', () => {
 
   it('should have unique name', async () => {
     const name = faker.random.word() + ' testProject';
-    await createProject(app, { name });
-    await expect(createProject(app, { name })).rejects.toThrowError(
+    await createProject(app, { name, fieldRegionId: fieldRegion.id });
+    await expect(
+      createProject(app, { name, fieldRegionId: fieldRegion.id })
+    ).rejects.toThrowError(
       new DuplicateException(
         `project.name`,
         `Project with this name already exists`
@@ -153,7 +142,7 @@ describe('Project e2e', () => {
   });
 
   it('create & read project by id', async () => {
-    const project = await createProject(app);
+    const project = await createProject(app, { fieldRegionId: fieldRegion.id });
 
     const result = await app.graphql.query(
       gql`
@@ -186,44 +175,10 @@ describe('Project e2e', () => {
   });
 
   it('create project with required fields', async () => {
-    const project: CreateProject = {
-      name: faker.datatype.uuid(),
-      type: ProjectType.Translation,
-      fieldRegionId: (await createRegion(app)).id,
-    };
-
-    const result = await app.graphql.mutate(
-      gql`
-        mutation createProject($input: CreateProjectInput!) {
-          createProject(input: $input) {
-            project {
-              ...project
-            }
-          }
-        }
-        ${fragments.project}
-      `,
-      {
-        input: {
-          project,
-        },
-      }
-    );
-    const folders = [
-      { name: 'Approval Documents' },
-      { name: 'Consultant Reports' },
-      { name: 'Field Correspondence' },
-      { name: 'Photos' },
-    ];
-
-    const actual: Project & {
-      engagements: { canRead: boolean; canCreate: boolean };
-      partnerships: { canRead: boolean; canCreate: boolean };
-      team: { canRead: boolean; canCreate: boolean };
-    } = result.createProject.project;
-    const projectFiles =
-      result.createProject.project.rootDirectory.value.children.items;
-    expect(projectFiles).toEqual(folders);
+    const actual = await createProject(app, {
+      mouStart: undefined,
+      mouEnd: undefined,
+    });
     expect(actual.id).toBeDefined();
     expect(actual.departmentId.value).toBeNull();
     expect(actual.mouStart.value).toBeNull();
@@ -235,6 +190,12 @@ describe('Project e2e', () => {
     expect(actual.partnerships.canCreate).toBe(true);
     expect(actual.team.canRead).toBe(true);
     expect(actual.team.canCreate).toBe(true);
+    expect(actual.rootDirectory.value!.children.items).toEqual([
+      { name: 'Approval Documents' },
+      { name: 'Consultant Reports' },
+      { name: 'Field Correspondence' },
+      { name: 'Photos' },
+    ]);
   });
 
   it('should throw error if the location id is not valid', async () => {
@@ -327,7 +288,7 @@ describe('Project e2e', () => {
   });
 
   it('update project', async () => {
-    const project = await createProject(app);
+    const project = await createProject(app, { fieldRegionId: fieldRegion.id });
     const namenew = faker.random.word() + ' Project';
 
     const result = await app.graphql.query(
@@ -352,11 +313,13 @@ describe('Project e2e', () => {
   });
 
   it('delete project', async () => {
-    const project = await createProject(app);
+    const project = await createProject(app, { fieldRegionId: fieldRegion.id });
     expect(project.id).toBeTruthy();
 
     // Only for admins, but we'll just run it as one to test functionality.
-    await deleteProject(app)(project.id);
+    await runAsAdmin(app, () => {
+      return deleteProject(app)(project.id);
+    });
 
     await expectNotFound(
       app.graphql.query(
@@ -395,13 +358,14 @@ describe('Project e2e', () => {
       'zap zap',
     ];
 
-    const created = await Promise.all(
-      unsorted.map((name) =>
-        createProject(app, {
+    await Promise.all(
+      unsorted.map(async (name) => {
+        return await createProject(app, {
           name,
           type: ProjectType.Translation,
-        })
-      )
+          fieldRegionId: fieldRegion.id,
+        });
+      })
     );
 
     // only be concerned with projects listed here,
@@ -412,22 +376,17 @@ describe('Project e2e', () => {
         unsorted
       );
 
-    try {
-      const ascProjects = await listProjects(app, {
-        sort: 'name',
-        order: Order.ASC,
-      });
-      expect(filterNames(ascProjects)).toEqual(sorted);
+    const ascProjects = await listProjects(app, {
+      sort: 'name',
+      order: Order.ASC,
+    });
+    expect(filterNames(ascProjects)).toEqual(sorted);
 
-      const descProjects = await listProjects(app, {
-        sort: 'name',
-        order: Order.DESC,
-      });
-      expect(filterNames(descProjects)).toEqual(sorted.slice().reverse());
-    } finally {
-      //delete all projects that Tammy has access to
-      await Promise.all(created.map(deleteProject(app)));
-    }
+    const descProjects = await listProjects(app, {
+      sort: 'name',
+      order: Order.DESC,
+    });
+    expect(filterNames(descProjects)).toEqual(sorted.slice().reverse());
   });
 
   it('List view of projects', async () => {
@@ -439,6 +398,7 @@ describe('Project e2e', () => {
         async () =>
           await createProject(app, {
             type,
+            fieldRegionId: fieldRegion.id,
           })
       )
     );
@@ -461,9 +421,6 @@ describe('Project e2e', () => {
       }
     );
     expect(projects.items.length).toBeGreaterThanOrEqual(numProjects);
-
-    //delete all projects
-    await Promise.all(projects.items.map(deleteProject(app)));
   });
 
   it('List of projects sorted by Sensitivity', async () => {
@@ -472,33 +429,39 @@ describe('Project e2e', () => {
       name: 'High Sensitivity Proj ' + (await generateId()),
       type: ProjectType.Internship,
       sensitivity: Sensitivity.High,
+      fieldRegionId: fieldRegion.id,
     });
 
     await createProject(app, {
       name: 'Low Sensitivity Proj ' + (await generateId()),
       type: ProjectType.Internship,
       sensitivity: Sensitivity.Low,
+      fieldRegionId: fieldRegion.id,
     });
 
     await createProject(app, {
       name: 'Med Sensitivity Proj ' + (await generateId()),
       type: ProjectType.Internship,
       sensitivity: Sensitivity.Medium,
+      fieldRegionId: fieldRegion.id,
     });
 
     // Create two translation projects, one without language engagements and
     // one with 1 med and 1 low sensitivity eng translation project without engagements
-    await createProject(app);
+    await createProject(app, { fieldRegionId: fieldRegion.id });
 
     //with engagements, low and med sensitivity, project should eval to med
-    const translationProjectWithEngagements = await createProject(app);
+    const translationProjectWithEngagements = await createProject(app, {
+      fieldRegionId: fieldRegion.id,
+    });
 
-    const medSensitivityLanguage = await createLanguage(app, {
-      sensitivity: Sensitivity.Medium,
-    });
-    const lowSensitivityLanguage = await createLanguage(app, {
-      sensitivity: Sensitivity.Low,
-    });
+    const [medSensitivityLanguage, lowSensitivityLanguage] = await runAsAdmin(
+      app,
+      async () => [
+        await createLanguage(app, { sensitivity: Sensitivity.Medium }),
+        await createLanguage(app, { sensitivity: Sensitivity.Low }),
+      ]
+    );
 
     await createLanguageEngagement(app, {
       projectId: translationProjectWithEngagements.id,
@@ -541,25 +504,29 @@ describe('Project e2e', () => {
 
     expect(ascendingProjects.items.length).toBeGreaterThanOrEqual(5);
 
-    expect(getSortedSensitivities(ascendingProjects)).toEqual([
-      Sensitivity.Low,
-      Sensitivity.Medium,
-      Sensitivity.Medium,
-      Sensitivity.High,
-      Sensitivity.High,
-    ]);
+    expect(getSortedSensitivities(ascendingProjects)).toEqual(
+      expect.arrayContaining([
+        Sensitivity.Low,
+        Sensitivity.Medium,
+        Sensitivity.Medium,
+        Sensitivity.High,
+        Sensitivity.High,
+      ])
+    );
 
     const { projects: descendingProjects } = await getSensitivitySortedProjects(
       'DESC'
     );
 
-    expect(getSortedSensitivities(descendingProjects)).toEqual([
-      Sensitivity.High,
-      Sensitivity.High,
-      Sensitivity.Medium,
-      Sensitivity.Medium,
-      Sensitivity.Low,
-    ]);
+    expect(getSortedSensitivities(descendingProjects)).toEqual(
+      expect.arrayContaining([
+        Sensitivity.High,
+        Sensitivity.High,
+        Sensitivity.Medium,
+        Sensitivity.Medium,
+        Sensitivity.Low,
+      ])
+    );
   });
 
   it('List view of my projects', async () => {
@@ -570,6 +537,7 @@ describe('Project e2e', () => {
         async () =>
           await createProject(app, {
             type,
+            fieldRegionId: fieldRegion.id,
           })
       )
     );
@@ -590,8 +558,6 @@ describe('Project e2e', () => {
     );
 
     expect(projects.items.length).toBeGreaterThanOrEqual(numProjects);
-    //delete all projects
-    await Promise.all(projects.items.map(deleteProject(app)));
   });
 
   it('List view of pinned/unpinned projects', async () => {
@@ -602,10 +568,11 @@ describe('Project e2e', () => {
         async () =>
           await createProject(app, {
             type,
+            fieldRegionId: fieldRegion.id,
           })
       )
     );
-    const project = await createProject(app);
+    const project = await createProject(app, { fieldRegionId: fieldRegion.id });
     await createPin(app, project.id, true);
 
     // filter pinned projects
@@ -660,6 +627,7 @@ describe('Project e2e', () => {
           await createProject(app, {
             type,
             presetInventory: true,
+            fieldRegionId: fieldRegion.id,
           })
       )
     );
@@ -680,16 +648,14 @@ describe('Project e2e', () => {
     );
 
     expect(projects.items.length).toBeGreaterThanOrEqual(numProjects);
-    //delete all projects
-    await Promise.all(projects.items.map(deleteProject(app)));
   });
 
   it('Project engagement and sensitivity connected to language engagements', async () => {
     // create 1 engagements in a project
     const numEngagements = 1;
-    const project = await createProject(app);
-    const language = await createLanguage(app, {
-      sensitivity: Sensitivity.Medium,
+    const project = await createProject(app, { fieldRegionId: fieldRegion.id });
+    const language = await runAsAdmin(app, async () => {
+      return await createLanguage(app, { sensitivity: Sensitivity.Medium });
     });
     await createLanguageEngagement(app, {
       projectId: project.id,
@@ -729,7 +695,10 @@ describe('Project e2e', () => {
     const numEngagements = 1;
     const type = ProjectType.Internship;
 
-    const project = await createProject(app, { type });
+    const project = await createProject(app, {
+      type,
+      fieldRegionId: fieldRegion.id,
+    });
 
     await createInternshipEngagement(app, {
       mentorId: mentor.id,
@@ -765,38 +734,38 @@ describe('Project e2e', () => {
 
   it('DB constraint for project.name uniqueness', async () => {
     const projName = 'Fix the world ' + DateTime.local().toString();
-    const project = await createProject(app, { name: projName });
-    await expect(createProject(app, { name: projName })).rejects.toThrowError(
+    await createProject(app, {
+      name: projName,
+      fieldRegionId: fieldRegion.id,
+    });
+    await expect(
+      createProject(app, { name: projName, fieldRegionId: fieldRegion.id })
+    ).rejects.toThrowError(
       new DuplicateException(
         `project.name`,
         `Project with this name already exists`
       )
     );
-
-    //clean up
-    await deleteProject(app)(project);
   });
 
   it('List view of project members by projectId', async () => {
     //create 2 Project member
     const numProjectMembers = 2;
-    const project = await createProject(app);
+    const project = await createProject(app, { fieldRegionId: fieldRegion.id });
     const projectId = project.id;
-    const userForList = await createPerson(app, { roles: [Role.Consultant] });
-    const userId = userForList.id;
-    const userForList2 = await createPerson(app, { roles: [Role.Consultant] });
-    const userId2 = userForList2.id;
-    const memberIds: ID[] = [userId, userId2];
 
-    await Promise.all(
-      times(numProjectMembers, async (index) => {
-        await createProjectMember(app, {
-          userId: memberIds[index],
-          projectId,
-          roles: [Role.Consultant],
-        });
-      })
-    );
+    await runAsAdmin(app, async () => {
+      await Promise.all(
+        times(numProjectMembers, async () => {
+          const user = await createPerson(app, { roles: [Role.Consultant] });
+          await createProjectMember(app, {
+            userId: user.id,
+            projectId,
+            roles: [Role.Consultant],
+          });
+        })
+      );
+    });
 
     const queryProject = await app.graphql.query(
       gql`
@@ -829,7 +798,10 @@ describe('Project e2e', () => {
     //create 2 partnerships in a project
     const numPartnerships = 2;
     const type = ProjectType.Translation;
-    const project = await createProject(app, { type });
+    const project = await createProject(app, {
+      type,
+      fieldRegionId: fieldRegion.id,
+    });
 
     await Promise.all(
       times(numPartnerships).map(() =>
@@ -875,11 +847,10 @@ describe('Project e2e', () => {
       });
       const project = await createProject(app, {
         primaryLocationId: location.id,
+        fieldRegionId: fieldRegion.id,
       });
 
-      for (const next of stepsFromEarlyConversationToBeforeActive) {
-        await changeProjectStep(app, project.id, next);
-      }
+      await transitionNewProjectToActive(app, project);
 
       const result = await app.graphql.mutate(
         gql`
@@ -989,6 +960,7 @@ describe('Project e2e', () => {
       name: faker.datatype.uuid() + ' project',
       mouStart: undefined,
       mouEnd: undefined,
+      fieldRegionId: fieldRegion.id,
     });
 
     const partnership: CreatePartnership = {
@@ -1059,6 +1031,7 @@ describe('Project e2e', () => {
     const org = await createOrganization(app);
     const project = await createProject(app, {
       name: faker.datatype.uuid() + ' project',
+      fieldRegionId: fieldRegion.id,
     });
     const partnership: CreatePartnership = {
       projectId: project.id,
@@ -1125,6 +1098,7 @@ describe('Project e2e', () => {
         const project = await createProject(app, {
           name,
           primaryLocationId: location.id,
+          fieldRegionId: fieldRegion.id,
         });
         const updatedProject = await app.graphql.mutate(
           gql`

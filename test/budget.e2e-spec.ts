@@ -7,7 +7,7 @@ import {
   NotFoundException,
   Secured,
 } from '../src/common';
-import { Powers } from '../src/components/authorization/dto/powers';
+import { Role } from '../src/components/authorization/dto/role.dto';
 import { Budget } from '../src/components/budget';
 import { PartnerType } from '../src/components/partner';
 import { Project } from '../src/components/project';
@@ -18,7 +18,7 @@ import {
   createTestApp,
   fragments,
   Raw,
-  registerUserWithPower,
+  registerUser,
   TestApp,
 } from './utility';
 import { createPartnership } from './utility/create-partnership';
@@ -30,12 +30,9 @@ describe('Budget e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    await registerUserWithPower(app, [
-      Powers.CreateOrganization,
-      Powers.CreateProject,
-      Powers.CreatePartnership,
-      Powers.CreateBudget,
-    ]);
+    await registerUser(app, {
+      roles: [Role.LeadFinancialAnalyst, Role.FieldOperationsDirector],
+    });
     project = await createProject(app);
     await createPartnership(app, {
       projectId: project.id,

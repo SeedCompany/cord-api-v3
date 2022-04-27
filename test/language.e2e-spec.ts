@@ -2,7 +2,6 @@ import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { times } from 'lodash';
 import { InputException, isValidId } from '../src/common';
-import { Powers } from '../src/components/authorization/dto/powers';
 import { UpdateLanguage } from '../src/components/language';
 import {
   createLanguage,
@@ -12,8 +11,7 @@ import {
   createSession,
   createTestApp,
   expectNotFound,
-  registerUserWithPower,
-  runAsAdmin,
+  loginAsAdmin,
   TestApp,
 } from './utility';
 import { fragments } from './utility/fragments';
@@ -24,13 +22,10 @@ describe('Language e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    await registerUserWithPower(app, [
-      Powers.CreateLanguage,
-      Powers.CreateEthnologueLanguage,
-      Powers.CreateProject,
-      Powers.CreateLanguageEngagement,
-    ]);
+    // Only admins can modify languages
+    await loginAsAdmin(app);
   });
+
   afterAll(async () => {
     await app.close();
   });
@@ -70,25 +65,20 @@ describe('Language e2e', () => {
       const language = await createLanguage(app);
       const newName = faker.company.companyName();
 
-      // run as admin because only admin role can edit properties on language
-      await runAsAdmin(app, async () => {
-        const updated = await updateLanguage(app, {
-          id: language.id,
-          name: newName,
-        });
-        expect(updated.name.value).toBe(newName);
+      const updated = await updateLanguage(app, {
+        id: language.id,
+        name: newName,
       });
+      expect(updated.name.value).toBe(newName);
     });
 
     it('empty ethnologue', async () => {
       const language = await createLanguage(app);
-      await runAsAdmin(app, async () => {
-        await updateLanguage(app, {
-          id: language.id,
-          ethnologue: {},
-        });
-        // no error, so all good
+      await updateLanguage(app, {
+        id: language.id,
+        ethnologue: {},
       });
+      // no error, so all good
     });
 
     it('a single language ethnologue property when language is minimally defined', async () => {
@@ -97,15 +87,13 @@ describe('Language e2e', () => {
         .replaceSymbols('???')
         .toLowerCase();
 
-      await runAsAdmin(app, async () => {
-        const updated = await updateLanguage(app, {
-          id: language.id,
-          ethnologue: {
-            code: newEthnologueCode,
-          },
-        });
-        expect(updated.ethnologue.code.value).toBe(newEthnologueCode);
+      const updated = await updateLanguage(app, {
+        id: language.id,
+        ethnologue: {
+          code: newEthnologueCode,
+        },
       });
+      expect(updated.ethnologue.code.value).toBe(newEthnologueCode);
     });
   });
 
@@ -149,6 +137,7 @@ describe('Language e2e', () => {
     // create a bunch of languages
     const numLanguages = 2;
     await Promise.all(times(numLanguages).map(() => createLanguage(app)));
+
     // test reading new lang
     const { languages } = await app.graphql.query(gql`
       query {
@@ -276,32 +265,30 @@ describe('Language e2e', () => {
       firstScripture: true,
     });
 
-    await runAsAdmin(app, async () => {
-      await expect(
-        app.graphql.mutate(
-          gql`
-            mutation updateLanguage($input: UpdateLanguageInput!) {
-              updateLanguage(input: $input) {
-                language {
-                  ...language
-                }
+    await expect(
+      app.graphql.mutate(
+        gql`
+          mutation updateLanguage($input: UpdateLanguageInput!) {
+            updateLanguage(input: $input) {
+              language {
+                ...language
               }
             }
-            ${fragments.language}
-          `,
-          {
-            input: {
-              language: {
-                id: language.id,
-                hasExternalFirstScripture: true,
-              },
-            },
           }
-        )
-      ).rejects.toThrowError(
-        'hasExternalFirstScripture can be set to true if the language has no engagements that have firstScripture=true'
-      );
-    });
+          ${fragments.language}
+        `,
+        {
+          input: {
+            language: {
+              id: language.id,
+              hasExternalFirstScripture: true,
+            },
+          },
+        }
+      )
+    ).rejects.toThrowError(
+      'hasExternalFirstScripture can be set to true if the language has no engagements that have firstScripture=true'
+    );
   });
 
   it('can set hasExternalFirstScripture=true if language has no engagements that have firstScripture=true', async () => {
@@ -311,13 +298,11 @@ describe('Language e2e', () => {
       firstScripture: false,
     });
 
-    await runAsAdmin(app, async () => {
-      const updated = await updateLanguage(app, {
-        id: language.id,
-        hasExternalFirstScripture: true,
-      });
-      expect(updated.hasExternalFirstScripture.value).toBe(true);
+    const updated = await updateLanguage(app, {
+      id: language.id,
+      hasExternalFirstScripture: true,
     });
+    expect(updated.hasExternalFirstScripture.value).toBe(true);
   });
 
   it('presetInventory flag', async () => {
@@ -347,6 +332,7 @@ describe('Language e2e', () => {
 
   it('List view of languages by presetInventory flag', async () => {
     const numLanguages = 2;
+
     await Promise.all(times(numLanguages).map(() => createLanguage(app)));
     // create presetInventory language
     const project = await createProject(app, { presetInventory: true });

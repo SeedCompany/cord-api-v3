@@ -53,11 +53,11 @@ export abstract class ProgressSheet extends Sheet {
   }
   get columnsForFiscalYear(): readonly [planned: Column, actual: Column] {
     const q4 = this.book.namedRange('Q4Column').start.column;
-    return [q4.next(), q4.next(2)];
+    return [q4.move(1), q4.move(2)];
   }
   get columnsForCumulative(): readonly [planned: Column, actual: Column] {
     const q4 = this.book.namedRange('Q4Column').start.column;
-    return [q4.next(3), q4.next(4)];
+    return [q4.move(3), q4.move(4)];
   }
 }
 
@@ -71,7 +71,7 @@ export class WrittenScriptureProgressSheet extends ProgressSheet {
       row < lastRow &&
       this.bookName(row) !== 'Other Goals and Milestones'
     ) {
-      row = row.next();
+      row = row.move(1);
     }
     return super.goalsEnd.column.cell(row);
   }

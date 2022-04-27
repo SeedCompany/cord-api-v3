@@ -2,7 +2,7 @@ import { gql } from 'apollo-server-core';
 import * as faker from 'faker';
 import { times } from 'lodash';
 import { isValidId } from '../src/common';
-import { Powers } from '../src/components/authorization/dto/powers';
+import { Role } from '../src/components/authorization/dto/role.dto';
 import { Film } from '../src/components/film/dto';
 import { ScriptureRange } from '../src/components/scripture';
 import {
@@ -10,7 +10,7 @@ import {
   createSession,
   createTestApp,
   fragments,
-  registerUserWithPower,
+  registerUser,
   TestApp,
 } from './utility';
 
@@ -20,7 +20,7 @@ describe('Film e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    await registerUserWithPower(app, [Powers.CreateFilm]);
+    await registerUser(app, { roles: [Role.Consultant, Role.ProjectManager] });
   });
 
   afterAll(async () => {

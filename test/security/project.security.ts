@@ -1,5 +1,5 @@
 import { CalendarDate, Sensitivity } from '../../src/common';
-import { Powers, Role, ScopedRole } from '../../src/components/authorization';
+import { Role, ScopedRole } from '../../src/components/authorization';
 import { Location } from '../../src/components/location';
 import { PartnerType } from '../../src/components/partner';
 import { IProject, Project, ProjectType } from '../../src/components/project';
@@ -20,7 +20,7 @@ import {
   readOneProjectOtherLocations,
   readOneProjectOtherLocationsItems,
   registerUser,
-  registerUserWithPower,
+  runAsAdmin,
   runInIsolatedSession,
   TestApp,
 } from '../utility';
@@ -40,19 +40,13 @@ describe('Project Security e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    await registerUserWithPower(app, [
-      Powers.CreateProject,
-      Powers.CreateLocation,
-      Powers.CreateLanguage,
-      Powers.CreateLanguageEngagement,
-      Powers.CreateEthnologueLanguage,
-      Powers.CreateBudget,
-      Powers.CreateOrganization,
-      Powers.CreatePartner,
-      Powers.CreatePartnership,
+    await registerUser(app, {
+      roles: [Role.FieldOperationsDirector, Role.LeadFinancialAnalyst],
+    });
+    [testLocation, primaryLocation] = await runAsAdmin(app, async () => [
+      await createLocation(app),
+      await createLocation(app),
     ]);
-    testLocation = await createLocation(app);
-    primaryLocation = await createLocation(app);
     testProject = await createProject(app, {
       otherLocationIds: [testLocation.id],
       primaryLocationId: primaryLocation.id,

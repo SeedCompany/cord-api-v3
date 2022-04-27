@@ -1,9 +1,10 @@
 import { gql } from 'apollo-server-core';
-import { CalendarDate } from '../src/common';
-import { Powers, Role } from '../src/components/authorization';
+import { CalendarDate, ID } from '../src/common';
+import { Role } from '../src/components/authorization';
 import { EngagementStatus } from '../src/components/engagement';
 import { Language } from '../src/components/language';
 import { ProjectStep } from '../src/components/project';
+import { ProjectChangeRequestType } from '../src/components/project-change-request/dto';
 import {
   approveProjectChangeRequest,
   createFundingAccount,
@@ -15,7 +16,7 @@ import {
   createRegion,
   createSession,
   createTestApp,
-  registerUserWithPower,
+  registerUser,
   runAsAdmin,
   TestApp,
   updateProject,
@@ -119,28 +120,29 @@ const readProjectChangeset = (app: TestApp, id: string, changeset?: string) =>
     }
   );
 
-const activeProject = async (app: TestApp) => {
-  const fundingAccount = await createFundingAccount(app);
-  const location = await createLocation(app, {
-    fundingAccountId: fundingAccount.id,
+const activeProject = async (app: TestApp, projectId: ID) => {
+  const { location, region } = await runAsAdmin(app, async () => {
+    const fundingAccount = await createFundingAccount(app);
+    const location = await createLocation(app, {
+      fundingAccountId: fundingAccount.id,
+    });
+    const region = await createRegion(app);
+    return { location, region };
   });
-  const fieldRegion = await createRegion(app);
-  const project = await createProject(app);
+
   await updateProject(app, {
-    id: project.id,
+    id: projectId,
     primaryLocationId: location.id,
-    fieldRegionId: fieldRegion.id,
+    fieldRegionId: region.id,
   });
   await runAsAdmin(app, async () => {
     for (const next of [
       ...stepsFromEarlyConversationToBeforeActive,
       ProjectStep.Active,
     ]) {
-      await changeProjectStep(app, project.id, next);
+      await changeProjectStep(app, projectId, next);
     }
   });
-
-  return project;
 };
 
 describe('Engagement Changeset Aware e2e', () => {
@@ -151,15 +153,11 @@ describe('Engagement Changeset Aware e2e', () => {
     app = await createTestApp();
     await createSession(app);
 
-    await registerUserWithPower(
-      app,
-      [Powers.CreateLanguage, Powers.CreateEthnologueLanguage],
-      {
-        roles: [Role.ProjectManager, Role.Administrator],
-      }
-    );
+    await registerUser(app, {
+      roles: [Role.ProjectManager, Role.FieldOperationsDirector],
+    });
 
-    language = await createLanguage(app);
+    language = await runAsAdmin(app, createLanguage);
   });
 
   afterAll(async () => {
@@ -167,14 +165,17 @@ describe('Engagement Changeset Aware e2e', () => {
   });
 
   it('Create', async () => {
-    const project = await activeProject(app);
+    const project = await createProject(app);
+    await createLanguageEngagement(app, {
+      projectId: project.id,
+      languageId: language.id,
+    });
+    await activeProject(app, project.id);
     const changeset = await createProjectChangeRequest(app, {
       projectId: project.id,
     });
+    const newLang = await runAsAdmin(app, createLanguage);
 
-    await createLanguageEngagement(app, {
-      projectId: project.id,
-    });
     // Create new engagement with changeset
     const changesetEngagement = await app.graphql.mutate(
       gql`
@@ -192,7 +193,7 @@ describe('Engagement Changeset Aware e2e', () => {
       {
         input: {
           engagement: {
-            languageId: language.id,
+            languageId: newLang.id,
             projectId: project.id,
             status: EngagementStatus.InDevelopment,
           },
@@ -215,14 +216,15 @@ describe('Engagement Changeset Aware e2e', () => {
   });
 
   it('Update', async () => {
-    const project = await activeProject(app);
-    const changeset = await createProjectChangeRequest(app, {
-      projectId: project.id,
-    });
+    const project = await createProject(app);
     const languageEngagement = await createLanguageEngagement(app, {
       languageId: language.id,
       projectId: project.id,
       status: EngagementStatus.InDevelopment,
+    });
+    await activeProject(app, project.id);
+    const changeset = await createProjectChangeRequest(app, {
+      projectId: project.id,
     });
     // Update engagement prop with changeset
     await app.graphql.mutate(
@@ -265,7 +267,8 @@ describe('Engagement Changeset Aware e2e', () => {
   });
 
   it('Update - created in changeset', async () => {
-    const project = await activeProject(app);
+    const project = await createProject(app);
+    await activeProject(app, project.id);
     const changeset = await createProjectChangeRequest(app, {
       projectId: project.id,
     });
@@ -336,18 +339,39 @@ describe('Engagement Changeset Aware e2e', () => {
   });
 
   it('Delete', async () => {
-    const project = await activeProject(app);
+    const project = await createProject(app);
+    await createLanguageEngagement(app, {
+      projectId: project.id,
+    });
+    await activeProject(app, project.id);
     const changeset = await createProjectChangeRequest(app, {
       projectId: project.id,
     });
 
-    await createLanguageEngagement(app, {
-      projectId: project.id,
-    });
-
-    const le = await createLanguageEngagement(app, {
-      projectId: project.id,
-    });
+    const le = await app.graphql.mutate(
+      gql`
+        mutation createLanguageEngagement(
+          $input: CreateLanguageEngagementInput!
+        ) {
+          createLanguageEngagement(input: $input) {
+            engagement {
+              ...languageEngagement
+            }
+          }
+        }
+        ${fragments.languageEngagement}
+      `,
+      {
+        input: {
+          engagement: {
+            languageId: language.id,
+            projectId: project.id,
+            completeDate: CalendarDate.fromISO('2021-09-22'),
+          },
+          changeset: changeset.id,
+        },
+      }
+    );
 
     // Delete engagement in changeset
     let result = await app.graphql.mutate(
@@ -359,7 +383,7 @@ describe('Engagement Changeset Aware e2e', () => {
         }
       `,
       {
-        id: le.id,
+        id: le.createLanguageEngagement.engagement.id,
         changeset: changeset.id,
       }
     );
@@ -368,33 +392,61 @@ describe('Engagement Changeset Aware e2e', () => {
 
     // List engagements without changeset
     result = await readEngagements(app, project.id);
-    expect(result.project.engagements.items.length).toBe(2);
+    expect(result.project.engagements.items.length).toBe(1);
     // List engagements with changeset
     result = await readEngagements(app, project.id, changeset.id);
-    expect(result.project.engagements.items.length).toBe(1);
+    expect(result.project.engagements.items.length).toBe(2);
 
     // Confirm engagement id is added to removed list
-    let projectChangeset = await readProjectChangeset(
+    const projectChangeset = await readProjectChangeset(
       app,
       project.id,
       changeset.id
     );
     expect(projectChangeset.project.changeset.difference.removed[0].id).toBe(
-      le.id
+      le.createLanguageEngagement.engagement.id
     );
+  });
 
-    await approveProjectChangeRequest(app, changeset.id);
-    // List engagements without changeset
-    result = await readEngagements(app, project.id);
-    expect(result.project.engagements.items.length).toBe(1);
+  it('Cannot create duplicate language engagements in a changeset', async () => {
+    const project = await createProject(app);
+    await createLanguageEngagement(app, {
+      projectId: project.id,
+      languageId: language.id,
+    });
+    await activeProject(app, project.id);
+    const changeset = await createProjectChangeRequest(app, {
+      projectId: project.id,
+      types: [ProjectChangeRequestType.Engagement],
+    });
 
-    projectChangeset = await readProjectChangeset(
-      app,
-      project.id,
-      changeset.id
-    );
-    expect(projectChangeset.project.changeset.difference.removed[0].id).toBe(
-      le.id
+    // Create new engagement with changeset
+    await expect(
+      app.graphql.mutate(
+        gql`
+          mutation createLanguageEngagement(
+            $input: CreateLanguageEngagementInput!
+          ) {
+            createLanguageEngagement(input: $input) {
+              engagement {
+                ...languageEngagement
+              }
+            }
+          }
+          ${fragments.languageEngagement}
+        `,
+        {
+          input: {
+            engagement: {
+              languageId: language.id,
+              projectId: project.id,
+            },
+            changeset: changeset.id,
+          },
+        }
+      )
+    ).rejects.toThrowError(
+      'Engagement for this project and language already exists'
     );
   });
 });

@@ -18,6 +18,7 @@ import {
 } from '../../core';
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
+import { Powers } from '../authorization/dto';
 import { ProjectService, ProjectStatus } from '../project';
 import {
   CreateProjectChangeRequest,
@@ -51,6 +52,11 @@ export class ProjectChangeRequestService {
     input: CreateProjectChangeRequest,
     session: Session
   ): Promise<ProjectChangeRequest> {
+    await this.authorizationService.checkPower(
+      Powers.CreateChangeRequest,
+      session
+    );
+
     const project = await this.projects.readOne(input.projectId, session);
     if (project.status !== ProjectStatus.Active) {
       throw new InputException(

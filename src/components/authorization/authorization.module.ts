@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { AuthorizationRepository } from './authorization.repository';
 import { AuthorizationResolver } from './authorization.resolver';
+import * as migrations from './migrations';
 
 @Module({
   imports: [],
@@ -9,6 +10,7 @@ import { AuthorizationResolver } from './authorization.resolver';
     AuthorizationResolver,
     AuthorizationService,
     AuthorizationRepository,
+    ...Object.values(migrations),
   ],
   exports: [AuthorizationService],
 })
