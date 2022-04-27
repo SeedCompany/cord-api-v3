@@ -12,33 +12,29 @@ export class ChangeFileToFileRels extends BaseMigration {
         relation('in', 'rel', 'parent'),
         node('child'),
       ])
-      .raw(`CALL apoc.refactor.invert(rel) yield input, output`)
-      .return<{ input: number }>('input')
-      .first();
-    this.logger.info(
-      `${res?.input ?? 0} FileNodes' parent relationships inverted`
-    );
-
-    // next, rename 'parent' to 'child'
-    const relNameChangeRes = await this.db
-      .query()
-      .match([
-        node('parent', 'FileNode'),
-        relation('out', 'p', 'parent'),
-        node('child'),
-      ])
-      .raw(
-        `
-        with collect(p) AS rels
-        CALL apoc.refactor.rename.type("parent", "child", rels )
-        yield committedOperations`
+      .subQuery('rel', (q) =>
+        q
+          .raw(`CALL apoc.refactor.invert(rel) yield input, output`)
+          .return('input as inversionInput')
       )
-      .return<{ committedOperations: number }>('committedOperations')
+      .subQuery('rel', (q) =>
+        q
+          .raw(
+            `
+          with collect(rel) AS rels
+          CALL apoc.refactor.rename.type("parent", "child", rels )
+          yield committedOperations`
+          )
+          .return('committedOpertions as relRenames')
+      )
+      .return<{ inversionInput: number; committedOperations: number }>(
+        'committedOperations, inversionInput'
+      )
       .first();
     this.logger.info(
-      `${
-        relNameChangeRes?.committedOperations ?? 0
-      } relationships renamed from 'parent' to 'child'`
+      `Relationships inverted: ${
+        res?.inversionInput ?? 0
+      } \nRelationship Names Changed: ${res?.committedOperations ?? 0}`
     );
   }
 }
