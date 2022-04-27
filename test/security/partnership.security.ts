@@ -1,5 +1,5 @@
 import { CalendarDate, Sensitivity } from '../../src/common';
-import { Powers, Role, ScopedRole } from '../../src/components/authorization';
+import { Role, ScopedRole } from '../../src/components/authorization';
 import { Partner, PartnerType } from '../../src/components/partner';
 import {
   FinancialReportingType,
@@ -18,7 +18,6 @@ import {
   Raw,
   readOnePartnership,
   registerUser,
-  registerUserWithPower,
   runInIsolatedSession,
   TestApp,
 } from '../utility';
@@ -34,17 +33,9 @@ describe('Partnership Security e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    await registerUserWithPower(app, [
-      Powers.CreateProject,
-      Powers.CreateLocation,
-      Powers.CreateLanguage,
-      Powers.CreateLanguageEngagement,
-      Powers.CreateEthnologueLanguage,
-      Powers.CreateBudget,
-      Powers.CreateOrganization,
-      Powers.CreatePartner,
-      Powers.CreatePartnership,
-    ]);
+    await registerUser(app, {
+      roles: [Role.FieldOperationsDirector, Role.LeadFinancialAnalyst],
+    });
     testProject = await createProject(app);
     const org = await createOrganization(app);
     testPartner = await createPartner(app, {

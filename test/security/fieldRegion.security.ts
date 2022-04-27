@@ -1,4 +1,4 @@
-import { Powers, Role } from '../../src/components/authorization';
+import { Role } from '../../src/components/authorization';
 import { FieldRegion } from '../../src/components/field-region';
 import {
   createRegion,
@@ -7,7 +7,7 @@ import {
   listFieldRegions,
   readOneRegion,
   registerUser,
-  registerUserWithPower,
+  runAsAdmin,
   runInIsolatedSession,
   TestApp,
 } from '../utility';
@@ -19,11 +19,11 @@ describe('Partnership Security e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    await registerUserWithPower(app, [
-      Powers.CreateRegion,
-      Powers.CreateProject,
-    ]);
-    testFieldRegion = await createRegion(app);
+    await registerUser(app, { roles: [Role.FieldOperationsDirector] });
+    testFieldRegion = await runAsAdmin(
+      app,
+      async () => await createRegion(app)
+    );
   });
 
   afterAll(async () => {

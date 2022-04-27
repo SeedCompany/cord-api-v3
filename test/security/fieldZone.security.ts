@@ -1,4 +1,4 @@
-import { Powers, Role } from '../../src/components/authorization';
+import { Role } from '../../src/components/authorization';
 import { FieldZone } from '../../src/components/field-zone';
 import {
   createSession,
@@ -7,7 +7,7 @@ import {
   listFieldZones,
   readOneZone,
   registerUser,
-  registerUserWithPower,
+  runAsAdmin,
   runInIsolatedSession,
   TestApp,
 } from '../utility';
@@ -19,11 +19,8 @@ describe('Partnership Security e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    await registerUserWithPower(app, [
-      Powers.CreateFieldZone,
-      Powers.CreateProject,
-    ]);
-    testFieldZone = await createZone(app);
+    await registerUser(app, { roles: [Role.FieldOperationsDirector] });
+    testFieldZone = await runAsAdmin(app, async () => await createZone(app));
   });
 
   afterAll(async () => {

@@ -1,11 +1,12 @@
 import { CalendarDate, Sensitivity } from '../../src/common';
-import { Powers, Role, ScopedRole } from '../../src/components/authorization';
+import { Role, ScopedRole } from '../../src/components/authorization';
 import { Organization } from '../../src/components/organization';
 import { PartnerType } from '../../src/components/partner';
 import { FinancialReportingType } from '../../src/components/partnership';
 import { ProjectType } from '../../src/components/project';
 import {
   addLocationToOrganization,
+  createLocation,
   createOrganization,
   createPartner,
   createPartnership,
@@ -17,7 +18,7 @@ import {
   readOneOrganization,
   readOneOrgLocations,
   registerUser,
-  registerUserWithPower,
+  runAsAdmin,
   runInIsolatedSession,
   TestApp,
 } from '../utility';
@@ -33,17 +34,9 @@ describe('Organization Security e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    await registerUserWithPower(app, [
-      Powers.CreateProject,
-      Powers.CreateLocation,
-      Powers.CreateLanguage,
-      Powers.CreateLanguageEngagement,
-      Powers.CreateEthnologueLanguage,
-      Powers.CreateBudget,
-      Powers.CreateOrganization,
-      Powers.CreatePartner,
-      Powers.CreatePartnership,
-    ]);
+    await registerUser(app, {
+      roles: [Role.FieldOperationsDirector, Role.LeadFinancialAnalyst],
+    });
   });
 
   afterAll(async () => {
@@ -206,7 +199,15 @@ describe('Organization Security e2e', () => {
               mouStartOverride: CalendarDate.fromISO('2000-01-01'),
               mouEndOverride: CalendarDate.fromISO('2004-01-01'),
             });
-            await addLocationToOrganization({ app, orgId: o.id });
+            const loc = await runAsAdmin(
+              app,
+              async () => await createLocation(app)
+            );
+            await addLocationToOrganization({
+              app,
+              orgId: o.id,
+              locId: loc.id,
+            });
             await expectSensitiveProperty({
               app,
               role,
@@ -250,7 +251,11 @@ describe('Organization Security e2e', () => {
           mouStartOverride: CalendarDate.fromISO('2000-01-01'),
           mouEndOverride: CalendarDate.fromISO('2004-01-01'),
         });
-        await addLocationToOrganization({ app, orgId: o.id });
+        const loc = await runAsAdmin(
+          app,
+          async () => await createLocation(app)
+        );
+        await addLocationToOrganization({ app, orgId: o.id, locId: loc.id });
         await expectSensitiveRelationList({
           app,
           role: Role.ConsultantManager,
