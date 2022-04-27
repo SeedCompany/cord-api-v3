@@ -10,6 +10,11 @@ export enum ProgressMeasurement {
 registerEnumType(ProgressMeasurement, {
   name: 'ProgressMeasurement',
   description: 'Measurement units for reporting progress',
+  valuesMap: {
+    Boolean: {
+      description: `@label Done / Not Done`,
+    },
+  },
 });
 
 @ObjectType({

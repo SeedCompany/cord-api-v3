@@ -8,4 +8,11 @@ export enum LocationType {
   CrossBorderArea = 'CrossBorderArea',
 }
 
-registerEnumType(LocationType, { name: 'LocationType' });
+registerEnumType(LocationType, {
+  name: 'LocationType',
+  valuesMap: {
+    CrossBorderArea: {
+      description: `@label Cross-Border Area`,
+    },
+  },
+});
