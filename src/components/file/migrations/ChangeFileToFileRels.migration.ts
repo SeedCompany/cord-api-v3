@@ -1,7 +1,7 @@
 import { node, relation } from 'cypher-query-builder';
 import { BaseMigration, Migration } from '../../../core';
 
-@Migration('2022-04-28T14:46:26')
+@Migration('2022-04-29T14:46:26')
 export class ChangeFileToFileRels extends BaseMigration {
   async up() {
     // first, invert the relationship from incoming to outgoing
@@ -19,7 +19,7 @@ export class ChangeFileToFileRels extends BaseMigration {
       )
       .match([
         node('parent2', 'FileNode'),
-        relation('out', 'rel2', 'parent2'),
+        relation('out', 'rel2', 'parent'),
         node('child2'),
       ])
       .subQuery('rel2', (q) =>
