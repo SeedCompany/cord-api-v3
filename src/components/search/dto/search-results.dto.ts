@@ -1,6 +1,7 @@
 import { createUnionType, registerEnumType } from '@nestjs/graphql';
 import { mapValues, uniq } from 'lodash';
 import { keys, simpleSwitch } from '../../../common';
+import { ResourceMap } from '../../authorization/model/resource-map';
 import { EthnoArt } from '../../ethno-art/dto';
 import { FieldRegion } from '../../field-region/dto';
 import { FieldZone } from '../../field-zone/dto';
@@ -11,6 +12,18 @@ import { LiteracyMaterial } from '../../literacy-material/dto';
 import { Location } from '../../location/dto';
 import { Organization } from '../../organization/dto';
 import { Partner } from '../../partner/dto';
+import {
+  FinancialReport,
+  NarrativeReport,
+  IPeriodicReport as PeriodicReport,
+  ProgressReport,
+} from '../../periodic-report/dto';
+import {
+  DerivativeScriptureProduct,
+  DirectScriptureProduct,
+  OtherProduct,
+  Product,
+} from '../../product/dto';
 import {
   InternshipProject,
   IProject as Project,
@@ -39,9 +52,15 @@ const publicSearchable = {
   FieldZone,
   FieldRegion,
   FundingAccount,
+  DirectScriptureProduct,
+  DerivativeScriptureProduct,
+  OtherProduct,
+  ProgressReport,
+  FinancialReport,
+  NarrativeReport,
 } as const;
 
-// Same as above, but the keys are ignored from from the SearchType enum,
+// Same as above, but the keys are ignored from the SearchType enum,
 // since they are expected to be used only for internal use.
 const privateSearchable = {
   PartnerByOrg: Partner,
@@ -51,6 +70,8 @@ const privateSearchable = {
 // Only use if not a concrete type.
 const searchableAbstracts = {
   Project,
+  Product,
+  PeriodicReport,
 } as const;
 
 /*******************************************************************************
@@ -60,13 +81,16 @@ const searchableAbstracts = {
 const searchable = { ...publicSearchable, ...privateSearchable };
 
 export type SearchableMap = {
-  [K in keyof typeof searchable]: typeof searchable[K]['prototype'];
+  [K in keyof typeof searchable]: SearchItem<
+    typeof searchable[K]['prototype'],
+    keyof ResourceMap
+  >;
 };
 
 export const SearchResultTypes = keys(publicSearchable);
 
 // __typename is a GQL thing to identify type at runtime
-// It makes since to match this to not conflict with actual properties and
+// It makes sense to use this key to not conflict with actual properties and
 // to match what GQL does on the consuming side.
 export type SearchItem<T, S> = T & { __typename: S };
 
