@@ -27,7 +27,6 @@ export enum Powers {
   CreatePartner = 'CreatePartner',
   CreatePartnership = 'CreatePartnership',
   CreatePost = 'CreatePost',
-  CreateProduct = 'CreateProduct',
   CreateProject = 'CreateProject',
   CreateProjectEngagement = 'CreateProjectEngagement',
   // place holder if needed

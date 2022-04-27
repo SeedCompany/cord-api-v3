@@ -50,7 +50,6 @@ export const ConsultantOnProject = new DbRole({
     Powers.CreateFilm,
     Powers.CreateLiteracyMaterial,
     Powers.CreatePost,
-    Powers.CreateProduct,
     Powers.CreateSong,
     Powers.CreateStory,
     Powers.CreateUnavailability,

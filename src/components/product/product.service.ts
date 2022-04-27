@@ -18,7 +18,7 @@ import { HandleIdLookup, ILogger, Logger, ResourceResolver } from '../../core';
 import { compareNullable, ifDiff, isSame } from '../../core/database/changes';
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { Powers } from '../authorization/dto/powers';
+import { LanguageEngagement } from '../engagement/dto';
 import {
   getTotalVerseEquivalents,
   getTotalVerses,
@@ -71,7 +71,6 @@ export class ProductService {
       | CreateOtherProduct,
     session: Session
   ): Promise<AnyProduct> {
-    await this.authorizationService.checkPower(Powers.CreateProduct, session);
     const engagement = await this.repo.getBaseNode(
       input.engagementId,
       'Engagement'
@@ -83,6 +82,23 @@ export class ProductService {
       throw new NotFoundException(
         'Could not find engagement',
         'product.engagementId'
+      );
+    }
+
+    const engagementUnsecured = await this.resources.lookup(
+      LanguageEngagement,
+      input.engagementId,
+      session
+    );
+    const perms = await this.authorizationService.getPermissions({
+      resource: LanguageEngagement,
+      dto: engagementUnsecured,
+      sessionOrUserId: session,
+    });
+
+    if (!perms.product.canEdit) {
+      throw new UnauthorizedException(
+        `User ${session.userId} not allowed to add product to engagement ${engagementUnsecured.id}`
       );
     }
 

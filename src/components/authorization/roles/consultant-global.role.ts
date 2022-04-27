@@ -46,7 +46,6 @@ export const ConsultantGlobal = new DbRole({
     Powers.CreateFileVersion,
     Powers.CreateFilm,
     Powers.CreateLiteracyMaterial,
-    Powers.CreateProduct,
     Powers.CreateSong,
     Powers.CreateStory,
     Powers.CreateUnavailability,

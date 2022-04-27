@@ -55,7 +55,6 @@ export const RegionalDirectorGlobal = new DbRole({
     Powers.CreateLiteracyMaterial,
     Powers.CreatePartnership,
     Powers.CreatePost,
-    Powers.CreateProduct,
     Powers.CreateProject,
     Powers.CreateProjectEngagement,
     Powers.CreateProjectMember,

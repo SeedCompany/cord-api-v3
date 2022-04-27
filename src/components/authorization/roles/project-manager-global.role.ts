@@ -53,7 +53,6 @@ export const ProjectManagerGlobal = new DbRole({
     Powers.CreateLanguageEngagement,
     Powers.CreateLiteracyMaterial,
     Powers.CreatePartnership,
-    Powers.CreateProduct,
     Powers.CreateProject,
     Powers.CreateProjectEngagement,
     Powers.CreateProjectMember,
