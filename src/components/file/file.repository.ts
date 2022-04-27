@@ -109,11 +109,11 @@ export class FileRepository extends CommonRepository {
       .query()
       .match([
         node('start', 'FileNode', { id }),
-        relation('in', 'child', 'child', ACTIVE, '*'),
+        relation('in', 'parent', 'child', ACTIVE, '*'),
         node('node', 'FileNode'),
       ])
-      .with('node, child')
-      .orderBy('size(child)')
+      .with('node, parent')
+      .orderBy('size(parent)')
       // Using paginate to maintain order through hydration
       .apply(paginate({ page: 1, count: 100 }, this.hydrate()))
       .first();
