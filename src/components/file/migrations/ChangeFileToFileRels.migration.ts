@@ -3,7 +3,7 @@ import { BaseMigration, Migration } from '../../../core';
 
 type ChildOrParentLabel = 'child' | 'parent';
 
-@Migration('2022-04-29T19:46:26')
+@Migration('2022-04-29T12:46:26')
 export class ChangeFileToFileRels extends BaseMigration {
   async up() {
     const parentBeforeRefactor = await this.getTotalFileNodeRelsByLabel(
@@ -21,7 +21,7 @@ export class ChangeFileToFileRels extends BaseMigration {
             'CALL apoc.refactor.setType(rel, "child") YIELD output as setTypeOutput
              CALL apoc.refactor.invert(setTypeOutput) YIELD output as invertOutput
              RETURN *',
-            { batchSize: 5 }
+            { batchSize: 1000 }
         )`
       )
       .first();
