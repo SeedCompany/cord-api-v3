@@ -20,7 +20,13 @@ describe('Film e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    await registerUser(app, { roles: [Role.Consultant, Role.ProjectManager] });
+    await registerUser(app, {
+      roles: [
+        Role.Consultant,
+        Role.ProjectManager,
+        Role.FieldOperationsDirector,
+      ],
+    });
   });
 
   afterAll(async () => {
