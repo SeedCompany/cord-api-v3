@@ -3,54 +3,84 @@ import { SecuredEnum, SecuredProperty } from '../../../common';
 
 export enum ProgressVarianceReason {
   //BEHIND
-  SlowStartOfProject = 'SlowStartOfProject',
+  SlowStart = 'SlowStart',
   DelayedActivities = 'DelayedActivities',
   DelayedHiring = 'DelayedHiring',
-  EconomicPoliticalOrCivilUnrest = 'EconomicPoliticalOrCivilUnrest',
-  LateOrDelayedPartnerReporting = 'LateOrDelayedPartnerReporting',
-  PartnerOrganizationIssues = 'PartnerOrganizationIssues',
+  Unrest = 'Unrest',
+  DelayedPartnerReporting = 'DelayedPartnerReporting',
+  PartnerOrgIssues = 'PartnerOrgIssues',
 
   // ON TRACK
   ProgressAsExpected = 'ProgressAsExpected',
   TeamMadeUpTime = 'TeamMadeUpTime',
 
   // AHEAD
-  ActivitiesAheadOfSchedule = 'ActivitiesAheadOfSchedule',
+  AheadOfSchedule = 'AheadOfSchedule',
   NewTeamFasterProgress = 'NewTeamFasterProgress',
 }
 
 registerEnumType(ProgressVarianceReason, {
   name: 'ProgressVarianceReason',
   valuesMap: {
-    SlowStartOfProject: {
-      description: `@label Behind`,
+    SlowStart: {
+      description: `
+	    @group Behind
+        @label Slow Start of Project
+	`,
     },
     DelayedActivities: {
-      description: `@label Behind`,
+      description: `
+		@group Behind
+        @label Delayed Activities
+	`,
     },
     DelayedHiring: {
-      description: `@label Behind`,
+      description: `
+		@group Behind
+        @label Delayed Hiring
+	`,
     },
-    EconomicPoliticalOrCivilUnrest: {
-      description: `@label Behind`,
+    Unrest: {
+      description: `
+		@group Behind
+        @label Economic, Political, or Civil Instability/Unrest
+	`,
     },
-    LateOrDelayedPartnerReporting: {
-      description: `@label Behind`,
+    DelayedPartnerReporting: {
+      description: `
+		@group Behind
+        @label Late or Delayed Partner Reporting
+	`,
     },
-    PartnerOrganizationIssues: {
-      description: `@label Behind`,
+    PartnerOrgIssues: {
+      description: `
+		@group Behind
+        @label Partner Organization Issues
+	`,
     },
     ProgressAsExpected: {
-      description: `@label On Track`,
+      description: `
+		@group On Track
+        @label Progress As Expected
+	`,
     },
     TeamMadeUpTime: {
-      description: `@label On Track`,
+      description: `
+		@group On Track
+        @label Team Made Up Time
+	`,
     },
-    ActivitiesAheadOfSchedule: {
-      description: `@label Ahead`,
+    AheadOfSchedule: {
+      description: `
+		@group Ahead
+        @Activities Ahead of Schedule
+	`,
     },
     NewTeamFasterProgress: {
-      description: `@label Ahead`,
+      description: `
+		@group Ahead
+        @label New Team, Faster Progress
+	`,
     },
   },
 });
@@ -58,6 +88,9 @@ registerEnumType(ProgressVarianceReason, {
 @ObjectType({
   description: SecuredProperty.descriptionFor('report period'),
 })
-export abstract class SecuredReportPeriod extends SecuredEnum(ReportPeriod, {
-  nullable: true,
-}) {}
+export abstract class SecuredReportPeriod extends SecuredEnum(
+  ProgressVarianceReason,
+  {
+    nullable: true, // TODO: I think this is right, since this is an optional field depending on the variance, but would be nice to have a second opinion
+  }
+) {}
