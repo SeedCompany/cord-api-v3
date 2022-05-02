@@ -10,7 +10,7 @@ import { ProjectStepChanged } from '../../../core/email/templates';
 import { ProjectUpdatedEvent } from '../events';
 import { ProjectRules } from '../project.rules';
 
-@EventsHandler(ProjectUpdatedEvent)
+@EventsHandler([ProjectUpdatedEvent, -10])
 export class ProjectStepChangedNotificationHandler
   implements IEventHandler<ProjectUpdatedEvent>
 {
