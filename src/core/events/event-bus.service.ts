@@ -1,7 +1,7 @@
 import { DiscoveryService } from '@golevelup/nestjs-discovery';
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
 import { stripIndent } from 'common-tags';
-import { groupBy, mapValues } from 'lodash';
+import { groupBy, mapValues, orderBy } from 'lodash';
 import { AnyFn, ID, ServerException } from '../../common';
 import { ILogger, Logger } from '../logger';
 import {
@@ -76,12 +76,14 @@ export class SyncEventBus implements IEventBus, OnApplicationBootstrap {
     const flat = discovered.flatMap((entry) => {
       const instance = entry.discoveredClass.instance as IEventHandler<any>;
       const handler = instance.handle.bind(instance);
-      return entry.meta.map((id) => ({
+      return [...entry.meta].map(([id, priority]) => ({
         id,
+        priority,
         handler,
       }));
     });
-    const grouped = groupBy(flat, (entry) => entry.id);
+    const ordered = orderBy(flat, (entry) => entry.priority, 'desc');
+    const grouped = groupBy(ordered, (entry) => entry.id);
     this.listenerMap = mapValues(grouped, (entries) =>
       entries.map((e) => e.handler)
     );
