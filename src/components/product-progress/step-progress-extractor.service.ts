@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { assert } from 'ts-essentials';
 import { MergeExclusive } from 'type-fest';
-import { entries, fullFiscalQuarter } from '../../common';
+import { entries, fullFiscalQuarter, fullFiscalYear } from '../../common';
 import { Cell, Column } from '../../common/xlsx.util';
 import { Downloadable } from '../file';
 import { findStepColumns, isGoalRow, Pnp, ProgressSheet } from '../pnp';
@@ -62,10 +62,17 @@ const parseProgressRow =
 
     const steps = entries(stepColumns).flatMap<StepProgressInput>(
       ([step, column]) => {
+        const fiscalYear = pnp.planning.cell(
+          planningStepColumns[step],
+          planningRow
+        ).asNumber;
         if (
-          !pnp.planning.cell(planningStepColumns[step], planningRow).asNumber
+          !fiscalYear ||
+          !pnp.planning.projectDateRange.intersection(
+            fullFiscalYear(fiscalYear)
+          )
         ) {
-          // Not planned, skip
+          // Not planned or planned outside project, skip
           return [];
         }
 

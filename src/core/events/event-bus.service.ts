@@ -1,29 +1,38 @@
-import { Injectable, Type } from '@nestjs/common';
-// eslint-disable-next-line no-restricted-imports
-import { EventBus, EventHandlerType, IEvent } from '@nestjs/cqrs';
+import { DiscoveryService } from '@golevelup/nestjs-discovery';
+import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
 import { stripIndent } from 'common-tags';
-import { AnyFn, ServerException } from '../../common';
+import { groupBy, mapValues, orderBy } from 'lodash';
+import { AnyFn, ID, ServerException } from '../../common';
 import { ILogger, Logger } from '../logger';
+import {
+  EVENT_METADATA,
+  EventHandlerMetadata,
+  EVENTS_HANDLER_METADATA,
+} from './constants';
 import { IEventHandler } from './event-handler.decorator';
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
-export abstract class IEventBus<EventBase extends IEvent = IEvent> {
-  publish: <T extends EventBase>(event: T) => Promise<void>;
-  publishAll: (events: EventBase[]) => Promise<void>;
+/**
+ * An event bus for internal use.
+ * This should be used to de-couple logic between different modules.
+ */
+export abstract class IEventBus {
+  publish: (event: object) => Promise<void>;
+  publishAll: (events: object[]) => Promise<void>;
 }
 
-/**
- * An EventBus where you can wait for event handling to finish.
- */
 @Injectable()
-export class SyncEventBus extends EventBus implements IEventBus {
-  private readonly listenerMap = new Map<string, Set<AnyFn>>();
-  @Logger('event-bus') logger: ILogger;
+export class SyncEventBus implements IEventBus, OnApplicationBootstrap {
+  private listenerMap: Record<ID, AnyFn[]> = {};
 
-  async publish<T extends IEvent>(event: T): Promise<void> {
+  constructor(
+    private readonly discovery: DiscoveryService,
+    @Logger('event-bus') private readonly logger: ILogger
+  ) {}
+
+  async publish(event: object): Promise<void> {
     let id;
     try {
-      id = this.getEventId(event);
+      id = Reflect.getMetadata(EVENT_METADATA, event.constructor).id;
     } catch (e) {
       // Fails when event doesn't have an ID in its metadata,
       // which is created upon first registration with a handler.
@@ -35,50 +44,48 @@ export class SyncEventBus extends EventBus implements IEventBus {
       );
       return;
     }
-    for (const handler of this.listeners(id)) {
+    for (const handler of this.listenerMap[id] || []) {
       await handler(event);
     }
   }
 
-  async publishAll<T extends IEvent>(events: T[]): Promise<void> {
+  async publishAll(events: any[]): Promise<void> {
     await Promise.all(events.map((e) => this.publish(e)));
   }
 
-  register(handlers: EventHandlerType[] = []) {
-    const defined = new Set<string>();
-    for (const handler of handlers) {
-      if (defined.has(handler.name)) {
-        throw new ServerException(stripIndent`
-          Event handler "${handler.name}" has already been defined.
-          Event handlers have to have unique class names to be registered correctly.
-      `);
+  async onApplicationBootstrap() {
+    const discovered =
+      await this.discovery.providersWithMetaAtKey<EventHandlerMetadata>(
+        EVENTS_HANDLER_METADATA
+      );
+
+    if (process.env.NODE_ENV !== 'production') {
+      const defined = new Set<string>();
+      for (const entry of discovered) {
+        const name = entry.discoveredClass.name;
+        if (defined.has(name)) {
+          throw new ServerException(stripIndent`
+            Event handler "${name}" has already been defined.
+            Event handlers have to have unique class names for DX sanity.
+          `);
+        }
+        defined.add(name);
       }
-      defined.add(handler.name);
     }
 
-    super.register(handlers);
-  }
-
-  bind(handler: IEventHandler<IEvent>, id: string) {
-    this.listeners(id).add((event) => handler.handle(event));
-  }
-
-  registerSagas(types: Array<Type<unknown>>) {
-    if (types.length > 0) {
-      throw new Error('Sagas are not supported with this EventBus');
-    }
-  }
-
-  private listeners(id: string) {
-    return mapGetOrCreate(this.listenerMap, id, () => new Set());
+    const flat = discovered.flatMap((entry) => {
+      const instance = entry.discoveredClass.instance as IEventHandler<any>;
+      const handler = instance.handle.bind(instance);
+      return [...entry.meta].map(([id, priority]) => ({
+        id,
+        priority,
+        handler,
+      }));
+    });
+    const ordered = orderBy(flat, (entry) => entry.priority, 'desc');
+    const grouped = groupBy(ordered, (entry) => entry.id);
+    this.listenerMap = mapValues(grouped, (entries) =>
+      entries.map((e) => e.handler)
+    );
   }
 }
-
-const mapGetOrCreate = <K, V>(map: Map<K, V>, key: K, creator: () => V) => {
-  if (map.has(key)) {
-    return map.get(key)!;
-  }
-  const out = creator();
-  map.set(key, out);
-  return out;
-};
