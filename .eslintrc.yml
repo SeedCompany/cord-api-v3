@@ -36,8 +36,6 @@ rules:
   no-restricted-imports:
     - error
     - paths:
-        - name: '@nestjs/cqrs'
-          message: Import from our core module instead
         - name: '@nestjs/common'
           importNames:
             - BadRequestException

@@ -2651,20 +2651,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nestjs/cqrs@npm:^8.0.2":
-  version: 8.0.2
-  resolution: "@nestjs/cqrs@npm:8.0.2"
-  dependencies:
-    uuid: 8.3.2
-  peerDependencies:
-    "@nestjs/common": ^8.0.0
-    "@nestjs/core": ^8.0.0
-    reflect-metadata: 0.1.13
-    rxjs: ^7.2.0
-  checksum: e706dc735efd0a1c6a7c082008775deaa83d2c52cd85e958a0c71c3968291944a0b05c211df2a8703aac2f5b06ad5b881838dbcdb54e9f661a9a6e566726168d
-  languageName: node
-  linkType: hard
-
 "@nestjs/graphql@npm:9.1.2":
   version: 9.1.2
   resolution: "@nestjs/graphql@npm:9.1.2"
@@ -5665,7 +5651,6 @@ __metadata:
     "@nestjs/cli": ^8.2.1
     "@nestjs/common": ^8.3.1
     "@nestjs/core": ^8.3.1
-    "@nestjs/cqrs": ^8.0.2
     "@nestjs/graphql": "patch:@nestjs/graphql@9.1.2#./patches/nestjs-graphql.patch"
     "@nestjs/platform-express": ^8.3.1
     "@nestjs/schematics": ^8.0.7
