@@ -4,7 +4,13 @@ import { MergeExclusive } from 'type-fest';
 import { CalendarDate, entries, fullFiscalYear } from '../../common';
 import { Cell, Column } from '../../common/xlsx.util';
 import { Downloadable } from '../file';
-import { findStepColumns, isGoalRow, PlanningSheet, Pnp } from '../pnp';
+import {
+  findStepColumns,
+  isGoalRow,
+  isProgressCompletedOutsideProject,
+  PlanningSheet,
+  Pnp,
+} from '../pnp';
 import { parseScripture, ScriptureRange } from '../scripture';
 import { ProductStep as Step } from './dto';
 
@@ -22,7 +28,7 @@ export class ProductExtractor {
     const productRows = sheet.goals
       .walkDown()
       .filter(isGoalRow)
-      .map(parseProductRow(stepColumns))
+      .map(parseProductRow(pnp, stepColumns))
       .filter((row) => row.steps.length > 0)
       .toArray();
 
@@ -44,10 +50,13 @@ export class ProductExtractor {
 }
 
 const parseProductRow =
-  (stepColumns: Record<Step, Column>) =>
+  (pnp: Pnp, stepColumns: Record<Step, Column>) =>
   (cell: Cell<PlanningSheet>, index: number): ExtractedRow => {
     const sheet = cell.sheet;
     const row = cell.row;
+    const rowIndex = row.a1 - sheet.goals.start.row.a1;
+    const progressRow = pnp.progress.goals.start.row.a1 + rowIndex;
+
     const steps = entries(stepColumns).flatMap(([step, column]) => {
       const fiscalYear = sheet.cell(column, row).asNumber;
       const fullFY = fiscalYear ? fullFiscalYear(fiscalYear) : undefined;
@@ -55,6 +64,12 @@ const parseProductRow =
       if (!fullFY || !sheet.projectFiscalYears.intersection(fullFY)) {
         return [];
       }
+
+      const cell = pnp.progress.cell(column, progressRow);
+      if (isProgressCompletedOutsideProject(pnp, cell)) {
+        return [];
+      }
+
       return { step, plannedCompleteDate: fullFY.end };
     });
 
