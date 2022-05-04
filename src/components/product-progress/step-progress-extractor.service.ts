@@ -1,12 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { assert } from 'ts-essentials';
 import { MergeExclusive } from 'type-fest';
-import { entries, fullFiscalYear } from '../../common';
+import { entries } from '../../common';
 import { Cell, Column } from '../../common/xlsx.util';
 import { Downloadable } from '../file';
 import {
   findStepColumns,
   isGoalRow,
+  isGoalStepPlannedInsideProject,
   isProgressCompletedOutsideProject,
   Pnp,
   ProgressSheet,
@@ -72,20 +73,15 @@ const parseProgressRow =
           planningStepColumns[step],
           planningRow
         ).asNumber;
+
+        const cell = sheet.cell(column, row);
         if (
-          !fiscalYear ||
-          !pnp.planning.projectDateRange.intersection(
-            fullFiscalYear(fiscalYear)
-          )
+          !isGoalStepPlannedInsideProject(fiscalYear, pnp.planning) ||
+          isProgressCompletedOutsideProject(pnp, cell)
         ) {
-          // Not planned or planned outside project, skip
           return [];
         }
 
-        const cell = sheet.cell(column, row);
-        if (isProgressCompletedOutsideProject(pnp, cell)) {
-          return [];
-        }
         return { step, completed: progress(cell) };
       }
     );
