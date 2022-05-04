@@ -20,6 +20,7 @@ import {
   UnsecuredProductProgress,
 } from './dto';
 import { ProductProgressRepository } from './product-progress.repository';
+import { StepNotPlannedException } from './step-not-planned.exception';
 
 @Injectable()
 export class ProductProgressService {
@@ -139,7 +140,7 @@ export class ProductProgressService {
 
     cleanedInput.steps.forEach((step, index) => {
       if (!scope.steps.includes(step.step)) {
-        throw new InputException('Step is not planned', `steps.${index}.step`);
+        throw new StepNotPlannedException(input.productId, step.step, index);
       }
       if (step.completed && step.completed > scope.progressTarget) {
         throw new InputException(

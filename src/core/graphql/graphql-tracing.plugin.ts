@@ -22,8 +22,13 @@ export class GraphqlTracingPlugin implements ApolloPlugin<ContextType> {
         segment.addAnnotation(reqContext.operation.operation, true);
 
         // Append operation name to url since all gql requests hit a single http endpoint
-        // @ts-expect-error http middleware could have not run or this is a subsegment
-        if (segment.http?.request) {
+        if (
+          // Check if http middleware is present, confirming this is a root subsegment
+          (segment as any).http?.request &&
+          // Confirm operation caller didn't do it themselves.
+          // They should, but it's not currently required.
+          !(segment as any).http.request.url.endsWith(segment.name)
+        ) {
           // @ts-expect-error xray library types suck
           (segment.http.request.url as string) += '/' + segment.name;
         }

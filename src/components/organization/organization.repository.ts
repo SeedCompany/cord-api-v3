@@ -115,8 +115,7 @@ export class OrganizationRepository extends DtoRepository<
       .match(requestingUser(session))
       .apply(matchProjectSensToLimitedScopeMap(limitedScope))
       .apply(sorting(Organization, input))
-      .apply(paginate(input, this.hydrate(session)))
-      .logIt();
+      .apply(paginate(input, this.hydrate(session)));
     return await result.first()!; // result from paginate() will always have 1 row.
   }
 }
