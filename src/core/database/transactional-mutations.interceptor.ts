@@ -7,7 +7,7 @@ import {
 import { GqlContextType, GqlExecutionContext } from '@nestjs/graphql';
 import { Connection } from 'cypher-query-builder';
 import { GraphQLResolveInfo } from 'graphql';
-import { lastValueFrom, of } from 'rxjs';
+import { from, lastValueFrom } from 'rxjs';
 
 /**
  * Run all mutations in a neo4j transaction.
@@ -28,9 +28,8 @@ export class TransactionalMutationsInterceptor implements NestInterceptor {
       return next.handle();
     }
 
-    const res = await this.db.runInTransaction(
-      async () => await lastValueFrom(next.handle())
+    return from(
+      this.db.runInTransaction(async () => await lastValueFrom(next.handle()))
     );
-    return of(res);
   }
 }
