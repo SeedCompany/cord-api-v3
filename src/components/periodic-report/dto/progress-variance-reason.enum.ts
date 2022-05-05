@@ -1,5 +1,5 @@
 import { ObjectType, registerEnumType } from '@nestjs/graphql';
-import { SecuredEnum, SecuredProperty } from '../../../common';
+import { SecuredEnumList, SecuredProperty } from '../../../common';
 
 export enum ProgressVarianceReason {
   //BEHIND
@@ -88,7 +88,7 @@ registerEnumType(ProgressVarianceReason, {
 @ObjectType({
   description: SecuredProperty.descriptionFor('report period'),
 })
-export abstract class SecuredReportPeriod extends SecuredEnum(
+export abstract class SecuredProgressVarianceReasons extends SecuredEnumList(
   ProgressVarianceReason,
   {
     nullable: true, // TODO: I think this is right, since this is an optional field depending on the variance, but would be nice to have a second opinion

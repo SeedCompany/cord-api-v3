@@ -18,7 +18,6 @@ import { AuthorizationService } from '../authorization/authorization.service';
 import { FileService } from '../file';
 import {
   FinancialReport,
-  IPeriodicReport,
   MergePeriodicReports,
   NarrativeReport,
   PeriodicReport,
@@ -28,6 +27,7 @@ import {
   resolveReportType,
   SecuredPeriodicReportList,
   UpdatePeriodicReportInput,
+  UpdateProgressReportInput,
 } from './dto';
 import { PeriodicReportUploadedEvent } from './events';
 import { PeriodicReportRepository } from './periodic-report.repository';
@@ -62,7 +62,10 @@ export class PeriodicReportService {
     }
   }
 
-  async update(input: UpdatePeriodicReportInput, session: Session) {
+  async update(
+    input: UpdatePeriodicReportInput | UpdateProgressReportInput,
+    session: Session
+  ) {
     const current = await this.readOne(input.id, session);
     const changes = this.repo.getActualChanges(current, input);
     await this.authorizationService.verifyCanEditChanges(
@@ -130,8 +133,24 @@ export class PeriodicReportService {
     dto: UnsecuredDto<PeriodicReport>,
     session: Session
   ): Promise<PeriodicReport> {
+    // yeah, I don't like this either, but since Progress Reports have two other properties that are not in common
+    // with the rest of the reports we have to secure the props separately and return
+    if (dto.type === ReportType.Progress) {
+      const securedProps = await this.authorizationService.secureProperties(
+        ProgressReport,
+        dto,
+        session,
+        dto.scope
+      );
+      return {
+        ...dto,
+        ...securedProps,
+        canDelete: false, // Auto generated, no user deleting.
+      };
+    }
+
     const securedProps = await this.authorizationService.secureProperties(
-      IPeriodicReport,
+      resolveReportType(dto),
       dto,
       session,
       dto.scope

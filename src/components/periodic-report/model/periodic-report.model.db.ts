@@ -11,3 +11,9 @@ export class DbPeriodicReport extends DbBaseNode {
   reportFile: any = null;
   skippedReason: any = null;
 }
+
+// used for role definitions
+export class DbProgressReport extends DbBaseNode {
+  varianceReasons: any = null;
+  varianceExplanation: any = null;
+}

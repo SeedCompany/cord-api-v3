@@ -16,6 +16,7 @@ import {
 import { BaseNode as DbBaseNode } from '../../../core/database/results';
 import { ScopedRole } from '../../authorization';
 import { DefinedFile } from '../../file';
+import { SecuredProgressVarianceReasons } from './progress-variance-reason.enum';
 import { ReportType } from './report-type.enum';
 
 type AnyPeriodicReport = MergeExclusive<
@@ -40,8 +41,9 @@ export const resolveReportType = (report: Pick<PeriodicReport, 'type'>) => {
   implements: [Resource],
 })
 class PeriodicReport extends Resource {
-  static readonly Props = keysOf<PeriodicReport>();
-  static readonly SecuredProps = keysOf<SecuredProps<PeriodicReport>>();
+  static readonly Props: string[] = keysOf<PeriodicReport>();
+  static readonly SecuredProps: string[] =
+    keysOf<SecuredProps<PeriodicReport>>();
 
   @Field(() => ReportType)
   readonly type: ReportType;
@@ -105,6 +107,12 @@ export class ProgressReport extends PeriodicReport {
   static readonly SecuredProps = keysOf<SecuredProps<ProgressReport>>();
 
   readonly type: ReportType.Progress;
+
+  @Field()
+  readonly varianceReasons: SecuredProgressVarianceReasons;
+
+  @Field()
+  readonly varianceExplanation: SecuredStringNullable;
 }
 
 @ObjectType({

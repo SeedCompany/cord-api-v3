@@ -104,6 +104,9 @@ export class PeriodicReportRepository extends DtoRepository<
             skippedReason: null,
             receivedDate: null,
             reportFile: variable('interval.tempFileId'),
+            ...(input.type === ReportType.Progress
+              ? { varianceReasons: [], varianceExplanation: null }
+              : {}),
           },
         })
       )

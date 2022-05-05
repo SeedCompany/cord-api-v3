@@ -9,6 +9,7 @@ import {
 import {
   AnonSession,
   CalendarDate,
+  InputException,
   ListArg,
   LoggedInSession,
   Session,
@@ -19,15 +20,19 @@ import { IdsAndView, IdsAndViewArg } from '../changeset/dto';
 import { FileNodeLoader, resolveDefinedFile, SecuredFile } from '../file';
 import {
   IPeriodicReport,
+  PeriodicReport,
   PeriodicReportListInput,
   PeriodicReportListOutput,
+  ProgressReport,
+  ReportType,
   UpdatePeriodicReportInput,
+  UpdateProgressReportInput,
   UploadPeriodicReportInput,
 } from './dto';
 import { PeriodicReportLoader as ReportLoader } from './periodic-report.loader';
 import { PeriodicReportService } from './periodic-report.service';
 
-@Resolver(IPeriodicReport)
+@Resolver(() => IPeriodicReport)
 export class PeriodicReportResolver {
   constructor(private readonly service: PeriodicReportService) {}
 
@@ -37,7 +42,7 @@ export class PeriodicReportResolver {
   async periodicReport(
     @Loader(ReportLoader) reports: LoaderOf<ReportLoader>,
     @IdsAndViewArg() { id }: IdsAndView
-  ): Promise<IPeriodicReport> {
+  ): Promise<PeriodicReport> {
     return await reports.load(id);
   }
 
@@ -83,6 +88,22 @@ export class PeriodicReportResolver {
     @Args('input') input: UpdatePeriodicReportInput
   ): Promise<IPeriodicReport> {
     return await this.service.update(input, session);
+  }
+
+  @Mutation(() => ProgressReport, {
+    description: 'Update a Progress Report',
+  })
+  async updateProgressReport(
+    @LoggedInSession() session: Session,
+    @Args('input') input: UpdateProgressReportInput
+  ): Promise<ProgressReport> {
+    const updated = await this.service.update(input, session);
+    if (updated.type === ReportType.Progress) {
+      return updated;
+    }
+    throw new InputException(
+      'You cannot use this mutation for updating a Periodic report that is not of type Progress'
+    );
   }
 
   @ResolveField(() => SecuredFile)
