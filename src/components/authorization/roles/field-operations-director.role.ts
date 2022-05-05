@@ -15,7 +15,7 @@ import { DbLocation } from '../../location/model';
 import { DbOrganization } from '../../organization/model';
 import { DbPartner } from '../../partner/model';
 import { DbPartnership } from '../../partnership/model';
-import { DbPeriodicReport } from '../../periodic-report/model';
+import { DbPeriodicReport, DbProgressReport } from '../../periodic-report/model';
 import { DbPost } from '../../post/model';
 import { StepProgress } from '../../product-progress/dto';
 import { DbProduct } from '../../product/model';
@@ -422,6 +422,14 @@ export const FieldOperationsDirector = new DbRole({
         { propertyName: 'receivedDate', permission: { read, write, }, },
         { propertyName: 'reportFile', permission: { read, write, }, },
         { propertyName: 'skippedReason', permission: { read, write, }, },
+      ],
+      canDelete: true,
+    }),
+    new DbBaseNodeGrant<DbProgressReport>({
+      __className: 'DbProgressReport',
+      properties: [
+        { propertyName: 'varianceExplanation', permission: { read, write, }, },
+        { propertyName: 'varianceReasons', permission: { read, write }, },
       ],
       canDelete: true,
     }),
