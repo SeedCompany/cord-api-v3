@@ -1,4 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { Connection } from 'cypher-query-builder';
 import { intersection } from 'lodash';
 import {
   bufferFromStream,
@@ -42,6 +43,7 @@ export class FileService {
   constructor(
     @Inject(FilesBucketToken) private readonly bucket: FileBucket,
     private readonly repo: FileRepository,
+    private readonly db: Connection,
     @Logger('file:service') private readonly logger: ILogger,
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService
@@ -279,6 +281,29 @@ export class FileService {
     // Skip S3 move if it's not needed
     if (existingUpload.status === 'rejected') {
       await this.bucket.moveObject(`temp/${uploadId}`, uploadId);
+
+      // A bit of a hacky way to move files back to the temp/ folder on
+      // mutation error / transaction rollback. This prevents orphaned files in bucket.
+      const tx = this.db.currentTransaction;
+      // The mutation can be retried multiple times, when neo4j deems the error
+      // is retry-able, but we only want to attach this rollback logic once.
+      if (tx && !(tx as any).__S3_ROLLBACK) {
+        (tx as any).__S3_ROLLBACK = true;
+
+        const orig = tx.rollback.bind(tx);
+        tx.rollback = async () => {
+          // Undo above operation by moving it back to temp folder.
+          await this.bucket
+            .moveObject(uploadId, `temp/${uploadId}`)
+            .catch((e) => {
+              this.logger.error('Failed to move file back to temp holding', {
+                uploadId,
+                exception: e,
+              });
+            });
+          await orig();
+        };
+      }
     }
 
     // Change the file's name to match the latest version name
