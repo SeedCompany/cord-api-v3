@@ -72,11 +72,11 @@ const parseProgressRow =
         const fiscalYear = pnp.planning.cell(
           planningStepColumns[step],
           planningRow
-        ).asNumber;
+        );
 
         const cell = sheet.cell(column, row);
         if (
-          !isGoalStepPlannedInsideProject(fiscalYear, pnp.planning) ||
+          !isGoalStepPlannedInsideProject(pnp, fiscalYear) ||
           isProgressCompletedOutsideProject(pnp, cell)
         ) {
           return [];

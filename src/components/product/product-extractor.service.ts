@@ -11,6 +11,7 @@ import {
   isProgressCompletedOutsideProject,
   PlanningSheet,
   Pnp,
+  stepPlanCompleteDate,
 } from '../pnp';
 import { parseScripture, ScriptureRange } from '../scripture';
 import { ProductStep as Step } from './dto';
@@ -59,15 +60,17 @@ const parseProductRow =
     const progressRow = pnp.progress.goals.start.row.a1 + rowIndex;
 
     const steps = entries(stepColumns).flatMap(([step, column]) => {
-      const fiscalYear = sheet.cell(column, row).asNumber;
-      const fullFY = isGoalStepPlannedInsideProject(fiscalYear, sheet);
+      const plannedCompleteDate = stepPlanCompleteDate(sheet.cell(column, row));
 
-      const cell = pnp.progress.cell(column, progressRow);
-      if (!fullFY || isProgressCompletedOutsideProject(pnp, cell)) {
+      const progressCell = pnp.progress.cell(column, progressRow);
+      if (
+        !isGoalStepPlannedInsideProject(pnp, plannedCompleteDate) ||
+        isProgressCompletedOutsideProject(pnp, progressCell)
+      ) {
         return [];
       }
 
-      return { step, plannedCompleteDate: fullFY.end };
+      return { step, plannedCompleteDate };
     });
 
     const common = {
