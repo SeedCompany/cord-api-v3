@@ -6,7 +6,6 @@ import {
   getDbClassLabels,
   getDbPropertyUnique,
   ID,
-  MaybeUnsecuredInstance,
   NotFoundException,
   ResourceShape,
   ServerException,
@@ -22,7 +21,9 @@ import { matchProps } from './query';
  */
 export const DtoRepository = <
   TResourceStatic extends ResourceShape<any>,
-  HydrateArgs extends unknown[] = []
+  HydrateArgs extends unknown[] = [],
+  // Specify this if the repo is for an interface, but works with all the concretes.
+  TResource extends TResourceStatic['prototype'] = TResourceStatic['prototype']
 >(
   resource: TResourceStatic
 ) => {
@@ -86,14 +87,10 @@ export const DtoRepository = <
     }
 
     async updateProperties<
-      TObject extends Partial<MaybeUnsecuredInstance<TResourceStatic>> & {
+      TObject extends Partial<TResource | UnsecuredDto<TResource>> & {
         id: ID;
       }
-    >(
-      object: TObject,
-      changes: DbChanges<TResourceStatic['prototype']>,
-      changeset?: ID
-    ) {
+    >(object: TObject, changes: DbChanges<TResource>, changeset?: ID) {
       return await this.db.updateProperties({
         type: resource,
         object,
@@ -127,9 +124,7 @@ export const DtoRepository = <
       return (query: Query) =>
         query
           .apply(matchProps())
-          .return<{ dto: UnsecuredDto<TResourceStatic['prototype']> }>(
-            'props as dto'
-          );
+          .return<{ dto: UnsecuredDto<TResource> }>('props as dto');
     }
 
     @OnIndex()

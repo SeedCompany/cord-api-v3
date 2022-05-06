@@ -88,7 +88,10 @@ export class ProjectMemberService {
     { userId, projectId, ...input }: CreateProjectMember,
     session: Session
   ): Promise<ProjectMember> {
-    await this.authorizationService.checkPower(Powers.CreateProject, session);
+    await this.authorizationService.checkPower(
+      Powers.CreateProjectMember,
+      session
+    );
     const id = await generateId();
     const createdAt = DateTime.local();
 

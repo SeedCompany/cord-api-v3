@@ -1,10 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { assert } from 'ts-essentials';
 import { MergeExclusive } from 'type-fest';
-import { entries, fullFiscalQuarter, fullFiscalYear } from '../../common';
+import { entries } from '../../common';
 import { Cell, Column } from '../../common/xlsx.util';
 import { Downloadable } from '../file';
-import { findStepColumns, isGoalRow, Pnp, ProgressSheet } from '../pnp';
+import {
+  findStepColumns,
+  isGoalRow,
+  isGoalStepPlannedInsideProject,
+  isProgressCompletedOutsideProject,
+  Pnp,
+  ProgressSheet,
+} from '../pnp';
 import { ProductStep as Step } from '../product';
 import { Book } from '../scripture';
 import { StepProgressInput } from './dto';
@@ -65,33 +72,31 @@ const parseProgressRow =
         const fiscalYear = pnp.planning.cell(
           planningStepColumns[step],
           planningRow
-        ).asNumber;
+        );
+
+        const cell = sheet.cell(column, row);
         if (
-          !fiscalYear ||
-          !pnp.planning.projectDateRange.intersection(
-            fullFiscalYear(fiscalYear)
-          )
+          !isGoalStepPlannedInsideProject(pnp, fiscalYear) ||
+          isProgressCompletedOutsideProject(pnp, cell)
         ) {
-          // Not planned or planned outside project, skip
           return [];
         }
 
-        const cell = sheet.cell(column, row);
-        if (isCompletedOutsideProject(pnp, cell)) {
-          return [];
-        }
         return { step, completed: progress(cell) };
       }
     );
+
     const common = {
       rowIndex: rowIndex + 1,
       order: index + 1,
       steps,
     };
+
     if (sheet.isOBS()) {
       const story = sheet.storyName(row)!; // Asserting bc loop verified this
       return { ...common, story };
     }
+
     assert(sheet.isWritten());
     const bookName = Book.find(
       sheet.bookName(row)! // Asserting bc loop verified this
@@ -99,24 +104,6 @@ const parseProgressRow =
     const totalVerses = sheet.totalVerses(row)!; // Asserting bc loop verified this
     return { ...common, bookName, totalVerses };
   };
-
-const isCompletedOutsideProject = (pnp: Pnp, cell: Cell) => {
-  const completeDate = stepCompleteDate(cell);
-  return completeDate && !pnp.planning.projectDateRange.contains(completeDate);
-};
-
-/**
- * Convert cell (and one to its right) to a calendar date.
- * ['Q2', '2022'] -> 03/31/2022
- */
-const stepCompleteDate = (cell: Cell) => {
-  const fiscalQuarter = Number(cell.asString?.slice(1));
-  const fiscalYear = cell.moveX(1).asNumber;
-  if (!fiscalQuarter || !fiscalYear) {
-    return null;
-  }
-  return fullFiscalQuarter(fiscalQuarter, fiscalYear).end;
-};
 
 const progress = (cell: Cell) => {
   if (cell.asString?.startsWith('Q')) {
