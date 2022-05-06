@@ -1,10 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { assert } from 'ts-essentials';
 import { MergeExclusive } from 'type-fest';
-import { CalendarDate, entries, fullFiscalYear } from '../../common';
+import { CalendarDate, entries } from '../../common';
 import { Cell, Column } from '../../common/xlsx.util';
 import { Downloadable } from '../file';
-import { findStepColumns, isGoalRow, PlanningSheet, Pnp } from '../pnp';
+import {
+  findStepColumns,
+  isGoalRow,
+  isGoalStepPlannedInsideProject,
+  isProgressCompletedOutsideProject,
+  PlanningSheet,
+  Pnp,
+  stepPlanCompleteDate,
+} from '../pnp';
 import { parseScripture, ScriptureRange } from '../scripture';
 import { ProductStep as Step } from './dto';
 
@@ -22,7 +30,7 @@ export class ProductExtractor {
     const productRows = sheet.goals
       .walkDown()
       .filter(isGoalRow)
-      .map(parseProductRow(stepColumns))
+      .map(parseProductRow(pnp, stepColumns))
       .filter((row) => row.steps.length > 0)
       .toArray();
 
@@ -44,18 +52,25 @@ export class ProductExtractor {
 }
 
 const parseProductRow =
-  (stepColumns: Record<Step, Column>) =>
+  (pnp: Pnp, stepColumns: Record<Step, Column>) =>
   (cell: Cell<PlanningSheet>, index: number): ExtractedRow => {
     const sheet = cell.sheet;
     const row = cell.row;
+    const rowIndex = row.a1 - sheet.goals.start.row.a1;
+    const progressRow = pnp.progress.goals.start.row.a1 + rowIndex;
+
     const steps = entries(stepColumns).flatMap(([step, column]) => {
-      const fiscalYear = sheet.cell(column, row).asNumber;
-      const fullFY = fiscalYear ? fullFiscalYear(fiscalYear) : undefined;
-      // only include step if it references a fiscal year within the project
-      if (!fullFY || !sheet.projectFiscalYears.intersection(fullFY)) {
+      const plannedCompleteDate = stepPlanCompleteDate(sheet.cell(column, row));
+
+      const progressCell = pnp.progress.cell(column, progressRow);
+      if (
+        !isGoalStepPlannedInsideProject(pnp, plannedCompleteDate) ||
+        isProgressCompletedOutsideProject(pnp, progressCell)
+      ) {
         return [];
       }
-      return { step, plannedCompleteDate: fullFY.end };
+
+      return { step, plannedCompleteDate };
     });
 
     const common = {
