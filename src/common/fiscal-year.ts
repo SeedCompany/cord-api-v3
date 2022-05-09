@@ -33,7 +33,7 @@ export const fullFiscalQuarter = (
   fiscalQuarter: number,
   fiscalYear: number
 ) => {
-  const calendarYear = fiscalYear + (fiscalQuarter === 4 ? -1 : 0);
+  const calendarYear = fiscalYear + (fiscalQuarter === 1 ? -1 : 0);
   const fiscalQuarterStartDate = CalendarDate.local(calendarYear, 1, 1)
     .minus({ quarter: 1 })
     .plus({ quarter: fiscalQuarter - 1 });
