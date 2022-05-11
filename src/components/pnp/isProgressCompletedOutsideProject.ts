@@ -8,9 +8,7 @@ export const isProgressCompletedOutsideProject = (
   cell: Cell<ProgressSheet>
 ) => {
   const completeDate = stepCompleteDate(cell);
-  return (
-    completeDate && !pnp.planning.projectFiscalYears.contains(completeDate)
-  );
+  return completeDate && !pnp.planning.projectDateRange.contains(completeDate);
 };
 
 /**
