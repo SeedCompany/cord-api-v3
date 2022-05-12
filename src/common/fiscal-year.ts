@@ -33,10 +33,12 @@ export const fullFiscalQuarter = (
   fiscalQuarter: number,
   fiscalYear: number
 ) => {
-  const calendarYear = fiscalYear + (fiscalQuarter === 1 ? -1 : 0);
-  const fiscalQuarterStartDate = CalendarDate.local(calendarYear, 1, 1)
-    .minus({ quarter: 1 })
-    .plus({ quarter: fiscalQuarter - 1 });
+  const year = fiscalYear + (fiscalQuarter === 1 ? -1 : 0);
+  const quarter = fiscalQuarter + (fiscalQuarter === 1 ? 2 : -2);
+  const fiscalQuarterStartDate = CalendarDate.local(year, 1, 1).plus({
+    quarter,
+  });
+
   return DateInterval.fromDateTimes(
     fiscalQuarterStartDate,
     fiscalQuarterStartDate.endOf('quarter')
