@@ -1,4 +1,5 @@
 import { ObjectType, registerEnumType } from '@nestjs/graphql';
+import { stripIndent } from 'common-tags';
 import { SecuredEnumList, SecuredProperty } from '../../../common';
 
 export enum ProgressVarianceReason {
@@ -23,63 +24,63 @@ registerEnumType(ProgressVarianceReason, {
   name: 'ProgressVarianceReason',
   valuesMap: {
     SlowStart: {
-      description: `
-	    @group Behind
-        @label Slow Start of Project
+      description: stripIndent`
+	      @group Behind
+      @label Slow Start of Project
 	`,
     },
     DelayedActivities: {
-      description: `
-		@group Behind
-        @label Delayed Activities
+      description: stripIndent`
+		  @group Behind
+      @label Delayed Activities
 	`,
     },
     DelayedHiring: {
-      description: `
-		@group Behind
-        @label Delayed Hiring
+      description: stripIndent`
+		  @group Behind
+      @label Delayed Hiring
 	`,
     },
     Unrest: {
-      description: `
-		@group Behind
-        @label Economic, Political, or Civil Instability/Unrest
+      description: stripIndent`
+		  @group Behind
+      @label Economic, Political, or Civil Instability/Unrest
 	`,
     },
     DelayedPartnerReporting: {
-      description: `
-		@group Behind
-        @label Late or Delayed Partner Reporting
+      description: stripIndent`
+		  @group Behind
+      @label Late or Delayed Partner Reporting
 	`,
     },
     PartnerOrgIssues: {
-      description: `
-		@group Behind
-        @label Partner Organization Issues
+      description: stripIndent`
+		  @group Behind
+      @label Partner Organization Issues
 	`,
     },
     ProgressAsExpected: {
-      description: `
-		@group On Track
-        @label Progress As Expected
+      description: stripIndent`
+		  @group On Track
+      @label Progress As Expected
 	`,
     },
     TeamMadeUpTime: {
-      description: `
-		@group On Track
-        @label Team Made Up Time
+      description: stripIndent`
+		  @group On Track
+      @label Team Made Up Time
 	`,
     },
     AheadOfSchedule: {
-      description: `
-		@group Ahead
+      description: stripIndent`
+		  @group Ahead
         @Activities Ahead of Schedule
 	`,
     },
     NewTeamFasterProgress: {
-      description: `
-		@group Ahead
-        @label New Team, Faster Progress
+      description: stripIndent`
+		  @group Ahead
+      @label New Team, Faster Progress
 	`,
     },
   },
