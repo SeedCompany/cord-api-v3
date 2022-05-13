@@ -1,5 +1,10 @@
 import { DateTime } from 'luxon';
-import { fiscalYear, fiscalYears, fullFiscalQuarter } from './fiscal-year';
+import {
+  fiscalQuarter,
+  fiscalYear,
+  fiscalYears,
+  fullFiscalQuarter,
+} from './fiscal-year';
 
 const Feb2019 = DateTime.fromObject({ year: 2019, month: 2, day: 1 });
 const Oct2019 = DateTime.fromObject({ year: 2019, month: 10, day: 1 });
@@ -43,6 +48,19 @@ describe('fiscalYears', () => {
     [Jun2020, Feb2019, []],
   ])('CStart%s CEnd%s -> expectedRange%s', (cStart, cEnd, expectedRange) => {
     expect(fiscalYears(cStart, cEnd)).toEqual(expectedRange);
+  });
+});
+
+describe('fiscalQuarter', () => {
+  it.each([
+    [Oct2019, 1],
+    [Nov2019, 1],
+    [Dec2019, 1],
+    [Jan2020, 2],
+    [Jun2020, 3],
+    [Sep2020, 4],
+  ])('CalDate%s -> FiscalQtr%s', (cDate, expQtr) => {
+    expect(fiscalQuarter(cDate)).toEqual(expQtr);
   });
 });
 
