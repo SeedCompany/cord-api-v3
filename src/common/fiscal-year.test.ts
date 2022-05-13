@@ -2,7 +2,7 @@ import { DateTime } from 'luxon';
 import { fiscalYear } from '.';
 import { fullFiscalQuarter } from './fiscal-year';
 
-describe('fiscal-year', () => {
+describe('fiscal-year-example', () => {
   //TODO - This is an example as to what a single test case WOULD be like with a
   // standard 'it' statement.  However, due to the nature of this function it should also be
   // transformed into the case below using the 'it.each' to easily cover all cases
@@ -23,5 +23,17 @@ describe('fullFiscalQuarter', () => {
     expect(fullFiscalQuarter(fiscalQuarter, fiscalYear).toISO()).toEqual(
       dateRange
     );
+  });
+});
+
+describe('fiscalYear', () => {
+  it.each([
+    [DateTime.fromObject({ year: 2019, month: 10, day: 1 }), 2020],
+    [DateTime.fromObject({ year: 2019, month: 11, day: 1 }), 2020],
+    [DateTime.fromObject({ year: 2019, month: 12, day: 1 }), 2020],
+    [DateTime.fromObject({ year: 2020, month: 1, day: 1 }), 2020],
+    [DateTime.fromObject({ year: 2020, month: 6, day: 1 }), 2020],
+  ])('FY%s -> CY%s', (fYear, cYear) => {
+    expect(fiscalYear(fYear)).toEqual(cYear);
   });
 });
