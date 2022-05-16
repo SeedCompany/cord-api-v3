@@ -19,7 +19,10 @@ const dec2019 = DateTime.fromObject({ year: 2019, month: 12, day: 1 });
 const dec312019 = DateTime.fromObject({ year: 2019, month: 12, day: 31 });
 const jan2020 = DateTime.fromObject({ year: 2020, month: 1, day: 1 });
 const mar312020 = DateTime.fromObject({ year: 2020, month: 3, day: 31 });
+const apr2020 = DateTime.fromObject({ year: 2020, month: 4, day: 1 });
 const jun2020 = DateTime.fromObject({ year: 2020, month: 6, day: 1 });
+const jun302020 = DateTime.fromObject({ year: 2020, month: 6, day: 30 });
+const jul2020 = DateTime.fromObject({ year: 2020, month: 7, day: 1 });
 const sep2020 = DateTime.fromObject({ year: 2020, month: 9, day: 1 });
 const sep302020 = DateTime.fromObject({ year: 2020, month: 9, day: 30 });
 const oct2020 = DateTime.fromObject({ year: 2020, month: 10, day: 1 });
@@ -40,6 +43,14 @@ const qtrFour2019 = DateInterval.fromObject({
 const qtrOne2020 = DateInterval.fromObject({
   start: jan2020,
   end: mar312020,
+});
+const qtrTwo2020 = DateInterval.fromObject({
+  start: apr2020,
+  end: jun302020,
+});
+const qtrThree2020 = DateInterval.fromObject({
+  start: jul2020,
+  end: sep302020,
 });
 const qtrFour2020 = DateInterval.fromObject({
   start: oct2020,
@@ -139,15 +150,14 @@ describe('fullFiscalYear', () => {
     expect(fullFiscalYear(yrNum)).toEqual(fYearInterval);
   });
 });
+
 describe('fullFiscalQuarter', () => {
   it.each([
-    [1, 2020, '2019-10-01/2019-12-31'],
-    [2, 2020, '2020-01-01/2020-03-31'],
-    [3, 2020, '2020-04-01/2020-06-30'],
-    [4, 2020, '2020-07-01/2020-09-30'],
+    [1, 2020, qtrFour2019],
+    [2, 2020, qtrOne2020],
+    [3, 2020, qtrTwo2020],
+    [4, 2020, qtrThree2020],
   ])('%o %o -> %o', (fiscalQuarter, fiscalYear, dateRange) => {
-    expect(fullFiscalQuarter(fiscalQuarter, fiscalYear).toISO()).toEqual(
-      dateRange
-    );
+    expect(fullFiscalQuarter(fiscalQuarter, fiscalYear)).toEqual(dateRange);
   });
 });
