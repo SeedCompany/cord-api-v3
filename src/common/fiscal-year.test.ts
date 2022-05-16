@@ -31,16 +31,17 @@ const dInterval2021 = DateInterval.fromObject({
   end: Sep302021,
 });
 
+/*-----------------------------------------------------------
 describe('fiscal-year-example', () => {
   //TODO - This is an example as to what a single test case WOULD be like with a
   // standard 'it' statement.  However, due to the nature of this function it should also be
   // transformed into the case below using the 'it.each' to easily cover all cases
   it('should return current year when date is in second quarter', () => {
     const regularDate = Jun2020;
-
     expect(fiscalYear(regularDate)).toEqual(2020);
   });
 });
+-------------------------------------------------------------*/
 
 describe('fiscalYear', () => {
   it.each([
