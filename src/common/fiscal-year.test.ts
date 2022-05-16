@@ -1,10 +1,15 @@
 import { DateTime } from 'luxon';
 import {
+  endOfFiscalYear,
+  expandToFullFiscalYears,
   fiscalQuarter,
   fiscalYear,
   fiscalYears,
   fullFiscalQuarter,
+  fullFiscalYear,
+  startOfFiscalYear,
 } from './fiscal-year';
+import { DateInterval } from './temporal';
 
 const Feb2019 = DateTime.fromObject({ year: 2019, month: 2, day: 1 });
 const Oct2019 = DateTime.fromObject({ year: 2019, month: 10, day: 1 });
@@ -14,6 +19,17 @@ const Jan2020 = DateTime.fromObject({ year: 2020, month: 1, day: 1 });
 const Jun2020 = DateTime.fromObject({ year: 2020, month: 6, day: 1 });
 const Sep2020 = DateTime.fromObject({ year: 2020, month: 9, day: 1 });
 const Oct2020 = DateTime.fromObject({ year: 2020, month: 10, day: 1 });
+const Sep302019 = DateTime.fromObject({ year: 2019, month: 9, day: 30 });
+const Sep302020 = DateTime.fromObject({ year: 2020, month: 9, day: 30 });
+const Sep302021 = DateTime.fromObject({ year: 2021, month: 9, day: 30 });
+const dInterval2020 = DateInterval.fromObject({
+  start: Oct2019,
+  end: Sep302020,
+});
+const dInterval2021 = DateInterval.fromObject({
+  start: Oct2020,
+  end: Sep302021,
+});
 
 describe('fiscal-year-example', () => {
   //TODO - This is an example as to what a single test case WOULD be like with a
@@ -64,6 +80,49 @@ describe('fiscalQuarter', () => {
   });
 });
 
+describe('startOfFiscalYear', () => {
+  it.each([
+    [Oct2019, Oct2019],
+    [Nov2019, Oct2019],
+    [Dec2019, Oct2019],
+    [Jan2020, Oct2019],
+    [Sep2020, Oct2019],
+    [Oct2020, Oct2020],
+  ])('CalDate%s -> FiscalYr%s', (cDate, expYear) => {
+    expect(startOfFiscalYear(cDate)).toEqual(expYear);
+  });
+});
+
+describe('endOfFiscalYear', () => {
+  it.each([
+    [Feb2019, Sep302019],
+    [Oct2019, Sep302020],
+    [Nov2019, Sep302020],
+    [Dec2019, Sep302020],
+    [Jan2020, Sep302020],
+    [Oct2020, Sep302021],
+  ])('CalDate%s -> FiscalYr%s', (cDate, expYear) => {
+    expect(endOfFiscalYear(cDate)).toEqual(expYear);
+  });
+});
+
+describe('expandToFullFiscalYears', () => {
+  it.each([
+    [dInterval2020, dInterval2020],
+    [dInterval2021, dInterval2021],
+  ])('DateInterval%s -> FullFiscalYrs%s', (dateInt, expYears) => {
+    expect(expandToFullFiscalYears(dateInt)).toEqual(expYears);
+  });
+});
+
+describe('fullFiscalYear', () => {
+  it.each([
+    [2020, dInterval2020],
+    [2021, dInterval2021],
+  ])('YrNum%s -> FullFiscalYrInterval%s', (yrNum, fYearInterval) => {
+    expect(fullFiscalYear(yrNum)).toEqual(fYearInterval);
+  });
+});
 describe('fullFiscalQuarter', () => {
   it.each([
     [1, 2020, '2019-10-01/2019-12-31'],
