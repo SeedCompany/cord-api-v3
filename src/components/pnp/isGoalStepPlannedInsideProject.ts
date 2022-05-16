@@ -11,7 +11,7 @@ export const isGoalStepPlannedInsideProject = (
   cell: Cell<PlanningSheet> | CalendarDate | undefined
 ): cell is CalendarDate => {
   const fullFY = cell instanceof Cell ? stepPlanCompleteDate(cell) : cell;
-  return !fullFY || pnp.planning.projectFiscalYears.contains(fullFY);
+  return !!fullFY && pnp.planning.projectFiscalYears.contains(fullFY);
 };
 
 export const stepPlanCompleteDate = (cell: Cell<PlanningSheet>) => {
