@@ -11,59 +11,32 @@ import {
 } from './fiscal-year';
 import { DateInterval } from './temporal';
 
-const feb2019 = DateTime.fromObject({ year: 2019, month: 2, day: 1 });
-const sep302019 = DateTime.fromObject({ year: 2019, month: 9, day: 30 });
-const oct2019 = DateTime.fromObject({ year: 2019, month: 10, day: 1 });
-const nov2019 = DateTime.fromObject({ year: 2019, month: 11, day: 1 });
-const dec2019 = DateTime.fromObject({ year: 2019, month: 12, day: 1 });
-const dec312019 = DateTime.fromObject({ year: 2019, month: 12, day: 31 });
-const jan2020 = DateTime.fromObject({ year: 2020, month: 1, day: 1 });
-const mar312020 = DateTime.fromObject({ year: 2020, month: 3, day: 31 });
-const apr2020 = DateTime.fromObject({ year: 2020, month: 4, day: 1 });
-const jun2020 = DateTime.fromObject({ year: 2020, month: 6, day: 1 });
-const jun302020 = DateTime.fromObject({ year: 2020, month: 6, day: 30 });
-const jul2020 = DateTime.fromObject({ year: 2020, month: 7, day: 1 });
-const sep2020 = DateTime.fromObject({ year: 2020, month: 9, day: 1 });
-const sep302020 = DateTime.fromObject({ year: 2020, month: 9, day: 30 });
-const oct2020 = DateTime.fromObject({ year: 2020, month: 10, day: 1 });
-const dec312020 = DateTime.fromObject({ year: 2020, month: 12, day: 31 });
-const sep302021 = DateTime.fromObject({ year: 2021, month: 9, day: 30 });
-const fy2020 = DateInterval.fromObject({
-  start: oct2019,
-  end: sep302020,
-});
-const fy2021 = DateInterval.fromObject({
-  start: oct2020,
-  end: sep302021,
-});
-const qtrFour2019 = DateInterval.fromObject({
-  start: oct2019,
-  end: dec312019,
-});
-const qtrOne2020 = DateInterval.fromObject({
-  start: jan2020,
-  end: mar312020,
-});
-const qtrTwo2020 = DateInterval.fromObject({
-  start: apr2020,
-  end: jun302020,
-});
-const qtrThree2020 = DateInterval.fromObject({
-  start: jul2020,
-  end: sep302020,
-});
-const qtrFour2020 = DateInterval.fromObject({
-  start: oct2020,
-  end: dec312020,
-});
-const jun2020ToEOY = DateInterval.fromObject({
-  start: jun2020,
-  end: dec312020,
-});
-const fiscalYrs20and21 = DateInterval.fromObject({
-  start: oct2019,
-  end: sep302021,
-});
+const feb2019 = DateTime.local(2019, 2, 1);
+const sep302019 = DateTime.local(2019, 9, 30);
+const oct2019 = DateTime.local(2019, 10, 1);
+const nov2019 = DateTime.local(2019, 11, 1);
+const dec2019 = DateTime.local(2019, 12, 1);
+const dec312019 = DateTime.local(2019, 12, 31);
+const jan2020 = DateTime.local(2020, 1, 1);
+const mar312020 = DateTime.local(2020, 3, 31);
+const apr2020 = DateTime.local(2020, 4, 1);
+const jun2020 = DateTime.local(2020, 6, 1);
+const jun302020 = DateTime.local(2020, 6, 30);
+const jul2020 = DateTime.local(2020, 7, 1);
+const sep2020 = DateTime.local(2020, 9, 1);
+const sep302020 = DateTime.local(2020, 9, 30);
+const oct2020 = DateTime.local(2020, 10, 1);
+const dec312020 = DateTime.local(2020, 12, 31);
+const sep302021 = DateTime.local(2021, 9, 30);
+const fy2020 = DateInterval.fromDateTimes(oct2019, sep302020);
+const fy2021 = DateInterval.fromDateTimes(oct2020, sep302021);
+const qtrFour2019 = DateInterval.fromDateTimes(oct2019, dec312019);
+const qtrOne2020 = DateInterval.fromDateTimes(jan2020, mar312020);
+const qtrTwo2020 = DateInterval.fromDateTimes(apr2020, jun302020);
+const qtrThree2020 = DateInterval.fromDateTimes(jul2020, sep302020);
+const qtrFour2020 = DateInterval.fromDateTimes(oct2020, dec312020);
+const jun2020ToEOY = DateInterval.fromDateTimes(jun2020, dec312020);
+const fiscalYrs20and21 = DateInterval.fromDateTimes(oct2019, sep302021);
 
 describe('fiscalYear', () => {
   it.each([
