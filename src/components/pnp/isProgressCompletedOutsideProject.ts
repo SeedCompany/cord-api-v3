@@ -15,7 +15,7 @@ export const isProgressCompletedOutsideProject = (
  * Convert cell (and one to its right) to a calendar date.
  * ['Q2', '2022'] -> 03/31/2022
  */
-const stepCompleteDate = (cell: Cell<ProgressSheet>) => {
+export const stepCompleteDate = (cell: Cell<ProgressSheet>) => {
   const fiscalQuarter = Number(cell.asString?.slice(1));
   const fiscalYear = cell.moveX(1).asNumber;
   if (!fiscalQuarter || !fiscalYear) {
