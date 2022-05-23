@@ -1,17 +1,24 @@
 import { jest } from '@jest/globals';
 import { promises as fs } from 'fs';
-// import { mocked } from 'jest-mock';
-// import { fullFiscalQuarter } from '../../common';
+import { DateTime } from 'luxon';
+import { DateInterval, fullFiscalQuarter } from '../../common';
 import { WorkBook } from '../../common/xlsx.util';
 import { stepCompleteDate } from './isProgressCompletedOutsideProject';
 import { ProgressSheet } from './progress-sheet';
 
-jest.mock('../../common/fiscal-year.ts');
+const fourthQuarterStart = DateTime.local(2020, 10, 1);
+const fourthQuarterEnd = DateTime.local(2020, 12, 31);
+const fourthQuarter = DateInterval.fromDateTimes(
+  fourthQuarterStart,
+  fourthQuarterEnd
+);
+
+jest.mock('../../common/fiscal-year.ts', () => ({
+  fullFiscalQuarter: jest.fn().mockImplementation(() => fourthQuarter),
+}));
 
 describe('stepCompleteDate', () => {
   let progressSheet: ProgressSheet;
-
-  //const mockFullFiscalQuarter = mocked(fullFiscalQuarter);
 
   beforeAll(async () => {
     progressSheet = WorkBook.fromBuffer(
@@ -40,6 +47,7 @@ describe('stepCompleteDate', () => {
 
     const actualStepCompleteDate = stepCompleteDate(cell);
 
-    expect(actualStepCompleteDate).toBeNull();
+    expect(actualStepCompleteDate).toEqual(fourthQuarter.end);
+    expect(fullFiscalQuarter).toBeCalledTimes(1);
   });
 });
