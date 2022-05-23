@@ -13,6 +13,8 @@ import { Except, Merge } from 'type-fest';
 import {
   getDbClassLabels,
   ID,
+  labelForView,
+  ObjectView,
   Range,
   ServerException,
   Session,
@@ -29,6 +31,7 @@ import {
   escapeLuceneSyntax,
   filter,
   fullTextQuery,
+  matchChangesetAndChangedProps,
   matchProps,
   matchPropsAndProjectSensAndScopedRoles,
   merge,
@@ -83,10 +86,11 @@ export class ProductRepository extends CommonRepository {
     super(db);
   }
 
-  async readMany(ids: readonly ID[], session: Session) {
+  async readMany(ids: readonly ID[], session: Session, view?: ObjectView) {
+    const label = labelForView('Product', view);
     const query = this.db
       .query()
-      .matchNode('node', 'Product')
+      .matchNode('node', label)
       .where({ 'node.id': inArray(ids) })
       .apply(this.hydrate(session))
       .map('dto');
@@ -184,7 +188,7 @@ export class ProductRepository extends CommonRepository {
     return res;
   }
 
-  protected hydrate(session: Session) {
+  protected hydrate(session: Session, view?: ObjectView) {
     return (query: Query) =>
       query
         .match([
@@ -194,7 +198,8 @@ export class ProductRepository extends CommonRepository {
           relation('out', '', 'product', ACTIVE),
           node('node'),
         ])
-        .apply(matchPropsAndProjectSensAndScopedRoles(session))
+        .apply(matchPropsAndProjectSensAndScopedRoles(session, { view }))
+        .apply(matchChangesetAndChangedProps(view?.changeset))
         .optionalMatch([
           node('node'),
           relation('out', '', 'unspecifiedScripture', ACTIVE),
@@ -234,7 +239,8 @@ export class ProductRepository extends CommonRepository {
           })
         )
         .return<{ dto: HydratedProductRow }>(
-          merge('props', {
+          merge('props', 'changedProps', {
+            changeset: 'changeset.id',
             engagement: 'engagement.id',
             project: 'project.id',
             produces: 'produces',
@@ -249,12 +255,14 @@ export class ProductRepository extends CommonRepository {
 
   async updateProperties(
     object: DirectScriptureProduct,
-    changes: DbChanges<DirectScriptureProduct>
+    changes: DbChanges<DirectScriptureProduct>,
+    changeset?: ID
   ) {
     return await this.db.updateProperties({
       type: DirectScriptureProduct,
       object,
       changes,
+      changeset,
     });
   }
 
@@ -277,7 +285,8 @@ export class ProductRepository extends CommonRepository {
     input: (CreateDerivativeScriptureProduct | CreateDirectScriptureProduct) & {
       totalVerses: number;
       totalVerseEquivalents: number;
-    }
+    },
+    changeset?: ID
   ) {
     const isDerivative = 'produces' in input;
     const Product = isDerivative
@@ -319,6 +328,7 @@ export class ProductRepository extends CommonRepository {
         createRelationships(Product, {
           in: {
             product: ['LanguageEngagement', input.engagementId],
+            changeset: ['Changeset', changeset],
           },
           out: isDerivative
             ? {
@@ -367,7 +377,7 @@ export class ProductRepository extends CommonRepository {
     return result.id;
   }
 
-  async createOther(input: CreateOtherProduct) {
+  async createOther(input: CreateOtherProduct, changeset?: ID) {
     const initialProps = {
       mediums: input.mediums ?? [],
       purposes: input.purposes ?? [],
@@ -393,6 +403,7 @@ export class ProductRepository extends CommonRepository {
       .apply(
         createRelationships(OtherProduct, 'in', {
           product: ['LanguageEngagement', input.engagementId],
+          changeset: ['Changeset', changeset],
         })
       )
       .return<{ id: ID }>('node.id as id');
@@ -405,19 +416,32 @@ export class ProductRepository extends CommonRepository {
 
   async updateProducible(
     input: Except<UpdateProduct, 'scriptureReferences'>,
-    produces: ID
+    produces: ID,
+    changeset?: ID
   ) {
+    // check if the node is created in changeset, update property normally
+    changeset = await this.db.checkCreatedInChangeset(
+      'Product',
+      input.id,
+      changeset
+    );
     await this.db
       .query()
       .match([
         node('product', 'Product', { id: input.id }),
-        relation('out', 'rel', 'produces', ACTIVE),
+        relation('out', 'oldToProd', 'produces', { active: !changeset }),
         node('', 'Producible'),
+        ...(changeset
+          ? [
+              relation('in', 'oldChange', 'changeset', ACTIVE),
+              node('changeNode', 'Changeset', { id: changeset }),
+            ]
+          : []),
       ])
       .setValues({
-        'rel.active': false,
+        [`${changeset ? 'oldChange' : 'oldToProd'}.active`]: false,
       })
-      .return('rel')
+      .return(`${changeset ? 'oldChange' : 'oldToProd'}`)
       .first();
 
     await this.db
@@ -428,13 +452,21 @@ export class ProductRepository extends CommonRepository {
           id: produces,
         }),
       ])
+      .apply((q) =>
+        changeset
+          ? q.match(node('changeset', 'Changeset', { id: changeset }))
+          : q
+      )
       .create([
         node('product'),
         relation('out', 'rel', 'produces', {
-          active: true,
+          active: !changeset,
           createdAt: DateTime.local(),
         }),
         node('producible'),
+        ...(changeset
+          ? [relation('in', '', 'changeset', ACTIVE), node('changset')]
+          : []),
       ])
       .return('rel')
       .first();
@@ -442,8 +474,14 @@ export class ProductRepository extends CommonRepository {
 
   async updateUnspecifiedScripture(
     productId: ID,
-    input: UnspecifiedScripturePortionInput | null
+    input: UnspecifiedScripturePortionInput | null,
+    changeset?: ID
   ) {
+    changeset = await this.db.checkCreatedInChangeset(
+      'Product',
+      productId,
+      changeset
+    );
     await this.db
       .query()
       .matchNode('node', 'Product', { id: productId })
@@ -451,17 +489,23 @@ export class ProductRepository extends CommonRepository {
         deactivateProperty({
           resource: DirectScriptureProduct,
           key: 'unspecifiedScripture',
+          changeset,
         })
       )
       .apply((q) =>
         input
           ? q.create([
               node('node'),
-              relation('out', 'rel', 'unspecifiedScripture', ACTIVE),
+              relation('out', 'rel', 'unspecifiedScripture', {
+                active: !changeset,
+              }),
               node('', ['UnspecifiedScripturePortion', 'Property'], {
                 ...input,
                 createdAt: DateTime.local(),
               }),
+              ...(changeset
+                ? [relation('in', '', 'changeset', ACTIVE), node('changeset')]
+                : []),
             ])
           : q
       )
@@ -471,20 +515,27 @@ export class ProductRepository extends CommonRepository {
 
   async updateDerivativeProperties(
     object: DerivativeScriptureProduct,
-    changes: DbChanges<DerivativeScriptureProduct>
+    changes: DbChanges<DerivativeScriptureProduct>,
+    changeset?: ID
   ) {
     return await this.db.updateProperties({
       type: DerivativeScriptureProduct,
       object,
       changes,
+      changeset,
     });
   }
 
-  async updateOther(object: OtherProduct, changes: DbChanges<OtherProduct>) {
+  async updateOther(
+    object: OtherProduct,
+    changes: DbChanges<OtherProduct>,
+    changeset?: ID
+  ) {
     return await this.db.updateProperties({
       type: OtherProduct,
       object,
       changes,
+      changeset,
     });
   }
 

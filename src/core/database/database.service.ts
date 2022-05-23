@@ -309,22 +309,7 @@ export class DatabaseService {
     const label = type.name;
 
     // check if the node is created in changeset, update property normally
-    if (changeset) {
-      const result = await this.db
-        .query()
-        .match([
-          node('changeset', 'Changeset', { id: changeset }),
-          relation('out', '', 'changeset', ACTIVE),
-          node('node', label, { id }),
-        ])
-        .return('node.id')
-        .first();
-
-      if (result) {
-        changeset = undefined;
-      }
-    }
-
+    changeset = await this.checkCreatedInChangeset(label, id, changeset);
     const update = this.db
       .query()
       .match(node('node', label, { id }))
@@ -368,6 +353,25 @@ export class DatabaseService {
    */
   async checkDeletePermission(..._args: any[]) {
     return true;
+  }
+  async checkCreatedInChangeset(label: string, nodeId: ID, changeset?: ID) {
+    // check if the node is created in changeset, update property normally
+    if (changeset) {
+      const result = await this.db
+        .query()
+        .match([
+          node('changeset', 'Changeset', { id: changeset }),
+          relation('out', '', 'changeset', ACTIVE),
+          node('node', label, { id: nodeId }),
+        ])
+        .return('node.id')
+        .first();
+
+      if (result) {
+        return undefined;
+      }
+    }
+    return changeset;
   }
 
   async deleteNode(objectOrId: { id: ID } | ID) {
