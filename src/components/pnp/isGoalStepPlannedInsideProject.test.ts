@@ -1,12 +1,8 @@
 import { jest } from '@jest/globals';
 import { promises as fs } from 'fs';
 import { DateTime } from 'luxon';
-import {
-  CalendarDate,
-  DateInterval,
-  expandToFullFiscalYears,
-  fullFiscalYear,
-} from '../../common';
+import { CalendarDate, DateInterval } from '../../common';
+import * as FiscalYear from '../../common/fiscal-year';
 import { WorkBook } from '../../common/xlsx.util';
 import { Pnp } from '../../components/pnp';
 import {
@@ -20,17 +16,8 @@ const fiscalYear2019 = DateInterval.fromDateTimes(
   CalendarDate.local(2019, 9, 30)
 );
 
-const projectYears = DateInterval.fromDateTimes(
-  CalendarDate.local(2019, 10, 1),
-  CalendarDate.local(2022, 9, 30)
-);
-
-jest.mock('../../common/fiscal-year', () => {
-  return {
-    fullFiscalYear: jest.fn().mockImplementation(() => fiscalYear2019),
-    expandToFullFiscalYears: jest.fn().mockImplementation(() => projectYears),
-  };
-});
+const mockFullFiscalYear = jest.spyOn(FiscalYear, 'fullFiscalYear');
+mockFullFiscalYear.mockReturnValue(fiscalYear2019);
 
 //test cases for stepPlanCompleteDate
 describe('stepPlanCompleteDate', () => {
@@ -42,11 +29,14 @@ describe('stepPlanCompleteDate', () => {
     ).sheet('Planning');
   });
 
+  afterEach(() => {
+    jest.resetAllMocks();
+  });
+
   it('should return the end month of the full fiscal year when valid cell is passed in', () => {
     const cell = planningSheet.cell('U23');
     const actualStepPlanCompleteDate = stepPlanCompleteDate(cell);
     expect(actualStepPlanCompleteDate).toEqual(DateTime.local(2019, 9, 30));
-    expect(fullFiscalYear).toBeCalledTimes(1);
   });
 
   it('should return null when fiscal year is nullish', () => {
@@ -57,44 +47,39 @@ describe('stepPlanCompleteDate', () => {
 });
 
 //test cases for isGoalStepPlannedInsidedProject
-describe('isGoalStepPlannedInsideProject (Mar-2020 to Sep-2022)', () => {
+describe('isGoalStepPlannedInsideProject', () => {
   let testPnp: Pnp;
   let planningSheet: PlanningSheet;
+  mockFullFiscalYear.mockRestore();
 
   beforeAll(async () => {
     testPnp = Pnp.fromBuffer(await fs.readFile('./test/pnp/ExamplePnP.xlsx'));
     planningSheet = testPnp.planning;
   });
 
-  it('cell U23 (stepcomplete by 9-30-2019) should return false', () => {
+  afterEach(() => {
+    jest.resetAllMocks();
+  });
+
+  it('[U23] should return false when cell contains a date before the project date range', () => {
     const cell = planningSheet.cell('U23');
     const results = isGoalStepPlannedInsideProject(testPnp, cell);
     expect(results).toEqual(false);
-    expect(expandToFullFiscalYears).toBeCalledTimes(1);
   });
 
-  it('cell U24 (stepcomplete by 9-30-2020) should return true', () => {
+  it('[U24] should return true when cell contains a date within the project date range', () => {
     const cell = planningSheet.cell('U24');
     const results = isGoalStepPlannedInsideProject(testPnp, cell);
     expect(results).toEqual(true);
-    expect(expandToFullFiscalYears).toBeCalledTimes(1);
   });
 
-  it('cell U25 (stepcomplete by 9-30-2021) should return true', () => {
-    const cell = planningSheet.cell('U25');
-    const results = isGoalStepPlannedInsideProject(testPnp, cell);
-    expect(results).toEqual(true);
-    expect(expandToFullFiscalYears).toBeCalledTimes(1);
-  });
-
-  it('cell U26 (stepcomplete by 9-30-2023) should return false', () => {
+  it('[U26] should return false when cell contains a date after the project date range', () => {
     const cell = planningSheet.cell('U26');
     const results = isGoalStepPlannedInsideProject(testPnp, cell);
     expect(results).toEqual(false);
-    expect(expandToFullFiscalYears).toBeCalledTimes(1);
   });
 
-  it('cell U27 (stepcomplete by empty/undefined) should return false', () => {
+  it('[U27] should return false when cell is empty/undefined', () => {
     const cell = planningSheet.cell('U27');
     const results = isGoalStepPlannedInsideProject(testPnp, cell);
     expect(results).toEqual(false);
