@@ -1,3 +1,4 @@
+import { trimStart } from 'lodash';
 import { CalendarDate, fullFiscalYear } from '../../common';
 import { Cell } from '../../common/xlsx.util';
 import { PlanningSheet } from './planning-sheet';
@@ -15,7 +16,8 @@ export const isGoalStepPlannedInsideProject = (
 };
 
 export const stepPlanCompleteDate = (cell: Cell<PlanningSheet>) => {
-  const fiscalYear = cell.asNumber;
+  const fiscalYear =
+    cell.asNumber ?? (Number(trimStart(cell.asString ?? '', `'`)) || undefined);
   const fullFY = fiscalYear ? fullFiscalYear(fiscalYear) : undefined;
   return fullFY?.end;
 };

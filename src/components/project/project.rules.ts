@@ -514,7 +514,7 @@ export class ProjectRules {
         };
       case ProjectStep.PendingChangeToPlanConfirmation:
         return {
-          approvers: [Role.Controller],
+          approvers: [Role.Administrator, Role.Controller],
           transitions: [
             {
               to: ProjectStep.DiscussingChangeToPlan,
