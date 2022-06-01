@@ -26,11 +26,12 @@ export class ProductExtractor {
     const sheet = pnp.planning;
 
     const stepColumns = findStepColumns(sheet, availableSteps);
+    const progressStepColumns = findStepColumns(pnp.progress, availableSteps);
 
     const productRows = sheet.goals
       .walkDown()
       .filter(isGoalRow)
-      .map(parseProductRow(pnp, stepColumns))
+      .map(parseProductRow(pnp, stepColumns, progressStepColumns))
       .filter((row) => row.steps.length > 0)
       .toArray();
 
@@ -52,7 +53,11 @@ export class ProductExtractor {
 }
 
 const parseProductRow =
-  (pnp: Pnp, stepColumns: Record<Step, Column>) =>
+  (
+    pnp: Pnp,
+    stepColumns: Record<Step, Column>,
+    progressStepColumns: Record<Step, Column>
+  ) =>
   (cell: Cell<PlanningSheet>, index: number): ExtractedRow => {
     const sheet = cell.sheet;
     const row = cell.row;
@@ -61,8 +66,11 @@ const parseProductRow =
 
     const steps = entries(stepColumns).flatMap(([step, column]) => {
       const plannedCompleteDate = stepPlanCompleteDate(sheet.cell(column, row));
+      const progressCell = pnp.progress.cell(
+        progressStepColumns[step],
+        progressRow
+      );
 
-      const progressCell = pnp.progress.cell(column, progressRow);
       if (
         !isGoalStepPlannedInsideProject(pnp, plannedCompleteDate) ||
         isProgressCompletedOutsideProject(pnp, progressCell)
