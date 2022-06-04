@@ -6,17 +6,19 @@ export const projectListFilter = (input: ProjectListInput) =>
   filter.builder(input.filter, {
     type: filter.skip, // already applied
     status: filter.stringListProp(),
-    onlyMultipleEngagements: ({ value, query }) => {
-      if (!value) return null;
-      query
-        .match([
-          node('node'),
-          relation('out', '', 'engagement', ACTIVE),
-          node('engagement', 'Engagement'),
-        ])
-        .with('*, count(engagement) as engagementCount');
-      return { engagementCount: greaterThan(1) };
-    },
+    onlyMultipleEngagements:
+      ({ value, query }) =>
+      () =>
+        value
+          ? query
+              .match([
+                node('node'),
+                relation('out', '', 'engagement', ACTIVE),
+                node('engagement', 'Engagement'),
+              ])
+              .with('node, count(engagement) as engagementCount')
+              .where({ engagementCount: greaterThan(1) })
+          : null,
     step: filter.stringListProp(),
     createdAt: filter.dateTimeBaseNodeProp(),
     modifiedAt: filter.dateTimeProp(),
