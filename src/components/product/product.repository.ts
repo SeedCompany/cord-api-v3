@@ -37,6 +37,7 @@ import {
   merge,
   paginate,
   sorting,
+  whereNotDeletedInChangeset,
 } from '../../core/database/query';
 import {
   ScriptureRange,
@@ -539,7 +540,7 @@ export class ProductRepository extends CommonRepository {
     });
   }
 
-  async list(input: ProductListInput, session: Session) {
+  async list(input: ProductListInput, session: Session, changeset?: ID) {
     const result = await this.db
       .query()
       .matchNode('node', 'Product')
@@ -554,6 +555,7 @@ export class ProductRepository extends CommonRepository {
             ]
           : []),
       ])
+      .apply(whereNotDeletedInChangeset(changeset))
       .apply((q) => {
         const { approach, methodology, ...rest } = input.filter;
         const merged = [

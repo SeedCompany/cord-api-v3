@@ -489,7 +489,8 @@ export class EngagementService {
   async listProducts(
     engagement: LanguageEngagement,
     input: ProductListInput,
-    session: Session
+    session: Session,
+    view?: ObjectView
   ): Promise<SecuredProductList> {
     const { product: perms } = await this.authorizationService.getPermissions({
       resource: LanguageEngagement,
@@ -508,7 +509,8 @@ export class EngagementService {
           engagementId: engagement.id,
         },
       },
-      session
+      session,
+      view
     );
 
     return {

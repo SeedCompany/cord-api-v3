@@ -730,10 +730,11 @@ export class ProductService {
 
   async list(
     input: ProductListInput,
-    session: Session
+    session: Session,
+    view?: ObjectView
   ): Promise<ProductListOutput> {
     // all roles can list, so no need to check canList for now
-    const results = await this.repo.list(input, session);
+    const results = await this.repo.list(input, session, view?.changeset);
     return await mapListResults(results, (row) =>
       this.secure(this.mapDbRowToDto(row), session)
     );
