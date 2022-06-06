@@ -93,7 +93,7 @@ export class ProductRepository extends CommonRepository {
       .query()
       .matchNode('node', label)
       .where({ 'node.id': inArray(ids) })
-      .apply(this.hydrate(session))
+      .apply(this.hydrate(session, view))
       .map('dto');
     return await query.run();
   }
@@ -338,7 +338,7 @@ export class ProductRepository extends CommonRepository {
             : {},
         })
       )
-      // Connect scripture ranges
+      //Connect scripture ranges
       .apply((q) => {
         const createdAt = DateTime.local();
         const connectScriptureRange =
@@ -370,7 +370,8 @@ export class ProductRepository extends CommonRepository {
             : [],
         ]);
       })
-      .return<{ id: ID }>('node.id as id');
+      .return<{ id: ID }>('node.id as id')
+      .logIt();
     const result = await query.first();
     if (!result) {
       throw new ServerException('Failed to create product');

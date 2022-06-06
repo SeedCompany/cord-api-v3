@@ -168,7 +168,7 @@ export class ProductService {
           changeset
         );
 
-    this.logger.debug(`product created`, { id });
+    this.logger.info(`product created`, { id });
     return await this.readOne(id, session, viewOfChangeset(changeset));
   }
 
@@ -194,7 +194,11 @@ export class ProductService {
     const rows = await this.readManyUnsecured([id], session, view);
     const result = rows[0];
     if (!result) {
-      throw new NotFoundException('Could not find product');
+      throw new NotFoundException(
+        `Could not find product: ID-${id}, CHANGESET-${
+          view?.changeset ?? 'none'
+        }`
+      );
     }
     return result;
   }
