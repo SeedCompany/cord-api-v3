@@ -1,6 +1,7 @@
 import {
   Args,
   ArgsType,
+  Info,
   Mutation,
   Parent,
   Query,
@@ -9,10 +10,12 @@ import {
 } from '@nestjs/graphql';
 import {
   AnonSession,
+  Fields,
   firstLettersOfWords,
   ID,
   IdArg,
   IdField,
+  IsOnly,
   ListArg,
   LoggedInSession,
   mapSecuredValue,
@@ -193,8 +196,15 @@ export class ProjectResolver {
     @AnonSession() session: Session,
     @Parent() project: Project,
     @ListArg(EngagementListInput) input: EngagementListInput,
-    @Loader(EngagementLoader) engagements: LoaderOf<EngagementLoader>
-  ): Promise<SecuredEngagementList> {
+    @Loader(EngagementLoader) engagements: LoaderOf<EngagementLoader>,
+    @Info(Fields, IsOnly<SecuredEngagementList>(['total'])) onlyTotal: boolean
+  ) {
+    // Optimize total for listing. Note that input filters could affect this
+    // number, but currently there's nothing exposed that does so this is safe.
+    if (onlyTotal) {
+      return { total: project.engagementTotal };
+    }
+
     const list = await this.projectService.listEngagements(
       project,
       input,
