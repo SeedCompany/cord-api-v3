@@ -43,9 +43,8 @@ export const builder =
 
     let conditions: AndConditions = {};
     const afters: Array<(query: Query) => Query> = [];
-    for (const pair of Object.entries(filters)) {
-      const key = pair[0] as keyof T & string;
-      const value = pair[1];
+    for (const key of Object.keys(builders)) {
+      const value = filters[key];
       if (value == null) {
         continue;
       }
