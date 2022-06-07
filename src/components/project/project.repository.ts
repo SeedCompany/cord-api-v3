@@ -121,6 +121,11 @@ export class ProjectRepository extends CommonRepository {
           relation('out', '', 'owningOrganization', ACTIVE),
           node('organization', 'Organization'),
         ])
+        .optionalMatch([
+          node('node'),
+          relation('out', '', 'engagement', ACTIVE),
+          node('engagement', 'Engagement'),
+        ])
         .return<{ dto: UnsecuredDto<Project> }>(
           merge('props', 'changedProps', {
             type: 'node.type',
@@ -130,6 +135,7 @@ export class ProjectRepository extends CommonRepository {
             marketingLocation: 'marketingLocation.id',
             fieldRegion: 'fieldRegion.id',
             owningOrganization: 'organization.id',
+            engagementTotal: 'count(engagement)',
             changeset: 'changeset.id',
           }).as('dto')
         );
