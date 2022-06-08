@@ -19,6 +19,7 @@ import {
   ServerException,
   Session,
   UnsecuredDto,
+  viewOfChangeset,
 } from '../../common';
 import { CommonRepository, DatabaseService, OnIndex } from '../../core';
 import { DbChanges, getChanges } from '../../core/database/changes';
@@ -31,6 +32,7 @@ import {
   escapeLuceneSyntax,
   filter,
   fullTextQuery,
+  INACTIVE,
   matchChangesetAndChangedProps,
   matchProps,
   matchPropsAndProjectSensAndScopedRoles,
@@ -194,9 +196,12 @@ export class ProductRepository extends CommonRepository {
       query
         .match([
           node('project', 'Project'),
-          relation('out', '', 'engagement', ACTIVE),
+          // active check not needed here as project will never change
+          // the relationships could be inactive if made in a changeset, we don't care either way.
+          relation('out', '', 'engagement'),
           node('engagement', 'Engagement'),
-          relation('out', '', 'product', ACTIVE),
+          // same here. Engagement itself could be in a changeset
+          relation('out', '', 'product'),
           node('node'),
         ])
         .apply(matchPropsAndProjectSensAndScopedRoles(session, { view }))
@@ -544,36 +549,57 @@ export class ProductRepository extends CommonRepository {
   async list(input: ProductListInput, session: Session, changeset?: ID) {
     const result = await this.db
       .query()
-      .matchNode('node', 'Product')
-      .match([
-        ...(input.filter.engagementId
-          ? [
-              node('node'),
-              relation('in', '', 'product', ACTIVE),
-              node('engagement', 'Engagement', {
-                id: input.filter.engagementId,
-              }),
-            ]
-          : []),
-      ])
-      .apply(whereNotDeletedInChangeset(changeset))
-      .apply((q) => {
-        const { approach, methodology, ...rest } = input.filter;
-        const merged = [
-          ...(approach ? ApproachToMethodologies[approach] : []),
-          ...(methodology ? [methodology] : []),
-        ];
-        filter.builder(
-          { ...rest, ...(merged.length ? { methodology: merged } : {}) },
-          {
-            engagementId: filter.skip,
-            placeholder: filter.isPropNotNull('placeholderDescription'),
-            methodology: filter.propVal(),
-          }
-        )(q);
-      })
+      .subQuery((sub) =>
+        sub
+          .matchNode('node', 'Product')
+          .match([
+            ...(input.filter.engagementId
+              ? [
+                  node('node'),
+                  relation('in', '', 'product', ACTIVE),
+                  node('engagement', 'Engagement', {
+                    id: input.filter.engagementId,
+                  }),
+                ]
+              : []),
+          ])
+          .apply(whereNotDeletedInChangeset(changeset))
+          .apply((q) => {
+            const { approach, methodology, ...rest } = input.filter;
+            const merged = [
+              ...(approach ? ApproachToMethodologies[approach] : []),
+              ...(methodology ? [methodology] : []),
+            ];
+            filter.builder(
+              { ...rest, ...(merged.length ? { methodology: merged } : {}) },
+              {
+                engagementId: filter.skip,
+                placeholder: filter.isPropNotNull('placeholderDescription'),
+                methodology: filter.propVal(),
+              }
+            )(q);
+          })
+          .return(['node', input.filter.engagementId ? 'engagement' : ''])
+          .apply((q) =>
+            changeset && input.filter.engagementId
+              ? q
+                  .union()
+                  .match([
+                    // product will always be a 'child' of LanguageEngagement
+                    node('engagement', 'LanguageEngagement', {
+                      id: input.filter.engagementId,
+                    }),
+                    relation('out', '', 'product', INACTIVE),
+                    node('node'),
+                    relation('in', '', 'changeset', ACTIVE),
+                    node('changeset', 'Changeset', { id: changeset }),
+                  ])
+                  .return(['node', 'engagement'])
+              : q
+          )
+      )
       .apply(sorting(Product, input))
-      .apply(paginate(input, this.hydrate(session)))
+      .apply(paginate(input, this.hydrate(session, viewOfChangeset(changeset))))
       .first();
     return result!; // result from paginate() will always have 1 row.
   }
