@@ -35,6 +35,10 @@ export class CalendarDate
       dt instanceof CalendarDate ? dt : dt.startOf('day')
     );
   }
+  static asDateTime(date: CalendarDate): DateTime {
+    if (!(date instanceof CalendarDate)) return date;
+    return Object.assign(Object.create(DateTime.prototype), date);
+  }
 
   protected constructor() {
     super({});

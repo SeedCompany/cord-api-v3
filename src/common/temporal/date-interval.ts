@@ -54,6 +54,13 @@ export class DateInterval
       end: dateTime.end,
     });
   }
+  static asInterval(interval: DateInterval): Interval {
+    if (!(interval instanceof DateInterval)) return interval;
+    const s = CalendarDate.asDateTime(interval.start);
+    const e = CalendarDate.asDateTime(interval.end);
+    return Object.assign(Object.create(Interval.prototype), interval, { s, e });
+  }
+
   static after(start: DateInput, duration: DurationLike) {
     const dur = Duration.from(duration).minus({ days: 1 });
     return DateInterval.fromInterval(super.after(start, dur));
