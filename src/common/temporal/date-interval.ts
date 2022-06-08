@@ -114,7 +114,11 @@ export class DateInterval
     return toSuper(this).contains(date);
   }
   count(unit: DurationUnit = 'days'): number {
-    return super.count(unit);
+    // no need to add day to end here as this underlying math already
+    // "rounds up" to include the end of the day.
+    // We do need to convert back to base classes, so that our subclass
+    // math doesn't interfere.
+    return DateInterval.asInterval(this).count(unit);
   }
   isAfter(date: CalendarDate): boolean {
     return toSuper(this).isAfter(date);
