@@ -28,7 +28,12 @@ export class StepProgressResolver {
     })
     format: ProgressFormat
   ): Promise<SecuredFloatNullable> {
-    const product = await products.load(sp.productId);
+    // since ProductProgress isn't changeset aware yet, we're passing a view in of active: true
+    // until later. Fix the parameters and view once ProductProgess is made changesetAware
+    const product = await products.load({
+      id: sp.productId,
+      view: { active: true },
+    });
     if (
       !product.progressTarget.canRead ||
       // progress target should always be >0 so this is just a sanity check

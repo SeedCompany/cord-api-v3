@@ -21,7 +21,9 @@ export class ProductProgressResolver {
     @Parent() { productId }: ProductProgress,
     @Loader(ProductLoader) products: LoaderOf<ProductLoader>
   ): Promise<Product> {
-    return await products.load(productId);
+    // since ProductProgress isn't changeset aware, we're passing a view in of active: true
+    // until later. Fix the parameters and view once ProductProgess is made changesetAware
+    return await products.load({ id: productId, view: { active: true } });
   }
 
   @ResolveField(() => ProgressReport)
