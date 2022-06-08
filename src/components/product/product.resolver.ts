@@ -61,9 +61,9 @@ export class ProductResolver {
   })
   async product(
     @Loader(ProductLoader) products: LoaderOf<ProductLoader>,
-    @IdsAndViewArg() { id }: IdsAndView
+    @IdsAndViewArg() key: IdsAndView
   ): Promise<AnyProduct> {
-    return await products.load(id);
+    return await products.load(key);
   }
 
   @Query(() => ProductListOutput, {
