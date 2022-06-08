@@ -168,7 +168,6 @@ export class ProductService {
           changeset
         );
 
-    this.logger.info(`product created`, { id });
     return await this.readOne(id, session, viewOfChangeset(changeset));
   }
 
