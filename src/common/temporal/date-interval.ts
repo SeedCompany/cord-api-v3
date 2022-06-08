@@ -25,7 +25,10 @@ const fromSuper = (int: Interval): DateInterval =>
  * meaning its inclusive of both it's starting & ending date.
  * Luxon's Interval is half-open with it's end point not inclusive.
  */
-export class DateInterval extends Interval {
+export class DateInterval
+  // @ts-expect-error library doesn't explicitly support extension
+  extends Interval
+{
   get end(): CalendarDate {
     return super.end;
   }
@@ -42,7 +45,6 @@ export class DateInterval extends Interval {
       config.end instanceof CalendarDate
         ? config.end
         : CalendarDate.fromDateTime(config.end);
-    // @ts-expect-error constructor not typed because it's private
     super(config);
   }
 
