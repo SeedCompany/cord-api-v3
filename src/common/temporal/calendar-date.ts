@@ -21,7 +21,10 @@ import { DateInterval } from './date-interval';
  * Whether or not we need/want it to be type compatible with DateTime has yet to
  * be determined - currently it is.
  */
-export class CalendarDate extends DateTime {
+export class CalendarDate
+  // @ts-expect-error library doesn't explicitly support extension
+  extends DateTime
+{
   static isDate(o: any): o is CalendarDate {
     return o instanceof CalendarDate;
   }
@@ -32,10 +35,12 @@ export class CalendarDate extends DateTime {
       dt instanceof CalendarDate ? dt : dt.startOf('day')
     );
   }
+  static asDateTime(date: CalendarDate): DateTime {
+    if (!(date instanceof CalendarDate)) return date;
+    return Object.assign(Object.create(DateTime.prototype), date);
+  }
 
   protected constructor() {
-    // @ts-expect-error DateTime constructor isn't defined, because it's private
-    // but it does require an object
     super({});
   }
 

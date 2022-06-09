@@ -125,6 +125,29 @@ describe('DateInterval', () => {
     expect(days(5, 5).count('days')).toBe(1);
     expect(days(5, 5).count('months')).toBe(1);
     expect(days(5, 5).count('years')).toBe(1);
+
+    const quarter = DateInterval.fromDateTimes(
+      DateTime.local(2020, 1, 1),
+      DateTime.local(2020, 3, 31)
+    );
+    expect(quarter.count('quarters')).toBe(1);
+    expect(quarter.count('years')).toBe(1);
+
+    const fourQuarters = DateInterval.fromDateTimes(
+      DateTime.local(2020, 1, 1),
+      DateTime.local(2020, 12, 31)
+    );
+    expect(fourQuarters.count('years')).toBe(1);
+    expect(fourQuarters.count('quarters')).toBe(4);
+
+    const yearAndDay = DateInterval.fromDateTimes(
+      DateTime.local(2019, 1, 1),
+      DateTime.local(2020, 1, 1)
+    );
+
+    expect(yearAndDay.count('years')).toBe(2);
+    expect(yearAndDay.count('months')).toBe(13);
+    expect(yearAndDay.count('quarters')).toBe(5);
   });
   it('contains', () => {
     expect(days(5, 8).contains(day(6))).toBeTruthy();

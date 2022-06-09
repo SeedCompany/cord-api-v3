@@ -25,7 +25,10 @@ const fromSuper = (int: Interval): DateInterval =>
  * meaning its inclusive of both it's starting & ending date.
  * Luxon's Interval is half-open with it's end point not inclusive.
  */
-export class DateInterval extends Interval {
+export class DateInterval
+  // @ts-expect-error library doesn't explicitly support extension
+  extends Interval
+{
   get end(): CalendarDate {
     return super.end;
   }
@@ -42,7 +45,6 @@ export class DateInterval extends Interval {
       config.end instanceof CalendarDate
         ? config.end
         : CalendarDate.fromDateTime(config.end);
-    // @ts-expect-error constructor not typed because it's private
     super(config);
   }
 
@@ -52,6 +54,13 @@ export class DateInterval extends Interval {
       end: dateTime.end,
     });
   }
+  static asInterval(interval: DateInterval): Interval {
+    if (!(interval instanceof DateInterval)) return interval;
+    const s = CalendarDate.asDateTime(interval.start);
+    const e = CalendarDate.asDateTime(interval.end);
+    return Object.assign(Object.create(Interval.prototype), interval, { s, e });
+  }
+
   static after(start: DateInput, duration: DurationLike) {
     const dur = Duration.from(duration).minus({ days: 1 });
     return DateInterval.fromInterval(super.after(start, dur));
@@ -105,7 +114,11 @@ export class DateInterval extends Interval {
     return toSuper(this).contains(date);
   }
   count(unit: DurationUnit = 'days'): number {
-    return super.count(unit);
+    // no need to add day to end here as this underlying math already
+    // "rounds up" to include the end of the day.
+    // We do need to convert back to base classes, so that our subclass
+    // math doesn't interfere.
+    return DateInterval.asInterval(this).count(unit);
   }
   isAfter(date: CalendarDate): boolean {
     return toSuper(this).isAfter(date);
