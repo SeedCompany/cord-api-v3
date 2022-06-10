@@ -217,6 +217,28 @@ export class PartnershipService {
       );
     }
 
+    if (input.mouStartOverride && input.mouStartOverride > existing.mouEnd!) {
+      throw new ServerException(
+        `Invalid date range, mou start date should come before project's mou end date`
+      );
+    }
+
+    if (input.mouEndOverride && input.mouEndOverride < existing.mouStart!) {
+      throw new ServerException(
+        `Invalid date range, mou end date should come after project's mou start date`
+      );
+    }
+
+    if (
+      input.mouStartOverride &&
+      input.mouEndOverride &&
+      input.mouStartOverride > input.mouEndOverride
+    ) {
+      throw new ServerException(
+        `Invalid date range, mou start date should come before mou end date`
+      );
+    }
+
     const changes = this.repo.getActualChanges(object, input);
     await this.authorizationService.verifyCanEditChanges(
       Partnership,
