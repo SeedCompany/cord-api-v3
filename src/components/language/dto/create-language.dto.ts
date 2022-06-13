@@ -5,7 +5,6 @@ import {
   IsLowercase,
   IsNumberString,
   IsPositive,
-  Length,
   Matches,
   ValidateNested,
 } from 'class-validator';
@@ -17,6 +16,7 @@ import {
   Sensitivity,
   SensitivityField,
 } from '../../../common';
+import { ExactLength } from '../../../common/validators/exactLength';
 import { Language } from './language.dto';
 
 @InputType()
@@ -24,13 +24,13 @@ export abstract class CreateEthnologueLanguage {
   @NameField({ nullable: true })
   @IsAlpha()
   @IsLowercase()
-  @Length(3)
+  @ExactLength(3)
   readonly code?: string;
 
   @NameField({ nullable: true })
   @IsAlpha()
   @IsLowercase()
-  @Length(3)
+  @ExactLength(3)
   readonly provisionalCode?: string;
 
   @NameField({ nullable: true })
@@ -65,7 +65,7 @@ export abstract class CreateLanguage {
   readonly populationOverride: number;
 
   @NameField({ nullable: true })
-  @Length(5)
+  @ExactLength(5)
   @IsNumberString()
   readonly registryOfDialectsCode?: string;
 
