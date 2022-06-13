@@ -341,6 +341,7 @@ export const Liaison = new DbRole({
         { propertyName: 'description', permission: { read, }, },
         { propertyName: 'unspecifiedScripture', permission: { read, }, },
         { propertyName: 'placeholderDescription', permission: { read, }, },
+        { propertyName: 'composite', permission: { read, }, },
       ],
       canDelete: false,
     }),

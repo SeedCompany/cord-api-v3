@@ -366,6 +366,7 @@ export const FieldOperationsDirector = new DbRole({
         { propertyName: 'description', permission: { read, write, }, },
         { propertyName: 'unspecifiedScripture', permission: { read, write, }, },
         { propertyName: 'placeholderDescription', permission: { read, write, }, },
+        { propertyName: 'composite', permission: { read, write, }, },
       ],
       canDelete: false,
     }),
