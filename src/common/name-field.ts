@@ -10,7 +10,17 @@ import { Transform } from './transform.decorator';
 export const NameField = (options: FieldOptions = {}) =>
   applyDecorators(
     InferredTypeOrStringField(options),
-    Transform(({ value }) => value?.trim()),
+    Transform(({ value }) => {
+      if (value === undefined) {
+        return undefined;
+      }
+      if (options.nullable) {
+        // Treat null & empty strings as null
+        return value?.trim() || null;
+      }
+      // Null & empty string treated as MinLength validation error
+      return value?.trim() ?? '';
+    }),
     DbSort((value) => `apoc.text.clean(${value})`),
     MinLength(1)
   );
