@@ -34,7 +34,7 @@ export abstract class UpdatePartner {
   readonly active?: boolean;
 
   @NameField({ nullable: true })
-  readonly address?: string;
+  readonly address?: string | null;
 }
 
 @InputType()
