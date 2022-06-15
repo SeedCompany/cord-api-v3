@@ -22,7 +22,10 @@ export const NameField = (options: FieldOptions = {}) =>
       return value?.trim() ?? '';
     }),
     DbSort((value) => `apoc.text.clean(${value})`),
-    MinLength(1)
+    // Using this instead of @IsNotEmpty, as this allows nulls.
+    MinLength(1, {
+      message: 'Cannot be empty',
+    })
   );
 
 /**
