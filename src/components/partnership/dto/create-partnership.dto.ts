@@ -2,7 +2,13 @@ import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Transform, Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { uniq } from 'lodash';
-import { CalendarDate, DateField, ID, IdField } from '../../../common';
+import {
+  CalendarDate,
+  DateField,
+  ID,
+  IdField,
+  IsValidDateRange,
+} from '../../../common';
 import { CreateDefinedFileVersionInput } from '../../file/dto';
 import { PartnerType } from '../../partner/dto';
 import { FinancialReportingType } from './financial-reporting-type';
@@ -34,6 +40,7 @@ export class CreatePartnership {
   readonly mouStatus?: PartnershipAgreementStatus;
 
   @DateField({ nullable: true })
+  @IsValidDateRange()
   readonly mouStartOverride?: CalendarDate;
 
   @DateField({ nullable: true })

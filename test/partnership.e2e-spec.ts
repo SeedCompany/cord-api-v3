@@ -167,8 +167,8 @@ describe('Partnership e2e', () => {
   it('update mou overrides partnership', async () => {
     const partnership = await createPartnership(app, { projectId: project.id });
 
-    const mouStartOverride = '1981-01-01';
-    const mouEndOverride = '2020-01-01';
+    const mouStartOverride = CalendarDate.local().toISODate();
+    const mouEndOverride = CalendarDate.local().plus({ years: 1 }).toISODate();
 
     const result = await app.graphql.query(
       gql`

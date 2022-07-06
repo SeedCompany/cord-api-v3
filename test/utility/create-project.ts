@@ -142,8 +142,8 @@ export async function createProject(
   const project: CreateProject = {
     name: faker.random.word() + ' ' + faker.datatype.uuid(),
     type: ProjectType.Translation,
-    mouStart: CalendarDate.fromISO('1991-01-01'),
-    mouEnd: CalendarDate.fromISO('1992-01-01'),
+    mouStart: CalendarDate.local(),
+    mouEnd: CalendarDate.local().plus({ years: 1 }),
     step: ProjectStep.EarlyConversations,
     tags: ['tag1', 'tag2'],
     fieldRegionId:
