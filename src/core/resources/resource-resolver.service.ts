@@ -94,7 +94,7 @@ export class ResourceResolver {
     );
     const filtered = discovered.filter((f) => f.meta.type.includes(type));
     if (filtered.length === 0) {
-      throw new ServerException(`Could find resolver for type: ${type}`);
+      throw new ServerException(`Could not find resolver for type: ${type}`);
     }
     if (filtered.length > 1) {
       this.logger.warning(`Found more than one resolver for ${type}`);
