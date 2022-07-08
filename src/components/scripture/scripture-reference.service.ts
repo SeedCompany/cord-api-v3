@@ -31,7 +31,7 @@ export class ScriptureReferenceService {
   async update(
     producibleId: ID,
     scriptureRefs: readonly ScriptureRangeInput[] | null | undefined,
-    options: { isOverriding?: boolean } = {}
+    options: { isOverriding?: boolean; changeset?: ID } = {}
   ): Promise<void> {
     if (scriptureRefs === undefined) {
       return;
@@ -45,12 +45,18 @@ export class ScriptureReferenceService {
       options.isOverriding,
       producibleId,
       scriptureRefs,
-      rel
+      rel,
+      options.changeset
     );
 
     if (scriptureRefs !== null) {
       for (const sr of scriptureRefs) {
-        await this.repo.updateScriptureRefs(sr, producibleId, rel);
+        await this.repo.updateScriptureRefs(
+          sr,
+          producibleId,
+          rel,
+          options.changeset
+        );
       }
     }
   }

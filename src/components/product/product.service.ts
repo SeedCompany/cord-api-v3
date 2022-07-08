@@ -270,7 +270,6 @@ export class ProductService {
     session: Session
   ): Promise<AnyProduct> {
     const canDelete = await this.repo.checkDeletePermission(dto.id, session);
-
     const scriptureReferences = this.scriptureRefs.parseList(
       dto.scriptureReferences
     );
@@ -425,7 +424,9 @@ export class ProductService {
     const { scriptureReferences, unspecifiedScripture, ...simpleChanges } =
       changes;
 
-    await this.scriptureRefs.update(input.id, scriptureReferences); //TODO: make changeset aware
+    await this.scriptureRefs.update(input.id, scriptureReferences, {
+      changeset,
+    });
 
     // update unspecifiedScripture if it's defined
     if (unspecifiedScripture !== undefined) {
