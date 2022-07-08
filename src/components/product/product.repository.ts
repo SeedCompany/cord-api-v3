@@ -236,12 +236,13 @@ export class ProductRepository extends CommonRepository {
         .subQuery(
           ['node', 'produces'],
           this.scriptureRefs.list({
+            changeset: view?.changeset,
             relationName: oneLine`
-              CASE WHEN produces is null
-                THEN "scriptureReferences"
-                ELSE "scriptureReferencesOverride"
-              END
-            `,
+            CASE WHEN produces is null
+              THEN "scriptureReferences"
+              ELSE "scriptureReferencesOverride"
+            END
+          `,
           })
         )
         .return<{ dto: HydratedProductRow }>(
@@ -375,8 +376,7 @@ export class ProductRepository extends CommonRepository {
             : [],
         ]);
       })
-      .return<{ id: ID }>('node.id as id')
-      .logIt();
+      .return<{ id: ID }>('node.id as id');
     const result = await query.first();
     if (!result) {
       throw new ServerException('Failed to create product');
@@ -472,7 +472,7 @@ export class ProductRepository extends CommonRepository {
         }),
         node('producible'),
         ...(changeset
-          ? [relation('in', '', 'changeset', ACTIVE), node('changset')]
+          ? [relation('in', '', 'changeset', ACTIVE), node('changeset')]
           : []),
       ])
       .return('rel')
