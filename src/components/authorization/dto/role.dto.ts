@@ -8,6 +8,7 @@ export enum Role {
   Consultant = 'Consultant',
   ConsultantManager = 'ConsultantManager',
   Controller = 'Controller',
+  ExperienceOperations = 'ExperienceOperations',
   FieldOperationsDirector = 'FieldOperationsDirector',
   FieldPartner = 'FieldPartner',
   FinancialAnalyst = 'FinancialAnalyst',
@@ -59,6 +60,7 @@ export type InternalRole =
   | 'ConsultantRole'
   | 'ConsultantManagerRole'
   | 'ControllerRole'
+  | 'ExperienceOperations'
   | 'FieldOperationsDirectorRole'
   | 'FieldPartnerRole'
   | 'FinancialAnalystOnGlobalRole'
