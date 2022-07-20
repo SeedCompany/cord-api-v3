@@ -41,6 +41,7 @@ import {
   ProjectListInput,
   ProjectStep,
   ProjectType,
+  PublicationProject,
   stepToStatus,
   TranslationProject,
   UpdateProject,
@@ -183,7 +184,11 @@ export class ProjectRepository extends CommonRepository {
       .query()
       .apply(
         await createNode(
-          type === 'Translation' ? TranslationProject : InternshipProject,
+          type === 'Translation'
+            ? TranslationProject
+            : type === 'Internship'
+            ? InternshipProject
+            : PublicationProject,
           {
             initialProps,
             baseNodeProps: { type },
@@ -209,14 +214,18 @@ export class ProjectRepository extends CommonRepository {
 
   async updateProperties(
     currentProject: UnsecuredDto<Project>,
-    simpleChanges: DbChanges<TranslationProject | InternshipProject>,
+    simpleChanges: DbChanges<
+      TranslationProject | InternshipProject | PublicationProject
+    >,
     changeset?: ID
   ) {
     return await this.db.updateProperties({
       type:
         currentProject.type === ProjectType.Translation
           ? TranslationProject
-          : InternshipProject,
+          : currentProject.type === ProjectType.Internship
+          ? InternshipProject
+          : PublicationProject,
       object: currentProject,
       changes: simpleChanges,
       changeset,

@@ -60,6 +60,7 @@ import {
   ProjectListInput,
   ProjectListOutput,
   ProjectType,
+  PublicationProjectListOutput,
   TranslationProjectListOutput,
   UpdateProjectInput,
   UpdateProjectOutput,
@@ -144,6 +145,28 @@ export class ProjectResolver {
         filter: {
           ...input.filter,
           type: ProjectType.Internship,
+        },
+      },
+      session
+    );
+    projects.primeAll(list.items);
+    return list;
+  }
+
+  @Query(() => PublicationProjectListOutput, {
+    description: 'Look up publication projects',
+  })
+  async publicationProjects(
+    @ListArg(ProjectListInput) input: ProjectListInput,
+    @Loader(ProjectLoader) projects: LoaderOf<ProjectLoader>,
+    @AnonSession() session: Session
+  ): Promise<ProjectListOutput> {
+    const list = await this.projectService.list(
+      {
+        ...input,
+        filter: {
+          ...input.filter,
+          type: ProjectType.Publication,
         },
       },
       session

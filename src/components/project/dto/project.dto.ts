@@ -43,7 +43,10 @@ import { ProjectStatus } from './status.enum';
 import { SecuredProjectStep } from './step.enum';
 import { ProjectType } from './type.enum';
 
-type AnyProject = MergeExclusive<TranslationProject, InternshipProject>;
+type AnyProject = MergeExclusive<
+  MergeExclusive<TranslationProject, InternshipProject>,
+  PublicationProject
+>;
 
 const PinnablePostableChangesetAwareResource: Type<
   Resource & Postable & ChangesetAware & Pinnable
@@ -59,6 +62,9 @@ const PinnablePostableChangesetAwareResource: Type<
     }
     if (val.type === ProjectType.Internship) {
       return InternshipProject;
+    }
+    if (val.type === ProjectType.Publication) {
+      return PublicationProject;
     }
 
     throw new Error('Could not resolve project type');
@@ -189,6 +195,15 @@ export class InternshipProject extends Project {
   static readonly SecuredProps = keysOf<SecuredProps<InternshipProject>>();
 
   readonly type: ProjectType.Internship;
+}
+@ObjectType({
+  implements: [Project, Postable],
+})
+export class PublicationProject extends Project {
+  static readonly Props = keysOf<PublicationProject>();
+  static readonly SecuredProps = keysOf<SecuredProps<PublicationProject>>();
+
+  readonly type: ProjectType.Publication;
 }
 
 export const projectRange = (project: UnsecuredDto<Project>) =>
