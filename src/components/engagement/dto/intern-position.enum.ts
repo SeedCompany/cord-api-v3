@@ -4,7 +4,6 @@ import { SecuredEnum } from '../../../common';
 
 export enum InternshipPosition {
   ConsultantInTraining = 'ConsultantInTraining',
-  ExegeticalFacilitator = 'ExegeticalFacilitator',
   MidLevelQualityAssurance = 'MidLevelQualityAssurance',
 
   LeadershipDevelopment = 'LeadershipDevelopment',
@@ -18,7 +17,6 @@ export enum InternshipPosition {
 
   LanguageProgramManager = 'LanguageProgramManager',
   Literacy = 'Literacy',
-  TranslationFacilitator = 'TranslationFacilitator',
   OralityFacilitator = 'OralityFacilitator',
   ScriptureEngagement = 'ScriptureEngagement',
 
@@ -26,6 +24,8 @@ export enum InternshipPosition {
   OtherAttached = 'OtherAttached',
   OtherTranslationCapacity = 'OtherTranslationCapacity',
   OtherPartnershipCapacity = 'OtherPartnershipCapacity',
+  ExegeticalFacilitator = 'ExegeticalFacilitator',
+  TranslationFacilitator = 'TranslationFacilitator',
 }
 
 export enum InternshipDomain {
@@ -48,7 +48,6 @@ export const InternshipPositionToDomain: Record<
   InternshipDomain | null
 > = {
   [Position.ConsultantInTraining]: null,
-  [Position.ExegeticalFacilitator]: null,
   [Position.MidLevelQualityAssurance]: null,
 
   [Position.LeadershipDevelopment]: Domain.Leadership,
@@ -62,7 +61,6 @@ export const InternshipPositionToDomain: Record<
 
   [Position.LanguageProgramManager]: Domain.FieldPrograms,
   [Position.Literacy]: Domain.FieldPrograms,
-  [Position.TranslationFacilitator]: Domain.FieldPrograms,
   [Position.OralityFacilitator]: Domain.FieldPrograms,
   [Position.ScriptureEngagement]: Domain.FieldPrograms,
 
@@ -70,6 +68,8 @@ export const InternshipPositionToDomain: Record<
   [Position.OtherAttached]: Domain.FieldPrograms,
   [Position.OtherTranslationCapacity]: Domain.FieldPrograms,
   [Position.OtherPartnershipCapacity]: Domain.Leadership,
+  [Position.ExegeticalFacilitator]: null,
+  [Position.TranslationFacilitator]: Domain.FieldPrograms,
 };
 
 export const InternshipPositionToProgram: Record<
@@ -77,7 +77,6 @@ export const InternshipPositionToProgram: Record<
   InternshipProgram
 > = {
   [Position.ConsultantInTraining]: Program.QualityAssurance,
-  [Position.ExegeticalFacilitator]: Program.QualityAssurance,
   [Position.MidLevelQualityAssurance]: Program.QualityAssurance,
 
   [Position.LeadershipDevelopment]: Program.CapacityBuilding,
@@ -91,7 +90,6 @@ export const InternshipPositionToProgram: Record<
 
   [Position.LanguageProgramManager]: Program.CapacityBuilding,
   [Position.Literacy]: Program.CapacityBuilding,
-  [Position.TranslationFacilitator]: Program.CapacityBuilding,
   [Position.OralityFacilitator]: Program.CapacityBuilding,
   [Position.ScriptureEngagement]: Program.CapacityBuilding,
 
@@ -99,16 +97,28 @@ export const InternshipPositionToProgram: Record<
   [Position.OtherAttached]: Program.QualityAssurance,
   [Position.OtherTranslationCapacity]: Program.QualityAssurance,
   [Position.OtherPartnershipCapacity]: Program.CapacityBuilding,
+  [Position.ExegeticalFacilitator]: Program.QualityAssurance,
+  [Position.TranslationFacilitator]: Program.CapacityBuilding,
 };
 
 export const historic = [
   Position.OtherAttached,
   Position.OtherTranslationCapacity,
   Position.OtherPartnershipCapacity,
+  Position.ExegeticalFacilitator,
+  Position.TranslationFacilitator,
 ];
 
 registerEnumType(InternshipPosition, {
   name: 'InternshipPosition',
+  valuesMap: {
+    ExegeticalFacilitator: {
+      deprecationReason: 'Legacy. Only used in historic data.',
+    },
+    TranslationFacilitator: {
+      deprecationReason: 'Legacy. Only used in historic data.',
+    },
+  },
 });
 
 @ObjectType({
