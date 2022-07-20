@@ -5,6 +5,7 @@ import { SecuredEnum } from '../../../common';
 export enum InternshipPosition {
   ConsultantInTraining = 'ConsultantInTraining',
   ExegeticalFacilitator = 'ExegeticalFacilitator',
+  MidLevelQualityAssurance = 'MidLevelQualityAssurance',
 
   LeadershipDevelopment = 'LeadershipDevelopment',
   Mobilization = 'Mobilization',
@@ -48,6 +49,7 @@ export const InternshipPositionToDomain: Record<
 > = {
   [Position.ConsultantInTraining]: null,
   [Position.ExegeticalFacilitator]: null,
+  [Position.MidLevelQualityAssurance]: null,
 
   [Position.LeadershipDevelopment]: Domain.Leadership,
   [Position.Mobilization]: Domain.Leadership,
@@ -76,6 +78,7 @@ export const InternshipPositionToProgram: Record<
 > = {
   [Position.ConsultantInTraining]: Program.QualityAssurance,
   [Position.ExegeticalFacilitator]: Program.QualityAssurance,
+  [Position.MidLevelQualityAssurance]: Program.QualityAssurance,
 
   [Position.LeadershipDevelopment]: Program.CapacityBuilding,
   [Position.Mobilization]: Program.CapacityBuilding,
