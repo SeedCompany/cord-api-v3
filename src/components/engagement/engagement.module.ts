@@ -17,6 +17,7 @@ import { InternshipEngagementResolver } from './internship-engagement.resolver';
 import { InternshipPositionResolver } from './internship-position.resolver';
 import { LanguageEngagementResolver } from './language-engagement.resolver';
 import { EngagementProductConnectionResolver } from './product-connection.resolver';
+import { PublicationEngagementResolver } from './publication-engagement.resolver';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { EngagementProductConnectionResolver } from './product-connection.resolv
     EngagementResolver,
     LanguageEngagementResolver,
     InternshipEngagementResolver,
+    PublicationEngagementResolver,
     EngagementStatusResolver,
     InternshipPositionResolver,
     EngagementProductConnectionResolver,

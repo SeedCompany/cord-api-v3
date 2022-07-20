@@ -5,7 +5,11 @@ import { stripIndent } from 'common-tags';
 import { CalendarDate, DateField, ID, IdField } from '../../../common';
 import { CreateDefinedFileVersionInput } from '../../file/dto';
 import { ProductMethodology } from '../../product/dto';
-import { InternshipEngagement, LanguageEngagement } from './engagement.dto';
+import {
+  InternshipEngagement,
+  LanguageEngagement,
+  PublicationEngagement,
+} from './engagement.dto';
 import { InternshipPosition } from './intern-position.enum';
 import { EngagementStatus } from './status.enum';
 
@@ -88,6 +92,14 @@ export abstract class UpdateInternshipEngagement extends UpdateEngagement {
 }
 
 @InputType()
+export abstract class UpdatePublicationEngagement extends UpdateEngagement {
+  @Field({ nullable: true })
+  @Type(() => CreateDefinedFileVersionInput)
+  @ValidateNested()
+  readonly publicationPlan?: CreateDefinedFileVersionInput;
+}
+
+@InputType()
 export abstract class UpdateLanguageEngagementInput {
   @IdField({
     description: 'The change object to associate these engagement changes with',
@@ -125,4 +137,24 @@ export abstract class UpdateInternshipEngagementInput {
 export abstract class UpdateInternshipEngagementOutput {
   @Field()
   readonly engagement: InternshipEngagement;
+}
+
+@InputType()
+export abstract class UpdatePublicationEngagementInput {
+  @IdField({
+    description: 'The change object to associate these engagement changes with',
+    nullable: true,
+  })
+  readonly changeset?: ID;
+
+  @Field()
+  @Type(() => UpdatePublicationEngagement)
+  @ValidateNested()
+  readonly engagement: UpdatePublicationEngagement;
+}
+
+@ObjectType()
+export abstract class UpdatePublicationEngagementOutput {
+  @Field()
+  readonly engagement: PublicationEngagement;
 }

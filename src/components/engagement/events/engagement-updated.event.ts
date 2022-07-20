@@ -3,8 +3,10 @@ import {
   Engagement,
   InternshipEngagement,
   LanguageEngagement,
+  PublicationEngagement,
   UpdateInternshipEngagement,
   UpdateLanguageEngagement,
+  UpdatePublicationEngagement,
 } from '../dto';
 
 export class EngagementUpdatedEvent {
@@ -27,5 +29,12 @@ export class EngagementUpdatedEvent {
     updates: UpdateInternshipEngagement;
   } {
     return this.updated.__typename === 'InternshipEngagement';
+  }
+
+  isPublicationEngagement(): this is EngagementUpdatedEvent & {
+    engagement: UnsecuredDto<PublicationEngagement>;
+    updates: UpdatePublicationEngagement;
+  } {
+    return this.updated.__typename === 'PublicationEngagement';
   }
 }

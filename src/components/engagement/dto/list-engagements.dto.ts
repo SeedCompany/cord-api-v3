@@ -12,6 +12,7 @@ import {
   IEngagement,
   InternshipEngagement,
   LanguageEngagement,
+  PublicationEngagement,
 } from './engagement.dto';
 
 @InputType()
@@ -20,7 +21,7 @@ export abstract class EngagementFilters {
     description: 'Only engagements matching this type',
     nullable: true,
   })
-  readonly type?: 'language' | 'internship';
+  readonly type?: 'language' | 'internship' | 'publication';
 
   readonly projectId?: ID;
 }
@@ -77,6 +78,18 @@ export abstract class SecuredInternshipEngagementList extends SecuredList(
   {
     itemsDescription: PaginatedList.itemDescriptionFor(
       'internship engagements'
+    ),
+  }
+) {}
+
+@ObjectType({
+  description: SecuredList.descriptionFor('publication engagements'),
+})
+export abstract class SecuredPublicationEngagementList extends SecuredList(
+  PublicationEngagement,
+  {
+    itemsDescription: PaginatedList.itemDescriptionFor(
+      'publication engagements'
     ),
   }
 ) {}

@@ -92,7 +92,7 @@ export class ApplyFinalizedChangesetToEngagement
 
       /**
        * Apply Language changes
-       * Even if the LanguageEngagement is created in changesets,
+       * Even if the LanguageEngagement/PublicationEngagement is created in changesets,
        * We need to commit changes because Language Node is not connected directly with Changeset
        */
       await this.db
@@ -108,7 +108,7 @@ export class ApplyFinalizedChangesetToEngagement
             .match([
               node('project'),
               relation('out', 'engagement', ACTIVE),
-              node('le', 'LanguageEngagement'),
+              node('eng', 'Engagement'),
               relation('out', '', 'language', ACTIVE),
               node('node', 'Language'),
             ])

@@ -39,6 +39,7 @@ import { ProjectType } from '../project';
 import {
   CreateInternshipEngagement,
   CreateLanguageEngagement,
+  CreatePublicationEngagement,
   Engagement,
   EngagementListInput,
   EngagementStatus,
@@ -46,6 +47,7 @@ import {
   InternshipEngagement,
   LanguageEngagement,
   OngoingEngagementStatuses,
+  PublicationEngagement,
 } from './dto';
 
 export type LanguageOrEngagementId = MergeExclusive<
@@ -128,7 +130,11 @@ export class EngagementRepository extends CommonRepository {
         .return<{ dto: UnsecuredDto<Engagement> }>(
           merge('props', 'changedProps', {
             __typename: typenameForView(
-              ['LanguageEngagement', 'InternshipEngagement'],
+              [
+                'LanguageEngagement',
+                'InternshipEngagement',
+                'PublicationEngagement',
+              ],
               view
             ),
             project: 'project.id',
@@ -250,6 +256,47 @@ export class EngagementRepository extends CommonRepository {
     return { id: result.id, growthPlanId };
   }
 
+  async createPublicationEngagement(
+    input: CreatePublicationEngagement,
+    changeset?: ID
+  ) {
+    const publicationPlanId = (await generateId()) as FileId;
+
+    const { projectId, languageId, ...initialProps } = {
+      ...mapFromList(CreatePublicationEngagement.Props, (k) => [k, undefined]),
+      ...input,
+      status: input.status || EngagementStatus.InDevelopment,
+      publicationPlan: publicationPlanId,
+      initialEndDate: undefined,
+      statusModifiedAt: undefined,
+      lastSuspendedAt: undefined,
+      lastReactivatedAt: undefined,
+      modifiedAt: DateTime.local(),
+      canDelete: true,
+    };
+
+    const query = this.db
+      .query()
+      .apply(await createNode(PublicationEngagement, { initialProps }))
+      .apply(
+        createRelationships(PublicationEngagement, {
+          in: {
+            engagement: ['Project', projectId],
+            changeset: ['Changeset', changeset],
+          },
+          out: { language: ['Language', languageId] },
+        })
+      )
+      .return<{ id: ID }>('node.id as id');
+
+    const result = await query.first();
+    if (!result) {
+      throw new ServerException('Could not create Publication Engagement');
+    }
+
+    return { id: result.id, publicationPlanId };
+  }
+
   // UPDATE ///////////////////////////////////////////////////////////
 
   getActualLanguageChanges = getChanges(LanguageEngagement);
@@ -352,6 +399,21 @@ export class EngagementRepository extends CommonRepository {
     });
   }
 
+  getActualPublicationChanges = getChanges(PublicationEngagement);
+
+  async updatePublicationProperties(
+    object: PublicationEngagement | UnsecuredDto<PublicationEngagement>,
+    changes: DbChanges<PublicationEngagement>,
+    changeset?: ID
+  ): Promise<void> {
+    await this.db.updateProperties({
+      type: PublicationEngagement,
+      object,
+      changes,
+      changeset,
+    });
+  }
+
   // LIST ///////////////////////////////////////////////////////////
 
   async list(
@@ -364,6 +426,7 @@ export class EngagementRepository extends CommonRepository {
       simpleSwitch(input.filter.type, {
         language: 'LanguageEngagement',
         internship: 'InternshipEngagement',
+        publication: 'PublicationEngagement',
       }) ?? 'Engagement';
 
     const result = await this.db
@@ -448,7 +511,7 @@ export class EngagementRepository extends CommonRepository {
   async verifyRelationshipEligibility(
     projectId: ID,
     otherId: ID,
-    isTranslation: boolean,
+    isTranslationOrPublication: boolean,
     property: 'language' | 'intern',
     changeset?: ID
   ) {
@@ -456,7 +519,7 @@ export class EngagementRepository extends CommonRepository {
       .query()
       .optionalMatch(node('project', 'Project', { id: projectId }))
       .optionalMatch(
-        node('other', isTranslation ? 'Language' : 'User', {
+        node('other', isTranslationOrPublication ? 'Language' : 'User', {
           id: otherId,
         })
       )
@@ -524,7 +587,7 @@ export class EngagementRepository extends CommonRepository {
     return (query: Query) =>
       engagementId
         ? query.match([
-            node('languageEngagement', 'LanguageEngagement', {
+            node('engagement', 'Engagement', {
               id: engagementId,
             }),
             relation('out', '', 'language', ACTIVE),

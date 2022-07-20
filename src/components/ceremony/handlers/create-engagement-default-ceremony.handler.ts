@@ -20,7 +20,8 @@ export class CreateEngagementDefaultCeremonyHandler
     const { engagement, session } = event;
     const input = {
       type:
-        engagement.__typename === 'LanguageEngagement'
+        engagement.__typename === 'LanguageEngagement' ||
+        engagement.__typename === 'PublicationEngagement'
           ? CeremonyType.Dedication
           : CeremonyType.Certification,
     };

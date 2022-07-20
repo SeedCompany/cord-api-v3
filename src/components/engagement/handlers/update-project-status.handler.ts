@@ -127,7 +127,12 @@ export class UpdateProjectStatusHandler
               updateInput,
               session
             )
-          : await this.engagementService.updateInternshipEngagement(
+          : type === ProjectType.Internship
+          ? await this.engagementService.updateInternshipEngagement(
+              updateInput,
+              session
+            )
+          : await this.engagementService.updatePublicationEngagement(
               updateInput,
               session
             );

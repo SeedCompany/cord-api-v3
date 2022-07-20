@@ -23,6 +23,8 @@ import {
   CreateInternshipEngagementOutput,
   CreateLanguageEngagementInput,
   CreateLanguageEngagementOutput,
+  CreatePublicationEngagementInput,
+  CreatePublicationEngagementOutput,
   DeleteEngagementOutput,
   Engagement,
   EngagementListInput,
@@ -32,6 +34,8 @@ import {
   UpdateInternshipEngagementOutput,
   UpdateLanguageEngagementInput,
   UpdateLanguageEngagementOutput,
+  UpdatePublicationEngagementInput,
+  UpdatePublicationEngagementOutput,
 } from './dto';
 
 @Resolver(IEngagement)
@@ -116,6 +120,22 @@ export class EngagementResolver {
     return { engagement };
   }
 
+  @Mutation(() => CreatePublicationEngagementOutput, {
+    description: 'Create a publication engagement',
+  })
+  async createPublicationEngagement(
+    @Args('input')
+    { engagement: input, changeset }: CreatePublicationEngagementInput,
+    @LoggedInSession() session: Session
+  ): Promise<CreatePublicationEngagementOutput> {
+    const engagement = await this.service.createPublicationEngagement(
+      input,
+      session,
+      changeset
+    );
+    return { engagement };
+  }
+
   @Mutation(() => UpdateLanguageEngagementOutput, {
     description: 'Update a language engagement',
   })
@@ -141,6 +161,22 @@ export class EngagementResolver {
     @LoggedInSession() session: Session
   ): Promise<UpdateInternshipEngagementOutput> {
     const engagement = await this.service.updateInternshipEngagement(
+      input,
+      session,
+      changeset
+    );
+    return { engagement };
+  }
+
+  @Mutation(() => UpdatePublicationEngagementOutput, {
+    description: 'Update a publication engagement',
+  })
+  async updatePublicationEngagement(
+    @Args('input')
+    { engagement: input, changeset }: UpdatePublicationEngagementInput,
+    @LoggedInSession() session: Session
+  ): Promise<UpdatePublicationEngagementOutput> {
+    const engagement = await this.service.updatePublicationEngagement(
       input,
       session,
       changeset

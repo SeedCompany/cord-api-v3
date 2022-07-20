@@ -10,6 +10,7 @@ import {
   EngagementStatus,
   InternshipEngagement,
   LanguageEngagement,
+  PublicationEngagement,
 } from '../dto';
 import { EngagementUpdatedEvent } from '../events';
 
@@ -49,7 +50,9 @@ export class SetLastStatusDate
         type:
           updated.__typename === 'LanguageEngagement'
             ? LanguageEngagement
-            : InternshipEngagement,
+            : updated.__typename === 'InternshipEngagement'
+            ? InternshipEngagement
+            : PublicationEngagement,
         object: updated,
         changes,
       });

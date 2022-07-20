@@ -6,7 +6,11 @@ import { keys as keysOf } from 'ts-transformer-keys';
 import { CalendarDate, DateField, ID, IdField } from '../../../common';
 import { CreateDefinedFileVersionInput } from '../../file/dto';
 import { ProductMethodology } from '../../product/dto';
-import { InternshipEngagement, LanguageEngagement } from './engagement.dto';
+import {
+  InternshipEngagement,
+  LanguageEngagement,
+  PublicationEngagement,
+} from './engagement.dto';
 import { InternshipPosition } from './intern-position.enum';
 import { EngagementStatus } from './status.enum';
 
@@ -97,6 +101,19 @@ export abstract class CreateInternshipEngagement extends CreateEngagement {
 }
 
 @InputType()
+export abstract class CreatePublicationEngagement extends CreateEngagement {
+  static readonly Props = keysOf<CreatePublicationEngagement>();
+
+  @IdField()
+  readonly languageId: ID;
+
+  @Field({ nullable: true })
+  @Type(() => CreateDefinedFileVersionInput)
+  @ValidateNested()
+  readonly publicationPlan?: CreateDefinedFileVersionInput;
+}
+
+@InputType()
 export abstract class CreateLanguageEngagementInput {
   @IdField({
     description: 'The change object to associate these engagement changes with',
@@ -134,4 +151,24 @@ export abstract class CreateInternshipEngagementInput {
 export abstract class CreateInternshipEngagementOutput {
   @Field()
   readonly engagement: InternshipEngagement;
+}
+
+@InputType()
+export abstract class CreatePublicationEngagementInput {
+  @IdField({
+    description: 'The change object to associate these engagement changes with',
+    nullable: true,
+  })
+  readonly changeset?: ID;
+
+  @Field()
+  @Type(() => CreatePublicationEngagement)
+  @ValidateNested()
+  readonly engagement: CreatePublicationEngagement;
+}
+
+@ObjectType()
+export abstract class CreatePublicationEngagementOutput {
+  @Field()
+  readonly engagement: PublicationEngagement;
 }

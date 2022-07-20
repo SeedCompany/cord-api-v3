@@ -10,6 +10,7 @@ import {
   EngagementStatus,
   InternshipEngagement,
   LanguageEngagement,
+  PublicationEngagement,
 } from '../dto';
 import { EngagementRepository } from '../engagement.repository';
 import { EngagementService } from '../engagement.service';
@@ -89,9 +90,15 @@ export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
         updateInput,
         changeset
       );
-    } else {
+    } else if (engagement.__typename === 'InternshipEngagement') {
       await this.engagementRepo.updateInternshipProperties(
         engagement as UnsecuredDto<InternshipEngagement>,
+        updateInput,
+        changeset
+      );
+    } else {
+      await this.engagementRepo.updatePublicationProperties(
+        engagement as UnsecuredDto<PublicationEngagement>,
         updateInput,
         changeset
       );

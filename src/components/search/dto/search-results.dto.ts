@@ -27,6 +27,7 @@ import {
 import {
   InternshipProject,
   IProject as Project,
+  PublicationProject,
   TranslationProject,
 } from '../../project/dto';
 import { Song } from '../../song/dto';
@@ -42,6 +43,7 @@ const publicSearchable = {
   Language,
   TranslationProject,
   InternshipProject,
+  PublicationProject,
   User,
   Film,
   Story,

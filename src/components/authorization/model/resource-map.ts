@@ -6,6 +6,7 @@ import {
   IEngagement as Engagement,
   InternshipEngagement,
   LanguageEngagement,
+  PublicationEngagement,
 } from '../../engagement/dto';
 import { EthnoArt } from '../../ethno-art/dto';
 import { FieldRegion } from '../../field-region/dto';
@@ -36,6 +37,7 @@ import { ProjectChangeRequest } from '../../project-change-request/dto';
 import {
   InternshipProject,
   IProject as Project,
+  PublicationProject,
   TranslationProject,
 } from '../../project/dto';
 import { ProjectMember } from '../../project/project-member/dto';
@@ -64,6 +66,7 @@ export const ResourceMap = {
   InternshipEngagement,
   Language,
   LanguageEngagement,
+  PublicationEngagement,
   LiteracyMaterial,
   Location,
   Organization,
@@ -77,6 +80,7 @@ export const ResourceMap = {
   Project,
   TranslationProject,
   InternshipProject,
+  PublicationProject,
   ProjectMember,
   PeriodicReport,
   FinancialReport,
