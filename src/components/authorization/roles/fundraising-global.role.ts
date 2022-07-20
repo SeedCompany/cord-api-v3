@@ -374,7 +374,7 @@ export const Fundraising = new DbRole({
         { propertyName: 'tags', permission: { read, }, },
         { propertyName: 'financialReportReceivedAt', permission: { read, }, },
         { propertyName: 'owningOrganization', permission: { read, }, },
-        { propertyName: 'posts', permission: { read, write, }, },
+        { propertyName: 'posts', permission: { read, }, },
         { propertyName: 'presetInventory', permission: { read, }, },
       ],
       canDelete: false,
