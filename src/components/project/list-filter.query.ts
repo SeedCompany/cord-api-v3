@@ -1,5 +1,10 @@
 import { greaterThan, inArray, node, relation } from 'cypher-query-builder';
-import { ACTIVE, filter, matchProjectSens } from '../../core/database/query';
+import {
+  ACTIVE,
+  filter,
+  matchProjectSens,
+  path,
+} from '../../core/database/query';
 import { ProjectListInput } from './dto';
 
 export const projectListFilter = (input: ProjectListInput) =>
@@ -38,6 +43,24 @@ export const projectListFilter = (input: ProjectListInput) =>
       relation('out', '', 'partner', ACTIVE),
       node('', 'Partner', { id }),
     ]),
+    userId: ({ value }) => ({
+      userId: [
+        path([
+          node('node'),
+          relation('out', '', 'member', ACTIVE),
+          node('', 'ProjectMember'),
+          relation('out', '', 'user', ACTIVE),
+          node('', 'User', { id: value }),
+        ]),
+        path([
+          node('node'),
+          relation('out', '', 'engagement', ACTIVE),
+          node('', 'Engagement'),
+          relation('out', '', 'intern', ACTIVE),
+          node('', 'User', { id: value }),
+        ]),
+      ],
+    }),
     sensitivity:
       ({ value, query }) =>
       () =>

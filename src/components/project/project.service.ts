@@ -49,6 +49,7 @@ import {
   ProjectChangeRequestListInput,
   SecuredProjectChangeRequestList,
 } from '../project-change-request/dto';
+import { User } from '../user';
 import {
   CreateProject,
   InternshipProject,
@@ -58,6 +59,7 @@ import {
   ProjectListOutput,
   ProjectStatus,
   ProjectType,
+  SecuredProjectList,
   TranslationProject,
   UpdateProject,
 } from './dto';
@@ -538,6 +540,34 @@ export class ProjectService {
       ...result,
       canRead: true,
       canCreate: project.status === ProjectStatus.Active,
+    };
+  }
+
+  async listProjectsByUserId(
+    userId: ID,
+    input: ProjectListInput,
+    session: Session
+  ): Promise<SecuredProjectList> {
+    const perms = await this.authorizationService.getPermissions({
+      resource: User,
+      sessionOrUserId: session,
+    });
+
+    const result = await this.list(
+      {
+        ...input,
+        filter: {
+          ...input.filter,
+          userId,
+        },
+      },
+      session
+    );
+
+    return {
+      ...result,
+      canCreate: perms.project.canEdit,
+      canRead: perms.project.canRead,
     };
   }
 
