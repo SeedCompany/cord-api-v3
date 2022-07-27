@@ -74,7 +74,7 @@ registerEnumType(ProgressVarianceReason, {
     AheadOfSchedule: {
       description: stripIndent`
 		  @group Ahead
-        @Activities Ahead of Schedule
+        @label Ahead of Schedule
 	`,
     },
     NewTeamFasterProgress: {
