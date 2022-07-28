@@ -1,6 +1,6 @@
 import { isValidId } from '../../src/common';
 import {
-  CreateDirectScriptureProduct,
+  CreateDirectScriptureProductInput,
   ProductMedium,
   ProductMethodology,
   ProductPurpose,
@@ -11,19 +11,21 @@ import { gql } from './gql-tag';
 
 export async function createDirectProduct(
   app: TestApp,
-  input: CreateDirectScriptureProduct
+  { product: input }: CreateDirectScriptureProductInput
 ) {
-  const product: CreateDirectScriptureProduct = {
-    mediums: [ProductMedium.Print],
-    purposes: [ProductPurpose.ChurchLife],
-    methodology: ProductMethodology.Paratext,
-    ...input,
+  const product: CreateDirectScriptureProductInput = {
+    product: {
+      mediums: [ProductMedium.Print],
+      purposes: [ProductPurpose.ChurchLife],
+      methodology: ProductMethodology.Paratext,
+      ...input,
+    },
   };
 
   const result = await app.graphql.mutate(
     gql`
       mutation createDirectScriptureProduct(
-        $input: CreateDirectScriptureProduct!
+        $input: CreateDirectScriptureProductInput!
       ) {
         createDirectScriptureProduct(input: $input) {
           product {
