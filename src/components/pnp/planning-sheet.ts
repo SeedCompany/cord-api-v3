@@ -31,10 +31,11 @@ export abstract class PlanningSheet extends Sheet {
   }
   protected abstract revisionCell: Cell;
 
+  // Note that the user specified date range on the PnP is only in months
   @Once() get projectDateRange(): DateInterval {
     const range = DateInterval.tryFrom(
       this.projectStartDateCell.asDate,
-      this.projectEndDateCell.asDate
+      this.projectEndDateCell.asDate?.endOf('month')
     );
     if (!range) {
       throw new Error('Could not find project date range');
