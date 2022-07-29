@@ -13,7 +13,7 @@ import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto';
 import { User, UserLoader } from '../user';
 import { AuthenticationService } from './authentication.service';
-import { LoginInput, LoginOutput, LogoutOutput, RegisterOutput } from './dto';
+import { LoginInput, LoginOutput, LogoutOutput } from './dto';
 
 @Resolver(LoginOutput)
 export class LoginResolver {
@@ -50,7 +50,7 @@ export class LoginResolver {
 
   @ResolveField(() => User, { description: 'The logged-in user' })
   async user(
-    @Parent() { user }: RegisterOutput,
+    @Parent() { user }: LoginOutput,
     @Loader(UserLoader) users: LoaderOf<UserLoader>
   ): Promise<User> {
     return await users.load(user);
