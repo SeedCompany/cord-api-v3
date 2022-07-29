@@ -548,6 +548,11 @@ export class ProjectService {
     input: ProjectListInput,
     session: Session
   ): Promise<SecuredProjectList> {
+    // Instead of trying to handle which subset of projects should be included,
+    // based on doing the work of seeing which project teams they can view,
+    // we'll use this course all/nothing check. This, assuming role permissions
+    // are set correctly, allows the users which can view all projects & their members
+    // to use this feature.
     const perms = await this.authorizationService.getPermissions({
       resource: User,
       sessionOrUserId: session,

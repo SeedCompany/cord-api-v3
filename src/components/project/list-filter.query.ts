@@ -45,6 +45,8 @@ export const projectListFilter = (input: ProjectListInput) =>
     ]),
     userId: ({ value }) => ({
       userId: [
+        // TODO We can leak if the project includes this person, if the
+        // requesting user does not have access to view the project's members.
         path([
           node('node'),
           relation('out', '', 'member', ACTIVE),
@@ -52,6 +54,7 @@ export const projectListFilter = (input: ProjectListInput) =>
           relation('out', '', 'user', ACTIVE),
           node('', 'User', { id: value }),
         ]),
+        // TODO does it make sense to include interns in this filter?
         path([
           node('node'),
           relation('out', '', 'engagement', ACTIVE),
