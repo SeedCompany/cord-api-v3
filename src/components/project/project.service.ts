@@ -559,7 +559,7 @@ export class ProjectService {
       sessionOrUserId: session,
     });
 
-    if (!perms.project.canRead) {
+    if (!perms.projects.canRead) {
       return SecuredList.Redacted;
     }
 

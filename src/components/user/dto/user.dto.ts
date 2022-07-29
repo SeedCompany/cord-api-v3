@@ -46,7 +46,7 @@ export class User extends PinnableResource {
     unavailability: [Unavailability],
     locations: [Location],
     knownLanguage: [KnownLanguage],
-    project: [Project],
+    projects: [Project],
   };
 
   @Field()
