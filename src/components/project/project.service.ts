@@ -8,6 +8,7 @@ import {
   many,
   NotFoundException,
   ObjectView,
+  SecuredList,
   Sensitivity,
   ServerException,
   Session,
@@ -558,6 +559,10 @@ export class ProjectService {
       sessionOrUserId: session,
     });
 
+    if (!perms.project.canRead) {
+      return SecuredList.Redacted;
+    }
+
     const result = await this.list(
       {
         ...input,
@@ -571,8 +576,8 @@ export class ProjectService {
 
     return {
       ...result,
-      canCreate: perms.project.canEdit,
-      canRead: perms.project.canRead,
+      canRead: true, // false handled above
+      canCreate: false, // This flag doesn't make sense here
     };
   }
 
