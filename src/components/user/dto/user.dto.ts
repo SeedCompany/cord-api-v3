@@ -17,6 +17,7 @@ import { Location } from '../../location/dto';
 import { Organization } from '../../organization/dto';
 import { Partner } from '../../partner/dto';
 import { Pinnable } from '../../pin/dto';
+import { IProject as Project } from '../../project/dto';
 import { Education } from '../education/dto';
 import { Unavailability } from '../unavailability/dto';
 import { KnownLanguage } from './known-language.dto';
@@ -45,6 +46,7 @@ export class User extends PinnableResource {
     unavailability: [Unavailability],
     locations: [Location],
     knownLanguage: [KnownLanguage],
+    projects: [Project],
   };
 
   @Field()

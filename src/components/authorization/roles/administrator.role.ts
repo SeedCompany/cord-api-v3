@@ -417,6 +417,7 @@ export const Administrator = new DbRole({
         { propertyName: 'unavailability', permission: { read, write, }, },
         { propertyName: 'locations', permission: { read, write, }, },
         { propertyName: 'knownLanguage', permission: { read, write, }, },
+        { propertyName: 'projects', permission: { read }, },
       ],
       canDelete: true,
     }),

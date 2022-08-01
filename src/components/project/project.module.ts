@@ -21,6 +21,7 @@ import { ProjectResolver } from './project.resolver';
 import { ProjectRules } from './project.rules';
 import { ProjectService } from './project.service';
 import { TranslationProjectResolver } from './translation-project.resolver';
+import { ProjectUserConnectionResolver } from './user-connection.resolver';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { TranslationProjectResolver } from './translation-project.resolver';
     TranslationProjectResolver,
     InternshipProjectResolver,
     ProjectEngagementConnectionResolver,
+    ProjectUserConnectionResolver,
     ProjectService,
     ProjectStepResolver,
     ProjectRules,

@@ -89,6 +89,8 @@ export abstract class ProjectFilters {
   readonly presetInventory?: boolean;
 
   readonly partnerId?: ID;
+
+  readonly userId?: ID;
 }
 
 const defaultFilters = {};
