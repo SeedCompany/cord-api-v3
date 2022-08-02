@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { assert } from 'ts-essentials';
 import { keys } from 'ts-transformer-keys';
-import { UrlScalar } from './common';
+import { RichTextScalar, UrlScalar } from './common';
 import { DateScalar, DateTimeScalar } from './common/luxon.graphql';
 import { AdminModule } from './components/admin/admin.module';
 import { AuthenticationModule } from './components/authentication/authentication.module';
@@ -84,6 +84,6 @@ assert(
     PartnershipProducingMediumModule,
   ],
   controllers: [],
-  providers: [DateTimeScalar, DateScalar, UrlScalar],
+  providers: [DateTimeScalar, DateScalar, RichTextScalar, UrlScalar],
 })
 export class AppModule {}
