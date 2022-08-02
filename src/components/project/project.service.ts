@@ -8,6 +8,7 @@ import {
   many,
   NotFoundException,
   ObjectView,
+  SecuredList,
   Sensitivity,
   ServerException,
   Session,
@@ -49,6 +50,7 @@ import {
   ProjectChangeRequestListInput,
   SecuredProjectChangeRequestList,
 } from '../project-change-request/dto';
+import { User } from '../user';
 import {
   CreateProject,
   InternshipProject,
@@ -59,6 +61,7 @@ import {
   ProjectStatus,
   ProjectType,
   PublicationProject,
+  SecuredProjectList,
   TranslationProject,
   UpdateProject,
 } from './dto';
@@ -569,6 +572,43 @@ export class ProjectService {
       ...result,
       canRead: true,
       canCreate: project.status === ProjectStatus.Active,
+    };
+  }
+
+  async listProjectsByUserId(
+    userId: ID,
+    input: ProjectListInput,
+    session: Session
+  ): Promise<SecuredProjectList> {
+    // Instead of trying to handle which subset of projects should be included,
+    // based on doing the work of seeing which project teams they can view,
+    // we'll use this course all/nothing check. This, assuming role permissions
+    // are set correctly, allows the users which can view all projects & their members
+    // to use this feature.
+    const perms = await this.authorizationService.getPermissions({
+      resource: User,
+      sessionOrUserId: session,
+    });
+
+    if (!perms.projects.canRead) {
+      return SecuredList.Redacted;
+    }
+
+    const result = await this.list(
+      {
+        ...input,
+        filter: {
+          ...input.filter,
+          userId,
+        },
+      },
+      session
+    );
+
+    return {
+      ...result,
+      canRead: true, // false handled above
+      canCreate: false, // This flag doesn't make sense here
     };
   }
 
