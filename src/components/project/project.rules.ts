@@ -34,6 +34,7 @@ type Notifiers = Lazy<Many<Notifier>>;
 interface Transition extends ProjectStepTransition {
   // Users/emails to notify when the project makes this transition
   notifiers?: Notifiers;
+  inChangeset?: boolean;
 }
 
 interface StepRule {
@@ -399,16 +400,36 @@ export class ProjectRules {
               to: ProjectStep.DiscussingChangeToPlan,
               type: TransitionType.Neutral,
               label: 'Discuss Change to Plan',
+              inChangeset: false,
             },
             {
               to: ProjectStep.DiscussingTermination,
               type: TransitionType.Neutral,
               label: 'Discuss Termination',
+              inChangeset: false,
             },
             {
               to: ProjectStep.FinalizingCompletion,
               type: TransitionType.Approve,
               label: 'Finalize Completion',
+            },
+            {
+              to: ProjectStep.ActiveChangedPlan,
+              type: TransitionType.Approve,
+              label: 'Approve Change to Plan',
+              inChangeset: true,
+            },
+            {
+              to: ProjectStep.Terminated,
+              type: TransitionType.Approve,
+              label: 'Approve Termination',
+              inChangeset: true,
+            },
+            {
+              to: ProjectStep.Suspended,
+              type: TransitionType.Approve,
+              label: 'Approve Suspension',
+              inChangeset: true,
             },
           ],
           getNotifiers: () => this.getProjectTeamUserIds(id),
@@ -426,16 +447,30 @@ export class ProjectRules {
               to: ProjectStep.DiscussingChangeToPlan,
               type: TransitionType.Neutral,
               label: 'Discuss Change to Plan',
+              inChangeset: false,
             },
             {
               to: ProjectStep.DiscussingTermination,
               type: TransitionType.Neutral,
               label: 'Discuss Termination',
+              inChangeset: false,
             },
             {
               to: ProjectStep.FinalizingCompletion,
               type: TransitionType.Approve,
               label: 'Finalize Completion',
+            },
+            {
+              to: ProjectStep.Terminated,
+              type: TransitionType.Approve,
+              label: 'Approve Termination',
+              inChangeset: true,
+            },
+            {
+              to: ProjectStep.Suspended,
+              type: TransitionType.Approve,
+              label: 'Approve Suspension',
+              inChangeset: true,
             },
           ],
           getNotifiers: async () => [
@@ -615,11 +650,25 @@ export class ProjectRules {
               to: ProjectStep.DiscussingReactivation,
               type: TransitionType.Neutral,
               label: 'Discuss Reactivation',
+              inChangeset: false,
             },
             {
               to: ProjectStep.DiscussingTermination,
               type: TransitionType.Neutral,
               label: 'Discuss Termination',
+              inChangeset: false,
+            },
+            {
+              to: ProjectStep.ActiveChangedPlan,
+              type: TransitionType.Approve,
+              label: 'Approve Change to Plan',
+              inChangeset: true,
+            },
+            {
+              to: ProjectStep.Terminated,
+              type: TransitionType.Approve,
+              label: 'Approve Termination',
+              inChangeset: true,
             },
           ],
           getNotifiers: async () => [
@@ -824,13 +873,17 @@ export class ProjectRules {
       changeset
     );
 
+    const filteredTransitions = transitions.filter((transition) =>
+      changeset ? transition.inChangeset !== false : !transition.inChangeset
+    );
+
     // If current user is not an approver (based on roles) then don't allow any transitions
     currentUserRoles ??= session.roles.map(withoutScope);
     if (intersection(approvers, currentUserRoles).length === 0) {
       return [];
     }
 
-    return transitions;
+    return filteredTransitions;
   }
 
   async canBypassWorkflow(session: Session) {

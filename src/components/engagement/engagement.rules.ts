@@ -20,6 +20,7 @@ import {
 
 interface Transition extends EngagementStatusTransition {
   projectStepRequirements?: ProjectStep[];
+  inChangeset?: boolean;
 }
 
 interface StatusRule {
@@ -89,21 +90,42 @@ export class EngagementRules {
               to: EngagementStatus.DiscussingChangeToPlan,
               type: EngagementTransitionType.Neutral,
               label: 'Discuss Change to Plan',
+              inChangeset: false,
             },
             {
               to: EngagementStatus.DiscussingSuspension,
               type: EngagementTransitionType.Neutral,
               label: 'Discuss Suspension',
+              inChangeset: false,
             },
             {
               to: EngagementStatus.DiscussingTermination,
               type: EngagementTransitionType.Neutral,
               label: 'Discuss Termination',
+              inChangeset: false,
             },
             {
               to: EngagementStatus.FinalizingCompletion,
               type: EngagementTransitionType.Approve,
               label: 'Finalize Completion',
+            },
+            {
+              to: EngagementStatus.ActiveChangedPlan,
+              type: EngagementTransitionType.Approve,
+              label: 'Approve Change to Plan',
+              inChangeset: true,
+            },
+            {
+              to: EngagementStatus.Suspended,
+              type: EngagementTransitionType.Approve,
+              label: 'Approve Suspension',
+              inChangeset: true,
+            },
+            {
+              to: EngagementStatus.Terminated,
+              type: EngagementTransitionType.Approve,
+              label: 'Approve Termination',
+              inChangeset: true,
             },
           ],
         };
@@ -120,21 +142,42 @@ export class EngagementRules {
               to: EngagementStatus.DiscussingChangeToPlan,
               type: EngagementTransitionType.Neutral,
               label: 'Discuss Change to Plan',
+              inChangeset: false,
             },
             {
               to: EngagementStatus.DiscussingTermination,
               type: EngagementTransitionType.Neutral,
               label: 'Discuss Termination',
+              inChangeset: false,
             },
             {
               to: EngagementStatus.DiscussingSuspension,
               type: EngagementTransitionType.Neutral,
               label: 'Discuss Suspension',
+              inChangeset: false,
             },
             {
               to: EngagementStatus.FinalizingCompletion,
               type: EngagementTransitionType.Approve,
               label: 'Finalize Completion',
+            },
+            {
+              to: EngagementStatus.ActiveChangedPlan,
+              type: EngagementTransitionType.Approve,
+              label: 'Approve Change to Plan',
+              inChangeset: true,
+            },
+            {
+              to: EngagementStatus.Suspended,
+              type: EngagementTransitionType.Approve,
+              label: 'Approve Suspension',
+              inChangeset: true,
+            },
+            {
+              to: EngagementStatus.Terminated,
+              type: EngagementTransitionType.Approve,
+              label: 'Approve Termination',
+              inChangeset: true,
             },
           ],
         };
@@ -210,11 +253,25 @@ export class EngagementRules {
               to: EngagementStatus.DiscussingReactivation,
               type: EngagementTransitionType.Neutral,
               label: 'Discuss Reactivation',
+              inChangeset: false,
             },
             {
               to: EngagementStatus.DiscussingTermination,
               type: EngagementTransitionType.Neutral,
               label: 'Discuss Termination',
+              inChangeset: false,
+            },
+            {
+              to: EngagementStatus.ActiveChangedPlan,
+              type: EngagementTransitionType.Approve,
+              label: 'Approve Change to Plan',
+              inChangeset: true,
+            },
+            {
+              to: EngagementStatus.Terminated,
+              type: EngagementTransitionType.Approve,
+              label: 'Approve Termination',
+              inChangeset: true,
             },
           ],
         };
@@ -320,9 +377,11 @@ export class EngagementRules {
 
     const currentStatus = await this.getCurrentStatus(engagementId, changeset);
     // get roles that can approve the current status
-    const { approvers, transitions } = await this.getStatusRule(
-      currentStatus,
-      engagementId
+    const { approvers, transitions: originTransitions } =
+      await this.getStatusRule(currentStatus, engagementId);
+
+    const transitions = originTransitions.filter((transition) =>
+      changeset ? transition.inChangeset !== false : !transition.inChangeset
     );
 
     // If current user is not an approver (based on roles) then don't allow any transitions
