@@ -9,6 +9,7 @@ import {
   NameField,
   OmitType,
   PickType,
+  RichTextField,
 } from '../../../common';
 import {
   CreateBaseProduct,
@@ -92,6 +93,9 @@ export abstract class UpdateProductInput {
   @Type(() => UpdateProduct)
   @ValidateNested()
   readonly product: UpdateProduct;
+
+  @RichTextField()
+  readonly richTextTest: any;
 }
 
 @InputType()
