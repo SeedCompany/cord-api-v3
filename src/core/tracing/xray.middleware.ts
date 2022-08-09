@@ -70,7 +70,13 @@ export class XRayMiddleware implements NestMiddleware, NestInterceptor {
    * context has much richer info than the raw request.
    */
   async intercept(context: ExecutionContext, next: CallHandler) {
-    const rootSegment = this.tracing.rootSegment;
+    let rootSegment;
+    try {
+      rootSegment = this.tracing.rootSegment;
+    } catch (e) {
+      return next.handle();
+    }
+
     const root = rootSegment as unknown as XRay.Segment | XRay.Subsegment;
     // @ts-expect-error we added it in middleware, so we don't have to parse it again
     // Don't assume though, i.e. tests don't run through middleware above.
