@@ -450,9 +450,10 @@ export const StaffMember = new DbRole({
     new DbBaseNodeGrant<DbProjectChangeRequest>({
       __className: 'DbProjectChangeRequest',
       properties: [
-        { propertyName: 'types',                       permission: { read, }, },
-        { propertyName: 'summary',                     permission: { read, }, },
-        { propertyName: 'status',                      permission: { read, }, },
+        { propertyName: 'types', permission: { read, }, },
+        { propertyName: 'summary', permission: { read, }, },
+        { propertyName: 'status', permission: { read, }, },
+        { propertyName: 'reviewers', permission: { read, }, },
       ],
       canDelete: true,
     }),

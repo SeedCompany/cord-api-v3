@@ -32,6 +32,7 @@ export class ProjectChangeRequestRepository extends DtoRepository<
             types: input.types,
             summary: input.summary,
             status: Status.Pending,
+            reviewers: input.reviewers ?? [],
           },
         })
       )

@@ -1173,6 +1173,11 @@ export const projectChangeRequest = gql`
       canEdit
       canRead
     }
+    reviewers {
+      value
+      canEdit
+      canRead
+    }
     createdAt
     canEdit
   }
