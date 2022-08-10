@@ -1,4 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { intersection } from 'lodash';
 import {
   ID,
   InputException,
@@ -18,13 +19,14 @@ import {
 } from '../../core';
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { Powers } from '../authorization/dto';
+import { Powers, Role } from '../authorization/dto';
 import { ProjectService, ProjectStatus } from '../project';
 import {
   CreateProjectChangeRequest,
   ProjectChangeRequest,
   ProjectChangeRequestListInput,
   ProjectChangeRequestListOutput,
+  ReviewProjectChangeRequest,
   ProjectChangeRequestStatus as Status,
   UpdateProjectChangeRequest,
 } from './dto';
@@ -169,5 +171,22 @@ export class ProjectChangeRequestService {
     // no need to check if canList for now, all roles allow for listing.
     const results = await this.repo.list(input, session);
     return await mapListResults(results, (dto) => this.secure(dto, session));
+  }
+
+  async review(
+    input: ReviewProjectChangeRequest,
+    session: Session
+  ): Promise<ProjectChangeRequest> {
+    const changeRequest = await this.readOne(input.id, session);
+    // TODO consolidate Role and ScopedRole
+    const roles = intersection(
+      changeRequest.reviewers.value,
+      session.roles.map((role) => role.split(':')[1] as Role)
+    );
+
+    if (roles.length > 0) {
+      await this.repo.createReview(input, roles);
+    }
+    return changeRequest;
   }
 }

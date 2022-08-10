@@ -13,6 +13,8 @@ import {
   CreateProjectChangeRequestOutput,
   DeleteProjectChangeRequestOutput,
   ProjectChangeRequest,
+  ReviewProjectChangeRequestInput,
+  ReviewProjectChangeRequestOutput,
   UpdateProjectChangeRequestInput,
   UpdateProjectChangeRequestOutput,
 } from './dto';
@@ -66,5 +68,17 @@ export class ProjectChangeRequestResolver {
   ): Promise<DeleteProjectChangeRequestOutput> {
     await this.service.delete(id, session);
     return { success: true };
+  }
+
+  @Mutation(() => ReviewProjectChangeRequestOutput, {
+    description: 'Review a project change request',
+  })
+  async reviewProjectChangeRequest(
+    @Args('input')
+    { reviewProjectChangeRequest: input }: ReviewProjectChangeRequestInput,
+    @LoggedInSession() session: Session
+  ): Promise<ReviewProjectChangeRequestOutput> {
+    const projectChangeRequest = await this.service.review(input, session);
+    return { projectChangeRequest };
   }
 }
