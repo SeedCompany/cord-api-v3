@@ -31,7 +31,7 @@ export class ProjectChangeRequestRepository extends DtoRepository<
           initialProps: {
             types: input.types,
             summary: input.summary,
-            status: Status.Pending,
+            status: Status.Draft,
             reviewers: input.reviewers ?? [],
           },
         })
@@ -60,7 +60,7 @@ export class ProjectChangeRequestRepository extends DtoRepository<
         .apply(matchPropsAndProjectSensAndScopedRoles(session))
         .return<{ dto: UnsecuredDto<ProjectChangeRequest> }>(
           merge('props', {
-            canEdit: `props.status = "${Status.Pending}"`,
+            canEdit: `props.status = "${Status.Draft}" OR props.status = "${Status.PendingReview}"`,
             project: 'project.id',
           }).as('dto')
         );

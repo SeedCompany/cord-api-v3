@@ -128,8 +128,8 @@ export class ProjectChangeRequestService {
     const updated = await this.readOneUnsecured(input.id, session);
 
     if (
-      object.status === Status.Pending &&
-      (changes.status === Status.Approved || changes.status === Status.Rejected)
+      object.status === Status.PendingReview &&
+      (changes.status === Status.Approved || changes.status === Status.Closed)
     ) {
       await this.eventBus.publish(
         new ProjectChangesetFinalizedEvent(updated, session)
