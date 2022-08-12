@@ -2,6 +2,7 @@ import { Type } from '@nestjs/common';
 import { CustomScalar } from '@nestjs/graphql';
 import { GraphQLScalarType } from 'graphql';
 import { DateScalar, DateTimeScalar } from './luxon.graphql';
+import { RichTextScalar } from './rich-text.scalar';
 import { UrlScalar } from './url.field';
 
 type Scalar = GraphQLScalarType | Type<CustomScalar<any, any>>;
@@ -10,5 +11,6 @@ type Scalar = GraphQLScalarType | Type<CustomScalar<any, any>>;
 export const getRegisteredScalars = (): Scalar[] => [
   DateScalar,
   DateTimeScalar,
+  RichTextScalar,
   UrlScalar,
 ];
