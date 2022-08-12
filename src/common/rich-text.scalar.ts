@@ -14,6 +14,26 @@ export class RichTextDocument {
   static from(doc: JsonObject): RichTextDocument {
     return Object.assign(new RichTextDocument(), doc);
   }
+
+  /** Used to identify this document stored as a string in the DB */
+  private static readonly serializedPrefix = '\0RichText\0';
+
+  static isSerialized(value: any): value is string {
+    return (
+      typeof value === 'string' &&
+      value.startsWith(RichTextDocument.serializedPrefix)
+    );
+  }
+
+  static fromSerialized(value: string) {
+    return RichTextDocument.from(
+      JSON.parse(value.slice(RichTextDocument.serializedPrefix.length))
+    );
+  }
+
+  static serialize(doc: RichTextDocument) {
+    return RichTextDocument.serializedPrefix + JSON.stringify(doc);
+  }
 }
 
 export const RichTextField = (options?: FieldOptions) =>
