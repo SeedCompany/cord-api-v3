@@ -26,6 +26,7 @@ import {
   ProjectChangeRequest,
   ProjectChangeRequestListInput,
   ProjectChangeRequestListOutput,
+  ProjectChangeRequestStatus,
   ReviewProjectChangeRequest,
   ProjectChangeRequestStatus as Status,
   UpdateProjectChangeRequest,
@@ -178,6 +179,13 @@ export class ProjectChangeRequestService {
     session: Session
   ): Promise<ProjectChangeRequest> {
     const changeRequest = await this.readOne(input.id, session);
+    if (
+      changeRequest.status.value !== ProjectChangeRequestStatus.PendingReview
+    ) {
+      throw new InputException(
+        'Only pending project change request could be reviewed'
+      );
+    }
     // TODO consolidate Role and ScopedRole
     const roles = intersection(
       changeRequest.reviewers.value,
@@ -186,6 +194,20 @@ export class ProjectChangeRequestService {
 
     if (roles.length > 0) {
       await this.repo.createReview(input, roles);
+    }
+    const approvedRoles = await this.repo.readApprovedRoles(input.id);
+    const approved = changeRequest.reviewers.value.every((role) =>
+      approvedRoles.includes(role)
+    );
+    // All reviewers approved change request
+    if (approved) {
+      await this.update(
+        {
+          id: input.id,
+          status: ProjectChangeRequestStatus.Approved,
+        },
+        session
+      );
     }
     return changeRequest;
   }
