@@ -5722,6 +5722,7 @@ __metadata:
     got: ^11.8.5
     graphql: ^15.8.0
     graphql-parse-resolve-info: ^4.12.0
+    graphql-scalars: ^1.18.0
     highlightjs-cypher: ^1.1.1
     husky: ^4.3.8
     iso-3166-1: ^2.1.1
@@ -7892,6 +7893,17 @@ cypher-query-builder@6.0.4:
   peerDependencies:
     graphql: ">=0.9 <0.14 || ^14.0.2 || ^15.4.0"
   checksum: d15554985407b34150a36f8526d3ce63cd97a1fa898eadd74ba5e6d099984d13929de64924332832613d59fba7946222b0a07a127e93ad58bdb82f3548cc497b
+  languageName: node
+  linkType: hard
+
+"graphql-scalars@npm:^1.18.0":
+  version: 1.18.0
+  resolution: "graphql-scalars@npm:1.18.0"
+  dependencies:
+    tslib: ~2.4.0
+  peerDependencies:
+    graphql: ^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
+  checksum: 41b545758a08d0fcf3aa49683f2694ab1397493baad56811e9f64c37d9850b485001fce8019d43a1c258ba60dc86efcd5790269af1ec984fdda49fa8c39f552e
   languageName: node
   linkType: hard
 
@@ -13954,7 +13966,7 @@ resolve@^2.0.0-next.3:
   languageName: node
   linkType: hard
 
-"tslib@npm:2.4.0, tslib@npm:^2.0.1, tslib@npm:^2.0.3, tslib@npm:^2.1.0, tslib@npm:^2.2.0, tslib@npm:^2.3.0, tslib@npm:^2.3.1":
+"tslib@npm:2.4.0, tslib@npm:^2.0.1, tslib@npm:^2.0.3, tslib@npm:^2.1.0, tslib@npm:^2.2.0, tslib@npm:^2.3.0, tslib@npm:^2.3.1, tslib@npm:~2.4.0":
   version: 2.4.0
   resolution: "tslib@npm:2.4.0"
   checksum: 8c4aa6a3c5a754bf76aefc38026134180c053b7bd2f81338cb5e5ebf96fefa0f417bff221592bf801077f5bf990562f6264fecbc42cd3309b33872cb6fc3b113
