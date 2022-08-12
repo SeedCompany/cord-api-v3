@@ -8,8 +8,8 @@ import { PostType } from './type.enum';
 
 @InputType()
 export class CreatePost {
-  @IdField({ nullable: true })
-  readonly parentId?: ID;
+  @IdField()
+  readonly parentId: ID;
 
   @Field(() => PostType)
   readonly type: PostType;
