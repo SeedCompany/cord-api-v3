@@ -409,11 +409,6 @@ export class ProjectRules {
               inChangeset: false,
             },
             {
-              to: ProjectStep.FinalizingCompletion,
-              type: TransitionType.Approve,
-              label: 'Finalize Completion',
-            },
-            {
               to: ProjectStep.Terminated,
               type: TransitionType.Neutral,
               label: 'Terminate',
@@ -424,6 +419,11 @@ export class ProjectRules {
               type: TransitionType.Neutral,
               label: 'Suspend',
               inChangeset: true,
+            },
+            {
+              to: ProjectStep.FinalizingCompletion,
+              type: TransitionType.Approve,
+              label: 'Finalize Completion',
             },
           ],
           getNotifiers: () => this.getProjectTeamUserIds(id),
@@ -450,11 +450,6 @@ export class ProjectRules {
               inChangeset: false,
             },
             {
-              to: ProjectStep.FinalizingCompletion,
-              type: TransitionType.Approve,
-              label: 'Finalize Completion',
-            },
-            {
               to: ProjectStep.Terminated,
               type: TransitionType.Neutral,
               label: 'Terminate',
@@ -465,6 +460,11 @@ export class ProjectRules {
               type: TransitionType.Neutral,
               label: 'Suspend',
               inChangeset: true,
+            },
+            {
+              to: ProjectStep.FinalizingCompletion,
+              type: TransitionType.Approve,
+              label: 'Finalize Completion',
             },
           ],
           getNotifiers: async () => [
