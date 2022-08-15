@@ -854,7 +854,7 @@ export class ProjectRules {
 
     // If current user is not an approver (based on roles) then don't allow any transitions
     currentUserRoles ??= session.roles.map(withoutScope);
-    if (intersection(approvers, currentUserRoles).length === 0) {
+    if (!changeset && intersection(approvers, currentUserRoles).length === 0) {
       return [];
     }
 
