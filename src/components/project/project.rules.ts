@@ -637,6 +637,12 @@ export class ProjectRules {
               inChangeset: false,
             },
             {
+              to: await backToActive(),
+              type: TransitionType.Approve,
+              label: 'Reactivate',
+              inChangeset: true,
+            },
+            {
               to: ProjectStep.DiscussingTermination,
               type: TransitionType.Neutral,
               label: 'Discuss Termination',
@@ -806,7 +812,14 @@ export class ProjectRules {
       case ProjectStep.Terminated:
         return {
           approvers: [Role.Administrator],
-          transitions: [],
+          transitions: [
+            {
+              to: await backToActive(),
+              type: TransitionType.Neutral,
+              label: 'Go back to Active',
+              inChangeset: true,
+            },
+          ],
           getNotifiers: async () => [
             ...(await this.getProjectTeamUserIds(id)),
             'project_termination@tsco.org',
