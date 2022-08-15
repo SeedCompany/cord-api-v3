@@ -76,8 +76,10 @@ export class ProjectRules {
     id: ID,
     changeset?: ID
   ): Promise<StepRule> {
-    const mostRecentPreviousStep = (steps: ProjectStep[]) =>
-      this.getMostRecentPreviousStep(id, steps, changeset);
+    const mostRecentPreviousStep = async (steps: ProjectStep[]) => {
+      const prevSteps = await this.getPreviousSteps(id, changeset);
+      return first(intersection(prevSteps, steps)) ?? steps[0];
+    };
     const backToActive = () =>
       mostRecentPreviousStep([
         ProjectStep.Active,
@@ -1028,25 +1030,16 @@ export class ProjectRules {
     return emails?.emails ?? [];
   }
 
-  /** Of the given steps which one was the most recent previous step */
-  private async getMostRecentPreviousStep(
-    id: ID,
-    steps: ProjectStep[],
-    changeset?: ID
-  ): Promise<ProjectStep> {
-    const prevSteps = await this.getPreviousSteps(id, changeset);
-    return first(intersection(prevSteps, steps)) ?? steps[0];
-  }
-
   /** A list of the project's previous steps ordered most recent to furthest in the past */
   private async getPreviousSteps(
     id: ID,
-    changeset?: ID
+    changeset?: ID,
+    includePreviousChangesetSteps = false
   ): Promise<ProjectStep[]> {
     const result = await this.db
       .query()
       .match([
-        ...(changeset
+        ...(changeset && includePreviousChangesetSteps
           ? [
               node('changeset', 'Changeset', { id: changeset }),
               relation('in', '', 'changeset', ACTIVE),
@@ -1057,9 +1050,9 @@ export class ProjectRules {
         node('prop'),
       ])
       .apply((q) =>
-        changeset
+        changeset && includePreviousChangesetSteps
           ? q.raw('WHERE NOT (changeset)-[:changeset {active:true}]->(prop)')
-          : q
+          : q.raw('WHERE NOT (:Changeset)-[:changeset]->(prop)')
       )
       .with('prop')
       .orderBy('prop.createdAt', 'DESC')
