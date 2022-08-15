@@ -404,10 +404,21 @@ export class ProjectRules {
           ],
           transitions: [
             {
+              to: ProjectStep.FinalizingCompletion,
+              type: TransitionType.Approve,
+              label: 'Finalize Completion',
+            },
+            {
               to: ProjectStep.DiscussingChangeToPlan,
               type: TransitionType.Neutral,
               label: 'Discuss Change to Plan',
               inChangeset: false,
+            },
+            {
+              to: ProjectStep.Suspended,
+              type: TransitionType.Neutral,
+              label: 'Suspend',
+              inChangeset: true,
             },
             {
               to: ProjectStep.DiscussingTermination,
@@ -420,17 +431,6 @@ export class ProjectRules {
               type: TransitionType.Neutral,
               label: 'Terminate',
               inChangeset: true,
-            },
-            {
-              to: ProjectStep.Suspended,
-              type: TransitionType.Neutral,
-              label: 'Suspend',
-              inChangeset: true,
-            },
-            {
-              to: ProjectStep.FinalizingCompletion,
-              type: TransitionType.Approve,
-              label: 'Finalize Completion',
             },
           ],
           getNotifiers: () => this.getProjectTeamUserIds(id),
@@ -445,10 +445,21 @@ export class ProjectRules {
           ],
           transitions: [
             {
+              to: ProjectStep.FinalizingCompletion,
+              type: TransitionType.Approve,
+              label: 'Finalize Completion',
+            },
+            {
               to: ProjectStep.DiscussingChangeToPlan,
               type: TransitionType.Neutral,
               label: 'Discuss Change to Plan',
               inChangeset: false,
+            },
+            {
+              to: ProjectStep.Suspended,
+              type: TransitionType.Neutral,
+              label: 'Suspend',
+              inChangeset: true,
             },
             {
               to: ProjectStep.DiscussingTermination,
@@ -461,17 +472,6 @@ export class ProjectRules {
               type: TransitionType.Neutral,
               label: 'Terminate',
               inChangeset: true,
-            },
-            {
-              to: ProjectStep.Suspended,
-              type: TransitionType.Neutral,
-              label: 'Suspend',
-              inChangeset: true,
-            },
-            {
-              to: ProjectStep.FinalizingCompletion,
-              type: TransitionType.Approve,
-              label: 'Finalize Completion',
             },
           ],
           getNotifiers: async () => [
