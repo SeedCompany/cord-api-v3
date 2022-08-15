@@ -414,12 +414,6 @@ export class ProjectRules {
               label: 'Finalize Completion',
             },
             {
-              to: ProjectStep.ActiveChangedPlan,
-              type: TransitionType.Approve,
-              label: 'Approve Change to Plan',
-              inChangeset: true,
-            },
-            {
               to: ProjectStep.Terminated,
               type: TransitionType.Approve,
               label: 'Approve Termination',
@@ -657,12 +651,6 @@ export class ProjectRules {
               type: TransitionType.Neutral,
               label: 'Discuss Termination',
               inChangeset: false,
-            },
-            {
-              to: ProjectStep.ActiveChangedPlan,
-              type: TransitionType.Approve,
-              label: 'Approve Change to Plan',
-              inChangeset: true,
             },
             {
               to: ProjectStep.Terminated,
