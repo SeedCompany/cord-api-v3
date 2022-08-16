@@ -1,5 +1,6 @@
+import { sumBy } from 'lodash';
 import { Cell } from '../../common/xlsx.util';
-import { Book } from '../scripture';
+import { parseScripture, ScriptureRange } from '../scripture';
 import { PlanningSheet } from './planning-sheet';
 import { ProgressSheet } from './progress-sheet';
 
@@ -10,7 +11,19 @@ export const isGoalRow = (cell: Cell<PlanningSheet | ProgressSheet>) => {
   if (!cell.sheet.isWritten()) {
     return false;
   }
-  const book = Book.tryFind(cell.sheet.bookName(cell.row));
-  const totalVerses = cell.sheet.totalVerses(cell.row) ?? 0;
-  return !!book && totalVerses > 0 && totalVerses <= book.totalVerses;
+  try {
+    const ranges = parseScripture(cell.sheet.bookName(cell.row));
+    if (ranges.length > 0) {
+      const versesToTranslate = cell.sheet.totalVerses(cell.row) ?? 0; //lifetime verses to translate
+      const versesInBook = sumBy(ranges, (range) => {
+        const verseRange = ScriptureRange.fromReferences(range);
+        return verseRange.end - verseRange.start + 1;
+      });
+      return versesToTranslate > 0 && versesToTranslate <= versesInBook;
+    } else {
+      return false;
+    }
+  } catch (e) {
+    return false;
+  }
 };
