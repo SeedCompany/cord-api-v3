@@ -114,9 +114,10 @@ const parseProductRow =
       };
     }
     assert(sheet.isWritten());
+    const bookName = parseScripture(sheet.bookName(row))[0]!.start.book;
     return {
       ...common,
-      bookName: sheet.bookName(row)!, // Asserting bc loop verified this
+      bookName,
       totalVerses: sheet.totalVerses(row)!, // Asserting bc loop verified this
     };
   };

@@ -13,7 +13,7 @@ import {
   ProgressSheet,
 } from '../pnp';
 import { ProductStep as Step } from '../product';
-import { Book } from '../scripture';
+import { parseScripture } from '../scripture';
 import { StepProgressInput } from './dto';
 
 type ExtractedRow = MergeExclusive<
@@ -98,9 +98,7 @@ const parseProgressRow =
     }
 
     assert(sheet.isWritten());
-    const bookName = Book.find(
-      sheet.bookName(row)! // Asserting bc loop verified this
-    ).name;
+    const bookName = parseScripture(sheet.bookName(row))[0]!.start.book;
     const totalVerses = sheet.totalVerses(row)!; // Asserting bc loop verified this
     return { ...common, bookName, totalVerses };
   };
