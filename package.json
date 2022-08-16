@@ -113,6 +113,7 @@
     "eslint-plugin-typescript-sort-keys": "^2.1.0",
     "husky": "^4.3.8",
     "jest": "^26.6.3",
+    "jest-mock": "*",
     "lint-staged": "^11.1.2",
     "madge": "^5.0.1",
     "ts-jest": "^26.5.6",
@@ -133,6 +134,10 @@
       "<rootDir>/src"
     ],
     "testEnvironment": "node",
+    "collectCoverageFrom": [
+      "**/*.ts",
+      "!**/*.generated.ts"
+    ],
     "globals": {
       "ts-jest": {
         "astTransformers": {
