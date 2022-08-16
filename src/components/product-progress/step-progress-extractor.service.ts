@@ -98,11 +98,7 @@ const parseProgressRow =
     }
 
     assert(sheet.isWritten());
-    let bookName = sheet.bookName(row)!;
-    const ranges = parseScripture(sheet.bookName(row));
-    if (ranges) {
-      bookName = ranges[0].start.book;
-    }
+    const bookName = parseScripture(sheet.bookName(row))[0]!.start.book;
     const totalVerses = sheet.totalVerses(row)!; // Asserting bc loop verified this
     return { ...common, bookName, totalVerses };
   };
