@@ -2,20 +2,24 @@ import { Injectable } from '@nestjs/common';
 import { hasLabel, node, not, relation } from 'cypher-query-builder';
 import { ID, NotFoundException, Session } from '../../common';
 import { DtoRepository } from '../../core';
-import { ACTIVE } from '../../core/database/query';
+import {
+  ACTIVE,
+  matchParentToSelfOrChildNode,
+} from '../../core/database/query';
 import { BaseNode } from '../../core/database/results';
 import { ProjectChangeRequestStatus } from '../project-change-request/dto';
 import { Changeset, ChangesetDiff } from './dto';
 
 @Injectable()
 export class ChangesetRepository extends DtoRepository(Changeset) {
-  async difference(id: ID, _session: Session) {
+  async difference(id: ID, _session: Session, parent: ID) {
     const result = await this.db
       .query()
       .match([node('changeset', 'Changeset', { id })])
+      .match([node('parent', { id: parent })])
       .subQuery((sub) =>
         sub
-          .with('changeset')
+          .with(['changeset', 'parent'])
           .match([
             node('changeset'),
             relation('out', '', [], ACTIVE),
@@ -27,22 +31,37 @@ export class ChangesetRepository extends DtoRepository(Changeset) {
           // These are not directly modified by user, and could be left over
           // if a user made a change and then reverted it.
           .where(not({ prop: hasLabel('modifiedAt') }))
-          .return('collect(distinct node) as changed')
+          .apply(matchParentToSelfOrChildNode())
+          .return('collect(distinct selfOrChild) as changed')
       )
       .subQuery((sub) =>
         sub
-          .with('changeset')
+          .with(['changeset', 'parent'])
           .match([
             node('changeset'),
             relation('out', '', [], { deleting: true }),
             node('node'),
           ])
-          .return('collect(distinct node) as removed')
+          .apply(matchParentToSelfOrChildNode())
+          .return('collect(distinct selfOrChild) as removed')
+      )
+      .subQuery((sub) =>
+        sub
+          .with(['changeset', 'parent'])
+          .match([
+            node('changeset'),
+            relation('out', 'changeType', 'changeset', { ACTIVE }),
+            node('node', 'BaseNode'),
+          ])
+          // There's got to be a better way than this... maybe filter our ScriptureRange results after the query?
+          .raw('WHERE changeType.deleting IS NULL and NOT node:ScriptureRange')
+          .apply(matchParentToSelfOrChildNode())
+          .return('collect(distinct selfOrChild) as added')
       )
       .return<Record<keyof ChangesetDiff, readonly BaseNode[]>>([
         'changed',
         'removed',
-        '[(changeset)-[changeType:changeset { active: true }]->(node:BaseNode) WHERE changeType.deleting IS NULL | node] as added',
+        'added',
       ])
       .first();
     if (!result) {

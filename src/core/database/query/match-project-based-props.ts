@@ -18,6 +18,24 @@ import {
 } from './cypher-functions';
 import { ACTIVE, matchProps, MatchPropsOptions } from './matching';
 
+export const matchParentToSelfOrChildNode =
+  () =>
+  <R>(query: Query<R>) =>
+    query.comment`
+    matchSelfOrChildNode()
+  `.subQuery((sub) =>
+      sub
+        .with(['node', 'parent'])
+        .with(['node', 'parent'])
+        .raw('WHERE node.id = parent.id')
+        .return({ node: 'selfOrChild' })
+        .union()
+        .with(['node', 'parent'])
+        .with(['node', 'parent'])
+        .raw('WHERE node.id <> parent.id AND (parent) -[*]-> (node)')
+        .return({ node: 'selfOrChild' })
+    );
+
 export const matchPropsAndProjectSensAndScopedRoles =
   (session?: Session | ID | Variable, propsOptions?: MatchPropsOptions) =>
   <R>(query: Query<R>) =>
