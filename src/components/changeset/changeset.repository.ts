@@ -53,8 +53,7 @@ export class ChangesetRepository extends DtoRepository(Changeset) {
             relation('out', 'changeType', 'changeset', { ACTIVE }),
             node('node', 'BaseNode'),
           ])
-          // There's got to be a better way than this... maybe filter our ScriptureRange results after the query?
-          .raw('WHERE changeType.deleting IS NULL and NOT node:ScriptureRange')
+          .raw('WHERE changeType.deleting IS NULL')
           .apply(matchParentToSelfOrChildNode())
           .return('collect(distinct selfOrChild) as added')
       )
