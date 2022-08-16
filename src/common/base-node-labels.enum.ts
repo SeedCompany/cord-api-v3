@@ -2,6 +2,8 @@ export enum DbBaseNodeLabel {
   Budget = 'DbBudget',
   BudgetRecord = 'DbBudgetRecord',
   Ceremony = 'DbCeremony',
+  Comment = 'DbComment',
+  CommentThread = 'DbCommentThread',
   Directory = 'DbDirectory',
   Education = 'DbEducation',
   Engagement = 'DbEngagement',
