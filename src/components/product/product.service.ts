@@ -451,7 +451,7 @@ export class ProductService {
   }
 
   private getDirectProductChanges(
-    input: UpdateDirectScriptureProduct,
+    { changeset, ...input }: UpdateDirectScriptureProduct,
     current: UnsecuredDto<DirectScriptureProduct>
   ) {
     const partialChanges = this.repo.getActualDirectChanges(current, {
@@ -549,7 +549,7 @@ export class ProductService {
   }
 
   private getDerivativeProductChanges(
-    input: UpdateDerivativeScriptureProduct,
+    { changeset, ...input }: UpdateDerivativeScriptureProduct,
     current: UnsecuredDto<DerivativeScriptureProduct>
   ) {
     const partialChanges = this.repo.getActualDerivativeChanges(
@@ -595,9 +595,8 @@ export class ProductService {
   }
 
   async updateOther(
-    input: UpdateOtherProduct,
-    session: Session,
-    changeset?: ID
+    { changeset, ...input }: UpdateOtherProduct,
+    session: Session
   ) {
     const view = viewOfChangeset(changeset);
     const currentProduct = await this.readOneUnsecured(input.id, session, view);

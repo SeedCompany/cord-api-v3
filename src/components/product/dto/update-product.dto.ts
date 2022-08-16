@@ -26,6 +26,12 @@ export abstract class UpdateBaseProduct extends OmitType(CreateBaseProduct, [
 ]) {
   @IdField()
   readonly id: ID;
+
+  @IdField({
+    description: 'The change object to associate these product changes with',
+    nullable: true,
+  })
+  readonly changeset?: ID;
 }
 
 @InputType()
@@ -38,20 +44,6 @@ export abstract class UpdateDirectScriptureProduct extends IntersectionType(
 ) {
   totalVerses?: number;
   totalVerseEquivalents?: number;
-}
-
-@InputType()
-export abstract class UpdateDirectScriptureProductInput {
-  @IdField({
-    description: 'The change object to associate these product changes with',
-    nullable: true,
-  })
-  readonly changeset?: ID;
-
-  @Field()
-  @Type(() => UpdateDirectScriptureProduct)
-  @ValidateNested()
-  readonly product: UpdateDirectScriptureProduct;
 }
 
 @InputType()
@@ -72,20 +64,6 @@ export abstract class UpdateDerivativeScriptureProduct extends IntersectionType(
 
   totalVerses?: number;
   totalVerseEquivalents?: number;
-}
-
-@InputType()
-export abstract class UpdateDerivativeScriptureProductInput {
-  @IdField({
-    description: 'The change object to associate these product changes with',
-    nullable: true,
-  })
-  readonly changeset?: ID;
-
-  @Field()
-  @Type(() => UpdateDerivativeScriptureProduct)
-  @ValidateNested()
-  readonly product: UpdateDerivativeScriptureProduct;
 }
 
 /**
@@ -129,20 +107,6 @@ export abstract class UpdateOtherProduct extends UpdateBaseProduct {
 
   @Field(() => String, { nullable: true })
   readonly description?: string | null;
-}
-
-@InputType()
-export abstract class UpdateOtherProductInput {
-  @IdField({
-    description: 'The change object to associate these product changes with',
-    nullable: true,
-  })
-  readonly changeset?: ID;
-
-  @Field()
-  @Type(() => UpdateOtherProduct)
-  @ValidateNested()
-  readonly product: UpdateOtherProduct;
 }
 
 @ObjectType()

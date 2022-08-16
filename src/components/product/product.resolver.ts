@@ -23,16 +23,16 @@ import { Loader, LoaderOf } from '../../core';
 import { IdsAndView, IdsAndViewArg } from '../changeset/dto';
 import {
   AvailableStepsOptions,
-  CreateDerivativeScriptureProductInput,
-  CreateDirectScriptureProductInput,
-  CreateOtherProductInput,
+  CreateDerivativeScriptureProduct,
+  CreateDirectScriptureProduct,
+  CreateOtherProduct,
   getAvailableSteps,
   ProductLoader,
   ProductService,
   ProductStep as Step,
-  UpdateDerivativeScriptureProductInput,
-  UpdateDirectScriptureProductInput,
-  UpdateOtherProductInput,
+  UpdateDerivativeScriptureProduct,
+  UpdateDirectScriptureProduct,
+  UpdateOtherProduct,
 } from '../product';
 import { ProjectLoader, TranslationProject } from '../project';
 import { Book, labelOfScriptureRanges } from '../scripture';
@@ -213,7 +213,7 @@ export class ProductResolver {
   async createDirectScriptureProduct(
     @LoggedInSession() session: Session,
     @Args('input')
-    { product: input, changeset }: CreateDirectScriptureProductInput
+    { changeset, ...input }: CreateDirectScriptureProduct
   ): Promise<CreateProductOutput> {
     const product = await this.productService.create(input, session, changeset);
     return { product };
@@ -225,7 +225,7 @@ export class ProductResolver {
   async createDerivativeScriptureProduct(
     @LoggedInSession() session: Session,
     @Args('input')
-    { product: input, changeset }: CreateDerivativeScriptureProductInput
+    { changeset, ...input }: CreateDerivativeScriptureProduct
   ): Promise<CreateProductOutput> {
     const product = await this.productService.create(input, session, changeset);
     return { product };
@@ -236,7 +236,7 @@ export class ProductResolver {
   })
   async createOtherProduct(
     @LoggedInSession() session: Session,
-    @Args('input') { product: input, changeset }: CreateOtherProductInput
+    @Args('input') { changeset, ...input }: CreateOtherProduct
   ): Promise<CreateProductOutput> {
     const product = await this.productService.create(input, session, changeset);
     return { product };
@@ -261,7 +261,7 @@ export class ProductResolver {
   async updateDirectScriptureProduct(
     @LoggedInSession() session: Session,
     @Args('input')
-    { product: input, changeset }: UpdateDirectScriptureProductInput
+    { changeset, ...input }: UpdateDirectScriptureProduct
   ): Promise<UpdateProductOutput> {
     const product = await this.productService.updateDirect(
       input,
@@ -278,7 +278,7 @@ export class ProductResolver {
   async updateDerivativeScriptureProduct(
     @LoggedInSession() session: Session,
     @Args('input')
-    { product: input, changeset }: UpdateDerivativeScriptureProductInput
+    { changeset, ...input }: UpdateDerivativeScriptureProduct
   ): Promise<UpdateProductOutput> {
     const product = await this.productService.updateDerivative(
       input,
@@ -294,13 +294,9 @@ export class ProductResolver {
   })
   async updateOtherProduct(
     @LoggedInSession() session: Session,
-    @Args('input') { product: input, changeset }: UpdateOtherProductInput
+    @Args('input') input: UpdateOtherProduct
   ): Promise<UpdateProductOutput> {
-    const product = await this.productService.updateOther(
-      input,
-      session,
-      changeset
-    );
+    const product = await this.productService.updateOther(input, session);
     return { product };
   }
 

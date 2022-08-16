@@ -26,6 +26,12 @@ export abstract class CreateBaseProduct {
   })
   readonly engagementId: ID;
 
+  @IdField({
+    description: 'The change object to associate these product changes with',
+    nullable: true,
+  })
+  readonly changeset?: ID;
+
   @Field(() => [ProductMedium], { nullable: true })
   @Transform(({ value }) => uniq(value))
   readonly mediums?: readonly ProductMedium[];
@@ -92,20 +98,6 @@ export abstract class CreateDirectScriptureProduct extends CreateBaseProduct {
 }
 
 @InputType()
-export abstract class CreateDirectScriptureProductInput {
-  @IdField({
-    description: 'The change object to associate these product changes with',
-    nullable: true,
-  })
-  readonly changeset?: ID;
-
-  @Field()
-  @Type(() => CreateDirectScriptureProduct)
-  @ValidateNested()
-  readonly product: CreateDirectScriptureProduct;
-}
-
-@InputType()
 export abstract class CreateDerivativeScriptureProduct extends CreateBaseProduct {
   @IdField({
     description: stripIndent`
@@ -133,20 +125,6 @@ export abstract class CreateDerivativeScriptureProduct extends CreateBaseProduct
     nullable: true,
   })
   readonly composite?: boolean;
-}
-
-@InputType()
-export abstract class CreateDerivativeScriptureProductInput {
-  @IdField({
-    description: 'The change object to associate these product changes with',
-    nullable: true,
-  })
-  readonly changeset?: ID;
-
-  @Field()
-  @Type(() => CreateDerivativeScriptureProduct)
-  @ValidateNested()
-  readonly product: CreateDerivativeScriptureProduct;
 }
 
 /**
@@ -205,20 +183,6 @@ export abstract class CreateOtherProduct extends CreateBaseProduct {
 
   @Field(() => String, { nullable: true })
   readonly description?: string | null;
-}
-
-@InputType()
-export abstract class CreateOtherProductInput {
-  @IdField({
-    description: 'The change object to associate these product changes with',
-    nullable: true,
-  })
-  readonly changeset?: ID;
-
-  @Field()
-  @Type(() => CreateOtherProduct)
-  @ValidateNested()
-  readonly product: CreateOtherProduct;
 }
 
 @ObjectType()
