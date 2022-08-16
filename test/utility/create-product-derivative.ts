@@ -1,6 +1,6 @@
 import { isValidId } from '../../src/common';
 import {
-  CreateDerivativeScriptureProductInput,
+  CreateDerivativeScriptureProduct,
   ProductMedium,
   ProductMethodology,
   ProductPurpose,
@@ -11,21 +11,19 @@ import { gql } from './gql-tag';
 
 export async function createDerivativeProduct(
   app: TestApp,
-  { product: input }: CreateDerivativeScriptureProductInput
+  input: CreateDerivativeScriptureProduct
 ) {
-  const product: CreateDerivativeScriptureProductInput = {
-    product: {
-      mediums: [ProductMedium.Print],
-      purposes: [ProductPurpose.ChurchLife],
-      methodology: ProductMethodology.Paratext,
-      ...input,
-    },
+  const product: CreateDerivativeScriptureProduct = {
+    mediums: [ProductMedium.Print],
+    purposes: [ProductPurpose.ChurchLife],
+    methodology: ProductMethodology.Paratext,
+    ...input,
   };
 
   const result = await app.graphql.mutate(
     gql`
       mutation createDerivativeScriptureProduct(
-        $input: CreateDerivativeScriptureProductInput!
+        $input: CreateDerivativeScriptureProduct!
       ) {
         createDerivativeScriptureProduct(input: $input) {
           product {
