@@ -69,14 +69,8 @@ export class ResourceLoader {
     id: ID,
     view?: ObjectView
   ): Promise<SomeResourceType['prototype']> {
-    const resolvedType = this.resourceResolver.resolveType(type);
-    if (!this.loaderRegistry.loaders.has(resolvedType)) {
-      throw new ServerException(
-        `Could not find loader for type: ${resolvedType}`
-      );
-    }
-    const { factory, objectViewAware } =
-      this.loaderRegistry.loaders.get(resolvedType)!;
+    const { factory, objectViewAware, resolvedType } =
+      this.findLoaderFactory(type);
     const loader: DataLoader<any, any> = await this.context[
       NEST_LOADER_CONTEXT_KEY
     ].getLoader(factory);
@@ -86,5 +80,27 @@ export class ResourceLoader {
       __typename: resolvedType, // Add typename so that Resource.resolveType can work.
       ...result,
     };
+  }
+
+  private findLoaderFactory(type: Many<keyof ResourceMap | SomeResourceType>) {
+    // Allow GQL interfaces to be used if referenced directly & have an available
+    // loader.
+    if (!Array.isArray(type)) {
+      const directType = ((type as SomeResourceType).name ??
+        type) as keyof ResourceMap;
+      const direct = this.loaderRegistry.loaders.get(directType);
+      if (direct) {
+        return { resolvedType: directType, ...direct };
+      }
+    }
+
+    const resolvedType = this.resourceResolver.resolveType(type);
+    const found = this.loaderRegistry.loaders.get(resolvedType);
+    if (!found) {
+      throw new ServerException(
+        `Could not find loader for type: ${resolvedType}`
+      );
+    }
+    return { resolvedType, ...found };
   }
 }
