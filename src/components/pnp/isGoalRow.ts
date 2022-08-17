@@ -28,7 +28,7 @@ export const isGoalRow = (cell: Cell<PlanningSheet | ProgressSheet>) => {
 
   let scriptureRanges;
   try {
-    scriptureRanges = parseScripture(maybeBook);
+    scriptureRanges = parseScripture(rawBook);
   } catch {
     return false;
   }
