@@ -1,8 +1,7 @@
 import { Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
 import { ID, IdArg, LoggedInSession, ObjectView, Session } from '../../common';
-import { Loader, LoaderOf, ResourceLoader } from '../../core';
+import { ResourceLoader } from '../../core';
 import { BaseNode } from '../../core/database/results';
-import { ChangesetLoader } from './changeset.loader';
 import { ChangesetRepository } from './changeset.repository';
 import { Changeset, ChangesetDiff, ResourceChange } from './dto';
 
@@ -14,12 +13,8 @@ export class ChangesetResolver {
   ) {}
 
   @Query(() => Changeset)
-  async changeset(
-    @Loader(() => ChangesetLoader)
-    changesets: LoaderOf<ChangesetLoader>,
-    @IdArg() id: ID
-  ): Promise<Changeset> {
-    return await changesets.load(id);
+  async changeset(@IdArg() id: ID): Promise<Changeset> {
+    return await this.resources.load(Changeset, id);
   }
 
   @ResolveField(() => ChangesetDiff, {
