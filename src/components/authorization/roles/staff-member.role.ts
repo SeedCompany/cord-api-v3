@@ -395,6 +395,7 @@ export const StaffMember = new DbRole({
         { propertyName: 'receivedDate', permission: { read, write }, },
         { propertyName: 'reportFile', permission: { read, write }, },
         { propertyName: 'skippedReason', permission: { read, }, },
+        { propertyName: 'otherFiles', permission: { read, write }, },
       ],
       canDelete: true,
     }),

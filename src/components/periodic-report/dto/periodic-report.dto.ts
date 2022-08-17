@@ -62,6 +62,8 @@ class PeriodicReport extends Resource {
 
   readonly reportFile: DefinedFile;
 
+  readonly otherFiles: DefinedFile;
+
   @SensitivityField({
     description: "Based on the project's sensitivity",
   })

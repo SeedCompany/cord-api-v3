@@ -16,7 +16,13 @@ import {
 } from '../../common';
 import { Loader, LoaderOf } from '../../core';
 import { IdsAndView, IdsAndViewArg } from '../changeset/dto';
-import { FileNodeLoader, resolveDefinedFile, SecuredFile } from '../file';
+import {
+  FileNodeLoader,
+  FileService,
+  resolveDefinedFile,
+  SecuredDirectory,
+  SecuredFile,
+} from '../file';
 import {
   IPeriodicReport,
   PeriodicReportListInput,
@@ -29,7 +35,10 @@ import { PeriodicReportService } from './periodic-report.service';
 
 @Resolver(IPeriodicReport)
 export class PeriodicReportResolver {
-  constructor(private readonly service: PeriodicReportService) {}
+  constructor(
+    private readonly service: PeriodicReportService,
+    private readonly files: FileService
+  ) {}
 
   @Query(() => IPeriodicReport, {
     description: 'Read a periodic report by id.',
@@ -91,5 +100,21 @@ export class PeriodicReportResolver {
     @Loader(FileNodeLoader) files: LoaderOf<FileNodeLoader>
   ): Promise<SecuredFile> {
     return await resolveDefinedFile(files, report.reportFile);
+  }
+
+  @ResolveField(() => SecuredDirectory)
+  async otherFiles(
+    @Parent() report: IPeriodicReport,
+    @AnonSession() session: Session
+  ): Promise<SecuredDirectory> {
+    const { value: directoryId, ...rest } = report.otherFiles;
+    if (!rest.canRead || !directoryId) {
+      return rest;
+    }
+
+    return {
+      ...rest,
+      value: await this.files.getDirectory(directoryId, session),
+    };
   }
 }
