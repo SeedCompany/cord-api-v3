@@ -587,17 +587,17 @@ export class Book implements Iterable<Chapter> {
     return this.name === other.name;
   }
 
-  static [Symbol.iterator] = function* () {
+  static *[Symbol.iterator]() {
     for (const book of books) {
       yield Book.find(book.names[0]);
     }
-  };
+  }
 
-  [Symbol.iterator] = function* (this: Book) {
+  *[Symbol.iterator]() {
     for (const chapter of range(1, this.totalChapters + 1)) {
       yield this.chapter(chapter);
     }
-  };
+  }
 
   [inspect.custom]() {
     return `[Book] ${this.label}`;
@@ -682,11 +682,11 @@ export class Chapter implements Iterable<Verse> {
     return new Verse(this, verseNumber);
   }
 
-  [Symbol.iterator] = function* (this: Chapter) {
+  *[Symbol.iterator]() {
     for (const verseNum of range(1, this.totalVerses + 1)) {
       yield this.verse(verseNum);
     }
-  };
+  }
 
   get verses() {
     return iterate(this);

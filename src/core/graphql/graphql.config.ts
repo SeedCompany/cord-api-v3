@@ -11,10 +11,15 @@ import {
   ValidationError,
 } from 'apollo-server-errors';
 import { Request, Response } from 'express';
-import { GraphQLError, GraphQLFormattedError } from 'graphql';
+import {
+  GraphQLError,
+  GraphQLFormattedError,
+  GraphQLScalarType,
+} from 'graphql';
 import { intersection } from 'lodash';
 import { sep } from 'path';
-import { GqlContextType } from '../../common';
+import { GqlContextType, mapFromList } from '../../common';
+import { getRegisteredScalars } from '../../common/scalars';
 import { ConfigService } from '../config/config.service';
 import { VersionService } from '../config/version.service';
 import { GraphqlTracingPlugin } from './graphql-tracing.plugin';
@@ -40,6 +45,10 @@ export class GraphQLConfig implements GqlOptionsFactory {
       process.env.APOLLO_SERVER_USER_VERSION = version.hash;
     }
 
+    const scalars = mapFromList(getRegisteredScalars(), (scalar) =>
+      scalar instanceof GraphQLScalarType ? [scalar.name, scalar] : null
+    );
+
     return {
       autoSchemaFile: 'schema.graphql',
       context: this.context,
@@ -51,6 +60,9 @@ export class GraphQLConfig implements GqlOptionsFactory {
       sortSchema: true,
       buildSchemaOptions: {
         fieldMiddleware: [this.tracing.fieldMiddleware()],
+      },
+      resolvers: {
+        ...scalars,
       },
       plugins: [ApolloServerPluginLandingPageLocalDefault({ footer: false })],
     };
