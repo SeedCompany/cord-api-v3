@@ -77,7 +77,10 @@ export class ResourceLoader {
     const key = objectViewAware ? { id, view: view ?? { active: true } } : id;
     const result = await loader.load(key);
     return {
-      __typename: resolvedType, // Add typename so that Resource.resolveType can work.
+      // Add typename so that Resource.resolveType can work.
+      // Note that this will fail when the resolvedType is an interface
+      // So in those cases we expect the result to override this.
+      __typename: resolvedType,
       ...result,
     };
   }

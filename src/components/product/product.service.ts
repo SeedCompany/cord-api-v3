@@ -221,6 +221,7 @@ export class ProductService {
         ...props,
         title,
         description,
+        __typename: 'OtherProduct',
       };
       return dto;
     }
@@ -228,6 +229,7 @@ export class ProductService {
     if (!producible) {
       const dto: UnsecuredDto<DirectScriptureProduct> = {
         ...props,
+        __typename: 'DirectScriptureProduct',
       };
       return dto;
     }
@@ -245,6 +247,7 @@ export class ProductService {
       scriptureReferencesOverride: !isOverriding
         ? null
         : props.scriptureReferences,
+      __typename: 'DerivativeScriptureProduct',
     };
     return dto;
   }
