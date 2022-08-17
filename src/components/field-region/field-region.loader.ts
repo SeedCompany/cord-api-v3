@@ -1,10 +1,9 @@
-import { Injectable, Scope } from '@nestjs/common';
 import { ID } from '../../common';
-import { OrderedNestDataLoader } from '../../core';
+import { LoaderFactory, OrderedNestDataLoader } from '../../core';
 import { FieldRegion } from './dto';
 import { FieldRegionService } from './field-region.service';
 
-@Injectable({ scope: Scope.REQUEST })
+@LoaderFactory(() => FieldRegion)
 export class FieldRegionLoader extends OrderedNestDataLoader<FieldRegion> {
   constructor(private readonly fieldRegions: FieldRegionService) {
     super();

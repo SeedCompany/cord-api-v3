@@ -1,10 +1,20 @@
-import { Injectable, Scope } from '@nestjs/common';
 import { ID } from '../../common';
-import { OrderedNestDataLoader } from '../../core';
-import { AnyProduct } from './dto';
+import { LoaderFactory, OrderedNestDataLoader } from '../../core';
+import {
+  AnyProduct,
+  DerivativeScriptureProduct,
+  DirectScriptureProduct,
+  OtherProduct,
+  Product,
+} from './dto';
 import { ProductService } from './product.service';
 
-@Injectable({ scope: Scope.REQUEST })
+@LoaderFactory(() => [
+  Product,
+  DirectScriptureProduct,
+  DerivativeScriptureProduct,
+  OtherProduct,
+])
 export class ProductLoader extends OrderedNestDataLoader<AnyProduct> {
   constructor(private readonly products: ProductService) {
     super();

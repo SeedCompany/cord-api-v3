@@ -1,10 +1,9 @@
-import { Injectable, Scope } from '@nestjs/common';
 import { ID, ObjectView } from '../../common';
-import { ObjectViewAwareLoader } from '../../core';
+import { LoaderFactory, ObjectViewAwareLoader } from '../../core';
 import { Language } from './dto';
 import { LanguageService } from './language.service';
 
-@Injectable({ scope: Scope.REQUEST })
+@LoaderFactory(() => Language)
 export class LanguageLoader extends ObjectViewAwareLoader<Language> {
   constructor(private readonly languages: LanguageService) {
     super();
