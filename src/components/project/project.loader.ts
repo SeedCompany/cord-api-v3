@@ -1,11 +1,15 @@
-import { Injectable, Scope } from '@nestjs/common';
 import { ID, ObjectView } from '../../common';
-import { ObjectViewAwareLoader } from '../../core';
-import { IProject, Project } from './dto';
+import { LoaderFactory, ObjectViewAwareLoader } from '../../core';
+import {
+  InternshipProject,
+  IProject,
+  Project,
+  TranslationProject,
+} from './dto';
 import { ProjectService } from './project.service';
 
-@Injectable({ scope: Scope.REQUEST })
-export class ProjectLoader extends ObjectViewAwareLoader<IProject> {
+@LoaderFactory(() => [IProject, TranslationProject, InternshipProject])
+export class ProjectLoader extends ObjectViewAwareLoader<Project> {
   constructor(private readonly projects: ProjectService) {
     super();
   }

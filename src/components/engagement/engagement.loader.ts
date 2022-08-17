@@ -1,10 +1,14 @@
-import { Injectable, Scope } from '@nestjs/common';
 import { ID, ObjectView } from '../../common';
-import { ObjectViewAwareLoader } from '../../core';
-import { Engagement } from './dto';
+import { LoaderFactory, ObjectViewAwareLoader } from '../../core';
+import {
+  Engagement,
+  IEngagement,
+  InternshipEngagement,
+  LanguageEngagement,
+} from './dto';
 import { EngagementService } from './engagement.service';
 
-@Injectable({ scope: Scope.REQUEST })
+@LoaderFactory(() => [IEngagement, LanguageEngagement, InternshipEngagement])
 export class EngagementLoader extends ObjectViewAwareLoader<Engagement> {
   constructor(private readonly engagements: EngagementService) {
     super();

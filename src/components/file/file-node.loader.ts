@@ -1,10 +1,9 @@
-import { Injectable, Scope } from '@nestjs/common';
 import { ID } from '../../common';
-import { OrderedNestDataLoader } from '../../core';
-import { FileNode } from './dto';
+import { LoaderFactory, OrderedNestDataLoader } from '../../core';
+import { Directory, File, FileNode, FileVersion } from './dto';
 import { FileService } from './file.service';
 
-@Injectable({ scope: Scope.REQUEST })
+@LoaderFactory(() => [Directory, File, FileVersion])
 export class FileNodeLoader extends OrderedNestDataLoader<FileNode> {
   constructor(private readonly files: FileService) {
     super();

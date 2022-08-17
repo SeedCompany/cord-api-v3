@@ -1,10 +1,9 @@
-import { Injectable, Scope } from '@nestjs/common';
 import { ID } from '../../common';
-import { OrderedNestDataLoader } from '../../core';
+import { LoaderFactory, OrderedNestDataLoader } from '../../core';
 import { FundingAccount } from './dto';
 import { FundingAccountService } from './funding-account.service';
 
-@Injectable({ scope: Scope.REQUEST })
+@LoaderFactory(() => FundingAccount)
 export class FundingAccountLoader extends OrderedNestDataLoader<FundingAccount> {
   constructor(private readonly fundingAccounts: FundingAccountService) {
     super();
