@@ -8,6 +8,7 @@ import { ProjectModule } from '../project/project.module';
 import { EducationModule } from '../user/education/education.module';
 import { UnavailabilityModule } from '../user/unavailability/unavailability.module';
 import { UserModule } from '../user/user.module';
+import { BudgetRecordLoader } from './budget-record.loader';
 import { BudgetRecordRepository } from './budget-record.repository';
 import { BudgetRecordResolver } from './budget-record.resolver';
 import { BudgetLoader } from './budget.loader';
@@ -35,6 +36,7 @@ import * as handlers from './handlers';
     BudgetRepository,
     BudgetRecordRepository,
     BudgetLoader,
+    BudgetRecordLoader,
     ...Object.values(handlers),
   ],
   exports: [BudgetService],
