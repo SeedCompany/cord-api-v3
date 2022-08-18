@@ -9,7 +9,7 @@ const size = 11;
 
 export const generateId = customAlphabet(alphabet, size) as () => Promise<ID>;
 
-export const isValidId = (value: unknown) => {
+export const isValidId = (value: unknown): value is ID => {
   if (typeof value !== 'string') {
     return false;
   }
