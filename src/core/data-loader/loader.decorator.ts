@@ -69,7 +69,7 @@ export const Loader =
     LoaderInner(type)(target, key, index);
   };
 
-export const LoaderInner = createParamDecorator(
+const LoaderInner = createParamDecorator(
   (type: LoaderTypeOrFn, context: ExecutionContext) => {
     if (context.getType<GqlRequestType>() !== 'graphql') {
       throw new ServerException(

@@ -1,6 +1,13 @@
-import { Injectable, Scope, SetMetadata } from '@nestjs/common';
+import {
+  Injectable,
+  OnModuleInit,
+  Scope,
+  SetMetadata,
+  Type,
+} from '@nestjs/common';
+import { ModulesContainer } from '@nestjs/core';
 import { ValueOf } from 'type-fest';
-import { Many } from '../../common';
+import { many, Many } from '../../common';
 import { ResourceMap } from '../../components/authorization/model/resource-map';
 import { NestDataLoader, ObjectViewAwareLoader } from '../data-loader';
 
@@ -49,3 +56,33 @@ export const LoaderFactory =
     };
     SetMetadata(LOADER_OF_RESOURCE, metadata)(target);
   };
+
+@Injectable()
+export class ResourceLoaderRegistry implements OnModuleInit {
+  readonly loaders = new Map<
+    keyof ResourceMap,
+    { factory: Type<NestDataLoader<any, any>> } & LoaderOptions
+  >();
+
+  constructor(private readonly modulesContainer: ModulesContainer) {}
+
+  async onModuleInit() {
+    const loaderFactories = [...this.modulesContainer.values()]
+      .flatMap((nestModule) => [...nestModule.providers.values()])
+      .filter((provider) => provider.scope === Scope.REQUEST)
+      .flatMap((provider) => {
+        const metadata = Reflect.getMetadata(
+          LOADER_OF_RESOURCE,
+          provider.metatype
+        ) as MetadataShape | undefined;
+        return metadata ? { ...metadata, provider } : [];
+      });
+    for (const { resource, provider, ...options } of loaderFactories) {
+      const types = resource ? many(resource()) : [];
+      for (const type of types) {
+        // @ts-expect-error yes, yes very dynamic, destination is stricter
+        this.loaders.set(type.name, { factory: provider.metatype, ...options });
+      }
+    }
+  }
+}
