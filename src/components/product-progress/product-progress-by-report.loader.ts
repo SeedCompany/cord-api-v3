@@ -1,11 +1,14 @@
-import { Injectable, Scope } from '@nestjs/common';
 import { ID } from '../../common';
-import { LoaderOptionsOf, OrderedNestDataLoader } from '../../core';
+import {
+  LoaderFactory,
+  LoaderOptionsOf,
+  OrderedNestDataLoader,
+} from '../../core';
 import { ProgressReport } from '../periodic-report';
 import { ProductProgress } from './dto';
 import { ProductProgressService } from './product-progress.service';
 
-@Injectable({ scope: Scope.REQUEST })
+@LoaderFactory()
 export class ProductProgressByReportLoader extends OrderedNestDataLoader<
   { report: ProgressReport; progress: readonly ProductProgress[] },
   ProgressReport,

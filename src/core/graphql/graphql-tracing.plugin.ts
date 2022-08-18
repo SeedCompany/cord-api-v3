@@ -6,7 +6,7 @@ import {
 } from 'apollo-server-plugin-base';
 import { GraphQLResolveInfo as ResolveInfo, ResponsePath } from 'graphql';
 import { GqlContextType as ContextType } from '../../common';
-import { TracingService } from '../tracing';
+import { Segment, TracingService } from '../tracing';
 
 @Plugin()
 export class GraphqlTracingPlugin implements ApolloPlugin<ContextType> {
@@ -17,7 +17,13 @@ export class GraphqlTracingPlugin implements ApolloPlugin<ContextType> {
       executionDidStart: async (
         reqContext
       ): Promise<ExecutionListener<ContextType>> => {
-        const segment = this.tracing.rootSegment;
+        let segment: Segment;
+        try {
+          segment = this.tracing.rootSegment;
+        } catch (e) {
+          return {};
+        }
+
         segment.name = reqContext.operationName ?? reqContext.queryHash;
         segment.addAnnotation(reqContext.operation.operation, true);
 

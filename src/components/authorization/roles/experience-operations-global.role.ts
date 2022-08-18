@@ -37,10 +37,11 @@ import { DbBaseNodeGrant, DbRole } from '../model';
 const read = true;
 const write = true;
 
-export const Fundraising = new DbRole({
-  name: `global:${Role.Fundraising}` as const,
+export const ExperienceOperations = new DbRole({
+  name: `global:${Role.ExperienceOperations}` as const,
   powers: [
     Powers.CreateEducation,
+    Powers.CreateProjectMember,
     Powers.CreateUnavailability,
     Powers.CreateUser,
   ],
@@ -360,10 +361,10 @@ export const Fundraising = new DbRole({
         { propertyName: 'mouEnd', permission: { read, }, },
         { propertyName: 'initialMouEnd', permission: { read, }, },
         { propertyName: 'stepChangedAt', permission: { read, }, },
-        { propertyName: 'rootDirectory', permission: { read, sensitivityAccess: Sensitivity.Medium }, },
-        { propertyName: 'member', permission: { read, }, },
-        { propertyName: 'otherLocations', permission: { read, sensitivityAccess: Sensitivity.Medium }, },
-        { propertyName: 'primaryLocation', permission: { read, sensitivityAccess: Sensitivity.Medium }, },
+        { propertyName: 'rootDirectory', permission: { read, }, },
+        { propertyName: 'member', permission: { read, write, }, },
+        { propertyName: 'otherLocations', permission: { read, }, },
+        { propertyName: 'primaryLocation', permission: { read, }, },
         { propertyName: 'marketingLocation', permission: { read, }, },
         { propertyName: 'partnership', permission: { read, }, },
         { propertyName: 'budget', permission: { read, }, },
@@ -383,8 +384,8 @@ export const Fundraising = new DbRole({
       __className: 'DbProjectMember',
       canList: true,
       properties: [
-        { propertyName: 'roles', permission: { read, }, },
-        { propertyName: 'user', permission: { read, }, },
+        { propertyName: 'roles', permission: { read, write, }, },
+        { propertyName: 'user', permission: { read, write, }, },
         { propertyName: 'modifiedAt', permission: { read, }, },
       ],
       canDelete: false,

@@ -1,10 +1,9 @@
-import { Injectable, Scope } from '@nestjs/common';
 import { ID, ObjectView } from '../../common';
-import { ObjectViewAwareLoader } from '../../core';
+import { LoaderFactory, ObjectViewAwareLoader } from '../../core';
 import { BudgetService } from './budget.service';
 import { Budget } from './dto';
 
-@Injectable({ scope: Scope.REQUEST })
+@LoaderFactory(() => Budget)
 export class BudgetLoader extends ObjectViewAwareLoader<Budget> {
   constructor(private readonly budgets: BudgetService) {
     super();

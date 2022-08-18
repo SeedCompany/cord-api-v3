@@ -88,7 +88,9 @@ const lexRange = (input: string) => {
 };
 
 const lexRef = (str: string) => {
-  const matches = /^(\d?[ A-Za-z]+)?(\d*)(?:\s*:\s*(\d+))?$/.exec(str.trim());
+  const matches = /^(\d?[ A-Za-z]+)?(?:\.\s*)?(\d*)(?:\s*:\s*(\d+))?$/.exec(
+    str.trim()
+  );
   const book = matches?.[1]?.trim() || undefined;
   const chapter = parseInt(matches?.[2] ?? '', 10) || undefined;
   const verse = parseInt(matches?.[3] ?? '', 10) || undefined;

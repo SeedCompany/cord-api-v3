@@ -1,10 +1,9 @@
-import { Injectable, Scope } from '@nestjs/common';
 import { ID } from '../../common';
-import { OrderedNestDataLoader } from '../../core';
+import { LoaderFactory, OrderedNestDataLoader } from '../../core';
 import { User } from './dto';
 import { UserService } from './user.service';
 
-@Injectable({ scope: Scope.REQUEST })
+@LoaderFactory(() => User)
 export class UserLoader extends OrderedNestDataLoader<User> {
   constructor(private readonly users: UserService) {
     super();

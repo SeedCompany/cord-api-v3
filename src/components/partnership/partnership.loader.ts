@@ -1,10 +1,9 @@
-import { Injectable, Scope } from '@nestjs/common';
 import { ID, ObjectView } from '../../common';
-import { ObjectViewAwareLoader } from '../../core';
+import { LoaderFactory, ObjectViewAwareLoader } from '../../core';
 import { Partnership } from './dto';
 import { PartnershipService } from './partnership.service';
 
-@Injectable({ scope: Scope.REQUEST })
+@LoaderFactory(() => Partnership)
 export class PartnershipLoader extends ObjectViewAwareLoader<Partnership> {
   constructor(private readonly partnerships: PartnershipService) {
     super();

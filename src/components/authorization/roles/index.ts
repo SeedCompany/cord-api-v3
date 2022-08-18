@@ -5,6 +5,8 @@ export * from './consultant-manager-on-project.role';
 export * from './consultant-on-project.role';
 export * from './controller-global.role';
 export * from './controller-on-project.role';
+export * from './experience-operations-global.role';
+export * from './experience-operations-on-project.role';
 export * from './field-operations-director.role';
 export * from './financial-analyst-global.role';
 export * from './financial-analyst-on-project.role';
