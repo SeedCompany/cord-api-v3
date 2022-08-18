@@ -31,7 +31,6 @@ export class ChangesetResolver {
     })
     parent?: ID
   ): Promise<ChangesetDiff> {
-    const isApproved = await this.repo.isApproved(changeset.id, session);
     const diff = await this.repo.difference(changeset.id, session, parent);
     const load = (node: BaseNode, view?: ObjectView) =>
       this.resources.loadByBaseNode(node, view ?? { changeset: changeset.id });
@@ -40,7 +39,7 @@ export class ChangesetResolver {
       // If the changeset is approved, we read deleted node otherwise read node in changeset
       Promise.all(
         diff.removed.map((node) =>
-          load(node, isApproved ? { deleted: true } : undefined)
+          load(node, changeset.applied ? { deleted: true } : undefined)
         )
       ),
       Promise.all(
