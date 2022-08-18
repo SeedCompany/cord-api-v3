@@ -1,7 +1,11 @@
 import { DbBudget } from '../../budget/model';
 import { DbBudgetRecord } from '../../budget/model/budget-record.model.db';
 import { DbCeremony } from '../../ceremony/model';
-import { DbInternshipEngagement, DbLanguageEngagement } from '../../engagement/model';
+import {
+  DbInternshipEngagement,
+  DbLanguageEngagement,
+  DbPublicationEngagement
+} from '../../engagement/model';
 import { DbEthnoArt } from '../../ethno-art/model';
 import { DbFieldRegion } from '../../field-region/model';
 import { DbFieldZone } from '../../field-zone/model';
@@ -380,6 +384,28 @@ export const Administrator = new DbRole({
       properties: [
         { propertyName: 'roles', permission: { read, write, }, },
         { propertyName: 'user', permission: { read, write, }, },
+        { propertyName: 'modifiedAt', permission: { read, write, }, },
+      ],
+      canDelete: true,
+    }),
+    new DbBaseNodeGrant<DbPublicationEngagement>({
+      __className: 'DbPublicationEngagement',
+      canList: true,
+      properties: [
+        { propertyName: 'ceremony', permission: { read, write, }, },
+        { propertyName: 'completeDate', permission: { read, write, }, },
+        { propertyName: 'disbursementCompleteDate', permission: { read, write, }, },
+        { propertyName: 'endDate', permission: { read, write, }, },
+        { propertyName: 'endDateOverride', permission: { read, write, }, },
+        { propertyName: 'initialEndDate', permission: { read, write, }, },
+        { propertyName: 'language', permission: { read, write, }, },
+        { propertyName: 'lastReactivatedAt', permission: { read, write, }, },
+        { propertyName: 'lastSuspendedAt', permission: { read, write, }, },
+        { propertyName: 'publicationPlan', permission: { read, write, }, },
+        { propertyName: 'startDate', permission: { read, write, }, },
+        { propertyName: 'startDateOverride', permission: { read, write, }, },
+        { propertyName: 'status', permission: { read, write, }},
+        { propertyName: 'statusModifiedAt', permission: { read, write, }, },
         { propertyName: 'modifiedAt', permission: { read, write, }, },
       ],
       canDelete: true,

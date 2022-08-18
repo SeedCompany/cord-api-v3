@@ -5,7 +5,12 @@ import {
   ILogger,
   Logger,
 } from '../../../core';
-import { InternshipProject, ProjectType, TranslationProject } from '../dto';
+import {
+  InternshipProject,
+  ProjectType,
+  PublicationProject,
+  TranslationProject,
+} from '../dto';
 import { ProjectUpdatedEvent } from '../events';
 import { ProjectService } from '../project.service';
 
@@ -30,7 +35,9 @@ export class ProjectStepChangedAtHandler
         type:
           project.type === ProjectType.Translation
             ? TranslationProject
-            : InternshipProject,
+            : project.type === ProjectType.Internship
+            ? InternshipProject
+            : PublicationProject,
         object: project,
         changes: {
           stepChangedAt: project.modifiedAt,

@@ -1,7 +1,11 @@
 import { DbBudget } from '../../budget/model';
 import { DbBudgetRecord } from '../../budget/model/budget-record.model.db';
 import { DbCeremony } from '../../ceremony/model';
-import { DbInternshipEngagement, DbLanguageEngagement } from '../../engagement/model';
+import {
+  DbInternshipEngagement,
+  DbLanguageEngagement,
+  DbPublicationEngagement
+} from '../../engagement/model';
 import { DbEthnoArt } from '../../ethno-art/model';
 import { DbFieldRegion } from '../../field-region/model';
 import { DbFieldZone } from '../../field-zone/model';
@@ -379,6 +383,28 @@ export const Leadership = new DbRole({
       properties: [
         { propertyName: 'roles', permission: { read, }, },
         { propertyName: 'user', permission: { read, }, },
+        { propertyName: 'modifiedAt', permission: { read, }, },
+      ],
+      canDelete: false,
+    }),
+    new DbBaseNodeGrant<DbPublicationEngagement>({
+      __className: 'DbPublicationEngagement',
+      canList: true,
+      properties: [
+        { propertyName: 'ceremony', permission: { read, }, },
+        { propertyName: 'completeDate', permission: { read, }, },
+        { propertyName: 'disbursementCompleteDate', permission: { read, }, },
+        { propertyName: 'endDate', permission: { read, }, },
+        { propertyName: 'endDateOverride', permission: { read, }, },
+        { propertyName: 'initialEndDate', permission: { read, }, },
+        { propertyName: 'language', permission: { read, }, },
+        { propertyName: 'lastReactivatedAt', permission: { read, }, },
+        { propertyName: 'lastSuspendedAt', permission: { read, }, },
+        { propertyName: 'publicationPlan', permission: { read, }, },
+        { propertyName: 'startDate', permission: { read, }, },
+        { propertyName: 'startDateOverride', permission: { read, }, },
+        { propertyName: 'status', permission: { read, }, },
+        { propertyName: 'statusModifiedAt', permission: { read, }, },
         { propertyName: 'modifiedAt', permission: { read, }, },
       ],
       canDelete: false,

@@ -33,8 +33,8 @@ import { SecuredEngagementStatus } from './status.enum';
  * concrete engagements.
  */
 export type AnyEngagement = MergeExclusive<
-  LanguageEngagement,
-  InternshipEngagement
+  MergeExclusive<LanguageEngagement, InternshipEngagement>,
+  PublicationEngagement
 >;
 
 const ChangesetAwareResource: Type<Resource & ChangesetAware> =
@@ -51,7 +51,10 @@ class Engagement extends ChangesetAwareResource {
   static readonly Props: string[] = keysOf<Engagement>();
   static readonly SecuredProps: string[] = keysOf<SecuredProps<Engagement>>();
 
-  readonly __typename: 'LanguageEngagement' | 'InternshipEngagement';
+  readonly __typename:
+    | 'LanguageEngagement'
+    | 'InternshipEngagement'
+    | 'PublicationEngagement';
 
   readonly project: ID;
 
@@ -180,6 +183,18 @@ export class InternshipEngagement extends Engagement {
   readonly methodologies: SecuredMethodologies;
 
   readonly growthPlan: DefinedFile;
+}
+
+@ObjectType({
+  implements: [Engagement],
+})
+export class PublicationEngagement extends Engagement {
+  static readonly Props = keysOf<PublicationEngagement>();
+  static readonly SecuredProps = keysOf<SecuredProps<PublicationEngagement>>();
+
+  readonly language: Secured<ID>;
+
+  readonly publicationPlan: DefinedFile;
 }
 
 export const engagementRange = (engagement: UnsecuredDto<Engagement>) =>

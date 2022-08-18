@@ -94,7 +94,7 @@ export class LanguageRepository extends DtoRepository<
         .optionalMatch([
           node('project', 'Project'),
           relation('out', '', 'engagement', ACTIVE),
-          node('', 'LanguageEngagement'),
+          node('', 'Engagement'),
           relation('out', '', 'engagement'),
           node('node'),
         ])
@@ -160,7 +160,7 @@ export class LanguageRepository extends DtoRepository<
           ? [
               node('project', 'Project'),
               relation('out', '', 'engagement', ACTIVE),
-              node('', 'LanguageEngagement'),
+              node('', 'Engagement'),
               relation('out', '', 'language'),
             ]
           : []),
@@ -196,7 +196,7 @@ export class LanguageRepository extends DtoRepository<
       .match([
         node('language'),
         relation('in', '', 'language', ACTIVE),
-        node('', 'LanguageEngagement'),
+        node('', 'Engagement'),
         relation('in', '', 'engagement', ACTIVE),
         node('project', 'Project'),
       ])
@@ -211,7 +211,7 @@ export class LanguageRepository extends DtoRepository<
       .match([
         node('', 'Language', { id: language.id }),
         relation('in', '', 'language', ACTIVE),
-        node('engagement', 'LanguageEngagement'),
+        node('engagement', 'Engagement'),
       ])
       .return(collect('engagement.id').as('engagementIds'))
       .asResult<{ engagementIds: ID[] }>()
@@ -244,7 +244,7 @@ export class LanguageRepository extends DtoRepository<
           .optionalMatch([
             node('node'),
             relation('in', '', 'language', ACTIVE),
-            node('', 'LanguageEngagement'),
+            node('', 'Engagement'),
             relation('in', '', 'engagement', ACTIVE),
             node('project', 'Project'),
             relation('out', '', 'status', ACTIVE),

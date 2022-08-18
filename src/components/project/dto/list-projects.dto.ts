@@ -14,6 +14,7 @@ import {
   InternshipProject,
   IProject,
   Project,
+  PublicationProject,
   TranslationProject,
 } from './project.dto';
 import { ProjectStatus } from './status.enum';
@@ -131,6 +132,14 @@ export class InternshipProjectListOutput extends PaginatedList(
   }
 ) {}
 
+@ObjectType()
+export class PublicationProjectListOutput extends PaginatedList(
+  PublicationProject,
+  {
+    itemsDescription: PaginatedList.itemDescriptionFor('publication projects'),
+  }
+) {}
+
 @ObjectType({
   description: SecuredList.descriptionFor('projects'),
 })
@@ -158,5 +167,15 @@ export abstract class SecuredInternshipProjectList extends SecuredList(
   InternshipProject,
   {
     itemsDescription: PaginatedList.itemDescriptionFor('internship projects'),
+  }
+) {}
+
+@ObjectType({
+  description: SecuredList.descriptionFor('publication projects'),
+})
+export abstract class SecuredPublicationProjectList extends SecuredList(
+  PublicationProject,
+  {
+    itemsDescription: PaginatedList.itemDescriptionFor('publication projects'),
   }
 ) {}

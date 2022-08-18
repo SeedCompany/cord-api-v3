@@ -60,6 +60,7 @@ import {
   ProjectListOutput,
   ProjectStatus,
   ProjectType,
+  PublicationProject,
   SecuredProjectList,
   TranslationProject,
   UpdateProject,
@@ -104,9 +105,15 @@ export class ProjectService {
     input: CreateProject,
     session: Session
   ): Promise<UnsecuredDto<Project>> {
-    if (input.type === ProjectType.Translation && input.sensitivity) {
+    if (
+      (input.type === ProjectType.Translation ||
+        input.type === ProjectType.Publication) &&
+      input.sensitivity
+    ) {
       throw new InputException(
-        'Cannot set sensitivity on translation project',
+        `Cannot set sensitivity on ${
+          input.type === ProjectType.Translation ? 'translation' : 'publication'
+        } project`,
         'project.sensitivity'
       );
     }
@@ -201,6 +208,20 @@ export class ProjectService {
     return project as InternshipProject;
   }
 
+  @HandleIdLookup(PublicationProject)
+  async readOnePublication(
+    id: ID,
+    session: Session,
+    view?: ObjectView
+  ): Promise<PublicationProject> {
+    const project = await this.readOne(id, session, view?.changeset);
+    if (project.type !== ProjectType.Publication) {
+      throw new Error('Project is not a publication project');
+    }
+
+    return project as PublicationProject;
+  }
+
   async readOneUnsecured(
     id: ID,
     sessionOrUserId: Session | ID,
@@ -277,9 +298,17 @@ export class ProjectService {
       session,
       changeset
     );
-    if (input.sensitivity && currentProject.type === ProjectType.Translation)
+    if (
+      input.sensitivity &&
+      (currentProject.type === ProjectType.Translation ||
+        currentProject.type === ProjectType.Publication)
+    )
       throw new InputException(
-        'Cannot update sensitivity on Translation Project',
+        `Cannot update sensitivity on ${
+          currentProject.type === ProjectType.Translation
+            ? 'Translation'
+            : 'Publication'
+        } Project`,
         'project.sensitivity'
       );
 
@@ -287,7 +316,9 @@ export class ProjectService {
     await this.authorizationService.verifyCanEditChanges(
       currentProject.type === 'Translation'
         ? TranslationProject
-        : InternshipProject,
+        : currentProject.type === 'Internship'
+        ? InternshipProject
+        : PublicationProject,
       await this.secure(currentProject, session),
       changes,
       'project'

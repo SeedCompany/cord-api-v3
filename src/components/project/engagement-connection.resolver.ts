@@ -21,7 +21,9 @@ export class ProjectEngagementConnectionResolver {
         type:
           engagement.__typename === 'LanguageEngagement'
             ? ProjectType.Translation
-            : ProjectType.Internship,
+            : engagement.__typename === 'InternshipEngagement'
+            ? ProjectType.Internship
+            : ProjectType.Publication,
       };
     }
     return await projects.load({

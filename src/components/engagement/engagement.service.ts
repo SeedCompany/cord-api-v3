@@ -38,14 +38,17 @@ import { User } from '../user/dto';
 import {
   CreateInternshipEngagement,
   CreateLanguageEngagement,
+  CreatePublicationEngagement,
   Engagement,
   EngagementListInput,
   EngagementListOutput,
   EngagementStatus,
   InternshipEngagement,
   LanguageEngagement,
+  PublicationEngagement,
   UpdateInternshipEngagement,
   UpdateLanguageEngagement,
+  UpdatePublicationEngagement,
 } from './dto';
 import {
   EngagementRepository,
@@ -213,6 +216,56 @@ export class EngagementService {
     )) as InternshipEngagement;
   }
 
+  async createPublicationEngagement(
+    input: CreatePublicationEngagement,
+    session: Session,
+    changeset?: ID
+  ): Promise<PublicationEngagement> {
+    const { languageId, projectId } = input;
+    await this.verifyRelationshipEligibility(
+      projectId,
+      languageId,
+      ProjectType.Publication,
+      changeset
+    );
+
+    await this.verifyProjectStatus(projectId, session, changeset);
+
+    this.verifyCreationStatus(input.status);
+
+    this.logger.debug('Creating publication engagement', {
+      input,
+      userId: session.userId,
+    });
+
+    const { id, publicationPlanId } =
+      await this.repo.createPublicationEngagement(input, changeset);
+
+    await this.files.createDefinedFile(
+      publicationPlanId,
+      `Publication Plan`,
+      session,
+      id,
+      'publicationPlan',
+      input.publicationPlan,
+      'engagement.publicationPlan'
+    );
+
+    const engagement = await this.repo.readOne(
+      id,
+      session,
+      viewOfChangeset(changeset)
+    );
+
+    const event = new EngagementCreatedEvent(engagement, input, session);
+    await this.eventBus.publish(event);
+
+    return (await this.secure(
+      event.engagement,
+      session
+    )) as PublicationEngagement;
+  }
+
   private verifyCreationStatus(status?: EngagementStatus) {
     if (status && status !== EngagementStatus.InDevelopment) {
       throw new InputException(
@@ -224,12 +277,18 @@ export class EngagementService {
 
   // READ ///////////////////////////////////////////////////////////
 
-  @HandleIdLookup([LanguageEngagement, InternshipEngagement])
+  @HandleIdLookup([
+    LanguageEngagement,
+    InternshipEngagement,
+    PublicationEngagement,
+  ])
   async readOne(
     id: ID,
     session: Session,
     view?: ObjectView
-  ): Promise<LanguageEngagement | InternshipEngagement> {
+  ): Promise<
+    LanguageEngagement | InternshipEngagement | PublicationEngagement
+  > {
     this.logger.debug('readOne', { id, userId: session.userId });
     if (!id) {
       throw new NotFoundException('no id given', 'engagement.id');
@@ -249,10 +308,12 @@ export class EngagementService {
     dto: UnsecuredDto<Engagement>,
     session: Session
   ): Promise<Engagement> {
-    const isLanguageEngagement = dto.__typename === 'LanguageEngagement';
-
     const securedProperties = await this.authorizationService.secureProperties(
-      isLanguageEngagement ? LanguageEngagement : InternshipEngagement,
+      dto.__typename === 'LanguageEngagement'
+        ? LanguageEngagement
+        : dto.__typename === 'InternshipEngagement'
+        ? InternshipEngagement
+        : PublicationEngagement,
       dto,
       session
     );
@@ -262,7 +323,7 @@ export class EngagementService {
       !session.roles.includes(`global:Administrator`)
         ? false
         : await this.repo.checkDeletePermission(dto.id, session);
-    if (isLanguageEngagement) {
+    if (dto.__typename === 'LanguageEngagement') {
       // help TS understand that the secured props are for a LanguageEngagement
       const secured = securedProperties as SecuredResource<
         typeof LanguageEngagement,
@@ -271,6 +332,19 @@ export class EngagementService {
 
       return {
         ...(dto as UnsecuredDto<LanguageEngagement>),
+        ...secured,
+        canDelete,
+      };
+    }
+    if (dto.__typename === 'PublicationEngagement') {
+      // help TS understand that the secured props are for a LanguageEngagement
+      const secured = securedProperties as SecuredResource<
+        typeof PublicationEngagement,
+        false
+      >;
+
+      return {
+        ...(dto as UnsecuredDto<PublicationEngagement>),
         ...secured,
         canDelete,
       };
@@ -434,6 +508,70 @@ export class EngagementService {
     return (await this.secure(event.updated, session)) as InternshipEngagement;
   }
 
+  async updatePublicationEngagement(
+    input: UpdatePublicationEngagement,
+    session: Session,
+    changeset?: ID
+  ): Promise<PublicationEngagement> {
+    const view: ObjectView = viewOfChangeset(changeset);
+    if (input.status) {
+      await this.engagementRules.verifyStatusChange(
+        input.id,
+        session,
+        input.status,
+        changeset
+      );
+    }
+
+    const previous = await this.repo.readOne(input.id, session, view);
+    const object = (await this.secure(
+      previous,
+      session
+    )) as PublicationEngagement;
+
+    const { ...maybeChanges } = input;
+    const changes = this.repo.getActualPublicationChanges(object, maybeChanges);
+    await this.authorizationService.verifyCanEditChanges(
+      PublicationEngagement,
+      object,
+      changes
+    );
+
+    const { publicationPlan, ...simpleChanges } = changes;
+
+    await this.files.updateDefinedFile(
+      object.publicationPlan,
+      'engagement.publicationPlan',
+      publicationPlan,
+      session
+    );
+
+    try {
+      await this.repo.updatePublicationProperties(
+        object,
+        simpleChanges,
+        changeset
+      );
+    } catch (exception) {
+      this.logger.error('Error updating publication engagement', { exception });
+      throw new ServerException(
+        'Could not update Publication Engagement',
+        exception
+      );
+    }
+
+    const updated = (await this.repo.readOne(
+      input.id,
+      session,
+      view
+    )) as UnsecuredDto<PublicationEngagement>;
+
+    const event = new EngagementUpdatedEvent(updated, previous, input, session);
+    await this.eventBus.publish(event);
+
+    return (await this.secure(event.updated, session)) as PublicationEngagement;
+  }
+
   async triggerUpdateEvent(id: ID, session: Session) {
     const object = await this.repo.readOne(id, session);
     const event = new EngagementUpdatedEvent(object, object, { id }, session);
@@ -529,12 +667,13 @@ export class EngagementService {
     type: ProjectType,
     changeset?: ID
   ): Promise<void> {
-    const isTranslation = type === ProjectType.Translation;
-    const property = isTranslation ? 'language' : 'intern';
+    const isTranslationOrPublication =
+      type === ProjectType.Translation || type === ProjectType.Publication;
+    const property = isTranslationOrPublication ? 'language' : 'intern';
     const result = await this.repo.verifyRelationshipEligibility(
       projectId,
       otherId,
-      isTranslation,
+      isTranslationOrPublication,
       property,
       changeset
     );
@@ -549,13 +688,17 @@ export class EngagementService {
     if (result.project.properties.type !== type) {
       throw new InputException(
         `Only ${
-          isTranslation ? 'Language' : 'Internship'
+          type === ProjectType.Translation
+            ? 'Language'
+            : type === ProjectType.Internship
+            ? 'Internship'
+            : 'Publication'
         } Engagements can be created on ${type} Projects`,
         `engagement.${property}Id`
       );
     }
 
-    const label = isTranslation ? 'language' : 'person';
+    const label = isTranslationOrPublication ? 'language' : 'person';
     if (!result?.other) {
       throw new NotFoundException(
         `Could not find ${label}`,

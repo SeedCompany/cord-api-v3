@@ -4,6 +4,7 @@ import { DbCeremony } from '../../ceremony/model';
 import {
   DbInternshipEngagement,
   DbLanguageEngagement,
+  DbPublicationEngagement,
 } from '../../engagement/model';
 import { DbEthnoArt } from '../../ethno-art/model';
 import { DbFieldRegion } from '../../field-region/model';
@@ -55,6 +56,7 @@ export type AnyBaseNode = DbBudget &
   DbProjectMember &
   DbPeriodicReport &
   DbProjectChangeRequest &
+  DbPublicationEngagement &
   DbSong &
   DbStory &
   DbUnavailability &
@@ -87,6 +89,7 @@ export type OneBaseNode =
   | DbProjectMember
   | DbPeriodicReport
   | DbProjectChangeRequest
+  | DbPublicationEngagement
   | DbSong
   | DbStory
   | DbUnavailability

@@ -2,9 +2,11 @@ import { Session, UnsecuredDto } from '../../../common';
 import {
   CreateInternshipEngagement,
   CreateLanguageEngagement,
+  CreatePublicationEngagement,
   Engagement,
   InternshipEngagement,
   LanguageEngagement,
+  PublicationEngagement,
 } from '../dto';
 
 export class EngagementCreatedEvent {
@@ -26,5 +28,12 @@ export class EngagementCreatedEvent {
     input: CreateInternshipEngagement;
   } {
     return this.engagement.__typename === 'InternshipEngagement';
+  }
+
+  isPublicationEngagement(): this is EngagementCreatedEvent & {
+    engagement: UnsecuredDto<PublicationEngagement>;
+    input: CreatePublicationEngagement;
+  } {
+    return this.engagement.__typename === 'PublicationEngagement';
   }
 }
