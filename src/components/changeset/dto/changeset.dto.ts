@@ -1,5 +1,4 @@
 import { Field, InterfaceType } from '@nestjs/graphql';
-import { stripIndent } from 'common-tags';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { Resource, SecuredProps } from '../../../common';
 
@@ -13,15 +12,12 @@ export class Changeset extends Resource {
   __typename: string;
 
   @Field({
-    description: 'Whether this changeset is editable or finalized',
+    description: 'Whether this changeset is editable',
   })
-  finalized: boolean;
+  editable: boolean;
 
   @Field({
-    description: stripIndent`
-      Whether the changes have been applied to live data.
-      This probably assumes \`finalized\` is true as well.
-    `,
+    description: 'Whether the changes have been applied to live data',
   })
   applied: boolean;
 }
