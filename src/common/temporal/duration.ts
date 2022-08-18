@@ -47,12 +47,23 @@ const normalizedUnit = (unit: string): keyof DurationLikeObject => {
   }
   /* eslint-disable prettier/prettier */
   switch (unit.replace(/s$/, '')) {
-    case 'sec': case '': return 'second';
-    case 'min': case 'm': return 'minute';
-    case 'hr': case 'h': return 'hour';
-    case 'd': return 'day';
-    case 'wk': case 'w': return 'week';
-    case 'yr': case 'y': return 'year';
+    case 'sec':
+    case '':
+      return 'second';
+    case 'min':
+    case 'm':
+      return 'minute';
+    case 'hr':
+    case 'h':
+      return 'hour';
+    case 'd':
+      return 'day';
+    case 'wk':
+    case 'w':
+      return 'week';
+    case 'yr':
+    case 'y':
+      return 'year';
   }
   /* eslint-enable prettier/prettier */
   // Typecasting here as Duration will do its own validation privately

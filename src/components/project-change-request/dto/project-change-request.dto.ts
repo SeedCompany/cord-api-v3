@@ -1,6 +1,7 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { ID, SecuredProps, SecuredString } from '../../../common';
+import { SecuredRoles } from '../../authorization';
 import { Changeset } from '../../changeset/dto';
 import { SecuredProjectChangeRequestStatus } from './project-change-request-status.enum';
 import { SecuredProjectChangeRequestTypes } from './project-change-request-type.enum';
@@ -29,4 +30,7 @@ export abstract class ProjectChangeRequest extends Changeset {
       'Whether or not modifications can be made (via other mutations `changeset` input) with this change request',
   })
   readonly canEdit: boolean;
+
+  @Field()
+  readonly reviewers: SecuredRoles;
 }

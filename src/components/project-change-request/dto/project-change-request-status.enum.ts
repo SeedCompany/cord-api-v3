@@ -2,9 +2,10 @@ import { ObjectType, registerEnumType } from '@nestjs/graphql';
 import { SecuredEnum } from '../../../common';
 
 export enum ProjectChangeRequestStatus {
-  Pending = 'Pending',
+  Draft = 'Draft',
+  PendingReview = 'PendingReview',
   Approved = 'Approved',
-  Rejected = 'Rejected',
+  Closed = 'Closed',
 }
 
 registerEnumType(ProjectChangeRequestStatus, {

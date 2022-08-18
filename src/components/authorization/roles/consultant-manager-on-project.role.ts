@@ -464,9 +464,10 @@ export const ConsultantManagerOnProject = new DbRole({
     new DbBaseNodeGrant<DbProjectChangeRequest>({
       __className: 'DbProjectChangeRequest',
       properties: [
-        { propertyName: 'types',                       permission: { read, write, }, },
-        { propertyName: 'summary',                     permission: { read, write, }, },
-        { propertyName: 'status',                      permission: { read, write, }, },
+        { propertyName: 'types', permission: { read, write, }, },
+        { propertyName: 'summary', permission: { read, write, }, },
+        { propertyName: 'status', permission: { read, write, }, },
+        { propertyName: 'reviewers', permission: { read, write, }, },
       ],
       canDelete: true,
     }),

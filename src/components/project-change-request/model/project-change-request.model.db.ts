@@ -9,4 +9,5 @@ export class DbProjectChangeRequest extends DbBaseNode {
   types: any = null;
   summary: any = null;
   status: any = null;
+  reviewers: any = null;
 }

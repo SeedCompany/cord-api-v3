@@ -1,7 +1,9 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
+import { uniq } from 'lodash';
 import { ID, IdField } from '../../../common';
+import { Role } from '../../authorization';
 import { ProjectChangeRequestType } from './project-change-request-type.enum';
 import { ProjectChangeRequest } from './project-change-request.dto';
 
@@ -17,6 +19,10 @@ export abstract class CreateProjectChangeRequest {
 
   @Field()
   readonly summary: string;
+
+  @Field(() => [Role], { nullable: true })
+  @Transform(({ value }) => uniq(value))
+  readonly reviewers?: Role[];
 }
 
 @InputType()

@@ -1,4 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { intersection } from 'lodash';
 import {
   ID,
   InputException,
@@ -18,13 +19,15 @@ import {
 } from '../../core';
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { Powers } from '../authorization/dto';
+import { Powers, Role } from '../authorization/dto';
 import { ProjectService, ProjectStatus } from '../project';
 import {
   CreateProjectChangeRequest,
   ProjectChangeRequest,
   ProjectChangeRequestListInput,
   ProjectChangeRequestListOutput,
+  ProjectChangeRequestStatus,
+  ReviewProjectChangeRequest,
   ProjectChangeRequestStatus as Status,
   UpdateProjectChangeRequest,
 } from './dto';
@@ -129,8 +132,8 @@ export class ProjectChangeRequestService {
     const updated = await this.readOneUnsecured(input.id, session);
 
     if (
-      object.status === Status.Pending &&
-      (changes.status === Status.Approved || changes.status === Status.Rejected)
+      object.status === Status.PendingReview &&
+      (changes.status === Status.Approved || changes.status === Status.Closed)
     ) {
       await this.eventBus.publish(
         new ProjectChangesetFinalizedEvent(updated, session)
@@ -170,5 +173,43 @@ export class ProjectChangeRequestService {
     // no need to check if canList for now, all roles allow for listing.
     const results = await this.repo.list(input, session);
     return await mapListResults(results, (dto) => this.secure(dto, session));
+  }
+
+  async review(
+    input: ReviewProjectChangeRequest,
+    session: Session
+  ): Promise<ProjectChangeRequest> {
+    const changeRequest = await this.readOne(input.id, session);
+    if (
+      changeRequest.status.value !== ProjectChangeRequestStatus.PendingReview
+    ) {
+      throw new InputException(
+        'Only pending project change request could be reviewed'
+      );
+    }
+    // TODO consolidate Role and ScopedRole
+    const roles = intersection(
+      changeRequest.reviewers.value,
+      session.roles.map((role) => role.split(':')[1] as Role)
+    );
+
+    if (roles.length > 0) {
+      await this.repo.createReview(input, roles);
+    }
+    const approvedRoles = await this.repo.readApprovedRoles(input.id);
+    const approved = changeRequest.reviewers.value.every((role) =>
+      approvedRoles.includes(role)
+    );
+    // All reviewers approved change request
+    if (approved) {
+      await this.update(
+        {
+          id: input.id,
+          status: ProjectChangeRequestStatus.Approved,
+        },
+        session
+      );
+    }
+    return changeRequest;
   }
 }

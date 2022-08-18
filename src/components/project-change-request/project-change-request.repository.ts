@@ -9,12 +9,15 @@ import {
   matchPropsAndProjectSensAndScopedRoles,
   merge,
   paginate,
+  property,
   sorting,
 } from '../../core/database/query';
+import { Role } from '../authorization';
 import {
   CreateProjectChangeRequest,
   ProjectChangeRequest,
   ProjectChangeRequestListInput,
+  ReviewProjectChangeRequest,
   ProjectChangeRequestStatus as Status,
 } from './dto';
 
@@ -31,7 +34,8 @@ export class ProjectChangeRequestRepository extends DtoRepository<
           initialProps: {
             types: input.types,
             summary: input.summary,
-            status: Status.Pending,
+            status: Status.Draft,
+            reviewers: input.reviewers ?? [],
           },
         })
       )
@@ -59,7 +63,7 @@ export class ProjectChangeRequestRepository extends DtoRepository<
         .apply(matchPropsAndProjectSensAndScopedRoles(session))
         .return<{ dto: UnsecuredDto<ProjectChangeRequest> }>(
           merge('props', {
-            canEdit: `props.status = "${Status.Pending}"`,
+            canEdit: `props.status = "${Status.Draft}" OR props.status = "${Status.PendingReview}"`,
             project: 'project.id',
           }).as('dto')
         );
@@ -83,5 +87,56 @@ export class ProjectChangeRequestRepository extends DtoRepository<
       .apply(paginate(input, this.hydrate(session)))
       .first();
     return result!; // result from paginate() will always have 1 row.
+  }
+
+  async createReview(input: ReviewProjectChangeRequest, roles: Role[]) {
+    await Promise.all(
+      roles.map(async (role) => {
+        await this.db
+          .query()
+          .apply(
+            await createNode(ReviewProjectChangeRequest, {
+              initialProps: {
+                comment: input.comment,
+                approved: input.approved,
+              },
+            })
+          )
+          .apply((q) => q.create([...property('role', role, 'node')]))
+          .with('node')
+          .apply(
+            createRelationships(ReviewProjectChangeRequest, 'in', {
+              review: ['ProjectChangeRequest', input.id],
+            })
+          )
+          .return<{ id: ID }>('node.id as id')
+          .first();
+      })
+    );
+  }
+
+  async readApprovedRoles(id: string): Promise<Role[]> {
+    const result = await this.db
+      .query()
+      .match([
+        node('node', 'ProjectChangeRequest', { id }),
+        relation('out', 'rel', 'review', ACTIVE),
+        node('review', 'ReviewProjectChangeRequest'),
+        relation('out', '', 'approved', ACTIVE),
+        node('approved', 'Property'),
+      ])
+      .where({
+        approved: {
+          value: true,
+        },
+      })
+      .match([
+        node('review'),
+        relation('out', '', 'role', ACTIVE),
+        node('role', 'Property'),
+      ])
+      .return<{ roles: Role[] }>('collect(role.value) as roles')
+      .first();
+    return result?.roles ?? [];
   }
 }
