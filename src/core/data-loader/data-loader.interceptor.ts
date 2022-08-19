@@ -8,16 +8,16 @@ import {
 import { ContextId, ContextIdFactory, ModuleRef } from '@nestjs/core';
 import { GqlContextType, GqlExecutionContext } from '@nestjs/graphql';
 import { Observable } from 'rxjs';
-import { ServerException } from '../../common';
+import { ID, ServerException } from '../../common';
 import { NEST_LOADER_CONTEXT_KEY } from './constants';
 import { DataLoader, NestDataLoader } from './loader.decorator';
 
 export interface LoaderContextType {
   contextId: ContextId;
   loaders: Map<Type<NestDataLoader<any, any>>, Promise<DataLoader<any, any>>>;
-  getLoader: (
-    type: Type<NestDataLoader<any, any>>
-  ) => Promise<DataLoader<any, any>>;
+  getLoader: <T, Key = ID, CachedKey = Key>(
+    type: Type<NestDataLoader<T, Key, CachedKey>>
+  ) => Promise<DataLoader<T, Key, CachedKey>>;
 }
 
 @Injectable()
