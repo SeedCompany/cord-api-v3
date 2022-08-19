@@ -51,6 +51,7 @@ import { WaitResolver } from './wait.resolver';
   exports: [
     AwsS3Factory,
     ConfigModule,
+    GraphqlModule,
     DatabaseModule,
     EmailModule,
     EventsModule,
