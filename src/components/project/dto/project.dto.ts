@@ -46,7 +46,7 @@ import { ProjectType } from './type.enum';
 
 type AnyProject = MergeExclusive<TranslationProject, InternshipProject>;
 
-const PinnablePostableChangesetAwareCommentableResource: Type<
+const Interfaces: Type<
   Resource & Postable & ChangesetAware & Pinnable & Commentable
 > = IntersectionType(
   Resource,
@@ -69,7 +69,7 @@ const PinnablePostableChangesetAwareCommentableResource: Type<
   },
   implements: [Resource, Pinnable, Postable, ChangesetAware, Commentable],
 })
-class Project extends PinnablePostableChangesetAwareCommentableResource {
+class Project extends Interfaces {
   static readonly Props: string[] = keysOf<Project>();
   static readonly SecuredProps: string[] = keysOf<SecuredProps<Project>>();
   static readonly Relations = {
@@ -177,7 +177,7 @@ class Project extends PinnablePostableChangesetAwareCommentableResource {
 export { Project as IProject, AnyProject as Project };
 
 @ObjectType({
-  implements: [Project, Postable, Commentable],
+  implements: [Project],
 })
 export class TranslationProject extends Project {
   static readonly Props = keysOf<TranslationProject>();
@@ -187,7 +187,7 @@ export class TranslationProject extends Project {
 }
 
 @ObjectType({
-  implements: [Project, Postable, Commentable],
+  implements: [Project],
 })
 export class InternshipProject extends Project {
   static readonly Props = keysOf<InternshipProject>();

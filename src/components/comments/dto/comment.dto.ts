@@ -8,6 +8,7 @@ import {
   RichTextField,
   Secured,
   SecuredProps,
+  SecuredRichTextDocument,
 } from '../../../common';
 
 @ObjectType({
@@ -20,7 +21,7 @@ export class Comment extends Resource {
   readonly creator: Secured<ID>;
 
   @RichTextField()
-  readonly body: string;
+  readonly body: SecuredRichTextDocument;
 
   @DateTimeField()
   readonly modifiedAt: DateTime;

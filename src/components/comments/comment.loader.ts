@@ -4,7 +4,7 @@ import { LoaderFactory } from '../../core/resources/loader.registry';
 import { CommentService } from './comment.service';
 import { Comment } from './dto';
 
-@LoaderFactory()
+@LoaderFactory(() => Comment)
 export class CommentLoader extends OrderedNestDataLoader<Comment> {
   constructor(private readonly comments: CommentService) {
     super();

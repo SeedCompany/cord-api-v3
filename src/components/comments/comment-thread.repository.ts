@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { node } from 'cypher-query-builder';
-import { ID, Session } from '../../common';
+import { node, Query, relation } from 'cypher-query-builder';
+import { ID, Session, UnsecuredDto } from '../../common';
 import { DtoRepository } from '../../core';
 import {
+  ACTIVE,
   createNode,
   createRelationships,
   matchRequestingUser,
@@ -13,12 +14,12 @@ import {
 import {
   CommentThread,
   CommentThreadListInput,
-  CreateCommentThread,
+  CreateCommentThreadInput,
 } from './dto';
 
 @Injectable()
 export class CommentThreadRepository extends DtoRepository(CommentThread) {
-  async create(input: CreateCommentThread, session: Session) {
+  async create(input: CreateCommentThreadInput, session: Session) {
     return await this.db
       .query()
       .apply(matchRequestingUser(session))
@@ -32,11 +33,26 @@ export class CommentThreadRepository extends DtoRepository(CommentThread) {
       .first();
   }
 
+  protected hydrate() {
+    return (query: Query) =>
+      query.return<{ dto: UnsecuredDto<CommentThread> }>(
+        '{ id: node.id, createdAt: node.createdAt } as dto'
+      );
+  }
+
   async list({ filter, ...input }: CommentThreadListInput, session: Session) {
     const result = await this.db
       .query()
       .match(requestingUser(session))
-      .match(node('node', 'CommentThread'))
+      .match([
+        node('node', 'CommentThread'),
+        ...(filter.parentId
+          ? [
+              relation('in', '', 'commentThread', ACTIVE),
+              node('', 'BaseNode', { id: filter.parentId }),
+            ]
+          : []),
+      ])
       .apply(sorting(CommentThread, input))
       .apply(paginate(input, this.hydrate()))
       .first();

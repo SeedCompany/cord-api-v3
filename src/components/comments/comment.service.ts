@@ -20,13 +20,12 @@ import {
   Comment,
   Commentable,
   CommentListInput,
-  CommentThread,
   CommentThreadListInput,
   CommentThreadListOutput,
-  CreateComment,
-  CreateCommentThread,
+  CreateCommentInput,
+  CreateCommentThreadInput,
 } from './dto';
-import { UpdateComment } from './dto/update-comment.dto';
+import { UpdateCommentInput } from './dto/update-comment.dto';
 
 @Injectable()
 export class CommentService {
@@ -36,7 +35,7 @@ export class CommentService {
     private readonly authorizationService: AuthorizationService,
     @Logger('comment:service') private readonly logger: ILogger
   ) {}
-  async create(input: CreateComment, session: Session) {
+  async create(input: CreateCommentInput, session: Session) {
     if (!input.threadId) {
       throw new ServerException('A comment must be associated with a thread');
     }
@@ -87,7 +86,7 @@ export class CommentService {
     };
   }
 
-  async update(input: UpdateComment, session: Session): Promise<Comment> {
+  async update(input: UpdateCommentInput, session: Session): Promise<Comment> {
     const object = await this.readOne(input.id, session);
     const changes = this.repo.getActualChanges(object, input);
     await this.repo.updateProperties(object, changes);
@@ -97,6 +96,22 @@ export class CommentService {
 
   async delete(id: ID, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
+    const commentThreadId = await this.repo.getThreadId(id);
+
+    const commentList = await this.listCommentsByThreadId(
+      {
+        count: 10,
+        sort: 'createdAt',
+        order: Order.ASC,
+        page: 1,
+        filter: { threadId: commentThreadId!.threadId },
+      },
+      session
+    );
+
+    if (commentList.total === 1) {
+      await this.commentThreadRepo.deleteNode(commentThreadId!.threadId);
+    }
 
     if (!object) {
       throw new NotFoundException('Could not find comment', 'comment.id');
@@ -113,7 +128,7 @@ export class CommentService {
     }
   }
 
-  async createThread(input: CreateCommentThread, session: Session) {
+  async createThread(input: CreateCommentThreadInput, session: Session) {
     if (!input.parentId) {
       throw new ServerException(
         'A comment thread must be associated with a parent node'
@@ -144,28 +159,13 @@ export class CommentService {
 
   async readOneThread(id: ID, session: Session) {
     const dto = await this.commentThreadRepo.readOne(id);
-    const securedProps = await this.authorizationService.secureProperties(
-      CommentThread,
-      dto,
-      session
-    );
-
-    const comments = await this.listCommentsByThreadId(
-      {
-        count: 25,
-        sort: 'createdAt',
-        page: 1,
-        filter: { threadId: id },
-        order: Order.ASC,
-      },
-      session
-    );
 
     return {
       ...dto,
-      securedProps,
-      comments: comments.items,
-      canDelete: await this.repo.checkDeletePermission(dto.id, session),
+      canDelete: await this.commentThreadRepo.checkDeletePermission(
+        dto.id,
+        session
+      ),
     };
   }
 

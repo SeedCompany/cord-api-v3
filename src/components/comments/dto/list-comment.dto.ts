@@ -1,4 +1,4 @@
-import { Field, InputType, ObjectType } from '@nestjs/graphql';
+import { InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import {
@@ -12,7 +12,6 @@ import { Comment } from './comment.dto';
 
 @InputType()
 export abstract class CommentFilters {
-  @Field()
   readonly threadId: ID;
 }
 
@@ -23,7 +22,6 @@ export class CommentListInput extends SortablePaginationInput<keyof Comment>({
 }) {
   static defaultVal = new CommentListInput();
 
-  @Field()
   @Type(() => CommentFilters)
   @ValidateNested()
   readonly filter: CommentFilters;

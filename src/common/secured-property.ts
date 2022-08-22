@@ -10,6 +10,7 @@ import { stripIndent } from 'common-tags';
 import { GraphQLBoolean, GraphQLScalarType, GraphQLString } from 'graphql';
 import { isObject } from 'lodash';
 import { Class, ConditionalKeys, ConditionalPick } from 'type-fest';
+import { RichTextDocument } from './rich-text.scalar';
 import { ISecured } from './secured.interface';
 import { AbstractClassType } from './types';
 
@@ -263,4 +264,11 @@ export abstract class SecuredFloatNullable extends SecuredProperty<
 })
 export abstract class SecuredBoolean extends SecuredProperty<boolean>(
   GraphQLBoolean
+) {}
+
+@ObjectType({
+  description: SecuredProperty.descriptionFor('a rich text document'),
+})
+export abstract class SecuredRichTextDocument extends SecuredProperty<RichTextDocument>(
+  RichTextDocument
 ) {}

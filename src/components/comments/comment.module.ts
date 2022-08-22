@@ -3,6 +3,7 @@ import { AuthorizationModule } from '../authorization/authorization.module';
 import { UserModule } from '../user/user.module';
 import { CommentThreadLoader } from './comment-thread.loader';
 import { CommentThreadRepository } from './comment-thread.repository';
+import { CommentThreadResolver } from './comment-thread.resolver';
 import { CommentLoader } from './comment.loader';
 import { CommentRepository } from './comment.repository';
 import { CommentResolver } from './comment.resolver';
@@ -22,6 +23,7 @@ import { CommentableResolver } from './commentable.resolver';
     CommentService,
     CommentThreadLoader,
     CommentableResolver,
+    CommentThreadResolver,
   ],
   exports: [CommentService],
 })

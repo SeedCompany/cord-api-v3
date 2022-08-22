@@ -1,4 +1,4 @@
-import { Field, ObjectType } from '@nestjs/graphql';
+import { ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { Resource, SecuredProps } from '../../../common';
 import { Comment } from './comment.dto';
@@ -13,7 +13,4 @@ export class CommentThread extends Resource {
   static readonly Relations = {
     comments: [Comment],
   };
-
-  @Field(() => [Comment])
-  readonly comments: readonly Comment[];
 }

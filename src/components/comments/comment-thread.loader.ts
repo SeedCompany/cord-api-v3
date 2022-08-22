@@ -3,7 +3,7 @@ import { LoaderFactory, OrderedNestDataLoader } from '../../core';
 import { CommentService } from './comment.service';
 import { CommentThread } from './dto';
 
-@LoaderFactory()
+@LoaderFactory(() => CommentThread)
 export class CommentThreadLoader extends OrderedNestDataLoader<CommentThread> {
   constructor(private readonly commentThreads: CommentService) {
     super();

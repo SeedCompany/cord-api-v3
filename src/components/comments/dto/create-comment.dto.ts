@@ -1,28 +1,25 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import { Type } from 'class-transformer';
-import { ValidateNested } from 'class-validator';
-import { ID, IdField, RichTextField } from '../../../common';
+import { ID, IdField, RichTextDocument, RichTextField } from '../../../common';
+import { CommentThread } from './comment-thread.dto';
 import { Comment } from './comment.dto';
 
 @InputType()
-export class CreateComment {
+export abstract class CreateCommentInput {
+  @IdField({ nullable: true })
+  readonly threadId?: ID;
+
   @IdField()
-  readonly threadId: ID;
+  readonly resourceId: ID;
 
   @RichTextField()
-  readonly body: string;
-}
-
-@InputType()
-export abstract class CreateCommentInput {
-  @Field()
-  @Type(() => CreateComment)
-  @ValidateNested()
-  readonly comment: CreateComment;
+  readonly body: RichTextDocument;
 }
 
 @ObjectType()
 export abstract class CreateCommentOutput {
   @Field()
   readonly comment: Comment;
+
+  @Field()
+  readonly commentThread: CommentThread;
 }

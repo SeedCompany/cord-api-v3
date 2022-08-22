@@ -4,7 +4,7 @@ import { ID, IdField } from '../../../common';
 
 @InterfaceType({
   description: stripIndent`
-    An object that can be used to enable Comment threads on a Node.
+    An object that can be used to enable comment threads on a Node.
   `,
 })
 export abstract class Commentable {

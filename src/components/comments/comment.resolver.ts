@@ -2,33 +2,23 @@ import {
   Args,
   Mutation,
   Parent,
-  Query,
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
 import {
-  AnonSession,
   ID,
   IdArg,
-  ListArg,
   LoggedInSession,
   mapSecuredValue,
   Session,
 } from '../../common';
 import { Loader, LoaderOf } from '../../core';
 import { SecuredUser, UserLoader } from '../user';
-import { CommentThreadLoader } from './comment-thread.loader';
-import { CommentLoader } from './comment.loader';
 import { CommentService } from './comment.service';
 import {
   Comment,
-  CommentListInput,
-  CommentListOutput,
-  CommentThread,
   CreateCommentInput,
   CreateCommentOutput,
-  CreateCommentThreadInput,
-  CreateCommentThreadOutput,
   DeleteCommentOutput,
   UpdateCommentInput,
   UpdateCommentOutput,
@@ -39,24 +29,32 @@ export class CommentResolver {
   constructor(private readonly service: CommentService) {}
 
   @Mutation(() => CreateCommentOutput, {
-    description: 'create a comment',
+    description: 'Create a comment',
   })
   async createComment(
     @LoggedInSession() session: Session,
-    @Args('input') { comment: input }: CreateCommentInput
+    @Args('input') input: CreateCommentInput
   ): Promise<CreateCommentOutput> {
-    const comment = await this.service.create(input, session);
-    return { comment };
-  }
+    if (!input.threadId) {
+      const commentThread = await this.service.createThread(
+        { parentId: input.resourceId },
+        session
+      );
 
-  @Query(() => Comment, {
-    description: 'Look up a comment by ID',
-  })
-  async comment(
-    @IdArg() id: ID,
-    @Loader(CommentLoader) comments: LoaderOf<CommentLoader>
-  ): Promise<Comment> {
-    return await comments.load(id);
+      const comment = await this.service.create(
+        { ...input, threadId: commentThread.id },
+        session
+      );
+
+      return { comment, commentThread };
+    }
+
+    const comment = await this.service.create(input, session);
+    const commentThread = await this.service.readOneThread(
+      input.threadId,
+      session
+    );
+    return { comment, commentThread };
   }
 
   @Mutation(() => UpdateCommentOutput, {
@@ -64,7 +62,7 @@ export class CommentResolver {
   })
   async updateComment(
     @LoggedInSession() session: Session,
-    @Args('input') { comment: input }: UpdateCommentInput
+    @Args('input') input: UpdateCommentInput
   ): Promise<UpdateCommentOutput> {
     const comment = await this.service.update(input, session);
     return { comment };
@@ -81,44 +79,9 @@ export class CommentResolver {
     return { success: true };
   }
 
-  @Mutation(() => CreateCommentThreadOutput, {
-    description: 'Create a comment thread',
+  @ResolveField(() => SecuredUser, {
+    description: 'Get comment creator',
   })
-  async createCommentThread(
-    @LoggedInSession() session: Session,
-    @Args('input') { commentThread: input }: CreateCommentThreadInput
-  ): Promise<CreateCommentThreadOutput> {
-    const commentThread = await this.service.createThread(input, session);
-    return { commentThread };
-  }
-
-  @Query(() => CommentThread, {
-    description: 'Look up a comment thread by ID',
-  })
-  async commentThread(
-    @IdArg() id: ID,
-    @Loader(CommentThreadLoader) commentThreads: LoaderOf<CommentThreadLoader>
-  ): Promise<CommentThread> {
-    return await commentThreads.load(id);
-  }
-
-  @Query(() => CommentListOutput, {
-    description: 'List of comments belonging to a thread',
-  })
-  async comments(
-    @AnonSession() session: Session,
-    @ListArg(CommentListInput) input: CommentListInput,
-    @Loader(CommentLoader) comments: LoaderOf<CommentLoader>
-  ) {
-    const list = await this.service.listCommentsByThreadId(
-      { ...input, filter: { threadId: input.filter.threadId } },
-      session
-    );
-    comments.primeAll(list.items);
-    return list;
-  }
-
-  @ResolveField(() => SecuredUser)
   async creator(
     @Parent() comment: Comment,
     @Loader(UserLoader) users: LoaderOf<UserLoader>
