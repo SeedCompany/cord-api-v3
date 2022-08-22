@@ -22,10 +22,17 @@ export class ChangesetResolver {
   })
   async difference(
     @Parent() changeset: Changeset,
-    @LoggedInSession() session: Session
+    @LoggedInSession() session: Session,
+    @IdArg({
+      name: 'resource',
+      nullable: true,
+      description:
+        'Optionally limit to only changes of this resource and its (grand)children',
+    })
+    parent?: ID
   ): Promise<ChangesetDiff> {
     const isApproved = await this.repo.isApproved(changeset.id, session);
-    const diff = await this.repo.difference(changeset.id, session);
+    const diff = await this.repo.difference(changeset.id, session, parent);
     const load = (node: BaseNode, view?: ObjectView) =>
       this.resources.loadByBaseNode(node, view ?? { changeset: changeset.id });
     const [added, removed, changed] = await Promise.all([
