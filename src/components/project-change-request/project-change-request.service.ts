@@ -19,6 +19,7 @@ import {
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto';
+import { ChangesetFinalizingEvent } from '../changeset/events';
 import { ProjectService, ProjectStatus } from '../project';
 import {
   CreateProjectChangeRequest,
@@ -28,10 +29,7 @@ import {
   ProjectChangeRequestStatus as Status,
   UpdateProjectChangeRequest,
 } from './dto';
-import {
-  ProjectChangesetAfterFinalizedEvent,
-  ProjectChangesetFinalizedEvent,
-} from './events';
+import { ProjectChangesetAfterFinalizedEvent } from './events';
 import { ProjectChangeRequestRepository } from './project-change-request.repository';
 
 @Injectable()
@@ -139,7 +137,7 @@ export class ProjectChangeRequestService {
 
     if (isStatusChanged) {
       await this.eventBus.publish(
-        new ProjectChangesetFinalizedEvent(updated, session)
+        new ChangesetFinalizingEvent(updated, session)
       );
       await this.eventBus.publish(
         new ProjectChangesetAfterFinalizedEvent(updated, session)
