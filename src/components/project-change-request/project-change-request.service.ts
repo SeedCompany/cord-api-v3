@@ -19,6 +19,7 @@ import {
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto';
+import { ChangesetFinalizingEvent } from '../changeset/events';
 import { ProjectService, ProjectStatus } from '../project';
 import {
   CreateProjectChangeRequest,
@@ -28,10 +29,7 @@ import {
   ProjectChangeRequestStatus as Status,
   UpdateProjectChangeRequest,
 } from './dto';
-import {
-  ProjectChangesetAfterFinalizedEvent,
-  ProjectChangesetFinalizedEvent,
-} from './events';
+import { ProjectChangeRequestApprovedEvent } from './events';
 import { ProjectChangeRequestRepository } from './project-change-request.repository';
 
 @Injectable()
@@ -120,24 +118,32 @@ export class ProjectChangeRequestService {
   ): Promise<ProjectChangeRequest> {
     const object = await this.readOneUnsecured(input.id, session);
     const changes = this.repo.getActualChanges(object, input);
+    const isStatusChanged =
+      object.status === Status.Pending &&
+      (changes.status === Status.Approved ||
+        changes.status === Status.Rejected);
 
     await this.db.updateProperties({
       type: ProjectChangeRequest,
       object,
-      changes,
+      changes: {
+        ...changes,
+        ...(isStatusChanged
+          ? { applied: changes.status === Status.Approved, editable: false }
+          : {}),
+      },
     });
     const updated = await this.readOneUnsecured(input.id, session);
 
-    if (
-      object.status === Status.Pending &&
-      (changes.status === Status.Approved || changes.status === Status.Rejected)
-    ) {
+    if (isStatusChanged) {
       await this.eventBus.publish(
-        new ProjectChangesetFinalizedEvent(updated, session)
+        new ChangesetFinalizingEvent(updated, session)
       );
-      await this.eventBus.publish(
-        new ProjectChangesetAfterFinalizedEvent(updated, session)
-      );
+      if (changes.status === Status.Approved) {
+        await this.eventBus.publish(
+          new ProjectChangeRequestApprovedEvent(updated, session)
+        );
+      }
     }
 
     return await this.secure(updated, session);

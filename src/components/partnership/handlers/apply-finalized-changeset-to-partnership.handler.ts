@@ -9,13 +9,12 @@ import {
 } from '../../../core';
 import { ACTIVE, deleteBaseNode, INACTIVE } from '../../../core/database/query';
 import { commitChangesetProps } from '../../changeset/commit-changeset-props.query';
+import { ChangesetFinalizingEvent } from '../../changeset/events';
 import { rejectChangesetProps } from '../../changeset/reject-changeset-props.query';
-import { ProjectChangeRequestStatus } from '../../project-change-request/dto';
-import { ProjectChangesetFinalizedEvent } from '../../project-change-request/events';
 
-type SubscribedEvent = ProjectChangesetFinalizedEvent;
+type SubscribedEvent = ChangesetFinalizingEvent;
 
-@EventsHandler(ProjectChangesetFinalizedEvent)
+@EventsHandler(ChangesetFinalizingEvent)
 export class ApplyFinalizedChangesetToPartnership
   implements IEventHandler<SubscribedEvent>
 {
@@ -25,11 +24,8 @@ export class ApplyFinalizedChangesetToPartnership
     private readonly logger: ILogger
   ) {}
 
-  async handle(event: SubscribedEvent) {
+  async handle({ changeset }: SubscribedEvent) {
     this.logger.debug('Applying changeset props');
-
-    const changesetId = event.changeRequest.id;
-    const status = event.changeRequest.status;
 
     try {
       // Update project partnership pending changes
@@ -38,7 +34,7 @@ export class ApplyFinalizedChangesetToPartnership
         .match([
           node('project', 'Project'),
           relation('out', '', 'changeset', ACTIVE),
-          node('changeset', 'Changeset', { id: changesetId }),
+          node('changeset', 'Changeset', { id: changeset.id }),
         ])
         .subQuery((sub) =>
           sub
@@ -49,7 +45,7 @@ export class ApplyFinalizedChangesetToPartnership
               node('node', 'Partnership'),
             ])
             .apply(
-              status === ProjectChangeRequestStatus.Approved
+              changeset.applied
                 ? commitChangesetProps()
                 : rejectChangesetProps()
             )
@@ -63,7 +59,7 @@ export class ApplyFinalizedChangesetToPartnership
         .match([
           node('project', 'Project'),
           relation('out', '', 'changeset', ACTIVE),
-          node('changeset', 'Changeset', { id: changesetId }),
+          node('changeset', 'Changeset', { id: changeset.id }),
         ])
         .subQuery((sub) =>
           sub
@@ -84,7 +80,7 @@ export class ApplyFinalizedChangesetToPartnership
         .run();
 
       // Remove deleting partnerships
-      await this.removeDeletingPartnerships(changesetId);
+      await this.removeDeletingPartnerships(changeset.id);
     } catch (exception) {
       throw new ServerException(
         'Failed to apply changeset to partnership',

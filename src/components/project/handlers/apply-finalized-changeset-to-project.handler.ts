@@ -9,13 +9,12 @@ import {
 } from '../../../core';
 import { ACTIVE, INACTIVE } from '../../../core/database/query';
 import { commitChangesetProps } from '../../changeset/commit-changeset-props.query';
+import { ChangesetFinalizingEvent } from '../../changeset/events';
 import { rejectChangesetProps } from '../../changeset/reject-changeset-props.query';
-import { ProjectChangeRequestStatus } from '../../project-change-request/dto';
-import { ProjectChangesetFinalizedEvent } from '../../project-change-request/events';
 
-type SubscribedEvent = ProjectChangesetFinalizedEvent;
+type SubscribedEvent = ChangesetFinalizingEvent;
 
-@EventsHandler(ProjectChangesetFinalizedEvent)
+@EventsHandler(ChangesetFinalizingEvent)
 export class ApplyFinalizedChangesetToProject
   implements IEventHandler<SubscribedEvent>
 {
@@ -24,11 +23,8 @@ export class ApplyFinalizedChangesetToProject
     @Logger('project:change-request:finalized') private readonly logger: ILogger
   ) {}
 
-  async handle(event: SubscribedEvent) {
+  async handle({ changeset }: SubscribedEvent) {
     this.logger.debug('Applying changeset props');
-
-    const changesetId = event.changeRequest.id;
-    const status = event.changeRequest.status;
 
     try {
       const query = this.db
@@ -36,12 +32,10 @@ export class ApplyFinalizedChangesetToProject
         .match([
           node('node', 'Project'),
           relation('out', '', 'changeset', ACTIVE),
-          node('changeset', 'Changeset', { id: changesetId }),
+          node('changeset', 'Changeset', { id: changeset.id }),
         ])
         .apply(
-          status === ProjectChangeRequestStatus.Approved
-            ? commitChangesetProps()
-            : rejectChangesetProps()
+          changeset.applied ? commitChangesetProps() : rejectChangesetProps()
         )
         // Apply pending budget records
         .subQuery((sub) =>
@@ -55,10 +49,10 @@ export class ApplyFinalizedChangesetToProject
               relation('out', 'recordRel', 'record', INACTIVE),
               node('br', 'BudgetRecord'),
               relation('in', '', 'changeset', ACTIVE),
-              node('changeset', 'Changeset', { id: changesetId }),
+              node('changeset', 'Changeset', { id: changeset.id }),
             ])
             .apply((q) =>
-              status === ProjectChangeRequestStatus.Approved
+              changeset.applied
                 ? q.setValues({
                     'recordRel.active': true,
                   })
@@ -66,7 +60,7 @@ export class ApplyFinalizedChangesetToProject
             )
             .with('br, changeset')
             .apply(
-              status === ProjectChangeRequestStatus.Approved
+              changeset.applied
                 ? commitChangesetProps({ nodeVar: 'br' })
                 : rejectChangesetProps({ nodeVar: 'br' })
             )
