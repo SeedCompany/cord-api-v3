@@ -3,6 +3,7 @@ import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { Budget, BudgetRecord, BudgetStatus } from '.';
 import { ID, IdField } from '../../../common';
+import { ChangesetIdField } from '../../changeset';
 import { CreateDefinedFileVersionInput } from '../../file/dto';
 
 @InputType()
@@ -51,10 +52,7 @@ export abstract class UpdateBudgetRecordInput {
   @ValidateNested()
   readonly budgetRecord: UpdateBudgetRecord;
 
-  @IdField({
-    description: 'The change object to associate these engagement changes with',
-    nullable: true,
-  })
+  @ChangesetIdField()
   readonly changeset?: ID;
 }
 
