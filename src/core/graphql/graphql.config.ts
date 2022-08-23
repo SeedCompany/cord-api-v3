@@ -15,10 +15,11 @@ import {
   GraphQLError,
   GraphQLFormattedError,
   GraphQLScalarType,
+  OperationDefinitionNode,
 } from 'graphql';
 import { intersection } from 'lodash';
 import { sep } from 'path';
-import { GqlContextType, mapFromList } from '../../common';
+import { GqlContextType, mapFromList, ServerException } from '../../common';
 import { getRegisteredScalars } from '../../common/scalars';
 import { ConfigService } from '../config/config.service';
 import { VersionService } from '../config/version.service';
@@ -78,6 +79,7 @@ export class GraphQLConfig implements GqlOptionsFactory {
   }) => ({
     request: req,
     response: res,
+    operation: createFakeStubOperation(),
   });
 
   formatError = (error: GraphQLError): GraphQLFormattedError => {
@@ -151,3 +153,12 @@ export class GraphQLConfig implements GqlOptionsFactory {
     return [code, 'Server'];
   }
 }
+
+export const createFakeStubOperation = () => {
+  const operation = {} as unknown as OperationDefinitionNode;
+  return new Proxy(operation, {
+    get() {
+      throw new ServerException('GQL operation has not been determined yet');
+    },
+  });
+};

@@ -8,6 +8,6 @@ import { ResourceLoader } from './resource.loader';
 @Module({
   imports: [GraphqlModule],
   providers: [ResourceResolver, ResourceLoaderRegistry, ResourceLoader],
-  exports: [ResourceResolver, ResourceLoader],
+  exports: [ResourceResolver, ResourceLoaderRegistry, ResourceLoader],
 })
 export class ResourceModule {}

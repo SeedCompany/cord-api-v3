@@ -19,6 +19,7 @@ import {
   SensitivityField,
 } from '../../../common';
 import { ExactLength } from '../../../common/validators/exactLength';
+import { ChangesetIdField } from '../../changeset';
 import { Language } from './language.dto';
 
 @InputType()
@@ -103,10 +104,7 @@ export abstract class UpdateLanguage {
 
 @InputType()
 export abstract class UpdateLanguageInput {
-  @IdField({
-    description: 'The change object to associate these engagement changes with',
-    nullable: true,
-  })
+  @ChangesetIdField()
   readonly changeset?: ID;
 
   @Field()

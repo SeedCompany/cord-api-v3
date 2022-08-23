@@ -13,6 +13,7 @@ import {
   Sensitivity,
   SensitivityField,
 } from '../../../common';
+import { ChangesetIdField } from '../../changeset';
 import { ReportPeriod } from '../../periodic-report/dto';
 import { IProject, Project } from './project.dto';
 import { ProjectStep } from './step.enum';
@@ -84,10 +85,7 @@ export abstract class UpdateProjectInput {
   @ValidateNested()
   readonly project: UpdateProject;
 
-  @IdField({
-    description: 'The change object to associate these engagement changes with',
-    nullable: true,
-  })
+  @ChangesetIdField()
   readonly changeset?: ID;
 }
 
