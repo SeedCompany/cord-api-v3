@@ -58,9 +58,13 @@ $ brew unlink node && brew install node@16 && brew link --overwrite node@16
   use = (req: Request, res: Response, next: () => void) => {
     // Connect middleware is the only place we get a function where we can
     // completely wrap the request for the use of an ALS context.
-    // Just give it a placeholder object for now which we populate below.
-    this.als.run({}, next);
+    this.attachScope(next);
   };
+
+  attachScope<R>(fn: () => R): R {
+    // Just give it a placeholder object for now which we populate below.
+    return this.als.run({}, fn);
+  }
 
   /**
    * Attach GQL context to the ALS store now that we have it.

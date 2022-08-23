@@ -6,6 +6,7 @@ import { GraphQLResponse } from 'apollo-server-types';
 import { DocumentNode, GraphQLFormattedError } from 'graphql';
 import { GqlContextType } from '../../src/common';
 import { TracingService } from '../../src/core';
+import { GqlContextHostImpl } from '../../src/core/graphql/gql-context.host';
 import { createFakeStubOperation } from '../../src/core/graphql/graphql.config';
 
 export interface GraphQLTestClient {
@@ -42,37 +43,42 @@ export const createGraphqlClient = async (
     obj ? JSON.parse(JSON.stringify(obj)) : obj;
 
   const tracing = app.get(TracingService);
+  const contextHost = app.get(GqlContextHostImpl);
   return {
     query: async (q, variables) => {
-      return await tracing.capture('query', async () => {
-        try {
-          const result = await server.executeOperation({
-            query: q,
-            variables: toPlain(variables),
-          });
-          validateResult(result);
-          return result.data;
-        } catch (e) {
-          throw adjustError(e);
-        } finally {
-          resetRequest();
-        }
+      return await contextHost.attachScope(async () => {
+        return await tracing.capture('query', async () => {
+          try {
+            const result = await server.executeOperation({
+              query: q,
+              variables: toPlain(variables),
+            });
+            validateResult(result);
+            return result.data;
+          } catch (e) {
+            throw adjustError(e);
+          } finally {
+            resetRequest();
+          }
+        });
       });
     },
     mutate: async (mutation, variables) => {
-      return await tracing.capture('mutation', async () => {
-        try {
-          const result = await server.executeOperation({
-            query: mutation,
-            variables: toPlain(variables),
-          });
-          validateResult(result);
-          return result.data;
-        } catch (e) {
-          throw adjustError(e);
-        } finally {
-          resetRequest();
-        }
+      return await contextHost.attachScope(async () => {
+        return await tracing.capture('mutation', async () => {
+          try {
+            const result = await server.executeOperation({
+              query: mutation,
+              variables: toPlain(variables),
+            });
+            validateResult(result);
+            return result.data;
+          } catch (e) {
+            throw adjustError(e);
+          } finally {
+            resetRequest();
+          }
+        });
       });
     },
     get authToken() {
