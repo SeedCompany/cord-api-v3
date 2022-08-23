@@ -41,11 +41,19 @@ export class EngagementRules {
 
   private async getStatusRule(
     status: EngagementStatus,
-    id: ID
+    id: ID,
+    changeset?: ID
   ): Promise<StatusRule> {
-    const mostRecentPreviousStatus = (steps: EngagementStatus[]) =>
-      this.getMostRecentPreviousStatus(id, steps);
+    const mostRecentPreviousStatus = async (steps: EngagementStatus[]) => {
+      const prevSteps = await this.getPreviousStatus(id, changeset);
+      return first(intersection(prevSteps, steps)) ?? steps[0];
+    };
 
+    const backToActive = () =>
+      mostRecentPreviousStatus([
+        EngagementStatus.Active,
+        EngagementStatus.ActiveChangedPlan,
+      ]);
     switch (status) {
       case EngagementStatus.InDevelopment:
         return {
@@ -87,6 +95,17 @@ export class EngagementRules {
           ],
           transitions: [
             {
+              to: EngagementStatus.FinalizingCompletion,
+              type: EngagementTransitionType.Approve,
+              label: 'Finalize Completion',
+            },
+            {
+              to: EngagementStatus.Suspended,
+              type: EngagementTransitionType.Neutral,
+              label: 'Suspend',
+              inChangeset: true,
+            },
+            {
               to: EngagementStatus.DiscussingChangeToPlan,
               type: EngagementTransitionType.Neutral,
               label: 'Discuss Change to Plan',
@@ -105,26 +124,9 @@ export class EngagementRules {
               inChangeset: false,
             },
             {
-              to: EngagementStatus.FinalizingCompletion,
-              type: EngagementTransitionType.Approve,
-              label: 'Finalize Completion',
-            },
-            {
-              to: EngagementStatus.ActiveChangedPlan,
-              type: EngagementTransitionType.Approve,
-              label: 'Approve Change to Plan',
-              inChangeset: true,
-            },
-            {
-              to: EngagementStatus.Suspended,
-              type: EngagementTransitionType.Approve,
-              label: 'Approve Suspension',
-              inChangeset: true,
-            },
-            {
               to: EngagementStatus.Terminated,
-              type: EngagementTransitionType.Approve,
-              label: 'Approve Termination',
+              type: EngagementTransitionType.Neutral,
+              label: 'Terminate',
               inChangeset: true,
             },
           ],
@@ -139,10 +141,21 @@ export class EngagementRules {
           ],
           transitions: [
             {
+              to: EngagementStatus.FinalizingCompletion,
+              type: EngagementTransitionType.Approve,
+              label: 'Finalize Completion',
+            },
+            {
               to: EngagementStatus.DiscussingChangeToPlan,
               type: EngagementTransitionType.Neutral,
               label: 'Discuss Change to Plan',
               inChangeset: false,
+            },
+            {
+              to: EngagementStatus.Suspended,
+              type: EngagementTransitionType.Neutral,
+              label: 'Suspend',
+              inChangeset: true,
             },
             {
               to: EngagementStatus.DiscussingTermination,
@@ -157,26 +170,9 @@ export class EngagementRules {
               inChangeset: false,
             },
             {
-              to: EngagementStatus.FinalizingCompletion,
-              type: EngagementTransitionType.Approve,
-              label: 'Finalize Completion',
-            },
-            {
-              to: EngagementStatus.ActiveChangedPlan,
-              type: EngagementTransitionType.Approve,
-              label: 'Approve Change to Plan',
-              inChangeset: true,
-            },
-            {
-              to: EngagementStatus.Suspended,
-              type: EngagementTransitionType.Approve,
-              label: 'Approve Suspension',
-              inChangeset: true,
-            },
-            {
               to: EngagementStatus.Terminated,
-              type: EngagementTransitionType.Approve,
-              label: 'Approve Termination',
+              type: EngagementTransitionType.Neutral,
+              label: 'Terminate',
               inChangeset: true,
             },
           ],
@@ -202,10 +198,7 @@ export class EngagementRules {
               label: 'Approve Change to Plan',
             },
             {
-              to: await mostRecentPreviousStatus([
-                EngagementStatus.Active,
-                EngagementStatus.ActiveChangedPlan,
-              ]),
+              to: await backToActive(),
               type: EngagementTransitionType.Neutral,
               label: 'Will Not Change Plan',
             },
@@ -226,10 +219,7 @@ export class EngagementRules {
               label: 'Approve Suspension',
             },
             {
-              to: await mostRecentPreviousStatus([
-                EngagementStatus.Active,
-                EngagementStatus.ActiveChangedPlan,
-              ]),
+              to: await backToActive(),
               type: EngagementTransitionType.Neutral,
               label: 'Will Not Suspend',
             },
@@ -256,6 +246,12 @@ export class EngagementRules {
               inChangeset: false,
             },
             {
+              to: await backToActive(),
+              type: EngagementTransitionType.Approve,
+              label: 'Reactivate',
+              inChangeset: true,
+            },
+            {
               to: EngagementStatus.DiscussingTermination,
               type: EngagementTransitionType.Neutral,
               label: 'Discuss Termination',
@@ -269,8 +265,8 @@ export class EngagementRules {
             },
             {
               to: EngagementStatus.Terminated,
-              type: EngagementTransitionType.Approve,
-              label: 'Approve Termination',
+              type: EngagementTransitionType.Neutral,
+              label: 'Terminate',
               inChangeset: true,
             },
           ],
@@ -333,10 +329,7 @@ export class EngagementRules {
           ],
           transitions: [
             {
-              to: await mostRecentPreviousStatus([
-                EngagementStatus.Active,
-                EngagementStatus.ActiveChangedPlan,
-              ]),
+              to: await backToActive(),
               type: EngagementTransitionType.Neutral,
               label: 'Still Working',
             },
@@ -350,7 +343,14 @@ export class EngagementRules {
       case EngagementStatus.Terminated:
         return {
           approvers: [Role.Administrator],
-          transitions: [],
+          transitions: [
+            {
+              to: await backToActive(),
+              type: EngagementTransitionType.Neutral,
+              label: 'Go back to Active',
+              inChangeset: true,
+            },
+          ],
         };
       case EngagementStatus.Completed:
         return {
@@ -386,7 +386,7 @@ export class EngagementRules {
 
     // If current user is not an approver (based on roles) then don't allow any transitions
     currentUserRoles ??= session.roles.map(withoutScope);
-    if (intersection(approvers, currentUserRoles).length === 0) {
+    if (!changeset && intersection(approvers, currentUserRoles).length === 0) {
       return [];
     }
 
@@ -540,28 +540,33 @@ export class EngagementRules {
     return currentStep;
   }
 
-  /** Of the given status which one was the most recent previous status */
-  private async getMostRecentPreviousStatus(
-    id: ID,
-    statuses: EngagementStatus[]
-  ): Promise<EngagementStatus> {
-    const prevStatus = await this.getPreviousStatus(id);
-    return first(intersection(prevStatus, statuses)) ?? statuses[0];
-  }
-
   /** A list of the engagement's previous status ordered most recent to furthest in the past */
-  private async getPreviousStatus(id: ID): Promise<EngagementStatus[]> {
+  private async getPreviousStatus(
+    id: ID,
+    changeset?: ID,
+    includePreviousChangesetSteps = false
+  ): Promise<EngagementStatus[]> {
     const result = await this.db
       .query()
       .match([
+        ...(changeset && includePreviousChangesetSteps
+          ? [
+              node('changeset', 'Changeset', { id: changeset }),
+              relation('in', '', 'changeset', ACTIVE),
+            ]
+          : []),
         node('node', 'Engagement', { id }),
-        relation('out', '', 'status', INACTIVE),
+        relation('out', '', 'status', changeset ? undefined : INACTIVE),
         node('prop'),
       ])
+      .apply((q) =>
+        changeset && includePreviousChangesetSteps
+          ? q.raw('WHERE NOT (changeset)-[:changeset {active:true}]->(prop)')
+          : q.raw('WHERE NOT (:Changeset)-[:changeset]->(prop)')
+      )
       .with('prop')
       .orderBy('prop.createdAt', 'DESC')
-      .raw(`RETURN collect(prop.value) as status`)
-      .asResult<{ status: EngagementStatus[] }>()
+      .return<{ status: EngagementStatus[] }>(`collect(prop.value) as status`)
       .first();
     if (!result) {
       throw new ServerException(
