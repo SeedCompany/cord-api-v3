@@ -69,10 +69,15 @@ $ brew unlink node && brew install node@16 && brew link --overwrite node@16
     context,
   }: RequestContext<ContextType>): Promise<RequestListener<ContextType>> {
     const store = this.als.getStore();
-    if (store) {
-      store.ctx = context;
+    if (!store) {
+      return {};
     }
-    return {};
+    store.ctx = context;
+    return {
+      async didResolveOperation({ operation }) {
+        context.operation = operation;
+      },
+    };
   }
 
   onModuleDestroy() {

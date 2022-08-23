@@ -6,6 +6,7 @@ import { GraphQLResponse } from 'apollo-server-types';
 import { DocumentNode, GraphQLFormattedError } from 'graphql';
 import { GqlContextType } from '../../src/common';
 import { TracingService } from '../../src/core';
+import { createFakeStubOperation } from '../../src/core/graphql/graphql.config';
 
 export interface GraphQLTestClient {
   query: (
@@ -153,7 +154,9 @@ const reportError = (
 };
 
 export const getGraphQLOptions = (): GqlModuleOptions => {
-  const context: GqlContextType = {};
+  const context: GqlContextType = {
+    operation: createFakeStubOperation(),
+  };
   return {
     path: '/graphql',
     fieldResolverEnhancers: [],
