@@ -6,8 +6,10 @@ import {
   ListArg,
   LoggedInSession,
   Session,
+  viewOfChangeset,
 } from '../../../common';
 import { Loader, LoaderOf } from '../../../core';
+import { ChangesetIds } from '../../changeset/dto';
 import { ProjectMemberLoader, ProjectMemberService } from '../project-member';
 import {
   CreateProjectMemberInput,
@@ -29,9 +31,9 @@ export class ProjectMemberResolver {
   })
   async createProjectMember(
     @LoggedInSession() session: Session,
-    @Args('input') { projectMember: input }: CreateProjectMemberInput
+    @Args('input') { projectMember: input, changeset }: CreateProjectMemberInput
   ): Promise<CreateProjectMemberOutput> {
-    const projectMember = await this.service.create(input, session);
+    const projectMember = await this.service.create(input, session, changeset);
     return { projectMember };
   }
 
@@ -63,9 +65,13 @@ export class ProjectMemberResolver {
   })
   async updateProjectMember(
     @LoggedInSession() session: Session,
-    @Args('input') { projectMember: input }: UpdateProjectMemberInput
+    @Args('input') { projectMember: input, changeset }: UpdateProjectMemberInput
   ): Promise<UpdateProjectMemberOutput> {
-    const projectMember = await this.service.update(input, session);
+    const projectMember = await this.service.update(
+      input,
+      session,
+      viewOfChangeset(changeset)
+    );
     return { projectMember };
   }
 
@@ -74,9 +80,9 @@ export class ProjectMemberResolver {
   })
   async deleteProjectMember(
     @LoggedInSession() session: Session,
-    @IdArg() id: ID
+    @Args() { id, changeset }: ChangesetIds
   ): Promise<DeleteProjectMemberOutput> {
-    await this.service.delete(id, session);
+    await this.service.delete(id, session, changeset);
     return { success: true };
   }
 }

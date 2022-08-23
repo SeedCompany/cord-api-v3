@@ -16,6 +16,7 @@ import {
   Session,
   UnauthorizedException,
   UnsecuredDto,
+  viewOfChangeset,
 } from '../../../common';
 import {
   ConfigService,
@@ -86,7 +87,8 @@ export class ProjectMemberService {
 
   async create(
     { userId, projectId, ...input }: CreateProjectMember,
-    session: Session
+    session: Session,
+    changeset?: ID
   ): Promise<ProjectMember> {
     await this.authorizationService.checkPower(
       Powers.CreateProjectMember,
@@ -106,13 +108,14 @@ export class ProjectMemberService {
         { userId, projectId, ...input },
         id,
         session,
-        createdAt
+        createdAt,
+        changeset
       );
       if (!memberQuery) {
         throw new ServerException('Failed to create project member');
       }
 
-      return await this.readOne(id, session);
+      return await this.readOne(id, session, viewOfChangeset(changeset));
     } catch (exception) {
       throw new ServerException('Could not create project member', exception);
     }
@@ -122,7 +125,7 @@ export class ProjectMemberService {
   async readOne(
     id: ID,
     session: Session,
-    _view?: ObjectView
+    view?: ObjectView
   ): Promise<ProjectMember> {
     this.logger.debug(`read one`, {
       id,
@@ -135,7 +138,7 @@ export class ProjectMemberService {
       );
     }
 
-    const dto = await this.repo.readOne(id, session);
+    const dto = await this.repo.readOne(id, session, view);
     return await this.secure(dto, session);
   }
 
@@ -173,7 +176,8 @@ export class ProjectMemberService {
 
   async update(
     input: UpdateProjectMember,
-    session: Session
+    session: Session,
+    view?: ObjectView
   ): Promise<ProjectMember> {
     const object = await this.readOne(input.id, session);
 
@@ -193,7 +197,7 @@ export class ProjectMemberService {
       object,
       changes
     );
-    await this.repo.updateProperties(object, changes);
+    await this.repo.updateProperties(object, changes, view?.changeset);
     return await this.readOne(input.id, session);
   }
 
@@ -216,7 +220,7 @@ export class ProjectMemberService {
     }
   }
 
-  async delete(id: ID, session: Session): Promise<void> {
+  async delete(id: ID, session: Session, changeset?: ID): Promise<void> {
     const object = await this.readOne(id, session);
 
     if (!object) {
@@ -227,7 +231,7 @@ export class ProjectMemberService {
     }
 
     try {
-      await this.repo.deleteNode(object);
+      await this.repo.deleteNode(object, changeset);
     } catch (exception) {
       this.logger.warning('Failed to delete project member', {
         exception,
@@ -239,12 +243,13 @@ export class ProjectMemberService {
 
   async list(
     input: ProjectMemberListInput,
-    session: Session
+    session: Session,
+    changeset?: ID
   ): Promise<ProjectMemberListOutput> {
     // Since there is no case at the present where there is global versus scoped canList,
     // not doing the whole limitedScope map thing for now.
     if (await this.authorizationService.canList(ProjectMember, session)) {
-      const results = await this.repo.list(input, session);
+      const results = await this.repo.list(input, session, changeset);
       return await mapListResults(results, (dto) => this.secure(dto, session));
     } else {
       return SecuredList.Redacted;
