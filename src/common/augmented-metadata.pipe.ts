@@ -7,7 +7,7 @@ export const createAugmentedMetadataPipe = <
 >() => {
   const pipe = (data: T | (() => T)): PipeTransform => ({
     transform: (value, metadata) => {
-      const actual = typeof data === 'function' ? data() : data;
+      const actual = typeof data === 'function' ? (data as () => T)() : data;
       if (!metadata.metatype) {
         throw new ServerException('Could not attach metadata');
       }
