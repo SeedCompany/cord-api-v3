@@ -3,6 +3,7 @@ import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { ID, IdField } from '../../../../common';
 import { Role } from '../../../authorization';
+import { ChangesetIdField } from '../../../changeset';
 import { ProjectMember } from './project-member.dto';
 
 @InputType()
@@ -16,10 +17,7 @@ export abstract class UpdateProjectMember {
 
 @InputType()
 export abstract class UpdateProjectMemberInput {
-  @IdField({
-    description: 'The change object to associate these engagement changes with',
-    nullable: true,
-  })
+  @ChangesetIdField()
   readonly changeset?: ID;
 
   @Field()
