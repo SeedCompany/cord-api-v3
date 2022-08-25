@@ -5734,6 +5734,8 @@ __metadata:
       built: false
     core-js-pure:
       built: false
+    typescript:
+      unplugged: true
   languageName: unknown
   linkType: soft
 
