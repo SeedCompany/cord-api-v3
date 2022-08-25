@@ -14,7 +14,6 @@ import {
   EngagementUpdatedEvent,
 } from '../../engagement/events';
 import { FileService } from '../../file';
-import { Book, ScriptureRangeInput } from '../../scripture';
 import { StoryService } from '../../story';
 import {
   CreateDerivativeScriptureProduct,
@@ -102,21 +101,7 @@ export class ExtractProductsFromPnpHandler
 
       if (row.bookName) {
         // Populate one of the two product props based on whether its a known verse range or not.
-        const book = Book.find(row.bookName);
-        const { totalVerses } = row;
-        const isKnown = book.totalVerses === totalVerses;
-        const scriptureReferences: ScriptureRangeInput[] = isKnown
-          ? [
-              {
-                start: book.firstChapter.firstVerse.reference,
-                end: book.lastChapter.lastVerse.reference,
-              },
-            ]
-          : [];
-        const unspecifiedScripture = isKnown
-          ? null
-          : { book: book.name, totalVerses };
-
+        const { scriptureReferences, unspecifiedScripture } = row;
         const props = {
           methodology,
           scriptureReferences,

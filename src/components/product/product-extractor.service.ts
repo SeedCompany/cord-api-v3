@@ -13,9 +13,18 @@ import {
   Pnp,
   stepPlanCompleteDate,
 } from '../pnp';
-import { parseScripture, ScriptureRange } from '../scripture';
+import {
+  Book,
+  parseScripture,
+  ScriptureRange,
+  ScriptureRangeInput,
+} from '../scripture';
 import { ProductStep as Step } from './dto';
 
+type UnspecifiedScriptureType = {
+  book: string;
+  totalVerses: number;
+} | null;
 @Injectable()
 export class ProductExtractor {
   async extract(
@@ -114,11 +123,58 @@ const parseProductRow =
       };
     }
     assert(sheet.isWritten());
-    const bookName = parseScripture(sheet.bookName(row))[0]!.start.book;
+    /**  Load Scripture References **/
+    let scriptureReferences: ScriptureRangeInput[] = [];
+    let unspecifiedScripture: UnspecifiedScriptureType = null;
+    let parsedScriptures: readonly ScriptureRange[] = [];
+    const totalVersesToTranslate = sheet.totalVerses(row) ?? 0;
+    let bookName = sheet.bookName(row)!;
+    const book = Book.tryFind(bookName);
+    const versesInBook = book ? book.totalVerses : null;
+    const isWholeBook = versesInBook === totalVersesToTranslate;
+    const findScriptures = (input: string) => {
+      try {
+        parsedScriptures = parseScripture(input);
+        bookName = parsedScriptures ? parsedScriptures[0]!.start.book : '';
+        scriptureReferences = parsedScriptures
+          ? [
+              {
+                start: parsedScriptures[0].start,
+                end: parsedScriptures[0].end,
+              },
+            ]
+          : [];
+        unspecifiedScripture = parsedScriptures
+          ? null
+          : {
+              book: book?.name ? book.name : bookName,
+              totalVerses: totalVersesToTranslate,
+            };
+        return;
+      } catch (e) {
+        return [];
+      }
+    };
+
+    // book is found
+    if (book) {
+      isWholeBook
+        ? (scriptureReferences = [
+            {
+              start: book.firstChapter.firstVerse.reference,
+              end: book.lastChapter.lastVerse.reference,
+            },
+          ])
+        : findScriptures(sheet.myNote(row)!);
+    } else {
+      findScriptures(bookName); // book is not found; try parser
+    }
     return {
       ...common,
       bookName,
-      totalVerses: sheet.totalVerses(row)!, // Asserting bc loop verified this
+      totalVerses: totalVersesToTranslate,
+      scriptureReferences,
+      unspecifiedScripture,
     };
   };
 
@@ -133,6 +189,8 @@ export type ExtractedRow = MergeExclusive<
   {
     bookName: string;
     totalVerses: number;
+    scriptureReferences: ScriptureRangeInput[];
+    unspecifiedScripture: UnspecifiedScriptureType;
   }
 > & {
   /**
