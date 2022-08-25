@@ -17,14 +17,19 @@ export class EnforceChangesetEditablePipe implements PipeTransform {
   ) {}
 
   async transform(value: any) {
+    await this.validateRequest(value);
+    return value;
+  }
+
+  async validateRequest(value: any) {
     const { context } = this.contextHost;
     if (context.operation.operation !== 'mutation') {
-      return value;
+      return;
     }
 
     const ids = this.findIdsToValidate(value);
     if (ids.length === 0) {
-      return value;
+      return;
     }
 
     const loaderFactory = this.loaderRegistry.loaders.get('Changeset')!.factory;
@@ -42,8 +47,6 @@ export class EnforceChangesetEditablePipe implements PipeTransform {
         throw new InputException('Changeset is not editable');
       }
     }
-
-    return value;
   }
 
   findIdsToValidate(value: any) {
