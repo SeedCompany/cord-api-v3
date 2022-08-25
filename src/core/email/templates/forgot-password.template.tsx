@@ -6,7 +6,6 @@ import {
   Section,
   Text,
 } from '@seedcompany/nestjs-email/templates';
-import * as React from 'react';
 import { EmailTemplate, Heading, Link, ReplyInfoFooter } from './base';
 import { useFrontendUrl } from './frontend-url';
 

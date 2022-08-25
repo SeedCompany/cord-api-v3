@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { createContext, ReactElement, useContext } from 'react';
 import { ServerException } from '../../../common/exceptions';
 
