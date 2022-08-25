@@ -5725,6 +5725,15 @@ __metadata:
     typescript: ^4.8.2
     winston: ^3.6.0
     xlsx: ^0.18.2
+  dependenciesMeta:
+    "@apollo/protobufjs":
+      built: false
+    "@nestjs/core":
+      built: false
+    core-js:
+      built: false
+    core-js-pure:
+      built: false
   languageName: unknown
   linkType: soft
 
