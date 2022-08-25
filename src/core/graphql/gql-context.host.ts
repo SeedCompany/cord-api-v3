@@ -1,5 +1,12 @@
-import { Injectable, NestMiddleware, OnModuleDestroy } from '@nestjs/common';
-import { Plugin } from '@nestjs/graphql';
+import {
+  CallHandler,
+  ExecutionContext,
+  Injectable,
+  NestInterceptor,
+  NestMiddleware,
+  OnModuleDestroy,
+} from '@nestjs/common';
+import { GqlContextType as ContextKey, Plugin } from '@nestjs/graphql';
 import {
   ApolloServerPlugin as ApolloPlugin,
   GraphQLRequestListener as RequestListener,
@@ -8,6 +15,7 @@ import { GraphQLRequestContext as RequestContext } from 'apollo-server-types';
 import { AsyncLocalStorage } from 'async_hooks';
 import { Request, Response } from 'express';
 import { GqlContextType as ContextType, GqlContextType } from '../../common';
+import { AsyncLocalStorageNoContextException } from '../async-local-storage-no-context.exception';
 
 /**
  * A service holding the current GraphQL context
@@ -21,7 +29,7 @@ export abstract class GqlContextHost {
 
 /**
  * This is necessary to allow global pipes to have access to GraphQL request context.
- * At least until this is resolved: https://github.com/nodejs/node/issues/43148
+ * At least until this is resolved: https://github.com/nestjs/graphql/issues/325
  */
 @Injectable()
 @Plugin()
@@ -29,30 +37,36 @@ export class GqlContextHostImpl
   implements
     GqlContextHost,
     NestMiddleware,
+    NestInterceptor,
     OnModuleDestroy,
     ApolloPlugin<ContextType>
 {
-  als = new AsyncLocalStorage<{ ctx?: GqlContextType }>();
+  als = new AsyncLocalStorage<{
+    ctx?: GqlContextType;
+    execution?: ExecutionContext;
+  }>();
 
   /**
    * Unwrap the ALS store or throw error if called incorrectly.
    */
   get context() {
-    const context = this.als.getStore()?.ctx;
-    if (context) {
-      return context;
+    const store = this.als.getStore();
+    if (store?.ctx) {
+      return store.ctx;
     }
-    const [major] = process.versions.node.split('.').map(Number);
-    if (major === 18) {
-      throw new Error(`The GraphQL context is not available yet.
 
-There's a bug with this process when using Node 18 with debugger ATTACHED (just listening is fine).
-Please downgrade to Node 16 for now if you want to debug and are encountering this.
-
-$ brew unlink node && brew install node@16 && brew link --overwrite node@16
-`);
+    const message = 'The GraphQL context is not available yet.';
+    if (!store) {
+      throw new AsyncLocalStorageNoContextException(message);
     }
-    throw new Error('The GraphQL context is not available yet.');
+    if (
+      !store.ctx &&
+      store.execution &&
+      store.execution.getType<ContextKey>() !== 'graphql'
+    ) {
+      throw new NotGraphQLContext(message);
+    }
+    throw new Error(message);
   }
 
   use = (req: Request, res: Response, next: () => void) => {
@@ -64,6 +78,15 @@ $ brew unlink node && brew install node@16 && brew link --overwrite node@16
   attachScope<R>(fn: () => R): R {
     // Just give it a placeholder object for now which we populate below.
     return this.als.run({}, fn);
+  }
+
+  intercept(context: ExecutionContext, next: CallHandler) {
+    const store = this.als.getStore();
+    if (store) {
+      store.execution = context;
+    }
+
+    return next.handle();
   }
 
   /**
@@ -88,3 +111,5 @@ $ brew unlink node && brew install node@16 && brew link --overwrite node@16
     this.als.disable();
   }
 }
+
+export class NotGraphQLContext extends Error {}

@@ -1,12 +1,26 @@
 import { Injectable, PipeTransform } from '@nestjs/common';
 import { isPlainObject } from 'lodash';
 import { ID, InputException, isIdLike } from '../../common';
-import { GqlContextHost, LoaderContextType } from '../../core';
+import {
+  GqlContextHost,
+  LoaderContextType,
+  NotGraphQLContext,
+} from '../../core';
 import { NEST_LOADER_CONTEXT_KEY as Loaders } from '../../core/data-loader/constants';
 import { ResourceLoaderRegistry } from '../../core/resources/loader.registry';
 import { Changeset } from './dto';
 import { shouldValidateEditability } from './validate-editability.decorator';
 
+/**
+ * Ensure changeset ID referenced is editable if called in a mutation.
+ *
+ * This is implemented as a Pipe because it has the input objects transformed
+ * to their class instances (via ValidationPipe), which allows us to reference
+ * metadata defined on class definition.
+ * This logic is more suited for a Guard or Interceptor, but we don't have that
+ * information easily accessible at that point.
+ * Though it could be possible with some work.
+ */
 @Injectable()
 export class EnforceChangesetEditablePipe implements PipeTransform {
   constructor(
@@ -17,14 +31,30 @@ export class EnforceChangesetEditablePipe implements PipeTransform {
   ) {}
 
   async transform(value: any) {
-    const { context } = this.contextHost;
+    await this.validateRequest(value);
+    return value;
+  }
+
+  async validateRequest(value: any) {
+    let context;
+
+    try {
+      ({ context } = this.contextHost);
+    } catch (e) {
+      if (e instanceof NotGraphQLContext) {
+        // Nothing to do if not GQL request
+        return;
+      }
+      throw e;
+    }
+
     if (context.operation.operation !== 'mutation') {
-      return value;
+      return;
     }
 
     const ids = this.findIdsToValidate(value);
     if (ids.length === 0) {
-      return value;
+      return;
     }
 
     const loaderFactory = this.loaderRegistry.loaders.get('Changeset')!.factory;
@@ -42,8 +72,6 @@ export class EnforceChangesetEditablePipe implements PipeTransform {
         throw new InputException('Changeset is not editable');
       }
     }
-
-    return value;
   }
 
   findIdsToValidate(value: any) {
