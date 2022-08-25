@@ -1,5 +1,5 @@
+import { faker } from '@faker-js/faker';
 import { gql } from 'apollo-server-core';
-import * as faker from 'faker';
 import { DuplicateException, InputException } from '../src/common';
 import { Role } from '../src/components/authorization/dto';
 import { Partner, PartnerType } from '../src/components/partner';

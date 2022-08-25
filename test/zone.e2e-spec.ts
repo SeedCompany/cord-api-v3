@@ -1,5 +1,5 @@
+import { faker } from '@faker-js/faker';
 import { gql } from 'apollo-server-core';
-import * as faker from 'faker';
 import { times } from 'lodash';
 import { isValidId } from '../src/common';
 import { FieldZone } from '../src/components/field-zone';
@@ -81,7 +81,7 @@ describe('Field Zone e2e', () => {
 
   it('update field zone', async () => {
     const fieldZone = await createZone(app, { directorId: director.id });
-    const newName = faker.company.companyName();
+    const newName = faker.company.name();
 
     const result = await app.graphql.mutate(
       gql`

@@ -1,5 +1,5 @@
+import { faker } from '@faker-js/faker';
 import { gql } from 'apollo-server-core';
-import * as faker from 'faker';
 import { assert, MarkOptional } from 'ts-essentials';
 import { ID } from '../../src/common';
 import {
@@ -18,7 +18,7 @@ export const generateFakeFile = () => ({
   name: faker.system.fileName(),
   content: Buffer.from(faker.image.dataUri(200, 200).split(',')[1], 'base64'),
   size: faker.datatype.number(1_000_000),
-  mimeType: faker.random.arrayElement(mimeTypes).name,
+  mimeType: faker.helpers.arrayElement(mimeTypes).name,
 });
 
 export type FakeFile = ReturnType<typeof generateFakeFile>;

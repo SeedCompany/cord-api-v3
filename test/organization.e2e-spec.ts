@@ -1,5 +1,5 @@
+import { faker } from '@faker-js/faker';
 import { gql } from 'apollo-server-core';
-import * as faker from 'faker';
 import { orderBy, times } from 'lodash';
 import { generateId, InputException, isValidId } from '../src/common';
 import { Role } from '../src/components/authorization';
@@ -29,7 +29,7 @@ describe('Organization e2e', () => {
   });
 
   it.skip('should have unique name', async () => {
-    const name = faker.company.companyName();
+    const name = faker.company.name();
     await createOrganization(app, { name });
     await expect(createOrganization(app, { name })).rejects.toThrowError();
   });
@@ -88,7 +88,7 @@ describe('Organization e2e', () => {
   it('update organization', async () => {
     const org = await createOrganization(app);
 
-    const newName = faker.company.companyName();
+    const newName = faker.company.name();
 
     const result = await app.graphql.mutate(
       gql`
@@ -118,7 +118,7 @@ describe('Organization e2e', () => {
   });
 
   it('update organization with blank, mismatch or invalid id', async () => {
-    const newName = faker.company.companyName();
+    const newName = faker.company.name();
 
     await expect(
       app.graphql.mutate(
@@ -193,7 +193,7 @@ describe('Organization e2e', () => {
   it.skip('update organization with mismatch name', async () => {
     const org = await createOrganization(app);
 
-    const newName = faker.company.companyName();
+    const newName = faker.company.name();
 
     await expect(
       app.graphql.mutate(
