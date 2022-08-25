@@ -1,3 +1,4 @@
+import { Plugin } from '@nestjs/apollo';
 import {
   CallHandler,
   ExecutionContext,
@@ -6,7 +7,7 @@ import {
   NestMiddleware,
   OnModuleDestroy,
 } from '@nestjs/common';
-import { GqlContextType as ContextKey, Plugin } from '@nestjs/graphql';
+import { GqlContextType as ContextKey } from '@nestjs/graphql';
 import {
   ApolloServerPlugin as ApolloPlugin,
   GraphQLRequestListener as RequestListener,

@@ -1,4 +1,5 @@
-import { FieldMiddleware, Plugin } from '@nestjs/graphql';
+import { Plugin } from '@nestjs/apollo';
+import { FieldMiddleware } from '@nestjs/graphql';
 import {
   ApolloServerPlugin as ApolloPlugin,
   GraphQLRequestExecutionListener as ExecutionListener,

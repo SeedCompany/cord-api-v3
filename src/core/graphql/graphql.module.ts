@@ -1,3 +1,4 @@
+import { ApolloDriver } from '@nestjs/apollo';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { GraphQLModule as NestGraphqlModule } from '@nestjs/graphql';
@@ -17,6 +18,7 @@ export class GraphqlConfigModule {}
 @Module({
   imports: [
     NestGraphqlModule.forRootAsync({
+      driver: ApolloDriver,
       useExisting: GraphQLConfig,
       imports: [GraphqlConfigModule],
     }),
