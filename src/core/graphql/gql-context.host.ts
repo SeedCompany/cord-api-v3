@@ -29,7 +29,7 @@ export abstract class GqlContextHost {
 
 /**
  * This is necessary to allow global pipes to have access to GraphQL request context.
- * At least until this is resolved: https://github.com/nodejs/node/issues/43148
+ * At least until this is resolved: https://github.com/nestjs/graphql/issues/325
  */
 @Injectable()
 @Plugin()
