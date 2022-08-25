@@ -144,6 +144,9 @@
     },
     "core-js-pure": {
       "built": false
+    },
+    "typescript": {
+      "unplugged": true
     }
   },
   "jest": {
