@@ -1,5 +1,6 @@
 import {
   Field,
+  FieldOptions,
   Float,
   GqlTypeReference,
   Int,
@@ -107,7 +108,7 @@ export function SecuredProperty<
 
 export interface SecuredPropertyOptions<
   Nullable extends boolean | undefined = false
-> {
+> extends Pick<FieldOptions, 'description'> {
   /** Whether the property can be null (when the requester can read) */
   nullable?: Nullable;
 }
@@ -121,12 +122,18 @@ function InnerSecuredProperty<
   GqlType extends GqlTypeReference,
   TsType = GqlType,
   Nullable extends boolean | undefined = false
->(valueClass: GqlType, _options: SecuredPropertyOptions<Nullable> = {}) {
+>(
+  valueClass: GqlType,
+  { nullable: _, ...options }: SecuredPropertyOptions<Nullable> = {}
+) {
   @ObjectType({ isAbstract: true, implements: [ISecured] })
   abstract class SecuredPropertyClass
     implements ISecured, Secured<SecuredValue<TsType, Nullable>>
   {
-    @Field(() => valueClass, { nullable: true })
+    @Field(() => valueClass, {
+      ...options,
+      nullable: true,
+    })
     readonly value?: SecuredValue<TsType, Nullable>;
     @Field()
     readonly canRead: boolean;

@@ -4,6 +4,7 @@ import {
   ObjectType,
   registerEnumType,
 } from '@nestjs/graphql';
+import { stripIndent } from 'common-tags';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
   Resource,
@@ -57,4 +58,9 @@ export type ProducibleRef = UnsecuredDto<Producible> & {
 @ObjectType({
   description: SecuredProperty.descriptionFor('a producible'),
 })
-export class SecuredProducible extends SecuredProperty(Producible) {}
+export class SecuredProducible extends SecuredProperty(Producible, {
+  description: stripIndent`
+    The object that this product is producing.
+    i.e. A film named "Jesus Film".
+  `,
+}) {}
