@@ -1,6 +1,5 @@
 import { node, relation } from 'cypher-query-builder';
 import { from as ix } from 'ix/asynciterable';
-import 'ix/add/asynciterable/from';
 import 'ix/add/asynciterable-operators/flatmap';
 import 'ix/add/asynciterable-operators/groupby';
 import 'ix/add/asynciterable-operators/map';
