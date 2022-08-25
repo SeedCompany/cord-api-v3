@@ -11,6 +11,16 @@ import { ResourceLoaderRegistry } from '../../core/resources/loader.registry';
 import { Changeset } from './dto';
 import { shouldValidateEditability } from './validate-editability.decorator';
 
+/**
+ * Ensure changeset ID referenced is editable if called in a mutation.
+ *
+ * This is implemented as a Pipe because it has the input objects transformed
+ * to their class instances (via ValidationPipe), which allows us to reference
+ * metadata defined on class definition.
+ * This logic is more suited for a Guard or Interceptor, but we don't have that
+ * information easily accessible at that point.
+ * Though it could be possible with some work.
+ */
 @Injectable()
 export class EnforceChangesetEditablePipe implements PipeTransform {
   constructor(
