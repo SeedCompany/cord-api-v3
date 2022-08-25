@@ -8,6 +8,7 @@ import { GraphQLRequestContext as RequestContext } from 'apollo-server-types';
 import { AsyncLocalStorage } from 'async_hooks';
 import { Request, Response } from 'express';
 import { GqlContextType as ContextType, GqlContextType } from '../../common';
+import { AsyncLocalStorageNoContextException } from '../async-local-storage-no-context.exception';
 
 /**
  * A service holding the current GraphQL context
@@ -38,21 +39,16 @@ export class GqlContextHostImpl
    * Unwrap the ALS store or throw error if called incorrectly.
    */
   get context() {
-    const context = this.als.getStore()?.ctx;
-    if (context) {
-      return context;
+    const store = this.als.getStore();
+    if (store?.ctx) {
+      return store.ctx;
     }
-    const [major] = process.versions.node.split('.').map(Number);
-    if (major === 18) {
-      throw new Error(`The GraphQL context is not available yet.
 
-There's a bug with this process when using Node 18 with debugger ATTACHED (just listening is fine).
-Please downgrade to Node 16 for now if you want to debug and are encountering this.
-
-$ brew unlink node && brew install node@16 && brew link --overwrite node@16
-`);
+    const message = 'The GraphQL context is not available yet.';
+    if (!store) {
+      throw new AsyncLocalStorageNoContextException(message);
     }
-    throw new Error('The GraphQL context is not available yet.');
+    throw new Error(message);
   }
 
   use = (req: Request, res: Response, next: () => void) => {
