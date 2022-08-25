@@ -1,7 +1,7 @@
+import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { INestApplicationContext } from '@nestjs/common';
-import { GqlModuleOptions, GraphQLModule } from '@nestjs/graphql';
+import { AbstractGraphQLDriver, GqlModuleOptions } from '@nestjs/graphql';
 import { GRAPHQL_MODULE_OPTIONS } from '@nestjs/graphql/dist/graphql.constants';
-import { ApolloServerBase } from 'apollo-server-core';
 import { GraphQLResponse } from 'apollo-server-types';
 import { DocumentNode, GraphQLFormattedError } from 'graphql';
 import { GqlContextType } from '../../src/common';
@@ -24,8 +24,8 @@ export interface GraphQLTestClient {
 export const createGraphqlClient = async (
   app: INestApplicationContext
 ): Promise<GraphQLTestClient> => {
-  const server = await getServer(app);
-  const options: GqlModuleOptions & { context: GqlContextType } = app.get(
+  const server = app.get<ApolloDriver>(AbstractGraphQLDriver);
+  const options: ApolloDriverConfig & { context: GqlContextType } = app.get(
     GRAPHQL_MODULE_OPTIONS
   );
 
@@ -49,7 +49,7 @@ export const createGraphqlClient = async (
       return await contextHost.attachScope(async () => {
         return await tracing.capture('query', async () => {
           try {
-            const result = await server.executeOperation({
+            const result = await server.instance.executeOperation({
               query: q,
               variables: toPlain(variables),
             });
@@ -67,7 +67,7 @@ export const createGraphqlClient = async (
       return await contextHost.attachScope(async () => {
         return await tracing.capture('mutation', async () => {
           try {
-            const result = await server.executeOperation({
+            const result = await server.instance.executeOperation({
               query: mutation,
               variables: toPlain(variables),
             });
@@ -169,9 +169,4 @@ export const getGraphQLOptions = (): GqlModuleOptions => {
     autoSchemaFile: 'schema.graphql',
     context,
   };
-};
-
-const getServer = async (app: INestApplicationContext) => {
-  const module = app.get(GraphQLModule);
-  return (module as any).apolloServer as ApolloServerBase;
 };

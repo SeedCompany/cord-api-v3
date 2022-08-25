@@ -33,10 +33,11 @@
     "@aws-sdk/client-s3": "^3.58.0",
     "@aws-sdk/s3-request-presigner": "^3.58.0",
     "@golevelup/nestjs-discovery": "^3.0.0",
-    "@nestjs/common": "^8.4.6",
-    "@nestjs/core": "^8.4.6",
-    "@nestjs/graphql": "patch:@nestjs/graphql@9.1.2#./patches/nestjs-graphql.patch",
-    "@nestjs/platform-express": "^8.4.7",
+    "@nestjs/apollo": "^10.0.22",
+    "@nestjs/common": "^9.0.11",
+    "@nestjs/core": "^9.0.11",
+    "@nestjs/graphql": "patch:@nestjs/graphql@npm%3A10.0.22#./patches/nestjs-graphql.patch",
+    "@nestjs/platform-express": "^9.0.11",
     "@patarapolw/prettyprint": "^1.0.3",
     "@seedcompany/nestjs-email": "^3.0.2",
     "apollo-server-core": "^3.6.3",
@@ -73,7 +74,7 @@
     "luxon": "^2.4.0",
     "nanoid": "^3.3.1",
     "neo4j-driver": "^4.4.3",
-    "nestjs-console": "^7.0.1",
+    "nestjs-console": "^8.0.0",
     "p-retry": "^4.6.1",
     "pg": "^8.7.3",
     "pkg-up": "^3.1.0",
@@ -89,9 +90,9 @@
     "xlsx": "^0.18.2"
   },
   "devDependencies": {
-    "@nestjs/cli": "^8.2.6",
-    "@nestjs/schematics": "^8.0.11",
-    "@nestjs/testing": "^8.4.6",
+    "@nestjs/cli": "^9.0.0",
+    "@nestjs/schematics": "^9.0.1",
+    "@nestjs/testing": "^9.0.11",
     "@seedcompany/eslint-plugin": "^3.3.0",
     "@types/common-tags": "^1.8.1",
     "@types/cookie-parser": "^1.4.2",
@@ -125,8 +126,6 @@
     "typescript": "^4.7.4"
   },
   "resolutions": {
-    "@angular-devkit/schematics-cli/minimist": "^1",
-    "@nestjs/graphql/@nestjs/mapped-types": "^1.0.0",
     "gonzales-pe/minimist": "^1.1.0",
     "mjml-react/react-reconciler": "^0.29.0",
     "request/http-signature": "^1.3.6"

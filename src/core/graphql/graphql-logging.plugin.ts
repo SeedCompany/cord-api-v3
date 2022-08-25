@@ -1,4 +1,4 @@
-import { Plugin } from '@nestjs/graphql';
+import { Plugin } from '@nestjs/apollo';
 import { GraphQLRequestContext as RequestContext } from 'apollo-server-core';
 import {
   ApolloServerPlugin as ApolloPlugin,

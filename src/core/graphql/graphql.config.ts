@@ -1,5 +1,6 @@
+import { ApolloDriverConfig } from '@nestjs/apollo';
 import { Injectable } from '@nestjs/common';
-import { GqlModuleOptions, GqlOptionsFactory } from '@nestjs/graphql';
+import { GqlOptionsFactory } from '@nestjs/graphql';
 import {
   ApolloServerPluginLandingPageLocalDefault,
   ContextFunction,
@@ -38,7 +39,7 @@ export class GraphQLConfig implements GqlOptionsFactory {
     private readonly versionService: VersionService
   ) {}
 
-  async createGqlOptions(): Promise<GqlModuleOptions> {
+  async createGqlOptions(): Promise<ApolloDriverConfig> {
     // Apply git hash to Apollo Studio.
     // They only look for env, so applying that way.
     const version = await this.versionService.version;
