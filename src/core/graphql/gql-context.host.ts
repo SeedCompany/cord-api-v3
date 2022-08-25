@@ -1,5 +1,12 @@
-import { Injectable, NestMiddleware, OnModuleDestroy } from '@nestjs/common';
-import { Plugin } from '@nestjs/graphql';
+import {
+  CallHandler,
+  ExecutionContext,
+  Injectable,
+  NestInterceptor,
+  NestMiddleware,
+  OnModuleDestroy,
+} from '@nestjs/common';
+import { GqlContextType as ContextKey, Plugin } from '@nestjs/graphql';
 import {
   ApolloServerPlugin as ApolloPlugin,
   GraphQLRequestListener as RequestListener,
@@ -30,10 +37,14 @@ export class GqlContextHostImpl
   implements
     GqlContextHost,
     NestMiddleware,
+    NestInterceptor,
     OnModuleDestroy,
     ApolloPlugin<ContextType>
 {
-  als = new AsyncLocalStorage<{ ctx?: GqlContextType }>();
+  als = new AsyncLocalStorage<{
+    ctx?: GqlContextType;
+    execution?: ExecutionContext;
+  }>();
 
   /**
    * Unwrap the ALS store or throw error if called incorrectly.
@@ -48,6 +59,13 @@ export class GqlContextHostImpl
     if (!store) {
       throw new AsyncLocalStorageNoContextException(message);
     }
+    if (
+      !store.ctx &&
+      store.execution &&
+      store.execution.getType<ContextKey>() !== 'graphql'
+    ) {
+      throw new NotGraphQLContext(message);
+    }
     throw new Error(message);
   }
 
@@ -60,6 +78,15 @@ export class GqlContextHostImpl
   attachScope<R>(fn: () => R): R {
     // Just give it a placeholder object for now which we populate below.
     return this.als.run({}, fn);
+  }
+
+  intercept(context: ExecutionContext, next: CallHandler) {
+    const store = this.als.getStore();
+    if (store) {
+      store.execution = context;
+    }
+
+    return next.handle();
   }
 
   /**
@@ -84,3 +111,5 @@ export class GqlContextHostImpl
     this.als.disable();
   }
 }
+
+export class NotGraphQLContext extends Error {}
