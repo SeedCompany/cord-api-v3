@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import { gql } from 'apollo-server-core';
+import { gql } from 'graphql-tag';
 import { CreateStory, Story } from '../../src/components/story';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';

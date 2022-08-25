@@ -1,4 +1,4 @@
-import { gql } from 'apollo-server-core';
+import { gql } from 'graphql-tag';
 import { Role } from '../src/components/authorization';
 import { PartnershipAgreementStatus } from '../src/components/partnership';
 import {

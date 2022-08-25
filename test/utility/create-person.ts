@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import { gql } from 'apollo-server-core';
+import { gql } from 'graphql-tag';
 import { generateId, isValidId } from '../../src/common';
 import { CreatePerson, User } from '../../src/components/user';
 import { TestApp } from './create-app';

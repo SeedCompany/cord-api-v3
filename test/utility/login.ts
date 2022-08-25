@@ -1,4 +1,4 @@
-import { gql } from 'apollo-server-core';
+import { gql } from 'graphql-tag';
 import { LoginInput } from '../../src/components/authentication/dto';
 import { ConfigService } from '../../src/core';
 import { TestApp } from './create-app';

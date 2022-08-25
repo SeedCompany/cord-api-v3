@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import { gql } from 'apollo-server-core';
+import { gql } from 'graphql-tag';
 import { times } from 'lodash';
 import { isValidId } from '../src/common';
 import { FieldZone } from '../src/components/field-zone';

@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import { gql } from 'apollo-server-core';
+import { gql } from 'graphql-tag';
 import { createLocation } from '.';
 import { ID } from '../../src/common';
 import { SecuredLocationList } from '../../src/components/location';

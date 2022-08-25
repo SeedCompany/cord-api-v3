@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import { gql } from 'apollo-server-core';
+import { gql } from 'graphql-tag';
 import countries from 'iso-3166-1/dist/iso-3166';
 import { ID, isValidId } from '../../src/common';
 import {

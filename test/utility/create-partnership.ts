@@ -1,4 +1,4 @@
-import { gql } from 'apollo-server-core';
+import { gql } from 'graphql-tag';
 import { CalendarDate, ID, isValidId } from '../../src/common';
 import { PartnerType } from '../../src/components/partner';
 import {

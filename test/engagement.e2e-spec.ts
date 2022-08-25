@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import { gql } from 'apollo-server-core';
+import { gql } from 'graphql-tag';
 import { some } from 'lodash';
 import { DateTime, Interval } from 'luxon';
 import { generateId, ID, InputException } from '../src/common';

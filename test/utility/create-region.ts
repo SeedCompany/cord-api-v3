@@ -1,4 +1,4 @@
-import { gql } from 'apollo-server-core';
+import { gql } from 'graphql-tag';
 import { createPerson, runAsAdmin } from '.';
 import { generateId, isValidId } from '../../src/common';
 import {

@@ -1,4 +1,4 @@
-import { gql } from 'apollo-server-core';
+import { gql } from 'graphql-tag';
 import { Except, Merge, MergeExclusive } from 'type-fest';
 import { ID, Secured } from '../../src/common';
 import {

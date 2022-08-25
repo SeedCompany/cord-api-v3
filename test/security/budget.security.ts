@@ -1,4 +1,4 @@
-import { gql } from 'apollo-server-core';
+import { gql } from 'graphql-tag';
 import { CalendarDate, ID, Sensitivity } from '../../src/common';
 import { Role, ScopedRole } from '../../src/components/authorization';
 import { Budget } from '../../src/components/budget';

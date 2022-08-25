@@ -1,4 +1,4 @@
-import { gql } from 'apollo-server-core';
+import { gql } from 'graphql-tag';
 import { UpdateProject } from '../../src/components/project';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';

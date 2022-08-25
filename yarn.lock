@@ -5196,6 +5196,7 @@ __metadata:
     graphql: ^15.8.0
     graphql-parse-resolve-info: ^4.12.3
     graphql-scalars: ^1.18.0
+    graphql-tag: ^2.12.6
     highlightjs-cypher: ^1.1.5
     husky: ^4.3.8
     iso-3166-1: ^2.1.1
@@ -7425,7 +7426,7 @@ cypher-query-builder@6.0.4:
   languageName: node
   linkType: hard
 
-"graphql-tag@npm:2.12.6, graphql-tag@npm:^2.11.0":
+"graphql-tag@npm:2.12.6, graphql-tag@npm:^2.11.0, graphql-tag@npm:^2.12.6":
   version: 2.12.6
   resolution: "graphql-tag@npm:2.12.6"
   dependencies:
