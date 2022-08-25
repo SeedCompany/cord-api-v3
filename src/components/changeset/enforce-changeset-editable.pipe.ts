@@ -1,7 +1,11 @@
 import { Injectable, PipeTransform } from '@nestjs/common';
 import { isPlainObject } from 'lodash';
 import { ID, InputException, isIdLike } from '../../common';
-import { GqlContextHost, LoaderContextType } from '../../core';
+import {
+  GqlContextHost,
+  LoaderContextType,
+  NotGraphQLContext,
+} from '../../core';
 import { NEST_LOADER_CONTEXT_KEY as Loaders } from '../../core/data-loader/constants';
 import { ResourceLoaderRegistry } from '../../core/resources/loader.registry';
 import { Changeset } from './dto';
@@ -22,7 +26,18 @@ export class EnforceChangesetEditablePipe implements PipeTransform {
   }
 
   async validateRequest(value: any) {
-    const { context } = this.contextHost;
+    let context;
+
+    try {
+      ({ context } = this.contextHost);
+    } catch (e) {
+      if (e instanceof NotGraphQLContext) {
+        // Nothing to do if not GQL request
+        return;
+      }
+      throw e;
+    }
+
     if (context.operation.operation !== 'mutation') {
       return;
     }
