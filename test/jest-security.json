@@ -5,12 +5,5 @@
   "roots": ["<rootDir>/test/security"],
   "testEnvironment": "node",
   "testRegex": ".security.ts$",
-  "setupFiles": ["reflect-metadata", "./src/app.module.ts"],
-  "globals": {
-    "ts-jest": {
-      "astTransformers": {
-        "before": ["./tools/jest-ts-transformer-keys"]
-      }
-    }
-  }
+  "setupFiles": ["reflect-metadata", "./src/app.module.ts"]
 }
