@@ -132,6 +132,20 @@
     "mjml-react/react-reconciler": "^0.29.0",
     "request/http-signature": "^1.3.6"
   },
+  "dependenciesMeta": {
+    "@apollo/protobufjs": {
+      "built": false
+    },
+    "@nestjs/core": {
+      "built": false
+    },
+    "core-js": {
+      "built": false
+    },
+    "core-js-pure": {
+      "built": false
+    }
+  },
   "jest": {
     "preset": "ts-jest",
     "roots": [
