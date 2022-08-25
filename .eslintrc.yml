@@ -75,6 +75,21 @@ rules:
         - name: dataloader
           message: Import DataLoader from our core folder instead
 
+  '@seedcompany/no-restricted-imports':
+    - error
+    # Guard against ts hints trying to insert "src/" paths.
+    # It does that with basePath configured which is required for path aliases, even though it's never what we want.
+    - path: src/common
+      replacement: { path: ~/common }
+    - pattern: src/common/*
+      replacement: { path: '~/common/{path}' }
+    - path: src/core
+      replacement: { path: ~/core }
+    - pattern: src/core/*
+      replacement: { path: '~/core/{path}' }
+    - pattern: src/*
+      message: Use relative import instead
+
   no-restricted-syntax:
     - error
     - selector: NewExpression[callee.name="Logger"]

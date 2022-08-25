@@ -22,7 +22,15 @@
     "noImplicitAny": true,
     "noImplicitThis": true,
     "noImplicitReturns": true,
+    "baseUrl": ".",
+    "paths": {
+      "~/common": ["./src/common"],
+      "~/common/*": ["./src/common/*"],
+      "~/core": ["./src/core"],
+      "~/core/*": ["./src/core/*"],
+    },
     "plugins": [
+      { "transform": "typescript-transform-paths" },
       { "transform": "ts-transformer-keys/transformer" },
     ],
   },
