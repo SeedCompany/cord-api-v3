@@ -1,5 +1,5 @@
+import { faker } from '@faker-js/faker';
 import { gql } from 'apollo-server-core';
-import * as faker from 'faker';
 import { generateId, isValidId } from '../../src/common';
 import { RegisterInput } from '../../src/components/authentication';
 import { Powers, Role } from '../../src/components/authorization';
@@ -51,11 +51,11 @@ export async function listUsers(app: TestApp) {
 
 export const generateRegisterInput = async (): Promise<RegisterInput> => ({
   ...(await generateRequireFieldsRegisterInput()),
-  phone: faker.phone.phoneNumber(),
+  phone: faker.phone.number(),
   about: 'about detail',
   status: UserStatus.Active,
   roles: [Role.ProjectManager, Role.Consultant],
-  title: faker.name.title(),
+  title: faker.name.jobTitle(),
 });
 
 export const generateRequireFieldsRegisterInput =

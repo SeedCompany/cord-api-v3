@@ -1,5 +1,5 @@
+import { faker } from '@faker-js/faker';
 import { gql } from 'apollo-server-core';
-import * as faker from 'faker';
 import { CreateStory, Story } from '../../src/components/story';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
@@ -8,7 +8,7 @@ export async function createStory(
   app: TestApp,
   input: Partial<CreateStory> = {}
 ) {
-  const name = input.name || faker.hacker.noun() + faker.company.companyName();
+  const name = input.name || faker.hacker.noun() + faker.company.name();
 
   const result = await app.graphql.mutate(
     gql`

@@ -1,7 +1,7 @@
+import { faker } from '@faker-js/faker';
 import { INestApplication } from '@nestjs/common';
 import { GRAPHQL_MODULE_OPTIONS } from '@nestjs/graphql/dist/graphql.constants';
 import { Test } from '@nestjs/testing';
-import * as faker from 'faker';
 import { AppModule } from '../../src/app.module';
 import { LogLevel } from '../../src/core/logger';
 import { LevelMatcher } from '../../src/core/logger/level-matcher';

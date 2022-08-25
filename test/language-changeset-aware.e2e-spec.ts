@@ -1,5 +1,5 @@
+import { faker } from '@faker-js/faker';
 import { gql } from 'apollo-server-core';
-import * as faker from 'faker';
 import {
   approveProjectChangeRequest,
   createFundingAccount,
@@ -75,7 +75,7 @@ describe.skip('Language Changeset Aware e2e', () => {
       projectId: project.id,
       languageId: language.id,
     });
-    const newLanguageName = faker.company.companyName();
+    const newLanguageName = faker.company.name();
     // Update language name with changeset
     await app.graphql.mutate(
       gql`

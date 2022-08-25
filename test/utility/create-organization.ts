@@ -1,5 +1,5 @@
+import { faker } from '@faker-js/faker';
 import { gql } from 'apollo-server-core';
-import * as faker from 'faker';
 import { createLocation } from '.';
 import { ID } from '../../src/common';
 import { SecuredLocationList } from '../../src/components/location';
@@ -72,7 +72,7 @@ export async function createOrganization(
   app: TestApp,
   input: Partial<CreateOrganization> = {}
 ) {
-  const name = input.name || faker.hacker.noun() + faker.company.companyName();
+  const name = input.name || faker.hacker.noun() + faker.company.name();
   const address = input.address || faker.address.city();
 
   const result = await app.graphql.mutate(

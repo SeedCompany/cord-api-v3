@@ -1,5 +1,5 @@
+import { faker } from '@faker-js/faker';
 import { gql } from 'apollo-server-core';
-import * as faker from 'faker';
 import { times } from 'lodash';
 import { isValidId } from '../src/common';
 import { Role } from '../src/components/authorization/dto/role.dto';
@@ -58,7 +58,7 @@ describe('Education e2e', () => {
   // UPDATE EDUCATION
   it('update education', async () => {
     const education = await createEducation(app, { userId: user.id });
-    const newInstitution = faker.company.companyName();
+    const newInstitution = faker.company.name();
 
     const result = await app.graphql.mutate(
       gql`

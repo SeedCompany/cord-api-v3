@@ -1,5 +1,5 @@
+import { faker } from '@faker-js/faker';
 import { gql } from 'apollo-server-core';
-import * as faker from 'faker';
 import { CalendarDate, generateId, ID, isValidId } from '../../src/common';
 import {
   CreateEthnologueLanguage,
@@ -97,7 +97,7 @@ export async function createLanguage(
   };
   const language: CreateLanguage = {
     name: faker.address.country() + '' + (await generateId()),
-    displayName: faker.company.companyName() + '' + (await generateId()),
+    displayName: faker.company.name() + '' + (await generateId()),
     displayNamePronunciation: faker.random.word(),
     isDialect: faker.datatype.boolean(),
     populationOverride: faker.datatype.number(),
@@ -162,7 +162,7 @@ export async function createLanguageMinimal(app: TestApp) {
       input: {
         language: {
           name: languageName,
-          displayName: faker.company.companyName() + '' + (await generateId()),
+          displayName: faker.company.name() + '' + (await generateId()),
         },
       },
     }

@@ -1,5 +1,5 @@
+import { faker } from '@faker-js/faker';
 import { gql } from 'apollo-server-core';
-import * as faker from 'faker';
 import {
   CreateLiteracyMaterial,
   LiteracyMaterial,
@@ -11,7 +11,7 @@ export async function createLiteracyMaterial(
   app: TestApp,
   input: Partial<CreateLiteracyMaterial> = {}
 ) {
-  const name = input.name || faker.hacker.noun() + faker.company.companyName();
+  const name = input.name || faker.hacker.noun() + faker.company.name();
 
   const result = await app.graphql.mutate(
     gql`

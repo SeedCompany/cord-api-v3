@@ -1,5 +1,5 @@
+import { faker } from '@faker-js/faker';
 import { gql } from 'apollo-server-core';
-import * as faker from 'faker';
 import {
   CreateFundingAccount,
   FundingAccount,
@@ -46,7 +46,7 @@ export async function createFundingAccount(
   app: TestApp,
   input: Partial<CreateFundingAccount> = {}
 ) {
-  const name = input.name || faker.hacker.noun() + faker.company.companyName();
+  const name = input.name || faker.hacker.noun() + faker.company.name();
   const accountNumber =
     input.accountNumber || faker.datatype.number({ min: 0, max: 9 });
 

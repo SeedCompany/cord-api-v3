@@ -1,5 +1,5 @@
+import { faker } from '@faker-js/faker';
 import { gql } from 'apollo-server-core';
-import * as faker from 'faker';
 import { times } from 'lodash';
 import { InputException, isValidId } from '../src/common';
 import { UpdateLanguage } from '../src/components/language';
@@ -63,7 +63,7 @@ describe('Language e2e', () => {
   describe('Updates', () => {
     it('simple', async () => {
       const language = await createLanguage(app);
-      const newName = faker.company.companyName();
+      const newName = faker.company.name();
 
       const updated = await updateLanguage(app, {
         id: language.id,
