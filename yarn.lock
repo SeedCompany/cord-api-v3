@@ -2222,7 +2222,7 @@ __metadata:
 
 "@nestjs/graphql@patch:@nestjs/graphql@npm%3A10.0.22#./patches/nestjs-graphql.patch::locator=cord-api-v3%40workspace%3A.":
   version: 10.0.22
-  resolution: "@nestjs/graphql@patch:@nestjs/graphql@npm%3A10.0.22#./patches/nestjs-graphql.patch::version=10.0.22&hash=0e7faf&locator=cord-api-v3%40workspace%3A."
+  resolution: "@nestjs/graphql@patch:@nestjs/graphql@npm%3A10.0.22#./patches/nestjs-graphql.patch::version=10.0.22&hash=0e93e5&locator=cord-api-v3%40workspace%3A."
   dependencies:
     "@graphql-tools/merge": 8.3.0
     "@graphql-tools/schema": 8.5.0
@@ -2250,7 +2250,7 @@ __metadata:
       optional: true
     ts-morph:
       optional: true
-  checksum: 8f7ea69c2b05436a688389a8eedcc9223d7cbf926cc2d96f787be378cc17e4eaebbc192c86cd686e9ac871abfc071829338252b1b8e20ef7737453e0749cc9fc
+  checksum: 71688e0838559cadc315166a5b35192e9dcd6bad3ac939d61b6c0cbd3be83df2121ad967f4ca617e76580067f53c4edea269f32c8a063ae42e8878da395e6552
   languageName: node
   linkType: hard
 
