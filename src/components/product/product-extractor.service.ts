@@ -126,49 +126,31 @@ const parseProductRow =
     /**  Load Scripture References **/
     let scriptureReferences: ScriptureRangeInput[] = [];
     let unspecifiedScripture: UnspecifiedScriptureType = null;
-    let parsedScriptures: readonly ScriptureRange[] = [];
     const totalVersesToTranslate = sheet.totalVerses(row) ?? 0;
-    let bookName = sheet.bookName(row)!;
+    const bookName = sheet.bookName(row)!;
     const book = Book.tryFind(bookName);
     const versesInBook = book ? book.totalVerses : null;
     const isWholeBook = versesInBook === totalVersesToTranslate;
-    const findScriptures = (input: string) => {
-      try {
-        parsedScriptures = parseScripture(input);
-        bookName = parsedScriptures ? parsedScriptures[0]!.start.book : '';
-        scriptureReferences = parsedScriptures
-          ? [
-              {
-                start: parsedScriptures[0].start,
-                end: parsedScriptures[0].end,
-              },
-            ]
-          : [];
-        unspecifiedScripture = parsedScriptures
-          ? null
-          : {
-              book: book?.name ? book.name : bookName,
-              totalVerses: totalVersesToTranslate,
-            };
-        return;
-      } catch (e) {
-        return [];
-      }
-    };
 
-    // book is found
-    if (book) {
-      isWholeBook
+    book
+      ? isWholeBook
         ? (scriptureReferences = [
             {
               start: book.firstChapter.firstVerse.reference,
               end: book.lastChapter.lastVerse.reference,
             },
           ])
-        : findScriptures(sheet.myNote(row)!);
-    } else {
-      findScriptures(bookName); // book is not found; try parser
-    }
+        : (scriptureReferences = findScriptures(sheet.myNote(row)!))
+      : (scriptureReferences = findScriptures(bookName));
+
+    unspecifiedScripture =
+      scriptureReferences.length > 0 || !book
+        ? null
+        : {
+            book: book.name,
+            totalVerses: totalVersesToTranslate,
+          };
+
     return {
       ...common,
       bookName,
@@ -177,6 +159,26 @@ const parseProductRow =
       unspecifiedScripture,
     };
   };
+
+const findScriptures = (input: string): ScriptureRangeInput[] => {
+  let parsedScriptures: readonly ScriptureRange[] = [];
+  let scriptureReferences: ScriptureRangeInput[] = [];
+  try {
+    parsedScriptures = parseScripture(input);
+    scriptureReferences =
+      parsedScriptures.length > 0
+        ? [
+            {
+              start: parsedScriptures[0].start,
+              end: parsedScriptures[0].end,
+            },
+          ]
+        : [];
+    return scriptureReferences;
+  } catch (e) {
+    return [];
+  }
+};
 
 export type ExtractedRow = MergeExclusive<
   {

@@ -97,11 +97,17 @@ export class ExtractProductsFromPnpHandler
 
     // Create/update products 5 at a time.
     await asyncPool(5, actionableProductRows, async (row) => {
-      const { existingId, steps, note, rowIndex: index } = row;
+      const {
+        scriptureReferences,
+        unspecifiedScripture,
+        existingId,
+        steps,
+        note,
+        rowIndex: index,
+      } = row;
 
       if (row.bookName) {
         // Populate one of the two product props based on whether its a known verse range or not.
-        const { scriptureReferences, unspecifiedScripture } = row;
         const props = {
           methodology,
           scriptureReferences,
