@@ -1,11 +1,11 @@
 import { faker } from '@faker-js/faker';
-import { gql } from 'apollo-server-core';
 import {
   CreateLiteracyMaterial,
   LiteracyMaterial,
 } from '../../src/components/literacy-material';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
+import { gql } from './gql-tag';
 
 export async function createLiteracyMaterial(
   app: TestApp,

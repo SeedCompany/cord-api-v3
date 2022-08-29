@@ -1,4 +1,3 @@
-import { gql } from 'apollo-server-core';
 import {
   createFundingAccount,
   createLocation,
@@ -16,6 +15,7 @@ import {
   LanguageEngagement,
 } from '../../src/components/engagement';
 import { ProjectStep } from '../../src/components/project';
+import { gql } from './gql-tag';
 import {
   changeProjectStep,
   stepsFromEarlyConversationToBeforeActive,

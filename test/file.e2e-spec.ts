@@ -1,5 +1,4 @@
 import { faker } from '@faker-js/faker';
-import { gql } from 'apollo-server-core';
 import { startCase, times } from 'lodash';
 import {
   DateTime,
@@ -27,6 +26,7 @@ import {
   generateFakeFile,
   getFileNode,
   getFileNodeChildren,
+  gql,
   registerUser,
   requestFileUpload,
   runInIsolatedSession,

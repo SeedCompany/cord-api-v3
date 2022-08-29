@@ -1,8 +1,8 @@
-import { gql } from 'apollo-server-core';
 import { LoginInput } from '../../src/components/authentication/dto';
 import { ConfigService } from '../../src/core';
 import { TestApp } from './create-app';
 import { createSession } from './create-session';
+import { gql } from './gql-tag';
 
 export async function login(app: TestApp, input: Partial<LoginInput> = {}) {
   return await app.graphql.mutate(

@@ -1,5 +1,4 @@
 import { faker } from '@faker-js/faker';
-import { gql } from 'apollo-server-core';
 import {
   approveProjectChangeRequest,
   createFundingAccount,
@@ -11,6 +10,7 @@ import {
   createRegion,
   createSession,
   createTestApp,
+  gql,
   loginAsAdmin,
   TestApp,
 } from './utility';

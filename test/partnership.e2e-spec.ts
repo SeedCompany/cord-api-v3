@@ -1,4 +1,3 @@
-import { gql } from 'apollo-server-core';
 import { sample, times } from 'lodash';
 import {
   CalendarDate,
@@ -22,6 +21,7 @@ import {
   createTestApp,
   expectNotFound,
   fragments,
+  gql,
   Raw,
   registerUser,
   TestApp,

@@ -1,5 +1,4 @@
 import { faker } from '@faker-js/faker';
-import { gql } from 'apollo-server-core';
 import { intersection, times } from 'lodash';
 import { DateTime } from 'luxon';
 import {
@@ -45,6 +44,7 @@ import {
   createZone,
   expectNotFound,
   fragments,
+  gql,
   Raw,
   registerUser,
   runAsAdmin,

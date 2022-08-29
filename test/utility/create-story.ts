@@ -1,8 +1,8 @@
 import { faker } from '@faker-js/faker';
-import { gql } from 'apollo-server-core';
 import { CreateStory, Story } from '../../src/components/story';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
+import { gql } from './gql-tag';
 
 export async function createStory(
   app: TestApp,

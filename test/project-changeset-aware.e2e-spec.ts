@@ -1,5 +1,4 @@
 import { faker } from '@faker-js/faker';
-import { gql } from 'apollo-server-core';
 import { CalendarDate } from '../src/common';
 import { Role } from '../src/components/authorization';
 import { PartnerType } from '../src/components/partner';
@@ -14,6 +13,7 @@ import {
   createRegion,
   createSession,
   createTestApp,
+  gql,
   registerUser,
   runAsAdmin,
   TestApp,

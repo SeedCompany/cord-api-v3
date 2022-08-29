@@ -1,4 +1,3 @@
-import { gql } from 'apollo-server-core';
 import {
   createLanguage,
   createLanguageEngagement,
@@ -19,6 +18,7 @@ import {
 import { Role } from '../../src/components/authorization';
 import { Permission } from '../../src/components/authorization/authorization.service';
 import { ProjectType } from '../../src/components/project';
+import { gql } from './gql-tag';
 import { registerUser } from './register';
 
 export type ReadOneFunction<T extends ResourceShape<any>['prototype']> = (

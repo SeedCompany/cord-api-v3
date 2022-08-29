@@ -1,4 +1,3 @@
-import { gql } from 'apollo-server-core';
 import { isValidId } from '../../src/common';
 import {
   CreateDerivativeScriptureProduct,
@@ -8,6 +7,7 @@ import {
 } from '../../src/components/product';
 import { TestApp } from './create-app';
 import { fragments, RawProduct } from './fragments';
+import { gql } from './gql-tag';
 
 export async function createDerivativeProduct(
   app: TestApp,

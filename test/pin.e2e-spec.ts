@@ -1,4 +1,3 @@
-import { gql } from 'apollo-server-core';
 import { Role } from '../src/components/authorization';
 import {
   createPin,
@@ -6,6 +5,7 @@ import {
   createSession,
   createTestApp,
   fragments,
+  gql,
   registerUser,
   TestApp,
 } from './utility';

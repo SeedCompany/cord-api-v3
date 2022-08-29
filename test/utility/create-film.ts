@@ -1,8 +1,8 @@
 import { faker } from '@faker-js/faker';
-import { gql } from 'apollo-server-core';
 import { CreateFilm, Film } from '../../src/components/film';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
+import { gql } from './gql-tag';
 
 export async function listFilms(app: TestApp) {
   const result = await app.graphql.mutate(

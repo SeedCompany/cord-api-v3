@@ -1,4 +1,3 @@
-import { gql } from 'apollo-server-core';
 import { times } from 'lodash';
 import { Merge } from 'type-fest';
 import { Secured } from '../src/common';
@@ -25,6 +24,7 @@ import {
   createTestApp,
   expectNotFound,
   fragments,
+  gql,
   registerUser,
   TestApp,
 } from './utility';

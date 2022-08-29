@@ -1,4 +1,3 @@
-import { gql } from 'apollo-server-core';
 import { Role } from '../src/components/authorization';
 import { PartnershipAgreementStatus } from '../src/components/partnership';
 import {
@@ -12,6 +11,7 @@ import {
   createRegion,
   createSession,
   createTestApp,
+  gql,
   registerUser,
   runAsAdmin,
   TestApp,

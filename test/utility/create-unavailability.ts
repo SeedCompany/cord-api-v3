@@ -1,5 +1,4 @@
 import { faker } from '@faker-js/faker';
-import { gql } from 'apollo-server-core';
 import { DateTime } from 'luxon';
 import { isValidId } from '../../src/common';
 import {
@@ -8,6 +7,7 @@ import {
 } from '../../src/components/user/unavailability';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
+import { gql } from './gql-tag';
 
 export async function createUnavailability(
   app: TestApp,

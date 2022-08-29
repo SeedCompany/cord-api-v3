@@ -1,11 +1,11 @@
 import { faker } from '@faker-js/faker';
-import { gql } from 'apollo-server-core';
 import { generateId, isValidId } from '../../src/common';
 import { RegisterInput } from '../../src/components/authentication';
 import { Powers, Role } from '../../src/components/authorization';
 import { User, UserStatus } from '../../src/components/user';
 import { TestApp } from './create-app';
 import { fragments, RawUser } from './fragments';
+import { gql } from './gql-tag';
 import { login, runAsAdmin, runInIsolatedSession } from './login';
 
 export async function readOneUser(app: TestApp, id: string) {

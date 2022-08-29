@@ -1,4 +1,3 @@
-import { gql } from 'apollo-server-core';
 import { CalendarDate, ID, Sensitivity } from '../../src/common';
 import { Role, ScopedRole } from '../../src/components/authorization';
 import { Budget } from '../../src/components/budget';
@@ -18,6 +17,7 @@ import {
   createProjectMember,
   createSession,
   createTestApp,
+  gql,
   listBudgets,
   Raw,
   readBudgetRecords,

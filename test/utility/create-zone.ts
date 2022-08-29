@@ -1,9 +1,9 @@
-import { gql } from 'apollo-server-core';
 import { createPerson, getUserFromSession, runAsAdmin } from '.';
 import { generateId, isValidId } from '../../src/common';
 import { CreateFieldZone, FieldZone } from '../../src/components/field-zone';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
+import { gql } from './gql-tag';
 
 export async function listFieldZones(app: TestApp) {
   const result = await app.graphql.mutate(

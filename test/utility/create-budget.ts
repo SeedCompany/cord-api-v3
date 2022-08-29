@@ -1,4 +1,3 @@
-import { gql } from 'apollo-server-core';
 import { generateId, isValidId } from '../../src/common';
 import {
   Budget,
@@ -8,6 +7,7 @@ import {
 import { Organization } from '../../src/components/organization';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
+import { gql } from './gql-tag';
 
 export async function listBudgets(app: TestApp) {
   const result = await app.graphql.mutate(
