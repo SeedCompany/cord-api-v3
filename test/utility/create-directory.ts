@@ -1,5 +1,5 @@
+import { faker } from '@faker-js/faker';
 import { gql } from 'apollo-server-core';
-import * as faker from 'faker';
 import { startCase } from 'lodash';
 import { ID } from '../../src/common';
 import { loggedInSession } from '../../src/common/session';

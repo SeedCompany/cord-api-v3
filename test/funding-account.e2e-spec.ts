@@ -1,5 +1,5 @@
+import { faker } from '@faker-js/faker';
 import { gql } from 'apollo-server-core';
-import * as faker from 'faker';
 import { times } from 'lodash';
 import { isValidId } from '../src/common';
 import { Role } from '../src/components/authorization/dto/role.dto';
@@ -60,7 +60,7 @@ describe('FundingAccount e2e', () => {
   // Update FundingAccount
   it('update funding account', async () => {
     const st = await runAsAdmin(app, createFundingAccount);
-    const newName = faker.company.companyName();
+    const newName = faker.company.name();
     const newAccountNumber = faker.datatype.number({ min: 0, max: 9 });
     await runAsAdmin(app, async () => {
       const result = await app.graphql.mutate(

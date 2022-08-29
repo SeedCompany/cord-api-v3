@@ -1,5 +1,5 @@
+import { faker } from '@faker-js/faker';
 import { gql } from 'apollo-server-core';
-import * as faker from 'faker';
 import {
   CreatePartner,
   Partner,

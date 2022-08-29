@@ -1,5 +1,5 @@
+import { faker } from '@faker-js/faker';
 import { gql } from 'apollo-server-core';
-import * as faker from 'faker';
 import { generateId, isValidId } from '../../src/common';
 import { CreatePerson, User } from '../../src/components/user';
 import { TestApp } from './create-app';
@@ -15,7 +15,7 @@ export async function createPerson(
     realLastName: faker.name.lastName(),
     displayFirstName: faker.name.firstName() + (await generateId()),
     displayLastName: faker.name.lastName() + (await generateId()),
-    phone: faker.phone.phoneNumber(),
+    phone: faker.phone.number(),
     timezone: 'America/Chicago',
     about: 'about detail' + (await generateId()),
     ...input,

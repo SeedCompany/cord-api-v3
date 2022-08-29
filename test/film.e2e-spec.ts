@@ -1,5 +1,5 @@
+import { faker } from '@faker-js/faker';
 import { gql } from 'apollo-server-core';
-import * as faker from 'faker';
 import { times } from 'lodash';
 import { isValidId } from '../src/common';
 import { Role } from '../src/components/authorization/dto/role.dto';
@@ -29,7 +29,7 @@ describe('Film e2e', () => {
 
   // Create FILM
   it('Create Film', async () => {
-    const name = faker.company.companyName();
+    const name = faker.company.name();
     const scriptureReferences = ScriptureRange.randomList();
     const film = await createFilm(app, { name, scriptureReferences });
     expect(film.scriptureReferences.value).toBeDefined();
@@ -40,7 +40,7 @@ describe('Film e2e', () => {
 
   // READ FILM
   it('create & read film by id', async () => {
-    const name = faker.company.companyName();
+    const name = faker.company.name();
     const scriptureReferences = ScriptureRange.randomList();
     const fm = await createFilm(app, { name, scriptureReferences });
     const { film: actual } = await app.graphql.query(
@@ -67,7 +67,7 @@ describe('Film e2e', () => {
   // UPDATE FILM
   it('update film', async () => {
     const fm = await createFilm(app);
-    const newName = faker.company.companyName();
+    const newName = faker.company.name();
     const scriptureReferences = ScriptureRange.randomList();
     const result = await app.graphql.mutate(
       gql`
