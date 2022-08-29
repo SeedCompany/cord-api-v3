@@ -6,6 +6,7 @@ import {
   GraphQLFormattedError,
   print,
 } from 'graphql';
+import './expect-gql-error';
 
 export interface GraphQLTestClient {
   query: <TData = AnyObject, TVars = AnyObject>(
