@@ -44,7 +44,7 @@ describe('Field Zone e2e', () => {
     await createZone(app, { directorId: director.id, name });
     await expect(
       createZone(app, { directorId: director.id, name })
-    ).rejects.toThrowError();
+    ).rejects.toThrowGqlError();
   });
 
   it('read one field zone by id', async () => {

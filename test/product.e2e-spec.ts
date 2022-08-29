@@ -22,7 +22,7 @@ import {
   createSession,
   createStory,
   createTestApp,
-  expectNotFound,
+  errors,
   fragments,
   gql,
   registerUser,
@@ -639,8 +639,8 @@ describe('Product e2e', () => {
 
     const actual: boolean | undefined = result.deleteProduct;
     expect(actual).toBeTruthy();
-    await expectNotFound(
-      app.graphql.query(
+    await app.graphql
+      .query(
         gql`
           query product($id: ID!) {
             product(id: $id) {
@@ -653,7 +653,7 @@ describe('Product e2e', () => {
           id: product.id,
         }
       )
-    );
+      .expectError(errors.notFound());
   });
 
   it('List view of products', async () => {

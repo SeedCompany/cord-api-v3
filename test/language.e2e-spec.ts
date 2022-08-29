@@ -1,6 +1,6 @@
 import { faker } from '@faker-js/faker';
 import { times } from 'lodash';
-import { InputException, isValidId } from '../src/common';
+import { isValidId } from '../src/common';
 import { UpdateLanguage } from '../src/components/language';
 import {
   createLanguage,
@@ -9,7 +9,7 @@ import {
   createProject,
   createSession,
   createTestApp,
-  expectNotFound,
+  errors,
   gql,
   loginAsAdmin,
   TestApp,
@@ -115,8 +115,8 @@ describe('Language e2e', () => {
     );
 
     expect(result.deleteLanguage).toBeTruthy();
-    await expectNotFound(
-      app.graphql.query(
+    await app.graphql
+      .query(
         gql`
           query language($id: ID!) {
             language(id: $id) {
@@ -129,7 +129,7 @@ describe('Language e2e', () => {
           id: language.id,
         }
       )
-    );
+      .expectError(errors.notFound());
   });
 
   // LIST Languages
@@ -255,7 +255,14 @@ describe('Language e2e', () => {
     const signLanguageCode = 'XXX1';
     await expect(
       createLanguage(app, { signLanguageCode })
-    ).rejects.toThrowError(new InputException('Input validation failed'));
+    ).rejects.toThrowGqlError(
+      errors.validation({
+        'language.signLanguageCode': {
+          matches:
+            'signLanguageCode must match /^[A-Z]{2}\\d{2}$/ regular expression',
+        },
+      })
+    );
   });
 
   it('should throw error if trying to set hasExternalFirstScripture=true while language has engagements that have firstScripture=true', async () => {
@@ -286,8 +293,12 @@ describe('Language e2e', () => {
           },
         }
       )
-    ).rejects.toThrowError(
-      'hasExternalFirstScripture can be set to true if the language has no engagements that have firstScripture=true'
+    ).rejects.toThrowGqlError(
+      errors.input({
+        message:
+          'hasExternalFirstScripture can be set to true if the language has no engagements that have firstScripture=true',
+        field: 'language.hasExternalFirstScripture',
+      })
     );
   });
 

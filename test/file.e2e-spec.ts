@@ -21,7 +21,7 @@ import {
   createFileVersion,
   createSession,
   createTestApp,
-  expectNotFound,
+  errors,
   FakeFile,
   generateFakeFile,
   getFileNode,
@@ -79,8 +79,8 @@ async function deleteNode(app: TestApp, id: ID) {
 }
 
 async function expectNodeNotFound(app: TestApp, id: ID) {
-  await expectNotFound(
-    app.graphql.query(
+  await app.graphql
+    .query(
       gql`
         query fileNode($id: ID!) {
           fileNode(id: $id) {
@@ -92,7 +92,7 @@ async function expectNodeNotFound(app: TestApp, id: ID) {
         id,
       }
     )
-  );
+    .expectError(errors.notFound());
 }
 
 function shiftNow(duration: DurationObject) {

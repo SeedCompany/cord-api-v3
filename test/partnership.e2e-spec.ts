@@ -1,10 +1,5 @@
 import { sample, times } from 'lodash';
-import {
-  CalendarDate,
-  ID,
-  InputException,
-  NotFoundException,
-} from '../src/common';
+import { CalendarDate, ID } from '../src/common';
 import { Role } from '../src/components/authorization';
 import { PartnerType } from '../src/components/partner';
 import {
@@ -19,7 +14,7 @@ import {
   createProject,
   createSession,
   createTestApp,
-  expectNotFound,
+  errors,
   fragments,
   gql,
   Raw,
@@ -147,8 +142,8 @@ describe('Partnership e2e', () => {
 
     const actual: boolean | undefined = result.deletePartnership;
     expect(actual).toBeTruthy();
-    await expectNotFound(
-      app.graphql.query(
+    await app.graphql
+      .query(
         gql`
           query partnership($id: ID!) {
             partnership(id: $id) {
@@ -161,7 +156,7 @@ describe('Partnership e2e', () => {
           id: partnership.id,
         }
       )
-    );
+      .expectError(errors.notFound());
   });
 
   it('update mou overrides partnership', async () => {
@@ -282,7 +277,12 @@ describe('Partnership e2e', () => {
         projectId: project.id,
         partnerId: 'fakePartner' as ID,
       })
-    ).rejects.toThrowError(new NotFoundException('Could not find partner'));
+    ).rejects.toThrowGqlError(
+      errors.notFound({
+        message: 'Could not find partner',
+        field: 'partnership.partnerId',
+      })
+    );
   });
 
   it('create partnership does not create if projectId is invalid', async () => {
@@ -290,7 +290,12 @@ describe('Partnership e2e', () => {
       createPartnership(app, {
         projectId: 'fakeProject' as ID,
       })
-    ).rejects.toThrowError(new NotFoundException('Could not find project'));
+    ).rejects.toThrowGqlError(
+      errors.notFound({
+        message: 'Could not find project',
+        field: 'partnership.projectId',
+      })
+    );
   });
 
   it('should create partnership without mou dates but returns project mou dates if exists', async () => {
@@ -377,8 +382,12 @@ describe('Partnership e2e', () => {
         partnerId: partner.id,
         financialReportingType: FinancialReportingType.Funded,
       })
-    ).rejects.toThrowError(
-      `Partner does not have this financial reporting type available`
+    ).rejects.toThrowGqlError(
+      errors.input({
+        message:
+          'Partner does not have this financial reporting type available',
+        field: 'partnership.financialReportingType',
+      })
     );
   });
 
@@ -414,8 +423,12 @@ describe('Partnership e2e', () => {
           },
         }
       )
-    ).rejects.toThrowError(
-      `Partner does not have this financial reporting type available`
+    ).rejects.toThrowGqlError(
+      errors.input({
+        message:
+          'Partner does not have this financial reporting type available',
+        field: 'partnership.financialReportingType',
+      })
     );
   });
 
@@ -433,8 +446,11 @@ describe('Partnership e2e', () => {
         partnerId: partner.id,
         projectId: project.id,
       })
-    ).rejects.toThrowError(
-      'Partnership for this project and partner already exists'
+    ).rejects.toThrowGqlError(
+      errors.duplicate({
+        message: 'Partnership for this project and partner already exists',
+        field: 'partnership.projectId',
+      })
     );
   });
 
@@ -523,17 +539,21 @@ describe('Partnership e2e', () => {
     expect(partnership3.primary.value).toBe(false);
 
     // delete primary partnership, throw error if it's not the only one
-    await expect(deletePartnership(partnership2.id)).rejects.toThrowError(
-      new InputException(
-        'Primary partnerships cannot be removed. Make another partnership primary first.'
-      )
+    await expect(deletePartnership(partnership2.id)).rejects.toThrowGqlError(
+      errors.input({
+        message:
+          'Primary partnerships cannot be removed. Make another partnership primary first.',
+        field: 'partnership.id',
+      })
     );
 
     await deletePartnership(partnership1.id);
-    await expect(deletePartnership(partnership2.id)).rejects.toThrowError(
-      new InputException(
-        'Primary partnerships cannot be removed. Make another partnership primary first.'
-      )
+    await expect(deletePartnership(partnership2.id)).rejects.toThrowGqlError(
+      errors.input({
+        message:
+          'Primary partnerships cannot be removed. Make another partnership primary first.',
+        field: 'partnership.id',
+      })
     );
 
     await deletePartnership(partnership3.id);

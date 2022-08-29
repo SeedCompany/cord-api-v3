@@ -61,7 +61,7 @@ describe('Region e2e', () => {
         name,
         fieldZoneId: fieldZone.id,
       })
-    ).rejects.toThrowError();
+    ).rejects.toThrowGqlError();
   });
 
   it('read one field region by id', async () => {

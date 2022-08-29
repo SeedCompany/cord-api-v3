@@ -1,6 +1,6 @@
 import { times } from 'lodash';
 import { DateTime, Interval } from 'luxon';
-import { isValidId, NotFoundException } from '../src/common';
+import { isValidId } from '../src/common';
 import { Role } from '../src/components/authorization';
 import { Project, ProjectMember } from '../src/components/project';
 import {
@@ -9,6 +9,7 @@ import {
   createProjectMember,
   createSession,
   createTestApp,
+  errors,
   fragments,
   gql,
   Raw,
@@ -62,8 +63,11 @@ describe('ProjectMember e2e', () => {
         projectId: project.id,
         roles: [Role.Controller],
       })
-    ).rejects.toThrowError(
-      'Role(s) Controller cannot be assigned to this project member'
+    ).rejects.toThrowGqlError(
+      errors.input({
+        message: 'Role(s) Controller cannot be assigned to this project member',
+        field: 'input.roles',
+      })
     );
   });
 
@@ -170,8 +174,11 @@ describe('ProjectMember e2e', () => {
           id: projectMember.id,
         }
       )
-    ).rejects.toThrowError(
-      new NotFoundException('Could not find project member')
+    ).rejects.toThrowGqlError(
+      errors.notFound({
+        message: 'Could not find project member',
+        field: 'projectMember.id',
+      })
     );
   });
 
@@ -276,8 +283,11 @@ describe('ProjectMember e2e', () => {
           },
         }
       )
-    ).rejects.toThrowError(
-      'Role(s) Intern cannot be assigned to this project member'
+    ).rejects.toThrowGqlError(
+      errors.input({
+        message: 'Role(s) Intern cannot be assigned to this project member',
+        field: 'input.roles',
+      })
     );
   });
 });

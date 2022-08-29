@@ -1,5 +1,4 @@
 import { faker } from '@faker-js/faker';
-import { DuplicateException, InputException } from '../src/common';
 import { Role } from '../src/components/authorization/dto';
 import { Partner, PartnerType } from '../src/components/partner';
 import { FinancialReportingType } from '../src/components/partnership';
@@ -9,6 +8,7 @@ import {
   createPerson,
   createSession,
   createTestApp,
+  errors,
   fragments,
   gql,
   registerUser,
@@ -135,27 +135,30 @@ describe('Partner e2e', () => {
     await createPartner(app, { organizationId: org.id });
     await expect(
       createPartner(app, { organizationId: org.id })
-    ).rejects.toThrowError(
-      new DuplicateException(
-        'partner.organizationId',
-        'Partner for organization already exists.'
-      )
+    ).rejects.toThrowGqlError(
+      errors.duplicate({
+        message: 'Partner for organization already exists.',
+        field: 'partner.organizationId',
+      })
     );
   });
 
   it('should throw error if the pmcEntityCode is not invalid format', async () => {
     const org = await createOrganization(app);
-    await expect(
-      createPartner(app, { pmcEntityCode: 'AA1', organizationId: org.id })
-    ).rejects.toThrowError(new InputException('Input validation failed'));
-
-    await expect(
-      createPartner(app, { pmcEntityCode: 'ABc', organizationId: org.id })
-    ).rejects.toThrowError(new InputException('Input validation failed'));
-
-    await expect(
-      createPartner(app, { pmcEntityCode: 'AAAA', organizationId: org.id })
-    ).rejects.toThrowError(new InputException('Input validation failed'));
+    for (const pmc of ['AA1', 'ABc', 'AAAA']) {
+      await expect(
+        createPartner(app, {
+          pmcEntityCode: pmc,
+          organizationId: org.id,
+        })
+      ).rejects.toThrowGqlError(
+        errors.validation({
+          'partner.pmcEntityCode': {
+            matches: 'pmcEntityCode must match /^[A-Z]{3}$/ regular expression',
+          },
+        })
+      );
+    }
   });
 
   it('should throw error if types & financialReportingType are mismatched', async () => {
@@ -166,8 +169,12 @@ describe('Partner e2e', () => {
         types: [PartnerType.Funding],
         financialReportingTypes: [FinancialReportingType.Funded],
       })
-    ).rejects.toThrowError(
-      'Financial reporting type can only be applied to managing partners'
+    ).rejects.toThrowGqlError(
+      errors.input({
+        message:
+          'Financial reporting type can only be applied to managing partners',
+        field: 'partnership.financialReportingType',
+      })
     );
   });
 });

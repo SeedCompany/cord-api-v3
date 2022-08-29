@@ -15,6 +15,7 @@ import {
   createRegion,
   createSession,
   createTestApp,
+  errors,
   gql,
   registerUser,
   runAsAdmin,
@@ -421,8 +422,8 @@ describe('Engagement Changeset Aware e2e', () => {
     });
 
     // Create new engagement with changeset
-    await expect(
-      app.graphql.mutate(
+    await app.graphql
+      .mutate(
         gql`
           mutation createLanguageEngagement(
             $input: CreateLanguageEngagementInput!
@@ -445,8 +446,10 @@ describe('Engagement Changeset Aware e2e', () => {
           },
         }
       )
-    ).rejects.toThrowError(
-      'Engagement for this project and language already exists'
-    );
+      .expectError(
+        errors.duplicate({
+          message: 'Engagement for this project and language already exists',
+        })
+      );
   });
 });

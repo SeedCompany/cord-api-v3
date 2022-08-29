@@ -1,11 +1,5 @@
 import { times } from 'lodash';
-import {
-  CalendarDate,
-  fiscalYears,
-  isValidId,
-  NotFoundException,
-  Secured,
-} from '../src/common';
+import { CalendarDate, fiscalYears, isValidId, Secured } from '../src/common';
 import { Role } from '../src/components/authorization/dto/role.dto';
 import { Budget } from '../src/components/budget';
 import { PartnerType } from '../src/components/partner';
@@ -15,6 +9,7 @@ import {
   createProject,
   createSession,
   createTestApp,
+  errors,
   fragments,
   gql,
   Raw,
@@ -96,8 +91,8 @@ describe('Budget e2e', () => {
     const actual: Budget | undefined = result.deleteBudget;
     expect(actual).toBeTruthy();
 
-    await expect(
-      app.graphql.query(
+    await app.graphql
+      .query(
         gql`
           query budget($id: ID!) {
             budget(id: $id) {
@@ -110,7 +105,7 @@ describe('Budget e2e', () => {
           id: budget.id,
         }
       )
-    ).rejects.toThrowError(new NotFoundException('Could not find budget'));
+      .expectError(errors.notFound({ message: 'Could not find budget' }));
   });
 
   it('List budget nodes', async () => {
