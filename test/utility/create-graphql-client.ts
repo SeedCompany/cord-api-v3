@@ -6,17 +6,20 @@ import {
   GraphQLFormattedError,
   print,
 } from 'graphql';
+// eslint-disable-next-line import/no-duplicates
+import { ErrorExpectations } from './expect-gql-error';
+// eslint-disable-next-line import/no-duplicates -- ensures runtime execution
 import './expect-gql-error';
 
 export interface GraphQLTestClient {
   query: <TData = AnyObject, TVars = AnyObject>(
     query: DocumentNode | string,
     variables?: TVars
-  ) => Promise<TData>;
+  ) => GqlResult<TData>;
   mutate: <TData = AnyObject, TVars = AnyObject>(
     query: DocumentNode | string,
     variables?: TVars
-  ) => Promise<TData>;
+  ) => GqlResult<TData>;
   authToken: string;
 }
 
@@ -28,11 +31,11 @@ export const createGraphqlClient = async (
 
   let authToken = '';
 
-  const execute = async <TData = AnyObject, TVars = AnyObject>(
+  const execute = <TData = AnyObject, TVars = AnyObject>(
     query: DocumentNode | string,
     variables?: TVars
   ) => {
-    const result = await got
+    const result = got
       .post({
         url: `${url}/graphql`,
         throwHttpErrors: false,
@@ -44,10 +47,13 @@ export const createGraphqlClient = async (
           variables,
         },
       })
-      .json<ExecutionResult<TData>>();
+      .json<ExecutionResult<TData>>()
+      .then((result) => {
+        validateResult(result);
+        return result.data;
+      });
 
-    validateResult(result);
-    return result.data;
+    return new GqlResult(result);
   };
 
   return {
@@ -61,6 +67,18 @@ export const createGraphqlClient = async (
     },
   };
 };
+
+class GqlResult<TData> implements PromiseLike<TData> {
+  constructor(private readonly result: Promise<TData>) {}
+
+  then: PromiseLike<TData>['then'] = (onFulfilled, onRejected) => {
+    return this.result.then(onFulfilled, onRejected);
+  };
+
+  expectError(expectations: ErrorExpectations = {}): Promise<void> {
+    return expect(this).rejects.toThrowGqlError(expectations);
+  }
+}
 
 function validateResult<TData>(
   res: ExecutionResult<TData>
