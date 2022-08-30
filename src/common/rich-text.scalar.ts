@@ -11,6 +11,9 @@ import { Transform } from './transform.decorator';
  * Probably best to treat this as opaque.
  */
 export class RichTextDocument {
+  // Allows TS to uniquely identify values
+  #isRichText?: never;
+
   static from(doc: JsonObject): RichTextDocument {
     return Object.assign(new RichTextDocument(), doc);
   }
