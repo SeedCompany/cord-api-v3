@@ -7,13 +7,7 @@ import 'ix/add/asynciterable-operators/map';
 import 'ix/add/asynciterable-operators/tap';
 import 'ix/add/asynciterable-operators/toarray';
 import { sum } from 'lodash';
-import {
-  has,
-  ID,
-  NotFoundException,
-  Range,
-  UnsecuredDto,
-} from '../../../common';
+import { ID, NotFoundException, Range, UnsecuredDto } from '../../../common';
 import { BaseMigration, Migration } from '../../../core';
 import { ACTIVE } from '../../../core/database/query';
 import { DbScriptureReferences, mapRange } from '../../scripture';
@@ -77,7 +71,7 @@ export class SplitScriptureSpanningBooksMigration extends BaseMigration {
     const stats: Record<string, number> = {};
 
     for await (const input of changes) {
-      if (has('id', input)) {
+      if ('id' in input) {
         this.logger.info('Updating product', {
           id: input.id,
           refs: labelOfScriptureRanges(input.scriptureReferences ?? []),

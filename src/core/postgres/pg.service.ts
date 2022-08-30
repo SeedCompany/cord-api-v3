@@ -42,7 +42,7 @@ export class Pg {
         // Help ID the segment as being for a database
         sub.sql = {};
 
-        const result = await client.query<R>(queryText, values);
+        const result = await client.query(queryText, values);
         return result.rows;
       });
     } catch (e) {
