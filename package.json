@@ -8,8 +8,10 @@
   },
   "scripts": {
     "prebuild": "rimraf dist",
+    "postinstall": "ts-patch install || true",
     "build": "nest build",
-    "console": "node -r ./tools/ts-node-register src/console.ts",
+    "clean": "rimraf dist",
+    "console": "ts-node src/console.ts",
     "console:prod": "node dist/console.js",
     "docker:build": "scripts/docker-build.sh",
     "docker:run": "scripts/docker-run.sh",
@@ -23,7 +25,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
-    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest",
+    "test:debug": "node --inspect-brk -r ts-node/register node_modules/.bin/jest",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "test:security": "jest --config ./test/jest-security.json",
     "madge": "madge --extensions ts,tsx --ts-config=tsconfig.json src",
@@ -120,9 +122,10 @@
     "madge": "^5.0.1",
     "ts-jest": "^26.5.6",
     "ts-node": "^10.9.1",
-    "tsconfig-paths": "*",
+    "ts-patch": "^2.0.2",
     "type-fest": "^2.19.0",
-    "typescript": "^4.8.2"
+    "typescript": "^4.8.2",
+    "typescript-transform-paths": "^3.3.1"
   },
   "resolutions": {
     "@angular-devkit/schematics-cli/minimist": "^1",
@@ -130,20 +133,28 @@
     "mjml-react/react-reconciler": "^0.29.0",
     "request/http-signature": "^1.3.6"
   },
+  "dependenciesMeta": {
+    "@apollo/protobufjs": {
+      "built": false
+    },
+    "@nestjs/core": {
+      "built": false
+    },
+    "core-js": {
+      "built": false
+    },
+    "core-js-pure": {
+      "built": false
+    },
+    "typescript": {
+      "unplugged": true
+    }
+  },
   "jest": {
     "preset": "ts-jest",
     "roots": [
       "<rootDir>/src"
     ],
-    "testEnvironment": "node",
-    "globals": {
-      "ts-jest": {
-        "astTransformers": {
-          "before": [
-            "./tools/jest-ts-transformer-keys"
-          ]
-        }
-      }
-    }
+    "testEnvironment": "node"
   }
 }

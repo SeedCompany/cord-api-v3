@@ -3,10 +3,5 @@
   "sourceRoot": "src/components",
   "generateOptions": {
     "spec": false
-  },
-  "compilerOptions": {
-    "plugins": [
-      "../tools/ts-transformer-keys"
-    ]
   }
 }
