@@ -8,6 +8,7 @@ import {
 } from '@nestjs/graphql';
 import {
   AnonSession,
+  Disabled,
   ID,
   IdArg,
   ListArg,
@@ -30,9 +31,11 @@ import {
 export class CommentThreadResolver {
   constructor(private readonly service: CommentService) {}
 
-  @Query(() => CommentThread, {
-    description: 'Look up a comment thread by ID',
-  })
+  @Disabled('Waiting for authorization to verify access')(
+    Query(() => CommentThread, {
+      description: 'Look up a comment thread by ID',
+    })
+  )
   async commentThread(
     @IdArg() id: ID,
     @Loader(CommentThreadLoader) commentThreads: LoaderOf<CommentThreadLoader>

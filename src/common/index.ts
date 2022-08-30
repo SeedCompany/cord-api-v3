@@ -7,6 +7,7 @@ export { DbLabel } from './db-label.decorator';
 export * from './db-label.helpers';
 export * from './db-sort.decorator';
 export * from './db-unique.decorator';
+export * from './disabled.decorator';
 export * from './mutation-placeholder.output';
 export * from './exceptions';
 export * from './fields.pipe';
