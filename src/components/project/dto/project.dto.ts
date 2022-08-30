@@ -28,7 +28,7 @@ import {
 import { ScopedRole } from '../../authorization/dto';
 import { Budget } from '../../budget/dto';
 import { ChangesetAware } from '../../changeset/dto';
-import { Commentable, CommentThread } from '../../comments';
+import { Commentable } from '../../comments';
 import { IEngagement as Engagement } from '../../engagement/dto';
 import { Directory } from '../../file/dto';
 import { SecuredTags } from '../../language/dto/language.dto';
@@ -83,7 +83,7 @@ class Project extends Interfaces {
     sensitivity: Sensitivity,
     posts: [Post], // from Postable interface
     changeRequests: [ProjectChangeRequest],
-    commentThreads: [CommentThread],
+    ...Commentable.Relations,
   };
 
   @Field(() => ProjectType)
