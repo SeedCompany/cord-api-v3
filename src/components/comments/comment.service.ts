@@ -169,11 +169,8 @@ export class CommentService {
     };
   }
 
-  async readManyThreads(ids: readonly ID[], session: Session) {
-    const commentThreads = await this.commentThreadRepo.readMany(ids);
-    return await Promise.all(
-      commentThreads.map((dto) => this.readOneThread(dto.id, session))
-    );
+  async readManyThreads(ids: readonly ID[]) {
+    return await this.commentThreadRepo.readMany(ids);
   }
 
   async listThreads(

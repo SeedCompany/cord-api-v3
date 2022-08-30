@@ -1,13 +1,6 @@
 import { Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
-import {
-  AnonSession,
-  Disabled,
-  ID,
-  IdArg,
-  ListArg,
-  Session,
-} from '../../common';
-import { Loader, LoaderOf } from '../../core';
+import { AnonSession, ID, IdArg, ListArg, Session } from '~/common';
+import { Loader, LoaderOf } from '~/core';
 import { CommentThreadLoader } from './comment-thread.loader';
 import { CommentLoader } from './comment.loader';
 import { CommentService } from './comment.service';
@@ -17,11 +10,9 @@ import { CommentListInput, CommentListOutput, CommentThread } from './dto';
 export class CommentThreadResolver {
   constructor(private readonly service: CommentService) {}
 
-  @Disabled('Waiting for authorization to verify access')(
-    Query(() => CommentThread, {
-      description: 'Look up a comment thread by ID',
-    })
-  )
+  @Query(() => CommentThread, {
+    description: 'Look up a comment thread by ID',
+  })
   async commentThread(
     @IdArg() id: ID,
     @Loader(CommentThreadLoader) commentThreads: LoaderOf<CommentThreadLoader>
