@@ -154,7 +154,7 @@ describe('Partner e2e', () => {
       ).rejects.toThrowGqlError(
         errors.validation({
           'partner.pmcEntityCode': {
-            matches: 'pmcEntityCode must match /^[A-Z]{3}$/ regular expression',
+            matches: 'Must be 3 uppercase letters',
           },
         })
       );

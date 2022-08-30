@@ -24,7 +24,9 @@ export abstract class UpdatePartner {
   readonly financialReportingTypes?: FinancialReportingType[];
 
   @Field({ nullable: true })
-  @Matches(/^[A-Z]{3}$/)
+  @Matches(/^[A-Z]{3}$/, {
+    message: 'Must be 3 uppercase letters',
+  })
   readonly pmcEntityCode?: string;
 
   @Field({ nullable: true })

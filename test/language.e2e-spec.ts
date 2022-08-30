@@ -258,8 +258,7 @@ describe('Language e2e', () => {
     ).rejects.toThrowGqlError(
       errors.validation({
         'language.signLanguageCode': {
-          matches:
-            'signLanguageCode must match /^[A-Z]{2}\\d{2}$/ regular expression',
+          matches: 'Must be 2 uppercase letters followed by 2 digits',
         },
       })
     );
