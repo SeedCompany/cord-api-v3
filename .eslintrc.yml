@@ -24,6 +24,11 @@ rules:
     - selector: property
       filter: __typename
       format: ~
+    # Allow object literal keys to be anything if they are in quotes
+    # Used mainly by cypher query builder
+    - selector: objectLiteralProperty
+      modifiers: [requiresQuotes]
+      format: ~
     - selector: property
       format: [camelCase, PascalCase]
       leadingUnderscore: forbid
