@@ -17,11 +17,16 @@ import {
   Title,
   Wrapper,
 } from '@seedcompany/nestjs-email/templates';
-import * as React from 'react';
-import { ComponentProps, FC, ReactElement } from 'react';
+import { ComponentProps, ReactElement, ReactNode } from 'react';
 import { useFrontendUrl } from './frontend-url';
 
-export const EmailTemplate: FC<{ title: string }> = ({ title, children }) => (
+export const EmailTemplate = ({
+  title,
+  children,
+}: {
+  title: string;
+  children: ReactNode;
+}) => (
   <Mjml lang="en">
     <Head>
       <Title>{`${title} - CORD Field`}</Title>
@@ -108,7 +113,7 @@ export const Branding = (): ReactElement => {
   );
 };
 
-export const Heading: FC<ComponentProps<typeof Text>> = (props) => (
+export const Heading = (props: ComponentProps<typeof Text>) => (
   <Section>
     <Column padding={0}>
       <Text fontSize={24} paddingTop={0} paddingBottom={0} {...props}>
@@ -120,7 +125,13 @@ export const Heading: FC<ComponentProps<typeof Text>> = (props) => (
   </Section>
 );
 
-export const Link: FC<{ href: string }> = ({ href, children }) => (
+export const Link = ({
+  href,
+  children,
+}: {
+  href: string;
+  children?: ReactNode;
+}) => (
   <Text>
     <a href={href} style={{ wordBreak: 'break-all' }}>
       {children || href}
