@@ -10,7 +10,7 @@ import { relative, resolve } from 'path';
  * it looks normal.
  */
 export const jestSkipFileInExceptionSource = (e: Error, filepath: string) => {
-  if (!(global as any).jasmine || !(e instanceof Error)) {
+  if (!process.env.JEST_WORKER_ID || !(e instanceof Error)) {
     return e;
   }
   const relativePath = relative(projectRoot, filepath);
