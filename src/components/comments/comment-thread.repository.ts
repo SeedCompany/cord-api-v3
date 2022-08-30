@@ -7,6 +7,7 @@ import {
   createNode,
   createRelationships,
   matchRequestingUser,
+  merge,
   paginate,
   requestingUser,
   sorting,
@@ -35,9 +36,17 @@ export class CommentThreadRepository extends DtoRepository(CommentThread) {
 
   protected hydrate() {
     return (query: Query) =>
-      query.return<{ dto: UnsecuredDto<CommentThread> }>(
-        '{ id: node.id, createdAt: node.createdAt } as dto'
-      );
+      query
+        .match([
+          node('node'),
+          relation('in', undefined, 'commentThread'),
+          node('parent', 'BaseNode'),
+        ])
+        .return<{ dto: UnsecuredDto<CommentThread> }>(
+          merge('node', {
+            parent: 'parent',
+          }).as('dto')
+        );
   }
 
   async list({ filter, ...input }: CommentThreadListInput, session: Session) {

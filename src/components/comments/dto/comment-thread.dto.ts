@@ -1,5 +1,6 @@
 import { ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
+import { BaseNode } from '~/core/database/results';
 import { Resource, SecuredProps } from '../../../common';
 import { Comment } from './comment.dto';
 
@@ -13,4 +14,6 @@ export class CommentThread extends Resource {
   static readonly Relations = {
     comments: [Comment],
   };
+
+  readonly parent: BaseNode;
 }
