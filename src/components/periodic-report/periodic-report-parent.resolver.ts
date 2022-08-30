@@ -1,5 +1,4 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { Resource } from '../../common';
 import { ResourceLoader } from '../../core';
 import { IPeriodicReport, PeriodicReport } from '../periodic-report';
 
@@ -7,7 +6,7 @@ import { IPeriodicReport, PeriodicReport } from '../periodic-report';
 export class PeriodicReportParentResolver {
   constructor(private readonly resources: ResourceLoader) {}
 
-  @ResolveField(() => Resource)
+  @ResolveField()
   async parent(@Parent() report: PeriodicReport) {
     return await this.resources.loadByBaseNode(report.parent);
   }

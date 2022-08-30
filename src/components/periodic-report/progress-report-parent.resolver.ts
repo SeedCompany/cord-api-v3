@@ -2,12 +2,11 @@ import { Info, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { Fields, IsOnlyId } from '../../common';
 import { Loader, LoaderOf } from '../../core';
 import { EngagementLoader } from '../engagement';
-import { LanguageEngagement } from '../engagement/dto';
 import { ProgressReport } from '../periodic-report';
 
 @Resolver(ProgressReport)
 export class ProgressReportParentResolver {
-  @ResolveField(() => LanguageEngagement)
+  @ResolveField()
   async parent(
     @Info(Fields, IsOnlyId) onlyId: boolean,
     @Parent() report: ProgressReport,
