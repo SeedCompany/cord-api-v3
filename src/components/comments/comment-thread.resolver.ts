@@ -1,31 +1,17 @@
-import {
-  Args,
-  Mutation,
-  Parent,
-  Query,
-  ResolveField,
-  Resolver,
-} from '@nestjs/graphql';
+import { Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
 import {
   AnonSession,
   Disabled,
   ID,
   IdArg,
   ListArg,
-  LoggedInSession,
   Session,
 } from '../../common';
 import { Loader, LoaderOf } from '../../core';
 import { CommentThreadLoader } from './comment-thread.loader';
 import { CommentLoader } from './comment.loader';
 import { CommentService } from './comment.service';
-import {
-  CommentListInput,
-  CommentListOutput,
-  CommentThread,
-  CreateCommentThreadInput,
-  CreateCommentThreadOutput,
-} from './dto';
+import { CommentListInput, CommentListOutput, CommentThread } from './dto';
 
 @Resolver(CommentThread)
 export class CommentThreadResolver {
@@ -41,17 +27,6 @@ export class CommentThreadResolver {
     @Loader(CommentThreadLoader) commentThreads: LoaderOf<CommentThreadLoader>
   ): Promise<CommentThread> {
     return await commentThreads.load(id);
-  }
-
-  @Mutation(() => CreateCommentThreadOutput, {
-    description: 'Create a comment thread',
-  })
-  async createCommentThread(
-    @LoggedInSession() session: Session,
-    @Args('input') input: CreateCommentThreadInput
-  ): Promise<CreateCommentThreadOutput> {
-    const commentThread = await this.service.createThread(input, session);
-    return { commentThread };
   }
 
   @ResolveField(() => CommentListOutput, {
