@@ -2,6 +2,7 @@
   "name": "cord-api-v3",
   "version": "3.0.0",
   "license": "MIT",
+  "packageManager": "yarn@3.2.3",
   "engines": {
     "node": ">=16"
   },
