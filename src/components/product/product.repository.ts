@@ -12,7 +12,6 @@ import { DateTime } from 'luxon';
 import { Except, Merge } from 'type-fest';
 import {
   getDbClassLabels,
-  has,
   ID,
   Range,
   ServerException,
@@ -280,7 +279,7 @@ export class ProductRepository extends CommonRepository {
       totalVerseEquivalents: number;
     }
   ) {
-    const isDerivative = has('produces', input);
+    const isDerivative = 'produces' in input;
     const Product = isDerivative
       ? DerivativeScriptureProduct
       : DirectScriptureProduct;

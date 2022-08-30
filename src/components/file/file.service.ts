@@ -73,9 +73,12 @@ export class FileService {
     return node;
   }
 
-  asDownloadable<T>(obj: T, fileVersionId: ID): Downloadable<T>;
+  asDownloadable<T extends object>(obj: T, fileVersionId: ID): Downloadable<T>;
   asDownloadable(fileVersion: FileVersion): Downloadable<FileVersion>;
-  asDownloadable<T>(obj: T, fileVersionId?: ID): Downloadable<T> {
+  asDownloadable<T extends object>(
+    obj: T,
+    fileVersionId?: ID
+  ): Downloadable<T> {
     let downloading: Promise<Buffer> | undefined;
     return Object.assign(obj, {
       download: () => {
