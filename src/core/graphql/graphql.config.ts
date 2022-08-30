@@ -107,12 +107,14 @@ export class GraphQLConfig implements GqlOptionsFactory {
             !frame.includes('(<anonymous>)')
         )
         .map((frame: string) =>
-          frame
-            // Convert absolute path to path relative to src dir
-            .replace(matchSrcPathInTrace, (_, group1) => group1)
-            // Convert windows paths to unix for consistency
-            .replace(/\\\\/, '/')
-            .trim()
+          this.config.jest
+            ? frame // Keep full FS path, so jest can link to it
+            : frame
+                // Convert absolute path to path relative to src dir
+                .replace(matchSrcPathInTrace, (_, group1) => group1)
+                // Convert windows paths to unix for consistency
+                .replace(/\\\\/, '/')
+                .trim()
         );
     }
 

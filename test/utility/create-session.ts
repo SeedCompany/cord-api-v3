@@ -1,6 +1,6 @@
-import { gql } from 'apollo-server-core';
 import { User } from '../../src/components/user';
 import { TestApp } from './create-app';
+import { gql } from './gql-tag';
 
 export async function createSession(app: TestApp): Promise<string> {
   const result = await app.graphql.query(gql`

@@ -1,5 +1,4 @@
 import { faker } from '@faker-js/faker';
-import { gql } from 'apollo-server-core';
 import { CalendarDate, generateId, ID, isValidId } from '../../src/common';
 import {
   CreateEthnologueLanguage,
@@ -9,6 +8,7 @@ import {
 import { SecuredLocationList } from '../../src/components/location';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
+import { gql } from './gql-tag';
 
 export async function listLanguageIds(app: TestApp) {
   const result = await app.graphql.mutate(

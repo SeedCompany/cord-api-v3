@@ -1,5 +1,4 @@
 import { faker } from '@faker-js/faker';
-import { gql } from 'apollo-server-core';
 import { firstLettersOfWords, isValidId } from '../src/common';
 import { Role } from '../src/components/authorization';
 import { SecuredTimeZone } from '../src/components/timezone';
@@ -14,6 +13,7 @@ import {
   fragments,
   generateRegisterInput,
   generateRequireFieldsRegisterInput,
+  gql,
   login,
   loginAsAdmin,
   registerUser,

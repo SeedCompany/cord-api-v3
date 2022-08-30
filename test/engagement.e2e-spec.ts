@@ -1,8 +1,7 @@
 import { faker } from '@faker-js/faker';
-import { gql } from 'apollo-server-core';
 import { some } from 'lodash';
 import { DateTime, Interval } from 'luxon';
-import { generateId, ID, InputException } from '../src/common';
+import { generateId, ID } from '../src/common';
 import { Role } from '../src/components/authorization';
 import {
   CreateInternshipEngagement,
@@ -33,9 +32,10 @@ import {
   createProject,
   createSession,
   createTestApp,
-  expectNotFound,
+  errors,
   fragments,
   getUserFromSession,
+  gql,
   Raw,
   registerUser,
   requestFileUpload,
@@ -455,8 +455,8 @@ describe('Engagement e2e', () => {
 
     const actual: boolean | undefined = result.deleteEngagement;
     expect(actual).toBeTruthy();
-    await expectNotFound(
-      app.graphql.query(
+    await app.graphql
+      .query(
         gql`
           query engagement($id: ID!) {
             engagement(id: $id) {
@@ -469,7 +469,7 @@ describe('Engagement e2e', () => {
           id: languageEngagement.id,
         }
       )
-    );
+      .expectError(errors.notFound());
   });
 
   it('returns the correct products in language engagement', async () => {
@@ -732,8 +732,8 @@ describe('Engagement e2e', () => {
       }
     );
 
-    await expectNotFound(
-      app.graphql.query(
+    await app.graphql
+      .query(
         gql`
           query ceremony($id: ID!) {
             ceremony(id: $id) {
@@ -746,7 +746,7 @@ describe('Engagement e2e', () => {
           id: ceremonyId,
         }
       )
-    );
+      .expectError(errors.notFound());
   });
 
   it('lists both language engagements and internship engagements', async () => {
@@ -810,7 +810,9 @@ describe('Engagement e2e', () => {
         internId: intern.id,
         mentorId: mentor.id,
       })
-    ).rejects.toThrow('Could not find project');
+    ).rejects.toThrowGqlError(
+      errors.notFound({ message: 'Could not find project' })
+    );
     await expect(
       createInternshipEngagement(app, {
         projectId: internshipProject.id,
@@ -818,7 +820,9 @@ describe('Engagement e2e', () => {
         internId: intern.id,
         mentorId: mentor.id,
       })
-    ).rejects.toThrow('Could not find country of origin');
+    ).rejects.toThrowGqlError(
+      errors.notFound({ message: 'Could not find country of origin' })
+    );
 
     internshipProject = await createProject(app, {
       type: ProjectType.Internship,
@@ -831,7 +835,9 @@ describe('Engagement e2e', () => {
         internId: invalidId,
         mentorId: mentor.id,
       })
-    ).rejects.toThrow('Could not find person');
+    ).rejects.toThrowGqlError(
+      errors.notFound({ message: 'Could not find person' })
+    );
 
     internshipProject = await createProject(app, {
       type: ProjectType.Internship,
@@ -844,7 +850,9 @@ describe('Engagement e2e', () => {
         internId: intern.id,
         mentorId: invalidId,
       })
-    ).rejects.toThrow('Could not find mentor');
+    ).rejects.toThrowGqlError(
+      errors.notFound({ message: 'Could not find mentor' })
+    );
   });
 
   it('language engagement creation fails and lets you know why if your ids are bad', async () => {
@@ -854,13 +862,17 @@ describe('Engagement e2e', () => {
         projectId: invalidId,
         languageId: language.id,
       })
-    ).rejects.toThrow('Could not find project');
+    ).rejects.toThrowGqlError(
+      errors.notFound({ message: 'Could not find project' })
+    );
     await expect(
       createLanguageEngagement(app, {
         projectId: project.id,
         languageId: invalidId,
       })
-    ).rejects.toThrow('Could not find language');
+    ).rejects.toThrowGqlError(
+      errors.notFound({ message: 'Could not find language' })
+    );
   });
 
   it('should return empty methodologies array even if it is null', async () => {
@@ -899,11 +911,12 @@ describe('Engagement e2e', () => {
       createInternshipEngagement(app, {
         projectId: project.id,
       })
-    ).rejects.toThrowError(
-      new InputException(
-        'Only Internship Engagements can be created on Internship Projects',
-        'engagement.projectId'
-      )
+    ).rejects.toThrowGqlError(
+      errors.input({
+        message:
+          'Only Internship Engagements can be created on Internship Projects',
+        field: 'engagement.internId',
+      })
     );
   });
 
@@ -921,8 +934,11 @@ describe('Engagement e2e', () => {
         projectId: project.id,
         languageId: language.id,
       })
-    ).rejects.toThrowError(
-      'Engagement for this project and language already exists'
+    ).rejects.toThrowGqlError(
+      errors.duplicate({
+        message: 'Engagement for this project and language already exists',
+        field: 'engagement.languageId',
+      })
     );
   });
 
@@ -942,8 +958,11 @@ describe('Engagement e2e', () => {
         projectId: project.id,
         internId: intern.id,
       })
-    ).rejects.toThrowError(
-      'Engagement for this project and person already exists'
+    ).rejects.toThrowGqlError(
+      errors.duplicate({
+        message: 'Engagement for this project and person already exists',
+        field: 'engagement.internId',
+      })
     );
   });
 
@@ -956,8 +975,12 @@ describe('Engagement e2e', () => {
         languageId: language.id,
         firstScripture: true,
       })
-    ).rejects.toThrowError(
-      'First scripture has already been marked as having been done externally'
+    ).rejects.toThrowGqlError(
+      errors.input({
+        message:
+          'First scripture has already been marked as having been done externally',
+        field: 'languageEngagement.firstScripture',
+      })
     );
   });
 
@@ -973,8 +996,12 @@ describe('Engagement e2e', () => {
         languageId: language.id,
         firstScripture: true,
       })
-    ).rejects.toThrowError(
-      'Another engagement has already been marked as having done the first scripture'
+    ).rejects.toThrowGqlError(
+      errors.input({
+        message:
+          'Another engagement has already been marked as having done the first scripture',
+        field: 'languageEngagement.firstScripture',
+      })
     );
   });
 
@@ -1033,9 +1060,10 @@ describe('Engagement e2e', () => {
         'The project cannot be completed since some engagements have a non-terminal status'
       );
     });
+
     // can't complete a project if you're not an admin and transition is disabled because of non terminal engagements
-    const updateProject = async () => {
-      return await app.graphql.mutate(
+    await app.graphql
+      .mutate(
         gql`
           mutation updateProject($id: ID!, $step: ProjectStep) {
             updateProject(input: { project: { id: $id, step: $step } }) {
@@ -1057,9 +1085,8 @@ describe('Engagement e2e', () => {
           id: project.id,
           step: ProjectStep.Completed,
         }
-      );
-    };
-    await expect(updateProject).rejects.toThrow(Error);
+      )
+      .expectError();
   });
 
   it.each([
@@ -1290,7 +1317,12 @@ describe('Engagement e2e', () => {
       createLanguageEngagement(app, {
         projectId: project.id,
       })
-    ).rejects.toThrowError('The Project status is not in development');
+    ).rejects.toThrowGqlError(
+      errors.input({
+        message: 'The Project status is not in development',
+        field: 'project.status',
+      })
+    );
 
     await expect(
       app.graphql.mutate(
@@ -1305,8 +1337,11 @@ describe('Engagement e2e', () => {
           id: engagement.id,
         }
       )
-    ).rejects.toThrowError(
-      'You do not have the permission to delete this Engagement'
+    ).rejects.toThrowGqlError(
+      errors.input({
+        code: ['Unauthorized', 'Input'],
+        message: 'You do not have the permission to delete this Engagement',
+      })
     );
   });
 });

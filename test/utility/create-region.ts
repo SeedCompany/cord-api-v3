@@ -1,4 +1,3 @@
-import { gql } from 'apollo-server-core';
 import { createPerson, runAsAdmin } from '.';
 import { generateId, isValidId } from '../../src/common';
 import {
@@ -9,6 +8,7 @@ import { TestApp } from './create-app';
 import { getUserFromSession } from './create-session';
 import { createZone } from './create-zone';
 import { fragments } from './fragments';
+import { gql } from './gql-tag';
 
 export async function listFieldRegions(app: TestApp) {
   const result = await app.graphql.mutate(

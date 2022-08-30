@@ -1,4 +1,3 @@
-import { gql } from 'apollo-server-core';
 import { isValidId } from '../../src/common';
 import {
   CreateProjectMember,
@@ -12,6 +11,7 @@ import {
   TestApp,
 } from '../utility';
 import { getUserFromSession } from './create-session';
+import { gql } from './gql-tag';
 
 export async function listProjectMembers(app: TestApp) {
   const result = await app.graphql.mutate(

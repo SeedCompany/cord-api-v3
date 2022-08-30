@@ -1,9 +1,9 @@
 import { faker } from '@faker-js/faker';
-import { gql } from 'apollo-server-core';
 import { generateId, isValidId } from '../../src/common';
 import { CreatePerson, User } from '../../src/components/user';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
+import { gql } from './gql-tag';
 
 export async function createPerson(
   app: TestApp,

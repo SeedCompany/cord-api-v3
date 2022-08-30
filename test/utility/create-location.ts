@@ -1,5 +1,4 @@
 import { faker } from '@faker-js/faker';
-import { gql } from 'apollo-server-core';
 import countries from 'iso-3166-1/dist/iso-3166';
 import { ID, isValidId } from '../../src/common';
 import {
@@ -9,6 +8,7 @@ import {
 } from '../../src/components/location';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
+import { gql } from './gql-tag';
 
 export async function createLocation(
   app: TestApp,

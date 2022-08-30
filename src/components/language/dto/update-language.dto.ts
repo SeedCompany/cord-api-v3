@@ -85,7 +85,9 @@ export abstract class UpdateLanguage {
   readonly isSignLanguage?: boolean;
 
   @Field({ nullable: true })
-  @Matches(/^[A-Z]{2}\d{2}$/)
+  @Matches(/^[A-Z]{2}\d{2}$/, {
+    message: 'Must be 2 uppercase letters followed by 2 digits',
+  })
   readonly signLanguageCode?: string;
 
   @SensitivityField({ nullable: true })

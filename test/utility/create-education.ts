@@ -1,5 +1,4 @@
 import { faker } from '@faker-js/faker';
-import { gql } from 'apollo-server-core';
 import { upperFirst } from 'lodash';
 import { isValidId } from '../../src/common';
 import {
@@ -9,6 +8,7 @@ import {
 } from '../../src/components/user/education';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
+import { gql } from './gql-tag';
 
 export async function createEducation(
   app: TestApp,
