@@ -1,7 +1,7 @@
 import { ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { BaseNode } from '~/core/database/results';
-import { Resource, SecuredProps } from '../../../common';
+import { ID, Resource, SecuredProps } from '../../../common';
 import { Comment } from './comment.dto';
 
 @ObjectType({
@@ -16,4 +16,6 @@ export class CommentThread extends Resource {
   };
 
   readonly parent: BaseNode;
+
+  readonly creator: ID;
 }

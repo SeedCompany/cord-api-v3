@@ -15,14 +15,15 @@ import { CommentThread, CommentThreadListInput } from './dto';
 
 @Injectable()
 export class CommentThreadRepository extends DtoRepository(CommentThread) {
-  async create(parent: ID) {
+  async create(parent: ID, session: Session) {
     const createThreadNode = await createNode(CommentThread, {});
     return (query: Query) =>
       query
         .apply(createThreadNode)
         .apply(
-          createRelationships(CommentThread, 'in', {
-            commentThread: ['BaseNode', parent],
+          createRelationships(CommentThread, {
+            in: { commentThread: ['BaseNode', parent] },
+            out: { creator: ['User', session.userId] },
           })
         )
         .return('node as thread');
@@ -36,9 +37,15 @@ export class CommentThreadRepository extends DtoRepository(CommentThread) {
           relation('in', undefined, 'commentThread'),
           node('parent', 'BaseNode'),
         ])
+        .match([
+          node('node'),
+          relation('out', '', 'creator'),
+          node('creator', 'User'),
+        ])
         .return<{ dto: UnsecuredDto<CommentThread> }>(
           merge('node', {
             parent: 'parent',
+            creator: 'creator.id',
           }).as('dto')
         );
   }
