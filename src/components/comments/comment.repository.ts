@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { ID, Session } from '../../common';
-import { DtoRepository } from '../../core';
+import { DatabaseService, DtoRepository } from '../../core';
 import {
   ACTIVE,
   createNode,
@@ -12,10 +12,15 @@ import {
   requestingUser,
   sorting,
 } from '../../core/database/query';
+import { CommentThreadRepository } from './comment-thread.repository';
 import { Comment, CommentListInput, CreateCommentInput } from './dto';
 
 @Injectable()
 export class CommentRepository extends DtoRepository(Comment) {
+  constructor(readonly threads: CommentThreadRepository, db: DatabaseService) {
+    super(db);
+  }
+
   async create(input: CreateCommentInput, session: Session) {
     const initialProps = {
       creator: session.userId,

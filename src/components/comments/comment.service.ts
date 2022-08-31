@@ -20,7 +20,6 @@ import {
 } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { resourceFromName } from '../authorization/model/resource-map';
-import { CommentThreadRepository } from './comment-thread.repository';
 import { CommentRepository } from './comment.repository';
 import {
   Comment,
@@ -39,7 +38,6 @@ type CommentableRef = ID | BaseNode | Commentable;
 export class CommentService {
   constructor(
     private readonly repo: CommentRepository,
-    private readonly commentThreadRepo: CommentThreadRepository,
     private readonly authorizationService: AuthorizationService,
     private readonly resources: ResourceLoader,
     @Logger('comment:service') private readonly logger: ILogger
@@ -161,7 +159,7 @@ export class CommentService {
     );
 
     if (commentList.total === 1) {
-      await this.commentThreadRepo.deleteNode(commentThreadId!.threadId);
+      await this.repo.threads.deleteNode(commentThreadId!.threadId);
     }
 
     if (!object) {
@@ -187,7 +185,7 @@ export class CommentService {
     }
 
     try {
-      const result = await this.commentThreadRepo.create(input, session);
+      const result = await this.repo.threads.create(input, session);
       if (!result) {
         throw new ServerException('Failed to create comment thread');
       }
@@ -198,9 +196,7 @@ export class CommentService {
         exception,
       });
 
-      if (
-        !(await this.commentThreadRepo.getBaseNode(input.parentId, 'BaseNode'))
-      ) {
+      if (!(await this.repo.threads.getBaseNode(input.parentId, 'BaseNode'))) {
         throw new InputException('threadId is invalid', 'comment.threadId');
       }
 
@@ -209,19 +205,16 @@ export class CommentService {
   }
 
   async readOneThread(id: ID, session: Session) {
-    const dto = await this.commentThreadRepo.readOne(id);
+    const dto = await this.repo.threads.readOne(id);
 
     return {
       ...dto,
-      canDelete: await this.commentThreadRepo.checkDeletePermission(
-        dto.id,
-        session
-      ),
+      canDelete: await this.repo.threads.checkDeletePermission(dto.id, session),
     };
   }
 
   async readManyThreads(ids: readonly ID[]) {
-    return await this.commentThreadRepo.readMany(ids);
+    return await this.repo.threads.readMany(ids);
   }
 
   async listThreads(
@@ -234,7 +227,7 @@ export class CommentService {
       return SecuredList.Redacted;
     }
 
-    const results = await this.commentThreadRepo.list(input, session);
+    const results = await this.repo.threads.list(input, session);
 
     return {
       ...(await mapListResults(results, (dto) =>
