@@ -20,24 +20,8 @@ export class CreateCommentResolver {
   })
   async createComment(
     @Args('input') input: CreateCommentInput,
-    @LoggedInSession() session: Session,
-    @Loader(CommentThreadLoader) threads: LoaderOf<CommentThreadLoader>
+    @LoggedInSession() session: Session
   ): Promise<CreateCommentOutput> {
-    if (!input.threadId) {
-      const commentThread = await this.service.createThread(
-        { parentId: input.resourceId },
-        session
-      );
-      threads.prime(commentThread.id, commentThread);
-
-      const comment = await this.service.create(
-        { ...input, threadId: commentThread.id },
-        session
-      );
-
-      return { comment };
-    }
-
     const comment = await this.service.create(input, session);
     return { comment };
   }

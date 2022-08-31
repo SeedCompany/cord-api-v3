@@ -28,7 +28,6 @@ import {
   CommentThreadListInput,
   CommentThreadListOutput,
   CreateCommentInput,
-  CreateCommentThreadInput,
 } from './dto';
 import { UpdateCommentInput } from './dto/update-comment.dto';
 
@@ -44,10 +43,6 @@ export class CommentService {
   ) {}
 
   async create(input: CreateCommentInput, session: Session) {
-    if (!input.threadId) {
-      throw new ServerException('A comment must be associated with a thread');
-    }
-
     const perms = await this.getPermissionsFromResource(
       input.resourceId,
       session
@@ -69,8 +64,11 @@ export class CommentService {
         exception,
       });
 
-      if (!(await this.repo.getBaseNode(input.threadId, 'CommentThread'))) {
-        throw new InputException('threadId is invalid', 'comment.threadId');
+      if (
+        input.threadId &&
+        !(await this.repo.threads.getBaseNode(input.threadId))
+      ) {
+        throw new InputException('Comment thread does not exist', 'threadId');
       }
 
       throw new ServerException('Failed to create comment', exception);
@@ -173,33 +171,6 @@ export class CommentService {
       });
 
       throw new ServerException('Failed to delete comment', exception);
-    }
-  }
-
-  async createThread(input: CreateCommentThreadInput, session: Session) {
-    if (!input.parentId) {
-      throw new ServerException(
-        'A comment thread must be associated with a parent node'
-      );
-    }
-
-    try {
-      const result = await this.repo.threads.create(input, session);
-      if (!result) {
-        throw new ServerException('Failed to create comment thread');
-      }
-
-      return await this.readOneThread(result.id, session);
-    } catch (exception) {
-      this.logger.warning('Failed to create comment thread', {
-        exception,
-      });
-
-      if (!(await this.repo.threads.getBaseNode(input.parentId, 'BaseNode'))) {
-        throw new InputException('threadId is invalid', 'comment.threadId');
-      }
-
-      throw new ServerException('Failed to create comment thread', exception);
     }
   }
 

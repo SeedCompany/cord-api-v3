@@ -1,7 +1,6 @@
 export * from './comment.dto';
 export * from './comment-thread.dto';
 export * from './create-comment.dto';
-export * from './create-comment-thread.dto';
 export * from './list-comment-thread.dto';
 export * from './list-comment.dto';
 export * from './update-comment.dto';

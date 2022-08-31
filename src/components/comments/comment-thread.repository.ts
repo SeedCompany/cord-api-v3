@@ -6,32 +6,26 @@ import {
   ACTIVE,
   createNode,
   createRelationships,
-  matchRequestingUser,
   merge,
   paginate,
   requestingUser,
   sorting,
 } from '../../core/database/query';
-import {
-  CommentThread,
-  CommentThreadListInput,
-  CreateCommentThreadInput,
-} from './dto';
+import { CommentThread, CommentThreadListInput } from './dto';
 
 @Injectable()
 export class CommentThreadRepository extends DtoRepository(CommentThread) {
-  async create(input: CreateCommentThreadInput, session: Session) {
-    return await this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .apply(await createNode(CommentThread, {}))
-      .apply(
-        createRelationships(CommentThread, 'in', {
-          commentThread: ['BaseNode', input.parentId],
-        })
-      )
-      .return<{ id: ID }>('node.id as id')
-      .first();
+  async create(parent: ID) {
+    const createThreadNode = await createNode(CommentThread, {});
+    return (query: Query) =>
+      query
+        .apply(createThreadNode)
+        .apply(
+          createRelationships(CommentThread, 'in', {
+            commentThread: ['BaseNode', parent],
+          })
+        )
+        .return('node as thread');
   }
 
   protected hydrate() {

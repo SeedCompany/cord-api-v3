@@ -13,6 +13,7 @@ import {
   paginate,
   requestingUser,
   sorting,
+  variable,
 } from '../../core/database/query';
 import { CommentThreadRepository } from './comment-thread.repository';
 import { Comment, CommentListInput, CreateCommentInput } from './dto';
@@ -32,13 +33,24 @@ export class CommentRepository extends DtoRepository(Comment) {
     return await this.db
       .query()
       .apply(matchRequestingUser(session))
+      .subQuery(
+        input.threadId
+          ? (q) =>
+              q
+                .matchNode('thread', 'CommentThread', { id: input.threadId })
+                .return('thread')
+          : await this.threads.create(input.resourceId)
+      )
       .apply(await createNode(Comment, { initialProps }))
       .apply(
         createRelationships(Comment, 'in', {
-          comment: ['BaseNode', input.threadId],
+          comment: variable('thread'),
         })
       )
-      .return<{ id: ID }>('node.id as id')
+      .return<{ id: ID; threadId: ID }>([
+        'node.id as id',
+        'thread.id as threadId',
+      ])
       .first();
   }
 
