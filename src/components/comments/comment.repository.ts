@@ -8,7 +8,6 @@ import {
   createNode,
   createRelationships,
   matchProps,
-  matchRequestingUser,
   merge,
   paginate,
   requestingUser,
@@ -26,13 +25,11 @@ export class CommentRepository extends DtoRepository(Comment) {
 
   async create(input: CreateCommentInput, session: Session) {
     const initialProps = {
-      creator: session.userId,
       body: input.body,
       modifiedAt: DateTime.local(),
     };
     return await this.db
       .query()
-      .apply(matchRequestingUser(session))
       .subQuery(
         input.threadId
           ? (q) =>
@@ -43,8 +40,9 @@ export class CommentRepository extends DtoRepository(Comment) {
       )
       .apply(await createNode(Comment, { initialProps }))
       .apply(
-        createRelationships(Comment, 'in', {
-          comment: variable('thread'),
+        createRelationships(Comment, {
+          in: { comment: variable('thread') },
+          out: { creator: ['User', session.userId] },
         })
       )
       .return<{ id: ID; threadId: ID }>([
@@ -63,8 +61,15 @@ export class CommentRepository extends DtoRepository(Comment) {
           relation('in', '', 'comment', ACTIVE),
           node('thread', 'CommentThread'),
         ])
+        .match([
+          node('node'),
+          relation('out', '', 'creator'),
+          node('creator', 'User'),
+        ])
         .return<{ dto: UnsecuredDto<Comment> }>(
-          merge('props', { thread: 'thread.id' }).as('dto')
+          merge('props', { thread: 'thread.id', creator: 'creator.id' }).as(
+            'dto'
+          )
         );
   }
 

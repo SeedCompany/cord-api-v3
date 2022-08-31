@@ -5,15 +5,9 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import {
-  ID,
-  IdArg,
-  LoggedInSession,
-  mapSecuredValue,
-  Session,
-} from '../../common';
+import { ID, IdArg, LoggedInSession, Session } from '../../common';
 import { Loader, LoaderOf } from '../../core';
-import { SecuredUser, UserLoader } from '../user';
+import { User, UserLoader } from '../user';
 import { CommentService } from './comment.service';
 import {
   Comment,
@@ -48,13 +42,11 @@ export class CommentResolver {
     return { success: true };
   }
 
-  @ResolveField(() => SecuredUser, {
-    description: 'Get comment creator',
-  })
+  @ResolveField(() => User)
   async creator(
     @Parent() comment: Comment,
     @Loader(UserLoader) users: LoaderOf<UserLoader>
-  ): Promise<SecuredUser> {
-    return await mapSecuredValue(comment.creator, (id) => users.load(id));
+  ): Promise<User> {
+    return await users.load(comment.creator);
   }
 }

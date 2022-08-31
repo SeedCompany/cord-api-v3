@@ -6,7 +6,6 @@ import {
   ID,
   Resource,
   RichTextField,
-  Secured,
   SecuredProps,
   SecuredRichTextDocument,
 } from '../../../common';
@@ -20,7 +19,7 @@ export class Comment extends Resource {
 
   readonly thread: ID;
 
-  readonly creator: Secured<ID>;
+  readonly creator: ID;
 
   @RichTextField()
   readonly body: SecuredRichTextDocument;
