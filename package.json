@@ -4,7 +4,7 @@
   "license": "MIT",
   "packageManager": "yarn@3.2.3",
   "engines": {
-    "node": ">=16"
+    "node": ">=16.11"
   },
   "scripts": {
     "prebuild": "rimraf dist",
