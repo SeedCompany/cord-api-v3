@@ -6,7 +6,6 @@ import {
   NotFoundException,
   Order,
   Resource,
-  ResourceShape,
   SecuredList,
   ServerException,
   Session,
@@ -226,18 +225,12 @@ export class CommentService {
   }
 
   async listThreads(
-    parentType: ResourceShape<Commentable>,
-    parent: Commentable & Resource,
+    parent: Commentable,
     input: CommentThreadListInput,
     session: Session
   ): Promise<CommentThreadListOutput> {
-    const perms = await this.authorizationService.getPermissions({
-      resource: parentType,
-      sessionOrUserId: session,
-      dto: parent,
-    });
-
-    if (!perms.commentThreads.canRead) {
+    const perms = await this.getPermissionsFromResource(parent, session);
+    if (!perms?.canRead) {
       return SecuredList.Redacted;
     }
 
