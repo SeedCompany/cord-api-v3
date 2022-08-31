@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import {
   ID,
   InputException,
+  isIdLike,
   NotFoundException,
   Order,
   Resource,
@@ -9,11 +10,13 @@ import {
   SecuredList,
   ServerException,
   Session,
+  UnauthorizedException,
   UnsecuredDto,
 } from '../../common';
-import { ILogger, Logger } from '../../core';
-import { mapListResults } from '../../core/database/results';
+import { ILogger, Logger, ResourceLoader } from '../../core';
+import { BaseNode, mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
+import { resourceFromName } from '../authorization/model/resource-map';
 import { CommentThreadRepository } from './comment-thread.repository';
 import { CommentRepository } from './comment.repository';
 import {
@@ -33,11 +36,23 @@ export class CommentService {
     private readonly repo: CommentRepository,
     private readonly commentThreadRepo: CommentThreadRepository,
     private readonly authorizationService: AuthorizationService,
+    private readonly resources: ResourceLoader,
     @Logger('comment:service') private readonly logger: ILogger
   ) {}
+
   async create(input: CreateCommentInput, session: Session) {
     if (!input.threadId) {
       throw new ServerException('A comment must be associated with a thread');
+    }
+
+    const perms = await this.getPermissionsFromResource(
+      input.resourceId,
+      session
+    );
+    if (!perms?.canEdit) {
+      throw new UnauthorizedException(
+        'You do not have the permission to add comments to this resource'
+      );
     }
 
     try {
@@ -57,6 +72,30 @@ export class CommentService {
 
       throw new ServerException('Failed to create comment', exception);
     }
+  }
+
+  async getPermissionsFromResource(resource: ID | BaseNode, session: Session) {
+    const parentNode = isIdLike(resource)
+      ? await this.repo.getBaseNode(resource, Resource)
+      : resource;
+    if (!parentNode) {
+      throw new NotFoundException('Resource does not exist', 'resourceId');
+    }
+    const parent = await this.resources.loadByBaseNode(parentNode);
+    const { commentThreads: perms } =
+      await this.authorizationService.getPermissions<typeof Commentable>({
+        // @ts-expect-error We are assuming this is an implementation of Commentable
+        resource: resourceFromName(parent.__typename),
+        dto: parent,
+        sessionOrUserId: session,
+      });
+    // this can be null on dev error
+    if (!perms) {
+      this.logger.warning(
+        `${parent.__typename} does not have any \`commentThreads\` permissions defined`
+      );
+    }
+    return perms as typeof perms | null;
   }
 
   async readOne(id: ID, session: Session): Promise<Comment> {
