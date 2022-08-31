@@ -1,34 +1,29 @@
-import { ID, UnauthorizedException } from '~/common';
-import { isAdmin } from '~/common/session';
+import { ID } from '~/common';
 import { LoaderFactory, OrderedNestDataLoader } from '~/core';
+import { CommentRepository } from './comment.repository';
 import { CommentService } from './comment.service';
 import { CommentThread } from './dto';
 
 @LoaderFactory(() => CommentThread)
 export class CommentThreadLoader extends OrderedNestDataLoader<CommentThread> {
-  constructor(private readonly service: CommentService) {
+  constructor(
+    private readonly service: CommentService,
+    private readonly repo: CommentRepository
+  ) {
     super();
   }
 
   async loadMany(ids: readonly ID[]) {
     const session = this.session;
-    const threads = await this.service.readManyThreads(ids);
+    const threads = await this.repo.threads.readMany(ids);
     return await Promise.all(
       threads.map(async (thread) => {
-        const perms = await this.service.getPermissionsFromResource(
-          thread.parent,
-          session
-        );
-        if (!perms?.canRead) {
-          const error = new UnauthorizedException(
-            'You do not have the permission to view this comment thread'
-          );
+        try {
+          await this.service.verifyCanView(thread.parent, session);
+          return await this.service.secureThread(thread, session);
+        } catch (error) {
           return { key: thread.id, error };
         }
-        return {
-          ...thread,
-          canDelete: thread.creator === session.userId || isAdmin(session),
-        };
       })
     );
   }

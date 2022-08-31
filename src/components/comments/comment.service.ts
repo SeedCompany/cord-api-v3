@@ -25,6 +25,7 @@ import {
   Comment,
   Commentable,
   CommentListInput,
+  CommentThread,
   CommentThreadListInput,
   CommentThreadListOutput,
   CreateCommentInput,
@@ -93,6 +94,15 @@ export class CommentService {
     return perms as typeof perms | null;
   }
 
+  async verifyCanView(resource: CommentableRef, session: Session) {
+    const perms = await this.getPermissionsFromResource(resource, session);
+    if (!perms?.canRead) {
+      throw new UnauthorizedException(
+        'You do not have the permission to view this comment thread'
+      );
+    }
+  }
+
   async loadCommentable(resource: CommentableRef): Promise<Commentable> {
     const parentNode = isIdLike(resource)
       ? await this.repo.getBaseNode(resource, Resource)
@@ -108,15 +118,27 @@ export class CommentService {
 
   async readOne(id: ID, session: Session): Promise<Comment> {
     const dto = await this.repo.readOne(id);
-    return await this.secure(dto, session);
+    return await this.secureComment(dto, session);
   }
 
   async readMany(ids: readonly ID[], session: Session) {
     const comments = await this.repo.readMany(ids);
-    return await Promise.all(comments.map((dto) => this.secure(dto, session)));
+    return await Promise.all(
+      comments.map((dto) => this.secureComment(dto, session))
+    );
   }
 
-  private async secure(
+  async secureThread(
+    thread: UnsecuredDto<CommentThread>,
+    session: Session
+  ): Promise<CommentThread> {
+    return {
+      ...thread,
+      canDelete: thread.creator === session.userId || isAdmin(session),
+    };
+  }
+
+  async secureComment(
     dto: UnsecuredDto<Comment>,
     session: Session
   ): Promise<Comment> {
@@ -179,10 +201,6 @@ export class CommentService {
     };
   }
 
-  async readManyThreads(ids: readonly ID[]) {
-    return await this.repo.threads.readMany(ids);
-  }
-
   async listThreads(
     parent: Commentable,
     input: CommentThreadListInput,
@@ -208,6 +226,8 @@ export class CommentService {
     session: Session
   ) {
     const results = await this.repo.list(thread, input, session);
-    return await mapListResults(results, (dto) => this.secure(dto, session));
+    return await mapListResults(results, (dto) =>
+      this.secureComment(dto, session)
+    );
   }
 }
