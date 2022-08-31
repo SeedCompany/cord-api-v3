@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ValueOf } from 'type-fest';
+import { ConditionalKeys, ValueOf } from 'type-fest';
 import { ID, Many, ObjectView, ServerException } from '~/common';
 import { GqlContextHost } from '~/core/graphql';
 import { ResourceMap } from '../../components/authorization/model/resource-map';
@@ -40,26 +40,31 @@ export class ResourceLoader {
     return await this.load(obj.__typename, obj.id, view);
   }
 
-  async load<TResource extends SomeResourceType>(
+  async load<
+    TResource extends SomeResourceType,
+    TResourceName = ConditionalKeys<ResourceMap, TResource>
+  >(
     type: TResource,
     id: ID,
     view?: ObjectView
-  ): Promise<TResource['prototype']>;
+  ): Promise<TResource['prototype'] & { __typename: TResourceName }>;
   async load<TResourceName extends keyof ResourceMap>(
     type: TResourceName,
     id: ID,
     view?: ObjectView
-  ): Promise<ResourceMap[TResourceName]['prototype']>;
+  ): Promise<
+    ResourceMap[TResourceName]['prototype'] & { __typename: TResourceName }
+  >;
   async load(
     type: Many<keyof ResourceMap | SomeResourceType>,
     id: ID,
     view?: ObjectView
-  ): Promise<SomeResourceType['prototype']>;
+  ): Promise<SomeResourceType['prototype'] & { __typename: string }>;
   async load(
     type: Many<keyof ResourceMap | SomeResourceType>,
     id: ID,
     view?: ObjectView
-  ): Promise<SomeResourceType['prototype']> {
+  ): Promise<SomeResourceType['prototype'] & { __typename: string }> {
     const { factory, objectViewAware, resolvedType } =
       this.findLoaderFactory(type);
 
