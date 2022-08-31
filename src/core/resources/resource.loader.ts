@@ -1,9 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Type } from '@nestjs/common';
 import { ConditionalKeys, ValueOf } from 'type-fest';
 import { ID, Many, ObjectView, ServerException } from '~/common';
 import { GqlContextHost } from '~/core/graphql';
 import { ResourceMap } from '../../components/authorization/model/resource-map';
-import { DataLoader, LoaderContextType } from '../data-loader';
+import { LoaderContextType, LoaderOf, NestDataLoader } from '../data-loader';
 import { NEST_LOADER_CONTEXT_KEY } from '../data-loader/constants';
 import { BaseNode } from '../database/results';
 import { ResourceLoaderRegistry } from './loader.registry';
@@ -67,13 +67,7 @@ export class ResourceLoader {
   ): Promise<SomeResourceType['prototype'] & { __typename: string }> {
     const { factory, objectViewAware, resolvedType } =
       this.findLoaderFactory(type);
-
-    const context = this.contextHost.context as unknown as {
-      [NEST_LOADER_CONTEXT_KEY]: LoaderContextType;
-    };
-    const loader: DataLoader<any, any> = await context[
-      NEST_LOADER_CONTEXT_KEY
-    ].getLoader(factory);
+    const loader = await this.getLoader(factory);
     const key = objectViewAware ? { id, view: view ?? { active: true } } : id;
     const result = await loader.load(key);
     return {
@@ -83,6 +77,16 @@ export class ResourceLoader {
       __typename: resolvedType,
       ...result,
     };
+  }
+
+  async getLoader<T extends NestDataLoader<any, any>>(
+    factory: Type<T>
+  ): Promise<LoaderOf<T>> {
+    const context = this.contextHost.context as unknown as {
+      [NEST_LOADER_CONTEXT_KEY]: LoaderContextType;
+    };
+    const loader = await context[NEST_LOADER_CONTEXT_KEY].getLoader(factory);
+    return loader as LoaderOf<T>;
   }
 
   private findLoaderFactory(type: Many<keyof ResourceMap | SomeResourceType>) {
