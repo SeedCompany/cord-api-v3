@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { isAdmin } from '~/common/session';
 import {
   ID,
-  InputException,
   isIdLike,
   NotFoundException,
   Resource,
@@ -68,7 +67,10 @@ export class CommentService {
         input.threadId &&
         !(await this.repo.threads.getBaseNode(input.threadId))
       ) {
-        throw new InputException('Comment thread does not exist', 'threadId');
+        throw new NotFoundException(
+          'Comment thread does not exist',
+          'threadId'
+        );
       }
 
       throw new ServerException('Failed to create comment', exception);
