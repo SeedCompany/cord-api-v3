@@ -14,7 +14,11 @@ import {
   UnsecuredDto,
 } from '../../common';
 import { ILogger, Logger, ResourceLoader } from '../../core';
-import { BaseNode, mapListResults } from '../../core/database/results';
+import {
+  BaseNode,
+  isBaseNode,
+  mapListResults,
+} from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { resourceFromName } from '../authorization/model/resource-map';
 import { CommentThreadRepository } from './comment-thread.repository';
@@ -30,7 +34,7 @@ import {
 } from './dto';
 import { UpdateCommentInput } from './dto/update-comment.dto';
 
-type CommentableRef = ID | BaseNode;
+type CommentableRef = ID | BaseNode | Commentable;
 
 @Injectable()
 export class CommentService {
@@ -101,7 +105,9 @@ export class CommentService {
     if (!parentNode) {
       throw new NotFoundException('Resource does not exist', 'resourceId');
     }
-    const parent = await this.resources.loadByBaseNode(parentNode);
+    const parent = isBaseNode(parentNode)
+      ? await this.resources.loadByBaseNode(parentNode)
+      : parentNode;
     return parent as Commentable;
   }
 
