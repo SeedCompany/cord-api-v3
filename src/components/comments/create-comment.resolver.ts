@@ -35,11 +35,11 @@ export class CreateCommentResolver {
         session
       );
 
-      return { comment, commentThread: commentThread.id };
+      return { comment };
     }
 
     const comment = await this.service.create(input, session);
-    return { comment, commentThread: input.threadId };
+    return { comment };
   }
 
   @ResolveField(() => CommentThread)
@@ -47,6 +47,6 @@ export class CreateCommentResolver {
     @Parent() output: CreateCommentOutput,
     @Loader(CommentThreadLoader) threads: LoaderOf<CommentThreadLoader>
   ) {
-    return await threads.load(output.commentThread);
+    return await threads.load(output.comment.thread);
   }
 }

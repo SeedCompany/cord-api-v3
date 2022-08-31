@@ -18,6 +18,4 @@ export abstract class CreateCommentInput {
 export abstract class CreateCommentOutput {
   @Field()
   readonly comment: Comment;
-
-  readonly commentThread: ID;
 }

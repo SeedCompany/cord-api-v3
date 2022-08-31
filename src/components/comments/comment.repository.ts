@@ -1,13 +1,15 @@
 import { Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
+import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { ID, Session } from '../../common';
+import { ID, Session, UnsecuredDto } from '../../common';
 import { DatabaseService, DtoRepository } from '../../core';
 import {
   ACTIVE,
   createNode,
   createRelationships,
+  matchProps,
   matchRequestingUser,
+  merge,
   paginate,
   requestingUser,
   sorting,
@@ -40,16 +42,18 @@ export class CommentRepository extends DtoRepository(Comment) {
       .first();
   }
 
-  async getThreadId(id: ID) {
-    return await this.db
-      .query()
-      .match([
-        node('node', 'Comment', { id }),
-        relation('in', '', 'comment', ACTIVE),
-        node('thread', 'CommentThread'),
-      ])
-      .return<{ threadId: ID }>('thread.id as threadId')
-      .first();
+  protected hydrate() {
+    return (query: Query) =>
+      query
+        .apply(matchProps())
+        .match([
+          node('node'),
+          relation('in', '', 'comment', ACTIVE),
+          node('thread', 'CommentThread'),
+        ])
+        .return<{ dto: UnsecuredDto<Comment> }>(
+          merge('props', { thread: 'thread.id' }).as('dto')
+        );
   }
 
   async list(input: CommentListInput, session: Session) {

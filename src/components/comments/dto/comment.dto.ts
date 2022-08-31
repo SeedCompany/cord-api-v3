@@ -18,6 +18,8 @@ export class Comment extends Resource {
   static readonly Props = keysOf<Comment>();
   static readonly SecuredProps: string[] = keysOf<SecuredProps<Comment>>();
 
+  readonly thread: ID;
+
   readonly creator: Secured<ID>;
 
   @RichTextField()

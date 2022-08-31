@@ -145,7 +145,6 @@ export class CommentService {
 
   async delete(id: ID, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
-    const commentThreadId = await this.repo.getThreadId(id);
 
     const commentList = await this.listCommentsByThreadId(
       {
@@ -153,13 +152,13 @@ export class CommentService {
         sort: 'createdAt',
         order: Order.ASC,
         page: 1,
-        filter: { threadId: commentThreadId!.threadId },
+        filter: { threadId: object.thread },
       },
       session
     );
 
     if (commentList.total === 1) {
-      await this.repo.threads.deleteNode(commentThreadId!.threadId);
+      await this.repo.threads.deleteNode(object.thread);
     }
 
     if (!object) {
