@@ -9,6 +9,7 @@ import { CommentRepository } from './comment.repository';
 import { CommentResolver } from './comment.resolver';
 import { CommentService } from './comment.service';
 import { CommentableResolver } from './commentable.resolver';
+import { CreateCommentResolver } from './create-comment.resolver';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { CommentableResolver } from './commentable.resolver';
     forwardRef(() => AuthorizationModule),
   ],
   providers: [
+    CreateCommentResolver,
     CommentResolver,
     CommentLoader,
     CommentRepository,

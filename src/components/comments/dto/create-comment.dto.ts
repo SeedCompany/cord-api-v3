@@ -1,6 +1,5 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { ID, IdField, RichTextDocument, RichTextField } from '../../../common';
-import { CommentThread } from './comment-thread.dto';
 import { Comment } from './comment.dto';
 
 @InputType()
@@ -20,6 +19,5 @@ export abstract class CreateCommentOutput {
   @Field()
   readonly comment: Comment;
 
-  @Field()
-  readonly commentThread: CommentThread;
+  readonly commentThread: ID;
 }

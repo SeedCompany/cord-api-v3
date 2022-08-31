@@ -17,8 +17,6 @@ import { SecuredUser, UserLoader } from '../user';
 import { CommentService } from './comment.service';
 import {
   Comment,
-  CreateCommentInput,
-  CreateCommentOutput,
   DeleteCommentOutput,
   UpdateCommentInput,
   UpdateCommentOutput,
@@ -27,35 +25,6 @@ import {
 @Resolver(Comment)
 export class CommentResolver {
   constructor(private readonly service: CommentService) {}
-
-  @Mutation(() => CreateCommentOutput, {
-    description: 'Create a comment',
-  })
-  async createComment(
-    @LoggedInSession() session: Session,
-    @Args('input') input: CreateCommentInput
-  ): Promise<CreateCommentOutput> {
-    if (!input.threadId) {
-      const commentThread = await this.service.createThread(
-        { parentId: input.resourceId },
-        session
-      );
-
-      const comment = await this.service.create(
-        { ...input, threadId: commentThread.id },
-        session
-      );
-
-      return { comment, commentThread };
-    }
-
-    const comment = await this.service.create(input, session);
-    const commentThread = await this.service.readOneThread(
-      input.threadId,
-      session
-    );
-    return { comment, commentThread };
-  }
 
   @Mutation(() => UpdateCommentOutput, {
     description: 'Update an existing comment',
