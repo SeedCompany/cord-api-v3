@@ -1,4 +1,5 @@
 import { ID, UnauthorizedException } from '~/common';
+import { isAdmin } from '~/common/session';
 import { LoaderFactory, OrderedNestDataLoader } from '~/core';
 import { CommentService } from './comment.service';
 import { CommentThread } from './dto';
@@ -10,12 +11,13 @@ export class CommentThreadLoader extends OrderedNestDataLoader<CommentThread> {
   }
 
   async loadMany(ids: readonly ID[]) {
+    const session = this.session;
     const threads = await this.service.readManyThreads(ids);
     return await Promise.all(
       threads.map(async (thread) => {
         const perms = await this.service.getPermissionsFromResource(
           thread.parent,
-          this.session
+          session
         );
         if (!perms?.canRead) {
           const error = new UnauthorizedException(
@@ -25,7 +27,7 @@ export class CommentThreadLoader extends OrderedNestDataLoader<CommentThread> {
         }
         return {
           ...thread,
-          canDelete: true,
+          canDelete: thread.creator === session.userId || isAdmin(session),
         };
       })
     );

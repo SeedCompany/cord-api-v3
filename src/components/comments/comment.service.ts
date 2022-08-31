@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { isAdmin } from '~/common/session';
 import {
   ID,
   InputException,
@@ -128,7 +129,7 @@ export class CommentService {
     return {
       ...dto,
       ...securedProps,
-      canDelete: await this.repo.checkDeletePermission(dto.id, session),
+      canDelete: dto.creator === session.userId || isAdmin(session),
     };
   }
 
