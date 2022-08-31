@@ -6,7 +6,6 @@ import {
   isIdLike,
   NotFoundException,
   Resource,
-  SecuredList,
   ServerException,
   Session,
   UnauthorizedException,
@@ -192,32 +191,17 @@ export class CommentService {
     }
   }
 
-  async readOneThread(id: ID, session: Session) {
-    const dto = await this.repo.threads.readOne(id);
-
-    return {
-      ...dto,
-      canDelete: await this.repo.threads.checkDeletePermission(dto.id, session),
-    };
-  }
-
   async listThreads(
     parent: Commentable,
     input: CommentThreadListInput,
     session: Session
   ): Promise<CommentThreadListOutput> {
-    const perms = await this.getPermissionsFromResource(parent, session);
-    if (!perms?.canRead) {
-      return SecuredList.Redacted;
-    }
+    await this.verifyCanView(parent, session);
 
     const results = await this.repo.threads.list(parent.id, input, session);
-
-    return {
-      ...(await mapListResults(results, (dto) =>
-        this.readOneThread(dto.id, session)
-      )),
-    };
+    return await mapListResults(results, (dto) =>
+      this.secureThread(dto, session)
+    );
   }
 
   async listCommentsByThreadId(
