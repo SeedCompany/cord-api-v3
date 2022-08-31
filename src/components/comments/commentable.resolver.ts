@@ -22,17 +22,7 @@ export class CommentableResolver {
     @LoggedInSession() session: Session,
     @Loader(CommentThreadLoader) commentThreads: LoaderOf<CommentThreadLoader>
   ): Promise<CommentThreadListOutput> {
-    const list = await this.service.listThreads(
-      parent,
-      {
-        ...input,
-        filter: {
-          ...input.filter,
-          parentId: parent.id,
-        },
-      },
-      session
-    );
+    const list = await this.service.listThreads(parent, input, session);
     commentThreads.primeAll(list.items);
     return list;
   }

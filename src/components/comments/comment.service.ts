@@ -4,7 +4,6 @@ import {
   InputException,
   isIdLike,
   NotFoundException,
-  Order,
   Resource,
   SecuredList,
   ServerException,
@@ -145,13 +144,8 @@ export class CommentService {
     const object = await this.readOne(id, session);
 
     const commentList = await this.listCommentsByThreadId(
-      {
-        count: 10,
-        sort: 'createdAt',
-        order: Order.ASC,
-        page: 1,
-        filter: { threadId: object.thread },
-      },
+      object.thread,
+      CommentListInput.defaultVal,
       session
     );
 
@@ -197,7 +191,7 @@ export class CommentService {
       return SecuredList.Redacted;
     }
 
-    const results = await this.repo.threads.list(input, session);
+    const results = await this.repo.threads.list(parent.id, input, session);
 
     return {
       ...(await mapListResults(results, (dto) =>
@@ -206,8 +200,12 @@ export class CommentService {
     };
   }
 
-  async listCommentsByThreadId(input: CommentListInput, session: Session) {
-    const results = await this.repo.list(input, session);
+  async listCommentsByThreadId(
+    thread: ID,
+    input: CommentListInput,
+    session: Session
+  ) {
+    const results = await this.repo.list(thread, input, session);
     return await mapListResults(results, (dto) => this.secure(dto, session));
   }
 }

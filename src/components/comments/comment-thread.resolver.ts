@@ -29,10 +29,7 @@ export class CommentThreadResolver {
     @ListArg(CommentListInput) input: CommentListInput,
     @Loader(CommentLoader) comments: LoaderOf<CommentLoader>
   ) {
-    const list = await this.service.listCommentsByThreadId(
-      { ...input, filter: { threadId: id } },
-      session
-    );
+    const list = await this.service.listCommentsByThreadId(id, input, session);
     comments.primeAll(list.items);
     return list;
   }

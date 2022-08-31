@@ -43,16 +43,20 @@ export class CommentThreadRepository extends DtoRepository(CommentThread) {
         );
   }
 
-  async list({ filter, ...input }: CommentThreadListInput, session: Session) {
+  async list(
+    parent: ID | undefined,
+    input: CommentThreadListInput,
+    session: Session
+  ) {
     const result = await this.db
       .query()
       .match(requestingUser(session))
       .match([
         node('node', 'CommentThread'),
-        ...(filter.parentId
+        ...(parent
           ? [
               relation('in', '', 'commentThread', ACTIVE),
-              node('', 'BaseNode', { id: filter.parentId }),
+              node('', 'BaseNode', { id: parent }),
             ]
           : []),
       ])

@@ -68,8 +68,7 @@ export class CommentRepository extends DtoRepository(Comment) {
         );
   }
 
-  async list(input: CommentListInput, session: Session) {
-    const { threadId } = input.filter;
+  async list(threadId: ID, input: CommentListInput, session: Session) {
     const result = await this.db
       .query()
       .match(requestingUser(session))
