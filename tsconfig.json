@@ -19,9 +19,6 @@
     // Disabling for now, but it would be good to re-enable later
     "useUnknownInCatchVariables": false,
     "skipLibCheck": true,
-    "noImplicitAny": true,
-    "noImplicitThis": true,
-    "noImplicitReturns": true,
     "baseUrl": ".",
     "paths": {
       "~/common": ["./src/common"],
