@@ -59,10 +59,6 @@ export class CommentService {
       }
       return await this.readOne(result.id, session);
     } catch (exception) {
-      this.logger.warning('Failed to create comment', {
-        exception,
-      });
-
       if (
         input.threadId &&
         !(await this.repo.threads.getBaseNode(input.threadId))
@@ -185,10 +181,6 @@ export class CommentService {
     try {
       await this.repo.deleteNode(object);
     } catch (exception) {
-      this.logger.warning('Failed to delete comment', {
-        exception,
-      });
-
       throw new ServerException('Failed to delete comment', exception);
     }
   }
