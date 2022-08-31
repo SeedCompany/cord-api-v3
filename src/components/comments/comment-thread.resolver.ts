@@ -4,7 +4,7 @@ import { Loader, LoaderOf } from '~/core';
 import { CommentThreadLoader } from './comment-thread.loader';
 import { CommentLoader } from './comment.loader';
 import { CommentService } from './comment.service';
-import { CommentListInput, CommentListOutput, CommentThread } from './dto';
+import { CommentList, CommentListInput, CommentThread } from './dto';
 
 @Resolver(CommentThread)
 export class CommentThreadResolver {
@@ -20,7 +20,7 @@ export class CommentThreadResolver {
     return await commentThreads.load(id);
   }
 
-  @ResolveField(() => CommentListOutput, {
+  @ResolveField(() => CommentList, {
     description: 'List of comments belonging to a thread',
   })
   async comments(
@@ -28,7 +28,7 @@ export class CommentThreadResolver {
     @Parent() { id }: CommentThread,
     @ListArg(CommentListInput) input: CommentListInput,
     @Loader(CommentLoader) comments: LoaderOf<CommentLoader>
-  ) {
+  ): Promise<CommentList> {
     const list = await this.service.listCommentsByThreadId(id, input, session);
     comments.primeAll(list.items);
     return list;

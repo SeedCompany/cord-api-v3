@@ -1,10 +1,5 @@
 import { InputType, ObjectType } from '@nestjs/graphql';
-import {
-  Order,
-  PaginatedList,
-  SecuredList,
-  SortablePaginationInput,
-} from '../../../common';
+import { Order, PaginatedList, SortablePaginationInput } from '~/common';
 import { Comment } from './comment.dto';
 
 @InputType()
@@ -16,9 +11,4 @@ export class CommentListInput extends SortablePaginationInput<keyof Comment>({
 }
 
 @ObjectType()
-export class CommentListOutput extends PaginatedList(Comment) {}
-
-@ObjectType({
-  description: SecuredList.descriptionFor('comments'),
-})
-export abstract class SecuredCommentList extends SecuredList(Comment) {}
+export abstract class CommentList extends PaginatedList(Comment) {}
