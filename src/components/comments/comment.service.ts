@@ -30,6 +30,8 @@ import {
 } from './dto';
 import { UpdateCommentInput } from './dto/update-comment.dto';
 
+type CommentableRef = ID | BaseNode;
+
 @Injectable()
 export class CommentService {
   constructor(
@@ -74,14 +76,8 @@ export class CommentService {
     }
   }
 
-  async getPermissionsFromResource(resource: ID | BaseNode, session: Session) {
-    const parentNode = isIdLike(resource)
-      ? await this.repo.getBaseNode(resource, Resource)
-      : resource;
-    if (!parentNode) {
-      throw new NotFoundException('Resource does not exist', 'resourceId');
-    }
-    const parent = await this.resources.loadByBaseNode(parentNode);
+  async getPermissionsFromResource(resource: CommentableRef, session: Session) {
+    const parent = await this.loadCommentable(resource);
     const { commentThreads: perms } =
       await this.authorizationService.getPermissions<typeof Commentable>({
         // @ts-expect-error We are assuming this is an implementation of Commentable
@@ -96,6 +92,17 @@ export class CommentService {
       );
     }
     return perms as typeof perms | null;
+  }
+
+  async loadCommentable(resource: CommentableRef): Promise<Commentable> {
+    const parentNode = isIdLike(resource)
+      ? await this.repo.getBaseNode(resource, Resource)
+      : resource;
+    if (!parentNode) {
+      throw new NotFoundException('Resource does not exist', 'resourceId');
+    }
+    const parent = await this.resources.loadByBaseNode(parentNode);
+    return parent as Commentable;
   }
 
   async readOne(id: ID, session: Session): Promise<Comment> {
