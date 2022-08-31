@@ -155,6 +155,11 @@ export class CommentService {
   async update(input: UpdateCommentInput, session: Session): Promise<Comment> {
     const object = await this.readOne(input.id, session);
     const changes = this.repo.getActualChanges(object, input);
+    await this.authorizationService.verifyCanEditChanges(
+      Comment,
+      object,
+      changes
+    );
     await this.repo.updateProperties(object, changes);
 
     return await this.readOne(input.id, session);
