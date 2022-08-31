@@ -143,6 +143,11 @@ export class CommentService {
 
   async delete(id: ID, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
+    if (!object.canDelete) {
+      throw new UnauthorizedException(
+        'You do not have permission to delete this comment'
+      );
+    }
 
     const commentList = await this.listCommentsByThreadId(
       object.thread,
@@ -152,10 +157,6 @@ export class CommentService {
 
     if (commentList.total === 1) {
       await this.repo.threads.deleteNode(object.thread);
-    }
-
-    if (!object) {
-      throw new NotFoundException('Could not find comment', 'comment.id');
     }
 
     try {
