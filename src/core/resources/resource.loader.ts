@@ -1,13 +1,7 @@
-import { Inject, Injectable, Scope } from '@nestjs/common';
-import { CONTEXT } from '@nestjs/graphql';
+import { Injectable } from '@nestjs/common';
 import { ValueOf } from 'type-fest';
-import {
-  GqlContextType,
-  ID,
-  Many,
-  ObjectView,
-  ServerException,
-} from '../../common';
+import { ID, Many, ObjectView, ServerException } from '~/common';
+import { GqlContextHost } from '~/core/graphql';
 import { ResourceMap } from '../../components/authorization/model/resource-map';
 import { DataLoader, LoaderContextType } from '../data-loader';
 import { NEST_LOADER_CONTEXT_KEY } from '../data-loader/constants';
@@ -22,14 +16,11 @@ interface ObjectRef<Key extends keyof ResourceMap> {
   id: ID;
 }
 
-@Injectable({ scope: Scope.REQUEST })
+@Injectable()
 export class ResourceLoader {
   constructor(
     private readonly loaderRegistry: ResourceLoaderRegistry,
-    @Inject(CONTEXT)
-    private readonly context: GqlContextType & {
-      [NEST_LOADER_CONTEXT_KEY]: LoaderContextType;
-    },
+    private readonly contextHost: GqlContextHost,
     private readonly resourceResolver: ResourceResolver
   ) {}
 
@@ -71,7 +62,11 @@ export class ResourceLoader {
   ): Promise<SomeResourceType['prototype']> {
     const { factory, objectViewAware, resolvedType } =
       this.findLoaderFactory(type);
-    const loader: DataLoader<any, any> = await this.context[
+
+    const context = this.contextHost.context as unknown as {
+      [NEST_LOADER_CONTEXT_KEY]: LoaderContextType;
+    };
+    const loader: DataLoader<any, any> = await context[
       NEST_LOADER_CONTEXT_KEY
     ].getLoader(factory);
     const key = objectViewAware ? { id, view: view ?? { active: true } } : id;
