@@ -1,6 +1,7 @@
 import { DbBudget } from '../../budget/model';
 import { DbBudgetRecord } from '../../budget/model/budget-record.model.db';
 import { DbCeremony } from '../../ceremony/model';
+import { DbComment, DbCommentThread} from '../../comments/model';
 import { DbInternshipEngagement, DbLanguageEngagement } from '../../engagement/model';
 import { DbEthnoArt } from '../../ethno-art/model';
 import { DbFieldRegion } from '../../field-region/model';
@@ -67,6 +68,23 @@ export const Administrator = new DbRole({
         { propertyName: 'estimatedDate', permission: { read, write, }, },
         { propertyName: 'planned', permission: { read, write, }, },
         { propertyName: 'type', permission: { read, write, }, },
+      ],
+      canDelete: true,
+    }),
+    new DbBaseNodeGrant<DbComment>({
+      __className: 'DbComment',
+      canList: true,
+      properties: [
+        { propertyName: 'body', permission: { read, write, }, },
+        { propertyName: 'creator', permission: { read, write, }, },
+      ],
+      canDelete: true,
+    }),
+    new DbBaseNodeGrant<DbCommentThread>({
+      __className: 'DbCommentThread',
+      canList: true,
+      properties: [
+        { propertyName: 'comments', permission: { read, write, }, },
       ],
       canDelete: true,
     }),
@@ -371,6 +389,7 @@ export const Administrator = new DbRole({
         { propertyName: 'owningOrganization', permission: { read, write, }, },
         { propertyName: 'posts', permission: { read, write, }, },
         { propertyName: 'presetInventory', permission: { read, write, }, },
+        { propertyName: 'commentThreads', permission: { read, write, }, },
       ],
       canDelete: true,
     }),

@@ -52,3 +52,6 @@ export const addScope = (session: Session, scope?: ScopedRole[]) => ({
   ...session,
   roles: uniq([...session.roles, ...(scope ?? [])]),
 });
+
+export const isAdmin = (session: Session) =>
+  session.roles.includes('global:Administrator');

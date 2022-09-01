@@ -7,6 +7,7 @@ export { DbLabel } from './db-label.decorator';
 export * from './db-label.helpers';
 export * from './db-sort.decorator';
 export * from './db-unique.decorator';
+export * from './disabled.decorator';
 export * from './mutation-placeholder.output';
 export * from './exceptions';
 export * from './fields.pipe';
@@ -35,4 +36,8 @@ export * from './id-field';
 export * from './url.field';
 export * from './base-node-labels.enum';
 export * from './object-view';
-export { RichTextField, RichTextDocument } from './rich-text.scalar';
+export {
+  RichTextField,
+  RichTextDocument,
+  SecuredRichText,
+} from './rich-text.scalar';

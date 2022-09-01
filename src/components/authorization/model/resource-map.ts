@@ -2,6 +2,7 @@ import { ServerException } from '../../../common';
 import { Budget, BudgetRecord } from '../../budget/dto';
 import { Ceremony } from '../../ceremony/dto';
 import { Changeset } from '../../changeset/dto';
+import { Comment, CommentThread } from '../../comments/dto';
 import {
   IEngagement as Engagement,
   InternshipEngagement,
@@ -50,6 +51,8 @@ export const ResourceMap = {
   BudgetRecord,
   Ceremony,
   Changeset,
+  Comment,
+  CommentThread,
   Directory,
   Education,
   Engagement,

@@ -1,15 +1,9 @@
-import { Inject, Injectable, Scope } from '@nestjs/common';
-import { CONTEXT } from '@nestjs/graphql';
-import { ValueOf } from 'type-fest';
-import {
-  GqlContextType,
-  ID,
-  Many,
-  ObjectView,
-  ServerException,
-} from '../../common';
+import { Injectable, Type } from '@nestjs/common';
+import { ConditionalKeys, ValueOf } from 'type-fest';
+import { ID, Many, ObjectView, ServerException } from '~/common';
+import { GqlContextHost } from '~/core/graphql';
 import { ResourceMap } from '../../components/authorization/model/resource-map';
-import { DataLoader, LoaderContextType } from '../data-loader';
+import { LoaderContextType, LoaderOf, NestDataLoader } from '../data-loader';
 import { NEST_LOADER_CONTEXT_KEY } from '../data-loader/constants';
 import { BaseNode } from '../database/results';
 import { ResourceLoaderRegistry } from './loader.registry';
@@ -22,14 +16,11 @@ interface ObjectRef<Key extends keyof ResourceMap> {
   id: ID;
 }
 
-@Injectable({ scope: Scope.REQUEST })
+@Injectable()
 export class ResourceLoader {
   constructor(
     private readonly loaderRegistry: ResourceLoaderRegistry,
-    @Inject(CONTEXT)
-    private readonly context: GqlContextType & {
-      [NEST_LOADER_CONTEXT_KEY]: LoaderContextType;
-    },
+    private readonly contextHost: GqlContextHost,
     private readonly resourceResolver: ResourceResolver
   ) {}
 
@@ -49,31 +40,34 @@ export class ResourceLoader {
     return await this.load(obj.__typename, obj.id, view);
   }
 
-  async load<TResource extends SomeResourceType>(
+  async load<
+    TResource extends SomeResourceType,
+    TResourceName = ConditionalKeys<ResourceMap, TResource>
+  >(
     type: TResource,
     id: ID,
     view?: ObjectView
-  ): Promise<TResource['prototype']>;
+  ): Promise<TResource['prototype'] & { __typename: TResourceName }>;
   async load<TResourceName extends keyof ResourceMap>(
     type: TResourceName,
     id: ID,
     view?: ObjectView
-  ): Promise<ResourceMap[TResourceName]['prototype']>;
+  ): Promise<
+    ResourceMap[TResourceName]['prototype'] & { __typename: TResourceName }
+  >;
   async load(
     type: Many<keyof ResourceMap | SomeResourceType>,
     id: ID,
     view?: ObjectView
-  ): Promise<SomeResourceType['prototype']>;
+  ): Promise<SomeResourceType['prototype'] & { __typename: string }>;
   async load(
     type: Many<keyof ResourceMap | SomeResourceType>,
     id: ID,
     view?: ObjectView
-  ): Promise<SomeResourceType['prototype']> {
+  ): Promise<SomeResourceType['prototype'] & { __typename: string }> {
     const { factory, objectViewAware, resolvedType } =
       this.findLoaderFactory(type);
-    const loader: DataLoader<any, any> = await this.context[
-      NEST_LOADER_CONTEXT_KEY
-    ].getLoader(factory);
+    const loader = await this.getLoader(factory);
     const key = objectViewAware ? { id, view: view ?? { active: true } } : id;
     const result = await loader.load(key);
     return {
@@ -83,6 +77,16 @@ export class ResourceLoader {
       __typename: resolvedType,
       ...result,
     };
+  }
+
+  async getLoader<T extends NestDataLoader<any, any>>(
+    factory: Type<T>
+  ): Promise<LoaderOf<T>> {
+    const context = this.contextHost.context as unknown as {
+      [NEST_LOADER_CONTEXT_KEY]: LoaderContextType;
+    };
+    const loader = await context[NEST_LOADER_CONTEXT_KEY].getLoader(factory);
+    return loader as LoaderOf<T>;
   }
 
   private findLoaderFactory(type: Many<keyof ResourceMap | SomeResourceType>) {

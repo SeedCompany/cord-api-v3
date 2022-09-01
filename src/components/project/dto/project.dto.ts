@@ -28,6 +28,7 @@ import {
 import { ScopedRole } from '../../authorization/dto';
 import { Budget } from '../../budget/dto';
 import { ChangesetAware } from '../../changeset/dto';
+import { Commentable } from '../../comments';
 import { IEngagement as Engagement } from '../../engagement/dto';
 import { Directory } from '../../file/dto';
 import { SecuredTags } from '../../language/dto/language.dto';
@@ -45,11 +46,14 @@ import { ProjectType } from './type.enum';
 
 type AnyProject = MergeExclusive<TranslationProject, InternshipProject>;
 
-const PinnablePostableChangesetAwareResource: Type<
-  Resource & Postable & ChangesetAware & Pinnable
+const Interfaces: Type<
+  Resource & Postable & ChangesetAware & Pinnable & Commentable
 > = IntersectionType(
   Resource,
-  IntersectionType(Postable, IntersectionType(ChangesetAware, Pinnable))
+  IntersectionType(
+    Commentable,
+    IntersectionType(Postable, IntersectionType(ChangesetAware, Pinnable))
+  )
 );
 
 @InterfaceType({
@@ -63,9 +67,9 @@ const PinnablePostableChangesetAwareResource: Type<
 
     throw new Error('Could not resolve project type');
   },
-  implements: [Resource, Pinnable, Postable, ChangesetAware],
+  implements: [Resource, Pinnable, Postable, ChangesetAware, Commentable],
 })
-class Project extends PinnablePostableChangesetAwareResource {
+class Project extends Interfaces {
   static readonly Props: string[] = keysOf<Project>();
   static readonly SecuredProps: string[] = keysOf<SecuredProps<Project>>();
   static readonly Relations = {
@@ -79,6 +83,7 @@ class Project extends PinnablePostableChangesetAwareResource {
     sensitivity: Sensitivity,
     posts: [Post], // from Postable interface
     changeRequests: [ProjectChangeRequest],
+    ...Commentable.Relations,
   };
 
   @Field(() => ProjectType)
@@ -172,7 +177,7 @@ class Project extends PinnablePostableChangesetAwareResource {
 export { Project as IProject, AnyProject as Project };
 
 @ObjectType({
-  implements: [Project, Postable],
+  implements: [Project],
 })
 export class TranslationProject extends Project {
   static readonly Props = keysOf<TranslationProject>();
@@ -182,7 +187,7 @@ export class TranslationProject extends Project {
 }
 
 @ObjectType({
-  implements: [Project, Postable],
+  implements: [Project],
 })
 export class InternshipProject extends Project {
   static readonly Props = keysOf<InternshipProject>();

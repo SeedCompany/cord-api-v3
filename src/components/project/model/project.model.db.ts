@@ -32,4 +32,5 @@ export class DbProject extends DbBaseNode {
   owningOrganization: any = null;
   posts: any = null;
   presetInventory: any = null;
+  commentThreads: any = null;
 }

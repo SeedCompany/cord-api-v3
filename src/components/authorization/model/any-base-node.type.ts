@@ -1,6 +1,7 @@
 import { DbBudget } from '../../budget/model';
 import { DbBudgetRecord } from '../../budget/model/budget-record.model.db';
 import { DbCeremony } from '../../ceremony/model';
+import { DbComment, DbCommentThread } from '../../comments/model';
 import {
   DbInternshipEngagement,
   DbLanguageEngagement,
@@ -31,6 +32,8 @@ import { DbEducation, DbUnavailability, DbUser } from '../../user/model';
 export type AnyBaseNode = DbBudget &
   DbBudgetRecord &
   DbCeremony &
+  DbComment &
+  DbCommentThread &
   DbDirectory &
   DbEducation &
   DbEthnoArt &
@@ -63,6 +66,8 @@ export type OneBaseNode =
   | DbBudget
   | DbBudgetRecord
   | DbCeremony
+  | DbComment
+  | DbCommentThread
   | DbDirectory
   | DbEducation
   | DbEthnoArt
