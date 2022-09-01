@@ -1,6 +1,13 @@
 import { Args, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { AnonSession, ID, IdArg, ListArg, Session } from '~/common';
+import {
+  AnonSession,
+  ID,
+  IdArg,
+  ListArg,
+  LoggedInSession,
+  Session,
+} from '~/common';
 import { Loader, LoaderOf, ResourceLoader } from '~/core';
 import { User, UserLoader } from '../user';
 import { CommentThreadLoader } from './comment-thread.loader';
@@ -12,6 +19,8 @@ import {
   CommentList,
   CommentListInput,
   CommentThread,
+  CommentThreadListInput,
+  CommentThreadListOutput,
 } from './dto';
 
 @Resolver(CommentThread)
@@ -29,6 +38,21 @@ export class CommentThreadResolver {
     @Loader(CommentThreadLoader) commentThreads: LoaderOf<CommentThreadLoader>
   ): Promise<CommentThread> {
     return await commentThreads.load(id);
+  }
+
+  @Query(() => CommentThreadListOutput, {
+    description: 'Look up a comment threads for a resource',
+  })
+  async commentThreads(
+    @IdArg({ name: 'resource' }) resourceId: ID,
+    @ListArg(CommentThreadListInput) input: CommentThreadListInput,
+    @LoggedInSession() session: Session,
+    @Loader(CommentThreadLoader) commentThreads: LoaderOf<CommentThreadLoader>
+  ): Promise<CommentThreadListOutput> {
+    const resource = await this.service.loadCommentable(resourceId);
+    const list = await this.service.listThreads(resource, input, session);
+    commentThreads.primeAll(list.items);
+    return list;
   }
 
   @ResolveField(() => CommentList, {
