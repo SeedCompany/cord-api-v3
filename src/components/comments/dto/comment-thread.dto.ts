@@ -17,7 +17,6 @@ export class CommentThread extends Resource {
 
   @Field()
   readonly firstComment: Comment;
-  @Field()
   readonly latestComment: Comment;
 
   readonly parent: BaseNode;
