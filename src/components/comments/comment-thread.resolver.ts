@@ -1,14 +1,22 @@
 import { Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
 import { AnonSession, ID, IdArg, ListArg, Session } from '~/common';
-import { Loader, LoaderOf } from '~/core';
+import { Loader, LoaderOf, ResourceLoader } from '~/core';
 import { CommentThreadLoader } from './comment-thread.loader';
 import { CommentLoader } from './comment.loader';
 import { CommentService } from './comment.service';
-import { CommentList, CommentListInput, CommentThread } from './dto';
+import {
+  Commentable,
+  CommentList,
+  CommentListInput,
+  CommentThread,
+} from './dto';
 
 @Resolver(CommentThread)
 export class CommentThreadResolver {
-  constructor(private readonly service: CommentService) {}
+  constructor(
+    private readonly service: CommentService,
+    private readonly resources: ResourceLoader
+  ) {}
 
   @Query(() => CommentThread, {
     description: 'Look up a comment thread by ID',
@@ -32,5 +40,10 @@ export class CommentThreadResolver {
     const list = await this.service.listCommentsByThreadId(id, input, session);
     comments.primeAll(list.items);
     return list;
+  }
+
+  @ResolveField(() => Commentable)
+  async parent(@Parent() thread: CommentThread) {
+    return await this.resources.loadByBaseNode(thread.parent);
   }
 }
