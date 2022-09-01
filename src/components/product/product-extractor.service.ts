@@ -18,13 +18,10 @@ import {
   parseScripture,
   ScriptureRange,
   ScriptureRangeInput,
+  UnspecifiedScripturePortion,
 } from '../scripture';
 import { ProductStep as Step } from './dto';
 
-type UnspecifiedScriptureType = {
-  book: string;
-  totalVerses: number;
-} | null;
 @Injectable()
 export class ProductExtractor {
   async extract(
@@ -125,7 +122,7 @@ const parseProductRow =
     assert(sheet.isWritten());
     /**  Load Scripture References **/
     let scriptureReferences: ScriptureRangeInput[] = [];
-    let unspecifiedScripture: UnspecifiedScriptureType = null;
+    let unspecifiedScripture: UnspecifiedScripturePortion | null = null;
     const totalVersesToTranslate = sheet.totalVerses(row) ?? 0;
     const bookName = sheet.bookName(row)!;
     const book = Book.tryFind(bookName);
@@ -192,7 +189,7 @@ export type ExtractedRow = MergeExclusive<
     bookName: string;
     totalVerses: number;
     scriptureReferences: ScriptureRangeInput[];
-    unspecifiedScripture: UnspecifiedScriptureType;
+    unspecifiedScripture: UnspecifiedScripturePortion | null;
   }
 > & {
   /**
