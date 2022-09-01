@@ -69,7 +69,6 @@
     "iso-3166-1": "^2.1.1",
     "ix": "^4.6.1",
     "js-levenshtein-esm": "^1.2.0",
-    "js-yaml": "^4.1.0",
     "jsonwebtoken": "^8.5.1",
     "lazy-get-decorator": "^2.2.0",
     "lodash": "^4.17.21",
@@ -89,7 +88,8 @@
     "ts-essentials": "^9.3.0",
     "ts-transformer-keys": "^0.4.3",
     "winston": "^3.8.1",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "yaml": "^2.1.1"
   },
   "devDependencies": {
     "@nestjs/cli": "^9.1.1",
@@ -101,7 +101,6 @@
     "@types/express": "^4.17.13",
     "@types/express-serve-static-core": "^4.17.30",
     "@types/jest": "^26.0.24",
-    "@types/js-yaml": "^4.0.5",
     "@types/jsonwebtoken": "^8.5.9",
     "@types/lodash": "^4.14.184",
     "@types/luxon": "^2.4.0",
