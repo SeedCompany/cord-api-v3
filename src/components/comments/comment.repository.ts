@@ -52,7 +52,7 @@ export class CommentRepository extends DtoRepository(Comment) {
       .first();
   }
 
-  protected hydrate() {
+  override hydrate() {
     return (query: Query) =>
       query
         .apply(matchProps())

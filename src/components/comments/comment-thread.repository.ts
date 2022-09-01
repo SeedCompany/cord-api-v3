@@ -1,7 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { ID, Session, UnsecuredDto } from '../../common';
-import { DtoRepository } from '../../core';
+import { DatabaseService, DtoRepository } from '../../core';
 import {
   ACTIVE,
   createNode,
@@ -11,10 +11,19 @@ import {
   requestingUser,
   sorting,
 } from '../../core/database/query';
+import { CommentRepository } from './comment.repository';
 import { CommentThread, CommentThreadListInput } from './dto';
 
 @Injectable()
 export class CommentThreadRepository extends DtoRepository(CommentThread) {
+  constructor(
+    @Inject(forwardRef(() => CommentRepository))
+    private readonly comments: CommentRepository,
+    db: DatabaseService
+  ) {
+    super(db);
+  }
+
   async create(parent: ID, session: Session) {
     const createThreadNode = await createNode(CommentThread, {});
     return (query: Query) =>
@@ -29,7 +38,7 @@ export class CommentThreadRepository extends DtoRepository(CommentThread) {
         .return('node as thread');
   }
 
-  protected hydrate() {
+  override hydrate() {
     return (query: Query) =>
       query
         .match([
@@ -42,10 +51,28 @@ export class CommentThreadRepository extends DtoRepository(CommentThread) {
           relation('out', '', 'creator'),
           node('creator', 'User'),
         ])
+        .subQuery('node', (sub) =>
+          sub
+            .with('node as thread')
+            .match([
+              node('thread'),
+              relation('out', '', 'comment', ACTIVE),
+              node('comment', 'Comment'),
+            ])
+            .with('comment')
+            .orderBy('comment.createdAt')
+            .with('collect(comment) as comments')
+            .with('[comments[0], comments[-1]] as comments')
+            .raw('unwind comments as node')
+            .subQuery('node', this.comments.hydrate())
+            .return('collect(dto) as comments')
+        )
         .return<{ dto: UnsecuredDto<CommentThread> }>(
           merge('node', {
             parent: 'parent',
             creator: 'creator.id',
+            firstComment: 'comments[0]',
+            latestComment: 'comments[-1]',
           }).as('dto')
         );
   }
