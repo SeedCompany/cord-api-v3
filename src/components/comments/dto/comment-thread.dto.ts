@@ -1,7 +1,13 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
+import {
+  ID,
+  Resource,
+  SecuredProps,
+  SetUnsecuredType,
+  UnsecuredDto,
+} from '~/common';
 import { BaseNode } from '~/core/database/results';
-import { ID, Resource, SecuredProps } from '../../../common';
 import { Comment } from './comment.dto';
 
 @ObjectType({
@@ -15,9 +21,9 @@ export class CommentThread extends Resource {
     comments: [Comment],
   };
 
-  @Field()
-  readonly firstComment: Comment;
-  readonly latestComment: Comment;
+  @Field(() => Comment)
+  readonly firstComment: Comment & SetUnsecuredType<UnsecuredDto<Comment>>;
+  readonly latestComment: Comment & SetUnsecuredType<UnsecuredDto<Comment>>;
 
   readonly parent: BaseNode;
 

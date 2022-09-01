@@ -131,6 +131,8 @@ export class CommentService {
   ): Promise<CommentThread> {
     return {
       ...thread,
+      firstComment: await this.secureComment(thread.firstComment, session),
+      latestComment: await this.secureComment(thread.latestComment, session),
       canDelete: thread.creator === session.userId || isAdmin(session),
     };
   }
