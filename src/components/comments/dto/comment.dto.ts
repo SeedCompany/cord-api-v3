@@ -1,13 +1,12 @@
-import { ObjectType } from '@nestjs/graphql';
+import { Field, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
   DateTimeField,
   ID,
   Resource,
-  RichTextField,
   SecuredProps,
-  SecuredRichTextDocument,
+  SecuredRichText,
 } from '../../../common';
 
 @ObjectType({
@@ -21,8 +20,8 @@ export class Comment extends Resource {
 
   readonly creator: ID;
 
-  @RichTextField()
-  readonly body: SecuredRichTextDocument;
+  @Field()
+  readonly body: SecuredRichText;
 
   @DateTimeField()
   readonly modifiedAt: DateTime;
