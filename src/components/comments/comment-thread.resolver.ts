@@ -19,8 +19,8 @@ import {
   CommentList,
   CommentListInput,
   CommentThread,
+  CommentThreadList,
   CommentThreadListInput,
-  CommentThreadListOutput,
 } from './dto';
 
 @Resolver(CommentThread)
@@ -40,7 +40,7 @@ export class CommentThreadResolver {
     return await commentThreads.load(id);
   }
 
-  @Query(() => CommentThreadListOutput, {
+  @Query(() => CommentThreadList, {
     description: 'Look up a comment threads for a resource',
   })
   async commentThreads(
@@ -48,7 +48,7 @@ export class CommentThreadResolver {
     @ListArg(CommentThreadListInput) input: CommentThreadListInput,
     @LoggedInSession() session: Session,
     @Loader(CommentThreadLoader) commentThreads: LoaderOf<CommentThreadLoader>
-  ): Promise<CommentThreadListOutput> {
+  ): Promise<CommentThreadList> {
     const resource = await this.service.loadCommentable(resourceId);
     const list = await this.service.listThreads(resource, input, session);
     commentThreads.primeAll(list.items);

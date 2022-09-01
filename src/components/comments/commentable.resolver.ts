@@ -3,17 +3,13 @@ import { ListArg, LoggedInSession, Resource, Session } from '../../common';
 import { Loader, LoaderOf } from '../../core';
 import { CommentThreadLoader } from './comment-thread.loader';
 import { CommentService } from './comment.service';
-import {
-  Commentable,
-  CommentThreadListInput,
-  CommentThreadListOutput,
-} from './dto';
+import { Commentable, CommentThreadList, CommentThreadListInput } from './dto';
 
 @Resolver(Commentable)
 export class CommentableResolver {
   constructor(private readonly service: CommentService) {}
 
-  @ResolveField(() => CommentThreadListOutput, {
+  @ResolveField(() => CommentThreadList, {
     description: 'List of comment threads belonging to the parent node.',
   })
   async commentThreads(
@@ -21,7 +17,7 @@ export class CommentableResolver {
     @ListArg(CommentThreadListInput) input: CommentThreadListInput,
     @LoggedInSession() session: Session,
     @Loader(CommentThreadLoader) commentThreads: LoaderOf<CommentThreadLoader>
-  ): Promise<CommentThreadListOutput> {
+  ): Promise<CommentThreadList> {
     const list = await this.service.listThreads(parent, input, session);
     commentThreads.primeAll(list.items);
     return list;

@@ -1,10 +1,5 @@
 import { InputType, ObjectType } from '@nestjs/graphql';
-import {
-  Order,
-  PaginatedList,
-  SecuredList,
-  SortablePaginationInput,
-} from '../../../common';
+import { Order, PaginatedList, SortablePaginationInput } from '../../../common';
 import { CommentThread } from './comment-thread.dto';
 
 @InputType()
@@ -18,11 +13,4 @@ export class CommentThreadListInput extends SortablePaginationInput<
 }
 
 @ObjectType()
-export class CommentThreadListOutput extends PaginatedList(CommentThread) {}
-
-@ObjectType({
-  description: SecuredList.descriptionFor('comment threads'),
-})
-export abstract class SecuredCommentThreadList extends SecuredList(
-  CommentThread
-) {}
+export class CommentThreadList extends PaginatedList(CommentThread) {}

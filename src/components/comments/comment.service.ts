@@ -24,8 +24,8 @@ import {
   Commentable,
   CommentListInput,
   CommentThread,
+  CommentThreadList,
   CommentThreadListInput,
-  CommentThreadListOutput,
   CreateCommentInput,
 } from './dto';
 import { UpdateCommentInput } from './dto/update-comment.dto';
@@ -196,7 +196,7 @@ export class CommentService {
     parent: Commentable,
     input: CommentThreadListInput,
     session: Session
-  ): Promise<CommentThreadListOutput> {
+  ): Promise<CommentThreadList> {
     await this.verifyCanView(parent, session);
 
     const results = await this.repo.threads.list(parent.id, input, session);
