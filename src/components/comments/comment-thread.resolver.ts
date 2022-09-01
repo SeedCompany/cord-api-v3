@@ -1,6 +1,7 @@
 import { Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
 import { AnonSession, ID, IdArg, ListArg, Session } from '~/common';
 import { Loader, LoaderOf, ResourceLoader } from '~/core';
+import { User, UserLoader } from '../user';
 import { CommentThreadLoader } from './comment-thread.loader';
 import { CommentLoader } from './comment.loader';
 import { CommentService } from './comment.service';
@@ -45,5 +46,13 @@ export class CommentThreadResolver {
   @ResolveField(() => Commentable)
   async parent(@Parent() thread: CommentThread) {
     return await this.resources.loadByBaseNode(thread.parent);
+  }
+
+  @ResolveField(() => User)
+  async creator(
+    @Parent() thread: CommentThread,
+    @Loader(UserLoader) users: LoaderOf<UserLoader>
+  ) {
+    return await users.load(thread.creator);
   }
 }
