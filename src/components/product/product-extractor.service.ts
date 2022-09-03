@@ -6,6 +6,7 @@ import { Cell, Column } from '../../common/xlsx.util';
 import { Downloadable } from '../file';
 import {
   findStepColumns,
+  getTotalVersesInRange,
   isGoalRow,
   isGoalStepPlannedInsideProject,
   isProgressCompletedOutsideProject,
@@ -14,10 +15,9 @@ import {
   stepPlanCompleteDate,
 } from '../pnp';
 import {
-  Book,
   parseScripture,
   ScriptureRange,
-  ScriptureRangeInput,
+  tryParseScripture,
   UnspecifiedScripturePortion,
 } from '../scripture';
 import { ProductStep as Step } from './dto';
@@ -120,78 +120,54 @@ const parseProductRow =
       };
     }
     assert(sheet.isWritten());
-    /**  Load Scripture References **/
-    let scriptureReferences: ScriptureRangeInput[] = [];
-    let unspecifiedScripture: UnspecifiedScripturePortion | null = null;
-    const totalVersesToTranslate = sheet.totalVerses(row) ?? 0;
     const bookName = sheet.bookName(row)!;
-    const book = Book.tryFind(bookName);
-    const versesInBook = book ? book.totalVerses : null;
-    const isWholeBook = versesInBook === totalVersesToTranslate;
-
-    book
-      ? isWholeBook
-        ? (scriptureReferences = [
-            {
-              start: book.firstChapter.firstVerse.reference,
-              end: book.lastChapter.lastVerse.reference,
-            },
-          ])
-        : (scriptureReferences = findScriptures(sheet.myNote(row)!))
-      : (scriptureReferences = findScriptures(bookName));
-
-    unspecifiedScripture =
-      scriptureReferences.length > 0 || !book
-        ? null
-        : {
-            book: book.name,
-            totalVerses: totalVersesToTranslate,
+    let unknownPortion: UnspecifiedScripturePortion | null = null;
+    let parsedScriptureRange = tryParseScripture(bookName);
+    let sumVerseCountFromRanges = getTotalVersesInRange(parsedScriptureRange);
+    const isKnown = sumVerseCountFromRanges === sheet.totalVerses(row)!;
+    if (!isKnown) {
+      if (sheet.myNote(row)?.trim()) {
+        const tmpScriptureRange = tryParseScripture(sheet.myNote(row));
+        if (tmpScriptureRange.length > 0) {
+          sumVerseCountFromRanges = getTotalVersesInRange(tmpScriptureRange);
+          parsedScriptureRange = tmpScriptureRange;
+        } else {
+          unknownPortion = {
+            book: parsedScriptureRange[0].start.book,
+            totalVerses: sheet.totalVerses(row)!,
           };
+        }
+      } else {
+        unknownPortion = {
+          book: parsedScriptureRange[0].start.book,
+          totalVerses: sheet.totalVerses(row)!,
+        };
+      }
+    }
+    const scripture = unknownPortion ? undefined : parsedScriptureRange;
 
     return {
       ...common,
       bookName,
-      totalVerses: totalVersesToTranslate,
-      scriptureReferences,
-      unspecifiedScripture,
+      totalVerses: sumVerseCountFromRanges,
+      scripture,
+      unspecifiedScripture: unknownPortion,
     };
   };
-
-const findScriptures = (input: string): ScriptureRangeInput[] => {
-  let parsedScriptures: readonly ScriptureRange[] = [];
-  let scriptureReferences: ScriptureRangeInput[] = [];
-  try {
-    parsedScriptures = parseScripture(input);
-    scriptureReferences =
-      parsedScriptures.length > 0
-        ? [
-            {
-              start: parsedScriptures[0].start,
-              end: parsedScriptures[0].end,
-            },
-          ]
-        : [];
-    return scriptureReferences;
-  } catch (e) {
-    return [];
-  }
-};
 
 export type ExtractedRow = MergeExclusive<
   {
     story: string;
-    scripture: readonly ScriptureRange[];
-    totalVerses: number | undefined;
     composite: boolean;
     placeholder: boolean;
   },
   {
     bookName: string;
-    totalVerses: number;
-    scriptureReferences: ScriptureRangeInput[];
     unspecifiedScripture: UnspecifiedScripturePortion | null;
   }
 > & {
+  scripture: readonly ScriptureRange[] | undefined;
+  totalVerses: number | undefined;
   /**
    * 1-indexed row for the order of the goal.
    * This will not have jumps in numbers, blank rows are ignored.

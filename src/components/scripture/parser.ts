@@ -37,6 +37,16 @@ export const parseScripture = (
   return mergeScriptureRanges(refs);
 };
 
+export const tryParseScripture = (
+  input: string | null | undefined
+): readonly ScriptureRange[] => {
+  try {
+    return parseScripture(input);
+  } catch (e) {
+    return [];
+  }
+};
+
 const parseRange = (input: string, fallbackBook?: string) => {
   const given = lexRange(input);
   if (!given.start.book && !fallbackBook) {

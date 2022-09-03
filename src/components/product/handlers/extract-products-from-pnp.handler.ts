@@ -98,7 +98,7 @@ export class ExtractProductsFromPnpHandler
     // Create/update products 5 at a time.
     await asyncPool(5, actionableProductRows, async (row) => {
       const {
-        scriptureReferences,
+        scripture,
         unspecifiedScripture,
         existingId,
         steps,
@@ -110,7 +110,7 @@ export class ExtractProductsFromPnpHandler
         // Populate one of the two product props based on whether its a known verse range or not.
         const props = {
           methodology,
-          scriptureReferences,
+          scriptureReferences: scripture,
           unspecifiedScripture,
           steps: steps.map((s) => s.step),
           describeCompletion: note,
