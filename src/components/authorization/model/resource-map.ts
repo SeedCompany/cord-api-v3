@@ -2,7 +2,7 @@ import { ServerException } from '../../../common';
 import { Budget, BudgetRecord } from '../../budget/dto';
 import { Ceremony } from '../../ceremony/dto';
 import { Changeset } from '../../changeset/dto';
-import { Comment, CommentThread } from '../../comments/dto';
+import { Comment, Commentable, CommentThread } from '../../comments/dto';
 import {
   IEngagement as Engagement,
   InternshipEngagement,
@@ -11,7 +11,12 @@ import {
 import { EthnoArt } from '../../ethno-art/dto';
 import { FieldRegion } from '../../field-region/dto';
 import { FieldZone } from '../../field-zone/dto';
-import { Directory, File, FileVersion } from '../../file/dto';
+import {
+  Directory,
+  File,
+  IFileNode as FileNode,
+  FileVersion,
+} from '../../file/dto';
 import { Film } from '../../film/dto';
 import { FundingAccount } from '../../funding-account/dto';
 import { EthnologueLanguage, Language } from '../../language/dto';
@@ -49,6 +54,7 @@ import { Education } from '../../user/education/dto';
 import { Unavailability } from '../../user/unavailability/dto';
 
 export const ResourceMap = {
+  Commentable,
   Budget,
   BudgetRecord,
   Ceremony,
@@ -63,6 +69,7 @@ export const ResourceMap = {
   FieldRegion,
   FieldZone,
   File,
+  FileNode,
   FileVersion,
   Film,
   FundingAccount,
