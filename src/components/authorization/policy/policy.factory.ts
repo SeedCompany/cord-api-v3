@@ -6,6 +6,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { mapValues, startCase } from 'lodash';
 import { DeepWritable, Writable } from 'ts-essentials';
 import { many } from '~/common';
+import { Powers as Power } from '../dto/powers';
 import { Role } from '../dto/role.dto';
 import { ResourceMap } from '../model/resource-map';
 import { Action, Permission, Permissions } from './builder/perm-granter';
@@ -33,6 +34,8 @@ export interface Policy {
       propLevel: Readonly<Partial<Record<string, Permissions>>>;
     }
   >;
+  /* An optimization to determine Powers this policy contains */
+  powers: Set<Power>;
 }
 
 @Injectable()
@@ -110,7 +113,8 @@ export class PolicyFactory implements OnModuleInit {
     }
 
     const name = startCase(discoveredClass.name.replace(/Policy$/, ''));
-    return { name, roles, grants };
+    const powers = await this.determinePowers(grants);
+    return { name, roles, grants, powers };
   }
 
   private mergePermissions(
@@ -138,5 +142,34 @@ export class PolicyFactory implements OnModuleInit {
     }
 
     return existing;
+  }
+
+  private async determinePowers(grants: Policy['grants']) {
+    const powers = new Set<Power>();
+    const pushPower = (str: string) => {
+      const power = `Create${str}`;
+      // verify actually defined as a power
+      if (power in Power) {
+        powers.add(power as Power);
+      }
+    };
+    for (const [res, grant] of grants.entries()) {
+      // Only looking for global create access, powers cannot be conditional.
+      if (grant.objectLevel.create !== true) {
+        continue;
+      }
+      pushPower(res);
+
+      const implementations = await this.resourcesHost.getImplementations(res);
+      for (const implementation of implementations) {
+        const implName = implementation.name as keyof ResourceMap;
+        if (grants.has(implName)) {
+          // If policy specifies this implementation then defer to its entry.
+          continue;
+        }
+        pushPower(implName);
+      }
+    }
+    return powers;
   }
 }
