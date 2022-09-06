@@ -11,7 +11,6 @@ import {
   Session,
   UnauthenticatedException,
 } from '../../common';
-import { RawSession } from '../../common/session';
 import { ConfigService, ILogger, Logger } from '../../core';
 import { ForgotPassword } from '../../core/email/templates';
 import { UserService } from '../user';
@@ -94,7 +93,7 @@ export class AuthenticationService {
     await this.repo.deleteSessionToken(token);
   }
 
-  async resumeSession(token: string): Promise<RawSession> {
+  async resumeSession(token: string): Promise<Session> {
     this.logger.debug('Decoding token', { token });
 
     const { iat } = this.decodeJWT(token);
@@ -109,10 +108,12 @@ export class AuthenticationService {
       );
     }
 
-    const session = {
+    const session: Session = {
       token,
       issuedAt: DateTime.fromMillis(iat),
-      ...result,
+      userId: result.userId ?? ('anonuserid' as ID),
+      anonymous: !result.userId,
+      roles: result.roles,
     };
     this.logger.debug('Resumed session', session);
     return session;

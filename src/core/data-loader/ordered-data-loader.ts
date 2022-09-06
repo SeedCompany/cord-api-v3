@@ -2,7 +2,6 @@
 import DataLoaderLib from 'dataloader';
 import { identity, startCase } from 'lodash';
 import { GqlContextType, ID, NotFoundException } from '../../common';
-import { anonymousSession } from '../../common/session';
 import { NoSessionException } from '../../components/authentication/no-session.exception';
 import { DataLoader, NestDataLoader } from './loader.decorator';
 
@@ -55,7 +54,7 @@ export abstract class OrderedNestDataLoader<T, Key = ID, CachedKey = Key>
     if (!session) {
       throw new NoSessionException();
     }
-    return anonymousSession(session);
+    return session;
   }
 
   generateDataLoader(context: GqlContextType) {

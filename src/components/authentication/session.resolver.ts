@@ -13,7 +13,6 @@ import {
   ServerException,
   UnauthenticatedException,
 } from '../../common';
-import { anonymousSession } from '../../common/session';
 import { ConfigService, ILogger, Loader, LoaderOf, Logger } from '../../core';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto';
@@ -52,9 +51,9 @@ export class SessionResolver {
     const existingToken = this.sessionInt.getTokenFromContext(context);
 
     let token = existingToken || (await this.authentication.createToken());
-    let rawSession;
+    let session;
     try {
-      rawSession = await this.authentication.resumeSession(token);
+      session = await this.authentication.resumeSession(token);
     } catch (exception) {
       if (!(exception instanceof UnauthenticatedException)) {
         throw exception;
@@ -64,10 +63,9 @@ export class SessionResolver {
         { exception }
       );
       token = await this.authentication.createToken();
-      rawSession = await this.authentication.resumeSession(token);
+      session = await this.authentication.resumeSession(token);
     }
-    context.session = rawSession; // Set for data loaders invoked later in operation
-    const session = anonymousSession(rawSession);
+    context.session = session; // Set for data loaders invoked later in operation
 
     const userFromSession = session.anonymous
       ? undefined
