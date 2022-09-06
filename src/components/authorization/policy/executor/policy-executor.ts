@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { intersection } from 'lodash';
-import { ResourceShape, Session } from '~/common';
+import { CachedOnArg, ResourceShape, Session } from '~/common';
 import { ILogger, Logger } from '~/core';
 import { withoutScope } from '../../dto/role.dto';
 import { ResourceMap } from '../../model/resource-map';
@@ -46,6 +46,7 @@ export class PolicyExecutor {
     return false;
   }
 
+  @CachedOnArg()
   getPolicies(session: Session) {
     const policies = this.policyFactory.getPolicies().filter((policy) => {
       if (!policy.roles) {

@@ -41,3 +41,4 @@ export {
   RichTextDocument,
   SecuredRichText,
 } from './rich-text.scalar';
+export * from './weak-map-cache';
