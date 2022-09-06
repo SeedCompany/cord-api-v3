@@ -50,8 +50,10 @@ export const rolesForScope =
   (role: Role): ScopedRole =>
     `${scope}:${role}` as const;
 
-export const withoutScope = (role: ScopedRole): Role =>
-  role.split(':')[1] as Role;
+export const withoutScope = (role: ScopedRole): Role => splitScope(role)[1];
+
+export const splitScope = (role: ScopedRole) =>
+  role.split(':') as [AuthScope, Role];
 
 export type InternalRole =
   | 'AdministratorRole'
