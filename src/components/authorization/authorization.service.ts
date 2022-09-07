@@ -1,19 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import { compact, keyBy, last, mapValues, pickBy, startCase } from 'lodash';
+import { keyBy, mapValues, pickBy } from 'lodash';
 import {
   getParentTypes,
   isResourceClass,
-  isSecured,
-  keys,
   mapFromList,
   ResourceShape,
   SecuredResource,
   Sensitivity,
   ServerException,
   Session,
-  UnauthorizedException,
 } from '../../common';
-import { ChangesOf, isRelation } from '../../core/database/changes';
+import { ChangesOf } from '../../core/database/changes';
 import {
   DbPropsOfDto,
   parseSecuredProperties,
@@ -79,57 +76,22 @@ export class AuthorizationService {
     return parseSecuredProperties(props, permissions, resource.SecuredProps);
   }
 
+  /**
+   * @deprecated Use `Privileges.for(X).verifyChanges(changes)` instead
+   */
   async verifyCanEditChanges<TResource extends ResourceShape<any>>(
     resource: TResource,
     baseNode: TResource['prototype'],
     changes: ChangesOf<TResource['prototype']>,
     pathPrefix?: string | null
   ) {
-    for (const prop of keys(changes)) {
-      await this.verifyCanEdit({
-        resource,
-        baseNode,
-        ...(isRelation(prop, baseNode)
-          ? { prop: prop.slice(0, -2), propPath: prop }
-          : { prop }),
-        pathPrefix: pathPrefix,
-      });
-    }
-  }
-
-  async verifyCanEdit<
-    TResource extends ResourceShape<any>,
-    Key extends keyof TResource['prototype'] & string
-  >({
-    resource,
-    baseNode,
-    prop,
-    propName,
-    propPath,
-    pathPrefix: pathPrefixProp,
-  }: {
-    resource: TResource;
-    baseNode: Partial<TResource['prototype']>;
-    prop: Key;
-    /** @deprecated Use propPath instead */
-    propName?: string;
-    propPath?: string;
-    pathPrefix?: string | null;
-  }) {
-    if (!isSecured(baseNode[prop]) || baseNode[prop].canEdit) {
-      return;
-    }
-    const pathPrefix =
-      pathPrefixProp ?? pathPrefixProp === null
-        ? null
-        : // Guess the input field path based on name convention
-          last(startCase(resource.name).split(' '))!.toLowerCase();
-    const path = propPath ?? propName ?? prop;
-    const fullPath = compact([pathPrefix, path]).join('.');
-    throw new UnauthorizedException(
-      `You do not have permission to update ${resource.name}.${path}`,
-      fullPath
-    );
+    // @ts-expect-error this function doesn't use session. Not sure if I want to
+    // move this function out of its new location or not. Everywhere we call
+    // this we have session available, so it shouldn't be a problem.
+    const fakeSession: Session = undefined;
+    this.privileges
+      .for(fakeSession, resource, baseNode)
+      .verifyChanges(changes, { pathPrefix });
   }
 
   async getListRoleSensitivityMapping<Resource extends ResourceShape<any>>(
