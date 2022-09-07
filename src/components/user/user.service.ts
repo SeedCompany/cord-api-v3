@@ -1,6 +1,7 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { difference } from 'lodash';
 import {
+  CachedOnArg,
   DuplicateException,
   ID,
   isIdLike,
@@ -12,6 +13,7 @@ import {
   SecuredResource,
   ServerException,
   Session,
+  UnauthorizedException,
   UnsecuredDto,
 } from '../../common';
 import {
@@ -23,12 +25,12 @@ import {
 } from '../../core';
 import { property } from '../../core/database/query';
 import { mapListResults } from '../../core/database/results';
-import { Role } from '../authorization';
+import { Privileges, Role } from '../authorization';
 import {
   AuthorizationService,
   PermissionsOf,
 } from '../authorization/authorization.service';
-import { Powers } from '../authorization/dto/powers';
+import { AssignableRoles } from '../authorization/dto/assignable-roles';
 import { LanguageService } from '../language';
 import {
   LocationListInput,
@@ -78,6 +80,7 @@ export class UserService {
     private readonly unavailabilities: UnavailabilityService,
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
+    private readonly privileges: Privileges,
     private readonly locationService: LocationService,
     private readonly languageService: LanguageService,
     private readonly userRepo: UserRepository,
@@ -93,7 +96,7 @@ export class UserService {
   async create(input: CreatePerson, session?: Session): Promise<ID> {
     if (input.roles && input.roles.length > 0 && session) {
       // Note: session is only omitted for creating RootUser
-      await this.authorizationService.checkPower(Powers.GrantRole, session);
+      this.verifyRolesAreAssignable(session, input.roles);
     }
 
     const id = await this.userRepo.create(input);
@@ -142,12 +145,6 @@ export class UserService {
       ...securedProps,
       roles: {
         ...securedProps.roles,
-        canEdit: isIdLike(sessionOrUserId)
-          ? false
-          : await this.authorizationService.hasPower(
-              sessionOrUserId,
-              Powers.GrantRole
-            ),
         value: securedProps.roles.value ?? [],
       },
       canDelete: await this.userRepo.checkDeletePermission(
@@ -171,7 +168,7 @@ export class UserService {
     const { roles, email, ...simpleChanges } = changes;
 
     if (roles) {
-      await this.authorizationService.checkPower(Powers.GrantRole, session);
+      this.verifyRolesAreAssignable(session, roles);
     }
 
     await this.userRepo.updateProperties(user, simpleChanges);
@@ -224,6 +221,29 @@ export class UserService {
         hasMore: false,
       };
     }
+  }
+
+  @CachedOnArg()
+  getAssignableRoles(session: Session) {
+    const privileges = this.privileges.for(session, AssignableRoles);
+    const assignableRoles = new Set(
+      (Object.keys(Role) as Role[]).filter((role: Role) =>
+        privileges.can('write', role)
+      )
+    );
+    return assignableRoles;
+  }
+
+  verifyRolesAreAssignable(session: Session, roles: Role[]) {
+    const allowed = this.getAssignableRoles(session);
+    const invalid = roles.filter((role) => !allowed.has(role));
+    if (invalid.length === 0) {
+      return;
+    }
+    const invalidStr = invalid.join(', ');
+    throw new UnauthorizedException(
+      `You do not have the permission to assign users the roles: ${invalidStr}`
+    );
   }
 
   async permissionsForListProp(

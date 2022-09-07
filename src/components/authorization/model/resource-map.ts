@@ -52,6 +52,7 @@ import { Story } from '../../story/dto';
 import { User } from '../../user/dto';
 import { Education } from '../../user/education/dto';
 import { Unavailability } from '../../user/unavailability/dto';
+import { AssignableRoles } from '../dto/assignable-roles';
 
 export const ResourceMap = {
   Commentable,
@@ -101,6 +102,7 @@ export const ResourceMap = {
   Story,
   Unavailability,
   User,
+  AssignableRoles,
 } as const;
 export type ResourceMap = typeof ResourceMap;
 
