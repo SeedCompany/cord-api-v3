@@ -4,7 +4,6 @@ import {
   CachedOnArg,
   DuplicateException,
   ID,
-  isIdLike,
   mapFromList,
   NotFoundException,
   ObjectView,
@@ -104,13 +103,9 @@ export class UserService {
   }
 
   @HandleIdLookup(User)
-  async readOne(
-    id: ID,
-    sessionOrUserId: Session | ID,
-    _view?: ObjectView
-  ): Promise<User> {
-    const user = await this.userRepo.readOne(id, sessionOrUserId);
-    return await this.secure(user, sessionOrUserId);
+  async readOne(id: ID, session: Session, _view?: ObjectView): Promise<User> {
+    const user = await this.userRepo.readOne(id, session);
+    return await this.secure(user, session);
   }
 
   async readMany(ids: readonly ID[], session: Session) {
@@ -118,13 +113,8 @@ export class UserService {
     return await Promise.all(users.map((dto) => this.secure(dto, session)));
   }
 
-  async secure(
-    user: UnsecuredDto<User>,
-    sessionOrUserId: Session | ID
-  ): Promise<User> {
-    const requestingUserId = isIdLike(sessionOrUserId)
-      ? sessionOrUserId
-      : sessionOrUserId.userId;
+  async secure(user: UnsecuredDto<User>, session: Session): Promise<User> {
+    const requestingUserId = session.userId;
 
     // let the user explicitly see all properties only if they're reading their own ID
     // TODO: express this within the authorization system. Like an Owner/Creator "meta" role that gets these x permissions.
@@ -134,11 +124,7 @@ export class UserService {
             key,
             { canRead: true, canEdit: true, value: user[key] },
           ]) as SecuredProps<User>)
-        : await this.authorizationService.secureProperties(
-            User,
-            user,
-            sessionOrUserId
-          );
+        : await this.authorizationService.secureProperties(User, user, session);
 
     return {
       ...user,
@@ -147,10 +133,7 @@ export class UserService {
         ...securedProps.roles,
         value: securedProps.roles.value ?? [],
       },
-      canDelete: await this.userRepo.checkDeletePermission(
-        user.id,
-        sessionOrUserId
-      ),
+      canDelete: await this.userRepo.checkDeletePermission(user.id, session),
     };
   }
 
@@ -248,7 +231,7 @@ export class UserService {
 
   async permissionsForListProp(
     prop: keyof PermissionsOf<SecuredResource<typeof User>>,
-    session: Session | ID
+    session: Session
   ) {
     const perms = await this.authorizationService.getPermissions({
       resource: User,

@@ -119,6 +119,18 @@ export class AuthenticationService {
     return session;
   }
 
+  async sessionForUser(userId: ID): Promise<Session> {
+    const roles = await this.repo.rolesForUser(userId);
+    const session: Session = {
+      token: 'system',
+      issuedAt: DateTime.now(),
+      userId,
+      anonymous: false,
+      roles,
+    };
+    return session;
+  }
+
   async changePassword(
     oldPassword: string,
     newPassword: string,

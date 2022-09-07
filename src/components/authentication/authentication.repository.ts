@@ -183,6 +183,16 @@ export class AuthenticationRepository {
     return result;
   }
 
+  async rolesForUser(user: ID) {
+    const result = await this.db
+      .query()
+      .matchNode('user', 'User', { id: user })
+      .apply(matchUserGloballyScopedRoles('user', 'roles'))
+      .return('roles')
+      .first();
+    return result?.roles ?? [];
+  }
+
   async getCurrentPasswordHash(session: Session) {
     const result = await this.db
       .query()

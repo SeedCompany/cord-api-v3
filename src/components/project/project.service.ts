@@ -224,12 +224,12 @@ export class ProjectService {
 
   async secure(
     project: UnsecuredDto<Project>,
-    sessionOrUserId: Session | ID
+    session: Session
   ): Promise<Project> {
     const securedProps = await this.authorizationService.secureProperties(
       IProject,
       project,
-      sessionOrUserId
+      session
     );
     return {
       ...project,
@@ -245,24 +245,16 @@ export class ProjectService {
         ...securedProps.tags,
         value: securedProps.tags.canRead ? securedProps.tags.value : [],
       },
-      canDelete: isIdLike(sessionOrUserId)
+      canDelete: isIdLike(session)
         ? false // Assume email workflow that doesn't need to know this. Skip lookup.
-        : sessionOrUserId.roles.includes('global:Administrator'),
+        : session.roles.includes('global:Administrator'),
       __typename: `${project.type}Project`,
     };
   }
 
-  async readOne(
-    id: ID,
-    sessionOrUserId: Session | ID,
-    changeset?: ID
-  ): Promise<Project> {
-    const unsecured = await this.readOneUnsecured(
-      id,
-      sessionOrUserId,
-      changeset
-    );
-    return await this.secure(unsecured, sessionOrUserId);
+  async readOne(id: ID, session: Session, changeset?: ID): Promise<Project> {
+    const unsecured = await this.readOneUnsecured(id, session, changeset);
+    return await this.secure(unsecured, session);
   }
 
   @Transactional()

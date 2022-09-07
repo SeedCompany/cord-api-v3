@@ -1,10 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { Connection } from 'cypher-query-builder';
 import { compact, keyBy, last, mapValues, pickBy, startCase } from 'lodash';
 import {
   getParentTypes,
-  ID,
-  isIdLike,
   isResourceClass,
   isSecured,
   keys,
@@ -16,19 +13,16 @@ import {
   Session,
   UnauthorizedException,
 } from '../../common';
-import { ILogger, Logger } from '../../core';
 import { ChangesOf, isRelation } from '../../core/database/changes';
 import {
   DbPropsOfDto,
   parseSecuredProperties,
 } from '../../core/database/results';
-import { AuthorizationRepository } from './authorization.repository';
 import {
   AuthScope,
   GlobalScopedRole,
   Powers as Power,
   ProjectScopedRole,
-  rolesForScope,
   ScopedRole,
 } from './dto';
 import { Action, DbRole, PermissionsForResource } from './model';
@@ -65,23 +59,18 @@ export type PermissionsOf<T> = Record<keyof T, Permission>;
 
 @Injectable()
 export class AuthorizationService {
-  constructor(
-    private readonly privileges: Privileges,
-    private readonly dbConn: Connection,
-    private readonly repo: AuthorizationRepository,
-    @Logger('authorization:service') private readonly logger: ILogger
-  ) {}
+  constructor(private readonly privileges: Privileges) {}
 
   async secureProperties<Resource extends ResourceShape<any>>(
     resource: Resource,
     props: DbPropsOfDto<Resource['prototype']>,
-    sessionOrUserId: Session | ID,
+    session: Session,
     otherRoles?: ScopedRole[],
     sensitivity?: Sensitivity
   ): Promise<SecuredResource<Resource, false>> {
     const permissions = await this.getPermissions({
       resource,
-      sessionOrUserId,
+      sessionOrUserId: session,
       otherRoles,
       dto: props,
       sensitivity,
@@ -164,11 +153,9 @@ export class AuthorizationService {
 
   async canList<Resource extends ResourceShape<any>>(
     resource: Resource,
-    sessionOrUserId: Session | ID
+    session: Session
   ): Promise<boolean> {
-    const userGlobalRoles = isIdLike(sessionOrUserId)
-      ? await this.getUserGlobalRoles(sessionOrUserId)
-      : sessionOrUserId.roles;
+    const userGlobalRoles = session.roles;
     const roles = [...userGlobalRoles];
 
     // convert resource to a list of resource names to check
@@ -218,14 +205,12 @@ export class AuthorizationService {
     sensitivity,
   }: {
     resource: Resource;
-    sessionOrUserId: Session | ID;
+    sessionOrUserId: Session;
     otherRoles?: ScopedRole[];
     dto?: Resource['prototype'];
     sensitivity?: Sensitivity;
   }): Promise<PermissionsOf<SecuredResource<Resource>>> {
-    const userGlobalRoles = isIdLike(sessionOrUserId)
-      ? await this.getUserGlobalRoles(sessionOrUserId)
-      : sessionOrUserId.roles;
+    const userGlobalRoles = sessionOrUserId.roles;
     const roles = [...userGlobalRoles, ...(otherRoles ?? dto?.scope ?? [])];
     sensitivity ??= dto?.sensitivity;
 
@@ -313,11 +298,5 @@ export class AuthorizationService {
    */
   async checkPower(power: Power, session: Session): Promise<void> {
     this.privileges.forUser(session).verifyPower(power);
-  }
-
-  async getUserGlobalRoles(id: ID | string): Promise<ScopedRole[]> {
-    const roles = await this.repo.getUserGlobalRoles(id as ID);
-    const scopedRoles = compact(roles.map(rolesForScope('global')));
-    return scopedRoles;
   }
 }
