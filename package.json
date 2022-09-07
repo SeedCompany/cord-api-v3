@@ -21,6 +21,7 @@
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
+    "repl": "nest start --entryFile repl",
     "lint": "eslint --ext .ts,.tsx --fix --max-warnings 0 .",
     "test": "jest",
     "test:watch": "jest --watch",
