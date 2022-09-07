@@ -1,4 +1,3 @@
-import { forwardRef, Inject } from '@nestjs/common';
 import {
   Args,
   Context,
@@ -14,8 +13,7 @@ import {
   UnauthenticatedException,
 } from '../../common';
 import { ConfigService, ILogger, Loader, LoaderOf, Logger } from '../../core';
-import { AuthorizationService } from '../authorization/authorization.service';
-import { Powers } from '../authorization/dto';
+import { Powers as Power, Privileges } from '../authorization';
 import { User, UserLoader } from '../user';
 import { AuthenticationRepository } from './authentication.repository';
 import { AuthenticationService } from './authentication.service';
@@ -27,8 +25,7 @@ export class SessionResolver {
   constructor(
     private readonly authentication: AuthenticationService,
     private readonly repo: AuthenticationRepository,
-    @Inject(forwardRef(() => AuthorizationService))
-    private readonly authorization: AuthorizationService,
+    private readonly privileges: Privileges,
     private readonly config: ConfigService,
     private readonly sessionInt: SessionInterceptor,
     @Logger('session:resolver') private readonly logger: ILogger
@@ -103,8 +100,8 @@ export class SessionResolver {
     return output.user ? await users.load(output.user) : null;
   }
 
-  @ResolveField(() => [Powers], { nullable: true })
-  async powers(@Parent() output: SessionOutput): Promise<Powers[]> {
-    return await this.authorization.readPower(output.session);
+  @ResolveField(() => [Power], { nullable: true })
+  async powers(@Parent() output: SessionOutput): Promise<Power[]> {
+    return [...this.privileges.forUser(output.session).powers];
   }
 }

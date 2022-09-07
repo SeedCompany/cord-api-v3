@@ -1,14 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Connection } from 'cypher-query-builder';
-import {
-  compact,
-  difference,
-  keyBy,
-  last,
-  mapValues,
-  pickBy,
-  startCase,
-} from 'lodash';
+import { compact, keyBy, last, mapValues, pickBy, startCase } from 'lodash';
 import {
   getParentTypes,
   ID,
@@ -34,13 +26,13 @@ import { AuthorizationRepository } from './authorization.repository';
 import {
   AuthScope,
   GlobalScopedRole,
+  Powers as Power,
   ProjectScopedRole,
   rolesForScope,
   ScopedRole,
 } from './dto';
-import { Powers } from './dto/powers';
-import { MissingPowerException } from './missing-power.exception';
 import { Action, DbRole, PermissionsForResource } from './model';
+import { Privileges } from './policy';
 import * as AllRoles from './roles';
 
 const getDbRoles = (roles: ScopedRole[]): DbRole[] =>
@@ -74,6 +66,7 @@ export type PermissionsOf<T> = Record<keyof T, Permission>;
 @Injectable()
 export class AuthorizationService {
   constructor(
+    private readonly privileges: Privileges,
     private readonly dbConn: Connection,
     private readonly repo: AuthorizationRepository,
     @Logger('authorization:service') private readonly logger: ILogger
@@ -315,31 +308,11 @@ export class AuthorizationService {
     );
   }
 
-  async checkPower(power: Powers, session: Session): Promise<void> {
-    const id = session.userId;
-
-    const hasPower = await this.hasPower(session, power);
-    if (!hasPower) {
-      throw new MissingPowerException(
-        power,
-        `User ${
-          session.anonymous ? 'anon' : id
-        } does not have the requested power: ${power}`
-      );
-    }
-  }
-
   /**
-   * Confirms the requesting user has all the powers given.
-   * This uses our app roles instead of powers in DB, which is the way forward.
+   * @deprecated Use `Privileges.for(X).verifyCan('create')` instead
    */
-  async hasPower(session: Session, ...powers: Powers[]) {
-    const granted = getDbRoles(session.roles).flatMap((role) => role.powers);
-    return difference(powers, granted).length === 0;
-  }
-
-  async readPower(session: Session): Promise<Powers[]> {
-    return getDbRoles(session.roles).flatMap((role) => role.powers);
+  async checkPower(power: Power, session: Session): Promise<void> {
+    this.privileges.forUser(session).verifyPower(power);
   }
 
   async getUserGlobalRoles(id: ID | string): Promise<ScopedRole[]> {

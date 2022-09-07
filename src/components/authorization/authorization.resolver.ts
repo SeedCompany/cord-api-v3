@@ -14,18 +14,17 @@ import {
   LoggedInSession,
   MutationPlaceholderOutput,
   Session,
-} from '../../common';
-import { Powers } from '../authorization/dto/powers';
-import { AuthorizationService } from './authorization.service';
-import { DeletePowerOutput } from './dto';
+} from '~/common';
+import { DeletePowerOutput, Powers as Power } from './dto';
+import { Privileges } from './policy';
 
 @ArgsType()
 class ModifyPowerArgs {
   @IdField()
   userId: ID;
 
-  @Field(() => Powers)
-  power: Powers;
+  @Field(() => Power)
+  power: Power;
 }
 
 @ObjectType()
@@ -33,11 +32,11 @@ export abstract class ModifyPowerOutput extends MutationPlaceholderOutput {}
 
 @Resolver()
 export class AuthorizationResolver {
-  constructor(private readonly authorizationService: AuthorizationService) {}
+  constructor(private readonly privileges: Privileges) {}
 
-  @Query(() => [Powers])
-  async powers(@AnonSession() session: Session): Promise<Powers[]> {
-    return await this.authorizationService.readPower(session);
+  @Query(() => [Power])
+  async powers(@AnonSession() session: Session): Promise<Power[]> {
+    return [...this.privileges.forUser(session).powers];
   }
 
   @Mutation(() => ModifyPowerOutput, {
