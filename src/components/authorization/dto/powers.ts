@@ -4,61 +4,69 @@ import { registerEnumType } from '@nestjs/graphql';
 
 export enum Powers {
   BetaFeatures = 'BetaFeatures',
-  CreateBudget = 'CreateBudget',
-  CreateBudgetRecord = 'CreateBudgetRecord',
-  CreateCeremony = 'CreateCeremony',
-  CreateChangeRequest = 'CreateChangeRequest',
-  CreateDirectory = 'CreateDirectory',
-  CreateEducation = 'CreateEducation',
+
   CreateEthnoArt = 'CreateEthnoArt',
-  CreateEthnologueLanguage = 'CreateEthnologueLanguage',
   CreateFieldRegion = 'CreateFieldRegion',
   CreateFieldZone = 'CreateFieldZone',
-  CreateFile = 'CreateFile',
-  CreateFileVersion = 'CreateFileVersion',
   CreateFilm = 'CreateFilm',
   CreateFundingAccount = 'CreateFundingAccount',
-  CreateInternshipEngagement = 'CreateInternshipEngagement',
   CreateLanguage = 'CreateLanguage',
-  CreateLanguageEngagement = 'CreateLanguageEngagement',
   CreateLiteracyMaterial = 'CreateLiteracyMaterial',
   CreateLocation = 'CreateLocation',
   CreateOrganization = 'CreateOrganization',
   CreatePartner = 'CreatePartner',
-  CreatePartnership = 'CreatePartnership',
   CreatePost = 'CreatePost',
-  CreateProduct = 'CreateProduct',
   CreateProject = 'CreateProject',
-  CreateProjectEngagement = 'CreateProjectEngagement',
-  // place holder if needed
-  CreateProjectMember = 'CreateProjectMember',
-  CreateRegion = 'CreateRegion',
   CreateSong = 'CreateSong',
   CreateStory = 'CreateStory',
-  CreateTranslationEngagement = 'CreateTranslationEngagement',
-  CreateUnavailability = 'CreateUnavailability',
   CreateUser = 'CreateUser',
-  CreateZone = 'CreateZone',
-  DeleteLanguage = 'DeleteLanguage',
-  DeleteProject = 'DeleteProject',
-  GrantAdministratorRole = 'GrantAdministratorRole',
-  GrantConsultantManagerRole = 'GrantConsultantManagerRole',
-  GrantConsultantRole = 'GrantConsultantRole',
-  GrantControllerRole = 'GrantControllerRole',
-  GrantFieldOperationsDirectorRole = 'GrantFieldOperationsDirectorRole',
-  GrantFinancialAnalystRole = 'GrantFinancialAnalystRole',
-  GrantFundraisingRole = 'GrantFundraisingRole',
+
+  /* eslint-disable typescript-sort-keys/string-enum */
+
+  /** @deprecated Use `Project.budget` instead */
+  CreateBudget = 'CreateBudget',
+  /** @deprecated Use `Project.budget` instead */
+  CreateBudgetRecord = 'CreateBudgetRecord',
+  /** @deprecated Use `Engagement.ceremony` instead */
+  CreateCeremony = 'CreateCeremony',
+  /** @deprecated Use `Project.changeRequests` instead */
+  CreateChangeRequest = 'CreateChangeRequest',
+  /** @deprecated Use something else instead */
+  CreateDirectory = 'CreateDirectory',
+  /** @deprecated Use `User.education` instead */
+  CreateEducation = 'CreateEducation',
+  /** @deprecated Just check `CreateLanguage` instead. This is a sub-object */
+  CreateEthnologueLanguage = 'CreateEthnologueLanguage',
+  /** @deprecated Use something else instead */
+  CreateFile = 'CreateFile',
+  /** @deprecated Use something else instead */
+  CreateFileVersion = 'CreateFileVersion',
+  /** @deprecated Use `Project.engagements` instead */
+  CreateInternshipEngagement = 'CreateInternshipEngagement',
+  /** @deprecated Use `Project.engagements` instead */
+  CreateLanguageEngagement = 'CreateLanguageEngagement',
+  /** @deprecated Use `Project.partnerships` instead */
+  CreatePartnership = 'CreatePartnership',
+  /** @deprecated Use `Engagement.products` instead */
+  CreateProduct = 'CreateProduct',
+  /** @deprecated Use `Project.engagements` instead */
+  CreateProjectEngagement = 'CreateProjectEngagement',
+  /** @deprecated Use `Project.team` instead */
+  CreateProjectMember = 'CreateProjectMember',
+  /** @deprecated Use `Project.engagements` instead */
+  CreateTranslationEngagement = 'CreateTranslationEngagement',
+  /** @deprecated Use `User.unavailabilities` instead */
+  CreateUnavailability = 'CreateUnavailability',
+
+  /** @deprecated Use `AuthorizedRoles.Intern` instead */
   GrantInternRole = 'GrantInternRole',
-  GrantLeadershipRole = 'GrantLeadershipRole',
+  /** @deprecated Use `AuthorizedRoles.Liaison` instead */
   GrantLiaisonRole = 'GrantLiaisonRole',
-  GrantMarketingRole = 'GrantMarketingRole',
+  /** @deprecated Use `AuthorizedRoles.Mentor` instead */
   GrantMentorRole = 'GrantMentorRole',
-  GrantPower = 'GrantPower',
-  GrantProjectManagerRole = 'GrantProjectManagerRole',
+  /** @deprecated Use `AuthorizedRoles.RegionalCommunicationsCoordinator` instead */
   GrantRegionalCommunicationsCoordinatorRole = 'GrantRegionalCommunicationsCoordinatorRole',
-  GrantRegionalDirectorRole = 'GrantRegionalDirectorRole',
-  GrantRole = 'GrantRole',
-  GrantStaffMemberRole = 'GrantStaffMemberRole',
+  /** @deprecated Use `AuthorizedRoles.Translator` instead */
   GrantTranslatorRole = 'GrantTranslatorRole',
 }
 
