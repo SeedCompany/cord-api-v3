@@ -34,9 +34,7 @@ import { AuthorizationRepository } from './authorization.repository';
 import {
   AuthScope,
   GlobalScopedRole,
-  InternalRole,
   ProjectScopedRole,
-  Role,
   rolesForScope,
   ScopedRole,
 } from './dto';
@@ -293,22 +291,6 @@ export class AuthorizationService {
       };
       return [key, value];
     }) as PermissionsOf<SecuredResource<Resource>>;
-  }
-
-  mapRoleToDbRoles(role: Role): InternalRole[] {
-    switch (role) {
-      case Role.FinancialAnalyst:
-        return [
-          'FinancialAnalystOnGlobalRole',
-          'FinancialAnalystOnProjectRole',
-        ];
-      case Role.ProjectManager:
-        return ['ProjectManagerGlobalRole', 'ProjectManagerOnProjectRole'];
-      case Role.RegionalDirector:
-        return ['RegionalDirectorGlobalRole', 'RegionalDirectorOnProjectRole'];
-      default:
-        return [(role + 'Role') as InternalRole];
-    }
   }
 
   isSensitivityAllowed<TResource extends ResourceShape<any>>(

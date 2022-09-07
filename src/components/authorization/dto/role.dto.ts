@@ -54,30 +54,3 @@ export const withoutScope = (role: ScopedRole): Role => splitScope(role)[1];
 
 export const splitScope = (role: ScopedRole) =>
   role.split(':') as [AuthScope, Role];
-
-export type InternalRole =
-  | 'AdministratorRole'
-  | 'BetaTesterRole'
-  | 'BibleTranslationLiaisonRole'
-  | 'ConsultantRole'
-  | 'ConsultantManagerRole'
-  | 'ControllerRole'
-  | 'ExperienceOperations'
-  | 'FieldOperationsDirectorRole'
-  | 'FieldPartnerRole'
-  | 'FinancialAnalystOnGlobalRole'
-  | 'FinancialAnalystOnProjectRole'
-  | 'FundraisingRole'
-  | 'InternRole'
-  | 'LeadFinancialAnalystRole'
-  | 'LeadershipRole'
-  | 'LiaisonRole'
-  | 'MarketingRole'
-  | 'MentorRole'
-  | 'ProjectManagerGlobalRole'
-  | 'ProjectManagerOnProjectRole'
-  | 'RegionalCommunicationsCoordinatorRole'
-  | 'RegionalDirectorGlobalRole'
-  | 'RegionalDirectorOnProjectRole'
-  | 'StaffMemberRole'
-  | 'TranslatorRole';
