@@ -14,8 +14,10 @@ import {
   mapFromList,
   maybeMany,
 } from '~/common';
-import { bootstrapLogger } from '~/core';
+import { bootstrapLogger, ConfigService } from '~/core';
 import { AppModule } from './app.module';
+import { AuthenticationService } from './components/authentication';
+import { ResourcesHost } from './components/authorization/policy/resources.host';
 import 'source-map-support/register';
 
 /**
@@ -43,6 +45,10 @@ async function bootstrap() {
   await promisify(replServer.setupHistory.bind(replServer))(
     '.cache/repl_history'
   );
+  const session = await app
+    .get(AuthenticationService)
+    .sessionForUser(app.get(ConfigService).rootAdmin.id);
+  const Resources = await app.get(ResourcesHost).getMap();
 
   assignToObject(replServer.context, {
     DateTime,
@@ -56,6 +62,8 @@ async function bootstrap() {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     __: lodash, // single underscore is "last execution result"
     lodash,
+    session,
+    Resources,
   });
 }
 bootstrap().catch((err) => {
