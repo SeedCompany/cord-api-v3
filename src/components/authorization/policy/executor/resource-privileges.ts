@@ -3,12 +3,15 @@ import { compact, last, lowerCase, startCase } from 'lodash';
 import {
   isSecured,
   keys,
+  mapFromList,
   ResourceShape,
+  SecuredResource,
   SecuredResourceKey,
   Session,
   UnauthorizedException,
 } from '~/common';
 import { ChangesOf, isRelation } from '~/core/database/changes';
+import { DbPropsOfDto } from '~/core/database/results';
 import { Action } from '../builder/perm-granter';
 import {
   AllPermissionsView,
@@ -89,5 +92,28 @@ export class ResourcePrivileges<TResourceStatic extends ResourceShape<any>> {
         fullPath
       );
     }
+  }
+
+  /**
+   * Takes the given dto which has unsecured props and returns the props that
+   * are supposed to be secured (unsecured props are omitted) as secured.
+   *
+   * This is mainly here to service the existing codebase. I suspect we'll want
+   * to migrate to a different method that handles things in a slightly different way.
+   */
+  secureProps(
+    dto: DbPropsOfDto<TResourceStatic['prototype']>
+  ): SecuredResource<TResourceStatic, false> {
+    const keys = this.resource.SecuredProps as Array<
+      SecuredResourceKey<TResourceStatic>
+    >;
+    const securedProps = mapFromList(keys, (key) => {
+      const canRead = this.can('read', key);
+      const canEdit = this.can('edit', key);
+      let value = (dto as any)[key];
+      value = canRead ? value : Array.isArray(value) ? [] : undefined;
+      return [key, { value, canRead, canEdit }];
+    });
+    return securedProps as SecuredResource<TResourceStatic, false>;
   }
 }

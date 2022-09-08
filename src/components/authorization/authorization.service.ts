@@ -10,10 +10,7 @@ import {
   Session,
 } from '../../common';
 import { ChangesOf } from '../../core/database/changes';
-import {
-  DbPropsOfDto,
-  parseSecuredProperties,
-} from '../../core/database/results';
+import { DbPropsOfDto } from '../../core/database/results';
 import {
   AuthScope,
   GlobalScopedRole,
@@ -58,6 +55,11 @@ export type PermissionsOf<T> = Record<keyof T & string, Permission>;
 export class AuthorizationService {
   constructor(private readonly privileges: Privileges) {}
 
+  /**
+   * @deprecated Use `Privileges.for(X).secureProps(props)` instead.
+   * If you need `otherRoles` or `sensitivity` wrap the object with
+   * `withScope` or `withEffectiveSensitivity` respectively.
+   */
   async secureProperties<Resource extends ResourceShape<any>>(
     resource: Resource,
     props: DbPropsOfDto<Resource['prototype']>,
@@ -65,15 +67,12 @@ export class AuthorizationService {
     otherRoles?: ScopedRole[],
     sensitivity?: Sensitivity
   ): Promise<SecuredResource<Resource, false>> {
-    const permissions = await this.getPermissions({
-      resource: resource,
-      sessionOrUserId: session,
-      otherRoles,
-      dto: props,
-      sensitivity,
-    });
-    // @ts-expect-error not matching for some reason but declared return type is correct
-    return parseSecuredProperties(props, permissions, resource.SecuredProps);
+    props =
+      otherRoles && otherRoles.length > 0
+        ? withScope(props, otherRoles)
+        : props;
+    props = sensitivity ? withEffectiveSensitivity(props, sensitivity) : props;
+    return this.privileges.for(session, resource, props).secureProps(props);
   }
 
   /**
