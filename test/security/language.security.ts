@@ -2,6 +2,7 @@ import {
   ResourceShape,
   SecuredListType,
   SecuredResource,
+  SecuredResourceKey,
   Sensitivity,
 } from '../../src/common';
 import { Role, ScopedRole } from '../../src/components/authorization';
@@ -270,7 +271,7 @@ describe('Language Security e2e', () => {
 
 async function testSensitivityHigherThan<
   TResource extends ResourceShape<any>,
-  Prop extends keyof TResource['prototype'] | keyof TResource['Relations']
+  Prop extends SecuredResourceKey<TResource>
 >(
   app: TestApp,
   sensitivity: Sensitivity,
@@ -370,7 +371,7 @@ async function testSensitivityHigherThan<
 
 async function testSensitivityLowerThanEqualTo<
   TResource extends ResourceShape<any>,
-  Prop extends keyof TResource['prototype'] | keyof TResource['Relations']
+  Prop extends SecuredResourceKey<TResource>
 >(
   app: TestApp,
   sensitivity: Sensitivity,
