@@ -14,7 +14,7 @@ function AuthExtraInfoResolver(concreteClass: AbstractClassType<any>) {
       const privileges = this.privileges.for(session, BetaFeatures);
       return mapFromList(BetaFeatures.Props, (prop) => [
         prop,
-        privileges.can('write', prop),
+        privileges.can('edit', prop),
       ]);
     }
   }

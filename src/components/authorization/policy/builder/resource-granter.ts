@@ -24,8 +24,8 @@ export abstract class ResourceGranter<
    * The requester can edit all props not specifically defined.
    * {@link read} is implied.
    */
-  get write() {
-    return super.write;
+  get edit() {
+    return super.edit;
   }
 
   /**

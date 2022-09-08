@@ -1,7 +1,7 @@
 import { mapFromList, ResourceShape } from '~/common';
 import { AndConditions, Condition, OrConditions } from '../conditions';
 
-export type Action = 'read' | 'write' | 'create' | 'delete';
+export type Action = 'read' | 'edit' | 'create' | 'delete';
 
 export type Permissions = Readonly<Partial<Record<Action, Permission>>>;
 export type Permission = Condition<any> | true;
@@ -27,11 +27,12 @@ export abstract class PermGranter<TResourceStatic extends ResourceShape<any>> {
   get read() {
     return this.withAddedAction('read');
   }
+
   /**
    * The requester can read & modify this prop or object.
    */
-  get write() {
-    return this.withAddedAction('read', 'write');
+  get edit() {
+    return this.withAddedAction('read', 'edit');
   }
 
   /**
