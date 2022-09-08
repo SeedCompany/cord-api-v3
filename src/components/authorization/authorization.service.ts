@@ -7,7 +7,6 @@ import {
   ResourceShape,
   SecuredResource,
   Sensitivity,
-  ServerException,
   Session,
 } from '../../common';
 import { ChangesOf } from '../../core/database/changes';
@@ -22,7 +21,8 @@ import {
   ProjectScopedRole,
   ScopedRole,
 } from './dto';
-import { Action, DbRole, PermissionsForResource } from './model';
+import { DbRole } from './model';
+import { withEffectiveSensitivity, withScope } from './policies/conditions';
 import { Privileges } from './policy';
 import * as AllRoles from './roles';
 
@@ -52,7 +52,7 @@ export const permissionDefaults = {
 };
 export type Permission = typeof permissionDefaults;
 
-export type PermissionsOf<T> = Record<keyof T, Permission>;
+export type PermissionsOf<T> = Record<keyof T & string, Permission>;
 
 @Injectable()
 export class AuthorizationService {
@@ -66,7 +66,7 @@ export class AuthorizationService {
     sensitivity?: Sensitivity
   ): Promise<SecuredResource<Resource, false>> {
     const permissions = await this.getPermissions({
-      resource,
+      resource: resource,
       sessionOrUserId: session,
       otherRoles,
       dto: props,
@@ -151,19 +151,24 @@ export class AuthorizationService {
   /**
    * Get the permissions for a resource.
    *
-   * @param resource        The resource to pull permissions for,
-   *                        this determines the return type
-   * @param sessionOrUserId Give session or a user to grab their global roles
-   *                        and merge them with the given roles
-   * @param otherRoles      Other roles to apply, probably non-global context
-   * @param dto             The object to in question. Currently sensitivity is pulled from this.
-   * @param sensitivity     The sensitivity level to get permissions for.
+   * @deprecated Use `Privileges.for(X).all` instead.
+   * If you need `otherRoles` or `sensitivity` wrap the object with
+   * `withScope` or `withEffectiveSensitivity` respectively.
+   *
+   * @param opt
+   * @param opt.resource        The resource to pull permissions for,
+   *                            this determines the return type
+   * @param opt.sessionOrUserId Give session or a user to grab their global roles
+   *                            and merge them with the given roles
+   * @param [opt.otherRoles]    Other roles to apply, probably non-global context
+   * @param [opt.dto]           The object to in question. Currently, sensitivity is pulled from this.
+   * @param [opt.sensitivity]   The sensitivity level to get permissions for.
    */
   async getPermissions<Resource extends ResourceShape<any>>({
     resource,
     sessionOrUserId,
     otherRoles,
-    dto,
+    dto = {},
     sensitivity,
   }: {
     resource: Resource;
@@ -172,87 +177,10 @@ export class AuthorizationService {
     dto?: Resource['prototype'];
     sensitivity?: Sensitivity;
   }): Promise<PermissionsOf<SecuredResource<Resource>>> {
-    const userGlobalRoles = sessionOrUserId.roles;
-    const roles = [...userGlobalRoles, ...(otherRoles ?? dto?.scope ?? [])];
-    sensitivity ??= dto?.sensitivity;
-
-    // convert resource to a list of resource names to check
-    const resources = getParentTypes(resource)
-      // if parent defines Props include it in mapping
-      .filter(isResourceClass)
-      .map((r) => r.name);
-
-    const normalizeGrants = (role: DbRole) =>
-      !Array.isArray(role.grants)
-        ? role.grants
-        : mapValues(
-            // convert list of grants to object keyed by resource name
-            keyBy(role.grants, (resourceGrant) =>
-              resourceGrant.__className.substring(2)
-            ),
-            (resourceGrant) =>
-              // convert value of a grant to an object keyed by prop name and value is a permission set
-              mapValues(
-                keyBy(resourceGrant.properties, (prop) => prop.propertyName),
-                (prop) => prop.permission
-              )
-          );
-
-    const dbRoles = getDbRoles(roles);
-
-    // grab all the grants for the given roles & matching resources
-    const grants = dbRoles.flatMap((role) =>
-      Object.entries(normalizeGrants(role)).flatMap(([name, grant]) => {
-        if (resources.includes(name)) {
-          const filtered = mapValues(grant, (propPerm, key) => {
-            return this.isSensitivityAllowed(
-              propPerm,
-              resource,
-              key,
-              sensitivity
-            )
-              ? propPerm
-              : {};
-          });
-          return filtered;
-        }
-        return [];
-      })
-    ) as Array<PermissionsForResource<ResourceShape<Resource>>>;
-
-    const keys = [
-      ...resource.SecuredProps,
-      ...Object.keys(resource.Relations ?? {}),
-    ] as Array<keyof Resource & string>;
-    return mapFromList(keys, (key) => {
-      const value = {
-        canRead: grants.some((grant) => grant[key]?.read === true),
-        canEdit: grants.some((grant) => grant[key]?.write === true),
-      };
-      return [key, value];
-    }) as PermissionsOf<SecuredResource<Resource>>;
-  }
-
-  isSensitivityAllowed<TResource extends ResourceShape<any>>(
-    grant: Partial<
-      Record<Action, boolean> & Record<'sensitivityAccess', Sensitivity>
-    >,
-    resource: TResource,
-    prop: string,
-    sensitivity?: Sensitivity
-  ): boolean {
-    if (grant.sensitivityAccess && !sensitivity) {
-      throw new ServerException(
-        `Sensitivity check required, but no sensitivity provided ${resource.name}.${prop}`
-      );
-    }
-
-    const sensitivityRank = { High: 3, Medium: 2, Low: 1 };
-    return !(
-      sensitivity &&
-      grant.sensitivityAccess &&
-      sensitivityRank[sensitivity] > sensitivityRank[grant.sensitivityAccess]
-    );
+    dto =
+      otherRoles && otherRoles.length > 0 ? withScope(dto, otherRoles) : dto;
+    dto = sensitivity ? withEffectiveSensitivity(dto, sensitivity) : dto;
+    return this.privileges.for(sessionOrUserId, resource, dto).all;
   }
 
   /**

@@ -18,7 +18,7 @@ import {
  */
 export const parseSecuredProperties = <
   DbProps extends Record<string, any>,
-  PickedKeys extends keyof DbProps
+  PickedKeys extends keyof DbProps & string
 >(
   props: DbProps,
   perms: PermissionsOf<DbProps>,
