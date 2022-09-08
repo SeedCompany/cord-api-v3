@@ -1,5 +1,5 @@
 import { keys as keysOf } from 'ts-transformer-keys';
-import { ResourceShape } from '~/common';
+import { mapFromList, ResourceShape } from '~/common';
 import { Role } from './role.dto';
 
 /**
@@ -9,16 +9,21 @@ import { Role } from './role.dto';
  *
  * Policy(Role.X, (r) => [
  *   r.AssignableRoles.specifically((p) => [
- *     p.Y.write,
- *     p.Z.write,
+ *     p.Y.edit,
+ *     p.Z.edit,
  *   ]),
  * ])
  */
 export const AssignableRoles = {
   // Stuff actually needed at runtime.
   name: 'AssignableRoles',
-  Props: keysOf<Record<Role, boolean>>(),
+  Relations: mapFromList(keysOf<Record<Role, boolean>>(), (role) => [role, '']),
+  Props: [],
   SecuredProps: [],
-} as unknown as Omit<ResourceShape<Record<Role, boolean>>, 'prototype'> & {
+} as unknown as Omit<
+  ResourceShape<Record<Role, boolean>>,
+  'prototype' | 'Relations'
+> & {
   prototype: Record<Role, boolean>;
+  Relations: Record<Role, boolean>;
 };
