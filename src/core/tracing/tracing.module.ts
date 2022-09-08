@@ -64,6 +64,18 @@ export class TracingModule implements OnModuleInit, NestModule {
       (msg: string, err: Error | string) => {
         if (err instanceof Error) {
           this.logger.log(level, msg, { exception: err });
+        } else if (msg.startsWith('Segment too large to send')) {
+          const matches = msg.match(
+            /Segment too large to send: (\{.+\}) \((\d+) bytes\)./
+          );
+          const safeMatches = matches
+            ? {
+                ...JSON.parse(matches[1]),
+                size: matches[2],
+              }
+            : {};
+
+          this.logger.warning('Segment too large to send', safeMatches);
         } else {
           this.logger.log(level, err ? `${msg} ${err}` : msg);
         }
