@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { keyBy, mapValues, pickBy } from 'lodash';
+import { mapValues, pickBy } from 'lodash';
 import {
   getParentTypes,
   isResourceClass,
@@ -22,9 +22,6 @@ import { DbRole } from './model';
 import { withEffectiveSensitivity, withScope } from './policies/conditions';
 import { Privileges } from './policy';
 import * as AllRoles from './roles';
-
-const getDbRoles = (roles: ScopedRole[]): DbRole[] =>
-  Object.values(AllRoles).filter((role) => roles.includes(role.name));
 
 const DbRolesForScope = (scope: AuthScope): Record<ScopedRole, DbRole> =>
   mapFromList(Object.values(AllRoles), (role) =>
@@ -112,39 +109,14 @@ export class AuthorizationService {
     return pickBy(map, (sens) => sens !== null);
   }
 
+  /**
+   * @deprecated Use `Privileges.for(X).can('read')` instead.
+   */
   async canList<Resource extends ResourceShape<any>>(
     resource: Resource,
     session: Session
   ): Promise<boolean> {
-    const userGlobalRoles = session.roles;
-    const roles = [...userGlobalRoles];
-
-    // convert resource to a list of resource names to check
-    const resources = getParentTypes(resource)
-      // if parent defines Props include it in mapping
-      .filter(isResourceClass)
-      .map((r) => r.name);
-
-    const normalizeGrants = (role: DbRole) =>
-      !Array.isArray(role.grants)
-        ? role.grants
-        : mapValues(
-            // convert list of canList permissions keyed by resource name
-            keyBy(role.grants, (resourceGrant) =>
-              resourceGrant.__className.substring(2)
-            ),
-            (resourceGrant) => resourceGrant.canList
-          );
-    const dbRoles = getDbRoles(roles);
-    const grants = dbRoles.flatMap((role) =>
-      Object.entries(normalizeGrants(role)).flatMap(([name, grant]) => {
-        if (resources.includes(name)) {
-          return grant;
-        }
-        return [];
-      })
-    );
-    return grants.some((grant) => grant);
+    return this.privileges.for(session, resource).can('read');
   }
 
   /**
