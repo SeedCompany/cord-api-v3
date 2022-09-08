@@ -1,11 +1,13 @@
+import { startCase } from 'lodash';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { ResourceShape } from '~/common';
+import { PascalCase } from 'type-fest';
+import { mapFromList, ResourceShape } from '~/common';
 import { Action } from '../builder/perm-granter';
 import { ResourceProps } from '../builder/prop-granter';
 import { ResourcePrivileges } from './resource-privileges';
 
 export type AllPermissionsView<TResourceStatic extends ResourceShape<any>> =
-  Record<ResourceProps<TResourceStatic>, Record<Action, boolean>>;
+  Record<ResourceProps<TResourceStatic>, Record<CompatAction, boolean>>;
 
 export const createAllPermissionsView = <
   TResourceStatic extends ResourceShape<any>
@@ -22,11 +24,36 @@ export const createAllPermissionsView = <
       return [...keys] as Array<ResourceProps<TResourceStatic>>;
     },
     calculate: (propName) =>
-      createLazyRecord<Record<Action, boolean>>({
-        getKeys: () => keysOf<Record<Action, boolean>>(),
-        calculate: (action) => privileges.can(action, propName),
+      createLazyRecord<Record<CompatAction, boolean>>({
+        getKeys: () => keysOf<Record<CompatAction, boolean>>(),
+        calculate: (actionInput, propPerms) => {
+          const action = compatMap.forward[actionInput];
+          const perm = privileges.can(action, propName);
+          propPerms[action] = perm;
+          propPerms[compatMap.backward[action]] = perm;
+          return perm;
+        },
       }),
   });
+
+type CompatAction = Action | `can${PascalCase<Action>}`;
+
+const compatMap = {
+  forward: {
+    ...mapFromList(keysOf<Record<CompatAction, boolean>>(), (action) => [
+      action,
+      (action.startsWith('can')
+        ? action.slice(3).toLowerCase()
+        : action) as Action,
+    ]),
+  },
+  backward: {
+    ...mapFromList(keysOf<Record<Action, boolean>>(), (action) => [
+      action,
+      `can${startCase(action)}` as CompatAction,
+    ]),
+  },
+};
 
 /**
  * Returns object matching any shape and calls the given functions to calculate
@@ -37,7 +64,7 @@ const createLazyRecord = <T extends object>({
   getKeys,
 }: {
   getKeys: () => Array<keyof T & string>;
-  calculate: (key: keyof T & string) => T[keyof T & string];
+  calculate: (key: keyof T & string, object: Partial<T>) => T[keyof T & string];
 }) => {
   const proxy = new Proxy<Partial<T>>(
     {},
@@ -52,7 +79,7 @@ const createLazyRecord = <T extends object>({
         if (target[propName]) {
           return target[propName];
         }
-        const value = calculate(propName);
+        const value = calculate(propName, target);
         target[propName] = value;
         return value;
       },
