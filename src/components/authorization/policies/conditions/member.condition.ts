@@ -1,6 +1,11 @@
 import { intersection } from 'lodash';
 import { ResourceShape } from '~/common';
-import { Role, ScopedRole, splitScope } from '../../dto/role.dto';
+import {
+  Role,
+  rolesForScope,
+  ScopedRole,
+  splitScope,
+} from '../../dto/role.dto';
 import { Condition, IsAllowedParams } from '../../policy/conditions';
 
 class MemberCondition<
@@ -15,7 +20,7 @@ class MemberCondition<
   isAllowed({ object, policy }: IsAllowedParams<TResourceStatic>): boolean {
     const expected = this.roles ?? policy.roles;
 
-    const scope: ScopedRole[] = object?.scope ?? [];
+    const scope: ScopedRole[] = object[ScopedRoles] ?? object?.scope ?? [];
     const actual = scope
       .map(splitScope)
       .filter(([scope, _]) => scope === 'project')
@@ -45,3 +50,22 @@ export const member = new MemberCondition();
  * policy's roles can effectively be used here.
  */
 export const memberWith = (...roles: Role[]) => new MemberCondition(roles);
+
+/**
+ * Specify roles that should be used for the membership condition.
+ */
+export const withMembershipRoles = <T extends object>(obj: T, roles: Role[]) =>
+  withScope(obj, roles.map(rolesForScope('project')));
+
+/**
+ * Specify scoped roles that should be used for the membership condition.
+ * This is useful when the object doesn't have a `scope` property or
+ * more scoped roles need to be added in for this condition.
+ */
+export const withScope = <T extends object>(obj: T, roles: ScopedRole[]) =>
+  Object.defineProperty(obj, ScopedRoles, {
+    value: roles,
+    enumerable: false,
+  });
+
+const ScopedRoles = Symbol('ScopedRoles');

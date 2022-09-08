@@ -18,16 +18,16 @@ export class SensitivityCondition<
     if (!object) {
       throw new Error("Needed object's sensitivity but object wasn't given");
     }
-    if (!object.sensitivity) {
+    const actual: Sensitivity | undefined =
+      object[EffectiveSensitivity] ?? object.sensitivity;
+
+    if (!actual) {
       throw new Error(
         "Needed object's sensitivity but object's sensitivity wasn't given"
       );
     }
 
-    return (
-      sensitivityRank[this.access] >
-      sensitivityRank[object.sensitivity as Sensitivity]
-    );
+    return sensitivityRank[this.access] >= sensitivityRank[actual];
   }
 }
 
@@ -40,3 +40,19 @@ export const sensMediumOrLower = new SensitivityCondition(Sensitivity.Medium);
  * The following actions only apply if the object's sensitivity is Low.
  */
 export const sensOnlyLow = new SensitivityCondition(Sensitivity.Low);
+
+/**
+ * Specify sensitivity that should be used for the sensitivity condition.
+ * This is useful when the object doesn't have a `sensitivity` property or
+ * a different/"effective" sensitivity should be used for this logic.
+ */
+export const withEffectiveSensitivity = <T extends object>(
+  obj: T,
+  sensitivity: Sensitivity
+): T =>
+  Object.defineProperty(obj, EffectiveSensitivity, {
+    value: sensitivity,
+    enumerable: false,
+  });
+
+const EffectiveSensitivity = Symbol('EffectiveSensitivity');
