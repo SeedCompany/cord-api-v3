@@ -1,3 +1,4 @@
+import { LazyGetter as Once } from 'lazy-get-decorator';
 import { compact, last, lowerCase, startCase } from 'lodash';
 import {
   isSecured,
@@ -9,6 +10,10 @@ import {
 import { ChangesOf, isRelation } from '~/core/database/changes';
 import { Action } from '../builder/perm-granter';
 import { ResourceProps } from '../builder/prop-granter';
+import {
+  AllPermissionsView,
+  createAllPermissionsView,
+} from './all-permissions-view';
 import { PolicyExecutor } from './policy-executor';
 
 export class ResourcePrivileges<TResourceStatic extends ResourceShape<any>> {
@@ -37,6 +42,20 @@ export class ResourcePrivileges<TResourceStatic extends ResourceShape<any>> {
         } ${lowerCase(this.resource.name)}${prop ? '.' + prop : ''}`
       );
     }
+  }
+
+  /**
+   * An alternative view that gives an object with all the permissions for
+   * each property & relation.
+   * @example
+   * const privileges = Privileges.for(session, User);
+   * if (privileges.all.email.read) {
+   *   // can read
+   * }
+   */
+  @Once()
+  get all(): AllPermissionsView<TResourceStatic> {
+    return createAllPermissionsView(this.resource, this);
   }
 
   /**
