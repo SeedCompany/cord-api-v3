@@ -76,3 +76,8 @@ export type SecuredResource<
   IncludeRelations extends boolean | undefined = true
 > = SecuredProps<Resource['prototype']> &
   (IncludeRelations extends false ? unknown : Resource['Relations']);
+
+export type SecuredResourceKey<
+  TResourceStatic extends ResourceShape<any>,
+  IncludeRelations extends boolean | undefined = true
+> = keyof SecuredResource<TResourceStatic, IncludeRelations> & string;

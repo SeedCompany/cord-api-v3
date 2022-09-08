@@ -1,4 +1,4 @@
-import { mapFromList, ResourceShape } from '~/common';
+import { mapFromList, ResourceShape, SecuredResourceKey } from '~/common';
 import { PermGranter } from './perm-granter';
 
 export abstract class PropGranter<
@@ -31,9 +31,10 @@ export class PropGranterImpl<
     resource: TResourceStatic
   ): PropsGranter<TResourceStatic> {
     const propsGranter = mapFromList(
-      [...resource.Props, ...Object.keys(resource.Relations ?? {})] as Array<
-        ResourceProps<TResourceStatic>
-      >,
+      [
+        ...resource.SecuredProps,
+        ...Object.keys(resource.Relations ?? {}),
+      ] as Array<SecuredResourceKey<TResourceStatic>>,
       (prop) => [prop, new PropGranterImpl(resource, [prop])]
     ) as PropsGranter<TResourceStatic>;
     propsGranter.many = (...props) => new PropGranterImpl(resource, props);
@@ -43,19 +44,13 @@ export class PropGranterImpl<
 }
 
 export type PropsGranter<TResourceStatic extends ResourceShape<any>> = Record<
-  ResourceProps<TResourceStatic>,
+  SecuredResourceKey<TResourceStatic>,
   PropGranter<TResourceStatic>
 > & {
   /**
    * A shortcut to apply actions to many properties at once.
    */
   many: (
-    ...props: Array<ResourceProps<TResourceStatic>>
+    ...props: Array<SecuredResourceKey<TResourceStatic>>
   ) => PropGranter<TResourceStatic>;
 };
-
-export type ResourceProps<TResourceStatic extends ResourceShape<any>> = (
-  | Exclude<keyof TResourceStatic['prototype'], 'modifiedAt'>
-  | keyof TResourceStatic['Relations']
-) &
-  string;

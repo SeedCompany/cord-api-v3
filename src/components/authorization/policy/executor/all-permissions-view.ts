@@ -1,13 +1,12 @@
 import { startCase } from 'lodash';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { PascalCase } from 'type-fest';
-import { mapFromList, ResourceShape } from '~/common';
+import { mapFromList, ResourceShape, SecuredResourceKey } from '~/common';
 import { Action } from '../builder/perm-granter';
-import { ResourceProps } from '../builder/prop-granter';
 import { ResourcePrivileges } from './resource-privileges';
 
 export type AllPermissionsView<TResourceStatic extends ResourceShape<any>> =
-  Record<ResourceProps<TResourceStatic>, Record<CompatAction, boolean>>;
+  Record<SecuredResourceKey<TResourceStatic>, Record<CompatAction, boolean>>;
 
 export const createAllPermissionsView = <
   TResourceStatic extends ResourceShape<any>
@@ -18,10 +17,10 @@ export const createAllPermissionsView = <
   createLazyRecord<AllPermissionsView<TResourceStatic>>({
     getKeys: () => {
       const keys = new Set([
-        ...resource.Props,
+        ...resource.SecuredProps,
         ...Object.keys(resource.Relations ?? {}),
       ]);
-      return [...keys] as Array<ResourceProps<TResourceStatic>>;
+      return [...keys] as Array<SecuredResourceKey<TResourceStatic>>;
     },
     calculate: (propName) =>
       createLazyRecord<Record<CompatAction, boolean>>({

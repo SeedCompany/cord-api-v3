@@ -4,12 +4,12 @@ import {
   isSecured,
   keys,
   ResourceShape,
+  SecuredResourceKey,
   Session,
   UnauthorizedException,
 } from '~/common';
 import { ChangesOf, isRelation } from '~/core/database/changes';
 import { Action } from '../builder/perm-granter';
-import { ResourceProps } from '../builder/prop-granter';
 import {
   AllPermissionsView,
   createAllPermissionsView,
@@ -24,7 +24,7 @@ export class ResourcePrivileges<TResourceStatic extends ResourceShape<any>> {
     private readonly policyExecutor: PolicyExecutor
   ) {}
 
-  can(action: Action, prop?: ResourceProps<TResourceStatic>) {
+  can(action: Action, prop?: SecuredResourceKey<TResourceStatic>) {
     return this.policyExecutor.execute(
       action,
       this.session,
@@ -34,7 +34,7 @@ export class ResourcePrivileges<TResourceStatic extends ResourceShape<any>> {
     );
   }
 
-  verifyCan(action: Action, prop?: ResourceProps<TResourceStatic>) {
+  verifyCan(action: Action, prop?: SecuredResourceKey<TResourceStatic>) {
     if (!this.can(action, prop)) {
       throw new UnauthorizedException(
         `You do not have the permission to ${action} ${
