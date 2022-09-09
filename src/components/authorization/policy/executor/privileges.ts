@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ResourceShape, Session } from '~/common';
 import { PolicyExecutor } from './policy-executor';
+import { ResourcePrivileges } from './resource-privileges';
 import { ScopedPrivileges } from './scoped-privileges';
 import { UserPrivileges } from './user-privileges';
 
@@ -10,6 +11,12 @@ export class Privileges {
 
   forUser(session: Session) {
     return new UserPrivileges(session, this.policyExecutor);
+  }
+
+  forResource<TResourceStatic extends ResourceShape<any>>(
+    resource: TResourceStatic
+  ) {
+    return new ResourcePrivileges(resource, this.policyExecutor);
   }
 
   /**
