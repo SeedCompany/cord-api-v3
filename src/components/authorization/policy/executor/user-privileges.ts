@@ -2,7 +2,7 @@ import { ResourceShape, Session } from '~/common';
 import { Powers as Power } from '../../index';
 import { MissingPowerException } from '../../missing-power.exception';
 import { PolicyExecutor } from './policy-executor';
-import { ResourcePrivileges } from './resource-privileges';
+import { ScopedPrivileges } from './scoped-privileges';
 
 export class UserPrivileges {
   constructor(
@@ -14,7 +14,7 @@ export class UserPrivileges {
     resource: TResourceStatic,
     object?: TResourceStatic['prototype']
   ) {
-    return new ResourcePrivileges(
+    return new ScopedPrivileges(
       resource,
       object,
       this.session,

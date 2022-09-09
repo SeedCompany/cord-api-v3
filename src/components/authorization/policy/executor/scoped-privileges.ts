@@ -19,7 +19,7 @@ import {
 } from './all-permissions-view';
 import { PolicyExecutor } from './policy-executor';
 
-export class ResourcePrivileges<TResourceStatic extends ResourceShape<any>> {
+export class ScopedPrivileges<TResourceStatic extends ResourceShape<any>> {
   constructor(
     private readonly resource: TResourceStatic,
     private readonly object: TResourceStatic['prototype'] | undefined,

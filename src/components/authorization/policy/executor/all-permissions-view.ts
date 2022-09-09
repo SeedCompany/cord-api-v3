@@ -3,7 +3,7 @@ import { keys as keysOf } from 'ts-transformer-keys';
 import { PascalCase } from 'type-fest';
 import { mapFromList, ResourceShape, SecuredResourceKey } from '~/common';
 import { Action } from '../builder/perm-granter';
-import { ResourcePrivileges } from './resource-privileges';
+import { ScopedPrivileges } from './scoped-privileges';
 
 export type AllPermissionsView<TResourceStatic extends ResourceShape<any>> =
   Record<SecuredResourceKey<TResourceStatic>, Record<CompatAction, boolean>>;
@@ -12,7 +12,7 @@ export const createAllPermissionsView = <
   TResourceStatic extends ResourceShape<any>
 >(
   resource: TResourceStatic,
-  privileges: ResourcePrivileges<TResourceStatic>
+  privileges: ScopedPrivileges<TResourceStatic>
 ) =>
   createLazyRecord<AllPermissionsView<TResourceStatic>>({
     getKeys: () => {
