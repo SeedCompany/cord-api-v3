@@ -52,3 +52,4 @@ lerna-debug.log*
 
 # default local files dir
 .files
+.cache

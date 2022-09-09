@@ -2,9 +2,11 @@ import { clc } from '@nestjs/common/utils/cli-colors.util';
 import { NestFactory } from '@nestjs/core';
 import { assignToObject } from '@nestjs/core/repl/assign-to-object.util';
 import { ReplContext } from '@nestjs/core/repl/repl-context';
+import { mkdir } from 'fs/promises';
 // eslint-disable-next-line no-restricted-imports
 import * as lodash from 'lodash';
 import { DateTime, Duration, Interval } from 'luxon';
+import { promisify } from 'util';
 import {
   CalendarDate,
   DateInterval,
@@ -36,6 +38,11 @@ async function bootstrap() {
   assignToObject(replServer.context, replContext.globalScope);
 
   // Our own stuff below
+
+  await mkdir('.cache', { recursive: true });
+  await promisify(replServer.setupHistory.bind(replServer))(
+    '.cache/repl_history'
+  );
 
   assignToObject(replServer.context, {
     DateTime,
