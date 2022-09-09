@@ -18,7 +18,7 @@ import {
   ResourceGranterImpl,
   ResourcesGranter,
 } from './builder/resource-granter';
-import { Condition, OrConditions } from './conditions';
+import { OrConditions } from './conditions';
 import { ResourcesHost } from './resources.host';
 
 export interface Policy {
@@ -124,24 +124,26 @@ export class PolicyFactory implements OnModuleInit {
     for (const [action, perm] of Object.entries(toMerge) as Array<
       [Action, Permission | true]
     >) {
-      if (perm === true || existing[action] === true) {
-        existing[action] = true;
-        continue;
-      }
-      if (!existing[action]) {
-        existing[action] = perm;
-        continue;
-      }
-
-      // This could result in duplicates entries for the same condition.
-      // An optimization would be to de-dupe those.
-      existing[action] = new OrConditions([
-        existing[action] as Condition<any>,
-        perm,
-      ]);
+      existing[action] = this.mergePermission(perm, existing[action]);
     }
 
     return existing;
+  }
+
+  private mergePermission(perm: Permission, prev?: Permission) {
+    if (perm === true || prev === true) {
+      return true;
+    }
+    if (!prev) {
+      return perm;
+    }
+
+    // This could result in duplicates entries for the same condition.
+    // An optimization would be to de-dupe those.
+    return new OrConditions([
+      ...(prev instanceof OrConditions ? prev.conditions : [prev]),
+      perm,
+    ]);
   }
 
   private async determinePowers(grants: Policy['grants']) {
