@@ -1,22 +1,34 @@
+import { startCase } from 'lodash';
+import { inspect, InspectOptionsStylized } from 'util';
 import { ResourceShape } from '~/common';
 import { Condition, IsAllowedParams } from './condition.interface';
 
-export class AndConditions<TResourceStatic extends ResourceShape<any>>
+abstract class AggregateConditions<TResourceStatic extends ResourceShape<any>>
   implements Condition<TResourceStatic>
 {
   constructor(readonly conditions: Array<Condition<TResourceStatic>>) {}
 
+  abstract readonly iteratorKey: 'some' | 'every';
+
   isAllowed(params: IsAllowedParams<TResourceStatic>) {
-    return this.conditions.every((condition) => condition.isAllowed(params));
+    return this.conditions[this.iteratorKey]((condition) =>
+      condition.isAllowed(params)
+    );
+  }
+
+  [inspect.custom](_depth: number, _options: InspectOptionsStylized) {
+    return `${startCase(this.constructor.name)} ${inspect(this.conditions)}`;
   }
 }
 
-export class OrConditions<TResourceStatic extends ResourceShape<any>>
-  implements Condition<TResourceStatic>
-{
-  constructor(readonly conditions: Array<Condition<TResourceStatic>>) {}
+export class AndConditions<
+  TResourceStatic extends ResourceShape<any>
+> extends AggregateConditions<TResourceStatic> {
+  readonly iteratorKey = 'every';
+}
 
-  isAllowed(params: IsAllowedParams<TResourceStatic>) {
-    return this.conditions.some((condition) => condition.isAllowed(params));
-  }
+export class OrConditions<
+  TResourceStatic extends ResourceShape<any>
+> extends AggregateConditions<TResourceStatic> {
+  readonly iteratorKey = 'some';
 }

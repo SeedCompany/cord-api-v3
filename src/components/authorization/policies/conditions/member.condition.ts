@@ -1,4 +1,5 @@
 import { intersection } from 'lodash';
+import { inspect, InspectOptionsStylized } from 'util';
 import { ResourceShape } from '~/common';
 import {
   Role,
@@ -32,6 +33,13 @@ class MemberCondition<
     }
 
     return intersection(expected, actual).length > 0;
+  }
+
+  [inspect.custom](_depth: number, _options: InspectOptionsStylized) {
+    if (this.roles) {
+      return `Membership ${inspect({ roles: this.roles })}`;
+    }
+    return 'Membership';
   }
 }
 

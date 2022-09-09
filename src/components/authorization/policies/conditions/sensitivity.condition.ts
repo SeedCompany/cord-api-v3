@@ -1,3 +1,4 @@
+import { inspect, InspectOptionsStylized } from 'util';
 import { ResourceShape, Sensitivity } from '~/common';
 import { Condition, IsAllowedParams } from '../../policy/conditions';
 
@@ -28,6 +29,10 @@ export class SensitivityCondition<
     }
 
     return sensitivityRank[this.access] >= sensitivityRank[actual];
+  }
+
+  [inspect.custom](_depth: number, _options: InspectOptionsStylized) {
+    return `Sensitivity { ${this.access} }`;
   }
 }
 
