@@ -1,4 +1,5 @@
 import { mapFromList, ResourceShape, SecuredResourceKey } from '~/common';
+import { Condition } from '../conditions';
 import { PermGranter } from './perm-granter';
 
 export abstract class PropGranter<
@@ -6,9 +7,11 @@ export abstract class PropGranter<
 > extends PermGranter<TResourceStatic> {
   constructor(
     protected resource: TResourceStatic,
-    protected properties: Array<keyof TResourceStatic['prototype'] & string>
+    protected properties: Array<keyof TResourceStatic['prototype'] & string>,
+    stagedCondition?: Condition<TResourceStatic>
   ) {
     super();
+    this.stagedCondition = stagedCondition;
   }
 }
 
@@ -28,14 +31,15 @@ export class PropGranterImpl<
   }
 
   static forResource<TResourceStatic extends ResourceShape<any>>(
-    resource: TResourceStatic
+    resource: TResourceStatic,
+    stagedCondition: Condition<TResourceStatic> | undefined
   ): PropsGranter<TResourceStatic> {
     const propsGranter = mapFromList(
       [
         ...resource.SecuredProps,
         ...Object.keys(resource.Relations ?? {}),
       ] as Array<SecuredResourceKey<TResourceStatic>>,
-      (prop) => [prop, new PropGranterImpl(resource, [prop])]
+      (prop) => [prop, new PropGranterImpl(resource, [prop], stagedCondition)]
     ) as PropsGranter<TResourceStatic>;
     propsGranter.many = (...props) => new PropGranterImpl(resource, props);
 

@@ -55,7 +55,10 @@ export abstract class ResourceGranter<
       granter: PropsGranter<TResourceStatic>
     ) => ReadonlyArray<PropGranter<TResourceStatic>>
   ) {
-    const propsGranter = PropGranterImpl.forResource(this.resource);
+    const propsGranter = PropGranterImpl.forResource(
+      this.resource,
+      this.stagedCondition
+    );
 
     const newPropGrants = propGrants(propsGranter) as ReadonlyArray<
       PropGranterImpl<TResourceStatic>
