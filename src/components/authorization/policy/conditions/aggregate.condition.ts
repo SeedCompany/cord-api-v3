@@ -32,3 +32,19 @@ export class OrConditions<
 > extends AggregateConditions<TResourceStatic> {
   readonly iteratorKey = 'some';
 }
+
+export const all = <T extends ResourceShape<any>>(
+  ...conditions: Array<Condition<T>>
+) =>
+  conditions.length === 1 ? conditions[0] : new AndConditions<T>(conditions);
+
+export const any = <T extends ResourceShape<any>>(
+  ...conditions: Array<Condition<T>>
+) =>
+  conditions.length === 1
+    ? conditions[0]
+    : new OrConditions<T>(
+        conditions.flatMap((c) =>
+          c instanceof OrConditions ? c.conditions : c
+        )
+      );

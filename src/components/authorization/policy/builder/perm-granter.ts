@@ -1,5 +1,5 @@
 import { mapFromList, ResourceShape } from '~/common';
-import { AndConditions, Condition, OrConditions } from '../conditions';
+import { all, any, Condition } from '../conditions';
 
 export type Action = 'read' | 'edit' | 'create' | 'delete';
 
@@ -41,7 +41,10 @@ export abstract class PermGranter<TResourceStatic extends ResourceShape<any>> {
    * Note this overrides whatever conditions were specified before this.
    */
   when(condition: Condition<TResourceStatic>) {
-    return this.whenAll(condition);
+    const cloned = this.clone();
+    cloned.stagedCondition = condition;
+    cloned.conditionWithoutAction = true;
+    return cloned;
   }
 
   /**
@@ -50,12 +53,7 @@ export abstract class PermGranter<TResourceStatic extends ResourceShape<any>> {
    * Note this overrides whatever conditions were specified before this.
    */
   whenAll(...conditions: Array<Condition<TResourceStatic>>) {
-    if (conditions.length === 0) return this;
-    const cloned = this.clone();
-    cloned.stagedCondition =
-      conditions.length > 1 ? new AndConditions(conditions) : conditions[0];
-    cloned.conditionWithoutAction = true;
-    return cloned;
+    return conditions.length > 0 ? this.when(all(...conditions)) : this;
   }
 
   /**
@@ -64,12 +62,7 @@ export abstract class PermGranter<TResourceStatic extends ResourceShape<any>> {
    * Note this overrides whatever conditions were specified before this.
    */
   whenAny(...conditions: Array<Condition<TResourceStatic>>) {
-    if (conditions.length === 0) return this;
-    const cloned = this.clone();
-    cloned.stagedCondition =
-      conditions.length > 1 ? new OrConditions(conditions) : conditions[0];
-    cloned.conditionWithoutAction = true;
-    return cloned;
+    return conditions.length > 0 ? this.when(any(...conditions)) : this;
   }
 
   /**

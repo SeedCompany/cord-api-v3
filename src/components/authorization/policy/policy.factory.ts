@@ -18,7 +18,7 @@ import {
   ResourceGranterImpl,
   ResourcesGranter,
 } from './builder/resource-granter';
-import { OrConditions } from './conditions';
+import { any } from './conditions';
 import { ResourcesHost } from './resources.host';
 
 export interface Policy {
@@ -140,10 +140,7 @@ export class PolicyFactory implements OnModuleInit {
 
     // This could result in duplicates entries for the same condition.
     // An optimization would be to de-dupe those.
-    return new OrConditions([
-      ...(prev instanceof OrConditions ? prev.conditions : [prev]),
-      perm,
-    ]);
+    return any(prev, perm);
   }
 
   private async determinePowers(grants: Policy['grants']) {
