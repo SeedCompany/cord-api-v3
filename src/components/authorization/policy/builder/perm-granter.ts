@@ -22,17 +22,32 @@ export abstract class PermGranter<TResourceStatic extends ResourceShape<any>> {
   }
 
   /**
-   * The requester can read this prop or object.
+   * The requester can read this.
    */
   get read() {
-    return this.withAddedAction('read');
+    return this.action('read');
   }
 
   /**
-   * The requester can read & modify this prop or object.
+   * The requester can read & modify this.
    */
   get edit() {
-    return this.withAddedAction('read', 'edit');
+    return this.action('read', 'edit');
+  }
+
+  /**
+   * Return grant with these actions added.
+   * Maybe expose publicly...
+   */
+  protected action(...actions: Action[]) {
+    const cloned = this.clone();
+    cloned.conditionWithoutAction = false;
+    const perm = cloned.stagedCondition ?? true;
+    cloned.perms = {
+      ...cloned.perms,
+      ...mapFromList(actions, (action) => [action, perm]),
+    };
+    return cloned;
   }
 
   /**
@@ -85,16 +100,6 @@ export abstract class PermGranter<TResourceStatic extends ResourceShape<any>> {
     const cloned = this.newThis();
     cloned.perms = { ...this.perms };
     cloned.stagedCondition = this.stagedCondition;
-    return cloned;
-  }
-  protected withAddedAction(...actions: Action[]) {
-    const cloned = this.clone();
-    cloned.conditionWithoutAction = false;
-    const perm = cloned.stagedCondition ?? true;
-    cloned.perms = {
-      ...cloned.perms,
-      ...mapFromList(actions, (action) => [action, perm]),
-    };
     return cloned;
   }
 }

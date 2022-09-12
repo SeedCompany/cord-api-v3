@@ -32,13 +32,13 @@ export abstract class ResourceGranter<
    * The requester can create a new instance of this resource.
    */
   get create() {
-    return this.withAddedAction('create');
+    return this.action('create');
   }
   /**
    * The requester can delete this object.
    */
   get delete() {
-    return this.withAddedAction('delete');
+    return this.action('delete');
   }
 
   /**
