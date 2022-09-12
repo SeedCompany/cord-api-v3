@@ -44,7 +44,7 @@ export class IndexerModule implements OnModuleInit {
     );
     // Wait for indexing to finish when running tests, else just let it run in
     // background and allow webserver to start.
-    if (this.config.jest) {
+    if (this.config.jest || this.config.isRepl) {
       await finishing;
     } else {
       finishing.catch((exception) => {
