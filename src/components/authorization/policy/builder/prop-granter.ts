@@ -10,8 +10,7 @@ export abstract class PropGranter<
     protected properties: Array<keyof TResourceStatic['prototype'] & string>,
     stagedCondition?: Condition<TResourceStatic>
   ) {
-    super();
-    this.stagedCondition = stagedCondition;
+    super(stagedCondition);
   }
 }
 
@@ -24,10 +23,6 @@ export class PropGranterImpl<
       properties: this.properties,
       perms: this.perms,
     };
-  }
-
-  protected newThis(): this {
-    return new PropGranterImpl(this.resource, this.properties) as this;
   }
 
   static forResource<TResourceStatic extends ResourceShape<any>>(

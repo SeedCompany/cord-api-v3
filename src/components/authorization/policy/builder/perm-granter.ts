@@ -7,6 +7,10 @@ export type Permissions = Readonly<Partial<Record<Action, Permission>>>;
 export type Permission = Condition<any> | true;
 
 export abstract class PermGranter<TResourceStatic extends ResourceShape<any>> {
+  protected constructor(
+    protected stagedCondition?: Condition<TResourceStatic>
+  ) {}
+
   /**
    * The requester can do nothing with this prop or object.
    *
@@ -90,16 +94,15 @@ export abstract class PermGranter<TResourceStatic extends ResourceShape<any>> {
   }
 
   protected perms: Permissions = {};
-  protected stagedCondition?: Condition<TResourceStatic>;
   /** Is a conditioned declared without an action. Maybe move to TS */
   protected conditionWithoutAction: boolean;
 
-  protected abstract newThis(): this;
-
   protected clone(): this {
-    const cloned = this.newThis();
+    const cloned = Object.assign(
+      Object.create(Object.getPrototypeOf(this)),
+      this
+    );
     cloned.perms = { ...this.perms };
-    cloned.stagedCondition = this.stagedCondition;
     return cloned;
   }
 }

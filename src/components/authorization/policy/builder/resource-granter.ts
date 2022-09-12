@@ -81,9 +81,6 @@ export class ResourceGranterImpl<
     };
   }
 
-  protected newThis(): this {
-    return new ResourceGranterImpl(this.resource) as this;
-  }
   protected clone(): this {
     const cloned = super.clone();
     cloned.propGrants = [...this.propGrants];
