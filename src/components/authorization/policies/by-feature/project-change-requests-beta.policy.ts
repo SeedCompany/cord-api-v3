@@ -1,4 +1,4 @@
-import { Policy, Role } from '../util';
+import { BetaFeatures, Policy, Role } from '../util';
 
 @Policy(
   [
@@ -7,6 +7,6 @@ import { Policy, Role } from '../util';
     Role.RegionalDirector,
     // TODO Who else?
   ],
-  (r) => [r.BetaFeatures.specifically((p) => [p.projectChangeRequests.edit])]
+  (r) => BetaFeatures.grant(r, 'projectChangeRequests')
 )
 export class ProjectChangeRequestsBetaPolicy {}
