@@ -79,7 +79,7 @@ export class PolicyFactory implements OnModuleInit {
   ): Promise<Policy> {
     const roles = meta.role === 'all' ? undefined : many(meta.role);
     const grants: DeepWritable<Policy['grants']> = new Map();
-    const resultList = meta.def(resGranter);
+    const resultList = many(meta.def(resGranter));
     for (const resourceGrant of resultList) {
       const { resource, perms, props } = (
         resourceGrant as ResourceGranterImpl<any>

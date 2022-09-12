@@ -5,7 +5,7 @@ import type { ResourceGranter, ResourcesGranter } from './resource-granter';
 
 type ResourceGranterFn = (
   resourcesGranter: ResourcesGranter
-) => ReadonlyArray<ResourceGranter<any>>;
+) => Many<ResourceGranter<any>>;
 
 export const POLICY_METADATA_KEY = Symbol('Policy');
 
