@@ -50,7 +50,7 @@ export type PermissionsOf<T> = Record<keyof T & string, Permission>;
 
 @Injectable()
 export class AuthorizationService {
-  constructor(private readonly privileges: Privileges) {}
+  constructor(readonly privileges: Privileges) {}
 
   /**
    * @deprecated Use `Privileges.for(X).secureProps(props)` instead.
@@ -151,7 +151,9 @@ export class AuthorizationService {
     dto =
       otherRoles && otherRoles.length > 0 ? withScope(dto, otherRoles) : dto;
     dto = sensitivity ? withEffectiveSensitivity(dto, sensitivity) : dto;
-    return this.privileges.for(sessionOrUserId, resource, dto).all;
+    const privileges = this.privileges.for(sessionOrUserId, resource, dto);
+    // @ts-expect-error new API is purposefully stricter, but it does handle this legacy API.
+    return privileges.all;
   }
 
   /**

@@ -21,6 +21,11 @@ export class PolicyExecutor {
     prop?: string
   ) {
     const policies = this.getPolicies(session);
+    const isChildRelation =
+      prop &&
+      resource.Relations &&
+      prop in resource.Relations &&
+      Array.isArray(resource.Relations[prop]);
 
     for (const policy of policies) {
       const grants = policy.grants.get(resource.name as keyof ResourceMap);
@@ -28,7 +33,9 @@ export class PolicyExecutor {
         continue;
       }
 
-      const condition = prop
+      const condition = isChildRelation
+        ? grants.childRelations[prop]?.[action]
+        : prop
         ? grants.propLevel[prop]?.[action] ?? grants.objectLevel[action]
         : grants.objectLevel[action];
 

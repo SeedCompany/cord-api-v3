@@ -1,6 +1,11 @@
 import { many, Many, ResourceShape } from '~/common';
 import type { ResourceMap } from '../../model/resource-map';
 import { ResourceAction } from '../actions';
+import {
+  ChildRelationshipGranter,
+  ChildRelationshipGranterImpl,
+  ChildRelationshipsGranter,
+} from './child-relationship-granter';
 import { PermGranter } from './perm-granter';
 import { PropGranter, PropGranterImpl, PropsGranter } from './prop-granter';
 
@@ -8,6 +13,9 @@ export abstract class ResourceGranter<
   TResourceStatic extends ResourceShape<any>
 > extends PermGranter<TResourceStatic, ResourceAction> {
   protected propGrants: ReadonlyArray<PropGranterImpl<TResourceStatic>> = [];
+  protected childRelationshipGrants: ReadonlyArray<
+    ChildRelationshipGranterImpl<TResourceStatic>
+  > = [];
 
   constructor(protected resource: TResourceStatic) {
     super();
@@ -70,6 +78,34 @@ export abstract class ResourceGranter<
     cloned.propGrants = [...this.propGrants, ...many(newGrants)];
     return cloned;
   }
+
+  /**
+   * Grant actions to specific child relations of this resource.
+   *
+   * Conditions previously given will apply automatically to these relations,
+   * unless the relation defines its own condition.
+   */
+  children(
+    relationGrants: (
+      granter: ChildRelationshipsGranter<TResourceStatic>
+    ) => Many<ChildRelationshipGranter<TResourceStatic>>
+  ) {
+    const granter = ChildRelationshipGranterImpl.forResource(
+      this.resource,
+      this.stagedCondition
+    );
+
+    const newGrants = relationGrants(granter) as Many<
+      ChildRelationshipGranterImpl<TResourceStatic>
+    >;
+
+    const cloned = this.clone();
+    cloned.childRelationshipGrants = [
+      ...this.childRelationshipGrants,
+      ...many(newGrants),
+    ];
+    return cloned;
+  }
 }
 
 export class ResourceGranterImpl<
@@ -80,12 +116,16 @@ export class ResourceGranterImpl<
       resource: this.resource,
       perms: this.perms,
       props: this.propGrants.map((prop) => prop.extract()),
+      childRelationships: this.childRelationshipGrants.map((rel) =>
+        rel.extract()
+      ),
     };
   }
 
   protected clone(): this {
     const cloned = super.clone();
     cloned.propGrants = [...this.propGrants];
+    cloned.childRelationshipGrants = [...this.childRelationshipGrants];
     return cloned;
   }
 }

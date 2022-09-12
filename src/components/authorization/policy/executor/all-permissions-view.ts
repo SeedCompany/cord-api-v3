@@ -1,12 +1,24 @@
 import { startCase } from 'lodash';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { PascalCase } from 'type-fest';
-import { mapFromList, ResourceShape, SecuredResourceKey } from '~/common';
-import { PropAction as Action } from '../actions';
+import {
+  ChildRelationsKey,
+  mapFromList,
+  ResourceShape,
+  SecuredPropsAndSingularRelationsKey,
+} from '~/common';
+import { AnyAction, ChildRelationshipAction, PropAction } from '../actions';
 import { ScopedPrivileges } from './scoped-privileges';
 
 export type AllPermissionsView<TResourceStatic extends ResourceShape<any>> =
-  Record<SecuredResourceKey<TResourceStatic>, Record<CompatAction, boolean>>;
+  Record<
+    SecuredPropsAndSingularRelationsKey<TResourceStatic>,
+    Record<PropAction, boolean>
+  > &
+    Record<
+      ChildRelationsKey<TResourceStatic>,
+      Record<ChildRelationshipAction, boolean>
+    >;
 
 export const createAllPermissionsView = <
   TResourceStatic extends ResourceShape<any>
@@ -20,14 +32,14 @@ export const createAllPermissionsView = <
         ...resource.SecuredProps,
         ...Object.keys(resource.Relations ?? {}),
       ]);
-      return [...keys] as Array<SecuredResourceKey<TResourceStatic>>;
+      return [...keys] as Array<keyof AllPermissionsView<TResourceStatic>>;
     },
     calculate: (propName) =>
       createLazyRecord<Record<CompatAction, boolean>>({
         getKeys: () => keysOf<Record<CompatAction, boolean>>(),
         calculate: (actionInput, propPerms) => {
           const action = compatMap.forward[actionInput];
-          const perm = privileges.can(action, propName);
+          const perm = privileges.can(action as PropAction, propName);
           propPerms[action] = perm;
           propPerms[compatMap.backward[action]] = perm;
           return perm;
@@ -35,7 +47,7 @@ export const createAllPermissionsView = <
       }),
   });
 
-type CompatAction = Action | `can${PascalCase<Action>}`;
+type CompatAction = AnyAction | `can${PascalCase<AnyAction>}`;
 
 const compatMap = {
   forward: {
@@ -43,11 +55,11 @@ const compatMap = {
       action,
       (action.startsWith('can')
         ? action.slice(3).toLowerCase()
-        : action) as Action,
+        : action) as AnyAction,
     ]),
   },
   backward: {
-    ...mapFromList(keysOf<Record<Action, boolean>>(), (action) => [
+    ...mapFromList(keysOf<Record<AnyAction, boolean>>(), (action) => [
       action,
       `can${startCase(action)}` as CompatAction,
     ]),

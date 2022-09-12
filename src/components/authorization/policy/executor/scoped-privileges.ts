@@ -1,6 +1,7 @@
 import { LazyGetter as Once } from 'lazy-get-decorator';
 import { compact, last, lowerCase, startCase } from 'lodash';
 import {
+  ChildRelationsKey,
   isSecured,
   keys,
   mapFromList,
@@ -12,7 +13,12 @@ import {
 } from '~/common';
 import { ChangesOf, isRelation } from '~/core/database/changes';
 import { DbPropsOfDto } from '~/core/database/results';
-import { AnyAction, PropAction, ResourceAction } from '../actions';
+import {
+  AnyAction,
+  ChildRelationshipAction,
+  PropAction,
+  ResourceAction,
+} from '../actions';
 import {
   AllPermissionsView,
   createAllPermissionsView,
@@ -29,6 +35,10 @@ export class ScopedPrivileges<TResourceStatic extends ResourceShape<any>> {
 
   can(action: ResourceAction): boolean;
   can(action: PropAction, prop: SecuredResourceKey<TResourceStatic>): boolean;
+  can(
+    action: ChildRelationshipAction,
+    relation: ChildRelationsKey<TResourceStatic>
+  ): boolean;
   can(action: AnyAction, prop?: SecuredResourceKey<TResourceStatic>) {
     return this.policyExecutor.execute(
       action,
@@ -43,6 +53,10 @@ export class ScopedPrivileges<TResourceStatic extends ResourceShape<any>> {
   verifyCan(
     action: PropAction,
     prop: SecuredResourceKey<TResourceStatic>
+  ): void;
+  verifyCan(
+    action: ChildRelationshipAction,
+    prop: ChildRelationsKey<TResourceStatic>
   ): void;
   verifyCan(action: AnyAction, prop?: SecuredResourceKey<TResourceStatic>) {
     // @ts-expect-error yeah IDK why but this is literally the signature.
@@ -114,7 +128,7 @@ export class ScopedPrivileges<TResourceStatic extends ResourceShape<any>> {
     dto: DbPropsOfDto<TResourceStatic['prototype']>
   ): SecuredResource<TResourceStatic, false> {
     const keys = this.resource.SecuredProps as Array<
-      SecuredResourceKey<TResourceStatic>
+      SecuredResourceKey<TResourceStatic, false>
     >;
     const securedProps = mapFromList(keys, (key) => {
       const canRead = this.can('read', key);

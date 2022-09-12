@@ -1,6 +1,7 @@
 import { Field, InterfaceType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
+import { ConditionalExcept, ConditionalPick } from 'type-fest';
 import { ScopedRole } from '../components/authorization';
 import { DbLabel } from './db-label.decorator';
 import { ServerException } from './exceptions';
@@ -81,3 +82,12 @@ export type SecuredResourceKey<
   TResourceStatic extends ResourceShape<any>,
   IncludeRelations extends boolean | undefined = true
 > = keyof SecuredResource<TResourceStatic, IncludeRelations> & string;
+
+export type SecuredPropsAndSingularRelationsKey<
+  TResourceStatic extends ResourceShape<any>
+> = string &
+  keyof (SecuredProps<TResourceStatic['prototype']> &
+    ConditionalExcept<TResourceStatic['Relations'], any[]>);
+
+export type ChildRelationsKey<TResourceStatic extends ResourceShape<any>> =
+  keyof ConditionalPick<TResourceStatic['Relations'], any[]> & string;

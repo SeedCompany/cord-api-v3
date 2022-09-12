@@ -1,4 +1,8 @@
-import { mapFromList, ResourceShape, SecuredResourceKey } from '~/common';
+import {
+  mapFromList,
+  ResourceShape,
+  SecuredPropsAndSingularRelationsKey,
+} from '~/common';
 import { PropAction } from '../actions';
 import { Condition } from '../conditions';
 import { PermGranter } from './perm-granter';
@@ -48,7 +52,7 @@ export class PropGranterImpl<
       [
         ...resource.SecuredProps,
         ...Object.keys(resource.Relations ?? {}),
-      ] as Array<SecuredResourceKey<TResourceStatic>>,
+      ] as Array<SecuredPropsAndSingularRelationsKey<TResourceStatic>>,
       (prop) => [prop, new PropGranterImpl(resource, [prop], stagedCondition)]
     ) as PropsGranter<TResourceStatic>;
     propsGranter.many = (...props) => new PropGranterImpl(resource, props);
@@ -58,13 +62,13 @@ export class PropGranterImpl<
 }
 
 export type PropsGranter<TResourceStatic extends ResourceShape<any>> = Record<
-  SecuredResourceKey<TResourceStatic>,
+  SecuredPropsAndSingularRelationsKey<TResourceStatic>,
   PropGranter<TResourceStatic>
 > & {
   /**
    * A shortcut to apply actions to many properties at once.
    */
   many: (
-    ...props: Array<SecuredResourceKey<TResourceStatic>>
+    ...props: Array<SecuredPropsAndSingularRelationsKey<TResourceStatic>>
   ) => PropGranter<TResourceStatic>;
 };

@@ -32,6 +32,7 @@ export interface Policy {
     {
       objectLevel: Permissions<string>;
       propLevel: Readonly<Partial<Record<string, Permissions<string>>>>;
+      childRelations: Readonly<Partial<Record<string, Permissions<string>>>>;
     }
   >;
   /* An optimization to determine Powers this policy contains */
@@ -81,7 +82,7 @@ export class PolicyFactory implements OnModuleInit {
     const grants: DeepWritable<Policy['grants']> = new Map();
     const resultList = many(meta.def(resGranter));
     for (const resourceGrant of resultList) {
-      const { resource, perms, props } = (
+      const { resource, perms, props, childRelationships } = (
         resourceGrant as ResourceGranterImpl<any>
       ).extract();
       const resName = resource.name as keyof ResourceMap;
@@ -89,14 +90,21 @@ export class PolicyFactory implements OnModuleInit {
         grants.set(resName, {
           objectLevel: {},
           propLevel: {},
+          childRelations: {},
         });
       }
-      const { objectLevel, propLevel } = grants.get(resName)!;
+      const { objectLevel, propLevel, childRelations } = grants.get(resName)!;
       this.mergePermissions(objectLevel, perms);
       for (const prop of props) {
         for (const propName of prop.properties) {
           const propPerms = (propLevel[propName] ??= {});
           this.mergePermissions(propPerms, prop.perms);
+        }
+      }
+      for (const childRelation of childRelationships) {
+        for (const relationName of childRelation.relationNames) {
+          const childPerms = (childRelations[relationName] ??= {});
+          this.mergePermissions(childPerms, childRelation.perms);
         }
       }
 
