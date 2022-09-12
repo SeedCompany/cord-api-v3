@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ValueOf } from 'ts-essentials';
-import { getParentTypes } from '~/common';
+import { getParentTypes, ResourceShape } from '~/common';
 import { ResourceMap } from '../model/resource-map';
 
 // TODO Move to ~/core along with resource mapping
@@ -13,7 +13,10 @@ export class ResourcesHost {
   }
 
   async getImplementations(
-    interfaceResource: ValueOf<ResourceMap> | keyof ResourceMap
+    interfaceResource:
+      | ValueOf<ResourceMap>
+      | keyof ResourceMap
+      | ResourceShape<any>
   ): Promise<ReadonlyArray<ValueOf<ResourceMap>>> {
     // TODO do once & cache
     const map = await this.getMap();

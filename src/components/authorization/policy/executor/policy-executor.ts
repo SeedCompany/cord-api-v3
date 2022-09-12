@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { intersection } from 'lodash';
+import { ValueOf } from 'type-fest';
 import { CachedOnArg, ResourceShape, Session } from '~/common';
 import { ILogger, Logger } from '~/core';
 import { withoutScope } from '../../dto/role.dto';
@@ -28,7 +29,7 @@ export class PolicyExecutor {
       Array.isArray(resource.Relations[prop]);
 
     for (const policy of policies) {
-      const grants = policy.grants.get(resource.name as keyof ResourceMap);
+      const grants = policy.grants.get(resource as ValueOf<ResourceMap>);
       if (!grants) {
         continue;
       }

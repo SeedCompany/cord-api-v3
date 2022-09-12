@@ -5,10 +5,9 @@ import {
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { mapValues, startCase } from 'lodash';
 import { DeepWritable, Writable } from 'ts-essentials';
-import { many } from '~/common';
+import { many, ResourceShape } from '~/common';
 import { Powers as Power } from '../dto/powers';
 import { Role } from '../dto/role.dto';
-import { ResourceMap } from '../model/resource-map';
 import { Permission, Permissions } from './builder/perm-granter';
 import {
   POLICY_METADATA_KEY,
@@ -28,7 +27,7 @@ export interface Policy {
   roles?: readonly Role[];
   /* What the policy grants */
   grants: Map<
-    keyof ResourceMap,
+    ResourceShape<any>,
     {
       objectLevel: Permissions<string>;
       propLevel: Readonly<Partial<Record<string, Permissions<string>>>>;
@@ -85,15 +84,14 @@ export class PolicyFactory implements OnModuleInit {
       const { resource, perms, props, childRelationships } = (
         resourceGrant as ResourceGranterImpl<any>
       ).extract();
-      const resName = resource.name as keyof ResourceMap;
-      if (!grants.has(resName)) {
-        grants.set(resName, {
+      if (!grants.has(resource)) {
+        grants.set(resource, {
           objectLevel: {},
           propLevel: {},
           childRelations: {},
         });
       }
-      const { objectLevel, propLevel, childRelations } = grants.get(resName)!;
+      const { objectLevel, propLevel, childRelations } = grants.get(resource)!;
       this.mergePermissions(objectLevel, perms);
       for (const prop of props) {
         for (const propName of prop.properties) {
@@ -112,10 +110,9 @@ export class PolicyFactory implements OnModuleInit {
         resource
       );
       for (const implementation of implementations) {
-        const implName = implementation.name as keyof ResourceMap;
-        if (!grants.has(implName)) {
+        if (!grants.has(implementation)) {
           // If policy doesn't specify this implementation then use interface grant
-          grants.set(implName, grants.get(resName)!);
+          grants.set(implementation, grants.get(resource)!);
         }
       }
     }
@@ -165,16 +162,15 @@ export class PolicyFactory implements OnModuleInit {
       if (grant.objectLevel.create !== true) {
         continue;
       }
-      pushPower(res);
+      pushPower(res.name);
 
       const implementations = await this.resourcesHost.getImplementations(res);
       for (const implementation of implementations) {
-        const implName = implementation.name as keyof ResourceMap;
-        if (grants.has(implName)) {
+        if (grants.has(implementation)) {
           // If policy specifies this implementation then defer to its entry.
           continue;
         }
-        pushPower(implName);
+        pushPower(implementation.name);
       }
     }
     return powers;
