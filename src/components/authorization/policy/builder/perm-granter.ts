@@ -1,12 +1,15 @@
 import { mapFromList, ResourceShape } from '~/common';
 import { all, any, Condition } from '../conditions';
 
-export type Action = 'read' | 'edit' | 'create' | 'delete';
-
-export type Permissions = Readonly<Partial<Record<Action, Permission>>>;
+export type Permissions<TAction extends string> = {
+  readonly [A in TAction]?: Permission;
+};
 export type Permission = Condition<any> | true;
 
-export abstract class PermGranter<TResourceStatic extends ResourceShape<any>> {
+export abstract class PermGranter<
+  TResourceStatic extends ResourceShape<any>,
+  TAction extends string
+> {
   protected constructor(
     protected stagedCondition?: Condition<TResourceStatic>
   ) {}
@@ -26,24 +29,10 @@ export abstract class PermGranter<TResourceStatic extends ResourceShape<any>> {
   }
 
   /**
-   * The requester can read this.
-   */
-  get read() {
-    return this.action('read');
-  }
-
-  /**
-   * The requester can read & modify this.
-   */
-  get edit() {
-    return this.action('read', 'edit');
-  }
-
-  /**
    * Return grant with these actions added.
    * Maybe expose publicly...
    */
-  protected action(...actions: Action[]) {
+  protected action(...actions: TAction[]) {
     const cloned = this.clone();
     cloned.conditionWithoutAction = false;
     const perm = cloned.stagedCondition ?? true;
@@ -93,7 +82,7 @@ export abstract class PermGranter<TResourceStatic extends ResourceShape<any>> {
     return cloned;
   }
 
-  protected perms: Permissions = {};
+  protected perms: Permissions<TAction> = {};
   /** Is a conditioned declared without an action. Maybe move to TS */
   protected conditionWithoutAction: boolean;
 

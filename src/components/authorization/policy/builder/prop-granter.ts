@@ -1,16 +1,31 @@
 import { mapFromList, ResourceShape, SecuredResourceKey } from '~/common';
+import { PropAction } from '../actions';
 import { Condition } from '../conditions';
 import { PermGranter } from './perm-granter';
 
 export abstract class PropGranter<
   TResourceStatic extends ResourceShape<any>
-> extends PermGranter<TResourceStatic> {
+> extends PermGranter<TResourceStatic, PropAction> {
   constructor(
     protected resource: TResourceStatic,
     protected properties: Array<keyof TResourceStatic['prototype'] & string>,
     stagedCondition?: Condition<TResourceStatic>
   ) {
     super(stagedCondition);
+  }
+
+  /**
+   * The requester can read this.
+   */
+  get read() {
+    return this.action('read');
+  }
+
+  /**
+   * The requester can read & modify this.
+   */
+  get edit() {
+    return this.action('read', 'edit');
   }
 }
 

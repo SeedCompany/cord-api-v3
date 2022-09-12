@@ -4,7 +4,6 @@ import { CachedOnArg, ResourceShape, Session } from '~/common';
 import { ILogger, Logger } from '~/core';
 import { withoutScope } from '../../dto/role.dto';
 import { ResourceMap } from '../../model/resource-map';
-import { Action } from '../builder/perm-granter';
 import { PolicyFactory } from '../policy.factory';
 
 @Injectable()
@@ -15,7 +14,7 @@ export class PolicyExecutor {
   ) {}
 
   execute(
-    action: Action,
+    action: string,
     session: Session,
     resource: ResourceShape<any>,
     object?: object,

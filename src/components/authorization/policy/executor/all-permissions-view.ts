@@ -2,7 +2,7 @@ import { startCase } from 'lodash';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { PascalCase } from 'type-fest';
 import { mapFromList, ResourceShape, SecuredResourceKey } from '~/common';
-import { Action } from '../builder/perm-granter';
+import { PropAction as Action } from '../actions';
 import { ScopedPrivileges } from './scoped-privileges';
 
 export type AllPermissionsView<TResourceStatic extends ResourceShape<any>> =

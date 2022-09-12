@@ -12,7 +12,7 @@ import {
 } from '~/common';
 import { ChangesOf, isRelation } from '~/core/database/changes';
 import { DbPropsOfDto } from '~/core/database/results';
-import { Action } from '../builder/perm-granter';
+import { AnyAction, PropAction, ResourceAction } from '../actions';
 import {
   AllPermissionsView,
   createAllPermissionsView,
@@ -27,7 +27,9 @@ export class ScopedPrivileges<TResourceStatic extends ResourceShape<any>> {
     private readonly policyExecutor: PolicyExecutor
   ) {}
 
-  can(action: Action, prop?: SecuredResourceKey<TResourceStatic>) {
+  can(action: ResourceAction): boolean;
+  can(action: PropAction, prop: SecuredResourceKey<TResourceStatic>): boolean;
+  can(action: AnyAction, prop?: SecuredResourceKey<TResourceStatic>) {
     return this.policyExecutor.execute(
       action,
       this.session,
@@ -37,14 +39,21 @@ export class ScopedPrivileges<TResourceStatic extends ResourceShape<any>> {
     );
   }
 
-  verifyCan(action: Action, prop?: SecuredResourceKey<TResourceStatic>) {
-    if (!this.can(action, prop)) {
-      throw new UnauthorizedException(
-        `You do not have the permission to ${action} ${
-          this.object ? 'this' : 'any'
-        } ${lowerCase(this.resource.name)}${prop ? '.' + prop : ''}`
-      );
+  verifyCan(action: ResourceAction): void;
+  verifyCan(
+    action: PropAction,
+    prop: SecuredResourceKey<TResourceStatic>
+  ): void;
+  verifyCan(action: AnyAction, prop?: SecuredResourceKey<TResourceStatic>) {
+    // @ts-expect-error yeah IDK why but this is literally the signature.
+    if (this.can(action, prop)) {
+      return;
     }
+    throw new UnauthorizedException(
+      `You do not have the permission to ${action} ${
+        this.object ? 'this' : 'any'
+      } ${lowerCase(this.resource.name)}${prop ? '.' + prop : ''}`
+    );
   }
 
   /**

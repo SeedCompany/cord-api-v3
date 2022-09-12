@@ -9,7 +9,7 @@ import { many } from '~/common';
 import { Powers as Power } from '../dto/powers';
 import { Role } from '../dto/role.dto';
 import { ResourceMap } from '../model/resource-map';
-import { Action, Permission, Permissions } from './builder/perm-granter';
+import { Permission, Permissions } from './builder/perm-granter';
 import {
   POLICY_METADATA_KEY,
   PolicyMetadata,
@@ -30,8 +30,8 @@ export interface Policy {
   grants: Map<
     keyof ResourceMap,
     {
-      objectLevel: Permissions;
-      propLevel: Readonly<Partial<Record<string, Permissions>>>;
+      objectLevel: Permissions<string>;
+      propLevel: Readonly<Partial<Record<string, Permissions<string>>>>;
     }
   >;
   /* An optimization to determine Powers this policy contains */
@@ -117,12 +117,12 @@ export class PolicyFactory implements OnModuleInit {
     return { name, roles, grants, powers };
   }
 
-  private mergePermissions(
-    existing: Writable<Permissions>,
-    toMerge: Permissions
+  private mergePermissions<TAction extends string>(
+    existing: Writable<Permissions<TAction>>,
+    toMerge: Permissions<TAction>
   ) {
     for (const [action, perm] of Object.entries(toMerge) as Array<
-      [Action, Permission | true]
+      [TAction, Permission | true]
     >) {
       existing[action] = this.mergePermission(perm, existing[action]);
     }

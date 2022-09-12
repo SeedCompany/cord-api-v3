@@ -1,11 +1,12 @@
 import { many, Many, ResourceShape } from '~/common';
 import type { ResourceMap } from '../../model/resource-map';
+import { ResourceAction } from '../actions';
 import { PermGranter } from './perm-granter';
 import { PropGranter, PropGranterImpl, PropsGranter } from './prop-granter';
 
 export abstract class ResourceGranter<
   TResourceStatic extends ResourceShape<any>
-> extends PermGranter<TResourceStatic> {
+> extends PermGranter<TResourceStatic, ResourceAction> {
   protected propGrants: ReadonlyArray<PropGranterImpl<TResourceStatic>> = [];
 
   constructor(protected resource: TResourceStatic) {
@@ -17,7 +18,7 @@ export abstract class ResourceGranter<
    * and can read all props not specifically defined.
    */
   get read() {
-    return super.read;
+    return this.action('read');
   }
 
   /**
@@ -25,7 +26,7 @@ export abstract class ResourceGranter<
    * {@link read} is implied.
    */
   get edit() {
-    return super.edit;
+    return this.action('read', 'edit');
   }
 
   /**
@@ -34,6 +35,7 @@ export abstract class ResourceGranter<
   get create() {
     return this.action('create');
   }
+
   /**
    * The requester can delete this object.
    */
