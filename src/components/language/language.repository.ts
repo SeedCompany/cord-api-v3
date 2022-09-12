@@ -45,6 +45,19 @@ export class LanguageRepository extends DtoRepository<
   typeof Language,
   [session: Session, view?: ObjectView]
 >(Language) {
+  async languageIdByEthLangId(ethLangId: ID) {
+    const result = await this.db
+      .query()
+      .match([
+        node('node', 'EthnologueLanguage', { id: ethLangId }),
+        relation('in', '', 'ethnologue', ACTIVE),
+        node('language', 'Language'),
+      ])
+      .return<{ id: ID }>('language.id as id')
+      .first();
+    return result?.id;
+  }
+
   async create(input: CreateLanguage, ethnologueId: ID, session: Session) {
     const initialProps = {
       name: input.name,

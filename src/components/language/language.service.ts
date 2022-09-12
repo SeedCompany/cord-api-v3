@@ -99,6 +99,17 @@ export class LanguageService {
     }
   }
 
+  async readOneLanguageByEthLangId(
+    id: ID,
+    session: Session
+  ): Promise<Language> {
+    const languageId = await this.repo.languageIdByEthLangId(id);
+    if (!languageId)
+      throw new NotFoundException('No Language Exists for this Eth Lang Id');
+
+    return await this.readOne(languageId, session);
+  }
+
   @HandleIdLookup(Language)
   async readOne(
     langId: ID,
