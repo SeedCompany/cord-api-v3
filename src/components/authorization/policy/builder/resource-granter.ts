@@ -1,4 +1,4 @@
-import { ResourceShape } from '~/common';
+import { many, Many, ResourceShape } from '~/common';
 import type { ResourceMap } from '../../model/resource-map';
 import { PermGranter } from './perm-granter';
 import { PropGranter, PropGranterImpl, PropsGranter } from './prop-granter';
@@ -6,7 +6,7 @@ import { PropGranter, PropGranterImpl, PropsGranter } from './prop-granter';
 export abstract class ResourceGranter<
   TResourceStatic extends ResourceShape<any>
 > extends PermGranter<TResourceStatic> {
-  protected props: ReadonlyArray<PropGranterImpl<TResourceStatic>> = [];
+  protected propGrants: ReadonlyArray<PropGranterImpl<TResourceStatic>> = [];
 
   constructor(protected resource: TResourceStatic) {
     super();
@@ -51,21 +51,21 @@ export abstract class ResourceGranter<
    * unless the prop defines its own condition.
    */
   specifically(
-    propGrants: (
+    grants: (
       granter: PropsGranter<TResourceStatic>
-    ) => ReadonlyArray<PropGranter<TResourceStatic>>
+    ) => Many<PropGranter<TResourceStatic>>
   ) {
     const propsGranter = PropGranterImpl.forResource(
       this.resource,
       this.stagedCondition
     );
 
-    const newPropGrants = propGrants(propsGranter) as ReadonlyArray<
+    const newGrants = grants(propsGranter) as Many<
       PropGranterImpl<TResourceStatic>
     >;
 
     const cloned = this.clone();
-    cloned.props = [...this.props, ...newPropGrants];
+    cloned.propGrants = [...this.propGrants, ...many(newGrants)];
     return cloned;
   }
 }
@@ -77,7 +77,7 @@ export class ResourceGranterImpl<
     return {
       resource: this.resource,
       perms: this.perms,
-      props: this.props.map((prop) => prop.extract()),
+      props: this.propGrants.map((prop) => prop.extract()),
     };
   }
 
@@ -86,7 +86,7 @@ export class ResourceGranterImpl<
   }
   protected clone(): this {
     const cloned = super.clone();
-    cloned.props = [...this.props];
+    cloned.propGrants = [...this.propGrants];
     return cloned;
   }
 }
