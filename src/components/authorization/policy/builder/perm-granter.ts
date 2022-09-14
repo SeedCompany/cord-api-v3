@@ -32,7 +32,7 @@ export abstract class PermGranter<
    * Return grant with these actions added.
    * Maybe expose publicly...
    */
-  protected action(...actions: TAction[]) {
+  protected action(...actions: TAction[]): this {
     const cloned = this.clone();
     cloned.conditionWithoutAction = false;
     const perm = cloned.stagedCondition ?? true;
@@ -48,7 +48,7 @@ export abstract class PermGranter<
    *
    * Note this overrides whatever conditions were specified before this.
    */
-  when(condition: Condition<TResourceStatic>) {
+  when(condition: Condition<TResourceStatic>): this {
     const cloned = this.clone();
     cloned.stagedCondition = condition;
     cloned.conditionWithoutAction = true;
@@ -76,7 +76,7 @@ export abstract class PermGranter<
   /**
    * The preceding conditions no longer apply to the following actions.
    */
-  get or() {
+  get or(): this {
     const cloned = this.clone();
     cloned.stagedCondition = undefined;
     return cloned;
