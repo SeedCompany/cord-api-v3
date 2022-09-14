@@ -43,6 +43,7 @@ export const resolveReportType = (report: Pick<PeriodicReport, 'type'>) => {
 class PeriodicReport extends Resource {
   static readonly Props = keysOf<PeriodicReport>();
   static readonly SecuredProps = keysOf<SecuredProps<PeriodicReport>>();
+  static readonly Parent = 'dynamic';
 
   @Field(() => ReportType)
   readonly type: ReportType;
@@ -85,6 +86,7 @@ export {
 export class FinancialReport extends PeriodicReport {
   static readonly Props = keysOf<FinancialReport>();
   static readonly SecuredProps = keysOf<SecuredProps<FinancialReport>>();
+  static readonly Parent = 'dynamic';
 
   readonly type: ReportType.Financial;
 }
@@ -95,6 +97,7 @@ export class FinancialReport extends PeriodicReport {
 export class NarrativeReport extends PeriodicReport {
   static readonly Props = keysOf<NarrativeReport>();
   static readonly SecuredProps = keysOf<SecuredProps<NarrativeReport>>();
+  static readonly Parent = 'dynamic';
 
   readonly type: ReportType.Narrative;
 }
@@ -105,6 +108,7 @@ export class NarrativeReport extends PeriodicReport {
 export class ProgressReport extends PeriodicReport {
   static readonly Props = keysOf<ProgressReport>();
   static readonly SecuredProps = keysOf<SecuredProps<ProgressReport>>();
+  static readonly Parent = 'dynamic';
 
   readonly type: ReportType.Progress;
 

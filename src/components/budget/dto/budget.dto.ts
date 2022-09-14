@@ -24,6 +24,7 @@ export class Budget extends IntersectionType(ChangesetAware, Resource) {
   static readonly Relations = {
     records: [BudgetRecord],
   };
+  static readonly Parent = import('../../project/dto').then((m) => m.IProject);
 
   @Field()
   @DbLabel('BudgetStatus')

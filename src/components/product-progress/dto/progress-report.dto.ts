@@ -60,6 +60,7 @@ export type UnsecuredProductProgress = Merge<
 export class StepProgress {
   static readonly Props = keysOf<StepProgress>();
   static readonly SecuredProps = keysOf<SecuredProps<StepProgress>>();
+  static readonly Parent = 'dynamic'; // [Product, ProgressReport]
 
   // Both of these only exist if progress has been reported (or explicitly set to null).
   // I have these here to show that they can exist in the DB, but they are private to the API.

@@ -61,7 +61,13 @@ export type ResourceShape<T> = AbstractClassType<T> & {
   // An optional list of props that exist on the BaseNode in the DB.
   // Default should probably be considered the props on Resource class.
   BaseNodeProps?: string[];
-  Relations?: Record<string, any>;
+  Relations?: Record<string, any>; // Many<ResourceShape<any>>
+  /**
+   * Define this resource as being a child of another.
+   * This means it's _created_ and scoped under this other resource.
+   * This _type_ cannot exist without this parent.
+   */
+  Parent?: Promise<any> | 'dynamic';
 };
 
 /**
@@ -84,6 +90,10 @@ export class EnhancedResource<T extends ResourceShape<any>> {
 
   get name() {
     return this.type.name;
+  }
+
+  get hasParent() {
+    return !!this.type.Parent;
   }
 
   @Once()

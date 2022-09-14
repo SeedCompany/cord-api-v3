@@ -20,6 +20,7 @@ import { ChangesetAware } from '../../changeset/dto';
 export class BudgetRecord extends IntersectionType(ChangesetAware, Resource) {
   static readonly Props = keysOf<BudgetRecord>();
   static readonly SecuredProps = keysOf<SecuredProps<BudgetRecord>>();
+  static readonly Parent = import('./budget.dto').then((m) => m.Budget);
 
   readonly organization: Secured<ID>;
 
