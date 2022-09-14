@@ -3,7 +3,7 @@ import {
   DiscoveryService,
 } from '@golevelup/nestjs-discovery';
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { mapValues, startCase } from 'lodash';
+import { startCase } from 'lodash';
 import { DeepWritable, Writable } from 'ts-essentials';
 import { many, ResourceShape } from '~/common';
 import { Powers as Power } from '../dto/powers';
@@ -61,10 +61,7 @@ export class PolicyFactory implements OnModuleInit {
       );
 
     const ResourceMap = await this.resourcesHost.getMap();
-    const resGranter = mapValues(
-      ResourceMap,
-      (resource) => new ResourceGranterImpl(resource)
-    ) as unknown as ResourcesGranter; // key/value association is being messed up
+    const resGranter = ResourceGranterImpl.create(ResourceMap);
 
     this.policies = await Promise.all(
       discoveredPolicies.map((discovered) =>
@@ -84,14 +81,16 @@ export class PolicyFactory implements OnModuleInit {
       const { resource, perms, props, childRelationships } = (
         resourceGrant as ResourceGranterImpl<any>
       ).extract();
-      if (!grants.has(resource)) {
-        grants.set(resource, {
+      if (!grants.has(resource.type)) {
+        grants.set(resource.type, {
           objectLevel: {},
           propLevel: {},
           childRelations: {},
         });
       }
-      const { objectLevel, propLevel, childRelations } = grants.get(resource)!;
+      const { objectLevel, propLevel, childRelations } = grants.get(
+        resource.type
+      )!;
       this.mergePermissions(objectLevel, perms);
       for (const prop of props) {
         for (const propName of prop.properties) {
@@ -107,12 +106,12 @@ export class PolicyFactory implements OnModuleInit {
       }
 
       const implementations = await this.resourcesHost.getImplementations(
-        resource
+        resource.type
       );
       for (const implementation of implementations) {
         if (!grants.has(implementation)) {
           // If policy doesn't specify this implementation then use interface grant
-          grants.set(implementation, grants.get(resource)!);
+          grants.set(implementation, grants.get(resource.type)!);
         }
       }
     }

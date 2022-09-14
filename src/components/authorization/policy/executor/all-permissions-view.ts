@@ -3,6 +3,7 @@ import { keys as keysOf } from 'ts-transformer-keys';
 import { PascalCase } from 'type-fest';
 import {
   ChildRelationsKey,
+  EnhancedResource,
   mapFromList,
   ResourceShape,
   SecuredPropsAndSingularRelationsKey,
@@ -23,14 +24,14 @@ export type AllPermissionsView<TResourceStatic extends ResourceShape<any>> =
 export const createAllPermissionsView = <
   TResourceStatic extends ResourceShape<any>
 >(
-  resource: TResourceStatic,
+  resource: EnhancedResource<TResourceStatic>,
   privileges: ScopedPrivileges<TResourceStatic>
 ) =>
   createLazyRecord<AllPermissionsView<TResourceStatic>>({
     getKeys: () => {
       const keys = new Set([
-        ...resource.SecuredProps,
-        ...Object.keys(resource.Relations ?? {}),
+        ...resource.securedProps,
+        ...resource.relationKeys,
       ]);
       return [...keys] as Array<keyof AllPermissionsView<TResourceStatic>>;
     },

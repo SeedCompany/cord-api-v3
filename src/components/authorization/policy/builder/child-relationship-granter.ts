@@ -1,4 +1,9 @@
-import { ChildRelationsKey, mapFromList, ResourceShape } from '~/common';
+import {
+  ChildRelationsKey,
+  EnhancedResource,
+  mapFromList,
+  ResourceShape,
+} from '~/common';
 import { ChildRelationshipAction } from '../actions';
 import { Condition } from '../conditions';
 import { PermGranter } from './perm-granter';
@@ -7,7 +12,7 @@ export abstract class ChildRelationshipGranter<
   TResourceStatic extends ResourceShape<any>
 > extends PermGranter<TResourceStatic, ChildRelationshipAction> {
   constructor(
-    protected resource: TResourceStatic,
+    protected resource: EnhancedResource<TResourceStatic>,
     protected relationNames: Array<ChildRelationsKey<TResourceStatic>>,
     stagedCondition?: Condition<TResourceStatic>
   ) {
@@ -55,13 +60,10 @@ export class ChildRelationshipGranterImpl<
   }
 
   static forResource<TResourceStatic extends ResourceShape<any>>(
-    resource: TResourceStatic,
+    resource: EnhancedResource<TResourceStatic>,
     stagedCondition: Condition<TResourceStatic> | undefined
   ): ChildRelationshipsGranter<TResourceStatic> {
-    const keys = Object.keys(resource.Relations ?? {}) as Array<
-      ChildRelationsKey<TResourceStatic>
-    >;
-    const granter = mapFromList(keys, (prop) => [
+    const granter = mapFromList(resource.childRelationKeys, (prop) => [
       prop,
       new ChildRelationshipGranterImpl(resource, [prop], stagedCondition),
     ]) as ChildRelationshipsGranter<TResourceStatic>;

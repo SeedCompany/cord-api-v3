@@ -1,10 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { intersection } from 'lodash';
-import { ValueOf } from 'type-fest';
-import { CachedOnArg, ResourceShape, Session } from '~/common';
+import { CachedOnArg, EnhancedResource, Session } from '~/common';
 import { ILogger, Logger } from '~/core';
 import { withoutScope } from '../../dto/role.dto';
-import { ResourceMap } from '../../model/resource-map';
 import { PolicyFactory } from '../policy.factory';
 
 @Injectable()
@@ -17,19 +15,15 @@ export class PolicyExecutor {
   execute(
     action: string,
     session: Session,
-    resource: ResourceShape<any>,
+    resource: EnhancedResource<any>,
     object?: object,
     prop?: string
   ) {
     const policies = this.getPolicies(session);
-    const isChildRelation =
-      prop &&
-      resource.Relations &&
-      prop in resource.Relations &&
-      Array.isArray(resource.Relations[prop]);
+    const isChildRelation = prop && resource.hasChildRelation(prop);
 
     for (const policy of policies) {
-      const grants = policy.grants.get(resource as ValueOf<ResourceMap>);
+      const grants = policy.grants.get(resource.type);
       if (!grants) {
         continue;
       }

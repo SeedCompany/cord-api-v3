@@ -1,4 +1,5 @@
-import { many, Many, ResourceShape } from '~/common';
+import { mapValues } from 'lodash';
+import { EnhancedResource, many, Many, ResourceShape } from '~/common';
 import type { ResourceMap } from '../../model/resource-map';
 import { ResourceAction } from '../actions';
 import {
@@ -17,7 +18,7 @@ export abstract class ResourceGranter<
     ChildRelationshipGranterImpl<TResourceStatic>
   > = [];
 
-  constructor(protected resource: TResourceStatic) {
+  constructor(protected resource: EnhancedResource<TResourceStatic>) {
     super();
   }
 
@@ -111,6 +112,13 @@ export abstract class ResourceGranter<
 export class ResourceGranterImpl<
   TResourceStatic extends ResourceShape<any>
 > extends ResourceGranter<TResourceStatic> {
+  static create(map: ResourceMap): ResourcesGranter {
+    return mapValues(
+      map,
+      (resource) => new ResourceGranterImpl(EnhancedResource.of(resource))
+    ) as any;
+  }
+
   extract() {
     return {
       resource: this.resource,

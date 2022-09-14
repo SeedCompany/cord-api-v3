@@ -1,7 +1,9 @@
 import { Field, InterfaceType } from '@nestjs/graphql';
+import { LazyGetter as Once } from 'lazy-get-decorator';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { ConditionalExcept, ConditionalPick } from 'type-fest';
+import { cachedOnObject } from '~/common/weak-map-cache';
 import { ScopedRole } from '../components/authorization';
 import { DbLabel } from './db-label.decorator';
 import { ServerException } from './exceptions';
@@ -61,6 +63,65 @@ export type ResourceShape<T> = AbstractClassType<T> & {
   BaseNodeProps?: string[];
   Relations?: Record<string, any>;
 };
+
+/**
+ * A helper class to query the static info of a resource in a typed way.
+ */
+export class EnhancedResource<T extends ResourceShape<any>> {
+  private constructor(readonly type: T) {}
+  private static readonly refs = new WeakMap<
+    ResourceShape<any>,
+    EnhancedResource<any>
+  >();
+
+  static of<T extends ResourceShape<any>>(resource: T | EnhancedResource<T>) {
+    if (resource instanceof EnhancedResource) {
+      return resource;
+    }
+    const factory = () => new EnhancedResource(resource);
+    return cachedOnObject(EnhancedResource.refs, resource, factory);
+  }
+
+  get name() {
+    return this.type.name;
+  }
+
+  @Once()
+  get securedProps() {
+    return new Set<SecuredResourceKey<T, false>>(this.type.SecuredProps as any);
+  }
+
+  @Once()
+  get relationKeys() {
+    return new Set<keyof T['Relations'] & string>(
+      Object.keys(this.type.Relations ?? {}) as any
+    );
+  }
+
+  @Once()
+  get childRelationKeys() {
+    return new Set<ChildRelationsKey<T>>(
+      // TODO strip out non child relations
+      Object.keys(this.type.Relations ?? {}) as any
+    );
+  }
+
+  @Once()
+  get securedPropsAndSingularRelationKeys() {
+    return new Set<SecuredPropsAndSingularRelationsKey<T>>([
+      ...this.securedProps,
+      ...this.relationKeys,
+    ]);
+  }
+
+  hasChildRelation(prop: string) {
+    return (
+      this.type.Relations &&
+      prop in this.type.Relations &&
+      Array.isArray(this.type.Relations[prop])
+    );
+  }
+}
 
 export const isResourceClass = <T>(
   cls: AbstractClassType<T>

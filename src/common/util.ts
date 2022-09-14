@@ -20,11 +20,11 @@ export const simpleSwitch = <T, K extends string = string>(
 
 /** Converts list to map given a function that returns a [key, value] tuple. */
 export const mapFromList = <T, S = T, K extends string | number = string>(
-  list: readonly T[],
+  list: readonly T[] | Set<T>,
   mapper: (item: T) => readonly [K, S] | null
 ): Record<K, S> => {
   const out: Partial<Record<K, S>> = {};
-  return list.reduce((acc, item) => {
+  return (list instanceof Set ? [...list] : list).reduce((acc, item) => {
     const res = mapper(item);
     if (!res) {
       return acc;

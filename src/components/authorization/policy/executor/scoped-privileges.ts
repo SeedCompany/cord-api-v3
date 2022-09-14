@@ -2,6 +2,7 @@ import { LazyGetter as Once } from 'lazy-get-decorator';
 import { compact, last, lowerCase, startCase } from 'lodash';
 import {
   ChildRelationsKey,
+  EnhancedResource,
   isSecured,
   keys,
   mapFromList,
@@ -26,12 +27,15 @@ import {
 import { PolicyExecutor } from './policy-executor';
 
 export class ScopedPrivileges<TResourceStatic extends ResourceShape<any>> {
+  private readonly resource: EnhancedResource<TResourceStatic>;
   constructor(
-    private readonly resource: TResourceStatic,
+    resource: TResourceStatic,
     private readonly object: TResourceStatic['prototype'] | undefined,
     private readonly session: Session,
     private readonly policyExecutor: PolicyExecutor
-  ) {}
+  ) {
+    this.resource = EnhancedResource.of(resource);
+  }
 
   can(action: ResourceAction): boolean;
   can(action: PropAction, prop: SecuredResourceKey<TResourceStatic>): boolean;
@@ -127,10 +131,7 @@ export class ScopedPrivileges<TResourceStatic extends ResourceShape<any>> {
   secureProps(
     dto: DbPropsOfDto<TResourceStatic['prototype']>
   ): SecuredResource<TResourceStatic, false> {
-    const keys = this.resource.SecuredProps as Array<
-      SecuredResourceKey<TResourceStatic, false>
-    >;
-    const securedProps = mapFromList(keys, (key) => {
+    const securedProps = mapFromList(this.resource.securedProps, (key) => {
       const canRead = this.can('read', key);
       const canEdit = this.can('edit', key);
       let value = (dto as any)[key];

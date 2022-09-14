@@ -1,4 +1,5 @@
 import {
+  EnhancedResource,
   mapFromList,
   ResourceShape,
   SecuredPropsAndSingularRelationsKey,
@@ -11,7 +12,7 @@ export abstract class PropGranter<
   TResourceStatic extends ResourceShape<any>
 > extends PermGranter<TResourceStatic, PropAction> {
   constructor(
-    protected resource: TResourceStatic,
+    protected resource: EnhancedResource<TResourceStatic>,
     protected properties: Array<keyof TResourceStatic['prototype'] & string>,
     stagedCondition?: Condition<TResourceStatic>
   ) {
@@ -45,14 +46,11 @@ export class PropGranterImpl<
   }
 
   static forResource<TResourceStatic extends ResourceShape<any>>(
-    resource: TResourceStatic,
+    resource: EnhancedResource<TResourceStatic>,
     stagedCondition: Condition<TResourceStatic> | undefined
   ): PropsGranter<TResourceStatic> {
     const propsGranter = mapFromList(
-      [
-        ...resource.SecuredProps,
-        ...Object.keys(resource.Relations ?? {}),
-      ] as Array<SecuredPropsAndSingularRelationsKey<TResourceStatic>>,
+      resource.securedPropsAndSingularRelationKeys,
       (prop) => [prop, new PropGranterImpl(resource, [prop], stagedCondition)]
     ) as PropsGranter<TResourceStatic>;
     propsGranter.many = (...props) => new PropGranterImpl(resource, props);
