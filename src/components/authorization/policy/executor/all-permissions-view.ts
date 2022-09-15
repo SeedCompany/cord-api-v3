@@ -9,6 +9,7 @@ import {
   SecuredPropsAndSingularRelationsKey,
 } from '~/common';
 import { AnyAction, ChildRelationshipAction, PropAction } from '../actions';
+import { createLazyRecord } from '../lazy-record';
 import { ScopedPrivileges } from './scoped-privileges';
 
 export type AllPermissionsView<TResourceStatic extends ResourceShape<any>> =
@@ -65,37 +66,4 @@ const compatMap = {
       `can${startCase(action)}` as CompatAction,
     ]),
   },
-};
-
-/**
- * Returns object matching any shape and calls the given functions to calculate
- * property values as needed.
- */
-const createLazyRecord = <T extends object>({
-  calculate,
-  getKeys,
-}: {
-  getKeys: () => Array<keyof T & string>;
-  calculate: (key: keyof T & string, object: Partial<T>) => T[keyof T & string];
-}) => {
-  const proxy = new Proxy<Partial<T>>(
-    {},
-    {
-      // All props are enumerable
-      getOwnPropertyDescriptor: () => ({
-        enumerable: true,
-        configurable: true,
-      }),
-      ownKeys: getKeys,
-      get: (target, propName: keyof T & string) => {
-        if (target[propName]) {
-          return target[propName];
-        }
-        const value = calculate(propName, target);
-        target[propName] = value;
-        return value;
-      },
-    }
-  );
-  return proxy as T;
 };
