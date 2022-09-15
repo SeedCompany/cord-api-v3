@@ -36,6 +36,11 @@ export class ExceptionFilter implements GqlExceptionFilter {
   ) {}
 
   catch(exception: Error, restHost: ArgumentsHost): any {
+    if (exception && (exception as any).type === 'request.aborted') {
+      this.logger?.warning('Request aborted');
+      return;
+    }
+
     let ex: ExceptionInfo;
     try {
       ex = this.catchGql(exception);
