@@ -1,7 +1,8 @@
 import { LazyGetter as Once } from 'lazy-get-decorator';
 import { compact, last, lowerCase, startCase } from 'lodash';
 import {
-  ChildRelationsKey,
+  ChildListsKey,
+  ChildSinglesKey,
   EnhancedResource,
   isSecured,
   keys,
@@ -16,7 +17,8 @@ import { ChangesOf, isRelation } from '~/core/database/changes';
 import { DbPropsOfDto } from '~/core/database/results';
 import {
   AnyAction,
-  ChildRelationshipAction,
+  ChildListAction,
+  ChildSingleAction,
   PropAction,
   ResourceAction,
 } from '../actions';
@@ -40,8 +42,12 @@ export class ScopedPrivileges<TResourceStatic extends ResourceShape<any>> {
   can(action: ResourceAction): boolean;
   can(action: PropAction, prop: SecuredResourceKey<TResourceStatic>): boolean;
   can(
-    action: ChildRelationshipAction,
-    relation: ChildRelationsKey<TResourceStatic>
+    action: ChildSingleAction,
+    relation: ChildSinglesKey<TResourceStatic>
+  ): boolean;
+  can(
+    action: ChildListAction,
+    relation: ChildListsKey<TResourceStatic>
   ): boolean;
   can(action: AnyAction, prop?: SecuredResourceKey<TResourceStatic>) {
     return this.policyExecutor.execute(
@@ -59,10 +65,14 @@ export class ScopedPrivileges<TResourceStatic extends ResourceShape<any>> {
     prop: SecuredResourceKey<TResourceStatic>
   ): void;
   verifyCan(
-    action: ChildRelationshipAction,
-    prop: ChildRelationsKey<TResourceStatic>
+    action: ChildSingleAction,
+    relation: ChildSinglesKey<TResourceStatic>
   ): void;
-  verifyCan(action: AnyAction, prop?: SecuredResourceKey<TResourceStatic>) {
+  verifyCan(
+    action: ChildListAction,
+    relation: ChildListsKey<TResourceStatic>
+  ): void;
+  verifyCan(action: AnyAction, prop?: string) {
     // @ts-expect-error yeah IDK why but this is literally the signature.
     if (this.can(action, prop)) {
       return;

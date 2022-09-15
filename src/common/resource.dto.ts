@@ -2,7 +2,6 @@ import { Field, InterfaceType } from '@nestjs/graphql';
 import { LazyGetter as Once } from 'lazy-get-decorator';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { ConditionalExcept, ConditionalPick } from 'type-fest';
 import { cachedOnObject } from '~/common/weak-map-cache';
 import { ScopedRole } from '../components/authorization';
 import { DbLabel } from './db-label.decorator';
@@ -97,38 +96,70 @@ export class EnhancedResource<T extends ResourceShape<any>> {
   }
 
   @Once()
+  get securedPropsPlusExtra() {
+    return new Set([...this.securedProps, ...this.extraPropsFromRelations]);
+  }
+
+  @Once()
   get securedProps() {
     return new Set<SecuredResourceKey<T, false>>(this.type.SecuredProps as any);
   }
 
   @Once()
-  get relationKeys() {
+  get childKeys() {
+    return new Set([...this.childSingleKeys, ...this.childListKeys]);
+  }
+
+  @Once()
+  get extraPropsFromRelations() {
+    return new Set<ExtraPropsFromRelationsKey<T>>(
+      [...this.relationKeys].filter((key) => {
+        let rawType = this.type.Relations![key];
+        rawType = Array.isArray(rawType) ? rawType[0] : rawType;
+        const type: EnhancedResource<any> = EnhancedResource.of(rawType);
+        return !type.hasParent;
+      }) as any
+    );
+  }
+
+  @Once()
+  get childSingleKeys() {
+    return new Set<ChildSinglesKey<T>>(
+      [...this.relationKeys].filter((key) => {
+        const rel = this.type.Relations![key];
+        if (!rel || Array.isArray(rel) || !isResourceClass(rel)) {
+          return false;
+        }
+        const type: EnhancedResource<any> = EnhancedResource.of(rel);
+        return type.hasParent;
+      }) as any
+    );
+  }
+
+  @Once()
+  get childListKeys() {
+    return new Set<ChildListsKey<T>>(
+      [...this.relationKeys].filter((key) => {
+        const relList = this.type.Relations![key];
+        if (!relList || !Array.isArray(relList)) {
+          return false;
+        }
+        const rel = relList[0];
+        if (!rel || !isResourceClass(rel)) {
+          return false;
+        }
+        const type: EnhancedResource<any> = EnhancedResource.of(rel);
+        return type.hasParent;
+      }) as any
+    );
+  }
+
+  @Once()
+  private get relationKeys() {
     return new Set<keyof T['Relations'] & string>(
-      Object.keys(this.type.Relations ?? {}) as any
-    );
-  }
-
-  @Once()
-  get childRelationKeys() {
-    return new Set<ChildRelationsKey<T>>(
-      // TODO strip out non child relations
-      Object.keys(this.type.Relations ?? {}) as any
-    );
-  }
-
-  @Once()
-  get securedPropsAndSingularRelationKeys() {
-    return new Set<SecuredPropsAndSingularRelationsKey<T>>([
-      ...this.securedProps,
-      ...this.relationKeys,
-    ]);
-  }
-
-  hasChildRelation(prop: string) {
-    return (
-      this.type.Relations &&
-      prop in this.type.Relations &&
-      Array.isArray(this.type.Relations[prop])
+      Object.keys(this.type.Relations ?? {}).filter(
+        (key) => this.type.Relations![key]
+      ) as any
     );
   }
 }
@@ -154,11 +185,46 @@ export type SecuredResourceKey<
   IncludeRelations extends boolean | undefined = true
 > = keyof SecuredResource<TResourceStatic, IncludeRelations> & string;
 
-export type SecuredPropsAndSingularRelationsKey<
+export type SecuredPropsPlusExtraKey<
   TResourceStatic extends ResourceShape<any>
-> = string &
-  keyof (SecuredProps<TResourceStatic['prototype']> &
-    ConditionalExcept<TResourceStatic['Relations'], any[]>);
+> =
+  | (keyof SecuredProps<TResourceStatic['prototype']> & string)
+  | ExtraPropsFromRelationsKey<TResourceStatic>;
 
-export type ChildRelationsKey<TResourceStatic extends ResourceShape<any>> =
-  keyof ConditionalPick<TResourceStatic['Relations'], any[]> & string;
+/* eslint-disable @typescript-eslint/ban-types -- {} is used to mean non-nullable, it's not an empty interface */
+
+export type ExtraPropsFromRelationsKey<T extends ResourceShape<any>> = {
+  [R in RelKey<T>]: T['Relations'][R] extends Array<infer U>
+    ? U extends ResourceShape<any>
+      ? U['Parent'] extends {}
+        ? never
+        : R
+      : R
+    : T['Relations'][R] extends ResourceShape<any>
+    ? T['Relations'][R]['Parent'] extends {}
+      ? never
+      : R
+    : R;
+}[RelKey<T>];
+
+export type ChildSinglesKey<T extends ResourceShape<any>> = {
+  [R in RelKey<T>]: T['Relations'][R] extends any[]
+    ? never
+    : T['Relations'][R] extends ResourceShape<any>
+    ? T['Relations'][R]['Parent'] extends {}
+      ? R
+      : never
+    : never;
+}[RelKey<T>];
+
+export type ChildListsKey<T extends ResourceShape<any>> = {
+  [R in RelKey<T>]: T['Relations'][R] extends Array<infer U>
+    ? U extends ResourceShape<any>
+      ? U['Parent'] extends {}
+        ? R
+        : never
+      : never
+    : never;
+}[RelKey<T>];
+
+type RelKey<T extends ResourceShape<any>> = keyof T['Relations'] & string;

@@ -4,7 +4,6 @@ import type { ResourceMap } from '../../model/resource-map';
 import { ResourceAction } from '../actions';
 import {
   ChildRelationshipGranter,
-  ChildRelationshipGranterImpl,
   ChildRelationshipsGranter,
 } from './child-relationship-granter';
 import { PermGranter } from './perm-granter';
@@ -15,7 +14,7 @@ export abstract class ResourceGranter<
 > extends PermGranter<TResourceStatic, ResourceAction> {
   protected propGrants: ReadonlyArray<PropGranterImpl<TResourceStatic>> = [];
   protected childRelationshipGrants: ReadonlyArray<
-    ChildRelationshipGranterImpl<TResourceStatic>
+    ChildRelationshipGranter<TResourceStatic>
   > = [];
 
   constructor(protected resource: EnhancedResource<TResourceStatic>) {
@@ -91,14 +90,12 @@ export abstract class ResourceGranter<
       granter: ChildRelationshipsGranter<TResourceStatic>
     ) => Many<ChildRelationshipGranter<TResourceStatic>>
   ) {
-    const granter = ChildRelationshipGranterImpl.forResource(
+    const granter = ChildRelationshipGranter.forResource(
       this.resource,
       this.stagedCondition
     );
 
-    const newGrants = relationGrants(granter) as Many<
-      ChildRelationshipGranterImpl<TResourceStatic>
-    >;
+    const newGrants = relationGrants(granter);
 
     const cloned = this.clone();
     cloned.childRelationshipGrants = [

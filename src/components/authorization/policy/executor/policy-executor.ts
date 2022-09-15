@@ -20,7 +20,7 @@ export class PolicyExecutor {
     prop?: string
   ) {
     const policies = this.getPolicies(session);
-    const isChildRelation = prop && resource.hasChildRelation(prop);
+    const isChildRelation = prop && resource.childKeys.has(prop);
 
     for (const policy of policies) {
       const grants = policy.grants.get(resource.type);

@@ -14,6 +14,16 @@ export type PropAction = 'read' | 'edit';
 export type ChildRelationshipAction = 'read' | 'create' | 'delete';
 
 /**
+ * Valid actions for child One-to-Many relationships
+ */
+export type ChildListAction = 'read' | 'create' | 'delete';
+
+/**
+ * Valid actions for child One-to-One relationships
+ */
+export type ChildSingleAction = 'read' | 'edit';
+
+/**
  * Probably don't use directly
  * @internal
  */

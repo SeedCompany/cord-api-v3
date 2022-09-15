@@ -8,16 +8,19 @@ import { Role } from './role.dto';
  * @example Users with role X can assign role Y & Z to any user
  *
  * Policy(Role.X, (r) => [
- *   r.AssignableRoles.specifically((p) => [
- *     p.Y.edit,
- *     p.Z.edit,
- *   ]),
+ *   Role.assignable(r, [
+ *     Role.Y,
+ *     Role.Z,
+ *   ])
  * ])
  */
 export const AssignableRoles = {
   // Stuff actually needed at runtime.
   name: 'AssignableRoles',
-  Relations: mapFromList(keysOf<Record<Role, boolean>>(), (role) => [role, '']),
+  Relations: mapFromList(keysOf<Record<Role, boolean>>(), (role) => [
+    role,
+    undefined,
+  ]),
   Props: [],
   SecuredProps: [],
 } as unknown as Omit<

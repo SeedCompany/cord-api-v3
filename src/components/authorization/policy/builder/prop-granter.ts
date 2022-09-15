@@ -1,11 +1,11 @@
 import {
   EnhancedResource,
-  mapFromList,
   ResourceShape,
-  SecuredPropsAndSingularRelationsKey,
+  SecuredPropsPlusExtraKey,
 } from '~/common';
 import { PropAction } from '../actions';
 import { Condition } from '../conditions';
+import { createLazyRecord } from '../lazy-record';
 import { PermGranter } from './perm-granter';
 
 export abstract class PropGranter<
@@ -49,24 +49,25 @@ export class PropGranterImpl<
     resource: EnhancedResource<TResourceStatic>,
     stagedCondition: Condition<TResourceStatic> | undefined
   ): PropsGranter<TResourceStatic> {
-    const propsGranter = mapFromList(
-      resource.securedPropsAndSingularRelationKeys,
-      (prop) => [prop, new PropGranterImpl(resource, [prop], stagedCondition)]
-    ) as PropsGranter<TResourceStatic>;
-    propsGranter.many = (...props) => new PropGranterImpl(resource, props);
-
-    return propsGranter;
+    const granter = createLazyRecord<PropsGranter<TResourceStatic>>({
+      getKeys: () => resource.securedPropsPlusExtra,
+      calculate: (prop) =>
+        new PropGranterImpl(resource, [prop], stagedCondition) as any,
+    });
+    granter.many = (...props) =>
+      new PropGranterImpl(resource, props, stagedCondition);
+    return granter;
   }
 }
 
 export type PropsGranter<TResourceStatic extends ResourceShape<any>> = Record<
-  SecuredPropsAndSingularRelationsKey<TResourceStatic>,
+  SecuredPropsPlusExtraKey<TResourceStatic>,
   PropGranter<TResourceStatic>
 > & {
   /**
    * A shortcut to apply actions to many properties at once.
    */
   many: (
-    ...props: Array<SecuredPropsAndSingularRelationsKey<TResourceStatic>>
+    ...props: Array<SecuredPropsPlusExtraKey<TResourceStatic>>
   ) => PropGranter<TResourceStatic>;
 };

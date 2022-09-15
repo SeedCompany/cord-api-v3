@@ -2,25 +2,32 @@ import { startCase } from 'lodash';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { PascalCase } from 'type-fest';
 import {
-  ChildRelationsKey,
+  ChildListsKey,
+  ChildSinglesKey,
   EnhancedResource,
   mapFromList,
   ResourceShape,
-  SecuredPropsAndSingularRelationsKey,
+  SecuredPropsPlusExtraKey,
 } from '~/common';
-import { AnyAction, ChildRelationshipAction, PropAction } from '../actions';
+import {
+  AnyAction,
+  ChildListAction,
+  ChildSingleAction,
+  PropAction,
+} from '../actions';
 import { createLazyRecord } from '../lazy-record';
 import { ScopedPrivileges } from './scoped-privileges';
 
 export type AllPermissionsView<TResourceStatic extends ResourceShape<any>> =
   Record<
-    SecuredPropsAndSingularRelationsKey<TResourceStatic>,
+    SecuredPropsPlusExtraKey<TResourceStatic>,
     Record<PropAction, boolean>
   > &
     Record<
-      ChildRelationsKey<TResourceStatic>,
-      Record<ChildRelationshipAction, boolean>
-    >;
+      ChildSinglesKey<TResourceStatic>,
+      Record<ChildSingleAction, boolean>
+    > &
+    Record<ChildListsKey<TResourceStatic>, Record<ChildListAction, boolean>>;
 
 export const createAllPermissionsView = <
   TResourceStatic extends ResourceShape<any>
@@ -29,18 +36,16 @@ export const createAllPermissionsView = <
   privileges: ScopedPrivileges<TResourceStatic>
 ) =>
   createLazyRecord<AllPermissionsView<TResourceStatic>>({
-    getKeys: () => {
-      const keys = new Set([
-        ...resource.securedProps,
-        ...resource.relationKeys,
-      ]);
-      return [...keys] as Array<keyof AllPermissionsView<TResourceStatic>>;
-    },
+    getKeys: () => [...resource.securedPropsPlusExtra, ...resource.childKeys],
     calculate: (propName) =>
       createLazyRecord<Record<CompatAction, boolean>>({
         getKeys: () => keysOf<Record<CompatAction, boolean>>(),
         calculate: (actionInput, propPerms) => {
-          const action = compatMap.forward[actionInput];
+          const action =
+            actionInput === 'canEdit' &&
+            resource.childListKeys.has(propName as any)
+              ? 'create' // Handled deprecated checks to list.canEdit === list.create
+              : compatMap.forward[actionInput];
           const perm = privileges.can(action as PropAction, propName);
           propPerms[action] = perm;
           propPerms[compatMap.backward[action]] = perm;
