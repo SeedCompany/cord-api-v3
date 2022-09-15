@@ -31,6 +31,7 @@ export class LocationRepository extends DtoRepository(Location) {
       name: input.name,
       isoAlpha3: input.isoAlpha3,
       type: input.type,
+      communicationRegions: input.communicationRegions,
       canDelete: true,
     };
 

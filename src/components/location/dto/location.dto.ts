@@ -13,6 +13,7 @@ import {
   SecuredString,
   SecuredStringNullable,
 } from '../../../common';
+import { SecuredCommunicationRegions } from './communication-region';
 import { LocationType } from './location-type.enum';
 
 @ObjectType({
@@ -38,6 +39,10 @@ export class Location extends Resource {
   @Field()
   @DbLabel('IsoAlpha3')
   readonly isoAlpha3: SecuredStringNullable;
+
+  @Field()
+  @DbLabel('CommunicationRegion')
+  readonly communicationRegions: SecuredCommunicationRegions;
 
   readonly fundingAccount: Secured<ID | null>;
 

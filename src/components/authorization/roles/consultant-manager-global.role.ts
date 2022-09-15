@@ -278,6 +278,7 @@ export const ConsultantManagerGlobal = new DbRole({
         { propertyName: 'type', permission: { read, }, },
         { propertyName: 'sensitivity', permission: { read, }, },
         { propertyName: 'isoAlpha3', permission: { read, }, },
+        { propertyName: 'communicationRegions', permission: { read, }, },
         { propertyName: 'fundingAccount', permission: { read, }, },
       ],
       canDelete: false,
