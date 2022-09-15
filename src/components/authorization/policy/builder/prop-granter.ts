@@ -53,9 +53,12 @@ export class PropGranterImpl<
       getKeys: () => resource.securedPropsPlusExtra,
       calculate: (prop) =>
         new PropGranterImpl(resource, [prop], stagedCondition) as any,
+      // @ts-expect-error IDK why this is failing
+      base: {
+        many: (...props) =>
+          new PropGranterImpl(resource, props, stagedCondition),
+      },
     });
-    granter.many = (...props) =>
-      new PropGranterImpl(resource, props, stagedCondition);
     return granter;
   }
 }

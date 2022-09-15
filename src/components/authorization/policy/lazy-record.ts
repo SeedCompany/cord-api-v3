@@ -5,11 +5,13 @@
 export const createLazyRecord = <T extends object>({
   calculate,
   getKeys,
+  base,
 }: {
   getKeys: () => Array<keyof T & string> | Set<keyof T & string>;
   calculate: (key: keyof T & string, object: Partial<T>) => T[keyof T & string];
+  base?: Partial<T>;
 }) => {
-  const initial = {};
+  const initial = base ?? {};
   const proxy = new Proxy<Partial<T>>(initial, {
     // All props are enumerable
     getOwnPropertyDescriptor: () => ({
