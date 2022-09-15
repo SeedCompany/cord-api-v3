@@ -1,5 +1,4 @@
-import { gql } from 'apollo-server-core';
-import * as faker from 'faker';
+import { faker } from '@faker-js/faker';
 import { startCase } from 'lodash';
 import { ID } from '../../src/common';
 import { loggedInSession } from '../../src/common/session';
@@ -7,6 +6,7 @@ import { AuthenticationService } from '../../src/components/authentication';
 import { FileService } from '../../src/components/file';
 import { TestApp } from './create-app';
 import { fileNode, RawDirectory } from './fragments';
+import { gql } from './gql-tag';
 
 export async function createRootDirectory(app: TestApp, name?: string) {
   name = name ?? startCase(faker.lorem.words());

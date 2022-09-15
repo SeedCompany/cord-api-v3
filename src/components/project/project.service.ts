@@ -248,6 +248,7 @@ export class ProjectService {
       canDelete: isIdLike(sessionOrUserId)
         ? false // Assume email workflow that doesn't need to know this. Skip lookup.
         : sessionOrUserId.roles.includes('global:Administrator'),
+      __typename: `${project.type}Project`,
     };
   }
 

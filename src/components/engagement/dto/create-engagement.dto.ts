@@ -4,6 +4,7 @@ import { ValidateNested } from 'class-validator';
 import { stripIndent } from 'common-tags';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { CalendarDate, DateField, ID, IdField } from '../../../common';
+import { ChangesetIdField } from '../../changeset';
 import { CreateDefinedFileVersionInput } from '../../file/dto';
 import { ProductMethodology } from '../../product/dto';
 import { InternshipEngagement, LanguageEngagement } from './engagement.dto';
@@ -98,10 +99,7 @@ export abstract class CreateInternshipEngagement extends CreateEngagement {
 
 @InputType()
 export abstract class CreateLanguageEngagementInput {
-  @IdField({
-    description: 'The change object to associate these engagement changes with',
-    nullable: true,
-  })
+  @ChangesetIdField()
   readonly changeset?: ID;
 
   @Field()
@@ -118,10 +116,7 @@ export abstract class CreateLanguageEngagementOutput {
 
 @InputType()
 export abstract class CreateInternshipEngagementInput {
-  @IdField({
-    description: 'The change object to associate these engagement changes with',
-    nullable: true,
-  })
+  @ChangesetIdField()
   readonly changeset?: ID;
 
   @Field()

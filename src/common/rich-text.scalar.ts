@@ -1,9 +1,10 @@
 import { applyDecorators } from '@nestjs/common';
-import { Field, FieldOptions } from '@nestjs/graphql';
+import { Field, FieldOptions, ObjectType } from '@nestjs/graphql';
 import { IsObject } from 'class-validator';
 import { GraphQLScalarType } from 'graphql';
 import { GraphQLJSONObject } from 'graphql-scalars';
 import { JsonObject } from 'type-fest';
+import { SecuredProperty } from '~/common/secured-property';
 import { Transform } from './transform.decorator';
 
 /**
@@ -11,6 +12,9 @@ import { Transform } from './transform.decorator';
  * Probably best to treat this as opaque.
  */
 export class RichTextDocument {
+  // Allows TS to uniquely identify values
+  #isRichText?: never;
+
   static from(doc: JsonObject): RichTextDocument {
     return Object.assign(new RichTextDocument(), doc);
   }
@@ -49,3 +53,10 @@ export const RichTextScalar = new GraphQLScalarType({
   name: 'RichText',
   description: 'A JSON object containing data from a block styled editor',
 });
+
+@ObjectType({
+  description: SecuredProperty.descriptionFor('a rich text document'),
+})
+export abstract class SecuredRichText extends SecuredProperty<RichTextDocument>(
+  RichTextScalar
+) {}

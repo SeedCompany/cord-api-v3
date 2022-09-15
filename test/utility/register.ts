@@ -1,11 +1,11 @@
-import { gql } from 'apollo-server-core';
-import * as faker from 'faker';
+import { faker } from '@faker-js/faker';
 import { generateId, isValidId } from '../../src/common';
 import { RegisterInput } from '../../src/components/authentication';
 import { Powers, Role } from '../../src/components/authorization';
 import { User, UserStatus } from '../../src/components/user';
 import { TestApp } from './create-app';
 import { fragments, RawUser } from './fragments';
+import { gql } from './gql-tag';
 import { login, runAsAdmin, runInIsolatedSession } from './login';
 
 export async function readOneUser(app: TestApp, id: string) {
@@ -51,11 +51,11 @@ export async function listUsers(app: TestApp) {
 
 export const generateRegisterInput = async (): Promise<RegisterInput> => ({
   ...(await generateRequireFieldsRegisterInput()),
-  phone: faker.phone.phoneNumber(),
+  phone: faker.phone.number(),
   about: 'about detail',
   status: UserStatus.Active,
   roles: [Role.ProjectManager, Role.Consultant],
-  title: faker.name.title(),
+  title: faker.name.jobTitle(),
 });
 
 export const generateRequireFieldsRegisterInput =

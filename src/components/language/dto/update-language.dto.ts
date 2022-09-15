@@ -19,6 +19,7 @@ import {
   SensitivityField,
 } from '../../../common';
 import { ExactLength } from '../../../common/validators/exactLength';
+import { ChangesetIdField } from '../../changeset';
 import { Language } from './language.dto';
 
 @InputType()
@@ -84,7 +85,9 @@ export abstract class UpdateLanguage {
   readonly isSignLanguage?: boolean;
 
   @Field({ nullable: true })
-  @Matches(/^[A-Z]{2}\d{2}$/)
+  @Matches(/^[A-Z]{2}\d{2}$/, {
+    message: 'Must be 2 uppercase letters followed by 2 digits',
+  })
   readonly signLanguageCode?: string;
 
   @SensitivityField({ nullable: true })
@@ -103,10 +106,7 @@ export abstract class UpdateLanguage {
 
 @InputType()
 export abstract class UpdateLanguageInput {
-  @IdField({
-    description: 'The change object to associate these engagement changes with',
-    nullable: true,
-  })
+  @ChangesetIdField()
   readonly changeset?: ID;
 
   @Field()

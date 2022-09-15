@@ -1,9 +1,7 @@
 {
   "collection": "@nestjs/schematics",
-  "sourceRoot": "src",
-  "compilerOptions": {
-    "plugins": [
-      "../tools/ts-transformer-keys"
-    ]
+  "sourceRoot": "src/components",
+  "generateOptions": {
+    "spec": false
   }
 }

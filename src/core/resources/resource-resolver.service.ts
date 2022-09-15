@@ -1,7 +1,7 @@
 import { DiscoveryService } from '@golevelup/nestjs-discovery';
 import { Injectable, SetMetadata } from '@nestjs/common';
 import { GraphQLSchemaHost } from '@nestjs/graphql';
-import { isObjectType } from 'graphql';
+import { GraphQLObjectType } from 'graphql';
 import { ValueOf } from 'type-fest';
 import {
   ID,
@@ -51,6 +51,8 @@ export const HandleIdLookup = (type: Many<SomeResource>) =>
  */
 @Injectable()
 export class ResourceResolver {
+  private readonly typeCache = new Map<string, keyof ResourceMap | Error>();
+
   constructor(
     private readonly discover: DiscoveryService,
     private readonly schemaHost: GraphQLSchemaHost,
@@ -122,13 +124,36 @@ export class ResourceResolver {
   }
 
   resolveType(types: Many<string | SomeResource>): keyof ResourceMap {
-    // Remove `Deleted_` prefix
-    const names = many(types).map((t) =>
-      (typeof t === 'string' ? t : t.name).replace(/^Deleted_/, '')
+    // This caching may not improve performance much...
+    const normalized = many(types).map((t) =>
+      typeof t === 'string' ? t : t.name
     );
+    const cacheKey = normalized.join(';');
+    const type = this.typeCache.get(cacheKey);
+    if (type) {
+      if (type instanceof Error) {
+        throw type;
+      }
+      return type;
+    }
+    try {
+      const result = this.doResolveType(normalized);
+      this.typeCache.set(cacheKey, result);
+      return result;
+    } catch (e) {
+      this.typeCache.set(cacheKey, e);
+      throw e;
+    }
+  }
+
+  private doResolveType(types: string[]): keyof ResourceMap {
+    // Remove `Deleted_` prefix
+    const names = many(types).map((t) => t.replace(/^Deleted_/, ''));
 
     const schema = this.schemaHost.schema;
-    const resolved = names.filter((name) => isObjectType(schema.getType(name)));
+    const resolved = names.filter(
+      (name) => schema.getType(name) instanceof GraphQLObjectType
+    );
 
     if (resolved.length === 1) {
       // This is mostly true...

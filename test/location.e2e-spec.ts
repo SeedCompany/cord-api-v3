@@ -1,5 +1,4 @@
-import { gql } from 'apollo-server-core';
-import * as faker from 'faker';
+import { faker } from '@faker-js/faker';
 import { times } from 'lodash';
 import { generateId, isValidId } from '../src/common';
 import { Location } from '../src/components/location';
@@ -10,6 +9,7 @@ import {
   createSession,
   createTestApp,
   fragments,
+  gql,
   loginAsAdmin,
   TestApp,
 } from './utility';
@@ -54,7 +54,7 @@ describe('Location e2e', () => {
   // Update Location
   it('update location', async () => {
     const st = await createLocation(app);
-    const newName = faker.company.companyName();
+    const newName = faker.company.name();
     const result = await app.graphql.mutate(
       gql`
         mutation updateLocation($input: UpdateLocationInput!) {

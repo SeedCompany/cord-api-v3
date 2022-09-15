@@ -32,6 +32,8 @@ export class ProjectChangeRequestRepository extends DtoRepository<
             types: input.types,
             summary: input.summary,
             status: Status.Pending,
+            applied: false,
+            editable: true, //needs to be editable on creation
           },
         })
       )

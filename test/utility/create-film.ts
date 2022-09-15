@@ -1,8 +1,8 @@
-import { gql } from 'apollo-server-core';
-import * as faker from 'faker';
+import { faker } from '@faker-js/faker';
 import { CreateFilm, Film } from '../../src/components/film';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
+import { gql } from './gql-tag';
 
 export async function listFilms(app: TestApp) {
   const result = await app.graphql.mutate(
@@ -43,7 +43,7 @@ export async function createFilm(
   app: TestApp,
   input: Partial<CreateFilm> = {}
 ) {
-  const name = input.name || faker.hacker.noun() + faker.company.companyName();
+  const name = input.name || faker.hacker.noun() + faker.company.name();
 
   const result = await app.graphql.mutate(
     gql`

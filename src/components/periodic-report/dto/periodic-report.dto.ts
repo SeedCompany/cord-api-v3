@@ -15,6 +15,7 @@ import {
 } from '../../../common';
 import { BaseNode as DbBaseNode } from '../../../core/database/results';
 import { ScopedRole } from '../../authorization';
+import { LanguageEngagement } from '../../engagement/dto/engagement.dto';
 import { DefinedFile } from '../../file';
 import { ReportType } from './report-type.enum';
 
@@ -46,6 +47,7 @@ class PeriodicReport extends Resource {
   @Field(() => ReportType)
   readonly type: ReportType;
 
+  @Field(() => Resource)
   readonly parent: DbBaseNode;
 
   @Field()
@@ -105,6 +107,9 @@ export class ProgressReport extends PeriodicReport {
   static readonly SecuredProps = keysOf<SecuredProps<ProgressReport>>();
 
   readonly type: ReportType.Progress;
+
+  @Field(() => LanguageEngagement)
+  readonly parent: DbBaseNode;
 }
 
 @ObjectType({

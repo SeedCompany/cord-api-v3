@@ -1,11 +1,11 @@
-import { gql } from 'apollo-server-core';
-import * as faker from 'faker';
+import { faker } from '@faker-js/faker';
 import {
   CreateFundingAccount,
   FundingAccount,
 } from '../../src/components/funding-account';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
+import { gql } from './gql-tag';
 
 export async function listFundingAccounts(app: TestApp) {
   const result = await app.graphql.mutate(
@@ -46,7 +46,7 @@ export async function createFundingAccount(
   app: TestApp,
   input: Partial<CreateFundingAccount> = {}
 ) {
-  const name = input.name || faker.hacker.noun() + faker.company.companyName();
+  const name = input.name || faker.hacker.noun() + faker.company.name();
   const accountNumber =
     input.accountNumber || faker.datatype.number({ min: 0, max: 9 });
 

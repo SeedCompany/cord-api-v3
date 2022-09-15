@@ -1,5 +1,4 @@
-import { gql } from 'apollo-server-core';
-import * as faker from 'faker';
+import { faker } from '@faker-js/faker';
 import { runAsAdmin } from '.';
 import {
   CalendarDate,
@@ -16,6 +15,7 @@ import {
 import { TestApp } from './create-app';
 import { createRegion } from './create-region';
 import { fragments, RawProject } from './fragments';
+import { gql } from './gql-tag';
 import { Raw } from './raw.type';
 
 export async function listProjects(app: TestApp) {

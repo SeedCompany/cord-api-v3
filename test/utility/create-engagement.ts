@@ -1,5 +1,4 @@
-import { gql } from 'apollo-server-core';
-import * as faker from 'faker';
+import { faker } from '@faker-js/faker';
 import { DateTime } from 'luxon';
 import { ID, isValidId } from '../../src/common';
 import {
@@ -19,6 +18,7 @@ import {
   RawInternshipEngagement,
   RawLanguageEngagement,
 } from './fragments';
+import { gql } from './gql-tag';
 import { runAsAdmin } from './login';
 
 export async function listInternshipEngagements(app: TestApp) {

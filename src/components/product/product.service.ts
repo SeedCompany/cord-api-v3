@@ -2,7 +2,6 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { intersection, sumBy, uniq } from 'lodash';
 import {
   asyncPool,
-  has,
   ID,
   InputException,
   mapFromList,
@@ -87,11 +86,9 @@ export class ProductService {
     }
 
     const otherInput: CreateOtherProduct | undefined =
-      // @prettier-ignore
-      has('title', input) ? input : undefined;
+      'title' in input ? input : undefined;
     const derivativeInput: CreateDerivativeScriptureProduct | undefined =
-      // @prettier-ignore
-      has('produces', input) ? input : undefined;
+      'produces' in input ? input : undefined;
     const scriptureInput: CreateDirectScriptureProduct | undefined =
       !otherInput && !derivativeInput ? input : undefined;
 
@@ -136,9 +133,10 @@ export class ProductService {
           );
     }
 
-    const type = has('title', input)
-      ? ProducibleType.OtherProduct
-      : producibleType ?? ProducibleType.DirectScriptureProduct;
+    const type =
+      'title' in input
+        ? ProducibleType.OtherProduct
+        : producibleType ?? ProducibleType.DirectScriptureProduct;
     const availableSteps = getAvailableSteps({
       type,
       methodology: input.methodology,
@@ -151,15 +149,16 @@ export class ProductService {
       Number: input.progressTarget ?? 1,
     });
 
-    const id = has('title', input)
-      ? await this.repo.createOther({ ...input, progressTarget, steps })
-      : await this.repo.create({
-          ...input,
-          progressTarget,
-          steps,
-          totalVerses,
-          totalVerseEquivalents,
-        });
+    const id =
+      'title' in input
+        ? await this.repo.createOther({ ...input, progressTarget, steps })
+        : await this.repo.create({
+            ...input,
+            progressTarget,
+            steps,
+            totalVerses,
+            totalVerseEquivalents,
+          });
 
     this.logger.debug(`product created`, { id });
     return await this.readOne(id, session);
@@ -221,6 +220,7 @@ export class ProductService {
         ...props,
         title,
         description,
+        __typename: 'OtherProduct',
       };
       return dto;
     }
@@ -228,6 +228,7 @@ export class ProductService {
     if (!producible) {
       const dto: UnsecuredDto<DirectScriptureProduct> = {
         ...props,
+        __typename: 'DirectScriptureProduct',
       };
       return dto;
     }
@@ -245,6 +246,7 @@ export class ProductService {
       scriptureReferencesOverride: !isOverriding
         ? null
         : props.scriptureReferences,
+      __typename: 'DerivativeScriptureProduct',
     };
     return dto;
   }

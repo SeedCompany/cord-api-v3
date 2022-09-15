@@ -10,7 +10,7 @@ export interface OrderedNestDataLoaderOptions<T, Key = ID, CachedKey = Key>
   extends DataLoaderLib.Options<Key, T, CachedKey> {
   /**
    * How should the object be identified?
-   * An function to do so or a property key. Defaults to `id`
+   * A function to do so or a property key. Defaults to `id`
    */
   propertyKey?: keyof T | ((obj: T) => Key);
 
@@ -38,7 +38,9 @@ export abstract class OrderedNestDataLoader<T, Key = ID, CachedKey = Key>
 {
   private context: GqlContextType;
 
-  abstract loadMany(keys: readonly Key[]): Promise<readonly T[]>;
+  abstract loadMany(
+    keys: readonly Key[]
+  ): Promise<ReadonlyArray<T | { key: Key; error: Error }>>;
 
   getOptions(): OrderedNestDataLoaderOptions<T, Key, CachedKey> {
     return {
@@ -86,7 +88,13 @@ export abstract class OrderedNestDataLoader<T, Key = ID, CachedKey = Key>
       // Put documents (docs) into a map where key is a document's ID or some
       // property (prop) of a document and value is a document.
       const docsMap = new Map();
-      docs.forEach((doc: T) => docsMap.set(getCacheKey(getKey(doc)), doc));
+      docs.forEach((doc) => {
+        if ('error' in doc && doc.error instanceof Error) {
+          docsMap.set(getCacheKey(doc.key), doc.error);
+        } else {
+          docsMap.set(getCacheKey(getKey(doc as T)), doc);
+        }
+      });
       // Loop through the keys and for each one retrieve proper document. For not
       // existing documents generate an error.
       return keys.map((key) => {

@@ -1,5 +1,4 @@
-import { gql } from 'apollo-server-core';
-import * as faker from 'faker';
+import { faker } from '@faker-js/faker';
 import { isValidId } from '../src/common';
 import { Role } from '../src/components/authorization/dto/role.dto';
 import { FieldRegion } from '../src/components/field-region';
@@ -10,6 +9,7 @@ import {
   createSession,
   createTestApp,
   fragments,
+  gql,
   loginAsAdmin,
   TestApp,
 } from './utility';
@@ -61,7 +61,7 @@ describe('Region e2e', () => {
         name,
         fieldZoneId: fieldZone.id,
       })
-    ).rejects.toThrowError();
+    ).rejects.toThrowGqlError();
   });
 
   it('read one field region by id', async () => {
@@ -112,7 +112,7 @@ describe('Region e2e', () => {
       fieldZoneId: fieldZone.id,
     });
 
-    const newName = faker.company.companyName();
+    const newName = faker.company.name();
 
     const result = await app.graphql.mutate(
       gql`

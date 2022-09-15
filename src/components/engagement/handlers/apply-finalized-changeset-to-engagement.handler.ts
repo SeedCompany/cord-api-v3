@@ -10,14 +10,13 @@ import {
 } from '../../../core';
 import { ACTIVE, deleteBaseNode, INACTIVE } from '../../../core/database/query';
 import { commitChangesetProps } from '../../changeset/commit-changeset-props.query';
+import { ChangesetFinalizingEvent } from '../../changeset/events';
 import { rejectChangesetProps } from '../../changeset/reject-changeset-props.query';
-import { ProjectChangeRequestStatus } from '../../project-change-request/dto';
-import { ProjectChangesetFinalizedEvent } from '../../project-change-request/events';
 import { EngagementService } from '../engagement.service';
 
-type SubscribedEvent = ProjectChangesetFinalizedEvent;
+type SubscribedEvent = ChangesetFinalizingEvent;
 
-@EventsHandler(ProjectChangesetFinalizedEvent)
+@EventsHandler(ChangesetFinalizingEvent)
 export class ApplyFinalizedChangesetToEngagement
   implements IEventHandler<SubscribedEvent>
 {
@@ -28,11 +27,8 @@ export class ApplyFinalizedChangesetToEngagement
     private readonly logger: ILogger
   ) {}
 
-  async handle(event: SubscribedEvent) {
+  async handle({ changeset, session }: SubscribedEvent) {
     this.logger.debug('Applying changeset props');
-
-    const changesetId = event.changeRequest.id;
-    const status = event.changeRequest.status;
 
     try {
       // Update project engagement pending changes
@@ -41,7 +37,7 @@ export class ApplyFinalizedChangesetToEngagement
         .match([
           node('project', 'Project'),
           relation('out', '', 'changeset', ACTIVE),
-          node('changeset', 'Changeset', { id: changesetId }),
+          node('changeset', 'Changeset', { id: changeset.id }),
         ])
         .subQuery((sub) =>
           sub
@@ -52,7 +48,7 @@ export class ApplyFinalizedChangesetToEngagement
               node('node', 'Engagement'),
             ])
             .apply(
-              status === ProjectChangeRequestStatus.Approved
+              changeset.applied
                 ? commitChangesetProps()
                 : rejectChangesetProps()
             )
@@ -68,7 +64,7 @@ export class ApplyFinalizedChangesetToEngagement
         .match([
           node('project', 'Project'),
           relation('out', '', 'changeset', ACTIVE),
-          node('changeset', 'Changeset', { id: changesetId }),
+          node('changeset', 'Changeset', { id: changeset.id }),
         ])
         .subQuery((sub) =>
           sub
@@ -100,7 +96,7 @@ export class ApplyFinalizedChangesetToEngagement
         .match([
           node('project', 'Project'),
           relation('out', '', 'changeset', ACTIVE),
-          node('changeset', 'Changeset', { id: changesetId }),
+          node('changeset', 'Changeset', { id: changeset.id }),
         ])
         .subQuery((sub) =>
           sub
@@ -113,9 +109,7 @@ export class ApplyFinalizedChangesetToEngagement
               node('node', 'Language'),
             ])
             .apply(
-              status === ProjectChangeRequestStatus.Approved
-                ? commitChangesetProps()
-                : rejectChangesetProps()
+              changeset.id ? commitChangesetProps() : rejectChangesetProps()
             )
             .return('1')
         )
@@ -123,7 +117,7 @@ export class ApplyFinalizedChangesetToEngagement
         .run();
 
       // Remove deleting engagements
-      await this.removeDeletingEngagements(changesetId);
+      await this.removeDeletingEngagements(changeset.id);
 
       // Trigger update event for all changed engagements
       // progress report sync is an example of a handler that needs to run
@@ -131,7 +125,7 @@ export class ApplyFinalizedChangesetToEngagement
         result?.engagementIds || [],
         newResult?.engagementIds || []
       );
-      await this.triggerUpdateEvent(allEngagementIds, event.session);
+      await this.triggerUpdateEvent(allEngagementIds, session);
     } catch (exception) {
       throw new ServerException(
         'Failed to apply changeset to project',

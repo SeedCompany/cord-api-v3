@@ -1,46 +1,21 @@
-diff --git a/dist/graphql.module.js b/dist/graphql.module.js
-index d62715951015b5a96256b4c0a7c6a020c79373f7..5da856ccad9fda2c4ec9e1c1c2c8f107f7f3a8f9 100644
---- a/dist/graphql.module.js
-+++ b/dist/graphql.module.js
-@@ -84,9 +84,6 @@ let GraphQLModule = GraphQLModule_1 = class GraphQLModule {
-             return;
-         }
-         const httpAdapter = this.httpAdapterHost.httpAdapter;
--        if (!httpAdapter) {
--            return;
--        }
-         const typeDefs = (await this.graphqlTypesLoader.mergeTypesByPaths(this.options.typePaths)) || [];
-         const mergedTypeDefs = (0, utils_1.extend)(typeDefs, this.options.typeDefs);
-         const apolloOptions = await this.graphqlFactory.mergeOptions({
-@@ -97,6 +94,9 @@ let GraphQLModule = GraphQLModule_1 = class GraphQLModule {
-         if (this.options.definitions && this.options.definitions.path) {
-             await this.graphqlFactory.generateDefinitions((0, graphql_1.printSchema)(apolloOptions.schema), this.options);
-         }
-+        if (!httpAdapter) {
-+            return;
-+        }
-         await this.registerGqlServer(apolloOptions);
-         if (this.options.installSubscriptionHandlers ||
-             this.options.subscriptions) {
-diff --git a/dist/schema-builder/storages/type-metadata.storage.js b/dist/schema-builder/storages/type-metadata.storage.js
-index dc3476005e1b73a07aca051450af618d33515dcd..028dc6bc77da7f5b447c607003729d48156d7c8e 100644
---- a/dist/schema-builder/storages/type-metadata.storage.js
-+++ b/dist/schema-builder/storages/type-metadata.storage.js
-@@ -6,6 +6,7 @@ const field_decorator_1 = require("../../decorators/field.decorator");
- const plugin_constants_1 = require("../../plugin/plugin-constants");
- const cannot_determine_host_type_error_1 = require("../errors/cannot-determine-host-type.error");
- const undefined_type_error_1 = require("../errors/undefined-type.error");
-+const get_interfaces_array_util_1 = require("../utils/get-interfaces-array.util");
- const is_target_equal_util_1 = require("../utils/is-target-equal-util");
- const is_throwing_util_1 = require("../utils/is-throwing.util");
- class TypeMetadataStorageHost {
-@@ -281,6 +282,9 @@ class TypeMetadataStorageHost {
-             };
-             this.addClassFieldMetadata(fieldMetadata);
-             objectOrInterfaceTypeMetadata.properties.push(fieldMetadata);
-+            // Add field to other interfaces implementing this interface
-+            this.interfaces.filter(i => get_interfaces_array_util_1.getInterfacesArray(i.interfaces).includes(objectTypeRef))
-+              .forEach(i => i.properties.push(fieldMetadata));
-         }
-         else {
-             const isEmpty = (arr) => arr.length === 0;
+diff --git a/dist/schema-builder/factories/interface-definition.factory.js b/dist/schema-builder/factories/interface-definition.factory.js
+index a2dc0aa2498d8980fefc6778ca79bf52d1a6e78e..f1912922b78c71b3dbb68dca8769cee54152cf80 100644
+--- a/dist/schema-builder/factories/interface-definition.factory.js
++++ b/dist/schema-builder/factories/interface-definition.factory.js
+@@ -82,7 +82,15 @@ let InterfaceDefinitionFactory = class InterfaceDefinitionFactory {
+         };
+         return () => {
+             let fields = {};
+-            metadata.properties.forEach((field) => {
++            let properties = [];
++            if (metadata.interfaces) {
++                const implementedInterfaces = type_metadata_storage_1.TypeMetadataStorage.getInterfacesMetadata()
++                    .filter((it) => (0, get_interfaces_array_util_1.getInterfacesArray)(metadata.interfaces).includes(it.target))
++                    .map((it) => it.properties);
++                implementedInterfaces.forEach(fields => properties.push(...(fields || [])));
++            }
++            properties = properties.concat(metadata.properties);
++            properties.forEach((field) => {
+                 const type = this.outputTypeFactory.create(field.name, field.typeFn(), options, field.options);
+                 fields[field.schemaName] = {
+                     description: field.description,

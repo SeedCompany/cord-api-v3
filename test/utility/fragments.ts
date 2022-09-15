@@ -1,4 +1,3 @@
-import { gql } from 'apollo-server-core';
 import { Except, Merge, MergeExclusive } from 'type-fest';
 import { ID, Secured } from '../../src/common';
 import {
@@ -17,6 +16,7 @@ import { SecuredLanguage } from '../../src/components/language/dto';
 import { Product, ProductApproach } from '../../src/components/product/dto';
 import { Project } from '../../src/components/project';
 import { User } from '../../src/components/user';
+import { gql } from './gql-tag';
 import { Raw } from './raw.type';
 
 export const org = gql`

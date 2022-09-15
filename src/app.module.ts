@@ -7,6 +7,7 @@ import { AuthorizationModule } from './components/authorization/authorization.mo
 import { BudgetModule } from './components/budget/budget.module';
 import { CeremonyModule } from './components/ceremony/ceremony.module';
 import { ChangesetModule } from './components/changeset/changeset.module';
+import { CommentModule } from './components/comments/comment.module';
 import { EngagementModule } from './components/engagement/engagement.module';
 import { EthnoArtModule } from './components/ethno-art/ethno-art.module';
 import { FieldRegionModule } from './components/field-region/field-region.module';
@@ -51,6 +52,7 @@ assert(
     AuthorizationModule,
     BudgetModule,
     CeremonyModule,
+    CommentModule,
     EthnoArtModule,
     FileModule,
     FilmModule,

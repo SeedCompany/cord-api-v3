@@ -1,5 +1,4 @@
-import { gql } from 'apollo-server-core';
-import * as faker from 'faker';
+import { faker } from '@faker-js/faker';
 import {
   CreatePartner,
   Partner,
@@ -10,6 +9,7 @@ import { TestApp } from './create-app';
 import { createOrganization } from './create-organization';
 import { createPerson } from './create-person';
 import { fragments } from './fragments';
+import { gql } from './gql-tag';
 
 export async function readOnePartner(app: TestApp, id: string) {
   const result = await app.graphql.query(

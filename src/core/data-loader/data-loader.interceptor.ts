@@ -5,12 +5,20 @@ import {
   NestInterceptor,
   Type,
 } from '@nestjs/common';
-import { ContextIdFactory, ModuleRef } from '@nestjs/core';
+import { ContextId, ContextIdFactory, ModuleRef } from '@nestjs/core';
 import { GqlContextType, GqlExecutionContext } from '@nestjs/graphql';
 import { Observable } from 'rxjs';
-import { ServerException } from '../../common';
+import { ID, ServerException } from '../../common';
 import { NEST_LOADER_CONTEXT_KEY } from './constants';
 import { DataLoader, NestDataLoader } from './loader.decorator';
+
+export interface LoaderContextType {
+  contextId: ContextId;
+  loaders: Map<Type<NestDataLoader<any, any>>, Promise<DataLoader<any, any>>>;
+  getLoader: <T, Key = ID, CachedKey = Key>(
+    type: Type<NestDataLoader<T, Key, CachedKey>>
+  ) => Promise<DataLoader<T, Key, CachedKey>>;
+}
 
 @Injectable()
 export class DataLoaderInterceptor implements NestInterceptor {
@@ -21,43 +29,43 @@ export class DataLoaderInterceptor implements NestInterceptor {
       return next.handle();
     }
 
-    const ctx = GqlExecutionContext.create(context).getContext();
+    const gqlContext = GqlExecutionContext.create(context).getContext();
 
-    if (ctx[NEST_LOADER_CONTEXT_KEY] === undefined) {
-      ctx[NEST_LOADER_CONTEXT_KEY] = {
-        contextId: ContextIdFactory.create(),
-        loaders: new Map<
-          Type<NestDataLoader<any, any>>,
-          DataLoader<any, any>
-        >(),
-        getLoader: (
-          type: Type<NestDataLoader<any, any>>
-        ): Promise<NestDataLoader<any, any>> => {
-          if (!ctx[NEST_LOADER_CONTEXT_KEY].loaders.has(type)) {
-            ctx[NEST_LOADER_CONTEXT_KEY].loaders.set(
-              type,
-              (async () => {
-                try {
-                  return (
-                    await this.moduleRef.resolve<NestDataLoader<any, any>>(
-                      type,
-                      ctx[NEST_LOADER_CONTEXT_KEY].contextId,
-                      { strict: false }
-                    )
-                  ).generateDataLoader(ctx);
-                } catch (e) {
-                  throw new ServerException(
-                    `The loader ${type.name} is not provided`,
-                    e
-                  );
-                }
-              })()
+    if (gqlContext[NEST_LOADER_CONTEXT_KEY] !== undefined) {
+      return next.handle();
+    }
+
+    const loaderContext: LoaderContextType = {
+      contextId: ContextIdFactory.create(),
+      loaders: new Map(),
+      getLoader: (type) => {
+        if (loaderContext.loaders.has(type)) {
+          return loaderContext.loaders.get(type)!;
+        }
+        // set promise in map asap, so the promise doesn't get duplicated
+        const promise = (async () => {
+          try {
+            return (
+              await this.moduleRef.resolve<NestDataLoader<any, any>>(
+                type,
+                loaderContext.contextId,
+                { strict: false }
+              )
+            ).generateDataLoader(gqlContext);
+          } catch (e) {
+            throw new ServerException(
+              `The loader ${type.name} is not provided`,
+              e
             );
           }
-          return ctx[NEST_LOADER_CONTEXT_KEY].loaders.get(type);
-        },
-      };
-    }
+        })();
+        loaderContext.loaders.set(type, promise);
+        return promise;
+      },
+    };
+
+    gqlContext[NEST_LOADER_CONTEXT_KEY] = loaderContext;
+
     return next.handle();
   }
 }

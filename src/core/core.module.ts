@@ -17,7 +17,7 @@ import { EventsModule } from './events';
 import { ExceptionFilter } from './exception.filter';
 import { GraphqlModule } from './graphql';
 import { PostgresModule } from './postgres/postgres.module';
-import { ResourceResolver } from './resources';
+import { ResourceModule } from './resources/resource.module';
 import { ScalarProviders } from './scalars.resolver';
 import { TimeoutInterceptor } from './timeout.interceptor';
 import { TracingModule } from './tracing';
@@ -35,6 +35,7 @@ import { WaitResolver } from './wait.resolver';
     EventsModule,
     TracingModule,
     PostgresModule,
+    ResourceModule,
   ],
   providers: [
     AwsS3Factory,
@@ -43,7 +44,6 @@ import { WaitResolver } from './wait.resolver';
     { provide: APP_PIPE, useClass: ValidationPipe },
     { provide: APP_INTERCEPTOR, useClass: DataLoaderInterceptor },
     { provide: APP_INTERCEPTOR, useClass: TimeoutInterceptor },
-    ResourceResolver,
     WaitResolver,
     ...ScalarProviders,
   ],
@@ -51,10 +51,11 @@ import { WaitResolver } from './wait.resolver';
   exports: [
     AwsS3Factory,
     ConfigModule,
+    GraphqlModule,
     DatabaseModule,
     EmailModule,
     EventsModule,
-    ResourceResolver,
+    ResourceModule,
     TracingModule,
     PostgresModule,
   ],

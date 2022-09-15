@@ -1,8 +1,8 @@
 import { Provider } from '@nestjs/common';
 import { promises as fs } from 'fs';
-import { load } from 'js-yaml';
-import { ConfigService, LogLevel } from '..';
 import { identity, pickBy } from 'lodash';
+import { parse } from 'yaml';
+import { ConfigService, LogLevel } from '..';
 import { mapFromList } from '../../common';
 import { LevelMatcher } from './level-matcher';
 
@@ -18,7 +18,7 @@ export const LevelMatcherProvider: Provider<Promise<LevelMatcher>> = {
     }
     const defaults = ConfigService.logging;
     const yamlOverrides: Partial<typeof defaults> = rawYaml
-      ? pickBy(load(rawYaml, { filename: path }) as typeof defaults)
+      ? pickBy(parse(rawYaml) as typeof defaults)
       : {};
 
     const envDefault = process.env.LOG_LEVEL_DEFAULT as LogLevel | undefined;

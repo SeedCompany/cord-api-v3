@@ -3,4 +3,4 @@ export * from './step-changed-notification.handler';
 export * from './set-initial-mou-end.handler';
 export * from './set-step-changed-at.handler';
 export * from './apply-finalized-changeset-to-project.handler';
-export * from './after-finalized-changeset-to-project.handler';
+export * from './send-step-change-notification-on-change-request-approved';

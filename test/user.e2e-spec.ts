@@ -1,5 +1,4 @@
-import { gql } from 'apollo-server-core';
-import * as faker from 'faker';
+import { faker } from '@faker-js/faker';
 import { firstLettersOfWords, isValidId } from '../src/common';
 import { Role } from '../src/components/authorization';
 import { SecuredTimeZone } from '../src/components/timezone';
@@ -14,6 +13,7 @@ import {
   fragments,
   generateRegisterInput,
   generateRequireFieldsRegisterInput,
+  gql,
   login,
   loginAsAdmin,
   registerUser,
@@ -98,7 +98,7 @@ describe('User e2e', () => {
       realLastName: faker.name.lastName(),
       displayFirstName: faker.name.firstName(),
       displayLastName: faker.name.lastName(),
-      phone: faker.phone.phoneNumber(),
+      phone: faker.phone.number(),
       timezone: 'America/New_York',
       about: 'new about detail',
       status: UserStatus.Disabled,

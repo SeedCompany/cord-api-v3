@@ -1,4 +1,3 @@
-import { gql } from 'apollo-server-core';
 import { CalendarDate, ID } from '../src/common';
 import { Role } from '../src/components/authorization';
 import { EngagementStatus } from '../src/components/engagement';
@@ -16,6 +15,8 @@ import {
   createRegion,
   createSession,
   createTestApp,
+  errors,
+  gql,
   registerUser,
   runAsAdmin,
   TestApp,
@@ -421,8 +422,8 @@ describe('Engagement Changeset Aware e2e', () => {
     });
 
     // Create new engagement with changeset
-    await expect(
-      app.graphql.mutate(
+    await app.graphql
+      .mutate(
         gql`
           mutation createLanguageEngagement(
             $input: CreateLanguageEngagementInput!
@@ -445,8 +446,10 @@ describe('Engagement Changeset Aware e2e', () => {
           },
         }
       )
-    ).rejects.toThrowError(
-      'Engagement for this project and language already exists'
-    );
+      .expectError(
+        errors.duplicate({
+          message: 'Engagement for this project and language already exists',
+        })
+      );
   });
 });

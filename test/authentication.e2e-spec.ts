@@ -1,13 +1,13 @@
+import { faker } from '@faker-js/faker';
 import { EmailService } from '@seedcompany/nestjs-email';
-import { gql } from 'apollo-server-core';
 import { Connection } from 'cypher-query-builder';
-import * as faker from 'faker';
 import { isValidId } from '../src/common';
 import {
   createSession,
   createTestApp,
   fragments,
   generateRegisterInput,
+  gql,
   login,
   logout,
   registerUser,

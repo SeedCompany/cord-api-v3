@@ -1,5 +1,4 @@
-import { gql } from 'apollo-server-core';
-import * as faker from 'faker';
+import { faker } from '@faker-js/faker';
 import { times } from 'lodash';
 import { isValidId } from '../src/common';
 import { FieldZone } from '../src/components/field-zone';
@@ -8,6 +7,7 @@ import {
   createPerson,
   createSession,
   createTestApp,
+  gql,
   loginAsAdmin,
   TestApp,
 } from './utility';
@@ -44,7 +44,7 @@ describe('Field Zone e2e', () => {
     await createZone(app, { directorId: director.id, name });
     await expect(
       createZone(app, { directorId: director.id, name })
-    ).rejects.toThrowError();
+    ).rejects.toThrowGqlError();
   });
 
   it('read one field zone by id', async () => {
@@ -81,7 +81,7 @@ describe('Field Zone e2e', () => {
 
   it('update field zone', async () => {
     const fieldZone = await createZone(app, { directorId: director.id });
-    const newName = faker.company.companyName();
+    const newName = faker.company.name();
 
     const result = await app.graphql.mutate(
       gql`

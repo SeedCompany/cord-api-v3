@@ -30,6 +30,8 @@ export abstract class Resource {
   static readonly Props: string[] = keysOf<Resource>();
   static readonly SecuredProps: string[] = [];
 
+  readonly __typename?: string;
+
   @IdField()
   readonly id: ID;
 

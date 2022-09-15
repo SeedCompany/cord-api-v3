@@ -1,14 +1,11 @@
-import { gql } from 'apollo-server-core';
-import * as faker from 'faker';
+import { faker } from '@faker-js/faker';
 import { intersection, times } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   CalendarDate,
-  DuplicateException,
   generateId,
   ID,
   isIdLike,
-  NotFoundException,
   Order,
   PaginatedListType,
   Sensitivity,
@@ -43,8 +40,9 @@ import {
   createSession,
   createTestApp,
   createZone,
-  expectNotFound,
+  errors,
   fragments,
+  gql,
   Raw,
   registerUser,
   runAsAdmin,
@@ -133,11 +131,11 @@ describe('Project e2e', () => {
     await createProject(app, { name, fieldRegionId: fieldRegion.id });
     await expect(
       createProject(app, { name, fieldRegionId: fieldRegion.id })
-    ).rejects.toThrowError(
-      new DuplicateException(
-        `project.name`,
-        `Project with this name already exists`
-      )
+    ).rejects.toThrowGqlError(
+      errors.duplicate({
+        message: 'Project with this name already exists',
+        field: 'project.name',
+      })
     );
   });
 
@@ -205,8 +203,11 @@ describe('Project e2e', () => {
         type: ProjectType.Translation,
         fieldRegionId: 'invalid-location-id' as ID,
       })
-    ).rejects.toThrowError(
-      new NotFoundException('Field region not found', 'project.fieldRegionId')
+    ).rejects.toThrowGqlError(
+      errors.notFound({
+        message: 'Field region not found',
+        field: 'project.fieldRegionId',
+      })
     );
   });
 
@@ -321,8 +322,8 @@ describe('Project e2e', () => {
       return deleteProject(app)(project.id);
     });
 
-    await expectNotFound(
-      app.graphql.query(
+    await app.graphql
+      .query(
         gql`
           query project($id: ID!) {
             project(id: $id) {
@@ -335,7 +336,7 @@ describe('Project e2e', () => {
           id: project.id,
         }
       )
-    );
+      .expectError(errors.notFound());
   });
 
   it('List of projects sorted by name to be alphabetical', async () => {
@@ -740,11 +741,11 @@ describe('Project e2e', () => {
     });
     await expect(
       createProject(app, { name: projName, fieldRegionId: fieldRegion.id })
-    ).rejects.toThrowError(
-      new DuplicateException(
-        `project.name`,
-        `Project with this name already exists`
-      )
+    ).rejects.toThrowGqlError(
+      errors.duplicate({
+        message: 'Project with this name already exists',
+        field: 'project.name',
+      })
     );
   });
 

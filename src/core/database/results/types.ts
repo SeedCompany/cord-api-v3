@@ -1,6 +1,5 @@
 import type { DateTime } from 'luxon';
-import { Resource } from '../../../common';
-import type { UnsecuredDto } from '../../../common';
+import type { Many, Resource, RichTextDocument, UnsecuredDto } from '~/common';
 import type { BaseNode } from './parse-base-node';
 
 /**
@@ -30,10 +29,6 @@ export type NativeDbProps<Dto extends Record<string, any>> = {
   [Key in keyof Dto]: Dto[Key] extends NativeDbValue ? Dto[Key] : unknown;
 };
 
-export type NativeDbValue =
-  | boolean
-  | string
-  | number
-  | DateTime
-  | null
-  | readonly string[];
+export type NativeDbValue = Many<
+  boolean | string | number | DateTime | RichTextDocument | null
+>;

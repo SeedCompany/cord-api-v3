@@ -3,6 +3,7 @@ import { Transform, Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { uniq } from 'lodash';
 import { CalendarDate, DateField, ID, IdField } from '../../../common';
+import { ChangesetIdField } from '../../changeset';
 import { CreateDefinedFileVersionInput } from '../../file/dto';
 import { PartnerType } from '../../partner/dto';
 import { FinancialReportingType } from './financial-reporting-type';
@@ -52,10 +53,7 @@ export class CreatePartnership {
 
 @InputType()
 export abstract class CreatePartnershipInput {
-  @IdField({
-    description: 'The change object to associate these engagement changes with',
-    nullable: true,
-  })
+  @ChangesetIdField()
   readonly changeset?: ID;
 
   @Field()

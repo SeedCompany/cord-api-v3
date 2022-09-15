@@ -1,5 +1,6 @@
+import { ApolloDriverConfig } from '@nestjs/apollo';
 import { Injectable } from '@nestjs/common';
-import { GqlModuleOptions, GqlOptionsFactory } from '@nestjs/graphql';
+import { GqlOptionsFactory } from '@nestjs/graphql';
 import {
   ApolloServerPluginLandingPageLocalDefault,
   ContextFunction,
@@ -15,10 +16,11 @@ import {
   GraphQLError,
   GraphQLFormattedError,
   GraphQLScalarType,
+  OperationDefinitionNode,
 } from 'graphql';
 import { intersection } from 'lodash';
 import { sep } from 'path';
-import { GqlContextType, mapFromList } from '../../common';
+import { GqlContextType, mapFromList, ServerException } from '../../common';
 import { getRegisteredScalars } from '../../common/scalars';
 import { ConfigService } from '../config/config.service';
 import { VersionService } from '../config/version.service';
@@ -37,7 +39,7 @@ export class GraphQLConfig implements GqlOptionsFactory {
     private readonly versionService: VersionService
   ) {}
 
-  async createGqlOptions(): Promise<GqlModuleOptions> {
+  async createGqlOptions(): Promise<ApolloDriverConfig> {
     // Apply git hash to Apollo Studio.
     // They only look for env, so applying that way.
     const version = await this.versionService.version;
@@ -78,6 +80,7 @@ export class GraphQLConfig implements GqlOptionsFactory {
   }) => ({
     request: req,
     response: res,
+    operation: createFakeStubOperation(),
   });
 
   formatError = (error: GraphQLError): GraphQLFormattedError => {
@@ -105,12 +108,14 @@ export class GraphQLConfig implements GqlOptionsFactory {
             !frame.includes('(<anonymous>)')
         )
         .map((frame: string) =>
-          frame
-            // Convert absolute path to path relative to src dir
-            .replace(matchSrcPathInTrace, (_, group1) => group1)
-            // Convert windows paths to unix for consistency
-            .replace(/\\\\/, '/')
-            .trim()
+          this.config.jest
+            ? frame // Keep full FS path, so jest can link to it
+            : frame
+                // Convert absolute path to path relative to src dir
+                .replace(matchSrcPathInTrace, (_, group1) => group1)
+                // Convert windows paths to unix for consistency
+                .replace(/\\\\/, '/')
+                .trim()
         );
     }
 
@@ -151,3 +156,12 @@ export class GraphQLConfig implements GqlOptionsFactory {
     return [code, 'Server'];
   }
 }
+
+export const createFakeStubOperation = () => {
+  const operation = {} as unknown as OperationDefinitionNode;
+  return new Proxy(operation, {
+    get() {
+      throw new ServerException('GQL operation has not been determined yet');
+    },
+  });
+};

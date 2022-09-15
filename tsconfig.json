@@ -5,9 +5,9 @@
     "moduleResolution": "node",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "jsx": "react",
-    "lib": ["ES2020"],
-    "target": "es2019",
+    "jsx": "react-jsx",
+    "lib": ["es2022"],
+    "target": "es2021",
     "sourceMap": true,
     "outDir": "./dist",
     "incremental": true,
@@ -19,9 +19,17 @@
     // Disabling for now, but it would be good to re-enable later
     "useUnknownInCatchVariables": false,
     "skipLibCheck": true,
-    "noImplicitAny": true,
-    "noImplicitThis": true,
-    "noImplicitReturns": true
+    "baseUrl": ".",
+    "paths": {
+      "~/common": ["./src/common"],
+      "~/common/*": ["./src/common/*"],
+      "~/core": ["./src/core"],
+      "~/core/*": ["./src/core/*"],
+    },
+    "plugins": [
+      { "transform": "typescript-transform-paths" },
+      { "transform": "ts-transformer-keys/transformer" },
+    ],
   },
   "include": ["src", "test"],
   "exclude": ["node_modules", "dist"]

@@ -1,4 +1,3 @@
-import { gql } from 'apollo-server-core';
 import { times } from 'lodash';
 import { Merge } from 'type-fest';
 import { Secured } from '../src/common';
@@ -23,8 +22,9 @@ import {
   createSession,
   createStory,
   createTestApp,
-  expectNotFound,
+  errors,
   fragments,
+  gql,
   registerUser,
   TestApp,
 } from './utility';
@@ -639,8 +639,8 @@ describe('Product e2e', () => {
 
     const actual: boolean | undefined = result.deleteProduct;
     expect(actual).toBeTruthy();
-    await expectNotFound(
-      app.graphql.query(
+    await app.graphql
+      .query(
         gql`
           query product($id: ID!) {
             product(id: $id) {
@@ -653,7 +653,7 @@ describe('Product e2e', () => {
           id: product.id,
         }
       )
-    );
+      .expectError(errors.notFound());
   });
 
   it('List view of products', async () => {

@@ -1,5 +1,4 @@
-import { gql } from 'apollo-server-core';
-import * as faker from 'faker';
+import { faker } from '@faker-js/faker';
 import { times } from 'lodash';
 import { isValidId } from '../src/common';
 import { Role } from '../src/components/authorization';
@@ -10,6 +9,7 @@ import {
   createSong,
   createTestApp,
   fragments,
+  gql,
   registerUser,
   TestApp,
 } from './utility';
@@ -29,7 +29,7 @@ describe('Song e2e', () => {
 
   // Create SONG
   it('Create Song', async () => {
-    const name = faker.company.companyName();
+    const name = faker.company.name();
     const scriptureReferences = ScriptureRange.randomList();
     const song = await createSong(app, { name, scriptureReferences });
     expect(song.scriptureReferences.value).toBeDefined();
@@ -40,7 +40,7 @@ describe('Song e2e', () => {
 
   // READ SONG
   it('create & read song by id', async () => {
-    const name = faker.company.companyName();
+    const name = faker.company.name();
     const scriptureReferences = ScriptureRange.randomList();
     const song = await createSong(app, { name, scriptureReferences });
 
@@ -68,7 +68,7 @@ describe('Song e2e', () => {
   // UPDATE SONG
   it('update song', async () => {
     const st = await createSong(app);
-    const newName = faker.company.companyName();
+    const newName = faker.company.name();
     const scriptureReferences = ScriptureRange.randomList();
     const result = await app.graphql.mutate(
       gql`

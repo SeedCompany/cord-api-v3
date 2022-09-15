@@ -1,168 +1,137 @@
-import { INestApplicationContext } from '@nestjs/common';
-import { GqlModuleOptions, GraphQLModule } from '@nestjs/graphql';
-import { GRAPHQL_MODULE_OPTIONS } from '@nestjs/graphql/dist/graphql.constants';
-import { ApolloServerBase } from 'apollo-server-core';
-import { GraphQLResponse } from 'apollo-server-types';
-import { DocumentNode, GraphQLFormattedError } from 'graphql';
-import { GqlContextType } from '../../src/common';
-import { TracingService } from '../../src/core';
+import { INestApplication } from '@nestjs/common';
+import got from 'got';
+import {
+  DocumentNode,
+  FormattedExecutionResult,
+  GraphQLFormattedError,
+  print,
+} from 'graphql';
+// eslint-disable-next-line import/no-duplicates
+import { ErrorExpectations } from './expect-gql-error';
+// eslint-disable-next-line import/no-duplicates -- ensures runtime execution
+import './expect-gql-error';
 
 export interface GraphQLTestClient {
-  query: (
-    query: DocumentNode,
-    variables?: { [name: string]: any }
-  ) => Promise<Record<string, any>>;
-  mutate: (
-    mutation: DocumentNode,
-    variables?: { [name: string]: any }
-  ) => Promise<Record<string, any>>;
+  query: <TData = AnyObject, TVars = AnyObject>(
+    query: DocumentNode | string,
+    variables?: TVars
+  ) => GqlResult<TData>;
+  mutate: <TData = AnyObject, TVars = AnyObject>(
+    query: DocumentNode | string,
+    variables?: TVars
+  ) => GqlResult<TData>;
   authToken: string;
 }
 
 export const createGraphqlClient = async (
-  app: INestApplicationContext
+  app: INestApplication
 ): Promise<GraphQLTestClient> => {
-  const server = await getServer(app);
-  const options: GqlModuleOptions & { context: GqlContextType } = app.get(
-    GRAPHQL_MODULE_OPTIONS
-  );
+  await app.listen(0);
+  const url = await app.getUrl();
 
-  const resetRequest = () => {
-    // Session data changes between requests
-    // Next request shouldn't rely on previously calculated data.
-    // It doesn't when using actual requests.
-    if (options.context?.session) {
-      delete options.context.session;
-    }
+  let authToken = '';
+
+  const execute = <TData = AnyObject, TVars = AnyObject>(
+    query: DocumentNode | string,
+    variables?: TVars
+  ) => {
+    const result = got
+      .post({
+        url: `${url}/graphql`,
+        throwHttpErrors: false,
+        headers: {
+          ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+        },
+        json: {
+          query: typeof query === 'string' ? query : print(query),
+          variables,
+        },
+      })
+      .json<ExecutionResult<TData>>()
+      .then((result) => {
+        validateResult(result);
+        return result.data;
+      });
+
+    return new GqlResult(result);
   };
 
-  // ensure variables are plain JSON as they would be over the wire
-  const toPlain = (obj: unknown) =>
-    obj ? JSON.parse(JSON.stringify(obj)) : obj;
-
-  const tracing = app.get(TracingService);
   return {
-    query: async (q, variables) => {
-      return await tracing.capture('query', async () => {
-        try {
-          const result = await server.executeOperation({
-            query: q,
-            variables: toPlain(variables),
-          });
-          validateResult(result);
-          return result.data;
-        } catch (e) {
-          throw adjustError(e);
-        } finally {
-          resetRequest();
-        }
-      });
-    },
-    mutate: async (mutation, variables) => {
-      return await tracing.capture('mutation', async () => {
-        try {
-          const result = await server.executeOperation({
-            query: mutation,
-            variables: toPlain(variables),
-          });
-          validateResult(result);
-          return result.data;
-        } catch (e) {
-          throw adjustError(e);
-        } finally {
-          resetRequest();
-        }
-      });
-    },
+    query: execute,
+    mutate: execute,
     get authToken() {
-      return (
-        options.context.request?.headers?.authorization?.replace(
-          'Bearer ',
-          ''
-        ) || ''
-      );
+      return authToken;
     },
     set authToken(token: string) {
-      // @ts-expect-error yes I know this is a fake request
-      options.context.request = {
-        headers: {
-          ...(token && {
-            authorization: `Bearer ${token}`,
-          }),
-        },
-      };
+      authToken = token;
     },
   };
 };
 
-function validateResult(res: GraphQLResponse): asserts res is Omit<
-  GraphQLResponse,
-  'data' | 'errors'
-> & {
-  data: Record<string, any>;
+class GqlResult<TData> implements PromiseLike<TData> {
+  constructor(private readonly result: Promise<TData>) {}
+
+  then: PromiseLike<TData>['then'] = (onFulfilled, onRejected) => {
+    return this.result.then(onFulfilled, onRejected);
+  };
+
+  expectError(expectations: ErrorExpectations = {}): Promise<void> {
+    return expect(this).rejects.toThrowGqlError(expectations);
+  }
+}
+
+function validateResult<TData>(
+  res: ExecutionResult<TData>
+): asserts res is Omit<ExecutionResult<TData>, 'data' | 'errors'> & {
+  data: TData;
 } {
   if (res.errors && res.errors.length > 0) {
-    throw reportError(res.errors[0]);
+    throw GqlError.from(res.errors[0]);
   }
   expect(res.data).toBeTruthy();
 }
 
-const adjustError = (e: Error) => {
-  if (e.stack) {
-    const thisStack = new Error('').stack?.split('\n').slice(2);
-    if (thisStack) {
-      e.stack += '\n' + thisStack.join('\n');
+/**
+ * An error class consuming the JSON formatted GraphQL error.
+ */
+export class GqlError extends Error {
+  constructor(readonly raw: RawGqlError) {
+    super();
+  }
+
+  static from(raw: RawGqlError) {
+    const err = new GqlError(raw);
+    err.name = raw.extensions.code;
+    // must be after err constructor finishes to capture correctly.
+    let frames = err.stack!.split('\n').slice(5);
+    if (raw.extensions.exception) {
+      frames = [...raw.extensions.exception.stacktrace, ...frames];
     }
+    err.message = raw.message;
+    err.stack = `${err.name}: ${err.message}\n` + frames.join('\n');
+    return err;
   }
-  return e;
+}
+
+export type ExecutionResult<TData> = Omit<
+  FormattedExecutionResult<TData>,
+  'errors'
+> & {
+  errors?: readonly RawGqlError[];
 };
 
-const reportError = (
-  e: GraphQLFormattedError & { originalError?: Error & { response?: any } }
-) => {
-  if (e.originalError instanceof Error) {
-    const e2 = e.originalError;
-    if (
-      e2.response?.message &&
-      e2.stack?.startsWith('Error: [object Object]\n')
-    ) {
-      e2.stack = e2.stack.replace('[object Object]', e2.response.message);
-      e2.message = e2.response.message;
-    }
-    return e2;
-  }
-
-  let msg =
-    typeof e.message === 'object'
-      ? JSON.stringify(e.message, undefined, 2)
-      : e.message;
-  if (e.path) {
-    msg += `\nPath: ${e.path.join('.')}`;
-  }
-  const location = (e.locations || [])
-    .map((l) => `  - line ${l.line}, column ${l.column}`)
-    .join('\n');
-  if (location) {
-    msg += `\nLocations:\n${location}`;
-  }
-
-  const err = new Error(msg);
-  err.name = (e as any).name || 'Error';
-
-  return err;
+export type RawGqlError = Omit<GraphQLFormattedError, 'extensions'> & {
+  extensions: {
+    code: string;
+    codes: string[];
+    status: number;
+    exception?: {
+      message: string;
+      stacktrace: string[];
+    };
+  } & AnyObject;
 };
 
-export const getGraphQLOptions = (): GqlModuleOptions => {
-  const context: GqlContextType = {};
-  return {
-    path: '/graphql',
-    fieldResolverEnhancers: [],
-    autoSchemaFile: 'schema.graphql',
-    context,
-  };
-};
-
-const getServer = async (app: INestApplicationContext) => {
-  const module = app.get(GraphQLModule);
-  return (module as any).apolloServer as ApolloServerBase;
-};
+interface AnyObject {
+  [key: string]: any;
+}

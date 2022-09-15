@@ -1,5 +1,4 @@
-import { gql } from 'apollo-server-core';
-import * as faker from 'faker';
+import { faker } from '@faker-js/faker';
 import { times } from 'lodash';
 import { isValidId } from '../src/common';
 import { Role } from '../src/components/authorization';
@@ -10,6 +9,7 @@ import {
   createStory,
   createTestApp,
   fragments,
+  gql,
   registerUser,
   TestApp,
 } from './utility';
@@ -28,7 +28,7 @@ describe('Story e2e', () => {
   });
 
   it('Create Story', async () => {
-    const name = faker.company.companyName();
+    const name = faker.company.name();
     const scriptureReferences = ScriptureRange.randomList();
     const story = await createStory(app, { name, scriptureReferences });
     expect(story.scriptureReferences.value).toBeDefined();
@@ -39,7 +39,7 @@ describe('Story e2e', () => {
 
   // READ STORY
   it('create & read story by id', async () => {
-    const name = faker.company.companyName();
+    const name = faker.company.name();
     const scriptureReferences = ScriptureRange.randomList();
     const story = await createStory(app, { name, scriptureReferences });
 
@@ -67,7 +67,7 @@ describe('Story e2e', () => {
   // UPDATE STORY
   it('update story', async () => {
     const st = await createStory(app);
-    const newName = faker.company.companyName();
+    const newName = faker.company.name();
     const scriptureReferences = ScriptureRange.randomList();
     const result = await app.graphql.mutate(
       gql`

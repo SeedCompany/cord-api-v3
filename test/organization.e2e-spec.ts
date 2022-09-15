@@ -1,14 +1,15 @@
-import { gql } from 'apollo-server-core';
-import * as faker from 'faker';
+import { faker } from '@faker-js/faker';
 import { orderBy, times } from 'lodash';
-import { generateId, InputException, isValidId } from '../src/common';
+import { generateId, isValidId } from '../src/common';
 import { Role } from '../src/components/authorization';
 import { Organization } from '../src/components/organization';
 import {
   createOrganization,
   createSession,
   createTestApp,
+  errors,
   fragments,
+  gql,
   registerUser,
   TestApp,
 } from './utility';
@@ -29,9 +30,9 @@ describe('Organization e2e', () => {
   });
 
   it.skip('should have unique name', async () => {
-    const name = faker.company.companyName();
+    const name = faker.company.name();
     await createOrganization(app, { name });
-    await expect(createOrganization(app, { name })).rejects.toThrowError();
+    await expect(createOrganization(app, { name })).rejects.toThrowGqlError();
   });
 
   // READ ORG
@@ -78,17 +79,19 @@ describe('Organization e2e', () => {
   });
 
   it.skip('create organization with mandatory field blank, mismatch or removed', async () => {
-    await expect(createOrganization(app, { name: '' })).rejects.toThrowError();
+    await expect(
+      createOrganization(app, { name: '' })
+    ).rejects.toThrowGqlError();
     await expect(
       createOrganization(app, { name: undefined })
-    ).rejects.toThrowError();
+    ).rejects.toThrowGqlError();
   });
 
   // UPDATE ORG
   it('update organization', async () => {
     const org = await createOrganization(app);
 
-    const newName = faker.company.companyName();
+    const newName = faker.company.name();
 
     const result = await app.graphql.mutate(
       gql`
@@ -118,10 +121,10 @@ describe('Organization e2e', () => {
   });
 
   it('update organization with blank, mismatch or invalid id', async () => {
-    const newName = faker.company.companyName();
+    const newName = faker.company.name();
 
-    await expect(
-      app.graphql.mutate(
+    await app.graphql
+      .mutate(
         gql`
           mutation updateOrganization($input: UpdateOrganizationInput!) {
             updateOrganization(input: $input) {
@@ -141,10 +144,10 @@ describe('Organization e2e', () => {
           },
         }
       )
-    ).rejects.toThrowError(new InputException('Input validation failed'));
+      .expectError(errors.invalidId('organization.id'));
 
-    await expect(
-      app.graphql.mutate(
+    await app.graphql
+      .mutate(
         gql`
           mutation updateOrganization($input: UpdateOrganizationInput!) {
             updateOrganization(input: $input) {
@@ -164,10 +167,10 @@ describe('Organization e2e', () => {
           },
         }
       )
-    ).rejects.toThrowError();
+      .expectError();
 
-    await expect(
-      app.graphql.mutate(
+    await app.graphql
+      .mutate(
         gql`
           mutation updateOrganization($input: UpdateOrganizationInput!) {
             updateOrganization(input: $input) {
@@ -187,16 +190,16 @@ describe('Organization e2e', () => {
           },
         }
       )
-    ).rejects.toThrowError(new InputException('Input validation failed'));
+      .expectError(errors.invalidId('organization.id'));
   });
 
   it.skip('update organization with mismatch name', async () => {
     const org = await createOrganization(app);
 
-    const newName = faker.company.companyName();
+    const newName = faker.company.name();
 
-    await expect(
-      app.graphql.mutate(
+    await app.graphql
+      .mutate(
         gql`
           mutation updateOrganization($input: UpdateOrganizationInput!) {
             updateOrganization(input: $input) {
@@ -216,7 +219,7 @@ describe('Organization e2e', () => {
           },
         }
       )
-    ).rejects.toThrowError();
+      .expectError();
   });
 
   // DELETE ORG
@@ -243,63 +246,26 @@ describe('Organization e2e', () => {
   it('delete organization with blank, mismatch, invalid id', async () => {
     const org = await createOrganization(app);
 
-    await expect(
-      app.graphql.mutate(
-        gql`
-          mutation deleteOrganization($id: ID!) {
-            deleteOrganization(id: $id) {
-              __typename
-            }
-          }
-        `,
-        {
-          id: '',
+    const DeleteOrganization = gql`
+      mutation deleteOrganization($id: ID!) {
+        deleteOrganization(id: $id) {
+          __typename
         }
-      )
-    ).rejects.toThrow('Input validation failed');
+      }
+    `;
+    await app.graphql
+      .mutate(DeleteOrganization, { id: '' })
+      .expectError(errors.invalidId());
 
-    await expect(
-      app.graphql.mutate(
-        gql`
-          mutation deleteOrganization($id: ID!) {
-            deleteOrganization(id: $id) {
-              __typename
-            }
-          }
-        `,
-        {}
-      )
-    ).rejects.toThrowError();
+    await app.graphql.mutate(DeleteOrganization).expectError(errors.schema());
 
-    await expect(
-      app.graphql.mutate(
-        gql`
-          mutation deleteOrganization($id: ID!) {
-            deleteOrganization(id: $id) {
-              __typename
-            }
-          }
-        `,
-        {
-          id5: org.id,
-        }
-      )
-    ).rejects.toThrowError();
+    await app.graphql
+      .mutate(DeleteOrganization, { id5: org.id })
+      .expectError(errors.schema());
 
-    await expect(
-      app.graphql.mutate(
-        gql`
-          mutation deleteOrganization($id: ID!) {
-            deleteOrganization(id: $id) {
-              __typename
-            }
-          }
-        `,
-        {
-          id: '!@#$%',
-        }
-      )
-    ).rejects.toThrow('Input validation failed');
+    await app.graphql
+      .mutate(DeleteOrganization, { id: '!@#$%' })
+      .expectError(errors.invalidId());
   });
 
   it('shows canEdit true when it can be edited', async () => {
@@ -323,6 +289,20 @@ describe('Organization e2e', () => {
     expect(actual.name.canEdit).toBe(true);
   });
 
+  const Organizations = gql`
+    query organizations($input: OrganizationListInput) {
+      organizations(input: $input) {
+        items {
+          id
+          name {
+            value
+          }
+        }
+        hasMore
+        total
+      }
+    }
+  `;
   it.skip('List of organizations sorted by name to be alphabetical, ignoring case sensitivity. Order: ASCENDING', async () => {
     await registerUser(app, {
       roles: [Role.FieldOperationsDirector],
@@ -341,30 +321,12 @@ describe('Organization e2e', () => {
     await createOrganization(app, {
       name: 'big Organization also' + faker.datatype.uuid(),
     });
-    const sortBy = 'name';
-    const ascOrder = 'ASC';
-    const { organizations } = await app.graphql.query(
-      gql`
-        query organizations($input: OrganizationListInput!) {
-          organizations(input: $input) {
-            hasMore
-            total
-            items {
-              id
-              name {
-                value
-              }
-            }
-          }
-        }
-      `,
-      {
-        input: {
-          sort: sortBy,
-          order: ascOrder,
-        },
-      }
-    );
+    const { organizations } = await app.graphql.query(Organizations, {
+      input: {
+        sort: 'name',
+        order: 'ASC',
+      },
+    });
     const items = organizations.items;
     const sorted = orderBy(items, (org) => org.name.value.toLowerCase(), [
       'asc',
@@ -390,30 +352,12 @@ describe('Organization e2e', () => {
     await createOrganization(app, {
       name: 'big Organization also' + faker.datatype.uuid(),
     });
-    const sortBy = 'name';
-    const descOrder = 'DESC';
-    const { organizations } = await app.graphql.query(
-      gql`
-        query organizations($input: OrganizationListInput!) {
-          organizations(input: $input) {
-            hasMore
-            total
-            items {
-              id
-              name {
-                value
-              }
-            }
-          }
-        }
-      `,
-      {
-        input: {
-          sort: sortBy,
-          order: descOrder,
-        },
-      }
-    );
+    const { organizations } = await app.graphql.query(Organizations, {
+      input: {
+        sort: 'name',
+        order: 'DESC',
+      },
+    });
     const items = organizations.items;
     const sorted = orderBy(items, (org) => org.name.value.toLowerCase(), [
       'desc',
@@ -431,145 +375,39 @@ describe('Organization e2e', () => {
       )
     );
 
-    await expect(
-      app.graphql.query(
-        gql`
-          query organizations($input: OrganizationListInput) {
-            organizations(input: $input) {
-              items {
-                ...org
-              }
-              hasMore
-              total
-            }
-          }
-          ${fragments.org}
-        `,
-        {
-          input: {
-            count1: 10,
-            page: 1,
-            sort: 'name',
-            order: 'ASC',
-            filter: {
-              name: '',
-            },
-          },
-        }
-      )
-    ).rejects.toThrowError();
+    await app.graphql
+      .query(Organizations, {
+        input: { count1: 10 },
+      })
+      .expectError();
 
-    await expect(
-      app.graphql.query(
-        gql`
-          query organizations($input: OrganizationListInput) {
-            organizations(input: $input) {
-              items {
-                ...org
-              }
-              hasMore
-              total
-            }
-          }
-          ${fragments.org}
-        `,
-        {
-          input: {
-            count: 10,
-            page1: 1,
-            sort: 'name',
-            order: 'ASC',
-            filter: {
-              name: '',
-            },
-          },
-        }
-      )
-    ).rejects.toThrowError();
+    await app.graphql
+      .query(Organizations, {
+        input: { page1: 1 },
+      })
+      .expectError();
 
-    await expect(
-      app.graphql.query(
-        gql`
-          query organizations($input: OrganizationListInput) {
-            organizations(input: $input) {
-              items {
-                ...org
-              }
-              hasMore
-              total
-            }
-          }
-          ${fragments.org}
-        `,
-        {
-          input: {
-            count: 10,
-            page: 1,
-            sort1: 'name',
-            order: 'ASC',
-            filter: {
-              name: '',
-            },
-          },
-        }
-      )
-    ).rejects.toThrowError();
+    await app.graphql
+      .query(Organizations, {
+        input: { sort1: 'name' },
+      })
+      .expectError();
 
-    await expect(
-      app.graphql.query(
-        gql`
-          query organizations($input: OrganizationListInput) {
-            organizations(input: $input) {
-              items {
-                ...org
-              }
-              hasMore
-              total
-            }
-          }
-          ${fragments.org}
-        `,
-        {
-          input: {
-            count: 10,
-            page: 1,
-            sort: 'name',
-            order1: 'ASC',
-            filter: {
-              name: '',
-            },
-          },
-        }
-      )
-    ).rejects.toThrowError();
+    await app.graphql
+      .query(Organizations, {
+        input: { order1: 'ASC' },
+      })
+      .expectError();
 
-    await expect(
-      app.graphql.query(
-        gql`
-          query organizations($input: OrganizationListInput) {
-            organizations(input: $input) {
-              items {
-                ...org
-              }
-              hasMore
-              total
-            }
-          }
-          ${fragments.org}
-        `,
-        {
-          input: {
-            count: 10,
-            page: 1,
-            sort: 'name',
-            order: 'ASC',
-            filter1: {
-              name: '',
-            },
+    await app.graphql
+      .query(Organizations, {
+        input: {
+          filter1: {
+            name: '',
           },
-        }
-      )
-    ).rejects.toThrowError();
+        },
+      })
+      .expectError();
   });
 
   it.skip('list view of organizations with invalid parameters', async () => {
@@ -582,144 +420,38 @@ describe('Organization e2e', () => {
       )
     );
 
-    await expect(
-      app.graphql.query(
-        gql`
-          query organizations($input: OrganizationListInput) {
-            organizations(input: $input) {
-              items {
-                ...org
-              }
-              hasMore
-              total
-            }
-          }
-          ${fragments.org}
-        `,
-        {
-          input: {
-            count: 0,
-            page: 1,
-            sort: 'name',
-            order: 'ASC',
-            filter: {
-              name: '',
-            },
-          },
-        }
-      )
-    ).rejects.toThrowError();
+    await app.graphql
+      .query(Organizations, {
+        input: { count: 0 },
+      })
+      .expectError();
 
-    await expect(
-      app.graphql.query(
-        gql`
-          query organizations($input: OrganizationListInput) {
-            organizations(input: $input) {
-              items {
-                ...org
-              }
-              hasMore
-              total
-            }
-          }
-          ${fragments.org}
-        `,
-        {
-          input: {
-            count: 10,
-            page: 0,
-            sort: 'name',
-            order: 'ASC',
-            filter: {
-              name: '',
-            },
-          },
-        }
-      )
-    ).rejects.toThrowError();
+    await app.graphql
+      .query(Organizations, {
+        input: { page: 0 },
+      })
+      .expectError();
 
-    await expect(
-      app.graphql.query(
-        gql`
-          query organizations($input: OrganizationListInput) {
-            organizations(input: $input) {
-              items {
-                ...org
-              }
-              hasMore
-              total
-            }
-          }
-          ${fragments.org}
-        `,
-        {
-          input: {
-            count: 10,
-            page: 1,
-            sort: 'abcd',
-            order: 'ASC',
-            filter: {
-              name: '',
-            },
-          },
-        }
-      )
-    ).rejects.toThrowError();
+    await app.graphql
+      .query(Organizations, {
+        input: { sort: 'abcd' },
+      })
+      .expectError();
 
-    await expect(
-      app.graphql.query(
-        gql`
-          query organizations($input: OrganizationListInput) {
-            organizations(input: $input) {
-              items {
-                ...org
-              }
-              hasMore
-              total
-            }
-          }
-          ${fragments.org}
-        `,
-        {
-          input: {
-            count: 10,
-            page: 1,
-            sort: 'name',
-            order: 'ASCENDING',
-            filter: {
-              name: '',
-            },
-          },
-        }
-      )
-    ).rejects.toThrowError();
+    await app.graphql
+      .query(Organizations, {
+        input: { order: 'ASCENDING' },
+      })
+      .expectError();
 
-    await expect(
-      app.graphql.query(
-        gql`
-          query organizations($input: OrganizationListInput) {
-            organizations(input: $input) {
-              items {
-                ...org
-              }
-              hasMore
-              total
-            }
-          }
-          ${fragments.org}
-        `,
-        {
-          input: {
-            count: 10,
-            page: 1,
-            sort: 'name',
-            order: 'ASC',
-            filter1: {
-              name: '',
-            },
+    await app.graphql
+      .query(Organizations, {
+        input: {
+          filter1: {
+            name: '',
           },
-        }
-      )
-    ).rejects.toThrowError();
+        },
+      })
+      .expectError();
   });
 });

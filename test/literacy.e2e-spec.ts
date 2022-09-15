@@ -1,5 +1,4 @@
-import { gql } from 'apollo-server-core';
-import * as faker from 'faker';
+import { faker } from '@faker-js/faker';
 import { times } from 'lodash';
 import { isValidId } from '../src/common';
 import { Role } from '../src/components/authorization/dto/role.dto';
@@ -10,6 +9,7 @@ import {
   createSession,
   createTestApp,
   fragments,
+  gql,
   registerUser,
   TestApp,
 } from './utility';
@@ -29,7 +29,7 @@ describe('LiteracyMaterial e2e', () => {
 
   // Create LiteracyMaterial
   it('create literacyMaterial', async () => {
-    const name = faker.company.companyName();
+    const name = faker.company.name();
     const scriptureReferences = ScriptureRange.randomList();
     const lm = await createLiteracyMaterial(app, { name, scriptureReferences });
     expect(lm.scriptureReferences.value).toBeDefined();
@@ -40,7 +40,7 @@ describe('LiteracyMaterial e2e', () => {
 
   // READ LiteracyMaterial
   it('create & read literacyMaterial by id', async () => {
-    const name = faker.company.companyName();
+    const name = faker.company.name();
     const scriptureReferences = ScriptureRange.randomList();
     const lm = await createLiteracyMaterial(app, { name, scriptureReferences });
     const { literacyMaterial: actual } = await app.graphql.query(
@@ -67,7 +67,7 @@ describe('LiteracyMaterial e2e', () => {
   // UPDATE LiteracyMaterial
   it('update literacyMaterial', async () => {
     const lm = await createLiteracyMaterial(app);
-    const newName = faker.company.companyName();
+    const newName = faker.company.name();
     const scriptureReferences = ScriptureRange.randomList();
     const result = await app.graphql.mutate(
       gql`

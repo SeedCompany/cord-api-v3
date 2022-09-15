@@ -1,4 +1,3 @@
-import { gql } from 'apollo-server-core';
 import { CalendarDate, ID, isValidId } from '../../src/common';
 import { PartnerType } from '../../src/components/partner';
 import {
@@ -11,6 +10,7 @@ import { TestApp } from './create-app';
 import { createPartner } from './create-partner';
 import { createProject } from './create-project';
 import { fragments } from './fragments';
+import { gql } from './gql-tag';
 
 export async function listPartnerships(app: TestApp) {
   const result = await app.graphql.mutate(

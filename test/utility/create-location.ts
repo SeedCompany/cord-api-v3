@@ -1,5 +1,4 @@
-import { gql } from 'apollo-server-core';
-import * as faker from 'faker';
+import { faker } from '@faker-js/faker';
 import countries from 'iso-3166-1/dist/iso-3166';
 import { ID, isValidId } from '../../src/common';
 import {
@@ -9,6 +8,7 @@ import {
 } from '../../src/components/location';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
+import { gql } from './gql-tag';
 
 export async function createLocation(
   app: TestApp,
@@ -17,7 +17,7 @@ export async function createLocation(
   const location: CreateLocation = {
     name: faker.random.word() + ' ' + faker.datatype.uuid(),
     type: LocationType.County,
-    isoAlpha3: faker.random.arrayElement(countries).alpha3,
+    isoAlpha3: faker.helpers.arrayElement(countries).alpha3,
     ...input,
   };
 

@@ -1,5 +1,4 @@
-import { gql } from 'apollo-server-core';
-import * as faker from 'faker';
+import { faker } from '@faker-js/faker';
 import { times } from 'lodash';
 import { isValidId } from '../src/common';
 import { Role } from '../src/components/authorization';
@@ -9,6 +8,7 @@ import {
   createSession,
   createTestApp,
   createUnavailability,
+  gql,
   registerUser,
   TestApp,
 } from './utility';
@@ -58,7 +58,7 @@ describe('Unavailability e2e', () => {
   // UPDATE UNAVAILABILITY
   it('update unavailability', async () => {
     const unavailability = await createUnavailability(app, { userId: user.id });
-    const newDesc = faker.company.companyName();
+    const newDesc = faker.company.name();
 
     const result = await app.graphql.mutate(
       gql`

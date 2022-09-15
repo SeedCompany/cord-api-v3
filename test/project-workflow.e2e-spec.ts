@@ -1,4 +1,3 @@
-import { gql } from 'apollo-server-core';
 import { CalendarDate } from '../src/common';
 import { Role } from '../src/components/authorization';
 import { PartnerType } from '../src/components/partner';
@@ -20,6 +19,7 @@ import {
   createSession,
   createTestApp,
   fragments,
+  gql,
   registerUser,
   runAsAdmin,
   TestApp,

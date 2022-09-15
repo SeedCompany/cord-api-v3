@@ -62,6 +62,9 @@ export class ConfigService implements EmailOptionsFactory {
     }
   }
 
+  /** Is this a REPL process? */
+  isRepl = process.argv.join(' ').includes('repl');
+
   /** Is this a jest process? */
   jest = Boolean(this.env.string('JEST_WORKER_ID').optional());
 

@@ -12,6 +12,6 @@ export async function mapSecuredValue<T, S>(
   if (!rest.canRead || value == null) {
     return rest;
   }
-  const mapped = await mapper(value as NonNullable<T>);
+  const mapped = await mapper(value);
   return { ...rest, value: mapped };
 }

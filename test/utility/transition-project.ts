@@ -1,4 +1,3 @@
-import { gql } from 'apollo-server-core';
 import { ID } from '../../src/common';
 import {
   Project,
@@ -7,6 +6,7 @@ import {
   SecuredProjectStep,
 } from '../../src/components/project/dto';
 import { TestApp } from './create-app';
+import { gql } from './gql-tag';
 import { Raw } from './raw.type';
 
 export const stepsFromEarlyConversationToBeforeActive = [

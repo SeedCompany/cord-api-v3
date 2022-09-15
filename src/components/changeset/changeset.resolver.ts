@@ -1,8 +1,7 @@
 import { Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
 import { ID, IdArg, LoggedInSession, ObjectView, Session } from '../../common';
-import { Loader, LoaderOf, ResourceResolver } from '../../core';
+import { ResourceLoader } from '../../core';
 import { BaseNode } from '../../core/database/results';
-import { ChangesetLoader } from './changeset.loader';
 import { ChangesetRepository } from './changeset.repository';
 import { Changeset, ChangesetDiff, ResourceChange } from './dto';
 
@@ -10,16 +9,12 @@ import { Changeset, ChangesetDiff, ResourceChange } from './dto';
 export class ChangesetResolver {
   constructor(
     private readonly repo: ChangesetRepository,
-    private readonly resources: ResourceResolver
+    private readonly resources: ResourceLoader
   ) {}
 
   @Query(() => Changeset)
-  async changeset(
-    @Loader(() => ChangesetLoader)
-    changesets: LoaderOf<ChangesetLoader>,
-    @IdArg() id: ID
-  ): Promise<Changeset> {
-    return await changesets.load(id);
+  async changeset(@IdArg() id: ID): Promise<Changeset> {
+    return await this.resources.load(Changeset, id);
   }
 
   @ResolveField(() => ChangesetDiff, {
@@ -27,31 +22,31 @@ export class ChangesetResolver {
   })
   async difference(
     @Parent() changeset: Changeset,
-    @LoggedInSession() session: Session
+    @LoggedInSession() session: Session,
+    @IdArg({
+      name: 'resource',
+      nullable: true,
+      description:
+        'Optionally limit to only changes of this resource and its (grand)children',
+    })
+    parent?: ID
   ): Promise<ChangesetDiff> {
-    const isApproved = await this.repo.isApproved(changeset.id, session);
-    const diff = await this.repo.difference(changeset.id, session);
-    const lookup = (node: BaseNode, view?: ObjectView) =>
-      this.resources.lookupByBaseNode(
-        node,
-        session,
-        view ?? {
-          changeset: changeset.id,
-        }
-      );
+    const diff = await this.repo.difference(changeset.id, session, parent);
+    const load = (node: BaseNode, view?: ObjectView) =>
+      this.resources.loadByBaseNode(node, view ?? { changeset: changeset.id });
     const [added, removed, changed] = await Promise.all([
-      Promise.all(diff.added.map((node) => lookup(node))),
+      Promise.all(diff.added.map((node) => load(node))),
       // If the changeset is approved, we read deleted node otherwise read node in changeset
       Promise.all(
         diff.removed.map((node) =>
-          lookup(node, isApproved ? { deleted: true } : undefined)
+          load(node, changeset.applied ? { deleted: true } : undefined)
         )
       ),
       Promise.all(
         diff.changed.map(async (node): Promise<ResourceChange> => {
           const [previous, updated] = await Promise.all([
-            this.resources.lookupByBaseNode(node, session),
-            lookup(node),
+            load(node, { active: true }),
+            load(node),
           ]);
           return { previous, updated };
         })

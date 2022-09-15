@@ -7,7 +7,6 @@ import {
 } from '@seedcompany/nestjs-email/templates';
 import { startCase } from 'lodash';
 import { DateTime } from 'luxon';
-import * as React from 'react';
 import { EmailNotification as StepChangeNotification } from '../../../components/project';
 import { fullName } from '../../../components/user';
 import { EmailTemplate, Heading } from './base';

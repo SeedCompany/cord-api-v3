@@ -1,6 +1,10 @@
-import { GetObjectCommand, PutObjectCommand, S3 } from '@aws-sdk/client-s3';
+import {
+  GetObjectCommand,
+  NoSuchKey,
+  PutObjectCommand,
+  S3,
+} from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { SdkError } from '@aws-sdk/types';
 import { Readable } from 'stream';
 import { NotFoundException } from '../../../common';
 import { BucketOptions, FileBucket } from './file-bucket';
@@ -81,8 +85,8 @@ export class S3Bucket extends FileBucket {
   }
 }
 
-const handleNotFound = (e: SdkError) => {
-  if (e.name === 'NoSuchKey') {
+const handleNotFound = (e: Error) => {
+  if (e instanceof NoSuchKey) {
     throw new NotFoundException('Could not find file contents', e);
   }
   throw e;
