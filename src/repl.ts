@@ -48,7 +48,7 @@ async function bootstrap() {
   const session = await app
     .get(AuthenticationService)
     .sessionForUser(app.get(ConfigService).rootAdmin.id);
-  const Resources = await app.get(ResourcesHost).getMap();
+  const Resources = await app.get(ResourcesHost).getEnhancedMap();
 
   assignToObject(replServer.context, {
     DateTime,

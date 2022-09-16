@@ -1,4 +1,4 @@
-import { ResourceShape, Session } from '~/common';
+import { EnhancedResource, ResourceShape, Session } from '~/common';
 import { Powers as Power } from '../../index';
 import { MissingPowerException } from '../../missing-power.exception';
 import { PolicyExecutor } from './policy-executor';
@@ -11,7 +11,7 @@ export class UserPrivileges {
   ) {}
 
   for<TResourceStatic extends ResourceShape<any>>(
-    resource: TResourceStatic,
+    resource: TResourceStatic | EnhancedResource<TResourceStatic>,
     object?: TResourceStatic['prototype']
   ) {
     return new ScopedPrivileges(

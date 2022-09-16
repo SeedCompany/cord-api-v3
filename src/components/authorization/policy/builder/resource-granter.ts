@@ -2,6 +2,7 @@ import { mapValues } from 'lodash';
 import { EnhancedResource, many, Many, ResourceShape } from '~/common';
 import type { ResourceMap } from '../../model/resource-map';
 import { ResourceAction } from '../actions';
+import type { EnhancedResourceMap } from '../resources.host';
 import {
   ChildRelationshipGranter,
   ChildRelationshipsGranter,
@@ -120,10 +121,10 @@ export abstract class ResourceGranter<
 export class ResourceGranterImpl<
   TResourceStatic extends ResourceShape<any>
 > extends ResourceGranter<TResourceStatic> {
-  static create(map: ResourceMap): ResourcesGranter {
+  static create(map: EnhancedResourceMap): ResourcesGranter {
     return mapValues(
       map,
-      (resource) => new ResourceGranterImpl(EnhancedResource.of(resource))
+      (resource: EnhancedResource<any>) => new ResourceGranterImpl(resource)
     ) as any;
   }
 

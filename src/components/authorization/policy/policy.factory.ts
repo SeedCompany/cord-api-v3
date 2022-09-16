@@ -68,7 +68,7 @@ export class PolicyFactory implements OnModuleInit {
         POLICY_METADATA_KEY
       );
 
-    const ResourceMap = await this.resourcesHost.getMap();
+    const ResourceMap = await this.resourcesHost.getEnhancedMap();
     const resGranter = ResourceGranterImpl.create(ResourceMap);
 
     this.policies = await Promise.all(

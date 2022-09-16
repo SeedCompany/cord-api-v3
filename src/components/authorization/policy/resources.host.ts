@@ -1,7 +1,12 @@
 import { Injectable } from '@nestjs/common';
+import { mapValues } from 'lodash';
 import { ValueOf } from 'ts-essentials';
-import { getParentTypes, ResourceShape } from '~/common';
+import { EnhancedResource, getParentTypes, ResourceShape } from '~/common';
 import { ResourceMap } from '../model/resource-map';
+
+export type EnhancedResourceMap = {
+  [K in keyof ResourceMap]: EnhancedResource<ResourceMap[K]>;
+};
 
 // TODO Move to ~/core along with resource mapping
 @Injectable()
@@ -12,12 +17,23 @@ export class ResourcesHost {
     return ResourceMap;
   }
 
+  async getEnhancedMap(): Promise<EnhancedResourceMap> {
+    const map = await this.getMap();
+    return mapValues(map, EnhancedResource.of) as any;
+  }
+
   async getImplementations(
     interfaceResource:
       | ValueOf<ResourceMap>
       | keyof ResourceMap
       | ResourceShape<any>
+      | EnhancedResource<any>
   ): Promise<ReadonlyArray<ValueOf<ResourceMap>>> {
+    interfaceResource =
+      interfaceResource instanceof EnhancedResource
+        ? interfaceResource.type
+        : interfaceResource;
+
     // TODO do once & cache
     const map = await this.getMap();
     const interfaceResourceObj =

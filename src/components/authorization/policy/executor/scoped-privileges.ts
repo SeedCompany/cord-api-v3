@@ -31,7 +31,7 @@ import { PolicyExecutor } from './policy-executor';
 export class ScopedPrivileges<TResourceStatic extends ResourceShape<any>> {
   private readonly resource: EnhancedResource<TResourceStatic>;
   constructor(
-    resource: TResourceStatic,
+    resource: TResourceStatic | EnhancedResource<TResourceStatic>,
     private readonly object: TResourceStatic['prototype'] | undefined,
     private readonly session: Session,
     private readonly policyExecutor: PolicyExecutor
