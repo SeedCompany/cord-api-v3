@@ -112,56 +112,59 @@ export class EnhancedResource<T extends ResourceShape<any>> {
 
   @Once()
   get extraPropsFromRelations() {
-    return new Set<ExtraPropsFromRelationsKey<T>>(
-      [...this.relationKeys].filter((key) => {
-        let rawType = this.type.Relations![key];
-        rawType = Array.isArray(rawType) ? rawType[0] : rawType;
-        const type: EnhancedResource<any> = EnhancedResource.of(rawType);
-        return !type.hasParent;
-      }) as any
+    return this.relNamesIf<ExtraPropsFromRelationsKey<T>>(
+      (rel) => !!rel.resource && !rel.resource.hasParent
     );
   }
 
   @Once()
   get childSingleKeys() {
-    return new Set<ChildSinglesKey<T>>(
-      [...this.relationKeys].filter((key) => {
-        const rel = this.type.Relations![key];
-        if (!rel || Array.isArray(rel) || !isResourceClass(rel)) {
-          return false;
-        }
-        const type: EnhancedResource<any> = EnhancedResource.of(rel);
-        return type.hasParent;
-      }) as any
+    return this.relNamesIf<ChildSinglesKey<T>>(
+      (rel) => !rel.list && !!rel.resource?.hasParent
     );
   }
 
   @Once()
   get childListKeys() {
-    return new Set<ChildListsKey<T>>(
-      [...this.relationKeys].filter((key) => {
-        const relList = this.type.Relations![key];
-        if (!relList || !Array.isArray(relList)) {
-          return false;
-        }
-        const rel = relList[0];
-        if (!rel || !isResourceClass(rel)) {
-          return false;
-        }
-        const type: EnhancedResource<any> = EnhancedResource.of(rel);
-        return type.hasParent;
-      }) as any
+    return this.relNamesIf<ChildListsKey<T>>(
+      (rel) => rel.list && !!rel.resource?.hasParent
+    );
+  }
+
+  private relNamesIf<K>(predicate: (rel: EnhancedRelation<any>) => boolean) {
+    return new Set<K>(
+      [...this.relations.values()].flatMap((rel) =>
+        predicate(rel) ? (rel.name as K) : []
+      )
     );
   }
 
   @Once()
-  private get relationKeys() {
-    return new Set<keyof T['Relations'] & string>(
-      Object.keys(this.type.Relations ?? {}).filter(
-        (key) => this.type.Relations![key]
-      ) as any
+  get relations(): ReadonlyMap<
+    keyof T['Relations'] & string,
+    EnhancedRelation<T>
+  > {
+    return new Map(
+      Object.entries(this.type.Relations ?? {}).map(([rawName, type]) => {
+        const name = rawName as keyof T['Relations'] & string;
+        const list = Array.isArray(type);
+        type = list ? type[0] : type;
+        const resource: EnhancedResource<any> | undefined =
+          type && isResourceClass(type) ? EnhancedResource.of(type) : undefined;
+        const rel: EnhancedRelation<T> = { name, list, type, resource };
+        return [name, rel];
+      })
     );
   }
+}
+
+export interface EnhancedRelation<TResourceStatic extends ResourceShape<any>> {
+  readonly name: keyof TResourceStatic['Relations'] & string;
+  /** Is the relationship One-to-Many */
+  readonly list: boolean;
+  readonly type: unknown;
+  /** Enhanced resource of type, if type is resource */
+  readonly resource?: EnhancedResource<any>;
 }
 
 export const isResourceClass = <T>(
