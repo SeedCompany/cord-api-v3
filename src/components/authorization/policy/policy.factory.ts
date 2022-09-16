@@ -3,11 +3,19 @@ import {
   DiscoveryService,
 } from '@golevelup/nestjs-discovery';
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { startCase } from 'lodash';
+import { pick, startCase } from 'lodash';
 import { DeepWritable, Writable } from 'ts-essentials';
-import { many, ResourceShape } from '~/common';
+import { keys as keysOf } from 'ts-transformer-keys';
+import {
+  EnhancedRelation,
+  EnhancedResource,
+  many,
+  mapFromList,
+  ResourceShape,
+} from '~/common';
 import { Powers as Power } from '../dto/powers';
 import { Role } from '../dto/role.dto';
+import { ChildListAction, ChildSingleAction } from './actions';
 import { Permission, Permissions } from './builder/perm-granter';
 import {
   POLICY_METADATA_KEY,
@@ -17,7 +25,7 @@ import {
   ResourceGranterImpl,
   ResourcesGranter,
 } from './builder/resource-granter';
-import { any } from './conditions';
+import { all, any, Condition } from './conditions';
 import { ResourcesHost } from './resources.host';
 
 export interface Policy {
@@ -118,7 +126,71 @@ export class PolicyFactory implements OnModuleInit {
 
     const name = startCase(discoveredClass.name.replace(/Policy$/, ''));
     const powers = await this.determinePowers(grants);
-    return { name, roles, grants, powers };
+    const policy: Policy = { name, roles, grants, powers };
+
+    await this.defaultRelationEdgesToResourceLevel(policy);
+
+    return policy;
+  }
+
+  private async defaultRelationEdgesToResourceLevel(policy: Policy) {
+    const grants = policy.grants as DeepWritable<Policy['grants']>;
+    for (const [rawResource, { childRelations }] of grants.entries()) {
+      const resource = EnhancedResource.of(rawResource);
+      for (const rel of resource.relations.values()) {
+        if (childRelations[rel.name]) {
+          continue; // already defined
+        }
+        const childActions =
+          await this.determineRelationActionPermissionsFromResourceLevel(
+            grants,
+            rel
+          );
+        if (!childActions) {
+          continue;
+        }
+        // Is merge necessary? We already know missing right?
+        const childPerms = (childRelations[rel.name] ??= {});
+        this.mergePermissions(childPerms, childActions);
+      }
+    }
+  }
+
+  private async determineRelationActionPermissionsFromResourceLevel(
+    grants: Policy['grants'],
+    rel: EnhancedRelation<any>
+  ) {
+    const type = rel.resource?.type;
+    if (!type) {
+      // We shouldn't be here if this type is not referencing another
+      // resource, so this is a safety/type check.
+      return undefined;
+    }
+
+    const childActions = rel.list
+      ? keysOf<Record<ChildListAction, any>>()
+      : keysOf<Record<ChildSingleAction, any>>();
+
+    if (grants.has(type)) {
+      const { objectLevel } = grants.get(type)!;
+      return pick(objectLevel, childActions);
+    }
+
+    const impls = await this.resourcesHost.getImplementations(type);
+
+    // If not an interface or policy doesn't specify all implementations of interface.
+    if (!(impls.length > 0 && impls.every((impl) => grants.has(impl)))) {
+      return undefined;
+    }
+
+    // Otherwise take the least permissive intersection of all the implementations.
+    return mapFromList(childActions, (action) => {
+      const implActions = impls.map(
+        (impl) => grants.get(impl)!.objectLevel[action]
+      );
+      const perm = this.intersectPermission(...implActions);
+      return perm ? [action, perm] : null;
+    });
   }
 
   private mergePermissions<TAction extends string>(
@@ -128,23 +200,44 @@ export class PolicyFactory implements OnModuleInit {
     for (const [action, perm] of Object.entries(toMerge) as Array<
       [TAction, Permission | true]
     >) {
-      existing[action] = this.mergePermission(perm, existing[action]);
+      existing[action] = this.unionPermission(perm, existing[action]);
     }
-
     return existing;
   }
 
-  private mergePermission(perm: Permission, prev?: Permission) {
-    if (perm === true || prev === true) {
+  private unionPermission(
+    ...perms: Array<Permission | undefined>
+  ): Permission | undefined {
+    const cleaned = perms.filter((p): p is Permission => !!p);
+    if (cleaned.length === 0) {
+      return undefined;
+    }
+    if (perms.some((perm) => perm === true)) {
       return true;
     }
-    if (!prev) {
-      return perm;
+    if (perms.length === 1) {
+      return perms[0];
     }
-
+    const conditions = cleaned.filter((p): p is Condition<any> => p !== true);
     // This could result in duplicates entries for the same condition.
     // An optimization would be to de-dupe those.
-    return any(prev, perm);
+    return any(...conditions);
+  }
+
+  private intersectPermission(
+    ...perms: Array<Permission | undefined>
+  ): Permission | undefined {
+    const cleaned = perms.filter((p): p is Permission => !!p);
+    if (cleaned.length === 0) {
+      return undefined;
+    }
+    if (cleaned.every((perm) => perm === true)) {
+      return true;
+    }
+    const conditions = cleaned.filter((p): p is Condition<any> => p !== true);
+    // This could result in duplicates entries for the same condition.
+    // An optimization would be to de-dupe those.
+    return all(...conditions);
   }
 
   private async determinePowers(grants: Policy['grants']) {

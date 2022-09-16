@@ -82,6 +82,17 @@ export abstract class ResourceGranter<
   /**
    * Grant actions to specific child relations of this resource.
    *
+   * PREFER defining these actions directly on the resource itself if possible.
+   * For example, `Engagements.read` over `Project.children(c => c.engagements.read)`.
+   * This is used when a resource has dynamic parents/edges, like Locations or Comments,
+   * and specific actions for this specified relation edge need to be defined.
+   *
+   * Relations without specific edges will fall back to what's defined at the resource level.
+   * i.e. `Engagements.create` -> `Project.engagements.create`.
+   *
+   * Conversely, when checking for these permissions, use the specific relation
+   * edge when possible as this gives the most info.
+   *
    * Conditions previously given will apply automatically to these relations,
    * unless the relation defines its own condition.
    */
