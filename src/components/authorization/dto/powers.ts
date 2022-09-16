@@ -15,7 +15,6 @@ export enum Powers {
   CreateLocation = 'CreateLocation',
   CreateOrganization = 'CreateOrganization',
   CreatePartner = 'CreatePartner',
-  CreatePost = 'CreatePost',
   CreateProject = 'CreateProject',
   CreateSong = 'CreateSong',
   CreateStory = 'CreateStory',
@@ -47,6 +46,8 @@ export enum Powers {
   CreateLanguageEngagement = 'CreateLanguageEngagement',
   /** @deprecated Use `Project.partnerships` instead */
   CreatePartnership = 'CreatePartnership',
+  /** @deprecated Use `X.posts` instead */
+  CreatePost = 'CreatePost',
   /** @deprecated Use `Engagement.products` instead */
   CreateProduct = 'CreateProduct',
   /** @deprecated Use `Project.engagements` instead */
