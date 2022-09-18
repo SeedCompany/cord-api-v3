@@ -114,6 +114,7 @@ describe('Language Security e2e', () => {
 
       it('reading locations', async () => {
         const perms = await getPermissions({
+          app,
           resource: Language,
           userRole: `global:${role as Role}` as ScopedRole,
           sensitivity: testLanguage.sensitivity,
@@ -332,11 +333,13 @@ async function testSensitivityHigherThan<
     case Sensitivity.Low: {
       if (isRelationList) {
         const medPerms = await getPermissions({
+          app,
           resource: resource,
           userRole: `global:${role}` as ScopedRole,
           sensitivity: medSenslanguage.sensitivity,
         });
         const highPerms = await getPermissions({
+          app,
           resource: resource,
           userRole: `global:${role}` as ScopedRole,
           sensitivity: highSenslanguage.sensitivity,
@@ -352,6 +355,7 @@ async function testSensitivityHigherThan<
     case Sensitivity.Medium: {
       if (isRelationList) {
         const highPerms = await getPermissions({
+          app,
           resource: resource,
           userRole: `global:${role}` as ScopedRole,
           sensitivity: highSenslanguage.sensitivity,
@@ -399,6 +403,7 @@ async function testSensitivityLowerThanEqualTo<
       })
   );
   const highPerms = await getPermissions({
+    app,
     resource: resource,
     userRole: `global:${role}` as ScopedRole,
     sensitivity: highSenslanguage.sensitivity,
@@ -412,6 +417,7 @@ async function testSensitivityLowerThanEqualTo<
       })
   );
   const medPerms = await getPermissions({
+    app,
     resource: resource,
     userRole: `global:${role}` as ScopedRole,
     sensitivity: medSenslanguage.sensitivity,
@@ -424,6 +430,7 @@ async function testSensitivityLowerThanEqualTo<
       })
   );
   const lowPerms = await getPermissions({
+    app,
     resource: resource,
     userRole: `global:${role}` as ScopedRole,
     sensitivity: lowSenslanguage.sensitivity,

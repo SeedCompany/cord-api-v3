@@ -27,6 +27,7 @@ export async function testRole<
   isSecureList?: boolean;
 }): Promise<void> {
   const permissions = (await getPermissions({
+    app,
     resource: staticResource,
     userRole: `global:${role}` as ScopedRole,
     sensitivity: resource.sensitivity,
