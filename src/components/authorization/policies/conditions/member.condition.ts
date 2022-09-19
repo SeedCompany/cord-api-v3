@@ -8,6 +8,7 @@ import {
   splitScope,
 } from '../../dto/role.dto';
 import { Condition, IsAllowedParams } from '../../policy/conditions';
+import { BuiltPolicy } from '../util';
 
 class MemberCondition<
   TResourceStatic extends ResourceShape<any> & {
@@ -16,11 +17,13 @@ class MemberCondition<
   }
 > implements Condition<TResourceStatic>
 {
-  constructor(private readonly roles?: Role[]) {}
+  constructor(private readonly roles?: readonly Role[]) {}
 
-  isAllowed({ object, policy }: IsAllowedParams<TResourceStatic>): boolean {
-    const expected = this.roles ?? policy.roles;
+  attachPolicy(policy: BuiltPolicy): MemberCondition<TResourceStatic> {
+    return this.roles ? this : new MemberCondition(policy.roles);
+  }
 
+  isAllowed({ object }: IsAllowedParams<TResourceStatic>): boolean {
     const scope: ScopedRole[] = object[ScopedRoles] ?? object?.scope ?? [];
     const actual = scope
       .map(splitScope)
@@ -28,11 +31,11 @@ class MemberCondition<
       .map(([_, role]) => role);
 
     // If policy is for any roles, just confirm that there's at least one member role.
-    if (!expected) {
+    if (!this.roles) {
       return actual.length > 0;
     }
 
-    return intersection(expected, actual).length > 0;
+    return intersection(this.roles, actual).length > 0;
   }
 
   [inspect.custom](_depth: number, _options: InspectOptionsStylized) {

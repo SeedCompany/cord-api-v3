@@ -40,7 +40,7 @@ export class PolicyExecutor {
       if (condition === true) {
         return true;
       }
-      if (condition.isAllowed({ policy, object, resource })) {
+      if (condition.isAllowed({ object, resource })) {
         return true;
       }
     }

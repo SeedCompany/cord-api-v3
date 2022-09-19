@@ -1,14 +1,25 @@
 import { startCase } from 'lodash';
 import { inspect, InspectOptionsStylized } from 'util';
 import { ResourceShape } from '~/common';
+import { Policy } from '../policy.factory';
 import { Condition, IsAllowedParams } from './condition.interface';
 
-abstract class AggregateConditions<TResourceStatic extends ResourceShape<any>>
-  implements Condition<TResourceStatic>
+export abstract class AggregateConditions<
+  TResourceStatic extends ResourceShape<any>
+> implements Condition<TResourceStatic>
 {
   constructor(readonly conditions: Array<Condition<TResourceStatic>>) {}
 
   abstract readonly iteratorKey: 'some' | 'every';
+
+  attachPolicy(policy: Policy): Condition<TResourceStatic> {
+    const newConditions = this.conditions.map(
+      (condition) => condition.attachPolicy?.(policy) ?? condition
+    );
+    // @ts-expect-error messy to express statically, but this works as long as
+    // subclass constructor doesn't change parameters.
+    return new this.constructor(newConditions);
+  }
 
   isAllowed(params: IsAllowedParams<TResourceStatic>) {
     return this.conditions[this.iteratorKey]((condition) =>

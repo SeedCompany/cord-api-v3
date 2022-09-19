@@ -128,9 +128,35 @@ export class PolicyFactory implements OnModuleInit {
     const powers = await this.determinePowers(grants);
     const policy: Policy = { name, roles, grants, powers };
 
+    this.attachPolicyToConditions(policy);
     await this.defaultRelationEdgesToResourceLevel(policy);
 
     return policy;
+  }
+
+  private attachPolicyToConditions(policy: Policy) {
+    const grants = policy.grants as DeepWritable<Policy['grants']>;
+    for (const { objectLevel, propLevel, childRelations } of grants.values()) {
+      for (const [action, perm] of Object.entries(objectLevel)) {
+        if (perm && typeof perm !== 'boolean') {
+          objectLevel[action] = perm.attachPolicy?.(policy) ?? perm;
+        }
+      }
+      for (const [prop, actions] of Object.entries(propLevel)) {
+        for (const [action, perm] of Object.entries(actions ?? {})) {
+          if (perm && typeof perm !== 'boolean') {
+            propLevel[prop]![action] = perm.attachPolicy?.(policy) ?? perm;
+          }
+        }
+      }
+      for (const [rel, actions] of Object.entries(childRelations)) {
+        for (const [action, perm] of Object.entries(actions ?? {})) {
+          if (perm && typeof perm !== 'boolean') {
+            childRelations[rel]![action] = perm.attachPolicy?.(policy) ?? perm;
+          }
+        }
+      }
+    }
   }
 
   private async defaultRelationEdgesToResourceLevel(policy: Policy) {
