@@ -1,16 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { intersection } from 'lodash';
 import { CachedOnArg, EnhancedResource, Session } from '~/common';
-import { ILogger, Logger } from '~/core';
 import { withoutScope } from '../../dto/role.dto';
 import { PolicyFactory } from '../policy.factory';
 
 @Injectable()
 export class PolicyExecutor {
-  constructor(
-    private readonly policyFactory: PolicyFactory,
-    @Logger('policy:executor') private readonly logger: ILogger
-  ) {}
+  constructor(private readonly policyFactory: PolicyFactory) {}
 
   execute(
     action: string,
