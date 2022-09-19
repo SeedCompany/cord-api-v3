@@ -2,22 +2,23 @@ import { Injectable } from '@nestjs/common';
 import { intersection } from 'lodash';
 import { CachedOnArg, EnhancedResource, Session } from '~/common';
 import { withoutScope } from '../../dto/role.dto';
+import { any } from '../conditions';
 import { PolicyFactory } from '../policy.factory';
 
 @Injectable()
 export class PolicyExecutor {
   constructor(private readonly policyFactory: PolicyFactory) {}
 
-  execute(
+  resolve(
     action: string,
     session: Session,
     resource: EnhancedResource<any>,
-    object?: object,
     prop?: string
   ) {
     const policies = this.getPolicies(session);
     const isChildRelation = prop && resource.childKeys.has(prop);
 
+    const conditions = [];
     for (const policy of policies) {
       const grants = policy.grants.get(resource.type);
       if (!grants) {
@@ -36,11 +37,12 @@ export class PolicyExecutor {
       if (condition === true) {
         return true;
       }
-      if (condition.isAllowed({ object, resource })) {
-        return true;
-      }
+      conditions.push(condition);
     }
-    return false;
+    if (conditions.length === 0) {
+      return false;
+    }
+    return any(...conditions);
   }
 
   @CachedOnArg()

@@ -50,13 +50,15 @@ export class ScopedPrivileges<TResourceStatic extends ResourceShape<any>> {
     relation: ChildListsKey<TResourceStatic>
   ): boolean;
   can(action: AnyAction, prop?: SecuredResourceKey<TResourceStatic>) {
-    return this.policyExecutor.execute(
+    const perm = this.policyExecutor.resolve(
       action,
       this.session,
       this.resource,
-      this.object,
       prop
     );
+    return perm === true || perm === false
+      ? perm
+      : perm.isAllowed({ object: this.object, resource: this.resource });
   }
 
   verifyCan(action: ResourceAction): void;
