@@ -5,14 +5,12 @@ import { DtoRepository } from '../../core';
 import {
   ACTIVE,
   createNode,
-  matchProjectSensToLimitedScopeMap,
   matchPropsAndProjectSensAndScopedRoles,
   matchRequestingUser,
   paginate,
   requestingUser,
   sorting,
 } from '../../core/database/query';
-import { AuthSensitivityMapping } from '../authorization/authorization.service';
 import { Ceremony, CeremonyListInput, CreateCeremony } from './dto';
 
 @Injectable()
@@ -50,11 +48,7 @@ export class CeremonyRepository extends DtoRepository<
         .return<{ dto: UnsecuredDto<Ceremony> }>('props as dto');
   }
 
-  async list(
-    { filter, ...input }: CeremonyListInput,
-    session: Session,
-    limitedScope?: AuthSensitivityMapping
-  ) {
+  async list({ filter, ...input }: CeremonyListInput, session: Session) {
     const result = await this.db
       .query()
       .match([
@@ -71,7 +65,7 @@ export class CeremonyRepository extends DtoRepository<
           : []),
       ])
       .match(requestingUser(session))
-      .apply(matchProjectSensToLimitedScopeMap(limitedScope))
+      .apply(this.privileges.forUser(session).filterToReadable())
       .apply(
         sorting(Ceremony, input, {
           projectName: (query) =>
