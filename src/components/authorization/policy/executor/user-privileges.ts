@@ -1,8 +1,17 @@
-import { EnhancedResource, ResourceShape, Session } from '~/common';
-import { Powers as Power } from '../../index';
+import {
+  ChildListsKey,
+  ChildSinglesKey,
+  EnhancedResource,
+  ResourceShape,
+  SecuredPropsPlusExtraKey,
+  Session,
+} from '~/common';
+import { Powers as Power } from '../../dto/powers';
 import { MissingPowerException } from '../../missing-power.exception';
+import { ChildListAction, ChildSingleAction, PropAction } from '../actions';
 import { PolicyExecutor } from './policy-executor';
-import { ScopedPrivileges } from './scoped-privileges';
+import { UserEdgePrivileges } from './user-edge-privileges';
+import { UserResourcePrivileges } from './user-resource-privileges';
 
 export class UserPrivileges {
   constructor(
@@ -10,12 +19,53 @@ export class UserPrivileges {
     private readonly policyExecutor: PolicyExecutor
   ) {}
 
-  for<TResourceStatic extends ResourceShape<any>>(
+  forResource<TResourceStatic extends ResourceShape<any>>(
     resource: TResourceStatic | EnhancedResource<TResourceStatic>,
     object?: TResourceStatic['prototype']
   ) {
-    return new ScopedPrivileges(
+    return new UserResourcePrivileges(
       resource,
+      object,
+      this.session,
+      this.policyExecutor
+    );
+  }
+
+  forEdge<TResourceStatic extends ResourceShape<any>>(
+    resource: TResourceStatic | EnhancedResource<TResourceStatic>,
+    key: SecuredPropsPlusExtraKey<TResourceStatic>,
+    object?: TResourceStatic['prototype']
+  ): UserEdgePrivileges<
+    TResourceStatic,
+    SecuredPropsPlusExtraKey<TResourceStatic>,
+    PropAction
+  >;
+  forEdge<TResourceStatic extends ResourceShape<any>>(
+    resource: TResourceStatic | EnhancedResource<TResourceStatic>,
+    key: ChildSinglesKey<TResourceStatic>,
+    object?: TResourceStatic['prototype']
+  ): UserEdgePrivileges<
+    TResourceStatic,
+    ChildSinglesKey<TResourceStatic>,
+    ChildSingleAction
+  >;
+  forEdge<TResourceStatic extends ResourceShape<any>>(
+    resource: TResourceStatic | EnhancedResource<TResourceStatic>,
+    key: ChildListsKey<TResourceStatic>,
+    object?: TResourceStatic['prototype']
+  ): UserEdgePrivileges<
+    TResourceStatic,
+    ChildListsKey<TResourceStatic>,
+    ChildListAction
+  >;
+  forEdge<TResourceStatic extends ResourceShape<any>>(
+    resource: TResourceStatic | EnhancedResource<TResourceStatic>,
+    key: string,
+    object?: TResourceStatic['prototype']
+  ) {
+    return new UserEdgePrivileges(
+      resource,
+      key,
       object,
       this.session,
       this.policyExecutor

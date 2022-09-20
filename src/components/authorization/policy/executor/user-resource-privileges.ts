@@ -8,6 +8,7 @@ import {
   keys,
   mapFromList,
   ResourceShape,
+  SecuredPropsPlusExtraKey,
   SecuredResource,
   SecuredResourceKey,
   Session,
@@ -27,8 +28,11 @@ import {
   createAllPermissionsView,
 } from './all-permissions-view';
 import { PolicyExecutor } from './policy-executor';
+import { UserEdgePrivileges } from './user-edge-privileges';
 
-export class ScopedPrivileges<TResourceStatic extends ResourceShape<any>> {
+export class UserResourcePrivileges<
+  TResourceStatic extends ResourceShape<any>
+> {
   private readonly resource: EnhancedResource<TResourceStatic>;
   constructor(
     resource: TResourceStatic | EnhancedResource<TResourceStatic>,
@@ -37,6 +41,40 @@ export class ScopedPrivileges<TResourceStatic extends ResourceShape<any>> {
     private readonly policyExecutor: PolicyExecutor
   ) {
     this.resource = EnhancedResource.of(resource);
+  }
+
+  forEdge(
+    key: SecuredPropsPlusExtraKey<TResourceStatic>,
+    object?: TResourceStatic['prototype']
+  ): UserEdgePrivileges<
+    TResourceStatic,
+    SecuredPropsPlusExtraKey<TResourceStatic>,
+    PropAction
+  >;
+  forEdge(
+    key: ChildSinglesKey<TResourceStatic>,
+    object?: TResourceStatic['prototype']
+  ): UserEdgePrivileges<
+    TResourceStatic,
+    ChildSinglesKey<TResourceStatic>,
+    ChildSingleAction
+  >;
+  forEdge(
+    key: ChildListsKey<TResourceStatic>,
+    object?: TResourceStatic['prototype']
+  ): UserEdgePrivileges<
+    TResourceStatic,
+    ChildListsKey<TResourceStatic>,
+    ChildListAction
+  >;
+  forEdge(key: string, object: object) {
+    return new UserEdgePrivileges(
+      this.resource,
+      key,
+      object ?? this.object,
+      this.session,
+      this.policyExecutor
+    );
   }
 
   can(action: ResourceAction): boolean;

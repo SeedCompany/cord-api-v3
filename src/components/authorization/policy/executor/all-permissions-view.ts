@@ -16,7 +16,8 @@ import {
   PropAction,
 } from '../actions';
 import { createLazyRecord } from '../lazy-record';
-import { ScopedPrivileges } from './scoped-privileges';
+import { UserEdgePrivileges } from './user-edge-privileges';
+import { UserResourcePrivileges } from './user-resource-privileges';
 
 export type AllPermissionsView<TResourceStatic extends ResourceShape<any>> =
   Record<
@@ -33,7 +34,7 @@ export const createAllPermissionsView = <
   TResourceStatic extends ResourceShape<any>
 >(
   resource: EnhancedResource<TResourceStatic>,
-  privileges: ScopedPrivileges<TResourceStatic>
+  privileges: UserResourcePrivileges<TResourceStatic>
 ) =>
   createLazyRecord<AllPermissionsView<TResourceStatic>>({
     getKeys: () => [...resource.securedPropsPlusExtra, ...resource.childKeys],
@@ -52,6 +53,24 @@ export const createAllPermissionsView = <
           return perm;
         },
       }),
+  });
+
+export type AllPermissionsOfEdgeView<TAction extends string> = Record<
+  TAction,
+  boolean
+>;
+
+export const createAllPermissionsOfEdgeView = <
+  TResourceStatic extends ResourceShape<any>,
+  TKey extends string,
+  TAction extends string
+>(
+  resource: EnhancedResource<TResourceStatic>,
+  privileges: UserEdgePrivileges<TResourceStatic, TKey, TAction>
+) =>
+  createLazyRecord<Record<TAction, boolean>>({
+    getKeys: () => [],
+    calculate: (action) => privileges.can(action),
   });
 
 type CompatAction = AnyAction | `can${PascalCase<AnyAction>}`;

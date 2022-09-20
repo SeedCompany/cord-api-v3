@@ -1,9 +1,18 @@
 import { Injectable } from '@nestjs/common';
-import { EnhancedResource, ResourceShape, Session } from '~/common';
+import {
+  ChildListsKey,
+  ChildSinglesKey,
+  EnhancedResource,
+  ResourceShape,
+  SecuredPropsPlusExtraKey,
+  Session,
+} from '~/common';
+import { ChildListAction, ChildSingleAction, PropAction } from '../actions';
+import { EdgePrivileges } from './edge-privileges';
 import { PolicyExecutor } from './policy-executor';
 import { ResourcePrivileges } from './resource-privileges';
-import { ScopedPrivileges } from './scoped-privileges';
 import { UserPrivileges } from './user-privileges';
+import { UserResourcePrivileges } from './user-resource-privileges';
 
 @Injectable()
 export class Privileges {
@@ -16,8 +25,43 @@ export class Privileges {
   forResource<TResourceStatic extends ResourceShape<any>>(
     resource: TResourceStatic | EnhancedResource<TResourceStatic>
   ) {
-    return new ResourcePrivileges(
+    return new ResourcePrivileges<TResourceStatic>(
       EnhancedResource.of(resource),
+      this.policyExecutor
+    );
+  }
+
+  forEdge<TResourceStatic extends ResourceShape<any>>(
+    resource: TResourceStatic | EnhancedResource<TResourceStatic>,
+    key: SecuredPropsPlusExtraKey<TResourceStatic>
+  ): EdgePrivileges<
+    TResourceStatic,
+    SecuredPropsPlusExtraKey<TResourceStatic>,
+    PropAction
+  >;
+  forEdge<TResourceStatic extends ResourceShape<any>>(
+    resource: TResourceStatic | EnhancedResource<TResourceStatic>,
+    key: ChildSinglesKey<TResourceStatic>
+  ): EdgePrivileges<
+    TResourceStatic,
+    ChildSinglesKey<TResourceStatic>,
+    ChildSingleAction
+  >;
+  forEdge<TResourceStatic extends ResourceShape<any>>(
+    resource: TResourceStatic | EnhancedResource<TResourceStatic>,
+    key: ChildListsKey<TResourceStatic>
+  ): EdgePrivileges<
+    TResourceStatic,
+    ChildListsKey<TResourceStatic>,
+    ChildListAction
+  >;
+  forEdge<TResourceStatic extends ResourceShape<any>>(
+    resource: TResourceStatic | EnhancedResource<TResourceStatic>,
+    key: string
+  ) {
+    return new EdgePrivileges(
+      EnhancedResource.of(resource),
+      key,
       this.policyExecutor
     );
   }
@@ -30,6 +74,11 @@ export class Privileges {
     resource: TResourceStatic | EnhancedResource<TResourceStatic>,
     object?: TResourceStatic['prototype']
   ) {
-    return new ScopedPrivileges(resource, object, session, this.policyExecutor);
+    return new UserResourcePrivileges<TResourceStatic>(
+      resource,
+      object,
+      session,
+      this.policyExecutor
+    );
   }
 }
