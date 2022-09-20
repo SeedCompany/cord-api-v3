@@ -88,12 +88,12 @@ export class UserResourcePrivileges<
     relation: ChildListsKey<TResourceStatic>
   ): boolean;
   can(action: AnyAction, prop?: SecuredResourceKey<TResourceStatic>) {
-    const perm = this.policyExecutor.resolve(
+    const perm = this.policyExecutor.resolve({
       action,
-      this.session,
-      this.resource,
-      prop
-    );
+      session: this.session,
+      resource: this.resource,
+      prop,
+    });
     return perm === true || perm === false
       ? perm
       : perm.isAllowed({ object: this.object, resource: this.resource });

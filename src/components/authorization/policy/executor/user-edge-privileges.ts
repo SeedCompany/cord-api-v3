@@ -29,12 +29,12 @@ export class UserEdgePrivileges<
   }
 
   can(action: TAction) {
-    const perm = this.policyExecutor.resolve(
+    const perm = this.policyExecutor.resolve({
       action,
-      this.session,
-      this.resource,
-      this.key
-    );
+      session: this.session,
+      resource: this.resource,
+      prop: this.key,
+    });
     return perm === true || perm === false
       ? perm
       : perm.isAllowed({ object: this.object, resource: this.resource });

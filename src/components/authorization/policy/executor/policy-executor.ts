@@ -5,16 +5,18 @@ import { withoutScope } from '../../dto/role.dto';
 import { any } from '../conditions';
 import { PolicyFactory } from '../policy.factory';
 
+export interface ResolveParams {
+  action: string;
+  session: Session;
+  resource: EnhancedResource<any>;
+  prop?: string;
+}
+
 @Injectable()
 export class PolicyExecutor {
   constructor(private readonly policyFactory: PolicyFactory) {}
 
-  resolve(
-    action: string,
-    session: Session,
-    resource: EnhancedResource<any>,
-    prop?: string
-  ) {
+  resolve({ action, session, resource, prop }: ResolveParams) {
     const policies = this.getPolicies(session);
     const isChildRelation = prop && resource.childKeys.has(prop);
 
