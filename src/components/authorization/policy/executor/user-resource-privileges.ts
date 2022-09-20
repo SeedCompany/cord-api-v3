@@ -27,7 +27,7 @@ import {
   AllPermissionsView,
   createAllPermissionsView,
 } from './all-permissions-view';
-import { PolicyExecutor } from './policy-executor';
+import { PolicyExecutor, ResolveParams } from './policy-executor';
 import { UserEdgePrivileges } from './user-edge-privileges';
 
 export class UserResourcePrivileges<
@@ -189,5 +189,24 @@ export class UserResourcePrivileges<
       return [key, { value, canRead, canEdit }];
     });
     return securedProps as SecuredResource<TResourceStatic, false>;
+  }
+
+  /**
+   * Applies a filter to the `node` so that only readable nodes continue based on our polices.
+   * This requires `node` & `project` to be defined where this cypher snippet
+   * is inserted.
+   */
+  filterToReadable() {
+    return this.dbFilter({
+      action: 'read',
+    });
+  }
+
+  dbFilter(options: Pick<ResolveParams, 'action'>) {
+    return this.policyExecutor.cypherFilter({
+      ...options,
+      session: this.session,
+      resource: this.resource,
+    });
   }
 }

@@ -1,8 +1,11 @@
+import { Query } from 'cypher-query-builder';
 import { inspect, InspectOptionsStylized } from 'util';
 import { ResourceShape, Sensitivity } from '~/common';
+import { matchProjectSens, rankSens } from '~/core/database/query';
 import { Condition, IsAllowedParams } from '../../policy/conditions';
 
 const sensitivityRank = { High: 3, Medium: 2, Low: 1 };
+const CQL_VAR = 'sens';
 
 export class SensitivityCondition<
   TResourceStatic extends ResourceShape<any> & {
@@ -28,7 +31,26 @@ export class SensitivityCondition<
       );
     }
 
-    return sensitivityRank[this.access] >= sensitivityRank[actual];
+    return sensitivityRank[actual] <= sensitivityRank[this.access];
+  }
+
+  setupCypherContext(query: Query, prevApplied: Set<any>) {
+    if (prevApplied.has('sensitivity')) {
+      return query;
+    }
+    prevApplied.add('sensitivity');
+
+    return query.subQuery('project', (sub) =>
+      sub
+        .apply(matchProjectSens())
+        .return(`${rankSens('sensitivity')} as ${CQL_VAR}`)
+    );
+  }
+
+  asCypherCondition(query: Query) {
+    const ranked = sensitivityRank[this.access];
+    const param = query.params.addParam(ranked, 'requiredSens');
+    return `${CQL_VAR} <= ${String(param)}`;
   }
 
   [inspect.custom](_depth: number, _options: InspectOptionsStylized) {

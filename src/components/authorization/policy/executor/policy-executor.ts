@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { intersection } from 'lodash';
 import { CachedOnArg, EnhancedResource, Session } from '~/common';
+import { QueryFragment } from '~/core/database/query';
 import { withoutScope } from '../../dto/role.dto';
 import { any } from '../conditions';
 import { PolicyFactory } from '../policy.factory';
@@ -45,6 +46,31 @@ export class PolicyExecutor {
       return false;
     }
     return any(...conditions);
+  }
+
+  cypherFilter(params: ResolveParams): QueryFragment {
+    const perm = this.resolve(params);
+
+    return (query) => {
+      if (perm === true) {
+        // There's no need to check because the user has roles that have global read
+        // access without any (unmet) conditions.
+        return query;
+      }
+      if (perm === false) {
+        // Under no circumstances is user able to read, so just block everything.
+        // Ideally this could be done without round tripping to the DB, but
+        // for simplicity its here. Also, I think it's not the normal hot path.
+        return query.raw('WHERE false');
+      }
+
+      return query
+        .comment("Loading policy condition's context")
+        .apply((q1) => perm.setupCypherContext?.(q1, new Set()) ?? q1)
+        .comment('Filtering by policy conditions')
+        .with('*')
+        .raw(`WHERE ${perm.asCypherCondition(query)}`);
+    };
   }
 
   @CachedOnArg()

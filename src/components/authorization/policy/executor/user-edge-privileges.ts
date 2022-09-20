@@ -10,7 +10,7 @@ import {
   AllPermissionsOfEdgeView,
   createAllPermissionsOfEdgeView,
 } from './all-permissions-view';
-import { PolicyExecutor } from './policy-executor';
+import { PolicyExecutor, ResolveParams } from './policy-executor';
 
 export class UserEdgePrivileges<
   TResourceStatic extends ResourceShape<any>,
@@ -63,5 +63,25 @@ export class UserEdgePrivileges<
   @Once()
   get all(): AllPermissionsOfEdgeView<TAction> {
     return createAllPermissionsOfEdgeView(this.resource, this);
+  }
+
+  /**
+   * Applies a filter to the `node` so that only readable nodes continue based on our polices.
+   * This requires `node` & `project` to be defined where this cypher snippet
+   * is inserted.
+   */
+  filterToReadable() {
+    return this.dbFilter({
+      action: 'read',
+    });
+  }
+
+  dbFilter(options: Pick<ResolveParams, 'action'>) {
+    return this.policyExecutor.cypherFilter({
+      ...options,
+      session: this.session,
+      resource: this.resource,
+      prop: this.key,
+    });
   }
 }

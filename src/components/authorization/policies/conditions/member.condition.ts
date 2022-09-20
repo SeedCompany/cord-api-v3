@@ -1,6 +1,8 @@
+import { Query } from 'cypher-query-builder';
 import { intersection } from 'lodash';
 import { inspect, InspectOptionsStylized } from 'util';
 import { ResourceShape } from '~/common';
+import { matchProjectScopedRoles, variable } from '~/core/database/query';
 import {
   Role,
   rolesForScope,
@@ -9,6 +11,8 @@ import {
 } from '../../dto/role.dto';
 import { Condition, IsAllowedParams } from '../../policy/conditions';
 import { BuiltPolicy } from '../util';
+
+const CQL_VAR = 'membershipRoles';
 
 class MemberCondition<
   TResourceStatic extends ResourceShape<any> & {
@@ -36,6 +40,32 @@ class MemberCondition<
     }
 
     return intersection(this.roles, actual).length > 0;
+  }
+
+  setupCypherContext(query: Query, prevApplied: Set<any>) {
+    if (prevApplied.has('membership')) {
+      return query;
+    }
+    prevApplied.add('membership');
+
+    return query.apply(
+      matchProjectScopedRoles({
+        session: variable('requestingUser'),
+        outputVar: CQL_VAR,
+      })
+    );
+  }
+
+  asCypherCondition(query: Query) {
+    let roles = CQL_VAR;
+    if (this.roles) {
+      const required = query.params.addParam(
+        this.roles.map(rolesForScope('project')),
+        'requiredMemberRoles'
+      );
+      roles = `apoc.coll.intersection(${roles}, ${String(required)})`;
+    }
+    return `size(${roles}) > 0`;
   }
 
   [inspect.custom](_depth: number, _options: InspectOptionsStylized) {
