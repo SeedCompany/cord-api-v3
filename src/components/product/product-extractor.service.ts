@@ -121,26 +121,36 @@ const parseProductRow =
     }
     assert(sheet.isWritten());
     const bookName = sheet.bookName(row)!;
+    const totalVersesToTranslate = sheet.totalVerses(row)!;
     let unknownPortion: UnspecifiedScripturePortion | null = null;
     let parsedScriptureRange = tryParseScripture(bookName);
     let sumVerseCountFromRanges = getTotalVersesInRange(parsedScriptureRange);
-    const isKnown = sumVerseCountFromRanges === sheet.totalVerses(row)!;
+    const isKnown = sumVerseCountFromRanges === totalVersesToTranslate;
     if (!isKnown) {
-      if (sheet.myNote(row)?.trim()) {
-        const tmpScriptureRange = tryParseScripture(sheet.myNote(row));
-        if (tmpScriptureRange.length > 0) {
-          sumVerseCountFromRanges = getTotalVersesInRange(tmpScriptureRange);
+      const rowNote = sheet.myNote(row)?.trim();
+      if (rowNote) {
+        const tmpScriptureRange = tryParseScripture(rowNote);
+        const tmpScriptureRangeCount =
+          tmpScriptureRange.length > 0
+            ? getTotalVersesInRange(tmpScriptureRange)
+            : null;
+        if (
+          tmpScriptureRange.length > 0 &&
+          tmpScriptureRangeCount === totalVersesToTranslate
+        ) {
+          sumVerseCountFromRanges = tmpScriptureRangeCount;
           parsedScriptureRange = tmpScriptureRange;
         } else {
+          sumVerseCountFromRanges = totalVersesToTranslate;
           unknownPortion = {
             book: parsedScriptureRange[0].start.book,
-            totalVerses: sheet.totalVerses(row)!,
+            totalVerses: totalVersesToTranslate,
           };
         }
       } else {
         unknownPortion = {
           book: parsedScriptureRange[0].start.book,
-          totalVerses: sheet.totalVerses(row)!,
+          totalVerses: totalVersesToTranslate,
         };
       }
     }

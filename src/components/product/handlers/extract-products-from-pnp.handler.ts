@@ -1,4 +1,4 @@
-import { difference, groupBy, uniq } from 'lodash';
+import { difference, groupBy, isEqual, uniq } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   asyncPool,
@@ -197,9 +197,16 @@ export class ExtractProductsFromPnpHandler
 
     const actionableProductRows = Object.values(
       // group by book name
-      groupBy(rows, (row) => row.bookName)
+      groupBy(rows, (row) => {
+        return row.scripture && row.scripture.length > 0
+          ? row.scripture[0].start.book
+          : row.unspecifiedScripture?.book;
+      })
     ).flatMap((rowsOfBook) => {
-      const bookName = rowsOfBook[0].bookName;
+      const bookName =
+        rowsOfBook[0].scripture && rowsOfBook[0].scripture.length > 0
+          ? rowsOfBook[0].scripture[0].start.book
+          : rowsOfBook[0].unspecifiedScripture?.book;
       if (!bookName) return [];
       let existingProductsForBook = scriptureProducts.filter(
         (ref) => ref.book === bookName
@@ -210,10 +217,21 @@ export class ExtractProductsFromPnpHandler
 
       // Exact matches
       for (const row of rowsOfBook) {
-        const totalVerses = row.totalVerses!;
-        const withTotalVerses = existingProductsForBook.filter(
-          (ref) => ref.totalVerses === totalVerses
-        );
+        const rowScriptRef =
+          row.scripture && row.scripture.length > 0 ? row.scripture : undefined;
+        const withTotalVerses = existingProductsForBook.filter((ref) => {
+          if (ref.refs.length > 0 && rowScriptRef) {
+            if (isEqual(ref.refs, rowScriptRef)) {
+              return true;
+            }
+          }
+          if (ref.unspecifiedScripture && row.unspecifiedScripture) {
+            if (isEqual(ref.unspecifiedScripture, row.unspecifiedScripture)) {
+              return true;
+            }
+          }
+          return false;
+        });
         const existingId =
           withTotalVerses.length === 1 ? withTotalVerses[0].id : undefined;
         if (existingId) {
