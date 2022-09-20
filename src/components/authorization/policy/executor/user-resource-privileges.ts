@@ -27,7 +27,11 @@ import {
   AllPermissionsView,
   createAllPermissionsView,
 } from './all-permissions-view';
-import { PolicyExecutor, ResolveParams } from './policy-executor';
+import {
+  FilterOptions,
+  PolicyExecutor,
+  ResolveParams,
+} from './policy-executor';
 import { UserEdgePrivileges } from './user-edge-privileges';
 
 export class UserResourcePrivileges<
@@ -196,13 +200,14 @@ export class UserResourcePrivileges<
    * This requires `node` & `project` to be defined where this cypher snippet
    * is inserted.
    */
-  filterToReadable() {
+  filterToReadable(options?: FilterOptions) {
     return this.dbFilter({
       action: 'read',
+      ...options,
     });
   }
 
-  dbFilter(options: Pick<ResolveParams, 'action'>) {
+  dbFilter(options: FilterOptions & Pick<ResolveParams, 'action'>) {
     return this.policyExecutor.cypherFilter({
       ...options,
       session: this.session,

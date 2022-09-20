@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { intersection } from 'lodash';
+import { identity, intersection } from 'lodash';
 import { CachedOnArg, EnhancedResource, Session } from '~/common';
 import { QueryFragment } from '~/core/database/query';
 import { withoutScope } from '../../dto/role.dto';
@@ -11,6 +11,10 @@ export interface ResolveParams {
   session: Session;
   resource: EnhancedResource<any>;
   prop?: string;
+}
+
+export interface FilterOptions {
+  wrapContext?: (next: QueryFragment) => QueryFragment;
 }
 
 @Injectable()
@@ -48,7 +52,10 @@ export class PolicyExecutor {
     return any(...conditions);
   }
 
-  cypherFilter(params: ResolveParams): QueryFragment {
+  cypherFilter({
+    wrapContext = identity,
+    ...params
+  }: FilterOptions & ResolveParams): QueryFragment {
     const perm = this.resolve(params);
 
     return (query) => {
@@ -66,7 +73,9 @@ export class PolicyExecutor {
 
       return query
         .comment("Loading policy condition's context")
-        .apply((q1) => perm.setupCypherContext?.(q1, new Set()) ?? q1)
+        .apply(
+          wrapContext((q1) => perm.setupCypherContext?.(q1, new Set()) ?? q1)
+        )
         .comment('Filtering by policy conditions')
         .with('*')
         .raw(`WHERE ${perm.asCypherCondition(query)}`);

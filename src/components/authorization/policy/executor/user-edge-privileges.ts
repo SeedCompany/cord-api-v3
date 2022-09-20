@@ -10,7 +10,11 @@ import {
   AllPermissionsOfEdgeView,
   createAllPermissionsOfEdgeView,
 } from './all-permissions-view';
-import { PolicyExecutor, ResolveParams } from './policy-executor';
+import {
+  FilterOptions,
+  PolicyExecutor,
+  ResolveParams,
+} from './policy-executor';
 
 export class UserEdgePrivileges<
   TResourceStatic extends ResourceShape<any>,
@@ -70,13 +74,14 @@ export class UserEdgePrivileges<
    * This requires `node` & `project` to be defined where this cypher snippet
    * is inserted.
    */
-  filterToReadable() {
+  filterToReadable(options?: FilterOptions) {
     return this.dbFilter({
       action: 'read',
+      ...options,
     });
   }
 
-  dbFilter(options: Pick<ResolveParams, 'action'>) {
+  dbFilter(options: FilterOptions & Pick<ResolveParams, 'action'>) {
     return this.policyExecutor.cypherFilter({
       ...options,
       session: this.session,
