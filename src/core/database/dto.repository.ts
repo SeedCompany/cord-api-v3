@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { inArray, Query } from 'cypher-query-builder';
 import { LazyGetter as Once } from 'lazy-get-decorator';
 import { lowerCase } from 'lodash';
@@ -11,6 +11,7 @@ import {
   ServerException,
   UnsecuredDto,
 } from '../../common';
+import { Privileges } from '../../components/authorization';
 import { DbChanges, getChanges } from './changes';
 import { CommonRepository } from './common.repository';
 import { OnIndex } from './indexer';
@@ -29,6 +30,14 @@ export const DtoRepository = <
 ) => {
   @Injectable()
   class DtoRepositoryClass extends CommonRepository {
+    @Inject(Privileges)
+    private readonly allPrivileges: Privileges;
+
+    @Once()
+    get privileges() {
+      return this.allPrivileges.forResource(resource);
+    }
+
     getActualChanges = getChanges(resource);
 
     /**
