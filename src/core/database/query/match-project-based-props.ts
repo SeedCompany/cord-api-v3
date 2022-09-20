@@ -205,8 +205,8 @@ export const matchProjectSensToLimitedScopeMap =
 
 export const rankSens = (variable: string) => oneLine`
   case ${variable}
-    when 'High' then 2
-    when 'Medium' then 1
-    when 'Low' then 0
+    when 'High' then 3
+    when 'Medium' then 2
+    when 'Low' then 1
   end
 `;
