@@ -7,6 +7,7 @@ import {
   createNode,
   matchPropsAndProjectSensAndScopedRoles,
   matchRequestingUser,
+  oncePerProject,
   paginate,
   requestingUser,
   sorting,
@@ -65,7 +66,11 @@ export class CeremonyRepository extends DtoRepository<
           : []),
       ])
       .match(requestingUser(session))
-      .apply(this.privileges.forUser(session).filterToReadable())
+      .apply(
+        this.privileges.forUser(session).filterToReadable({
+          wrapContext: oncePerProject,
+        })
+      )
       .apply(
         sorting(Ceremony, input, {
           projectName: (query) =>

@@ -1,5 +1,6 @@
 import { oneLine } from 'common-tags';
 import { node, Query, relation } from 'cypher-query-builder';
+import { QueryFragment } from '~/core/database/query';
 import { requestingUser, variable, Variable } from '.';
 import { ID, Sensitivity, Session } from '../../../common';
 import {
@@ -202,6 +203,15 @@ export const matchProjectSensToLimitedScopeMap =
         }
       );
   };
+
+// group by project so inner logic doesn't run multiple times for a single project
+export const oncePerProject =
+  (logic: QueryFragment): QueryFragment =>
+  (query) =>
+    query
+      .with(['project', 'collect(node) as nodeList', 'requestingUser'])
+      .apply(logic)
+      .raw('UNWIND nodeList as node');
 
 export const rankSens = (variable: string) => oneLine`
   case ${variable}
