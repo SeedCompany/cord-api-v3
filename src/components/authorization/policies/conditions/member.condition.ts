@@ -28,6 +28,10 @@ class MemberCondition<
   }
 
   isAllowed({ object }: IsAllowedParams<TResourceStatic>): boolean {
+    if (!object) {
+      throw new Error("Needed object's scoped roles but object wasn't given");
+    }
+
     const scope: ScopedRole[] = object[ScopedRoles] ?? object?.scope ?? [];
     const actual = scope
       .map(splitScope)
