@@ -85,15 +85,6 @@ export class OrganizationRepository extends DtoRepository<
     const query = this.db
       .query()
       .matchNode('node', 'Organization')
-      .optionalMatch([
-        node('project', 'Project'),
-        relation('out', '', 'partnership'),
-        node('', 'Partnership'),
-        relation('out', '', 'partner'),
-        node('', 'Partner'),
-        relation('out', 'organization'),
-        node('node'),
-      ])
       .match([
         ...(filter.userId && session.userId
           ? [
@@ -106,7 +97,18 @@ export class OrganizationRepository extends DtoRepository<
       .match(requestingUser(session))
       .apply(
         this.privileges.forUser(session).filterToReadable({
-          wrapContext: oncePerProject,
+          wrapContext: (inner) => (query) =>
+            query
+              .optionalMatch([
+                node('project', 'Project'),
+                relation('out', '', 'partnership'),
+                node('', 'Partnership'),
+                relation('out', '', 'partner'),
+                node('', 'Partner'),
+                relation('out', 'organization'),
+                node('node'),
+              ])
+              .apply(oncePerProject(inner)),
         })
       )
       .apply(sorting(Organization, input))
