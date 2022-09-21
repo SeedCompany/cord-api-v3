@@ -140,6 +140,7 @@ export const matchProjectSens =
         .with(projectVar)
         .with(projectVar)
         .raw(`WHERE ${projectVar} IS NULL`)
+        // TODO this doesn't work for languages without projects. They should use their own sensitivity not High.
         .return<{ sensitivity: Sensitivity }>('"High" as sensitivity')
     );
 
