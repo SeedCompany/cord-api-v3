@@ -7,16 +7,15 @@ import {
   createNode,
   matchProjectScopedRoles,
   matchProjectSens,
-  matchProjectSensToLimitedScopeMap,
   matchProps,
   matchRequestingUser,
   merge,
+  oncePerProject,
   paginate,
   rankSens,
   requestingUser,
   sorting,
 } from '../../core/database/query';
-import { AuthSensitivityMapping } from '../authorization/authorization.service';
 import { CreateOrganization, Organization, OrganizationListInput } from './dto';
 
 @Injectable()
@@ -82,26 +81,18 @@ export class OrganizationRepository extends DtoRepository<
         );
   }
 
-  async list(
-    { filter, ...input }: OrganizationListInput,
-    session: Session,
-    limitedScope?: AuthSensitivityMapping
-  ) {
-    const result = this.db
+  async list({ filter, ...input }: OrganizationListInput, session: Session) {
+    const query = this.db
       .query()
       .matchNode('node', 'Organization')
       .optionalMatch([
-        ...(limitedScope
-          ? [
-              node('project', 'Project'),
-              relation('out', '', 'partnership'),
-              node('', 'Partnership'),
-              relation('out', '', 'partner'),
-              node('', 'Partner'),
-              relation('out', 'organization'),
-              node('node'),
-            ]
-          : []),
+        node('project', 'Project'),
+        relation('out', '', 'partnership'),
+        node('', 'Partnership'),
+        relation('out', '', 'partner'),
+        node('', 'Partner'),
+        relation('out', 'organization'),
+        node('node'),
       ])
       .match([
         ...(filter.userId && session.userId
@@ -113,9 +104,13 @@ export class OrganizationRepository extends DtoRepository<
           : []),
       ])
       .match(requestingUser(session))
-      .apply(matchProjectSensToLimitedScopeMap(limitedScope))
+      .apply(
+        this.privileges.forUser(session).filterToReadable({
+          wrapContext: oncePerProject,
+        })
+      )
       .apply(sorting(Organization, input))
       .apply(paginate(input, this.hydrate(session)));
-    return await result.first()!; // result from paginate() will always have 1 row.
+    return (await query.first())!; // result from paginate() will always have 1 row.
   }
 }
