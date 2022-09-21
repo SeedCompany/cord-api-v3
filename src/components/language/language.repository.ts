@@ -150,12 +150,13 @@ export class LanguageRepository extends DtoRepository<
   async list(input: LanguageListInput, session: Session) {
     const result = await this.db
       .query()
-      .match([
+      .matchNode('node', 'Language')
+      .optionalMatch([
         node('project', 'Project'),
         relation('out', '', 'engagement', ACTIVE),
         node('', 'LanguageEngagement'),
         relation('out', '', 'language'),
-        node('node', 'Language'),
+        node('node'),
       ])
       // match requesting user once (instead of once per row)
       .match(requestingUser(session))
