@@ -303,16 +303,7 @@ export class PartnershipService {
       ...partialInput,
     };
 
-    const limited = (await this.authorizationService.canList(
-      Partnership,
-      session
-    ))
-      ? undefined
-      : await this.authorizationService.getListRoleSensitivityMapping(
-          Partnership
-        );
-
-    const results = await this.repo.list(input, session, changeset, limited);
+    const results = await this.repo.list(input, session, changeset);
     return await mapListResults(results, (id) =>
       this.readOne(id, session, viewOfChangeset(changeset))
     );

@@ -18,17 +18,16 @@ import {
   createRelationships,
   INACTIVE,
   matchChangesetAndChangedProps,
-  matchProjectSensToLimitedScopeMap,
   matchProps,
   matchPropsAndProjectSensAndScopedRoles,
   matchRequestingUser,
   merge,
+  oncePerProject,
   paginate,
   requestingUser,
   sorting,
   whereNotDeletedInChangeset,
 } from '../../core/database/query';
-import { AuthSensitivityMapping } from '../authorization/authorization.service';
 import {
   CreatePartnership,
   Partnership,
@@ -154,39 +153,18 @@ export class PartnershipRepository extends DtoRepository<
       .run();
   }
 
-  async list(
-    input: PartnershipListInput,
-    session: Session,
-    changeset?: ID,
-    limitedScope?: AuthSensitivityMapping
-  ) {
-    const matchProjectId = input.filter.projectId
-      ? { id: input.filter.projectId }
-      : {};
-
+  async list(input: PartnershipListInput, session: Session, changeset?: ID) {
     const result = await this.db
       .query()
       .subQuery((s) =>
         s
           .match([
-            ...(limitedScope
-              ? [
-                  node('project', 'Project', matchProjectId),
-                  relation('out', '', 'partnership'),
-                ]
-              : input.filter.projectId
-              ? [
-                  node('project', 'Project', { id: input.filter.projectId }),
-                  relation('out', '', 'partnership', ACTIVE),
-                ]
-              : []),
+            node('project', 'Project', { id: input.filter.projectId }),
+            relation('out', '', 'partnership'),
             node('node', 'Partnership'),
           ])
           .apply(whereNotDeletedInChangeset(changeset))
-          .return([
-            'node',
-            input.filter.projectId || limitedScope ? 'project' : '',
-          ])
+          .return(['node', 'project'])
           .apply((q) =>
             changeset && input.filter.projectId
               ? q
@@ -204,7 +182,11 @@ export class PartnershipRepository extends DtoRepository<
       )
 
       .match(requestingUser(session))
-      .apply(matchProjectSensToLimitedScopeMap(limitedScope))
+      .apply(
+        this.privileges.forUser(session).filterToReadable({
+          wrapContext: oncePerProject,
+        })
+      )
       .apply(sorting(Partnership, input))
       .apply(paginate(input))
       .first();
