@@ -401,10 +401,7 @@ export class ProjectService {
     input: ProjectListInput,
     session: Session
   ): Promise<ProjectListOutput> {
-    const limited = (await this.authorizationService.canList(IProject, session))
-      ? undefined
-      : await this.authorizationService.getListRoleSensitivityMapping(IProject);
-    const results = await this.repo.list(input, session, limited);
+    const results = await this.repo.list(input, session);
     return await mapListResults(results, (dto) => this.secure(dto, session));
   }
 
