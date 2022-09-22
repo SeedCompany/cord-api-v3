@@ -1,13 +1,12 @@
 import { oneLine } from 'common-tags';
 import { node, Query, relation } from 'cypher-query-builder';
 import { QueryFragment } from '~/core/database/query';
-import { requestingUser, variable, Variable } from '.';
+import { requestingUser, Variable } from '.';
 import { ID, Sensitivity, Session } from '../../../common';
 import {
   GlobalScopedRole,
   ScopedRole,
 } from '../../../components/authorization';
-import { AuthSensitivityMapping } from '../../../components/authorization/authorization.service';
 import { ProjectType } from '../../../components/project/dto/type.enum';
 import {
   apoc,
@@ -168,42 +167,6 @@ export const matchUserGloballyScopedRoles =
           ).as(outputVar)
         )
     );
-
-export const matchProjectSensToLimitedScopeMap =
-  (authScope?: AuthSensitivityMapping) =>
-  <R>(query: Query<R>) => {
-    if (!authScope) {
-      return;
-    }
-    query
-      // group by project so this next bit doesn't run multiple times for a single project
-      .with(['project', 'collect(node) as nodeList', 'requestingUser'])
-      .apply(
-        matchProjectScopedRoles({
-          session: variable('requestingUser'),
-        })
-      )
-      .subQuery('project', (sub) =>
-        sub
-          .apply(matchProjectSens())
-          .return(`${rankSens('sensitivity')} as sens`)
-      )
-      .apply((q) =>
-        Object.keys(authScope).some((s) => s.startsWith('global:'))
-          ? q.apply(matchUserGloballyScopedRoles())
-          : q.subQuery((sub) => sub.return('[] as globalRoles'))
-      )
-      .raw('UNWIND nodeList as node')
-      .matchNode('node')
-      .raw(
-        `WHERE any(role in scopedRoles + globalRoles WHERE role IN keys($sensMap) and sens <= ${rankSens(
-          'apoc.map.get($sensMap, role)'
-        )})`,
-        {
-          sensMap: authScope,
-        }
-      );
-  };
 
 // group by project so inner logic doesn't run multiple times for a single project
 export const oncePerProject =
