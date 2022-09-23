@@ -1,4 +1,4 @@
-import { BaseMigration, Migration } from '../../../core';
+import { BaseMigration, Migration } from '~/core/database';
 
 @Migration('2022-04-21T15:30:05')
 export class DeleteSecurityGroups extends BaseMigration {
