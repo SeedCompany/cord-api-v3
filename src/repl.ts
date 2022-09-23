@@ -14,10 +14,9 @@ import {
   mapFromList,
   maybeMany,
 } from '~/common';
-import { bootstrapLogger, ConfigService } from '~/core';
+import { bootstrapLogger, ConfigService, ResourcesHost } from '~/core';
 import { AppModule } from './app.module';
 import { AuthenticationService } from './components/authentication';
-import { ResourcesHost } from './components/authorization/policy/resources.host';
 import 'source-map-support/register';
 
 /**

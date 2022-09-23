@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { mapValues } from 'lodash';
 import { ValueOf } from 'ts-essentials';
 import { EnhancedResource, getParentTypes, ResourceShape } from '~/common';
-import { ResourceMap } from '../model/resource-map';
+import { ResourceMap } from '../../components/authorization/model/resource-map';
 
 export type EnhancedResourceMap = {
   [K in keyof ResourceMap]: EnhancedResource<ResourceMap[K]>;
@@ -13,7 +13,9 @@ export type EnhancedResourceMap = {
 export class ResourcesHost {
   async getMap() {
     // Deferred import until now to prevent circular dependency
-    const { ResourceMap } = await import('../model/resource-map');
+    const { ResourceMap } = await import(
+      '../../components/authorization/model/resource-map'
+    );
     return ResourceMap;
   }
 

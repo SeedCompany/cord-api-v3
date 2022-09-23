@@ -13,6 +13,7 @@ import {
   mapFromList,
   ResourceShape,
 } from '~/common';
+import { ResourcesHost } from '~/core/resources';
 import { Powers as Power } from '../dto/powers';
 import { Role } from '../dto/role.dto';
 import { ChildListAction, ChildSingleAction } from './actions';
@@ -26,7 +27,6 @@ import {
   ResourcesGranter,
 } from './builder/resource-granter';
 import { all, any, Condition } from './conditions';
-import { ResourcesHost } from './resources.host';
 
 export interface Policy {
   /* Policy Name */
