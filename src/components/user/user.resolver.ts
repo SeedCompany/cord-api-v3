@@ -58,13 +58,14 @@ import {
   EducationLoader,
   SecuredEducationList,
 } from './education';
+import { fullName } from './fullName';
 import {
   SecuredUnavailabilityList,
   UnavailabilityListInput,
   UnavailabilityLoader,
 } from './unavailability';
 import { UserLoader } from './user.loader';
-import { fullName, UserService } from './user.service';
+import { UserService } from './user.service';
 
 @ArgsType()
 class ModifyLocationArgs {

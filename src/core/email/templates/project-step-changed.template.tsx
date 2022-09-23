@@ -8,7 +8,7 @@ import {
 import { startCase } from 'lodash';
 import { DateTime } from 'luxon';
 import { EmailNotification as StepChangeNotification } from '../../../components/project';
-import { fullName } from '../../../components/user';
+import { fullName } from '../../../components/user/fullName';
 import { EmailTemplate, Heading } from './base';
 import { useFrontendUrl } from './frontend-url';
 

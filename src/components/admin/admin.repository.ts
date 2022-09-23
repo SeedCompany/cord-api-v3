@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { ID, Resource } from '../../common';
-import { CommonRepository, OnIndex, SyntaxError } from '../../core';
-import { ACTIVE } from '../../core/database/query';
+import { ID, Resource } from '~/common';
+import { CommonRepository, OnIndex, SyntaxError } from '~/core/database';
+import { ACTIVE } from '~/core/database/query';
 
 @Injectable()
 export class AdminRepository extends CommonRepository {
