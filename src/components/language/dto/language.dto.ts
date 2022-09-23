@@ -25,7 +25,7 @@ import {
 import { SetChangeType } from '../../../core/database/changes';
 import { Location } from '../../location/dto';
 import { Pinnable } from '../../pin/dto';
-import { Post, Postable } from '../../post';
+import { Post, Postable } from '../../post/dto';
 import { UpdateEthnologueLanguage } from './update-language.dto';
 
 const Interfaces: Type<Resource & Pinnable & Postable> = IntersectionType(

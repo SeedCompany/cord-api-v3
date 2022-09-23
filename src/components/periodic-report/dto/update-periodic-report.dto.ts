@@ -1,8 +1,8 @@
 import { Field, InputType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { CalendarDate, DateField, ID, IdField } from '../../../common';
-import { CreateDefinedFileVersionInput } from '../../file';
+import { CalendarDate, DateField, ID, IdField } from '~/common';
+import { CreateDefinedFileVersionInput } from '../../file/dto';
 
 @InputType()
 export abstract class UpdatePeriodicReportInput {
