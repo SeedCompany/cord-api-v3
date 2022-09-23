@@ -219,7 +219,7 @@ export class ExtractProductsFromPnpHandler
       for (const row of rowsOfBook) {
         const rowScriptRef =
           row.scripture && row.scripture.length > 0 ? row.scripture : undefined;
-        const withTotalVerses = existingProductsForBook.filter((ref) => {
+        const withMatches = existingProductsForBook.filter((ref) => {
           if (ref.refs.length > 0 && rowScriptRef) {
             if (isEqual(ref.refs, rowScriptRef)) {
               return true;
@@ -233,7 +233,7 @@ export class ExtractProductsFromPnpHandler
           return false;
         });
         const existingId =
-          withTotalVerses.length === 1 ? withTotalVerses[0].id : undefined;
+          withMatches.length === 1 ? withMatches[0].id : undefined;
         if (existingId) {
           matches.push({ ...row, existingId });
           existingProductsForBook = existingProductsForBook.filter(
