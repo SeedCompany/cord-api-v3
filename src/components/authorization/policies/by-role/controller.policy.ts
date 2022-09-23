@@ -18,7 +18,6 @@ import { member, Policy, Role, sensMediumOrLower } from '../util';
   r.Language.read.specifically((p) => [
     p.locations.whenAny(member, sensMediumOrLower).read,
   ]),
-  r.Location.read,
   r.Organization.edit.create,
   r.Partner.edit.create,
   r.Partnership.edit.create.delete.specifically((p) => [
@@ -32,7 +31,6 @@ import { member, Policy, Role, sensMediumOrLower } from '../util';
     ).read, // Maybe flip and explicitly define props with write perms
   ]),
   r.Post.edit,
-  r.Producible.read,
   r.Product.read,
   r.Project.read.specifically((p) => [
     p.many(

@@ -10,7 +10,6 @@ import { member, Policy, Role, sensMediumOrLower, sensOnlyLow } from '../util';
   r.EthnologueLanguage.whenAny(member, sensMediumOrLower).read,
   r.FieldRegion.read,
   r.FieldZone.read,
-  r.Producible.read,
   r.FundingAccount.read,
   r.Language.read.specifically((p) => [
     p.registryOfDialectsCode.when(sensMediumOrLower).read,
@@ -21,7 +20,6 @@ import { member, Policy, Role, sensMediumOrLower, sensOnlyLow } from '../util';
   r.LanguageEngagement.edit.specifically((p) => [
     p.paratextRegistryId.whenAny(member, sensMediumOrLower).edit,
   ]),
-  r.Location.read,
   r.Organization.read.specifically((p) => [
     p.address.none,
     p.locations.when(sensMediumOrLower).read,

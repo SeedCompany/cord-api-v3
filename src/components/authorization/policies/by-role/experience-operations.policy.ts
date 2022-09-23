@@ -17,7 +17,6 @@ import { member, Policy, Role, sensMediumOrLower } from '../util';
       .many('registryOfDialectsCode', 'signLanguageCode', 'locations')
       .whenAny(member, sensMediumOrLower).read,
   ]),
-  r.Location.read,
   r.Organization.whenAny(member, sensMediumOrLower).read.specifically((p) => [
     p.address.none,
   ]),
@@ -28,7 +27,6 @@ import { member, Policy, Role, sensMediumOrLower } from '../util';
     p.many('organization', 'partner').whenAny(member, sensMediumOrLower).read,
   ]),
   r.Post.read,
-  r.Producible.read,
   r.Product.read,
   r.Project.read,
   r.ProjectMember.read,

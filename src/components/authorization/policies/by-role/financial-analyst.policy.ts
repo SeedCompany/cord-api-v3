@@ -16,8 +16,6 @@ import { member, Policy, Role, sensMediumOrLower, sensOnlyLow } from '../util';
     p.many('disbursementCompleteDate', 'status').when(member).edit,
   ]),
   r.Language.read.specifically((c) => c.locations.when(sensOnlyLow).read),
-  r.Producible.read,
-  r.Location.read,
   r.Organization.whenAny(member, sensMediumOrLower).edit.or.create,
   r.Partner.read.create
     .specifically((p) => [

@@ -2,7 +2,6 @@ import { member, Policy, Role, sensOnlyLow } from '../util';
 
 // NOTE: There could be other permissions for this role from other policies
 @Policy(Role.Consultant, (r) => [
-  r.Location.read,
   r.FieldRegion.read,
   r.FieldZone.read,
   r.Language.read,
@@ -11,8 +10,6 @@ import { member, Policy, Role, sensOnlyLow } from '../util';
 
   r.Partner.when(member).read,
   r.Partner.specifically((p) => p.pmcEntityCode.edit),
-
-  r.Producible.read,
 
   r.Project.when(member).read,
   r.ProjectChangeRequest.edit,

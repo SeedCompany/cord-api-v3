@@ -11,7 +11,6 @@ import { member, Policy, Role, sensOnlyLow } from '../util';
   r.FieldRegion.read,
   r.FieldZone.read,
   r.FundingAccount.read,
-  r.Producible.read,
   r.InternshipEngagement.edit,
   r.LanguageEngagement.read,
   r.Language.read.specifically((p) => [
@@ -19,7 +18,6 @@ import { member, Policy, Role, sensOnlyLow } from '../util';
     p.signLanguageCode.when(sensOnlyLow).read,
     p.locations.whenAny(member, sensOnlyLow).read,
   ]),
-  r.Location.read,
   r.Organization.whenAny(member, sensOnlyLow).read.specifically((p) => [
     p.address.none,
     p.locations.when(sensOnlyLow).read,

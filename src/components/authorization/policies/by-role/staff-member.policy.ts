@@ -10,11 +10,9 @@ import { Policy, Role, sensOnlyLow } from '../util';
   r.EthnologueLanguage.read,
   r.FieldRegion.read,
   r.FieldZone.read,
-  r.Producible.read,
   r.FundingAccount.read,
   r.Engagement.read,
   r.Language.read.specifically((p) => p.locations.when(sensOnlyLow).read),
-  r.Location.read,
   r.Organization.when(sensOnlyLow).read.specifically((p) => p.address.none),
   r.Partner.when(sensOnlyLow)
     .read.specifically((p) => [p.pointOfContact.none, p.pmcEntityCode.none])

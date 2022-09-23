@@ -14,7 +14,6 @@ import { Policy, Role } from '../util';
   r.FundingAccount.read,
   r.Engagement.edit,
   r.Language.read,
-  r.Location.read,
   r.Organization.read,
   r.Partner.edit,
   r.Partnership.edit,

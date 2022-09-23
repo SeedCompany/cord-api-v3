@@ -7,7 +7,6 @@ import { member, Policy, Role, sensMediumOrLower } from '../util';
   r.Ceremony.read,
   r.Directory.read,
   r.Education.read,
-  r.Producible.read,
   r.EthnologueLanguage.whenAny(member, sensMediumOrLower).read,
   r.FieldRegion.read,
   r.FieldZone.read,
@@ -20,7 +19,6 @@ import { member, Policy, Role, sensMediumOrLower } from '../util';
     p.signLanguageCode.whenAny(member, sensMediumOrLower).read,
     p.locations.whenAny(member, sensMediumOrLower).read,
   ]),
-  r.Location.read,
   r.Organization.whenAny(member, sensMediumOrLower).read.specifically((p) => [
     p.address.none,
   ]),

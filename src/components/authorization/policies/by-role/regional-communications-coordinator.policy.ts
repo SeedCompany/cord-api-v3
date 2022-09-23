@@ -8,11 +8,9 @@ import { Policy, Role } from '../util';
 
   r.Ceremony.read,
   r.FileNode.edit,
-  r.Producible.read,
 
   r.Language.read,
   r.Engagement.read,
-  r.Location.read,
   r.Partnership.read,
   r.Post.edit,
   r.Product.read,

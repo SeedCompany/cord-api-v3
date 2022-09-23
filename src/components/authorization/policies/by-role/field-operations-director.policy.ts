@@ -13,7 +13,6 @@ import { Policy, Role } from '../util';
   r.FundingAccount.read,
   r.Engagement.edit.specifically((p) => p.disbursementCompleteDate.read),
   r.Language.read,
-  r.Location.read,
   r.Organization.read,
   r.Partner.read.children((p) => p.posts.edit),
   r.Partnership.read.specifically((p) => [

@@ -33,7 +33,6 @@ import { member, Policy, Role, sensMediumOrLower } from '../util';
   r.Engagement.read
     .when(member)
     .edit.or.specifically((p) => p.disbursementCompleteDate.read),
-  r.Location.read,
   r.Organization.read,
   r.Partner.read.children((c) => c.posts.edit),
   r.Partnership.read.when(member).edit,

@@ -27,7 +27,6 @@ import { member, Policy, Role, sensMediumOrLower } from '../util';
   r.FundingAccount.read,
   r.Language.read,
   r.Engagement.edit.specifically((p) => p.disbursementCompleteDate.read),
-  r.Location.read,
   r.Organization.read,
   r.Partner.read
     .specifically((p) => p.pmcEntityCode.none)
