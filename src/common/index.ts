@@ -34,7 +34,6 @@ export * from './validators';
 export * from './name-field';
 export * from './id-field';
 export * from './url.field';
-export * from './base-node-labels.enum';
 export * from './object-view';
 export {
   RichTextField,
