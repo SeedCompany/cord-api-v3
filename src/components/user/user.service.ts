@@ -1,5 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { compact, difference } from 'lodash';
+import { difference } from 'lodash';
 import {
   DuplicateException,
   ID,
@@ -67,32 +67,6 @@ import {
   UnavailabilityService,
 } from './unavailability';
 import { UserRepository } from './user.repository';
-
-export const fullName = (
-  user: Partial<
-    Pick<
-      User,
-      'realFirstName' | 'realLastName' | 'displayFirstName' | 'displayLastName'
-    >
-  >
-) => {
-  const realName = compact([
-    user.realFirstName?.value ?? '',
-    user.realLastName?.value ?? '',
-  ]).join(' ');
-  if (realName) {
-    return realName;
-  }
-  const displayName = compact([
-    user.displayFirstName?.value ?? '',
-    user.displayLastName?.value ?? '',
-  ]).join(' ');
-  if (displayName) {
-    return displayName;
-  }
-
-  return undefined;
-};
 
 @Injectable()
 export class UserService {
