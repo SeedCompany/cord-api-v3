@@ -79,7 +79,9 @@ export class EnhancedResource<T extends ResourceShape<any>> {
     EnhancedResource<any>
   >();
 
-  static of<T extends ResourceShape<any>>(resource: T | EnhancedResource<T>) {
+  static of<T extends ResourceShape<any>>(
+    resource: T | EnhancedResource<T>
+  ): EnhancedResource<T> {
     if (resource instanceof EnhancedResource) {
       return resource;
     }
