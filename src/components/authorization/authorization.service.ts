@@ -19,6 +19,9 @@ export type Permission = typeof permissionDefaults;
 
 export type PermissionsOf<T> = Record<keyof T & string, Permission>;
 
+/**
+ * @deprecated Use `Privileges` instead.
+ */
 @Injectable()
 export class AuthorizationService {
   constructor(readonly privileges: Privileges) {}
