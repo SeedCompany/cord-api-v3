@@ -1,4 +1,4 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { Connection } from 'cypher-query-builder';
 import { intersection } from 'lodash';
 import {
@@ -13,8 +13,6 @@ import {
   UnauthorizedException,
 } from '../../common';
 import { ILogger, Logger } from '../../core';
-import { AuthorizationService } from '../authorization/authorization.service';
-import { Powers } from '../authorization/dto/powers';
 import { FileBucket } from './bucket';
 import {
   CreateDefinedFileVersionInput,
@@ -44,9 +42,7 @@ export class FileService {
     @Inject(FilesBucketToken) private readonly bucket: FileBucket,
     private readonly repo: FileRepository,
     private readonly db: Connection,
-    @Logger('file:service') private readonly logger: ILogger,
-    @Inject(forwardRef(() => AuthorizationService))
-    private readonly authorizationService: AuthorizationService
+    @Logger('file:service') private readonly logger: ILogger
   ) {}
 
   async getDirectory(id: ID, session: Session): Promise<Directory> {
@@ -155,7 +151,6 @@ export class FileService {
     name: string,
     session: Session
   ): Promise<Directory> {
-    await this.authorizationService.checkPower(Powers.CreateDirectory, session);
     if (parentId) {
       await this.validateParentNode(
         parentId,
@@ -202,10 +197,6 @@ export class FileService {
     }: CreateFileVersionInput,
     session: Session
   ): Promise<File> {
-    await this.authorizationService.checkPower(
-      Powers.CreateFileVersion,
-      session
-    );
     const [tempUpload, existingUpload] = await Promise.allSettled([
       this.bucket.headObject(`temp/${uploadId}`),
       this.bucket.headObject(uploadId),
@@ -353,7 +344,6 @@ export class FileService {
       }
     }
 
-    await this.authorizationService.checkPower(Powers.CreateFile, session);
     const fileId = await generateId();
     await this.repo.createFile(fileId, name, session, parentId);
 
@@ -377,13 +367,6 @@ export class FileService {
     initialVersion?: CreateDefinedFileVersionInput,
     field?: string
   ) {
-    // not sure about this, but I'm thinking it's best to check from the get-go whether the user can create a file
-    // File AND fileVersion
-    await this.authorizationService.checkPower(Powers.CreateFile, session);
-    await this.authorizationService.checkPower(
-      Powers.CreateFileVersion,
-      session
-    );
     await this.repo.createFile(fileId, name, session);
 
     await this.repo.attachBaseNode(fileId, baseNodeId, propertyName + 'Node');
@@ -417,11 +400,6 @@ export class FileService {
     if (!input) {
       return;
     }
-    // -- we technically check if they have the CreateFileVersion power, even though it's just an update, right?
-    await this.authorizationService.checkPower(
-      Powers.CreateFileVersion,
-      session
-    );
     if (!file.canRead || !file.canEdit || !file.value) {
       throw new UnauthorizedException(
         'You do not have permission to update this file',
