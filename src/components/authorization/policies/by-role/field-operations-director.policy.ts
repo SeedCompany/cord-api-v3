@@ -28,7 +28,7 @@ import { Policy, Role } from '../util';
   r.Post.edit,
   r.Producible.edit.create,
   r.Product.edit,
-  r.Project.edit,
+  r.Project.edit.create,
   r.ProjectMember.edit,
   r.PeriodicReport.edit,
   r.User.read,
