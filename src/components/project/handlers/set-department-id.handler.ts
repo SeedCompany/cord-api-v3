@@ -17,6 +17,10 @@ export class SetDepartmentId implements IEventHandler<SubscribedEvent> {
       return;
     }
 
+    if (!event.updated.primaryLocation) {
+      throw new ServerException('Primary Location on project must be set');
+    }
+
     try {
       const departmentId = await this.assignDepartmentIdForProject(
         event.updated
