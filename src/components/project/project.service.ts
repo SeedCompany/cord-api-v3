@@ -168,7 +168,10 @@ export class ProjectService {
           'Project with this name already exists'
         );
       }
-      if (e instanceof NotFoundException) {
+      if (
+        e instanceof NotFoundException ||
+        e instanceof UnauthorizedException
+      ) {
         throw e;
       }
       throw new ServerException(`Could not create project`, e);
