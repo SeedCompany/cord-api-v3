@@ -22,6 +22,7 @@ import {
   getPreviousList,
   simpleSwitch,
 } from '../common';
+import { ConfigService } from './config/config.service';
 import { ConnectionTimeoutError, ServiceUnavailableError } from './database';
 import { ILogger, Logger, LogLevel } from './logger';
 
@@ -32,7 +33,8 @@ type ExceptionInfo = ReturnType<ExceptionFilter['catchGql']>;
 export class ExceptionFilter implements GqlExceptionFilter {
   constructor(
     private readonly baseFilter: BaseExceptionFilter,
-    @Logger('nest') private readonly logger?: ILogger
+    @Logger('nest') private readonly logger?: ILogger,
+    private readonly config?: ConfigService
   ) {}
 
   catch(exception: Error, restHost: ArgumentsHost): any {
@@ -67,6 +69,10 @@ export class ExceptionFilter implements GqlExceptionFilter {
     }
     if (error instanceof Neo4jError && error.logProps) {
       // Assume these have already been logged.
+      return;
+    }
+    if (this.config?.jest) {
+      // Jest will log exceptions, don't duplicate.
       return;
     }
 
