@@ -23,7 +23,7 @@ import {
   AuthorizationService,
   PermissionsOf,
 } from '../authorization/authorization.service';
-import { Powers, ScopedRole } from '../authorization/dto';
+import { ScopedRole } from '../authorization/dto';
 import { FileService } from '../file';
 import { ProjectChangeRequest } from '../project-change-request/dto';
 import { BudgetRecordRepository } from './budget-record.repository';
@@ -65,7 +65,6 @@ export class BudgetService {
     session: Session
   ): Promise<Budget> {
     this.logger.debug('Creating budget', { projectId });
-    await this.authorizationService.checkPower(Powers.CreateBudget, session);
 
     const projectExists = await this.budgetRepo.doesProjectExist(
       projectId,
@@ -125,10 +124,6 @@ export class BudgetService {
     await this.verifyRecordUniqueness(input);
 
     this.logger.debug('Creating BudgetRecord', input);
-    await this.authorizationService.checkPower(
-      Powers.CreateBudgetRecord,
-      session
-    );
 
     try {
       const recordId = await this.budgetRecordsRepo.create(input, changeset);
