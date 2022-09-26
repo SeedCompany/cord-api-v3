@@ -37,13 +37,14 @@ export const parseScripture = (
   return mergeScriptureRanges(refs);
 };
 
-export const tryParseScripture = (
-  input: string | null | undefined
-): readonly ScriptureRange[] => {
+export const tryParseScripture = (input: string | null | undefined) => {
+  if (!input || !input.trim()) {
+    return undefined;
+  }
   try {
     return parseScripture(input);
   } catch (e) {
-    return [];
+    return undefined;
   }
 };
 

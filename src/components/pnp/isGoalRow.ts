@@ -1,4 +1,3 @@
-import { sumBy } from 'lodash';
 import { Cell } from '../../common/xlsx.util';
 import { Book, parseScripture, ScriptureRange } from '../scripture';
 import { PlanningSheet } from './planning-sheet';
@@ -33,18 +32,9 @@ export const isGoalRow = (cell: Cell<PlanningSheet | ProgressSheet>) => {
     return false;
   }
 
-  const totalVersesInRange = getTotalVersesInRange(scriptureRanges);
+  const totalVersesInRange = ScriptureRange.totalVerses(...scriptureRanges);
 
   // Treat range(s) as valid if the total verses the represents
   // equals what's been given in other column.
   return versesToTranslate === totalVersesInRange;
 };
-
-export function getTotalVersesInRange(
-  scriptureRanges: readonly ScriptureRange[]
-) {
-  return sumBy(scriptureRanges, (range) => {
-    const verseRange = ScriptureRange.fromReferences(range);
-    return verseRange.end - verseRange.start + 1;
-  });
-}

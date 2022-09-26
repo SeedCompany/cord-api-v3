@@ -6,7 +6,6 @@ import { Cell, Column } from '../../common/xlsx.util';
 import { Downloadable } from '../file';
 import {
   findStepColumns,
-  getTotalVersesInRange,
   isGoalRow,
   isGoalStepPlannedInsideProject,
   isProgressCompletedOutsideProject,
@@ -121,47 +120,43 @@ const parseProductRow =
     }
     assert(sheet.isWritten());
     const bookName = sheet.bookName(row)!;
-    const totalVersesToTranslate = sheet.totalVerses(row)!;
-    let unknownPortion: UnspecifiedScripturePortion | null = null;
-    let parsedScriptureRange = tryParseScripture(bookName);
-    let sumVerseCountFromRanges = getTotalVersesInRange(parsedScriptureRange);
-    const isKnown = sumVerseCountFromRanges === totalVersesToTranslate;
-    if (!isKnown) {
-      const rowNote = sheet.myNote(row)?.trim();
-      if (rowNote) {
-        const tmpScriptureRange = tryParseScripture(rowNote);
-        const tmpScriptureRangeCount =
-          tmpScriptureRange.length > 0
-            ? getTotalVersesInRange(tmpScriptureRange)
-            : null;
-        if (
-          tmpScriptureRange.length > 0 &&
-          tmpScriptureRangeCount === totalVersesToTranslate
-        ) {
-          sumVerseCountFromRanges = tmpScriptureRangeCount;
-          parsedScriptureRange = tmpScriptureRange;
-        } else {
-          sumVerseCountFromRanges = totalVersesToTranslate;
-          unknownPortion = {
-            book: parsedScriptureRange[0].start.book,
-            totalVerses: totalVersesToTranslate,
-          };
-        }
-      } else {
-        unknownPortion = {
-          book: parsedScriptureRange[0].start.book,
-          totalVerses: totalVersesToTranslate,
-        };
-      }
-    }
-    const scripture = unknownPortion ? undefined : parsedScriptureRange;
+    const totalVerses = sheet.totalVerses(row)!;
+    const scriptureFromBookCol = parseScripture(bookName);
 
-    return {
+    const commonWritten = {
       ...common,
       bookName,
-      totalVerses: sumVerseCountFromRanges,
-      scripture,
-      unspecifiedScripture: unknownPortion,
+      totalVerses,
+    };
+
+    // If scripture from book column matches total count use it.
+    if (ScriptureRange.totalVerses(...scriptureFromBookCol) === totalVerses) {
+      return {
+        ...commonWritten,
+        scripture: scriptureFromBookCol,
+      };
+    }
+
+    // Otherwise if note column has scripture that matches total count use it.
+    const scriptureFromNoteCol = tryParseScripture(sheet.myNote(row));
+    if (
+      scriptureFromNoteCol &&
+      ScriptureRange.totalVerses(...scriptureFromNoteCol) === totalVerses
+    ) {
+      return {
+        ...commonWritten,
+        scripture: scriptureFromNoteCol,
+      };
+    }
+
+    // Otherwise fallback to unspecified scripture.
+    return {
+      ...commonWritten,
+      scripture: [],
+      unspecifiedScripture: {
+        book: scriptureFromBookCol[0].start.book,
+        totalVerses: totalVerses,
+      },
     };
   };
 
@@ -173,10 +168,10 @@ export type ExtractedRow = MergeExclusive<
   },
   {
     bookName: string;
-    unspecifiedScripture: UnspecifiedScripturePortion | null;
+    unspecifiedScripture?: UnspecifiedScripturePortion;
   }
 > & {
-  scripture: readonly ScriptureRange[] | undefined;
+  scripture: readonly ScriptureRange[];
   totalVerses: number | undefined;
   /**
    * 1-indexed row for the order of the goal.

@@ -755,7 +755,7 @@ export class ProductService {
         book,
         totalVerses,
         unspecifiedScripture: productRef.unspecifiedScripture,
-        refs: refs,
+        scriptureRanges: refs,
       };
     });
   }

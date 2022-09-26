@@ -1,4 +1,4 @@
-import { difference, groupBy, isEqual, uniq } from 'lodash';
+import { difference, groupBy, uniq } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   asyncPool,
@@ -14,6 +14,7 @@ import {
   EngagementUpdatedEvent,
 } from '../../engagement/events';
 import { FileService } from '../../file';
+import { labelOfScriptureRanges } from '../../scripture';
 import { StoryService } from '../../story';
 import {
   CreateDerivativeScriptureProduct,
@@ -107,11 +108,11 @@ export class ExtractProductsFromPnpHandler
       } = row;
 
       if (row.bookName) {
-        // Populate one of the two product props based on whether its a known verse range or not.
+        // Populate one of the two product props based on whether it's a known verse range or not.
         const props = {
           methodology,
           scriptureReferences: scripture,
-          unspecifiedScripture,
+          unspecifiedScripture: unspecifiedScripture ?? null,
           steps: steps.map((s) => s.step),
           describeCompletion: note,
         };
@@ -198,15 +199,12 @@ export class ExtractProductsFromPnpHandler
     const actionableProductRows = Object.values(
       // group by book name
       groupBy(rows, (row) => {
-        return row.scripture && row.scripture.length > 0
-          ? row.scripture[0].start.book
-          : row.unspecifiedScripture?.book;
+        return row.scripture[0]?.start.book ?? row.unspecifiedScripture?.book;
       })
     ).flatMap((rowsOfBook) => {
       const bookName =
-        rowsOfBook[0].scripture && rowsOfBook[0].scripture.length > 0
-          ? rowsOfBook[0].scripture[0].start.book
-          : rowsOfBook[0].unspecifiedScripture?.book;
+        rowsOfBook[0].scripture[0]?.start.book ??
+        rowsOfBook[0].unspecifiedScripture?.book;
       if (!bookName) return [];
       let existingProductsForBook = scriptureProducts.filter(
         (ref) => ref.book === bookName
@@ -217,18 +215,24 @@ export class ExtractProductsFromPnpHandler
 
       // Exact matches
       for (const row of rowsOfBook) {
-        const rowScriptRef =
-          row.scripture && row.scripture.length > 0 ? row.scripture : undefined;
-        const withMatches = existingProductsForBook.filter((ref) => {
-          if (ref.refs.length > 0 && rowScriptRef) {
-            if (isEqual(ref.refs, rowScriptRef)) {
-              return true;
-            }
+        const rowScriptureLabel = labelOfScriptureRanges(row.scripture);
+        const withMatches = existingProductsForBook.filter((existingRef) => {
+          if (
+            existingRef.scriptureRanges.length > 0 &&
+            rowScriptureLabel ===
+              labelOfScriptureRanges(existingRef.scriptureRanges)
+          ) {
+            return true;
           }
-          if (ref.unspecifiedScripture && row.unspecifiedScripture) {
-            if (isEqual(ref.unspecifiedScripture, row.unspecifiedScripture)) {
-              return true;
-            }
+          if (
+            existingRef.unspecifiedScripture &&
+            row.unspecifiedScripture &&
+            existingRef.unspecifiedScripture.book ===
+              row.unspecifiedScripture.book &&
+            existingRef.unspecifiedScripture.totalVerses ===
+              row.unspecifiedScripture.totalVerses
+          ) {
+            return true;
           }
           return false;
         });
