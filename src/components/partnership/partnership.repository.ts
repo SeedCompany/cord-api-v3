@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
+import { pickBy } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   generateId,
@@ -159,7 +160,7 @@ export class PartnershipRepository extends DtoRepository<
       .subQuery((s) =>
         s
           .match([
-            node('project', 'Project', { id: input.filter.projectId }),
+            node('project', 'Project', pickBy({ id: input.filter.projectId })),
             relation('out', '', 'partnership'),
             node('node', 'Partnership'),
           ])

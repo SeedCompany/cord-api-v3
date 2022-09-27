@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { inArray, node, Query, relation } from 'cypher-query-builder';
+import { pickBy } from 'lodash';
 import {
   ID,
   labelForView,
@@ -131,9 +132,7 @@ export class BudgetRepository extends DtoRepository<
       .match([
         node('node', 'Budget'),
         relation('in', '', 'budget', ACTIVE),
-        node('project', 'Project', {
-          id: filter.projectId,
-        }),
+        node('project', 'Project', pickBy({ id: filter.projectId })),
       ])
       .match(requestingUser(session))
       .apply(

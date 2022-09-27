@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { inArray, node, Node, Query, relation } from 'cypher-query-builder';
-import { difference } from 'lodash';
+import { difference, pickBy } from 'lodash';
 import { DateTime } from 'luxon';
 import { MergeExclusive } from 'type-fest';
 import {
@@ -371,7 +371,7 @@ export class EngagementRepository extends CommonRepository {
       .subQuery((sub) =>
         sub
           .match([
-            node('project', 'Project', { id: input.filter.projectId }),
+            node('project', 'Project', pickBy({ id: input.filter.projectId })),
             relation('out', '', 'engagement', ACTIVE),
             node('node', 'Engagement'),
           ])
