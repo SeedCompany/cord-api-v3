@@ -94,6 +94,30 @@ export class EnhancedResource<T extends ResourceShape<any>> {
     return `${this.constructor.name} { ${this.name} }`;
   }
 
+  /**
+   * Check if the given type is the same as this type.
+   * A helper to narrow the type of enhanced resource.
+   *
+   * This doesn't narrow though when T is `any`.
+   */
+  is<S extends ResourceShape<any>>(clsType: S): this is EnhancedResource<S> {
+    return Object.is(this.type, clsType);
+  }
+
+  /**
+   * Check if the given type is the same as this type.
+   * If it is, then this is returned otherwise undefined.
+   * This should help to narrow with null coalescing when {@link is} isn't viable.
+   */
+  as<S extends ResourceShape<any>>(
+    clsType: S
+  ): EnhancedResource<S> | undefined {
+    return Object.is(this.type, clsType)
+      ? // If check passes then T and S are the same.
+        (this as unknown as EnhancedResource<S>)
+      : undefined;
+  }
+
   get name() {
     return this.type.name;
   }
