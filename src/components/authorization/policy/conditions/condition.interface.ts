@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/method-signature-style */
 import { Query } from 'cypher-query-builder';
-import { EnhancedResource, ResourceShape } from '~/common';
+import { EnhancedResource, ResourceShape, Session } from '~/common';
 import { Policy } from '../policy.factory';
 
 export interface IsAllowedParams<TResourceStatic extends ResourceShape<any>> {
@@ -12,6 +12,8 @@ export interface IsAllowedParams<TResourceStatic extends ResourceShape<any>> {
   // This should be EnhancedResource<TResourceStatic>.
   // I can't figure out why TS is having a hard time with it.
   resource: EnhancedResource<any>;
+
+  session: Session;
 }
 
 export interface Condition<TResourceStatic extends ResourceShape<any>> {

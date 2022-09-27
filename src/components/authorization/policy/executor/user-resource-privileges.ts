@@ -100,7 +100,11 @@ export class UserResourcePrivileges<
     });
     return perm === true || perm === false
       ? perm
-      : perm.isAllowed({ object: this.object, resource: this.resource });
+      : perm.isAllowed({
+          object: this.object,
+          resource: this.resource,
+          session: this.session,
+        });
   }
 
   verifyCan(action: ResourceAction): void;
