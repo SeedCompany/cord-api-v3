@@ -2,7 +2,7 @@ import { Field, InterfaceType } from '@nestjs/graphql';
 import { LazyGetter as Once } from 'lazy-get-decorator';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { cachedOnObject } from '~/common/weak-map-cache';
+import { inspect } from 'util';
 import { ScopedRole } from '../components/authorization';
 import { DbLabel } from './db-label.decorator';
 import { ServerException } from './exceptions';
@@ -11,6 +11,7 @@ import { DateTimeField } from './luxon.graphql';
 import { SecuredProps, UnsecuredDto } from './secured-property';
 import { AbstractClassType } from './types';
 import { has } from './util';
+import { cachedOnObject } from './weak-map-cache';
 
 const hasTypename = (value: unknown): value is { __typename: string } =>
   value != null &&
@@ -87,6 +88,10 @@ export class EnhancedResource<T extends ResourceShape<any>> {
     }
     const factory = () => new EnhancedResource(resource);
     return cachedOnObject(EnhancedResource.refs, resource, factory);
+  }
+
+  [inspect.custom]() {
+    return `${this.constructor.name} { ${this.name} }`;
   }
 
   get name() {
