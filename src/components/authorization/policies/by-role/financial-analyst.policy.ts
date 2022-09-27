@@ -12,9 +12,11 @@ import { member, Policy, Role, sensMediumOrLower, sensOnlyLow } from '../util';
   r.FileNode.edit,
   r.Directory.read.when(member).edit,
   r.FundingAccount.read,
-  r.Engagement.read.specifically((p) => [
-    p.many('disbursementCompleteDate', 'status').when(member).edit,
-  ]),
+  r.Engagement.read
+    .specifically((p) => [
+      p.many('disbursementCompleteDate', 'status').when(member).edit,
+    ])
+    .when(member).create.delete,
   r.Language.read.specifically((c) => c.locations.when(sensOnlyLow).read),
   r.Organization.whenAny(member, sensMediumOrLower).edit.or.create,
   r.Partner.read.create
@@ -22,21 +24,24 @@ import { member, Policy, Role, sensMediumOrLower, sensOnlyLow } from '../util';
       p.many('organization', 'pointOfContact').when(sensMediumOrLower).read,
     ])
     .children((c) => c.posts.edit),
-  r.Partnership.read.specifically((p) => [
-    p.financialReportingType.edit,
-    p.partner.when(sensMediumOrLower).read, // same for org?
-  ]),
+  r.Partnership.read
+    .specifically((p) => [
+      p.financialReportingType.edit,
+      p.many('organization', 'partner').whenAny(member, sensMediumOrLower).read,
+    ])
+    .when(member).edit.create.delete,
   r.Post.edit,
   r.Product.read,
   r.Project.read
     .specifically((p) => [
       p
         .many('rootDirectory', 'primaryLocation', 'otherLocations')
-        .when(sensMediumOrLower).read,
+        .whenAny(member, sensMediumOrLower).read,
+      p.many('step', 'mouStart', 'mouEnd', 'rootDirectory').when(member).edit,
       p.financialReportPeriod.edit,
     ])
     .children((c) => c.posts.edit),
-  r.ProjectMember.read,
+  r.ProjectMember.read.when(member).create.delete,
   r.PeriodicReport.read,
   r.User.read.create,
   r.Unavailability.read,
