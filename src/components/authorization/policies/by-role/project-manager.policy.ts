@@ -45,7 +45,7 @@ import { member, Policy, Role, sensMediumOrLower } from '../util';
   ]),
   r.FieldRegion.edit,
   r.FieldZone.edit,
-  r.ProjectMember.edit,
+  r.ProjectMember.edit.create,
   r.PeriodicReport.read.when(member).edit,
   r.User.read,
   r.Unavailability.read,
