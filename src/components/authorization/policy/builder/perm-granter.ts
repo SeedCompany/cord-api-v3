@@ -60,7 +60,7 @@ export abstract class PermGranter<
    *
    * Note this overrides whatever conditions were specified before this.
    */
-  whenAll(...conditions: Array<Condition<TResourceStatic>>) {
+  whenAll(...conditions: Array<Condition<TResourceStatic>>): this {
     return conditions.length > 0 ? this.when(all(...conditions)) : this;
   }
 
@@ -69,7 +69,7 @@ export abstract class PermGranter<
    *
    * Note this overrides whatever conditions were specified before this.
    */
-  whenAny(...conditions: Array<Condition<TResourceStatic>>) {
+  whenAny(...conditions: Array<Condition<TResourceStatic>>): this {
     return conditions.length > 0 ? this.when(any(...conditions)) : this;
   }
 

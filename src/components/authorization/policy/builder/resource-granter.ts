@@ -65,7 +65,7 @@ export abstract class ResourceGranter<
     grants: (
       granter: PropsGranter<TResourceStatic>
     ) => Many<PropGranter<TResourceStatic>>
-  ) {
+  ): this {
     const propsGranter = PropGranterImpl.forResource(
       this.resource,
       this.stagedCondition
@@ -101,7 +101,7 @@ export abstract class ResourceGranter<
     relationGrants: (
       granter: ChildRelationshipsGranter<TResourceStatic>
     ) => Many<ChildRelationshipGranter<TResourceStatic>>
-  ) {
+  ): this {
     const granter = ChildRelationshipGranter.forResource(
       this.resource,
       this.stagedCondition
