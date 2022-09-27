@@ -34,14 +34,14 @@ import { member, Policy, Role, sensMediumOrLower, sensOnlyLow } from '../util';
   r.Product.read,
   r.Project.read
     .specifically((p) => [
-      p.step.when(member).edit,
+      p.step.edit,
       p.stepChangedAt.edit,
-      p.rootDirectory.when(sensMediumOrLower).edit,
-      p.primaryLocation.when(sensMediumOrLower).read,
+      p.rootDirectory.whenAny(member, sensMediumOrLower).edit,
+      p.primaryLocation.whenAny(member, sensMediumOrLower).read,
       p.financialReportReceivedAt.edit,
       p.financialReportPeriod.edit,
       p.sensitivity.whenAny(member, sensMediumOrLower).edit,
-      p.otherLocations.when(sensMediumOrLower).read,
+      p.otherLocations.whenAny(member, sensMediumOrLower).read,
     ])
     .children((c) => [c.posts.edit]),
   r.ProjectMember.edit,
