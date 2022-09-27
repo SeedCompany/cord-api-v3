@@ -5,7 +5,7 @@ import { Policy, Role } from '../util';
   r.Budget.edit,
   r.BudgetRecord.edit,
   r.Ceremony.edit,
-  r.Education.read,
+  r.Education.edit.create,
   r.EthnologueLanguage.read,
   r.FieldRegion.read,
   r.FieldZone.read,
@@ -32,7 +32,7 @@ import { Policy, Role } from '../util';
   r.ProjectMember.edit.create,
   r.PeriodicReport.edit,
   r.User.read,
-  r.Unavailability.read,
+  r.Unavailability.edit.create,
   r.ProjectChangeRequest.edit.create,
   r.StepProgress.edit,
 
