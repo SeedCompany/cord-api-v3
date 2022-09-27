@@ -13,7 +13,7 @@ import {
 import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
 import { ACTIVE, INACTIVE } from '../../core/database/query';
 import { Role, withoutScope } from '../authorization';
-import { EngagementService } from '../engagement';
+import { EngagementService, EngagementStatus } from '../engagement';
 import { User, UserService } from '../user';
 import {
   Project,
@@ -746,7 +746,9 @@ export class ProjectRules {
           ],
         };
       case ProjectStep.FinalizingCompletion:
-        const disabled = await this.engagements.hasOngoing(id);
+        const disabled = await this.engagements.hasOngoing(id, [
+          EngagementStatus.FinalizingCompletion,
+        ]);
         return {
           approvers: [
             Role.Administrator,

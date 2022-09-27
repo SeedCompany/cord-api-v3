@@ -518,8 +518,8 @@ export class EngagementService {
     };
   }
 
-  async hasOngoing(projectId: ID) {
-    const ids = await this.repo.getOngoingEngagementIds(projectId);
+  async hasOngoing(projectId: ID, excludes: EngagementStatus[] = []) {
+    const ids = await this.repo.getOngoingEngagementIds(projectId, excludes);
     return ids.length > 0;
   }
 
