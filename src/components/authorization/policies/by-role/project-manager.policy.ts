@@ -31,11 +31,13 @@ import { member, Policy, Role, sensMediumOrLower } from '../util';
   r.Partner.read
     .specifically((p) => p.pmcEntityCode.none)
     .children((c) => c.posts.edit),
-  r.Partnership.read.specifically((p) => [
-    p.many('agreement', 'agreementStatus', 'types', 'organization', 'primary')
-      .edit,
-    p.partner.whenAny(member, sensMediumOrLower).edit,
-  ]),
+  r.Partnership.read
+    .specifically((p) => [
+      p.many('agreement', 'agreementStatus', 'types', 'organization', 'primary')
+        .edit,
+      p.partner.whenAny(member, sensMediumOrLower).edit,
+    ])
+    .when(member).create,
   r.Post.edit,
   r.Product.edit,
   r.Project.edit.specifically((p) => [

@@ -15,7 +15,7 @@ import { Policy, Role } from '../util';
   r.Language.read,
   r.Organization.read,
   r.Partner.read.children((p) => p.posts.edit),
-  r.Partnership.read.specifically((p) => [
+  r.Partnership.read.create.specifically((p) => [
     p.many(
       'agreement',
       'agreementStatus',
