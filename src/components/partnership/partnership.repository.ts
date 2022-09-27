@@ -161,7 +161,7 @@ export class PartnershipRepository extends DtoRepository<
         s
           .match([
             node('project', 'Project', pickBy({ id: input.filter.projectId })),
-            relation('out', '', 'partnership'),
+            relation('out', '', 'partnership', ACTIVE),
             node('node', 'Partnership'),
           ])
           .apply(whereNotDeletedInChangeset(changeset))
