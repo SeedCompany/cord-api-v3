@@ -33,7 +33,7 @@ import { Policy, Role } from '../util';
   r.PeriodicReport.edit,
   r.User.read,
   r.Unavailability.read,
-  r.ProjectChangeRequest.edit,
+  r.ProjectChangeRequest.edit.create,
   r.StepProgress.edit,
 
   Role.assignable(r, [
