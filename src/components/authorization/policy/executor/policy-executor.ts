@@ -71,14 +71,20 @@ export class PolicyExecutor {
         return query.raw('WHERE false');
       }
 
+      const other = {
+        resource: params.resource,
+        session: params.session,
+      };
       return query
         .comment("Loading policy condition's context")
         .apply(
-          wrapContext((q1) => perm.setupCypherContext?.(q1, new Set()) ?? q1)
+          wrapContext(
+            (q1) => perm.setupCypherContext?.(q1, new Set(), other) ?? q1
+          )
         )
         .comment('Filtering by policy conditions')
         .with('*')
-        .raw(`WHERE ${perm.asCypherCondition(query)}`);
+        .raw(`WHERE ${perm.asCypherCondition(query, other)}`);
     };
   }
 

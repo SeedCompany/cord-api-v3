@@ -17,6 +17,11 @@ export interface IsAllowedParams<TResourceStatic extends ResourceShape<any>> {
   session: Session;
 }
 
+export type AsCypherParams<TResourceStatic extends ResourceShape<any>> = Omit<
+  IsAllowedParams<TResourceStatic>,
+  'object'
+>;
+
 export interface Condition<TResourceStatic extends ResourceShape<any>> {
   isAllowed(params: IsAllowedParams<TResourceStatic>): boolean;
 
@@ -33,10 +38,17 @@ export interface Condition<TResourceStatic extends ResourceShape<any>> {
    * Use `prevApplied` to dedupe logic, like when this type of condition
    * is used multiple times with a query.
    */
-  setupCypherContext?(query: Query, prevApplied: Set<any>): Query;
+  setupCypherContext?(
+    query: Query,
+    prevApplied: Set<any>,
+    other: AsCypherParams<TResourceStatic>
+  ): Query;
 
   /**
    * DB query where clause fragment that represents the condition.
    */
-  asCypherCondition(query: Query): string;
+  asCypherCondition(
+    query: Query,
+    other: AsCypherParams<TResourceStatic>
+  ): string;
 }

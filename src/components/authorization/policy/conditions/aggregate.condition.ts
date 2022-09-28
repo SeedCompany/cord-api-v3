@@ -3,7 +3,11 @@ import { startCase } from 'lodash';
 import { inspect, InspectOptionsStylized } from 'util';
 import { ResourceShape } from '~/common';
 import { Policy } from '../policy.factory';
-import { Condition, IsAllowedParams } from './condition.interface';
+import {
+  AsCypherParams,
+  Condition,
+  IsAllowedParams,
+} from './condition.interface';
 
 export abstract class AggregateConditions<
   TResourceStatic extends ResourceShape<any>
@@ -27,20 +31,28 @@ export abstract class AggregateConditions<
     );
   }
 
-  setupCypherContext(query: Query, prevApplied: Set<any>) {
+  setupCypherContext(
+    query: Query,
+    prevApplied: Set<any>,
+    other: AsCypherParams<TResourceStatic>
+  ) {
     for (const condition of this.conditions) {
-      query = condition.setupCypherContext?.(query, prevApplied) ?? query;
+      query =
+        condition.setupCypherContext?.(query, prevApplied, other) ?? query;
     }
     return query;
   }
 
   protected abstract readonly cypherJoiner: string;
-  asCypherCondition(query: Query): string {
+  asCypherCondition(
+    query: Query,
+    other: AsCypherParams<TResourceStatic>
+  ): string {
     if (this.conditions.length === 0) {
       return 'true';
     }
     const inner = this.conditions
-      .map((c) => c.asCypherCondition(query))
+      .map((c) => c.asCypherCondition(query, other))
       .join(this.cypherJoiner);
     return `(${inner})`;
   }
