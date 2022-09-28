@@ -14,15 +14,11 @@ import {
   Session,
   UnwrapSecured,
 } from '../../common';
-import {
-  ConfigService,
-  ILogger,
-  Logger,
-  ServiceUnavailableError,
-  UniquenessError,
-} from '..';
 import { AbortError, retry, RetryOptions } from '../../common/retry';
+import { ConfigService } from '../config/config.service';
+import { ILogger, Logger } from '../logger';
 import { DbChanges } from './changes';
+import { ServiceUnavailableError, UniquenessError } from './errors';
 import { ACTIVE, deleteBaseNode, exp, updateProperty } from './query';
 
 export interface ServerInfo {

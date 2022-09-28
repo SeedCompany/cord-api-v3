@@ -1,7 +1,7 @@
 import { node, not, relation } from 'cypher-query-builder';
-import { Product } from '..';
-import { BaseMigration, Migration } from '../../../core';
-import { ACTIVE, createProperty, path } from '../../../core/database/query';
+import { BaseMigration, Migration } from '~/core';
+import { ACTIVE, createProperty, path } from '~/core/database/query';
+import { Product } from '../dto';
 
 @Migration('2022-02-09T00:00:00')
 export class AddProductStepsMigration extends BaseMigration {

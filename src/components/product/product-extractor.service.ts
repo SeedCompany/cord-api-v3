@@ -13,7 +13,12 @@ import {
   Pnp,
   stepPlanCompleteDate,
 } from '../pnp';
-import { parseScripture, ScriptureRange } from '../scripture';
+import {
+  parseScripture,
+  ScriptureRange,
+  tryParseScripture,
+  UnspecifiedScripturePortion,
+} from '../scripture';
 import { ProductStep as Step } from './dto';
 
 @Injectable()
@@ -114,27 +119,60 @@ const parseProductRow =
       };
     }
     assert(sheet.isWritten());
-    const bookName = parseScripture(sheet.bookName(row))[0]!.start.book;
-    return {
+    const bookName = sheet.bookName(row)!;
+    const totalVerses = sheet.totalVerses(row)!;
+    const scriptureFromBookCol = parseScripture(bookName);
+
+    const commonWritten = {
       ...common,
       bookName,
-      totalVerses: sheet.totalVerses(row)!, // Asserting bc loop verified this
+      totalVerses,
+    };
+
+    // If scripture from book column matches total count use it.
+    if (ScriptureRange.totalVerses(...scriptureFromBookCol) === totalVerses) {
+      return {
+        ...commonWritten,
+        scripture: scriptureFromBookCol,
+      };
+    }
+
+    // Otherwise if note column has scripture that matches total count use it.
+    const scriptureFromNoteCol = tryParseScripture(sheet.myNote(row));
+    if (
+      scriptureFromNoteCol &&
+      ScriptureRange.totalVerses(...scriptureFromNoteCol) === totalVerses
+    ) {
+      return {
+        ...commonWritten,
+        scripture: scriptureFromNoteCol,
+      };
+    }
+
+    // Otherwise fallback to unspecified scripture.
+    return {
+      ...commonWritten,
+      scripture: [],
+      unspecifiedScripture: {
+        book: scriptureFromBookCol[0].start.book,
+        totalVerses: totalVerses,
+      },
     };
   };
 
 export type ExtractedRow = MergeExclusive<
   {
     story: string;
-    scripture: readonly ScriptureRange[];
-    totalVerses: number | undefined;
     composite: boolean;
     placeholder: boolean;
   },
   {
     bookName: string;
-    totalVerses: number;
+    unspecifiedScripture?: UnspecifiedScripturePortion;
   }
 > & {
+  scripture: readonly ScriptureRange[];
+  totalVerses: number | undefined;
   /**
    * 1-indexed row for the order of the goal.
    * This will not have jumps in numbers, blank rows are ignored.

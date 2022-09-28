@@ -1,7 +1,7 @@
 import { node, not, relation } from 'cypher-query-builder';
-import { DerivativeScriptureProduct } from '..';
-import { BaseMigration, Migration } from '../../../core';
-import { ACTIVE, createProperty, path } from '../../../core/database/query';
+import { BaseMigration, Migration } from '~/core';
+import { ACTIVE, createProperty, path } from '~/core/database/query';
+import { DerivativeScriptureProduct } from '../dto';
 
 @Migration('2021-12-14T00:00:00')
 export class AddCompositeMigration extends BaseMigration {

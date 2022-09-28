@@ -11,7 +11,7 @@ import {
   UnsecuredDto,
 } from '../../../../common';
 import { SecuredRoles } from '../../../authorization';
-import { SecuredUser, User } from '../../../user';
+import { SecuredUser, User } from '../../../user/dto';
 
 @ObjectType({
   implements: [Resource],

@@ -1026,6 +1026,13 @@ describe('Engagement e2e', () => {
       for (const next of stepsFromEarlyConversationToBeforeCompleted) {
         await changeProjectStep(app, project.id, next);
       }
+      /**
+       * https://github.com/SeedCompany/cord-api-v3/issues/2526
+       * Need to another non-terminal Engagement (Not FinalizingCompletion)
+       */
+      await createLanguageEngagement(app, {
+        projectId: project.id,
+      });
       const projectQueryResult = await app.graphql.query(
         gql`
           query project($id: ID!) {

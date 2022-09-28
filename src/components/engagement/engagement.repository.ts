@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { inArray, node, Node, Query, relation } from 'cypher-query-builder';
+import { difference } from 'lodash';
 import { DateTime } from 'luxon';
 import { MergeExclusive } from 'type-fest';
 import {
@@ -425,7 +426,10 @@ export class EngagementRepository extends CommonRepository {
       .run();
   }
 
-  async getOngoingEngagementIds(projectId: ID) {
+  async getOngoingEngagementIds(
+    projectId: ID,
+    excludes: EngagementStatus[] = []
+  ) {
     const rows = await this.db
       .query()
       .match([
@@ -437,7 +441,7 @@ export class EngagementRepository extends CommonRepository {
       ])
       .where({
         sn: {
-          value: inArray(OngoingEngagementStatuses),
+          value: inArray(difference(OngoingEngagementStatuses, excludes)),
         },
       })
       .return<{ id: ID }>('engagement.id as id')

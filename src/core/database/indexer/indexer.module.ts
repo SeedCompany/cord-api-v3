@@ -6,11 +6,12 @@ import {
 import { Module, OnModuleInit } from '@nestjs/common';
 import { groupBy } from 'lodash';
 import { Neo4jError } from 'neo4j-driver';
-import { ConfigService, IndexMode } from '../..';
-import { many } from '../../../common';
+import { many } from '~/common';
+import { ConfigService } from '../../config/config.service';
 import { ILogger, Logger } from '../../logger';
 import { DatabaseService, ServerInfo } from '../database.service';
 import { Transactional } from '../transactional.decorator';
+import { IndexMode } from './create-indexes.decorator';
 import { DB_INDEX_KEY } from './indexer.constants';
 
 @Module({

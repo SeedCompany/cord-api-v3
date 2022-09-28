@@ -89,6 +89,8 @@ rules:
       replacement: { path: '~/core/{path}' }
     - pattern: src/*
       message: Use relative import instead
+    - path: [.., ../.., ../../..]
+      message: Not specific enough
 
   no-restricted-syntax:
     - error

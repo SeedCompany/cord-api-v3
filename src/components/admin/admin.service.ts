@@ -1,7 +1,9 @@
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
 import { DateTime } from 'luxon';
-import { ID, ServerException } from '../../common';
-import { ConfigService, ILogger, Logger, Transactional } from '../../core';
+import { ID, ServerException } from '~/common';
+import { ConfigService } from '~/core/config/config.service';
+import { Transactional } from '~/core/database';
+import { ILogger, Logger } from '~/core/logger';
 import { AuthenticationService } from '../authentication';
 import { CryptoService } from '../authentication/crypto.service';
 import { AuthorizationService } from '../authorization/authorization.service';
