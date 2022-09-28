@@ -6,6 +6,7 @@ import {
   Session,
   UnauthorizedException,
 } from '~/common';
+import { ResourceObjectContext } from '../object.type';
 import {
   AllPermissionsOfEdgeView,
   createAllPermissionsOfEdgeView,
@@ -25,7 +26,7 @@ export class UserEdgePrivileges<
   constructor(
     resource: TResourceStatic | EnhancedResource<TResourceStatic>,
     private readonly key: TKey,
-    private readonly object: TResourceStatic['prototype'] | undefined,
+    private readonly object: ResourceObjectContext<TResourceStatic> | undefined,
     private readonly session: Session,
     private readonly policyExecutor: PolicyExecutor
   ) {

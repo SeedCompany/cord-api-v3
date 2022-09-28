@@ -1,4 +1,5 @@
 import { EnhancedResource, ResourceShape, Session } from '~/common';
+import { ResourceObjectContext } from '../object.type';
 import { PolicyExecutor } from './policy-executor';
 import { UserEdgePrivileges } from './user-edge-privileges';
 
@@ -16,7 +17,7 @@ export class EdgePrivileges<
     this.resource = EnhancedResource.of(resource);
   }
 
-  forUser(session: Session, object?: TResourceStatic['prototype']) {
+  forUser(session: Session, object?: ResourceObjectContext<TResourceStatic>) {
     return new UserEdgePrivileges<TResourceStatic, TKey, TAction>(
       this.resource,
       this.key,

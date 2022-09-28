@@ -23,6 +23,7 @@ import {
   PropAction,
   ResourceAction,
 } from '../actions';
+import { ResourceObjectContext } from '../object.type';
 import {
   AllPermissionsView,
   createAllPermissionsView,
@@ -40,7 +41,7 @@ export class UserResourcePrivileges<
   private readonly resource: EnhancedResource<TResourceStatic>;
   constructor(
     resource: TResourceStatic | EnhancedResource<TResourceStatic>,
-    private readonly object: TResourceStatic['prototype'] | undefined,
+    private readonly object: ResourceObjectContext<TResourceStatic> | undefined,
     private readonly session: Session,
     private readonly policyExecutor: PolicyExecutor
   ) {
@@ -49,7 +50,7 @@ export class UserResourcePrivileges<
 
   forEdge(
     key: SecuredPropsPlusExtraKey<TResourceStatic>,
-    object?: TResourceStatic['prototype']
+    object?: ResourceObjectContext<TResourceStatic>
   ): UserEdgePrivileges<
     TResourceStatic,
     SecuredPropsPlusExtraKey<TResourceStatic>,
@@ -57,7 +58,7 @@ export class UserResourcePrivileges<
   >;
   forEdge(
     key: ChildSinglesKey<TResourceStatic>,
-    object?: TResourceStatic['prototype']
+    object?: ResourceObjectContext<TResourceStatic>
   ): UserEdgePrivileges<
     TResourceStatic,
     ChildSinglesKey<TResourceStatic>,
@@ -65,7 +66,7 @@ export class UserResourcePrivileges<
   >;
   forEdge(
     key: ChildListsKey<TResourceStatic>,
-    object?: TResourceStatic['prototype']
+    object?: ResourceObjectContext<TResourceStatic>
   ): UserEdgePrivileges<
     TResourceStatic,
     ChildListsKey<TResourceStatic>,

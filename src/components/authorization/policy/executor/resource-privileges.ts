@@ -7,6 +7,7 @@ import {
   Session,
 } from '~/common';
 import { ChildListAction, ChildSingleAction, PropAction } from '../actions';
+import { ResourceObjectContext } from '../object.type';
 import { EdgePrivileges } from './edge-privileges';
 import { PolicyExecutor } from './policy-executor';
 import { UserResourcePrivileges } from './user-resource-privileges';
@@ -17,7 +18,7 @@ export class ResourcePrivileges<TResourceStatic extends ResourceShape<any>> {
     private readonly policyExecutor: PolicyExecutor
   ) {}
 
-  forUser(session: Session, object?: TResourceStatic['prototype']) {
+  forUser(session: Session, object?: ResourceObjectContext<TResourceStatic>) {
     return new UserResourcePrivileges(
       this.resource,
       object,

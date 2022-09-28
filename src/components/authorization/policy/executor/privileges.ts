@@ -8,6 +8,7 @@ import {
   Session,
 } from '~/common';
 import { ChildListAction, ChildSingleAction, PropAction } from '../actions';
+import { ResourceObjectContext } from '../object.type';
 import { EdgePrivileges } from './edge-privileges';
 import { PolicyExecutor } from './policy-executor';
 import { ResourcePrivileges } from './resource-privileges';
@@ -72,7 +73,7 @@ export class Privileges {
   for<TResourceStatic extends ResourceShape<any>>(
     session: Session,
     resource: TResourceStatic | EnhancedResource<TResourceStatic>,
-    object?: TResourceStatic['prototype']
+    object?: ResourceObjectContext<TResourceStatic>
   ) {
     return new UserResourcePrivileges<TResourceStatic>(
       resource,

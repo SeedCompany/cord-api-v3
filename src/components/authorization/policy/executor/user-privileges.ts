@@ -9,6 +9,7 @@ import {
 import { Powers as Power } from '../../dto/powers';
 import { MissingPowerException } from '../../missing-power.exception';
 import { ChildListAction, ChildSingleAction, PropAction } from '../actions';
+import { ResourceObjectContext } from '../object.type';
 import { PolicyExecutor } from './policy-executor';
 import { UserEdgePrivileges } from './user-edge-privileges';
 import { UserResourcePrivileges } from './user-resource-privileges';
@@ -21,7 +22,7 @@ export class UserPrivileges {
 
   forResource<TResourceStatic extends ResourceShape<any>>(
     resource: TResourceStatic | EnhancedResource<TResourceStatic>,
-    object?: TResourceStatic['prototype']
+    object?: ResourceObjectContext<TResourceStatic>
   ) {
     return new UserResourcePrivileges(
       resource,
@@ -34,7 +35,7 @@ export class UserPrivileges {
   forEdge<TResourceStatic extends ResourceShape<any>>(
     resource: TResourceStatic | EnhancedResource<TResourceStatic>,
     key: SecuredPropsPlusExtraKey<TResourceStatic>,
-    object?: TResourceStatic['prototype']
+    object?: ResourceObjectContext<TResourceStatic>
   ): UserEdgePrivileges<
     TResourceStatic,
     SecuredPropsPlusExtraKey<TResourceStatic>,
@@ -43,7 +44,7 @@ export class UserPrivileges {
   forEdge<TResourceStatic extends ResourceShape<any>>(
     resource: TResourceStatic | EnhancedResource<TResourceStatic>,
     key: ChildSinglesKey<TResourceStatic>,
-    object?: TResourceStatic['prototype']
+    object?: ResourceObjectContext<TResourceStatic>
   ): UserEdgePrivileges<
     TResourceStatic,
     ChildSinglesKey<TResourceStatic>,
@@ -52,7 +53,7 @@ export class UserPrivileges {
   forEdge<TResourceStatic extends ResourceShape<any>>(
     resource: TResourceStatic | EnhancedResource<TResourceStatic>,
     key: ChildListsKey<TResourceStatic>,
-    object?: TResourceStatic['prototype']
+    object?: ResourceObjectContext<TResourceStatic>
   ): UserEdgePrivileges<
     TResourceStatic,
     ChildListsKey<TResourceStatic>,
@@ -61,7 +62,7 @@ export class UserPrivileges {
   forEdge<TResourceStatic extends ResourceShape<any>>(
     resource: TResourceStatic | EnhancedResource<TResourceStatic>,
     key: string,
-    object?: TResourceStatic['prototype']
+    object?: ResourceObjectContext<TResourceStatic>
   ) {
     return new UserEdgePrivileges(
       resource,

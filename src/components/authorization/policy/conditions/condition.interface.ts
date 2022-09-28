@@ -1,17 +1,18 @@
 /* eslint-disable @typescript-eslint/method-signature-style */
 import { Query } from 'cypher-query-builder';
 import { EnhancedResource, ResourceShape, Session } from '~/common';
+import { ResourceObjectContext } from '../object.type';
 import { Policy } from '../policy.factory';
 
 export interface IsAllowedParams<TResourceStatic extends ResourceShape<any>> {
-  object: TResourceStatic['prototype'];
-
   /**
    * The resource this condition is attached too.
    */
   // This should be EnhancedResource<TResourceStatic>.
   // I can't figure out why TS is having a hard time with it.
   resource: EnhancedResource<any>;
+
+  object?: ResourceObjectContext<TResourceStatic>;
 
   session: Session;
 }
