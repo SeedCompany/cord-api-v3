@@ -132,6 +132,11 @@ export class EnhancedResource<T extends ResourceShape<any>> {
   }
 
   @Once()
+  get props() {
+    return new Set<keyof T['prototype'] & string>(this.type.Props as any);
+  }
+
+  @Once()
   get securedProps() {
     return new Set<SecuredResourceKey<T, false>>(this.type.SecuredProps as any);
   }

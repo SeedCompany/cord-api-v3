@@ -165,7 +165,7 @@ export class UserResourcePrivileges<
           last(startCase(this.resource.name).split(' '))!.toLowerCase();
 
     for (const prop of keys(changes)) {
-      const dtoPropName = isRelation(prop, this.object)
+      const dtoPropName = isRelation(this.resource, prop)
         ? prop.slice(0, -2)
         : prop;
       const dtoProp = this.object[dtoPropName];
