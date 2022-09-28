@@ -176,18 +176,8 @@ export class UserService {
   }
 
   async list(input: UserListInput, session: Session): Promise<UserListOutput> {
-    if (await this.authorizationService.canList(User, session)) {
-      const results = await this.userRepo.list(input, session);
-      return await mapListResults(results, (dto) => this.secure(dto, session));
-    } else {
-      // return a list of one: the person's own user info if can't read others
-      const sessionUser = await this.readOne(session.userId, session);
-      return {
-        items: [sessionUser],
-        total: 1,
-        hasMore: false,
-      };
-    }
+    const results = await this.userRepo.list(input, session);
+    return await mapListResults(results, (dto) => this.secure(dto, session));
   }
 
   @CachedOnArg()
