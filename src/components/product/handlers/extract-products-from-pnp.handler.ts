@@ -14,7 +14,7 @@ import {
   EngagementUpdatedEvent,
 } from '../../engagement/events';
 import { FileService } from '../../file';
-import { Book, ScriptureRangeInput } from '../../scripture';
+import { labelOfScriptureRanges } from '../../scripture';
 import { StoryService } from '../../story';
 import {
   CreateDerivativeScriptureProduct,
@@ -98,29 +98,21 @@ export class ExtractProductsFromPnpHandler
 
     // Create/update products 5 at a time.
     await asyncPool(5, actionableProductRows, async (row) => {
-      const { existingId, steps, note, rowIndex: index } = row;
+      const {
+        scripture,
+        unspecifiedScripture,
+        existingId,
+        steps,
+        note,
+        rowIndex: index,
+      } = row;
 
       if (row.bookName) {
-        // Populate one of the two product props based on whether its a known verse range or not.
-        const book = Book.find(row.bookName);
-        const { totalVerses } = row;
-        const isKnown = book.totalVerses === totalVerses;
-        const scriptureReferences: ScriptureRangeInput[] = isKnown
-          ? [
-              {
-                start: book.firstChapter.firstVerse.reference,
-                end: book.lastChapter.lastVerse.reference,
-              },
-            ]
-          : [];
-        const unspecifiedScripture = isKnown
-          ? null
-          : { book: book.name, totalVerses };
-
+        // Populate one of the two product props based on whether it's a known verse range or not.
         const props = {
           methodology,
-          scriptureReferences,
-          unspecifiedScripture,
+          scriptureReferences: scripture,
+          unspecifiedScripture: unspecifiedScripture ?? null,
           steps: steps.map((s) => s.step),
           describeCompletion: note,
         };
@@ -206,9 +198,13 @@ export class ExtractProductsFromPnpHandler
 
     const actionableProductRows = Object.values(
       // group by book name
-      groupBy(rows, (row) => row.bookName)
+      groupBy(rows, (row) => {
+        return row.scripture[0]?.start.book ?? row.unspecifiedScripture?.book;
+      })
     ).flatMap((rowsOfBook) => {
-      const bookName = rowsOfBook[0].bookName;
+      const bookName =
+        rowsOfBook[0].scripture[0]?.start.book ??
+        rowsOfBook[0].unspecifiedScripture?.book;
       if (!bookName) return [];
       let existingProductsForBook = scriptureProducts.filter(
         (ref) => ref.book === bookName
@@ -219,12 +215,29 @@ export class ExtractProductsFromPnpHandler
 
       // Exact matches
       for (const row of rowsOfBook) {
-        const totalVerses = row.totalVerses!;
-        const withTotalVerses = existingProductsForBook.filter(
-          (ref) => ref.totalVerses === totalVerses
-        );
+        const rowScriptureLabel = labelOfScriptureRanges(row.scripture);
+        const withMatches = existingProductsForBook.filter((existingRef) => {
+          if (
+            existingRef.scriptureRanges.length > 0 &&
+            rowScriptureLabel ===
+              labelOfScriptureRanges(existingRef.scriptureRanges)
+          ) {
+            return true;
+          }
+          if (
+            existingRef.unspecifiedScripture &&
+            row.unspecifiedScripture &&
+            existingRef.unspecifiedScripture.book ===
+              row.unspecifiedScripture.book &&
+            existingRef.unspecifiedScripture.totalVerses ===
+              row.unspecifiedScripture.totalVerses
+          ) {
+            return true;
+          }
+          return false;
+        });
         const existingId =
-          withTotalVerses.length === 1 ? withTotalVerses[0].id : undefined;
+          withMatches.length === 1 ? withMatches[0].id : undefined;
         if (existingId) {
           matches.push({ ...row, existingId });
           existingProductsForBook = existingProductsForBook.filter(

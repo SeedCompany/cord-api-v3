@@ -37,6 +37,17 @@ export const parseScripture = (
   return mergeScriptureRanges(refs);
 };
 
+export const tryParseScripture = (input: string | null | undefined) => {
+  if (!input || !input.trim()) {
+    return undefined;
+  }
+  try {
+    return parseScripture(input);
+  } catch (e) {
+    return undefined;
+  }
+};
+
 const parseRange = (input: string, fallbackBook?: string) => {
   const given = lexRange(input);
   if (!given.start.book && !fallbackBook) {

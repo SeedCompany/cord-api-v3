@@ -3,7 +3,7 @@ import { Field, FieldOptions, InputType, ObjectType } from '@nestjs/graphql';
 import { Transform, Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { stripIndent } from 'common-tags';
-import { random, times } from 'lodash';
+import { random, sumBy, times } from 'lodash';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { Range, SecuredPropertyList, SecuredProps } from '../../../common';
 import { Verse } from '../books';
@@ -88,6 +88,13 @@ export abstract class ScriptureRange implements Range<ScriptureReference> {
 
   static fromVerses(range: Range<Verse>) {
     return mapRange(range, (p) => p.reference);
+  }
+
+  static totalVerses(...ranges: ScriptureRange[]) {
+    return sumBy(ranges, (range) => {
+      const verseRange = ScriptureRange.fromReferences(range);
+      return verseRange.end - verseRange.start + 1;
+    });
   }
 
   static random() {

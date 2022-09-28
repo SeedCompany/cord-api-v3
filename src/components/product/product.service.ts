@@ -754,6 +754,8 @@ export class ProductService {
         pnpIndex: productRef.pnpIndex,
         book,
         totalVerses,
+        unspecifiedScripture: productRef.unspecifiedScripture,
+        scriptureRanges: refs,
       };
     });
   }
