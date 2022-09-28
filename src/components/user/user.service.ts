@@ -4,11 +4,9 @@ import {
   CachedOnArg,
   DuplicateException,
   ID,
-  mapFromList,
   NotFoundException,
   ObjectView,
   SecuredList,
-  SecuredProps,
   SecuredResource,
   ServerException,
   Session,
@@ -114,25 +112,13 @@ export class UserService {
   }
 
   async secure(user: UnsecuredDto<User>, session: Session): Promise<User> {
-    const requestingUserId = session.userId;
-
-    // let the user explicitly see all properties only if they're reading their own ID
-    // TODO: express this within the authorization system. Like an Owner/Creator "meta" role that gets these x permissions.
-    const securedProps =
-      user.id === requestingUserId
-        ? (mapFromList(User.SecuredProps, (key) => [
-            key,
-            { canRead: true, canEdit: true, value: user[key] },
-          ]) as SecuredProps<User>)
-        : await this.authorizationService.secureProperties(User, user, session);
+    const securedProps = this.privileges
+      .for(session, User, user)
+      .secureProps(user);
 
     return {
       ...user,
       ...securedProps,
-      roles: {
-        ...securedProps.roles,
-        value: securedProps.roles.value ?? [],
-      },
       canDelete: await this.userRepo.checkDeletePermission(user.id, session),
     };
   }
@@ -144,9 +130,7 @@ export class UserService {
 
     const changes = this.userRepo.getActualChanges(user, input);
 
-    if (user.id !== session.userId) {
-      await this.authorizationService.verifyCanEditChanges(User, user, changes);
-    }
+    await this.authorizationService.verifyCanEditChanges(User, user, changes);
 
     const { roles, email, ...simpleChanges } = changes;
 
