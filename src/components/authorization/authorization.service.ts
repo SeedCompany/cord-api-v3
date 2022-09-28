@@ -27,7 +27,7 @@ export class AuthorizationService {
   constructor(readonly privileges: Privileges) {}
 
   /**
-   * @deprecated Use `Privileges.for(X).secureProps(props)` instead.
+   * @deprecated Use `Privileges.for(X).secure(props)` instead.
    * If you need `otherRoles` or `sensitivity` wrap the object with
    * `withScope` or `withEffectiveSensitivity` respectively.
    */

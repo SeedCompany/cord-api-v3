@@ -12,6 +12,7 @@ import {
   SecuredResourceKey,
   Session,
   UnauthorizedException,
+  UnsecuredDto,
 } from '~/common';
 import { ChangesOf, isRelation } from '~/core/database/changes';
 import { DbPropsOfDto } from '~/core/database/results';
@@ -45,6 +46,18 @@ export class UserResourcePrivileges<
     private readonly policyExecutor: PolicyExecutor
   ) {
     this.resource = EnhancedResource.of(resource);
+  }
+
+  forContext(object: ResourceObjectContext<TResourceStatic>) {
+    if (object === this.object) {
+      return this;
+    }
+    return new UserResourcePrivileges(
+      this.resource,
+      object,
+      this.session,
+      this.policyExecutor
+    );
   }
 
   forEdge(
@@ -191,11 +204,39 @@ export class UserResourcePrivileges<
   }
 
   /**
-   * Takes the given dto which has unsecured props and returns the props that
+   * Takes the given unsecured dto which has unsecured props and returns the props that
    * are supposed to be secured (unsecured props are omitted) as secured.
    *
    * This is mainly here to service the existing codebase. I suspect we'll want
    * to migrate to a different method that handles things in a slightly different way.
+   */
+  secure(
+    dto: UnsecuredDto<TResourceStatic['prototype']>
+  ): TResourceStatic['prototype'] {
+    // Be helpful and allow object param to be skipped upstream.
+    // But it still can be used if given possible for use with condition wrapper functions.
+    const perms = this.object ? this : this.forContext(dto);
+
+    const securedProps = mapFromList(this.resource.securedProps, (key) => {
+      const canRead = perms.can('read', key);
+      const canEdit = perms.can('edit', key);
+      let value = (dto as any)[key];
+      value = canRead ? value : Array.isArray(value) ? [] : undefined;
+      return [key, { value, canRead, canEdit }];
+    }) as SecuredResource<TResourceStatic, false>;
+
+    return {
+      ...dto,
+      ...securedProps,
+      canDelete: perms.can('delete'),
+    };
+  }
+
+  /**
+   * Takes the given dto which has unsecured props and returns the props that
+   * are supposed to be secured (unsecured props are omitted) as secured.
+   *
+   * @deprecated Use {@link secure} instead.
    */
   secureProps(
     dto: DbPropsOfDto<TResourceStatic['prototype']>
