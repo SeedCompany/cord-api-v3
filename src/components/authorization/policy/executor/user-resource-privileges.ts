@@ -72,7 +72,7 @@ export class UserResourcePrivileges<
     ChildListsKey<TResourceStatic>,
     ChildListAction
   >;
-  forEdge(key: string, object: object) {
+  forEdge(key: string, object: any) {
     return new UserEdgePrivileges(
       this.resource,
       key,

@@ -32,7 +32,8 @@ class MemberCondition<
       throw new Error("Needed object's scoped roles but object wasn't given");
     }
 
-    const scope: ScopedRole[] = object[ScopedRoles] ?? object?.scope ?? [];
+    const scope: ScopedRole[] =
+      Reflect.get(object, ScopedRoles) ?? object?.scope ?? [];
     const actual = scope
       .map(splitScope)
       .filter(([scope, _]) => scope === 'project')

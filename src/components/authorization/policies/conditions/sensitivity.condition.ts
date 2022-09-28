@@ -23,7 +23,7 @@ export class SensitivityCondition<
       throw new Error("Needed object's sensitivity but object wasn't given");
     }
     const actual: Sensitivity | undefined =
-      object[EffectiveSensitivity] ?? object.sensitivity;
+      Reflect.get(object, EffectiveSensitivity) ?? object.sensitivity;
 
     if (!actual) {
       throw new Error(

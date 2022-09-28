@@ -43,7 +43,15 @@ export class AuthorizationService {
         ? withScope(props, otherRoles)
         : props;
     props = sensitivity ? withEffectiveSensitivity(props, sensitivity) : props;
-    return this.privileges.for(session, resource, props).secureProps(props);
+    return this.privileges
+      .for(
+        session,
+        resource,
+        // @ts-expect-error I believe this type is functionality the same.
+        // This type has been almost completely dropped from the codebase.
+        props
+      )
+      .secureProps(props);
   }
 
   /**

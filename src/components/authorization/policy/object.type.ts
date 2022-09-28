@@ -1,4 +1,4 @@
-import { ResourceShape } from '~/common';
+import { ResourceShape, UnsecuredDto } from '~/common';
 
 /**
  * An instance of a resource for use in executing policy conditions.
@@ -9,4 +9,4 @@ import { ResourceShape } from '~/common';
  * pass around a lot of places in this module.
  */
 export type ResourceObjectContext<TResourceStatic extends ResourceShape<any>> =
-  TResourceStatic['prototype'];
+  UnsecuredDto<TResourceStatic['prototype']>;
