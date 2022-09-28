@@ -5,7 +5,6 @@ import {
   ChildSinglesKey,
   EnhancedResource,
   isSecured,
-  keys,
   mapFromList,
   ResourceShape,
   SecuredPropsPlusExtraKey,
@@ -152,24 +151,35 @@ export class UserResourcePrivileges<
    */
   verifyChanges(
     changes: ChangesOf<TResourceStatic['prototype']>,
-    { pathPrefix: pathPrefixProp }: { pathPrefix?: string | null } = {}
+    {
+      pathPrefix: pathPrefixProp,
+      legacySecuredInstance,
+    }: {
+      pathPrefix?: string | null;
+      /** @deprecated */
+      legacySecuredInstance?: TResourceStatic['prototype'];
+    } = {}
   ) {
-    if (!this.object) {
-      throw new Error('Current object is required to verify changes');
-    }
-
     const pathPrefix =
       pathPrefixProp ?? pathPrefixProp === null
         ? null
         : // Guess the input field path based on name convention
           last(startCase(this.resource.name).split(' '))!.toLowerCase();
 
-    for (const prop of keys(changes)) {
-      const dtoPropName = isRelation(this.resource, prop)
+    for (const prop of Object.keys(changes)) {
+      const dtoPropName: any = isRelation(this.resource, prop)
         ? prop.slice(0, -2)
         : prop;
-      const dtoProp = this.object[dtoPropName];
-      if (!isSecured(dtoProp) || dtoProp.canEdit) {
+      if (!this.resource.securedProps.has(dtoPropName)) {
+        continue;
+      }
+      if (
+        !legacySecuredInstance
+          ? this.can('edit', dtoPropName)
+          : isSecured(legacySecuredInstance[dtoPropName])
+          ? legacySecuredInstance[dtoPropName].canEdit
+          : true
+      ) {
         continue;
       }
       const fullPath = compact([pathPrefix, prop]).join('.');

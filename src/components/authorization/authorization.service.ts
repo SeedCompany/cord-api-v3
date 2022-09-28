@@ -63,13 +63,14 @@ export class AuthorizationService {
     changes: ChangesOf<TResource['prototype']>,
     pathPrefix?: string | null
   ) {
-    // @ts-expect-error this function doesn't use session. Not sure if I want to
-    // move this function out of its new location or not. Everywhere we call
-    // this we have session available, so it shouldn't be a problem.
+    // @ts-expect-error using legacy option of this function doesn't use session,
+    // but instead using the previously calculated canEdit booleans of secured
+    // properties. New logic uses session to lookup permission as needed
+    // instead of an existing secured object.
     const fakeSession: Session = undefined;
     this.privileges
       .for(fakeSession, resource, baseNode)
-      .verifyChanges(changes, { pathPrefix });
+      .verifyChanges(changes, { legacySecuredInstance: baseNode, pathPrefix });
   }
 
   /**
