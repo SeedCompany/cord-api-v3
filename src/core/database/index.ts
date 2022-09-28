@@ -1,6 +1,7 @@
 export * from './transactional.decorator';
 export * from './database.service';
 export * from './errors';
+export * from './exceptions';
 export * from './transaction';
 export * from './common.repository';
 export * from './dto.repository';
