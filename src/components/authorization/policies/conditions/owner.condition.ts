@@ -1,6 +1,6 @@
 import { Query } from 'cypher-query-builder';
 import { inspect, InspectOptionsStylized } from 'util';
-import { ResourceShape } from '~/common';
+import { ID, ResourceShape, Secured } from '~/common';
 import { User } from '../../../user/dto';
 import {
   AsCypherParams,
@@ -10,15 +10,19 @@ import {
 
 const CQL_VAR = 'requestingUser';
 
-class OwnerCondition<TResourceStatic extends ResourceShape<any> & typeof User>
-  implements Condition<TResourceStatic>
+class OwnerCondition<
+  TResourceStatic extends
+    | ResourceShape<{ creator: ID | Secured<ID> }>
+    | typeof User
+> implements Condition<TResourceStatic>
 {
   isAllowed({ object, resource, session }: IsAllowedParams<TResourceStatic>) {
     if (!object) {
       throw new Error("Needed object but wasn't given");
     }
 
-    return resource.is(User) && object.id === session.userId;
+    const creator = resource.is(User) ? object.id : object.creator;
+    return creator === session.userId;
   }
 
   setupCypherContext(
@@ -38,7 +42,14 @@ class OwnerCondition<TResourceStatic extends ResourceShape<any> & typeof User>
   }
 
   asCypherCondition(_query: Query, other: AsCypherParams<TResourceStatic>) {
-    return `node:User AND node.id = ${String(Reflect.get(other, CQL_VAR))}`;
+    const requester = String(Reflect.get(other, CQL_VAR));
+    if (other.resource.is(User)) {
+      return `node:User AND node.id = ${requester}`;
+    }
+    return [
+      `exists((node)-[:creator { active: true }]->(:Property { value: ${requester} }))`,
+      `exists((node)-[:creator { active: true }]->(:User { id: ${requester} }))`,
+    ].join(' OR ');
   }
 
   [inspect.custom](_depth: number, _options: InspectOptionsStylized) {
