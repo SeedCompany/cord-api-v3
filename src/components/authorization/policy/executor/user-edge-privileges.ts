@@ -1,5 +1,4 @@
 import { LazyGetter as Once } from 'lazy-get-decorator';
-import { lowerCase } from 'lodash';
 import {
   EnhancedResource,
   ResourceShape,
@@ -53,10 +52,11 @@ export class UserEdgePrivileges<
     if (this.can(action)) {
       return;
     }
-    throw new UnauthorizedException(
-      `You do not have the permission to ${action} ${
-        this.object ? 'this' : 'any'
-      } ${lowerCase(this.resource.name)}.${this.key}`
+    throw UnauthorizedException.fromPrivileges(
+      action,
+      this.object,
+      this.resource.name,
+      this.key
     );
   }
 

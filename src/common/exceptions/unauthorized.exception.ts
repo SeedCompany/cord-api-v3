@@ -1,4 +1,5 @@
 import { HttpStatus } from '@nestjs/common';
+import { lowerCase } from 'lodash';
 import { Mutable } from 'type-fest';
 import { InputException, InputExceptionArgs } from './input.exception';
 
@@ -65,5 +66,27 @@ export class UnauthorizedException extends InputException {
   constructor(...args: InputExceptionArgs) {
     super(...InputException.parseArgs(`Insufficient permission`, args));
     (this as Mutable<this>).status = HttpStatus.FORBIDDEN;
+  }
+
+  static fromPrivileges(
+    action: string,
+    object: object | undefined,
+    resource: string,
+    edge?: string
+  ) {
+    action = action === 'read' ? 'view' : action;
+    resource = lowerCase(resource);
+    edge = edge ? lowerCase(edge) : undefined;
+    const scope = object ? 'this' : 'any';
+    if (action === 'create') {
+      const message = edge
+        ? `You do not have the permission to create ${edge} for ${scope} ${resource}`
+        : `You do not have the permission to create ${resource}`;
+      return new UnauthorizedException(message);
+    }
+    const ref = edge ? `${resource}'s ${edge}` : resource;
+    return new UnauthorizedException(
+      `You do not have the permission to ${action} ${scope} ${ref}`
+    );
   }
 }

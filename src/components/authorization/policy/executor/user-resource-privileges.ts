@@ -1,5 +1,5 @@
 import { LazyGetter as Once } from 'lazy-get-decorator';
-import { compact, last, lowerCase, startCase } from 'lodash';
+import { compact, last, startCase } from 'lodash';
 import {
   ChildListsKey,
   ChildSinglesKey,
@@ -138,10 +138,11 @@ export class UserResourcePrivileges<
     if (this.can(action, prop)) {
       return;
     }
-    throw new UnauthorizedException(
-      `You do not have the permission to ${action} ${
-        this.object ? 'this' : 'any'
-      } ${lowerCase(this.resource.name)}${prop ? '.' + prop : ''}`
+    throw UnauthorizedException.fromPrivileges(
+      action,
+      this.object,
+      this.resource.name,
+      prop
     );
   }
 
