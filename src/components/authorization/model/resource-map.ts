@@ -108,6 +108,7 @@ export const ResourceMap = {
 } as const;
 export type ResourceMap = typeof ResourceMap;
 
+/** @deprecated Use {@link import('~/core').ResourcesHost.getByName} instead */
 export const resourceFromName = (name: string) => {
   const resource = ResourceMap[name as keyof ResourceMap];
   if (!resource) {

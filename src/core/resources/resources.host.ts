@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { mapValues } from 'lodash';
-import { CachedOnArg, EnhancedResource } from '~/common';
+import { ValueOf } from 'ts-essentials';
+import { CachedOnArg, EnhancedResource, ServerException } from '~/common';
 import type { ResourceMap as LegacyResourceMap } from '../../components/authorization/model/resource-map';
 import { ResourceMap } from './map';
 import { __privateDontUseThis } from './resource-map-holder';
@@ -29,6 +30,21 @@ export class ResourcesHost {
   async getEnhancedMap(): Promise<EnhancedResourceMap> {
     const map = await this.getMap();
     return mapValues(map, EnhancedResource.of) as any;
+  }
+
+  async getByName<K extends keyof ResourceMap>(
+    name: K
+  ): Promise<ValueOf<Pick<ResourceMap, K>>>;
+  async getByName(name: keyof ResourceMap): Promise<ValueOf<ResourceMap>>;
+  async getByName(name: keyof ResourceMap) {
+    const map = await this.getMap();
+    const resource = map[name];
+    if (!resource) {
+      throw new ServerException(
+        `Unable to determine resource from ResourceMap for type: ${name}`
+      );
+    }
+    return resource;
   }
 
   @CachedOnArg()
