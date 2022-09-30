@@ -1,6 +1,8 @@
 import { HttpStatus } from '@nestjs/common';
 import { lowerCase } from 'lodash';
+import pluralize from 'plur';
 import { Mutable } from 'type-fest';
+import { EnhancedResource } from '../resource.dto';
 import { InputException, InputExceptionArgs } from './input.exception';
 
 /**
@@ -71,22 +73,33 @@ export class UnauthorizedException extends InputException {
   static fromPrivileges(
     action: string,
     object: object | undefined,
-    resource: string,
+    resource: EnhancedResource<any>,
     edge?: string
   ) {
     action = action === 'read' ? 'view' : action;
-    resource = lowerCase(resource);
-    edge = edge ? lowerCase(edge) : undefined;
+    const resourceName = lowerCase(resource.name);
+    const resources = pluralize(resourceName, 2);
+    const edgeName = edge ? lowerCase(edge) : undefined;
+    const edges =
+      edge && edgeName
+        ? (resource.childListKeys as Set<string>).has(edge)
+          ? edgeName // assume child lists are already plural
+          : pluralize(edgeName, 2)
+        : undefined;
+    const prefix = `You do not have the permission to`;
     const scope = object ? 'this' : 'any';
     if (action === 'create') {
-      const message = edge
-        ? `You do not have the permission to create ${edge} for ${scope} ${resource}`
-        : `You do not have the permission to create ${resource}`;
+      const message = edges
+        ? `${prefix} create ${edges} for ${scope} ${
+            object ? resourceName : resources
+          }`
+        : `${prefix} create ${resources}`;
       return new UnauthorizedException(message);
     }
-    const ref = edge ? `${resource}'s ${edge}` : resource;
-    return new UnauthorizedException(
-      `You do not have the permission to ${action} ${scope} ${ref}`
-    );
+    const ref =
+      edgeName && edges
+        ? `${resourceName}'s ${object ? edgeName : edges}`
+        : `${object ? resourceName : resources}`;
+    return new UnauthorizedException(`${prefix} ${action} ${scope} ${ref}`);
   }
 }

@@ -1,4 +1,8 @@
+import { EnhancedResource } from '~/common';
+import { TranslationProject } from '../../components/project/dto';
 import { UnauthorizedException } from './unauthorized.exception';
+
+const Project = EnhancedResource.of(TranslationProject);
 
 describe('UnauthorizedException', () => {
   describe('fromPrivileges', () => {
@@ -7,39 +11,47 @@ describe('UnauthorizedException', () => {
 
     it.each([
       [
-        ['create', {}, 'TranslationProject'] as In,
-        'You do not have the permission to create translation project',
+        ['create', {}, Project] as In,
+        'You do not have the permission to create translation projects',
       ],
       [
-        ['create', undefined, 'TranslationProject'] as In,
-        'You do not have the permission to create translation project',
+        ['create', undefined, Project] as In,
+        'You do not have the permission to create translation projects',
       ],
       [
-        ['create', {}, 'TranslationProject', 'name'] as In,
-        'You do not have the permission to create name for this translation project',
+        ['create', {}, Project, 'commentThreads'] as In,
+        'You do not have the permission to create comment threads for this translation project',
       ],
       [
-        ['create', undefined, 'TranslationProject', 'name'] as In,
-        'You do not have the permission to create name for any translation project',
+        ['create', undefined, Project, 'commentThreads'] as In,
+        'You do not have the permission to create comment threads for any translation projects',
       ],
 
       [
-        ['read', {}, 'TranslationProject'] as In,
+        ['read', {}, Project] as In,
         'You do not have the permission to view this translation project',
       ],
       [
-        ['read', undefined, 'TranslationProject'] as In,
-        'You do not have the permission to view any translation project',
+        ['read', undefined, Project] as In,
+        'You do not have the permission to view any translation projects',
       ],
       [
-        ['read', {}, 'TranslationProject', 'name'] as In,
+        ['read', {}, Project, 'name'] as In,
         `You do not have the permission to view this translation project's name`,
       ],
       [
-        ['read', undefined, 'TranslationProject', 'name'] as In,
-        `You do not have the permission to view any translation project's name`,
+        ['read', undefined, Project, 'name'] as In,
+        `You do not have the permission to view any translation project's names`,
       ],
-    ])('%s', (args: In, message: string) => {
+      [
+        ['delete', {}, Project, 'commentThreads'] as In,
+        `You do not have the permission to delete this translation project's comment threads`,
+      ],
+      [
+        ['delete', undefined, Project, 'commentThreads'] as In,
+        `You do not have the permission to delete any translation project's comment threads`,
+      ],
+    ])('%#', (args: In, message: string) => {
       const ex = UnauthorizedException.fromPrivileges(...args);
       expect(ex.message).toEqual(message);
     });

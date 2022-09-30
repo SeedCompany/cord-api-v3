@@ -55,7 +55,7 @@ export class UserEdgePrivileges<
     throw UnauthorizedException.fromPrivileges(
       action,
       this.object,
-      this.resource.name,
+      this.resource,
       this.key
     );
   }

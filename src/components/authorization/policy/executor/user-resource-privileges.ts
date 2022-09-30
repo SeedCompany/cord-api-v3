@@ -141,7 +141,7 @@ export class UserResourcePrivileges<
     throw UnauthorizedException.fromPrivileges(
       action,
       this.object,
-      this.resource.name,
+      this.resource,
       prop
     );
   }
