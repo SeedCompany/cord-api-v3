@@ -55,6 +55,7 @@ import { Unavailability } from '../../user/unavailability/dto';
 import { AssignableRoles } from '../dto/assignable-roles';
 import { BetaFeatures } from '../dto/beta-features';
 
+/** @deprecated Use {@link import('~/core').ResourcesHost.getMap} instead */
 export const ResourceMap = {
   Commentable,
   Budget,
@@ -106,6 +107,8 @@ export const ResourceMap = {
   AssignableRoles,
   BetaFeatures,
 } as const;
+
+/** @deprecated Use {@link import('~/core').ResourceMap} instead */
 export type ResourceMap = typeof ResourceMap;
 
 /** @deprecated Use {@link import('~/core').ResourcesHost.getByName} instead */
