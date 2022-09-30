@@ -1,21 +1,29 @@
 import { Injectable } from '@nestjs/common';
 import { mapValues } from 'lodash';
 import { CachedOnArg, EnhancedResource } from '~/common';
-import { ResourceMap } from '../../components/authorization/model/resource-map';
+import type { ResourceMap as LegacyResourceMap } from '../../components/authorization/model/resource-map';
+import { ResourceMap } from './map';
+import { __privateDontUseThis } from './resource-map-holder';
 
 export type EnhancedResourceMap = {
   [K in keyof ResourceMap]: EnhancedResource<ResourceMap[K]>;
 };
 
-// TODO Move to ~/core along with resource mapping
 @Injectable()
 export class ResourcesHost {
   async getMap() {
     // Deferred import until now to prevent circular dependency
-    const { ResourceMap } = await import(
+    const legacyPath = await import(
       '../../components/authorization/model/resource-map'
     );
-    return ResourceMap;
+
+    // @ts-expect-error Yeah we are assuming each type has been correctly
+    // registered & type declared.
+    const map: ResourceMap = {
+      ...__privateDontUseThis,
+      ...(legacyPath.ResourceMap as object),
+    };
+    return map;
   }
 
   async getEnhancedMap(): Promise<EnhancedResourceMap> {
@@ -43,4 +51,9 @@ export class ResourcesHost {
     );
     return impls;
   }
+}
+
+declare module '~/core/resources/map' {
+  // eslint-disable-next-line @typescript-eslint/no-empty-interface
+  interface ResourceMap extends LegacyResourceMap {}
 }
