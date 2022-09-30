@@ -1,4 +1,9 @@
-import { ID, ServerException, UnsecuredDto } from '../../../common';
+import {
+  ClientException,
+  ID,
+  ServerException,
+  UnsecuredDto,
+} from '../../../common';
 import { DatabaseService, EventsHandler, IEventHandler } from '../../../core';
 import { Project, ProjectStep } from '../dto';
 import { ProjectUpdatedEvent } from '../events';
@@ -15,6 +20,10 @@ export class SetDepartmentId implements IEventHandler<SubscribedEvent> {
       !event.updated.departmentId;
     if (!shouldSetDepartmentId) {
       return;
+    }
+
+    if (!event.updated.primaryLocation) {
+      throw new ClientException('Primary Location on project must be set');
     }
 
     try {

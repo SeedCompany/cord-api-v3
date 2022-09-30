@@ -21,7 +21,7 @@ export class ServerException extends Exception {
   readonly status: number = 500;
 }
 
-export abstract class ClientException extends Exception {
+export class ClientException extends Exception {
   readonly status: number = 400;
 }
 
