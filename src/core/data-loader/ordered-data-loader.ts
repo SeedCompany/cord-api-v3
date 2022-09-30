@@ -1,5 +1,5 @@
 // eslint-disable-next-line no-restricted-imports -- it's ok in this folder
-import * as DataLoaderLib from 'dataloader';
+import DataLoaderLib from 'dataloader';
 import { identity, startCase } from 'lodash';
 import { GqlContextType, ID, NotFoundException } from '../../common';
 import { anonymousSession } from '../../common/session';

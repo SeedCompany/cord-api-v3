@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { BaseExceptionFilter } from '@nestjs/core';
 import { Request as IRequest, Response as IResponse } from 'express';
-import * as rawBody from 'raw-body';
+import rawBody from 'raw-body';
 import { InputException, ServerException } from '../../common';
 import { FileBucket, LocalBucket } from './bucket';
 import { FilesBucketToken } from './files-bucket.factory';

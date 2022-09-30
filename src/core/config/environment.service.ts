@@ -1,6 +1,6 @@
 import { Injectable, Optional } from '@nestjs/common';
 import { parse as parseEnv } from 'dotenv';
-import * as dotEnvExpand from 'dotenv-expand';
+import dotEnvExpand from 'dotenv-expand';
 import * as fs from 'fs';
 import { isString, mapKeys, pickBy } from 'lodash';
 import { Duration, DurationLike } from 'luxon';
