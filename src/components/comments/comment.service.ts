@@ -175,13 +175,8 @@ export class CommentService {
       );
     }
 
-    const commentList = await this.listCommentsByThreadId(
-      object.thread,
-      CommentListInput.defaultVal,
-      session
-    );
-
-    if (commentList.total === 1) {
+    const thread = await this.repo.threads.readOne(object.thread);
+    if (object.id === thread.firstComment.id) {
       await this.repo.threads.deleteNode(object.thread);
     }
 
