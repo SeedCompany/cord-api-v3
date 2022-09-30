@@ -1,7 +1,7 @@
 import { createUnionType, registerEnumType } from '@nestjs/graphql';
 import { mapValues, uniq } from 'lodash';
-import { keys, simpleSwitch } from '../../../common';
-import { ResourceMap } from '../../authorization/model/resource-map';
+import { keys, simpleSwitch } from '~/common';
+import { ResourceMap } from '~/core';
 import { EthnoArt } from '../../ethno-art/dto';
 import { FieldRegion } from '../../field-region/dto';
 import { FieldZone } from '../../field-zone/dto';
