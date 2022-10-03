@@ -28,20 +28,21 @@ import {
 } from './builder/resource-granter';
 import { all, any, Condition } from './conditions';
 
+interface ResourceGrants {
+  objectLevel: Permissions<string>;
+  propLevel: Readonly<Partial<Record<string, Permissions<string>>>>;
+  childRelations: Readonly<Partial<Record<string, Permissions<string>>>>;
+}
+type Grants = ReadonlyMap<ResourceShape<any>, ResourceGrants>;
+type WritableGrants = Map<ResourceShape<any>, DeepWritable<ResourceGrants>>;
+
 export interface Policy {
   /* Policy Name */
   name: string;
   /* Only applies to these roles */
   roles?: readonly Role[];
   /* What the policy grants */
-  grants: Map<
-    ResourceShape<any>,
-    {
-      objectLevel: Permissions<string>;
-      propLevel: Readonly<Partial<Record<string, Permissions<string>>>>;
-      childRelations: Readonly<Partial<Record<string, Permissions<string>>>>;
-    }
-  >;
+  grants: Grants;
   /* An optimization to determine Powers this policy contains */
   powers: Set<Power>;
 }
@@ -83,7 +84,7 @@ export class PolicyFactory implements OnModuleInit {
     { meta, discoveredClass }: DiscoveredClassWithMeta<PolicyMetadata>
   ): Promise<Policy> {
     const roles = meta.role === 'all' ? undefined : many(meta.role);
-    const grants: DeepWritable<Policy['grants']> = new Map();
+    const grants: WritableGrants = new Map();
     const resultList = many(meta.def(resGranter));
     for (const resourceGrant of resultList) {
       const { resource, perms, props, childRelationships } = (
@@ -129,13 +130,13 @@ export class PolicyFactory implements OnModuleInit {
     const policy: Policy = { name, roles, grants, powers };
 
     this.attachPolicyToConditions(policy);
-    await this.defaultRelationEdgesToResourceLevel(policy);
+    await this.defaultRelationEdgesToResourceLevel(grants);
 
     return policy;
   }
 
   private attachPolicyToConditions(policy: Policy) {
-    const grants = policy.grants as DeepWritable<Policy['grants']>;
+    const grants = policy.grants as WritableGrants;
     for (const { objectLevel, propLevel, childRelations } of grants.values()) {
       for (const [action, perm] of Object.entries(objectLevel)) {
         if (perm && typeof perm !== 'boolean') {
@@ -159,8 +160,7 @@ export class PolicyFactory implements OnModuleInit {
     }
   }
 
-  private async defaultRelationEdgesToResourceLevel(policy: Policy) {
-    const grants = policy.grants as DeepWritable<Policy['grants']>;
+  private async defaultRelationEdgesToResourceLevel(grants: WritableGrants) {
     for (const [rawResource, { childRelations }] of grants.entries()) {
       const resource = EnhancedResource.of(rawResource);
       for (const rel of resource.relations.values()) {
@@ -183,7 +183,7 @@ export class PolicyFactory implements OnModuleInit {
   }
 
   private async determineRelationActionPermissionsFromResourceLevel(
-    grants: Policy['grants'],
+    grants: Grants,
     rel: EnhancedRelation<any>
   ) {
     const type = rel.resource?.type;
@@ -266,7 +266,7 @@ export class PolicyFactory implements OnModuleInit {
     return all(...conditions);
   }
 
-  private async determinePowers(grants: Policy['grants']) {
+  private async determinePowers(grants: Grants) {
     const powers = new Set<Power>();
     const pushPower = (str: string) => {
       const power = `Create${str}`;
