@@ -1,8 +1,8 @@
 import { Info, Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { Fields, IsOnlyId } from '../../common';
-import { Loader, LoaderOf } from '../../core';
-import { EngagementLoader } from '../engagement';
-import { ProgressReport } from '../periodic-report';
+import { Fields, IsOnlyId } from '~/common';
+import { Loader, LoaderOf } from '~/core';
+import { EngagementLoader } from '../../engagement';
+import { ProgressReport } from '../dto';
 
 @Resolver(ProgressReport)
 export class ProgressReportParentResolver {

@@ -1,47 +1,47 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { AnonSession, ListArg, Session } from '../../common';
-import { Loader, LoaderOf } from '../../core';
-import { Engagement, LanguageEngagement } from '../engagement/dto';
+import { AnonSession, ListArg, Session } from '~/common';
+import { Loader, LoaderOf } from '~/core';
+import { Engagement, LanguageEngagement } from '../../engagement/dto';
 import {
   PeriodicReportLoader,
   PeriodicReportService,
-} from '../periodic-report';
+} from '../../periodic-report';
 import {
   PeriodicReportListInput,
   ReportType,
   SecuredPeriodicReport,
-  SecuredPeriodicReportList,
-} from './dto';
+} from '../../periodic-report/dto';
+import { ProgressReportList, SecuredProgressReport } from '../dto';
 
 @Resolver(LanguageEngagement)
-export class PeriodicReportEngagementConnectionResolver {
+export class ProgressReportEngagementConnectionResolver {
   constructor(private readonly service: PeriodicReportService) {}
 
-  @ResolveField(() => SecuredPeriodicReportList)
+  @ResolveField(() => ProgressReportList)
   async progressReports(
     @AnonSession() session: Session,
     @Parent() engagement: Engagement,
     @ListArg(PeriodicReportListInput) input: PeriodicReportListInput,
     @Loader(PeriodicReportLoader)
     periodicReports: LoaderOf<PeriodicReportLoader>
-  ): Promise<SecuredPeriodicReportList> {
+  ): Promise<ProgressReportList> {
     const list = await this.service.list(session, {
       ...input,
       parent: engagement.id,
       type: ReportType.Progress,
     });
     periodicReports.primeAll(list.items);
-    return list;
+    return list as ProgressReportList;
   }
 
-  @ResolveField(() => SecuredPeriodicReport, {
+  @ResolveField(() => SecuredProgressReport, {
     description:
       'The progress report currently due. This is the period that most recently completed.',
   })
   async currentProgressReportDue(
     @AnonSession() session: Session,
     @Parent() engagement: Engagement
-  ): Promise<SecuredPeriodicReport> {
+  ): Promise<SecuredProgressReport> {
     const value = await this.service.getCurrentReportDue(
       engagement.id,
       ReportType.Progress,
@@ -60,7 +60,7 @@ export class PeriodicReportEngagementConnectionResolver {
   async latestProgressReportSubmitted(
     @AnonSession() session: Session,
     @Parent() engagement: Engagement
-  ): Promise<SecuredPeriodicReport> {
+  ): Promise<SecuredProgressReport> {
     const value = await this.service.getLatestReportSubmitted(
       engagement.id,
       ReportType.Progress,
@@ -73,14 +73,14 @@ export class PeriodicReportEngagementConnectionResolver {
     };
   }
 
-  @ResolveField(() => SecuredPeriodicReport, {
+  @ResolveField(() => SecuredProgressReport, {
     description:
       'The progress report due next. This is the period currently in progress.',
   })
   async nextProgressReportDue(
     @AnonSession() session: Session,
     @Parent() engagement: Engagement
-  ): Promise<SecuredPeriodicReport> {
+  ): Promise<SecuredProgressReport> {
     const value = await this.service.getNextReportDue(
       engagement.id,
       ReportType.Progress,

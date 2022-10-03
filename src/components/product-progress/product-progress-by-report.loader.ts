@@ -4,7 +4,7 @@ import {
   LoaderOptionsOf,
   OrderedNestDataLoader,
 } from '../../core';
-import { ProgressReport } from '../periodic-report';
+import type { ProgressReport } from '../progress-report/dto';
 import { ProductProgress } from './dto';
 import { ProductProgressService } from './product-progress.service';
 

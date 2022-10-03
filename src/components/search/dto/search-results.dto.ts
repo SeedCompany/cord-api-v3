@@ -16,7 +16,6 @@ import {
   FinancialReport,
   NarrativeReport,
   IPeriodicReport as PeriodicReport,
-  ProgressReport,
 } from '../../periodic-report/dto';
 import {
   DerivativeScriptureProduct,
@@ -24,6 +23,7 @@ import {
   OtherProduct,
   Product,
 } from '../../product/dto';
+import { ProgressReport } from '../../progress-report/dto';
 import {
   InternshipProject,
   IProject as Project,

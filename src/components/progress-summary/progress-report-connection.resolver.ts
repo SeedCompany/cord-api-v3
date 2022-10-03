@@ -1,6 +1,6 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { Loader, LoaderOf } from '../../core';
-import { ProgressReport } from '../periodic-report';
+import { ProgressReport } from '../progress-report/dto';
 import { ProgressSummary, SummaryPeriod } from './dto';
 import { ProgressSummaryLoader } from './progress-summary.loader';
 

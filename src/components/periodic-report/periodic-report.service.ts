@@ -16,14 +16,14 @@ import { Variable } from '../../core/database/query';
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { FileService } from '../file';
+import { ProgressReport } from '../progress-report/dto';
 import {
   FinancialReport,
-  IPeriodicReport,
   MergePeriodicReports,
   NarrativeReport,
   PeriodicReport,
   PeriodicReportListInput,
-  ProgressReport,
+  PeriodicReportTypeMap,
   ReportType,
   resolveReportType,
   SecuredPeriodicReportList,
@@ -131,7 +131,7 @@ export class PeriodicReportService {
     session: Session
   ): Promise<PeriodicReport> {
     const securedProps = await this.authorizationService.secureProperties(
-      IPeriodicReport,
+      resolveReportType(dto),
       dto,
       session,
       dto.scope
@@ -157,39 +157,46 @@ export class PeriodicReportService {
     };
   }
 
-  async getCurrentReportDue(
+  async getCurrentReportDue<Type extends keyof PeriodicReportTypeMap>(
     parentId: ID,
-    reportType: ReportType,
+    reportType: Type & ReportType,
     session: Session
-  ): Promise<PeriodicReport | undefined> {
-    const report = await this.repo.getCurrentDue(parentId, reportType, session);
-    return report ? await this.secure(report, session) : undefined;
+  ): Promise<PeriodicReportTypeMap[Type] | undefined> {
+    const report: UnsecuredDto<PeriodicReport> | undefined =
+      await this.repo.getCurrentDue(parentId, reportType, session);
+    return report
+      ? ((await this.secure(report, session)) as PeriodicReportTypeMap[Type])
+      : undefined;
   }
 
   matchCurrentDue(parentId: ID | Variable, reportType: ReportType) {
     return this.repo.matchCurrentDue(parentId, reportType);
   }
 
-  async getNextReportDue(
+  async getNextReportDue<Type extends keyof PeriodicReportTypeMap>(
     parentId: ID,
-    reportType: ReportType,
+    reportType: Type & ReportType,
     session: Session
-  ): Promise<PeriodicReport | undefined> {
+  ): Promise<PeriodicReportTypeMap[Type] | undefined> {
     const report = await this.repo.getNextDue(parentId, reportType, session);
-    return report ? await this.secure(report, session) : undefined;
+    return report
+      ? ((await this.secure(report, session)) as PeriodicReportTypeMap[Type])
+      : undefined;
   }
 
-  async getLatestReportSubmitted(
+  async getLatestReportSubmitted<Type extends keyof PeriodicReportTypeMap>(
     parentId: ID,
-    type: ReportType,
+    type: Type & ReportType,
     session: Session
-  ): Promise<PeriodicReport | undefined> {
+  ): Promise<PeriodicReportTypeMap[Type] | undefined> {
     const report = await this.repo.getLatestReportSubmitted(
       parentId,
       type,
       session
     );
-    return report ? await this.secure(report, session) : undefined;
+    return report
+      ? ((await this.secure(report, session)) as PeriodicReportTypeMap[Type])
+      : undefined;
   }
 
   async delete(

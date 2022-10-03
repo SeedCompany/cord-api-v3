@@ -1,11 +1,11 @@
 import { ID } from '../../common';
 import { LoaderFactory, OrderedNestDataLoader } from '../../core';
+import { ProgressReport } from '../progress-report/dto';
 import {
   FinancialReport,
   IPeriodicReport,
   NarrativeReport,
   PeriodicReport,
-  ProgressReport,
 } from './dto';
 import { PeriodicReportService } from './periodic-report.service';
 
