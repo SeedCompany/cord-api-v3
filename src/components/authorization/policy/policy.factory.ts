@@ -11,7 +11,6 @@ import {
   EnhancedResource,
   many,
   mapFromList,
-  ResourceShape,
 } from '~/common';
 import { ResourcesHost } from '~/core/resources';
 import { Powers as Power } from '../dto/powers';
@@ -33,8 +32,8 @@ interface ResourceGrants {
   propLevel: Readonly<Partial<Record<string, Permissions<string>>>>;
   childRelations: Readonly<Partial<Record<string, Permissions<string>>>>;
 }
-type Grants = ReadonlyMap<ResourceShape<any>, ResourceGrants>;
-type WritableGrants = Map<ResourceShape<any>, DeepWritable<ResourceGrants>>;
+type Grants = ReadonlyMap<EnhancedResource<any>, ResourceGrants>;
+type WritableGrants = Map<EnhancedResource<any>, DeepWritable<ResourceGrants>>;
 
 export interface Policy {
   /* Policy Name */
@@ -90,16 +89,14 @@ export class PolicyFactory implements OnModuleInit {
       const { resource, perms, props, childRelationships } = (
         resourceGrant as ResourceGranterImpl<any>
       ).extract();
-      if (!grants.has(resource.type)) {
-        grants.set(resource.type, {
+      if (!grants.has(resource)) {
+        grants.set(resource, {
           objectLevel: {},
           propLevel: {},
           childRelations: {},
         });
       }
-      const { objectLevel, propLevel, childRelations } = grants.get(
-        resource.type
-      )!;
+      const { objectLevel, propLevel, childRelations } = grants.get(resource)!;
       this.mergePermissions(objectLevel, perms);
       for (const prop of props) {
         for (const propName of prop.properties) {
@@ -115,12 +112,13 @@ export class PolicyFactory implements OnModuleInit {
       }
 
       const implementations = await this.resourcesHost.getImplementations(
-        resource.type
+        resource
       );
       for (const implementation of implementations) {
-        if (!grants.has(implementation)) {
+        const impl = EnhancedResource.of(implementation);
+        if (!grants.has(impl)) {
           // If policy doesn't specify this implementation then use interface grant
-          grants.set(implementation, grants.get(resource.type)!);
+          grants.set(impl, grants.get(resource)!);
         }
       }
     }
@@ -161,8 +159,7 @@ export class PolicyFactory implements OnModuleInit {
   }
 
   private async defaultRelationEdgesToResourceLevel(grants: WritableGrants) {
-    for (const [rawResource, { childRelations }] of grants.entries()) {
-      const resource = EnhancedResource.of(rawResource);
+    for (const [resource, { childRelations }] of grants.entries()) {
       for (const rel of resource.relations.values()) {
         if (childRelations[rel.name]) {
           continue; // already defined
@@ -186,7 +183,7 @@ export class PolicyFactory implements OnModuleInit {
     grants: Grants,
     rel: EnhancedRelation<any>
   ) {
-    const type = rel.resource?.type;
+    const type = rel.resource;
     if (!type) {
       // We shouldn't be here if this type is not referencing another
       // resource, so this is a safety/type check.
@@ -202,7 +199,8 @@ export class PolicyFactory implements OnModuleInit {
       return pick(objectLevel, childActions);
     }
 
-    const impls = await this.resourcesHost.getImplementations(type);
+    const rawImpls = await this.resourcesHost.getImplementations(type);
+    const impls = rawImpls.map(EnhancedResource.of);
 
     // If not an interface or policy doesn't specify all implementations of interface.
     if (!(impls.length > 0 && impls.every((impl) => grants.has(impl)))) {
@@ -284,7 +282,7 @@ export class PolicyFactory implements OnModuleInit {
 
       const implementations = await this.resourcesHost.getImplementations(res);
       for (const implementation of implementations) {
-        if (grants.has(implementation)) {
+        if (grants.has(EnhancedResource.of(implementation))) {
           // If policy specifies this implementation then defer to its entry.
           continue;
         }

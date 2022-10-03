@@ -27,7 +27,7 @@ export class PolicyExecutor {
 
     const conditions = [];
     for (const policy of policies) {
-      const grants = policy.grants.get(resource.type);
+      const grants = policy.grants.get(resource);
       if (!grants) {
         continue;
       }
