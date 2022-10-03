@@ -277,6 +277,7 @@ export const Administrator = new DbRole({
         { propertyName: 'type', permission: { read, write, }, },
         { propertyName: 'sensitivity', permission: { read, write, }, },
         { propertyName: 'isoAlpha3', permission: { read, write, }, },
+        { propertyName: 'communicationRegions', permission: { read, write, }, },
         { propertyName: 'fundingAccount', permission: { read, write, }, },
         { propertyName: 'defaultFieldRegion', permission: { read, write, }, },
       ],
