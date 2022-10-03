@@ -8,6 +8,7 @@ import { DbLabel } from './db-label.decorator';
 import { ServerException } from './exceptions';
 import { ID, IdField } from './id-field';
 import { DateTimeField } from './luxon.graphql';
+import { getParentTypes } from './parent-types';
 import { SecuredProps, UnsecuredDto } from './secured-property';
 import { AbstractClassType } from './types';
 import { has } from './util';
@@ -120,6 +121,11 @@ export class EnhancedResource<T extends ResourceShape<any>> {
 
   get name() {
     return this.type.name;
+  }
+
+  @Once()
+  get parentTypes() {
+    return new Set(getParentTypes(this.type));
   }
 
   get hasParent() {

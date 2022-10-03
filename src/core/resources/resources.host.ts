@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { mapValues } from 'lodash';
-import { ValueOf } from 'ts-essentials';
-import { EnhancedResource, getParentTypes, ResourceShape } from '~/common';
+import { CachedOnArg, EnhancedResource } from '~/common';
 import { ResourceMap } from '../../components/authorization/model/resource-map';
 
 export type EnhancedResourceMap = {
@@ -24,29 +23,15 @@ export class ResourcesHost {
     return mapValues(map, EnhancedResource.of) as any;
   }
 
+  @CachedOnArg()
   async getImplementations(
-    interfaceResource:
-      | ValueOf<ResourceMap>
-      | keyof ResourceMap
-      | ResourceShape<any>
-      | EnhancedResource<any>
-  ): Promise<ReadonlyArray<ValueOf<ResourceMap>>> {
-    interfaceResource =
-      interfaceResource instanceof EnhancedResource
-        ? interfaceResource.type
-        : interfaceResource;
-
-    // TODO do once & cache
-    const map = await this.getMap();
-    const interfaceResourceObj =
-      typeof interfaceResource === 'string'
-        ? map[interfaceResource]
-        : interfaceResource;
-
+    interfaceResource: EnhancedResource<any>
+  ): Promise<ReadonlyArray<EnhancedResource<any>>> {
+    const map = await this.getEnhancedMap();
     const impls = Object.values(map).filter((resource) => {
       return (
-        resource !== interfaceResourceObj &&
-        getParentTypes(resource).includes(interfaceResourceObj as any)
+        resource !== interfaceResource &&
+        resource.parentTypes.has(interfaceResource.type)
       );
     });
     return impls;

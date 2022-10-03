@@ -114,8 +114,7 @@ export class PolicyFactory implements OnModuleInit {
       const implementations = await this.resourcesHost.getImplementations(
         resource
       );
-      for (const implementation of implementations) {
-        const impl = EnhancedResource.of(implementation);
+      for (const impl of implementations) {
         if (!grants.has(impl)) {
           // If policy doesn't specify this implementation then use interface grant
           grants.set(impl, grants.get(resource)!);
@@ -199,8 +198,7 @@ export class PolicyFactory implements OnModuleInit {
       return pick(objectLevel, childActions);
     }
 
-    const rawImpls = await this.resourcesHost.getImplementations(type);
-    const impls = rawImpls.map(EnhancedResource.of);
+    const impls = await this.resourcesHost.getImplementations(type);
 
     // If not an interface or policy doesn't specify all implementations of interface.
     if (!(impls.length > 0 && impls.every((impl) => grants.has(impl)))) {
@@ -282,7 +280,7 @@ export class PolicyFactory implements OnModuleInit {
 
       const implementations = await this.resourcesHost.getImplementations(res);
       for (const implementation of implementations) {
-        if (grants.has(EnhancedResource.of(implementation))) {
+        if (grants.has(implementation)) {
           // If policy specifies this implementation then defer to its entry.
           continue;
         }
