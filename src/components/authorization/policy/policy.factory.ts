@@ -110,24 +110,16 @@ export class PolicyFactory implements OnModuleInit {
           this.mergePermissions(childPerms, childRelation.perms);
         }
       }
-
-      const implementations = await this.resourcesHost.getImplementations(
-        resource
-      );
-      for (const impl of implementations) {
-        if (!grants.has(impl)) {
-          // If policy doesn't specify this implementation then use interface grant
-          grants.set(impl, grants.get(resource)!);
-        }
-      }
     }
 
-    const name = startCase(discoveredClass.name.replace(/Policy$/, ''));
-    const powers = await this.determinePowers(grants);
-    const policy: Policy = { name, roles, grants, powers };
-
-    this.attachPolicyToConditions(policy);
+    await this.defaultImplementationsFromInterfaces(grants);
     await this.defaultRelationEdgesToResourceLevel(grants);
+
+    const powers = await this.determinePowers(grants);
+
+    const name = startCase(discoveredClass.name.replace(/Policy$/, ''));
+    const policy: Policy = { name, roles, grants, powers };
+    this.attachPolicyToConditions(policy);
 
     return policy;
   }
@@ -152,6 +144,18 @@ export class PolicyFactory implements OnModuleInit {
           if (perm && typeof perm !== 'boolean') {
             childRelations[rel]![action] = perm.attachPolicy?.(policy) ?? perm;
           }
+        }
+      }
+    }
+  }
+
+  private async defaultImplementationsFromInterfaces(grants: WritableGrants) {
+    for (const [resource, perms] of grants.entries()) {
+      const impls = await this.resourcesHost.getImplementations(resource);
+      for (const impl of impls) {
+        if (!grants.has(impl)) {
+          // If policy doesn't specify this implementation then use interface grant
+          grants.set(impl, perms);
         }
       }
     }
