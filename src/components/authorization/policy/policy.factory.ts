@@ -6,12 +6,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { pick, startCase } from 'lodash';
 import { DeepWritable, Writable } from 'ts-essentials';
 import { keys as keysOf } from 'ts-transformer-keys';
-import {
-  EnhancedRelation,
-  EnhancedResource,
-  many,
-  mapFromList,
-} from '~/common';
+import { EnhancedResource, many, mapFromList } from '~/common';
 import { ResourcesHost } from '~/core/resources';
 import { Powers as Power } from '../dto/powers';
 import { Role } from '../dto/role.dto';
@@ -246,59 +241,26 @@ export class PolicyFactory implements OnModuleInit {
   private async defaultRelationEdgesToResourceLevel(grants: WritableGrants) {
     for (const [resource, { childRelations }] of grants.entries()) {
       for (const rel of resource.relations.values()) {
-        if (childRelations[rel.name]) {
-          continue; // already defined
-        }
-        const childActions =
-          await this.determineRelationActionPermissionsFromResourceLevel(
-            grants,
-            rel
-          );
-        if (!childActions) {
+        const type = rel.resource;
+
+        if (
+          childRelations[rel.name] || // already defined
+          !type || // safety check
+          !grants.has(type) // policy doesn't define resource level
+        ) {
           continue;
         }
-        // Is merge necessary? We already know missing right?
-        const childPerms = (childRelations[rel.name] ??= {});
-        this.mergePermissions(childPerms, childActions);
+
+        const childActions = rel.list
+          ? keysOf<Record<ChildListAction, any>>()
+          : keysOf<Record<ChildSingleAction, any>>();
+
+        this.mergePermissions(
+          (childRelations[rel.name] ??= {}),
+          pick(grants.get(type)!.objectLevel, childActions)
+        );
       }
     }
-  }
-
-  private async determineRelationActionPermissionsFromResourceLevel(
-    grants: Grants,
-    rel: EnhancedRelation<any>
-  ) {
-    const type = rel.resource;
-    if (!type) {
-      // We shouldn't be here if this type is not referencing another
-      // resource, so this is a safety/type check.
-      return undefined;
-    }
-
-    const childActions = rel.list
-      ? keysOf<Record<ChildListAction, any>>()
-      : keysOf<Record<ChildSingleAction, any>>();
-
-    if (grants.has(type)) {
-      const { objectLevel } = grants.get(type)!;
-      return pick(objectLevel, childActions);
-    }
-
-    const impls = await this.resourcesHost.getImplementations(type);
-
-    // If not an interface or policy doesn't specify all implementations of interface.
-    if (!(impls.length > 0 && impls.every((impl) => grants.has(impl)))) {
-      return undefined;
-    }
-
-    // Otherwise take the least permissive intersection of all the implementations.
-    return mapFromList(childActions, (action) => {
-      const implActions = impls.map(
-        (impl) => grants.get(impl)!.objectLevel[action]
-      );
-      const perm = this.mergePermission(implActions, all);
-      return perm ? [action, perm] : null;
-    });
   }
 
   private mergePermissions<TAction extends string>(
