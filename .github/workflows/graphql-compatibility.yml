@@ -9,6 +9,7 @@ on:
 jobs:
   gql-breaking-changes:
     name: GraphQL Compatibility
+    if: ${{ github.event_name != 'pull_request' || !contains(github.event.pull_request.labels.*.name, 'breaking change') }}
     runs-on: ubuntu-latest
 
     steps:
