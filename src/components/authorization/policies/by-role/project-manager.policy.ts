@@ -39,7 +39,7 @@ import { member, Policy, Role, sensMediumOrLower } from '../util';
     ])
     .when(member).create,
   r.Post.edit,
-  r.Product.edit,
+  r.Product.edit.create,
   r.Project.edit.specifically((p) => [
     p
       .many('rootDirectory', 'otherLocations', 'primaryLocation')
