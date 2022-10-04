@@ -150,13 +150,24 @@ export class PolicyFactory implements OnModuleInit {
   }
 
   private async defaultImplementationsFromInterfaces(grants: WritableGrants) {
-    for (const [resource, perms] of grants.entries()) {
+    for (const resource of grants.keys()) {
       const impls = await this.resourcesHost.getImplementations(resource);
       for (const impl of impls) {
-        if (!grants.has(impl)) {
-          // If policy doesn't specify this implementation then use interface grant
-          grants.set(impl, perms);
+        if (grants.has(impl)) {
+          continue;
         }
+        // If policy doesn't specify this implementation then use most specific
+        // interface given.
+        const interfaceToApply = (
+          await this.resourcesHost.getInterfaces(impl)
+        ).find((i) => grants.has(i));
+        const interfacePerms = interfaceToApply && grants.get(interfaceToApply);
+        if (!interfacePerms) {
+          // Safety check, but this shouldn't ever happen, since we only got
+          // here from an interface used in the policy.
+          continue;
+        }
+        grants.set(impl, interfacePerms);
       }
     }
   }

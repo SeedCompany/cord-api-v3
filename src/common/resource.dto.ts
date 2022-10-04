@@ -123,9 +123,20 @@ export class EnhancedResource<T extends ResourceShape<any>> {
     return this.type.name;
   }
 
+  /**
+   * An ordered set of interfaces the resource.
+   *
+   * Note: This doesn't work with mapped types
+   * i.e. {@link import('@nestjs/graphql').IntersectionType}
+   */
   @Once()
-  get parentTypes() {
-    return new Set(getParentTypes(this.type));
+  get interfaces() {
+    return new Set(
+      getParentTypes(this.type)
+        .slice(1) // not self
+        .filter(isResourceClass)
+        .map(EnhancedResource.of)
+    );
   }
 
   get hasParent() {

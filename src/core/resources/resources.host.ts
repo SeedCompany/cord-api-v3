@@ -23,17 +23,19 @@ export class ResourcesHost {
     return mapValues(map, EnhancedResource.of) as any;
   }
 
+  async getInterfaces(resource: EnhancedResource<any>) {
+    // Possible change in future to use GQL.
+    return [...resource.interfaces];
+  }
+
   @CachedOnArg()
   async getImplementations(
     interfaceResource: EnhancedResource<any>
   ): Promise<ReadonlyArray<EnhancedResource<any>>> {
     const map = await this.getEnhancedMap();
-    const impls = Object.values(map).filter((resource) => {
-      return (
-        resource !== interfaceResource &&
-        resource.parentTypes.has(interfaceResource.type)
-      );
-    });
+    const impls = Object.values(map).filter((resource) =>
+      resource.interfaces.has(interfaceResource)
+    );
     return impls;
   }
 }
