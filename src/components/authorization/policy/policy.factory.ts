@@ -112,6 +112,7 @@ export class PolicyFactory implements OnModuleInit {
       }
     }
 
+    await this.defaultInterfacesFromImplementationsIntersection(grants);
     await this.defaultImplementationsFromInterfaces(grants);
     await this.defaultRelationEdgesToResourceLevel(grants);
 
@@ -122,6 +123,76 @@ export class PolicyFactory implements OnModuleInit {
     this.attachPolicyToConditions(policy);
 
     return policy;
+  }
+
+  /**
+   * Declare permissions of missing interfaces based on the intersection of
+   * the permissions of its implementations
+   */
+  private async defaultInterfacesFromImplementationsIntersection(
+    grantMap: WritableGrants
+  ) {
+    const interfaceCandidates = new Set(
+      (
+        await Promise.all(
+          [...grantMap.keys()].map((res) =>
+            this.resourcesHost.getInterfaces(res)
+          )
+        )
+      ).flat()
+    );
+
+    const allKeysOf = (list: Array<object | undefined>) =>
+      new Set(list.flatMap((itemObj) => (itemObj ? Object.keys(itemObj) : [])));
+
+    const intersectPermissions = (
+      perms: Array<Permissions<string> | undefined>
+    ): Permissions<string> =>
+      mapFromList(allKeysOf(perms), (action) => {
+        const implActions = perms.map((g) => g?.[action] ?? false);
+        const perm = this.mergePermission(implActions, all);
+        return perm ? [action, perm] : null;
+      });
+
+    for (const interfaceRes of interfaceCandidates) {
+      // Skip if policy already defines
+      if (grantMap.has(interfaceRes)) {
+        continue;
+      }
+
+      const impls = await this.resourcesHost.getImplementations(interfaceRes);
+
+      // Skip if policy doesn't specify all implementations of the interface
+      if (!(impls.length > 0 && impls.every((impl) => grantMap.has(impl)))) {
+        continue;
+      }
+
+      const implGrants = impls.map((impl) => grantMap.get(impl)!);
+      const objectLevelPermissions = implGrants.map((g) => g.objectLevel);
+      const propLevelPermissions = implGrants.map((g) => g.propLevel);
+      const childRelationPermissions = implGrants.map((g) => g.childRelations);
+
+      const interfaceGrants: ResourceGrants = {
+        objectLevel: intersectPermissions(objectLevelPermissions),
+        propLevel: mapFromList(allKeysOf(propLevelPermissions), (prop) => {
+          const perms = intersectPermissions(
+            propLevelPermissions.map((propLevel) => propLevel[prop])
+          );
+          return [prop, perms];
+        }),
+        childRelations: mapFromList(
+          allKeysOf(childRelationPermissions),
+          (prop) => {
+            const perms = intersectPermissions(
+              childRelationPermissions.map((propLevel) => propLevel[prop])
+            );
+            return [prop, perms];
+          }
+        ),
+      };
+
+      grantMap.set(interfaceRes, interfaceGrants);
+    }
   }
 
   private attachPolicyToConditions(policy: Policy) {

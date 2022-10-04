@@ -23,9 +23,14 @@ export class ResourcesHost {
     return mapValues(map, EnhancedResource.of) as any;
   }
 
-  async getInterfaces(resource: EnhancedResource<any>) {
+  @CachedOnArg()
+  async getInterfaces(
+    resource: EnhancedResource<any>
+  ): Promise<ReadonlyArray<EnhancedResource<any>>> {
     // Possible change in future to use GQL.
-    return [...resource.interfaces];
+    const map = await this.getEnhancedMap();
+    const resSet = new Set<EnhancedResource<any>>(Object.values(map));
+    return [...resource.interfaces].filter((i) => resSet.has(i));
   }
 
   @CachedOnArg()
