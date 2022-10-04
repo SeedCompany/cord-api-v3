@@ -38,7 +38,11 @@ export class PolicyExecutor {
         ? grants.propLevel[prop]?.[action] ?? grants.objectLevel[action]
         : grants.objectLevel[action];
 
-      if (!condition) {
+      if (condition == null) {
+        continue;
+      }
+      if (condition === false) {
+        // Deny actions should not cross into other policies, continue executing.
         continue;
       }
       if (condition === true) {

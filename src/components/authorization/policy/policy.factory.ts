@@ -225,7 +225,7 @@ export class PolicyFactory implements OnModuleInit {
       const implActions = impls.map(
         (impl) => grants.get(impl)!.objectLevel[action]
       );
-      const perm = this.intersectPermission(...implActions);
+      const perm = this.mergePermission(implActions, all);
       return perm ? [action, perm] : null;
     });
   }
@@ -235,46 +235,35 @@ export class PolicyFactory implements OnModuleInit {
     toMerge: Permissions<TAction>
   ) {
     for (const [action, perm] of Object.entries(toMerge) as Array<
-      [TAction, Permission | true]
+      [TAction, Permission]
     >) {
-      existing[action] = this.unionPermission(perm, existing[action]);
+      existing[action] = this.mergePermission([perm, existing[action]], any);
     }
     return existing;
   }
 
-  private unionPermission(
-    ...perms: Array<Permission | undefined>
+  private mergePermission(
+    perms: ReadonlyArray<Permission | undefined>,
+    mergeConditions: (...conditions: Array<Condition<any>>) => Condition<any>
   ): Permission | undefined {
-    const cleaned = perms.filter((p): p is Permission => !!p);
+    const cleaned = perms.filter((p): p is Permission => p != null);
     if (cleaned.length === 0) {
       return undefined;
     }
-    if (perms.some((perm) => perm === true)) {
-      return true;
-    }
-    if (perms.length === 1) {
+    if (cleaned.length === 1) {
       return perms[0];
     }
-    const conditions = cleaned.filter((p): p is Condition<any> => p !== true);
-    // This could result in duplicates entries for the same condition.
-    // An optimization would be to de-dupe those.
-    return any(...conditions);
-  }
-
-  private intersectPermission(
-    ...perms: Array<Permission | undefined>
-  ): Permission | undefined {
-    const cleaned = perms.filter((p): p is Permission => !!p);
-    if (cleaned.length === 0) {
-      return undefined;
+    if (cleaned.some((perm) => perm === false)) {
+      return false;
     }
-    if (cleaned.every((perm) => perm === true)) {
+    if (cleaned.some((perm) => perm === true)) {
       return true;
     }
-    const conditions = cleaned.filter((p): p is Condition<any> => p !== true);
+    // Since we've checked for booleans above, this is safe.
+    const conditions = cleaned as Array<Condition<any>>;
     // This could result in duplicates entries for the same condition.
     // An optimization would be to de-dupe those.
-    return all(...conditions);
+    return mergeConditions(...conditions);
   }
 
   private async determinePowers(grants: Grants) {

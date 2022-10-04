@@ -4,7 +4,7 @@ import { all, any, Condition } from '../conditions';
 export type Permissions<TAction extends string> = {
   readonly [A in TAction]?: Permission;
 };
-export type Permission = Condition<any> | true;
+export type Permission = Condition<any> | boolean;
 
 export abstract class PermGranter<
   TResourceStatic extends ResourceShape<any>,
