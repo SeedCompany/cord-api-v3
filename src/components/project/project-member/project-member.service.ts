@@ -37,6 +37,7 @@ import {
   ProjectMemberListOutput,
   UpdateProjectMember,
 } from './dto';
+import { ProjectMemberCreatedEvent, ProjectMemberDeletedEvent } from './events';
 import { ProjectMemberRepository } from './project-member.repository';
 
 @Injectable()
@@ -112,7 +113,11 @@ export class ProjectMemberService {
         throw new ServerException('Failed to create project member');
       }
 
-      return await this.readOne(id, session);
+      const projectMember = await this.readOne(id, session);
+      await this.eventBus.publish(
+        new ProjectMemberCreatedEvent(projectMember, session)
+      );
+      return projectMember;
     } catch (exception) {
       throw new ServerException('Could not create project member', exception);
     }
@@ -235,6 +240,7 @@ export class ProjectMemberService {
 
       throw new ServerException('Failed to delete project member', exception);
     }
+    await this.eventBus.publish(new ProjectMemberDeletedEvent(object, session));
   }
 
   async list(

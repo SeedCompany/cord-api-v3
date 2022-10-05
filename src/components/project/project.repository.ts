@@ -306,6 +306,27 @@ export class ProjectRepository extends CommonRepository {
     return result?.props;
   }
 
+  async isUserConnectedToSensitivity(userId: ID) {
+    const sensitiveProject = await this.db
+      .query()
+      .match([
+        node('project', 'Project'),
+        relation('out', '', 'member', ACTIVE),
+        node('member', 'ProjectMember'),
+        relation('out', '', 'user', ACTIVE),
+        node('user', 'User', { id: userId }),
+      ])
+      .match([
+        node('project'),
+        relation('out', '', 'sensitivity', ACTIVE),
+        node('sensitivity', 'Property'),
+      ])
+      .where({ 'sensitivity.value': [Sensitivity.High, Sensitivity.Medium] })
+      .return('project')
+      .first();
+    return !!sensitiveProject;
+  }
+
   @OnIndex()
   private createIndexes() {
     return this.getConstraintsFor(IProject);
