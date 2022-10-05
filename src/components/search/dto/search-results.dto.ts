@@ -7,7 +7,7 @@ import { FieldRegion } from '../../field-region/dto';
 import { FieldZone } from '../../field-zone/dto';
 import { Film } from '../../film/dto';
 import { FundingAccount } from '../../funding-account/dto';
-import { Language } from '../../language/dto';
+import { EthnologueLanguage, Language } from '../../language/dto';
 import { LiteracyMaterial } from '../../literacy-material/dto';
 import { Location } from '../../location/dto';
 import { Organization } from '../../organization/dto';
@@ -40,6 +40,7 @@ const publicSearchable = {
   Organization,
   Partner,
   Language,
+  EthnologueLanguage,
   TranslationProject,
   InternshipProject,
   User,
@@ -64,11 +65,13 @@ const publicSearchable = {
 // since they are expected to be used only for internal use.
 const privateSearchable = {
   PartnerByOrg: Partner,
+  LanguageByEthnologueLanguage: Language,
 } as const;
 
 // Expand this to add more search types, but not result types.
 // Only use if not a concrete type.
 const searchableAbstracts = {
+  EthnologueLanguage,
   Project,
   Product,
   PeriodicReport,

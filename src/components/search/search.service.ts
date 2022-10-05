@@ -13,6 +13,7 @@ import {
   Permission,
 } from '../authorization/authorization.service';
 import { ResourceMap } from '../authorization/model/resource-map';
+import { LanguageService } from '../language';
 import { PartnerService } from '../partner';
 import {
   SearchableMap,
@@ -39,12 +40,17 @@ export class SearchService {
       ...(await this.partners.readOnePartnerByOrgId(...args)),
       __typename: 'Partner',
     }),
+    LanguageByEthnologueLanguage: async (...args) => ({
+      ...(await this.languages.readOneLanguageByEthLangId(...args)),
+      __typename: 'Language',
+    }),
   };
   /* eslint-enable @typescript-eslint/naming-convention */
 
   constructor(
     private readonly resources: ResourceResolver,
     private readonly auth: AuthorizationService,
+    private readonly languages: LanguageService,
     private readonly partners: PartnerService,
     private readonly repo: SearchRepository
   ) {}
@@ -58,6 +64,11 @@ export class SearchService {
       // Add Organization label when searching for Partners we can search for
       // Partner by organization name
       ...(inputTypes.includes('Partner') ? (['Organization'] as const) : []),
+      // Add EthnologueLanguage label when searching for Languages we can search for
+      // Language by Eth Code and ROD
+      ...(inputTypes.includes('Language')
+        ? (['EthnologueLanguage'] as const)
+        : []),
     ];
 
     // Search for nodes based on input, only returning their id and "type"
@@ -76,11 +87,15 @@ export class SearchService {
           matchedProps,
         }))
         // Map Org results to Org & Partner results based on types asked for
+        // Map EthnologueLanguage results to EthnologueLanguage & Language results based on types asked for
         .flatMap((result) =>
-          result.type !== 'Organization'
+          result.type !== 'Organization' && result.type !== 'EthnologueLanguage'
             ? result
             : [
-                ...(inputTypes.includes('Organization') ? [result] : []),
+                ...(inputTypes.includes('Organization') ||
+                inputTypes.includes('EthnologueLanguage')
+                  ? [result]
+                  : []),
                 // If matched Organization, include Partner implicitly
                 ...(inputTypes.includes('Partner')
                   ? [
@@ -88,6 +103,16 @@ export class SearchService {
                         id: result.id, // hydrator knows this is an org id not partner
                         type: 'PartnerByOrg' as const,
                         matchedProps: ['organization' as const],
+                      },
+                    ]
+                  : []),
+                // If matched EthnologueLanguage, include Language implicitly
+                ...(inputTypes.includes('Language')
+                  ? [
+                      {
+                        id: result.id, // hydrator knows this is an ethLang id not language
+                        type: 'LanguageByEthnologueLanguage' as const,
+                        matchedProps: ['ethnologueLanguage' as const],
                       },
                     ]
                   : []),
