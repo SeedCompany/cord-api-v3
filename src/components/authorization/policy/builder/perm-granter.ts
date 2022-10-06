@@ -34,7 +34,7 @@ export abstract class PermGranter<
    */
   protected action(...actions: TAction[]): this {
     const cloned = this.clone();
-    cloned.conditionWithoutAction = false;
+    cloned.trailingCondition = undefined;
     const perm = cloned.stagedCondition ?? true;
     cloned.perms = [
       ...cloned.perms,
@@ -51,7 +51,15 @@ export abstract class PermGranter<
   when(condition: Condition<TResourceStatic>): this {
     const cloned = this.clone();
     cloned.stagedCondition = condition;
-    cloned.conditionWithoutAction = true;
+    if (process.env.NODE_ENV !== 'production') {
+      cloned.trailingCondition = new Error(
+        'Condition applies to nothing. Specify before actions.'
+      );
+      cloned.trailingCondition.stack = [
+        `Error: ${cloned.trailingCondition.message}`,
+        ...cloned.trailingCondition.stack!.split('\n').slice(2, 3),
+      ].join('\n');
+    }
     return cloned;
   }
 
@@ -83,6 +91,9 @@ export abstract class PermGranter<
   }
 
   protected extract() {
+    if (this.trailingCondition) {
+      throw this.trailingCondition;
+    }
     return {
       perms: this.perms,
     };
@@ -90,7 +101,7 @@ export abstract class PermGranter<
 
   protected perms: ReadonlyArray<Permissions<TAction>> = [];
   /** Is a conditioned declared without an action. Maybe move to TS */
-  protected conditionWithoutAction: boolean;
+  protected trailingCondition?: Error;
 
   protected clone(): this {
     const cloned = Object.assign(

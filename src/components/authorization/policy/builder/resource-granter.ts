@@ -71,12 +71,14 @@ export abstract class ResourceGranter<
       this.stagedCondition
     );
 
-    const newGrants = grants(propsGranter) as Many<
+    const newGrants = many(grants(propsGranter)) as Array<
       PropGranterImpl<TResourceStatic>
     >;
 
     const cloned = this.clone();
-    cloned.propGrants = [...this.propGrants, ...many(newGrants)];
+    cloned.trailingCondition =
+      newGrants.length > 0 ? undefined : cloned.trailingCondition;
+    cloned.propGrants = [...this.propGrants, ...newGrants];
     return cloned;
   }
 
@@ -107,12 +109,14 @@ export abstract class ResourceGranter<
       this.stagedCondition
     );
 
-    const newGrants = relationGrants(granter);
+    const newGrants = many(relationGrants(granter));
 
     const cloned = this.clone();
+    cloned.trailingCondition =
+      newGrants.length > 0 ? undefined : cloned.trailingCondition;
     cloned.childRelationshipGrants = [
       ...this.childRelationshipGrants,
-      ...many(newGrants),
+      ...newGrants,
     ];
     return cloned;
   }
