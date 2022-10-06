@@ -128,6 +128,17 @@ export class ResourceGranterImpl<
     ) as any;
   }
 
+  withOther(other: ResourceGranterImpl<TResourceStatic>): this {
+    const cloned = this.clone();
+    cloned.perms = [...this.perms, ...other.perms];
+    cloned.propGrants = [...this.propGrants, ...other.propGrants];
+    cloned.childRelationshipGrants = [
+      ...this.childRelationshipGrants,
+      ...other.childRelationshipGrants,
+    ];
+    return cloned;
+  }
+
   extract() {
     return {
       resource: this.resource,
