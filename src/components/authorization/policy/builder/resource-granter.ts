@@ -141,8 +141,8 @@ export class ResourceGranterImpl<
 
   extract() {
     return {
+      ...super.extract(),
       resource: this.resource,
-      perms: this.perms,
       props: this.propGrants.map((prop) => prop.extract()),
       childRelationships: this.childRelationshipGrants.map((rel) =>
         rel.extract()

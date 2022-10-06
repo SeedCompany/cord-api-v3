@@ -39,9 +39,9 @@ export class PropGranterImpl<
 > extends PropGranter<TResourceStatic> {
   extract() {
     return {
+      ...super.extract(),
       resource: this.resource,
       properties: this.properties,
-      perms: this.perms,
     };
   }
 

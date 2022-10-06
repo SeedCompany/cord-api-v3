@@ -82,6 +82,12 @@ export abstract class PermGranter<
     return cloned;
   }
 
+  protected extract() {
+    return {
+      perms: this.perms,
+    };
+  }
+
   protected perms: ReadonlyArray<Permissions<TAction>> = [];
   /** Is a conditioned declared without an action. Maybe move to TS */
   protected conditionWithoutAction: boolean;

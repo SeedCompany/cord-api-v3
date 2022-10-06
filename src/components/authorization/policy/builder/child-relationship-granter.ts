@@ -24,9 +24,9 @@ export abstract class ChildRelationshipGranter<
 
   extract() {
     return {
+      ...super.extract(),
       resource: this.resource,
       relationNames: this.relationNames,
-      perms: this.perms,
     };
   }
 
