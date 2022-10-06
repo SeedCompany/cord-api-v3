@@ -36,10 +36,10 @@ export abstract class PermGranter<
     const cloned = this.clone();
     cloned.conditionWithoutAction = false;
     const perm = cloned.stagedCondition ?? true;
-    cloned.perms = {
+    cloned.perms = [
       ...cloned.perms,
-      ...mapFromList(actions, (action) => [action, perm]),
-    };
+      mapFromList(actions, (action) => [action, perm]),
+    ];
     return cloned;
   }
 
@@ -82,7 +82,7 @@ export abstract class PermGranter<
     return cloned;
   }
 
-  protected perms: Permissions<TAction> = {};
+  protected perms: ReadonlyArray<Permissions<TAction>> = [];
   /** Is a conditioned declared without an action. Maybe move to TS */
   protected conditionWithoutAction: boolean;
 
@@ -91,7 +91,7 @@ export abstract class PermGranter<
       Object.create(Object.getPrototypeOf(this)),
       this
     );
-    cloned.perms = { ...this.perms };
+    cloned.perms = [...this.perms];
     return cloned;
   }
 }

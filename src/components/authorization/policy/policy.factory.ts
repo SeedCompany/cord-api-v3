@@ -92,17 +92,21 @@ export class PolicyFactory implements OnModuleInit {
         });
       }
       const { objectLevel, propLevel, childRelations } = grants.get(resource)!;
-      this.mergePermissions(objectLevel, perms);
+      perms.forEach((objPerms) => this.mergePermissions(objectLevel, objPerms));
       for (const prop of props) {
         for (const propName of prop.properties) {
           const propPerms = (propLevel[propName] ??= {});
-          this.mergePermissions(propPerms, prop.perms);
+          prop.perms.forEach((perms) =>
+            this.mergePermissions(propPerms, perms)
+          );
         }
       }
       for (const childRelation of childRelationships) {
         for (const relationName of childRelation.relationNames) {
           const childPerms = (childRelations[relationName] ??= {});
-          this.mergePermissions(childPerms, childRelation.perms);
+          childRelation.perms.forEach((perms) =>
+            this.mergePermissions(childPerms, perms)
+          );
         }
       }
     }
