@@ -1,25 +1,12 @@
-import { member, Policy, Role, sensMediumOrLower } from '../util';
+import { Policy, Role } from '../util';
 
 // NOTE: There could be other permissions for this role from other policies
 @Policy(Role.Controller, (r) => [
-  r.Budget.edit,
-  r.BudgetRecord.edit,
-  r.Ceremony.read,
-  r.FileNode.edit.create,
   r.Education.read.create,
+  r.Engagement.read.create.delete.specifically((p) => [p.status.edit]),
   r.EthnologueLanguage.read,
-  r.FieldRegion.read,
-  r.FieldZone.read,
-  r.FundingAccount.read,
-  r.Engagement.read.create.delete.specifically((p) => [
-    p.disbursementCompleteDate.edit,
-    p.status.edit,
-  ]),
-  r.Language.read.specifically((p) => [
-    p.locations.whenAny(member, sensMediumOrLower).read,
-  ]),
-  r.Organization.edit.create,
-  r.Partner.edit.create,
+  r.Organization.create,
+  r.Partner.create,
   r.Partnership.edit.create.delete.specifically((p) => [
     p.many(
       'mou',
@@ -30,8 +17,6 @@ import { member, Policy, Role, sensMediumOrLower } from '../util';
       'mouStatus'
     ).read, // Maybe flip and explicitly define props with write perms
   ]),
-  r.Post.edit,
-  r.Product.read,
   r.Project.read.specifically((p) => [
     p.many(
       'step',
@@ -43,10 +28,5 @@ import { member, Policy, Role, sensMediumOrLower } from '../util';
     ).edit,
   ]),
   r.ProjectMember.edit.create.delete,
-  r.PeriodicReport.read,
-  r.User.read,
-  r.Unavailability.read,
-  r.ProjectChangeRequest.edit,
-  r.StepProgress.read,
 ])
 export class ControllerPolicy {}

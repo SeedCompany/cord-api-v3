@@ -1,7 +1,7 @@
 import { member, Policy, Role, sensMediumOrLower } from '../util';
 
 // NOTE: There could be other permissions for this role from other policies
-@Policy(Role.LeadFinancialAnalyst, (r) => [
+@Policy([Role.LeadFinancialAnalyst, Role.Controller], (r) => [
   r.Budget.edit,
   r.BudgetRecord.edit,
   r.Engagement.specifically((p) => p.disbursementCompleteDate.edit),
@@ -13,6 +13,7 @@ import { member, Policy, Role, sensMediumOrLower } from '../util';
   r.Partnership.read.create.delete.specifically((p) => [
     p.many('mouStartOverride', 'mouEndOverride', 'mou', 'mouStatus').edit,
   ]),
+  r.PeriodicReport.edit,
   r.Project.specifically((p) => [
     p.rootDirectory.read,
     p.many(
@@ -27,6 +28,5 @@ import { member, Policy, Role, sensMediumOrLower } from '../util';
       'otherLocations'
     ).edit,
   ]),
-  r.PeriodicReport.edit,
 ])
 export class FinancialAnalystLeadPolicy {}

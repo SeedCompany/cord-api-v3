@@ -4,19 +4,14 @@ import { member, Policy, Role, sensMediumOrLower, sensOnlyLow } from '../util';
 @Policy(Role.ConsultantManager, (r) => [
   r.Budget.whenAny(member, sensMediumOrLower).read,
   r.BudgetRecord.whenAny(member, sensMediumOrLower).read,
-  r.Ceremony.read,
-  r.FileNode.edit,
   r.Education.read,
   r.EthnologueLanguage.whenAny(member, sensMediumOrLower).read,
-  r.FieldRegion.read,
-  r.FieldZone.read,
   r.FundingAccount.read,
   r.Language.read.specifically((p) => [
     p.registryOfDialectsCode.when(sensMediumOrLower).read,
     p.signLanguageCode.when(sensMediumOrLower).read,
     p.locations.when(sensMediumOrLower).read,
   ]),
-  r.Engagement.edit,
   r.LanguageEngagement.edit.specifically((p) => [
     p.paratextRegistryId.whenAny(member, sensMediumOrLower).edit,
   ]),
@@ -30,8 +25,6 @@ import { member, Policy, Role, sensMediumOrLower, sensOnlyLow } from '../util';
   r.Partnership.read.specifically((p) => [
     p.partner.whenAny(member, sensOnlyLow).read,
   ]),
-  r.Post.edit.delete,
-  r.Product.read,
   r.Project.read
     .specifically((p) => [
       p.step.edit,
@@ -45,10 +38,6 @@ import { member, Policy, Role, sensMediumOrLower, sensOnlyLow } from '../util';
     ])
     .children((c) => [c.posts.edit]),
   r.ProjectMember.edit,
-  r.PeriodicReport.read,
   r.User.read,
-  r.Unavailability.read,
-  r.ProjectChangeRequest.edit,
-  r.StepProgress.read,
 ])
 export class ConsultantManagerPolicy {}

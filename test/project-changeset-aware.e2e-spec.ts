@@ -85,7 +85,7 @@ describe('Project Changeset Aware e2e', () => {
     await createSession(app);
 
     await registerUser(app, {
-      roles: [Role.FieldOperationsDirector, Role.LeadFinancialAnalyst],
+      roles: [Role.Administrator],
     });
   });
 

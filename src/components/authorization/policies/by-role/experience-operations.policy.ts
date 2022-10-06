@@ -6,12 +6,11 @@ import { member, Policy, Role, sensMediumOrLower } from '../util';
   r.BudgetRecord.read,
   r.Ceremony.read,
   r.Education.read,
+  r.Engagement.read,
   r.EthnologueLanguage.whenAny(member, sensMediumOrLower).read,
   r.FieldRegion.read,
   r.FieldZone.read,
-  r.FileNode.read,
   r.FundingAccount.read,
-  r.Engagement.read,
   r.Language.read.specifically((p) => [
     p
       .many('registryOfDialectsCode', 'signLanguageCode', 'locations')
@@ -26,14 +25,12 @@ import { member, Policy, Role, sensMediumOrLower } from '../util';
   r.Partnership.read.specifically((p) => [
     p.many('organization', 'partner').whenAny(member, sensMediumOrLower).read,
   ]),
-  r.Post.read,
+  r.PeriodicReport.read,
   r.Product.read,
   r.Project.read,
   r.ProjectMember.read,
-  r.PeriodicReport.read,
-  r.User.read,
-  r.Unavailability.read,
-  r.ProjectChangeRequest.read,
   r.StepProgress.read,
+  r.Unavailability.read,
+  r.User.read,
 ])
 export class ExperienceOperationsPolicy {}

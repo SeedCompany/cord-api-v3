@@ -5,7 +5,6 @@ import { member, Policy, Role, sensOnlyLow } from '../util';
   r.Budget.read,
   r.BudgetRecord.read,
   r.Ceremony.read,
-  r.FileNode.edit.create,
   r.Education.read,
   r.EthnologueLanguage.when(sensOnlyLow).read,
   r.FieldRegion.read,
@@ -30,7 +29,7 @@ import { member, Policy, Role, sensOnlyLow } from '../util';
     p.organization.whenAny(member, sensOnlyLow).read,
     p.partner.whenAny(member, sensOnlyLow).read,
   ]),
-  r.Post.edit,
+  r.PeriodicReport.read,
   r.Product.read,
   r.Project.read
     .specifically((p) => [
@@ -41,10 +40,8 @@ import { member, Policy, Role, sensOnlyLow } from '../util';
     ])
     .children((c) => c.posts.edit),
   r.ProjectMember.read,
-  r.PeriodicReport.read,
-  r.User.read.create,
-  r.Unavailability.read.create,
-  r.ProjectChangeRequest.edit,
   r.StepProgress.read,
+  r.Unavailability.read.create,
+  r.User.read.create,
 ])
 export class MarketingPolicy {}
