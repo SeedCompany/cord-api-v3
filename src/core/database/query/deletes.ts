@@ -5,7 +5,7 @@ import { ACTIVE } from './matching';
 
 export const deleteBaseNode = (nodeVar: string) => (query: Query) =>
   query.comment`deleteBaseNode(${nodeVar})`
-    .match([
+    .optionalMatch([
       node(nodeVar),
       /**
          in this case we want to set Deleted_ labels for all properties
