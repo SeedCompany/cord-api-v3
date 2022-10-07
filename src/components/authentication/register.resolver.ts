@@ -1,4 +1,3 @@
-import { forwardRef, Inject } from '@nestjs/common';
 import {
   Args,
   Context,
@@ -9,8 +8,7 @@ import {
 } from '@nestjs/graphql';
 import { AnonSession, GqlContextType, Session } from '../../common';
 import { Loader, LoaderOf } from '../../core';
-import { AuthorizationService } from '../authorization/authorization.service';
-import { Powers } from '../authorization/dto';
+import { Powers as Power, Privileges } from '../authorization';
 import { User, UserLoader } from '../user';
 import { AuthenticationService } from './authentication.service';
 import { RegisterInput, RegisterOutput } from './dto';
@@ -19,8 +17,7 @@ import { RegisterInput, RegisterOutput } from './dto';
 export class RegisterResolver {
   constructor(
     private readonly authentication: AuthenticationService,
-    @Inject(forwardRef(() => AuthorizationService))
-    private readonly authorization: AuthorizationService
+    private readonly privileges: Privileges
   ) {}
 
   @Mutation(() => RegisterOutput, {
@@ -47,8 +44,8 @@ export class RegisterResolver {
     return await users.load(user);
   }
 
-  @ResolveField(() => [Powers])
-  async powers(@AnonSession() session: Session): Promise<Powers[]> {
-    return await this.authorization.readPower(session);
+  @ResolveField(() => [Power])
+  async powers(@AnonSession() session: Session): Promise<Power[]> {
+    return [...this.privileges.forUser(session).powers];
   }
 }

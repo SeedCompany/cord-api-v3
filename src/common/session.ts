@@ -7,33 +7,20 @@ import { GqlContextType } from './context.type';
 import { UnauthenticatedException } from './exceptions';
 import { ID } from './id-field';
 
-export interface RawSession {
+export interface Session {
   readonly token: string;
   readonly issuedAt: DateTime;
-  readonly userId?: ID;
+  readonly userId: ID;
   readonly roles: ScopedRole[];
-}
-
-export interface Session extends Required<RawSession> {
   readonly anonymous: boolean;
 }
 
-export function loggedInSession(session: RawSession): Session {
-  if (!session.userId) {
+export function loggedInSession(session: Session): Session {
+  if (session.anonymous) {
     throw new UnauthenticatedException('User is not logged in');
   }
-  return {
-    ...session,
-    userId: session.userId,
-    anonymous: false,
-  };
+  return session;
 }
-
-export const anonymousSession = (session: RawSession): Session => ({
-  ...session,
-  userId: session.userId ?? ('anonuserid' as ID),
-  anonymous: !session.userId,
-});
 
 const sessionFromContext = (context: GqlContextType) => {
   if (!context.session) {
@@ -42,8 +29,7 @@ const sessionFromContext = (context: GqlContextType) => {
   return context.session;
 };
 
-export const AnonSession = () =>
-  Context({ transform: sessionFromContext }, { transform: anonymousSession });
+export const AnonSession = () => Context({ transform: sessionFromContext });
 
 export const LoggedInSession = () =>
   Context({ transform: sessionFromContext }, { transform: loggedInSession });

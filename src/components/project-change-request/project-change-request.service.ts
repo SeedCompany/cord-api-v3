@@ -17,8 +17,7 @@ import {
   Logger,
 } from '../../core';
 import { mapListResults } from '../../core/database/results';
-import { AuthorizationService } from '../authorization/authorization.service';
-import { Powers } from '../authorization/dto';
+import { Privileges } from '../authorization';
 import { ChangesetFinalizingEvent } from '../changeset/events';
 import { ProjectService, ProjectStatus } from '../project';
 import {
@@ -38,8 +37,7 @@ export class ProjectChangeRequestService {
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
     @Logger('project:change-request:service') private readonly logger: ILogger,
-    @Inject(forwardRef(() => AuthorizationService))
-    private readonly authorizationService: AuthorizationService,
+    private readonly privileges: Privileges,
     private readonly eventBus: IEventBus,
     @Inject(forwardRef(() => ProjectService))
     private readonly projects: ProjectService,
@@ -50,10 +48,7 @@ export class ProjectChangeRequestService {
     input: CreateProjectChangeRequest,
     session: Session
   ): Promise<ProjectChangeRequest> {
-    await this.authorizationService.checkPower(
-      Powers.CreateChangeRequest,
-      session
-    );
+    this.privileges.for(session, ProjectChangeRequest).verifyCan('create');
 
     const project = await this.projects.readOne(input.projectId, session);
     if (project.status !== ProjectStatus.Active) {
@@ -95,11 +90,9 @@ export class ProjectChangeRequestService {
     dto: UnsecuredDto<ProjectChangeRequest>,
     session: Session
   ): Promise<ProjectChangeRequest> {
-    const securedProps = await this.authorizationService.secureProperties(
-      ProjectChangeRequest,
-      dto,
-      session
-    );
+    const securedProps = this.privileges
+      .for(session, ProjectChangeRequest)
+      .secureProps(dto);
     return {
       ...dto,
       ...securedProps,

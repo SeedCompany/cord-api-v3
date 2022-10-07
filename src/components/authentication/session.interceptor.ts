@@ -11,7 +11,6 @@ import {
 import { Request } from 'express';
 import { GraphQLResolveInfo } from 'graphql';
 import { GqlContextType, UnauthenticatedException } from '../../common';
-import { RawSession } from '../../common/session';
 import { ConfigService } from '../../core';
 import { AuthenticationService } from './authentication.service';
 
@@ -37,7 +36,7 @@ export class SessionInterceptor implements NestInterceptor {
     return next.handle();
   }
 
-  async hydrateSession(context: GqlContextType): Promise<RawSession> {
+  async hydrateSession(context: GqlContextType) {
     const token = this.getTokenFromContext(context);
     if (!token) {
       throw new UnauthenticatedException();

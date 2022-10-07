@@ -50,6 +50,7 @@ const ChangesetAwareResource: Type<Resource & ChangesetAware> =
 class Engagement extends ChangesetAwareResource {
   static readonly Props: string[] = keysOf<Engagement>();
   static readonly SecuredProps: string[] = keysOf<SecuredProps<Engagement>>();
+  static readonly Parent = import('../../project/dto').then((m) => m.IProject);
 
   readonly __typename: 'LanguageEngagement' | 'InternshipEngagement';
 
@@ -132,6 +133,9 @@ export class LanguageEngagement extends Engagement {
     // why is this singular?
     product: [Product],
   };
+  static readonly Parent = import('../../project/dto').then(
+    (m) => m.TranslationProject
+  );
 
   readonly language: Secured<ID>;
 
@@ -164,6 +168,9 @@ export class LanguageEngagement extends Engagement {
 export class InternshipEngagement extends Engagement {
   static readonly Props = keysOf<InternshipEngagement>();
   static readonly SecuredProps = keysOf<SecuredProps<InternshipEngagement>>();
+  static readonly Parent = import('../../project/dto').then(
+    (m) => m.InternshipProject
+  );
 
   readonly countryOfOrigin: Secured<ID>;
 

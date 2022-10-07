@@ -76,7 +76,7 @@ class Project extends Interfaces {
     rootDirectory: Directory,
     member: [ProjectMember], // why singular
     otherLocations: [Location],
-    partnership: Partnership, // why singular
+    partnership: [Partnership], // why singular
     budget: Budget, // currentBudget
     engagement: [Engagement], // why singular
     // edge case because it's writable for internships but not secured

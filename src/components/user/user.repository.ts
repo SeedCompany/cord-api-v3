@@ -206,6 +206,7 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
           pinned: filter.isPinned,
         })
       )
+      .apply(this.privileges.forUser(session).filterToReadable())
       .apply(sorting(User, input))
       .apply(paginate(input, this.hydrate(session.userId)))
       .first();

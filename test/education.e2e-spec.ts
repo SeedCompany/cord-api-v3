@@ -21,7 +21,7 @@ describe('Education e2e', () => {
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
-    user = await registerUser(app, { roles: [Role.LeadFinancialAnalyst] });
+    user = await registerUser(app, { roles: [Role.FieldOperationsDirector] });
   });
 
   afterAll(async () => {

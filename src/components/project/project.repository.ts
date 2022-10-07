@@ -22,7 +22,6 @@ import {
   createRelationships,
   matchChangesetAndChangedProps,
   matchProjectSens,
-  matchProjectSensToLimitedScopeMap,
   matchProps,
   matchPropsAndProjectSensAndScopedRoles,
   merge,
@@ -31,8 +30,7 @@ import {
   sorting,
 } from '../../core/database/query';
 import { DbPropsOfDto } from '../../core/database/results';
-import { Role } from '../authorization';
-import { AuthSensitivityMapping } from '../authorization/authorization.service';
+import { Privileges, Role } from '../authorization';
 import {
   CreateProject,
   InternshipProject,
@@ -49,7 +47,11 @@ import { projectListFilter } from './list-filter.query';
 
 @Injectable()
 export class ProjectRepository extends CommonRepository {
-  constructor(db: DatabaseService, private readonly config: ConfigService) {
+  constructor(
+    db: DatabaseService,
+    private readonly config: ConfigService,
+    private readonly privileges: Privileges
+  ) {
     super(db);
   }
 
@@ -238,18 +240,14 @@ export class ProjectRepository extends CommonRepository {
     );
   }
 
-  async list(
-    input: ProjectListInput,
-    session: Session,
-    limitedScope?: AuthSensitivityMapping
-  ) {
+  async list(input: ProjectListInput, session: Session) {
     const result = await this.db
       .query()
       .matchNode('node', `${input.filter.type ?? ''}Project`)
       .with('distinct(node) as node, node as project')
       .match(requestingUser(session))
       .apply(projectListFilter(input))
-      .apply(matchProjectSensToLimitedScopeMap(limitedScope))
+      .apply(this.privileges.for(session, IProject).filterToReadable())
       .apply(
         sorting(IProject, input, {
           sensitivity: (query) =>

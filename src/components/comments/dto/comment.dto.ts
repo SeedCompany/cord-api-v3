@@ -15,6 +15,9 @@ import {
 export class Comment extends Resource {
   static readonly Props = keysOf<Comment>();
   static readonly SecuredProps: string[] = keysOf<SecuredProps<Comment>>();
+  static readonly Parent = import('./comment-thread.dto').then(
+    (m) => m.CommentThread
+  );
 
   readonly thread: ID;
 

@@ -2,6 +2,7 @@ import { difference, isEmpty, omit, pickBy } from 'lodash';
 import { DateTime } from 'luxon';
 import { ConditionalKeys } from 'type-fest';
 import {
+  EnhancedResource,
   ID,
   MaybeUnsecuredInstance,
   Resource,
@@ -100,8 +101,9 @@ export const getChanges =
       // properties.
       Record<Exclude<keyof Changes, keyof ChangesOf<TResource>>, never>
   ): Partial<Omit<Changes, keyof Resource> & AndModifiedAt<TResource>> => {
+    const res = EnhancedResource.of(resource);
     const actual = pickBy(omit(changes, Resource.Props), (change, prop) => {
-      const key = isRelation(prop, existingObject) ? prop.slice(0, -2) : prop;
+      const key = isRelation(res, prop) ? prop.slice(0, -2) : prop;
       const existing = unwrapSecured(existingObject[key]);
       return !isSame(change, existing);
     });
@@ -120,14 +122,17 @@ export const getChanges =
   };
 
 /**
- * If prop ends with `Id` and existing object has `x` instead of `xId`, assume
+ * If prop ends with `Id` and resource has `x` instead of `xId`, assume
  * it is a relation and the current value is the ID of the relation.
  * This is our convention in order to lazily hydrate them.
  */
-export const isRelation = (prop: string, existingObject: Record<string, any>) =>
-  !(prop in existingObject) &&
+export const isRelation = <TResourceStatic extends ResourceShape<any>>(
+  resource: EnhancedResource<TResourceStatic>,
+  prop: string
+) =>
+  !resource.props.has(prop) &&
   prop.endsWith('Id') &&
-  prop.slice(0, -2) in existingObject;
+  resource.props.has(prop.slice(0, -2));
 
 export const compareNullable =
   <T>(fn: (a: T, b: T) => boolean) =>

@@ -1,5 +1,6 @@
 import { ObjectType, registerEnumType } from '@nestjs/graphql';
-import { SecuredEnumList } from '../../../common';
+import { SecuredEnumList } from '~/common';
+import { ResourcesGranter } from '../policy';
 
 export enum Role {
   Administrator = 'Administrator',
@@ -31,7 +32,7 @@ registerEnumType(Role, { name: 'Role' });
 @ObjectType({
   description: SecuredEnumList.descriptionFor('roles'),
 })
-export abstract class SecuredRoles extends SecuredEnumList(Role) {}
+export abstract class SecuredRoles extends SecuredEnumList<Role, Role>(Role) {}
 
 export type ProjectScope = 'project';
 export type GlobalScope = 'global';
@@ -50,32 +51,21 @@ export const rolesForScope =
   (role: Role): ScopedRole =>
     `${scope}:${role}` as const;
 
-export const withoutScope = (role: ScopedRole): Role =>
-  role.split(':')[1] as Role;
+export const withoutScope = (role: ScopedRole): Role => splitScope(role)[1];
 
-export type InternalRole =
-  | 'AdministratorRole'
-  | 'BetaTesterRole'
-  | 'BibleTranslationLiaisonRole'
-  | 'ConsultantRole'
-  | 'ConsultantManagerRole'
-  | 'ControllerRole'
-  | 'ExperienceOperations'
-  | 'FieldOperationsDirectorRole'
-  | 'FieldPartnerRole'
-  | 'FinancialAnalystOnGlobalRole'
-  | 'FinancialAnalystOnProjectRole'
-  | 'FundraisingRole'
-  | 'InternRole'
-  | 'LeadFinancialAnalystRole'
-  | 'LeadershipRole'
-  | 'LiaisonRole'
-  | 'MarketingRole'
-  | 'MentorRole'
-  | 'ProjectManagerGlobalRole'
-  | 'ProjectManagerOnProjectRole'
-  | 'RegionalCommunicationsCoordinatorRole'
-  | 'RegionalDirectorGlobalRole'
-  | 'RegionalDirectorOnProjectRole'
-  | 'StaffMemberRole'
-  | 'TranslatorRole';
+export const splitScope = (role: ScopedRole) =>
+  role.split(':') as [AuthScope, Role];
+
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export namespace Role {
+  /**
+   * A helper to grant roles to be assignable in a more readable way.
+   * This should be used within a Policy.
+   */
+  export const assignable = (
+    resources: ResourcesGranter,
+    roles: readonly Role[]
+  ) => resources.AssignableRoles.specifically((p) => p.many(...roles).edit);
+
+  Object.defineProperty(Role, 'assignable', { enumerable: false });
+}

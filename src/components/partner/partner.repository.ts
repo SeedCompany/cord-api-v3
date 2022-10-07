@@ -10,16 +10,15 @@ import {
   filter as filters,
   matchProjectScopedRoles,
   matchProjectSens,
-  matchProjectSensToLimitedScopeMap,
   matchProps,
   matchRequestingUser,
   merge,
+  oncePerProject,
   paginate,
   rankSens,
   requestingUser,
   sorting,
 } from '../../core/database/query';
-import { AuthSensitivityMapping } from '../authorization/authorization.service';
 import { CreatePartner, Partner, PartnerListInput } from './dto';
 
 @Injectable()
@@ -153,11 +152,7 @@ export class PartnerRepository extends DtoRepository<
       .run();
   }
 
-  async list(
-    { filter, ...input }: PartnerListInput,
-    session: Session,
-    limitedScope?: AuthSensitivityMapping
-  ) {
+  async list({ filter, ...input }: PartnerListInput, session: Session) {
     const result = await this.db
       .query()
       .matchNode('node', 'Partner')
@@ -172,18 +167,6 @@ export class PartnerRepository extends DtoRepository<
             ]
           : []),
       ])
-      .apply((q) =>
-        limitedScope
-          ? q.optionalMatch([
-              node('project', 'Project'),
-              relation('out', '', 'partnership'),
-              node('', 'Partnership'),
-              relation('out', '', 'partner'),
-              node('node'),
-            ])
-          : q
-      )
-      // match requesting user once (instead of once per row)
       .match(requestingUser(session))
       .apply(
         filters.builder(filter, {
@@ -191,7 +174,20 @@ export class PartnerRepository extends DtoRepository<
           userId: filters.skip, // already applied above
         })
       )
-      .apply(matchProjectSensToLimitedScopeMap(limitedScope))
+      .apply(
+        this.privileges.forUser(session).filterToReadable({
+          wrapContext: (inner) => (query) =>
+            query
+              .optionalMatch([
+                node('project', 'Project'),
+                relation('out', '', 'partnership'),
+                node('', 'Partnership'),
+                relation('out', '', 'partner'),
+                node('node'),
+              ])
+              .apply(oncePerProject(inner)),
+        })
+      )
       .apply(
         sorting(Partner, input, {
           name: (query) =>

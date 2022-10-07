@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { inArray, node, Query, relation } from 'cypher-query-builder';
+import { pickBy } from 'lodash';
 import {
   ID,
   labelForView,
@@ -16,16 +17,15 @@ import {
   createNode,
   createRelationships,
   matchChangesetAndChangedProps,
-  matchProjectSensToLimitedScopeMap,
   matchPropsAndProjectSensAndScopedRoles,
   matchRequestingUser,
   matchSession,
   merge,
+  oncePerProject,
   paginate,
   requestingUser,
   sorting,
 } from '../../core/database/query';
-import { AuthSensitivityMapping } from '../authorization/authorization.service';
 import { BudgetRecordRepository } from './budget-record.repository';
 import {
   Budget,
@@ -126,33 +126,20 @@ export class BudgetRepository extends DtoRepository<
     return result.status;
   }
 
-  async list(
-    { filter, ...input }: BudgetListInput,
-    session: Session,
-    limitedScope?: AuthSensitivityMapping
-  ) {
-    const matchProjectId = filter.projectId ? { id: filter.projectId } : {};
-
+  async list({ filter, ...input }: BudgetListInput, session: Session) {
     const result = await this.db
       .query()
       .match([
-        ...(limitedScope
-          ? [
-              node('project', 'Project', matchProjectId),
-              relation('out', '', 'budget', ACTIVE),
-            ]
-          : filter.projectId
-          ? [
-              relation('in', '', 'budget', ACTIVE),
-              node('project', 'Project', {
-                id: filter.projectId,
-              }),
-            ]
-          : []),
         node('node', 'Budget'),
+        relation('in', '', 'budget', ACTIVE),
+        node('project', 'Project', pickBy({ id: filter.projectId })),
       ])
       .match(requestingUser(session))
-      .apply(matchProjectSensToLimitedScopeMap(limitedScope))
+      .apply(
+        this.privileges.forUser(session).filterToReadable({
+          wrapContext: oncePerProject,
+        })
+      )
       .apply(sorting(Budget, input))
       .apply(paginate(input))
       .first();

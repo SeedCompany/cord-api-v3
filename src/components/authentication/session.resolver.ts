@@ -1,4 +1,3 @@
-import { forwardRef, Inject } from '@nestjs/common';
 import {
   Args,
   Context,
@@ -13,10 +12,8 @@ import {
   ServerException,
   UnauthenticatedException,
 } from '../../common';
-import { anonymousSession } from '../../common/session';
 import { ConfigService, ILogger, Loader, LoaderOf, Logger } from '../../core';
-import { AuthorizationService } from '../authorization/authorization.service';
-import { Powers } from '../authorization/dto';
+import { Powers as Power, Privileges } from '../authorization';
 import { User, UserLoader } from '../user';
 import { AuthenticationRepository } from './authentication.repository';
 import { AuthenticationService } from './authentication.service';
@@ -28,8 +25,7 @@ export class SessionResolver {
   constructor(
     private readonly authentication: AuthenticationService,
     private readonly repo: AuthenticationRepository,
-    @Inject(forwardRef(() => AuthorizationService))
-    private readonly authorization: AuthorizationService,
+    private readonly privileges: Privileges,
     private readonly config: ConfigService,
     private readonly sessionInt: SessionInterceptor,
     @Logger('session:resolver') private readonly logger: ILogger
@@ -52,9 +48,9 @@ export class SessionResolver {
     const existingToken = this.sessionInt.getTokenFromContext(context);
 
     let token = existingToken || (await this.authentication.createToken());
-    let rawSession;
+    let session;
     try {
-      rawSession = await this.authentication.resumeSession(token);
+      session = await this.authentication.resumeSession(token);
     } catch (exception) {
       if (!(exception instanceof UnauthenticatedException)) {
         throw exception;
@@ -64,10 +60,9 @@ export class SessionResolver {
         { exception }
       );
       token = await this.authentication.createToken();
-      rawSession = await this.authentication.resumeSession(token);
+      session = await this.authentication.resumeSession(token);
     }
-    context.session = rawSession; // Set for data loaders invoked later in operation
-    const session = anonymousSession(rawSession);
+    context.session = session; // Set for data loaders invoked later in operation
 
     const userFromSession = session.anonymous
       ? undefined
@@ -105,8 +100,8 @@ export class SessionResolver {
     return output.user ? await users.load(output.user) : null;
   }
 
-  @ResolveField(() => [Powers], { nullable: true })
-  async powers(@Parent() output: SessionOutput): Promise<Powers[]> {
-    return await this.authorization.readPower(output.session);
+  @ResolveField(() => [Power], { nullable: true })
+  async powers(@Parent() output: SessionOutput): Promise<Power[]> {
+    return [...this.privileges.forUser(output.session).powers];
   }
 }

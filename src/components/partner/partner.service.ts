@@ -12,10 +12,12 @@ import {
 } from '../../common';
 import { HandleIdLookup, ILogger, Logger } from '../../core';
 import { mapListResults } from '../../core/database/results';
+import { Privileges } from '../authorization';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto/powers';
 import { FinancialReportingType } from '../partnership/dto/financial-reporting-type';
 import {
+  IProject,
   ProjectListInput,
   ProjectService,
   SecuredProjectList,
@@ -36,6 +38,7 @@ export class PartnerService {
     @Logger('partner:service') private readonly logger: ILogger,
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
+    private readonly privileges: Privileges,
     @Inject(forwardRef(() => ProjectService))
     private readonly projectService: ProjectService,
     private readonly repo: PartnerRepository
@@ -182,23 +185,7 @@ export class PartnerService {
     input: PartnerListInput,
     session: Session
   ): Promise<PartnerListOutput> {
-    const limited = (await this.authorizationService.canList(Partner, session))
-      ? // --- need a sensitivity mapping for global because several roles have a global and/or project sensitivity access for nearly all props.
-        {
-          ...(await this.authorizationService.getListRoleSensitivityMapping(
-            Partner,
-            'global'
-          )),
-          ...(await this.authorizationService.getListRoleSensitivityMapping(
-            Partner,
-            'project'
-          )),
-        }
-      : await this.authorizationService.getListRoleSensitivityMapping(
-          Partner,
-          'project'
-        );
-    const results = await this.repo.list(input, session, limited);
+    const results = await this.repo.list(input, session);
     return await mapListResults(results, (dto) => this.secure(dto, session));
   }
 
@@ -215,10 +202,7 @@ export class PartnerService {
     return {
       ...projectListOutput,
       canRead: true,
-      canCreate: await this.authorizationService.hasPower(
-        session,
-        Powers.CreateProject
-      ),
+      canCreate: this.privileges.for(session, IProject).can('create'),
     };
   }
 

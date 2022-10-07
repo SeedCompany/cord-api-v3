@@ -13,10 +13,13 @@ import {
   many,
   mapFromList,
   maybeMany,
+  Session,
 } from '~/common';
-import { bootstrapLogger } from '~/core';
+import { bootstrapLogger, ConfigService, ResourcesHost } from '~/core';
 import { AppModule } from './app.module';
+import { AuthenticationService } from './components/authentication';
 import 'source-map-support/register';
+import { Role } from './components/authorization';
 
 /**
  * This does the same thing as {@link import('@nestjs/core').repl}
@@ -43,6 +46,10 @@ async function bootstrap() {
   await promisify(replServer.setupHistory.bind(replServer))(
     '.cache/repl_history'
   );
+  const session = await app
+    .get(AuthenticationService)
+    .sessionForUser(app.get(ConfigService).rootAdmin.id);
+  const Resources = await app.get(ResourcesHost).getEnhancedMap();
 
   assignToObject(replServer.context, {
     DateTime,
@@ -56,6 +63,12 @@ async function bootstrap() {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     __: lodash, // single underscore is "last execution result"
     lodash,
+    session,
+    sessionFor: (role: Role): Session => ({
+      ...session,
+      roles: [`global:${role}`],
+    }),
+    Resources,
   });
 }
 bootstrap().catch((err) => {

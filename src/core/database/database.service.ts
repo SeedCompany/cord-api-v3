@@ -11,7 +11,6 @@ import {
   MaybeUnsecuredInstance,
   ResourceShape,
   ServerException,
-  Session,
   UnwrapSecured,
 } from '../../common';
 import { AbortError, retry, RetryOptions } from '../../common/retry';
@@ -364,26 +363,11 @@ export class DatabaseService {
     }
   }
 
-  // eslint-disable-next-line @seedcompany/no-unused-vars
-  async checkDeletePermission(id: ID, session: Partial<Session> | string) {
+  /**
+   * @deprecated Use Privileges.for().can('delete') or Privileges.for().secure(dto)
+   */
+  async checkDeletePermission(..._args: any[]) {
     return true;
-    // const query = this.db
-    //   .query()
-    //   .apply(matchRequestingUser(session))
-    //   .match(node('node', { id }))
-    //   .match([
-    //     node('requestingUser'),
-    //     relation('in', 'memberOfSecurityGroup', 'member'),
-    //     node('securityGroup', 'SecurityGroup'),
-    //     relation('out', 'sgPerms', 'permission'),
-    //     node('perm', 'Permission', { read: true, property: 'canDelete' }),
-    //     relation('out', 'permsOfBaseNode', 'baseNode'),
-    //     node('node'),
-    //   ])
-    //   .return('perm');
-
-    // const result = await query.first();
-    // return !!result;
   }
 
   async deleteNode(objectOrId: { id: ID } | ID) {

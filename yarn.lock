@@ -5925,6 +5925,7 @@ __metadata:
     p-retry: ^4.6.2
     pg: ^8.8.0
     pkg-up: ^3.1.0
+    plur: ^4.0.0
     react: ^18.2.0
     react-dom: ^18.2.0
     reflect-metadata: ^0.1.13
@@ -8717,6 +8718,13 @@ cypher-query-builder@6.0.4:
   version: 1.9.1
   resolution: "ipaddr.js@npm:1.9.1"
   checksum: f88d3825981486f5a1942414c8d77dd6674dd71c065adcfa46f578d677edcb99fda25af42675cb59db492fdf427b34a5abfcde3982da11a8fd83a500b41cfe77
+  languageName: node
+  linkType: hard
+
+"irregular-plurals@npm:^3.2.0":
+  version: 3.3.0
+  resolution: "irregular-plurals@npm:3.3.0"
+  checksum: 1282d8adfb00a9718655ce21e5b096d4b31d2115c817a30e1e3254648ae4ac0f84d706cd0cad2a93c64f4bb5c5572ea8f63fcc9766f005a5362031c56d9e77b5
   languageName: node
   linkType: hard
 
@@ -12196,6 +12204,15 @@ cypher-query-builder@6.0.4:
   dependencies:
     semver-compare: ^1.0.0
   checksum: d87c41581a2a022fbe25965a97006238cd9b8cbbf49b39f78d262548149a9d30bd2bdf35fec3d810e0001e630cd46ef13c7e19c389dea8de7e64db271a2381bb
+  languageName: node
+  linkType: hard
+
+"plur@npm:^4.0.0":
+  version: 4.0.0
+  resolution: "plur@npm:4.0.0"
+  dependencies:
+    irregular-plurals: ^3.2.0
+  checksum: fea2e903efca67cc5c7a8952fca3db46ae8d9e9353373b406714977e601a5d3b628bcb043c3ad2126c6ff0e73d8020bf43af30a72dd087eff1ec240eb13b90e1
   languageName: node
   linkType: hard
 

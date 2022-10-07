@@ -6,6 +6,7 @@ import {
   ObjectView,
   ResourceShape,
   SecuredList,
+  SecuredResourceKey,
   ServerException,
   Session,
   UnauthorizedException,
@@ -181,7 +182,7 @@ export class LocationService {
   async listLocationForResource<TResource extends ResourceShape<any>>(
     label: TResource,
     dto: TResource['prototype'],
-    rel: keyof TResource['prototype'] | keyof TResource['Relations'],
+    rel: SecuredResourceKey<TResource>,
     input: LocationListInput,
     session: Session
   ): Promise<SecuredLocationList> {
@@ -193,7 +194,7 @@ export class LocationService {
 
     const results = await this.repo.listLocationsFromNodeNoSecGroups(
       label.name,
-      rel as string,
+      rel,
       dto.id,
       input
     );

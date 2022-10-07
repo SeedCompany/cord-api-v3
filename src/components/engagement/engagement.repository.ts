@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { inArray, node, Node, Query, relation } from 'cypher-query-builder';
-import { difference } from 'lodash';
+import { difference, pickBy } from 'lodash';
 import { DateTime } from 'luxon';
 import { MergeExclusive } from 'type-fest';
 import {
@@ -17,7 +17,7 @@ import {
   UnsecuredDto,
   viewOfChangeset,
 } from '../../common';
-import { CommonRepository, OnIndex } from '../../core';
+import { CommonRepository, DatabaseService, OnIndex } from '../../core';
 import { DbChanges, getChanges } from '../../core/database/changes';
 import {
   ACTIVE,
@@ -26,15 +26,15 @@ import {
   createRelationships,
   INACTIVE,
   matchChangesetAndChangedProps,
-  matchProjectSensToLimitedScopeMap,
   matchPropsAndProjectSensAndScopedRoles,
   merge,
+  oncePerProject,
   paginate,
   requestingUser,
   sorting,
   whereNotDeletedInChangeset,
 } from '../../core/database/query';
-import { AuthSensitivityMapping } from '../authorization/authorization.service';
+import { Privileges } from '../authorization';
 import { FileId } from '../file';
 import { ProjectType } from '../project';
 import {
@@ -56,6 +56,10 @@ export type LanguageOrEngagementId = MergeExclusive<
 
 @Injectable()
 export class EngagementRepository extends CommonRepository {
+  constructor(db: DatabaseService, private readonly privileges: Privileges) {
+    super(db);
+  }
+
   async readOne(id: ID, session: Session, view?: ObjectView) {
     const query = this.db
       .query()
@@ -355,12 +359,7 @@ export class EngagementRepository extends CommonRepository {
 
   // LIST ///////////////////////////////////////////////////////////
 
-  async list(
-    input: EngagementListInput,
-    session: Session,
-    changeset?: ID,
-    limitedScope?: AuthSensitivityMapping // setup limitedScope just in case we need it later on
-  ) {
+  async list(input: EngagementListInput, session: Session, changeset?: ID) {
     const label =
       simpleSwitch(input.filter.type, {
         language: 'LanguageEngagement',
@@ -372,24 +371,12 @@ export class EngagementRepository extends CommonRepository {
       .subQuery((sub) =>
         sub
           .match([
-            ...(limitedScope
-              ? [
-                  node('project', 'Project'),
-                  relation('out', '', 'engagement', ACTIVE),
-                ]
-              : input.filter.projectId
-              ? [
-                  node('project', 'Project', { id: input.filter.projectId }),
-                  relation('out', '', 'engagement', ACTIVE),
-                ]
-              : []),
+            node('project', 'Project', pickBy({ id: input.filter.projectId })),
+            relation('out', '', 'engagement', ACTIVE),
             node('node', 'Engagement'),
           ])
           .apply(whereNotDeletedInChangeset(changeset))
-          .return([
-            'node',
-            input.filter.projectId || limitedScope ? 'project' : '',
-          ])
+          .return(['node', 'project'])
           .apply((q) =>
             changeset && input.filter.projectId
               ? q
@@ -406,7 +393,11 @@ export class EngagementRepository extends CommonRepository {
           )
       )
       .match(requestingUser(session))
-      .apply(matchProjectSensToLimitedScopeMap(limitedScope))
+      .apply(
+        this.privileges.for(session, IEngagement).filterToReadable({
+          wrapContext: oncePerProject,
+        })
+      )
       .apply(sorting(IEngagement, input))
       .apply(paginate(input, this.hydrate(session, viewOfChangeset(changeset))))
       .first();

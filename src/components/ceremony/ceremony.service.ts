@@ -126,10 +126,7 @@ export class CeremonyService {
     input: CeremonyListInput,
     session: Session
   ): Promise<CeremonyListOutput> {
-    const limited = (await this.authorizationService.canList(Ceremony, session))
-      ? undefined
-      : await this.authorizationService.getListRoleSensitivityMapping(Ceremony);
-    const results = await this.ceremonyRepo.list(input, session, limited);
+    const results = await this.ceremonyRepo.list(input, session);
     return await mapListResults(results, (dto) => this.secure(dto, session));
   }
 }

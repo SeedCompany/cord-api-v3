@@ -107,6 +107,7 @@ describe('Project Security e2e', () => {
 
       it('reading otherLocations', async () => {
         const perms = await getPermissions({
+          app,
           resource: IProject,
           userRole: `global:${role as Role}` as ScopedRole,
           sensitivity: testProject.sensitivity,
@@ -221,6 +222,7 @@ describe('Project Security e2e', () => {
               sensitivityRestriction: sensitivityToTest,
               projectType: type,
               permissions: await getPermissions({
+                app,
                 resource: resource,
                 userRole: `global:${role as Role}` as ScopedRole,
                 sensitivity: sensitivityToTest,
@@ -265,6 +267,7 @@ describe('Project Security e2e', () => {
               sensitivityRestriction: sensitivityToTest,
               projectType: type,
               permissions: await getPermissions({
+                app,
                 resource: resource,
                 userRole: `global:${role as Role}` as ScopedRole,
                 sensitivity: sensitivityToTest,
@@ -293,6 +296,7 @@ describe('Project Security e2e', () => {
         mouEndOverride: CalendarDate.fromISO('2004-01-01'),
       });
       const perms = await getPermissions({
+        app,
         resource: IProject,
         userRole: `global:${Role.ConsultantManager as Role}` as ScopedRole,
         sensitivity: Sensitivity.Medium,
@@ -340,6 +344,7 @@ describe('Project Security e2e', () => {
             resource: IProject,
             propertyToCheck: 'otherLocations',
             perms: await getPermissions({
+              app,
               resource: IProject,
               userRole: `global:${role as Role}` as ScopedRole,
               sensitivity: sensitivityToTest,
@@ -362,6 +367,7 @@ describe('Project Security e2e', () => {
             resource: IProject,
             propertyToCheck: 'otherLocations',
             perms: await getPermissions({
+              app,
               resource: IProject,
               userRole: `global:${role as Role}` as ScopedRole,
               sensitivity: sensitivityToTest,
