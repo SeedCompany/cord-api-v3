@@ -1,4 +1,4 @@
-import { ResourceGranter, ResourceGranterImpl } from './resource-granter';
+import { ResourceGranter, withOther } from './resource-granter';
 
 /**
  * This merges the permissions from the first granter, into the other ones.
@@ -26,7 +26,8 @@ export function inherit(
   theInterface: ResourceGranter<any>,
   ...implementations: Array<ResourceGranter<any>>
 ): Array<ResourceGranter<any>> {
-  const start = theInterface as ResourceGranterImpl<any>;
-  const impls = implementations as Array<ResourceGranterImpl<any>>;
-  return [start, ...impls.map((granter) => granter.withOther(start))];
+  return [
+    theInterface,
+    ...implementations.map((granter) => granter[withOther](theInterface)),
+  ];
 }

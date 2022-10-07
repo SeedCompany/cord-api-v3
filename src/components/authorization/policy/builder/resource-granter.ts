@@ -6,13 +6,15 @@ import {
   ChildRelationshipGranter,
   ChildRelationshipsGranter,
 } from './child-relationship-granter';
-import { PermGranter } from './perm-granter';
-import { PropGranter, PropGranterImpl, PropsGranter } from './prop-granter';
+import { extract, PermGranter } from './perm-granter';
+import { PropGranter, PropsGranter } from './prop-granter';
 
-export abstract class ResourceGranter<
+export const withOther = Symbol('ResourceGranter.withOther');
+
+export class ResourceGranter<
   TResourceStatic extends ResourceShape<any>
 > extends PermGranter<TResourceStatic, ResourceAction> {
-  protected propGrants: ReadonlyArray<PropGranterImpl<TResourceStatic>> = [];
+  protected propGrants: ReadonlyArray<PropGranter<TResourceStatic>> = [];
   protected childRelationshipGrants: ReadonlyArray<
     ChildRelationshipGranter<TResourceStatic>
   > = [];
@@ -65,14 +67,12 @@ export abstract class ResourceGranter<
       granter: PropsGranter<TResourceStatic>
     ) => Many<PropGranter<TResourceStatic>>
   ): this {
-    const propsGranter = PropGranterImpl.forResource(
+    const propsGranter = PropGranter.forResource(
       this.resource,
       this.stagedCondition
     );
 
-    const newGrants = many(grants(propsGranter)) as Array<
-      PropGranterImpl<TResourceStatic>
-    >;
+    const newGrants = many(grants(propsGranter));
 
     const cloned = this.clone();
     cloned.trailingCondition =
@@ -119,19 +119,15 @@ export abstract class ResourceGranter<
     ];
     return cloned;
   }
-}
 
-export class ResourceGranterImpl<
-  TResourceStatic extends ResourceShape<any>
-> extends ResourceGranter<TResourceStatic> {
   static create(map: EnhancedResourceMap): ResourcesGranter {
     return mapValues(
       map,
-      (resource: EnhancedResource<any>) => new ResourceGranterImpl(resource)
+      (resource: EnhancedResource<any>) => new ResourceGranter(resource)
     ) as any;
   }
 
-  withOther(other: ResourceGranterImpl<TResourceStatic>): this {
+  [withOther](other: ResourceGranter<TResourceStatic>): this {
     const cloned = this.clone();
     cloned.perms = [...this.perms, ...other.perms];
     cloned.propGrants = [...this.propGrants, ...other.propGrants];
@@ -142,13 +138,13 @@ export class ResourceGranterImpl<
     return cloned;
   }
 
-  extract() {
+  [extract]() {
     return {
-      ...super.extract(),
+      ...super[extract](),
       resource: this.resource,
-      props: this.propGrants.map((prop) => prop.extract()),
+      props: this.propGrants.map((prop) => prop[extract]()),
       childRelationships: this.childRelationshipGrants.map((rel) =>
-        rel.extract()
+        rel[extract]()
       ),
     };
   }

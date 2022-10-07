@@ -11,15 +11,12 @@ import { ResourcesHost } from '~/core/resources';
 import { Powers as Power } from '../dto/powers';
 import { Role } from '../dto/role.dto';
 import { ChildListAction, ChildSingleAction } from './actions';
-import { Permission, Permissions } from './builder/perm-granter';
+import { extract, Permission, Permissions } from './builder/perm-granter';
 import {
   POLICY_METADATA_KEY,
   PolicyMetadata,
 } from './builder/policy.decorator';
-import {
-  ResourceGranterImpl,
-  ResourcesGranter,
-} from './builder/resource-granter';
+import { ResourceGranter, ResourcesGranter } from './builder/resource-granter';
 import { all, any, Condition } from './conditions';
 
 interface ResourceGrants {
@@ -64,7 +61,7 @@ export class PolicyFactory implements OnModuleInit {
       );
 
     const ResourceMap = await this.resourcesHost.getEnhancedMap();
-    const resGranter = ResourceGranterImpl.create(ResourceMap);
+    const resGranter = ResourceGranter.create(ResourceMap);
 
     this.policies = await Promise.all(
       discoveredPolicies.map((discovered) =>
@@ -81,9 +78,8 @@ export class PolicyFactory implements OnModuleInit {
     const grants: WritableGrants = new Map();
     const resultList = many(meta.def(resGranter));
     for (const resourceGrant of resultList) {
-      const { resource, perms, props, childRelationships } = (
-        resourceGrant as ResourceGranterImpl<any>
-      ).extract();
+      const { resource, perms, props, childRelationships } =
+        resourceGrant[extract]();
       if (!grants.has(resource)) {
         grants.set(resource, {
           objectLevel: {},

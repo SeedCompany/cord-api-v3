@@ -6,6 +6,11 @@ export type Permissions<TAction extends string> = {
 };
 export type Permission = Condition<any> | boolean;
 
+/**
+ * Extract permissions from granter.
+ */
+export const extract = Symbol('PermGranter.extract');
+
 export abstract class PermGranter<
   TResourceStatic extends ResourceShape<any>,
   TAction extends string
@@ -90,7 +95,7 @@ export abstract class PermGranter<
     return cloned;
   }
 
-  protected extract() {
+  [extract]() {
     if (this.trailingCondition) {
       throw this.trailingCondition;
     }

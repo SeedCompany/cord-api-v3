@@ -7,7 +7,7 @@ import {
 import { ChildListAction, ChildSingleAction } from '../actions';
 import { Condition } from '../conditions';
 import { createLazyRecord } from '../lazy-record';
-import { PermGranter } from './perm-granter';
+import { extract, PermGranter } from './perm-granter';
 
 export abstract class ChildRelationshipGranter<
   TResourceStatic extends ResourceShape<any>,
@@ -22,9 +22,9 @@ export abstract class ChildRelationshipGranter<
     super(stagedCondition);
   }
 
-  extract() {
+  [extract]() {
     return {
-      ...super.extract(),
+      ...super[extract](),
       resource: this.resource,
       relationNames: this.relationNames,
     };
