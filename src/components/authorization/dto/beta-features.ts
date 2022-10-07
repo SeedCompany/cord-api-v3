@@ -1,6 +1,6 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { ResourcesGranter } from '../policy';
+import { Granter, ResourceGranter } from '../policy';
 
 // TODO move somewhere else
 
@@ -14,17 +14,19 @@ export class BetaFeatures {
     projectChangeRequests: '',
   };
 
-  /**
-   * A helper to grant access to beta features in a more readable way.
-   * This should be used within a Policy.
-   */
-  static grant(
-    r: ResourcesGranter,
-    ...features: Array<keyof typeof BetaFeatures['Relations'] & string>
-  ) {
-    return r.BetaFeatures.specifically((p) => p.many(...features).edit);
-  }
-
   @Field()
   projectChangeRequests: boolean;
+}
+
+@Granter(BetaFeatures)
+export class BetaFeaturesGranter extends ResourceGranter<typeof BetaFeatures> {
+  grant(...features: Array<keyof BetaFeatures & string>) {
+    return this.specifically((p) => p.many(...features).edit);
+  }
+}
+
+declare module '../policy/granters' {
+  interface GrantersOverride {
+    BetaFeatures: BetaFeaturesGranter;
+  }
 }
