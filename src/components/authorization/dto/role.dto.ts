@@ -65,7 +65,7 @@ export namespace Role {
   export const assignable = (
     resources: ResourcesGranter,
     roles: readonly Role[]
-  ) => resources.AssignableRoles.specifically((p) => p.many(...roles).edit);
+  ) => resources.AssignableRoles.grant(roles);
 
   Object.defineProperty(Role, 'assignable', { enumerable: false });
 }
