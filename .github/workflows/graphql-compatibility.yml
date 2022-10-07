@@ -9,7 +9,6 @@ on:
 jobs:
   gql-breaking-changes:
     name: GraphQL Compatibility
-    if: ${{ github.event_name != 'pull_request' || !contains(github.event.pull_request.labels.*.name, 'breaking change') }}
     runs-on: ubuntu-latest
 
     steps:
@@ -51,3 +50,4 @@ jobs:
             --use-colors --fail-on-breaking-changes --sort-schema \
             ../base/schema.graphql ./schema.graphql
         working-directory: head
+        continue-on-error: ${{ github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'breaking change') }}
