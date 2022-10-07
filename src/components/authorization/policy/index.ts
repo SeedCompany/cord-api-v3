@@ -1,5 +1,7 @@
 export { Policy } from './builder/policy.decorator';
-export { ResourcesGranter } from './builder/resource-granter';
+export { ResourcesGranter } from './granters';
+export { Granter } from './builder/granter.decorator';
+export { ResourceGranter } from './builder/resource-granter';
 export * from './builder/inherit-resource.helper';
 export * from './executor/privileges';
 export * from './executor/resource-privileges';

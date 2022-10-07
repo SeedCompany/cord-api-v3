@@ -1,6 +1,4 @@
-import { mapValues } from 'lodash';
 import { EnhancedResource, many, Many, ResourceShape } from '~/common';
-import type { EnhancedResourceMap, ResourceMap } from '~/core';
 import { ResourceAction } from '../actions';
 import {
   ChildRelationshipGranter,
@@ -120,13 +118,6 @@ export class ResourceGranter<
     return cloned;
   }
 
-  static create(map: EnhancedResourceMap): ResourcesGranter {
-    return mapValues(
-      map,
-      (resource: EnhancedResource<any>) => new ResourceGranter(resource)
-    ) as any;
-  }
-
   [withOther](other: ResourceGranter<TResourceStatic>): this {
     const cloned = this.clone();
     cloned.perms = [...this.perms, ...other.perms];
@@ -156,7 +147,3 @@ export class ResourceGranter<
     return cloned;
   }
 }
-
-export type ResourcesGranter = {
-  [K in keyof ResourceMap]: ResourceGranter<ResourceMap[K]>;
-};

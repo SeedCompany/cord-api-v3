@@ -16,8 +16,9 @@ import {
   POLICY_METADATA_KEY,
   PolicyMetadata,
 } from './builder/policy.decorator';
-import { ResourceGranter, ResourcesGranter } from './builder/resource-granter';
 import { all, any, Condition } from './conditions';
+import { ResourcesGranter } from './granters';
+import { GrantersFactory } from './granters.factory';
 
 interface ResourceGrants {
   objectLevel: Permissions<string>;
@@ -43,6 +44,7 @@ export class PolicyFactory implements OnModuleInit {
   private policies?: Policy[];
 
   constructor(
+    private readonly grantersFactory: GrantersFactory,
     private readonly discovery: DiscoveryService,
     private readonly resourcesHost: ResourcesHost
   ) {}
@@ -60,8 +62,7 @@ export class PolicyFactory implements OnModuleInit {
         POLICY_METADATA_KEY
       );
 
-    const ResourceMap = await this.resourcesHost.getEnhancedMap();
-    const resGranter = ResourceGranter.create(ResourceMap);
+    const resGranter = await this.grantersFactory.makeGranters();
 
     this.policies = await Promise.all(
       discoveredPolicies.map((discovered) =>
