@@ -9,6 +9,14 @@ import { PropGranter, PropsGranter } from './prop-granter';
 
 export const withOther = Symbol('ResourceGranter.withOther');
 
+type PropsGranterFn<TResourceStatic extends ResourceShape<any>> = (
+  granter: PropsGranter<TResourceStatic>
+) => Many<PropGranter<TResourceStatic>>;
+
+type ChildrenGranterFn<TResourceStatic extends ResourceShape<any>> = (
+  granter: ChildRelationshipsGranter<TResourceStatic>
+) => Many<ChildRelationshipGranter<TResourceStatic>>;
+
 export class ResourceGranter<
   TResourceStatic extends ResourceShape<any>
 > extends PermGranter<TResourceStatic, ResourceAction> {
@@ -22,36 +30,6 @@ export class ResourceGranter<
   }
 
   /**
-   * The requester can read the object (via lists or individual lookups)
-   * and can read all props not specifically defined.
-   */
-  get read() {
-    return this.action('read');
-  }
-
-  /**
-   * The requester can edit all props not specifically defined.
-   * {@link read} is implied.
-   */
-  get edit() {
-    return this.action('read', 'edit');
-  }
-
-  /**
-   * The requester can create a new instance of this resource.
-   */
-  get create() {
-    return this.action('create');
-  }
-
-  /**
-   * The requester can delete this object.
-   */
-  get delete() {
-    return this.action('delete');
-  }
-
-  /**
    * Grant specific actions to individual props of this object.
    *
    * Any props not explicitly defined will fall back to granted actions defined
@@ -60,11 +38,7 @@ export class ResourceGranter<
    * Conditions previously given will apply automatically to these props,
    * unless the prop defines its own condition.
    */
-  specifically(
-    grants: (
-      granter: PropsGranter<TResourceStatic>
-    ) => Many<PropGranter<TResourceStatic>>
-  ): this {
+  protected specifically(grants: PropsGranterFn<TResourceStatic>): this {
     const propsGranter = PropGranter.forResource(
       this.resource,
       this.stagedCondition
@@ -96,11 +70,7 @@ export class ResourceGranter<
    * Conditions previously given will apply automatically to these relations,
    * unless the relation defines its own condition.
    */
-  children(
-    relationGrants: (
-      granter: ChildRelationshipsGranter<TResourceStatic>
-    ) => Many<ChildRelationshipGranter<TResourceStatic>>
-  ): this {
+  protected children(relationGrants: ChildrenGranterFn<TResourceStatic>): this {
     const granter = ChildRelationshipGranter.forResource(
       this.resource,
       this.stagedCondition
@@ -145,5 +115,47 @@ export class ResourceGranter<
     cloned.propGrants = [...this.propGrants];
     cloned.childRelationshipGrants = [...this.childRelationshipGrants];
     return cloned;
+  }
+}
+
+export class DefaultResourceGranter<
+  TResourceStatic extends ResourceShape<any>
+> extends ResourceGranter<TResourceStatic> {
+  /**
+   * The requester can read the object (via lists or individual lookups)
+   * and can read all props not specifically defined.
+   */
+  get read() {
+    return this.action('read');
+  }
+
+  /**
+   * The requester can edit all props not specifically defined.
+   * {@link read} is implied.
+   */
+  get edit() {
+    return this.action('read', 'edit');
+  }
+
+  /**
+   * The requester can create a new instance of this resource.
+   */
+  get create() {
+    return this.action('create');
+  }
+
+  /**
+   * The requester can delete this object.
+   */
+  get delete() {
+    return this.action('delete');
+  }
+
+  specifically(grants: PropsGranterFn<TResourceStatic>): this {
+    return super.specifically(grants);
+  }
+
+  children(grants: ChildrenGranterFn<TResourceStatic>): this {
+    return super.children(grants);
   }
 }

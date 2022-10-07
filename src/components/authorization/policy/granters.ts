@@ -1,10 +1,10 @@
 import { Merge } from 'type-fest';
 import { ResourceMap } from '~/core/resources';
-import { ResourceGranter } from './builder/resource-granter';
+import { DefaultResourceGranter } from './builder/resource-granter';
 
 export type ResourcesGranter = Merge<
   {
-    [K in keyof ResourceMap]: ResourceGranter<ResourceMap[K]>;
+    [K in keyof ResourceMap]: DefaultResourceGranter<ResourceMap[K]>;
   },
   GrantersOverride
 >;

@@ -4,7 +4,10 @@ import { mapValues } from 'lodash';
 import { EnhancedResource, many, mapFromList } from '~/common';
 import { ResourcesHost } from '~/core/resources';
 import { discover } from './builder/granter.decorator';
-import { ResourceGranter } from './builder/resource-granter';
+import {
+  DefaultResourceGranter,
+  ResourceGranter,
+} from './builder/resource-granter';
 import { ResourcesGranter } from './granters';
 
 @Injectable()
@@ -36,7 +39,7 @@ export class GrantersFactory {
     const resGranter: ResourcesGranter = mapValues(
       ResourceMap,
       (resource: EnhancedResource<any>) =>
-        custom[resource.name] ?? new ResourceGranter(resource)
+        custom[resource.name] ?? new DefaultResourceGranter(resource)
     ) as any;
 
     return resGranter;
