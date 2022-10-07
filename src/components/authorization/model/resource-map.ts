@@ -1,4 +1,3 @@
-import { ServerException } from '../../../common';
 import { Budget, BudgetRecord } from '../../budget/dto';
 import { Ceremony } from '../../ceremony/dto';
 import { Changeset } from '../../changeset/dto';
@@ -110,14 +109,3 @@ export const ResourceMap = {
 
 /** @deprecated Use {@link import('~/core').ResourceMap} instead */
 export type ResourceMap = typeof ResourceMap;
-
-/** @deprecated Use {@link import('~/core').ResourcesHost.getByName} instead */
-export const resourceFromName = (name: string) => {
-  const resource = ResourceMap[name as keyof ResourceMap];
-  if (!resource) {
-    throw new ServerException(
-      `Unable to determine resource from ResourceMap for type: ${name}`
-    );
-  }
-  return resource;
-};

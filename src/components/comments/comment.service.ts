@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { isAdmin } from '~/common/session';
+import { ConditionalKeys } from 'type-fest';
 import {
   ID,
   isIdLike,
@@ -9,15 +9,17 @@ import {
   Session,
   UnauthorizedException,
   UnsecuredDto,
-} from '../../common';
-import { ILogger, Logger, ResourceLoader } from '../../core';
+} from '~/common';
+import { isAdmin } from '~/common/session';
 import {
-  BaseNode,
-  isBaseNode,
-  mapListResults,
-} from '../../core/database/results';
+  ILogger,
+  Logger,
+  ResourceLoader,
+  ResourceMap,
+  ResourcesHost,
+} from '~/core';
+import { BaseNode, isBaseNode, mapListResults } from '~/core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { resourceFromName } from '../authorization/model/resource-map';
 import { CommentRepository } from './comment.repository';
 import {
   Comment,
@@ -38,6 +40,7 @@ export class CommentService {
     private readonly repo: CommentRepository,
     private readonly authorizationService: AuthorizationService,
     private readonly resources: ResourceLoader,
+    private readonly resourcesHost: ResourcesHost,
     @Logger('comment:service') private readonly logger: ILogger
   ) {}
 
@@ -75,10 +78,13 @@ export class CommentService {
 
   async getPermissionsFromResource(resource: CommentableRef, session: Session) {
     const parent = await this.loadCommentable(resource);
+    const parentType: typeof Commentable = await this.resourcesHost.getByName(
+      // I'd like to type this prop as this but somehow blows everything up.
+      parent.__typename as ConditionalKeys<ResourceMap, Commentable>
+    );
     const { commentThreads: perms } =
       await this.authorizationService.getPermissions<typeof Commentable>({
-        // @ts-expect-error We are assuming this is an implementation of Commentable
-        resource: resourceFromName(parent.__typename),
+        resource: parentType,
         dto: parent,
         sessionOrUserId: session,
       });
