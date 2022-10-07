@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { mapValues } from 'lodash';
 import { ValueOf } from 'ts-essentials';
+import { LiteralUnion } from 'type-fest';
 import { CachedOnArg, EnhancedResource, ServerException } from '~/common';
 import type { ResourceMap as LegacyResourceMap } from '../../components/authorization/model/resource-map';
 import { ResourceMap } from './map';
@@ -35,7 +36,9 @@ export class ResourcesHost {
   async getByName<K extends keyof ResourceMap>(
     name: K
   ): Promise<ValueOf<Pick<ResourceMap, K>>>;
-  async getByName(name: keyof ResourceMap): Promise<ValueOf<ResourceMap>>;
+  async getByName(
+    name: LiteralUnion<keyof ResourceMap, string>
+  ): Promise<ValueOf<ResourceMap>>;
   async getByName(name: keyof ResourceMap) {
     const map = await this.getMap();
     const resource = map[name];
