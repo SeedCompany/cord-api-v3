@@ -3,7 +3,7 @@ import { mapValues } from 'lodash';
 import { ValueOf } from 'ts-essentials';
 import { LiteralUnion } from 'type-fest';
 import { CachedOnArg, EnhancedResource, ServerException } from '~/common';
-import type { ResourceMap as LegacyResourceMap } from '../../components/authorization/model/resource-map';
+import type { LegacyResourceMap } from '../../components/authorization/model/resource-map';
 import { ResourceMap } from './map';
 import { __privateDontUseThis } from './resource-map-holder';
 
@@ -23,7 +23,7 @@ export class ResourcesHost {
     // registered & type declared.
     const map: ResourceMap = {
       ...__privateDontUseThis,
-      ...(legacyPath.ResourceMap as object),
+      ...(legacyPath.LegacyResourceMap as object),
     };
     return map;
   }
@@ -72,7 +72,8 @@ export class ResourcesHost {
   }
 }
 
+type LegacyMap = typeof LegacyResourceMap;
 declare module '~/core/resources/map' {
   // eslint-disable-next-line @typescript-eslint/no-empty-interface
-  interface ResourceMap extends LegacyResourceMap {}
+  interface ResourceMap extends LegacyMap {}
 }
