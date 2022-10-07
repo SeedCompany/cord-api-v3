@@ -1,7 +1,6 @@
 import { mapValues } from 'lodash';
 import { EnhancedResource, many, Many, ResourceShape } from '~/common';
-import type { EnhancedResourceMap } from '~/core';
-import type { ResourceMap } from '../../model/resource-map';
+import type { EnhancedResourceMap, ResourceMap } from '~/core';
 import { ResourceAction } from '../actions';
 import {
   ChildRelationshipGranter,

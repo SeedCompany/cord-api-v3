@@ -112,7 +112,7 @@ export class PostService {
   }
 
   async securedList(
-    parentType: ResourceShape<Postable>,
+    parentType: ResourceShape<any>,
     parent: Postable & Resource,
     input: PostListInput,
     session: Session

@@ -1,4 +1,3 @@
-import { ServerException } from '../../../common';
 import { Budget, BudgetRecord } from '../../budget/dto';
 import { Ceremony } from '../../ceremony/dto';
 import { Changeset } from '../../changeset/dto';
@@ -55,7 +54,8 @@ import { Unavailability } from '../../user/unavailability/dto';
 import { AssignableRoles } from '../dto/assignable-roles';
 import { BetaFeatures } from '../dto/beta-features';
 
-export const ResourceMap = {
+/** @deprecated Use {@link import('~/core').ResourcesHost.getMap} instead */
+export const LegacyResourceMap = {
   Commentable,
   Budget,
   BudgetRecord,
@@ -106,14 +106,3 @@ export const ResourceMap = {
   AssignableRoles,
   BetaFeatures,
 } as const;
-export type ResourceMap = typeof ResourceMap;
-
-export const resourceFromName = (name: string) => {
-  const resource = ResourceMap[name as keyof ResourceMap];
-  if (!resource) {
-    throw new ServerException(
-      `Unable to determine resource from ResourceMap for type: ${name}`
-    );
-  }
-  return resource;
-};

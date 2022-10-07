@@ -1,18 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { compact } from 'lodash';
-import {
-  has,
-  ID,
-  NotFoundException,
-  ServerException,
-  Session,
-} from '../../common';
-import { ResourceResolver } from '../../core';
+import { has, ID, NotFoundException, ServerException, Session } from '~/common';
+import { ResourceResolver, ResourcesHost } from '~/core';
 import {
   AuthorizationService,
   Permission,
 } from '../authorization/authorization.service';
-import { ResourceMap } from '../authorization/model/resource-map';
 import { PartnerService } from '../partner';
 import {
   SearchableMap,
@@ -43,6 +36,7 @@ export class SearchService {
   /* eslint-enable @typescript-eslint/naming-convention */
 
   constructor(
+    private readonly resourceHost: ResourcesHost,
     private readonly resources: ResourceResolver,
     private readonly auth: AuthorizationService,
     private readonly partners: PartnerService,
@@ -63,6 +57,8 @@ export class SearchService {
     // Search for nodes based on input, only returning their id and "type"
     // which is based on their first valid search label.
     const results = await this.repo.search({ ...input, type: types });
+
+    const ResourceMap = await this.resourceHost.getMap();
 
     // Individually convert each result (id & type) to its search result
     // based on this.hydrators
@@ -102,7 +98,7 @@ export class SearchService {
             }
 
             const perms = await this.auth.getPermissions({
-              resource: ResourceMap[hydrated.__typename],
+              resource: await this.resourceHost.getByName(hydrated.__typename),
               dto: hydrated,
               sessionOrUserId: session,
             });
