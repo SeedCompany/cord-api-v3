@@ -5,6 +5,7 @@ export {
   ResourceGranter,
   DefaultResourceGranter,
 } from './builder/resource-granter';
+export * from './builder/allow-all.helper';
 export * from './builder/as-normalized.helper';
 export * from './builder/inherit-resource.helper';
 export * from './executor/privileges';
