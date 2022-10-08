@@ -28,6 +28,11 @@ export class GrantersFactory {
             const res = EnhancedResource.of(raw);
             const granter =
               factory?.(res) ?? new discoveredClass.dependencyType(res);
+            if (!(granter instanceof ResourceGranter)) {
+              throw new Error(
+                `Granter for ${res.name} must extend ResourceGranter class`
+              );
+            }
             return [res.name, granter];
           });
         }
