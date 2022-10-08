@@ -6,7 +6,7 @@ import {
 import { PropAction } from '../actions';
 import { Condition } from '../conditions';
 import { createLazyRecord } from '../lazy-record';
-import { extract, PermGranter } from './perm-granter';
+import { action, extract, PermGranter } from './perm-granter';
 
 export class PropGranter<
   TResourceStatic extends ResourceShape<any>
@@ -23,14 +23,14 @@ export class PropGranter<
    * The requester can read this.
    */
   get read() {
-    return this.action('read');
+    return this[action]('read');
   }
 
   /**
    * The requester can read & modify this.
    */
   get edit() {
-    return this.action('read', 'edit');
+    return this[action]('read', 'edit');
   }
 
   [extract]() {

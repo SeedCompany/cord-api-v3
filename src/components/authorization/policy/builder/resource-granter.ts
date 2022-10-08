@@ -4,7 +4,7 @@ import {
   ChildRelationshipGranter,
   ChildRelationshipsGranter,
 } from './child-relationship-granter';
-import { extract, PermGranter } from './perm-granter';
+import { action, extract, PermGranter } from './perm-granter';
 import { PropGranter, PropsGranter } from './prop-granter';
 
 export const withOther = Symbol('ResourceGranter.withOther');
@@ -126,7 +126,7 @@ export class DefaultResourceGranter<
    * and can read all props not specifically defined.
    */
   get read() {
-    return this.action('read');
+    return this[action]('read');
   }
 
   /**
@@ -134,21 +134,21 @@ export class DefaultResourceGranter<
    * {@link read} is implied.
    */
   get edit() {
-    return this.action('read', 'edit');
+    return this[action]('read', 'edit');
   }
 
   /**
    * The requester can create a new instance of this resource.
    */
   get create() {
-    return this.action('create');
+    return this[action]('create');
   }
 
   /**
    * The requester can delete this object.
    */
   get delete() {
-    return this.action('delete');
+    return this[action]('delete');
   }
 
   specifically(grants: PropsGranterFn<TResourceStatic>): this {

@@ -7,7 +7,7 @@ import {
 import { ChildListAction, ChildSingleAction } from '../actions';
 import { Condition } from '../conditions';
 import { createLazyRecord } from '../lazy-record';
-import { extract, PermGranter } from './perm-granter';
+import { action, extract, PermGranter } from './perm-granter';
 
 export abstract class ChildRelationshipGranter<
   TResourceStatic extends ResourceShape<any>,
@@ -60,14 +60,14 @@ export class ChildSingleGranter<
    * The requester can read this relationship.
    */
   get read() {
-    return this.action('read');
+    return this[action]('read');
   }
 
   /**
    * The requester can swap this relationship edge to another resource.
    */
   get edit() {
-    return this.action('read', 'edit');
+    return this[action]('read', 'edit');
   }
 }
 
@@ -82,28 +82,28 @@ export class ChildListGranter<
    * The requester can read this relationship.
    */
   get read() {
-    return this.action('read');
+    return this[action]('read');
   }
 
   /**
    * A shortcut for read, create, delete.
    */
   get edit() {
-    return this.action('read', 'create', 'delete');
+    return this[action]('read', 'create', 'delete');
   }
 
   /**
    * The requester can create an instance of this resource & associate it on this edge.
    */
   get create() {
-    return this.action('create');
+    return this[action]('create');
   }
 
   /**
    * The requester can delete an instance of this resource that is associated on this edge.
    */
   get delete() {
-    return this.action('delete');
+    return this[action]('delete');
   }
 }
 
