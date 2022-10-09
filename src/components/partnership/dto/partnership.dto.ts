@@ -1,6 +1,7 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
+  Calculated,
   ID,
   IntersectionType,
   Resource,
@@ -57,9 +58,11 @@ export class Partnership extends IntersectionType(ChangesetAware, Resource) {
   @Field()
   readonly mouStatus: SecuredPartnershipAgreementStatus;
 
+  @Calculated()
   @Field()
   readonly mouStart: SecuredDateNullable;
 
+  @Calculated()
   @Field()
   readonly mouEnd: SecuredDateNullable;
 

@@ -4,6 +4,7 @@ import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive } from 'type-fest';
 import {
+  Calculated,
   DateInterval,
   DateTimeField,
   DbLabel,
@@ -72,11 +73,13 @@ class Engagement extends ChangesetAwareResource {
   @Field()
   readonly disbursementCompleteDate: SecuredDateNullable;
 
+  @Calculated()
   @Field()
   // Match the project mouStart. Could need to manually set for an extension.
   // formally stage_begin.
   readonly startDate: SecuredDateNullable;
 
+  @Calculated()
   @Field()
   // Match the project mouEnd. Could need to manually set for an extension.
   // formally revised_end.

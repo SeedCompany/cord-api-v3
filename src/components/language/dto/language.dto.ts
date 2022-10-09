@@ -4,6 +4,7 @@ import { stripIndent } from 'common-tags';
 import { GraphQLString } from 'graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
+  Calculated,
   DbLabel,
   DbUnique,
   ID,
@@ -173,6 +174,7 @@ export class Language extends Interfaces {
   @Field()
   readonly tags: SecuredTags;
 
+  @Calculated()
   @Field({
     description: stripIndent`
       Whether or not this language is a part of our "Preset Inventory".
