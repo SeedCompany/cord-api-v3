@@ -4,6 +4,7 @@ import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { inspect } from 'util';
 import { ScopedRole } from '../components/authorization';
+import { CalculatedSymbol } from './calculated.decorator';
 import { DbLabel } from './db-label.decorator';
 import { ServerException } from './exceptions';
 import { ID, IdField } from './id-field';
@@ -208,6 +209,19 @@ export class EnhancedResource<T extends ResourceShape<any>> {
         return [name, rel];
       })
     );
+  }
+
+  @Once()
+  get isCalculated() {
+    return !!Reflect.getMetadata(CalculatedSymbol, this.type);
+  }
+
+  @Once()
+  get calculatedProps() {
+    const props = [...this.props].filter((prop) => {
+      return !!Reflect.getMetadata(CalculatedSymbol, this.type.prototype, prop);
+    });
+    return new Set(props);
   }
 }
 
