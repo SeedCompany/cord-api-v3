@@ -6,7 +6,7 @@ import type { ResourcesGranter } from '../granters';
 
 type ResourceGranterFn = (
   resourcesGranter: ResourcesGranter
-) => Many<ValueOf<ResourcesGranter>>;
+) => Many<Many<ValueOf<ResourcesGranter>>>;
 
 export const POLICY_METADATA_KEY = Symbol('Policy');
 

@@ -10,7 +10,7 @@ import { ResourceGranter, withOther } from './resource-granter';
  *
  * @example
  * \@Policy([], r => [
- *   ...inherit(
+ *   inherit(
  *     r.Vehicle.read.specifically(p => p.color.edit),
  *     // truck will be readable and their color & tires can be edited.
  *     r.Truck.specifically(p => p.tires.edit),

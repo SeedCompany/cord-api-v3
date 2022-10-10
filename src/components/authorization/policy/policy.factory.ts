@@ -77,7 +77,7 @@ export class PolicyFactory implements OnModuleInit {
   ): Promise<Policy> {
     const roles = meta.role === 'all' ? undefined : many(meta.role);
     const grants: WritableGrants = new Map();
-    const resultList = many(meta.def(resGranter));
+    const resultList = many(meta.def(resGranter)).flat();
     for (const resourceGrant of resultList) {
       const { resource, perms, props, childRelationships } =
         resourceGrant[extract]();
