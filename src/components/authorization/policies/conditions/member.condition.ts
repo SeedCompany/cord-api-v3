@@ -29,16 +29,15 @@ class MemberCondition<
 
     const scope: ScopedRole[] =
       Reflect.get(object, ScopedRoles) ?? object?.scope ?? [];
+
+    if (!this.roles) {
+      return scope.includes('member:true');
+    }
+
     const actual = scope
       .map(splitScope)
       .filter(([scope, _]) => scope === 'project')
       .map(([_, role]) => role);
-
-    // If policy is for any roles, just confirm that there's at least one member role.
-    if (!this.roles) {
-      return actual.length > 0;
-    }
-
     return intersection(this.roles, actual).length > 0;
   }
 
