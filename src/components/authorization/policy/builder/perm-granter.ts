@@ -64,9 +64,21 @@ export abstract class PermGranter<
       cloned.trailingCondition = new Error(
         'Condition applies to nothing. Specify before actions.'
       );
+      // Find first frame that is not from a Granter call.
+      let frame = cloned.trailingCondition
+        .stack!.split('\n')
+        .find(
+          (line) => line.includes(' at ') && !/\s+at \w+Granter\./.exec(line)
+        );
+      // If frame is the function call of Policy decorator, which it probably is,
+      // then remove the useless type/function/method name for clarity.
+      if (frame?.startsWith('    at Object.def')) {
+        const match = frame.match(/^\s+at .+\((.+)\)$/)!;
+        frame = `    at ${match[1]}`;
+      }
       cloned.trailingCondition.stack = [
         `Error: ${cloned.trailingCondition.message}`,
-        ...cloned.trailingCondition.stack!.split('\n').slice(2, 3),
+        frame ?? '',
       ].join('\n');
     }
     return cloned;
