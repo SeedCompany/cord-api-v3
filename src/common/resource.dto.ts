@@ -6,13 +6,14 @@ import { inspect } from 'util';
 import { ScopedRole } from '../components/authorization';
 import { CalculatedSymbol } from './calculated.decorator';
 import { DbLabel } from './db-label.decorator';
+import { getDbClassLabels, getDbPropertyLabels } from './db-label.helpers';
 import { ServerException } from './exceptions';
 import { ID, IdField } from './id-field';
 import { DateTimeField } from './luxon.graphql';
 import { getParentTypes } from './parent-types';
 import { SecuredProps, UnsecuredDto } from './secured-property';
 import { AbstractClassType } from './types';
-import { has } from './util';
+import { has, mapFromList } from './util';
 import { cachedOnObject } from './weak-map-cache';
 
 const hasTypename = (value: unknown): value is { __typename: string } =>
@@ -222,6 +223,21 @@ export class EnhancedResource<T extends ResourceShape<any>> {
       return !!Reflect.getMetadata(CalculatedSymbol, this.type.prototype, prop);
     });
     return new Set(props);
+  }
+
+  @Once()
+  get dbLabels() {
+    return getDbClassLabels(this.type);
+  }
+  get dbLabel() {
+    return this.dbLabels[0];
+  }
+  @Once()
+  get dbPropLabels() {
+    return mapFromList(this.props, (prop) => {
+      const labels = getDbPropertyLabels(this.type, prop);
+      return [prop, labels];
+    });
   }
 }
 
