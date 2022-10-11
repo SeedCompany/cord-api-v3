@@ -17,32 +17,16 @@ import {
 
 const CQL_VAR = 'membershipRoles';
 
-class MemberCondition<
-  TResourceStatic extends ResourceShape<any> & {
-    // Make non-nullable to enforce that resource has its own scope to use this condition.
-    prototype: { scope?: readonly ScopedRole[] };
-  }
-> implements Condition<TResourceStatic>
+type ResourceWithScope = ResourceShape<any> & {
+  // Make non-nullable to enforce that resource has its own scope to use this condition.
+  prototype: { scope?: readonly ScopedRole[] };
+};
+
+class MemberCondition<TResourceStatic extends ResourceWithScope>
+  implements Condition<TResourceStatic>
 {
-  constructor(private readonly roles?: readonly Role[]) {}
-
   isAllowed({ object }: IsAllowedParams<TResourceStatic>): boolean {
-    if (!object) {
-      throw new Error("Needed object's scoped roles but object wasn't given");
-    }
-
-    const scope: ScopedRole[] =
-      Reflect.get(object, ScopedRoles) ?? object?.scope ?? [];
-
-    if (!this.roles) {
-      return scope.includes('member:true');
-    }
-
-    const actual = scope
-      .map(splitScope)
-      .filter(([scope, _]) => scope === 'project')
-      .map(([_, role]) => role);
-    return intersection(this.roles, actual).length > 0;
+    return getScope(object).includes('member:true');
   }
 
   setupCypherContext(
@@ -50,20 +34,44 @@ class MemberCondition<
     prevApplied: Set<any>,
     other: AsCypherParams<TResourceStatic>
   ) {
-    const cacheKey = this.roles ? 'membership-roles' : 'membership';
-    if (prevApplied.has(cacheKey)) {
+    if (prevApplied.has('membership')) {
       return query;
     }
-    prevApplied.add(cacheKey);
+    prevApplied.add('membership');
 
-    if (!this.roles) {
-      const param = query.params.addParam(
-        other.session.userId,
-        'requestingUser'
-      );
-      Reflect.set(other, CQL_VAR, param);
+    const param = query.params.addParam(other.session.userId, 'requestingUser');
+    Reflect.set(other, CQL_VAR, param);
+    return query;
+  }
+
+  asCypherCondition(query: Query, other: AsCypherParams<TResourceStatic>) {
+    const requester = String(Reflect.get(other, CQL_VAR));
+    return `exists((project)-[:member { active: true }]->(:ProjectMember)-[:user]->(:User { id: ${requester} }))`;
+  }
+
+  [inspect.custom](_depth: number, _options: InspectOptionsStylized) {
+    return 'Member';
+  }
+}
+
+class MemberWithRolesCondition<TResourceStatic extends ResourceWithScope>
+  implements Condition<TResourceStatic>
+{
+  constructor(private readonly roles: readonly Role[]) {}
+
+  isAllowed({ object }: IsAllowedParams<TResourceStatic>): boolean {
+    const actual = getScope(object)
+      .map(splitScope)
+      .filter(([scope, _]) => scope === 'project')
+      .map(([_, role]) => role);
+    return intersection(this.roles, actual).length > 0;
+  }
+
+  setupCypherContext(query: Query, prevApplied: Set<any>) {
+    if (prevApplied.has('membership-roles')) {
       return query;
     }
+    prevApplied.add('membership-roles');
 
     return query.apply(
       matchProjectScopedRoles({
@@ -73,12 +81,7 @@ class MemberCondition<
     );
   }
 
-  asCypherCondition(query: Query, other: AsCypherParams<TResourceStatic>) {
-    if (!this.roles) {
-      const requester = String(Reflect.get(other, CQL_VAR));
-      return `exists((project)-[:member { active: true }]->(:ProjectMember)-[:user]->(:User { id: ${requester} }))`;
-    }
-
+  asCypherCondition(query: Query) {
     const required = query.params.addParam(
       this.roles.map(rolesForScope('project')),
       'requiredMemberRoles'
@@ -87,7 +90,7 @@ class MemberCondition<
   }
 
   [inspect.custom](_depth: number, _options: InspectOptionsStylized) {
-    return 'Member';
+    return `Member with ${this.roles.join(', ')}`;
   }
 }
 
@@ -104,7 +107,8 @@ export const member = new MemberCondition();
  * NOTE that the policy roles are filtered before this, so only a subset of the
  * policy's roles can effectively be used here.
  */
-export const memberWith = (...roles: Role[]) => new MemberCondition(roles);
+export const memberWith = (...roles: Role[]) =>
+  new MemberWithRolesCondition(roles);
 
 /**
  * Specify roles that should be used for the membership condition.
@@ -122,5 +126,15 @@ export const withScope = <T extends object>(obj: T, roles: ScopedRole[]) =>
     value: roles,
     enumerable: false,
   });
+
+export const getScope = (
+  object: IsAllowedParams<ResourceWithScope>['object']
+): ScopedRole[] => {
+  if (!object) {
+    throw new Error("Needed object's scoped roles but object wasn't given");
+  }
+
+  return Reflect.get(object, ScopedRoles) ?? object?.scope ?? [];
+};
 
 const ScopedRoles = Symbol('ScopedRoles');
