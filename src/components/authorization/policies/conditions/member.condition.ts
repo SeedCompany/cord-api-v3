@@ -10,7 +10,6 @@ import {
   splitScope,
 } from '../../dto/role.dto';
 import { Condition, IsAllowedParams } from '../../policy/conditions';
-import { BuiltPolicy } from '../util';
 
 const CQL_VAR = 'membershipRoles';
 
@@ -22,10 +21,6 @@ class MemberCondition<
 > implements Condition<TResourceStatic>
 {
   constructor(private readonly roles?: readonly Role[]) {}
-
-  attachPolicy(policy: BuiltPolicy): MemberCondition<TResourceStatic> {
-    return this.roles ? this : new MemberCondition(policy.roles);
-  }
 
   isAllowed({ object }: IsAllowedParams<TResourceStatic>): boolean {
     if (!object) {
@@ -79,8 +74,7 @@ class MemberCondition<
 }
 
 /**
- * The following actions only apply if the requester has any "member" scoped roles
- * with this policy's defined roles.
+ * The following actions only apply if the requester has any "member" scoped roles.
  * This usually is implemented as a member of the related project.
  */
 export const member = new MemberCondition();
