@@ -22,6 +22,16 @@ export class PolicyExecutor {
   constructor(private readonly policyFactory: PolicyFactory) {}
 
   resolve({ action, session, resource, prop }: ResolveParams) {
+    if (action !== 'read') {
+      if (prop) {
+        if (resource.calculatedProps.has(prop)) {
+          return false;
+        }
+      } else if (resource.isCalculated) {
+        return false;
+      }
+    }
+
     const policies = this.getPolicies(session);
     const isChildRelation = prop && resource.childKeys.has(prop);
 

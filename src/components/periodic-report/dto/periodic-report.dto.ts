@@ -2,6 +2,7 @@ import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive } from 'type-fest';
 import {
+  Calculated,
   CalendarDate,
   Resource,
   SecuredDateNullable,
@@ -36,6 +37,7 @@ export const resolveReportType = (report: Pick<PeriodicReport, 'type'>) => {
   return type;
 };
 
+@Calculated()
 @InterfaceType({
   resolveType: resolveReportType,
   implements: [Resource],

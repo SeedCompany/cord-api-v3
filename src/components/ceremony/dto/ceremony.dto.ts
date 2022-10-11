@@ -1,6 +1,7 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
+  Calculated,
   Resource,
   SecuredBoolean,
   SecuredDate,
@@ -11,6 +12,7 @@ import {
 } from '../../../common';
 import { CeremonyType } from './type.enum';
 
+@Calculated()
 @ObjectType({
   implements: [Resource],
 })

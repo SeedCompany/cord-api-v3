@@ -1,6 +1,7 @@
 export * from './async-pool.util';
 export * from './buffer';
 export * from './temporal';
+export * from './calculated.decorator';
 export * from './context.type';
 export * from './date-filter.input';
 export { DbLabel } from './db-label.decorator';
