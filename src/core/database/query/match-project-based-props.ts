@@ -80,13 +80,17 @@ export const matchProjectScopedRoles =
               node('rolesProp', 'Property'),
             ],
           ])
+          .with(collect('rolesProp.value').as('memberRoleProps'))
           .return<{ [K in Output]: ScopedRole[] }>(
-            reduce(
-              'scopedRoles',
-              [],
-              apoc.coll.flatten(collect('rolesProp.value')),
-              'role',
-              listConcat('scopedRoles', [`"project:" + role`])
+            listConcat(
+              'case size(memberRoleProps) > 0 when true then ["member:true"] else [] end',
+              reduce(
+                'scopedRoles',
+                [],
+                apoc.coll.flatten('memberRoleProps'),
+                'role',
+                listConcat('scopedRoles', [`"project:" + role`])
+              )
             ).as(outputVar)
           )
           .union()
