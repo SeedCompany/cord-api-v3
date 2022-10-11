@@ -9,7 +9,11 @@ import {
   ScopedRole,
   splitScope,
 } from '../../dto/role.dto';
-import { Condition, IsAllowedParams } from '../../policy/conditions';
+import {
+  AsCypherParams,
+  Condition,
+  IsAllowedParams,
+} from '../../policy/conditions';
 
 const CQL_VAR = 'membershipRoles';
 
@@ -41,11 +45,25 @@ class MemberCondition<
     return intersection(this.roles, actual).length > 0;
   }
 
-  setupCypherContext(query: Query, prevApplied: Set<any>) {
-    if (prevApplied.has('membership')) {
+  setupCypherContext(
+    query: Query,
+    prevApplied: Set<any>,
+    other: AsCypherParams<TResourceStatic>
+  ) {
+    const cacheKey = this.roles ? 'membership-roles' : 'membership';
+    if (prevApplied.has(cacheKey)) {
       return query;
     }
-    prevApplied.add('membership');
+    prevApplied.add(cacheKey);
+
+    if (!this.roles) {
+      const param = query.params.addParam(
+        other.session.userId,
+        'requestingUser'
+      );
+      Reflect.set(other, CQL_VAR, param);
+      return query;
+    }
 
     return query.apply(
       matchProjectScopedRoles({
@@ -55,16 +73,17 @@ class MemberCondition<
     );
   }
 
-  asCypherCondition(query: Query) {
-    let roles = CQL_VAR;
-    if (this.roles) {
-      const required = query.params.addParam(
-        this.roles.map(rolesForScope('project')),
-        'requiredMemberRoles'
-      );
-      roles = `apoc.coll.intersection(${roles}, ${String(required)})`;
+  asCypherCondition(query: Query, other: AsCypherParams<TResourceStatic>) {
+    if (!this.roles) {
+      const requester = String(Reflect.get(other, CQL_VAR));
+      return `exists((project)-[:member { active: true }]->(:ProjectMember)-[:user]->(:User { id: ${requester} }))`;
     }
-    return `size(${roles}) > 0`;
+
+    const required = query.params.addParam(
+      this.roles.map(rolesForScope('project')),
+      'requiredMemberRoles'
+    );
+    return `size(apoc.coll.intersection(${CQL_VAR}, ${String(required)})) > 0`;
   }
 
   [inspect.custom](_depth: number, _options: InspectOptionsStylized) {
