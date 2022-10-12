@@ -64,21 +64,28 @@ export class TracingModule implements OnModuleInit, NestModule {
       (msg: string, err: Error | string) => {
         if (err instanceof Error) {
           this.logger.log(level, msg, { exception: err });
-        } else if (msg.startsWith('Segment too large to send')) {
-          const matches = msg.match(
-            /Segment too large to send: (\{.+\}) \((\d+) bytes\)./
-          );
-          const safeMatches = matches
-            ? {
-                ...JSON.parse(matches[1]),
-                size: matches[2],
-              }
-            : {};
-
-          this.logger.warning('Segment too large to send', safeMatches);
-        } else {
-          this.logger.log(level, err ? `${msg} ${err}` : msg);
+          return;
         }
+        if (msg.startsWith('Segment too large to send')) {
+          const matches = msg.match(
+            /Segment too large to send: (\{.+}) \((\d+) bytes\)./
+          );
+          try {
+            this.logger.warning(
+              'Segment too large to send',
+              matches
+                ? {
+                    ...JSON.parse(matches[1]),
+                    size: matches[2],
+                  }
+                : undefined
+            );
+            return;
+          } catch {
+            // fallthrough
+          }
+        }
+        this.logger.log(level, err ? `${msg} ${err}` : msg);
       };
     XRay.setLogger({
       info: log(LogLevel.INFO),
