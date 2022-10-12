@@ -1,10 +1,13 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { SecuredProperty, SecuredProps } from '~/common';
+import { parentIdMiddleware, SecuredProperty, SecuredProps } from '~/common';
 import { RegisterResource } from '~/core';
 import { BaseNode } from '~/core/database/results';
 import { LanguageEngagement } from '../../engagement/dto';
-import { IPeriodicReport, ReportType } from '../../periodic-report/dto';
+import { DefinedFile } from '../../file';
+import { IPeriodicReport } from '../../periodic-report/dto/periodic-report.dto';
+import { ReportType } from '../../periodic-report/dto/report-type.enum';
+import { SecuredProgressReportStatus as SecuredStatus } from './progress-report-status.enum';
 
 @RegisterResource()
 @ObjectType({
@@ -20,7 +23,15 @@ export class ProgressReport extends IPeriodicReport {
   declare readonly type: ReportType.Progress;
 
   @Field(() => LanguageEngagement)
-  readonly parent: BaseNode;
+  override readonly parent: BaseNode;
+
+  /** @deprecated */
+  readonly reportFile: DefinedFile;
+
+  @Field(() => SecuredStatus, {
+    middleware: [parentIdMiddleware],
+  })
+  readonly status: SecuredStatus;
 }
 
 @ObjectType({

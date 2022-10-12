@@ -6,9 +6,13 @@ import { ProgressReportService } from './progress-report.service';
 import { ProgressReportEngagementConnectionResolver } from './resolvers/progress-report-engagement-connection.resolver';
 import { ProgressReportParentResolver } from './resolvers/progress-report-parent.resolver';
 import { ProgressReportResolver } from './resolvers/progress-report.resolver';
+import { ProgressReportWorkflowModule } from './workflow/progress-report-workflow.module';
 
 @Module({
-  imports: [forwardRef(() => PeriodicReportModule)],
+  imports: [
+    forwardRef(() => PeriodicReportModule),
+    ProgressReportWorkflowModule,
+  ],
   providers: [
     ProgressReportResolver,
     ProgressReportParentResolver,
