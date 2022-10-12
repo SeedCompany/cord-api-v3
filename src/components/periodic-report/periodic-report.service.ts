@@ -1,6 +1,5 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import {
-  asyncPool,
   CalendarDate,
   DateInterval,
   ID,
@@ -13,8 +12,7 @@ import {
 } from '../../common';
 import { HandleIdLookup, IEventBus, ILogger, Logger } from '../../core';
 import { Variable } from '../../core/database/query';
-import { mapListResults } from '../../core/database/results';
-import { AuthorizationService } from '../authorization/authorization.service';
+import { Privileges } from '../authorization';
 import { FileService } from '../file';
 import { ProgressReport } from '../progress-report/dto';
 import {
@@ -38,8 +36,7 @@ export class PeriodicReportService {
     private readonly files: FileService,
     @Logger('periodic:report:service') private readonly logger: ILogger,
     private readonly eventBus: IEventBus,
-    @Inject(forwardRef(() => AuthorizationService))
-    private readonly authorizationService: AuthorizationService,
+    private readonly privileges: Privileges,
     private readonly repo: PeriodicReportRepository
   ) {}
 
@@ -63,13 +60,12 @@ export class PeriodicReportService {
   }
 
   async update(input: UpdatePeriodicReportInput, session: Session) {
-    const current = await this.readOne(input.id, session);
+    const currentRaw = await this.repo.readOne(input.id, session);
+    const current = this.secure(currentRaw, session);
     const changes = this.repo.getActualChanges(current, input);
-    await this.authorizationService.verifyCanEditChanges(
-      resolveReportType(current),
-      current,
-      changes
-    );
+    this.privileges
+      .for(session, resolveReportType(current), currentRaw)
+      .verifyChanges(changes);
 
     const { reportFile, ...simpleChanges } = changes;
 
@@ -116,32 +112,19 @@ export class PeriodicReportService {
     }
 
     const result = await this.repo.readOne(id, session);
-    return await this.secure(result, session);
+    return this.secure(result, session);
   }
 
   async readMany(ids: readonly ID[], session: Session) {
     const periodicReports = await this.repo.readMany(ids, session);
-    return await asyncPool(25, periodicReports, (dto) =>
-      this.secure(dto, session)
-    );
+    return periodicReports.map((dto) => this.secure(dto, session));
   }
 
-  private async secure(
+  private secure(
     dto: UnsecuredDto<PeriodicReport>,
     session: Session
-  ): Promise<PeriodicReport> {
-    const securedProps = await this.authorizationService.secureProperties(
-      resolveReportType(dto),
-      dto,
-      session,
-      dto.scope
-    );
-
-    return {
-      ...dto,
-      ...securedProps,
-      canDelete: false, // Auto generated, no user deleting.
-    };
+  ): PeriodicReport {
+    return this.privileges.for(session, resolveReportType(dto)).secure(dto);
   }
 
   async list(
@@ -151,7 +134,8 @@ export class PeriodicReportService {
     const results = await this.repo.list(input, session);
 
     return {
-      ...(await mapListResults(results, (dto) => this.secure(dto, session))),
+      ...results,
+      items: results.items.map((dto) => this.secure(dto, session)),
       canRead: true,
       canCreate: true,
     };
@@ -165,7 +149,7 @@ export class PeriodicReportService {
     const report: UnsecuredDto<PeriodicReport> | undefined =
       await this.repo.getCurrentDue(parentId, reportType, session);
     return report
-      ? ((await this.secure(report, session)) as PeriodicReportTypeMap[Type])
+      ? (this.secure(report, session) as PeriodicReportTypeMap[Type])
       : undefined;
   }
 
@@ -180,7 +164,7 @@ export class PeriodicReportService {
   ): Promise<PeriodicReportTypeMap[Type] | undefined> {
     const report = await this.repo.getNextDue(parentId, reportType, session);
     return report
-      ? ((await this.secure(report, session)) as PeriodicReportTypeMap[Type])
+      ? (this.secure(report, session) as PeriodicReportTypeMap[Type])
       : undefined;
   }
 
@@ -195,7 +179,7 @@ export class PeriodicReportService {
       session
     );
     return report
-      ? ((await this.secure(report, session)) as PeriodicReportTypeMap[Type])
+      ? (this.secure(report, session) as PeriodicReportTypeMap[Type])
       : undefined;
   }
 
@@ -219,7 +203,7 @@ export class PeriodicReportService {
     session: Session
   ): Promise<PeriodicReport | undefined> {
     const report = await this.repo.getFinalReport(parentId, type, session);
-    return report ? await this.secure(report, session) : undefined;
+    return report ? this.secure(report, session) : undefined;
   }
 
   async mergeFinalReport(
