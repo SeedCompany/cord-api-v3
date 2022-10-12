@@ -207,9 +207,6 @@ export class UserResourcePrivileges<
   /**
    * Takes the given unsecured dto which has unsecured props and returns the props that
    * are supposed to be secured (unsecured props are omitted) as secured.
-   *
-   * This is mainly here to service the existing codebase. I suspect we'll want
-   * to migrate to a different method that handles things in a slightly different way.
    */
   secure(
     dto: UnsecuredDto<TResourceStatic['prototype']>
