@@ -6,6 +6,16 @@ export type Permissions<TAction extends string> = {
 };
 export type Permission = Condition<any> | boolean;
 
+/**
+ * Add allowed actions.
+ */
+export const action = Symbol('PermGranter.action');
+
+/**
+ * Extract permissions from granter.
+ */
+export const extract = Symbol('PermGranter.extract');
+
 export abstract class PermGranter<
   TResourceStatic extends ResourceShape<any>,
   TAction extends string
@@ -30,9 +40,8 @@ export abstract class PermGranter<
 
   /**
    * Return grant with these actions added.
-   * Maybe expose publicly...
    */
-  protected action(...actions: TAction[]): this {
+  [action](...actions: TAction[]): this {
     const cloned = this.clone();
     cloned.trailingCondition = undefined;
     const perm = cloned.stagedCondition ?? true;
@@ -90,7 +99,7 @@ export abstract class PermGranter<
     return cloned;
   }
 
-  protected extract() {
+  [extract]() {
     if (this.trailingCondition) {
       throw this.trailingCondition;
     }

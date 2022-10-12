@@ -1,54 +1,32 @@
-import { mapValues } from 'lodash';
 import { EnhancedResource, many, Many, ResourceShape } from '~/common';
-import type { EnhancedResourceMap, ResourceMap } from '~/core';
 import { ResourceAction } from '../actions';
 import {
   ChildRelationshipGranter,
   ChildRelationshipsGranter,
 } from './child-relationship-granter';
-import { PermGranter } from './perm-granter';
-import { PropGranter, PropGranterImpl, PropsGranter } from './prop-granter';
+import { action, extract, PermGranter } from './perm-granter';
+import { PropGranter, PropsGranter } from './prop-granter';
 
-export abstract class ResourceGranter<
+export const withOther = Symbol('ResourceGranter.withOther');
+
+type PropsGranterFn<TResourceStatic extends ResourceShape<any>> = (
+  granter: PropsGranter<TResourceStatic>
+) => Many<PropGranter<TResourceStatic>>;
+
+type ChildrenGranterFn<TResourceStatic extends ResourceShape<any>> = (
+  granter: ChildRelationshipsGranter<TResourceStatic>
+) => Many<ChildRelationshipGranter<TResourceStatic>>;
+
+export class ResourceGranter<
   TResourceStatic extends ResourceShape<any>
 > extends PermGranter<TResourceStatic, ResourceAction> {
-  protected propGrants: ReadonlyArray<PropGranterImpl<TResourceStatic>> = [];
+  protected propGrants: ReadonlyArray<PropGranter<TResourceStatic>> = [];
   protected childRelationshipGrants: ReadonlyArray<
     ChildRelationshipGranter<TResourceStatic>
   > = [];
 
   constructor(protected resource: EnhancedResource<TResourceStatic>) {
     super();
-  }
-
-  /**
-   * The requester can read the object (via lists or individual lookups)
-   * and can read all props not specifically defined.
-   */
-  get read() {
-    return this.action('read');
-  }
-
-  /**
-   * The requester can edit all props not specifically defined.
-   * {@link read} is implied.
-   */
-  get edit() {
-    return this.action('read', 'edit');
-  }
-
-  /**
-   * The requester can create a new instance of this resource.
-   */
-  get create() {
-    return this.action('create');
-  }
-
-  /**
-   * The requester can delete this object.
-   */
-  get delete() {
-    return this.action('delete');
   }
 
   /**
@@ -60,19 +38,13 @@ export abstract class ResourceGranter<
    * Conditions previously given will apply automatically to these props,
    * unless the prop defines its own condition.
    */
-  specifically(
-    grants: (
-      granter: PropsGranter<TResourceStatic>
-    ) => Many<PropGranter<TResourceStatic>>
-  ): this {
-    const propsGranter = PropGranterImpl.forResource(
+  protected specifically(grants: PropsGranterFn<TResourceStatic>): this {
+    const propsGranter = PropGranter.forResource(
       this.resource,
       this.stagedCondition
     );
 
-    const newGrants = many(grants(propsGranter)) as Array<
-      PropGranterImpl<TResourceStatic>
-    >;
+    const newGrants = many(grants(propsGranter));
 
     const cloned = this.clone();
     cloned.trailingCondition =
@@ -98,11 +70,7 @@ export abstract class ResourceGranter<
    * Conditions previously given will apply automatically to these relations,
    * unless the relation defines its own condition.
    */
-  children(
-    relationGrants: (
-      granter: ChildRelationshipsGranter<TResourceStatic>
-    ) => Many<ChildRelationshipGranter<TResourceStatic>>
-  ): this {
+  protected children(relationGrants: ChildrenGranterFn<TResourceStatic>): this {
     const granter = ChildRelationshipGranter.forResource(
       this.resource,
       this.stagedCondition
@@ -119,19 +87,8 @@ export abstract class ResourceGranter<
     ];
     return cloned;
   }
-}
 
-export class ResourceGranterImpl<
-  TResourceStatic extends ResourceShape<any>
-> extends ResourceGranter<TResourceStatic> {
-  static create(map: EnhancedResourceMap): ResourcesGranter {
-    return mapValues(
-      map,
-      (resource: EnhancedResource<any>) => new ResourceGranterImpl(resource)
-    ) as any;
-  }
-
-  withOther(other: ResourceGranterImpl<TResourceStatic>): this {
+  [withOther](other: ResourceGranter<TResourceStatic>): this {
     const cloned = this.clone();
     cloned.perms = [...this.perms, ...other.perms];
     cloned.propGrants = [...this.propGrants, ...other.propGrants];
@@ -142,13 +99,13 @@ export class ResourceGranterImpl<
     return cloned;
   }
 
-  extract() {
+  [extract]() {
     return {
-      ...super.extract(),
+      ...super[extract](),
       resource: this.resource,
-      props: this.propGrants.map((prop) => prop.extract()),
+      props: this.propGrants.map((prop) => prop[extract]()),
       childRelationships: this.childRelationshipGrants.map((rel) =>
-        rel.extract()
+        rel[extract]()
       ),
     };
   }
@@ -161,6 +118,44 @@ export class ResourceGranterImpl<
   }
 }
 
-export type ResourcesGranter = {
-  [K in keyof ResourceMap]: ResourceGranter<ResourceMap[K]>;
-};
+export class DefaultResourceGranter<
+  TResourceStatic extends ResourceShape<any>
+> extends ResourceGranter<TResourceStatic> {
+  /**
+   * The requester can read the object (via lists or individual lookups)
+   * and can read all props not specifically defined.
+   */
+  get read() {
+    return this[action]('read');
+  }
+
+  /**
+   * The requester can edit all props not specifically defined.
+   * {@link read} is implied.
+   */
+  get edit() {
+    return this[action]('read', 'edit');
+  }
+
+  /**
+   * The requester can create a new instance of this resource.
+   */
+  get create() {
+    return this[action]('create');
+  }
+
+  /**
+   * The requester can delete this object.
+   */
+  get delete() {
+    return this[action]('delete');
+  }
+
+  specifically(grants: PropsGranterFn<TResourceStatic>): this {
+    return super.specifically(grants);
+  }
+
+  children(grants: ChildrenGranterFn<TResourceStatic>): this {
+    return super.children(grants);
+  }
+}

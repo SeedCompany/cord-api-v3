@@ -1,6 +1,4 @@
-import { Policy, Role } from '../util';
+import { allowAll, Policy, Role } from '../util';
 
-@Policy(Role.Administrator, (resources) =>
-  Object.values(resources).map((resource) => resource.edit.create.delete)
-)
+@Policy(Role.Administrator, allowAll('read', 'edit', 'create', 'delete'))
 export class AdministratorPolicy {}

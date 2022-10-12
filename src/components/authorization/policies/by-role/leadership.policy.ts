@@ -1,7 +1,5 @@
-import { Policy, Role } from '../util';
+import { allowAll, Policy, Role } from '../util';
 
 // NOTE: There could be other permissions for this role from other policies
-@Policy(Role.Leadership, (r) =>
-  Object.values(r).map((resource) => resource.read)
-)
+@Policy(Role.Leadership, allowAll('read'))
 export class LeadershipPolicy {}

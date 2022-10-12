@@ -6,9 +6,9 @@ import {
 import { PropAction } from '../actions';
 import { Condition } from '../conditions';
 import { createLazyRecord } from '../lazy-record';
-import { PermGranter } from './perm-granter';
+import { action, extract, PermGranter } from './perm-granter';
 
-export abstract class PropGranter<
+export class PropGranter<
   TResourceStatic extends ResourceShape<any>
 > extends PermGranter<TResourceStatic, PropAction> {
   constructor(
@@ -23,23 +23,19 @@ export abstract class PropGranter<
    * The requester can read this.
    */
   get read() {
-    return this.action('read');
+    return this[action]('read');
   }
 
   /**
    * The requester can read & modify this.
    */
   get edit() {
-    return this.action('read', 'edit');
+    return this[action]('read', 'edit');
   }
-}
 
-export class PropGranterImpl<
-  TResourceStatic extends ResourceShape<any>
-> extends PropGranter<TResourceStatic> {
-  extract() {
+  [extract]() {
     return {
-      ...super.extract(),
+      ...super[extract](),
       resource: this.resource,
       properties: this.properties,
     };
@@ -52,11 +48,10 @@ export class PropGranterImpl<
     const granter = createLazyRecord<PropsGranter<TResourceStatic>>({
       getKeys: () => resource.securedPropsPlusExtra,
       calculate: (prop) =>
-        new PropGranterImpl(resource, [prop], stagedCondition) as any,
+        new PropGranter(resource, [prop], stagedCondition) as any,
       // @ts-expect-error IDK why this is failing
       base: {
-        many: (...props) =>
-          new PropGranterImpl(resource, props, stagedCondition),
+        many: (...props) => new PropGranter(resource, props, stagedCondition),
       },
     });
     return granter;
