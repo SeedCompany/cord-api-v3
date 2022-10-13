@@ -82,7 +82,7 @@ export class UnauthorizedException extends InputException {
     const edgeName = edge ? lowerCase(edge) : undefined;
     const edges =
       edge && edgeName
-        ? (resource.childListKeys as Set<string>).has(edge)
+        ? resource.childListKeys.has(edge as never)
           ? edgeName // assume child lists are already plural
           : pluralize(edgeName, 2)
         : undefined;

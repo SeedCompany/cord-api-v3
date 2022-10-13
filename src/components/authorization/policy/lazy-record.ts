@@ -7,7 +7,7 @@ export const createLazyRecord = <T extends object>({
   getKeys,
   base,
 }: {
-  getKeys: () => Array<keyof T & string> | Set<keyof T & string>;
+  getKeys: () => Array<keyof T & string> | ReadonlySet<keyof T & string>;
   calculate: (key: keyof T & string, object: Partial<T>) => T[keyof T & string];
   base?: Partial<T>;
 }) => {
