@@ -3,7 +3,8 @@ import { identity, intersection } from 'lodash';
 import { CachedOnArg, EnhancedResource, Session } from '~/common';
 import { QueryFragment } from '~/core/database/query';
 import { withoutScope } from '../../dto/role.dto';
-import { any } from '../conditions';
+import { Permission } from '../builder/perm-granter';
+import { any, Condition } from '../conditions';
 import { PolicyFactory } from '../policy.factory';
 
 export interface ResolveParams {
@@ -11,6 +12,7 @@ export interface ResolveParams {
   session: Session;
   resource: EnhancedResource<any>;
   prop?: string;
+  calculatedAsCondition?: boolean;
 }
 
 export interface FilterOptions {
@@ -21,14 +23,20 @@ export interface FilterOptions {
 export class PolicyExecutor {
   constructor(private readonly policyFactory: PolicyFactory) {}
 
-  resolve({ action, session, resource, prop }: ResolveParams) {
+  resolve({
+    action,
+    session,
+    resource,
+    prop,
+    calculatedAsCondition,
+  }: ResolveParams): Permission {
     if (action !== 'read') {
       if (prop) {
         if (resource.calculatedProps.has(prop)) {
-          return false;
+          return calculatedAsCondition ? CalculatedCondition.instance : false;
         }
       } else if (resource.isCalculated) {
-        return false;
+        return calculatedAsCondition ? CalculatedCondition.instance : false;
       }
     }
 
@@ -115,5 +123,15 @@ export class PolicyExecutor {
       return rolesSpecifiedByPolicyThatUserHas.length > 0;
     });
     return policies;
+  }
+}
+
+export class CalculatedCondition implements Condition<any> {
+  static readonly instance = new CalculatedCondition();
+  isAllowed() {
+    return false;
+  }
+  asCypherCondition() {
+    return 'false';
   }
 }

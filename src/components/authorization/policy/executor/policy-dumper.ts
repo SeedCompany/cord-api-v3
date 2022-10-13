@@ -14,7 +14,7 @@ import {
   ResourceAction,
 } from '../actions';
 import { Permission } from '../builder/perm-granter';
-import { PolicyExecutor } from './policy-executor';
+import { CalculatedCondition, PolicyExecutor } from './policy-executor';
 
 interface DumpedRow {
   resource: EnhancedResource<any>;
@@ -79,6 +79,9 @@ export class PolicyDumper {
           if (v instanceof EnhancedResource) {
             return startCase(v.name);
           }
+          if (v instanceof CalculatedCondition) {
+            return null;
+          }
           return inspect(v);
         }),
         (_, k) => (headerMap as any)[k] ?? k
@@ -90,7 +93,7 @@ export class PolicyDumper {
     session: Session,
     resource: EnhancedResource<any>
   ): DumpedRow[] {
-    const opts = { session, resource };
+    const opts = { session, resource, calculatedAsCondition: true };
     return [
       {
         resource,
