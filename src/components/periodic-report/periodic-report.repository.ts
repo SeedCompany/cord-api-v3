@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { hasLabel, node, Query, relation } from 'cypher-query-builder';
+import { hasLabel, node, not, Query, relation } from 'cypher-query-builder';
 import { AndConditions } from 'cypher-query-builder/src/clauses/where-utils';
 import {
   CalendarDate,
@@ -9,7 +9,7 @@ import {
   Session,
   UnsecuredDto,
 } from '../../common';
-import { DtoRepository } from '../../core';
+import { DatabaseService, DtoRepository } from '../../core';
 import {
   ACTIVE,
   createNode,
@@ -24,6 +24,7 @@ import {
   Variable,
 } from '../../core/database/query';
 import { File } from '../file';
+import { ProgressReportExtraForPeriodicInterfaceRepository } from '../progress-report/progress-report-extra-for-periodic-interface.repository';
 import {
   IPeriodicReport,
   MergePeriodicReports,
@@ -39,6 +40,13 @@ export class PeriodicReportRepository extends DtoRepository<
   [session: Session],
   PeriodicReport
 >(IPeriodicReport) {
+  constructor(
+    private readonly progressRepo: ProgressReportExtraForPeriodicInterfaceRepository,
+    db: DatabaseService
+  ) {
+    super(db);
+  }
+
   async merge(input: MergePeriodicReports) {
     const Report = resolveReportType(input);
 
@@ -52,6 +60,11 @@ export class PeriodicReportRepository extends DtoRepository<
         tempFileId: await generateId(),
       }))
     );
+
+    const isProgress = input.type === ReportType.Progress;
+    const extraCreateOptions = isProgress
+      ? this.progressRepo.getCreateOptions(input)
+      : {};
 
     const query = this.db
       .query()
@@ -96,6 +109,7 @@ export class PeriodicReportRepository extends DtoRepository<
           baseNodeProps: {
             id: variable('interval.tempId'),
             createdAt: variable('now'),
+            ...extraCreateOptions.baseNodeProps,
           },
           initialProps: {
             type: input.type,
@@ -104,6 +118,7 @@ export class PeriodicReportRepository extends DtoRepository<
             skippedReason: null,
             receivedDate: null,
             reportFile: variable('interval.tempFileId'),
+            ...extraCreateOptions.initialProps,
           },
         })
       )
@@ -112,6 +127,7 @@ export class PeriodicReportRepository extends DtoRepository<
           report: variable('parent'),
         })
       )
+      .apply(isProgress ? this.progressRepo.amendAfterCreateNode() : undefined)
       // rename node to report, so we can call create node again for the file
       .with('now, interval, node as report')
       .apply(
@@ -294,6 +310,7 @@ export class PeriodicReportRepository extends DtoRepository<
         ],
       ])
       .raw(
+        // TODO this wont be sufficient with new progress reports.
         `
           WHERE NOT (report)-[:reportFileNode]->(:File)<-[:parent { active: true }]-(:FileVersion)
             AND CASE
@@ -318,6 +335,18 @@ export class PeriodicReportRepository extends DtoRepository<
   protected hydrate(session: Session) {
     return (query: Query) =>
       query
+        .subQuery((sub) =>
+          sub
+            .with('node')
+            .with('node')
+            .where({ node: hasLabel('ProgressReport') })
+            .apply(this.progressRepo.extraHydrate())
+            .union()
+            .with('node')
+            .with('node')
+            .where({ node: not(hasLabel('ProgressReport')) })
+            .return('{} as extra')
+        )
         .subQuery('node', (sub) =>
           sub
             .match([
@@ -344,7 +373,7 @@ export class PeriodicReportRepository extends DtoRepository<
         ])
         .apply(matchPropsAndProjectSensAndScopedRoles(session))
         .return<{ dto: UnsecuredDto<PeriodicReport> }>(
-          merge('props', { parent: 'parent' }).as('dto')
+          merge('props', { parent: 'parent' }, 'extra').as('dto')
         );
   }
 }
