@@ -1,4 +1,8 @@
+import { ValueOf } from 'type-fest';
+import { ResourcesGranter } from '../granters';
 import { ResourceGranter, withOther } from './resource-granter';
+
+type Granter = ValueOf<ResourcesGranter>;
 
 /**
  * This merges the permissions from the first granter, into the other ones.
@@ -23,11 +27,13 @@ import { ResourceGranter, withOther } from './resource-granter';
  * ])
  */
 export function inherit(
-  theInterface: ResourceGranter<any>,
-  ...implementations: Array<ResourceGranter<any>>
-): Array<ResourceGranter<any>> {
+  theInterface: Granter,
+  ...implementations: Granter[]
+): Granter[] {
   return [
     theInterface,
-    ...implementations.map((granter) => granter[withOther](theInterface)),
+    ...implementations.map((granter) =>
+      granter[withOther](theInterface as ResourceGranter<any>)
+    ),
   ];
 }
