@@ -3,6 +3,7 @@ import { inArray, Query } from 'cypher-query-builder';
 import { LazyGetter as Once } from 'lazy-get-decorator';
 import { lowerCase } from 'lodash';
 import {
+  EnhancedResource,
   getDbClassLabels,
   getDbPropertyUnique,
   ID,
@@ -32,6 +33,7 @@ export const DtoRepository = <
   class DtoRepositoryClass extends CommonRepository {
     @Inject(Privileges)
     private readonly allPrivileges: Privileges;
+    protected readonly resource = EnhancedResource.of(resource);
 
     @Once()
     get privileges() {
