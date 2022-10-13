@@ -10,7 +10,7 @@ import {
   UnwrapSecured,
 } from '~/common';
 import { DbChanges } from '~/core/database/changes';
-import { ACTIVE, createProperty, path } from '~/core/database/query';
+import { ACTIVE, path } from '~/core/database/query';
 import { ILogger, Logger } from '../../logger';
 import { DatabaseService } from '../database.service';
 
@@ -31,6 +31,9 @@ import { DatabaseService } from '../database.service';
  */
 @Injectable()
 export abstract class BaseMigration {
+  /** The class' version declared on the @Migration() decorator */
+  version: DateTime;
+
   @Inject(DatabaseService)
   protected db: DatabaseService;
 
@@ -79,15 +82,20 @@ export abstract class BaseMigration {
           ])
         )
       )
-      .apply(
-        createProperty({
-          resource,
-          key: property,
+      .create([
+        node('node'),
+        relation('out', undefined, property, {
+          ...ACTIVE,
+          createdAt: this.version,
+        }),
+        node('newPropNode', resource.dbPropLabels[property], {
+          createdAt: this.version,
+          migration: this.version,
           value,
-        })
-      )
+        }),
+      ])
       .return<{ numPropsCreated: number }>(
-        'sum(numPropsCreated) as numPropsCreated'
+        'count(newPropNode) as numPropsCreated'
       )
       .first();
     this.logger.info(
