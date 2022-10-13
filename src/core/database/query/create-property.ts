@@ -3,7 +3,7 @@ import { DateTime } from 'luxon';
 import { MergeExclusive } from 'type-fest';
 import { ACTIVE, variable as varRef } from '.';
 import {
-  getDbPropertyLabels,
+  EnhancedResource,
   ID,
   MaybeUnsecuredInstance,
   ResourceShape,
@@ -18,7 +18,7 @@ export type CreatePropertyOptions<
   },
   Key extends keyof DbChanges<TObject> & string
 > = {
-  resource: TResourceStatic;
+  resource: TResourceStatic | EnhancedResource<TResourceStatic>;
   key: Key;
   changeset?: ID;
   nodeName?: string;
@@ -54,9 +54,11 @@ export const createProperty =
     numCreatedVar = 'numPropsCreated',
   }: CreatePropertyOptions<TResourceStatic, TObject, Key>) =>
   <R>(query: Query<R>) => {
+    resource = EnhancedResource.of(resource);
+
     const createdAt = DateTime.local();
     const propLabels = !changeset
-      ? getDbPropertyLabels(resource, key)
+      ? resource.dbPropLabels[key]
       : // Do not give properties unique labels if inside a changeset.
         // They'll get them when they are applied for real.
         ['Property'];

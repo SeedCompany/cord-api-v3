@@ -1,6 +1,16 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { node, not, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { ID, Session } from '../../../common';
+import {
+  EnhancedResource,
+  ID,
+  MaybeUnsecuredInstance,
+  ResourceShape,
+  Session,
+  UnwrapSecured,
+} from '~/common';
+import { DbChanges } from '~/core/database/changes';
+import { ACTIVE, createProperty, path } from '~/core/database/query';
 import { ILogger, Logger } from '../../logger';
 import { DatabaseService } from '../database.service';
 
@@ -34,7 +44,7 @@ export abstract class BaseMigration {
    * Usually it's required just to provide user authorization.
    * This is not guaranteed to work, especially for usage with writes.
    */
-  get fakeAdminSession(): Session {
+  protected get fakeAdminSession(): Session {
     return {
       token: '',
       issuedAt: DateTime.now(),
@@ -42,5 +52,48 @@ export abstract class BaseMigration {
       userId: 'fake admin :(' as ID,
       anonymous: false,
     };
+  }
+
+  protected async addProperty<
+    TResourceStatic extends ResourceShape<any>,
+    TObject extends Partial<MaybeUnsecuredInstance<TResourceStatic>> & {
+      id: ID;
+    },
+    Key extends keyof DbChanges<TObject> & string
+  >(
+    resource: TResourceStatic | EnhancedResource<TResourceStatic>,
+    property: Key,
+    value: UnwrapSecured<TObject[Key]>
+  ) {
+    resource = EnhancedResource.of(resource);
+
+    const result = await this.db
+      .query()
+      .matchNode('node', resource.dbLabel)
+      .where(
+        not(
+          path([
+            node('node'),
+            relation('out', '', property, ACTIVE),
+            node('', 'Property'),
+          ])
+        )
+      )
+      .apply(
+        createProperty({
+          resource,
+          key: property,
+          value,
+        })
+      )
+      .return<{ numPropsCreated: number }>(
+        'sum(numPropsCreated) as numPropsCreated'
+      )
+      .first();
+    this.logger.info(
+      `Created ${result?.numPropsCreated ?? 0} ${
+        resource.name
+      }.${property} default props`
+    );
   }
 }
