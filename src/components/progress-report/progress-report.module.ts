@@ -1,5 +1,6 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { PeriodicReportModule } from '../periodic-report/periodic-report.module';
+import { AddProgressReportStatusMigration } from './migrations/AddStatus.migration';
 import { ProgressReportExtraForPeriodicInterfaceRepository } from './progress-report-extra-for-periodic-interface.repository';
 import { ProgressReportRepository } from './progress-report.repository';
 import { ProgressReportService } from './progress-report.service';
@@ -20,6 +21,7 @@ import { ProgressReportWorkflowModule } from './workflow/progress-report-workflo
     ProgressReportService,
     ProgressReportRepository,
     ProgressReportExtraForPeriodicInterfaceRepository,
+    AddProgressReportStatusMigration,
   ],
   exports: [ProgressReportExtraForPeriodicInterfaceRepository],
 })
