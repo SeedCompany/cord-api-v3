@@ -201,9 +201,13 @@ export class CommentService {
     await this.verifyCanView(parent, session);
 
     const results = await this.repo.threads.list(parent.id, input, session);
-    return await mapListResults(results, (dto) =>
-      this.secureThread(dto, session)
-    );
+
+    return {
+      ...(await mapListResults(results, (dto) =>
+        this.secureThread(dto, session)
+      )),
+      parent,
+    };
   }
 
   async listCommentsByThreadId(
