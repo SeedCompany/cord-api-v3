@@ -54,7 +54,12 @@ export class SensitivityCondition<
   }
 
   [inspect.custom](_depth: number, _options: InspectOptionsStylized) {
-    return `Sensitivity { ${this.access} }`;
+    const map = {
+      High: 'Any',
+      Medium: 'Medium/Low',
+      Low: 'Low',
+    };
+    return `Sens ${map[this.access]}`;
   }
 }
 

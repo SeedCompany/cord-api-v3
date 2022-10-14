@@ -132,7 +132,7 @@ export class EnhancedResource<T extends ResourceShape<any>> {
    * i.e. {@link import('@nestjs/graphql').IntersectionType}
    */
   @Once()
-  get interfaces() {
+  get interfaces(): ReadonlySet<EnhancedResource<any>> {
     return new Set(
       getParentTypes(this.type)
         .slice(1) // not self
@@ -146,29 +146,31 @@ export class EnhancedResource<T extends ResourceShape<any>> {
   }
 
   @Once()
-  get securedPropsPlusExtra() {
+  get securedPropsPlusExtra(): ReadonlySet<
+    SecuredResourceKey<T, false> | ExtraPropsFromRelationsKey<T>
+  > {
     return new Set([...this.securedProps, ...this.extraPropsFromRelations]);
   }
 
   @Once()
-  get props() {
+  get props(): ReadonlySet<keyof T['prototype'] & string> {
     return new Set<keyof T['prototype'] & string>(this.type.Props as any);
   }
 
   @Once()
-  get securedProps() {
+  get securedProps(): ReadonlySet<SecuredResourceKey<T, false>> {
     return new Set<SecuredResourceKey<T, false>>(this.type.SecuredProps as any);
   }
 
   @Once()
-  get childKeys() {
+  get childKeys(): ReadonlySet<ChildSinglesKey<T> | ChildListsKey<T>> {
     return new Set([...this.childSingleKeys, ...this.childListKeys]);
   }
 
   @Once()
   get extraPropsFromRelations() {
     return this.relNamesIf<ExtraPropsFromRelationsKey<T>>(
-      (rel) => !!rel.resource && !rel.resource.hasParent
+      (rel) => !rel.resource || !rel.resource.hasParent
     );
   }
 
@@ -186,7 +188,9 @@ export class EnhancedResource<T extends ResourceShape<any>> {
     );
   }
 
-  private relNamesIf<K>(predicate: (rel: EnhancedRelation<any>) => boolean) {
+  private relNamesIf<K>(
+    predicate: (rel: EnhancedRelation<any>) => boolean
+  ): ReadonlySet<K> {
     return new Set<K>(
       [...this.relations.values()].flatMap((rel) =>
         predicate(rel) ? (rel.name as K) : []
@@ -218,7 +222,7 @@ export class EnhancedResource<T extends ResourceShape<any>> {
   }
 
   @Once()
-  get calculatedProps() {
+  get calculatedProps(): ReadonlySet<keyof T['prototype'] & string> {
     const props = [...this.props].filter((prop) => {
       return !!Reflect.getMetadata(CalculatedSymbol, this.type.prototype, prop);
     });

@@ -1,5 +1,4 @@
 import { Query } from 'cypher-query-builder';
-import { startCase } from 'lodash';
 import { inspect, InspectOptionsStylized } from 'util';
 import { ResourceShape } from '~/common';
 import { Policy } from '../policy.factory';
@@ -58,7 +57,13 @@ export abstract class AggregateConditions<
   }
 
   [inspect.custom](_depth: number, _options: InspectOptionsStylized) {
-    return `${startCase(this.constructor.name)} ${inspect(this.conditions)}`;
+    const name = this instanceof AndConditions ? ' AND ' : ' OR ';
+    return this.conditions
+      .map((c) => {
+        const l = inspect(c);
+        return c instanceof AggregateConditions ? `(${l})` : l;
+      })
+      .join(name);
   }
 }
 

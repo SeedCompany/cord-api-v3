@@ -74,10 +74,7 @@ class MemberCondition<
   }
 
   [inspect.custom](_depth: number, _options: InspectOptionsStylized) {
-    if (this.roles) {
-      return `Membership ${inspect({ roles: this.roles })}`;
-    }
-    return 'Membership';
+    return 'Member';
   }
 }
 
