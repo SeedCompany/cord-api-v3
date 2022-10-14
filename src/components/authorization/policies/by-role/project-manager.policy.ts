@@ -40,7 +40,7 @@ import { inherit, member, Policy, Role, sensMediumOrLower } from '../util';
       ]
     ),
     r.PeriodicReport.read.when(member).edit,
-    r.Producible.when(member).edit.create,
+    r.Producible.edit.create,
     r.Product.read.when(member).edit.create,
     r.Project.read.create
       .when(member)
