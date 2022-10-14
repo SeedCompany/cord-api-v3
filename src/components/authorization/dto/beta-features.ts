@@ -1,9 +1,11 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
+import { Calculated } from '~/common';
 import { Granter, ResourceGranter } from '../policy';
 
 // TODO move somewhere else
 
+@Calculated()
 @ObjectType()
 export class BetaFeatures {
   static readonly Props = keysOf<BetaFeatures>();

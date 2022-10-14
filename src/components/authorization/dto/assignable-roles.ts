@@ -1,5 +1,5 @@
 import { keys as keysOf } from 'ts-transformer-keys';
-import { mapFromList } from '~/common';
+import { Calculated, mapFromList } from '~/common';
 import { Role } from './role.dto';
 
 /**
@@ -14,6 +14,7 @@ import { Role } from './role.dto';
  *   ])
  * ])
  */
+@Calculated()
 export class AssignableRoles {
   static Props = [];
   static SecuredProps = [];
