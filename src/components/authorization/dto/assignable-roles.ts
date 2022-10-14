@@ -1,5 +1,5 @@
 import { keys as keysOf } from 'ts-transformer-keys';
-import { mapFromList, ResourceShape } from '~/common';
+import { mapFromList } from '~/common';
 import { Role } from './role.dto';
 
 /**
@@ -14,19 +14,11 @@ import { Role } from './role.dto';
  *   ])
  * ])
  */
-export const AssignableRoles = {
-  // Stuff actually needed at runtime.
-  name: 'AssignableRoles',
-  Relations: mapFromList(keysOf<Record<Role, boolean>>(), (role) => [
+export class AssignableRoles {
+  static Props = [];
+  static SecuredProps = [];
+  static Relations = mapFromList(keysOf<Record<Role, boolean>>(), (role) => [
     role,
     undefined,
-  ]),
-  Props: [],
-  SecuredProps: [],
-} as unknown as Omit<
-  ResourceShape<Record<Role, boolean>>,
-  'prototype' | 'Relations'
-> & {
-  prototype: Record<Role, boolean>;
-  Relations: Record<Role, boolean>;
-};
+  ]);
+}
