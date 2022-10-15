@@ -1,4 +1,5 @@
 import { config } from 'winston';
+import { CachedForArg } from '~/common';
 import { LogLevel } from './logger.interface';
 
 interface MatcherConfig {
@@ -55,7 +56,6 @@ interface MatcherConfig {
 export class LevelMatcher {
   private readonly defaultLevel: LogLevel;
   private readonly matchers: MatcherConfig[] = [];
-  private cached: Record<string, LogLevel> = {};
 
   constructor(
     levelMap: Record<string, string | undefined>,
@@ -94,20 +94,16 @@ export class LevelMatcher {
     return config.syslog.levels[level] <= config.syslog.levels[configuredLevel];
   }
 
+  @CachedForArg()
   getLevel(name: string): LogLevel {
-    if (this.cached[name]) {
-      return this.cached[name];
-    }
     for (const { include, exclude, level } of this.matchers) {
       const matched =
         include.some((regex) => regex.exec(name)) &&
         !exclude.some((regex) => regex.exec(name));
       if (matched) {
-        this.cached[name] = level;
         return level;
       }
     }
-    this.cached[name] = this.defaultLevel;
     return this.defaultLevel;
   }
 }
