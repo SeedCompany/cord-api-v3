@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ProgressReportWorkflowEventLoader } from './progress-report-workflow-event.loader';
+import { ProgressReportWorkflowFlowchart } from './progress-report-workflow.flowchart';
 import { ProgressReportWorkflowEventGranter } from './progress-report-workflow.granter';
 import { ProgressReportWorkflowRepository } from './progress-report-workflow.repository';
 import { ProgressReportWorkflowService } from './progress-report-workflow.service';
@@ -18,6 +19,7 @@ import { ProgressReportWorkflowEventsResolver } from './resolvers/progress-repor
     ProgressReportWorkflowService,
     ProgressReportWorkflowEventGranter,
     ProgressReportWorkflowRepository,
+    ProgressReportWorkflowFlowchart,
   ],
 })
 export class ProgressReportWorkflowModule {}
