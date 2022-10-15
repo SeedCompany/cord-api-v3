@@ -3,8 +3,9 @@ import { parse as parseEnv } from 'dotenv';
 import dotEnvExpand from 'dotenv-expand';
 import * as fs from 'fs';
 import { isString, mapKeys, pickBy } from 'lodash';
-import { Duration, DurationLike } from 'luxon';
+import { Duration } from 'luxon';
 import { join } from 'path';
+import { DurationIn } from '~/common';
 import { ILogger, Logger } from '../logger';
 
 /**
@@ -58,25 +59,24 @@ export class EnvironmentService implements Iterable<[string, string]> {
   }
 
   string(key: string) {
-    return this.wrap(key, (raw) => raw);
+    return this.wrap(key, (raw: string) => raw);
   }
 
   boolean(key: string) {
-    return this.wrap(key, (raw) => raw.toLowerCase() === 'true');
-  }
-
-  duration(key: string) {
-    key = key.toUpperCase();
-    return new DurationConfigValue(
-      key in this.env,
-      key,
-      this.env[key],
-      Duration.from
+    return this.wrap(key, (raw: string | boolean) =>
+      typeof raw === 'boolean' ? raw : raw.toLowerCase() === 'true'
     );
   }
 
+  duration(key: string) {
+    return this.wrap<Duration, DurationIn>(key, Duration.from);
+  }
+
   number(key: string) {
-    return this.wrap(key, (raw) => {
+    return this.wrap(key, (raw: string | number) => {
+      if (typeof raw === 'number') {
+        return raw;
+      }
       const val = raw.toLowerCase();
       if (val === 'infinity') {
         return Infinity;
@@ -99,18 +99,18 @@ export class EnvironmentService implements Iterable<[string, string]> {
     yield* Object.entries<string>(this.env);
   }
 
-  private wrap<T>(key: string, parse: (raw: string) => T) {
+  private wrap<Out, In>(key: string, parse: (raw: In | string) => Out) {
     key = key.toUpperCase();
     return new ConfigValue(key in this.env, key, this.env[key], parse);
   }
 }
 
-class ConfigValue<T> {
+class ConfigValue<Out, In> {
   constructor(
     readonly exists: boolean,
     readonly key: string,
     protected readonly rawValue: string,
-    protected readonly parse: (raw: string) => T
+    protected readonly parse: (raw: In | string) => Out
   ) {}
 
   required() {
@@ -120,19 +120,13 @@ class ConfigValue<T> {
     return this.parse(this.rawValue);
   }
 
-  optional<D = undefined>(defaultValue?: D): T | D {
-    return this.exists ? this.parse(this.rawValue) : defaultValue!;
-  }
-}
-
-class DurationConfigValue extends ConfigValue<Duration> {
-  optional(): Duration | undefined;
-  optional(defaultValue: string | DurationLike): Duration;
-  optional(defaultValue?: string | DurationLike) {
+  optional(): Out | undefined;
+  optional(defaultValue: In): Out;
+  optional(defaultValue?: In): Out | undefined {
     return this.exists
       ? this.parse(this.rawValue)
       : defaultValue == null
       ? undefined
-      : Duration.from(defaultValue);
+      : this.parse(defaultValue);
   }
 }

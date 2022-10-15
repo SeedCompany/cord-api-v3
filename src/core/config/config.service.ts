@@ -121,9 +121,9 @@ export class ConfigService implements EmailOptionsFactory {
     const password = this.env
       .string('NEO4J_PASSWORD')
       .optional(parsed.password || 'admin');
-    const database = this.env
-      .string('NEO4J_DBNAME')
-      .optional<string | undefined>(parsed.pathname.slice(1) || undefined);
+    const database =
+      this.env.string('NEO4J_DBNAME').optional() ??
+      (parsed.pathname.slice(1) || undefined);
     if (parsed.username || parsed.password || parsed.pathname) {
       parsed.username = '';
       parsed.password = '';
@@ -172,9 +172,9 @@ export class ConfigService implements EmailOptionsFactory {
 
   @Lazy() get files() {
     const bucket = this.env.string('FILES_S3_BUCKET').optional();
-    const localDirectory = this.env
-      .string('FILES_LOCAL_DIR')
-      .optional(this.jest ? null : '.files');
+    const localDirectory =
+      this.env.string('FILES_LOCAL_DIR').optional() ??
+      (this.jest ? undefined : '.files');
     // Routes to LocalBucketController
     const baseUrl = join(this.hostUrl, this.globalPrefix, 'file');
     return {
