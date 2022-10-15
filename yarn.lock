@@ -3497,6 +3497,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/human-format@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "@types/human-format@npm:1.0.0"
+  checksum: b8991e670fce21d60e5b2ef2261e2e64315ec6df0e6199d63926b2b8ce23b96175f3cc0c5edc8f846852e7823c9acc73d09ecc3c77e34ea245513d7cb52e7b18
+  languageName: node
+  linkType: hard
+
 "@types/istanbul-lib-coverage@npm:*, @types/istanbul-lib-coverage@npm:^2.0.0, @types/istanbul-lib-coverage@npm:^2.0.1":
   version: 2.0.1
   resolution: "@types/istanbul-lib-coverage@npm:2.0.1"
@@ -5884,6 +5891,7 @@ __metadata:
     "@types/cookie-parser": ^1.4.3
     "@types/express": ^4.17.14
     "@types/express-serve-static-core": ^4.17.31
+    "@types/human-format": ^1.0.0
     "@types/jest": ^26.0.24
     "@types/jsonwebtoken": ^8.5.9
     "@types/lodash": ^4.14.186
@@ -5922,6 +5930,7 @@ __metadata:
     graphql-parse-resolve-info: ^4.12.3
     graphql-scalars: ^1.18.0
     highlightjs-cypher: ^1.1.5
+    human-format: ^1.0.0
     husky: ^4.3.8
     ioredis: ^5.2.3
     iso-3166-1: ^2.1.1
@@ -8546,6 +8555,13 @@ cypher-query-builder@6.0.4:
     agent-base: 6
     debug: 4
   checksum: 165bfb090bd26d47693597661298006841ab733d0c7383a8cb2f17373387a94c903a3ac687090aa739de05e379ab6f868bae84ab4eac288ad85c328cd1ec9e53
+  languageName: node
+  linkType: hard
+
+"human-format@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "human-format@npm:1.0.0"
+  checksum: 19abc036128d81899a64e08945e5b34b1ada796f85c6a9dc83dd4498f2d4595a91e08ca6508b2386d2a7c2ef4841192af185ea013887ce6b0ad150352978bb5d
   languageName: node
   linkType: hard
 

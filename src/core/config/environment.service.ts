@@ -2,6 +2,7 @@ import { Injectable, Optional } from '@nestjs/common';
 import { parse as parseEnv } from 'dotenv';
 import dotEnvExpand from 'dotenv-expand';
 import * as fs from 'fs';
+import { parse as parseSize } from 'human-format';
 import { isString, mapKeys, pickBy } from 'lodash';
 import { Duration } from 'luxon';
 import { join } from 'path';
@@ -72,26 +73,25 @@ export class EnvironmentService implements Iterable<[string, string]> {
     return this.wrap<Duration, DurationIn>(key, Duration.from);
   }
 
-  number(key: string) {
-    return this.wrap(key, (raw: string | number) => {
+  number(key: string, options?: Parameters<typeof parseSize>[1]) {
+    return this.wrap<number, string | number>(key, (raw) => {
       if (typeof raw === 'number') {
         return raw;
       }
-      const val = raw.toLowerCase();
-      if (val === 'infinity') {
+      const lower = raw.toLowerCase();
+      if (lower === 'infinity') {
         return Infinity;
       }
-      if (val === '-infinity') {
+      if (lower === '-infinity') {
         return -Infinity;
       }
-      const parsed = parseFloat(val);
-      if (isNaN(parsed)) {
+      try {
+        return parseSize(raw, options);
+      } catch (e) {
         throw new Error(
-          `Environment "${key}" has value "${val}" which cannot be parsed to a number`
+          `Environment "${key}" has value "${raw}" which cannot be parsed to a number`
         );
       }
-
-      return parsed;
     });
   }
 
