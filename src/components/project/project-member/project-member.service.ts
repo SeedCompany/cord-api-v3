@@ -8,6 +8,7 @@ import {
   generateId,
   ID,
   InputException,
+  isIdLike,
   MaybeAsync,
   NotFoundException,
   ObjectView,
@@ -27,9 +28,11 @@ import {
 } from '../../../core';
 import { ACTIVE } from '../../../core/database/query';
 import { mapListResults } from '../../../core/database/results';
-import { Powers, Role } from '../../authorization';
+import { Role } from '../../authorization';
 import { AuthorizationService } from '../../authorization/authorization.service';
 import { User, UserService } from '../../user';
+import { IProject, Project } from '../dto';
+import { ProjectService } from '../project.service';
 import {
   CreateProjectMember,
   ProjectMember,
@@ -47,6 +50,8 @@ export class ProjectMemberService {
     @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
     private readonly eventBus: IEventBus,
+    @Inject(forwardRef(() => ProjectService))
+    private readonly projectService: ProjectService,
     @Logger('project:member:service') private readonly logger: ILogger,
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
@@ -54,7 +59,7 @@ export class ProjectMemberService {
   ) {}
 
   protected async verifyRelationshipEligibility(
-    projectId: ID,
+    projectId: ID | UnsecuredDto<Project>,
     userId: ID
   ): Promise<void> {
     const result = await this.repo.verifyRelationshipEligibility(
@@ -88,10 +93,16 @@ export class ProjectMemberService {
     { userId, projectId, ...input }: CreateProjectMember,
     session: Session
   ): Promise<ProjectMember> {
-    await this.authorizationService.checkPower(
-      Powers.CreateProjectMember,
-      session
-    );
+    const project = isIdLike(projectId)
+      ? await this.projectService.readOneUnsecured(projectId, session)
+      : projectId;
+
+    this.authorizationService.privileges
+      .for(session, IProject, project)
+      .verifyCan('create', 'member');
+
+    // session.roles
+
     const id = await generateId();
     const createdAt = DateTime.local();
 

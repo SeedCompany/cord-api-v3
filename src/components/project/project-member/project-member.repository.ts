@@ -14,6 +14,7 @@ import {
   sorting,
 } from '../../../core/database/query';
 import { UserRepository } from '../../user/user.repository';
+import { Project } from '../dto';
 
 @Injectable()
 export class ProjectMemberRepository extends DtoRepository<
@@ -24,7 +25,10 @@ export class ProjectMemberRepository extends DtoRepository<
     super(db);
   }
 
-  async verifyRelationshipEligibility(projectId: ID, userId: ID) {
+  async verifyRelationshipEligibility(
+    projectId: ID | UnsecuredDto<Project>,
+    userId: ID
+  ) {
     return await this.db
       .query()
       .optionalMatch(node('user', 'User', { id: userId }))

@@ -145,17 +145,21 @@ export class ProjectService {
 
       const roles = await this.repo.getRoles(session);
 
+      let project = await this.readOneUnsecured(id, session);
+      project = {
+        ...project,
+        scope: ['member:true', ...project.scope],
+      };
+
       // Add creator to the project team if not in migration
       await this.projectMembers.create(
         {
           userId: session.userId,
-          projectId: id,
+          projectId: project,
           roles,
         },
         session
       );
-
-      const project = await this.readOneUnsecured(id, session);
 
       const event = new ProjectCreatedEvent(project, session);
       await this.eventBus.publish(event);
