@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { startCase } from 'lodash';
+import open from 'open';
+import pako from 'pako';
 import { ProgressReportStatus as Status } from '../dto';
 import { Transitions } from './transitions';
 
@@ -55,5 +57,21 @@ export class ProgressReportWorkflowFlowchart {
   dump() {
     // eslint-disable-next-line no-console
     console.log(this.generate());
+  }
+
+  open() {
+    const result = this.compressAndB64encode(this.generate());
+    const url = `https://kroki.io/mermaid/svg/${result}`;
+    return open(url);
+  }
+
+  private compressAndB64encode(str: string) {
+    const data = Buffer.from(str, 'utf8');
+    const compressed = pako.deflate(data, { level: 9 });
+    const result = Buffer.from(compressed)
+      .toString('base64')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_');
+    return result;
   }
 }

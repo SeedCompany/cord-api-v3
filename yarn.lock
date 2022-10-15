@@ -3643,6 +3643,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/pako@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "@types/pako@npm:2.0.0"
+  checksum: 50240a036b5e6acabbf36ac4dca93ec9e619241f0404da8d401cdb427bec3029833324b8a04c4b1ae2ecbc33422fdec31dbf9f43653d9d07cafb82ace78dfccd
+  languageName: node
+  linkType: hard
+
 "@types/parse-json@npm:^4.0.0":
   version: 4.0.0
   resolution: "@types/parse-json@npm:4.0.0"
@@ -5898,6 +5905,7 @@ __metadata:
     "@types/luxon": ^2.4.0
     "@types/mjml-react": ^2.0.6
     "@types/node": ^18.7.23
+    "@types/pako": ^2.0.0
     "@types/pg": ^8.6.5
     "@types/react": ^18.0.21
     "@types/stack-trace": ^0.0.30
@@ -5948,6 +5956,7 @@ __metadata:
     neo4j-driver: ^4.4.7
     nestjs-console: ^8.0.0
     p-retry: ^4.6.2
+    pako: ^2.0.4
     pg: ^8.8.0
     pkg-up: ^3.1.0
     plur: ^4.0.0
@@ -11989,6 +11998,13 @@ cypher-query-builder@6.0.4:
   version: 1.0.0
   resolution: "packet-reader@npm:1.0.0"
   checksum: 0b7516f0cbf3e322aad591bed29ba544220088c53943145c0d9121a6f59182ad811f7fd6785a8979a34356aca69d97653689029964c5998dc02645633d88ffd7
+  languageName: node
+  linkType: hard
+
+"pako@npm:^2.0.4":
+  version: 2.0.4
+  resolution: "pako@npm:2.0.4"
+  checksum: 82b9b0b99dd830c9103856a6dbd10f0cb2c8c32b9768184727ea381a99666de9a47a069d2e6efe6acf09336f363956b50835c196ef9311b34b7274d420eb0d88
   languageName: node
   linkType: hard
 
