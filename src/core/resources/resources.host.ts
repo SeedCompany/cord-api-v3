@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { mapValues } from 'lodash';
 import { ValueOf } from 'ts-essentials';
 import { LiteralUnion } from 'type-fest';
-import { CachedOnArg, EnhancedResource, ServerException } from '~/common';
+import { CachedForArg, EnhancedResource, ServerException } from '~/common';
 import type { LegacyResourceMap } from '../../components/authorization/model/resource-map';
 import { ResourceMap } from './map';
 import { __privateDontUseThis } from './resource-map-holder';
@@ -50,7 +50,7 @@ export class ResourcesHost {
     return resource;
   }
 
-  @CachedOnArg()
+  @CachedForArg()
   async getInterfaces(
     resource: EnhancedResource<any>
   ): Promise<ReadonlyArray<EnhancedResource<any>>> {
@@ -60,7 +60,7 @@ export class ResourcesHost {
     return [...resource.interfaces].filter((i) => resSet.has(i));
   }
 
-  @CachedOnArg()
+  @CachedForArg()
   async getImplementations(
     interfaceResource: EnhancedResource<any>
   ): Promise<ReadonlyArray<EnhancedResource<any>>> {

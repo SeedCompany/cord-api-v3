@@ -1,7 +1,7 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { difference } from 'lodash';
 import {
-  CachedOnArg,
+  CachedForArg,
   DuplicateException,
   ID,
   NotFoundException,
@@ -180,7 +180,7 @@ export class UserService {
     return await mapListResults(results, (dto) => this.secure(dto, session));
   }
 
-  @CachedOnArg()
+  @CachedForArg({ weak: true })
   getAssignableRoles(session: Session) {
     const privileges = this.privileges.for(session, AssignableRoles);
     const assignableRoles = new Set(

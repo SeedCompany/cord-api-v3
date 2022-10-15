@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { identity, intersection } from 'lodash';
-import { CachedOnArg, EnhancedResource, Session } from '~/common';
+import { CachedForArg, EnhancedResource, Session } from '~/common';
 import { QueryFragment } from '~/core/database/query';
 import { withoutScope } from '../../dto/role.dto';
 import { Permission } from '../builder/perm-granter';
@@ -110,7 +110,7 @@ export class PolicyExecutor {
     };
   }
 
-  @CachedOnArg()
+  @CachedForArg({ weak: true })
   getPolicies(session: Session) {
     const policies = this.policyFactory.getPolicies().filter((policy) => {
       if (!policy.roles) {
