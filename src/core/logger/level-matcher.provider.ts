@@ -32,14 +32,7 @@ export const LevelMatcherProvider: Provider<Promise<LevelMatcher>> = {
       identity
     );
 
-    const declaredLevels = {
-      ...yamlOverrides.levels,
-      ...envLevels,
-    };
-    const levels =
-      Object.keys(declaredLevels).length === 0
-        ? defaults.levels
-        : declaredLevels;
+    const levels = [envLevels, yamlOverrides.levels ?? {}, defaults.levels];
 
     const defaultLevel =
       envDefault ?? yamlOverrides.defaultLevel ?? defaults.defaultLevel;

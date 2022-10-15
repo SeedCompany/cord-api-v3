@@ -57,15 +57,15 @@ interface MatcherConfig {
  */
 export class LevelMatcher {
   private readonly defaultLevel: LogLevel;
-  private readonly matchers: MatcherConfig[] = [];
+  private readonly matcherGroups: MatcherConfig[][] = [];
 
   constructor(
-    levelMap: Record<string, string | undefined>,
+    levelMaps: Array<Record<string, string | undefined>>,
     defaultLevel: LogLevel | string
   ) {
     this.defaultLevel = parseLevel(defaultLevel) ?? LogLevel.INFO;
-    this.matchers = Object.entries(levelMap).flatMap(
-      ([namespaces, rawLevel]) => {
+    this.matcherGroups = levelMaps.map((levelMap) =>
+      Object.entries(levelMap).flatMap(([namespaces, rawLevel]) => {
         const level = parseLevel(rawLevel);
         if (!level || !namespaces) {
           return [];
@@ -86,8 +86,8 @@ export class LevelMatcher {
           }
         }
 
-        return [matcher];
-      }
+        return matcher;
+      })
     );
   }
 
@@ -98,12 +98,14 @@ export class LevelMatcher {
 
   @CachedForArg()
   getLevel(name: string): LogLevel {
-    for (const { include, exclude, level } of this.matchers) {
-      const matched =
-        include.some((regex) => regex.exec(name)) &&
-        !exclude.some((regex) => regex.exec(name));
-      if (matched) {
-        return level;
+    for (const matcherGroup of this.matcherGroups) {
+      for (const { include, exclude, level } of matcherGroup) {
+        const matched =
+          include.some((regex) => regex.exec(name)) &&
+          !exclude.some((regex) => regex.exec(name));
+        if (matched) {
+          return level;
+        }
       }
     }
     return this.defaultLevel;
