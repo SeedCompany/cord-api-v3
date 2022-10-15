@@ -62,6 +62,8 @@ async function bootstrap() {
     prompt: clc.green('> '),
     ignoreUndefined: true,
   });
+  replServer.on('exit', () => void app.close());
+
   assignToObject(replServer.context, context);
 
   await mkdir('.cache', { recursive: true });
