@@ -8,6 +8,7 @@ import {
 import { EmailModule } from '@seedcompany/nestjs-email';
 import { ConsoleModule } from 'nestjs-console';
 import { AwsS3Factory } from './aws-s3.factory';
+import { CacheModule } from './cache/cache.module';
 import { ConfigModule } from './config/config.module';
 import { ConfigService } from './config/config.service';
 import { CoreController } from './core.controller';
@@ -28,6 +29,7 @@ import { WaitResolver } from './wait.resolver';
 @Module({
   imports: [
     ConfigModule,
+    CacheModule,
     ConsoleModule,
     DatabaseModule,
     EmailModule.forRootAsync({ useExisting: ConfigService }),
@@ -51,6 +53,7 @@ import { WaitResolver } from './wait.resolver';
   exports: [
     AwsS3Factory,
     ConfigModule,
+    CacheModule,
     GraphqlModule,
     DatabaseModule,
     EmailModule,

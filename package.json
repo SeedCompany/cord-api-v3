@@ -67,6 +67,7 @@
     "graphql-parse-resolve-info": "^4.12.3",
     "graphql-scalars": "^1.18.0",
     "highlightjs-cypher": "^1.1.5",
+    "ioredis": "^5.2.3",
     "iso-3166-1": "^2.1.1",
     "ix": "^4.6.1",
     "js-levenshtein-esm": "^1.2.0",

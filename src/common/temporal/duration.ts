@@ -1,13 +1,23 @@
 import { Duration, DurationLike, DurationLikeObject } from 'luxon';
-import { Mutable } from 'type-fest';
+import { Writable } from 'type-fest';
+
+/**
+ * A duration represented as an:
+ * - ISO string {@link Duration.fromISO}
+ * - Human string {@link Duration.fromHuman}
+ * - millisecond number {@link Duration.fromMillis}
+ * - object literal {@link Duration.fromObject}
+ * - Duration instance
+ */
+export type DurationIn = string | DurationLike;
 
 declare module 'luxon/src/duration' {
   // eslint-disable-next-line @typescript-eslint/no-namespace -- augmenting static class method
   namespace Duration {
     /**
-     * Create from ISO, Human, ms number, std object, or other Duration.
+     * Create from ISO, Human, ms number, std object, or another Duration.
      */
-    export const from: (duration: string | DurationLike) => Duration;
+    export const from: (duration: DurationIn) => Duration;
     /**
      * Parse a humanized duration string.
      * @example
@@ -19,8 +29,8 @@ declare module 'luxon/src/duration' {
     export const fromHuman: (duration: string) => Duration;
   }
 }
-const D = Duration as Mutable<typeof Duration>;
-D.from = (input: string | DurationLike) =>
+const D = Duration as Writable<typeof Duration>;
+D.from = (input: DurationIn) =>
   typeof input === 'string'
     ? input.startsWith('P')
       ? D.fromISO(input)

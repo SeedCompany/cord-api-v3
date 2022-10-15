@@ -283,6 +283,12 @@ export class ConfigService implements EmailOptionsFactory {
     };
   }
 
+  @Lazy() get redis() {
+    return {
+      url: this.env.string('REDIS_URL').optional(),
+    };
+  }
+
   /**
    * @see https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-metadata-endpoint.html
    */
