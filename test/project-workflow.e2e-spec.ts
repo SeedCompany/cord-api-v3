@@ -35,6 +35,7 @@ import {
 describe('Project-Workflow e2e', () => {
   let app: TestApp;
   let fieldOpsDirector: TestUser;
+  let projectManager: TestUser;
   let consultantManager: TestUser;
   let financialAnalyst: TestUser;
   let controller: TestUser;
@@ -48,6 +49,9 @@ describe('Project-Workflow e2e', () => {
     fieldOpsDirector = await registerUser(app, {
       roles: [Role.FieldOperationsDirector],
     });
+    projectManager = await registerUser(app, {
+      roles: [Role.ProjectManager],
+    });
     consultantManager = await registerUser(app, {
       roles: [Role.ConsultantManager],
     });
@@ -59,7 +63,7 @@ describe('Project-Workflow e2e', () => {
     });
     controller = financialAnalystController;
 
-    await fieldOpsDirector.login();
+    await projectManager.login();
   });
   afterAll(async () => {
     await app.close();
@@ -105,7 +109,7 @@ describe('Project-Workflow e2e', () => {
 
   describe('Workflow', () => {
     beforeEach(async () => {
-      await fieldOpsDirector.login();
+      await projectManager.login();
     });
 
     it('Step 1. Create Project', async () => {
@@ -187,7 +191,7 @@ describe('Project-Workflow e2e', () => {
       expect(projectMember.user.value?.id).toBe(person.id);
 
       // Add partners
-      await controller.login();
+      await projectManager.login();
       const partner = await createPartner(app, {
         types: [PartnerType.Funding, PartnerType.Impact, PartnerType.Technical],
         financialReportingTypes: [],
@@ -206,20 +210,21 @@ describe('Project-Workflow e2e', () => {
       // expect(result.sensitivity).toBe(Sensitivity.Medium);
 
       // Add products
-      await fieldOpsDirector.login();
       await createProduct(app, {
         engagementId: languageEngagement.id,
       });
     });
 
     it('Step 2. Did Not Develop', async () => {
-      await fieldOpsDirector.login();
+      await projectManager.login();
       const project = await createProject(app);
       await changeProjectStep(
         app,
         project.id,
         ProjectStep.PendingConceptApproval
       );
+
+      await fieldOpsDirector.login();
       await changeProjectStep(
         app,
         project.id,
@@ -245,7 +250,7 @@ describe('Project-Workflow e2e', () => {
         ProjectStep.PendingFinancialEndorsement
       );
 
-      await controller.login();
+      await projectManager.login();
       await createProjectMember(app, {
         userId: financialAnalyst.id,
         projectId: project.id,
@@ -321,12 +326,13 @@ describe('Project-Workflow e2e', () => {
       await financialAnalystController.login();
       await changeProjectStep(app, project.id, ProjectStep.FinalizingProposal);
 
-      await fieldOpsDirector.login();
+      await projectManager.login();
       await changeProjectStep(
         app,
         project.id,
         ProjectStep.PendingRegionalDirectorApproval
       );
+      await fieldOpsDirector.login();
       await changeProjectStep(
         app,
         project.id,
@@ -339,7 +345,7 @@ describe('Project-Workflow e2e', () => {
       /**
        * Step3. Change to Plan Workflow
        *  */
-      await fieldOpsDirector.login();
+      await projectManager.login();
       await changeProjectStep(
         app,
         project.id,
@@ -350,6 +356,7 @@ describe('Project-Workflow e2e', () => {
         project.id,
         ProjectStep.PendingChangeToPlanApproval
       );
+      await fieldOpsDirector.login();
       await changeProjectStep(
         app,
         project.id,
@@ -365,6 +372,8 @@ describe('Project-Workflow e2e', () => {
         project.id,
         ProjectStep.FinalizingCompletion
       );
+
+      await financialAnalystController.login();
       await changeProjectStep(app, project.id, ProjectStep.Completed);
 
       const result = await app.graphql.query(
