@@ -36,6 +36,15 @@ export class ConfigService implements EmailOptionsFactory {
     .optional(`http://localhost:${this.publicPort}`);
   globalPrefix = '';
 
+  @Lazy() get graphQL() {
+    return {
+      persistedQueries: {
+        enabled: this.env.boolean('GRAPHQL_PERSISTED_QUERIES').optional(true),
+        ttl: this.env.duration('GRAPHQL_PERSISTED_QUERIES_TTL').optional('1w'),
+      },
+    };
+  }
+
   @Lazy() get lruCache(): LRUCache.Options<string, unknown> {
     return {
       ttl: this.env.duration('LRU_CACHE_TTL').optional()?.as('milliseconds'),
