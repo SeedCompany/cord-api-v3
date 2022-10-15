@@ -7,7 +7,9 @@ import { mkdir } from 'fs/promises';
 import * as lodash from 'lodash';
 import { DateTime, Duration, Interval } from 'luxon';
 import { promisify } from 'util';
+import { createContext, runInContext } from 'vm';
 import {
+  bufferFromStream,
   CalendarDate,
   DateInterval,
   many,
@@ -56,6 +58,13 @@ async function bootstrap() {
     }),
     Resources,
   });
+
+  if (!process.stdin.isTTY) {
+    const input = await bufferFromStream(process.stdin);
+    runInContext(input.toString(), createContext(context));
+    await app.close();
+    return;
+  }
 
   const _repl = await Promise.resolve().then(() => import('repl'));
   const replServer = _repl.start({
