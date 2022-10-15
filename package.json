@@ -75,6 +75,7 @@
     "jsonwebtoken": "^8.5.1",
     "lazy-get-decorator": "^2.2.0",
     "lodash": "^4.17.21",
+    "lru-cache": "^7.14.0",
     "luxon": "^2.5.0",
     "nanoid": "^3.3.4",
     "neo4j-driver": "^4.4.7",

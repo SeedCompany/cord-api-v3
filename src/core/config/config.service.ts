@@ -7,6 +7,7 @@ import {
 import { CookieOptions } from 'express';
 import type { Server as HttpServer } from 'http';
 import { LazyGetter as Lazy } from 'lazy-get-decorator';
+import LRUCache from 'lru-cache';
 import { Duration, DurationLike } from 'luxon';
 import { nanoid } from 'nanoid';
 import { Config as Neo4JDriverConfig } from 'neo4j-driver';
@@ -34,6 +35,14 @@ export class ConfigService implements EmailOptionsFactory {
     .string('host_url')
     .optional(`http://localhost:${this.publicPort}`);
   globalPrefix = '';
+
+  @Lazy() get lruCache(): LRUCache.Options<string, unknown> {
+    return {
+      ttl: this.env.duration('LRU_CACHE_TTL').optional()?.as('milliseconds'),
+      max: this.env.number('LRU_CACHE_MAX').optional(),
+      maxSize: this.env.number('LRU_CACHE_MAX_SIZE').optional('30MB'),
+    };
+  }
 
   @Lazy() get httpTimeouts() {
     return {

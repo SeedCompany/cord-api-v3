@@ -5941,6 +5941,7 @@ __metadata:
     lazy-get-decorator: ^2.2.0
     lint-staged: ^11.2.6
     lodash: ^4.17.21
+    lru-cache: ^7.14.0
     luxon: ^2.5.0
     madge: ^5.0.1
     nanoid: ^3.3.4
@@ -10433,7 +10434,7 @@ cypher-query-builder@6.0.4:
   languageName: node
   linkType: hard
 
-"lru-cache@npm:^7.10.1":
+"lru-cache@npm:^7.10.1, lru-cache@npm:^7.14.0":
   version: 7.14.0
   resolution: "lru-cache@npm:7.14.0"
   checksum: efdd329f2c1bb790b71d497c6c59272e6bc2d7dd060ba55fc136becd3dd31fc8346edb446275504d94cb60d3c8385dbf5267b79b23789e409b2bdf302d13f0d7

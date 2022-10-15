@@ -16,7 +16,7 @@ import { RedisCache } from './redis.cache';
       useFactory: (config: ConfigService, logger: ILogger) => {
         const connStr = config.redis.url;
         if (!connStr) {
-          return new InMemoryCache();
+          return new InMemoryCache(config.lruCache);
         }
         const redis = new Redis(connStr);
         redis.on('ready', () => {

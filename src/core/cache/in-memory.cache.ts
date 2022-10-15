@@ -1,31 +1,39 @@
+import LRUCache from 'lru-cache';
 import { CacheBackingService, ItemOptions } from './backing.interface';
 
 export class InMemoryCache extends CacheBackingService {
-  private readonly cache = new Map<string, string>();
-  private readonly timers = new Map<string, NodeJS.Timeout>();
+  private readonly cache: LRUCache<string, unknown>;
+
+  constructor(options?: LRUCache.Options<string, unknown>) {
+    super();
+    this.cache = new LRUCache({
+      sizeCalculation,
+      maxSize: 2 ** 20 * 30,
+      ...options,
+    });
+  }
 
   async get<T>(key: string) {
-    const val = this.cache.get(key);
-    if (val === undefined) {
-      return undefined;
-    }
-    return JSON.parse(val) as T;
+    return this.cache.get<T>(key);
   }
 
   async set<T>(key: string, value: T, options: ItemOptions) {
-    this.cache.set(key, JSON.stringify(value));
-    const oldTimer = this.timers.get(key);
-    if (oldTimer) {
-      clearTimeout(oldTimer);
-    }
-    if (options.ttl) {
-      const handler = () => this.cache.delete(key);
-      const timeout = options.ttl.toMillis();
-      this.timers.set(key, setTimeout(handler, timeout));
-    }
+    this.cache.set(key, value, {
+      ttl: options.ttl?.toMillis(),
+    });
   }
 
   async delete(key: string) {
     this.cache.delete(key);
   }
 }
+
+const sizeCalculation = (item: unknown) => {
+  if (typeof item === 'string') {
+    return item.length;
+  }
+  if (typeof item === 'object') {
+    return Buffer.byteLength(JSON.stringify(item), 'utf8');
+  }
+  return 1;
+};
