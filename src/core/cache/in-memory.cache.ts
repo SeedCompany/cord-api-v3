@@ -17,6 +17,10 @@ export class InMemoryCache extends CacheBackingService {
     return this.cache.get<T>(key);
   }
 
+  async remainingTtl(key: string): Promise<number> {
+    return this.cache.getRemainingTTL(key);
+  }
+
   async set<T>(key: string, value: T, options: ItemOptions) {
     this.cache.set(key, value, {
       ttl: options.ttl?.toMillis(),

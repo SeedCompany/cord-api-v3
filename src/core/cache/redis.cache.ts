@@ -16,6 +16,11 @@ export class RedisCache extends CacheBackingService {
     return JSON.parse(val) as T;
   }
 
+  async remainingTtl(key: string) {
+    const ttl = await this.redis.pttl(key);
+    return ttl === -2 ? 0 : ttl === -1 ? Infinity : ttl;
+  }
+
   async set<T>(key: string, value: T, options: ItemOptions) {
     const encoded = JSON.stringify(value);
     if (options.ttl) {

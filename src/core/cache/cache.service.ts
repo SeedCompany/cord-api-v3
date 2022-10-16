@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { DateTime, Duration } from 'luxon';
+import { Duration } from 'luxon';
 import { setImmediate } from 'timers';
 import { Promisable } from 'type-fest';
 import { DurationIn } from '~/common';
@@ -28,10 +28,7 @@ export class CacheService {
     ttl = ttl?.toMillis() === 0 ? undefined : ttl;
     const resolved: BackingOptions = { ttl };
 
-    await Promise.all([
-      this.backing.set(key, value, resolved),
-      this.setMeta(key, resolved),
-    ]);
+    await this.backing.set(key, value, resolved);
   }
 
   async delete(key: string) {
@@ -42,23 +39,22 @@ export class CacheService {
   }
 
   async getOrCalculate<T>(options: CachableCalculationOptions<T>): Promise<T> {
-    const { key, calculate, backgroundRefreshAfter, ...cacheOptions } = options;
-    const [prev, meta] = await Promise.all([
+    const { key, calculate, backgroundRefreshTtl, ...cacheOptions } = options;
+    const [prev, remainingTtl] = await Promise.all([
       this.get<T>(key),
-      options.backgroundRefreshAfter ? this.getMeta(key) : undefined,
+      options.backgroundRefreshTtl ? this.backing.remainingTtl(key) : undefined,
     ]);
     if (!prev) {
       const now = await calculate();
       await this.set(key, now, cacheOptions); // TODO maybe don't await?
       return now;
     }
-    if (!backgroundRefreshAfter) {
+    if (!backgroundRefreshTtl || !remainingTtl) {
       return prev;
     }
-    const staleAt = DateTime.now()
-      .plus(Duration.from(backgroundRefreshAfter))
-      .toMillis();
-    if ((!meta || staleAt > meta.createdAt) && !this.refreshing.has(key)) {
+    const shouldRefresh =
+      Duration.fromMillis(remainingTtl) < Duration.from(backgroundRefreshTtl);
+    if (shouldRefresh && !this.refreshing.has(key)) {
       this.refreshing.add(key);
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       setImmediate(async () => {
@@ -69,18 +65,6 @@ export class CacheService {
     }
 
     return prev;
-  }
-
-  async getMeta(key: string) {
-    return await this.get<ItemMetadata>(key + ':meta');
-  }
-
-  private async setMeta(key: string, options: BackingOptions) {
-    await this.backing.set<ItemMetadata>(
-      key + ':meta',
-      { createdAt: Date.now() },
-      options
-    );
   }
 }
 
@@ -98,13 +82,9 @@ export interface CachableCalculationOptions<T> extends ItemOptions {
 
   /**
    * Run the calculation in the background to freshen cache while returning
-   * the cached value, if the item was created this far in the past.
+   * the cached value, if the item is this close to expiring.
    */
-  backgroundRefreshAfter?: DurationIn;
-}
-
-interface ItemMetadata {
-  createdAt: Milliseconds;
+  backgroundRefreshTtl?: DurationIn;
 }
 
 export class CacheItem<T> {
@@ -139,5 +119,3 @@ export class CacheItem<T> {
     });
   }
 }
-
-type Milliseconds = number;
