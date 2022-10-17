@@ -75,7 +75,9 @@ export class TracingModule implements OnModuleInit, NestModule {
               'Segment too large to send',
               matches
                 ? {
-                    ...JSON.parse(matches[1]),
+                    ...JSON.parse(
+                      matches[1].replace('"trace_id:"', '"trace_id":"')
+                    ),
                     size: matches[2],
                   }
                 : undefined
