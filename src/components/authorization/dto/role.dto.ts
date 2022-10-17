@@ -43,7 +43,7 @@ export type AuthScope = GlobalScope | ProjectScope;
 export type ProjectScopedRole = `${ProjectScope}:${Role}`;
 export type GlobalScopedRole = `${GlobalScope}:${Role}`;
 
-export type ScopedRole = `${AuthScope}:${Role}`;
+export type ScopedRole = `${AuthScope}:${Role}` | 'member:true';
 
 // A helper to create a bunch of scoped roles for a given scope
 export const rolesForScope =
