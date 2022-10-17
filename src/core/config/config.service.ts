@@ -7,6 +7,7 @@ import {
 import { CookieOptions } from 'express';
 import type { Server as HttpServer } from 'http';
 import { LazyGetter as Lazy } from 'lazy-get-decorator';
+import LRUCache from 'lru-cache';
 import { Duration, DurationLike } from 'luxon';
 import { nanoid } from 'nanoid';
 import { Config as Neo4JDriverConfig } from 'neo4j-driver';
@@ -34,6 +35,23 @@ export class ConfigService implements EmailOptionsFactory {
     .string('host_url')
     .optional(`http://localhost:${this.publicPort}`);
   globalPrefix = '';
+
+  @Lazy() get graphQL() {
+    return {
+      persistedQueries: {
+        enabled: this.env.boolean('GRAPHQL_PERSISTED_QUERIES').optional(true),
+        ttl: this.env.duration('GRAPHQL_PERSISTED_QUERIES_TTL').optional('1w'),
+      },
+    };
+  }
+
+  @Lazy() get lruCache(): LRUCache.Options<string, unknown> {
+    return {
+      ttl: this.env.duration('LRU_CACHE_TTL').optional()?.as('milliseconds'),
+      max: this.env.number('LRU_CACHE_MAX').optional(),
+      maxSize: this.env.number('LRU_CACHE_MAX_SIZE').optional('30MB'),
+    };
+  }
 
   @Lazy() get httpTimeouts() {
     return {
@@ -121,9 +139,9 @@ export class ConfigService implements EmailOptionsFactory {
     const password = this.env
       .string('NEO4J_PASSWORD')
       .optional(parsed.password || 'admin');
-    const database = this.env
-      .string('NEO4J_DBNAME')
-      .optional<string | undefined>(parsed.pathname.slice(1) || undefined);
+    const database =
+      this.env.string('NEO4J_DBNAME').optional() ??
+      (parsed.pathname.slice(1) || undefined);
     if (parsed.username || parsed.password || parsed.pathname) {
       parsed.username = '';
       parsed.password = '';
@@ -172,9 +190,9 @@ export class ConfigService implements EmailOptionsFactory {
 
   @Lazy() get files() {
     const bucket = this.env.string('FILES_S3_BUCKET').optional();
-    const localDirectory = this.env
-      .string('FILES_LOCAL_DIR')
-      .optional(this.jest ? null : '.files');
+    const localDirectory =
+      this.env.string('FILES_LOCAL_DIR').optional() ??
+      (this.jest ? undefined : '.files');
     // Routes to LocalBucketController
     const baseUrl = join(this.hostUrl, this.globalPrefix, 'file');
     return {
@@ -280,6 +298,12 @@ export class ConfigService implements EmailOptionsFactory {
       daemonAddress: this.jest
         ? undefined
         : this.env.string('AWS_XRAY_DAEMON_ADDRESS').optional(),
+    };
+  }
+
+  @Lazy() get redis() {
+    return {
+      url: this.env.string('REDIS_URL').optional(),
     };
   }
 
