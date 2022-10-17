@@ -7,7 +7,9 @@ import { mkdir } from 'fs/promises';
 import * as lodash from 'lodash';
 import { DateTime, Duration, Interval } from 'luxon';
 import { promisify } from 'util';
+import { createContext, runInContext } from 'vm';
 import {
+  bufferFromStream,
   CalendarDate,
   DateInterval,
   many,
@@ -32,26 +34,12 @@ async function bootstrap() {
   });
   await app.init();
 
-  const replContext = new ReplContext(app);
-  const _repl = await Promise.resolve().then(() => import('repl'));
-  const replServer = _repl.start({
-    prompt: clc.green('> '),
-    ignoreUndefined: true,
-  });
-  assignToObject(replServer.context, replContext.globalScope);
-
-  // Our own stuff below
-
-  await mkdir('.cache', { recursive: true });
-  await promisify(replServer.setupHistory.bind(replServer))(
-    '.cache/repl_history'
-  );
   const session = await app
     .get(AuthenticationService)
     .sessionForUser(app.get(ConfigService).rootAdmin.id);
   const Resources = await app.get(ResourcesHost).getEnhancedMap();
 
-  assignToObject(replServer.context, {
+  const context = assignToObject(new ReplContext(app).globalScope, {
     DateTime,
     Duration,
     Interval,
@@ -70,6 +58,27 @@ async function bootstrap() {
     }),
     Resources,
   });
+
+  if (!process.stdin.isTTY) {
+    const input = await bufferFromStream(process.stdin);
+    runInContext(input.toString(), createContext(context));
+    await app.close();
+    return;
+  }
+
+  const _repl = await Promise.resolve().then(() => import('repl'));
+  const replServer = _repl.start({
+    prompt: clc.green('> '),
+    ignoreUndefined: true,
+  });
+  replServer.on('exit', () => void app.close());
+
+  assignToObject(replServer.context, context);
+
+  await mkdir('.cache', { recursive: true });
+  await promisify(replServer.setupHistory.bind(replServer))(
+    '.cache/repl_history'
+  );
 }
 bootstrap().catch((err) => {
   // eslint-disable-next-line no-console

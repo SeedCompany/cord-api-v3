@@ -1,4 +1,5 @@
 import { config } from 'winston';
+import { CachedForArg } from '~/common';
 import { LogLevel } from './logger.interface';
 
 interface MatcherConfig {
@@ -10,17 +11,18 @@ interface MatcherConfig {
 /**
  * Determines whether a named logger is enabled for the given log level.
  *
- * It works similarly to the `debug` library, where loggers are named/namespace
+ * It works similarly to the `debug` library, where loggers are named/namespace,
  * and you specify which loggers you want with a single DEBUG env var.
  * Their logger doesn't have any levels, where ours does.
  *
- * In order to map the loggers to a level you provide an object mapping the
- * name(s) to a level. Each key can specify one or more names separated by comma.
- * An `*` can be used as a wild card as well matching sub namespaces.
+ * In order to map the loggers to a level, you provide an object mapping the
+ * name(s) to a level.
+ * Each key can specify one or more names separated by comma.
+ * An `*` can be used as a wild card as well that will match sub namespaces.
  * It's important to note the order of the keys matters as the first matching
  * name determines the level.
  *
- * An simple example:
+ * A simple example:
  *     {
  *       'foo:bar': LogLevel.DEBUG,
  *       'foo:*': LogLevel.INFO,
@@ -50,20 +52,20 @@ interface MatcherConfig {
  * so the default would be used.
  *
  * You can personalize the level config for your local machine by using the
- * logging.yml file in the project root. See the example file as a starting point.
+ * logging.yml file in the project root.
+ * See the example file as a starting point.
  */
 export class LevelMatcher {
   private readonly defaultLevel: LogLevel;
-  private readonly matchers: MatcherConfig[] = [];
-  private cached: Record<string, LogLevel> = {};
+  private readonly matcherGroups: MatcherConfig[][] = [];
 
   constructor(
-    levelMap: Record<string, string | undefined>,
+    levelMaps: Array<Record<string, string | undefined>>,
     defaultLevel: LogLevel | string
   ) {
     this.defaultLevel = parseLevel(defaultLevel) ?? LogLevel.INFO;
-    this.matchers = Object.entries(levelMap).flatMap(
-      ([namespaces, rawLevel]) => {
+    this.matcherGroups = levelMaps.map((levelMap) =>
+      Object.entries(levelMap).flatMap(([namespaces, rawLevel]) => {
         const level = parseLevel(rawLevel);
         if (!level || !namespaces) {
           return [];
@@ -78,14 +80,14 @@ export class LevelMatcher {
           const exclude = namespace.startsWith('-');
           const regPart = namespace.replace(/\*/g, '.*?');
           if (exclude) {
-            matcher.exclude.push(new RegExp(`^${regPart.substr(1)}$`));
+            matcher.exclude.push(new RegExp(`^${regPart.slice(1)}$`));
           } else {
             matcher.include.push(new RegExp(`^${regPart}$`));
           }
         }
 
-        return [matcher];
-      }
+        return matcher;
+      })
     );
   }
 
@@ -94,20 +96,18 @@ export class LevelMatcher {
     return config.syslog.levels[level] <= config.syslog.levels[configuredLevel];
   }
 
+  @CachedForArg()
   getLevel(name: string): LogLevel {
-    if (this.cached[name]) {
-      return this.cached[name];
-    }
-    for (const { include, exclude, level } of this.matchers) {
-      const matched =
-        include.some((regex) => regex.exec(name)) &&
-        !exclude.some((regex) => regex.exec(name));
-      if (matched) {
-        this.cached[name] = level;
-        return level;
+    for (const matcherGroup of this.matcherGroups) {
+      for (const { include, exclude, level } of matcherGroup) {
+        const matched =
+          include.some((regex) => regex.exec(name)) &&
+          !exclude.some((regex) => regex.exec(name));
+        if (matched) {
+          return level;
+        }
       }
     }
-    this.cached[name] = this.defaultLevel;
     return this.defaultLevel;
   }
 }

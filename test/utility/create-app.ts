@@ -23,7 +23,7 @@ export const createTestApp = async () => {
     imports: [AppModule],
   })
     .overrideProvider(LevelMatcher)
-    .useValue(new LevelMatcher({}, LogLevel.ERROR))
+    .useValue(new LevelMatcher([], LogLevel.ERROR))
     .compile();
 
   const app = moduleFixture.createNestApplication<TestApp>();
