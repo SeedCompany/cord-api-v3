@@ -18,17 +18,20 @@ export class CacheService {
     return new CacheItem<T>(key, this, options);
   }
 
-  async get<T>(key: string): Promise<T | undefined> {
-    return await this.backing.get(key);
+  async get<T>(key: string, options: ItemOptions = {}): Promise<T | undefined> {
+    return await this.backing.get<T>(key, this.resolveOptions(options));
   }
 
   async set(key: string, value: unknown, options: ItemOptions = {}) {
-    let ttl = options.ttl ? Duration.from(options.ttl) : undefined;
+    await this.backing.set(key, value, this.resolveOptions(options));
+  }
+
+  private resolveOptions(options: ItemOptions): BackingOptions {
+    const { ttl: rawTtl, ...rest } = options;
+    let ttl = rawTtl ? Duration.from(rawTtl) : undefined;
     // Treat 0 as infinite
     ttl = ttl?.toMillis() === 0 ? undefined : ttl;
-    const resolved: BackingOptions = { ttl };
-
-    await this.backing.set(key, value, resolved);
+    return { ttl, ...rest };
   }
 
   async delete(key: string) {
@@ -68,7 +71,7 @@ export class CacheService {
   }
 }
 
-export interface ItemOptions {
+export interface ItemOptions extends Pick<BackingOptions, 'refreshTtlOnGet'> {
   /**
    * Time to live - duration that an item is cached before it is deleted.
    */
@@ -97,12 +100,18 @@ export class CacheItem<T> {
     private readonly options: ItemOptions = {}
   ) {}
 
-  async get(): Promise<T | undefined> {
-    return await this.service.get<T>(this.key);
+  async get(optionsOverride?: Partial<ItemOptions>): Promise<T | undefined> {
+    return await this.service.get<T>(this.key, {
+      ...this.options,
+      ...optionsOverride,
+    });
   }
 
-  async set(value: T) {
-    await this.service.set(this.key, value, this.options);
+  async set(value: T, optionsOverride?: Partial<ItemOptions>) {
+    await this.service.set(this.key, value, {
+      ...this.options,
+      ...optionsOverride,
+    });
   }
 
   async delete() {

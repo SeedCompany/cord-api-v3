@@ -8,8 +8,11 @@ export class RedisCache extends CacheBackingService {
     super();
   }
 
-  async get<T>(key: string) {
+  async get<T>(key: string, options: ItemOptions) {
     const val = await this.redis.get(key);
+    if (options.refreshTtlOnGet && options.ttl) {
+      void this.redis.pexpire(key, options.ttl.toMillis());
+    }
     if (val == null) {
       return undefined;
     }

@@ -13,8 +13,10 @@ export class InMemoryCache extends CacheBackingService {
     });
   }
 
-  async get<T>(key: string) {
-    return this.cache.get<T>(key);
+  async get<T>(key: string, options: ItemOptions) {
+    return this.cache.get<T>(key, {
+      updateAgeOnGet: options.refreshTtlOnGet,
+    });
   }
 
   async remainingTtl(key: string): Promise<number> {
