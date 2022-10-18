@@ -2,7 +2,6 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { intersection, sumBy, uniq } from 'lodash';
 import {
   asyncPool,
-  has,
   ID,
   InputException,
   mapFromList,
@@ -152,21 +151,22 @@ export class ProductService {
       Number: input.progressTarget ?? 1,
     });
 
-    const id = has('title', input)
-      ? await this.repo.createOther(
-          { ...input, progressTarget, steps },
-          changeset
-        )
-      : await this.repo.create(
-          {
-            ...input,
-            progressTarget,
-            steps,
-            totalVerses,
-            totalVerseEquivalents,
-          },
-          changeset
-        );
+    const id =
+      'title' in input
+        ? await this.repo.createOther(
+            { ...input, progressTarget, steps },
+            changeset
+          )
+        : await this.repo.create(
+            {
+              ...input,
+              progressTarget,
+              steps,
+              totalVerses,
+              totalVerseEquivalents,
+            },
+            changeset
+          );
 
     return await this.readOne(id, session, viewOfChangeset(changeset));
   }
