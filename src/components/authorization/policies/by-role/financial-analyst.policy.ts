@@ -1,4 +1,11 @@
-import { member, Policy, Role, sensMediumOrLower, sensOnlyLow } from '../util';
+import {
+  inherit,
+  member,
+  Policy,
+  Role,
+  sensMediumOrLower,
+  sensOnlyLow,
+} from '../util';
 
 // NOTE: There could be other permissions for this role from other policies
 @Policy(
@@ -9,17 +16,23 @@ import { member, Policy, Role, sensMediumOrLower, sensOnlyLow } from '../util';
     r.Ceremony.read,
     r.Directory.read.when(member).edit,
     r.Education.read,
-    r.Engagement.read
-      .when(member)
-      .create.delete.specifically((p) => [
-        p.many('disbursementCompleteDate', 'status').when(member).edit,
-      ]),
-    r.EthnologueLanguage.read,
+    inherit(
+      r.Engagement.read
+        .when(member)
+        .create.delete.specifically((p) => [
+          p.many('disbursementCompleteDate', 'status').when(member).edit,
+        ]),
+      r.LanguageEngagement.specifically((p) => [p.paratextRegistryId.none])
+    ),
     r.FieldRegion.read,
     r.FieldZone.read,
+    r.FinancialReport.edit,
     r.FundingAccount.read,
-    r.Language.read.specifically((c) => c.locations.when(sensOnlyLow).read),
-    r.Organization.whenAny(member, sensMediumOrLower).edit.or.create,
+    r.Language.read.specifically((p) => [
+      p.locations.when(sensOnlyLow).read,
+      p.many('registryOfDialectsCode', 'signLanguageCode').none,
+    ]),
+    r.Organization.create.whenAny(member, sensMediumOrLower).edit,
     r.Partner.read.create
       .specifically((p) => [
         p.many('organization', 'pointOfContact').when(sensMediumOrLower).read,
@@ -27,7 +40,6 @@ import { member, Policy, Role, sensMediumOrLower, sensOnlyLow } from '../util';
       .children((c) => c.posts.edit),
     r.Partnership.read
       .specifically((p) => [
-        p.financialReportingType.edit,
         p.many('organization', 'partner').whenAny(member, sensMediumOrLower)
           .read,
       ])
@@ -38,12 +50,20 @@ import { member, Policy, Role, sensMediumOrLower, sensOnlyLow } from '../util';
         p
           .many('rootDirectory', 'primaryLocation', 'otherLocations')
           .whenAny(member, sensMediumOrLower).read,
-        p.many('step', 'mouStart', 'mouEnd', 'rootDirectory').when(member).edit,
-        p.financialReportPeriod.edit,
+        p
+          .many(
+            'step',
+            'mouStart',
+            'mouEnd',
+            'rootDirectory',
+            'financialReportPeriod',
+            'financialReportReceivedAt'
+          )
+          .when(member).edit,
       ])
       .children((c) => c.posts.edit),
-    r.ProjectMember.read.when(member).create.delete,
-    r.PeriodicReport.read,
+    r.ProjectMember.read.when(member).edit.create.delete,
+    r.PeriodicReport.read.when(member).edit,
     r.StepProgress.read,
     r.Unavailability.read,
     r.User.read.create,

@@ -5,13 +5,14 @@ import { member, Policy, Role, sensMediumOrLower, sensOnlyLow } from '../util';
   r.Budget.whenAny(member, sensMediumOrLower).read,
   r.BudgetRecord.whenAny(member, sensMediumOrLower).read,
   r.Education.read,
-  r.EthnologueLanguage.whenAny(member, sensMediumOrLower).read,
+  r.EthnologueLanguage.when(sensMediumOrLower).read,
   r.FundingAccount.read,
-  r.Language.read.specifically((p) => [
-    p.registryOfDialectsCode.when(sensMediumOrLower).read,
-    p.signLanguageCode.when(sensMediumOrLower).read,
-    p.locations.when(sensMediumOrLower).read,
-  ]),
+  r.Language.read.specifically(
+    (p) =>
+      p
+        .many('registryOfDialectsCode', 'signLanguageCode', 'locations')
+        .whenAny(member, sensMediumOrLower).read
+  ),
   r.LanguageEngagement.edit.specifically((p) => [
     p.paratextRegistryId.whenAny(member, sensMediumOrLower).edit,
   ]),
@@ -24,6 +25,8 @@ import { member, Policy, Role, sensMediumOrLower, sensOnlyLow } from '../util';
     .children((r) => r.posts.edit),
   r.Partnership.read.specifically((p) => [
     p.partner.whenAny(member, sensOnlyLow).read,
+    p.organization.whenAny(member, sensOnlyLow).read,
+    // clean up above
   ]),
   r.Project.read
     .specifically((p) => [
@@ -31,13 +34,13 @@ import { member, Policy, Role, sensMediumOrLower, sensOnlyLow } from '../util';
       p.stepChangedAt.edit,
       p.rootDirectory.whenAny(member, sensMediumOrLower).edit,
       p.primaryLocation.whenAny(member, sensMediumOrLower).read,
-      p.financialReportReceivedAt.edit,
-      p.financialReportPeriod.edit,
-      p.sensitivity.whenAny(member, sensMediumOrLower).edit,
+      p.financialReportReceivedAt.whenAny(member, sensMediumOrLower).read,
+      p.financialReportPeriod.whenAny(member, sensMediumOrLower).read,
+      p.sensitivity.whenAny(member, sensMediumOrLower).read,
       p.otherLocations.whenAny(member, sensMediumOrLower).read,
     ])
+    // clean up above
     .children((c) => [c.posts.edit]),
   r.ProjectMember.edit,
-  r.User.read,
 ])
 export class ConsultantManagerPolicy {}

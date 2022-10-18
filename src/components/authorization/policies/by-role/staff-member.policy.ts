@@ -4,7 +4,7 @@ import { inherit, Policy, Role, sensOnlyLow } from '../util';
 @Policy(Role.StaffMember, (r) => [
   r.Ceremony.read,
   r.Education.read,
-  ...inherit(
+  inherit(
     r.Engagement.read,
     r.LanguageEngagement.specifically((p) => p.paratextRegistryId.none)
   ),

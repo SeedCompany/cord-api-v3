@@ -16,7 +16,7 @@ import { inherit, member, Policy, Role, sensMediumOrLower } from '../util';
     r.BudgetRecord.read.when(member).edit,
     r.Ceremony.read.when(member).edit,
     r.Education.read.create,
-    ...inherit(
+    inherit(
       r.Engagement.read.create
         .when(member)
         .edit.specifically((p) => p.disbursementCompleteDate.read),
