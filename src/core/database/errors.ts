@@ -55,6 +55,27 @@ export class ServiceUnavailableError extends Neo4jError {
   }
 }
 
+export class SessionExpiredError extends Neo4jError {
+  static readonly code = 'SessionExpired' as const;
+
+  constructor(message: string) {
+    super(message, SessionExpiredError.code);
+    this.constructor = SessionExpiredError;
+    this.__proto__ = SessionExpiredError.prototype;
+    this.name = this.constructor.name;
+    noEnumerate(this, 'constructor', '__proto__', 'name', 'code');
+  }
+
+  static fromNeo(e: Neo4jError) {
+    if (e instanceof SessionExpiredError) {
+      return e;
+    }
+    const ex = new this(e.message);
+    ex.stack = e.stack;
+    return ex;
+  }
+}
+
 export class ConnectionTimeoutError extends Neo4jError {
   static readonly code = 'N/A' as const;
 
@@ -153,6 +174,9 @@ export const createBetterError = (e: Error) => {
 const cast = (e: Neo4jError): Neo4jError => {
   if (e.code === ServiceUnavailableError.code) {
     return ServiceUnavailableError.fromNeo(e);
+  }
+  if (e.code === SessionExpiredError.code) {
+    return SessionExpiredError.fromNeo(e);
   }
   if (e.code === ConstraintError.code) {
     if (e.message.includes('already exists with label')) {

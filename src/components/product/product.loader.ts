@@ -30,8 +30,7 @@ export class ProductLoader extends OrderedNestDataLoader<AnyProduct> {
 
   getOptions(): OrderedNestDataLoaderOptions<AnyProduct> {
     return {
-      // Increase the batching timeframe from the same nodejs frame to 10ms
-      batchScheduleFn: (cb) => setTimeout(cb, 10),
+      ...super.getOptions(),
       maxBatchSize: 25,
     };
   }
