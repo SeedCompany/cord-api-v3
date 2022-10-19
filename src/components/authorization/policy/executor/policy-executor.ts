@@ -90,7 +90,7 @@ export class PolicyExecutor {
         // Under no circumstances is user able to read, so just block everything.
         // Ideally this could be done without round tripping to the DB, but
         // for simplicity its here. Also, I think it's not the normal hot path.
-        return query.raw('WHERE false');
+        return query.with('*').raw('WHERE false');
       }
 
       const other = {
