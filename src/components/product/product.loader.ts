@@ -1,5 +1,9 @@
 import { ID } from '../../common';
-import { LoaderFactory, OrderedNestDataLoader } from '../../core';
+import {
+  LoaderFactory,
+  OrderedNestDataLoader,
+  OrderedNestDataLoaderOptions,
+} from '../../core';
 import {
   AnyProduct,
   DerivativeScriptureProduct,
@@ -22,5 +26,12 @@ export class ProductLoader extends OrderedNestDataLoader<AnyProduct> {
 
   async loadMany(ids: readonly ID[]) {
     return await this.products.readMany(ids, this.session);
+  }
+
+  getOptions(): OrderedNestDataLoaderOptions<AnyProduct> {
+    return {
+      ...super.getOptions(),
+      maxBatchSize: 25,
+    };
   }
 }
