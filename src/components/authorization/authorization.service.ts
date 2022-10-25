@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import {
+  EnhancedResource,
   ResourceShape,
   SecuredResource,
   Sensitivity,
@@ -106,7 +107,7 @@ export class AuthorizationService {
     dto = {},
     sensitivity,
   }: {
-    resource: Resource;
+    resource: Resource | EnhancedResource<Resource>;
     sessionOrUserId: Session;
     otherRoles?: ScopedRole[];
     dto?: Resource['prototype'];

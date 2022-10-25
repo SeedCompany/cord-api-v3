@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { ConditionalKeys } from 'type-fest';
 import {
   ID,
   isIdLike,
@@ -11,13 +10,7 @@ import {
   UnsecuredDto,
 } from '~/common';
 import { isAdmin } from '~/common/session';
-import {
-  ILogger,
-  Logger,
-  ResourceLoader,
-  ResourceMap,
-  ResourcesHost,
-} from '~/core';
+import { ILogger, Logger, ResourceLoader, ResourcesHost } from '~/core';
 import { BaseNode, isBaseNode, mapListResults } from '~/core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { CommentRepository } from './comment.repository';
@@ -78,9 +71,9 @@ export class CommentService {
 
   async getPermissionsFromResource(resource: CommentableRef, session: Session) {
     const parent = await this.loadCommentable(resource);
-    const parentType: typeof Commentable = await this.resourcesHost.getByName(
+    const parentType = await this.resourcesHost.getByName(
       // I'd like to type this prop as this but somehow blows everything up.
-      parent.__typename as ConditionalKeys<ResourceMap, Commentable>
+      parent.__typename as 'Commentable'
     );
     const { commentThreads: perms } =
       await this.authorizationService.getPermissions<typeof Commentable>({

@@ -35,12 +35,12 @@ export class ResourcesHost {
 
   async getByName<K extends keyof ResourceMap>(
     name: K
-  ): Promise<ValueOf<Pick<ResourceMap, K>>>;
+  ): Promise<EnhancedResource<ValueOf<Pick<ResourceMap, K>>>>;
   async getByName(
     name: LiteralUnion<keyof ResourceMap, string>
-  ): Promise<ValueOf<ResourceMap>>;
-  async getByName(name: keyof ResourceMap) {
-    const map = await this.getMap();
+  ): Promise<EnhancedResource<ValueOf<ResourceMap>>>;
+  async getByName(name: keyof ResourceMap): Promise<EnhancedResource<any>> {
+    const map = await this.getEnhancedMap();
     const resource = map[name];
     if (!resource) {
       throw new ServerException(
