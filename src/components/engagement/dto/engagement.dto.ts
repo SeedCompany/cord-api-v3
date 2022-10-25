@@ -3,6 +3,7 @@ import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive } from 'type-fest';
+import { BaseNode } from '~/core/database/results';
 import {
   Calculated,
   DateInterval,
@@ -26,6 +27,11 @@ import { ScopedRole } from '../../authorization';
 import { ChangesetAware } from '../../changeset/dto';
 import { DefinedFile } from '../../file/dto';
 import { Product, SecuredMethodologies } from '../../product/dto';
+import {
+  InternshipProject,
+  IProject,
+  TranslationProject,
+} from '../../project/dto';
 import { SecuredInternPosition } from './intern-position.enum';
 import { SecuredEngagementStatus } from './status.enum';
 
@@ -56,6 +62,9 @@ class Engagement extends ChangesetAwareResource {
   readonly __typename: 'LanguageEngagement' | 'InternshipEngagement';
 
   readonly project: ID;
+
+  @Field(() => IProject)
+  readonly parent: BaseNode;
 
   @Field(() => SecuredEngagementStatus, {
     middleware: [parentIdMiddleware],
@@ -140,6 +149,9 @@ export class LanguageEngagement extends Engagement {
     (m) => m.TranslationProject
   );
 
+  @Field(() => TranslationProject)
+  readonly parent: BaseNode;
+
   readonly language: Secured<ID>;
 
   @Field()
@@ -174,6 +186,9 @@ export class InternshipEngagement extends Engagement {
   static readonly Parent = import('../../project/dto').then(
     (m) => m.InternshipProject
   );
+
+  @Field(() => InternshipProject)
+  readonly parent: BaseNode;
 
   readonly countryOfOrigin: Secured<ID>;
 
