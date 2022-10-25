@@ -1,6 +1,7 @@
 import { Field, InterfaceType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { ID, IdField } from '../../../common';
+import { ID, IdField } from '~/common';
+import { BaseNode } from '~/core/database/results';
 import { Changeset } from './changeset.dto';
 
 @InterfaceType({
@@ -21,4 +22,6 @@ export abstract class ChangesetAware {
     nullable: true,
   })
   readonly changeset?: ID;
+
+  readonly parent?: BaseNode;
 }
