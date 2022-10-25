@@ -1,4 +1,6 @@
 import { Injectable } from '@nestjs/common';
+import { GraphQLSchemaHost } from '@nestjs/graphql';
+import { isObjectType } from 'graphql';
 import { mapValues } from 'lodash';
 import { ValueOf } from 'ts-essentials';
 import { LiteralUnion } from 'type-fest';
@@ -13,6 +15,8 @@ export type EnhancedResourceMap = {
 
 @Injectable()
 export class ResourcesHost {
+  constructor(private readonly gqlSchema: GraphQLSchemaHost) {}
+
   async getMap() {
     // Deferred import until now to prevent circular dependency
     const legacyPath = await import(
@@ -50,14 +54,46 @@ export class ResourcesHost {
     return resource;
   }
 
-  @CachedForArg()
   async getInterfaces(
     resource: EnhancedResource<any>
   ): Promise<ReadonlyArray<EnhancedResource<any>>> {
-    // Possible change in future to use GQL.
+    // Use interfaces from GQL schema if it's available.
+    // Otherwise, fallback to the interfaces from DTO class hierarchy.
+    // The former doesn't work with CLI.
+    // The latter doesn't work for IntersectionTypes.
+    // Hoping to resolve with https://github.com/nestjs/graphql/pull/2435
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+      this.gqlSchema.schema;
+    } catch (e) {
+      return await this.getInterfacesFromClassType(resource);
+    }
+    return await this.getInterfacesFromGQLSchema(resource);
+  }
+
+  @CachedForArg()
+  private async getInterfacesFromClassType(
+    resource: EnhancedResource<any>
+  ): Promise<ReadonlyArray<EnhancedResource<any>>> {
     const map = await this.getEnhancedMap();
     const resSet = new Set<EnhancedResource<any>>(Object.values(map));
     return [...resource.interfaces].filter((i) => resSet.has(i));
+  }
+
+  @CachedForArg()
+  private async getInterfacesFromGQLSchema(
+    resource: EnhancedResource<any>
+  ): Promise<ReadonlyArray<EnhancedResource<any>>> {
+    const { schema } = this.gqlSchema;
+    const map = await this.getEnhancedMap();
+
+    const type = schema.getType(resource.name);
+    if (!type || !isObjectType(type)) {
+      return [];
+    }
+    return type
+      .getInterfaces()
+      .flatMap((i) => map[i.name as keyof ResourceMap] ?? []);
   }
 
   @CachedForArg()
