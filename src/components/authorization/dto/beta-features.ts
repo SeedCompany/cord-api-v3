@@ -14,10 +14,14 @@ export class BetaFeatures {
   // Declaring as relations as well so privileges can use.
   static readonly Relations = {
     projectChangeRequests: '',
+    newProgressReports: '',
   };
 
   @Field()
   projectChangeRequests: boolean;
+
+  @Field()
+  newProgressReports: boolean;
 }
 
 @Granter(BetaFeatures)
