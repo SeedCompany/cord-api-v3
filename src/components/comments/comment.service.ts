@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import {
+  EnhancedResource,
   ID,
+  InvalidIdForTypeException,
   isIdLike,
   NotFoundException,
   Resource,
@@ -109,6 +111,12 @@ export class CommentService {
     const parent = isBaseNode(parentNode)
       ? await this.resources.loadByBaseNode(parentNode)
       : parentNode;
+
+    const parentType = await this.resourcesHost.getByName(parent.__typename);
+    const parentInterfaces = await this.resourcesHost.getInterfaces(parentType);
+    if (!parentInterfaces.includes(EnhancedResource.of(Commentable))) {
+      throw new InvalidIdForTypeException('Resource is not commentable');
+    }
     return parent as Commentable;
   }
 
