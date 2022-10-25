@@ -146,6 +146,11 @@ export class BudgetRecordRepository extends DtoRepository<
           )
           .match([
             node('node'),
+            relation('in', '', 'record'),
+            node('budget', labelForView('Budget', view)),
+          ])
+          .match([
+            node('node'),
             relation('out', '', 'organization', ACTIVE),
             node('organization', 'Organization'),
           ])
@@ -153,6 +158,7 @@ export class BudgetRecordRepository extends DtoRepository<
           .apply(matchPropsAndProjectSensAndScopedRoles(session, { view }))
           .return<{ dto: UnsecuredDto<BudgetRecord> }>(
             merge('props', 'changedProps', {
+              parent: 'budget',
               organization: 'organization.id',
               changeset: 'changeset.id',
             }).as(outputVar)

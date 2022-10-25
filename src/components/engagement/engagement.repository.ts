@@ -136,6 +136,7 @@ export class EngagementRepository extends CommonRepository {
               ['LanguageEngagement', 'InternshipEngagement'],
               view
             ),
+            parent: 'project',
             project: 'project.id',
             language: 'language.id',
             ceremony: 'ceremony.id',
