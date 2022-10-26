@@ -12,34 +12,36 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           ref: ${{ github.event.pull_request.base.ref }}
           path: base
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v3
         with:
           node-version: 16
-      - uses: actions/cache@v1
-        id: yarn-cache-base
+      - uses: actions/cache@v3
         with:
-          path: base/node_modules
-          key: ${{ runner.os }}-yarn-${{ hashFiles('base/yarn.lock') }}-${{ hashFiles('base/.yarnrc.yml') }}
-      - run: yarn install --immutable && yarn dedupe --check
+          path: |
+            base/.yarn/cache
+            base/node_modules
+          key: yarn-cache-${{ hashFiles('base/yarn.lock', 'base/.yarnrc.yml') }}
+          restore-keys: yarn-cache-
+      - run: yarn install --immutable
         working-directory: base
-        if: steps.yarn-cache-base.outputs.cache-hit != 'true'
       - run: yarn start -- --gen-schema
         working-directory: base
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           path: head
-      - uses: actions/cache@v1
-        id: yarn-cache-head
+      - uses: actions/cache@v3
         with:
-          path: head/node_modules
-          key: ${{ runner.os }}-yarn-${{ hashFiles('head/yarn.lock') }}-${{ hashFiles('head/.yarnrc.yml') }}
-      - run: yarn install --immutable && yarn dedupe --check
-        if: steps.yarn-cache-head.outputs.cache-hit != 'true'
+          path: |
+            head/.yarn/cache
+            head/node_modules
+          key: yarn-cache-${{ hashFiles('head/yarn.lock', 'head/.yarnrc.yml') }}
+          restore-keys: yarn-cache-
+      - run: yarn install --immutable
         working-directory: head
       - run: yarn start -- --gen-schema
         working-directory: head
