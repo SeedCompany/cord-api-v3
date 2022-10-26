@@ -96,7 +96,7 @@ export class CommentService {
     const parentType = await this.resourcesHost.getByName(parent.__typename);
     const parentInterfaces = await this.resourcesHost.getInterfaces(parentType);
     if (!parentInterfaces.includes(EnhancedResource.of(Commentable))) {
-      throw new InvalidIdForTypeException('Resource is not commentable');
+      throw new NonCommentableType('Resource does not implement Commentable');
     }
     return parent as Commentable;
   }
@@ -186,3 +186,5 @@ export class CommentService {
     );
   }
 }
+
+class NonCommentableType extends InvalidIdForTypeException {}
