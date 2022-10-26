@@ -7,45 +7,55 @@ on:
       - develop
 
 jobs:
-  gql-breaking-changes:
-    name: GraphQL Compatibility
+  generate-api-schema:
+    name: Generate API Schema
     runs-on: ubuntu-latest
-
+    strategy:
+      matrix:
+        ref: [base, head]
     steps:
       - uses: actions/checkout@v3
         with:
-          ref: ${{ github.event.pull_request.base.ref }}
-          path: base
+          ref: ${{ github.event.pull_request[matrix.ref].ref }}
+
       - uses: actions/setup-node@v3
         with:
           node-version: 16
-      - uses: actions/cache@v3
+
+      - name: Yarn cache
+        uses: actions/cache@v3
         with:
           path: |
-            base/.yarn/cache
-            base/node_modules
-          key: yarn-cache-${{ hashFiles('base/yarn.lock', 'base/.yarnrc.yml') }}
+            .yarn/cache
+            node_modules
+          key: yarn-cache-${{ hashFiles('yarn.lock', '.yarnrc.yml') }}
           restore-keys: yarn-cache-
-      - run: yarn install --immutable
-        working-directory: base
-      - run: yarn start -- --gen-schema
-        working-directory: base
 
-      - uses: actions/checkout@v3
+      - name: Yarn install
+        run: yarn install --immutable
+
+      - name: Generate GraphQL Schema
+        run: yarn start -- --gen-schema
+
+      - name: Upload GraphQL Schema
+        uses: actions/upload-artifact@v3
         with:
+          name: ${{ matrix.ref }}-gql-schema
+          path: schema.graphql
+
+  graphql-diff:
+    name: GraphQL Compatibility
+    needs: [generate-api-schema]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: base-gql-schema
+          path: base
+      - uses: actions/download-artifact@v3
+        with:
+          name: head-gql-schema
           path: head
-      - uses: actions/cache@v3
-        with:
-          path: |
-            head/.yarn/cache
-            head/node_modules
-          key: yarn-cache-${{ hashFiles('head/yarn.lock', 'head/.yarnrc.yml') }}
-          restore-keys: yarn-cache-
-      - run: yarn install --immutable
-        working-directory: head
-      - run: yarn start -- --gen-schema
-        working-directory: head
-
       - name: Schema Diff
         run: |
           yarn dlx -q graphql-schema-diff \
