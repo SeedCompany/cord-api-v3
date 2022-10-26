@@ -13,6 +13,7 @@ import {
   IntersectionType,
   NameField,
   parentIdMiddleware,
+  resolveByTypename,
   Resource,
   Secured,
   SecuredBoolean,
@@ -64,8 +65,7 @@ const Interfaces: Type<
     if (val.type === ProjectType.Internship) {
       return InternshipProject;
     }
-
-    throw new Error('Could not resolve project type');
+    return resolveByTypename(Project.name)(val);
   },
   implements: [Resource, Pinnable, Postable, ChangesetAware, Commentable],
 })

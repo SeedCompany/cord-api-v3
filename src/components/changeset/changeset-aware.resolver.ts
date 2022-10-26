@@ -1,7 +1,7 @@
-import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
+import { Info, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { LoggedInSession, Session } from '../../common';
-import { ResourceLoader } from '../../core';
+import { Fields, IsOnlyId, LoggedInSession, Resource, Session } from '~/common';
+import { ResourceLoader, ResourceResolver } from '~/core';
 import { ChangesetResolver } from './changeset.resolver';
 import { Changeset, ChangesetAware, ChangesetDiff } from './dto';
 
@@ -9,6 +9,7 @@ import { Changeset, ChangesetAware, ChangesetDiff } from './dto';
 export class ChangesetAwareResolver {
   constructor(
     private readonly resources: ResourceLoader,
+    private readonly resourceResolver: ResourceResolver,
     private readonly changesetResolver: ChangesetResolver
   ) {}
 
@@ -17,6 +18,27 @@ export class ChangesetAwareResolver {
     return object.changeset
       ? await this.resources.load(Changeset, object.changeset)
       : null;
+  }
+
+  @ResolveField(() => Resource, {
+    description: 'The parent resource of this resource',
+    nullable: true,
+  })
+  async parent(
+    @Parent() object: ChangesetAware,
+    @Info(Fields, IsOnlyId) isOnlyId: boolean
+  ) {
+    if (!object.parent) {
+      return null;
+    }
+    if (isOnlyId) {
+      return {
+        __typename: this.resourceResolver.resolveTypeByBaseNode(object.parent),
+        id: object.parent.properties.id,
+        changeset: object.changeset,
+      };
+    }
+    return await this.resources.loadByBaseNode(object.parent);
   }
 
   @ResolveField(() => ChangesetDiff, {

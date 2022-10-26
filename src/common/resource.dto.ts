@@ -22,14 +22,16 @@ const hasTypename = (value: unknown): value is { __typename: string } =>
   has('__typename', value) &&
   typeof value.__typename === 'string';
 
-@InterfaceType({
-  resolveType: (value: unknown) => {
+export const resolveByTypename =
+  (interfaceName: string) => (value: unknown) => {
     if (hasTypename(value)) {
       return value.__typename;
     }
+    throw new ServerException(`Cannot resolve ${interfaceName} type`);
+  };
 
-    throw new ServerException('Cannot resolve Resource type');
-  },
+@InterfaceType({
+  resolveType: resolveByTypename(Resource.name),
 })
 @DbLabel('BaseNode')
 export abstract class Resource {

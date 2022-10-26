@@ -144,6 +144,7 @@ export class PartnershipRepository extends DtoRepository<
             'projectChangedProps.mouEnd',
             'projectProps.mouEnd'
           ),
+          parent: 'project',
           project: 'project.id',
           partner: 'partner.id',
           organization: 'org.id',

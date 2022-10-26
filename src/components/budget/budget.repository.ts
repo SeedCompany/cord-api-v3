@@ -101,6 +101,7 @@ export class BudgetRepository extends DtoRepository<
       .apply(matchChangesetAndChangedProps(view?.changeset))
       .return<{ dto: UnsecuredDto<Budget> }>(
         merge('props', 'changedProps', {
+          parent: 'project',
           changeset: 'changeset.id',
         }).as('dto')
       )

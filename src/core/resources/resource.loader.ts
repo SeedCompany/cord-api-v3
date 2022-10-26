@@ -11,7 +11,7 @@ import { ResourceResolver } from './resource-resolver.service';
 
 type SomeResourceType = ValueOf<ResourceMap>;
 
-interface ObjectRef<Key extends keyof ResourceMap> {
+export interface ResourceRef<Key extends keyof ResourceMap> {
   __typename: Key;
   id: ID;
 }
@@ -34,7 +34,7 @@ export class ResourceLoader {
   }
 
   async loadByRef<Key extends keyof ResourceMap>(
-    obj: ObjectRef<Key>,
+    obj: ResourceRef<Key>,
     view?: ObjectView
   ) {
     return await this.load(obj.__typename, obj.id, view);

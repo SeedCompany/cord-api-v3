@@ -1,5 +1,6 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
+import { BaseNode } from '~/core/database/results';
 import {
   Calculated,
   ID,
@@ -18,6 +19,7 @@ import { ChangesetAware } from '../../changeset/dto';
 import { DefinedFile } from '../../file/dto';
 import { Organization } from '../../organization/dto';
 import { SecuredPartnerTypes } from '../../partner/dto/partner-type.enum';
+import { IProject } from '../../project/dto';
 import { FinancialReportingType } from './financial-reporting-type';
 import { PartnershipAgreementStatus } from './partnership-agreement-status.enum';
 
@@ -49,6 +51,9 @@ export class Partnership extends IntersectionType(ChangesetAware, Resource) {
   static readonly Parent = import('../../project/dto').then((m) => m.IProject);
 
   readonly project: ID;
+
+  @Field(() => IProject)
+  readonly parent: BaseNode;
 
   @Field()
   readonly agreementStatus: SecuredPartnershipAgreementStatus;
