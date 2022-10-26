@@ -54,11 +54,23 @@ export class ProgressReportWorkflowFlowchart {
     return graph;
   }
 
+  /**
+   * Copy mermaid markup of workflow to clipboard
+   * ```bash
+   * echo '$(ProgressReportWorkflowFlowchart).dump()' | LOG_LEVELS='*=error' yarn repl | pbcopy
+   * ```
+   */
   dump() {
     // eslint-disable-next-line no-console
     console.log(this.generate());
   }
 
+  /**
+   * Open a generated SVG of workflow in browser
+   * ```bash
+   * echo '$(ProgressReportWorkflowFlowchart).open()' | yarn repl
+   * ```
+   */
   open() {
     const result = this.compressAndB64encode(this.generate());
     const url = `https://kroki.io/mermaid/svg/${result}`;
