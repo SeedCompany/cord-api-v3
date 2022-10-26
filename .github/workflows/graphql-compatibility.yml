@@ -18,21 +18,8 @@ jobs:
         with:
           ref: ${{ github.event.pull_request[matrix.ref].ref }}
 
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 16
-
-      - name: Yarn cache
-        uses: actions/cache@v3
-        with:
-          path: |
-            .yarn/cache
-            node_modules
-          key: yarn-cache-${{ hashFiles('yarn.lock', '.yarnrc.yml') }}
-          restore-keys: yarn-cache-
-
-      - name: Yarn install
-        run: yarn install --immutable
+      - name: Node Setup & Yarn Install
+        uses: ./.github/actions/setup
 
       - name: Generate GraphQL Schema
         run: yarn start -- --gen-schema

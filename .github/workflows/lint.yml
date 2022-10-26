@@ -12,21 +12,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 16
+      - name: Node Setup & Yarn Install
+        uses: ./.github/actions/setup
 
-      - name: Yarn cache
-        uses: actions/cache@v3
-        with:
-          path: |
-            .yarn/cache
-            node_modules
-          key: yarn-cache-${{ hashFiles('yarn.lock', '.yarnrc.yml') }}
-          restore-keys: yarn-cache-
-
-      - name: Install dependencies
-        run: yarn install --immutable && yarn dedupe --check
+      - name: Check for no duplicate dependencies
+        run: yarn dedupe --check
 
       - name: Check TypeScript
         run: yarn type-check
