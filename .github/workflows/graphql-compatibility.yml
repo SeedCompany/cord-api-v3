@@ -7,43 +7,42 @@ on:
       - develop
 
 jobs:
-  gql-breaking-changes:
-    name: GraphQL Compatibility
+  generate-api-schema:
+    name: Generate API Schema
     runs-on: ubuntu-latest
-
+    strategy:
+      matrix:
+        ref: [base, head]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
-          ref: ${{ github.event.pull_request.base.ref }}
+          ref: ${{ github.event.pull_request[matrix.ref].ref }}
+
+      - name: Node Setup & Yarn Install
+        uses: ./.github/actions/setup
+
+      - name: Generate GraphQL Schema
+        run: yarn start -- --gen-schema
+
+      - name: Upload GraphQL Schema
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.ref }}-gql-schema
+          path: schema.graphql
+
+  graphql-diff:
+    name: GraphQL Compatibility
+    needs: [generate-api-schema]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: base-gql-schema
           path: base
-      - uses: actions/setup-node@v2
+      - uses: actions/download-artifact@v3
         with:
-          node-version: 16
-      - uses: actions/cache@v1
-        id: yarn-cache-base
-        with:
-          path: base/node_modules
-          key: ${{ runner.os }}-yarn-${{ hashFiles('base/yarn.lock') }}-${{ hashFiles('base/.yarnrc.yml') }}
-      - run: yarn install --immutable && yarn dedupe --check
-        working-directory: base
-        if: steps.yarn-cache-base.outputs.cache-hit != 'true'
-      - run: yarn start -- --gen-schema
-        working-directory: base
-
-      - uses: actions/checkout@v2
-        with:
+          name: head-gql-schema
           path: head
-      - uses: actions/cache@v1
-        id: yarn-cache-head
-        with:
-          path: head/node_modules
-          key: ${{ runner.os }}-yarn-${{ hashFiles('head/yarn.lock') }}-${{ hashFiles('head/.yarnrc.yml') }}
-      - run: yarn install --immutable && yarn dedupe --check
-        if: steps.yarn-cache-head.outputs.cache-hit != 'true'
-        working-directory: head
-      - run: yarn start -- --gen-schema
-        working-directory: head
-
       - name: Schema Diff
         run: |
           yarn dlx -q graphql-schema-diff \

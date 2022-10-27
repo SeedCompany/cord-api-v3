@@ -11,21 +11,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
-        with:
-          node-version: 16
+      - uses: actions/checkout@v3
+      - name: Node Setup & Yarn Install
+        uses: ./.github/actions/setup
 
-      - name: Yarn cache
-        uses: actions/cache@v1
-        id: yarn-cache
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}-${{ hashFiles('.yarnrc.yml') }}
-
-      - name: Install dependencies
-        run: yarn install --immutable && yarn dedupe --check
-        if: steps.yarn-cache.outputs.cache-hit != 'true'
+      - name: Check for no duplicate dependencies
+        run: yarn dedupe --check
 
       - name: Check TypeScript
         run: yarn type-check
@@ -33,7 +24,7 @@ jobs:
       - name: Generate GQL Schema
         run: yarn start -- --gen-schema
       - name: Upload GQL Schema
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: schema.graphql
           path: schema.graphql

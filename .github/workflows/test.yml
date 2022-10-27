@@ -22,21 +22,9 @@ jobs:
           NEO4JLABS_PLUGINS: '["apoc"]'
 
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
-        with:
-          node-version: 16
-
-      - name: Yarn cache
-        uses: actions/cache@v1
-        id: yarn-cache
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}-${{ hashFiles('.yarnrc.yml') }}
-
-      - name: Install dependencies
-        run: yarn install
-        if: steps.yarn-cache.outputs.cache-hit != 'true'
+      - uses: actions/checkout@v3
+      - name: Node Setup & Yarn Install
+        uses: ./.github/actions/setup
 
       - name: Tests
         run: yarn test
