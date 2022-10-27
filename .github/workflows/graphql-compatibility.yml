@@ -35,6 +35,8 @@ jobs:
     needs: [generate-api-schema]
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v3
+
       - uses: actions/download-artifact@v3
         with:
           name: base-gql-schema
@@ -43,6 +45,7 @@ jobs:
         with:
           name: head-gql-schema
           path: head
+
       - name: Schema Diff
         run: |
           yarn dlx -q graphql-schema-diff \
