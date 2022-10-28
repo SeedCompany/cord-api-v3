@@ -1,6 +1,18 @@
-import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
+import {
+  Args,
+  Mutation,
+  Parent,
+  ResolveField,
+  Resolver,
+} from '@nestjs/graphql';
 import { AnonSession, Session } from '~/common';
-import { PromptVariantResponseList } from '../../prompts/dto';
+import {
+  ChangePrompt,
+  ChoosePrompt,
+  PromptVariantResponse,
+  PromptVariantResponseList,
+  UpdatePromptVariantResponse,
+} from '../../prompts/dto';
 import { ProgressReport } from '../dto';
 import { ProgressReportHighlightsService } from '../progress-report-highlights.service';
 
@@ -18,5 +30,26 @@ export class ProgressReportHighlightsResolver {
       this.service.getAvailable(session),
     ]);
     return { ...list, available };
+  }
+
+  @Mutation(() => PromptVariantResponse)
+  async createProgressReportHighlight(
+    @Args({ name: 'input' }) input: ChoosePrompt
+  ): Promise<PromptVariantResponse> {
+    return await this.service.create(input);
+  }
+
+  @Mutation(() => PromptVariantResponse)
+  async changeProgressReportHighlightPrompt(
+    @Args({ name: 'input' }) input: ChangePrompt
+  ): Promise<PromptVariantResponse> {
+    return await this.service.changePrompt(input);
+  }
+
+  @Mutation(() => PromptVariantResponse)
+  async updateProgressReportHighlightResponse(
+    @Args({ name: 'input' }) input: UpdatePromptVariantResponse
+  ): Promise<PromptVariantResponse> {
+    return await this.service.submitResponse(input);
   }
 }

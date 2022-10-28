@@ -1,9 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { SecuredList, SecuredListType, Session } from '~/common';
+import { SecuredList, SecuredListType, Session, TODO } from '~/common';
 import { Role } from '../authorization';
 import {
+  ChangePrompt,
+  ChoosePrompt,
   Prompt,
   PromptVariantResponse,
+  UpdatePromptVariantResponse,
   VariantPromptList,
 } from '../prompts/dto';
 import { ProgressReport } from './dto';
@@ -20,6 +23,20 @@ export class ProgressReportHighlightsService {
   async getAvailable(_session: Session): Promise<VariantPromptList> {
     // TODO filter variants to readable
     return available;
+  }
+
+  async create(input: ChoosePrompt): Promise<PromptVariantResponse> {
+    return TODO(input);
+  }
+
+  async changePrompt(input: ChangePrompt): Promise<PromptVariantResponse> {
+    return TODO(input);
+  }
+
+  async submitResponse(
+    input: UpdatePromptVariantResponse
+  ): Promise<PromptVariantResponse> {
+    return TODO(input);
   }
 }
 

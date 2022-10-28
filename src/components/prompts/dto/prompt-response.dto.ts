@@ -1,5 +1,13 @@
-import { Field, ObjectType } from '@nestjs/graphql';
-import { Resource, SecuredRichText } from '~/common';
+import { Field, InputType, ObjectType } from '@nestjs/graphql';
+import {
+  ID,
+  IdField,
+  IdOf,
+  Resource,
+  RichTextDocument,
+  RichTextField,
+  SecuredRichText,
+} from '~/common';
 import { ResourceRef } from '~/core';
 import { Prompt } from './prompt.dto';
 import { Variant } from './variant.dto';
@@ -33,4 +41,34 @@ export abstract class VariantResponse {
 
   @Field()
   readonly response: SecuredRichText;
+}
+
+@InputType()
+export abstract class ChoosePrompt {
+  @IdField()
+  readonly resource: ID;
+
+  @IdField()
+  readonly prompt: IdOf<Prompt>;
+}
+
+@InputType()
+export abstract class ChangePrompt {
+  @IdField()
+  readonly id: IdOf<PromptResponse | PromptVariantResponse>;
+
+  @IdField()
+  readonly prompt: IdOf<Prompt>;
+}
+
+@InputType()
+export abstract class UpdatePromptVariantResponse {
+  @IdField()
+  readonly id: IdOf<PromptVariantResponse>;
+
+  @IdField()
+  readonly variant: ID;
+
+  @RichTextField()
+  readonly response: RichTextDocument;
 }
