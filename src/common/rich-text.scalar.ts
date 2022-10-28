@@ -1,11 +1,16 @@
 import { applyDecorators } from '@nestjs/common';
 import { Field, FieldOptions, ObjectType } from '@nestjs/graphql';
 import { IsObject } from 'class-validator';
+import { createHash } from 'crypto';
 import { GraphQLScalarType } from 'graphql';
 import { GraphQLJSONObject } from 'graphql-scalars';
 import { JsonObject } from 'type-fest';
 import { SecuredProperty } from '~/common/secured-property';
 import { Transform } from './transform.decorator';
+
+function hashId(name: string) {
+  return createHash('shake256', { outputLength: 5 }).update(name).digest('hex');
+}
 
 /**
  * A JSON object containing data from a block styled editor.
@@ -17,6 +22,14 @@ export class RichTextDocument {
 
   static from(doc: JsonObject): RichTextDocument {
     return Object.assign(new RichTextDocument(), doc);
+  }
+
+  static fromText(text: string): RichTextDocument {
+    return RichTextDocument.from({
+      version: '2.25.0',
+      time: Date.now(),
+      blocks: [{ id: hashId(text), type: 'paragraph', data: { text } }],
+    });
   }
 
   /** Used to identify this document stored as a string in the DB */
