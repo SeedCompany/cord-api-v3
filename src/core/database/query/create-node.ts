@@ -14,7 +14,7 @@ import {
 import { FileId } from '../../../components/file';
 import { Variable } from '../query-augmentation/condition-variables';
 
-interface CreateNodeOptions<TResourceStatic extends ResourceShape<any>> {
+export interface CreateNodeOptions<TResourceStatic extends ResourceShape<any>> {
   initialProps?: InitialPropsOf<UnsecuredDto<TResourceStatic['prototype']>>;
   baseNodeProps?: Record<string, any>;
 }

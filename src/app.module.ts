@@ -27,6 +27,7 @@ import { PinModule } from './components/pin/pin.module';
 import { PostModule } from './components/post/post.module';
 import { ProductProgressModule } from './components/product-progress/product-progress.module';
 import { ProductModule } from './components/product/product.module';
+import { ProgressReportModule } from './components/progress-report/progress-report.module';
 import { ProgressSummaryModule } from './components/progress-summary/progress-summary.module';
 import { ProjectChangeRequestModule } from './components/project-change-request/project-change-request.module';
 import { ProjectModule } from './components/project/project.module';
@@ -82,6 +83,7 @@ assert(
     ProjectChangeRequestModule,
     ProductProgressModule,
     PartnershipProducingMediumModule,
+    ProgressReportModule,
   ],
 })
 export class AppModule {}

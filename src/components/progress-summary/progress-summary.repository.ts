@@ -9,7 +9,7 @@ import {
   listConcat,
   merge,
 } from '../../core/database/query';
-import { ProgressReport } from '../periodic-report/dto';
+import { ProgressReport } from '../progress-report/dto';
 import { FetchedSummaries, ProgressSummary, SummaryPeriod } from './dto';
 
 @Injectable()

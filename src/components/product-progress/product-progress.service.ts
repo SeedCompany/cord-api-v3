@@ -11,8 +11,8 @@ import {
 } from '../../common';
 import { addScope } from '../../common/session';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { ProgressReport } from '../periodic-report';
 import { Product } from '../product';
+import type { ProgressReport } from '../progress-report/dto';
 import {
   ProductProgress,
   ProductProgressInput,

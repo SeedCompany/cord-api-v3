@@ -1,6 +1,6 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { AnonSession, ID, Session } from '../../common';
+import { AnonSession, ParentIdMiddlewareAdditions, Session } from '~/common';
 import { EngagementStatusTransition, SecuredEngagementStatus } from './dto';
 import { EngagementRules } from './engagement.rules';
 
@@ -13,7 +13,7 @@ export class EngagementStatusResolver {
   })
   async transitions(
     @Parent()
-    status: SecuredEngagementStatus & { parentId: ID; changeset?: ID },
+    status: SecuredEngagementStatus & ParentIdMiddlewareAdditions,
     @AnonSession() session: Session
   ): Promise<EngagementStatusTransition[]> {
     if (!status.canRead || !status.canEdit || !status.value) {

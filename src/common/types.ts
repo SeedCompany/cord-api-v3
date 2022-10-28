@@ -6,6 +6,7 @@ import {
   PickType as BasePickType,
 } from '@nestjs/graphql';
 import { ClassDecoratorFactory } from '@nestjs/graphql/dist/interfaces/class-decorator-factory.interface';
+import { NotImplementedException } from './exceptions';
 
 export type MaybeAsync<T> = T | Promise<T>;
 
@@ -93,3 +94,10 @@ export const IntersectionType = BaseIntersectionType as {
     decorator?: ClassDecoratorFactory
   ): Type<A & B>;
 };
+
+function TODOFn(..._args: any[]) {
+  throw new NotImplementedException();
+}
+export const TODO = TODOFn as any;
+// eslint-disable-next-line @seedcompany/no-unused-vars
+export type TODO<A = any, B = any, C = any, D = any> = any;

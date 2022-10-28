@@ -28,7 +28,6 @@ import {
   FinancialReport,
   NarrativeReport,
   IPeriodicReport as PeriodicReport,
-  ProgressReport,
 } from '../../periodic-report/dto';
 import { Post } from '../../post/dto';
 import { StepProgress } from '../../product-progress/dto';
@@ -96,7 +95,6 @@ export const LegacyResourceMap = {
   PeriodicReport,
   FinancialReport,
   NarrativeReport,
-  ProgressReport,
   ProjectChangeRequest,
   StepProgress,
   Song,

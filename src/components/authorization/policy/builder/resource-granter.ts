@@ -9,11 +9,11 @@ import { PropGranter, PropsGranter } from './prop-granter';
 
 export const withOther = Symbol('ResourceGranter.withOther');
 
-type PropsGranterFn<TResourceStatic extends ResourceShape<any>> = (
+export type PropsGranterFn<TResourceStatic extends ResourceShape<any>> = (
   granter: PropsGranter<TResourceStatic>
 ) => Many<PropGranter<TResourceStatic>>;
 
-type ChildrenGranterFn<TResourceStatic extends ResourceShape<any>> = (
+export type ChildrenGranterFn<TResourceStatic extends ResourceShape<any>> = (
   granter: ChildRelationshipsGranter<TResourceStatic>
 ) => Many<ChildRelationshipGranter<TResourceStatic>>;
 

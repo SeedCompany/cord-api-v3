@@ -6,7 +6,8 @@ import {
   SecuredList,
   SortablePaginationInput,
 } from '../../../common';
-import { IPeriodicReport, PeriodicReport } from './periodic-report.dto';
+import { PeriodicReport } from './merge-periodic-reports.dto';
+import { IPeriodicReport } from './periodic-report.dto';
 import { ReportType } from './report-type.enum';
 
 @InputType()
