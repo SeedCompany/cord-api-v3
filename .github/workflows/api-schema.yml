@@ -1,14 +1,15 @@
-name: GraphQL Compatibility
+name: API Schema
 on:
   pull_request:
-  push:
-    branches:
-      - master
-      - develop
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - labeled
 
 jobs:
-  generate-api-schema:
-    name: Generate API Schema
+  generate:
+    name: Generate
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -31,8 +32,8 @@ jobs:
           path: schema.graphql
 
   graphql-diff:
-    name: GraphQL Compatibility
-    needs: [generate-api-schema]
+    name: GraphQL Diff
+    needs: [generate]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -46,10 +47,16 @@ jobs:
           name: head-gql-schema
           path: head
 
-      - name: Schema Diff
+      - name: Show diff in PR comment
+        uses: agu-z/gql-diff-action@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          old-schema: ./base/schema.graphql
+          new-schema: ./head/schema.graphql
+
+      - name: Enforce compatibility
         run: |
-          yarn dlx -q graphql-schema-diff \
-            --use-colors --fail-on-breaking-changes --sort-schema \
-            ../base/schema.graphql ./schema.graphql
-        working-directory: head
-        continue-on-error: ${{ github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'breaking change') }}
+          yarn dlx graphql-schema-diff \
+            --use-colors --fail-on-breaking-changes \
+            ./base/schema.graphql ./head/schema.graphql
+        if: ${{ !contains(github.event.pull_request.labels.*.name, 'breaking change') }}
