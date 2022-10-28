@@ -1,5 +1,6 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { Prompt } from './prompt.dto';
+import { Variant } from './variant.dto';
 
 @ObjectType()
 export abstract class PromptList {
@@ -9,6 +10,6 @@ export abstract class PromptList {
 
 @ObjectType()
 export abstract class VariantPromptList extends PromptList {
-  @Field(() => [String])
-  readonly variants: readonly string[];
+  @Field(() => [Variant])
+  readonly variants: readonly Variant[];
 }

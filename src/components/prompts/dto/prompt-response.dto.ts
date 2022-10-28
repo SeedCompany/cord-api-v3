@@ -2,6 +2,7 @@ import { Field, ObjectType } from '@nestjs/graphql';
 import { Resource, SecuredRichText } from '~/common';
 import { ResourceRef } from '~/core';
 import { Prompt } from './prompt.dto';
+import { Variant } from './variant.dto';
 
 @ObjectType()
 export class PromptResponse extends Resource {
@@ -28,7 +29,7 @@ export class PromptVariantResponse extends Resource {
 @ObjectType()
 export abstract class VariantResponse {
   @Field()
-  readonly variant: string;
+  readonly variant: Variant;
 
   @Field()
   readonly response: SecuredRichText;
