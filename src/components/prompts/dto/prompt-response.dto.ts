@@ -1,9 +1,12 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { Resource, SecuredRichText } from '~/common';
+import { ResourceRef } from '~/core';
 import { Prompt } from './prompt.dto';
 
 @ObjectType()
 export class PromptResponse extends Resource {
+  readonly parent: ResourceRef<any>;
+
   @Field()
   readonly prompt: Prompt;
 
@@ -13,6 +16,8 @@ export class PromptResponse extends Resource {
 
 @ObjectType()
 export class PromptVariantResponse extends Resource {
+  readonly parent: ResourceRef<any>;
+
   @Field()
   readonly prompt: Prompt;
 
