@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Node, node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { CreateProjectMember, ProjectMember, ProjectMemberListInput } from '.';
-import { ID, Session, UnsecuredDto } from '../../../common';
+import { ID, ObjectView, Session, UnsecuredDto } from '../../../common';
 import { DatabaseService, DtoRepository } from '../../../core';
 import {
   ACTIVE,
@@ -12,13 +12,14 @@ import {
   property,
   requestingUser,
   sorting,
+  whereNotDeletedInChangeset,
 } from '../../../core/database/query';
 import { UserRepository } from '../../user/user.repository';
 
 @Injectable()
 export class ProjectMemberRepository extends DtoRepository<
   typeof ProjectMember,
-  [session: Session]
+  [session: Session, view?: ObjectView]
 >(ProjectMember) {
   constructor(private readonly users: UserRepository, db: DatabaseService) {
     super(db);
@@ -45,7 +46,8 @@ export class ProjectMemberRepository extends DtoRepository<
     { userId, projectId, ...input }: CreateProjectMember,
     id: ID,
     session: Session,
-    createdAt: DateTime
+    createdAt: DateTime,
+    changeset?: ID
   ) {
     const createProjectMember = this.db
       .query()
@@ -84,6 +86,20 @@ export class ProjectMemberRepository extends DtoRepository<
         }),
         node('user'),
       ])
+      .apply((q) =>
+        changeset
+          ? q
+              .match([node('changeset', 'Changeset', { id: changeset })])
+              .create([
+                node('changeset'),
+                relation('out', '', 'changeset', {
+                  active: true,
+                  createdAt: DateTime.local(),
+                }),
+                node('projectMember'),
+              ])
+          : q
+      )
       .return<{ id: ID }>('projectMember.id as id')
       .first();
   }
@@ -110,7 +126,11 @@ export class ProjectMemberRepository extends DtoRepository<
         );
   }
 
-  async list({ filter, ...input }: ProjectMemberListInput, session: Session) {
+  async list(
+    { filter, ...input }: ProjectMemberListInput,
+    session: Session,
+    changeset?: ID
+  ) {
     const result = await this.db
       .query()
       .match([
@@ -124,6 +144,7 @@ export class ProjectMemberRepository extends DtoRepository<
           : []),
         node('node', 'ProjectMember'),
       ])
+      .apply(whereNotDeletedInChangeset(changeset))
       .apply((q) =>
         filter.roles
           ? q

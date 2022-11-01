@@ -3,6 +3,7 @@ import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { ID, IdField } from '../../../../common';
 import { Role } from '../../../authorization';
+import { ChangesetIdField } from '../../../changeset';
 import { ProjectMember } from './project-member.dto';
 
 @InputType()
@@ -23,6 +24,9 @@ export class CreateProjectMember {
 
 @InputType()
 export abstract class CreateProjectMemberInput {
+  @ChangesetIdField()
+  readonly changeset?: ID;
+
   @Field()
   @Type(() => CreateProjectMember)
   @ValidateNested()
