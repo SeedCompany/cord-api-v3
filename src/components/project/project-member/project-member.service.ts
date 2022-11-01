@@ -31,7 +31,7 @@ import { mapListResults } from '../../../core/database/results';
 import { Role } from '../../authorization';
 import { AuthorizationService } from '../../authorization/authorization.service';
 import { User, UserService } from '../../user';
-import { IProject, Project } from '../dto';
+import { IProject } from '../dto';
 import { ProjectService } from '../project.service';
 import {
   CreateProjectMember,
@@ -59,7 +59,7 @@ export class ProjectMemberService {
   ) {}
 
   protected async verifyRelationshipEligibility(
-    projectId: ID | UnsecuredDto<Project>,
+    projectId: ID,
     userId: ID
   ): Promise<void> {
     const result = await this.repo.verifyRelationshipEligibility(
@@ -90,12 +90,13 @@ export class ProjectMemberService {
   }
 
   async create(
-    { userId, projectId, ...input }: CreateProjectMember,
+    { userId, projectId: projectOrId, ...input }: CreateProjectMember,
     session: Session
   ): Promise<ProjectMember> {
-    const project = isIdLike(projectId)
-      ? await this.projectService.readOneUnsecured(projectId, session)
-      : projectId;
+    const projectId = isIdLike(projectOrId) ? projectOrId : projectOrId.id;
+    const project = isIdLike(projectOrId)
+      ? await this.projectService.readOneUnsecured(projectOrId, session)
+      : projectOrId;
 
     this.authorizationService.privileges
       .for(session, IProject, project)
@@ -105,8 +106,7 @@ export class ProjectMemberService {
 
     const id = await generateId();
     const createdAt = DateTime.local();
-
-    await this.verifyRelationshipEligibility(projectId, userId);
+    await this.repo.verifyRelationshipEligibility(projectId, userId);
 
     await this.assertValidRoles(input.roles, () =>
       this.userService.readOne(userId, session)
