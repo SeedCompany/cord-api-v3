@@ -24,6 +24,13 @@ export class RichTextDocument {
     return Object.assign(new RichTextDocument(), doc);
   }
 
+  static fromMaybe(doc: JsonObject | null): RichTextDocument | null {
+    if (!doc || !Array.isArray(doc.blocks!) || doc.blocks.length === 0) {
+      return null;
+    }
+    return RichTextDocument.from(doc);
+  }
+
   static fromText(text: string): RichTextDocument {
     return RichTextDocument.from({
       version: '2.25.0',
@@ -57,7 +64,7 @@ export const RichTextField = (options?: FieldOptions) =>
   applyDecorators(
     Field(() => RichTextScalar, options),
     IsObject(),
-    Transform(({ value }) => RichTextDocument.from(value))
+    Transform(({ value }) => RichTextDocument.fromMaybe(value))
   );
 
 /** @internal */
