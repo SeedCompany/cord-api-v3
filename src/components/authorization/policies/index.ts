@@ -21,5 +21,5 @@ export * from './by-role/translator.policy';
 export * from './by-feature/project-change-requests-beta.policy';
 export * from './by-feature/read-util-objects.policy';
 export * from './by-feature/user-can-edit-self.policy';
-export * from './by-feature/user-can-see-edit-own-comments.policy';
+export * from './by-feature/user-can-manage-own-comments.policy';
 export * from './by-feature/new-progress-reports-beta.policy';

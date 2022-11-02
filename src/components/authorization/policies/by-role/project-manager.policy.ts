@@ -17,7 +17,7 @@ import { inherit, member, Policy, Role, sensMediumOrLower } from '../util';
     r.Ceremony.read.when(member).edit,
     r.Education.read.create,
     inherit(
-      r.Engagement.read.create
+      r.Engagement.read.create.delete
         .when(member)
         .edit.specifically((p) => p.disbursementCompleteDate.read),
       r.LanguageEngagement.specifically((p) => [
@@ -33,15 +33,16 @@ import { inherit, member, Policy, Role, sensMediumOrLower } from '../util';
     r.Partner.read
       .specifically((p) => p.pmcEntityCode.none)
       .children((c) => c.posts.read.create),
-    r.Partnership.whenAny(member, sensMediumOrLower).read.create.specifically(
-      (p) => [
-        p.many('agreement', 'agreementStatus', 'types', 'partner', 'primary')
-          .edit,
-      ]
-    ),
+    r.Partnership.whenAny(
+      member,
+      sensMediumOrLower
+    ).read.create.delete.specifically((p) => [
+      p.many('agreement', 'agreementStatus', 'types', 'partner', 'primary')
+        .edit,
+    ]),
     r.PeriodicReport.read.when(member).edit,
     r.Producible.edit.create,
-    r.Product.read.when(member).edit.create,
+    r.Product.read.when(member).edit.create.delete,
     r.Project.read.create
       .when(member)
       .edit.specifically((p) => [
@@ -50,7 +51,7 @@ import { inherit, member, Policy, Role, sensMediumOrLower } from '../util';
           .whenAny(member, sensMediumOrLower).read,
       ])
       .children((c) => c.posts.read.create),
-    r.ProjectMember.read.when(member).edit.create,
+    r.ProjectMember.read.when(member).edit.create.delete,
     r.StepProgress.read.when(member).edit,
     r.Unavailability.create.read,
     r.User.create.read,
