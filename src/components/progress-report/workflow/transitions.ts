@@ -11,14 +11,14 @@ export const Transitions = defineTransitions({
   'Draft -> Pending Translation': {
     from: Status.Draft,
     to: Status.PendingTranslation,
-    label: 'Submit & Request Translation',
+    label: 'Submit for Translation',
     type: Type.Approve,
     notify: ['Next', 'Translator'],
   },
   'Draft -> In Review': {
     from: Status.Draft,
     to: Status.InReview,
-    label: 'Ready for Review',
+    label: 'Submit for Review',
     type: Type.Approve,
     notify: 'FPM',
   },
@@ -40,7 +40,7 @@ export const Transitions = defineTransitions({
   'Withdraw Review Request': {
     from: Status.PendingTranslation,
     to: Status.Draft,
-    label: 'Withdraw review request to make more changes',
+    label: 'Withdraw Translation to Make Changes',
     type: Type.Reject,
   },
 
