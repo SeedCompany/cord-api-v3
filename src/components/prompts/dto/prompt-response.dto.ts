@@ -9,7 +9,7 @@ import {
   SecuredRichText,
 } from '~/common';
 import { ResourceRef } from '~/core';
-import { Prompt } from './prompt.dto';
+import { Prompt, SecuredPrompt } from './prompt.dto';
 import { Variant } from './variant.dto';
 
 @ObjectType()
@@ -17,7 +17,7 @@ export class PromptResponse extends Resource {
   readonly parent: ResourceRef<any>;
 
   @Field()
-  readonly prompt: Prompt;
+  readonly prompt: SecuredPrompt;
 
   @Field()
   readonly response: SecuredRichText;
@@ -28,7 +28,7 @@ export class PromptVariantResponse extends Resource {
   readonly parent: ResourceRef<any>;
 
   @Field()
-  readonly prompt: Prompt;
+  readonly prompt: SecuredPrompt;
 
   @Field(() => [VariantResponse])
   readonly responses: readonly VariantResponse[];

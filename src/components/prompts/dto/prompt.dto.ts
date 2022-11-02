@@ -8,6 +8,7 @@ import {
   RichTextDocument,
   RichTextField,
   SecuredInt,
+  SecuredProperty,
   SecuredRichText,
 } from '~/common';
 
@@ -36,6 +37,11 @@ export class Prompt extends Resource {
     };
   }
 }
+
+@ObjectType({
+  description: SecuredProperty.descriptionFor('a prompt'),
+})
+export class SecuredPrompt extends SecuredProperty(Prompt) {}
 
 @InputType()
 export abstract class PromptInput {
