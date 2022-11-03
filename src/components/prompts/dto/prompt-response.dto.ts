@@ -38,6 +38,10 @@ export class PromptVariantResponse<
 > extends Resource {
   readonly parent: ResourceRef<any>;
 
+  static Relations = {
+    // So the policies can specify
+    responses: [VariantResponse],
+  };
   @Field()
   readonly prompt: SecuredPrompt;
 
