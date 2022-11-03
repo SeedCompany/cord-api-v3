@@ -1,5 +1,5 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { PaginatedList, SortablePaginationInput } from '../../../common';
 import { User } from './user.dto';
@@ -23,6 +23,7 @@ export class UserListInput extends SortablePaginationInput<keyof User>({
 
   @Field({ nullable: true })
   @Type(() => UserFilters)
+  @Transform(({ value }) => value || defaultFilters)
   @ValidateNested()
   readonly filter: UserFilters = defaultFilters;
 }
