@@ -39,7 +39,6 @@ describe('Project-Workflow e2e', () => {
   let consultantManager: TestUser;
   let financialAnalyst: TestUser;
   let controller: TestUser;
-  let financialAnalystController: TestUser;
 
   beforeAll(async () => {
     app = await createTestApp();
@@ -58,10 +57,9 @@ describe('Project-Workflow e2e', () => {
     financialAnalyst = await registerUser(app, {
       roles: [Role.FinancialAnalyst],
     });
-    financialAnalystController = await registerUser(app, {
+    controller = await registerUser(app, {
       roles: [Role.Controller],
     });
-    controller = financialAnalystController;
 
     await projectManager.login();
   });
@@ -192,22 +190,22 @@ describe('Project-Workflow e2e', () => {
 
       // Add partners
       await projectManager.login();
-      const partner = await createPartner(app, {
-        types: [PartnerType.Funding, PartnerType.Impact, PartnerType.Technical],
-        financialReportingTypes: [],
+      const { partner } = await runAsAdmin(app, async () => {
+        const partner = await createPartner(app, {
+          types: [
+            PartnerType.Funding,
+            PartnerType.Impact,
+            PartnerType.Technical,
+          ],
+          financialReportingTypes: [],
+        });
+        return { partner };
       });
       await createPartnership(app, {
         partnerId: partner.id,
         projectId: project.id,
         financialReportingType: undefined,
       });
-
-      // Select sensitivity (Cannot update sensitivity if the project type is translation)
-      // result = await updateProject(app, {
-      //   id: project.id,
-      //   sensitivity: Sensitivity.Medium,
-      // });
-      // expect(result.sensitivity).toBe(Sensitivity.Medium);
 
       // Add products
       await createProduct(app, {
@@ -323,7 +321,7 @@ describe('Project-Workflow e2e', () => {
         ProjectStep.PendingFinancialEndorsement
       );
 
-      await financialAnalystController.login();
+      await controller.login();
       await changeProjectStep(app, project.id, ProjectStep.FinalizingProposal);
 
       await projectManager.login();
@@ -373,7 +371,7 @@ describe('Project-Workflow e2e', () => {
         ProjectStep.FinalizingCompletion
       );
 
-      await financialAnalystController.login();
+      await controller.login();
       await changeProjectStep(app, project.id, ProjectStep.Completed);
 
       const result = await app.graphql.query(
