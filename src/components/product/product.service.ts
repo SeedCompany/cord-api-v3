@@ -17,7 +17,7 @@ import { HandleIdLookup, ILogger, Logger, ResourceResolver } from '../../core';
 import { compareNullable, ifDiff, isSame } from '../../core/database/changes';
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { Powers } from '../authorization/dto/powers';
+import { EngagementService } from '../engagement';
 import {
   getTotalVerseEquivalents,
   getTotalVerses,
@@ -58,6 +58,8 @@ export class ProductService {
     private readonly scriptureRefs: ScriptureReferenceService,
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
+    @Inject(forwardRef(() => EngagementService))
+    private readonly engagementService: EngagementService,
     private readonly repo: ProductRepository,
     private readonly resources: ResourceResolver,
     @Logger('product:service') private readonly logger: ILogger
@@ -70,7 +72,13 @@ export class ProductService {
       | CreateOtherProduct,
     session: Session
   ): Promise<AnyProduct> {
-    await this.authorizationService.checkPower(Powers.CreateProduct, session);
+    const engagementPrivileges = await this.engagementService.privilegesFor(
+      input.engagementId,
+      session
+    );
+
+    engagementPrivileges.verifyCan('create');
+
     const engagement = await this.repo.getBaseNode(
       input.engagementId,
       'Engagement'

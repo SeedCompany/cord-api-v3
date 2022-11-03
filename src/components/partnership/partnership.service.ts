@@ -14,7 +14,6 @@ import {
 import { HandleIdLookup, IEventBus, ILogger, Logger } from '../../core';
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { Powers } from '../authorization/dto/powers';
 import { FileService } from '../file';
 import { Partner, PartnerService, PartnerType } from '../partner';
 import { ProjectService } from '../project';
@@ -37,10 +36,10 @@ import { PartnershipRepository } from './partnership.repository';
 export class PartnershipService {
   constructor(
     private readonly files: FileService,
-    @Inject(forwardRef(() => ProjectService))
-    private readonly projectService: ProjectService,
     @Inject(forwardRef(() => PartnerService))
     private readonly partnerService: PartnerService,
+    @Inject(forwardRef(() => ProjectService))
+    private readonly projectService: ProjectService,
     private readonly eventBus: IEventBus,
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
@@ -53,11 +52,13 @@ export class PartnershipService {
     session: Session,
     changeset?: ID
   ): Promise<Partnership> {
-    await this.authorizationService.checkPower(
-      Powers.CreatePartnership,
+    const { projectId, partnerId } = input;
+    const projectPrivileges = await this.projectService.privilegesFor(
+      projectId,
       session
     );
-    const { projectId, partnerId } = input;
+
+    projectPrivileges.verifyCan('create', 'partnership');
 
     await this.verifyRelationshipEligibility(projectId, partnerId, changeset);
 

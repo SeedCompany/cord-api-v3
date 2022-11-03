@@ -51,6 +51,11 @@ import { ProjectUserConnectionResolver } from './user-connection.resolver';
     ...Object.values(handlers),
     ...Object.values(migrations),
   ],
-  exports: [ProjectService, ProjectMemberModule, ProjectRules],
+  exports: [
+    ProjectService,
+    ProjectMemberModule,
+    ProjectRules,
+    ProjectRepository,
+  ],
 })
 export class ProjectModule {}
