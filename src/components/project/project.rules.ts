@@ -755,6 +755,7 @@ export class ProjectRules {
         return {
           approvers: [
             Role.Administrator,
+            Role.Controller,
             Role.ProjectManager,
             Role.RegionalDirector,
             Role.FieldOperationsDirector,
