@@ -10,9 +10,9 @@ export class PromptResponseList extends SecuredList(PromptResponse) {
 }
 
 @ObjectType()
-export class PromptVariantResponseList extends SecuredList(
-  PromptVariantResponse
-) {
+export class PromptVariantResponseList<
+  VariantKey extends string = string
+> extends SecuredList(PromptVariantResponse) {
   @Field()
-  readonly available: VariantPromptList;
+  readonly available: VariantPromptList<VariantKey>;
 }

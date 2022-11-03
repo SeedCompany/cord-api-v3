@@ -9,7 +9,9 @@ export abstract class PromptList {
 }
 
 @ObjectType()
-export abstract class VariantPromptList extends PromptList {
+export abstract class VariantPromptList<
+  VariantKey extends string = string
+> extends PromptList {
   @Field(() => [Variant])
-  readonly variants: readonly Variant[];
+  readonly variants: ReadonlyArray<Variant<VariantKey>>;
 }

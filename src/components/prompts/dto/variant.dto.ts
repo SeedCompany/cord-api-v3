@@ -1,14 +1,14 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { IdField } from '~/common';
+import { entries, IdField } from '~/common';
 import { Role } from '../../authorization';
 
 @ObjectType()
-export class Variant {
+export class Variant<Key extends string = string> {
   @IdField({
     description: 'Use this field when communicating with the API',
   })
-  key: string;
+  key: Key;
 
   @Field({
     description: 'Describe the variant to users with this field',
@@ -25,4 +25,12 @@ export class Variant {
     `,
   })
   responsibleRole?: Role;
+
+  static createList<VKey extends string>(
+    map: Record<VKey, Omit<Variant, 'key'>>
+  ): ReadonlyArray<Variant<VKey>> {
+    return entries(map).map(([key, val]) => ({ key, ...val }));
+  }
 }
+
+export type VariantKeyOf<T> = T extends Variant<infer K> ? K : never;

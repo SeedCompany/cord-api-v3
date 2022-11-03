@@ -24,23 +24,25 @@ export class PromptResponse extends Resource {
 }
 
 @ObjectType()
-export class PromptVariantResponse extends Resource {
+export abstract class VariantResponse<Key extends string = string> {
+  @Field()
+  readonly variant: Variant<Key>;
+
+  @Field()
+  readonly response: SecuredRichText;
+}
+
+@ObjectType()
+export class PromptVariantResponse<
+  Key extends string = string
+> extends Resource {
   readonly parent: ResourceRef<any>;
 
   @Field()
   readonly prompt: SecuredPrompt;
 
   @Field(() => [VariantResponse])
-  readonly responses: readonly VariantResponse[];
-}
-
-@ObjectType()
-export abstract class VariantResponse {
-  @Field()
-  readonly variant: Variant;
-
-  @Field()
-  readonly response: SecuredRichText;
+  readonly responses: ReadonlyArray<VariantResponse<Key>>;
 }
 
 @InputType()
@@ -62,12 +64,12 @@ export abstract class ChangePrompt {
 }
 
 @InputType()
-export abstract class UpdatePromptVariantResponse {
+export abstract class UpdatePromptVariantResponse<Key extends string = ID> {
   @IdField()
   readonly id: IdOf<PromptVariantResponse>;
 
   @IdField()
-  readonly variant: ID;
+  readonly variant: Key;
 
   @RichTextField()
   readonly response: RichTextDocument;
