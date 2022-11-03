@@ -47,7 +47,8 @@ export const createAllPermissionsView = <
             resource.childListKeys.has(propName as any)
               ? 'create' // Handled deprecated checks to list.canEdit === list.create
               : compatMap.forward[actionInput];
-          const perm = privileges.can(action as PropAction, propName);
+          // @ts-expect-error dynamic usage here is struggling
+          const perm = privileges.can(action, propName);
           propPerms[action] = perm;
           propPerms[compatMap.backward[action]] = perm;
           return perm;

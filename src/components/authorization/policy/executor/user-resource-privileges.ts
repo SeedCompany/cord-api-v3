@@ -95,7 +95,10 @@ export class UserResourcePrivileges<
   }
 
   can(action: ResourceAction): boolean;
-  can(action: PropAction, prop: SecuredResourceKey<TResourceStatic>): boolean;
+  can(
+    action: PropAction,
+    prop: SecuredPropsPlusExtraKey<TResourceStatic>
+  ): boolean;
   can(
     action: ChildSingleAction,
     relation: ChildSinglesKey<TResourceStatic>
@@ -123,7 +126,7 @@ export class UserResourcePrivileges<
   verifyCan(action: ResourceAction): void;
   verifyCan(
     action: PropAction,
-    prop: SecuredResourceKey<TResourceStatic>
+    prop: SecuredPropsPlusExtraKey<TResourceStatic>
   ): void;
   verifyCan(
     action: ChildSingleAction,
