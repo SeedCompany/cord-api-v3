@@ -25,6 +25,7 @@ import {
   UniquenessError,
 } from '../../core';
 import { mapListResults } from '../../core/database/results';
+import { Privileges } from '../authorization';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { ScopedRole } from '../authorization/dto';
 import { Powers } from '../authorization/dto/powers';
@@ -91,6 +92,7 @@ export class ProjectService {
     @Inject(forwardRef(() => PartnerService))
     private readonly partnerService: PartnerService,
     private readonly config: ConfigService,
+    private readonly privileges: Privileges,
     private readonly eventBus: IEventBus,
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
@@ -691,5 +693,10 @@ export class ProjectService {
         );
       })
     );
+  }
+
+  async privilegesFor(id: ID, session: Session) {
+    const project = await this.readOneUnsecured(id, session);
+    return this.privileges.for(session, IProject, project);
   }
 }

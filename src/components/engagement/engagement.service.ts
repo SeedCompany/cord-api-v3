@@ -21,6 +21,7 @@ import {
   Logger,
 } from '../../core';
 import { mapListResults } from '../../core/database/results';
+import { Privileges } from '../authorization';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto/powers';
 import { CeremonyService } from '../ceremony';
@@ -42,6 +43,7 @@ import {
   EngagementListInput,
   EngagementListOutput,
   EngagementStatus,
+  IEngagement,
   InternshipEngagement,
   LanguageEngagement,
   UpdateInternshipEngagement,
@@ -67,6 +69,7 @@ export class EngagementService {
     private readonly config: ConfigService,
     private readonly files: FileService,
     private readonly engagementRules: EngagementRules,
+    private readonly privileges: Privileges,
     @Inject(forwardRef(() => ProjectService))
     private readonly projectService: ProjectService,
     private readonly eventBus: IEventBus,
@@ -619,5 +622,10 @@ export class EngagementService {
         'project.status'
       );
     }
+  }
+
+  async privilegesFor(id: ID, session: Session) {
+    const engagement = await this.repo.readOne(id, session);
+    return this.privileges.for(session, IEngagement, engagement);
   }
 }
