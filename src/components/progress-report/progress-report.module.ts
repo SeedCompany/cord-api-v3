@@ -2,6 +2,7 @@ import { forwardRef, Module } from '@nestjs/common';
 import { PeriodicReportModule } from '../periodic-report/periodic-report.module';
 import { AddProgressReportStatusMigration } from './migrations/AddStatus.migration';
 import { ProgressReportExtraForPeriodicInterfaceRepository } from './progress-report-extra-for-periodic-interface.repository';
+import { ProgressReportHighlightsRepository } from './progress-report-highlights.repository';
 import { ProgressReportHighlightsService } from './progress-report-highlights.service';
 import { ProgressReportRepository } from './progress-report.repository';
 import { ProgressReportService } from './progress-report.service';
@@ -22,6 +23,7 @@ import { ProgressReportWorkflowModule } from './workflow/progress-report-workflo
     ProgressReportEngagementConnectionResolver,
     ProgressReportHighlightsResolver,
     ProgressReportHighlightsService,
+    ProgressReportHighlightsRepository,
     ProgressReportService,
     ProgressReportRepository,
     ProgressReportExtraForPeriodicInterfaceRepository,

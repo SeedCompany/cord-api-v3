@@ -18,8 +18,10 @@ class VariantCondition<TResourceStatic extends ResourceShape<any>>
       throw new Error("Needed object but wasn't given");
     }
 
-    // TODO hand waving
-    const current = object.variant as VariantOf<TResourceStatic>;
+    const current: VariantOf<TResourceStatic> = Reflect.get(
+      object,
+      VariantForCondition
+    );
 
     return this.variants.has(current);
   }
@@ -33,6 +35,14 @@ class VariantCondition<TResourceStatic extends ResourceShape<any>>
     return `Variant(s) { ${[...this.variants].join(', ')} }`;
   }
 }
+
+export const withVariant = <T extends object>(obj: T, variant: string): T =>
+  Object.defineProperty(obj, VariantForCondition, {
+    value: variant,
+    enumerable: false,
+  });
+
+const VariantForCondition = Symbol('Variant');
 
 /**
  * The following actions if the object is one of the given variants.

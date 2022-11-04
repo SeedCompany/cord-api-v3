@@ -5,7 +5,7 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { AnonSession, Session } from '~/common';
+import { AnonSession, LoggedInSession, Session } from '~/common';
 import {
   ChangePrompt,
   ChoosePrompt,
@@ -14,6 +14,7 @@ import {
   UpdatePromptVariantResponse,
 } from '../../prompts/dto';
 import { ProgressReport } from '../dto';
+import { HighlightVariant } from '../dto/hightlights.dto';
 import { ProgressReportHighlightsService } from '../progress-report-highlights.service';
 
 @Resolver(ProgressReport)
@@ -24,32 +25,32 @@ export class ProgressReportHighlightsResolver {
   async highlights(
     @Parent() report: ProgressReport,
     @AnonSession() session: Session
-  ): Promise<PromptVariantResponseList> {
-    const [list, available] = await Promise.all([
-      this.service.list(report, session),
-      this.service.getAvailable(session),
-    ]);
-    return { ...list, available };
+  ): Promise<PromptVariantResponseList<HighlightVariant>> {
+    return await this.service.list(report, session);
   }
 
   @Mutation(() => PromptVariantResponse)
   async createProgressReportHighlight(
-    @Args({ name: 'input' }) input: ChoosePrompt
+    @Args({ name: 'input' }) input: ChoosePrompt,
+    @LoggedInSession() session: Session
   ): Promise<PromptVariantResponse> {
-    return await this.service.create(input);
+    return await this.service.create(input, session);
   }
 
   @Mutation(() => PromptVariantResponse)
   async changeProgressReportHighlightPrompt(
-    @Args({ name: 'input' }) input: ChangePrompt
+    @Args({ name: 'input' }) input: ChangePrompt,
+    @LoggedInSession() session: Session
   ): Promise<PromptVariantResponse> {
-    return await this.service.changePrompt(input);
+    return await this.service.changePrompt(input, session);
   }
 
   @Mutation(() => PromptVariantResponse)
   async updateProgressReportHighlightResponse(
-    @Args({ name: 'input' }) input: UpdatePromptVariantResponse
+    @Args({ name: 'input' })
+    input: UpdatePromptVariantResponse<HighlightVariant>,
+    @LoggedInSession() session: Session
   ): Promise<PromptVariantResponse> {
-    return await this.service.submitResponse(input);
+    return await this.service.submitResponse(input, session);
   }
 }

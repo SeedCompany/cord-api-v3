@@ -3,7 +3,11 @@ import { SecuredProps } from '~/common';
 import { RegisterResource } from '~/core';
 import { Role } from '../../authorization';
 import { PromptVariantResponse } from '../../prompts/dto';
-import { Variant, VariantKeyOf } from '../../prompts/dto/variant.dto';
+import {
+  Variant,
+  VariantKeyOf,
+  VariantOf,
+} from '../../prompts/dto/variant.dto';
 
 const variants = Variant.createList({
   draft: {
@@ -30,11 +34,13 @@ export class ProgressReportHighlight extends PromptVariantResponse<
 > {
   static Props = keysOf<ProgressReportHighlight>();
   static SecuredProps = keysOf<SecuredProps<ProgressReportHighlight>>();
-  static Parent = import('./progress-report.entity').then(
+  static readonly Parent = import('./progress-report.entity').then(
     (m) => m.ProgressReport
   );
   static Variants = variants;
 }
+
+export type HighlightVariant = VariantOf<typeof ProgressReportHighlight>;
 
 declare module '~/core/resources/map' {
   interface ResourceMap {

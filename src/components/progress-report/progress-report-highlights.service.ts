@@ -1,45 +1,42 @@
 import { Injectable } from '@nestjs/common';
-import { SecuredList, SecuredListType, Session, TODO } from '~/common';
+import { UnsecuredDto } from '~/common';
 import {
-  ChangePrompt,
-  ChoosePrompt,
-  Prompt,
-  PromptVariantResponse,
-  UpdatePromptVariantResponse,
-  VariantPromptList,
-} from '../prompts/dto';
+  withEffectiveSensitivity,
+  withScope,
+} from '../authorization/policies/conditions';
+import { Prompt } from '../prompts/dto';
+import { PromptVariantResponseListService } from '../prompts/prompt-variant-response.service';
 import { ProgressReport } from './dto';
-import { ProgressReportHighlight as Highlights } from './dto/hightlights.dto';
+import {
+  ProgressReportHighlight as Highlight,
+  HighlightVariant,
+} from './dto/hightlights.dto';
+import { ProgressReportHighlightsRepository } from './progress-report-highlights.repository';
 
 @Injectable()
-export class ProgressReportHighlightsService {
-  async list(
-    _report: ProgressReport,
-    _session: Session
-  ): Promise<SecuredListType<PromptVariantResponse>> {
-    return SecuredList.Redacted;
+export class ProgressReportHighlightsService extends PromptVariantResponseListService<
+  typeof ProgressReport,
+  HighlightVariant,
+  typeof Highlight
+> {
+  constructor(repo: ProgressReportHighlightsRepository) {
+    super(ProgressReport, Highlight, repo);
   }
 
-  async getAvailable(_session: Session): Promise<VariantPromptList> {
-    // TODO filter variants to readable
-    return {
-      prompts,
-      variants: Highlights.Variants,
-    };
+  protected async getPrompts(): Promise<readonly Prompt[]> {
+    return prompts;
   }
 
-  async create(input: ChoosePrompt): Promise<PromptVariantResponse> {
-    return TODO(input);
+  protected getEdgePrivileges() {
+    return this.privileges.forEdge(ProgressReport, 'highlights');
   }
 
-  async changePrompt(input: ChangePrompt): Promise<PromptVariantResponse> {
-    return TODO(input);
-  }
-
-  async submitResponse(
-    input: UpdatePromptVariantResponse
-  ): Promise<PromptVariantResponse> {
-    return TODO(input);
+  protected async getPrivilegeContext(dto: UnsecuredDto<Highlight>) {
+    const report = await this.resources.loadByRef(dto.parent);
+    return withEffectiveSensitivity(
+      withScope({}, report.scope),
+      report.sensitivity
+    );
   }
 }
 

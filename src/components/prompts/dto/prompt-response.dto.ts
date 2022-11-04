@@ -1,4 +1,5 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
+import { keys as keysOf } from 'ts-transformer-keys';
 import {
   ID,
   IdField,
@@ -6,7 +7,9 @@ import {
   Resource,
   RichTextDocument,
   RichTextField,
+  SecuredProps,
   SecuredRichText,
+  SetUnsecuredType,
 } from '~/common';
 import { ResourceRef } from '~/core';
 import { Prompt, SecuredPrompt } from './prompt.dto';
@@ -36,17 +39,25 @@ export abstract class VariantResponse<Key extends string = string> {
 export class PromptVariantResponse<
   Key extends string = string
 > extends Resource {
-  readonly parent: ResourceRef<any>;
+  static Props = keysOf<PromptVariantResponse>();
+  static SecuredProps = keysOf<SecuredProps<PromptVariantResponse>>();
+  static readonly Parent = 'dynamic' as 'dynamic' | Promise<any>;
 
   static Relations = {
     // So the policies can specify
     responses: [VariantResponse],
   };
-  @Field()
-  readonly prompt: SecuredPrompt;
+
+  readonly parent: ResourceRef<any>;
+
+  @Field(() => SecuredPrompt)
+  readonly prompt: SecuredPrompt & SetUnsecuredType<IdOf<Prompt>>;
 
   @Field(() => [VariantResponse])
-  readonly responses: ReadonlyArray<VariantResponse<Key>>;
+  readonly responses: ReadonlyArray<VariantResponse<Key>> &
+    SetUnsecuredType<
+      ReadonlyArray<{ variant: Key; response: RichTextDocument | null }>
+    >;
 }
 
 @InputType()
