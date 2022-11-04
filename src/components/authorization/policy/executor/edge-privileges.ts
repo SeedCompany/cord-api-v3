@@ -8,10 +8,10 @@ export class EdgePrivileges<
   TKey extends string,
   TAction extends string
 > {
-  private readonly resource: EnhancedResource<TResourceStatic>;
+  readonly resource: EnhancedResource<TResourceStatic>;
   constructor(
     resource: TResourceStatic | EnhancedResource<TResourceStatic>,
-    private readonly key: TKey,
+    readonly key: TKey,
     private readonly policyExecutor: PolicyExecutor
   ) {
     this.resource = EnhancedResource.of(resource);

@@ -38,14 +38,18 @@ import { UserEdgePrivileges } from './user-edge-privileges';
 export class UserResourcePrivileges<
   TResourceStatic extends ResourceShape<any>
 > {
-  private readonly resource: EnhancedResource<TResourceStatic>;
+  readonly resource: EnhancedResource<TResourceStatic>;
   constructor(
     resource: TResourceStatic | EnhancedResource<TResourceStatic>,
     private readonly object: ResourceObjectContext<TResourceStatic> | undefined,
-    private readonly session: Session,
+    readonly session: Session,
     private readonly policyExecutor: PolicyExecutor
   ) {
     this.resource = EnhancedResource.of(resource);
+  }
+
+  get context() {
+    return this.object;
   }
 
   forContext(object: ResourceObjectContext<TResourceStatic>) {
