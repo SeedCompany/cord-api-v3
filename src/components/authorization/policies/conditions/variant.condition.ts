@@ -1,7 +1,7 @@
 import { Query } from 'cypher-query-builder';
 import { inspect, InspectOptionsStylized } from 'util';
 import { Many, ResourceShape } from '~/common';
-import { Variant } from '../../../prompts/dto/variant.dto';
+import type { VariantOf } from '../../../prompts/dto/variant.dto';
 import {
   AsCypherParams,
   Condition,
@@ -43,8 +43,3 @@ export const variant = <TResourceStatic extends ResourceShape<any>>(
   new VariantCondition<TResourceStatic>(
     new Set(variant.flat() as Array<VariantOf<TResourceStatic>>)
   );
-
-type VariantOf<TResourceStatic extends ResourceShape<any>> =
-  TResourceStatic extends { Variants: ReadonlyArray<Variant<infer VariantKey>> }
-    ? VariantKey
-    : never;

@@ -1,6 +1,6 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { entries, IdField } from '~/common';
+import { entries, IdField, ResourceShape } from '~/common';
 import { Role } from '../../authorization';
 
 @ObjectType()
@@ -34,3 +34,8 @@ export class Variant<Key extends string = string> {
 }
 
 export type VariantKeyOf<T> = T extends Variant<infer K> ? K : never;
+
+export type VariantOf<TResourceStatic extends ResourceShape<any>> =
+  TResourceStatic extends { Variants: ReadonlyArray<Variant<infer VariantKey>> }
+    ? VariantKey
+    : never;
