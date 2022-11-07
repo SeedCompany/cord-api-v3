@@ -17,9 +17,11 @@ import { inherit, member, Policy, Role, sensMediumOrLower } from '../util';
     r.Ceremony.read.when(member).edit,
     r.Education.read.create,
     inherit(
-      r.Engagement.read.create.delete
+      r.Engagement.read
         .when(member)
-        .edit.specifically((p) => p.disbursementCompleteDate.read),
+        .edit.create.delete.specifically(
+          (p) => p.disbursementCompleteDate.read
+        ),
       r.LanguageEngagement.specifically((p) => [
         p.paratextRegistryId.when(member).read,
       ])

@@ -13,8 +13,8 @@ import { PartnershipService } from './partnership.service';
 @Module({
   imports: [
     forwardRef(() => AuthorizationModule),
-    forwardRef(() => BudgetModule),
     FileModule,
+    forwardRef(() => BudgetModule),
     forwardRef(() => ProjectModule),
     PartnerModule,
   ],

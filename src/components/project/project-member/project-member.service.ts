@@ -102,8 +102,6 @@ export class ProjectMemberService {
       .for(session, IProject, project)
       .verifyCan('create', 'member');
 
-    // session.roles
-
     const id = await generateId();
     const createdAt = DateTime.local();
     await this.repo.verifyRelationshipEligibility(projectId, userId);

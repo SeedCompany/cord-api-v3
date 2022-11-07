@@ -11,7 +11,7 @@ import { member, Policy, Role, sensMediumOrLower } from '../util';
   r.Organization.whenAny(sensMediumOrLower).read.specifically((p) => [
     //TODO - this none can be removed when policy executor is refactored to check for address.none in parent policy
     p.address.none,
-    p.locations.when(sensMediumOrLower).read,
+    p.locations.read,
   ]),
   r.Partner.when(sensMediumOrLower)
     .read.when(member)

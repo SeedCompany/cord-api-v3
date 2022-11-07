@@ -8,6 +8,7 @@ export * from './by-role/financial-analyst.policy';
 export * from './by-role/financial-analyst-lead.policy';
 export * from './by-role/fundraising.policy';
 export * from './by-role/intern.policy';
+export * from './by-role/investor-common.policy';
 export * from './by-role/leadership.policy';
 export * from './by-role/marketing.policy';
 export * from './by-role/mentor.policy';

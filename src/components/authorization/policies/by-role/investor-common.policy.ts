@@ -27,6 +27,7 @@ import {
   ]),
   r.Location.read,
   r.Organization.whenAny(member, sensOnlyLow).read.specifically((p) => [
+    //NOTE - this none also exists in both the Fundraising and ExperienceOperations policies
     p.address.none,
     p.locations.when(sensOnlyLow).read,
   ]),
