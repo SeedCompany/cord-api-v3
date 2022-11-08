@@ -12,7 +12,7 @@ import { ServerException } from './exceptions';
 import { ID, IdField } from './id-field';
 import { DateTimeField } from './luxon.graphql';
 import { getParentTypes } from './parent-types';
-import { SecuredProps, UnsecuredDto } from './secured-property';
+import { MaybeSecured, SecuredProps } from './secured-property';
 import { AbstractClassType } from './types';
 import { has, mapFromList } from './util';
 import { cachedOnObject } from './weak-map-cache';
@@ -259,7 +259,7 @@ export const isResourceClass = <T>(
   has('Props', cls) && Array.isArray(cls.Props) && cls.Props.length > 0;
 
 export type MaybeUnsecuredInstance<TResourceStatic extends ResourceShape<any>> =
-  TResourceStatic['prototype'] | UnsecuredDto<TResourceStatic['prototype']>;
+  MaybeSecured<InstanceType<TResourceStatic>>;
 
 // Get the secured props of the resource
 // merged with all of the relations which are assumed to be secure.
