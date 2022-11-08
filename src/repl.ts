@@ -17,6 +17,7 @@ import {
   maybeMany,
   Session,
 } from '~/common';
+import * as common from '~/common';
 import { bootstrapLogger, ConfigService, ResourcesHost } from '~/core';
 import { AppModule } from './app.module';
 import { AuthenticationService } from './components/authentication';
@@ -48,6 +49,7 @@ async function bootstrap() {
     mapFromList,
     many,
     maybeMany,
+    common,
     // eslint-disable-next-line @typescript-eslint/naming-convention
     __: lodash, // single underscore is "last execution result"
     lodash,
