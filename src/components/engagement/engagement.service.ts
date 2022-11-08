@@ -19,11 +19,11 @@ import {
   IEventBus,
   ILogger,
   Logger,
+  ResourceLoader,
 } from '../../core';
 import { mapListResults } from '../../core/database/results';
 import { Privileges } from '../authorization';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { Powers } from '../authorization/dto/powers';
 import { CeremonyService } from '../ceremony';
 import { FileService } from '../file';
 import { Location } from '../location/dto';
@@ -32,7 +32,7 @@ import {
   ProductService,
   SecuredProductList,
 } from '../product';
-import { ProjectStatus } from '../project';
+import { IProject, ProjectStatus } from '../project';
 import { ProjectType } from '../project/dto/type.enum';
 import { ProjectService } from '../project/project.service';
 import { User } from '../user/dto';
@@ -74,21 +74,18 @@ export class EngagementService {
     private readonly eventBus: IEventBus,
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
+    private readonly resources: ResourceLoader,
     @Logger(`engagement:service`) private readonly logger: ILogger
   ) {}
-
-  // CREATE /////////////////////////////////////////////////////////
 
   async createLanguageEngagement(
     input: CreateLanguageEngagement,
     session: Session,
     changeset?: ID
   ): Promise<LanguageEngagement> {
-    await this.authorizationService.checkPower(
-      Powers.CreateLanguageEngagement,
-      session
-    );
     const { languageId, projectId } = input;
+    await this.verifyCreateEngagement(projectId, session);
+
     await this.verifyRelationshipEligibility(
       projectId,
       languageId,
@@ -140,11 +137,10 @@ export class EngagementService {
     session: Session,
     changeset?: ID
   ): Promise<InternshipEngagement> {
-    await this.authorizationService.checkPower(
-      Powers.CreateInternshipEngagement,
-      session
-    );
     const { projectId, internId, mentorId, countryOfOriginId } = input;
+
+    await this.verifyCreateEngagement(projectId, session);
+
     await this.verifyRelationshipEligibility(
       projectId,
       internId,
@@ -213,6 +209,13 @@ export class EngagementService {
       event.engagement,
       session
     )) as InternshipEngagement;
+  }
+
+  private async verifyCreateEngagement(projectId: ID, session: Session) {
+    const project = await this.resources.load(IProject, projectId);
+    const projectPrivileges = this.privileges.for(session, IProject, project);
+
+    projectPrivileges.verifyCan('create', 'engagement');
   }
 
   private verifyCreationStatus(status?: EngagementStatus) {
