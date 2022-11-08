@@ -21,8 +21,6 @@ const defaultFilters = {};
 export class BudgetListInput extends SortablePaginationInput<keyof Budget>({
   defaultSort: 'status',
 }) {
-  static defaultVal = new BudgetListInput();
-
   @Type(() => BudgetFilters)
   @ValidateNested()
   readonly filter: BudgetFilters = defaultFilters;
@@ -47,8 +45,6 @@ export class BudgetRecordListInput extends SortablePaginationInput<
 >({
   defaultSort: 'fiscalYear',
 }) {
-  static defaultVal = new BudgetListInput();
-
   @Type(() => BudgetRecordFilters)
   @ValidateNested()
   readonly filter: BudgetRecordFilters;

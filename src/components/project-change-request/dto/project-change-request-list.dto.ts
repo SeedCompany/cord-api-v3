@@ -22,8 +22,6 @@ export class ProjectChangeRequestListInput extends SortablePaginationInput<
 >({
   defaultSort: 'createdAt',
 }) {
-  static defaultVal = new ProjectChangeRequestListInput();
-
   @Type(() => ProjectChangeRequestFilters)
   @ValidateNested()
   readonly filter: ProjectChangeRequestFilters = defaultFilters;

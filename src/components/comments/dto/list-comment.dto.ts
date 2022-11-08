@@ -6,9 +6,7 @@ import { Comment } from './comment.dto';
 export class CommentListInput extends SortablePaginationInput<keyof Comment>({
   defaultSort: 'createdAt',
   defaultOrder: Order.DESC,
-}) {
-  static defaultVal = new CommentListInput();
-}
+}) {}
 
 @ObjectType()
 export abstract class CommentList extends PaginatedList(Comment) {}

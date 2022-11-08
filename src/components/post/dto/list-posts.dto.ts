@@ -22,8 +22,6 @@ export class PostListInput extends SortablePaginationInput<keyof Post>({
   defaultSort: 'createdAt',
   defaultOrder: Order.DESC,
 }) {
-  static defaultVal = new PostListInput();
-
   @Type(() => PostFilters)
   @ValidateNested()
   readonly filter: PostFilters = defaultFilters;

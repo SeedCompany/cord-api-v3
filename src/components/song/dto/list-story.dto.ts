@@ -13,8 +13,6 @@ const defaultFilters = {};
 export class SongListInput extends SortablePaginationInput<keyof Song>({
   defaultSort: 'name',
 }) {
-  static defaultVal = new SongListInput();
-
   @Type(() => SongFilters)
   @ValidateNested()
   readonly filter: SongFilters = defaultFilters;

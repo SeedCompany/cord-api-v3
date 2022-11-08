@@ -26,8 +26,6 @@ export class PeriodicReportListInput extends SortablePaginationInput<
   readonly type?: ReportType;
 
   readonly parent?: ID;
-
-  static defaultVal = new PeriodicReportListInput();
 }
 
 @ObjectType()

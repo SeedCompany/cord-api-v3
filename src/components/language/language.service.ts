@@ -230,10 +230,10 @@ export class LanguageService {
     input: ProjectListInput,
     session: Session
   ): Promise<SecuredProjectList> {
-    const { page, count } = {
-      ...ProjectListInput.defaultVal,
-      ...input,
-    };
+    const { page, count } = ProjectListInput.defaultValue(
+      ProjectListInput,
+      input
+    );
 
     const result: {
       items: Project[];

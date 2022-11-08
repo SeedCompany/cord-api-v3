@@ -19,8 +19,6 @@ const defaultFilters = {};
 export class UserListInput extends SortablePaginationInput<keyof User>({
   defaultSort: 'id', // TODO How to sort on name?
 }) {
-  static defaultVal = new UserListInput();
-
   @Field({ nullable: true })
   @Type(() => UserFilters)
   @ValidateNested()

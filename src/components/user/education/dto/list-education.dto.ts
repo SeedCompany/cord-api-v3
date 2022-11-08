@@ -22,8 +22,6 @@ export class EducationListInput extends SortablePaginationInput<
 >({
   defaultSort: 'institution',
 }) {
-  static defaultVal = new EducationListInput();
-
   @Type(() => EducationFilters)
   @ValidateNested()
   readonly filter: EducationFilters = defaultFilters;

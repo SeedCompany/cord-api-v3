@@ -27,8 +27,6 @@ const defaultFilters = {};
 export class PartnerListInput extends SortablePaginationInput<keyof Partner>({
   defaultSort: 'createdAt',
 }) {
-  static defaultVal = new PartnerListInput();
-
   @Field({ nullable: true })
   @Type(() => PartnerFilters)
   @ValidateNested()

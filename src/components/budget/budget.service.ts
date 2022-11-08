@@ -388,10 +388,7 @@ export class BudgetService {
     session: Session,
     changeset?: ID
   ): Promise<BudgetListOutput> {
-    const input = {
-      ...BudgetListInput.defaultVal,
-      ...partialInput,
-    };
+    const input = BudgetListInput.defaultValue(BudgetListInput, partialInput);
     const results = await this.budgetRepo.list(input, session);
     return await mapListResults(results, (id) =>
       this.readOne(id, session, viewOfChangeset(changeset))
@@ -403,10 +400,7 @@ export class BudgetService {
     session: Session,
     changeset?: ID
   ): Promise<BudgetListOutput> {
-    const input = {
-      ...BudgetListInput.defaultVal,
-      ...partialInput,
-    };
+    const input = BudgetListInput.defaultValue(BudgetListInput, partialInput);
     const results = await this.budgetRepo.listUnsecure(input);
     return await mapListResults(results, (id) =>
       this.readOne(id, session, viewOfChangeset(changeset))

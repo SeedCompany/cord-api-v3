@@ -22,8 +22,6 @@ export class FieldZoneListInput extends SortablePaginationInput<
 >({
   defaultSort: 'name',
 }) {
-  static defaultVal = new FieldZoneListInput();
-
   @Type(() => FieldZoneFilters)
   @ValidateNested()
   readonly filter: FieldZoneFilters = defaultFilters;

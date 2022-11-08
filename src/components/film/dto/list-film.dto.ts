@@ -13,8 +13,6 @@ const defaultFilters = {};
 export class FilmListInput extends SortablePaginationInput<keyof Film>({
   defaultSort: 'name',
 }) {
-  static defaultVal = new FilmListInput();
-
   @Type(() => FilmFilters)
   @ValidateNested()
   readonly filter: FilmFilters = defaultFilters;

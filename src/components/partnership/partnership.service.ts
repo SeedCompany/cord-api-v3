@@ -298,11 +298,10 @@ export class PartnershipService {
     session: Session,
     changeset?: ID
   ): Promise<PartnershipListOutput> {
-    const input = {
-      ...PartnershipListInput.defaultVal,
-      ...partialInput,
-    };
-
+    const input = PartnershipListInput.defaultValue(
+      PartnershipListInput,
+      partialInput
+    );
     const results = await this.repo.list(input, session, changeset);
     return await mapListResults(results, (id) =>
       this.readOne(id, session, viewOfChangeset(changeset))

@@ -28,8 +28,6 @@ export class FileListInput extends SortablePaginationInput<
 >({
   defaultSort: 'name',
 }) {
-  static defaultVal = new FileListInput();
-
   @Field({ nullable: true })
   @Type(() => FileFilters)
   @ValidateNested()

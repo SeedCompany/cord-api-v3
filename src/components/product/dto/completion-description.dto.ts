@@ -4,8 +4,6 @@ import { ProductMethodology } from './product-methodology';
 
 @InputType()
 export class ProductCompletionDescriptionSuggestionsInput extends PaginationInput {
-  static defaultVal = new ProductCompletionDescriptionSuggestionsInput();
-
   @Field({
     nullable: true,
     description: 'A partial description to search for',

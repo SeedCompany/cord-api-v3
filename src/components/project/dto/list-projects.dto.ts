@@ -99,8 +99,6 @@ const defaultFilters = {};
 export class ProjectListInput extends SortablePaginationInput<keyof IProject>({
   defaultSort: 'name',
 }) {
-  static defaultVal = new ProjectListInput();
-
   @Field({ nullable: true })
   @Type(() => ProjectFilters)
   @ValidateNested()

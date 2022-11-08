@@ -97,7 +97,7 @@ export const SortablePaginationInput = <SortKey extends string = string>({
  * A GQL argument for paginated list input
  */
 export const ListArg = <T extends PaginationInput>(
-  input: AbstractClassType<T> & { defaultVal: T },
+  input: AbstractClassType<T>,
   opts: Partial<ArgsOptions> = {},
   ...pipes: Array<Type<PipeTransform> | PipeTransform>
 ) =>
@@ -106,7 +106,7 @@ export const ListArg = <T extends PaginationInput>(
       name: 'input',
       type: () => input,
       nullable: true,
-      defaultValue: input.defaultVal,
+      defaultValue: DataObject.defaultValue(input),
       ...opts,
     },
     ...pipes

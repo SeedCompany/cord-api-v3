@@ -55,8 +55,6 @@ const defaultFilters = {};
 export class LanguageListInput extends SortablePaginationInput<keyof Language>({
   defaultSort: 'name',
 }) {
-  static defaultVal = new LanguageListInput();
-
   @Field({ nullable: true })
   @Type(() => LanguageFilters)
   @ValidateNested()

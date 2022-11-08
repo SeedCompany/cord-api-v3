@@ -44,8 +44,6 @@ const defaultFilters = {};
 export class ProductListInput extends SortablePaginationInput<keyof Product>({
   defaultSort: 'createdAt',
 }) {
-  static defaultVal = new ProductListInput();
-
   @Field({ nullable: true })
   @Type(() => ProductFilters)
   @ValidateNested()

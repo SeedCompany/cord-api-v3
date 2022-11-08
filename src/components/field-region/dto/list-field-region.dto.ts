@@ -22,8 +22,6 @@ export class FieldRegionListInput extends SortablePaginationInput<
 >({
   defaultSort: 'name',
 }) {
-  static defaultVal = new FieldRegionListInput();
-
   @Type(() => FieldRegionFilters)
   @ValidateNested()
   readonly filter: FieldRegionFilters = defaultFilters;

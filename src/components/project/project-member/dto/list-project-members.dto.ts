@@ -29,8 +29,6 @@ export class ProjectMemberListInput extends SortablePaginationInput<
 >({
   defaultSort: 'createdAt',
 }) {
-  static defaultVal = new ProjectMemberListInput();
-
   @Field({ nullable: true })
   @Type(() => ProjectMemberFilters)
   @ValidateNested()

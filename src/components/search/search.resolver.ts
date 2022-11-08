@@ -1,5 +1,5 @@
-import { Args, Query, Resolver } from '@nestjs/graphql';
-import { AnonSession, Session } from '../../common';
+import { Query, Resolver } from '@nestjs/graphql';
+import { AnonSession, ListArg, Session } from '~/common';
 import { SearchInput, SearchOutput } from './dto';
 import { SearchService } from './search.service';
 
@@ -12,11 +12,7 @@ export class SearchResolver {
   })
   async search(
     @AnonSession() session: Session,
-    @Args({
-      name: 'input',
-      type: () => SearchInput,
-      defaultValue: SearchInput.defaultVal,
-    })
+    @ListArg(SearchInput, { nullable: false })
     input: SearchInput
   ): Promise<SearchOutput> {
     return await this.service.search(input, session);

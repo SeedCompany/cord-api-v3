@@ -22,8 +22,6 @@ export class PartnershipListInput extends SortablePaginationInput<
 >({
   defaultSort: 'createdAt',
 }) {
-  static defaultVal = new PartnershipListInput();
-
   @Type(() => PartnershipFilters)
   @ValidateNested()
   readonly filter: PartnershipFilters = defaultFilters;
