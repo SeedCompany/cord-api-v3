@@ -200,7 +200,9 @@ export class ExceptionFilter implements GqlExceptionFilter {
 
   private errorToCodes(ex: Error) {
     return compact(
-      getParentTypes(ex.constructor).flatMap((e) => this.errorToCode(e, ex))
+      getParentTypes(ex.constructor as AbstractClassType<Error>).flatMap((e) =>
+        this.errorToCode(e as AbstractClassType<Error>, ex)
+      )
     );
   }
 
