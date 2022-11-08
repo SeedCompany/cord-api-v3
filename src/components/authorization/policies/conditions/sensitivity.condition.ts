@@ -8,10 +8,7 @@ const sensitivityRank = { High: 3, Medium: 2, Low: 1 };
 const CQL_VAR = 'sens';
 
 export class SensitivityCondition<
-  TResourceStatic extends ResourceShape<any> & {
-    // Enforcing at TS level that resource needs a sensitivity prop to use this condition.
-    prototype: { sensitivity: Sensitivity };
-  }
+  TResourceStatic extends ResourceShape<{ sensitivity: Sensitivity }>
 > implements Condition<TResourceStatic>
 {
   constructor(private readonly access: Sensitivity) {}

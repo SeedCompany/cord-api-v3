@@ -1,5 +1,5 @@
 import { Query } from 'cypher-query-builder';
-import { ID, keys, Many } from '~/common';
+import { ID, isIdLike, keys, Many } from '~/common';
 import { Granter, ResourceGranter } from '../../authorization';
 import { action } from '../../authorization/policy/builder/perm-granter';
 import { PropsGranterFn } from '../../authorization/policy/builder/resource-granter';
@@ -99,7 +99,9 @@ class TransitionCondition implements Condition<typeof Event> {
     if (!transitionId) {
       return false;
     }
-    return this.allowedTransitionIds.has(transitionId);
+    return this.allowedTransitionIds.has(
+      isIdLike(transitionId) ? transitionId : transitionId.id
+    );
   }
 
   asCypherCondition(query: Query) {

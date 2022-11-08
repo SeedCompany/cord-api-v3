@@ -1,6 +1,7 @@
+import { Logger } from '@nestjs/common';
 import { Query } from 'cypher-query-builder';
 import { inspect, InspectOptionsStylized } from 'util';
-import { ID, ResourceShape, Secured } from '~/common';
+import { ID, isIdLike, MaybeSecured, ResourceShape, Secured } from '~/common';
 import { User } from '../../../user/dto';
 import {
   AsCypherParams,
@@ -10,10 +11,12 @@ import {
 
 const CQL_VAR = 'requestingUser';
 
+interface HasCreator {
+  creator: ID | Secured<ID>;
+}
+
 class OwnerCondition<
-  TResourceStatic extends
-    | ResourceShape<{ creator: ID | Secured<ID> }>
-    | typeof User
+  TResourceStatic extends ResourceShape<HasCreator> | typeof User
 > implements Condition<TResourceStatic>
 {
   isAllowed({ object, resource, session }: IsAllowedParams<TResourceStatic>) {
@@ -21,7 +24,20 @@ class OwnerCondition<
       throw new Error("Needed object but wasn't given");
     }
 
-    const creator = resource.is(User) ? object.id : object.creator;
+    const creator = (() => {
+      if (resource.is(User)) {
+        return (object as MaybeSecured<User>).id;
+      }
+      const o = object as MaybeSecured<HasCreator>;
+      return isIdLike(o.creator) ? o.creator : o.creator.value;
+    })();
+    if (!creator) {
+      Logger.warn(
+        'Could not find or view creator ID to determine if owner',
+        'privileges:condition:owner'
+      );
+    }
+
     return creator === session.userId;
   }
 
