@@ -6,29 +6,15 @@ import {
 } from '../authorization/policies/conditions';
 import { Prompt } from '../prompts/dto';
 import { PromptVariantResponseListService } from '../prompts/prompt-variant-response.service';
-import { ProgressReport } from './dto';
-import {
-  ProgressReportHighlight as Highlight,
-  HighlightVariant,
-} from './dto/hightlights.dto';
+import { ProgressReportHighlight as Highlight } from './dto/hightlights.dto';
 import { ProgressReportHighlightsRepository } from './progress-report-highlights.repository';
 
 @Injectable()
-export class ProgressReportHighlightsService extends PromptVariantResponseListService<
-  typeof ProgressReport,
-  HighlightVariant,
-  typeof Highlight
-> {
-  constructor(repo: ProgressReportHighlightsRepository) {
-    super(ProgressReport, Highlight, repo);
-  }
-
+export class ProgressReportHighlightsService extends PromptVariantResponseListService(
+  ProgressReportHighlightsRepository
+) {
   protected async getPrompts(): Promise<readonly Prompt[]> {
     return prompts;
-  }
-
-  protected getEdgePrivileges() {
-    return this.privileges.forEdge(ProgressReport, 'highlights');
   }
 
   protected async getPrivilegeContext(dto: UnsecuredDto<Highlight>) {

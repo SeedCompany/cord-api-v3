@@ -9,7 +9,10 @@ import {
 } from './dto/hightlights.dto';
 
 @Injectable()
-export class ProgressReportHighlightsRepository extends PromptVariantResponseRepository<HighlightVariant> {
+export class ProgressReportHighlightsRepository extends PromptVariantResponseRepository(
+  [ProgressReport, 'highlights'],
+  Highlight
+) {
   async list(
     reportId: IdOf<ProgressReport>,
     session: Session
