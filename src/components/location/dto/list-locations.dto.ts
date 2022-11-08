@@ -20,8 +20,6 @@ const defaultFilters = {};
 export class LocationListInput extends SortablePaginationInput<keyof Location>({
   defaultSort: 'name',
 }) {
-  static defaultVal = new LocationListInput();
-
   @Type(() => LocationFilters)
   @ValidateNested()
   readonly filter: LocationFilters = defaultFilters;

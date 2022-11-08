@@ -13,8 +13,6 @@ const defaultFilters = {};
 export class EthnoArtListInput extends SortablePaginationInput<keyof EthnoArt>({
   defaultSort: 'name',
 }) {
-  static defaultVal = new EthnoArtListInput();
-
   @Type(() => EthnoArtFilters)
   @ValidateNested()
   readonly filter: EthnoArtFilters = defaultFilters;

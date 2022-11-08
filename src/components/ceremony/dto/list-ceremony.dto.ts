@@ -22,8 +22,6 @@ export class CeremonyListInput extends SortablePaginationInput<
 >({
   defaultSort: 'projectName',
 }) {
-  static defaultVal = new CeremonyListInput();
-
   @Field({ nullable: true })
   @Type(() => CeremonyFilters)
   @ValidateNested()

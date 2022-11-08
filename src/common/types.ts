@@ -13,10 +13,9 @@ export type MaybeAsync<T> = T | Promise<T>;
 /**
  * Used for generic GraphQL types
  */
-export type AbstractClassType<T> = {
+export type AbstractClassType<T> = (abstract new (...args: any[]) => T) & {
   prototype: T;
-  // eslint-disable-next-line @typescript-eslint/ban-types
-} & Function;
+};
 
 /**
  * Used for conditional generics

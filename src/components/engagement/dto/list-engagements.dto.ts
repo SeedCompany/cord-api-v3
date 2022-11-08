@@ -33,8 +33,6 @@ export class EngagementListInput extends SortablePaginationInput<
 >({
   defaultSort: 'createdAt',
 }) {
-  static defaultVal = new EngagementListInput();
-
   @Field({ nullable: true })
   @Type(() => EngagementFilters)
   @ValidateNested()

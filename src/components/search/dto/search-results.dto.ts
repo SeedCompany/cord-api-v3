@@ -101,7 +101,6 @@ export type SearchResult = SearchResultMap[keyof SearchableMap];
 
 export const SearchResult = createUnionType({
   name: 'SearchResult',
-  // @ts-expect-error ignore errors for abstract classes
   types: () => uniq(Object.values(searchable)),
   resolveType: (value: SearchResult) =>
     simpleSwitch(value.__typename, searchable),

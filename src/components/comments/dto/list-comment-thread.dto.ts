@@ -9,9 +9,7 @@ export class CommentThreadListInput extends SortablePaginationInput<
 >({
   defaultSort: 'createdAt',
   defaultOrder: Order.DESC,
-}) {
-  static defaultVal = new CommentThreadListInput();
-}
+}) {}
 
 @ObjectType()
 export class CommentThreadList extends PaginatedList(CommentThread) {

@@ -5,13 +5,14 @@ import { keys as keysOf } from 'ts-transformer-keys';
 import { inspect } from 'util';
 import { ScopedRole } from '../components/authorization';
 import { CalculatedSymbol } from './calculated.decorator';
+import { DataObject } from './data-object';
 import { DbLabel } from './db-label.decorator';
 import { getDbClassLabels, getDbPropertyLabels } from './db-label.helpers';
 import { ServerException } from './exceptions';
 import { ID, IdField } from './id-field';
 import { DateTimeField } from './luxon.graphql';
 import { getParentTypes } from './parent-types';
-import { SecuredProps, UnsecuredDto } from './secured-property';
+import { MaybeSecured, SecuredProps } from './secured-property';
 import { AbstractClassType } from './types';
 import { has, mapFromList } from './util';
 import { cachedOnObject } from './weak-map-cache';
@@ -34,7 +35,7 @@ export const resolveByTypename =
   resolveType: resolveByTypename(Resource.name),
 })
 @DbLabel('BaseNode')
-export abstract class Resource {
+export abstract class Resource extends DataObject {
   static readonly Props: string[] = keysOf<Resource>();
   static readonly SecuredProps: string[] = [];
 
@@ -54,10 +55,6 @@ export abstract class Resource {
   // A list of non-global roles the requesting user has available for this object.
   // This is used by the authorization module to determine permissions.
   readonly scope?: ScopedRole[];
-
-  protected constructor() {
-    // no instantiation, shape only
-  }
 }
 
 export type ResourceShape<T> = AbstractClassType<T> & {
@@ -262,7 +259,7 @@ export const isResourceClass = <T>(
   has('Props', cls) && Array.isArray(cls.Props) && cls.Props.length > 0;
 
 export type MaybeUnsecuredInstance<TResourceStatic extends ResourceShape<any>> =
-  TResourceStatic['prototype'] | UnsecuredDto<TResourceStatic['prototype']>;
+  MaybeSecured<InstanceType<TResourceStatic>>;
 
 // Get the secured props of the resource
 // merged with all of the relations which are assumed to be secure.

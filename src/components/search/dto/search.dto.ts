@@ -4,8 +4,6 @@ import { GqlSearchType, SearchResult, SearchType } from './search-results.dto';
 
 @InputType()
 export class SearchInput extends PaginationInput {
-  static defaultVal = new SearchInput();
-
   @Field({
     description: 'The search string to look for.',
   })

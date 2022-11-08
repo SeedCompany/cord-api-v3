@@ -24,8 +24,6 @@ export class UnavailabilityListInput extends SortablePaginationInput<
   defaultSort: 'start',
   defaultOrder: Order.DESC,
 }) {
-  static defaultVal = new UnavailabilityListInput();
-
   @Type(() => UnavailabilityFilters)
   @ValidateNested()
   readonly filter: UnavailabilityFilters = defaultFilters;

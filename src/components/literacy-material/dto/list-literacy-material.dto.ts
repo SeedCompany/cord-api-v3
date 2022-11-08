@@ -15,8 +15,6 @@ export class LiteracyMaterialListInput extends SortablePaginationInput<
 >({
   defaultSort: 'name',
 }) {
-  static defaultVal = new LiteracyMaterialListInput();
-
   @Type(() => LiteracyMaterialFilters)
   @ValidateNested()
   readonly filter: LiteracyMaterialFilters = defaultFilters;

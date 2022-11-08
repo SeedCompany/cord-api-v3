@@ -13,8 +13,6 @@ const defaultFilters = {};
 export class StoryListInput extends SortablePaginationInput<keyof Story>({
   defaultSort: 'name',
 }) {
-  static defaultVal = new StoryListInput();
-
   @Type(() => StoryFilters)
   @ValidateNested()
   readonly filter: StoryFilters = defaultFilters;

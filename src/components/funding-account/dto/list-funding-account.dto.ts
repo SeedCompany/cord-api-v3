@@ -7,9 +7,7 @@ export class FundingAccountListInput extends SortablePaginationInput<
   keyof FundingAccount
 >({
   defaultSort: 'name',
-}) {
-  static defaultVal = new FundingAccountListInput();
-}
+}) {}
 
 @ObjectType()
 export class FundingAccountListOutput extends PaginatedList(FundingAccount) {}

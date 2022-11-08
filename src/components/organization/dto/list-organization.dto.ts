@@ -22,8 +22,6 @@ export class OrganizationListInput extends SortablePaginationInput<
 >({
   defaultSort: 'name',
 }) {
-  static defaultVal = new OrganizationListInput();
-
   @Type(() => OrganizationFilters)
   @ValidateNested()
   readonly filter: OrganizationFilters = defaultFilters;
