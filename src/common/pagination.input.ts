@@ -2,13 +2,14 @@ import { PipeTransform, Type } from '@nestjs/common';
 import { Args, ArgsOptions, Field, InputType, Int } from '@nestjs/graphql';
 import { Matches, Max, Min } from 'class-validator';
 import { stripIndent } from 'common-tags';
+import { DataObject } from './data-object';
 import { Order } from './order.enum';
 import { AbstractClassType } from './types';
 
 @InputType({
   isAbstract: true,
 })
-export abstract class PaginationInput {
+export abstract class PaginationInput extends DataObject {
   @Field(() => Int, {
     description: 'The number of items to return in a single page',
   })
@@ -24,16 +25,12 @@ export abstract class PaginationInput {
   })
   @Min(1)
   readonly page: number = 1;
-
-  protected constructor() {
-    // no instantiation, shape only
-  }
 }
 
 @InputType({
   isAbstract: true,
 })
-export abstract class CursorPaginationInput {
+export abstract class CursorPaginationInput extends DataObject {
   @Field(() => Int, {
     description: 'The number of items to return in a single page',
   })
@@ -56,10 +53,6 @@ export abstract class CursorPaginationInput {
     nullable: true,
   })
   readonly before?: string;
-
-  protected constructor() {
-    // no instantiation, shape only
-  }
 }
 
 export interface SortablePaginationInput<SortKey extends string = string>
