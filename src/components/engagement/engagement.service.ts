@@ -84,7 +84,6 @@ export class EngagementService {
     changeset?: ID
   ): Promise<LanguageEngagement> {
     const { languageId, projectId } = input;
-    await this.verifyCreateEngagement(projectId, session);
 
     await this.verifyRelationshipEligibility(
       projectId,
@@ -92,6 +91,8 @@ export class EngagementService {
       ProjectType.Translation,
       changeset
     );
+
+    await this.verifyCreateEngagement(projectId, session);
 
     if (input.firstScripture) {
       await this.verifyFirstScripture({ languageId });
@@ -139,14 +140,14 @@ export class EngagementService {
   ): Promise<InternshipEngagement> {
     const { projectId, internId, mentorId, countryOfOriginId } = input;
 
-    await this.verifyCreateEngagement(projectId, session);
-
     await this.verifyRelationshipEligibility(
       projectId,
       internId,
       ProjectType.Internship,
       changeset
     );
+
+    await this.verifyCreateEngagement(projectId, session);
 
     await this.verifyProjectStatus(projectId, session);
 
