@@ -694,9 +694,4 @@ export class ProjectService {
       })
     );
   }
-
-  async privilegesFor(id: ID, session: Session) {
-    const project = await this.readOneUnsecured(id, session);
-    return this.privileges.for(session, IProject, project);
-  }
 }

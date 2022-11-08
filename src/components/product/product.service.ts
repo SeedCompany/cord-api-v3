@@ -13,11 +13,18 @@ import {
   UnauthorizedException,
   UnsecuredDto,
 } from '../../common';
-import { HandleIdLookup, ILogger, Logger, ResourceResolver } from '../../core';
+import {
+  HandleIdLookup,
+  ILogger,
+  Logger,
+  ResourceLoader,
+  ResourceResolver,
+} from '../../core';
 import { compareNullable, ifDiff, isSame } from '../../core/database/changes';
 import { mapListResults } from '../../core/database/results';
+import { Privileges } from '../authorization';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { EngagementService } from '../engagement';
+import { IEngagement } from '../engagement';
 import {
   getTotalVerseEquivalents,
   getTotalVerses,
@@ -58,9 +65,9 @@ export class ProductService {
     private readonly scriptureRefs: ScriptureReferenceService,
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
-    @Inject(forwardRef(() => EngagementService))
-    private readonly engagementService: EngagementService,
+    private readonly privileges: Privileges,
     private readonly repo: ProductRepository,
+    private readonly resourceLoader: ResourceLoader,
     private readonly resources: ResourceResolver,
     @Logger('product:service') private readonly logger: ILogger
   ) {}
@@ -72,9 +79,14 @@ export class ProductService {
       | CreateOtherProduct,
     session: Session
   ): Promise<AnyProduct> {
-    const engagementPrivileges = await this.engagementService.privilegesFor(
-      input.engagementId,
-      session
+    const engagementResource = await this.resourceLoader.load(
+      IEngagement,
+      input.engagementId
+    );
+    const engagementPrivileges = this.privileges.for(
+      session,
+      IEngagement,
+      engagementResource
     );
 
     engagementPrivileges.verifyCan('create');

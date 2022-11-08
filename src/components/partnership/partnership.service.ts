@@ -11,12 +11,19 @@ import {
   UnsecuredDto,
   viewOfChangeset,
 } from '../../common';
-import { HandleIdLookup, IEventBus, ILogger, Logger } from '../../core';
+import {
+  HandleIdLookup,
+  IEventBus,
+  ILogger,
+  Logger,
+  ResourceLoader,
+} from '../../core';
 import { mapListResults } from '../../core/database/results';
+import { Privileges } from '../authorization';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { FileService } from '../file';
 import { Partner, PartnerService, PartnerType } from '../partner';
-import { ProjectService } from '../project';
+import { IProject, ProjectService } from '../project';
 import {
   CreatePartnership,
   FinancialReportingType,
@@ -40,10 +47,12 @@ export class PartnershipService {
     private readonly partnerService: PartnerService,
     @Inject(forwardRef(() => ProjectService))
     private readonly projectService: ProjectService,
+    private readonly privileges: Privileges,
     private readonly eventBus: IEventBus,
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
     private readonly repo: PartnershipRepository,
+    private readonly resourceLoader: ResourceLoader,
     @Logger('partnership:service') private readonly logger: ILogger
   ) {}
 
@@ -53,9 +62,11 @@ export class PartnershipService {
     changeset?: ID
   ): Promise<Partnership> {
     const { projectId, partnerId } = input;
-    const projectPrivileges = await this.projectService.privilegesFor(
-      projectId,
-      session
+    const projectResource = await this.resourceLoader.load(IProject, projectId);
+    const projectPrivileges = this.privileges.for(
+      session,
+      IProject,
+      projectResource
     );
 
     projectPrivileges.verifyCan('create', 'partnership');

@@ -1,6 +1,5 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { AuthorizationModule } from '../authorization/authorization.module';
-import { EngagementModule } from '../engagement/engagement.module';
 import { FileModule } from '../file/file.module';
 import { ScriptureModule } from '../scripture';
 import { StoryModule } from '../story/story.module';
@@ -17,7 +16,6 @@ import { ProductService } from './product.service';
   imports: [
     forwardRef(() => AuthorizationModule),
     ScriptureModule,
-    forwardRef(() => EngagementModule),
     FileModule,
     StoryModule,
   ],

@@ -43,7 +43,6 @@ import {
   EngagementListInput,
   EngagementListOutput,
   EngagementStatus,
-  IEngagement,
   InternshipEngagement,
   LanguageEngagement,
   UpdateInternshipEngagement,
@@ -622,10 +621,5 @@ export class EngagementService {
         'project.status'
       );
     }
-  }
-
-  async privilegesFor(id: ID, session: Session) {
-    const engagement = await this.repo.readOne(id, session);
-    return this.privileges.for(session, IEngagement, engagement);
   }
 }
