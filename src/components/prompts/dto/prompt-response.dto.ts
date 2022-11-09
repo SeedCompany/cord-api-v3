@@ -105,6 +105,6 @@ export abstract class UpdatePromptVariantResponse<Key extends string = ID> {
   @IdField()
   readonly variant: Key;
 
-  @RichTextField()
-  readonly response: RichTextDocument;
+  @RichTextField({ nullable: true })
+  readonly response: RichTextDocument | null;
 }
