@@ -7,7 +7,7 @@ import { Variant, VariantOf } from '../../prompts/dto/variant.dto';
 
 const variants = Variant.createList({
   draft: {
-    label: `Partner's Entry`,
+    label: `Partner`,
     responsibleRole: Role.FieldPartner,
   },
   translated: {
@@ -15,11 +15,11 @@ const variants = Variant.createList({
     responsibleRole: Role.Translator,
   },
   fpm: {
-    label: `Field Project Manager Notes`,
+    label: `Field Operations`,
     responsibleRole: Role.ProjectManager,
   },
   published: {
-    label: `Published Version`,
+    label: `Investor Communications`,
     responsibleRole: Role.Marketing,
   },
 });
