@@ -127,6 +127,9 @@ export const PromptVariantResponseRepository = <
         .query()
         .apply(
           await createNode(resource, {
+            baseNodeProps: {
+              creator: session.userId,
+            },
             initialProps: {
               prompt: input.prompt,
             },
@@ -144,7 +147,7 @@ export const PromptVariantResponseRepository = <
 
     async submitResponse(
       input: UpdatePromptVariantResponse<TVariant>,
-      _session: Session
+      session: Session
     ) {
       await this.db
         .query()
@@ -173,6 +176,7 @@ export const PromptVariantResponseRepository = <
             baseNodeProps: {
               variant: input.variant,
               response: input.response,
+              creator: session.userId,
             },
           })
         )

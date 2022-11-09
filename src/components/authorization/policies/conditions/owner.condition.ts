@@ -63,6 +63,7 @@ class OwnerCondition<
       return `node:User AND node.id = ${requester}`;
     }
     return [
+      `node.creator = ${requester}`,
       `exists((node)-[:creator { active: true }]->(:Property { value: ${requester} }))`,
       `exists((node)-[:creator { active: true }]->(:User { id: ${requester} }))`,
     ].join(' OR ');

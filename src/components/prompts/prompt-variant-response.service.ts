@@ -125,7 +125,7 @@ export const PromptVariantResponseListService = <
       const privileges = this.resourcePrivileges.forUser(session, context);
       const responses = mapFromList(dto.responses, (response) => [
         response.variant,
-        response.response,
+        response,
       ]);
       const secured = privileges.secure(dto);
       return {
@@ -140,12 +140,18 @@ export const PromptVariantResponseListService = <
           if (!variantPrivileges.can('read', 'responses')) {
             return [];
           }
+          const response = responses[variant.key];
           return {
             variant,
             response: {
               canRead: true,
-              value: responses[variant.key] ?? undefined,
+              value: response.response ?? undefined,
               canEdit: variantPrivileges.can('edit', 'responses'),
+            },
+            creator: {
+              canRead: variantPrivileges.can('read', 'creator'),
+              canEdit: variantPrivileges.can('edit', 'creator'),
+              value: response.creator,
             },
           };
         }),

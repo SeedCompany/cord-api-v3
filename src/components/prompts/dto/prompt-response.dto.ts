@@ -8,6 +8,7 @@ import {
   Resource,
   RichTextDocument,
   RichTextField,
+  Secured,
   SecuredProps,
   SecuredRichText,
   SecuredRichTextNullable,
@@ -16,6 +17,7 @@ import {
 } from '~/common';
 import { ResourceRef } from '~/core';
 import { BaseNode } from '~/core/database/results';
+import { User } from '../../user';
 import { Prompt, SecuredPrompt } from './prompt.dto';
 import { Variant } from './variant.dto';
 
@@ -41,6 +43,8 @@ export abstract class VariantResponse<Key extends string = string> {
 
   @Field()
   readonly response: SecuredRichTextNullable;
+
+  readonly creator: Secured<IdOf<User>>;
 }
 
 @ObjectType()
@@ -55,6 +59,8 @@ export class PromptVariantResponse<
     // So the policies can specify
     responses: [VariantResponse],
   };
+
+  readonly creator: Secured<IdOf<User>>;
 
   readonly parent: BaseNode;
 

@@ -1,7 +1,8 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { Resource } from '~/common';
-import { ResourceLoader } from '~/core';
-import { PromptResponse, PromptVariantResponse } from './dto';
+import { mapSecuredValue, Resource } from '~/common';
+import { Loader, LoaderOf, ResourceLoader } from '~/core';
+import { SecuredUser, UserLoader } from '../user';
+import { PromptResponse, PromptVariantResponse, VariantResponse } from './dto';
 
 @Resolver(() => PromptResponse)
 export class PromptResponseResolver {
@@ -20,5 +21,24 @@ export class PromptVariantResponseResolver {
   @ResolveField(() => Resource)
   async parent(@Parent() response: PromptVariantResponse) {
     return await this.resources.loadByBaseNode(response.parent);
+  }
+
+  @ResolveField(() => SecuredUser)
+  async creator(
+    @Parent() response: PromptVariantResponse,
+    @Loader(UserLoader) users: LoaderOf<UserLoader>
+  ) {
+    return await mapSecuredValue(response.creator, users.load.bind(users));
+  }
+}
+
+@Resolver(() => VariantResponse)
+export class VariantResponseResolver {
+  @ResolveField(() => SecuredUser)
+  async creator(
+    @Parent() response: VariantResponse,
+    @Loader(UserLoader) users: LoaderOf<UserLoader>
+  ) {
+    return await mapSecuredValue(response.creator, users.load.bind(users));
   }
 }
