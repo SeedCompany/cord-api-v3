@@ -3,11 +3,7 @@ import { SecuredProps } from '~/common';
 import { RegisterResource } from '~/core';
 import { Role } from '../../authorization';
 import { PromptVariantResponse } from '../../prompts/dto';
-import {
-  Variant,
-  VariantKeyOf,
-  VariantOf,
-} from '../../prompts/dto/variant.dto';
+import { Variant, VariantOf } from '../../prompts/dto/variant.dto';
 
 const variants = Variant.createList({
   draft: {
@@ -29,9 +25,7 @@ const variants = Variant.createList({
 });
 
 @RegisterResource()
-export class ProgressReportHighlight extends PromptVariantResponse<
-  VariantKeyOf<typeof Variant>
-> {
+export class ProgressReportHighlight extends PromptVariantResponse<HighlightVariant> {
   static Props = keysOf<ProgressReportHighlight>();
   static SecuredProps = keysOf<SecuredProps<ProgressReportHighlight>>();
   static readonly Parent = import('./progress-report.entity').then(
