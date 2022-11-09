@@ -17,7 +17,7 @@ import {
 } from '../../prompts/dto';
 import { ProgressReport } from '../dto';
 import { HighlightVariant } from '../dto/hightlights.dto';
-import { ProgressReportHighlightsService } from '../progress-report-highlights.service';
+import { ProgressReportHighlightsService } from './progress-report-highlights.service';
 
 @Resolver(ProgressReport)
 export class ProgressReportHighlightsResolver {

@@ -2,9 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { Session } from '~/common';
 import { oncePerProject, QueryFragment } from '~/core/database/query';
-import { PromptVariantResponseRepository } from '../prompts/prompt-variant-response.repository';
-import { ProgressReport } from './dto';
-import { ProgressReportHighlight as Highlight } from './dto/hightlights.dto';
+import { PromptVariantResponseRepository } from '../../prompts/prompt-variant-response.repository';
+import { ProgressReport } from '../dto';
+import { ProgressReportHighlight as Highlight } from '../dto/hightlights.dto';
 
 @Injectable()
 export class ProgressReportHighlightsRepository extends PromptVariantResponseRepository(
