@@ -40,6 +40,7 @@ export const withVariant = <T extends object>(obj: T, variant: string): T =>
   Object.defineProperty(obj, VariantForCondition, {
     value: variant,
     enumerable: false,
+    writable: true,
   });
 
 const VariantForCondition = Symbol('Variant');
