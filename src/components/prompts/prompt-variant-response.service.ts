@@ -140,18 +140,21 @@ export const PromptVariantResponseListService = <
           if (!variantPrivileges.can('read', 'responses')) {
             return [];
           }
-          const response = responses[variant.key];
+          // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+          const response = (responses as Partial<typeof responses>)[
+            variant.key
+          ];
           return {
             variant,
             response: {
               canRead: true,
-              value: response.response ?? undefined,
+              value: response?.response,
               canEdit: variantPrivileges.can('edit', 'responses'),
             },
             creator: {
               canRead: variantPrivileges.can('read', 'creator'),
               canEdit: variantPrivileges.can('edit', 'creator'),
-              value: response.creator,
+              value: response?.creator,
             },
           };
         }),
