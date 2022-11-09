@@ -233,6 +233,18 @@ export const PromptVariantResponseListService = <
       };
       return await this.secure(updated, session);
     }
+
+    async delete(id: IdOf<PromptVariantResponse>, session: Session) {
+      const response = await this.repo.readOne(id, session);
+
+      const context = await this.getPrivilegeContext(response);
+      const privileges = this.resourcePrivileges.forUser(session, context);
+      privileges.verifyCan('delete');
+
+      await this.repo.deleteNode(id);
+
+      return response;
+    }
   }
 
   return PromptVariantResponseListServiceClass;
