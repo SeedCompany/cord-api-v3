@@ -7,6 +7,7 @@ import {
   NotFoundException,
   Resource,
   ResourceShape,
+  RichTextDocument,
   SecuredList,
   Session,
   UnauthorizedException,
@@ -225,7 +226,14 @@ export const PromptVariantResponseListService = <
         );
       }
 
-      await this.repo.submitResponse(input, session);
+      if (
+        !RichTextDocument.isEqual(
+          input.response,
+          response.responses.find((r) => r.variant === variant.key)?.response
+        )
+      ) {
+        await this.repo.submitResponse(input, session);
+      }
 
       const updated: UnsecuredDto<PromptVariantResponse<TVariant>> = {
         ...response,

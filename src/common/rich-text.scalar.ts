@@ -4,6 +4,7 @@ import { IsObject } from 'class-validator';
 import { createHash } from 'crypto';
 import { GraphQLScalarType } from 'graphql';
 import { GraphQLJSONObject } from 'graphql-scalars';
+import { isEqual } from 'lodash';
 import { JsonObject } from 'type-fest';
 import { SecuredProperty } from '~/common/secured-property';
 import { Transform } from './transform.decorator';
@@ -19,6 +20,7 @@ function hashId(name: string) {
 export class RichTextDocument {
   // Allows TS to uniquely identify values
   #isRichText?: never;
+  private readonly blocks?: unknown[];
 
   static from(doc: JsonObject): RichTextDocument {
     return Object.assign(new RichTextDocument(), doc);
@@ -57,6 +59,16 @@ export class RichTextDocument {
 
   static serialize(doc: RichTextDocument) {
     return RichTextDocument.serializedPrefix + JSON.stringify(doc);
+  }
+
+  static isEqual(
+    a: RichTextDocument | null | undefined,
+    b: RichTextDocument | null | undefined
+  ) {
+    // This is crude but it's better than nothing.
+    const aBlocks = a?.blocks ?? [];
+    const bBlocks = b?.blocks ?? [];
+    return isEqual(aBlocks, bBlocks);
   }
 }
 
