@@ -7,6 +7,7 @@ import { LanguageEngagement } from '../../engagement/dto';
 import { DefinedFile } from '../../file';
 import { IPeriodicReport } from '../../periodic-report/dto/periodic-report.dto';
 import { ReportType } from '../../periodic-report/dto/report-type.enum';
+import { ProgressReportHighlight } from './hightlights.dto';
 import { SecuredProgressReportStatus as SecuredStatus } from './progress-report-status.enum';
 
 @RegisterResource()
@@ -19,6 +20,9 @@ export class ProgressReport extends IPeriodicReport {
   static readonly Parent = import('../../engagement/dto').then(
     (m) => m.IEngagement
   );
+  static readonly Relations = {
+    highlights: [ProgressReportHighlight],
+  };
 
   declare readonly type: ReportType.Progress;
 

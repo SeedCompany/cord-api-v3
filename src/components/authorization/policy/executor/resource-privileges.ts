@@ -14,7 +14,7 @@ import { UserResourcePrivileges } from './user-resource-privileges';
 
 export class ResourcePrivileges<TResourceStatic extends ResourceShape<any>> {
   constructor(
-    private readonly resource: EnhancedResource<TResourceStatic>,
+    readonly resource: EnhancedResource<TResourceStatic>,
     private readonly policyExecutor: PolicyExecutor
   ) {}
 

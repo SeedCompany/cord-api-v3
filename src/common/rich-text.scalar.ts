@@ -1,11 +1,16 @@
 import { applyDecorators } from '@nestjs/common';
 import { Field, FieldOptions, ObjectType } from '@nestjs/graphql';
 import { IsObject } from 'class-validator';
+import { createHash } from 'crypto';
 import { GraphQLScalarType } from 'graphql';
 import { GraphQLJSONObject } from 'graphql-scalars';
 import { JsonObject } from 'type-fest';
 import { SecuredProperty } from '~/common/secured-property';
 import { Transform } from './transform.decorator';
+
+function hashId(name: string) {
+  return createHash('shake256', { outputLength: 5 }).update(name).digest('hex');
+}
 
 /**
  * A JSON object containing data from a block styled editor.
@@ -17,6 +22,21 @@ export class RichTextDocument {
 
   static from(doc: JsonObject): RichTextDocument {
     return Object.assign(new RichTextDocument(), doc);
+  }
+
+  static fromMaybe(doc: JsonObject | null): RichTextDocument | null {
+    if (!doc || !Array.isArray(doc.blocks!) || doc.blocks.length === 0) {
+      return null;
+    }
+    return RichTextDocument.from(doc);
+  }
+
+  static fromText(text: string): RichTextDocument {
+    return RichTextDocument.from({
+      version: '2.25.0',
+      time: Date.now(),
+      blocks: [{ id: hashId(text), type: 'paragraph', data: { text } }],
+    });
   }
 
   /** Used to identify this document stored as a string in the DB */
@@ -44,7 +64,7 @@ export const RichTextField = (options?: FieldOptions) =>
   applyDecorators(
     Field(() => RichTextScalar, options),
     IsObject(),
-    Transform(({ value }) => RichTextDocument.from(value))
+    Transform(({ value }) => RichTextDocument.fromMaybe(value))
   );
 
 /** @internal */
@@ -57,6 +77,18 @@ export const RichTextScalar = new GraphQLScalarType({
 @ObjectType({
   description: SecuredProperty.descriptionFor('a rich text document'),
 })
-export abstract class SecuredRichText extends SecuredProperty<RichTextDocument>(
-  RichTextScalar
-) {}
+export abstract class SecuredRichText extends SecuredProperty<
+  typeof RichTextScalar,
+  RichTextDocument
+>(RichTextScalar) {}
+
+@ObjectType({
+  description: SecuredProperty.descriptionFor('a rich text document or null'),
+})
+export abstract class SecuredRichTextNullable extends SecuredProperty<
+  typeof RichTextScalar,
+  RichTextDocument,
+  true
+>(RichTextScalar, {
+  nullable: true,
+}) {}

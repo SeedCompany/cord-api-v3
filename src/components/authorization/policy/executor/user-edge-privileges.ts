@@ -21,12 +21,12 @@ export class UserEdgePrivileges<
   TKey extends string,
   TAction extends string
 > {
-  private readonly resource: EnhancedResource<TResourceStatic>;
+  readonly resource: EnhancedResource<TResourceStatic>;
   constructor(
     resource: TResourceStatic | EnhancedResource<TResourceStatic>,
-    private readonly key: TKey,
+    readonly key: TKey,
     private readonly object: ResourceObjectContext<TResourceStatic> | undefined,
-    private readonly session: Session,
+    readonly session: Session,
     private readonly policyExecutor: PolicyExecutor
   ) {
     this.resource = EnhancedResource.of(resource);

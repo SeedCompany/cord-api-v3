@@ -22,6 +22,7 @@
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "repl": "nest start --entryFile repl",
+    "gen-id": "ts-node -Te \"let g = require('./src/common/generate-id').generateId; for (let i = 0, l = process.argv[1] || 1; i < l; i++) { g().then(console.log) }\"",
     "lint": "eslint --ext .ts,.tsx --fix --max-warnings 0 .",
     "test": "jest",
     "test:watch": "jest --watch",

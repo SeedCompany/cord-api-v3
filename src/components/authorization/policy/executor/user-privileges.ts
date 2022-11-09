@@ -16,7 +16,7 @@ import { UserResourcePrivileges } from './user-resource-privileges';
 
 export class UserPrivileges {
   constructor(
-    private readonly session: Session,
+    readonly session: Session,
     private readonly policyExecutor: PolicyExecutor
   ) {}
 

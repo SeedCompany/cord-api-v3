@@ -18,6 +18,8 @@ import { CommonRepository } from './common.repository';
 import { OnIndex } from './indexer';
 import { matchProps } from './query';
 
+export const privileges = Symbol('DtoRepository.privileges');
+
 /**
  * A repository for a simple DTO. This provides a few methods out of the box.
  */
@@ -25,19 +27,19 @@ export const DtoRepository = <
   TResourceStatic extends ResourceShape<any>,
   HydrateArgs extends unknown[] = [],
   // Specify this if the repo is for an interface, but works with all the concretes.
-  TResource extends TResourceStatic['prototype'] = TResourceStatic['prototype']
+  TResource extends InstanceType<TResourceStatic> = InstanceType<TResourceStatic>
 >(
   resource: TResourceStatic
 ) => {
   @Injectable()
   class DtoRepositoryClass extends CommonRepository {
     @Inject(Privileges)
-    private readonly allPrivileges: Privileges;
+    protected readonly [privileges]: Privileges;
     protected readonly resource = EnhancedResource.of(resource);
 
     @Once()
     get privileges() {
-      return this.allPrivileges.forResource(resource);
+      return this[privileges].forResource(resource);
     }
 
     getActualChanges = getChanges(resource);

@@ -38,14 +38,18 @@ import { UserEdgePrivileges } from './user-edge-privileges';
 export class UserResourcePrivileges<
   TResourceStatic extends ResourceShape<any>
 > {
-  private readonly resource: EnhancedResource<TResourceStatic>;
+  readonly resource: EnhancedResource<TResourceStatic>;
   constructor(
     resource: TResourceStatic | EnhancedResource<TResourceStatic>,
     private readonly object: ResourceObjectContext<TResourceStatic> | undefined,
-    private readonly session: Session,
+    readonly session: Session,
     private readonly policyExecutor: PolicyExecutor
   ) {
     this.resource = EnhancedResource.of(resource);
+  }
+
+  get context() {
+    return this.object;
   }
 
   forContext(object: ResourceObjectContext<TResourceStatic>) {
@@ -95,7 +99,10 @@ export class UserResourcePrivileges<
   }
 
   can(action: ResourceAction): boolean;
-  can(action: PropAction, prop: SecuredResourceKey<TResourceStatic>): boolean;
+  can(
+    action: PropAction,
+    prop: SecuredPropsPlusExtraKey<TResourceStatic>
+  ): boolean;
   can(
     action: ChildSingleAction,
     relation: ChildSinglesKey<TResourceStatic>
@@ -123,7 +130,7 @@ export class UserResourcePrivileges<
   verifyCan(action: ResourceAction): void;
   verifyCan(
     action: PropAction,
-    prop: SecuredResourceKey<TResourceStatic>
+    prop: SecuredPropsPlusExtraKey<TResourceStatic>
   ): void;
   verifyCan(
     action: ChildSingleAction,
