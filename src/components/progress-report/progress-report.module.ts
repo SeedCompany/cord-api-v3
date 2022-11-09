@@ -1,5 +1,8 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { PeriodicReportModule } from '../periodic-report/periodic-report.module';
+import { ProgressReportCommunityStoryRepository } from './community-stories/progress-report-community-story.repository';
+import { ProgressReportCommunityStoryResolver } from './community-stories/progress-report-community-story.resolver';
+import { ProgressReportCommunityStoryService } from './community-stories/progress-report-community-story.service';
 import { ProgressReportHighlightsRepository } from './highlights/progress-report-highlights.repository';
 import { ProgressReportHighlightsResolver } from './highlights/progress-report-highlights.resolver';
 import { ProgressReportHighlightsService } from './highlights/progress-report-highlights.service';
@@ -24,6 +27,9 @@ import { ProgressReportWorkflowModule } from './workflow/progress-report-workflo
     ProgressReportHighlightsResolver,
     ProgressReportHighlightsService,
     ProgressReportHighlightsRepository,
+    ProgressReportCommunityStoryResolver,
+    ProgressReportCommunityStoryService,
+    ProgressReportCommunityStoryRepository,
     ProgressReportService,
     ProgressReportRepository,
     ProgressReportExtraForPeriodicInterfaceRepository,
