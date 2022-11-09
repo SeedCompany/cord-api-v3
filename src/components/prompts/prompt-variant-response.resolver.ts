@@ -19,6 +19,6 @@ export class PromptVariantResponseResolver {
 
   @ResolveField(() => Resource)
   async parent(@Parent() response: PromptVariantResponse) {
-    return await this.resources.loadByRef(response.parent);
+    return await this.resources.loadByBaseNode(response.parent);
   }
 }

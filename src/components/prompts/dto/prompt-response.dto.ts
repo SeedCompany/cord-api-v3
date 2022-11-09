@@ -13,6 +13,7 @@ import {
   SetUnsecuredType,
 } from '~/common';
 import { ResourceRef } from '~/core';
+import { BaseNode } from '~/core/database/results';
 import { Prompt, SecuredPrompt } from './prompt.dto';
 import { Variant } from './variant.dto';
 
@@ -53,7 +54,7 @@ export class PromptVariantResponse<
     responses: [VariantResponse],
   };
 
-  readonly parent: ResourceRef<any>;
+  readonly parent: BaseNode;
 
   @Field(() => SecuredPrompt)
   readonly prompt: SecuredPrompt & SetUnsecuredType<IdOf<Prompt>>;

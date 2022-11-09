@@ -6,6 +6,7 @@ import {
 } from '../authorization/policies/conditions';
 import { Prompt } from '../prompts/dto';
 import { PromptVariantResponseListService } from '../prompts/prompt-variant-response.service';
+import { ProgressReport } from './dto';
 import { ProgressReportHighlight as Highlight } from './dto/hightlights.dto';
 import { ProgressReportHighlightsRepository } from './progress-report-highlights.repository';
 
@@ -18,7 +19,9 @@ export class ProgressReportHighlightsService extends PromptVariantResponseListSe
   }
 
   protected async getPrivilegeContext(dto: UnsecuredDto<Highlight>) {
-    const report = await this.resources.loadByRef(dto.parent);
+    const report = (await this.resources.loadByBaseNode(
+      dto.parent
+    )) as ProgressReport;
     return withEffectiveSensitivity(
       withScope({}, report.scope),
       report.sensitivity
