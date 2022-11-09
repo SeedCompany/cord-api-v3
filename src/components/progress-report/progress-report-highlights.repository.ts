@@ -1,36 +1,34 @@
 import { Injectable } from '@nestjs/common';
-import { IdOf, PaginatedListType, Session, TODO, UnsecuredDto } from '~/common';
-import { ChoosePrompt, UpdatePromptVariantResponse } from '../prompts/dto';
+import { node, relation } from 'cypher-query-builder';
+import { Session } from '~/common';
+import { oncePerProject, QueryFragment } from '~/core/database/query';
 import { PromptVariantResponseRepository } from '../prompts/prompt-variant-response.repository';
 import { ProgressReport } from './dto';
-import {
-  ProgressReportHighlight as Highlight,
-  HighlightVariant,
-} from './dto/hightlights.dto';
+import { ProgressReportHighlight as Highlight } from './dto/hightlights.dto';
 
 @Injectable()
 export class ProgressReportHighlightsRepository extends PromptVariantResponseRepository(
   [ProgressReport, 'highlights'],
   Highlight
 ) {
-  async list(
-    reportId: IdOf<ProgressReport>,
-    session: Session
-  ): Promise<PaginatedListType<UnsecuredDto<Highlight>>> {
-    return TODO(reportId, session);
-  }
-
-  async create(
-    input: ChoosePrompt,
-    session: Session
-  ): Promise<UnsecuredDto<Highlight>> {
-    return TODO(input, session);
-  }
-
-  async submitResponse(
-    input: UpdatePromptVariantResponse<HighlightVariant>,
-    session: Session
-  ) {
-    return TODO(input, session);
+  protected filterToReadable(session: Session) {
+    return this.privileges.forUser(session).filterToReadable({
+      wrapContext: oncePerProjectFromProgressReportEdge,
+    });
   }
 }
+
+export const oncePerProjectFromProgressReportEdge =
+  (inner: QueryFragment): QueryFragment =>
+  (query) =>
+    query
+      .match([
+        node('project', 'Project'),
+        relation('out', '', 'engagement'),
+        node('', 'Engagement'),
+        relation('out', '', 'report'),
+        node('', 'ProgressReport'),
+        relation('out', '', 'child'),
+        node('node'),
+      ])
+      .apply(oncePerProject(inner));

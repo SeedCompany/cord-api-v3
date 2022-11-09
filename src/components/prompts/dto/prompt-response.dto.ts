@@ -1,6 +1,7 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
+  DbLabel,
   ID,
   IdField,
   IdOf,
@@ -27,7 +28,11 @@ export class PromptResponse extends Resource {
 }
 
 @ObjectType()
+@DbLabel(VariantResponse.name, 'Property')
 export abstract class VariantResponse<Key extends string = string> {
+  static Props = keysOf<VariantResponse>();
+  static SecuredProps = keysOf<SecuredProps<VariantResponse>>();
+
   @Field()
   readonly variant: Variant<Key>;
 
