@@ -77,6 +77,18 @@ export const RichTextScalar = new GraphQLScalarType({
 @ObjectType({
   description: SecuredProperty.descriptionFor('a rich text document'),
 })
-export abstract class SecuredRichText extends SecuredProperty<RichTextDocument>(
-  RichTextScalar
-) {}
+export abstract class SecuredRichText extends SecuredProperty<
+  typeof RichTextScalar,
+  RichTextDocument
+>(RichTextScalar) {}
+
+@ObjectType({
+  description: SecuredProperty.descriptionFor('a rich text document or null'),
+})
+export abstract class SecuredRichTextNullable extends SecuredProperty<
+  typeof RichTextScalar,
+  RichTextDocument,
+  true
+>(RichTextScalar, {
+  nullable: true,
+}) {}

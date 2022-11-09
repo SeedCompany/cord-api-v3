@@ -10,7 +10,9 @@ import {
   RichTextField,
   SecuredProps,
   SecuredRichText,
+  SecuredRichTextNullable,
   SetUnsecuredType,
+  UnsecuredDto,
 } from '~/common';
 import { ResourceRef } from '~/core';
 import { BaseNode } from '~/core/database/results';
@@ -34,11 +36,11 @@ export abstract class VariantResponse<Key extends string = string> {
   static Props = keysOf<VariantResponse>();
   static SecuredProps = keysOf<SecuredProps<VariantResponse>>();
 
-  @Field()
-  readonly variant: Variant<Key>;
+  @Field(() => Variant)
+  readonly variant: Variant<Key> & SetUnsecuredType<Key>;
 
   @Field()
-  readonly response: SecuredRichText;
+  readonly response: SecuredRichTextNullable;
 }
 
 @ObjectType()
@@ -61,9 +63,7 @@ export class PromptVariantResponse<
 
   @Field(() => [VariantResponse])
   readonly responses: ReadonlyArray<VariantResponse<Key>> &
-    SetUnsecuredType<
-      ReadonlyArray<{ variant: Key; response: RichTextDocument | null }>
-    >;
+    SetUnsecuredType<ReadonlyArray<UnsecuredDto<VariantResponse<Key>>>>;
 }
 
 @InputType()
