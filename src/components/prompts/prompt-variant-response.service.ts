@@ -197,7 +197,9 @@ export const PromptVariantResponseListService = <
 
       await this.getPromptById(input.prompt);
 
-      await this.repo.changePrompt(input, session);
+      if (input.prompt !== response.prompt) {
+        await this.repo.changePrompt(input, session);
+      }
 
       return await this.secure({ ...response, prompt: input.prompt }, session);
     }
