@@ -15,7 +15,6 @@ import { DtoRepository } from '~/core';
 import { privileges } from '~/core/database/dto.repository';
 import {
   ACTIVE,
-  apoc,
   createNode,
   createRelationships,
   merge,
@@ -23,6 +22,7 @@ import {
   prefixNodeLabelsWithDeleted,
   QueryFragment,
   sorting,
+  updateProperty,
   variable,
 } from '~/core/database/query';
 import { EdgePrivileges } from '../authorization';
@@ -103,7 +103,11 @@ export const PromptVariantResponseRepository = <
                 relation('out', undefined, 'child', ACTIVE),
                 node('response', 'VariantResponse'),
               ])
-              .with(apoc.convert.toMap('response').as('response'))
+              .with(
+                merge('response', { modifiedAt: 'response.createdAt' }).as(
+                  'response'
+                )
+              )
               .return('collect(response) as responses')
           )
           .return<{ dto: UnsecuredDto<InstanceType<TResourceStatic>> }>(
@@ -123,12 +127,16 @@ export const PromptVariantResponseRepository = <
     ): Promise<UnsecuredDto<PromptVariantResponse<TVariant>>> {
       // @ts-expect-error uhhhh yolo ¯\_(ツ)_/¯
       const resource: typeof PromptVariantResponse = this.resource.type;
+
+      const createdAt = DateTime.now();
       const result = await this.db
         .query()
         .apply(
           await createNode(resource, {
             baseNodeProps: {
               creator: session.userId,
+              createdAt,
+              modifiedAt: createdAt,
             },
             initialProps: {
               prompt: input.prompt,
@@ -149,6 +157,7 @@ export const PromptVariantResponseRepository = <
       input: UpdatePromptVariantResponse<TVariant>,
       session: Session
     ) {
+      const now = DateTime.now();
       await this.db
         .query()
         .matchNode('parent', 'PromptVariantResponse', { id: input.id })
@@ -165,7 +174,7 @@ export const PromptVariantResponseRepository = <
             .apply(prefixNodeLabelsWithDeleted('response'))
             .setValues({
               'response.active': false,
-              'response.deletedAt': DateTime.local(),
+              'response.deletedAt': now,
             })
             .return('count(response) as oldResponseCount')
         )
@@ -185,17 +194,28 @@ export const PromptVariantResponseRepository = <
             child: variable('parent'),
           })
         )
+        .with('parent')
+        .setValues({ 'parent.modifiedAt': now })
         .return('parent')
         .first();
     }
 
     async changePrompt(input: ChangePrompt, _session: Session) {
-      await this.db.updateProperty({
-        type: this.resource.type,
-        object: { id: input.id } as any,
-        key: 'prompt',
-        value: input.prompt,
-      });
+      // @ts-expect-error uhhhh yolo ¯\_(ツ)_/¯
+      const resource: typeof PromptVariantResponse = this.resource.type;
+      await this.db
+        .query()
+        .match(node('node', this.resource.dbLabel, { id: input.id }))
+        .apply(
+          updateProperty({
+            resource,
+            key: 'prompt',
+            value: input.prompt,
+          })
+        )
+        .setValues({ 'node.modifiedAt': DateTime.now() })
+        .return('node')
+        .run();
     }
   }
 

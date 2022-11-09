@@ -156,6 +156,7 @@ export const PromptVariantResponseListService = <
               canEdit: variantPrivileges.can('edit', 'creator'),
               value: response?.creator,
             },
+            modifiedAt: response?.modifiedAt,
           };
         }),
       };

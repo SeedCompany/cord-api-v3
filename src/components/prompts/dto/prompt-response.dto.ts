@@ -1,4 +1,5 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
+import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
   DbLabel,
@@ -45,6 +46,9 @@ export abstract class VariantResponse<Key extends string = string> {
   readonly response: SecuredRichTextNullable;
 
   readonly creator: Secured<IdOf<User>>;
+
+  @Field(() => DateTime, { nullable: true })
+  readonly modifiedAt?: DateTime;
 }
 
 @ObjectType()
@@ -70,6 +74,9 @@ export class PromptVariantResponse<
   @Field(() => [VariantResponse])
   readonly responses: ReadonlyArray<VariantResponse<Key>> &
     SetUnsecuredType<ReadonlyArray<UnsecuredDto<VariantResponse<Key>>>>;
+
+  @Field()
+  readonly modifiedAt: DateTime;
 }
 
 @InputType()
