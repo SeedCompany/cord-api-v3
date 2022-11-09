@@ -62,6 +62,9 @@ export class PartnershipService {
     changeset?: ID
   ): Promise<Partnership> {
     const { projectId, partnerId } = input;
+
+    await this.verifyRelationshipEligibility(projectId, partnerId, changeset);
+
     const projectResource = await this.resourceLoader.load(IProject, projectId);
     const projectPrivileges = this.privileges.for(
       session,
@@ -70,8 +73,6 @@ export class PartnershipService {
     );
 
     projectPrivileges.verifyCan('create', 'partnership');
-
-    await this.verifyRelationshipEligibility(projectId, partnerId, changeset);
 
     const isFirstPartnership = await this.repo.isFirstPartnership(
       projectId,
