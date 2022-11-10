@@ -22,7 +22,7 @@ import { bootstrapLogger, ConfigService, ResourcesHost } from '~/core';
 import { AppModule } from './app.module';
 import { AuthenticationService } from './components/authentication';
 import 'source-map-support/register';
-import { Role } from './components/authorization';
+import { Role, rolesForScope } from './components/authorization';
 
 /**
  * This does the same thing as {@link import('@nestjs/core').repl}
@@ -54,9 +54,9 @@ async function bootstrap() {
     __: lodash, // single underscore is "last execution result"
     lodash,
     session,
-    sessionFor: (role: Role): Session => ({
+    sessionFor: (...roles: Role[]): Session => ({
       ...session,
-      roles: [`global:${role}`],
+      roles: roles.map(rolesForScope('global')),
     }),
     Resources,
   });
