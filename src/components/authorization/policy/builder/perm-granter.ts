@@ -12,6 +12,11 @@ export type Permission = Condition<any> | boolean;
 export const action = Symbol('PermGranter.action');
 
 /**
+ * Add to the perms list.
+ */
+export const withPerms = Symbol('PermGranter.withPerms');
+
+/**
  * Extract permissions from granter.
  */
 export const extract = Symbol('PermGranter.extract');
@@ -42,13 +47,14 @@ export abstract class PermGranter<
    * Return grant with these actions added.
    */
   [action](...actions: TAction[]): this {
+    const perm = this.stagedCondition ?? true;
+    return this[withPerms](mapFromList(actions, (action) => [action, perm]));
+  }
+
+  [withPerms](...perms: Array<Permissions<TAction>>): this {
     const cloned = this.clone();
     cloned.trailingCondition = undefined;
-    const perm = cloned.stagedCondition ?? true;
-    cloned.perms = [
-      ...cloned.perms,
-      mapFromList(actions, (action) => [action, perm]),
-    ];
+    cloned.perms = [...cloned.perms, ...perms];
     return cloned;
   }
 

@@ -1,13 +1,21 @@
-import { EnhancedResource, many, Many, ResourceShape } from '~/common';
+import {
+  EnhancedResource,
+  many,
+  Many,
+  ResourceShape,
+  SecuredPropsPlusExtraKey,
+} from '~/common';
 import { ResourceAction } from '../actions';
 import {
   ChildRelationshipGranter,
   ChildRelationshipsGranter,
 } from './child-relationship-granter';
-import { action, extract, PermGranter } from './perm-granter';
+import { action, extract, PermGranter, withPerms } from './perm-granter';
 import { PropGranter, PropsGranter } from './prop-granter';
 
 export const withOther = Symbol('ResourceGranter.withOther');
+
+export const andAllProps = Symbol('ResourceGranter.andAllProps');
 
 export type PropsGranterFn<TResourceStatic extends ResourceShape<any>> = (
   granter: PropsGranter<TResourceStatic>
@@ -51,6 +59,18 @@ export class ResourceGranter<
       newGrants.length > 0 ? undefined : cloned.trailingCondition;
     cloned.propGrants = [...this.propGrants, ...newGrants];
     return cloned;
+  }
+
+  get [andAllProps](): this {
+    return this.specifically((props) => {
+      const all = Object.keys(props) as Array<
+        SecuredPropsPlusExtraKey<TResourceStatic>
+      >;
+      const granter = props.many(...all);
+      // TODO this should be filtered down to only actions applicable to props
+      // For now it's ok for them to have extra as they'll just be unused.
+      return granter[withPerms](...this.perms);
+    });
   }
 
   /**
@@ -153,6 +173,27 @@ export class DefaultResourceGranter<
 
   specifically(grants: PropsGranterFn<TResourceStatic>): this {
     return super.specifically(grants);
+  }
+
+  /**
+   * Use all preceding resource level actions for all the properties of this resource as well.
+   *
+   * This ensures that all props will have (at least) the resource level permissions
+   * declared here, even if another policy declares something less permissive for a specific property.
+   *
+   * @example
+   * // Policy A
+   * r.Organization.read
+   * // Policy B
+   * r.Organization.specifically(p => p.address.none)
+   * // Policy C
+   * r.Organization.read.andAllProps
+   * // If policy A & B apply, then the user has NO permission for address.
+   * // If policy C applies, then the user has read permission for address,
+   * // regardless of whether policy A or B are included.
+   */
+  get andAllProps(): this {
+    return super[andAllProps];
   }
 
   children(grants: ChildrenGranterFn<TResourceStatic>): this {
