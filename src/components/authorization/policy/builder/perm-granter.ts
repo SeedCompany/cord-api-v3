@@ -30,20 +30,6 @@ export abstract class PermGranter<
   ) {}
 
   /**
-   * The requester can do nothing with this prop or object.
-   *
-   * This is not a DENY action. It can be overridden by another entry
-   * in the same or even different policy.
-   *
-   * This does provide logical value when you want to:
-   * - Exclude a certain prop from object level actions.
-   * - Exclude an implementation from actions defined for an interface.
-   */
-  get none() {
-    return this;
-  }
-
-  /**
    * Return grant with these actions added.
    */
   [action](...actions: TAction[]): this {

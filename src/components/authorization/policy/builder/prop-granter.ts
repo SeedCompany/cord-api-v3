@@ -6,7 +6,7 @@ import {
 import { PropAction } from '../actions';
 import { Condition } from '../conditions';
 import { createLazyRecord } from '../lazy-record';
-import { action, extract, PermGranter } from './perm-granter';
+import { action, extract, PermGranter, withPerms } from './perm-granter';
 
 export class PropGranter<
   TResourceStatic extends ResourceShape<any>
@@ -17,6 +17,15 @@ export class PropGranter<
     stagedCondition?: Condition<TResourceStatic>
   ) {
     super(stagedCondition);
+  }
+
+  /**
+   * The requester can do nothing with the given prop(s).
+   *
+   * It can be overridden by another entry in a different policy.
+   */
+  get none() {
+    return this[withPerms]({ read: false, edit: false });
   }
 
   /**

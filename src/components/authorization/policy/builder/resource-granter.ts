@@ -38,6 +38,19 @@ export class ResourceGranter<
   }
 
   /**
+   * The requester can do nothing with this resource.
+   *
+   * This is not a DENY action.
+   * It can be overridden by another entry in the same or even different policy.
+   *
+   * This does provide logical value when you want to exclude an implementation
+   * from actions defined for an interface.
+   */
+  get none() {
+    return this;
+  }
+
+  /**
    * Grant specific actions to individual props of this object.
    *
    * Any props not explicitly defined (from any policy) will fall back to granted
