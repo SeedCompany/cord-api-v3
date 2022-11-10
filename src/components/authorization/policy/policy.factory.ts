@@ -276,28 +276,39 @@ export class PolicyFactory implements OnModuleInit {
     return existing;
   }
 
-  private mergePermission(
+  mergePermission(
     perms: ReadonlyArray<Permission | undefined>,
-    mergeConditions: (...conditions: Array<Condition<any>>) => Condition<any>
+    mergeConditions: (...conditions: Array<Condition<any>>) => Condition<any>,
+    precedence: Array<'deny' | 'allow' | 'conditional'> = [
+      'deny',
+      'allow',
+      'conditional',
+    ]
   ): Permission | undefined {
     const cleaned = perms.filter((p): p is Permission => p != null);
     if (cleaned.length === 0) {
       return undefined;
     }
-    if (cleaned.length === 1) {
-      return perms[0];
+    for (const answer of precedence) {
+      if (answer === 'deny' && cleaned.some((p) => p === false)) {
+        return false;
+      }
+      if (answer === 'allow' && cleaned.some((p) => p === true)) {
+        return true;
+      }
+      if (answer === 'conditional') {
+        const conditions = cleaned.filter(
+          (p): p is Condition<any> => typeof p !== 'boolean'
+        );
+        if (conditions.length === 0) {
+          continue;
+        }
+        // This could result in duplicates entries for the same condition.
+        // An optimization would be to de-dupe those.
+        return mergeConditions(...conditions);
+      }
     }
-    if (cleaned.some((perm) => perm === false)) {
-      return false;
-    }
-    if (cleaned.some((perm) => perm === true)) {
-      return true;
-    }
-    // Since we've checked for booleans above, this is safe.
-    const conditions = cleaned as Array<Condition<any>>;
-    // This could result in duplicates entries for the same condition.
-    // An optimization would be to de-dupe those.
-    return mergeConditions(...conditions);
+    return undefined;
   }
 
   private async determinePowers(grants: Grants) {
