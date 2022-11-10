@@ -32,8 +32,8 @@ export class ResourceGranter<
   /**
    * Grant specific actions to individual props of this object.
    *
-   * Any props not explicitly defined will fall back to granted actions defined
-   * on this object.
+   * Any props not explicitly defined (from any policy) will fall back to granted
+   * actions defined on this object (from any policy).
    *
    * Conditions previously given will apply automatically to these props,
    * unless the prop defines its own condition.

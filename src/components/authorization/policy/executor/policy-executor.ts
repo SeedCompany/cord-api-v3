@@ -54,16 +54,15 @@ export class PolicyExecutor {
     }
 
     if (prop) {
-      return (
-        this.resolvePermission(
-          policies.map((policy) => {
-            return (
-              policy.grants.get(resource)?.propLevel[prop]?.[action] ??
-              policy.grants.get(resource)?.objectLevel[action]
-            );
-          })
-        ) ?? false
+      const resolved = this.resolvePermission(
+        policies.map((policy) => {
+          return policy.grants.get(resource)?.propLevel[prop]?.[action];
+        })
       );
+      if (resolved != null) {
+        return resolved;
+      }
+      // fall through to resource level
     }
 
     return (
