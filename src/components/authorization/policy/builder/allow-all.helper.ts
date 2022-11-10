@@ -3,6 +3,7 @@ import { ResourceAction } from '../actions';
 import { ResourcesGranter } from '../granters';
 import { asNormalized } from './as-normalized.helper';
 import { action } from './perm-granter';
+import { andAllProps } from './resource-granter';
 
 /**
  * A helper to allow these actions for all resources
@@ -13,9 +14,9 @@ export const allowAll =
     Object.values(r).map((res) => allowActions(res, ...actions));
 
 /**
- * A helper to allow these actions for this resource.
+ * A helper to allow these actions for this resource & and all its props.
  */
 export const allowActions = (
   granter: ValueOf<ResourcesGranter>,
   ...actions: ResourceAction[]
-) => asNormalized(granter, (g) => g[action](...actions));
+) => asNormalized(granter, (g) => g[action](...actions)[andAllProps]);
