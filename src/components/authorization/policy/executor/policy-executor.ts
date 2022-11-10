@@ -114,9 +114,11 @@ export class PolicyExecutor {
     permissions: ReadonlyArray<Permission | undefined>
   ): Permission | undefined {
     return this.policyFactory.mergePermission(permissions, any, [
-      // 'deny', // Deny actions should not cross into other policies, ignoring.
       'allow',
       'conditional',
+      // Allow "deny" to apply as long as there's no "allow" or conditions
+      // from other policies.
+      'deny',
     ]);
   }
 
