@@ -43,35 +43,36 @@ export class PolicyExecutor {
     const policies = this.getPolicies(session);
     const isChildRelation = prop && resource.childKeys.has(prop);
 
-    const conditions = [];
-    for (const policy of policies) {
-      const grants = policy.grants.get(resource);
-      if (!grants) {
-        continue;
-      }
-
-      const condition = isChildRelation
-        ? grants.childRelations[prop]?.[action]
-        : prop
-        ? grants.propLevel[prop]?.[action] ?? grants.objectLevel[action]
-        : grants.objectLevel[action];
-
-      if (condition == null) {
-        continue;
-      }
-      if (condition === false) {
-        // Deny actions should not cross into other policies, continue executing.
-        continue;
-      }
-      if (condition === true) {
-        return true;
-      }
-      conditions.push(condition);
+    if (isChildRelation) {
+      return (
+        this.resolvePermission(
+          policies.map((policy) => {
+            return policy.grants.get(resource)?.childRelations[prop]?.[action];
+          })
+        ) ?? false
+      );
     }
-    if (conditions.length === 0) {
-      return false;
+
+    if (prop) {
+      return (
+        this.resolvePermission(
+          policies.map((policy) => {
+            return (
+              policy.grants.get(resource)?.propLevel[prop]?.[action] ??
+              policy.grants.get(resource)?.objectLevel[action]
+            );
+          })
+        ) ?? false
+      );
     }
-    return any(...conditions);
+
+    return (
+      this.resolvePermission(
+        policies.map((policy) => {
+          return policy.grants.get(resource)?.objectLevel[action];
+        })
+      ) ?? false
+    );
   }
 
   cypherFilter({
@@ -108,6 +109,16 @@ export class PolicyExecutor {
         .with('*')
         .raw(`WHERE ${perm.asCypherCondition(query, other)}`);
     };
+  }
+
+  private resolvePermission(
+    permissions: ReadonlyArray<Permission | undefined>
+  ): Permission | undefined {
+    return this.policyFactory.mergePermission(permissions, any, [
+      // 'deny', // Deny actions should not cross into other policies, ignoring.
+      'allow',
+      'conditional',
+    ]);
   }
 
   @CachedForArg({ weak: true })
