@@ -8,8 +8,8 @@ import { member, Policy, Role, sensMediumOrLower } from '../util';
   r.Language.read.specifically((c) => [
     c.locations.whenAny(member, sensMediumOrLower).read,
   ]),
-  r.Organization.edit,
-  r.Partner.edit,
+  r.Organization.edit.andAllProps,
+  r.Partner.edit.andAllProps,
   r.Partnership.read.create.delete.specifically((p) => [
     p.many('mouStartOverride', 'mouEndOverride', 'mou', 'mouStatus').edit,
   ]),
