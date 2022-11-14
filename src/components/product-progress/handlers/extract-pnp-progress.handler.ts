@@ -56,7 +56,9 @@ export class ExtractPnpProgressHandler {
       const productId = row.bookName
         ? scriptureProducts.find(
             (ref) =>
-              ref.book === row.bookName && ref.totalVerses === row.totalVerses
+              ref.book === row.bookName &&
+              ref.totalVerses === row.totalVerses &&
+              ref.pnpIndex === row.rowIndex
           )?.id
         : storyProducts[row.story!];
       if (productId) {
