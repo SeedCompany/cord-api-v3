@@ -9,7 +9,6 @@ import { member, Policy, Role, sensMediumOrLower } from '../util';
     p.locations.whenAny(member, sensMediumOrLower).read,
   ]),
   r.Organization.whenAny(sensMediumOrLower).read.specifically((p) => [
-    //TODO - this none can be removed when policy executor is refactored to check for address.none in parent policy
     p.address.none,
     p.locations.read,
   ]),
@@ -21,10 +20,10 @@ import { member, Policy, Role, sensMediumOrLower } from '../util';
     // TODO this is same as above (when combined with the Investor Common Policy). Inherit single relation perms automatically. Only read action I guess
     p.many('organization', 'partner').whenAny(member, sensMediumOrLower).read,
   ]),
-  r.Project.specifically((p) => [
+  r.Project.read.specifically((p) => [
     p
       .many('rootDirectory', 'primaryLocation', 'otherLocations')
       .whenAny(member, sensMediumOrLower).read,
-  ]).children((c) => c.posts.when(member).edit),
+  ]),
 ])
 export class FundraisingPolicy {}

@@ -26,18 +26,13 @@ import {
     p.locations.whenAny(member, sensOnlyLow).read,
   ]),
   r.Location.read,
-  r.Organization.whenAny(member, sensOnlyLow).read.specifically((p) => [
-    //NOTE - this none also exists in both the Fundraising and ExperienceOperations policies
-    p.address.none,
-    p.locations.when(sensOnlyLow).read,
-  ]),
   r.Partnership.read.specifically((p) => [
     // TODO this is same as above. Inherit single relation perms automatically. Only read action I guess
     p.many('organization', 'partner').whenAny(member, sensOnlyLow).read,
   ]),
   r.PeriodicReport.whenAny(member, sensMediumOrLower).read,
   r.Product.read,
-  r.Project.read,
+  r.Project.children((c) => c.posts.when(member).edit),
   r.ProjectMember.read,
   r.StepProgress.read,
   r.Unavailability.read,
