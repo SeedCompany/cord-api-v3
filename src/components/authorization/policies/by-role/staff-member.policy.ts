@@ -1,36 +1,40 @@
-import { Policy, Role, sensOnlyLow } from '../util';
+import { inherit, Policy, Role, sensOnlyLow } from '../util';
 
 // NOTE: There could be other permissions for this role from other policies
 @Policy(Role.StaffMember, (r) => [
-  r.Budget.read,
-  r.BudgetRecord.read,
   r.Ceremony.read,
-  r.FileNode.read,
   r.Education.read,
-  r.EthnologueLanguage.read,
+  inherit(
+    r.Engagement.read,
+    r.LanguageEngagement.specifically((p) => p.paratextRegistryId.none)
+  ),
   r.FieldRegion.read,
   r.FieldZone.read,
   r.FundingAccount.read,
-  r.Engagement.read,
-  r.Language.read.specifically((p) => p.locations.when(sensOnlyLow).read),
-  r.Organization.when(sensOnlyLow).read.specifically((p) => p.address.none),
+  r.Language.read.specifically((p) => [
+    p.locations.when(sensOnlyLow).read,
+    p.registryOfDialectsCode.none,
+    p.signLanguageCode.none,
+  ]),
+  r.Organization.read.specifically((p) => [
+    p.address.none,
+    p.many('name', 'locations').when(sensOnlyLow).read,
+  ]),
   r.Partner.when(sensOnlyLow)
     .read.specifically((p) => [p.pointOfContact.none, p.pmcEntityCode.none])
-    .children((c) => c.posts.edit),
-  r.Partnership.read.specifically((p) => p.partner.when(sensOnlyLow).read),
-  r.Post.read,
+    .children((c) => c.posts.create.read),
+  r.Partnership.when(sensOnlyLow).read,
+  r.PeriodicReport.read,
   r.Product.read,
   r.Project.read
     .specifically((p) => [
       p.rootDirectory.none,
       p.many('otherLocations', 'primaryLocation').when(sensOnlyLow).read,
     ])
-    .children((c) => c.posts.edit),
+    .children((c) => c.posts.create.read),
   r.ProjectMember.read,
-  r.PeriodicReport.edit,
-  r.User.read,
-  r.Unavailability.read,
-  r.ProjectChangeRequest.read,
   r.StepProgress.read,
+  r.Unavailability.read,
+  r.User.read,
 ])
 export class StaffMemberPolicy {}

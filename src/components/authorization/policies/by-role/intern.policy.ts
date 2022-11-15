@@ -1,30 +1,38 @@
-import { Policy, Role } from '../util';
+import { inherit, member, Policy, Role } from '../util';
 
 // NOTE: There could be other permissions for this role from other policies
 @Policy(Role.Intern, (r) => [
-  r.Budget.edit,
-  r.BudgetRecord.edit,
-  r.Ceremony.edit,
-  r.Education.edit,
-  r.Producible.edit,
-  r.EthnologueLanguage.read,
-  r.FieldRegion.read,
-  r.FieldZone.read,
-  r.FileNode.edit,
-  r.FundingAccount.read,
-  r.Engagement.edit,
-  r.Language.read,
-  r.Organization.read,
-  r.Partner.edit,
-  r.Partnership.edit,
-  r.Post.edit,
-  r.Product.edit,
-  r.Project.edit,
-  r.ProjectMember.edit,
-  r.PeriodicReport.read,
-  r.User.read,
-  r.Unavailability.read,
-  r.ProjectChangeRequest.edit,
-  r.StepProgress.read,
+  r.Ceremony.when(member).read,
+  inherit(
+    r.Engagement.when(member).read,
+    r.LanguageEngagement.specifically((p) => [p.paratextRegistryId.none])
+  ),
+  r.Language.when(member).read.specifically(
+    (p) =>
+      p.many(
+        'leastOfThese',
+        'leastOfTheseReason',
+        'name',
+        'registryOfDialectsCode',
+        'signLanguageCode',
+        'sponsorEstimatedEndDate'
+      ).none
+  ),
+  r.Location.when(member).read.specifically(
+    (p) => p.many('fundingAccount').none
+  ),
+  r.PeriodicReport.when(member).read,
+  r.Producible.when(member).read,
+  r.Product.when(member).read,
+  r.Project.when(member)
+    .read.specifically((p) => [
+      p.rootDirectory.edit,
+      p.many('departmentId', 'marketingLocation', 'fieldRegion').none,
+    ])
+    .children((c) => c.posts.edit),
+  r.ProjectMember.when(member).read,
+  r.StepProgress.when(member).read,
+  r.Unavailability.when(member).read,
+  r.User.when(member).read,
 ])
 export class InternPolicy {}

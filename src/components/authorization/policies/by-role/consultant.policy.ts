@@ -1,31 +1,32 @@
-import { member, Policy, Role, sensOnlyLow } from '../util';
+import { inherit, member, Policy, Role } from '../util';
 
 // NOTE: There could be other permissions for this role from other policies
-@Policy(Role.Consultant, (r) => [
+@Policy([Role.Consultant, Role.ConsultantManager], (r) => [
+  r.Ceremony.read,
+  inherit(
+    r.Engagement.read,
+    r.InternshipEngagement.when(member).edit.specifically(
+      (p) => p.ceremony.none
+    ),
+    r.LanguageEngagement.when(member).read.specifically(
+      (p) => p.many('pnp', 'paratextRegistryId').edit
+    )
+  ),
+  r.EthnologueLanguage.when(member).read,
   r.FieldRegion.read,
   r.FieldZone.read,
-  r.Language.read,
-  r.EthnologueLanguage.read,
-  r.Partner.when(member).read.or.specifically((p) => p.pmcEntityCode.edit),
-
-  r.Partner.when(member).read,
-  r.Partner.specifically((p) => p.pmcEntityCode.edit),
-
-  r.Project.when(member).read,
-  r.ProjectChangeRequest.edit,
-  r.Budget.when(member).read,
-  r.BudgetRecord.when(member).read,
-  r.Partnership.whenAll(member, sensOnlyLow).read,
-  r.Engagement.edit,
-  r.Ceremony.read,
-  r.Product.read,
-  r.ProjectMember.read,
-  r.StepProgress.read,
+  r.Language.when(member).read,
+  r.Organization.when(member).read.specifically((p) => p.address.none),
+  r.Partner.when(member).read.specifically((p) => p.pointOfContact.none),
+  r.Partnership.when(member).read,
   r.PeriodicReport.read,
-
-  r.User.read.create,
+  r.Product.read,
+  r.Project.when(member).read.specifically(
+    (p) => p.many('step', 'stepChangedAt', 'rootDirectory').edit
+  ),
+  r.ProjectMember.when(member).read,
+  r.StepProgress.read,
   r.Unavailability.read,
-  r.FileNode.edit.create,
-  r.Post.edit,
+  r.User.read.create,
 ])
 export class ConsultantPolicy {}

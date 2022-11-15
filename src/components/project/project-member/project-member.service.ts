@@ -8,6 +8,7 @@ import {
   generateId,
   ID,
   InputException,
+  isIdLike,
   MaybeAsync,
   NotFoundException,
   ObjectView,
@@ -27,9 +28,11 @@ import {
 } from '../../../core';
 import { ACTIVE } from '../../../core/database/query';
 import { mapListResults } from '../../../core/database/results';
-import { Powers, Role } from '../../authorization';
+import { Role } from '../../authorization';
 import { AuthorizationService } from '../../authorization/authorization.service';
 import { User, UserService } from '../../user';
+import { IProject } from '../dto';
+import { ProjectService } from '../project.service';
 import {
   CreateProjectMember,
   ProjectMember,
@@ -47,6 +50,8 @@ export class ProjectMemberService {
     @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
     private readonly eventBus: IEventBus,
+    @Inject(forwardRef(() => ProjectService))
+    private readonly projectService: ProjectService,
     @Logger('project:member:service') private readonly logger: ILogger,
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
@@ -85,17 +90,21 @@ export class ProjectMemberService {
   }
 
   async create(
-    { userId, projectId, ...input }: CreateProjectMember,
+    { userId, projectId: projectOrId, ...input }: CreateProjectMember,
     session: Session
   ): Promise<ProjectMember> {
-    await this.authorizationService.checkPower(
-      Powers.CreateProjectMember,
-      session
-    );
+    const projectId = isIdLike(projectOrId) ? projectOrId : projectOrId.id;
+    const project = isIdLike(projectOrId)
+      ? await this.projectService.readOneUnsecured(projectOrId, session)
+      : projectOrId;
+
+    this.authorizationService.privileges
+      .for(session, IProject, project)
+      .verifyCan('create', 'member');
+
     const id = await generateId();
     const createdAt = DateTime.local();
-
-    await this.verifyRelationshipEligibility(projectId, userId);
+    await this.repo.verifyRelationshipEligibility(projectId, userId);
 
     await this.assertValidRoles(input.roles, () =>
       this.userService.readOne(userId, session)

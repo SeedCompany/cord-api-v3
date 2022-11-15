@@ -1,25 +1,40 @@
-import { Policy, Role } from '../util';
+import { inherit, member, Policy, Role } from '../util';
 
 // NOTE: There could be other permissions for this role from other policies
 @Policy(Role.Mentor, (r) => [
-  r.Budget.read,
-  r.BudgetRecord.read,
-  r.Ceremony.read,
-  r.FileNode.edit,
-  r.FundingAccount.read,
-  r.Engagement.read,
-  r.Language.read,
-  r.Organization.read,
-  r.Partner.read,
-  r.Partnership.read,
-  r.Post.edit,
+  r.Ceremony.when(member).read,
+  inherit(
+    r.Engagement.when(member).read,
+    r.LanguageEngagement.specifically((p) => [p.paratextRegistryId.none])
+  ),
+  r.Language.when(member).read.specifically(
+    (p) =>
+      p.many(
+        'leastOfThese',
+        'leastOfTheseReason',
+        'name',
+        'registryOfDialectsCode',
+        'signLanguageCode',
+        'sponsorEstimatedEndDate'
+      ).none
+  ),
+  r.Location.when(member).read.specifically(
+    (p) => p.many('fundingAccount').none
+  ),
+  r.Partnership.when(member).specifically(
+    (p) => p.many('organization', 'partner', 'types').read
+  ),
   r.Product.read,
-  r.Project.read.children((c) => c.posts.edit),
-  r.ProjectMember.read,
-  r.PeriodicReport.read,
-  r.User.read,
-  r.Unavailability.read,
-  r.ProjectChangeRequest.edit,
-  r.StepProgress.read,
+  r.Project.when(member)
+    .read.specifically((p) => [
+      p.rootDirectory.edit,
+      p.many('departmentId', 'marketingLocation', 'fieldRegion').none,
+    ])
+    .children((c) => c.posts.edit),
+  r.ProjectMember.when(member).read,
+  r.PeriodicReport.when(member).read,
+  r.StepProgress.when(member).read,
+  r.Unavailability.when(member).read,
+  r.User.when(member).read,
 ])
 export class MentorPolicy {}
