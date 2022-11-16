@@ -1,7 +1,6 @@
 import { Query } from 'cypher-query-builder';
 import { inspect, InspectOptionsStylized } from 'util';
-import { Many, ResourceShape } from '~/common';
-import type { VariantOf } from '../../../prompts/dto/variant.dto';
+import { Many, ResourceShape, VariantOf } from '~/common';
 import {
   AsCypherParams,
   Condition,

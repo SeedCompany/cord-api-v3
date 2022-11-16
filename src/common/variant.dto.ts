@@ -1,7 +1,10 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { entries, IdField, InputException, ResourceShape } from '~/common';
-import { Role } from '../../authorization';
+import { ResourceShape } from '~/common/resource.dto';
+import { InputException } from './exceptions';
+import { IdField } from './id-field';
+import { Role } from './role.dto';
+import { entries } from './util';
 
 @ObjectType()
 export class Variant<Key extends string = string> {

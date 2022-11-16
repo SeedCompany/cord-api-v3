@@ -1,9 +1,8 @@
 import { keys as keysOf } from 'ts-transformer-keys';
-import { SecuredProps } from '~/common';
+import { SecuredProps, Variant, VariantOf } from '~/common';
 import { RegisterResource } from '~/core';
 import { Role } from '../../authorization';
 import { PromptVariantResponse } from '../../prompts/dto';
-import { Variant, VariantOf } from '../../prompts/dto/variant.dto';
 
 const variants = Variant.createList({
   draft: {

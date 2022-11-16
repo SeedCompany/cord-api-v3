@@ -1,6 +1,6 @@
 import { Field, ObjectType } from '@nestjs/graphql';
+import { Variant } from '~/common';
 import { Prompt } from './prompt.dto';
-import { Variant } from './variant.dto';
 
 @ObjectType()
 export abstract class PromptList {

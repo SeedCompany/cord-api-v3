@@ -15,12 +15,12 @@ import {
   SecuredRichTextNullable,
   SetUnsecuredType,
   UnsecuredDto,
+  Variant,
 } from '~/common';
 import { ResourceRef } from '~/core';
 import { BaseNode } from '~/core/database/results';
 import { User } from '../../user';
 import { Prompt, SecuredPrompt } from './prompt.dto';
-import { Variant } from './variant.dto';
 
 @ObjectType()
 export class PromptResponse extends Resource {

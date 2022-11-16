@@ -1,8 +1,7 @@
 import { keys as keysOf } from 'ts-transformer-keys';
-import { SecuredProps } from '~/common';
+import { SecuredProps, VariantOf } from '~/common';
 import { RegisterResource } from '~/core';
 import { PromptVariantResponse } from '../../prompts/dto';
-import { VariantOf } from '../../prompts/dto/variant.dto';
 import { ProgressReportHighlight } from './hightlights.dto';
 
 @RegisterResource()

@@ -12,6 +12,8 @@ import {
   Session,
   UnauthorizedException,
   UnsecuredDto,
+  VariantList,
+  VariantOf,
 } from '~/common';
 import { ResourceLoader } from '~/core';
 import { mapListResults } from '~/core/database/results';
@@ -25,7 +27,6 @@ import {
   PromptVariantResponseList,
   UpdatePromptVariantResponse,
 } from './dto';
-import { VariantList, VariantOf } from './dto/variant.dto';
 import { PromptVariantResponseRepository } from './prompt-variant-response.repository';
 
 export const PromptVariantResponseListService = <

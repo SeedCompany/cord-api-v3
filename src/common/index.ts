@@ -45,3 +45,4 @@ export {
   SecuredRichTextNullable,
 } from './rich-text.scalar';
 export * from './weak-map-cache';
+export * from './variant.dto';
