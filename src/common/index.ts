@@ -24,6 +24,7 @@ export * from './pagination-list';
 export * from './parent-id.middleware';
 export * from './parent-types';
 export * from './resource.dto';
+export * from './role.dto';
 export * from './secured-list';
 export * from './secured-property';
 export * from './secured-date';
