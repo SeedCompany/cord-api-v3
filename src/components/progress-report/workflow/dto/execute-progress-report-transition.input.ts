@@ -10,7 +10,7 @@ export abstract class ExecuteProgressReportTransitionInput {
   readonly reportId: ID;
 
   @IdField({
-    name: 'transition',
+    name: 'transitionId',
     description: 'Execute this transition',
     nullable: true,
   })
