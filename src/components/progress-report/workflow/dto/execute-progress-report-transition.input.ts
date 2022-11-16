@@ -5,7 +5,7 @@ import { ProgressReportStatus } from '../../dto';
 @ArgsType()
 export abstract class ExecuteProgressReportTransitionInput {
   @IdField({
-    name: 'id',
+    name: 'reportId',
   })
   readonly reportId: ID;
 
