@@ -1,5 +1,5 @@
 import { ArgsType, Field } from '@nestjs/graphql';
-import { ID, IdField } from '~/common';
+import { ID, IdField, RichTextDocument, RichTextField } from '~/common';
 import { ProgressReportStatus } from '../../dto';
 
 @ArgsType()
@@ -21,4 +21,9 @@ export abstract class ExecuteProgressReportTransitionInput {
     nullable: true,
   })
   readonly status?: ProgressReportStatus;
+
+  @RichTextField({
+    nullable: true,
+  })
+  readonly notes?: RichTextDocument;
 }
