@@ -1,7 +1,8 @@
 import { Args, Mutation, Resolver } from '@nestjs/graphql';
-import { ID, IdArg, LoggedInSession, Session } from '~/common';
+import { LoggedInSession, Session } from '~/common';
 import { ResourceLoader } from '~/core';
-import { ProgressReport, ProgressReportStatus } from '../../dto';
+import { ProgressReport } from '../../dto';
+import { ExecuteProgressReportTransitionInput } from '../dto/execute-progress-report-transition.input';
 import { ProgressReportWorkflowService } from '../progress-report-workflow.service';
 
 @Resolver()
@@ -13,28 +14,10 @@ export class ProgressReportExecuteTransitionResolver {
 
   @Mutation(() => ProgressReport)
   async transitionProgressReport(
-    @IdArg() reportId: ID,
-    @IdArg({
-      name: 'transition',
-      nullable: true,
-      description: 'Execute this transition',
-    })
-    transitionId: ID | undefined,
-    @Args({
-      name: 'status',
-      type: () => ProgressReportStatus,
-      nullable: true,
-      description: 'Bypass the workflow, and go straight to this status.',
-    })
-    status: ProgressReportStatus | undefined,
+    @Args() input: ExecuteProgressReportTransitionInput,
     @LoggedInSession() session: Session
   ): Promise<ProgressReport> {
-    await this.workflow.executeTransition(
-      reportId,
-      transitionId,
-      status,
-      session
-    );
-    return await this.resources.load(ProgressReport, reportId);
+    await this.workflow.executeTransition(input, session);
+    return await this.resources.load(ProgressReport, input.reportId);
   }
 }
