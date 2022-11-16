@@ -69,6 +69,7 @@ export class ProgressReportWorkflowService {
       reportId,
       transitionId,
       status: overrideStatus,
+      notes,
     }: ExecuteProgressReportTransitionInput,
     session: Session
   ) {
@@ -82,7 +83,7 @@ export class ProgressReportWorkflowService {
       }
 
       await Promise.all([
-        this.repo.recordBypass(reportId, overrideStatus, session),
+        this.repo.recordBypass(reportId, overrideStatus, session, notes),
         this.repo.changeStatus(reportId, overrideStatus),
       ]);
       return;
@@ -95,7 +96,7 @@ export class ProgressReportWorkflowService {
     }
 
     await Promise.all([
-      this.repo.recordTransition(reportId, transition, session),
+      this.repo.recordTransition(reportId, transition, session, notes),
       this.repo.changeStatus(reportId, transition.to),
     ]);
 

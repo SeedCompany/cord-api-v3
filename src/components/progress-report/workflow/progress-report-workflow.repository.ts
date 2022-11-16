@@ -1,6 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { inArray, node, Query, relation } from 'cypher-query-builder';
-import { ID, NotFoundException, Order, Session, UnsecuredDto } from '~/common';
+import {
+  ID,
+  NotFoundException,
+  Order,
+  RichTextDocument,
+  Session,
+  UnsecuredDto,
+} from '~/common';
 import { DtoRepository } from '~/core';
 import {
   ACTIVE,
@@ -75,13 +82,19 @@ export class ProgressReportWorkflowRepository extends DtoRepository(
   async recordTransition(
     report: ID,
     { id: transition, to: status }: InternalTransition,
-    session: Session
+    session: Session,
+    notes?: RichTextDocument
   ) {
-    await this.recordEvent(report, { status, transition }, session);
+    await this.recordEvent(report, { status, transition, notes }, session);
   }
 
-  async recordBypass(report: ID, status: Status, session: Session) {
-    await this.recordEvent(report, { status }, session);
+  async recordBypass(
+    report: ID,
+    status: Status,
+    session: Session,
+    notes?: RichTextDocument
+  ) {
+    await this.recordEvent(report, { status, notes }, session);
   }
 
   private async recordEvent(
