@@ -13,13 +13,18 @@ import {
   ProgressSheet,
 } from '../pnp';
 import { ProductStep as Step } from '../product';
-import { parseScripture } from '../scripture';
+import {
+  parseScripture,
+  ScriptureRange,
+  tryParseScripture,
+} from '../scripture';
 import { StepProgressInput } from './dto';
 
 type ExtractedRow = MergeExclusive<
   {
     bookName: string;
-    totalVerses: number;
+    totalVerses: number | undefined;
+    scripture: readonly ScriptureRange[];
   },
   { story: string }
 > & {
@@ -66,7 +71,7 @@ const parseProgressRow =
     const row = cell.row;
     const rowIndex = row.a1 - sheet.goals.start.row.a1;
     const planningRow = pnp.planning.goals.start.row.a1 + rowIndex;
-
+    const rowNote = pnp.planning.myNote(row);
     const steps = entries(stepColumns).flatMap<StepProgressInput>(
       ([step, column]) => {
         const fiscalYear = pnp.planning.cell(
@@ -100,7 +105,39 @@ const parseProgressRow =
     assert(sheet.isWritten());
     const bookName = parseScripture(sheet.bookName(row))[0]!.start.book;
     const totalVerses = sheet.totalVerses(row)!; // Asserting bc loop verified this
-    return { ...common, bookName, totalVerses };
+    const scriptureFromBookCol = parseScripture(sheet.bookName(row));
+
+    const commonWritten = {
+      ...common,
+      bookName,
+      totalVerses,
+    };
+
+    // If scripture from book column matches total count use it.
+    if (ScriptureRange.totalVerses(...scriptureFromBookCol) === totalVerses) {
+      return {
+        ...commonWritten,
+        scripture: scriptureFromBookCol,
+      };
+    }
+
+    // Otherwise if note column has scripture that matches total count use it.
+    const scriptureFromNoteCol = tryParseScripture(rowNote);
+    if (
+      scriptureFromNoteCol &&
+      ScriptureRange.totalVerses(...scriptureFromNoteCol) === totalVerses
+    ) {
+      return {
+        ...commonWritten,
+        scripture: scriptureFromNoteCol,
+      };
+    }
+
+    // Otherwise leave array empty. bookName and totalVerses are already loaded in commonWritten
+    return {
+      ...commonWritten,
+      scripture: [],
+    };
   };
 
 const progress = (cell: Cell) => {

@@ -2,6 +2,7 @@ import { EventsHandler, ILogger, Logger } from '../../../core';
 import { ReportType } from '../../periodic-report/dto';
 import { PeriodicReportUploadedEvent } from '../../periodic-report/events';
 import { ProducibleType, ProductService } from '../../product';
+import { isScriptureEqual } from '../../scripture';
 import { ProductProgressService } from '../product-progress.service';
 import { StepProgressExtractor } from '../step-progress-extractor.service';
 
@@ -53,14 +54,22 @@ export class ExtractPnpProgressHandler {
     // Convert row to product ID
     const updates = progressRows.flatMap((row) => {
       const { steps, ...rest } = row;
-      const productId = row.bookName
-        ? scriptureProducts.find(
+      const rowScripture = row.scripture ?? [];
+      let productId = null;
+      if (row.bookName) {
+        productId = scriptureProducts.find((ref) =>
+          isScriptureEqual(ref.scriptureRanges, rowScripture)
+        )?.id;
+        if (!productId) {
+          productId = scriptureProducts.find(
             (ref) =>
-              ref.book === row.bookName &&
-              ref.totalVerses === row.totalVerses &&
-              ref.pnpIndex === row.rowIndex
-          )?.id
-        : storyProducts[row.story!];
+              ref.book === row.bookName && ref.totalVerses === row.totalVerses
+          )?.id;
+        }
+      } else {
+        productId = storyProducts[row.story!];
+      }
+
       if (productId) {
         return { productId, steps };
       }
