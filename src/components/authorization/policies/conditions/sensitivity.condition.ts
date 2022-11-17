@@ -7,8 +7,14 @@ import { Condition, IsAllowedParams } from '../../policy/conditions';
 const sensitivityRank = { High: 3, Medium: 2, Low: 1 };
 const CQL_VAR = 'sens';
 
+const EffectiveSensitivity = Symbol('EffectiveSensitivity');
+
+export type HasSensitivity =
+  | { sensitivity: Sensitivity }
+  | { [EffectiveSensitivity]: Sensitivity };
+
 export class SensitivityCondition<
-  TResourceStatic extends ResourceShape<{ sensitivity: Sensitivity }>
+  TResourceStatic extends ResourceShape<HasSensitivity>
 > implements Condition<TResourceStatic>
 {
   constructor(private readonly access: Sensitivity) {}
@@ -20,7 +26,8 @@ export class SensitivityCondition<
       throw new Error("Needed object's sensitivity but object wasn't given");
     }
     const actual: Sensitivity | undefined =
-      Reflect.get(object, EffectiveSensitivity) ?? object.sensitivity;
+      Reflect.get(object, EffectiveSensitivity) ??
+      Reflect.get(object, 'sensitivity');
 
     if (!actual) {
       throw new Error(
@@ -78,10 +85,8 @@ export const sensOnlyLow = new SensitivityCondition(Sensitivity.Low);
 export const withEffectiveSensitivity = <T extends object>(
   obj: T,
   sensitivity: Sensitivity
-): T =>
+) =>
   Object.defineProperty(obj, EffectiveSensitivity, {
     value: sensitivity,
     enumerable: false,
-  });
-
-const EffectiveSensitivity = Symbol('EffectiveSensitivity');
+  }) as T & { [EffectiveSensitivity]: Sensitivity };
