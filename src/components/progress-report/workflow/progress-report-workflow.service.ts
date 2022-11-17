@@ -66,8 +66,8 @@ export class ProgressReportWorkflowService {
 
   async executeTransition(
     {
-      reportId,
-      transitionId,
+      report: reportId,
+      transition: transitionId,
       status: overrideStatus,
       notes,
     }: ExecuteProgressReportTransitionInput,

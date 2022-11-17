@@ -14,10 +14,10 @@ export class ProgressReportExecuteTransitionResolver {
 
   @Mutation(() => ProgressReport)
   async transitionProgressReport(
-    @Args() input: ExecuteProgressReportTransitionInput,
+    @Args({ name: 'input' }) input: ExecuteProgressReportTransitionInput,
     @LoggedInSession() session: Session
   ): Promise<ProgressReport> {
     await this.workflow.executeTransition(input, session);
-    return await this.resources.load(ProgressReport, input.reportId);
+    return await this.resources.load(ProgressReport, input.report);
   }
 }

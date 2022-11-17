@@ -1,20 +1,20 @@
-import { ArgsType, Field } from '@nestjs/graphql';
+import { Field, InputType } from '@nestjs/graphql';
 import { ID, IdField, RichTextDocument, RichTextField } from '~/common';
 import { ProgressReportStatus } from '../../dto';
 
-@ArgsType()
+@InputType()
 export abstract class ExecuteProgressReportTransitionInput {
   @IdField({
-    name: 'reportId',
+    name: 'report',
   })
-  readonly reportId: ID;
+  readonly report: ID;
 
   @IdField({
-    name: 'transitionId',
+    name: 'transition',
     description: 'Execute this transition',
     nullable: true,
   })
-  readonly transitionId?: ID;
+  readonly transition?: ID;
 
   @Field(() => ProgressReportStatus, {
     description: 'Bypass the workflow, and go straight to this status.',
