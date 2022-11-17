@@ -1,16 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import {
-  asyncPool,
   ID,
   InputException,
   isIdLike,
   mapFromList,
-  Sensitivity,
   Session,
   UnauthorizedException,
 } from '../../common';
-import { addScope } from '../../common/session';
-import { AuthorizationService } from '../authorization/authorization.service';
+import {
+  HasScope,
+  HasSensitivity,
+  Privileges,
+  UserResourcePrivileges,
+} from '../authorization';
 import { Product } from '../product';
 import type { ProgressReport } from '../progress-report/dto';
 import {
@@ -25,7 +27,7 @@ import { StepNotPlannedException } from './step-not-planned.exception';
 @Injectable()
 export class ProductProgressService {
   constructor(
-    private readonly auth: AuthorizationService,
+    private readonly privileges: Privileges,
     private readonly repo: ProductProgressRepository
   ) {}
 
@@ -41,21 +43,13 @@ export class ProductProgressService {
       await this.repo.readAllProgressReportsForManyReports(
         reports.map((report) => report.id)
       );
-    return await asyncPool(
-      5,
-      progressForManyReports,
-      async ({ reportId, progressList }) => {
-        const report = reportMap[reportId];
-        const progress = await asyncPool(5, progressList, (progress) =>
-          this.secure(
-            progress,
-            addScope(session, report.scope),
-            report.sensitivity
-          )
-        );
-        return { report, progress };
-      }
-    );
+    return progressForManyReports.map(({ reportId, progressList }) => {
+      const report = reportMap[reportId];
+      const progress = progressList.map((progress) =>
+        this.secure(progress, this.privilegesFor(session, report))
+      );
+      return { report, progress };
+    });
   }
 
   async readAllForManyProducts(products: readonly Product[], session: Session) {
@@ -67,21 +61,13 @@ export class ProductProgressService {
       await this.repo.readAllProgressReportsForManyProducts(
         products.map((product) => product.id)
       );
-    return await asyncPool(
-      5,
-      progressForManyProducts,
-      async ({ productId, progressList }) => {
-        const product = productMap[productId];
-        const progress = await asyncPool(5, progressList, (progress) =>
-          this.secure(
-            progress,
-            addScope(session, product.scope),
-            product.sensitivity
-          )
-        );
-        return { product, progress };
-      }
-    );
+    return progressForManyProducts.map(({ productId, progressList }) => {
+      const product = productMap[productId];
+      const progress = progressList.map((progress) =>
+        this.secure(progress, this.privilegesFor(session, product))
+      );
+      return { product, progress };
+    });
   }
 
   async readOne(
@@ -91,14 +77,14 @@ export class ProductProgressService {
   ): Promise<ProductProgress> {
     const productId = isIdLike(product) ? product : product.id;
     const reportId = isIdLike(report) ? report : report.id;
-    const { scope, sensitivity } = !isIdLike(product)
+    const context = !isIdLike(product)
       ? product
       : !isIdLike(report)
       ? report
       : await this.repo.getScope(productId, session);
 
     const progress = await this.repo.readOne(productId, reportId);
-    return await this.secure(progress, addScope(session, scope), sensitivity);
+    return this.secure(progress, this.privilegesFor(session, context));
   }
 
   async readOneForCurrentReport(
@@ -106,24 +92,16 @@ export class ProductProgressService {
     session: Session
   ): Promise<ProductProgress | undefined> {
     const progress = await this.repo.readOneForCurrentReport(product.id);
-    return progress
-      ? await this.secure(
-          progress,
-          addScope(session, product.scope),
-          product.sensitivity
-        )
-      : undefined;
+    if (!progress) {
+      return undefined;
+    }
+    return this.secure(progress, this.privilegesFor(session, product));
   }
 
   async update(input: ProductProgressInput, session: Session) {
     const scope = await this.repo.getScope(input.productId, session);
-    const perms = await this.auth.getPermissions({
-      resource: StepProgress,
-      sensitivity: scope.sensitivity,
-      otherRoles: scope.scope,
-      sessionOrUserId: session,
-    });
-    if (!perms.completed.canEdit) {
+    const privileges = this.privilegesFor(session, scope);
+    if (!privileges.can('edit', 'completed')) {
       throw new UnauthorizedException(
         `You do not have permission to update this product's progress`
       );
@@ -151,46 +129,23 @@ export class ProductProgressService {
     });
 
     const progress = await this.repo.update(cleanedInput);
-    return await this.secure(
-      progress,
-      addScope(session, scope.scope),
-      scope.sensitivity
-    );
+    return this.secure(progress, this.privilegesFor(session, scope));
   }
 
-  async secureAll(
-    progress: readonly UnsecuredProductProgress[],
-    session: Session,
-    sensitivity: Sensitivity
-  ): Promise<readonly ProductProgress[]> {
-    return await Promise.all(
-      progress.map((p) => this.secure(p, session, sensitivity))
-    );
-  }
-
-  async secure(
+  private secure(
     progress: UnsecuredProductProgress,
-    session: Session,
-    sensitivity: Sensitivity
-  ): Promise<ProductProgress> {
-    const steps = await Promise.all(
-      progress.steps.map(async (step): Promise<StepProgress> => {
-        const secured = await this.auth.secureProperties(
-          StepProgress,
-          step,
-          session,
-          [],
-          sensitivity
-        );
-        return {
-          ...step,
-          ...secured,
-        };
-      })
-    );
+    privileges: UserResourcePrivileges<typeof StepProgress>
+  ): ProductProgress {
     return {
       ...progress,
-      steps,
+      steps: progress.steps.map((step) => privileges.secure(step)),
     };
+  }
+
+  private privilegesFor(
+    session: Session,
+    context: HasSensitivity & HasScope
+  ): UserResourcePrivileges<typeof StepProgress> {
+    return this.privileges.for(session, StepProgress, context as any);
   }
 }
