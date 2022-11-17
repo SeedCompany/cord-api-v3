@@ -7,6 +7,12 @@ import {
   IsAllowedParams,
 } from '../../policy/conditions';
 
+const VariantForCondition = Symbol('Variant');
+
+export interface HasVariant {
+  [VariantForCondition]: string;
+}
+
 class VariantCondition<TResourceStatic extends ResourceShape<any>>
   implements Condition<TResourceStatic>
 {
@@ -35,14 +41,12 @@ class VariantCondition<TResourceStatic extends ResourceShape<any>>
   }
 }
 
-export const withVariant = <T extends object>(obj: T, variant: string): T =>
+export const withVariant = <T extends object>(obj: T, variant: string) =>
   Object.defineProperty(obj, VariantForCondition, {
     value: variant,
     enumerable: false,
     writable: true,
-  });
-
-const VariantForCondition = Symbol('Variant');
+  }) as T & HasVariant;
 
 /**
  * The following actions if the object is one of the given variants.

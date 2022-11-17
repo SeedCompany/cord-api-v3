@@ -11,7 +11,7 @@ import {
 
 const CQL_VAR = 'requestingUser';
 
-interface HasCreator {
+export interface HasCreator {
   creator: ID | Secured<ID>;
 }
 
