@@ -3,6 +3,7 @@ import { stripIndent } from 'common-tags';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { Merge } from 'type-fest';
+import { RegisterResource } from '~/core';
 import {
   ID,
   SecuredFloatNullable,
@@ -54,6 +55,7 @@ export type UnsecuredProductProgress = Merge<
   }
 >;
 
+@RegisterResource()
 @ObjectType({
   description: `The progress of a product's step for a given report`,
 })
@@ -79,4 +81,10 @@ export class StepProgress {
     `,
   })
   readonly completed: SecuredFloatNullable;
+}
+
+declare module '~/core/resources/map' {
+  interface ResourceMap {
+    StepProgress: typeof StepProgress;
+  }
 }

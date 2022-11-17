@@ -30,7 +30,6 @@ import {
   IPeriodicReport as PeriodicReport,
 } from '../../periodic-report/dto';
 import { Post } from '../../post/dto';
-import { StepProgress } from '../../product-progress/dto';
 import {
   DerivativeScriptureProduct,
   DirectScriptureProduct,
@@ -96,7 +95,6 @@ export const LegacyResourceMap = {
   FinancialReport,
   NarrativeReport,
   ProjectChangeRequest,
-  StepProgress,
   Song,
   Story,
   Unavailability,
