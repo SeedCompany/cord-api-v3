@@ -2,6 +2,7 @@ import { EventsHandler, ILogger, Logger } from '../../../core';
 import { ReportType } from '../../periodic-report/dto';
 import { PeriodicReportUploadedEvent } from '../../periodic-report/events';
 import { ProducibleType, ProductService } from '../../product';
+import { ProgressReportVariantProgress as Progress } from '../dto';
 import { ProductProgressService } from '../product-progress.service';
 import { StepProgressExtractor } from '../step-progress-extractor.service';
 
@@ -78,6 +79,8 @@ export class ExtractPnpProgressHandler {
           {
             ...input,
             reportId: event.report.id,
+            // TODO this seems fine for now as only this variant will upload PnPs.
+            variant: Progress.FallbackVariant,
           },
           event.session
         );

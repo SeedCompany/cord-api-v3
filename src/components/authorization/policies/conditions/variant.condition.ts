@@ -1,6 +1,6 @@
 import { Query } from 'cypher-query-builder';
 import { inspect, InspectOptionsStylized } from 'util';
-import { Many, ResourceShape, VariantOf } from '~/common';
+import { Many, ResourceShape, Variant, VariantOf } from '~/common';
 import {
   AsCypherParams,
   Condition,
@@ -41,9 +41,12 @@ class VariantCondition<TResourceStatic extends ResourceShape<any>>
   }
 }
 
-export const withVariant = <T extends object>(obj: T, variant: string) =>
+export const withVariant = <T extends object>(
+  obj: T,
+  variant: string | Variant
+) =>
   Object.defineProperty(obj, VariantForCondition, {
-    value: variant,
+    value: typeof variant === 'string' ? variant : variant.key,
     enumerable: false,
     writable: true,
   }) as T & HasVariant;

@@ -3,14 +3,41 @@ import { stripIndent } from 'common-tags';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { Merge } from 'type-fest';
-import { RegisterResource } from '~/core';
 import {
   ID,
   SecuredFloatNullable,
   SecuredProps,
+  SetUnsecuredType,
   UnsecuredDto,
-} from '../../../common';
-import { ProductStep } from '../../product';
+  Variant,
+} from '~/common';
+import { RegisterResource } from '~/core';
+import { Product, ProductStep } from '../../product';
+import { ProgressReport } from '../../progress-report/dto';
+import {
+  ProgressReportVariantProgress,
+  ProgressVariant,
+} from './variant-progress.dto';
+
+export interface ProgressVariantByProductInput {
+  product: Product;
+  variant: Variant<ProgressVariant>;
+}
+
+export interface ProgressVariantByProductOutput
+  extends Pick<ProgressReportVariantProgress, 'variant' | 'details'> {
+  product: Product;
+}
+
+export interface ProgressVariantByReportInput {
+  report: ProgressReport;
+  variant: Variant<ProgressVariant>;
+}
+
+export interface ProgressVariantByReportOutput
+  extends Pick<ProgressReportVariantProgress, 'variant' | 'details'> {
+  report: ProgressReport;
+}
 
 @ObjectType({
   description: 'The progress of a product for a given report',
@@ -28,6 +55,10 @@ export class ProductProgress {
   readonly productId: ID;
 
   readonly reportId: ID;
+
+  @Field(() => Variant)
+  readonly variant: Variant<ProgressVariant> &
+    SetUnsecuredType<ProgressVariant>;
 
   @Field(() => [StepProgress], {
     description: stripIndent`
@@ -63,6 +94,7 @@ export class StepProgress {
   static readonly Props = keysOf<StepProgress>();
   static readonly SecuredProps = keysOf<SecuredProps<StepProgress>>();
   static readonly Parent = 'dynamic'; // [Product, ProgressReport]
+  static readonly Variants = ProgressReportVariantProgress.Variants;
 
   // Both of these only exist if progress has been reported (or explicitly set to null).
   // I have these here to show that they can exist in the DB, but they are private to the API.

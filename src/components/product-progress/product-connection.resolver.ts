@@ -1,8 +1,8 @@
-import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { AnonSession, ID, IdArg, Session } from '../../common';
-import { Loader, LoaderOf } from '../../core';
+import { Args, Parent, ResolveField, Resolver } from '@nestjs/graphql';
+import { AnonSession, ID, IdArg, Session } from '~/common';
+import { Loader, LoaderOf } from '~/core';
 import { Product } from '../product';
-import { ProductProgress } from './dto';
+import { ProductProgress, VariantProgressArg } from './dto';
 import { ProductProgressByProductLoader } from './product-progress-by-product.loader';
 import { ProductProgressService } from './product-progress.service';
 
@@ -15,10 +15,11 @@ export class ProductConnectionResolver {
   })
   async progressReports(
     @Parent() product: Product,
+    @Args() { variant }: VariantProgressArg,
     @Loader(ProductProgressByProductLoader)
     loader: LoaderOf<ProductProgressByProductLoader>
   ): Promise<readonly ProductProgress[]> {
-    return (await loader.load(product)).progress;
+    return (await loader.load({ product, variant })).details;
   }
 
   @ResolveField(() => ProductProgress, {
@@ -27,9 +28,10 @@ export class ProductConnectionResolver {
   async progressReport(
     @IdArg({ name: 'reportId' }) reportId: ID,
     @Parent() product: Product,
+    @Args() { variant }: VariantProgressArg,
     @AnonSession() session: Session
   ): Promise<ProductProgress> {
-    return await this.service.readOne(reportId, product, session);
+    return await this.service.readOne(reportId, product, variant, session);
   }
 
   @ResolveField(() => ProductProgress, {
@@ -38,8 +40,12 @@ export class ProductConnectionResolver {
   })
   async progressOfCurrentReportDue(
     @Parent() product: Product,
+    @Args() { variant }: VariantProgressArg,
     @AnonSession() session: Session
   ): Promise<ProductProgress | undefined> {
-    return await this.service.readOneForCurrentReport(product, session);
+    return await this.service.readOneForCurrentReport(
+      { product, variant },
+      session
+    );
   }
 }
