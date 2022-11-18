@@ -1,5 +1,10 @@
-import { Field, ObjectType } from '@nestjs/graphql';
+import { applyDecorators } from '@nestjs/common';
+import { Field, FieldOptions, ObjectType } from '@nestjs/graphql';
+import { ID as IDType } from '@nestjs/graphql/dist/scalars';
+import { Transform } from 'class-transformer';
+import { IsIn } from 'class-validator';
 import { stripIndent } from 'common-tags';
+import { Merge } from 'type-fest';
 import { ResourceShape } from '~/common/resource.dto';
 import { InputException } from './exceptions';
 import { IdField } from './id-field';
@@ -60,3 +65,45 @@ export type VariantOf<TResourceStatic extends ResourceShape<any>> =
   TResourceStatic extends { Variants: ReadonlyArray<Variant<infer VariantKey>> }
     ? VariantKey
     : never;
+
+/**
+ * A variant input field.
+ * It'll be confirmed to be one of the variants of the resource given.
+ * It'll be converted to the Variant object.
+ */
+export const VariantInputField = <
+  Res extends ResourceShape<any> & { Variants: readonly Variant[] }
+>(
+  resource: Res,
+  options: Merge<
+    FieldOptions,
+    { defaultValue?: Variant<VariantOf<Res>> | VariantOf<Res> }
+  > = {}
+) => {
+  const { defaultValue, ...rest } = options;
+
+  // Resolve default to variant object
+  const defaultVariant =
+    typeof defaultValue === 'string'
+      ? resource.Variants.find((v) => v.key === options.defaultValue)
+      : defaultValue;
+
+  return applyDecorators(
+    Field(() => IDType, {
+      // Don't put default value in schema as we are trying to keep specific
+      // values out of schema, so they can be more dynamic.
+      nullable: !!defaultValue,
+      ...rest,
+    }),
+    Transform(({ value }) => {
+      if (value == null) {
+        return defaultVariant;
+      }
+      return resource.Variants.find((v) => v.key === value) ?? value;
+    }),
+    IsIn(resource.Variants, {
+      message: ({ value }) =>
+        `Variant with key "${String(value)}" was not found`,
+    })
+  );
+};
