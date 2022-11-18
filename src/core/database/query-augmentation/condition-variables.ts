@@ -10,7 +10,7 @@ import type {
 } from 'cypher-query-builder/dist/typings/parameter-bag';
 import type { ParameterContainer as TSParameterContainer } from 'cypher-query-builder/dist/typings/parameter-container';
 import { Class } from 'type-fest';
-import { many, Many, mapFromList } from '../../../common';
+import { mapFromList } from '../../../common';
 
 // This class is not exported so grab it a hacky way
 const ParameterContainer = Object.getPrototypeOf(
@@ -23,48 +23,31 @@ const Parameter = new ParameterBag().addParam('')
 const Pattern = Object.getPrototypeOf(NodePattern) as Class<TSPattern>;
 
 export class Variable extends Parameter {
-  constructor(variable: string, public refs: readonly string[]) {
-    super(variable, variable);
+  constructor(variable: string, name = variable) {
+    super(name, variable);
   }
 
   toString() {
-    return `${this.name}`;
+    return `${this.value}`;
   }
 }
 
 /**
  * @param expression The expression to inline in the query
- * @param refs References used in the expression.
- *             Can be used to import them into sub-queries.
  */
-export const variable = (expression: string, refs?: Many<string>) =>
-  new Variable(expression, refs ? many(refs) : []);
+export const variable = (expression: string) => new Variable(expression);
 
 ParameterBag.prototype.addParam = function addParam(
   this: TSParameterBag,
   value: any | Variable,
   name?: string
 ) {
-  if (value instanceof Variable) {
-    this.parameterMap[value.name] = value;
-    return value;
-  }
   const actualName = this.getName(name);
-  const param = new Parameter(actualName, value);
+  const param =
+    value instanceof Variable
+      ? new Variable(value.value, actualName)
+      : new Parameter(actualName, value);
   this.parameterMap[actualName] = param;
-  return param;
-};
-
-ParameterBag.prototype.addExistingParam = function addExistingParam(
-  this: TSParameterBag,
-  param: TSParameter
-) {
-  if (param instanceof Variable) {
-    this.parameterMap[param.name] = param;
-    return param;
-  }
-  param.name = this.getName(param.name);
-  this.parameterMap[param.name] = param;
   return param;
 };
 
