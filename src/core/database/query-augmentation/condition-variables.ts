@@ -10,7 +10,7 @@ import type {
 } from 'cypher-query-builder/dist/typings/parameter-bag';
 import type { ParameterContainer as TSParameterContainer } from 'cypher-query-builder/dist/typings/parameter-container';
 import { Class } from 'type-fest';
-import { many, Many, mapFromList } from '../../../common';
+import { mapFromList } from '../../../common';
 
 // This class is not exported so grab it a hacky way
 const ParameterContainer = Object.getPrototypeOf(
@@ -23,7 +23,7 @@ const Parameter = new ParameterBag().addParam('')
 const Pattern = Object.getPrototypeOf(NodePattern) as Class<TSPattern>;
 
 export class Variable extends Parameter {
-  constructor(variable: string, public refs: readonly string[]) {
+  constructor(variable: string) {
     super(variable, variable);
   }
 
@@ -34,11 +34,8 @@ export class Variable extends Parameter {
 
 /**
  * @param expression The expression to inline in the query
- * @param refs References used in the expression.
- *             Can be used to import them into sub-queries.
  */
-export const variable = (expression: string, refs?: Many<string>) =>
-  new Variable(expression, refs ? many(refs) : []);
+export const variable = (expression: string) => new Variable(expression);
 
 ParameterBag.prototype.addParam = function addParam(
   this: TSParameterBag,
