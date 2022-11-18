@@ -23,12 +23,12 @@ const Parameter = new ParameterBag().addParam('')
 const Pattern = Object.getPrototypeOf(NodePattern) as Class<TSPattern>;
 
 export class Variable extends Parameter {
-  constructor(variable: string) {
-    super(variable, variable);
+  constructor(variable: string, name = variable) {
+    super(name, variable);
   }
 
   toString() {
-    return `${this.name}`;
+    return `${this.value}`;
   }
 }
 
@@ -42,26 +42,12 @@ ParameterBag.prototype.addParam = function addParam(
   value: any | Variable,
   name?: string
 ) {
-  if (value instanceof Variable) {
-    this.parameterMap[value.name] = value;
-    return value;
-  }
   const actualName = this.getName(name);
-  const param = new Parameter(actualName, value);
+  const param =
+    value instanceof Variable
+      ? new Variable(value.value, actualName)
+      : new Parameter(actualName, value);
   this.parameterMap[actualName] = param;
-  return param;
-};
-
-ParameterBag.prototype.addExistingParam = function addExistingParam(
-  this: TSParameterBag,
-  param: TSParameter
-) {
-  if (param instanceof Variable) {
-    this.parameterMap[param.name] = param;
-    return param;
-  }
-  param.name = this.getName(param.name);
-  this.parameterMap[param.name] = param;
   return param;
 };
 
