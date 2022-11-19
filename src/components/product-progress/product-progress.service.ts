@@ -4,6 +4,7 @@ import {
   InputException,
   isIdLike,
   mapFromList,
+  NotFoundException,
   Session,
   UnauthorizedException,
   Variant,
@@ -55,9 +56,10 @@ export class ProductProgressService {
       return {
         report,
         variant: Progress.Variants.byKey(row.variant),
-        details: row.progressList.map((progress) =>
-          this.secure(progress, this.privilegesFor(session, report))
-        ),
+        details: row.progressList.flatMap((progress) => {
+          const privileges = this.privilegesFor(session, report);
+          return this.secure(progress, privileges) ?? [];
+        }),
       };
     });
   }
@@ -78,9 +80,10 @@ export class ProductProgressService {
       return {
         product,
         variant: Progress.Variants.byKey(row.variant),
-        details: row.progressList.map((progress) =>
-          this.secure(progress, this.privilegesFor(session, product))
-        ),
+        details: row.progressList.flatMap((progress) => {
+          const privileges = this.privilegesFor(session, product);
+          return this.secure(progress, privileges) ?? [];
+        }),
       };
     });
   }
@@ -99,8 +102,15 @@ export class ProductProgressService {
       ? report
       : await this.repo.getScope(productId, session);
 
-    const progress = await this.repo.readOne(productId, reportId, variant);
-    return this.secure(progress, this.privilegesFor(session, context));
+    const unsecured = await this.repo.readOne(productId, reportId, variant);
+    const progress = this.secure(
+      unsecured,
+      this.privilegesFor(session, context)
+    );
+    if (!progress) {
+      throw new NotFoundException();
+    }
+    return progress;
   }
 
   async readOneForCurrentReport(
@@ -120,7 +130,7 @@ export class ProductProgressService {
       session,
       withVariant(scope, input.variant)
     );
-    if (!privileges.can('edit', 'completed')) {
+    if (!privileges.can('read') || !privileges.can('edit', 'completed')) {
       throw new UnauthorizedException(
         `You do not have the permission to update the "${input.variant.label}" variant of this goal's progress`
       );
@@ -148,16 +158,19 @@ export class ProductProgressService {
     });
 
     const progress = await this.repo.update(cleanedInput);
-    return this.secure(progress, this.privilegesFor(session, scope));
+    return this.secure(progress, this.privilegesFor(session, scope))!;
   }
 
   private secure(
     progress: UnsecuredProductProgress,
     privileges: UserResourcePrivileges<typeof StepProgress>
-  ): ProductProgress {
+  ): ProductProgress | undefined {
     const vp = privileges.forContext(
       withVariant(privileges.context!, progress.variant)
     );
+    if (!vp.can('read')) {
+      return undefined;
+    }
     return {
       ...progress,
       variant: Progress.Variants.byKey(progress.variant),

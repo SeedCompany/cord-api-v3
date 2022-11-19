@@ -39,6 +39,9 @@ export class ProgressReportConnectionResolver {
         }
         throw entry;
       }
+      if (entry.details.length === 0) {
+        return [];
+      }
       return [entry.details];
     });
   }
