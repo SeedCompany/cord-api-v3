@@ -8,6 +8,7 @@ import {
   IdOf,
   Secured,
   SecuredProps,
+  SecuredRichTextNullable,
   SetUnsecuredType,
 } from '~/common';
 import { RegisterResource } from '~/core';
@@ -40,6 +41,9 @@ export abstract class ProgressReportWorkflowEvent {
 
   @Field(() => ProgressReportStatus)
   readonly status: ProgressReportStatus;
+
+  @Field()
+  readonly notes: SecuredRichTextNullable;
 }
 
 declare module '~/core/resources/map' {

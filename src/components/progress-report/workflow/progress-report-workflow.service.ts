@@ -9,6 +9,7 @@ import {
 import { ResourceLoader } from '~/core';
 import { Privileges } from '../../authorization';
 import { ProgressReport, ProgressReportStatus as Status } from '../dto';
+import { ExecuteProgressReportTransitionInput } from './dto/execute-progress-report-transition.input';
 import { ProgressReportWorkflowEvent as WorkflowEvent } from './dto/workflow-event.dto';
 import { ProgressReportWorkflowRepository } from './progress-report-workflow.repository';
 import { Transitions } from './transitions';
@@ -64,9 +65,12 @@ export class ProgressReportWorkflowService {
   }
 
   async executeTransition(
-    reportId: ID,
-    transitionId: ID | undefined,
-    overrideStatus: Status | undefined,
+    {
+      report: reportId,
+      transition: transitionId,
+      status: overrideStatus,
+      notes,
+    }: ExecuteProgressReportTransitionInput,
     session: Session
   ) {
     const currentStatus = await this.repo.currentStatus(reportId);
@@ -79,7 +83,7 @@ export class ProgressReportWorkflowService {
       }
 
       await Promise.all([
-        this.repo.recordBypass(reportId, overrideStatus, session),
+        this.repo.recordBypass(reportId, overrideStatus, session, notes),
         this.repo.changeStatus(reportId, overrideStatus),
       ]);
       return;
@@ -92,7 +96,7 @@ export class ProgressReportWorkflowService {
     }
 
     await Promise.all([
-      this.repo.recordTransition(reportId, transition, session),
+      this.repo.recordTransition(reportId, transition, session, notes),
       this.repo.changeStatus(reportId, transition.to),
     ]);
 
