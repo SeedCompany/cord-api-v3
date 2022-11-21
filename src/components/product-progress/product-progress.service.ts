@@ -42,6 +42,16 @@ export class ProductProgressService {
     private readonly repo: ProductProgressRepository
   ) {}
 
+  async getAvailableVariantsForProduct(product: Product, session: Session) {
+    return Progress.Variants.filter((variant) => {
+      const privileges = this.privilegesFor(
+        session,
+        withVariant(product, variant)
+      );
+      return privileges.can('read', 'completed');
+    });
+  }
+
   async readAllForManyReports(
     reports: readonly ProgressVariantByReportInput[],
     session: Session
