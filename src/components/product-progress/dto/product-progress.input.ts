@@ -2,11 +2,12 @@ import { Field, Float, InputType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { Max, Min, ValidateNested } from 'class-validator';
 import { stripIndent } from 'common-tags';
-import { ID, IdField } from '../../../common';
+import { ID, IdField } from '~/common';
 import { ProductStep } from '../../product';
+import { VariantProgressArg } from './variant-progress.dto';
 
 @InputType()
-export abstract class ProductProgressInput {
+export abstract class ProductProgressInput extends VariantProgressArg {
   @IdField({
     description: 'Which product are you reporting on?',
   })

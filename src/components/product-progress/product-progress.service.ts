@@ -1,131 +1,138 @@
 import { Injectable } from '@nestjs/common';
 import {
-  asyncPool,
   ID,
   InputException,
   isIdLike,
   mapFromList,
-  Sensitivity,
+  NotFoundException,
   Session,
   UnauthorizedException,
-} from '../../common';
-import { addScope } from '../../common/session';
-import { AuthorizationService } from '../authorization/authorization.service';
+  Variant,
+} from '~/common';
+import {
+  HasScope,
+  HasSensitivity,
+  Privileges,
+  UserResourcePrivileges,
+  withVariant,
+} from '../authorization';
 import { Product } from '../product';
 import type { ProgressReport } from '../progress-report/dto';
 import {
   ProductProgress,
   ProductProgressInput,
+  ProgressVariantByProductInput,
+  ProgressVariantByProductOutput,
+  ProgressVariantByReportInput,
+  ProgressVariantByReportOutput,
   StepProgress,
   UnsecuredProductProgress,
 } from './dto';
+import {
+  ProgressReportVariantProgress as Progress,
+  ProgressVariant,
+} from './dto/variant-progress.dto';
 import { ProductProgressRepository } from './product-progress.repository';
 import { StepNotPlannedException } from './step-not-planned.exception';
 
 @Injectable()
 export class ProductProgressService {
   constructor(
-    private readonly auth: AuthorizationService,
+    private readonly privileges: Privileges,
     private readonly repo: ProductProgressRepository
   ) {}
 
   async readAllForManyReports(
-    reports: readonly ProgressReport[],
+    reports: readonly ProgressVariantByReportInput[],
     session: Session
-  ) {
+  ): Promise<readonly ProgressVariantByReportOutput[]> {
     if (reports.length === 0) {
       return [];
     }
-    const reportMap = mapFromList(reports, (r) => [r.id, r]);
-    const progressForManyReports =
-      await this.repo.readAllProgressReportsForManyReports(
-        reports.map((report) => report.id)
-      );
-    return await asyncPool(
-      5,
-      progressForManyReports,
-      async ({ reportId, progressList }) => {
-        const report = reportMap[reportId];
-        const progress = await asyncPool(5, progressList, (progress) =>
-          this.secure(
-            progress,
-            addScope(session, report.scope),
-            report.sensitivity
-          )
-        );
-        return { report, progress };
-      }
-    );
+    const reportMap = mapFromList(reports, (r) => [r.report.id, r.report]);
+    const rows = await this.repo.readAllProgressReportsForManyReports(reports);
+    return rows.map((row): ProgressVariantByReportOutput => {
+      const report = reportMap[row.reportId];
+      return {
+        report,
+        variant: Progress.Variants.byKey(row.variant),
+        details: row.progressList.flatMap((progress) => {
+          const privileges = this.privilegesFor(session, report);
+          return this.secure(progress, privileges) ?? [];
+        }),
+      };
+    });
   }
 
-  async readAllForManyProducts(products: readonly Product[], session: Session) {
+  async readAllForManyProducts(
+    products: readonly ProgressVariantByProductInput[],
+    session: Session
+  ): Promise<readonly ProgressVariantByProductOutput[]> {
     if (products.length === 0) {
       return [];
     }
-    const productMap = mapFromList(products, (r) => [r.id, r]);
-    const progressForManyProducts =
-      await this.repo.readAllProgressReportsForManyProducts(
-        products.map((product) => product.id)
-      );
-    return await asyncPool(
-      5,
-      progressForManyProducts,
-      async ({ productId, progressList }) => {
-        const product = productMap[productId];
-        const progress = await asyncPool(5, progressList, (progress) =>
-          this.secure(
-            progress,
-            addScope(session, product.scope),
-            product.sensitivity
-          )
-        );
-        return { product, progress };
-      }
+    const productMap = mapFromList(products, (p) => [p.product.id, p.product]);
+    const rows = await this.repo.readAllProgressReportsForManyProducts(
+      products
     );
+    return rows.map((row): ProgressVariantByProductOutput => {
+      const product = productMap[row.productId];
+      return {
+        product,
+        variant: Progress.Variants.byKey(row.variant),
+        details: row.progressList.flatMap((progress) => {
+          const privileges = this.privilegesFor(session, product);
+          return this.secure(progress, privileges) ?? [];
+        }),
+      };
+    });
   }
 
   async readOne(
     report: ID | ProgressReport,
     product: ID | Product,
+    variant: Variant<ProgressVariant>,
     session: Session
   ): Promise<ProductProgress> {
     const productId = isIdLike(product) ? product : product.id;
     const reportId = isIdLike(report) ? report : report.id;
-    const { scope, sensitivity } = !isIdLike(product)
+    const context = !isIdLike(product)
       ? product
       : !isIdLike(report)
       ? report
       : await this.repo.getScope(productId, session);
 
-    const progress = await this.repo.readOne(productId, reportId);
-    return await this.secure(progress, addScope(session, scope), sensitivity);
+    const unsecured = await this.repo.readOne(productId, reportId, variant);
+    const progress = this.secure(
+      unsecured,
+      this.privilegesFor(session, context)
+    );
+    if (!progress) {
+      throw new NotFoundException();
+    }
+    return progress;
   }
 
   async readOneForCurrentReport(
-    product: Product,
+    input: ProgressVariantByProductInput,
     session: Session
   ): Promise<ProductProgress | undefined> {
-    const progress = await this.repo.readOneForCurrentReport(product.id);
-    return progress
-      ? await this.secure(
-          progress,
-          addScope(session, product.scope),
-          product.sensitivity
-        )
-      : undefined;
+    const progress = await this.repo.readOneForCurrentReport(input);
+    if (!progress) {
+      return undefined;
+    }
+    return this.secure(progress, this.privilegesFor(session, input.product));
   }
 
   async update(input: ProductProgressInput, session: Session) {
     const scope = await this.repo.getScope(input.productId, session);
-    const perms = await this.auth.getPermissions({
-      resource: StepProgress,
-      sensitivity: scope.sensitivity,
-      otherRoles: scope.scope,
-      sessionOrUserId: session,
-    });
-    if (!perms.completed.canEdit) {
+    const privileges = this.privilegesFor(
+      session,
+      withVariant(scope, input.variant)
+    );
+    if (!privileges.can('read') || !privileges.can('edit', 'completed')) {
       throw new UnauthorizedException(
-        `You do not have permission to update this product's progress`
+        `You do not have the permission to update the "${input.variant.label}" variant of this goal's progress`
       );
     }
 
@@ -151,46 +158,30 @@ export class ProductProgressService {
     });
 
     const progress = await this.repo.update(cleanedInput);
-    return await this.secure(
-      progress,
-      addScope(session, scope.scope),
-      scope.sensitivity
-    );
+    return this.secure(progress, this.privilegesFor(session, scope))!;
   }
 
-  async secureAll(
-    progress: readonly UnsecuredProductProgress[],
-    session: Session,
-    sensitivity: Sensitivity
-  ): Promise<readonly ProductProgress[]> {
-    return await Promise.all(
-      progress.map((p) => this.secure(p, session, sensitivity))
-    );
-  }
-
-  async secure(
+  private secure(
     progress: UnsecuredProductProgress,
-    session: Session,
-    sensitivity: Sensitivity
-  ): Promise<ProductProgress> {
-    const steps = await Promise.all(
-      progress.steps.map(async (step): Promise<StepProgress> => {
-        const secured = await this.auth.secureProperties(
-          StepProgress,
-          step,
-          session,
-          [],
-          sensitivity
-        );
-        return {
-          ...step,
-          ...secured,
-        };
-      })
+    privileges: UserResourcePrivileges<typeof StepProgress>
+  ): ProductProgress | undefined {
+    const vp = privileges.forContext(
+      withVariant(privileges.context!, progress.variant)
     );
+    if (!vp.can('read')) {
+      return undefined;
+    }
     return {
       ...progress,
-      steps,
+      variant: Progress.Variants.byKey(progress.variant),
+      steps: progress.steps.map((step) => vp.secure(step)),
     };
+  }
+
+  private privilegesFor(
+    session: Session,
+    context: HasSensitivity & HasScope
+  ): UserResourcePrivileges<typeof StepProgress> {
+    return this.privileges.for(session, StepProgress, context as any);
   }
 }

@@ -17,10 +17,14 @@ import {
 
 const CQL_VAR = 'membershipRoles';
 
-type ResourceWithScope = ResourceShape<any> & {
+const ScopedRoles = Symbol('ScopedRoles');
+
+export type HasScope =
   // Make non-nullable to enforce that resource has its own scope to use this condition.
-  prototype: { scope?: readonly ScopedRole[] };
-};
+  { scope?: readonly ScopedRole[] } | { [ScopedRoles]: readonly ScopedRole[] };
+
+// TODO-ing any here as this hasn't been implemented in some cases yet. #2566
+type ResourceWithScope = ResourceShape<HasScope | any>;
 
 class MemberCondition<TResourceStatic extends ResourceWithScope>
   implements Condition<TResourceStatic>
@@ -125,16 +129,12 @@ export const withScope = <T extends object>(obj: T, roles: ScopedRole[]) =>
   Object.defineProperty(obj, ScopedRoles, {
     value: roles,
     enumerable: false,
-  });
+  }) as T & { [ScopedRoles]: ScopedRole[] };
 
-export const getScope = (
-  object: IsAllowedParams<ResourceWithScope>['object']
-): ScopedRole[] => {
+export const getScope = (object?: HasScope): ScopedRole[] => {
   if (!object) {
     throw new Error("Needed object's scoped roles but object wasn't given");
   }
 
-  return Reflect.get(object, ScopedRoles) ?? object?.scope ?? [];
+  return Reflect.get(object, ScopedRoles) ?? Reflect.get(object, 'scope') ?? [];
 };
-
-const ScopedRoles = Symbol('ScopedRoles');

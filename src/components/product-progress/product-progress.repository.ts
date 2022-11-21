@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { stripIndent } from 'common-tags';
-import { inArray, node, Query, relation } from 'cypher-query-builder';
+import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   generateId,
@@ -8,6 +8,7 @@ import {
   ID,
   NotFoundException,
   Session,
+  Variant,
 } from '../../common';
 import { DatabaseService } from '../../core';
 import {
@@ -25,6 +26,9 @@ import { ProductStep } from '../product';
 import {
   ProductProgress,
   ProductProgressInput,
+  ProgressVariant,
+  ProgressVariantByProductInput,
+  ProgressVariantByReportInput,
   StepProgress,
   UnsecuredProductProgress,
 } from './dto';
@@ -36,13 +40,14 @@ export class ProductProgressRepository {
     private readonly reports: PeriodicReportService
   ) {}
 
-  async readOne(productId: ID, reportId: ID) {
+  async readOne(productId: ID, reportId: ID, variant: Variant) {
     const result = await this.db
       .query()
       .match([
         [node('product', 'Product', { id: productId })],
         [node('report', 'PeriodicReport', { id: reportId })],
       ])
+      .apply(this.withVariant(variant))
       .apply(this.hydrateAll())
       .first();
     if (!result) {
@@ -53,10 +58,11 @@ export class ProductProgressRepository {
     return result;
   }
 
-  async readOneForCurrentReport(productId: ID) {
+  async readOneForCurrentReport(input: ProgressVariantByProductInput) {
     const result = await this.db
       .query()
-      .match(node('product', 'Product', { id: productId }))
+      .match(node('product', 'Product', { id: input.product.id }))
+      .apply(this.withVariant(input.variant))
       .subQuery('product', (sub) =>
         sub
           .match([
@@ -77,56 +83,80 @@ export class ProductProgressRepository {
     return result;
   }
 
-  async readAllProgressReportsForManyProducts(productIds: ID[]) {
+  async readAllProgressReportsForManyProducts(
+    products: readonly ProgressVariantByProductInput[]
+  ) {
     const result = await this.db
       .query()
+      .unwind(
+        products.map((r) => ({
+          productId: r.product.id,
+          variant: r.variant.key,
+        })),
+        'input'
+      )
       .match([
-        node('eng'),
+        node('eng', 'Engagement'),
         relation('out', '', 'product', ACTIVE),
-        node('product', 'Product'),
+        node('product', 'Product', {
+          id: variable('input.productId'),
+        }),
       ])
-      .where({ 'product.id': inArray(productIds) })
-      .subQuery(['eng', 'product'], (sub) =>
+      .with('eng, product, input.variant as variant')
+      .subQuery(['eng', 'product', 'variant'], (sub) =>
         sub
           .match([
-            node('eng', 'Engagement'),
+            node('eng'),
             relation('out', '', 'report', ACTIVE),
             node('report', 'ProgressReport'),
           ])
-          .subQuery(['report', 'product'], this.hydrateAll())
+          .subQuery(['report', 'product', 'variant'], this.hydrateAll())
           .return(collect('dto').as('progressList'))
       )
-      .return<{ productId: ID; progressList: UnsecuredProductProgress[] }>([
-        'product.id as productId',
-        'progressList',
-      ])
+      .return<{
+        productId: ID;
+        variant: ProgressVariant;
+        progressList: UnsecuredProductProgress[];
+      }>(['product.id as productId', 'variant', 'progressList'])
       .run();
     return result;
   }
 
-  async readAllProgressReportsForManyReports(reportIds: ID[]) {
+  async readAllProgressReportsForManyReports(
+    reports: readonly ProgressVariantByReportInput[]
+  ) {
     const result = await this.db
       .query()
+      .unwind(
+        reports.map((r) => ({
+          reportId: r.report.id,
+          variant: r.variant.key,
+        })),
+        'input'
+      )
       .match([
         node('eng', 'Engagement'),
         relation('out', '', 'report', ACTIVE),
-        node('report', 'ProgressReport'),
+        node('report', 'ProgressReport', {
+          id: variable('input.reportId'),
+        }),
       ])
-      .where({ 'report.id': inArray(reportIds) })
-      .subQuery(['eng', 'report'], (sub) =>
+      .with('eng, report, input.variant as variant')
+      .subQuery(['eng', 'report', 'variant'], (sub) =>
         sub
           .match([
             node('eng'),
             relation('out', '', 'product', ACTIVE),
             node('product', 'Product'),
           ])
-          .subQuery(['report', 'product'], this.hydrateAll())
+          .subQuery(['report', 'product', 'variant'], this.hydrateAll())
           .return(collect('dto').as('progressList'))
       )
-      .return<{ reportId: ID; progressList: UnsecuredProductProgress[] }>([
-        'report.id as reportId',
-        'progressList',
-      ])
+      .return<{
+        reportId: ID;
+        variant: ProgressVariant;
+        progressList: UnsecuredProductProgress[];
+      }>(['report.id as reportId', 'variant', 'progressList'])
       .run();
     return result;
   }
@@ -138,7 +168,9 @@ export class ProductProgressRepository {
         .optionalMatch([
           node('report'),
           relation('out', '', 'progress', ACTIVE),
-          node('progress', 'ProductProgress'),
+          node('progress', 'ProductProgress', {
+            variant: variable('variant'),
+          }),
           relation('in', '', 'progress', ACTIVE),
           node('product'),
         ])
@@ -150,7 +182,7 @@ export class ProductProgressRepository {
   private hydrateOne() {
     return <R>(query: Query<R>) =>
       query.comment`hydrateOne()`.subQuery(
-        ['product', 'report', 'progress'],
+        ['product', 'report', 'progress', 'variant'],
         (sub1) =>
           sub1
             .subQuery(['product', 'report', 'progress'], (sub2) =>
@@ -178,6 +210,7 @@ export class ProductProgressRepository {
               merge('progress', {
                 productId: 'product.id',
                 reportId: 'report.id',
+                variant: 'variant',
                 // Convert the products step strings into actual StepProgress
                 // or fallback to a placeholder. This ensures that the list is
                 // in the correct order and indicates which steps still need
@@ -207,14 +240,17 @@ export class ProductProgressRepository {
       .query()
       .match([node('product', 'Product', { id: input.productId })])
       .match([node('report', 'PeriodicReport', { id: input.reportId })])
+      .apply(this.withVariant(input.variant))
 
       .comment('Create ProductProgress if needed')
-      .subQuery(['product', 'report'], (sub) =>
+      .subQuery(['product', 'report', 'variant'], (sub) =>
         sub
           .merge([
             node('product'),
             relation('out', 'productProgressRel', 'progress', ACTIVE),
-            node('progress', 'ProductProgress'),
+            node('progress', 'ProductProgress', {
+              variant: variable('variant'),
+            }),
             relation('in', 'reportProgressRel', 'progress', ACTIVE),
             node('report'),
           ])
@@ -332,5 +368,12 @@ export class ProductProgressRepository {
       throw new NotFoundException('Could not find product');
     }
     return result;
+  }
+
+  private withVariant(variant: Variant) {
+    return (q: Query) => {
+      const p = q.params.addParam(variant.key, 'variant');
+      return q.with(`*, ${String(p)} as variant`);
+    };
   }
 }

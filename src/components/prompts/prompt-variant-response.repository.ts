@@ -10,6 +10,8 @@ import {
   ResourceShape,
   Session,
   UnsecuredDto,
+  VariantList,
+  VariantOf,
 } from '~/common';
 import { DtoRepository } from '~/core';
 import { privileges } from '~/core/database/dto.repository';
@@ -34,7 +36,6 @@ import {
   UpdatePromptVariantResponse,
   VariantResponse,
 } from './dto';
-import { VariantList, VariantOf } from './dto/variant.dto';
 
 export const PromptVariantResponseRepository = <
   Parent extends ResourceShape<any>,
