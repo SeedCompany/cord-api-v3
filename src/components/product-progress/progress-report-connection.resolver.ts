@@ -1,4 +1,5 @@
 import { Args, Parent, ResolveField, Resolver } from '@nestjs/graphql';
+import { sortBy } from 'lodash';
 import { ClientException } from '~/common';
 import { Loader, LoaderOf } from '~/core';
 import { ProgressReport } from '../progress-report/dto';
@@ -32,7 +33,7 @@ export class ProgressReportConnectionResolver {
     const detailsOrErrors = await loader.loadMany(
       Progress.Variants.map((variant) => ({ report, variant }))
     );
-    return detailsOrErrors.flatMap((entry) => {
+    const details = detailsOrErrors.flatMap((entry) => {
       if (entry instanceof Error) {
         if (entry instanceof ClientException) {
           return [];
@@ -44,5 +45,9 @@ export class ProgressReportConnectionResolver {
       }
       return [entry.details];
     });
+    const orderMap = Object.fromEntries(
+      Progress.Variants.map((variant, index) => [variant.key, index])
+    );
+    return sortBy(details, (detail) => orderMap[detail[0].variant.key]);
   }
 }
