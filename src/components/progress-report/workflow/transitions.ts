@@ -8,19 +8,19 @@ import {
 } from './dto/workflow-transition.dto';
 
 export const Transitions = defineTransitions({
-  'Draft -> Pending Translation': {
-    from: Status.Draft,
-    to: Status.PendingTranslation,
-    label: 'Submit for Translation',
-    type: Type.Approve,
-    notify: ['Next', 'Translator'],
-  },
   'Draft -> In Review': {
     from: Status.Draft,
     to: Status.InReview,
     label: 'Submit for Review',
     type: Type.Approve,
     notify: 'FPM',
+  },
+  'Draft -> Pending Translation': {
+    from: Status.Draft,
+    to: Status.PendingTranslation,
+    label: 'Submit for Translation',
+    type: Type.Approve,
+    notify: ['Next', 'Translator'],
   },
 
   'Translation Done': {
