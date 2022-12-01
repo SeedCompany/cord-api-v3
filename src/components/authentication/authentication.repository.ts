@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { ID, ServerException, Session } from '../../common';
-import { DatabaseService } from '../../core';
+import { DatabaseService, OnIndex } from '../../core';
 import {
   ACTIVE,
   matchUserGloballyScopedRoles,
@@ -324,5 +324,14 @@ export class AuthenticationRepository {
       .raw('WHERE NOT token.value = $token', { token: session.token })
       .setValues({ 'oldRel.active': false })
       .run();
+  }
+
+  @OnIndex()
+  private createIndexes() {
+    return [
+      `CREATE INDEX AuthToken_value IF NOT EXISTS FOR (n:Token) ON (n.value)`,
+      `CREATE INDEX AuthEmailToken_token IF NOT EXISTS FOR (n:EmailToken) ON (n.token)`,
+      `CREATE INDEX AuthEmailToken_email IF NOT EXISTS FOR (n:EmailToken) ON (n.value)`,
+    ];
   }
 }
