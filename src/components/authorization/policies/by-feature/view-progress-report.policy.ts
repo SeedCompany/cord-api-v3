@@ -13,10 +13,7 @@ import { Policy, Role, variant } from '../util';
   ],
   (r) => [
     [r.ProgressReportCommunityStory, r.ProgressReportHighlight].map((it) =>
-      it.specifically((p) => [
-        p.prompt.when(variant('published')).read,
-        p.responses.when(variant('published')).read,
-      ])
+      it.read.specifically((p) => p.responses.when(variant('published')).read)
     ),
     r.StepProgress.when(variant('official')).read,
   ]
