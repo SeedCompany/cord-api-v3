@@ -19,11 +19,10 @@ import {
     .children((c) => c.posts.edit),
   r.ProgressReport.when(member).edit,
   [r.ProgressReportCommunityStory, r.ProgressReportHighlight].flatMap((it) => [
-    it.when(variant('published')).read,
-    it.whenAll(sensMediumOrLower, variant('fpm')).read,
-    it.when(member).read,
-    it.specifically((p) => [
-      p.responses.whenAll(member, variant('draft', 'fpm', 'published')).read,
+    it.read.specifically((p) => [
+      p.responses.when(variant('published')).read,
+      p.responses.whenAll(sensMediumOrLower, variant('fpm')).read,
+      p.responses.when(member).read,
       p.responses.whenAll(member, variant('published')).edit,
     ]),
   ]),
