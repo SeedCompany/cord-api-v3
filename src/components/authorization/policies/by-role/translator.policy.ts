@@ -17,7 +17,6 @@ import { member, Policy, Role, variant } from '../util';
     (p) => p.many('organization', 'partner', 'types').read
   ),
   r.Product.read,
-  r.ProgressReport.when(member).edit,
   [r.ProgressReportCommunityStory, r.ProgressReportHighlight].flatMap((it) => [
     it.when(member).read,
     it.specifically((p) => [

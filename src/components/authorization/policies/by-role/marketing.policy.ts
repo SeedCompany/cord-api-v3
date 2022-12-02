@@ -17,7 +17,6 @@ import {
     .read.whenAll(member, sensMediumOrLower)
     .read.specifically((p) => p.many('pmcEntityCode', 'pointOfContact').none)
     .children((c) => c.posts.edit),
-  r.ProgressReport.when(member).edit,
   [r.ProgressReportCommunityStory, r.ProgressReportHighlight].flatMap((it) => [
     it.read.specifically((p) => [
       p.responses.when(variant('published')).read,
