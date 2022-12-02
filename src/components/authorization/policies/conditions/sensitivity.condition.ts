@@ -14,7 +14,11 @@ export type HasSensitivity =
   | { [EffectiveSensitivity]: Sensitivity };
 
 export class SensitivityCondition<
-  TResourceStatic extends ResourceShape<HasSensitivity>
+  TResourceStatic extends
+    | ResourceShape<HasSensitivity>
+    | (ResourceShape<any> & {
+        ConfirmThisClassPassesSensitivityToPolicies: true;
+      })
 > implements Condition<TResourceStatic>
 {
   constructor(private readonly access: Sensitivity) {}
