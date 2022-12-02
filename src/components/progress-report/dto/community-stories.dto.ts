@@ -12,6 +12,7 @@ export class ProgressReportCommunityStory extends PromptVariantResponse<Communit
     (m) => m.ProgressReport
   );
   static Variants = ProgressReportHighlight.Variants;
+  static readonly ConfirmThisClassPassesSensitivityToPolicies = true;
 }
 
 export type CommunityStoryVariant = VariantOf<

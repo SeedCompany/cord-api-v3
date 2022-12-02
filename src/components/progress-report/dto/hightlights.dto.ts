@@ -31,6 +31,7 @@ export class ProgressReportHighlight extends PromptVariantResponse<HighlightVari
     (m) => m.ProgressReport
   );
   static Variants = variants;
+  static readonly ConfirmThisClassPassesSensitivityToPolicies = true;
 }
 
 export type HighlightVariant = VariantOf<typeof ProgressReportHighlight>;
