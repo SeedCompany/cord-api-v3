@@ -54,22 +54,25 @@ import {
     r.Producible.edit.create,
     r.Product.read.when(member).edit.create.delete,
     r.ProgressReport.when(member).edit,
-    r.ProgressReportCommunityStory.whenAll(
-      sensOnlyLow,
-      variant('fpm', 'published')
-    )
-      .read.when(member)
-      .create.read.specifically((p) => [
-        p.responses.whenAll(member, variant('translated', 'fpm')).edit,
+    [r.ProgressReportCommunityStory].flatMap((it) => [
+      it.read,
+      it.when(member).create,
+      it.specifically((p) => [
+        p.responses.whenAll(sensOnlyLow, variant('fpm', 'published')).read,
+        p.responses.whenAll(member, variant('translated')).read,
+        p.responses.whenAll(member, variant('fpm')).edit,
       ]),
-    r.ProgressReportHighlight.whenAll(
-      sensMediumOrLower,
-      variant('fpm', 'published')
-    )
-      .read.when(member)
-      .create.read.specifically((p) => [
-        p.responses.whenAll(member, variant('translated')).edit,
+    ]),
+    [r.ProgressReportHighlight].flatMap((it) => [
+      it.read,
+      it.when(member).create,
+      it.specifically((p) => [
+        p.responses.whenAll(sensMediumOrLower, variant('fpm', 'published'))
+          .read,
+        p.responses.whenAll(member, variant('translated')).read,
+        p.responses.whenAll(member, variant('fpm')).edit,
       ]),
+    ]),
     r.Project.read.create
       .when(member)
       .edit.specifically((p) => [
