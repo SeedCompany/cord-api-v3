@@ -1,4 +1,12 @@
-import { inherit, member, Policy, Role, sensMediumOrLower } from '../util';
+import {
+  inherit,
+  member,
+  Policy,
+  Role,
+  sensMediumOrLower,
+  sensOnlyLow,
+  variant,
+} from '../util';
 
 // NOTE: There could be other permissions for this role from other policies
 @Policy(
@@ -45,6 +53,23 @@ import { inherit, member, Policy, Role, sensMediumOrLower } from '../util';
     r.PeriodicReport.read.when(member).edit,
     r.Producible.edit.create,
     r.Product.read.when(member).edit.create.delete,
+    r.ProgressReport.when(member).edit,
+    r.ProgressReportCommunityStory.whenAll(
+      sensOnlyLow,
+      variant('fpm', 'published')
+    )
+      .read.when(member)
+      .create.read.specifically((p) => [
+        p.responses.whenAll(member, variant('translated', 'fpm')).edit,
+      ]),
+    r.ProgressReportHighlight.whenAll(
+      sensMediumOrLower,
+      variant('fpm', 'published')
+    )
+      .read.when(member)
+      .create.read.specifically((p) => [
+        p.responses.whenAll(member, variant('translated')).edit,
+      ]),
     r.Project.read.create
       .when(member)
       .edit.specifically((p) => [
@@ -54,7 +79,10 @@ import { inherit, member, Policy, Role, sensMediumOrLower } from '../util';
       ])
       .children((c) => c.posts.read.create),
     r.ProjectMember.read.when(member).edit.create.delete,
-    r.StepProgress.read.when(member).edit,
+    r.StepProgress.read
+      .when(member)
+      .edit.whenAll(member, variant('partner'))
+      .read.whenAll(member, variant('official')).edit,
     r.Unavailability.create.read,
     r.User.create.read,
   ]
