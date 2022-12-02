@@ -18,20 +18,15 @@ import {
     .read.specifically((p) => p.many('pmcEntityCode', 'pointOfContact').none)
     .children((c) => c.posts.edit),
   r.ProgressReport.when(member).edit,
-  r.ProgressReportCommunityStory.when(variant('published'))
-    .read.whenAll(sensMediumOrLower, variant('fpm'))
-    .read.when(member)
-    .read.specifically((p) => [
+  [r.ProgressReportCommunityStory, r.ProgressReportHighlight].flatMap((it) => [
+    it.when(variant('published')).read,
+    it.whenAll(sensMediumOrLower, variant('fpm')).read,
+    it.when(member).read,
+    it.specifically((p) => [
       p.responses.whenAll(member, variant('draft', 'fpm', 'published')).read,
       p.responses.whenAll(member, variant('published')).edit,
     ]),
-  r.ProgressReportHighlight.when(variant('published'))
-    .read.whenAll(sensMediumOrLower, variant('fpm'))
-    .read.when(member)
-    .read.specifically((p) => [
-      p.responses.whenAll(member, variant('draft', 'fpm', 'published')).read,
-      p.responses.whenAll(member, variant('published')).edit,
-    ]),
+  ]),
   r.Project.read
     .specifically((p) => [
       p

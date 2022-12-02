@@ -18,13 +18,12 @@ import { member, Policy, Role, variant } from '../util';
   ),
   r.Product.read,
   r.ProgressReport.when(member).edit,
-  r.ProgressReportCommunityStory.when(member).read.specifically((p) => [
-    p.responses.whenAll(member, variant('draft')).read,
-    p.responses.whenAll(member, variant('translated')).edit,
-  ]),
-  r.ProgressReportHighlight.when(member).read.specifically((p) => [
-    p.responses.whenAll(member, variant('draft')).read,
-    p.responses.whenAll(member, variant('translated')).edit,
+  [r.ProgressReportCommunityStory, r.ProgressReportHighlight].flatMap((it) => [
+    it.when(member).read,
+    it.specifically((p) => [
+      p.responses.whenAll(member, variant('draft')).read,
+      p.responses.whenAll(member, variant('translated')).edit,
+    ]),
   ]),
   r.Project.when(member)
     .read.specifically((p) => [
