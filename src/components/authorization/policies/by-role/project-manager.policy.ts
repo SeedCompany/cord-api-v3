@@ -82,10 +82,10 @@ import {
       ])
       .children((c) => c.posts.read.create),
     r.ProjectMember.read.when(member).edit.create.delete,
-    r.StepProgress.read
-      .when(member)
-      .edit.whenAll(member, variant('partner'))
-      .read.whenAll(member, variant('official')).edit,
+    [r.StepProgress].flatMap((it) => [
+      it.when(variant('official')).read,
+      it.when(member).edit,
+    ]),
     r.Unavailability.create.read,
     r.User.create.read,
   ]
