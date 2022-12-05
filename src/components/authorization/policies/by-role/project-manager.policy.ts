@@ -67,8 +67,7 @@ import {
       it.read,
       it.when(member).create,
       it.specifically((p) => [
-        p.responses.whenAll(sensMediumOrLower, variant('fpm', 'published'))
-          .read,
+        p.responses.whenAll(sensOnlyLow, variant('fpm', 'published')).read,
         p.responses.whenAll(member, variant('translated')).read,
         p.responses.whenAll(member, variant('fpm')).edit,
       ]),
