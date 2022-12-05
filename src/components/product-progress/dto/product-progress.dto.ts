@@ -95,6 +95,7 @@ export class StepProgress {
   static readonly SecuredProps = keysOf<SecuredProps<StepProgress>>();
   static readonly Parent = 'dynamic'; // [Product, ProgressReport]
   static readonly Variants = ProgressReportVariantProgress.Variants;
+  static readonly ConfirmThisClassPassesSensitivityToPolicies = true;
 
   // Both of these only exist if progress has been reported (or explicitly set to null).
   // I have these here to show that they can exist in the DB, but they are private to the API.
