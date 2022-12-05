@@ -33,6 +33,6 @@ import {
       p.marketingLocation.edit,
     ])
     .children((c) => c.posts.edit),
-  r.StepProgress.whenAll(member, variant('official')).read,
+  r.StepProgress.whenAll(sensOnlyLow, variant('official')).read,
 ])
 export class MarketingPolicy {}
