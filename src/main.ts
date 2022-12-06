@@ -1,7 +1,7 @@
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import cookieParser from 'cookie-parser';
-import 'source-map-support/register';
+import './polyfills';
 
 async function bootstrap() {
   // Ensure src files are initialized here were init errors can be caught

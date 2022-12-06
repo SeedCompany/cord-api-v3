@@ -1,4 +1,5 @@
 import { BootstrapConsole } from 'nestjs-console';
+import './polyfills';
 
 async function bootstrap() {
   // Ensure src files are initialized here were init errors can be caught

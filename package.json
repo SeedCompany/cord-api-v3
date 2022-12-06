@@ -163,6 +163,9 @@
     "roots": [
       "<rootDir>/src"
     ],
+    "setupFiles": [
+      "./src/polyfills.ts"
+    ],
     "testEnvironment": "node"
   }
 }

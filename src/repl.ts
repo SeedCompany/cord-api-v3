@@ -19,7 +19,7 @@ import {
   Session,
 } from '~/common';
 import * as common from '~/common';
-import 'source-map-support/register';
+import './polyfills';
 
 /**
  * This does the same thing as {@link import('@nestjs/core').repl}
