@@ -12,6 +12,7 @@ export * from './db-unique.decorator';
 export * from './disabled.decorator';
 export * from './mutation-placeholder.output';
 export * from './exceptions';
+export * from './expose-enum-order.helper';
 export * from './fields.pipe';
 export * from './firstLettersOfWords';
 export * from './fiscal-year';

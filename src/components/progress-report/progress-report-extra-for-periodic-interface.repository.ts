@@ -10,7 +10,7 @@ export class ProgressReportExtraForPeriodicInterfaceRepository {
   ): CreateNodeOptions<typeof ProgressReport> {
     return {
       initialProps: {
-        status: Status.Draft,
+        status: Status.NotStarted,
       },
     };
   }
