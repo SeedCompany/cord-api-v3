@@ -2,7 +2,14 @@ import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { stripIndent } from 'common-tags';
-import { CalendarDate, DateField, ID, IdField } from '../../../common';
+import { RichTextField } from '~/common/rich-text.scalar';
+import {
+  CalendarDate,
+  DateField,
+  ID,
+  IdField,
+  RichTextDocument,
+} from '../../../common';
 import { ChangesetIdField } from '../../changeset';
 import { CreateDefinedFileVersionInput } from '../../file/dto';
 import { ProductMethodology } from '../../product/dto';
@@ -33,6 +40,9 @@ export abstract class UpdateEngagement {
 
   @Field(() => EngagementStatus, { nullable: true })
   readonly status?: EngagementStatus;
+
+  @RichTextField({ nullable: true })
+  readonly summary?: RichTextDocument;
 }
 
 @InputType()

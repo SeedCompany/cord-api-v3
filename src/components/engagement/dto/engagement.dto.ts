@@ -18,6 +18,7 @@ import {
   SecuredDateNullable,
   SecuredDateTime,
   SecuredProps,
+  SecuredRichTextNullable,
   SecuredString,
   Sensitivity,
   SensitivityField,
@@ -129,6 +130,9 @@ class Engagement extends ChangesetAwareResource {
   // A list of non-global roles the requesting user has available for this object.
   // This is just a cache, to prevent extra db lookups within the same request.
   readonly scope: ScopedRole[];
+
+  @Field()
+  readonly summary: SecuredRichTextNullable;
 }
 
 // class name has to match schema name for interface resolvers to work.
