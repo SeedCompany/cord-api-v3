@@ -73,6 +73,7 @@
     "image-size": "^1.0.2",
     "ioredis": "^5.3.2",
     "iso-3166-1": "^2.1.1",
+    "iterator-helpers-polyfill": "^2.3.2",
     "ix": "^5.0.0",
     "jsonwebtoken": "^9.0.1",
     "lazy-get-decorator": "^2.2.1",

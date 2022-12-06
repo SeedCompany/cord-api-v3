@@ -5289,6 +5289,7 @@ __metadata:
     image-size: ^1.0.2
     ioredis: ^5.3.2
     iso-3166-1: ^2.1.1
+    iterator-helpers-polyfill: ^2.3.2
     ix: ^5.0.0
     jest: ^29.6.3
     jsonwebtoken: ^9.0.1
@@ -8170,6 +8171,13 @@ __metadata:
   version: 1.2.1
   resolution: "iterare@npm:1.2.1"
   checksum: 70bc80038e3718aa9072bc63b3a0135166d7120bde46bfcaf80a88d11005dcef1b2d69cd353849f87a3f58ba8f546a8c6e6983408236ff01fa50b52339ee5223
+  languageName: node
+  linkType: hard
+
+"iterator-helpers-polyfill@npm:^2.3.2":
+  version: 2.3.2
+  resolution: "iterator-helpers-polyfill@npm:2.3.2"
+  checksum: 7cec833d9b95672d3c72da12512b57fcb94733dffd34c5719b3f47a2c6f816d8164ced640c24e663660b58bd10567888b18a84bfc636ea90d4391b92a5f4e938
   languageName: node
   linkType: hard
 
