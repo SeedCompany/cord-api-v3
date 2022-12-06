@@ -12,6 +12,12 @@ export enum ProgressReportStatus {
 
 registerEnumType(ProgressReportStatus, {
   name: 'ProgressReportStatus',
+  valuesMap: Object.fromEntries(
+    Object.keys(ProgressReportStatus).map((status, index) => [
+      status,
+      { description: `@order ${index}` },
+    ])
+  ),
 });
 
 @ObjectType()
