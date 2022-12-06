@@ -1,5 +1,5 @@
 import { ObjectType, registerEnumType } from '@nestjs/graphql';
-import { SecuredEnum } from '~/common';
+import { exposeSrcOrder, SecuredEnum } from '~/common';
 
 export enum ProgressReportStatus {
   NotStarted = 'NotStarted',
@@ -12,12 +12,7 @@ export enum ProgressReportStatus {
 
 registerEnumType(ProgressReportStatus, {
   name: 'ProgressReportStatus',
-  valuesMap: Object.fromEntries(
-    Object.keys(ProgressReportStatus).map((status, index) => [
-      status,
-      { description: `@order ${index}` },
-    ])
-  ),
+  valuesMap: exposeSrcOrder(ProgressReportStatus),
 });
 
 @ObjectType()
