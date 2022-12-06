@@ -169,7 +169,7 @@ export class EnhancedResource<T extends ResourceShape<any>> {
   @Once()
   get extraPropsFromRelations() {
     return this.relNamesIf<ExtraPropsFromRelationsKey<T>>(
-      (rel) => !rel.resource || !rel.resource.hasParent
+      (rel) => !rel.resource?.hasParent
     );
   }
 

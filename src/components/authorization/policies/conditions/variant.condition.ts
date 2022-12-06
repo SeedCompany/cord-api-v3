@@ -23,10 +23,10 @@ class VariantCondition<TResourceStatic extends ResourceShape<any>>
       throw new Error("Needed object but wasn't given");
     }
 
-    const current: VariantOf<TResourceStatic> = Reflect.get(
+    const current = Reflect.get(
       object,
       VariantForCondition
-    );
+    ) as VariantOf<TResourceStatic>;
 
     return this.variants.has(current);
   }

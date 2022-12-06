@@ -1,6 +1,6 @@
 import { ValueOf } from 'type-fest';
 import { ResourcesGranter } from '../granters';
-import { ResourceGranter, withOther } from './resource-granter';
+import { withOther } from './resource-granter';
 
 type Granter = ValueOf<ResourcesGranter>;
 
@@ -33,7 +33,7 @@ export function inherit(
   return [
     theInterface,
     ...implementations.map((granter) =>
-      granter[withOther](theInterface as ResourceGranter<any>)
+      granter[withOther](theInterface as any)
     ),
   ];
 }

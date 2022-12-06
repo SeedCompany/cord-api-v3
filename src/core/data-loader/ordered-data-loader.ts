@@ -88,7 +88,12 @@ export abstract class OrderedNestDataLoader<T, Key = ID, CachedKey = Key>
       // property (prop) of a document and value is a document.
       const docsMap = new Map();
       docs.forEach((doc) => {
-        if ('error' in doc && doc.error instanceof Error) {
+        if (
+          doc &&
+          typeof doc === 'object' &&
+          'error' in doc &&
+          doc.error instanceof Error
+        ) {
           docsMap.set(getCacheKey(doc.key), doc.error);
         } else {
           docsMap.set(getCacheKey(getKey(doc as T)), doc);
