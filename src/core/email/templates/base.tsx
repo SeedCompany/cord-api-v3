@@ -65,7 +65,7 @@ export const Theme = () => (
   <>
     <Font name="sofia-pro" href="https://use.typekit.net/qrd6jxb.css" />
     <Attributes>
-      <All fontFamily="sofia-pro" fontSize={16} />
+      <All fontFamily="sofia-pro" fontSize="16px" />
       <Body width={600} backgroundColor="#fafafa">
         {[]}
       </Body>
@@ -143,7 +143,7 @@ export const ReplyInfoFooter = () => (
   <Section>
     <Column>
       <Divider borderWidth={1} />
-      <Text fontWeight={300}>
+      <Text fontWeight="300">
         If you are having any issues with your account, please don't hesitate to
         contact us by replying to this email.
         <br />
