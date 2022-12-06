@@ -1,11 +1,13 @@
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import cookieParser from 'cookie-parser';
-import { AppModule } from './app.module';
-import { bootstrapLogger, ConfigService } from './core';
 import 'source-map-support/register';
 
 async function bootstrap() {
+  // Ensure src files are initialized here were init errors can be caught
+  const { AppModule } = await import('./app.module');
+  const { bootstrapLogger, ConfigService } = await import('./core');
+
   if (process.argv.includes('--gen-schema')) {
     const app = await NestFactory.create(AppModule, { logger: false });
     await app.init();

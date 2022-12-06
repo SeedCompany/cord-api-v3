@@ -15,20 +15,24 @@ import {
   many,
   mapFromList,
   maybeMany,
+  Role,
   Session,
 } from '~/common';
 import * as common from '~/common';
-import { bootstrapLogger, ConfigService, ResourcesHost } from '~/core';
-import { AppModule } from './app.module';
-import { AuthenticationService } from './components/authentication';
 import 'source-map-support/register';
-import { Role } from './components/authorization';
 
 /**
  * This does the same thing as {@link import('@nestjs/core').repl}
  * Just that we use our own logger & add more to the global context
  */
 async function bootstrap() {
+  // Ensure src files are initialized here were init errors can be caught
+  const { AppModule } = await import('./app.module');
+  const { bootstrapLogger, ConfigService, ResourcesHost } = await import(
+    '~/core'
+  );
+  const { AuthenticationService } = await import('./components/authentication');
+
   const app = await NestFactory.createApplicationContext(AppModule, {
     abortOnError: false,
     logger: bootstrapLogger,
