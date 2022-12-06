@@ -5273,7 +5273,7 @@ __metadata:
     ts-jest: ^26.5.6
     ts-node: ^10.9.1
     ts-patch: ^2.0.2
-    ts-transformer-keys: ^0.4.3
+    ts-transformer-keys: "github:CarsonF/ts-transformer-keys#temp-host"
     type-fest: ^2.19.0
     typescript: ^4.9.3
     typescript-transform-paths: ^3.4.4
@@ -13140,12 +13140,12 @@ resolve@^2.0.0-next.3:
   languageName: node
   linkType: hard
 
-"ts-transformer-keys@npm:^0.4.3":
+"ts-transformer-keys@github:CarsonF/ts-transformer-keys#temp-host":
   version: 0.4.3
-  resolution: "ts-transformer-keys@npm:0.4.3"
+  resolution: "ts-transformer-keys@https://github.com/CarsonF/ts-transformer-keys.git#commit=5704d8dc8cad89814bcf5947a6cb8c5a11e2acea"
   peerDependencies:
-    typescript: ">=2.4.1"
-  checksum: 915155202544d2975c858419924c1a56483222328cd2f51268605bf1508154021b2604f34de2de1c2b8627fb43e96dd92cea4142eadb9e20a3b21445dbae56ee
+    typescript: ">=4.0.0"
+  checksum: 1f9ca440893a8e48fe30a005bd7fc9aef7f545c56a297ce2ace2c008a14dce86ff096286ceac441c0eabb138d1595bcde5fa41f92969ac5a085d81d75c6bc192
   languageName: node
   linkType: hard
 
