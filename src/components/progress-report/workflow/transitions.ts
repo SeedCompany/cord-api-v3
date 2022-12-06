@@ -8,15 +8,22 @@ import {
 } from './dto/workflow-transition.dto';
 
 export const Transitions = defineTransitions({
-  'Draft -> In Review': {
-    from: Status.Draft,
+  Start: {
+    from: Status.NotStarted,
+    to: Status.InReview,
+    label: 'Start',
+    type: Type.Approve,
+    notify: 'FPM',
+  },
+  'In Progress -> In Review': {
+    from: Status.InProgress,
     to: Status.InReview,
     label: 'Submit for Review',
     type: Type.Approve,
     notify: 'FPM',
   },
-  'Draft -> Pending Translation': {
-    from: Status.Draft,
+  'In Progress -> Pending Translation': {
+    from: Status.InProgress,
     to: Status.PendingTranslation,
     label: 'Submit for Translation',
     type: Type.Approve,
@@ -32,14 +39,14 @@ export const Transitions = defineTransitions({
   },
   'Translation Reject': {
     from: Status.PendingTranslation,
-    to: Status.Draft,
+    to: Status.InProgress,
     label: 'Need More Info',
     type: Type.Reject,
     notify: 'FP',
   },
   'Withdraw Review Request': {
     from: Status.PendingTranslation,
-    to: Status.Draft,
+    to: Status.InProgress,
     label: 'Withdraw Translation to Make Changes',
     type: Type.Reject,
   },
@@ -53,7 +60,7 @@ export const Transitions = defineTransitions({
   },
   'Review Reject': {
     from: Status.InReview,
-    to: Status.Draft,
+    to: Status.InProgress,
     label: 'Request Changes',
     type: Type.Reject,
     notify: 'FP',

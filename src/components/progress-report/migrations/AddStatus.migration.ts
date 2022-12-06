@@ -5,6 +5,6 @@ import { ProgressReport, ProgressReportStatus as Status } from '../dto';
 export class AddProgressReportStatusMigration extends BaseMigration {
   async up() {
     // TODO infer starting status based on...end time?
-    await this.addProperty(ProgressReport, 'status', Status.Draft);
+    await this.addProperty(ProgressReport, 'status', Status.NotStarted);
   }
 }

@@ -2,7 +2,8 @@ import { ObjectType, registerEnumType } from '@nestjs/graphql';
 import { SecuredEnum } from '~/common';
 
 export enum ProgressReportStatus {
-  Draft = 'Draft',
+  NotStarted = 'NotStarted',
+  InProgress = 'InProgress',
   PendingTranslation = 'PendingTranslation',
   InReview = 'InReview',
   Approved = 'Approved',
