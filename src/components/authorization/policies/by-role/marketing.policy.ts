@@ -1,4 +1,11 @@
-import { member, Policy, Role, sensMediumOrLower, sensOnlyLow } from '../util';
+import {
+  member,
+  Policy,
+  Role,
+  sensMediumOrLower,
+  sensOnlyLow,
+  variant,
+} from '../util';
 
 // NOTE: There could be other permissions for this role from other policies
 @Policy([Role.Marketing], (r) => [
@@ -10,6 +17,14 @@ import { member, Policy, Role, sensMediumOrLower, sensOnlyLow } from '../util';
     .read.whenAll(member, sensMediumOrLower)
     .read.specifically((p) => p.many('pmcEntityCode', 'pointOfContact').none)
     .children((c) => c.posts.edit),
+  [r.ProgressReportCommunityStory, r.ProgressReportHighlight].flatMap((it) => [
+    it.read.specifically((p) => [
+      p.responses.when(variant('published')).read,
+      p.responses.whenAll(sensMediumOrLower, variant('fpm')).read,
+      p.responses.when(member).read,
+      p.responses.whenAll(member, variant('published')).edit,
+    ]),
+  ]),
   r.Project.read
     .specifically((p) => [
       p
@@ -18,5 +33,6 @@ import { member, Policy, Role, sensMediumOrLower, sensOnlyLow } from '../util';
       p.marketingLocation.edit,
     ])
     .children((c) => c.posts.edit),
+  r.StepProgress.whenAll(sensOnlyLow, variant('official')).read,
 ])
 export class MarketingPolicy {}

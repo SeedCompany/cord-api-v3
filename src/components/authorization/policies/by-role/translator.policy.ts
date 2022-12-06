@@ -1,4 +1,4 @@
-import { member, Policy, Role } from '../util';
+import { member, Policy, Role, variant } from '../util';
 
 // NOTE: There could be other permissions for this role from other policies
 @Policy(Role.Translator, (r) => [
@@ -17,6 +17,14 @@ import { member, Policy, Role } from '../util';
     (p) => p.many('organization', 'partner', 'types').read
   ),
   r.Product.read,
+  r.ProgressReport.when(member).read.specifically((p) => p.reportFile.none),
+  [r.ProgressReportCommunityStory, r.ProgressReportHighlight].flatMap((it) => [
+    it.when(member).read,
+    it.specifically((p) => [
+      p.responses.whenAll(member, variant('draft')).read,
+      p.responses.whenAll(member, variant('translated')).edit,
+    ]),
+  ]),
   r.Project.when(member)
     .read.specifically((p) => [
       p.rootDirectory.edit,
@@ -25,6 +33,5 @@ import { member, Policy, Role } from '../util';
     .children((c) => c.posts.edit),
   r.ProjectMember.when(member).read,
   r.PeriodicReport.when(member).read,
-  r.StepProgress.when(member).read,
 ])
 export class TranslatorPolicy {}
