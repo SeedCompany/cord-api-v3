@@ -104,3 +104,11 @@ rules:
 
   # TODO Enable this and fix errors (both types & logic changes will be needed)
   '@typescript-eslint/no-unnecessary-condition': off
+
+overrides:
+  - files: ./src/core/database/query-augmentation/*.ts
+    rules:
+      # This is enforced to treat functions arguments as contravariant instead of bivariant.
+      # This doesn't matter here as this class won't be overridden.
+      # Declaring them as methods keeps their color the same as the rest of the query methods.
+      '@typescript-eslint/method-signature-style': off
