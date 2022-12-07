@@ -24,6 +24,7 @@ import {
   Variable,
 } from '../../core/database/query';
 import { File } from '../file';
+import { ProgressReportStatus as ProgressStatus } from '../progress-report/dto';
 import { ProgressReportExtraForPeriodicInterfaceRepository } from '../progress-report/progress-report-extra-for-periodic-interface.repository';
 import {
   IPeriodicReport,
@@ -310,16 +311,24 @@ export class PeriodicReportRepository extends DtoRepository<
         ],
       ])
       .raw(
-        // TODO this wont be sufficient with new progress reports.
         `
-          WHERE NOT (report)-[:reportFileNode]->(:File)<-[:parent { active: true }]-(:FileVersion)
-            AND CASE
+          WHERE
+            CASE
               WHEN interval.start is null
                   THEN end.value <= interval.end
               WHEN interval.end is null
                   THEN start.value >= interval.start
               ELSE interval.start = start.value AND interval.end = end.value
             END
+            AND (
+              (
+                NOT report:ProgressReport
+                AND NOT (report)-[:reportFileNode]->(:File)<-[:parent { active: true }]-(:FileVersion)
+              ) OR (
+                report:ProgressReport
+                AND (report)-[:status { active: true }]->(:Property { value: "${ProgressStatus.NotStarted}" })
+              )
+            )
         `
       )
       .subQuery('report', (sub) =>
