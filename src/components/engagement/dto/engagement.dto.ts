@@ -132,7 +132,7 @@ class Engagement extends ChangesetAwareResource {
   readonly scope: ScopedRole[];
 
   @Field()
-  readonly summary: SecuredRichTextNullable;
+  readonly description: SecuredRichTextNullable;
 }
 
 // class name has to match schema name for interface resolvers to work.
