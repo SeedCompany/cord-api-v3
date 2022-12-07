@@ -10,6 +10,7 @@ import { FileService } from './file.service';
 import { FilesBucketFactory } from './files-bucket.factory';
 import * as handlers from './handlers';
 import { LocalBucketController } from './local-bucket.controller';
+import * as migrations from './migrations';
 
 @Module({
   imports: [forwardRef(() => AuthorizationModule)],
@@ -23,6 +24,7 @@ import { LocalBucketController } from './local-bucket.controller';
     FileNodeLoader,
     FileService,
     ...Object.values(handlers),
+    ...Object.values(migrations),
   ],
   controllers: [LocalBucketController],
   exports: [FileService],

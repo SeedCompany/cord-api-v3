@@ -435,7 +435,7 @@ describe('File e2e', () => {
           `
         MATCH
           (file: FileNode {active: true}),
-          (file)<-[:parent {active: true}]-(fv: FileVersion {active: true}),
+          (file)-[:child {active: true}]->(fv: FileVersion {active: true}),
           (fv)-[:mimeType {active: true}]->(mt: Property {active: false})
         SET
           mt.active = true
