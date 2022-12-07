@@ -4,6 +4,7 @@ export * from './by-role/consultant-manager.policy';
 export * from './by-role/controller.policy';
 export * from './by-role/experience-operations.policy';
 export * from './by-role/field-operations-director.policy';
+export * from './by-role/field-partner.policy';
 export * from './by-role/financial-analyst.policy';
 export * from './by-role/financial-analyst-lead.policy';
 export * from './by-role/fundraising.policy';
