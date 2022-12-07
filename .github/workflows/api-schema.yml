@@ -17,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          ref: ${{ github.event.pull_request[matrix.ref].ref }}
+          ref: ${{ matrix.ref == 'base' && github.event.pull_request[matrix.ref].ref || '' }}
 
       - name: Node Setup & Yarn Install
         uses: ./.github/actions/setup
