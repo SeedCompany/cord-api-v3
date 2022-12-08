@@ -1,4 +1,5 @@
 import { node, Query, relation } from 'cypher-query-builder';
+import { Parameter } from 'cypher-query-builder/dist/typings/parameter-bag';
 import { DateTime } from 'luxon';
 import { MergeExclusive } from 'type-fest';
 import {
@@ -7,7 +8,7 @@ import {
   MaybeUnsecuredInstance,
   ResourceShape,
 } from '~/common';
-import { ACTIVE, Variable } from '.';
+import { ACTIVE, Variable, variable as varRef } from '.';
 import { DbChanges } from '../changes';
 import { prefixNodeLabelsWithDeleted } from './deletes';
 
@@ -29,6 +30,7 @@ export type DeactivatePropertyOptions<
   changeset?: ID;
   nodeName?: string;
   numDeactivatedVar?: string;
+  now?: Parameter;
 };
 
 /**
@@ -46,6 +48,7 @@ export const deactivateProperty =
     changeset,
     nodeName = 'node',
     numDeactivatedVar = 'numPropsDeactivated',
+    now,
   }: DeactivatePropertyOptions<TResourceStatic, TObject, Key>) =>
   <R>(query: Query<R>) => {
     const imports = [nodeName, key instanceof Variable ? key : ''];
@@ -74,7 +77,7 @@ export const deactivateProperty =
         )
         .setValues({
           [`${changeset ? 'oldChange' : 'oldToProp'}.active`]: false,
-          'oldPropVar.deletedAt': DateTime.local(),
+          'oldPropVar.deletedAt': now ? varRef(now.toString()) : DateTime.now(),
         })
         .with('oldPropVar')
         .apply(prefixNodeLabelsWithDeleted('oldPropVar'))

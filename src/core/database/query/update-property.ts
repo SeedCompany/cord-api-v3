@@ -1,5 +1,6 @@
 import { Query } from 'cypher-query-builder';
-import { ID, MaybeUnsecuredInstance, ResourceShape } from '../../../common';
+import { DateTime } from 'luxon';
+import { ID, MaybeUnsecuredInstance, ResourceShape } from '~/common';
 import { DbChanges } from '../changes';
 import { createProperty, CreatePropertyOptions } from './create-property';
 import {
@@ -30,7 +31,12 @@ export const updateProperty =
   >(
     options: UpdatePropertyOptions<TResourceStatic, TObject, Key>
   ) =>
-  <R>(query: Query<R>) =>
-    query
-      .apply(deactivateProperty<TResourceStatic, TObject, Key>(options))
-      .apply(createProperty<TResourceStatic, TObject, Key>(options));
+  <R>(query: Query<R>) => {
+    const resolved = {
+      ...options,
+      now: options.now ?? query.params.addParam(DateTime.now(), 'now'),
+    };
+    return query
+      .apply(deactivateProperty<TResourceStatic, TObject, Key>(resolved))
+      .apply(createProperty<TResourceStatic, TObject, Key>(resolved));
+  };

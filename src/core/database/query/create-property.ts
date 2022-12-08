@@ -1,4 +1,5 @@
 import { node, Query, relation } from 'cypher-query-builder';
+import { Parameter } from 'cypher-query-builder/dist/typings/parameter-bag';
 import { compact } from 'lodash';
 import { DateTime } from 'luxon';
 import { MergeExclusive } from 'type-fest';
@@ -34,6 +35,7 @@ export type CreatePropertyOptions<
   changeset?: ID;
   nodeName?: string;
   numCreatedVar?: string;
+  now?: Parameter;
 } & MergeExclusive<
     {
       /** The new value which will be a bound parameter */
@@ -63,11 +65,12 @@ export const createProperty =
     changeset,
     nodeName = 'node',
     numCreatedVar = 'numPropsCreated',
+    now: nowIn,
   }: CreatePropertyOptions<TResourceStatic, TObject, Key>) =>
   <R>(query: Query<R>) => {
     resource = resource ? EnhancedResource.of(resource) : undefined;
 
-    const createdAtParam = query.params.addParam(DateTime.local(), 'createdAt');
+    const now = nowIn ?? query.params.addParam(DateTime.now(), 'now');
 
     // Grab labels for property if it's statically given.
     // Also, do not give properties unique labels if inside a changeset.
@@ -122,7 +125,7 @@ export const createProperty =
               sub2
                 .create([
                   node('newPropNode', propLabels, {
-                    createdAt: varRef(createdAtParam.toString()),
+                    createdAt: varRef(now.toString()),
                     value: variable ? varRef(variable) : value,
                   }),
                   ...(changeset
@@ -139,7 +142,7 @@ export const createProperty =
               key instanceof Variable ? key.toString() : `'${key}'`
             }, ${exp({
               active: !changeset,
-              createdAt: createdAtParam.toString(),
+              createdAt: now.toString(),
             })}, newPropNode) YIELD rel`
           )
           .return(`count(newPropNode) as ${numCreatedVar}`)
