@@ -2,9 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { assert } from 'ts-essentials';
 import { MergeExclusive } from 'type-fest';
 import { CalendarDate, entries } from '../../common';
-import { Cell, Column } from '../../common/xlsx.util';
+import { Cell, Column, Row } from '../../common/xlsx.util';
 import { Downloadable } from '../file';
 import {
+  extractScripture,
   findStepColumns,
   isGoalRow,
   isGoalStepPlannedInsideProject,
@@ -12,11 +13,11 @@ import {
   PlanningSheet,
   Pnp,
   stepPlanCompleteDate,
+  WrittenScripturePlanningSheet,
 } from '../pnp';
 import {
   parseScripture,
   ScriptureRange,
-  tryParseScripture,
   UnspecifiedScripturePortion,
 } from '../scripture';
 import { ProductStep as Step } from './dto';
@@ -119,44 +120,10 @@ const parseProductRow =
       };
     }
     assert(sheet.isWritten());
-    const bookName = sheet.bookName(row)!;
-    const totalVerses = sheet.totalVerses(row)!;
-    const scriptureFromBookCol = parseScripture(bookName);
 
-    const commonWritten = {
-      ...common,
-      bookName,
-      totalVerses,
-    };
-
-    // If scripture from book column matches total count use it.
-    if (ScriptureRange.totalVerses(...scriptureFromBookCol) === totalVerses) {
-      return {
-        ...commonWritten,
-        scripture: scriptureFromBookCol,
-      };
-    }
-
-    // Otherwise if note column has scripture that matches total count use it.
-    const scriptureFromNoteCol = tryParseScripture(sheet.myNote(row));
-    if (
-      scriptureFromNoteCol &&
-      ScriptureRange.totalVerses(...scriptureFromNoteCol) === totalVerses
-    ) {
-      return {
-        ...commonWritten,
-        scripture: scriptureFromNoteCol,
-      };
-    }
-
-    // Otherwise fallback to unspecified scripture.
     return {
-      ...commonWritten,
-      scripture: [],
-      unspecifiedScripture: {
-        book: scriptureFromBookCol[0].start.book,
-        totalVerses: totalVerses,
-      },
+      ...common,
+      ...extractScripture(row as Row<WrittenScripturePlanningSheet>),
     };
   };
 

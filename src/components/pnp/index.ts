@@ -5,3 +5,4 @@ export * from './findStepColumns';
 export * from './isGoalRow';
 export * from './isProgressCompletedOutsideProject';
 export * from './isGoalStepPlannedInsideProject';
+export * from './extract-scripture';

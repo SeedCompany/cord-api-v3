@@ -2,22 +2,20 @@ import { Injectable } from '@nestjs/common';
 import { assert } from 'ts-essentials';
 import { MergeExclusive } from 'type-fest';
 import { entries } from '../../common';
-import { Cell, Column } from '../../common/xlsx.util';
+import { Cell, Column, Row } from '../../common/xlsx.util';
 import { Downloadable } from '../file';
 import {
+  extractScripture,
   findStepColumns,
   isGoalRow,
   isGoalStepPlannedInsideProject,
   isProgressCompletedOutsideProject,
   Pnp,
   ProgressSheet,
+  WrittenScripturePlanningSheet,
 } from '../pnp';
 import { ProductStep as Step } from '../product';
-import {
-  parseScripture,
-  ScriptureRange,
-  tryParseScripture,
-} from '../scripture';
+import { ScriptureRange } from '../scripture';
 import { StepProgressInput } from './dto';
 
 type ExtractedRow = MergeExclusive<
@@ -70,8 +68,10 @@ const parseProgressRow =
     const sheet = cell.sheet;
     const row = cell.row;
     const rowIndex = row.a1 - sheet.goals.start.row.a1;
-    const planningRow = pnp.planning.goals.start.row.a1 + rowIndex;
-    const rowNote = pnp.planning.myNote(row);
+    const planningRow = pnp.planning.row(
+      pnp.planning.goals.start.row.a1 + rowIndex
+    );
+
     const steps = entries(stepColumns).flatMap<StepProgressInput>(
       ([step, column]) => {
         const fiscalYear = pnp.planning.cell(
@@ -103,40 +103,9 @@ const parseProgressRow =
     }
 
     assert(sheet.isWritten());
-    const bookName = parseScripture(sheet.bookName(row))[0]!.start.book;
-    const totalVerses = sheet.totalVerses(row)!; // Asserting bc loop verified this
-    const scriptureFromBookCol = parseScripture(sheet.bookName(row));
-
-    const commonWritten = {
-      ...common,
-      bookName,
-      totalVerses,
-    };
-
-    // If scripture from book column matches total count use it.
-    if (ScriptureRange.totalVerses(...scriptureFromBookCol) === totalVerses) {
-      return {
-        ...commonWritten,
-        scripture: scriptureFromBookCol,
-      };
-    }
-
-    // Otherwise if note column has scripture that matches total count use it.
-    const scriptureFromNoteCol = tryParseScripture(rowNote);
-    if (
-      scriptureFromNoteCol &&
-      ScriptureRange.totalVerses(...scriptureFromNoteCol) === totalVerses
-    ) {
-      return {
-        ...commonWritten,
-        scripture: scriptureFromNoteCol,
-      };
-    }
-
-    // Otherwise leave array empty. bookName and totalVerses are already loaded in commonWritten
     return {
-      ...commonWritten,
-      scripture: [],
+      ...common,
+      ...extractScripture(planningRow as Row<WrittenScripturePlanningSheet>),
     };
   };
 
