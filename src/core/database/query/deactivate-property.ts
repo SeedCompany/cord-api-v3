@@ -70,7 +70,7 @@ export const deactivateProperty =
         ])
         .apply((q) =>
           key instanceof Variable
-            ? q.raw(`WHERE type(oldToProp) = ${key.name}`)
+            ? q.raw(`WHERE type(oldToProp) = ${key.toString()}`)
             : q
         )
         .setValues({
