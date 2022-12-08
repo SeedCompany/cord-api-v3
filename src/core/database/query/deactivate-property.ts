@@ -50,10 +50,16 @@ export const deactivateProperty =
     numDeactivatedVar = 'numPropsDeactivated',
     importVars = [],
   }: DeactivatePropertyOptions<TResourceStatic, TObject, Key>) =>
-  <R>(query: Query<R>) =>
-    query.comment`
-      deactivateProperty(${nodeName}.${key})
-    `.subQuery([nodeName, ...many(importVars)], (sub) =>
+  <R>(query: Query<R>) => {
+    const imports = [
+      nodeName,
+      key instanceof Variable ? key : '',
+      ...many(importVars),
+    ];
+
+    const docKey = key instanceof Variable ? `[${key.toString()}]` : `.${key}`;
+    const docSignature = `deactivateProperty(${nodeName}${docKey})`;
+    return query.comment(docSignature).subQuery(imports, (sub) =>
       sub
         .match([
           node(nodeName),
@@ -81,3 +87,4 @@ export const deactivateProperty =
         .apply(prefixNodeLabelsWithDeleted('oldPropVar'))
         .return(`count(oldPropVar) as ${numDeactivatedVar}`)
     );
+  };
