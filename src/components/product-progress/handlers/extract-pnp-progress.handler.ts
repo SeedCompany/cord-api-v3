@@ -54,24 +54,28 @@ export class ExtractPnpProgressHandler {
     // Convert row to product ID
     const updates = progressRows.flatMap((row) => {
       const { steps, ...rest } = row;
-      const rowScripture = row.scripture ?? [];
-      let productId = null;
-      if (row.bookName) {
-        productId = scriptureProducts.find((ref) =>
-          isScriptureEqual(ref.scriptureRanges, rowScripture)
-        )?.id;
-        if (!productId) {
-          productId = scriptureProducts.find(
-            (ref) =>
-              ref.book === row.bookName && ref.totalVerses === row.totalVerses
-          )?.id;
+      if (row.story) {
+        const productId = storyProducts[row.story];
+        if (productId) {
+          return { productId, steps };
         }
-      } else {
-        productId = storyProducts[row.story!];
       }
 
-      if (productId) {
-        return { productId, steps };
+      if (row.bookName) {
+        const exactScriptureMatch = scriptureProducts.find((ref) =>
+          isScriptureEqual(ref.scriptureRanges, row.scripture)
+        );
+        if (exactScriptureMatch) {
+          return { productId: exactScriptureMatch.id, steps };
+        }
+
+        const unspecifiedScriptureMatch = scriptureProducts.find(
+          (ref) =>
+            ref.book === row.bookName && ref.totalVerses === row.totalVerses
+        );
+        if (unspecifiedScriptureMatch) {
+          return { productId: unspecifiedScriptureMatch.id, steps };
+        }
       }
 
       this.logger.warning('Could not find product in pnp', {
