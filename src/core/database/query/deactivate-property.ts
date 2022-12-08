@@ -1,12 +1,13 @@
 import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { MergeExclusive } from 'type-fest';
-import { ACTIVE, Variable } from '.';
 import {
+  EnhancedResource,
   ID,
   MaybeUnsecuredInstance,
   ResourceShape,
-} from '../../../common';
+} from '~/common';
+import { ACTIVE, Variable } from '.';
 import { DbChanges } from '../changes';
 import { prefixNodeLabelsWithDeleted } from './deletes';
 
@@ -18,7 +19,7 @@ export type DeactivatePropertyOptions<
   Key extends keyof DbChanges<TObject> & string
 > = MergeExclusive<
   {
-    resource: TResourceStatic;
+    resource: TResourceStatic | EnhancedResource<TResourceStatic>;
     key: Key;
   },
   {
