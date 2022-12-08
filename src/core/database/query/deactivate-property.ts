@@ -4,8 +4,6 @@ import { MergeExclusive } from 'type-fest';
 import { ACTIVE, Variable } from '.';
 import {
   ID,
-  many,
-  Many,
   MaybeUnsecuredInstance,
   ResourceShape,
 } from '../../../common';
@@ -30,7 +28,6 @@ export type DeactivatePropertyOptions<
   changeset?: ID;
   nodeName?: string;
   numDeactivatedVar?: string;
-  importVars?: Many<string>;
 };
 
 /**
@@ -48,14 +45,9 @@ export const deactivateProperty =
     changeset,
     nodeName = 'node',
     numDeactivatedVar = 'numPropsDeactivated',
-    importVars = [],
   }: DeactivatePropertyOptions<TResourceStatic, TObject, Key>) =>
   <R>(query: Query<R>) => {
-    const imports = [
-      nodeName,
-      key instanceof Variable ? key : '',
-      ...many(importVars),
-    ];
+    const imports = [nodeName, key instanceof Variable ? key : ''];
 
     const docKey = key instanceof Variable ? `[${key.toString()}]` : `.${key}`;
     const docSignature = `deactivateProperty(${nodeName}${docKey})`;
