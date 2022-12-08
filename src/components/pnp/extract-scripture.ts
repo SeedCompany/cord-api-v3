@@ -8,12 +8,11 @@ import { WrittenScripturePlanningSheet } from './planning-sheet';
 
 export const extractScripture = (row: Row<WrittenScripturePlanningSheet>) => {
   const sheet = row.sheet;
-  const bookName = sheet.bookName(row)!;
   const totalVerses = sheet.totalVerses(row)!;
-  const scriptureFromBookCol = parseScripture(bookName);
+  const scriptureFromBookCol = parseScripture(sheet.bookName(row));
 
   const common = {
-    bookName,
+    bookName: scriptureFromBookCol[0].start.book,
     totalVerses,
   };
 
@@ -42,7 +41,7 @@ export const extractScripture = (row: Row<WrittenScripturePlanningSheet>) => {
     ...common,
     scripture: [],
     unspecifiedScripture: {
-      book: scriptureFromBookCol[0].start.book,
+      book: common.bookName,
       totalVerses: totalVerses,
     },
   };
