@@ -1,5 +1,5 @@
 import { Info, Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { Fields, IsOnlyId } from '../../common';
+import { Fields, IsOnlyId, viewOfChangeset } from '../../common';
 import { Loader, LoaderOf } from '../../core';
 import { Product } from '../product';
 import { LanguageEngagement } from './dto';
@@ -17,7 +17,7 @@ export class EngagementProductConnectionResolver {
       ? { id: product.engagement }
       : await engagements.load({
           id: product.engagement,
-          view: { active: true },
+          view: viewOfChangeset(product.changeset),
         });
   }
 }

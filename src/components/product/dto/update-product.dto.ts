@@ -26,6 +26,12 @@ export abstract class UpdateBaseProduct extends OmitType(CreateBaseProduct, [
 ]) {
   @IdField()
   readonly id: ID;
+
+  @IdField({
+    description: 'The change object to associate these product changes with',
+    nullable: true,
+  })
+  readonly changeset?: ID;
 }
 
 @InputType()

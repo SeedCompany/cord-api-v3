@@ -25,18 +25,19 @@ import {
   AvailableStepsOptions,
   CreateDerivativeScriptureProduct,
   CreateDirectScriptureProduct,
+  CreateOtherProduct,
   getAvailableSteps,
   ProductLoader,
   ProductService,
   ProductStep as Step,
   UpdateDerivativeScriptureProduct,
   UpdateDirectScriptureProduct,
+  UpdateOtherProduct,
 } from '../product';
 import { ProjectLoader, TranslationProject } from '../project';
 import { Book, labelOfScriptureRanges } from '../scripture';
 import {
   AnyProduct,
-  CreateOtherProduct,
   CreateProductInput,
   CreateProductOutput,
   DeleteProductOutput,
@@ -47,7 +48,6 @@ import {
   ProductCompletionDescriptionSuggestionsOutput,
   ProductListInput,
   ProductListOutput,
-  UpdateOtherProduct,
   UpdateProductInput,
   UpdateProductOutput,
 } from './dto';
@@ -61,9 +61,9 @@ export class ProductResolver {
   })
   async product(
     @Loader(ProductLoader) products: LoaderOf<ProductLoader>,
-    @IdsAndViewArg() { id }: IdsAndView
+    @IdsAndViewArg() key: IdsAndView
   ): Promise<AnyProduct> {
-    return await products.load(id);
+    return await products.load(key);
   }
 
   @Query(() => ProductListOutput, {
@@ -212,9 +212,10 @@ export class ProductResolver {
   })
   async createDirectScriptureProduct(
     @LoggedInSession() session: Session,
-    @Args('input') input: CreateDirectScriptureProduct
+    @Args('input')
+    { changeset, ...input }: CreateDirectScriptureProduct
   ): Promise<CreateProductOutput> {
-    const product = await this.productService.create(input, session);
+    const product = await this.productService.create(input, session, changeset);
     return { product };
   }
 
@@ -223,9 +224,10 @@ export class ProductResolver {
   })
   async createDerivativeScriptureProduct(
     @LoggedInSession() session: Session,
-    @Args('input') input: CreateDerivativeScriptureProduct
+    @Args('input')
+    { changeset, ...input }: CreateDerivativeScriptureProduct
   ): Promise<CreateProductOutput> {
-    const product = await this.productService.create(input, session);
+    const product = await this.productService.create(input, session, changeset);
     return { product };
   }
 
@@ -234,9 +236,9 @@ export class ProductResolver {
   })
   async createOtherProduct(
     @LoggedInSession() session: Session,
-    @Args('input') input: CreateOtherProduct
+    @Args('input') { changeset, ...input }: CreateOtherProduct
   ): Promise<CreateProductOutput> {
-    const product = await this.productService.create(input, session);
+    const product = await this.productService.create(input, session, changeset);
     return { product };
   }
 
@@ -258,9 +260,15 @@ export class ProductResolver {
   })
   async updateDirectScriptureProduct(
     @LoggedInSession() session: Session,
-    @Args('input') input: UpdateDirectScriptureProduct
+    @Args('input')
+    { changeset, ...input }: UpdateDirectScriptureProduct
   ): Promise<UpdateProductOutput> {
-    const product = await this.productService.updateDirect(input, session);
+    const product = await this.productService.updateDirect(
+      input,
+      session,
+      undefined,
+      changeset
+    );
     return { product };
   }
 
@@ -269,9 +277,15 @@ export class ProductResolver {
   })
   async updateDerivativeScriptureProduct(
     @LoggedInSession() session: Session,
-    @Args('input') input: UpdateDerivativeScriptureProduct
+    @Args('input')
+    { changeset, ...input }: UpdateDerivativeScriptureProduct
   ): Promise<UpdateProductOutput> {
-    const product = await this.productService.updateDerivative(input, session);
+    const product = await this.productService.updateDerivative(
+      input,
+      session,
+      undefined,
+      changeset
+    );
     return { product };
   }
 

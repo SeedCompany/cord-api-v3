@@ -3,7 +3,7 @@ import { Node, node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { ID, Range } from '../../common';
 import { DatabaseService } from '../../core';
-import { ACTIVE, collect } from '../../core/database/query';
+import { ACTIVE, collect, INACTIVE } from '../../core/database/query';
 import { ScriptureRange, ScriptureRangeInput } from './dto';
 
 export type DbScriptureReferences = ReadonlyArray<Node<Range<number>>>;
@@ -37,8 +37,15 @@ export class ScriptureReferenceRepository {
     isOverriding: boolean | undefined,
     producibleId: ID,
     scriptureRefs: readonly ScriptureRangeInput[] | null,
-    rel: 'scriptureReferencesOverride' | 'scriptureReferences'
+    rel: 'scriptureReferencesOverride' | 'scriptureReferences',
+    changeset?: ID
   ) {
+    changeset = await this.db.checkCreatedInChangeset(
+      'Product',
+      producibleId,
+      changeset
+    );
+
     if (isOverriding) {
       await this.db
         .query()
@@ -57,12 +64,18 @@ export class ScriptureReferenceRepository {
       .query()
       .match([
         node('node', 'BaseNode', { id: producibleId }),
-        relation('out', 'rel', rel, ACTIVE),
+        relation('out', 'rel', rel, { active: !changeset }),
         node('sr', 'ScriptureRange'),
+        ...(changeset
+          ? [
+              relation('in', 'oldChange', 'changeset', ACTIVE),
+              node('changeNode', 'Changeset', { id: changeset }),
+            ]
+          : []),
       ])
       .setValues({
-        'rel.active': false,
-        'sr.active': false,
+        [`${changeset ? 'oldChange' : 'rel'}.active`]: false,
+        'sr.active': false, // I think that this is inactive no matter whether it's a change of a changeset... not sure though...
       })
       .return('sr')
       .run();
@@ -71,19 +84,33 @@ export class ScriptureReferenceRepository {
   async updateScriptureRefs(
     sr: ScriptureRangeInput,
     producibleId: ID,
-    rel: 'scriptureReferencesOverride' | 'scriptureReferences'
+    rel: 'scriptureReferencesOverride' | 'scriptureReferences',
+    changeset?: ID
   ) {
+    changeset = await this.db.checkCreatedInChangeset(
+      'Product',
+      producibleId,
+      changeset
+    );
     await this.db
       .query()
+      .apply((q) =>
+        changeset
+          ? q.match(node('changeset', 'Changeset', { id: changeset })) //doing things a little different here from db.create-property because we want to create an entirely new list with old and new values.
+          : q
+      )
       .match([node('node', 'BaseNode', { id: producibleId })])
       .create([
         node('node'),
-        relation('out', '', rel, ACTIVE),
+        relation('out', '', rel, { active: !changeset }),
         node('', ['ScriptureRange', 'BaseNode'], {
           ...ScriptureRange.fromReferences(sr),
 
           createdAt: DateTime.local(),
         }),
+        ...(changeset
+          ? [relation('in', '', 'changeset', ACTIVE), node('changeset')]
+          : []),
       ])
       .return('node')
       .run();
@@ -93,10 +120,13 @@ export class ScriptureReferenceRepository {
     nodeName = 'node',
     relationName = 'scriptureReferences',
     outVar = 'scriptureReferences',
+    changeset,
   }: {
     nodeName?: string;
     relationName?: string;
     outVar?: string;
+    changeset?: ID;
+    importVars?: string[];
   } = {}) {
     const dynamicRel = !!relationName.match(/['"]/);
     return (query: Query) =>
@@ -108,9 +138,15 @@ export class ScriptureReferenceRepository {
             'out',
             'scriptureRangeRel',
             dynamicRel ? undefined : relationName,
-            ACTIVE
+            changeset ? INACTIVE : ACTIVE
           ),
           node('scriptureRange', 'ScriptureRange'),
+          ...(changeset
+            ? [
+                relation('in', '', 'changeset', ACTIVE),
+                node('changeset', 'Changeset', { id: changeset }),
+              ]
+            : []),
         ])
         .apply((q) =>
           dynamicRel

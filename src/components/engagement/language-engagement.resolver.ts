@@ -39,7 +39,10 @@ export class LanguageEngagementResolver {
     const list = await this.engagements.listProducts(
       engagement,
       input,
-      session
+      session,
+      engagement.changeset
+        ? { changeset: engagement.changeset }
+        : { active: true }
     );
     products.primeAll(list.items);
     return list;

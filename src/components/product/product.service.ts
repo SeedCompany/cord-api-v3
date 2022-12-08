@@ -12,6 +12,7 @@ import {
   simpleSwitch,
   UnauthorizedException,
   UnsecuredDto,
+  viewOfChangeset,
 } from '../../common';
 import {
   HandleIdLookup,
@@ -77,7 +78,8 @@ export class ProductService {
       | CreateDirectScriptureProduct
       | CreateDerivativeScriptureProduct
       | CreateOtherProduct,
-    session: Session
+    session: Session,
+    changeset?: ID
   ): Promise<AnyProduct> {
     const engagementResource = await this.resourceLoader.load(
       IEngagement,
@@ -171,17 +173,22 @@ export class ProductService {
 
     const id =
       'title' in input
-        ? await this.repo.createOther({ ...input, progressTarget, steps })
-        : await this.repo.create({
-            ...input,
-            progressTarget,
-            steps,
-            totalVerses,
-            totalVerseEquivalents,
-          });
+        ? await this.repo.createOther(
+            { ...input, progressTarget, steps },
+            changeset
+          )
+        : await this.repo.create(
+            {
+              ...input,
+              progressTarget,
+              steps,
+              totalVerses,
+              totalVerseEquivalents,
+            },
+            changeset
+          );
 
-    this.logger.debug(`product created`, { id });
-    return await this.readOne(id, session);
+    return await this.readOne(id, session, viewOfChangeset(changeset));
   }
 
   @HandleIdLookup([
@@ -192,37 +199,44 @@ export class ProductService {
   async readOne(
     id: ID,
     session: Session,
-    _view?: ObjectView
+    view?: ObjectView
   ): Promise<AnyProduct> {
-    const dto = await this.readOneUnsecured(id, session);
+    const dto = await this.readOneUnsecured(id, session, view);
     return await this.secure(dto, session);
   }
 
   async readOneUnsecured(
     id: ID,
-    session: Session
+    session: Session,
+    view?: ObjectView
   ): Promise<UnsecuredDto<AnyProduct>> {
-    const rows = await this.readManyUnsecured([id], session);
+    const rows = await this.readManyUnsecured([id], session, view);
     const result = rows[0];
     if (!result) {
-      throw new NotFoundException('Could not find product');
+      throw new NotFoundException(
+        `Could not find product: ID-${id}, CHANGESET-${
+          view?.changeset ?? 'none'
+        }`
+      );
     }
     return result;
   }
 
   async readMany(
     ids: readonly ID[],
-    session: Session
+    session: Session,
+    view?: ObjectView
   ): Promise<readonly AnyProduct[]> {
-    const rows = await this.readManyUnsecured(ids, session);
+    const rows = await this.readManyUnsecured(ids, session, view);
     return await asyncPool(25, rows, (row) => this.secure(row, session));
   }
 
   async readManyUnsecured(
     ids: readonly ID[],
-    session: Session
+    session: Session,
+    view?: ObjectView
   ): Promise<ReadonlyArray<UnsecuredDto<AnyProduct>>> {
-    const rows = await this.repo.readMany(ids, session);
+    const rows = await this.repo.readMany(ids, session, view);
     return rows.map((row) => this.mapDbRowToDto(row));
   }
 
@@ -276,7 +290,6 @@ export class ProductService {
     session: Session
   ): Promise<AnyProduct> {
     const canDelete = await this.repo.checkDeletePermission(dto.id, session);
-
     const scriptureReferences = this.scriptureRefs.parseList(
       dto.scriptureReferences
     );
@@ -413,10 +426,12 @@ export class ProductService {
   async updateDirect(
     input: UpdateDirectScriptureProduct,
     session: Session,
-    currentProduct?: UnsecuredDto<DirectScriptureProduct>
+    currentProduct?: UnsecuredDto<DirectScriptureProduct>,
+    changeset?: ID
   ): Promise<DirectScriptureProduct> {
+    const view: ObjectView = viewOfChangeset(changeset);
     currentProduct ??= asProductType(DirectScriptureProduct)(
-      await this.readOneUnsecured(input.id, session)
+      await this.readOneUnsecured(input.id, session, view)
     );
     const changes = this.getDirectProductChanges(input, currentProduct);
 
@@ -429,13 +444,16 @@ export class ProductService {
     const { scriptureReferences, unspecifiedScripture, ...simpleChanges } =
       changes;
 
-    await this.scriptureRefs.update(input.id, scriptureReferences);
+    await this.scriptureRefs.update(input.id, scriptureReferences, {
+      changeset,
+    });
 
     // update unspecifiedScripture if it's defined
     if (unspecifiedScripture !== undefined) {
       await this.repo.updateUnspecifiedScripture(
         input.id,
-        unspecifiedScripture
+        unspecifiedScripture,
+        changeset
       );
     }
 
@@ -443,16 +461,17 @@ export class ProductService {
 
     const productUpdatedScriptureReferences = asProductType(
       DirectScriptureProduct
-    )(await this.readOne(input.id, session));
+    )(await this.readOne(input.id, session, view));
 
     return await this.repo.updateProperties(
       productUpdatedScriptureReferences,
-      simpleChanges
+      simpleChanges,
+      changeset
     );
   }
 
   private getDirectProductChanges(
-    input: UpdateDirectScriptureProduct,
+    { changeset, ...input }: UpdateDirectScriptureProduct,
     current: UnsecuredDto<DirectScriptureProduct>
   ) {
     const partialChanges = this.repo.getActualDirectChanges(current, {
@@ -496,10 +515,12 @@ export class ProductService {
   async updateDerivative(
     input: UpdateDerivativeScriptureProduct,
     session: Session,
-    currentProduct?: UnsecuredDto<DerivativeScriptureProduct>
+    currentProduct?: UnsecuredDto<DerivativeScriptureProduct>,
+    changeset?: ID
   ): Promise<DerivativeScriptureProduct> {
+    const view = viewOfChangeset(changeset);
     currentProduct ??= asProductType(DerivativeScriptureProduct)(
-      await this.readOneUnsecured(input.id, session)
+      await this.readOneUnsecured(input.id, session, view)
     );
 
     const changes = this.getDerivativeProductChanges(input, currentProduct);
@@ -525,28 +546,30 @@ export class ProductService {
           'product.produces'
         );
       }
-      await this.repo.updateProducible(input, produces);
+      await this.repo.updateProducible(input, produces, changeset);
     }
 
     await this.mergeCompletionDescription(changes, currentProduct);
 
     // update the scripture references (override)
     await this.scriptureRefs.update(input.id, scriptureReferencesOverride, {
+      //TODO for changeset
       isOverriding: true,
     });
 
     const productUpdatedScriptureReferences = asProductType(
       DerivativeScriptureProduct
-    )(await this.readOne(input.id, session));
+    )(await this.readOne(input.id, session, view));
 
     return await this.repo.updateDerivativeProperties(
       productUpdatedScriptureReferences,
-      simpleChanges
+      simpleChanges,
+      changeset
     );
   }
 
   private getDerivativeProductChanges(
-    input: UpdateDerivativeScriptureProduct,
+    { changeset, ...input }: UpdateDerivativeScriptureProduct,
     current: UnsecuredDto<DerivativeScriptureProduct>
   ) {
     const partialChanges = this.repo.getActualDerivativeChanges(
@@ -591,8 +614,12 @@ export class ProductService {
     return changes;
   }
 
-  async updateOther(input: UpdateOtherProduct, session: Session) {
-    const currentProduct = await this.readOneUnsecured(input.id, session);
+  async updateOther(
+    { changeset, ...input }: UpdateOtherProduct,
+    session: Session
+  ) {
+    const view = viewOfChangeset(changeset);
+    const currentProduct = await this.readOneUnsecured(input.id, session, view);
     if (!currentProduct.title) {
       throw new InputException('Product given is not an OtherProduct');
     }
@@ -619,7 +646,7 @@ export class ProductService {
     const currentSecured = asProductType(OtherProduct)(
       await this.secure(currentProduct, session)
     );
-    return await this.repo.updateOther(currentSecured, changes);
+    return await this.repo.updateOther(currentSecured, changes, changeset);
   }
 
   /**
@@ -726,10 +753,11 @@ export class ProductService {
 
   async list(
     input: ProductListInput,
-    session: Session
+    session: Session,
+    view?: ObjectView
   ): Promise<ProductListOutput> {
     // all roles can list, so no need to check canList for now
-    const results = await this.repo.list(input, session);
+    const results = await this.repo.list(input, session, view?.changeset);
     return await mapListResults(results, (row) =>
       this.secure(this.mapDbRowToDto(row), session)
     );

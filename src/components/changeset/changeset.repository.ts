@@ -81,8 +81,10 @@ export class ChangesetRepository extends DtoRepository(Changeset) {
       .return<Record<keyof ChangesetDiff, readonly BaseNode[]>>([
         'changed',
         'removed',
-        'added',
+        // There's got to be a better way than this... maybe filter our ScriptureRange results after the query?
+        '[(changeset)-[changeType:changeset { active: true }]->(node:BaseNode) WHERE changeType.deleting IS NULL AND NOT node:ScriptureRange | node] as added',
       ])
+      .logIt()
       .first();
     if (!result) {
       throw new NotFoundException('Could not find changeset');

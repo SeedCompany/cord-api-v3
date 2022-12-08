@@ -1,3 +1,4 @@
+import { Type } from '@nestjs/common';
 import { Field, Float, Int, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { startCase } from 'lodash';
@@ -6,6 +7,8 @@ import { MergeExclusive } from 'type-fest';
 import {
   DbLabel,
   ID,
+  IntersectionType,
+  Resource,
   Secured,
   SecuredBoolean,
   SecuredFloat,
@@ -19,6 +22,7 @@ import {
   UnsecuredDto,
 } from '../../../common';
 import { SetChangeType } from '../../../core/database/changes';
+import { ChangesetAware } from '../../changeset/dto';
 import {
   DbScriptureReferences,
   ScriptureRangeInput,
@@ -39,11 +43,16 @@ const resolveProductType = (product: AnyProduct | UnsecuredDto<AnyProduct>) =>
     ? OtherProduct
     : DirectScriptureProduct;
 
+const Interfaces: Type<ChangesetAware & Producible> = IntersectionType(
+  Producible,
+  ChangesetAware
+);
+
 @InterfaceType({
   resolveType: resolveProductType,
-  implements: [Producible],
+  implements: [ChangesetAware, Producible, Resource],
 })
-export class Product extends Producible {
+export class Product extends Interfaces {
   static readonly Props: string[] = keysOf<Product>();
   static readonly SecuredProps: string[] = keysOf<SecuredProps<Product>>();
   static readonly Parent = import('../../engagement/dto').then(

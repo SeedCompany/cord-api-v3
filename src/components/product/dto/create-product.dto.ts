@@ -26,6 +26,12 @@ export abstract class CreateBaseProduct {
   })
   readonly engagementId: ID;
 
+  @IdField({
+    description: 'The change object to associate these product changes with',
+    nullable: true,
+  })
+  readonly changeset?: ID;
+
   @Field(() => [ProductMedium], { nullable: true })
   @Transform(({ value }) => uniq(value))
   readonly mediums?: readonly ProductMedium[];

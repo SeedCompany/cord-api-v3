@@ -1,5 +1,5 @@
-import { ID } from '../../common';
-import { LoaderFactory, OrderedNestDataLoader } from '../../core';
+import { ID, ObjectView } from '../../common';
+import { LoaderFactory, ObjectViewAwareLoader } from '../../core';
 import {
   AnyProduct,
   DerivativeScriptureProduct,
@@ -15,12 +15,12 @@ import { ProductService } from './product.service';
   DerivativeScriptureProduct,
   OtherProduct,
 ])
-export class ProductLoader extends OrderedNestDataLoader<AnyProduct> {
+export class ProductLoader extends ObjectViewAwareLoader<AnyProduct> {
   constructor(private readonly products: ProductService) {
     super();
   }
 
-  async loadMany(ids: readonly ID[]) {
-    return await this.products.readMany(ids, this.session);
+  async loadManyByView(ids: readonly ID[], view: ObjectView) {
+    return await this.products.readMany(ids, this.session, view);
   }
 }
