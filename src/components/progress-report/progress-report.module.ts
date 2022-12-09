@@ -12,16 +12,16 @@ import { ProgressReportRepository } from './progress-report.repository';
 import { ProgressReportService } from './progress-report.service';
 import { ProgressReportEngagementConnectionResolver } from './resolvers/progress-report-engagement-connection.resolver';
 import { ProgressReportParentResolver } from './resolvers/progress-report-parent.resolver';
-import { ProgressReportResolver } from './resolvers/progress-report.resolver';
+import { ProgressReportVarianceExplanationModule } from './variance-explanation/variance-explanation.module';
 import { ProgressReportWorkflowModule } from './workflow/progress-report-workflow.module';
 
 @Module({
   imports: [
     forwardRef(() => PeriodicReportModule),
     ProgressReportWorkflowModule,
+    ProgressReportVarianceExplanationModule,
   ],
   providers: [
-    ProgressReportResolver,
     ProgressReportParentResolver,
     ProgressReportEngagementConnectionResolver,
     ProgressReportHighlightsResolver,

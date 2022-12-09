@@ -231,6 +231,13 @@ export abstract class SecuredString extends SecuredProperty<string>(
 ) {}
 
 @ObjectType({
+  description: SecuredPropertyList.descriptionFor('strings'),
+})
+export abstract class SecuredStringList extends SecuredPropertyList<string>(
+  GraphQLString
+) {}
+
+@ObjectType({
   description: SecuredProperty.descriptionFor('an integer'),
 })
 export abstract class SecuredInt extends SecuredProperty<number>(Int) {}
