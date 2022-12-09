@@ -1,7 +1,9 @@
 import { node, Query, relation } from 'cypher-query-builder';
+import { Parameter } from 'cypher-query-builder/dist/typings/parameter-bag';
+import { compact } from 'lodash';
 import { DateTime } from 'luxon';
 import { MergeExclusive } from 'type-fest';
-import { ACTIVE, variable as varRef } from '.';
+import { ACTIVE, exp, Variable, variable as varRef } from '.';
 import {
   EnhancedResource,
   ID,
@@ -17,22 +19,34 @@ export type CreatePropertyOptions<
     id: ID;
   },
   Key extends keyof DbChanges<TObject> & string
-> = {
-  resource: TResourceStatic | EnhancedResource<TResourceStatic>;
-  key: Key;
-  changeset?: ID;
-  nodeName?: string;
-  numCreatedVar?: string;
-} & MergeExclusive<
+> = MergeExclusive<
   {
-    /** The new value which will be a bound parameter */
-    value: UnwrapSecured<TObject[Key]>;
+    resource: TResourceStatic | EnhancedResource<TResourceStatic>;
+    key: Key;
   },
   {
-    /** The variable to use as the new value */
-    variable: string;
+    /**
+     * Update a dynamic property.
+     * Note that this doesn't set labels declared in the DTO.
+     */
+    key: Variable;
   }
->;
+> & {
+  changeset?: ID;
+  nodeName?: string;
+  labels?: string[] | Variable;
+  numCreatedVar?: string;
+  now?: Parameter;
+} & MergeExclusive<
+    {
+      /** The new value which will be a bound parameter */
+      value: UnwrapSecured<TObject[Key]>;
+    },
+    {
+      /** The variable to use as the new value */
+      variable: string;
+    }
+  >;
 
 /**
  * Creates a new property from the node var with given key/value.
@@ -52,49 +66,95 @@ export const createProperty =
     changeset,
     nodeName = 'node',
     numCreatedVar = 'numPropsCreated',
+    labels,
+    now: nowIn,
   }: CreatePropertyOptions<TResourceStatic, TObject, Key>) =>
   <R>(query: Query<R>) => {
-    resource = EnhancedResource.of(resource);
+    resource = resource ? EnhancedResource.of(resource) : undefined;
 
-    const createdAt = DateTime.local();
-    const propLabels = !changeset
+    const now = nowIn ?? query.params.addParam(DateTime.now(), 'now');
+
+    // Grab labels for property if it's statically given.
+    // Also, do not give properties unique labels if inside a changeset.
+    // They'll get them when they are applied for real.
+    const propLabels = Array.isArray(labels)
+      ? labels
+      : !changeset && resource && typeof key === 'string'
       ? resource.dbPropLabels[key]
-      : // Do not give properties unique labels if inside a changeset.
-        // They'll get them when they are applied for real.
-        ['Property'];
+      : ['Property'];
 
-    return query.comment`
-      createProperty(${nodeName}.${key})
-    `.subQuery([nodeName, variable ? varRef(variable) : null], (sub) =>
-      sub
-        .apply((q) =>
-          changeset
-            ? q
-                .match(node('changeset', 'Changeset', { id: changeset }))
-                // Don't create new "change value" if the value is the same as
-                // the value outside the changeset.
-                .raw(
-                  `WHERE NOT (${nodeName})-[:${key} { active: true }]->(:Property { value: ${
-                    variable ? variable : '$value'
-                  } })`,
-                  variable ? {} : { value }
+    const docSignature = `createProperty(${nodeName}${
+      key instanceof Variable ? `[${key.toString()}]` : `.${key}`
+    }${variable ? ` = ${variable}` : ''})`;
+    return query
+      .comment(docSignature)
+      .subQuery([nodeName, variable ? varRef(variable) : null], (sub) =>
+        sub
+          .apply((q) =>
+            changeset
+              ? q
+                  .match(node('changeset', 'Changeset', { id: changeset }))
+                  .optionalMatch([
+                    node(nodeName),
+                    relation(
+                      'out',
+                      undefined,
+                      key instanceof Variable ? [] : key,
+                      ACTIVE
+                    ),
+                    node('existingProp', 'Property'),
+                  ])
+                  // Don't create a new "change value" if the value is the same as
+                  // the value outside the changeset.
+                  .raw(
+                    compact([
+                      'WHERE',
+                      key instanceof Variable
+                        ? `type(existingProp) = ${key.toString()} AND`
+                        : '',
+                      `existingProp.value <> ${variable ? variable : '$value'}`,
+                    ]).join(' '),
+                    variable ? {} : { value }
+                  )
+              : q
+          )
+          .subQuery(
+            [
+              nodeName,
+              variable ? varRef(variable) : '',
+              changeset ? 'changeset' : '',
+            ],
+            (sub2) =>
+              sub2
+                .create([
+                  node('newPropNode', propLabels, {
+                    createdAt: varRef(now.toString()),
+                    value: variable ? varRef(variable) : value,
+                  }),
+                  ...(changeset
+                    ? [
+                        relation('in', '', 'changeset', ACTIVE),
+                        node('changeset'),
+                      ]
+                    : []),
+                ])
+                .return(['newPropNode'])
+          )
+          .apply((q) =>
+            labels instanceof Variable
+              ? q.raw(
+                  `CALL apoc.create.addLabels(newPropNode, ${labels.toString()}) YIELD node as addedLabels`
                 )
-            : q
-        )
-        .create([
-          node(nodeName),
-          relation('out', 'toProp', key, {
-            active: !changeset,
-            createdAt,
-          }),
-          node('newPropNode', propLabels, {
-            createdAt,
-            value: variable ? varRef(variable) : value,
-          }),
-          ...(changeset
-            ? [relation('in', '', 'changeset', ACTIVE), node('changeset')]
-            : []),
-        ])
-        .return(`count(newPropNode) as ${numCreatedVar}`)
-    );
+              : q
+          )
+          .raw(
+            `CALL apoc.create.relationship(${nodeName}, ${
+              key instanceof Variable ? key.toString() : `'${key}'`
+            }, ${exp({
+              active: !changeset,
+              createdAt: now.toString(),
+            })}, newPropNode) YIELD rel`
+          )
+          .return(`count(newPropNode) as ${numCreatedVar}`)
+      );
   };

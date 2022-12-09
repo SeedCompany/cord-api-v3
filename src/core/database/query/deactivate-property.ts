@@ -1,14 +1,14 @@
 import { node, Query, relation } from 'cypher-query-builder';
+import { Parameter } from 'cypher-query-builder/dist/typings/parameter-bag';
 import { DateTime } from 'luxon';
 import { MergeExclusive } from 'type-fest';
-import { ACTIVE, Variable } from '.';
 import {
+  EnhancedResource,
   ID,
-  many,
-  Many,
   MaybeUnsecuredInstance,
   ResourceShape,
-} from '../../../common';
+} from '~/common';
+import { ACTIVE, Variable, variable as varRef } from '.';
 import { DbChanges } from '../changes';
 import { prefixNodeLabelsWithDeleted } from './deletes';
 
@@ -20,7 +20,7 @@ export type DeactivatePropertyOptions<
   Key extends keyof DbChanges<TObject> & string
 > = MergeExclusive<
   {
-    resource: TResourceStatic;
+    resource: TResourceStatic | EnhancedResource<TResourceStatic>;
     key: Key;
   },
   {
@@ -30,7 +30,7 @@ export type DeactivatePropertyOptions<
   changeset?: ID;
   nodeName?: string;
   numDeactivatedVar?: string;
-  importVars?: Many<string>;
+  now?: Parameter;
 };
 
 /**
@@ -48,12 +48,14 @@ export const deactivateProperty =
     changeset,
     nodeName = 'node',
     numDeactivatedVar = 'numPropsDeactivated',
-    importVars = [],
+    now,
   }: DeactivatePropertyOptions<TResourceStatic, TObject, Key>) =>
-  <R>(query: Query<R>) =>
-    query.comment`
-      deactivateProperty(${nodeName}.${key})
-    `.subQuery([nodeName, ...many(importVars)], (sub) =>
+  <R>(query: Query<R>) => {
+    const imports = [nodeName, key instanceof Variable ? key : ''];
+
+    const docKey = key instanceof Variable ? `[${key.toString()}]` : `.${key}`;
+    const docSignature = `deactivateProperty(${nodeName}${docKey})`;
+    return query.comment(docSignature).subQuery(imports, (sub) =>
       sub
         .match([
           node(nodeName),
@@ -70,14 +72,15 @@ export const deactivateProperty =
         ])
         .apply((q) =>
           key instanceof Variable
-            ? q.raw(`WHERE type(oldToProp) = ${key.name}`)
+            ? q.raw(`WHERE type(oldToProp) = ${key.toString()}`)
             : q
         )
         .setValues({
           [`${changeset ? 'oldChange' : 'oldToProp'}.active`]: false,
-          'oldPropVar.deletedAt': DateTime.local(),
+          'oldPropVar.deletedAt': now ? varRef(now.toString()) : DateTime.now(),
         })
         .with('oldPropVar')
         .apply(prefixNodeLabelsWithDeleted('oldPropVar'))
         .return(`count(oldPropVar) as ${numDeactivatedVar}`)
     );
+  };
