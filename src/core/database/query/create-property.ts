@@ -34,6 +34,7 @@ export type CreatePropertyOptions<
 > & {
   changeset?: ID;
   nodeName?: string;
+  labels?: string[] | Variable;
   numCreatedVar?: string;
   now?: Parameter;
 } & MergeExclusive<
@@ -65,6 +66,7 @@ export const createProperty =
     changeset,
     nodeName = 'node',
     numCreatedVar = 'numPropsCreated',
+    labels,
     now: nowIn,
   }: CreatePropertyOptions<TResourceStatic, TObject, Key>) =>
   <R>(query: Query<R>) => {
@@ -75,10 +77,11 @@ export const createProperty =
     // Grab labels for property if it's statically given.
     // Also, do not give properties unique labels if inside a changeset.
     // They'll get them when they are applied for real.
-    const propLabels =
-      !changeset && resource && typeof key === 'string'
-        ? resource.dbPropLabels[key]
-        : ['Property'];
+    const propLabels = Array.isArray(labels)
+      ? labels
+      : !changeset && resource && typeof key === 'string'
+      ? resource.dbPropLabels[key]
+      : ['Property'];
 
     const docSignature = `createProperty(${nodeName}${
       key instanceof Variable ? `[${key.toString()}]` : `.${key}`
@@ -136,6 +139,13 @@ export const createProperty =
                     : []),
                 ])
                 .return(['newPropNode'])
+          )
+          .apply((q) =>
+            labels instanceof Variable
+              ? q.raw(
+                  `CALL apoc.create.addLabels(newPropNode, ${labels.toString()}) YIELD node as addedLabels`
+                )
+              : q
           )
           .raw(
             `CALL apoc.create.relationship(${nodeName}, ${

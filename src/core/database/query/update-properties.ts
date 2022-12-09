@@ -1,5 +1,4 @@
 import { Query } from 'cypher-query-builder';
-import { pickBy } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   EnhancedResource,
@@ -30,18 +29,24 @@ export const updateProperties =
       id: ID;
     }
   >({
-    resource,
+    resource: resourceIn,
     changes,
     changeset,
     nodeName = 'node',
     numUpdatedVar = 'numPropsUpdated',
   }: UpdatePropertiesOptions<TResourceStatic, TObject>) =>
   <R>(query: Query<R>) => {
-    resource = EnhancedResource.of(resource);
+    const resource = EnhancedResource.of(resourceIn);
 
-    const propEntries = Object.entries(
-      pickBy(changes, (value) => value !== undefined)
-    ).map(([key, value]) => ({ key, value }));
+    const propEntries = Object.entries(changes).flatMap(([key, value]) =>
+      value !== undefined
+        ? {
+            key,
+            value,
+            labels: resource.dbPropLabels[key],
+          }
+        : []
+    );
 
     return query
       .comment(`updateProperties(${resource.dbLabel})`)
@@ -52,6 +57,7 @@ export const updateProperties =
             updateProperty({
               key: variable('prop.key'),
               variable: 'prop.value',
+              labels: variable('prop.labels'),
               changeset,
               nodeName,
               now: query.params.addParam(DateTime.local(), 'now'),
