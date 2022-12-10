@@ -35,6 +35,7 @@ type Notifiers = Lazy<Many<Notifier>>;
 interface Transition extends ProjectStepTransition {
   // Users/emails to notify when the project makes this transition
   notifiers?: Notifiers;
+  inChangeset?: boolean;
 }
 
 interface StepRule {
@@ -78,8 +79,15 @@ export class ProjectRules {
     id: ID,
     changeset?: ID
   ): Promise<StepRule> {
-    const mostRecentPreviousStep = (steps: ProjectStep[]) =>
-      this.getMostRecentPreviousStep(id, steps, changeset);
+    const mostRecentPreviousStep = async (steps: ProjectStep[]) => {
+      const prevSteps = await this.getPreviousSteps(id, changeset);
+      return first(intersection(prevSteps, steps)) ?? steps[0];
+    };
+    const backToActive = () =>
+      mostRecentPreviousStep([
+        ProjectStep.Active,
+        ProjectStep.ActiveChangedPlan,
+      ]);
 
     switch (step) {
       case ProjectStep.EarlyConversations:
@@ -399,19 +407,33 @@ export class ProjectRules {
           ],
           transitions: [
             {
+              to: ProjectStep.FinalizingCompletion,
+              type: TransitionType.Approve,
+              label: 'Finalize Completion',
+            },
+            {
               to: ProjectStep.DiscussingChangeToPlan,
               type: TransitionType.Neutral,
               label: 'Discuss Change to Plan',
+              inChangeset: false,
+            },
+            {
+              to: ProjectStep.Suspended,
+              type: TransitionType.Neutral,
+              label: 'Suspend',
+              inChangeset: true,
             },
             {
               to: ProjectStep.DiscussingTermination,
               type: TransitionType.Neutral,
               label: 'Discuss Termination',
+              inChangeset: false,
             },
             {
-              to: ProjectStep.FinalizingCompletion,
-              type: TransitionType.Approve,
-              label: 'Finalize Completion',
+              to: ProjectStep.Terminated,
+              type: TransitionType.Neutral,
+              label: 'Terminate',
+              inChangeset: true,
             },
           ],
           getNotifiers: () => this.getProjectTeamUserIds(id),
@@ -426,19 +448,33 @@ export class ProjectRules {
           ],
           transitions: [
             {
+              to: ProjectStep.FinalizingCompletion,
+              type: TransitionType.Approve,
+              label: 'Finalize Completion',
+            },
+            {
               to: ProjectStep.DiscussingChangeToPlan,
               type: TransitionType.Neutral,
               label: 'Discuss Change to Plan',
+              inChangeset: false,
+            },
+            {
+              to: ProjectStep.Suspended,
+              type: TransitionType.Neutral,
+              label: 'Suspend',
+              inChangeset: true,
             },
             {
               to: ProjectStep.DiscussingTermination,
               type: TransitionType.Neutral,
               label: 'Discuss Termination',
+              inChangeset: false,
             },
             {
-              to: ProjectStep.FinalizingCompletion,
-              type: TransitionType.Approve,
-              label: 'Finalize Completion',
+              to: ProjectStep.Terminated,
+              type: TransitionType.Neutral,
+              label: 'Terminate',
+              inChangeset: true,
             },
           ],
           getNotifiers: async () => [
@@ -468,10 +504,7 @@ export class ProjectRules {
               label: 'Discuss Suspension',
             },
             {
-              to: await mostRecentPreviousStep([
-                ProjectStep.Active,
-                ProjectStep.ActiveChangedPlan,
-              ]),
+              to: await backToActive(),
               type: TransitionType.Neutral,
               label: 'Will Not Change Plan',
             },
@@ -501,10 +534,7 @@ export class ProjectRules {
               label: 'Approve Change to Plan',
             },
             {
-              to: await mostRecentPreviousStep([
-                ProjectStep.Active,
-                ProjectStep.ActiveChangedPlan,
-              ]),
+              to: await backToActive(),
               type: TransitionType.Reject,
               label: 'Reject Change to Plan',
             },
@@ -530,10 +560,7 @@ export class ProjectRules {
               label: 'Approve Change to Plan',
             },
             {
-              to: await mostRecentPreviousStep([
-                ProjectStep.Active,
-                ProjectStep.ActiveChangedPlan,
-              ]),
+              to: await backToActive(),
               type: TransitionType.Reject,
               label: 'Reject Change to Plan',
             },
@@ -560,10 +587,7 @@ export class ProjectRules {
               label: 'Submit for Approval',
             },
             {
-              to: await mostRecentPreviousStep([
-                ProjectStep.Active,
-                ProjectStep.ActiveChangedPlan,
-              ]),
+              to: await backToActive(),
               type: TransitionType.Neutral,
               label: 'Will Not Suspend',
             },
@@ -592,10 +616,7 @@ export class ProjectRules {
               label: 'Approve Suspension',
             },
             {
-              to: await mostRecentPreviousStep([
-                ProjectStep.Active,
-                ProjectStep.ActiveChangedPlan,
-              ]),
+              to: await backToActive(),
               type: TransitionType.Reject,
               label: 'Reject Suspension',
             },
@@ -618,11 +639,25 @@ export class ProjectRules {
               to: ProjectStep.DiscussingReactivation,
               type: TransitionType.Neutral,
               label: 'Discuss Reactivation',
+              inChangeset: false,
+            },
+            {
+              to: await backToActive(),
+              type: TransitionType.Approve,
+              label: 'Reactivate',
+              inChangeset: true,
             },
             {
               to: ProjectStep.DiscussingTermination,
               type: TransitionType.Neutral,
               label: 'Discuss Termination',
+              inChangeset: false,
+            },
+            {
+              to: ProjectStep.Terminated,
+              type: TransitionType.Reject,
+              label: 'Terminate',
+              inChangeset: true,
             },
           ],
           getNotifiers: async () => [
@@ -763,10 +798,7 @@ export class ProjectRules {
           ],
           transitions: [
             {
-              to: await mostRecentPreviousStep([
-                ProjectStep.Active,
-                ProjectStep.ActiveChangedPlan,
-              ]),
+              to: await backToActive(),
               type: TransitionType.Neutral,
               label: 'Still Working',
             },
@@ -788,7 +820,14 @@ export class ProjectRules {
       case ProjectStep.Terminated:
         return {
           approvers: [Role.Administrator],
-          transitions: [],
+          transitions: [
+            {
+              to: await backToActive(),
+              type: TransitionType.Neutral,
+              label: 'Go back to Active',
+              inChangeset: true,
+            },
+          ],
           getNotifiers: async () => [
             ...(await this.getProjectTeamUserIds(id)),
             'project_termination@tsco.org',
@@ -830,13 +869,17 @@ export class ProjectRules {
       changeset
     );
 
+    const filteredTransitions = transitions.filter((transition) =>
+      changeset ? transition.inChangeset !== false : !transition.inChangeset
+    );
+
     // If current user is not an approver (based on roles) then don't allow any transitions
     currentUserRoles ??= session.roles.map(withoutScope);
-    if (intersection(approvers, currentUserRoles).length === 0) {
+    if (!changeset && intersection(approvers, currentUserRoles).length === 0) {
       return [];
     }
 
-    return transitions;
+    return filteredTransitions;
   }
 
   async canBypassWorkflow(session: Session) {
@@ -993,25 +1036,16 @@ export class ProjectRules {
     return emails?.emails ?? [];
   }
 
-  /** Of the given steps which one was the most recent previous step */
-  private async getMostRecentPreviousStep(
-    id: ID,
-    steps: ProjectStep[],
-    changeset?: ID
-  ): Promise<ProjectStep> {
-    const prevSteps = await this.getPreviousSteps(id, changeset);
-    return first(intersection(prevSteps, steps)) ?? steps[0];
-  }
-
   /** A list of the project's previous steps ordered most recent to furthest in the past */
   private async getPreviousSteps(
     id: ID,
-    changeset?: ID
+    changeset?: ID,
+    includePreviousChangesetSteps = false
   ): Promise<ProjectStep[]> {
     const result = await this.db
       .query()
       .match([
-        ...(changeset
+        ...(changeset && includePreviousChangesetSteps
           ? [
               node('changeset', 'Changeset', { id: changeset }),
               relation('in', '', 'changeset', ACTIVE),
@@ -1022,9 +1056,9 @@ export class ProjectRules {
         node('prop'),
       ])
       .apply((q) =>
-        changeset
+        changeset && includePreviousChangesetSteps
           ? q.raw('WHERE NOT (changeset)-[:changeset {active:true}]->(prop)')
-          : q
+          : q.raw('WHERE NOT (:Changeset)-[:changeset]->(prop)')
       )
       .with('prop')
       .orderBy('prop.createdAt', 'DESC')
