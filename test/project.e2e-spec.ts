@@ -884,7 +884,7 @@ describe('Project e2e', () => {
         BudgetStatus.Current
       );
       expect(result?.updateProject.project.departmentId.value).toContain(
-        fundingAccount.accountNumber.value
+        fundingAccount.accountNumber.value?.toString()
       );
       // Ensure the initialMouEnd is updated to mouEnd value
       expect(result?.updateProject.project.initialMouEnd.value).toBe(
