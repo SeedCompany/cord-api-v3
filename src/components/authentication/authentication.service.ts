@@ -101,7 +101,7 @@ export class AuthenticationService {
 
     const { iat } = this.decodeJWT(token);
 
-    const result = await this.repo.resumeSession(token);
+    const result = await this.repo.resumeSession(token, impersonatee?.id);
 
     if (!result) {
       this.logger.debug('Failed to find active token in database', { token });
@@ -110,6 +110,16 @@ export class AuthenticationService {
         'NoSession'
       );
     }
+
+    impersonatee = impersonatee
+      ? {
+          id: impersonatee?.id,
+          roles: [
+            ...(impersonatee.roles ?? []),
+            ...(result.impersonateeRoles ?? []),
+          ],
+        }
+      : undefined;
 
     const session: Session = {
       token,
