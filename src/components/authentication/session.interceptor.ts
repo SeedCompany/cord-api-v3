@@ -10,8 +10,20 @@ import {
 } from '@nestjs/graphql';
 import { Request } from 'express';
 import { GraphQLResolveInfo } from 'graphql';
-import { GqlContextType, UnauthenticatedException } from '../../common';
-import { ConfigService } from '../../core';
+import { compact } from 'lodash';
+import {
+  GqlContextType,
+  ID,
+  InputException,
+  isIdLike,
+  many,
+  Many,
+  Role,
+  Session,
+  UnauthenticatedException,
+} from '~/common';
+import { ConfigService } from '~/core';
+import { rolesForScope } from '../authorization';
 import { AuthenticationService } from './authentication.service';
 
 @Injectable()
@@ -41,7 +53,8 @@ export class SessionInterceptor implements NestInterceptor {
     if (!token) {
       throw new UnauthenticatedException();
     }
-    return await this.auth.resumeSession(token);
+    const impersonatee = this.getImpersonateeFromContext(context);
+    return await this.auth.resumeSession(token, impersonatee);
   }
 
   getTokenFromContext(context: GqlContextType): string | null {
@@ -67,4 +80,50 @@ export class SessionInterceptor implements NestInterceptor {
   private getTokenFromCookie(req: Request | undefined): string | null {
     return req?.cookies?.[this.config.sessionCookie.name] || null;
   }
+
+  private getImpersonateeFromContext(
+    context: GqlContextType
+  ): Session['impersonatee'] {
+    const user = context.request?.headers?.['x-cord-impersonate-user'] as
+      | ID
+      | undefined;
+    if (user && !isIdLike(user)) {
+      throw new InputException(
+        `Invalid user ID given in "X-CORD-Impersonate-User" header`
+      );
+    }
+
+    const roles = csvHeader(
+      context.request?.headers?.['x-cord-impersonate-role']
+    );
+
+    if (!roles && !user) {
+      return undefined;
+    }
+
+    const scoped = (roles ?? [])
+      .map(assertValidRole)
+      .map(rolesForScope('global'));
+
+    return { id: user, roles: scoped };
+  }
+}
+
+const assertValidRole = (role: string): Role => {
+  if (Role.all.has(role as Role)) {
+    return role as Role;
+  }
+  throw new InputException(
+    `Invalid role "${role}" from "X-CORD-Impersonate-Role" header`
+  );
+};
+
+function csvHeader(headerVal: Many<string> | undefined) {
+  if (!headerVal) {
+    return undefined;
+  }
+  const items = many(headerVal).flatMap((itemCsv) =>
+    compact((itemCsv ?? '').split(',').map((role) => role.trim()))
+  );
+  return items && items.length > 0 ? items : undefined;
 }

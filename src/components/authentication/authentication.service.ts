@@ -93,7 +93,10 @@ export class AuthenticationService {
     await this.repo.deleteSessionToken(token);
   }
 
-  async resumeSession(token: string): Promise<Session> {
+  async resumeSession(
+    token: string,
+    impersonatee?: Session['impersonatee']
+  ): Promise<Session> {
     this.logger.debug('Decoding token', { token });
 
     const { iat } = this.decodeJWT(token);
@@ -114,6 +117,7 @@ export class AuthenticationService {
       userId: result.userId ?? ('anonuserid' as ID),
       anonymous: !result.userId,
       roles: result.roles,
+      impersonatee,
     };
     this.logger.debug('Resumed session', session);
     return session;

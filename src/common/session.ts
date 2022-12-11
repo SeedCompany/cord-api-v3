@@ -13,6 +13,11 @@ export interface Session {
   readonly userId: ID;
   readonly roles: ScopedRole[];
   readonly anonymous: boolean;
+
+  readonly impersonatee?: {
+    id?: ID;
+    roles: readonly ScopedRole[];
+  };
 }
 
 export function loggedInSession(session: Session): Session {
