@@ -10,7 +10,7 @@ import {
 export const Transitions = defineTransitions({
   Start: {
     from: Status.NotStarted,
-    to: Status.InReview,
+    to: Status.InProgress,
     label: 'Start',
     type: Type.Approve,
     notify: 'FPM',
