@@ -121,14 +121,24 @@ export class AuthenticationService {
         }
       : undefined;
 
-    const session: Session = {
+    const requesterSession: Session = {
       token,
       issuedAt: DateTime.fromMillis(iat),
       userId: result.userId ?? ('anonuserid' as ID),
       anonymous: !result.userId,
       roles: result.roles,
-      impersonatee,
     };
+
+    const session: Session = impersonatee
+      ? {
+          ...requesterSession,
+          userId: impersonatee?.id ?? requesterSession.userId,
+          roles: impersonatee.roles,
+          impersonator: requesterSession,
+          impersonatee,
+        }
+      : requesterSession;
+
     this.logger.debug('Resumed session', session);
     return session;
   }
