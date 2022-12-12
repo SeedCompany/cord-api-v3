@@ -4,6 +4,7 @@ import { Injectable } from '@nestjs/common';
 import { GqlOptionsFactory } from '@nestjs/graphql';
 import {
   ApolloServerPluginLandingPageLocalDefault,
+  ApolloServerPluginLandingPageProductionDefault,
   ContextFunction,
   KeyValueCache,
 } from 'apollo-server-core';
@@ -78,7 +79,18 @@ export class GraphQLConfig implements GqlOptionsFactory {
       resolvers: {
         ...scalars,
       },
-      plugins: [ApolloServerPluginLandingPageLocalDefault({ footer: false })],
+      plugins: [
+        process.env.APOLLO_GRAPH_REF
+          ? ApolloServerPluginLandingPageProductionDefault({
+              graphRef: process.env.APOLLO_GRAPH_REF,
+              embed: true,
+              includeCookies: true,
+            })
+          : ApolloServerPluginLandingPageLocalDefault({
+              embed: true,
+              includeCookies: true,
+            }),
+      ],
     };
   }
 
