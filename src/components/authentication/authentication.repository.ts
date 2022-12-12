@@ -46,23 +46,6 @@ export class AuthenticationRepository {
     }
   }
 
-  async getUserFromSession(session: Session) {
-    const result = await this.db
-      .query()
-      .raw('', { token: session.token })
-      .match([
-        node('token', 'Token', {
-          ...ACTIVE,
-          value: variable('$token'),
-        }),
-        relation('in', '', 'token', ACTIVE),
-        node('user', 'User'),
-      ])
-      .return<{ id: ID }>('user.id as id')
-      .first();
-    return result?.id;
-  }
-
   async savePasswordHashOnUser(userId: ID, passwordHash: string) {
     await this.db
       .query()
