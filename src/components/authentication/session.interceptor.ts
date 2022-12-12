@@ -81,9 +81,7 @@ export class SessionInterceptor implements NestInterceptor {
     return req?.cookies?.[this.config.sessionCookie.name] || null;
   }
 
-  private getImpersonateeFromContext(
-    context: GqlContextType
-  ): Session['impersonatee'] {
+  getImpersonateeFromContext(context: GqlContextType): Session['impersonatee'] {
     const user = context.request?.headers?.['x-cord-impersonate-user'] as
       | ID
       | undefined;

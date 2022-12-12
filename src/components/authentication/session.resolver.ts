@@ -46,11 +46,12 @@ export class SessionResolver {
     browser?: boolean
   ): Promise<SessionOutput> {
     const existingToken = this.sessionInt.getTokenFromContext(context);
+    const impersonatee = this.sessionInt.getImpersonateeFromContext(context);
 
     let token = existingToken || (await this.authentication.createToken());
     let session;
     try {
-      session = await this.authentication.resumeSession(token);
+      session = await this.authentication.resumeSession(token, impersonatee);
     } catch (exception) {
       if (!(exception instanceof UnauthenticatedException)) {
         throw exception;
@@ -60,7 +61,7 @@ export class SessionResolver {
         { exception }
       );
       token = await this.authentication.createToken();
-      session = await this.authentication.resumeSession(token);
+      session = await this.authentication.resumeSession(token, impersonatee);
     }
     context.session = session; // Set for data loaders invoked later in operation
 
