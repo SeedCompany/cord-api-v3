@@ -15,7 +15,6 @@ import {
 import { ConfigService, ILogger, Loader, LoaderOf, Logger } from '../../core';
 import { Powers as Power, Privileges } from '../authorization';
 import { User, UserLoader } from '../user';
-import { AuthenticationRepository } from './authentication.repository';
 import { AuthenticationService } from './authentication.service';
 import { SessionOutput } from './dto';
 import { SessionInterceptor } from './session.interceptor';
@@ -24,7 +23,6 @@ import { SessionInterceptor } from './session.interceptor';
 export class SessionResolver {
   constructor(
     private readonly authentication: AuthenticationService,
-    private readonly repo: AuthenticationRepository,
     private readonly privileges: Privileges,
     private readonly config: ConfigService,
     private readonly sessionInt: SessionInterceptor,
@@ -46,11 +44,12 @@ export class SessionResolver {
     browser?: boolean
   ): Promise<SessionOutput> {
     const existingToken = this.sessionInt.getTokenFromContext(context);
+    const impersonatee = this.sessionInt.getImpersonateeFromContext(context);
 
     let token = existingToken || (await this.authentication.createToken());
     let session;
     try {
-      session = await this.authentication.resumeSession(token);
+      session = await this.authentication.resumeSession(token, impersonatee);
     } catch (exception) {
       if (!(exception instanceof UnauthenticatedException)) {
         throw exception;
@@ -60,13 +59,11 @@ export class SessionResolver {
         { exception }
       );
       token = await this.authentication.createToken();
-      session = await this.authentication.resumeSession(token);
+      session = await this.authentication.resumeSession(token, impersonatee);
     }
     context.session = session; // Set for data loaders invoked later in operation
 
-    const userFromSession = session.anonymous
-      ? undefined
-      : await this.repo.getUserFromSession(session);
+    const userFromSession = session.anonymous ? undefined : session.userId;
 
     if (browser) {
       const { name, expires, ...options } = this.config.sessionCookie;

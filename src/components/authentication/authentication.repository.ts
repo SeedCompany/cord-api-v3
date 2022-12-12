@@ -46,23 +46,6 @@ export class AuthenticationRepository {
     }
   }
 
-  async getUserFromSession(session: Session) {
-    const result = await this.db
-      .query()
-      .raw('', { token: session.token })
-      .match([
-        node('token', 'Token', {
-          ...ACTIVE,
-          value: variable('$token'),
-        }),
-        relation('in', '', 'token', ACTIVE),
-        node('user', 'User'),
-      ])
-      .return<{ id: ID }>('user.id as id')
-      .first();
-    return result?.id;
-  }
-
   async savePasswordHashOnUser(userId: ID, passwordHash: string) {
     await this.db
       .query()
@@ -164,7 +147,7 @@ export class AuthenticationRepository {
       .run();
   }
 
-  async resumeSession(token: string) {
+  async resumeSession(token: string, impersonatee?: ID) {
     const result = await this.db
       .query()
       .raw('MATCH (token:Token { active: true, value: $token })', { token })
@@ -174,9 +157,32 @@ export class AuthenticationRepository {
         node('user', 'User'),
       ])
       .apply(matchUserGloballyScopedRoles('user', 'roles'))
-      .return<{ userId?: ID; roles: ScopedRole[] }>([
+      .apply(
+        impersonatee
+          ? (q) =>
+              q.subQuery((sub) =>
+                sub
+                  .optionalMatch(
+                    node('impersonatee', 'User', { id: impersonatee })
+                  )
+                  .apply(
+                    matchUserGloballyScopedRoles(
+                      'impersonatee',
+                      'impersonateeRoles'
+                    )
+                  )
+                  .return('impersonateeRoles')
+              )
+          : null
+      )
+      .return<{
+        userId?: ID;
+        roles: ScopedRole[];
+        impersonateeRoles?: ScopedRole[];
+      }>([
         'user.id as userId',
         'roles',
+        impersonatee ? 'impersonateeRoles' : '',
       ])
       .first();
 

@@ -184,9 +184,7 @@ export class UserService {
   getAssignableRoles(session: Session) {
     const privileges = this.privileges.for(session, AssignableRoles);
     const assignableRoles = new Set(
-      (Object.keys(Role) as Role[]).filter((role: Role) =>
-        privileges.can('edit', role)
-      )
+      [...Role.all].filter((role) => privileges.can('edit', role))
     );
     return assignableRoles;
   }

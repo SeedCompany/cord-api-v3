@@ -10,9 +10,12 @@ import {
   ServerException,
   Session,
   UnauthenticatedException,
+  UnauthorizedException,
 } from '../../common';
 import { ConfigService, ILogger, Logger } from '../../core';
 import { ForgotPassword } from '../../core/email/templates';
+import { Privileges, withoutScope } from '../authorization';
+import { AssignableRoles } from '../authorization/dto/assignable-roles';
 import { UserService } from '../user';
 import { AuthenticationRepository } from './authentication.repository';
 import { CryptoService } from './crypto.service';
@@ -30,6 +33,7 @@ export class AuthenticationService {
     private readonly crypto: CryptoService,
     private readonly email: EmailService,
     private readonly userService: UserService,
+    private readonly privileges: Privileges,
     @Logger('authentication:service') private readonly logger: ILogger,
     private readonly repo: AuthenticationRepository
   ) {}
@@ -93,12 +97,15 @@ export class AuthenticationService {
     await this.repo.deleteSessionToken(token);
   }
 
-  async resumeSession(token: string): Promise<Session> {
+  async resumeSession(
+    token: string,
+    impersonatee?: Session['impersonatee']
+  ): Promise<Session> {
     this.logger.debug('Decoding token', { token });
 
     const { iat } = this.decodeJWT(token);
 
-    const result = await this.repo.resumeSession(token);
+    const result = await this.repo.resumeSession(token, impersonatee?.id);
 
     if (!result) {
       this.logger.debug('Failed to find active token in database', { token });
@@ -108,13 +115,48 @@ export class AuthenticationService {
       );
     }
 
-    const session: Session = {
+    impersonatee = impersonatee
+      ? {
+          id: impersonatee?.id,
+          roles: [
+            ...(impersonatee.roles ?? []),
+            ...(result.impersonateeRoles ?? []),
+          ],
+        }
+      : undefined;
+
+    const requesterSession: Session = {
       token,
       issuedAt: DateTime.fromMillis(iat),
       userId: result.userId ?? ('anonuserid' as ID),
       anonymous: !result.userId,
       roles: result.roles,
     };
+
+    const session: Session = impersonatee
+      ? {
+          ...requesterSession,
+          userId: impersonatee?.id ?? requesterSession.userId,
+          roles: impersonatee.roles,
+          impersonator: requesterSession,
+          impersonatee,
+        }
+      : requesterSession;
+
+    if (impersonatee) {
+      const p = this.privileges.for(requesterSession, AssignableRoles);
+      const valid = impersonatee.roles.every((role) =>
+        p.can('edit', withoutScope(role))
+      );
+      if (!valid) {
+        // Don't expose what the requester is unable to do as this could leak
+        // private information.
+        throw new UnauthorizedException(
+          'You are not authorized to perform this impersonation'
+        );
+      }
+    }
+
     this.logger.debug('Resumed session', session);
     return session;
   }

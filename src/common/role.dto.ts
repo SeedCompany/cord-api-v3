@@ -44,6 +44,8 @@ export namespace Role {
     resources: ResourcesGranter,
     roles: readonly Role[]
   ) => resources.AssignableRoles.grant(roles);
-
   Object.defineProperty(Role, 'assignable', { enumerable: false });
+
+  export const all = new Set(Object.keys(Role)) as ReadonlySet<Role>;
+  Object.defineProperty(Role, 'all', { enumerable: false });
 }

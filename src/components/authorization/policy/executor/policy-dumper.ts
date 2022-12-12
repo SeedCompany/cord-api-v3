@@ -37,7 +37,7 @@ export class PolicyDumper {
   async write(filename?: string) {
     const book = xlsx.utils.book_new();
 
-    for (const role of Object.keys(Role) as Role[]) {
+    for (const role of [...Role.all]) {
       const data = await this.dumpFor(role);
       const sheet = xlsx.utils.json_to_sheet(data);
       xlsx.utils.book_append_sheet(book, sheet, startCase(role).slice(0, 31));
