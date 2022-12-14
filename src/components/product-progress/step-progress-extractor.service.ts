@@ -2,24 +2,27 @@ import { Injectable } from '@nestjs/common';
 import { assert } from 'ts-essentials';
 import { MergeExclusive } from 'type-fest';
 import { entries } from '../../common';
-import { Cell, Column } from '../../common/xlsx.util';
+import { Cell, Column, Row } from '../../common/xlsx.util';
 import { Downloadable } from '../file';
 import {
+  extractScripture,
   findStepColumns,
   isGoalRow,
   isGoalStepPlannedInsideProject,
   isProgressCompletedOutsideProject,
   Pnp,
   ProgressSheet,
+  WrittenScripturePlanningSheet,
 } from '../pnp';
 import { ProductStep as Step } from '../product';
-import { parseScripture } from '../scripture';
+import { ScriptureRange } from '../scripture';
 import { StepProgressInput } from './dto';
 
 type ExtractedRow = MergeExclusive<
   {
     bookName: string;
-    totalVerses: number;
+    totalVerses: number | undefined;
+    scripture: readonly ScriptureRange[];
   },
   { story: string }
 > & {
@@ -65,7 +68,9 @@ const parseProgressRow =
     const sheet = cell.sheet;
     const row = cell.row;
     const rowIndex = row.a1 - sheet.goals.start.row.a1;
-    const planningRow = pnp.planning.goals.start.row.a1 + rowIndex;
+    const planningRow = pnp.planning.row(
+      pnp.planning.goals.start.row.a1 + rowIndex
+    );
 
     const steps = entries(stepColumns).flatMap<StepProgressInput>(
       ([step, column]) => {
@@ -98,9 +103,10 @@ const parseProgressRow =
     }
 
     assert(sheet.isWritten());
-    const bookName = parseScripture(sheet.bookName(row))[0]!.start.book;
-    const totalVerses = sheet.totalVerses(row)!; // Asserting bc loop verified this
-    return { ...common, bookName, totalVerses };
+    return {
+      ...common,
+      ...extractScripture(planningRow as Row<WrittenScripturePlanningSheet>),
+    };
   };
 
 const progress = (cell: Cell) => {

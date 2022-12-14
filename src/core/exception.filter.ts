@@ -23,7 +23,11 @@ import {
   simpleSwitch,
 } from '../common';
 import { ConfigService } from './config/config.service';
-import { ConnectionTimeoutError, ServiceUnavailableError } from './database';
+import {
+  ConnectionTimeoutError,
+  ServiceUnavailableError,
+  SessionExpiredError,
+} from './database';
 import { ILogger, Logger, LogLevel } from './logger';
 
 type ExceptionInfo = ReturnType<ExceptionFilter['catchGql']>;
@@ -146,6 +150,12 @@ export class ExceptionFilter implements GqlExceptionFilter {
       return {
         codes: ['DatabaseTimeoutFailure', 'Transient', 'Database', 'Server'],
         message: 'Failed to retrieve data from CORD database',
+      };
+    }
+    if (exs.some((e) => e instanceof SessionExpiredError)) {
+      return {
+        codes: ['SessionExpired', 'Transient', 'Database', 'Server'],
+        message: 'The query to the database has expired',
       };
     }
 

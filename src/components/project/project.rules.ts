@@ -760,6 +760,7 @@ export class ProjectRules {
             Role.RegionalDirector,
             Role.FieldOperationsDirector,
             Role.FinancialAnalyst,
+            Role.LeadFinancialAnalyst,
           ],
           transitions: [
             {

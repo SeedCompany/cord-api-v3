@@ -2,6 +2,7 @@ import { EventsHandler, ILogger, Logger } from '../../../core';
 import { ReportType } from '../../periodic-report/dto';
 import { PeriodicReportUploadedEvent } from '../../periodic-report/events';
 import { ProducibleType, ProductService } from '../../product';
+import { isScriptureEqual } from '../../scripture';
 import { ProgressReportVariantProgress as Progress } from '../dto';
 import { ProductProgressService } from '../product-progress.service';
 import { StepProgressExtractor } from '../step-progress-extractor.service';
@@ -54,14 +55,28 @@ export class ExtractPnpProgressHandler {
     // Convert row to product ID
     const updates = progressRows.flatMap((row) => {
       const { steps, ...rest } = row;
-      const productId = row.bookName
-        ? scriptureProducts.find(
-            (ref) =>
-              ref.book === row.bookName && ref.totalVerses === row.totalVerses
-          )?.id
-        : storyProducts[row.story!];
-      if (productId) {
-        return { productId, steps };
+      if (row.story) {
+        const productId = storyProducts[row.story];
+        if (productId) {
+          return { productId, steps };
+        }
+      }
+
+      if (row.bookName) {
+        const exactScriptureMatch = scriptureProducts.find((ref) =>
+          isScriptureEqual(ref.scriptureRanges, row.scripture)
+        );
+        if (exactScriptureMatch) {
+          return { productId: exactScriptureMatch.id, steps };
+        }
+
+        const unspecifiedScriptureMatch = scriptureProducts.find(
+          (ref) =>
+            ref.book === row.bookName && ref.totalVerses === row.totalVerses
+        );
+        if (unspecifiedScriptureMatch) {
+          return { productId: unspecifiedScriptureMatch.id, steps };
+        }
       }
 
       this.logger.warning('Could not find product in pnp', {
