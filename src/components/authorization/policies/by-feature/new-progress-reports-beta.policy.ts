@@ -6,7 +6,8 @@ import { Policy, Role } from '../util';
     Role.FieldOperationsDirector,
     Role.RegionalDirector,
     Role.RegionalCommunicationsCoordinator,
-    // TODO Who else?
+    Role.ProjectManager,
+    Role.Marketing,
   ],
   (r) => r.BetaFeatures.grant('newProgressReports')
 )
