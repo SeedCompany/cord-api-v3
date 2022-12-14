@@ -7,6 +7,7 @@ import { bufferFromStream, cleanJoin } from '@seedcompany/common';
 import { Connection } from 'cypher-query-builder';
 import { intersection } from 'lodash';
 import { Duration } from 'luxon';
+import { Readable } from 'stream';
 import { withAddedPath } from '~/common/url.util';
 import {
   DuplicateException,
@@ -83,15 +84,18 @@ export class FileService {
     obj: T,
     fileVersionId?: ID,
   ): Downloadable<T> {
+    const id = fileVersionId ?? (obj as unknown as FileVersion).id;
+
     let downloading: Promise<Buffer> | undefined;
     return Object.assign(obj, {
-      download: () => {
-        if (!downloading) {
-          downloading = this.downloadFileVersion(
-            fileVersionId ?? (obj as unknown as FileVersion).id,
-          );
+      download: () =>
+        (downloading ??= this.downloadFileVersion(id).then(bufferFromStream)),
+      stream: async () => {
+        if (downloading) {
+          // If already buffering file, just use that instead of going to source.
+          return Readable.from(await downloading);
         }
-        return downloading;
+        return await this.downloadFileVersion(id);
       },
     });
   }
@@ -109,7 +113,7 @@ export class FileService {
   /**
    * Internal API method to download file contents from S3
    */
-  async downloadFileVersion(versionId: ID): Promise<Buffer> {
+  private async downloadFileVersion(versionId: ID): Promise<Readable> {
     let data;
     try {
       const obj = await this.bucket.getObject(versionId);
@@ -124,7 +128,7 @@ export class FileService {
       throw new NotFoundException('Could not find file contents');
     }
 
-    return await bufferFromStream(data);
+    return data;
   }
 
   async getUrl(node: FileNode) {
