@@ -22,7 +22,7 @@ async function bootstrap() {
   app.enableCors(config.cors);
   app.use(cookieParser());
 
-  app.setGlobalPrefix(new URL(config.hostUrl).pathname.slice(1));
+  app.setGlobalPrefix(config.hostUrl.pathname.slice(1));
 
   config.applyTimeouts(app.getHttpServer(), config.httpTimeouts);
 
