@@ -12,8 +12,10 @@ import rawBody from 'raw-body';
 import { InputException, ServerException } from '../../common';
 import { FileBucket, LocalBucket } from './bucket';
 
-@Controller('/file')
+@Controller(LocalBucketController.path)
 export class LocalBucketController {
+  static path = '/file';
+
   private readonly bucket: LocalBucket | undefined;
   constructor(bucket: FileBucket) {
     this.bucket = bucket instanceof LocalBucket ? bucket : undefined;
