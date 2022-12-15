@@ -34,7 +34,6 @@ export class ConfigService implements EmailOptionsFactory {
   hostUrl = this.env
     .string('host_url')
     .optional(`http://localhost:${this.publicPort}`);
-  globalPrefix = '';
 
   @Lazy() get graphQL() {
     return {
@@ -194,7 +193,7 @@ export class ConfigService implements EmailOptionsFactory {
       this.env.string('FILES_LOCAL_DIR').optional() ??
       (this.jest ? undefined : '.files');
     // Routes to LocalBucketController
-    const baseUrl = join(this.hostUrl, this.globalPrefix, 'file');
+    const baseUrl = join(this.hostUrl, 'file');
     return {
       bucket,
       localDirectory,
