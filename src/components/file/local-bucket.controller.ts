@@ -14,7 +14,7 @@ import { FileBucket, LocalBucket } from './bucket';
 
 @Controller(LocalBucketController.path)
 export class LocalBucketController {
-  static path = '/file';
+  static path = '/local-bucket';
 
   private readonly bucket: LocalBucket | undefined;
   constructor(bucket: FileBucket) {
