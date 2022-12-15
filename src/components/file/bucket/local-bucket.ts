@@ -5,7 +5,7 @@ import { InputException } from '../../../common';
 import { BucketOptions, FileBucket } from './file-bucket';
 
 export interface LocalBucketOptions extends BucketOptions {
-  baseUrl: string;
+  baseUrl: URL;
 }
 
 export type FakeAwsFile = Required<Pick<GetObjectOutput, 'ContentType'>> &
@@ -15,7 +15,7 @@ export type FakeAwsFile = Required<Pick<GetObjectOutput, 'ContentType'>> &
  * Common functionality for "local" (non-s3) buckets
  */
 export abstract class LocalBucket extends FileBucket {
-  private readonly baseUrl: string;
+  private readonly baseUrl: URL;
 
   constructor(options: LocalBucketOptions) {
     super(options);
