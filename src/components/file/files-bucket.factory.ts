@@ -1,12 +1,10 @@
 import { S3 } from '@aws-sdk/client-s3';
 import { FactoryProvider } from '@nestjs/common';
 import { ConfigService } from '../../core';
-import { FilesystemBucket, MemoryBucket, S3Bucket } from './bucket';
-
-export const FilesBucketToken = Symbol('FilesBucket');
+import { FileBucket, FilesystemBucket, MemoryBucket, S3Bucket } from './bucket';
 
 export const FilesBucketFactory: FactoryProvider = {
-  provide: FilesBucketToken,
+  provide: FileBucket,
   useFactory: (s3: S3, config: ConfigService) => {
     const { bucket, localDirectory, baseUrl, signedUrlExpires } = config.files;
     if (bucket) {

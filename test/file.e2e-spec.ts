@@ -13,8 +13,7 @@ import {
   FileNodeType,
   RequestUploadOutput,
 } from '../src/components/file';
-import { LocalBucket } from '../src/components/file/bucket';
-import { FilesBucketToken } from '../src/components/file/files-bucket.factory';
+import { FileBucket, LocalBucket } from '../src/components/file/bucket';
 import { User } from '../src/components/user';
 import { DatabaseService } from '../src/core';
 import {
@@ -122,7 +121,7 @@ describe('File e2e', () => {
 
   beforeAll(async () => {
     app = await createTestApp();
-    bucket = app.get(FilesBucketToken);
+    bucket = app.get(FileBucket);
     await createSession(app);
     me = await registerUser(app, {
       roles: [Role.ProjectManager],
