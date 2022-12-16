@@ -6,7 +6,7 @@ import {
 import { isEmpty } from 'lodash';
 import { SetRequired } from 'type-fest';
 import { ClientException } from '../common/exceptions';
-import { jestSkipFileInExceptionSource } from './jest-skip-source-file';
+import { jestSkipFileInExceptionSource } from './exception';
 
 @Injectable()
 export class ValidationPipe extends BaseValidationPipe {

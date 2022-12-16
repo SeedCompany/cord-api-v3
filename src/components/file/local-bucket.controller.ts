@@ -7,9 +7,7 @@ import {
   Query,
   Request,
   Response,
-  UseFilters,
 } from '@nestjs/common';
-import { BaseExceptionFilter } from '@nestjs/core';
 import { Request as IRequest, Response as IResponse } from 'express';
 import rawBody from 'raw-body';
 import { InputException, ServerException } from '../../common';
@@ -17,7 +15,6 @@ import { FileBucket, LocalBucket } from './bucket';
 import { FilesBucketToken } from './files-bucket.factory';
 
 @Controller('/file')
-@UseFilters(BaseExceptionFilter)
 export class LocalBucketController {
   private readonly bucket: LocalBucket | undefined;
   constructor(@Inject(FilesBucketToken) bucket: FileBucket) {
