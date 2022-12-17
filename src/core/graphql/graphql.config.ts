@@ -23,18 +23,12 @@ import {
   OperationDefinitionNode,
 } from 'graphql';
 import { intersection } from 'lodash';
-import { sep } from 'path';
 import { GqlContextType, mapFromList, ServerException } from '~/common';
 import { getRegisteredScalars } from '../../common/scalars';
 import { CacheService } from '../cache';
 import { ConfigService } from '../config/config.service';
 import { VersionService } from '../config/version.service';
 import { GraphqlTracingPlugin } from './graphql-tracing.plugin';
-
-const escapedSep = sep === '/' ? '\\/' : '\\\\';
-const matchSrcPathInTrace = RegExp(
-  `(at (.+ \\()?).+${escapedSep}src${escapedSep}`
-);
 
 @Injectable()
 export class GraphQLConfig implements GqlOptionsFactory {
@@ -120,27 +114,6 @@ export class GraphQLConfig implements GqlOptionsFactory {
 
     if (!this.debug || worthlessTrace) {
       delete extensions.exception;
-    } else {
-      extensions.exception.stacktrace = extensions.exception.stacktrace
-        // remove non src frames
-        .filter(
-          (frame: string) =>
-            frame.startsWith('    at') &&
-            !frame.includes('node_modules') &&
-            !frame.includes('(internal/') &&
-            !frame.includes('(node:') &&
-            !frame.includes('(<anonymous>)')
-        )
-        .map((frame: string) =>
-          this.config.jest
-            ? frame // Keep full FS path, so jest can link to it
-            : frame
-                // Convert absolute path to path relative to src dir
-                .replace(matchSrcPathInTrace, (_, group1) => group1)
-                // Convert windows paths to unix for consistency
-                .replace(/\\\\/, '/')
-                .trim()
-        );
     }
 
     return {

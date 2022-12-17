@@ -11,6 +11,7 @@ import { DataLoaderInterceptor } from './data-loader';
 import { DatabaseModule } from './database/database.module';
 import { EventsModule } from './events';
 import { ExceptionFilter } from './exception/exception.filter';
+import { ExceptionNormalizer } from './exception/exception.normalizer';
 import { GraphqlModule } from './graphql';
 import { PostgresModule } from './postgres/postgres.module';
 import { ResourceModule } from './resources/resource.module';

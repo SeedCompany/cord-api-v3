@@ -1,3 +1,4 @@
+import { Injectable } from '@nestjs/common';
 import * as Nest from '@nestjs/common/exceptions';
 import { compact, uniq } from 'lodash';
 import {
@@ -7,7 +8,10 @@ import {
   getPreviousList,
   simpleSwitch,
 } from '~/common';
+import { ConfigService } from '~/core';
 import * as Neo from '../database';
+import { isSrcFrame } from './is-src-frame';
+import { normalizeFramePath } from './normalize-frame-path';
 
 export interface ExceptionJson {
   message: string;
@@ -17,7 +21,10 @@ export interface ExceptionJson {
   [key: string]: unknown;
 }
 
+@Injectable()
 export class ExceptionNormalizer {
+  constructor(private readonly config?: ConfigService) {}
+
   normalize(ex: Error): ExceptionJson {
     const {
       message = ex.message,
@@ -31,7 +38,13 @@ export class ExceptionNormalizer {
       code: codes[0],
       codes: new JsonSet(codes),
       ...extensions,
-      stack,
+      stack: stack
+        .split('\n')
+        .filter(isSrcFrame)
+        .map((frame: string) =>
+          this.config?.jest ? frame : normalizeFramePath(frame)
+        )
+        .join('\n'),
     };
   }
 

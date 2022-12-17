@@ -1,7 +1,7 @@
 import { ArgumentsHost, Catch, HttpStatus, Injectable } from '@nestjs/common';
 import { HttpAdapterHost } from '@nestjs/core';
 import { GqlContextType, GqlExceptionFilter } from '@nestjs/graphql';
-import { mapValues, omit } from 'lodash';
+import { mapValues } from 'lodash';
 import { Neo4jError } from 'neo4j-driver';
 import { ConfigService } from '../config/config.service';
 import { ILogger, Logger, LogLevel } from '../logger';
@@ -12,11 +12,11 @@ import { isFromHackAttempt } from './is-from-hack-attempt';
 @Catch()
 @Injectable()
 export class ExceptionFilter implements GqlExceptionFilter {
-  private readonly normalizer = new ExceptionNormalizer();
   constructor(
     private readonly httpAdapterHost: HttpAdapterHost,
     @Logger('nest') private readonly logger: ILogger,
-    private readonly config: ConfigService
+    private readonly config: ConfigService,
+    private readonly normalizer: ExceptionNormalizer
   ) {}
 
   catch(exception: Error, args: ArgumentsHost) {
@@ -65,7 +65,13 @@ export class ExceptionFilter implements GqlExceptionFilter {
       ? HttpStatus.BAD_REQUEST
       : HttpStatus.INTERNAL_SERVER_ERROR;
 
-    const out = process.env.NODE_ENV === 'production' ? omit(ex, 'stack') : ex;
+    const out = {
+      ...ex,
+      stack:
+        process.env.NODE_ENV === 'production'
+          ? undefined
+          : ex.stack.split('\n'),
+    };
 
     const { httpAdapter } = this.httpAdapterHost;
     const res = args.switchToHttp().getResponse();
