@@ -3,6 +3,7 @@ import { AuthorizationModule } from '../authorization/authorization.module';
 import { DirectoryResolver } from './directory.resolver';
 import { FileNodeLoader } from './file-node.loader';
 import { FileNodeResolver } from './file-node.resolver';
+import { FileUrlController } from './file-url.controller';
 import { FileVersionResolver } from './file-version.resolver';
 import { FileRepository } from './file.repository';
 import { FileResolver } from './file.resolver';
@@ -24,7 +25,7 @@ import { LocalBucketController } from './local-bucket.controller';
     FileService,
     ...Object.values(handlers),
   ],
-  controllers: [LocalBucketController],
+  controllers: [FileUrlController, LocalBucketController],
   exports: [FileService],
 })
 export class FileModule {}

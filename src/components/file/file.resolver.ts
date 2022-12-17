@@ -76,6 +76,17 @@ export class FileResolver {
   }
 
   @ResolveField(() => URL, {
+    description: stripIndent`
+      A url to the file.
+
+      This url could require authentication.
+    `,
+  })
+  async url(@Parent() node: File) {
+    return await this.service.getUrl(node);
+  }
+
+  @ResolveField(() => URL, {
     description: 'A direct url to download the file',
   })
   downloadUrl(@Parent() node: File): Promise<string> {
