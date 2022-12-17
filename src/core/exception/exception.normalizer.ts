@@ -6,6 +6,7 @@ import {
   Exception,
   getParentTypes,
   getPreviousList,
+  JsonSet,
   simpleSwitch,
 } from '~/common';
 import { ConfigService } from '~/core';
@@ -154,11 +155,5 @@ export class ExceptionNormalizer {
     }
 
     return type.name.replace(/(Exception|Error)$/, '');
-  }
-}
-
-class JsonSet extends Set {
-  toJSON() {
-    return [...this];
   }
 }

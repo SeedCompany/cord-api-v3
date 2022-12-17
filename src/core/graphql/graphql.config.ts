@@ -22,8 +22,12 @@ import {
   GraphQLScalarType,
   OperationDefinitionNode,
 } from 'graphql';
-import { intersection } from 'lodash';
-import { GqlContextType, mapFromList, ServerException } from '~/common';
+import {
+  GqlContextType,
+  JsonSet,
+  mapFromList,
+  ServerException,
+} from '~/common';
 import { getRegisteredScalars } from '../../common/scalars';
 import { CacheService } from '../cache';
 import { ConfigService } from '../config/config.service';
@@ -104,13 +108,12 @@ export class GraphQLConfig implements GqlOptionsFactory {
   formatError = (error: GraphQLError): GraphQLFormattedError => {
     const extensions = { ...error.extensions };
 
-    if (!extensions.codes) {
-      extensions.codes = this.resolveCodes(error, extensions.code);
-    }
+    const codes = (extensions.codes ??= new JsonSet(
+      this.resolveCodes(error, extensions.code)
+    ));
 
     // Schema & validation errors don't have meaningful stack traces, so remove them
-    const worthlessTrace =
-      intersection(extensions.codes, ['Validation', 'GraphQL']).length > 0;
+    const worthlessTrace = codes.has('Validation') || codes.has('GraphQL');
 
     if (!this.debug || worthlessTrace) {
       delete extensions.exception;
