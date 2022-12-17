@@ -1,3 +1,10 @@
+import {
+  createParamDecorator,
+  ExecutionContext,
+  PipeTransform,
+  Type,
+} from '@nestjs/common';
+import { CONTROLLER_WATERMARK } from '@nestjs/common/constants';
 import { Context } from '@nestjs/graphql';
 import { uniq } from 'lodash';
 import { DateTime } from 'luxon';
@@ -41,10 +48,32 @@ const sessionFromContext = (context: GqlContextType) => {
   return context.session;
 };
 
-export const AnonSession = () => Context({ transform: sessionFromContext });
-
 export const LoggedInSession = () =>
-  Context({ transform: sessionFromContext }, { transform: loggedInSession });
+  AnonSession({ transform: loggedInSession });
+
+export const AnonSession =
+  (...pipes: Array<Type<PipeTransform> | PipeTransform>): ParameterDecorator =>
+  (...args) => {
+    Context({ transform: sessionFromContext }, ...pipes)(...args);
+    process.nextTick(() => {
+      // Only set this metadata if it's a controller method.
+      // Waiting for the next tick as class decorators execute after methods.
+      if (Reflect.getMetadata(CONTROLLER_WATERMARK, args[0].constructor)) {
+        HttpSession(...pipes)(...args);
+        SessionWatermark(...args);
+      }
+    });
+  };
+
+// Using Nest's custom decorator so that we can pass pipes.
+const HttpSession = createParamDecorator(
+  (_data: unknown, ctx: ExecutionContext) => {
+    return ctx.switchToHttp().getRequest().session;
+  }
+);
+
+const SessionWatermark: ParameterDecorator = (target, key) =>
+  Reflect.defineMetadata('SESSION_WATERMARK', true, target.constructor, key);
 
 export const addScope = (session: Session, scope?: ScopedRole[]) => ({
   ...session,
