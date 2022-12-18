@@ -14,6 +14,7 @@ import {
   DurationIn,
   generateId,
   ID,
+  IdOf,
   InputException,
   NotFoundException,
   ServerException,
@@ -43,6 +44,7 @@ import {
 } from './dto';
 import { FileUrlController as FileUrl } from './file-url.controller';
 import { FileRepository } from './file.repository';
+import { MediaService } from './media/media.service';
 
 @Injectable()
 export class FileService {
@@ -51,6 +53,7 @@ export class FileService {
     private readonly repo: FileRepository,
     private readonly db: Connection,
     private readonly config: ConfigService,
+    private readonly mediaService: MediaService,
     @Logger('file:service') private readonly logger: ILogger,
   ) {}
 
@@ -350,6 +353,13 @@ export class FileService {
         };
       }
     }
+
+    await this.mediaService.detectAndSave(
+      this.asDownloadable(
+        { file: uploadId as IdOf<FileVersion>, mimeType },
+        uploadId,
+      ),
+    );
 
     // Change the file's name to match the latest version name
     await this.rename({ id: fileId, name }, session);

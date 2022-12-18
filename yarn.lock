@@ -1651,6 +1651,95 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@ffprobe-installer/darwin-arm64@npm:5.0.1":
+  version: 5.0.1
+  resolution: "@ffprobe-installer/darwin-arm64@npm:5.0.1"
+  conditions: os=darwin & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@ffprobe-installer/darwin-x64@npm:5.1.0":
+  version: 5.1.0
+  resolution: "@ffprobe-installer/darwin-x64@npm:5.1.0"
+  conditions: os=darwin & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@ffprobe-installer/ffprobe@npm:^2.1.1":
+  version: 2.1.1
+  resolution: "@ffprobe-installer/ffprobe@npm:2.1.1"
+  dependencies:
+    "@ffprobe-installer/darwin-arm64": 5.0.1
+    "@ffprobe-installer/darwin-x64": 5.1.0
+    "@ffprobe-installer/linux-arm": 5.1.0
+    "@ffprobe-installer/linux-arm64": 5.1.0
+    "@ffprobe-installer/linux-ia32": 5.1.0
+    "@ffprobe-installer/linux-x64": 5.1.0
+    "@ffprobe-installer/win32-ia32": 5.1.0
+    "@ffprobe-installer/win32-x64": 5.1.0
+  dependenciesMeta:
+    "@ffprobe-installer/darwin-arm64":
+      optional: true
+    "@ffprobe-installer/darwin-x64":
+      optional: true
+    "@ffprobe-installer/linux-arm":
+      optional: true
+    "@ffprobe-installer/linux-arm64":
+      optional: true
+    "@ffprobe-installer/linux-ia32":
+      optional: true
+    "@ffprobe-installer/linux-x64":
+      optional: true
+    "@ffprobe-installer/win32-ia32":
+      optional: true
+    "@ffprobe-installer/win32-x64":
+      optional: true
+  checksum: cbd74b8840257b710296683c3255515282c51c5ab88491490722aeb1789921e97a95634c81a47545dccee21b0d37d2e2e18449dd2da23ef163bc8fb714593de4
+  languageName: node
+  linkType: hard
+
+"@ffprobe-installer/linux-arm64@npm:5.1.0":
+  version: 5.1.0
+  resolution: "@ffprobe-installer/linux-arm64@npm:5.1.0"
+  conditions: os=linux & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@ffprobe-installer/linux-arm@npm:5.1.0":
+  version: 5.1.0
+  resolution: "@ffprobe-installer/linux-arm@npm:5.1.0"
+  conditions: os=linux & cpu=arm
+  languageName: node
+  linkType: hard
+
+"@ffprobe-installer/linux-ia32@npm:5.1.0":
+  version: 5.1.0
+  resolution: "@ffprobe-installer/linux-ia32@npm:5.1.0"
+  conditions: os=linux & cpu=ia32
+  languageName: node
+  linkType: hard
+
+"@ffprobe-installer/linux-x64@npm:5.1.0":
+  version: 5.1.0
+  resolution: "@ffprobe-installer/linux-x64@npm:5.1.0"
+  conditions: os=linux & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@ffprobe-installer/win32-ia32@npm:5.1.0":
+  version: 5.1.0
+  resolution: "@ffprobe-installer/win32-ia32@npm:5.1.0"
+  conditions: os=win32 & cpu=ia32
+  languageName: node
+  linkType: hard
+
+"@ffprobe-installer/win32-x64@npm:5.1.0":
+  version: 5.1.0
+  resolution: "@ffprobe-installer/win32-x64@npm:5.1.0"
+  conditions: os=win32 & cpu=x64
+  languageName: node
+  linkType: hard
+
 "@golevelup/nestjs-discovery@npm:^4.0.0":
   version: 4.0.0
   resolution: "@golevelup/nestjs-discovery@npm:4.0.0"
@@ -3295,6 +3384,13 @@ __metadata:
     "@types/qs": "*"
     "@types/serve-static": "*"
   checksum: 0196dacc275ac3ce89d7364885cb08e7fb61f53ca101f65886dbf1daf9b7eb05c0943e2e4bbd01b0cc5e50f37e0eea7e4cbe97d0304094411ac73e1b7998f4da
+  languageName: node
+  linkType: hard
+
+"@types/ffprobe@npm:^1.1.4":
+  version: 1.1.4
+  resolution: "@types/ffprobe@npm:1.1.4"
+  checksum: 98ffd218a32e5707a92a557e822d9079083a0b8195e44213889be1293b51ac6e02de1a287c2fdc2271b231f77c7289024357fbf635a25428c8c8ab95f6f6d3c1
   languageName: node
   linkType: hard
 
@@ -5113,6 +5209,7 @@ __metadata:
     "@aws-sdk/client-s3": ^3.370.0
     "@aws-sdk/s3-request-presigner": ^3.370.0
     "@faker-js/faker": ^8.0.2
+    "@ffprobe-installer/ffprobe": ^2.1.1
     "@golevelup/nestjs-discovery": ^4.0.0
     "@leeoniya/ufuzzy": ^1.0.8
     "@nestjs/apollo": ^12.0.7
@@ -5134,6 +5231,7 @@ __metadata:
     "@types/cookie-parser": ^1.4.3
     "@types/express": ^4.17.17
     "@types/express-serve-static-core": ^4.17.35
+    "@types/ffprobe": ^1.1.4
     "@types/jest": ^29.5.3
     "@types/jsonwebtoken": ^9.0.2
     "@types/lodash": ^4.14.195
@@ -5174,6 +5272,7 @@ __metadata:
     graphql-scalars: ^1.22.2
     human-format: ^1.2.0
     husky: ^4.3.8
+    image-size: ^1.0.2
     ioredis: ^5.3.2
     iso-3166-1: ^2.1.1
     ix: ^5.0.0
@@ -7369,6 +7468,17 @@ __metadata:
   version: 5.2.4
   resolution: "ignore@npm:5.2.4"
   checksum: 3d4c309c6006e2621659311783eaea7ebcd41fe4ca1d78c91c473157ad6666a57a2df790fe0d07a12300d9aac2888204d7be8d59f9aaf665b1c7fcdb432517ef
+  languageName: node
+  linkType: hard
+
+"image-size@npm:^1.0.2":
+  version: 1.0.2
+  resolution: "image-size@npm:1.0.2"
+  dependencies:
+    queue: 6.0.2
+  bin:
+    image-size: bin/image-size.js
+  checksum: 01745fdb47f87cecf538e69c63f9adc5bfab30a345345c2de91105f3afbd1bfcfba1256af02bf3323077b33b0004469a837e077bf0cbb9c907e9c1e9e7547585
   languageName: node
   linkType: hard
 
@@ -10777,6 +10887,15 @@ __metadata:
   version: 1.2.3
   resolution: "queue-microtask@npm:1.2.3"
   checksum: b676f8c040cdc5b12723ad2f91414d267605b26419d5c821ff03befa817ddd10e238d22b25d604920340fd73efd8ba795465a0377c4adf45a4a41e4234e42dc4
+  languageName: node
+  linkType: hard
+
+"queue@npm:6.0.2":
+  version: 6.0.2
+  resolution: "queue@npm:6.0.2"
+  dependencies:
+    inherits: ~2.0.3
+  checksum: ebc23639248e4fe40a789f713c20548e513e053b3dc4924b6cb0ad741e3f264dcff948225c8737834dd4f9ec286dbc06a1a7c13858ea382d9379f4303bcc0916
   languageName: node
   linkType: hard
 
