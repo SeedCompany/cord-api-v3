@@ -21,6 +21,11 @@ export class FileVersionResolver {
 
   @ResolveField(() => URL, {
     description: 'A direct url to download the file version',
+    deprecationReason: stripIndent`
+      Use \`url\` instead.
+
+      Note while this url is anonymous, the new field, \`url\` is not.
+    `,
   })
   downloadUrl(@Parent() node: FileVersion): Promise<string> {
     return this.service.getDownloadUrl(node);

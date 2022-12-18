@@ -88,6 +88,11 @@ export class FileResolver {
 
   @ResolveField(() => URL, {
     description: 'A direct url to download the file',
+    deprecationReason: stripIndent`
+      Use \`url\` instead.
+
+      Note while this url is anonymous, the new field, \`url\` is not.
+    `,
   })
   downloadUrl(@Parent() node: File): Promise<string> {
     return this.service.getDownloadUrl(node);
