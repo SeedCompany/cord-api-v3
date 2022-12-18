@@ -1,7 +1,9 @@
 import {
   GetObjectCommand,
+  GetObjectCommandInput,
   NoSuchKey,
   PutObjectCommand,
+  PutObjectCommandInput,
   S3,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
@@ -28,9 +30,11 @@ export class S3Bucket extends FileBucket {
 
   protected async getSignedUrl(
     operation: 'putObject' | 'getObject',
-    key: string
+    key: string,
+    options?: GetObjectCommandInput | PutObjectCommandInput
   ) {
     const input = {
+      ...options,
       Bucket: this.bucket,
       Key: key,
     };
