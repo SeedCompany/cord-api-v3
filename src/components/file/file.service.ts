@@ -125,7 +125,7 @@ export class FileService {
     const url = withAddedPath(
       this.config.hostUrl,
       FileUrl.path,
-      node.id,
+      isFile(node) ? node.latestVersionId : node.id,
       encodeURIComponent(node.name)
     );
     return url.toString();
