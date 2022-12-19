@@ -68,3 +68,12 @@ export function has<K extends string | number | symbol, T>(
 ): obj is T & Record<K, unknown> {
   return key in (obj as any);
 }
+
+/**
+ * A Set that will render as a list in JSON.stringify
+ */
+export class JsonSet extends Set {
+  toJSON() {
+    return [...this];
+  }
+}

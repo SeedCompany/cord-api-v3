@@ -12,7 +12,7 @@ import { Merge } from 'type-fest';
 import { getPreviousList } from '~/common';
 import { dropSecrets } from '~/common/mask-secrets';
 import { ConfigService } from '../config/config.service';
-import { jestSkipFileInExceptionSource } from '../jest-skip-source-file';
+import { jestSkipFileInExceptionSource } from '../exception';
 import { ILogger, LoggerToken, LogLevel } from '../logger';
 import { AFTER_MESSAGE } from '../logger/formatters';
 import { TracingService } from '../tracing';
