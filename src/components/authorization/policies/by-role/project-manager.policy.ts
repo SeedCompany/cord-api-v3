@@ -66,17 +66,20 @@ import {
         ]),
       ]
     ),
-    r.ProgressReportWorkflowEvent.transitions(
-      'Start',
-      'In Progress -> In Review',
-      'In Progress -> Pending Translation',
-      'Translation Done',
-      'Translation Reject',
-      'Withdraw Review Request',
-      'In Review -> Needs Translation',
-      'Review Reject',
-      'Review Approve'
-    ).execute,
+    [r.ProgressReportWorkflowEvent].flatMap((it) => [
+      it.read,
+      it.transitions(
+        'Start',
+        'In Progress -> In Review',
+        'In Progress -> Pending Translation',
+        'Translation Done',
+        'Translation Reject',
+        'Withdraw Review Request',
+        'In Review -> Needs Translation',
+        'Review Reject',
+        'Review Approve'
+      ).execute,
+    ]),
     r.Project.read.create
       .when(member)
       .edit.specifically((p) => [
