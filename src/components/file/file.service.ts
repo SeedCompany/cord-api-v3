@@ -126,7 +126,10 @@ export class FileService {
     try {
       // before sending link, first check if object exists in s3
       await this.bucket.headObject(id);
-      return await this.bucket.getSignedUrlForGetObject(id);
+      return await this.bucket.getSignedUrlForGetObject(id, {
+        ResponseContentDisposition: `attachment; filename="${node.name}"`,
+        ResponseContentType: node.mimeType,
+      });
     } catch (e) {
       this.logger.error('Unable to generate download url', { exception: e });
       throw new ServerException('Unable to generate download url', e);

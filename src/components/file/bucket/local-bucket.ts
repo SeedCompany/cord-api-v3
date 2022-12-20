@@ -1,15 +1,23 @@
-import { GetObjectOutput } from '@aws-sdk/client-s3';
+import {
+  GetObjectCommandInput,
+  PutObjectCommandInput,
+} from '@aws-sdk/client-s3';
+import { pickBy } from 'lodash';
 import { DateTime } from 'luxon';
 import { assert } from 'ts-essentials';
-import { InputException } from '../../../common';
-import { BucketOptions, FileBucket } from './file-bucket';
+import { Except } from 'type-fest';
+import { InputException } from '~/common';
+import { BucketOptions, FileBucket, GetObjectOutput } from './file-bucket';
 
 export interface LocalBucketOptions extends BucketOptions {
   baseUrl: URL;
 }
 
 export type FakeAwsFile = Required<Pick<GetObjectOutput, 'ContentType'>> &
-  Pick<GetObjectOutput, 'ContentLength' | 'LastModified'> & { Body: Buffer };
+  Pick<
+    GetObjectOutput,
+    'ContentLength' | 'ContentLanguage' | 'ContentEncoding' | 'LastModified'
+  > & { Body: Buffer };
 
 /**
  * Common functionality for "local" (non-s3) buckets
@@ -22,14 +30,30 @@ export abstract class LocalBucket extends FileBucket {
     this.baseUrl = options.baseUrl;
   }
 
-  async download(signed: string) {
-    const key = this.validateSignedUrl('getObject', signed);
-    return await this.getObject(key);
+  async download(signed: string): Promise<GetObjectOutput> {
+    const parsed: GetObjectCommandInput = this.validateSignedUrl(
+      'getObject',
+      signed
+    );
+    return {
+      ...(await this.getObject(parsed.Key!)),
+      ...pickBy(
+        {
+          ContentType: parsed.ResponseContentType,
+          ContentDisposition: parsed.ResponseContentDisposition,
+          CacheControl: parsed.ResponseCacheControl,
+          ContentEncoding: parsed.ResponseContentEncoding,
+          ContentLanguage: parsed.ResponseContentLanguage,
+          Expires: parsed.ResponseExpires,
+        },
+        (val) => val != null
+      ),
+    };
   }
 
   async upload(signed: string, file: FakeAwsFile) {
-    const key = this.validateSignedUrl('putObject', signed);
-    await this.saveFile(key, {
+    const parsed = this.validateSignedUrl('putObject', signed);
+    await this.saveFile(parsed.Key!, {
       ContentLength: file.Body.byteLength,
       LastModified: new Date(),
       ...file,
@@ -40,11 +64,19 @@ export abstract class LocalBucket extends FileBucket {
 
   protected abstract saveFile(key: string, file: FakeAwsFile): Promise<void>;
 
-  protected async getSignedUrl(operation: string, key: string) {
+  protected async getSignedUrl(
+    operation: string,
+    key: string,
+    options?: Except<
+      GetObjectCommandInput | PutObjectCommandInput,
+      'Bucket' | 'Key'
+    >
+  ) {
     const signed = JSON.stringify({
       operation,
-      key,
+      Key: key,
       expires: DateTime.local().plus(this.signedUrlExpires).toMillis(),
+      ...options,
     });
     const url = new URL(this.baseUrl);
     url.searchParams.set('signed', signed);
@@ -54,7 +86,10 @@ export abstract class LocalBucket extends FileBucket {
   /**
    * parses & validates the signed url or just the json query param
    */
-  protected validateSignedUrl(operation: string, url: string) {
+  protected validateSignedUrl(
+    operation: string,
+    url: string
+  ): GetObjectCommandInput | PutObjectCommandInput {
     let raw;
     try {
       raw = new URL(url).searchParams.get('signed');
@@ -66,7 +101,7 @@ export abstract class LocalBucket extends FileBucket {
     try {
       parsed = JSON.parse(raw);
       assert(parsed.operation === operation);
-      assert(typeof parsed.key === 'string');
+      assert(typeof parsed.Key === 'string');
       assert(typeof parsed.expires === 'number');
     } catch (e) {
       throw new InputException(e);
@@ -74,6 +109,6 @@ export abstract class LocalBucket extends FileBucket {
     if (DateTime.local() > DateTime.fromMillis(parsed.expires)) {
       throw new InputException('url expired');
     }
-    return parsed.key as string;
+    return parsed;
   }
 }
