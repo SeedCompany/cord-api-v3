@@ -3,13 +3,14 @@ import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import {
   DateTimeFilter,
+  FilterField,
   ID,
   PaginatedList,
   SecuredList,
   SensitivitiesFilter,
   Sensitivity,
   SortablePaginationInput,
-} from '../../../common';
+} from '~/common';
 import {
   InternshipProject,
   IProject,
@@ -93,16 +94,12 @@ export abstract class ProjectFilters {
   readonly userId?: ID;
 }
 
-const defaultFilters = {};
-
 @InputType()
 export class ProjectListInput extends SortablePaginationInput<keyof IProject>({
   defaultSort: 'name',
 }) {
-  @Field({ nullable: true })
-  @Type(() => ProjectFilters)
-  @ValidateNested()
-  readonly filter: ProjectFilters = defaultFilters;
+  @FilterField(ProjectFilters)
+  readonly filter: ProjectFilters;
 }
 
 @ObjectType()

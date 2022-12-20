@@ -1,7 +1,5 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import { Type } from 'class-transformer';
-import { ValidateNested } from 'class-validator';
-import { PaginatedList, SortablePaginationInput } from '../../../common';
+import { FilterField, PaginatedList, SortablePaginationInput } from '~/common';
 import { Ceremony } from './ceremony.dto';
 import { CeremonyType } from './type.enum';
 
@@ -14,18 +12,14 @@ export abstract class CeremonyFilters {
   readonly type?: CeremonyType;
 }
 
-const defaultFilters = {};
-
 @InputType()
 export class CeremonyListInput extends SortablePaginationInput<
   keyof Ceremony | 'projectName' | 'languageName'
 >({
   defaultSort: 'projectName',
 }) {
-  @Field({ nullable: true })
-  @Type(() => CeremonyFilters)
-  @ValidateNested()
-  readonly filter: CeremonyFilters = defaultFilters;
+  @FilterField(CeremonyFilters)
+  readonly filter: CeremonyFilters;
 }
 
 @ObjectType()
