@@ -6,8 +6,7 @@ import {
   FileListInput,
   RequestUploadOutput,
 } from '../../src/components/file';
-import { LocalBucket } from '../../src/components/file/bucket';
-import { FilesBucketToken } from '../../src/components/file/files-bucket.factory';
+import { FileBucket, LocalBucket } from '../../src/components/file/bucket';
 import { mimeTypes } from '../../src/components/file/mimeTypes';
 import { TestApp } from './create-app';
 import { RawFile, RawFileNode, RawFileNodeChildren } from './fragments';
@@ -53,7 +52,7 @@ export const uploadFileContents = async (
     size: ContentLength,
   } = completeInput;
 
-  const bucket = app.get(FilesBucketToken);
+  const bucket = app.get(FileBucket);
   assert(bucket instanceof LocalBucket);
   await bucket.upload(url, {
     Body,

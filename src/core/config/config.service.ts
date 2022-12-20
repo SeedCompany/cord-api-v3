@@ -13,7 +13,6 @@ import { nanoid } from 'nanoid';
 import { Config as Neo4JDriverConfig } from 'neo4j-driver';
 import { PoolConfig } from 'pg';
 import { Merge } from 'type-fest';
-import { withAddedPath } from '~/common/url.util';
 import { ID, ServerException } from '../../common';
 import { FrontendUrlWrapper } from '../email/templates/frontend-url';
 import { LogLevel } from '../logger';
@@ -192,12 +191,9 @@ export class ConfigService implements EmailOptionsFactory {
     const localDirectory =
       this.env.string('FILES_LOCAL_DIR').optional() ??
       (this.jest ? undefined : '.files');
-    // Routes to LocalBucketController
-    const baseUrl = withAddedPath(this.hostUrl, 'file');
     return {
       bucket,
       localDirectory,
-      baseUrl,
       signedUrlExpires: Duration.fromObject({ minutes: 15 }),
     };
   }

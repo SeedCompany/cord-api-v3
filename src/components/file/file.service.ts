@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Connection } from 'cypher-query-builder';
 import { intersection } from 'lodash';
 import {
@@ -34,12 +34,11 @@ import {
   RequestUploadOutput,
 } from './dto';
 import { FileRepository } from './file.repository';
-import { FilesBucketToken } from './files-bucket.factory';
 
 @Injectable()
 export class FileService {
   constructor(
-    @Inject(FilesBucketToken) private readonly bucket: FileBucket,
+    private readonly bucket: FileBucket,
     private readonly repo: FileRepository,
     private readonly db: Connection,
     @Logger('file:service') private readonly logger: ILogger
