@@ -25,6 +25,10 @@ import { member, Policy, Role, variant } from '../util';
       p.responses.whenAll(member, variant('translated')).edit,
     ]),
   ]),
+  r.ProgressReportWorkflowEvent.transitions(
+    'Translation Done',
+    'Translation Reject'
+  ).execute,
   r.Project.when(member)
     .read.specifically((p) => [
       p.rootDirectory.edit,

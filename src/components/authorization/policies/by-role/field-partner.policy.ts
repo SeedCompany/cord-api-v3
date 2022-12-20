@@ -20,6 +20,12 @@ import { member, Policy, Role, variant } from '../util';
       p.responses.whenAll(member, variant('draft')).edit,
     ]),
   ]),
+  r.ProgressReportWorkflowEvent.transitions(
+    'Start',
+    'In Progress -> In Review',
+    'In Progress -> Pending Translation',
+    'Withdraw Review Request'
+  ).execute,
   r.Project.when(member).read.specifically((p) => p.rootDirectory.none),
   r.ProjectMember.when(member).read,
   r.StepProgress.whenAll(member, variant('partner')).edit,
