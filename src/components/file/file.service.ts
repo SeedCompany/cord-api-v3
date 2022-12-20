@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Connection } from 'cypher-query-builder';
 import { intersection } from 'lodash';
+import { withAddedPath } from '~/common/url.util';
 import {
   bufferFromStream,
   DuplicateException,
@@ -12,7 +13,7 @@ import {
   Session,
   UnauthorizedException,
 } from '../../common';
-import { ILogger, Logger } from '../../core';
+import { ConfigService, ILogger, Logger } from '../../core';
 import { FileBucket } from './bucket';
 import {
   CreateDefinedFileVersionInput,
@@ -33,6 +34,7 @@ import {
   RenameFileInput,
   RequestUploadOutput,
 } from './dto';
+import { FileUrlController as FileUrl } from './file-url.controller';
 import { FileRepository } from './file.repository';
 
 @Injectable()
@@ -41,6 +43,7 @@ export class FileService {
     private readonly bucket: FileBucket,
     private readonly repo: FileRepository,
     private readonly db: Connection,
+    private readonly config: ConfigService,
     @Logger('file:service') private readonly logger: ILogger
   ) {}
 
@@ -116,6 +119,16 @@ export class FileService {
     }
 
     return await bufferFromStream(data);
+  }
+
+  async getUrl(node: FileNode) {
+    const url = withAddedPath(
+      this.config.hostUrl,
+      FileUrl.path,
+      isFile(node) ? node.latestVersionId : node.id,
+      encodeURIComponent(node.name)
+    );
+    return url.toString();
   }
 
   async getDownloadUrl(node: FileNode): Promise<string> {

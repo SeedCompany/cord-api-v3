@@ -34,9 +34,30 @@ export class SessionInterceptor implements NestInterceptor {
   ) {}
 
   async intercept(executionContext: ExecutionContext, next: CallHandler) {
-    if (executionContext.getType<GqlRequestType>() !== 'graphql') {
-      return next.handle();
+    const type = executionContext.getType<GqlRequestType>();
+    if (type === 'graphql') {
+      await this.handleGql(executionContext);
+    } else if (type === 'http') {
+      await this.handleHttp(executionContext);
     }
+
+    return next.handle();
+  }
+
+  private async handleHttp(executionContext: ExecutionContext) {
+    const enabled = Reflect.getMetadata(
+      'SESSION_WATERMARK',
+      executionContext.getClass(),
+      executionContext.getHandler().name
+    );
+    if (!enabled) {
+      return;
+    }
+    const request = executionContext.switchToHttp().getRequest();
+    request.session = await this.hydrateSession({ request });
+  }
+
+  private async handleGql(executionContext: ExecutionContext) {
     const gqlExecutionContext = GqlExecutionContext.create(executionContext);
     const ctx = gqlExecutionContext.getContext<GqlContextType>();
     const info = gqlExecutionContext.getInfo<GraphQLResolveInfo>();
@@ -44,11 +65,9 @@ export class SessionInterceptor implements NestInterceptor {
     if (!ctx.session && info.fieldName !== 'session') {
       ctx.session = await this.hydrateSession(ctx);
     }
-
-    return next.handle();
   }
 
-  async hydrateSession(context: GqlContextType) {
+  async hydrateSession(context: Pick<GqlContextType, 'request'>) {
     const token = this.getTokenFromContext(context);
     if (!token) {
       throw new UnauthenticatedException();
@@ -57,7 +76,7 @@ export class SessionInterceptor implements NestInterceptor {
     return await this.auth.resumeSession(token, impersonatee);
   }
 
-  getTokenFromContext(context: GqlContextType): string | null {
+  getTokenFromContext(context: Pick<GqlContextType, 'request'>): string | null {
     return (
       this.getTokenFromAuthHeader(context.request) ??
       this.getTokenFromCookie(context.request)
@@ -81,7 +100,9 @@ export class SessionInterceptor implements NestInterceptor {
     return req?.cookies?.[this.config.sessionCookie.name] || null;
   }
 
-  getImpersonateeFromContext(context: GqlContextType): Session['impersonatee'] {
+  getImpersonateeFromContext(
+    context: Pick<GqlContextType, 'request'>
+  ): Session['impersonatee'] {
     const user = context.request?.headers?.['x-cord-impersonate-user'] as
       | ID
       | undefined;
