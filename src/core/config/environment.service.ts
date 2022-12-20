@@ -63,6 +63,15 @@ export class EnvironmentService implements Iterable<[string, string]> {
     return this.wrap(key, (raw: string) => raw);
   }
 
+  url(key: string): ConfigValue<
+    Readonly<URL> &
+      // Work around the linter not liking implicit toString concat
+      string,
+    URL | string
+  > {
+    return this.wrap(key, (raw) => Object.freeze(new URL(raw)) as any);
+  }
+
   boolean(key: string) {
     return this.wrap(key, (raw: string | boolean) =>
       typeof raw === 'boolean' ? raw : raw.toLowerCase() === 'true'

@@ -22,15 +22,13 @@ async function bootstrap() {
   app.enableCors(config.cors);
   app.use(cookieParser());
 
-  app.setGlobalPrefix(config.globalPrefix);
+  app.setGlobalPrefix(config.hostUrl.pathname.slice(1));
 
   config.applyTimeouts(app.getHttpServer(), config.httpTimeouts);
 
   app.enableShutdownHooks();
   await app.listen(config.port, () => {
-    app
-      .get(Logger)
-      .log(`Listening at ${config.hostUrl}/${config.globalPrefix}`);
+    app.get(Logger).log(`Listening at ${config.hostUrl}`);
   });
 }
 bootstrap().catch((err) => {

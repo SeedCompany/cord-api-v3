@@ -48,7 +48,7 @@ export class TracingModule implements OnModuleInit, NestModule {
     }
 
     XRay.SegmentUtils.setServiceData({
-      name: this.config.hostUrl,
+      name: this.config.hostUrl.toString(),
       version: (await this.version.version).toString(),
       runtime: process.release?.name ?? 'unknown',
       // eslint-disable-next-line @typescript-eslint/naming-convention

@@ -11,9 +11,9 @@ import LRUCache from 'lru-cache';
 import { Duration, DurationLike } from 'luxon';
 import { nanoid } from 'nanoid';
 import { Config as Neo4JDriverConfig } from 'neo4j-driver';
-import { join } from 'path';
 import { PoolConfig } from 'pg';
 import { Merge } from 'type-fest';
+import { withAddedPath } from '~/common/url.util';
 import { ID, ServerException } from '../../common';
 import { FrontendUrlWrapper } from '../email/templates/frontend-url';
 import { LogLevel } from '../logger';
@@ -31,10 +31,9 @@ export class ConfigService implements EmailOptionsFactory {
   port = this.env.number('port').optional(3000);
   // The port where the app is being hosted. i.e. a docker bound port
   publicPort = this.env.number('public_port').optional(this.port);
-  hostUrl = this.env
-    .string('host_url')
+  readonly hostUrl = this.env
+    .url('host_url')
     .optional(`http://localhost:${this.publicPort}`);
-  globalPrefix = '';
 
   @Lazy() get graphQL() {
     return {
@@ -194,7 +193,7 @@ export class ConfigService implements EmailOptionsFactory {
       this.env.string('FILES_LOCAL_DIR').optional() ??
       (this.jest ? undefined : '.files');
     // Routes to LocalBucketController
-    const baseUrl = join(this.hostUrl, this.globalPrefix, 'file');
+    const baseUrl = withAddedPath(this.hostUrl, 'file');
     return {
       bucket,
       localDirectory,
