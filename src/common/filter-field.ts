@@ -3,6 +3,7 @@ import { Field } from '@nestjs/graphql';
 import { Transform, Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { HasRequiredKeys } from 'type-fest';
+import { DefaultValue } from './default-value';
 import { AbstractClassType } from './types';
 
 /**
@@ -23,10 +24,11 @@ export const FilterField = <T extends object>(
       : [
           Field(() => type, {
             nullable: true,
-            defaultValue: {},
+            defaultValue: {}, // Only for GQL schema & not always applied in TS
           }),
         ]),
     Type(() => type),
     ValidateNested(),
-    Transform(({ value }) => value || {})
+    DefaultValue.Set({}), // Default when omitted
+    Transform(({ value }) => value || {}) // null -> {}
   );

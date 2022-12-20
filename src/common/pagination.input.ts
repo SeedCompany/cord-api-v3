@@ -3,6 +3,7 @@ import { Args, ArgsOptions, Field, InputType, Int } from '@nestjs/graphql';
 import { Matches, Max, Min } from 'class-validator';
 import { stripIndent } from 'common-tags';
 import { DataObject } from './data-object';
+import { DefaultValue } from './default-value';
 import { Order } from './order.enum';
 import { AbstractClassType } from './types';
 
@@ -106,7 +107,7 @@ export const ListArg = <T extends PaginationInput>(
       name: 'input',
       type: () => input,
       nullable: true,
-      defaultValue: DataObject.defaultValue(input),
+      defaultValue: DataObject.defaultValue(input, DefaultValue.Get(input)),
       ...opts,
     },
     ...pipes
