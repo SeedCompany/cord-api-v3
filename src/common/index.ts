@@ -14,6 +14,7 @@ export * from './mutation-placeholder.output';
 export * from './exceptions';
 export * from './expose-enum-order.helper';
 export * from './fields.pipe';
+export * from './filter-field';
 export * from './firstLettersOfWords';
 export * from './fiscal-year';
 export * from './generate-id';

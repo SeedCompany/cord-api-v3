@@ -1,12 +1,11 @@
 import { InputType, ObjectType } from '@nestjs/graphql';
-import { Type } from 'class-transformer';
-import { ValidateNested } from 'class-validator';
 import {
+  FilterField,
   ID,
   PaginatedList,
   SecuredList,
   SortablePaginationInput,
-} from '../../../common';
+} from '~/common';
 import { FieldRegion } from './field-region.dto';
 
 @InputType()
@@ -14,17 +13,14 @@ export abstract class FieldRegionFilters {
   readonly fieldZoneId?: ID;
 }
 
-const defaultFilters = {};
-
 @InputType()
 export class FieldRegionListInput extends SortablePaginationInput<
   keyof FieldRegion
 >({
   defaultSort: 'name',
 }) {
-  @Type(() => FieldRegionFilters)
-  @ValidateNested()
-  readonly filter: FieldRegionFilters = defaultFilters;
+  @FilterField(FieldRegionFilters, { internal: true })
+  readonly filter: FieldRegionFilters;
 }
 
 @ObjectType()

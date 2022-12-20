@@ -1,13 +1,12 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import { Type } from 'class-transformer';
-import { ValidateNested } from 'class-validator';
 import { stripIndent } from 'common-tags';
 import {
+  FilterField,
   ID,
   PaginatedList,
   SecuredList,
   SortablePaginationInput,
-} from '../../../common';
+} from '~/common';
 import { ProductApproach } from './product-approach';
 import { ProductMethodology } from './product-methodology';
 import { AnyProduct, Product } from './product.dto';
@@ -38,16 +37,12 @@ export abstract class ProductFilters {
   readonly engagementId?: ID;
 }
 
-const defaultFilters = {};
-
 @InputType()
 export class ProductListInput extends SortablePaginationInput<keyof Product>({
   defaultSort: 'createdAt',
 }) {
-  @Field({ nullable: true })
-  @Type(() => ProductFilters)
-  @ValidateNested()
-  readonly filter: ProductFilters = defaultFilters;
+  @FilterField(ProductFilters)
+  readonly filter: ProductFilters;
 }
 
 @ObjectType()

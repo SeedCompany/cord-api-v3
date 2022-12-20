@@ -1,7 +1,5 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import { Type } from 'class-transformer';
-import { ValidateNested } from 'class-validator';
-import { PaginatedList, SortablePaginationInput } from '../../../common';
+import { FilterField, PaginatedList, SortablePaginationInput } from '~/common';
 import { Directory, File, FileNode, IFileNode } from './node';
 import { FileNodeType } from './type';
 
@@ -20,18 +18,14 @@ export abstract class FileFilters {
   readonly type?: FileNodeType;
 }
 
-const defaultFilters = {};
-
 @InputType()
 export class FileListInput extends SortablePaginationInput<
   keyof File | keyof Directory
 >({
   defaultSort: 'name',
 }) {
-  @Field({ nullable: true })
-  @Type(() => FileFilters)
-  @ValidateNested()
-  readonly filter?: FileFilters = defaultFilters;
+  @FilterField(FileFilters)
+  readonly filter?: FileFilters;
 }
 
 @ObjectType()
