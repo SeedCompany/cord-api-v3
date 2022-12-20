@@ -1,6 +1,6 @@
 import { applyDecorators } from '@nestjs/common';
 import { Field } from '@nestjs/graphql';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { HasRequiredKeys } from 'type-fest';
 import { AbstractClassType } from './types';
@@ -27,5 +27,6 @@ export const FilterField = <T extends object>(
           }),
         ]),
     Type(() => type),
-    ValidateNested()
+    ValidateNested(),
+    Transform(({ value }) => value || {})
   );
