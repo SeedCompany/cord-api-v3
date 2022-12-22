@@ -72,7 +72,7 @@
     "iso-3166-1": "^2.1.1",
     "ix": "^5.0.0",
     "js-levenshtein-esm": "^1.2.0",
-    "jsonwebtoken": "^8.5.1",
+    "jsonwebtoken": "^9.0.0",
     "lazy-get-decorator": "^2.2.1",
     "lodash": "^4.17.21",
     "lru-cache": "^7.14.1",
