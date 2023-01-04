@@ -19,7 +19,7 @@ jobs:
         env:
           NEO4J_ACCEPT_LICENSE_AGREEMENT: yes
           NEO4J_AUTH: neo4j/neo4j-password
-          NEO4JLABS_PLUGINS: '["apoc"]'
+          NEO4JLABS_PLUGINS: '["apoc-core"]'
 
     steps:
       - uses: actions/checkout@v3
