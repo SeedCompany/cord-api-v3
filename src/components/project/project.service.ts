@@ -371,6 +371,19 @@ export class ProjectService {
       };
     }
 
+    if (marketingLocationId !== undefined) {
+      await this.repo.updateRelation(
+        'marketingLocation',
+        'Location',
+        input.id,
+        marketingLocationId
+      );
+      result = {
+        ...result,
+        marketingLocation: marketingLocationId,
+      };
+    }
+
     const event = new ProjectUpdatedEvent(
       result,
       currentProject,
