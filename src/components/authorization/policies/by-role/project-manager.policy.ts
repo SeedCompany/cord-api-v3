@@ -66,6 +66,7 @@ import {
         ]),
       ]
     ),
+    r.ProgressReportVarianceExplanation.edit,
     r.ProgressReportWorkflowEvent.read.transitions(
       'Start',
       'In Progress -> In Review',
