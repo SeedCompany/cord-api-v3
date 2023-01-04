@@ -17,7 +17,11 @@ import {
     .read.whenAll(member, sensMediumOrLower)
     .read.specifically((p) => p.many('pmcEntityCode', 'pointOfContact').none)
     .children((c) => c.posts.edit),
-  [r.ProgressReportCommunityStory, r.ProgressReportHighlight].flatMap((it) => [
+  [
+    r.ProgressReportCommunityStory,
+    r.ProgressReportHighlight,
+    r.ProgressReportTeamNews,
+  ].flatMap((it) => [
     it.read.specifically((p) => [
       p.responses.when(variant('published')).read,
       p.responses.whenAll(sensMediumOrLower, variant('fpm')).read,

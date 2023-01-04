@@ -10,6 +10,7 @@ import { ReportType } from '../../periodic-report/dto/report-type.enum';
 import { ProgressReportCommunityStory } from './community-stories.dto';
 import { ProgressReportHighlight } from './hightlights.dto';
 import { SecuredProgressReportStatus as SecuredStatus } from './progress-report-status.enum';
+import { ProgressReportTeamNews } from './team-news.dto';
 
 @RegisterResource()
 @ObjectType({
@@ -23,6 +24,7 @@ export class ProgressReport extends IPeriodicReport {
   );
   static readonly Relations = {
     highlights: [ProgressReportHighlight],
+    teamNews: [ProgressReportTeamNews],
     communityStories: [ProgressReportCommunityStory],
   };
 
