@@ -25,6 +25,7 @@ import {
       p.responses.whenAll(member, variant('published')).edit,
     ]),
   ]),
+  r.ProgressReportVarianceExplanation.read,
   r.ProgressReportWorkflowEvent.transitions('Publish').execute,
   r.Project.read
     .specifically((p) => [
