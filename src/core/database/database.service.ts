@@ -346,9 +346,9 @@ export class DatabaseService {
     } catch (e) {
       if (e instanceof UniquenessError) {
         throw new DuplicateException(
-          `${startCase(label)} with this ${key} is already in use`,
           // Guess the input field path based on name convention
           `${last(startCase(label).split(' '))!.toLowerCase()}.${key}`,
+          `${startCase(label)} with this ${key} is already in use`,
           e
         );
       }
