@@ -3,9 +3,9 @@ import { oneLine } from 'common-tags';
 import { Connection, node, Query, relation } from 'cypher-query-builder';
 import { compact, isEmpty, last, mapKeys, pickBy, startCase } from 'lodash';
 import {
+  DuplicateException,
   entries,
   ID,
-  InputException,
   isIdLike,
   isSecured,
   MaybeUnsecuredInstance,
@@ -345,7 +345,7 @@ export class DatabaseService {
       result = await update.first();
     } catch (e) {
       if (e instanceof UniquenessError) {
-        throw new InputException(
+        throw new DuplicateException(
           `${startCase(label)} with this ${key} is already in use`,
           // Guess the input field path based on name convention
           `${last(startCase(label).split(' '))!.toLowerCase()}.${key}`,
