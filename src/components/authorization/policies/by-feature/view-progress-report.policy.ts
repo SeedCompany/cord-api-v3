@@ -12,7 +12,11 @@ import { Policy, Role, variant } from '../util';
     Role.LeadFinancialAnalyst,
   ],
   (r) => [
-    [r.ProgressReportCommunityStory, r.ProgressReportHighlight].map((it) =>
+    [
+      r.ProgressReportCommunityStory,
+      r.ProgressReportHighlight,
+      r.ProgressReportTeamNews,
+    ].map((it) =>
       it.read.specifically((p) => p.responses.when(variant('published')).read)
     ),
     r.StepProgress.when(variant('official')).read,

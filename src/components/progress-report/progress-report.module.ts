@@ -12,6 +12,9 @@ import { ProgressReportRepository } from './progress-report.repository';
 import { ProgressReportService } from './progress-report.service';
 import { ProgressReportEngagementConnectionResolver } from './resolvers/progress-report-engagement-connection.resolver';
 import { ProgressReportParentResolver } from './resolvers/progress-report-parent.resolver';
+import { ProgressReportTeamNewsRepository } from './team-news/progress-report-team-news.repository';
+import { ProgressReportTeamNewsResolver } from './team-news/progress-report-team-news.resolver';
+import { ProgressReportTeamNewsService } from './team-news/progress-report-team-news.service';
 import { ProgressReportVarianceExplanationModule } from './variance-explanation/variance-explanation.module';
 import { ProgressReportWorkflowModule } from './workflow/progress-report-workflow.module';
 
@@ -24,6 +27,9 @@ import { ProgressReportWorkflowModule } from './workflow/progress-report-workflo
   providers: [
     ProgressReportParentResolver,
     ProgressReportEngagementConnectionResolver,
+    ProgressReportTeamNewsResolver,
+    ProgressReportTeamNewsService,
+    ProgressReportTeamNewsRepository,
     ProgressReportHighlightsResolver,
     ProgressReportHighlightsService,
     ProgressReportHighlightsRepository,

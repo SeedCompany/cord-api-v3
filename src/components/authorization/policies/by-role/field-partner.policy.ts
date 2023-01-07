@@ -13,7 +13,11 @@ import { member, Policy, Role, variant } from '../util';
   r.PeriodicReport.read,
   r.Product.read,
   r.ProgressReport.when(member).read.specifically((p) => p.reportFile.none),
-  [r.ProgressReportCommunityStory, r.ProgressReportHighlight].flatMap((it) => [
+  [
+    r.ProgressReportCommunityStory,
+    r.ProgressReportHighlight,
+    r.ProgressReportTeamNews,
+  ].flatMap((it) => [
     it.when(member).create.read,
     it.specifically((p) => [
       p.responses.whenAll(member, variant('translated')).read,
