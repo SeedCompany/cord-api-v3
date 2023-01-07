@@ -4,6 +4,7 @@ export enum LocationType {
   Country = 'Country',
   City = 'City',
   County = 'County',
+  Region = 'Region',
   State = 'State',
   CrossBorderArea = 'CrossBorderArea',
 }
