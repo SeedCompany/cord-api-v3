@@ -4,6 +4,10 @@ import { stripIndent } from 'common-tags';
 import { simpleSwitch } from '../../common';
 import { ProgressFormat } from '../product-progress/dto';
 import { ProgressSummary } from './dto';
+import {
+  ScheduleStatus,
+  fromVariance as scheduleStatusFromVariance,
+} from './dto/schedule-status.enum';
 
 const formatArg: ArgsOptions = {
   name: 'format',
@@ -53,5 +57,13 @@ export class ProgressSummaryResolver {
     @Args(formatArg) format: ProgressFormat
   ): number {
     return this.actual(summary, format) - this.planned(summary, format);
+  }
+
+  @ResolveField(() => ScheduleStatus, {
+    description: 'Is the variance great enough to be ahead/behind?',
+  })
+  scheduleStatus(@Parent() summary: ProgressSummary): ScheduleStatus {
+    const variance = this.variance(summary, ProgressFormat.Decimal);
+    return scheduleStatusFromVariance(variance);
   }
 }
