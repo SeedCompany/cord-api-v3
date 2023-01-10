@@ -64,6 +64,20 @@ export class ProgressReportVarianceExplanationReasonOptionsResolver {
     @Loader(ProgressSummaryLoader)
     summaryLoader: LoaderOf<ProgressSummaryLoader>
   ): Promise<ScheduleStatus | null> {
+    const reason = self.reasons.value[0];
+    if (reason) {
+      const { ahead, behind, onTime } = ReasonOptions.instance;
+      if (ahead.has(reason)) {
+        return ScheduleStatus.Ahead;
+      }
+      if (behind.has(reason)) {
+        return ScheduleStatus.Behind;
+      }
+      if (onTime.has(reason)) {
+        return ScheduleStatus.OnTime;
+      }
+    }
+
     const summaries = await summaryLoader.load(self.report.id);
     const summary = summaries.Cumulative;
     if (!summary) {
