@@ -51,7 +51,7 @@ export class ProgressReportVarianceExplanationResolver {
 export class ProgressReportVarianceExplanationReasonOptionsResolver {
   @ResolveField(() => ReasonOptions)
   async reasonOptions(): Promise<ReasonOptions> {
-    return new ReasonOptions();
+    return ReasonOptions.instance;
   }
 
   @ResolveField(() => ScheduleStatus, {

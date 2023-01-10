@@ -40,7 +40,7 @@ export abstract class ProgressReportVarianceExplanationInput {
   readonly report: ID;
 
   @Field(() => [String], { nullable: true })
-  @IsIn(Object.values(new ReasonOptions()).flat(), {
+  @IsIn([...ReasonOptions.instance.all], {
     each: true,
     message: 'Reason is not one of our available choices',
   })
