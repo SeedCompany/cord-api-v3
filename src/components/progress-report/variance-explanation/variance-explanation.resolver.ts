@@ -7,6 +7,11 @@ import {
 } from '@nestjs/graphql';
 import { AnonSession, LoggedInSession, Session } from '~/common';
 import { Loader, LoaderOf } from '~/core';
+import {
+  ScheduleStatus,
+  fromVariance as scheduleStatusFromVariance,
+} from '../../progress-summary/dto/schedule-status.enum';
+import { ProgressSummaryLoader } from '../../progress-summary/progress-summary.loader';
 import { ProgressReport } from '../dto';
 import { ProgressReportVarianceExplanationReasonOptions as ReasonOptions } from './reason-options';
 import {
@@ -47,5 +52,24 @@ export class ProgressReportVarianceExplanationReasonOptionsResolver {
   @ResolveField(() => ReasonOptions)
   async reasonOptions(): Promise<ReasonOptions> {
     return new ReasonOptions();
+  }
+
+  @ResolveField(() => ScheduleStatus, {
+    description:
+      'Based on the cumulative variance. Here to be helpful since it goes hand in hand with this explanation',
+    nullable: true,
+  })
+  async scheduleStatus(
+    @Parent() self: VarianceExplanation,
+    @Loader(ProgressSummaryLoader)
+    summaryLoader: LoaderOf<ProgressSummaryLoader>
+  ): Promise<ScheduleStatus | null> {
+    const summaries = await summaryLoader.load(self.report.id);
+    const summary = summaries.Cumulative;
+    if (!summary) {
+      return null;
+    }
+    const variance = summary.actual - summary.planned;
+    return scheduleStatusFromVariance(variance);
   }
 }
