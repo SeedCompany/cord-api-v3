@@ -3,6 +3,7 @@ import './as-result';
 import './call';
 import './comment';
 import './condition-variables';
+import './expose-params';
 import './foreach';
 import './interpolate';
 import './log-it';

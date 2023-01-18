@@ -206,6 +206,7 @@ describe('Partnership Security e2e', () => {
               sensitivityRestriction: sensitivityToTest,
               projectType: type,
               permissions: await getPermissions({
+                app,
                 resource: resource,
                 userRole: `global:${role as Role}` as ScopedRole,
                 sensitivity: sensitivityToTest,

@@ -284,6 +284,7 @@ describe('Budget Security e2e', () => {
             resource: Budget,
             sensitivityRestriction: sensitivityToTest,
             permissions: await getPermissions({
+              app,
               resource: Budget,
               userRole: `global:${role as Role}` as ScopedRole,
             }),
@@ -325,6 +326,7 @@ describe('Budget Security e2e', () => {
               readFunction: readBudgetRecords,
               resourceId: budget.budget.value.id,
               perms: await getPermissions({
+                app,
                 resource: Budget,
                 userRole: `global:${role as Role}` as ScopedRole,
               }),

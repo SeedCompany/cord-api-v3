@@ -15,7 +15,7 @@ import { mergeScriptureRanges } from './merge-to-minimal-set';
 export const parseScripture = (
   input: string | null | undefined
 ): readonly ScriptureRange[] => {
-  if (!input || !input.trim()) {
+  if (!input?.trim()) {
     return [];
   }
 
@@ -38,7 +38,7 @@ export const parseScripture = (
 };
 
 export const tryParseScripture = (input: string | null | undefined) => {
-  if (!input || !input.trim()) {
+  if (!input?.trim()) {
     return undefined;
   }
   try {

@@ -1,12 +1,11 @@
 import { InputType, ObjectType } from '@nestjs/graphql';
-import { Type } from 'class-transformer';
-import { ValidateNested } from 'class-validator';
 import {
+  FilterField,
   ID,
   PaginatedList,
   SecuredList,
   SortablePaginationInput,
-} from '../../../../common';
+} from '~/common';
 import { Education } from './education.dto';
 
 @InputType()
@@ -14,19 +13,14 @@ export abstract class EducationFilters {
   readonly userId?: ID;
 }
 
-const defaultFilters = {};
-
 @InputType()
 export class EducationListInput extends SortablePaginationInput<
   keyof Education
 >({
   defaultSort: 'institution',
 }) {
-  static defaultVal = new EducationListInput();
-
-  @Type(() => EducationFilters)
-  @ValidateNested()
-  readonly filter: EducationFilters = defaultFilters;
+  @FilterField(EducationFilters, { internal: true })
+  readonly filter: EducationFilters;
 }
 
 @ObjectType()

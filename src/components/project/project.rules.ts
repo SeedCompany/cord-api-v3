@@ -12,6 +12,7 @@ import {
 } from '../../common';
 import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
 import { ACTIVE, INACTIVE } from '../../core/database/query';
+import { AuthenticationService } from '../authentication';
 import { Role, withoutScope } from '../authorization';
 import { EngagementService, EngagementStatus } from '../engagement';
 import { User, UserService } from '../user';
@@ -46,7 +47,7 @@ interface StepRule {
 export interface EmailNotification {
   recipient: Pick<
     User,
-    'id' | 'email' | 'displayFirstName' | 'displayLastName' | 'timezone'
+    'email' | 'displayFirstName' | 'displayLastName' | 'timezone'
   >;
   changedBy: Pick<User, 'id' | 'displayFirstName' | 'displayLastName'>;
   project: Pick<Project, 'id' | 'modifiedAt' | 'name' | 'step'>;
@@ -65,6 +66,8 @@ export class ProjectRules {
     private readonly projectService: ProjectService,
     @Inject(forwardRef(() => EngagementService))
     private readonly engagements: EngagementService,
+    @Inject(forwardRef(() => AuthenticationService))
+    private readonly auth: AuthenticationService,
     private readonly configService: ConfigService,
     // eslint-disable-next-line @seedcompany/no-unused-vars
     @Logger('project:rules') private readonly logger: ILogger
@@ -752,6 +755,7 @@ export class ProjectRules {
         return {
           approvers: [
             Role.Administrator,
+            Role.Controller,
             Role.ProjectManager,
             Role.RegionalDirector,
             Role.FieldOperationsDirector,
@@ -1039,41 +1043,36 @@ export class ProjectRules {
     notifier: Notifier,
     previousStep?: ProjectStep
   ): Promise<EmailNotification> {
-    let recipient;
-    let changedBy;
-    let project;
+    const recipientId = notifier.includes('@')
+      ? this.configService.rootAdmin.id
+      : (notifier as ID);
+    const recipientSession = await this.auth.sessionForUser(recipientId);
+    const recipient = notifier.includes('@')
+      ? {
+          email: { value: notifier, canRead: true, canEdit: false },
+          displayFirstName: {
+            value: notifier.split('@')[0],
+            canRead: true,
+            canEdit: false,
+          },
+          displayLastName: { value: '', canRead: true, canEdit: false },
+          timezone: {
+            value: this.configService.defaultTimeZone,
+            canRead: true,
+            canEdit: false,
+          },
+        }
+      : await this.userService.readOne(recipientId, recipientSession);
 
-    if (notifier.includes('@')) {
-      const email = notifier;
-      changedBy = await this.userService.readOne(
-        changedById,
-        this.configService.rootAdmin.id
-      );
-      project = await this.projectService.readOne(
-        projectId,
-        this.configService.rootAdmin.id
-      );
-      recipient = {
-        id: email.split('@')[0] as ID,
-        email: { value: email, canRead: true, canEdit: false },
-        displayFirstName: {
-          value: email.split('@')[0],
-          canRead: true,
-          canEdit: false,
-        },
-        displayLastName: { value: '', canRead: true, canEdit: false },
-        timezone: {
-          value: this.configService.defaultTimeZone,
-          canRead: true,
-          canEdit: false,
-        },
-      };
-    } else {
-      const recipientId = notifier as ID;
-      changedBy = await this.userService.readOne(changedById, recipientId);
-      project = await this.projectService.readOne(projectId, recipientId);
-      recipient = await this.userService.readOne(recipientId, recipientId);
-    }
+    const changedBy = await this.userService.readOne(
+      changedById,
+      recipientSession
+    );
+    const project = await this.projectService.readOne(
+      projectId,
+      recipientSession
+    );
+
     return {
       changedBy,
       project,

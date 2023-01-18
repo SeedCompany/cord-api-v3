@@ -1,20 +1,17 @@
 import { Global, Module } from '@nestjs/common';
-import {
-  APP_FILTER,
-  APP_INTERCEPTOR,
-  APP_PIPE,
-  BaseExceptionFilter,
-} from '@nestjs/core';
+import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { EmailModule } from '@seedcompany/nestjs-email';
 import { ConsoleModule } from 'nestjs-console';
 import { AwsS3Factory } from './aws-s3.factory';
+import { CacheModule } from './cache/cache.module';
 import { ConfigModule } from './config/config.module';
 import { ConfigService } from './config/config.service';
 import { CoreController } from './core.controller';
 import { DataLoaderInterceptor } from './data-loader';
 import { DatabaseModule } from './database/database.module';
 import { EventsModule } from './events';
-import { ExceptionFilter } from './exception.filter';
+import { ExceptionFilter } from './exception/exception.filter';
+import { ExceptionNormalizer } from './exception/exception.normalizer';
 import { GraphqlModule } from './graphql';
 import { PostgresModule } from './postgres/postgres.module';
 import { ResourceModule } from './resources/resource.module';
@@ -28,6 +25,7 @@ import { WaitResolver } from './wait.resolver';
 @Module({
   imports: [
     ConfigModule,
+    CacheModule,
     ConsoleModule,
     DatabaseModule,
     EmailModule.forRootAsync({ useExisting: ConfigService }),
@@ -39,7 +37,7 @@ import { WaitResolver } from './wait.resolver';
   ],
   providers: [
     AwsS3Factory,
-    BaseExceptionFilter,
+    ExceptionNormalizer,
     { provide: APP_FILTER, useClass: ExceptionFilter },
     { provide: APP_PIPE, useClass: ValidationPipe },
     { provide: APP_INTERCEPTOR, useClass: DataLoaderInterceptor },
@@ -51,6 +49,7 @@ import { WaitResolver } from './wait.resolver';
   exports: [
     AwsS3Factory,
     ConfigModule,
+    CacheModule,
     GraphqlModule,
     DatabaseModule,
     EmailModule,

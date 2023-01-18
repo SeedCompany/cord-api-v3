@@ -28,10 +28,14 @@ declare module 'cypher-query-builder/dist/typings/query' {
      *
      * db.query().apply(matchFoo('Movie'));
      */
-    apply<S>(fn: (query: Query<Result>) => Query<S>): Query<S>;
+    apply<S>(fn: QueryFragment<Result, S>): Query<S>;
     apply(fn: ((query: this) => void) | null | undefined): this;
   }
 }
+
+export type QueryFragment<In = unknown, Out = In> = (
+  query: Query<In>
+) => Query<Out>;
 
 Query.prototype.apply = function apply<R>(
   fn: ((q: Query) => R) | null | undefined

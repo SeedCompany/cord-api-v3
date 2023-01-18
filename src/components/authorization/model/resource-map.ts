@@ -1,8 +1,7 @@
-import { ServerException } from '../../../common';
 import { Budget, BudgetRecord } from '../../budget/dto';
 import { Ceremony } from '../../ceremony/dto';
 import { Changeset } from '../../changeset/dto';
-import { Comment, CommentThread } from '../../comments/dto';
+import { Comment, Commentable, CommentThread } from '../../comments/dto';
 import {
   IEngagement as Engagement,
   InternshipEngagement,
@@ -11,7 +10,12 @@ import {
 import { EthnoArt } from '../../ethno-art/dto';
 import { FieldRegion } from '../../field-region/dto';
 import { FieldZone } from '../../field-zone/dto';
-import { Directory, File, FileVersion } from '../../file/dto';
+import {
+  Directory,
+  File,
+  IFileNode as FileNode,
+  FileVersion,
+} from '../../file/dto';
 import { Film } from '../../film/dto';
 import { FundingAccount } from '../../funding-account/dto';
 import { EthnologueLanguage, Language } from '../../language/dto';
@@ -24,8 +28,8 @@ import {
   FinancialReport,
   NarrativeReport,
   IPeriodicReport as PeriodicReport,
-  ProgressReport,
 } from '../../periodic-report/dto';
+import { Post } from '../../post/dto';
 import {
   DerivativeScriptureProduct,
   DirectScriptureProduct,
@@ -45,8 +49,12 @@ import { Story } from '../../story/dto';
 import { User } from '../../user/dto';
 import { Education } from '../../user/education/dto';
 import { Unavailability } from '../../user/unavailability/dto';
+import { AssignableRoles } from '../dto/assignable-roles';
+import { BetaFeatures } from '../dto/beta-features';
 
-export const ResourceMap = {
+/** @deprecated Use {@link import('~/core').ResourcesHost.getMap} instead */
+export const LegacyResourceMap = {
+  Commentable,
   Budget,
   BudgetRecord,
   Ceremony,
@@ -61,6 +69,7 @@ export const ResourceMap = {
   FieldRegion,
   FieldZone,
   File,
+  FileNode,
   FileVersion,
   Film,
   FundingAccount,
@@ -72,6 +81,7 @@ export const ResourceMap = {
   Organization,
   Partner,
   Partnership,
+  Post,
   Producible,
   Product,
   DirectScriptureProduct,
@@ -84,21 +94,11 @@ export const ResourceMap = {
   PeriodicReport,
   FinancialReport,
   NarrativeReport,
-  ProgressReport,
   ProjectChangeRequest,
   Song,
   Story,
   Unavailability,
   User,
+  AssignableRoles,
+  BetaFeatures,
 } as const;
-export type ResourceMap = typeof ResourceMap;
-
-export const resourceFromName = (name: string) => {
-  const resource = ResourceMap[name as keyof ResourceMap];
-  if (!resource) {
-    throw new ServerException(
-      `Unable to determine resource from ResourceMap for type: ${name}`
-    );
-  }
-  return resource;
-};

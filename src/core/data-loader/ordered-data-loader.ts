@@ -1,8 +1,7 @@
 // eslint-disable-next-line no-restricted-imports -- it's ok in this folder
-import * as DataLoaderLib from 'dataloader';
+import DataLoaderLib from 'dataloader';
 import { identity, startCase } from 'lodash';
 import { GqlContextType, ID, NotFoundException } from '../../common';
-import { anonymousSession } from '../../common/session';
 import { NoSessionException } from '../../components/authentication/no-session.exception';
 import { DataLoader, NestDataLoader } from './loader.decorator';
 
@@ -55,7 +54,7 @@ export abstract class OrderedNestDataLoader<T, Key = ID, CachedKey = Key>
     if (!session) {
       throw new NoSessionException();
     }
-    return anonymousSession(session);
+    return session;
   }
 
   generateDataLoader(context: GqlContextType) {
@@ -89,7 +88,12 @@ export abstract class OrderedNestDataLoader<T, Key = ID, CachedKey = Key>
       // property (prop) of a document and value is a document.
       const docsMap = new Map();
       docs.forEach((doc) => {
-        if ('error' in doc && doc.error instanceof Error) {
+        if (
+          doc &&
+          typeof doc === 'object' &&
+          'error' in doc &&
+          doc.error instanceof Error
+        ) {
           docsMap.set(getCacheKey(doc.key), doc.error);
         } else {
           docsMap.set(getCacheKey(getKey(doc as T)), doc);

@@ -1,7 +1,9 @@
 import { Field, Int, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { GraphQLScalarType } from 'graphql';
+import { lowerCase } from 'lodash';
 import { Class } from 'type-fest';
+import { DataObject } from './data-object';
 import { IPaginatedList } from './list.interface';
 import { AbstractClassType } from './types';
 
@@ -21,12 +23,13 @@ export function PaginatedList<Type, ListItem = Type>(
 ) {
   @ObjectType({ isAbstract: true, implements: [IPaginatedList] })
   abstract class PaginatedListClass
+    extends DataObject
     implements PaginatedListType<ListItem>, IPaginatedList
   {
     @Field(() => [itemClass], {
       description:
         options.itemsDescription ||
-        PaginatedList.itemDescriptionFor(itemClass.name.toLowerCase()),
+        PaginatedList.itemDescriptionFor(lowerCase(itemClass.name)),
     })
     readonly items: readonly ListItem[];
 
@@ -39,10 +42,6 @@ export function PaginatedList<Type, ListItem = Type>(
       description: 'Whether the next page exists',
     })
     readonly hasMore: boolean;
-
-    protected constructor() {
-      // no instantiation, shape only
-    }
   }
 
   return PaginatedListClass;

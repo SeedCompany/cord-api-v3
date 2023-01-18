@@ -5,6 +5,11 @@ import { UserModule } from '../user/user.module';
 import { AuthenticationRepository } from './authentication.repository';
 import { AuthenticationService } from './authentication.service';
 import { CryptoService } from './crypto.service';
+import {
+  LoginExtraInfoResolver,
+  RegisterExtraInfoResolver,
+  SessionExtraInfoResolver,
+} from './extra-info.resolver';
 import { LoginResolver } from './login.resolver';
 import { PasswordResolver } from './password.resolver';
 import { RegisterResolver } from './register.resolver';
@@ -22,6 +27,9 @@ import { SessionResolver } from './session.resolver';
     PasswordResolver,
     RegisterResolver,
     SessionResolver,
+    SessionExtraInfoResolver,
+    LoginExtraInfoResolver,
+    RegisterExtraInfoResolver,
     AuthenticationService,
     AuthenticationRepository,
     CryptoService,

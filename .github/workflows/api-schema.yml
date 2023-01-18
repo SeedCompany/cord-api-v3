@@ -1,0 +1,62 @@
+name: API Schema
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - labeled
+
+jobs:
+  generate:
+    name: Generate
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        ref: [base, head]
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ matrix.ref == 'base' && github.event.pull_request[matrix.ref].ref || '' }}
+
+      - name: Node Setup & Yarn Install
+        uses: ./.github/actions/setup
+
+      - name: Generate GraphQL Schema
+        run: yarn start -- --gen-schema
+
+      - name: Upload GraphQL Schema
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.ref }}-gql-schema
+          path: schema.graphql
+
+  graphql-diff:
+    name: GraphQL Diff
+    needs: [generate]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: base-gql-schema
+          path: base
+      - uses: actions/download-artifact@v3
+        with:
+          name: head-gql-schema
+          path: head
+
+      - name: Show diff in PR comment
+        uses: agu-z/gql-diff-action@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          old-schema: ./base/schema.graphql
+          new-schema: ./head/schema.graphql
+
+      - name: Enforce compatibility
+        run: |
+          yarn dlx graphql-schema-diff \
+            --use-colors --fail-on-breaking-changes \
+            ./base/schema.graphql ./head/schema.graphql
+        if: ${{ !contains(github.event.pull_request.labels.*.name, 'breaking change') }}

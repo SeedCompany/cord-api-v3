@@ -11,6 +11,8 @@ export * from './deletes';
 export * from './match-project-based-props';
 export * from './match-changeset-and-changed-props';
 export * from './update-property';
+export * from './update-properties';
+export { QueryFragment } from '../query-augmentation/apply';
 export * from '../query-augmentation/condition-variables';
 export * from './where-path';
 export * as filter from './filters';

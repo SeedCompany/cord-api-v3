@@ -14,6 +14,7 @@ import {
 export class Unavailability extends Resource {
   static readonly Props = keysOf<Unavailability>();
   static readonly SecuredProps = keysOf<SecuredProps<Unavailability>>();
+  static readonly Parent = import('../../dto').then((m) => m.User);
 
   @Field()
   readonly description: SecuredString;

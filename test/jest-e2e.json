@@ -5,5 +5,5 @@
   "roots": ["<rootDir>/test"],
   "testEnvironment": "node",
   "testRegex": ".e2e-spec.ts$",
-  "setupFiles": ["reflect-metadata", "./src/app.module.ts", "./test/jest.d.ts"]
+  "setupFiles": ["./src/polyfills.ts", "./src/app.module.ts", "./test/jest.d.ts"]
 }

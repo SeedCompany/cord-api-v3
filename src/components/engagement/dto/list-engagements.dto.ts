@@ -1,12 +1,11 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import { Type } from 'class-transformer';
-import { ValidateNested } from 'class-validator';
 import {
+  FilterField,
   ID,
   PaginatedList,
   SecuredList,
   SortablePaginationInput,
-} from '../../../common';
+} from '~/common';
 import {
   Engagement,
   IEngagement,
@@ -25,20 +24,14 @@ export abstract class EngagementFilters {
   readonly projectId?: ID;
 }
 
-const defaultFilters = {};
-
 @InputType()
 export class EngagementListInput extends SortablePaginationInput<
   keyof Engagement
 >({
   defaultSort: 'createdAt',
 }) {
-  static defaultVal = new EngagementListInput();
-
-  @Field({ nullable: true })
-  @Type(() => EngagementFilters)
-  @ValidateNested()
-  readonly filter: EngagementFilters = defaultFilters;
+  @FilterField(EngagementFilters)
+  readonly filter: EngagementFilters;
 }
 
 @ObjectType()

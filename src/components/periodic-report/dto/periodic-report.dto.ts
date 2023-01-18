@@ -1,48 +1,39 @@
 import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { MergeExclusive } from 'type-fest';
 import {
+  Calculated,
   CalendarDate,
   Resource,
+  ResourceShape,
   SecuredDateNullable,
   SecuredProperty,
   SecuredProps,
   SecuredStringNullable,
   Sensitivity,
   SensitivityField,
-  ServerException,
-  simpleSwitch,
 } from '../../../common';
 import { BaseNode as DbBaseNode } from '../../../core/database/results';
 import { ScopedRole } from '../../authorization';
-import { LanguageEngagement } from '../../engagement/dto/engagement.dto';
 import { DefinedFile } from '../../file';
 import { ReportType } from './report-type.enum';
 
-type AnyPeriodicReport = MergeExclusive<
-  MergeExclusive<FinancialReport, NarrativeReport>,
-  ProgressReport
->;
-
-export const resolveReportType = (report: Pick<PeriodicReport, 'type'>) => {
-  const type = simpleSwitch(report.type, {
-    Financial: FinancialReport,
-    Narrative: NarrativeReport,
-    Progress: ProgressReport,
-  });
-  if (!type) {
-    throw new ServerException('Could not resolve periodic report type');
-  }
-  return type;
-};
-
+@Calculated()
 @InterfaceType({
-  resolveType: resolveReportType,
+  resolveType: (obj: PeriodicReport) =>
+    // Prevent circular dependency by lazily importing this.
+    // This file has the concretes which depend on the interface defined here
+    // so this interface file needs to finish loading before the merge file
+    // can be loaded
+    import('./merge-periodic-reports.dto').then((m) =>
+      m.resolveReportType(obj)
+    ),
   implements: [Resource],
 })
 class PeriodicReport extends Resource {
-  static readonly Props = keysOf<PeriodicReport>();
-  static readonly SecuredProps = keysOf<SecuredProps<PeriodicReport>>();
+  static readonly Props: string[] = keysOf<PeriodicReport>();
+  static readonly SecuredProps: string[] =
+    keysOf<SecuredProps<PeriodicReport>>();
+  static readonly Parent: ResourceShape<any>['Parent'] = 'dynamic';
 
   @Field(() => ReportType)
   readonly type: ReportType;
@@ -74,10 +65,7 @@ class PeriodicReport extends Resource {
   readonly scope: ScopedRole[];
 }
 
-export {
-  PeriodicReport as IPeriodicReport,
-  AnyPeriodicReport as PeriodicReport,
-};
+export { PeriodicReport as IPeriodicReport };
 
 @ObjectType({
   implements: [PeriodicReport],
@@ -85,6 +73,7 @@ export {
 export class FinancialReport extends PeriodicReport {
   static readonly Props = keysOf<FinancialReport>();
   static readonly SecuredProps = keysOf<SecuredProps<FinancialReport>>();
+  static readonly Parent = 'dynamic';
 
   readonly type: ReportType.Financial;
 }
@@ -95,21 +84,9 @@ export class FinancialReport extends PeriodicReport {
 export class NarrativeReport extends PeriodicReport {
   static readonly Props = keysOf<NarrativeReport>();
   static readonly SecuredProps = keysOf<SecuredProps<NarrativeReport>>();
+  static readonly Parent = 'dynamic';
 
   readonly type: ReportType.Narrative;
-}
-
-@ObjectType({
-  implements: [PeriodicReport],
-})
-export class ProgressReport extends PeriodicReport {
-  static readonly Props = keysOf<ProgressReport>();
-  static readonly SecuredProps = keysOf<SecuredProps<ProgressReport>>();
-
-  readonly type: ReportType.Progress;
-
-  @Field(() => LanguageEngagement)
-  readonly parent: DbBaseNode;
 }
 
 @ObjectType({

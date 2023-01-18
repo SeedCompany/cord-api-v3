@@ -1,3 +1,4 @@
-export * from './progress-report.dto';
-export * from './progress-report.input';
+export * from './product-progress.dto';
+export * from './product-progress.input';
 export * from './progress-format.enum';
+export * from './variant-progress.dto';

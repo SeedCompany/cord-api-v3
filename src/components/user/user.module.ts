@@ -6,6 +6,7 @@ import { LocationModule } from '../location/location.module';
 import { OrganizationModule } from '../organization/organization.module';
 import { PartnerModule } from '../partner/partner.module';
 import { TimeZoneModule } from '../timezone';
+import { AssignableRolesResolver } from './assignable-roles.resolver';
 import { EducationModule } from './education/education.module';
 import { KnownLanguageResolver } from './known-language.resolver';
 import { UnavailabilityModule } from './unavailability/unavailability.module';
@@ -29,6 +30,7 @@ import { UserService } from './user.service';
   providers: [
     KnownLanguageResolver,
     UserResolver,
+    AssignableRolesResolver,
     UserLoader,
     UserService,
     UserRepository,

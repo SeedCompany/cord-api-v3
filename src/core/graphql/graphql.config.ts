@@ -1,10 +1,14 @@
+import { KeyValueCacheSetOptions } from '@apollo/utils.keyvaluecache/src/KeyValueCache';
 import { ApolloDriverConfig } from '@nestjs/apollo';
 import { Injectable } from '@nestjs/common';
 import { GqlOptionsFactory } from '@nestjs/graphql';
 import {
   ApolloServerPluginLandingPageLocalDefault,
+  ApolloServerPluginLandingPageProductionDefault,
   ContextFunction,
+  KeyValueCache,
 } from 'apollo-server-core';
+import { PersistedQueryOptions } from 'apollo-server-core/src/graphqlOptions';
 import {
   PersistedQueryNotFoundError,
   PersistedQueryNotSupportedError,
@@ -18,23 +22,23 @@ import {
   GraphQLScalarType,
   OperationDefinitionNode,
 } from 'graphql';
-import { intersection } from 'lodash';
-import { sep } from 'path';
-import { GqlContextType, mapFromList, ServerException } from '../../common';
+import {
+  GqlContextType,
+  JsonSet,
+  mapFromList,
+  ServerException,
+} from '~/common';
 import { getRegisteredScalars } from '../../common/scalars';
+import { CacheService } from '../cache';
 import { ConfigService } from '../config/config.service';
 import { VersionService } from '../config/version.service';
 import { GraphqlTracingPlugin } from './graphql-tracing.plugin';
-
-const escapedSep = sep === '/' ? '\\/' : '\\\\';
-const matchSrcPathInTrace = RegExp(
-  `(at (.+ \\()?).+${escapedSep}src${escapedSep}`
-);
 
 @Injectable()
 export class GraphQLConfig implements GqlOptionsFactory {
   constructor(
     private readonly config: ConfigService,
+    private readonly cache: CacheService,
     private readonly tracing: GraphqlTracingPlugin,
     private readonly versionService: VersionService
   ) {}
@@ -63,10 +67,28 @@ export class GraphQLConfig implements GqlOptionsFactory {
       buildSchemaOptions: {
         fieldMiddleware: [this.tracing.fieldMiddleware()],
       },
+      cache: new GraphQLCacheAdapter(this.cache),
+      persistedQueries: ((): PersistedQueryOptions | false => {
+        const config = this.config.graphQL.persistedQueries;
+        const ttl =
+          config.ttl.toMillis() <= 0 ? null : config.ttl.as('seconds');
+        return config.enabled ? { ttl } : false;
+      })(),
       resolvers: {
         ...scalars,
       },
-      plugins: [ApolloServerPluginLandingPageLocalDefault({ footer: false })],
+      plugins: [
+        process.env.APOLLO_GRAPH_REF
+          ? ApolloServerPluginLandingPageProductionDefault({
+              graphRef: process.env.APOLLO_GRAPH_REF,
+              embed: true,
+              includeCookies: true,
+            })
+          : ApolloServerPluginLandingPageLocalDefault({
+              embed: true,
+              includeCookies: true,
+            }),
+      ],
     };
   }
 
@@ -86,37 +108,15 @@ export class GraphQLConfig implements GqlOptionsFactory {
   formatError = (error: GraphQLError): GraphQLFormattedError => {
     const extensions = { ...error.extensions };
 
-    if (!extensions.codes) {
-      extensions.codes = this.resolveCodes(error, extensions.code);
-    }
+    const codes = (extensions.codes ??= new JsonSet(
+      this.resolveCodes(error, extensions.code)
+    ));
 
     // Schema & validation errors don't have meaningful stack traces, so remove them
-    const worthlessTrace =
-      intersection(extensions.codes, ['Validation', 'GraphQL']).length > 0;
+    const worthlessTrace = codes.has('Validation') || codes.has('GraphQL');
 
     if (!this.debug || worthlessTrace) {
       delete extensions.exception;
-    } else {
-      extensions.exception.stacktrace = extensions.exception.stacktrace
-        // remove non src frames
-        .filter(
-          (frame: string) =>
-            frame.startsWith('    at') &&
-            !frame.includes('node_modules') &&
-            !frame.includes('(internal/') &&
-            !frame.includes('(node:') &&
-            !frame.includes('(<anonymous>)')
-        )
-        .map((frame: string) =>
-          this.config.jest
-            ? frame // Keep full FS path, so jest can link to it
-            : frame
-                // Convert absolute path to path relative to src dir
-                .replace(matchSrcPathInTrace, (_, group1) => group1)
-                // Convert windows paths to unix for consistency
-                .replace(/\\\\/, '/')
-                .trim()
-        );
     }
 
     return {
@@ -165,3 +165,26 @@ export const createFakeStubOperation = () => {
     },
   });
 };
+
+class GraphQLCacheAdapter implements KeyValueCache {
+  constructor(
+    private readonly cache: CacheService,
+    private readonly prefix = 'apollo:'
+  ) {}
+
+  async get(key: string): Promise<string | undefined> {
+    return await this.cache.get(this.prefix + key, {
+      refreshTtlOnGet: true,
+    });
+  }
+
+  async set(key: string, value: string, options?: KeyValueCacheSetOptions) {
+    await this.cache.set(this.prefix + key, value, {
+      ttl: options?.ttl ? { seconds: options.ttl } : undefined,
+    });
+  }
+
+  async delete(key: string) {
+    await this.cache.delete(this.prefix + key);
+  }
+}

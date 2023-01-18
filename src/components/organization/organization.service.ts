@@ -151,27 +151,8 @@ export class OrganizationService {
     input: OrganizationListInput,
     session: Session
   ): Promise<OrganizationListOutput> {
-    const limited = (await this.authorizationService.canList(
-      Organization,
-      session
-    ))
-      ? // --- need a sensitivity mapping for global because several roles have a global and/or project sensitivity access for nearly all props.
-        {
-          ...(await this.authorizationService.getListRoleSensitivityMapping(
-            Organization,
-            'global'
-          )),
-          ...(await this.authorizationService.getListRoleSensitivityMapping(
-            Organization,
-            'project'
-          )),
-        }
-      : await this.authorizationService.getListRoleSensitivityMapping(
-          Organization
-        );
-
-    const results = await this.repo.list(input, session, limited);
-    return await mapListResults(results!, (dto) => this.secure(dto, session));
+    const results = await this.repo.list(input, session);
+    return await mapListResults(results, (dto) => this.secure(dto, session));
   }
 
   async addLocation(

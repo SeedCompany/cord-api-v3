@@ -5,5 +5,5 @@
   "roots": ["<rootDir>/test/security"],
   "testEnvironment": "node",
   "testRegex": ".security.ts$",
-  "setupFiles": ["reflect-metadata", "./src/app.module.ts"]
+  "setupFiles": ["./src/polyfills.ts", "./src/app.module.ts"]
 }

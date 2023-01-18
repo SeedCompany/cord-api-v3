@@ -1,7 +1,7 @@
 import { createUnionType, registerEnumType } from '@nestjs/graphql';
 import { mapValues, uniq } from 'lodash';
-import { keys, simpleSwitch } from '../../../common';
-import { ResourceMap } from '../../authorization/model/resource-map';
+import { keys, simpleSwitch } from '~/common';
+import { ResourceMap } from '~/core';
 import { EthnoArt } from '../../ethno-art/dto';
 import { FieldRegion } from '../../field-region/dto';
 import { FieldZone } from '../../field-zone/dto';
@@ -16,7 +16,6 @@ import {
   FinancialReport,
   NarrativeReport,
   IPeriodicReport as PeriodicReport,
-  ProgressReport,
 } from '../../periodic-report/dto';
 import {
   DerivativeScriptureProduct,
@@ -24,6 +23,7 @@ import {
   OtherProduct,
   Product,
 } from '../../product/dto';
+import { ProgressReport } from '../../progress-report/dto';
 import {
   InternshipProject,
   IProject as Project,
@@ -101,7 +101,6 @@ export type SearchResult = SearchResultMap[keyof SearchableMap];
 
 export const SearchResult = createUnionType({
   name: 'SearchResult',
-  // @ts-expect-error ignore errors for abstract classes
   types: () => uniq(Object.values(searchable)),
   resolveType: (value: SearchResult) =>
     simpleSwitch(value.__typename, searchable),

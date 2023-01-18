@@ -2,25 +2,23 @@ import {
   Controller,
   Get,
   Headers,
-  Inject,
   Put,
   Query,
   Request,
   Response,
-  UseFilters,
 } from '@nestjs/common';
-import { BaseExceptionFilter } from '@nestjs/core';
 import { Request as IRequest, Response as IResponse } from 'express';
-import * as rawBody from 'raw-body';
+import { DateTime } from 'luxon';
+import rawBody from 'raw-body';
 import { InputException, ServerException } from '../../common';
 import { FileBucket, LocalBucket } from './bucket';
-import { FilesBucketToken } from './files-bucket.factory';
 
-@Controller('/file')
-@UseFilters(BaseExceptionFilter)
+@Controller(LocalBucketController.path)
 export class LocalBucketController {
+  static path = '/local-bucket';
+
   private readonly bucket: LocalBucket | undefined;
-  constructor(@Inject(FilesBucketToken) bucket: FileBucket) {
+  constructor(bucket: FileBucket) {
     this.bucket = bucket instanceof LocalBucket ? bucket : undefined;
   }
 
@@ -54,7 +52,28 @@ export class LocalBucketController {
     }
 
     const out = await this.bucket.download(signed);
-    res.setHeader('Content-Type', out.ContentType!);
+
+    const headers = {
+      'Cache-Control': out.CacheControl,
+      'Content-Disposition': out.ContentDisposition,
+      'Content-Encoding': out.ContentEncoding,
+      'Content-Language': out.ContentLanguage,
+      'Content-Length': out.ContentLength,
+      'Content-Type': out.ContentType,
+      Expires: out.Expires
+        ? DateTime.fromJSDate(out.Expires).toHTTP()
+        : undefined,
+      ETag: out.ETag,
+      LastModified: out.LastModified
+        ? DateTime.fromJSDate(out.LastModified).toHTTP()
+        : undefined,
+    };
+    for (const [header, val] of Object.entries(headers)) {
+      if (val != null) {
+        res.setHeader(header, val);
+      }
+    }
+
     out.Body.pipe(res);
   }
 }

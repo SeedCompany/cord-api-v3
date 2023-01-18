@@ -1,21 +1,18 @@
 import { InputType, ObjectType } from '@nestjs/graphql';
-import { Type } from 'class-transformer';
-import { ValidateNested } from 'class-validator';
 import {
+  FilterField,
   ID,
   Order,
   PaginatedList,
   SecuredList,
   SortablePaginationInput,
-} from '../../../../common';
+} from '~/common';
 import { Unavailability } from './unavailability.dto';
 
 @InputType()
 export abstract class UnavailabilityFilters {
   readonly userId?: ID;
 }
-
-const defaultFilters = {};
 
 @InputType()
 export class UnavailabilityListInput extends SortablePaginationInput<
@@ -24,11 +21,8 @@ export class UnavailabilityListInput extends SortablePaginationInput<
   defaultSort: 'start',
   defaultOrder: Order.DESC,
 }) {
-  static defaultVal = new UnavailabilityListInput();
-
-  @Type(() => UnavailabilityFilters)
-  @ValidateNested()
-  readonly filter: UnavailabilityFilters = defaultFilters;
+  @FilterField(UnavailabilityFilters, { internal: true })
+  readonly filter: UnavailabilityFilters;
 }
 
 @ObjectType()

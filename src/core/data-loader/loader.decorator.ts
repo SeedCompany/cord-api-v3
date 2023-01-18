@@ -5,7 +5,7 @@ import {
   GqlContextType as GqlRequestType,
 } from '@nestjs/graphql';
 // eslint-disable-next-line no-restricted-imports -- the one spot we do want to import it
-import * as DataLoaderLib from 'dataloader';
+import DataLoaderLib from 'dataloader';
 import { GqlContextType, ID, ServerException } from '../../common';
 import { NEST_LOADER_CONTEXT_KEY } from './constants';
 import { DataLoaderInterceptor } from './data-loader.interceptor';

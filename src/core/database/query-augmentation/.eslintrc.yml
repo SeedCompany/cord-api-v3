@@ -1,9 +1,0 @@
-parserOptions:
-  project: ../../../../tsconfig.json
-overrides:
-  - files: '*.ts'
-    rules:
-      # This is enforced to treat functions arguments as contravariant instead of bivariant.
-      # This doesn't matter here as this class won't be overridden.
-      # Declaring them as methods keeps their color the same as the rest of the query methods.
-      '@typescript-eslint/method-signature-style': off

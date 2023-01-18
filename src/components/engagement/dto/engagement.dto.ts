@@ -3,7 +3,9 @@ import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive } from 'type-fest';
+import { BaseNode } from '~/core/database/results';
 import {
+  Calculated,
   DateInterval,
   DateTimeField,
   DbLabel,
@@ -16,6 +18,7 @@ import {
   SecuredDateNullable,
   SecuredDateTime,
   SecuredProps,
+  SecuredRichTextNullable,
   SecuredString,
   Sensitivity,
   SensitivityField,
@@ -25,6 +28,11 @@ import { ScopedRole } from '../../authorization';
 import { ChangesetAware } from '../../changeset/dto';
 import { DefinedFile } from '../../file/dto';
 import { Product, SecuredMethodologies } from '../../product/dto';
+import {
+  InternshipProject,
+  IProject,
+  TranslationProject,
+} from '../../project/dto';
 import { SecuredInternPosition } from './intern-position.enum';
 import { SecuredEngagementStatus } from './status.enum';
 
@@ -50,10 +58,14 @@ const ChangesetAwareResource: Type<Resource & ChangesetAware> =
 class Engagement extends ChangesetAwareResource {
   static readonly Props: string[] = keysOf<Engagement>();
   static readonly SecuredProps: string[] = keysOf<SecuredProps<Engagement>>();
+  static readonly Parent = import('../../project/dto').then((m) => m.IProject);
 
   readonly __typename: 'LanguageEngagement' | 'InternshipEngagement';
 
   readonly project: ID;
+
+  @Field(() => IProject)
+  readonly parent: BaseNode;
 
   @Field(() => SecuredEngagementStatus, {
     middleware: [parentIdMiddleware],
@@ -71,11 +83,13 @@ class Engagement extends ChangesetAwareResource {
   @Field()
   readonly disbursementCompleteDate: SecuredDateNullable;
 
+  @Calculated()
   @Field()
   // Match the project mouStart. Could need to manually set for an extension.
   // formally stage_begin.
   readonly startDate: SecuredDateNullable;
 
+  @Calculated()
   @Field()
   // Match the project mouEnd. Could need to manually set for an extension.
   // formally revised_end.
@@ -116,6 +130,9 @@ class Engagement extends ChangesetAwareResource {
   // A list of non-global roles the requesting user has available for this object.
   // This is just a cache, to prevent extra db lookups within the same request.
   readonly scope: ScopedRole[];
+
+  @Field()
+  readonly description: SecuredRichTextNullable;
 }
 
 // class name has to match schema name for interface resolvers to work.
@@ -132,6 +149,12 @@ export class LanguageEngagement extends Engagement {
     // why is this singular?
     product: [Product],
   };
+  static readonly Parent = import('../../project/dto').then(
+    (m) => m.TranslationProject
+  );
+
+  @Field(() => TranslationProject)
+  readonly parent: BaseNode;
 
   readonly language: Secured<ID>;
 
@@ -164,6 +187,12 @@ export class LanguageEngagement extends Engagement {
 export class InternshipEngagement extends Engagement {
   static readonly Props = keysOf<InternshipEngagement>();
   static readonly SecuredProps = keysOf<SecuredProps<InternshipEngagement>>();
+  static readonly Parent = import('../../project/dto').then(
+    (m) => m.InternshipProject
+  );
+
+  @Field(() => InternshipProject)
+  readonly parent: BaseNode;
 
   readonly countryOfOrigin: Secured<ID>;
 

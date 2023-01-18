@@ -3,17 +3,10 @@ import { Injectable, SetMetadata } from '@nestjs/common';
 import { GraphQLSchemaHost } from '@nestjs/graphql';
 import { GraphQLObjectType } from 'graphql';
 import { ValueOf } from 'type-fest';
-import {
-  ID,
-  many,
-  Many,
-  ObjectView,
-  ServerException,
-  Session,
-} from '../../common';
-import { ResourceMap } from '../../components/authorization/model/resource-map';
+import { ID, many, Many, ObjectView, ServerException, Session } from '~/common';
 import { BaseNode } from '../database/results';
 import { ILogger, Logger } from '../logger';
+import { ResourceMap } from './map';
 
 const RESOLVE_BY_ID = 'RESOLVE_BY_ID';
 interface Shape {

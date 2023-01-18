@@ -2,11 +2,12 @@ import { InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import {
+  FilterField,
   ID,
   PaginatedList,
   SecuredList,
   SortablePaginationInput,
-} from '../../../common';
+} from '~/common';
 import { BudgetRecord } from './budget-record.dto';
 import { Budget } from './budget.dto';
 
@@ -15,17 +16,12 @@ export abstract class BudgetFilters {
   readonly projectId?: ID;
 }
 
-const defaultFilters = {};
-
 @InputType()
 export class BudgetListInput extends SortablePaginationInput<keyof Budget>({
   defaultSort: 'status',
 }) {
-  static defaultVal = new BudgetListInput();
-
-  @Type(() => BudgetFilters)
-  @ValidateNested()
-  readonly filter: BudgetFilters = defaultFilters;
+  @FilterField(BudgetFilters, { internal: true })
+  readonly filter: BudgetFilters;
 }
 
 @ObjectType()
@@ -47,8 +43,6 @@ export class BudgetRecordListInput extends SortablePaginationInput<
 >({
   defaultSort: 'fiscalYear',
 }) {
-  static defaultVal = new BudgetListInput();
-
   @Type(() => BudgetRecordFilters)
   @ValidateNested()
   readonly filter: BudgetRecordFilters;

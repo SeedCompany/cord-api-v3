@@ -30,3 +30,8 @@ export const parentIdMiddleware: FieldMiddleware = async (
   }
   return value;
 };
+
+export interface ParentIdMiddlewareAdditions {
+  parentId: ID;
+  changeset: ID;
+}

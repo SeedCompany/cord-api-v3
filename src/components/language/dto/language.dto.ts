@@ -4,6 +4,7 @@ import { stripIndent } from 'common-tags';
 import { GraphQLString } from 'graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
+  Calculated,
   DbLabel,
   DbUnique,
   ID,
@@ -44,6 +45,8 @@ export abstract class SecuredTags extends SecuredPropertyList<string>(
 export class EthnologueLanguage {
   static readonly Props = keysOf<EthnologueLanguage>();
   static readonly SecuredProps = keysOf<SecuredProps<EthnologueLanguage>>();
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  static readonly Parent = Promise.resolve().then(() => Language);
 
   readonly id: ID;
 
@@ -83,7 +86,7 @@ export class Language extends Interfaces {
   static readonly SecuredProps = keysOf<SecuredProps<Language>>();
   static readonly Relations = {
     ethnologue: EthnologueLanguage,
-    locations: [Location],
+    locations: [Location], // a child list but not creating deleting...does it still count?
     posts: [Post],
   };
 
@@ -171,6 +174,7 @@ export class Language extends Interfaces {
   @Field()
   readonly tags: SecuredTags;
 
+  @Calculated()
   @Field({
     description: stripIndent`
       Whether or not this language is a part of our "Preset Inventory".

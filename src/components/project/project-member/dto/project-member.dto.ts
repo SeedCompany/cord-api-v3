@@ -19,6 +19,7 @@ import { SecuredUser, User } from '../../../user/dto';
 export class ProjectMember extends Resource {
   static readonly Props = keysOf<ProjectMember>();
   static readonly SecuredProps = keysOf<SecuredProps<ProjectMember>>();
+  static readonly Parent = import('../../dto').then((m) => m.IProject);
 
   @Field(() => SecuredUser)
   readonly user: SecuredUser & SetUnsecuredType<UnsecuredDto<User>>;

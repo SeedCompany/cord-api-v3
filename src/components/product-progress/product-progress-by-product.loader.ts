@@ -1,18 +1,15 @@
-import { ID } from '../../common';
+import { LoaderFactory, LoaderOptionsOf, OrderedNestDataLoader } from '~/core';
 import {
-  LoaderFactory,
-  LoaderOptionsOf,
-  OrderedNestDataLoader,
-} from '../../core';
-import { Product } from '../product';
-import { ProductProgress } from './dto';
+  ProgressVariantByProductInput,
+  ProgressVariantByProductOutput,
+} from './dto';
 import { ProductProgressService } from './product-progress.service';
 
 @LoaderFactory()
 export class ProductProgressByProductLoader extends OrderedNestDataLoader<
-  { product: Product; progress: readonly ProductProgress[] },
-  Product,
-  ID
+  ProgressVariantByProductOutput,
+  ProgressVariantByProductInput,
+  string
 > {
   constructor(private readonly service: ProductProgressService) {
     super();
@@ -21,12 +18,15 @@ export class ProductProgressByProductLoader extends OrderedNestDataLoader<
   getOptions(): LoaderOptionsOf<ProductProgressByProductLoader> {
     return {
       ...super.getOptions(),
-      propertyKey: (result) => result.product,
-      cacheKeyFn: (report) => report.id,
+      propertyKey: (result) => ({
+        product: result.product,
+        variant: result.variant,
+      }),
+      cacheKeyFn: (args) => `${args.product.id}:${args.variant.key}`,
     };
   }
 
-  async loadMany(products: readonly Product[]) {
+  async loadMany(products: readonly ProgressVariantByProductInput[]) {
     return await this.service.readAllForManyProducts(products, this.session);
   }
 }

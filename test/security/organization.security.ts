@@ -218,6 +218,7 @@ describe('Organization Security e2e', () => {
               sensitivityRestriction: sensitivityToTest,
               projectType: type,
               permissions: await getPermissions({
+                app,
                 resource: resource,
                 userRole: `global:${role as Role}` as ScopedRole,
                 sensitivity: sensitivityToTest,
@@ -266,6 +267,7 @@ describe('Organization Security e2e', () => {
           sensitivityRestriction: Sensitivity.Medium,
           projectType: type,
           perms: await getPermissions({
+            app,
             resource: Organization,
             userRole: `global:${Role.ConsultantManager}`,
             sensitivity: Sensitivity.Medium,

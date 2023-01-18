@@ -1,5 +1,6 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
+import { BaseNode } from '~/core/database/results';
 import {
   ID,
   IntersectionType,
@@ -13,6 +14,7 @@ import {
 } from '../../../common';
 import { ScopedRole } from '../../authorization';
 import { ChangesetAware } from '../../changeset/dto';
+import { Budget } from './budget.dto';
 
 @ObjectType({
   implements: [Resource, ChangesetAware],
@@ -20,6 +22,10 @@ import { ChangesetAware } from '../../changeset/dto';
 export class BudgetRecord extends IntersectionType(ChangesetAware, Resource) {
   static readonly Props = keysOf<BudgetRecord>();
   static readonly SecuredProps = keysOf<SecuredProps<BudgetRecord>>();
+  static readonly Parent = import('./budget.dto').then((m) => m.Budget);
+
+  @Field(() => Budget)
+  readonly parent: BaseNode;
 
   readonly organization: Secured<ID>;
 

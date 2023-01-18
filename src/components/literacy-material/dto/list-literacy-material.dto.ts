@@ -1,13 +1,9 @@
 import { InputType, ObjectType } from '@nestjs/graphql';
-import { Type } from 'class-transformer';
-import { ValidateNested } from 'class-validator';
-import { PaginatedList, SortablePaginationInput } from '../../../common';
+import { FilterField, PaginatedList, SortablePaginationInput } from '~/common';
 import { LiteracyMaterial } from './literacy-material.dto';
 
 @InputType()
 export abstract class LiteracyMaterialFilters {}
-
-const defaultFilters = {};
 
 @InputType()
 export class LiteracyMaterialListInput extends SortablePaginationInput<
@@ -15,11 +11,8 @@ export class LiteracyMaterialListInput extends SortablePaginationInput<
 >({
   defaultSort: 'name',
 }) {
-  static defaultVal = new LiteracyMaterialListInput();
-
-  @Type(() => LiteracyMaterialFilters)
-  @ValidateNested()
-  readonly filter: LiteracyMaterialFilters = defaultFilters;
+  @FilterField(LiteracyMaterialFilters, { internal: true })
+  readonly filter: LiteracyMaterialFilters;
 }
 
 @ObjectType()

@@ -3,15 +3,14 @@ import { oneLine } from 'common-tags';
 import { Connection, node, Query, relation } from 'cypher-query-builder';
 import { compact, isEmpty, last, mapKeys, pickBy, startCase } from 'lodash';
 import {
+  DuplicateException,
   entries,
   ID,
-  InputException,
   isIdLike,
   isSecured,
   MaybeUnsecuredInstance,
   ResourceShape,
   ServerException,
-  Session,
   UnwrapSecured,
 } from '../../common';
 import { AbortError, retry, RetryOptions } from '../../common/retry';
@@ -346,10 +345,10 @@ export class DatabaseService {
       result = await update.first();
     } catch (e) {
       if (e instanceof UniquenessError) {
-        throw new InputException(
-          `${startCase(label)} with this ${key} is already in use`,
+        throw new DuplicateException(
           // Guess the input field path based on name convention
           `${last(startCase(label).split(' '))!.toLowerCase()}.${key}`,
+          `${startCase(label)} with this ${key} is already in use`,
           e
         );
       }
@@ -364,26 +363,11 @@ export class DatabaseService {
     }
   }
 
-  // eslint-disable-next-line @seedcompany/no-unused-vars
-  async checkDeletePermission(id: ID, session: Partial<Session> | string) {
+  /**
+   * @deprecated Use Privileges.for().can('delete') or Privileges.for().secure(dto)
+   */
+  async checkDeletePermission(..._args: any[]) {
     return true;
-    // const query = this.db
-    //   .query()
-    //   .apply(matchRequestingUser(session))
-    //   .match(node('node', { id }))
-    //   .match([
-    //     node('requestingUser'),
-    //     relation('in', 'memberOfSecurityGroup', 'member'),
-    //     node('securityGroup', 'SecurityGroup'),
-    //     relation('out', 'sgPerms', 'permission'),
-    //     node('perm', 'Permission', { read: true, property: 'canDelete' }),
-    //     relation('out', 'permsOfBaseNode', 'baseNode'),
-    //     node('node'),
-    //   ])
-    //   .return('perm');
-
-    // const result = await query.first();
-    // return !!result;
   }
 
   async deleteNode(objectOrId: { id: ID } | ID) {

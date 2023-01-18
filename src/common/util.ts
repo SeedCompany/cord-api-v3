@@ -20,10 +20,11 @@ export const simpleSwitch = <T, K extends string = string>(
 
 /** Converts list to map given a function that returns a [key, value] tuple. */
 export const mapFromList = <T, S = T, K extends string | number = string>(
-  list: readonly T[],
+  list: readonly T[] | ReadonlySet<T>,
   mapper: (item: T) => readonly [K, S] | null
 ): Record<K, S> => {
   const out: Partial<Record<K, S>> = {};
+  list = list instanceof Set ? [...list] : (list as T[]);
   return list.reduce((acc, item) => {
     const res = mapper(item);
     if (!res) {
@@ -65,5 +66,14 @@ export function has<K extends string | number | symbol, T>(
   key: K,
   obj: T
 ): obj is T & Record<K, unknown> {
-  return key in obj;
+  return key in (obj as any);
+}
+
+/**
+ * A Set that will render as a list in JSON.stringify
+ */
+export class JsonSet extends Set {
+  toJSON() {
+    return [...this];
+  }
 }

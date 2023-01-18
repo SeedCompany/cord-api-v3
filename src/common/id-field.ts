@@ -17,3 +17,7 @@ export type ID = Opaque<string, 'ID'>;
 
 export const isIdLike = (value: unknown): value is ID =>
   typeof value === 'string';
+
+declare const ref: unique symbol;
+/** An ID for a specific thing */
+export type IdOf<T> = ID & { readonly [ref]: T };

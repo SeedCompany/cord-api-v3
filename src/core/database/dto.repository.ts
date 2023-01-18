@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { inArray, Query } from 'cypher-query-builder';
 import { LazyGetter as Once } from 'lazy-get-decorator';
 import { lowerCase } from 'lodash';
 import {
+  EnhancedResource,
   getDbClassLabels,
   getDbPropertyUnique,
   ID,
@@ -11,10 +12,13 @@ import {
   ServerException,
   UnsecuredDto,
 } from '../../common';
+import { Privileges } from '../../components/authorization';
 import { DbChanges, getChanges } from './changes';
 import { CommonRepository } from './common.repository';
 import { OnIndex } from './indexer';
 import { matchProps } from './query';
+
+export const privileges = Symbol('DtoRepository.privileges');
 
 /**
  * A repository for a simple DTO. This provides a few methods out of the box.
@@ -23,12 +27,21 @@ export const DtoRepository = <
   TResourceStatic extends ResourceShape<any>,
   HydrateArgs extends unknown[] = [],
   // Specify this if the repo is for an interface, but works with all the concretes.
-  TResource extends TResourceStatic['prototype'] = TResourceStatic['prototype']
+  TResource extends InstanceType<TResourceStatic> = InstanceType<TResourceStatic>
 >(
   resource: TResourceStatic
 ) => {
   @Injectable()
   class DtoRepositoryClass extends CommonRepository {
+    @Inject(Privileges)
+    protected readonly [privileges]: Privileges;
+    protected readonly resource = EnhancedResource.of(resource);
+
+    @Once()
+    get privileges() {
+      return this[privileges].forResource(resource);
+    }
+
     getActualChanges = getChanges(resource);
 
     /**

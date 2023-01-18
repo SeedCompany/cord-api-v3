@@ -1,5 +1,5 @@
 # Base node stage that sets up common config for dev & prod
-FROM ghcr.io/tarampampam/node:16-alpine as node
+FROM public.ecr.aws/docker/library/node:16-alpine as node
 
 LABEL org.opencontainers.image.title="CORD API"
 LABEL org.opencontainers.image.vendor="Seed Company"
@@ -7,8 +7,6 @@ LABEL org.opencontainers.image.source=https://github.com/SeedCompany/cord-api-v3
 LABEL org.opencontainers.image.licenses="MIT"
 
 WORKDIR /opt/cord-api
-
-RUN apk add --no-cache jq
 
 ENV NODE_ENV=development PORT=80
 
@@ -44,9 +42,8 @@ FROM dev as builder
 
 # Remove non-production code
 RUN rm -rf nest-cli.json tsconfig* test
-# list and remove dev dependencies
-# yarn v2 doesn't have an install only production deps command
-RUN jq -r '.devDependencies | keys | .[]' package.json | xargs yarn remove
+# Remove dev dependencies
+RUN yarn workspaces focus --all --production
 
 
 # Production stage which is clean from our base node stage

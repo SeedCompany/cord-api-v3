@@ -1,17 +1,19 @@
 import {
   GetObjectOutput as AwsGetObjectOutput,
+  GetObjectCommandInput,
   HeadObjectOutput,
+  PutObjectCommandInput,
 } from '@aws-sdk/client-s3';
 import { Duration } from 'luxon';
 import { Readable } from 'stream';
-import { Merge } from 'type-fest';
+import { Except, Merge } from 'type-fest';
 
 export interface BucketOptions {
   signedUrlExpires?: Duration;
 }
 
-// Limit body to only Readable which is always the case for Nodejs execution.
-type GetObjectOutput = Merge<AwsGetObjectOutput, { Body: Readable }>;
+// Limit body to only `Readable` which is always the case for Nodejs execution.
+export type GetObjectOutput = Merge<AwsGetObjectOutput, { Body: Readable }>;
 
 /**
  * Base interface for a bucket of files
@@ -24,15 +26,25 @@ export abstract class FileBucket {
       options.signedUrlExpires ?? Duration.fromObject({ minutes: 15 });
   }
 
-  getSignedUrlForPutObject(key: string) {
-    return this.getSignedUrl('putObject', key);
+  getSignedUrlForPutObject(
+    key: string,
+    options?: Except<PutObjectCommandInput, 'Bucket' | 'Key'>
+  ) {
+    return this.getSignedUrl('putObject', key, options);
   }
-  getSignedUrlForGetObject(key: string) {
-    return this.getSignedUrl('getObject', key);
+  getSignedUrlForGetObject(
+    key: string,
+    options?: Except<GetObjectCommandInput, 'Bucket' | 'Key'>
+  ) {
+    return this.getSignedUrl('getObject', key, options);
   }
   protected abstract getSignedUrl(
     operation: 'putObject' | 'getObject',
-    key: string
+    key: string,
+    options?: Except<
+      GetObjectCommandInput | PutObjectCommandInput,
+      'Bucket' | 'Key'
+    >
   ): Promise<string>;
   abstract getObject(key: string): Promise<GetObjectOutput>;
   abstract headObject(key: string): Promise<HeadObjectOutput>;

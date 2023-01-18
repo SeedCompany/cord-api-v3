@@ -207,10 +207,7 @@ export class LanguageService {
     input: LanguageListInput,
     session: Session
   ): Promise<LanguageListOutput> {
-    const limited = (await this.authorizationService.canList(Language, session))
-      ? undefined
-      : await this.authorizationService.getListRoleSensitivityMapping(Language);
-    const results = await this.repo.list(input, session, limited);
+    const results = await this.repo.list(input, session);
     return await mapListResults(results, (dto) => this.secure(dto, session));
   }
 
@@ -233,10 +230,10 @@ export class LanguageService {
     input: ProjectListInput,
     session: Session
   ): Promise<SecuredProjectList> {
-    const { page, count } = {
-      ...ProjectListInput.defaultVal,
-      ...input,
-    };
+    const { page, count } = ProjectListInput.defaultValue(
+      ProjectListInput,
+      input
+    );
 
     const result: {
       items: Project[];

@@ -1,5 +1,6 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
+import { BaseNode } from '~/core/database/results';
 import {
   DbLabel,
   IntersectionType,
@@ -12,6 +13,7 @@ import {
 import { ScopedRole } from '../../authorization';
 import { ChangesetAware } from '../../changeset/dto';
 import { DefinedFile } from '../../file/dto';
+import { IProject } from '../../project/dto';
 import { BudgetRecord } from './budget-record.dto';
 import { BudgetStatus } from './budget-status.enum';
 
@@ -24,6 +26,10 @@ export class Budget extends IntersectionType(ChangesetAware, Resource) {
   static readonly Relations = {
     records: [BudgetRecord],
   };
+  static readonly Parent = import('../../project/dto').then((m) => m.IProject);
+
+  @Field(() => IProject)
+  readonly parent: BaseNode;
 
   @Field()
   @DbLabel('BudgetStatus')

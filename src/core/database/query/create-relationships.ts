@@ -3,8 +3,8 @@ import { node, Query, relation } from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
 import { Maybe as Nullable } from 'graphql/jsutils/Maybe';
 import { DateTime } from 'luxon';
-import { ID, many, ResourceShape } from '../../../common';
-import { ResourceMap } from '../../../components/authorization/model/resource-map';
+import { ID, many, ResourceShape } from '~/common';
+import { ResourceMap } from '~/core';
 import { Variable } from '../query-augmentation/condition-variables';
 
 type RelationshipDefinition = Record<

@@ -1,12 +1,12 @@
 import { oneLine } from 'common-tags';
 import { node, Query, relation } from 'cypher-query-builder';
-import { requestingUser, variable, Variable } from '.';
+import { QueryFragment } from '~/core/database/query';
+import { requestingUser, Variable } from '.';
 import { ID, Sensitivity, Session } from '../../../common';
 import {
   GlobalScopedRole,
   ScopedRole,
 } from '../../../components/authorization';
-import { AuthSensitivityMapping } from '../../../components/authorization/authorization.service';
 import { ProjectType } from '../../../components/project/dto/type.enum';
 import {
   apoc,
@@ -80,13 +80,17 @@ export const matchProjectScopedRoles =
               node('rolesProp', 'Property'),
             ],
           ])
+          .with(collect('rolesProp.value').as('memberRoleProps'))
           .return<{ [K in Output]: ScopedRole[] }>(
-            reduce(
-              'scopedRoles',
-              [],
-              apoc.coll.flatten(collect('rolesProp.value')),
-              'role',
-              listConcat('scopedRoles', [`"project:" + role`])
+            listConcat(
+              'case size(memberRoleProps) > 0 when true then ["member:true"] else [] end',
+              reduce(
+                'scopedRoles',
+                [],
+                apoc.coll.flatten('memberRoleProps'),
+                'role',
+                listConcat('scopedRoles', [`"project:" + role`])
+              )
             ).as(outputVar)
           )
           .union()
@@ -139,6 +143,7 @@ export const matchProjectSens =
         .with(projectVar)
         .with(projectVar)
         .raw(`WHERE ${projectVar} IS NULL`)
+        // TODO this doesn't work for languages without projects. They should use their own sensitivity not High.
         .return<{ sensitivity: Sensitivity }>('"High" as sensitivity')
     );
 
@@ -167,46 +172,19 @@ export const matchUserGloballyScopedRoles =
         )
     );
 
-export const matchProjectSensToLimitedScopeMap =
-  (authScope?: AuthSensitivityMapping) =>
-  <R>(query: Query<R>) => {
-    if (!authScope) {
-      return;
-    }
+// group by project so inner logic doesn't run multiple times for a single project
+export const oncePerProject =
+  (logic: QueryFragment): QueryFragment =>
+  (query) =>
     query
-      // group by project so this next bit doesn't run multiple times for a single project
       .with(['project', 'collect(node) as nodeList', 'requestingUser'])
-      .apply(
-        matchProjectScopedRoles({
-          session: variable('requestingUser'),
-        })
-      )
-      .subQuery('project', (sub) =>
-        sub
-          .apply(matchProjectSens())
-          .return(`${rankSens('sensitivity')} as sens`)
-      )
-      .apply((q) =>
-        Object.keys(authScope).some((s) => s.startsWith('global:'))
-          ? q.apply(matchUserGloballyScopedRoles())
-          : q.subQuery((sub) => sub.return('[] as globalRoles'))
-      )
-      .raw('UNWIND nodeList as node')
-      .matchNode('node')
-      .raw(
-        `WHERE any(role in scopedRoles + globalRoles WHERE role IN keys($sensMap) and sens <= ${rankSens(
-          'apoc.map.get($sensMap, role)'
-        )})`,
-        {
-          sensMap: authScope,
-        }
-      );
-  };
+      .apply(logic)
+      .raw('UNWIND nodeList as node');
 
 export const rankSens = (variable: string) => oneLine`
   case ${variable}
-    when 'High' then 2
-    when 'Medium' then 1
-    when 'Low' then 0
+    when 'High' then 3
+    when 'Medium' then 2
+    when 'Low' then 1
   end
 `;

@@ -1,10 +1,10 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import {
+  EnhancedResource,
   ID,
   InputException,
   NotFoundException,
   Resource,
-  ResourceShape,
   SecuredList,
   ServerException,
   Session,
@@ -112,7 +112,7 @@ export class PostService {
   }
 
   async securedList(
-    parentType: ResourceShape<Postable>,
+    parentType: EnhancedResource<any>,
     parent: Postable & Resource,
     input: PostListInput,
     session: Session

@@ -20,6 +20,7 @@ export class CommentThread extends Resource {
   static readonly Relations = {
     comments: [Comment],
   };
+  static readonly Parent = 'dynamic';
 
   @Field(() => Comment)
   readonly firstComment: Comment & SetUnsecuredType<UnsecuredDto<Comment>>;

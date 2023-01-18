@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { ID, ServerException, Session } from '../../common';
-import { DatabaseService } from '../../core';
+import { DatabaseService, OnIndex } from '../../core';
 import {
   ACTIVE,
   matchUserGloballyScopedRoles,
@@ -44,23 +44,6 @@ export class AuthenticationRepository {
     if (!result) {
       throw new ServerException('Failed to save session token');
     }
-  }
-
-  async getUserFromSession(session: Session) {
-    const result = await this.db
-      .query()
-      .raw('', { token: session.token })
-      .match([
-        node('token', 'Token', {
-          ...ACTIVE,
-          value: variable('$token'),
-        }),
-        relation('in', '', 'token', ACTIVE),
-        node('user', 'User'),
-      ])
-      .return<{ id: ID }>('user.id as id')
-      .first();
-    return result?.id;
   }
 
   async savePasswordHashOnUser(userId: ID, passwordHash: string) {
@@ -164,7 +147,7 @@ export class AuthenticationRepository {
       .run();
   }
 
-  async resumeSession(token: string) {
+  async resumeSession(token: string, impersonatee?: ID) {
     const result = await this.db
       .query()
       .raw('MATCH (token:Token { active: true, value: $token })', { token })
@@ -174,13 +157,46 @@ export class AuthenticationRepository {
         node('user', 'User'),
       ])
       .apply(matchUserGloballyScopedRoles('user', 'roles'))
-      .return<{ userId?: ID; roles: ScopedRole[] }>([
+      .apply(
+        impersonatee
+          ? (q) =>
+              q.subQuery((sub) =>
+                sub
+                  .optionalMatch(
+                    node('impersonatee', 'User', { id: impersonatee })
+                  )
+                  .apply(
+                    matchUserGloballyScopedRoles(
+                      'impersonatee',
+                      'impersonateeRoles'
+                    )
+                  )
+                  .return('impersonateeRoles')
+              )
+          : null
+      )
+      .return<{
+        userId?: ID;
+        roles: ScopedRole[];
+        impersonateeRoles?: ScopedRole[];
+      }>([
         'user.id as userId',
         'roles',
+        impersonatee ? 'impersonateeRoles' : '',
       ])
       .first();
 
     return result;
+  }
+
+  async rolesForUser(user: ID) {
+    const result = await this.db
+      .query()
+      .matchNode('user', 'User', { id: user })
+      .apply(matchUserGloballyScopedRoles('user', 'roles'))
+      .return('roles')
+      .first();
+    return result?.roles ?? [];
   }
 
   async getCurrentPasswordHash(session: Session) {
@@ -314,5 +330,14 @@ export class AuthenticationRepository {
       .raw('WHERE NOT token.value = $token', { token: session.token })
       .setValues({ 'oldRel.active': false })
       .run();
+  }
+
+  @OnIndex()
+  private createIndexes() {
+    return [
+      `CREATE INDEX AuthToken_value IF NOT EXISTS FOR (n:Token) ON (n.value)`,
+      `CREATE INDEX AuthEmailToken_token IF NOT EXISTS FOR (n:EmailToken) ON (n.token)`,
+      `CREATE INDEX AuthEmailToken_email IF NOT EXISTS FOR (n:EmailToken) ON (n.value)`,
+    ];
   }
 }

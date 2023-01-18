@@ -2,16 +2,16 @@ import { Injectable, Type } from '@nestjs/common';
 import { ConditionalKeys, ValueOf } from 'type-fest';
 import { ID, Many, ObjectView, ServerException } from '~/common';
 import { GqlContextHost } from '~/core/graphql';
-import { ResourceMap } from '../../components/authorization/model/resource-map';
 import { LoaderContextType, LoaderOf, NestDataLoader } from '../data-loader';
 import { NEST_LOADER_CONTEXT_KEY } from '../data-loader/constants';
 import { BaseNode } from '../database/results';
 import { ResourceLoaderRegistry } from './loader.registry';
+import { ResourceMap } from './map';
 import { ResourceResolver } from './resource-resolver.service';
 
 type SomeResourceType = ValueOf<ResourceMap>;
 
-interface ObjectRef<Key extends keyof ResourceMap> {
+export interface ResourceRef<Key extends keyof ResourceMap> {
   __typename: Key;
   id: ID;
 }
@@ -34,7 +34,7 @@ export class ResourceLoader {
   }
 
   async loadByRef<Key extends keyof ResourceMap>(
-    obj: ObjectRef<Key>,
+    obj: ResourceRef<Key>,
     view?: ObjectView
   ) {
     return await this.load(obj.__typename, obj.id, view);

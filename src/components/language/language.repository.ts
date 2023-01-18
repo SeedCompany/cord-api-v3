@@ -26,17 +26,16 @@ import {
   matchChangesetAndChangedProps,
   matchProjectScopedRoles,
   matchProjectSens,
-  matchProjectSensToLimitedScopeMap,
   matchProps,
   matchRequestingUser,
   merge,
+  oncePerProject,
   paginate,
   rankSens,
   requestingUser,
   sorting,
   variable,
 } from '../../core/database/query';
-import { AuthSensitivityMapping } from '../authorization/authorization.service';
 import { ProjectStatus } from '../project';
 import { CreateLanguage, Language, LanguageListInput } from './dto';
 
@@ -148,23 +147,16 @@ export class LanguageRepository extends DtoRepository<
         );
   }
 
-  async list(
-    input: LanguageListInput,
-    session: Session,
-    limitedScope?: AuthSensitivityMapping
-  ) {
+  async list(input: LanguageListInput, session: Session) {
     const result = await this.db
       .query()
-      .match([
-        ...(limitedScope
-          ? [
-              node('project', 'Project'),
-              relation('out', '', 'engagement', ACTIVE),
-              node('', 'LanguageEngagement'),
-              relation('out', '', 'language'),
-            ]
-          : []),
-        node('node', 'Language'),
+      .matchNode('node', 'Language')
+      .optionalMatch([
+        node('project', 'Project'),
+        relation('out', '', 'engagement', ACTIVE),
+        node('', 'LanguageEngagement'),
+        relation('out', '', 'language'),
+        node('node'),
       ])
       // match requesting user once (instead of once per row)
       .match(requestingUser(session))
@@ -182,7 +174,11 @@ export class LanguageRepository extends DtoRepository<
           pinned: filter.isPinned,
         })
       )
-      .apply(matchProjectSensToLimitedScopeMap(limitedScope))
+      .apply(
+        this.privileges.forUser(session).filterToReadable({
+          wrapContext: oncePerProject,
+        })
+      )
       .apply(sorting(Language, input))
       .apply(paginate(input, this.hydrate(session)))
       .first();

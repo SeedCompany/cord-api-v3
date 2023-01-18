@@ -121,7 +121,7 @@ export class FileRepository extends CommonRepository {
   }
 
   async getChildrenById(parent: FileNode, input?: FileListInput) {
-    input ??= FileListInput.defaultVal;
+    input ??= FileListInput.defaultValue(FileListInput);
     const result = await this.db
       .query()
       .match([

@@ -4,7 +4,6 @@ import { PeriodicReportModule } from '../periodic-report/periodic-report.module'
 import * as handlers from './handlers';
 import * as migrations from './migrations';
 import { ProgressReportConnectionResolver } from './progress-report-connection.resolver';
-import { ProgressSummaryEngagementConnectionResolver } from './progress-summary-engagement-connection.resolver';
 import { ProgressSummaryExtractor } from './progress-summary.extractor';
 import { ProgressSummaryLoader } from './progress-summary.loader';
 import { ProgressSummaryRepository } from './progress-summary.repository';
@@ -14,7 +13,6 @@ import { ProgressSummaryResolver } from './progress-summary.resolver';
   imports: [PeriodicReportModule, FileModule],
   providers: [
     ProgressReportConnectionResolver,
-    ProgressSummaryEngagementConnectionResolver,
     ProgressSummaryResolver,
     ProgressSummaryLoader,
     ProgressSummaryRepository,

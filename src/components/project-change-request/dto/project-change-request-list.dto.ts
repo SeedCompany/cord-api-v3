@@ -1,12 +1,11 @@
 import { InputType, ObjectType } from '@nestjs/graphql';
-import { Type } from 'class-transformer';
-import { ValidateNested } from 'class-validator';
 import {
+  FilterField,
   ID,
   PaginatedList,
   SecuredList,
   SortablePaginationInput,
-} from '../../../common';
+} from '~/common';
 import { ProjectChangeRequest } from './project-change-request.dto';
 
 @InputType()
@@ -14,19 +13,14 @@ export abstract class ProjectChangeRequestFilters {
   readonly projectId?: ID;
 }
 
-const defaultFilters = {};
-
 @InputType()
 export class ProjectChangeRequestListInput extends SortablePaginationInput<
   keyof ProjectChangeRequest
 >({
   defaultSort: 'createdAt',
 }) {
-  static defaultVal = new ProjectChangeRequestListInput();
-
-  @Type(() => ProjectChangeRequestFilters)
-  @ValidateNested()
-  readonly filter: ProjectChangeRequestFilters = defaultFilters;
+  @FilterField(ProjectChangeRequestFilters, { internal: true })
+  readonly filter: ProjectChangeRequestFilters;
 }
 
 @ObjectType()

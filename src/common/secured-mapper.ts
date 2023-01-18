@@ -1,12 +1,12 @@
-import { Secured } from './secured-property';
+import { Secured, UnwrapSecured } from './secured-property';
 
 /**
  * Map a secured value to something else.
  * The mapper is only called if `value` is truthy and `canRead` is true.
  */
-export async function mapSecuredValue<T, S>(
-  input: Secured<T>,
-  mapper: (unwrapped: NonNullable<T>) => Promise<S>
+export async function mapSecuredValue<T extends Secured<any>, S>(
+  input: T,
+  mapper: (unwrapped: NonNullable<UnwrapSecured<T>>) => Promise<S>
 ): Promise<Secured<S>> {
   const { value, ...rest } = input;
   if (!rest.canRead || value == null) {

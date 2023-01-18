@@ -1,5 +1,5 @@
 import { Duration, DurationLike } from 'luxon';
-import * as pRetry from 'p-retry';
+import pRetry from 'p-retry';
 import { Merge } from 'type-fest';
 
 export { AbortError } from 'p-retry';

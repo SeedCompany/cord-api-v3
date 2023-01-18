@@ -1,13 +1,12 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import { Type } from 'class-transformer';
-import { ValidateNested } from 'class-validator';
 import {
+  FilterField,
   PaginatedList,
   SecuredList,
   SensitivitiesFilter,
   Sensitivity,
   SortablePaginationInput,
-} from '../../../common';
+} from '~/common';
 import { Language } from './language.dto';
 
 @InputType()
@@ -49,18 +48,12 @@ export abstract class LanguageFilters {
   readonly pinned?: boolean;
 }
 
-const defaultFilters = {};
-
 @InputType()
 export class LanguageListInput extends SortablePaginationInput<keyof Language>({
   defaultSort: 'name',
 }) {
-  static defaultVal = new LanguageListInput();
-
-  @Field({ nullable: true })
-  @Type(() => LanguageFilters)
-  @ValidateNested()
-  readonly filter: LanguageFilters = defaultFilters;
+  @FilterField(LanguageFilters)
+  readonly filter: LanguageFilters;
 }
 
 @ObjectType()

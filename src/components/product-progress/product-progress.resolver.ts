@@ -7,8 +7,9 @@ import {
 } from '@nestjs/graphql';
 import { LoggedInSession, Session } from '../../common';
 import { Loader, LoaderOf } from '../../core';
-import { PeriodicReportLoader, ProgressReport } from '../periodic-report';
+import { PeriodicReportLoader } from '../periodic-report';
 import { Product, ProductLoader } from '../product';
+import { ProgressReport } from '../progress-report/dto';
 import { ProductProgress, ProductProgressInput } from './dto';
 import { ProductProgressService } from './product-progress.service';
 

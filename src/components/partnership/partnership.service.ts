@@ -11,13 +11,19 @@ import {
   UnsecuredDto,
   viewOfChangeset,
 } from '../../common';
-import { HandleIdLookup, IEventBus, ILogger, Logger } from '../../core';
+import {
+  HandleIdLookup,
+  IEventBus,
+  ILogger,
+  Logger,
+  ResourceLoader,
+} from '../../core';
 import { mapListResults } from '../../core/database/results';
+import { Privileges } from '../authorization';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { Powers } from '../authorization/dto/powers';
 import { FileService } from '../file';
 import { Partner, PartnerService, PartnerType } from '../partner';
-import { ProjectService } from '../project';
+import { IProject, ProjectService } from '../project';
 import {
   CreatePartnership,
   FinancialReportingType,
@@ -37,14 +43,16 @@ import { PartnershipRepository } from './partnership.repository';
 export class PartnershipService {
   constructor(
     private readonly files: FileService,
-    @Inject(forwardRef(() => ProjectService))
-    private readonly projectService: ProjectService,
     @Inject(forwardRef(() => PartnerService))
     private readonly partnerService: PartnerService,
+    @Inject(forwardRef(() => ProjectService))
+    private readonly projectService: ProjectService,
+    private readonly privileges: Privileges,
     private readonly eventBus: IEventBus,
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
     private readonly repo: PartnershipRepository,
+    private readonly resourceLoader: ResourceLoader,
     @Logger('partnership:service') private readonly logger: ILogger
   ) {}
 
@@ -53,13 +61,18 @@ export class PartnershipService {
     session: Session,
     changeset?: ID
   ): Promise<Partnership> {
-    await this.authorizationService.checkPower(
-      Powers.CreatePartnership,
-      session
-    );
     const { projectId, partnerId } = input;
 
     await this.verifyRelationshipEligibility(projectId, partnerId, changeset);
+
+    const projectResource = await this.resourceLoader.load(IProject, projectId);
+    const projectPrivileges = this.privileges.for(
+      session,
+      IProject,
+      projectResource
+    );
+
+    projectPrivileges.verifyCan('create', 'partnership');
 
     const isFirstPartnership = await this.repo.isFirstPartnership(
       projectId,
@@ -298,21 +311,11 @@ export class PartnershipService {
     session: Session,
     changeset?: ID
   ): Promise<PartnershipListOutput> {
-    const input = {
-      ...PartnershipListInput.defaultVal,
-      ...partialInput,
-    };
-
-    const limited = (await this.authorizationService.canList(
-      Partnership,
-      session
-    ))
-      ? undefined
-      : await this.authorizationService.getListRoleSensitivityMapping(
-          Partnership
-        );
-
-    const results = await this.repo.list(input, session, changeset, limited);
+    const input = PartnershipListInput.defaultValue(
+      PartnershipListInput,
+      partialInput
+    );
+    const results = await this.repo.list(input, session, changeset);
     return await mapListResults(results, (id) =>
       this.readOne(id, session, viewOfChangeset(changeset))
     );

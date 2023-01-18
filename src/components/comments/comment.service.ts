@@ -1,23 +1,19 @@
 import { Injectable } from '@nestjs/common';
-import { isAdmin } from '~/common/session';
 import {
+  EnhancedResource,
   ID,
+  InvalidIdForTypeException,
   isIdLike,
   NotFoundException,
   Resource,
   ServerException,
   Session,
-  UnauthorizedException,
   UnsecuredDto,
-} from '../../common';
-import { ILogger, Logger, ResourceLoader } from '../../core';
-import {
-  BaseNode,
-  isBaseNode,
-  mapListResults,
-} from '../../core/database/results';
-import { AuthorizationService } from '../authorization/authorization.service';
-import { resourceFromName } from '../authorization/model/resource-map';
+} from '~/common';
+import { isAdmin } from '~/common/session';
+import { ILogger, Logger, ResourceLoader, ResourcesHost } from '~/core';
+import { BaseNode, isBaseNode, mapListResults } from '~/core/database/results';
+import { Privileges } from '../authorization';
 import { CommentRepository } from './comment.repository';
 import {
   Comment,
@@ -36,8 +32,9 @@ type CommentableRef = ID | BaseNode | Commentable;
 export class CommentService {
   constructor(
     private readonly repo: CommentRepository,
-    private readonly authorizationService: AuthorizationService,
+    private readonly privileges: Privileges,
     private readonly resources: ResourceLoader,
+    private readonly resourcesHost: ResourcesHost,
     @Logger('comment:service') private readonly logger: ILogger
   ) {}
 
@@ -46,11 +43,7 @@ export class CommentService {
       input.resourceId,
       session
     );
-    if (!perms?.canEdit) {
-      throw new UnauthorizedException(
-        'You do not have the permission to add comments to this resource'
-      );
-    }
+    perms.verifyCan('create');
 
     try {
       const result = await this.repo.create(input, session);
@@ -75,29 +68,18 @@ export class CommentService {
 
   async getPermissionsFromResource(resource: CommentableRef, session: Session) {
     const parent = await this.loadCommentable(resource);
-    const { commentThreads: perms } =
-      await this.authorizationService.getPermissions<typeof Commentable>({
-        // @ts-expect-error We are assuming this is an implementation of Commentable
-        resource: resourceFromName(parent.__typename),
-        dto: parent,
-        sessionOrUserId: session,
-      });
-    // this can be null on dev error
-    if (!perms) {
-      this.logger.warning(
-        `${parent.__typename} does not have any \`commentThreads\` permissions defined`
-      );
-    }
-    return perms as typeof perms | null;
+    const parentType = await this.resourcesHost.getByName(
+      // I'd like to type this prop as this but somehow blows everything up.
+      parent.__typename as 'Commentable'
+    );
+    return this.privileges
+      .for(session, parentType, parent)
+      .forEdge('commentThreads');
   }
 
   async verifyCanView(resource: CommentableRef, session: Session) {
     const perms = await this.getPermissionsFromResource(resource, session);
-    if (!perms?.canRead) {
-      throw new UnauthorizedException(
-        'You do not have the permission to view this comment thread'
-      );
-    }
+    perms.verifyCan('read');
   }
 
   async loadCommentable(resource: CommentableRef): Promise<Commentable> {
@@ -110,6 +92,12 @@ export class CommentService {
     const parent = isBaseNode(parentNode)
       ? await this.resources.loadByBaseNode(parentNode)
       : parentNode;
+
+    const parentType = await this.resourcesHost.getByName(parent.__typename);
+    const parentInterfaces = await this.resourcesHost.getInterfaces(parentType);
+    if (!parentInterfaces.includes(EnhancedResource.of(Commentable))) {
+      throw new NonCommentableType('Resource does not implement Commentable');
+    }
     return parent as Commentable;
   }
 
@@ -141,47 +129,25 @@ export class CommentService {
     dto: UnsecuredDto<Comment>,
     session: Session
   ): Promise<Comment> {
-    const securedProps = await this.authorizationService.secureProperties(
-      Comment,
-      dto,
-      session
-    );
-
-    return {
-      ...dto,
-      ...securedProps,
-      canDelete: dto.creator === session.userId || isAdmin(session),
-    };
+    return this.privileges.for(session, Comment).secure(dto);
   }
 
   async update(input: UpdateCommentInput, session: Session): Promise<Comment> {
-    const object = await this.readOne(input.id, session);
+    const object = await this.repo.readOne(input.id);
+
     const changes = this.repo.getActualChanges(object, input);
-    await this.authorizationService.verifyCanEditChanges(
-      Comment,
-      object,
-      changes
-    );
+    this.privileges.for(session, Comment, object).verifyChanges(changes);
     await this.repo.updateProperties(object, changes);
 
     return await this.readOne(input.id, session);
   }
 
   async delete(id: ID, session: Session): Promise<void> {
-    const object = await this.readOne(id, session);
-    if (!object.canDelete) {
-      throw new UnauthorizedException(
-        'You do not have permission to delete this comment'
-      );
-    }
+    const object = await this.repo.readOne(id);
+    this.privileges.for(session, Comment, object).verifyCan('delete');
 
-    const commentList = await this.listCommentsByThreadId(
-      object.thread,
-      CommentListInput.defaultVal,
-      session
-    );
-
-    if (commentList.total === 1) {
+    const thread = await this.repo.threads.readOne(object.thread);
+    if (object.id === thread.firstComment.id) {
       await this.repo.threads.deleteNode(object.thread);
     }
 
@@ -200,9 +166,13 @@ export class CommentService {
     await this.verifyCanView(parent, session);
 
     const results = await this.repo.threads.list(parent.id, input, session);
-    return await mapListResults(results, (dto) =>
-      this.secureThread(dto, session)
-    );
+
+    return {
+      ...(await mapListResults(results, (dto) =>
+        this.secureThread(dto, session)
+      )),
+      parent,
+    };
   }
 
   async listCommentsByThreadId(
@@ -216,3 +186,5 @@ export class CommentService {
     );
   }
 }
+
+class NonCommentableType extends InvalidIdForTypeException {}

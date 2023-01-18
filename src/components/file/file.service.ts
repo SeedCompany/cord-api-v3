@@ -1,6 +1,7 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Connection } from 'cypher-query-builder';
 import { intersection } from 'lodash';
+import { withAddedPath } from '~/common/url.util';
 import {
   bufferFromStream,
   DuplicateException,
@@ -12,9 +13,7 @@ import {
   Session,
   UnauthorizedException,
 } from '../../common';
-import { ILogger, Logger } from '../../core';
-import { AuthorizationService } from '../authorization/authorization.service';
-import { Powers } from '../authorization/dto/powers';
+import { ConfigService, ILogger, Logger } from '../../core';
 import { FileBucket } from './bucket';
 import {
   CreateDefinedFileVersionInput,
@@ -35,18 +34,17 @@ import {
   RenameFileInput,
   RequestUploadOutput,
 } from './dto';
+import { FileUrlController as FileUrl } from './file-url.controller';
 import { FileRepository } from './file.repository';
-import { FilesBucketToken } from './files-bucket.factory';
 
 @Injectable()
 export class FileService {
   constructor(
-    @Inject(FilesBucketToken) private readonly bucket: FileBucket,
+    private readonly bucket: FileBucket,
     private readonly repo: FileRepository,
     private readonly db: Connection,
-    @Logger('file:service') private readonly logger: ILogger,
-    @Inject(forwardRef(() => AuthorizationService))
-    private readonly authorizationService: AuthorizationService
+    private readonly config: ConfigService,
+    @Logger('file:service') private readonly logger: ILogger
   ) {}
 
   async getDirectory(id: ID, session: Session): Promise<Directory> {
@@ -123,6 +121,16 @@ export class FileService {
     return await bufferFromStream(data);
   }
 
+  async getUrl(node: FileNode) {
+    const url = withAddedPath(
+      this.config.hostUrl,
+      FileUrl.path,
+      isFile(node) ? node.latestVersionId : node.id,
+      encodeURIComponent(node.name)
+    );
+    return url.toString();
+  }
+
   async getDownloadUrl(node: FileNode): Promise<string> {
     if (isDirectory(node)) {
       throw new InputException('Directories cannot be downloaded yet');
@@ -131,7 +139,10 @@ export class FileService {
     try {
       // before sending link, first check if object exists in s3
       await this.bucket.headObject(id);
-      return await this.bucket.getSignedUrlForGetObject(id);
+      return await this.bucket.getSignedUrlForGetObject(id, {
+        ResponseContentDisposition: `attachment; filename="${node.name}"`,
+        ResponseContentType: node.mimeType,
+      });
     } catch (e) {
       this.logger.error('Unable to generate download url', { exception: e });
       throw new ServerException('Unable to generate download url', e);
@@ -155,7 +166,6 @@ export class FileService {
     name: string,
     session: Session
   ): Promise<Directory> {
-    await this.authorizationService.checkPower(Powers.CreateDirectory, session);
     if (parentId) {
       await this.validateParentNode(
         parentId,
@@ -202,10 +212,6 @@ export class FileService {
     }: CreateFileVersionInput,
     session: Session
   ): Promise<File> {
-    await this.authorizationService.checkPower(
-      Powers.CreateFileVersion,
-      session
-    );
     const [tempUpload, existingUpload] = await Promise.allSettled([
       this.bucket.headObject(`temp/${uploadId}`),
       this.bucket.headObject(uploadId),
@@ -353,7 +359,6 @@ export class FileService {
       }
     }
 
-    await this.authorizationService.checkPower(Powers.CreateFile, session);
     const fileId = await generateId();
     await this.repo.createFile(fileId, name, session, parentId);
 
@@ -377,13 +382,6 @@ export class FileService {
     initialVersion?: CreateDefinedFileVersionInput,
     field?: string
   ) {
-    // not sure about this, but I'm thinking it's best to check from the get-go whether the user can create a file
-    // File AND fileVersion
-    await this.authorizationService.checkPower(Powers.CreateFile, session);
-    await this.authorizationService.checkPower(
-      Powers.CreateFileVersion,
-      session
-    );
     await this.repo.createFile(fileId, name, session);
 
     await this.repo.attachBaseNode(fileId, baseNodeId, propertyName + 'Node');
@@ -417,11 +415,6 @@ export class FileService {
     if (!input) {
       return;
     }
-    // -- we technically check if they have the CreateFileVersion power, even though it's just an update, right?
-    await this.authorizationService.checkPower(
-      Powers.CreateFileVersion,
-      session
-    );
     if (!file.canRead || !file.canEdit || !file.value) {
       throw new UnauthorizedException(
         'You do not have permission to update this file',

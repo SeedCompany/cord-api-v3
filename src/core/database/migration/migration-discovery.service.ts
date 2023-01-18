@@ -16,6 +16,7 @@ export class MigrationDiscovery {
     const mapped = discovered.map((d): DiscoveredMigration => {
       const instance = d.discoveredClass.instance as BaseMigration;
       const name = instance.constructor.name.replace('Migration', '');
+      instance.version = d.meta;
       return {
         version: d.meta,
         instance: instance,

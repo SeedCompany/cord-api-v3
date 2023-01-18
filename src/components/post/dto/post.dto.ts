@@ -18,6 +18,7 @@ import { PostType } from './type.enum';
 export class Post extends Resource {
   static readonly Props = keysOf<Post>();
   static readonly SecuredProps = keysOf<SecuredProps<Post>>();
+  static readonly Parent = 'dynamic';
 
   readonly creator: Secured<ID>;
 

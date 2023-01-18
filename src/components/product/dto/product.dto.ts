@@ -46,6 +46,9 @@ const resolveProductType = (product: AnyProduct | UnsecuredDto<AnyProduct>) =>
 export class Product extends Producible {
   static readonly Props: string[] = keysOf<Product>();
   static readonly SecuredProps: string[] = keysOf<SecuredProps<Product>>();
+  static readonly Parent = import('../../engagement/dto').then(
+    (m) => m.LanguageEngagement
+  );
 
   readonly engagement: ID;
   readonly project: ID;
@@ -117,6 +120,7 @@ export class Product extends Producible {
 export class DirectScriptureProduct extends Product {
   static readonly Props = keysOf<DirectScriptureProduct>();
   static readonly SecuredProps = keysOf<SecuredProps<DirectScriptureProduct>>();
+  static readonly Parent = Product.Parent;
 
   @Field({
     description: stripIndent`
@@ -157,6 +161,7 @@ export class DerivativeScriptureProduct extends Product {
   static readonly Props = keysOf<DerivativeScriptureProduct>();
   static readonly SecuredProps =
     keysOf<SecuredProps<DerivativeScriptureProduct>>();
+  static readonly Parent = Product.Parent;
 
   @Field(() => SecuredProducible, {
     description: stripIndent`
@@ -211,6 +216,7 @@ export class DerivativeScriptureProduct extends Product {
 export class OtherProduct extends Product {
   static readonly Props = keysOf<OtherProduct>();
   static readonly SecuredProps = keysOf<SecuredProps<OtherProduct>>();
+  static readonly Parent = Product.Parent;
 
   @Field()
   readonly title: SecuredString;

@@ -7,8 +7,8 @@ import {
 } from '@nestjs/common';
 import { ModulesContainer } from '@nestjs/core';
 import { ValueOf } from 'type-fest';
-import { many, Many } from '../../common';
-import { ResourceMap } from '../../components/authorization/model/resource-map';
+import { many, Many } from '~/common';
+import { ResourceMap } from '~/core';
 import { NestDataLoader, ObjectViewAwareLoader } from '../data-loader';
 
 type SomeResource = ValueOf<ResourceMap>;

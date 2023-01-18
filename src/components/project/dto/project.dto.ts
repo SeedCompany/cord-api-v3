@@ -13,6 +13,7 @@ import {
   IntersectionType,
   NameField,
   parentIdMiddleware,
+  resolveByTypename,
   Resource,
   Secured,
   SecuredBoolean,
@@ -64,8 +65,7 @@ const Interfaces: Type<
     if (val.type === ProjectType.Internship) {
       return InternshipProject;
     }
-
-    throw new Error('Could not resolve project type');
+    return resolveByTypename(Project.name)(val);
   },
   implements: [Resource, Pinnable, Postable, ChangesetAware, Commentable],
 })
@@ -76,7 +76,7 @@ class Project extends Interfaces {
     rootDirectory: Directory,
     member: [ProjectMember], // why singular
     otherLocations: [Location],
-    partnership: Partnership, // why singular
+    partnership: [Partnership], // why singular
     budget: Budget, // currentBudget
     engagement: [Engagement], // why singular
     // edge case because it's writable for internships but not secured
