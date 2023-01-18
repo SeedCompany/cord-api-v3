@@ -16,6 +16,7 @@ import { inherit, member, Policy, Role } from '../util';
   r.FieldRegion.read,
   r.FieldZone.read,
   r.Language.when(member).read,
+  r.NarrativeReport.when(member).edit.create,
   r.Organization.when(member).read.specifically((p) => p.address.none),
   r.Partner.when(member).read.specifically((p) => p.pointOfContact.none),
   r.Partnership.when(member).read,
