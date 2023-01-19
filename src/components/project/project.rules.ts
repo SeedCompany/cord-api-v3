@@ -810,14 +810,9 @@ export class ProjectRules {
       case ProjectStep.DidNotDevelop:
       case ProjectStep.Rejected:
         return {
-          approvers: [
-            Role.Administrator,
-            Role.ProjectManager,
-            Role.RegionalDirector,
-            Role.FieldOperationsDirector,
-          ],
+          approvers: [],
           transitions: [],
-          getNotifiers: async () => [...(await this.getProjectTeamUserIds(id))],
+          getNotifiers: () => this.getProjectTeamUserIds(id),
         };
     }
     throw new UnreachableCaseError(step);
