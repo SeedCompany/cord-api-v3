@@ -2,6 +2,7 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { first, intersection, Many, uniq } from 'lodash';
+import { UnreachableCaseError } from 'ts-essentials';
 import { Promisable } from 'type-fest';
 import {
   ID,
@@ -81,6 +82,7 @@ export class ProjectRules {
     const mostRecentPreviousStep = (steps: ProjectStep[]) =>
       this.getMostRecentPreviousStep(id, steps, changeset);
 
+    /* eslint @typescript-eslint/switch-exhaustiveness-check: "error" */
     switch (step) {
       case ProjectStep.EarlyConversations:
         return {
@@ -804,12 +806,16 @@ export class ProjectRules {
             'project_closing@tsco.org',
           ],
         };
-      default:
+
+      case ProjectStep.DidNotDevelop:
+      case ProjectStep.Rejected:
         return {
-          approvers: [Role.Administrator],
+          approvers: [],
           transitions: [],
+          getNotifiers: () => this.getProjectTeamUserIds(id),
         };
     }
+    throw new UnreachableCaseError(step);
   }
 
   async getAvailableTransitions(
