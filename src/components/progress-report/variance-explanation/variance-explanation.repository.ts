@@ -1,18 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import {
-  inArray,
-  isNull,
-  node,
-  not,
-  Query,
-  relation,
-} from 'cypher-query-builder';
+import { inArray, node, Query, relation } from 'cypher-query-builder';
 import { ID, Session, UnsecuredDto } from '~/common';
 import { DtoRepository } from '~/core';
 import { DbChanges } from '~/core/database/changes';
 import {
   ACTIVE,
-  exp,
   ExpressionInput,
   matchProps,
   merge,
@@ -45,7 +37,7 @@ export class ProgressReportVarianceExplanationRepository extends DtoRepository(
   }
 
   protected hydrate() {
-    const placeholder: UnsecuredDto<VarianceExplanation> & ExpressionInput = {
+    const defaults: UnsecuredDto<VarianceExplanation> & ExpressionInput = {
       report: 'report.id' as ID,
       reasons: [],
       comments: null,
@@ -56,19 +48,10 @@ export class ProgressReportVarianceExplanationRepository extends DtoRepository(
         .subQuery((sub) =>
           sub
             .with(ctx)
-            .with(ctx)
-            .where({ node: not(isNull()) })
-            .apply(matchProps())
+            .apply(matchProps({ optional: true, excludeBaseProps: true }))
             .return<{ dto: UnsecuredDto<VarianceExplanation> }>(
-              merge('props', {
-                report: 'report.id',
-              }).as('dto')
+              merge(defaults, 'props').as('dto')
             )
-            .union()
-            .with(ctx)
-            .with(ctx)
-            .where({ node: isNull() })
-            .return(exp(placeholder).as('dto'))
         )
         .return('dto');
   }
