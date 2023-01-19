@@ -806,6 +806,19 @@ export class ProjectRules {
             'project_closing@tsco.org',
           ],
         };
+
+      case ProjectStep.DidNotDevelop:
+      case ProjectStep.Rejected:
+        return {
+          approvers: [
+            Role.Administrator,
+            Role.ProjectManager,
+            Role.RegionalDirector,
+            Role.FieldOperationsDirector,
+          ],
+          transitions: [],
+          getNotifiers: async () => [...(await this.getProjectTeamUserIds(id))],
+        };
     }
     throw new UnreachableCaseError(step);
   }
