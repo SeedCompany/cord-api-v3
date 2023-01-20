@@ -7,18 +7,15 @@ import {
   TransitionType as Type,
 } from './dto/workflow-transition.dto';
 
+// This also controls the order shown in the UI.
+// Therefore, these should generally flow down.
+// "back transactions" should come before/above "forward transactions".
+
 export const Transitions = defineTransitions({
   Start: {
     from: Status.NotStarted,
     to: Status.InProgress,
     label: 'Start',
-    type: Type.Approve,
-    notify: 'FPM',
-  },
-  'In Progress -> In Review': {
-    from: Status.InProgress,
-    to: Status.InReview,
-    label: 'Submit for Review',
     type: Type.Approve,
     notify: 'FPM',
   },
@@ -28,6 +25,13 @@ export const Transitions = defineTransitions({
     label: 'Submit for Translation',
     type: Type.Approve,
     notify: ['Next', 'Translator'],
+  },
+  'In Progress -> In Review': {
+    from: Status.InProgress,
+    to: Status.InReview,
+    label: 'Submit for Review',
+    type: Type.Approve,
+    notify: 'FPM',
   },
 
   'Translation Done': {
