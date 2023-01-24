@@ -57,7 +57,7 @@ export const updateProperties =
           .apply(
             updateProperty({
               key: variable('prop.key'),
-              variable: 'prop.value',
+              value: variable('prop.value'),
               labels: variable('prop.labels'),
               changeset,
               nodeName,

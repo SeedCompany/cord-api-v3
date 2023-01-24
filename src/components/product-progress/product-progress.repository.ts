@@ -311,7 +311,7 @@ export class ProductProgressRepository {
               nodeName: 'stepNode',
               resource: StepProgress,
               key: 'completed',
-              variable: 'stepInput.completed',
+              value: variable('stepInput.completed'),
             })
           )
           .return([
