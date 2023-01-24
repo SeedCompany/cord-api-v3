@@ -1,5 +1,4 @@
 import { node, Query, relation } from 'cypher-query-builder';
-import { compact } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   EnhancedResource,
@@ -10,6 +9,7 @@ import {
 } from '~/common';
 import { DbChanges } from '../../changes';
 import { ACTIVE, exp, Variable, variable as varRef } from '../index';
+import { maybeWhereAnd } from '../maybe-where-and';
 import { CommonPropertyOptions } from './common-property-options';
 
 export type CreatePropertyOptions<
@@ -80,17 +80,16 @@ export const createProperty =
                   ),
                   node('existingProp', 'Property'),
                 ])
-                // Don't create a new "change value" if the value is the same as
-                // the value outside the changeset.
-                .raw(
-                  compact([
-                    'WHERE',
-                    key instanceof Variable
-                      ? `type(existingProp) = ${key.toString()} AND`
-                      : '',
-                    `existingProp.value <> ${variable?.toString() ?? '$value'}`,
-                  ]).join(' '),
-                  variable ? {} : { value }
+                .apply(
+                  maybeWhereAnd(
+                    key instanceof Variable &&
+                      `type(existingProp) = ${key.toString()}`,
+                    // Don't create a new "change value" if the value is the same as
+                    // the value outside the changeset.
+                    `existingProp.value <> ${(
+                      variable ?? query.params.addParam(value, 'value')
+                    ).toString()}`
+                  )
                 )
             : q
         )

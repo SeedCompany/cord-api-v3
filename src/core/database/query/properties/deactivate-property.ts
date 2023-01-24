@@ -4,6 +4,7 @@ import { ID, MaybeUnsecuredInstance, ResourceShape } from '~/common';
 import { DbChanges } from '../../changes';
 import { prefixNodeLabelsWithDeleted } from '../deletes';
 import { ACTIVE, Variable, variable as varRef } from '../index';
+import { maybeWhereAnd } from '../maybe-where-and';
 import { CommonPropertyOptions } from './common-property-options';
 
 export type DeactivatePropertyOptions<
@@ -53,10 +54,10 @@ export const deactivateProperty =
               ]
             : []),
         ])
-        .apply((q) =>
-          key instanceof Variable
-            ? q.raw(`WHERE type(oldToProp) = ${key.toString()}`)
-            : q
+        .apply(
+          maybeWhereAnd(
+            key instanceof Variable && `type(oldToProp) = ${key.toString()}`
+          )
         )
         .setValues({
           [`${changeset ? 'oldChange' : 'oldToProp'}.active`]: false,
