@@ -11,6 +11,7 @@ import {
 } from '~/common';
 import { DbChanges } from '../../changes';
 import { ACTIVE, exp, Variable, variable as varRef } from '../index';
+import { CommonPropertyOptions } from './common-property-options';
 
 export type CreatePropertyOptions<
   TResourceStatic extends ResourceShape<any>,
@@ -18,24 +19,9 @@ export type CreatePropertyOptions<
     id: ID;
   },
   Key extends keyof DbChanges<TObject> & string
-> = MergeExclusive<
-  {
-    resource: TResourceStatic | EnhancedResource<TResourceStatic>;
-    key: Key;
-  },
-  {
-    /**
-     * Update a dynamic property.
-     * Note that this doesn't set labels declared in the DTO.
-     */
-    key: Variable;
-  }
-> & {
-  changeset?: ID;
-  nodeName?: string;
+> = CommonPropertyOptions<TResourceStatic, TObject, Key> & {
   labels?: string[] | Variable;
   numCreatedVar?: string;
-  now?: Variable;
 } & MergeExclusive<
     {
       /** The new value which will be a bound parameter */

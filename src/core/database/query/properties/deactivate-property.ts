@@ -1,15 +1,10 @@
 import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { MergeExclusive } from 'type-fest';
-import {
-  EnhancedResource,
-  ID,
-  MaybeUnsecuredInstance,
-  ResourceShape,
-} from '~/common';
+import { ID, MaybeUnsecuredInstance, ResourceShape } from '~/common';
 import { DbChanges } from '../../changes';
 import { prefixNodeLabelsWithDeleted } from '../deletes';
 import { ACTIVE, Variable, variable as varRef } from '../index';
+import { CommonPropertyOptions } from './common-property-options';
 
 export type DeactivatePropertyOptions<
   TResourceStatic extends ResourceShape<any>,
@@ -17,19 +12,8 @@ export type DeactivatePropertyOptions<
     id: ID;
   },
   Key extends keyof DbChanges<TObject> & string
-> = MergeExclusive<
-  {
-    resource: TResourceStatic | EnhancedResource<TResourceStatic>;
-    key: Key;
-  },
-  {
-    key: Variable;
-  }
-> & {
-  changeset?: ID;
-  nodeName?: string;
+> = CommonPropertyOptions<TResourceStatic, TObject, Key> & {
   numDeactivatedVar?: string;
-  now?: Variable;
 };
 
 /**
