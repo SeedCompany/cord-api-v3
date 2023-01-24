@@ -6,8 +6,9 @@ import {
   MaybeUnsecuredInstance,
   ResourceShape,
 } from '~/common';
-import { updateProperty, variable } from '.';
-import { DbChanges } from '../changes';
+import { DbChanges } from '../../changes';
+import { variable } from '../index';
+import { updateProperty } from './update-property';
 
 export interface UpdatePropertiesOptions<
   TResourceStatic extends ResourceShape<any>,

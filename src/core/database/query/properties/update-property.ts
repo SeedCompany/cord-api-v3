@@ -1,7 +1,7 @@
 import { Query } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { ID, MaybeUnsecuredInstance, ResourceShape } from '~/common';
-import { DbChanges } from '../changes';
+import { DbChanges } from '../../changes';
 import { createProperty, CreatePropertyOptions } from './create-property';
 import {
   deactivateProperty,
@@ -18,8 +18,8 @@ export type UpdatePropertyOptions<
   CreatePropertyOptions<TResourceStatic, TObject, Key>;
 
 /**
- * Deactivates all existing properties of given key (if any) and then
- * creates a new property with given value.
+ * Deactivates all existing properties of the given key (if any) and then
+ * creates a new property with the given value.
  */
 export const updateProperty =
   <

@@ -1,17 +1,16 @@
 import { node, Query, relation } from 'cypher-query-builder';
-import { Parameter } from 'cypher-query-builder/dist/typings/parameter-bag';
 import { compact } from 'lodash';
 import { DateTime } from 'luxon';
 import { MergeExclusive } from 'type-fest';
-import { ACTIVE, exp, Variable, variable as varRef } from '.';
 import {
   EnhancedResource,
   ID,
   MaybeUnsecuredInstance,
   ResourceShape,
   UnwrapSecured,
-} from '../../../common';
-import { DbChanges } from '../changes';
+} from '~/common';
+import { DbChanges } from '../../changes';
+import { ACTIVE, exp, Variable, variable as varRef } from '../index';
 
 export type CreatePropertyOptions<
   TResourceStatic extends ResourceShape<any>,
@@ -36,7 +35,7 @@ export type CreatePropertyOptions<
   nodeName?: string;
   labels?: string[] | Variable;
   numCreatedVar?: string;
-  now?: Parameter;
+  now?: Variable;
 } & MergeExclusive<
     {
       /** The new value which will be a bound parameter */
