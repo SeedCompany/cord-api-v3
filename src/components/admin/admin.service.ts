@@ -18,7 +18,8 @@ export class AdminService implements OnApplicationBootstrap {
     private readonly crypto: CryptoService,
     private readonly authorizationService: AuthorizationService,
     private readonly repo: AdminRepository,
-    @Logger('admin:service') private readonly logger: ILogger
+    @Logger('admin:service') private readonly logger: ILogger,
+    @Logger('admin:database') private readonly dbLogger: ILogger
   ) {}
 
   async onApplicationBootstrap(): Promise<void> {
@@ -38,6 +39,9 @@ export class AdminService implements OnApplicationBootstrap {
 
   @Transactional()
   private async setupRootObjects(): Promise<void> {
+    // @ts-expect-error ahh I'm just being lazy.
+    this.repo.db.conn.currentTransaction!.queryLogger = this.dbLogger;
+
     const apoc = await this.repo.apocVersion();
     if (apoc) {
       this.logger.info('Found Neo4j APOC plugin', { version: apoc });

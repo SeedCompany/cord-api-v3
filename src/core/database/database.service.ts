@@ -42,6 +42,10 @@ export class DatabaseService {
     @Logger('database:service') private readonly logger: ILogger
   ) {}
 
+  get conn() {
+    return this.db;
+  }
+
   /**
    * This will run the function after connecting to the database.
    * If connection to database fails while executing function it will keep

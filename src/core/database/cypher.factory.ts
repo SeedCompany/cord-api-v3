@@ -4,7 +4,7 @@ import { highlight } from 'cli-highlight';
 import { stripIndent } from 'common-tags';
 import { Connection } from 'cypher-query-builder';
 import { compact } from 'lodash';
-import { Driver, Session, Transaction } from 'neo4j-driver-core';
+import { Driver, Session } from 'neo4j-driver-core';
 // @ts-expect-error this isn't typed but it exists
 import * as RetryStrategy from 'neo4j-driver-core/lib/internal/retry-strategy';
 import QueryRunner from 'neo4j-driver/types/query-runner';
@@ -18,7 +18,10 @@ import { AFTER_MESSAGE } from '../logger/formatters';
 import { TracingService } from '../tracing';
 import { createBetterError, isNeo4jError } from './errors';
 import { ParameterTransformer } from './parameter-transformer.service';
+// eslint-disable-next-line import/no-duplicates
+import { Transaction } from './transaction';
 import { MyTransformer } from './transformer';
+// eslint-disable-next-line import/no-duplicates
 import './transaction'; // import our transaction augmentation
 import './query-augmentation'; // import our query augmentation
 
@@ -131,7 +134,11 @@ export const CypherFactory: FactoryProvider<Connection> = {
         // in order to forward methods to the current transaction.
         // @ts-expect-error yes we are only supporting these two methods
         const txSession: Session = {
-          run: wrapQueryRun(currentTransaction, logger, parameterTransformer),
+          run: wrapQueryRun(
+            currentTransaction,
+            currentTransaction.queryLogger ?? logger,
+            parameterTransformer
+          ),
           close: async () => {
             // No need to close anything when finishing the query inside of the
             // transaction. The close will happen when the transaction work finishes.
