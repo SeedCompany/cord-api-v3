@@ -19,6 +19,7 @@ export class NestLoggerAdapterService implements INestLogger, OnModuleInit {
     NestApplication: 'nest:application',
     RouterExplorer: 'nest:router:explorer',
     RoutesResolver: 'nest:router:resolver',
+    GraphQLModule: 'graphql:module',
   };
 
   constructor(private readonly logger: ILogger) {}
