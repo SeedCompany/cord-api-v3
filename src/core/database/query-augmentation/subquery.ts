@@ -2,6 +2,7 @@ import { Query } from 'cypher-query-builder';
 import { compact, uniq } from 'lodash';
 import { many, Many } from '../../../common';
 import { Variable } from './condition-variables';
+import { withParent } from './root';
 import { SubClauseCollection } from './SubClauseCollection';
 
 declare module 'cypher-query-builder/dist/typings/query' {
@@ -43,7 +44,7 @@ Query.prototype.subQuery = function subQuery(
   maybeSub?: (query: Query) => void
 ) {
   const subClause = new SubQueryClause();
-  const subQ = subClause.asQuery();
+  const subQ = withParent(subClause.asQuery(), this);
   if (typeof subOrImport === 'function') {
     subOrImport(subQ);
   } else {

@@ -25,11 +25,12 @@ Query.prototype.logIt = function logIt(
   level = LogLevel.NOTICE,
   interpolate?: boolean
 ) {
-  const orig = this.buildQueryObject.bind(this);
-  this.buildQueryObject = function buildQueryObject() {
+  const query = this.root;
+  const orig = query.buildQueryObject.bind(query);
+  query.buildQueryObject = function buildQueryObject() {
     const result = orig();
     if (interpolate ?? process.env.NODE_ENV !== 'production') {
-      let interpolated = this.interpolate();
+      let interpolated = query.interpolate();
       interpolated = highlight(interpolated, {
         language: 'cypher',
       });
