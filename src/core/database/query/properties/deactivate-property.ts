@@ -32,10 +32,13 @@ export const deactivateProperty =
     changeset,
     nodeName = 'node',
     numDeactivatedVar = 'numPropsDeactivated',
-    now,
+    now: nowIn,
   }: DeactivatePropertyOptions<TResourceStatic, TObject, Key>) =>
   <R>(query: Query<R>) => {
     const imports = [nodeName, key instanceof Variable ? key : ''];
+    const now = (
+      nowIn ?? query.params.addParam(DateTime.now(), 'now')
+    ).toString();
 
     const docKey = key instanceof Variable ? `[${key.toString()}]` : `.${key}`;
     const docSignature = `deactivateProperty(${nodeName}${docKey})`;
@@ -61,7 +64,7 @@ export const deactivateProperty =
         )
         .setValues({
           [`${changeset ? 'oldChange' : 'oldToProp'}.active`]: false,
-          'oldPropVar.deletedAt': now ? varRef(now.toString()) : DateTime.now(),
+          'oldPropVar.deletedAt': varRef(now),
         })
         .with('oldPropVar')
         .apply(prefixNodeLabelsWithDeleted('oldPropVar'))

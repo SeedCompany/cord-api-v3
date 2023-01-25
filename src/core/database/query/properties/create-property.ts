@@ -48,7 +48,9 @@ export const createProperty =
   <R>(query: Query<R>) => {
     resource = resource ? EnhancedResource.of(resource) : undefined;
 
-    const now = nowIn ?? query.params.addParam(DateTime.now(), 'now');
+    const now = (
+      nowIn ?? query.params.addParam(DateTime.now(), 'now')
+    ).toString();
 
     // Grab labels for property if it's statically given.
     // Also, do not give properties unique labels if inside a changeset.
@@ -97,7 +99,7 @@ export const createProperty =
           sub2
             .create([
               node('newPropNode', propLabels, {
-                createdAt: varRef(now.toString()),
+                createdAt: varRef(now),
                 value,
               }),
               ...(changeset
@@ -118,7 +120,7 @@ export const createProperty =
             key instanceof Variable ? key.toString() : `'${key}'`
           }, ${exp({
             active: !changeset,
-            createdAt: now.toString(),
+            createdAt: now,
           })}, newPropNode) YIELD rel`
         )
         .return(`count(newPropNode) as ${numCreatedVar}`)
