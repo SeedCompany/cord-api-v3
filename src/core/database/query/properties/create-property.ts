@@ -76,7 +76,7 @@ export const createProperty =
                   node(nodeName),
                   relation(
                     'out',
-                    undefined,
+                    'existingPropRel',
                     key instanceof Variable ? [] : key,
                     ACTIVE
                   ),
@@ -85,7 +85,7 @@ export const createProperty =
                 .apply(
                   maybeWhereAnd(
                     key instanceof Variable &&
-                      `type(existingProp) = ${key.toString()}`,
+                      `type(existingPropRel) = ${key.toString()}`,
                     // Don't create a new "change value" if the value is the same as
                     // the value outside the changeset.
                     `existingProp.value <> ${(
