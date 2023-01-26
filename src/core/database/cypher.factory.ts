@@ -267,22 +267,36 @@ const wrapQueryRun = (
       : undefined;
     const result = origRun(statement, params);
 
+    const tweakError = (e: Error) => {
+      if (typeof parameters?.__stacktrace === 'string' && e.stack) {
+        const stackStart = e.stack.indexOf('    at');
+        e.stack = e.stack.slice(0, stackStart) + parameters.__stacktrace;
+      }
+      const patched = jestSkipFileInExceptionSource(e, __filename);
+      const mapped = createBetterError(patched);
+      if (isNeo4jError(mapped) && mapped.logProps) {
+        logger.log(mapped.logProps);
+      }
+      return mapped;
+    };
+
     const origSubscribe = result.subscribe.bind(result);
     result.subscribe = function (this: never, observer) {
       const onError = observer.onError?.bind(observer);
       observer.onError = (e) => {
-        if (typeof parameters?.__stacktrace === 'string' && e.stack) {
-          const stackStart = e.stack.indexOf('    at');
-          e.stack = e.stack.slice(0, stackStart) + parameters.__stacktrace;
-        }
-        const patched = jestSkipFileInExceptionSource(e, __filename);
-        const mapped = createBetterError(patched);
-        if (isNeo4jError(mapped) && mapped.logProps) {
-          logger.log(mapped.logProps);
-        }
+        const mapped = tweakError(e);
         onError?.(mapped);
       };
       origSubscribe(observer);
+    };
+
+    const origSummary = result.summary.bind(result);
+    result.summary = async function () {
+      try {
+        return await origSummary();
+      } catch (e) {
+        throw tweakError(e);
+      }
     };
 
     return result;
