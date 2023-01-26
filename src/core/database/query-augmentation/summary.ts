@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common';
 import { Connection, Query } from 'cypher-query-builder';
 import { ResultSummary } from 'neo4j-driver';
 import { Stats } from 'neo4j-driver-core';
@@ -21,6 +22,10 @@ declare module 'cypher-query-builder/dist/typings/query' {
      * Execute query and return stats.
      */
     executeAndReturnStats(): Promise<Stats>;
+    /**
+     * Execute query and log/return stats.
+     */
+    executeAndLogStats(): Promise<Stats>;
   }
 }
 
@@ -64,4 +69,17 @@ Query.prototype.executeAndReturnStats = async function executeAndReturnStats(
 ) {
   const summary = await this.executeAndReturnSummary();
   return summary.updateStatistics.updates();
+};
+
+Query.prototype.executeAndLogStats = async function executeAndLogStats(
+  this: Query
+) {
+  const summary = await this.executeAndReturnSummary();
+  const stats = summary.updateStatistics.updates();
+  const filteredStats = Object.fromEntries(
+    Object.entries(stats).filter(([_, num]) => num > 0)
+  );
+  const name = String((this as any).name ?? 'Query');
+  Logger.log({ message: name, ...filteredStats }, 'database:results:stats');
+  return stats;
 };
