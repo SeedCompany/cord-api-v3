@@ -1,5 +1,6 @@
 import { Duration, DurationLike, DurationLikeObject } from 'luxon';
 import { Writable } from 'type-fest';
+import { inspect } from 'util';
 
 /**
  * A duration represented as an:
@@ -72,4 +73,10 @@ const normalizedUnit = (unit: string): keyof DurationLikeObject => {
 // @ts-expect-error Adding here, which will be called by pg client
 Duration.prototype.toPostgres = function (this: Duration) {
   return this.toISO();
+};
+
+// @ts-expect-error Yes, it doesn't have to be defined, we are adding it.
+Duration.prototype[inspect.custom] = function (this: Duration) {
+  const str = this.toHuman({ unitDisplay: 'short' });
+  return `[Duration] ${str}`;
 };
