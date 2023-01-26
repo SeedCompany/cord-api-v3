@@ -191,7 +191,7 @@ export const printForCli = () =>
 const printObj = (obj: Record<string, any>) =>
   Object.keys(obj).length > 0
     ? ` ${prettyPrint(obj, {
-        depth: 2, // 2 default
+        depth: 3, // 2 default
         colors: colorsEnabled,
       })}`
     : '';
