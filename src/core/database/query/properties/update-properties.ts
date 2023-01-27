@@ -7,7 +7,7 @@ import {
   ResourceShape,
 } from '~/common';
 import { DbChanges } from '../../changes';
-import { variable } from '../index';
+import { exp, variable } from '../index';
 import { updateProperty } from './update-property';
 
 export interface UpdatePropertiesOptions<
@@ -20,7 +20,7 @@ export interface UpdatePropertiesOptions<
   changes: DbChanges<TObject>;
   changeset?: ID;
   nodeName?: string;
-  numUpdatedVar?: string;
+  outputStatsVar?: string;
 }
 
 export const updateProperties =
@@ -34,7 +34,7 @@ export const updateProperties =
     changes,
     changeset,
     nodeName = 'node',
-    numUpdatedVar = 'numPropsUpdated',
+    outputStatsVar = 'stats',
   }: UpdatePropertiesOptions<TResourceStatic, TObject>) =>
   <R>(query: Query<R>) => {
     const resource = EnhancedResource.of(resourceIn);
@@ -64,6 +64,11 @@ export const updateProperties =
               now: query.params.addParam(DateTime.local(), 'now'),
             })
           )
-          .return(`count(prop) as ${numUpdatedVar}`)
+          .return(
+            exp({
+              deactivated: 'sum(numPropsDeactivated)',
+              created: 'sum(numPropsCreated)',
+            }).as(outputStatsVar)
+          )
       );
   };
