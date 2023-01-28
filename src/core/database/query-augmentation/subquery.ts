@@ -51,7 +51,7 @@ Query.prototype.subQuery = function subQuery(
     const imports = uniq(
       compact(
         many(subOrImport).flatMap((val) =>
-          val instanceof Variable ? varImport(val) : val
+          val instanceof Variable ? varInExp(val) : val
         )
       )
     );
@@ -69,7 +69,7 @@ class SubQueryClause extends SubClauseCollection {
 }
 
 // Try to pull the root variable referenced from expression https://regex101.com/r/atshF5
-const varImport = (variable: string | Variable) =>
+export const varInExp = (variable: string | Variable) =>
   variable.toString().startsWith('$')
     ? ''
     : /(?:.+\()?([^.]+)\.?.*/.exec(variable.toString())?.[1] ?? '';

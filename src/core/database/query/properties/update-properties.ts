@@ -7,8 +7,8 @@ import {
   ResourceShape,
 } from '~/common';
 import { DbChanges } from '../../changes';
-import { exp, variable } from '../index';
-import { updateProperty } from './update-property';
+import { apoc, collect, merge, variable } from '../index';
+import { PropUpdateStat, updateProperty } from './update-property';
 
 export interface UpdatePropertiesOptions<
   TResourceStatic extends ResourceShape<any>,
@@ -64,11 +64,12 @@ export const updateProperties =
               now: query.params.addParam(DateTime.local(), 'now'),
             })
           )
-          .return(
-            exp({
-              deactivated: 'sum(numPropsDeactivated)',
-              created: 'sum(numPropsCreated)',
-            }).as(outputStatsVar)
+          .return<{
+            stats: { [K in keyof DbChanges<TObject>]?: PropUpdateStat };
+          }>(
+            merge(collect(apoc.map.fromValues(['prop.key', 'stats']))).as(
+              outputStatsVar
+            )
           )
       );
   };
