@@ -1,5 +1,5 @@
 import { node, Query, relation } from 'cypher-query-builder';
-import { DateTime, Duration } from 'luxon';
+import { DateTime, Duration, DurationLikeObject as MyDuration } from 'luxon';
 import {
   DurationIn,
   ID,
@@ -22,6 +22,8 @@ import {
   deactivateProperty,
   DeactivatePropertyOptions,
 } from './deactivate-property';
+
+export const defaultPermanentAfter: MyDuration = { minutes: 30 };
 
 export type UpdatePropertyOptions<
   TResourceStatic extends ResourceShape<any>,
@@ -67,7 +69,10 @@ export const updateProperty =
           ? options.value
           : variable(query.params.addParam(options.value, 'value').toString()),
       now: options.now ?? query.params.addParam(DateTime.now(), 'now'),
-      permanentAfter: permanentAfterAsVar(options.permanentAfter, query),
+      permanentAfter: permanentAfterAsVar(
+        options.permanentAfter ?? defaultPermanentAfter,
+        query
+      ),
     };
     const { nodeName, key, value, now } = resolved;
 
