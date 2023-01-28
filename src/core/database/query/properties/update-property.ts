@@ -60,7 +60,7 @@ export const updateProperty =
   >(
     options: UpdatePropertyOptions<TResourceStatic, TObject, Key>
   ) =>
-  <R>(query: Query<R>) => {
+  <R>(query: Query<R>): Query<{ stats: PropUpdateStat }> => {
     const { permanentAfter, ...resolved } = {
       ...options,
       nodeName: options.nodeName ?? 'node',
@@ -78,7 +78,7 @@ export const updateProperty =
 
     query.comment('updateProperty()');
 
-    const modifyPermanentProp: QueryFragment = (query) =>
+    const modifyPermanentProp = (query: Query) =>
       query
         .apply(deactivateProperty<TResourceStatic, TObject, Key>(resolved))
         .apply(createProperty<TResourceStatic, TObject, Key>(resolved))
@@ -94,7 +94,7 @@ export const updateProperty =
       return query.apply(modifyPermanentProp);
     }
 
-    const modifyMutableProp: QueryFragment = (query) =>
+    const modifyMutableProp = (query: Query) =>
       query
         .setVariables({
           'existingProp.value': value.toString(),
@@ -179,12 +179,12 @@ export function permanentAfterAsVar(
   return param.toString();
 }
 
-export const conditionalOn = (
+export const conditionalOn = <R>(
   conditionVar: string,
   scope: string[],
-  trueQuery: QueryFragment,
-  falseQuery: QueryFragment
-): QueryFragment => {
+  trueQuery: QueryFragment<unknown, R>,
+  falseQuery: QueryFragment<unknown, R>
+): QueryFragment<unknown, R> => {
   const imports = [...new Set([conditionVar, ...scope])];
   return (query) =>
     query.subQuery((sub) =>

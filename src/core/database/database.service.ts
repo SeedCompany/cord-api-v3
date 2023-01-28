@@ -355,9 +355,7 @@ export class DatabaseService {
           permanentAfter,
         })
       )
-      .return<{ numPropsCreated: number; numPropsDeactivated: number }>(
-        'numPropsCreated, numPropsDeactivated'
-      );
+      .return('*');
 
     let result;
     try {
@@ -376,7 +374,8 @@ export class DatabaseService {
 
     if (
       !result ||
-      (result.numPropsCreated === 0 && result.numPropsDeactivated === 0)
+      (result.stats.created === 0 && result.stats.deactivated === 0) ||
+      result.stats.updated === 0
     ) {
       throw new ServerException(`Could not find ${label}.${key} to update`);
     }
