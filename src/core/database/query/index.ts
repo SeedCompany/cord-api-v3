@@ -1,7 +1,11 @@
 export * from './create-node';
 export * from './properties/create-property';
 export * from './properties/deactivate-property';
-export * from './properties/update-property';
+export {
+  updateProperty,
+  UpdatePropertyOptions,
+  defaultPermanentAfter,
+} from './properties/update-property';
 export * from './properties/update-properties';
 export * from './create-relationships';
 export * from './cypher-expression';

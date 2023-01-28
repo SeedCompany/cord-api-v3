@@ -19,6 +19,7 @@ import {
   ACTIVE,
   createNode,
   createRelationships,
+  defaultPermanentAfter,
   merge,
   paginate,
   prefixNodeLabelsWithDeleted,
@@ -27,6 +28,11 @@ import {
   updateProperty,
   variable,
 } from '~/core/database/query';
+import {
+  conditionalOn,
+  determineIfPermanent,
+  permanentAfterAsVar,
+} from '~/core/database/query/properties/update-property';
 import { EdgePrivileges } from '../authorization';
 import { ChildListAction } from '../authorization/policy/actions';
 import {
@@ -158,45 +164,65 @@ export const PromptVariantResponseRepository = <
       input: UpdatePromptVariantResponse<TVariant>,
       session: Session
     ) {
-      const now = DateTime.now();
-      await this.db
-        .query()
+      const query = this.db.query();
+      const permanentAfter = permanentAfterAsVar(defaultPermanentAfter, query)!;
+      const now = query.params.addParam(DateTime.now(), 'now');
+      const newResponse = await createNode(VariantResponse, {
+        baseNodeProps: {
+          variant: input.variant,
+          response: input.response,
+          creator: session.userId,
+        },
+      });
+      await query
         .matchNode('parent', 'PromptVariantResponse', { id: input.id })
 
-        .comment('deactivate old responses for variant')
-        .subQuery('parent', (sub) =>
-          sub
-            .match([
-              node('parent'),
-              relation('out', undefined, 'child', ACTIVE),
-              node('response', 'VariantResponse', { variant: input.variant }),
-            ])
-            // TODO just delete created less than 1 hour?
-            .apply(prefixNodeLabelsWithDeleted('response'))
-            .setValues({
-              'response.active': false,
-              'response.deletedAt': now,
-            })
-            .return('count(response) as oldResponseCount')
-        )
+        .optionalMatch([
+          node('parent'),
+          relation('out', undefined, 'child', ACTIVE),
+          node('response', 'VariantResponse', { variant: input.variant }),
+        ])
+        .apply(determineIfPermanent(permanentAfter, now, 'response'))
+        .apply(
+          conditionalOn(
+            'isPermanent',
+            ['parent', 'response'],
+            (query) =>
+              query
+                .comment('deactivate old responses for variant')
+                .subQuery(['parent', 'response'], (sub) =>
+                  sub
+                    .apply(prefixNodeLabelsWithDeleted('response'))
+                    .setVariables({
+                      'response.active': 'false',
+                      'response.deletedAt': now.toString(),
+                    })
+                    .return('count(response) as oldResponseCount')
+                )
 
-        .comment('create new response for variant')
-        .apply(
-          await createNode(VariantResponse, {
-            baseNodeProps: {
-              variant: input.variant,
-              response: input.response,
-              creator: session.userId,
-            },
-          })
-        )
-        .apply(
-          createRelationships(resource, 'in', {
-            child: variable('parent'),
-          })
+                .comment('create new response for variant')
+                .apply(newResponse)
+                .apply(
+                  createRelationships(resource, 'in', {
+                    child: variable('parent'),
+                  })
+                )
+                .return('count(node) as updatedResponseCount'),
+            (query) =>
+              query
+                .set({
+                  values: {
+                    'response.response': input.response,
+                  },
+                  variables: {
+                    'response.modifiedAt': now.toString(),
+                  },
+                })
+                .return('count(response) as updatedResponseCount')
+          )
         )
         .with('parent')
-        .setValues({ 'parent.modifiedAt': now })
+        .setVariables({ 'parent.modifiedAt': now.toString() })
         .return('parent')
         .first();
     }

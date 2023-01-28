@@ -145,19 +145,23 @@ const loadExistingProp =
         )
       );
 
-const determineIfPermanent =
-  (permanentAfter: string, now: Variable): QueryFragment =>
+export const determineIfPermanent =
+  (
+    permanentAfter: string,
+    now: Variable,
+    nodeName = 'existingProp'
+  ): QueryFragment =>
   (query) =>
-    query.subQuery(['existingProp'], (sub) =>
+    query.subQuery([nodeName], (sub) =>
       sub.return(
         coalesce(
-          `coalesce(existingProp.modifiedAt, existingProp.createdAt) + ${permanentAfter}) < ${now.toString()}`,
+          `coalesce(${nodeName}.modifiedAt, ${nodeName}.createdAt) + ${permanentAfter} < ${now.toString()}`,
           true
         ).as('isPermanent')
       )
     );
 
-function permanentAfterAsVar(
+export function permanentAfterAsVar(
   permanentAfter: Variable | DurationIn | undefined,
   query: Query
 ) {
@@ -175,7 +179,7 @@ function permanentAfterAsVar(
   return param.toString();
 }
 
-const conditionalOn = (
+export const conditionalOn = (
   conditionVar: string,
   scope: string[],
   trueQuery: QueryFragment,
