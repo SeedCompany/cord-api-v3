@@ -67,14 +67,7 @@ export const updateProperty =
           ? options.value
           : variable(query.params.addParam(options.value, 'value').toString()),
       now: options.now ?? query.params.addParam(DateTime.now(), 'now'),
-      permanentAfter:
-        options.permanentAfter == null
-          ? undefined
-          : options.permanentAfter instanceof Variable
-          ? options.permanentAfter.toString()
-          : query.params
-              .addParam(Duration.from(options.permanentAfter), 'permanentAfter')
-              .toString(),
+      permanentAfter: permanentAfterAsVar(options.permanentAfter, query),
     };
     const { nodeName, key, value, now } = resolved;
 
@@ -158,6 +151,24 @@ const determineIfPermanent =
         ).as('isPermanent')
       )
     );
+
+function permanentAfterAsVar(
+  permanentAfter: Variable | DurationIn | undefined,
+  query: Query
+) {
+  if (permanentAfter instanceof Variable) {
+    return permanentAfter.toString();
+  }
+  if (permanentAfter == null) {
+    return undefined;
+  }
+  const asObj = Duration.from(permanentAfter);
+  if (asObj.as('milliseconds') === 0) {
+    return undefined;
+  }
+  const param = query.params.addParam(asObj, 'permanentAfter');
+  return param.toString();
+}
 
 const conditionalOn = (
   conditionVar: string,
