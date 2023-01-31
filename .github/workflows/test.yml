@@ -16,7 +16,7 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Tests
-        run: yarn test
+        run: yarn test --reporters=github-actions
 
   E2E:
     runs-on: ubuntu-latest
@@ -49,4 +49,4 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: E2E Tests
-        run: yarn test:e2e --shard=${{ matrix.shard }}/${{ strategy.job-total }}
+        run: yarn test:e2e --shard=${{ matrix.shard }}/${{ strategy.job-total }} --reporters=github-actions
