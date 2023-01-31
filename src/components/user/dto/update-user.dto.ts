@@ -54,6 +54,8 @@ export abstract class UpdateUser {
 
   @Field({ nullable: true })
   readonly title?: string;
+
+  readonly isConnectedToSensitive?: boolean;
 }
 
 @InputType()

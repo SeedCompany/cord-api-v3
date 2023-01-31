@@ -51,7 +51,7 @@ import {
   ProjectChangeRequestListInput,
   SecuredProjectChangeRequestList,
 } from '../project-change-request/dto';
-import { User } from '../user';
+import { User, UserService } from '../user';
 import {
   CreateProject,
   InternshipProject,
@@ -96,6 +96,8 @@ export class ProjectService {
     private readonly eventBus: IEventBus,
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
+    @Inject(forwardRef(() => UserService))
+    private readonly userService: UserService,
     private readonly projectRules: ProjectRules,
     private readonly repo: ProjectRepository,
     private readonly projectChangeRequests: ProjectChangeRequestService,
@@ -686,6 +688,22 @@ export class ProjectService {
           session.roles.concat(project.scope)
         ),
     };
+  }
+
+  async updateIsConnectedToSensitiveByIds(userIds: ID[], session: Session) {
+    await Promise.all(
+      userIds.map(async (userId: ID) => {
+        if (await this.repo.isUserConnectedToSensitivity(userId)) {
+          await this.userService.update(
+            {
+              id: userId,
+              isConnectedToSensitive: true,
+            },
+            session
+          );
+        }
+      })
+    );
   }
 
   protected async validateOtherResourceId(

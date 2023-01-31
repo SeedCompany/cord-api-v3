@@ -6,6 +6,7 @@ import {
   IntersectionType,
   NameField,
   Resource,
+  SecuredBoolean,
   SecuredEnum,
   SecuredProperty,
   SecuredProps,
@@ -81,6 +82,9 @@ export class User extends PinnableResource {
 
   @Field()
   title: SecuredString;
+
+  @Field()
+  isConnectedToSensitive: SecuredBoolean;
 }
 
 @ObjectType({
