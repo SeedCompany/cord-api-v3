@@ -12,6 +12,7 @@ import {
   ACTIVE,
   coalesce,
   exp,
+  INACTIVE,
   QueryFragment,
   variable,
   Variable,
@@ -108,13 +109,14 @@ export const updateProperty =
         ]);
 
     return query
-      .apply(loadExistingProp(nodeName, key))
+      .apply(loadExistingProp(nodeName, key, resolved.changeset))
       .apply(determineIfPermanent(permanentAfter, now))
       .apply(
         conditionalOn(
           'isPermanent',
           [
             nodeName,
+            resolved.changeset ? varInExp(resolved.changeset) : '',
             key instanceof Variable ? varInExp(key) : '',
             varInExp(value),
             'existingProp',
@@ -126,7 +128,11 @@ export const updateProperty =
   };
 
 const loadExistingProp =
-  (nodeName: string, key: string | Variable): QueryFragment =>
+  (
+    nodeName: string,
+    key: string | Variable,
+    changeset?: Variable
+  ): QueryFragment =>
   (query) =>
     query
       .optionalMatch([
@@ -135,9 +141,15 @@ const loadExistingProp =
           'out',
           'existingPropRel',
           key instanceof Variable ? [] : key,
-          ACTIVE
+          changeset ? INACTIVE : ACTIVE
         ),
         node('existingProp', 'Property'),
+        ...(changeset
+          ? [
+              relation('in', '', 'changeset', ACTIVE),
+              node(changeset.toString()),
+            ]
+          : []),
       ])
       .apply(
         maybeWhereAnd(
