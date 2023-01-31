@@ -35,7 +35,7 @@ export const deactivateProperty =
     now: nowIn,
   }: DeactivatePropertyOptions<TResourceStatic, TObject, Key>) =>
   <R>(query: Query<R>) => {
-    const imports = [nodeName, key instanceof Variable ? key : ''];
+    const imports = [nodeName, key instanceof Variable ? key : '', changeset];
     const now = (
       nowIn ?? query.params.addParam(DateTime.now(), 'now')
     ).toString();
@@ -53,7 +53,7 @@ export const deactivateProperty =
           ...(changeset
             ? [
                 relation('in', 'oldChange', 'changeset', ACTIVE),
-                node('changeNode', 'Changeset', { id: changeset }),
+                node(changeset.toString()),
               ]
             : []),
         ])

@@ -7,7 +7,7 @@ import {
   ResourceShape,
 } from '~/common';
 import { DbChanges } from '../../changes';
-import { apoc, collect, merge, variable } from '../index';
+import { apoc, collect, merge, Variable, variable } from '../index';
 import { PropUpdateStat, updateProperty } from './update-property';
 
 export interface UpdatePropertiesOptions<
@@ -18,7 +18,7 @@ export interface UpdatePropertiesOptions<
 > {
   resource: TResourceStatic | EnhancedResource<TResourceStatic>;
   changes: DbChanges<TObject>;
-  changeset?: ID;
+  changeset?: Variable;
   nodeName?: string;
   outputStatsVar?: string;
 }

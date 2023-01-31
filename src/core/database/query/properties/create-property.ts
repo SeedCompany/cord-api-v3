@@ -63,15 +63,16 @@ export const createProperty =
 
     const variable = value instanceof Variable ? value : undefined;
 
+    const imports = [nodeName, variable, changeset];
+
     const docSignature = `createProperty(${nodeName}${
       key instanceof Variable ? `[${key.toString()}]` : `.${key}`
     }${variable ? ` = ${variable.toString()}` : ''})`;
-    return query.comment(docSignature).subQuery([nodeName, variable], (sub) =>
+    return query.comment(docSignature).subQuery(imports, (sub) =>
       sub
         .apply((q) =>
           changeset
             ? q
-                .match(node('changeset', 'Changeset', { id: changeset }))
                 .optionalMatch([
                   node(nodeName),
                   relation(
@@ -95,7 +96,7 @@ export const createProperty =
                 )
             : q
         )
-        .subQuery([nodeName, variable, changeset ? 'changeset' : ''], (sub2) =>
+        .subQuery(imports, (sub2) =>
           sub2
             .create([
               node('newPropNode', propLabels, {
@@ -103,7 +104,10 @@ export const createProperty =
                 value,
               }),
               ...(changeset
-                ? [relation('in', '', 'changeset', ACTIVE), node('changeset')]
+                ? [
+                    relation('in', '', 'changeset', ACTIVE),
+                    node(changeset.toString()),
+                  ]
                 : []),
             ])
             .return(['newPropNode'])

@@ -24,6 +24,7 @@ import {
   exp,
   updateProperty,
   UpdatePropertyOptions,
+  variable,
 } from './query';
 
 export interface ServerInfo {
@@ -347,11 +348,16 @@ export class DatabaseService {
       .query()
       .match(node('node', label, { id }))
       .apply(
+        changeset
+          ? (q) => q.match(node('changeset', 'Changeset', { id: changeset }))
+          : null
+      )
+      .apply(
         updateProperty<TResourceStatic, TObject, Key>({
           resource: type,
           key,
           value,
-          changeset,
+          changeset: changeset ? variable('changeset') : undefined,
           permanentAfter,
         })
       )

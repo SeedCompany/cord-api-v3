@@ -27,7 +27,7 @@ export type CommonPropertyOptions<
     key: Variable;
   }
 > & {
-  changeset?: ID;
+  changeset?: Variable;
   nodeName?: string;
   now?: Variable;
 };
