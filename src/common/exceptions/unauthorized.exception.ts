@@ -1,7 +1,7 @@
 import { HttpStatus } from '@nestjs/common';
 import { lowerCase } from 'lodash';
 import pluralize from 'plur';
-import { Mutable } from 'type-fest';
+import { Writable as Mutable } from 'type-fest';
 import { EnhancedResource } from '../resource.dto';
 import { InputException, InputExceptionArgs } from './input.exception';
 

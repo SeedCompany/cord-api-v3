@@ -5238,7 +5238,7 @@ __metadata:
     ts-node: ^10.9.1
     ts-patch: ^2.1.0
     ts-transformer-keys: ^0.4.4
-    type-fest: ^2.19.0
+    type-fest: ^3.5.4
     typescript: ^4.9.5
     typescript-transform-paths: ^3.4.6
     winston: ^3.8.2
@@ -12063,10 +12063,17 @@ resolve@^2.0.0-next.3:
   languageName: node
   linkType: hard
 
-"type-fest@npm:^2.13.1, type-fest@npm:^2.19.0":
+"type-fest@npm:^2.13.1":
   version: 2.19.0
   resolution: "type-fest@npm:2.19.0"
   checksum: a4ef07ece297c9fba78fc1bd6d85dff4472fe043ede98bd4710d2615d15776902b595abf62bd78339ed6278f021235fb28a96361f8be86ed754f778973a0d278
+  languageName: node
+  linkType: hard
+
+"type-fest@npm:^3.5.4":
+  version: 3.5.4
+  resolution: "type-fest@npm:3.5.4"
+  checksum: e2250c8afc80c61126bb484bce767e6bf1bf831af9351bfed1b18f2150be45315b5c1c4fd185691572c348c3a929deda7371fd52adb38b301ef6ef9566776118
   languageName: node
   linkType: hard
 
