@@ -5202,7 +5202,7 @@ __metadata:
     express: ^4.18.2
     fast-safe-stringify: ^2.1.1
     got: ^11.8.5
-    graphql: ^15.8.0
+    graphql: ^16.6.0
     graphql-parse-resolve-info: ^4.13.0
     graphql-scalars: ^1.20.1
     highlightjs-cypher: ^1.1.5
@@ -6986,10 +6986,10 @@ cypher-query-builder@6.0.4:
   languageName: node
   linkType: hard
 
-"graphql@npm:^15.8.0":
-  version: 15.8.0
-  resolution: "graphql@npm:15.8.0"
-  checksum: 423325271db8858428641b9aca01699283d1fe5b40ef6d4ac622569ecca927019fce8196208b91dd1d8eb8114f00263fe661d241d0eb40c10e5bfd650f86ec5e
+"graphql@npm:^16.6.0":
+  version: 16.6.0
+  resolution: "graphql@npm:16.6.0"
+  checksum: bf1d9e3c1938ce3c1a81e909bd3ead1ae4707c577f91cff1ca2eca474bfbc7873d5d7b942e1e9777ff5a8304421dba57a4b76d7a29eb19de8711cb70e3c2415e
   languageName: node
   linkType: hard
 

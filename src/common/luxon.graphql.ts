@@ -63,18 +63,18 @@ export class DateTimeScalar
 {
   description = 'An ISO-8601 date time string';
 
-  parseValue(value: string): string {
-    return value;
+  parseValue(value: unknown): string {
+    return String(value);
   }
 
-  serialize(value: DateTime | string | null): string {
+  serialize(value: unknown): string {
     if (value instanceof DateTime) {
       return value.toISO();
     }
-    if (!value) {
-      throw new InputException('No DateTime to serialize');
+    if (typeof value === 'string') {
+      return value;
     }
-    return value;
+    throw new InputException('Could not serialize DateTime value');
   }
 
   parseLiteral(ast: ValueNode): string | null {
