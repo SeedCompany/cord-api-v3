@@ -18,7 +18,14 @@ import { ConfigService } from '../config/config.service';
 import { ILogger, Logger } from '../logger';
 import { DbChanges } from './changes';
 import { ServiceUnavailableError, UniquenessError } from './errors';
-import { ACTIVE, deleteBaseNode, exp, updateProperty } from './query';
+import {
+  ACTIVE,
+  deleteBaseNode,
+  exp,
+  updateProperty,
+  UpdatePropertyOptions,
+  variable,
+} from './query';
 
 export interface ServerInfo {
   version: string;
@@ -31,6 +38,11 @@ interface DbInfo {
   status: string;
   error?: string;
 }
+
+type PermanentAfterOption = Pick<
+  UpdatePropertyOptions<any, any, any>,
+  'permanentAfter'
+>;
 
 @Injectable()
 export class DatabaseService {
@@ -252,6 +264,7 @@ export class DatabaseService {
     object,
     changes,
     changeset,
+    permanentAfter,
   }: {
     // This becomes the label of the base node
     type: TResourceStatic;
@@ -261,7 +274,7 @@ export class DatabaseService {
     changes: DbChanges<TResourceStatic['prototype']>;
     // Changeset ID
     changeset?: ID;
-  }): Promise<TObject> {
+  } & PermanentAfterOption): Promise<TObject> {
     let updated = object;
     for (const [prop, change] of entries(changes)) {
       if (change === undefined) {
@@ -273,6 +286,7 @@ export class DatabaseService {
         key: prop as any,
         value: change,
         changeset,
+        permanentAfter,
       });
 
       updated = {
@@ -303,13 +317,14 @@ export class DatabaseService {
     key,
     value,
     changeset,
+    permanentAfter,
   }: {
     type: TResourceStatic;
     object: TObject;
     key: Key;
     value: UnwrapSecured<TObject[Key]>;
     changeset?: ID;
-  }): Promise<void> {
+  } & PermanentAfterOption): Promise<void> {
     const label = type.name;
 
     // check if the node is created in changeset, update property normally
@@ -333,16 +348,20 @@ export class DatabaseService {
       .query()
       .match(node('node', label, { id }))
       .apply(
+        changeset
+          ? (q) => q.match(node('changeset', 'Changeset', { id: changeset }))
+          : null
+      )
+      .apply(
         updateProperty<TResourceStatic, TObject, Key>({
           resource: type,
           key,
           value,
-          changeset,
+          changeset: changeset ? variable('changeset') : undefined,
+          permanentAfter,
         })
       )
-      .return<{ numPropsCreated: number; numPropsDeactivated: number }>(
-        'numPropsCreated, numPropsDeactivated'
-      );
+      .return('*');
 
     let result;
     try {
@@ -361,7 +380,8 @@ export class DatabaseService {
 
     if (
       !result ||
-      (result.numPropsCreated === 0 && result.numPropsDeactivated === 0)
+      (result.stats.created === 0 && result.stats.deactivated === 0) ||
+      result.stats.updated === 0
     ) {
       throw new ServerException(`Could not find ${label}.${key} to update`);
     }
