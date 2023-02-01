@@ -4,7 +4,6 @@ import { ID as IDType } from '@nestjs/graphql/dist/scalars';
 import { Transform } from 'class-transformer';
 import { IsIn } from 'class-validator';
 import { stripIndent } from 'common-tags';
-import { Merge } from 'type-fest';
 import { ResourceShape } from '~/common/resource.dto';
 import { InputException } from './exceptions';
 import { IdField } from './id-field';
@@ -75,10 +74,9 @@ export const VariantInputField = <
   Res extends ResourceShape<any> & { Variants: readonly Variant[] }
 >(
   resource: Res,
-  options: Merge<
-    FieldOptions,
-    { defaultValue?: Variant<VariantOf<Res>> | VariantOf<Res> }
-  > = {}
+  options: Omit<FieldOptions, 'defaultValue'> & {
+    defaultValue?: Variant<VariantOf<Res>> | VariantOf<Res>;
+  } = {}
 ) => {
   const { defaultValue, ...rest } = options;
 

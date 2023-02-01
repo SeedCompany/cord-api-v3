@@ -5,6 +5,8 @@ import { difference, omit } from 'lodash';
 import { many, Many } from '../../src/common';
 import { GqlError } from './create-graphql-client';
 
+// Consider replacing with Jest 29.4+ feature: https://jestjs.io/docs/expect#expectaddequalitytesterstesters
+
 expect.extend({
   toThrowGqlError(received: GqlError, expected?: ErrorExpectations) {
     expect(received).toBeInstanceOf(GqlError);
@@ -36,9 +38,11 @@ expect.extend({
       : true;
     const extensionsPassed =
       Object.keys(expectedObj.extensions).length > 0
-        ? !!this.utils.subsetEquality(
+        ? !!this.utils.subsetEquality.call(
+            this,
             expectedObj.extensions,
-            actualObj.extensions
+            actualObj.extensions,
+            this.customTesters
           )
         : true;
     const pass = codesPassed && messagePassed && extensionsPassed;

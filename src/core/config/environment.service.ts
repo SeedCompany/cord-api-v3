@@ -1,6 +1,6 @@
 import { Injectable, Optional } from '@nestjs/common';
 import { parse as parseEnv } from 'dotenv';
-import dotEnvExpand from 'dotenv-expand';
+import { expand as dotEnvExpand } from 'dotenv-expand';
 import * as fs from 'fs';
 import { parse as parseSize } from 'human-format';
 import { isString, mapKeys, pickBy } from 'lodash';

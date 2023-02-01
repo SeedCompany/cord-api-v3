@@ -1,7 +1,7 @@
 import { applyDecorators } from '@nestjs/common';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { Mutable } from 'type-fest';
+import { Writable as Mutable } from 'type-fest';
 import { Book } from '../books';
 import { ScriptureReferenceInput } from './scripture-reference.dto';
 

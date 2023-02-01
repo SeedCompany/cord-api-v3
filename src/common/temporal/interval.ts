@@ -1,5 +1,5 @@
 import { DateTime, DateTimeUnit, Interval } from 'luxon';
-import { Mutable } from 'type-fest';
+import { Writable as Mutable } from 'type-fest';
 import { inspect } from 'util';
 
 /* eslint-disable @typescript-eslint/method-signature-style */
