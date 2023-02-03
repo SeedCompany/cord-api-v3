@@ -192,6 +192,8 @@ export const PromptVariantResponseRepository = <
                 .comment('deactivate old responses for variant')
                 .subQuery('response', (sub) =>
                   sub
+                    .with('response')
+                    .raw('WHERE response IS NOT NULL')
                     .apply(prefixNodeLabelsWithDeleted('response'))
                     .setVariables({
                       'response.active': 'false',
