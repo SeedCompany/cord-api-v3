@@ -190,7 +190,7 @@ export const PromptVariantResponseRepository = <
             (query) =>
               query
                 .comment('deactivate old responses for variant')
-                .subQuery(['parent', 'response'], (sub) =>
+                .subQuery('response', (sub) =>
                   sub
                     .apply(prefixNodeLabelsWithDeleted('response'))
                     .setVariables({
