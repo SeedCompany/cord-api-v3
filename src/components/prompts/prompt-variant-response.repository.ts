@@ -167,10 +167,11 @@ export const PromptVariantResponseRepository = <
       const query = this.db.query();
       const permanentAfter = permanentAfterAsVar(defaultPermanentAfter, query)!;
       const now = query.params.addParam(DateTime.now(), 'now');
+      const responseVar = query.params.addParam(input.response, 'response');
       const newResponse = await createNode(VariantResponse, {
         baseNodeProps: {
           variant: input.variant,
-          response: input.response,
+          response: variable(responseVar.toString()),
           creator: session.userId,
         },
       });
@@ -212,13 +213,9 @@ export const PromptVariantResponseRepository = <
                 .return('count(node) as updatedResponseCount'),
             (query) =>
               query
-                .set({
-                  values: {
-                    'response.response': input.response,
-                  },
-                  variables: {
-                    'response.modifiedAt': now.toString(),
-                  },
+                .setVariables({
+                  'response.response': responseVar.toString(),
+                  'response.modifiedAt': now.toString(),
                 })
                 .return('count(response) as updatedResponseCount')
           )
@@ -226,7 +223,7 @@ export const PromptVariantResponseRepository = <
         .with('parent')
         .setVariables({ 'parent.modifiedAt': now.toString() })
         .return('parent')
-        .first();
+        .executeAndLogStats();
     }
 
     async changePrompt(input: ChangePrompt, _session: Session) {
