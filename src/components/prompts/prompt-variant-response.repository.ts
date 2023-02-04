@@ -111,9 +111,10 @@ export const PromptVariantResponseRepository = <
                 node('response', 'VariantResponse'),
               ])
               .with(
-                merge('response', { modifiedAt: 'response.createdAt' }).as(
-                  'response'
-                )
+                merge('response', {
+                  modifiedAt:
+                    'coalesce(response.modifiedAt, response.createdAt)',
+                }).as('response')
               )
               .return('collect(response) as responses')
           )

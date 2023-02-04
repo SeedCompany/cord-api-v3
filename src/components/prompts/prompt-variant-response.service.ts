@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { lowerCase } from 'lodash';
+import { DateTime } from 'luxon';
 import {
   IdOf,
   mapFromList,
@@ -240,10 +241,12 @@ export const PromptVariantResponseListService = <
         ...response,
         responses: response.responses.map((response) => ({
           ...response,
-          response:
-            response.variant !== variant.key
-              ? response.response
-              : input.response,
+          ...(response.variant === variant.key
+            ? {
+                response: input.response,
+                modifiedAt: DateTime.now(),
+              }
+            : {}),
         })),
       };
       return await this.secure(updated, session);
