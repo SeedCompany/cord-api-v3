@@ -111,9 +111,10 @@ export const PromptVariantResponseRepository = <
                 node('response', 'VariantResponse'),
               ])
               .with(
-                merge('response', { modifiedAt: 'response.createdAt' }).as(
-                  'response'
-                )
+                merge('response', {
+                  modifiedAt:
+                    'coalesce(response.modifiedAt, response.createdAt)',
+                }).as('response')
               )
               .return('collect(response) as responses')
           )
@@ -167,10 +168,11 @@ export const PromptVariantResponseRepository = <
       const query = this.db.query();
       const permanentAfter = permanentAfterAsVar(defaultPermanentAfter, query)!;
       const now = query.params.addParam(DateTime.now(), 'now');
+      const responseVar = query.params.addParam(input.response, 'response');
       const newResponse = await createNode(VariantResponse, {
         baseNodeProps: {
           variant: input.variant,
-          response: input.response,
+          response: variable(responseVar.toString()),
           creator: session.userId,
         },
       });
@@ -190,8 +192,10 @@ export const PromptVariantResponseRepository = <
             (query) =>
               query
                 .comment('deactivate old responses for variant')
-                .subQuery(['parent', 'response'], (sub) =>
+                .subQuery('response', (sub) =>
                   sub
+                    .with('response')
+                    .raw('WHERE response IS NOT NULL')
                     .apply(prefixNodeLabelsWithDeleted('response'))
                     .setVariables({
                       'response.active': 'false',
@@ -210,13 +214,9 @@ export const PromptVariantResponseRepository = <
                 .return('count(node) as updatedResponseCount'),
             (query) =>
               query
-                .set({
-                  values: {
-                    'response.response': input.response,
-                  },
-                  variables: {
-                    'response.modifiedAt': now.toString(),
-                  },
+                .setVariables({
+                  'response.response': responseVar.toString(),
+                  'response.modifiedAt': now.toString(),
                 })
                 .return('count(response) as updatedResponseCount')
           )
@@ -224,7 +224,7 @@ export const PromptVariantResponseRepository = <
         .with('parent')
         .setVariables({ 'parent.modifiedAt': now.toString() })
         .return('parent')
-        .first();
+        .executeAndLogStats();
     }
 
     async changePrompt(input: ChangePrompt, _session: Session) {
