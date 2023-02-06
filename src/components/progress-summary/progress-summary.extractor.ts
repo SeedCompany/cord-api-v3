@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { round } from 'lodash';
 import { CalendarDate, fiscalQuarter, fiscalYear } from '../../common';
 import { Column, Row } from '../../common/xlsx.util';
 import { Downloadable } from '../file';
@@ -41,7 +42,7 @@ const summaryFrom = (
   if (!planned || !actual) {
     return null;
   }
-  if (planned > 1) {
+  if (round(planned, 4) > 1) {
     // The PnP has the macro option to do calculations as percents or verse equivalents.
     // We need to standardize as percents here.
     return {
