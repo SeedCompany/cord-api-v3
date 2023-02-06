@@ -325,6 +325,7 @@ export class ConfigService implements EmailOptionsFactory {
       'nest,nest:*,-nest:loader': LogLevel.DEBUG,
       'nest:loader,nest:router': LogLevel.WARNING,
       'config:environment': LogLevel.INFO,
+      'graphql:module': LogLevel.WARNING,
       version: LogLevel.DEBUG,
     },
   };

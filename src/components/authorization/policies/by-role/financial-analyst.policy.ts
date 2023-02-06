@@ -35,7 +35,9 @@ import {
     r.Organization.create.whenAny(member, sensMediumOrLower).edit,
     r.Partner.read.create
       .specifically((p) => [
-        p.many('organization', 'pointOfContact').when(sensMediumOrLower).read,
+        p
+          .many('organization', 'pointOfContact')
+          .whenAny(member, sensMediumOrLower).read,
       ])
       .children((c) => c.posts.edit),
     r.Partnership.read

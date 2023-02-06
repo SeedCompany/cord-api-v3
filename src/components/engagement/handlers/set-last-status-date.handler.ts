@@ -1,5 +1,6 @@
 import { ServerException } from '../../../common';
 import {
+  ConfigService,
   DatabaseService,
   EventsHandler,
   IEventHandler,
@@ -19,6 +20,7 @@ export class SetLastStatusDate
 {
   constructor(
     private readonly db: DatabaseService,
+    private readonly config: ConfigService,
     @Logger('engagement:set-last-status-date') private readonly logger: ILogger
   ) {}
 
@@ -58,7 +60,9 @@ export class SetLastStatusDate
         userId: session.userId,
         exception,
       });
-      throw new ServerException('Could not set last status date', exception);
+      throw this.config.jest
+        ? exception
+        : new ServerException('Could not set last status date', exception);
     }
   }
 }

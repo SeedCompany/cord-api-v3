@@ -1,8 +1,11 @@
 import { Connection } from 'cypher-query-builder';
 import { Duration, DurationLike } from 'luxon';
-import { Transaction } from 'neo4j-driver';
+import { Transaction as NeoTransaction } from 'neo4j-driver';
 import { ServerException } from '../../common';
+import { ILogger } from '../logger';
 import { PatchedConnection } from './cypher.factory';
+
+export type Transaction = NeoTransaction & { queryLogger?: ILogger };
 
 /**
  * A neo4j transaction mode
@@ -40,6 +43,8 @@ export interface TransactionOptions {
    * It will also get logged to the `query.log`.
    */
   metadata?: Record<string, unknown>;
+
+  queryLogger?: ILogger;
 }
 
 declare module 'cypher-query-builder/dist/typings/connection' {
@@ -101,7 +106,12 @@ Connection.prototype.runInTransaction = async function withTransaction<R>(
 
   try {
     return await runTransaction(
-      (tx) => this.transactionStorage.run(tx, inner),
+      (tx) => {
+        if (options?.queryLogger) {
+          (tx as Transaction).queryLogger = options?.queryLogger;
+        }
+        return this.transactionStorage.run(tx, inner);
+      },
       {
         timeout: options?.timeout
           ? Duration.from(options.timeout).toMillis()

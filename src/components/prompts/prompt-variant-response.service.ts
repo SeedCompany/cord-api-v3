@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { lowerCase } from 'lodash';
+import { DateTime } from 'luxon';
 import {
   IdOf,
   mapFromList,
@@ -236,14 +237,22 @@ export const PromptVariantResponseListService = <
         await this.repo.submitResponse(input, session);
       }
 
+      const responses = mapFromList(response.responses, (response) => [
+        response.variant,
+        response,
+      ]);
       const updated: UnsecuredDto<PromptVariantResponse<TVariant>> = {
         ...response,
-        responses: response.responses.map((response) => ({
-          ...response,
-          response:
-            response.variant !== variant.key
-              ? response.response
-              : input.response,
+        responses: this.resource.Variants.map(({ key }) => ({
+          ...responses[key],
+          ...(variant.key === key
+            ? {
+                variant: key,
+                response: input.response,
+                creator: responses[key]?.creator ?? session.userId,
+                modifiedAt: DateTime.now(),
+              }
+            : {}),
         })),
       };
       return await this.secure(updated, session);

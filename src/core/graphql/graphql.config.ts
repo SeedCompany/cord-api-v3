@@ -34,6 +34,13 @@ import { ConfigService } from '../config/config.service';
 import { VersionService } from '../config/version.service';
 import { GraphqlTracingPlugin } from './graphql-tracing.plugin';
 
+declare module 'graphql/error/GraphQLError' {
+  interface GraphQLErrorExtensions {
+    code: string;
+    codes?: ReadonlySet<string>;
+  }
+}
+
 @Injectable()
 export class GraphQLConfig implements GqlOptionsFactory {
   constructor(

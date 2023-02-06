@@ -42,6 +42,7 @@ export class ParameterTransformer {
     }
 
     if (value instanceof Duration) {
+      value = value.shiftTo('months', 'days', 'seconds', 'milliseconds');
       return new Neo.Duration(
         value.months,
         value.days,

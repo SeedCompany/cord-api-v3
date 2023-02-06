@@ -10,7 +10,6 @@ import { many } from '~/common';
 import { ConfigService } from '../../config/config.service';
 import { ILogger, Logger } from '../../logger';
 import { DatabaseService, ServerInfo } from '../database.service';
-import { Transactional } from '../transactional.decorator';
 import { IndexMode } from './create-indexes.decorator';
 import { DB_INDEX_KEY } from './indexer.constants';
 
@@ -38,7 +37,12 @@ export class IndexerModule implements OnModuleInit {
     const finishing = this.db.runOnceUntilCompleteAfterConnecting(
       async (serverInfo) => {
         for (const [mode, discoveredOfMode] of Object.entries(groupedByMode)) {
-          await this.doIndexing(discoveredOfMode, serverInfo);
+          await this.db.conn.runInTransaction(
+            () => this.doIndexing(discoveredOfMode, serverInfo),
+            {
+              queryLogger: this.logger,
+            }
+          );
           this.logger.debug(`Finished syncing ${mode} indexes`);
         }
       }
@@ -56,7 +60,6 @@ export class IndexerModule implements OnModuleInit {
     }
   }
 
-  @Transactional()
   async doIndexing(
     discovered: Array<DiscoveredMethodWithMeta<unknown>>,
     serverInfo: ServerInfo
@@ -65,10 +68,6 @@ export class IndexerModule implements OnModuleInit {
 
     const indexers = discovered.map((h) => h.discoveredMethod);
     for (const { handler, methodName, parentClass } of indexers) {
-      this.logger.debug('Running indexer', {
-        class: parentClass.name,
-        method: methodName,
-      });
       const maybeStatements = await handler.call(parentClass.instance, {
         db: this.db,
         logger: this.logger,

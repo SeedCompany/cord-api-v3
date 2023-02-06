@@ -311,12 +311,12 @@ export class ProductProgressRepository {
               nodeName: 'stepNode',
               resource: StepProgress,
               key: 'completed',
-              variable: 'stepInput.completed',
+              value: variable('stepInput.completed'),
             })
           )
           .return([
-            'sum(numPropsCreated) as numProgressPercentCreated',
-            'sum(numPropsDeactivated) as numProgressPercentDeactivated',
+            'sum(stats.created) as numProgressPercentCreated',
+            'sum(stats.deactivated) as numProgressPercentDeactivated',
           ])
       )
 

@@ -4,7 +4,7 @@ import { highlight } from 'cli-highlight';
 import { stripIndent } from 'common-tags';
 import { Connection } from 'cypher-query-builder';
 import { compact } from 'lodash';
-import { Driver, Session, Transaction } from 'neo4j-driver-core';
+import { Driver, Session } from 'neo4j-driver-core';
 // @ts-expect-error this isn't typed but it exists
 import * as RetryStrategy from 'neo4j-driver-core/lib/internal/retry-strategy';
 import QueryRunner from 'neo4j-driver/types/query-runner';
@@ -18,7 +18,10 @@ import { AFTER_MESSAGE } from '../logger/formatters';
 import { TracingService } from '../tracing';
 import { createBetterError, isNeo4jError } from './errors';
 import { ParameterTransformer } from './parameter-transformer.service';
+// eslint-disable-next-line import/no-duplicates
+import { Transaction } from './transaction';
 import { MyTransformer } from './transformer';
+// eslint-disable-next-line import/no-duplicates
 import './transaction'; // import our transaction augmentation
 import './query-augmentation'; // import our query augmentation
 
@@ -131,7 +134,11 @@ export const CypherFactory: FactoryProvider<Connection> = {
         // in order to forward methods to the current transaction.
         // @ts-expect-error yes we are only supporting these two methods
         const txSession: Session = {
-          run: wrapQueryRun(currentTransaction, logger, parameterTransformer),
+          run: wrapQueryRun(
+            currentTransaction,
+            currentTransaction.queryLogger ?? logger,
+            parameterTransformer
+          ),
           close: async () => {
             // No need to close anything when finishing the query inside of the
             // transaction. The close will happen when the transaction work finishes.
@@ -260,22 +267,36 @@ const wrapQueryRun = (
       : undefined;
     const result = origRun(statement, params);
 
+    const tweakError = (e: Error) => {
+      if (typeof parameters?.__stacktrace === 'string' && e.stack) {
+        const stackStart = e.stack.indexOf('    at');
+        e.stack = e.stack.slice(0, stackStart) + parameters.__stacktrace;
+      }
+      const patched = jestSkipFileInExceptionSource(e, __filename);
+      const mapped = createBetterError(patched);
+      if (isNeo4jError(mapped) && mapped.logProps) {
+        logger.log(mapped.logProps);
+      }
+      return mapped;
+    };
+
     const origSubscribe = result.subscribe.bind(result);
     result.subscribe = function (this: never, observer) {
       const onError = observer.onError?.bind(observer);
       observer.onError = (e) => {
-        if (typeof parameters?.__stacktrace === 'string' && e.stack) {
-          const stackStart = e.stack.indexOf('    at');
-          e.stack = e.stack.slice(0, stackStart) + parameters.__stacktrace;
-        }
-        const patched = jestSkipFileInExceptionSource(e, __filename);
-        const mapped = createBetterError(patched);
-        if (isNeo4jError(mapped) && mapped.logProps) {
-          logger.log(mapped.logProps);
-        }
+        const mapped = tweakError(e);
         onError?.(mapped);
       };
       origSubscribe(observer);
+    };
+
+    const origSummary = result.summary.bind(result);
+    result.summary = async function () {
+      try {
+        return await origSummary();
+      } catch (e) {
+        throw tweakError(e);
+      }
     };
 
     return result;

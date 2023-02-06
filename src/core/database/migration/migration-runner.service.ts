@@ -36,7 +36,7 @@ export class MigrationRunner {
     const migratorsToRun = discovered.filter((d) => d.version > existing);
 
     if (migratorsToRun.length === 0) {
-      this.logger.info('Schema is already up to date');
+      this.logger.debug('Schema is already up to date');
       return;
     }
 
@@ -71,12 +71,19 @@ export class MigrationRunner {
   }
 
   private async currentSchemaVersion() {
-    return await this.db
-      .query()
-      .matchNode('node', 'SchemaVersion')
-      .return<{ value: DateTime }>('node.value as value')
-      .map('value')
-      .first();
+    const query = this.db.query();
+    return await this.db.conn.runInTransaction(
+      async () => {
+        return await query
+          .matchNode('node', 'SchemaVersion')
+          .return<{ value: DateTime }>('node.value as value')
+          .map('value')
+          .first();
+      },
+      {
+        queryLogger: this.logger,
+      }
+    );
   }
 
   private async setSchemaVersion(next: DateTime) {

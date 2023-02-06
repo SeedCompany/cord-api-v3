@@ -327,8 +327,16 @@ export const unavailability = gql`
       canEdit
       canRead
     }
-    start
-    end
+    start {
+      value
+      canEdit
+      canRead
+    }
+    end {
+      value
+      canEdit
+      canRead
+    }
   }
 `;
 

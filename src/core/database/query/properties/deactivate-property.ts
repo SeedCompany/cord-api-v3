@@ -1,16 +1,11 @@
 import { node, Query, relation } from 'cypher-query-builder';
-import { Parameter } from 'cypher-query-builder/dist/typings/parameter-bag';
 import { DateTime } from 'luxon';
-import { MergeExclusive } from 'type-fest';
-import {
-  EnhancedResource,
-  ID,
-  MaybeUnsecuredInstance,
-  ResourceShape,
-} from '~/common';
-import { ACTIVE, Variable, variable as varRef } from '.';
-import { DbChanges } from '../changes';
-import { prefixNodeLabelsWithDeleted } from './deletes';
+import { ID, MaybeUnsecuredInstance, ResourceShape } from '~/common';
+import { DbChanges } from '../../changes';
+import { prefixNodeLabelsWithDeleted } from '../deletes';
+import { ACTIVE, Variable, variable as varRef } from '../index';
+import { maybeWhereAnd } from '../maybe-where-and';
+import { CommonPropertyOptions } from './common-property-options';
 
 export type DeactivatePropertyOptions<
   TResourceStatic extends ResourceShape<any>,
@@ -18,19 +13,8 @@ export type DeactivatePropertyOptions<
     id: ID;
   },
   Key extends keyof DbChanges<TObject> & string
-> = MergeExclusive<
-  {
-    resource: TResourceStatic | EnhancedResource<TResourceStatic>;
-    key: Key;
-  },
-  {
-    key: Variable;
-  }
-> & {
-  changeset?: ID;
-  nodeName?: string;
+> = CommonPropertyOptions<TResourceStatic, TObject, Key> & {
   numDeactivatedVar?: string;
-  now?: Parameter;
 };
 
 /**
@@ -48,10 +32,13 @@ export const deactivateProperty =
     changeset,
     nodeName = 'node',
     numDeactivatedVar = 'numPropsDeactivated',
-    now,
+    now: nowIn,
   }: DeactivatePropertyOptions<TResourceStatic, TObject, Key>) =>
   <R>(query: Query<R>) => {
-    const imports = [nodeName, key instanceof Variable ? key : ''];
+    const imports = [nodeName, key instanceof Variable ? key : '', changeset];
+    const now = (
+      nowIn ?? query.params.addParam(DateTime.now(), 'now')
+    ).toString();
 
     const docKey = key instanceof Variable ? `[${key.toString()}]` : `.${key}`;
     const docSignature = `deactivateProperty(${nodeName}${docKey})`;
@@ -66,18 +53,18 @@ export const deactivateProperty =
           ...(changeset
             ? [
                 relation('in', 'oldChange', 'changeset', ACTIVE),
-                node('changeNode', 'Changeset', { id: changeset }),
+                node(changeset.toString()),
               ]
             : []),
         ])
-        .apply((q) =>
-          key instanceof Variable
-            ? q.raw(`WHERE type(oldToProp) = ${key.toString()}`)
-            : q
+        .apply(
+          maybeWhereAnd(
+            key instanceof Variable && `type(oldToProp) = ${key.toString()}`
+          )
         )
         .setValues({
           [`${changeset ? 'oldChange' : 'oldToProp'}.active`]: false,
-          'oldPropVar.deletedAt': now ? varRef(now.toString()) : DateTime.now(),
+          'oldPropVar.deletedAt': varRef(now),
         })
         .with('oldPropVar')
         .apply(prefixNodeLabelsWithDeleted('oldPropVar'))

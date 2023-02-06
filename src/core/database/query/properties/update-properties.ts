@@ -6,8 +6,9 @@ import {
   MaybeUnsecuredInstance,
   ResourceShape,
 } from '~/common';
-import { updateProperty, variable } from '.';
-import { DbChanges } from '../changes';
+import { DbChanges } from '../../changes';
+import { apoc, collect, merge, Variable, variable } from '../index';
+import { PropUpdateStat, updateProperty } from './update-property';
 
 export interface UpdatePropertiesOptions<
   TResourceStatic extends ResourceShape<any>,
@@ -17,9 +18,9 @@ export interface UpdatePropertiesOptions<
 > {
   resource: TResourceStatic | EnhancedResource<TResourceStatic>;
   changes: DbChanges<TObject>;
-  changeset?: ID;
+  changeset?: Variable;
   nodeName?: string;
-  numUpdatedVar?: string;
+  outputStatsVar?: string;
 }
 
 export const updateProperties =
@@ -33,7 +34,7 @@ export const updateProperties =
     changes,
     changeset,
     nodeName = 'node',
-    numUpdatedVar = 'numPropsUpdated',
+    outputStatsVar = 'stats',
   }: UpdatePropertiesOptions<TResourceStatic, TObject>) =>
   <R>(query: Query<R>) => {
     const resource = EnhancedResource.of(resourceIn);
@@ -56,13 +57,19 @@ export const updateProperties =
           .apply(
             updateProperty({
               key: variable('prop.key'),
-              variable: 'prop.value',
+              value: variable('prop.value'),
               labels: variable('prop.labels'),
               changeset,
               nodeName,
               now: query.params.addParam(DateTime.local(), 'now'),
             })
           )
-          .return(`count(prop) as ${numUpdatedVar}`)
+          .return<{
+            stats: { [K in keyof DbChanges<TObject>]?: PropUpdateStat };
+          }>(
+            merge(collect(apoc.map.fromValues(['prop.key', 'stats']))).as(
+              outputStatsVar
+            )
+          )
       );
   };
