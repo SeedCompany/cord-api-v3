@@ -9,7 +9,8 @@ export const isScriptureEqual = (
 ) => {
   if (
     (a.length !== 0 && b.length === 0) ||
-    (a.length === 0 && b.length !== 0)
+    (a.length === 0 && b.length !== 0) ||
+    (a.length === 0 && b.length === 0)
   ) {
     // If one is empty and the other is not, then we know they aren't equal
     return false;
