@@ -220,16 +220,14 @@ export class ProjectResolver {
   })
   async team(
     @AnonSession() session: Session,
-    @Parent() { id, sensitivity, scope }: Project,
+    @Parent() project: Project,
     @ListArg(ProjectMemberListInput) input: ProjectMemberListInput,
     @Loader(ProjectMemberLoader) projectMembers: LoaderOf<ProjectMemberLoader>
   ): Promise<SecuredProjectMemberList> {
     const list = await this.projectService.listProjectMembers(
-      id,
+      project,
       input,
-      session,
-      sensitivity,
-      scope
+      session
     );
     projectMembers.primeAll(list.items);
     return list;

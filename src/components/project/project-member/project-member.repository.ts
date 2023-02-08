@@ -8,6 +8,7 @@ import {
   ACTIVE,
   matchPropsAndProjectSensAndScopedRoles,
   merge,
+  oncePerProject,
   paginate,
   property,
   requestingUser,
@@ -114,14 +115,12 @@ export class ProjectMemberRepository extends DtoRepository<
     const result = await this.db
       .query()
       .match([
-        ...(filter.projectId
-          ? [
-              node('project', 'Project', {
-                id: filter.projectId,
-              }),
-              relation('out', '', 'member'),
-            ]
-          : []),
+        node(
+          'project',
+          'Project',
+          filter.projectId ? { id: filter.projectId } : {}
+        ),
+        relation('out', '', 'member'),
         node('node', 'ProjectMember'),
       ])
       .apply((q) =>
@@ -139,6 +138,11 @@ export class ProjectMemberRepository extends DtoRepository<
           : q
       )
       .match(requestingUser(session))
+      .apply(
+        this.privileges.forUser(session).filterToReadable({
+          wrapContext: oncePerProject,
+        })
+      )
       .apply(sorting(ProjectMember, input))
       .apply(paginate(input, this.hydrate(session)))
       .first();

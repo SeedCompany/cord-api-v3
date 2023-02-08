@@ -12,7 +12,6 @@ import {
   MaybeAsync,
   NotFoundException,
   ObjectView,
-  SecuredList,
   ServerException,
   Session,
   UnauthorizedException,
@@ -250,14 +249,8 @@ export class ProjectMemberService {
     input: ProjectMemberListInput,
     session: Session
   ): Promise<ProjectMemberListOutput> {
-    // Since there is no case at the present where there is global versus scoped canList,
-    // not doing the whole limitedScope map thing for now.
-    if (await this.authorizationService.canList(ProjectMember, session)) {
-      const results = await this.repo.list(input, session);
-      return await mapListResults(results, (dto) => this.secure(dto, session));
-    } else {
-      return SecuredList.Redacted;
-    }
+    const results = await this.repo.list(input, session);
+    return await mapListResults(results, (dto) => this.secure(dto, session));
   }
 
   protected filterByProject(
