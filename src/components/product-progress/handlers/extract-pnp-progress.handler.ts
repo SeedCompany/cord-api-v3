@@ -63,8 +63,10 @@ export class ExtractPnpProgressHandler {
       }
 
       if (row.bookName) {
-        const exactScriptureMatch = scriptureProducts.find((ref) =>
-          isScriptureEqual(ref.scriptureRanges, row.scripture)
+        const exactScriptureMatch = scriptureProducts.find(
+          (ref) =>
+            ref.scriptureRanges.length > 0 &&
+            isScriptureEqual(ref.scriptureRanges, row.scripture)
         );
         if (exactScriptureMatch) {
           return { productId: exactScriptureMatch.id, steps };
