@@ -469,34 +469,27 @@ export class ProjectService {
   }
 
   async listProjectMembers(
-    projectId: ID,
+    project: Project,
     input: ProjectMemberListInput,
-    session: Session,
-    sensitivity?: Sensitivity,
-    scope?: ScopedRole[]
+    session: Session
   ): Promise<SecuredProjectMemberList> {
     const result = await this.projectMembers.list(
       {
         ...input,
         filter: {
           ...input.filter,
-          projectId: projectId,
+          projectId: project.id,
         },
       },
       session
     );
 
-    const perms = await this.authorizationService.getPermissions({
-      resource: IProject,
-      sessionOrUserId: session,
-      sensitivity,
-      otherRoles: scope,
-    });
+    const perms = this.privileges.for(session, IProject, project).all.member;
 
     return {
       ...result,
-      canRead: perms.member.canRead,
-      canCreate: perms.member.canEdit,
+      canRead: perms.read,
+      canCreate: perms.create,
     };
   }
 
