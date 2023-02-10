@@ -22,15 +22,10 @@ import {
     r.ProgressReportHighlight,
     r.ProgressReportTeamNews,
   ].flatMap((it) => [
-    it.read.specifically((p) => [
-      p.responses.when(variant('published')).read,
-      p.responses.whenAll(sensMediumOrLower, variant('fpm')).read,
-      p.responses.when(member).read,
-      p.responses.whenAll(member, variant('published')).edit,
-    ]),
+    it.read.specifically((p) => [p.responses.when(variant('published')).edit]),
   ]),
-  r.ProgressReportVarianceExplanation.read,
-  r.ProgressReportWorkflowEvent.transitions('Publish').execute,
+  r.ProgressReportVarianceExplanation.read.specifically((p) => p.comments.none),
+  r.ProgressReportWorkflowEvent.read.transitions('Publish').execute,
   r.Project.read
     .specifically((p) => [
       p
@@ -39,6 +34,5 @@ import {
       p.marketingLocation.edit,
     ])
     .children((c) => c.posts.edit),
-  r.StepProgress.whenAll(sensOnlyLow, variant('official')).read,
 ])
 export class MarketingPolicy {}
