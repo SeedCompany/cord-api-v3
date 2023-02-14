@@ -26,7 +26,7 @@ export const LevelMatcherProvider: Provider<Promise<LevelMatcher>> = {
     // env levels take the form of a,b=level;c,d=level
     const envLevels: Record<string, LogLevel> = mapFromList(
       (process.env.LOG_LEVELS || '').split(';').flatMap((pair) => {
-        const matched = /\s*([\w\s,-:*]+)=\s*(\w+)\s*/.exec(pair);
+        const matched = /\s*([\w\s,\-:*]+)=\s*(\w+)\s*/.exec(pair);
         return matched ? [[matched[1], matched[2]]] : [];
       }),
       identity
