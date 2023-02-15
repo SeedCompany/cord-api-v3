@@ -41,6 +41,6 @@ import { member, Policy, Role, sensMediumOrLower, sensOnlyLow } from '../util';
       p.rootDirectory.whenAny(member, sensMediumOrLower).edit,
     ])
     .children((c) => [c.posts.edit]),
-  r.ProjectMember.edit,
+  r.ProjectMember.edit.create.delete,
 ])
 export class ConsultantManagerPolicy {}
