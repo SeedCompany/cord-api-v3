@@ -13,11 +13,19 @@ import { member, Policy, Role, sensMediumOrLower } from '../util';
   r.Organization.edit,
   r.Partner.edit,
   r.Partnership.read.create.delete.specifically((p) => [
-    p.many('mouStartOverride', 'mouEndOverride', 'mou', 'mouStatus').edit,
+    p.many(
+      'mouStartOverride',
+      'mouEndOverride',
+      'mou',
+      'mouStatus',
+      'financialReportingType',
+      'primary',
+      'types'
+    ).edit,
   ]),
   r.PeriodicReport.edit,
   r.Project.specifically((p) => [
-    p.rootDirectory.read,
+    p.many('primaryLocation', 'rootDirectory').read,
     p.many(
       'step',
       'mouStart',
