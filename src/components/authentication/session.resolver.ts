@@ -97,6 +97,21 @@ export class SessionResolver {
     return output.user ? await users.load(output.user) : null;
   }
 
+  @ResolveField(() => User, {
+    nullable: true,
+    description:
+      'The impersonator if the user is logged in and impersonating someone else',
+  })
+  async impersonator(
+    @Parent() { session }: SessionOutput,
+    @Loader(UserLoader) users: LoaderOf<UserLoader>
+  ): Promise<User | null> {
+    if (session.anonymous || !session.impersonator) {
+      return null;
+    }
+    return await users.load(session.impersonator.userId);
+  }
+
   @ResolveField(() => [Power], { nullable: true })
   async powers(@Parent() output: SessionOutput): Promise<Power[]> {
     return [...this.privileges.forUser(output.session).powers];
