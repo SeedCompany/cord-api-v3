@@ -1,6 +1,11 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { parentIdMiddleware, SecuredProperty, SecuredProps } from '~/common';
+import {
+  Calculated,
+  parentIdMiddleware,
+  SecuredProperty,
+  SecuredProps,
+} from '~/common';
 import { RegisterResource } from '~/core';
 import { BaseNode } from '~/core/database/results';
 import { LanguageEngagement } from '../../engagement/dto';
@@ -39,6 +44,7 @@ export class ProgressReport extends IPeriodicReport {
   @Field(() => SecuredStatus, {
     middleware: [parentIdMiddleware],
   })
+  @Calculated()
   readonly status: SecuredStatus;
 }
 
