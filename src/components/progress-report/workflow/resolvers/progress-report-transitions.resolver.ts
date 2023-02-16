@@ -16,7 +16,7 @@ export class ProgressReportTransitionsResolver {
     @Parent() status: SecuredProgressReportStatus & ParentIdMiddlewareAdditions,
     @AnonSession() session: Session
   ): Promise<ProgressReportWorkflowTransition[]> {
-    if (!status.canRead || !status.canEdit || !status.value) {
+    if (!status.canRead || !status.value) {
       return [];
     }
     return this.workflow.getAvailableTransitions(session, status.value);
