@@ -25,7 +25,9 @@ import {
     r.ProgressReportHighlight,
     r.ProgressReportTeamNews,
   ].flatMap((it) => [
-    it.read.specifically((p) => [p.responses.when(variant('published')).edit]),
+    it.read.specifically((p) => [
+      p.responses.read.when(variant('published')).edit,
+    ]),
   ]),
   r.ProgressReportVarianceExplanation.read.specifically((p) => p.comments.none),
   r.ProgressReportWorkflowEvent.read.transitions('Publish').execute,
