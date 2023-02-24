@@ -65,15 +65,31 @@ export class ProgressReportWorkflowService {
   }
 
   async executeTransition(
-    {
-      report: reportId,
-      transition: transitionId,
-      status: overrideStatus,
-      notes,
-    }: ExecuteProgressReportTransitionInput,
+    input: ExecuteProgressReportTransitionInput,
     session: Session,
   ) {
+    const { report: reportId, notes } = input;
+
     const currentStatus = await this.repo.currentStatus(reportId);
+    const next = this.validateExecutionInput(input, currentStatus, session);
+    const isTransition = typeof next !== 'string';
+
+    await Promise.all([
+      isTransition
+        ? this.repo.recordTransition(reportId, next, session, notes)
+        : this.repo.recordBypass(reportId, next, session, notes),
+      this.repo.changeStatus(reportId, isTransition ? next.to : next),
+    ]);
+
+    // TODO(transition.notify);
+  }
+
+  private validateExecutionInput(
+    input: ExecuteProgressReportTransitionInput,
+    currentStatus: Status,
+    session: Session,
+  ) {
+    const { transition: transitionId, status: overrideStatus } = input;
 
     if (overrideStatus) {
       if (!this.canBypass(session)) {
@@ -81,12 +97,7 @@ export class ProgressReportWorkflowService {
           'You do not have permission to bypass workflow. Specify a transition ID instead.',
         );
       }
-
-      await Promise.all([
-        this.repo.recordBypass(reportId, overrideStatus, session, notes),
-        this.repo.changeStatus(reportId, overrideStatus),
-      ]);
-      return;
+      return overrideStatus;
     }
 
     const available = this.getAvailableTransitions(session, currentStatus);
@@ -94,12 +105,6 @@ export class ProgressReportWorkflowService {
     if (!transition) {
       throw new UnauthorizedException('This transition is not available');
     }
-
-    await Promise.all([
-      this.repo.recordTransition(reportId, transition, session, notes),
-      this.repo.changeStatus(reportId, transition.to),
-    ]);
-
-    // TODO(transition.notify);
+    return transition;
   }
 }
