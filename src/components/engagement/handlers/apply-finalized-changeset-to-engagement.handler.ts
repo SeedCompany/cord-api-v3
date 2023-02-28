@@ -24,7 +24,7 @@ export class ApplyFinalizedChangesetToEngagement
     private readonly db: DatabaseService,
     private readonly engagementService: EngagementService,
     @Logger('engagement:change-request:finalized')
-    private readonly logger: ILogger
+    private readonly logger: ILogger,
   ) {}
 
   async handle({ changeset, session }: SubscribedEvent) {
@@ -50,12 +50,12 @@ export class ApplyFinalizedChangesetToEngagement
             .apply(
               changeset.applied
                 ? commitChangesetProps()
-                : rejectChangesetProps()
+                : rejectChangesetProps(),
             )
-            .return('node.id as engagementId')
+            .return('node.id as engagementId'),
         )
         .return<{ engagementIds: ID[] }>(
-          'collect(engagementId) as engagementIds'
+          'collect(engagementId) as engagementIds',
         )
         .first();
 
@@ -79,10 +79,10 @@ export class ApplyFinalizedChangesetToEngagement
             .setValues({
               'engagementRel.active': true,
             })
-            .return('node.id as engagementId')
+            .return('node.id as engagementId'),
         )
         .return<{ engagementIds: ID[] }>(
-          'collect(engagementId) as engagementIds'
+          'collect(engagementId) as engagementIds',
         )
         .first();
 
@@ -109,9 +109,9 @@ export class ApplyFinalizedChangesetToEngagement
               node('node', 'Language'),
             ])
             .apply(
-              changeset.id ? commitChangesetProps() : rejectChangesetProps()
+              changeset.id ? commitChangesetProps() : rejectChangesetProps(),
             )
-            .return('1')
+            .return('1'),
         )
         .return('project')
         .run();
@@ -123,13 +123,13 @@ export class ApplyFinalizedChangesetToEngagement
       // progress report sync is an example of a handler that needs to run
       const allEngagementIds = union(
         result?.engagementIds || [],
-        newResult?.engagementIds || []
+        newResult?.engagementIds || [],
       );
       await this.triggerUpdateEvent(allEngagementIds, session);
     } catch (exception) {
       throw new ServerException(
         'Failed to apply changeset to project',
-        exception
+        exception,
       );
     }
   }

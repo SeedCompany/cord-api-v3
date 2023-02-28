@@ -7,7 +7,7 @@ import { isPromise } from 'util/types';
 export const cachedOnObject = <T extends object, R>(
   map: WeakMap<T, Awaited<R>>,
   object: T,
-  calculate: () => R
+  calculate: () => R,
 ): R => {
   if (map.has(object)) {
     return map.get(object)!;
@@ -36,7 +36,7 @@ export const CachedForArg =
   <Arg extends Weak extends true ? object : any, R>(
     staticClass: any,
     methodName: string | symbol,
-    descriptor: TypedPropertyDescriptor<(...args: [Arg]) => R>
+    descriptor: TypedPropertyDescriptor<(...args: [Arg]) => R>,
   ) => {
     const execute = descriptor.value!;
     const staticMap = new WeakMap(); // holds a map for each instance

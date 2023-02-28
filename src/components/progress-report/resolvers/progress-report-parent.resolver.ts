@@ -10,7 +10,7 @@ export class ProgressReportParentResolver {
   async parent(
     @Info(Fields, IsOnlyId) onlyId: boolean,
     @Parent() report: ProgressReport,
-    @Loader(EngagementLoader) engagements: LoaderOf<EngagementLoader>
+    @Loader(EngagementLoader) engagements: LoaderOf<EngagementLoader>,
   ) {
     if (onlyId) {
       return { id: report.parent.properties.id };

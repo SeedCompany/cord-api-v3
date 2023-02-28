@@ -29,7 +29,7 @@ export async function listProjects(app: TestApp) {
         }
       }
       ${fragments.project}
-    `
+    `,
   );
   const projects: RawProject[] = result.projects.items;
   expect(projects).toBeTruthy();
@@ -38,7 +38,7 @@ export async function listProjects(app: TestApp) {
 
 export async function readOneProjectOtherLocationsItems(
   app: TestApp,
-  id: string
+  id: string,
 ) {
   return (await readOneProjectOtherLocations(app, id)).items;
 }
@@ -59,7 +59,7 @@ export async function readOneProjectPrimaryLocation(app: TestApp, id: string) {
       }
       ${fragments.location}
     `,
-    { id }
+    { id },
   );
 
   const actual: Raw<SecuredList<Location>> = result.project.primaryLocation;
@@ -84,7 +84,7 @@ export async function readOneProjectOtherLocations(app: TestApp, id: string) {
       }
       ${fragments.location}
     `,
-    { id }
+    { id },
   );
 
   const actual: SecuredList<Location> = result.project.otherLocations;
@@ -108,7 +108,7 @@ export async function readOneProjectBudget(app: TestApp, id: string) {
       }
       ${fragments.budget}
     `,
-    { id }
+    { id },
   );
 
   const actual: { budget: SecuredBudget } = result.project;
@@ -126,7 +126,7 @@ export async function readOneProject(app: TestApp, id: string) {
       }
       ${fragments.project}
     `,
-    { id }
+    { id },
   );
 
   const actual: RawProject = result.project;
@@ -137,7 +137,7 @@ export async function readOneProject(app: TestApp, id: string) {
 
 export async function createProject(
   app: TestApp,
-  input: Partial<CreateProject> = {}
+  input: Partial<CreateProject> = {},
 ) {
   const project: CreateProject = {
     name: faker.random.word() + ' ' + faker.datatype.uuid(),
@@ -170,7 +170,7 @@ export async function createProject(
       input: {
         project,
       },
-    }
+    },
   );
 
   const actual: RawProject = result.createProject.project;

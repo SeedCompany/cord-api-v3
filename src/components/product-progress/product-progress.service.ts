@@ -39,14 +39,14 @@ import { StepNotPlannedException } from './step-not-planned.exception';
 export class ProductProgressService {
   constructor(
     private readonly privileges: Privileges,
-    private readonly repo: ProductProgressRepository
+    private readonly repo: ProductProgressRepository,
   ) {}
 
   async getAvailableVariantsForProduct(product: Product, session: Session) {
     return Progress.Variants.filter((variant) => {
       const privileges = this.privilegesFor(
         session,
-        withVariant(product, variant)
+        withVariant(product, variant),
       );
       return privileges.can('read', 'completed');
     });
@@ -54,7 +54,7 @@ export class ProductProgressService {
 
   async readAllForManyReports(
     reports: readonly ProgressVariantByReportInput[],
-    session: Session
+    session: Session,
   ): Promise<readonly ProgressVariantByReportOutput[]> {
     if (reports.length === 0) {
       return [];
@@ -76,14 +76,14 @@ export class ProductProgressService {
 
   async readAllForManyProducts(
     products: readonly ProgressVariantByProductInput[],
-    session: Session
+    session: Session,
   ): Promise<readonly ProgressVariantByProductOutput[]> {
     if (products.length === 0) {
       return [];
     }
     const productMap = mapFromList(products, (p) => [p.product.id, p.product]);
     const rows = await this.repo.readAllProgressReportsForManyProducts(
-      products
+      products,
     );
     return rows.map((row): ProgressVariantByProductOutput => {
       const product = productMap[row.productId];
@@ -102,7 +102,7 @@ export class ProductProgressService {
     report: ID | ProgressReport,
     product: ID | Product,
     variant: Variant<ProgressVariant>,
-    session: Session
+    session: Session,
   ): Promise<ProductProgress> {
     const productId = isIdLike(product) ? product : product.id;
     const reportId = isIdLike(report) ? report : report.id;
@@ -115,7 +115,7 @@ export class ProductProgressService {
     const unsecured = await this.repo.readOne(productId, reportId, variant);
     const progress = this.secure(
       unsecured,
-      this.privilegesFor(session, context)
+      this.privilegesFor(session, context),
     );
     if (!progress) {
       throw new NotFoundException();
@@ -125,7 +125,7 @@ export class ProductProgressService {
 
   async readOneForCurrentReport(
     input: ProgressVariantByProductInput,
-    session: Session
+    session: Session,
   ): Promise<ProductProgress | undefined> {
     const progress = await this.repo.readOneForCurrentReport(input);
     if (!progress) {
@@ -138,11 +138,11 @@ export class ProductProgressService {
     const scope = await this.repo.getScope(input.productId, session);
     const privileges = this.privilegesFor(
       session,
-      withVariant(scope, input.variant)
+      withVariant(scope, input.variant),
     );
     if (!privileges.can('read') || !privileges.can('edit', 'completed')) {
       throw new UnauthorizedException(
-        `You do not have the permission to update the "${input.variant.label}" variant of this goal's progress`
+        `You do not have the permission to update the "${input.variant.label}" variant of this goal's progress`,
       );
     }
 
@@ -162,7 +162,7 @@ export class ProductProgressService {
       if (step.completed && step.completed > scope.progressTarget) {
         throw new InputException(
           "Completed value cannot exceed product's progress target",
-          `steps.${index}.completed`
+          `steps.${index}.completed`,
         );
       }
     });
@@ -173,10 +173,10 @@ export class ProductProgressService {
 
   private secure(
     progress: UnsecuredProductProgress,
-    privileges: UserResourcePrivileges<typeof StepProgress>
+    privileges: UserResourcePrivileges<typeof StepProgress>,
   ): ProductProgress | undefined {
     const vp = privileges.forContext(
-      withVariant(privileges.context!, progress.variant)
+      withVariant(privileges.context!, progress.variant),
     );
     if (!vp.can('read')) {
       return undefined;
@@ -190,7 +190,7 @@ export class ProductProgressService {
 
   private privilegesFor(
     session: Session,
-    context: HasSensitivity & HasScope
+    context: HasSensitivity & HasScope,
   ): UserResourcePrivileges<typeof StepProgress> {
     return this.privileges.for(session, StepProgress, context as any);
   }

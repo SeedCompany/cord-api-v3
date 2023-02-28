@@ -201,7 +201,7 @@ describe('Organization Security e2e', () => {
             });
             const loc = await runAsAdmin(
               app,
-              async () => await createLocation(app)
+              async () => await createLocation(app),
             );
             await addLocationToOrganization({
               app,
@@ -225,9 +225,9 @@ describe('Organization Security e2e', () => {
               }),
               readOneFunction: readFunction,
             });
-          }
+          },
         );
-      }
+      },
     );
     describe.each`
       type
@@ -254,7 +254,7 @@ describe('Organization Security e2e', () => {
         });
         const loc = await runAsAdmin(
           app,
-          async () => await createLocation(app)
+          async () => await createLocation(app),
         );
         await addLocationToOrganization({ app, orgId: o.id, locId: loc.id });
         await expectSensitiveRelationList({

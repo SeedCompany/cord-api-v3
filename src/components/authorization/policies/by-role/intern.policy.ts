@@ -5,7 +5,7 @@ import { inherit, member, Policy, Role } from '../util';
   r.Ceremony.when(member).read,
   inherit(
     r.Engagement.when(member).read,
-    r.LanguageEngagement.specifically((p) => [p.paratextRegistryId.none])
+    r.LanguageEngagement.specifically((p) => [p.paratextRegistryId.none]),
   ),
   r.Language.when(member).read.specifically(
     (p) =>
@@ -15,11 +15,11 @@ import { inherit, member, Policy, Role } from '../util';
         'name',
         'registryOfDialectsCode',
         'signLanguageCode',
-        'sponsorEstimatedEndDate'
-      ).none
+        'sponsorEstimatedEndDate',
+      ).none,
   ),
   r.Location.when(member).read.specifically(
-    (p) => p.many('fundingAccount').none
+    (p) => p.many('fundingAccount').none,
   ),
   r.PeriodicReport.when(member).read,
   r.Producible.when(member).read,

@@ -27,7 +27,7 @@ export class CeremonyService {
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
     private readonly ceremonyRepo: CeremonyRepository,
-    @Logger('ceremony:service') private readonly logger: ILogger
+    @Logger('ceremony:service') private readonly logger: ILogger,
   ) {}
 
   async create(input: CreateCeremony, session: Session): Promise<ID> {
@@ -52,7 +52,7 @@ export class CeremonyService {
   async readOne(
     id: ID,
     session: Session,
-    _view?: ObjectView
+    _view?: ObjectView,
   ): Promise<Ceremony> {
     this.logger.debug(`Query readOne Ceremony`, { id, userId: session.userId });
     if (!id) {
@@ -66,7 +66,7 @@ export class CeremonyService {
   async readMany(ids: readonly ID[], session: Session) {
     const ceremonies = await this.ceremonyRepo.readMany(ids, session);
     return await Promise.all(
-      ceremonies.map((dto) => this.secure(dto, session))
+      ceremonies.map((dto) => this.secure(dto, session)),
     );
   }
 
@@ -74,7 +74,7 @@ export class CeremonyService {
     const securedProps = await this.authorizationService.secureProperties(
       Ceremony,
       dto,
-      session
+      session,
     );
 
     return {
@@ -90,7 +90,7 @@ export class CeremonyService {
     await this.authorizationService.verifyCanEditChanges(
       Ceremony,
       object,
-      changes
+      changes,
     );
     return await this.ceremonyRepo.updateProperties(object, changes);
   }
@@ -104,12 +104,12 @@ export class CeremonyService {
 
     const canDelete = await this.ceremonyRepo.checkDeletePermission(
       id,
-      session
+      session,
     );
 
     if (!canDelete)
       throw new UnauthorizedException(
-        'You do not have the permission to delete this Ceremony'
+        'You do not have the permission to delete this Ceremony',
       );
 
     try {
@@ -124,7 +124,7 @@ export class CeremonyService {
 
   async list(
     input: CeremonyListInput,
-    session: Session
+    session: Session,
   ): Promise<CeremonyListOutput> {
     const results = await this.ceremonyRepo.list(input, session);
     return await mapListResults(results, (dto) => this.secure(dto, session));

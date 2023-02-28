@@ -20,7 +20,7 @@ export class CreateCommentResolver {
   })
   async createComment(
     @Args('input') input: CreateCommentInput,
-    @LoggedInSession() session: Session
+    @LoggedInSession() session: Session,
   ): Promise<CreateCommentOutput> {
     const comment = await this.service.create(input, session);
     return { comment };
@@ -29,7 +29,7 @@ export class CreateCommentResolver {
   @ResolveField(() => CommentThread)
   async commentThread(
     @Parent() output: CreateCommentOutput,
-    @Loader(CommentThreadLoader) threads: LoaderOf<CommentThreadLoader>
+    @Loader(CommentThreadLoader) threads: LoaderOf<CommentThreadLoader>,
   ) {
     return await threads.load(output.comment.thread);
   }

@@ -30,7 +30,7 @@ export class SongResolver {
   })
   async song(
     @Loader(EthnoArtLoader) arts: LoaderOf<EthnoArtLoader>,
-    @IdArg() id: ID
+    @IdArg() id: ID,
   ): Promise<Song> {
     return await arts.load(id);
   }
@@ -42,7 +42,7 @@ export class SongResolver {
   async songs(
     @AnonSession() session: Session,
     @ListArg(SongListInput) input: SongListInput,
-    @Loader(EthnoArtLoader) arts: LoaderOf<EthnoArtLoader>
+    @Loader(EthnoArtLoader) arts: LoaderOf<EthnoArtLoader>,
   ): Promise<SongListOutput> {
     const list = await this.ethnoArts.list(input, session);
     arts.primeAll(list.items);
@@ -55,7 +55,7 @@ export class SongResolver {
   })
   async createSong(
     @LoggedInSession() session: Session,
-    @Args('input') { song: input }: CreateSongInput
+    @Args('input') { song: input }: CreateSongInput,
   ): Promise<CreateSongOutput> {
     const song = await this.ethnoArts.create(input, session);
     return { song };
@@ -67,7 +67,7 @@ export class SongResolver {
   })
   async updateSong(
     @LoggedInSession() session: Session,
-    @Args('input') { song: input }: UpdateSongInput
+    @Args('input') { song: input }: UpdateSongInput,
   ): Promise<UpdateSongOutput> {
     const song = await this.ethnoArts.update(input, session);
     return { song };
@@ -79,7 +79,7 @@ export class SongResolver {
   })
   async deleteSong(
     @LoggedInSession() session: Session,
-    @IdArg() id: ID
+    @IdArg() id: ID,
   ): Promise<DeleteSongOutput> {
     await this.ethnoArts.delete(id, session);
     return { success: true };

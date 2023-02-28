@@ -29,7 +29,7 @@ export class TransactionalMutationsInterceptor implements NestInterceptor {
     }
 
     return from(
-      this.db.runInTransaction(async () => await lastValueFrom(next.handle()))
+      this.db.runInTransaction(async () => await lastValueFrom(next.handle())),
     );
   }
 }

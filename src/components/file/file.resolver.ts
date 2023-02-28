@@ -41,7 +41,7 @@ export class FileResolver {
   @Query(() => File)
   async file(
     @IdArg() id: ID,
-    @Loader(FileNodeLoader) files: LoaderOf<FileNodeLoader>
+    @Loader(FileNodeLoader) files: LoaderOf<FileNodeLoader>,
   ): Promise<File> {
     return asFile(await files.load(id));
   }
@@ -49,7 +49,7 @@ export class FileResolver {
   @Query(() => IFileNode)
   async fileNode(
     @IdArg() id: ID,
-    @Loader(FileNodeLoader) files: LoaderOf<FileNodeLoader>
+    @Loader(FileNodeLoader) files: LoaderOf<FileNodeLoader>,
   ): Promise<FileNode> {
     return await files.load(id);
   }
@@ -59,7 +59,7 @@ export class FileResolver {
   })
   async modifiedBy(
     @Parent() node: File,
-    @Loader(UserLoader) users: LoaderOf<UserLoader>
+    @Loader(UserLoader) users: LoaderOf<UserLoader>,
   ): Promise<User> {
     return await users.load(node.modifiedById);
   }
@@ -70,7 +70,7 @@ export class FileResolver {
   async children(
     @AnonSession() session: Session,
     @Parent() node: File,
-    @ListArg(FileListInput) input: FileListInput
+    @ListArg(FileListInput) input: FileListInput,
   ): Promise<FileListOutput> {
     return await this.service.listChildren(node, input, session);
   }
@@ -103,7 +103,7 @@ export class FileResolver {
   })
   async deleteFileNode(
     @IdArg() id: ID,
-    @LoggedInSession() session: Session
+    @LoggedInSession() session: Session,
   ): Promise<DeleteFileNodeOutput> {
     await this.service.delete(id, session);
     return { success: true };
@@ -113,7 +113,7 @@ export class FileResolver {
     description: 'Start the file upload process by requesting an upload',
   })
   async requestFileUpload(
-    @LoggedInSession() _session: Session // require authorized
+    @LoggedInSession() _session: Session, // require authorized
   ): Promise<RequestUploadOutput> {
     return await this.service.requestUpload();
   }
@@ -129,7 +129,7 @@ export class FileResolver {
   })
   createFileVersion(
     @Args('input') input: CreateFileVersionInput,
-    @LoggedInSession() session: Session
+    @LoggedInSession() session: Session,
   ): Promise<File> {
     return this.service.createFileVersion(input, session);
   }
@@ -139,7 +139,7 @@ export class FileResolver {
   })
   async renameFileNode(
     @Args('input') input: RenameFileInput,
-    @LoggedInSession() session: Session
+    @LoggedInSession() session: Session,
   ): Promise<FileNode> {
     await this.service.rename(input, session);
     return await this.service.getFileNode(input.id, session);
@@ -150,7 +150,7 @@ export class FileResolver {
   })
   moveFileNode(
     @Args('input') input: MoveFileInput,
-    @LoggedInSession() session: Session
+    @LoggedInSession() session: Session,
   ): Promise<FileNode> {
     return this.service.move(input, session);
   }

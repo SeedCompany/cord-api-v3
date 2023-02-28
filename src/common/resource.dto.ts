@@ -83,7 +83,7 @@ export class EnhancedResource<T extends ResourceShape<any>> {
   >();
 
   static of<T extends ResourceShape<any>>(
-    resource: T | EnhancedResource<T>
+    resource: T | EnhancedResource<T>,
   ): EnhancedResource<T> {
     if (resource instanceof EnhancedResource) {
       return resource;
@@ -112,7 +112,7 @@ export class EnhancedResource<T extends ResourceShape<any>> {
    * This should help to narrow with null coalescing when {@link is} isn't viable.
    */
   as<S extends ResourceShape<any>>(
-    clsType: S
+    clsType: S,
   ): EnhancedResource<S> | undefined {
     return Object.is(this.type, clsType)
       ? // If check passes then T and S are the same.
@@ -136,7 +136,7 @@ export class EnhancedResource<T extends ResourceShape<any>> {
       getParentTypes(this.type)
         .slice(1) // not self
         .filter(isResourceClass)
-        .map(EnhancedResource.of)
+        .map(EnhancedResource.of),
     );
   }
 
@@ -169,31 +169,31 @@ export class EnhancedResource<T extends ResourceShape<any>> {
   @Once()
   get extraPropsFromRelations() {
     return this.relNamesIf<ExtraPropsFromRelationsKey<T>>(
-      (rel) => !rel.resource?.hasParent
+      (rel) => !rel.resource?.hasParent,
     );
   }
 
   @Once()
   get childSingleKeys() {
     return this.relNamesIf<ChildSinglesKey<T>>(
-      (rel) => !rel.list && !!rel.resource?.hasParent
+      (rel) => !rel.list && !!rel.resource?.hasParent,
     );
   }
 
   @Once()
   get childListKeys() {
     return this.relNamesIf<ChildListsKey<T>>(
-      (rel) => rel.list && !!rel.resource?.hasParent
+      (rel) => rel.list && !!rel.resource?.hasParent,
     );
   }
 
   private relNamesIf<K>(
-    predicate: (rel: EnhancedRelation<any>) => boolean
+    predicate: (rel: EnhancedRelation<any>) => boolean,
   ): ReadonlySet<K> {
     return new Set<K>(
       [...this.relations.values()].flatMap((rel) =>
-        predicate(rel) ? (rel.name as K) : []
-      )
+        predicate(rel) ? (rel.name as K) : [],
+      ),
     );
   }
 
@@ -211,7 +211,7 @@ export class EnhancedResource<T extends ResourceShape<any>> {
           type && isResourceClass(type) ? EnhancedResource.of(type) : undefined;
         const rel: EnhancedRelation<T> = { name, list, type, resource };
         return [name, rel];
-      })
+      }),
     );
   }
 
@@ -254,7 +254,7 @@ export interface EnhancedRelation<TResourceStatic extends ResourceShape<any>> {
 }
 
 export const isResourceClass = <T>(
-  cls: AbstractClassType<T>
+  cls: AbstractClassType<T>,
 ): cls is ResourceShape<T> =>
   has('Props', cls) && Array.isArray(cls.Props) && cls.Props.length > 0;
 
@@ -265,17 +265,17 @@ export type MaybeUnsecuredInstance<TResourceStatic extends ResourceShape<any>> =
 // merged with all of the relations which are assumed to be secure.
 export type SecuredResource<
   Resource extends ResourceShape<any>,
-  IncludeRelations extends boolean | undefined = true
+  IncludeRelations extends boolean | undefined = true,
 > = SecuredProps<Resource['prototype']> &
   (IncludeRelations extends false ? unknown : Resource['Relations']);
 
 export type SecuredResourceKey<
   TResourceStatic extends ResourceShape<any>,
-  IncludeRelations extends boolean | undefined = true
+  IncludeRelations extends boolean | undefined = true,
 > = keyof SecuredResource<TResourceStatic, IncludeRelations> & string;
 
 export type SecuredPropsPlusExtraKey<
-  TResourceStatic extends ResourceShape<any>
+  TResourceStatic extends ResourceShape<any>,
 > =
   | (keyof SecuredProps<TResourceStatic['prototype']> & string)
   | ExtraPropsFromRelationsKey<TResourceStatic>;

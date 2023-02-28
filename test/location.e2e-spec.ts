@@ -43,7 +43,7 @@ describe('Location e2e', () => {
       `,
       {
         id: st.id,
-      }
+      },
     );
     expect(actual.id).toBe(st.id);
     expect(isValidId(actual.id)).toBe(true);
@@ -73,7 +73,7 @@ describe('Location e2e', () => {
             name: newName,
           },
         },
-      }
+      },
     );
     const updated = result.updateLocation.location;
     expect(updated).toBeTruthy();
@@ -93,7 +93,7 @@ describe('Location e2e', () => {
       `,
       {
         id: st.id,
-      }
+      },
     );
     const actual: Location | undefined = result.deleteLocation;
     expect(actual).toBeTruthy();
@@ -108,8 +108,8 @@ describe('Location e2e', () => {
         async () =>
           await createLocation(app, {
             name: (await generateId()) + ' Location',
-          })
-      )
+          }),
+      ),
     );
 
     const { locations } = await app.graphql.query(gql`
@@ -153,7 +153,7 @@ describe('Location e2e', () => {
             defaultFieldRegionId: newFieldRegion.id,
           },
         },
-      }
+      },
     );
     const updated = result.updateLocation.location;
     expect(updated).toBeTruthy();
@@ -185,7 +185,7 @@ describe('Location e2e', () => {
             fundingAccountId: newFundingAccount.id,
           },
         },
-      }
+      },
     );
     const updated = result.updateLocation.location;
     expect(updated).toBeTruthy();

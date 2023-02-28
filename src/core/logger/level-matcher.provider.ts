@@ -29,7 +29,7 @@ export const LevelMatcherProvider: Provider<Promise<LevelMatcher>> = {
         const matched = /\s*([\w\s,\-:*]+)=\s*(\w+)\s*/.exec(pair);
         return matched ? [[matched[1], matched[2]]] : [];
       }),
-      identity
+      identity,
     );
 
     const levels = [envLevels, yamlOverrides.levels ?? {}, defaults.levels];

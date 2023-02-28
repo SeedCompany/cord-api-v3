@@ -52,7 +52,7 @@ export abstract class AbstractLogger implements ILogger {
       | LogLevel
       | ({ level: LogLevel; message: string } & LogEntryContext),
     msgOrContext?: string | ({ message: string } & LogEntryContext),
-    context?: LogEntryContext
+    context?: LogEntryContext,
   ): void {
     // This is logically correct, but TS doesn't think so.
     // So without the unsafe typecast there's an error.
@@ -72,7 +72,7 @@ export abstract class AbstractLogger implements ILogger {
   private createEntry(
     level: LogLevel,
     msgOrContext: MsgOrContext,
-    context?: LogEntryContext
+    context?: LogEntryContext,
   ): LogEntry {
     return {
       ...(context || {}),

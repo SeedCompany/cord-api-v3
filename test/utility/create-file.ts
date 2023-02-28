@@ -23,7 +23,7 @@ export const generateFakeFile = () => ({
 export type FakeFile = ReturnType<typeof generateFakeFile>;
 
 export async function requestFileUpload(
-  app: TestApp
+  app: TestApp,
 ): Promise<RequestUploadOutput> {
   const res = await app.graphql.mutate(gql`
     mutation {
@@ -40,7 +40,7 @@ export async function requestFileUpload(
 export const uploadFileContents = async (
   app: TestApp,
   url: string,
-  input: Partial<FakeFile> = {}
+  input: Partial<FakeFile> = {},
 ) => {
   const completeInput = {
     ...generateFakeFile(),
@@ -65,7 +65,7 @@ export const uploadFileContents = async (
 
 export async function createFileVersion(
   app: TestApp,
-  input: MarkOptional<CreateFileVersionInput, 'name'>
+  input: MarkOptional<CreateFileVersionInput, 'name'>,
 ) {
   const file: CreateFileVersionInput = {
     ...input,
@@ -85,7 +85,7 @@ export async function createFileVersion(
     `,
     {
       input: file,
-    }
+    },
   );
 
   const actual: RawFile = result.createFileVersion;
@@ -105,7 +105,7 @@ export async function getFileNode(app: TestApp, id: ID) {
     `,
     {
       id,
-    }
+    },
   );
 
   const actual: RawFileNode = result.fileNode;
@@ -116,7 +116,7 @@ export async function getFileNode(app: TestApp, id: ID) {
 export async function getFileNodeChildren(
   app: TestApp,
   id: ID,
-  input?: Partial<FileListInput>
+  input?: Partial<FileListInput>,
 ) {
   const result = await app.graphql.query(
     gql`
@@ -139,7 +139,7 @@ export async function getFileNodeChildren(
     {
       id,
       input,
-    }
+    },
   );
 
   const actual: RawFileNodeChildren = result.fileNode.children;

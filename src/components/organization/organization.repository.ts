@@ -70,14 +70,14 @@ export class OrganizationRepository extends DtoRepository<
             .with('projList')
             .with('projList')
             .raw('WHERE size(projList) = 0')
-            .return(`'High' as sensitivity`)
+            .return(`'High' as sensitivity`),
         )
         .apply(matchProps())
         .return<{ dto: UnsecuredDto<Organization> }>(
           merge('props', {
             scope: 'scopedRoles',
             sensitivity: 'sensitivity',
-          }).as('dto')
+          }).as('dto'),
         );
   }
 
@@ -109,7 +109,7 @@ export class OrganizationRepository extends DtoRepository<
                 node('node'),
               ])
               .apply(oncePerProject(inner)),
-        })
+        }),
       )
       .apply(sorting(Organization, input))
       .apply(paginate(input, this.hydrate(session)));

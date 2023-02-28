@@ -11,7 +11,7 @@ type RelationshipDefinition = Record<
   string,
   | [
       baseNodeLabel: keyof ResourceMap | 'BaseNode',
-      id: Nullable<ID> | readonly ID[]
+      id: Nullable<ID> | readonly ID[],
     ]
   | Variable
 >;
@@ -76,16 +76,16 @@ type AnyDirectionalDefinition = Partial<
 export function createRelationships<TResourceStatic extends ResourceShape<any>>(
   resource: TResourceStatic,
   direction: RelationDirection,
-  labelsToRelationships: RelationshipDefinition
+  labelsToRelationships: RelationshipDefinition,
 ): (query: Query) => Query;
 export function createRelationships<TResourceStatic extends ResourceShape<any>>(
   resource: TResourceStatic,
-  definition: AnyDirectionalDefinition
+  definition: AnyDirectionalDefinition,
 ): (query: Query) => Query;
 export function createRelationships<TResourceStatic extends ResourceShape<any>>(
   resource: TResourceStatic,
   directionOrDefinition: RelationDirection | AnyDirectionalDefinition,
-  maybeLabelsToRelationships?: RelationshipDefinition
+  maybeLabelsToRelationships?: RelationshipDefinition,
 ) {
   const normalizedArgs =
     typeof directionOrDefinition === 'string'
@@ -106,9 +106,9 @@ export function createRelationships<TResourceStatic extends ResourceShape<any>>(
               : Array.isArray(varOrTuple[1])
               ? `${relLabel}${i}`
               : relLabel,
-          })
-        )
-      )
+          }),
+        ),
+      ),
   );
 
   if (flattened.length === 0) {
@@ -118,13 +118,13 @@ export function createRelationships<TResourceStatic extends ResourceShape<any>>(
 
   // We are creating inside of changeset if there's a changeset relation into the node.
   const inChangeset = flattened.some(
-    (f) => f.direction === 'in' && f.relLabel === 'changeset' && f.id
+    (f) => f.direction === 'in' && f.relLabel === 'changeset' && f.id,
   );
 
   const createdAt = DateTime.local();
 
   const returnTerms = flattened.flatMap((f) =>
-    f.id instanceof Variable ? [] : f.variable
+    f.id instanceof Variable ? [] : f.variable,
   );
   if (returnTerms.length === 0) {
     // Create hash based on input to use as a unique return since a return
@@ -142,15 +142,15 @@ export function createRelationships<TResourceStatic extends ResourceShape<any>>(
       [
         'node',
         ...flattened.flatMap(({ id }) =>
-          id instanceof Variable ? id.value : []
+          id instanceof Variable ? id.value : [],
         ),
       ],
       (sub) =>
         sub
           .match(
             flattened.map(({ variable, nodeLabel, id }) =>
-              id instanceof Variable ? [] : [node(variable, nodeLabel, { id })]
-            )
+              id instanceof Variable ? [] : [node(variable, nodeLabel, { id })],
+            ),
           )
           .create(
             flattened.map(({ direction, relLabel, variable }) => [
@@ -167,9 +167,9 @@ export function createRelationships<TResourceStatic extends ResourceShape<any>>(
                 createdAt,
               }),
               node(variable),
-            ])
+            ]),
           )
-          .return(returnTerms)
+          .return(returnTerms),
     );
   };
 }

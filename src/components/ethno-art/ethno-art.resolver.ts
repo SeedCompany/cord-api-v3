@@ -32,7 +32,7 @@ export class EthnoArtResolver {
   })
   async ethnoArt(
     @IdArg() id: ID,
-    @Loader(EthnoArtLoader) ethnoArts: LoaderOf<EthnoArtLoader>
+    @Loader(EthnoArtLoader) ethnoArts: LoaderOf<EthnoArtLoader>,
   ): Promise<EthnoArt> {
     return await ethnoArts.load(id);
   }
@@ -43,7 +43,7 @@ export class EthnoArtResolver {
   async ethnoArts(
     @AnonSession() session: Session,
     @ListArg(EthnoArtListInput) input: EthnoArtListInput,
-    @Loader(EthnoArtLoader) ethnoArts: LoaderOf<EthnoArtLoader>
+    @Loader(EthnoArtLoader) ethnoArts: LoaderOf<EthnoArtLoader>,
   ): Promise<EthnoArtListOutput> {
     const list = await this.ethnoArtService.list(input, session);
     ethnoArts.primeAll(list.items);
@@ -55,7 +55,7 @@ export class EthnoArtResolver {
   })
   async createEthnoArt(
     @LoggedInSession() session: Session,
-    @Args('input') { ethnoArt: input }: CreateEthnoArtInput
+    @Args('input') { ethnoArt: input }: CreateEthnoArtInput,
   ): Promise<CreateEthnoArtOutput> {
     const ethnoArt = await this.ethnoArtService.create(input, session);
     return { ethnoArt };
@@ -66,7 +66,7 @@ export class EthnoArtResolver {
   })
   async updateEthnoArt(
     @LoggedInSession() session: Session,
-    @Args('input') { ethnoArt: input }: UpdateEthnoArtInput
+    @Args('input') { ethnoArt: input }: UpdateEthnoArtInput,
   ): Promise<UpdateEthnoArtOutput> {
     const ethnoArt = await this.ethnoArtService.update(input, session);
     return { ethnoArt };
@@ -77,7 +77,7 @@ export class EthnoArtResolver {
   })
   async deleteEthnoArt(
     @LoggedInSession() session: Session,
-    @IdArg() id: ID
+    @IdArg() id: ID,
   ): Promise<DeleteEthnoArtOutput> {
     await this.ethnoArtService.delete(id, session);
     return { success: true };

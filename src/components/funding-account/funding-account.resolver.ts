@@ -31,7 +31,7 @@ export class FundingAccountResolver {
   async fundingAccount(
     @Loader(FundingAccountLoader)
     fundingAccounts: LoaderOf<FundingAccountLoader>,
-    @IdArg() id: ID
+    @IdArg() id: ID,
   ): Promise<FundingAccount> {
     return await fundingAccounts.load(id);
   }
@@ -43,7 +43,7 @@ export class FundingAccountResolver {
     @AnonSession() session: Session,
     @ListArg(FundingAccountListInput) input: FundingAccountListInput,
     @Loader(FundingAccountLoader)
-    fundingAccounts: LoaderOf<FundingAccountLoader>
+    fundingAccounts: LoaderOf<FundingAccountLoader>,
   ): Promise<FundingAccountListOutput> {
     const list = await this.fundingAccountService.list(input, session);
     fundingAccounts.primeAll(list.items);
@@ -55,11 +55,11 @@ export class FundingAccountResolver {
   })
   async createFundingAccount(
     @LoggedInSession() session: Session,
-    @Args('input') { fundingAccount: input }: CreateFundingAccountInput
+    @Args('input') { fundingAccount: input }: CreateFundingAccountInput,
   ): Promise<CreateFundingAccountOutput> {
     const fundingAccount = await this.fundingAccountService.create(
       input,
-      session
+      session,
     );
     return { fundingAccount };
   }
@@ -69,11 +69,11 @@ export class FundingAccountResolver {
   })
   async updateFundingAccount(
     @LoggedInSession() session: Session,
-    @Args('input') { fundingAccount: input }: UpdateFundingAccountInput
+    @Args('input') { fundingAccount: input }: UpdateFundingAccountInput,
   ): Promise<UpdateFundingAccountOutput> {
     const fundingAccount = await this.fundingAccountService.update(
       input,
-      session
+      session,
     );
     return { fundingAccount };
   }
@@ -83,7 +83,7 @@ export class FundingAccountResolver {
   })
   async deleteFundingAccount(
     @LoggedInSession() session: Session,
-    @IdArg() id: ID
+    @IdArg() id: ID,
   ): Promise<DeleteFundingAccountOutput> {
     await this.fundingAccountService.delete(id, session);
     return { success: true };

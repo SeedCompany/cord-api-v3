@@ -16,7 +16,7 @@ export const FilterField = <T extends object>(
      * There are no external fields on the filter, so don't expose to GQL.
      */
     internal?: boolean;
-  }
+  },
 ): PropertyDecorator =>
   applyDecorators(
     ...(options?.internal
@@ -30,5 +30,5 @@ export const FilterField = <T extends object>(
     Type(() => type),
     ValidateNested(),
     DefaultValue.Set({}), // Default when omitted
-    Transform(({ value }) => value || {}) // null -> {}
+    Transform(({ value }) => value || {}), // null -> {}
   );

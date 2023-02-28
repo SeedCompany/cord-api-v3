@@ -8,7 +8,7 @@ const fn =
       `${name}(${args
         .filter((arg) => arg !== undefined)
         .map(exp)
-        .join(', ')})`
+        .join(', ')})`,
     );
 
 /** Create a function with a name that takes a single argument */
@@ -82,7 +82,7 @@ export const listConcat = (...items: ExpressionInput[]) =>
     items
       .filter((item) => item !== undefined)
       .map(exp)
-      .join(' + ')
+      .join(' + '),
   );
 
 /**
@@ -93,11 +93,11 @@ export const reduce = (
   initial: ExpressionInput,
   list: ExpressionInput,
   variable: string,
-  iteratee: ExpressionInput
+  iteratee: ExpressionInput,
 ) =>
   fn('reduce')(
     `${exp(accumulator)} = ${exp(initial)}`,
-    `${variable} IN ${exp(list)} | ${exp(iteratee)}`
+    `${variable} IN ${exp(list)} | ${exp(iteratee)}`,
   );
 
 /**
@@ -106,5 +106,5 @@ export const reduce = (
 export const any = (
   variable: string,
   list: ExpressionInput,
-  predicate: ExpressionInput
+  predicate: ExpressionInput,
 ) => fn('any')(`${variable} IN ${exp(list)} WHERE ${exp(predicate)}`);

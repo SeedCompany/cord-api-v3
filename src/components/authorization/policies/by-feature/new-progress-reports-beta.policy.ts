@@ -9,6 +9,6 @@ import { Policy, Role } from '../util';
     Role.ProjectManager,
     Role.Marketing,
   ],
-  (r) => r.BetaFeatures.grant('newProgressReports')
+  (r) => r.BetaFeatures.grant('newProgressReports'),
 )
 export class NewProgressReportsPolicy {}

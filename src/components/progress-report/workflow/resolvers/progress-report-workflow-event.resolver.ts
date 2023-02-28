@@ -9,7 +9,7 @@ export class ProgressReportWorkflowEventResolver {
   @ResolveField(() => SecuredUser)
   async who(
     @Parent() event: WorkflowEvent,
-    @Loader(UserLoader) users: LoaderOf<UserLoader>
+    @Loader(UserLoader) users: LoaderOf<UserLoader>,
   ): Promise<SecuredUser> {
     return await mapSecuredValue(event.who, (id) => users.load(id));
   }

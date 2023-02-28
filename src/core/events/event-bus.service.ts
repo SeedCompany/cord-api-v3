@@ -26,7 +26,7 @@ export class SyncEventBus implements IEventBus, OnApplicationBootstrap {
 
   constructor(
     private readonly discovery: DiscoveryService,
-    @Logger('event-bus') private readonly logger: ILogger
+    @Logger('event-bus') private readonly logger: ILogger,
   ) {}
 
   async publish(event: object): Promise<void> {
@@ -40,7 +40,7 @@ export class SyncEventBus implements IEventBus, OnApplicationBootstrap {
         return;
       }
       this.logger.warning(
-        `It appears that ${event.constructor.name} does not have any registered handlers. Are you sure this is right?`
+        `It appears that ${event.constructor.name} does not have any registered handlers. Are you sure this is right?`,
       );
       return;
     }
@@ -56,7 +56,7 @@ export class SyncEventBus implements IEventBus, OnApplicationBootstrap {
   async onApplicationBootstrap() {
     const discovered =
       await this.discovery.providersWithMetaAtKey<EventHandlerMetadata>(
-        EVENTS_HANDLER_METADATA
+        EVENTS_HANDLER_METADATA,
       );
 
     if (process.env.NODE_ENV !== 'production') {
@@ -85,7 +85,7 @@ export class SyncEventBus implements IEventBus, OnApplicationBootstrap {
     const ordered = orderBy(flat, (entry) => entry.priority, 'desc');
     const grouped = groupBy(ordered, (entry) => entry.id);
     this.listenerMap = mapValues(grouped, (entries) =>
-      entries.map((e) => e.handler)
+      entries.map((e) => e.handler),
     );
   }
 }

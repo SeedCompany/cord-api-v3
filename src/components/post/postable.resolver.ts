@@ -11,7 +11,7 @@ import { PostService } from './post.service';
 export class PostableResolver {
   constructor(
     private readonly resourcesHost: ResourcesHost,
-    private readonly service: PostService
+    private readonly service: PostService,
   ) {}
 
   @ResolveField(() => SecuredPostList, {
@@ -22,7 +22,7 @@ export class PostableResolver {
     @Parent() parent: Postable & Resource,
     @ListArg(PostListInput) input: PostListInput,
     @LoggedInSession() session: Session,
-    @Loader(PostLoader) posts: LoaderOf<PostLoader>
+    @Loader(PostLoader) posts: LoaderOf<PostLoader>,
   ): Promise<SecuredPostList> {
     const parentType = await this.resourcesHost.getByName(info.parentType.name);
     const list = await this.service.securedList(
@@ -35,7 +35,7 @@ export class PostableResolver {
           parentId: parent.id,
         },
       },
-      session
+      session,
     );
     posts.primeAll(list.items);
     return list;

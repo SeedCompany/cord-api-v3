@@ -41,7 +41,7 @@ export class SplitScriptureSpanningBooksMigration extends BaseMigration {
           this.findProductsWithScriptureSpanningOverBooks({
             start: book.firstChapter.firstVerse.id,
             end: book.lastChapter.lastVerse.id,
-          })
+          }),
         )
         // Lookup the product DTO for the ID
         .flatMap(async (id: ID) => {
@@ -49,8 +49,8 @@ export class SplitScriptureSpanningBooksMigration extends BaseMigration {
             const product = asProductType(DirectScriptureProduct)(
               await this.productService.readOneUnsecured(
                 id,
-                this.fakeAdminSession
-              )
+                this.fakeAdminSession,
+              ),
             );
             return ix([product]);
           } catch (e) {
@@ -93,14 +93,14 @@ export class SplitScriptureSpanningBooksMigration extends BaseMigration {
     const oldProductsCount = Object.keys(stats).length;
     const newProductsCount = sum(Object.values(stats));
     this.logger.info(
-      `Split ${oldProductsCount} products into ${newProductsCount} products`
+      `Split ${oldProductsCount} products into ${newProductsCount} products`,
     );
     this.logger.info(`Updated ${updated} products`);
     this.logger.info(`Created ${created} products`);
   }
 
   private async findProductsWithScriptureSpanningOverBooks(
-    book: Range<number>
+    book: Range<number>,
   ) {
     const ids = await this.db
       .query()
@@ -115,7 +115,7 @@ export class SplitScriptureSpanningBooksMigration extends BaseMigration {
           WHERE any(ref in refs WHERE ref.start >= $start AND ref.end <= $end) // has book
             AND any(ref in refs WHERE ref.start < $start OR ref.end > $end) // has other book
         `,
-        book
+        book,
       )
       .return<{ id: ID }>('node.id as id')
       .map('id')
@@ -155,7 +155,7 @@ export class SplitScriptureSpanningBooksMigration extends BaseMigration {
 
   private *splitRefsByBook(refs: DbScriptureReferences) {
     const verses = refs.map((range) =>
-      mapRange(range.properties, Verse.fromId)
+      mapRange(range.properties, Verse.fromId),
     );
 
     // eslint-disable-next-line prefer-const

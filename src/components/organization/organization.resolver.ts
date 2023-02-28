@@ -53,7 +53,7 @@ export class OrganizationResolver {
   })
   async createOrganization(
     @LoggedInSession() session: Session,
-    @Args('input') { organization: input }: CreateOrganizationInput
+    @Args('input') { organization: input }: CreateOrganizationInput,
   ): Promise<CreateOrganizationOutput> {
     const organization = await this.orgs.create(input, session);
     return { organization };
@@ -64,7 +64,7 @@ export class OrganizationResolver {
   })
   async organization(
     @Loader(OrganizationLoader) organizations: LoaderOf<OrganizationLoader>,
-    @IdArg() id: ID
+    @IdArg() id: ID,
   ): Promise<Organization> {
     return await organizations.load(id);
   }
@@ -82,7 +82,7 @@ export class OrganizationResolver {
   async organizations(
     @AnonSession() session: Session,
     @ListArg(OrganizationListInput) input: OrganizationListInput,
-    @Loader(OrganizationLoader) organizations: LoaderOf<OrganizationLoader>
+    @Loader(OrganizationLoader) organizations: LoaderOf<OrganizationLoader>,
   ): Promise<OrganizationListOutput> {
     const list = await this.orgs.list(input, session);
     organizations.primeAll(list.items);
@@ -94,7 +94,7 @@ export class OrganizationResolver {
     @AnonSession() session: Session,
     @Parent() organization: Organization,
     @ListArg(LocationListInput) input: LocationListInput,
-    @Loader(LocationLoader) locations: LoaderOf<LocationLoader>
+    @Loader(LocationLoader) locations: LoaderOf<LocationLoader>,
   ): Promise<SecuredLocationList> {
     const list = await this.orgs.listLocations(organization, input, session);
     locations.primeAll(list.items);
@@ -106,7 +106,7 @@ export class OrganizationResolver {
   })
   async updateOrganization(
     @LoggedInSession() session: Session,
-    @Args('input') { organization: input }: UpdateOrganizationInput
+    @Args('input') { organization: input }: UpdateOrganizationInput,
   ): Promise<UpdateOrganizationOutput> {
     const organization = await this.orgs.update(input, session);
     return { organization };
@@ -117,7 +117,7 @@ export class OrganizationResolver {
   })
   async deleteOrganization(
     @LoggedInSession() session: Session,
-    @IdArg() id: ID
+    @IdArg() id: ID,
   ): Promise<DeleteOrganizationOutput> {
     await this.orgs.delete(id, session);
     return { success: true };
@@ -128,7 +128,7 @@ export class OrganizationResolver {
   })
   async addLocationToOrganization(
     @LoggedInSession() session: Session,
-    @Args() { organizationId, locationId }: ModifyLocationArgs
+    @Args() { organizationId, locationId }: ModifyLocationArgs,
   ): Promise<Organization> {
     await this.orgs.addLocation(organizationId, locationId, session);
     return await this.orgs.readOne(organizationId, session);
@@ -139,7 +139,7 @@ export class OrganizationResolver {
   })
   async removeLocationFromOrganization(
     @LoggedInSession() session: Session,
-    @Args() { organizationId, locationId }: ModifyLocationArgs
+    @Args() { organizationId, locationId }: ModifyLocationArgs,
   ): Promise<Organization> {
     await this.orgs.removeLocation(organizationId, locationId, session);
     return await this.orgs.readOne(organizationId, session);

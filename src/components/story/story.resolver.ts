@@ -30,7 +30,7 @@ export class StoryResolver {
   })
   async story(
     @Loader(StoryLoader) stories: LoaderOf<StoryLoader>,
-    @IdArg() id: ID
+    @IdArg() id: ID,
   ): Promise<Story> {
     return await stories.load(id);
   }
@@ -41,7 +41,7 @@ export class StoryResolver {
   async stories(
     @AnonSession() session: Session,
     @ListArg(StoryListInput) input: StoryListInput,
-    @Loader(StoryLoader) stories: LoaderOf<StoryLoader>
+    @Loader(StoryLoader) stories: LoaderOf<StoryLoader>,
   ): Promise<StoryListOutput> {
     const list = await this.storyService.list(input, session);
     stories.primeAll(list.items);
@@ -53,7 +53,7 @@ export class StoryResolver {
   })
   async createStory(
     @LoggedInSession() session: Session,
-    @Args('input') { story: input }: CreateStoryInput
+    @Args('input') { story: input }: CreateStoryInput,
   ): Promise<CreateStoryOutput> {
     const story = await this.storyService.create(input, session);
     return { story };
@@ -64,7 +64,7 @@ export class StoryResolver {
   })
   async updateStory(
     @LoggedInSession() session: Session,
-    @Args('input') { story: input }: UpdateStoryInput
+    @Args('input') { story: input }: UpdateStoryInput,
   ): Promise<UpdateStoryOutput> {
     const story = await this.storyService.update(input, session);
     return { story };
@@ -75,7 +75,7 @@ export class StoryResolver {
   })
   async deleteStory(
     @LoggedInSession() session: Session,
-    @IdArg() id: ID
+    @IdArg() id: ID,
   ): Promise<DeleteStoryOutput> {
     await this.storyService.delete(id, session);
     return { success: true };

@@ -9,7 +9,7 @@ import { gql } from './gql-tag';
 
 export async function createLiteracyMaterial(
   app: TestApp,
-  input: Partial<CreateLiteracyMaterial> = {}
+  input: Partial<CreateLiteracyMaterial> = {},
 ) {
   const name = input.name || faker.hacker.noun() + faker.company.name();
 
@@ -31,7 +31,7 @@ export async function createLiteracyMaterial(
           name,
         },
       },
-    }
+    },
   );
   const lm: LiteracyMaterial = result.createLiteracyMaterial.literacyMaterial;
 

@@ -17,7 +17,7 @@ export class PartnershipProducingMediumEngagementConnectionResolver {
   })
   async partnershipsProducingMediums(
     @Parent() engagement: LanguageEngagement,
-    @AnonSession() session: Session
+    @AnonSession() session: Session,
   ): Promise<SecuredPartnershipsProducingMediums> {
     return await this.service.list(engagement, session);
   }

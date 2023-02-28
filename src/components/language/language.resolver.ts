@@ -59,7 +59,7 @@ export class LanguageResolver {
   })
   async language(
     @IdsAndViewArg() key: IdsAndView,
-    @Loader(LanguageLoader) languages: LoaderOf<LanguageLoader>
+    @Loader(LanguageLoader) languages: LoaderOf<LanguageLoader>,
   ): Promise<Language> {
     return await languages.load(key);
   }
@@ -107,7 +107,7 @@ export class LanguageResolver {
     @AnonSession() session: Session,
     @Parent() language: Language,
     @ListArg(LocationListInput) input: LocationListInput,
-    @Loader(LocationLoader) locations: LoaderOf<LocationLoader>
+    @Loader(LocationLoader) locations: LoaderOf<LocationLoader>,
   ): Promise<SecuredLocationList> {
     const list = await this.langService.listLocations(language, input, session);
     locations.primeAll(list.items);
@@ -119,7 +119,7 @@ export class LanguageResolver {
   })
   async sponsorStartDate(
     @AnonSession() session: Session,
-    @Parent() language: Language
+    @Parent() language: Language,
   ): Promise<SecuredDate> {
     return await this.langService.sponsorStartDate(language, session);
   }
@@ -131,7 +131,7 @@ export class LanguageResolver {
     @AnonSession() session: Session,
     @Parent() language: Language,
     @ListArg(ProjectListInput) input: ProjectListInput,
-    @Loader(ProjectLoader) loader: LoaderOf<ProjectLoader>
+    @Loader(ProjectLoader) loader: LoaderOf<ProjectLoader>,
   ): Promise<SecuredProjectList> {
     const list = await this.langService.listProjects(language, input, session);
     loader.primeAll(list.items);
@@ -144,7 +144,7 @@ export class LanguageResolver {
   async languages(
     @AnonSession() session: Session,
     @ListArg(LanguageListInput) input: LanguageListInput,
-    @Loader(LanguageLoader) languages: LoaderOf<LanguageLoader>
+    @Loader(LanguageLoader) languages: LoaderOf<LanguageLoader>,
   ): Promise<LanguageListOutput> {
     const list = await this.langService.list(input, session);
     languages.primeAll(list.items);
@@ -156,7 +156,7 @@ export class LanguageResolver {
   })
   async createLanguage(
     @LoggedInSession() session: Session,
-    @Args('input') { language: input }: CreateLanguageInput
+    @Args('input') { language: input }: CreateLanguageInput,
   ): Promise<CreateLanguageOutput> {
     const language = await this.langService.create(input, session);
     return { language };
@@ -167,12 +167,12 @@ export class LanguageResolver {
   })
   async updateLanguage(
     @LoggedInSession() session: Session,
-    @Args('input') { language: input, changeset }: UpdateLanguageInput
+    @Args('input') { language: input, changeset }: UpdateLanguageInput,
   ): Promise<UpdateLanguageOutput> {
     const language = await this.langService.update(
       input,
       session,
-      viewOfChangeset(changeset)
+      viewOfChangeset(changeset),
     );
     return { language };
   }
@@ -182,7 +182,7 @@ export class LanguageResolver {
   })
   async deleteLanguage(
     @LoggedInSession() session: Session,
-    @IdArg() id: ID
+    @IdArg() id: ID,
   ): Promise<DeleteLanguageOutput> {
     await this.langService.delete(id, session);
     return { success: true };
@@ -193,7 +193,7 @@ export class LanguageResolver {
   })
   async addLocationToLanguage(
     @LoggedInSession() session: Session,
-    @Args() { languageId, locationId }: ModifyLocationArgs
+    @Args() { languageId, locationId }: ModifyLocationArgs,
   ): Promise<Language> {
     await this.langService.addLocation(languageId, locationId, session);
     return await this.langService.readOne(languageId, session);
@@ -204,7 +204,7 @@ export class LanguageResolver {
   })
   async removeLocationFromLanguage(
     @LoggedInSession() session: Session,
-    @Args() { languageId, locationId }: ModifyLocationArgs
+    @Args() { languageId, locationId }: ModifyLocationArgs,
   ): Promise<Language> {
     await this.langService.removeLocation(languageId, locationId, session);
     return await this.langService.readOne(languageId, session);

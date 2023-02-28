@@ -134,7 +134,7 @@ export class EngagementRepository extends CommonRepository {
           merge('props', 'changedProps', {
             __typename: typenameForView(
               ['LanguageEngagement', 'InternshipEngagement'],
-              view
+              view,
             ),
             parent: 'project',
             project: 'project.id',
@@ -146,15 +146,15 @@ export class EngagementRepository extends CommonRepository {
             startDate: coalesce(
               'changedProps.startDateOverride',
               'props.startDateOverride',
-              'mouStart.value'
+              'mouStart.value',
             ),
             endDate: coalesce(
               'changedProps.endDateOverride',
               'props.endDateOverride',
-              'mouEnd.value'
+              'mouEnd.value',
             ),
             changeset: 'changeset.id',
-          }).as('dto')
+          }).as('dto'),
         );
   }
 
@@ -162,7 +162,7 @@ export class EngagementRepository extends CommonRepository {
 
   async createLanguageEngagement(
     input: CreateLanguageEngagement,
-    changeset?: ID
+    changeset?: ID,
   ) {
     const pnpId = (await generateId()) as FileId;
 
@@ -194,7 +194,7 @@ export class EngagementRepository extends CommonRepository {
             changeset: ['Changeset', changeset],
           },
           out: { language: ['Language', languageId] },
-        })
+        }),
       )
       .return<{ id: ID }>('node.id as id');
 
@@ -208,7 +208,7 @@ export class EngagementRepository extends CommonRepository {
 
   async createInternshipEngagement(
     input: CreateInternshipEngagement,
-    changeset?: ID
+    changeset?: ID,
   ) {
     const growthPlanId = (await generateId()) as FileId;
 
@@ -245,7 +245,7 @@ export class EngagementRepository extends CommonRepository {
             mentor: ['User', mentorId],
             countryOfOrigin: ['Location', countryOfOriginId],
           },
-        })
+        }),
       )
       .return<{ id: ID }>('node.id as id');
     const result = await query.first();
@@ -263,7 +263,7 @@ export class EngagementRepository extends CommonRepository {
   async updateLanguageProperties(
     object: LanguageEngagement | UnsecuredDto<LanguageEngagement>,
     changes: DbChanges<LanguageEngagement>,
-    changeset?: ID
+    changeset?: ID,
   ): Promise<void> {
     await this.db.updateProperties({
       type: LanguageEngagement,
@@ -348,7 +348,7 @@ export class EngagementRepository extends CommonRepository {
   async updateInternshipProperties(
     object: InternshipEngagement | UnsecuredDto<InternshipEngagement>,
     changes: DbChanges<InternshipEngagement>,
-    changeset?: ID
+    changeset?: ID,
   ): Promise<void> {
     await this.db.updateProperties({
       type: InternshipEngagement,
@@ -390,14 +390,14 @@ export class EngagementRepository extends CommonRepository {
                     node('changeset', 'Changeset', { id: changeset }),
                   ])
                   .return(['node', 'project'])
-              : q
-          )
+              : q,
+          ),
       )
       .match(requestingUser(session))
       .apply(
         this.privileges.for(session, IEngagement).filterToReadable({
           wrapContext: oncePerProject,
-        })
+        }),
       )
       .apply(sorting(IEngagement, input))
       .apply(paginate(input, this.hydrate(session, viewOfChangeset(changeset))))
@@ -420,7 +420,7 @@ export class EngagementRepository extends CommonRepository {
 
   async getOngoingEngagementIds(
     projectId: ID,
-    excludes: EngagementStatus[] = []
+    excludes: EngagementStatus[] = [],
   ) {
     const rows = await this.db
       .query()
@@ -446,7 +446,7 @@ export class EngagementRepository extends CommonRepository {
     otherId: ID,
     isTranslation: boolean,
     property: 'language' | 'intern',
-    changeset?: ID
+    changeset?: ID,
   ) {
     return await this.db
       .query()
@@ -454,7 +454,7 @@ export class EngagementRepository extends CommonRepository {
       .optionalMatch(
         node('other', isTranslation ? 'Language' : 'User', {
           id: otherId,
-        })
+        }),
       )
       .optionalMatch([
         node('project'),
@@ -472,7 +472,7 @@ export class EngagementRepository extends CommonRepository {
               relation('in', '', 'changeset', ACTIVE),
               node('changesetNode', 'Changeset', { id: changeset }),
             ]
-          : [node('engagement')]
+          : [node('engagement')],
       )
       .return(['project', 'other', 'engagement'])
       .asResult<{

@@ -38,7 +38,7 @@ export class AuthenticationRepository {
     `,
         {
           token,
-        }
+        },
       )
       .first();
     if (!result) {
@@ -90,7 +90,7 @@ export class AuthenticationRepository {
         {
           token: session.token,
           email: input.email,
-        }
+        },
       )
       .asResult<{ pash: string }>()
       .first();
@@ -121,7 +121,7 @@ export class AuthenticationRepository {
         {
           token: session.token,
           email: input.email,
-        }
+        },
       )
       .asResult<{ id: ID }>()
       .first();
@@ -142,7 +142,7 @@ export class AuthenticationRepository {
       `,
         {
           token,
-        }
+        },
       )
       .run();
   }
@@ -163,17 +163,17 @@ export class AuthenticationRepository {
               q.subQuery((sub) =>
                 sub
                   .optionalMatch(
-                    node('impersonatee', 'User', { id: impersonatee })
+                    node('impersonatee', 'User', { id: impersonatee }),
                   )
                   .apply(
                     matchUserGloballyScopedRoles(
                       'impersonatee',
-                      'impersonateeRoles'
-                    )
+                      'impersonateeRoles',
+                    ),
                   )
-                  .return('impersonateeRoles')
+                  .return('impersonateeRoles'),
               )
-          : null
+          : null,
       )
       .return<{
         userId?: ID;
@@ -215,7 +215,7 @@ export class AuthenticationRepository {
 
   async updatePassword(
     newPasswordHash: string,
-    session: Session
+    session: Session,
   ): Promise<void> {
     await this.db
       .query()
@@ -251,7 +251,7 @@ export class AuthenticationRepository {
         {
           value: email,
           token,
-        }
+        },
       )
       .run();
   }
@@ -272,7 +272,7 @@ export class AuthenticationRepository {
 
   async updatePasswordViaEmailToken(
     { token, email }: EmailToken,
-    pash: string
+    pash: string,
   ): Promise<void> {
     await this.db
       .query()
@@ -291,7 +291,7 @@ export class AuthenticationRepository {
           email,
           password: pash,
           createdAt: DateTime.local(),
-        }
+        },
       )
       .first();
   }

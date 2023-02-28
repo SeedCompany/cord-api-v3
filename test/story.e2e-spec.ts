@@ -33,7 +33,7 @@ describe('Story e2e', () => {
     const story = await createStory(app, { name, scriptureReferences });
     expect(story.scriptureReferences.value).toBeDefined();
     expect(story.scriptureReferences.value).toEqual(
-      expect.arrayContaining(scriptureReferences)
+      expect.arrayContaining(scriptureReferences),
     );
   });
 
@@ -54,13 +54,13 @@ describe('Story e2e', () => {
       `,
       {
         id: story.id,
-      }
+      },
     );
     expect(actual.id).toBe(story.id);
     expect(isValidId(actual.id)).toBe(true);
     expect(actual.name.value).toBe(story.name.value);
     expect(actual.scriptureReferences.value).toEqual(
-      expect.arrayContaining(story.scriptureReferences.value)
+      expect.arrayContaining(story.scriptureReferences.value),
     );
   });
 
@@ -88,14 +88,14 @@ describe('Story e2e', () => {
             scriptureReferences,
           },
         },
-      }
+      },
     );
     const updated = result.updateStory.story;
     expect(updated).toBeTruthy();
     expect(updated.name.value).toBe(newName);
     expect(updated.scriptureReferences.value).toBeDefined();
     expect(updated.scriptureReferences.value).toEqual(
-      expect.arrayContaining(scriptureReferences)
+      expect.arrayContaining(scriptureReferences),
     );
   });
 
@@ -112,7 +112,7 @@ describe('Story e2e', () => {
       `,
       {
         id: st.id,
-      }
+      },
     );
     const actual: Story | undefined = result.deleteStory;
     expect(actual).toBeTruthy();

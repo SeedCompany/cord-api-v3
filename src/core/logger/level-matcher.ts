@@ -61,7 +61,7 @@ export class LevelMatcher {
 
   constructor(
     levelMaps: Array<Record<string, string | undefined>>,
-    defaultLevel: LogLevel | string
+    defaultLevel: LogLevel | string,
   ) {
     this.defaultLevel = parseLevel(defaultLevel) ?? LogLevel.INFO;
     this.matcherGroups = levelMaps.map((levelMap) =>
@@ -87,7 +87,7 @@ export class LevelMatcher {
         }
 
         return matcher;
-      })
+      }),
     );
   }
 

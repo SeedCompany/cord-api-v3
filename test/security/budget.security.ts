@@ -46,7 +46,7 @@ describe('Budget Security e2e', () => {
     await createSession(app);
     await registerUser(
       app,
-      { roles: [Role.LeadFinancialAnalyst, Role.FieldOperationsDirector] }
+      { roles: [Role.LeadFinancialAnalyst, Role.FieldOperationsDirector] },
       // [
       // Powers.CreateLanguage,
       // Powers.CreateEthnologueLanguage,
@@ -111,7 +111,7 @@ describe('Budget Security e2e', () => {
             propToTest: property,
             skipEditCheck: false,
           });
-        }
+        },
       );
     });
   });
@@ -333,7 +333,7 @@ describe('Budget Security e2e', () => {
             });
           }
         });
-      }
+      },
     );
   });
 });
@@ -348,6 +348,6 @@ async function deleteEngagement(app: TestApp, id: ID) {
     `,
     {
       id: id,
-    }
+    },
   );
 }

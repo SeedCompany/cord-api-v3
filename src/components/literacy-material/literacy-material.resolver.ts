@@ -30,7 +30,7 @@ export class LiteracyMaterialResolver {
   })
   async literacyMaterial(
     @IdArg() id: ID,
-    @Loader(EthnoArtLoader) arts: LoaderOf<EthnoArtLoader>
+    @Loader(EthnoArtLoader) arts: LoaderOf<EthnoArtLoader>,
   ): Promise<LiteracyMaterial> {
     return await arts.load(id);
   }
@@ -42,7 +42,7 @@ export class LiteracyMaterialResolver {
   async literacyMaterials(
     @AnonSession() session: Session,
     @ListArg(LiteracyMaterialListInput) input: LiteracyMaterialListInput,
-    @Loader(EthnoArtLoader) arts: LoaderOf<EthnoArtLoader>
+    @Loader(EthnoArtLoader) arts: LoaderOf<EthnoArtLoader>,
   ): Promise<LiteracyMaterialListOutput> {
     const list = await this.ethnoArts.list(input, session);
     arts.primeAll(list.items);
@@ -55,7 +55,7 @@ export class LiteracyMaterialResolver {
   })
   async createLiteracyMaterial(
     @LoggedInSession() session: Session,
-    @Args('input') { literacyMaterial: input }: CreateLiteracyMaterialInput
+    @Args('input') { literacyMaterial: input }: CreateLiteracyMaterialInput,
   ): Promise<CreateLiteracyMaterialOutput> {
     const literacyMaterial = await this.ethnoArts.create(input, session);
     return { literacyMaterial };
@@ -67,7 +67,7 @@ export class LiteracyMaterialResolver {
   })
   async updateLiteracyMaterial(
     @LoggedInSession() session: Session,
-    @Args('input') { literacyMaterial: input }: UpdateLiteracyMaterialInput
+    @Args('input') { literacyMaterial: input }: UpdateLiteracyMaterialInput,
   ): Promise<UpdateLiteracyMaterialOutput> {
     const literacyMaterial = await this.ethnoArts.update(input, session);
     return { literacyMaterial };
@@ -79,7 +79,7 @@ export class LiteracyMaterialResolver {
   })
   async deleteLiteracyMaterial(
     @LoggedInSession() session: Session,
-    @IdArg() id: ID
+    @IdArg() id: ID,
   ): Promise<DeleteLiteracyMaterialOutput> {
     await this.ethnoArts.delete(id, session);
     return { success: true };

@@ -73,7 +73,7 @@ export abstract class SecuredDateRange
 {
   static fromPair(
     start: Secured<CalendarDate | null>,
-    end: Secured<CalendarDate | null>
+    end: Secured<CalendarDate | null>,
   ): SecuredDateRange {
     const canRead = start.canRead && end.canRead;
     return {

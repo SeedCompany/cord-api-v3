@@ -63,12 +63,12 @@ const deleteProject =
       `,
       {
         id: isIdLike(id) || typeof id === 'string' ? id : id.id,
-      }
+      },
     );
 
 const listProjects = async (
   app: TestApp,
-  input?: Partial<ProjectListInput>
+  input?: Partial<ProjectListInput>,
 ) => {
   const { projects } = await app.graphql.query(
     gql`
@@ -83,7 +83,7 @@ const listProjects = async (
       }
       ${fragments.project}
     `,
-    { input }
+    { input },
   );
   return projects as PaginatedListType<Raw<Project>>;
 };
@@ -130,12 +130,12 @@ describe('Project e2e', () => {
     const name = faker.random.word() + ' testProject';
     await createProject(app, { name, fieldRegionId: fieldRegion.id });
     await expect(
-      createProject(app, { name, fieldRegionId: fieldRegion.id })
+      createProject(app, { name, fieldRegionId: fieldRegion.id }),
     ).rejects.toThrowGqlError(
       errors.duplicate({
         message: 'Project with this name already exists',
         field: 'project.name',
-      })
+      }),
     );
   });
 
@@ -153,7 +153,7 @@ describe('Project e2e', () => {
       `,
       {
         id: project.id,
-      }
+      },
     );
 
     const actual: Project = result.project;
@@ -167,7 +167,7 @@ describe('Project e2e', () => {
     expect(actual.mouStart.value).toBe(project.mouStart.value);
     expect(actual.mouEnd.value).toBe(project.mouEnd.value);
     expect(actual.estimatedSubmission.value).toBe(
-      project.estimatedSubmission.value
+      project.estimatedSubmission.value,
     );
     expect(actual.presetInventory.value).toBe(project.presetInventory.value);
   });
@@ -202,12 +202,12 @@ describe('Project e2e', () => {
         name: faker.datatype.uuid(),
         type: ProjectType.Translation,
         fieldRegionId: 'invalid-location-id' as ID,
-      })
+      }),
     ).rejects.toThrowGqlError(
       errors.notFound({
         message: 'Field region not found',
         field: 'project.fieldRegionId',
-      })
+      }),
     );
   });
 
@@ -247,7 +247,7 @@ describe('Project e2e', () => {
         input: {
           project: proj,
         },
-      }
+      },
     );
     const project = res.createProject.project;
 
@@ -276,7 +276,7 @@ describe('Project e2e', () => {
       `,
       {
         id: project.id,
-      }
+      },
     );
 
     const actual = result.project;
@@ -284,7 +284,7 @@ describe('Project e2e', () => {
     expect(actual.type).toBe(project.type);
     expect(actual.budget.value.id).toBe(project.budget.value.id);
     expect(actual.fieldRegion.value.name.value).toBe(
-      project.fieldRegion.value.name.value
+      project.fieldRegion.value.name.value,
     );
   });
 
@@ -306,7 +306,7 @@ describe('Project e2e', () => {
       {
         id: project.id,
         name: namenew,
-      }
+      },
     );
 
     expect(result.updateProject.project.id).toBe(project.id);
@@ -334,7 +334,7 @@ describe('Project e2e', () => {
         `,
         {
           id: project.id,
-        }
+        },
       )
       .expectError(errors.notFound());
   });
@@ -366,7 +366,7 @@ describe('Project e2e', () => {
           type: ProjectType.Translation,
           fieldRegionId: fieldRegion.id,
         });
-      })
+      }),
     );
 
     // only be concerned with projects listed here,
@@ -374,7 +374,7 @@ describe('Project e2e', () => {
     const filterNames = (list: PaginatedListType<Raw<Project>>) =>
       intersection(
         list.items.map((p) => p.name.value),
-        unsorted
+        unsorted,
       );
 
     const ascProjects = await listProjects(app, {
@@ -400,8 +400,8 @@ describe('Project e2e', () => {
           await createProject(app, {
             type,
             fieldRegionId: fieldRegion.id,
-          })
-      )
+          }),
+      ),
     );
 
     const { projects } = await app.graphql.query(
@@ -419,7 +419,7 @@ describe('Project e2e', () => {
       `,
       {
         type,
-      }
+      },
     );
     expect(projects.items.length).toBeGreaterThanOrEqual(numProjects);
   });
@@ -461,7 +461,7 @@ describe('Project e2e', () => {
       async () => [
         await createLanguage(app, { sensitivity: Sensitivity.Medium }),
         await createLanguage(app, { sensitivity: Sensitivity.Low }),
-      ]
+      ],
     );
 
     await createLanguageEngagement(app, {
@@ -493,14 +493,14 @@ describe('Project e2e', () => {
             sort: 'sensitivity',
             order,
           },
-        }
+        },
       );
     const getSortedSensitivities = (
-      projects: PaginatedListType<Raw<Project>>
+      projects: PaginatedListType<Raw<Project>>,
     ) => projects.items.map((project) => project.sensitivity);
 
     const { projects: ascendingProjects } = await getSensitivitySortedProjects(
-      'ASC'
+      'ASC',
     );
 
     expect(ascendingProjects.items.length).toBeGreaterThanOrEqual(5);
@@ -512,11 +512,11 @@ describe('Project e2e', () => {
         Sensitivity.Medium,
         Sensitivity.High,
         Sensitivity.High,
-      ])
+      ]),
     );
 
     const { projects: descendingProjects } = await getSensitivitySortedProjects(
-      'DESC'
+      'DESC',
     );
 
     expect(getSortedSensitivities(descendingProjects)).toEqual(
@@ -526,7 +526,7 @@ describe('Project e2e', () => {
         Sensitivity.Medium,
         Sensitivity.Medium,
         Sensitivity.Low,
-      ])
+      ]),
     );
   });
 
@@ -539,8 +539,8 @@ describe('Project e2e', () => {
           await createProject(app, {
             type,
             fieldRegionId: fieldRegion.id,
-          })
-      )
+          }),
+      ),
     );
 
     const { projects } = await app.graphql.query(
@@ -555,7 +555,7 @@ describe('Project e2e', () => {
           }
         }
         ${fragments.project}
-      `
+      `,
     );
 
     expect(projects.items.length).toBeGreaterThanOrEqual(numProjects);
@@ -570,8 +570,8 @@ describe('Project e2e', () => {
           await createProject(app, {
             type,
             fieldRegionId: fieldRegion.id,
-          })
-      )
+          }),
+      ),
     );
     const project = await createProject(app, { fieldRegionId: fieldRegion.id });
     await createPin(app, project.id, true);
@@ -589,7 +589,7 @@ describe('Project e2e', () => {
           }
         }
         ${fragments.project}
-      `
+      `,
     );
 
     expect(pinnedProjects.items.length).toBe(1);
@@ -608,13 +608,13 @@ describe('Project e2e', () => {
           }
         }
         ${fragments.project}
-      `
+      `,
     );
 
     expect(unpinnedProjects.items.length).toBeGreaterThanOrEqual(numProjects);
     // pinned project should be excluded
     const result = unpinnedProjects.items.find(
-      ({ id }: Partial<Project>) => id === project.id
+      ({ id }: Partial<Project>) => id === project.id,
     );
     expect(result).toBeUndefined();
   });
@@ -629,8 +629,8 @@ describe('Project e2e', () => {
             type,
             presetInventory: true,
             fieldRegionId: fieldRegion.id,
-          })
-      )
+          }),
+      ),
     );
 
     const { projects } = await app.graphql.query(
@@ -645,7 +645,7 @@ describe('Project e2e', () => {
           }
         }
         ${fragments.project}
-      `
+      `,
     );
 
     expect(projects.items.length).toBeGreaterThanOrEqual(numProjects);
@@ -682,10 +682,10 @@ describe('Project e2e', () => {
       `,
       {
         id: project.id,
-      }
+      },
     );
     expect(
-      queryProject.project.engagements.items.length
+      queryProject.project.engagements.items.length,
     ).toBeGreaterThanOrEqual(numEngagements);
 
     expect(queryProject.project.sensitivity).toEqual(language.sensitivity);
@@ -726,10 +726,10 @@ describe('Project e2e', () => {
       `,
       {
         id: project.id,
-      }
+      },
     );
     expect(
-      queryProject.project.engagements.items.length
+      queryProject.project.engagements.items.length,
     ).toBeGreaterThanOrEqual(numEngagements);
   });
 
@@ -740,12 +740,12 @@ describe('Project e2e', () => {
       fieldRegionId: fieldRegion.id,
     });
     await expect(
-      createProject(app, { name: projName, fieldRegionId: fieldRegion.id })
+      createProject(app, { name: projName, fieldRegionId: fieldRegion.id }),
     ).rejects.toThrowGqlError(
       errors.duplicate({
         message: 'Project with this name already exists',
         field: 'project.name',
-      })
+      }),
     );
   });
 
@@ -764,7 +764,7 @@ describe('Project e2e', () => {
             projectId,
             roles: [Role.Consultant],
           });
-        })
+        }),
       );
     });
 
@@ -787,7 +787,7 @@ describe('Project e2e', () => {
       `,
       {
         id: project.id,
-      }
+      },
     );
 
     // Remember the project Owner is also a team member so that should be +1
@@ -808,8 +808,8 @@ describe('Project e2e', () => {
       times(numPartnerships).map(() =>
         createPartnership(app, {
           projectId: project.id,
-        })
-      )
+        }),
+      ),
     );
 
     const queryProject = await app.graphql.query(
@@ -831,11 +831,11 @@ describe('Project e2e', () => {
       `,
       {
         id: project.id,
-      }
+      },
     );
 
     expect(
-      queryProject.project.partnerships.items.length
+      queryProject.project.partnerships.items.length,
     ).toBeGreaterThanOrEqual(numPartnerships);
     expect(queryProject.project.partnerships.total).toBe(numPartnerships);
   });
@@ -877,18 +877,18 @@ describe('Project e2e', () => {
           id: project.id,
           // Ensure the result from the change to Active returns the correct budget status
           step: ProjectStep.Active,
-        }
+        },
       );
 
       expect(result?.updateProject.project.budget.value.status).toBe(
-        BudgetStatus.Current
+        BudgetStatus.Current,
       );
       expect(result?.updateProject.project.departmentId.value).toContain(
-        fundingAccount.accountNumber.value?.toString()
+        fundingAccount.accountNumber.value?.toString(),
       );
       // Ensure the initialMouEnd is updated to mouEnd value
       expect(result?.updateProject.project.initialMouEnd.value).toBe(
-        project.mouEnd.value
+        project.mouEnd.value,
       );
     });
   });
@@ -916,7 +916,7 @@ describe('Project e2e', () => {
         input: {
           project,
         },
-      }
+      },
     );
     expect(createProject.project.id).toBeDefined();
   });
@@ -945,7 +945,7 @@ describe('Project e2e', () => {
         input: {
           project,
         },
-      }
+      },
     );
 
     expect(createProject.project.id).toBeDefined();
@@ -986,7 +986,7 @@ describe('Project e2e', () => {
         input: {
           partnership,
         },
-      }
+      },
     );
 
     // Update Project with mou dates
@@ -1017,7 +1017,7 @@ describe('Project e2e', () => {
         id: proj.id,
         mouStart: CalendarDate.fromISO('2020-08-23'),
         mouEnd: CalendarDate.fromISO('2021-08-22'),
-      }
+      },
     );
 
     const actual = result.updateProject.project;
@@ -1055,7 +1055,7 @@ describe('Project e2e', () => {
         input: {
           partnership,
         },
-      }
+      },
     );
 
     const projectQueryResult = await app.graphql.query(
@@ -1081,7 +1081,7 @@ describe('Project e2e', () => {
       `,
       {
         id: project.id,
-      }
+      },
     );
     const firstBudgetRecordOrganizationId =
       projectQueryResult.project.budget.value.records[0].organization.value.id;
@@ -1117,14 +1117,14 @@ describe('Project e2e', () => {
             id: project.id,
             // updating to this step assigns a dept id
             step: ProjectStep.PendingFinanceConfirmation,
-          }
+          },
         );
         return updatedProject.updateProject.project;
       };
       const projects = await Promise.all(
         ['1', '2'].map(async (i) => {
           return await createAndUpdateProject(i);
-        })
+        }),
       );
       const [project1, project2] = projects;
 

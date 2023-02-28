@@ -31,7 +31,7 @@ export type UpdatePropertyOptions<
   TObject extends Partial<MaybeUnsecuredInstance<TResourceStatic>> & {
     id: ID;
   },
-  Key extends keyof DbChanges<TObject> & string
+  Key extends keyof DbChanges<TObject> & string,
 > = DeactivatePropertyOptions<TResourceStatic, TObject, Key> &
   CreatePropertyOptions<TResourceStatic, TObject, Key> & {
     /**
@@ -57,9 +57,9 @@ export const updateProperty =
     TObject extends Partial<MaybeUnsecuredInstance<TResourceStatic>> & {
       id: ID;
     },
-    Key extends keyof DbChanges<TObject> & string
+    Key extends keyof DbChanges<TObject> & string,
   >(
-    options: UpdatePropertyOptions<TResourceStatic, TObject, Key>
+    options: UpdatePropertyOptions<TResourceStatic, TObject, Key>,
   ) =>
   <R>(query: Query<R>): Query<{ stats: PropUpdateStat }> => {
     const { permanentAfter, ...resolved } = {
@@ -72,7 +72,7 @@ export const updateProperty =
       now: options.now ?? query.params.addParam(DateTime.now(), 'now'),
       permanentAfter: permanentAfterAsVar(
         options.permanentAfter ?? defaultPermanentAfter,
-        query
+        query,
       ),
     };
     const { nodeName, key, value, now } = resolved;
@@ -122,8 +122,8 @@ export const updateProperty =
             'existingProp',
           ],
           modifyPermanentProp,
-          modifyMutableProp
-        )
+          modifyMutableProp,
+        ),
       );
   };
 
@@ -131,7 +131,7 @@ const loadExistingProp =
   (
     nodeName: string,
     key: string | Variable,
-    changeset?: Variable
+    changeset?: Variable,
   ): QueryFragment =>
   (query) =>
     query
@@ -141,7 +141,7 @@ const loadExistingProp =
           'out',
           'existingPropRel',
           key instanceof Variable ? [] : key,
-          changeset ? INACTIVE : ACTIVE
+          changeset ? INACTIVE : ACTIVE,
         ),
         node('existingProp', 'Property'),
         ...(changeset
@@ -153,29 +153,30 @@ const loadExistingProp =
       ])
       .apply(
         maybeWhereAnd(
-          key instanceof Variable && `type(existingPropRel) = ${key.toString()}`
-        )
+          key instanceof Variable &&
+            `type(existingPropRel) = ${key.toString()}`,
+        ),
       );
 
 export const determineIfPermanent =
   (
     permanentAfter: string,
     now: Variable,
-    nodeName = 'existingProp'
+    nodeName = 'existingProp',
   ): QueryFragment =>
   (query) =>
     query.subQuery([nodeName], (sub) =>
       sub.return(
         coalesce(
           `coalesce(${nodeName}.modifiedAt, ${nodeName}.createdAt) + ${permanentAfter} < ${now.toString()}`,
-          true
-        ).as('isPermanent')
-      )
+          true,
+        ).as('isPermanent'),
+      ),
     );
 
 export function permanentAfterAsVar(
   permanentAfter: Variable | DurationIn | undefined,
-  query: Query
+  query: Query,
 ) {
   if (permanentAfter instanceof Variable) {
     return permanentAfter.toString();
@@ -195,7 +196,7 @@ export const conditionalOn = <R>(
   conditionVar: string,
   scope: string[],
   trueQuery: QueryFragment<unknown, R>,
-  falseQuery: QueryFragment<unknown, R>
+  falseQuery: QueryFragment<unknown, R>,
 ): QueryFragment<unknown, R> => {
   const imports = [...new Set([conditionVar, ...scope])];
   return (query) =>
@@ -210,6 +211,6 @@ export const conditionalOn = <R>(
         .with(imports)
         .with(imports)
         .raw(`WHERE NOT ${conditionVar}`)
-        .apply(falseQuery)
+        .apply(falseQuery),
     );
 };

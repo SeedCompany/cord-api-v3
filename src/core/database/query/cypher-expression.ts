@@ -40,7 +40,7 @@ export const exp = (exp: ExpressionInput): CypherExpression => {
         }
         throw new ServerException('Something went wrong');
       },
-    }
+    },
   );
 };
 
@@ -80,7 +80,7 @@ const buildExp = (exp: ExpressionInput): string => {
   }
 
   const pairs = Object.entries(exp).flatMap(([key, value]) =>
-    value !== undefined ? `${quoteKey(key)}: ${buildExp(value)}` : []
+    value !== undefined ? `${quoteKey(key)}: ${buildExp(value)}` : [],
   );
   return shouldMultiline(pairs)
     ? `{${makeMultiline(pairs)}}`

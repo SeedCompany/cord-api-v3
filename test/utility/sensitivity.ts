@@ -23,19 +23,19 @@ import { registerUser } from './register';
 
 export type ReadOneFunction<T extends ResourceShape<any>['prototype']> = (
   app: TestApp,
-  id: string
+  id: string,
 ) => Promise<T>;
 
 type InstanceOf<T> = T extends ResourceShape<any> ? T['prototype'] : never;
 
 export type ResourceArrayRelation<
   TResourceStatic extends ResourceShape<any>,
-  Rel extends keyof TResourceStatic['Relations'] & string
+  Rel extends keyof TResourceStatic['Relations'] & string,
 > = InstanceOf<ArrayItem<TResourceStatic['Relations'][Rel]>>;
 
 export async function expectSensitiveRelationList<
   TResourceStatic extends ResourceShape<any>,
-  Prop extends keyof TResourceStatic['Relations'] & string
+  Prop extends keyof TResourceStatic['Relations'] & string,
 >({
   app,
   role,
@@ -61,7 +61,7 @@ export async function expectSensitiveRelationList<
   perms: Record<Prop, Permission>;
 }) {
   const user = await runInIsolatedSession(app, () =>
-    registerUser(app, { roles: [role] })
+    registerUser(app, { roles: [role] }),
   );
 
   await runAsAdmin(app, () =>
@@ -69,8 +69,8 @@ export async function expectSensitiveRelationList<
       sensitivityRestriction,
       projectId,
       app,
-      projectType
-    )
+      projectType,
+    ),
   );
   const canReadProp = await user.runAs(() => readFunction(app, resourceId));
   if (perms[propertyToCheck]) {
@@ -82,11 +82,11 @@ export async function expectSensitiveRelationList<
         sensitivityRestriction,
         projectId,
         app,
-        projectType
-      )
+        projectType,
+      ),
     );
     const cannotReadProp = await user.runAs(() =>
-      readFunction(app, resourceId)
+      readFunction(app, resourceId),
     );
     expect(cannotReadProp).toHaveLength(0);
   }
@@ -95,7 +95,7 @@ export async function expectSensitiveRelationList<
 export async function expectSensitiveProperty<
   TResourceStatic extends ResourceShape<any>,
   TResource extends SecuredResource<TResourceStatic>,
-  Prop extends keyof TResource & string
+  Prop extends keyof TResource & string,
 >({
   app,
   role,
@@ -126,7 +126,7 @@ export async function expectSensitiveProperty<
   projectType: ProjectType;
 }) {
   const user = await runInIsolatedSession(app, () =>
-    registerUser(app, { roles: [role] })
+    registerUser(app, { roles: [role] }),
   );
 
   await runAsAdmin(app, () =>
@@ -134,24 +134,24 @@ export async function expectSensitiveProperty<
       sensitivityRestriction,
       projectId,
       app,
-      projectType
-    )
+      projectType,
+    ),
   );
 
   const canReadProp = await user.runAs(() => readOneFunction(app, resourceId));
 
   if (permissions[propertyToCheck]) {
     expect(canReadProp[propertyToCheck].canRead).toEqual(
-      permissions[propertyToCheck].canRead
+      permissions[propertyToCheck].canRead,
     );
     try {
       expect(canReadProp[propertyToCheck].canEdit).toEqual(
-        permissions[propertyToCheck].canEdit
+        permissions[propertyToCheck].canEdit,
       );
     } catch (error) {
       if (canReadProp[propertyToCheck].canEdit === undefined) {
         expect(canReadProp[propertyToCheck].canCreate).toEqual(
-          permissions[propertyToCheck].canEdit
+          permissions[propertyToCheck].canEdit,
         );
       }
     }
@@ -163,12 +163,12 @@ export async function expectSensitiveProperty<
         sensitivityRestriction,
         projectId,
         app,
-        projectType
-      )
+        projectType,
+      ),
     );
 
     const cannotReadProp = await user.runAs(() =>
-      readOneFunction(app, resourceId)
+      readOneFunction(app, resourceId),
     );
 
     if (cannotReadProp[propertyToCheck].canRead != null) {
@@ -185,7 +185,7 @@ export async function expectSensitiveProperty<
       }
       if (canReadProp[propertyToCheck].canEdit === undefined) {
         expect(canReadProp[propertyToCheck].canCreate).toEqual(
-          permissions[propertyToCheck].canEdit
+          permissions[propertyToCheck].canEdit,
         );
       }
     }
@@ -196,7 +196,7 @@ async function doSensitivityHigherThan(
   sensitivity: Sensitivity,
   projectId: ID,
   app: TestApp,
-  projectType: ProjectType
+  projectType: ProjectType,
 ): Promise<void> {
   switch (sensitivity) {
     case Sensitivity.Low: {
@@ -219,7 +219,7 @@ async function doSensitivityHigherThan(
         await updateInternProjectSensitivity(
           app,
           projectId,
-          Sensitivity.Medium
+          Sensitivity.Medium,
         );
       }
       break;
@@ -250,7 +250,7 @@ async function doSensitivityLessThanEqualTo(
   sensitivity: Sensitivity,
   projectId: ID,
   app: TestApp,
-  projectType: ProjectType
+  projectType: ProjectType,
 ): Promise<void> {
   switch (sensitivity) {
     case Sensitivity.High: {
@@ -282,7 +282,7 @@ async function doSensitivityLessThanEqualTo(
         await updateInternProjectSensitivity(
           app,
           projectId,
-          Sensitivity.Medium
+          Sensitivity.Medium,
         );
       }
     }
@@ -307,7 +307,7 @@ async function doSensitivityLessThanEqualTo(
 export async function updateInternProjectSensitivity(
   app: TestApp,
   projectId: string,
-  sensitivity: Sensitivity
+  sensitivity: Sensitivity,
 ): Promise<void> {
   const result = await app.graphql.query(
     gql`
@@ -325,7 +325,7 @@ export async function updateInternProjectSensitivity(
     {
       id: projectId,
       sensitivity: sensitivity,
-    }
+    },
   );
   expect(result.updateProject.project.id).toBe(projectId);
   expect(result.updateProject.project.sensitivity).toBe(sensitivity);

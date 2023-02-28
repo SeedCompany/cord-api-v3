@@ -42,7 +42,7 @@ export class TimeZoneService {
         'https://raw.githubusercontent.com/moment/moment-timezone/master/data/meta/latest.json',
         {
           cache: this.httpCache,
-        }
+        },
       )
       .json<TzJson>();
 

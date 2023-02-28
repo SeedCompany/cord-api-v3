@@ -43,7 +43,7 @@ export class PeriodicReportRepository extends DtoRepository<
 >(IPeriodicReport) {
   constructor(
     private readonly progressRepo: ProgressReportExtraForPeriodicInterfaceRepository,
-    db: DatabaseService
+    db: DatabaseService,
   ) {
     super(db);
   }
@@ -59,7 +59,7 @@ export class PeriodicReportRepository extends DtoRepository<
         start: interval.start,
         end: interval.end,
         tempFileId: await generateId(),
-      }))
+      })),
     );
 
     const isProgress = input.type === ReportType.Progress;
@@ -103,7 +103,7 @@ export class PeriodicReportRepository extends DtoRepository<
           .with('CASE WHEN count(node) = 0 THEN [true] ELSE [] END as rows')
           .raw('UNWIND rows as row')
           // nonsense value, the 1 row returned is what is important, not this column
-          .return('true as itIsNew')
+          .return('true as itIsNew'),
       )
       .apply(
         await createNode(Report as typeof IPeriodicReport, {
@@ -121,12 +121,12 @@ export class PeriodicReportRepository extends DtoRepository<
             reportFile: variable('interval.tempFileId'),
             ...extraCreateOptions.initialProps,
           },
-        })
+        }),
       )
       .apply(
         createRelationships(Report, 'in', {
           report: variable('parent'),
-        })
+        }),
       )
       .apply(isProgress ? this.progressRepo.amendAfterCreateNode() : undefined)
       // rename node to report, so we can call create node again for the file
@@ -140,16 +140,16 @@ export class PeriodicReportRepository extends DtoRepository<
             id: variable('interval.tempFileId'),
             createdAt: variable('now'),
           },
-        })
+        }),
       )
       .apply(
         createRelationships(File, {
           in: { reportFileNode: variable('report') },
           out: { createdBy: ['User', input.session.userId] },
-        })
+        }),
       )
       .return<{ id: ID; interval: Range<CalendarDate> }>(
-        'report.id as id, interval'
+        'report.id as id, interval',
       );
     return await query.run();
   }
@@ -232,7 +232,7 @@ export class PeriodicReportRepository extends DtoRepository<
   async getLatestReportSubmitted(
     parentId: ID,
     type: ReportType,
-    session: Session
+    session: Session,
   ) {
     const res = await this.db
       .query()
@@ -285,13 +285,13 @@ export class PeriodicReportRepository extends DtoRepository<
   async delete(
     baseNodeId: ID,
     type: ReportType,
-    intervals: ReadonlyArray<Range<CalendarDate | null>>
+    intervals: ReadonlyArray<Range<CalendarDate | null>>,
   ) {
     return await this.db
       .query()
       .unwind(
         intervals.map((i) => ({ start: i.start, end: i.end })),
-        'interval'
+        'interval',
       )
       .match([
         [
@@ -329,13 +329,13 @@ export class PeriodicReportRepository extends DtoRepository<
                 AND (report)-[:status { active: true }]->(:Property { value: "${ProgressStatus.NotStarted}" })
               )
             )
-        `
+        `,
       )
       .subQuery('report', (sub) =>
         sub
           .apply(deleteBaseNode('report'))
           .return('node as somethingDeleted')
-          .raw('LIMIT 1')
+          .raw('LIMIT 1'),
       )
       .return<{ count: number }>('count(report) as count')
       .first();
@@ -354,7 +354,7 @@ export class PeriodicReportRepository extends DtoRepository<
             .with('node')
             .with('node')
             .where({ node: not(hasLabel('ProgressReport')) })
-            .return('{} as extra')
+            .return('{} as extra'),
         )
         .subQuery('node', (sub) =>
           sub
@@ -373,7 +373,7 @@ export class PeriodicReportRepository extends DtoRepository<
               relation('in', '', 'engagement', ACTIVE),
               node('project', 'Project'),
             ])
-            .return('project')
+            .return('project'),
         )
         .match([
           node('parent', 'BaseNode'),
@@ -382,7 +382,7 @@ export class PeriodicReportRepository extends DtoRepository<
         ])
         .apply(matchPropsAndProjectSensAndScopedRoles(session))
         .return<{ dto: UnsecuredDto<PeriodicReport> }>(
-          merge('props', { parent: 'parent' }, 'extra').as('dto')
+          merge('props', { parent: 'parent' }, 'extra').as('dto'),
         );
   }
 }

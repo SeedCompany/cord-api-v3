@@ -45,7 +45,7 @@ export const commitChangesetProps =
               }),
               node(changesetVar),
             ])
-            .return(['previouslyActiveProp', 'previouslyActiveRel'])
+            .return(['previouslyActiveProp', 'previouslyActiveRel']),
         )
         .with(['changedRel', 'previouslyActiveProp', 'previouslyActiveRel'])
 
@@ -58,6 +58,6 @@ export const commitChangesetProps =
         .with('previouslyActiveProp')
         .apply(prefixNodeLabelsWithDeleted('previouslyActiveProp'))
 
-        .return('1')
+        .return('1'),
     );
   };

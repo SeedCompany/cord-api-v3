@@ -35,13 +35,13 @@ export class CommentService {
     private readonly privileges: Privileges,
     private readonly resources: ResourceLoader,
     private readonly resourcesHost: ResourcesHost,
-    @Logger('comment:service') private readonly logger: ILogger
+    @Logger('comment:service') private readonly logger: ILogger,
   ) {}
 
   async create(input: CreateCommentInput, session: Session) {
     const perms = await this.getPermissionsFromResource(
       input.resourceId,
-      session
+      session,
     );
     perms.verifyCan('create');
 
@@ -58,7 +58,7 @@ export class CommentService {
       ) {
         throw new NotFoundException(
           'Comment thread does not exist',
-          'threadId'
+          'threadId',
         );
       }
 
@@ -70,7 +70,7 @@ export class CommentService {
     const parent = await this.loadCommentable(resource);
     const parentType = await this.resourcesHost.getByName(
       // I'd like to type this prop as this but somehow blows everything up.
-      parent.__typename as 'Commentable'
+      parent.__typename as 'Commentable',
     );
     return this.privileges
       .for(session, parentType, parent)
@@ -109,13 +109,13 @@ export class CommentService {
   async readMany(ids: readonly ID[], session: Session) {
     const comments = await this.repo.readMany(ids);
     return await Promise.all(
-      comments.map((dto) => this.secureComment(dto, session))
+      comments.map((dto) => this.secureComment(dto, session)),
     );
   }
 
   async secureThread(
     thread: UnsecuredDto<CommentThread>,
-    session: Session
+    session: Session,
   ): Promise<CommentThread> {
     return {
       ...thread,
@@ -127,7 +127,7 @@ export class CommentService {
 
   async secureComment(
     dto: UnsecuredDto<Comment>,
-    session: Session
+    session: Session,
   ): Promise<Comment> {
     return this.privileges.for(session, Comment).secure(dto);
   }
@@ -161,7 +161,7 @@ export class CommentService {
   async listThreads(
     parent: Commentable,
     input: CommentThreadListInput,
-    session: Session
+    session: Session,
   ): Promise<CommentThreadList> {
     await this.verifyCanView(parent, session);
 
@@ -169,7 +169,7 @@ export class CommentService {
 
     return {
       ...(await mapListResults(results, (dto) =>
-        this.secureThread(dto, session)
+        this.secureThread(dto, session),
       )),
       parent,
     };
@@ -178,11 +178,11 @@ export class CommentService {
   async listCommentsByThreadId(
     thread: ID,
     input: CommentListInput,
-    session: Session
+    session: Session,
   ) {
     const results = await this.repo.list(thread, input, session);
     return await mapListResults(results, (dto) =>
-      this.secureComment(dto, session)
+      this.secureComment(dto, session),
     );
   }
 }

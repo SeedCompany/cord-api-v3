@@ -9,7 +9,7 @@ import { Changeset, ChangesetDiff, ResourceChange } from './dto';
 export class ChangesetResolver {
   constructor(
     private readonly repo: ChangesetRepository,
-    private readonly resources: ResourceLoader
+    private readonly resources: ResourceLoader,
   ) {}
 
   @Query(() => Changeset)
@@ -29,7 +29,7 @@ export class ChangesetResolver {
       description:
         'Optionally limit to only changes of this resource and its (grand)children',
     })
-    parent?: ID
+    parent?: ID,
   ): Promise<ChangesetDiff> {
     const diff = await this.repo.difference(changeset.id, session, parent);
     const load = (node: BaseNode, view?: ObjectView) =>
@@ -39,8 +39,8 @@ export class ChangesetResolver {
       // If the changeset is approved, we read deleted node otherwise read node in changeset
       Promise.all(
         diff.removed.map((node) =>
-          load(node, changeset.applied ? { deleted: true } : undefined)
-        )
+          load(node, changeset.applied ? { deleted: true } : undefined),
+        ),
       ),
       Promise.all(
         diff.changed.map(async (node): Promise<ResourceChange> => {
@@ -49,7 +49,7 @@ export class ChangesetResolver {
             load(node),
           ]);
           return { previous, updated };
-        })
+        }),
       ),
     ]);
     return {

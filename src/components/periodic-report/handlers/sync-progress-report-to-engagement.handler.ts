@@ -25,7 +25,7 @@ type SubscribedEvent =
 @EventsHandler(
   EngagementCreatedEvent,
   EngagementUpdatedEvent,
-  ProjectUpdatedEvent
+  ProjectUpdatedEvent,
 )
 export class SyncProgressReportToEngagementDateRange
   extends AbstractPeriodicReportSync
@@ -34,7 +34,7 @@ export class SyncProgressReportToEngagementDateRange
   constructor(
     periodicReports: PeriodicReportService,
     private readonly engagements: EngagementService,
-    @Logger('progress-report:engagement-sync') private readonly logger: ILogger
+    @Logger('progress-report:engagement-sync') private readonly logger: ILogger,
   ) {
     super(periodicReports);
   }
@@ -58,7 +58,7 @@ export class SyncProgressReportToEngagementDateRange
       event instanceof ProjectUpdatedEvent
         ? await this.engagements.listAllByProjectId(
             event.updated.id,
-            event.session
+            event.session,
           )
         : event instanceof EngagementUpdatedEvent
         ? [event.updated]
@@ -79,14 +79,14 @@ export class SyncProgressReportToEngagementDateRange
         engagement.id,
         ReportType.Progress,
         diff,
-        engagement.endDate?.endOf('quarter')
+        engagement.endDate?.endOf('quarter'),
       );
     }
   }
 
   private intervalsFromProjectChange(
     engagement: UnsecuredDto<Engagement>,
-    event: ProjectUpdatedEvent
+    event: ProjectUpdatedEvent,
   ): Intervals {
     return [
       // Engagement already has all the updated values calculated correctly.
@@ -95,7 +95,7 @@ export class SyncProgressReportToEngagementDateRange
       // otherwise it's the project's previous
       DateInterval.tryFrom(
         engagement.startDateOverride ?? event.previous.mouStart,
-        engagement.endDateOverride ?? event.previous.mouEnd
+        engagement.endDateOverride ?? event.previous.mouEnd,
       ),
     ];
   }

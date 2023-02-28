@@ -11,7 +11,7 @@ import { member, Policy, Role, sensMediumOrLower, sensOnlyLow } from '../util';
     (p) =>
       p
         .many('registryOfDialectsCode', 'signLanguageCode', 'locations')
-        .whenAny(member, sensMediumOrLower).read
+        .whenAny(member, sensMediumOrLower).read,
   ),
   r.LanguageEngagement.edit.specifically((p) => [
     p.paratextRegistryId.whenAny(member, sensMediumOrLower).edit,
@@ -35,7 +35,7 @@ import { member, Policy, Role, sensMediumOrLower, sensOnlyLow } from '../util';
           'financialReportReceivedAt',
           'otherLocations',
           'primaryLocation',
-          'sensitivity'
+          'sensitivity',
         )
         .whenAny(member, sensMediumOrLower).read,
       p.rootDirectory.whenAny(member, sensMediumOrLower).edit,

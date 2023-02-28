@@ -44,7 +44,7 @@ export class PartnerResolver {
   })
   async partner(
     @Loader(PartnerLoader) partners: LoaderOf<PartnerLoader>,
-    @IdArg() id: ID
+    @IdArg() id: ID,
   ): Promise<Partner> {
     return await partners.load(id);
   }
@@ -55,7 +55,7 @@ export class PartnerResolver {
   async partners(
     @AnonSession() session: Session,
     @ListArg(PartnerListInput) input: PartnerListInput,
-    @Loader(PartnerLoader) partners: LoaderOf<PartnerLoader>
+    @Loader(PartnerLoader) partners: LoaderOf<PartnerLoader>,
   ): Promise<PartnerListOutput> {
     const list = await this.partnerService.list(input, session);
     partners.primeAll(list.items);
@@ -65,20 +65,20 @@ export class PartnerResolver {
   @ResolveField(() => SecuredOrganization)
   async organization(
     @Parent() partner: Partner,
-    @Loader(OrganizationLoader) organizations: LoaderOf<OrganizationLoader>
+    @Loader(OrganizationLoader) organizations: LoaderOf<OrganizationLoader>,
   ): Promise<SecuredOrganization> {
     return await mapSecuredValue(partner.organization, (id) =>
-      organizations.load(id)
+      organizations.load(id),
     );
   }
 
   @ResolveField(() => SecuredUser)
   async pointOfContact(
     @Parent() partner: Partner,
-    @Loader(UserLoader) users: LoaderOf<UserLoader>
+    @Loader(UserLoader) users: LoaderOf<UserLoader>,
   ): Promise<SecuredUser> {
     return await mapSecuredValue(partner.pointOfContact, (id) =>
-      users.load(id)
+      users.load(id),
     );
   }
 
@@ -89,12 +89,12 @@ export class PartnerResolver {
     @AnonSession() session: Session,
     @Parent() partner: Partner,
     @ListArg(ProjectListInput) input: ProjectListInput,
-    @Loader(ProjectLoader) loader: LoaderOf<ProjectLoader>
+    @Loader(ProjectLoader) loader: LoaderOf<ProjectLoader>,
   ): Promise<SecuredProjectList> {
     const list = await this.partnerService.listProjects(
       partner,
       input,
-      session
+      session,
     );
     loader.primeAll(list.items);
     return list;
@@ -105,7 +105,7 @@ export class PartnerResolver {
   })
   async createPartner(
     @LoggedInSession() session: Session,
-    @Args('input') { partner: input }: CreatePartnerInput
+    @Args('input') { partner: input }: CreatePartnerInput,
   ): Promise<CreatePartnerOutput> {
     const partner = await this.partnerService.create(input, session);
     return { partner };
@@ -116,7 +116,7 @@ export class PartnerResolver {
   })
   async updatePartner(
     @LoggedInSession() session: Session,
-    @Args('input') { partner: input }: UpdatePartnerInput
+    @Args('input') { partner: input }: UpdatePartnerInput,
   ): Promise<UpdatePartnerOutput> {
     const partner = await this.partnerService.update(input, session);
     return { partner };
@@ -127,7 +127,7 @@ export class PartnerResolver {
   })
   async deletePartner(
     @LoggedInSession() session: Session,
-    @IdArg() id: ID
+    @IdArg() id: ID,
   ): Promise<DeletePartnerOutput> {
     await this.partnerService.delete(id, session);
     return { success: true };

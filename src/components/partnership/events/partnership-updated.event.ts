@@ -6,6 +6,6 @@ export class PartnershipUpdatedEvent {
     public updated: Partnership,
     readonly previous: Partnership,
     readonly updates: UpdatePartnership,
-    readonly session: Session
+    readonly session: Session,
   ) {}
 }

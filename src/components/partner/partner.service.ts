@@ -41,21 +41,21 @@ export class PartnerService {
     private readonly privileges: Privileges,
     @Inject(forwardRef(() => ProjectService))
     private readonly projectService: ProjectService,
-    private readonly repo: PartnerRepository
+    private readonly repo: PartnerRepository,
   ) {}
 
   async create(input: CreatePartner, session: Session): Promise<Partner> {
     await this.authorizationService.checkPower(Powers.CreatePartner, session);
     this.verifyFinancialReportingType(
       input.financialReportingTypes,
-      input.types
+      input.types,
     );
 
     const partnerExists = await this.repo.partnerIdByOrg(input.organizationId);
     if (partnerExists) {
       throw new DuplicateException(
         'partner.organizationId',
-        'Partner for organization already exists.'
+        'Partner for organization already exists.',
       );
     }
 
@@ -82,7 +82,7 @@ export class PartnerService {
   async readOne(
     id: ID,
     session: Session,
-    _view?: ObjectView
+    _view?: ObjectView,
   ): Promise<Partner> {
     this.logger.debug(`Read Partner by Partner Id`, {
       id: id,
@@ -102,7 +102,7 @@ export class PartnerService {
     const securedProps = await this.authorizationService.secureProperties(
       Partner,
       dto,
-      session
+      session,
     );
 
     return {
@@ -126,13 +126,13 @@ export class PartnerService {
     if (
       !this.validateFinancialReportingType(
         input.financialReportingTypes ?? object.financialReportingTypes.value,
-        input.types ?? object.types.value
+        input.types ?? object.types.value,
       )
     ) {
       if (input.financialReportingTypes && input.types) {
         throw new InputException(
           'Financial reporting type can only be applied to managing partners',
-          'partnership.financialReportingType'
+          'partnership.financialReportingType',
         );
       }
       input = {
@@ -145,7 +145,7 @@ export class PartnerService {
     await this.authorizationService.verifyCanEditChanges(
       Partner,
       object,
-      changes
+      changes,
     );
     const { pointOfContactId, ...simpleChanges } = changes;
 
@@ -168,7 +168,7 @@ export class PartnerService {
 
     if (!canDelete)
       throw new UnauthorizedException(
-        'You do not have the permission to delete this Partner'
+        'You do not have the permission to delete this Partner',
       );
 
     try {
@@ -183,7 +183,7 @@ export class PartnerService {
 
   async list(
     input: PartnerListInput,
-    session: Session
+    session: Session,
   ): Promise<PartnerListOutput> {
     const results = await this.repo.list(input, session);
     return await mapListResults(results, (dto) => this.secure(dto, session));
@@ -192,11 +192,11 @@ export class PartnerService {
   async listProjects(
     partner: Partner,
     input: ProjectListInput,
-    session: Session
+    session: Session,
   ): Promise<SecuredProjectList> {
     const projectListOutput = await this.projectService.list(
       { ...input, filter: { ...input.filter, partnerId: partner.id } },
-      session
+      session,
     );
 
     return {
@@ -208,19 +208,19 @@ export class PartnerService {
 
   protected verifyFinancialReportingType(
     financialReportingTypes: FinancialReportingType[] | undefined,
-    types: PartnerType[] | undefined
+    types: PartnerType[] | undefined,
   ) {
     if (!this.validateFinancialReportingType(financialReportingTypes, types)) {
       throw new InputException(
         'Financial reporting type can only be applied to managing partners',
-        'partnership.financialReportingType'
+        'partnership.financialReportingType',
       );
     }
   }
 
   protected validateFinancialReportingType(
     financialReportingTypes: readonly FinancialReportingType[] | undefined,
-    types: readonly PartnerType[] | undefined
+    types: readonly PartnerType[] | undefined,
   ) {
     return financialReportingTypes?.length &&
       !types?.includes(PartnerType.Managing)

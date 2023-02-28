@@ -41,7 +41,7 @@ type SecuredStep = SecuredProjectStep & {
 export const changeProjectStep = async (
   app: TestApp,
   id: ID,
-  to: ProjectStep
+  to: ProjectStep,
 ): Promise<SecuredStep> => {
   const result = await app.graphql.mutate(
     gql`
@@ -65,14 +65,14 @@ export const changeProjectStep = async (
     {
       id,
       step: to,
-    }
+    },
   );
   return result.updateProject.project.step.transitions;
 };
 
 export const transitionNewProjectToActive = async (
   app: TestApp,
-  project: Raw<Project>
+  project: Raw<Project>,
 ) => {
   for (const next of [
     ...stepsFromEarlyConversationToBeforeActive,

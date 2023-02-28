@@ -26,7 +26,7 @@ export class TimeZoneResolver {
 
   @Query(() => IanaCountry, { nullable: true })
   async ianaCountry(
-    @Args('code') code: string
+    @Args('code') code: string,
   ): Promise<IanaCountry | undefined> {
     const countries = await this.service.countries();
     return countries[code];

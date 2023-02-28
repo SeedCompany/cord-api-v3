@@ -34,7 +34,7 @@ export class PostResolver {
   })
   async createPost(
     @LoggedInSession() session: Session,
-    @Args('input') { post: input }: CreatePostInput
+    @Args('input') { post: input }: CreatePostInput,
   ): Promise<CreatePostOutput> {
     const post = await this.service.create(input, session);
     return { post };
@@ -45,7 +45,7 @@ export class PostResolver {
   })
   async post(
     @IdArg() id: ID,
-    @Loader(PostLoader) posts: LoaderOf<PostLoader>
+    @Loader(PostLoader) posts: LoaderOf<PostLoader>,
   ): Promise<Post> {
     return await posts.load(id);
   }
@@ -53,7 +53,7 @@ export class PostResolver {
   @ResolveField(() => SecuredUser)
   async creator(
     @Parent() post: Post,
-    @Loader(UserLoader) users: LoaderOf<UserLoader>
+    @Loader(UserLoader) users: LoaderOf<UserLoader>,
   ): Promise<SecuredUser> {
     return await mapSecuredValue(post.creator, (id) => users.load(id));
   }
@@ -63,7 +63,7 @@ export class PostResolver {
   })
   async updatePost(
     @LoggedInSession() session: Session,
-    @Args('input') { post: input }: UpdatePostInput
+    @Args('input') { post: input }: UpdatePostInput,
   ): Promise<UpdatePostOutput> {
     const post = await this.service.update(input, session);
     return { post };
@@ -74,7 +74,7 @@ export class PostResolver {
   })
   async deletePost(
     @LoggedInSession() session: Session,
-    @IdArg() id: ID
+    @IdArg() id: ID,
   ): Promise<DeletePostOutput> {
     await this.service.delete(id, session);
     return { success: true };

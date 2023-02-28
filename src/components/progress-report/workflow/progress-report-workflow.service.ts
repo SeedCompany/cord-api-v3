@@ -19,12 +19,12 @@ export class ProgressReportWorkflowService {
   constructor(
     private readonly privileges: Privileges,
     private readonly resources: ResourceLoader,
-    private readonly repo: ProgressReportWorkflowRepository
+    private readonly repo: ProgressReportWorkflowRepository,
   ) {}
 
   async list(
     report: ProgressReport,
-    session: Session
+    session: Session,
   ): Promise<WorkflowEvent[]> {
     const dtos = await this.repo.list(report.id, session);
     return dtos.map((dto) => this.secure(dto, session));
@@ -37,7 +37,7 @@ export class ProgressReportWorkflowService {
 
   private secure(
     dto: UnsecuredDto<WorkflowEvent>,
-    session: Session
+    session: Session,
   ): WorkflowEvent {
     const secured = this.privileges.for(session, WorkflowEvent).secure(dto);
     return {
@@ -55,7 +55,7 @@ export class ProgressReportWorkflowService {
         (t.from ? many(t.from).includes(current) : true) &&
         // I don't have a good way to type this right now.
         // Context usage is still fuzzy when conditions need different shapes.
-        p.forContext({ transition: t.id } as any).can('create')
+        p.forContext({ transition: t.id } as any).can('create'),
     );
     return available;
   }
@@ -71,14 +71,14 @@ export class ProgressReportWorkflowService {
       status: overrideStatus,
       notes,
     }: ExecuteProgressReportTransitionInput,
-    session: Session
+    session: Session,
   ) {
     const currentStatus = await this.repo.currentStatus(reportId);
 
     if (overrideStatus) {
       if (!this.canBypass(session)) {
         throw new UnauthorizedException(
-          'You do not have permission to bypass workflow. Specify a transition ID instead.'
+          'You do not have permission to bypass workflow. Specify a transition ID instead.',
         );
       }
 

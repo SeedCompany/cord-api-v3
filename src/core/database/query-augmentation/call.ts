@@ -18,7 +18,7 @@ declare module 'cypher-query-builder/dist/typings/query' {
 
 Query.prototype.call = function call<
   A extends any[],
-  R extends Query<any> | void
+  R extends Query<any> | void,
 >(
   this: Query,
   fn: (q: Query, ...args: A) => R,

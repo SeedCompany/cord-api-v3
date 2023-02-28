@@ -20,7 +20,8 @@ export class ApplyFinalizedChangesetToProject
 {
   constructor(
     private readonly db: DatabaseService,
-    @Logger('project:change-request:finalized') private readonly logger: ILogger
+    @Logger('project:change-request:finalized')
+    private readonly logger: ILogger,
   ) {}
 
   async handle({ changeset }: SubscribedEvent) {
@@ -35,7 +36,7 @@ export class ApplyFinalizedChangesetToProject
           node('changeset', 'Changeset', { id: changeset.id }),
         ])
         .apply(
-          changeset.applied ? commitChangesetProps() : rejectChangesetProps()
+          changeset.applied ? commitChangesetProps() : rejectChangesetProps(),
         )
         // Apply pending budget records
         .subQuery((sub) =>
@@ -56,15 +57,15 @@ export class ApplyFinalizedChangesetToProject
                 ? q.setValues({
                     'recordRel.active': true,
                   })
-                : q
+                : q,
             )
             .with('br, changeset')
             .apply(
               changeset.applied
                 ? commitChangesetProps({ nodeVar: 'br' })
-                : rejectChangesetProps({ nodeVar: 'br' })
+                : rejectChangesetProps({ nodeVar: 'br' }),
             )
-            .return('br')
+            .return('br'),
         )
         .return('node');
       await query.run();
@@ -72,7 +73,7 @@ export class ApplyFinalizedChangesetToProject
     } catch (exception) {
       throw new ServerException(
         'Failed to apply changeset to project',
-        exception
+        exception,
       );
     }
   }

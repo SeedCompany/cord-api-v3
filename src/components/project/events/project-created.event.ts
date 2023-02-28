@@ -4,6 +4,6 @@ import { Project } from '../dto';
 export class ProjectCreatedEvent {
   constructor(
     public project: UnsecuredDto<Project>,
-    readonly session: Session
+    readonly session: Session,
   ) {}
 }

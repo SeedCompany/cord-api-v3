@@ -199,9 +199,9 @@ describe('Partner Security e2e', () => {
               }),
               readOneFunction: readFunction,
             });
-          }
+          },
         );
-      }
+      },
     );
     describe.each`
       role                     | sensitivityToTest
@@ -248,9 +248,9 @@ describe('Partner Security e2e', () => {
               }),
               readOneFunction: readFunction,
             });
-          }
+          },
         );
-      }
+      },
     );
   });
 });

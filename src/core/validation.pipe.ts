@@ -45,7 +45,7 @@ export class ValidationException extends ClientException {
 
 /** Flatten validation errors keeping only errors with constraint violations */
 const flattenConstraints = (
-  e: ValidationError[]
+  e: ValidationError[],
 ): Array<SetRequired<ValidationError, 'constraints'>> =>
   e.flatMap((er) => [
     ...(er.constraints
@@ -57,7 +57,7 @@ const flattenConstraints = (
 const flattenValidationErrors = (
   e: ValidationError[],
   out: Record<string, any> = {},
-  prefixes: string[] = []
+  prefixes: string[] = [],
 ) =>
   e.reduce((obj, error) => {
     const { target: _, value: __, property, children, constraints } = error;

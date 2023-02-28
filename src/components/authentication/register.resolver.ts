@@ -17,7 +17,7 @@ import { RegisterInput, RegisterOutput } from './dto';
 export class RegisterResolver {
   constructor(
     private readonly authentication: AuthenticationService,
-    private readonly privileges: Privileges
+    private readonly privileges: Privileges,
   ) {}
 
   @Mutation(() => RegisterOutput, {
@@ -26,7 +26,7 @@ export class RegisterResolver {
   async register(
     @Args('input') input: RegisterInput,
     @AnonSession() session: Session,
-    @Context() context: GqlContextType
+    @Context() context: GqlContextType,
   ): Promise<RegisterOutput> {
     const user = await this.authentication.register(input, session);
     await this.authentication.login(input, session);
@@ -39,7 +39,7 @@ export class RegisterResolver {
   })
   async user(
     @Parent() { user }: RegisterOutput,
-    @Loader(UserLoader) users: LoaderOf<UserLoader>
+    @Loader(UserLoader) users: LoaderOf<UserLoader>,
   ): Promise<User> {
     return await users.load(user);
   }

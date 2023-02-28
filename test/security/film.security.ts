@@ -61,7 +61,7 @@ describe('Film Security e2e', () => {
             propToTest: property,
             skipEditCheck: false,
           });
-        }
+        },
       );
     });
   });

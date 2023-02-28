@@ -19,7 +19,7 @@ export class GraphqlLoggingPlugin implements ApolloPlugin<ContextType> {
   constructor(@Logger('graphql') private readonly logger: ILogger) {}
 
   async requestDidStart(
-    _context: RequestContext<ContextType>
+    _context: RequestContext<ContextType>,
   ): Promise<RequestListener<ContextType>> {
     return {
       executionDidStart: async ({ operationName, operation, request }) => {

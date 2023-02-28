@@ -33,7 +33,7 @@ export function inherit(
   return [
     theInterface,
     ...implementations.map((granter) =>
-      granter[withOther](theInterface as any)
+      granter[withOther](theInterface as any),
     ),
   ];
 }

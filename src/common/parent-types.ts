@@ -5,7 +5,7 @@ import { AbstractClassType } from './types';
  */
 export function getParentTypes(
   type: AbstractClassType<unknown>,
-  types: ReadonlyArray<AbstractClassType<unknown>> = [type]
+  types: ReadonlyArray<AbstractClassType<unknown>> = [type],
 ): ReadonlyArray<AbstractClassType<unknown>> {
   const parent = Object.getPrototypeOf(type);
   if (parent == null) {

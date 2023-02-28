@@ -14,7 +14,7 @@ export class EngagementStatusResolver {
   async transitions(
     @Parent()
     status: SecuredEngagementStatus & ParentIdMiddlewareAdditions,
-    @AnonSession() session: Session
+    @AnonSession() session: Session,
   ): Promise<EngagementStatusTransition[]> {
     if (!status.canRead || !status.canEdit || !status.value) {
       return [];
@@ -23,7 +23,7 @@ export class EngagementStatusResolver {
       status.parentId,
       session,
       undefined,
-      status.changeset
+      status.changeset,
     );
   }
 
@@ -34,7 +34,7 @@ export class EngagementStatusResolver {
    `,
   })
   async canBypassTransitions(
-    @AnonSession() session: Session
+    @AnonSession() session: Session,
   ): Promise<boolean> {
     return await this.engagementRules.canBypassWorkflow(session);
   }

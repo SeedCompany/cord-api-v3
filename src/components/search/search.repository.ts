@@ -43,7 +43,7 @@ export class SearchRepository extends CommonRepository {
           // The input.count is going to be applied once the results are 'filtered'
           // according to what the user can read. This limit is just set to a bigger
           // number, so we don't choke things without a limit.
-          .raw('LIMIT 100')
+          .raw('LIMIT 100'),
       )
       .apply((q) =>
         input.type
@@ -52,7 +52,7 @@ export class SearchRepository extends CommonRepository {
               .raw('WHERE any(l in labels(node) where l in $types)', {
                 types: input.type,
               })
-          : q
+          : q,
       )
       .return<{
         node: BaseNode;

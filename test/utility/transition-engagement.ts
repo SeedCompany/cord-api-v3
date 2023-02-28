@@ -24,7 +24,7 @@ import {
 export const changeInternshipEngagementStatus = async (
   app: TestApp,
   id: ID,
-  to: EngagementStatus
+  to: EngagementStatus,
 ): Promise<InternshipEngagement> => {
   const result = await app.graphql.mutate(
     gql`
@@ -45,7 +45,7 @@ export const changeInternshipEngagementStatus = async (
     {
       id,
       status: to,
-    }
+    },
   );
   return result.updateInternshipEngagement.engagement;
 };
@@ -53,7 +53,7 @@ export const changeInternshipEngagementStatus = async (
 export const changeLanguageEngagementStatus = async (
   app: TestApp,
   id: ID,
-  to: EngagementStatus
+  to: EngagementStatus,
 ): Promise<LanguageEngagement> => {
   const result = await app.graphql.mutate(
     gql`
@@ -71,7 +71,7 @@ export const changeLanguageEngagementStatus = async (
     {
       id,
       status: to,
-    }
+    },
   );
   expect(result.updateLanguageEngagement.engagement.status.value).toBe(to);
   return result.updateLanguageEngagement.engagement;
@@ -80,7 +80,7 @@ export const changeLanguageEngagementStatus = async (
 export const transitionEngagementToActive = async (
   app: TestApp,
   projectId: ID,
-  langEngagementId: ID
+  langEngagementId: ID,
 ): Promise<any> => {
   await runAsAdmin(app, async () => {
     const fundingAccount = await createFundingAccount(app);
@@ -100,7 +100,7 @@ export const transitionEngagementToActive = async (
   });
   const lEngagementStatus = await getCurrentEngagementStatus(
     app,
-    langEngagementId
+    langEngagementId,
   );
   expect(lEngagementStatus.status.value).toBe(EngagementStatus.Active);
   return lEngagementStatus;

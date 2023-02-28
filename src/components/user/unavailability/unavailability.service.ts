@@ -26,17 +26,17 @@ export class UnavailabilityService {
     @Logger('unavailability:service') private readonly logger: ILogger,
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
-    private readonly repo: UnavailabilityRepository
+    private readonly repo: UnavailabilityRepository,
   ) {}
 
   async create(
     input: CreateUnavailability,
-    session: Session
+    session: Session,
   ): Promise<Unavailability> {
     try {
       await this.authorizationService.checkPower(
         Powers.CreateUnavailability,
-        session
+        session,
       );
 
       // create and connect the Unavailability to the User.
@@ -60,7 +60,7 @@ export class UnavailabilityService {
   async readOne(
     id: ID,
     session: Session,
-    _view?: ObjectView
+    _view?: ObjectView,
   ): Promise<Unavailability> {
     const result = await this.repo.readOne(id);
     return await this.secure(result, session);
@@ -69,18 +69,18 @@ export class UnavailabilityService {
   async readMany(ids: readonly ID[], session: Session) {
     const unavailabilities = await this.repo.readMany(ids);
     return await Promise.all(
-      unavailabilities.map((dto) => this.secure(dto, session))
+      unavailabilities.map((dto) => this.secure(dto, session)),
     );
   }
 
   private async secure(
     dto: UnsecuredDto<Unavailability>,
-    session: Session
+    session: Session,
   ): Promise<Unavailability> {
     const securedProps = await this.authorizationService.secureProperties(
       Unavailability,
       dto,
-      session
+      session,
     );
 
     return {
@@ -92,7 +92,7 @@ export class UnavailabilityService {
 
   async update(
     input: UpdateUnavailability,
-    session: Session
+    session: Session,
   ): Promise<Unavailability> {
     const unavailability = await this.readOne(input.id, session);
 
@@ -100,7 +100,7 @@ export class UnavailabilityService {
     if (!result) {
       throw new NotFoundException(
         'Could not find user associated with unavailability',
-        'user.unavailability'
+        'user.unavailability',
       );
     }
 
@@ -110,7 +110,7 @@ export class UnavailabilityService {
       await this.authorizationService.verifyCanEditChanges(
         Unavailability,
         unavailability,
-        changes
+        changes,
       );
     }
     return await this.repo.updateProperties(unavailability, changes);
@@ -122,7 +122,7 @@ export class UnavailabilityService {
     if (!ua) {
       throw new NotFoundException(
         'Unavailability not found',
-        'unavailability.id'
+        'unavailability.id',
       );
     }
     await this.repo.deleteNode(ua);
@@ -130,7 +130,7 @@ export class UnavailabilityService {
 
   async list(
     input: UnavailabilityListInput,
-    session: Session
+    session: Session,
   ): Promise<UnavailabilityListOutput> {
     const results = await this.repo.list(input, session);
     return await mapListResults(results, (dto) => this.secure(dto, session));

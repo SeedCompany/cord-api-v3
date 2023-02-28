@@ -31,7 +31,7 @@ export class EthnoArtService {
     @Logger('ethno-art:service') private readonly logger: ILogger,
     private readonly scriptureRefs: ScriptureReferenceService,
     private readonly authorizationService: AuthorizationService,
-    private readonly repo: EthnoArtRepository
+    private readonly repo: EthnoArtRepository,
   ) {}
 
   async create(input: CreateEthnoArt, session: Session): Promise<EthnoArt> {
@@ -39,7 +39,7 @@ export class EthnoArtService {
     if (!(await this.repo.isUnique(input.name))) {
       throw new DuplicateException(
         'ethnoArt.name',
-        'Ethno art with this name already exists'
+        'Ethno art with this name already exists',
       );
     }
 
@@ -53,7 +53,7 @@ export class EthnoArtService {
       await this.scriptureRefs.create(
         result.id,
         input.scriptureReferences,
-        session
+        session,
       );
 
       this.logger.debug(`ethno art created`, { id: result.id });
@@ -70,7 +70,7 @@ export class EthnoArtService {
   async readOne(
     id: ID,
     session: Session,
-    _view?: ObjectView
+    _view?: ObjectView,
   ): Promise<EthnoArt> {
     const result = await this.repo.readOne(id);
     return await this.secure(result, session);
@@ -83,17 +83,17 @@ export class EthnoArtService {
 
   private async secure(
     dto: UnsecuredDto<EthnoArt>,
-    session: Session
+    session: Session,
   ): Promise<EthnoArt> {
     const securedProps = await this.authorizationService.secureProperties(
       EthnoArt,
       {
         ...dto,
         scriptureReferences: this.scriptureRefs.parseList(
-          dto.scriptureReferences
+          dto.scriptureReferences,
         ),
       },
-      session
+      session,
     );
 
     return {
@@ -116,14 +116,14 @@ export class EthnoArtService {
       ...this.repo.getActualChanges(ethnoArt, input),
       scriptureReferences: ifDiff(isScriptureEqual)(
         input.scriptureReferences,
-        ethnoArt.scriptureReferences.value
+        ethnoArt.scriptureReferences.value,
       ),
     };
 
     await this.authorizationService.verifyCanEditChanges(
       EthnoArt,
       ethnoArt,
-      changes
+      changes,
     );
 
     const { scriptureReferences, ...simpleChanges } = changes;
@@ -145,7 +145,7 @@ export class EthnoArtService {
     const canDelete = await this.repo.checkDeletePermission(id, session);
     if (!canDelete) {
       throw new UnauthorizedException(
-        'You do not have permissions to delete this Ethno Art'
+        'You do not have permissions to delete this Ethno Art',
       );
     }
 

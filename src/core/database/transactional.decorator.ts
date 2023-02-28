@@ -19,7 +19,7 @@ export function Transactional(options?: TransactionOptions) {
   return ((
     target: any,
     methodName: string | symbol,
-    descriptor: TypedPropertyDescriptor<AsyncFn>
+    descriptor: TypedPropertyDescriptor<AsyncFn>,
   ) => {
     // Use property-based injection to get access to the db connection object
     // at a known location.
@@ -49,7 +49,7 @@ export function Transactional(options?: TransactionOptions) {
             initiator,
             ...options?.metadata,
           },
-        }
+        },
       );
     };
   }) as MethodDecorator;

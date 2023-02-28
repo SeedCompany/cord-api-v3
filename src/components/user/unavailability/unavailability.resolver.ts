@@ -30,7 +30,7 @@ export class UnavailabilityResolver {
   async unavailability(
     @Loader(UnavailabilityLoader)
     unavailabilities: LoaderOf<UnavailabilityLoader>,
-    @IdArg() id: ID
+    @IdArg() id: ID,
   ): Promise<Unavailability> {
     return await unavailabilities.load(id);
   }
@@ -42,7 +42,7 @@ export class UnavailabilityResolver {
     @AnonSession() session: Session,
     @ListArg(UnavailabilityListInput) input: UnavailabilityListInput,
     @Loader(UnavailabilityLoader)
-    unavailabilities: LoaderOf<UnavailabilityLoader>
+    unavailabilities: LoaderOf<UnavailabilityLoader>,
   ): Promise<UnavailabilityListOutput> {
     const list = await this.service.list(input, session);
     unavailabilities.primeAll(list.items);
@@ -54,7 +54,7 @@ export class UnavailabilityResolver {
   })
   async createUnavailability(
     @LoggedInSession() session: Session,
-    @Args('input') { unavailability: input }: CreateUnavailabilityInput
+    @Args('input') { unavailability: input }: CreateUnavailabilityInput,
   ): Promise<CreateUnavailabilityOutput> {
     const unavailability = await this.service.create(input, session);
     return { unavailability };
@@ -65,7 +65,7 @@ export class UnavailabilityResolver {
   })
   async updateUnavailability(
     @LoggedInSession() session: Session,
-    @Args('input') { unavailability: input }: UpdateUnavailabilityInput
+    @Args('input') { unavailability: input }: UpdateUnavailabilityInput,
   ): Promise<UpdateUnavailabilityOutput> {
     const unavailability = await this.service.update(input, session);
     return { unavailability };
@@ -76,7 +76,7 @@ export class UnavailabilityResolver {
   })
   async deleteUnavailability(
     @LoggedInSession() session: Session,
-    @IdArg() id: ID
+    @IdArg() id: ID,
   ): Promise<DeleteUnavailabilityOutput> {
     await this.service.delete(id, session);
     return { success: true };

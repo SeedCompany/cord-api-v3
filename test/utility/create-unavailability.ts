@@ -11,7 +11,7 @@ import { gql } from './gql-tag';
 
 export async function createUnavailability(
   app: TestApp,
-  input: Partial<CreateUnavailability> = {}
+  input: Partial<CreateUnavailability> = {},
 ) {
   const unavailability: CreateUnavailability = {
     userId: input.userId!,
@@ -38,7 +38,7 @@ export async function createUnavailability(
           ...unavailability,
         },
       },
-    }
+    },
   );
 
   const actual: Unavailability = result.createUnavailability.unavailability;

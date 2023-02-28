@@ -11,7 +11,7 @@ export class MigrationDiscovery {
 
   async getMigrations() {
     const discovered = await this.discover.providersWithMetaAtKey<DateTime>(
-      DB_MIGRATION_KEY
+      DB_MIGRATION_KEY,
     );
     const mapped = discovered.map((d): DiscoveredMigration => {
       const instance = d.discoveredClass.instance as BaseMigration;

@@ -4,6 +4,6 @@ import { Project } from '../dto';
 export class ProjectDeletedEvent {
   constructor(
     readonly project: UnsecuredDto<Project>,
-    readonly session: Session
+    readonly session: Session,
   ) {}
 }

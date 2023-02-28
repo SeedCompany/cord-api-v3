@@ -18,7 +18,7 @@ export class AttachProjectRootDirectoryHandler
     private readonly files: FileService,
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
-    private readonly authorizationService: AuthorizationService
+    private readonly authorizationService: AuthorizationService,
   ) {}
 
   async handle(event: ProjectCreatedEvent) {
@@ -28,7 +28,7 @@ export class AttachProjectRootDirectoryHandler
     const rootDir = await this.files.createDirectory(
       undefined,
       `${id} root directory`,
-      session
+      session,
     );
 
     await this.db

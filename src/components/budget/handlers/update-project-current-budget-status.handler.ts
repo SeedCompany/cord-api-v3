@@ -37,7 +37,7 @@ export class UpdateProjectBudgetStatusHandler
           projectId: previous.id,
         },
       },
-      session
+      session,
     );
 
     const budget = budgets.items.find(
@@ -45,7 +45,7 @@ export class UpdateProjectBudgetStatusHandler
         b.status ===
         (budgetStatus === BudgetStatus.Current
           ? BudgetStatus.Pending
-          : BudgetStatus.Current)
+          : BudgetStatus.Current),
     );
     if (!budget) {
       // no pending or current budget, nothing to do

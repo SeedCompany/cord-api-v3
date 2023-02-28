@@ -27,7 +27,7 @@ export class SendStepChangeNotificationsOnChangeRequestApproved
     private readonly emailService: EmailService,
     private readonly config: ConfigService,
     @Logger('project:change-request:approved')
-    private readonly logger: ILogger
+    private readonly logger: ILogger,
   ) {}
 
   async handle(event: SubscribedEvent) {
@@ -60,7 +60,7 @@ export class SendStepChangeNotificationsOnChangeRequestApproved
         currentStep: ProjectStep;
         previousStep: ProjectStep;
       }>(
-        'node.id as projectId, currentStep.value as currentStep, collect(previousStep.value)[0] as previousStep'
+        'node.id as projectId, currentStep.value as currentStep, collect(previousStep.value)[0] as previousStep',
       )
       .first();
 
@@ -76,7 +76,7 @@ export class SendStepChangeNotificationsOnChangeRequestApproved
       result.projectId,
       result.currentStep,
       event.session.userId,
-      result.previousStep
+      result.previousStep,
     );
 
     this.logger.info('Notifying', {
@@ -93,7 +93,7 @@ export class SendStepChangeNotificationsOnChangeRequestApproved
       await this.emailService.send(
         notification.recipient.email.value,
         ProjectStepChanged,
-        notification
+        notification,
       );
     }
   }

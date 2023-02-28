@@ -26,7 +26,7 @@ export class EducationService {
     @Logger('education:service') private readonly logger: ILogger,
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
-    private readonly repo: EducationRepository
+    private readonly repo: EducationRepository,
   ) {}
 
   async create(input: CreateEducation, session: Session): Promise<Education> {
@@ -46,7 +46,7 @@ export class EducationService {
   async readOne(
     id: ID,
     session: Session,
-    _view?: ObjectView
+    _view?: ObjectView,
   ): Promise<Education> {
     this.logger.debug(`Read Education`, {
       id: id,
@@ -60,18 +60,18 @@ export class EducationService {
   async readMany(ids: readonly ID[], session: Session) {
     const educations = await this.repo.readMany(ids);
     return await Promise.all(
-      educations.map((dto) => this.secure(dto, session))
+      educations.map((dto) => this.secure(dto, session)),
     );
   }
 
   private async secure(
     dto: UnsecuredDto<Education>,
-    session: Session
+    session: Session,
   ): Promise<Education> {
     const securedProps = await this.authorizationService.secureProperties(
       Education,
       dto,
-      session
+      session,
     );
 
     return {
@@ -87,7 +87,7 @@ export class EducationService {
     if (!result) {
       throw new NotFoundException(
         'Could not find user associated with education',
-        'user.education'
+        'user.education',
       );
     }
     const changes = this.repo.getActualChanges(ed, input);
@@ -95,7 +95,7 @@ export class EducationService {
       await this.authorizationService.verifyCanEditChanges(
         Education,
         ed,
-        changes
+        changes,
       );
     }
 
@@ -109,7 +109,7 @@ export class EducationService {
 
   async list(
     input: EducationListInput,
-    session: Session
+    session: Session,
   ): Promise<EducationListOutput> {
     const results = await this.repo.list(input, session);
     return await mapListResults(results, (dto) => this.secure(dto, session));

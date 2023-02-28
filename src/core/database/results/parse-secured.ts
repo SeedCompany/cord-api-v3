@@ -18,11 +18,11 @@ import {
  */
 export const parseSecuredProperties = <
   DbProps extends Record<string, any>,
-  PickedKeys extends keyof DbProps & string
+  PickedKeys extends keyof DbProps & string,
 >(
   props: DbProps,
   perms: PermissionsOf<DbProps>,
-  propKeysObjectOrList: Record<PickedKeys, boolean> | readonly PickedKeys[]
+  propKeysObjectOrList: Record<PickedKeys, boolean> | readonly PickedKeys[],
 ) => {
   const mapKey = (key: PickedKeys) => {
     const res = {
@@ -36,7 +36,7 @@ export const parseSecuredProperties = <
   const propKeys = Array.isArray(propKeysObjectOrList)
     ? propKeysObjectOrList
     : keys<PickedKeys & string>(
-        propKeysObjectOrList as Record<PickedKeys, boolean>
+        propKeysObjectOrList as Record<PickedKeys, boolean>,
       );
 
   const merged = mapFromList(propKeys, (key) => [key, mapKey(key)]);

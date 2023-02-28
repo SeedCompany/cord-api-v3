@@ -37,5 +37,5 @@ export class ProjectMemberListOutput extends PaginatedList(ProjectMember) {}
   description: SecuredList.descriptionFor('project members'),
 })
 export abstract class SecuredProjectMemberList extends SecuredList(
-  ProjectMember
+  ProjectMember,
 ) {}

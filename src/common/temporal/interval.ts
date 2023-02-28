@@ -16,13 +16,13 @@ declare module 'luxon/src/interval' {
   namespace Interval {
     export const compare: (
       previous: Interval | null | undefined,
-      updated: Interval | null | undefined
+      updated: Interval | null | undefined,
     ) => Record<'additions' | 'removals', Interval[]>;
 
     export function tryFrom(start: DateTime, end: DateTime): Interval;
     export function tryFrom(
       start: DateTime | null | undefined,
-      end: DateTime | null | undefined
+      end: DateTime | null | undefined,
     ): Interval | null;
   }
 }
@@ -36,7 +36,7 @@ Interval.prototype[inspect.custom] = function (this: Interval) {
 
 Interval.prototype.expandToFull = function (
   this: Interval,
-  unit: DateTimeUnit
+  unit: DateTimeUnit,
 ) {
   return Interval.fromDateTimes(this.start.startOf(unit), this.end.endOf(unit));
 };
@@ -45,7 +45,7 @@ const IntervalStatic = Interval as Mutable<typeof Interval>;
 
 IntervalStatic.compare = (
   prev: Interval | null | undefined,
-  now: Interval | null | undefined
+  now: Interval | null | undefined,
 ) => {
   const removals = !prev ? [] : !now ? [prev] : prev.difference(now);
   const additions = !now ? [] : !prev ? [now] : now.difference(prev);
@@ -55,11 +55,11 @@ IntervalStatic.compare = (
 function tryFrom(start: DateTime, end: DateTime): Interval;
 function tryFrom(
   start: DateTime | null | undefined,
-  end: DateTime | null | undefined
+  end: DateTime | null | undefined,
 ): Interval | null;
 function tryFrom(
   start: DateTime | null | undefined,
-  end: DateTime | null | undefined
+  end: DateTime | null | undefined,
 ): Interval | null {
   return start && end ? Interval.fromDateTimes(start, end) : null;
 }

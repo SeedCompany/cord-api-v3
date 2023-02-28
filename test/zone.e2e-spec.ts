@@ -43,7 +43,7 @@ describe('Field Zone e2e', () => {
     const name = faker.address.country() + ' Zone';
     await createZone(app, { directorId: director.id, name });
     await expect(
-      createZone(app, { directorId: director.id, name })
+      createZone(app, { directorId: director.id, name }),
     ).rejects.toThrowGqlError();
   });
 
@@ -70,7 +70,7 @@ describe('Field Zone e2e', () => {
       `,
       {
         id: fieldZone.id,
-      }
+      },
     );
 
     expect(actual.id).toBe(fieldZone.id);
@@ -101,7 +101,7 @@ describe('Field Zone e2e', () => {
             name: newName,
           },
         },
-      }
+      },
     );
     const updated = result.updateFieldZone.fieldZone;
     expect(updated).toBeTruthy();
@@ -137,7 +137,7 @@ describe('Field Zone e2e', () => {
             directorId: newDirector.id,
           },
         },
-      }
+      },
     );
     const updated = result.updateFieldZone.fieldZone;
     expect(updated).toBeTruthy();
@@ -158,7 +158,7 @@ describe('Field Zone e2e', () => {
       `,
       {
         id: fieldZone.id,
-      }
+      },
     );
     const actual: FieldZone | undefined = result.deleteFieldZone;
 
@@ -169,8 +169,8 @@ describe('Field Zone e2e', () => {
     // create 2 zones
     await Promise.all(
       times(2).map(
-        async () => await createZone(app, { directorId: director.id })
-      )
+        async () => await createZone(app, { directorId: director.id }),
+      ),
     );
 
     const { fieldZones } = await app.graphql.query(gql`

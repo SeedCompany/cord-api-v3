@@ -26,7 +26,7 @@ export class ProgressReportHighlightsResolver {
   @ResolveField(() => PromptVariantResponseList)
   async highlights(
     @Parent() report: ProgressReport,
-    @AnonSession() session: Session
+    @AnonSession() session: Session,
   ): Promise<PromptVariantResponseList<HighlightVariant>> {
     return await this.service.list(report, session);
   }
@@ -34,7 +34,7 @@ export class ProgressReportHighlightsResolver {
   @Mutation(() => PromptVariantResponse)
   async createProgressReportHighlight(
     @Args({ name: 'input' }) input: ChoosePrompt,
-    @LoggedInSession() session: Session
+    @LoggedInSession() session: Session,
   ): Promise<PromptVariantResponse> {
     return await this.service.create(input, session);
   }
@@ -42,7 +42,7 @@ export class ProgressReportHighlightsResolver {
   @Mutation(() => PromptVariantResponse)
   async changeProgressReportHighlightPrompt(
     @Args({ name: 'input' }) input: ChangePrompt,
-    @LoggedInSession() session: Session
+    @LoggedInSession() session: Session,
   ): Promise<PromptVariantResponse> {
     return await this.service.changePrompt(input, session);
   }
@@ -51,7 +51,7 @@ export class ProgressReportHighlightsResolver {
   async updateProgressReportHighlightResponse(
     @Args({ name: 'input' })
     input: UpdatePromptVariantResponse<HighlightVariant>,
-    @LoggedInSession() session: Session
+    @LoggedInSession() session: Session,
   ): Promise<PromptVariantResponse> {
     return await this.service.submitResponse(input, session);
   }
@@ -60,7 +60,7 @@ export class ProgressReportHighlightsResolver {
   async deleteProgressReportHighlight(
     @IdArg() id: IdOf<PromptVariantResponse>,
     @LoggedInSession() session: Session,
-    @Loader(PeriodicReportLoader) reports: LoaderOf<PeriodicReportLoader>
+    @Loader(PeriodicReportLoader) reports: LoaderOf<PeriodicReportLoader>,
   ): Promise<PeriodicReport> {
     const response = await this.service.delete(id, session);
     return await reports.load(response.parent.properties.id);

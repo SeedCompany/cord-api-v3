@@ -110,5 +110,5 @@ export const ListArg = <T extends PaginationInput>(
       defaultValue: DataObject.defaultValue(input, DefaultValue.Get(input)),
       ...opts,
     },
-    ...pipes
+    ...pipes,
   );

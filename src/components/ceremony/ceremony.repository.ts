@@ -69,7 +69,7 @@ export class CeremonyRepository extends DtoRepository<
       .apply(
         this.privileges.forUser(session).filterToReadable({
           wrapContext: oncePerProject,
-        })
+        }),
       )
       .apply(
         sorting(Ceremony, input, {
@@ -81,7 +81,7 @@ export class CeremonyRepository extends DtoRepository<
                 node('prop', 'Property'),
               ])
               .return<{ sortValue: string }>('prop.value as sortValue'),
-        })
+        }),
       )
       .apply(paginate(input, this.hydrate(session)))
       .first();

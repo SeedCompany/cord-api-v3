@@ -47,7 +47,7 @@ export class Product extends Producible {
   static readonly Props: string[] = keysOf<Product>();
   static readonly SecuredProps: string[] = keysOf<SecuredProps<Product>>();
   static readonly Parent = import('../../engagement/dto').then(
-    (m) => m.LanguageEngagement
+    (m) => m.LanguageEngagement,
   );
 
   readonly engagement: ID;
@@ -238,10 +238,10 @@ export type AnyProduct = MergeExclusive<
  */
 export const asProductType =
   <Concrete extends ReturnType<typeof resolveProductType>>(
-    expected: Concrete
+    expected: Concrete,
   ) =>
   <Given extends AnyProduct | UnsecuredDto<AnyProduct>>(
-    product: Given
+    product: Given,
   ): Given extends AnyProduct
     ? Concrete['prototype']
     : UnsecuredDto<Concrete['prototype']> => {

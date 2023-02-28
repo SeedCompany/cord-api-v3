@@ -124,7 +124,7 @@ export class UniquenessError extends ConstraintError {
     readonly label: string,
     readonly property: string,
     readonly value: string,
-    message: string
+    message: string,
   ) {
     super(message);
     this.constructor = UniquenessError;
@@ -150,7 +150,7 @@ export class UniquenessError extends ConstraintError {
       info.label,
       info.property,
       info.value,
-      e.message
+      e.message,
     );
     ex.stack = e.stack;
     return ex;
@@ -206,7 +206,7 @@ const getUniqueFailureInfo = (e: Neo4jError) => {
   const matches = uniqueMsgRegex.exec(e.message);
   if (!matches) {
     throw new Error(
-      'Could not determine uniqueness info from error. Are you sure this is a uniqueness constraint failure?'
+      'Could not determine uniqueness info from error. Are you sure this is a uniqueness constraint failure?',
     );
   }
   return {
@@ -223,5 +223,5 @@ const noEnumerate = <T>(
 ) =>
   Object.defineProperties(
     obj,
-    mapFromList(keys, (key) => [key, { enumerable: false }])
+    mapFromList(keys, (key) => [key, { enumerable: false }]),
   );

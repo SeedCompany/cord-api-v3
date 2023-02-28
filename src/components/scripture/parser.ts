@@ -13,7 +13,7 @@ import { mergeScriptureRanges } from './merge-to-minimal-set';
  * - Luke 1 and Matthew 1
  */
 export const parseScripture = (
-  input: string | null | undefined
+  input: string | null | undefined,
 ): readonly ScriptureRange[] => {
   if (!input?.trim()) {
     return [];
@@ -23,7 +23,7 @@ export const parseScripture = (
     input
       .replace(/ and /gi, ' , ')
       .split(/[,;]/)
-      .map((p) => p.trim())
+      .map((p) => p.trim()),
   );
 
   const refs = [];
@@ -52,7 +52,7 @@ const parseRange = (input: string, fallbackBook?: string) => {
   const given = lexRange(input);
   if (!given.start.book && !fallbackBook) {
     throw new InputException(
-      'Cannot parse partial reference without previous complete reference'
+      'Cannot parse partial reference without previous complete reference',
     );
   }
   const start = Book.find(given.start.book ?? fallbackBook!)
@@ -79,7 +79,7 @@ const parseRange = (input: string, fallbackBook?: string) => {
             endBook.chapter(
               given.end.chapter ??
                 given.start.chapter ??
-                endBook.lastChapter.chapter
+                endBook.lastChapter.chapter,
             ).lastVerse.verse,
         }),
   });
@@ -100,7 +100,7 @@ const lexRange = (input: string) => {
 
 const lexRef = (str: string) => {
   const matches = /^(\d?[ A-Za-z]+)?(?:\.\s*)?(\d*)(?:\s*:\s*(\d+))?$/.exec(
-    str.trim()
+    str.trim(),
   );
   const book = matches?.[1]?.trim() || undefined;
   const chapter = parseInt(matches?.[2] ?? '', 10) || undefined;

@@ -107,7 +107,7 @@ export class ProjectListOutput extends PaginatedList<IProject, Project>(
   IProject,
   {
     itemsDescription: PaginatedList.itemDescriptionFor('projects'),
-  }
+  },
 ) {}
 
 @ObjectType()
@@ -115,7 +115,7 @@ export class TranslationProjectListOutput extends PaginatedList(
   TranslationProject,
   {
     itemsDescription: PaginatedList.itemDescriptionFor('translation projects'),
-  }
+  },
 ) {}
 
 @ObjectType()
@@ -123,7 +123,7 @@ export class InternshipProjectListOutput extends PaginatedList(
   InternshipProject,
   {
     itemsDescription: PaginatedList.itemDescriptionFor('internship projects'),
-  }
+  },
 ) {}
 
 @ObjectType({
@@ -133,7 +133,7 @@ export abstract class SecuredProjectList extends SecuredList<IProject, Project>(
   IProject,
   {
     itemsDescription: PaginatedList.itemDescriptionFor('projects'),
-  }
+  },
 ) {}
 
 @ObjectType({
@@ -143,7 +143,7 @@ export abstract class SecuredTranslationProjectList extends SecuredList(
   TranslationProject,
   {
     itemsDescription: PaginatedList.itemDescriptionFor('translation projects'),
-  }
+  },
 ) {}
 
 @ObjectType({
@@ -153,5 +153,5 @@ export abstract class SecuredInternshipProjectList extends SecuredList(
   InternshipProject,
   {
     itemsDescription: PaginatedList.itemDescriptionFor('internship projects'),
-  }
+  },
 ) {}

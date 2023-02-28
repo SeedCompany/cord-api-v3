@@ -56,7 +56,7 @@ export class AddProgressReportStatusMigration extends BaseMigration {
         `,
         {
           version: this.version,
-        }
+        },
       )
       .first();
     this.logger.info('ProgressReport.status migration results', stats as any);

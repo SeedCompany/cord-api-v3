@@ -6,7 +6,7 @@ import { CreateEthnologueLanguage, EthnologueLanguage } from '../dto';
 
 @Injectable()
 export class EthnologueLanguageRepository extends DtoRepository(
-  EthnologueLanguage
+  EthnologueLanguage,
 ) {
   async create(input: CreateEthnologueLanguage, session: Session) {
     const initialProps = {

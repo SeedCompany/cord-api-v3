@@ -28,7 +28,7 @@ export class FieldZoneService {
   constructor(
     @Logger('field-zone:service') private readonly logger: ILogger,
     private readonly authorizationService: AuthorizationService,
-    private readonly repo: FieldZoneRepository
+    private readonly repo: FieldZoneRepository,
   ) {}
 
   async create(input: CreateFieldZone, session: Session): Promise<FieldZone> {
@@ -36,7 +36,7 @@ export class FieldZoneService {
     if (!(await this.repo.isUnique(input.name))) {
       throw new DuplicateException(
         'fieldZone.name',
-        'FieldZone with this name already exists.'
+        'FieldZone with this name already exists.',
       );
     }
     const result = await this.repo.create(input, session);
@@ -53,7 +53,7 @@ export class FieldZoneService {
   async readOne(
     id: ID,
     session: Session,
-    _view?: ObjectView
+    _view?: ObjectView,
   ): Promise<FieldZone> {
     this.logger.debug(`Read Field Zone`, {
       id: id,
@@ -67,18 +67,18 @@ export class FieldZoneService {
   async readMany(ids: readonly ID[], session: Session) {
     const fieldZones = await this.repo.readMany(ids);
     return await Promise.all(
-      fieldZones.map((dto) => this.secure(dto, session))
+      fieldZones.map((dto) => this.secure(dto, session)),
     );
   }
 
   private async secure(
     dto: UnsecuredDto<FieldZone>,
-    session: Session
+    session: Session,
   ): Promise<FieldZone> {
     const securedProps = await this.authorizationService.secureProperties(
       FieldZone,
       dto,
-      session
+      session,
     );
 
     return {
@@ -95,7 +95,7 @@ export class FieldZoneService {
     await this.authorizationService.verifyCanEditChanges(
       FieldZone,
       fieldZone,
-      changes
+      changes,
     );
 
     const { directorId, ...simpleChanges } = changes;
@@ -121,7 +121,7 @@ export class FieldZoneService {
 
     if (!canDelete)
       throw new UnauthorizedException(
-        'You do not have the permission to delete this Field Zone'
+        'You do not have the permission to delete this Field Zone',
       );
 
     try {
@@ -134,7 +134,7 @@ export class FieldZoneService {
 
   async list(
     input: FieldZoneListInput,
-    session: Session
+    session: Session,
   ): Promise<FieldZoneListOutput> {
     if (await this.authorizationService.canList(FieldZone, session)) {
       const results = await this.repo.list(input, session);

@@ -15,7 +15,7 @@ export interface ValidateByOptions {
 export const ValidateBy =
   (
     options: ValidateByOptions,
-    validationOptions?: ValidationOptions
+    validationOptions?: ValidationOptions,
   ): PropertyDecorator =>
   (object: Record<string, any>, propertyName: string | symbol) => {
     registerDecorator({

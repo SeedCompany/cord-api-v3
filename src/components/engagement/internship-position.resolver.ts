@@ -49,7 +49,7 @@ export class InternshipPositionResolver {
     description: 'The InternshipDomain based on the currently selected `value`',
   })
   domain(
-    @Parent() { value: position }: SecuredInternPosition
+    @Parent() { value: position }: SecuredInternPosition,
   ): InternshipDomain | null {
     return position ? InternshipPositionToDomain[position] : null;
   }
@@ -60,7 +60,7 @@ export class InternshipPositionResolver {
       'The InternshipProgram based on the currently selected `value`',
   })
   program(
-    @Parent() { value: position }: SecuredInternPosition
+    @Parent() { value: position }: SecuredInternPosition,
   ): InternshipProgram | null {
     return position ? InternshipPositionToProgram[position] : null;
   }

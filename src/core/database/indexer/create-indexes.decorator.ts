@@ -21,12 +21,12 @@ export interface OnIndexParams {
 }
 
 export type Indexer = (
-  params: OnIndexParams
+  params: OnIndexParams,
 ) => Promise<string | string[] | void>;
 
 export const createUniqueConstraint = (
   nodeName: string,
   propertyName: string,
-  constraintName = `${nodeName}_${propertyName}`
+  constraintName = `${nodeName}_${propertyName}`,
 ) =>
   `CREATE CONSTRAINT ${constraintName} IF NOT EXISTS ON (n:${nodeName}) ASSERT n.${propertyName} IS UNIQUE`;

@@ -15,7 +15,7 @@ import { UserResourcePrivileges } from './user-resource-privileges';
 export class ResourcePrivileges<TResourceStatic extends ResourceShape<any>> {
   constructor(
     readonly resource: EnhancedResource<TResourceStatic>,
-    private readonly policyExecutor: PolicyExecutor
+    private readonly policyExecutor: PolicyExecutor,
   ) {}
 
   forUser(session: Session, object?: ResourceObjectContext<TResourceStatic>) {
@@ -23,26 +23,26 @@ export class ResourcePrivileges<TResourceStatic extends ResourceShape<any>> {
       this.resource,
       object,
       session,
-      this.policyExecutor
+      this.policyExecutor,
     );
   }
 
   forEdge(
-    key: SecuredPropsPlusExtraKey<TResourceStatic>
+    key: SecuredPropsPlusExtraKey<TResourceStatic>,
   ): EdgePrivileges<
     TResourceStatic,
     SecuredPropsPlusExtraKey<TResourceStatic>,
     PropAction
   >;
   forEdge(
-    key: ChildSinglesKey<TResourceStatic>
+    key: ChildSinglesKey<TResourceStatic>,
   ): EdgePrivileges<
     TResourceStatic,
     ChildSinglesKey<TResourceStatic>,
     ChildSingleAction
   >;
   forEdge(
-    key: ChildListsKey<TResourceStatic>
+    key: ChildListsKey<TResourceStatic>,
   ): EdgePrivileges<
     TResourceStatic,
     ChildListsKey<TResourceStatic>,

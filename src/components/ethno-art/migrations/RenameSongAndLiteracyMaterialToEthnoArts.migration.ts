@@ -51,7 +51,7 @@ export class RenameSongAndLiteracyMaterialToEthnoArts extends BaseMigration {
         name: 'EthnoArtName',
       })
       .return<{ numNodesRelabeled: number }>(
-        'count(producible) as numNodesRelabeled'
+        'count(producible) as numNodesRelabeled',
       )
       .first();
     this.logger.info(`${res?.numNodesRelabeled ?? 0} Relabeled producibles`);

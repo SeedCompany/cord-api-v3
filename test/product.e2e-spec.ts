@@ -73,7 +73,7 @@ describe('Product e2e', () => {
       `,
       {
         id: product.id,
-      }
+      },
     );
     const actual: RawProduct = result.product;
     expect(actual.id).toBe(product.id);
@@ -113,7 +113,7 @@ describe('Product e2e', () => {
       `,
       {
         id: product.id,
-      }
+      },
     );
     const actual: AnyProduct = result.product;
     expect(actual?.unspecifiedScripture?.value).toMatchObject({
@@ -131,7 +131,7 @@ describe('Product e2e', () => {
 
     expect(product.scriptureReferences.value).toBeDefined();
     expect(product.scriptureReferences.value).toEqual(
-      expect.arrayContaining(randomScriptureReferences)
+      expect.arrayContaining(randomScriptureReferences),
     );
   });
 
@@ -194,7 +194,7 @@ describe('Product e2e', () => {
       `,
       {
         id: product.id,
-      }
+      },
     );
     const actual: DerivativeScriptureProduct = result.product;
     expect(actual.produces).toBeDefined();
@@ -202,12 +202,12 @@ describe('Product e2e', () => {
     expect(actual.produces?.value?.id).toBe(story.id);
     expect(actual.produces?.value?.__typename).toBe(ProducibleType.Story);
     expect(actual.produces?.value?.scriptureReferences?.value).toEqual(
-      expect.arrayContaining(story.scriptureReferences.value)
+      expect.arrayContaining(story.scriptureReferences.value),
     );
     expect(actual.scriptureReferences.value).toEqual(
       expect.arrayContaining(
-        actual.produces?.value?.scriptureReferences?.value || []
-      )
+        actual.produces?.value?.scriptureReferences?.value || [],
+      ),
     );
     expect(actual.scriptureReferencesOverride?.value).toBeNull();
   });
@@ -273,18 +273,18 @@ describe('Product e2e', () => {
       `,
       {
         id: product.id,
-      }
+      },
     );
     const actual: DerivativeScriptureProduct = result.product;
     expect(actual.scriptureReferencesOverride?.value).toBeDefined();
     expect(actual.scriptureReferencesOverride?.value).toEqual(
-      expect.arrayContaining(randomScriptureReferences)
+      expect.arrayContaining(randomScriptureReferences),
     );
     expect(actual.scriptureReferences.value).toEqual(
-      expect.arrayContaining(randomScriptureReferences)
+      expect.arrayContaining(randomScriptureReferences),
     );
     expect(actual.produces?.value?.scriptureReferences?.value).toEqual(
-      expect.arrayContaining(story.scriptureReferences.value)
+      expect.arrayContaining(story.scriptureReferences.value),
     );
   });
 
@@ -306,7 +306,7 @@ describe('Product e2e', () => {
       `,
       {
         id: product.id,
-      }
+      },
     );
 
     expect(result.updateDirectScriptureProduct.product.id).toBe(product.id);
@@ -357,7 +357,7 @@ describe('Product e2e', () => {
           id: product.id,
           ...updateProduct,
         },
-      }
+      },
     );
 
     const actual: AnyProduct = result.updateDirectScriptureProduct.product;
@@ -365,7 +365,7 @@ describe('Product e2e', () => {
     expect(actual.purposes.value).toEqual(updateProduct.purposes);
     expect(actual.methodology.value).toEqual(updateProduct.methodology);
     expect(actual.scriptureReferences.value).toEqual(
-      expect.arrayContaining(updateProduct.scriptureReferences)
+      expect.arrayContaining(updateProduct.scriptureReferences),
     );
     expect(actual?.unspecifiedScripture?.value).toMatchObject({
       book: 'Matthew',
@@ -441,7 +441,7 @@ describe('Product e2e', () => {
           id: product.id,
           produces: updateProduces,
         },
-      }
+      },
     );
 
     const actual: AnyProduct = result.updateDerivativeScriptureProduct.product;
@@ -450,7 +450,7 @@ describe('Product e2e', () => {
     expect(actual.produces?.value?.id).toBe(film.id);
     expect(actual.produces?.value?.__typename).toBe(ProducibleType.Film);
     expect(actual.produces?.value?.scriptureReferences).toEqual(
-      expect.arrayContaining(film.scriptureReferences.value)
+      expect.arrayContaining(film.scriptureReferences.value),
     );
     expect(actual.scriptureReferencesOverride?.value).toBeNull();
   });
@@ -524,20 +524,20 @@ describe('Product e2e', () => {
           id: product.id,
           scriptureReferencesOverride: override,
         },
-      }
+      },
     );
 
     const actual: DerivativeScriptureProduct =
       result.updateDerivativeScriptureProduct.product;
 
     expect(actual.scriptureReferencesOverride?.value).toEqual(
-      expect.arrayContaining(override)
+      expect.arrayContaining(override),
     );
     expect(actual.scriptureReferences?.value).toEqual(
-      expect.arrayContaining(override)
+      expect.arrayContaining(override),
     );
     expect(actual.produces?.value?.scriptureReferences?.value).toEqual(
-      expect.arrayContaining(story.scriptureReferences.value)
+      expect.arrayContaining(story.scriptureReferences.value),
     );
   });
 
@@ -608,14 +608,14 @@ describe('Product e2e', () => {
           id: product.id,
           scriptureReferencesOverride: null,
         },
-      }
+      },
     );
 
     const actual: DerivativeScriptureProduct =
       result.updateDerivativeScriptureProduct.product;
     expect(actual.scriptureReferencesOverride?.value).toBeNull();
     expect(actual.produces?.value?.scriptureReferences?.value).toEqual(
-      actual.scriptureReferences.value
+      actual.scriptureReferences.value,
     );
   });
 
@@ -634,7 +634,7 @@ describe('Product e2e', () => {
       `,
       {
         id: product.id,
-      }
+      },
     );
 
     const actual: boolean | undefined = result.deleteProduct;
@@ -651,7 +651,7 @@ describe('Product e2e', () => {
         `,
         {
           id: product.id,
-        }
+        },
       )
       .expectError(errors.notFound());
   });
@@ -663,8 +663,8 @@ describe('Product e2e', () => {
       times(numProducts).map(() =>
         createDirectProduct(app, {
           engagementId: engagement.id,
-        })
-      )
+        }),
+      ),
     );
 
     const { products } = await app.graphql.query(
@@ -679,7 +679,7 @@ describe('Product e2e', () => {
           }
         }
       `,
-      {}
+      {},
     );
 
     expect(products.items.length).toBeGreaterThanOrEqual(numProducts);
@@ -693,8 +693,8 @@ describe('Product e2e', () => {
         createDirectProduct(app, {
           engagementId: engagement.id,
           scriptureReferences: ScriptureRange.randomList(),
-        })
-      )
+        }),
+      ),
     );
 
     const { products } = await app.graphql.query(
@@ -719,7 +719,7 @@ describe('Product e2e', () => {
           }
         }
       `,
-      {}
+      {},
     );
 
     expect(products.items.length).toBeGreaterThanOrEqual(numProducts);
@@ -734,8 +734,8 @@ describe('Product e2e', () => {
           engagementId: engagement.id,
           produces: story.id,
           scriptureReferencesOverride: ScriptureRange.randomList(),
-        })
-      )
+        }),
+      ),
     );
 
     const { products } = await app.graphql.query(
@@ -778,7 +778,7 @@ describe('Product e2e', () => {
           }
         }
       `,
-      {}
+      {},
     );
 
     expect(products.items.length).toBeGreaterThanOrEqual(numProducts);
@@ -791,8 +791,8 @@ describe('Product e2e', () => {
       times(numProducts).map(() =>
         createDirectProduct(app, {
           engagementId: engagement.id,
-        })
-      )
+        }),
+      ),
     );
 
     const { engagement: actual } = await app.graphql.query(
@@ -812,7 +812,7 @@ describe('Product e2e', () => {
       `,
       {
         id: engagement.id,
-      }
+      },
     );
 
     expect(actual.products.items.length).toBeGreaterThanOrEqual(numProducts);

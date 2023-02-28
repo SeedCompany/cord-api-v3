@@ -28,7 +28,7 @@ export class TracingModule implements OnModuleInit, NestModule {
   constructor(
     @Logger('xray') private readonly logger: ILogger,
     private readonly config: ConfigService,
-    private readonly version: VersionService
+    private readonly version: VersionService,
   ) {}
 
   configure(consumer: MiddlewareConsumer) {
@@ -68,7 +68,7 @@ export class TracingModule implements OnModuleInit, NestModule {
         }
         if (msg.startsWith('Segment too large to send')) {
           const matches = msg.match(
-            /Segment too large to send: (\{.+}) \((\d+) bytes\)./
+            /Segment too large to send: (\{.+}) \((\d+) bytes\)./,
           );
           try {
             this.logger.warning(
@@ -76,11 +76,11 @@ export class TracingModule implements OnModuleInit, NestModule {
               matches
                 ? {
                     ...JSON.parse(
-                      matches[1].replace('"trace_id:"', '"trace_id":"')
+                      matches[1].replace('"trace_id:"', '"trace_id":"'),
                     ),
                     size: matches[2],
                   }
-                : undefined
+                : undefined,
             );
             return;
           } catch {

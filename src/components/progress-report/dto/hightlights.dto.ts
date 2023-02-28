@@ -28,7 +28,7 @@ export class ProgressReportHighlight extends PromptVariantResponse<HighlightVari
   static Props = keysOf<ProgressReportHighlight>();
   static SecuredProps = keysOf<SecuredProps<ProgressReportHighlight>>();
   static readonly Parent = import('./progress-report.entity').then(
-    (m) => m.ProgressReport
+    (m) => m.ProgressReport,
   );
   static Variants = variants;
   static readonly ConfirmThisClassPassesSensitivityToPolicies = true;

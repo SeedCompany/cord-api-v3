@@ -25,7 +25,7 @@ class VariantCondition<TResourceStatic extends ResourceShape<any>>
 
     const current = Reflect.get(
       object,
-      VariantForCondition
+      VariantForCondition,
     ) as VariantOf<TResourceStatic>;
 
     return this.variants.has(current);
@@ -43,7 +43,7 @@ class VariantCondition<TResourceStatic extends ResourceShape<any>>
 
 export const withVariant = <T extends object>(
   obj: T,
-  variant: string | Variant
+  variant: string | Variant,
 ) =>
   Object.defineProperty(obj, VariantForCondition, {
     value: typeof variant === 'string' ? variant : variant.key,
@@ -58,5 +58,5 @@ export const variant = <TResourceStatic extends ResourceShape<any>>(
   ...variant: Array<Many<VariantOf<TResourceStatic>>>
 ) =>
   new VariantCondition<TResourceStatic>(
-    new Set(variant.flat() as Array<VariantOf<TResourceStatic>>)
+    new Set(variant.flat() as Array<VariantOf<TResourceStatic>>),
   );

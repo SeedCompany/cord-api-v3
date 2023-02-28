@@ -35,18 +35,18 @@ export const matchPropsAndProjectSensAndScopedRoles =
           matchProps(
             propsOptions?.view?.deleted
               ? propsOptions
-              : { ...propsOptions, view: { active: true } }
-          )
+              : { ...propsOptions, view: { active: true } },
+          ),
         )
         .apply((q) =>
-          !session ? q : q.apply(matchProjectScopedRoles({ session }))
+          !session ? q : q.apply(matchProjectScopedRoles({ session })),
         )
         .return([
           merge(propsOptions?.outputVar ?? 'props', {
             sensitivity: 'sensitivity',
             scope: session ? `scopedRoles` : null,
           }).as(propsOptions?.outputVar ?? 'props'),
-        ])
+        ]),
     );
 
 export const matchProjectScopedRoles =
@@ -89,15 +89,15 @@ export const matchProjectScopedRoles =
                 [],
                 apoc.coll.flatten('memberRoleProps'),
                 'role',
-                listConcat('scopedRoles', [`"project:" + role`])
-              )
-            ).as(outputVar)
+                listConcat('scopedRoles', [`"project:" + role`]),
+              ),
+            ).as(outputVar),
           )
           .union()
           .with('project')
           .with('project')
           .raw('WHERE project IS NULL')
-          .return(`[] as ${outputVar}`)
+          .return(`[] as ${outputVar}`),
     );
 
 export const matchProjectSens =
@@ -108,7 +108,7 @@ export const matchProjectSens =
         .with(projectVar) // import
         .with(projectVar) // needed for where clause
         .raw(
-          `WHERE ${projectVar} IS NOT NULL AND ${projectVar}.type = "${ProjectType.Internship}"`
+          `WHERE ${projectVar} IS NOT NULL AND ${projectVar}.type = "${ProjectType.Internship}"`,
         )
         .match([
           node(projectVar),
@@ -120,7 +120,7 @@ export const matchProjectSens =
         .with(projectVar) // import
         .with(projectVar) // needed for where clause
         .raw(
-          `WHERE ${projectVar} IS NOT NULL AND ${projectVar}.type = "${ProjectType.Translation}"`
+          `WHERE ${projectVar} IS NOT NULL AND ${projectVar}.type = "${ProjectType.Translation}"`,
         )
         .optionalMatch([
           node(projectVar),
@@ -144,13 +144,13 @@ export const matchProjectSens =
         .with(projectVar)
         .raw(`WHERE ${projectVar} IS NULL`)
         // TODO this doesn't work for languages without projects. They should use their own sensitivity not High.
-        .return<{ sensitivity: Sensitivity }>('"High" as sensitivity')
+        .return<{ sensitivity: Sensitivity }>('"High" as sensitivity'),
     );
 
 export const matchUserGloballyScopedRoles =
   <Output extends string = 'scopedRoles'>(
     userVar = 'requestingUser',
-    outputVar = 'globalRoles' as Output
+    outputVar = 'globalRoles' as Output,
   ) =>
   <R>(query: Query<R>) =>
     query.comment('matchUserGloballyScopedRoles()').subQuery((sub) =>
@@ -167,9 +167,9 @@ export const matchUserGloballyScopedRoles =
             [],
             apoc.coll.flatten(collect('role.value')),
             'role',
-            listConcat('scopedRoles', [`"global:" + role`])
-          ).as(outputVar)
-        )
+            listConcat('scopedRoles', [`"global:" + role`]),
+          ).as(outputVar),
+        ),
     );
 
 // group by project so inner logic doesn't run multiple times for a single project

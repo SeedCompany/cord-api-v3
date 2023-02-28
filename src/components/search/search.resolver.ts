@@ -13,7 +13,7 @@ export class SearchResolver {
   async search(
     @AnonSession() session: Session,
     @ListArg(SearchInput, { nullable: false })
-    input: SearchInput
+    input: SearchInput,
   ): Promise<SearchOutput> {
     return await this.service.search(input, session);
   }

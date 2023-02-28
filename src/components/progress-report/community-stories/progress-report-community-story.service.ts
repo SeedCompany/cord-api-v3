@@ -12,7 +12,7 @@ import { ProgressReportCommunityStoryRepository } from './progress-report-commun
 
 @Injectable()
 export class ProgressReportCommunityStoryService extends PromptVariantResponseListService(
-  ProgressReportCommunityStoryRepository
+  ProgressReportCommunityStoryRepository,
 ) {
   protected async getPrompts(): Promise<readonly Prompt[]> {
     return prompts;
@@ -20,11 +20,11 @@ export class ProgressReportCommunityStoryService extends PromptVariantResponseLi
 
   protected async getPrivilegeContext(dto: UnsecuredDto<CommunityStory>) {
     const report = (await this.resources.loadByBaseNode(
-      dto.parent
+      dto.parent,
     )) as ProgressReport;
     return withEffectiveSensitivity(
       withScope({}, report.scope),
-      report.sensitivity
+      report.sensitivity,
     );
   }
 }

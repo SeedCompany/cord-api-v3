@@ -17,5 +17,5 @@ export class LiteracyMaterialListInput extends SortablePaginationInput<
 
 @ObjectType()
 export class LiteracyMaterialListOutput extends PaginatedList(
-  LiteracyMaterial
+  LiteracyMaterial,
 ) {}

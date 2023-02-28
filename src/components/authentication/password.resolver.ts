@@ -19,7 +19,7 @@ export class PasswordResolver {
   })
   async changePassword(
     @Args() { oldPassword, newPassword }: ChangePasswordArgs,
-    @LoggedInSession() session: Session
+    @LoggedInSession() session: Session,
   ): Promise<ChangePasswordOutput> {
     await this.authentication.changePassword(oldPassword, newPassword, session);
     return { success: true };
@@ -29,7 +29,7 @@ export class PasswordResolver {
     description: 'Forgot password; send password reset email',
   })
   async forgotPassword(
-    @Args() { email }: ForgotPasswordArgs
+    @Args() { email }: ForgotPasswordArgs,
   ): Promise<ForgotPasswordOutput> {
     await this.authentication.forgotPassword(email);
     return { success: true };
@@ -40,7 +40,7 @@ export class PasswordResolver {
   })
   async resetPassword(
     @Args('input') input: ResetPasswordInput,
-    @AnonSession() session: Session
+    @AnonSession() session: Session,
   ): Promise<ResetPasswordOutput> {
     await this.authentication.resetPassword(input, session);
     return { success: true };

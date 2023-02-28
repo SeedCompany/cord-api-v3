@@ -51,7 +51,7 @@ export class Fields<T>
 // Not sure if this is entirely necessary, I think each interface has a
 // flat list of parents. But just to be safe...
 const getInterfacesDeep = (
-  type: GraphQLInterfaceType
+  type: GraphQLInterfaceType,
 ): GraphQLInterfaceType[] => [
   type,
   ...type.getInterfaces().flatMap(getInterfacesDeep),
@@ -65,7 +65,7 @@ const getInterfacesDeep = (
  * ```
  */
 export const IsOnly = <T>(
-  fields: Array<keyof T & string>
+  fields: Array<keyof T & string>,
 ): PipeTransform<FieldInfo<T>, boolean> => ({
   transform: (requested) =>
     difference(Object.keys(requested), fields).length === 0,

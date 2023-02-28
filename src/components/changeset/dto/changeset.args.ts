@@ -27,7 +27,7 @@ class ObjectViewPipe implements PipeTransform {
       {
         metatype: ChangesetIds,
         type: 'body',
-      }
+      },
     );
     const view: ObjectView = changeset ? { changeset } : { active: true };
     return { id, changeset, view };

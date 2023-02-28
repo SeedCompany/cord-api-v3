@@ -5,14 +5,14 @@ import { Role } from '../../dto/role.dto';
 import type { ResourcesGranter } from '../granters';
 
 type ResourceGranterFn = (
-  resourcesGranter: ResourcesGranter
+  resourcesGranter: ResourcesGranter,
 ) => Many<Many<ValueOf<ResourcesGranter>>>;
 
 export const POLICY_METADATA_KEY = Symbol('Policy');
 
 export const Policy = (
   role: Many<Role> | 'all',
-  privilegesForResources: ResourceGranterFn
+  privilegesForResources: ResourceGranterFn,
 ): ClassDecorator =>
   SetMetadata<any, PolicyMetadata>(POLICY_METADATA_KEY, {
     role,

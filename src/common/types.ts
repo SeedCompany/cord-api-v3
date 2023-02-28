@@ -43,7 +43,7 @@ export type PublicOf<T> = { [P in keyof T]: T[P] };
  * @see https://docs.nestjs.com/graphql/mapped-types#partial
  */
 export const PartialType = BasePartialType as <T>(
-  classRef: AbstractClassType<T>
+  classRef: AbstractClassType<T>,
 ) => Type<Partial<T>>;
 
 /**
@@ -57,7 +57,7 @@ export const PartialType = BasePartialType as <T>(
 export const PickType = BasePickType as <T, K extends keyof T>(
   classRef: AbstractClassType<T>,
   keys: readonly K[],
-  decorator?: ClassDecoratorFactory
+  decorator?: ClassDecoratorFactory,
 ) => Type<Pick<T, typeof keys[number]>>;
 
 /**
@@ -71,7 +71,7 @@ export const PickType = BasePickType as <T, K extends keyof T>(
 export const OmitType = BaseOmitType as <T, K extends keyof T>(
   classRef: AbstractClassType<T>,
   keys: readonly K[],
-  decorator?: ClassDecoratorFactory
+  decorator?: ClassDecoratorFactory,
 ) => Type<Omit<T, typeof keys[number]>>;
 
 /**
@@ -85,12 +85,12 @@ export const IntersectionType = BaseIntersectionType as {
   <A, B>(
     classARef: abstract new (...args: any[]) => A,
     classBRef: abstract new (...args: any[]) => B,
-    decorator?: ClassDecoratorFactory
+    decorator?: ClassDecoratorFactory,
   ): Type<A & B>;
   <A, B>(
     classARef: AbstractClassType<A>,
     classBRef: AbstractClassType<B>,
-    decorator?: ClassDecoratorFactory
+    decorator?: ClassDecoratorFactory,
   ): Type<A & B>;
 };
 

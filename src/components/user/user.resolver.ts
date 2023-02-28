@@ -80,7 +80,7 @@ class ModifyLocationArgs {
 export class UserResolver {
   constructor(
     private readonly userService: UserService,
-    private readonly timeZoneService: TimeZoneService
+    private readonly timeZoneService: TimeZoneService,
   ) {}
 
   @Query(() => User, {
@@ -88,7 +88,7 @@ export class UserResolver {
   })
   async user(
     @Loader(UserLoader) users: LoaderOf<UserLoader>,
-    @IdArg() id: ID
+    @IdArg() id: ID,
   ): Promise<User> {
     return await users.load(id);
   }
@@ -125,7 +125,7 @@ export class UserResolver {
   async users(
     @AnonSession() session: Session,
     @ListArg(UserListInput) input: UserListInput,
-    @Loader(UserLoader) users: LoaderOf<UserLoader>
+    @Loader(UserLoader) users: LoaderOf<UserLoader>,
   ): Promise<UserListOutput> {
     const list = await this.userService.list(input, session);
     users.primeAll(list.items);
@@ -145,12 +145,12 @@ export class UserResolver {
     @Parent() { id }: User,
     @ListArg(UnavailabilityListInput) input: UnavailabilityListInput,
     @Loader(UnavailabilityLoader)
-    unavailabilities: LoaderOf<UnavailabilityLoader>
+    unavailabilities: LoaderOf<UnavailabilityLoader>,
   ): Promise<SecuredUnavailabilityList> {
     const list = await this.userService.listUnavailabilities(
       id,
       input,
-      session
+      session,
     );
     unavailabilities.primeAll(list.items);
     return list;
@@ -161,7 +161,7 @@ export class UserResolver {
     @AnonSession() session: Session,
     @Parent() { id }: User,
     @ListArg(OrganizationListInput) input: OrganizationListInput,
-    @Loader(OrganizationLoader) organizations: LoaderOf<OrganizationLoader>
+    @Loader(OrganizationLoader) organizations: LoaderOf<OrganizationLoader>,
   ): Promise<SecuredOrganizationList> {
     const list = await this.userService.listOrganizations(id, input, session);
     organizations.primeAll(list.items);
@@ -173,7 +173,7 @@ export class UserResolver {
     @AnonSession() session: Session,
     @Parent() { id }: User,
     @ListArg(PartnerListInput) input: PartnerListInput,
-    @Loader(PartnerLoader) partners: LoaderOf<PartnerLoader>
+    @Loader(PartnerLoader) partners: LoaderOf<PartnerLoader>,
   ): Promise<SecuredPartnerList> {
     const list = await this.userService.listPartners(id, input, session);
     partners.primeAll(list.items);
@@ -185,7 +185,7 @@ export class UserResolver {
     @AnonSession() session: Session,
     @Parent() { id }: User,
     @ListArg(EducationListInput) input: EducationListInput,
-    @Loader(EducationLoader) educations: LoaderOf<EducationLoader>
+    @Loader(EducationLoader) educations: LoaderOf<EducationLoader>,
   ): Promise<SecuredEducationList> {
     const list = await this.userService.listEducations(id, input, session);
     educations.primeAll(list.items);
@@ -197,7 +197,7 @@ export class UserResolver {
     @AnonSession() session: Session,
     @Parent() user: User,
     @ListArg(LocationListInput) input: LocationListInput,
-    @Loader(LocationLoader) locations: LoaderOf<LocationLoader>
+    @Loader(LocationLoader) locations: LoaderOf<LocationLoader>,
   ): Promise<SecuredLocationList> {
     const list = await this.userService.listLocations(user, input, session);
     locations.primeAll(list.items);
@@ -207,7 +207,7 @@ export class UserResolver {
   @ResolveField(() => [KnownLanguage])
   async knownLanguages(
     @AnonSession() session: Session,
-    @Parent() { id }: User
+    @Parent() { id }: User,
   ): Promise<readonly KnownLanguage[]> {
     return await this.userService.listKnownLanguages(id, session);
   }
@@ -217,7 +217,7 @@ export class UserResolver {
   })
   async createPerson(
     @LoggedInSession() session: Session,
-    @Args('input') { person: input }: CreatePersonInput
+    @Args('input') { person: input }: CreatePersonInput,
   ): Promise<CreatePersonOutput> {
     const userId = await this.userService.create(input, session);
     const user = await this.userService.readOne(userId, session);
@@ -229,7 +229,7 @@ export class UserResolver {
   })
   async updateUser(
     @LoggedInSession() session: Session,
-    @Args('input') { user: input }: UpdateUserInput
+    @Args('input') { user: input }: UpdateUserInput,
   ): Promise<UpdateUserOutput> {
     const user = await this.userService.update(input, session);
     return { user };
@@ -240,7 +240,7 @@ export class UserResolver {
   })
   async deleteUser(
     @LoggedInSession() session: Session,
-    @IdArg() id: ID
+    @IdArg() id: ID,
   ): Promise<DeleteUserOutput> {
     await this.userService.delete(id, session);
     return { success: true };
@@ -251,7 +251,7 @@ export class UserResolver {
   })
   async addLocationToUser(
     @LoggedInSession() session: Session,
-    @Args() { userId, locationId }: ModifyLocationArgs
+    @Args() { userId, locationId }: ModifyLocationArgs,
   ): Promise<User> {
     await this.userService.addLocation(userId, locationId, session);
     return await this.userService.readOne(userId, session);
@@ -262,7 +262,7 @@ export class UserResolver {
   })
   async removeLocationFromUser(
     @LoggedInSession() session: Session,
-    @Args() { userId, locationId }: ModifyLocationArgs
+    @Args() { userId, locationId }: ModifyLocationArgs,
   ): Promise<User> {
     await this.userService.removeLocation(userId, locationId, session);
     return await this.userService.readOne(userId, session);
@@ -273,7 +273,7 @@ export class UserResolver {
   })
   async assignOrganizationToUser(
     @LoggedInSession() session: Session,
-    @Args('input') input: AssignOrganizationToUserInput
+    @Args('input') input: AssignOrganizationToUserInput,
   ): Promise<AssignOrganizationToUserOutput> {
     await this.userService.assignOrganizationToUser(input.request, session);
     return { success: true };
@@ -284,7 +284,7 @@ export class UserResolver {
   })
   async removeOrganizationFromUser(
     @LoggedInSession() session: Session,
-    @Args('input') input: RemoveOrganizationFromUserInput
+    @Args('input') input: RemoveOrganizationFromUserInput,
   ): Promise<RemoveOrganizationFromUserOutput> {
     await this.userService.removeOrganizationFromUser(input.request, session);
     return { success: true };
@@ -295,13 +295,14 @@ export class UserResolver {
   })
   async createKnownLanguage(
     @LoggedInSession() session: Session,
-    @Args() { userId, languageId, languageProficiency }: ModifyKnownLanguageArgs
+    @Args()
+    { userId, languageId, languageProficiency }: ModifyKnownLanguageArgs,
   ): Promise<User> {
     await this.userService.createKnownLanguage(
       userId,
       languageId,
       languageProficiency,
-      session
+      session,
     );
     return await this.userService.readOne(userId, session);
   }
@@ -311,13 +312,14 @@ export class UserResolver {
   })
   async deleteKnownLanguage(
     @LoggedInSession() session: Session,
-    @Args() { userId, languageId, languageProficiency }: ModifyKnownLanguageArgs
+    @Args()
+    { userId, languageId, languageProficiency }: ModifyKnownLanguageArgs,
   ): Promise<User> {
     await this.userService.deleteKnownLanguage(
       userId,
       languageId,
       languageProficiency,
-      session
+      session,
     );
     return await this.userService.readOne(userId, session);
   }

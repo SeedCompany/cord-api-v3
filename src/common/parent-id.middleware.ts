@@ -9,18 +9,18 @@ import type { ID } from './id-field';
  */
 export const parentIdMiddleware: FieldMiddleware = async (
   { source, info },
-  next
+  next,
 ) => {
   const value = await next();
   if (!source.id) {
     throw new ServerException(
-      `Cannot determine ID for ${info.parentType.name}`
+      `Cannot determine ID for ${info.parentType.name}`,
     );
   }
   if (value) {
     if (!isObject(value)) {
       throw new ServerException(
-        `Cannot set parent ID on ${info.parentType.name}.${info.fieldName} because it is not an object.`
+        `Cannot set parent ID on ${info.parentType.name}.${info.fieldName} because it is not an object.`,
       );
     }
     (value as { parentId: ID }).parentId = source.id;

@@ -27,9 +27,9 @@ export const DtoRepository = <
   TResourceStatic extends ResourceShape<any>,
   HydrateArgs extends unknown[] = [],
   // Specify this if the repo is for an interface, but works with all the concretes.
-  TResource extends InstanceType<TResourceStatic> = InstanceType<TResourceStatic>
+  TResource extends InstanceType<TResourceStatic> = InstanceType<TResourceStatic>,
 >(
-  resource: TResourceStatic
+  resource: TResourceStatic,
 ) => {
   @Injectable()
   class DtoRepositoryClass extends CommonRepository {
@@ -60,16 +60,16 @@ export const DtoRepository = <
     }
     @Once() private get uniqueLabel() {
       const labels = resource.Props.flatMap(
-        (p) => getDbPropertyUnique(resource, p) ?? []
+        (p) => getDbPropertyUnique(resource, p) ?? [],
       );
       if (labels.length === 0) {
         return new ServerException(
-          `No unique properties found in ${resource.name}`
+          `No unique properties found in ${resource.name}`,
         );
       }
       if (labels.length > 1) {
         return new ServerException(
-          `Multiple unique properties found in ${resource.name}, not sure which one to use.`
+          `Multiple unique properties found in ${resource.name}, not sure which one to use.`,
         );
       }
       return labels[0];
@@ -83,7 +83,7 @@ export const DtoRepository = <
       const rows = await this.readMany([id], ...args);
       if (!rows[0]) {
         throw new NotFoundException(
-          `Could not find ${lowerCase(resource.name)}`
+          `Could not find ${lowerCase(resource.name)}`,
         );
       }
       return rows[0];
@@ -102,7 +102,7 @@ export const DtoRepository = <
     async updateProperties<
       TObject extends Partial<TResource | UnsecuredDto<TResource>> & {
         id: ID;
-      }
+      },
     >(object: TObject, changes: DbChanges<TResource>, changeset?: ID) {
       return await this.db.updateProperties({
         type: resource,
@@ -116,14 +116,14 @@ export const DtoRepository = <
       relationName: string,
       otherLabel: string,
       id: ID,
-      otherId: ID | null
+      otherId: ID | null,
     ) {
       await super.updateRelation(
         relationName,
         otherLabel,
         id,
         otherId,
-        getDbClassLabels(resource)[0]
+        getDbClassLabels(resource)[0],
       );
     }
 

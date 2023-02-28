@@ -48,7 +48,7 @@ describe('ProjectMember e2e', () => {
     expect(projectMember.modifiedAt).toBeDefined();
     const difference = Interval.fromDateTimes(
       DateTime.fromISO(projectMember.modifiedAt.toString()),
-      DateTime.local()
+      DateTime.local(),
     )
       .toDuration()
       .toFormat('S');
@@ -62,12 +62,12 @@ describe('ProjectMember e2e', () => {
         userId: member.id,
         projectId: project.id,
         roles: [Role.Controller],
-      })
+      }),
     ).rejects.toThrowGqlError(
       errors.input({
         message: 'Role(s) Controller cannot be assigned to this project member',
         field: 'input.roles',
-      })
+      }),
     );
   });
 
@@ -88,7 +88,7 @@ describe('ProjectMember e2e', () => {
       `,
       {
         id: projectMember.id,
-      }
+      },
     );
 
     const actual: ProjectMember = result.projectMember;
@@ -106,7 +106,7 @@ describe('ProjectMember e2e', () => {
         await createPerson(app);
         const project = await createProject(app);
         return project.id;
-      })
+      }),
     );
 
     await Promise.all(
@@ -116,7 +116,7 @@ describe('ProjectMember e2e', () => {
           projectId: projectIds[index],
           roles: [Role.Consultant],
         });
-      })
+      }),
     );
 
     const { projectMembers } = await app.graphql.query(
@@ -130,10 +130,10 @@ describe('ProjectMember e2e', () => {
             total
           }
         }
-      `
+      `,
     );
     expect(projectMembers.items.length).toBeGreaterThanOrEqual(
-      numProjectMembers
+      numProjectMembers,
     );
   });
 
@@ -154,7 +154,7 @@ describe('ProjectMember e2e', () => {
       `,
       {
         id: projectMember.id,
-      }
+      },
     );
 
     const actual: boolean | undefined = result.deleteProjectMember;
@@ -172,13 +172,13 @@ describe('ProjectMember e2e', () => {
         `,
         {
           id: projectMember.id,
-        }
-      )
+        },
+      ),
     ).rejects.toThrowGqlError(
       errors.notFound({
         message: 'Could not find project member',
         field: 'projectMember.id',
-      })
+      }),
     );
   });
 
@@ -199,7 +199,7 @@ describe('ProjectMember e2e', () => {
       `,
       {
         id: projectMember.id,
-      }
+      },
     );
 
     const newProjectMember = await createProjectMember(app, {
@@ -239,19 +239,19 @@ describe('ProjectMember e2e', () => {
               roles: [Role.ProjectManager],
             },
           },
-        }
+        },
       );
       return { projectMember, result };
     });
     expect(result.updateProjectMember.projectMember.id).toBe(projectMember.id);
     expect(result.updateProjectMember.projectMember.roles.value).toEqual(
-      expect.arrayContaining([Role.ProjectManager])
+      expect.arrayContaining([Role.ProjectManager]),
     );
     const updated: Raw<ProjectMember> =
       result.updateProjectMember.projectMember;
     expect(updated).toBeTruthy();
     expect(+DateTime.fromISO(updated.modifiedAt)).toBeGreaterThan(
-      +DateTime.fromISO(projectMember.modifiedAt)
+      +DateTime.fromISO(projectMember.modifiedAt),
     );
   });
 
@@ -281,13 +281,13 @@ describe('ProjectMember e2e', () => {
               roles: [Role.Intern],
             },
           },
-        }
-      )
+        },
+      ),
     ).rejects.toThrowGqlError(
       errors.input({
         message: 'Role(s) Intern cannot be assigned to this project member',
         field: 'input.roles',
-      })
+      }),
     );
   });
 });

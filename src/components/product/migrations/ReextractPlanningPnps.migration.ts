@@ -11,7 +11,7 @@ import { ProductMethodology as Methodology } from '../dto';
 export class ReextractPlanningPnpsMigration extends BaseMigration {
   constructor(
     private readonly moduleRef: ModuleRef,
-    private readonly eventBus: IEventBus
+    private readonly eventBus: IEventBus,
   ) {
     super();
   }
@@ -19,7 +19,7 @@ export class ReextractPlanningPnpsMigration extends BaseMigration {
   async up() {
     const rows = await this.grabAllPnpsToReextract();
     this.logger.info(
-      `Found ${rows.length} eligible PnPs that can be re-extracted to create products`
+      `Found ${rows.length} eligible PnPs that can be re-extracted to create products`,
     );
 
     const engagementRepo = this.moduleRef.get(EngagementRepository);
@@ -42,7 +42,7 @@ export class ReextractPlanningPnpsMigration extends BaseMigration {
                 ? Methodology.Paratext
                 : row.methodologies[0],
           },
-          session
+          session,
         );
         await this.eventBus.publish(event);
       } catch (e) {
@@ -61,7 +61,7 @@ export class ReextractPlanningPnpsMigration extends BaseMigration {
       .matchNode('eng', 'LanguageEngagement')
       // Only active engagements
       .raw(
-        'WHERE (eng)-[:status { active: true }]->(:Property { value: "Active" })'
+        'WHERE (eng)-[:status { active: true }]->(:Property { value: "Active" })',
       )
       // Grab latest pnp file version, ignore engagements without
       .subQuery('eng', (sub) =>
@@ -75,7 +75,7 @@ export class ReextractPlanningPnpsMigration extends BaseMigration {
           ])
           .return('version')
           .orderBy('version.createdAt', 'DESC')
-          .raw('LIMIT 1')
+          .raw('LIMIT 1'),
       )
       // Grab all unique methodologies from engagement's products, ignore engagements without
       .subQuery('eng', (sub) =>
@@ -91,7 +91,7 @@ export class ReextractPlanningPnpsMigration extends BaseMigration {
             'keys(apoc.coll.frequenciesAsMap(collect(methodology.value))) as methodologies',
           ])
           .raw('WHERE size(methodologies) > 0')
-          .return('methodologies')
+          .return('methodologies'),
       )
       .return<{ engId: ID; pnpFileId: ID; methodologies: Methodology[] }>([
         'eng.id as engId',

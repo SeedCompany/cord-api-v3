@@ -27,7 +27,7 @@ export async function createRootDirectory(app: TestApp, name?: string) {
 export async function createDirectory(
   app: TestApp,
   parentId: ID,
-  name?: string
+  name?: string,
 ) {
   const input = {
     parentId,
@@ -45,7 +45,7 @@ export async function createDirectory(
     `,
     {
       input,
-    }
+    },
   );
 
   const actual: RawDirectory = result.createDirectory;

@@ -10,7 +10,7 @@ export class ChangesetAwareResolver {
   constructor(
     private readonly resources: ResourceLoader,
     private readonly resourceResolver: ResourceResolver,
-    private readonly changesetResolver: ChangesetResolver
+    private readonly changesetResolver: ChangesetResolver,
   ) {}
 
   @ResolveField()
@@ -26,7 +26,7 @@ export class ChangesetAwareResolver {
   })
   async parent(
     @Parent() object: ChangesetAware,
-    @Info(Fields, IsOnlyId) isOnlyId: boolean
+    @Info(Fields, IsOnlyId) isOnlyId: boolean,
   ) {
     if (!object.parent) {
       return null;
@@ -49,7 +49,7 @@ export class ChangesetAwareResolver {
   })
   async changesetDiff(
     @Parent() object: ChangesetAware,
-    @LoggedInSession() session: Session
+    @LoggedInSession() session: Session,
   ): Promise<ChangesetDiff | null> {
     const changeset = await this.changeset(object);
     if (!changeset) {
@@ -58,7 +58,7 @@ export class ChangesetAwareResolver {
     const diff = await this.changesetResolver.difference(
       changeset,
       session,
-      object.id
+      object.id,
     );
     return diff;
   }

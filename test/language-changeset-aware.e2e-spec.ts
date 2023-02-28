@@ -30,7 +30,7 @@ const readLanguage = (app: TestApp, id: string, changeset?: string) =>
     {
       id,
       changeset,
-    }
+    },
   );
 
 const activeProject = async (app: TestApp) => {
@@ -96,7 +96,7 @@ describe.skip('Language Changeset Aware e2e', () => {
           },
           changeset: changeset.id,
         },
-      }
+      },
     );
 
     // read language without changeset

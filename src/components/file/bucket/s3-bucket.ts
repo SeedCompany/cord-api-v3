@@ -31,7 +31,7 @@ export class S3Bucket extends FileBucket {
   protected async getSignedUrl(
     operation: 'putObject' | 'getObject',
     key: string,
-    options?: GetObjectCommandInput | PutObjectCommandInput
+    options?: GetObjectCommandInput | PutObjectCommandInput,
   ) {
     const input = {
       ...options,

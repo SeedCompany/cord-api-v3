@@ -32,7 +32,7 @@ export class FilmService {
     @Logger('film:service') private readonly logger: ILogger,
     private readonly scriptureRefs: ScriptureReferenceService,
     private readonly authorizationService: AuthorizationService,
-    private readonly repo: FilmRepository
+    private readonly repo: FilmRepository,
   ) {}
 
   async create(input: CreateFilm, session: Session): Promise<Film> {
@@ -41,7 +41,7 @@ export class FilmService {
     if (!(await this.repo.isUnique(input.name))) {
       throw new DuplicateException(
         'film.name',
-        'Film with this name already exists'
+        'Film with this name already exists',
       );
     }
 
@@ -55,7 +55,7 @@ export class FilmService {
       await this.scriptureRefs.create(
         result.id,
         input.scriptureReferences,
-        session
+        session,
       );
 
       this.logger.debug(`flim created`, { id: result.id });
@@ -87,17 +87,17 @@ export class FilmService {
 
   private async secure(
     dto: UnsecuredDto<Film>,
-    session: Session
+    session: Session,
   ): Promise<Film> {
     const securedProps = await this.authorizationService.secureProperties(
       Film,
       {
         ...dto,
         scriptureReferences: this.scriptureRefs.parseList(
-          dto.scriptureReferences
+          dto.scriptureReferences,
         ),
       },
-      session
+      session,
     );
 
     return {
@@ -119,7 +119,7 @@ export class FilmService {
       ...this.repo.getActualChanges(film, input),
       scriptureReferences: ifDiff(isScriptureEqual)(
         input.scriptureReferences,
-        film.scriptureReferences.value
+        film.scriptureReferences.value,
       ),
     };
     await this.authorizationService.verifyCanEditChanges(Film, film, changes);
@@ -143,7 +143,7 @@ export class FilmService {
 
     if (!canDelete)
       throw new UnauthorizedException(
-        'You do not have the permission to delete this Film'
+        'You do not have the permission to delete this Film',
       );
 
     try {

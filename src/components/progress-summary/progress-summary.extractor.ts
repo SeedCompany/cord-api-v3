@@ -35,7 +35,7 @@ const findFiscalYearRow = (sheet: ProgressSheet, fiscalYear: number) => {
 const summaryFrom = (
   fiscalYear: Row<ProgressSheet>,
   plannedColumn: Column,
-  actualColumn: Column
+  actualColumn: Column,
 ): Progress | null => {
   let planned = fiscalYear.cell(plannedColumn).asNumber;
   let actual = fiscalYear.cell(actualColumn).asNumber;

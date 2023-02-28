@@ -93,7 +93,7 @@ describe('Internship Engagment Security e2e', () => {
             propToTest: property,
             skipEditCheck: false,
           });
-        }
+        },
       );
     });
   });

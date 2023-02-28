@@ -25,7 +25,7 @@ export class ProjectChangeRequestResolver {
   @ResolveField(() => IProject)
   async project(
     @Parent() changeset: ProjectChangeRequest,
-    @Loader(() => ProjectLoader) projects: LoaderOf<ProjectLoader>
+    @Loader(() => ProjectLoader) projects: LoaderOf<ProjectLoader>,
   ): Promise<Project> {
     return await projects.load({
       id: changeset.project,
@@ -39,7 +39,7 @@ export class ProjectChangeRequestResolver {
   async createProjectChangeRequest(
     @Args('input')
     { projectChangeRequest: input }: CreateProjectChangeRequestInput,
-    @LoggedInSession() session: Session
+    @LoggedInSession() session: Session,
   ): Promise<CreateProjectChangeRequestOutput> {
     const projectChangeRequest = await this.service.create(input, session);
     return { projectChangeRequest };
@@ -51,7 +51,7 @@ export class ProjectChangeRequestResolver {
   async updateProjectChangeRequest(
     @LoggedInSession() session: Session,
     @Args('input')
-    { projectChangeRequest: input }: UpdateProjectChangeRequestInput
+    { projectChangeRequest: input }: UpdateProjectChangeRequestInput,
   ): Promise<UpdateProjectChangeRequestOutput> {
     const projectChangeRequest = await this.service.update(input, session);
     return { projectChangeRequest };
@@ -62,7 +62,7 @@ export class ProjectChangeRequestResolver {
   })
   async deleteProjectChangeRequest(
     @LoggedInSession() session: Session,
-    @IdArg() id: ID
+    @IdArg() id: ID,
   ): Promise<DeleteProjectChangeRequestOutput> {
     await this.service.delete(id, session);
     return { success: true };

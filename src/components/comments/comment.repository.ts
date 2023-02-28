@@ -36,14 +36,14 @@ export class CommentRepository extends DtoRepository(Comment) {
               q
                 .matchNode('thread', 'CommentThread', { id: input.threadId })
                 .return('thread')
-          : await this.threads.create(input.resourceId, session)
+          : await this.threads.create(input.resourceId, session),
       )
       .apply(await createNode(Comment, { initialProps }))
       .apply(
         createRelationships(Comment, {
           in: { comment: variable('thread') },
           out: { creator: ['User', session.userId] },
-        })
+        }),
       )
       .return<{ id: ID; threadId: ID }>([
         'node.id as id',
@@ -68,8 +68,8 @@ export class CommentRepository extends DtoRepository(Comment) {
         ])
         .return<{ dto: UnsecuredDto<Comment> }>(
           merge('props', { thread: 'thread.id', creator: 'creator.id' }).as(
-            'dto'
-          )
+            'dto',
+          ),
         );
   }
 

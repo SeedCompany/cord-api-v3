@@ -49,7 +49,7 @@ describe('User e2e', () => {
       `,
       {
         id: user.id,
-      }
+      },
     );
 
     const actual: User = result.user;
@@ -63,7 +63,7 @@ describe('User e2e', () => {
     expect(actual.displayLastName.value).toBe(fakeUser.displayLastName);
     expect(actual.phone.value).toBe(fakeUser.phone);
     expect((actual.timezone as SecuredTimeZone).value?.name).toBe(
-      fakeUser.timezone
+      fakeUser.timezone,
     );
     expect(actual.about.value).toBe(fakeUser.about);
     expect(actual.status.value).toBe(fakeUser.status);
@@ -121,7 +121,7 @@ describe('User e2e', () => {
             ...fakeUser,
           },
         },
-      }
+      },
     );
     const actual: User = result.updateUser.user;
 
@@ -136,7 +136,7 @@ describe('User e2e', () => {
     expect(actual.displayLastName.value).toBe(fakeUser.displayLastName);
     expect(actual.phone.value).toBe(fakeUser.phone);
     expect((actual.timezone as SecuredTimeZone).value?.name).toBe(
-      fakeUser.timezone
+      fakeUser.timezone,
     );
     expect(actual.about.value).toBe(fakeUser.about);
     expect(actual.status.value).toBe(fakeUser.status);
@@ -157,7 +157,7 @@ describe('User e2e', () => {
       `,
       {
         id: user.id,
-      }
+      },
     );
 
     const actual: User | undefined = result.deleteUser;
@@ -209,7 +209,7 @@ describe('User e2e', () => {
       {
         orgId: org.id,
         userId: newUser.id,
-      }
+      },
     );
   });
 
@@ -233,7 +233,7 @@ describe('User e2e', () => {
       {
         orgId: org.id,
         userId: newUser.id,
-      }
+      },
     );
 
     // remove organization from user
@@ -250,7 +250,7 @@ describe('User e2e', () => {
       {
         orgId: org.id,
         userId: newUser.id,
-      }
+      },
     );
   });
 
@@ -279,7 +279,7 @@ describe('User e2e', () => {
         orgId: org.id,
         userId: newUser.id,
         primary: true,
-      }
+      },
     );
   });
 
@@ -310,7 +310,7 @@ describe('User e2e', () => {
         orgId: org.id,
         userId: newUser.id,
         primary: true,
-      }
+      },
     );
 
     // remove primary organization from user
@@ -327,7 +327,7 @@ describe('User e2e', () => {
       {
         orgId: org.id,
         userId: newUser.id,
-      }
+      },
     );
 
     // TODO after #430 is resolved, list orgs and make sure org is removed as primary
@@ -359,7 +359,7 @@ describe('User e2e', () => {
         orgId: org.id,
         userId: newUser.id,
         primary: true,
-      }
+      },
     );
 
     const result1 = await app.graphql.query(
@@ -383,7 +383,7 @@ describe('User e2e', () => {
       `,
       {
         id: newUser.id,
-      }
+      },
     );
     const actual = result1.user;
     expect(actual).toBeTruthy();
@@ -416,7 +416,7 @@ describe('User e2e', () => {
       `,
       {
         id: newUser.id,
-      }
+      },
     );
     const actual = result.user;
     expect(actual).toBeTruthy();
@@ -451,7 +451,7 @@ describe('User e2e', () => {
       `,
       {
         id: newUser.id,
-      }
+      },
     );
     const actual = result.user;
     expect(actual).toBeTruthy();
@@ -476,7 +476,7 @@ describe('User e2e', () => {
       `,
       {
         id: newUser.id,
-      }
+      },
     );
     const actual = result.user;
     expect(actual.avatarLetters).toBe(firstLettersOfWords(actual.fullName));
@@ -508,7 +508,7 @@ describe('User e2e', () => {
         orgId: org.id,
         userId: newUser.id,
         primary: true,
-      }
+      },
     );
 
     const { user } = await app.graphql.query(
@@ -532,7 +532,7 @@ describe('User e2e', () => {
       `,
       {
         id: newUser.id,
-      }
+      },
     );
     expect(user.organizations).toBeTruthy();
     expect(user.organizations.items.length).toBeGreaterThanOrEqual(1);

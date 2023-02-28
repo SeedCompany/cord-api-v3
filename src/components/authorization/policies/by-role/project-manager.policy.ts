@@ -28,11 +28,11 @@ import {
       r.Engagement.read
         .when(member)
         .edit.create.delete.specifically(
-          (p) => p.disbursementCompleteDate.read
+          (p) => p.disbursementCompleteDate.read,
         ),
       r.LanguageEngagement.specifically((p) => [
         p.paratextRegistryId.when(member).read,
-      ])
+      ]),
     ),
     r.EthnologueLanguage.read,
     r.FieldRegion.read,
@@ -45,7 +45,7 @@ import {
       .children((c) => c.posts.read.create),
     r.Partnership.whenAny(
       member,
-      sensMediumOrLower
+      sensMediumOrLower,
     ).read.create.delete.specifically((p) => [
       p.many('agreement', 'agreementStatus', 'types', 'partner', 'primary')
         .edit,
@@ -77,7 +77,7 @@ import {
       'Withdraw Review Request',
       'In Review -> Needs Translation',
       'Review Reject',
-      'Review Approve'
+      'Review Approve',
     ).execute,
     r.Project.read.create
       .when(member)
@@ -94,6 +94,6 @@ import {
     ]),
     r.Unavailability.create.read,
     r.User.create.read,
-  ]
+  ],
 )
 export class ProjectManagerPolicy {}

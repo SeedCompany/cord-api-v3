@@ -42,7 +42,7 @@ export class ExtractProductsFromPnpHandler
     private readonly extractor: ProductExtractor,
     private readonly repo: ProductRepository,
     private readonly stories: StoryService,
-    @Logger('product:extractor') private readonly logger: ILogger
+    @Logger('product:extractor') private readonly logger: ILogger,
   ) {}
 
   async handle(event: SubscribedEvent): Promise<void> {
@@ -86,12 +86,12 @@ export class ExtractProductsFromPnpHandler
 
     const actionableProductRows = await this.matchRowsToProductChanges(
       engagement,
-      productRows
+      productRows,
     );
 
     const storyIds = await this.getOrCreateStoriesByName(
       productRows,
-      event.session
+      event.session,
     );
 
     const createdAt = DateTime.now();
@@ -173,19 +173,19 @@ export class ExtractProductsFromPnpHandler
    */
   private async matchRowsToProductChanges(
     engagement: UnsecuredDto<Engagement>,
-    rows: readonly ExtractedRow[]
+    rows: readonly ExtractedRow[],
   ) {
     const scriptureProducts = rows[0].bookName
       ? await this.products.loadProductIdsForBookAndVerse(
           engagement.id,
-          this.logger
+          this.logger,
         )
       : [];
 
     const storyProducts = rows[0].story
       ? await this.products.loadProductIdsByPnpIndex(
           engagement.id,
-          DerivativeScriptureProduct.name
+          DerivativeScriptureProduct.name,
         )
       : {};
 
@@ -200,14 +200,14 @@ export class ExtractProductsFromPnpHandler
       // group by book name
       groupBy(rows, (row) => {
         return row.scripture[0]?.start.book ?? row.unspecifiedScripture?.book;
-      })
+      }),
     ).flatMap((rowsOfBook) => {
       const bookName =
         rowsOfBook[0].scripture[0]?.start.book ??
         rowsOfBook[0].unspecifiedScripture?.book;
       if (!bookName) return [];
       let existingProductsForBook = scriptureProducts.filter(
-        (ref) => ref.book === bookName
+        (ref) => ref.book === bookName,
       );
 
       const matches: Array<ExtractedRow & { existingId: ID | undefined }> = [];
@@ -241,7 +241,7 @@ export class ExtractProductsFromPnpHandler
         if (existingId) {
           matches.push({ ...row, existingId });
           existingProductsForBook = existingProductsForBook.filter(
-            (ref) => ref.id !== existingId
+            (ref) => ref.id !== existingId,
           );
         } else {
           nonExactMatches.push(row);
@@ -288,19 +288,19 @@ export class ExtractProductsFromPnpHandler
 
   private async getOrCreateStoriesByName(
     rows: readonly ExtractedRow[],
-    session: Session
+    session: Session,
   ) {
     const names = uniq(
       rows.flatMap((row) =>
-        !row.story ? [] : row.placeholder ? 'Unknown' : row.story
-      )
+        !row.story ? [] : row.placeholder ? 'Unknown' : row.story,
+      ),
     );
     if (names.length === 0) {
       return {};
     }
     const existingList = await this.repo.getProducibleIdsByNames(
       names,
-      ProducibleType.Story
+      ProducibleType.Story,
     );
     const existing = mapFromList(existingList, (row) => [row.name, row.id]);
     const newNames = difference(names, Object.keys(existing));

@@ -38,7 +38,7 @@ export class ProgressReportWorkflowFlowchart {
       }),
       '',
       ...Object.keys(Status).map(
-        (status) => `${status}(${startCase(status)}):::State`
+        (status) => `${status}(${startCase(status)}):::State`,
       ),
       '',
       ...Object.values(Transitions).flatMap((t) => {

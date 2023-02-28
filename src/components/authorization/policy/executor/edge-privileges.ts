@@ -6,13 +6,13 @@ import { UserEdgePrivileges } from './user-edge-privileges';
 export class EdgePrivileges<
   TResourceStatic extends ResourceShape<any>,
   TKey extends string,
-  TAction extends string
+  TAction extends string,
 > {
   readonly resource: EnhancedResource<TResourceStatic>;
   constructor(
     resource: TResourceStatic | EnhancedResource<TResourceStatic>,
     readonly key: TKey,
-    private readonly policyExecutor: PolicyExecutor
+    private readonly policyExecutor: PolicyExecutor,
   ) {
     this.resource = EnhancedResource.of(resource);
   }
@@ -23,7 +23,7 @@ export class EdgePrivileges<
       this.key,
       object,
       session,
-      this.policyExecutor
+      this.policyExecutor,
     );
   }
 }

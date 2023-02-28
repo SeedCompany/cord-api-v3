@@ -25,7 +25,7 @@ import { isExp } from '../query';
 const PatternClause = Object.getPrototypeOf(Create) as Class<TSPatternClause>;
 PatternClause.prototype.build = function build() {
   const patternStrings = map(this.patterns, (pattern) =>
-    reduce(pattern, (str: string, clause: Clause) => str + clause.build(), '')
+    reduce(pattern, (str: string, clause: Clause) => str + clause.build(), ''),
   );
   return compact(patternStrings).join(',\n    ');
 };
@@ -42,7 +42,7 @@ const origStringifyProperty = TermListClause.prototype.stringifyProperty;
 TermListClause.prototype.stringifyProperty = function stringifyProperty(
   prop: string,
   alias?: string,
-  node?: string
+  node?: string,
 ) {
   if (prop === alias && !node) {
     return prop;
@@ -108,7 +108,7 @@ ClauseCollection.prototype.build = function build(this: ClauseCollection) {
 // eslint-disable-next-line @typescript-eslint/unbound-method
 const origRebind = NodePattern.prototype.rebindConditionParams;
 NodePattern.prototype.rebindConditionParams = function rebindConditionParams(
-  this: NodePattern
+  this: NodePattern,
 ) {
   origRebind.call(this);
   const params = isPlainObject(this.conditionParams)

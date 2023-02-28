@@ -10,7 +10,7 @@ export const IdField = ({
 }: FieldOptions & { validation?: ValidationOptions } = {}) =>
   applyDecorators(
     Field(() => IDType, options),
-    IsId(validation)
+    IsId(validation),
   );
 
 export type ID = Opaque<string, 'ID'>;

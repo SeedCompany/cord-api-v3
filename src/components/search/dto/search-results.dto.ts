@@ -116,7 +116,7 @@ export const GqlSearchType = mapValues(
     ...publicSearchable,
     ...searchableAbstracts,
   },
-  (v, k) => k
+  (v, k) => k,
 );
 
 registerEnumType(GqlSearchType, { name: 'SearchType' });

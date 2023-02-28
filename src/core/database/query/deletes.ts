@@ -63,7 +63,7 @@ export const deleteProperties =
         })
         .with('property')
         .apply(prefixNodeLabelsWithDeleted('property'))
-        .return('count(property) as numPropsDeactivated')
+        .return('count(property) as numPropsDeactivated'),
     );
   };
 
@@ -87,11 +87,11 @@ export const prefixNodeLabelsWithDeleted = (node: string) => (query: Query) =>
       ])
       // yielding node is necessary even though unused
       .raw(
-        `call apoc.create.removeLabels(${node}, labels(${node})) yield node as nodeRemoved`
+        `call apoc.create.removeLabels(${node}, labels(${node})) yield node as nodeRemoved`,
       )
       .with([node, 'deletedLabels']) // Is this really needed?
       .raw(
-        `call apoc.create.addLabels(${node}, deletedLabels) yield node as nodeAdded`
+        `call apoc.create.addLabels(${node}, deletedLabels) yield node as nodeAdded`,
       )
-      .return('1')
+      .return('1'),
   );

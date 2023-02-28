@@ -38,7 +38,7 @@ export abstract class OrderedNestDataLoader<T, Key = ID, CachedKey = Key>
   private context: GqlContextType;
 
   abstract loadMany(
-    keys: readonly Key[]
+    keys: readonly Key[],
   ): Promise<ReadonlyArray<T | { key: Key; error: Error }>>;
 
   getOptions(): OrderedNestDataLoaderOptions<T, Key, CachedKey> {
@@ -72,7 +72,7 @@ export abstract class OrderedNestDataLoader<T, Key = ID, CachedKey = Key>
     CachedKey
   > {
     typeName ??= startCase(
-      this.constructor.name.replace('Loader', '')
+      this.constructor.name.replace('Loader', ''),
     ).toLowerCase();
 
     const getKey =
@@ -113,7 +113,7 @@ export abstract class OrderedNestDataLoader<T, Key = ID, CachedKey = Key>
 
     const loader = new DataLoaderLib<Key, T, CachedKey>(
       batchFn,
-      options
+      options,
     ) as DataLoader<T, Key, CachedKey>;
 
     loader.primeAll = (items) => {

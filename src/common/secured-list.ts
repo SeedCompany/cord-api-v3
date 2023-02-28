@@ -17,7 +17,7 @@ export type SecuredListType<T> = PaginatedListType<T> & {
 
 export function SecuredList<Type, ListItem = Type>(
   itemClass: Class<Type> | AbstractClassType<Type> | GraphQLScalarType,
-  options: ListOptions = {}
+  options: ListOptions = {},
 ) {
   @ObjectType({ isAbstract: true, implements: [ISecured] })
   abstract class SecuredListClass

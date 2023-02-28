@@ -53,13 +53,13 @@ export class PartnershipService {
     private readonly authorizationService: AuthorizationService,
     private readonly repo: PartnershipRepository,
     private readonly resourceLoader: ResourceLoader,
-    @Logger('partnership:service') private readonly logger: ILogger
+    @Logger('partnership:service') private readonly logger: ILogger,
   ) {}
 
   async create(
     input: CreatePartnership,
     session: Session,
-    changeset?: ID
+    changeset?: ID,
   ): Promise<Partnership> {
     const { projectId, partnerId } = input;
 
@@ -69,14 +69,14 @@ export class PartnershipService {
     const projectPrivileges = this.privileges.for(
       session,
       IProject,
-      projectResource
+      projectResource,
     );
 
     projectPrivileges.verifyCan('create', 'partnership');
 
     const isFirstPartnership = await this.repo.isFirstPartnership(
       projectId,
-      changeset
+      changeset,
     );
     const primary = isFirstPartnership ? true : input.primary;
 
@@ -84,7 +84,7 @@ export class PartnershipService {
     this.verifyFinancialReportingType(
       input.financialReportingType,
       input.types ?? [],
-      partner
+      partner,
     );
 
     try {
@@ -94,7 +94,7 @@ export class PartnershipService {
           primary,
         },
         session,
-        changeset
+        changeset,
       );
 
       await this.files.createDefinedFile(
@@ -104,7 +104,7 @@ export class PartnershipService {
         id,
         'mou',
         input.mou,
-        'partnership.mou'
+        'partnership.mou',
       );
 
       await this.files.createDefinedFile(
@@ -114,7 +114,7 @@ export class PartnershipService {
         id,
         'agreement',
         input.agreement,
-        'partnership.agreement'
+        'partnership.agreement',
       );
 
       if (primary) {
@@ -124,11 +124,11 @@ export class PartnershipService {
       const partnership = await this.readOne(
         id,
         session,
-        viewOfChangeset(changeset)
+        viewOfChangeset(changeset),
       );
 
       await this.eventBus.publish(
-        new PartnershipCreatedEvent(partnership, session)
+        new PartnershipCreatedEvent(partnership, session),
       );
 
       return partnership;
@@ -145,7 +145,7 @@ export class PartnershipService {
   async readOne(
     id: ID,
     session: Session,
-    view?: ObjectView
+    view?: ObjectView,
   ): Promise<Partnership> {
     const dto = await this.readOneUnsecured(id, session, view);
     return await this.secure(dto, session);
@@ -154,7 +154,7 @@ export class PartnershipService {
   async readOneUnsecured(
     id: ID,
     session: Session,
-    view?: ObjectView
+    view?: ObjectView,
   ): Promise<UnsecuredDto<Partnership>> {
     this.logger.debug('readOne', { id, userId: session.userId });
     return await this.repo.readOne(id, session, view);
@@ -163,18 +163,18 @@ export class PartnershipService {
   async readMany(ids: readonly ID[], session: Session, view?: ObjectView) {
     const partnerships = await this.repo.readMany(ids, session, view);
     return await Promise.all(
-      partnerships.map((dto) => this.secure(dto, session))
+      partnerships.map((dto) => this.secure(dto, session)),
     );
   }
 
   async secure(
     dto: UnsecuredDto<Partnership>,
-    session: Session
+    session: Session,
   ): Promise<Partnership> {
     const securedProps = await this.authorizationService.secureProperties(
       Partnership,
       dto,
-      session
+      session,
     );
 
     return {
@@ -200,7 +200,7 @@ export class PartnershipService {
     const existing = await this.repo.readOne(input.id, session, view);
     const partner = await this.partnerService.readOne(
       existing.partner,
-      session
+      session,
     );
     const object = await this.secure(existing, session);
 
@@ -208,7 +208,7 @@ export class PartnershipService {
       this.verifyFinancialReportingType(
         input.financialReportingType ?? object.financialReportingType.value,
         input.types ?? object.types.value,
-        partner
+        partner,
       );
     } catch (e) {
       if (input.types && !input.financialReportingType) {
@@ -226,7 +226,7 @@ export class PartnershipService {
     if (input.primary === false) {
       throw new InputException(
         'To remove primary from this partnership, set another partnership as the primary',
-        'partnership.primary'
+        'partnership.primary',
       );
     }
 
@@ -234,7 +234,7 @@ export class PartnershipService {
     await this.authorizationService.verifyCanEditChanges(
       Partnership,
       object,
-      changes
+      changes,
     );
     const { mou, agreement, ...simpleChanges } = changes;
 
@@ -247,13 +247,13 @@ export class PartnershipService {
       object.mou,
       'partnership.mou',
       mou,
-      session
+      session,
     );
     await this.files.updateDefinedFile(
       object.agreement,
       'partnership.agreement',
       agreement,
-      session
+      session,
     );
 
     const partnership = await this.readOne(input.id, session, view);
@@ -261,7 +261,7 @@ export class PartnershipService {
       partnership,
       object,
       input,
-      session
+      session,
     );
     await this.eventBus.publish(event);
     return event.updated;
@@ -273,14 +273,14 @@ export class PartnershipService {
     if (!object) {
       throw new NotFoundException(
         'Could not find partnership',
-        'partnership.id'
+        'partnership.id',
       );
     }
     const canDelete = await this.repo.checkDeletePermission(id, session);
 
     if (!canDelete)
       throw new UnauthorizedException(
-        'You do not have the permission to delete this Partnership'
+        'You do not have the permission to delete this Partnership',
       );
 
     // only primary one partnership could be removed
@@ -289,13 +289,13 @@ export class PartnershipService {
       if (isOthers) {
         throw new InputException(
           'Primary partnerships cannot be removed. Make another partnership primary first.',
-          'partnership.id'
+          'partnership.id',
         );
       }
     }
 
     await this.eventBus.publish(
-      new PartnershipWillDeleteEvent(object, session)
+      new PartnershipWillDeleteEvent(object, session),
     );
 
     try {
@@ -309,22 +309,22 @@ export class PartnershipService {
   async list(
     partialInput: Partial<PartnershipListInput>,
     session: Session,
-    changeset?: ID
+    changeset?: ID,
   ): Promise<PartnershipListOutput> {
     const input = PartnershipListInput.defaultValue(
       PartnershipListInput,
-      partialInput
+      partialInput,
     );
     const results = await this.repo.list(input, session, changeset);
     return await mapListResults(results, (id) =>
-      this.readOne(id, session, viewOfChangeset(changeset))
+      this.readOne(id, session, viewOfChangeset(changeset)),
     );
   }
 
   protected verifyFinancialReportingType(
     financialReportingType: FinancialReportingType | null | undefined,
     types: readonly PartnerType[],
-    partner: Partner
+    partner: Partner,
   ) {
     if (!financialReportingType) {
       return;
@@ -334,13 +334,13 @@ export class PartnershipService {
     ) {
       throw new InputException(
         `Partner does not have this financial reporting type available`,
-        'partnership.financialReportingType'
+        'partnership.financialReportingType',
       );
     }
     if (!types.includes(PartnerType.Managing)) {
       throw new InputException(
         'Financial reporting type can only be applied to managing partners',
-        'partnership.financialReportingType'
+        'partnership.financialReportingType',
       );
     }
   }
@@ -348,32 +348,32 @@ export class PartnershipService {
   protected async verifyRelationshipEligibility(
     projectId: ID,
     partnerId: ID,
-    changeset?: ID
+    changeset?: ID,
   ): Promise<void> {
     const result = await this.repo.verifyRelationshipEligibility(
       projectId,
       partnerId,
-      changeset
+      changeset,
     );
 
     if (!result.project) {
       throw new NotFoundException(
         'Could not find project',
-        'partnership.projectId'
+        'partnership.projectId',
       );
     }
 
     if (!result.partner) {
       throw new NotFoundException(
         'Could not find partner',
-        'partnership.partnerId'
+        'partnership.partnerId',
       );
     }
 
     if (result.partnership) {
       throw new DuplicateException(
         'partnership.projectId',
-        'Partnership for this project and partner already exists'
+        'Partnership for this project and partner already exists',
       );
     }
   }

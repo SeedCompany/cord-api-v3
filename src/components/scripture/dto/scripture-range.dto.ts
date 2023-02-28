@@ -25,7 +25,7 @@ const description = stripIndent`
 
 export const mapRange = <T, U = T>(
   input: Range<T>,
-  mapper: (point: T) => U
+  mapper: (point: T) => U,
 ): Range<U> => ({
   start: mapper(input.start),
   end: mapper(input.end),
@@ -42,7 +42,7 @@ export const ScriptureField = (options: FieldOptions) =>
       } catch (e) {
         return value;
       }
-    })
+    }),
   );
 
 @InputType()
@@ -107,7 +107,7 @@ export abstract class ScriptureRange implements Range<ScriptureReference> {
 
   static randomList(min = 2, max = 4) {
     return mergeScriptureRanges(
-      times(random(min, max)).map(ScriptureRange.random)
+      times(random(min, max)).map(ScriptureRange.random),
     );
   }
 }
@@ -116,7 +116,7 @@ export abstract class ScriptureRange implements Range<ScriptureReference> {
   description: SecuredPropertyList.descriptionFor('scripture ranges'),
 })
 export class SecuredScriptureRanges extends SecuredPropertyList(
-  ScriptureRange
+  ScriptureRange,
 ) {}
 
 @ObjectType({
@@ -124,5 +124,5 @@ export class SecuredScriptureRanges extends SecuredPropertyList(
 })
 export class SecuredScriptureRangesOverride extends SecuredPropertyList(
   ScriptureRange,
-  { nullable: true }
+  { nullable: true },
 ) {}

@@ -24,7 +24,7 @@ export class PeriodicReportProjectConnectionResolver {
     project: Project,
     @ListArg(PeriodicReportListInput) input: PeriodicReportListInput,
     @Loader(PeriodicReportLoader)
-    periodicReports: LoaderOf<PeriodicReportLoader>
+    periodicReports: LoaderOf<PeriodicReportLoader>,
   ): Promise<SecuredPeriodicReportList> {
     const list = await this.service.list(session, {
       ...input,
@@ -41,7 +41,7 @@ export class PeriodicReportProjectConnectionResolver {
     @Parent() project: Project,
     @ListArg(PeriodicReportListInput) input: PeriodicReportListInput,
     @Loader(PeriodicReportLoader)
-    periodicReports: LoaderOf<PeriodicReportLoader>
+    periodicReports: LoaderOf<PeriodicReportLoader>,
   ): Promise<SecuredPeriodicReportList> {
     const list = await this.service.list(session, {
       ...input,
@@ -58,12 +58,12 @@ export class PeriodicReportProjectConnectionResolver {
   })
   async currentFinancialReportDue(
     @AnonSession() session: Session,
-    @Parent() project: Project
+    @Parent() project: Project,
   ): Promise<SecuredPeriodicReport> {
     const value = await this.service.getCurrentReportDue(
       project.id,
       ReportType.Financial,
-      session
+      session,
     );
     return {
       canRead: true,
@@ -78,12 +78,12 @@ export class PeriodicReportProjectConnectionResolver {
   })
   async currentNarrativeReportDue(
     @AnonSession() session: Session,
-    @Parent() project: Project
+    @Parent() project: Project,
   ): Promise<SecuredPeriodicReport> {
     const value = await this.service.getCurrentReportDue(
       project.id,
       ReportType.Narrative,
-      session
+      session,
     );
     return {
       canRead: true,
@@ -98,12 +98,12 @@ export class PeriodicReportProjectConnectionResolver {
   })
   async nextFinancialReportDue(
     @AnonSession() session: Session,
-    @Parent() project: Project
+    @Parent() project: Project,
   ): Promise<SecuredPeriodicReport> {
     const value = await this.service.getNextReportDue(
       project.id,
       ReportType.Financial,
-      session
+      session,
     );
     return {
       canRead: true,
@@ -118,12 +118,12 @@ export class PeriodicReportProjectConnectionResolver {
   })
   async nextNarrativeReportDue(
     @AnonSession() session: Session,
-    @Parent() project: Project
+    @Parent() project: Project,
   ): Promise<SecuredPeriodicReport> {
     const value = await this.service.getNextReportDue(
       project.id,
       ReportType.Narrative,
-      session
+      session,
     );
     return {
       canRead: true,

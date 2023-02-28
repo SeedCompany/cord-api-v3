@@ -37,7 +37,7 @@ import {
 export class ProductProgressRepository {
   constructor(
     private readonly db: DatabaseService,
-    private readonly reports: PeriodicReportService
+    private readonly reports: PeriodicReportService,
   ) {}
 
   async readOne(productId: ID, reportId: ID, variant: Variant) {
@@ -52,7 +52,7 @@ export class ProductProgressRepository {
       .first();
     if (!result) {
       throw new NotFoundException(
-        'Could not find progress for product and report period'
+        'Could not find progress for product and report period',
       );
     }
     return result;
@@ -73,10 +73,10 @@ export class ProductProgressRepository {
           .apply(
             this.reports.matchCurrentDue(
               variable('baseNode.id'),
-              ReportType.Progress
-            )
+              ReportType.Progress,
+            ),
           )
-          .return('node as report')
+          .return('node as report'),
       )
       .apply(this.hydrateAll())
       .first();
@@ -84,7 +84,7 @@ export class ProductProgressRepository {
   }
 
   async readAllProgressReportsForManyProducts(
-    products: readonly ProgressVariantByProductInput[]
+    products: readonly ProgressVariantByProductInput[],
   ) {
     const result = await this.db
       .query()
@@ -93,7 +93,7 @@ export class ProductProgressRepository {
           productId: r.product.id,
           variant: r.variant.key,
         })),
-        'input'
+        'input',
       )
       .match([
         node('eng', 'Engagement'),
@@ -111,7 +111,7 @@ export class ProductProgressRepository {
             node('report', 'ProgressReport'),
           ])
           .subQuery(['report', 'product', 'variant'], this.hydrateAll())
-          .return(collect('dto').as('progressList'))
+          .return(collect('dto').as('progressList')),
       )
       .return<{
         productId: ID;
@@ -123,7 +123,7 @@ export class ProductProgressRepository {
   }
 
   async readAllProgressReportsForManyReports(
-    reports: readonly ProgressVariantByReportInput[]
+    reports: readonly ProgressVariantByReportInput[],
   ) {
     const result = await this.db
       .query()
@@ -132,7 +132,7 @@ export class ProductProgressRepository {
           reportId: r.report.id,
           variant: r.variant.key,
         })),
-        'input'
+        'input',
       )
       .match([
         node('eng', 'Engagement'),
@@ -150,7 +150,7 @@ export class ProductProgressRepository {
             node('product', 'Product'),
           ])
           .subQuery(['report', 'product', 'variant'], this.hydrateAll())
-          .return(collect('dto').as('progressList'))
+          .return(collect('dto').as('progressList')),
       )
       .return<{
         reportId: ID;
@@ -193,7 +193,7 @@ export class ProductProgressRepository {
                   node('stepNode', 'StepProgress'),
                 ])
                 .apply(matchProps({ nodeName: 'stepNode', outputVar: 'step' }))
-                .return(collect('step').as('steps'))
+                .return(collect('step').as('steps')),
             )
             .match([
               node('product'),
@@ -220,8 +220,8 @@ export class ProductProgressRepository {
                     apoc.map.get(progressStepMap, step, { step: step, completed: null })
                   ]
                 `,
-              }).as('dto')
-            )
+              }).as('dto'),
+            ),
       );
   }
 
@@ -233,7 +233,7 @@ export class ProductProgressRepository {
       input.steps.map(async (stepIn) => ({
         ...stepIn,
         tempId: await generateId(),
-      }))
+      })),
     );
 
     const query = this.db
@@ -265,9 +265,9 @@ export class ProductProgressRepository {
                 reportProgressRel: { createdAt },
               },
             },
-            { merge: true }
+            { merge: true },
           )
-          .return('progress')
+          .return('progress'),
       )
 
       .comment('For each step input given')
@@ -295,12 +295,12 @@ export class ProductProgressRepository {
                     progressStepRel: { createdAt },
                   },
                 },
-                { merge: true }
+                { merge: true },
               )
               .onCreate.setVariables({
                 stepNode: { id: 'stepInput.tempId' },
               })
-              .return('stepNode')
+              .return('stepNode'),
           ).raw`
             // Update current completed values that have changed
             WITH *
@@ -312,12 +312,12 @@ export class ProductProgressRepository {
               resource: StepProgress,
               key: 'completed',
               value: variable('stepInput.completed'),
-            })
+            }),
           )
           .return([
             'sum(stats.created) as numProgressPercentCreated',
             'sum(stats.deactivated) as numProgressPercentDeactivated',
-          ])
+          ]),
       )
 
       .comment('Now read back progress node')
@@ -331,7 +331,7 @@ export class ProductProgressRepository {
     const result = await query.first();
     if (!result) {
       throw new NotFoundException(
-        'Could not find product or report to add progress to'
+        'Could not find product or report to add progress to',
       );
     }
     return result.dto;
@@ -359,8 +359,8 @@ export class ProductProgressRepository {
             node('progressTarget', 'Property'),
           ])
           .return<{ progressTarget: number; steps: ProductStep[] }>(
-            'progressTarget.value as progressTarget, steps.value as steps'
-          )
+            'progressTarget.value as progressTarget, steps.value as steps',
+          ),
       )
       .return(['sensitivity', 'scope', 'progressTarget', 'steps']);
     const result = await query.first();

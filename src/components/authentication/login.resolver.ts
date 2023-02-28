@@ -17,7 +17,7 @@ import { LoginInput, LoginOutput, LogoutOutput } from './dto';
 export class LoginResolver {
   constructor(
     private readonly authentication: AuthenticationService,
-    private readonly privileges: Privileges
+    private readonly privileges: Privileges,
   ) {}
 
   @Mutation(() => LoginOutput, {
@@ -26,7 +26,7 @@ export class LoginResolver {
   async login(
     @Args('input') input: LoginInput,
     @AnonSession() session: Session,
-    @Context() context: GqlContextType
+    @Context() context: GqlContextType,
   ): Promise<LoginOutput> {
     const user = await this.authentication.login(input, session);
     await this.authentication.updateSession(context);
@@ -38,7 +38,7 @@ export class LoginResolver {
   })
   async logout(
     @AnonSession() session: Session,
-    @Context() context: GqlContextType
+    @Context() context: GqlContextType,
   ): Promise<LogoutOutput> {
     await this.authentication.logout(session.token);
     await this.authentication.updateSession(context); // ensure session data is fresh
@@ -48,7 +48,7 @@ export class LoginResolver {
   @ResolveField(() => User, { description: 'The logged-in user' })
   async user(
     @Parent() { user }: LoginOutput,
-    @Loader(UserLoader) users: LoaderOf<UserLoader>
+    @Loader(UserLoader) users: LoaderOf<UserLoader>,
   ): Promise<User> {
     return await users.load(user);
   }

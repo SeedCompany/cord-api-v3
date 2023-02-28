@@ -25,14 +25,14 @@ import { SecuredPartnerTypes } from './partner-type.enum';
 
 const Interfaces: Type<Resource & Pinnable & Postable> = IntersectionType(
   Resource,
-  IntersectionType(Pinnable, Postable)
+  IntersectionType(Pinnable, Postable),
 );
 
 @ObjectType({
   description: SecuredEnumList.descriptionFor('financial reporting types'),
 })
 export abstract class SecuredFinancialReportingTypes extends SecuredEnumList(
-  FinancialReportingType
+  FinancialReportingType,
 ) {}
 
 @ObjectType({

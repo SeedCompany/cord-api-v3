@@ -20,7 +20,7 @@ export class ProductProgressResolver {
   @ResolveField(() => Product)
   async product(
     @Parent() { productId }: ProductProgress,
-    @Loader(ProductLoader) products: LoaderOf<ProductLoader>
+    @Loader(ProductLoader) products: LoaderOf<ProductLoader>,
   ): Promise<Product> {
     return await products.load(productId);
   }
@@ -29,7 +29,7 @@ export class ProductProgressResolver {
   async report(
     @Parent() { reportId }: ProductProgress,
     @Loader(PeriodicReportLoader)
-    periodicReports: LoaderOf<PeriodicReportLoader>
+    periodicReports: LoaderOf<PeriodicReportLoader>,
   ) {
     return await periodicReports.load(reportId);
   }
@@ -37,7 +37,7 @@ export class ProductProgressResolver {
   @Mutation(() => ProductProgress)
   async updateProductProgress(
     @Args('input') input: ProductProgressInput,
-    @LoggedInSession() session: Session
+    @LoggedInSession() session: Session,
   ): Promise<ProductProgress> {
     return await this.service.update(input, session);
   }

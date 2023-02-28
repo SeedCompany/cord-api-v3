@@ -27,7 +27,7 @@ describe('Project Member Security e2e', () => {
     await registerUser(app, { roles: [Role.FieldOperationsDirector] });
     testUser = await runInIsolatedSession(
       app,
-      async () => await registerUser(app, { roles: [Role.Consultant] })
+      async () => await registerUser(app, { roles: [Role.Consultant] }),
     );
     testProject = await createProject(app);
     testProjectMember = await createProjectMember(app, {
@@ -76,7 +76,7 @@ describe('Project Member Security e2e', () => {
             propToTest: property,
             skipEditCheck: false,
           });
-        }
+        },
       );
     });
   });

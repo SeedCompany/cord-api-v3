@@ -38,12 +38,12 @@ export const ScriptureStart = () =>
   applyDecorators(
     ValidateNested(),
     // @Transform doesn't work with nested validators, so using a custom class instead.
-    Type(() => ScriptureReferenceStartInput)!
+    Type(() => ScriptureReferenceStartInput)!,
   );
 
 export const ScriptureEnd = () =>
   applyDecorators(
     ValidateNested(),
     // @Transform doesn't work with nested validators, so using a custom class instead.
-    Type(() => ScriptureReferenceEndInput)!
+    Type(() => ScriptureReferenceEndInput)!,
   );

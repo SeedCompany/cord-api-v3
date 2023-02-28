@@ -18,7 +18,7 @@ export async function readOneUser(app: TestApp, id: string) {
       }
       ${fragments.user}
     `,
-    { id }
+    { id },
   );
 
   const actual = result.user;
@@ -42,7 +42,7 @@ export async function listUsers(app: TestApp) {
         }
       }
       ${fragments.user}
-    `
+    `,
   );
   const users = result.users.items;
   expect(users).toBeTruthy();
@@ -71,7 +71,7 @@ export const generateRequireFieldsRegisterInput =
 
 export async function registerUserWithStrictInput(
   app: TestApp,
-  input: RegisterInput
+  input: RegisterInput,
 ) {
   const user: RegisterInput = {
     ...input,
@@ -89,7 +89,7 @@ export async function registerUserWithStrictInput(
     `,
     {
       input: user,
-    }
+    },
   );
   const actual: RawUser = result.register.user;
   expect(actual).toBeTruthy();
@@ -114,7 +114,7 @@ export type TestUser = User & {
 
 export async function registerUser(
   app: TestApp,
-  input: Partial<RegisterInput> = {}
+  input: Partial<RegisterInput> = {},
 ): Promise<TestUser> {
   const { roles, ...user }: RegisterInput = {
     ...(await generateRegisterInput()),
@@ -134,7 +134,7 @@ export async function registerUser(
     `,
     {
       input: user,
-    }
+    },
   );
   const actual: User = result.register.user;
   expect(actual).toBeTruthy();
@@ -157,7 +157,7 @@ export async function registerUser(
         {
           userId: actual.id,
           roles,
-        }
+        },
       );
     });
   }
@@ -182,7 +182,7 @@ export async function registerUser(
 export async function registerUserWithPower(
   app: TestApp,
   powers: Powers[],
-  input: Partial<RegisterInput> = {}
+  input: Partial<RegisterInput> = {},
 ): Promise<TestUser> {
   const user = await registerUser(app, input);
   return user;

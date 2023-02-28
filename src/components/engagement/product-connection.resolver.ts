@@ -11,7 +11,7 @@ export class EngagementProductConnectionResolver {
   async engagement(
     @Parent() product: Product,
     @Loader(EngagementLoader) engagements: LoaderOf<EngagementLoader>,
-    @Info(Fields, IsOnlyId) onlyId: boolean
+    @Info(Fields, IsOnlyId) onlyId: boolean,
   ) {
     return onlyId
       ? { id: product.engagement }

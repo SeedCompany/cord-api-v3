@@ -5,7 +5,7 @@ import { ProgressSheet } from './progress-sheet';
 
 export const isProgressCompletedOutsideProject = (
   pnp: Pnp,
-  cell: Cell<ProgressSheet>
+  cell: Cell<ProgressSheet>,
 ) => {
   const completeDate = stepCompleteDate(cell);
   return completeDate && !pnp.planning.projectDateRange.contains(completeDate);

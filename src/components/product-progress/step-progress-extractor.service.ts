@@ -62,21 +62,21 @@ const parseProgressRow =
   (
     pnp: Pnp,
     stepColumns: Record<Step, Column>,
-    planningStepColumns: Record<Step, Column>
+    planningStepColumns: Record<Step, Column>,
   ) =>
   (cell: Cell<ProgressSheet>, index: number): ExtractedRow => {
     const sheet = cell.sheet;
     const row = cell.row;
     const rowIndex = row.a1 - sheet.goals.start.row.a1;
     const planningRow = pnp.planning.row(
-      pnp.planning.goals.start.row.a1 + rowIndex
+      pnp.planning.goals.start.row.a1 + rowIndex,
     );
 
     const steps = entries(stepColumns).flatMap<StepProgressInput>(
       ([step, column]) => {
         const fiscalYear = pnp.planning.cell(
           planningStepColumns[step],
-          planningRow
+          planningRow,
         );
 
         const cell = sheet.cell(column, row);
@@ -88,7 +88,7 @@ const parseProgressRow =
         }
 
         return { step, completed: progress(cell) };
-      }
+      },
     );
 
     const common = {

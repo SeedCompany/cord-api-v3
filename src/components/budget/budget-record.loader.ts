@@ -36,7 +36,7 @@ export class BudgetRecordLoader extends ObjectViewAwareLoader<BudgetRecord> {
           }
           throw e;
         }
-      })
+      }),
     );
     return items.flat();
   }

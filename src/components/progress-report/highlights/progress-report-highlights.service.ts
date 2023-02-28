@@ -12,7 +12,7 @@ import { ProgressReportHighlightsRepository } from './progress-report-highlights
 
 @Injectable()
 export class ProgressReportHighlightsService extends PromptVariantResponseListService(
-  ProgressReportHighlightsRepository
+  ProgressReportHighlightsRepository,
 ) {
   protected async getPrompts(): Promise<readonly Prompt[]> {
     return prompts;
@@ -20,11 +20,11 @@ export class ProgressReportHighlightsService extends PromptVariantResponseListSe
 
   protected async getPrivilegeContext(dto: UnsecuredDto<Highlight>) {
     const report = (await this.resources.loadByBaseNode(
-      dto.parent
+      dto.parent,
     )) as ProgressReport;
     return withEffectiveSensitivity(
       withScope({}, report.scope),
-      report.sensitivity
+      report.sensitivity,
     );
   }
 }

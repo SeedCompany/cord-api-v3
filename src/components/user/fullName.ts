@@ -7,7 +7,7 @@ export const fullName = (
       User,
       'realFirstName' | 'realLastName' | 'displayFirstName' | 'displayLastName'
     >
-  >
+  >,
 ) => {
   const realName = compact([
     user.realFirstName?.value ?? '',

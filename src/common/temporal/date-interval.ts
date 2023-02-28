@@ -90,11 +90,11 @@ export class DateInterval
   static tryFrom(start: CalendarDate, end: CalendarDate): DateInterval;
   static tryFrom(
     start: CalendarDate | null | undefined,
-    end: CalendarDate | null | undefined
+    end: CalendarDate | null | undefined,
   ): DateInterval | null;
   static tryFrom(
     start: CalendarDate | null | undefined,
-    end: CalendarDate | null | undefined
+    end: CalendarDate | null | undefined,
   ): DateInterval | null {
     return start && end ? DateInterval.fromDateTimes(start, end) : null;
   }
@@ -150,7 +150,7 @@ export class DateInterval
   set(values: Partial<Record<'start' | 'end', CalendarDate>>) {
     return DateInterval.fromDateTimes(
       values.start ?? this.start,
-      values.end ?? this.end
+      values.end ?? this.end,
     );
   }
   splitAt(...dates: CalendarDate[]) {
@@ -188,7 +188,7 @@ export class DateInterval
   expandToFull(unit: DateTimeUnit): DateInterval {
     return DateInterval.fromDateTimes(
       this.start.startOf(unit),
-      this.end.endOf(unit)
+      this.end.endOf(unit),
     );
   }
 }

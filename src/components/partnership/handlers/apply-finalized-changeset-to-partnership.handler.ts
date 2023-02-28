@@ -21,7 +21,7 @@ export class ApplyFinalizedChangesetToPartnership
   constructor(
     private readonly db: DatabaseService,
     @Logger('partnership:change-request:finalized')
-    private readonly logger: ILogger
+    private readonly logger: ILogger,
   ) {}
 
   async handle({ changeset }: SubscribedEvent) {
@@ -47,9 +47,9 @@ export class ApplyFinalizedChangesetToPartnership
             .apply(
               changeset.applied
                 ? commitChangesetProps()
-                : rejectChangesetProps()
+                : rejectChangesetProps(),
             )
-            .return('1')
+            .return('1'),
         )
         .return('project')
         .run();
@@ -74,7 +74,7 @@ export class ApplyFinalizedChangesetToPartnership
             .setValues({
               'partnershipRel.active': true,
             })
-            .return('1')
+            .return('1'),
         )
         .return('project')
         .run();
@@ -84,7 +84,7 @@ export class ApplyFinalizedChangesetToPartnership
     } catch (exception) {
       throw new ServerException(
         'Failed to apply changeset to partnership',
-        exception
+        exception,
       );
     }
   }

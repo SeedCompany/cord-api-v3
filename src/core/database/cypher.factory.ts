@@ -37,7 +37,7 @@ const csv = (str: string): string[] =>
 const parseRoutingTable = (routingTableStr: string) => {
   const matched =
     /RoutingTable\[database=(.+), expirationTime=(\d+), currentTime=(\d+), routers=\[(.*)], readers=\[(.*)], writers=\[(.*)]]/.exec(
-      routingTableStr
+      routingTableStr,
     );
   if (!matched) {
     return undefined;
@@ -70,7 +70,7 @@ export const CypherFactory: FactoryProvider<Connection> = {
     tracing: TracingService,
     parameterTransformer: ParameterTransformer,
     logger: ILogger,
-    driverLogger: ILogger
+    driverLogger: ILogger,
   ) => {
     const { url, username, password, database, driverConfig } = config.neo4j;
     // @ts-expect-error yes we are patching the connection object
@@ -102,7 +102,7 @@ export const CypherFactory: FactoryProvider<Connection> = {
               } else if (
                 level === LogLevel.ERROR &&
                 message.includes(
-                  'experienced a fatal error {"code":"ServiceUnavailable","name":"Neo4jError"}'
+                  'experienced a fatal error {"code":"ServiceUnavailable","name":"Neo4jError"}',
                 )
               ) {
                 // Change connection failure messages to debug.
@@ -116,7 +116,7 @@ export const CypherFactory: FactoryProvider<Connection> = {
             },
           },
         },
-      }
+      },
     );
 
     // Holder for the current transaction using native async storage context.
@@ -137,7 +137,7 @@ export const CypherFactory: FactoryProvider<Connection> = {
           run: wrapQueryRun(
             currentTransaction,
             currentTransaction.queryLogger ?? logger,
-            parameterTransformer
+            parameterTransformer,
           ),
           close: async () => {
             // No need to close anything when finishing the query inside of the
@@ -238,7 +238,7 @@ export const CypherFactory: FactoryProvider<Connection> = {
 const wrapQueryRun = (
   runner: QueryRunner,
   logger: ILogger,
-  parameterTransformer: ParameterTransformer
+  parameterTransformer: ParameterTransformer,
 ): QueryRunner['run'] => {
   const origRun = runner.run.bind(runner);
   return (origStatement, parameters) => {
@@ -259,7 +259,7 @@ const wrapQueryRun = (
                 }
               : {}),
             ...parameters,
-          }
+          },
     );
 
     const params = parameters

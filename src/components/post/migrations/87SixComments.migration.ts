@@ -28,7 +28,7 @@ export class EightySevenSixCommentsMigration extends BaseMigration {
               (po)-[:body { active: true, createdAt: datetime() }]->(:Property { createdAt: datetime(), value: post.body }),
               (po)-[:modifiedAt { active: true, createdAt: datetime() }]->(:Property { createdAt: datetime(), value: p.createdAt }),
               (po)-[:creator { active: true, createdAt: datetime() }]->(:Property { createdAt: datetime(), value: rootId })
-        `
+        `,
       )
       .run();
     const after = await this.getPostCount(false);
@@ -41,7 +41,7 @@ export class EightySevenSixCommentsMigration extends BaseMigration {
           `
           match(p:Project)
           remove p.commentDescription, p.commentPrayerNeeds, p.commentProposalComments
-        `
+        `,
         )
         .run();
     }
@@ -61,7 +61,7 @@ export class EightySevenSixCommentsMigration extends BaseMigration {
             `
           : `
               match (po:Post { postMigration: true })
-            `
+            `,
       )
       .return<{ count: number }>('count(po) as count')
       .first();

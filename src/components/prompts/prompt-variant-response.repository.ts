@@ -48,10 +48,10 @@ export const PromptVariantResponseRepository = <
   TResourceStatic extends ResourceShape<PromptVariantResponse<TVariant>> & {
     Variants: VariantList<TVariant>;
   },
-  TVariant extends string = VariantOf<TResourceStatic>
+  TVariant extends string = VariantOf<TResourceStatic>,
 >(
   parentEdge: ListEdge<Parent>,
-  resource: TResourceStatic
+  resource: TResourceStatic,
 ) => {
   abstract class PromptVariantResponseRepositoryClass extends DtoRepository<
     TResourceStatic,
@@ -70,7 +70,7 @@ export const PromptVariantResponseRepository = <
 
     async list(
       parentId: ID,
-      session: Session
+      session: Session,
     ): Promise<
       PaginatedListType<UnsecuredDto<PromptVariantResponse<TVariant>>>
     > {
@@ -82,7 +82,7 @@ export const PromptVariantResponseRepository = <
           node('node', this.resource.dbLabel),
         ])
         .apply(
-          sorting(this.resource.type, { sort: 'createdAt', order: Order.ASC })
+          sorting(this.resource.type, { sort: 'createdAt', order: Order.ASC }),
         )
         .apply(paginate({ count: 25, page: 1 }, this.hydrate(session)))
         .first();
@@ -114,16 +114,16 @@ export const PromptVariantResponseRepository = <
                 merge('response', {
                   modifiedAt:
                     'coalesce(response.modifiedAt, response.createdAt)',
-                }).as('response')
+                }).as('response'),
               )
-              .return('collect(response) as responses')
+              .return('collect(response) as responses'),
           )
           .return<{ dto: UnsecuredDto<InstanceType<TResourceStatic>> }>(
             merge('node', {
               parent: 'parent',
               prompt: 'prompt.value',
               responses: 'responses',
-            }).as('dto')
+            }).as('dto'),
           );
     }
 
@@ -131,7 +131,7 @@ export const PromptVariantResponseRepository = <
 
     async create(
       input: ChoosePrompt,
-      session: Session
+      session: Session,
     ): Promise<UnsecuredDto<PromptVariantResponse<TVariant>>> {
       // @ts-expect-error uhhhh yolo ¯\_(ツ)_/¯
       const resource: typeof PromptVariantResponse = this.resource.type;
@@ -149,12 +149,12 @@ export const PromptVariantResponseRepository = <
             initialProps: {
               prompt: input.prompt,
             },
-          })
+          }),
         )
         .apply(
           createRelationships(resource, 'in', {
             child: ['BaseNode', input.resource],
-          })
+          }),
         )
         .apply(this.hydrate(session))
         .first();
@@ -163,7 +163,7 @@ export const PromptVariantResponseRepository = <
 
     async submitResponse(
       input: UpdatePromptVariantResponse<TVariant>,
-      session: Session
+      session: Session,
     ) {
       const query = this.db.query();
       const permanentAfter = permanentAfterAsVar(defaultPermanentAfter, query)!;
@@ -201,7 +201,7 @@ export const PromptVariantResponseRepository = <
                       'response.active': 'false',
                       'response.deletedAt': now.toString(),
                     })
-                    .return('count(response) as oldResponseCount')
+                    .return('count(response) as oldResponseCount'),
                 )
 
                 .comment('create new response for variant')
@@ -209,7 +209,7 @@ export const PromptVariantResponseRepository = <
                 .apply(
                   createRelationships(resource, 'in', {
                     child: variable('parent'),
-                  })
+                  }),
                 )
                 .return('count(node) as updatedResponseCount'),
             (query) =>
@@ -218,8 +218,8 @@ export const PromptVariantResponseRepository = <
                   'response.response': responseVar.toString(),
                   'response.modifiedAt': now.toString(),
                 })
-                .return('count(response) as updatedResponseCount')
-          )
+                .return('count(response) as updatedResponseCount'),
+          ),
         )
         .with('parent')
         .setVariables({ 'parent.modifiedAt': now.toString() })
@@ -238,7 +238,7 @@ export const PromptVariantResponseRepository = <
             resource,
             key: 'prompt',
             value: input.prompt,
-          })
+          }),
         )
         .setValues({ 'node.modifiedAt': DateTime.now() })
         .return('node')
@@ -251,5 +251,5 @@ export const PromptVariantResponseRepository = <
 
 export type ListEdge<TResourceStatic extends ResourceShape<any>> = [
   resource: TResourceStatic | EnhancedResource<TResourceStatic>,
-  key: ChildListsKey<TResourceStatic>
+  key: ChildListsKey<TResourceStatic>,
 ];

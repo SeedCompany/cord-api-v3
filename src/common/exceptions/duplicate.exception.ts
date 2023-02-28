@@ -8,7 +8,7 @@ export class DuplicateException extends InputException {
     super(
       message ?? `${field} already exists and needs to be unique`,
       field,
-      previous
+      previous,
     );
   }
 }

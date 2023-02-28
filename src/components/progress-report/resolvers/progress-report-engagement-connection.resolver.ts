@@ -23,7 +23,7 @@ export class ProgressReportEngagementConnectionResolver {
     @Parent() engagement: Engagement,
     @ListArg(PeriodicReportListInput) input: PeriodicReportListInput,
     @Loader(PeriodicReportLoader)
-    periodicReports: LoaderOf<PeriodicReportLoader>
+    periodicReports: LoaderOf<PeriodicReportLoader>,
   ): Promise<ProgressReportList> {
     const list = await this.service.list(session, {
       ...input,
@@ -40,12 +40,12 @@ export class ProgressReportEngagementConnectionResolver {
   })
   async currentProgressReportDue(
     @AnonSession() session: Session,
-    @Parent() engagement: Engagement
+    @Parent() engagement: Engagement,
   ): Promise<SecuredProgressReport> {
     const value = await this.service.getCurrentReportDue(
       engagement.id,
       ReportType.Progress,
-      session
+      session,
     );
     return {
       canEdit: false,
@@ -59,12 +59,12 @@ export class ProgressReportEngagementConnectionResolver {
   })
   async latestProgressReportSubmitted(
     @AnonSession() session: Session,
-    @Parent() engagement: Engagement
+    @Parent() engagement: Engagement,
   ): Promise<SecuredProgressReport> {
     const value = await this.service.getLatestReportSubmitted(
       engagement.id,
       ReportType.Progress,
-      session
+      session,
     );
     return {
       canEdit: false,
@@ -79,12 +79,12 @@ export class ProgressReportEngagementConnectionResolver {
   })
   async nextProgressReportDue(
     @AnonSession() session: Session,
-    @Parent() engagement: Engagement
+    @Parent() engagement: Engagement,
   ): Promise<SecuredProgressReport> {
     const value = await this.service.getNextReportDue(
       engagement.id,
       ReportType.Progress,
-      session
+      session,
     );
     return {
       canEdit: false,

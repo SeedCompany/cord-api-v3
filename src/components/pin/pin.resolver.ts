@@ -23,7 +23,7 @@ export class PinResolver {
     @IdArg({
       description: 'A resource ID',
     })
-    id: ID
+    id: ID,
   ): Promise<boolean> {
     return await this.pins.isPinned(id, session);
   }
@@ -43,7 +43,7 @@ export class PinResolver {
       description:
         'Whether the item should be pinned or not. Omit to toggle the current state.',
     })
-    pinned?: boolean
+    pinned?: boolean,
   ): Promise<boolean> {
     return await this.pins.togglePinned(id, session, pinned);
   }
@@ -54,7 +54,7 @@ export class PinResolver {
   // })
   async list(
     @LoggedInSession() _session: Session,
-    @ListArg(PinnedListInput) _input: PinnedListInput
+    @ListArg(PinnedListInput) _input: PinnedListInput,
   ): Promise<PinnedListOutput> {
     throw new NotImplementedException();
   }

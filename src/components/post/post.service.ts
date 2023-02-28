@@ -26,14 +26,14 @@ export class PostService {
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
     private readonly repo: PostRepository,
-    @Logger('post:service') private readonly logger: ILogger
+    @Logger('post:service') private readonly logger: ILogger,
   ) {}
 
   async create(input: CreatePost, session: Session): Promise<Post> {
     // TODO: need to check if have a CreatePost power.
     if (!input.parentId) {
       throw new ServerException(
-        'A post must be associated with a parent node.'
+        'A post must be associated with a parent node.',
       );
     }
 
@@ -69,12 +69,12 @@ export class PostService {
 
   private async secure(
     dto: UnsecuredDto<Post>,
-    session: Session
+    session: Session,
   ): Promise<Post> {
     const securedProps = await this.authorizationService.secureProperties(
       Post,
       dto,
-      session
+      session,
     );
 
     return {
@@ -115,7 +115,7 @@ export class PostService {
     parentType: EnhancedResource<any>,
     parent: Postable & Resource,
     input: PostListInput,
-    session: Session
+    session: Session,
   ): Promise<SecuredPostList> {
     const perms = await this.authorizationService.getPermissions({
       resource: parentType,

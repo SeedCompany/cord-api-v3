@@ -102,7 +102,7 @@ export interface InternalTransition extends PublicTransition {
 }
 
 function defineTransitions<Names extends string>(
-  obj: Record<Names, TransitionInput>
+  obj: Record<Names, TransitionInput>,
 ) {
   return mapValues(
     obj,
@@ -111,7 +111,7 @@ function defineTransitions<Names extends string>(
       ...transition,
       from: maybeMany(transition.from),
       id: (transition.id ?? hashId(name)) as ID,
-    })
+    }),
   );
 }
 

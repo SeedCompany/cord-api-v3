@@ -61,7 +61,7 @@ export class ProductResolver {
   })
   async product(
     @Loader(ProductLoader) products: LoaderOf<ProductLoader>,
-    @IdsAndViewArg() { id }: IdsAndView
+    @IdsAndViewArg() { id }: IdsAndView,
   ): Promise<AnyProduct> {
     return await products.load(id);
   }
@@ -72,7 +72,7 @@ export class ProductResolver {
   async products(
     @AnonSession() session: Session,
     @ListArg(ProductListInput) input: ProductListInput,
-    @Loader(ProductLoader) products: LoaderOf<ProductLoader>
+    @Loader(ProductLoader) products: LoaderOf<ProductLoader>,
   ): Promise<ProductListOutput> {
     const list = await this.productService.list(input, session);
     products.primeAll(list.items);
@@ -83,7 +83,7 @@ export class ProductResolver {
   async project(
     @Parent() product: AnyProduct,
     @Loader(() => ProjectLoader) projects: LoaderOf<ProjectLoader>,
-    @Info(Fields, IsOnlyId) onlyId: boolean
+    @Info(Fields, IsOnlyId) onlyId: boolean,
   ) {
     return onlyId
       ? { id: product.project }
@@ -164,7 +164,7 @@ export class ProductResolver {
     `,
   })
   availableProductSteps(
-    @Args() options: AvailableStepsOptions
+    @Args() options: AvailableStepsOptions,
   ): readonly Step[] {
     return getAvailableSteps(options);
   }
@@ -188,7 +188,7 @@ export class ProductResolver {
     `,
   })
   async suggestProductCompletionDescriptions(
-    @Args('input') input: ProductCompletionDescriptionSuggestionsInput
+    @Args('input') input: ProductCompletionDescriptionSuggestionsInput,
   ): Promise<ProductCompletionDescriptionSuggestionsOutput> {
     return await this.productService.suggestCompletionDescriptions(input);
   }
@@ -200,7 +200,7 @@ export class ProductResolver {
   })
   async createProduct(
     @LoggedInSession() session: Session,
-    @Args('input') { product: input }: CreateProductInput
+    @Args('input') { product: input }: CreateProductInput,
   ): Promise<CreateProductOutput> {
     return {
       product: await this.productService.create(input, session),
@@ -212,7 +212,7 @@ export class ProductResolver {
   })
   async createDirectScriptureProduct(
     @LoggedInSession() session: Session,
-    @Args('input') input: CreateDirectScriptureProduct
+    @Args('input') input: CreateDirectScriptureProduct,
   ): Promise<CreateProductOutput> {
     const product = await this.productService.create(input, session);
     return { product };
@@ -223,7 +223,7 @@ export class ProductResolver {
   })
   async createDerivativeScriptureProduct(
     @LoggedInSession() session: Session,
-    @Args('input') input: CreateDerivativeScriptureProduct
+    @Args('input') input: CreateDerivativeScriptureProduct,
   ): Promise<CreateProductOutput> {
     const product = await this.productService.create(input, session);
     return { product };
@@ -234,7 +234,7 @@ export class ProductResolver {
   })
   async createOtherProduct(
     @LoggedInSession() session: Session,
-    @Args('input') input: CreateOtherProduct
+    @Args('input') input: CreateOtherProduct,
   ): Promise<CreateProductOutput> {
     const product = await this.productService.create(input, session);
     return { product };
@@ -247,7 +247,7 @@ export class ProductResolver {
   })
   async updateProduct(
     @LoggedInSession() session: Session,
-    @Args('input') { product: input }: UpdateProductInput
+    @Args('input') { product: input }: UpdateProductInput,
   ): Promise<UpdateProductOutput> {
     const product = await this.productService.update(input, session);
     return { product };
@@ -258,7 +258,7 @@ export class ProductResolver {
   })
   async updateDirectScriptureProduct(
     @LoggedInSession() session: Session,
-    @Args('input') input: UpdateDirectScriptureProduct
+    @Args('input') input: UpdateDirectScriptureProduct,
   ): Promise<UpdateProductOutput> {
     const product = await this.productService.updateDirect(input, session);
     return { product };
@@ -269,7 +269,7 @@ export class ProductResolver {
   })
   async updateDerivativeScriptureProduct(
     @LoggedInSession() session: Session,
-    @Args('input') input: UpdateDerivativeScriptureProduct
+    @Args('input') input: UpdateDerivativeScriptureProduct,
   ): Promise<UpdateProductOutput> {
     const product = await this.productService.updateDerivative(input, session);
     return { product };
@@ -280,7 +280,7 @@ export class ProductResolver {
   })
   async updateOtherProduct(
     @LoggedInSession() session: Session,
-    @Args('input') input: UpdateOtherProduct
+    @Args('input') input: UpdateOtherProduct,
   ): Promise<UpdateProductOutput> {
     const product = await this.productService.updateOther(input, session);
     return { product };
@@ -291,7 +291,7 @@ export class ProductResolver {
   })
   async deleteProduct(
     @LoggedInSession() session: Session,
-    @IdArg() id: ID
+    @IdArg() id: ID,
   ): Promise<DeleteProductOutput> {
     await this.productService.delete(id, session);
     return { success: true };

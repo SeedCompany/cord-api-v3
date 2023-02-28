@@ -13,7 +13,7 @@ export class CreateEngagementDefaultCeremonyHandler
   constructor(
     private readonly ceremonies: CeremonyService,
     private readonly db: DatabaseService,
-    private readonly authorizationService: AuthorizationService
+    private readonly authorizationService: AuthorizationService,
   ) {}
 
   async handle(event: EngagementCreatedEvent) {

@@ -55,5 +55,5 @@ export class BudgetRecordListOutput extends PaginatedList(BudgetRecord) {}
   description: SecuredList.descriptionFor('budget records'),
 })
 export abstract class SecuredBudgetRecordList extends SecuredList(
-  BudgetRecord
+  BudgetRecord,
 ) {}

@@ -12,7 +12,7 @@ import { gql } from './gql-tag';
 
 export async function createEducation(
   app: TestApp,
-  input: Partial<CreateEducation> = {}
+  input: Partial<CreateEducation> = {},
 ) {
   const education: CreateEducation = {
     userId: input.userId!,
@@ -39,7 +39,7 @@ export async function createEducation(
           ...education,
         },
       },
-    }
+    },
   );
 
   const actual: Education = result.createEducation.education;

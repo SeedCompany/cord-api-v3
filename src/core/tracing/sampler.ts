@@ -9,6 +9,6 @@ export abstract class Sampler {
    */
   abstract shouldTrace(
     context: ExecutionContext,
-    segment: Segment
+    segment: Segment,
   ): Promise<string | boolean>;
 }
