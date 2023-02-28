@@ -31,7 +31,7 @@ export class UnavailabilityRepository extends DtoRepository(Unavailability) {
       .apply(
         createRelationships(Unavailability, 'in', {
           unavailability: ['User', input.userId],
-        })
+        }),
       )
       .return<{ id: ID }>('node.id as id');
     const result = await query.first();

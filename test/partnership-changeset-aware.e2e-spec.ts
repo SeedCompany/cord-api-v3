@@ -37,7 +37,7 @@ const readPartnerships = (app: TestApp, id: string, changeset?: string) =>
     {
       id,
       changeset,
-    }
+    },
   );
 
 const readPartnership = (app: TestApp, id: string, changeset?: string) =>
@@ -53,7 +53,7 @@ const readPartnership = (app: TestApp, id: string, changeset?: string) =>
     {
       id,
       changeset,
-    }
+    },
   );
 
 const activeProject = async (app: TestApp) => {
@@ -122,7 +122,7 @@ describe('Partnership Changeset Aware e2e', () => {
           },
           changeset: changeset.id,
         },
-      }
+      },
     );
     // list partnerships without changeset
     let result = await readPartnerships(app, project.id);
@@ -131,7 +131,7 @@ describe('Partnership Changeset Aware e2e', () => {
     result = await readPartnerships(app, project.id, changeset.id);
     expect(result.project.partnerships.items.length).toBe(2);
     expect(result.project.partnerships.items[1].id).toBe(
-      changesetPartnership.createPartnership.partnership.id
+      changesetPartnership.createPartnership.partnership.id,
     );
     await approveProjectChangeRequest(app, changeset.id);
     result = await readPartnerships(app, project.id);
@@ -167,23 +167,23 @@ describe('Partnership Changeset Aware e2e', () => {
           },
           changeset: changeset.id,
         },
-      }
+      },
     );
 
     // read partnership without changeset
     let result = await readPartnership(app, partnership.id);
     expect(
-      result.partnership.mouStatus.value !== PartnershipAgreementStatus.Signed
+      result.partnership.mouStatus.value !== PartnershipAgreementStatus.Signed,
     );
     // read partnership with changeset
     result = await readPartnership(app, partnership.id, changeset.id);
     expect(result.partnership.mouStatus.value).toBe(
-      PartnershipAgreementStatus.Signed
+      PartnershipAgreementStatus.Signed,
     );
     await approveProjectChangeRequest(app, changeset.id);
     result = await readPartnership(app, partnership.id);
     expect(result.partnership.mouStatus.value).toBe(
-      PartnershipAgreementStatus.Signed
+      PartnershipAgreementStatus.Signed,
     );
   });
 
@@ -213,7 +213,7 @@ describe('Partnership Changeset Aware e2e', () => {
       {
         id: partnership.id,
         changeset: changeset.id,
-      }
+      },
     );
     const actual: boolean | undefined = result.deletePartnership;
     expect(actual).toBeTruthy();

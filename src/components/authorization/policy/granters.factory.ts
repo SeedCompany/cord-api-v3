@@ -14,7 +14,7 @@ import { ResourcesGranter } from './granters';
 export class GrantersFactory {
   constructor(
     private readonly discovery: DiscoveryService,
-    private readonly resourcesHost: ResourcesHost
+    private readonly resourcesHost: ResourcesHost,
   ) {}
 
   async makeGranters() {
@@ -30,13 +30,13 @@ export class GrantersFactory {
               factory?.(res) ?? new discoveredClass.dependencyType(res);
             if (!(granter instanceof ResourceGranter)) {
               throw new Error(
-                `Granter for ${res.name} must extend ResourceGranter class`
+                `Granter for ${res.name} must extend ResourceGranter class`,
               );
             }
             return [res.name, granter];
           });
-        }
-      )
+        },
+      ),
     );
 
     const ResourceMap = await this.resourcesHost.getEnhancedMap();
@@ -44,7 +44,7 @@ export class GrantersFactory {
     const resGranter: ResourcesGranter = mapValues(
       ResourceMap,
       (resource: EnhancedResource<any>) =>
-        custom[resource.name] ?? new DefaultResourceGranter(resource)
+        custom[resource.name] ?? new DefaultResourceGranter(resource),
     ) as any;
 
     return resGranter;

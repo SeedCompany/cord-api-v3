@@ -53,8 +53,8 @@ const Interfaces: Type<
   Resource,
   IntersectionType(
     Commentable,
-    IntersectionType(Postable, IntersectionType(ChangesetAware, Pinnable))
-  )
+    IntersectionType(Postable, IntersectionType(ChangesetAware, Pinnable)),
+  ),
 );
 
 @InterfaceType({

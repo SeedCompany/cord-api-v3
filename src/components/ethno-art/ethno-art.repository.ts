@@ -16,7 +16,7 @@ import { CreateEthnoArt, EthnoArt, EthnoArtListInput } from './dto';
 export class EthnoArtRepository extends DtoRepository(EthnoArt) {
   constructor(
     private readonly scriptureRefs: ScriptureReferenceRepository,
-    db: DatabaseService
+    db: DatabaseService,
   ) {
     super(db);
   }
@@ -51,7 +51,7 @@ export class EthnoArtRepository extends DtoRepository(EthnoArt) {
         .return<{ dto: UnsecuredDto<EthnoArt> }>(
           merge('props', {
             scriptureReferences: 'scriptureReferences',
-          }).as('dto')
+          }).as('dto'),
         );
   }
 }

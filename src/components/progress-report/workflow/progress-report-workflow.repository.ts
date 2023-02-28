@@ -23,7 +23,7 @@ import { InternalTransition } from './transitions';
 
 @Injectable()
 export class ProgressReportWorkflowRepository extends DtoRepository(
-  WorkflowEvent
+  WorkflowEvent,
 ) {
   // @ts-expect-error It doesn't have match base signature
   async readMany(ids: readonly ID[], session: Session) {
@@ -75,7 +75,7 @@ export class ProgressReportWorkflowRepository extends DtoRepository(
           merge('node', {
             at: 'node.createdAt',
             who: 'who.id',
-          }).as('dto')
+          }).as('dto'),
         );
   }
 
@@ -83,7 +83,7 @@ export class ProgressReportWorkflowRepository extends DtoRepository(
     report: ID,
     { id: transition, to: status }: InternalTransition,
     session: Session,
-    notes?: RichTextDocument
+    notes?: RichTextDocument,
   ) {
     await this.recordEvent(report, { status, transition, notes }, session);
   }
@@ -92,7 +92,7 @@ export class ProgressReportWorkflowRepository extends DtoRepository(
     report: ID,
     status: Status,
     session: Session,
-    notes?: RichTextDocument
+    notes?: RichTextDocument,
   ) {
     await this.recordEvent(report, { status, notes }, session);
   }
@@ -100,20 +100,20 @@ export class ProgressReportWorkflowRepository extends DtoRepository(
   private async recordEvent(
     report: ID,
     props: Record<string, any>,
-    session: Session
+    session: Session,
   ) {
     await this.db
       .query()
       .apply(
         await createNode(WorkflowEvent, {
           baseNodeProps: props,
-        })
+        }),
       )
       .apply(
         createRelationships(WorkflowEvent, {
           in: { workflowEvent: ['ProgressReport', report] },
           out: { who: ['User', session.userId] },
-        })
+        }),
       )
       .return('*')
       .run();

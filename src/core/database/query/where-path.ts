@@ -7,7 +7,7 @@ import { Comparator } from 'cypher-query-builder/dist/typings/clauses/where-comp
  * It doesn't matter what key this is assigned to it - it is ignored.
  */
 export const path = (
-  pattern: Exclude<PatternCollection, any[][]>
+  pattern: Exclude<PatternCollection, any[][]>,
 ): Comparator => {
   // Using merge as shortcut to compile path to string.
   const clause = new Merge(pattern);

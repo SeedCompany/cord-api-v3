@@ -34,7 +34,7 @@ export class Variant<Key extends string = string> {
   responsibleRole?: Role;
 
   static createList<VKey extends string>(
-    map: Record<VKey, Omit<Variant, 'key'>>
+    map: Record<VKey, Omit<Variant, 'key'>>,
   ): VariantList<VKey> {
     const list = entries(map).map(([key, val]) => ({ key, ...val }));
     Object.defineProperty(list, 'byKey', {
@@ -44,7 +44,7 @@ export class Variant<Key extends string = string> {
         if (!found) {
           throw new InputException(
             `Variant with key "${key}" was not found`,
-            'variant'
+            'variant',
           );
         }
         return found;
@@ -71,12 +71,12 @@ export type VariantOf<TResourceStatic extends ResourceShape<any>> =
  * It'll be converted to the Variant object.
  */
 export const VariantInputField = <
-  Res extends ResourceShape<any> & { Variants: readonly Variant[] }
+  Res extends ResourceShape<any> & { Variants: readonly Variant[] },
 >(
   resource: Res,
   options: Omit<FieldOptions, 'defaultValue'> & {
     defaultValue?: Variant<VariantOf<Res>> | VariantOf<Res>;
-  } = {}
+  } = {},
 ) => {
   const { defaultValue, ...rest } = options;
 
@@ -102,6 +102,6 @@ export const VariantInputField = <
     IsIn(resource.Variants, {
       message: ({ value }) =>
         `Variant with key "${String(value)}" was not found`,
-    })
+    }),
   );
 };

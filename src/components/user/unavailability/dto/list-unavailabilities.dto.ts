@@ -31,5 +31,5 @@ export class UnavailabilityListOutput extends PaginatedList(Unavailability) {}
   description: SecuredList.descriptionFor('unavailabilities'),
 })
 export abstract class SecuredUnavailabilityList extends SecuredList(
-  Unavailability
+  Unavailability,
 ) {}

@@ -32,7 +32,7 @@ export async function listInternshipEngagements(app: TestApp) {
         }
       }
       ${fragments.internshipEngagement}
-    `
+    `,
   );
   const engagements = result.engagements.items;
   expect(engagements).toBeTruthy();
@@ -49,7 +49,7 @@ export async function listLanguageEngagements(app: TestApp) {
         }
       }
       ${fragments.languageEngagement}
-    `
+    `,
   );
   const engagements = result.engagements.items;
   expect(engagements).toBeTruthy();
@@ -67,7 +67,7 @@ export async function listCeremonies(app: TestApp) {
         }
       }
       ${fragments.ceremony}
-    `
+    `,
   );
   const ceremonies = result.ceremonies.items;
   expect(ceremonies).toBeTruthy();
@@ -83,7 +83,7 @@ export async function readOneCeremony(app: TestApp, id: string) {
       }
       ${fragments.ceremony}
     `,
-    { id }
+    { id },
   );
   const actual = result.ceremony;
   expect(actual).toBeTruthy();
@@ -92,7 +92,7 @@ export async function readOneCeremony(app: TestApp, id: string) {
 
 export async function readOneLanguageEngagementParatextId(
   app: TestApp,
-  id: ID
+  id: ID,
 ) {
   const result = await app.graphql.query(
     gql`
@@ -109,7 +109,7 @@ export async function readOneLanguageEngagementParatextId(
         }
       }
     `,
-    { id }
+    { id },
   );
   const actual: RawLanguageEngagement = result.engagement;
   expect(actual).toBeTruthy();
@@ -126,7 +126,7 @@ export async function readOneInternshipEngagement(app: TestApp, id: ID) {
       }
       ${fragments.internshipEngagement}
     `,
-    { id }
+    { id },
   );
   const actual: RawInternshipEngagement = result.engagement;
   expect(actual).toBeTruthy();
@@ -143,7 +143,7 @@ export async function readOneLanguageEngagement(app: TestApp, id: ID) {
       }
       ${fragments.languageEngagement}
     `,
-    { id }
+    { id },
   );
   const actual: RawLanguageEngagement = result.engagement;
   expect(actual).toBeTruthy();
@@ -152,7 +152,7 @@ export async function readOneLanguageEngagement(app: TestApp, id: ID) {
 
 export async function createLanguageEngagement(
   app: TestApp,
-  input: Partial<CreateLanguageEngagement> = {}
+  input: Partial<CreateLanguageEngagement> = {},
 ) {
   const languageEngagement: CreateLanguageEngagement = {
     languageId:
@@ -186,7 +186,7 @@ export async function createLanguageEngagement(
       input: {
         engagement: languageEngagement,
       },
-    }
+    },
   );
 
   const actual: RawLanguageEngagement =
@@ -200,7 +200,7 @@ export async function createLanguageEngagement(
 
 export async function createInternshipEngagement(
   app: TestApp,
-  input: Partial<CreateInternshipEngagement> = {}
+  input: Partial<CreateInternshipEngagement> = {},
 ) {
   const currentUserId = (await getUserFromSession(app)).id;
   const internshipEngagement: CreateInternshipEngagement = {
@@ -238,7 +238,7 @@ export async function createInternshipEngagement(
       input: {
         engagement: internshipEngagement,
       },
-    }
+    },
   );
 
   const actual: RawInternshipEngagement =
@@ -252,7 +252,7 @@ export async function createInternshipEngagement(
 
 export async function createInternshipEngagementWithMinimumValues(
   app: TestApp,
-  input: Partial<CreateInternshipEngagement> = {}
+  input: Partial<CreateInternshipEngagement> = {},
 ) {
   const currentUserId = (await getUserFromSession(app)).id;
   const internshipEngagement: CreateInternshipEngagement = {
@@ -277,7 +277,7 @@ export async function createInternshipEngagementWithMinimumValues(
       input: {
         engagement: internshipEngagement,
       },
-    }
+    },
   );
 
   const actual: RawInternshipEngagement =
@@ -307,7 +307,7 @@ export async function getCurrentEngagementStatus(app: TestApp, id: ID) {
           }
       }
     }
-  `
+  `,
   );
 
   expect(result).toBeTruthy();

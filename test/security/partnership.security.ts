@@ -96,7 +96,7 @@ describe('Partnership Security e2e', () => {
             propToTest: property,
             skipEditCheck: skipEditCheck,
           });
-        }
+        },
       );
       it('should not be able to edit mouStart and mouEnd', async () => {
         // still logged in under role, testRole doesn't reset the login
@@ -213,9 +213,9 @@ describe('Partnership Security e2e', () => {
               }),
               readOneFunction: readFunction,
             });
-          }
+          },
         );
-      }
+      },
     );
   });
 });

@@ -26,7 +26,7 @@ export class LocalBucketController {
   async upload(
     @Headers('content-type') contentType: string,
     @Query('signed') signed: string,
-    @Request() req: IRequest
+    @Request() req: IRequest,
   ) {
     if (!this.bucket) {
       throw new ServerException('Cannot upload file here');

@@ -15,7 +15,7 @@ const generateOrdinalNameVariations = (ordinal: 1 | 2 | 3, names: string[]) => {
     ordinalMap[ordinal].flatMap((numeral) => [
       numeral + ' ' + name,
       numeral + name,
-    ])
+    ]),
   );
 };
 
@@ -108,7 +108,7 @@ const books: readonly BookData[] = [
   {
     names: generateOrdinalNameVariations(
       1,
-      'Kings Ki King Kin Kngs'.split(' ')
+      'Kings Ki King Kin Kngs'.split(' '),
     ),
     chapters: [
       53, 46, 28, 34, 18, 38, 51, 66, 28, 29, 43, 33, 34, 31, 34, 34, 24, 46,
@@ -119,7 +119,7 @@ const books: readonly BookData[] = [
   {
     names: generateOrdinalNameVariations(
       2,
-      'Kings Ki King Kin Kngs'.split(' ')
+      'Kings Ki King Kin Kngs'.split(' '),
     ),
     chapters: [
       18, 25, 27, 44, 27, 33, 20, 29, 37, 36, 21, 21, 25, 29, 38, 20, 41, 37,
@@ -130,7 +130,7 @@ const books: readonly BookData[] = [
   {
     names: generateOrdinalNameVariations(
       1,
-      'Chronicles Ch Chr Chron'.split(' ')
+      'Chronicles Ch Chr Chron'.split(' '),
     ),
     chapters: [
       54, 55, 24, 43, 26, 81, 40, 40, 44, 14, 47, 40, 14, 17, 29, 43, 27, 17,
@@ -141,7 +141,7 @@ const books: readonly BookData[] = [
   {
     names: generateOrdinalNameVariations(
       2,
-      'Chronicles Ch Chr Chron'.split(' ')
+      'Chronicles Ch Chr Chron'.split(' '),
     ),
     chapters: [
       17, 18, 17, 22, 14, 42, 22, 18, 31, 19, 23, 16, 22, 15, 19, 14, 19, 34,
@@ -378,7 +378,7 @@ const books: readonly BookData[] = [
   {
     names: generateOrdinalNameVariations(
       1,
-      'Thessalonians Th Thess Thes'.split(' ')
+      'Thessalonians Th Thess Thes'.split(' '),
     ),
     chapters: [10, 20, 13, 18, 28],
     difficulty: Difficulty.Hard,
@@ -386,7 +386,7 @@ const books: readonly BookData[] = [
   {
     names: generateOrdinalNameVariations(
       2,
-      'Thessalonians Th Thess Thes'.split(' ')
+      'Thessalonians Th Thess Thes'.split(' '),
     ),
     chapters: [12, 17, 18],
     difficulty: Difficulty.Hard,
@@ -485,7 +485,7 @@ export class Book implements Iterable<Chapter> {
     const normalizedName = name.toLowerCase();
     if (!bookCache.has(normalizedName)) {
       const book = books.find((book) =>
-        book.names.map((n) => n.toLowerCase()).includes(normalizedName)
+        book.names.map((n) => n.toLowerCase()).includes(normalizedName),
       );
       bookCache.set(normalizedName, book ?? null);
     }
@@ -579,7 +579,7 @@ export class Book implements Iterable<Chapter> {
       return new Chapter(this, chapterNumber, totalVerses);
     }
     throw new NotFoundException(
-      `Chapter ${chapterNumber} of ${this.label} does not exist`
+      `Chapter ${chapterNumber} of ${this.label} does not exist`,
     );
   }
 
@@ -608,7 +608,7 @@ export class Chapter implements Iterable<Verse> {
   constructor(
     readonly book: Book,
     readonly chapter: number,
-    readonly totalVerses: number
+    readonly totalVerses: number,
   ) {}
 
   static first() {
@@ -676,7 +676,7 @@ export class Chapter implements Iterable<Verse> {
   verse(verseNumber: number) {
     if (verseNumber <= 0 || verseNumber > this.totalVerses) {
       throw new NotFoundException(
-        `Verse ${verseNumber} of ${this.label} does not exist`
+        `Verse ${verseNumber} of ${this.label} does not exist`,
       );
     }
     return new Verse(this, verseNumber);
@@ -746,7 +746,7 @@ export class Verse {
   static random(after?: Verse) {
     const chapter = Chapter.random(after?.chapter);
     return chapter.randomVerse(
-      after?.chapter.equals(chapter) ? after : undefined
+      after?.chapter.equals(chapter) ? after : undefined,
     );
   }
 

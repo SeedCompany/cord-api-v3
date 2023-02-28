@@ -35,12 +35,12 @@ export class EngagementRules {
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
     // eslint-disable-next-line @seedcompany/no-unused-vars
-    @Logger('engagement:rules') private readonly logger: ILogger
+    @Logger('engagement:rules') private readonly logger: ILogger,
   ) {}
 
   private async getStatusRule(
     status: EngagementStatus,
-    id: ID
+    id: ID,
   ): Promise<StatusRule> {
     const mostRecentPreviousStatus = (steps: EngagementStatus[]) =>
       this.getMostRecentPreviousStatus(id, steps);
@@ -313,7 +313,7 @@ export class EngagementRules {
     engagementId: ID,
     session: Session,
     currentUserRoles?: Role[],
-    changeset?: ID
+    changeset?: ID,
   ): Promise<EngagementStatusTransition[]> {
     if (session.anonymous) {
       return [];
@@ -323,7 +323,7 @@ export class EngagementRules {
     // get roles that can approve the current status
     const { approvers, transitions } = await this.getStatusRule(
       currentStatus,
-      engagementId
+      engagementId,
     );
 
     // If current user is not an approver (based on roles) then don't allow any transitions
@@ -335,7 +335,7 @@ export class EngagementRules {
     // If transitions don't need project's step then dont fetch or filter it.
     if (
       !transitions.some(
-        (transition) => transition.projectStepRequirements?.length
+        (transition) => transition.projectStepRequirements?.length,
       )
     ) {
       return transitions;
@@ -343,12 +343,12 @@ export class EngagementRules {
 
     const currentStep = await this.getCurrentProjectStep(
       engagementId,
-      changeset
+      changeset,
     );
     const availableTransitionsAccordingToProject = transitions.filter(
       (transition) =>
         !transition.projectStepRequirements?.length ||
-        transition.projectStepRequirements.includes(currentStep)
+        transition.projectStepRequirements.includes(currentStep),
     );
     return availableTransitionsAccordingToProject;
   }
@@ -362,7 +362,7 @@ export class EngagementRules {
     engagementId: ID,
     session: Session,
     nextStatus: EngagementStatus,
-    changeset?: ID
+    changeset?: ID,
   ) {
     // If current user's roles include a role that can bypass workflow
     // stop the check here.
@@ -375,16 +375,16 @@ export class EngagementRules {
       engagementId,
       session,
       currentUserRoles,
-      changeset
+      changeset,
     );
 
     const validNextStatus = transitions.some(
-      (transition) => transition.to === nextStatus
+      (transition) => transition.to === nextStatus,
     );
     if (!validNextStatus) {
       throw new UnauthorizedException(
         'This status is not in an authorized sequence',
-        'engagement.status'
+        'engagement.status',
       );
     }
   }
@@ -485,7 +485,7 @@ export class EngagementRules {
   /** Of the given status which one was the most recent previous status */
   private async getMostRecentPreviousStatus(
     id: ID,
-    statuses: EngagementStatus[]
+    statuses: EngagementStatus[],
   ): Promise<EngagementStatus> {
     const prevStatus = await this.getPreviousStatus(id);
     return first(intersection(prevStatus, statuses)) ?? statuses[0];
@@ -507,7 +507,7 @@ export class EngagementRules {
       .first();
     if (!result) {
       throw new ServerException(
-        "Failed to determine engagement's previous status"
+        "Failed to determine engagement's previous status",
       );
     }
     return result.status;

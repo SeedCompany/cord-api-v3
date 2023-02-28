@@ -78,7 +78,7 @@ export const matchProps = (options: MatchPropsOptions = {}) => {
           : []),
       ]);
     const collectProps = collect(
-      apoc.map.fromValues(['type(r)', 'prop.value'])
+      apoc.map.fromValues(['type(r)', 'prop.value']),
     );
 
     return query.comment`matchProps(${nodeName})`.subQuery(nodeName, (sub) =>
@@ -90,17 +90,17 @@ export const matchProps = (options: MatchPropsOptions = {}) => {
       // Error is "Tried overwriting already taken variable name" with v4.2.8
       (optional
         ? sub.subQuery(nodeName, (sub2) =>
-            sub2.apply(lookupProps).return(collectProps.as('props'))
+            sub2.apply(lookupProps).return(collectProps.as('props')),
           )
         : sub.apply(lookupProps)
       ).return(
         merge(
           listConcat(
             `[${excludeBaseProps ? '' : nodeName}]`,
-            optional ? 'props' : collectProps
-          )
-        ).as(outputVar)
-      )
+            optional ? 'props' : collectProps,
+          ),
+        ).as(outputVar),
+      ),
     );
   };
 };
@@ -110,7 +110,7 @@ export const property = (
   value: any | null,
   baseNode: string,
   propVar = prop,
-  extraPropLabel?: Many<string>
+  extraPropLabel?: Many<string>,
 ) => [
   [
     node(baseNode),
@@ -136,7 +136,7 @@ export const matchSession = (
     withAclEdit?: string;
     withAclRead?: string;
     requestingUserConditions?: Record<string, any>;
-  } = {}
+  } = {},
 ) => [
   node('token', 'Token', {
     active: true,

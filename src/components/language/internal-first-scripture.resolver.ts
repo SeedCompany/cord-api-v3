@@ -10,7 +10,7 @@ export class InternalFirstScriptureResolver {
   })
   engagement(
     @Parent() { engagement }: InternalFirstScripture,
-    @Loader(EngagementLoader) engagements: LoaderOf<EngagementLoader>
+    @Loader(EngagementLoader) engagements: LoaderOf<EngagementLoader>,
   ) {
     return engagements.load({
       id: engagement,

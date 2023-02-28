@@ -18,7 +18,7 @@ import { ACTIVE } from './matching';
 import { path as pathPattern } from './where-path';
 
 export type Builder<T, K extends keyof T = keyof T> = (
-  args: BuilderArgs<T, K>
+  args: BuilderArgs<T, K>,
 ) => Query | null | Record<string, any> | void | ((query: Query) => Query);
 export interface BuilderArgs<T, K extends keyof T = keyof T> {
   key: K & string;
@@ -99,7 +99,7 @@ export const propVal =
 
 export const stringListProp =
   <T, K extends ConditionalKeys<Required<T>, readonly string[]>>(
-    prop?: string
+    prop?: string,
   ): Builder<T, K> =>
   ({ key, value, query }) => {
     query.match([
@@ -114,7 +114,7 @@ type PatternInput = Exclude<PatternCollection, any[][]>;
 
 export const pathExists =
   <T, K extends keyof Required<T>>(
-    pattern: PatternInput | ((val: NonNullable<T[K]>) => PatternInput)
+    pattern: PatternInput | ((val: NonNullable<T[K]>) => PatternInput),
   ): Builder<T, K> =>
   ({ key, value }) => {
     const cond = pathPattern(isFunction(pattern) ? pattern(value) : pattern);
@@ -132,7 +132,7 @@ export const isPinned = pathExists<{ pinned?: boolean }, 'pinned'>([
 
 export const dateTimeBaseNodeProp =
   <T, K extends ConditionalKeys<Required<T>, DateTimeFilter>>(
-    prop?: string
+    prop?: string,
   ): Builder<T, K> =>
   ({ key, value }) => {
     const comparison = comparisonOfDateTimeFilter(value);
@@ -141,7 +141,7 @@ export const dateTimeBaseNodeProp =
 
 export const dateTimeProp =
   <T, K extends ConditionalKeys<Required<T>, DateTimeFilter>>(
-    prop?: string
+    prop?: string,
   ): Builder<T, K> =>
   ({ key, value, query }) => {
     const comparison = comparisonOfDateTimeFilter(value);

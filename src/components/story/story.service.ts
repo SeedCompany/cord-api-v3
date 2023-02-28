@@ -30,7 +30,7 @@ export class StoryService {
     @Logger('story:service') private readonly logger: ILogger,
     private readonly scriptureRefs: ScriptureReferenceService,
     private readonly authorizationService: AuthorizationService,
-    private readonly repo: StoryRepository
+    private readonly repo: StoryRepository,
   ) {}
 
   async create(input: CreateStory, session: Session): Promise<Story> {
@@ -38,7 +38,7 @@ export class StoryService {
     if (!(await this.repo.isUnique(input.name))) {
       throw new DuplicateException(
         'story.name',
-        'Story with this name already exists.'
+        'Story with this name already exists.',
       );
     }
 
@@ -52,7 +52,7 @@ export class StoryService {
       await this.scriptureRefs.create(
         result.id,
         input.scriptureReferences,
-        session
+        session,
       );
 
       this.logger.debug(`story created`, { id: result.id });
@@ -84,17 +84,17 @@ export class StoryService {
 
   private async secure(
     dto: UnsecuredDto<Story>,
-    session: Session
+    session: Session,
   ): Promise<Story> {
     const securedProps = await this.authorizationService.secureProperties(
       Story,
       {
         ...dto,
         scriptureReferences: this.scriptureRefs.parseList(
-          dto.scriptureReferences
+          dto.scriptureReferences,
         ),
       },
-      session
+      session,
     );
 
     return {
@@ -116,7 +116,7 @@ export class StoryService {
       ...this.repo.getActualChanges(story, input),
       scriptureReferences: ifDiff(isScriptureEqual)(
         input.scriptureReferences,
-        story.scriptureReferences.value
+        story.scriptureReferences.value,
       ),
     };
     await this.authorizationService.verifyCanEditChanges(Story, story, changes);
@@ -137,7 +137,7 @@ export class StoryService {
 
     if (!canDelete)
       throw new UnauthorizedException(
-        'You do not have the permission to delete this Story'
+        'You do not have the permission to delete this Story',
       );
 
     try {
@@ -152,7 +152,7 @@ export class StoryService {
 
   async list(
     input: StoryListInput,
-    session: Session
+    session: Session,
   ): Promise<StoryListOutput> {
     const results = await this.repo.list(input, session);
     return await mapListResults(results, (dto) => this.secure(dto, session));

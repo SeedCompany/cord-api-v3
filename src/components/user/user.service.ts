@@ -81,12 +81,12 @@ export class UserService {
     private readonly locationService: LocationService,
     private readonly languageService: LanguageService,
     private readonly userRepo: UserRepository,
-    @Logger('user:service') private readonly logger: ILogger
+    @Logger('user:service') private readonly logger: ILogger,
   ) {}
 
   roleProperties = (roles?: Role[]) => {
     return (roles || []).flatMap((role) =>
-      property('roles', role, 'user', `role${role}`)
+      property('roles', role, 'user', `role${role}`),
     );
   };
 
@@ -149,7 +149,7 @@ export class UserService {
           throw new DuplicateException(
             'person.email',
             'Email address is already in use',
-            e
+            e,
           );
         }
         throw new ServerException('Failed to create user', e);
@@ -184,7 +184,7 @@ export class UserService {
   getAssignableRoles(session: Session) {
     const privileges = this.privileges.for(session, AssignableRoles);
     const assignableRoles = new Set(
-      [...Role.all].filter((role) => privileges.can('edit', role))
+      [...Role.all].filter((role) => privileges.can('edit', role)),
     );
     return assignableRoles;
   }
@@ -197,13 +197,13 @@ export class UserService {
     }
     const invalidStr = invalid.join(', ');
     throw new UnauthorizedException(
-      `You do not have the permission to assign users the roles: ${invalidStr}`
+      `You do not have the permission to assign users the roles: ${invalidStr}`,
     );
   }
 
   async permissionsForListProp(
     prop: keyof PermissionsOf<SecuredResource<typeof User>>,
-    session: Session
+    session: Session,
   ) {
     const perms = await this.authorizationService.getPermissions({
       resource: User,
@@ -215,7 +215,7 @@ export class UserService {
   async listEducations(
     userId: ID,
     input: EducationListInput,
-    session: Session
+    session: Session,
   ): Promise<SecuredEducationList> {
     const perms = await this.permissionsForListProp('education', session);
 
@@ -230,7 +230,7 @@ export class UserService {
           userId: userId,
         },
       },
-      session
+      session,
     );
     return {
       ...result,
@@ -241,7 +241,7 @@ export class UserService {
   async listOrganizations(
     userId: ID,
     input: OrganizationListInput,
-    session: Session
+    session: Session,
   ): Promise<SecuredOrganizationList> {
     const perms = await this.permissionsForListProp('organization', session);
 
@@ -256,7 +256,7 @@ export class UserService {
           userId: userId,
         },
       },
-      session
+      session,
     );
 
     return {
@@ -268,7 +268,7 @@ export class UserService {
   async listPartners(
     userId: ID,
     input: PartnerListInput,
-    session: Session
+    session: Session,
   ): Promise<SecuredPartnerList> {
     const perms = await this.permissionsForListProp('partner', session);
     const result = await this.partners.list(
@@ -279,7 +279,7 @@ export class UserService {
           userId,
         },
       },
-      session
+      session,
     );
     return {
       ...result,
@@ -290,7 +290,7 @@ export class UserService {
   async listUnavailabilities(
     userId: ID,
     input: UnavailabilityListInput,
-    session: Session
+    session: Session,
   ): Promise<SecuredUnavailabilityList> {
     const perms = await this.permissionsForListProp('unavailability', session);
 
@@ -305,7 +305,7 @@ export class UserService {
           userId: userId,
         },
       },
-      session
+      session,
     );
 
     return {
@@ -317,14 +317,14 @@ export class UserService {
   async addLocation(
     userId: ID,
     locationId: ID,
-    _session: Session
+    _session: Session,
   ): Promise<void> {
     try {
       await this.locationService.addLocationToNode(
         'User',
         userId,
         'locations',
-        locationId
+        locationId,
       );
     } catch (e) {
       throw new ServerException('Could not add location to user', e);
@@ -334,14 +334,14 @@ export class UserService {
   async removeLocation(
     userId: ID,
     locationId: ID,
-    _session: Session
+    _session: Session,
   ): Promise<void> {
     try {
       await this.locationService.removeLocationFromNode(
         'User',
         userId,
         'locations',
-        locationId
+        locationId,
       );
     } catch (e) {
       throw new ServerException('Could not remove location from user', e);
@@ -351,14 +351,14 @@ export class UserService {
   async listLocations(
     user: User,
     input: LocationListInput,
-    session: Session
+    session: Session,
   ): Promise<SecuredLocationList> {
     return await this.locationService.listLocationForResource(
       User,
       user,
       'locations',
       input,
-      session
+      session,
     );
   }
 
@@ -366,19 +366,19 @@ export class UserService {
     userId: ID,
     languageId: ID,
     languageProficiency: LanguageProficiency,
-    _session: Session
+    _session: Session,
   ): Promise<void> {
     try {
       await this.deleteKnownLanguage(
         userId,
         languageId,
         languageProficiency,
-        _session
+        _session,
       );
       await this.userRepo.createKnownLanguage(
         userId,
         languageId,
-        languageProficiency
+        languageProficiency,
       );
     } catch (e) {
       throw new ServerException('Could not create known language', e);
@@ -389,13 +389,13 @@ export class UserService {
     userId: ID,
     languageId: ID,
     languageProficiency: LanguageProficiency,
-    _session: Session
+    _session: Session,
   ): Promise<void> {
     try {
       await this.userRepo.deleteKnownLanguage(
         userId,
         languageId,
-        languageProficiency
+        languageProficiency,
       );
     } catch (e) {
       throw new ServerException('Could not delete known language', e);
@@ -404,7 +404,7 @@ export class UserService {
 
   async listKnownLanguages(
     userId: ID,
-    session: Session
+    session: Session,
   ): Promise<readonly KnownLanguage[]> {
     const perms = await this.permissionsForListProp('knownLanguage', session);
     if (!perms.canRead) {
@@ -420,14 +420,14 @@ export class UserService {
 
   async assignOrganizationToUser(
     request: AssignOrganizationToUser,
-    _session: Session
+    _session: Session,
   ) {
     await this.userRepo.assignOrganizationToUser(request);
   }
 
   async removeOrganizationFromUser(
     request: RemoveOrganizationFromUser,
-    _session: Session
+    _session: Session,
   ): Promise<void> {
     await this.userRepo.removeOrganizationFromUser(request);
   }

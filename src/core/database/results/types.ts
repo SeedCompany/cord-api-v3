@@ -16,7 +16,7 @@ import type { BaseNode } from './parse-base-node';
 export type DbPropsOfDto<
   Dto extends Record<string, any>,
   // Specify this as true when using new matchProps query fragment
-  IncludeBaseNode extends boolean | undefined = false
+  IncludeBaseNode extends boolean | undefined = false,
 > = NativeDbProps<
   Omit<
     UnsecuredDto<Dto>,

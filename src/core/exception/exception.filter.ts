@@ -16,7 +16,7 @@ export class ExceptionFilter implements GqlExceptionFilter {
     private readonly httpAdapterHost: HttpAdapterHost,
     @Logger('nest') private readonly logger: ILogger,
     private readonly config: ConfigService,
-    private readonly normalizer: ExceptionNormalizer
+    private readonly normalizer: ExceptionNormalizer,
   ) {}
 
   catch(exception: Error, args: ArgumentsHost) {
@@ -92,7 +92,7 @@ export class ExceptionFilter implements GqlExceptionFilter {
       this.logger.notice(info.message, {
         inputErrors: mapValues(
           info.errors as ValidationException['errors'],
-          (constraints) => Object.values(constraints)[0]
+          (constraints) => Object.values(constraints)[0],
         ),
       });
       return;

@@ -24,7 +24,7 @@ export class PartnershipProducingMediumResolver {
   })
   async partnership(
     @Parent() pair: PartnershipProducingMedium,
-    @Loader(() => PartnershipLoader) partnerships: LoaderOf<PartnershipLoader>
+    @Loader(() => PartnershipLoader) partnerships: LoaderOf<PartnershipLoader>,
   ): Promise<Partnership | null> {
     return pair.partnership
       ? await partnerships.load({
@@ -45,7 +45,7 @@ export class PartnershipProducingMediumResolver {
         'A partial list of changes to the partners producing which mediums',
     })
     input: readonly PartnershipProducingMediumInput[],
-    @LoggedInSession() session: Session
+    @LoggedInSession() session: Session,
   ): Promise<UpdatePartnershipProducingMediumOutput> {
     await this.service.update(engagementId, input, session);
     return { engagement: engagementId };

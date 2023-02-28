@@ -32,7 +32,7 @@ export class LocationService {
     @Logger('location:service') private readonly logger: ILogger,
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
-    private readonly repo: LocationRepository
+    private readonly repo: LocationRepository,
   ) {}
 
   async create(input: CreateLocation, session: Session): Promise<Location> {
@@ -41,7 +41,7 @@ export class LocationService {
     if (checkName) {
       throw new DuplicateException(
         'location.name',
-        'Location with this name already exists.'
+        'Location with this name already exists.',
       );
     }
 
@@ -55,7 +55,7 @@ export class LocationService {
   async readOne(
     id: ID,
     session: Session,
-    _view?: ObjectView
+    _view?: ObjectView,
   ): Promise<Location> {
     this.logger.debug(`Read Location`, {
       id: id,
@@ -73,12 +73,12 @@ export class LocationService {
 
   private async secure(
     dto: UnsecuredDto<Location>,
-    session: Session
+    session: Session,
   ): Promise<Location> {
     const securedProps = await this.authorizationService.secureProperties(
       Location,
       dto,
-      session
+      session,
     );
 
     return {
@@ -95,7 +95,7 @@ export class LocationService {
     await this.authorizationService.verifyCanEditChanges(
       Location,
       location,
-      changes
+      changes,
     );
 
     const { fundingAccountId, defaultFieldRegionId, ...simpleChanges } =
@@ -108,7 +108,7 @@ export class LocationService {
         'fundingAccount',
         'FundingAccount',
         input.id,
-        fundingAccountId
+        fundingAccountId,
       );
     }
 
@@ -117,7 +117,7 @@ export class LocationService {
         'defaultFieldRegion',
         'FieldRegion',
         input.id,
-        defaultFieldRegionId
+        defaultFieldRegionId,
       );
     }
 
@@ -135,7 +135,7 @@ export class LocationService {
 
     if (!canDelete)
       throw new UnauthorizedException(
-        'You do not have the permission to delete this Location'
+        'You do not have the permission to delete this Location',
       );
 
     try {
@@ -148,7 +148,7 @@ export class LocationService {
 
   async list(
     input: LocationListInput,
-    session: Session
+    session: Session,
   ): Promise<LocationListOutput> {
     // no canList check needed because all roles can list
     const results = await this.repo.list(input, session);
@@ -170,7 +170,7 @@ export class LocationService {
     label: string,
     id: ID,
     rel: string,
-    locationId: ID
+    locationId: ID,
   ) {
     try {
       await this.repo.removeLocationFromNode(label, id, rel, locationId);
@@ -184,7 +184,7 @@ export class LocationService {
     dto: TResource['prototype'],
     rel: SecuredResourceKey<TResource>,
     input: LocationListInput,
-    session: Session
+    session: Session,
   ): Promise<SecuredLocationList> {
     const perms = await this.authorizationService.getPermissions({
       resource: label,
@@ -196,7 +196,7 @@ export class LocationService {
       label.name,
       rel,
       dto.id,
-      input
+      input,
     );
 
     return {

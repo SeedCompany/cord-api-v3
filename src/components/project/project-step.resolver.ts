@@ -13,7 +13,7 @@ export class ProjectStepResolver {
   })
   async transitions(
     @Parent() step: SecuredProjectStep & { parentId: ID; changeset?: ID },
-    @AnonSession() session: Session
+    @AnonSession() session: Session,
   ): Promise<ProjectStepTransition[]> {
     if (!step.canRead || !step.canEdit || !step.value) {
       return [];
@@ -22,7 +22,7 @@ export class ProjectStepResolver {
       step.parentId,
       session,
       undefined,
-      step.changeset
+      step.changeset,
     );
   }
 
@@ -33,7 +33,7 @@ export class ProjectStepResolver {
    `,
   })
   async canBypassTransitions(
-    @AnonSession() session: Session
+    @AnonSession() session: Session,
   ): Promise<boolean> {
     return await this.projectRules.canBypassWorkflow(session);
   }

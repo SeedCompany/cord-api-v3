@@ -21,7 +21,7 @@ export async function listFieldRegions(app: TestApp) {
         }
       }
       ${fragments.fieldRegion}
-    `
+    `,
   );
   const regions = result.fieldRegions.items;
   expect(regions).toBeTruthy();
@@ -38,7 +38,7 @@ export async function readOneRegion(app: TestApp, id: string) {
       }
       ${fragments.fieldRegion}
     `,
-    { id }
+    { id },
   );
   const actual = result.fieldRegion;
   expect(actual).toBeTruthy();
@@ -47,7 +47,7 @@ export async function readOneRegion(app: TestApp, id: string) {
 
 export async function createRegion(
   app: TestApp,
-  input: Partial<CreateFieldRegion> = {}
+  input: Partial<CreateFieldRegion> = {},
 ) {
   const fieldRegion: CreateFieldRegion = {
     name: 'Region' + (await generateId()),
@@ -97,7 +97,7 @@ export async function createRegion(
       input: {
         fieldRegion,
       },
-    }
+    },
   );
 
   const actual: FieldRegion = result.createFieldRegion.fieldRegion;

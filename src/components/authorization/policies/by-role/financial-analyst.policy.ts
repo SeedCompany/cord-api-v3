@@ -22,7 +22,7 @@ import {
         .create.delete.specifically((p) => [
           p.many('disbursementCompleteDate', 'status').when(member).edit,
         ]),
-      r.LanguageEngagement.specifically((p) => [p.paratextRegistryId.none])
+      r.LanguageEngagement.specifically((p) => [p.paratextRegistryId.none]),
     ),
     r.FieldRegion.read,
     r.FieldZone.read,
@@ -59,7 +59,7 @@ import {
             'mouEnd',
             'rootDirectory',
             'financialReportPeriod',
-            'financialReportReceivedAt'
+            'financialReportReceivedAt',
           )
           .when(member).edit,
       ])
@@ -69,6 +69,6 @@ import {
     r.StepProgress.read,
     r.Unavailability.read,
     r.User.read.create,
-  ]
+  ],
 )
 export class FinancialAnalystPolicy {}

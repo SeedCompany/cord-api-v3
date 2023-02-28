@@ -43,7 +43,7 @@ export const maskSecrets = () =>
 
 export const timestamp = format((info) => {
   info.timestamp = DateTime.local().toLocaleString(
-    DateTime.DATETIME_SHORT_WITH_SECONDS
+    DateTime.DATETIME_SHORT_WITH_SECONDS,
   );
   return info;
 });
@@ -101,7 +101,7 @@ const formatMessage = (
   message: string,
   other: Record<string, any>,
   color: Color,
-  extraSpace: boolean
+  extraSpace: boolean,
 ) => {
   const otherStr = printObj(other);
   let msg = `${type}: ${message}\n`;
@@ -153,7 +153,7 @@ export const formatException = () =>
             ex.message,
             ex.other,
             bad ? red : yellow,
-            bad && index === 0
+            bad && index === 0,
           );
         const formattedTrace = ex.trace
           .map(formatStackFrame)

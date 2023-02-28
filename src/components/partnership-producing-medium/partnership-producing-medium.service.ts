@@ -23,12 +23,12 @@ export class PartnershipProducingMediumService {
   constructor(
     private readonly auth: AuthorizationService,
     private readonly resources: ResourceResolver,
-    private readonly repo: PartnershipProducingMediumRepository
+    private readonly repo: PartnershipProducingMediumRepository,
   ) {}
 
   async list(
     engagement: LanguageEngagement,
-    session: Session
+    session: Session,
   ): Promise<SecuredPartnershipsProducingMediums> {
     const perms = await this.auth.getPermissions({
       resource: IProject,
@@ -58,7 +58,7 @@ export class PartnershipProducingMediumService {
   async update(
     engagementId: ID,
     input: readonly PartnershipProducingMediumInput[],
-    session: Session
+    session: Session,
   ) {
     if (uniqBy(input, (pair) => pair.medium).length !== input.length) {
       throw new InputException('A medium can only be mentioned once');
@@ -67,7 +67,7 @@ export class PartnershipProducingMediumService {
     const engagement = await this.resources.lookup(
       LanguageEngagement,
       engagementId,
-      session
+      session,
     );
 
     const perms = await this.auth.getPermissions({
@@ -78,7 +78,7 @@ export class PartnershipProducingMediumService {
     });
     if (!perms.partnership.canEdit) {
       throw new UnauthorizedException(
-        `You do not have permission to update the partnerships producing mediums for this engagement`
+        `You do not have permission to update the partnerships producing mediums for this engagement`,
       );
     }
 

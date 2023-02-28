@@ -12,7 +12,7 @@ export class ProgressReportCreateProductConnectionResolver {
   })
   async availableVariants(
     @Parent() { product }: CreateProductOutput,
-    @LoggedInSession() session: Session
+    @LoggedInSession() session: Session,
   ): Promise<readonly Variant[]> {
     return await this.service.getAvailableVariantsForProduct(product, session);
   }

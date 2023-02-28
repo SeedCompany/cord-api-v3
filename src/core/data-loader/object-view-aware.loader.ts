@@ -18,11 +18,11 @@ interface Key {
  * able to ask for multiple objects with a specific view.
  */
 export abstract class ObjectViewAwareLoader<
-  T extends ChangesetAware
+  T extends ChangesetAware,
 > extends Loader<T, Key, string> {
   abstract loadManyByView(
     ids: readonly ID[],
-    view: ObjectView
+    view: ObjectView,
   ): Promise<readonly T[]>;
 
   async loadMany(keys: readonly Key[]): Promise<readonly T[]> {
@@ -32,9 +32,9 @@ export abstract class ObjectViewAwareLoader<
       grouped.map(async (keys) => {
         return await this.loadManyByView(
           keys.map((key) => key.id),
-          keys[0].view
+          keys[0].view,
         );
-      })
+      }),
     );
     return items.flat();
   }

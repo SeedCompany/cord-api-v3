@@ -35,7 +35,7 @@ export const PromptVariantResponseListService = <
   TResourceStatic extends ResourceShape<PromptVariantResponse<TVariant>> & {
     Variants: VariantList<TVariant>;
   },
-  TVariant extends string = VariantOf<TResourceStatic>
+  TVariant extends string = VariantOf<TResourceStatic>,
 >(
   repo: ReturnType<
     typeof PromptVariantResponseRepository<
@@ -43,7 +43,7 @@ export const PromptVariantResponseListService = <
       TResourceStatic,
       TVariant
     >
-  >
+  >,
 ) => {
   @Injectable()
   abstract class PromptVariantResponseListServiceClass {
@@ -65,7 +65,7 @@ export const PromptVariantResponseListService = <
     }
 
     protected abstract getPrivilegeContext(
-      dto: UnsecuredDto<Resource>
+      dto: UnsecuredDto<Resource>,
     ): Promise<any>;
 
     protected abstract getPrompts(): Promise<readonly Prompt[]>;
@@ -81,7 +81,7 @@ export const PromptVariantResponseListService = <
 
     async list(
       parent: Resource,
-      session: Session
+      session: Session,
     ): Promise<PromptVariantResponseList<TVariant>> {
       const context = parent as any;
       const edge = this.repo.edge.forUser(session, context);
@@ -110,19 +110,21 @@ export const PromptVariantResponseListService = <
     }
 
     protected async getAvailableVariants(
-      privileges: UserResourcePrivileges<typeof PromptVariantResponse<TVariant>>
+      privileges: UserResourcePrivileges<
+        typeof PromptVariantResponse<TVariant>
+      >,
     ) {
       const variants = this.resource.Variants.filter((variant) =>
         privileges
           .forContext(withVariant(privileges.context!, variant.key))
-          .can('edit', 'responses')
+          .can('edit', 'responses'),
       );
       return variants;
     }
 
     protected async secure(
       dto: UnsecuredDto<PromptVariantResponse<TVariant>>,
-      session: Session
+      session: Session,
     ): Promise<PromptVariantResponse<TVariant>> {
       const context = await this.getPrivilegeContext(dto);
       const privileges = this.resourcePrivileges.forUser(session, context);
@@ -134,11 +136,11 @@ export const PromptVariantResponseListService = <
       return {
         ...secured,
         prompt: await mapSecuredValue(secured.prompt, (id) =>
-          this.getPromptById(id)
+          this.getPromptById(id),
         ),
         responses: this.resource.Variants.flatMap((variant) => {
           const variantPrivileges = privileges.forContext(
-            withVariant(privileges.context!, variant.key)
+            withVariant(privileges.context!, variant.key),
           );
           if (!variantPrivileges.can('read', 'responses')) {
             return [];
@@ -167,18 +169,18 @@ export const PromptVariantResponseListService = <
 
     async create(
       input: ChoosePrompt,
-      session: Session
+      session: Session,
     ): Promise<PromptVariantResponse<TVariant>> {
       const edge = this.repo.edge;
       const parent = await this.resources.load(
         // @ts-expect-error yeah we are assuming it's registered
         edge.resource,
-        input.resource
+        input.resource,
       );
       const privileges = edge.forUser(
         session,
         // @ts-expect-error yeah it's not unsecured, but none of our conditions actually needs that.
-        parent
+        parent,
       );
       privileges.verifyCan('create');
 
@@ -191,7 +193,7 @@ export const PromptVariantResponseListService = <
 
     async changePrompt(
       input: ChangePrompt,
-      session: Session
+      session: Session,
     ): Promise<PromptVariantResponse<TVariant>> {
       const response = await this.repo.readOne(input.id, session);
       const context = await this.getPrivilegeContext(response);
@@ -209,7 +211,7 @@ export const PromptVariantResponseListService = <
 
     async submitResponse(
       input: UpdatePromptVariantResponse<TVariant>,
-      session: Session
+      session: Session,
     ): Promise<PromptVariantResponse<TVariant>> {
       const variant = this.resource.Variants.byKey(input.variant);
 
@@ -224,14 +226,14 @@ export const PromptVariantResponseListService = <
         throw new UnauthorizedException(
           `You do not have the permission to edit the "${
             variant.label
-          }" response for this ${lowerCase(this.resource.name)}`
+          }" response for this ${lowerCase(this.resource.name)}`,
         );
       }
 
       if (
         !RichTextDocument.isEqual(
           input.response,
-          response.responses.find((r) => r.variant === variant.key)?.response
+          response.responses.find((r) => r.variant === variant.key)?.response,
         )
       ) {
         await this.repo.submitResponse(input, session);

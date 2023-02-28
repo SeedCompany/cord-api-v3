@@ -5,7 +5,7 @@
 export const asyncPool = async <T, R>(
   concurrencyLimit: number,
   items: readonly T[],
-  iteratee: (item: T, index: number) => Promise<R>
+  iteratee: (item: T, index: number) => Promise<R>,
 ): Promise<readonly R[]> => {
   const ret: Array<Promise<R>> = [];
   const executing: Array<Promise<void>> = [];

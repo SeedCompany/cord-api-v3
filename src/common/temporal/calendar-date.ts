@@ -32,7 +32,7 @@ export class CalendarDate
   static fromDateTime(dt: DateTime): CalendarDate {
     return Object.assign(
       new CalendarDate(),
-      dt instanceof CalendarDate ? dt : dt.startOf('day')
+      dt instanceof CalendarDate ? dt : dt.startOf('day'),
     );
   }
   static asDateTime(date: CalendarDate): DateTime {
@@ -83,7 +83,7 @@ export class CalendarDate
   static fromFormat(
     text: string,
     format: string,
-    opts?: DateTimeOptions
+    opts?: DateTimeOptions,
   ): CalendarDate {
     return CalendarDate.fromDateTime(super.fromFormat(text, format, opts));
   }
@@ -100,7 +100,7 @@ export class CalendarDate
     minute: number,
     second: number,
     millisecond: number,
-    opts?: DateTimeJSOptions
+    opts?: DateTimeJSOptions,
   ): DateTime;
   static local(
     year: number,
@@ -109,7 +109,7 @@ export class CalendarDate
     hour: number,
     minute: number,
     second: number,
-    opts?: DateTimeJSOptions
+    opts?: DateTimeJSOptions,
   ): DateTime;
   static local(
     year: number,
@@ -117,20 +117,20 @@ export class CalendarDate
     day: number,
     hour: number,
     minute: number,
-    opts?: DateTimeJSOptions
+    opts?: DateTimeJSOptions,
   ): DateTime;
   static local(
     year: number,
     month: number,
     day: number,
     hour: number,
-    opts?: DateTimeJSOptions
+    opts?: DateTimeJSOptions,
   ): DateTime;
   static local(
     year: number,
     month: number,
     day: number,
-    opts?: DateTimeJSOptions
+    opts?: DateTimeJSOptions,
   ): DateTime;
   static local(year: number, month: number, opts?: DateTimeJSOptions): DateTime;
   static local(year: number, opts?: DateTimeJSOptions): DateTime;
@@ -160,7 +160,7 @@ export class CalendarDate
     minute: number,
     second: number,
     millisecond: number,
-    options?: LocaleOptions
+    options?: LocaleOptions,
   ): DateTime;
   static utc(
     year: number,
@@ -169,7 +169,7 @@ export class CalendarDate
     hour: number,
     minute: number,
     second: number,
-    options?: LocaleOptions
+    options?: LocaleOptions,
   ): DateTime;
   static utc(
     year: number,
@@ -177,20 +177,20 @@ export class CalendarDate
     day: number,
     hour: number,
     minute: number,
-    options?: LocaleOptions
+    options?: LocaleOptions,
   ): DateTime;
   static utc(
     year: number,
     month: number,
     day: number,
     hour: number,
-    options?: LocaleOptions
+    options?: LocaleOptions,
   ): DateTime;
   static utc(
     year: number,
     month: number,
     day: number,
-    options?: LocaleOptions
+    options?: LocaleOptions,
   ): DateTime;
   static utc(year: number, month: number, options?: LocaleOptions): DateTime;
   static utc(year: number, options?: LocaleOptions): DateTime;

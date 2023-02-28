@@ -33,7 +33,7 @@ export abstract class LocalBucket extends FileBucket {
   async download(signed: string): Promise<GetObjectOutput> {
     const parsed: GetObjectCommandInput = this.validateSignedUrl(
       'getObject',
-      signed
+      signed,
     );
     return {
       ...(await this.getObject(parsed.Key!)),
@@ -46,7 +46,7 @@ export abstract class LocalBucket extends FileBucket {
           ContentLanguage: parsed.ResponseContentLanguage,
           Expires: parsed.ResponseExpires,
         },
-        (val) => val != null
+        (val) => val != null,
       ),
     };
   }
@@ -70,7 +70,7 @@ export abstract class LocalBucket extends FileBucket {
     options?: Except<
       GetObjectCommandInput | PutObjectCommandInput,
       'Bucket' | 'Key'
-    >
+    >,
   ) {
     const signed = JSON.stringify({
       operation,
@@ -88,7 +88,7 @@ export abstract class LocalBucket extends FileBucket {
    */
   protected validateSignedUrl(
     operation: string,
-    url: string
+    url: string,
   ): GetObjectCommandInput | PutObjectCommandInput {
     let raw;
     try {

@@ -5,7 +5,7 @@ export class MissingPowerException extends UnauthorizedException {
   constructor(
     readonly power: Powers,
     message = `Missing required power: ${power}`,
-    previous?: Error
+    previous?: Error,
   ) {
     super(message, previous);
   }

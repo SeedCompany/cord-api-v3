@@ -15,8 +15,8 @@ export class AddProgressMeasurementsMigration extends BaseMigration {
             node('node'),
             relation('out', '', 'progressStepMeasurement', ACTIVE),
             node('', 'Property'),
-          ])
-        )
+          ]),
+        ),
       )
       .apply(
         createProperty({
@@ -24,7 +24,7 @@ export class AddProgressMeasurementsMigration extends BaseMigration {
           key: 'progressStepMeasurement',
           value: ProgressMeasurement.Percent,
           numCreatedVar: 'numPsmCreated',
-        })
+        }),
       )
       .apply(
         createProperty({
@@ -32,7 +32,7 @@ export class AddProgressMeasurementsMigration extends BaseMigration {
           key: 'progressTarget',
           value: 100,
           numCreatedVar: 'numPtCreated',
-        })
+        }),
       )
       .return<{ numPsmCreated: number; numPtCreated: number }>([
         'sum(numPsmCreated) as numPsmCreated',

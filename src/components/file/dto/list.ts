@@ -33,5 +33,5 @@ export class FileListOutput extends PaginatedList<IFileNode, FileNode>(
   IFileNode,
   {
     itemsDescription: PaginatedList.itemDescriptionFor('file nodes'),
-  }
+  },
 ) {}

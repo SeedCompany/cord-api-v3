@@ -71,13 +71,13 @@ export class ProjectRules {
     private readonly auth: AuthenticationService,
     private readonly configService: ConfigService,
     // eslint-disable-next-line @seedcompany/no-unused-vars
-    @Logger('project:rules') private readonly logger: ILogger
+    @Logger('project:rules') private readonly logger: ILogger,
   ) {}
 
   private async getStepRule(
     step: ProjectStep,
     id: ID,
-    changeset?: ID
+    changeset?: ID,
   ): Promise<StepRule> {
     const mostRecentPreviousStep = (steps: ProjectStep[]) =>
       this.getMostRecentPreviousStep(id, steps, changeset);
@@ -822,7 +822,7 @@ export class ProjectRules {
     projectId: ID,
     session: Session,
     currentUserRoles?: Role[],
-    changeset?: ID
+    changeset?: ID,
   ): Promise<ProjectStepTransition[]> {
     if (session.anonymous) {
       return [];
@@ -834,7 +834,7 @@ export class ProjectRules {
     const { approvers, transitions } = await this.getStepRule(
       currentStep,
       projectId,
-      changeset
+      changeset,
     );
 
     // If current user is not an approver (based on roles) then don't allow any transitions
@@ -855,7 +855,7 @@ export class ProjectRules {
     projectId: ID,
     session: Session,
     nextStep: ProjectStep,
-    changeset?: ID
+    changeset?: ID,
   ) {
     // If current user's roles include a role that can bypass workflow
     // stop the check here.
@@ -868,16 +868,16 @@ export class ProjectRules {
       projectId,
       session,
       currentUserRoles,
-      changeset
+      changeset,
     );
 
     const validNextStep = transitions.some(
-      (transition) => transition.to === nextStep && !transition.disabled
+      (transition) => transition.to === nextStep && !transition.disabled,
     );
     if (!validNextStep) {
       throw new UnauthorizedException(
         'This step is not in an authorized sequence',
-        'project.step'
+        'project.step',
       );
     }
   }
@@ -925,12 +925,12 @@ export class ProjectRules {
     step: ProjectStep,
     changedById: ID,
     previousStep: ProjectStep,
-    changeset?: ID
+    changeset?: ID,
   ): Promise<EmailNotification[]> {
     const { getNotifiers: arrivalNotifiers } = await this.getStepRule(
       step,
       projectId,
-      changeset
+      changeset,
     );
 
     const transitionNotifiers = (
@@ -939,7 +939,7 @@ export class ProjectRules {
 
     const resolve = async (notifiers?: Notifiers) =>
       maybeMany(
-        typeof notifiers === 'function' ? await notifiers() : notifiers
+        typeof notifiers === 'function' ? await notifiers() : notifiers,
       ) ?? [];
 
     const userIdsAndEmailAddresses = uniq([
@@ -950,7 +950,7 @@ export class ProjectRules {
     const recipientIds = this.configService.email.notifyDistributionLists
       ? userIdsAndEmailAddresses
       : userIdsAndEmailAddresses.filter(
-          (idOrEmail) => !idOrEmail.includes('@')
+          (idOrEmail) => !idOrEmail.includes('@'),
         );
 
     const notifications = await Promise.all(
@@ -959,9 +959,9 @@ export class ProjectRules {
           changedById,
           projectId,
           recipientId,
-          previousStep
-        )
-      )
+          previousStep,
+        ),
+      ),
     );
 
     this.logger.debug('notifying: ', notifications);
@@ -1004,7 +1004,7 @@ export class ProjectRules {
   private async getMostRecentPreviousStep(
     id: ID,
     steps: ProjectStep[],
-    changeset?: ID
+    changeset?: ID,
   ): Promise<ProjectStep> {
     const prevSteps = await this.getPreviousSteps(id, changeset);
     return first(intersection(prevSteps, steps)) ?? steps[0];
@@ -1013,7 +1013,7 @@ export class ProjectRules {
   /** A list of the project's previous steps ordered most recent to furthest in the past */
   private async getPreviousSteps(
     id: ID,
-    changeset?: ID
+    changeset?: ID,
   ): Promise<ProjectStep[]> {
     const result = await this.db
       .query()
@@ -1031,7 +1031,7 @@ export class ProjectRules {
       .apply((q) =>
         changeset
           ? q.raw('WHERE NOT (changeset)-[:changeset {active:true}]->(prop)')
-          : q
+          : q,
       )
       .with('prop')
       .orderBy('prop.createdAt', 'DESC')
@@ -1047,7 +1047,7 @@ export class ProjectRules {
     changedById: ID,
     projectId: ID,
     notifier: Notifier,
-    previousStep?: ProjectStep
+    previousStep?: ProjectStep,
   ): Promise<EmailNotification> {
     const recipientId = notifier.includes('@')
       ? this.configService.rootAdmin.id
@@ -1072,11 +1072,11 @@ export class ProjectRules {
 
     const changedBy = await this.userService.readOne(
       changedById,
-      recipientSession
+      recipientSession,
     );
     const project = await this.projectService.readOne(
       projectId,
-      recipientSession
+      recipientSession,
     );
 
     return {

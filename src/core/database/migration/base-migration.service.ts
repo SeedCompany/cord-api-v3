@@ -62,11 +62,11 @@ export abstract class BaseMigration {
     TObject extends Partial<MaybeUnsecuredInstance<TResourceStatic>> & {
       id: ID;
     },
-    Key extends keyof DbChanges<TObject> & string
+    Key extends keyof DbChanges<TObject> & string,
   >(
     resource: TResourceStatic | EnhancedResource<TResourceStatic>,
     property: Key,
-    value: UnwrapSecured<TObject[Key]>
+    value: UnwrapSecured<TObject[Key]>,
   ) {
     resource = EnhancedResource.of(resource);
 
@@ -79,8 +79,8 @@ export abstract class BaseMigration {
             node('node'),
             relation('out', '', property, ACTIVE),
             node('', 'Property'),
-          ])
-        )
+          ]),
+        ),
       )
       .create([
         node('node'),
@@ -95,13 +95,13 @@ export abstract class BaseMigration {
         }),
       ])
       .return<{ numPropsCreated: number }>(
-        'count(newPropNode) as numPropsCreated'
+        'count(newPropNode) as numPropsCreated',
       )
       .first();
     this.logger.info(
       `Created ${result?.numPropsCreated ?? 0} ${
         resource.name
-      }.${property} default props`
+      }.${property} default props`,
     );
   }
 }

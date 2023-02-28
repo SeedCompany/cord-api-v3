@@ -17,9 +17,9 @@ import { Policy, Role, variant } from '../util';
       r.ProgressReportHighlight,
       r.ProgressReportTeamNews,
     ].map((it) =>
-      it.read.specifically((p) => p.responses.when(variant('published')).read)
+      it.read.specifically((p) => p.responses.when(variant('published')).read),
     ),
     r.StepProgress.when(variant('official')).read,
-  ]
+  ],
 )
 export class ViewProgressReportPolicy {}

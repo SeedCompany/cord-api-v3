@@ -26,7 +26,7 @@ export class ProgressReportTeamNewsResolver {
   @ResolveField(() => PromptVariantResponseList)
   async teamNews(
     @Parent() report: ProgressReport,
-    @AnonSession() session: Session
+    @AnonSession() session: Session,
   ): Promise<PromptVariantResponseList<TeamNewsVariant>> {
     return await this.service.list(report, session);
   }
@@ -34,7 +34,7 @@ export class ProgressReportTeamNewsResolver {
   @Mutation(() => PromptVariantResponse)
   async createProgressReportTeamNews(
     @Args({ name: 'input' }) input: ChoosePrompt,
-    @LoggedInSession() session: Session
+    @LoggedInSession() session: Session,
   ): Promise<PromptVariantResponse> {
     return await this.service.create(input, session);
   }
@@ -42,7 +42,7 @@ export class ProgressReportTeamNewsResolver {
   @Mutation(() => PromptVariantResponse)
   async changeProgressReportTeamNewsPrompt(
     @Args({ name: 'input' }) input: ChangePrompt,
-    @LoggedInSession() session: Session
+    @LoggedInSession() session: Session,
   ): Promise<PromptVariantResponse> {
     return await this.service.changePrompt(input, session);
   }
@@ -51,7 +51,7 @@ export class ProgressReportTeamNewsResolver {
   async updateProgressReportTeamNewsResponse(
     @Args({ name: 'input' })
     input: UpdatePromptVariantResponse<TeamNewsVariant>,
-    @LoggedInSession() session: Session
+    @LoggedInSession() session: Session,
   ): Promise<PromptVariantResponse> {
     return await this.service.submitResponse(input, session);
   }
@@ -60,7 +60,7 @@ export class ProgressReportTeamNewsResolver {
   async deleteProgressReportTeamNews(
     @IdArg() id: IdOf<PromptVariantResponse>,
     @LoggedInSession() session: Session,
-    @Loader(PeriodicReportLoader) reports: LoaderOf<PeriodicReportLoader>
+    @Loader(PeriodicReportLoader) reports: LoaderOf<PeriodicReportLoader>,
   ): Promise<PeriodicReport> {
     const response = await this.service.delete(id, session);
     return await reports.load(response.parent.properties.id);

@@ -28,21 +28,21 @@ export class FundingAccountService {
   constructor(
     @Logger('funding-account:service') private readonly logger: ILogger,
     private readonly authorizationService: AuthorizationService,
-    private readonly repo: FundingAccountRepository
+    private readonly repo: FundingAccountRepository,
   ) {}
 
   async create(
     input: CreateFundingAccount,
-    session: Session
+    session: Session,
   ): Promise<FundingAccount> {
     await this.authorizationService.checkPower(
       Powers.CreateFundingAccount,
-      session
+      session,
     );
     if (!(await this.repo.isUnique(input.name))) {
       throw new DuplicateException(
         'fundingAccount.name',
-        'FundingAccount with this name already exists.'
+        'FundingAccount with this name already exists.',
       );
     }
 
@@ -69,7 +69,7 @@ export class FundingAccountService {
   async readOne(
     id: ID,
     session: Session,
-    _view?: ObjectView
+    _view?: ObjectView,
   ): Promise<FundingAccount> {
     this.logger.info('readOne', { id, userId: session.userId });
 
@@ -84,18 +84,18 @@ export class FundingAccountService {
   async readMany(ids: readonly ID[], session: Session) {
     const fundingAccounts = await this.repo.readMany(ids);
     return await Promise.all(
-      fundingAccounts.map((dto) => this.secure(dto, session))
+      fundingAccounts.map((dto) => this.secure(dto, session)),
     );
   }
 
   private async secure(
     dto: UnsecuredDto<FundingAccount>,
-    session: Session
+    session: Session,
   ): Promise<FundingAccount> {
     const securedProps = await this.authorizationService.secureProperties(
       FundingAccount,
       dto,
-      session
+      session,
     );
     return {
       ...dto,
@@ -106,7 +106,7 @@ export class FundingAccountService {
 
   async update(
     input: UpdateFundingAccount,
-    session: Session
+    session: Session,
   ): Promise<FundingAccount> {
     const fundingAccount = await this.readOne(input.id, session);
 
@@ -114,7 +114,7 @@ export class FundingAccountService {
     await this.authorizationService.verifyCanEditChanges(
       FundingAccount,
       fundingAccount,
-      changes
+      changes,
     );
     return await this.repo.updateProperties(fundingAccount, changes);
   }
@@ -130,7 +130,7 @@ export class FundingAccountService {
 
     if (!canDelete)
       throw new UnauthorizedException(
-        'You do not have the permission to delete this Funding Account'
+        'You do not have the permission to delete this Funding Account',
       );
 
     try {
@@ -143,7 +143,7 @@ export class FundingAccountService {
 
   async list(
     input: FundingAccountListInput,
-    session: Session
+    session: Session,
   ): Promise<FundingAccountListOutput> {
     if (await this.authorizationService.canList(FundingAccount, session)) {
       const results = await this.repo.list(input, session);

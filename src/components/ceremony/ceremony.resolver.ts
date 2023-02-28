@@ -26,7 +26,7 @@ export class CeremonyResolver {
   })
   async ceremony(
     @IdArg() id: ID,
-    @Loader(CeremonyLoader) ceremonies: LoaderOf<CeremonyLoader>
+    @Loader(CeremonyLoader) ceremonies: LoaderOf<CeremonyLoader>,
   ): Promise<Ceremony> {
     return await ceremonies.load(id);
   }
@@ -37,7 +37,7 @@ export class CeremonyResolver {
   async ceremonies(
     @AnonSession() session: Session,
     @ListArg(CeremonyListInput) input: CeremonyListInput,
-    @Loader(CeremonyLoader) ceremonies: LoaderOf<CeremonyLoader>
+    @Loader(CeremonyLoader) ceremonies: LoaderOf<CeremonyLoader>,
   ): Promise<CeremonyListOutput> {
     const list = await this.service.list(input, session);
     ceremonies.primeAll(list.items);
@@ -49,7 +49,7 @@ export class CeremonyResolver {
   })
   async updateCeremony(
     @LoggedInSession() session: Session,
-    @Args('input') { ceremony: input }: UpdateCeremonyInput
+    @Args('input') { ceremony: input }: UpdateCeremonyInput,
   ): Promise<UpdateCeremonyOutput> {
     const ceremony = await this.service.update(input, session);
     return { ceremony };

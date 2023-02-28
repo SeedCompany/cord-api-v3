@@ -16,7 +16,7 @@ export class ProjectLoader extends ObjectViewAwareLoader<Project> {
 
   async loadManyByView(
     ids: readonly ID[],
-    view: ObjectView
+    view: ObjectView,
   ): Promise<readonly Project[]> {
     return await this.projects.readMany(ids, this.session, view);
   }

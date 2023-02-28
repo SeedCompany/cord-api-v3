@@ -9,12 +9,12 @@ import { createLazyRecord } from '../lazy-record';
 import { action, extract, PermGranter } from './perm-granter';
 
 export class PropGranter<
-  TResourceStatic extends ResourceShape<any>
+  TResourceStatic extends ResourceShape<any>,
 > extends PermGranter<TResourceStatic, PropAction> {
   constructor(
     protected resource: EnhancedResource<TResourceStatic>,
     protected properties: Array<keyof TResourceStatic['prototype'] & string>,
-    stagedCondition?: Condition<TResourceStatic>
+    stagedCondition?: Condition<TResourceStatic>,
   ) {
     super(stagedCondition);
   }
@@ -43,7 +43,7 @@ export class PropGranter<
 
   static forResource<TResourceStatic extends ResourceShape<any>>(
     resource: EnhancedResource<TResourceStatic>,
-    stagedCondition: Condition<TResourceStatic> | undefined
+    stagedCondition: Condition<TResourceStatic> | undefined,
   ): PropsGranter<TResourceStatic> {
     const granter = createLazyRecord<PropsGranter<TResourceStatic>>({
       getKeys: () => resource.securedPropsPlusExtra,

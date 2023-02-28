@@ -39,7 +39,7 @@ export const Cache =
     methodName: string | symbol,
     descriptor: TypedPropertyDescriptor<
       (this: { [CacheKey]: CacheService }, ...args: Args) => Promise<Result>
-    >
+    >,
   ) => {
     // Use property-based injection to get access to the Cache object at a known location.
     if (target[CacheKey] === undefined) {

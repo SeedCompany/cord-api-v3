@@ -40,7 +40,7 @@ ExceptionHandler.getLogger = memoize(() =>
   createLogger({
     transports: [new transports.Console()],
     format: format.combine(exceptionInfo(), formatException(), printForCli()),
-  })
+  }),
 );
 
 @Global()
@@ -75,7 +75,7 @@ ExceptionHandler.getLogger = memoize(() =>
                 colorize(),
                 formatException(),
                 printForCli(),
-              ])
+              ]),
         );
 
         return {
@@ -110,7 +110,7 @@ export class LoggerModule {
   constructor(
     proxy: ProxyLoggerService,
     winston: WinstonLoggerService,
-    buffer: BufferLoggerService
+    buffer: BufferLoggerService,
   ) {
     proxy.setLogger(winston);
     buffer.flushTo(winston);

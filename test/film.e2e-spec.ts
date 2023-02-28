@@ -34,7 +34,7 @@ describe('Film e2e', () => {
     const film = await createFilm(app, { name, scriptureReferences });
     expect(film.scriptureReferences.value).toBeDefined();
     expect(film.scriptureReferences.value).toEqual(
-      expect.arrayContaining(scriptureReferences)
+      expect.arrayContaining(scriptureReferences),
     );
   });
 
@@ -54,13 +54,13 @@ describe('Film e2e', () => {
       `,
       {
         id: fm.id,
-      }
+      },
     );
     expect(actual.id).toBe(fm.id);
     expect(isValidId(actual.id)).toBe(true);
     expect(actual.name.value).toBe(fm.name.value);
     expect(actual.scriptureReferences.value).toEqual(
-      expect.arrayContaining(fm.scriptureReferences.value)
+      expect.arrayContaining(fm.scriptureReferences.value),
     );
   });
 
@@ -88,14 +88,14 @@ describe('Film e2e', () => {
             scriptureReferences,
           },
         },
-      }
+      },
     );
     const updated = result.updateFilm.film;
     expect(updated).toBeTruthy();
     expect(updated.name.value).toBe(newName);
     expect(updated.scriptureReferences.value).toBeDefined();
     expect(updated.scriptureReferences.value).toEqual(
-      expect.arrayContaining(scriptureReferences)
+      expect.arrayContaining(scriptureReferences),
     );
   });
 
@@ -112,7 +112,7 @@ describe('Film e2e', () => {
       `,
       {
         id: fm.id,
-      }
+      },
     );
     const actual: Film | undefined = result.deleteFilm;
     expect(actual).toBeTruthy();

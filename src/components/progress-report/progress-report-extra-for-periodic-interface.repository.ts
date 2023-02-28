@@ -6,7 +6,7 @@ import { ProgressReport, ProgressReportStatus as Status } from './dto';
 @Injectable()
 export class ProgressReportExtraForPeriodicInterfaceRepository {
   getCreateOptions(
-    _input: MergePeriodicReports
+    _input: MergePeriodicReports,
   ): CreateNodeOptions<typeof ProgressReport> {
     return {
       initialProps: {

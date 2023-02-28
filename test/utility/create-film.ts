@@ -15,7 +15,7 @@ export async function listFilms(app: TestApp) {
         }
       }
       ${fragments.film}
-    `
+    `,
   );
   const films = result.films.items;
   expect(films).toBeTruthy();
@@ -32,7 +32,7 @@ export async function readOneFilm(app: TestApp, id: string) {
       }
       ${fragments.film}
     `,
-    { id }
+    { id },
   );
   const actual = result.film;
   expect(actual).toBeTruthy();
@@ -41,7 +41,7 @@ export async function readOneFilm(app: TestApp, id: string) {
 
 export async function createFilm(
   app: TestApp,
-  input: Partial<CreateFilm> = {}
+  input: Partial<CreateFilm> = {},
 ) {
   const name = input.name || faker.hacker.noun() + faker.company.name();
 
@@ -63,7 +63,7 @@ export async function createFilm(
           name,
         },
       },
-    }
+    },
   );
   const fm: Film = result.createFilm.film;
 

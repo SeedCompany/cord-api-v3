@@ -26,7 +26,7 @@ export class ProgressReportCommunityStoryResolver {
   @ResolveField(() => PromptVariantResponseList)
   async communityStories(
     @Parent() report: ProgressReport,
-    @AnonSession() session: Session
+    @AnonSession() session: Session,
   ): Promise<PromptVariantResponseList<CommunityStoryVariant>> {
     return await this.service.list(report, session);
   }
@@ -34,7 +34,7 @@ export class ProgressReportCommunityStoryResolver {
   @Mutation(() => PromptVariantResponse)
   async createProgressReportCommunityStory(
     @Args({ name: 'input' }) input: ChoosePrompt,
-    @LoggedInSession() session: Session
+    @LoggedInSession() session: Session,
   ): Promise<PromptVariantResponse> {
     return await this.service.create(input, session);
   }
@@ -42,7 +42,7 @@ export class ProgressReportCommunityStoryResolver {
   @Mutation(() => PromptVariantResponse)
   async changeProgressReportCommunityStoryPrompt(
     @Args({ name: 'input' }) input: ChangePrompt,
-    @LoggedInSession() session: Session
+    @LoggedInSession() session: Session,
   ): Promise<PromptVariantResponse> {
     return await this.service.changePrompt(input, session);
   }
@@ -51,7 +51,7 @@ export class ProgressReportCommunityStoryResolver {
   async updateProgressReportCommunityStoryResponse(
     @Args({ name: 'input' })
     input: UpdatePromptVariantResponse<CommunityStoryVariant>,
-    @LoggedInSession() session: Session
+    @LoggedInSession() session: Session,
   ): Promise<PromptVariantResponse> {
     return await this.service.submitResponse(input, session);
   }
@@ -60,7 +60,7 @@ export class ProgressReportCommunityStoryResolver {
   async deleteProgressReportCommunityStory(
     @IdArg() id: IdOf<PromptVariantResponse>,
     @LoggedInSession() session: Session,
-    @Loader(PeriodicReportLoader) reports: LoaderOf<PeriodicReportLoader>
+    @Loader(PeriodicReportLoader) reports: LoaderOf<PeriodicReportLoader>,
   ): Promise<PeriodicReport> {
     const response = await this.service.delete(id, session);
     return await reports.load(response.parent.properties.id);

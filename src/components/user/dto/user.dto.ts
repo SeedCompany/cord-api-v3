@@ -25,7 +25,7 @@ import { UserStatus } from './user-status.enum';
 
 const PinnableResource: Type<Resource & Pinnable> = IntersectionType(
   Resource,
-  Pinnable
+  Pinnable,
 );
 
 @ObjectType({

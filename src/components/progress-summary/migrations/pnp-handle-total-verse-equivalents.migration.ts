@@ -11,7 +11,7 @@ export class PnpHandleTotalVerseEquivalentsMigration extends BaseMigration {
   constructor(
     private readonly files: FileService,
     private readonly reports: PeriodicReportService,
-    private readonly eventBus: IEventBus
+    private readonly eventBus: IEventBus,
   ) {
     super();
   }
@@ -19,7 +19,7 @@ export class PnpHandleTotalVerseEquivalentsMigration extends BaseMigration {
   async up() {
     const result = await this.findSummariesWithValuesGreaterThanOne();
     this.logger.info(
-      `Found ${result.length} reports with summaries whose values were incorrectly extracted as percents`
+      `Found ${result.length} reports with summaries whose values were incorrectly extracted as percents`,
     );
 
     const session = this.fakeAdminSession;
@@ -70,7 +70,7 @@ export class PnpHandleTotalVerseEquivalentsMigration extends BaseMigration {
           ])
           .return('version')
           .orderBy('version.createdAt', 'DESC')
-          .raw('LIMIT 1')
+          .raw('LIMIT 1'),
       )
       .return<{ reportId: ID; versionId: ID }>([
         'r.id as reportId',

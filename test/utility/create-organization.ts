@@ -21,7 +21,7 @@ export async function listOrganizations(app: TestApp) {
         }
       }
       ${fragments.org}
-    `
+    `,
   );
   const orgs = result.organizations.items;
   expect(orgs).toBeTruthy();
@@ -44,7 +44,7 @@ export async function readOneOrgLocations(app: TestApp, id: string) {
       }
       ${fragments.location}
     `,
-    { id }
+    { id },
   );
   const actual: SecuredLocationList = result.organization.locations;
   expect(actual).toBeTruthy();
@@ -61,7 +61,7 @@ export async function readOneOrganization(app: TestApp, id: ID) {
       }
       ${fragments.org}
     `,
-    { id }
+    { id },
   );
   const actual: Organization = result.organization;
   expect(actual).toBeTruthy();
@@ -70,7 +70,7 @@ export async function readOneOrganization(app: TestApp, id: ID) {
 
 export async function createOrganization(
   app: TestApp,
-  input: Partial<CreateOrganization> = {}
+  input: Partial<CreateOrganization> = {},
 ) {
   const name = input.name || faker.hacker.noun() + faker.company.name();
   const address = input.address || faker.address.city();
@@ -94,7 +94,7 @@ export async function createOrganization(
           address,
         },
       },
-    }
+    },
   );
   const org: Organization = result.createOrganization.organization;
 
@@ -132,10 +132,10 @@ export async function addLocationToOrganization({
     {
       organizationId: organizationId,
       locationId: locationId,
-    }
+    },
   );
   expect(result.addLocationToOrganization.id).toEqual(organizationId);
   expect(result.addLocationToOrganization.locations.items[0].id).toEqual(
-    locationId
+    locationId,
   );
 }

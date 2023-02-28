@@ -12,10 +12,10 @@ export const matchChangesetAndChangedProps =
               view: { changeset },
               outputVar: 'changedProps',
               optional: true,
-            })
+            }),
           )
           .match(node('changeset', 'Changeset', { id: changeset }))
       : query.subQuery((sub) =>
-          sub.return(['null as changeset', '{} as changedProps'])
+          sub.return(['null as changeset', '{} as changedProps']),
         );
   };

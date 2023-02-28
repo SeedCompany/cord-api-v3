@@ -72,18 +72,18 @@ describe('Partner e2e', () => {
             address,
           },
         },
-      }
+      },
     );
     const updated = result.updatePartner.partner;
     expect(updated).toBeTruthy();
     expect(updated.pointOfContact.value.id).toBe(person.id);
     expect(updated.types.value).toEqual(expect.arrayContaining(types));
     expect(updated.financialReportingTypes.value).toEqual(
-      financialReportingTypes
+      financialReportingTypes,
     );
     expect(updated.pmcEntityCode.value).toEqual(pmcEntityCode);
     expect(updated.globalInnovationsClient.value).toEqual(
-      globalInnovationsClient
+      globalInnovationsClient,
     );
     expect(updated.active.value).toEqual(active);
     expect(updated.address.value).toEqual(address);
@@ -102,7 +102,7 @@ describe('Partner e2e', () => {
       `,
       {
         id: pt.id,
-      }
+      },
     );
     const actual: Partner | undefined = result.deletePartner;
     expect(actual).toBeTruthy();
@@ -134,12 +134,12 @@ describe('Partner e2e', () => {
     const org = await createOrganization(app);
     await createPartner(app, { organizationId: org.id });
     await expect(
-      createPartner(app, { organizationId: org.id })
+      createPartner(app, { organizationId: org.id }),
     ).rejects.toThrowGqlError(
       errors.duplicate({
         message: 'Partner for organization already exists.',
         field: 'partner.organizationId',
-      })
+      }),
     );
   });
 
@@ -150,13 +150,13 @@ describe('Partner e2e', () => {
         createPartner(app, {
           pmcEntityCode: pmc,
           organizationId: org.id,
-        })
+        }),
       ).rejects.toThrowGqlError(
         errors.validation({
           'partner.pmcEntityCode': {
             matches: 'Must be 3 uppercase letters',
           },
-        })
+        }),
       );
     }
   });
@@ -168,13 +168,13 @@ describe('Partner e2e', () => {
         organizationId: org.id,
         types: [PartnerType.Funding],
         financialReportingTypes: [FinancialReportingType.Funded],
-      })
+      }),
     ).rejects.toThrowGqlError(
       errors.input({
         message:
           'Financial reporting type can only be applied to managing partners',
         field: 'partnership.financialReportingType',
-      })
+      }),
     );
   });
 });

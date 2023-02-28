@@ -66,7 +66,7 @@ declare module 'cypher-query-builder/dist/typings/connection' {
      */
     runInTransaction: <R>(
       inTx: (this: void) => Promise<R>,
-      options?: TransactionOptions
+      options?: TransactionOptions,
     ) => Promise<R>;
   }
 }
@@ -80,7 +80,7 @@ Object.defineProperty(Connection.prototype, 'currentTransaction', {
 Connection.prototype.runInTransaction = async function withTransaction<R>(
   this: PatchedConnection,
   inner: (this: void) => Promise<R>,
-  options?: TransactionOptions
+  options?: TransactionOptions,
 ): Promise<R> {
   const outer = this.currentTransaction;
   if (outer) {
@@ -88,7 +88,7 @@ Connection.prototype.runInTransaction = async function withTransaction<R>(
     const isExistingRead = outer._connectionHolder._mode === 'READ';
     if (isExistingRead && options?.mode !== 'read') {
       throw new ServerException(
-        'A write transaction cannot be started within a read transaction'
+        'A write transaction cannot be started within a read transaction',
       );
     }
 
@@ -117,7 +117,7 @@ Connection.prototype.runInTransaction = async function withTransaction<R>(
           ? Duration.from(options.timeout).toMillis()
           : undefined,
         metadata: options?.metadata,
-      }
+      },
     );
   } finally {
     await session.close();

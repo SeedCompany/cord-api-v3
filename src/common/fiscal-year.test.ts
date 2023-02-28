@@ -21,7 +21,7 @@ describe('fullFiscalQuarter', () => {
     [4, 2020, '2020-07-01/2020-09-30'],
   ])('Q%s FY%s -> %s', (fiscalQuarter, fiscalYear, dateRange) => {
     expect(fullFiscalQuarter(fiscalQuarter, fiscalYear).toISO()).toEqual(
-      dateRange
+      dateRange,
     );
   });
 });

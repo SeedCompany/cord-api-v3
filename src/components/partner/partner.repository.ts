@@ -58,7 +58,7 @@ export class PartnerRepository extends DtoRepository<
         createRelationships(Partner, 'out', {
           organization: ['Organization', input.organizationId],
           pointOfContact: ['User', input.pointOfContactId],
-        })
+        }),
       )
       .return<{ id: ID }>('node.id as id')
       .first();
@@ -97,7 +97,7 @@ export class PartnerRepository extends DtoRepository<
             .with('projList')
             .with('projList')
             .raw('WHERE size(projList) = 0')
-            .return(`'High' as sensitivity`)
+            .return(`'High' as sensitivity`),
         )
         .apply(matchProps())
         .optionalMatch([
@@ -117,7 +117,7 @@ export class PartnerRepository extends DtoRepository<
             pointOfContact: 'pointOfContact.id',
             scope: 'scopedRoles',
             pinned: 'exists((:User { id: $requestingUser })-[:pinned]->(node))',
-          }).as('dto')
+          }).as('dto'),
         );
   }
 
@@ -172,7 +172,7 @@ export class PartnerRepository extends DtoRepository<
         filters.builder(filter, {
           pinned: filters.isPinned,
           userId: filters.skip, // already applied above
-        })
+        }),
       )
       .apply(
         this.privileges.forUser(session).filterToReadable({
@@ -186,7 +186,7 @@ export class PartnerRepository extends DtoRepository<
                 node('node'),
               ])
               .apply(oncePerProject(inner)),
-        })
+        }),
       )
       .apply(
         sorting(Partner, input, {
@@ -200,7 +200,7 @@ export class PartnerRepository extends DtoRepository<
                 node('prop', 'Property'),
               ])
               .return<{ sortValue: string }>('prop.value as sortValue'),
-        })
+        }),
       )
       .apply(paginate(input, this.hydrate(session)))
       .first();

@@ -78,7 +78,7 @@ export type HydratedProductRow = Merge<
 export class ProductRepository extends CommonRepository {
   constructor(
     private readonly scriptureRefs: ScriptureReferenceRepository,
-    db: DatabaseService
+    db: DatabaseService,
   ) {
     super(db);
   }
@@ -115,8 +115,8 @@ export class ProductRepository extends CommonRepository {
             node('scriptureRanges', 'ScriptureRange'),
           ])
           .return(
-            collect('scriptureRanges { .start, .end }').as('scriptureRanges')
-          )
+            collect('scriptureRanges { .start, .end }').as('scriptureRanges'),
+          ),
       )
       .return<{
         id: ID;
@@ -166,7 +166,7 @@ export class ProductRepository extends CommonRepository {
 
   async getProducibleIdsByNames(
     names: readonly string[],
-    type?: ProducibleType
+    type?: ProducibleType,
   ) {
     const res = await this.db
       .query()
@@ -212,15 +212,15 @@ export class ProductRepository extends CommonRepository {
               'produces',
               this.scriptureRefs.list({
                 nodeName: 'produces',
-              })
+              }),
             )
             .with(
               merge('produces', 'props', {
                 __typename: 'labels(produces)',
                 scriptureReferences: 'scriptureReferences',
-              }).as('produces')
+              }).as('produces'),
             )
-            .return('collect(produces)[0] as produces')
+            .return('collect(produces)[0] as produces'),
         )
         .subQuery(
           ['node', 'produces'],
@@ -231,7 +231,7 @@ export class ProductRepository extends CommonRepository {
                 ELSE "scriptureReferencesOverride"
               END
             `,
-          })
+          }),
         )
         .return<{ dto: HydratedProductRow }>(
           merge('props', {
@@ -241,7 +241,7 @@ export class ProductRepository extends CommonRepository {
             unspecifiedScripture:
               'unspecifiedScripture { .book, .totalVerses }',
             scriptureReferences: 'scriptureReferences',
-          }).as('dto')
+          }).as('dto'),
         );
   }
 
@@ -249,7 +249,7 @@ export class ProductRepository extends CommonRepository {
 
   async updateProperties(
     object: DirectScriptureProduct,
-    changes: DbChanges<DirectScriptureProduct>
+    changes: DbChanges<DirectScriptureProduct>,
   ) {
     return await this.db.updateProperties({
       type: DirectScriptureProduct,
@@ -277,7 +277,7 @@ export class ProductRepository extends CommonRepository {
     input: (CreateDerivativeScriptureProduct | CreateDirectScriptureProduct) & {
       totalVerses: number;
       totalVerseEquivalents: number;
-    }
+    },
   ) {
     const isDerivative = 'produces' in input;
     const Product = isDerivative
@@ -313,7 +313,7 @@ export class ProductRepository extends CommonRepository {
             pnpIndex: input.pnpIndex,
             createdAt: input.createdAt,
           },
-        })
+        }),
       )
       .apply(
         createRelationships(Product, {
@@ -325,7 +325,7 @@ export class ProductRepository extends CommonRepository {
                 produces: ['Producible', input.produces],
               }
             : {},
-        })
+        }),
       )
       // Connect scripture ranges
       .apply((q) => {
@@ -342,10 +342,10 @@ export class ProductRepository extends CommonRepository {
             ];
         return q.create([
           ...(!isDerivative ? input.scriptureReferences ?? [] : []).map(
-            connectScriptureRange('scriptureReferences')
+            connectScriptureRange('scriptureReferences'),
           ),
           ...(isDerivative ? input.scriptureReferencesOverride ?? [] : []).map(
-            connectScriptureRange('scriptureReferencesOverride')
+            connectScriptureRange('scriptureReferencesOverride'),
           ),
           !isDerivative && input.unspecifiedScripture
             ? [
@@ -388,12 +388,12 @@ export class ProductRepository extends CommonRepository {
       .apply(
         await createNode(OtherProduct, {
           initialProps,
-        })
+        }),
       )
       .apply(
         createRelationships(OtherProduct, 'in', {
           product: ['LanguageEngagement', input.engagementId],
-        })
+        }),
       )
       .return<{ id: ID }>('node.id as id');
     const result = await query.first();
@@ -405,7 +405,7 @@ export class ProductRepository extends CommonRepository {
 
   async updateProducible(
     input: Except<UpdateProduct, 'scriptureReferences'>,
-    produces: ID
+    produces: ID,
   ) {
     await this.db
       .query()
@@ -442,7 +442,7 @@ export class ProductRepository extends CommonRepository {
 
   async updateUnspecifiedScripture(
     productId: ID,
-    input: UnspecifiedScripturePortionInput | null
+    input: UnspecifiedScripturePortionInput | null,
   ) {
     await this.db
       .query()
@@ -451,7 +451,7 @@ export class ProductRepository extends CommonRepository {
         deactivateProperty({
           resource: DirectScriptureProduct,
           key: 'unspecifiedScripture',
-        })
+        }),
       )
       .apply((q) =>
         input
@@ -463,7 +463,7 @@ export class ProductRepository extends CommonRepository {
                 createdAt: DateTime.local(),
               }),
             ])
-          : q
+          : q,
       )
       .return('numPropsDeactivated')
       .first();
@@ -471,7 +471,7 @@ export class ProductRepository extends CommonRepository {
 
   async updateDerivativeProperties(
     object: DerivativeScriptureProduct,
-    changes: DbChanges<DerivativeScriptureProduct>
+    changes: DbChanges<DerivativeScriptureProduct>,
   ) {
     return await this.db.updateProperties({
       type: DerivativeScriptureProduct,
@@ -515,7 +515,7 @@ export class ProductRepository extends CommonRepository {
             engagementId: filter.skip,
             placeholder: filter.isPropNotNull('placeholderDescription'),
             methodology: filter.propVal(),
-          }
+          },
         )(q);
       })
       .apply(sorting(Product, input))
@@ -526,7 +526,7 @@ export class ProductRepository extends CommonRepository {
 
   async mergeCompletionDescription(
     description: string,
-    methodology: Methodology
+    methodology: Methodology,
   ) {
     await this.db
       .query()
@@ -534,7 +534,7 @@ export class ProductRepository extends CommonRepository {
         node('node', 'ProductCompletionDescription', {
           value: description,
           methodology,
-        })
+        }),
       )
       .onCreate.setVariables({
         'node.lastUsedAt': 'datetime()',
@@ -557,13 +557,13 @@ export class ProductRepository extends CommonRepository {
       .apply((q) =>
         query
           ? q.apply(fullTextQuery('ProductCompletionDescription', query))
-          : q.matchNode('node', 'ProductCompletionDescription')
+          : q.matchNode('node', 'ProductCompletionDescription'),
       )
       .apply((q) =>
-        methodology ? q.with('node').where({ node: { methodology } }) : q
+        methodology ? q.with('node').where({ node: { methodology } }) : q,
       )
       .apply((q) =>
-        query ? q : q.with('node').orderBy('node.lastUsedAt', 'DESC')
+        query ? q : q.with('node').orderBy('node.lastUsedAt', 'DESC'),
       )
       .with('node.value as node')
       .apply(paginate(input, (q) => q.return<{ dto: string }>('node as dto')))
@@ -579,7 +579,7 @@ export class ProductRepository extends CommonRepository {
       ['value'],
       {
         analyzer: 'standard-folding',
-      }
+      },
     );
   }
 

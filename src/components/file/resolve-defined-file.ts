@@ -8,7 +8,7 @@ import { DefinedFile, FileNode, isFile, SecuredFile } from './dto';
 
 export async function resolveDefinedFile(
   loader: DataLoader<FileNode>,
-  input: DefinedFile
+  input: DefinedFile,
 ): Promise<SecuredFile> {
   return await mapSecuredValue(input, async (fileId) => {
     try {

@@ -14,7 +14,7 @@ export class MigrationModule implements OnModuleInit {
   constructor(
     private readonly db: DatabaseService,
     private readonly runner: MigrationRunner,
-    private readonly config: ConfigService
+    private readonly config: ConfigService,
   ) {}
 
   async onModuleInit() {

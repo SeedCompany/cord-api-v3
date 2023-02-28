@@ -60,7 +60,7 @@ describe('Region e2e', () => {
         directorId: director.id,
         name,
         fieldZoneId: fieldZone.id,
-      })
+      }),
     ).rejects.toThrowGqlError();
   });
 
@@ -97,7 +97,7 @@ describe('Region e2e', () => {
       `,
       {
         id: fieldRegion.id,
-      }
+      },
     );
 
     expect(actual.id).toBe(fieldRegion.id);
@@ -148,7 +148,7 @@ describe('Region e2e', () => {
             name: newName,
           },
         },
-      }
+      },
     );
     const updated = result.updateFieldRegion.fieldRegion;
     expect(updated).toBeTruthy();
@@ -190,7 +190,7 @@ describe('Region e2e', () => {
             zoneId: newZone.id,
           },
         },
-      }
+      },
     );
     const updated = result.updateFieldRegion.fieldRegion;
 
@@ -227,7 +227,7 @@ describe('Region e2e', () => {
             directorId: newDirector.id,
           },
         },
-      }
+      },
     );
     const updated = result.updateFieldregion.fieldRegion;
 
@@ -252,7 +252,7 @@ describe('Region e2e', () => {
       `,
       {
         id: fieldRegion.id,
-      }
+      },
     );
     const actual: FieldRegion | undefined = result.deleteFieldRegion;
     expect(actual).toBeTruthy();
@@ -266,8 +266,8 @@ describe('Region e2e', () => {
           name: regionName,
           directorId: director.id,
           fieldZoneId: fieldZone.id,
-        })
-      )
+        }),
+      ),
     );
 
     const { fieldRegions } = await app.graphql.query(gql`

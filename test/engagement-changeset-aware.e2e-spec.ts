@@ -49,7 +49,7 @@ const readEngagements = (app: TestApp, id: string, changeset?: string) =>
     {
       id,
       changeset,
-    }
+    },
   );
 
 const readLanguageEngagement = (app: TestApp, id: string, changeset?: string) =>
@@ -84,7 +84,7 @@ const readLanguageEngagement = (app: TestApp, id: string, changeset?: string) =>
     {
       id,
       changeset,
-    }
+    },
   );
 
 const readProjectChangeset = (app: TestApp, id: string, changeset?: string) =>
@@ -118,7 +118,7 @@ const readProjectChangeset = (app: TestApp, id: string, changeset?: string) =>
     {
       id,
       changeset,
-    }
+    },
   );
 
 const activeProject = async (app: TestApp, projectId: ID) => {
@@ -200,7 +200,7 @@ describe('Engagement Changeset Aware e2e', () => {
           },
           changeset: changeset.id,
         },
-      }
+      },
     );
     // list engagements without changeset
     let result = await readEngagements(app, project.id);
@@ -209,7 +209,7 @@ describe('Engagement Changeset Aware e2e', () => {
     result = await readEngagements(app, project.id, changeset.id);
     expect(result.project.engagements.items.length).toBe(2);
     expect(result.project.engagements.items[1].id).toBe(
-      changesetEngagement.createLanguageEngagement.engagement.id
+      changesetEngagement.createLanguageEngagement.engagement.id,
     );
     await approveProjectChangeRequest(app, changeset.id);
     result = await readEngagements(app, project.id);
@@ -249,7 +249,7 @@ describe('Engagement Changeset Aware e2e', () => {
           },
           changeset: changeset.id,
         },
-      }
+      },
     );
 
     // read engagement without changeset
@@ -259,7 +259,7 @@ describe('Engagement Changeset Aware e2e', () => {
     result = await readLanguageEngagement(
       app,
       languageEngagement.id,
-      changeset.id
+      changeset.id,
     );
     expect(result.engagement.completeDate.value).toBe('2100-08-22');
     await approveProjectChangeRequest(app, changeset.id);
@@ -297,10 +297,10 @@ describe('Engagement Changeset Aware e2e', () => {
           },
           changeset: changeset.id,
         },
-      }
+      },
     );
     expect(
-      changesetEngagement.createLanguageEngagement.engagement.ceremony
+      changesetEngagement.createLanguageEngagement.engagement.ceremony,
     ).toBeDefined();
 
     const engagementId =
@@ -327,7 +327,7 @@ describe('Engagement Changeset Aware e2e', () => {
           },
           changeset: changeset.id,
         },
-      }
+      },
     );
 
     // read engagement with changeset
@@ -371,7 +371,7 @@ describe('Engagement Changeset Aware e2e', () => {
           },
           changeset: changeset.id,
         },
-      }
+      },
     );
 
     // Delete engagement in changeset
@@ -386,7 +386,7 @@ describe('Engagement Changeset Aware e2e', () => {
       {
         id: le.createLanguageEngagement.engagement.id,
         changeset: changeset.id,
-      }
+      },
     );
     const actual: boolean | undefined = result.deleteEngagement;
     expect(actual).toBeTruthy();
@@ -402,10 +402,10 @@ describe('Engagement Changeset Aware e2e', () => {
     const projectChangeset = await readProjectChangeset(
       app,
       project.id,
-      changeset.id
+      changeset.id,
     );
     expect(projectChangeset.project.changeset.difference.removed[0].id).toBe(
-      le.createLanguageEngagement.engagement.id
+      le.createLanguageEngagement.engagement.id,
     );
   });
 
@@ -444,12 +444,12 @@ describe('Engagement Changeset Aware e2e', () => {
             },
             changeset: changeset.id,
           },
-        }
+        },
       )
       .expectError(
         errors.duplicate({
           message: 'Engagement for this project and language already exists',
-        })
+        }),
       );
   });
 });

@@ -37,7 +37,7 @@ export class CommonRepository {
 
   async getBaseNode(
     id: ID,
-    label?: string | ResourceShape<any>
+    label?: string | ResourceShape<any>,
   ): Promise<BaseNode | undefined> {
     const resolvedLabel = label
       ? typeof label === 'string'
@@ -57,7 +57,7 @@ export class CommonRepository {
     otherLabel: string,
     id: ID,
     otherId: ID | null,
-    label?: string
+    label?: string,
   ) {
     await this.db
       .query()
@@ -77,7 +77,7 @@ export class CommonRepository {
             'oldRel.deletedAt': 'datetime()',
           })
           // Ensure exactly one row is returned, for the create below
-          .return('count(oldRel) as removedRelationCount')
+          .return('count(oldRel) as removedRelationCount'),
       )
       .create([
         node('node'),

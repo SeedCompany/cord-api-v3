@@ -21,7 +21,7 @@ export class EnvironmentService implements Iterable<[string, string]> {
   constructor(
     @Logger('config:environment') private readonly logger: ILogger,
     @Optional() rootPath = process.cwd(),
-    @Optional() env = process.env.NODE_ENV || 'development'
+    @Optional() env = process.env.NODE_ENV || 'development',
   ) {
     // I think we have to load parent env by default
     // as pairs could be passed in instead of in env files
@@ -74,7 +74,7 @@ export class EnvironmentService implements Iterable<[string, string]> {
 
   boolean(key: string) {
     return this.wrap(key, (raw: string | boolean) =>
-      typeof raw === 'boolean' ? raw : raw.toLowerCase() === 'true'
+      typeof raw === 'boolean' ? raw : raw.toLowerCase() === 'true',
     );
   }
 
@@ -98,7 +98,7 @@ export class EnvironmentService implements Iterable<[string, string]> {
         return parseSize(raw, options);
       } catch (e) {
         throw new Error(
-          `Environment "${key}" has value "${raw}" which cannot be parsed to a number`
+          `Environment "${key}" has value "${raw}" which cannot be parsed to a number`,
         );
       }
     });
@@ -119,7 +119,7 @@ class ConfigValue<Out, In> {
     readonly exists: boolean,
     readonly key: string,
     protected readonly rawValue: string,
-    protected readonly parse: (raw: In | string) => Out
+    protected readonly parse: (raw: In | string) => Out,
   ) {}
 
   required() {

@@ -17,5 +17,5 @@ registerEnumType(ProgressReportStatus, {
 
 @ObjectType()
 export class SecuredProgressReportStatus extends SecuredEnum(
-  ProgressReportStatus
+  ProgressReportStatus,
 ) {}

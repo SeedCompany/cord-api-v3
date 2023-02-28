@@ -109,7 +109,7 @@ describe('Language Security e2e', () => {
             propToTest: property,
             skipEditCheck: false,
           });
-        }
+        },
       );
 
       it('reading locations', async () => {
@@ -220,7 +220,7 @@ describe('Language Security e2e', () => {
               property,
               readFunction,
               role,
-              resource
+              resource,
             );
             await testSensitivityHigherThan(
               app,
@@ -228,11 +228,11 @@ describe('Language Security e2e', () => {
               resource,
               property,
               role,
-              readFunction
+              readFunction,
             );
-          }
+          },
         );
-      }
+      },
     );
 
     describe.each`
@@ -254,7 +254,7 @@ describe('Language Security e2e', () => {
             Language,
             'locations',
             role,
-            readOneLanguageLocation
+            readOneLanguageLocation,
           );
           await testSensitivityLowerThanEqualTo(
             app,
@@ -262,17 +262,17 @@ describe('Language Security e2e', () => {
             'locations',
             readOneLanguageLocation,
             role,
-            Language
+            Language,
           );
         });
-      }
+      },
     );
   });
 });
 
 async function testSensitivityHigherThan<
   TResource extends ResourceShape<any>,
-  Prop extends SecuredResourceKey<TResource>
+  Prop extends SecuredResourceKey<TResource>,
 >(
   app: TestApp,
   sensitivity: Sensitivity,
@@ -287,7 +287,7 @@ async function testSensitivityHigherThan<
         ? ReadOneFunction<
             SecuredListType<ResourceArrayRelation<TResource, Prop>>
           >
-        : never)
+        : never),
 ) {
   const isRelationList = resource.Relations && property in resource.Relations;
 
@@ -302,7 +302,7 @@ async function testSensitivityHigherThan<
           sensitivity: Sensitivity.High,
         }),
       ];
-    }
+    },
   );
 
   const [medRead, highRead] = await runInIsolatedSession(app, async () => {
@@ -320,7 +320,7 @@ async function testSensitivityHigherThan<
 
   async function expectLocationList(
     read: SecuredLocationList,
-    canRead: boolean
+    canRead: boolean,
   ) {
     if (canRead) {
       expect(read.items).not.toHaveLength(0);
@@ -375,7 +375,7 @@ async function testSensitivityHigherThan<
 
 async function testSensitivityLowerThanEqualTo<
   TResource extends ResourceShape<any>,
-  Prop extends SecuredResourceKey<TResource>
+  Prop extends SecuredResourceKey<TResource>,
 >(
   app: TestApp,
   sensitivity: Sensitivity,
@@ -390,7 +390,7 @@ async function testSensitivityLowerThanEqualTo<
           >
         : never),
   role: Role,
-  resource: TResource
+  resource: TResource,
 ) {
   const isRelationList = resource.Relations && property in resource.Relations;
 
@@ -400,7 +400,7 @@ async function testSensitivityLowerThanEqualTo<
     async () =>
       await createLanguage(app, {
         sensitivity: Sensitivity.High,
-      })
+      }),
   );
   const highPerms = await getPermissions({
     app,
@@ -414,7 +414,7 @@ async function testSensitivityLowerThanEqualTo<
     async () =>
       await createLanguage(app, {
         sensitivity: Sensitivity.Medium,
-      })
+      }),
   );
   const medPerms = await getPermissions({
     app,
@@ -427,7 +427,7 @@ async function testSensitivityLowerThanEqualTo<
     async () =>
       await createLanguage(app, {
         sensitivity: Sensitivity.Low,
-      })
+      }),
   );
   const lowPerms = await getPermissions({
     app,
@@ -445,12 +445,12 @@ async function testSensitivityLowerThanEqualTo<
         await readFunction(app, medSenslanguage.id),
         await readFunction(app, lowSenslanguage.id),
       ];
-    }
+    },
   );
 
   async function expectPropSensitivity(
     read: TResource['prototype'],
-    perms: PermissionsOf<SecuredResource<TResource>>
+    perms: PermissionsOf<SecuredResource<TResource>>,
   ) {
     expect(read[property].canRead).toEqual(perms[property].canRead);
     expect(read[property].canEdit).toEqual(perms[property].canEdit);
@@ -458,7 +458,7 @@ async function testSensitivityLowerThanEqualTo<
 
   async function expectRelationList(
     read: SecuredLocationList,
-    perms: PermissionsOf<SecuredResource<TResource>>
+    perms: PermissionsOf<SecuredResource<TResource>>,
   ) {
     if (perms[property].canRead) {
       expect(read.items).toHaveLength(0);

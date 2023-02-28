@@ -28,7 +28,7 @@ export class SetDepartmentId implements IEventHandler<SubscribedEvent> {
 
     try {
       const departmentId = await this.assignDepartmentIdForProject(
-        event.updated
+        event.updated,
       );
       event.updated = {
         ...event.updated,
@@ -37,7 +37,7 @@ export class SetDepartmentId implements IEventHandler<SubscribedEvent> {
     } catch (exception) {
       throw new ServerException(
         'Could not set departmentId on project',
-        exception
+        exception,
       );
     }
   }
@@ -63,7 +63,7 @@ export class SetDepartmentId implements IEventHandler<SubscribedEvent> {
         CREATE (project)-[newDepartmentIdRelationship:departmentId { active: true, createdAt: datetime() }]->(:Property { createdAt: datetime(), value: departmentId })
         RETURN departmentId
         `,
-        { departmentIdPrefix: departmentIdPrefix, projectId: project.id }
+        { departmentIdPrefix: departmentIdPrefix, projectId: project.id },
       )
       .asResult<{ departmentId: ID }>()
       .first();
@@ -83,13 +83,13 @@ export class SetDepartmentId implements IEventHandler<SubscribedEvent> {
               -()-[:accountNumber {active: true}]-(node:Property)
         RETURN node.value as prefix
       `,
-        { projectId: project.id }
+        { projectId: project.id },
       )
       .asResult<{ prefix: number }>()
       .first();
     if (!res) {
       throw new ServerException(
-        `Unable to find accountNumber associated with project: ${project.id}`
+        `Unable to find accountNumber associated with project: ${project.id}`,
       );
     }
     return res.prefix.toString();

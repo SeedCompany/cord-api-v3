@@ -55,20 +55,20 @@ describe('Partnership e2e', () => {
       {
         id: partnership.id,
         projectId: project.id,
-      }
+      },
     );
 
     const actual: Partnership = result.partnership;
 
     expect(actual.id).toBe(partnership.id);
     expect(actual.agreementStatus.value).toBe(
-      partnership.agreementStatus.value
+      partnership.agreementStatus.value,
     );
     expect(actual.mouStatus.value).toBe(partnership.mouStatus.value);
     expect(actual.mouStart.value).toBe(partnership.mouStart.value);
     expect(actual.mouEnd.value).toBe(partnership.mouEnd.value);
     expect(actual.types.value).toEqual(
-      expect.arrayContaining(partnership.types.value)
+      expect.arrayContaining(partnership.types.value),
     );
     expect(actual.partner).toBeTruthy();
     expect(actual.partner).toEqual(partnership.partner);
@@ -80,7 +80,7 @@ describe('Partnership e2e', () => {
 
     // lodash.sample used to grab a random enum value
     const newAgreementStatus = sample(
-      Object.values(PartnershipAgreementStatus)
+      Object.values(PartnershipAgreementStatus),
     );
     const newMouStatus = sample(Object.values(PartnershipAgreementStatus));
     const newTypes = [PartnerType.Managing];
@@ -107,20 +107,20 @@ describe('Partnership e2e', () => {
         }
         ${fragments.partnership}
       `,
-      { input }
+      { input },
     );
     expect(result.updatePartnership.partnership.id).toBe(partnership.id);
     partnership.agreementStatus.canEdit &&
       expect(result.updatePartnership.partnership.agreementStatus.value).toBe(
-        newAgreementStatus
+        newAgreementStatus,
       );
     partnership.mouStatus.canEdit &&
       expect(result.updatePartnership.partnership.mouStatus.value).toBe(
-        newMouStatus
+        newMouStatus,
       );
     partnership.types.canEdit &&
       expect(result.updatePartnership.partnership.types.value).toEqual(
-        expect.arrayContaining(newTypes)
+        expect.arrayContaining(newTypes),
       );
   });
 
@@ -137,7 +137,7 @@ describe('Partnership e2e', () => {
       `,
       {
         id: partnership.id,
-      }
+      },
     );
 
     const actual: boolean | undefined = result.deletePartnership;
@@ -154,7 +154,7 @@ describe('Partnership e2e', () => {
         `,
         {
           id: partnership.id,
-        }
+        },
       )
       .expectError(errors.notFound());
   });
@@ -192,15 +192,15 @@ describe('Partnership e2e', () => {
         id: partnership.id,
         startOverride: mouStartOverride,
         endOverride: mouEndOverride,
-      }
+      },
     );
 
     expect(result.updatePartnership.partnership.id).toBe(partnership.id);
     expect(result.updatePartnership.partnership.mouStart.value).toBe(
-      mouStartOverride
+      mouStartOverride,
     );
     expect(result.updatePartnership.partnership.mouEnd.value).toBe(
-      mouEndOverride
+      mouEndOverride,
     );
   });
 
@@ -209,8 +209,8 @@ describe('Partnership e2e', () => {
     const numPartnerships = 2;
     await Promise.all(
       times(numPartnerships).map(() =>
-        createPartnership(app, { projectId: project.id })
-      )
+        createPartnership(app, { projectId: project.id }),
+      ),
     );
 
     const { partnerships } = await app.graphql.query(
@@ -227,7 +227,7 @@ describe('Partnership e2e', () => {
             total
           }
         }
-      `
+      `,
     );
 
     expect(partnerships.items.length).toBeGreaterThanOrEqual(numPartnerships);
@@ -240,8 +240,8 @@ describe('Partnership e2e', () => {
       times(numPartnerships).map(() =>
         createPartnership(app, {
           projectId: project.id,
-        })
-      )
+        }),
+      ),
     );
 
     const result = await app.graphql.query(
@@ -263,11 +263,11 @@ describe('Partnership e2e', () => {
       `,
       {
         projectId: project.id,
-      }
+      },
     );
 
     expect(result.project.partnerships.items.length).toBeGreaterThanOrEqual(
-      numPartnerships
+      numPartnerships,
     );
   });
 
@@ -276,12 +276,12 @@ describe('Partnership e2e', () => {
       createPartnership(app, {
         projectId: project.id,
         partnerId: 'fakePartner' as ID,
-      })
+      }),
     ).rejects.toThrowGqlError(
       errors.notFound({
         message: 'Could not find partner',
         field: 'partnership.partnerId',
-      })
+      }),
     );
   });
 
@@ -289,12 +289,12 @@ describe('Partnership e2e', () => {
     await expect(
       createPartnership(app, {
         projectId: 'fakeProject' as ID,
-      })
+      }),
     ).rejects.toThrowGqlError(
       errors.notFound({
         message: 'Could not find project',
         field: 'partnership.projectId',
-      })
+      }),
     );
   });
 
@@ -316,20 +316,20 @@ describe('Partnership e2e', () => {
       `,
       {
         id: partnership.id,
-      }
+      },
     );
 
     const actual: Partnership = result.partnership;
 
     expect(actual.id).toBe(partnership.id);
     expect(actual.agreementStatus.value).toBe(
-      partnership.agreementStatus.value
+      partnership.agreementStatus.value,
     );
     expect(actual.mouStatus.value).toBe(partnership.mouStatus.value);
     expect(actual.mouStart.value).toBe(project.mouStart.value);
     expect(actual.mouEnd.value).toBe(project.mouEnd.value);
     expect(actual.types.value).toEqual(
-      expect.arrayContaining(partnership.types.value)
+      expect.arrayContaining(partnership.types.value),
     );
     expect(actual.partner).toBeTruthy();
     expect(actual.partner).toEqual(partnership.partner);
@@ -363,7 +363,7 @@ describe('Partnership e2e', () => {
       `,
       {
         id: project.id,
-      }
+      },
     );
 
     const actual = result.project;
@@ -381,13 +381,13 @@ describe('Partnership e2e', () => {
       createPartnership(app, {
         partnerId: partner.id,
         financialReportingType: FinancialReportingType.Funded,
-      })
+      }),
     ).rejects.toThrowGqlError(
       errors.input({
         message:
           'Partner does not have this financial reporting type available',
         field: 'partnership.financialReportingType',
-      })
+      }),
     );
   });
 
@@ -421,14 +421,14 @@ describe('Partnership e2e', () => {
               financialReportingType: FinancialReportingType.Funded,
             },
           },
-        }
-      )
+        },
+      ),
     ).rejects.toThrowGqlError(
       errors.input({
         message:
           'Partner does not have this financial reporting type available',
         field: 'partnership.financialReportingType',
-      })
+      }),
     );
   });
 
@@ -445,12 +445,12 @@ describe('Partnership e2e', () => {
       createPartnership(app, {
         partnerId: partner.id,
         projectId: project.id,
-      })
+      }),
     ).rejects.toThrowGqlError(
       errors.duplicate({
         message: 'Partnership for this project and partner already exists',
         field: 'partnership.projectId',
-      })
+      }),
     );
   });
 
@@ -470,7 +470,7 @@ describe('Partnership e2e', () => {
     });
 
     const getPartnershipById = async (
-      partnershipId: ID
+      partnershipId: ID,
     ): Promise<Partnership> => {
       const result = await app.graphql.query(
         gql`
@@ -484,7 +484,7 @@ describe('Partnership e2e', () => {
         {
           id: partnershipId,
           projectId: project.id,
-        }
+        },
       );
       return result.partnership;
     };
@@ -500,7 +500,7 @@ describe('Partnership e2e', () => {
         `,
         {
           id: partnershipId,
-        }
+        },
       );
     };
 
@@ -529,7 +529,7 @@ describe('Partnership e2e', () => {
         }
         ${fragments.partnership}
       `,
-      { input }
+      { input },
     );
     partnership1 = await getPartnershipById(partnership1.id);
     partnership2 = await getPartnershipById(partnership2.id);
@@ -544,7 +544,7 @@ describe('Partnership e2e', () => {
         message:
           'Primary partnerships cannot be removed. Make another partnership primary first.',
         field: 'partnership.id',
-      })
+      }),
     );
 
     await deletePartnership(partnership1.id);
@@ -553,7 +553,7 @@ describe('Partnership e2e', () => {
         message:
           'Primary partnerships cannot be removed. Make another partnership primary first.',
         field: 'partnership.id',
-      })
+      }),
     );
 
     await deletePartnership(partnership3.id);

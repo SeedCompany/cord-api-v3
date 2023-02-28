@@ -18,7 +18,7 @@ registerEnumType(Sensitivity, {
 export const SensitivityField = (options: FieldOptions = {}) =>
   applyDecorators(
     Field(() => Sensitivity, options),
-    DbSort(rankSens)
+    DbSort(rankSens),
   );
 
 export const SensitivitiesFilter = () =>

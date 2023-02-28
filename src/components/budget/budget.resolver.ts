@@ -40,7 +40,7 @@ export class BudgetResolver {
   })
   async budget(
     @Loader(BudgetLoader) budgets: LoaderOf<BudgetLoader>,
-    @IdsAndViewArg() key: IdsAndView
+    @IdsAndViewArg() key: IdsAndView,
   ): Promise<Budget> {
     return await budgets.load(key);
   }
@@ -51,7 +51,7 @@ export class BudgetResolver {
   async budgets(
     @AnonSession() session: Session,
     @ListArg(BudgetListInput) input: BudgetListInput,
-    @Loader(BudgetLoader) budgets: LoaderOf<BudgetLoader>
+    @Loader(BudgetLoader) budgets: LoaderOf<BudgetLoader>,
   ): Promise<BudgetListOutput> {
     const list = await this.service.list(input, session);
     budgets.primeAll(list.items);
@@ -68,7 +68,7 @@ export class BudgetResolver {
   })
   async universalTemplateFile(
     @Parent() budget: Budget,
-    @Loader(FileNodeLoader) files: LoaderOf<FileNodeLoader>
+    @Loader(FileNodeLoader) files: LoaderOf<FileNodeLoader>,
   ): Promise<SecuredFile> {
     return await resolveDefinedFile(files, budget.universalTemplateFile);
   }
@@ -78,7 +78,7 @@ export class BudgetResolver {
   })
   async createBudget(
     @LoggedInSession() session: Session,
-    @Args('input') { budget: input }: CreateBudgetInput
+    @Args('input') { budget: input }: CreateBudgetInput,
   ): Promise<CreateBudgetOutput> {
     const budget = await this.service.create(input, session);
     return { budget };
@@ -89,7 +89,7 @@ export class BudgetResolver {
   })
   async updateBudget(
     @LoggedInSession() session: Session,
-    @Args('input') { budget: input }: UpdateBudgetInput
+    @Args('input') { budget: input }: UpdateBudgetInput,
   ): Promise<UpdateBudgetOutput> {
     const budget = await this.service.update(input, session);
     return { budget };
@@ -100,7 +100,7 @@ export class BudgetResolver {
   })
   async deleteBudget(
     @LoggedInSession() session: Session,
-    @IdArg() id: ID
+    @IdArg() id: ID,
   ): Promise<DeleteBudgetOutput> {
     await this.service.delete(id, session);
     return { success: true };

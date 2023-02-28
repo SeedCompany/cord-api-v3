@@ -49,13 +49,13 @@ describe('Language e2e', () => {
       `,
       {
         id: language.id,
-      }
+      },
     );
 
     expect(actual.id).toBe(language.id);
     expect(isValidId(actual.id)).toBeTruthy();
     expect(actual.ethnologue.population.value).toEqual(
-      language.ethnologue.population.value
+      language.ethnologue.population.value,
     );
     expect(actual.name.value).toEqual(language.name.value);
   });
@@ -111,7 +111,7 @@ describe('Language e2e', () => {
       `,
       {
         id: language.id,
-      }
+      },
     );
 
     expect(result.deleteLanguage).toBeTruthy();
@@ -127,7 +127,7 @@ describe('Language e2e', () => {
         `,
         {
           id: language.id,
-        }
+        },
       )
       .expectError(errors.notFound());
   });
@@ -181,7 +181,7 @@ describe('Language e2e', () => {
             projectId: project.id,
           },
         },
-      }
+      },
     );
     // test reading new lang
     const result = await app.graphql.query(gql`
@@ -222,8 +222,8 @@ describe('Language e2e', () => {
         createLanguageEngagement(app, {
           projectId,
           languageId,
-        })
-      )
+        }),
+      ),
     );
 
     const queryProject = await app.graphql.query(
@@ -245,7 +245,7 @@ describe('Language e2e', () => {
       `,
       {
         id: language.id,
-      }
+      },
     );
     expect(queryProject.language.projects.items.length).toBe(numProjects);
     expect(queryProject.language.projects.total).toBe(numProjects);
@@ -254,13 +254,13 @@ describe('Language e2e', () => {
   it('should throw error if signLanguageCode is not valid', async () => {
     const signLanguageCode = 'XXX1';
     await expect(
-      createLanguage(app, { signLanguageCode })
+      createLanguage(app, { signLanguageCode }),
     ).rejects.toThrowGqlError(
       errors.validation({
         'language.signLanguageCode': {
           matches: 'Must be 2 uppercase letters followed by 2 digits',
         },
-      })
+      }),
     );
   });
 
@@ -290,14 +290,14 @@ describe('Language e2e', () => {
               hasExternalFirstScripture: true,
             },
           },
-        }
-      )
+        },
+      ),
     ).rejects.toThrowGqlError(
       errors.input({
         message:
           'hasExternalFirstScripture can be set to true if the language has no engagements that have firstScripture=true',
         field: 'language.hasExternalFirstScripture',
-      })
+      }),
     );
   });
 
@@ -334,7 +334,7 @@ describe('Language e2e', () => {
       `,
       {
         id: language.id,
-      }
+      },
     );
 
     expect(actual.presetInventory.value).toBe(true);
@@ -385,7 +385,7 @@ async function updateLanguage(app: TestApp, update: Partial<UpdateLanguage>) {
       input: {
         language: update,
       },
-    }
+    },
   );
   const updated = result.updateLanguage.language;
   expect(updated.id).toBe(update.id);

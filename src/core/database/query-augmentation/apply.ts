@@ -34,11 +34,11 @@ declare module 'cypher-query-builder/dist/typings/query' {
 }
 
 export type QueryFragment<In = unknown, Out = In> = (
-  query: Query<In>
+  query: Query<In>,
 ) => Query<Out>;
 
 Query.prototype.apply = function apply<R>(
-  fn: ((q: Query) => R) | null | undefined
+  fn: ((q: Query) => R) | null | undefined,
 ): R extends void ? Query : R {
   return (fn?.(this) || this) as Exclude<R, void>;
 };

@@ -90,7 +90,7 @@ export const getChanges =
   <TResourceStatic extends ResourceShape<any>>(resource: TResourceStatic) =>
   <
     TResource extends MaybeUnsecuredInstance<TResourceStatic>,
-    Changes extends ChangesOf<TResource>
+    Changes extends ChangesOf<TResource>,
   >(
     existingObject: TResource,
     changes: Changes &
@@ -99,7 +99,7 @@ export const getChanges =
       // It's a generic to ensure that if only a subset of the changes
       // are passed in we don't declare the return type having those omitted
       // properties.
-      Record<Exclude<keyof Changes, keyof ChangesOf<TResource>>, never>
+      Record<Exclude<keyof Changes, keyof ChangesOf<TResource>>, never>,
   ): Partial<Omit<Changes, keyof Resource> & AndModifiedAt<TResource>> => {
     const res = EnhancedResource.of(resource);
     const actual = pickBy(omit(changes, Resource.Props), (change, prop) => {
@@ -128,7 +128,7 @@ export const getChanges =
  */
 export const isRelation = <TResourceStatic extends ResourceShape<any>>(
   resource: EnhancedResource<TResourceStatic>,
-  prop: string
+  prop: string,
 ) =>
   !resource.props.has(prop) &&
   prop.endsWith('Id') &&

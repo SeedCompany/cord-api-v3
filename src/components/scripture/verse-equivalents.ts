@@ -23,7 +23,7 @@ export const getTotalVerseEquivalents = (
 };
 
 export const getVerseEquivalentsFromUnspecified = (
-  portion: UnspecifiedScripturePortion
+  portion: UnspecifiedScripturePortion,
 ) => {
   const factor = factorOfBook(Book.find(portion.book));
   return factor * portion.totalVerses;

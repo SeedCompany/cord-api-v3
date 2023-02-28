@@ -11,7 +11,7 @@ export class ProgressReportVarianceExplanationLoader extends OrderedNestDataLoad
   ID
 > {
   constructor(
-    private readonly service: ProgressReportVarianceExplanationService
+    private readonly service: ProgressReportVarianceExplanationService,
   ) {
     super();
   }

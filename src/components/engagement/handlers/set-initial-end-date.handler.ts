@@ -22,7 +22,7 @@ export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
   constructor(
     private readonly engagementRepo: EngagementRepository,
     private readonly engagementService: EngagementService,
-    @Logger('engagement:set-initial-end-date') private readonly logger: ILogger
+    @Logger('engagement:set-initial-end-date') private readonly logger: ILogger,
   ) {}
 
   async handle(event: SubscribedEvent) {
@@ -51,7 +51,7 @@ export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
       await this.updateEngagementInitialEndDate(
         engagement,
         initialEndDate,
-        engagement.changeset
+        engagement.changeset,
       );
       const updatedEngagement = {
         ...engagement,
@@ -70,7 +70,7 @@ export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
       });
       throw new ServerException(
         'Could set initial end date on engagement',
-        exception
+        exception,
       );
     }
   }
@@ -78,7 +78,7 @@ export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
   private async updateEngagementInitialEndDate(
     engagement: UnsecuredDto<Engagement>,
     initialEndDate: CalendarDate | null | undefined,
-    changeset?: ID
+    changeset?: ID,
   ) {
     const updateInput = {
       initialEndDate: initialEndDate || null,
@@ -87,13 +87,13 @@ export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
       await this.engagementRepo.updateLanguageProperties(
         engagement as UnsecuredDto<LanguageEngagement>,
         updateInput,
-        changeset
+        changeset,
       );
     } else {
       await this.engagementRepo.updateInternshipProperties(
         engagement as UnsecuredDto<InternshipEngagement>,
         updateInput,
-        changeset
+        changeset,
       );
     }
   }

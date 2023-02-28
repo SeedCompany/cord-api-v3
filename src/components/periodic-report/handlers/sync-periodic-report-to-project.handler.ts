@@ -19,7 +19,7 @@ export class SyncPeriodicReportsToProjectDateRange
 {
   constructor(
     periodicReports: PeriodicReportService,
-    @Logger('periodic-reports:project-sync') private readonly logger: ILogger
+    @Logger('periodic-reports:project-sync') private readonly logger: ILogger,
   ) {
     super(periodicReports);
   }
@@ -42,7 +42,7 @@ export class SyncPeriodicReportsToProjectDateRange
       project.id,
       ReportType.Narrative,
       narrativeDiff,
-      project.mouEnd?.endOf('quarter')
+      project.mouEnd?.endOf('quarter'),
     );
 
     if (!project.financialReportPeriod) {
@@ -54,7 +54,7 @@ export class SyncPeriodicReportsToProjectDateRange
       project.id,
       ReportType.Financial,
       financialDiff,
-      project.mouEnd?.endOf(financialDiff.interval)
+      project.mouEnd?.endOf(financialDiff.interval),
     );
   }
 

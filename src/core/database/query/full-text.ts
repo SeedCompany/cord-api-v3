@@ -19,7 +19,7 @@ export const fullTextQuery =
         // fallback to "" when no query is given, so that no results are
         // returned instead of the procedure failing
         query: query.trim() || '""',
-      }
+      },
     );
 
 export const escapeLuceneSyntax = (query: string) =>

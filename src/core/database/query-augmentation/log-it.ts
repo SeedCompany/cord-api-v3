@@ -23,7 +23,7 @@ declare module 'cypher-query-builder/dist/typings/query' {
 Query.prototype.logIt = function logIt(
   this: Query,
   level = LogLevel.NOTICE,
-  interpolate?: boolean
+  interpolate?: boolean,
 ) {
   const query = this.root;
   const orig = query.buildQueryObject.bind(query);

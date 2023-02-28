@@ -18,7 +18,7 @@ export const UrlField = ({
       // eslint-disable-next-line @typescript-eslint/naming-convention
       require_tld: false,
       ...url,
-    })
+    }),
   );
 
 @Scalar('URL', () => URL)
@@ -29,7 +29,7 @@ export class UrlScalar implements CustomScalar<string, string | null> {
   parseLiteral(ast: ValueNode): string | null {
     if (ast.kind !== Kind.STRING) {
       throw new GraphQLError(
-        `Can only validate strings as URLs but got a: ${ast.kind}`
+        `Can only validate strings as URLs but got a: ${ast.kind}`,
       );
     }
     return ast.value;

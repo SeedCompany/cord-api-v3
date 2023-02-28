@@ -55,7 +55,7 @@ export class FilesystemBucket extends LocalBucket {
     await fs.copyFile(this.getPath(oldKey), this.getPath(newKey));
     await fs.copyFile(
       this.getPath(oldKey) + '.info',
-      this.getPath(newKey) + '.info'
+      this.getPath(newKey) + '.info',
     );
   }
 

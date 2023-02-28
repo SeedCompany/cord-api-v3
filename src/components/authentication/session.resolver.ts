@@ -26,7 +26,7 @@ export class SessionResolver {
     private readonly privileges: Privileges,
     private readonly config: ConfigService,
     private readonly sessionInt: SessionInterceptor,
-    @Logger('session:resolver') private readonly logger: ILogger
+    @Logger('session:resolver') private readonly logger: ILogger,
   ) {}
 
   @Query(() => SessionOutput, {
@@ -41,7 +41,7 @@ export class SessionResolver {
       type: () => Boolean,
       defaultValue: false,
     })
-    browser?: boolean
+    browser?: boolean,
   ): Promise<SessionOutput> {
     const existingToken = this.sessionInt.getTokenFromContext(context);
     const impersonatee = this.sessionInt.getImpersonateeFromContext(context);
@@ -56,7 +56,7 @@ export class SessionResolver {
       }
       this.logger.debug(
         'Failed to use existing session token, creating new one.',
-        { exception }
+        { exception },
       );
       token = await this.authentication.createToken();
       session = await this.authentication.resumeSession(token, impersonatee);
@@ -69,7 +69,7 @@ export class SessionResolver {
       const { name, expires, ...options } = this.config.sessionCookie;
       if (!context.response) {
         throw new ServerException(
-          'Cannot use cookie session without a response object'
+          'Cannot use cookie session without a response object',
         );
       }
       context.response.cookie(name, token, {
@@ -92,7 +92,7 @@ export class SessionResolver {
   })
   async user(
     @Parent() output: SessionOutput,
-    @Loader(UserLoader) users: LoaderOf<UserLoader>
+    @Loader(UserLoader) users: LoaderOf<UserLoader>,
   ): Promise<User | null> {
     return output.user ? await users.load(output.user) : null;
   }
@@ -104,7 +104,7 @@ export class SessionResolver {
   })
   async impersonator(
     @Parent() { session }: SessionOutput,
-    @Loader(UserLoader) users: LoaderOf<UserLoader>
+    @Loader(UserLoader) users: LoaderOf<UserLoader>,
   ): Promise<User | null> {
     if (session.anonymous || !session.impersonator) {
       return null;

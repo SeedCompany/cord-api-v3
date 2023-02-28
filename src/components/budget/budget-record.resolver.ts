@@ -23,10 +23,10 @@ export class BudgetRecordResolver {
   @ResolveField(() => SecuredOrganization)
   async organization(
     @Parent() record: BudgetRecord,
-    @Loader(OrganizationLoader) organizations: LoaderOf<OrganizationLoader>
+    @Loader(OrganizationLoader) organizations: LoaderOf<OrganizationLoader>,
   ): Promise<SecuredOrganization> {
     return await mapSecuredValue(record.organization, (id) =>
-      organizations.load(id)
+      organizations.load(id),
     );
   }
 
@@ -35,12 +35,12 @@ export class BudgetRecordResolver {
   })
   async updateBudgetRecord(
     @LoggedInSession() session: Session,
-    @Args('input') { budgetRecord: input, changeset }: UpdateBudgetRecordInput
+    @Args('input') { budgetRecord: input, changeset }: UpdateBudgetRecordInput,
   ): Promise<UpdateBudgetRecordOutput> {
     const budgetRecord = await this.service.updateRecord(
       input,
       session,
-      changeset
+      changeset,
     );
     return { budgetRecord };
   }

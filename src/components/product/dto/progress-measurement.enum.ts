@@ -21,5 +21,5 @@ registerEnumType(ProgressMeasurement, {
   description: SecuredEnum.descriptionFor('progress measurement'),
 })
 export class SecuredProgressMeasurement extends SecuredEnum(
-  ProgressMeasurement
+  ProgressMeasurement,
 ) {}

@@ -6,7 +6,7 @@ import { DataObject, JsonSet } from '~/common';
 export class ProgressReportVarianceExplanationReasonOptions extends DataObject {
   @Once() static get instance() {
     return ProgressReportVarianceExplanationReasonOptions.defaultValue(
-      ProgressReportVarianceExplanationReasonOptions
+      ProgressReportVarianceExplanationReasonOptions,
     );
   }
 

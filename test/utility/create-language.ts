@@ -20,7 +20,7 @@ export async function listLanguageIds(app: TestApp) {
           }
         }
       }
-    `
+    `,
   );
   const languages = result.languages.items;
   expect(languages).toBeTruthy();
@@ -29,7 +29,7 @@ export async function listLanguageIds(app: TestApp) {
 
 export async function readOneLanguageLocation(
   app: TestApp,
-  langId: string
+  langId: string,
 ): Promise<SecuredLocationList> {
   const result = await app.graphql.query(
     gql`
@@ -39,7 +39,7 @@ export async function readOneLanguageLocation(
         }
       }
       ${fragments.language}
-    `
+    `,
   );
 
   const actual = result.language.locations;
@@ -48,7 +48,7 @@ export async function readOneLanguageLocation(
 }
 export async function readOneLanguageEthnologue(
   app: TestApp,
-  langId: ID
+  langId: ID,
 ): Promise<Language> {
   const result = await app.graphql.query(
     gql`
@@ -58,7 +58,7 @@ export async function readOneLanguageEthnologue(
         }
       }
       ${fragments.language}
-    `
+    `,
   );
 
   const actual = result.language.ethnologue;
@@ -75,7 +75,7 @@ export async function readOneLanguage(app: TestApp, id: ID): Promise<Language> {
         }
       }
       ${fragments.language}
-    `
+    `,
   );
 
   const actual = result.language;
@@ -86,7 +86,7 @@ export async function readOneLanguage(app: TestApp, id: ID): Promise<Language> {
 
 export async function createLanguage(
   app: TestApp,
-  input: Partial<CreateLanguage> = {}
+  input: Partial<CreateLanguage> = {},
 ) {
   const ethnologueLanguage: CreateEthnologueLanguage = {
     code: faker.helpers.replaceSymbols('???').toLowerCase(),
@@ -132,7 +132,7 @@ export async function createLanguage(
           ...language,
         },
       },
-    }
+    },
   );
 
   const actual: Language = result.createLanguage.language;
@@ -165,7 +165,7 @@ export async function createLanguageMinimal(app: TestApp) {
           displayName: faker.company.name() + '' + (await generateId()),
         },
       },
-    }
+    },
   );
 
   const actual: Language = result.createLanguage.language;

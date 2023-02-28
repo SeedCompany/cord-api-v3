@@ -83,7 +83,7 @@ describe('Project Security e2e', () => {
             propToTest: property,
             isSecureList: isSecureList,
           });
-        }
+        },
       );
     });
   });

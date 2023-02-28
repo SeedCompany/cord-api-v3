@@ -29,7 +29,7 @@ import { ResourceGranter } from './resource-granter';
  */
 export const Granter = (
   resources: GranterMetadata['resources'],
-  factory?: GranterMetadata['factory']
+  factory?: GranterMetadata['factory'],
 ): ClassDecorator =>
   SetMetadata<any, GranterMetadata>(GRANTER_FACTORY_METADATA_KEY, {
     resources,
@@ -38,7 +38,7 @@ export const Granter = (
 
 export const discover = (discovery: DiscoveryService) =>
   discovery.providersWithMetaAtKey<GranterMetadata>(
-    GRANTER_FACTORY_METADATA_KEY
+    GRANTER_FACTORY_METADATA_KEY,
   );
 
 const GRANTER_FACTORY_METADATA_KEY = Symbol('GranterFactory');
@@ -46,6 +46,6 @@ const GRANTER_FACTORY_METADATA_KEY = Symbol('GranterFactory');
 interface GranterMetadata {
   resources: Many<ResourceShape<any>>;
   factory?: <TResourceStatic extends ResourceShape<any>>(
-    resource: EnhancedResource<TResourceStatic>
+    resource: EnhancedResource<TResourceStatic>,
   ) => ResourceGranter<TResourceStatic>;
 }

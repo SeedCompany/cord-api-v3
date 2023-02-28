@@ -42,7 +42,7 @@ export class LocationRepository extends DtoRepository(Location) {
         createRelationships(Location, 'out', {
           fundingAccount: ['FundingAccount', input.fundingAccountId],
           defaultFieldRegion: ['FieldRegion', input.defaultFieldRegionId],
-        })
+        }),
       )
       .return<{ id: ID }>('node.id as id');
 
@@ -72,7 +72,7 @@ export class LocationRepository extends DtoRepository(Location) {
           merge('props', {
             fundingAccount: 'fundingAccount.id',
             defaultFieldRegion: 'defaultFieldRegion.id',
-          }).as('dto')
+          }).as('dto'),
         );
   }
 
@@ -106,7 +106,7 @@ export class LocationRepository extends DtoRepository(Location) {
     label: string,
     id: ID,
     rel: string,
-    locationId: ID
+    locationId: ID,
   ) {
     await this.db
       .query()
@@ -127,7 +127,7 @@ export class LocationRepository extends DtoRepository(Location) {
     label: string,
     rel: string,
     id: ID,
-    input: LocationListInput
+    input: LocationListInput,
   ) {
     const result = await this.db
       .query()

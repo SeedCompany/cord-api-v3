@@ -35,22 +35,22 @@ export class OrganizationService {
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
     private readonly locationService: LocationService,
-    private readonly repo: OrganizationRepository
+    private readonly repo: OrganizationRepository,
   ) {}
 
   async create(
     input: CreateOrganization,
-    session: Session
+    session: Session,
   ): Promise<Organization> {
     await this.authorizationService.checkPower(
       Powers.CreateOrganization,
-      session
+      session,
     );
 
     if (!(await this.repo.isUnique(input.name))) {
       throw new DuplicateException(
         'organization.name',
-        'Organization with this name already exists'
+        'Organization with this name already exists',
       );
     }
 
@@ -71,7 +71,7 @@ export class OrganizationService {
   async readOne(
     orgId: ID,
     session: Session,
-    _view?: ObjectView
+    _view?: ObjectView,
   ): Promise<Organization> {
     this.logger.debug(`Read Organization`, {
       id: orgId,
@@ -85,18 +85,18 @@ export class OrganizationService {
   async readMany(ids: readonly ID[], session: Session) {
     const organizations = await this.repo.readMany(ids, session);
     return await Promise.all(
-      organizations.map((dto) => this.secure(dto, session))
+      organizations.map((dto) => this.secure(dto, session)),
     );
   }
 
   private async secure(
     dto: UnsecuredDto<Organization>,
-    session: Session
+    session: Session,
   ): Promise<Organization> {
     const securedProps = await this.authorizationService.secureProperties(
       Organization,
       dto,
-      session
+      session,
     );
 
     return {
@@ -108,7 +108,7 @@ export class OrganizationService {
 
   async update(
     input: UpdateOrganization,
-    session: Session
+    session: Session,
   ): Promise<Organization> {
     const organization = await this.readOne(input.id, session);
 
@@ -117,7 +117,7 @@ export class OrganizationService {
     await this.authorizationService.verifyCanEditChanges(
       Organization,
       organization,
-      changes
+      changes,
     );
 
     return await this.repo.updateProperties(organization, changes);
@@ -134,7 +134,7 @@ export class OrganizationService {
 
     if (!canDelete)
       throw new UnauthorizedException(
-        'You do not have the permission to delete this Organization'
+        'You do not have the permission to delete this Organization',
       );
 
     try {
@@ -149,7 +149,7 @@ export class OrganizationService {
 
   async list(
     input: OrganizationListInput,
-    session: Session
+    session: Session,
   ): Promise<OrganizationListOutput> {
     const results = await this.repo.list(input, session);
     return await mapListResults(results, (dto) => this.secure(dto, session));
@@ -158,14 +158,14 @@ export class OrganizationService {
   async addLocation(
     organizationId: ID,
     locationId: ID,
-    _session: Session
+    _session: Session,
   ): Promise<void> {
     try {
       await this.locationService.addLocationToNode(
         'Organization',
         organizationId,
         'locations',
-        locationId
+        locationId,
       );
     } catch (e) {
       throw new ServerException('Could not add location to organization', e);
@@ -175,19 +175,19 @@ export class OrganizationService {
   async removeLocation(
     organizationId: ID,
     locationId: ID,
-    _session: Session
+    _session: Session,
   ): Promise<void> {
     try {
       await this.locationService.removeLocationFromNode(
         'Organization',
         organizationId,
         'locations',
-        locationId
+        locationId,
       );
     } catch (e) {
       throw new ServerException(
         'Could not remove location from organization',
-        e
+        e,
       );
     }
   }
@@ -195,14 +195,14 @@ export class OrganizationService {
   async listLocations(
     organization: Organization,
     input: LocationListInput,
-    session: Session
+    session: Session,
   ): Promise<SecuredLocationList> {
     return await this.locationService.listLocationForResource(
       Organization,
       organization,
       'locations',
       input,
-      session
+      session,
     );
   }
 }

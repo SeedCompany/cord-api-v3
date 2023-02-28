@@ -46,19 +46,19 @@ import {
 
 @Injectable()
 export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
-  User
+  User,
 ) {
   constructor(
     db: DatabaseService,
     private readonly config: ConfigService,
-    @Logger('user:repository') private readonly logger: ILogger
+    @Logger('user:repository') private readonly logger: ILogger,
   ) {
     super(db);
   }
 
   private readonly roleProperties = (roles?: Role[]) =>
     (roles || []).flatMap((role) =>
-      property('roles', role, 'node', `role${role}`)
+      property('roles', role, 'node', `role${role}`),
     );
 
   async create(input: CreatePerson) {
@@ -82,7 +82,7 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
       .apply((q) =>
         input.roles && input.roles.length > 0
           ? q.create([...this.roleProperties(input.roles)])
-          : q
+          : q,
       )
       .return<{ id: ID }>('node.id as id');
     let result;
@@ -93,7 +93,7 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
         throw new DuplicateException(
           'person.email',
           'Email address is already in use',
-          e
+          e,
         );
       }
       throw new ServerException('Failed to create user', e);
@@ -118,13 +118,13 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
           merge({ email: null }, 'props', {
             roles: collect('role.value'),
             pinned: 'exists((requestingUser)-[:pinned]->(node))',
-          }).as('dto')
+          }).as('dto'),
         );
   }
 
   async updateEmail(
     user: User,
-    email: string | null | undefined
+    email: string | null | undefined,
   ): Promise<void> {
     await this.db
       .query()
@@ -133,9 +133,9 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
       .apply((q) =>
         email
           ? q.apply(
-              createProperty({ resource: User, key: 'email', value: email })
+              createProperty({ resource: User, key: 'email', value: email }),
             )
-          : q
+          : q,
       )
       .return('*')
       .run();
@@ -144,7 +144,7 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
   async updateRoles(
     input: UpdateUser,
     removals: Role[],
-    additions: Role[]
+    additions: Role[],
   ): Promise<void> {
     if (removals.length > 0) {
       await this.db
@@ -186,7 +186,7 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
     const canDelete = await this.db.checkDeletePermission(id, session);
     if (!canDelete)
       throw new UnauthorizedException(
-        'You do not have the permission to delete this User'
+        'You do not have the permission to delete this User',
       );
     try {
       await this.db.deleteNode(object);
@@ -204,7 +204,7 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
       .apply(
         filter.builder(input.filter, {
           pinned: filter.isPinned,
-        })
+        }),
       )
       .apply(this.privileges.forUser(session).filterToReadable())
       .apply(sorting(User, input))
@@ -216,7 +216,7 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
   async createKnownLanguage(
     userId: ID,
     languageId: ID,
-    languageProficiency: LanguageProficiency
+    languageProficiency: LanguageProficiency,
   ): Promise<void> {
     await this.db
       .query()
@@ -237,7 +237,7 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
   async deleteKnownLanguage(
     userId: ID,
     languageId: ID,
-    languageProficiency: LanguageProficiency
+    languageProficiency: LanguageProficiency,
   ): Promise<void> {
     await this.db
       .query()
@@ -306,7 +306,7 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
           .setValues({ 'oldRel.active': false })
           .return('oldRel')
           .union()
-          .return('null as oldRel')
+          .return('null as oldRel'),
       )
       .apply((q) => {
         if (primary) {
@@ -323,7 +323,7 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
               .setValues({ 'oldRel.active': false })
               .return('oldRel as oldPrimaryRel')
               .union()
-              .return('null as oldPrimaryRel')
+              .return('null as oldPrimaryRel'),
           );
         }
       })

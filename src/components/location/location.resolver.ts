@@ -46,7 +46,7 @@ export class LocationResolver {
   })
   async location(
     @Loader(LocationLoader) locations: LoaderOf<LocationLoader>,
-    @IdArg() id: ID
+    @IdArg() id: ID,
   ): Promise<Location> {
     return await locations.load(id);
   }
@@ -57,7 +57,7 @@ export class LocationResolver {
   async locations(
     @AnonSession() session: Session,
     @ListArg(LocationListInput) input: LocationListInput,
-    @Loader(LocationLoader) locations: LoaderOf<LocationLoader>
+    @Loader(LocationLoader) locations: LoaderOf<LocationLoader>,
   ): Promise<LocationListOutput> {
     const list = await this.locationService.list(input, session);
     locations.primeAll(list.items);
@@ -68,20 +68,20 @@ export class LocationResolver {
   async fundingAccount(
     @Parent() location: Location,
     @Loader(FundingAccountLoader)
-    fundingAccounts: LoaderOf<FundingAccountLoader>
+    fundingAccounts: LoaderOf<FundingAccountLoader>,
   ): Promise<SecuredFundingAccount> {
     return await mapSecuredValue(location.fundingAccount, (id) =>
-      fundingAccounts.load(id)
+      fundingAccounts.load(id),
     );
   }
 
   @ResolveField(() => SecuredFieldRegion)
   async defaultFieldRegion(
     @Parent() location: Location,
-    @Loader(FieldRegionLoader) fieldRegions: LoaderOf<FieldRegionLoader>
+    @Loader(FieldRegionLoader) fieldRegions: LoaderOf<FieldRegionLoader>,
   ): Promise<SecuredFieldRegion> {
     return await mapSecuredValue(location.defaultFieldRegion, (id) =>
-      fieldRegions.load(id)
+      fieldRegions.load(id),
     );
   }
 
@@ -110,7 +110,7 @@ export class LocationResolver {
   })
   async createLocation(
     @LoggedInSession() session: Session,
-    @Args('input') { location: input }: CreateLocationInput
+    @Args('input') { location: input }: CreateLocationInput,
   ): Promise<CreateLocationOutput> {
     const location = await this.locationService.create(input, session);
     return { location };
@@ -121,7 +121,7 @@ export class LocationResolver {
   })
   async updateLocation(
     @LoggedInSession() session: Session,
-    @Args('input') { location: input }: UpdateLocationInput
+    @Args('input') { location: input }: UpdateLocationInput,
   ): Promise<UpdateLocationOutput> {
     const location = await this.locationService.update(input, session);
     return { location };
@@ -132,7 +132,7 @@ export class LocationResolver {
   })
   async deleteLocation(
     @LoggedInSession() session: Session,
-    @IdArg() id: ID
+    @IdArg() id: ID,
   ): Promise<DeleteLocationOutput> {
     await this.locationService.delete(id, session);
     return { success: true };

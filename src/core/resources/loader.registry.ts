@@ -42,7 +42,7 @@ type DataLoaderCtor = new (...args: any[]) => NestDataLoader<any, any>;
 export const LoaderFactory =
   (
     resource?: () => Many<SomeResource>,
-    options?: LoaderOptions
+    options?: LoaderOptions,
   ): (<LoaderCtor extends DataLoaderCtor>(target: LoaderCtor) => void) =>
   (target) => {
     Injectable({ scope: Scope.REQUEST })(target);
@@ -73,7 +73,7 @@ export class ResourceLoaderRegistry implements OnModuleInit {
       .flatMap((provider) => {
         const metadata = Reflect.getMetadata(
           LOADER_OF_RESOURCE,
-          provider.metatype
+          provider.metatype,
         ) as MetadataShape | undefined;
         return metadata ? { ...metadata, provider } : [];
       });

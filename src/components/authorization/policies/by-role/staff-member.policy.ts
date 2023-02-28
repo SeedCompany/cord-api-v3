@@ -6,7 +6,7 @@ import { inherit, Policy, Role, sensOnlyLow } from '../util';
   r.Education.read,
   inherit(
     r.Engagement.read,
-    r.LanguageEngagement.specifically((p) => p.paratextRegistryId.none)
+    r.LanguageEngagement.specifically((p) => p.paratextRegistryId.none),
   ),
   r.FieldRegion.read,
   r.FieldZone.read,

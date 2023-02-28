@@ -41,7 +41,7 @@ export interface Condition<TResourceStatic extends ResourceShape<any>> {
   setupCypherContext?(
     query: Query,
     prevApplied: Set<any>,
-    other: AsCypherParams<TResourceStatic>
+    other: AsCypherParams<TResourceStatic>,
   ): Query;
 
   /**
@@ -49,6 +49,6 @@ export interface Condition<TResourceStatic extends ResourceShape<any>> {
    */
   asCypherCondition(
     query: Query,
-    other: AsCypherParams<TResourceStatic>
+    other: AsCypherParams<TResourceStatic>,
   ): string;
 }

@@ -30,7 +30,7 @@ export class EducationResolver {
   })
   async createEducation(
     @LoggedInSession() session: Session,
-    @Args('input') { education: input }: CreateEducationInput
+    @Args('input') { education: input }: CreateEducationInput,
   ): Promise<CreateEducationOutput> {
     const education = await this.service.create(input, session);
     return { education };
@@ -41,7 +41,7 @@ export class EducationResolver {
   })
   async education(
     @Loader(EducationLoader) educations: LoaderOf<EducationLoader>,
-    @IdArg() id: ID
+    @IdArg() id: ID,
   ): Promise<Education> {
     return await educations.load(id);
   }
@@ -52,7 +52,7 @@ export class EducationResolver {
   async educations(
     @AnonSession() session: Session,
     @ListArg(EducationListInput) input: EducationListInput,
-    @Loader(EducationLoader) educations: LoaderOf<EducationLoader>
+    @Loader(EducationLoader) educations: LoaderOf<EducationLoader>,
   ): Promise<EducationListOutput> {
     const list = await this.service.list(input, session);
     educations.primeAll(list.items);
@@ -64,7 +64,7 @@ export class EducationResolver {
   })
   async updateEducation(
     @LoggedInSession() session: Session,
-    @Args('input') { education: input }: UpdateEducationInput
+    @Args('input') { education: input }: UpdateEducationInput,
   ): Promise<UpdateEducationOutput> {
     const education = await this.service.update(input, session);
     return { education };
@@ -75,7 +75,7 @@ export class EducationResolver {
   })
   async deleteEducation(
     @LoggedInSession() session: Session,
-    @IdArg() id: ID
+    @IdArg() id: ID,
   ): Promise<DeleteEducationOutput> {
     await this.service.delete(id, session);
     return { success: true };

@@ -33,9 +33,9 @@ export const DateTimeField = (options?: FieldOptions) =>
       },
       {
         toClassOnly: true,
-      }
+      },
     ),
-    IsIsoDate()
+    IsIsoDate(),
   );
 
 export const DateField = (options?: FieldOptions) =>
@@ -52,9 +52,9 @@ export const DateField = (options?: FieldOptions) =>
       },
       {
         toClassOnly: true,
-      }
+      },
     ),
-    IsIsoDate()
+    IsIsoDate(),
   );
 
 @Scalar('DateTime', () => DateTime)

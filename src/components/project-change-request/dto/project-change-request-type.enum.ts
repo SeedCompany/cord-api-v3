@@ -17,5 +17,5 @@ registerEnumType(ProjectChangeRequestType, {
   description: SecuredEnumList.descriptionFor('project change request types'),
 })
 export abstract class SecuredProjectChangeRequestTypes extends SecuredEnumList(
-  ProjectChangeRequestType
+  ProjectChangeRequestType,
 ) {}

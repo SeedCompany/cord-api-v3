@@ -10,7 +10,7 @@ const runValidation = (ref: ScriptureReferenceInput) => {
 const expectSingleConstraintFailure = (
   errors: ValidationError[],
   expectedCode: string,
-  message: string
+  message: string,
 ) => {
   const constraints = errors[0].constraints ?? {};
   const actualCode = Object.keys(constraints)[0];
@@ -36,7 +36,7 @@ describe('ScriptureReference', () => {
     expectSingleConstraintFailure(
       result,
       'ScriptureBook',
-      'Not a valid Bible book'
+      'Not a valid Bible book',
     );
   });
   it('Invalid chapter', async () => {
@@ -48,7 +48,7 @@ describe('ScriptureReference', () => {
     expectSingleConstraintFailure(
       result,
       'ScriptureChapter',
-      'Matthew does not have chapter 40'
+      'Matthew does not have chapter 40',
     );
   });
   it('Invalid verse', async () => {
@@ -60,7 +60,7 @@ describe('ScriptureReference', () => {
     expectSingleConstraintFailure(
       result,
       'ScriptureVerse',
-      'Matthew 1 does not have verse 1000'
+      'Matthew 1 does not have verse 1000',
     );
   });
 });

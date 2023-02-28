@@ -43,7 +43,7 @@ export class ExceptionNormalizer {
         .split('\n')
         .filter(isSrcFrame)
         .map((frame: string) =>
-          this.config?.jest ? frame : normalizeFramePath(frame)
+          this.config?.jest ? frame : normalizeFramePath(frame),
         )
         .join('\n'),
     };
@@ -132,8 +132,8 @@ export class ExceptionNormalizer {
   private errorToCodes(ex: Error) {
     return compact(
       getParentTypes(ex.constructor as AbstractClassType<Error>).flatMap((e) =>
-        this.errorToCode(e as AbstractClassType<Error>, ex)
-      )
+        this.errorToCode(e as AbstractClassType<Error>, ex),
+      ),
     );
   }
 

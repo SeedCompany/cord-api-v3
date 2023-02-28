@@ -7,7 +7,7 @@ import { gql } from './gql-tag';
 
 export async function createPerson(
   app: TestApp,
-  input: Partial<CreatePerson> = {}
+  input: Partial<CreatePerson> = {},
 ) {
   const person: CreatePerson = {
     email: faker.internet.email(),
@@ -36,7 +36,7 @@ export async function createPerson(
       input: {
         person,
       },
-    }
+    },
   );
 
   const actual: User = result.createPerson.user;

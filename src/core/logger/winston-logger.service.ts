@@ -55,8 +55,8 @@ export class WinstonLoggerService
   async onModuleDestroy() {
     const finish = Promise.all(
       this.logger.transports.map(
-        (t) => new Promise((resolve) => t.on('finish', resolve))
-      )
+        (t) => new Promise((resolve) => t.on('finish', resolve)),
+      ),
     );
     this.closing = true;
     this.logger.end();

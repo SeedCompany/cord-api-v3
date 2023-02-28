@@ -30,7 +30,7 @@ export class FilmResolver {
   })
   async film(
     @Loader(FilmLoader) films: LoaderOf<FilmLoader>,
-    @IdArg() id: ID
+    @IdArg() id: ID,
   ): Promise<Film> {
     return await films.load(id);
   }
@@ -41,7 +41,7 @@ export class FilmResolver {
   async films(
     @ListArg(FilmListInput) input: FilmListInput,
     @Loader(FilmLoader) films: LoaderOf<FilmLoader>,
-    @AnonSession() session: Session
+    @AnonSession() session: Session,
   ): Promise<FilmListOutput> {
     const list = await this.filmService.list(input, session);
     films.primeAll(list.items);
@@ -53,7 +53,7 @@ export class FilmResolver {
   })
   async createFilm(
     @LoggedInSession() session: Session,
-    @Args('input') { film: input }: CreateFilmInput
+    @Args('input') { film: input }: CreateFilmInput,
   ): Promise<CreateFilmOutput> {
     const film = await this.filmService.create(input, session);
     return { film };
@@ -64,7 +64,7 @@ export class FilmResolver {
   })
   async updateFilm(
     @LoggedInSession() session: Session,
-    @Args('input') { film: input }: UpdateFilmInput
+    @Args('input') { film: input }: UpdateFilmInput,
   ): Promise<UpdateFilmOutput> {
     const film = await this.filmService.update(input, session);
     return { film };
@@ -75,7 +75,7 @@ export class FilmResolver {
   })
   async deleteFilm(
     @LoggedInSession() session: Session,
-    @IdArg() id: ID
+    @IdArg() id: ID,
   ): Promise<DeleteFilmOutput> {
     await this.filmService.delete(id, session);
     return { success: true };

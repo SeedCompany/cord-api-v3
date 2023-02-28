@@ -6,7 +6,7 @@ import { gql } from './gql-tag';
 
 export async function createStory(
   app: TestApp,
-  input: Partial<CreateStory> = {}
+  input: Partial<CreateStory> = {},
 ) {
   const name = input.name || faker.hacker.noun() + faker.company.name();
 
@@ -28,7 +28,7 @@ export async function createStory(
           name,
         },
       },
-    }
+    },
   );
   const st: Story = result.createStory.story;
 

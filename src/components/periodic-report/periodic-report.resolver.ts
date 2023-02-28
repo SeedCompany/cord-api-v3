@@ -36,7 +36,7 @@ export class PeriodicReportResolver {
   })
   async periodicReport(
     @Loader(ReportLoader) reports: LoaderOf<ReportLoader>,
-    @IdsAndViewArg() { id }: IdsAndView
+    @IdsAndViewArg() { id }: IdsAndView,
   ): Promise<IPeriodicReport> {
     return await reports.load(id);
   }
@@ -47,7 +47,7 @@ export class PeriodicReportResolver {
   async periodicReports(
     @AnonSession() session: Session,
     @ListArg(PeriodicReportListInput) input: PeriodicReportListInput,
-    @Loader(ReportLoader) loader: LoaderOf<ReportLoader>
+    @Loader(ReportLoader) loader: LoaderOf<ReportLoader>,
   ): Promise<PeriodicReportListOutput> {
     // Only let admins do this for now.
     if (!session.roles.includes('global:Administrator')) {
@@ -70,7 +70,8 @@ export class PeriodicReportResolver {
   })
   async uploadPeriodicReport(
     @LoggedInSession() session: Session,
-    @Args('input') { reportId: id, file: reportFile }: UploadPeriodicReportInput
+    @Args('input')
+    { reportId: id, file: reportFile }: UploadPeriodicReportInput,
   ): Promise<IPeriodicReport> {
     return await this.service.update({ id, reportFile }, session);
   }
@@ -80,7 +81,7 @@ export class PeriodicReportResolver {
   })
   async updatePeriodicReport(
     @LoggedInSession() session: Session,
-    @Args('input') input: UpdatePeriodicReportInput
+    @Args('input') input: UpdatePeriodicReportInput,
   ): Promise<IPeriodicReport> {
     return await this.service.update(input, session);
   }
@@ -88,7 +89,7 @@ export class PeriodicReportResolver {
   @ResolveField(() => SecuredFile)
   async reportFile(
     @Parent() report: IPeriodicReport,
-    @Loader(FileNodeLoader) files: LoaderOf<FileNodeLoader>
+    @Loader(FileNodeLoader) files: LoaderOf<FileNodeLoader>,
   ): Promise<SecuredFile> {
     return await resolveDefinedFile(files, report.reportFile);
   }

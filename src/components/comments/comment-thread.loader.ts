@@ -8,7 +8,7 @@ import { CommentThread } from './dto';
 export class CommentThreadLoader extends OrderedNestDataLoader<CommentThread> {
   constructor(
     private readonly service: CommentService,
-    private readonly repo: CommentRepository
+    private readonly repo: CommentRepository,
   ) {
     super();
   }
@@ -24,7 +24,7 @@ export class CommentThreadLoader extends OrderedNestDataLoader<CommentThread> {
         } catch (error) {
           return { key: thread.id, error };
         }
-      })
+      }),
     );
   }
 }

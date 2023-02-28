@@ -3,7 +3,7 @@ import { ValidateBy } from './validateBy';
 
 export const IsIanaTimezone = (
   options?: ValidationOptions,
-  validationOptions?: ValidationOptions
+  validationOptions?: ValidationOptions,
 ) =>
   ValidateBy(
     {
@@ -21,5 +21,5 @@ export const IsIanaTimezone = (
         defaultMessage: () => 'Timezone is not valid',
       },
     },
-    validationOptions
+    validationOptions,
   );

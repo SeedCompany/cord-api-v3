@@ -4,7 +4,7 @@ import { ValidateBy } from './validateBy';
 
 export const IsEmail = (
   options?: ValidatorJS.IsEmailOptions,
-  validationOptions?: ValidationOptions
+  validationOptions?: ValidationOptions,
 ) =>
   ValidateBy(
     {
@@ -20,5 +20,5 @@ export const IsEmail = (
             : 'Invalid email',
       },
     },
-    validationOptions
+    validationOptions,
   );

@@ -16,5 +16,5 @@ export const ChangesetIdField = (options?: FieldOptions): PropertyDecorator =>
       `,
       ...options,
     }),
-    ValidateEditability()
+    ValidateEditability(),
   );

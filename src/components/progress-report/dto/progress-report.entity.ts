@@ -25,7 +25,7 @@ export class ProgressReport extends IPeriodicReport {
   static readonly Props = keysOf<ProgressReport>();
   static readonly SecuredProps = keysOf<SecuredProps<ProgressReport>>();
   static readonly Parent = import('../../engagement/dto').then(
-    (m) => m.IEngagement
+    (m) => m.IEngagement,
   );
   static readonly Relations = {
     highlights: [ProgressReportHighlight],

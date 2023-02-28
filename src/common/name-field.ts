@@ -25,7 +25,7 @@ export const NameField = (options: FieldOptions = {}) =>
     // Using this instead of @IsNotEmpty, as this allows nulls.
     MinLength(1, {
       message: 'Cannot be empty',
-    })
+    }),
   );
 
 /**

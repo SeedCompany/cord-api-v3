@@ -32,7 +32,7 @@ export class FieldRegionRepository extends DtoRepository(FieldRegion) {
         createRelationships(FieldRegion, 'out', {
           director: ['User', input.directorId],
           zone: ['FieldZone', input.fieldZoneId],
-        })
+        }),
       )
       .return<{ id: ID }>('node.id as id');
 
@@ -57,7 +57,7 @@ export class FieldRegionRepository extends DtoRepository(FieldRegion) {
           merge('props', {
             director: 'director.id',
             fieldZone: 'fieldZone.id',
-          }).as('dto')
+          }).as('dto'),
         );
   }
 

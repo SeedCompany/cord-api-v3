@@ -15,5 +15,5 @@ registerEnumType(PartnerType, { name: 'PartnerType' });
   description: SecuredEnumList.descriptionFor('partner types'),
 })
 export abstract class SecuredPartnerTypes extends SecuredEnumList(
-  PartnerType
+  PartnerType,
 ) {}

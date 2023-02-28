@@ -44,7 +44,7 @@ export class FileService {
     private readonly repo: FileRepository,
     private readonly db: Connection,
     private readonly config: ConfigService,
-    @Logger('file:service') private readonly logger: ILogger
+    @Logger('file:service') private readonly logger: ILogger,
   ) {}
 
   async getDirectory(id: ID, session: Session): Promise<Directory> {
@@ -75,14 +75,14 @@ export class FileService {
   asDownloadable(fileVersion: FileVersion): Downloadable<FileVersion>;
   asDownloadable<T extends object>(
     obj: T,
-    fileVersionId?: ID
+    fileVersionId?: ID,
   ): Downloadable<T> {
     let downloading: Promise<Buffer> | undefined;
     return Object.assign(obj, {
       download: () => {
         if (!downloading) {
           downloading = this.downloadFileVersion(
-            fileVersionId ?? (obj as unknown as FileVersion).id
+            fileVersionId ?? (obj as unknown as FileVersion).id,
           );
         }
         return downloading;
@@ -126,7 +126,7 @@ export class FileService {
       this.config.hostUrl,
       FileUrl.path,
       isFile(node) ? node.latestVersionId : node.id,
-      encodeURIComponent(node.name)
+      encodeURIComponent(node.name),
     );
     return url.toString();
   }
@@ -156,7 +156,7 @@ export class FileService {
   async listChildren(
     parent: FileNode,
     input: FileListInput | undefined,
-    _session: Session
+    _session: Session,
   ): Promise<FileListOutput> {
     return await this.repo.getChildrenById(parent, input);
   }
@@ -164,19 +164,19 @@ export class FileService {
   async createDirectory(
     parentId: ID | undefined,
     name: string,
-    session: Session
+    session: Session,
   ): Promise<Directory> {
     if (parentId) {
       await this.validateParentNode(
         parentId,
         (type) => type === FileNodeType.Directory,
-        'Directories can only be created under directories'
+        'Directories can only be created under directories',
       );
       try {
         await this.repo.getByName(parentId, name, session);
         throw new DuplicateException(
           'name',
-          'Node with this name already exists in this directory'
+          'Node with this name already exists in this directory',
         );
       } catch (e) {
         if (!(e instanceof NotFoundException)) {
@@ -210,7 +210,7 @@ export class FileService {
       name,
       mimeType: mimeTypeOverride,
     }: CreateFileVersionInput,
-    session: Session
+    session: Session,
   ): Promise<File> {
     const [tempUpload, existingUpload] = await Promise.allSettled([
       this.bucket.headObject(`temp/${uploadId}`),
@@ -232,7 +232,7 @@ export class FileService {
       if (tempUpload.value && existingUpload.value) {
         throw new InputException(
           'Upload request has already been used',
-          'uploadId'
+          'uploadId',
         );
       }
       throw new ServerException('Unable to create file version');
@@ -253,7 +253,7 @@ export class FileService {
     const parentType = await this.validateParentNode(
       parentId,
       (type) => type !== FileNodeType.FileVersion,
-      'Only files and directories can be parents of a file version'
+      'Only files and directories can be parents of a file version',
     );
 
     const fileId =
@@ -284,7 +284,7 @@ export class FileService {
         mimeType,
         size: upload?.ContentLength ?? 0,
       },
-      session
+      session,
     );
 
     // Skip S3 move if it's not needed
@@ -324,7 +324,7 @@ export class FileService {
   private async validateParentNode(
     id: ID,
     isType: (type: FileNodeType) => boolean,
-    typeMismatchError: string
+    typeMismatchError: string,
   ) {
     const node = await this.repo.getBaseNode(id);
     if (!node) {
@@ -332,7 +332,7 @@ export class FileService {
     }
     const type = intersection(
       node.labels,
-      Object.keys(FileNodeType)
+      Object.keys(FileNodeType),
     )[0] as FileNodeType;
     if (!isType(type)) {
       throw new InputException(typeMismatchError, 'parentId');
@@ -343,7 +343,7 @@ export class FileService {
   private async getOrCreateFileByName(
     parentId: ID,
     name: string,
-    session: Session
+    session: Session,
   ) {
     try {
       const node = await this.repo.getByName(parentId, name, session);
@@ -368,7 +368,7 @@ export class FileService {
         parentId,
         fileName: name,
         fileId: fileId,
-      }
+      },
     );
     return fileId;
   }
@@ -380,7 +380,7 @@ export class FileService {
     baseNodeId: ID,
     propertyName: string,
     initialVersion?: CreateDefinedFileVersionInput,
-    field?: string
+    field?: string,
   ) {
     await this.repo.createFile(fileId, name, session);
 
@@ -395,7 +395,7 @@ export class FileService {
             name: initialVersion.name ?? name,
             mimeType: initialVersion.mimeType,
           },
-          session
+          session,
         );
       } catch (e) {
         if (e instanceof InputException && e.field === 'uploadId' && field) {
@@ -410,7 +410,7 @@ export class FileService {
     file: DefinedFile,
     field: string,
     input: CreateDefinedFileVersionInput | undefined,
-    session: Session
+    session: Session,
   ) {
     if (!input) {
       return;
@@ -418,7 +418,7 @@ export class FileService {
     if (!file.canRead || !file.canEdit || !file.value) {
       throw new UnauthorizedException(
         'You do not have permission to update this file',
-        field
+        field,
       );
     }
     const name = input.name ?? (await this.getFile(file.value, session)).name;
@@ -430,7 +430,7 @@ export class FileService {
           name,
           mimeType: input.mimeType,
         },
-        session
+        session,
       );
     } catch (e) {
       if (e instanceof InputException && e.field === 'uploadId' && field) {

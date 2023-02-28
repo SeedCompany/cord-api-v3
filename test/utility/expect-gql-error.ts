@@ -26,7 +26,7 @@ expect.extend({
         'code',
         'codes',
         'status',
-        'exception'
+        'exception',
       ),
     };
 
@@ -42,7 +42,7 @@ expect.extend({
             this,
             expectedObj.extensions,
             actualObj.extensions,
-            this.customTesters
+            this.customTesters,
           )
         : true;
     const pass = codesPassed && messagePassed && extensionsPassed;

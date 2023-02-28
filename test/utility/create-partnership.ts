@@ -23,7 +23,7 @@ export async function listPartnerships(app: TestApp) {
         }
       }
       ${fragments.partnership}
-    `
+    `,
   );
   const partnerships = result.partnerships.items;
   expect(partnerships).toBeTruthy();
@@ -40,7 +40,7 @@ export async function readOnePartnership(app: TestApp, id: string) {
       }
       ${fragments.partnership}
     `,
-    { id }
+    { id },
   );
   const actual = result.partnership;
   expect(actual).toBeTruthy();
@@ -48,7 +48,7 @@ export async function readOnePartnership(app: TestApp, id: string) {
 }
 export async function createPartnership(
   app: TestApp,
-  { changeset, ...input }: Partial<CreatePartnership> & { changeset?: ID } = {}
+  { changeset, ...input }: Partial<CreatePartnership> & { changeset?: ID } = {},
 ) {
   const partnership: CreatePartnership = {
     projectId: input.projectId || (await createProject(app)).id,
@@ -78,7 +78,7 @@ export async function createPartnership(
         partnership,
         changeset,
       },
-    }
+    },
   );
 
   const actual: Partnership = result.createPartnership.partnership;
@@ -88,7 +88,7 @@ export async function createPartnership(
   expect(actual.agreementStatus.value).toBe(partnership.agreementStatus);
   expect(actual.mouStatus.value).toBe(partnership.mouStatus);
   expect(actual.types.value).toEqual(
-    expect.arrayContaining(partnership.types!)
+    expect.arrayContaining(partnership.types!),
   );
 
   return actual;

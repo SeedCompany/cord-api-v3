@@ -35,12 +35,12 @@ export class ProjectChangeRequestRepository extends DtoRepository<
             applied: false,
             editable: true, //needs to be editable on creation
           },
-        })
+        }),
       )
       .apply(
         createRelationships(ProjectChangeRequest, 'in', {
           changeset: ['Project', input.projectId],
-        })
+        }),
       )
       .return<{ id: ID }>('node.id as id')
       .first();
@@ -63,7 +63,7 @@ export class ProjectChangeRequestRepository extends DtoRepository<
           merge('props', {
             canEdit: `props.status = "${Status.Pending}"`,
             project: 'project.id',
-          }).as('dto')
+          }).as('dto'),
         );
   }
 

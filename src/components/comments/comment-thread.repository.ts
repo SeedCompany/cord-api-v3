@@ -19,7 +19,7 @@ export class CommentThreadRepository extends DtoRepository(CommentThread) {
   constructor(
     @Inject(forwardRef(() => CommentRepository))
     private readonly comments: CommentRepository,
-    db: DatabaseService
+    db: DatabaseService,
   ) {
     super(db);
   }
@@ -33,7 +33,7 @@ export class CommentThreadRepository extends DtoRepository(CommentThread) {
           createRelationships(CommentThread, {
             in: { commentThread: ['BaseNode', parent] },
             out: { creator: ['User', session.userId] },
-          })
+          }),
         )
         .return('node as thread');
   }
@@ -65,7 +65,7 @@ export class CommentThreadRepository extends DtoRepository(CommentThread) {
             .with('[comments[0], comments[-1]] as comments')
             .raw('unwind comments as node')
             .subQuery('node', this.comments.hydrate())
-            .return('collect(dto) as comments')
+            .return('collect(dto) as comments'),
         )
         .return<{ dto: UnsecuredDto<CommentThread> }>(
           merge('node', {
@@ -73,14 +73,14 @@ export class CommentThreadRepository extends DtoRepository(CommentThread) {
             creator: 'creator.id',
             firstComment: 'comments[0]',
             latestComment: 'comments[-1]',
-          }).as('dto')
+          }).as('dto'),
         );
   }
 
   async list(
     parent: ID | undefined,
     input: CommentThreadListInput,
-    session: Session
+    session: Session,
   ) {
     const result = await this.db
       .query()

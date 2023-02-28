@@ -12,7 +12,7 @@ export class EngagementUpdatedEvent {
     public updated: UnsecuredDto<Engagement>,
     readonly previous: UnsecuredDto<Engagement>,
     readonly updates: UpdateLanguageEngagement | UpdateInternshipEngagement,
-    readonly session: Session
+    readonly session: Session,
   ) {}
 
   isLanguageEngagement(): this is EngagementUpdatedEvent & {

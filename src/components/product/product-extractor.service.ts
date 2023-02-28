@@ -26,7 +26,7 @@ import { ProductStep as Step } from './dto';
 export class ProductExtractor {
   async extract(
     file: Downloadable<unknown>,
-    availableSteps: readonly Step[]
+    availableSteps: readonly Step[],
   ): Promise<readonly ExtractedRow[]> {
     const pnp = await Pnp.fromDownloadable(file);
     const sheet = pnp.planning;
@@ -62,7 +62,7 @@ const parseProductRow =
   (
     pnp: Pnp,
     stepColumns: Record<Step, Column>,
-    progressStepColumns: Record<Step, Column>
+    progressStepColumns: Record<Step, Column>,
   ) =>
   (cell: Cell<PlanningSheet>, index: number): ExtractedRow => {
     const sheet = cell.sheet;
@@ -74,7 +74,7 @@ const parseProductRow =
       const plannedCompleteDate = stepPlanCompleteDate(sheet.cell(column, row));
       const progressCell = pnp.progress.cell(
         progressStepColumns[step],
-        progressRow
+        progressRow,
       );
 
       if (
@@ -103,7 +103,7 @@ const parseProductRow =
               .scriptureReference(row)
               // Ignore these two strings that are meaningless here
               ?.replace('Composite', '')
-              .replace('other portions', '') ?? ''
+              .replace('other portions', '') ?? '',
           );
         } catch (e) {
           return [];

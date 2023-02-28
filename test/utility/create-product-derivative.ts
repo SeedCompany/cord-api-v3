@@ -11,7 +11,7 @@ import { gql } from './gql-tag';
 
 export async function createDerivativeProduct(
   app: TestApp,
-  input: CreateDerivativeScriptureProduct
+  input: CreateDerivativeScriptureProduct,
 ) {
   const product: CreateDerivativeScriptureProduct = {
     mediums: [ProductMedium.Print],
@@ -35,7 +35,7 @@ export async function createDerivativeProduct(
     `,
     {
       input: product,
-    }
+    },
   );
 
   const actual: RawProduct = result.createDerivativeScriptureProduct.product;

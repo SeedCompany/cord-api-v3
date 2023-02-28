@@ -34,7 +34,7 @@ export abstract class UpdateDirectScriptureProduct extends IntersectionType(
   PickType(CreateDirectScriptureProduct, [
     'scriptureReferences',
     'unspecifiedScripture',
-  ])
+  ]),
 ) {
   totalVerses?: number;
   totalVerseEquivalents?: number;
@@ -46,7 +46,7 @@ export abstract class UpdateDerivativeScriptureProduct extends IntersectionType(
   PickType(CreateDerivativeScriptureProduct, [
     'scriptureReferencesOverride',
     'composite',
-  ])
+  ]),
 ) {
   @IdField({
     nullable: true,

@@ -12,5 +12,5 @@ export const ISO31661Alpha3 = (validationOptions?: ValidationOptions) =>
         defaultMessage: () => 'Invalid ISO-3166-1 alpha-3 country code',
       },
     },
-    validationOptions
+    validationOptions,
   );

@@ -22,7 +22,7 @@ describe('Partnership Security e2e', () => {
     await registerUser(app, { roles: [Role.FieldOperationsDirector] });
     testFieldRegion = await runAsAdmin(
       app,
-      async () => await createRegion(app)
+      async () => await createRegion(app),
     );
   });
 
@@ -66,7 +66,7 @@ describe('Partnership Security e2e', () => {
             propToTest: property,
             skipEditCheck: false,
           });
-        }
+        },
       );
     });
   });

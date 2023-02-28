@@ -19,7 +19,7 @@ import {
 export class UserEdgePrivileges<
   TResourceStatic extends ResourceShape<any>,
   TKey extends string,
-  TAction extends string
+  TAction extends string,
 > {
   readonly resource: EnhancedResource<TResourceStatic>;
   constructor(
@@ -27,7 +27,7 @@ export class UserEdgePrivileges<
     readonly key: TKey,
     private readonly object: ResourceObjectContext<TResourceStatic> | undefined,
     readonly session: Session,
-    private readonly policyExecutor: PolicyExecutor
+    private readonly policyExecutor: PolicyExecutor,
   ) {
     this.resource = EnhancedResource.of(resource);
   }
@@ -56,7 +56,7 @@ export class UserEdgePrivileges<
       action,
       this.object,
       this.resource,
-      this.key
+      this.key,
     );
   }
 

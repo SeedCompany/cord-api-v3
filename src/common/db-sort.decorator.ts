@@ -15,6 +15,6 @@ export const DbSort = (transformer: SortTransformer) =>
 
 export const getDbSortTransformer = (
   type: AbstractClassType<unknown>,
-  property: string
+  property: string,
 ): SortTransformer | undefined =>
   Reflect.getMetadata(DbSortSymbol, type.prototype, property);

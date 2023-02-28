@@ -12,7 +12,7 @@ export class UpdatePartnershipProducingMediumOutputResolver {
   @ResolveField(() => LanguageEngagement)
   engagement(
     @Parent() output: UpdatePartnershipProducingMediumOutput,
-    @Loader(() => EngagementLoader) engagements: LoaderOf<EngagementLoader>
+    @Loader(() => EngagementLoader) engagements: LoaderOf<EngagementLoader>,
   ): Promise<Engagement> {
     return engagements.load({ id: output.engagement, view: { active: true } });
   }

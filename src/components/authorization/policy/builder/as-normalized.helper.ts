@@ -10,6 +10,6 @@ import { ResourceGranter } from './resource-granter';
  */
 export const asNormalized = (
   granter: ValueOf<ResourcesGranter>,
-  fn: (granter: ResourceGranter<any>) => ResourceGranter<any>
+  fn: (granter: ResourceGranter<any>) => ResourceGranter<any>,
 ): ValueOf<ResourcesGranter> =>
   fn(granter as ResourceGranter<any>) as ValueOf<ResourcesGranter>;

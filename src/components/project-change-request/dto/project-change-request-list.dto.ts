@@ -25,12 +25,12 @@ export class ProjectChangeRequestListInput extends SortablePaginationInput<
 
 @ObjectType()
 export class ProjectChangeRequestListOutput extends PaginatedList(
-  ProjectChangeRequest
+  ProjectChangeRequest,
 ) {}
 
 @ObjectType({
   description: SecuredList.descriptionFor('project change requests'),
 })
 export abstract class SecuredProjectChangeRequestList extends SecuredList(
-  ProjectChangeRequest
+  ProjectChangeRequest,
 ) {}

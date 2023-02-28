@@ -25,7 +25,7 @@ export class ProgressSummaryResolver {
   @ResolveField()
   planned(
     @Parent() summary: ProgressSummary,
-    @Args(formatArg) format: ProgressFormat
+    @Args(formatArg) format: ProgressFormat,
   ): number {
     return summary.planned * this.formatFactor(summary, format);
   }
@@ -33,7 +33,7 @@ export class ProgressSummaryResolver {
   @ResolveField()
   actual(
     @Parent() summary: ProgressSummary,
-    @Args(formatArg) format: ProgressFormat
+    @Args(formatArg) format: ProgressFormat,
   ): number {
     return summary.actual * this.formatFactor(summary, format);
   }
@@ -54,7 +54,7 @@ export class ProgressSummaryResolver {
   })
   variance(
     @Parent() summary: ProgressSummary,
-    @Args(formatArg) format: ProgressFormat
+    @Args(formatArg) format: ProgressFormat,
   ): number {
     return this.actual(summary, format) - this.planned(summary, format);
   }

@@ -10,14 +10,14 @@ import {
 export class ScriptureReferenceService {
   constructor(
     @Logger('scripture-reference:service') private readonly logger: ILogger,
-    private readonly repo: ScriptureReferenceRepository
+    private readonly repo: ScriptureReferenceRepository,
   ) {}
 
   async create(
     producibleId: ID,
     scriptureRefs: readonly ScriptureRangeInput[] | undefined,
     // eslint-disable-next-line @seedcompany/no-unused-vars
-    session: Session
+    session: Session,
   ): Promise<void> {
     if (!scriptureRefs) {
       return;
@@ -31,7 +31,7 @@ export class ScriptureReferenceService {
   async update(
     producibleId: ID,
     scriptureRefs: readonly ScriptureRangeInput[] | null | undefined,
-    options: { isOverriding?: boolean } = {}
+    options: { isOverriding?: boolean } = {},
   ): Promise<void> {
     if (scriptureRefs === undefined) {
       return;
@@ -45,7 +45,7 @@ export class ScriptureReferenceService {
       options.isOverriding,
       producibleId,
       scriptureRefs,
-      rel
+      rel,
     );
 
     if (scriptureRefs !== null) {
@@ -58,7 +58,7 @@ export class ScriptureReferenceService {
   parseList(nodes: DbScriptureReferences) {
     return sortBy(
       nodes.map((row) => row.properties),
-      [(range) => range.start, (range) => range.end]
+      [(range) => range.start, (range) => range.end],
     ).map(ScriptureRange.fromIds);
   }
 }

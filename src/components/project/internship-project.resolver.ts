@@ -24,13 +24,13 @@ export class InternshipProjectResolver {
     @AnonSession() session: Session,
     @Parent() project: Project,
     @ListArg(EngagementListInput) input: EngagementListInput,
-    @Loader(EngagementLoader) engagements: LoaderOf<EngagementLoader>
+    @Loader(EngagementLoader) engagements: LoaderOf<EngagementLoader>,
   ): Promise<SecuredEngagementList> {
     const list = await this.projects.listEngagements(
       project,
       input,
       session,
-      project.changeset ? { changeset: project.changeset } : { active: true }
+      project.changeset ? { changeset: project.changeset } : { active: true },
     );
     engagements.primeAll(list.items);
     return list;

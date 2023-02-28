@@ -50,7 +50,7 @@ describe('Organization e2e', () => {
       `,
       {
         id: org.id,
-      }
+      },
     );
     expect(actual.id).toBe(org.id);
     expect(isValidId(actual.id)).toBe(true);
@@ -71,7 +71,7 @@ describe('Organization e2e', () => {
       `,
       {
         id: org.id,
-      }
+      },
     );
     expect(actual.id).toBe(org.id);
     expect(isValidId(actual.id)).toBe(true);
@@ -80,10 +80,10 @@ describe('Organization e2e', () => {
 
   it.skip('create organization with mandatory field blank, mismatch or removed', async () => {
     await expect(
-      createOrganization(app, { name: '' })
+      createOrganization(app, { name: '' }),
     ).rejects.toThrowGqlError();
     await expect(
-      createOrganization(app, { name: undefined })
+      createOrganization(app, { name: undefined }),
     ).rejects.toThrowGqlError();
   });
 
@@ -111,7 +111,7 @@ describe('Organization e2e', () => {
             name: newName,
           },
         },
-      }
+      },
     );
 
     const updated = result.updateOrganization.organization;
@@ -142,7 +142,7 @@ describe('Organization e2e', () => {
               name: newName,
             },
           },
-        }
+        },
       )
       .expectError(errors.invalidId('organization.id'));
 
@@ -165,7 +165,7 @@ describe('Organization e2e', () => {
               name: newName,
             },
           },
-        }
+        },
       )
       .expectError();
 
@@ -188,7 +188,7 @@ describe('Organization e2e', () => {
               name: newName,
             },
           },
-        }
+        },
       )
       .expectError(errors.invalidId('organization.id'));
   });
@@ -217,7 +217,7 @@ describe('Organization e2e', () => {
               name2: newName,
             },
           },
-        }
+        },
       )
       .expectError();
   });
@@ -236,7 +236,7 @@ describe('Organization e2e', () => {
       `,
       {
         id: org.id,
-      }
+      },
     );
 
     const actual: Organization | undefined = result.deleteOrganization;
@@ -283,7 +283,7 @@ describe('Organization e2e', () => {
       `,
       {
         id: org.id,
-      }
+      },
     );
 
     expect(actual.name.canEdit).toBe(true);
@@ -371,8 +371,10 @@ describe('Organization e2e', () => {
     await Promise.all(
       times(numOrgs).map(
         async () =>
-          await createOrganization(app, { name: (await generateId()) + ' Inc' })
-      )
+          await createOrganization(app, {
+            name: (await generateId()) + ' Inc',
+          }),
+      ),
     );
 
     await app.graphql
@@ -416,8 +418,10 @@ describe('Organization e2e', () => {
     await Promise.all(
       times(numOrgs).map(
         async () =>
-          await createOrganization(app, { name: (await generateId()) + ' Inc' })
-      )
+          await createOrganization(app, {
+            name: (await generateId()) + ' Inc',
+          }),
+      ),
     );
 
     await app.graphql

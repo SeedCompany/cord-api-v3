@@ -34,7 +34,7 @@ export abstract class UnspecifiedScripturePortionInput {
 export abstract class UnspecifiedScripturePortion extends UnspecifiedScripturePortionInput {
   static isEqual(
     a: UnspecifiedScripturePortion,
-    b: UnspecifiedScripturePortion
+    b: UnspecifiedScripturePortion,
   ) {
     return a.book === b.book && a.totalVerses === b.totalVerses;
   }
@@ -45,5 +45,5 @@ export abstract class UnspecifiedScripturePortion extends UnspecifiedScripturePo
 })
 export class SecuredUnspecifiedScripturePortion extends SecuredProperty(
   UnspecifiedScripturePortion,
-  { nullable: true }
+  { nullable: true },
 ) {}

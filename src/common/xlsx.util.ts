@@ -123,7 +123,7 @@ export class Sheet {
     return new Range(
       this,
       s instanceof Cell ? s : this.cell(s),
-      e instanceof Cell ? e : this.cell(e)
+      e instanceof Cell ? e : this.cell(e),
     );
   }
 
@@ -159,14 +159,14 @@ export class Sheet {
   cell(address: string | CellAddress): Cell<this>;
   cell(
     column: string | number | CellAddress | Column | Cell,
-    row?: number | Row
+    row?: number | Row,
   ) {
     if (column instanceof Cell) {
       return new Cell(
         this,
         this.sheet,
         this.sheet[column.toString()],
-        column.address
+        column.address,
       );
     }
     if (column instanceof Column) {
@@ -192,7 +192,7 @@ export class Sheet {
       this,
       this.sheet,
       this.sheet[address],
-      utils.decode_cell(address)
+      utils.decode_cell(address),
     );
   }
 }
@@ -202,7 +202,7 @@ export class Cell<TSheet extends Sheet = Sheet> {
     readonly sheet: TSheet,
     private readonly libSheet: WorkSheet,
     private readonly cell: CellObject | undefined,
-    readonly address: CellAddress
+    readonly address: CellAddress,
   ) {}
 
   @Once() get row() {
@@ -274,7 +274,7 @@ abstract class Rangable<TSheet extends Sheet = Sheet> {
           }
           current = current.move(1);
         }
-      }.call(this)
+      }.call(this),
     );
   }
 
@@ -293,7 +293,7 @@ abstract class Rangable<TSheet extends Sheet = Sheet> {
           }
           current = current.move(1);
         }
-      }.call(this)
+      }.call(this),
     );
   }
 
@@ -306,7 +306,7 @@ export class Range<TSheet extends Sheet = Sheet> extends Rangable<TSheet> {
   constructor(
     sheet: TSheet,
     readonly start: Cell<TSheet>,
-    readonly end: Cell<TSheet>
+    readonly end: Cell<TSheet>,
   ) {
     super(sheet);
   }

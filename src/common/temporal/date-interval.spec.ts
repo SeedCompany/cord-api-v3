@@ -22,9 +22,9 @@ expect.extend({
         isNot: this.isNot,
         promise: this.promise,
       })}\n\nExpected:${this.isNot ? ' not' : ''} ${this.utils.EXPECTED_COLOR(
-        expected.toString()
+        expected.toString(),
       )}\nReceived:${this.isNot ? '    ' : ''} ${this.utils.RECEIVED_COLOR(
-        received.toString()
+        received.toString(),
       )}`;
     return { pass, message };
   },
@@ -47,7 +47,7 @@ expect.extend({
           receivedStrs,
           'Expected',
           'Received',
-          this.expand ?? true
+          this.expand ?? true,
         )
         .replace(/"/g, '')}`;
     return {
@@ -92,7 +92,7 @@ describe('DateInterval', () => {
     const interval = DateInterval.fromISO('2020-03-04/2021-05-22');
     expect(interval.toDuration().toObject()).toEqual({ days: 445 });
     expect(interval.toDuration(['years', 'months', 'days']).toObject()).toEqual(
-      { years: 1, months: 2, days: 19 }
+      { years: 1, months: 2, days: 19 },
     );
   });
   it('fromInterval', () => {
@@ -128,21 +128,21 @@ describe('DateInterval', () => {
 
     const quarter = DateInterval.fromDateTimes(
       DateTime.local(2020, 1, 1),
-      DateTime.local(2020, 3, 31)
+      DateTime.local(2020, 3, 31),
     );
     expect(quarter.count('quarters')).toBe(1);
     expect(quarter.count('years')).toBe(1);
 
     const fourQuarters = DateInterval.fromDateTimes(
       DateTime.local(2020, 1, 1),
-      DateTime.local(2020, 12, 31)
+      DateTime.local(2020, 12, 31),
     );
     expect(fourQuarters.count('years')).toBe(1);
     expect(fourQuarters.count('quarters')).toBe(4);
 
     const yearAndDay = DateInterval.fromDateTimes(
       DateTime.local(2019, 1, 1),
-      DateTime.local(2020, 1, 1)
+      DateTime.local(2020, 1, 1),
     );
 
     expect(yearAndDay.count('years')).toBe(2);
@@ -208,14 +208,14 @@ describe('DateInterval', () => {
     it('non-overlapping', () => {
       const nonOverlapping = [days(5, 6), days(8, 9)];
       expect(DateInterval.xor(nonOverlapping)).toBeDateIntervals(
-        nonOverlapping
+        nonOverlapping,
       );
     });
 
     it('empty for fully overlapping', () => {
       expect(DateInterval.xor([days(5, 8), days(5, 8)])).toBeDateIntervals([]);
       expect(
-        DateInterval.xor([days(5, 8), days(5, 6), days(6, 8)])
+        DateInterval.xor([days(5, 8), days(5, 6), days(6, 8)]),
       ).toBeDateIntervals([]);
     });
 
@@ -239,7 +239,7 @@ describe('DateInterval', () => {
 
       // three intervals
       expect(
-        DateInterval.xor([days(10, 13), days(8, 10), days(12, 14)])
+        DateInterval.xor([days(10, 13), days(8, 10), days(12, 14)]),
       ).toBeDateIntervals([days(8, 9), days(11, 11), days(14, 14)]);
     });
   });
@@ -258,19 +258,19 @@ describe('DateInterval', () => {
         days(10, 11),
       ]);
       expect(
-        days(8, 11).difference(days(7, 8), days(11, 12))
+        days(8, 11).difference(days(7, 8), days(11, 12)),
       ).toBeDateIntervals([days(9, 10)]);
       expect(
-        days(9, 11).difference(days(8, 9), days(11, 11))
+        days(9, 11).difference(days(8, 9), days(11, 11)),
       ).toBeDateIntervals([days(10, 10)]);
     });
     it('empty for fully subtracted', () => {
       expect(days(8, 10).difference(days(7, 11))).toBeDateIntervals([]);
       expect(
-        days(8, 11).difference(days(8, 9), days(10, 11))
+        days(8, 11).difference(days(8, 9), days(10, 11)),
       ).toBeDateIntervals([]);
       expect(
-        days(6, 12).difference(days(6, 9), days(8, 11), days(10, 13))
+        days(6, 12).difference(days(6, 9), days(8, 11), days(10, 13)),
       ).toBeDateIntervals([]);
     });
     it('returns outside parts when engulfing another interval', () => {
@@ -279,12 +279,12 @@ describe('DateInterval', () => {
         days(12, 13),
       ]);
       expect(
-        days(8, 14).difference(days(10, 11), days(11, 12))
+        days(8, 14).difference(days(10, 11), days(11, 12)),
       ).toBeDateIntervals([days(8, 9), days(13, 14)]);
     });
     it('allows holes', () => {
       expect(
-        days(8, 14).difference(days(10, 10), days(12, 12))
+        days(8, 14).difference(days(10, 10), days(12, 12)),
       ).toBeDateIntervals([days(8, 9), days(11, 11), days(13, 14)]);
     });
   });

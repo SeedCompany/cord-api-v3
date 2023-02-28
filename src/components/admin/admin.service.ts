@@ -19,7 +19,7 @@ export class AdminService implements OnApplicationBootstrap {
     private readonly authorizationService: AuthorizationService,
     private readonly repo: AdminRepository,
     @Logger('admin:service') private readonly logger: ILogger,
-    @Logger('admin:database') private readonly dbLogger: ILogger
+    @Logger('admin:database') private readonly dbLogger: ILogger,
   ) {}
 
   async onApplicationBootstrap(): Promise<void> {
@@ -115,7 +115,7 @@ export class AdminService implements OnApplicationBootstrap {
         // add label to org
 
         const giveOrgDefaultLabel = await this.repo.giveOrgDefaultLabel(
-          defaultOrgName
+          defaultOrgName,
         );
 
         if (!giveOrgDefaultLabel) {
@@ -130,7 +130,7 @@ export class AdminService implements OnApplicationBootstrap {
         const createOrgResult = await this.repo.createOrgResult(
           createdAt,
           defaultOrgId,
-          defaultOrgName
+          defaultOrgName,
         );
 
         if (!createOrgResult) {

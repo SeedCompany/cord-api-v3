@@ -24,17 +24,17 @@ export class Privileges {
   }
 
   forResource<TResourceStatic extends ResourceShape<any>>(
-    resource: TResourceStatic | EnhancedResource<TResourceStatic>
+    resource: TResourceStatic | EnhancedResource<TResourceStatic>,
   ) {
     return new ResourcePrivileges<TResourceStatic>(
       EnhancedResource.of(resource),
-      this.policyExecutor
+      this.policyExecutor,
     );
   }
 
   forEdge<TResourceStatic extends ResourceShape<any>>(
     resource: TResourceStatic | EnhancedResource<TResourceStatic>,
-    key: SecuredPropsPlusExtraKey<TResourceStatic>
+    key: SecuredPropsPlusExtraKey<TResourceStatic>,
   ): EdgePrivileges<
     TResourceStatic,
     SecuredPropsPlusExtraKey<TResourceStatic>,
@@ -42,7 +42,7 @@ export class Privileges {
   >;
   forEdge<TResourceStatic extends ResourceShape<any>>(
     resource: TResourceStatic | EnhancedResource<TResourceStatic>,
-    key: ChildSinglesKey<TResourceStatic>
+    key: ChildSinglesKey<TResourceStatic>,
   ): EdgePrivileges<
     TResourceStatic,
     ChildSinglesKey<TResourceStatic>,
@@ -50,7 +50,7 @@ export class Privileges {
   >;
   forEdge<TResourceStatic extends ResourceShape<any>>(
     resource: TResourceStatic | EnhancedResource<TResourceStatic>,
-    key: ChildListsKey<TResourceStatic>
+    key: ChildListsKey<TResourceStatic>,
   ): EdgePrivileges<
     TResourceStatic,
     ChildListsKey<TResourceStatic>,
@@ -58,12 +58,12 @@ export class Privileges {
   >;
   forEdge<TResourceStatic extends ResourceShape<any>>(
     resource: TResourceStatic | EnhancedResource<TResourceStatic>,
-    key: string
+    key: string,
   ) {
     return new EdgePrivileges(
       EnhancedResource.of(resource),
       key,
-      this.policyExecutor
+      this.policyExecutor,
     );
   }
 
@@ -73,13 +73,13 @@ export class Privileges {
   for<TResourceStatic extends ResourceShape<any>>(
     session: Session,
     resource: TResourceStatic | EnhancedResource<TResourceStatic>,
-    object?: ResourceObjectContext<TResourceStatic>
+    object?: ResourceObjectContext<TResourceStatic>,
   ) {
     return new UserResourcePrivileges<TResourceStatic>(
       resource,
       object,
       session,
-      this.policyExecutor
+      this.policyExecutor,
     );
   }
 }

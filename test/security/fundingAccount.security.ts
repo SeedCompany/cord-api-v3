@@ -22,7 +22,7 @@ describe('Funding Account Security e2e', () => {
     await registerUser(app, { roles: [Role.FieldOperationsDirector] });
     testFundingAccount = await runAsAdmin(
       app,
-      async () => await createFundingAccount(app)
+      async () => await createFundingAccount(app),
     );
   });
 
@@ -65,7 +65,7 @@ describe('Funding Account Security e2e', () => {
             propToTest: property,
             skipEditCheck: false,
           });
-        }
+        },
       );
     });
   });

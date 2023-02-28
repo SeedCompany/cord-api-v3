@@ -27,7 +27,7 @@ export class EnforceChangesetEditablePipe implements PipeTransform {
     private readonly contextHost: GqlContextHost,
     // Cannot use request scoped injection here in global pipes,
     // So we have to re-create the loader fetching here.
-    private readonly loaderRegistry: ResourceLoaderRegistry
+    private readonly loaderRegistry: ResourceLoaderRegistry,
   ) {}
 
   async transform(value: any) {

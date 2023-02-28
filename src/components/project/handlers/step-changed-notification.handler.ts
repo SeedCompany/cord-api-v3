@@ -18,7 +18,7 @@ export class ProjectStepChangedNotificationHandler
     private readonly projectRules: ProjectRules,
     private readonly emailService: EmailService,
     private readonly config: ConfigService,
-    @Logger('project:step-changed') private readonly logger: ILogger
+    @Logger('project:step-changed') private readonly logger: ILogger,
   ) {}
 
   async handle(event: ProjectUpdatedEvent) {
@@ -34,7 +34,7 @@ export class ProjectStepChangedNotificationHandler
       event.updated.id,
       event.updated.step,
       event.session.userId,
-      event.previous.step
+      event.previous.step,
     );
 
     this.logger.info('Notifying', {
@@ -51,7 +51,7 @@ export class ProjectStepChangedNotificationHandler
       await this.emailService.send(
         notification.recipient.email.value,
         ProjectStepChanged,
-        notification
+        notification,
       );
     }
   }

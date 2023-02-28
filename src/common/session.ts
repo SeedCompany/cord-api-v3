@@ -69,7 +69,7 @@ export const AnonSession =
 const HttpSession = createParamDecorator(
   (_data: unknown, ctx: ExecutionContext) => {
     return ctx.switchToHttp().getRequest().session;
-  }
+  },
 );
 
 const SessionWatermark: ParameterDecorator = (target, key) =>

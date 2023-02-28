@@ -101,8 +101,8 @@ export class PolicyExecutor {
         .comment("Loading policy condition's context")
         .apply(
           wrapContext(
-            (q1) => perm.setupCypherContext?.(q1, new Set(), other) ?? q1
-          )
+            (q1) => perm.setupCypherContext?.(q1, new Set(), other) ?? q1,
+          ),
         )
         .comment('Filtering by policy conditions')
         .with('*')
@@ -118,7 +118,7 @@ export class PolicyExecutor {
       }
       const rolesSpecifiedByPolicyThatUserHas = intersection(
         policy.roles,
-        session.roles.map(withoutScope)
+        session.roles.map(withoutScope),
       );
       return rolesSpecifiedByPolicyThatUserHas.length > 0;
     });

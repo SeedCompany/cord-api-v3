@@ -8,13 +8,13 @@ import { member, Policy, Role, variant } from '../util';
   r.Language.when(member).read.specifically(
     (p) =>
       p.many('leastOfThese', 'leastOfTheseReason', 'sponsorEstimatedEndDate')
-        .none
+        .none,
   ),
   r.Location.when(member).read.specifically(
-    (p) => p.many('fundingAccount').none
+    (p) => p.many('fundingAccount').none,
   ),
   r.Partnership.when(member).specifically(
-    (p) => p.many('organization', 'partner', 'types').read
+    (p) => p.many('organization', 'partner', 'types').read,
   ),
   r.Product.read,
   r.ProgressReport.when(member).read.specifically((p) => p.reportFile.none),
@@ -31,7 +31,7 @@ import { member, Policy, Role, variant } from '../util';
   ]),
   r.ProgressReportWorkflowEvent.transitions(
     'Translation Done',
-    'Translation Reject'
+    'Translation Reject',
   ).execute,
   r.Project.when(member)
     .read.specifically((p) => [

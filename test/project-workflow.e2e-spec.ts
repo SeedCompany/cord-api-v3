@@ -100,7 +100,7 @@ describe('Project-Workflow e2e', () => {
       `,
       {
         id: project.id,
-      }
+      },
     );
     expect(queryProject.project.budget.value.status).toBe('Pending');
   });
@@ -155,7 +155,7 @@ describe('Project-Workflow e2e', () => {
         `,
         {
           id: project.id,
-        }
+        },
       );
       expect(result.project.primaryLocation.value.id).toBe(location.id);
       expect(result.project.fieldRegion.value.id).toBe(fieldRegion.id);
@@ -219,33 +219,33 @@ describe('Project-Workflow e2e', () => {
       await changeProjectStep(
         app,
         project.id,
-        ProjectStep.PendingConceptApproval
+        ProjectStep.PendingConceptApproval,
       );
 
       await fieldOpsDirector.login();
       await changeProjectStep(
         app,
         project.id,
-        ProjectStep.PrepForConsultantEndorsement
+        ProjectStep.PrepForConsultantEndorsement,
       );
       await changeProjectStep(
         app,
         project.id,
-        ProjectStep.PendingConsultantEndorsement
+        ProjectStep.PendingConsultantEndorsement,
       );
 
       await consultantManager.login();
       await changeProjectStep(
         app,
         project.id,
-        ProjectStep.PrepForFinancialEndorsement
+        ProjectStep.PrepForFinancialEndorsement,
       );
 
       await fieldOpsDirector.login();
       await changeProjectStep(
         app,
         project.id,
-        ProjectStep.PendingFinancialEndorsement
+        ProjectStep.PendingFinancialEndorsement,
       );
 
       await projectManager.login();
@@ -270,7 +270,7 @@ describe('Project-Workflow e2e', () => {
         `,
         {
           id: project.id,
-        }
+        },
       );
       expect(result.project.step.value).toBe(ProjectStep.DidNotDevelop);
       expect(result.project.status).toBe(ProjectStatus.DidNotDevelop);
@@ -292,33 +292,33 @@ describe('Project-Workflow e2e', () => {
       await changeProjectStep(
         app,
         project.id,
-        ProjectStep.PendingConceptApproval
+        ProjectStep.PendingConceptApproval,
       );
 
       await fieldOpsDirector.login();
       await changeProjectStep(
         app,
         project.id,
-        ProjectStep.PrepForConsultantEndorsement
+        ProjectStep.PrepForConsultantEndorsement,
       );
       await changeProjectStep(
         app,
         project.id,
-        ProjectStep.PendingConsultantEndorsement
+        ProjectStep.PendingConsultantEndorsement,
       );
 
       await consultantManager.login();
       await changeProjectStep(
         app,
         project.id,
-        ProjectStep.PrepForFinancialEndorsement
+        ProjectStep.PrepForFinancialEndorsement,
       );
 
       await fieldOpsDirector.login();
       await changeProjectStep(
         app,
         project.id,
-        ProjectStep.PendingFinancialEndorsement
+        ProjectStep.PendingFinancialEndorsement,
       );
 
       await controller.login();
@@ -328,13 +328,13 @@ describe('Project-Workflow e2e', () => {
       await changeProjectStep(
         app,
         project.id,
-        ProjectStep.PendingRegionalDirectorApproval
+        ProjectStep.PendingRegionalDirectorApproval,
       );
       await fieldOpsDirector.login();
       await changeProjectStep(
         app,
         project.id,
-        ProjectStep.PendingFinanceConfirmation
+        ProjectStep.PendingFinanceConfirmation,
       );
 
       await controller.login();
@@ -347,18 +347,18 @@ describe('Project-Workflow e2e', () => {
       await changeProjectStep(
         app,
         project.id,
-        ProjectStep.DiscussingChangeToPlan
+        ProjectStep.DiscussingChangeToPlan,
       );
       await changeProjectStep(
         app,
         project.id,
-        ProjectStep.PendingChangeToPlanApproval
+        ProjectStep.PendingChangeToPlanApproval,
       );
       await fieldOpsDirector.login();
       await changeProjectStep(
         app,
         project.id,
-        ProjectStep.PendingChangeToPlanConfirmation
+        ProjectStep.PendingChangeToPlanConfirmation,
       );
 
       await controller.login();
@@ -368,7 +368,7 @@ describe('Project-Workflow e2e', () => {
       await changeProjectStep(
         app,
         project.id,
-        ProjectStep.FinalizingCompletion
+        ProjectStep.FinalizingCompletion,
       );
 
       await controller.login();
@@ -385,7 +385,7 @@ describe('Project-Workflow e2e', () => {
         `,
         {
           id: project.id,
-        }
+        },
       );
       expect(result.project.step.value).toBe(ProjectStep.Completed);
       expect(result.project.status).toBe(ProjectStatus.Completed);

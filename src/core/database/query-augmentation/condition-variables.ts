@@ -14,7 +14,7 @@ import { mapFromList } from '../../../common';
 
 // This class is not exported so grab it a hacky way
 const ParameterContainer = Object.getPrototypeOf(
-  Clause
+  Clause,
 ) as Class<TSParameterContainer>;
 const ParameterBag = new ParameterContainer().getParameterBag()
   .constructor as Class<TSParameterBag>;
@@ -40,7 +40,7 @@ export const variable = (expression: string) => new Variable(expression);
 ParameterBag.prototype.addParam = function addParam(
   this: TSParameterBag,
   value: any | Variable,
-  name?: string
+  name?: string,
 ) {
   const actualName = this.getName(name);
   const param =
@@ -53,13 +53,13 @@ ParameterBag.prototype.addParam = function addParam(
 
 ParameterBag.prototype.getParams = function getParams(this: TSParameterBag) {
   return mapFromList(Object.entries(this.parameterMap), ([name, param]) =>
-    param instanceof Variable ? null : ([name, param.value] as const)
+    param instanceof Variable ? null : ([name, param.value] as const),
   );
 };
 
 Pattern.prototype.setExpandedConditions = function (
   this: TSPattern,
-  expanded: boolean
+  expanded: boolean,
 ) {
   if (this.useExpandedConditions !== expanded) {
     // If trying to join conditions into a single parameter check if there are any variables being referenced.

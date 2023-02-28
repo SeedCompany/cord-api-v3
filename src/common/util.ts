@@ -5,23 +5,23 @@ export const many = <T>(item: Many<T>): readonly T[] =>
   Array.isArray(item) ? item : [item as T];
 
 export const maybeMany = <T>(
-  item: Many<T> | null | undefined
+  item: Many<T> | null | undefined,
 ): readonly T[] | undefined => (item != null ? many(item) : undefined);
 
 export const sleep = (duration: string | DurationLike) =>
   new Promise((resolve) =>
-    setTimeout(resolve, Duration.from(duration).toMillis())
+    setTimeout(resolve, Duration.from(duration).toMillis()),
   );
 
 export const simpleSwitch = <T, K extends string = string>(
   key: K | null | undefined,
-  options: Record<K, T>
+  options: Record<K, T>,
 ): T | undefined => (key ? options[key] : undefined);
 
 /** Converts list to map given a function that returns a [key, value] tuple. */
 export const mapFromList = <T, S = T, K extends string | number = string>(
   list: readonly T[] | ReadonlySet<T>,
-  mapper: (item: T) => readonly [K, S] | null
+  mapper: (item: T) => readonly [K, S] | null,
 ): Record<K, S> => {
   const out: Partial<Record<K, S>> = {};
   list = list instanceof Set ? [...list] : (list as T[]);
@@ -49,7 +49,7 @@ export const keys: <K extends string>(o: Record<K, unknown>) => K[] =
   Object.keys as any;
 
 export const iterate = <T>(
-  iterator: Iterable<T> | IterableIterator<T>
+  iterator: Iterable<T> | IterableIterator<T>,
 ): readonly T[] => {
   const res: T[] = [];
   for (const item of iterator) {
@@ -64,7 +64,7 @@ export const iterate = <T>(
  */
 export function has<K extends string | number | symbol, T>(
   key: K,
-  obj: T
+  obj: T,
 ): obj is T & Record<K, unknown> {
   return key in (obj as any);
 }

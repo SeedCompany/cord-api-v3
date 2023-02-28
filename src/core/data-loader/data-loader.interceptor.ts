@@ -16,7 +16,7 @@ export interface LoaderContextType {
   contextId: ContextId;
   loaders: Map<Type<NestDataLoader<any, any>>, Promise<DataLoader<any, any>>>;
   getLoader: <T, Key = ID, CachedKey = Key>(
-    type: Type<NestDataLoader<T, Key, CachedKey>>
+    type: Type<NestDataLoader<T, Key, CachedKey>>,
   ) => Promise<DataLoader<T, Key, CachedKey>>;
 }
 
@@ -49,13 +49,13 @@ export class DataLoaderInterceptor implements NestInterceptor {
               await this.moduleRef.resolve<NestDataLoader<any, any>>(
                 type,
                 loaderContext.contextId,
-                { strict: false }
+                { strict: false },
               )
             ).generateDataLoader(gqlContext);
           } catch (e) {
             throw new ServerException(
               `The loader ${type.name} is not provided`,
-              e
+              e,
             );
           }
         })();

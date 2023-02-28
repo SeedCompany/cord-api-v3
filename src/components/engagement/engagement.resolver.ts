@@ -43,7 +43,7 @@ export class EngagementResolver {
   })
   async engagement(
     @IdsAndViewArg() key: IdsAndView,
-    @Loader(EngagementLoader) engagements: LoaderOf<EngagementLoader>
+    @Loader(EngagementLoader) engagements: LoaderOf<EngagementLoader>,
   ): Promise<Engagement> {
     return await engagements.load(key);
   }
@@ -54,7 +54,7 @@ export class EngagementResolver {
   async engagements(
     @ListArg(EngagementListInput) input: EngagementListInput,
     @AnonSession() session: Session,
-    @Loader(EngagementLoader) engagements: LoaderOf<EngagementLoader>
+    @Loader(EngagementLoader) engagements: LoaderOf<EngagementLoader>,
   ): Promise<EngagementListOutput> {
     const list = await this.service.list(input, session);
     engagements.primeAll(list.items);
@@ -64,10 +64,10 @@ export class EngagementResolver {
   @ResolveField(() => SecuredCeremony)
   async ceremony(
     @Parent() engagement: Engagement,
-    @Loader(CeremonyLoader) ceremonies: LoaderOf<CeremonyLoader>
+    @Loader(CeremonyLoader) ceremonies: LoaderOf<CeremonyLoader>,
   ): Promise<SecuredCeremony> {
     return await mapSecuredValue(engagement.ceremony, (id) =>
-      ceremonies.load(id)
+      ceremonies.load(id),
     );
   }
 
@@ -80,7 +80,7 @@ export class EngagementResolver {
   dateRangeOverride(@Parent() engagement: Engagement): SecuredDateRange {
     return SecuredDateRange.fromPair(
       engagement.startDateOverride,
-      engagement.endDateOverride
+      engagement.endDateOverride,
     );
   }
 
@@ -90,12 +90,12 @@ export class EngagementResolver {
   async createLanguageEngagement(
     @Args('input')
     { engagement: input, changeset }: CreateLanguageEngagementInput,
-    @LoggedInSession() session: Session
+    @LoggedInSession() session: Session,
   ): Promise<CreateLanguageEngagementOutput> {
     const engagement = await this.service.createLanguageEngagement(
       input,
       session,
-      changeset
+      changeset,
     );
     return { engagement };
   }
@@ -106,12 +106,12 @@ export class EngagementResolver {
   async createInternshipEngagement(
     @Args('input')
     { engagement: input, changeset }: CreateInternshipEngagementInput,
-    @LoggedInSession() session: Session
+    @LoggedInSession() session: Session,
   ): Promise<CreateInternshipEngagementOutput> {
     const engagement = await this.service.createInternshipEngagement(
       input,
       session,
-      changeset
+      changeset,
     );
     return { engagement };
   }
@@ -122,12 +122,12 @@ export class EngagementResolver {
   async updateLanguageEngagement(
     @Args('input')
     { engagement: input, changeset }: UpdateLanguageEngagementInput,
-    @LoggedInSession() session: Session
+    @LoggedInSession() session: Session,
   ): Promise<UpdateLanguageEngagementOutput> {
     const engagement = await this.service.updateLanguageEngagement(
       input,
       session,
-      changeset
+      changeset,
     );
     return { engagement };
   }
@@ -138,12 +138,12 @@ export class EngagementResolver {
   async updateInternshipEngagement(
     @Args('input')
     { engagement: input, changeset }: UpdateInternshipEngagementInput,
-    @LoggedInSession() session: Session
+    @LoggedInSession() session: Session,
   ): Promise<UpdateInternshipEngagementOutput> {
     const engagement = await this.service.updateInternshipEngagement(
       input,
       session,
-      changeset
+      changeset,
     );
     return { engagement };
   }
@@ -153,7 +153,7 @@ export class EngagementResolver {
   })
   async deleteEngagement(
     @Args() { id, changeset }: ChangesetIds,
-    @LoggedInSession() session: Session
+    @LoggedInSession() session: Session,
   ): Promise<DeleteEngagementOutput> {
     await this.service.delete(id, session, changeset);
     return { success: true };

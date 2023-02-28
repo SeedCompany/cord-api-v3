@@ -14,17 +14,17 @@ import './expect-gql-error';
 export interface GraphQLTestClient {
   query: <TData = AnyObject, TVars = AnyObject>(
     query: DocumentNode | string,
-    variables?: TVars
+    variables?: TVars,
   ) => GqlResult<TData>;
   mutate: <TData = AnyObject, TVars = AnyObject>(
     query: DocumentNode | string,
-    variables?: TVars
+    variables?: TVars,
   ) => GqlResult<TData>;
   authToken: string;
 }
 
 export const createGraphqlClient = async (
-  app: INestApplication
+  app: INestApplication,
 ): Promise<GraphQLTestClient> => {
   await app.listen(0);
   const url = await app.getUrl();
@@ -33,7 +33,7 @@ export const createGraphqlClient = async (
 
   const execute = <TData = AnyObject, TVars = AnyObject>(
     query: DocumentNode | string,
-    variables?: TVars
+    variables?: TVars,
   ) => {
     const result = got
       .post({
@@ -81,7 +81,7 @@ class GqlResult<TData> implements PromiseLike<TData> {
 }
 
 function validateResult<TData>(
-  res: ExecutionResult<TData>
+  res: ExecutionResult<TData>,
 ): asserts res is Omit<ExecutionResult<TData>, 'data' | 'errors'> & {
   data: TData;
 } {

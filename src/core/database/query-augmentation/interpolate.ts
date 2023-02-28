@@ -55,7 +55,7 @@ function stringifyValue(value: unknown): string {
   if (isObject(value)) {
     const pairs = map(
       value,
-      (el, key) => `${quoteKey(key)}: ${stringifyValue(el)}`
+      (el, key) => `${quoteKey(key)}: ${stringifyValue(el)}`,
     );
     const str = pairs.join(', ');
     return `{ ${str} }`;

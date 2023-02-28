@@ -14,7 +14,7 @@ export class ProgressReportVarianceExplanationService {
   constructor(
     private readonly privileges: Privileges,
     private readonly resources: ResourceLoader,
-    private readonly repo: ProgressReportVarianceExplanationRepository
+    private readonly repo: ProgressReportVarianceExplanationRepository,
   ) {}
 
   async readMany(reports: readonly ProgressReport[], session: Session) {
@@ -29,7 +29,7 @@ export class ProgressReportVarianceExplanationService {
 
   async update(
     input: VarianceExplanationInput,
-    session: Session
+    session: Session,
   ): Promise<ProgressReport> {
     const report = await this.resources.load(ProgressReport, input.report);
     const [existing] = await this.readMany([report], session);

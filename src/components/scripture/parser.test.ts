@@ -58,7 +58,7 @@ describe('parseScripture', () => {
       refs.map((ref) => ({
         start: { book: ref[0], chapter: ref[1], verse: ref[2] },
         end: { book: ref[3], chapter: ref[4], verse: ref[5] },
-      }))
+      })),
     );
   });
 

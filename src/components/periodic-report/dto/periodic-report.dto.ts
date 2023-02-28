@@ -25,7 +25,7 @@ import { ReportType } from './report-type.enum';
     // so this interface file needs to finish loading before the merge file
     // can be loaded
     import('./merge-periodic-reports.dto').then((m) =>
-      m.resolveReportType(obj)
+      m.resolveReportType(obj),
     ),
   implements: [Resource],
 })

@@ -38,24 +38,24 @@ export class ResourcesHost {
   }
 
   async getByName<K extends keyof ResourceMap>(
-    name: K
+    name: K,
   ): Promise<EnhancedResource<ValueOf<Pick<ResourceMap, K>>>>;
   async getByName(
-    name: LiteralUnion<keyof ResourceMap, string>
+    name: LiteralUnion<keyof ResourceMap, string>,
   ): Promise<EnhancedResource<ValueOf<ResourceMap>>>;
   async getByName(name: keyof ResourceMap): Promise<EnhancedResource<any>> {
     const map = await this.getEnhancedMap();
     const resource = map[name];
     if (!resource) {
       throw new ServerException(
-        `Unable to determine resource from ResourceMap for type: ${name}`
+        `Unable to determine resource from ResourceMap for type: ${name}`,
       );
     }
     return resource;
   }
 
   async getInterfaces(
-    resource: EnhancedResource<any>
+    resource: EnhancedResource<any>,
   ): Promise<ReadonlyArray<EnhancedResource<any>>> {
     // Use interfaces from GQL schema if it's available.
     // Otherwise, fallback to the interfaces from DTO class hierarchy.
@@ -73,7 +73,7 @@ export class ResourcesHost {
 
   @CachedForArg()
   private async getInterfacesFromClassType(
-    resource: EnhancedResource<any>
+    resource: EnhancedResource<any>,
   ): Promise<ReadonlyArray<EnhancedResource<any>>> {
     const map = await this.getEnhancedMap();
     const resSet = new Set<EnhancedResource<any>>(Object.values(map));
@@ -82,7 +82,7 @@ export class ResourcesHost {
 
   @CachedForArg()
   private async getInterfacesFromGQLSchema(
-    resource: EnhancedResource<any>
+    resource: EnhancedResource<any>,
   ): Promise<ReadonlyArray<EnhancedResource<any>>> {
     const { schema } = this.gqlSchema;
     const map = await this.getEnhancedMap();
@@ -98,11 +98,11 @@ export class ResourcesHost {
 
   @CachedForArg()
   async getImplementations(
-    interfaceResource: EnhancedResource<any>
+    interfaceResource: EnhancedResource<any>,
   ): Promise<ReadonlyArray<EnhancedResource<any>>> {
     const map = await this.getEnhancedMap();
     const impls = Object.values(map).filter((resource) =>
-      resource.interfaces.has(interfaceResource)
+      resource.interfaces.has(interfaceResource),
     );
     return impls;
   }

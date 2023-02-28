@@ -32,7 +32,7 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
       .apply(
         createRelationships(FieldZone, 'out', {
           director: ['User', input.directorId],
-        })
+        }),
       )
       .return<{ id: ID }>('node.id as id');
 
@@ -51,7 +51,7 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
         .return<{ dto: UnsecuredDto<FieldZone> }>(
           merge('props', {
             director: 'director.id',
-          }).as('dto')
+          }).as('dto'),
         );
   }
 

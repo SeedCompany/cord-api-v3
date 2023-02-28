@@ -55,7 +55,7 @@ export const MethodologyToApproach: Record<ProductMethodology, Approach> = {
 };
 
 export const ApproachToMethodologies = invertBy(
-  MethodologyToApproach
+  MethodologyToApproach,
 ) as Record<Approach, ProductMethodology[]>;
 
 registerEnumType(ProductMethodology, {

@@ -35,7 +35,7 @@ export class AuthenticationService {
     private readonly userService: UserService,
     private readonly privileges: Privileges,
     @Logger('authentication:service') private readonly logger: ILogger,
-    private readonly repo: AuthenticationRepository
+    private readonly repo: AuthenticationRepository,
   ) {}
 
   async createToken(): Promise<string> {
@@ -99,7 +99,7 @@ export class AuthenticationService {
 
   async resumeSession(
     token: string,
-    impersonatee?: Session['impersonatee']
+    impersonatee?: Session['impersonatee'],
   ): Promise<Session> {
     this.logger.debug('Decoding token', { token });
 
@@ -111,7 +111,7 @@ export class AuthenticationService {
       this.logger.debug('Failed to find active token in database', { token });
       throw new NoSessionException(
         'Session has not been established',
-        'NoSession'
+        'NoSession',
       );
     }
 
@@ -146,13 +146,13 @@ export class AuthenticationService {
     if (impersonatee) {
       const p = this.privileges.for(requesterSession, AssignableRoles);
       const valid = impersonatee.roles.every((role) =>
-        p.can('edit', withoutScope(role))
+        p.can('edit', withoutScope(role)),
       );
       if (!valid) {
         // Don't expose what the requester is unable to do as this could leak
         // private information.
         throw new UnauthorizedException(
-          'You are not authorized to perform this impersonation'
+          'You are not authorized to perform this impersonation',
         );
       }
     }
@@ -176,7 +176,7 @@ export class AuthenticationService {
   async changePassword(
     oldPassword: string,
     newPassword: string,
-    session: Session
+    session: Session,
   ): Promise<void> {
     if (!oldPassword)
       throw new InputException('Old Password Required', 'oldPassword');
@@ -210,7 +210,7 @@ export class AuthenticationService {
 
   async resetPassword(
     { token, password }: ResetPasswordInput,
-    session: Session
+    session: Session,
   ): Promise<void> {
     const emailToken = await this.repo.findEmailToken(token);
     if (!emailToken) {
@@ -226,7 +226,7 @@ export class AuthenticationService {
     await this.repo.updatePasswordViaEmailToken(emailToken, pash);
     await this.repo.deactivateAllOtherSessionsByEmail(
       emailToken.email,
-      session
+      session,
     );
     await this.repo.removeAllEmailTokensForEmail(emailToken.email);
   }

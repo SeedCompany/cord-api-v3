@@ -24,7 +24,7 @@ export async function listProjectMembers(app: TestApp) {
         }
       }
       ${fragments.projectMember}
-    `
+    `,
   );
   const projectMembers = result.projectMembers.items;
   expect(projectMembers).toBeTruthy();
@@ -41,7 +41,7 @@ export async function readOneProjectMember(app: TestApp, id: string) {
       }
       ${fragments.projectMember}
     `,
-    { id }
+    { id },
   );
 
   const actual: ProjectMember = result.projectMember;
@@ -52,7 +52,7 @@ export async function readOneProjectMember(app: TestApp, id: string) {
 
 export async function createProjectMember(
   app: TestApp,
-  input: Partial<CreateProjectMember> = {}
+  input: Partial<CreateProjectMember> = {},
 ) {
   const projectMember: CreateProjectMember = {
     userId:
@@ -78,7 +78,7 @@ export async function createProjectMember(
       input: {
         projectMember,
       },
-    }
+    },
   );
 
   const actual: Raw<ProjectMember> = result.createProjectMember.projectMember;

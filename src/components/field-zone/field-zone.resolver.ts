@@ -39,7 +39,7 @@ export class FieldZoneResolver {
   })
   async fieldZone(
     @Loader(FieldZoneLoader) fieldZones: LoaderOf<FieldZoneLoader>,
-    @IdArg() id: ID
+    @IdArg() id: ID,
   ): Promise<FieldZone> {
     return await fieldZones.load(id);
   }
@@ -50,7 +50,7 @@ export class FieldZoneResolver {
   async fieldZones(
     @AnonSession() session: Session,
     @ListArg(FieldZoneListInput) input: FieldZoneListInput,
-    @Loader(FieldZoneLoader) fieldZones: LoaderOf<FieldZoneLoader>
+    @Loader(FieldZoneLoader) fieldZones: LoaderOf<FieldZoneLoader>,
   ): Promise<FieldZoneListOutput> {
     const list = await this.fieldZoneService.list(input, session);
     fieldZones.primeAll(list.items);
@@ -60,7 +60,7 @@ export class FieldZoneResolver {
   @ResolveField(() => SecuredUser)
   async director(
     @Parent() fieldZone: FieldZone,
-    @Loader(UserLoader) users: LoaderOf<UserLoader>
+    @Loader(UserLoader) users: LoaderOf<UserLoader>,
   ): Promise<SecuredUser> {
     return await mapSecuredValue(fieldZone.director, (id) => users.load(id));
   }
@@ -70,7 +70,7 @@ export class FieldZoneResolver {
   })
   async createFieldZone(
     @LoggedInSession() session: Session,
-    @Args('input') { fieldZone: input }: CreateFieldZoneInput
+    @Args('input') { fieldZone: input }: CreateFieldZoneInput,
   ): Promise<CreateFieldZoneOutput> {
     const fieldZone = await this.fieldZoneService.create(input, session);
     return { fieldZone };
@@ -81,7 +81,7 @@ export class FieldZoneResolver {
   })
   async updateFieldZone(
     @LoggedInSession() session: Session,
-    @Args('input') { fieldZone: input }: UpdateFieldZoneInput
+    @Args('input') { fieldZone: input }: UpdateFieldZoneInput,
   ): Promise<UpdateFieldZoneOutput> {
     const fieldZone = await this.fieldZoneService.update(input, session);
     return { fieldZone };
@@ -92,7 +92,7 @@ export class FieldZoneResolver {
   })
   async deleteFieldZone(
     @LoggedInSession() session: Session,
-    @IdArg() id: ID
+    @IdArg() id: ID,
   ): Promise<DeleteFieldZoneOutput> {
     await this.fieldZoneService.delete(id, session);
     return { success: true };

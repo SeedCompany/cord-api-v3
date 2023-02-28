@@ -53,7 +53,7 @@ export class RichTextDocument {
 
   static fromSerialized(value: string) {
     return RichTextDocument.from(
-      JSON.parse(value.slice(RichTextDocument.serializedPrefix.length))
+      JSON.parse(value.slice(RichTextDocument.serializedPrefix.length)),
     );
   }
 
@@ -63,7 +63,7 @@ export class RichTextDocument {
 
   static isEqual(
     a: RichTextDocument | null | undefined,
-    b: RichTextDocument | null | undefined
+    b: RichTextDocument | null | undefined,
   ) {
     // This is crude but it's better than nothing.
     const aBlocks = a?.blocks ?? [];
@@ -76,7 +76,7 @@ export const RichTextField = (options?: FieldOptions) =>
   applyDecorators(
     Field(() => RichTextScalar, options),
     IsObject(),
-    Transform(({ value }) => RichTextDocument.fromMaybe(value))
+    Transform(({ value }) => RichTextDocument.fromMaybe(value)),
   );
 
 /** @internal */

@@ -7,12 +7,12 @@ import { ScriptureRange } from './dto';
  * Also sorts them.
  */
 export const mergeScriptureRanges = (
-  ranges: readonly ScriptureRange[]
+  ranges: readonly ScriptureRange[],
 ): readonly ScriptureRange[] =>
   mergeScriptureRangesToMinimalIds(ranges).map(ScriptureRange.fromIds);
 
 export const mergeScriptureRangesToMinimalIds = (
-  ranges: readonly ScriptureRange[]
+  ranges: readonly ScriptureRange[],
 ) => {
   // Adapted from Luxon's Interval.merge logic
   const [found, final] = ranges
@@ -39,7 +39,7 @@ export const mergeScriptureRangesToMinimalIds = (
         }
         return [[...sofar, current], item];
       },
-      [[], null] as [Array<Range<number>>, Range<number> | null]
+      [[], null] as [Array<Range<number>>, Range<number> | null],
     );
   if (final) {
     found.push(final);
