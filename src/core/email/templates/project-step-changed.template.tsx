@@ -6,11 +6,11 @@ import {
   Text,
 } from '@seedcompany/nestjs-email/templates';
 import { startCase } from 'lodash';
-import { DateTime } from 'luxon';
 import { EmailNotification as StepChangeNotification } from '../../../components/project';
-import { fullName } from '../../../components/user/fullName';
 import { EmailTemplate, Heading } from './base';
+import { FormattedDateTime } from './formatted-date-time';
 import { useFrontendUrl } from './frontend-url';
+import { UserRef } from './user-ref';
 
 export function ProjectStepChanged({
   project,
@@ -21,15 +21,8 @@ export function ProjectStepChanged({
   const projectUrl = useFrontendUrl(`/projects/${project.id}`);
   const projectName = project.name.value;
 
-  const changerUrl = useFrontendUrl(`/users/${changedBy.id}`);
-  const changerName = fullName(changedBy);
-
   const oldStep = startCase(oldStepVal) || undefined;
   const newStep = startCase(project.step.value) || undefined;
-
-  const changedAtFormatted = project.modifiedAt
-    .setZone(recipient.timezone.value ?? 'America/Chicago')
-    .toLocaleString(DateTime.DATETIME_FULL);
 
   return (
     <EmailTemplate
@@ -52,8 +45,8 @@ export function ProjectStepChanged({
       <Section>
         <Column>
           <Text paddingBottom={16}>
-            {changerName ? <a href={changerUrl}>{changerName}</a> : 'Someone'}{' '}
-            has changed {projectName ? 'project ' : ''}
+            <UserRef {...changedBy} /> has changed{' '}
+            {projectName ? 'project ' : ''}
             <a href={projectUrl}>{projectName ?? 'a project'}</a>{' '}
             {newStep ? (
               <>
@@ -65,7 +58,11 @@ export function ProjectStepChanged({
                 to <em>{newStep}</em>{' '}
               </>
             ) : null}
-            at {changedAtFormatted}
+            at{' '}
+            <FormattedDateTime
+              value={project.modifiedAt}
+              timezone={recipient.timezone.value}
+            />
           </Text>
           <HideInText>
             <Button href={projectUrl} paddingTop={16}>

@@ -1,4 +1,9 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
+import { LanguageModule } from '../../language/language.module';
+import { PeriodicReportModule } from '../../periodic-report/periodic-report.module';
+import { ProjectModule } from '../../project/project.module';
+import { UserModule } from '../../user/user.module';
+import * as handlers from './handlers';
 import { ProgressReportWorkflowEventLoader } from './progress-report-workflow-event.loader';
 import { ProgressReportWorkflowFlowchart } from './progress-report-workflow.flowchart';
 import { ProgressReportWorkflowEventGranter } from './progress-report-workflow.granter';
@@ -10,6 +15,12 @@ import { ProgressReportWorkflowEventResolver } from './resolvers/progress-report
 import { ProgressReportWorkflowEventsResolver } from './resolvers/progress-report-workflow-events.resolver';
 
 @Module({
+  imports: [
+    UserModule,
+    ProjectModule,
+    LanguageModule,
+    forwardRef(() => PeriodicReportModule),
+  ],
   providers: [
     ProgressReportTransitionsResolver,
     ProgressReportExecuteTransitionResolver,
@@ -20,6 +31,7 @@ import { ProgressReportWorkflowEventsResolver } from './resolvers/progress-repor
     ProgressReportWorkflowEventGranter,
     ProgressReportWorkflowRepository,
     ProgressReportWorkflowFlowchart,
+    ...Object.values(handlers),
   ],
 })
 export class ProgressReportWorkflowModule {}

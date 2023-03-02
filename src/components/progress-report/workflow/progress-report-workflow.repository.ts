@@ -5,6 +5,8 @@ import {
   NotFoundException,
   Order,
   RichTextDocument,
+  Role,
+  ServerException,
   Session,
   UnsecuredDto,
 } from '~/common';
@@ -85,7 +87,11 @@ export class ProgressReportWorkflowRepository extends DtoRepository(
     session: Session,
     notes?: RichTextDocument,
   ) {
-    await this.recordEvent(report, { status, transition, notes }, session);
+    return await this.recordEvent(
+      report,
+      { status, transition, notes },
+      session,
+    );
   }
 
   async recordBypass(
@@ -94,7 +100,7 @@ export class ProgressReportWorkflowRepository extends DtoRepository(
     session: Session,
     notes?: RichTextDocument,
   ) {
-    await this.recordEvent(report, { status, notes }, session);
+    return await this.recordEvent(report, { status, notes }, session);
   }
 
   private async recordEvent(
@@ -102,7 +108,7 @@ export class ProgressReportWorkflowRepository extends DtoRepository(
     props: Record<string, any>,
     session: Session,
   ) {
-    await this.db
+    const result = await this.db
       .query()
       .apply(
         await createNode(WorkflowEvent, {
@@ -115,8 +121,9 @@ export class ProgressReportWorkflowRepository extends DtoRepository(
           out: { who: ['User', session.userId] },
         }),
       )
-      .return('*')
-      .run();
+      .apply(this.hydrate())
+      .first();
+    return result!.dto;
   }
 
   async currentStatus(reportId: ID): Promise<Status> {
@@ -145,5 +152,100 @@ export class ProgressReportWorkflowRepository extends DtoRepository(
       object: { id: report },
       changes: { status },
     });
+  }
+
+  async getProjectMemberInfoByReportId(reportId: ID) {
+    const query = this.db
+      .query()
+      .match([
+        node('report', 'ProgressReport', { id: reportId }),
+        relation('in', '', ACTIVE),
+        node('engagement', 'Engagement'),
+        relation('in', '', 'engagement', ACTIVE),
+        node('project', 'Project'),
+        relation('out', '', 'member', ACTIVE),
+        node('member', 'ProjectMember'),
+        relation('out', '', 'user', ACTIVE),
+        node('user', 'User'),
+      ])
+      .optionalMatch([
+        node('user'),
+        relation('out', '', 'email', ACTIVE),
+        node('email', 'EmailAddress'),
+      ])
+      .match([
+        node('member'),
+        relation('out', '', 'roles', ACTIVE),
+        node('role', 'Property'),
+      ])
+      .return<{
+        id: ID;
+        email: string;
+        roles: Role[];
+      }>([
+        'user.id as id',
+        'email.value as email',
+        'coalesce(role.value, []) as roles',
+      ]);
+    return await query.run();
+  }
+
+  async getUserInfoByEmail(email: string) {
+    const query = this.db
+      .query()
+      .match([
+        node('email', 'EmailAddress', { value: email }),
+        relation('in', '', 'email', ACTIVE),
+        node('user', 'User'),
+      ])
+      .return<{
+        id?: ID;
+        email?: string;
+      }>(['user.id as id', 'email.value as email']);
+    return await query.run();
+  }
+
+  async getUserIdByEmails(emails: readonly string[]) {
+    const query = this.db
+      .query()
+      .match([
+        node('email', 'EmailAddress'),
+        relation('in', '', 'email', ACTIVE),
+        node('user', 'User'),
+      ])
+      .where({ 'email.value': inArray(emails) })
+      .return<{
+        id: ID;
+        email: string;
+      }>(['user.id as id, email.value as email']);
+    return await query.run();
+  }
+
+  async getProjectInfoByReportId(reportId: ID) {
+    const query = this.db
+      .query()
+      .match([
+        node('report', 'ProgressReport', { id: reportId }),
+        relation('in', '', ACTIVE),
+        node('engagement', 'Engagement'),
+        relation('in', '', 'engagement', ACTIVE),
+        node('project', 'Project'),
+      ])
+      .match([
+        node('engagement'),
+        relation('out', '', ACTIVE),
+        node('language', 'Language'),
+      ])
+      .return<{
+        projectId: ID;
+        languageId: ID;
+      }>(['project.id as projectId', 'language.id as languageId']);
+    const result = await query.first();
+    if (!result) {
+      throw new ServerException(
+        `Unable to retrieve project and language information for reportId ${reportId}`,
+      );
+    }
+    return result;
   }
 }
