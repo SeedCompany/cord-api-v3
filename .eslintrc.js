@@ -1,3 +1,5 @@
+const baseConfig = require('@seedcompany/eslint-plugin').configs.base;
+
 const oldRestrictedImports = [
   {
     name: '@nestjs/common',
@@ -138,6 +140,7 @@ const config = {
     '@seedcompany/no-restricted-imports': ['error', ...restrictedImports],
     'no-restricted-syntax': [
       'error',
+      ...baseConfig.rules['no-restricted-syntax']?.slice(1),
       {
         selector: 'NewExpression[callee.name="Logger"]',
         'message': `
