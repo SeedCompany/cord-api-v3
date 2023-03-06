@@ -2757,9 +2757,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@seedcompany/eslint-plugin@npm:^3.3.0":
-  version: 3.3.0
-  resolution: "@seedcompany/eslint-plugin@npm:3.3.0"
+"@seedcompany/eslint-plugin@npm:^3.4.1":
+  version: 3.4.1
+  resolution: "@seedcompany/eslint-plugin@npm:3.4.1"
   dependencies:
     "@typescript-eslint/eslint-plugin": ^5.28.0
     "@typescript-eslint/parser": ^5.28.0
@@ -2787,7 +2787,7 @@ __metadata:
       optional: true
     react-dom:
       optional: true
-  checksum: da2cdbfdc8ce8d6b494cb140faa425b0a287e1245d9ba92a596269fba5f0f93d7dca3c4c1f8ae30061a951c1092e0b0c3d5164be20bae4961979ac3c5942c4d6
+  checksum: 2a5ade0f4a9efedaca047bfca9f8c2a0a65eb6050adb43911efef6730009bbb9ab7b3a8475af0266969f9562953e5b1155f3bf4570d4de02b6f7569a07998c0b
   languageName: node
   linkType: hard
 
@@ -5167,7 +5167,7 @@ __metadata:
     "@nestjs/schematics": ^9.0.4
     "@nestjs/testing": ^9.3.1
     "@patarapolw/prettyprint": ^1.0.3
-    "@seedcompany/eslint-plugin": ^3.3.0
+    "@seedcompany/eslint-plugin": ^3.4.1
     "@seedcompany/nestjs-email": ^3.1.0
     "@types/common-tags": ^1.8.1
     "@types/cookie-parser": ^1.4.3
