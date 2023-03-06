@@ -133,6 +133,8 @@
     "typescript-transform-paths": "^3.4.6"
   },
   "resolutions": {
+    "@nestjs/cli/fork-ts-checker-webpack-plugin": "npm:lodash@*",
+    "@nestjs/cli/webpack": "npm:lodash@*",
     "@nestjs/cli/typescript": "^4.8.2"
   },
   "dependenciesMeta": {
