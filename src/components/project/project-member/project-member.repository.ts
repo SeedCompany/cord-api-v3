@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Node, node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { CreateProjectMember, ProjectMember, ProjectMemberListInput } from '.';
 import { ID, Session, UnsecuredDto } from '../../../common';
 import { DatabaseService, DtoRepository } from '../../../core';
 import {
@@ -15,6 +14,11 @@ import {
   sorting,
 } from '../../../core/database/query';
 import { UserRepository } from '../../user/user.repository';
+import {
+  CreateProjectMember,
+  ProjectMember,
+  ProjectMemberListInput,
+} from './dto';
 
 @Injectable()
 export class ProjectMemberRepository extends DtoRepository<

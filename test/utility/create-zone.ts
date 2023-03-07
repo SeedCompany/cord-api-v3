@@ -1,9 +1,11 @@
-import { createPerson, getUserFromSession, runAsAdmin } from '.';
-import { generateId, isValidId } from '../../src/common';
+import { generateId, isValidId } from '~/common';
 import { CreateFieldZone, FieldZone } from '../../src/components/field-zone';
 import { TestApp } from './create-app';
+import { createPerson } from './create-person';
+import { getUserFromSession } from './create-session';
 import { fragments } from './fragments';
 import { gql } from './gql-tag';
+import { runAsAdmin } from './login';
 
 export async function listFieldZones(app: TestApp) {
   const result = await app.graphql.mutate(

@@ -1,7 +1,6 @@
 import { oneLine } from 'common-tags';
 import { node, Query, relation } from 'cypher-query-builder';
-import { QueryFragment } from '~/core/database/query';
-import { requestingUser, Variable } from '.';
+import { QueryFragment, requestingUser, Variable } from '~/core/database/query';
 import { ID, Sensitivity, Session } from '../../../common';
 import {
   GlobalScopedRole,

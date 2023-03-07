@@ -1,14 +1,15 @@
-import { createPerson, runAsAdmin } from '.';
-import { generateId, isValidId } from '../../src/common';
+import { generateId, isValidId } from '~/common';
 import {
   CreateFieldRegion,
   FieldRegion,
 } from '../../src/components/field-region';
 import { TestApp } from './create-app';
+import { createPerson } from './create-person';
 import { getUserFromSession } from './create-session';
 import { createZone } from './create-zone';
 import { fragments } from './fragments';
 import { gql } from './gql-tag';
+import { runAsAdmin } from './login';
 
 export async function listFieldRegions(app: TestApp) {
   const result = await app.graphql.mutate(
