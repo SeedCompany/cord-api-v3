@@ -1,6 +1,5 @@
 import { node, Query, relation } from 'cypher-query-builder';
 import { identity } from 'rxjs';
-import { ACTIVE } from '.';
 import {
   getDbSortTransformer,
   ID,
@@ -9,8 +8,9 @@ import {
   PaginationInput,
   Resource,
   ResourceShape,
-} from '../../../common';
+} from '~/common';
 import { collect } from './cypher-functions';
+import { ACTIVE } from './matching';
 
 /**
  * Adds pagination to a query based on input.

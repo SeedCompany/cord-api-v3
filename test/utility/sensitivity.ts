@@ -1,12 +1,4 @@
 import {
-  createLanguage,
-  createLanguageEngagement,
-  fragments,
-  runAsAdmin,
-  runInIsolatedSession,
-  TestApp,
-} from '.';
-import {
   AbstractClassType,
   ArrayItem,
   ID,
@@ -14,11 +6,16 @@ import {
   Secured,
   SecuredResource,
   Sensitivity,
-} from '../../src/common';
+} from '~/common';
 import { Role } from '../../src/components/authorization';
 import { Permission } from '../../src/components/authorization/authorization.service';
 import { ProjectType } from '../../src/components/project';
+import { TestApp } from './create-app';
+import { createLanguageEngagement } from './create-engagement';
+import { createLanguage } from './create-language';
+import { fragments } from './fragments';
 import { gql } from './gql-tag';
+import { runAsAdmin, runInIsolatedSession } from './login';
 import { registerUser } from './register';
 
 export type ReadOneFunction<T extends ResourceShape<any>['prototype']> = (

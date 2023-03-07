@@ -1,12 +1,12 @@
 import { faker } from '@faker-js/faker';
-import { createLocation } from '.';
-import { ID } from '../../src/common';
+import { ID } from '~/common';
 import { SecuredLocationList } from '../../src/components/location';
 import {
   CreateOrganization,
   Organization,
 } from '../../src/components/organization';
 import { TestApp } from './create-app';
+import { createLocation } from './create-location';
 import { fragments } from './fragments';
 import { gql } from './gql-tag';
 

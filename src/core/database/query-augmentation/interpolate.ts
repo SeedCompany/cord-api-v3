@@ -12,9 +12,9 @@ Clause.prototype.interpolate = function interpolate() {
   let query = this.build();
   query = stripIndent(query.slice(0, -1));
   const params = this.getParams();
-  for (const name in params) {
+  for (const [name, param] of Object.entries(params)) {
     const pattern = new RegExp(`\\$${name}(?![a-zA-Z0-9_])`, 'g');
-    query = query.replace(pattern, stringifyValue(params[name]));
+    query = query.replace(pattern, stringifyValue(param));
   }
   return query;
 };

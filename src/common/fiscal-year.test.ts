@@ -1,6 +1,5 @@
 import { DateTime } from 'luxon';
-import { fiscalYear } from '.';
-import { fullFiscalQuarter } from './fiscal-year';
+import { fiscalYear, fullFiscalQuarter } from './fiscal-year';
 
 describe('fiscal-year', () => {
   //TODO - This is an example as to what a single test case WOULD be like with a

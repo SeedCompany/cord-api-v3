@@ -1,25 +1,23 @@
-import {
-  createFundingAccount,
-  createLocation,
-  createRegion,
-  fragments,
-  getCurrentEngagementStatus,
-  runAsAdmin,
-  TestApp,
-  updateProject,
-} from '.';
-import { ID } from '../../src/common';
+import { ID } from '~/common';
 import {
   EngagementStatus,
   InternshipEngagement,
   LanguageEngagement,
 } from '../../src/components/engagement';
 import { ProjectStep } from '../../src/components/project';
+import { TestApp } from './create-app';
+import { getCurrentEngagementStatus } from './create-engagement';
+import { createFundingAccount } from './create-funding-account';
+import { createLocation } from './create-location';
+import { createRegion } from './create-region';
+import { fragments } from './fragments';
 import { gql } from './gql-tag';
+import { runAsAdmin } from './login';
 import {
   changeProjectStep,
   stepsFromEarlyConversationToBeforeActive,
 } from './transition-project';
+import { updateProject } from './update-project';
 
 export const changeInternshipEngagementStatus = async (
   app: TestApp,

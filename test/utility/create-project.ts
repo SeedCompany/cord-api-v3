@@ -1,10 +1,9 @@
 import { faker } from '@faker-js/faker';
-import { runAsAdmin } from '.';
 import {
   CalendarDate,
   isValidId,
   SecuredListType as SecuredList,
-} from '../../src/common';
+} from '~/common';
 import { SecuredBudget } from '../../src/components/budget';
 import { Location } from '../../src/components/location';
 import {
@@ -16,6 +15,7 @@ import { TestApp } from './create-app';
 import { createRegion } from './create-region';
 import { fragments, RawProject } from './fragments';
 import { gql } from './gql-tag';
+import { runAsAdmin } from './login';
 import { Raw } from './raw.type';
 
 export async function listProjects(app: TestApp) {
