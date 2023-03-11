@@ -71,14 +71,7 @@ export class IndexerModule implements OnModuleInit {
         logger: this.logger,
         serverInfo,
       });
-      const statements = many<string>(maybeStatements ?? []).map((statement) =>
-        serverInfo.versionXY >= 4
-          ? statement.replace(
-              'CREATE CONSTRAINT ON ',
-              'CREATE CONSTRAINT IF NOT EXISTS ON ',
-            )
-          : statement,
-      );
+      const statements = many<string>(maybeStatements ?? []);
       for (const [i, statement] of Object.entries(statements)) {
         if (
           serverInfo.edition === 'community' &&

@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { oneLine } from 'common-tags';
 import { Connection, node, Query, relation } from 'cypher-query-builder';
 import { compact, isEmpty, last, mapKeys, pickBy, startCase } from 'lodash';
 import {
@@ -220,38 +219,17 @@ export class DatabaseService {
         : undefined,
     };
 
-    const info = await this.getServerInfo();
-    if (info.versionXY >= 4.3) {
-      const options = !isEmpty(pickBy(parsedConfig, (v) => v !== undefined))
-        ? {
-            indexConfig: mapKeys(parsedConfig, (_, k) => `fulltext.${k}`),
-          }
-        : undefined;
-      await this.query(
-        `
-          CREATE FULLTEXT INDEX ${name} IF NOT EXISTS
-          FOR (n:${labels.join('|')})
-          ON EACH ${exp(properties.map((p) => `n.${p}`))}
-          ${options ? `OPTIONS ${exp(options)}` : ''}
-        `,
-      ).run();
-      return;
-    }
-
-    const exists = await this.query(
-      `call db.indexes() yield name where name = '${name}' return name limit 1`,
-    ).first();
-    if (exists) {
-      return;
-    }
+    const options = !isEmpty(pickBy(parsedConfig, (v) => v !== undefined))
+      ? {
+          indexConfig: mapKeys(parsedConfig, (_, k) => `fulltext.${k}`),
+        }
+      : undefined;
     await this.query(
-      oneLine`
-        CALL db.index.fulltext.createNodeIndex(
-          ${quote(name)},
-          ${exp(labels.map(quote))},
-          ${exp(properties.map(quote))},
-          ${exp(parsedConfig)}
-        )
+      `
+        CREATE FULLTEXT INDEX ${name} IF NOT EXISTS
+        FOR (n:${labels.join('|')})
+        ON EACH ${exp(properties.map((p) => `n.${p}`))}
+        ${options ? `OPTIONS ${exp(options)}` : ''}
       `,
     ).run();
   }
