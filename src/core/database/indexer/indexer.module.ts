@@ -71,7 +71,11 @@ export class IndexerModule implements OnModuleInit {
         logger: this.logger,
         serverInfo,
       });
-      const statements = many<string>(maybeStatements ?? []);
+      const statements = many<string>(maybeStatements ?? []).map((statement) =>
+        serverInfo.versionXY >= 4.4 || !statement.includes(' CONSTRAINT ')
+          ? statement
+          : statement.replace(' FOR ', ' ON ').replace(' REQUIRE ', ' ASSERT '),
+      );
       for (const [i, statement] of Object.entries(statements)) {
         if (
           serverInfo.edition === 'community' &&
