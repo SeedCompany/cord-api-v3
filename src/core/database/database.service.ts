@@ -137,10 +137,7 @@ export class DatabaseService {
       }
       // "Administration" command doesn't work with read transactions
       const dbs = await session.writeTransaction((tx) =>
-        tx.run(`
-          show databases
-          yield name, currentStatus, error
-        `),
+        tx.run('show databases yield *'),
       );
       const version = (info.get('version') as string).split('.').map(Number);
       return {
@@ -150,7 +147,8 @@ export class DatabaseService {
         databases: dbs.records.map((r) => ({
           name: r.get('name'),
           status: r.get('currentStatus'),
-          error: r.get('error') || undefined,
+          error:
+            r.get(version[0] >= 5 ? 'statusMessage' : 'error') || undefined,
         })),
       };
     } finally {
