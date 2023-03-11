@@ -91,10 +91,14 @@ export class IndexerModule implements OnModuleInit {
           continue;
         }
 
+        const indexName = statement.match(
+          /create (?:index|constraint) ([\w_]+)/i,
+        )?.[1];
+        const src = `${parentClass.name}.${methodName}`;
+        const indexStr = Number(i) > 0 ? ` #${Number(i) + 1}` : '';
+        const name = indexName ? `${indexName} (${src})` : `${src}${indexStr}`;
+
         const q = this.db.query();
-        const name = `${parentClass.name}.${methodName}${
-          Number(i) > 0 ? ` #${Number(i) + 1}` : ''
-        }`;
         (q as any).name = name;
         try {
           await q.raw(statement).run();
