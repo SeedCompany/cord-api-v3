@@ -28,7 +28,9 @@ import {
 } from './query';
 
 export interface ServerInfo {
-  version: string;
+  version: [major: number, minor: number, patch: number];
+  /** Major.Minor float number */
+  versionXY: number;
   edition: string;
   databases: DbInfo[];
 }
@@ -140,8 +142,10 @@ export class DatabaseService {
           yield name, currentStatus, error
         `),
       );
+      const version = (info.get('version') as string).split('.').map(Number);
       return {
-        version: info.get('version'),
+        version: version as ServerInfo['version'],
+        versionXY: version[0] + version[1] / 10,
         edition: info.get('edition'),
         databases: dbs.records.map((r) => ({
           name: r.get('name'),
@@ -184,7 +188,7 @@ export class DatabaseService {
     // We need to run this query with a session that's not configured to use the
     // database we are trying to create.
     const session = this.db.driver.session();
-    const supportsWait = parseFloat(info.version.slice(0, 3)) >= 4.2;
+    const supportsWait = info.versionXY >= 4.2;
     try {
       await session.writeTransaction((tx) =>
         tx.run(
@@ -219,7 +223,7 @@ export class DatabaseService {
     };
 
     const info = await this.getServerInfo();
-    if (info.version.startsWith('4.3')) {
+    if (info.versionXY >= 4.3) {
       const options = !isEmpty(pickBy(parsedConfig, (v) => v !== undefined))
         ? {
             indexConfig: mapKeys(parsedConfig, (_, k) => `fulltext.${k}`),

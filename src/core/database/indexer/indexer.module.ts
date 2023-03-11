@@ -64,8 +64,6 @@ export class IndexerModule implements OnModuleInit {
     discovered: Array<DiscoveredMethodWithMeta<unknown>>,
     serverInfo: ServerInfo,
   ) {
-    const isV4 = serverInfo.version.startsWith('4');
-
     const indexers = discovered.map((h) => h.discoveredMethod);
     for (const { handler, methodName, parentClass } of indexers) {
       const maybeStatements = await handler.call(parentClass.instance, {
@@ -74,7 +72,7 @@ export class IndexerModule implements OnModuleInit {
         serverInfo,
       });
       const statements = many<string>(maybeStatements ?? []).map((statement) =>
-        isV4
+        serverInfo.versionXY >= 4
           ? statement.replace(
               'CREATE CONSTRAINT ON ',
               'CREATE CONSTRAINT IF NOT EXISTS ON ',
