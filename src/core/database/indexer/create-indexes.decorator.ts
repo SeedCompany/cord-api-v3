@@ -29,4 +29,4 @@ export const createUniqueConstraint = (
   propertyName: string,
   constraintName = `${nodeName}_${propertyName}`,
 ) =>
-  `CREATE CONSTRAINT ${constraintName} IF NOT EXISTS ON (n:${nodeName}) ASSERT n.${propertyName} IS UNIQUE`;
+  `CREATE CONSTRAINT ${constraintName} IF NOT EXISTS FOR (n:${nodeName}) REQUIRE n.${propertyName} IS UNIQUE`;

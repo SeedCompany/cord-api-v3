@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { oneLine } from 'common-tags';
 import { Connection, node, Query, relation } from 'cypher-query-builder';
 import { compact, isEmpty, last, mapKeys, pickBy, startCase } from 'lodash';
 import {
@@ -28,7 +27,9 @@ import {
 } from './query';
 
 export interface ServerInfo {
-  version: string;
+  version: [major: number, minor: number, patch: number];
+  /** Major.Minor float number */
+  versionXY: number;
   edition: string;
   databases: DbInfo[];
 }
@@ -135,18 +136,18 @@ export class DatabaseService {
       }
       // "Administration" command doesn't work with read transactions
       const dbs = await session.writeTransaction((tx) =>
-        tx.run(`
-          show databases
-          yield name, currentStatus, error
-        `),
+        tx.run('show databases yield *'),
       );
+      const version = (info.get('version') as string).split('.').map(Number);
       return {
-        version: info.get('version'),
+        version: version as ServerInfo['version'],
+        versionXY: version[0] + version[1] / 10,
         edition: info.get('edition'),
         databases: dbs.records.map((r) => ({
           name: r.get('name'),
           status: r.get('currentStatus'),
-          error: r.get('error') || undefined,
+          error:
+            r.get(version[0] >= 5 ? 'statusMessage' : 'error') || undefined,
         })),
       };
     } finally {
@@ -184,7 +185,7 @@ export class DatabaseService {
     // We need to run this query with a session that's not configured to use the
     // database we are trying to create.
     const session = this.db.driver.session();
-    const supportsWait = parseFloat(info.version.slice(0, 3)) >= 4.2;
+    const supportsWait = info.versionXY >= 4.2;
     try {
       await session.writeTransaction((tx) =>
         tx.run(
@@ -218,38 +219,17 @@ export class DatabaseService {
         : undefined,
     };
 
-    const info = await this.getServerInfo();
-    if (info.version.startsWith('4.3')) {
-      const options = !isEmpty(pickBy(parsedConfig, (v) => v !== undefined))
-        ? {
-            indexConfig: mapKeys(parsedConfig, (_, k) => `fulltext.${k}`),
-          }
-        : undefined;
-      await this.query(
-        `
-          CREATE FULLTEXT INDEX ${name} IF NOT EXISTS
-          FOR (n:${labels.join('|')})
-          ON EACH ${exp(properties.map((p) => `n.${p}`))}
-          ${options ? `OPTIONS ${exp(options)}` : ''}
-        `,
-      ).run();
-      return;
-    }
-
-    const exists = await this.query(
-      `call db.indexes() yield name where name = '${name}' return name limit 1`,
-    ).first();
-    if (exists) {
-      return;
-    }
+    const options = !isEmpty(pickBy(parsedConfig, (v) => v !== undefined))
+      ? {
+          indexConfig: mapKeys(parsedConfig, (_, k) => `fulltext.${k}`),
+        }
+      : undefined;
     await this.query(
-      oneLine`
-        CALL db.index.fulltext.createNodeIndex(
-          ${quote(name)},
-          ${exp(labels.map(quote))},
-          ${exp(properties.map(quote))},
-          ${exp(parsedConfig)}
-        )
+      `
+        CREATE FULLTEXT INDEX ${name} IF NOT EXISTS
+        FOR (n:${labels.join('|')})
+        ON EACH ${exp(properties.map((p) => `n.${p}`))}
+        ${options ? `OPTIONS ${exp(options)}` : ''}
       `,
     ).run();
   }
