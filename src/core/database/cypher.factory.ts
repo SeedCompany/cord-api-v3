@@ -3,10 +3,11 @@ import { AsyncLocalStorage } from 'async_hooks';
 import { highlight } from 'cli-highlight';
 import { stripIndent } from 'common-tags';
 import { Connection } from 'cypher-query-builder';
-import { Driver, Session } from 'neo4j-driver-core';
+import type { Driver, Config as DriverConfig, Session } from 'neo4j-driver';
 // @ts-expect-error this isn't typed but it exists
 import * as RetryStrategy from 'neo4j-driver-core/lib/internal/retry-strategy';
-import QueryRunner from 'neo4j-driver/types/query-runner';
+import type { LoggerFunction } from 'neo4j-driver-core/types/types';
+import type QueryRunner from 'neo4j-driver/types/query-runner';
 import { Merge } from 'type-fest';
 import { csv, getPreviousList } from '~/common';
 import { dropSecrets } from '~/common/mask-secrets';
@@ -73,49 +74,53 @@ export const CypherFactory: FactoryProvider<Connection> = {
     driverLogger: ILogger,
   ) => {
     const { url, username, password, database, driverConfig } = config.neo4j;
+
+    const driverLoggerAdapter: LoggerFunction = (neoLevel, message) => {
+      const level =
+        neoLevel === 'warn' ? LogLevel.WARNING : (neoLevel as LogLevel);
+      if (message.startsWith('Updated routing table')) {
+        const routingTable = parseRoutingTable(message);
+        driverLogger.info('Updated routing table', { routingTable });
+      } else if (message.startsWith('Routing table is stale for database')) {
+        const routingTable = parseRoutingTable(message);
+        const matched = /for database: "(.*)" and access mode: "(.+)":/.exec(
+          message,
+        );
+        driverLogger.info('Routing table is stale', {
+          database: matched?.[1] || null,
+          accessMode: matched?.[2],
+          routingTable,
+        });
+      } else if (
+        level === LogLevel.ERROR &&
+        message.includes(
+          'experienced a fatal error {"code":"ServiceUnavailable","name":"Neo4jError"}',
+        )
+      ) {
+        // Change connection failure messages to debug.
+        // Connection failures are thrown so they will get logged
+        // in exception handling (if they are not handled, i.e. retries/transactions).
+        // Otherwise, these are misleading as they aren't actual problems.
+        driverLogger.log(LogLevel.DEBUG, message);
+      } else {
+        driverLogger.log(level, message);
+      }
+    };
+
+    const resolvedDriverConfig: DriverConfig = {
+      ...driverConfig,
+      logging: {
+        level: 'debug', // log everything, we'll filter out in our logger
+        logger: driverLoggerAdapter,
+      },
+    };
+
     // @ts-expect-error yes we are patching the connection object
     const conn: PatchedConnection = new Connection(
       url,
       { username, password },
       {
-        driverConfig: {
-          ...driverConfig,
-          logging: {
-            level: 'debug', // log everything, we'll filter out in our logger
-            logger: (neoLevel, message) => {
-              const level =
-                neoLevel === 'warn' ? LogLevel.WARNING : (neoLevel as LogLevel);
-              if (message.startsWith('Updated routing table')) {
-                const routingTable = parseRoutingTable(message);
-                driverLogger.info('Updated routing table', { routingTable });
-              } else if (
-                message.startsWith('Routing table is stale for database')
-              ) {
-                const routingTable = parseRoutingTable(message);
-                const matched =
-                  /for database: "(.*)" and access mode: "(.+)":/.exec(message);
-                driverLogger.info('Routing table is stale', {
-                  database: matched?.[1] || null,
-                  accessMode: matched?.[2],
-                  routingTable,
-                });
-              } else if (
-                level === LogLevel.ERROR &&
-                message.includes(
-                  'experienced a fatal error {"code":"ServiceUnavailable","name":"Neo4jError"}',
-                )
-              ) {
-                // Change connection failure messages to debug.
-                // Connection failures are thrown so they will get logged
-                // in exception handling (if they are not handled, i.e. retries/transactions).
-                // Otherwise, these are misleading as they aren't actual problems.
-                driverLogger.log(LogLevel.DEBUG, message);
-              } else {
-                driverLogger.log(level, message);
-              }
-            },
-          },
-        },
+        driverConfig: resolvedDriverConfig,
       },
     );
 
