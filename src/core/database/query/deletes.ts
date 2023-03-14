@@ -93,5 +93,5 @@ export const prefixNodeLabelsWithDeleted = (node: string) => (query: Query) =>
       .raw(
         `call apoc.create.addLabels(${node}, deletedLabels) yield node as nodeAdded`,
       )
-      .return('1'),
+      .return('1 as deletedPrefixDone'),
   );

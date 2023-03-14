@@ -132,7 +132,7 @@ export function createRelationships<TResourceStatic extends ResourceShape<any>>(
     const hash = createHash('sha1')
       .update(resource.name + JSON.stringify(normalizedArgs))
       .digest('base64');
-    returnTerms.push(`"${hash}"`);
+    returnTerms.push(`"unknown" as \`${hash}\``);
   }
 
   return (query: Query) => {
