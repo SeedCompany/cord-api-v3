@@ -19,7 +19,6 @@ import {
 } from '../../core';
 import {
   ACTIVE,
-  collect,
   createNode,
   createProperty,
   deactivateProperty,
@@ -107,16 +106,20 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
   hydrate(requestingUserId: Session | ID) {
     return (query: Query) =>
       query
-        .optionalMatch([
-          node('node'),
-          relation('out', '', 'roles', ACTIVE),
-          node('role', 'Property'),
-        ])
+        .subQuery('node', (sub) =>
+          sub
+            .match([
+              node('node'),
+              relation('out', '', 'roles', ACTIVE),
+              node('role', 'Property'),
+            ])
+            .return('collect(role.value) as roles'),
+        )
         .apply(matchProps())
         .match(requestingUser(requestingUserId))
         .return<{ dto: UnsecuredDto<User> }>(
           merge({ email: null }, 'props', {
-            roles: collect('role.value'),
+            roles: 'roles',
             pinned: 'exists((requestingUser)-[:pinned]->(node))',
           }).as('dto'),
         );

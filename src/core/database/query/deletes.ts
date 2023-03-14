@@ -30,7 +30,8 @@ export const deleteBaseNode = (nodeVar: string) => (query: Query) =>
        if we set anything on property nodes or property relationships in the query above (as was done previously)
        we need to distinct propertyNode to avoid collecting and labeling each propertyNode more than once
        */
-    .with(`[${nodeVar}] + collect(propertyNode) as nodeList`)
+    .with(`${nodeVar}, collect(propertyNode) as propList`)
+    .with(`[${nodeVar}] + propList as nodeList`)
     .raw('unwind nodeList as node')
     .apply(prefixNodeLabelsWithDeleted('node'));
 
