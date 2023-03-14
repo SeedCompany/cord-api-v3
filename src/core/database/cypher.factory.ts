@@ -4,8 +4,6 @@ import { highlight } from 'cli-highlight';
 import { stripIndent } from 'common-tags';
 import { Connection } from 'cypher-query-builder';
 import type { Driver, Config as DriverConfig, Session } from 'neo4j-driver';
-// @ts-expect-error this isn't typed but it exists
-import * as RetryStrategy from 'neo4j-driver-core/lib/internal/retry-strategy';
 import type { LoggerFunction } from 'neo4j-driver-core/types/types';
 import type QueryRunner from 'neo4j-driver/types/query-runner';
 import { Merge } from 'type-fest';
@@ -28,12 +26,6 @@ import { MyTransformer } from './transformer';
 // eslint-disable-next-line import/no-duplicates
 import './transaction'; // import our transaction augmentation
 import './query-augmentation'; // import our query augmentation
-
-// Change transaction retry logic also check all previous exceptions when
-// looking for retryable errors.
-const canRetryOn = RetryStrategy.canRetryOn;
-RetryStrategy.canRetryOn = (error?: Error) =>
-  error && getPreviousList(error, true).some(canRetryOn);
 
 const parseRoutingTable = (routingTableStr: string) => {
   const matched =
@@ -66,14 +58,15 @@ export type PatchedConnection = Merge<
 
 export const CypherFactory: FactoryProvider<Connection> = {
   provide: Connection,
-  useFactory: (
+  useFactory: async (
     config: ConfigService,
     tracing: TracingService,
     parameterTransformer: ParameterTransformer,
     logger: ILogger,
     driverLogger: ILogger,
   ) => {
-    const { url, username, password, database, driverConfig } = config.neo4j;
+    const { version, url, username, password, database, driverConfig } =
+      config.neo4j;
 
     const driverLoggerAdapter: LoggerFunction = (neoLevel, message) => {
       const level =
@@ -115,14 +108,35 @@ export const CypherFactory: FactoryProvider<Connection> = {
       },
     };
 
-    // @ts-expect-error yes we are patching the connection object
-    const conn: PatchedConnection = new Connection(
-      url,
-      { username, password },
-      {
-        driverConfig: resolvedDriverConfig,
-      },
+    // Change transaction retry logic to also check all previous exceptions when
+    // looking for retryable errors.
+    if (version === 4) {
+      const RetryStrategy = await import(
+        // @ts-expect-error this isn't typed but it exists
+        'neo4j-v4/node_modules/neo4j-driver-core/lib/internal/retry-strategy'
+      );
+      const canRetryOn = RetryStrategy.canRetryOn;
+      RetryStrategy.canRetryOn = (error?: Error) =>
+        error && getPreviousList(error, true).some(canRetryOn);
+    } else {
+      // @ts-expect-error this isn't typed but it exists
+      const NeoErrorModule = await import('neo4j-driver-core/lib/error');
+      const isRetriableError = NeoErrorModule.isRetriableError;
+      NeoErrorModule.Neo4jError.isRetriable = NeoErrorModule.isRetriableError =
+        (error?: Error) =>
+          error && getPreviousList(error, true).some(isRetriableError);
+    }
+
+    const { auth, driver: driverConstructor } = await import(
+      version === 4 ? 'neo4j-v4' : 'neo4j-driver'
     );
+    const authToken = auth.basic(username, password);
+
+    // @ts-expect-error yes we are patching the connection object
+    const conn: PatchedConnection = new Connection(url, authToken, {
+      driverConstructor,
+      driverConfig: resolvedDriverConfig,
+    });
 
     // Holder for the current transaction using native async storage context.
     conn.transactionStorage = new AsyncLocalStorage();

@@ -179,6 +179,9 @@ export class ConfigService implements EmailOptionsFactory {
       url = parsed.toString();
     }
     return {
+      version: Math.trunc(this.env.number('NEO4J_VERSION').optional(4)) as
+        | 4
+        | 5,
       url,
       username,
       password,

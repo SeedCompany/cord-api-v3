@@ -1893,11 +1893,11 @@ __metadata:
   linkType: hard
 
 "@babel/runtime@npm:^7.10.2, @babel/runtime@npm:^7.14.6, @babel/runtime@npm:^7.16.3, @babel/runtime@npm:^7.5.5":
-  version: 7.16.7
-  resolution: "@babel/runtime@npm:7.16.7"
+  version: 7.21.0
+  resolution: "@babel/runtime@npm:7.21.0"
   dependencies:
-    regenerator-runtime: ^0.13.4
-  checksum: 47912f0aaacd1cab2e2552aaf3e6eaffbcaf2d5ac9b07a89a12ac0d42029cb92c070b0d16f825e4277c4a34677c54d8ffe85e1f7c6feb57de58f700eec67ce2f
+    regenerator-runtime: ^0.13.11
+  checksum: 7b33e25bfa9e0e1b9e8828bb61b2d32bdd46b41b07ba7cb43319ad08efc6fda8eb89445193e67d6541814627df0ca59122c0ea795e412b99c5183a0540d338ab
   languageName: node
   linkType: hard
 
@@ -5034,7 +5034,8 @@ __metadata:
     lru-cache: ^7.14.1
     luxon: ^3.3.0
     nanoid: ^3.3.4
-    neo4j-driver: ^4.4.10
+    neo4j-driver: ^5.6.0
+    neo4j-v4: "npm:neo4j-driver@^4.0.0"
     nestjs-console: ^8.0.0
     p-retry: ^4.6.2
     pako: ^2.1.0
@@ -9357,6 +9358,17 @@ cypher-query-builder@6.0.4:
   languageName: node
   linkType: hard
 
+"neo4j-driver-bolt-connection@npm:^5.6.0":
+  version: 5.6.0
+  resolution: "neo4j-driver-bolt-connection@npm:5.6.0"
+  dependencies:
+    buffer: ^6.0.3
+    neo4j-driver-core: ^5.6.0
+    string_decoder: ^1.3.0
+  checksum: 5268e8909017f3a0c5f82cf8473cb3cf132b9e22d71d114a675a865dac1ddc5a36e7655f27dffae89467d3cb603faa2406f0211a1cba36566c32d3a9fd43ee7e
+  languageName: node
+  linkType: hard
+
 "neo4j-driver-core@npm:^4.4.10":
   version: 4.4.10
   resolution: "neo4j-driver-core@npm:4.4.10"
@@ -9364,7 +9376,25 @@ cypher-query-builder@6.0.4:
   languageName: node
   linkType: hard
 
-"neo4j-driver@npm:^4.1.2, neo4j-driver@npm:^4.4.10":
+"neo4j-driver-core@npm:^5.6.0":
+  version: 5.6.0
+  resolution: "neo4j-driver-core@npm:5.6.0"
+  checksum: 3e89225a84b5dd17caad7012a1e24b4192f3d317fcb1054780e631d27cfc1e33a37e6895546bd6e694d51e0e62bbe3bc1dace39391004274e4e4563cbd6c7924
+  languageName: node
+  linkType: hard
+
+"neo4j-driver@npm:^5.6.0":
+  version: 5.6.0
+  resolution: "neo4j-driver@npm:5.6.0"
+  dependencies:
+    neo4j-driver-bolt-connection: ^5.6.0
+    neo4j-driver-core: ^5.6.0
+    rxjs: ^7.8.0
+  checksum: c84e73bc5c8beb3112b58418a8f8bda15f5ded62c401d7a3549f8b3a9796071c132d161ec80e3cc4501eca67c80fa7f27f4390ad9bd441887439962c496808a5
+  languageName: node
+  linkType: hard
+
+"neo4j-v4@npm:neo4j-driver@^4.0.0":
   version: 4.4.10
   resolution: "neo4j-driver@npm:4.4.10"
   dependencies:
@@ -10507,10 +10537,10 @@ cypher-query-builder@6.0.4:
   languageName: node
   linkType: hard
 
-"regenerator-runtime@npm:^0.13.4":
-  version: 0.13.5
-  resolution: "regenerator-runtime@npm:0.13.5"
-  checksum: afc42d8b86f5ef2003821a2fc214c60640a07992563888529f45533071545c2631805d7214e32f55b517a665f1c59f2629a641a5cc1efbd56f48b6149dd319f2
+"regenerator-runtime@npm:^0.13.11, regenerator-runtime@npm:^0.13.4":
+  version: 0.13.11
+  resolution: "regenerator-runtime@npm:0.13.11"
+  checksum: 27481628d22a1c4e3ff551096a683b424242a216fee44685467307f14d58020af1e19660bf2e26064de946bad7eff28950eae9f8209d55723e2d9351e632bbb4
   languageName: node
   linkType: hard
 
