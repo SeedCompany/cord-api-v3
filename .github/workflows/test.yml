@@ -19,16 +19,17 @@ jobs:
         run: yarn test --reporters=github-actions
 
   E2E:
+    name: E2E Tests (${{ matrix.shard }}/6) - Neo4j v${{ matrix.neo4j-version }}
     runs-on: ubuntu-latest
 
     services:
       neo4j:
-        image: neo4j:4.4-enterprise
+        image: neo4j:${{ matrix.neo4j-version }}-enterprise
         ports:
           - 7687:7687
         env:
           NEO4J_ACCEPT_LICENSE_AGREEMENT: yes
-          NEO4JLABS_PLUGINS: '["apoc-core"]'
+          NEO4JLABS_PLUGINS: ${{ matrix.neo4j-version == 4.4 && '["apoc-core"]' || '' }}
           NEO4J_dbms_security_auth__enabled: 'false'
           NEO4J_dbms_security_procedures_unrestricted: apoc.*
           NEO4J_dbms_connector_bolt_enabled: 'true'
@@ -43,6 +44,7 @@ jobs:
     strategy:
       matrix:
         shard: [1, 2, 3, 4, 5, 6]
+        neo4j-version: [4.4, 5.5]
       fail-fast: false
     steps:
       - uses: actions/checkout@v3
@@ -50,4 +52,6 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: E2E Tests
-        run: yarn test:e2e --shard=${{ matrix.shard }}/${{ strategy.job-total }} --reporters=github-actions
+        run: yarn test:e2e --shard=${{ matrix.shard }}/6 --reporters=github-actions
+        env:
+          NEO4J_VERSION: ${{ matrix.neo4j-version }}
