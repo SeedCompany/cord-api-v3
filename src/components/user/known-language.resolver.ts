@@ -8,7 +8,7 @@ export class KnownLanguageResolver {
   @ResolveField(() => Language)
   async language(
     @Parent() knownLanguage: KnownLanguage,
-    @Loader(LanguageLoader) languages: LoaderOf<LanguageLoader>
+    @Loader(LanguageLoader) languages: LoaderOf<LanguageLoader>,
   ): Promise<Language> {
     return await languages.load({
       id: knownLanguage.language,

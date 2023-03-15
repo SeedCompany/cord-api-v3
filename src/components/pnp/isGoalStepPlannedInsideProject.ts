@@ -9,7 +9,7 @@ import { Pnp } from './pnp';
  */
 export const isGoalStepPlannedInsideProject = (
   pnp: Pnp,
-  cell: Cell<PlanningSheet> | CalendarDate | undefined
+  cell: Cell<PlanningSheet> | CalendarDate | undefined,
 ): cell is CalendarDate => {
   const fullFY = cell instanceof Cell ? stepPlanCompleteDate(cell) : cell;
   return !!fullFY && pnp.planning.projectFiscalYears.contains(fullFY);

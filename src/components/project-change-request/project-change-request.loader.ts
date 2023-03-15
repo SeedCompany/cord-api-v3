@@ -11,7 +11,7 @@ import { ProjectChangeRequestService } from './project-change-request.service';
 ])
 export class ProjectChangeRequestLoader extends OrderedNestDataLoader<ProjectChangeRequest> {
   constructor(
-    private readonly projectChangeRequests: ProjectChangeRequestService
+    private readonly projectChangeRequests: ProjectChangeRequestService,
   ) {
     super();
   }

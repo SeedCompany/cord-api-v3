@@ -49,7 +49,7 @@ export class ResourceResolver {
   constructor(
     private readonly discover: DiscoveryService,
     private readonly schemaHost: GraphQLSchemaHost,
-    @Logger('resource-resolver') private readonly logger: ILogger
+    @Logger('resource-resolver') private readonly logger: ILogger,
   ) {}
 
   /**
@@ -68,29 +68,29 @@ export class ResourceResolver {
     type: TResource,
     id: ID,
     session: Session,
-    view?: ObjectView
+    view?: ObjectView,
   ): Promise<TResource['prototype']>;
   async lookup<TResourceName extends keyof ResourceMap>(
     type: TResourceName,
     id: ID,
     session: Session,
-    view?: ObjectView
+    view?: ObjectView,
   ): Promise<ResourceMap[TResourceName]['prototype']>;
   async lookup(
     possibleTypes: Many<string | SomeResource>,
     id: ID,
     session: Session,
-    view?: ObjectView
+    view?: ObjectView,
   ): Promise<SomeResource['prototype'] & { __typename: string }>;
   async lookup(
     possibleTypes: Many<string | SomeResource>,
     id: ID,
     session: Session,
-    view?: ObjectView
+    view?: ObjectView,
   ): Promise<SomeResource['prototype'] & { __typename: string }> {
     const type = this.resolveType(possibleTypes);
     const discovered = await this.discover.providerMethodsWithMetaAtKey<Shape>(
-      RESOLVE_BY_ID
+      RESOLVE_BY_ID,
     );
     const filtered = discovered.filter((f) => f.meta.type.includes(type));
     if (filtered.length === 0) {
@@ -104,7 +104,7 @@ export class ResourceResolver {
       method.parentClass.instance,
       id,
       session,
-      view
+      view,
     );
     return {
       __typename: type,
@@ -119,7 +119,7 @@ export class ResourceResolver {
   resolveType(types: Many<string | SomeResource>): keyof ResourceMap {
     // This caching may not improve performance much...
     const normalized = many(types).map((t) =>
-      typeof t === 'string' ? t : t.name
+      typeof t === 'string' ? t : t.name,
     );
     const cacheKey = normalized.join(';');
     const type = this.typeCache.get(cacheKey);
@@ -145,7 +145,7 @@ export class ResourceResolver {
 
     const schema = this.schemaHost.schema;
     const resolved = names.filter(
-      (name) => schema.getType(name) instanceof GraphQLObjectType
+      (name) => schema.getType(name) instanceof GraphQLObjectType,
     );
 
     if (resolved.length === 1) {
@@ -156,11 +156,11 @@ export class ResourceResolver {
     const namesStr = names.join(', ');
     if (resolved.length === 0) {
       throw new ServerException(
-        `Could not determine GraphQL object from type: ${namesStr}`
+        `Could not determine GraphQL object from type: ${namesStr}`,
       );
     }
     throw new ServerException(
-      `Could not decide which GraphQL object type to choose from: ${namesStr}`
+      `Could not decide which GraphQL object type to choose from: ${namesStr}`,
     );
   }
 }

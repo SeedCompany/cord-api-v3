@@ -7,7 +7,7 @@ const uppercasePattern = RegExp(
   '(?:^|\\b|\\s)' +
     // Capture uppercase unicode letter or number
     '([\\p{Lu}\\p{N}])',
-  'ug'
+  'ug',
 );
 
 // https://regex101.com/r/t2xf5O (make sure you are viewing the latest version)
@@ -18,7 +18,7 @@ const lowercasePattern = RegExp(
   `(?:^|'|\\(|-|\\s)` +
     // Capture lower case unicode letter or number
     '([\\p{Ll}\\p{N}])',
-  'ug'
+  'ug',
 );
 
 const matchAndMerge = (pattern: RegExp, str: string, group = 1) =>
@@ -26,7 +26,7 @@ const matchAndMerge = (pattern: RegExp, str: string, group = 1) =>
 
 export function firstLettersOfWords(
   words: string,
-  limit: number | null = 3
+  limit: number | null = 3,
 ): string {
   // If the string has uppercase characters we use the uppercase pattern which
   // will ignore lowercase characters after word-like boundaries.

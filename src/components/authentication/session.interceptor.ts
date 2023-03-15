@@ -30,7 +30,7 @@ import { AuthenticationService } from './authentication.service';
 export class SessionInterceptor implements NestInterceptor {
   constructor(
     private readonly auth: AuthenticationService,
-    private readonly config: ConfigService
+    private readonly config: ConfigService,
   ) {}
 
   async intercept(executionContext: ExecutionContext, next: CallHandler) {
@@ -48,7 +48,7 @@ export class SessionInterceptor implements NestInterceptor {
     const enabled = Reflect.getMetadata(
       'SESSION_WATERMARK',
       executionContext.getClass(),
-      executionContext.getHandler().name
+      executionContext.getHandler().name,
     );
     if (!enabled) {
       return;
@@ -101,19 +101,19 @@ export class SessionInterceptor implements NestInterceptor {
   }
 
   getImpersonateeFromContext(
-    context: Pick<GqlContextType, 'request'>
+    context: Pick<GqlContextType, 'request'>,
   ): Session['impersonatee'] {
     const user = context.request?.headers?.['x-cord-impersonate-user'] as
       | ID
       | undefined;
     if (user && !isIdLike(user)) {
       throw new InputException(
-        `Invalid user ID given in "X-CORD-Impersonate-User" header`
+        `Invalid user ID given in "X-CORD-Impersonate-User" header`,
       );
     }
 
     const roles = csvHeader(
-      context.request?.headers?.['x-cord-impersonate-role']
+      context.request?.headers?.['x-cord-impersonate-role'],
     );
 
     if (!roles && !user) {
@@ -133,7 +133,7 @@ const assertValidRole = (role: string): Role => {
     return role as Role;
   }
   throw new InputException(
-    `Invalid role "${role}" from "X-CORD-Impersonate-Role" header`
+    `Invalid role "${role}" from "X-CORD-Impersonate-Role" header`,
   );
 };
 
@@ -142,7 +142,7 @@ function csvHeader(headerVal: Many<string> | undefined) {
     return undefined;
   }
   const items = many(headerVal).flatMap((itemCsv) =>
-    compact((itemCsv ?? '').split(',').map((role) => role.trim()))
+    compact((itemCsv ?? '').split(',').map((role) => role.trim())),
   );
   return items && items.length > 0 ? items : undefined;
 }

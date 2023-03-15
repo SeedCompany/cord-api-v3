@@ -17,7 +17,7 @@ export class FileUrlController {
 
   constructor(
     @Inject(forwardRef(() => FileService))
-    private readonly files: FileService
+    private readonly files: FileService,
   ) {}
 
   @Get(':fileId/:fileName')
@@ -25,7 +25,7 @@ export class FileUrlController {
     @Param('fileId') fileId: ID,
     @Query('proxy') proxy: string | undefined,
     @LoggedInSession() session: Session,
-    @Response() res: IResponse
+    @Response() res: IResponse,
   ) {
     const node = await this.files.getFileNode(fileId, session);
 

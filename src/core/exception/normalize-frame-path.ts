@@ -2,7 +2,7 @@ import { sep } from 'path';
 
 const escapedSep = sep === '/' ? '\\/' : '\\\\';
 const matchSrcPathInTrace = RegExp(
-  `(at (.+ \\()?).+${escapedSep}src${escapedSep}`
+  `(at (.+ \\()?).+${escapedSep}src${escapedSep}`,
 );
 
 export const normalizeFramePath = (frame: string) =>

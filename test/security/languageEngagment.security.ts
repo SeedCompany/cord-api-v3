@@ -36,7 +36,7 @@ describe('Language Engagment Security e2e', () => {
     testProject = await createProject(app);
     testLanguage = await runAsAdmin(
       app,
-      async () => await createLanguage(app, { sensitivity: Sensitivity.High })
+      async () => await createLanguage(app, { sensitivity: Sensitivity.High }),
     );
     testLanguageEngagement = await createLanguageEngagement(app, {
       projectId: testProject.id,
@@ -101,7 +101,7 @@ describe('Language Engagment Security e2e', () => {
             propToTest: property,
             skipEditCheck: false,
           });
-        }
+        },
       );
     });
   });
@@ -124,7 +124,7 @@ describe('Language Engagment Security e2e', () => {
               async () =>
                 await createLanguage(app, {
                   sensitivity: Sensitivity.Low, // setting to low because we don't want it to effect the other lang engagements for testing
-                })
+                }),
             );
             const langEngagement = await createLanguageEngagement(app, {
               projectId: proj.id,
@@ -147,9 +147,9 @@ describe('Language Engagment Security e2e', () => {
               }),
               readOneFunction: readFunction,
             });
-          }
+          },
         );
-      }
+      },
     );
   });
   describe('Restricted by role', () => {
@@ -181,7 +181,7 @@ describe('Language Engagment Security e2e', () => {
           async () =>
             await createLanguage(app, {
               sensitivity: Sensitivity.Low, // setting to low because we don't want it to effect the other lang engagements for testing
-            })
+            }),
         );
         await createLanguageEngagement(app, {
           projectId: proj.id,
@@ -210,7 +210,7 @@ describe('Language Engagment Security e2e', () => {
           async () =>
             await createLanguage(app, {
               sensitivity: Sensitivity.Low, // setting to low because we don't want it to effect the other lang engagements for testing
-            })
+            }),
         );
         await createLanguageEngagement(app, {
           projectId: proj.id,

@@ -102,7 +102,7 @@ describe('Project Security e2e', () => {
             propToTest: property,
             skipEditCheck: false,
           });
-        }
+        },
       );
 
       it('reading otherLocations', async () => {
@@ -229,9 +229,9 @@ describe('Project Security e2e', () => {
               }),
               readOneFunction: readFunction,
             });
-          }
+          },
         );
-      }
+      },
     );
 
     // ---- Root Directory
@@ -274,9 +274,9 @@ describe('Project Security e2e', () => {
               }),
               readOneFunction: readFunction,
             });
-          }
+          },
         );
-      }
+      },
     );
 
     // ---- CurrentBudget
@@ -374,7 +374,7 @@ describe('Project Security e2e', () => {
             }),
           });
         });
-      }
+      },
     );
   });
 });

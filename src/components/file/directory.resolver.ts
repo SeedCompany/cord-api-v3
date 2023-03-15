@@ -36,7 +36,7 @@ export class DirectoryResolver {
   @Query(() => Directory)
   async directory(
     @IdArg() id: ID,
-    @Loader(FileNodeLoader) files: LoaderOf<FileNodeLoader>
+    @Loader(FileNodeLoader) files: LoaderOf<FileNodeLoader>,
   ): Promise<Directory> {
     return asDirectory(await files.load(id));
   }
@@ -47,7 +47,7 @@ export class DirectoryResolver {
   async children(
     @AnonSession() session: Session,
     @Parent() node: Directory,
-    @ListArg(FileListInput) input: FileListInput
+    @ListArg(FileListInput) input: FileListInput,
   ): Promise<FileListOutput> {
     return await this.service.listChildren(node, input, session);
   }
@@ -58,7 +58,7 @@ export class DirectoryResolver {
   })
   async modifiedBy(
     @Parent() node: Directory,
-    @Loader(UserLoader) users: LoaderOf<UserLoader>
+    @Loader(UserLoader) users: LoaderOf<UserLoader>,
   ): Promise<User> {
     return await users.load(node.modifiedBy);
   }
@@ -73,7 +73,7 @@ export class DirectoryResolver {
   })
   async firstFileCreated(
     @Parent() node: Directory,
-    @Loader(FileNodeLoader) files: LoaderOf<FileNodeLoader>
+    @Loader(FileNodeLoader) files: LoaderOf<FileNodeLoader>,
   ): Promise<FileNode | null> {
     return node.firstFileCreated
       ? await files.load(node.firstFileCreated)
@@ -83,7 +83,7 @@ export class DirectoryResolver {
   @Mutation(() => Directory)
   async createDirectory(
     @LoggedInSession() session: Session,
-    @Args('input') { parentId, name }: CreateDirectoryInput
+    @Args('input') { parentId, name }: CreateDirectoryInput,
   ): Promise<Directory> {
     return await this.service.createDirectory(parentId, name, session);
   }

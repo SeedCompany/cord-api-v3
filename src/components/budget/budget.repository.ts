@@ -42,7 +42,7 @@ export class BudgetRepository extends DtoRepository<
 >(Budget) {
   constructor(
     db: DatabaseService,
-    private readonly records: BudgetRecordRepository
+    private readonly records: BudgetRecordRepository,
   ) {
     super(db);
   }
@@ -60,7 +60,7 @@ export class BudgetRepository extends DtoRepository<
   async create(
     input: CreateBudget,
     universalTemplateFileId: ID,
-    session: Session
+    session: Session,
   ) {
     const initialProps = {
       status: Status.Pending,
@@ -75,7 +75,7 @@ export class BudgetRepository extends DtoRepository<
       .apply(
         createRelationships(Budget, 'in', {
           budget: ['Project', input.projectId],
-        })
+        }),
       )
       .return<{ id: ID }>('node.id as id')
       .first();
@@ -103,7 +103,7 @@ export class BudgetRepository extends DtoRepository<
         merge('props', 'changedProps', {
           parent: 'project',
           changeset: 'changeset.id',
-        }).as('dto')
+        }).as('dto'),
       )
       .map((row) => row.dto)
       .run();
@@ -139,7 +139,7 @@ export class BudgetRepository extends DtoRepository<
       .apply(
         this.privileges.forUser(session).filterToReadable({
           wrapContext: oncePerProject,
-        })
+        }),
       )
       .apply(sorting(Budget, input))
       .apply(paginate(input))
@@ -186,7 +186,7 @@ export class BudgetRepository extends DtoRepository<
                   relation('out', '', 'status', ACTIVE),
                   node('changesetStatus', 'Property', { value: 'Pending' }),
                 ])
-              : q.subQuery((sub2) => sub2.return('null as changesetStatus'))
+              : q.subQuery((sub2) => sub2.return('null as changesetStatus')),
           )
           .with([
             'project, budget',
@@ -204,7 +204,7 @@ export class BudgetRepository extends DtoRepository<
           ])
           .orderBy('statusRank')
           .limit(1)
-          .return('project, budget, status')
+          .return('project, budget, status'),
       );
   }
 
@@ -218,7 +218,7 @@ export class BudgetRepository extends DtoRepository<
           .with('project, budget')
           .apply(this.records.recordsOfBudget({ view }))
           .apply(this.records.hydrate({ session, view }))
-          .return('collect(dto) as records')
+          .return('collect(dto) as records'),
       )
       .return<
         UnsecuredDto<Pick<Budget, 'id' | 'status'>> & {

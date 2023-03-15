@@ -11,7 +11,7 @@ export class ProjectEngagementConnectionResolver {
   async project(
     @Info(Fields, IsOnlyId) onlyId: boolean,
     @Parent() engagement: IEngagement,
-    @Loader(ProjectLoader) projects: LoaderOf<ProjectLoader>
+    @Loader(ProjectLoader) projects: LoaderOf<ProjectLoader>,
   ) {
     if (onlyId) {
       return {

@@ -11,7 +11,7 @@ export class ProgressReportWorkflowEventsResolver {
   @ResolveField(() => [WorkflowEvent])
   async workflowEvents(
     @Parent() report: ProgressReport,
-    @AnonSession() session: Session
+    @AnonSession() session: Session,
   ): Promise<WorkflowEvent[]> {
     return await this.service.list(report, session);
   }

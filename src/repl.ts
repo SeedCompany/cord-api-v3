@@ -83,7 +83,7 @@ async function bootstrap() {
 
   await mkdir('.cache', { recursive: true });
   await promisify(replServer.setupHistory.bind(replServer))(
-    '.cache/repl_history'
+    '.cache/repl_history',
   );
 }
 bootstrap().catch((err) => {

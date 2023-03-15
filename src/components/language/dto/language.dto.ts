@@ -31,14 +31,14 @@ import { UpdateEthnologueLanguage } from './update-language.dto';
 
 const Interfaces: Type<Resource & Pinnable & Postable> = IntersectionType(
   Resource,
-  IntersectionType(Pinnable, Postable)
+  IntersectionType(Pinnable, Postable),
 );
 
 @ObjectType({
   description: SecuredPropertyList.descriptionFor('tags'),
 })
 export abstract class SecuredTags extends SecuredPropertyList<string>(
-  GraphQLString
+  GraphQLString,
 ) {}
 
 @ObjectType()

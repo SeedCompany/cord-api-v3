@@ -17,9 +17,7 @@ import {
     .read.whenAll(member, sensMediumOrLower)
     .read.specifically((p) => p.many('pmcEntityCode', 'pointOfContact').none)
     .children((c) => c.posts.edit),
-  // This is only here to allow the children connections below to work.
-  // I think the builder should be updated to be able to infer this automatically.
-  r.ProgressReport,
+  r.ProgressReport.specifically((p) => p.status.read), // allows access to workflow
   [
     r.ProgressReportCommunityStory,
     r.ProgressReportHighlight,

@@ -9,13 +9,13 @@ import { ProgressReportWorkflowService } from '../progress-report-workflow.servi
 export class ProgressReportExecuteTransitionResolver {
   constructor(
     private readonly workflow: ProgressReportWorkflowService,
-    private readonly resources: ResourceLoader
+    private readonly resources: ResourceLoader,
   ) {}
 
   @Mutation(() => ProgressReport)
   async transitionProgressReport(
     @Args({ name: 'input' }) input: ExecuteProgressReportTransitionInput,
-    @LoggedInSession() session: Session
+    @LoggedInSession() session: Session,
   ): Promise<ProgressReport> {
     await this.workflow.executeTransition(input, session);
     return await this.resources.load(ProgressReport, input.report);

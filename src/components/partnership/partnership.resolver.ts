@@ -40,7 +40,7 @@ export class PartnershipResolver {
   })
   async createPartnership(
     @LoggedInSession() session: Session,
-    @Args('input') { partnership: input, changeset }: CreatePartnershipInput
+    @Args('input') { partnership: input, changeset }: CreatePartnershipInput,
   ): Promise<CreatePartnershipOutput> {
     const partnership = await this.service.create(input, session, changeset);
     return { partnership };
@@ -51,7 +51,7 @@ export class PartnershipResolver {
   })
   async partnership(
     @Loader(PartnershipLoader) partnerships: LoaderOf<PartnershipLoader>,
-    @IdsAndViewArg() key: IdsAndView
+    @IdsAndViewArg() key: IdsAndView,
   ): Promise<Partnership> {
     return await partnerships.load(key);
   }
@@ -61,7 +61,7 @@ export class PartnershipResolver {
   })
   async mou(
     @Parent() partnership: Partnership,
-    @Loader(FileNodeLoader) files: LoaderOf<FileNodeLoader>
+    @Loader(FileNodeLoader) files: LoaderOf<FileNodeLoader>,
   ): Promise<SecuredFile> {
     return await resolveDefinedFile(files, partnership.mou);
   }
@@ -71,7 +71,7 @@ export class PartnershipResolver {
   })
   async agreement(
     @Parent() partnership: Partnership,
-    @Loader(FileNodeLoader) files: LoaderOf<FileNodeLoader>
+    @Loader(FileNodeLoader) files: LoaderOf<FileNodeLoader>,
   ): Promise<SecuredFile> {
     return await resolveDefinedFile(files, partnership.agreement);
   }
@@ -79,10 +79,10 @@ export class PartnershipResolver {
   @ResolveField(() => SecuredPartner)
   async partner(
     @Parent() partnership: Partnership,
-    @Loader(PartnerLoader) partners: LoaderOf<PartnerLoader>
+    @Loader(PartnerLoader) partners: LoaderOf<PartnerLoader>,
   ): Promise<SecuredPartner> {
     return await mapSecuredValue(partnership.partner, (id) =>
-      partners.load(id)
+      partners.load(id),
     );
   }
 
@@ -95,7 +95,7 @@ export class PartnershipResolver {
   mouRangeOverride(@Parent() partnership: Partnership): SecuredDateRange {
     return SecuredDateRange.fromPair(
       partnership.mouStartOverride,
-      partnership.mouEndOverride
+      partnership.mouEndOverride,
     );
   }
 
@@ -105,7 +105,7 @@ export class PartnershipResolver {
   async partnerships(
     @AnonSession() session: Session,
     @ListArg(PartnershipListInput) input: PartnershipListInput,
-    @Loader(PartnershipLoader) partnerships: LoaderOf<PartnershipLoader>
+    @Loader(PartnershipLoader) partnerships: LoaderOf<PartnershipLoader>,
   ): Promise<PartnershipListOutput> {
     const list = await this.service.list(input, session);
     partnerships.primeAll(list.items);
@@ -117,12 +117,12 @@ export class PartnershipResolver {
   })
   async updatePartnership(
     @LoggedInSession() session: Session,
-    @Args('input') { partnership: input, changeset }: UpdatePartnershipInput
+    @Args('input') { partnership: input, changeset }: UpdatePartnershipInput,
   ): Promise<UpdatePartnershipOutput> {
     const partnership = await this.service.update(
       input,
       session,
-      viewOfChangeset(changeset)
+      viewOfChangeset(changeset),
     );
     return { partnership };
   }
@@ -132,7 +132,7 @@ export class PartnershipResolver {
   })
   async deletePartnership(
     @LoggedInSession() session: Session,
-    @Args() { id, changeset }: ChangesetIds
+    @Args() { id, changeset }: ChangesetIds,
   ): Promise<DeletePartnershipOutput> {
     await this.service.delete(id, session, changeset);
     return { success: true };

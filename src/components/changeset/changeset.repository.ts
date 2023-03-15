@@ -53,7 +53,7 @@ export class ChangesetRepository extends DtoRepository(Changeset) {
             prop: not(hasLabel('modifiedAt')),
             ...limitToParentSubTree,
           })
-          .return('collect(distinct node) as changed')
+          .return('collect(distinct node) as changed'),
       )
       .subQuery(importVars, (sub) =>
         sub
@@ -63,7 +63,7 @@ export class ChangesetRepository extends DtoRepository(Changeset) {
             node('node'),
           ])
           .apply((q) => (parent ? q.where(limitToParentSubTree) : q))
-          .return('collect(distinct node) as removed')
+          .return('collect(distinct node) as removed'),
       )
       .subQuery(importVars, (sub) =>
         sub
@@ -76,7 +76,7 @@ export class ChangesetRepository extends DtoRepository(Changeset) {
             changeType: { deleting: isNull() },
             ...limitToParentSubTree,
           })
-          .return('collect(distinct node) as added')
+          .return('collect(distinct node) as added'),
       )
       .return<Record<keyof ChangesetDiff, readonly BaseNode[]>>([
         'changed',

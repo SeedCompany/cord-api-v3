@@ -1,6 +1,5 @@
 import { node, Query, relation } from 'cypher-query-builder';
 import { identity } from 'rxjs';
-import { ACTIVE } from '.';
 import {
   getDbSortTransformer,
   ID,
@@ -9,8 +8,9 @@ import {
   PaginationInput,
   Resource,
   ResourceShape,
-} from '../../../common';
+} from '~/common';
 import { collect } from './cypher-functions';
+import { ACTIVE } from './matching';
 
 /**
  * Adds pagination to a query based on input.
@@ -26,7 +26,7 @@ import { collect } from './cypher-functions';
 export const paginate =
   <R = ID>(
     { count, page }: PaginationInput,
-    hydrate?: (query: Query) => Query<{ dto: R }>
+    hydrate?: (query: Query) => Query<{ dto: R }>,
   ) =>
   (query: Query) => {
     let list = 'list';
@@ -59,7 +59,7 @@ export const paginate =
           // Using collect in sub query ensures that unwinding an empty list
           // and then collecting in the return will maintain the one row outside
           // this sub query so that total and other pagination info is returned.
-          .return(collect('dto').as('hydratedPage'))
+          .return(collect('dto').as('hydratedPage')),
       )
       .return<PaginatedListType<R>>([
         'hydratedPage as items',
@@ -82,7 +82,7 @@ export const sorting =
     { sort, order }: { sort: string; order: Order },
     customPropMatchers: {
       [SortKey in string]?: (query: Query) => Query<{ sortValue: unknown }>;
-    } = {}
+    } = {},
   ) =>
   (query: Query) => {
     const sortTransformer = getDbSortTransformer(resource, sort) ?? identity;
@@ -116,6 +116,6 @@ export const whereNotDeletedInChangeset = (changeset?: ID) => (query: Query) =>
   changeset
     ? query.raw(
         'WHERE NOT (node)<-[:changeset { active: true, deleting: true }]-(:Changeset { id: $changesetId })',
-        { changesetId: changeset }
+        { changesetId: changeset },
       )
     : query;

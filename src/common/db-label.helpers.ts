@@ -6,19 +6,19 @@ import { AbstractClassType } from './types';
 
 export const getDbPropertyLabels = (
   type: AbstractClassType<unknown>,
-  property: string
+  property: string,
 ) => {
   const labels: string[] | undefined = Reflect.getMetadata(
     DbLabelSymbol,
     type.prototype,
-    property
+    property,
   );
   const normalized = labels?.flatMap((l) => l.split(':'));
   return uniq([...(normalized ?? []), 'Property']);
 };
 
 export const getDbClassLabels = (
-  type: AbstractClassType<unknown>
+  type: AbstractClassType<unknown>,
 ): readonly string[] => {
   const labels = getParentTypes(type)
     .filter(isResourceClass)
@@ -27,11 +27,11 @@ export const getDbClassLabels = (
 };
 
 const getDbClassOwnLabels = (
-  type: AbstractClassType<unknown>
+  type: AbstractClassType<unknown>,
 ): readonly string[] => {
   const decorated: string[] | null = Reflect.getOwnMetadata(
     DbLabelSymbol,
-    type
+    type,
   );
   return decorated?.flatMap((l) => l.split(':')) ?? [type.name];
 };

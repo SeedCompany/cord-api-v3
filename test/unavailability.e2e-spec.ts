@@ -47,7 +47,7 @@ describe('Unavailability e2e', () => {
       `,
       {
         id: unavailability.id,
-      }
+      },
     );
 
     expect(actual.id).toBe(unavailability.id);
@@ -78,7 +78,7 @@ describe('Unavailability e2e', () => {
             description: newDesc,
           },
         },
-      }
+      },
     );
     const updated = result.updateUnavailability.unavailability;
     expect(updated).toBeTruthy();
@@ -100,7 +100,7 @@ describe('Unavailability e2e', () => {
       `,
       {
         id: unavailability.id,
-      }
+      },
     );
     const actual: Unavailability | undefined = result.deleteUnavailability;
     expect(actual).toBeTruthy();
@@ -111,8 +111,8 @@ describe('Unavailability e2e', () => {
     const numUnavail = 2;
     await Promise.all(
       times(numUnavail).map(() =>
-        createUnavailability(app, { userId: user.id })
-      )
+        createUnavailability(app, { userId: user.id }),
+      ),
     );
 
     const result = await app.graphql.query(
@@ -132,11 +132,11 @@ describe('Unavailability e2e', () => {
       `,
       {
         id: user.id,
-      }
+      },
     );
 
     expect(result.user.unavailabilities.items.length).toBeGreaterThanOrEqual(
-      numUnavail
+      numUnavail,
     );
   });
 });

@@ -11,7 +11,7 @@ import { gql } from './gql-tag';
 
 export async function createProjectChangeRequest(
   app: TestApp,
-  input: Partial<CreateProjectChangeRequest>
+  input: Partial<CreateProjectChangeRequest>,
 ) {
   const changeRequest: CreateProjectChangeRequest = {
     projectId: input.projectId!, // Project status should be Active
@@ -37,7 +37,7 @@ export async function createProjectChangeRequest(
       input: {
         projectChangeRequest: changeRequest,
       },
-    }
+    },
   );
 
   const actual: ProjectChangeRequest =
@@ -65,7 +65,7 @@ export async function approveProjectChangeRequest(app: TestApp, id: ID) {
     `,
     {
       id,
-    }
+    },
   );
 
   const actual: ProjectChangeRequest =

@@ -6,10 +6,10 @@ import { Changeset } from '../dto';
  * Please attach to this event to determine how your objects should change.
  */
 export class ChangesetFinalizingEvent<
-  TChangeset extends Changeset = Changeset
+  TChangeset extends Changeset = Changeset,
 > {
   constructor(
     readonly changeset: UnsecuredDto<TChangeset>,
-    readonly session: Session
+    readonly session: Session,
   ) {}
 }

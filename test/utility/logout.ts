@@ -9,6 +9,6 @@ export async function logout(app: TestApp) {
           __typename
         }
       }
-    `
+    `,
   );
 }

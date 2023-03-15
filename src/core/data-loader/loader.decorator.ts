@@ -46,7 +46,7 @@ export interface NestDataLoader<T, Key = ID, CachedKey = Key> {
    * Should return a new instance of dataloader each time
    */
   generateDataLoader: (
-    context: GqlContextType
+    context: GqlContextType,
   ) => DataLoader<T, Key, CachedKey>;
 }
 
@@ -62,7 +62,7 @@ export const Loader =
     if (!type) {
       const source = `${target.constructor.name}.${String(key)}[${index}]`;
       throw new ServerException(
-        `@Loader for ${source} failed to reference loader class. Try wrapping the loader class in \`() => Type\`.`
+        `@Loader for ${source} failed to reference loader class. Try wrapping the loader class in \`() => Type\`.`,
       );
     }
 
@@ -73,14 +73,14 @@ const LoaderInner = createParamDecorator(
   (type: LoaderTypeOrFn, context: ExecutionContext) => {
     if (context.getType<GqlRequestType>() !== 'graphql') {
       throw new ServerException(
-        '@Loader should only be used within the GraphQL context'
+        '@Loader should only be used within the GraphQL context',
       );
     }
 
     const ctx = GqlExecutionContext.create(context).getContext();
     if (!ctx[NEST_LOADER_CONTEXT_KEY]) {
       throw new ServerException(
-        `You should provide interceptor ${DataLoaderInterceptor.name} globally with ${APP_INTERCEPTOR}`
+        `You should provide interceptor ${DataLoaderInterceptor.name} globally with ${APP_INTERCEPTOR}`,
       );
     }
 
@@ -88,5 +88,5 @@ const LoaderInner = createParamDecorator(
       ? (type as LoaderType)
       : (type as () => LoaderType)();
     return ctx[NEST_LOADER_CONTEXT_KEY].getLoader(resolvedType);
-  }
+  },
 );

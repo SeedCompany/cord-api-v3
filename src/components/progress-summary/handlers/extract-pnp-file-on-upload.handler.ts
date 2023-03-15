@@ -10,7 +10,7 @@ export class ExtractPnpFileOnUploadHandler {
   constructor(
     private readonly repo: ProgressSummaryRepository,
     private readonly extractor: ProgressSummaryExtractor,
-    @Logger('progress-summary:extractor') private readonly logger: ILogger
+    @Logger('progress-summary:extractor') private readonly logger: ILogger,
   ) {}
 
   async handle(event: PeriodicReportUploadedEvent) {
@@ -46,21 +46,21 @@ export class ExtractPnpFileOnUploadHandler {
       await this.repo.save(
         event.report,
         SummaryPeriod.Cumulative,
-        extracted.cumulative
+        extracted.cumulative,
       );
     }
     if (extracted?.reportPeriod) {
       await this.repo.save(
         event.report,
         SummaryPeriod.ReportPeriod,
-        extracted.reportPeriod
+        extracted.reportPeriod,
       );
     }
     if (extracted?.fiscalYear) {
       await this.repo.save(
         event.report,
         SummaryPeriod.FiscalYearSoFar,
-        extracted.fiscalYear
+        extracted.fiscalYear,
       );
     }
   }

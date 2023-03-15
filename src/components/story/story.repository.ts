@@ -17,7 +17,7 @@ import { CreateStory, Story, StoryListInput } from './dto';
 export class StoryRepository extends DtoRepository(Story) {
   constructor(
     private readonly scriptureRefs: ScriptureReferenceRepository,
-    db: DatabaseService
+    db: DatabaseService,
   ) {
     super(db);
   }
@@ -53,7 +53,7 @@ export class StoryRepository extends DtoRepository(Story) {
         .return<{ dto: UnsecuredDto<Story> }>(
           merge('props', {
             scriptureReferences: 'scriptureReferences',
-          }).as('dto')
+          }).as('dto'),
         );
   }
 }

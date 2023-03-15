@@ -25,7 +25,7 @@ import { ProgressReportVarianceExplanationService } from './variance-explanation
 @Resolver(ProgressReport)
 export class ProgressReportVarianceExplanationResolver {
   constructor(
-    private readonly service: ProgressReportVarianceExplanationService
+    private readonly service: ProgressReportVarianceExplanationService,
   ) {}
 
   @ResolveField(() => VarianceExplanation)
@@ -33,7 +33,7 @@ export class ProgressReportVarianceExplanationResolver {
     @AnonSession() session: Session,
     @Parent() report: ProgressReport,
     @Loader(() => ProgressReportVarianceExplanationLoader)
-    loader: LoaderOf<ProgressReportVarianceExplanationLoader>
+    loader: LoaderOf<ProgressReportVarianceExplanationLoader>,
   ): Promise<ProgressReportVarianceExplanation> {
     return await loader.load(report);
   }
@@ -41,7 +41,7 @@ export class ProgressReportVarianceExplanationResolver {
   @Mutation(() => ProgressReport)
   async explainProgressVariance(
     @Args({ name: 'input' }) input: ProgressReportVarianceExplanationInput,
-    @LoggedInSession() session: Session
+    @LoggedInSession() session: Session,
   ): Promise<ProgressReport> {
     return await this.service.update(input, session);
   }
@@ -62,7 +62,7 @@ export class ProgressReportVarianceExplanationReasonOptionsResolver {
   async scheduleStatus(
     @Parent() self: VarianceExplanation,
     @Loader(ProgressSummaryLoader)
-    summaryLoader: LoaderOf<ProgressSummaryLoader>
+    summaryLoader: LoaderOf<ProgressSummaryLoader>,
   ): Promise<ScheduleStatus | null> {
     const reason = self.reasons.value[0];
     if (reason) {

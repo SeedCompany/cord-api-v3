@@ -13,7 +13,7 @@ import 'ix/add/iterable-operators/toarray';
  */
 export function findStepColumns(
   sheet: PlanningSheet | ProgressSheet,
-  availableSteps: readonly Step[] = Object.values(Step)
+  availableSteps: readonly Step[] = Object.values(Step),
 ) {
   const matchedColumns: Partial<Record<Step, Column>> = {};
   let remainingSteps = availableSteps;
@@ -39,7 +39,7 @@ export function findStepColumns(
     const chosen = sortBy(
       // 5 is too far ignore those
       distances.filter(([_, distance]) => distance < 5),
-      ([_, distance]) => distance
+      ([_, distance]) => distance,
     )[0]?.[0];
     if (!chosen) {
       return;

@@ -62,7 +62,7 @@ describe('Partnership Security e2e', () => {
             propToTest: property,
             skipEditCheck: false,
           });
-        }
+        },
       );
     });
   });

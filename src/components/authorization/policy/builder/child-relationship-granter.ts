@@ -12,12 +12,12 @@ import { action, extract, PermGranter } from './perm-granter';
 export abstract class ChildRelationshipGranter<
   TResourceStatic extends ResourceShape<any>,
   TRelName extends string = string,
-  TAction extends string = string
+  TAction extends string = string,
 > extends PermGranter<TResourceStatic, TAction> {
   constructor(
     protected resource: EnhancedResource<TResourceStatic>,
     protected relationNames: TRelName[],
-    stagedCondition?: Condition<TResourceStatic>
+    stagedCondition?: Condition<TResourceStatic>,
   ) {
     super(stagedCondition);
   }
@@ -32,7 +32,7 @@ export abstract class ChildRelationshipGranter<
 
   static forResource<TResourceStatic extends ResourceShape<any>>(
     resource: EnhancedResource<TResourceStatic>,
-    stagedCondition: Condition<TResourceStatic> | undefined
+    stagedCondition: Condition<TResourceStatic> | undefined,
   ): ChildRelationshipsGranter<TResourceStatic> {
     const granter = createLazyRecord<
       ChildRelationshipsGranter<TResourceStatic>
@@ -50,7 +50,7 @@ export abstract class ChildRelationshipGranter<
 }
 
 export class ChildSingleGranter<
-  TResourceStatic extends ResourceShape<any>
+  TResourceStatic extends ResourceShape<any>,
 > extends ChildRelationshipGranter<
   TResourceStatic,
   ChildSinglesKey<TResourceStatic>,
@@ -72,7 +72,7 @@ export class ChildSingleGranter<
 }
 
 export class ChildListGranter<
-  TResourceStatic extends ResourceShape<any>
+  TResourceStatic extends ResourceShape<any>,
 > extends ChildRelationshipGranter<
   TResourceStatic,
   ChildListsKey<TResourceStatic>,
@@ -108,7 +108,7 @@ export class ChildListGranter<
 }
 
 export type ChildRelationshipsGranter<
-  TResourceStatic extends ResourceShape<any>
+  TResourceStatic extends ResourceShape<any>,
 > = Record<
   ChildSinglesKey<TResourceStatic>,
   Omit<ChildSingleGranter<TResourceStatic>, 'extract'>

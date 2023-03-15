@@ -36,6 +36,6 @@ for (const scalar of getRegisteredScalars()) {
 export const ScalarProviders: Provider[] = [
   ScalarResolver,
   ...getRegisteredScalars().filter(
-    (scalar): scalar is Type => !(scalar instanceof GraphQLScalarType)
+    (scalar): scalar is Type => !(scalar instanceof GraphQLScalarType),
   ),
 ];

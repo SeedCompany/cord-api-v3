@@ -12,7 +12,7 @@ export enum LogLevel {
 export const LoggerName = Symbol('LoggerName');
 
 export const getNameFromEntry = (
-  entry: Record<string, any>
+  entry: Record<string, any>,
 ): string | undefined => {
   // @ts-expect-error TS can't index on symbols??
   // https://github.com/Microsoft/TypeScript/issues/24587
@@ -107,11 +107,11 @@ export abstract class ILogger {
   abstract log(
     level: LogLevel,
     message: string,
-    context?: LogEntryContext
+    context?: LogEntryContext,
   ): void;
   abstract log(
     level: LogLevel,
-    entry: { message: string } & LogEntryContext
+    entry: { message: string } & LogEntryContext,
   ): void;
   abstract log(entry: LogEntry): void;
 }

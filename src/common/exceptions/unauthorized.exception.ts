@@ -74,7 +74,7 @@ export class UnauthorizedException extends InputException {
     action: string,
     object: object | undefined,
     resource: EnhancedResource<any>,
-    edge?: string
+    edge?: string,
   ) {
     action = action === 'read' ? 'view' : action;
     const resourceName = lowerCase(resource.name);

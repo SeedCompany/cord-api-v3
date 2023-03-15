@@ -48,7 +48,7 @@ type InitialPropsOf<T> = {
  */
 export const createNode = async <TResourceStatic extends ResourceShape<any>>(
   resource: TResourceStatic,
-  { initialProps = {}, baseNodeProps = {} }: CreateNodeOptions<TResourceStatic>
+  { initialProps = {}, baseNodeProps = {} }: CreateNodeOptions<TResourceStatic>,
 ) => {
   const {
     id = baseNodeProps.id ?? (await generateId()),
@@ -57,7 +57,7 @@ export const createNode = async <TResourceStatic extends ResourceShape<any>>(
   } = initialProps;
 
   const imports = Object.values({ ...initialProps, ...baseNodeProps }).filter(
-    (val) => val instanceof Variable
+    (val) => val instanceof Variable,
   );
 
   return (query: Query) =>
@@ -80,6 +80,6 @@ export const createNode = async <TResourceStatic extends ResourceShape<any>>(
             }),
           ]),
         ])
-        .return('node')
+        .return('node'),
     );
 };

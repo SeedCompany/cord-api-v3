@@ -15,5 +15,5 @@ registerEnumType(ProjectChangeRequestStatus, {
   description: SecuredEnum.descriptionFor('a project change request status'),
 })
 export abstract class SecuredProjectChangeRequestStatus extends SecuredEnum(
-  ProjectChangeRequestStatus
+  ProjectChangeRequestStatus,
 ) {}

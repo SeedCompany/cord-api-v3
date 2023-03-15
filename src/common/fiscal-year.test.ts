@@ -1,6 +1,5 @@
 import { DateTime } from 'luxon';
-import { fiscalYear } from '.';
-import { fullFiscalQuarter } from './fiscal-year';
+import { fiscalYear, fullFiscalQuarter } from './fiscal-year';
 
 describe('fiscal-year', () => {
   //TODO - This is an example as to what a single test case WOULD be like with a
@@ -21,7 +20,7 @@ describe('fullFiscalQuarter', () => {
     [4, 2020, '2020-07-01/2020-09-30'],
   ])('Q%s FY%s -> %s', (fiscalQuarter, fiscalYear, dateRange) => {
     expect(fullFiscalQuarter(fiscalQuarter, fiscalYear).toISO()).toEqual(
-      dateRange
+      dateRange,
     );
   });
 });

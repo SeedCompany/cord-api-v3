@@ -71,7 +71,7 @@ export class InputException extends ClientException {
   constructor(...args: InputExceptionArgs) {
     const [message, field, previous] = InputException.parseArgs(
       'Invalid request',
-      args
+      args,
     );
     super(message, previous);
     this.field = field;
@@ -84,7 +84,7 @@ export class InputException extends ClientException {
 
   static parseArgs(
     defaultMessage: string,
-    [one, two, three]: InputExceptionArgs
+    [one, two, three]: InputExceptionArgs,
   ) {
     let message = defaultMessage;
     let field;

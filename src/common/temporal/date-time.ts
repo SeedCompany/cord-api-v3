@@ -26,8 +26,8 @@ DateTime.prototype.toNeo4JDateTime = function (this: DateTime) {
     this.minute,
     this.second,
     this.millisecond * 1e6,
-    this.zone.isUniversal ? this.offset * 60 : undefined,
-    this.zone.isUniversal ? undefined : this.zoneName
+    this.offset * 60,
+    undefined, // Neo4j doesn't recommend timezone names as they are ambiguous
   );
 };
 

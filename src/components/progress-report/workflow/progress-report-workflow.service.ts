@@ -19,12 +19,12 @@ export class ProgressReportWorkflowService {
   constructor(
     private readonly privileges: Privileges,
     private readonly resources: ResourceLoader,
-    private readonly repo: ProgressReportWorkflowRepository
+    private readonly repo: ProgressReportWorkflowRepository,
   ) {}
 
   async list(
     report: ProgressReport,
-    session: Session
+    session: Session,
   ): Promise<WorkflowEvent[]> {
     const dtos = await this.repo.list(report.id, session);
     return dtos.map((dto) => this.secure(dto, session));
@@ -37,7 +37,7 @@ export class ProgressReportWorkflowService {
 
   private secure(
     dto: UnsecuredDto<WorkflowEvent>,
-    session: Session
+    session: Session,
   ): WorkflowEvent {
     const secured = this.privileges.for(session, WorkflowEvent).secure(dto);
     return {
@@ -55,7 +55,7 @@ export class ProgressReportWorkflowService {
         (t.from ? many(t.from).includes(current) : true) &&
         // I don't have a good way to type this right now.
         // Context usage is still fuzzy when conditions need different shapes.
-        p.forContext({ transition: t.id } as any).can('create')
+        p.forContext({ transition: t.id } as any).can('create'),
     );
     return available;
   }
@@ -65,28 +65,39 @@ export class ProgressReportWorkflowService {
   }
 
   async executeTransition(
-    {
-      report: reportId,
-      transition: transitionId,
-      status: overrideStatus,
-      notes,
-    }: ExecuteProgressReportTransitionInput,
-    session: Session
+    input: ExecuteProgressReportTransitionInput,
+    session: Session,
   ) {
+    const { report: reportId, notes } = input;
+
     const currentStatus = await this.repo.currentStatus(reportId);
+    const next = this.validateExecutionInput(input, currentStatus, session);
+    const isTransition = typeof next !== 'string';
+
+    await Promise.all([
+      isTransition
+        ? this.repo.recordTransition(reportId, next, session, notes)
+        : this.repo.recordBypass(reportId, next, session, notes),
+      this.repo.changeStatus(reportId, isTransition ? next.to : next),
+    ]);
+
+    // TODO(transition.notify);
+  }
+
+  private validateExecutionInput(
+    input: ExecuteProgressReportTransitionInput,
+    currentStatus: Status,
+    session: Session,
+  ) {
+    const { transition: transitionId, status: overrideStatus } = input;
 
     if (overrideStatus) {
       if (!this.canBypass(session)) {
         throw new UnauthorizedException(
-          'You do not have permission to bypass workflow. Specify a transition ID instead.'
+          'You do not have permission to bypass workflow. Specify a transition ID instead.',
         );
       }
-
-      await Promise.all([
-        this.repo.recordBypass(reportId, overrideStatus, session, notes),
-        this.repo.changeStatus(reportId, overrideStatus),
-      ]);
-      return;
+      return overrideStatus;
     }
 
     const available = this.getAvailableTransitions(session, currentStatus);
@@ -94,12 +105,6 @@ export class ProgressReportWorkflowService {
     if (!transition) {
       throw new UnauthorizedException('This transition is not available');
     }
-
-    await Promise.all([
-      this.repo.recordTransition(reportId, transition, session, notes),
-      this.repo.changeStatus(reportId, transition.to),
-    ]);
-
-    // TODO(transition.notify);
+    return transition;
   }
 }

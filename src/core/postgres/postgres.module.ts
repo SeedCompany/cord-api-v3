@@ -59,7 +59,7 @@ export class PostgresModule implements OnModuleInit, OnModuleDestroy {
     types.setTypeParser(TypeId.TIMETZ, dateParser(DateTime.fromSQL));
 
     types.setTypeParser(TypeId.INTERVAL, (val) =>
-      val == null ? val : Duration.fromISO(val)
+      val == null ? val : Duration.fromISO(val),
     );
   }
 

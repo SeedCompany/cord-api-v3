@@ -24,7 +24,7 @@ const generateLabels = (labels: string[], view: ObjectView) =>
 export const typenameForView = (
   labels: string[],
   view: ObjectView = { active: true },
-  nodeVar = 'node'
+  nodeVar = 'node',
 ) => stripIndent`
   replace(
     [l in labels(${nodeVar})

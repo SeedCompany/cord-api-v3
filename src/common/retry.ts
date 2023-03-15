@@ -27,7 +27,7 @@ export type RetryOptions = Merge<
 
 export const retry = <T>(
   input: (attemptCount: number) => PromiseLike<T> | T,
-  options?: RetryOptions
+  options?: RetryOptions,
 ): Promise<T> =>
   pRetry(input, {
     ...options,

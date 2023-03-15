@@ -19,7 +19,7 @@ export class ProgressReportConnectionResolver {
     @Parent() report: ProgressReport,
     @Args() { variant }: VariantProgressArg,
     @Loader(ProductProgressByReportLoader)
-    loader: LoaderOf<ProductProgressByReportLoader>
+    loader: LoaderOf<ProductProgressByReportLoader>,
   ): Promise<readonly ProductProgress[]> {
     return (await loader.load({ report, variant })).details;
   }
@@ -28,10 +28,10 @@ export class ProgressReportConnectionResolver {
   async progressForAllVariants(
     @Parent() report: ProgressReport,
     @Loader(ProductProgressByReportLoader)
-    loader: LoaderOf<ProductProgressByReportLoader>
+    loader: LoaderOf<ProductProgressByReportLoader>,
   ): Promise<ReadonlyArray<readonly ProductProgress[]>> {
     const detailsOrErrors = await loader.loadMany(
-      Progress.Variants.map((variant) => ({ report, variant }))
+      Progress.Variants.map((variant) => ({ report, variant })),
     );
     const details = detailsOrErrors.flatMap((entry) => {
       if (entry instanceof Error) {
@@ -46,7 +46,7 @@ export class ProgressReportConnectionResolver {
       return [entry.details];
     });
     const orderMap = Object.fromEntries(
-      Progress.Variants.map((variant, index) => [variant.key, index])
+      Progress.Variants.map((variant, index) => [variant.key, index]),
     );
     return sortBy(details, (detail) => orderMap[detail[0].variant.key]);
   }

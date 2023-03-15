@@ -97,7 +97,7 @@ export class CacheItem<T> {
   constructor(
     readonly key: string,
     private readonly service: CacheService,
-    private readonly options: ItemOptions = {}
+    private readonly options: ItemOptions = {},
   ) {}
 
   async get(optionsOverride?: Partial<ItemOptions>): Promise<T | undefined> {
@@ -119,7 +119,7 @@ export class CacheItem<T> {
   }
 
   async getOrCalculate(
-    options: Omit<CachableCalculationOptions<T>, 'key'> | (() => Promisable<T>)
+    options: Omit<CachableCalculationOptions<T>, 'key'> | (() => Promisable<T>),
   ): Promise<T> {
     return await this.service.getOrCalculate({
       ...this.options,

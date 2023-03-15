@@ -19,19 +19,19 @@ export const endOfFiscalYear = (date: CalendarDate) =>
 export const expandToFullFiscalYears = (dates: DateInterval) =>
   DateInterval.fromDateTimes(
     startOfFiscalYear(dates.start),
-    endOfFiscalYear(dates.end)
+    endOfFiscalYear(dates.end),
   );
 
 export const fullFiscalYear = (fiscalYear: number) =>
   DateInterval.fromDateTimes(
     CalendarDate.local(fiscalYear - 1, 10, 1),
-    CalendarDate.local(fiscalYear, 9, 30)
+    CalendarDate.local(fiscalYear, 9, 30),
   );
 
 /** The date interval of a given fiscal quarter */
 export const fullFiscalQuarter = (
   fiscalQuarter: number,
-  fiscalYear: number
+  fiscalYear: number,
 ) => {
   const year = fiscalYear + (fiscalQuarter === 1 ? -1 : 0);
   const quarter = fiscalQuarter + (fiscalQuarter === 1 ? 2 : -2);
@@ -41,6 +41,6 @@ export const fullFiscalQuarter = (
 
   return DateInterval.fromDateTimes(
     fiscalQuarterStartDate,
-    fiscalQuarterStartDate.endOf('quarter')
+    fiscalQuarterStartDate.endOf('quarter'),
   );
 };

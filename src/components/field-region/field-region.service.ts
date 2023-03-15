@@ -29,21 +29,21 @@ export class FieldRegionService {
     @Logger('field-region:service') private readonly logger: ILogger,
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
-    private readonly repo: FieldRegionRepository
+    private readonly repo: FieldRegionRepository,
   ) {}
 
   async create(
     input: CreateFieldRegion,
-    session: Session
+    session: Session,
   ): Promise<FieldRegion> {
     await this.authorizationService.checkPower(
       Powers.CreateFieldRegion,
-      session
+      session,
     );
     if (!(await this.repo.isUnique(input.name))) {
       throw new DuplicateException(
         'fieldRegion.name',
-        'FieldRegion with this name already exists.'
+        'FieldRegion with this name already exists.',
       );
     }
 
@@ -61,7 +61,7 @@ export class FieldRegionService {
   async readOne(
     id: ID,
     session: Session,
-    _view?: ObjectView
+    _view?: ObjectView,
   ): Promise<FieldRegion> {
     this.logger.debug(`Read Field Region`, {
       id: id,
@@ -75,18 +75,18 @@ export class FieldRegionService {
   async readMany(ids: readonly ID[], session: Session) {
     const fieldRegions = await this.repo.readMany(ids);
     return await Promise.all(
-      fieldRegions.map((dto) => this.secure(dto, session))
+      fieldRegions.map((dto) => this.secure(dto, session)),
     );
   }
 
   private async secure(
     dto: UnsecuredDto<FieldRegion>,
-    session: Session
+    session: Session,
   ): Promise<FieldRegion> {
     const securedProps = await this.authorizationService.secureProperties(
       FieldRegion,
       dto,
-      session
+      session,
     );
 
     return {
@@ -98,14 +98,14 @@ export class FieldRegionService {
 
   async update(
     input: UpdateFieldRegion,
-    session: Session
+    session: Session,
   ): Promise<FieldRegion> {
     const fieldRegion = await this.readOne(input.id, session);
     const changes = this.repo.getActualChanges(fieldRegion, input);
     await this.authorizationService.verifyCanEditChanges(
       FieldRegion,
       fieldRegion,
-      changes
+      changes,
     );
     // update director
 
@@ -125,7 +125,7 @@ export class FieldRegionService {
 
     if (!canDelete)
       throw new UnauthorizedException(
-        'You do not have the permission to delete this Field Region'
+        'You do not have the permission to delete this Field Region',
       );
 
     try {
@@ -138,7 +138,7 @@ export class FieldRegionService {
 
   async list(
     input: FieldRegionListInput,
-    session: Session
+    session: Session,
   ): Promise<FieldRegionListOutput> {
     if (await this.authorizationService.canList(FieldRegion, session)) {
       const results = await this.repo.list(input, session);

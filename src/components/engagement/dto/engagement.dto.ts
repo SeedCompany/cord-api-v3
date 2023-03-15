@@ -150,7 +150,7 @@ export class LanguageEngagement extends Engagement {
     product: [Product],
   };
   static readonly Parent = import('../../project/dto').then(
-    (m) => m.TranslationProject
+    (m) => m.TranslationProject,
   );
 
   @Field(() => TranslationProject)
@@ -188,7 +188,7 @@ export class InternshipEngagement extends Engagement {
   static readonly Props = keysOf<InternshipEngagement>();
   static readonly SecuredProps = keysOf<SecuredProps<InternshipEngagement>>();
   static readonly Parent = import('../../project/dto').then(
-    (m) => m.InternshipProject
+    (m) => m.InternshipProject,
   );
 
   @Field(() => InternshipProject)

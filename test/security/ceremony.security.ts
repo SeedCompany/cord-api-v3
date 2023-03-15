@@ -29,7 +29,7 @@ describe('Ceremony Security e2e', () => {
     await registerUser(app, { roles: [Role.FieldOperationsDirector] });
     await runInIsolatedSession(
       app,
-      async () => await registerUser(app, { roles: [Role.Consultant] })
+      async () => await registerUser(app, { roles: [Role.Consultant] }),
     );
     testProject = await createProject(app);
     const lang = await runAsAdmin(app, async () => await createLanguage(app));
@@ -80,7 +80,7 @@ describe('Ceremony Security e2e', () => {
             propToTest: property,
             skipEditCheck: false,
           });
-        }
+        },
       );
     });
   });

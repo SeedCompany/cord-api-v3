@@ -28,7 +28,7 @@ export class EducationRepository extends DtoRepository(Education) {
       .apply(
         createRelationships(Education, 'in', {
           education: ['User', input.userId],
-        })
+        }),
       )
       .return<{ id: ID }>('node.id as id');
 

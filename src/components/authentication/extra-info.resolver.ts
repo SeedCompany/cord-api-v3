@@ -22,13 +22,13 @@ function AuthExtraInfoResolver(concreteClass: AbstractClassType<any>) {
 }
 
 export class SessionExtraInfoResolver extends AuthExtraInfoResolver(
-  SessionOutput
+  SessionOutput,
 ) {}
 
 export class LoginExtraInfoResolver extends AuthExtraInfoResolver(
-  LoginOutput
+  LoginOutput,
 ) {}
 
 export class RegisterExtraInfoResolver extends AuthExtraInfoResolver(
-  RegisterOutput
+  RegisterOutput,
 ) {}

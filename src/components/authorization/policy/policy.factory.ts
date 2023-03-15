@@ -46,7 +46,7 @@ export class PolicyFactory implements OnModuleInit {
   constructor(
     private readonly grantersFactory: GrantersFactory,
     private readonly discovery: DiscoveryService,
-    private readonly resourcesHost: ResourcesHost
+    private readonly resourcesHost: ResourcesHost,
   ) {}
 
   getPolicies() {
@@ -59,21 +59,21 @@ export class PolicyFactory implements OnModuleInit {
   async onModuleInit() {
     const discoveredPolicies =
       await this.discovery.providersWithMetaAtKey<PolicyMetadata>(
-        POLICY_METADATA_KEY
+        POLICY_METADATA_KEY,
       );
 
     const resGranter = await this.grantersFactory.makeGranters();
 
     this.policies = await Promise.all(
       discoveredPolicies.map((discovered) =>
-        this.buildPolicy(resGranter, discovered)
-      )
+        this.buildPolicy(resGranter, discovered),
+      ),
     );
   }
 
   async buildPolicy(
     resGranter: ResourcesGranter,
-    { meta, discoveredClass }: DiscoveredClassWithMeta<PolicyMetadata>
+    { meta, discoveredClass }: DiscoveredClassWithMeta<PolicyMetadata>,
   ): Promise<Policy> {
     const roles = meta.role === 'all' ? undefined : many(meta.role);
     const grants: WritableGrants = new Map();
@@ -94,7 +94,7 @@ export class PolicyFactory implements OnModuleInit {
         for (const propName of prop.properties) {
           const propPerms = (propLevel[propName] ??= {});
           prop.perms.forEach((perms) =>
-            this.mergePermissions(propPerms, perms)
+            this.mergePermissions(propPerms, perms),
           );
         }
       }
@@ -102,7 +102,7 @@ export class PolicyFactory implements OnModuleInit {
         for (const relationName of childRelation.relationNames) {
           const childPerms = (childRelations[relationName] ??= {});
           childRelation.perms.forEach((perms) =>
-            this.mergePermissions(childPerms, perms)
+            this.mergePermissions(childPerms, perms),
           );
         }
       }
@@ -126,23 +126,23 @@ export class PolicyFactory implements OnModuleInit {
    * the permissions of its implementations
    */
   private async defaultInterfacesFromImplementationsIntersection(
-    grantMap: WritableGrants
+    grantMap: WritableGrants,
   ) {
     const interfaceCandidates = new Set(
       (
         await Promise.all(
           [...grantMap.keys()].map((res) =>
-            this.resourcesHost.getInterfaces(res)
-          )
+            this.resourcesHost.getInterfaces(res),
+          ),
         )
-      ).flat()
+      ).flat(),
     );
 
     const allKeysOf = (list: Array<object | undefined>) =>
       new Set(list.flatMap((itemObj) => (itemObj ? Object.keys(itemObj) : [])));
 
     const intersectPermissions = (
-      perms: Array<Permissions<string> | undefined>
+      perms: Array<Permissions<string> | undefined>,
     ): Permissions<string> =>
       mapFromList(allKeysOf(perms), (action) => {
         const implActions = perms.map((g) => g?.[action] ?? false);
@@ -172,7 +172,7 @@ export class PolicyFactory implements OnModuleInit {
         objectLevel: intersectPermissions(objectLevelPermissions),
         propLevel: mapFromList(allKeysOf(propLevelPermissions), (prop) => {
           const perms = intersectPermissions(
-            propLevelPermissions.map((propLevel) => propLevel[prop])
+            propLevelPermissions.map((propLevel) => propLevel[prop]),
           );
           return [prop, perms];
         }),
@@ -180,10 +180,10 @@ export class PolicyFactory implements OnModuleInit {
           allKeysOf(childRelationPermissions),
           (prop) => {
             const perms = intersectPermissions(
-              childRelationPermissions.map((propLevel) => propLevel[prop])
+              childRelationPermissions.map((propLevel) => propLevel[prop]),
             );
             return [prop, perms];
-          }
+          },
         ),
       };
 
@@ -258,7 +258,7 @@ export class PolicyFactory implements OnModuleInit {
 
         this.mergePermissions(
           (childRelations[rel.name] ??= {}),
-          pick(grants.get(type)!.objectLevel, childActions)
+          pick(grants.get(type)!.objectLevel, childActions),
         );
       }
     }
@@ -266,7 +266,7 @@ export class PolicyFactory implements OnModuleInit {
 
   private mergePermissions<TAction extends string>(
     existing: Writable<Permissions<TAction>>,
-    toMerge: Permissions<TAction>
+    toMerge: Permissions<TAction>,
   ) {
     for (const [action, perm] of Object.entries(toMerge) as Array<
       [TAction, Permission]
@@ -278,7 +278,7 @@ export class PolicyFactory implements OnModuleInit {
 
   private mergePermission(
     perms: ReadonlyArray<Permission | undefined>,
-    mergeConditions: (...conditions: Array<Condition<any>>) => Condition<any>
+    mergeConditions: (...conditions: Array<Condition<any>>) => Condition<any>,
   ): Permission | undefined {
     const cleaned = perms.filter((p): p is Permission => p != null);
     if (cleaned.length === 0) {

@@ -15,7 +15,7 @@ export class AddFinalReportMigration extends BaseMigration {
     const before = await this.getBaseNodeCount(type, false);
     const baseNode = type !== ReportType.Progress ? 'projects' : 'engagements';
     this.logger.info(
-      `${before} ${baseNode} with ${type} reports before migration`
+      `${before} ${baseNode} with ${type} reports before migration`,
     );
     await this.db
       .query()
@@ -53,12 +53,12 @@ export class AddFinalReportMigration extends BaseMigration {
           ', {
             batchSize: 100
           })
-        `
+        `,
       )
       .run();
     const after = await this.getBaseNodeCount(type, true);
     this.logger.info(
-      `${after} ${baseNode} with new final report after ${type} report migration`
+      `${after} ${baseNode} with new final report after ${type} report migration`,
     );
   }
 
@@ -71,7 +71,7 @@ export class AddFinalReportMigration extends BaseMigration {
         node(
           'rn',
           `${type}Report`,
-          after ? { finalReportMigration: true } : {}
+          after ? { finalReportMigration: true } : {},
         ),
       ])
       .return<{ count: number }>('count(distinct b) as count')

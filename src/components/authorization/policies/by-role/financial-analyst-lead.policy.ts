@@ -5,7 +5,7 @@ import { member, Policy, Role, sensMediumOrLower } from '../util';
   r.Budget.edit,
   r.BudgetRecord.edit,
   r.Engagement.specifically(
-    (p) => p.many('disbursementCompleteDate', 'status').edit
+    (p) => p.many('disbursementCompleteDate', 'status').edit,
   ),
   r.Language.read.specifically((c) => [
     c.locations.whenAny(member, sensMediumOrLower).read,
@@ -20,7 +20,7 @@ import { member, Policy, Role, sensMediumOrLower } from '../util';
       'mouStatus',
       'financialReportingType',
       'primary',
-      'types'
+      'types',
     ).edit,
   ]),
   r.PeriodicReport.edit,
@@ -32,7 +32,7 @@ import { member, Policy, Role, sensMediumOrLower } from '../util';
       'mouEnd',
       'rootDirectory',
       'financialReportPeriod',
-      'financialReportReceivedAt'
+      'financialReportReceivedAt',
     ).edit,
   ]),
   r.ProjectMember.edit.create.delete,

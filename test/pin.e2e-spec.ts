@@ -39,7 +39,7 @@ describe('Pin e2e', () => {
       `,
       {
         id: project.id,
-      }
+      },
     );
 
     const actual = result.project;

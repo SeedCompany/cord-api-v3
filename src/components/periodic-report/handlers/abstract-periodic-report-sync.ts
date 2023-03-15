@@ -11,7 +11,7 @@ import { PeriodicReportService } from '../periodic-report.service';
 
 export type Intervals = [
   updated: DateInterval | null,
-  previous: DateInterval | null
+  previous: DateInterval | null,
 ];
 
 export abstract class AbstractPeriodicReportSync {
@@ -25,7 +25,7 @@ export abstract class AbstractPeriodicReportSync {
       additions: ReadonlyArray<Range<CalendarDate>>;
       removals: ReadonlyArray<Range<CalendarDate | null>>;
     },
-    finalAt?: CalendarDate
+    finalAt?: CalendarDate,
   ) {
     if (!diff) {
       return;
@@ -51,12 +51,12 @@ export abstract class AbstractPeriodicReportSync {
   protected diffBy(
     updated: DateInterval | null | undefined,
     previous: DateInterval | null | undefined,
-    unit: DateTimeUnit
+    unit: DateTimeUnit,
   ) {
     const fullUpdated = updated?.expandToFull(unit);
     const diff = DateInterval.compare(
       previous?.expandToFull(unit),
-      fullUpdated
+      fullUpdated,
     );
     const splitByUnit = (range: DateInterval) => range.splitBy({ [unit]: 1 });
     return {

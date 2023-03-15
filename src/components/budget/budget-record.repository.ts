@@ -45,7 +45,7 @@ export class BudgetRecordRepository extends DtoRepository<
             fiscalYear: input.fiscalYear,
             amount: null,
           },
-        })
+        }),
       )
       .apply(
         createRelationships(BudgetRecord, {
@@ -56,7 +56,7 @@ export class BudgetRecordRepository extends DtoRepository<
           out: {
             organization: ['Organization', input.organizationId],
           },
-        })
+        }),
       )
       .return<{ id: ID }>('node.id as id')
       .first();
@@ -104,7 +104,7 @@ export class BudgetRecordRepository extends DtoRepository<
     if (!result) {
       throw new NotFoundException(
         'Could not find BudgetRecord',
-        'budgetRecord.budgetId'
+        'budgetRecord.budgetId',
       );
     }
 
@@ -114,7 +114,7 @@ export class BudgetRecordRepository extends DtoRepository<
   async list(
     input: BudgetRecordListInput,
     session: Session,
-    view?: ObjectView
+    view?: ObjectView,
   ) {
     const { budgetId } = input.filter;
     const result = await this.db
@@ -142,7 +142,7 @@ export class BudgetRecordRepository extends DtoRepository<
           .apply((q) =>
             recordVar !== 'node' || projectVar !== 'project'
               ? q.with({ [recordVar]: 'node', [projectVar]: 'project' })
-              : q
+              : q,
           )
           .match([
             node('node'),
@@ -161,8 +161,8 @@ export class BudgetRecordRepository extends DtoRepository<
               parent: 'budget',
               organization: 'organization.id',
               changeset: 'changeset.id',
-            }).as(outputVar)
-          )
+            }).as(outputVar),
+          ),
       );
   }
 
@@ -197,8 +197,8 @@ export class BudgetRecordRepository extends DtoRepository<
                     node('changeset', 'Changeset', { id: view.changeset }),
                   ])
                   .return({ node: outputVar })
-              : q
-          )
+              : q,
+          ),
       );
   }
 }

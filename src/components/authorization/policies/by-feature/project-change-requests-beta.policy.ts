@@ -7,6 +7,6 @@ import { Policy, Role } from '../util';
     Role.RegionalDirector,
     // TODO Who else?
   ],
-  (r) => r.BetaFeatures.grant('projectChangeRequests')
+  (r) => r.BetaFeatures.grant('projectChangeRequests'),
 )
 export class ProjectChangeRequestsBetaPolicy {}

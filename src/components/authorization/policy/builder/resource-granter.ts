@@ -10,15 +10,15 @@ import { PropGranter, PropsGranter } from './prop-granter';
 export const withOther = Symbol('ResourceGranter.withOther');
 
 export type PropsGranterFn<TResourceStatic extends ResourceShape<any>> = (
-  granter: PropsGranter<TResourceStatic>
+  granter: PropsGranter<TResourceStatic>,
 ) => Many<PropGranter<TResourceStatic>>;
 
 export type ChildrenGranterFn<TResourceStatic extends ResourceShape<any>> = (
-  granter: ChildRelationshipsGranter<TResourceStatic>
+  granter: ChildRelationshipsGranter<TResourceStatic>,
 ) => Many<ChildRelationshipGranter<TResourceStatic>>;
 
 export class ResourceGranter<
-  TResourceStatic extends ResourceShape<any>
+  TResourceStatic extends ResourceShape<any>,
 > extends PermGranter<TResourceStatic, ResourceAction> {
   protected propGrants: ReadonlyArray<PropGranter<TResourceStatic>> = [];
   protected childRelationshipGrants: ReadonlyArray<
@@ -41,7 +41,7 @@ export class ResourceGranter<
   protected specifically(grants: PropsGranterFn<TResourceStatic>): this {
     const propsGranter = PropGranter.forResource(
       this.resource,
-      this.stagedCondition
+      this.stagedCondition,
     );
 
     const newGrants = many(grants(propsGranter));
@@ -73,7 +73,7 @@ export class ResourceGranter<
   protected children(relationGrants: ChildrenGranterFn<TResourceStatic>): this {
     const granter = ChildRelationshipGranter.forResource(
       this.resource,
-      this.stagedCondition
+      this.stagedCondition,
     );
 
     const newGrants = many(relationGrants(granter));
@@ -105,7 +105,7 @@ export class ResourceGranter<
       resource: this.resource,
       props: this.propGrants.map((prop) => prop[extract]()),
       childRelationships: this.childRelationshipGrants.map((rel) =>
-        rel[extract]()
+        rel[extract](),
       ),
     };
   }
@@ -119,7 +119,7 @@ export class ResourceGranter<
 }
 
 export class DefaultResourceGranter<
-  TResourceStatic extends ResourceShape<any>
+  TResourceStatic extends ResourceShape<any>,
 > extends ResourceGranter<TResourceStatic> {
   /**
    * The requester can read the object (via lists or individual lookups)

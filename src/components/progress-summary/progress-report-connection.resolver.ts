@@ -13,7 +13,7 @@ export class ProgressReportConnectionResolver {
   })
   async periodSummary(
     @Loader(ProgressSummaryLoader) loader: LoaderOf<ProgressSummaryLoader>,
-    @Parent() report: ProgressReport
+    @Parent() report: ProgressReport,
   ): Promise<ProgressSummary | undefined> {
     return await this.fetch(loader, report, SummaryPeriod.ReportPeriod);
   }
@@ -25,7 +25,7 @@ export class ProgressReportConnectionResolver {
   })
   async fiscalYearSummary(
     @Loader(ProgressSummaryLoader) loader: LoaderOf<ProgressSummaryLoader>,
-    @Parent() report: ProgressReport
+    @Parent() report: ProgressReport,
   ): Promise<ProgressSummary | undefined> {
     return await this.fetch(loader, report, SummaryPeriod.FiscalYearSoFar);
   }
@@ -37,7 +37,7 @@ export class ProgressReportConnectionResolver {
   })
   async cumulativeSummary(
     @Loader(ProgressSummaryLoader) loader: LoaderOf<ProgressSummaryLoader>,
-    @Parent() report: ProgressReport
+    @Parent() report: ProgressReport,
   ): Promise<ProgressSummary | undefined> {
     return await this.fetch(loader, report, SummaryPeriod.Cumulative);
   }
@@ -48,7 +48,7 @@ export class ProgressReportConnectionResolver {
   })
   async summary(
     @Loader(ProgressSummaryLoader) loader: LoaderOf<ProgressSummaryLoader>,
-    @Parent() report: ProgressReport
+    @Parent() report: ProgressReport,
   ): Promise<ProgressSummary | undefined> {
     return await this.fetch(loader, report, SummaryPeriod.Cumulative);
   }
@@ -56,7 +56,7 @@ export class ProgressReportConnectionResolver {
   private async fetch(
     loader: LoaderOf<ProgressSummaryLoader>,
     report: ProgressReport,
-    period: SummaryPeriod
+    period: SummaryPeriod,
   ): Promise<ProgressSummary | undefined> {
     const fetched = await loader.load(report.id);
     if (!fetched[period]) {

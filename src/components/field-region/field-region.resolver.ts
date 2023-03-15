@@ -40,7 +40,7 @@ export class FieldRegionResolver {
   })
   async fieldRegion(
     @Loader(FieldRegionLoader) fieldRegions: LoaderOf<FieldRegionLoader>,
-    @IdArg() id: ID
+    @IdArg() id: ID,
   ): Promise<FieldRegion> {
     return await fieldRegions.load(id);
   }
@@ -51,7 +51,7 @@ export class FieldRegionResolver {
   async fieldRegions(
     @AnonSession() session: Session,
     @ListArg(FieldRegionListInput) input: FieldRegionListInput,
-    @Loader(FieldRegionLoader) fieldRegions: LoaderOf<FieldRegionLoader>
+    @Loader(FieldRegionLoader) fieldRegions: LoaderOf<FieldRegionLoader>,
   ): Promise<FieldRegionListOutput> {
     const list = await this.fieldRegionService.list(input, session);
     fieldRegions.primeAll(list.items);
@@ -61,7 +61,7 @@ export class FieldRegionResolver {
   @ResolveField(() => SecuredUser)
   async director(
     @Parent() fieldRegion: FieldRegion,
-    @Loader(UserLoader) users: LoaderOf<UserLoader>
+    @Loader(UserLoader) users: LoaderOf<UserLoader>,
   ): Promise<SecuredUser> {
     return await mapSecuredValue(fieldRegion.director, (id) => users.load(id));
   }
@@ -69,10 +69,10 @@ export class FieldRegionResolver {
   @ResolveField(() => SecuredFieldZone)
   async fieldZone(
     @Parent() fieldRegion: FieldRegion,
-    @Loader(FieldZoneLoader) fieldZones: LoaderOf<FieldZoneLoader>
+    @Loader(FieldZoneLoader) fieldZones: LoaderOf<FieldZoneLoader>,
   ): Promise<SecuredFieldZone> {
     return await mapSecuredValue(fieldRegion.fieldZone, (id) =>
-      fieldZones.load(id)
+      fieldZones.load(id),
     );
   }
 
@@ -81,7 +81,7 @@ export class FieldRegionResolver {
   })
   async createFieldRegion(
     @LoggedInSession() session: Session,
-    @Args('input') { fieldRegion: input }: CreateFieldRegionInput
+    @Args('input') { fieldRegion: input }: CreateFieldRegionInput,
   ): Promise<CreateFieldRegionOutput> {
     const fieldRegion = await this.fieldRegionService.create(input, session);
     return { fieldRegion };
@@ -92,7 +92,7 @@ export class FieldRegionResolver {
   })
   async updateFieldRegion(
     @LoggedInSession() session: Session,
-    @Args('input') { fieldRegion: input }: UpdateFieldRegionInput
+    @Args('input') { fieldRegion: input }: UpdateFieldRegionInput,
   ): Promise<UpdateFieldRegionOutput> {
     const fieldRegion = await this.fieldRegionService.update(input, session);
     return { fieldRegion };
@@ -103,7 +103,7 @@ export class FieldRegionResolver {
   })
   async deleteFieldRegion(
     @LoggedInSession() session: Session,
-    @IdArg() id: ID
+    @IdArg() id: ID,
   ): Promise<DeleteFieldRegionOutput> {
     await this.fieldRegionService.delete(id, session);
     return { success: true };

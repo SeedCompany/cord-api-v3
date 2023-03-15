@@ -32,7 +32,7 @@ export async function createProduct(app: TestApp, input: CreateProduct) {
       input: {
         product,
       },
-    }
+    },
   );
 
   const actual: RawProduct = result.createProduct.product;

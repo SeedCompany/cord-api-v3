@@ -22,7 +22,7 @@ const pipeMetadata = createAugmentedMetadataPipe<{
 }>();
 
 export const ChangesetArg = (
-  options?: Omit<ArgsOptions, 'type'>
+  options?: Omit<ArgsOptions, 'type'>,
 ): ParameterDecorator => {
   return (target, methodName, argIndex) => {
     let type: Resolver;
@@ -39,7 +39,7 @@ export const ChangesetArg = (
         mutation: type === Resolver.MUTATION,
         fieldName: resolved.name!,
       })),
-      ValidateChangesetEditablePipe
+      ValidateChangesetEditablePipe,
     )(target, methodName, argIndex);
 
     // method metadata is set after parameter metadata, so wait until next tick
@@ -48,7 +48,7 @@ export const ChangesetArg = (
       type = Reflect.getMetadata(TypeKey, (target as any)[methodName]);
       if (!type) {
         throw new ServerException(
-          'Something went wrong trying to determine operation type'
+          'Something went wrong trying to determine operation type',
         );
       }
       if (resolved.description) {

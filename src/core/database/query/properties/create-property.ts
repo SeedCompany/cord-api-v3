@@ -17,7 +17,7 @@ export type CreatePropertyOptions<
   TObject extends Partial<MaybeUnsecuredInstance<TResourceStatic>> & {
     id: ID;
   },
-  Key extends keyof DbChanges<TObject> & string
+  Key extends keyof DbChanges<TObject> & string,
 > = CommonPropertyOptions<TResourceStatic, TObject, Key> & {
   /** The new value which will be a bound parameter */
   value: UnwrapSecured<TObject[Key]> | Variable;
@@ -34,7 +34,7 @@ export const createProperty =
     TObject extends Partial<MaybeUnsecuredInstance<TResourceStatic>> & {
       id: ID;
     },
-    Key extends keyof DbChanges<TObject> & string
+    Key extends keyof DbChanges<TObject> & string,
   >({
     resource,
     key,
@@ -79,7 +79,7 @@ export const createProperty =
                     'out',
                     'existingPropRel',
                     key instanceof Variable ? [] : key,
-                    ACTIVE
+                    ACTIVE,
                   ),
                   node('existingProp', 'Property'),
                 ])
@@ -91,10 +91,10 @@ export const createProperty =
                     // the value outside the changeset.
                     `existingProp.value <> ${(
                       variable ?? query.params.addParam(value, 'value')
-                    ).toString()}`
-                  )
+                    ).toString()}`,
+                  ),
                 )
-            : q
+            : q,
         )
         .subQuery(imports, (sub2) =>
           sub2
@@ -110,14 +110,14 @@ export const createProperty =
                   ]
                 : []),
             ])
-            .return(['newPropNode'])
+            .return(['newPropNode']),
         )
         .apply((q) =>
           labels instanceof Variable
             ? q.raw(
-                `CALL apoc.create.addLabels(newPropNode, ${labels.toString()}) YIELD node as addedLabels`
+                `CALL apoc.create.addLabels(newPropNode, ${labels.toString()}) YIELD node as addedLabels`,
               )
-            : q
+            : q,
         )
         .raw(
           `CALL apoc.create.relationship(${nodeName}, ${
@@ -125,8 +125,8 @@ export const createProperty =
           }, ${exp({
             active: !changeset,
             createdAt: now,
-          })}, newPropNode) YIELD rel`
+          })}, newPropNode) YIELD rel`,
         )
-        .return(`count(newPropNode) as ${numCreatedVar}`)
+        .return(`count(newPropNode) as ${numCreatedVar}`),
     );
   };

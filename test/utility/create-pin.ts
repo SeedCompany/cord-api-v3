@@ -12,7 +12,7 @@ export async function createPin(app: TestApp, id: ID, pinned?: boolean) {
     {
       id,
       pinned,
-    }
+    },
   );
 
   expect(result.togglePinned).toBeDefined();

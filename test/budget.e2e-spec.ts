@@ -64,7 +64,7 @@ describe('Budget e2e', () => {
       `,
       {
         id: budget.id,
-      }
+      },
     );
 
     expect(actual.id).toBe(budget.id);
@@ -86,7 +86,7 @@ describe('Budget e2e', () => {
       `,
       {
         id: budget.id,
-      }
+      },
     );
     const actual: Budget | undefined = result.deleteBudget;
     expect(actual).toBeTruthy();
@@ -103,7 +103,7 @@ describe('Budget e2e', () => {
         `,
         {
           id: budget.id,
-        }
+        },
       )
       .expectError(errors.notFound({ message: 'Could not find budget' }));
   });
@@ -112,7 +112,7 @@ describe('Budget e2e', () => {
     // create 2 budgets
     const numBudgets = 2;
     await Promise.all(
-      times(numBudgets).map(() => createBudget(app, { projectId: project.id }))
+      times(numBudgets).map(() => createBudget(app, { projectId: project.id })),
     );
 
     const { budgets } = await app.graphql.query(
@@ -128,7 +128,7 @@ describe('Budget e2e', () => {
         }
         ${fragments.budget}
       `,
-      {}
+      {},
     );
 
     expect(budgets.items.length).toBeGreaterThanOrEqual(numBudgets);

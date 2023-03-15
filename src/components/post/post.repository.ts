@@ -33,7 +33,7 @@ export class PostRepository extends DtoRepository(Post) {
       .apply(
         createRelationships(Post, 'in', {
           post: ['BaseNode', input.parentId],
-        })
+        }),
       )
       .return<{ id: ID }>('node.id as id')
       .first();
@@ -68,7 +68,7 @@ export class PostRepository extends DtoRepository(Post) {
               (node)<-[:post]-(:BaseNode)-[:member]-(:BaseNode)-[:user]->(:User { id: $requestingUser })
             )
           `,
-        { requestingUser: session.userId }
+        { requestingUser: session.userId },
       )
       .apply(sorting(Post, input))
       .apply(paginate(input, this.hydrate()))

@@ -13,7 +13,7 @@ export type CommonPropertyOptions<
   TObject extends Partial<MaybeUnsecuredInstance<TResourceStatic>> & {
     id: ID;
   },
-  Key extends keyof DbChanges<TObject> & string
+  Key extends keyof DbChanges<TObject> & string,
 > = MergeExclusive<
   {
     resource: TResourceStatic | EnhancedResource<TResourceStatic>;

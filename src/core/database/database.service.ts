@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { oneLine } from 'common-tags';
 import { Connection, node, Query, relation } from 'cypher-query-builder';
 import { compact, isEmpty, last, mapKeys, pickBy, startCase } from 'lodash';
 import {
@@ -28,7 +27,9 @@ import {
 } from './query';
 
 export interface ServerInfo {
-  version: string;
+  version: [major: number, minor: number, patch: number];
+  /** Major.Minor float number */
+  versionXY: number;
   edition: string;
   databases: DbInfo[];
 }
@@ -51,7 +52,7 @@ export class DatabaseService {
   constructor(
     private readonly db: Connection,
     private readonly config: ConfigService,
-    @Logger('database:service') private readonly logger: ILogger
+    @Logger('database:service') private readonly logger: ILogger,
   ) {}
 
   get conn() {
@@ -64,7 +65,7 @@ export class DatabaseService {
    * retrying (after another successful connection) until the function finishes.
    */
   async runOnceUntilCompleteAfterConnecting(
-    run: (info: ServerInfo) => Promise<void>
+    run: (info: ServerInfo) => Promise<void>,
   ) {
     await this.waitForConnection(
       {
@@ -72,7 +73,7 @@ export class DatabaseService {
         minTimeout: { seconds: 10 },
         maxTimeout: { minutes: 5 },
       },
-      run
+      run,
     );
   }
 
@@ -82,7 +83,7 @@ export class DatabaseService {
    */
   async waitForConnection(
     options?: RetryOptions,
-    then?: (info: ServerInfo) => Promise<void>
+    then?: (info: ServerInfo) => Promise<void>,
   ) {
     await retry(async () => {
       try {
@@ -106,7 +107,7 @@ export class DatabaseService {
    */
   query<Result = unknown>(
     query?: string,
-    parameters?: Record<string, any>
+    parameters?: Record<string, any>,
   ): Query<Result> {
     const q = this.db.query() as Query<Result>;
     if (query) {
@@ -127,7 +128,7 @@ export class DatabaseService {
           yield versions, edition
           unwind versions as version
           return version, edition
-        `)
+        `),
       );
       const info = generalInfo.records[0];
       if (!info) {
@@ -135,18 +136,18 @@ export class DatabaseService {
       }
       // "Administration" command doesn't work with read transactions
       const dbs = await session.writeTransaction((tx) =>
-        tx.run(`
-          show databases
-          yield name, currentStatus, error
-        `)
+        tx.run('show databases yield *'),
       );
+      const version = (info.get('version') as string).split('.').map(Number);
       return {
-        version: info.get('version'),
+        version: version as ServerInfo['version'],
+        versionXY: version[0] + version[1] / 10,
         edition: info.get('edition'),
         databases: dbs.records.map((r) => ({
           name: r.get('name'),
           status: r.get('currentStatus'),
-          error: r.get('error') || undefined,
+          error:
+            r.get(version[0] >= 5 ? 'statusMessage' : 'error') || undefined,
         })),
       };
     } finally {
@@ -178,13 +179,13 @@ export class DatabaseService {
   private async runAdminCommand(
     action: 'CREATE' | 'DROP',
     dbName: string,
-    info: ServerInfo
+    info: ServerInfo,
   ) {
     // @ts-expect-error Yes this is private, but we have a special use case.
     // We need to run this query with a session that's not configured to use the
     // database we are trying to create.
     const session = this.db.driver.session();
-    const supportsWait = parseFloat(info.version.slice(0, 3)) >= 4.2;
+    const supportsWait = info.versionXY >= 4.2;
     try {
       await session.writeTransaction((tx) =>
         tx.run(
@@ -195,8 +196,8 @@ export class DatabaseService {
           ]).join(' '),
           {
             name: dbName,
-          }
-        )
+          },
+        ),
       );
     } finally {
       await session.close();
@@ -207,7 +208,7 @@ export class DatabaseService {
     name: string,
     labels: string[],
     properties: string[],
-    config: { analyzer?: string; eventuallyConsistent?: boolean }
+    config: { analyzer?: string; eventuallyConsistent?: boolean },
   ) {
     const quote = (q: string) => `'${q}'`;
     const parsedConfig = {
@@ -218,39 +219,18 @@ export class DatabaseService {
         : undefined,
     };
 
-    const info = await this.getServerInfo();
-    if (info.version.startsWith('4.3')) {
-      const options = !isEmpty(pickBy(parsedConfig, (v) => v !== undefined))
-        ? {
-            indexConfig: mapKeys(parsedConfig, (_, k) => `fulltext.${k}`),
-          }
-        : undefined;
-      await this.query(
-        `
-          CREATE FULLTEXT INDEX ${name} IF NOT EXISTS
-          FOR (n:${labels.join('|')})
-          ON EACH ${exp(properties.map((p) => `n.${p}`))}
-          ${options ? `OPTIONS ${exp(options)}` : ''}
-        `
-      ).run();
-      return;
-    }
-
-    const exists = await this.query(
-      `call db.indexes() yield name where name = '${name}' return name limit 1`
-    ).first();
-    if (exists) {
-      return;
-    }
+    const options = !isEmpty(pickBy(parsedConfig, (v) => v !== undefined))
+      ? {
+          indexConfig: mapKeys(parsedConfig, (_, k) => `fulltext.${k}`),
+        }
+      : undefined;
     await this.query(
-      oneLine`
-        CALL db.index.fulltext.createNodeIndex(
-          ${quote(name)},
-          ${exp(labels.map(quote))},
-          ${exp(properties.map(quote))},
-          ${exp(parsedConfig)}
-        )
       `
+        CREATE FULLTEXT INDEX ${name} IF NOT EXISTS
+        FOR (n:${labels.join('|')})
+        ON EACH ${exp(properties.map((p) => `n.${p}`))}
+        ${options ? `OPTIONS ${exp(options)}` : ''}
+      `,
     ).run();
   }
 
@@ -258,7 +238,7 @@ export class DatabaseService {
     TResourceStatic extends ResourceShape<any>,
     TObject extends Partial<MaybeUnsecuredInstance<TResourceStatic>> & {
       id: ID;
-    }
+    },
   >({
     type,
     object,
@@ -310,7 +290,7 @@ export class DatabaseService {
     TObject extends Partial<MaybeUnsecuredInstance<TResourceStatic>> & {
       id: ID;
     },
-    Key extends keyof DbChanges<TObject> & string
+    Key extends keyof DbChanges<TObject> & string,
   >({
     type,
     object: { id },
@@ -350,7 +330,7 @@ export class DatabaseService {
       .apply(
         changeset
           ? (q) => q.match(node('changeset', 'Changeset', { id: changeset }))
-          : null
+          : null,
       )
       .apply(
         updateProperty<TResourceStatic, TObject, Key>({
@@ -359,7 +339,7 @@ export class DatabaseService {
           value,
           changeset: changeset ? variable('changeset') : undefined,
           permanentAfter,
-        })
+        }),
       )
       .return('*');
 
@@ -372,7 +352,7 @@ export class DatabaseService {
           // Guess the input field path based on name convention
           `${last(startCase(label).split(' '))!.toLowerCase()}.${key}`,
           `${startCase(label)} with this ${key} is already in use`,
-          e
+          e,
         );
       }
       throw new ServerException(`Failed to update property ${label}.${key}`, e);

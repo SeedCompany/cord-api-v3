@@ -47,7 +47,7 @@ describe('Education e2e', () => {
       `,
       {
         id: education.id,
-      }
+      },
     );
 
     expect(actual.id).toBe(education.id);
@@ -78,7 +78,7 @@ describe('Education e2e', () => {
             institution: newInstitution,
           },
         },
-      }
+      },
     );
     const updated = result.updateEducation.education;
     expect(updated).toBeTruthy();
@@ -100,7 +100,7 @@ describe('Education e2e', () => {
       `,
       {
         id: education.id,
-      }
+      },
     );
     const actual: Education | undefined = result.deleteEducation;
     expect(actual).toBeTruthy();
@@ -111,7 +111,7 @@ describe('Education e2e', () => {
     // create 2 educations
     const numEducations = 2;
     await Promise.all(
-      times(numEducations).map(() => createEducation(app, { userId: user.id }))
+      times(numEducations).map(() => createEducation(app, { userId: user.id })),
     );
 
     const result = await app.graphql.query(
@@ -131,11 +131,11 @@ describe('Education e2e', () => {
       `,
       {
         id: user.id,
-      }
+      },
     );
 
     expect(result.user.education.items.length).toBeGreaterThanOrEqual(
-      numEducations
+      numEducations,
     );
   });
 });

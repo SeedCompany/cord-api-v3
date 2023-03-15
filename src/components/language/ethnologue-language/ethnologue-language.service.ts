@@ -21,13 +21,13 @@ export class EthnologueLanguageService {
   constructor(
     private readonly authorizationService: AuthorizationService,
     @Logger('language:ethnologue:service') private readonly logger: ILogger,
-    private readonly repo: EthnologueLanguageRepository
+    private readonly repo: EthnologueLanguageRepository,
   ) {}
 
   async create(input: CreateEthnologueLanguage, session: Session): Promise<ID> {
     await this.authorizationService.checkPower(
       Powers.CreateEthnologueLanguage,
-      session
+      session,
     );
 
     const result = await this.repo.create(input, session);
@@ -45,7 +45,7 @@ export class EthnologueLanguageService {
   async readOne(
     id: ID,
     sensitivity: Sensitivity,
-    session: Session
+    session: Session,
   ): Promise<EthnologueLanguage> {
     const dto = await this.repo.readOne(id);
     return await this.secure(dto, sensitivity, session);
@@ -54,12 +54,12 @@ export class EthnologueLanguageService {
   async secure(
     dto: UnsecuredDto<EthnologueLanguage>,
     sensitivity: Sensitivity,
-    session: Session
+    session: Session,
   ): Promise<EthnologueLanguage> {
     const secured = await this.authorizationService.secureProperties(
       EthnologueLanguage,
       { ...dto, sensitivity },
-      session
+      session,
     );
 
     return {
@@ -74,7 +74,7 @@ export class EthnologueLanguageService {
     id: ID,
     input: UpdateEthnologueLanguage,
     sensitivity: Sensitivity,
-    session: Session
+    session: Session,
   ) {
     if (!input) return;
     const ethnologueLanguage = await this.readOne(id, sensitivity, session);
@@ -83,7 +83,7 @@ export class EthnologueLanguageService {
     await this.authorizationService.verifyCanEditChanges(
       EthnologueLanguage,
       ethnologueLanguage,
-      changes
+      changes,
     );
 
     try {
@@ -92,7 +92,7 @@ export class EthnologueLanguageService {
       this.logger.error('update failed', { exception });
       throw new ServerException(
         'Failed to update ethnologue language',
-        exception
+        exception,
       );
     }
   }

@@ -15,7 +15,7 @@ type SubscribedEvent = ProjectCreatedEvent | ProjectUpdatedEvent;
 export class SetInitialMouEnd implements IEventHandler<SubscribedEvent> {
   constructor(
     private readonly db: DatabaseService,
-    @Logger('project:set-initial-mou-end') private readonly logger: ILogger
+    @Logger('project:set-initial-mou-end') private readonly logger: ILogger,
   ) {}
 
   async handle(event: SubscribedEvent) {
@@ -57,7 +57,7 @@ export class SetInitialMouEnd implements IEventHandler<SubscribedEvent> {
       });
       throw new ServerException(
         'Could not set initial mou end on project',
-        exception
+        exception,
       );
     }
   }

@@ -103,13 +103,13 @@ describe('Engagement e2e', () => {
     expect(languageEngagement.id).toBeDefined();
     const difference = Interval.fromDateTimes(
       DateTime.fromISO(languageEngagement.modifiedAt.toString()),
-      DateTime.local()
+      DateTime.local(),
     )
       .toDuration()
       .toFormat('S');
     expect(parseInt(difference)).toBeGreaterThan(0);
     expect(languageEngagement.status.value).toBe(
-      EngagementStatus.InDevelopment
+      EngagementStatus.InDevelopment,
     );
   });
 
@@ -136,7 +136,7 @@ describe('Engagement e2e', () => {
         input: {
           engagement: languageEngagement,
         },
-      }
+      },
     );
 
     const actual: LanguageEngagement =
@@ -168,7 +168,7 @@ describe('Engagement e2e', () => {
     expect(internEngagement.id).toBeDefined();
     const difference = Interval.fromDateTimes(
       DateTime.fromISO(internEngagement.modifiedAt.toString()),
-      DateTime.local()
+      DateTime.local(),
     )
       .toDuration()
       .toFormat('S');
@@ -202,7 +202,7 @@ describe('Engagement e2e', () => {
         input: {
           engagement: internshipEngagement,
         },
-      }
+      },
     );
 
     const actual: InternshipEngagement =
@@ -244,27 +244,27 @@ describe('Engagement e2e', () => {
       `,
       {
         id: languageEngagement.id,
-      }
+      },
     );
 
     expect(actual.id).toBe(languageEngagement.id);
     expect(actual.language).toMatchObject(languageEngagement.language);
     expect(actual.firstScripture).toMatchObject(
-      languageEngagement.firstScripture
+      languageEngagement.firstScripture,
     );
     expect(actual.lukePartnership).toMatchObject(
-      languageEngagement.lukePartnership
+      languageEngagement.lukePartnership,
     );
     expect(actual.ceremony).toBeDefined();
     expect(actual.completeDate).toMatchObject(languageEngagement.completeDate);
     expect(actual.disbursementCompleteDate).toMatchObject(
-      languageEngagement.disbursementCompleteDate
+      languageEngagement.disbursementCompleteDate,
     );
     expect(actual.startDate).toMatchObject(languageEngagement.startDate);
     expect(actual.endDate).toMatchObject(languageEngagement.endDate);
     expect(actual.modifiedAt).toBe(languageEngagement.modifiedAt);
     expect(actual.paratextRegistryId).toMatchObject(
-      languageEngagement.paratextRegistryId
+      languageEngagement.paratextRegistryId,
     );
     expect(actual.pnp).toMatchObject(languageEngagement.pnp);
   });
@@ -298,25 +298,25 @@ describe('Engagement e2e', () => {
       `,
       {
         id: internshipEngagement.id,
-      }
+      },
     );
 
     expect(actual.id).toBe(internshipEngagement.id);
     expect(actual.intern).toMatchObject(internshipEngagement.intern);
     expect(actual.mentor).toMatchObject(internshipEngagement.mentor);
     expect(actual.countryOfOrigin).toMatchObject(
-      internshipEngagement.countryOfOrigin
+      internshipEngagement.countryOfOrigin,
     );
     expect(actual.methodologies).toMatchObject(
-      internshipEngagement.methodologies
+      internshipEngagement.methodologies,
     );
     expect(actual.position).toMatchObject(internshipEngagement.position);
     expect(actual.ceremony).toBeDefined();
     expect(actual.completeDate).toMatchObject(
-      internshipEngagement.completeDate
+      internshipEngagement.completeDate,
     );
     expect(actual.disbursementCompleteDate).toMatchObject(
-      internshipEngagement.disbursementCompleteDate
+      internshipEngagement.disbursementCompleteDate,
     );
     expect(actual.startDate).toMatchObject(internshipEngagement.startDate);
     expect(actual.endDate).toMatchObject(internshipEngagement.endDate);
@@ -357,12 +357,12 @@ describe('Engagement e2e', () => {
             paratextRegistryId: updateParatextRegistryId,
           },
         },
-      }
+      },
     );
     const updated = result.updateLanguageEngagement.engagement;
     expect(updated).toBeTruthy();
     expect(DateTime.fromISO(updated.modifiedAt).toMillis()).toBeGreaterThan(
-      DateTime.fromISO(languageEngagement.modifiedAt).toMillis()
+      DateTime.fromISO(languageEngagement.modifiedAt).toMillis(),
     );
     expect(updated.id).toBe(languageEngagement.id);
     expect(updated.firstScripture.value).toBe(updateFirstScripture);
@@ -411,7 +411,7 @@ describe('Engagement e2e', () => {
             methodologies: updateMethodologies,
           },
         },
-      }
+      },
     );
 
     const updated = result.updateInternshipEngagement.engagement;
@@ -421,12 +421,12 @@ describe('Engagement e2e', () => {
     expect(updated.countryOfOrigin.value.id).toBe(location.id);
     expect(updated.position.value).toBe(updatePosition);
     expect(updated.methodologies.value).toEqual(
-      expect.arrayContaining(updateMethodologies)
+      expect.arrayContaining(updateMethodologies),
     );
 
     const difference = Interval.fromDateTimes(
       DateTime.fromISO(internshipEngagement.modifiedAt.toString()),
-      DateTime.fromISO(updated.modifiedAt)
+      DateTime.fromISO(updated.modifiedAt),
     )
       .toDuration()
       .toFormat('S');
@@ -450,7 +450,7 @@ describe('Engagement e2e', () => {
       `,
       {
         id: languageEngagement.id,
-      }
+      },
     );
 
     const actual: boolean | undefined = result.deleteEngagement;
@@ -467,7 +467,7 @@ describe('Engagement e2e', () => {
         `,
         {
           id: languageEngagement.id,
-        }
+        },
       )
       .expectError(errors.notFound());
   });
@@ -497,7 +497,7 @@ describe('Engagement e2e', () => {
       `,
       {
         id: languageEngagement.id,
-      }
+      },
     );
     expect(result.engagement.products.total).toEqual(2);
     expect(result.engagement.products.items).toEqual(
@@ -505,14 +505,14 @@ describe('Engagement e2e', () => {
         expect.objectContaining({
           id: product1.id,
         }),
-      ])
+      ]),
     );
     expect(result.engagement.products.items).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           id: product2.id,
         }),
-      ])
+      ]),
     );
   });
 
@@ -536,7 +536,7 @@ describe('Engagement e2e', () => {
       `,
       {
         id: languageEngagement.id,
-      }
+      },
     );
 
     expect(result?.engagement?.ceremony?.value?.id).toBeDefined();
@@ -561,10 +561,10 @@ describe('Engagement e2e', () => {
       `,
       {
         id: languageEngagement.id,
-      }
+      },
     );
     expect(
-      languageEngagementRead?.engagement?.ceremony?.value?.id
+      languageEngagementRead?.engagement?.ceremony?.value?.id,
     ).toBeDefined();
 
     await registerUser(app, { roles: [Role.FieldOperationsDirector] });
@@ -587,7 +587,7 @@ describe('Engagement e2e', () => {
             estimatedDate: date,
           },
         },
-      }
+      },
     );
     const result = await app.graphql.query(
       gql`
@@ -607,7 +607,7 @@ describe('Engagement e2e', () => {
       `,
       {
         id: languageEngagementRead?.engagement?.ceremony?.value?.id,
-      }
+      },
     );
     expect(result.ceremony.planned.value).toBeTruthy();
     expect(result.ceremony.estimatedDate.value).toBe(date);
@@ -637,10 +637,10 @@ describe('Engagement e2e', () => {
       `,
       {
         id: ie.id,
-      }
+      },
     );
     expect(
-      internshipEngagementRead?.engagement?.ceremony?.value?.id
+      internshipEngagementRead?.engagement?.ceremony?.value?.id,
     ).toBeDefined();
 
     await registerUser(app, { roles: [Role.FieldOperationsDirector] });
@@ -663,7 +663,7 @@ describe('Engagement e2e', () => {
             estimatedDate: date,
           },
         },
-      }
+      },
     );
     const result = await app.graphql.query(
       gql`
@@ -683,7 +683,7 @@ describe('Engagement e2e', () => {
       `,
       {
         id: internshipEngagementRead?.engagement?.ceremony?.value?.id,
-      }
+      },
     );
     expect(result.ceremony.planned.value).toBeTruthy();
     expect(result.ceremony.estimatedDate.value).toBe(date);
@@ -710,11 +710,11 @@ describe('Engagement e2e', () => {
       `,
       {
         id: languageEngagement.id,
-      }
+      },
     );
 
     expect(
-      languageEngagementRead?.engagement?.ceremony?.value?.id
+      languageEngagementRead?.engagement?.ceremony?.value?.id,
     ).toBeDefined();
 
     const ceremonyId = languageEngagementRead?.engagement?.ceremony?.value?.id;
@@ -729,7 +729,7 @@ describe('Engagement e2e', () => {
       `,
       {
         id: languageEngagement.id,
-      }
+      },
     );
 
     await app.graphql
@@ -744,7 +744,7 @@ describe('Engagement e2e', () => {
         `,
         {
           id: ceremonyId,
-        }
+        },
       )
       .expectError(errors.notFound());
   });
@@ -781,20 +781,20 @@ describe('Engagement e2e', () => {
             }
           }
         }
-      `
+      `,
     );
 
     expect(
       some(engagements.items, {
         // eslint-disable-next-line @typescript-eslint/naming-convention
         __typename: 'InternshipEngagement',
-      })
+      }),
     ).toBeTruthy();
     expect(
       some(engagements.items, {
         // eslint-disable-next-line @typescript-eslint/naming-convention
         __typename: 'LanguageEngagement',
-      })
+      }),
     ).toBeTruthy();
   });
 
@@ -809,9 +809,9 @@ describe('Engagement e2e', () => {
         countryOfOriginId: location.id,
         internId: intern.id,
         mentorId: mentor.id,
-      })
+      }),
     ).rejects.toThrowGqlError(
-      errors.notFound({ message: 'Could not find project' })
+      errors.notFound({ message: 'Could not find project' }),
     );
     await expect(
       createInternshipEngagement(app, {
@@ -819,9 +819,9 @@ describe('Engagement e2e', () => {
         countryOfOriginId: invalidId,
         internId: intern.id,
         mentorId: mentor.id,
-      })
+      }),
     ).rejects.toThrowGqlError(
-      errors.notFound({ message: 'Could not find country of origin' })
+      errors.notFound({ message: 'Could not find country of origin' }),
     );
 
     internshipProject = await createProject(app, {
@@ -834,9 +834,9 @@ describe('Engagement e2e', () => {
         countryOfOriginId: location.id,
         internId: invalidId,
         mentorId: mentor.id,
-      })
+      }),
     ).rejects.toThrowGqlError(
-      errors.notFound({ message: 'Could not find person' })
+      errors.notFound({ message: 'Could not find person' }),
     );
 
     internshipProject = await createProject(app, {
@@ -849,9 +849,9 @@ describe('Engagement e2e', () => {
         countryOfOriginId: location.id,
         internId: intern.id,
         mentorId: invalidId,
-      })
+      }),
     ).rejects.toThrowGqlError(
-      errors.notFound({ message: 'Could not find mentor' })
+      errors.notFound({ message: 'Could not find mentor' }),
     );
   });
 
@@ -861,17 +861,17 @@ describe('Engagement e2e', () => {
       createLanguageEngagement(app, {
         projectId: invalidId,
         languageId: language.id,
-      })
+      }),
     ).rejects.toThrowGqlError(
-      errors.notFound({ message: 'Could not find project' })
+      errors.notFound({ message: 'Could not find project' }),
     );
     await expect(
       createLanguageEngagement(app, {
         projectId: project.id,
         languageId: invalidId,
-      })
+      }),
     ).rejects.toThrowGqlError(
-      errors.notFound({ message: 'Could not find language' })
+      errors.notFound({ message: 'Could not find language' }),
     );
   });
 
@@ -898,7 +898,7 @@ describe('Engagement e2e', () => {
           }
         }
       }
-      `
+      `,
     );
     expect(internshipEngagement.id).toBeDefined();
     expect(actual.methodologies).toBeDefined();
@@ -910,13 +910,13 @@ describe('Engagement e2e', () => {
     await expect(
       createInternshipEngagement(app, {
         projectId: project.id,
-      })
+      }),
     ).rejects.toThrowGqlError(
       errors.input({
         message:
           'Only Internship Engagements can be created on Internship Projects',
         field: 'engagement.internId',
-      })
+      }),
     );
   });
 
@@ -933,12 +933,12 @@ describe('Engagement e2e', () => {
       createLanguageEngagement(app, {
         projectId: project.id,
         languageId: language.id,
-      })
+      }),
     ).rejects.toThrowGqlError(
       errors.duplicate({
         message: 'Engagement for this project and language already exists',
         field: 'engagement.languageId',
-      })
+      }),
     );
   });
 
@@ -957,12 +957,12 @@ describe('Engagement e2e', () => {
       createInternshipEngagement(app, {
         projectId: project.id,
         internId: intern.id,
-      })
+      }),
     ).rejects.toThrowGqlError(
       errors.duplicate({
         message: 'Engagement for this project and person already exists',
         field: 'engagement.internId',
-      })
+      }),
     );
   });
 
@@ -974,13 +974,13 @@ describe('Engagement e2e', () => {
       createLanguageEngagement(app, {
         languageId: language.id,
         firstScripture: true,
-      })
+      }),
     ).rejects.toThrowGqlError(
       errors.input({
         message:
           'First scripture has already been marked as having been done externally',
         field: 'languageEngagement.firstScripture',
-      })
+      }),
     );
   });
 
@@ -995,13 +995,13 @@ describe('Engagement e2e', () => {
       createLanguageEngagement(app, {
         languageId: language.id,
         firstScripture: true,
-      })
+      }),
     ).rejects.toThrowGqlError(
       errors.input({
         message:
           'Another engagement has already been marked as having done the first scripture',
         field: 'languageEngagement.firstScripture',
-      })
+      }),
     );
   });
 
@@ -1051,20 +1051,20 @@ describe('Engagement e2e', () => {
         `,
         {
           id: project.id,
-        }
+        },
       );
 
       const toCompletedTransition =
         projectQueryResult.project.step.transitions.find(
-          (t: ProjectStepTransition) => t.to === 'Completed'
+          (t: ProjectStepTransition) => t.to === 'Completed',
         );
 
       expect(projectQueryResult.project.step.value).toBe(
-        ProjectStep.FinalizingCompletion
+        ProjectStep.FinalizingCompletion,
       );
       expect(toCompletedTransition.disabled).toBe(true);
       expect(toCompletedTransition.disabledReason).toBe(
-        'The project cannot be completed since some engagements have a non-terminal status'
+        'The project cannot be completed since some engagements have a non-terminal status',
       );
     });
 
@@ -1091,7 +1091,7 @@ describe('Engagement e2e', () => {
         {
           id: project.id,
           step: ProjectStep.Completed,
-        }
+        },
       )
       .expectError();
   });
@@ -1124,7 +1124,7 @@ describe('Engagement e2e', () => {
         projectId: project.id,
       });
       expect(engagement.status.value === EngagementStatus.InDevelopment).toBe(
-        true
+        true,
       );
       await runAsAdmin(app, async () => {
         for (const next of steps) {
@@ -1152,15 +1152,15 @@ describe('Engagement e2e', () => {
           {
             id: project.id,
             step: newStatus,
-          }
+          },
         );
 
         const actual = result.updateProject.project.engagements.items.find(
-          (e: { id: ID }) => e.id === engagement.id
+          (e: { id: ID }) => e.id === engagement.id,
         );
         expect(actual.status.value).toBe(EngagementStatus[newStatus]);
       });
-    }
+    },
   );
 
   /** Whenever an engagement's status gets changed to anything different the statusModifiedAt date should get set to now
@@ -1185,12 +1185,12 @@ describe('Engagement e2e', () => {
       const actual = await transitionEngagementToActive(
         app,
         project.id,
-        engagement.id
+        engagement.id,
       );
 
       const modAtMillis = DateTime.fromISO(actual.modifiedAt).toMillis();
       const statusModMillis = DateTime.fromISO(
-        actual.statusModifiedAt.value
+        actual.statusModifiedAt.value,
       ).toMillis();
       expect(modAtMillis).toBe(statusModMillis);
     });
@@ -1220,17 +1220,17 @@ describe('Engagement e2e', () => {
       await changeProjectStep(
         app,
         project.id,
-        ProjectStep.DiscussingChangeToPlan
+        ProjectStep.DiscussingChangeToPlan,
       );
       await changeInternshipEngagementStatus(
         app,
         engagement.id,
-        EngagementStatus.DiscussingSuspension
+        EngagementStatus.DiscussingSuspension,
       );
       const actual = await changeInternshipEngagementStatus(
         app,
         engagement.id,
-        EngagementStatus.Suspended
+        EngagementStatus.Suspended,
       );
 
       expect(actual.id).toBe(engagement.id);
@@ -1265,28 +1265,28 @@ describe('Engagement e2e', () => {
       await changeProjectStep(
         app,
         project.id,
-        ProjectStep.DiscussingChangeToPlan
+        ProjectStep.DiscussingChangeToPlan,
       );
       await changeInternshipEngagementStatus(
         app,
         engagement.id,
-        EngagementStatus.DiscussingSuspension
+        EngagementStatus.DiscussingSuspension,
       );
       await changeInternshipEngagementStatus(
         app,
         engagement.id,
-        EngagementStatus.Suspended
+        EngagementStatus.Suspended,
       );
       await changeInternshipEngagementStatus(
         app,
         engagement.id,
-        EngagementStatus.DiscussingReactivation
+        EngagementStatus.DiscussingReactivation,
       );
 
       const actual = await changeInternshipEngagementStatus(
         app,
         engagement.id,
-        EngagementStatus.ActiveChangedPlan
+        EngagementStatus.ActiveChangedPlan,
       );
       expect(actual.id).toBe(engagement.id);
       expect(actual.status.value).toBe(EngagementStatus.ActiveChangedPlan);
@@ -1323,12 +1323,12 @@ describe('Engagement e2e', () => {
     await expect(
       createLanguageEngagement(app, {
         projectId: project.id,
-      })
+      }),
     ).rejects.toThrowGqlError(
       errors.input({
         message: 'The Project status is not in development',
         field: 'project.status',
-      })
+      }),
     );
 
     await expect(
@@ -1342,13 +1342,13 @@ describe('Engagement e2e', () => {
         `,
         {
           id: engagement.id,
-        }
-      )
+        },
+      ),
     ).rejects.toThrowGqlError(
       errors.input({
         code: ['Unauthorized', 'Input'],
         message: 'You do not have the permission to delete this Engagement',
-      })
+      }),
     );
   });
 });

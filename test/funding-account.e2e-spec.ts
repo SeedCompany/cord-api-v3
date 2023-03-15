@@ -49,7 +49,7 @@ describe('FundingAccount e2e', () => {
       `,
       {
         id: st.id,
-      }
+      },
     );
     expect(actual.id).toBe(st.id);
     expect(isValidId(actual.id)).toBe(true);
@@ -82,7 +82,7 @@ describe('FundingAccount e2e', () => {
               accountNumber: newAccountNumber,
             },
           },
-        }
+        },
       );
       const updated = result.updateFundingAccount.fundingAccount;
       expect(updated).toBeTruthy();
@@ -104,7 +104,7 @@ describe('FundingAccount e2e', () => {
       `,
       {
         id: st.id,
-      }
+      },
     );
     const actual: FundingAccount | undefined = result.deleteFundingAccount;
     expect(actual).toBeTruthy();
@@ -118,7 +118,7 @@ describe('FundingAccount e2e', () => {
     await Promise.all(
       times(numFundingAccounts).map(async () => {
         return await createFundingAccount(app); // can't runInSession here, creates problems
-      })
+      }),
     );
     await registerUser(app, { roles: [Role.LeadFinancialAnalyst] });
 
@@ -136,7 +136,7 @@ describe('FundingAccount e2e', () => {
     `);
 
     expect(fundingAccounts.items.length).toBeGreaterThanOrEqual(
-      numFundingAccounts
+      numFundingAccounts,
     );
   });
 });

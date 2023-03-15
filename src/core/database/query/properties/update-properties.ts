@@ -14,7 +14,7 @@ export interface UpdatePropertiesOptions<
   TResourceStatic extends ResourceShape<any>,
   TObject extends Partial<MaybeUnsecuredInstance<TResourceStatic>> & {
     id: ID;
-  }
+  },
 > {
   resource: TResourceStatic | EnhancedResource<TResourceStatic>;
   changes: DbChanges<TObject>;
@@ -28,7 +28,7 @@ export const updateProperties =
     TResourceStatic extends ResourceShape<any>,
     TObject extends Partial<MaybeUnsecuredInstance<TResourceStatic>> & {
       id: ID;
-    }
+    },
   >({
     resource: resourceIn,
     changes,
@@ -46,7 +46,7 @@ export const updateProperties =
             value,
             labels: resource.dbPropLabels[key],
           }
-        : []
+        : [],
     );
 
     return query
@@ -62,14 +62,14 @@ export const updateProperties =
               changeset,
               nodeName,
               now: query.params.addParam(DateTime.local(), 'now'),
-            })
+            }),
           )
           .return<{
             stats: { [K in keyof DbChanges<TObject>]?: PropUpdateStat };
           }>(
             merge(collect(apoc.map.fromValues(['prop.key', 'stats']))).as(
-              outputStatsVar
-            )
-          )
+              outputStatsVar,
+            ),
+          ),
       );
   };

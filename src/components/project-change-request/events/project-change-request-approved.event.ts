@@ -4,6 +4,6 @@ import { ProjectChangeRequest } from '../dto';
 export class ProjectChangeRequestApprovedEvent {
   constructor(
     readonly changeRequest: UnsecuredDto<ProjectChangeRequest>,
-    readonly session: Session
+    readonly session: Session,
   ) {}
 }

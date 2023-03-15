@@ -24,7 +24,7 @@ export abstract class SingleItemLoader<T, Key = ID> extends DataLoader<T, Key> {
           }
           throw e;
         }
-      })
+      }),
     );
     return items.flat() as T[];
   }

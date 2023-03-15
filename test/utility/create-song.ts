@@ -6,7 +6,7 @@ import { gql } from './gql-tag';
 
 export async function createSong(
   app: TestApp,
-  input: Partial<CreateSong> = {}
+  input: Partial<CreateSong> = {},
 ) {
   const name = input.name || faker.hacker.noun() + faker.company.name();
 
@@ -28,7 +28,7 @@ export async function createSong(
           name,
         },
       },
-    }
+    },
   );
   const st: Song = result.createSong.song;
 

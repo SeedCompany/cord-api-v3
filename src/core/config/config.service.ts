@@ -204,7 +204,7 @@ export class ConfigService implements EmailOptionsFactory {
       get id(): ID {
         if (!rootId) {
           throw new ServerException(
-            'Cannot access root admin ID before it is initialized'
+            'Cannot access root admin ID before it is initialized',
           );
         }
         return rootId;

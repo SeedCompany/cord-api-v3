@@ -21,7 +21,7 @@ export class IndexerModule implements OnModuleInit {
     private readonly db: DatabaseService,
     private readonly discover: DiscoveryService,
     private readonly config: ConfigService,
-    @Logger('database:indexer') private readonly logger: ILogger
+    @Logger('database:indexer') private readonly logger: ILogger,
   ) {}
 
   async onModuleInit() {
@@ -41,11 +41,11 @@ export class IndexerModule implements OnModuleInit {
             () => this.doIndexing(discoveredOfMode, serverInfo),
             {
               queryLogger: this.logger,
-            }
+            },
           );
           this.logger.debug(`Finished syncing ${mode} indexes`);
         }
-      }
+      },
     );
     // Wait for indexing to finish when running tests, else just let it run in
     // background and allow webserver to start.
@@ -62,10 +62,8 @@ export class IndexerModule implements OnModuleInit {
 
   async doIndexing(
     discovered: Array<DiscoveredMethodWithMeta<unknown>>,
-    serverInfo: ServerInfo
+    serverInfo: ServerInfo,
   ) {
-    const isV4 = serverInfo.version.startsWith('4');
-
     const indexers = discovered.map((h) => h.discoveredMethod);
     for (const { handler, methodName, parentClass } of indexers) {
       const maybeStatements = await handler.call(parentClass.instance, {
@@ -74,12 +72,9 @@ export class IndexerModule implements OnModuleInit {
         serverInfo,
       });
       const statements = many<string>(maybeStatements ?? []).map((statement) =>
-        isV4
-          ? statement.replace(
-              'CREATE CONSTRAINT ON ',
-              'CREATE CONSTRAINT IF NOT EXISTS ON '
-            )
-          : statement
+        serverInfo.versionXY >= 4.4 || !statement.includes(' CONSTRAINT ')
+          ? statement
+          : statement.replace(' FOR ', ' ON ').replace(' REQUIRE ', ' ASSERT '),
       );
       for (const [i, statement] of Object.entries(statements)) {
         if (
@@ -88,15 +83,19 @@ export class IndexerModule implements OnModuleInit {
         ) {
           this.logger.debug(
             'Skipping constraint not supported on Neo4j Community Edition',
-            { constraint: statement }
+            { constraint: statement },
           );
           continue;
         }
 
+        const indexName = statement.match(
+          /create (?:index|constraint) ([\w_]+)/i,
+        )?.[1];
+        const src = `${parentClass.name}.${methodName}`;
+        const indexStr = Number(i) > 0 ? ` #${Number(i) + 1}` : '';
+        const name = indexName ? `${indexName} (${src})` : `${src}${indexStr}`;
+
         const q = this.db.query();
-        const name = `${parentClass.name}.${methodName}${
-          Number(i) > 0 ? ` #${Number(i) + 1}` : ''
-        }`;
         (q as any).name = name;
         try {
           await q.raw(statement).run();
@@ -108,7 +107,7 @@ export class IndexerModule implements OnModuleInit {
           ) {
             this.logger.debug(
               'Skipping constraint not supported on Neo4j Community Edition',
-              { constraint: statement }
+              { constraint: statement },
             );
           } else {
             this.logger.error('Failed to apply index', {

@@ -15,7 +15,7 @@ export async function login(app: TestApp, input: Partial<LoginInput> = {}) {
         }
       }
     `,
-    { input }
+    { input },
   );
 }
 
@@ -26,7 +26,7 @@ export const loginAsAdmin = async (app: TestApp) => {
 
 export const runAsAdmin = async <R>(
   app: TestApp,
-  adminExecution: (app: TestApp) => Promise<R> | R
+  adminExecution: (app: TestApp) => Promise<R> | R,
 ) =>
   await runInIsolatedSession(app, async () => {
     await loginAsAdmin(app);
@@ -35,7 +35,7 @@ export const runAsAdmin = async <R>(
 
 export const runInIsolatedSession = async <R>(
   app: TestApp,
-  execution: () => Promise<R> | R
+  execution: () => Promise<R> | R,
 ): Promise<R> => {
   const currentSession = app.graphql.authToken;
   app.graphql.authToken = ''; // reset to no session

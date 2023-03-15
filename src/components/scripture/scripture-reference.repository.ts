@@ -37,7 +37,7 @@ export class ScriptureReferenceRepository {
     isOverriding: boolean | undefined,
     producibleId: ID,
     scriptureRefs: readonly ScriptureRangeInput[] | null,
-    rel: 'scriptureReferencesOverride' | 'scriptureReferences'
+    rel: 'scriptureReferencesOverride' | 'scriptureReferences',
   ) {
     if (isOverriding) {
       await this.db
@@ -71,7 +71,7 @@ export class ScriptureReferenceRepository {
   async updateScriptureRefs(
     sr: ScriptureRangeInput,
     producibleId: ID,
-    rel: 'scriptureReferencesOverride' | 'scriptureReferences'
+    rel: 'scriptureReferencesOverride' | 'scriptureReferences',
   ) {
     await this.db
       .query()
@@ -108,17 +108,17 @@ export class ScriptureReferenceRepository {
             'out',
             'scriptureRangeRel',
             dynamicRel ? undefined : relationName,
-            ACTIVE
+            ACTIVE,
           ),
           node('scriptureRange', 'ScriptureRange'),
         ])
         .apply((q) =>
           dynamicRel
             ? q.raw(`WHERE type(scriptureRangeRel) = ${relationName}`)
-            : q
+            : q,
         )
         .return<{ scriptureReferences: DbScriptureReferences }>(
-          collect('scriptureRange').as(outVar)
+          collect('scriptureRange').as(outVar),
         );
   }
 }

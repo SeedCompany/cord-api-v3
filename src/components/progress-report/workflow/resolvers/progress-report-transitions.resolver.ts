@@ -14,7 +14,7 @@ export class ProgressReportTransitionsResolver {
   })
   async transitions(
     @Parent() status: SecuredProgressReportStatus & ParentIdMiddlewareAdditions,
-    @AnonSession() session: Session
+    @AnonSession() session: Session,
   ): Promise<ProgressReportWorkflowTransition[]> {
     if (!status.canRead || !status.value) {
       return [];
@@ -29,7 +29,7 @@ export class ProgressReportTransitionsResolver {
    `,
   })
   async canBypassTransitions(
-    @AnonSession() session: Session
+    @AnonSession() session: Session,
   ): Promise<boolean> {
     return this.workflow.canBypass(session);
   }

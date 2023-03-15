@@ -59,7 +59,7 @@ export abstract class SecuredLanguageEngagementList extends SecuredList(
   LanguageEngagement,
   {
     itemsDescription: PaginatedList.itemDescriptionFor('language engagements'),
-  }
+  },
 ) {}
 
 @ObjectType({
@@ -69,7 +69,7 @@ export abstract class SecuredInternshipEngagementList extends SecuredList(
   InternshipEngagement,
   {
     itemsDescription: PaginatedList.itemDescriptionFor(
-      'internship engagements'
+      'internship engagements',
     ),
-  }
+  },
 ) {}

@@ -54,7 +54,7 @@ const EngagementStatusTerminalMap: Record<EngagementStatus, boolean> = {
 export const [TerminalEngagementStatuses, OngoingEngagementStatuses] =
   partition(
     Object.keys(EngagementStatusTerminalMap) as EngagementStatus[],
-    (k) => EngagementStatusTerminalMap[k]
+    (k) => EngagementStatusTerminalMap[k],
   );
 
 registerEnumType(EngagementStatus, {

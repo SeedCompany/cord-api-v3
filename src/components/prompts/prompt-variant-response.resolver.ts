@@ -26,7 +26,7 @@ export class PromptVariantResponseResolver {
   @ResolveField(() => SecuredUser)
   async creator(
     @Parent() response: PromptVariantResponse,
-    @Loader(UserLoader) users: LoaderOf<UserLoader>
+    @Loader(UserLoader) users: LoaderOf<UserLoader>,
   ) {
     return await mapSecuredValue(response.creator, users.load.bind(users));
   }
@@ -37,7 +37,7 @@ export class VariantResponseResolver {
   @ResolveField(() => SecuredUser)
   async creator(
     @Parent() response: VariantResponse,
-    @Loader(UserLoader) users: LoaderOf<UserLoader>
+    @Loader(UserLoader) users: LoaderOf<UserLoader>,
   ) {
     return await mapSecuredValue(response.creator, users.load.bind(users));
   }

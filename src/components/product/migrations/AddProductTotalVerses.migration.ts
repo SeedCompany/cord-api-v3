@@ -32,12 +32,12 @@ export class AddProductTotalVersesMigration extends BaseMigration {
       const totalVerses = product.unspecifiedScripture
         ? product.unspecifiedScripture.totalVerses
         : getTotalVerses(
-            ...product.scriptureRanges.map(ScriptureRange.fromIds)
+            ...product.scriptureRanges.map(ScriptureRange.fromIds),
           );
       const totalVerseEquivalents = product.unspecifiedScripture
         ? getVerseEquivalentsFromUnspecified(product.unspecifiedScripture)
         : getTotalVerseEquivalents(
-            ...product.scriptureRanges.map(ScriptureRange.fromIds)
+            ...product.scriptureRanges.map(ScriptureRange.fromIds),
           );
 
       await this.save(product, totalVerses, totalVerseEquivalents);
@@ -64,7 +64,7 @@ export class AddProductTotalVersesMigration extends BaseMigration {
             node('node'),
             relation('out', '', 'totalVerses'),
             node('', 'Property'),
-          ])
+          ]),
         ),
       })
       .optionalMatch([
@@ -80,8 +80,8 @@ export class AddProductTotalVersesMigration extends BaseMigration {
             node('scriptureRanges', 'ScriptureRange'),
           ])
           .return(
-            collect('scriptureRanges { .start, .end }').as('scriptureRanges')
-          )
+            collect('scriptureRanges { .start, .end }').as('scriptureRanges'),
+          ),
       )
       .logIt()
       .return<ProductRef>([
@@ -96,7 +96,7 @@ export class AddProductTotalVersesMigration extends BaseMigration {
   private async save(
     row: ProductRef,
     totalVerses: number,
-    totalVerseEquivalents: number
+    totalVerseEquivalents: number,
   ) {
     await this.db
       .query()
@@ -107,7 +107,7 @@ export class AddProductTotalVersesMigration extends BaseMigration {
           key: 'totalVerses',
           value: totalVerses,
           numCreatedVar: 'numTvCreated',
-        })
+        }),
       )
       .apply(
         createProperty({
@@ -115,7 +115,7 @@ export class AddProductTotalVersesMigration extends BaseMigration {
           key: 'totalVerseEquivalents',
           value: totalVerseEquivalents,
           numCreatedVar: 'numTveCreated',
-        })
+        }),
       )
       .return('numTvCreated, numTveCreated')
       .first();

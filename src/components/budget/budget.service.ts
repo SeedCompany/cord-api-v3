@@ -57,18 +57,18 @@ export class BudgetService {
     private readonly budgetRepo: BudgetRepository,
     private readonly budgetRecordsRepo: BudgetRecordRepository,
     private readonly resources: ResourceResolver,
-    @Logger('budget:service') private readonly logger: ILogger
+    @Logger('budget:service') private readonly logger: ILogger,
   ) {}
 
   async create(
     { projectId, ...input }: CreateBudget,
-    session: Session
+    session: Session,
   ): Promise<Budget> {
     this.logger.debug('Creating budget', { projectId });
 
     const projectExists = await this.budgetRepo.doesProjectExist(
       projectId,
-      session
+      session,
     );
     if (!projectExists) {
       throw new NotFoundException('project does not exist', 'budget.projectId');
@@ -80,7 +80,7 @@ export class BudgetService {
       const budgetId = await this.budgetRepo.create(
         { projectId, ...input },
         universalTemplateFileId,
-        session
+        session,
       );
 
       this.logger.debug(`Created Budget`, {
@@ -95,7 +95,7 @@ export class BudgetService {
         budgetId,
         'universalTemplateFile',
         input.universalTemplateFile,
-        'budget.universalTemplateFile'
+        'budget.universalTemplateFile',
       );
 
       return await this.readOne(budgetId, session);
@@ -111,13 +111,13 @@ export class BudgetService {
   async createRecord(
     input: CreateBudgetRecord,
     session: Session,
-    changeset?: ID
+    changeset?: ID,
   ): Promise<BudgetRecord> {
     const { organizationId, fiscalYear } = input;
 
     if (!fiscalYear || !organizationId) {
       throw new InputException(
-        !fiscalYear ? 'budget.fiscalYear' : 'budget.organizationId'
+        !fiscalYear ? 'budget.fiscalYear' : 'budget.organizationId',
       );
     }
 
@@ -136,7 +136,7 @@ export class BudgetService {
       const budgetRecord = await this.readOneRecord(
         recordId,
         session,
-        viewOfChangeset(changeset)
+        viewOfChangeset(changeset),
       );
 
       return budgetRecord;
@@ -154,7 +154,7 @@ export class BudgetService {
     if (exists) {
       throw new DuplicateException(
         'fiscalYear',
-        'A record for given partner and fiscal year already exists in this budget'
+        'A record for given partner and fiscal year already exists in this budget',
       );
     }
   }
@@ -177,7 +177,7 @@ export class BudgetService {
     const securedProps = parseSecuredProperties(
       result,
       perms as PermissionsOf<Budget>,
-      Budget.SecuredProps
+      Budget.SecuredProps,
     );
 
     let records = null;
@@ -191,7 +191,7 @@ export class BudgetService {
           filter: { budgetId: id },
         },
         session,
-        view
+        view,
       );
     }
 
@@ -199,7 +199,7 @@ export class BudgetService {
       ? await this.resources.lookup(
           ProjectChangeRequest,
           view.changeset,
-          session
+          session,
         )
       : undefined;
 
@@ -217,7 +217,7 @@ export class BudgetService {
   async readMany(ids: readonly ID[], session: Session, view?: ObjectView) {
     const budgets = await this.budgetRepo.readMany(ids, session, view);
     return await Promise.all(
-      budgets.map(async (dto) => await this.readOne(dto.id, session, view))
+      budgets.map(async (dto) => await this.readOne(dto.id, session, view)),
     );
   }
 
@@ -225,7 +225,7 @@ export class BudgetService {
   async readOneRecord(
     id: ID,
     session: Session,
-    view?: ObjectView
+    view?: ObjectView,
   ): Promise<BudgetRecord> {
     this.logger.debug(`readOne BudgetRecord`, {
       id,
@@ -237,7 +237,7 @@ export class BudgetService {
     const securedProps = await this.authorizationService.secureProperties(
       BudgetRecord,
       result,
-      session
+      session,
     );
 
     return {
@@ -254,14 +254,14 @@ export class BudgetService {
     await this.authorizationService.verifyCanEditChanges(
       Budget,
       budget,
-      changes
+      changes,
     );
     const { universalTemplateFile, ...simpleChanges } = changes;
     await this.files.updateDefinedFile(
       budget.universalTemplateFile,
       'budget.universalTemplateFile',
       universalTemplateFile,
-      session
+      session,
     );
     return await this.budgetRepo.updateProperties(budget, simpleChanges);
   }
@@ -269,14 +269,14 @@ export class BudgetService {
   async updateRecord(
     { id, ...input }: UpdateBudgetRecord,
     session: Session,
-    changeset?: ID
+    changeset?: ID,
   ): Promise<BudgetRecord> {
     this.logger.debug('Update budget record', { id, userId: session.userId });
 
     const br = await this.readOneRecord(
       id,
       session,
-      viewOfChangeset(changeset)
+      viewOfChangeset(changeset),
     );
     await this.verifyCanEdit(id, session, br.scope);
 
@@ -284,14 +284,14 @@ export class BudgetService {
     await this.authorizationService.verifyCanEditChanges(
       BudgetRecord,
       br,
-      changes
+      changes,
     );
 
     try {
       const result = await this.budgetRecordsRepo.updateProperties(
         br,
         changes,
-        changeset
+        changeset,
       );
       return result;
     } catch (e) {
@@ -306,7 +306,7 @@ export class BudgetService {
   private async verifyCanEdit(
     recordId: ID,
     session: Session,
-    scope: ScopedRole[]
+    scope: ScopedRole[],
   ) {
     if (this.canEditFinalized(session.roles.concat(scope))) {
       return;
@@ -315,7 +315,7 @@ export class BudgetService {
     if (status !== BudgetStatus.Pending) {
       throw new InputException(
         'Budget cannot be modified',
-        'budgetRecord.amount'
+        'budgetRecord.amount',
       );
     }
   }
@@ -334,12 +334,12 @@ export class BudgetService {
     const canDelete = await this.budgetRepo.checkDeletePermission(id, session);
     if (!canDelete)
       throw new UnauthorizedException(
-        'You do not have the permission to delete this Budget'
+        'You do not have the permission to delete this Budget',
       );
 
     // cascade delete each budget record in this budget
     await Promise.all(
-      budget.records.map((br) => this.deleteRecord(br.id, session))
+      budget.records.map((br) => this.deleteRecord(br.id, session)),
     );
 
     try {
@@ -356,7 +356,7 @@ export class BudgetService {
     const br = await this.readOneRecord(
       id,
       session,
-      viewOfChangeset(changeset)
+      viewOfChangeset(changeset),
     );
 
     if (!br) {
@@ -365,12 +365,12 @@ export class BudgetService {
 
     const canDelete = await this.budgetRecordsRepo.checkDeletePermission(
       id,
-      session
+      session,
     );
 
     if (!canDelete)
       throw new UnauthorizedException(
-        'You do not have the permission to delete this Budget Record'
+        'You do not have the permission to delete this Budget Record',
       );
 
     try {
@@ -386,36 +386,36 @@ export class BudgetService {
   async list(
     partialInput: Partial<BudgetListInput>,
     session: Session,
-    changeset?: ID
+    changeset?: ID,
   ): Promise<BudgetListOutput> {
     const input = BudgetListInput.defaultValue(BudgetListInput, partialInput);
     const results = await this.budgetRepo.list(input, session);
     return await mapListResults(results, (id) =>
-      this.readOne(id, session, viewOfChangeset(changeset))
+      this.readOne(id, session, viewOfChangeset(changeset)),
     );
   }
 
   async listUnsecure(
     partialInput: Partial<BudgetListInput>,
     session: Session,
-    changeset?: ID
+    changeset?: ID,
   ): Promise<BudgetListOutput> {
     const input = BudgetListInput.defaultValue(BudgetListInput, partialInput);
     const results = await this.budgetRepo.listUnsecure(input);
     return await mapListResults(results, (id) =>
-      this.readOne(id, session, viewOfChangeset(changeset))
+      this.readOne(id, session, viewOfChangeset(changeset)),
     );
   }
 
   async listRecords(
     input: BudgetRecordListInput,
     session: Session,
-    view?: ObjectView
+    view?: ObjectView,
   ): Promise<BudgetRecordListOutput> {
     const results = await this.budgetRecordsRepo.list(input, session, view);
 
     return await mapListResults(results, (id) =>
-      this.readOneRecord(id, session, view)
+      this.readOneRecord(id, session, view),
     );
   }
 }

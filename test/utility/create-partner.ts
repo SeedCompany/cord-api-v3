@@ -21,7 +21,7 @@ export async function readOnePartner(app: TestApp, id: string) {
       }
       ${fragments.partner}
     `,
-    { id }
+    { id },
   );
   const actual = result.partner;
   expect(actual).toBeTruthy();
@@ -39,7 +39,7 @@ export async function listPartners(app: TestApp) {
         }
       }
       ${fragments.partner}
-    `
+    `,
   );
   const partners = result.partners.items;
   expect(partners).toBeTruthy();
@@ -47,7 +47,7 @@ export async function listPartners(app: TestApp) {
 }
 export async function createPartner(
   app: TestApp,
-  input: Partial<CreatePartner> = {}
+  input: Partial<CreatePartner> = {},
 ) {
   const createPartner: CreatePartner = {
     organizationId: input.organizationId || (await createOrganization(app)).id,
@@ -76,7 +76,7 @@ export async function createPartner(
       input: {
         partner: createPartner,
       },
-    }
+    },
   );
   const partner: Partner = result.createPartner.partner;
 

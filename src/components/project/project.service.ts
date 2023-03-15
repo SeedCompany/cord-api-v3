@@ -99,17 +99,17 @@ export class ProjectService {
     private readonly projectRules: ProjectRules,
     private readonly repo: ProjectRepository,
     private readonly projectChangeRequests: ProjectChangeRequestService,
-    @Logger('project:service') private readonly logger: ILogger
+    @Logger('project:service') private readonly logger: ILogger,
   ) {}
 
   async create(
     input: CreateProject,
-    session: Session
+    session: Session,
   ): Promise<UnsecuredDto<Project>> {
     if (input.type === ProjectType.Translation && input.sensitivity) {
       throw new InputException(
         'Cannot set sensitivity on translation project',
-        'project.sensitivity'
+        'project.sensitivity',
       );
     }
     await this.authorizationService.checkPower(Powers.CreateProject, session);
@@ -118,25 +118,25 @@ export class ProjectService {
       input.fieldRegionId,
       'FieldRegion',
       'fieldRegionId',
-      'Field region not found'
+      'Field region not found',
     );
     await this.validateOtherResourceId(
       input.primaryLocationId,
       'Location',
       'primaryLocationId',
-      'Primary location not found'
+      'Primary location not found',
     );
     await this.validateOtherResourceId(
       input.otherLocationIds,
       'Location',
       'otherLocationIds',
-      'One of the other locations was not found'
+      'One of the other locations was not found',
     );
     await this.validateOtherResourceId(
       input.marketingLocationId,
       'Location',
       'marketingLocationId',
-      'Marketing location not found'
+      'Marketing location not found',
     );
 
     try {
@@ -160,7 +160,7 @@ export class ProjectService {
           projectId: project,
           roles,
         },
-        session
+        session,
       );
 
       const event = new ProjectCreatedEvent(project, session);
@@ -171,7 +171,7 @@ export class ProjectService {
       if (e instanceof UniquenessError && e.label === 'ProjectName') {
         throw new DuplicateException(
           'project.name',
-          'Project with this name already exists'
+          'Project with this name already exists',
         );
       }
       if (
@@ -188,7 +188,7 @@ export class ProjectService {
   async readOneTranslation(
     id: ID,
     session: Session,
-    view?: ObjectView
+    view?: ObjectView,
   ): Promise<TranslationProject> {
     const project = await this.readOne(id, session, view?.changeset);
     if (project.type !== ProjectType.Translation) {
@@ -201,7 +201,7 @@ export class ProjectService {
   async readOneInternship(
     id: ID,
     session: Session,
-    view?: ObjectView
+    view?: ObjectView,
   ): Promise<InternshipProject> {
     const project = await this.readOne(id, session, view?.changeset);
     if (project.type !== ProjectType.Internship) {
@@ -213,7 +213,7 @@ export class ProjectService {
   async readOneUnsecured(
     id: ID,
     sessionOrUserId: Session | ID,
-    changeset?: ID
+    changeset?: ID,
   ): Promise<UnsecuredDto<Project>> {
     const userId = isIdLike(sessionOrUserId)
       ? sessionOrUserId
@@ -224,7 +224,7 @@ export class ProjectService {
   async readMany(
     ids: readonly ID[],
     session: Session,
-    view: ObjectView
+    view: ObjectView,
   ): Promise<readonly Project[]> {
     this.logger.debug('read many', { ids, view });
     const projects = await this.repo.readMany(ids, session, view?.changeset);
@@ -233,12 +233,12 @@ export class ProjectService {
 
   async secure(
     project: UnsecuredDto<Project>,
-    session: Session
+    session: Session,
   ): Promise<Project> {
     const securedProps = await this.authorizationService.secureProperties(
       IProject,
       project,
-      session
+      session,
     );
     return {
       ...project,
@@ -271,17 +271,17 @@ export class ProjectService {
     input: UpdateProject,
     session: Session,
     changeset?: ID,
-    stepValidation = true
+    stepValidation = true,
   ): Promise<UnsecuredDto<Project>> {
     const currentProject = await this.readOneUnsecured(
       input.id,
       session,
-      changeset
+      changeset,
     );
     if (input.sensitivity && currentProject.type === ProjectType.Translation)
       throw new InputException(
         'Cannot update sensitivity on Translation Project',
-        'project.sensitivity'
+        'project.sensitivity',
       );
 
     const changes = this.repo.getActualChanges(currentProject, input);
@@ -291,7 +291,7 @@ export class ProjectService {
         : InternshipProject,
       await this.secure(currentProject, session),
       changes,
-      'project'
+      'project',
     );
 
     if (changes.step && stepValidation) {
@@ -299,7 +299,7 @@ export class ProjectService {
         input.id,
         session,
         changes.step,
-        changeset
+        changeset,
       );
     }
 
@@ -313,19 +313,19 @@ export class ProjectService {
     let result = await this.repo.updateProperties(
       currentProject,
       simpleChanges,
-      changeset
+      changeset,
     );
 
     if (primaryLocationId) {
       try {
         const location = await this.locationService.readOne(
           primaryLocationId,
-          session
+          session,
         );
         if (!location.fundingAccount.value) {
           throw new InputException(
             'Cannot connect location without a funding account',
-            'project.primaryLocationId'
+            'project.primaryLocationId',
           );
         }
       } catch (e) {
@@ -333,7 +333,7 @@ export class ProjectService {
           throw new NotFoundException(
             'Primary location not found',
             'project.primaryLocationId',
-            e
+            e,
           );
         }
         throw e;
@@ -344,7 +344,7 @@ export class ProjectService {
         'primaryLocation',
         'Location',
         input.id,
-        primaryLocationId
+        primaryLocationId,
       );
       result = {
         ...result,
@@ -357,13 +357,13 @@ export class ProjectService {
         fieldRegionId,
         'FieldRegion',
         'fieldRegionId',
-        'Field region not found'
+        'Field region not found',
       );
       await this.repo.updateRelation(
         'fieldRegion',
         'FieldRegion',
         input.id,
-        fieldRegionId
+        fieldRegionId,
       );
       result = {
         ...result,
@@ -376,7 +376,7 @@ export class ProjectService {
         'marketingLocation',
         'Location',
         input.id,
-        marketingLocationId
+        marketingLocationId,
       );
       result = {
         ...result,
@@ -388,7 +388,7 @@ export class ProjectService {
       result,
       currentProject,
       input,
-      session
+      session,
     );
     await this.eventBus.publish(event);
     return event.updated;
@@ -404,7 +404,7 @@ export class ProjectService {
 
     if (!canDelete)
       throw new UnauthorizedException(
-        'You do not have the permission to delete this Project'
+        'You do not have the permission to delete this Project',
       );
 
     try {
@@ -421,7 +421,7 @@ export class ProjectService {
 
   async list(
     input: ProjectListInput,
-    session: Session
+    session: Session,
   ): Promise<ProjectListOutput> {
     const results = await this.repo.list(input, session);
     return await mapListResults(results, (dto) => this.secure(dto, session));
@@ -431,7 +431,7 @@ export class ProjectService {
     project: Project,
     input: EngagementListInput,
     session: Session,
-    view?: ObjectView
+    view?: ObjectView,
   ): Promise<SecuredEngagementList> {
     this.logger.debug('list engagements ', {
       projectId: project.id,
@@ -448,7 +448,7 @@ export class ProjectService {
         },
       },
       session,
-      view
+      view,
     );
 
     const perms = await this.authorizationService.getPermissions({
@@ -471,7 +471,7 @@ export class ProjectService {
   async listProjectMembers(
     project: Project,
     input: ProjectMemberListInput,
-    session: Session
+    session: Session,
   ): Promise<SecuredProjectMemberList> {
     const result = await this.projectMembers.list(
       {
@@ -481,7 +481,7 @@ export class ProjectService {
           projectId: project.id,
         },
       },
-      session
+      session,
     );
 
     const perms = this.privileges.for(session, IProject, project).all.member;
@@ -499,7 +499,7 @@ export class ProjectService {
     session: Session,
     sensitivity: Sensitivity,
     scope: ScopedRole[],
-    changeset?: ID
+    changeset?: ID,
   ): Promise<SecuredPartnershipList> {
     const result = await this.partnerships.list(
       {
@@ -510,7 +510,7 @@ export class ProjectService {
         },
       },
       session,
-      changeset
+      changeset,
     );
 
     const perms = await this.authorizationService.getPermissions({
@@ -529,7 +529,7 @@ export class ProjectService {
   async listChangeRequests(
     project: Project,
     input: ProjectChangeRequestListInput,
-    session: Session
+    session: Session,
   ): Promise<SecuredProjectChangeRequestList> {
     const result = await this.projectChangeRequests.list(
       {
@@ -539,7 +539,7 @@ export class ProjectService {
           projectId: project.id,
         },
       },
-      session
+      session,
     );
 
     return {
@@ -552,7 +552,7 @@ export class ProjectService {
   async listProjectsByUserId(
     userId: ID,
     input: ProjectListInput,
-    session: Session
+    session: Session,
   ): Promise<SecuredProjectList> {
     // Instead of trying to handle which subset of projects should be included,
     // based on doing the work of seeing which project teams they can view,
@@ -576,7 +576,7 @@ export class ProjectService {
           userId,
         },
       },
-      session
+      session,
     );
 
     return {
@@ -589,14 +589,14 @@ export class ProjectService {
   async addOtherLocation(
     projectId: ID,
     locationId: ID,
-    _session: Session
+    _session: Session,
   ): Promise<void> {
     try {
       await this.locationService.addLocationToNode(
         'Project',
         projectId,
         'otherLocations',
-        locationId
+        locationId,
       );
     } catch (e) {
       throw new ServerException('Could not add other location to project', e);
@@ -606,19 +606,19 @@ export class ProjectService {
   async removeOtherLocation(
     projectId: ID,
     locationId: ID,
-    _session: Session
+    _session: Session,
   ): Promise<void> {
     try {
       await this.locationService.removeLocationFromNode(
         'Project',
         projectId,
         'otherLocations',
-        locationId
+        locationId,
       );
     } catch (e) {
       throw new ServerException(
         'Could not remove other location from project',
-        e
+        e,
       );
     }
   }
@@ -626,21 +626,21 @@ export class ProjectService {
   async listOtherLocations(
     project: Project,
     input: LocationListInput,
-    session: Session
+    session: Session,
   ): Promise<SecuredLocationList> {
     return await this.locationService.listLocationForResource(
       IProject,
       project,
       'otherLocations',
       input,
-      session
+      session,
     );
   }
 
   async currentBudget(
     project: IProject,
     session: Session,
-    changeset?: ID
+    changeset?: ID,
   ): Promise<SecuredBudget> {
     let budgetToReturn;
 
@@ -658,11 +658,11 @@ export class ProjectService {
           },
         },
         session,
-        changeset
+        changeset,
       );
 
       const current = budgets.items.find(
-        (b) => b.status === BudgetStatus.Current
+        (b) => b.status === BudgetStatus.Current,
       );
 
       // #574 - if no current budget, then fallback to the first pending budget
@@ -676,7 +676,7 @@ export class ProjectService {
         (permsOfProject.budget.canEdit &&
           budgetToReturn?.status === BudgetStatus.Pending) ||
         this.budgetService.canEditFinalized(
-          session.roles.concat(project.scope)
+          session.roles.concat(project.scope),
         ),
     };
   }
@@ -685,7 +685,7 @@ export class ProjectService {
     ids: Many<ID> | null | undefined,
     label: string,
     resourceField: string,
-    errMsg: string
+    errMsg: string,
   ): Promise<void> {
     await Promise.all(
       many(ids ?? []).map(async (id, index) => {
@@ -695,9 +695,9 @@ export class ProjectService {
         }
         throw new NotFoundException(
           errMsg,
-          `project.${resourceField}${Array.isArray(ids) ? `[${index}]` : ''}`
+          `project.${resourceField}${Array.isArray(ids) ? `[${index}]` : ''}`,
         );
-      })
+      }),
     );
   }
 }

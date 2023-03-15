@@ -21,7 +21,7 @@ export class XRayMiddleware implements NestMiddleware, NestInterceptor {
   constructor(
     private readonly tracing: TracingService,
     private readonly sampler: Sampler,
-    private readonly config: ConfigService
+    private readonly config: ConfigService,
   ) {}
 
   /**
@@ -29,7 +29,7 @@ export class XRayMiddleware implements NestMiddleware, NestInterceptor {
    */
   use(req: Request, res: Response, next: () => void) {
     const traceData = XRay.utils.processTraceData(
-      req.header('x-amzn-trace-id')
+      req.header('x-amzn-trace-id'),
     );
     const root = new XRay.Segment('cord', traceData.root, traceData.parent);
     const reqData = new XRay.middleware.IncomingRequestData(req);
@@ -109,7 +109,7 @@ export class XRayMiddleware implements NestMiddleware, NestInterceptor {
     if (res && root instanceof XRay.Segment) {
       res.setHeader(
         'x-amzn-trace-id',
-        `Root=${root.trace_id};Sampled=${sampled ? '1' : '0'}`
+        `Root=${root.trace_id};Sampled=${sampled ? '1' : '0'}`,
       );
     }
 

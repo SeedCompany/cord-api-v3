@@ -37,7 +37,7 @@ export class AuthorizationService {
     props: DbPropsOfDto<Resource['prototype']>,
     session: Session,
     otherRoles?: ScopedRole[],
-    sensitivity?: Sensitivity
+    sensitivity?: Sensitivity,
   ): Promise<SecuredResource<Resource, false>> {
     props =
       otherRoles && otherRoles.length > 0
@@ -50,7 +50,7 @@ export class AuthorizationService {
         resource,
         // @ts-expect-error I believe this type is functionality the same.
         // This type has been almost completely dropped from the codebase.
-        props
+        props,
       )
       .secureProps(props);
   }
@@ -62,7 +62,7 @@ export class AuthorizationService {
     resource: TResource,
     baseNode: TResource['prototype'],
     changes: ChangesOf<TResource['prototype']>,
-    pathPrefix?: string | null
+    pathPrefix?: string | null,
   ) {
     // @ts-expect-error using legacy option of this function doesn't use session,
     // but instead using the previously calculated canEdit booleans of secured
@@ -79,7 +79,7 @@ export class AuthorizationService {
    */
   async canList<Resource extends ResourceShape<any>>(
     resource: Resource,
-    session: Session
+    session: Session,
   ): Promise<boolean> {
     return this.privileges.for(session, resource).can('read');
   }

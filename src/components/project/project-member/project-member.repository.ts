@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Node, node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { CreateProjectMember, ProjectMember, ProjectMemberListInput } from '.';
 import { ID, Session, UnsecuredDto } from '../../../common';
 import { DatabaseService, DtoRepository } from '../../../core';
 import {
@@ -15,6 +14,11 @@ import {
   sorting,
 } from '../../../core/database/query';
 import { UserRepository } from '../../user/user.repository';
+import {
+  CreateProjectMember,
+  ProjectMember,
+  ProjectMemberListInput,
+} from './dto';
 
 @Injectable()
 export class ProjectMemberRepository extends DtoRepository<
@@ -46,7 +50,7 @@ export class ProjectMemberRepository extends DtoRepository<
     { userId, projectId, ...input }: CreateProjectMember,
     id: ID,
     session: Session,
-    createdAt: DateTime
+    createdAt: DateTime,
   ) {
     const createProjectMember = this.db
       .query()
@@ -104,10 +108,10 @@ export class ProjectMemberRepository extends DtoRepository<
           node('user', 'User'),
         ])
         .subQuery('user', (sub) =>
-          sub.with('user as node').apply(this.users.hydrate(session.userId))
+          sub.with('user as node').apply(this.users.hydrate(session.userId)),
         )
         .return<{ dto: UnsecuredDto<ProjectMember> }>(
-          merge('props', { user: 'dto' }).as('dto')
+          merge('props', { user: 'dto' }).as('dto'),
         );
   }
 
@@ -118,7 +122,7 @@ export class ProjectMemberRepository extends DtoRepository<
         node(
           'project',
           'Project',
-          filter.projectId ? { id: filter.projectId } : {}
+          filter.projectId ? { id: filter.projectId } : {},
         ),
         relation('out', '', 'member'),
         node('node', 'ProjectMember'),
@@ -133,15 +137,15 @@ export class ProjectMemberRepository extends DtoRepository<
               ])
               .raw(
                 `WHERE size(apoc.coll.intersection(role.value, $filteredRoles)) > 0`,
-                { filteredRoles: filter.roles }
+                { filteredRoles: filter.roles },
               )
-          : q
+          : q,
       )
       .match(requestingUser(session))
       .apply(
         this.privileges.forUser(session).filterToReadable({
           wrapContext: oncePerProject,
-        })
+        }),
       )
       .apply(sorting(ProjectMember, input))
       .apply(paginate(input, this.hydrate(session)))

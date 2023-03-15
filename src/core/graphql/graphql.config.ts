@@ -47,7 +47,7 @@ export class GraphQLConfig implements GqlOptionsFactory {
     private readonly config: ConfigService,
     private readonly cache: CacheService,
     private readonly tracing: GraphqlTracingPlugin,
-    private readonly versionService: VersionService
+    private readonly versionService: VersionService,
   ) {}
 
   async createGqlOptions(): Promise<ApolloDriverConfig> {
@@ -59,7 +59,7 @@ export class GraphQLConfig implements GqlOptionsFactory {
     }
 
     const scalars = mapFromList(getRegisteredScalars(), (scalar) =>
-      scalar instanceof GraphQLScalarType ? [scalar.name, scalar] : null
+      scalar instanceof GraphQLScalarType ? [scalar.name, scalar] : null,
     );
 
     return {
@@ -116,7 +116,7 @@ export class GraphQLConfig implements GqlOptionsFactory {
     const extensions = { ...error.extensions };
 
     const codes = (extensions.codes ??= new JsonSet(
-      this.resolveCodes(error, extensions.code)
+      this.resolveCodes(error, extensions.code),
     ));
 
     // Schema & validation errors don't have meaningful stack traces, so remove them
@@ -176,7 +176,7 @@ export const createFakeStubOperation = () => {
 class GraphQLCacheAdapter implements KeyValueCache {
   constructor(
     private readonly cache: CacheService,
-    private readonly prefix = 'apollo:'
+    private readonly prefix = 'apollo:',
   ) {}
 
   async get(key: string): Promise<string | undefined> {

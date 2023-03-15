@@ -12,7 +12,7 @@ export type DeactivatePropertyOptions<
   TObject extends Partial<MaybeUnsecuredInstance<TResourceStatic>> & {
     id: ID;
   },
-  Key extends keyof DbChanges<TObject> & string
+  Key extends keyof DbChanges<TObject> & string,
 > = CommonPropertyOptions<TResourceStatic, TObject, Key> & {
   numDeactivatedVar?: string;
 };
@@ -26,7 +26,7 @@ export const deactivateProperty =
     TObject extends Partial<MaybeUnsecuredInstance<TResourceStatic>> & {
       id: ID;
     },
-    Key extends keyof DbChanges<TObject> & string
+    Key extends keyof DbChanges<TObject> & string,
   >({
     key,
     changeset,
@@ -59,8 +59,8 @@ export const deactivateProperty =
         ])
         .apply(
           maybeWhereAnd(
-            key instanceof Variable && `type(oldToProp) = ${key.toString()}`
-          )
+            key instanceof Variable && `type(oldToProp) = ${key.toString()}`,
+          ),
         )
         .setValues({
           [`${changeset ? 'oldChange' : 'oldToProp'}.active`]: false,
@@ -68,6 +68,6 @@ export const deactivateProperty =
         })
         .with('oldPropVar')
         .apply(prefixNodeLabelsWithDeleted('oldPropVar'))
-        .return(`count(oldPropVar) as ${numDeactivatedVar}`)
+        .return(`count(oldPropVar) as ${numDeactivatedVar}`),
     );
   };

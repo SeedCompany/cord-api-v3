@@ -16,7 +16,7 @@ export class GraphqlTracingPlugin implements ApolloPlugin<ContextType> {
   async requestDidStart(): Promise<Listener<ContextType>> {
     return {
       executionDidStart: async (
-        reqContext
+        reqContext,
       ): Promise<ExecutionListener<ContextType>> => {
         let segment: Segment;
         try {

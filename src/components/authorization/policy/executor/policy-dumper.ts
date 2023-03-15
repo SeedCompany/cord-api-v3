@@ -31,7 +31,7 @@ export class PolicyDumper {
     private readonly resources: ResourcesHost,
     private readonly executor: PolicyExecutor,
     private readonly auth: AuthenticationService,
-    private readonly config: ConfigService
+    private readonly config: ConfigService,
   ) {}
 
   async write(filename?: string) {
@@ -54,7 +54,7 @@ export class PolicyDumper {
 
     const map = await this.resources.getEnhancedMap();
     const data = sortBy(Object.values(map), (r) => r.name).flatMap((resource) =>
-      this.dumpRes(session, resource)
+      this.dumpRes(session, resource),
     );
     const headerMap = {
       resource: 'Resource',
@@ -84,14 +84,14 @@ export class PolicyDumper {
           }
           return inspect(v);
         }),
-        (_, k) => (headerMap as any)[k] ?? k
-      )
+        (_, k) => (headerMap as any)[k] ?? k,
+      ),
     );
   }
 
   private dumpRes(
     session: Session,
-    resource: EnhancedResource<any>
+    resource: EnhancedResource<any>,
   ): DumpedRow[] {
     const opts = { session, resource, calculatedAsCondition: true };
     return [
@@ -117,7 +117,7 @@ export class PolicyDumper {
             action,
             this.executor.resolve({ ...opts, action, prop }),
           ]),
-        }))
+        })),
       ),
     ];
   }

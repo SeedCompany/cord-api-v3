@@ -12,7 +12,7 @@ import { ProgressReportTeamNewsRepository } from './progress-report-team-news.re
 
 @Injectable()
 export class ProgressReportTeamNewsService extends PromptVariantResponseListService(
-  ProgressReportTeamNewsRepository
+  ProgressReportTeamNewsRepository,
 ) {
   protected async getPrompts(): Promise<readonly Prompt[]> {
     return prompts;
@@ -20,11 +20,11 @@ export class ProgressReportTeamNewsService extends PromptVariantResponseListServ
 
   protected async getPrivilegeContext(dto: UnsecuredDto<TeamNews>) {
     const report = (await this.resources.loadByBaseNode(
-      dto.parent
+      dto.parent,
     )) as ProgressReport;
     return withEffectiveSensitivity(
       withScope({}, report.scope),
-      report.sensitivity
+      report.sensitivity,
     );
   }
 }

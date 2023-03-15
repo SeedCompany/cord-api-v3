@@ -19,7 +19,7 @@ export interface PaginatedListType<T> {
 
 export function PaginatedList<Type, ListItem = Type>(
   itemClass: Class<Type> | AbstractClassType<Type> | GraphQLScalarType,
-  options: ListOptions = {}
+  options: ListOptions = {},
 ) {
   @ObjectType({ isAbstract: true, implements: [IPaginatedList] })
   abstract class PaginatedListClass

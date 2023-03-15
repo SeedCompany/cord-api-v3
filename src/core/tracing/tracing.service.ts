@@ -34,7 +34,7 @@ export class TracingService implements OnModuleDestroy {
     const current = this.segmentStorage.getStore();
     if (!current) {
       throw new ServerException(
-        'Cannot get segment outside of defined context'
+        'Cannot get segment outside of defined context',
       );
     }
     return current as unknown as Segment;

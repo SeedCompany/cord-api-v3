@@ -12,7 +12,7 @@ import { gql } from './gql-tag';
 
 export async function createLocation(
   app: TestApp,
-  input: Partial<CreateLocation> = {}
+  input: Partial<CreateLocation> = {},
 ) {
   const location: CreateLocation = {
     name: faker.random.word() + ' ' + faker.datatype.uuid(),
@@ -36,7 +36,7 @@ export async function createLocation(
       input: {
         location,
       },
-    }
+    },
   );
 
   const actual: Location = result.createLocation.location;
@@ -52,7 +52,7 @@ export async function createLocation(
 export async function addLocationToLanguage(
   app: TestApp,
   locationId: ID,
-  languageId: ID
+  languageId: ID,
 ) {
   const result = await app.graphql.mutate(
     gql`
@@ -70,7 +70,7 @@ export async function addLocationToLanguage(
     {
       langId: languageId,
       locId: locationId,
-    }
+    },
   );
   const actual = result.addLocationToLanguage.locations;
   expect(actual).toBeTruthy();

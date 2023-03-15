@@ -31,13 +31,13 @@ export class PartnershipProducingMediumRepository extends CommonRepository {
             node('mediumsNode', 'Property'),
           ])
           .with(
-            'keys(apoc.coll.frequenciesAsMap(apoc.coll.flatten(collect(mediumsNode.value)))) as mediums'
+            'keys(apoc.coll.frequenciesAsMap(apoc.coll.flatten(collect(mediumsNode.value)))) as mediums',
           )
           .return(
             merge(
-              '[medium in mediums | apoc.map.fromValues([medium, null])]'
-            ).as('allAvailable')
-          )
+              '[medium in mediums | apoc.map.fromValues([medium, null])]',
+            ).as('allAvailable'),
+          ),
       )
       .comment('Grab all the defined producing partnership pairs')
       .subQuery('eng', (sub) =>
@@ -49,12 +49,12 @@ export class PartnershipProducingMediumRepository extends CommonRepository {
           ])
           .return(
             merge(
-              collect(apoc.map.fromValues(['ppm.medium', 'partnership.id']))
-            ).as('defined')
-          )
+              collect(apoc.map.fromValues(['ppm.medium', 'partnership.id'])),
+            ).as('defined'),
+          ),
       )
       .return<{ out: Record<ProductMedium, ID | null> }>(
-        merge('allAvailable', 'defined').as('out')
+        merge('allAvailable', 'defined').as('out'),
       )
       .first();
     if (!res) {
@@ -65,14 +65,14 @@ export class PartnershipProducingMediumRepository extends CommonRepository {
 
   async update(
     engagementId: ID,
-    input: readonly PartnershipProducingMediumInput[]
+    input: readonly PartnershipProducingMediumInput[],
   ) {
     const results = await this.db
       .query()
       .matchNode('eng', 'LanguageEngagement', { id: engagementId })
       .unwind(input.slice(), 'input')
       .comment(
-        "Deactivate all existing PPMs that don't match the current input"
+        "Deactivate all existing PPMs that don't match the current input",
       )
       .subQuery(['eng', 'input'], (sub) =>
         sub
@@ -89,13 +89,13 @@ export class PartnershipProducingMediumRepository extends CommonRepository {
             'ppm.active': 'false',
             'ppm.deletedAt': 'datetime()',
           })
-          .return('count(ppm) as previouslyActivePpmCount')
+          .return('count(ppm) as previouslyActivePpmCount'),
       )
       .comment(
         `
           Merge PPMs based on current input
           This will ignore partnership ID's that are null or don't match a partnership
-        `
+        `,
       )
       .subQuery(['eng', 'input'], (sub) =>
         sub
@@ -113,7 +113,7 @@ export class PartnershipProducingMediumRepository extends CommonRepository {
           .onCreate.setVariables({
             'ppm.createdAt': 'datetime()',
           })
-          .return('count(ppm) as newlyMergedPpmCount')
+          .return('count(ppm) as newlyMergedPpmCount'),
       )
       .return<{
         previouslyActivePpmCount: number;

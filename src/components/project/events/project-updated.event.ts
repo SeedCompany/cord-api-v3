@@ -6,6 +6,6 @@ export class ProjectUpdatedEvent {
     public updated: UnsecuredDto<Project>,
     readonly previous: UnsecuredDto<Project>,
     readonly updates: UpdateProject,
-    readonly session: Session
+    readonly session: Session,
   ) {}
 }

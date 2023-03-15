@@ -6,7 +6,7 @@ import { DataObject, JsonSet } from '~/common';
 export class ProgressReportVarianceExplanationReasonOptions extends DataObject {
   @Once() static get instance() {
     return ProgressReportVarianceExplanationReasonOptions.defaultValue(
-      ProgressReportVarianceExplanationReasonOptions
+      ProgressReportVarianceExplanationReasonOptions,
     );
   }
 
@@ -16,12 +16,12 @@ export class ProgressReportVarianceExplanationReasonOptions extends DataObject {
 
   @Field(() => [String])
   readonly behind: ReadonlySet<string> = new JsonSet([
-    'Delayed activities/activities did not occur/slow start of project',
+    'Delayed activities; activities did not occur; slow start of project',
     'Team is being trained at start of project; they expect to catch up by end of project',
     'Delayed hiring and/or replacement of personnel',
     'Economic/political/civil instability or unrest',
     'Late or delayed partner reporting',
-    'Partner organization issues: leadership/infrastructure',
+    'Partner organization issues currently being addressed.',
     'Health issues with team members or their families',
     'Team member passed away',
     'Security breach/teams in hiding',

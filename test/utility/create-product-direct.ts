@@ -11,7 +11,7 @@ import { gql } from './gql-tag';
 
 export async function createDirectProduct(
   app: TestApp,
-  input: CreateDirectScriptureProduct
+  input: CreateDirectScriptureProduct,
 ) {
   const product: CreateDirectScriptureProduct = {
     mediums: [ProductMedium.Print],
@@ -35,7 +35,7 @@ export async function createDirectProduct(
     `,
     {
       input: product,
-    }
+    },
   );
 
   const actual: RawProduct = result.createDirectScriptureProduct.product;

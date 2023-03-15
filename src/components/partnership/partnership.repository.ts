@@ -72,7 +72,7 @@ export class PartnershipRepository extends DtoRepository<
           out: {
             partner: ['Partner', input.partnerId],
           },
-        })
+        }),
       )
       .return<{ id: ID }>('node.id as id')
       .first();
@@ -109,8 +109,8 @@ export class PartnershipRepository extends DtoRepository<
                   ])
                   .raw('WHERE node.id in $ids')
                   .return('project, node')
-              : q
-          )
+              : q,
+          ),
       )
       .match([
         node('node'),
@@ -128,7 +128,7 @@ export class PartnershipRepository extends DtoRepository<
           view,
           optional: true,
           outputVar: 'projectChangedProps',
-        })
+        }),
       )
       .return<{ dto: UnsecuredDto<Partnership> }>(
         merge('props', 'changedProps', {
@@ -136,20 +136,20 @@ export class PartnershipRepository extends DtoRepository<
             'changedProps.mouStartOverride',
             'props.mouStartOverride',
             'projectChangedProps.mouStart',
-            'projectProps.mouStart'
+            'projectProps.mouStart',
           ),
           mouEnd: coalesce(
             'changedProps.mouEndOverride',
             'props.mouEndOverride',
             'projectChangedProps.mouEnd',
-            'projectProps.mouEnd'
+            'projectProps.mouEnd',
           ),
           parent: 'project',
           project: 'project.id',
           partner: 'partner.id',
           organization: 'org.id',
           changeset: 'changeset.id',
-        }).as('dto')
+        }).as('dto'),
       )
       .map('dto')
       .run();
@@ -179,15 +179,15 @@ export class PartnershipRepository extends DtoRepository<
                     node('changeset', 'Changeset', { id: changeset }),
                   ])
                   .return(['node', 'project'])
-              : q
-          )
+              : q,
+          ),
       )
 
       .match(requestingUser(session))
       .apply(
         this.privileges.forUser(session).filterToReadable({
           wrapContext: oncePerProject,
-        })
+        }),
       )
       .apply(sorting(Partnership, input))
       .apply(paginate(input))
@@ -198,7 +198,7 @@ export class PartnershipRepository extends DtoRepository<
   async verifyRelationshipEligibility(
     projectId: ID,
     partnerId: ID,
-    changeset?: ID
+    changeset?: ID,
   ) {
     return (
       (await this.db
@@ -235,8 +235,8 @@ export class PartnershipRepository extends DtoRepository<
                       node('partner'),
                     ])
                     .return(['partnership'])
-                : q
-            )
+                : q,
+            ),
         )
         .return(['partner', 'project', 'partnership'])
         .asResult<{ partner?: Node; project?: Node; partnership?: Node }>()
@@ -268,8 +268,8 @@ export class PartnershipRepository extends DtoRepository<
                     node('changeset'),
                   ])
                   .return(['partnership'])
-              : q
-          )
+              : q,
+          ),
       )
       .return(['partnership'])
       .asResult<{ partnership?: Node }>()

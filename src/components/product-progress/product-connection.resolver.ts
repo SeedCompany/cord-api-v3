@@ -17,7 +17,7 @@ export class ProductConnectionResolver {
     @Parent() product: Product,
     @Args() { variant }: VariantProgressArg,
     @Loader(ProductProgressByProductLoader)
-    loader: LoaderOf<ProductProgressByProductLoader>
+    loader: LoaderOf<ProductProgressByProductLoader>,
   ): Promise<readonly ProductProgress[]> {
     return (await loader.load({ product, variant })).details;
   }
@@ -29,7 +29,7 @@ export class ProductConnectionResolver {
     @IdArg({ name: 'reportId' }) reportId: ID,
     @Parent() product: Product,
     @Args() { variant }: VariantProgressArg,
-    @AnonSession() session: Session
+    @AnonSession() session: Session,
   ): Promise<ProductProgress> {
     return await this.service.readOne(reportId, product, variant, session);
   }
@@ -41,11 +41,11 @@ export class ProductConnectionResolver {
   async progressOfCurrentReportDue(
     @Parent() product: Product,
     @Args() { variant }: VariantProgressArg,
-    @AnonSession() session: Session
+    @AnonSession() session: Session,
   ): Promise<ProductProgress | undefined> {
     return await this.service.readOneForCurrentReport(
       { product, variant },
-      session
+      session,
     );
   }
 }

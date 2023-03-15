@@ -6,11 +6,11 @@ import { inherit, member, Policy, Role } from '../util';
   inherit(
     r.Engagement.read,
     r.InternshipEngagement.when(member).edit.specifically(
-      (p) => p.ceremony.none
+      (p) => p.ceremony.none,
     ),
     r.LanguageEngagement.when(member).read.specifically(
-      (p) => p.many('pnp', 'paratextRegistryId').edit
-    )
+      (p) => p.many('pnp', 'paratextRegistryId').edit,
+    ),
   ),
   r.EthnologueLanguage.when(member).read,
   r.FieldRegion.read,
@@ -23,7 +23,7 @@ import { inherit, member, Policy, Role } from '../util';
   r.PeriodicReport.read,
   r.Product.read,
   r.Project.when(member).read.specifically(
-    (p) => p.many('step', 'stepChangedAt', 'rootDirectory').edit
+    (p) => p.many('step', 'stepChangedAt', 'rootDirectory').edit,
   ),
   r.ProjectMember.when(member).read,
   r.StepProgress.read,

@@ -27,11 +27,11 @@ declare module 'cypher-query-builder/dist/typings/query' {
      * .return(['x', 'y'])
      */
     subQuery<SubResult>(
-      sub: (query: Query<Result>) => Query<SubResult>
+      sub: (query: Query<Result>) => Query<SubResult>,
     ): Query<Result & SubResult>;
     subQuery<SubResult>(
       importVars: Many<string | Variable | null | undefined>,
-      sub: (query: Query<Result>) => Query<SubResult>
+      sub: (query: Query<Result>) => Query<SubResult>,
     ): Query<Result & SubResult>;
   }
 }
@@ -41,7 +41,7 @@ Query.prototype.subQuery = function subQuery(
   subOrImport:
     | Many<string | Variable | null | undefined>
     | ((query: Query) => void),
-  maybeSub?: (query: Query) => void
+  maybeSub?: (query: Query) => void,
 ) {
   const subClause = new SubQueryClause();
   const subQ = withParent(subClause.asQuery(), this);
@@ -51,9 +51,9 @@ Query.prototype.subQuery = function subQuery(
     const imports = uniq(
       compact(
         many(subOrImport).flatMap((val) =>
-          val instanceof Variable ? varInExp(val) : val
-        )
-      )
+          val instanceof Variable ? varInExp(val) : val,
+        ),
+      ),
     );
     subQ.with(imports);
     maybeSub!(subQ);

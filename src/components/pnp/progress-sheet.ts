@@ -29,7 +29,7 @@ export abstract class ProgressSheet extends Sheet {
   @Once() protected get goalsStart() {
     return this.cell(
       this.goalStartColumn,
-      this.book.namedRange('ProgDraft').start.row
+      this.book.namedRange('ProgDraft').start.row,
     );
   }
   @Once() protected get goalsEnd() {

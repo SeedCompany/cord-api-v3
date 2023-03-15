@@ -100,7 +100,7 @@
     "@nestjs/cli": "^9.1.9",
     "@nestjs/schematics": "^9.0.4",
     "@nestjs/testing": "^9.3.1",
-    "@seedcompany/eslint-plugin": "^3.3.0",
+    "@seedcompany/eslint-plugin": "^3.4.1",
     "@types/common-tags": "^1.8.1",
     "@types/cookie-parser": "^1.4.3",
     "@types/express": "^4.17.16",
@@ -133,6 +133,8 @@
     "typescript-transform-paths": "^3.4.6"
   },
   "resolutions": {
+    "@nestjs/cli/fork-ts-checker-webpack-plugin": "npm:lodash@*",
+    "@nestjs/cli/webpack": "npm:lodash@*",
     "@nestjs/cli/typescript": "^4.8.2"
   },
   "dependenciesMeta": {

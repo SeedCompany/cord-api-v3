@@ -9,6 +9,6 @@ export class PeriodicReportUploadedEvent {
   constructor(
     readonly report: PeriodicReport,
     readonly file: Downloadable<FileNode>,
-    readonly session: Session
+    readonly session: Session,
   ) {}
 }

@@ -43,7 +43,7 @@ export class ProgressSummaryRepository extends CommonRepository {
           .return([
             'sum(tv.value) as totalVerses',
             'sum(tve.value) as totalVerseEquivalents',
-          ])
+          ]),
       )
       .optionalMatch([
         node('report'),
@@ -55,15 +55,15 @@ export class ProgressSummaryRepository extends CommonRepository {
           listConcat(
             // Convert rows of `ps` summaries to mapping keyed by their period
             collect(
-              apoc.map.fromValues(['ps.period', apoc.convert.toMap('ps')])
+              apoc.map.fromValues(['ps.period', apoc.convert.toMap('ps')]),
             ),
             {
               reportId: 'report.id',
               totalVerses: 'totalVerses',
               totalVerseEquivalents: 'totalVerseEquivalents',
-            }
-          )
-        ).as('dto')
+            },
+          ),
+        ).as('dto'),
       )
       .map('dto');
     return await query.run();
@@ -72,7 +72,7 @@ export class ProgressSummaryRepository extends CommonRepository {
   async save(
     report: ProgressReport,
     period: SummaryPeriod,
-    data: ProgressSummary
+    data: ProgressSummary,
   ) {
     await this.db
       .query()

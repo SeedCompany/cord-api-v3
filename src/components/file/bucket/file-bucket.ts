@@ -28,13 +28,13 @@ export abstract class FileBucket {
 
   getSignedUrlForPutObject(
     key: string,
-    options?: Except<PutObjectCommandInput, 'Bucket' | 'Key'>
+    options?: Except<PutObjectCommandInput, 'Bucket' | 'Key'>,
   ) {
     return this.getSignedUrl('putObject', key, options);
   }
   getSignedUrlForGetObject(
     key: string,
-    options?: Except<GetObjectCommandInput, 'Bucket' | 'Key'>
+    options?: Except<GetObjectCommandInput, 'Bucket' | 'Key'>,
   ) {
     return this.getSignedUrl('getObject', key, options);
   }
@@ -44,7 +44,7 @@ export abstract class FileBucket {
     options?: Except<
       GetObjectCommandInput | PutObjectCommandInput,
       'Bucket' | 'Key'
-    >
+    >,
   ): Promise<string>;
   abstract getObject(key: string): Promise<GetObjectOutput>;
   abstract headObject(key: string): Promise<HeadObjectOutput>;

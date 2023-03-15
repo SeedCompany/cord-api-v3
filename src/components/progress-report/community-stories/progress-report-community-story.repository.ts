@@ -8,7 +8,7 @@ import { oncePerProjectFromProgressReportChild } from '../once-per-project-from-
 @Injectable()
 export class ProgressReportCommunityStoryRepository extends PromptVariantResponseRepository(
   [ProgressReport, 'communityStories'],
-  CommunityStory
+  CommunityStory,
 ) {
   protected filterToReadable(session: Session) {
     return this.privileges.forUser(session).filterToReadable({

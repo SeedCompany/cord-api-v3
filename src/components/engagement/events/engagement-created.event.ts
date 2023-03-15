@@ -11,7 +11,7 @@ export class EngagementCreatedEvent {
   constructor(
     public engagement: UnsecuredDto<Engagement>,
     readonly input: CreateLanguageEngagement | CreateInternshipEngagement,
-    readonly session: Session
+    readonly session: Session,
   ) {}
 
   isLanguageEngagement(): this is EngagementCreatedEvent & {

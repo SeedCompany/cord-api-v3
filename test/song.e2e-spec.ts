@@ -34,7 +34,7 @@ describe('Song e2e', () => {
     const song = await createSong(app, { name, scriptureReferences });
     expect(song.scriptureReferences.value).toBeDefined();
     expect(song.scriptureReferences.value).toEqual(
-      expect.arrayContaining(scriptureReferences)
+      expect.arrayContaining(scriptureReferences),
     );
   });
 
@@ -55,13 +55,13 @@ describe('Song e2e', () => {
       `,
       {
         id: song.id,
-      }
+      },
     );
     expect(actual.id).toBe(song.id);
     expect(isValidId(actual.id)).toBe(true);
     expect(actual.name.value).toBe(song.name.value);
     expect(actual.scriptureReferences.value).toEqual(
-      expect.arrayContaining(song.scriptureReferences.value)
+      expect.arrayContaining(song.scriptureReferences.value),
     );
   });
 
@@ -89,14 +89,14 @@ describe('Song e2e', () => {
             scriptureReferences,
           },
         },
-      }
+      },
     );
     const updated = result.updateSong.song;
     expect(updated).toBeTruthy();
     expect(updated.name.value).toBe(newName);
     expect(updated.scriptureReferences.value).toBeDefined();
     expect(updated.scriptureReferences.value).toEqual(
-      expect.arrayContaining(scriptureReferences)
+      expect.arrayContaining(scriptureReferences),
     );
   });
 
@@ -113,7 +113,7 @@ describe('Song e2e', () => {
       `,
       {
         id: st.id,
-      }
+      },
     );
     const actual: Song | undefined = result.deleteSong;
     expect(actual).toBeTruthy();

@@ -13,7 +13,7 @@ export abstract class DataObject {
 
   static defaultValue<T extends DataObject>(
     type: AbstractClassType<T>,
-    partialExtra?: Partial<T>
+    partialExtra?: Partial<T>,
   ): T {
     // @ts-expect-error ignore abstract modifier it's only to prevent instantiation.
     // This is the only time we want to allow it.

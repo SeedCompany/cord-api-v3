@@ -49,7 +49,7 @@ export class LanguageService {
     private readonly engagementService: EngagementService,
     private readonly authorizationService: AuthorizationService,
     private readonly repo: LanguageRepository,
-    @Logger('language:service') private readonly logger: ILogger
+    @Logger('language:service') private readonly logger: ILogger,
   ) {}
 
   async create(input: CreateLanguage, session: Session): Promise<Language> {
@@ -57,20 +57,20 @@ export class LanguageService {
 
     await this.authorizationService.checkPower(
       Powers.CreateEthnologueLanguage,
-      session
+      session,
     );
 
     try {
       const ethnologueId = await this.ethnologueLanguageService.create(
         input?.ethnologue,
-        session
+        session,
       );
 
       // create language and connect ethnologueLanguage to language
       const resultLanguage = await this.repo.create(
         input,
         ethnologueId,
-        session
+        session,
       );
 
       if (!resultLanguage) {
@@ -91,7 +91,7 @@ export class LanguageService {
         throw new DuplicateException(
           `language.${prop}`,
           `${prop} with value ${e.value} already exists`,
-          e
+          e,
         );
       }
       this.logger.error(`Could not create`, { ...input, exception: e });
@@ -103,7 +103,7 @@ export class LanguageService {
   async readOne(
     langId: ID,
     session: Session,
-    view?: ObjectView
+    view?: ObjectView,
   ): Promise<Language> {
     const dto = await this.repo.readOne(langId, session, view);
     return await this.secure(dto, session);
@@ -116,20 +116,20 @@ export class LanguageService {
 
   private async secure(
     dto: UnsecuredDto<Language>,
-    session: Session
+    session: Session,
   ): Promise<Language> {
     const securedProps = await this.authorizationService.secureProperties(
       Language,
       dto,
       session,
       undefined,
-      dto.effectiveSensitivity
+      dto.effectiveSensitivity,
     );
 
     const ethnologue = await this.ethnologueLanguageService.secure(
       dto.ethnologue,
       dto.sensitivity,
-      session
+      session,
     );
 
     return {
@@ -151,7 +151,7 @@ export class LanguageService {
   async update(
     input: UpdateLanguage,
     session: Session,
-    view?: ObjectView
+    view?: ObjectView,
   ): Promise<Language> {
     if (input.hasExternalFirstScripture) {
       await this.verifyExternalFirstScripture(input.id);
@@ -162,7 +162,7 @@ export class LanguageService {
     await this.authorizationService.verifyCanEditChanges(
       Language,
       object,
-      changes
+      changes,
     );
 
     const { ethnologue, ...simpleChanges } = changes;
@@ -172,7 +172,7 @@ export class LanguageService {
         object.ethnologue.id,
         ethnologue,
         object.sensitivity,
-        session
+        session,
       );
     }
 
@@ -192,7 +192,7 @@ export class LanguageService {
 
     if (!canDelete)
       throw new UnauthorizedException(
-        'You do not have the permission to delete this Language'
+        'You do not have the permission to delete this Language',
       );
 
     try {
@@ -205,7 +205,7 @@ export class LanguageService {
 
   async list(
     input: LanguageListInput,
-    session: Session
+    session: Session,
   ): Promise<LanguageListOutput> {
     const results = await this.repo.list(input, session);
     return await mapListResults(results, (dto) => this.secure(dto, session));
@@ -214,25 +214,25 @@ export class LanguageService {
   async listLocations(
     dto: Language,
     input: LocationListInput,
-    session: Session
+    session: Session,
   ): Promise<SecuredLocationList> {
     return await this.locationService.listLocationForResource(
       Language,
       dto,
       'locations',
       input,
-      session
+      session,
     );
   }
 
   async listProjects(
     language: Language,
     input: ProjectListInput,
-    session: Session
+    session: Session,
   ): Promise<SecuredProjectList> {
     const { page, count } = ProjectListInput.defaultValue(
       ProjectListInput,
-      input
+      input,
     );
 
     const result: {
@@ -253,8 +253,8 @@ export class LanguageService {
     result.items = await Promise.all(
       readProject.map(
         async (project) =>
-          await this.projectService.readOne(project.id, session)
-      )
+          await this.projectService.readOne(project.id, session),
+      ),
     );
 
     return {
@@ -269,7 +269,7 @@ export class LanguageService {
 
   async sponsorStartDate(
     language: Language,
-    session: Session
+    session: Session,
   ): Promise<SecuredDate> {
     const result = await this.repo.sponsorStartDate(language);
 
@@ -280,8 +280,8 @@ export class LanguageService {
     try {
       const engagments = await Promise.all(
         result.engagementIds.map((engagementId) =>
-          this.engagementService.readOne(engagementId, session)
-        )
+          this.engagementService.readOne(engagementId, session),
+        ),
       );
       const dates = compact(
         engagments
@@ -293,13 +293,13 @@ export class LanguageService {
                 EngagementStatus.DidNotDevelop,
                 EngagementStatus.Unapproved,
                 EngagementStatus.Rejected,
-              ].includes(engagement.status.value)
+              ].includes(engagement.status.value),
           )
-          .map((engagement) => engagement.startDate.value)
+          .map((engagement) => engagement.startDate.value),
       );
 
       const canRead = engagments.every(
-        (engagement) => engagement.startDate.canRead
+        (engagement) => engagement.startDate.canRead,
       );
 
       const value =
@@ -323,14 +323,14 @@ export class LanguageService {
   async addLocation(
     languageId: ID,
     locationId: ID,
-    _session: Session
+    _session: Session,
   ): Promise<void> {
     try {
       await this.locationService.addLocationToNode(
         'Language',
         languageId,
         'locations',
-        locationId
+        locationId,
       );
     } catch (e) {
       throw new ServerException('Could not add location to language', e);
@@ -340,14 +340,14 @@ export class LanguageService {
   async removeLocation(
     languageId: ID,
     locationId: ID,
-    _session: Session
+    _session: Session,
   ): Promise<void> {
     try {
       await this.locationService.removeLocationFromNode(
         'Language',
         languageId,
         'locations',
-        locationId
+        locationId,
       );
     } catch (e) {
       throw new ServerException('Could not remove location from language', e);
@@ -362,7 +362,7 @@ export class LanguageService {
     if (engagement) {
       throw new InputException(
         'hasExternalFirstScripture can be set to true if the language has no engagements that have firstScripture=true',
-        'language.hasExternalFirstScripture'
+        'language.hasExternalFirstScripture',
       );
     }
   }

@@ -28,7 +28,7 @@ import { member, Policy, Role, variant } from '../util';
     'Start',
     'In Progress -> In Review',
     'In Progress -> Pending Translation',
-    'Withdraw Review Request'
+    'Withdraw Review Request',
   ).execute,
   r.Project.when(member).read.specifically((p) => p.rootDirectory.none),
   r.ProjectMember.when(member).read,

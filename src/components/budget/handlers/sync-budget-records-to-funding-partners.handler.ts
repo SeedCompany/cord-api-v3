@@ -43,7 +43,7 @@ type SubscribedEvent =
   ProjectUpdatedEvent,
   PartnershipCreatedEvent,
   PartnershipUpdatedEvent,
-  PartnershipWillDeleteEvent
+  PartnershipWillDeleteEvent,
 )
 export class SyncBudgetRecordsToFundingPartners
   implements IEventHandler<SubscribedEvent>
@@ -53,7 +53,7 @@ export class SyncBudgetRecordsToFundingPartners
     private readonly budgets: BudgetService,
     private readonly budgetRepo: BudgetRepository,
     private readonly partnershipService: PartnershipService,
-    @Logger('budget:sync-partnerships') private readonly logger: ILogger
+    @Logger('budget:sync-partnerships') private readonly logger: ILogger,
   ) {}
 
   async handle(event: SubscribedEvent) {
@@ -85,7 +85,7 @@ export class SyncBudgetRecordsToFundingPartners
     const budget = await this.budgetRepo.listRecordsForSync(
       projectId,
       event.session,
-      changeset
+      changeset,
     );
 
     const partnerships = await this.determinePartnerships(event, changeset);
@@ -138,7 +138,7 @@ export class SyncBudgetRecordsToFundingPartners
     const list = await this.partnershipService.list(
       { filter: { projectId: event.updated.id } },
       event.session,
-      changeset
+      changeset,
     );
     return list.items.filter(isFunding);
   }
@@ -147,7 +147,7 @@ export class SyncBudgetRecordsToFundingPartners
     budget: PartialBudget,
     partnership: Partnership,
     event: SubscribedEvent,
-    changeset?: ID
+    changeset?: ID,
   ) {
     const organizationId = partnership.organization;
 
@@ -167,14 +167,14 @@ export class SyncBudgetRecordsToFundingPartners
       organizationId,
       removals,
       event.session,
-      changeset
+      changeset,
     );
     await this.addRecords(
       budget,
       organizationId,
       additions,
       event.session,
-      changeset
+      changeset,
     );
   }
 
@@ -183,7 +183,7 @@ export class SyncBudgetRecordsToFundingPartners
     organizationId: ID,
     additions: readonly FiscalYear[],
     session: Session,
-    changeset?: ID
+    changeset?: ID,
   ) {
     await Promise.all(
       additions.map((fiscalYear) =>
@@ -195,7 +195,7 @@ export class SyncBudgetRecordsToFundingPartners
               organizationId,
             },
             session,
-            changeset
+            changeset,
           )
           .catch((e) => {
             if (e instanceof DuplicateException) {
@@ -204,8 +204,8 @@ export class SyncBudgetRecordsToFundingPartners
               return;
             }
             throw e;
-          })
-      )
+          }),
+      ),
     );
   }
 
@@ -214,31 +214,31 @@ export class SyncBudgetRecordsToFundingPartners
     organizationId: ID,
     removals: readonly FiscalYear[],
     session: Session,
-    changeset?: ID
+    changeset?: ID,
   ) {
     const recordsToDelete = budget.records.filter(
       (record) =>
         record.organization === organizationId &&
-        removals.includes(record.fiscalYear)
+        removals.includes(record.fiscalYear),
     );
 
     await Promise.all(
       recordsToDelete.map((record) =>
-        this.budgets.deleteRecord(record.id, session, changeset)
-      )
+        this.budgets.deleteRecord(record.id, session, changeset),
+      ),
     );
   }
 }
 
 const isFunding = (partnership: Partnership) =>
   readSecured(partnership.types, `partnership's types`).includes(
-    PartnerType.Funding
+    PartnerType.Funding,
   );
 
 type FiscalYear = number;
 
 const partnershipFiscalYears = (
-  partnership: Partnership
+  partnership: Partnership,
 ): readonly FiscalYear[] => {
   if (!isFunding(partnership)) {
     return [];
@@ -246,7 +246,7 @@ const partnershipFiscalYears = (
 
   const start = readSecured(
     partnership.mouStart,
-    `partnership's mouStart date`
+    `partnership's mouStart date`,
   );
   const end = readSecured(partnership.mouEnd, `partnership's mouEnd date`);
   return start && end ? fiscalYears(start, end) : [];
@@ -254,11 +254,11 @@ const partnershipFiscalYears = (
 
 const readSecured = <T extends Secured<any>>(
   field: T,
-  errorMessage: string
+  errorMessage: string,
 ): Exclude<T['value'], undefined> => {
   if (!field.canRead) {
     throw new UnauthorizedException(
-      `Current user cannot read ${errorMessage} thus record sync cannot continue`
+      `Current user cannot read ${errorMessage} thus record sync cannot continue`,
     );
   }
   return field.value;

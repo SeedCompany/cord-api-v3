@@ -22,6 +22,6 @@ export const DbUnique =
 
 export const getDbPropertyUnique = (
   type: AbstractClassType<unknown>,
-  property: string
+  property: string,
 ): string | undefined =>
   Reflect.getMetadata(DbUniqueSymbol, type.prototype, property);

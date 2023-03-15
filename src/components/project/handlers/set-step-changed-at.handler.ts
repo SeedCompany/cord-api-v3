@@ -16,7 +16,7 @@ export class ProjectStepChangedAtHandler
   constructor(
     private readonly db: DatabaseService,
     private readonly projectService: ProjectService,
-    @Logger('project:step-changed-at') private readonly logger: ILogger
+    @Logger('project:step-changed-at') private readonly logger: ILogger,
   ) {}
 
   async handle(event: ProjectUpdatedEvent) {

@@ -26,7 +26,7 @@ export class StepProgressResolver {
         in these cases a null \`value\` is returned.
       `,
     })
-    format: ProgressFormat
+    format: ProgressFormat,
   ): Promise<SecuredFloatNullable> {
     const product = await products.load(sp.productId);
     if (
@@ -45,7 +45,7 @@ export class StepProgressResolver {
       [ProgressFormat.VerseEquivalents]: product.totalVerseEquivalents,
     });
     return await mapSecuredValue(sp.completed, async (val) =>
-      factor != null ? (val / denominator) * factor : null
+      factor != null ? (val / denominator) * factor : null,
     );
   }
 

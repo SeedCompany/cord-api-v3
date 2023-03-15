@@ -50,7 +50,7 @@ export class ProjectRepository extends CommonRepository {
   constructor(
     db: DatabaseService,
     private readonly config: ConfigService,
-    private readonly privileges: Privileges
+    private readonly privileges: Privileges,
   ) {
     super(db);
   }
@@ -139,13 +139,13 @@ export class ProjectRepository extends CommonRepository {
             owningOrganization: 'organization.id',
             engagementTotal: 'count(engagement)',
             changeset: 'changeset.id',
-          }).as('dto')
+          }).as('dto'),
         );
   }
 
   getActualChanges(
     currentProject: UnsecuredDto<Project>,
-    input: UpdateProject
+    input: UpdateProject,
   ) {
     return getChanges(IProject)(currentProject, {
       ...input,
@@ -189,8 +189,8 @@ export class ProjectRepository extends CommonRepository {
           {
             initialProps,
             baseNodeProps: { type },
-          }
-        )
+          },
+        ),
       )
       .apply(
         createRelationships(IProject, 'out', {
@@ -199,7 +199,7 @@ export class ProjectRepository extends CommonRepository {
           otherLocations: ['Location', otherLocationIds],
           marketingLocation: ['Location', marketingLocationId],
           owningOrganization: ['Organization', this.config.defaultOrg.id],
-        })
+        }),
       )
       .return<{ id: ID }>('node.id as id')
       .first();
@@ -212,7 +212,7 @@ export class ProjectRepository extends CommonRepository {
   async updateProperties(
     currentProject: UnsecuredDto<Project>,
     simpleChanges: DbChanges<TranslationProject | InternshipProject>,
-    changeset?: ID
+    changeset?: ID,
   ) {
     return await this.db.updateProperties({
       type:
@@ -229,14 +229,14 @@ export class ProjectRepository extends CommonRepository {
     relationName: string,
     otherLabel: string,
     id: ID,
-    otherId: ID | null
+    otherId: ID | null,
   ) {
     await super.updateRelation(
       relationName,
       otherLabel,
       id,
       otherId,
-      'Project'
+      'Project',
     );
   }
 
@@ -254,7 +254,7 @@ export class ProjectRepository extends CommonRepository {
             query
               .apply(matchProjectSens('node'))
               .return<{ sortValue: string }>('sensitivity as sortValue'),
-        })
+        }),
       )
       .apply(paginate(input, this.hydrate(session.userId)))
       .first();

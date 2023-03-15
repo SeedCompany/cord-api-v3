@@ -8,7 +8,7 @@ import { TracingService } from '../tracing';
 export class Pg {
   constructor(
     private readonly pool: Pool,
-    private readonly tracing: TracingService
+    private readonly tracing: TracingService,
   ) {}
 
   /**
@@ -20,7 +20,7 @@ export class Pg {
 
   async query<R = unknown>(
     queryText: string,
-    values?: unknown[]
+    values?: unknown[],
   ): Promise<readonly R[]> {
     // Grab transaction client creator & initialize it if needed.
     const txClient = await this.clientStore.getStore()?.();
@@ -53,7 +53,7 @@ export class Pg {
         // to the code defining the query being executed.
         e.stack = [
           ...dropRightWhile(e.stack!.split('\n'), (line) =>
-            line.startsWith('    at')
+            line.startsWith('    at'),
           ),
           ...new Error('').stack!.split('\n').slice(2),
         ].join('\n');

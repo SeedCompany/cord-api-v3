@@ -40,7 +40,7 @@ export class SearchService {
     private readonly resources: ResourceResolver,
     private readonly auth: AuthorizationService,
     private readonly partners: PartnerService,
-    private readonly repo: SearchRepository
+    private readonly repo: SearchRepository,
   ) {}
 
   async search(input: SearchInput, session: Session): Promise<SearchOutput> {
@@ -66,7 +66,7 @@ export class SearchService {
       results
         .map(({ node, matchedProps }) => ({
           type: this.resources.resolveTypeByBaseNode(
-            node
+            node,
           ) as keyof SearchableMap,
           id: node.properties.id,
           matchedProps,
@@ -87,7 +87,7 @@ export class SearchService {
                       },
                     ]
                   : []),
-              ]
+              ],
         )
         .map(
           async ({ id, matchedProps, type }): Promise<SearchResult | null> => {
@@ -103,12 +103,12 @@ export class SearchService {
               sessionOrUserId: session,
             });
             return matchedProps.some((key) =>
-              has(key, perms) ? (perms[key] as Permission).canRead : true
+              has(key, perms) ? (perms[key] as Permission).canRead : true,
             )
               ? hydrated
               : null;
-          }
-        )
+          },
+        ),
     );
 
     return {

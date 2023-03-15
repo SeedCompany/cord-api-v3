@@ -47,7 +47,7 @@ export class ParameterTransformer {
         value.months,
         value.days,
         value.seconds,
-        value.milliseconds * 1e6
+        value.milliseconds * 1e6,
       );
     }
 

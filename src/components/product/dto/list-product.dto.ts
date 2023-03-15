@@ -47,7 +47,7 @@ export class ProductListInput extends SortablePaginationInput<keyof Product>({
 
 @ObjectType()
 export class ProductListOutput extends PaginatedList<Product, AnyProduct>(
-  Product
+  Product,
 ) {}
 
 @ObjectType({

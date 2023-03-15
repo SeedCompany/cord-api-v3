@@ -18,7 +18,7 @@ import { CreateFilm, Film, FilmListInput } from './dto';
 export class FilmRepository extends DtoRepository(Film) {
   constructor(
     private readonly scriptureRefs: ScriptureReferenceRepository,
-    db: DatabaseService
+    db: DatabaseService,
   ) {
     super(db);
   }
@@ -55,7 +55,7 @@ export class FilmRepository extends DtoRepository(Film) {
         .return<{ dto: UnsecuredDto<Film> }>(
           merge('props', {
             scriptureReferences: 'scriptureReferences',
-          }).as('dto')
+          }).as('dto'),
         );
   }
 }

@@ -30,7 +30,7 @@ export class CommentableResolver {
     @Parent() parent: Commentable & Resource,
     @ListArg(CommentThreadListInput) input: CommentThreadListInput,
     @LoggedInSession() session: Session,
-    @Loader(CommentThreadLoader) commentThreads: LoaderOf<CommentThreadLoader>
+    @Loader(CommentThreadLoader) commentThreads: LoaderOf<CommentThreadLoader>,
   ): Promise<CommentThreadList> {
     const list = await this.service.listThreads(parent, input, session);
     commentThreads.primeAll(list.items);

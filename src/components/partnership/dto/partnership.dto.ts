@@ -27,7 +27,7 @@ import { PartnershipAgreementStatus } from './partnership-agreement-status.enum'
   description: SecuredEnum.descriptionFor('a partnership agreement status'),
 })
 export abstract class SecuredPartnershipAgreementStatus extends SecuredEnum(
-  PartnershipAgreementStatus
+  PartnershipAgreementStatus,
 ) {}
 
 @ObjectType({
@@ -35,7 +35,7 @@ export abstract class SecuredPartnershipAgreementStatus extends SecuredEnum(
 })
 export abstract class SecuredFinancialReportingType extends SecuredEnum(
   FinancialReportingType,
-  { nullable: true }
+  { nullable: true },
 ) {}
 
 @ObjectType({

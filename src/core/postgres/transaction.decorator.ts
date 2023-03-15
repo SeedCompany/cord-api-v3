@@ -17,7 +17,7 @@ export const PgTransaction =
   <T>(
     target: any,
     methodName: string | symbol,
-    theDescriptor: TypedPropertyDescriptor<T>
+    theDescriptor: TypedPropertyDescriptor<T>,
   ) => {
     // Use property-based injection to get access to the Pg object at a known location.
     if (target[PgKey] === undefined) {

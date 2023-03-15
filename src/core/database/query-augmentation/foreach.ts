@@ -29,7 +29,7 @@ declare module 'cypher-query-builder/dist/typings/query' {
     forEach(
       variable: string,
       list: string,
-      each: string | ((query: Query) => Query)
+      each: string | ((query: Query) => Query),
     ): this;
   }
 }
@@ -38,7 +38,7 @@ Query.prototype.forEach = function forEach(
   this: Query,
   variable: string,
   list: string,
-  each: string | ((query: Query) => Query)
+  each: string | ((query: Query) => Query),
 ) {
   const clause = new ForEachClause(variable, list);
   const q = clause.asQuery();
@@ -49,7 +49,7 @@ Query.prototype.forEach = function forEach(
 class ForEachClause extends SubClauseCollection {
   constructor(
     private readonly variable: string,
-    private readonly list: string
+    private readonly list: string,
   ) {
     super();
   }
@@ -58,7 +58,7 @@ class ForEachClause extends SubClauseCollection {
     return this.wrapBuild(
       `FOREACH (${this.variable} IN ${this.list} | `,
       ')',
-      super.build()
+      super.build(),
     );
   }
 }

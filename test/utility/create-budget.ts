@@ -20,7 +20,7 @@ export async function listBudgets(app: TestApp) {
         }
       }
       ${fragments.budget}
-    `
+    `,
   );
   const budgets = result.budgets.items;
   expect(budgets).toBeTruthy();
@@ -29,7 +29,7 @@ export async function listBudgets(app: TestApp) {
 
 export async function readOneBudgetRecordOrganization(
   app: TestApp,
-  budgetId: string
+  budgetId: string,
 ): Promise<Organization & { canRead: boolean; canEdit: boolean }> {
   const { budget: actual } = await app.graphql.query(
     gql`
@@ -42,7 +42,7 @@ export async function readOneBudgetRecordOrganization(
     `,
     {
       id: budgetId,
-    }
+    },
   );
 
   expect(actual.id).toBe(budgetId);
@@ -56,7 +56,7 @@ export async function readOneBudgetRecordOrganization(
 
 export async function readBudgetRecords(
   app: TestApp,
-  id: string
+  id: string,
 ): Promise<BudgetRecord[]> {
   const result = await app.graphql.query(
     gql`
@@ -69,7 +69,7 @@ export async function readBudgetRecords(
     `,
     {
       id: id,
-    }
+    },
   );
   expect(result.budget.id).toBe(id);
   expect(isValidId(result.budget.id)).toBe(true);
@@ -88,7 +88,7 @@ export async function readOneBudget(app: TestApp, id: string): Promise<Budget> {
     `,
     {
       id: id,
-    }
+    },
   );
 
   expect(actual.id).toBe(id);
@@ -98,7 +98,7 @@ export async function readOneBudget(app: TestApp, id: string): Promise<Budget> {
 
 export async function createBudget(
   app: TestApp,
-  input: Partial<CreateBudget> = {}
+  input: Partial<CreateBudget> = {},
 ) {
   const budget: CreateBudget = {
     projectId: await generateId(),
@@ -122,7 +122,7 @@ export async function createBudget(
           ...budget,
         },
       },
-    }
+    },
   );
 
   const actual: Budget = result.createBudget.budget;

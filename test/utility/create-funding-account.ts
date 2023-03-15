@@ -18,7 +18,7 @@ export async function listFundingAccounts(app: TestApp) {
         }
       }
       ${fragments.fundingAccount}
-    `
+    `,
   );
   const fundingAccounts = result.fundingAccounts.items;
   expect(fundingAccounts).toBeTruthy();
@@ -35,7 +35,7 @@ export async function readOneFundingAccount(app: TestApp, id: string) {
       }
       ${fragments.fundingAccount}
     `,
-    { id }
+    { id },
   );
   const actual = result.fundingAccount;
   expect(actual).toBeTruthy();
@@ -44,7 +44,7 @@ export async function readOneFundingAccount(app: TestApp, id: string) {
 
 export async function createFundingAccount(
   app: TestApp,
-  input: Partial<CreateFundingAccount> = {}
+  input: Partial<CreateFundingAccount> = {},
 ) {
   const name = input.name || faker.hacker.noun() + faker.company.name();
   const accountNumber =
@@ -69,7 +69,7 @@ export async function createFundingAccount(
           accountNumber,
         },
       },
-    }
+    },
   );
   const st: FundingAccount = result.createFundingAccount.fundingAccount;
 

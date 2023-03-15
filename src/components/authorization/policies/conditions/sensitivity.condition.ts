@@ -18,7 +18,7 @@ export class SensitivityCondition<
     | ResourceShape<HasSensitivity>
     | (ResourceShape<any> & {
         ConfirmThisClassPassesSensitivityToPolicies: true;
-      })
+      }),
 > implements Condition<TResourceStatic>
 {
   constructor(private readonly access: Sensitivity) {}
@@ -35,7 +35,7 @@ export class SensitivityCondition<
 
     if (!actual) {
       throw new Error(
-        "Needed object's sensitivity but object's sensitivity wasn't given"
+        "Needed object's sensitivity but object's sensitivity wasn't given",
       );
     }
 
@@ -51,7 +51,7 @@ export class SensitivityCondition<
     return query.subQuery('project', (sub) =>
       sub
         .apply(matchProjectSens())
-        .return(`${rankSens('sensitivity')} as ${CQL_VAR}`)
+        .return(`${rankSens('sensitivity')} as ${CQL_VAR}`),
     );
   }
 
@@ -88,7 +88,7 @@ export const sensOnlyLow = new SensitivityCondition(Sensitivity.Low);
  */
 export const withEffectiveSensitivity = <T extends object>(
   obj: T,
-  sensitivity: Sensitivity
+  sensitivity: Sensitivity,
 ) =>
   Object.defineProperty(obj, EffectiveSensitivity, {
     value: sensitivity,

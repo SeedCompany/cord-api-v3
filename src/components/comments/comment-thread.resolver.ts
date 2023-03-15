@@ -27,7 +27,7 @@ import {
 export class CommentThreadResolver {
   constructor(
     private readonly service: CommentService,
-    private readonly resources: ResourceLoader
+    private readonly resources: ResourceLoader,
   ) {}
 
   @Query(() => CommentThread, {
@@ -35,7 +35,7 @@ export class CommentThreadResolver {
   })
   async commentThread(
     @IdArg() id: ID,
-    @Loader(CommentThreadLoader) commentThreads: LoaderOf<CommentThreadLoader>
+    @Loader(CommentThreadLoader) commentThreads: LoaderOf<CommentThreadLoader>,
   ): Promise<CommentThread> {
     return await commentThreads.load(id);
   }
@@ -47,7 +47,7 @@ export class CommentThreadResolver {
     @IdArg({ name: 'resource' }) resourceId: ID,
     @ListArg(CommentThreadListInput) input: CommentThreadListInput,
     @LoggedInSession() session: Session,
-    @Loader(CommentThreadLoader) commentThreads: LoaderOf<CommentThreadLoader>
+    @Loader(CommentThreadLoader) commentThreads: LoaderOf<CommentThreadLoader>,
   ): Promise<CommentThreadList> {
     const resource = await this.service.loadCommentable(resourceId);
     const list = await this.service.listThreads(resource, input, session);
@@ -62,7 +62,7 @@ export class CommentThreadResolver {
     @AnonSession() session: Session,
     @Parent() { id }: CommentThread,
     @ListArg(CommentListInput) input: CommentListInput,
-    @Loader(CommentLoader) comments: LoaderOf<CommentLoader>
+    @Loader(CommentLoader) comments: LoaderOf<CommentLoader>,
   ): Promise<CommentList> {
     const list = await this.service.listCommentsByThreadId(id, input, session);
     comments.primeAll(list.items);
@@ -82,7 +82,7 @@ export class CommentThreadResolver {
         and null implies that the first comment is the latest.
       `,
     })
-    includeFirst: boolean
+    includeFirst: boolean,
   ) {
     return thread.firstComment.id === thread.latestComment.id && includeFirst
       ? thread.latestComment
@@ -97,7 +97,7 @@ export class CommentThreadResolver {
   @ResolveField(() => User)
   async creator(
     @Parent() thread: CommentThread,
-    @Loader(UserLoader) users: LoaderOf<UserLoader>
+    @Loader(UserLoader) users: LoaderOf<UserLoader>,
   ) {
     return await users.load(thread.creator);
   }

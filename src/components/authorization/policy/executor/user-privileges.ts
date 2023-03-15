@@ -17,25 +17,25 @@ import { UserResourcePrivileges } from './user-resource-privileges';
 export class UserPrivileges {
   constructor(
     readonly session: Session,
-    private readonly policyExecutor: PolicyExecutor
+    private readonly policyExecutor: PolicyExecutor,
   ) {}
 
   forResource<TResourceStatic extends ResourceShape<any>>(
     resource: TResourceStatic | EnhancedResource<TResourceStatic>,
-    object?: ResourceObjectContext<TResourceStatic>
+    object?: ResourceObjectContext<TResourceStatic>,
   ) {
     return new UserResourcePrivileges(
       resource,
       object,
       this.session,
-      this.policyExecutor
+      this.policyExecutor,
     );
   }
 
   forEdge<TResourceStatic extends ResourceShape<any>>(
     resource: TResourceStatic | EnhancedResource<TResourceStatic>,
     key: SecuredPropsPlusExtraKey<TResourceStatic>,
-    object?: ResourceObjectContext<TResourceStatic>
+    object?: ResourceObjectContext<TResourceStatic>,
   ): UserEdgePrivileges<
     TResourceStatic,
     SecuredPropsPlusExtraKey<TResourceStatic>,
@@ -44,7 +44,7 @@ export class UserPrivileges {
   forEdge<TResourceStatic extends ResourceShape<any>>(
     resource: TResourceStatic | EnhancedResource<TResourceStatic>,
     key: ChildSinglesKey<TResourceStatic>,
-    object?: ResourceObjectContext<TResourceStatic>
+    object?: ResourceObjectContext<TResourceStatic>,
   ): UserEdgePrivileges<
     TResourceStatic,
     ChildSinglesKey<TResourceStatic>,
@@ -53,7 +53,7 @@ export class UserPrivileges {
   forEdge<TResourceStatic extends ResourceShape<any>>(
     resource: TResourceStatic | EnhancedResource<TResourceStatic>,
     key: ChildListsKey<TResourceStatic>,
-    object?: ResourceObjectContext<TResourceStatic>
+    object?: ResourceObjectContext<TResourceStatic>,
   ): UserEdgePrivileges<
     TResourceStatic,
     ChildListsKey<TResourceStatic>,
@@ -62,14 +62,14 @@ export class UserPrivileges {
   forEdge<TResourceStatic extends ResourceShape<any>>(
     resource: TResourceStatic | EnhancedResource<TResourceStatic>,
     key: string,
-    object?: ResourceObjectContext<TResourceStatic>
+    object?: ResourceObjectContext<TResourceStatic>,
   ) {
     return new UserEdgePrivileges(
       resource,
       key,
       object,
       this.session,
-      this.policyExecutor
+      this.policyExecutor,
     );
   }
 
@@ -82,7 +82,7 @@ export class UserPrivileges {
         power,
         `User ${
           this.session.anonymous ? 'anon' : this.session.userId
-        } does not have the requested power: ${power}`
+        } does not have the requested power: ${power}`,
       );
     }
   }

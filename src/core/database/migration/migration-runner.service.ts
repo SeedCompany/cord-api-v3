@@ -16,7 +16,7 @@ export class MigrationRunner {
     private readonly db: DatabaseService,
     private readonly discover: MigrationDiscovery,
     private readonly config: ConfigService,
-    @Logger('database:migration') private readonly logger: ILogger
+    @Logger('database:migration') private readonly logger: ILogger,
   ) {}
 
   async syncUp() {
@@ -62,7 +62,7 @@ export class MigrationRunner {
       }
       if (current < latest) {
         this.logger.info(
-          'Schema migration finished incompletely due to error(s)'
+          'Schema migration finished incompletely due to error(s)',
         );
       } else {
         this.logger.info('Schema is now up to date');
@@ -82,7 +82,7 @@ export class MigrationRunner {
       },
       {
         queryLogger: this.logger,
-      }
+      },
     );
   }
 

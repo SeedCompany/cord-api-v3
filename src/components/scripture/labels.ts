@@ -5,7 +5,7 @@ import { mergeScriptureRanges } from './merge-to-minimal-set';
 
 export const labelOfScriptureRange = (
   ref: ScriptureRange,
-  omit?: 'book' | 'chapter'
+  omit?: 'book' | 'chapter',
 ): string => {
   const { start, end } = mapRange(ref, Verse.fromRef);
   if (start.book.equals(end.book)) {

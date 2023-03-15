@@ -42,7 +42,7 @@ import { CoreModule, LoggerModule } from './core';
 
 assert(
   keys<{ foo: string }>().length === 1,
-  'Sanity check for key transformer failed'
+  'Sanity check for key transformer failed',
 );
 
 @Module({

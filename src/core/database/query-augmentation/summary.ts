@@ -65,19 +65,19 @@ Query.prototype.executeAndReturnSummary =
   };
 
 Query.prototype.executeAndReturnStats = async function executeAndReturnStats(
-  this: Query
+  this: Query,
 ) {
   const summary = await this.executeAndReturnSummary();
   return summary.updateStatistics.updates();
 };
 
 Query.prototype.executeAndLogStats = async function executeAndLogStats(
-  this: Query
+  this: Query,
 ) {
   const summary = await this.executeAndReturnSummary();
   const stats = summary.updateStatistics.updates();
   const filteredStats = Object.fromEntries(
-    Object.entries(stats).filter(([_, num]) => num > 0)
+    Object.entries(stats).filter(([_, num]) => num > 0),
   );
   const name = String((this as any).name ?? 'Query');
   Logger.log({ message: name, ...filteredStats }, 'database:results:stats');

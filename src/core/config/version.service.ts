@@ -12,7 +12,7 @@ export class VersionService implements OnModuleInit {
   constructor(
     private readonly config: ConfigService,
     private readonly env: EnvironmentService,
-    @Logger('version') private readonly logger: ILogger
+    @Logger('version') private readonly logger: ILogger,
   ) {}
 
   async onModuleInit() {
@@ -81,7 +81,7 @@ export class Version {
   constructor(
     readonly hash?: string,
     readonly branch?: string,
-    readonly packageJson?: string
+    readonly packageJson?: string,
   ) {}
 
   get known() {

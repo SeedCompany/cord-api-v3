@@ -11,7 +11,7 @@ export class PnpCaptureSummaryForMultiplePeriodsMigration extends BaseMigration 
   constructor(
     private readonly files: FileService,
     private readonly reports: PeriodicReportService,
-    private readonly eventBus: IEventBus
+    private readonly eventBus: IEventBus,
   ) {
     super();
   }
@@ -19,7 +19,7 @@ export class PnpCaptureSummaryForMultiplePeriodsMigration extends BaseMigration 
   async up() {
     const result = await this.findSummariesWithoutPeriod();
     this.logger.info(
-      `Found ${result.length} reports with summaries without a period`
+      `Found ${result.length} reports with summaries without a period`,
     );
 
     const session = this.fakeAdminSession;
@@ -72,7 +72,7 @@ export class PnpCaptureSummaryForMultiplePeriodsMigration extends BaseMigration 
           ])
           .return('version')
           .orderBy('version.createdAt', 'DESC')
-          .raw('LIMIT 1')
+          .raw('LIMIT 1'),
       )
       .return<{ reportId: ID; versionId: ID }>([
         'r.id as reportId',

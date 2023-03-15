@@ -31,10 +31,10 @@ export type AllPermissionsView<TResourceStatic extends ResourceShape<any>> =
     Record<ChildListsKey<TResourceStatic>, Record<ChildListAction, boolean>>;
 
 export const createAllPermissionsView = <
-  TResourceStatic extends ResourceShape<any>
+  TResourceStatic extends ResourceShape<any>,
 >(
   resource: EnhancedResource<TResourceStatic>,
-  privileges: UserResourcePrivileges<TResourceStatic>
+  privileges: UserResourcePrivileges<TResourceStatic>,
 ) =>
   createLazyRecord<AllPermissionsView<TResourceStatic>>({
     getKeys: () => [...resource.securedPropsPlusExtra, ...resource.childKeys],
@@ -64,10 +64,10 @@ export type AllPermissionsOfEdgeView<TAction extends string> = Record<
 export const createAllPermissionsOfEdgeView = <
   TResourceStatic extends ResourceShape<any>,
   TKey extends string,
-  TAction extends string
+  TAction extends string,
 >(
   resource: EnhancedResource<TResourceStatic>,
-  privileges: UserEdgePrivileges<TResourceStatic, TKey, TAction>
+  privileges: UserEdgePrivileges<TResourceStatic, TKey, TAction>,
 ) =>
   createLazyRecord<Record<TAction, boolean>>({
     getKeys: () => [],

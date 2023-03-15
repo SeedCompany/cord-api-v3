@@ -36,7 +36,7 @@ class MemberCondition<TResourceStatic extends ResourceWithScope>
   setupCypherContext(
     query: Query,
     prevApplied: Set<any>,
-    other: AsCypherParams<TResourceStatic>
+    other: AsCypherParams<TResourceStatic>,
   ) {
     if (prevApplied.has('membership')) {
       return query;
@@ -81,14 +81,14 @@ class MemberWithRolesCondition<TResourceStatic extends ResourceWithScope>
       matchProjectScopedRoles({
         session: variable('requestingUser'),
         outputVar: CQL_VAR,
-      })
+      }),
     );
   }
 
   asCypherCondition(query: Query) {
     const required = query.params.addParam(
       this.roles.map(rolesForScope('project')),
-      'requiredMemberRoles'
+      'requiredMemberRoles',
     );
     return `size(apoc.coll.intersection(${CQL_VAR}, ${String(required)})) > 0`;
   }

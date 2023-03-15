@@ -51,7 +51,7 @@ import {
 export class FileRepository extends CommonRepository {
   constructor(
     db: DatabaseService,
-    @Logger('file:repository') private readonly logger: ILogger
+    @Logger('file:repository') private readonly logger: ILogger,
   ) {
     super(db);
   }
@@ -84,7 +84,7 @@ export class FileRepository extends CommonRepository {
   async getByName(
     parentId: ID,
     name: string,
-    _session: Session
+    _session: Session,
   ): Promise<FileNode> {
     const result = await this.db
       .query()
@@ -103,7 +103,7 @@ export class FileRepository extends CommonRepository {
 
   async getParentsById(
     id: ID,
-    _session: Session
+    _session: Session,
   ): Promise<readonly FileNode[]> {
     const result = await this.db
       .query()
@@ -168,7 +168,7 @@ export class FileRepository extends CommonRepository {
             .with('node')
             .with('node')
             .where({ node: hasLabel(FileNodeType.Directory) })
-            .apply(this.hydrateDirectory())
+            .apply(this.hydrateDirectory()),
         )
         .return<{ dto: FileNode }>('dto');
   }
@@ -197,7 +197,7 @@ export class FileRepository extends CommonRepository {
             modifiedAt: 'version.createdAt',
             createdById: 'createdBy.id',
             canDelete: true,
-          }).as('dto')
+          }).as('dto'),
         );
   }
 
@@ -236,7 +236,7 @@ export class FileRepository extends CommonRepository {
                 .return([
                   'versions[0] as firstVersion',
                   'versions[-1] as latestVersion',
-                ])
+                ]),
             )
             // endregion
             // region For each latest file version grab its size
@@ -276,7 +276,7 @@ export class FileRepository extends CommonRepository {
               'firstFile',
               'latestVersion',
               'modifiedBy',
-            ])
+            ]),
         )
         .return<{ dto: Directory }>(
           merge('props', {
@@ -288,7 +288,7 @@ export class FileRepository extends CommonRepository {
             modifiedBy: 'coalesce(modifiedBy, createdBy).id',
             modifiedAt: 'coalesce(latestVersion, node).createdAt',
             canDelete: true,
-          }).as('dto')
+          }).as('dto'),
         );
 
     function singleVersionFrom(list: string, out: string, order: Direction) {
@@ -304,7 +304,7 @@ export class FileRepository extends CommonRepository {
             .with(list)
             .with(list)
             .raw(`WHERE size(${list}) = 0`)
-            .return(`null as ${out}`)
+            .return(`null as ${out}`),
         );
     }
   }
@@ -323,7 +323,7 @@ export class FileRepository extends CommonRepository {
             type: `"${FileNodeType.FileVersion}"`,
             createdById: 'createdBy.id',
             canDelete: true,
-          }).as('dto')
+          }).as('dto'),
         );
   }
 
@@ -338,7 +338,7 @@ export class FileRepository extends CommonRepository {
           ])
           .return('version')
           .orderBy('version.createdAt', 'DESC')
-          .raw('LIMIT 1')
+          .raw('LIMIT 1'),
       );
   }
 
@@ -354,7 +354,7 @@ export class FileRepository extends CommonRepository {
   async createDirectory(
     parentId: ID | undefined,
     name: string,
-    session: Session
+    session: Session,
   ): Promise<ID> {
     const initialProps = {
       name,
@@ -368,7 +368,7 @@ export class FileRepository extends CommonRepository {
         createRelationships(Directory, 'out', {
           createdBy: ['User', session.userId],
           parent: ['Directory', parentId],
-        })
+        }),
       )
       .return<{ id: ID }>('node.id as id');
 
@@ -388,13 +388,13 @@ export class FileRepository extends CommonRepository {
     const createFile = this.db
       .query()
       .apply(
-        await createNode(File, { initialProps, baseNodeProps: { id: fileId } })
+        await createNode(File, { initialProps, baseNodeProps: { id: fileId } }),
       )
       .apply(
         createRelationships(File, 'out', {
           createdBy: ['User', session.userId],
           parent: ['Directory', parentId],
-        })
+        }),
       )
       .return<{ id: ID }>('node.id as id');
 
@@ -408,7 +408,7 @@ export class FileRepository extends CommonRepository {
   async createFileVersion(
     fileId: ID,
     input: Pick<FileVersion, 'id' | 'name' | 'mimeType' | 'size'>,
-    session: Session
+    session: Session,
   ) {
     const initialProps = {
       name: input.name,
@@ -423,13 +423,13 @@ export class FileRepository extends CommonRepository {
         await createNode(FileVersion, {
           initialProps,
           baseNodeProps: { id: input.id },
-        })
+        }),
       )
       .apply(
         createRelationships(FileVersion, 'out', {
           createdBy: ['User', session.userId],
           parent: ['File', fileId],
-        })
+        }),
       )
       .return<{ id: ID }>('node.id as id');
 
@@ -504,7 +504,7 @@ export class FileRepository extends CommonRepository {
 
     if (!canDelete)
       throw new UnauthorizedException(
-        'You do not have the permission to delete this File item'
+        'You do not have the permission to delete this File item',
       );
 
     try {

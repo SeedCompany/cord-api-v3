@@ -9,14 +9,14 @@ import {
 } from './condition.interface';
 
 export abstract class AggregateConditions<
-  TResourceStatic extends ResourceShape<any>
+  TResourceStatic extends ResourceShape<any>,
 > implements Condition<TResourceStatic>
 {
   constructor(readonly conditions: Array<Condition<TResourceStatic>>) {}
 
   attachPolicy(policy: Policy): Condition<TResourceStatic> {
     const newConditions = this.conditions.map(
-      (condition) => condition.attachPolicy?.(policy) ?? condition
+      (condition) => condition.attachPolicy?.(policy) ?? condition,
     );
     // @ts-expect-error messy to express statically, but this works as long as
     // subclass constructor doesn't change parameters.
@@ -26,14 +26,14 @@ export abstract class AggregateConditions<
   protected abstract readonly iteratorKey: 'some' | 'every';
   isAllowed(params: IsAllowedParams<TResourceStatic>) {
     return this.conditions[this.iteratorKey]((condition) =>
-      condition.isAllowed(params)
+      condition.isAllowed(params),
     );
   }
 
   setupCypherContext(
     query: Query,
     prevApplied: Set<any>,
-    other: AsCypherParams<TResourceStatic>
+    other: AsCypherParams<TResourceStatic>,
   ) {
     for (const condition of this.conditions) {
       query =
@@ -45,7 +45,7 @@ export abstract class AggregateConditions<
   protected abstract readonly cypherJoiner: string;
   asCypherCondition(
     query: Query,
-    other: AsCypherParams<TResourceStatic>
+    other: AsCypherParams<TResourceStatic>,
   ): string {
     if (this.conditions.length === 0) {
       return 'true';
@@ -68,14 +68,14 @@ export abstract class AggregateConditions<
 }
 
 export class AndConditions<
-  TResourceStatic extends ResourceShape<any>
+  TResourceStatic extends ResourceShape<any>,
 > extends AggregateConditions<TResourceStatic> {
   protected readonly iteratorKey = 'every';
   protected readonly cypherJoiner = ' AND ';
 }
 
 export class OrConditions<
-  TResourceStatic extends ResourceShape<any>
+  TResourceStatic extends ResourceShape<any>,
 > extends AggregateConditions<TResourceStatic> {
   protected readonly iteratorKey = 'some';
   protected readonly cypherJoiner = ' OR ';
@@ -93,6 +93,6 @@ export const any = <T extends ResourceShape<any>>(
     ? conditions[0]
     : new OrConditions<T>(
         conditions.flatMap((c) =>
-          c instanceof OrConditions ? c.conditions : c
-        )
+          c instanceof OrConditions ? c.conditions : c,
+        ),
       );

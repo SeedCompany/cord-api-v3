@@ -1,12 +1,14 @@
-import { registerUser, runInIsolatedSession, TestApp } from '.';
-import { ResourceShape } from '../../src/common';
+import { ResourceShape } from '~/common';
 import { Role, ScopedRole } from '../../src/components/authorization';
 import { getPermissions } from '../security/permissions';
+import { TestApp } from './create-app';
+import { runInIsolatedSession } from './login';
+import { registerUser } from './register';
 import { ReadOneFunction } from './sensitivity';
 
 export async function testRole<
   Resource extends ResourceShape<any>,
-  ResourceObj extends Resource['prototype']
+  ResourceObj extends Resource['prototype'],
 >({
   app,
   resource,
@@ -37,18 +39,18 @@ export async function testRole<
     return await readOneFunction(app, resource.id);
   });
   expect(readResource[propToTest].canRead).toEqual(
-    permissions[propToTest].canRead
+    permissions[propToTest].canRead,
   );
 
   if (isSecureList) {
     if (!skipEditCheck) {
       expect(readResource[propToTest].canCreate).toEqual(
-        permissions[propToTest].canEdit
+        permissions[propToTest].canEdit,
       );
     }
   } else if (!skipEditCheck) {
     expect(readResource[propToTest].canEdit).toEqual(
-      permissions[propToTest].canEdit
+      permissions[propToTest].canEdit,
     );
   }
 }

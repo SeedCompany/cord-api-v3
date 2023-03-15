@@ -16,7 +16,7 @@ export const IsId = (validationOptions?: ValidationOptions) =>
             : 'Invalid ID',
       },
     },
-    validationOptions
+    validationOptions,
   );
 
 export class ValidateIdPipe implements PipeTransform {

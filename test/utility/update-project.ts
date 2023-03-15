@@ -21,7 +21,7 @@ export async function updateProject(app: TestApp, input: UpdateProject) {
           ...input,
         },
       },
-    }
+    },
   );
 
   const actual = result.updateProject.project;

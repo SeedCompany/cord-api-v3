@@ -16,7 +16,7 @@ export interface HasCreator {
 }
 
 class OwnerCondition<
-  TResourceStatic extends ResourceShape<HasCreator> | typeof User
+  TResourceStatic extends ResourceShape<HasCreator> | typeof User,
 > implements Condition<TResourceStatic>
 {
   isAllowed({ object, resource, session }: IsAllowedParams<TResourceStatic>) {
@@ -34,7 +34,7 @@ class OwnerCondition<
     if (!creator) {
       Logger.warn(
         'Could not find or view creator ID to determine if owner',
-        'privileges:condition:owner'
+        'privileges:condition:owner',
       );
     }
 
@@ -44,7 +44,7 @@ class OwnerCondition<
   setupCypherContext(
     query: Query,
     prevApplied: Set<any>,
-    other: AsCypherParams<TResourceStatic>
+    other: AsCypherParams<TResourceStatic>,
   ) {
     if (prevApplied.has('owner')) {
       return query;

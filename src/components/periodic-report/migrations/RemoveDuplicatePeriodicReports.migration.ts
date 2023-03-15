@@ -41,7 +41,7 @@ export class RemoveDuplicatePeriodicReportsMigration extends BaseMigration {
           unwind ordered[1..] as report
           // Delete report
           detach delete report
-        `
+        `,
       )
       .run();
   }

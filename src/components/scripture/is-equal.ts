@@ -5,7 +5,7 @@ import { mergeScriptureRangesToMinimalIds } from './merge-to-minimal-set';
 
 export const isScriptureEqual = (
   a: readonly ScriptureRange[],
-  b: readonly ScriptureRange[]
+  b: readonly ScriptureRange[],
 ) => {
   if (
     (a.length !== 0 && b.length === 0) ||

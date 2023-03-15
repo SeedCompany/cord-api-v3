@@ -53,7 +53,7 @@ export abstract class VariantResponse<Key extends string = string> {
 
 @ObjectType()
 export class PromptVariantResponse<
-  Key extends string = string
+  Key extends string = string,
 > extends Resource {
   static Props = keysOf<PromptVariantResponse>();
   static SecuredProps = keysOf<SecuredProps<PromptVariantResponse>>();

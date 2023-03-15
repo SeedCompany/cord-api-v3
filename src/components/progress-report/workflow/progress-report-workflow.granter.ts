@@ -76,7 +76,7 @@ class TransitionCondition implements Condition<typeof Event> {
 
   static fromName(allowedTransitions: readonly TransitionName[]) {
     return new TransitionCondition(
-      allowedTransitions.map((t) => Transitions[t].id)
+      allowedTransitions.map((t) => Transitions[t].id),
     );
   }
 
@@ -85,7 +85,7 @@ class TransitionCondition implements Condition<typeof Event> {
     return new TransitionCondition(
       Object.values(Transitions)
         .filter((t) => allowed.has(t.to))
-        .map((t) => t.id)
+        .map((t) => t.id),
     );
   }
 
@@ -100,7 +100,7 @@ class TransitionCondition implements Condition<typeof Event> {
       return false;
     }
     return this.allowedTransitionIds.has(
-      isIdLike(transitionId) ? transitionId : transitionId.id
+      isIdLike(transitionId) ? transitionId : transitionId.id,
     );
   }
 
@@ -108,7 +108,7 @@ class TransitionCondition implements Condition<typeof Event> {
     // TODO bypasses to statuses won't work with this. How should these be filtered?
     const required = query.params.addParam(
       this.allowedTransitionIds,
-      'allowedTransitions'
+      'allowedTransitions',
     );
     return `node.transition IN ${String(required)}`;
   }

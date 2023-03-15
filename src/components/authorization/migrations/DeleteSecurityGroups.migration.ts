@@ -19,7 +19,7 @@ export class DeleteSecurityGroups extends BaseMigration {
             'DETACH DELETE n',
             { batchSize: 1000 }
           )
-        `
+        `,
       )
       .first();
     this.logger.info('Stats', stats);

@@ -30,5 +30,5 @@ export class OrganizationListOutput extends PaginatedList(Organization) {}
   description: SecuredList.descriptionFor('organizations'),
 })
 export abstract class SecuredOrganizationList extends SecuredList(
-  Organization
+  Organization,
 ) {}

@@ -29,7 +29,7 @@ describe('ExceptionNormalizer', () => {
     it('custom code', () => {
       const ex = new Nest.NotFoundException(
         'Could not find resource',
-        'CustomNotFound'
+        'CustomNotFound',
       );
       const res = sut.normalize(ex);
       expect(res.message).toEqual('Could not find resource');
@@ -40,7 +40,7 @@ describe('ExceptionNormalizer', () => {
     it('custom error object with message', () => {
       const ex = new Nest.NotFoundException(
         { message: 'Could not find resource', foo: 'bar' },
-        'Ignored'
+        'Ignored',
       );
       const res = sut.normalize(ex);
       expect(res.message).toEqual('Could not find resource');
@@ -56,7 +56,7 @@ describe('ExceptionNormalizer', () => {
           code: 'CustomNotFound',
           foo: 'bar',
         },
-        'Ignored'
+        'Ignored',
       );
       const res = sut.normalize(ex);
       expect(res.message).toEqual('Could not find resource');
@@ -68,7 +68,7 @@ describe('ExceptionNormalizer', () => {
     it('custom error object without message', () => {
       const ex = new Nest.NotFoundException(
         { description: 'Could not find resource' },
-        'Ignored'
+        'Ignored',
       );
       const res = sut.normalize(ex);
       expect(res.message).toEqual('Not Found Exception');

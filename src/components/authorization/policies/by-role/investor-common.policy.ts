@@ -15,7 +15,7 @@ import {
   r.Education.read,
   inherit(
     r.Engagement.read,
-    r.LanguageEngagement.specifically((p) => [p.paratextRegistryId.none])
+    r.LanguageEngagement.specifically((p) => [p.paratextRegistryId.none]),
   ),
   r.EthnologueLanguage.when(sensOnlyLow).read,
   r.FieldRegion.read,

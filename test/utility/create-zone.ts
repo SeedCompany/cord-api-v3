@@ -1,9 +1,11 @@
-import { createPerson, getUserFromSession, runAsAdmin } from '.';
-import { generateId, isValidId } from '../../src/common';
+import { generateId, isValidId } from '~/common';
 import { CreateFieldZone, FieldZone } from '../../src/components/field-zone';
 import { TestApp } from './create-app';
+import { createPerson } from './create-person';
+import { getUserFromSession } from './create-session';
 import { fragments } from './fragments';
 import { gql } from './gql-tag';
+import { runAsAdmin } from './login';
 
 export async function listFieldZones(app: TestApp) {
   const result = await app.graphql.mutate(
@@ -16,7 +18,7 @@ export async function listFieldZones(app: TestApp) {
         }
       }
       ${fragments.fieldZone}
-    `
+    `,
   );
   const zones = result.fieldZones.items;
   expect(zones).toBeTruthy();
@@ -33,7 +35,7 @@ export async function readOneZone(app: TestApp, id: string) {
       }
       ${fragments.fieldZone}
     `,
-    { id }
+    { id },
   );
   const actual = result.fieldZone;
   expect(actual).toBeTruthy();
@@ -42,7 +44,7 @@ export async function readOneZone(app: TestApp, id: string) {
 
 export async function createZone(
   app: TestApp,
-  input: Partial<CreateFieldZone> = {}
+  input: Partial<CreateFieldZone> = {},
 ) {
   const fieldZone: CreateFieldZone = {
     name: 'Zone' + (await generateId()),
@@ -79,7 +81,7 @@ export async function createZone(
       input: {
         fieldZone,
       },
-    }
+    },
   );
 
   const actual: FieldZone = result.createFieldZone.fieldZone;

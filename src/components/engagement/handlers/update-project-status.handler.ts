@@ -90,12 +90,12 @@ export class UpdateProjectStatusHandler
 {
   constructor(
     private readonly repo: EngagementRepository,
-    private readonly engagementService: EngagementService
+    private readonly engagementService: EngagementService,
   ) {}
 
   async handle({ previous, updated, session }: ProjectUpdatedEvent) {
     const engagementStatus = changes.find(
-      changeMatcher(previous, updated)
+      changeMatcher(previous, updated),
     )?.newStatus;
     if (!engagementStatus) return;
 
@@ -105,7 +105,7 @@ export class UpdateProjectStatusHandler
       engagementStatus,
       engagementIds,
       updated.type,
-      session
+      session,
     );
   }
 
@@ -113,7 +113,7 @@ export class UpdateProjectStatusHandler
     status: EngagementStatus,
     engagementIds: ID[],
     type: ProjectType,
-    session: Session
+    session: Session,
   ) {
     await Promise.all(
       engagementIds.map(async (id) => {
@@ -124,13 +124,13 @@ export class UpdateProjectStatusHandler
         type === ProjectType.Translation
           ? await this.engagementService.updateLanguageEngagement(
               updateInput,
-              session
+              session,
             )
           : await this.engagementService.updateInternshipEngagement(
               updateInput,
-              session
+              session,
             );
-      })
+      }),
     );
   }
 }

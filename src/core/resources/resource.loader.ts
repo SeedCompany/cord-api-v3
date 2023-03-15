@@ -21,7 +21,7 @@ export class ResourceLoader {
   constructor(
     private readonly loaderRegistry: ResourceLoaderRegistry,
     private readonly contextHost: GqlContextHost,
-    private readonly resourceResolver: ResourceResolver
+    private readonly resourceResolver: ResourceResolver,
   ) {}
 
   async loadByBaseNode(node: BaseNode, view?: ObjectView) {
@@ -35,35 +35,35 @@ export class ResourceLoader {
 
   async loadByRef<Key extends keyof ResourceMap>(
     obj: ResourceRef<Key>,
-    view?: ObjectView
+    view?: ObjectView,
   ) {
     return await this.load(obj.__typename, obj.id, view);
   }
 
   async load<
     TResource extends SomeResourceType,
-    TResourceName = ConditionalKeys<ResourceMap, TResource>
+    TResourceName = ConditionalKeys<ResourceMap, TResource>,
   >(
     type: TResource,
     id: ID,
-    view?: ObjectView
+    view?: ObjectView,
   ): Promise<TResource['prototype'] & { __typename: TResourceName }>;
   async load<TResourceName extends keyof ResourceMap>(
     type: TResourceName,
     id: ID,
-    view?: ObjectView
+    view?: ObjectView,
   ): Promise<
     ResourceMap[TResourceName]['prototype'] & { __typename: TResourceName }
   >;
   async load(
     type: Many<keyof ResourceMap | SomeResourceType>,
     id: ID,
-    view?: ObjectView
+    view?: ObjectView,
   ): Promise<SomeResourceType['prototype'] & { __typename: string }>;
   async load(
     type: Many<keyof ResourceMap | SomeResourceType>,
     id: ID,
-    view?: ObjectView
+    view?: ObjectView,
   ): Promise<SomeResourceType['prototype'] & { __typename: string }> {
     const { factory, objectViewAware, resolvedType } =
       this.findLoaderFactory(type);
@@ -80,7 +80,7 @@ export class ResourceLoader {
   }
 
   async getLoader<T extends NestDataLoader<any, any>>(
-    factory: Type<T>
+    factory: Type<T>,
   ): Promise<LoaderOf<T>> {
     const context = this.contextHost.context as unknown as {
       [NEST_LOADER_CONTEXT_KEY]: LoaderContextType;
@@ -105,7 +105,7 @@ export class ResourceLoader {
     const found = this.loaderRegistry.loaders.get(resolvedType);
     if (!found) {
       throw new ServerException(
-        `Could not find loader for type: ${resolvedType}`
+        `Could not find loader for type: ${resolvedType}`,
       );
     }
     return { resolvedType, ...found };

@@ -47,7 +47,7 @@ export async function uploadFile(
   app: TestApp,
   parentId: ID,
   input: Partial<FakeFile> = {},
-  uploadRequest?: RequestUploadOutput
+  uploadRequest?: RequestUploadOutput,
 ) {
   const { id, url } = uploadRequest ?? (await requestFileUpload(app));
 
@@ -73,7 +73,7 @@ async function deleteNode(app: TestApp, id: ID) {
     `,
     {
       id,
-    }
+    },
   );
 }
 
@@ -89,7 +89,7 @@ async function expectNodeNotFound(app: TestApp, id: ID) {
       `,
       {
         id,
-      }
+      },
     )
     .expectError(errors.notFound());
 }
@@ -106,7 +106,7 @@ function resetNow() {
 const expectEqualContent = async (
   bucket: LocalBucket,
   url: string,
-  expected: FakeFile
+  expected: FakeFile,
 ) => {
   const actualFile = await bucket.download(url);
   const contents = await bufferFromStream(actualFile.Body);
@@ -213,7 +213,7 @@ describe('File e2e', () => {
   async function assertFileChanges(
     updated: RawFile,
     initial: RawFile,
-    input: FakeFile
+    input: FakeFile,
   ) {
     expect(updated.id).toEqual(initial.id);
     await expectEqualContent(bucket, updated.downloadUrl, input);
@@ -221,7 +221,7 @@ describe('File e2e', () => {
     expect(updated.mimeType).toEqual(input.mimeType);
     const createdAt = DateTime.fromISO(updated.createdAt);
     expect(createdAt.toMillis()).toEqual(
-      DateTime.fromISO(initial.createdAt).toMillis()
+      DateTime.fromISO(initial.createdAt).toMillis(),
     );
     const modifiedAt = DateTime.fromISO(updated.modifiedAt);
     expect(modifiedAt.diff(createdAt).as('days')).toBeGreaterThanOrEqual(2);
@@ -292,8 +292,8 @@ describe('File e2e', () => {
         times(expectedTotalFiles).map(() =>
           uploadFile(app, dir.id, {
             mimeType: 'font/woff',
-          })
-        )
+          }),
+        ),
       );
 
       expectedTotalVideos = 4;
@@ -301,14 +301,14 @@ describe('File e2e', () => {
         times(expectedTotalVideos).map(() =>
           uploadFile(app, dir.id, {
             mimeType: 'video/mp4',
-          })
-        )
+          }),
+        ),
       );
       expectedTotalFiles += expectedTotalVideos;
 
       expectedTotalDirs = 3;
       const dirs = await Promise.all(
-        times(expectedTotalDirs).map(() => createDirectory(app, dir.id))
+        times(expectedTotalDirs).map(() => createDirectory(app, dir.id)),
       );
       expectedTotalChildren = expectedTotalFiles + expectedTotalDirs;
       expectedChildren = [...files, ...videos, ...dirs];
@@ -320,7 +320,7 @@ describe('File e2e', () => {
       expect(children.hasMore).toBeFalsy();
       expect(children.items.length).toEqual(expectedTotalChildren);
       expect(children.items.map((n) => n.id)).toEqual(
-        expect.arrayContaining(expectedChildren.map((n) => n.id))
+        expect.arrayContaining(expectedChildren.map((n) => n.id)),
       );
     });
 
@@ -344,7 +344,7 @@ describe('File e2e', () => {
       expect(nextPage.hasMore).toBeTruthy();
       expect(nextPage.items.length).toEqual(count); // complete page
       expect(nextPage.items.map((n) => n.id)).not.toEqual(
-        expect.arrayContaining(firstPage.items.map((n) => n.id))
+        expect.arrayContaining(firstPage.items.map((n) => n.id)),
       );
 
       const lastPage = await getFileNodeChildren(app, dir.id, {
@@ -356,8 +356,8 @@ describe('File e2e', () => {
       expect(lastPage.items.length).toEqual(expectedTotalChildren - count * 2); // partial page
       expect(lastPage.items.map((n) => n.id)).not.toEqual(
         expect.arrayContaining(
-          firstPage.items.concat(nextPage.items).map((n) => n.id)
-        )
+          firstPage.items.concat(nextPage.items).map((n) => n.id),
+        ),
       );
     });
 
@@ -371,7 +371,7 @@ describe('File e2e', () => {
       expect(children.hasMore).toBeFalsy();
       expect(children.items.length).toEqual(expectedTotalFiles);
       expect(
-        children.items.every((n) => n.type === FileNodeType.File)
+        children.items.every((n) => n.type === FileNodeType.File),
       ).toBeTruthy();
     });
 
@@ -385,7 +385,7 @@ describe('File e2e', () => {
       expect(children.hasMore).toBeFalsy();
       expect(children.items.length).toEqual(expectedTotalDirs);
       expect(
-        children.items.every((n) => n.type === FileNodeType.Directory)
+        children.items.every((n) => n.type === FileNodeType.Directory),
       ).toBeTruthy();
     });
   });
@@ -408,7 +408,7 @@ describe('File e2e', () => {
           SET rel.active = true
           RETURN
             file, rel
-          `
+          `,
         )
         .run();
 
@@ -423,7 +423,7 @@ describe('File e2e', () => {
           SET rel.active = true
           RETURN
           dir, rel
-          `
+          `,
         )
         .run();
 
@@ -440,7 +440,7 @@ describe('File e2e', () => {
           mt.active = true
         RETURN
           fv, mt
-        `
+        `,
         )
         .run();
     });
@@ -466,10 +466,10 @@ describe('File e2e', () => {
       expect(children.hasMore).toBeFalsy();
       expect(children.items.length).toEqual(expectedTotalVersions);
       expect(children.items.map((n) => n.id)).toEqual(
-        expect.arrayContaining(expectedVersionIds)
+        expect.arrayContaining(expectedVersionIds),
       );
       expect(
-        children.items.every((n) => n.type === FileNodeType.FileVersion)
+        children.items.every((n) => n.type === FileNodeType.FileVersion),
       ).toBeTruthy();
     });
   });

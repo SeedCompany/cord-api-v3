@@ -8,7 +8,7 @@ export class DetachEngagementRootDirectoryHandler
 {
   constructor(
     private readonly ceremonies: CeremonyService,
-    private readonly db: DatabaseService
+    private readonly db: DatabaseService,
   ) {}
 
   async handle({ engagement, session }: EngagementWillDeleteEvent) {

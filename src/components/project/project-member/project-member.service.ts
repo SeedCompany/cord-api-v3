@@ -54,43 +54,43 @@ export class ProjectMemberService {
     @Logger('project:member:service') private readonly logger: ILogger,
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
-    private readonly repo: ProjectMemberRepository
+    private readonly repo: ProjectMemberRepository,
   ) {}
 
   protected async verifyRelationshipEligibility(
     projectId: ID,
-    userId: ID
+    userId: ID,
   ): Promise<void> {
     const result = await this.repo.verifyRelationshipEligibility(
       projectId,
-      userId
+      userId,
     );
 
     if (!result?.project) {
       throw new NotFoundException(
         'Could not find project',
-        'projectMember.projectId'
+        'projectMember.projectId',
       );
     }
 
     if (!result?.user) {
       throw new NotFoundException(
         'Could not find person',
-        'projectMember.userId'
+        'projectMember.userId',
       );
     }
 
     if (result.member) {
       throw new DuplicateException(
         'projectMember.userId',
-        'Person is already a member of this project'
+        'Person is already a member of this project',
       );
     }
   }
 
   async create(
     { userId, projectId: projectOrId, ...input }: CreateProjectMember,
-    session: Session
+    session: Session,
   ): Promise<ProjectMember> {
     const projectId = isIdLike(projectOrId) ? projectOrId : projectOrId.id;
     const project = isIdLike(projectOrId)
@@ -106,7 +106,7 @@ export class ProjectMemberService {
     await this.repo.verifyRelationshipEligibility(projectId, userId);
 
     await this.assertValidRoles(input.roles, () =>
-      this.userService.readOne(userId, session)
+      this.userService.readOne(userId, session),
     );
 
     try {
@@ -114,7 +114,7 @@ export class ProjectMemberService {
         { userId, projectId, ...input },
         id,
         session,
-        createdAt
+        createdAt,
       );
       if (!memberQuery) {
         throw new ServerException('Failed to create project member');
@@ -130,7 +130,7 @@ export class ProjectMemberService {
   async readOne(
     id: ID,
     session: Session,
-    _view?: ObjectView
+    _view?: ObjectView,
   ): Promise<ProjectMember> {
     this.logger.debug(`read one`, {
       id,
@@ -139,7 +139,7 @@ export class ProjectMemberService {
     if (!id) {
       throw new NotFoundException(
         'No project member id to search for',
-        'projectMember.id'
+        'projectMember.id',
       );
     }
 
@@ -150,18 +150,18 @@ export class ProjectMemberService {
   async readMany(ids: readonly ID[], session: Session) {
     const projectMembers = await this.repo.readMany(ids, session);
     return await Promise.all(
-      projectMembers.map((dto) => this.secure(dto, session))
+      projectMembers.map((dto) => this.secure(dto, session)),
     );
   }
 
   private async secure(
     dto: UnsecuredDto<ProjectMember>,
-    session: Session
+    session: Session,
   ): Promise<ProjectMember> {
     const securedProps = await this.authorizationService.secureProperties(
       ProjectMember,
       dto,
-      session
+      session,
     );
 
     return {
@@ -181,7 +181,7 @@ export class ProjectMemberService {
 
   async update(
     input: UpdateProjectMember,
-    session: Session
+    session: Session,
   ): Promise<ProjectMember> {
     const object = await this.readOne(input.id, session);
 
@@ -189,7 +189,7 @@ export class ProjectMemberService {
       const user = object.user.value;
       if (!user) {
         throw new UnauthorizedException(
-          'Cannot read user to verify roles available'
+          'Cannot read user to verify roles available',
         );
       }
       return user;
@@ -199,7 +199,7 @@ export class ProjectMemberService {
     await this.authorizationService.verifyCanEditChanges(
       ProjectMember,
       object,
-      changes
+      changes,
     );
     await this.repo.updateProperties(object, changes);
     return await this.readOne(input.id, session);
@@ -207,7 +207,7 @@ export class ProjectMemberService {
 
   private async assertValidRoles(
     roles: Role[] | undefined,
-    forUser: () => MaybeAsync<User>
+    forUser: () => MaybeAsync<User>,
   ) {
     if (!roles || roles.length === 0) {
       return;
@@ -219,7 +219,7 @@ export class ProjectMemberService {
       const forbiddenRolesStr = forbiddenRoles.join(', ');
       throw new InputException(
         `Role(s) ${forbiddenRolesStr} cannot be assigned to this project member`,
-        'input.roles'
+        'input.roles',
       );
     }
   }
@@ -230,7 +230,7 @@ export class ProjectMemberService {
     if (!object) {
       throw new NotFoundException(
         'Could not find project member',
-        'projectMember.id'
+        'projectMember.id',
       );
     }
 
@@ -247,7 +247,7 @@ export class ProjectMemberService {
 
   async list(
     input: ProjectMemberListInput,
-    session: Session
+    session: Session,
   ): Promise<ProjectMemberListOutput> {
     const results = await this.repo.list(input, session);
     return await mapListResults(results, (dto) => this.secure(dto, session));
@@ -258,7 +258,7 @@ export class ProjectMemberService {
     projectId: ID,
     relationshipType: string,
     relationshipDirection: RelationDirection,
-    label: string
+    label: string,
   ) {
     query.match([
       node('project', 'Project', { id: projectId }),

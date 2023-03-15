@@ -6,7 +6,7 @@ import { Secured, UnwrapSecured } from './secured-property';
  */
 export async function mapSecuredValue<T extends Secured<any>, S>(
   input: T,
-  mapper: (unwrapped: NonNullable<UnwrapSecured<T>>) => Promise<S>
+  mapper: (unwrapped: NonNullable<UnwrapSecured<T>>) => Promise<S>,
 ): Promise<Secured<S>> {
   const { value, ...rest } = input;
   if (!rest.canRead || value == null) {

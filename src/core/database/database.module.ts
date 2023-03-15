@@ -25,7 +25,7 @@ export class DatabaseModule implements OnApplicationShutdown {
   constructor(
     private readonly db: Connection,
     private readonly dbService: DatabaseService,
-    private readonly config: ConfigService
+    private readonly config: ConfigService,
   ) {}
 
   async onApplicationShutdown() {

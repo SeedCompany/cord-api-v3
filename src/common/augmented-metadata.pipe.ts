@@ -3,7 +3,7 @@ import { ServerException } from './exceptions';
 
 const key = Symbol('AugmentedMetadata');
 export const createAugmentedMetadataPipe = <
-  T extends Record<string, any>
+  T extends Record<string, any>,
 >() => {
   const pipe = (data: T | (() => T)): PipeTransform => ({
     transform: (value, metadata) => {

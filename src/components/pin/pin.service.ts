@@ -13,7 +13,7 @@ export class PinService {
   async togglePinned(
     id: ID,
     session: Session,
-    pinned?: boolean
+    pinned?: boolean,
   ): Promise<boolean> {
     pinned ??= !(await this.repo.isPinned(id, session));
     if (pinned) {

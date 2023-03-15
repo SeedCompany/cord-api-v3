@@ -46,7 +46,7 @@ describe('Authentication e2e', () => {
       `,
       {
         email: email,
-      }
+      },
     );
 
     const tokenRes = await db
@@ -70,7 +70,7 @@ describe('Authentication e2e', () => {
           token: token,
           password: newPassword,
         },
-      }
+      },
     );
 
     const { login: newLogin } = await login(app, {
@@ -99,7 +99,7 @@ describe('Authentication e2e', () => {
       `,
       {
         id: user.id,
-      }
+      },
     );
 
     const actual: RawUser = result.user;
@@ -134,7 +134,7 @@ describe('Authentication e2e', () => {
       {
         oldPassword: fakeUser.password,
         newPassword: newPassword,
-      }
+      },
     );
 
     const updatedUser = await login(app, {

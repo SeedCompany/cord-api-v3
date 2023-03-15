@@ -25,7 +25,7 @@ export class CommentResolver {
   })
   async updateComment(
     @LoggedInSession() session: Session,
-    @Args('input') input: UpdateCommentInput
+    @Args('input') input: UpdateCommentInput,
   ): Promise<UpdateCommentOutput> {
     const comment = await this.service.update(input, session);
     return { comment };
@@ -36,7 +36,7 @@ export class CommentResolver {
   })
   async deleteComment(
     @LoggedInSession() session: Session,
-    @IdArg() id: ID
+    @IdArg() id: ID,
   ): Promise<DeleteCommentOutput> {
     await this.service.delete(id, session);
     return { success: true };
@@ -45,7 +45,7 @@ export class CommentResolver {
   @ResolveField(() => User)
   async creator(
     @Parent() comment: Comment,
-    @Loader(UserLoader) users: LoaderOf<UserLoader>
+    @Loader(UserLoader) users: LoaderOf<UserLoader>,
   ): Promise<User> {
     return await users.load(comment.creator);
   }

@@ -18,7 +18,7 @@ import {
 
 @Injectable()
 export class ProgressReportVarianceExplanationRepository extends DtoRepository(
-  VarianceExplanation
+  VarianceExplanation,
 ) {
   // @ts-expect-error It doesn't have match base signature
   async readMany(reports: readonly ProgressReport[]) {
@@ -50,8 +50,8 @@ export class ProgressReportVarianceExplanationRepository extends DtoRepository(
             .with(ctx)
             .apply(matchProps({ optional: true, excludeBaseProps: true }))
             .return<{ dto: UnsecuredDto<VarianceExplanation> }>(
-              merge(defaults, 'props').as('dto')
-            )
+              merge(defaults, 'props').as('dto'),
+            ),
         )
         .return('dto');
   }
@@ -59,7 +59,7 @@ export class ProgressReportVarianceExplanationRepository extends DtoRepository(
   async update(
     reportId: ID,
     changes: DbChanges<VarianceExplanationInput>,
-    _session: Session
+    _session: Session,
   ) {
     await this.db
       .query()
@@ -74,7 +74,7 @@ export class ProgressReportVarianceExplanationRepository extends DtoRepository(
         updateProperties({
           resource: VarianceExplanation,
           changes,
-        })
+        }),
       )
       .return('*')
       .run();

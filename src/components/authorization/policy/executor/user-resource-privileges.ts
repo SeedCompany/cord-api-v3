@@ -36,14 +36,14 @@ import {
 import { UserEdgePrivileges } from './user-edge-privileges';
 
 export class UserResourcePrivileges<
-  TResourceStatic extends ResourceShape<any>
+  TResourceStatic extends ResourceShape<any>,
 > {
   readonly resource: EnhancedResource<TResourceStatic>;
   constructor(
     resource: TResourceStatic | EnhancedResource<TResourceStatic>,
     private readonly object: ResourceObjectContext<TResourceStatic> | undefined,
     readonly session: Session,
-    private readonly policyExecutor: PolicyExecutor
+    private readonly policyExecutor: PolicyExecutor,
   ) {
     this.resource = EnhancedResource.of(resource);
   }
@@ -60,13 +60,13 @@ export class UserResourcePrivileges<
       this.resource,
       object,
       this.session,
-      this.policyExecutor
+      this.policyExecutor,
     );
   }
 
   forEdge(
     key: SecuredPropsPlusExtraKey<TResourceStatic>,
-    object?: ResourceObjectContext<TResourceStatic>
+    object?: ResourceObjectContext<TResourceStatic>,
   ): UserEdgePrivileges<
     TResourceStatic,
     SecuredPropsPlusExtraKey<TResourceStatic>,
@@ -74,7 +74,7 @@ export class UserResourcePrivileges<
   >;
   forEdge(
     key: ChildSinglesKey<TResourceStatic>,
-    object?: ResourceObjectContext<TResourceStatic>
+    object?: ResourceObjectContext<TResourceStatic>,
   ): UserEdgePrivileges<
     TResourceStatic,
     ChildSinglesKey<TResourceStatic>,
@@ -82,7 +82,7 @@ export class UserResourcePrivileges<
   >;
   forEdge(
     key: ChildListsKey<TResourceStatic>,
-    object?: ResourceObjectContext<TResourceStatic>
+    object?: ResourceObjectContext<TResourceStatic>,
   ): UserEdgePrivileges<
     TResourceStatic,
     ChildListsKey<TResourceStatic>,
@@ -94,22 +94,22 @@ export class UserResourcePrivileges<
       key,
       object ?? this.object,
       this.session,
-      this.policyExecutor
+      this.policyExecutor,
     );
   }
 
   can(action: ResourceAction): boolean;
   can(
     action: PropAction,
-    prop: SecuredPropsPlusExtraKey<TResourceStatic>
+    prop: SecuredPropsPlusExtraKey<TResourceStatic>,
   ): boolean;
   can(
     action: ChildSingleAction,
-    relation: ChildSinglesKey<TResourceStatic>
+    relation: ChildSinglesKey<TResourceStatic>,
   ): boolean;
   can(
     action: ChildListAction,
-    relation: ChildListsKey<TResourceStatic>
+    relation: ChildListsKey<TResourceStatic>,
   ): boolean;
   can(action: AnyAction, prop?: SecuredResourceKey<TResourceStatic>) {
     const perm = this.policyExecutor.resolve({
@@ -130,15 +130,15 @@ export class UserResourcePrivileges<
   verifyCan(action: ResourceAction): void;
   verifyCan(
     action: PropAction,
-    prop: SecuredPropsPlusExtraKey<TResourceStatic>
+    prop: SecuredPropsPlusExtraKey<TResourceStatic>,
   ): void;
   verifyCan(
     action: ChildSingleAction,
-    relation: ChildSinglesKey<TResourceStatic>
+    relation: ChildSinglesKey<TResourceStatic>,
   ): void;
   verifyCan(
     action: ChildListAction,
-    relation: ChildListsKey<TResourceStatic>
+    relation: ChildListsKey<TResourceStatic>,
   ): void;
   verifyCan(action: AnyAction, prop?: string) {
     // @ts-expect-error yeah IDK why but this is literally the signature.
@@ -149,7 +149,7 @@ export class UserResourcePrivileges<
       action,
       this.object,
       this.resource,
-      prop
+      prop,
     );
   }
 
@@ -179,7 +179,7 @@ export class UserResourcePrivileges<
       pathPrefix?: string | null;
       /** @deprecated */
       legacySecuredInstance?: TResourceStatic['prototype'];
-    } = {}
+    } = {},
   ) {
     const pathPrefix =
       pathPrefixProp ?? pathPrefixProp === null
@@ -206,7 +206,7 @@ export class UserResourcePrivileges<
       const fullPath = compact([pathPrefix, prop]).join('.');
       throw new UnauthorizedException(
         `You do not have permission to update ${this.resource.name}.${prop}`,
-        fullPath
+        fullPath,
       );
     }
   }
@@ -216,7 +216,7 @@ export class UserResourcePrivileges<
    * are supposed to be secured (unsecured props are omitted) as secured.
    */
   secure(
-    dto: UnsecuredDto<TResourceStatic['prototype']>
+    dto: UnsecuredDto<TResourceStatic['prototype']>,
   ): TResourceStatic['prototype'] {
     // Be helpful and allow object param to be skipped upstream.
     // But it still can be used if given possible for use with condition wrapper functions.
@@ -244,7 +244,7 @@ export class UserResourcePrivileges<
    * @deprecated Use {@link secure} instead.
    */
   secureProps(
-    dto: DbPropsOfDto<TResourceStatic['prototype']>
+    dto: DbPropsOfDto<TResourceStatic['prototype']>,
   ): SecuredResource<TResourceStatic, false> {
     const securedProps = mapFromList(this.resource.securedProps, (key) => {
       const canRead = this.can('read', key);

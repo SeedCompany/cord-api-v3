@@ -1,14 +1,15 @@
-import { createPerson, runAsAdmin } from '.';
-import { generateId, isValidId } from '../../src/common';
+import { generateId, isValidId } from '~/common';
 import {
   CreateFieldRegion,
   FieldRegion,
 } from '../../src/components/field-region';
 import { TestApp } from './create-app';
+import { createPerson } from './create-person';
 import { getUserFromSession } from './create-session';
 import { createZone } from './create-zone';
 import { fragments } from './fragments';
 import { gql } from './gql-tag';
+import { runAsAdmin } from './login';
 
 export async function listFieldRegions(app: TestApp) {
   const result = await app.graphql.mutate(
@@ -21,7 +22,7 @@ export async function listFieldRegions(app: TestApp) {
         }
       }
       ${fragments.fieldRegion}
-    `
+    `,
   );
   const regions = result.fieldRegions.items;
   expect(regions).toBeTruthy();
@@ -38,7 +39,7 @@ export async function readOneRegion(app: TestApp, id: string) {
       }
       ${fragments.fieldRegion}
     `,
-    { id }
+    { id },
   );
   const actual = result.fieldRegion;
   expect(actual).toBeTruthy();
@@ -47,7 +48,7 @@ export async function readOneRegion(app: TestApp, id: string) {
 
 export async function createRegion(
   app: TestApp,
-  input: Partial<CreateFieldRegion> = {}
+  input: Partial<CreateFieldRegion> = {},
 ) {
   const fieldRegion: CreateFieldRegion = {
     name: 'Region' + (await generateId()),
@@ -97,7 +98,7 @@ export async function createRegion(
       input: {
         fieldRegion,
       },
-    }
+    },
   );
 
   const actual: FieldRegion = result.createFieldRegion.fieldRegion;

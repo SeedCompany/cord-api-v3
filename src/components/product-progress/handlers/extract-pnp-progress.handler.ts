@@ -13,7 +13,7 @@ export class ExtractPnpProgressHandler {
     private readonly extractor: StepProgressExtractor,
     private readonly progress: ProductProgressService,
     private readonly products: ProductService,
-    @Logger('step-progress:extractor') private readonly logger: ILogger
+    @Logger('step-progress:extractor') private readonly logger: ILogger,
   ) {}
 
   async handle(event: PeriodicReportUploadedEvent) {
@@ -42,13 +42,13 @@ export class ExtractPnpProgressHandler {
     const storyProducts = progressRows[0].story
       ? await this.products.loadProductIdsWithProducibleNames(
           engagementId,
-          ProducibleType.Story
+          ProducibleType.Story,
         )
       : {};
     const scriptureProducts = progressRows[0].bookName
       ? await this.products.loadProductIdsForBookAndVerse(
           engagementId,
-          this.logger
+          this.logger,
         )
       : [];
 
@@ -66,7 +66,7 @@ export class ExtractPnpProgressHandler {
         const exactScriptureMatch = scriptureProducts.find(
           (ref) =>
             ref.scriptureRanges.length > 0 &&
-            isScriptureEqual(ref.scriptureRanges, row.scripture)
+            isScriptureEqual(ref.scriptureRanges, row.scripture),
         );
         if (exactScriptureMatch) {
           return { productId: exactScriptureMatch.id, steps };
@@ -74,7 +74,7 @@ export class ExtractPnpProgressHandler {
 
         const unspecifiedScriptureMatch = scriptureProducts.find(
           (ref) =>
-            ref.book === row.bookName && ref.totalVerses === row.totalVerses
+            ref.book === row.bookName && ref.totalVerses === row.totalVerses,
         );
         if (unspecifiedScriptureMatch) {
           return { productId: unspecifiedScriptureMatch.id, steps };
@@ -99,9 +99,9 @@ export class ExtractPnpProgressHandler {
             // TODO this seems fine for now as only this variant will upload PnPs.
             variant: Progress.FallbackVariant,
           },
-          event.session
+          event.session,
         );
-      })
+      }),
     );
   }
 }

@@ -13,12 +13,12 @@ export class ProjectUserConnectionResolver {
     @AnonSession() session: Session,
     @Parent() { id }: User,
     @ListArg(ProjectListInput) input: ProjectListInput,
-    @Loader(ProjectLoader) loader: LoaderOf<ProjectLoader>
+    @Loader(ProjectLoader) loader: LoaderOf<ProjectLoader>,
   ) {
     const list = await this.projectService.listProjectsByUserId(
       id,
       input,
-      session
+      session,
     );
     loader.primeAll(list.items);
     return list;

@@ -22,10 +22,10 @@ export class LanguageEngagementResolver {
   @ResolveField(() => SecuredLanguage)
   async language(
     @Parent() engagement: LanguageEngagement,
-    @Loader(LanguageLoader) languages: LoaderOf<LanguageLoader>
+    @Loader(LanguageLoader) languages: LoaderOf<LanguageLoader>,
   ): Promise<SecuredLanguage> {
     return await mapSecuredValue(engagement.language, (id) =>
-      languages.load({ id, view: viewOfChangeset(engagement.changeset) })
+      languages.load({ id, view: viewOfChangeset(engagement.changeset) }),
     );
   }
 
@@ -34,12 +34,12 @@ export class LanguageEngagementResolver {
     @Parent() engagement: LanguageEngagement,
     @AnonSession() session: Session,
     @Loader(ProductLoader) products: LoaderOf<ProductLoader>,
-    @ListArg(ProductListInput) input: ProductListInput
+    @ListArg(ProductListInput) input: ProductListInput,
   ): Promise<SecuredProductList> {
     const list = await this.engagements.listProducts(
       engagement,
       input,
-      session
+      session,
     );
     products.primeAll(list.items);
     return list;
@@ -48,7 +48,7 @@ export class LanguageEngagementResolver {
   @ResolveField(() => SecuredFile)
   async pnp(
     @Parent() engagement: LanguageEngagement,
-    @Loader(FileNodeLoader) files: LoaderOf<FileNodeLoader>
+    @Loader(FileNodeLoader) files: LoaderOf<FileNodeLoader>,
   ): Promise<SecuredFile> {
     return await resolveDefinedFile(files, engagement.pnp);
   }

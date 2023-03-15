@@ -70,7 +70,7 @@ export class LanguageRepository extends DtoRepository<
       .apply(
         createRelationships(Language, 'out', {
           ethnologue: ['EthnologueLanguage', ethnologueId],
-        })
+        }),
       )
       .return<{ id: ID }>('node.id as id');
 
@@ -119,7 +119,7 @@ export class LanguageRepository extends DtoRepository<
             .with('projList, props')
             .with('projList, props')
             .raw('WHERE size(projList) = 0')
-            .return(`props.sensitivity as effectiveSensitivity`)
+            .return(`props.sensitivity as effectiveSensitivity`),
         )
         .match([
           node('node'),
@@ -143,7 +143,7 @@ export class LanguageRepository extends DtoRepository<
             firstScriptureEngagement: 'firstScriptureEngagement.id',
             scope: 'scopedRoles',
             changeset: 'changeset.id',
-          }).as('dto')
+          }).as('dto'),
         );
   }
 
@@ -172,12 +172,12 @@ export class LanguageRepository extends DtoRepository<
             return { presetInventory: value ? condition : not(condition) };
           },
           pinned: filter.isPinned,
-        })
+        }),
       )
       .apply(
         this.privileges.forUser(session).filterToReadable({
           wrapContext: oncePerProject,
-        })
+        }),
       )
       .apply(sorting(Language, input))
       .apply(paginate(input, this.hydrate(session)))
@@ -249,7 +249,7 @@ export class LanguageRepository extends DtoRepository<
           .where({
             'status.value': inArray(
               `['${ProjectStatus.InDevelopment}', '${ProjectStatus.Active}']`,
-              true
+              true,
             ),
           })
           .return(
@@ -260,9 +260,9 @@ export class LanguageRepository extends DtoRepository<
                 node('project'),
                 relation('out', '', 'presetInventory', ACTIVE),
                 node('', 'Property', { value: variable('true') }),
-              ])
-            ).as('presetInventory')
-          )
+              ]),
+            ).as('presetInventory'),
+          ),
       );
   }
 }

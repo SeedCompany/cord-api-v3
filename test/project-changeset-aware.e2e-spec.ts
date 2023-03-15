@@ -45,7 +45,7 @@ const readProject = (app: TestApp, id: string, changeset?: string) =>
     {
       id,
       changeset,
-    }
+    },
   );
 
 const activeProject = async (app: TestApp) => {
@@ -120,7 +120,7 @@ describe('Project Changeset Aware e2e', () => {
           },
           changeset: changeset.id,
         },
-      }
+      },
     );
     expect(mutationResult.updateProject.project.name.value).toBe(newCRName);
 
@@ -168,7 +168,7 @@ describe('Project Changeset Aware e2e', () => {
           },
           changeset: changeset.id,
         },
-      }
+      },
     );
     expect(mutationResult.updateProject.project.mouStart.value).toBe(mouStart);
     expect(mutationResult.updateProject.project.mouEnd.value).toBe(mouEnd);
@@ -236,7 +236,7 @@ describe('Project Changeset Aware e2e', () => {
           },
           changeset: changeset.id,
         },
-      }
+      },
     );
 
     // Query project without changeset
@@ -280,10 +280,10 @@ describe('Project Changeset Aware e2e', () => {
           },
           changeset: changeset.id,
         },
-      }
+      },
     );
     expect(mutationResult.updateProject.project.step.value).toBe(
-      ProjectStep.FinalizingCompletion
+      ProjectStep.FinalizingCompletion,
     );
 
     // Query project without changeset

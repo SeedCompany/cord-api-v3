@@ -12,7 +12,7 @@ export class PartnershipProducingMedium {
 
 @ObjectType()
 export class SecuredPartnershipsProducingMediums extends SecuredList(
-  PartnershipProducingMedium
+  PartnershipProducingMedium,
 ) {}
 
 @InputType()
