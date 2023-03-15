@@ -33,6 +33,7 @@ import {
   UpdateLanguageEngagementInput,
   UpdateLanguageEngagementOutput,
 } from './dto';
+import { OutcomeList } from './outcomes/dto/list-outcome.dto';
 
 @Resolver(IEngagement)
 export class EngagementResolver {
@@ -82,6 +83,17 @@ export class EngagementResolver {
       engagement.startDateOverride,
       engagement.endDateOverride,
     );
+  }
+
+  @ResolveField(() => OutcomeList, {
+    description: 'List of outcomes belonging to an engagement',
+  })
+  async outcomes(): Promise<OutcomeList> {
+    return {
+      items: [],
+      hasMore: false,
+      total: 0,
+    };
   }
 
   @Mutation(() => CreateLanguageEngagementOutput, {
