@@ -19,6 +19,7 @@ import { LanguageModule } from './components/language/language.module';
 import { LiteracyMaterialModule } from './components/literacy-material/literacy-material.module';
 import { LocationModule } from './components/location/location.module';
 import { OrganizationModule } from './components/organization/organization.module';
+import { OutcomeModule } from './components/outcome/outcome.module';
 import { PartnerModule } from './components/partner/partner.module';
 import { PartnershipProducingMediumModule } from './components/partnership-producing-medium/partnership-producing-medium.module';
 import { PartnershipModule } from './components/partnership/partnership.module';
@@ -86,6 +87,7 @@ assert(
     PartnershipProducingMediumModule,
     ProgressReportModule,
     PromptsModule,
+    OutcomeModule,
   ],
 })
 export class AppModule {}

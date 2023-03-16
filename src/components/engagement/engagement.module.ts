@@ -16,7 +16,6 @@ import * as handlers from './handlers';
 import { InternshipEngagementResolver } from './internship-engagement.resolver';
 import { InternshipPositionResolver } from './internship-position.resolver';
 import { LanguageEngagementResolver } from './language-engagement.resolver';
-import { OutcomesResolver } from './outcomes/outcomes.resolver';
 import { EngagementProductConnectionResolver } from './product-connection.resolver';
 
 @Module({
@@ -40,7 +39,6 @@ import { EngagementProductConnectionResolver } from './product-connection.resolv
     EngagementService,
     EngagementRepository,
     EngagementLoader,
-    OutcomesResolver,
     ...Object.values(handlers),
   ],
   exports: [EngagementService, EngagementRepository],

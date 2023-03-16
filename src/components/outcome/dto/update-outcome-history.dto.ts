@@ -2,19 +2,14 @@ import { Field, InputType } from '@nestjs/graphql';
 import { ID, IdField } from '~/common';
 import { OutcomeStatus } from './status.enum';
 
-@InputType({
-  isAbstract: true,
-})
-export class UpdateOutcomeInput {
+@InputType()
+export class UpdateOutcomeHistoryInput {
   @IdField()
   id: ID;
 
-  @Field()
-  description?: string;
+  @IdField()
+  report: ID;
 
   @Field(() => OutcomeStatus)
   status?: OutcomeStatus;
-
-  @Field()
-  report?: ID;
 }

@@ -1,13 +1,14 @@
 import { Field, ObjectType } from '@nestjs/graphql';
-import { DbLabel, ID, IdField } from '~/common';
+import { IdOf } from '~/common';
+import { ProgressReport } from '../../progress-report/dto';
+import { Outcome } from './outcome.dto';
 import { OutcomeStatus } from './status.enum';
 
 @ObjectType()
 export class OutcomeHistory {
-  @IdField()
-  report: ID;
+  outcome: IdOf<Outcome>;
+  report: IdOf<ProgressReport>;
 
   @Field(() => OutcomeStatus)
-  @DbLabel('OutcomeStatus')
   status: OutcomeStatus;
 }
