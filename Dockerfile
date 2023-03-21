@@ -1,5 +1,5 @@
 # Base node stage that sets up common config for dev & prod
-FROM public.ecr.aws/docker/library/node:16-alpine as node
+FROM public.ecr.aws/docker/library/node:18-slim as node
 
 LABEL org.opencontainers.image.title="CORD API"
 LABEL org.opencontainers.image.vendor="Seed Company"
