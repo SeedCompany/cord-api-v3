@@ -1,6 +1,12 @@
 # Base node stage that sets up common config for dev & prod
 FROM public.ecr.aws/docker/library/node:18-slim as node
 
+# Add wget in for healthchecks
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates wget \
+    && apt-get clean -q -y \
+    && rm -rf /var/lib/apt/lists/*
+
 LABEL org.opencontainers.image.title="CORD API"
 LABEL org.opencontainers.image.vendor="Seed Company"
 LABEL org.opencontainers.image.source=https://github.com/SeedCompany/cord-api-v3
