@@ -110,7 +110,18 @@ export class ProductResolver {
       could return null.
     `,
   })
-  label(@Parent() product: AnyProduct): string | null {
+  label(
+    @Parent() product: AnyProduct,
+    @Args('collapseAfter', {
+      nullable: true,
+      defaultValue: 3,
+      description: stripIndent`
+        Collapses ranges after a Scripture book after showing the specified
+        number of ranges then shows how many more ranges are after that number.
+        Default is 3.`,
+    })
+    collapseAfter: number,
+  ): string | null {
     if (product.placeholderDescription.value) {
       return product.placeholderDescription.value;
     }
@@ -130,7 +141,10 @@ export class ProductResolver {
         const totalVerses = Book.find(book).totalVerses;
         return `${book} (${verses} / ${totalVerses} verses)`;
       }
-      return labelOfScriptureRanges(product.scriptureReferences.value);
+      return labelOfScriptureRanges(
+        product.scriptureReferences.value,
+        collapseAfter,
+      );
     }
     if (!product.produces.value) {
       return null;

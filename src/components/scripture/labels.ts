@@ -73,7 +73,10 @@ export const labelOfScriptureRange = (
   }
 };
 
-export const labelOfScriptureRanges = (refs: readonly ScriptureRange[]) => {
+export const labelOfScriptureRanges = (
+  refs: readonly ScriptureRange[],
+  collapseAfter?: number,
+) => {
   if (refs.length === 0) {
     return '';
   }
@@ -88,7 +91,16 @@ export const labelOfScriptureRanges = (refs: readonly ScriptureRange[]) => {
   const hasSame = (key: keyof ScriptureReference) =>
     uniq(refs.flatMap((ref) => [ref.start[key], ref.end[key]])).length === 1;
   const same = hasSame('book') ? 'book' : undefined;
-  const labels = refs.map((ref) => labelOfScriptureRange(ref, same)).join(', ');
+  const labels = refs.map((ref) => labelOfScriptureRange(ref, same));
   const prefix = same === 'book' ? `${refs[0].start.book} ` : '';
-  return `${prefix}${labels}`;
+  const collapseLabels = (labels: string[]) => {
+    if (collapseAfter && labels.length > collapseAfter) {
+      const collapsed = labels.slice(0, collapseAfter);
+      collapsed.push(`and ${labels.length - collapseAfter} other portions`);
+      return collapsed.join(', ');
+    }
+    return labels.join(', ');
+  };
+  const labelOutput = collapseLabels(labels);
+  return `${prefix}${labelOutput}`;
 };
