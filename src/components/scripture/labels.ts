@@ -91,16 +91,16 @@ export const labelOfScriptureRanges = (
   const hasSame = (key: keyof ScriptureReference) =>
     uniq(refs.flatMap((ref) => [ref.start[key], ref.end[key]])).length === 1;
   const same = hasSame('book') ? 'book' : undefined;
-  const labels = refs.map((ref) => labelOfScriptureRange(ref, same));
+  const totalRefs = refs.length;
+  const labels = refs
+    .slice(0, collapseAfter)
+    .map((ref) => labelOfScriptureRange(ref, same));
   const prefix = same === 'book' ? `${refs[0].start.book} ` : '';
-  const collapseLabels = (labels: string[]) => {
-    if (collapseAfter && labels.length > collapseAfter) {
-      const collapsed = labels.slice(0, collapseAfter);
-      collapsed.push(`and ${labels.length - collapseAfter} other portions`);
-      return collapsed.join(', ');
-    }
-    return labels.join(', ');
-  };
-  const labelOutput = collapseLabels(labels);
+  const labelOutput = new Intl.ListFormat().format([
+    ...labels,
+    ...(collapseAfter && totalRefs > collapseAfter
+      ? [`${totalRefs - collapseAfter} other portions`]
+      : []),
+  ]);
   return `${prefix}${labelOutput}`;
 };
