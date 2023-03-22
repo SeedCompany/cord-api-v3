@@ -118,7 +118,8 @@ export class ProductResolver {
       description: stripIndent`
         Collapses ranges after a Scripture book after showing the specified
         number of ranges then shows how many more ranges are after that number.
-        Default is 3.`,
+        Default is 3.
+      `,
     })
     collapseAfter: number,
   ): string | null {
