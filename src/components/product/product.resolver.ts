@@ -113,6 +113,7 @@ export class ProductResolver {
   label(
     @Parent() product: AnyProduct,
     @Args('collapseAfter', {
+      nullable: true,
       defaultValue: 3,
       description: stripIndent`
         Collapses ranges after a Scripture book after showing the specified
