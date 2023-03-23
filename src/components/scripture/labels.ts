@@ -96,7 +96,9 @@ export const labelOfScriptureRanges = (
     .slice(0, collapseAfter)
     .map((ref) => labelOfScriptureRange(ref, same));
   const prefix = same === 'book' ? `${refs[0].start.book} ` : '';
-  const labelOutput = new Intl.ListFormat().format([
+  const labelOutput = new Intl.ListFormat(undefined, {
+    style: prefix ? 'narrow' : undefined,
+  }).format([
     ...labels,
     ...(collapseAfter && totalRefs > collapseAfter
       ? [`${totalRefs - collapseAfter} other portions`]
