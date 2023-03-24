@@ -19,4 +19,13 @@ describe('labels', () => {
   ])('%s', (input) => {
     expect(labelOfScriptureRanges(parseScripture(input))).toEqual(input);
   });
+
+  it.each([
+    ['Genesis 1:1, 1:3, 1:5, 1:7', 2, 'Genesis 1:1, 1:3, and 2 other portions'],
+    ['Matthew 1:1, 1:4, 1:20, 2:1', undefined, 'Matthew 1:1, 1:4, 1:20, 2:1'],
+  ])('%s', (input, collapseAfter, output) => {
+    expect(
+      labelOfScriptureRanges(parseScripture(input), collapseAfter),
+    ).toEqual(output);
+  });
 });
