@@ -1,6 +1,7 @@
 import {
   Args,
   Info,
+  Int,
   Mutation,
   Parent,
   Query,
@@ -113,13 +114,15 @@ export class ProductResolver {
   label(
     @Parent() product: AnyProduct,
     @Args('collapseAfter', {
-      nullable: true,
-      defaultValue: 3,
+      nullable: false,
       description: stripIndent`
         Collapses ranges after a Scripture book after showing the specified
         number of ranges then shows how many more ranges are after that number.
-        Default is 3.
+        A value of <= 0  collapses all Scripture ranges of that book.
+        Default is 0 (collapse all ranges).
       `,
+      type: () => Int,
+      defaultValue: 0,
     })
     collapseAfter: number,
   ): string | null {
