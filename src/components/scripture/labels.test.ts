@@ -23,6 +23,9 @@ describe('labels', () => {
   it.each([
     ['Genesis 1:1, 1:3, 1:5, 1:7', 2, 'Genesis 1:1, 1:3, and 2 other portions'],
     ['Matthew 1:1, 1:4, 1:20, 2:1', undefined, 'Matthew 1:1, 1:4, 1:20, 2:1'],
+    ['Isaiah 1:1, 1:5, 1:7', 0, 'Isaiah 1:1, 1:5, 1:7'],
+    ['Jeremiah 1:4, 1:6, 1:8', 4, 'Jeremiah 1:4, 1:6, 1:8'],
+    ['Mark 2:4, 2:6, 2:8, 4:7', -1, 'Mark 2:4, 2:6, 2:8, 4:7'],
   ])('%s', (input, collapseAfter, output) => {
     expect(
       labelOfScriptureRanges(parseScripture(input), collapseAfter),
