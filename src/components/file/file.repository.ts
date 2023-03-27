@@ -379,7 +379,19 @@ export class FileRepository extends CommonRepository {
     return result.id;
   }
 
-  async createFile(fileId: ID, name: string, session: Session, parentId?: ID) {
+  async createFile({
+    fileId,
+    name,
+    session,
+    parentId,
+    propOfNode,
+  }: {
+    fileId: ID;
+    name: string;
+    session: Session;
+    parentId?: ID;
+    propOfNode?: [baseNodeId: ID, propertyName: string];
+  }) {
     const initialProps = {
       name,
       canDelete: true,
@@ -391,9 +403,14 @@ export class FileRepository extends CommonRepository {
         await createNode(File, { initialProps, baseNodeProps: { id: fileId } }),
       )
       .apply(
-        createRelationships(File, 'out', {
-          createdBy: ['User', session.userId],
-          parent: ['Directory', parentId],
+        createRelationships(File, {
+          out: {
+            createdBy: ['User', session.userId],
+            parent: ['Directory', parentId],
+          },
+          in: {
+            [propOfNode?.[1] ?? '']: ['BaseNode', propOfNode?.[0]],
+          },
         }),
       )
       .return<{ id: ID }>('node.id as id');
@@ -438,21 +455,6 @@ export class FileRepository extends CommonRepository {
       throw new ServerException('Failed to create file version');
     }
     return result;
-  }
-
-  async attachBaseNode(id: ID, baseNodeId: ID, attachName: string) {
-    await this.db
-      .query()
-      .match([
-        [node('node', 'FileNode', { id })],
-        [node('attachNode', 'BaseNode', { id: baseNodeId })],
-      ])
-      .create([
-        node('node'),
-        relation('in', '', attachName, ACTIVE),
-        node('attachNode'),
-      ])
-      .run();
   }
 
   async rename(fileNode: FileNode, newName: string): Promise<void> {

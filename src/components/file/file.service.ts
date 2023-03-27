@@ -360,7 +360,7 @@ export class FileService {
     }
 
     const fileId = await generateId();
-    await this.repo.createFile(fileId, name, session, parentId);
+    await this.repo.createFile({ fileId, name, session, parentId });
 
     this.logger.debug(
       'File matching given name not found, creating a new one',
@@ -382,9 +382,12 @@ export class FileService {
     initialVersion?: CreateDefinedFileVersionInput,
     field?: string,
   ) {
-    await this.repo.createFile(fileId, name, session);
-
-    await this.repo.attachBaseNode(fileId, baseNodeId, propertyName + 'Node');
+    await this.repo.createFile({
+      fileId,
+      name,
+      session,
+      propOfNode: [baseNodeId, propertyName + 'Node'],
+    });
 
     if (initialVersion) {
       try {
