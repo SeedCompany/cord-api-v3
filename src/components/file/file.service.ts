@@ -381,11 +381,13 @@ export class FileService {
     propertyName: string,
     initialVersion?: CreateDefinedFileVersionInput,
     field?: string,
+    isPublic?: boolean,
   ) {
     await this.repo.createFile({
       fileId,
       name,
       session,
+      public: isPublic,
       propOfNode: [baseNodeId, propertyName + 'Node'],
     });
 
