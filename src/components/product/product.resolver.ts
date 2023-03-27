@@ -120,6 +120,12 @@ export class ProductResolver {
         number of ranges then shows how many more ranges are after that number.
         A value of <= 0  collapses all Scripture ranges of that book.
         Default is 0 (collapse all ranges).
+
+        For example, with a \`collapseAfter\` value of 2:
+        \`Genesis 1:2, 1:5, 1:7, 1:9\` becomes \`Genesis 1:2, 1:5 and 2 other portions\`
+        with a \`collapseAfter\` value of 0 or less:
+        \`Genesis 1:2, 1:5, 1:7, 1:9\` remains the same.
+
       `,
       type: () => Int,
       defaultValue: 0,
