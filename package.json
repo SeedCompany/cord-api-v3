@@ -44,6 +44,7 @@
     "@patarapolw/prettyprint": "^1.0.3",
     "@seedcompany/common": ">=0.11 <1",
     "@seedcompany/data-loader": "^0.5.4",
+    "@seedcompany/nest": ">=0.1 <1",
     "@seedcompany/nestjs-email": "^3.3.2",
     "@seedcompany/scripture": "^0.3.0",
     "argon2": "^0.31.1",
