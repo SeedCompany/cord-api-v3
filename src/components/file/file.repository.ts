@@ -3,7 +3,9 @@ import {
   contains,
   hasLabel,
   inArray,
+  isNull,
   node,
+  not,
   Query,
   relation,
 } from 'cypher-query-builder';
@@ -28,12 +30,14 @@ import {
 import {
   ACTIVE,
   createNode,
+  createProperty,
   createRelationships,
   matchProps,
   matchSession,
   merge,
   paginate,
   sorting,
+  variable,
 } from '../../core/database/query';
 import { BaseNode } from '../../core/database/results';
 import {
@@ -372,6 +376,7 @@ export class FileRepository extends CommonRepository {
           parent: ['Directory', parentId],
         }),
       )
+      .apply(this.defaultPublicFromParent(isPublic))
       .return<{ id: ID }>('node.id as id');
 
     const result = await createFile.first();
@@ -418,6 +423,7 @@ export class FileRepository extends CommonRepository {
           },
         }),
       )
+      .apply(this.defaultPublicFromParent(isPublic))
       .return<{ id: ID }>('node.id as id');
 
     const result = await createFile.first();
@@ -456,6 +462,7 @@ export class FileRepository extends CommonRepository {
           parent: ['File', fileId],
         }),
       )
+      .apply(this.defaultPublicFromParent(input.public))
       .return<{ id: ID }>('node.id as id');
 
     const result = await createFile.first();
@@ -523,6 +530,30 @@ export class FileRepository extends CommonRepository {
       this.logger.error('Failed to delete', { id: fileNode.id, exception });
       throw new ServerException('Failed to delete', exception);
     }
+  }
+
+  private defaultPublicFromParent(explicitPublic?: boolean) {
+    return (query: Query) => {
+      if (explicitPublic != null) {
+        // public flag has been explicitly set, so not defaulting from parent.
+        return query;
+      }
+      return query.subQuery('node', (sub) =>
+        sub.raw`
+            MATCH (node)-[:parent { active: true }]->
+                  (:FileNode)-[:public { active: true }]->(prop:Property)
+          `
+          .where({ 'prop.value': not(isNull()) })
+          .apply(
+            createProperty({
+              key: 'public',
+              value: variable('prop.value'),
+              resource: IFileNode,
+            }),
+          )
+          .return('count(prop) as appliedPublicFromParent'),
+      );
+    };
   }
 }
 
