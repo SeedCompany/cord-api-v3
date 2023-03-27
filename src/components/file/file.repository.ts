@@ -190,7 +190,7 @@ export class FileRepository extends CommonRepository {
           node('modifiedBy'),
         ])
         .return<{ dto: File }>(
-          merge('versionProps', 'props', {
+          merge({ public: false }, 'versionProps', 'props', {
             type: `"${FileNodeType.File}"`,
             latestVersionId: 'version.id',
             modifiedById: 'modifiedBy.id',
@@ -279,7 +279,7 @@ export class FileRepository extends CommonRepository {
             ]),
         )
         .return<{ dto: Directory }>(
-          merge('props', {
+          merge({ public: false }, 'props', {
             type: `"${FileNodeType.Directory}"`,
             createdById: 'createdBy.id',
             totalFiles: 'totalFiles',
@@ -319,7 +319,7 @@ export class FileRepository extends CommonRepository {
           node('createdBy'),
         ])
         .return<{ dto: FileVersion }>(
-          merge('props', {
+          merge({ public: false }, 'props', {
             type: `"${FileNodeType.FileVersion}"`,
             createdById: 'createdBy.id',
             canDelete: true,
