@@ -355,9 +355,11 @@ export class FileRepository extends CommonRepository {
     parentId: ID | undefined,
     name: string,
     session: Session,
+    { public: isPublic }: { public?: boolean } = {},
   ): Promise<ID> {
     const initialProps = {
       name,
+      ...(isPublic ? { public: true } : {}),
       canDelete: true,
     };
 
@@ -385,15 +387,18 @@ export class FileRepository extends CommonRepository {
     session,
     parentId,
     propOfNode,
+    public: isPublic,
   }: {
     fileId: ID;
     name: string;
     session: Session;
     parentId?: ID;
     propOfNode?: [baseNodeId: ID, propertyName: string];
+    public?: boolean;
   }) {
     const initialProps = {
       name,
+      ...(isPublic ? { public: true } : {}),
       canDelete: true,
     };
 
@@ -424,13 +429,16 @@ export class FileRepository extends CommonRepository {
 
   async createFileVersion(
     fileId: ID,
-    input: Pick<FileVersion, 'id' | 'name' | 'mimeType' | 'size'>,
+    input: Pick<FileVersion, 'id' | 'name' | 'mimeType' | 'size'> & {
+      public?: boolean;
+    },
     session: Session,
   ) {
     const initialProps = {
       name: input.name,
       mimeType: input.mimeType,
       size: input.size,
+      ...(input.public ? { public: true } : {}),
       canDelete: true,
     };
 
