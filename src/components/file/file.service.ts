@@ -90,8 +90,8 @@ export class FileService {
     });
   }
 
-  async getFileNode(id: ID, session: Session): Promise<FileNode> {
-    this.logger.debug(`getNode`, { id, userId: session.userId });
+  async getFileNode(id: ID, session?: Session): Promise<FileNode> {
+    this.logger.debug(`getNode`, { id, userId: session?.userId });
     return await this.repo.getById(id, session);
   }
 

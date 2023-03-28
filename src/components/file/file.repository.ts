@@ -65,7 +65,7 @@ export class FileRepository extends CommonRepository {
     return this.getConstraintsFor(IFileNode);
   }
 
-  async getById(id: ID, _session: Session): Promise<FileNode> {
+  async getById(id: ID, _session?: Session): Promise<FileNode> {
     const result = await this.db
       .query()
       .matchNode('node', 'FileNode', { id })
