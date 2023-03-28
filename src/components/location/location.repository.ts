@@ -1,7 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { ID, ServerException, Session, UnsecuredDto } from '../../common';
+import {
+  generateId,
+  ID,
+  ServerException,
+  Session,
+  UnsecuredDto,
+} from '../../common';
 import { DtoRepository } from '../../core';
 import {
   ACTIVE,
@@ -27,10 +33,13 @@ export class LocationRepository extends DtoRepository(Location) {
   }
 
   async create(input: CreateLocation, session: Session) {
+    const mapImageId = await generateId();
+
     const initialProps = {
       name: input.name,
       isoAlpha3: input.isoAlpha3,
       type: input.type,
+      mapImage: mapImageId,
       canDelete: true,
     };
 
@@ -51,7 +60,7 @@ export class LocationRepository extends DtoRepository(Location) {
       throw new ServerException('Failed to create location');
     }
 
-    return result.id;
+    return { id: result.id, mapImageId };
   }
 
   protected hydrate() {

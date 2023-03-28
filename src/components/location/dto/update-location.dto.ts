@@ -3,6 +3,7 @@ import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { ID, IdField, ISO31661Alpha3, NameField } from '../../../common';
 import { Transform } from '../../../common/transform.decorator';
+import { CreateDefinedFileVersionInput } from '../../file/dto';
 import { LocationType } from './location-type.enum';
 import { Location } from './location.dto';
 
@@ -30,6 +31,11 @@ export abstract class UpdateLocation {
 
   @IdField({ nullable: true })
   readonly defaultFieldRegionId?: ID | null;
+
+  @Field({ nullable: true })
+  @Type(() => CreateDefinedFileVersionInput)
+  @ValidateNested()
+  readonly mapImage?: CreateDefinedFileVersionInput;
 }
 
 @InputType()
