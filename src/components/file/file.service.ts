@@ -133,7 +133,7 @@ export class FileService {
 
   async getDownloadUrl(node: FileNode): Promise<string> {
     if (isDirectory(node)) {
-      throw new InputException('Directories cannot be downloaded yet');
+      throw new InputException('View directories via GraphQL API');
     }
     const id = isFile(node) ? node.latestVersionId : node.id;
     try {
