@@ -27,7 +27,7 @@ export class FileUrlController {
     private readonly httpAdapterHost: HttpAdapterHost,
   ) {}
 
-  @Get(':fileId/:fileName')
+  @Get(':fileId/:fileName?')
   async download(
     @Param('fileId') fileId: ID,
     @Query('proxy') proxy: string | undefined,
