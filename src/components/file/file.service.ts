@@ -421,14 +421,11 @@ export class FileService {
         field,
       );
     }
-    const name = input.name ?? (await this.getFile(file.value, session)).name;
     try {
       await this.createFileVersion(
         {
           parentId: file.value,
-          uploadId: input.uploadId,
-          name,
-          mimeType: input.mimeType,
+          ...input,
         },
         session,
       );
