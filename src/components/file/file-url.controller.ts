@@ -42,8 +42,10 @@ export class FileUrlController {
     // TODO authorization using session
 
     const url = await this.files.getDownloadUrl(node);
+    const cacheControl = this.files.determineCacheHeader(node);
 
     const { httpAdapter } = this.httpAdapterHost;
+    httpAdapter.setHeader(res, 'Cache-Control', cacheControl);
     httpAdapter.redirect(res, HttpStatus.FOUND, url);
   }
 }

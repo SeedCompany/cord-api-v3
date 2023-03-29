@@ -1,10 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { Connection } from 'cypher-query-builder';
 import { intersection } from 'lodash';
+import { Duration } from 'luxon';
 import { withAddedPath } from '~/common/url.util';
 import {
   bufferFromStream,
+  cleanJoin,
   DuplicateException,
+  DurationIn,
   generateId,
   ID,
   InputException,
@@ -142,11 +145,25 @@ export class FileService {
       return await this.bucket.getSignedUrlForGetObject(id, {
         ResponseContentDisposition: `attachment; filename="${node.name}"`,
         ResponseContentType: node.mimeType,
+        ResponseCacheControl: this.determineCacheHeader(node),
       });
     } catch (e) {
       this.logger.error('Unable to generate download url', { exception: e });
       throw new ServerException('Unable to generate download url', e);
     }
+  }
+
+  determineCacheHeader(node: FileNode) {
+    const duration = (name: string, d: DurationIn) =>
+      `${name}=${Duration.from(d).as('seconds')}`;
+
+    const isImmutable = isFileVersion(node);
+
+    return cleanJoin(', ', [
+      isImmutable && 'immutable',
+      node.public ? 'public' : 'private',
+      duration('max-age', isImmutable ? { year: 1 } : { day: 1 }),
+    ]);
   }
 
   async getParents(nodeId: ID, session: Session): Promise<readonly FileNode[]> {
