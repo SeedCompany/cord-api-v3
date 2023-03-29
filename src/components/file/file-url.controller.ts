@@ -2,13 +2,15 @@ import {
   Controller,
   forwardRef,
   Get,
+  HttpStatus,
   Inject,
   Param,
   Query,
   Request,
   Response,
 } from '@nestjs/common';
-import { Request as IRequest, Response as IResponse } from 'express';
+import { HttpAdapterHost } from '@nestjs/core';
+import { Request as IRequest } from 'express';
 import { ID } from '~/common';
 import { loggedInSession as verifyLoggedIn } from '~/common/session';
 import { SessionInterceptor } from '../authentication/session.interceptor';
@@ -22,6 +24,7 @@ export class FileUrlController {
     @Inject(forwardRef(() => FileService))
     private readonly files: FileService,
     private readonly sessionHost: SessionInterceptor,
+    private readonly httpAdapterHost: HttpAdapterHost,
   ) {}
 
   @Get(':fileId/:fileName')
@@ -29,7 +32,7 @@ export class FileUrlController {
     @Param('fileId') fileId: ID,
     @Query('proxy') proxy: string | undefined,
     @Request() request: IRequest,
-    @Response() res: IResponse,
+    @Response() res: unknown,
   ) {
     const node = await this.files.getFileNode(fileId);
 
@@ -41,6 +44,8 @@ export class FileUrlController {
     // TODO authorization using session
 
     const url = await this.files.getDownloadUrl(node);
-    res.redirect(url);
+
+    const { httpAdapter } = this.httpAdapterHost;
+    httpAdapter.redirect(res, HttpStatus.FOUND, url);
   }
 }
