@@ -5,7 +5,6 @@ import {
   HttpStatus,
   Inject,
   Param,
-  Query,
   Request,
   Response,
 } from '@nestjs/common';
@@ -30,7 +29,6 @@ export class FileUrlController {
   @Get(':fileId/:fileName?')
   async download(
     @Param('fileId') fileId: ID,
-    @Query('proxy') proxy: string | undefined,
     @Request() request: IRequest,
     @Response() res: unknown,
   ) {
