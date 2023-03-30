@@ -16,6 +16,7 @@ import { HandleIdLookup, ILogger, Logger } from '../../core';
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto/powers';
+import { FileService } from '../file';
 import {
   CreateLocation,
   Location,
@@ -33,6 +34,7 @@ export class LocationService {
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
     private readonly repo: LocationRepository,
+    private readonly files: FileService,
   ) {}
 
   async create(input: CreateLocation, session: Session): Promise<Location> {
@@ -45,7 +47,17 @@ export class LocationService {
       );
     }
 
-    const id = await this.repo.create(input, session);
+    const { id, mapImageId } = await this.repo.create(input, session);
+    await this.files.createDefinedFile(
+      mapImageId,
+      input.name,
+      session,
+      id,
+      'mapImage',
+      input.mapImage,
+      'location.mapImage',
+      true,
+    );
 
     this.logger.debug(`location created`, { id: id });
     return await this.readOne(id, session);
@@ -98,8 +110,12 @@ export class LocationService {
       changes,
     );
 
-    const { fundingAccountId, defaultFieldRegionId, ...simpleChanges } =
-      changes;
+    const {
+      fundingAccountId,
+      defaultFieldRegionId,
+      mapImage,
+      ...simpleChanges
+    } = changes;
 
     await this.repo.updateProperties(location, simpleChanges);
 
@@ -120,6 +136,13 @@ export class LocationService {
         defaultFieldRegionId,
       );
     }
+
+    await this.files.updateDefinedFile(
+      location.mapImage,
+      'location.mapImage',
+      mapImage,
+      session,
+    );
 
     return await this.readOne(input.id, session);
   }

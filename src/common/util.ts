@@ -77,3 +77,11 @@ export class JsonSet extends Set {
     return [...this];
   }
 }
+
+/**
+ * Join the items to a string after stripping falsy conditions.
+ */
+export const cleanJoin = (
+  separator: string,
+  list: ReadonlyArray<string | number | null | undefined | boolean>,
+) => list.filter((item) => item != null && item !== false).join(separator);

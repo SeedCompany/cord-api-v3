@@ -1,10 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { Connection } from 'cypher-query-builder';
 import { intersection } from 'lodash';
+import { Duration } from 'luxon';
 import { withAddedPath } from '~/common/url.util';
 import {
   bufferFromStream,
+  cleanJoin,
   DuplicateException,
+  DurationIn,
   generateId,
   ID,
   InputException,
@@ -90,8 +93,8 @@ export class FileService {
     });
   }
 
-  async getFileNode(id: ID, session: Session): Promise<FileNode> {
-    this.logger.debug(`getNode`, { id, userId: session.userId });
+  async getFileNode(id: ID, session?: Session): Promise<FileNode> {
+    this.logger.debug(`getNode`, { id, userId: session?.userId });
     return await this.repo.getById(id, session);
   }
 
@@ -133,7 +136,7 @@ export class FileService {
 
   async getDownloadUrl(node: FileNode): Promise<string> {
     if (isDirectory(node)) {
-      throw new InputException('Directories cannot be downloaded yet');
+      throw new InputException('View directories via GraphQL API');
     }
     const id = isFile(node) ? node.latestVersionId : node.id;
     try {
@@ -142,11 +145,25 @@ export class FileService {
       return await this.bucket.getSignedUrlForGetObject(id, {
         ResponseContentDisposition: `attachment; filename="${node.name}"`,
         ResponseContentType: node.mimeType,
+        ResponseCacheControl: this.determineCacheHeader(node),
       });
     } catch (e) {
       this.logger.error('Unable to generate download url', { exception: e });
       throw new ServerException('Unable to generate download url', e);
     }
+  }
+
+  determineCacheHeader(node: FileNode) {
+    const duration = (name: string, d: DurationIn) =>
+      `${name}=${Duration.from(d).as('seconds')}`;
+
+    const isImmutable = isFileVersion(node);
+
+    return cleanJoin(', ', [
+      isImmutable && 'immutable',
+      node.public ? 'public' : 'private',
+      duration('max-age', isImmutable ? { year: 1 } : { day: 1 }),
+    ]);
   }
 
   async getParents(nodeId: ID, session: Session): Promise<readonly FileNode[]> {
@@ -360,7 +377,7 @@ export class FileService {
     }
 
     const fileId = await generateId();
-    await this.repo.createFile(fileId, name, session, parentId);
+    await this.repo.createFile({ fileId, name, session, parentId });
 
     this.logger.debug(
       'File matching given name not found, creating a new one',
@@ -381,10 +398,15 @@ export class FileService {
     propertyName: string,
     initialVersion?: CreateDefinedFileVersionInput,
     field?: string,
+    isPublic?: boolean,
   ) {
-    await this.repo.createFile(fileId, name, session);
-
-    await this.repo.attachBaseNode(fileId, baseNodeId, propertyName + 'Node');
+    await this.repo.createFile({
+      fileId,
+      name,
+      session,
+      public: isPublic,
+      propOfNode: [baseNodeId, propertyName + 'Node'],
+    });
 
     if (initialVersion) {
       try {
@@ -421,14 +443,11 @@ export class FileService {
         field,
       );
     }
-    const name = input.name ?? (await this.getFile(file.value, session)).name;
     try {
       await this.createFileVersion(
         {
           parentId: file.value,
-          uploadId: input.uploadId,
-          name,
-          mimeType: input.mimeType,
+          ...input,
         },
         session,
       );
