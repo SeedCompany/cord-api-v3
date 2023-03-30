@@ -59,6 +59,11 @@ abstract class FileNode extends Resource {
   })
   readonly name: string;
 
+  @Field({
+    description: 'Is this available to anyone anonymously?',
+  })
+  readonly public: boolean;
+
   readonly createdById: ID;
 }
 

@@ -3,7 +3,9 @@ import {
   contains,
   hasLabel,
   inArray,
+  isNull,
   node,
+  not,
   Query,
   relation,
 } from 'cypher-query-builder';
@@ -28,12 +30,14 @@ import {
 import {
   ACTIVE,
   createNode,
+  createProperty,
   createRelationships,
   matchProps,
   matchSession,
   merge,
   paginate,
   sorting,
+  variable,
 } from '../../core/database/query';
 import { BaseNode } from '../../core/database/results';
 import {
@@ -61,7 +65,7 @@ export class FileRepository extends CommonRepository {
     return this.getConstraintsFor(IFileNode);
   }
 
-  async getById(id: ID, _session: Session): Promise<FileNode> {
+  async getById(id: ID, _session?: Session): Promise<FileNode> {
     const result = await this.db
       .query()
       .matchNode('node', 'FileNode', { id })
@@ -190,7 +194,7 @@ export class FileRepository extends CommonRepository {
           node('modifiedBy'),
         ])
         .return<{ dto: File }>(
-          merge('versionProps', 'props', {
+          merge({ public: false }, 'versionProps', 'props', {
             type: `"${FileNodeType.File}"`,
             latestVersionId: 'version.id',
             modifiedById: 'modifiedBy.id',
@@ -279,7 +283,7 @@ export class FileRepository extends CommonRepository {
             ]),
         )
         .return<{ dto: Directory }>(
-          merge('props', {
+          merge({ public: false }, 'props', {
             type: `"${FileNodeType.Directory}"`,
             createdById: 'createdBy.id',
             totalFiles: 'totalFiles',
@@ -319,7 +323,7 @@ export class FileRepository extends CommonRepository {
           node('createdBy'),
         ])
         .return<{ dto: FileVersion }>(
-          merge('props', {
+          merge({ public: false }, 'props', {
             type: `"${FileNodeType.FileVersion}"`,
             createdById: 'createdBy.id',
             canDelete: true,
@@ -355,9 +359,11 @@ export class FileRepository extends CommonRepository {
     parentId: ID | undefined,
     name: string,
     session: Session,
+    { public: isPublic }: { public?: boolean } = {},
   ): Promise<ID> {
     const initialProps = {
       name,
+      ...(isPublic ? { public: true } : {}),
       canDelete: true,
     };
 
@@ -370,6 +376,7 @@ export class FileRepository extends CommonRepository {
           parent: ['Directory', parentId],
         }),
       )
+      .apply(this.defaultPublicFromParent(isPublic))
       .return<{ id: ID }>('node.id as id');
 
     const result = await createFile.first();
@@ -379,9 +386,24 @@ export class FileRepository extends CommonRepository {
     return result.id;
   }
 
-  async createFile(fileId: ID, name: string, session: Session, parentId?: ID) {
+  async createFile({
+    fileId,
+    name,
+    session,
+    parentId,
+    propOfNode,
+    public: isPublic,
+  }: {
+    fileId: ID;
+    name: string;
+    session: Session;
+    parentId?: ID;
+    propOfNode?: [baseNodeId: ID, propertyName: string];
+    public?: boolean;
+  }) {
     const initialProps = {
       name,
+      ...(isPublic ? { public: true } : {}),
       canDelete: true,
     };
 
@@ -391,11 +413,17 @@ export class FileRepository extends CommonRepository {
         await createNode(File, { initialProps, baseNodeProps: { id: fileId } }),
       )
       .apply(
-        createRelationships(File, 'out', {
-          createdBy: ['User', session.userId],
-          parent: ['Directory', parentId],
+        createRelationships(File, {
+          out: {
+            createdBy: ['User', session.userId],
+            parent: ['Directory', parentId],
+          },
+          in: {
+            [propOfNode?.[1] ?? '']: ['BaseNode', propOfNode?.[0]],
+          },
         }),
       )
+      .apply(this.defaultPublicFromParent(isPublic))
       .return<{ id: ID }>('node.id as id');
 
     const result = await createFile.first();
@@ -407,13 +435,16 @@ export class FileRepository extends CommonRepository {
 
   async createFileVersion(
     fileId: ID,
-    input: Pick<FileVersion, 'id' | 'name' | 'mimeType' | 'size'>,
+    input: Pick<FileVersion, 'id' | 'name' | 'mimeType' | 'size'> & {
+      public?: boolean;
+    },
     session: Session,
   ) {
     const initialProps = {
       name: input.name,
       mimeType: input.mimeType,
       size: input.size,
+      ...(input.public ? { public: true } : {}),
       canDelete: true,
     };
 
@@ -431,6 +462,7 @@ export class FileRepository extends CommonRepository {
           parent: ['File', fileId],
         }),
       )
+      .apply(this.defaultPublicFromParent(input.public))
       .return<{ id: ID }>('node.id as id');
 
     const result = await createFile.first();
@@ -438,21 +470,6 @@ export class FileRepository extends CommonRepository {
       throw new ServerException('Failed to create file version');
     }
     return result;
-  }
-
-  async attachBaseNode(id: ID, baseNodeId: ID, attachName: string) {
-    await this.db
-      .query()
-      .match([
-        [node('node', 'FileNode', { id })],
-        [node('attachNode', 'BaseNode', { id: baseNodeId })],
-      ])
-      .create([
-        node('node'),
-        relation('in', '', attachName, ACTIVE),
-        node('attachNode'),
-      ])
-      .run();
   }
 
   async rename(fileNode: FileNode, newName: string): Promise<void> {
@@ -513,6 +530,30 @@ export class FileRepository extends CommonRepository {
       this.logger.error('Failed to delete', { id: fileNode.id, exception });
       throw new ServerException('Failed to delete', exception);
     }
+  }
+
+  private defaultPublicFromParent(explicitPublic?: boolean) {
+    return (query: Query) => {
+      if (explicitPublic != null) {
+        // public flag has been explicitly set, so not defaulting from parent.
+        return query;
+      }
+      return query.subQuery('node', (sub) =>
+        sub.raw`
+            MATCH (node)-[:parent { active: true }]->
+                  (:FileNode)-[:public { active: true }]->(prop:Property)
+          `
+          .where({ 'prop.value': not(isNull()) })
+          .apply(
+            createProperty({
+              key: 'public',
+              value: variable('prop.value'),
+              resource: IFileNode,
+            }),
+          )
+          .return('count(prop) as appliedPublicFromParent'),
+      );
+    };
   }
 }
 

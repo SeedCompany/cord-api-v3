@@ -36,6 +36,11 @@ import { SessionResolver } from './session.resolver';
     SessionInterceptor,
     { provide: APP_INTERCEPTOR, useExisting: SessionInterceptor },
   ],
-  exports: [AuthenticationService, CryptoService, AuthenticationRepository],
+  exports: [
+    SessionInterceptor,
+    AuthenticationService,
+    CryptoService,
+    AuthenticationRepository,
+  ],
 })
 export class AuthenticationModule {}
