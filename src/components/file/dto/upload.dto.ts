@@ -46,10 +46,9 @@ export abstract class CreateDefinedFileVersionInput {
   readonly uploadId: ID;
 
   @Field({
-    description: 'An optional name. Defaults to file name.',
-    nullable: true,
+    description: 'The file name',
   })
-  readonly name?: string;
+  readonly name: string;
 
   @Field({
     description:

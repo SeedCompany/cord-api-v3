@@ -36,6 +36,7 @@ export class ReextractPlanningPnpsMigration extends BaseMigration {
             id: engagement.id,
             pnp: {
               uploadId: row.pnpFileId,
+              name: row.pnpFileName,
             },
             methodology:
               row.methodologies.length > 1
@@ -72,8 +73,10 @@ export class ReextractPlanningPnpsMigration extends BaseMigration {
             node('', 'File'),
             relation('in', '', 'parent', ACTIVE),
             node('version', 'FileVersion'),
+            relation('out', '', 'name', ACTIVE),
+            node('name', 'Property'),
           ])
-          .return('version')
+          .return('version, name.value as name')
           .orderBy('version.createdAt', 'DESC')
           .raw('LIMIT 1'),
       )
@@ -93,9 +96,15 @@ export class ReextractPlanningPnpsMigration extends BaseMigration {
           .raw('WHERE size(methodologies) > 0')
           .return('methodologies'),
       )
-      .return<{ engId: ID; pnpFileId: ID; methodologies: Methodology[] }>([
+      .return<{
+        engId: ID;
+        pnpFileId: ID;
+        pnpFileName: string;
+        methodologies: Methodology[];
+      }>([
         'eng.id as engId',
         'version.id as pnpFileId',
+        'name as pnpFileName',
         'methodologies',
       ])
       .run();
