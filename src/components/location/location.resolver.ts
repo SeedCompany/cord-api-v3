@@ -19,6 +19,7 @@ import {
 } from '../../common';
 import { Loader, LoaderOf } from '../../core';
 import { FieldRegionLoader, SecuredFieldRegion } from '../field-region';
+import { FileNodeLoader, resolveDefinedFile, SecuredFile } from '../file';
 import {
   FundingAccountLoader,
   SecuredFundingAccount,
@@ -83,6 +84,14 @@ export class LocationResolver {
     return await mapSecuredValue(location.defaultFieldRegion, (id) =>
       fieldRegions.load(id),
     );
+  }
+
+  @ResolveField(() => SecuredFile)
+  async mapImage(
+    @Parent() location: Location,
+    @Loader(FileNodeLoader) files: LoaderOf<FileNodeLoader>,
+  ): Promise<SecuredFile> {
+    return await resolveDefinedFile(files, location.mapImage);
   }
 
   @ResolveField(() => IsoCountry, {

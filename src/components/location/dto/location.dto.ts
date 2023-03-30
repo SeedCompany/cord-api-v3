@@ -13,6 +13,7 @@ import {
   SecuredString,
   SecuredStringNullable,
 } from '../../../common';
+import { DefinedFile } from '../../file/dto';
 import { LocationType } from './location-type.enum';
 
 @ObjectType({
@@ -42,6 +43,8 @@ export class Location extends Resource {
   readonly fundingAccount: Secured<ID | null>;
 
   readonly defaultFieldRegion: Secured<ID | null>;
+
+  readonly mapImage: DefinedFile;
 }
 
 @ObjectType({
