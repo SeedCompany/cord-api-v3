@@ -1,3 +1,7 @@
+import {
+  GetObjectCommand as GetObject,
+  PutObjectCommand as PutObject,
+} from '@aws-sdk/client-s3';
 import { Injectable } from '@nestjs/common';
 import { Connection } from 'cypher-query-builder';
 import { intersection } from 'lodash';
@@ -142,10 +146,14 @@ export class FileService {
     try {
       // before sending link, first check if object exists in s3
       await this.bucket.headObject(id);
-      return await this.bucket.getSignedUrlForGetObject(id, {
+      return await this.bucket.getSignedUrl(GetObject, {
+        Key: id,
         ResponseContentDisposition: `attachment; filename="${node.name}"`,
         ResponseContentType: node.mimeType,
         ResponseCacheControl: this.determineCacheHeader(node),
+        signing: {
+          expiresIn: this.config.files.signedUrlExpires,
+        },
       });
     } catch (e) {
       this.logger.error('Unable to generate download url', { exception: e });
@@ -209,7 +217,12 @@ export class FileService {
 
   async requestUpload(): Promise<RequestUploadOutput> {
     const id = await generateId();
-    const url = await this.bucket.getSignedUrlForPutObject(`temp/${id}`);
+    const url = await this.bucket.getSignedUrl(PutObject, {
+      Key: `temp/${id}`,
+      signing: {
+        expiresIn: this.config.files.signedUrlExpires,
+      },
+    });
     return { id, url };
   }
 

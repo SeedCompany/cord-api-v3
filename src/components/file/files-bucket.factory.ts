@@ -8,9 +8,9 @@ import { LocalBucketController } from './local-bucket.controller';
 export const FilesBucketFactory: FactoryProvider = {
   provide: FileBucket,
   useFactory: (s3: S3, config: ConfigService) => {
-    const { bucket, localDirectory, signedUrlExpires } = config.files;
+    const { bucket, localDirectory } = config.files;
     if (bucket) {
-      return new S3Bucket({ s3, bucket, signedUrlExpires });
+      return new S3Bucket(s3, bucket);
     }
 
     const baseUrl = withAddedPath(config.hostUrl, LocalBucketController.path);
@@ -19,10 +19,9 @@ export const FilesBucketFactory: FactoryProvider = {
       return new FilesystemBucket({
         rootDirectory: localDirectory,
         baseUrl,
-        signedUrlExpires,
       });
     }
-    return new MemoryBucket({ baseUrl, signedUrlExpires });
+    return new MemoryBucket({ baseUrl });
   },
   inject: [S3, ConfigService],
 };
