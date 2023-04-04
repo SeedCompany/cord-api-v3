@@ -23,12 +23,11 @@ export type FakeAwsFile = Required<Pick<GetObjectOutput, 'ContentType'>> &
 /**
  * Common functionality for "local" (non-s3) buckets
  */
-export abstract class LocalBucket extends FileBucket {
-  private readonly baseUrl: URL;
-
-  constructor(options: LocalBucketOptions) {
+export abstract class LocalBucket<
+  Options extends LocalBucketOptions = LocalBucketOptions,
+> extends FileBucket {
+  constructor(protected options: Options) {
     super();
-    this.baseUrl = options.baseUrl;
   }
 
   async download(signed: string): Promise<GetObjectOutput> {
@@ -76,7 +75,7 @@ export abstract class LocalBucket extends FileBucket {
           .toMillis(),
       },
     });
-    const url = new URL(this.baseUrl);
+    const url = new URL(this.options.baseUrl);
     url.searchParams.set('signed', signed);
     return url.toString();
   }

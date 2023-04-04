@@ -1,5 +1,6 @@
 import { S3 } from '@aws-sdk/client-s3';
 import { FactoryProvider } from '@nestjs/common';
+import { resolve } from 'path';
 import { withAddedPath } from '~/common/url.util';
 import { ConfigService } from '../../core';
 import { FileBucket, FilesystemBucket, MemoryBucket, S3Bucket } from './bucket';
@@ -17,7 +18,7 @@ export const FilesBucketFactory: FactoryProvider = {
 
     if (localDirectory) {
       return new FilesystemBucket({
-        rootDirectory: localDirectory,
+        rootDirectory: resolve(localDirectory),
         baseUrl,
       });
     }
