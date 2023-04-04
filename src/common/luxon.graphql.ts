@@ -9,6 +9,11 @@ import { Transform } from './transform.decorator';
 import { ValidateBy } from './validators/validateBy';
 
 Settings.throwOnInvalid = true;
+declare module 'luxon' {
+  interface TSSettings {
+    throwOnInvalid: true;
+  }
+}
 
 const IsIsoDate = () =>
   ValidateBy({
