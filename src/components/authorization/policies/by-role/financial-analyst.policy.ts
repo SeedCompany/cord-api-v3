@@ -32,7 +32,7 @@ import {
       p.locations.when(sensOnlyLow).read,
       p.many('registryOfDialectsCode', 'signLanguageCode').none,
     ]),
-    r.Organization.create.whenAny(member, sensMediumOrLower).edit,
+    r.Organization.read.create.whenAny(member, sensMediumOrLower).edit,
     r.Partner.read.create
       .specifically((p) => [
         p
