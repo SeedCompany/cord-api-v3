@@ -11,7 +11,8 @@ export const FilesBucketFactory: FactoryProvider = {
   useFactory: (s3: S3, config: ConfigService) => {
     const { bucket, localDirectory } = config.files;
     if (bucket) {
-      return new S3Bucket(s3, bucket);
+      const [bucketName, ...prefix] = bucket.split('/');
+      return new S3Bucket(s3, bucketName, prefix.join('/'));
     }
 
     const baseUrl = withAddedPath(config.hostUrl, LocalBucketController.path);

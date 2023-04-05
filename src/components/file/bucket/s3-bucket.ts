@@ -3,6 +3,7 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { Command } from '@aws-sdk/smithy-client';
 import { Type } from '@nestjs/common';
 import { Duration } from 'luxon';
+import { join } from 'path/posix';
 import { Readable } from 'stream';
 import { NotFoundException } from '~/common';
 import { FileBucket, SignedOp } from './file-bucket';
@@ -11,7 +12,11 @@ import { FileBucket, SignedOp } from './file-bucket';
  * A bucket that actually connects to S3.
  */
 export class S3Bucket extends FileBucket {
-  constructor(private readonly s3: S3, private readonly bucket: string) {
+  constructor(
+    private readonly s3: S3,
+    private readonly bucket: string,
+    private readonly prefix = '',
+  ) {
     super();
   }
 
@@ -22,6 +27,7 @@ export class S3Bucket extends FileBucket {
     const { signing, ...rest } = input;
     const command = new operation({
       ...rest,
+      Key: this.fullKey(rest.Key),
       Bucket: this.bucket,
     });
     return await getSignedUrl(this.s3, command, {
@@ -34,7 +40,7 @@ export class S3Bucket extends FileBucket {
     const file = await this.s3
       .getObject({
         Bucket: this.bucket,
-        Key: key,
+        Key: this.fullKey(key),
       })
       .catch(handleNotFound);
     return {
@@ -47,7 +53,7 @@ export class S3Bucket extends FileBucket {
     return await this.s3
       .headObject({
         Bucket: this.bucket,
-        Key: key,
+        Key: this.fullKey(key),
       })
       .catch(handleNotFound);
   }
@@ -56,8 +62,8 @@ export class S3Bucket extends FileBucket {
     await this.s3
       .copyObject({
         Bucket: this.bucket,
-        CopySource: `${this.bucket}/${oldKey}`,
-        Key: newKey,
+        CopySource: join(this.bucket, this.fullKey(oldKey)),
+        Key: this.fullKey(newKey),
       })
       .catch(handleNotFound);
   }
@@ -66,9 +72,13 @@ export class S3Bucket extends FileBucket {
     await this.s3
       .deleteObject({
         Bucket: this.bucket,
-        Key: key,
+        Key: this.fullKey(key),
       })
       .catch(handleNotFound);
+  }
+
+  private fullKey(key: string) {
+    return join(this.prefix, key);
   }
 }
 
