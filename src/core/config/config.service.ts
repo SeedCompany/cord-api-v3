@@ -18,6 +18,8 @@ import { FrontendUrlWrapper } from '../email/templates/frontend-url';
 import { LogLevel } from '../logger';
 import { EnvironmentService } from './environment.service';
 
+const dur = Duration.from;
+
 type HttpTimeoutOptions = typeof ConfigService.prototype.httpTimeouts;
 
 /**
@@ -194,7 +196,11 @@ export class ConfigService implements EmailOptionsFactory {
     return {
       bucket,
       localDirectory,
-      signedUrlExpires: Duration.fromObject({ minutes: 15 }),
+      cacheTtl: {
+        file: { private: dur('1h'), public: dur('1d') },
+        version: { private: dur('1h'), public: dur('6d') },
+      },
+      putTtl: dur('10m'),
     };
   }
 

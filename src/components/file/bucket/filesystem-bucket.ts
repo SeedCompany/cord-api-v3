@@ -1,5 +1,5 @@
 import { promises as fs } from 'fs';
-import { dirname, join, resolve } from 'path';
+import { dirname, join } from 'path';
 import { Readable } from 'stream';
 import { NotFoundException } from '../../../common';
 import { FakeAwsFile, LocalBucket, LocalBucketOptions } from './local-bucket';
@@ -11,12 +11,9 @@ export interface FilesystemBucketOptions extends LocalBucketOptions {
 /**
  * A bucket that uses the local filesystem
  */
-export class FilesystemBucket extends LocalBucket {
-  private readonly rootDir: string;
-
-  constructor(options: FilesystemBucketOptions) {
-    super(options);
-    this.rootDir = resolve(options.rootDirectory);
+export class FilesystemBucket extends LocalBucket<FilesystemBucketOptions> {
+  private get rootDir() {
+    return this.options.rootDirectory;
   }
 
   protected async saveFile(key: string, file: FakeAwsFile) {

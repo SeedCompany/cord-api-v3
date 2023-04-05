@@ -1,15 +1,16 @@
 import {
-  GetObjectCommandInput,
-  PutObjectCommandInput,
+  GetObjectCommand as GetObject,
+  PutObjectCommand as PutObject,
 } from '@aws-sdk/client-s3';
+import { Command } from '@aws-sdk/smithy-client';
+import { Type } from '@nestjs/common';
 import { pickBy } from 'lodash';
-import { DateTime } from 'luxon';
+import { DateTime, Duration } from 'luxon';
 import { assert } from 'ts-essentials';
-import { Except } from 'type-fest';
 import { InputException } from '~/common';
-import { BucketOptions, FileBucket, GetObjectOutput } from './file-bucket';
+import { FileBucket, GetObjectOutput, SignedOp } from './file-bucket';
 
-export interface LocalBucketOptions extends BucketOptions {
+export interface LocalBucketOptions {
   baseUrl: URL;
 }
 
@@ -22,21 +23,17 @@ export type FakeAwsFile = Required<Pick<GetObjectOutput, 'ContentType'>> &
 /**
  * Common functionality for "local" (non-s3) buckets
  */
-export abstract class LocalBucket extends FileBucket {
-  private readonly baseUrl: URL;
-
-  constructor(options: LocalBucketOptions) {
-    super(options);
-    this.baseUrl = options.baseUrl;
+export abstract class LocalBucket<
+  Options extends LocalBucketOptions = LocalBucketOptions,
+> extends FileBucket {
+  constructor(protected options: Options) {
+    super();
   }
 
   async download(signed: string): Promise<GetObjectOutput> {
-    const parsed: GetObjectCommandInput = this.validateSignedUrl(
-      'getObject',
-      signed,
-    );
+    const parsed = this.validateSignedUrl(GetObject, signed);
     return {
-      ...(await this.getObject(parsed.Key!)),
+      ...(await this.getObject(parsed.Key)),
       ...pickBy(
         {
           ContentType: parsed.ResponseContentType,
@@ -52,8 +49,8 @@ export abstract class LocalBucket extends FileBucket {
   }
 
   async upload(signed: string, file: FakeAwsFile) {
-    const parsed = this.validateSignedUrl('putObject', signed);
-    await this.saveFile(parsed.Key!, {
+    const parsed = this.validateSignedUrl(PutObject, signed);
+    await this.saveFile(parsed.Key, {
       ContentLength: file.Body.byteLength,
       LastModified: new Date(),
       ...file,
@@ -64,21 +61,21 @@ export abstract class LocalBucket extends FileBucket {
 
   protected abstract saveFile(key: string, file: FakeAwsFile): Promise<void>;
 
-  protected async getSignedUrl(
-    operation: string,
-    key: string,
-    options?: Except<
-      GetObjectCommandInput | PutObjectCommandInput,
-      'Bucket' | 'Key'
-    >,
+  async getSignedUrl<TCommandInput extends object>(
+    operation: Type<Command<TCommandInput, any, any>>,
+    input: SignedOp<TCommandInput>,
   ) {
     const signed = JSON.stringify({
-      operation,
-      Key: key,
-      expires: DateTime.local().plus(this.signedUrlExpires).toMillis(),
-      ...options,
+      operation: operation.constructor.name,
+      ...input,
+      signing: {
+        ...input.signing,
+        expiresIn: DateTime.local()
+          .plus(Duration.from(input.signing.expiresIn))
+          .toMillis(),
+      },
     });
-    const url = new URL(this.baseUrl);
+    const url = new URL(this.options.baseUrl);
     url.searchParams.set('signed', signed);
     return url.toString();
   }
@@ -86,10 +83,10 @@ export abstract class LocalBucket extends FileBucket {
   /**
    * parses & validates the signed url or just the json query param
    */
-  protected validateSignedUrl(
-    operation: string,
+  protected validateSignedUrl<TCommandInput extends object>(
+    operation: Type<Command<TCommandInput, any, any>>,
     url: string,
-  ): GetObjectCommandInput | PutObjectCommandInput {
+  ): SignedOp<TCommandInput> & { Key: string } {
     let raw;
     try {
       raw = new URL(url).searchParams.get('signed');
@@ -99,14 +96,17 @@ export abstract class LocalBucket extends FileBucket {
     assert(typeof raw === 'string');
     let parsed;
     try {
-      parsed = JSON.parse(raw);
-      assert(parsed.operation === operation);
+      parsed = JSON.parse(raw) as SignedOp<TCommandInput> & {
+        operation: string;
+        Key: string;
+      };
+      assert(parsed.operation === operation.constructor.name);
       assert(typeof parsed.Key === 'string');
-      assert(typeof parsed.expires === 'number');
+      assert(typeof parsed.signing.expiresIn === 'number');
     } catch (e) {
       throw new InputException(e);
     }
-    if (DateTime.local() > DateTime.fromMillis(parsed.expires)) {
+    if (DateTime.local() > DateTime.fromMillis(parsed.signing.expiresIn)) {
       throw new InputException('url expired');
     }
     return parsed;

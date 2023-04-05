@@ -1,51 +1,30 @@
 import {
   GetObjectOutput as AwsGetObjectOutput,
-  GetObjectCommandInput,
   HeadObjectOutput,
-  PutObjectCommandInput,
 } from '@aws-sdk/client-s3';
-import { Duration } from 'luxon';
+import { Command } from '@aws-sdk/smithy-client';
+import { RequestPresigningArguments } from '@aws-sdk/types';
+import { Type } from '@nestjs/common';
 import { Readable } from 'stream';
-import { Except, Merge } from 'type-fest';
-
-export interface BucketOptions {
-  signedUrlExpires?: Duration;
-}
+import { Merge } from 'type-fest';
+import { DurationIn } from '~/common';
 
 // Limit body to only `Readable` which is always the case for Nodejs execution.
 export type GetObjectOutput = Merge<AwsGetObjectOutput, { Body: Readable }>;
+
+export type SignedOp<T extends object> = Omit<T, 'Bucket'> & {
+  signing: Merge<RequestPresigningArguments, { expiresIn: DurationIn }>;
+};
 
 /**
  * Base interface for a bucket of files
  */
 export abstract class FileBucket {
-  protected readonly signedUrlExpires: Duration;
-
-  constructor(options: BucketOptions = {}) {
-    this.signedUrlExpires =
-      options.signedUrlExpires ?? Duration.fromObject({ minutes: 15 });
-  }
-
-  getSignedUrlForPutObject(
-    key: string,
-    options?: Except<PutObjectCommandInput, 'Bucket' | 'Key'>,
-  ) {
-    return this.getSignedUrl('putObject', key, options);
-  }
-  getSignedUrlForGetObject(
-    key: string,
-    options?: Except<GetObjectCommandInput, 'Bucket' | 'Key'>,
-  ) {
-    return this.getSignedUrl('getObject', key, options);
-  }
-  protected abstract getSignedUrl(
-    operation: 'putObject' | 'getObject',
-    key: string,
-    options?: Except<
-      GetObjectCommandInput | PutObjectCommandInput,
-      'Bucket' | 'Key'
-    >,
+  abstract getSignedUrl<TCommandInput extends object>(
+    operation: Type<Command<TCommandInput, any, any>>,
+    input: SignedOp<TCommandInput>,
   ): Promise<string>;
+
   abstract getObject(key: string): Promise<GetObjectOutput>;
   abstract headObject(key: string): Promise<HeadObjectOutput>;
   abstract copyObject(oldKey: string, newKey: string): Promise<void>;
