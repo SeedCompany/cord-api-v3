@@ -1,5 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { hasLabel, node, not, Query, relation } from 'cypher-query-builder';
+import {
+  equals,
+  hasLabel,
+  node,
+  not,
+  Query,
+  relation,
+} from 'cypher-query-builder';
 import { AndConditions } from 'cypher-query-builder/src/clauses/where-utils';
 import {
   CalendarDate,
@@ -199,6 +206,27 @@ export class PeriodicReportRepository extends DtoRepository<
         .with('node, end')
         .orderBy('end.value', 'desc')
         .limit(1);
+  }
+
+  async getByDate(
+    parentId: ID,
+    date: CalendarDate,
+    reportType: ReportType,
+    session: Session,
+  ) {
+    const res = await this.db
+      .query()
+      .match([
+        node('baseNode', 'BaseNode', { id: parentId }),
+        relation('out', '', 'report', ACTIVE),
+        node('node', `${reportType}Report`),
+        relation('out', '', 'end', ACTIVE),
+        node('end', 'Property'),
+      ])
+      .where({ 'end.value': equals(date.endOf('quarter')) })
+      .apply(this.hydrate(session))
+      .first();
+    return res?.dto;
   }
 
   async getCurrentDue(parentId: ID, reportType: ReportType, session: Session) {

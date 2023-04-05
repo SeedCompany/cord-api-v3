@@ -1,5 +1,17 @@
-import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { AnonSession, ListArg, Session } from '~/common';
+import {
+  Args,
+  ArgsType,
+  Parent,
+  ResolveField,
+  Resolver,
+} from '@nestjs/graphql';
+import {
+  AnonSession,
+  CalendarDate,
+  DateField,
+  ListArg,
+  Session,
+} from '~/common';
 import { Loader, LoaderOf } from '~/core';
 import { Engagement, LanguageEngagement } from '../../engagement/dto';
 import {
@@ -12,6 +24,12 @@ import {
   SecuredPeriodicReport,
 } from '../../periodic-report/dto';
 import { ProgressReportList, SecuredProgressReport } from '../dto';
+
+@ArgsType()
+class PeriodicReportArgs {
+  @DateField()
+  date: CalendarDate;
+}
 
 @Resolver(LanguageEngagement)
 export class ProgressReportEngagementConnectionResolver {
@@ -32,6 +50,21 @@ export class ProgressReportEngagementConnectionResolver {
     });
     periodicReports.primeAll(list.items);
     return list as ProgressReportList;
+  }
+
+  @ResolveField(() => SecuredProgressReport)
+  async progressReport(
+    @AnonSession() session: Session,
+    @Parent() engagement: Engagement,
+    @Args() { date }: PeriodicReportArgs,
+  ): Promise<SecuredProgressReport> {
+    const value = await this.service.getReportByDate(
+      engagement.id,
+      date,
+      ReportType.Progress,
+      session,
+    );
+    return { canEdit: false, canRead: true, value };
   }
 
   @ResolveField(() => SecuredProgressReport, {
