@@ -14,6 +14,7 @@ import { Config as Neo4JDriverConfig } from 'neo4j-driver';
 import { PoolConfig } from 'pg';
 import { Merge } from 'type-fest';
 import { ID, ServerException } from '../../common';
+import { parseUri } from '../../components/file/bucket/parse-uri';
 import { FrontendUrlWrapper } from '../email/templates/frontend-url';
 import { LogLevel } from '../logger';
 import { EnvironmentService } from './environment.service';
@@ -189,13 +190,14 @@ export class ConfigService implements EmailOptionsFactory {
     .optional(process.env.NODE_ENV !== 'production' && !this.jest);
 
   @Lazy() get files() {
-    const bucket = this.env.string('FILES_S3_BUCKET').optional();
-    const localDirectory =
-      this.env.string('FILES_LOCAL_DIR').optional() ??
-      (this.jest ? undefined : '.files');
+    const legacyBucket = this.env.string('FILES_S3_BUCKET').optional();
+    const sources = this.env
+      .string('FILES_SOURCE')
+      .optional(legacyBucket ? `s3://${legacyBucket}` : '.files')
+      ?.split(',')
+      .flatMap((src) => parseUri(src.trim()));
     return {
-      bucket,
-      localDirectory,
+      sources: this.jest ? [] : sources,
       cacheTtl: {
         file: { private: dur('1h'), public: dur('1d') },
         version: { private: dur('1h'), public: dur('6d') },
