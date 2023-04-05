@@ -152,7 +152,9 @@ export class FileService {
         ResponseContentType: node.mimeType,
         ResponseCacheControl: this.determineCacheHeader(node),
         signing: {
-          expiresIn: this.config.files.signedUrlExpires,
+          expiresIn: this.config.files.cacheTtl.version[
+            node.public ? 'public' : 'private'
+          ].plus({ seconds: 10 }), // buffer to ensure validity while cached is fresh
         },
       });
     } catch (e) {
@@ -165,12 +167,13 @@ export class FileService {
     const duration = (name: string, d: DurationIn) =>
       `${name}=${Duration.from(d).as('seconds')}`;
 
-    const isImmutable = isFileVersion(node);
-
+    const { cacheTtl } = this.config.files;
+    const publicStr = node.public ? 'public' : 'private';
+    const isVersion = isFileVersion(node);
     return cleanJoin(', ', [
-      isImmutable && 'immutable',
-      node.public ? 'public' : 'private',
-      duration('max-age', isImmutable ? { year: 1 } : { day: 1 }),
+      isVersion && 'immutable',
+      publicStr,
+      duration('max-age', cacheTtl[isVersion ? 'version' : 'file'][publicStr]),
     ]);
   }
 
@@ -220,7 +223,7 @@ export class FileService {
     const url = await this.bucket.getSignedUrl(PutObject, {
       Key: `temp/${id}`,
       signing: {
-        expiresIn: this.config.files.signedUrlExpires,
+        expiresIn: this.config.files.putTtl,
       },
     });
     return { id, url };
