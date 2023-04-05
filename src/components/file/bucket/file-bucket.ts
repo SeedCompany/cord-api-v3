@@ -13,6 +13,7 @@ import { DurationIn } from '~/common';
 export type GetObjectOutput = Merge<AwsGetObjectOutput, { Body: Readable }>;
 
 export type SignedOp<T extends object> = Omit<T, 'Bucket'> & {
+  Key: string;
   signing: Merge<RequestPresigningArguments, { expiresIn: DurationIn }>;
 };
 
