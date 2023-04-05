@@ -141,6 +141,23 @@ export class PeriodicReportService {
     };
   }
 
+  async getReportByDate<Type extends keyof PeriodicReportTypeMap>(
+    parentId: ID,
+    date: CalendarDate,
+    reportType: Type & ReportType,
+    session: Session,
+  ): Promise<PeriodicReportTypeMap[Type] | undefined> {
+    const report = await this.repo.getByDate(
+      parentId,
+      date,
+      reportType,
+      session,
+    );
+    return report
+      ? (this.secure(report, session) as PeriodicReportTypeMap[Type])
+      : undefined;
+  }
+
   async getCurrentReportDue<Type extends keyof PeriodicReportTypeMap>(
     parentId: ID,
     reportType: Type & ReportType,
