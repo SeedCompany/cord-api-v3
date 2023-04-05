@@ -198,7 +198,7 @@ export class ConfigService implements EmailOptionsFactory {
       localDirectory,
       cacheTtl: {
         file: { private: dur('1h'), public: dur('1d') },
-        version: { private: dur('1h'), public: dur('1 month') },
+        version: { private: dur('1h'), public: dur('6d') },
       },
       putTtl: dur('10m'),
     };
