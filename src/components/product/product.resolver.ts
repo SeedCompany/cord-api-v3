@@ -1,6 +1,7 @@
 import {
   Args,
   Info,
+  Int,
   Mutation,
   Parent,
   Query,
@@ -110,7 +111,27 @@ export class ProductResolver {
       could return null.
     `,
   })
-  label(@Parent() product: AnyProduct): string | null {
+  label(
+    @Parent() product: AnyProduct,
+    @Args('collapseAfter', {
+      nullable: false,
+      description: stripIndent`
+        Collapses ranges after a Scripture book after showing the specified
+        number of ranges then shows how many more ranges are after that number.
+        A value of <= 0  collapses all Scripture ranges of that book.
+        Default is 0 (collapse all ranges).
+
+        For example, with a \`collapseAfter\` value of 2:
+        \`Genesis 1:2, 1:5, 1:7, 1:9\` becomes \`Genesis 1:2, 1:5 and 2 other portions\`
+        with a \`collapseAfter\` value of 0 or less:
+        \`Genesis 1:2, 1:5, 1:7, 1:9\` remains the same.
+
+      `,
+      type: () => Int,
+      defaultValue: 0,
+    })
+    collapseAfter: number,
+  ): string | null {
     if (product.placeholderDescription.value) {
       return product.placeholderDescription.value;
     }
@@ -130,7 +151,10 @@ export class ProductResolver {
         const totalVerses = Book.find(book).totalVerses;
         return `${book} (${verses} / ${totalVerses} verses)`;
       }
-      return labelOfScriptureRanges(product.scriptureReferences.value);
+      return labelOfScriptureRanges(
+        product.scriptureReferences.value,
+        collapseAfter,
+      );
     }
     if (!product.produces.value) {
       return null;
