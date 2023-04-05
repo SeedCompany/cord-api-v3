@@ -13,6 +13,7 @@ import { DurationIn } from '~/common';
 export type GetObjectOutput = Merge<AwsGetObjectOutput, { Body: Readable }>;
 
 export type SignedOp<T extends object> = Omit<T, 'Bucket'> & {
+  Key: string;
   signing: Merge<RequestPresigningArguments, { expiresIn: DurationIn }>;
 };
 
@@ -20,6 +21,10 @@ export type SignedOp<T extends object> = Omit<T, 'Bucket'> & {
  * Base interface for a bucket of files
  */
 export abstract class FileBucket {
+  get isReadonly() {
+    return false;
+  }
+
   abstract getSignedUrl<TCommandInput extends object>(
     operation: Type<Command<TCommandInput, any, any>>,
     input: SignedOp<TCommandInput>,
