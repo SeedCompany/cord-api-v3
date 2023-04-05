@@ -73,7 +73,10 @@ export const labelOfScriptureRange = (
   }
 };
 
-export const labelOfScriptureRanges = (refs: readonly ScriptureRange[]) => {
+export const labelOfScriptureRanges = (
+  refs: readonly ScriptureRange[],
+  collapseAfter?: number,
+) => {
   if (refs.length === 0) {
     return '';
   }
@@ -88,7 +91,17 @@ export const labelOfScriptureRanges = (refs: readonly ScriptureRange[]) => {
   const hasSame = (key: keyof ScriptureReference) =>
     uniq(refs.flatMap((ref) => [ref.start[key], ref.end[key]])).length === 1;
   const same = hasSame('book') ? 'book' : undefined;
-  const labels = refs.map((ref) => labelOfScriptureRange(ref, same)).join(', ');
+  const truncatedCount =
+    collapseAfter && collapseAfter > 0 ? refs.length - collapseAfter : 0;
+  const labels = refs
+    .slice(0, refs.length - truncatedCount)
+    .map((ref) => labelOfScriptureRange(ref, same));
   const prefix = same === 'book' ? `${refs[0].start.book} ` : '';
-  return `${prefix}${labels}`;
+  const labelOutput = new Intl.ListFormat(undefined, {
+    style: prefix && truncatedCount <= 0 ? 'narrow' : undefined,
+  }).format([
+    ...labels,
+    ...(truncatedCount > 0 ? [`${truncatedCount} other portions`] : []),
+  ]);
+  return `${prefix}${labelOutput}`;
 };
