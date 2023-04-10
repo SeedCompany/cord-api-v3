@@ -3,7 +3,7 @@ import { keys as keysOf } from 'ts-transformer-keys';
 import { IdOf, Resource, SecuredProps, SecuredRichText } from '~/common';
 import { RegisterResource } from '~/core';
 import { LanguageEngagement } from '../../engagement/dto';
-import { OutcomeHistory } from './outcome-history';
+import { OutcomeHistory } from './outcome-history.dto';
 
 @ObjectType({
   implements: [Resource],

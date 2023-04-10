@@ -15,20 +15,29 @@ import { Outcome, OutcomeHistory } from './dto';
 import { CreateOutcomeInput } from './dto/create-outome.dto';
 import { UpdateOutcomeHistoryInput } from './dto/update-outcome-history.dto';
 import { UpdateOutcomeInput } from './dto/update-outcome.dto';
+import { OutcomesHistoryService } from './outcomes-history.service';
+import { OutcomesService } from './outomes.service';
 
 @Resolver(Outcome)
 export class OutcomesResolver {
+  constructor(
+    private readonly service: OutcomesService,
+    private readonly historyService: OutcomesHistoryService,
+  ) {}
+
   @Mutation(() => Outcome, {
     description: 'Create a new outcome',
   })
   async createOutcome(@Args('input') input: CreateOutcomeInput) {
-    throw new NotImplementedException('createOutcome').with(input);
+    const temp = await this.service.create(input);
+    return temp;
   }
 
   @Mutation(() => Outcome, {
     description: 'Update an existing outcome',
   })
   async updateOutcome(@Args('input') { id, ...input }: UpdateOutcomeInput) {
+    // TODO: implement updateOutcome
     throw new NotImplementedException('updateOutcome').with(id, input);
   }
 
@@ -39,19 +48,20 @@ export class OutcomesResolver {
     `,
   })
   async updateOutcomeHistory(@Args('input') input: UpdateOutcomeHistoryInput) {
-    throw new NotImplementedException('updateOutcomeHistory').with(input);
+    return await this.historyService.updateOutcomeHistory(input);
   }
 
   @Mutation(() => Outcome, {
     description: 'Delete an outcome',
   })
   async deleteOutcome(@Args('id') id: ID) {
+    // TODO: implement deleteOutcome
     throw new NotImplementedException('deleteOutcome').with(id);
   }
 
   @ResolveField(() => [OutcomeHistory])
-  async history() {
-    throw new NotImplementedException('history');
+  async history(@Parent() outcome: Outcome) {
+    return await this.historyService.readByOutcomeId(outcome.id);
   }
 
   @ResolveField(() => LanguageEngagement)
