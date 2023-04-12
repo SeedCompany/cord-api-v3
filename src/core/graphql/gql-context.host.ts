@@ -15,7 +15,7 @@ import {
 import { GraphQLRequestContext as RequestContext } from 'apollo-server-types';
 import { AsyncLocalStorage } from 'async_hooks';
 import { Request, Response } from 'express';
-import { GqlContextType as ContextType, GqlContextType } from '../../common';
+import { GqlContextType as ContextType } from '~/common';
 import { AsyncLocalStorageNoContextException } from '../async-local-storage-no-context.exception';
 
 /**
@@ -25,7 +25,7 @@ export abstract class GqlContextHost {
   /**
    * The current GraphQL context
    */
-  readonly context: GqlContextType;
+  readonly context: ContextType;
 }
 
 /**
@@ -43,7 +43,7 @@ export class GqlContextHostImpl
     ApolloPlugin<ContextType>
 {
   als = new AsyncLocalStorage<{
-    ctx?: GqlContextType;
+    ctx?: ContextType;
     execution?: ExecutionContext;
   }>();
 

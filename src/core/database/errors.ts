@@ -49,8 +49,19 @@ export class ServiceUnavailableError extends Neo4jError {
     if (e instanceof ServiceUnavailableError) {
       return e;
     }
-    const ex = new this(e.message);
-    ex.stack = e.stack;
+    const message = e.message
+      // Strip useless empty routing table.
+      .replace(
+        / No routing servers available. Known routing table:.+$/,
+        ' No routing servers available.',
+      )
+      // Strip excessive documentation.
+      .replace(
+        'Please ensure that your database is listening on the correct host and port and that you have compatible encryption settings both on Neo4j server and driver. Note that the default encryption setting has changed in Neo4j 4.0. ',
+        '',
+      );
+    const ex = new this(message);
+    replaceStack(ex, e);
     return ex;
   }
 }
@@ -71,7 +82,7 @@ export class SessionExpiredError extends Neo4jError {
       return e;
     }
     const ex = new this(e.message);
-    ex.stack = e.stack;
+    replaceStack(ex, e);
     return ex;
   }
 }
@@ -92,7 +103,7 @@ export class ConnectionTimeoutError extends Neo4jError {
       return e;
     }
     const ex = new this(e.message);
-    ex.stack = e.stack;
+    replaceStack(ex, e);
     return ex;
   }
 }
@@ -113,7 +124,7 @@ export class ConstraintError extends Neo4jError {
       return e;
     }
     const ex = new this(e.message);
-    ex.stack = e.stack;
+    replaceStack(ex, e);
     return ex;
   }
 }
@@ -152,7 +163,7 @@ export class UniquenessError extends ConstraintError {
       info.value,
       e.message,
     );
-    ex.stack = e.stack;
+    replaceStack(ex, e);
     return ex;
   }
 }
@@ -195,6 +206,19 @@ const cast = (e: Neo4jError): Neo4jError => {
   // Hide worthless code
   if (e.code === 'N/A') {
     noEnumerate(e, 'code');
+  }
+
+  return e;
+};
+
+const replaceStack = (e: Error, original: Error) => {
+  e.stack = `${e.name}: ${e.message}`;
+
+  const originalStack = original.stack;
+  const stackStart = originalStack?.indexOf('    at') ?? -1;
+  const originalTrace = stackStart >= 0 ? originalStack!.slice(stackStart) : '';
+  if (originalTrace) {
+    e.stack += `\n${originalTrace}`;
   }
 
   return e;

@@ -16,7 +16,11 @@ import { AbortError, retry, RetryOptions } from '../../common/retry';
 import { ConfigService } from '../config/config.service';
 import { ILogger, Logger } from '../logger';
 import { DbChanges } from './changes';
-import { ServiceUnavailableError, UniquenessError } from './errors';
+import {
+  createBetterError,
+  ServiceUnavailableError,
+  UniquenessError,
+} from './errors';
 import {
   ACTIVE,
   deleteBaseNode,
@@ -123,12 +127,18 @@ export class DatabaseService {
     const session = this.db.driver.session();
     try {
       const generalInfo = await session.readTransaction((tx) =>
-        tx.run(`
+        tx
+          .run(
+            `
           call dbms.components()
           yield versions, edition
           unwind versions as version
           return version, edition
-        `),
+        `,
+          )
+          .catch((e) => {
+            throw createBetterError(e);
+          }),
       );
       const info = generalInfo.records[0];
       if (!info) {
