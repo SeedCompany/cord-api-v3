@@ -208,7 +208,9 @@ export const printForJson = () =>
         type,
         message,
         ...other,
-        stack,
+        // Only include stack if it includes trace.
+        // Otherwise, the type and message have already been given.
+        stack: stack.includes('    at ') ? stack : undefined,
       })),
       ...metadata,
     };
