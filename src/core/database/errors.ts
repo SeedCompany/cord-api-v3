@@ -49,7 +49,18 @@ export class ServiceUnavailableError extends Neo4jError {
     if (e instanceof ServiceUnavailableError) {
       return e;
     }
-    const ex = new this(e.message);
+    const message = e.message
+      // Strip useless empty routing table.
+      .replace(
+        / No routing servers available. Known routing table:.+$/,
+        ' No routing servers available.',
+      )
+      // Strip excessive documentation.
+      .replace(
+        'Please ensure that your database is listening on the correct host and port and that you have compatible encryption settings both on Neo4j server and driver. Note that the default encryption setting has changed in Neo4j 4.0. ',
+        '',
+      );
+    const ex = new this(message);
     replaceStack(ex, e);
     return ex;
   }
