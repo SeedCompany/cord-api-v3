@@ -16,7 +16,11 @@ import { jestSkipFileInExceptionSource } from '../exception';
 import { ILogger, LoggerToken, LogLevel } from '../logger';
 import { AFTER_MESSAGE } from '../logger/formatters';
 import { TracingService } from '../tracing';
-import { createBetterError, isNeo4jError } from './errors';
+import {
+  createBetterError,
+  isNeo4jError,
+  ServiceUnavailableError,
+} from './errors';
 import { ParameterTransformer } from './parameter-transformer.service';
 // eslint-disable-next-line import/no-duplicates
 import { Transaction } from './transaction';
@@ -268,16 +272,22 @@ const wrapQueryRun = (
     const result = origRun(statement, params);
 
     const tweakError = (e: Error) => {
-      if (typeof parameters?.__stacktrace === 'string' && e.stack) {
+      e = createBetterError(e);
+      if (e.stack) {
         const stackStart = e.stack.indexOf('    at');
-        e.stack = e.stack.slice(0, stackStart) + parameters.__stacktrace;
+        if (e instanceof ServiceUnavailableError) {
+          // Stack doesn't matter for connection errors, as it's not caused by
+          // the specific DB query.
+          e.stack = e.stack.slice(0, stackStart).trim();
+        } else if (typeof parameters?.__stacktrace === 'string' && e.stack) {
+          e.stack = e.stack.slice(0, stackStart) + parameters.__stacktrace;
+        }
       }
-      const patched = jestSkipFileInExceptionSource(e, __filename);
-      const mapped = createBetterError(patched);
-      if (isNeo4jError(mapped) && mapped.logProps) {
-        logger.log(mapped.logProps);
+      jestSkipFileInExceptionSource(e, __filename);
+      if (isNeo4jError(e) && e.logProps) {
+        logger.log(e.logProps);
       }
-      return mapped;
+      return e;
     };
 
     const origSubscribe = result.subscribe.bind(result);
