@@ -50,7 +50,7 @@ export class ServiceUnavailableError extends Neo4jError {
       return e;
     }
     const ex = new this(e.message);
-    ex.stack = e.stack;
+    replaceStack(ex, e);
     return ex;
   }
 }
@@ -71,7 +71,7 @@ export class SessionExpiredError extends Neo4jError {
       return e;
     }
     const ex = new this(e.message);
-    ex.stack = e.stack;
+    replaceStack(ex, e);
     return ex;
   }
 }
@@ -92,7 +92,7 @@ export class ConnectionTimeoutError extends Neo4jError {
       return e;
     }
     const ex = new this(e.message);
-    ex.stack = e.stack;
+    replaceStack(ex, e);
     return ex;
   }
 }
@@ -113,7 +113,7 @@ export class ConstraintError extends Neo4jError {
       return e;
     }
     const ex = new this(e.message);
-    ex.stack = e.stack;
+    replaceStack(ex, e);
     return ex;
   }
 }
@@ -152,7 +152,7 @@ export class UniquenessError extends ConstraintError {
       info.value,
       e.message,
     );
-    ex.stack = e.stack;
+    replaceStack(ex, e);
     return ex;
   }
 }
@@ -195,6 +195,19 @@ const cast = (e: Neo4jError): Neo4jError => {
   // Hide worthless code
   if (e.code === 'N/A') {
     noEnumerate(e, 'code');
+  }
+
+  return e;
+};
+
+const replaceStack = (e: Error, original: Error) => {
+  e.stack = `${e.name}: ${e.message}`;
+
+  const originalStack = original.stack;
+  const stackStart = originalStack?.indexOf('    at') ?? -1;
+  const originalTrace = stackStart >= 0 ? originalStack!.slice(stackStart) : '';
+  if (originalTrace) {
+    e.stack += `\n${originalTrace}`;
   }
 
   return e;
