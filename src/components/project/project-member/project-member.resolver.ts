@@ -69,6 +69,19 @@ export class ProjectMemberResolver {
     return { projectMember };
   }
 
+  @Mutation(() => Boolean, {
+    description:
+      'Swap out the oldProjectMember with newProjectMember in all projects that oldProjectMember is associated with.',
+  })
+  async swapProjectMember(
+    @LoggedInSession() session: Session,
+    @IdArg({ name: 'oldMemberId' }) oldMemberId: ID,
+    @IdArg({ name: 'newMemberId' }) newMemberId: ID,
+  ): Promise<boolean> {
+    await this.service.swapMembers(session, oldMemberId, newMemberId);
+    return true;
+  }
+
   @Mutation(() => DeleteProjectMemberOutput, {
     description: 'Delete a project member',
   })

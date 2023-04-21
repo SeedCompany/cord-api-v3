@@ -1,15 +1,12 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
-import { difference } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
   generateId,
   ID,
-  InputException,
   isIdLike,
-  MaybeAsync,
   NotFoundException,
   ObjectView,
   ServerException,
@@ -27,9 +24,8 @@ import {
 } from '../../../core';
 import { ACTIVE } from '../../../core/database/query';
 import { mapListResults } from '../../../core/database/results';
-import { Role } from '../../authorization';
 import { AuthorizationService } from '../../authorization/authorization.service';
-import { User, UserService } from '../../user';
+import { UserService } from '../../user';
 import { IProject } from '../dto';
 import { ProjectService } from '../project.service';
 import {
@@ -105,7 +101,7 @@ export class ProjectMemberService {
     const createdAt = DateTime.local();
     await this.repo.verifyRelationshipEligibility(projectId, userId);
 
-    await this.assertValidRoles(input.roles, () =>
+    await this.repo.assertValidRoles(input.roles, () =>
       this.userService.readOne(userId, session),
     );
 
@@ -179,13 +175,18 @@ export class ProjectMemberService {
     };
   }
 
+  async swapMembers(session: Session, oldMemberId: ID, newMemberId: ID) {
+    const newMember = await this.userService.readOne(newMemberId, session);
+    await this.repo.swapMembers(oldMemberId, newMember);
+  }
+
   async update(
     input: UpdateProjectMember,
     session: Session,
   ): Promise<ProjectMember> {
     const object = await this.readOne(input.id, session);
 
-    await this.assertValidRoles(input.roles, () => {
+    await this.repo.assertValidRoles(input.roles, () => {
       const user = object.user.value;
       if (!user) {
         throw new UnauthorizedException(
@@ -203,25 +204,6 @@ export class ProjectMemberService {
     );
     await this.repo.updateProperties(object, changes);
     return await this.readOne(input.id, session);
-  }
-
-  private async assertValidRoles(
-    roles: Role[] | undefined,
-    forUser: () => MaybeAsync<User>,
-  ) {
-    if (!roles || roles.length === 0) {
-      return;
-    }
-    const user = await forUser();
-    const availableRoles = user.roles.value ?? [];
-    const forbiddenRoles = difference(roles, availableRoles);
-    if (forbiddenRoles.length) {
-      const forbiddenRolesStr = forbiddenRoles.join(', ');
-      throw new InputException(
-        `Role(s) ${forbiddenRolesStr} cannot be assigned to this project member`,
-        'input.roles',
-      );
-    }
   }
 
   async delete(id: ID, session: Session): Promise<void> {
