@@ -3,13 +3,12 @@ import { AsyncLocalStorage } from 'async_hooks';
 import { highlight } from 'cli-highlight';
 import { stripIndent } from 'common-tags';
 import { Connection } from 'cypher-query-builder';
-import { compact } from 'lodash';
 import { Driver, Session } from 'neo4j-driver-core';
 // @ts-expect-error this isn't typed but it exists
 import * as RetryStrategy from 'neo4j-driver-core/lib/internal/retry-strategy';
 import QueryRunner from 'neo4j-driver/types/query-runner';
 import { Merge } from 'type-fest';
-import { getPreviousList } from '~/common';
+import { csv, getPreviousList } from '~/common';
 import { dropSecrets } from '~/common/mask-secrets';
 import { ConfigService } from '../config/config.service';
 import { jestSkipFileInExceptionSource } from '../exception';
@@ -34,9 +33,6 @@ import './query-augmentation'; // import our query augmentation
 const canRetryOn = RetryStrategy.canRetryOn;
 RetryStrategy.canRetryOn = (error?: Error) =>
   error && getPreviousList(error, true).some(canRetryOn);
-
-const csv = (str: string): string[] =>
-  compact(str.split(',').map((s) => s.trim()));
 
 const parseRoutingTable = (routingTableStr: string) => {
   const matched =

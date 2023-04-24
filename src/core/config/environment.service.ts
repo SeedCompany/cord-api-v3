@@ -3,7 +3,7 @@ import { parse as parseEnv } from 'dotenv';
 import { expand as dotEnvExpand } from 'dotenv-expand';
 import * as fs from 'fs';
 import { parse as parseSize } from 'human-format';
-import { isString, mapKeys, pickBy } from 'lodash';
+import { identity, isString, mapKeys, pickBy } from 'lodash';
 import { Duration } from 'luxon';
 import { join } from 'path';
 import { DurationIn } from '~/common';
@@ -104,6 +104,44 @@ export class EnvironmentService implements Iterable<[string, string]> {
     });
   }
 
+  map<K extends string, V>(
+    key: string,
+    options: {
+      parseKey?: ((raw: string) => K) | Iterable<K>;
+      parseValue?: (raw: string) => V;
+      pairSeparator?: string;
+      keySeparator?: string;
+    },
+  ) {
+    return this.wrap<
+      ReadonlyMap<K, V>,
+      string | ReadonlyMap<K, V> | Partial<Record<K, V>>
+    >(key, (raw) => {
+      if (raw instanceof Map) {
+        return raw;
+      }
+      if (typeof raw === 'object') {
+        return new Map(Object.entries(raw));
+      }
+      const { pairSeparator = ';', keySeparator = '=' } = options;
+
+      const parseKey =
+        typeof options.parseKey === 'function'
+          ? options.parseKey
+          : options.parseKey
+          ? verifyInSet(key, options.parseKey)
+          : identity;
+      const parseValue = options.parseValue ?? identity;
+
+      return new Map(
+        (raw ?? '').split(pairSeparator).map((item) => {
+          const [key, value] = item.trim().split(keySeparator);
+          return [parseKey(key), parseValue(value)] as const;
+        }),
+      );
+    });
+  }
+
   *[Symbol.iterator]() {
     yield* Object.entries<string>(this.env);
   }
@@ -139,3 +177,13 @@ class ConfigValue<Out, In> {
       : this.parse(defaultValue);
   }
 }
+
+const verifyInSet = <T extends string>(envKey: string, set: Iterable<T>) => {
+  const validKeys = new Map([...set].map((key) => [key.toLowerCase(), key]));
+  return (key: string): T => {
+    if (validKeys.has(key.toLowerCase())) {
+      return validKeys.get(key)!;
+    }
+    throw new Error(`Invalid map key given for ${envKey}: ${key}`);
+  };
+};

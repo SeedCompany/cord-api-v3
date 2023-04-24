@@ -12,9 +12,13 @@ import { Duration, DurationLike } from 'luxon';
 import { nanoid } from 'nanoid';
 import { Config as Neo4JDriverConfig } from 'neo4j-driver';
 import { PoolConfig } from 'pg';
+import { keys as keysOf } from 'ts-transformer-keys';
 import { Merge } from 'type-fest';
-import { ID, ServerException } from '../../common';
+import { csv, ID, keys, ServerException } from '../../common';
 import { parseUri } from '../../components/file/bucket/parse-uri';
+import { ProgressReportStatus } from '../../components/progress-report/dto/progress-report-status.enum';
+import type { TransitionName as ProgressReportTransitionName } from '../../components/progress-report/workflow/transitions';
+import { DefaultTimezoneWrapper } from '../email/templates/formatted-date-time';
 import { FrontendUrlWrapper } from '../email/templates/frontend-url';
 import { LogLevel } from '../logger';
 import { EnvironmentService } from './environment.service';
@@ -89,7 +93,7 @@ export class ConfigService implements EmailOptionsFactory {
 
   jwtKey = this.env.string('JWT_AUTH_KEY').optional('cord-field');
 
-  createEmailOptions(): EmailModuleOptions {
+  createEmailOptions() {
     const send = this.env.boolean('EMAIL_SEND').optional(false);
     return {
       from: this.env
@@ -105,8 +109,11 @@ export class ConfigService implements EmailOptionsFactory {
       ses: {
         region: this.env.string('SES_REGION').optional(),
       },
-      wrappers: [FrontendUrlWrapper(this.frontendUrl)],
-    };
+      wrappers: [
+        FrontendUrlWrapper(this.frontendUrl),
+        DefaultTimezoneWrapper(this.defaultTimeZone),
+      ],
+    } satisfies EmailModuleOptions;
   }
 
   @Lazy() get email() {
@@ -117,6 +124,28 @@ export class ConfigService implements EmailOptionsFactory {
       notifyProjectStepChanges: this.env
         .boolean('NOTIFY_PROJECT_STEP_CHANGES')
         .optional(true),
+    };
+  }
+
+  @Lazy() get progressReportStatusChange() {
+    return {
+      enabled: this.env
+        .boolean('NOTIFY_PROGRESS_REPORT_STATUS_CHANGES')
+        .optional(this.createEmailOptions().send),
+      notifyExtraEmails: {
+        forTransitions: this.env
+          .map('PROGRESS_REPORT_EMAILS_FOR_TRANSITIONS', {
+            parseKey: keysOf<Record<ProgressReportTransitionName, ''>>(),
+            parseValue: csv,
+          })
+          .optional({}),
+        forBypasses: this.env
+          .map('PROGRESS_REPORT_EMAILS_FOR_BYPASSES', {
+            parseKey: keys(ProgressReportStatus),
+            parseValue: csv,
+          })
+          .optional({}),
+      },
     };
   }
 

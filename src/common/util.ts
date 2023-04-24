@@ -1,3 +1,4 @@
+import { compact } from 'lodash';
 import { Duration, DurationLike } from 'luxon';
 
 export type Many<T> = T | readonly T[];
@@ -85,3 +86,6 @@ export const cleanJoin = (
   separator: string,
   list: ReadonlyArray<string | number | null | undefined | boolean>,
 ) => list.filter((item) => item != null && item !== false).join(separator);
+
+export const csv = (str: string): readonly string[] =>
+  compact(str.split(',').map((s) => s.trim()));

@@ -6,11 +6,12 @@ import {
   UnauthorizedException,
   UnsecuredDto,
 } from '~/common';
-import { ResourceLoader } from '~/core';
+import { IEventBus } from '~/core';
 import { Privileges } from '../../authorization';
 import { ProgressReport, ProgressReportStatus as Status } from '../dto';
 import { ExecuteProgressReportTransitionInput } from './dto/execute-progress-report-transition.input';
 import { ProgressReportWorkflowEvent as WorkflowEvent } from './dto/workflow-event.dto';
+import { WorkflowUpdatedEvent } from './events/workflow-updated.event';
 import { ProgressReportWorkflowRepository } from './progress-report-workflow.repository';
 import { Transitions } from './transitions';
 
@@ -18,8 +19,8 @@ import { Transitions } from './transitions';
 export class ProgressReportWorkflowService {
   constructor(
     private readonly privileges: Privileges,
-    private readonly resources: ResourceLoader,
     private readonly repo: ProgressReportWorkflowRepository,
+    private readonly eventBus: IEventBus,
   ) {}
 
   async list(
@@ -35,10 +36,7 @@ export class ProgressReportWorkflowService {
     return dtos.map((dto) => this.secure(dto, session));
   }
 
-  private secure(
-    dto: UnsecuredDto<WorkflowEvent>,
-    session: Session,
-  ): WorkflowEvent {
+  secure(dto: UnsecuredDto<WorkflowEvent>, session: Session): WorkflowEvent {
     const secured = this.privileges.for(session, WorkflowEvent).secure(dto);
     return {
       ...secured,
@@ -74,14 +72,20 @@ export class ProgressReportWorkflowService {
     const next = this.validateExecutionInput(input, currentStatus, session);
     const isTransition = typeof next !== 'string';
 
-    await Promise.all([
+    const [unsecuredEvent] = await Promise.all([
       isTransition
         ? this.repo.recordTransition(reportId, next, session, notes)
         : this.repo.recordBypass(reportId, next, session, notes),
       this.repo.changeStatus(reportId, isTransition ? next.to : next),
     ]);
 
-    // TODO(transition.notify);
+    const event = new WorkflowUpdatedEvent(
+      reportId,
+      currentStatus,
+      next,
+      unsecuredEvent,
+    );
+    await this.eventBus.publish(event);
   }
 
   private validateExecutionInput(
