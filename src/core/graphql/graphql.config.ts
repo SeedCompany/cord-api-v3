@@ -1,5 +1,8 @@
 import { ContextFunction, PersistedQueryOptions } from '@apollo/server';
-import { ApolloServerErrorCode as ApolloCode } from '@apollo/server/errors';
+import {
+  ApolloServerErrorCode as ApolloCode,
+  unwrapResolverError,
+} from '@apollo/server/errors';
 import { ExpressContextFunctionArgument } from '@apollo/server/express4';
 import {
   ApolloServerPluginLandingPageLocalDefault,
@@ -14,11 +17,13 @@ import { Injectable } from '@nestjs/common';
 import { GqlOptionsFactory } from '@nestjs/graphql';
 import { setHas, setOf } from '@seedcompany/common';
 import {
+  GraphQLErrorExtensions as ErrorExtensions,
+  GraphQLFormattedError as FormattedError,
   GraphQLError,
-  GraphQLFormattedError,
   GraphQLScalarType,
   OperationDefinitionNode,
 } from 'graphql';
+import { compact } from 'lodash';
 import {
   GqlContextType,
   JsonSet,
@@ -33,8 +38,9 @@ import { GraphqlTracingPlugin } from './graphql-tracing.plugin';
 
 declare module 'graphql/error/GraphQLError' {
   interface GraphQLErrorExtensions {
-    code: string;
+    code?: string;
     codes?: ReadonlySet<string>;
+    stacktrace?: string[];
   }
 }
 
@@ -103,30 +109,36 @@ export class GraphQLConfig implements GqlOptionsFactory {
       operation: createFakeStubOperation(),
     });
 
-  formatError = (error: GraphQLError): GraphQLFormattedError => {
-    const extensions = { ...error.extensions };
+  formatError = (
+    formatted: FormattedError,
+    error: unknown | /* but probably a */ GraphQLError,
+  ): FormattedError => {
+    // Probably the actual error thrown
+    const _original = unwrapResolverError(error);
+
+    const extensions: ErrorExtensions = { ...formatted.extensions };
 
     const codes = (extensions.codes ??= new JsonSet(
-      this.resolveCodes(error, extensions.code),
+      compact(this.resolveCodes(formatted, extensions.code)),
     ));
+    delete extensions.code;
 
     // Schema & validation errors don't have meaningful stack traces, so remove them
     const worthlessTrace = codes.has('Validation') || codes.has('GraphQL');
-
-    if (!this.debug || worthlessTrace) {
-      delete extensions.exception;
+    if (worthlessTrace) {
+      delete extensions.stacktrace;
     }
 
     return {
-      message: error.message,
+      message: formatted.message,
       extensions,
-      locations: error.locations,
-      path: error.path,
+      locations: formatted.locations,
+      path: formatted.path,
     };
   };
 
-  private resolveCodes(error: GraphQLError, code: string): string[] {
-    if (setHas(apolloErrorCodesThatAreClientProblem, code)) {
+  private resolveCodes(error: FormattedError, code?: string) {
+    if (code && setHas(apolloErrorCodesThatAreClientProblem, code)) {
       return [code, 'GraphQL', 'Client'];
     }
     if (
