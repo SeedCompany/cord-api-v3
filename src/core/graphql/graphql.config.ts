@@ -1,21 +1,18 @@
-import { KeyValueCacheSetOptions } from '@apollo/utils.keyvaluecache/src/KeyValueCache';
-import { ApolloDriverConfig } from '@nestjs/apollo';
-import { Injectable } from '@nestjs/common';
-import { GqlOptionsFactory } from '@nestjs/graphql';
+import { ContextFunction, PersistedQueryOptions } from '@apollo/server';
+import { ApolloServerErrorCode as ApolloCode } from '@apollo/server/errors';
+import { ExpressContextFunctionArgument } from '@apollo/server/express4';
 import {
   ApolloServerPluginLandingPageLocalDefault,
   ApolloServerPluginLandingPageProductionDefault,
-  ContextFunction,
-  KeyValueCache,
-} from 'apollo-server-core';
-import { PersistedQueryOptions } from 'apollo-server-core/src/graphqlOptions';
+} from '@apollo/server/plugin/landingPage/default';
 import {
-  PersistedQueryNotFoundError,
-  PersistedQueryNotSupportedError,
-  SyntaxError,
-  ValidationError,
-} from 'apollo-server-errors';
-import { Request, Response } from 'express';
+  KeyValueCache,
+  KeyValueCacheSetOptions,
+} from '@apollo/utils.keyvaluecache';
+import { ApolloDriverConfig } from '@nestjs/apollo';
+import { Injectable } from '@nestjs/common';
+import { GqlOptionsFactory } from '@nestjs/graphql';
+import { setHas, setOf } from '@seedcompany/common';
 import {
   GraphQLError,
   GraphQLFormattedError,
@@ -65,11 +62,11 @@ export class GraphQLConfig implements GqlOptionsFactory {
     return {
       autoSchemaFile: 'schema.graphql',
       context: this.context,
-      cors: this.config.cors,
       playground: false,
       introspection: true,
       formatError: this.formatError,
-      debug: this.debug,
+      includeStacktraceInErrorResponses: true,
+      status400ForVariableCoercionErrors: true, // will be default in v5
       sortSchema: true,
       buildSchemaOptions: {
         fieldMiddleware: [this.tracing.fieldMiddleware()],
@@ -99,18 +96,12 @@ export class GraphQLConfig implements GqlOptionsFactory {
     };
   }
 
-  get debug() {
-    return true; // TODO
-  }
-
-  context: ContextFunction<{ req: Request; res: Response }, GqlContextType> = ({
-    req,
-    res,
-  }) => ({
-    request: req,
-    response: res,
-    operation: createFakeStubOperation(),
-  });
+  context: ContextFunction<[ExpressContextFunctionArgument], GqlContextType> =
+    async ({ req, res }) => ({
+      request: req,
+      response: res,
+      operation: createFakeStubOperation(),
+    });
 
   formatError = (error: GraphQLError): GraphQLFormattedError => {
     const extensions = { ...error.extensions };
@@ -135,14 +126,7 @@ export class GraphQLConfig implements GqlOptionsFactory {
   };
 
   private resolveCodes(error: GraphQLError, code: string): string[] {
-    if (
-      [
-        ValidationError,
-        SyntaxError,
-        PersistedQueryNotFoundError,
-        PersistedQueryNotSupportedError,
-      ].some((cls) => error instanceof cls)
-    ) {
+    if (setHas(apolloErrorCodesThatAreClientProblem, code)) {
       return [code, 'GraphQL', 'Client'];
     }
     if (
@@ -195,3 +179,12 @@ class GraphQLCacheAdapter implements KeyValueCache {
     await this.cache.delete(this.prefix + key);
   }
 }
+
+const apolloErrorCodesThatAreClientProblem = setOf([
+  ApolloCode.GRAPHQL_PARSE_FAILED,
+  ApolloCode.GRAPHQL_VALIDATION_FAILED,
+  ApolloCode.PERSISTED_QUERY_NOT_FOUND,
+  ApolloCode.PERSISTED_QUERY_NOT_SUPPORTED,
+  ApolloCode.BAD_USER_INPUT,
+  ApolloCode.BAD_REQUEST,
+]);
