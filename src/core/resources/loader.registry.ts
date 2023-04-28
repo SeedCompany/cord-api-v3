@@ -6,10 +6,11 @@ import {
   Type,
 } from '@nestjs/common';
 import { ModulesContainer } from '@nestjs/core';
+import { DataLoaderStrategy } from '@seedcompany/data-loader';
 import { ValueOf } from 'type-fest';
 import { many, Many } from '~/common';
 import { ResourceMap } from '~/core';
-import { NestDataLoader, ObjectViewAwareLoader } from '../data-loader';
+import { ObjectViewAwareLoader } from '../data-loader';
 
 type SomeResource = ValueOf<ResourceMap>;
 
@@ -24,14 +25,14 @@ interface LoaderOptions {
    * Whether the loader is aware of ObjectViews.
    *
    * This means the loader key needs to be in the shape of
-   * {@link import('../data-loader/object-view-aware.loader').Key Key}
+   * {@link import('../data-loader/object-view-aware-loader.strategy').Key Key}
    *
    * This defaults to true if the class extends ObjectViewAwareLoader.
    */
   objectViewAware?: boolean;
 }
 
-type DataLoaderCtor = new (...args: any[]) => NestDataLoader<any, any>;
+type DataLoaderCtor = Type<DataLoaderStrategy<any, any>>;
 
 /**
  * Register this class as a DataLoader for the given resource(s)
@@ -61,7 +62,7 @@ export const LoaderFactory =
 export class ResourceLoaderRegistry implements OnModuleInit {
   readonly loaders = new Map<
     keyof ResourceMap,
-    { factory: Type<NestDataLoader<any, any>> } & LoaderOptions
+    { factory: Type<DataLoaderStrategy<any, any>> } & LoaderOptions
   >();
 
   constructor(private readonly modulesContainer: ModulesContainer) {}

@@ -1,8 +1,6 @@
-import { ID, NotFoundException } from '../../common';
-import {
-  OrderedNestDataLoader as DataLoader,
-  OrderedNestDataLoaderOptions as LoaderOptions,
-} from './ordered-data-loader';
+import { DataLoaderOptions } from '@seedcompany/data-loader';
+import { ID, NotFoundException } from '~/common';
+import { SessionAwareLoaderStrategy } from './session-aware-loader.strategy';
 
 /**
  * A loader that will load each item one by one.
@@ -10,7 +8,10 @@ import {
  * Using this is only encouraged to adopt the DataLoader pattern, which can provide
  * caching even without batching.
  */
-export abstract class SingleItemLoader<T, Key = ID> extends DataLoader<T, Key> {
+export abstract class SingleItemLoader<
+  T,
+  Key = ID,
+> extends SessionAwareLoaderStrategy<T, Key> {
   abstract loadOne(key: Key): Promise<T>;
 
   async loadMany(keys: readonly Key[]): Promise<readonly T[]> {
@@ -29,9 +30,8 @@ export abstract class SingleItemLoader<T, Key = ID> extends DataLoader<T, Key> {
     return items.flat() as T[];
   }
 
-  getOptions(): LoaderOptions<T, Key> {
+  getOptions(): DataLoaderOptions<T, Key> {
     return {
-      ...super.getOptions(),
       // Batching is worthless here since we load each item individually anyways
       // This skips the wait time and fires immediately.
       batch: false,

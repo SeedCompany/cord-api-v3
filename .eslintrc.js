@@ -41,10 +41,6 @@ const oldRestrictedImports = [
     importNames: ['Dictionary'],
     message: 'Use a type with strict keys instead',
   },
-  {
-    name: 'dataloader',
-    message: 'Import DataLoader from our core folder instead',
-  },
 ];
 
 /** @type import('@seedcompany/eslint-plugin').ImportRestriction[] */

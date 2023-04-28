@@ -13,11 +13,10 @@ export class ProgressSummaryLoader extends OrderedNestDataLoader<FetchedSummarie
     super();
   }
 
-  getOptions(): LoaderOptionsOf<ProgressSummaryLoader> {
+  getOptions() {
     return {
-      ...super.getOptions(),
       propertyKey: 'reportId',
-    };
+    } satisfies LoaderOptionsOf<ProgressSummaryLoader>;
   }
 
   async loadMany(ids: readonly ID[]) {
