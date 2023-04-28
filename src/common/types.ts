@@ -8,21 +8,12 @@ import {
 import { ClassDecoratorFactory } from '@nestjs/graphql/dist/interfaces/class-decorator-factory.interface';
 import { NotImplementedException } from './exceptions';
 
-export type MaybeAsync<T> = T | Promise<T>;
-
 /**
  * Used for generic GraphQL types
  */
 export type AbstractClassType<T> = (abstract new (...args: any[]) => T) & {
   prototype: T;
 };
-
-/**
- * Used for conditional generics
- */
-export type AnyFn = (...args: any) => any;
-
-export type ArrayItem<T> = T extends ReadonlyArray<infer U> ? U : never;
 
 export interface Range<T> {
   start: T;

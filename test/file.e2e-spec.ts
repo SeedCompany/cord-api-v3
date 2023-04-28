@@ -1,4 +1,5 @@
 import { faker } from '@faker-js/faker';
+import { bufferFromStream } from '@seedcompany/common';
 import { startCase, times } from 'lodash';
 import {
   DateTime,
@@ -6,7 +7,7 @@ import {
   DurationObjectUnits as DurationObject,
   Settings,
 } from 'luxon';
-import { bufferFromStream, ID } from '../src/common';
+import { ID } from '~/common';
 import { Role } from '../src/components/authorization';
 import {
   Directory,

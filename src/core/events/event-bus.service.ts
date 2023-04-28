@@ -1,8 +1,9 @@
 import { DiscoveryService } from '@golevelup/nestjs-discovery';
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
+import { FnLike } from '@seedcompany/common';
 import { stripIndent } from 'common-tags';
 import { groupBy, mapValues, orderBy } from 'lodash';
-import { AnyFn, ID, ServerException } from '../../common';
+import { ID, ServerException } from '../../common';
 import { ILogger, Logger } from '../logger';
 import {
   EVENT_METADATA,
@@ -22,7 +23,7 @@ export abstract class IEventBus {
 
 @Injectable()
 export class SyncEventBus implements IEventBus, OnApplicationBootstrap {
-  private listenerMap: Record<ID, AnyFn[]> = {};
+  private listenerMap: Record<ID, FnLike[]> = {};
 
   constructor(
     private readonly discovery: DiscoveryService,
