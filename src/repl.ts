@@ -2,6 +2,7 @@ import { clc } from '@nestjs/common/utils/cli-colors.util';
 import { NestFactory } from '@nestjs/core';
 import { assignToObject } from '@nestjs/core/repl/assign-to-object.util';
 import { ReplContext } from '@nestjs/core/repl/repl-context';
+import { bufferFromStream } from '@seedcompany/common';
 import { mkdir } from 'fs/promises';
 // eslint-disable-next-line no-restricted-imports
 import * as lodash from 'lodash';
@@ -9,7 +10,6 @@ import { DateTime, Duration, Interval } from 'luxon';
 import { promisify } from 'util';
 import { createContext, runInContext } from 'vm';
 import {
-  bufferFromStream,
   CalendarDate,
   DateInterval,
   many,

@@ -1,5 +1,5 @@
+import { CachedByArg } from '@seedcompany/common';
 import { config } from 'winston';
-import { CachedForArg } from '~/common';
 import { LogLevel } from './logger.interface';
 
 interface MatcherConfig {
@@ -96,7 +96,7 @@ export class LevelMatcher {
     return config.syslog.levels[level] <= config.syslog.levels[configuredLevel];
   }
 
-  @CachedForArg()
+  @CachedByArg()
   getLevel(name: string): LogLevel {
     for (const matcherGroup of this.matcherGroups) {
       for (const { include, exclude, level } of matcherGroup) {

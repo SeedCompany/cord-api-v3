@@ -1,4 +1,5 @@
 import { Field, InterfaceType } from '@nestjs/graphql';
+import { cached } from '@seedcompany/common';
 import { LazyGetter as Once } from 'lazy-get-decorator';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
@@ -15,7 +16,6 @@ import { getParentTypes } from './parent-types';
 import { MaybeSecured, SecuredProps } from './secured-property';
 import { AbstractClassType } from './types';
 import { has, mapFromList } from './util';
-import { cachedOnObject } from './weak-map-cache';
 
 const hasTypename = (value: unknown): value is { __typename: string } =>
   value != null &&
@@ -89,7 +89,7 @@ export class EnhancedResource<T extends ResourceShape<any>> {
       return resource;
     }
     const factory = () => new EnhancedResource(resource);
-    return cachedOnObject(EnhancedResource.refs, resource, factory);
+    return cached(EnhancedResource.refs, resource, factory);
   }
 
   [inspect.custom]() {

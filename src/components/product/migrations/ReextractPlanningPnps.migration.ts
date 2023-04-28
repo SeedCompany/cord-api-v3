@@ -1,6 +1,7 @@
 import { ModuleRef } from '@nestjs/core';
+import { asyncPool } from '@seedcompany/common';
 import { node, relation } from 'cypher-query-builder';
-import { asyncPool, ID } from '../../../common';
+import { ID } from '~/common';
 import { BaseMigration, IEventBus, Migration } from '../../../core';
 import { ACTIVE } from '../../../core/database/query';
 import { EngagementRepository } from '../../engagement/engagement.repository';
@@ -24,7 +25,7 @@ export class ReextractPlanningPnpsMigration extends BaseMigration {
 
     const engagementRepo = this.moduleRef.get(EngagementRepository);
     const session = this.fakeAdminSession;
-    await asyncPool(2, rows, async (row, i) => {
+    await asyncPool(2, rows.entries(), async ([i, row]) => {
       this.logger.info(`Re-extracting PnP ${i} / ${rows.length}`);
 
       try {

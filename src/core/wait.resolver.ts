@@ -1,11 +1,11 @@
 import { Args, Query, Resolver } from '@nestjs/graphql';
-import { sleep } from '../common';
+import { delay } from '@seedcompany/common';
 
 @Resolver()
 export class WaitResolver {
   @Query(() => Boolean)
-  async wait(@Args('delay') delay: string) {
-    await sleep(delay);
+  async wait(@Args('delay') duration: string) {
+    await delay(duration);
     return true;
   }
 }

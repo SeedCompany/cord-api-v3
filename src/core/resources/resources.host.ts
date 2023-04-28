@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { GraphQLSchemaHost } from '@nestjs/graphql';
+import { CachedByArg } from '@seedcompany/common';
 import { isObjectType } from 'graphql';
 import { mapValues } from 'lodash';
 import { ValueOf } from 'ts-essentials';
 import { LiteralUnion } from 'type-fest';
-import { CachedForArg, EnhancedResource, ServerException } from '~/common';
+import { EnhancedResource, ServerException } from '~/common';
 import type { LegacyResourceMap } from '../../components/authorization/model/resource-map';
 import { ResourceMap } from './map';
 import { __privateDontUseThis } from './resource-map-holder';
@@ -71,7 +72,7 @@ export class ResourcesHost {
     return await this.getInterfacesFromGQLSchema(resource);
   }
 
-  @CachedForArg()
+  @CachedByArg()
   private async getInterfacesFromClassType(
     resource: EnhancedResource<any>,
   ): Promise<ReadonlyArray<EnhancedResource<any>>> {
@@ -80,7 +81,7 @@ export class ResourcesHost {
     return [...resource.interfaces].filter((i) => resSet.has(i));
   }
 
-  @CachedForArg()
+  @CachedByArg()
   private async getInterfacesFromGQLSchema(
     resource: EnhancedResource<any>,
   ): Promise<ReadonlyArray<EnhancedResource<any>>> {
@@ -96,7 +97,7 @@ export class ResourcesHost {
       .flatMap((i) => map[i.name as keyof ResourceMap] ?? []);
   }
 
-  @CachedForArg()
+  @CachedByArg()
   async getImplementations(
     interfaceResource: EnhancedResource<any>,
   ): Promise<ReadonlyArray<EnhancedResource<any>>> {

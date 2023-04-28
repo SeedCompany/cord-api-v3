@@ -1,6 +1,7 @@
+import { asyncPool } from '@seedcompany/common';
 import { node, relation } from 'cypher-query-builder';
 import { union } from 'lodash';
-import { asyncPool, ID, ServerException, Session } from '../../../common';
+import { ID, ServerException, Session } from '~/common';
 import {
   DatabaseService,
   EventsHandler,

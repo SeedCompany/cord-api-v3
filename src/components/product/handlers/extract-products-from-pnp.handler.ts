@@ -1,12 +1,7 @@
+import { asyncPool } from '@seedcompany/common';
 import { difference, groupBy, uniq } from 'lodash';
 import { DateTime } from 'luxon';
-import {
-  asyncPool,
-  ID,
-  mapFromList,
-  Session,
-  UnsecuredDto,
-} from '../../../common';
+import { ID, mapFromList, Session, UnsecuredDto } from '~/common';
 import { EventsHandler, IEventHandler, ILogger, Logger } from '../../../core';
 import { Engagement } from '../../engagement';
 import {

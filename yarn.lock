@@ -2747,6 +2747,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@seedcompany/common@npm:>=0.9 <1":
+  version: 0.9.0
+  resolution: "@seedcompany/common@npm:0.9.0"
+  peerDependencies:
+    luxon: ^3.3.0
+  peerDependenciesMeta:
+    luxon:
+      optional: true
+  checksum: 48d318024ea7980691127cba446bd66ee52cb4ca2333b64720e92d5f27e144cee237d6212d00a922c7c262d7beb0c1dd74ae478431cba49f17daa13e6d4ef4ce
+  languageName: node
+  linkType: hard
+
 "@seedcompany/eslint-plugin@npm:^3.4.1":
   version: 3.4.1
   resolution: "@seedcompany/eslint-plugin@npm:3.4.1"
@@ -4938,6 +4950,7 @@ __metadata:
     "@nestjs/schematics": ^9.0.4
     "@nestjs/testing": ^9.3.1
     "@patarapolw/prettyprint": ^1.0.3
+    "@seedcompany/common": ">=0.9 <1"
     "@seedcompany/eslint-plugin": ^3.4.1
     "@seedcompany/nestjs-email": ^3.1.0
     "@types/common-tags": ^1.8.1

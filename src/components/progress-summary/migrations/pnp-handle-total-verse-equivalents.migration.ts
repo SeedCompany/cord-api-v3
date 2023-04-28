@@ -1,5 +1,6 @@
+import { asyncPool } from '@seedcompany/common';
 import { greaterThan, node, relation } from 'cypher-query-builder';
-import { asyncPool, ID } from '../../../common';
+import { ID } from '~/common';
 import { BaseMigration, IEventBus, Migration } from '../../../core';
 import { ACTIVE } from '../../../core/database/query';
 import { FileService } from '../../file';
@@ -25,7 +26,7 @@ export class PnpHandleTotalVerseEquivalentsMigration extends BaseMigration {
     const session = this.fakeAdminSession;
 
     // Re-extract pnp progress for all results
-    await asyncPool(2, result, async (row, i) => {
+    await asyncPool(2, result.entries(), async ([i, row]) => {
       this.logger.info(`Re-extracting PnP ${i} / ${result.length}`);
 
       try {
