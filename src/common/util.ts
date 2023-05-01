@@ -1,17 +1,4 @@
-import { Duration, DurationLike } from 'luxon';
-
-export type Many<T> = T | readonly T[];
-export const many = <T>(item: Many<T>): readonly T[] =>
-  Array.isArray(item) ? item : [item as T];
-
-export const maybeMany = <T>(
-  item: Many<T> | null | undefined,
-): readonly T[] | undefined => (item != null ? many(item) : undefined);
-
-export const sleep = (duration: string | DurationLike) =>
-  new Promise((resolve) =>
-    setTimeout(resolve, Duration.from(duration).toMillis()),
-  );
+import { compact } from 'lodash';
 
 export const simpleSwitch = <T, K extends string = string>(
   key: K | null | undefined,
@@ -69,19 +56,5 @@ export function has<K extends string | number | symbol, T>(
   return key in (obj as any);
 }
 
-/**
- * A Set that will render as a list in JSON.stringify
- */
-export class JsonSet extends Set {
-  toJSON() {
-    return [...this];
-  }
-}
-
-/**
- * Join the items to a string after stripping falsy conditions.
- */
-export const cleanJoin = (
-  separator: string,
-  list: ReadonlyArray<string | number | null | undefined | boolean>,
-) => list.filter((item) => item != null && item !== false).join(separator);
+export const csv = (str: string): readonly string[] =>
+  compact(str.split(',').map((s) => s.trim()));

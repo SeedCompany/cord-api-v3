@@ -1,4 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { MaybeAsync } from '@seedcompany/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
 import { difference } from 'lodash';
@@ -9,7 +10,6 @@ import {
   ID,
   InputException,
   isIdLike,
-  MaybeAsync,
   NotFoundException,
   ObjectView,
   ServerException,

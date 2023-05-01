@@ -11,7 +11,7 @@ import {
 } from 'luxon';
 import { inspect } from 'util';
 import { CalendarDate } from './calendar-date';
-import './duration';
+import '@seedcompany/common/temporal/luxon';
 
 const toSuper = (int: DateInterval): Interval =>
   Interval.fromDateTimes(int.start, int.end.plus({ days: 1 }));

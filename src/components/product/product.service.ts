@@ -1,7 +1,7 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { asyncPool } from '@seedcompany/common';
 import { intersection, sumBy, uniq } from 'lodash';
 import {
-  asyncPool,
   ID,
   InputException,
   mapFromList,

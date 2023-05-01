@@ -15,15 +15,14 @@ export class ProductProgressByReportLoader extends OrderedNestDataLoader<
     super();
   }
 
-  getOptions(): LoaderOptionsOf<ProductProgressByReportLoader> {
+  getOptions() {
     return {
-      ...super.getOptions(),
       propertyKey: (result) => ({
         report: result.report,
         variant: result.variant,
       }),
       cacheKeyFn: (args) => `${args.report.id}:${args.variant.key}`,
-    };
+    } satisfies LoaderOptionsOf<ProductProgressByReportLoader>;
   }
 
   async loadMany(reports: readonly ProgressVariantByReportInput[]) {

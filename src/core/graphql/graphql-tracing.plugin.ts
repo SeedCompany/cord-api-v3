@@ -1,10 +1,10 @@
-import { Plugin } from '@nestjs/apollo';
-import { FieldMiddleware } from '@nestjs/graphql';
 import {
   ApolloServerPlugin as ApolloPlugin,
   GraphQLRequestExecutionListener as ExecutionListener,
   GraphQLRequestListener as Listener,
-} from 'apollo-server-plugin-base';
+} from '@apollo/server';
+import { Plugin } from '@nestjs/apollo';
+import { FieldMiddleware } from '@nestjs/graphql';
 import { GraphQLResolveInfo as ResolveInfo, ResponsePath } from 'graphql';
 import { GqlContextType as ContextType } from '../../common';
 import { Segment, TracingService } from '../tracing';
@@ -42,7 +42,7 @@ export class GraphqlTracingPlugin implements ApolloPlugin<ContextType> {
 
         return {
           executionDidEnd: async (err) => {
-            const userId = reqContext.context.session?.userId;
+            const userId = reqContext.contextValue.session?.userId;
             if (userId) {
               segment.setUser?.(userId);
             }

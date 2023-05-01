@@ -1,5 +1,6 @@
+import { asyncPool } from '@seedcompany/common';
 import { hasLabel, node, not, relation } from 'cypher-query-builder';
-import { asyncPool, ID, Range } from '../../../common';
+import { ID, Range } from '~/common';
 import { BaseMigration, Migration } from '../../../core';
 import {
   ACTIVE,
@@ -28,7 +29,7 @@ export class AddProductTotalVersesMigration extends BaseMigration {
     const products = await this.findProductRefsWithoutTotalVerses();
     this.logger.info(`Found ${products.length} products without total verses`);
 
-    await asyncPool(5, products, async (product, i) => {
+    await asyncPool(5, products.entries(), async ([i, product]) => {
       const totalVerses = product.unspecifiedScripture
         ? product.unspecifiedScripture.totalVerses
         : getTotalVerses(

@@ -1,10 +1,12 @@
 import { Injectable, Type } from '@nestjs/common';
+import {
+  DataLoaderContext,
+  DataLoaderStrategy,
+} from '@seedcompany/data-loader';
 import { ConditionalKeys, ValueOf } from 'type-fest';
 import { ID, Many, ObjectView, ServerException } from '~/common';
-import { GqlContextHost } from '~/core/graphql';
-import { LoaderContextType, LoaderOf, NestDataLoader } from '../data-loader';
-import { NEST_LOADER_CONTEXT_KEY } from '../data-loader/constants';
 import { BaseNode } from '../database/results';
+import { GqlContextHost } from '../graphql';
 import { ResourceLoaderRegistry } from './loader.registry';
 import { ResourceMap } from './map';
 import { ResourceResolver } from './resource-resolver.service';
@@ -21,6 +23,7 @@ export class ResourceLoader {
   constructor(
     private readonly loaderRegistry: ResourceLoaderRegistry,
     private readonly contextHost: GqlContextHost,
+    private readonly loaderContext: DataLoaderContext,
     private readonly resourceResolver: ResourceResolver,
   ) {}
 
@@ -67,7 +70,7 @@ export class ResourceLoader {
   ): Promise<SomeResourceType['prototype'] & { __typename: string }> {
     const { factory, objectViewAware, resolvedType } =
       this.findLoaderFactory(type);
-    const loader = await this.getLoader(factory);
+    const loader = await this.getLoader<any, any>(factory);
     const key = objectViewAware ? { id, view: view ?? { active: true } } : id;
     const result = await loader.load(key);
     return {
@@ -79,14 +82,13 @@ export class ResourceLoader {
     };
   }
 
-  async getLoader<T extends NestDataLoader<any, any>>(
-    factory: Type<T>,
-  ): Promise<LoaderOf<T>> {
-    const context = this.contextHost.context as unknown as {
-      [NEST_LOADER_CONTEXT_KEY]: LoaderContextType;
-    };
-    const loader = await context[NEST_LOADER_CONTEXT_KEY].getLoader(factory);
-    return loader as LoaderOf<T>;
+  async getLoader<T, Key, CachedKey = Key>(
+    type: Type<DataLoaderStrategy<T, Key, CachedKey>>,
+  ) {
+    return await this.loaderContext.getLoader<T, Key, CachedKey>(
+      type,
+      this.contextHost.context,
+    );
   }
 
   private findLoaderFactory(type: Many<keyof ResourceMap | SomeResourceType>) {

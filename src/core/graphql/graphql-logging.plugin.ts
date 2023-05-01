@@ -1,9 +1,9 @@
-import { Plugin } from '@nestjs/apollo';
-import { GraphQLRequestContext as RequestContext } from 'apollo-server-core';
 import {
   ApolloServerPlugin as ApolloPlugin,
+  GraphQLRequestContext as RequestContext,
   GraphQLRequestListener as RequestListener,
-} from 'apollo-server-plugin-base';
+} from '@apollo/server';
+import { Plugin } from '@nestjs/apollo';
 import { GraphQLError } from 'graphql';
 import { Neo4jError } from 'neo4j-driver';
 import { GqlContextType as ContextType } from '../../common';

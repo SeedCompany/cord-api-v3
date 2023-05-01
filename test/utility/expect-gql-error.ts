@@ -26,7 +26,7 @@ expect.extend({
         'code',
         'codes',
         'status',
-        'exception',
+        'stacktrace',
       ),
     };
 

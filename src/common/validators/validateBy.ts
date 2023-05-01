@@ -1,14 +1,14 @@
+import { FnLike } from '@seedcompany/common';
 import {
   registerDecorator,
   ValidationOptions,
   ValidatorConstraintInterface,
 } from 'class-validator';
-import { AnyFn } from '../types';
 
 export interface ValidateByOptions {
   name: string;
   constraints?: any[];
-  validator: ValidatorConstraintInterface | AnyFn;
+  validator: ValidatorConstraintInterface | FnLike;
   async?: boolean;
 }
 
