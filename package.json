@@ -95,7 +95,7 @@
     "ts-essentials": "^9.3.0",
     "winston": "^3.8.2",
     "xlsx": "^0.18.5",
-    "yaml": "^2.2.1"
+    "yaml": "^2.2.2"
   },
   "devDependencies": {
     "@nestjs/cli": "^9.1.9",
