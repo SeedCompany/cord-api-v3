@@ -1,3 +1,4 @@
+import { Type } from '@nestjs/common';
 import {
   Field,
   FieldOptions,
@@ -132,7 +133,7 @@ function InnerSecuredProperty<
   abstract class SecuredPropertyClass
     implements ISecured, Secured<SecuredValue<TsType, Nullable>>
   {
-    @Field(() => valueClass, {
+    @Field(() => valueClass as Type<GqlType>, {
       ...options,
       nullable: true,
     })
@@ -191,7 +192,7 @@ function SecuredList<GQL, TS, Nullable extends boolean | undefined = false>(
   abstract class SecuredPropertyListClass
     implements ISecured, Secured<SecuredList<TS, Nullable>>
   {
-    @Field(() => [valueClass], {
+    @Field(() => [valueClass as Type<GQL>], {
       nullable: options.nullable,
     })
     readonly value: SecuredList<TS, Nullable>;

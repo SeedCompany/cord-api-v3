@@ -1,3 +1,8 @@
+import {
+  ApolloServerPlugin as ApolloPlugin,
+  GraphQLRequestContext as RequestContext,
+  GraphQLRequestListener as RequestListener,
+} from '@apollo/server';
 import { Plugin } from '@nestjs/apollo';
 import {
   CallHandler,
@@ -8,11 +13,6 @@ import {
   OnModuleDestroy,
 } from '@nestjs/common';
 import { GqlContextType as ContextKey } from '@nestjs/graphql';
-import {
-  ApolloServerPlugin as ApolloPlugin,
-  GraphQLRequestListener as RequestListener,
-} from 'apollo-server-plugin-base';
-import { GraphQLRequestContext as RequestContext } from 'apollo-server-types';
 import { AsyncLocalStorage } from 'async_hooks';
 import { Request, Response } from 'express';
 import { GqlContextType as ContextType } from '~/common';
@@ -94,7 +94,7 @@ export class GqlContextHostImpl
    * Attach GQL context to the ALS store now that we have it.
    */
   async requestDidStart({
-    context,
+    contextValue: context,
   }: RequestContext<ContextType>): Promise<RequestListener<ContextType>> {
     const store = this.als.getStore();
     if (!store) {
@@ -103,7 +103,7 @@ export class GqlContextHostImpl
     store.ctx = context;
     return {
       async didResolveOperation({ operation }) {
-        context.operation = operation;
+        context.operation = operation!;
       },
     };
   }

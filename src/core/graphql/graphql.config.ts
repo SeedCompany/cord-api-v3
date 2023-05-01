@@ -1,27 +1,29 @@
-import { KeyValueCacheSetOptions } from '@apollo/utils.keyvaluecache/src/KeyValueCache';
-import { ApolloDriverConfig } from '@nestjs/apollo';
-import { Injectable } from '@nestjs/common';
-import { GqlOptionsFactory } from '@nestjs/graphql';
+import { ContextFunction, PersistedQueryOptions } from '@apollo/server';
+import {
+  ApolloServerErrorCode as ApolloCode,
+  unwrapResolverError,
+} from '@apollo/server/errors';
+import { ExpressContextFunctionArgument } from '@apollo/server/express4';
 import {
   ApolloServerPluginLandingPageLocalDefault,
   ApolloServerPluginLandingPageProductionDefault,
-  ContextFunction,
+} from '@apollo/server/plugin/landingPage/default';
+import {
   KeyValueCache,
-} from 'apollo-server-core';
-import { PersistedQueryOptions } from 'apollo-server-core/src/graphqlOptions';
+  KeyValueCacheSetOptions,
+} from '@apollo/utils.keyvaluecache';
+import { ApolloDriverConfig } from '@nestjs/apollo';
+import { Injectable } from '@nestjs/common';
+import { GqlOptionsFactory } from '@nestjs/graphql';
+import { setHas, setOf } from '@seedcompany/common';
 import {
-  PersistedQueryNotFoundError,
-  PersistedQueryNotSupportedError,
-  SyntaxError,
-  ValidationError,
-} from 'apollo-server-errors';
-import { Request, Response } from 'express';
-import {
+  GraphQLErrorExtensions as ErrorExtensions,
+  GraphQLFormattedError as FormattedError,
   GraphQLError,
-  GraphQLFormattedError,
   GraphQLScalarType,
   OperationDefinitionNode,
 } from 'graphql';
+import { compact } from 'lodash';
 import {
   GqlContextType,
   JsonSet,
@@ -36,8 +38,9 @@ import { GraphqlTracingPlugin } from './graphql-tracing.plugin';
 
 declare module 'graphql/error/GraphQLError' {
   interface GraphQLErrorExtensions {
-    code: string;
+    code?: string;
     codes?: ReadonlySet<string>;
+    stacktrace?: string[];
   }
 }
 
@@ -65,11 +68,11 @@ export class GraphQLConfig implements GqlOptionsFactory {
     return {
       autoSchemaFile: 'schema.graphql',
       context: this.context,
-      cors: this.config.cors,
       playground: false,
       introspection: true,
       formatError: this.formatError,
-      debug: this.debug,
+      includeStacktraceInErrorResponses: true,
+      status400ForVariableCoercionErrors: true, // will be default in v5
       sortSchema: true,
       buildSchemaOptions: {
         fieldMiddleware: [this.tracing.fieldMiddleware()],
@@ -99,50 +102,43 @@ export class GraphQLConfig implements GqlOptionsFactory {
     };
   }
 
-  get debug() {
-    return true; // TODO
-  }
+  context: ContextFunction<[ExpressContextFunctionArgument], GqlContextType> =
+    async ({ req, res }) => ({
+      request: req,
+      response: res,
+      operation: createFakeStubOperation(),
+    });
 
-  context: ContextFunction<{ req: Request; res: Response }, GqlContextType> = ({
-    req,
-    res,
-  }) => ({
-    request: req,
-    response: res,
-    operation: createFakeStubOperation(),
-  });
+  formatError = (
+    formatted: FormattedError,
+    error: unknown | /* but probably a */ GraphQLError,
+  ): FormattedError => {
+    // Probably the actual error thrown
+    const _original = unwrapResolverError(error);
 
-  formatError = (error: GraphQLError): GraphQLFormattedError => {
-    const extensions = { ...error.extensions };
+    const extensions: ErrorExtensions = { ...formatted.extensions };
 
     const codes = (extensions.codes ??= new JsonSet(
-      this.resolveCodes(error, extensions.code),
+      compact(this.resolveCodes(formatted, extensions.code)),
     ));
+    delete extensions.code;
 
     // Schema & validation errors don't have meaningful stack traces, so remove them
     const worthlessTrace = codes.has('Validation') || codes.has('GraphQL');
-
-    if (!this.debug || worthlessTrace) {
-      delete extensions.exception;
+    if (worthlessTrace) {
+      delete extensions.stacktrace;
     }
 
     return {
-      message: error.message,
+      message: formatted.message,
       extensions,
-      locations: error.locations,
-      path: error.path,
+      locations: formatted.locations,
+      path: formatted.path,
     };
   };
 
-  private resolveCodes(error: GraphQLError, code: string): string[] {
-    if (
-      [
-        ValidationError,
-        SyntaxError,
-        PersistedQueryNotFoundError,
-        PersistedQueryNotSupportedError,
-      ].some((cls) => error instanceof cls)
-    ) {
+  private resolveCodes(error: FormattedError, code?: string) {
+    if (code && setHas(apolloErrorCodesThatAreClientProblem, code)) {
       return [code, 'GraphQL', 'Client'];
     }
     if (
@@ -195,3 +191,12 @@ class GraphQLCacheAdapter implements KeyValueCache {
     await this.cache.delete(this.prefix + key);
   }
 }
+
+const apolloErrorCodesThatAreClientProblem = setOf([
+  ApolloCode.GRAPHQL_PARSE_FAILED,
+  ApolloCode.GRAPHQL_VALIDATION_FAILED,
+  ApolloCode.PERSISTED_QUERY_NOT_FOUND,
+  ApolloCode.PERSISTED_QUERY_NOT_SUPPORTED,
+  ApolloCode.BAD_USER_INPUT,
+  ApolloCode.BAD_REQUEST,
+]);
