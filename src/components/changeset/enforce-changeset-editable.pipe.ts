@@ -1,12 +1,11 @@
-import { Injectable, PipeTransform } from '@nestjs/common';
+import { Injectable, PipeTransform, Type } from '@nestjs/common';
+import {
+  DataLoaderContext,
+  DataLoaderStrategy,
+} from '@seedcompany/data-loader';
 import { isPlainObject } from 'lodash';
 import { ID, InputException, isIdLike } from '../../common';
-import {
-  GqlContextHost,
-  LoaderContextType,
-  NotGraphQLContext,
-} from '../../core';
-import { NEST_LOADER_CONTEXT_KEY as Loaders } from '../../core/data-loader/constants';
+import { GqlContextHost, NotGraphQLContext } from '../../core';
 import { ResourceLoaderRegistry } from '../../core/resources/loader.registry';
 import { Changeset } from './dto';
 import { shouldValidateEditability } from './validate-editability.decorator';
@@ -28,6 +27,7 @@ export class EnforceChangesetEditablePipe implements PipeTransform {
     // Cannot use request scoped injection here in global pipes,
     // So we have to re-create the loader fetching here.
     private readonly loaderRegistry: ResourceLoaderRegistry,
+    private readonly loaderContext: DataLoaderContext,
   ) {}
 
   async transform(value: any) {
@@ -57,11 +57,9 @@ export class EnforceChangesetEditablePipe implements PipeTransform {
       return;
     }
 
-    const loaderFactory = this.loaderRegistry.loaders.get('Changeset')!.factory;
-    const { [Loaders]: loaders } = context as any as {
-      [Loaders]: LoaderContextType;
-    };
-    const loader = await loaders.getLoader<Changeset>(loaderFactory);
+    const loaderFactory: Type<DataLoaderStrategy<Changeset, ID>> =
+      this.loaderRegistry.loaders.get('Changeset')!.factory;
+    const loader = await this.loaderContext.getLoader(loaderFactory, context);
 
     const changesets = await loader.loadMany(ids);
     for (const changeset of changesets) {

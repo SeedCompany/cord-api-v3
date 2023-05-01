@@ -16,12 +16,11 @@ export class ProgressReportVarianceExplanationLoader extends OrderedNestDataLoad
     super();
   }
 
-  getOptions(): LoaderOptionsOf<ProgressReportVarianceExplanationLoader> {
+  getOptions() {
     return {
-      ...super.getOptions(),
       propertyKey: (obj) => obj.report,
       cacheKeyFn: (key) => key.id,
-    };
+    } satisfies LoaderOptionsOf<ProgressReportVarianceExplanationLoader, ID>;
   }
 
   async loadMany(reports: readonly ProgressReport[]) {

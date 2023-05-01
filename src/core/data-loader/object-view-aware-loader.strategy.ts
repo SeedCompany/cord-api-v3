@@ -1,10 +1,8 @@
+import { DataLoaderOptions } from '@seedcompany/data-loader';
 import { groupBy } from 'lodash';
-import { ID, ObjectView, viewOfChangeset } from '../../common';
+import { ID, ObjectView, viewOfChangeset } from '~/common';
 import { ChangesetAware } from '../../components/changeset/dto';
-import {
-  OrderedNestDataLoader as Loader,
-  OrderedNestDataLoaderOptions as LoaderOptions,
-} from './ordered-data-loader';
+import { SessionAwareLoaderStrategy } from './session-aware-loader.strategy';
 
 interface Key {
   id: ID;
@@ -19,7 +17,7 @@ interface Key {
  */
 export abstract class ObjectViewAwareLoader<
   T extends ChangesetAware,
-> extends Loader<T, Key, string> {
+> extends SessionAwareLoaderStrategy<T, Key, string> {
   abstract loadManyByView(
     ids: readonly ID[],
     view: ObjectView,
@@ -39,10 +37,8 @@ export abstract class ObjectViewAwareLoader<
     return items.flat();
   }
 
-  getOptions(): LoaderOptions<T, Key, string> {
-    const parent = super.getOptions();
+  getOptions(): DataLoaderOptions<T, Key, string> {
     return {
-      ...parent,
       propertyKey: (obj: T) => ({
         id: obj.id,
         view: viewOfChangeset(obj.changeset),

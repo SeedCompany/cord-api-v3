@@ -1,13 +1,10 @@
-import {
-  mapSecuredValue,
-  NotFoundException,
-  ServerException,
-} from '../../common';
-import { DataLoader } from '../../core';
-import { DefinedFile, FileNode, isFile, SecuredFile } from './dto';
+import { LoaderOf } from '@seedcompany/data-loader';
+import { mapSecuredValue, NotFoundException, ServerException } from '~/common';
+import { DefinedFile, isFile, SecuredFile } from './dto';
+import { FileNodeLoader } from './file-node.loader';
 
 export async function resolveDefinedFile(
-  loader: DataLoader<FileNode>,
+  loader: LoaderOf<FileNodeLoader>,
   input: DefinedFile,
 ): Promise<SecuredFile> {
   return await mapSecuredValue(input, async (fileId) => {
