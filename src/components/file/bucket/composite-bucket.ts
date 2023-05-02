@@ -1,6 +1,7 @@
 import { HeadObjectOutput } from '@aws-sdk/client-s3';
 import { Command } from '@aws-sdk/smithy-client';
 import { Type } from '@nestjs/common';
+import { NotFoundException } from '~/common';
 import { FileBucket, GetObjectOutput, SignedOp } from './file-bucket';
 
 /**
@@ -77,8 +78,18 @@ export class CompositeBucket extends FileBucket {
   }
 
   private async selectSource(key: string) {
-    const [success] = await this.selectSources(key);
-    return success[0];
+    try {
+      const [success] = await this.selectSources(key);
+      return success[0];
+    } catch (e) {
+      if (
+        e instanceof AggregateError &&
+        e.errors.every((e) => e instanceof NotFoundException)
+      ) {
+        throw e.errors[0];
+      }
+      throw e;
+    }
   }
 
   private async selectSources(key: string, sources?: typeof this.sources) {
