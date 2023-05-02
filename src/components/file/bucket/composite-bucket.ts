@@ -25,7 +25,13 @@ export class CompositeBucket extends FileBucket {
     operation: Type<Command<TCommandInput, any, any>>,
     input: SignedOp<TCommandInput>,
   ): Promise<string> {
-    const [source] = await this.selectSource(input.Key);
+    let source;
+    try {
+      [source] = await this.selectSource(input.Key);
+    } catch {
+      // If no source has the file, use the first one. It's probably an upload command.
+      source = this.sources[0];
+    }
     return await source.getSignedUrl(operation, input);
   }
 
