@@ -63,7 +63,10 @@ export class CompositeBucket extends FileBucket {
       (result): result is PromiseRejectedResult => result.status === 'rejected',
     );
     if (errors.length > 0) {
-      throw new AggregateError(errors.map((error) => error.reason));
+      throw new AggregateError(
+        errors.map((error) => error.reason),
+        'Failed to apply some S3 actions',
+      );
     }
   }
 
@@ -85,7 +88,7 @@ export class CompositeBucket extends FileBucket {
       result.status === 'rejected' ? result.reason : [],
     );
     if (success.length === 0) {
-      throw new AggregateError(errors);
+      throw new AggregateError(errors, 'Key does not exist in any source');
     }
     return [success, errors] as const;
   }
