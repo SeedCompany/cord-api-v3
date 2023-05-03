@@ -88,7 +88,14 @@ export const exceptionInfo = () =>
         message,
         stack,
         trace,
-        other,
+        other: {
+          ...other,
+          ...(ex instanceof AggregateError
+            ? {
+                errors: ex.errors.map((e) => ({ stack: e.stack, ...e })),
+              }
+            : {}),
+        },
       };
     });
     delete info.exception;

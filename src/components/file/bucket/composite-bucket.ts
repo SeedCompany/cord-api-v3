@@ -1,6 +1,7 @@
 import { HeadObjectOutput } from '@aws-sdk/client-s3';
 import { Command } from '@aws-sdk/smithy-client';
 import { Type } from '@nestjs/common';
+import { NotFoundException } from '~/common';
 import { FileBucket, GetObjectOutput, SignedOp } from './file-bucket';
 
 /**
@@ -25,7 +26,13 @@ export class CompositeBucket extends FileBucket {
     operation: Type<Command<TCommandInput, any, any>>,
     input: SignedOp<TCommandInput>,
   ): Promise<string> {
-    const [source] = await this.selectSource(input.Key);
+    let source;
+    try {
+      [source] = await this.selectSource(input.Key);
+    } catch {
+      // If no source has the file, use the first one. It's probably an upload command.
+      source = this.sources[0];
+    }
     return await source.getSignedUrl(operation, input);
   }
 
@@ -63,13 +70,26 @@ export class CompositeBucket extends FileBucket {
       (result): result is PromiseRejectedResult => result.status === 'rejected',
     );
     if (errors.length > 0) {
-      throw new AggregateError(errors.map((error) => error.reason));
+      throw new AggregateError(
+        errors.map((error) => error.reason),
+        'Failed to apply some S3 actions',
+      );
     }
   }
 
   private async selectSource(key: string) {
-    const [success] = await this.selectSources(key);
-    return success[0];
+    try {
+      const [success] = await this.selectSources(key);
+      return success[0];
+    } catch (e) {
+      if (
+        e instanceof AggregateError &&
+        e.errors.every((e) => e instanceof NotFoundException)
+      ) {
+        throw e.errors[0];
+      }
+      throw e;
+    }
   }
 
   private async selectSources(key: string, sources?: typeof this.sources) {
@@ -85,7 +105,7 @@ export class CompositeBucket extends FileBucket {
       result.status === 'rejected' ? result.reason : [],
     );
     if (success.length === 0) {
-      throw new AggregateError(errors);
+      throw new AggregateError(errors, 'Key does not exist in any source');
     }
     return [success, errors] as const;
   }
