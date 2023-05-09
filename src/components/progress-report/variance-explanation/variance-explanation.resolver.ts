@@ -5,6 +5,7 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
+import { clamp } from 'lodash';
 import { AnonSession, LoggedInSession, Session } from '~/common';
 import { Loader, LoaderOf } from '~/core';
 import {
@@ -83,7 +84,9 @@ export class ProgressReportVarianceExplanationReasonOptionsResolver {
     if (!summary) {
       return null;
     }
-    const variance = summary.actual - summary.planned;
+    const actual = clamp(summary.actual, 0, 1);
+    const planned = clamp(summary.planned, 0, 1);
+    const variance = actual - planned;
     return scheduleStatusFromVariance(variance);
   }
 }
