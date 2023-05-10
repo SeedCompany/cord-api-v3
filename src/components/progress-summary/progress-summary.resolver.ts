@@ -1,6 +1,7 @@
 import { Args, Float, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { ArgsOptions } from '@nestjs/graphql/dist/decorators/args.decorator';
 import { stripIndent } from 'common-tags';
+import { clamp } from 'lodash';
 import { simpleSwitch } from '../../common';
 import { ProgressFormat } from '../product-progress/dto';
 import { ProgressSummary } from './dto';
@@ -27,7 +28,8 @@ export class ProgressSummaryResolver {
     @Parent() summary: ProgressSummary,
     @Args(formatArg) format: ProgressFormat,
   ): number {
-    return summary.planned * this.formatFactor(summary, format);
+    const planned = clamp(summary.planned, 0, 1);
+    return planned * this.formatFactor(summary, format);
   }
 
   @ResolveField()
@@ -35,7 +37,8 @@ export class ProgressSummaryResolver {
     @Parent() summary: ProgressSummary,
     @Args(formatArg) format: ProgressFormat,
   ): number {
-    return summary.actual * this.formatFactor(summary, format);
+    const actual = clamp(summary.actual, 0, 1);
+    return actual * this.formatFactor(summary, format);
   }
 
   private formatFactor(summary: ProgressSummary, format: ProgressFormat) {
