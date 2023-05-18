@@ -34,7 +34,8 @@ import { PeriodicReportRepository } from './periodic-report.repository';
 export class PeriodicReportService {
   constructor(
     private readonly files: FileService,
-    @Logger('periodic:report:service') private readonly logger: ILogger,
+    @Logger('investigation:periodic:report:service')
+    private readonly logger: ILogger,
     private readonly eventBus: IEventBus,
     private readonly privileges: Privileges,
     private readonly repo: PeriodicReportRepository,
@@ -147,6 +148,13 @@ export class PeriodicReportService {
     reportType: Type & ReportType,
     session: Session,
   ): Promise<PeriodicReportTypeMap[Type] | undefined> {
+    this.logger.debug(`Retrieving: report by date`, {
+      parentId,
+      date,
+      reportType,
+      userId: session.userId,
+    });
+
     const report = await this.repo.getByDate(
       parentId,
       date,

@@ -12,7 +12,7 @@ import {
   ListArg,
   Session,
 } from '~/common';
-import { Loader, LoaderOf } from '~/core';
+import { ILogger, Loader, LoaderOf, Logger } from '~/core';
 import { Engagement, LanguageEngagement } from '../../engagement/dto';
 import {
   PeriodicReportLoader,
@@ -33,7 +33,11 @@ class PeriodicReportArgs {
 
 @Resolver(LanguageEngagement)
 export class ProgressReportEngagementConnectionResolver {
-  constructor(private readonly service: PeriodicReportService) {}
+  constructor(
+    private readonly service: PeriodicReportService,
+    @Logger('investigation:progress-report-engagement-resolver')
+    private readonly logger: ILogger,
+  ) {}
 
   @ResolveField(() => ProgressReportList)
   async progressReports(
@@ -58,6 +62,12 @@ export class ProgressReportEngagementConnectionResolver {
     @Parent() engagement: Engagement,
     @Args() { date }: PeriodicReportArgs,
   ): Promise<SecuredProgressReport> {
+    this.logger.debug(`Retrieving: progress report`, {
+      parentId: engagement.id,
+      date,
+      userId: session.userId,
+    });
+
     const value = await this.service.getReportByDate(
       engagement.id,
       date,
