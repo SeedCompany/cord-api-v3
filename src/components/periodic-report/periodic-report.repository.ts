@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import {
-  equals,
+  and,
+  greaterEqualTo,
   hasLabel,
+  lessEqualTo,
   node,
   not,
   Query,
@@ -217,13 +219,28 @@ export class PeriodicReportRepository extends DtoRepository<
     const res = await this.db
       .query()
       .match([
-        node('baseNode', 'BaseNode', { id: parentId }),
-        relation('out', '', 'report', ACTIVE),
-        node('node', `${reportType}Report`),
-        relation('out', '', 'end', ACTIVE),
-        node('end', 'Property'),
+        [
+          node('', 'BaseNode', { id: parentId }),
+          relation('out', '', 'report', ACTIVE),
+          node('node', `${reportType}Report`),
+        ],
+        [
+          node('node'),
+          relation('out', '', 'start', ACTIVE),
+          node('start', 'Property'),
+        ],
+        [
+          node('node'),
+          relation('out', '', 'end', ACTIVE),
+          node('end', 'Property'),
+        ],
       ])
-      .where({ 'end.value': equals(date.endOf('quarter')) })
+      .where(
+        and({
+          'start.value': lessEqualTo(date),
+          'end.value': greaterEqualTo(date),
+        }),
+      )
       .apply(this.hydrate(session))
       .first();
     return res?.dto;
