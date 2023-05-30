@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { ID, Resource } from '~/common';
-import { CommonRepository, OnIndex, SyntaxError } from '~/core/database';
+import { CommonRepository, OnIndex } from '~/core/database';
 import { ACTIVE } from '~/core/database/query';
 
 @Injectable()
@@ -14,22 +14,6 @@ export class AdminRepository extends CommonRepository {
   @OnIndex()
   private applyIndexes() {
     return this.getConstraintsFor(Resource);
-  }
-
-  async apocVersion() {
-    try {
-      const res = await this.db
-        .query()
-        .return('apoc.version() as version')
-        .asResult<{ version: string }>()
-        .first();
-      return res?.version;
-    } catch (e) {
-      if (e instanceof SyntaxError) {
-        return undefined;
-      }
-      throw e;
-    }
   }
 
   async mergeAnonUser(createdAt: DateTime, anonUserId: string) {
