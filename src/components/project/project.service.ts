@@ -168,7 +168,12 @@ export class ProjectService {
 
       return event.project;
     } catch (e) {
-      if (e instanceof UniquenessError && e.label === 'ProjectName') {
+      if (
+        (e instanceof UniquenessError && e.label === 'ProjectName') ||
+        // this condition is for Neo4j v4.4
+        (e.code === 'Neo.ClientError.Schema.ConstraintValidationFailed' &&
+          e.message.includes('already exists with label `ProjectName`'))
+      ) {
         throw new DuplicateException(
           'project.name',
           'Project with this name already exists',
