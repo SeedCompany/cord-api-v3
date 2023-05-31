@@ -49,7 +49,7 @@ export class ApplyFinalizedChangesetToPartnership
                 ? commitChangesetProps()
                 : rejectChangesetProps(),
             )
-            .return('1'),
+            .return('1 as one'),
         )
         .return('project')
         .run();
@@ -74,7 +74,7 @@ export class ApplyFinalizedChangesetToPartnership
             .setValues({
               'partnershipRel.active': true,
             })
-            .return('1'),
+            .return('1 as one'),
         )
         .return('project')
         .run();

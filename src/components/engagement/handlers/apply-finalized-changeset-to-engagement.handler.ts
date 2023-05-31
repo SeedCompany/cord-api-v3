@@ -112,7 +112,7 @@ export class ApplyFinalizedChangesetToEngagement
             .apply(
               changeset.id ? commitChangesetProps() : rejectChangesetProps(),
             )
-            .return('1'),
+            .return('1 as one'),
         )
         .return('project')
         .run();

@@ -58,6 +58,6 @@ export const commitChangesetProps =
         .with('previouslyActiveProp')
         .apply(prefixNodeLabelsWithDeleted('previouslyActiveProp'))
 
-        .return('1'),
+        .return('1 as one'),
     );
   };
