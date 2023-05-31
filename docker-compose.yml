@@ -32,6 +32,18 @@ services:
       NEO4JLABS_PLUGINS: '["apoc"]'
       NEO4J_PLUGINS: '["apoc"]'
 
+  db5:
+    image: neo4j:5.8-enterprise
+    ports:
+      - 7475:7474
+      - 7688:7687
+    networks:
+      - cord
+    environment:
+      NEO4J_ACCEPT_LICENSE_AGREEMENT: 'yes'
+      NEO4J_AUTH: neo4j/admin
+      NEO4J_PLUGINS: '["apoc"]'
+
   pg:
     image: postgres
     ports:
