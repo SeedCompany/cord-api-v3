@@ -5,9 +5,9 @@ import {
 } from '@apollo/server';
 import { Plugin } from '@nestjs/apollo';
 import { GraphQLError } from 'graphql';
-import { isNeo4jError } from '~/core';
 import { GqlContextType as ContextType } from '../../common';
 import { maskSecrets } from '../../common/mask-secrets';
+import { isNeo4jError } from '../database/errors';
 import { ILogger, Logger } from '../logger';
 
 /**
