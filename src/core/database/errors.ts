@@ -169,7 +169,7 @@ export class UniquenessError extends ConstraintError {
 }
 
 export const isNeo4jError = (e: unknown): e is Neo4jError =>
-  e instanceof Neo4jError;
+  e instanceof Error && e.name === 'Neo4jError';
 
 export const createBetterError = (e: Error) => {
   if (!isNeo4jError(e)) {
