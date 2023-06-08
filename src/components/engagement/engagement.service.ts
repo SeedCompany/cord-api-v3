@@ -85,16 +85,18 @@ export class EngagementService {
   ): Promise<LanguageEngagement> {
     const { languageId, projectId } = input;
 
-    await this.verifyRelationshipEligibility(
-      projectId,
-      languageId,
-      ProjectType.Translation,
-      changeset,
-    );
+    if (languageId) {
+      await this.verifyRelationshipEligibility(
+        projectId,
+        ProjectType.Translation,
+        changeset,
+        languageId,
+      );
+    }
 
     await this.verifyCreateEngagement(projectId, session);
 
-    if (input.firstScripture) {
+    if (input.firstScripture && languageId) {
       await this.verifyFirstScripture({ languageId });
     }
     await this.verifyProjectStatus(projectId, session, changeset);
@@ -142,9 +144,9 @@ export class EngagementService {
 
     await this.verifyRelationshipEligibility(
       projectId,
-      internId,
       ProjectType.Internship,
       changeset,
+      internId,
     );
 
     await this.verifyCreateEngagement(projectId, session);
@@ -278,6 +280,12 @@ export class EngagementService {
       return {
         ...(dto as UnsecuredDto<LanguageEngagement>),
         ...secured,
+        nameWhenUnknown: {
+          ...secured.nameWhenUnknown,
+          value: securedProperties.nameWhenUnknown.canRead
+            ? securedProperties.nameWhenUnknown.value
+            : null,
+        },
         canDelete,
       };
     } else {
@@ -292,6 +300,12 @@ export class EngagementService {
         methodologies: {
           ...secured.methodologies,
           value: secured.methodologies.value ?? [],
+        },
+        nameWhenUnknown: {
+          ...secured.nameWhenUnknown,
+          value: securedProperties.nameWhenUnknown.canRead
+            ? securedProperties.nameWhenUnknown.value
+            : null,
         },
         canDelete,
       };
@@ -531,18 +545,19 @@ export class EngagementService {
 
   protected async verifyRelationshipEligibility(
     projectId: ID,
-    otherId: ID,
     type: ProjectType,
     changeset?: ID,
+    otherId?: ID,
+    nameWhenUnknown?: string,
   ): Promise<void> {
     const isTranslation = type === ProjectType.Translation;
     const property = isTranslation ? 'language' : 'intern';
     const result = await this.repo.verifyRelationshipEligibility(
       projectId,
-      otherId,
       isTranslation,
       property,
       changeset,
+      otherId,
     );
 
     if (!result?.project) {
@@ -562,7 +577,9 @@ export class EngagementService {
     }
 
     const label = isTranslation ? 'language' : 'person';
-    if (!result?.other) {
+    // Add a check to make sure that otherId is defined because
+    // this could just be an unknown engagement.
+    if (!result?.other && otherId) {
       throw new NotFoundException(
         `Could not find ${label}`,
         `engagement.${property}Id`,

@@ -443,10 +443,10 @@ export class EngagementRepository extends CommonRepository {
 
   async verifyRelationshipEligibility(
     projectId: ID,
-    otherId: ID,
     isTranslation: boolean,
     property: 'language' | 'intern',
     changeset?: ID,
+    otherId?: ID,
   ) {
     return await this.db
       .query()

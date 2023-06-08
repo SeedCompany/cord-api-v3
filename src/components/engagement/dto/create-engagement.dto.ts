@@ -32,14 +32,23 @@ export abstract class CreateEngagement {
 
   @Field(() => EngagementStatus, { nullable: true })
   readonly status?: EngagementStatus;
+
+  @Field({
+    nullable: true,
+    description: stripIndent`
+      User can set when the language or intern for the 
+      engagement is unknown as of yet.
+    `,
+  })
+  readonly nameWhenUnknown?: string;
 }
 
 @InputType()
 export abstract class CreateLanguageEngagement extends CreateEngagement {
   static readonly Props = keysOf<CreateLanguageEngagement>();
 
-  @IdField()
-  readonly languageId: ID;
+  @IdField({ nullable: true })
+  readonly languageId?: ID;
 
   @Field({ nullable: true })
   readonly firstScripture?: boolean;
@@ -76,8 +85,8 @@ export abstract class CreateLanguageEngagement extends CreateEngagement {
 export abstract class CreateInternshipEngagement extends CreateEngagement {
   static readonly Props = keysOf<CreateInternshipEngagement>();
 
-  @IdField()
-  readonly internId: ID;
+  @IdField({ nullable: true })
+  readonly internId?: ID;
 
   @IdField({ nullable: true })
   readonly mentorId?: ID;
