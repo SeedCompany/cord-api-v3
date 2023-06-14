@@ -5,25 +5,25 @@ import {
   NestInterceptor,
 } from '@nestjs/common';
 import { GqlContextType, GqlExecutionContext } from '@nestjs/graphql';
-import { Connection } from 'cypher-query-builder';
 import { GraphQLResolveInfo } from 'graphql';
 import { from, lastValueFrom } from 'rxjs';
 import { ConfigService } from '../config/config.service';
+import { TransactionContext } from './transaction.context';
 
 /**
- * Run all mutations in a neo4j transaction.
+ * Run all mutations in an EdgeDB transaction.
  * This allows automatic rollbacks on error.
  */
 @Injectable()
 export class TransactionalMutationsInterceptor implements NestInterceptor {
   constructor(
-    private readonly db: Connection,
+    private readonly context: TransactionContext,
     private readonly config: ConfigService,
   ) {}
 
   async intercept(context: ExecutionContext, next: CallHandler) {
     if (
-      this.config.databaseEngine !== 'neo4j' ||
+      this.config.databaseEngine !== 'edgedb' ||
       context.getType<GqlContextType>() !== 'graphql'
     ) {
       return next.handle();
@@ -36,7 +36,7 @@ export class TransactionalMutationsInterceptor implements NestInterceptor {
     }
 
     return from(
-      this.db.runInTransaction(async () => await lastValueFrom(next.handle())),
+      this.context.inTx(async () => await lastValueFrom(next.handle())),
     );
   }
 }
