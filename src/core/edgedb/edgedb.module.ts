@@ -1,6 +1,7 @@
 import { Module, OnModuleDestroy } from '@nestjs/common';
-import { createClient } from 'edgedb';
+import { createClient, Executor } from 'edgedb';
 import { Client, EdgeDb } from './reexports';
+import { TransactionContext } from './transaction.context';
 
 @Module({
   providers: [
@@ -13,10 +14,21 @@ import { Client, EdgeDb } from './reexports';
     },
     {
       provide: EdgeDb,
-      useExisting: Client,
+      inject: [TransactionContext],
+      useFactory: async (txCtx: TransactionContext) => {
+        // basically a lazy Transaction/Executor/"EdgeDb" that points to the
+        // current transaction in context or just the client if there is no transaction.
+        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+        return new Proxy({} as Executor, {
+          get(target: Executor, p: string, receiver: unknown) {
+            return Reflect.get(txCtx.current, p, receiver);
+          },
+        });
+      },
     },
+    TransactionContext,
   ],
-  exports: [EdgeDb, Client],
+  exports: [EdgeDb, TransactionContext, Client],
 })
 export class EdgedbModule implements OnModuleDestroy {
   constructor(private readonly client: Client) {}
