@@ -198,9 +198,9 @@ export const makeConfig = (env: EnvironmentService) =>
       return config;
     })();
 
-    // Control which database is prioritized, while we migrate to postgres
-    database = env.string('DATABASE').optional('neo4j');
-    usePostgres = this.database.toLowerCase() === 'postgres';
+    // Control which database is prioritized, while we migrate.
+    databaseEngine = env.string('DATABASE').optional('neo4j').toLowerCase();
+    usePostgres = this.databaseEngine === 'postgres';
 
     dbIndexesCreate = env.boolean('DB_CREATE_INDEXES').optional(true);
     dbAutoMigrate = env
