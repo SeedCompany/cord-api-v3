@@ -6,6 +6,7 @@ import { Class } from 'type-fest';
 import { EdgeDB } from './edgedb.service';
 import { Client } from './reexports';
 import { LuxonCalendarDateCodec, LuxonDateTimeCodec } from './temporal.codecs';
+import { TransactionContext } from './transaction.context';
 
 @Module({
   providers: [
@@ -23,6 +24,7 @@ import { LuxonCalendarDateCodec, LuxonDateTimeCodec } from './temporal.codecs';
       },
     },
     EdgeDB,
+    TransactionContext,
   ],
   exports: [EdgeDB, Client],
 })
