@@ -1,5 +1,5 @@
 module default {
-  type User extending Resource {
+  type User extending Resource, Pinnable {
     email: str {
       constraint exclusive;
     };
@@ -19,6 +19,9 @@ module default {
     };
     multi roles: Role;
     title: str;
+    multi link pins: Pinnable {
+      on target delete allow;
+    }
   }
 
   scalar type UserStatus extending enum<Active, Disabled>;
