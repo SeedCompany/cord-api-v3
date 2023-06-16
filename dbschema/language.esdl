@@ -43,15 +43,15 @@ module default {
 
     sponsorEstimatedEndDate: cal::local_date;
 
-#     required hasExternalFirstScripture: bool {
-#       default := false;
-#     };
-#     single link firstScriptureEngagement := (
-#         select LanguageEngagement filter .language = __source__ and .firstScripture = true
-#     );
-#     firstScriptureEngagement: LanguageEngagement {
-#       constraint exclusive;
-#     }
+    required hasExternalFirstScripture: bool {
+      default := false;
+    };
+    optional firstScriptureEngagement: LanguageEngagement;
+    # These two props above are mutually exclusive
+    constraint expression on (
+      (exists .firstScriptureEngagement and not .hasExternalFirstScripture)
+      or not exists .firstScriptureEngagement
+    );
   }
 
   scalar type population extending int32 {

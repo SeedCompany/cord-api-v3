@@ -5,7 +5,8 @@ module default {
       readonly := true;
     };
     required modifiedAt: datetime {
-      rewrite insert, update using (datetime_of_statement());
+      default := datetime_of_statement(); # default here helps editor know it's not required.
+      rewrite update using (datetime_of_statement());
     };
   };
 }
