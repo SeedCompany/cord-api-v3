@@ -38,10 +38,8 @@ module default {
       default := false;
     };
 
-    multi engagements: Engagement {
-      constraint exclusive;
-    }
-    property engagementTotal := count(.engagements);
+#     multi link engagements := .<project[is Engagement];
+    property engagementTotal := count(.<project[is Engagement]);
 
 #       link primaryLocation: Location;
 #       link marketingLocation: Location;
@@ -50,10 +48,12 @@ module default {
   }
 
   type TranslationProject extending Project {
-    overloaded multi engagements: LanguageEngagement;
+    multi link engagements := .<project[is LanguageEngagement];
+    multi link languages := .engagements.language;
   }
+
   type InternshipProject extending Project {
-    overloaded multi engagements: InternshipEngagement;
+    multi link engagements := .<project[is InternshipEngagement];
   }
 }
 
