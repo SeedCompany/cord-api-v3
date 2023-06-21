@@ -35,12 +35,20 @@ adapter.readFileUtf8 = new Proxy(adapter.readFileUtf8, {
 
 import { generateQueryBuilder } from '@edgedb/generate/dist/edgeql-js';
 import { runInterfacesGenerator as generateTsSchema } from '@edgedb/generate/dist/interfaces';
+import {
+  IndentationText,
+  Project,
+  QuoteKind,
+  SourceFile,
+  SyntaxKind,
+} from 'ts-morph';
 
 (async () => {
   const edgedbDir = 'src/core/edgedb';
   const generatedClientDir = `${edgedbDir}/generated-client`;
   const generatedSchemaFile = `${edgedbDir}/schema.ts`;
 
+  const project = createTsMorphProject();
   const root = process.cwd();
   const connectionConfig = {};
 
@@ -54,6 +62,7 @@ import { runInterfacesGenerator as generateTsSchema } from '@edgedb/generate/dis
     connectionConfig,
     root,
   });
+  changeQueryBuilderToUseIdTypeForUuids(project, generatedClientDir);
 
   await generateTsSchema({
     options: {
@@ -62,8 +71,73 @@ import { runInterfacesGenerator as generateTsSchema } from '@edgedb/generate/dis
     connectionConfig,
     root,
   });
+  changeSchemaToUseIdTypeForUuids(project, generatedSchemaFile);
+
+  await project.save();
 })().catch((err) => {
   // eslint-disable-next-line no-console
   console.error(err);
   process.exit(1);
 });
+
+function changeQueryBuilderToUseIdTypeForUuids(
+  project: Project,
+  generatedClientDir: string,
+) {
+  // Change $uuid scalar type alias to use ID type instead of string
+  const clientStd = project.addSourceFileAtPath(
+    `${generatedClientDir}/modules/std.ts`,
+  );
+  addIdImport(clientStd);
+  const uuid = clientStd
+    .getChildSyntaxListOrThrow()
+    .getFirstChildOrThrow(
+      (c) =>
+        c.isKind(SyntaxKind.TypeAliasDeclaration) && c.getName() === '$uuid',
+    );
+  uuid.replaceWithText(uuid.getFullText().replace('string', 'ID'));
+
+  // Change implicit return shapes that are just the id to be ID type.
+  const typesystem = project.addSourceFileAtPath(
+    `${generatedClientDir}/typesystem.ts`,
+  );
+  addIdImport(typesystem);
+  typesystem.replaceWithText(
+    typesystem.getFullText().replaceAll('{ id: string }', '{ id: ID }'),
+  );
+}
+
+function changeSchemaToUseIdTypeForUuids(
+  project: Project,
+  generatedSchemaFile: string,
+) {
+  const schema = project.addSourceFileAtPath(generatedSchemaFile);
+  addIdImport(schema);
+  schema
+    .getChildrenOfKind(SyntaxKind.ModuleDeclaration)
+    .find((ns) => ns.getName() === 'std')
+    ?.getInterfaceOrThrow('BaseObject')
+    .getPropertyOrThrow('"id"')
+    .setType('ID');
+}
+
+function createTsMorphProject() {
+  return new Project({
+    tsConfigFilePath: 'tsconfig.json',
+    skipAddingFilesFromTsConfig: true,
+    manipulationSettings: {
+      indentationText: IndentationText.TwoSpaces,
+      quoteKind: QuoteKind.Single,
+      useTrailingCommas: true,
+    },
+  });
+}
+
+function addIdImport(file: SourceFile) {
+  file.insertImportDeclaration(2, {
+    namedImports: ['ID'],
+    moduleSpecifier: '~/common',
+    leadingTrivia: '\n',
+    isTypeOnly: true,
+  });
+}
