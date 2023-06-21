@@ -11,7 +11,7 @@
     "prebuild": "rimraf dist",
     "postinstall": "ts-patch install || true",
     "build": "nest build",
-    "clean": "rimraf dist schema.graphql 'src/core/edgedb/{generated-client,schema.ts}'",
+    "clean": "rimraf -g dist schema.graphql 'src/core/edgedb/{generated-client,schema.ts}' 'src/**/*.edgeql.ts'",
     "console": "node --loader ts-node/esm --experimental-loader=extensionless src/console.ts",
     "console:prod": "node --experimental-loader=extensionless dist/console.js",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
