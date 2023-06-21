@@ -1,7 +1,11 @@
 /* eslint-disable import/first,import-helpers/order-imports */
 import { adapter } from 'edgedb';
+import { SCALAR_CODECS } from 'edgedb/dist/codecs/codecs';
+import { KNOWN_TYPENAMES } from 'edgedb/dist/codecs/consts';
 
 const actualGenCommand = 'yarn edgedb:gen';
+
+const pathsNeedingIdImportFix = new Set<string>();
 
 // Swap out references to npx for our actual yarn command before writing to disk
 adapter.fs.writeFile = new Proxy(adapter.fs.writeFile, {
@@ -10,6 +14,10 @@ adapter.fs.writeFile = new Proxy(adapter.fs.writeFile, {
       /([`'])npx @edgedb\/generate [\w-]+[`']/,
       `$1${actualGenCommand}$1`,
     );
+    // Check if the file references our ID type to fix import later.
+    if (content.match(/import type {.*ID.*} from "edgedb";/)) {
+      pathsNeedingIdImportFix.add(path);
+    }
     return Reflect.apply(target, thisArg, [path, patched]);
   },
 });
@@ -77,6 +85,13 @@ import {
   const root = process.cwd();
   const connectionConfig = {};
 
+  // Change uuid to generate as an ID type. Will need to fix imports.
+  const uuidCodec = SCALAR_CODECS.get(KNOWN_TYPENAMES.get('std::uuid')!)!;
+  Object.assign(uuidCodec, {
+    tsType: 'ID',
+    importedType: true,
+  });
+
   await generateQueryBuilder({
     options: {
       out: generatedClientDir,
@@ -106,6 +121,7 @@ import {
     connectionConfig,
     root,
   });
+  fixIdImportsInGeneratedEdgeqlFiles(project);
 
   await project.save();
 })().catch((err) => {
@@ -153,6 +169,18 @@ function changeSchemaToUseIdTypeForUuids(
     ?.getInterfaceOrThrow('BaseObject')
     .getPropertyOrThrow('"id"')
     .setType('ID');
+}
+
+function fixIdImportsInGeneratedEdgeqlFiles(project: Project) {
+  for (const path of pathsNeedingIdImportFix) {
+    const file = project.addSourceFileAtPath(path);
+    file
+      .getImportDeclarationOrThrow('edgedb')
+      .getNamedImports()
+      .find((i) => i.getName() === 'ID')
+      ?.remove();
+    addIdImport(file);
+  }
 }
 
 function createTsMorphProject() {
