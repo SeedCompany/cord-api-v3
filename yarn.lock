@@ -1975,16 +1975,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@edgedb/generate@npm:^0.2.0":
-  version: 0.2.0
-  resolution: "@edgedb/generate@npm:0.2.0"
+"@edgedb/generate@npm:^0.2.1":
+  version: 0.2.1
+  resolution: "@edgedb/generate@npm:0.2.1"
   dependencies:
     chokidar: ^3.5.3
   peerDependencies:
-    edgedb: ^1.1.0
+    edgedb: ^1.3.1
   bin:
     generate: dist/cli.js
-  checksum: 715dd21cc8a684c2a4093b1a4411fc4091d1f8eccebb3c3e12081c8a2f2abcfc0b1048c84bd16ae766b704ddd2a6285267b0471e195696981a19ee959a855dcb
+  checksum: 41be226e5bc441a29af88428af729bc18928a768374f570730c4be4434e4922a88434e18a963db2528935b76c4476605fcf0b5f67b5cfa667a173ab7afc7ee07
   languageName: node
   linkType: hard
 
@@ -4978,7 +4978,7 @@ __metadata:
     "@apollo/subgraph": ^2.4.2
     "@aws-sdk/client-s3": ^3.262.0
     "@aws-sdk/s3-request-presigner": ^3.262.0
-    "@edgedb/generate": ^0.2.0
+    "@edgedb/generate": ^0.2.1
     "@faker-js/faker": ^7.6.0
     "@golevelup/nestjs-discovery": ^3.0.0
     "@nestjs/apollo": ^11.0.5
@@ -5023,7 +5023,7 @@ __metadata:
     cypher-query-builder: "patch:cypher-query-builder@6.0.4#./patches/cypher-query-builder.patch"
     dotenv: ^16.0.3
     dotenv-expand: ^10.0.0
-    edgedb: ^1.2.3
+    edgedb: ^1.3.1
     eslint: ^8.33.0
     eslint-plugin-no-only-tests: ^3.1.0
     eslint-plugin-typescript-sort-keys: ^2.1.0
@@ -5535,12 +5535,12 @@ cypher-query-builder@6.0.4:
   languageName: node
   linkType: hard
 
-"edgedb@npm:^1.2.3":
-  version: 1.2.3
-  resolution: "edgedb@npm:1.2.3"
+"edgedb@npm:^1.3.1":
+  version: 1.3.1
+  resolution: "edgedb@npm:1.3.1"
   bin:
     edgeql-js: dist/cli.js
-  checksum: cc8c30d7ac1f39887c4f58c4b2399fbc7d31ee75df293cbe78955183d13dc209b368ed2d81fcd6f419e90291b24dec4bdd7e45f96dcfce7943aa2e8160fbc36d
+  checksum: 35fcec5deffd5ed151cf3a9f2f517a83a4164415b8c6cf8be9155b4b7429a93079566c68b74128dbb14a668a723ab2e21cd8ecb40f80808743878c3114d65c00
   languageName: node
   linkType: hard
 
