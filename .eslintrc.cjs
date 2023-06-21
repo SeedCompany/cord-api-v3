@@ -102,6 +102,17 @@ const namingConvention = [
     filter: '__typename',
     format: null,
   },
+  // allow exceptions for edgedb query builder
+  {
+    selector: 'objectLiteralProperty',
+    filter: 'filter_single',
+    format: null,
+  },
+  {
+    selector: 'objectLiteralProperty',
+    filter: 'order_by',
+    format: null,
+  },
   // Allow object literal keys to be anything if they are in quotes
   // Used mainly by cypher query builder
   {
