@@ -1,2 +1,4 @@
 .yarn
 dist
+src/core/edgedb/generated-client
+src/core/edgedb/schema.ts
