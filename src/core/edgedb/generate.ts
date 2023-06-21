@@ -32,9 +32,34 @@ adapter.readFileUtf8 = new Proxy(adapter.readFileUtf8, {
     });
   },
 });
+// Change .edgeql files to generate at a .edgeql suffix instead of .query.
+// This better represents the connection between the two files and looks nice in
+// TS import statements.
+// It is also consistent with how we generate ts files from .graphql files in other places.
+// This also allows us to safely ignore those generated files while keeping our
+// other versioned files that include .query.ts.
+// Unfortunately, the only way to do this is to monkey patch the path.join method.
+adapter.path = new Proxy(adapter.path, {
+  get(target: any, p: string | symbol, receiver: any): any {
+    if (p !== 'join') {
+      return Reflect.get(target, p, receiver);
+    }
+    return (...segments: string[]) => {
+      if (segments.at(-1)!.endsWith('.query')) {
+        segments.push(segments.pop()!.replace('.query', '.edgeql'));
+      }
+      return Reflect.apply(
+        Reflect.get(target, p, receiver),
+        undefined,
+        segments,
+      );
+    };
+  },
+});
 
 import { generateQueryBuilder } from '@edgedb/generate/dist/edgeql-js';
 import { runInterfacesGenerator as generateTsSchema } from '@edgedb/generate/dist/interfaces';
+import { generateQueryFiles } from '@edgedb/generate/dist/queries';
 import {
   IndentationText,
   Project,
@@ -72,6 +97,15 @@ import {
     root,
   });
   changeSchemaToUseIdTypeForUuids(project, generatedSchemaFile);
+
+  await generateQueryFiles({
+    options: {
+      target: 'ts',
+      watch: true, // don't exit, doesn't actually watch
+    },
+    connectionConfig,
+    root,
+  });
 
   await project.save();
 })().catch((err) => {
