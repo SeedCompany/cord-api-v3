@@ -5,7 +5,7 @@ import { ServerException } from '../../common';
 import { ILogger } from '../logger';
 import { PatchedConnection } from './cypher.factory';
 
-export type Transaction = NeoTransaction & { queryLogger?: ILogger };
+export type Neo4jTransaction = NeoTransaction & { queryLogger?: ILogger };
 
 /**
  * A neo4j transaction mode
@@ -53,7 +53,7 @@ declare module 'cypher-query-builder/dist/typings/connection' {
      * The currently active transaction within the current calling context.
      * Use of this is discouraged.
      */
-    currentTransaction: Transaction | undefined;
+    currentTransaction: Neo4jTransaction | undefined;
 
     /**
      * This will create a transaction and call the given function with it.
@@ -108,7 +108,7 @@ Connection.prototype.runInTransaction = async function withTransaction<R>(
     return await runTransaction(
       (tx) => {
         if (options?.queryLogger) {
-          (tx as Transaction).queryLogger = options?.queryLogger;
+          (tx as Neo4jTransaction).queryLogger = options?.queryLogger;
         }
         return this.transactionStorage.run(tx, inner);
       },

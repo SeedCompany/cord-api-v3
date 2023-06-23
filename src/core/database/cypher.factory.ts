@@ -21,7 +21,7 @@ import {
 } from './errors';
 import { ParameterTransformer } from './parameter-transformer.service';
 // eslint-disable-next-line import/no-duplicates
-import { Transaction } from './transaction';
+import { Neo4jTransaction as Transaction } from './transaction';
 import { MyTransformer } from './transformer';
 // eslint-disable-next-line import/no-duplicates
 import './transaction'; // import our transaction augmentation
