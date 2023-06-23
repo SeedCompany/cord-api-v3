@@ -1,7 +1,9 @@
 import { forwardRef, Global, Module } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
+import { splitDb } from '~/core';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { UserModule } from '../user/user.module';
+import { AuthenticationEdgedbRepository } from './authentication.edgedb.repository';
 import { AuthenticationRepository } from './authentication.repository';
 import { AuthenticationService } from './authentication.service';
 import { CryptoService } from './crypto.service';
@@ -31,7 +33,7 @@ import { SessionResolver } from './session.resolver';
     LoginExtraInfoResolver,
     RegisterExtraInfoResolver,
     AuthenticationService,
-    AuthenticationRepository,
+    splitDb(AuthenticationRepository, AuthenticationEdgedbRepository),
     CryptoService,
     SessionInterceptor,
     { provide: APP_INTERCEPTOR, useExisting: SessionInterceptor },
