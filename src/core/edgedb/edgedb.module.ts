@@ -1,6 +1,11 @@
 import { Module, OnModuleDestroy } from '@nestjs/common';
 import { createClient, Executor } from 'edgedb';
 import { Client, EdgeDb } from './reexports';
+import {
+  customScalarCodecsMapFromClient,
+  LuxonCalendarDateCodec,
+  LuxonDateTimeCodec,
+} from './temporal.codecs';
 import { TransactionContext } from './transaction.context';
 
 @Module({
@@ -9,6 +14,11 @@ import { TransactionContext } from './transaction.context';
       provide: Client,
       useFactory: () => {
         const client = createClient();
+
+        const codecs = customScalarCodecsMapFromClient(client);
+        LuxonDateTimeCodec.registerTo(codecs);
+        LuxonCalendarDateCodec.registerTo(codecs);
+
         return client;
       },
     },
