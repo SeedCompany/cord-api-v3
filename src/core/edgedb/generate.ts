@@ -23,6 +23,13 @@ import {
 
 const customScalarList: readonly CustomScalar[] = [
   { module: 'std', type: 'uuid', ts: 'ID', path: '~/common' },
+  { module: 'std', type: 'datetime', ts: 'DateTime', path: 'luxon' },
+  {
+    module: 'cal',
+    type: 'local_date',
+    ts: 'CalendarDate',
+    path: '~/common',
+  },
 ];
 const customScalars = mapKeys.fromList(customScalarList, (s) => s.ts).asMap;
 interface CustomScalar {
