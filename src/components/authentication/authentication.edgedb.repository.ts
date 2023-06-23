@@ -12,7 +12,7 @@ export class AuthenticationEdgedbRepository
 {
   @Logger('AuthenticationRepository') private readonly logger: ILogger;
 
-  constructor(private readonly db: EdgeDb) {}
+  constructor(protected readonly db: EdgeDb) {}
 
   async saveSessionToken(token: string) {
     const query = e.insert(e.Auth.Session, { token });
