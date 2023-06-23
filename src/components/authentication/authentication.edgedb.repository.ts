@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { IntegrityError } from 'edgedb';
 import { ID, PublicOf, ServerException, Session } from '~/common';
-import { ILogger, Logger } from '~/core';
 import { e, EdgeDb, withScope } from '~/core/edgedb';
 import type { AuthenticationRepository } from './authentication.repository';
 import { LoginInput } from './dto';
@@ -10,8 +9,6 @@ import { LoginInput } from './dto';
 export class AuthenticationEdgedbRepository
   implements PublicOf<AuthenticationRepository>
 {
-  @Logger('AuthenticationRepository') private readonly logger: ILogger;
-
   constructor(protected readonly db: EdgeDb) {}
 
   async saveSessionToken(token: string) {
