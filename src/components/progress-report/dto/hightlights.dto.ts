@@ -1,6 +1,6 @@
 import { keys as keysOf } from 'ts-transformer-keys';
 import { SecuredProps, Variant, VariantOf } from '~/common';
-import { RegisterResource } from '~/core';
+import { RegisterResource } from '~/core/resources';
 import { Role } from '../../authorization';
 import { PromptVariantResponse } from '../../prompts/dto';
 

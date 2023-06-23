@@ -6,8 +6,8 @@ import {
   SecuredProperty,
   SecuredProps,
 } from '~/common';
-import { RegisterResource } from '~/core';
 import { BaseNode } from '~/core/database/results';
+import { RegisterResource } from '~/core/resources';
 import { LanguageEngagement } from '../../engagement/dto';
 import { DefinedFile } from '../../file';
 import { IPeriodicReport } from '../../periodic-report/dto/periodic-report.dto';

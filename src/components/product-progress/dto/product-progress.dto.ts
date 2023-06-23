@@ -11,7 +11,7 @@ import {
   UnsecuredDto,
   Variant,
 } from '~/common';
-import { RegisterResource } from '~/core';
+import { RegisterResource } from '~/core/resources';
 import { Product, ProductStep } from '../../product';
 import { ProgressReport } from '../../progress-report/dto';
 import {
