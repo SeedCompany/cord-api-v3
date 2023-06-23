@@ -5,7 +5,31 @@ import { KNOWN_TYPENAMES } from 'edgedb/dist/codecs/consts';
 
 const actualGenCommand = 'yarn edgedb:gen';
 
-const pathsNeedingIdImportFix = new Set<string>();
+interface CustomScalar {
+  module: string;
+  type: string;
+  ts: string;
+  path: string;
+}
+const customScalars = new Map(
+  (
+    [
+      { module: 'std', type: 'uuid', ts: 'ID', path: '~/common' },
+      { module: 'std', type: 'datetime', ts: 'DateTime', path: 'luxon' },
+      {
+        module: 'cal',
+        type: 'local_date',
+        ts: 'CalendarDate',
+        path: '~/common',
+      },
+    ] satisfies CustomScalar[]
+  ).map((s) => [s.ts, s]),
+);
+
+const customScalarImportCheck = RegExp(
+  `import type {.*(${[...customScalars.keys()].join('|')}).*} from "edgedb";`,
+);
+const pathsNeedingScalarImportFix = new Set<string>();
 
 // Swap out references to npx for our actual yarn command before writing to disk
 adapter.fs.writeFile = new Proxy(adapter.fs.writeFile, {
@@ -15,8 +39,11 @@ adapter.fs.writeFile = new Proxy(adapter.fs.writeFile, {
       `$1${actualGenCommand}$1`,
     );
     // Check if the file references our ID type to fix import later.
-    if (content.match(/import type {.*ID.*} from "edgedb";/)) {
-      pathsNeedingIdImportFix.add(path);
+    if (
+      !path.includes('generated-client') &&
+      content.match(customScalarImportCheck)
+    ) {
+      pathsNeedingScalarImportFix.add(path);
     }
     return Reflect.apply(target, thisArg, [path, patched]);
   },
@@ -66,8 +93,10 @@ adapter.path = new Proxy(adapter.path, {
 });
 
 import { generateQueryBuilder } from '@edgedb/generate/dist/edgeql-js';
+import { scalarToLiteralMapping } from '@edgedb/generate/dist/genutil';
 import { runInterfacesGenerator as generateTsSchema } from '@edgedb/generate/dist/interfaces';
 import { generateQueryFiles } from '@edgedb/generate/dist/queries';
+import { groupBy } from 'lodash';
 import {
   IndentationText,
   Project,
@@ -85,12 +114,7 @@ import {
   const root = process.cwd();
   const connectionConfig = {};
 
-  // Change uuid to generate as an ID type. Will need to fix imports.
-  const uuidCodec = SCALAR_CODECS.get(KNOWN_TYPENAMES.get('std::uuid')!)!;
-  Object.assign(uuidCodec, {
-    tsType: 'ID',
-    importedType: true,
-  });
+  changeScalarCodecsToOurCustomTypes();
 
   await generateQueryBuilder({
     options: {
@@ -102,7 +126,8 @@ import {
     connectionConfig,
     root,
   });
-  changeQueryBuilderToUseIdTypeForUuids(project, generatedClientDir);
+  changeCustomScalarsInQueryBuilder(project, generatedClientDir);
+  changeImplicitIDTypeToOurCustomScalar(project, generatedClientDir);
 
   await generateTsSchema({
     options: {
@@ -111,7 +136,10 @@ import {
     connectionConfig,
     root,
   });
-  changeSchemaToUseIdTypeForUuids(project, generatedSchemaFile);
+  addCustomScalarImports(
+    project.addSourceFileAtPath(generatedSchemaFile),
+    customScalars.values(),
+  );
 
   await generateQueryFiles({
     options: {
@@ -121,7 +149,7 @@ import {
     connectionConfig,
     root,
   });
-  fixIdImportsInGeneratedEdgeqlFiles(project);
+  fixCustomScalarImportsInGeneratedEdgeqlFiles(project);
 
   await project.save();
 })().catch((err) => {
@@ -130,56 +158,71 @@ import {
   process.exit(1);
 });
 
-function changeQueryBuilderToUseIdTypeForUuids(
+function changeScalarCodecsToOurCustomTypes() {
+  for (const scalar of customScalars.values()) {
+    const fqName = `${scalar.module}::${scalar.type}`;
+
+    // codes are used for edgeql files
+    const id = KNOWN_TYPENAMES.get(fqName)!;
+    const codec = SCALAR_CODECS.get(id)!;
+    Object.assign(codec, { tsType: scalar.ts, importedType: true });
+
+    // this is used for schema interfaces
+    scalarToLiteralMapping[fqName].type = scalar.ts;
+  }
+}
+
+function changeCustomScalarsInQueryBuilder(
   project: Project,
   generatedClientDir: string,
 ) {
   // Change $uuid scalar type alias to use ID type instead of string
-  const clientStd = project.addSourceFileAtPath(
-    `${generatedClientDir}/modules/std.ts`,
-  );
-  addIdImport(clientStd);
-  const uuid = clientStd
-    .getChildSyntaxListOrThrow()
-    .getFirstChildOrThrow(
-      (c) =>
-        c.isKind(SyntaxKind.TypeAliasDeclaration) && c.getName() === '$uuid',
+  for (const scalars of Object.values(
+    groupBy([...customScalars.values()], (s) => s.module),
+  )) {
+    const moduleFile = project.addSourceFileAtPath(
+      `${generatedClientDir}/modules/${scalars[0]!.module}.ts`,
     );
-  uuid.replaceWithText(uuid.getFullText().replace('string', 'ID'));
+    for (const scalar of scalars) {
+      const typeAlias = moduleFile.getTypeAliasOrThrow(`$${scalar.type}`);
+      typeAlias
+        .getFirstChildByKindOrThrow(SyntaxKind.TypeReference)
+        .getFirstChildByKindOrThrow(SyntaxKind.SyntaxList)
+        .getLastChildOrThrow()
+        .replaceWithText(scalar.ts);
+    }
+    addCustomScalarImports(moduleFile, scalars);
+  }
+}
 
+function changeImplicitIDTypeToOurCustomScalar(
+  project: Project,
+  generatedClientDir: string,
+) {
   // Change implicit return shapes that are just the id to be ID type.
   const typesystem = project.addSourceFileAtPath(
     `${generatedClientDir}/typesystem.ts`,
   );
-  addIdImport(typesystem);
+  addCustomScalarImports(typesystem, [customScalars.get('ID')!]);
   typesystem.replaceWithText(
     typesystem.getFullText().replaceAll('{ id: string }', '{ id: ID }'),
   );
 }
 
-function changeSchemaToUseIdTypeForUuids(
-  project: Project,
-  generatedSchemaFile: string,
-) {
-  const schema = project.addSourceFileAtPath(generatedSchemaFile);
-  addIdImport(schema);
-  schema
-    .getChildrenOfKind(SyntaxKind.ModuleDeclaration)
-    .find((ns) => ns.getName() === 'std')
-    ?.getInterfaceOrThrow('BaseObject')
-    .getPropertyOrThrow('"id"')
-    .setType('ID');
-}
-
-function fixIdImportsInGeneratedEdgeqlFiles(project: Project) {
-  for (const path of pathsNeedingIdImportFix) {
+function fixCustomScalarImportsInGeneratedEdgeqlFiles(project: Project) {
+  const toRemove = new Set(customScalars.keys());
+  for (const path of pathsNeedingScalarImportFix) {
+    const toAdd = new Set<CustomScalar>();
     const file = project.addSourceFileAtPath(path);
     file
       .getImportDeclarationOrThrow('edgedb')
       .getNamedImports()
-      .find((i) => i.getName() === 'ID')
-      ?.remove();
-    addIdImport(file);
+      .filter((i) => toRemove.has(i.getName()))
+      .forEach((i) => {
+        toAdd.add(customScalars.get(i.getName())!);
+        i.remove();
+      });
+    addCustomScalarImports(file, toAdd);
   }
 }
 
@@ -195,11 +238,17 @@ function createTsMorphProject() {
   });
 }
 
-function addIdImport(file: SourceFile) {
-  file.insertImportDeclaration(2, {
-    namedImports: ['ID'],
-    moduleSpecifier: '~/common',
-    leadingTrivia: '\n',
-    isTypeOnly: true,
-  });
+function addCustomScalarImports(
+  file: SourceFile,
+  scalars: Iterable<CustomScalar>,
+) {
+  file.insertImportDeclarations(
+    2,
+    [...scalars].map((scalar, i) => ({
+      isTypeOnly: true,
+      namedImports: [scalar.ts],
+      moduleSpecifier: scalar.path,
+      leadingTrivia: i === 0 ? '\n' : undefined,
+    })),
+  );
 }
