@@ -1,11 +1,13 @@
 import { Module } from '@nestjs/common';
+import { splitDb } from '~/core';
 import { AuthorizationModule } from '../authorization/authorization.module';
+import { AdminEdgedbRepository } from './admin.edgedb.repository';
 import { AdminRepository } from './admin.repository';
 import { AdminService } from './admin.service';
 
 @Module({
   imports: [AuthorizationModule],
-  providers: [AdminService, AdminRepository],
+  providers: [AdminService, splitDb(AdminRepository, AdminEdgedbRepository)],
   exports: [AdminService],
 })
 export class AdminModule {}

@@ -67,7 +67,7 @@ export class AdminService implements OnApplicationBootstrap {
     if (existing) {
       if (
         existing.email !== email ||
-        !(await this.crypto.verify(existing.hash, password))
+        !(await this.crypto.verify(existing.hash, password).catch(() => false))
       ) {
         this.logger.notice('Updating root user to match app configuration');
         const hashedPassword = await this.crypto.hash(password);
