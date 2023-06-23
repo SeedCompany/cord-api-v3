@@ -6,3 +6,4 @@ export * from './common.repository';
 export { DtoRepository } from './dto.repository';
 export * from './indexer';
 export * from './migration';
+export * from './split-db.provider';
