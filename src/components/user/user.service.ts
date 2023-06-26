@@ -1,8 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { CachedByArg } from '@seedcompany/common';
-import { difference } from 'lodash';
 import {
-  DuplicateException,
   ID,
   NotFoundException,
   ObjectView,
@@ -13,13 +11,7 @@ import {
   UnauthorizedException,
   UnsecuredDto,
 } from '../../common';
-import {
-  HandleIdLookup,
-  ILogger,
-  Logger,
-  Transactional,
-  UniquenessError,
-} from '../../core';
+import { HandleIdLookup, ILogger, Logger, Transactional } from '../../core';
 import { property } from '../../core/database/query';
 import { mapListResults } from '../../core/database/results';
 import { Privileges, Role } from '../authorization';
@@ -142,25 +134,12 @@ export class UserService {
 
     // Update email
     if (email !== undefined) {
-      try {
-        await this.userRepo.updateEmail(user, email);
-      } catch (e) {
-        if (e instanceof UniquenessError && e.label === 'EmailAddress') {
-          throw new DuplicateException(
-            'person.email',
-            'Email address is already in use',
-            e,
-          );
-        }
-        throw new ServerException('Failed to create user', e);
-      }
+      await this.userRepo.updateEmail(user, email);
     }
 
     // Update roles
     if (roles) {
-      const removals = difference(user.roles.value, roles);
-      const additions = difference(roles, user.roles.value);
-      await this.userRepo.updateRoles(input, removals, additions);
+      await this.userRepo.updateRoles(user, roles);
     }
 
     return await this.readOne(input.id, session);

@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { inArray, node, Query, relation } from 'cypher-query-builder';
+import { difference } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
@@ -9,14 +10,7 @@ import {
   UnauthorizedException,
   UnsecuredDto,
 } from '../../common';
-import {
-  ConfigService,
-  DatabaseService,
-  DtoRepository,
-  ILogger,
-  Logger,
-  UniquenessError,
-} from '../../core';
+import { DtoRepository, UniquenessError } from '../../core';
 import {
   ACTIVE,
   createNode,
@@ -38,7 +32,6 @@ import {
   KnownLanguage,
   LanguageProficiency,
   RemoveOrganizationFromUser,
-  UpdateUser,
   User,
   UserListInput,
 } from './dto';
@@ -47,14 +40,6 @@ import {
 export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
   User,
 ) {
-  constructor(
-    db: DatabaseService,
-    private readonly config: ConfigService,
-    @Logger('user:repository') private readonly logger: ILogger,
-  ) {
-    super(db);
-  }
-
   private readonly roleProperties = (roles?: Role[]) =>
     (roles || []).flatMap((role) =>
       property('roles', role, 'node', `role${role}`),
@@ -129,7 +114,7 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
     user: User,
     email: string | null | undefined,
   ): Promise<void> {
-    await this.db
+    const query = this.db
       .query()
       .matchNode('node', 'User', { id: user.id })
       .apply(deactivateProperty({ resource: User, key: 'email' }))
@@ -140,21 +125,31 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
             )
           : q,
       )
-      .return('*')
-      .run();
+      .return('*');
+    try {
+      await query.run();
+    } catch (e) {
+      if (e instanceof UniquenessError && e.label === 'EmailAddress') {
+        throw new DuplicateException(
+          'person.email',
+          'Email address is already in use',
+          e,
+        );
+      }
+      throw e;
+    }
   }
 
-  async updateRoles(
-    input: UpdateUser,
-    removals: Role[],
-    additions: Role[],
-  ): Promise<void> {
+  async updateRoles(user: User, roles: Role[]): Promise<void> {
+    const removals = difference(user.roles.value, roles);
+    const additions = difference(roles, user.roles.value);
+
     if (removals.length > 0) {
       await this.db
         .query()
         .match([
           node('user', ['User', 'BaseNode'], {
-            id: input.id,
+            id: user.id,
           }),
           relation('out', 'oldRoleRel', 'roles', ACTIVE),
           node('oldRoles', 'Property'),
@@ -177,7 +172,7 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
         .query()
         .match([
           node('node', ['User', 'BaseNode'], {
-            id: input.id,
+            id: user.id,
           }),
         ])
         .create([...this.roleProperties(additions)])
@@ -194,7 +189,6 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
     try {
       await this.db.deleteNode(object);
     } catch (exception) {
-      this.logger.error('Failed to delete', { id, exception });
       throw new ServerException('Failed to delete', exception);
     }
   }
