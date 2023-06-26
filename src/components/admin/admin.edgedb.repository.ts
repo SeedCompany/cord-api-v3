@@ -29,15 +29,13 @@ export class AdminEdgedbRepository extends AdminRepository {
     };
   }
 
-  async mergeRootAdminUser(_email: string, hashedPassword: string) {
+  async mergeRootAdminUser(_email: string, passwordHash: string) {
     // email is currently static for RootUser, so don't change.
-    const query = e.params({ hash: e.str }, ({ hash }) =>
-      e.update(e.Auth.Identity, (identity) => ({
-        filter: e.op(identity.user, '=', e.RootUser),
-        set: { passwordHash: hash },
-      })),
-    );
-    await query.run(this.edgedb, { hash: hashedPassword });
+    const query = e.update(e.Auth.Identity, (identity) => ({
+      filter: e.op(identity.user, '=', e.RootUser),
+      set: { passwordHash },
+    }));
+    await query.run(this.edgedb);
   }
 
   async checkDefaultOrg() {

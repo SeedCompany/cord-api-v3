@@ -17,65 +17,50 @@ export class AuthenticationEdgedbRepository
   }
 
   async savePasswordHashOnUser(userId: ID, passwordHash: string) {
-    const query = e.params(
-      { userId: e.uuid, passwordHash: e.str },
-      ({ userId, passwordHash }) => {
-        const user = e.select(e.User, () => ({
-          filter_single: { id: userId },
-        }));
-        const insert = e.insert(e.Auth.Identity, { user, passwordHash });
-        const update = e.update(e.Auth.Identity, () => ({
+    const user = e.select(e.User, () => ({
+      filter_single: { id: userId },
+    }));
+    const query = e
+      .insert(e.Auth.Identity, { user, passwordHash })
+      .unlessConflict((identity) => ({
+        on: identity.user,
+        else: e.update(e.Auth.Identity, () => ({
           filter_single: { user },
           set: { passwordHash },
-        }));
-        return insert.unlessConflict((identity) => ({
-          on: identity.user,
-          else: update,
-        }));
-      },
-    );
-    await query.run(this.db, { userId, passwordHash });
+        })),
+      }));
+    await query.run(this.db);
   }
 
   async getPasswordHash(
     { email }: LoginInput,
     _session: Session, // former impl asserted session was found, but not used.
   ): Promise<string | undefined> {
-    const query = e.params({ email: e.str }, ({ email }) =>
-      e.select(e.Auth.Identity, (identity) => ({
-        filter_single: e.op(identity.user.email, '=', email),
-        passwordHash: true,
-      })),
-    );
-    const result = await query.run(this.db, { email });
+    const query = e.select(e.Auth.Identity, (identity) => ({
+      passwordHash: true,
+      filter_single: e.op(identity.user.email, '=', email),
+    }));
+    const result = await query.run(this.db);
     return result?.passwordHash;
   }
 
   async connectSessionToUser(input: LoginInput, session: Session): Promise<ID> {
     try {
-      const query = e.params(
-        { email: e.str, token: e.str },
-        ({ email, token }) => {
-          const user = e.assert_exists(
-            { message: 'User not found' },
-            e.select(e.User, () => ({
-              filter_single: { email },
-            })),
-          );
-          const session = e.assert_exists(
-            { message: 'Token not found' },
-            e.update(e.Auth.Session, () => ({
-              filter_single: { token },
-              set: { user },
-            })),
-          );
-          return e.with([user, session], e.select(user));
-        },
+      const user = e.assert_exists(
+        { message: 'User not found' },
+        e.select(e.User, () => ({
+          filter_single: { email: input.email },
+        })),
       );
-      const result = await query.run(this.db, {
-        email: input.email,
-        token: session.token,
-      });
+      const updateSession = e.assert_exists(
+        { message: 'Token not found' },
+        e.update(e.Auth.Session, () => ({
+          filter_single: { token: session.token },
+          set: { user },
+        })),
+      );
+      const query = e.with([user, updateSession], e.select(user));
+      const result = await query.run(this.db);
       return result.id;
     } catch (e) {
       if (e instanceof IntegrityError) {
@@ -86,37 +71,34 @@ export class AuthenticationEdgedbRepository
   }
 
   async deleteSessionToken(token: string): Promise<void> {
-    const query = e.params({ token: e.str }, ({ token }) =>
-      e.delete(e.Auth.Session, () => ({
-        filter_single: { token },
-      })),
-    );
-    await query.run(this.db, { token });
+    const query = e.delete(e.Auth.Session, () => ({
+      filter_single: { token },
+    }));
+    await query.run(this.db);
   }
 
   async resumeSession(token: string, impersonateeId?: ID) {
-    const query = e.params(
-      { token: e.str, impersonateeId: e.optional(e.uuid) },
-      ({ token, impersonateeId }) =>
-        e.assert_exists(
-          e.select(e.Auth.Session, () => ({
-            filter_single: { token },
-            user: (user) => ({
-              id: true,
-              firstRole: withScope('global', e.array_agg(user.roles)),
-              scopedRoles: withScope('global', user.roles),
-            }),
-            impersonatee: e.select(e.User, (user) => ({
-              filter_single: { id: impersonateeId },
-              scopedRoles: withScope('global', user.roles),
-            })),
+    const query = e.assert_exists(
+      e.select(e.Auth.Session, () => ({
+        filter_single: { token },
+        user: (user) => ({
+          id: true,
+          firstRole: withScope('global', e.array_agg(user.roles)),
+          scopedRoles: withScope('global', user.roles),
+        }),
+        impersonatee: e.assert_single(
+          e.select(e.detached(e.User), (user) => ({
+            scopedRoles: withScope('global', user.roles),
+            filter: e.op(
+              user.id,
+              '=',
+              impersonateeId ?? e.cast(e.uuid, e.set()),
+            ),
           })),
         ),
+      })),
     );
-    const { user, impersonatee } = await query.run(this.db, {
-      token,
-      impersonateeId,
-    });
+    const { user, impersonatee } = await query.run(this.db);
     return {
       userId: user?.id,
       roles: user?.scopedRoles ?? [],
@@ -124,25 +106,21 @@ export class AuthenticationEdgedbRepository
     };
   }
 
-  async rolesForUser(user: ID) {
-    const query = e.params({ id: e.uuid }, ({ id }) =>
-      e.select(e.User, (user) => ({
-        filter_single: { id },
-        scopedRoles: withScope('global', user.roles),
-      })),
-    );
-    const result = await query.run(this.db, { id: user });
+  async rolesForUser(userId: ID) {
+    const query = e.select(e.User, (user) => ({
+      scopedRoles: withScope('global', user.roles),
+      filter_single: { id: userId },
+    }));
+    const result = await query.run(this.db);
     return result?.scopedRoles ?? [];
   }
 
   async getCurrentPasswordHash(session: Session): Promise<string | undefined> {
-    const query = e.params({ id: e.uuid }, ({ id }) =>
-      e.select(e.Auth.Identity, (identity) => ({
-        filter_single: e.op(identity.user.id, '=', id),
-        passwordHash: true,
-      })),
-    );
-    const result = await query.run(this.db, { id: session.userId });
+    const query = e.select(e.Auth.Identity, (identity) => ({
+      passwordHash: true,
+      filter_single: e.op(identity.user.id, '=', session.userId),
+    }));
+    const result = await query.run(this.db);
     return result?.passwordHash;
   }
 
@@ -150,27 +128,18 @@ export class AuthenticationEdgedbRepository
     newPasswordHash: string,
     session: Session,
   ): Promise<void> {
-    const query = e.params(
-      { userId: e.uuid, passwordHash: e.str },
-      ({ userId, passwordHash }) =>
-        e.update(e.Auth.Identity, (identity) => ({
-          filter_single: e.op(identity.user.id, '=', userId),
-          set: { passwordHash },
-        })),
-    );
-    await query.run(this.db, {
-      userId: session.userId,
-      passwordHash: newPasswordHash,
-    });
+    const query = e.update(e.Auth.Identity, (identity) => ({
+      filter_single: e.op(identity.user.id, '=', session.userId),
+      set: { passwordHash: newPasswordHash },
+    }));
+    await query.run(this.db);
   }
 
   async userByEmail(email: string) {
-    const query = e.params({ email: e.str }, ({ email }) =>
-      e.select(e.User, () => ({
-        filter_single: { email },
-      })),
-    );
-    const result = await query.run(this.db, { email });
+    const query = e.select(e.User, () => ({
+      filter_single: { email },
+    }));
+    const result = await query.run(this.db);
     return result?.id;
   }
 
@@ -184,14 +153,12 @@ export class AuthenticationEdgedbRepository
   }
 
   async findEmailToken(token: string) {
-    const query = e.params({ token: e.str }, ({ token }) =>
-      e.select(e.Auth.EmailToken, (et) => ({
-        filter_single: { token },
-        ...et['*'],
-        createdOn: et.createdAt,
-      })),
-    );
-    const result = await query.run(this.db, { token });
+    const query = e.select(e.Auth.EmailToken, (et) => ({
+      ...et['*'],
+      createdOn: et.createdAt, // backwards compatibility
+      filter_single: { token },
+    }));
+    const result = await query.run(this.db);
     return result ?? undefined;
   }
 
@@ -204,37 +171,31 @@ export class AuthenticationEdgedbRepository
   }
 
   async removeAllEmailTokensForEmail(email: string) {
-    const query = e.params({ email: e.str }, ({ email }) =>
-      e.delete(e.Auth.EmailToken, (et) => ({
-        filter: e.op(et.email, '=', email),
-      })),
-    );
-    await query.run(this.db, { email });
+    const query = e.delete(e.Auth.EmailToken, (et) => ({
+      filter: e.op(et.email, '=', email),
+    }));
+    await query.run(this.db);
   }
 
   async deactivateAllOtherSessions(session: Session) {
-    const query = e.params({ token: e.str, user: e.uuid }, ({ token, user }) =>
-      e.delete(e.Auth.Session, (session) => ({
-        filter: e.op(
-          e.op(session.user.id, '=', user),
-          'and',
-          e.op(session.token, '!=', token),
-        ),
-      })),
-    );
-    await query.run(this.db, { token: session.token, user: session.userId });
+    const query = e.delete(e.Auth.Session, (s) => ({
+      filter: e.op(
+        e.op(s.user.id, '=', session.userId),
+        'and',
+        e.op(s.token, '!=', session.token),
+      ),
+    }));
+    await query.run(this.db);
   }
 
   async deactivateAllOtherSessionsByEmail(email: string, session: Session) {
-    const query = e.params({ token: e.str, email: e.str }, ({ token, email }) =>
-      e.delete(e.Auth.Session, (session) => ({
-        filter: e.op(
-          e.op(session.user.email, '=', email),
-          'and',
-          e.op(session.token, '!=', token),
-        ),
-      })),
-    );
-    await query.run(this.db, { token: session.token, email });
+    const query = e.delete(e.Auth.Session, (s) => ({
+      filter: e.op(
+        e.op(s.user.email, '=', email),
+        'and',
+        e.op(s.token, '!=', session.token),
+      ),
+    }));
+    await query.run(this.db);
   }
 }
