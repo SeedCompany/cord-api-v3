@@ -2868,9 +2868,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@seedcompany/data-loader@npm:^0.4.0":
-  version: 0.4.0
-  resolution: "@seedcompany/data-loader@npm:0.4.0"
+"@seedcompany/data-loader@npm:^0.4.1":
+  version: 0.4.1
+  resolution: "@seedcompany/data-loader@npm:0.4.1"
   dependencies:
     "@nestjs/common": ^9
     "@nestjs/core": ^9
@@ -2884,7 +2884,7 @@ __metadata:
   peerDependenciesMeta:
     "@nestjs/graphql":
       optional: true
-  checksum: b4d5ad980541be21ac7a173922b75fa8314b3847aaa7f71aa2b0478d743a68419e180cc8ce7c3d360127b491cc62003dbc7043e0620b86bf00a42b8fdd717eeb
+  checksum: 0acb0dcd91a548f953318a4531337b8dc9d1e0b33fc77b417056e8d9d64ae77a4ce89b370a928515b330ec431f530dec889ad9c2da965d5695ea768bc3a37fdc
   languageName: node
   linkType: hard
 
@@ -5010,7 +5010,7 @@ __metadata:
     "@nestjs/testing": ^9.3.1
     "@patarapolw/prettyprint": ^1.0.3
     "@seedcompany/common": ">=0.10 <1"
-    "@seedcompany/data-loader": ^0.4.0
+    "@seedcompany/data-loader": ^0.4.1
     "@seedcompany/eslint-plugin": ^3.4.1
     "@seedcompany/nestjs-email": ^3.1.0
     "@types/common-tags": ^1.8.1
