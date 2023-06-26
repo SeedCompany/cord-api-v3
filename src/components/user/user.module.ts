@@ -1,4 +1,5 @@
 import { forwardRef, Module } from '@nestjs/common';
+import { splitDb } from '~/core/database';
 import { AuthenticationModule } from '../authentication/authentication.module';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { LanguageModule } from '../language/language.module';
@@ -10,6 +11,7 @@ import { AssignableRolesResolver } from './assignable-roles.resolver';
 import { EducationModule } from './education/education.module';
 import { KnownLanguageResolver } from './known-language.resolver';
 import { UnavailabilityModule } from './unavailability/unavailability.module';
+import { UserEdgedbRepository } from './user.edgedb.repository';
 import { UserLoader } from './user.loader';
 import { UserRepository } from './user.repository';
 import { UserResolver } from './user.resolver';
@@ -33,7 +35,7 @@ import { UserService } from './user.service';
     AssignableRolesResolver,
     UserLoader,
     UserService,
-    UserRepository,
+    splitDb(UserRepository, UserEdgedbRepository),
   ],
   exports: [UserService, UserRepository, EducationModule, UnavailabilityModule],
 })
