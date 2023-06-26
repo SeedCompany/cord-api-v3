@@ -44,24 +44,26 @@ export class AuthenticationEdgedbRepository
     return result?.passwordHash;
   }
 
-  async connectSessionToUser(input: LoginInput, session: Session): Promise<ID> {
+  async connectSessionToUser(input: LoginInput, session: Session) {
+    const user = e.assert_exists(
+      { message: 'User not found' },
+      e.select(e.User, () => ({
+        filter_single: { email: input.email },
+      })),
+    );
+    const updateSession = e.assert_exists(
+      { message: 'Token not found' },
+      e.update(e.Auth.Session, () => ({
+        filter_single: { token: session.token },
+        set: { user },
+      })),
+    );
+    const query = e.select(updateSession, () => ({
+      user: true,
+    }));
     try {
-      const user = e.assert_exists(
-        { message: 'User not found' },
-        e.select(e.User, () => ({
-          filter_single: { email: input.email },
-        })),
-      );
-      const updateSession = e.assert_exists(
-        { message: 'Token not found' },
-        e.update(e.Auth.Session, () => ({
-          filter_single: { token: session.token },
-          set: { user },
-        })),
-      );
-      const query = e.with([user, updateSession], e.select(user));
       const result = await query.run(this.db);
-      return result.id;
+      return result.user!.id;
     } catch (e) {
       if (e instanceof IntegrityError) {
         throw new ServerException('Login failed', e);
@@ -78,31 +80,24 @@ export class AuthenticationEdgedbRepository
   }
 
   async resumeSession(token: string, impersonateeId?: ID) {
-    const query = e.assert_exists(
-      e.select(e.Auth.Session, () => ({
-        filter_single: { token },
-        user: (user) => ({
-          id: true,
-          firstRole: withScope('global', e.array_agg(user.roles)),
+    const query = e.select(e.Auth.Session, () => ({
+      filter_single: { token },
+      user: (user) => ({
+        id: true,
+        scopedRoles: withScope('global', user.roles),
+      }),
+      impersonatee: e.assert_single(
+        e.select(e.User, (user) => ({
           scopedRoles: withScope('global', user.roles),
-        }),
-        impersonatee: e.assert_single(
-          e.select(e.detached(e.User), (user) => ({
-            scopedRoles: withScope('global', user.roles),
-            filter: e.op(
-              user.id,
-              '=',
-              impersonateeId ?? e.cast(e.uuid, e.set()),
-            ),
-          })),
-        ),
-      })),
-    );
-    const { user, impersonatee } = await query.run(this.db);
+          filter: e.op(user.id, '=', impersonateeId ?? e.cast(e.uuid, e.set())),
+        })),
+      ),
+    }));
+    const result = await query.run(this.db);
     return {
-      userId: user?.id,
-      roles: user?.scopedRoles ?? [],
-      impersonateeRoles: impersonatee?.scopedRoles,
+      userId: result?.user?.id,
+      roles: result?.user?.scopedRoles ?? [],
+      impersonateeRoles: result?.impersonatee?.scopedRoles,
     };
   }
 
