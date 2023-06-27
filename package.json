@@ -10,7 +10,7 @@
     "prebuild": "rimraf dist",
     "postinstall": "ts-patch install || true",
     "build": "nest build",
-    "clean": "rimraf dist",
+    "clean": "rimraf dist \"src/core/edgedb/{generated-client,schema.ts} src/**/*.edgeql.ts\" schema.graphql",
     "console": "ts-node src/console.ts",
     "console:prod": "node dist/console.js",
     "docker:build": "scripts/docker-build.sh",
