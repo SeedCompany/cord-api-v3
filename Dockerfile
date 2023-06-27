@@ -1,20 +1,77 @@
-# Base node stage that sets up common config for dev & prod
-FROM public.ecr.aws/docker/library/node:18-slim as node
+ARG NODE_VERSION=18
 
-# Add wget in for healthchecks
+FROM edgedb/edgedb:3 as builder
+
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends ca-certificates wget \
-    && apt-get clean -q -y \
+    && apt-get install -y --no-install-recommends ca-certificates wget curl
+
+# Install NodeJS & Yarn
+ARG NODE_VERSION
+RUN curl -fsSL https://deb.nodesource.com/setup_$NODE_VERSION.x | bash -
+RUN apt-get install -y nodejs
+RUN corepack enable && corepack prepare yarn@stable --activate
+
+# Clean up apt stuff
+RUN apt-get clean -q -y \
     && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /source
+
+ENV NODE_ENV=development
+
+# Install dependencies (in separate docker layer from app code)
+COPY .yarn .yarn
+COPY patches patches
+COPY package.json yarn.lock .yarnrc.yml ./
+ENV VERBOSE_YARN_LOG=discard
+RUN yarn install --immutable
+
+# Copy in application code
+COPY . .
+
+# region Generate EdgeDB TS/JS files
+RUN chown -R edgedb:edgedb dbschema
+
+# Hook `yarn edgedb:gen` into edgedb bootstrap.
+# This allows it to be ran in parllel to the db server running without a daemon
+RUN mkdir -p /edgedb-bootstrap-late.d \
+  && printf "#!/usr/bin/env bash\ncd /source \nyarn edgedb:gen" \
+  > /edgedb-bootstrap-late.d/01-generate-js.sh
+RUN chmod +x /edgedb-bootstrap-late.d/01-generate-js.sh
+
+# Ignore creds during this build process
+ENV EDGEDB_SERVER_SECURITY=insecure_dev_mode
+
+# Bootstrap the db to apply migrations and then generate the TS/JS from that.
+RUN source "/usr/local/bin/docker-entrypoint-funcs.sh" \
+    && edbdocker_prepare && edbdocker_bootstrap_instance
+# endregion
+
+# Build server
+RUN yarn build
+
+# Remove non-production code
+RUN rm -rf nest-cli.json tsconfig* test
+# Remove dev dependencies
+RUN yarn workspaces focus --all --production
+RUN yarn cache clean --all
+
+# Production stage which is clean from our base node stage
+# Since this is separate from dev/builder it won't include
+# the docker layers to get to the production files.
+# This reduces the image size by ~60%!
+FROM public.ecr.aws/docker/library/node:${NODE_VERSION}-slim as production
+
+# Copy everything from builder stage to this run stage
+COPY --from=builder /source /opt/cord-api
+WORKDIR /opt/cord-api
 
 LABEL org.opencontainers.image.title="CORD API"
 LABEL org.opencontainers.image.vendor="Seed Company"
 LABEL org.opencontainers.image.source=https://github.com/SeedCompany/cord-api-v3
 LABEL org.opencontainers.image.licenses="MIT"
 
-WORKDIR /opt/cord-api
-
-ENV NODE_ENV=development PORT=80
+ENV NODE_ENV=production PORT=80
 
 EXPOSE 80
 
@@ -24,41 +81,3 @@ ARG GIT_HASH
 ARG GIT_BRANCH
 RUN echo GIT_HASH=$GIT_HASH > .env
 RUN echo GIT_BRANCH=$GIT_BRANCH >> .env
-
-# Dev stage that installs dependencies and copies project files
-# This stage can run everything
-FROM node as dev
-
-# Install dependencies (in separate docker layer from app code)
-COPY .yarn .yarn
-COPY patches patches
-COPY package.json yarn.lock .yarnrc.yml ./
-ENV VERBOSE_YARN_LOG=discard
-RUN yarn install --immutable
-
-# Copy application code
-COPY . .
-
-# Build server
-RUN yarn build
-
-
-# Temporary builder stage that cleans files from dev stage for production
-FROM dev as builder
-
-# Remove non-production code
-RUN rm -rf nest-cli.json tsconfig* test
-# Remove dev dependencies
-RUN yarn workspaces focus --all --production
-
-
-# Production stage which is clean from our base node stage
-# Since this is separate from dev/builder it won't include
-# the docker layers to get to the production files.
-# This reduces the image size by ~60%!
-FROM node as production
-
-# Copy everything from builder stage to this run stage
-COPY --from=builder /opt/cord-api .
-
-ENV NODE_ENV=production
