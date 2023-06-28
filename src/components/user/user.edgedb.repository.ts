@@ -5,6 +5,7 @@ import {
   CalendarDate,
   DuplicateException,
   ID,
+  NotFoundException,
   Order,
   Role,
   ServerException,
@@ -29,6 +30,9 @@ export class UserEdgedbRepository extends UserRepository {
       filter_single: { id },
     }));
     const user = await query.run(this.edgedb);
+    if (!user) {
+      throw new NotFoundException('Could not find user');
+    }
     return user as UnsecuredDto<User>;
   }
 
