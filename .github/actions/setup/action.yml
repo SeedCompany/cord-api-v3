@@ -22,3 +22,9 @@ runs:
       env:
         YARN_ENABLE_GLOBAL_CACHE: 'false' # Use local cache folder to keep downloaded archives
         YARN_NM_MODE: 'hardlinks-local' # Hardlinks-(local|global) reduces io / node_modules size
+
+    - name: Setup EdgeDB
+      uses: edgedb/setup-edgedb@v1
+    - name: Generate EdgeDB TS files
+      shell: bash
+      run: yarn edgedb:gen
