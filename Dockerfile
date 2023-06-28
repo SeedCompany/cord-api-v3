@@ -1,6 +1,6 @@
 ARG NODE_VERSION=18
 
-FROM edgedb/edgedb:3 as builder
+FROM ghcr.io/edgedb/edgedb:3 as builder
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends ca-certificates wget curl
@@ -41,10 +41,11 @@ RUN chmod +x /edgedb-bootstrap-late.d/01-generate-js.sh
 
 # Ignore creds during this build process
 ENV EDGEDB_SERVER_SECURITY=insecure_dev_mode
+# Don't start/host the db server, just bootstrap & quit.
+ENV EDGEDB_SERVER_BOOTSTRAP_ONLY=1
 
 # Bootstrap the db to apply migrations and then generate the TS/JS from that.
-RUN source "/usr/local/bin/docker-entrypoint-funcs.sh" \
-    && edbdocker_prepare && edbdocker_bootstrap_instance
+RUN /usr/local/bin/docker-entrypoint.sh edgedb-server
 # endregion
 
 # Build server
