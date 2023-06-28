@@ -131,7 +131,7 @@ export class UserEdgedbRepository extends UserRepository {
     await query.run(this.edgedb);
   }
 
-  async delete(id: ID, session: Session, object: User): Promise<void> {
+  async delete(id: ID, session: Session, _object: User): Promise<void> {
     const canDelete = await this.db.checkDeletePermission(id, session);
     if (!canDelete)
       throw new UnauthorizedException(
