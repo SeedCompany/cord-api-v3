@@ -18,6 +18,11 @@ import { User as DbUser } from '~/core/edgedb/schema';
 import { CreatePerson, User, UserListInput } from './dto';
 import { UserRepository } from './user.repository';
 
+const hydrate = e.shape(e.User, (user) => ({
+  ...user['*'],
+  // Other links if needed
+}));
+
 @Injectable()
 export class UserEdgedbRepository extends UserRepository {
   constructor(private readonly edgedb: EdgeDb) {
@@ -26,7 +31,7 @@ export class UserEdgedbRepository extends UserRepository {
 
   async readOne(id: ID, _session: Session | ID) {
     const query = e.select(e.User, (user) => ({
-      ...user['*'],
+      ...hydrate(user),
       filter_single: { id },
     }));
     const user = await query.run(this.edgedb);
@@ -39,7 +44,7 @@ export class UserEdgedbRepository extends UserRepository {
   async readMany(ids: readonly ID[], _session: Session | ID) {
     const query = e.params({ ids: e.array(e.uuid) }, ({ ids }) =>
       e.select(e.User, (user) => ({
-        ...user['*'],
+        ...hydrate(user),
         filter: e.op(user.id, 'in', e.array_unpack(ids)),
       })),
     );
@@ -62,7 +67,7 @@ export class UserEdgedbRepository extends UserRepository {
     > &
       string;
     const query = e.select(e.User, (user) => ({
-      ...user['*'],
+      ...hydrate(user),
       // TODO filters
       // TODO privileges filters
       order_by: {
