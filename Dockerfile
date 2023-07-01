@@ -29,6 +29,9 @@ RUN echo GIT_BRANCH=$GIT_BRANCH >> .env
 # This stage can run everything
 FROM node as dev
 
+# Grab latest timezone data
+RUN mkdir -p .cache && curl -o .cache/timezones https://raw.githubusercontent.com/moment/moment-timezone/master/data/meta/latest.json
+
 # Install dependencies (in separate docker layer from app code)
 COPY .yarn .yarn
 COPY patches patches
