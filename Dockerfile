@@ -9,6 +9,10 @@ RUN apt-get update \
     &&  apt-get clean -q -y \
     && rm -rf /var/lib/apt/lists/*
 
+# Install EdgeDB CLI
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.edgedb.com | sh -s -- -y --no-modify-path \
+    && mv /root/.local/bin/edgedb /usr/local/bin/edgedb
+
 FROM ghcr.io/edgedb/edgedb:3 as builder
 
 RUN apt-get update \
