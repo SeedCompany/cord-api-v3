@@ -1,9 +1,18 @@
 ARG NODE_VERSION=18
 
+FROM public.ecr.aws/docker/library/node:${NODE_VERSION}-slim as node
+
+# Install wget curl
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+      ca-certificates wget curl \
+    &&  apt-get clean -q -y \
+    && rm -rf /var/lib/apt/lists/*
+
 FROM ghcr.io/edgedb/edgedb:3 as builder
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends ca-certificates wget curl
+    && apt-get install -y --no-install-recommends ca-certificates curl
 
 # Install NodeJS & Yarn
 ARG NODE_VERSION
@@ -61,7 +70,7 @@ RUN yarn cache clean --all
 # Since this is separate from dev/builder it won't include
 # the docker layers to get to the production files.
 # This reduces the image size by ~60%!
-FROM public.ecr.aws/docker/library/node:${NODE_VERSION}-slim as production
+FROM node as production
 
 # Copy everything from builder stage to this run stage
 COPY --from=builder /source /opt/cord-api
