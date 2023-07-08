@@ -44,7 +44,7 @@ COPY ./dbschema /dbschema
 COPY . .
 
 # region Generate EdgeDB TS/JS files
-RUN chown -R edgedb:edgedb /dbschema
+RUN chown -R edgedb:edgedb /dbschema src
 
 # Hook `yarn edgedb:gen` into edgedb bootstrap.
 # This allows it to be ran in parllel to the db server running without a daemon
