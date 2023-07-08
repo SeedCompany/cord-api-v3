@@ -1,4 +1,4 @@
-/* eslint-disable import/first,import-helpers/order-imports */
+/* eslint-disable import/first,import-helpers/order-imports,no-console */
 import { adapter } from 'edgedb';
 import { SCALAR_CODECS } from 'edgedb/dist/codecs/codecs';
 import { KNOWN_TYPENAMES } from 'edgedb/dist/codecs/consts';
@@ -116,13 +116,21 @@ import {
 
   changeScalarCodecsToOurCustomTypes();
 
+  const qbOptions = {
+    out: generatedClientDir,
+    updateIgnoreFile: false,
+    target: 'ts',
+    forceOverwrite: true,
+  } as const;
+  // Don't allow this function to change any properties
+  // i.e., don't re-enable updateIgnoreFile.
+  // We don't want to check that every time.
+  // Their ignore file logic also breaks the docker build.
+  const qbOptionImmutable = new Proxy(qbOptions, {
+    set: () => true,
+  });
   await generateQueryBuilder({
-    options: {
-      out: generatedClientDir,
-      updateIgnoreFile: false,
-      target: 'ts',
-      forceOverwrite: true,
-    },
+    options: qbOptionImmutable,
     connectionConfig,
     root,
   });
@@ -152,8 +160,9 @@ import {
   fixCustomScalarImportsInGeneratedEdgeqlFiles(project);
 
   await project.save();
+
+  console.log('Done!');
 })().catch((err) => {
-  // eslint-disable-next-line no-console
   console.error(err);
   process.exit(1);
 });
