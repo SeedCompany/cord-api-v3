@@ -40,10 +40,11 @@ ENV VERBOSE_YARN_LOG=discard
 RUN yarn install --immutable
 
 # Copy in application code
+COPY ./dbschema /dbschema
 COPY . .
 
 # region Generate EdgeDB TS/JS files
-RUN chown -R edgedb:edgedb dbschema
+RUN chown -R edgedb:edgedb /dbschema
 
 # Hook `yarn edgedb:gen` into edgedb bootstrap.
 # This allows it to be ran in parllel to the db server running without a daemon
