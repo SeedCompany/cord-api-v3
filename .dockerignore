@@ -21,3 +21,6 @@ coverage
 logging.yml
 *.gql
 *.graphql
+src/core/edgedb/generated-client
+src/core/edgedb/schema.ts
+src/**/*.edgeql.ts
