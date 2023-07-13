@@ -1,6 +1,6 @@
 import { HeadObjectOutput } from '@aws-sdk/client-s3';
-import { Command } from '@aws-sdk/smithy-client';
 import { Type } from '@nestjs/common';
+import { Command } from '@smithy/smithy-client';
 import { NotFoundException } from '~/common';
 import { FileBucket, GetObjectOutput, SignedOp } from './file-bucket';
 
