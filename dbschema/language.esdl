@@ -52,6 +52,9 @@ module default {
       (exists .firstScriptureEngagement and not .hasExternalFirstScripture)
       or not exists .firstScriptureEngagement
     );
+
+    multi link engagements := .<language[is LanguageEngagement];
+    multi link projects := .engagements.project;
   }
 
   scalar type population extending int32 {
