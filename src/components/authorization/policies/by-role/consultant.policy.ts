@@ -22,6 +22,12 @@ import { inherit, member, Policy, Role } from '../util';
   r.Partnership.when(member).read,
   r.PeriodicReport.read,
   r.Product.read,
+  r.ProgressReport.when(member).specifically((p) => p.status.read),
+  [
+    r.ProgressReportCommunityStory,
+    r.ProgressReportHighlight,
+    r.ProgressReportTeamNews,
+  ].flatMap((it) => [it.read.specifically((p) => [p.responses.read])]),
   r.Project.when(member).read.specifically(
     (p) => p.many('step', 'stepChangedAt', 'rootDirectory').edit,
   ),
