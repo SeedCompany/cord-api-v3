@@ -48,7 +48,7 @@
     "@patarapolw/prettyprint": "^1.0.3",
     "@seedcompany/common": ">=0.10 <1",
     "@seedcompany/data-loader": "^0.4.1",
-    "@seedcompany/nestjs-email": "^3.1.0",
+    "@seedcompany/nestjs-email": "^3.2.2",
     "argon2": "^0.30.3",
     "aws-xray-sdk-core": "^3.4.1",
     "class-transformer": "^0.5.1",

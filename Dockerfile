@@ -81,6 +81,9 @@ FROM node as production
 COPY --from=builder /source /opt/cord-api
 WORKDIR /opt/cord-api
 
+# Grab latest timezone data
+RUN mkdir -p .cache && curl -o .cache/timezones https://raw.githubusercontent.com/moment/moment-timezone/master/data/meta/latest.json
+
 LABEL org.opencontainers.image.title="CORD API"
 LABEL org.opencontainers.image.vendor="Seed Company"
 LABEL org.opencontainers.image.source=https://github.com/SeedCompany/cord-api-v3

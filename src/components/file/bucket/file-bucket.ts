@@ -2,9 +2,9 @@ import {
   GetObjectOutput as AwsGetObjectOutput,
   HeadObjectOutput,
 } from '@aws-sdk/client-s3';
-import { Command } from '@aws-sdk/smithy-client';
 import { RequestPresigningArguments } from '@aws-sdk/types';
 import { Type } from '@nestjs/common';
+import { Command } from '@smithy/smithy-client';
 import { Readable } from 'stream';
 import { Merge } from 'type-fest';
 import { DurationIn } from '~/common';

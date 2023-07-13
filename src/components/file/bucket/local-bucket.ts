@@ -2,8 +2,8 @@ import {
   GetObjectCommand as GetObject,
   PutObjectCommand as PutObject,
 } from '@aws-sdk/client-s3';
-import { Command } from '@aws-sdk/smithy-client';
 import { Type } from '@nestjs/common';
+import { Command } from '@smithy/smithy-client';
 import { pickBy } from 'lodash';
 import { DateTime, Duration } from 'luxon';
 import { assert } from 'ts-essentials';
