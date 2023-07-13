@@ -3,7 +3,7 @@ FROM public.ecr.aws/docker/library/node:18-slim as node
 
 # Add wget in for healthchecks
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends ca-certificates wget \
+    && apt-get install -y --no-install-recommends ca-certificates wget curl \
     && apt-get clean -q -y \
     && rm -rf /var/lib/apt/lists/*
 
@@ -28,9 +28,6 @@ RUN echo GIT_BRANCH=$GIT_BRANCH >> .env
 # Dev stage that installs dependencies and copies project files
 # This stage can run everything
 FROM node as dev
-
-# Grab latest timezone data
-RUN mkdir -p .cache && curl -o .cache/timezones https://raw.githubusercontent.com/moment/moment-timezone/master/data/meta/latest.json
 
 # Install dependencies (in separate docker layer from app code)
 COPY .yarn .yarn
@@ -63,5 +60,8 @@ FROM node as production
 
 # Copy everything from builder stage to this run stage
 COPY --from=builder /opt/cord-api .
+
+# Grab latest timezone data
+RUN mkdir -p .cache && curl -o .cache/timezones https://raw.githubusercontent.com/moment/moment-timezone/master/data/meta/latest.json
 
 ENV NODE_ENV=production
