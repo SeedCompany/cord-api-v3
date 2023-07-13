@@ -5,9 +5,9 @@ import {
 } from '@apollo/server';
 import { Plugin } from '@nestjs/apollo';
 import { GraphQLError } from 'graphql';
-import { Neo4jError } from 'neo4j-driver';
 import { GqlContextType as ContextType } from '../../common';
 import { maskSecrets } from '../../common/mask-secrets';
+import { isNeo4jError } from '../database/errors';
 import { ILogger, Logger } from '../logger';
 
 /**
@@ -42,7 +42,7 @@ export class GraphqlLoggingPlugin implements ApolloPlugin<ContextType> {
   private onError(error: GraphQLError) {
     // Assume Neo4jErrors are already logged if they need to be.
     // For some reason they do not go through our ExceptionFilter.
-    if (error.originalError instanceof Neo4jError) {
+    if (isNeo4jError(error.originalError)) {
       return;
     }
 

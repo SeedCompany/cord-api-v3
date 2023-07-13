@@ -2,7 +2,6 @@ import { ArgumentsHost, Catch, HttpStatus, Injectable } from '@nestjs/common';
 import { HttpAdapterHost } from '@nestjs/core';
 import { GqlContextType, GqlExceptionFilter } from '@nestjs/graphql';
 import { mapValues } from 'lodash';
-import { Neo4jError } from 'neo4j-driver';
 import { ConfigService } from '../config/config.service';
 import { ILogger, Logger, LogLevel } from '../logger';
 import { ValidationException } from '../validation.pipe';
@@ -79,7 +78,7 @@ export class ExceptionFilter implements GqlExceptionFilter {
   }
 
   private logIt(info: ExceptionJson, error: Error) {
-    if (error instanceof Neo4jError && error.logProps) {
+    if ('logProps' in error && error.logProps) {
       // Assume these have already been logged.
       return;
     }

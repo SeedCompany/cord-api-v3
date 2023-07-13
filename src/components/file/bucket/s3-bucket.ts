@@ -1,7 +1,7 @@
 import { NoSuchKey, S3 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { Command } from '@aws-sdk/smithy-client';
 import { Type } from '@nestjs/common';
+import { Command } from '@smithy/smithy-client';
 import { Duration } from 'luxon';
 import { join } from 'path/posix';
 import { Readable } from 'stream';

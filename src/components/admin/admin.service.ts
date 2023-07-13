@@ -42,13 +42,6 @@ export class AdminService implements OnApplicationBootstrap {
     // @ts-expect-error ahh I'm just being lazy.
     this.repo.db.conn.currentTransaction!.queryLogger = this.dbLogger;
 
-    const apoc = await this.repo.apocVersion();
-    if (apoc) {
-      this.logger.info('Found Neo4j APOC plugin', { version: apoc });
-    } else {
-      this.logger.error('Neo4j APOC plugin not loaded');
-    }
-
     this.logger.debug('Setting up root objects');
 
     await this.mergeAnonUser();

@@ -5,7 +5,6 @@ import {
 } from '@golevelup/nestjs-discovery';
 import { Module, OnModuleInit } from '@nestjs/common';
 import { groupBy } from 'lodash';
-import { Neo4jError } from 'neo4j-driver';
 import { many } from '~/common';
 import { ConfigService } from '../../config/config.service';
 import { ILogger, Logger } from '../../logger';
@@ -101,7 +100,6 @@ export class IndexerModule implements OnModuleInit {
           await q.raw(statement).run();
         } catch (e) {
           if (
-            e instanceof Neo4jError &&
             e.code === 'Neo.DatabaseError.Schema.ConstraintCreationFailed' &&
             e.message.includes('constraint requires Neo4j Enterprise Edition')
           ) {

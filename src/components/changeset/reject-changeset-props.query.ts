@@ -34,6 +34,6 @@ export const rejectChangesetProps =
           }),
           node(changesetVar),
         ])
-        .return('1'),
+        .return('1 as one'),
     );
   };

@@ -93,14 +93,18 @@ export const matchProps = (options: MatchPropsOptions = {}) => {
             sub2.apply(lookupProps).return(collectProps.as('props')),
           )
         : sub.apply(lookupProps)
-      ).return(
-        merge(
+      )
+        .with([
+          nodeName,
+          `${optional ? 'props' : collectProps} as collectedProps`,
+        ])
+        .with(
           listConcat(
             `[${excludeBaseProps ? '' : nodeName}]`,
-            optional ? 'props' : collectProps,
-          ),
-        ).as(outputVar),
-      ),
+            'collectedProps',
+          ).as('propList'),
+        )
+        .return(merge('propList').as(outputVar)),
     );
   };
 };

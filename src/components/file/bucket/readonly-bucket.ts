@@ -1,5 +1,5 @@
-import { Command } from '@aws-sdk/smithy-client';
 import { Type } from '@nestjs/common';
+import { Command } from '@smithy/smithy-client';
 import { FileBucket, SignedOp } from './file-bucket';
 
 export class ReadonlyBucket extends FileBucket {
