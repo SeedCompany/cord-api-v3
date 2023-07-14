@@ -26,14 +26,7 @@ import { member, Policy, Role, sensMediumOrLower, sensOnlyLow } from '../util';
   r.Partnership.read.specifically((p) => [
     p.many('partner', 'organization').whenAny(member, sensOnlyLow).read,
   ]),
-  r.ProgressReport.whenAny(member, sensMediumOrLower).specifically(
-    (p) => p.status.read,
-  ),
-  [
-    r.ProgressReportCommunityStory,
-    r.ProgressReportHighlight,
-    r.ProgressReportTeamNews,
-  ].flatMap((it) => [it.read.specifically((p) => [p.responses.read])]),
+  r.ProgressReport.whenAny(member, sensMediumOrLower).read,
   r.Project.read
     .specifically((p) => [
       p.many('step', 'stepChangedAt').edit,

@@ -22,7 +22,9 @@ import { inherit, member, Policy, Role } from '../util';
   r.Partnership.when(member).read,
   r.PeriodicReport.read,
   r.Product.read,
-  r.ProgressReport.when(member).specifically((p) => p.status.read),
+  r.ProgressReport.when(member).read,
+  r.ProgressReportVarianceExplanation.when(member).read,
+  r.ProgressReportWorkflowEvent.when(member).read,
   [
     r.ProgressReportCommunityStory,
     r.ProgressReportHighlight,
