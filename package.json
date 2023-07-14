@@ -48,7 +48,7 @@
     "@patarapolw/prettyprint": "^1.0.3",
     "@seedcompany/common": ">=0.10 <1",
     "@seedcompany/data-loader": "^0.4.1",
-    "@seedcompany/nestjs-email": "^3.2.2",
+    "@seedcompany/nestjs-email": "3.1.0",
     "argon2": "^0.30.3",
     "aws-xray-sdk-core": "^3.4.1",
     "class-transformer": "^0.5.1",
@@ -139,6 +139,7 @@
     "typescript-transform-paths": "^3.4.6"
   },
   "resolutions": {
+    "@seedcompany/nestjs-email/@faire/mjml-react": "3.0.0",
     "cypher-query-builder/neo4j-driver": "^5.9.0",
     "@nestjs/cli/fork-ts-checker-webpack-plugin": "npm:lodash@*",
     "@nestjs/cli/webpack": "npm:lodash@*",

@@ -1622,16 +1622,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@faire/mjml-react@npm:^3.1.1":
-  version: 3.3.0
-  resolution: "@faire/mjml-react@npm:3.3.0"
+"@faire/mjml-react@npm:3.0.0":
+  version: 3.0.0
+  resolution: "@faire/mjml-react@npm:3.0.0"
   dependencies:
     lodash.kebabcase: ^4.1.1
   peerDependencies:
     mjml: ^4.13.0
     react: ^16.0.0 || ^17.0.0 || ^18.0.0
     react-dom: ^16.0.0 || ^17.0.0 || ^18.0.0
-  checksum: 887730796704318f427dabee6ebe2183fcafe6f9fc86f13e5fd9ed1da24e16acd5a65eadf945dbb58765fa7229813d163520bfb22e2bf0545f480c9e9f7592c6
+  checksum: 33cbf39396f87994851b77153c544fb172d9ad22c82fc6fc3fd7ca6bb56ffb2782983e8910000457fee3b580bdf8c3bcfb7943ed194ce4d9cde82e8221ff9cb9
   languageName: node
   linkType: hard
 
@@ -2539,12 +2539,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@seedcompany/nestjs-email@npm:^3.2.2":
-  version: 3.2.2
-  resolution: "@seedcompany/nestjs-email@npm:3.2.2"
+"@seedcompany/nestjs-email@npm:3.1.0":
+  version: 3.1.0
+  resolution: "@seedcompany/nestjs-email@npm:3.1.0"
   dependencies:
     "@aws-sdk/client-sesv2": ^3.218.0
-    "@faire/mjml-react": ^3.1.1
+    "@faire/mjml-react": ^3.0.0
     "@nestjs/common": ^7.6.4 || ^8 || ^9
     emailjs: ^3.8.1
     html-to-text: ^8.2.1
@@ -2557,7 +2557,7 @@ __metadata:
     react: ">=17.0.0"
     react-dom: ">=17.0.0"
     reflect-metadata: ^0.1.12
-  checksum: aac6e2ef3df1234b605c9f30c636341d5029b8a5fca35ed93ef269c02f34120e9ce057a9c82d865a2f9f7a52c31866b117ac152817380e42595342627cc4ad2f
+  checksum: e4628330bfba8339eaf7a114a8fa112f2932f4724b360b5e4322163d74ec293e3a60d61ea6d35ceb13c3f1dbb5498672bc3ad07244968c6dfffadbe8bb04f705
   languageName: node
   linkType: hard
 
@@ -5108,7 +5108,7 @@ __metadata:
     "@seedcompany/common": ">=0.10 <1"
     "@seedcompany/data-loader": ^0.4.1
     "@seedcompany/eslint-plugin": ^3.4.1
-    "@seedcompany/nestjs-email": ^3.2.2
+    "@seedcompany/nestjs-email": 3.1.0
     "@types/common-tags": ^1.8.1
     "@types/cookie-parser": ^1.4.3
     "@types/express": ^4.17.16
