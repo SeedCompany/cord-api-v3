@@ -19,6 +19,8 @@ export abstract class Postable {
   } satisfies ResourceRelationsShape;
   static readonly Parent = 'dynamic';
 
+  readonly __typename: string;
+
   @IdField({
     description: "The object's ID",
   })
