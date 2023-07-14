@@ -12,7 +12,7 @@ import {
 } from '../../common';
 import { ILogger, Logger } from '../../core';
 import { mapListResults } from '../../core/database/results';
-import { AuthorizationService } from '../authorization/authorization.service';
+import { Privileges } from '../authorization';
 import { UserService } from '../user';
 import { CreatePost, Post, Postable, UpdatePost } from './dto';
 import { PostListInput, SecuredPostList } from './dto/list-posts.dto';
@@ -22,9 +22,8 @@ import { PostRepository } from './post.repository';
 export class PostService {
   constructor(
     @Inject(forwardRef(() => UserService))
-    private readonly userService: UserService & {},
-    @Inject(forwardRef(() => AuthorizationService))
-    private readonly authorizationService: AuthorizationService & {},
+    private readonly userService: UserService,
+    private readonly privileges: Privileges,
     private readonly repo: PostRepository,
     @Logger('post:service') private readonly logger: ILogger,
   ) {}
@@ -71,17 +70,7 @@ export class PostService {
     dto: UnsecuredDto<Post>,
     session: Session,
   ): Promise<Post> {
-    const securedProps = await this.authorizationService.secureProperties(
-      Post,
-      dto,
-      session,
-    );
-
-    return {
-      ...dto,
-      ...securedProps,
-      canDelete: await this.repo.checkDeletePermission(dto.id, session),
-    };
+    return this.privileges.for(session, Post).secure(dto);
   }
 
   async update(input: UpdatePost, session: Session): Promise<Post> {
@@ -117,12 +106,10 @@ export class PostService {
     input: PostListInput,
     session: Session,
   ): Promise<SecuredPostList> {
-    const perms = await this.authorizationService.getPermissions({
-      resource: parentType,
-      sessionOrUserId: session,
-      dto: parent,
-    });
-    if (!perms.posts.canRead) {
+    const permsPriv = this.privileges.for(session, parentType, parent).all;
+    // Don't love carrying this forward so likely will tinker with this more
+    // @ts-expect-error new API is purposefully stricter, but it does handle this legacy API.
+    if (!permsPriv.posts.canRead) {
       return SecuredList.Redacted;
     }
 
@@ -131,7 +118,9 @@ export class PostService {
     return {
       ...(await mapListResults(results, (dto) => this.secure(dto, session))),
       canRead: true, // false handled above
-      canCreate: perms.posts.canEdit,
+      // Don't love carrying this forward so likely will tinker with this more
+      // @ts-expect-error new API is purposefully stricter, but it does handle this legacy API.
+      canCreate: permsPriv.posts.canEdit,
     };
   }
 }
