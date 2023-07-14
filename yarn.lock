@@ -2526,9 +2526,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@seedcompany/nestjs-email@npm:^3.2.2":
-  version: 3.2.2
-  resolution: "@seedcompany/nestjs-email@npm:3.2.2"
+"@seedcompany/nestjs-email@npm:^3.2.3":
+  version: 3.2.3
+  resolution: "@seedcompany/nestjs-email@npm:3.2.3"
   dependencies:
     "@aws-sdk/client-sesv2": ^3.218.0
     "@faire/mjml-react": ^3.1.1
@@ -2544,7 +2544,7 @@ __metadata:
     react: ">=17.0.0"
     react-dom: ">=17.0.0"
     reflect-metadata: ^0.1.12
-  checksum: aac6e2ef3df1234b605c9f30c636341d5029b8a5fca35ed93ef269c02f34120e9ce057a9c82d865a2f9f7a52c31866b117ac152817380e42595342627cc4ad2f
+  checksum: 91a946575cbeaf49aeb691a3ff0bf0ab1f612c7077e17dbe53d3a3cca95893117ce8893cbb56bee2b7049240d5ba8be39d7fb0be9454867588d1bdfa0f29d671
   languageName: node
   linkType: hard
 
@@ -5075,7 +5075,7 @@ __metadata:
     "@seedcompany/common": ">=0.10 <1"
     "@seedcompany/data-loader": ^0.4.1
     "@seedcompany/eslint-plugin": ^3.4.1
-    "@seedcompany/nestjs-email": ^3.2.2
+    "@seedcompany/nestjs-email": ^3.2.3
     "@types/common-tags": ^1.8.1
     "@types/cookie-parser": ^1.4.3
     "@types/express": ^4.17.16
