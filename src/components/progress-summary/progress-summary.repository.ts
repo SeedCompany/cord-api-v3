@@ -44,11 +44,12 @@ export class ProgressSummaryRepository extends CommonRepository {
         relation('out', '', 'summary', ACTIVE),
         node('ps', 'ProgressSummary'),
       ])
-      .subQuery('ps', (sub) =>
-        sub.return(
-          'collect(apoc.map.fromValues([ps.period, apoc.convert.toMap(ps)])) as collected',
-        ),
-      )
+      .with([
+        'report',
+        'totalVerses',
+        'totalVerseEquivalents',
+        'collect(apoc.map.fromValues([ps.period, apoc.convert.toMap(ps)])) as collected',
+      ])
       .return<{ dto: FetchedSummaries }>(
         merge(
           listConcat('collected', {
