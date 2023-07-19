@@ -3,8 +3,7 @@ import { GraphQLSchemaHost } from '@nestjs/graphql';
 import { CachedByArg } from '@seedcompany/common';
 import { isObjectType } from 'graphql';
 import { mapValues } from 'lodash';
-import { ValueOf } from 'ts-essentials';
-import { LiteralUnion } from 'type-fest';
+import { LiteralUnion, ValueOf } from 'type-fest';
 import { EnhancedResource, ServerException } from '~/common';
 import type { LegacyResourceMap } from '../../components/authorization/model/resource-map';
 import { ResourceMap } from './map';
@@ -40,11 +39,7 @@ export class ResourcesHost {
 
   async getByName<K extends keyof ResourceMap>(
     name: K,
-  ): Promise<EnhancedResource<ValueOf<Pick<ResourceMap, K>>>>;
-  async getByName(
-    name: LiteralUnion<keyof ResourceMap, string>,
-  ): Promise<EnhancedResource<ValueOf<ResourceMap>>>;
-  async getByName(name: keyof ResourceMap): Promise<EnhancedResource<any>> {
+  ): Promise<EnhancedResource<ValueOf<Pick<ResourceMap, K>>>> {
     const map = await this.getEnhancedMap();
     const resource = map[name];
     if (!resource) {
@@ -53,6 +48,12 @@ export class ResourcesHost {
       );
     }
     return resource;
+  }
+
+  async getByDynamicName(
+    name: LiteralUnion<keyof ResourceMap, string>,
+  ): Promise<EnhancedResource<ValueOf<ResourceMap>>> {
+    return await this.getByName(name as any);
   }
 
   async getInterfaces(

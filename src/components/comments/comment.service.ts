@@ -93,7 +93,9 @@ export class CommentService {
       ? await this.resources.loadByBaseNode(parentNode)
       : parentNode;
 
-    const parentType = await this.resourcesHost.getByName(parent.__typename);
+    const parentType = await this.resourcesHost.getByDynamicName(
+      parent.__typename,
+    );
     const parentInterfaces = await this.resourcesHost.getInterfaces(parentType);
     if (!parentInterfaces.includes(EnhancedResource.of(Commentable))) {
       throw new NonCommentableType('Resource does not implement Commentable');
