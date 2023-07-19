@@ -4,7 +4,12 @@ import { CachedByArg } from '@seedcompany/common';
 import { isObjectType } from 'graphql';
 import { mapValues } from 'lodash';
 import { LiteralUnion, ValueOf } from 'type-fest';
-import { EnhancedResource, ServerException } from '~/common';
+import {
+  EnhancedResource,
+  InvalidIdForTypeException,
+  ResourceShape,
+  ServerException,
+} from '~/common';
 import type { LegacyResourceMap } from '../../components/authorization/model/resource-map';
 import { ResourceMap } from './map';
 import { __privateDontUseThis } from './resource-map-holder';
@@ -12,6 +17,13 @@ import { __privateDontUseThis } from './resource-map-holder';
 export type EnhancedResourceMap = {
   [K in keyof ResourceMap]: EnhancedResource<ResourceMap[K]>;
 };
+
+type LooseResourceName = LiteralUnion<keyof ResourceMap, string>;
+
+type ResourceRef =
+  | ResourceShape<any>
+  | EnhancedResource<any>
+  | LooseResourceName;
 
 @Injectable()
 export class ResourcesHost {
@@ -51,9 +63,29 @@ export class ResourcesHost {
   }
 
   async getByDynamicName(
-    name: LiteralUnion<keyof ResourceMap, string>,
+    name: LooseResourceName,
   ): Promise<EnhancedResource<ValueOf<ResourceMap>>> {
     return await this.getByName(name as any);
+  }
+
+  async verifyImplements(resource: ResourceRef, theInterface: ResourceRef) {
+    const iface = await this.enhance(theInterface);
+    if (!(await this.doesImplement(resource, iface))) {
+      throw new InvalidIdForTypeException(
+        `Resource does not implement ${iface.name}`,
+      );
+    }
+  }
+
+  async doesImplement(resource: ResourceRef, theInterface: ResourceRef) {
+    const interfaces = await this.getInterfaces(await this.enhance(resource));
+    return interfaces.includes(await this.enhance(theInterface));
+  }
+
+  private async enhance(ref: ResourceRef) {
+    return typeof ref === 'string'
+      ? await this.getByDynamicName(ref)
+      : EnhancedResource.of(ref);
   }
 
   async getInterfaces(
