@@ -26,7 +26,9 @@ import { member, Policy, Role, sensMediumOrLower, sensOnlyLow } from '../util';
   r.Partnership.read.specifically((p) => [
     p.many('partner', 'organization').whenAny(member, sensOnlyLow).read,
   ]),
-  r.ProgressReport.whenAny(member, sensMediumOrLower).read,
+  r.ProgressReport.whenAny(member, sensMediumOrLower).read.children((c) =>
+    [c.teamNews, c.communityStories, c.highlights].flatMap((it) => it.read),
+  ),
   r.Project.read
     .specifically((p) => [
       p.many('step', 'stepChangedAt').edit,

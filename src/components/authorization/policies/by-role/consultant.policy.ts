@@ -22,14 +22,13 @@ import { inherit, member, Policy, Role } from '../util';
   r.Partnership.when(member).read,
   r.PeriodicReport.read,
   r.Product.read,
-  r.ProgressReport.when(member).read,
+  r.ProgressReport.when(member).read.children((c) =>
+    [c.teamNews, c.communityStories, c.highlights].flatMap((it) => it.read),
+  ),
   r.ProgressReportVarianceExplanation.when(member).read,
-  r.ProgressReportWorkflowEvent.when(member).read,
-  [
-    r.ProgressReportCommunityStory,
-    r.ProgressReportHighlight,
-    r.ProgressReportTeamNews,
-  ].flatMap((it) => [it.read.specifically((p) => [p.responses.read])]),
+  r.ProgressReportTeamNews.read.specifically((p) => p.responses.read),
+  r.ProgressReportCommunityStory.read.specifically((p) => p.responses.read),
+  r.ProgressReportHighlight.read.specifically((p) => p.responses.read),
   r.Project.when(member).read.specifically(
     (p) => p.many('step', 'stepChangedAt', 'rootDirectory').edit,
   ),
