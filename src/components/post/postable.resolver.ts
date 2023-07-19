@@ -24,7 +24,9 @@ export class PostableResolver {
     @LoggedInSession() session: Session,
     @Loader(PostLoader) posts: LoaderOf<PostLoader>,
   ): Promise<SecuredPostList> {
-    const parentType = await this.resourcesHost.getByName(info.parentType.name);
+    const parentType = await this.resourcesHost.getByName(
+      info.parentType.name as 'Postable',
+    );
     const list = await this.service.securedList(
       parentType,
       parent,
