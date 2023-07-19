@@ -106,10 +106,10 @@ export class PostService {
     input: PostListInput,
     session: Session,
   ): Promise<SecuredPostList> {
-    const permsPriv = this.privileges.for(session, parentType, parent).all;
+    const perms = this.privileges.for(session, parentType, parent).all;
     // Don't love carrying this forward so likely will tinker with this more
     // @ts-expect-error new API is purposefully stricter, but it does handle this legacy API.
-    if (!permsPriv.posts.canRead) {
+    if (!perms.posts.canRead) {
       return SecuredList.Redacted;
     }
 
@@ -120,7 +120,7 @@ export class PostService {
       canRead: true, // false handled above
       // Don't love carrying this forward so likely will tinker with this more
       // @ts-expect-error new API is purposefully stricter, but it does handle this legacy API.
-      canCreate: permsPriv.posts.canEdit,
+      canCreate: perms.posts.canEdit,
     };
   }
 }
