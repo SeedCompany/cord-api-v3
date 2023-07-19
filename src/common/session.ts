@@ -73,7 +73,7 @@ const HttpSession = createParamDecorator(
 );
 
 const SessionWatermark: ParameterDecorator = (target, key) =>
-  Reflect.defineMetadata('SESSION_WATERMARK', true, target.constructor, key);
+  Reflect.defineMetadata('SESSION_WATERMARK', true, target.constructor, key!);
 
 export const addScope = (session: Session, scope?: ScopedRole[]) => ({
   ...session,

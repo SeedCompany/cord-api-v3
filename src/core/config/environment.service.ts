@@ -2,7 +2,7 @@ import { Injectable, Optional } from '@nestjs/common';
 import { parse as parseEnv } from 'dotenv';
 import { expand as dotEnvExpand } from 'dotenv-expand';
 import * as fs from 'fs';
-import { parse as parseSize } from 'human-format';
+import humanFormat from 'human-format';
 import { identity, isString, mapKeys, pickBy } from 'lodash';
 import { Duration } from 'luxon';
 import { join } from 'path';
@@ -82,7 +82,7 @@ export class EnvironmentService implements Iterable<[string, string]> {
     return this.wrap<Duration, DurationIn>(key, Duration.from);
   }
 
-  number(key: string, options?: Parameters<typeof parseSize>[1]) {
+  number(key: string, options?: Parameters<(typeof humanFormat)['parse']>[1]) {
     return this.wrap<number, string | number>(key, (raw) => {
       if (typeof raw === 'number') {
         return raw;
@@ -95,7 +95,7 @@ export class EnvironmentService implements Iterable<[string, string]> {
         return -Infinity;
       }
       try {
-        return parseSize(raw, options);
+        return humanFormat.parse(raw, options);
       } catch (e) {
         throw new Error(
           `Environment "${key}" has value "${raw}" which cannot be parsed to a number`,

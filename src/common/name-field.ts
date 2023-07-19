@@ -47,18 +47,17 @@ const InferredTypeOrStringField =
           explicitTypeFn: typeFn,
           typeOptions: options,
         });
-      let getType;
-      let typeOptions;
+      let resolved;
       try {
-        ({ typeFn: getType, options: typeOptions } = resolveType());
+        resolved = resolveType();
       } catch {
-        ({ typeFn: getType, options: typeOptions } = resolveType(() => String));
+        resolved = resolveType(() => String);
       }
       TypeMetadataStorage.addClassFieldMetadata({
         name: propertyKey,
         schemaName: options.name || propertyKey,
-        typeFn: getType,
-        options: typeOptions,
+        typeFn: resolved.typeFn!,
+        options: resolved.options,
         target: prototype.constructor,
         description: options.description,
         deprecationReason: options.deprecationReason,

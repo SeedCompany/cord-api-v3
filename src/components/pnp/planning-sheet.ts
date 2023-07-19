@@ -120,6 +120,6 @@ export class OralStoryingPlanningSheet extends PlanningSheet {
     return this.cell('Y', goalRow).asString;
   }
   sustainabilityRoleCount(goalRow: Row) {
-    return this.cell('AA', goalRow).asString;
+    return this.cell('AA', goalRow).asNumber;
   }
 }

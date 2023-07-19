@@ -14,9 +14,9 @@ export class InMemoryCache extends CacheBackingService {
   }
 
   async get<T>(key: string, options: ItemOptions) {
-    return this.cache.get<T>(key, {
+    return this.cache.get(key, {
       updateAgeOnGet: options.refreshTtlOnGet,
-    });
+    }) as T | undefined;
   }
 
   async remainingTtl(key: string): Promise<number> {

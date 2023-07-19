@@ -185,7 +185,7 @@ export const printForCli = () =>
     // msg += green(`[Nest] ${info.pid}   - `);
     // msg += `${info.timestamp}   `;
     msg += typeof name === 'string' ? yellow(`[${name}] `) : '';
-    msg += info.message;
+    msg += info.message as string;
     msg += ` ${yellow(info.ms)}`;
     msg += printObj(info.metadata);
     if (info[AFTER_MESSAGE]) {
