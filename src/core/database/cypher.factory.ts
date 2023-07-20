@@ -7,6 +7,7 @@ import type { Driver, Config as DriverConfig, Session } from 'neo4j-driver';
 import type { LoggerFunction } from 'neo4j-driver-core/types/types';
 import type QueryRunner from 'neo4j-driver/types/query-runner';
 import { Merge } from 'type-fest';
+import { fileURLToPath } from 'url';
 import { csv } from '~/common';
 import { dropSecrets } from '~/common/mask-secrets';
 import { ConfigService } from '../config/config.service';
@@ -279,7 +280,7 @@ const wrapQueryRun = (
           e.stack = e.stack.slice(0, stackStart) + parameters.__stacktrace;
         }
       }
-      jestSkipFileInExceptionSource(e, __filename);
+      jestSkipFileInExceptionSource(e, fileURLToPath(import.meta.url));
       if (isNeo4jError(e) && e.logProps) {
         logger.log(e.logProps);
       }

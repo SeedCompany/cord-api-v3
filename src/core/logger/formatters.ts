@@ -4,10 +4,11 @@ import stringify from 'fast-safe-stringify';
 import { identity } from 'lodash';
 import { TransformableInfo as ScuffedTransformableInfo } from 'logform';
 import { DateTime } from 'luxon';
-import { relative } from 'path';
+import { dirname, relative } from 'path';
 import { StackFrame } from 'stack-trace';
 import * as stacktrace from 'stack-trace';
 import { MESSAGE } from 'triple-beam';
+import { fileURLToPath } from 'url';
 import { config, format, LogEntry } from 'winston';
 import { Exception } from '../../common/exceptions';
 import { maskSecrets as maskSecretsOfObj } from '../../common/mask-secrets';
@@ -135,7 +136,10 @@ const formatStackFrame = (t: StackFrame) => {
     return null;
   }
 
-  const file = relative(`${__dirname}/../../..`, absolute);
+  const file = relative(
+    `${dirname(fileURLToPath(import.meta.url))}/../../..`,
+    absolute,
+  );
   const location = `${file}:${t.getLineNumber()}:${t.getColumnNumber()}`;
 
   return (
