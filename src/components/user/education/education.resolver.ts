@@ -27,6 +27,7 @@ export class EducationResolver {
 
   @Mutation(() => CreateEducationOutput, {
     description: 'Create an education entry',
+    deprecationReason: `This is unfinished functionality, don't use`,
   })
   async createEducation(
     @LoggedInSession() session: Session,
@@ -38,6 +39,7 @@ export class EducationResolver {
 
   @Query(() => Education, {
     description: 'Look up an education by its ID',
+    deprecationReason: 'Query via user instead',
   })
   async education(
     @Loader(EducationLoader) educations: LoaderOf<EducationLoader>,
@@ -48,6 +50,7 @@ export class EducationResolver {
 
   @Query(() => EducationListOutput, {
     description: 'Look up educations by user id',
+    deprecationReason: 'Query via user instead',
   })
   async educations(
     @AnonSession() session: Session,
@@ -61,6 +64,7 @@ export class EducationResolver {
 
   @Mutation(() => UpdateEducationOutput, {
     description: 'Update an education',
+    deprecationReason: `This is unfinished functionality, don't use`,
   })
   async updateEducation(
     @LoggedInSession() session: Session,
@@ -72,6 +76,7 @@ export class EducationResolver {
 
   @Mutation(() => DeleteEducationOutput, {
     description: 'Delete an education',
+    deprecationReason: `This is unfinished functionality, don't use`,
   })
   async deleteEducation(
     @LoggedInSession() session: Session,

@@ -101,6 +101,7 @@ export class PartnershipResolver {
 
   @Query(() => PartnershipListOutput, {
     description: 'Look up partnerships',
+    deprecationReason: 'Query via project instead',
   })
   async partnerships(
     @AnonSession() session: Session,
