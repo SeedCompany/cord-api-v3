@@ -1,5 +1,5 @@
+import { clc } from '@nestjs/common/utils/cli-colors.util.js';
 import { ppRaw as prettyPrint } from '@patarapolw/prettyprint';
-import { enabled as colorsEnabled, red, yellow } from 'colors/safe';
 import stringify from 'fast-safe-stringify';
 import { identity } from 'lodash';
 import { TransformableInfo as ScuffedTransformableInfo } from 'logform';
@@ -12,6 +12,9 @@ import { config, format, LogEntry } from 'winston';
 import { Exception } from '../../common/exceptions';
 import { maskSecrets as maskSecretsOfObj } from '../../common/mask-secrets';
 import { getNameFromEntry } from './logger.interface';
+
+const colorsEnabled = !process.env.NO_COLOR;
+const { red, yellow } = clc;
 
 export const AFTER_MESSAGE = Symbol('AFTER_MESSAGE');
 
