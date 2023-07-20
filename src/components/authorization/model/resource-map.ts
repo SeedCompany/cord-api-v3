@@ -19,7 +19,6 @@ import {
 import { Film } from '../../film/dto';
 import { FundingAccount } from '../../funding-account/dto';
 import { EthnologueLanguage, Language } from '../../language/dto';
-import { LiteracyMaterial } from '../../literacy-material/dto';
 import { Location } from '../../location/dto';
 import { Organization } from '../../organization/dto';
 import { Partner } from '../../partner/dto';
@@ -76,7 +75,6 @@ export const LegacyResourceMap = {
   InternshipEngagement,
   Language,
   LanguageEngagement,
-  LiteracyMaterial,
   Location,
   Organization,
   Partner,

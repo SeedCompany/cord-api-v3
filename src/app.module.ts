@@ -16,7 +16,6 @@ import { FileModule } from './components/file/file.module';
 import { FilmModule } from './components/film/film.module';
 import { FundingAccountModule } from './components/funding-account/funding-account.module';
 import { LanguageModule } from './components/language/language.module';
-import { LiteracyMaterialModule } from './components/literacy-material/literacy-material.module';
 import { LocationModule } from './components/location/location.module';
 import { OrganizationModule } from './components/organization/organization.module';
 import { PartnerModule } from './components/partner/partner.module';
@@ -59,7 +58,6 @@ assert(
     FileModule,
     FilmModule,
     LanguageModule,
-    LiteracyMaterialModule,
     EngagementModule,
     ProductModule,
     ProjectModule,

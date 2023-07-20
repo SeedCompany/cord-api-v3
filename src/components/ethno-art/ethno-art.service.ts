@@ -14,7 +14,6 @@ import { ifDiff } from '../../core/database/changes';
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto/powers';
-import { LiteracyMaterial } from '../literacy-material/dto';
 import { isScriptureEqual, ScriptureReferenceService } from '../scripture';
 import { Song } from '../song/dto';
 import {
@@ -66,7 +65,7 @@ export class EthnoArtService {
     }
   }
 
-  @HandleIdLookup([EthnoArt, Song, LiteracyMaterial])
+  @HandleIdLookup([EthnoArt, Song])
   async readOne(
     id: ID,
     session: Session,

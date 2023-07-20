@@ -8,7 +8,6 @@ import { FieldZone } from '../../field-zone/dto';
 import { Film } from '../../film/dto';
 import { FundingAccount } from '../../funding-account/dto';
 import { Language } from '../../language/dto';
-import { LiteracyMaterial } from '../../literacy-material/dto';
 import { Location } from '../../location/dto';
 import { Organization } from '../../organization/dto';
 import { Partner } from '../../partner/dto';
@@ -46,7 +45,6 @@ const publicSearchable = {
   Film,
   Story,
   EthnoArt,
-  LiteracyMaterial,
   Song,
   Location,
   FieldZone,
