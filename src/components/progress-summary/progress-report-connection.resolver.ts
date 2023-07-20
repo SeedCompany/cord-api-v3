@@ -42,17 +42,6 @@ export class ProgressReportConnectionResolver {
     return await this.fetch(loader, report, SummaryPeriod.Cumulative);
   }
 
-  @ResolveField(() => ProgressSummary, {
-    nullable: true,
-    deprecationReason: 'Use `ProgressReport.cumulativeSummary` instead',
-  })
-  async summary(
-    @Loader(ProgressSummaryLoader) loader: LoaderOf<ProgressSummaryLoader>,
-    @Parent() report: ProgressReport,
-  ): Promise<ProgressSummary | undefined> {
-    return await this.fetch(loader, report, SummaryPeriod.Cumulative);
-  }
-
   private async fetch(
     loader: LoaderOf<ProgressSummaryLoader>,
     report: ProgressReport,
