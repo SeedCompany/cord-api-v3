@@ -24,7 +24,6 @@ export * from './create-region';
 export * from './create-location';
 export * from './create-engagement';
 export * from './create-partnership';
-export * from './create-song';
 export * from './create-partner';
 export * from './create-funding-account';
 export * from './register';

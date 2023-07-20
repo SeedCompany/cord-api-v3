@@ -33,7 +33,6 @@ import { ProjectModule } from './components/project/project.module';
 import { PromptsModule } from './components/prompts/prompts.module';
 import { ScriptureModule } from './components/scripture';
 import { SearchModule } from './components/search/search.module';
-import { SongModule } from './components/song/song.module';
 import { StoryModule } from './components/story/story.module';
 import { TimeZoneModule } from './components/timezone';
 import { UserModule } from './components/user/user.module';
@@ -64,7 +63,6 @@ assert(
     LocationModule,
     OrganizationModule,
     ScriptureModule,
-    SongModule,
     StoryModule,
     UserModule,
     PartnershipModule,

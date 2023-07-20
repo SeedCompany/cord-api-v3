@@ -28,7 +28,6 @@ import {
   IProject as Project,
   TranslationProject,
 } from '../../project/dto';
-import { Song } from '../../song/dto';
 import { Story } from '../../story/dto';
 import { User } from '../../user/dto';
 
@@ -45,7 +44,6 @@ const publicSearchable = {
   Film,
   Story,
   EthnoArt,
-  Song,
   Location,
   FieldZone,
   FieldRegion,

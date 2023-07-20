@@ -43,7 +43,6 @@ import {
   TranslationProject,
 } from '../../project/dto';
 import { ProjectMember } from '../../project/project-member/dto';
-import { Song } from '../../song/dto';
 import { Story } from '../../story/dto';
 import { User } from '../../user/dto';
 import { Education } from '../../user/education/dto';
@@ -93,7 +92,6 @@ export const LegacyResourceMap = {
   FinancialReport,
   NarrativeReport,
   ProjectChangeRequest,
-  Song,
   Story,
   Unavailability,
   User,

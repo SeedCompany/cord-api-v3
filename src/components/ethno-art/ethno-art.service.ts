@@ -15,7 +15,6 @@ import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers } from '../authorization/dto/powers';
 import { isScriptureEqual, ScriptureReferenceService } from '../scripture';
-import { Song } from '../song/dto';
 import {
   CreateEthnoArt,
   EthnoArt,
@@ -65,7 +64,7 @@ export class EthnoArtService {
     }
   }
 
-  @HandleIdLookup([EthnoArt, Song])
+  @HandleIdLookup(EthnoArt)
   async readOne(
     id: ID,
     session: Session,
