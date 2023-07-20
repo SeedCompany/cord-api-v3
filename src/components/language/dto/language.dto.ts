@@ -26,7 +26,7 @@ import {
 import { SetChangeType } from '../../../core/database/changes';
 import { Location } from '../../location/dto';
 import { Pinnable } from '../../pin/dto';
-import { Post, Postable } from '../../post/dto';
+import { Postable } from '../../post/dto';
 import { UpdateEthnologueLanguage } from './update-language.dto';
 
 const Interfaces: Type<Resource & Pinnable & Postable> = IntersectionType(
@@ -87,7 +87,7 @@ export class Language extends Interfaces {
   static readonly Relations = {
     ethnologue: EthnologueLanguage,
     locations: [Location], // a child list but not creating deleting...does it still count?
-    posts: [Post],
+    ...Postable.Relations,
   };
 
   @NameField({

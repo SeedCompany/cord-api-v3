@@ -19,7 +19,7 @@ import {
 import { ScopedRole } from '../../authorization';
 import { FinancialReportingType } from '../../partnership/dto/financial-reporting-type';
 import { Pinnable } from '../../pin/dto';
-import { Post, Postable } from '../../post/dto';
+import { Postable } from '../../post/dto';
 import { IProject } from '../../project/dto';
 import { SecuredPartnerTypes } from './partner-type.enum';
 
@@ -43,7 +43,7 @@ export class Partner extends Interfaces {
   static readonly SecuredProps = keysOf<SecuredProps<Partner>>();
   static readonly Relations = {
     projects: [IProject],
-    posts: [Post],
+    ...Postable.Relations,
   };
 
   readonly organization: Secured<ID>;

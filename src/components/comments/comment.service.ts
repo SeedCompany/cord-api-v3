@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import {
-  EnhancedResource,
   ID,
   InvalidIdForTypeException,
   isIdLike,
@@ -93,10 +92,10 @@ export class CommentService {
       ? await this.resources.loadByBaseNode(parentNode)
       : parentNode;
 
-    const parentType = await this.resourcesHost.getByName(parent.__typename);
-    const parentInterfaces = await this.resourcesHost.getInterfaces(parentType);
-    if (!parentInterfaces.includes(EnhancedResource.of(Commentable))) {
-      throw new NonCommentableType('Resource does not implement Commentable');
+    try {
+      await this.resourcesHost.verifyImplements(parent.__typename, Commentable);
+    } catch (e) {
+      throw new NonCommentableType(e.message);
     }
     return parent as Commentable;
   }
