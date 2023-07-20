@@ -14,5 +14,5 @@ export abstract class Commentable extends Resource {
     commentThreads: [CommentThread],
   };
 
-  __typename: string;
+  declare __typename: string;
 }

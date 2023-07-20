@@ -168,7 +168,7 @@ class Project extends Interfaces {
 
   // A list of non-global roles the requesting user has available for this object.
   // This is just a cache, to prevent extra db lookups within the same request.
-  readonly scope: ScopedRole[];
+  declare readonly scope: ScopedRole[];
 }
 
 // class name has to match schema name for interface resolvers to work.
@@ -182,7 +182,7 @@ export class TranslationProject extends Project {
   static readonly Props = keysOf<TranslationProject>();
   static readonly SecuredProps = keysOf<SecuredProps<TranslationProject>>();
 
-  readonly type: ProjectType.Translation;
+  declare readonly type: ProjectType.Translation;
 }
 
 @ObjectType({
@@ -192,7 +192,7 @@ export class InternshipProject extends Project {
   static readonly Props = keysOf<InternshipProject>();
   static readonly SecuredProps = keysOf<SecuredProps<InternshipProject>>();
 
-  readonly type: ProjectType.Internship;
+  declare readonly type: ProjectType.Internship;
 }
 
 export const projectRange = (project: UnsecuredDto<Project>) =>

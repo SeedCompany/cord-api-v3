@@ -57,7 +57,7 @@ export const PromptVariantResponseRepository = <
     TResourceStatic,
     [Session]
   >(resource) {
-    readonly resource: EnhancedResource<TResourceStatic>;
+    declare readonly resource: EnhancedResource<TResourceStatic>;
 
     @Once()
     get edge() {

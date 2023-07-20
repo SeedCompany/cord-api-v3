@@ -60,12 +60,12 @@ class Engagement extends ChangesetAwareResource {
   static readonly SecuredProps: string[] = keysOf<SecuredProps<Engagement>>();
   static readonly Parent = import('../../project/dto').then((m) => m.IProject);
 
-  readonly __typename: 'LanguageEngagement' | 'InternshipEngagement';
+  declare readonly __typename: 'LanguageEngagement' | 'InternshipEngagement';
 
   readonly project: ID;
 
   @Field(() => IProject)
-  readonly parent: BaseNode;
+  declare readonly parent: BaseNode;
 
   @Field(() => SecuredEngagementStatus, {
     middleware: [parentIdMiddleware],
@@ -129,7 +129,7 @@ class Engagement extends ChangesetAwareResource {
 
   // A list of non-global roles the requesting user has available for this object.
   // This is just a cache, to prevent extra db lookups within the same request.
-  readonly scope: ScopedRole[];
+  declare readonly scope: ScopedRole[];
 
   @Field()
   readonly description: SecuredRichTextNullable;
@@ -154,7 +154,7 @@ export class LanguageEngagement extends Engagement {
   );
 
   @Field(() => TranslationProject)
-  readonly parent: BaseNode;
+  declare readonly parent: BaseNode;
 
   readonly language: Secured<ID>;
 
@@ -192,7 +192,7 @@ export class InternshipEngagement extends Engagement {
   );
 
   @Field(() => InternshipProject)
-  readonly parent: BaseNode;
+  declare readonly parent: BaseNode;
 
   readonly countryOfOrigin: Secured<ID>;
 

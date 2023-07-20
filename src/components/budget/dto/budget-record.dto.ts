@@ -25,7 +25,7 @@ export class BudgetRecord extends IntersectionType(ChangesetAware, Resource) {
   static readonly Parent = import('./budget.dto').then((m) => m.Budget);
 
   @Field(() => Budget)
-  readonly parent: BaseNode;
+  declare readonly parent: BaseNode;
 
   readonly organization: Secured<ID>;
 
@@ -42,5 +42,5 @@ export class BudgetRecord extends IntersectionType(ChangesetAware, Resource) {
 
   // A list of non-global roles the requesting user has available for this object.
   // This is just a cache, to prevent extra db lookups within the same request.
-  readonly scope: ScopedRole[];
+  declare readonly scope: ScopedRole[];
 }

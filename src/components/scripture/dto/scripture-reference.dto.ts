@@ -47,10 +47,10 @@ export abstract class ScriptureReference extends ScriptureReferenceInput {
   @Field(() => Int, {
     description: `The chapter number.`,
   })
-  readonly chapter: number;
+  declare readonly chapter: number;
 
   @Field(() => Int, {
     description: `The verse number.`,
   })
-  readonly verse: number;
+  declare readonly verse: number;
 }

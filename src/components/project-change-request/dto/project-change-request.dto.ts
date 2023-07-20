@@ -13,7 +13,7 @@ export abstract class ProjectChangeRequest extends Changeset {
   static readonly SecuredProps = keysOf<SecuredProps<ProjectChangeRequest>>();
   static readonly Parent = import('../../project/dto').then((m) => m.IProject);
 
-  __typename: 'ProjectChangeRequest';
+  declare __typename: 'ProjectChangeRequest';
 
   readonly project: ID;
 

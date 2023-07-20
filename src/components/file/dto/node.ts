@@ -94,7 +94,7 @@ export class FileVersion extends BaseFile {
   static readonly Props = keysOf<FileVersion>();
   static readonly SecuredProps = keysOf<SecuredProps<FileVersion>>();
 
-  readonly type: FileNodeType.FileVersion;
+  declare readonly type: FileNodeType.FileVersion;
 }
 
 @ObjectType({
@@ -104,7 +104,7 @@ export class File extends BaseFile {
   static readonly Props = keysOf<File>();
   static readonly SecuredProps = keysOf<SecuredProps<File>>();
 
-  readonly type: FileNodeType.File;
+  declare readonly type: FileNodeType.File;
 
   readonly latestVersionId: ID;
 
@@ -121,7 +121,7 @@ export class Directory extends FileNode {
   static readonly Props = keysOf<Directory>();
   static readonly SecuredProps = keysOf<SecuredProps<Directory>>();
 
-  readonly type: FileNodeType.Directory;
+  declare readonly type: FileNodeType.Directory;
 
   @Field(() => Int, {
     description:
