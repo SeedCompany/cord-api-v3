@@ -33,7 +33,7 @@ export class OrganizationService {
     @Logger('org:service') private readonly logger: ILogger,
     private readonly config: ConfigService,
     @Inject(forwardRef(() => AuthorizationService))
-    private readonly authorizationService: AuthorizationService,
+    private readonly authorizationService: AuthorizationService & {},
     private readonly locationService: LocationService,
     private readonly repo: OrganizationRepository,
   ) {}

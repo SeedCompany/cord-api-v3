@@ -37,10 +37,10 @@ export class PartnerService {
   constructor(
     @Logger('partner:service') private readonly logger: ILogger,
     @Inject(forwardRef(() => AuthorizationService))
-    private readonly authorizationService: AuthorizationService,
+    private readonly authorizationService: AuthorizationService & {},
     private readonly privileges: Privileges,
     @Inject(forwardRef(() => ProjectService))
-    private readonly projectService: ProjectService,
+    private readonly projectService: ProjectService & {},
     private readonly repo: PartnerRepository,
   ) {}
 

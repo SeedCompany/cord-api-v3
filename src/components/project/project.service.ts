@@ -84,18 +84,18 @@ export class ProjectService {
     private readonly projectMembers: ProjectMemberService,
     private readonly locationService: LocationService,
     @Inject(forwardRef(() => BudgetService))
-    private readonly budgetService: BudgetService,
+    private readonly budgetService: BudgetService & {},
     @Inject(forwardRef(() => PartnershipService))
-    private readonly partnerships: PartnershipService,
+    private readonly partnerships: PartnershipService & {},
     @Inject(forwardRef(() => EngagementService))
-    private readonly engagementService: EngagementService,
+    private readonly engagementService: EngagementService & {},
     @Inject(forwardRef(() => PartnerService))
-    private readonly partnerService: PartnerService,
+    private readonly partnerService: PartnerService & {},
     private readonly config: ConfigService,
     private readonly privileges: Privileges,
     private readonly eventBus: IEventBus,
     @Inject(forwardRef(() => AuthorizationService))
-    private readonly authorizationService: AuthorizationService,
+    private readonly authorizationService: AuthorizationService & {},
     private readonly projectRules: ProjectRules,
     private readonly repo: ProjectRepository,
     private readonly projectChangeRequests: ProjectChangeRequestService,

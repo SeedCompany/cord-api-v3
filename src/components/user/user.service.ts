@@ -73,10 +73,10 @@ export class UserService {
     private readonly educations: EducationService,
     private readonly organizations: OrganizationService,
     @Inject(forwardRef(() => PartnerService))
-    private readonly partners: PartnerService,
+    private readonly partners: PartnerService & {},
     private readonly unavailabilities: UnavailabilityService,
     @Inject(forwardRef(() => AuthorizationService))
-    private readonly authorizationService: AuthorizationService,
+    private readonly authorizationService: AuthorizationService & {},
     private readonly privileges: Privileges,
     private readonly locationService: LocationService,
     private readonly languageService: LanguageService,
