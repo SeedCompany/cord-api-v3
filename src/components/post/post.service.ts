@@ -101,15 +101,14 @@ export class PostService {
   }
 
   async securedList(
-    parentType: EnhancedResource<any>,
+    parentType: EnhancedResource<typeof Postable>,
     parent: Postable & Resource,
     input: PostListInput,
     session: Session,
   ): Promise<SecuredPostList> {
     const perms = this.privileges.for(session, parentType, parent).all;
-    // Don't love carrying this forward so likely will tinker with this more
-    // @ts-expect-error new API is purposefully stricter, but it does handle this legacy API.
-    if (!perms.posts.canRead) {
+
+    if (!perms.posts.read) {
       return SecuredList.Redacted;
     }
 
@@ -118,9 +117,7 @@ export class PostService {
     return {
       ...(await mapListResults(results, (dto) => this.secure(dto, session))),
       canRead: true, // false handled above
-      // Don't love carrying this forward so likely will tinker with this more
-      // @ts-expect-error new API is purposefully stricter, but it does handle this legacy API.
-      canCreate: perms.posts.canEdit,
+      canCreate: perms.posts.create,
     };
   }
 }

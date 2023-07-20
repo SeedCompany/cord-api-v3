@@ -1,6 +1,12 @@
 import { Info, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { GraphQLResolveInfo } from 'graphql';
-import { ListArg, LoggedInSession, Resource, Session } from '~/common';
+import {
+  EnhancedResource,
+  ListArg,
+  LoggedInSession,
+  Resource,
+  Session,
+} from '~/common';
 import { Loader, LoaderOf, ResourcesHost } from '~/core';
 import { Postable } from './dto';
 import { PostListInput, SecuredPostList } from './dto/list-posts.dto';
