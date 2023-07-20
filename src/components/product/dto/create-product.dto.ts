@@ -121,55 +121,6 @@ export abstract class CreateDerivativeScriptureProduct extends CreateBaseProduct
   readonly composite?: boolean;
 }
 
-/**
- * @deprecated
- */
-@InputType()
-export abstract class CreateProduct extends CreateBaseProduct {
-  @IdField({
-    nullable: true,
-    description: stripIndent`
-      An ID of a \`Producible\` object, which will create a \`DerivativeScriptureProduct\`.
-      If omitted a \`DirectScriptureProduct\` will be created instead.
-    `,
-  })
-  readonly produces?: ID;
-
-  @ScriptureField({
-    nullable: true,
-    description: stripIndent`
-      Change this list of \`scriptureReferences\` if provided.
-
-      Note only \`DirectScriptureProduct\`s can use this field.
-    `,
-  })
-  readonly scriptureReferences?: readonly ScriptureRangeInput[];
-
-  @ScriptureField({
-    nullable: true,
-    description: stripIndent`
-      The \`Producible\` defines a \`scriptureReferences\` list, and this is
-      used by default in this product's \`scriptureReferences\` list.
-      If this product _specifically_ needs to customize the references, then
-      this property can be set (and read) to "override" the \`producible\`'s list.
-
-      Note only \`DerivativeScriptureProduct\`s can use this field.
-    `,
-  })
-  readonly scriptureReferencesOverride?: readonly ScriptureRangeInput[];
-}
-
-/**
- * @deprecated
- */
-@InputType()
-export abstract class CreateProductInput {
-  @Field()
-  @Type(() => CreateProduct)
-  @ValidateNested()
-  readonly product: CreateProduct;
-}
-
 @InputType()
 export abstract class CreateOtherProduct extends CreateBaseProduct {
   @NameField()

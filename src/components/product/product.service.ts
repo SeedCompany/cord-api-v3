@@ -54,7 +54,7 @@ import {
   UpdateDerivativeScriptureProduct,
   UpdateDirectScriptureProduct,
   UpdateOtherProduct,
-  UpdateProduct,
+  UpdateBaseProduct as UpdateProduct,
 } from './dto';
 import { ProducibleType } from './dto/producible.dto';
 import { HydratedProductRow, ProductRepository } from './product.repository';
@@ -370,44 +370,6 @@ export class ProductService {
       canDelete,
     };
     return direct;
-  }
-
-  /**
-   * @deprecated
-   */
-  async update(input: UpdateProduct, session: Session): Promise<AnyProduct> {
-    const currentProduct = await this.readOneUnsecured(input.id, session);
-
-    // If isDirectScriptureProduct
-    if (!currentProduct.produces) {
-      if (input.produces) {
-        throw new InputException(
-          'Cannot update produces on a Direct Scripture Product',
-          'product.produces',
-        );
-      }
-      //If current product is a Direct Scripture Product, cannot update scriptureReferencesOverride or produces
-      if (input.scriptureReferencesOverride) {
-        throw new InputException(
-          'Cannot update Scripture References Override on a Direct Scripture Product',
-          'product.scriptureReferencesOverride',
-        );
-      }
-      return await this.updateDirect(
-        input,
-        session,
-        asProductType(DirectScriptureProduct)(currentProduct),
-      );
-    }
-
-    // If current product is a Derivative Scripture Product, cannot update scriptureReferencesOverride
-    if (input.scriptureReferences) {
-      throw new InputException(
-        'Cannot update Scripture References on a Derivative Scripture Product',
-        'product.scriptureReferences',
-      );
-    }
-    return await this.updateDerivative(input, session, currentProduct);
   }
 
   async updateDirect(
