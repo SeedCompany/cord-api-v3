@@ -5187,6 +5187,7 @@ __metadata:
     eslint-plugin-typescript-sort-keys: ^2.3.0
     execa: ^5.1.1
     express: ^4.18.2
+    extensionless: ^1.4.5
     fast-safe-stringify: ^2.1.1
     got: ^11.8.6
     graphql: ^16.7.1
@@ -5203,7 +5204,7 @@ __metadata:
     jsonwebtoken: ^9.0.1
     lazy-get-decorator: ^2.2.1
     lint-staged: ^13.2.3
-    lodash: ^4.17.21
+    lodash: "npm:lodash-es@^4.17.21"
     lru-cache: ^7.18.3
     luxon: ^3.3.0
     nanoid: ^3.3.6
@@ -6422,6 +6423,13 @@ __metadata:
     utils-merge: 1.0.1
     vary: ~1.1.2
   checksum: 3c4b9b076879442f6b968fe53d85d9f1eeacbb4f4c41e5f16cc36d77ce39a2b0d81b3f250514982110d815b2f7173f5561367f9110fcc541f9371948e8c8b037
+  languageName: node
+  linkType: hard
+
+"extensionless@npm:^1.4.5":
+  version: 1.4.5
+  resolution: "extensionless@npm:1.4.5"
+  checksum: bc36e2e1493378ca04131a5ba9089bf5d3f0809ed97e9c780625a006ded15b3e5e91f03ee5264683520e6cd3f97de2c1058dffec5be7e98c51ad8997828c68d0
   languageName: node
   linkType: hard
 
@@ -8769,6 +8777,13 @@ __metadata:
   version: 4.7.0
   resolution: "lodash.sortby@npm:4.7.0"
   checksum: db170c9396d29d11fe9a9f25668c4993e0c1331bcb941ddbd48fb76f492e732add7f2a47cfdf8e9d740fa59ac41bbfaf931d268bc72aab3ab49e9f89354d718c
+  languageName: node
+  linkType: hard
+
+"lodash@npm:lodash-es@^4.17.21":
+  version: 4.17.21
+  resolution: "lodash-es@npm:4.17.21"
+  checksum: 05cbffad6e2adbb331a4e16fbd826e7faee403a1a04873b82b42c0f22090f280839f85b95393f487c1303c8a3d2a010048bf06151a6cbe03eee4d388fb0a12d2
   languageName: node
   linkType: hard
 

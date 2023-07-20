@@ -6,6 +6,7 @@
   "engines": {
     "node": ">= 18.9"
   },
+  "type": "module",
   "scripts": {
     "prebuild": "rimraf dist",
     "postinstall": "ts-patch install || true",
@@ -17,11 +18,11 @@
     "docker:run": "scripts/docker-run.sh",
     "docker:test": "scripts/docker-run.sh yarn test:e2e",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "start": "nest start",
-    "start:dev": "nest start --watch",
-    "start:debug": "nest start --debug --watch",
-    "start:prod": "node --enable-source-maps dist/main",
-    "repl": "nest start --entryFile repl",
+    "start": "NODE_OPTIONS=\"${NODE_OPTIONS:-} --experimental-loader=extensionless\" nest start",
+    "start:dev": "yarn start --watch",
+    "start:debug": "yarn start --debug --watch",
+    "start:prod": "node --experimental-loader=extensionless --enable-source-maps dist/main",
+    "repl": "yarn start --entryFile repl",
     "gen-id": "ts-node -Te \"let g = require('./src/common/generate-id').generateId; for (let i = 0, l = process.argv[1] || 1; i < l; i++) { g().then(console.log) }\"",
     "lint": "eslint --ext .ts,.tsx --fix --max-warnings 0 .",
     "test": "node --experimental-vm-modules $(yarn bin jest)",
@@ -61,6 +62,7 @@
     "dotenv-expand": "^10.0.0",
     "execa": "^5.1.1",
     "express": "^4.18.2",
+    "extensionless": "^1.4.5",
     "fast-safe-stringify": "^2.1.1",
     "got": "^11.8.6",
     "graphql": "^16.7.1",
@@ -74,7 +76,7 @@
     "js-levenshtein-esm": "^1.2.0",
     "jsonwebtoken": "^9.0.1",
     "lazy-get-decorator": "^2.2.1",
-    "lodash": "^4.17.21",
+    "lodash": "npm:lodash-es@^4.17.21",
     "lru-cache": "^7.18.3",
     "luxon": "^3.3.0",
     "nanoid": "^3.3.6",
@@ -152,7 +154,7 @@
     }
   },
   "jest": {
-    "preset": "ts-jest",
+    "preset": "ts-jest/presets/default-esm",
     "roots": [
       "<rootDir>/src"
     ],
