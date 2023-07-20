@@ -106,9 +106,9 @@ export class ProductService {
     }
 
     const otherInput: CreateOtherProduct | undefined =
-      'title' in input ? input : undefined;
+      'title' in input && input.title !== undefined ? input : undefined;
     const derivativeInput: CreateDerivativeScriptureProduct | undefined =
-      'produces' in input ? input : undefined;
+      'produces' in input && input.produces !== undefined ? input : undefined;
     const scriptureInput: CreateDirectScriptureProduct | undefined =
       !otherInput && !derivativeInput ? input : undefined;
 
@@ -154,7 +154,7 @@ export class ProductService {
     }
 
     const type =
-      'title' in input
+      'title' in input && input.title !== undefined
         ? ProducibleType.OtherProduct
         : producibleType ?? ProducibleType.DirectScriptureProduct;
     const availableSteps = getAvailableSteps({
@@ -170,7 +170,7 @@ export class ProductService {
     });
 
     const id =
-      'title' in input
+      'title' in input && input.title !== undefined
         ? await this.repo.createOther({ ...input, progressTarget, steps })
         : await this.repo.create({
             ...input,
