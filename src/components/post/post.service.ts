@@ -105,7 +105,6 @@ export class PostService {
   async getPermissionsFromResource(resource: CommentableRef, session: Session) {
     const parent = await this.loadPostable(resource);
     const parentType = await this.resourcesHost.getByName(
-      // I'd like to type this prop as this but somehow blows everything up.
       parent.__typename as 'Postable',
     );
     return this.privileges.for(session, parentType, parent).forEdge('posts');
