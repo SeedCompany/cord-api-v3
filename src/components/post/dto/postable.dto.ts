@@ -10,14 +10,17 @@ import { Post } from './post.dto';
   description: stripIndent`
     An object that can be used to enable Post discussions on a Node.
   `,
+  implements: Resource,
 })
-export abstract class Postable {
+export abstract class Postable extends Resource {
   static readonly Props: string[] = keysOf<Postable>();
   static readonly SecuredProps: string[] = keysOf<SecuredProps<Postable>>();
   static readonly Relations = {
     posts: [Post],
   } satisfies ResourceRelationsShape;
   static readonly Parent = 'dynamic';
+
+  __typename: string;
 
   @IdField({
     description: "The object's ID",
