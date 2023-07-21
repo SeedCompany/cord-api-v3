@@ -5,7 +5,7 @@ import {
   OnModuleInit,
 } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
-import * as XRay from 'aws-xray-sdk-core';
+import XRay from 'aws-xray-sdk-core';
 import { ConfigService } from '../config/config.service';
 import { VersionService } from '../config/version.service';
 import { ILogger, Logger, LoggerModule, LogLevel } from '../logger';

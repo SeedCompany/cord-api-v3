@@ -1,11 +1,11 @@
 import { highlight } from 'cli-highlight';
 import { Query } from 'cypher-query-builder';
-import { registerLanguage } from 'highlight.js';
+import Highlight from 'highlight.js';
 import { LogLevel } from '../../logger';
 
 if (process.env.NODE_ENV !== 'production') {
   void import('highlightjs-cypher' as any).then(({ default: cypher }) => {
-    registerLanguage('cypher', cypher);
+    Highlight.registerLanguage('cypher', cypher);
   });
 }
 
