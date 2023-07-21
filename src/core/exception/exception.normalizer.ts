@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import * as Nest from '@nestjs/common/exceptions';
+// eslint-disable-next-line no-restricted-imports
+import * as Nest from '@nestjs/common';
 import { compact, uniq } from 'lodash';
 import {
   AbstractClassType,

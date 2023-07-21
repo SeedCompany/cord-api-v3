@@ -3,7 +3,7 @@ import { Query, Resolver } from '@nestjs/graphql';
 import {
   SCALAR_NAME_METADATA,
   SCALAR_TYPE_METADATA,
-} from '@nestjs/graphql/dist/graphql.constants';
+} from '@nestjs/graphql/dist/graphql.constants.js';
 import { GraphQLScalarType } from 'graphql';
 import { getRegisteredScalars } from '../common/scalars';
 

@@ -1,4 +1,4 @@
-import { isPlainObject } from '@nestjs/common/utils/shared.utils';
+import { isPlainObject } from '@nestjs/common/utils/shared.utils.js';
 import { mapValues } from 'lodash';
 
 export const maskSecrets = (

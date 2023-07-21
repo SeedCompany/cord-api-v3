@@ -5,8 +5,8 @@ import {
   Scope,
 } from '@nestjs/common';
 import { Args, ArgsOptions, ID as IDType } from '@nestjs/graphql';
-import { Resolver } from '@nestjs/graphql/dist/enums/resolver.enum';
-import { RESOLVER_TYPE_METADATA as TypeKey } from '@nestjs/graphql/dist/graphql.constants';
+import { Resolver } from '@nestjs/graphql/dist/enums/resolver.enum.js';
+import { RESOLVER_TYPE_METADATA as TypeKey } from '@nestjs/graphql/dist/graphql.constants.js';
 import {
   ID,
   InputException,
