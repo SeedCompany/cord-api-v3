@@ -6,7 +6,7 @@ import { CreatePerson } from '../../user/dto';
 @InputType()
 export abstract class RegisterInput extends CreatePerson {
   @Field()
-  readonly email: string;
+  declare readonly email: string;
 
   @Field()
   @MinLength(6)

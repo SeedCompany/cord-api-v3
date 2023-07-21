@@ -29,7 +29,7 @@ export class Budget extends IntersectionType(ChangesetAware, Resource) {
   static readonly Parent = import('../../project/dto').then((m) => m.IProject);
 
   @Field(() => IProject)
-  readonly parent: BaseNode;
+  declare readonly parent: BaseNode;
 
   @Field()
   @DbLabel('BudgetStatus')
@@ -47,7 +47,7 @@ export class Budget extends IntersectionType(ChangesetAware, Resource) {
 
   // A list of non-global roles the requesting user has available for this object.
   // This is just a cache, to prevent extra db lookups within the same request.
-  readonly scope: ScopedRole[];
+  declare readonly scope: ScopedRole[];
 }
 
 @ObjectType({

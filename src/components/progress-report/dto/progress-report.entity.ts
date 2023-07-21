@@ -36,10 +36,10 @@ export class ProgressReport extends IPeriodicReport {
   declare readonly type: ReportType.Progress;
 
   @Field(() => LanguageEngagement)
-  override readonly parent: BaseNode;
+  declare readonly parent: BaseNode;
 
   /** @deprecated */
-  readonly reportFile: DefinedFile;
+  declare readonly reportFile: DefinedFile;
 
   @Field(() => SecuredStatus, {
     middleware: [parentIdMiddleware],

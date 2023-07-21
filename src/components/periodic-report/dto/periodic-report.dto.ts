@@ -62,7 +62,7 @@ class PeriodicReport extends Resource {
 
   // A list of non-global roles the requesting user has available for this object.
   // This is just a cache, to prevent extra db lookups within the same request.
-  readonly scope: ScopedRole[];
+  declare readonly scope: ScopedRole[];
 }
 
 export { PeriodicReport as IPeriodicReport };
@@ -75,7 +75,7 @@ export class FinancialReport extends PeriodicReport {
   static readonly SecuredProps = keysOf<SecuredProps<FinancialReport>>();
   static readonly Parent = 'dynamic';
 
-  readonly type: ReportType.Financial;
+  declare readonly type: ReportType.Financial;
 }
 
 @ObjectType({
@@ -86,7 +86,7 @@ export class NarrativeReport extends PeriodicReport {
   static readonly SecuredProps = keysOf<SecuredProps<NarrativeReport>>();
   static readonly Parent = 'dynamic';
 
-  readonly type: ReportType.Narrative;
+  declare readonly type: ReportType.Narrative;
 }
 
 @ObjectType({

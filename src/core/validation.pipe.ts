@@ -26,7 +26,10 @@ export class ValidationException extends ClientException {
   constructor(errors: ValidationError[]) {
     super('Input validation failed');
     this.errors = flattenValidationErrors(errors);
-    Object.defineProperty(this, 'errorList', { value: errors });
+    Object.defineProperty(this, 'errorList', {
+      value: errors,
+      enumerable: false,
+    });
     const errorsAsString = flattenConstraints(errors)
       .map((e) => {
         const constraint = Object.values(e.constraints)[0];

@@ -9,7 +9,7 @@ import { Resource, SecuredProps } from '../../../common';
 export class Changeset extends Resource {
   static readonly Props: string[] = keysOf<Changeset>();
   static readonly SecuredProps: string[] = keysOf<SecuredProps<Changeset>>();
-  __typename: string;
+  declare __typename: string;
 
   @Field({
     description: 'Whether this changeset is editable',

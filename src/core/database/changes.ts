@@ -103,6 +103,9 @@ export const getChanges =
   ): Partial<Omit<Changes, keyof Resource> & AndModifiedAt<TResource>> => {
     const res = EnhancedResource.of(resource);
     const actual = pickBy(omit(changes, Resource.Props), (change, prop) => {
+      if (change === undefined) {
+        return false;
+      }
       const key = isRelation(res, prop) ? prop.slice(0, -2) : prop;
       const existing = unwrapSecured(existingObject[key]);
       return !isSame(change, existing);

@@ -6,6 +6,7 @@
     "esModuleInterop": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
+    "useDefineForClassFields": true,
     "jsx": "react-jsx",
     "lib": ["es2022"],
     "target": "es2021",
