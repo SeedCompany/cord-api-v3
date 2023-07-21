@@ -20,12 +20,12 @@ export abstract class Postable extends Resource {
   } satisfies ResourceRelationsShape;
   static readonly Parent = 'dynamic';
 
-  __typename: string;
+  declare __typename: string;
 
   @IdField({
     description: "The object's ID",
   })
-  readonly id: ID;
+  declare readonly id: ID;
 }
 
 declare module '~/core/resources/map' {
