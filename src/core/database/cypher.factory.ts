@@ -7,7 +7,7 @@ import type { Driver, Config as DriverConfig, Session } from 'neo4j-driver';
 import type { LoggerFunction } from 'neo4j-driver-core/types/types';
 import type QueryRunner from 'neo4j-driver/types/query-runner';
 import { Merge } from 'type-fest';
-import { csv, getPreviousList } from '~/common';
+import { csv } from '~/common';
 import { dropSecrets } from '~/common/mask-secrets';
 import { ConfigService } from '../config/config.service';
 import { jestSkipFileInExceptionSource } from '../exception';
@@ -107,25 +107,6 @@ export const CypherFactory: FactoryProvider<Connection> = {
         logger: driverLoggerAdapter,
       },
     };
-
-    // Change transaction retry logic to also check all previous exceptions when
-    // looking for retryable errors.
-    if (version === 4) {
-      const RetryStrategy = await import(
-        // @ts-expect-error this isn't typed but it exists
-        'neo4j-v4/node_modules/neo4j-driver-core/lib/internal/retry-strategy'
-      );
-      const canRetryOn = RetryStrategy.canRetryOn;
-      RetryStrategy.canRetryOn = (error?: Error) =>
-        error && getPreviousList(error, true).some(canRetryOn);
-    } else {
-      // @ts-expect-error this isn't typed but it exists
-      const NeoErrorModule = await import('neo4j-driver-core/lib/error');
-      const isRetriableError = NeoErrorModule.isRetriableError;
-      NeoErrorModule.Neo4jError.isRetriable = NeoErrorModule.isRetriableError =
-        (error?: Error) =>
-          error && getPreviousList(error, true).some(isRetriableError);
-    }
 
     const { auth, driver: driverConstructor } = await import(
       version === 4 ? 'neo4j-v4' : 'neo4j-driver'
