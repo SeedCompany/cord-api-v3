@@ -1,4 +1,3 @@
-import { Injectable } from '@nestjs/common';
 import { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
 import {
   EmailModuleOptions,
@@ -6,14 +5,13 @@ import {
 } from '@seedcompany/nestjs-email';
 import { CookieOptions } from 'express';
 import type { Server as HttpServer } from 'http';
-import { LazyGetter as Lazy } from 'lazy-get-decorator';
 import LRUCache from 'lru-cache';
 import { Duration, DurationLike } from 'luxon';
 import { nanoid } from 'nanoid';
 import { Config as Neo4JDriverConfig } from 'neo4j-driver';
 import { PoolConfig } from 'pg';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { Merge } from 'type-fest';
+import { Class, Merge } from 'type-fest';
 import { csv, ID, keys, ServerException } from '../../common';
 import { parseUri } from '../../components/file/bucket/parse-uri';
 import { ProgressReportStatus } from '../../components/progress-report/dto/progress-report-status.enum';
@@ -25,121 +23,113 @@ import { EnvironmentService } from './environment.service';
 
 const dur = Duration.from;
 
-type HttpTimeoutOptions = typeof ConfigService.prototype.httpTimeouts;
+type AppConfig = InstanceType<ReturnType<typeof makeConfig>>;
 
-/**
- * Application configuration.
- * This is used to provide a higher level mapping from the raw environment.
- * Keys are camelcase, objects can be used, references to usages can be found.
- */
-@Injectable()
-export class ConfigService implements EmailOptionsFactory {
-  port = this.env.number('port').optional(3000);
-  // The port where the app is being hosted. i.e. a docker bound port
-  publicPort = this.env.number('public_port').optional(this.port);
-  readonly hostUrl = this.env
-    .url('host_url')
-    .optional(`http://localhost:${this.publicPort}`);
+type HttpTimeoutOptions = AppConfig['httpTimeouts'];
 
-  @Lazy() get graphQL() {
-    return {
+export const makeConfig = (env: EnvironmentService) =>
+  class ConfigService implements EmailOptionsFactory {
+    port = env.number('port').optional(3000);
+    // The port where the app is being hosted. i.e. a docker bound port
+    publicPort = env.number('public_port').optional(this.port);
+    hostUrl = env
+      .url('host_url')
+      .optional(`http://localhost:${this.publicPort}`);
+
+    graphQL = {
       persistedQueries: {
-        enabled: this.env.boolean('GRAPHQL_PERSISTED_QUERIES').optional(true),
-        ttl: this.env.duration('GRAPHQL_PERSISTED_QUERIES_TTL').optional('1w'),
+        enabled: env.boolean('GRAPHQL_PERSISTED_QUERIES').optional(true),
+        ttl: env.duration('GRAPHQL_PERSISTED_QUERIES_TTL').optional('1w'),
       },
     };
-  }
 
-  @Lazy() get lruCache(): LRUCache.Options<string, unknown> {
-    return {
-      ttl: this.env.duration('LRU_CACHE_TTL').optional()?.as('milliseconds'),
-      max: this.env.number('LRU_CACHE_MAX').optional(),
-      maxSize: this.env.number('LRU_CACHE_MAX_SIZE').optional('30MB'),
-    };
-  }
+    lruCache = {
+      ttl: env.duration('LRU_CACHE_TTL').optional()?.as('milliseconds'),
+      max: env.number('LRU_CACHE_MAX').optional(),
+      maxSize: env.number('LRU_CACHE_MAX_SIZE').optional('30MB'),
+    } satisfies LRUCache.Options<string, unknown>;
 
-  @Lazy() get httpTimeouts() {
-    return {
+    httpTimeouts = {
       /** @see HttpServer.keepAliveTimeout */
-      keepAlive: this.env.duration('HTTP_KEEP_ALIVE_TIMEOUT').optional('5s'),
+      keepAlive: env.duration('HTTP_KEEP_ALIVE_TIMEOUT').optional('5s'),
       /** @see HttpServer.headersTimeout */
-      headers: this.env.duration('HTTP_HEADERS_TIMEOUT').optional('1m'),
+      headers: env.duration('HTTP_HEADERS_TIMEOUT').optional('1m'),
       /** @see HttpServer.timeout */
-      socket: this.env.duration('HTTP_SOCKET_TIMEOUT').optional(0),
+      socket: env.duration('HTTP_SOCKET_TIMEOUT').optional(0),
       /** @see HttpServer.requestTimeout */
-      request: this.env.duration('HTTP_REQUEST_TIMEOUT').optional(0),
+      request: env.duration('HTTP_REQUEST_TIMEOUT').optional(0),
     };
-  }
-  applyTimeouts(http: HttpServer, timeouts: Partial<HttpTimeoutOptions>) {
-    if (timeouts.keepAlive != null) {
-      http.keepAliveTimeout = timeouts.keepAlive.toMillis();
-    }
-    if (timeouts.headers != null) {
-      http.headersTimeout = timeouts.headers.toMillis();
-    }
-    if (timeouts.socket != null) {
-      http.timeout = timeouts.socket.toMillis();
-    }
-    if (timeouts.request != null) {
-      http.requestTimeout = timeouts.request.toMillis();
-    }
-  }
 
-  /** Is this a REPL process? */
-  isRepl = process.argv.join(' ').includes('repl');
+    applyTimeouts = (
+      http: HttpServer,
+      timeouts: Partial<HttpTimeoutOptions>,
+    ) => {
+      if (timeouts.keepAlive != null) {
+        http.keepAliveTimeout = timeouts.keepAlive.toMillis();
+      }
+      if (timeouts.headers != null) {
+        http.headersTimeout = timeouts.headers.toMillis();
+      }
+      if (timeouts.socket != null) {
+        http.timeout = timeouts.socket.toMillis();
+      }
+      if (timeouts.request != null) {
+        http.requestTimeout = timeouts.request.toMillis();
+      }
+    };
 
-  /** Is this a jest process? */
-  jest = Boolean(this.env.string('JEST_WORKER_ID').optional());
+    /** Is this a REPL process? */
+    isRepl = process.argv.join(' ').includes('repl');
 
-  jwtKey = this.env.string('JWT_AUTH_KEY').optional('cord-field');
+    /** Is this a jest process? */
+    jest = Boolean(env.string('JEST_WORKER_ID').optional());
 
-  createEmailOptions() {
-    const send = this.env.boolean('EMAIL_SEND').optional(false);
-    return {
-      from: this.env
-        .string('EMAIL_FROM')
-        .optional('CORD Field <noreply@cordfield.com>'),
-      replyTo: this.env.string('EMAIL_REPLY_TO').optional() || undefined, // falsy -> undefined
-      send,
-      open: this.jest
-        ? false
-        : this.env
-            .boolean('EMAIL_OPEN')
-            .optional(!send && process.env.NODE_ENV === 'development'),
-      ses: {
-        region: this.env.string('SES_REGION').optional(),
-      },
-      wrappers: [
-        FrontendUrlWrapper(this.frontendUrl),
-        DefaultTimezoneWrapper(this.defaultTimeZone),
-      ],
-    } satisfies EmailModuleOptions;
-  }
+    jwtKey = env.string('JWT_AUTH_KEY').optional('cord-field');
 
-  @Lazy() get email() {
-    return {
-      notifyDistributionLists: this.env
+    createEmailOptions = () => {
+      const send = env.boolean('EMAIL_SEND').optional(false);
+      return {
+        from: env
+          .string('EMAIL_FROM')
+          .optional('CORD Field <noreply@cordfield.com>'),
+        replyTo: env.string('EMAIL_REPLY_TO').optional() || undefined, // falsy -> undefined
+        send,
+        open: this.jest
+          ? false
+          : env
+              .boolean('EMAIL_OPEN')
+              .optional(!send && process.env.NODE_ENV === 'development'),
+        ses: {
+          region: env.string('SES_REGION').optional(),
+        },
+        wrappers: [
+          FrontendUrlWrapper(this.frontendUrl),
+          DefaultTimezoneWrapper(this.defaultTimeZone),
+        ],
+      } satisfies EmailModuleOptions;
+    };
+
+    email = {
+      notifyDistributionLists: env
         .boolean('NOTIFY_DISTRIBUTION_LIST')
         .optional(false),
-      notifyProjectStepChanges: this.env
+      notifyProjectStepChanges: env
         .boolean('NOTIFY_PROJECT_STEP_CHANGES')
         .optional(true),
     };
-  }
 
-  @Lazy() get progressReportStatusChange() {
-    return {
-      enabled: this.env
+    progressReportStatusChange = {
+      enabled: env
         .boolean('NOTIFY_PROGRESS_REPORT_STATUS_CHANGES')
         .optional(this.createEmailOptions().send),
       notifyExtraEmails: {
-        forTransitions: this.env
+        forTransitions: env
           .map('PROGRESS_REPORT_EMAILS_FOR_TRANSITIONS', {
             parseKey: keysOf<Record<ProgressReportTransitionName, ''>>(),
             parseValue: csv,
           })
           .optional({}),
-        forBypasses: this.env
+        forBypasses: env
           .map('PROGRESS_REPORT_EMAILS_FOR_BYPASSES', {
             parseKey: keys(ProgressReportStatus),
             parseValue: csv,
@@ -147,213 +137,211 @@ export class ConfigService implements EmailOptionsFactory {
           .optional({}),
       },
     };
-  }
 
-  defaultTimeZone = this.env
-    .string('DEFAULT_TIMEZONE')
-    .optional('America/Chicago');
+    defaultTimeZone = env
+      .string('DEFAULT_TIMEZONE')
+      .optional('America/Chicago');
 
-  frontendUrl = this.env
-    .string('FRONTEND_URL')
-    .optional('http://localhost:3001');
+    frontendUrl = env.string('FRONTEND_URL').optional('http://localhost:3001');
 
-  @Lazy() get neo4j() {
-    const driverConfig: Neo4JDriverConfig = {
-      maxTransactionRetryTime: 30_000,
-    };
-    let url = this.env.string('NEO4J_URL').optional('bolt://localhost');
-    const parsed = new URL(url);
-    const username = this.env
-      .string('NEO4J_USERNAME')
-      .optional(parsed.username || 'neo4j');
-    const password = this.env
-      .string('NEO4J_PASSWORD')
-      .optional(parsed.password || 'admin');
-    const database =
-      this.env.string('NEO4J_DBNAME').optional() ??
-      (parsed.pathname.slice(1) || undefined);
-    if (parsed.username || parsed.password || parsed.pathname) {
-      parsed.username = '';
-      parsed.password = '';
-      parsed.pathname = '';
-      url = parsed.toString();
-    }
-    return {
-      version: Math.trunc(this.env.number('NEO4J_VERSION').optional(4)) as
-        | 4
-        | 5,
-      url,
-      username,
-      password,
-      database: this.jest ? `test.${nanoid().replace(/[-_]/g, '')}` : database,
-      ephemeral: this.jest,
-      driverConfig,
-    };
-  }
-
-  @Lazy() get postgres(): PoolConfig {
-    // Put the PG* env vars in the global env, so the library can use them.
-    // There's dozens of them, so we'll just pass them through implicitly.
-    for (const [key, value] of this.env) {
-      if (key.startsWith('PG')) {
-        process.env[key] = value;
+    neo4j = (() => {
+      const driverConfig: Neo4JDriverConfig = {
+        maxTransactionRetryTime: 30_000,
+      };
+      let url = env.string('NEO4J_URL').optional('bolt://localhost');
+      const parsed = new URL(url);
+      const username = env
+        .string('NEO4J_USERNAME')
+        .optional(parsed.username || 'neo4j');
+      const password = env
+        .string('NEO4J_PASSWORD')
+        .optional(parsed.password || 'admin');
+      const database =
+        env.string('NEO4J_DBNAME').optional() ??
+        (parsed.pathname.slice(1) || undefined);
+      if (parsed.username || parsed.password || parsed.pathname) {
+        parsed.username = '';
+        parsed.password = '';
+        parsed.pathname = '';
+        url = parsed.toString();
       }
-    }
-    /* eslint-disable @typescript-eslint/naming-convention */
-    const config: PoolConfig = {
-      application_name: this.env.string('PGAPPNAME').optional('cord_api'),
-      connectionString:
-        this.env.string('PGURI').optional() ??
-        this.env
-          .string('PGURL')
-          .optional('postgres://postgres:postgres@localhost/cord'),
-    };
-    /* eslint-enable @typescript-eslint/naming-convention */
-    return config;
-  }
+      return {
+        version: Math.trunc(env.number('NEO4J_VERSION').optional(4)) as 4 | 5,
+        url,
+        username,
+        password,
+        database: this.jest
+          ? `test.${nanoid().replace(/[-_]/g, '')}`
+          : database,
+        ephemeral: this.jest,
+        driverConfig,
+      };
+    })();
 
-  // Control which database is prioritized, while we migrate to postgres
-  database = this.env.string('DATABASE').optional('neo4j');
-  usePostgres = this.database.toLowerCase() === 'postgres';
-
-  dbIndexesCreate = this.env.boolean('DB_CREATE_INDEXES').optional(true);
-  dbAutoMigrate = this.env
-    .boolean('DB_AUTO_MIGRATE')
-    .optional(process.env.NODE_ENV !== 'production' && !this.jest);
-
-  @Lazy() get files() {
-    const legacyBucket = this.env.string('FILES_S3_BUCKET').optional();
-    const sources = this.env
-      .string('FILES_SOURCE')
-      .optional(legacyBucket ? `s3://${legacyBucket}` : '.files')
-      ?.split(',')
-      .flatMap((src) => parseUri(src.trim()));
-    return {
-      sources: this.jest ? [] : sources,
-      cacheTtl: {
-        file: { private: dur('1h'), public: dur('1d') },
-        version: { private: dur('1h'), public: dur('6d') },
-      },
-      putTtl: dur('10m'),
-    };
-  }
-
-  @Lazy() get rootAdmin() {
-    let rootId: ID;
-    return {
-      get id(): ID {
-        if (!rootId) {
-          throw new ServerException(
-            'Cannot access root admin ID before it is initialized',
-          );
+    postgres = (() => {
+      // Put the PG* env vars in the global env, so the library can use them.
+      // There's dozens of them, so we'll just pass them through implicitly.
+      for (const [key, value] of env) {
+        if (key.startsWith('PG')) {
+          process.env[key] = value;
         }
-        return rootId;
-      },
-      set id(newId: ID) {
-        rootId = newId;
-      },
-      email: 'devops@tsco.org',
-      password: this.env.string('ROOT_ADMIN_PASSWORD').optional('admin'),
-    };
-  }
+      }
+      /* eslint-disable @typescript-eslint/naming-convention */
+      const config: PoolConfig = {
+        application_name: env.string('PGAPPNAME').optional('cord_api'),
+        connectionString:
+          env.string('PGURI').optional() ??
+          env
+            .string('PGURL')
+            .optional('postgres://postgres:postgres@localhost/cord'),
+      };
+      /* eslint-enable @typescript-eslint/naming-convention */
+      return config;
+    })();
 
-  passwordSecret = this.env.string('PASSWORD_SECRET').optional();
+    // Control which database is prioritized, while we migrate to postgres
+    database = env.string('DATABASE').optional('neo4j');
+    usePostgres = this.database.toLowerCase() === 'postgres';
 
-  @Lazy() get rootSecurityGroup() {
-    return {
+    dbIndexesCreate = env.boolean('DB_CREATE_INDEXES').optional(true);
+    dbAutoMigrate = env
+      .boolean('DB_AUTO_MIGRATE')
+      .optional(process.env.NODE_ENV !== 'production' && !this.jest);
+
+    files = (() => {
+      const legacyBucket = env.string('FILES_S3_BUCKET').optional();
+      const sources = env
+        .string('FILES_SOURCE')
+        .optional(legacyBucket ? `s3://${legacyBucket}` : '.files')
+        ?.split(',')
+        .flatMap((src) => parseUri(src.trim()));
+      return {
+        sources: this.jest ? [] : sources,
+        cacheTtl: {
+          file: { private: dur('1h'), public: dur('1d') },
+          version: { private: dur('1h'), public: dur('6d') },
+        },
+        putTtl: dur('10m'),
+      };
+    })();
+
+    rootAdmin = (() => {
+      let rootId: ID;
+      return {
+        get id(): ID {
+          if (!rootId) {
+            throw new ServerException(
+              'Cannot access root admin ID before it is initialized',
+            );
+          }
+          return rootId;
+        },
+        set id(newId: ID) {
+          rootId = newId;
+        },
+        email: 'devops@tsco.org',
+        password: env.string('ROOT_ADMIN_PASSWORD').optional('admin'),
+      };
+    })();
+
+    passwordSecret = env.string('PASSWORD_SECRET').optional();
+
+    rootSecurityGroup = {
       id: 'rootsgid',
     };
-  }
 
-  @Lazy() get publicSecurityGroup() {
-    return {
+    publicSecurityGroup = {
       id: 'publicsgid',
     };
-  }
 
-  @Lazy() get defaultOrg() {
-    return {
+    defaultOrg = {
       id: '5c4278da9503d5cd78e82f02' as ID,
       name: 'Seed Company',
     };
-  }
 
-  @Lazy() get anonUser() {
-    return {
+    anonUser = {
       id: 'anonuserid',
     };
-  }
 
-  @Lazy() get cors(): CorsOptions {
-    // regex is matched against origin which includes protocol and port (no path)
-    // `cf\.com$` matches both root cf.com and all subdomains
-    // `\/\/cf\.com$` matches only root cf.com
-    const rawOrigin = this.env.string('CORS_ORIGIN').optional('*');
-    // Always use regex instead of literal `*` so the current origin is returned
-    // instead of `*`. fetch credentials="include" requires specific origin.
-    const origin =
-      rawOrigin === '*' ? /.*/ : rawOrigin.split(',').map((o) => new RegExp(o));
-    return {
-      origin,
-      credentials: true,
-    };
-  }
+    cors = (() => {
+      // regex is matched against origin which includes protocol and port (no path)
+      // `cf\.com$` matches both root cf.com and all subdomains
+      // `\/\/cf\.com$` matches only root cf.com
+      const rawOrigin = env.string('CORS_ORIGIN').optional('*');
+      // Always use regex instead of literal `*` so the current origin is returned
+      // instead of `*`. fetch credentials="include" requires specific origin.
+      const origin =
+        rawOrigin === '*'
+          ? /.*/
+          : rawOrigin.split(',').map((o) => new RegExp(o));
+      return {
+        origin,
+        credentials: true,
+      } satisfies CorsOptions;
+    })();
 
-  @Lazy() get sessionCookie(): Merge<
-    CookieOptions,
-    { name: string; expires?: DurationLike }
-  > {
-    const name = this.env.string('SESSION_COOKIE_NAME').optional('cordsession');
+    sessionCookie = ((): Merge<
+      CookieOptions,
+      { name: string; expires?: DurationLike }
+    > => {
+      const name = env.string('SESSION_COOKIE_NAME').optional('cordsession');
 
-    let domain = this.env.string('SESSION_COOKIE_DOMAIN').optional();
+      let domain = env.string('SESSION_COOKIE_DOMAIN').optional();
 
-    // Ensure sub-domains are allowed
-    if (domain && !domain.startsWith('.')) {
-      domain = '.' + domain;
-    }
+      // Ensure sub-domains are allowed
+      if (domain && !domain.startsWith('.')) {
+        domain = '.' + domain;
+      }
 
-    return {
-      name,
-      domain,
-      // Persist past current browser session
-      expires: { years: 10 },
-      // Cannot be retrieved by JS
-      httpOnly: true,
-      // All paths, not just the current one
-      path: '/',
-      // Require HTTPS (required for SameSite) (ignored for localhost)
-      secure: true,
-      // Allow 3rd party (other domains)
-      sameSite: 'none',
-    };
-  }
+      return {
+        name,
+        domain,
+        // Persist past current browser session
+        expires: { years: 10 },
+        // Cannot be retrieved by JS
+        httpOnly: true,
+        // All paths, not just the current one
+        path: '/',
+        // Require HTTPS (required for SameSite) (ignored for localhost)
+        secure: true,
+        // Allow 3rd party (other domains)
+        sameSite: 'none',
+      };
+    })();
 
-  @Lazy() get xray() {
-    return {
+    xray = {
       daemonAddress: this.jest
         ? undefined
-        : this.env.string('AWS_XRAY_DAEMON_ADDRESS').optional(),
+        : env.string('AWS_XRAY_DAEMON_ADDRESS').optional(),
     };
-  }
 
-  @Lazy() get redis() {
-    return {
-      url: this.env.string('REDIS_URL').optional(),
+    redis = {
+      url: env.string('REDIS_URL').optional(),
     };
-  }
 
-  /**
-   * @see https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-metadata-endpoint.html
-   */
-  readonly ecsMetadataUri =
-    this.env.string('ECS_CONTAINER_METADATA_URI_V4').optional() ||
-    this.env.string('ECS_CONTAINER_METADATA_URI').optional();
+    /**
+     * @see https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-metadata-endpoint.html
+     */
+    ecsMetadataUri =
+      env.string('ECS_CONTAINER_METADATA_URI_V4').optional() ||
+      env.string('ECS_CONTAINER_METADATA_URI').optional();
 
-  /** Should logger output as JSON? Defaults to true if running in ECS */
-  readonly jsonLogs = this.env
-    .boolean('JSON_LOGS')
-    .optional(!!this.ecsMetadataUri);
+    /** Should logger output as JSON? Defaults to true if running in ECS */
+    jsonLogs = env.boolean('JSON_LOGS').optional(!!this.ecsMetadataUri);
+  };
 
+// @ts-expect-error We will call makeConfig to create this shape.
+// This just allows ConfigService to have the type correctly.
+// Going through the hassle of a dynamic class is better
+// because it allows NestJS injection and TS type at the same time.
+const ConfigShape: Class<AppConfig> = class {};
+
+/**
+ * Application configuration.
+ * This is used to provide a higher level mapping from the raw environment.
+ * Keys are camelcase, objects can be used, references to usages can be found.
+ */
+export class ConfigService extends ConfigShape {
   /**
    * Default configuration for logging.
    * These can be overridden with logging.yml file at project root
@@ -369,6 +357,4 @@ export class ConfigService implements EmailOptionsFactory {
       version: LogLevel.DEBUG,
     },
   };
-
-  constructor(private readonly env: EnvironmentService) {}
 }

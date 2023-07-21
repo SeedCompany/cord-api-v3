@@ -1,6 +1,6 @@
 export * from './async-local-storage-no-context.exception';
 export * from './logger';
-export * from './config/config.service';
+export { ConfigService } from './config/config.service';
 export * from './core.module';
 export * from './cache';
 export * from './graphql';
