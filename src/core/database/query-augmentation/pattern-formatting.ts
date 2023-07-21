@@ -24,6 +24,7 @@ import { isExp } from '../query';
 // And ignore empty patterns
 const PatternClause = Object.getPrototypeOf(Create) as Class<TSPatternClause>;
 PatternClause.prototype.build = function build() {
+  // @ts-expect-error private but we are using it
   const patternStrings = map(this.patterns, (pattern) =>
     reduce(pattern, (str: string, clause: Clause) => str + clause.build(), ''),
   );
@@ -38,7 +39,9 @@ const TermListClause = Object.getPrototypeOf(With) as Class<TSTermListClause>;
 // e.g. .with({ node: 'node' })
 // WITH node as node
 // Neo4jError: key not found: SymbolUse(node@821)
+// @ts-expect-error private but we are calling it
 const origStringifyProperty = TermListClause.prototype.stringifyProperty;
+// @ts-expect-error private but we are replacing it
 TermListClause.prototype.stringifyProperty = function stringifyProperty(
   prop: string,
   alias?: string,
@@ -52,7 +55,9 @@ TermListClause.prototype.stringifyProperty = function stringifyProperty(
 
 // Strip indents from `with` & `return` clauses.
 // Convert CypherExpression proxies to strings, so they are rendered correctly.
+// @ts-expect-error private but we are calling it
 const origStringifyTerm = TermListClause.prototype.stringifyTerm;
+// @ts-expect-error private but we are replacing it
 TermListClause.prototype.stringifyTerm = function stringifyTerm(term: Term) {
   const stripped =
     typeof term === 'string'

@@ -45,7 +45,7 @@ export const ChangesetArg = (
     // method metadata is set after parameter metadata, so wait until next tick
     // to determine if method is query or mutation to set default description.
     process.nextTick(() => {
-      type = Reflect.getMetadata(TypeKey, (target as any)[methodName]);
+      type = Reflect.getMetadata(TypeKey, (target as any)[methodName!]);
       if (!type) {
         throw new ServerException(
           'Something went wrong trying to determine operation type',

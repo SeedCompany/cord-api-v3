@@ -15,8 +15,11 @@ import { gql } from './gql-tag';
 
 export const generateFakeFile = () => ({
   name: faker.system.fileName(),
-  content: Buffer.from(faker.image.dataUri(200, 200).split(',')[1], 'base64'),
-  size: faker.datatype.number(1_000_000),
+  content: Buffer.from(
+    faker.image.dataUri({ width: 200, height: 200 }).split(',')[1],
+    'base64',
+  ),
+  size: faker.number.int(1_000_000),
   mimeType: faker.helpers.arrayElement(mimeTypes).name,
 });
 

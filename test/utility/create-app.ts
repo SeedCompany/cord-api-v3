@@ -12,7 +12,7 @@ import {
 // Patch faker email to be more unique
 const origEmail = faker.internet.email.bind(faker.internet);
 faker.internet.email = (...args) =>
-  origEmail(...args).replace('@', `.${Date.now()}@`);
+  origEmail(...(args as any)).replace('@', `.${Date.now()}@`);
 
 export interface TestApp extends INestApplication {
   graphql: GraphQLTestClient;

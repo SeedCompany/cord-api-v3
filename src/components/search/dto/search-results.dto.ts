@@ -82,7 +82,7 @@ const searchable = { ...publicSearchable, ...privateSearchable };
 
 export type SearchableMap = {
   [K in keyof typeof searchable]: SearchItem<
-    typeof searchable[K]['prototype'],
+    (typeof searchable)[K]['prototype'],
     keyof ResourceMap
   >;
 };

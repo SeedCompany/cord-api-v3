@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { ID, Session, UnsecuredDto } from '../../common';
@@ -19,7 +19,11 @@ import { Comment, CommentListInput, CreateCommentInput } from './dto';
 
 @Injectable()
 export class CommentRepository extends DtoRepository(Comment) {
-  constructor(readonly threads: CommentThreadRepository, db: DatabaseService) {
+  constructor(
+    @Inject(forwardRef(() => CommentThreadRepository))
+    readonly threads: CommentThreadRepository,
+    db: DatabaseService,
+  ) {
     super(db);
   }
 
