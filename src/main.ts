@@ -1,4 +1,5 @@
 import { Logger } from '@nestjs/common';
+import { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
 import { NestFactory } from '@nestjs/core';
 import cookieParser from 'cookie-parser';
 import './polyfills';
@@ -19,7 +20,7 @@ async function bootstrap() {
   });
   const config = app.get(ConfigService);
 
-  app.enableCors(config.cors);
+  app.enableCors(config.cors as CorsOptions); // typecast to undo deep readonly
   app.use(cookieParser());
 
   app.setGlobalPrefix(config.hostUrl.pathname.slice(1));

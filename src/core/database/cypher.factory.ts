@@ -101,7 +101,7 @@ export const CypherFactory: FactoryProvider<Connection> = {
     };
 
     const resolvedDriverConfig: DriverConfig = {
-      ...driverConfig,
+      ...(driverConfig as DriverConfig), // typecast to undo deep readonly
       logging: {
         level: 'debug', // log everything, we'll filter out in our logger
         logger: driverLoggerAdapter,

@@ -11,7 +11,7 @@ import { nanoid } from 'nanoid';
 import { Config as Neo4JDriverConfig } from 'neo4j-driver';
 import { PoolConfig } from 'pg';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { Class, Merge } from 'type-fest';
+import { Class, Merge, ReadonlyDeep } from 'type-fest';
 import { csv, ID, keys, ServerException } from '../../common';
 import { parseUri } from '../../components/file/bucket/parse-uri';
 import { ProgressReportStatus } from '../../components/progress-report/dto/progress-report-status.enum';
@@ -23,7 +23,7 @@ import { EnvironmentService } from './environment.service';
 
 const dur = Duration.from;
 
-type AppConfig = InstanceType<ReturnType<typeof makeConfig>>;
+type AppConfig = ReadonlyDeep<InstanceType<ReturnType<typeof makeConfig>>>;
 
 type HttpTimeoutOptions = AppConfig['httpTimeouts'];
 
