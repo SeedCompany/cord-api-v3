@@ -23,6 +23,7 @@ export class CeremonyResolver {
 
   @Query(() => Ceremony, {
     description: 'Look up a ceremony by its ID',
+    deprecationReason: 'Query via engagement instead',
   })
   async ceremony(
     @IdArg() id: ID,
@@ -33,6 +34,7 @@ export class CeremonyResolver {
 
   @Query(() => CeremonyListOutput, {
     description: 'Look up ceremonies',
+    deprecationReason: 'Query via engagement instead',
   })
   async ceremonies(
     @AnonSession() session: Session,

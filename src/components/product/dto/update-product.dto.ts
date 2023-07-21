@@ -1,6 +1,4 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import { Type } from 'class-transformer';
-import { ValidateNested } from 'class-validator';
 import { stripIndent } from 'common-tags';
 import {
   ID,
@@ -14,7 +12,6 @@ import {
   CreateBaseProduct,
   CreateDerivativeScriptureProduct,
   CreateDirectScriptureProduct,
-  CreateProduct,
 } from './create-product.dto';
 import { AnyProduct, Product } from './product.dto';
 
@@ -58,40 +55,6 @@ export abstract class UpdateDerivativeScriptureProduct extends IntersectionType(
 
   totalVerses?: number;
   totalVerseEquivalents?: number;
-}
-
-/**
- * @deprecated
- */
-@InputType()
-export abstract class UpdateProduct extends OmitType(CreateProduct, [
-  'engagementId',
-  'produces',
-  'pnpIndex',
-] as const) {
-  @IdField()
-  readonly id: ID;
-
-  @IdField({
-    nullable: true,
-    description: stripIndent`
-      An ID of a \`Producible\` object to change.
-
-      Note only \`DerivativeScriptureProduct\`s can use this field.
-    `,
-  })
-  readonly produces?: ID;
-}
-
-/**
- * @deprecated
- */
-@InputType()
-export abstract class UpdateProductInput {
-  @Field()
-  @Type(() => UpdateProduct)
-  @ValidateNested()
-  readonly product: UpdateProduct;
 }
 
 @InputType()

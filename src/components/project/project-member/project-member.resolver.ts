@@ -37,6 +37,7 @@ export class ProjectMemberResolver {
 
   @Query(() => ProjectMember, {
     description: 'Look up a project member by ID',
+    deprecationReason: 'Query via project instead',
   })
   async projectMember(
     @Loader(ProjectMemberLoader) projectMembers: LoaderOf<ProjectMemberLoader>,
@@ -47,6 +48,7 @@ export class ProjectMemberResolver {
 
   @Query(() => ProjectMemberListOutput, {
     description: 'Look up project members',
+    deprecationReason: 'Query via project instead',
   })
   async projectMembers(
     @AnonSession() session: Session,

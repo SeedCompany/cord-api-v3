@@ -26,6 +26,7 @@ export class UnavailabilityResolver {
 
   @Query(() => Unavailability, {
     description: 'Look up a unavailability by its ID',
+    deprecationReason: 'Query via user instead',
   })
   async unavailability(
     @Loader(UnavailabilityLoader)
@@ -37,6 +38,7 @@ export class UnavailabilityResolver {
 
   @Query(() => UnavailabilityListOutput, {
     description: 'Look up unavailabilities by user id',
+    deprecationReason: 'Query via user instead',
   })
   async unavailabilities(
     @AnonSession() session: Session,
@@ -51,6 +53,7 @@ export class UnavailabilityResolver {
 
   @Mutation(() => CreateUnavailabilityOutput, {
     description: 'Create an unavailability',
+    deprecationReason: `This is unfinished functionality, don't use`,
   })
   async createUnavailability(
     @LoggedInSession() session: Session,
@@ -62,6 +65,7 @@ export class UnavailabilityResolver {
 
   @Mutation(() => UpdateUnavailabilityOutput, {
     description: 'Update an unavailability',
+    deprecationReason: `This is unfinished functionality, don't use`,
   })
   async updateUnavailability(
     @LoggedInSession() session: Session,
@@ -73,6 +77,7 @@ export class UnavailabilityResolver {
 
   @Mutation(() => DeleteUnavailabilityOutput, {
     description: 'Delete an unavailability',
+    deprecationReason: `This is unfinished functionality, don't use`,
   })
   async deleteUnavailability(
     @LoggedInSession() session: Session,

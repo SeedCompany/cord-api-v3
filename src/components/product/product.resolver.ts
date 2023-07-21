@@ -38,7 +38,6 @@ import { Book, labelOfScriptureRanges } from '../scripture';
 import {
   AnyProduct,
   CreateOtherProduct,
-  CreateProductInput,
   CreateProductOutput,
   DeleteProductOutput,
   MethodologyToApproach,
@@ -49,7 +48,6 @@ import {
   ProductListInput,
   ProductListOutput,
   UpdateOtherProduct,
-  UpdateProductInput,
   UpdateProductOutput,
 } from './dto';
 
@@ -218,20 +216,6 @@ export class ProductResolver {
   }
 
   @Mutation(() => CreateProductOutput, {
-    description: 'Create a product entry',
-    deprecationReason:
-      'Use `createDirectScriptureProduct` or `createDerivativeScriptureProduct` instead',
-  })
-  async createProduct(
-    @LoggedInSession() session: Session,
-    @Args('input') { product: input }: CreateProductInput,
-  ): Promise<CreateProductOutput> {
-    return {
-      product: await this.productService.create(input, session),
-    };
-  }
-
-  @Mutation(() => CreateProductOutput, {
     description: 'Create a direct scripture product',
   })
   async createDirectScriptureProduct(
@@ -261,19 +245,6 @@ export class ProductResolver {
     @Args('input') input: CreateOtherProduct,
   ): Promise<CreateProductOutput> {
     const product = await this.productService.create(input, session);
-    return { product };
-  }
-
-  @Mutation(() => UpdateProductOutput, {
-    description: 'Update a product entry',
-    deprecationReason:
-      'Use `updateDirectScriptureProduct` or `updateDerivativeScriptureProduct` instead',
-  })
-  async updateProduct(
-    @LoggedInSession() session: Session,
-    @Args('input') { product: input }: UpdateProductInput,
-  ): Promise<UpdateProductOutput> {
-    const product = await this.productService.update(input, session);
     return { product };
   }
 

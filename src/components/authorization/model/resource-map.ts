@@ -19,7 +19,6 @@ import {
 import { Film } from '../../film/dto';
 import { FundingAccount } from '../../funding-account/dto';
 import { EthnologueLanguage, Language } from '../../language/dto';
-import { LiteracyMaterial } from '../../literacy-material/dto';
 import { Location } from '../../location/dto';
 import { Organization } from '../../organization/dto';
 import { Partner } from '../../partner/dto';
@@ -44,7 +43,6 @@ import {
   TranslationProject,
 } from '../../project/dto';
 import { ProjectMember } from '../../project/project-member/dto';
-import { Song } from '../../song/dto';
 import { Story } from '../../story/dto';
 import { User } from '../../user/dto';
 import { Education } from '../../user/education/dto';
@@ -76,7 +74,6 @@ export const LegacyResourceMap = {
   InternshipEngagement,
   Language,
   LanguageEngagement,
-  LiteracyMaterial,
   Location,
   Organization,
   Partner,
@@ -95,7 +92,6 @@ export const LegacyResourceMap = {
   FinancialReport,
   NarrativeReport,
   ProjectChangeRequest,
-  Song,
   Story,
   Unavailability,
   User,

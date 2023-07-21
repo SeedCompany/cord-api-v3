@@ -37,6 +37,7 @@ export class BudgetResolver {
 
   @Query(() => Budget, {
     description: 'Look up a budget by its ID',
+    deprecationReason: 'Query via project instead',
   })
   async budget(
     @Loader(BudgetLoader) budgets: LoaderOf<BudgetLoader>,
@@ -47,6 +48,7 @@ export class BudgetResolver {
 
   @Query(() => BudgetListOutput, {
     description: 'Look up budgets by projectId',
+    deprecationReason: 'Query via project instead',
   })
   async budgets(
     @AnonSession() session: Session,
@@ -75,6 +77,7 @@ export class BudgetResolver {
 
   @Mutation(() => CreateBudgetOutput, {
     description: 'Create a budget',
+    deprecationReason: `This has always been undefined behavior, don't use`,
   })
   async createBudget(
     @LoggedInSession() session: Session,
@@ -97,6 +100,7 @@ export class BudgetResolver {
 
   @Mutation(() => DeleteBudgetOutput, {
     description: 'Delete a budget',
+    deprecationReason: `This has always been undefined behavior, don't use`,
   })
   async deleteBudget(
     @LoggedInSession() session: Session,

@@ -8,7 +8,6 @@ import { FieldZone } from '../../field-zone/dto';
 import { Film } from '../../film/dto';
 import { FundingAccount } from '../../funding-account/dto';
 import { Language } from '../../language/dto';
-import { LiteracyMaterial } from '../../literacy-material/dto';
 import { Location } from '../../location/dto';
 import { Organization } from '../../organization/dto';
 import { Partner } from '../../partner/dto';
@@ -29,7 +28,6 @@ import {
   IProject as Project,
   TranslationProject,
 } from '../../project/dto';
-import { Song } from '../../song/dto';
 import { Story } from '../../story/dto';
 import { User } from '../../user/dto';
 
@@ -46,8 +44,6 @@ const publicSearchable = {
   Film,
   Story,
   EthnoArt,
-  LiteracyMaterial,
-  Song,
   Location,
   FieldZone,
   FieldRegion,
