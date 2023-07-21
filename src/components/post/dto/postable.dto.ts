@@ -12,7 +12,7 @@ import { Post } from './post.dto';
   `,
   implements: Resource,
 })
-export abstract class Postable extends Resource {
+export abstract class Postable {
   static readonly Props: string[] = keysOf<Postable>();
   static readonly SecuredProps: string[] = keysOf<SecuredProps<Postable>>();
   static readonly Relations = {

@@ -122,11 +122,13 @@ export class PostService {
 
   async delete(id: ID, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
-    this.privileges.for(session, Post, object).verifyCan('delete');
 
     if (!object) {
       throw new NotFoundException('Could not find post', 'post.id');
     }
+
+    const perms = await this.getPermissionsFromResource(id, session);
+    perms.verifyCan('delete');
 
     try {
       await this.repo.deleteNode(object);
