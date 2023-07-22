@@ -18,7 +18,7 @@ import { ProgressReportStatus } from '../../components/progress-report/dto/progr
 import type { TransitionName as ProgressReportTransitionName } from '../../components/progress-report/workflow/transitions';
 import { DefaultTimezoneWrapper } from '../email/templates/formatted-date-time';
 import { FrontendUrlWrapper } from '../email/templates/frontend-url';
-import { LogLevel } from '../logger';
+import { LogLevel } from '../logger/logger.interface';
 import { EnvironmentService } from './environment.service';
 
 const dur = Duration.from;
