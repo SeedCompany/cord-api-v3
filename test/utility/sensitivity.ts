@@ -5,6 +5,7 @@ import {
   ResourceShape,
   Secured,
   SecuredResource,
+  SecuredResourceKey,
   Sensitivity,
 } from '~/common';
 import { Role } from '../../src/components/authorization';
@@ -27,12 +28,12 @@ type InstanceOf<T> = T extends ResourceShape<any> ? T['prototype'] : never;
 
 export type ResourceArrayRelation<
   TResourceStatic extends ResourceShape<any>,
-  Rel extends keyof TResourceStatic['Relations'] & string,
-> = InstanceOf<ArrayItem<TResourceStatic['Relations'][Rel]>>;
+  Rel extends SecuredResourceKey<TResourceStatic>,
+> = InstanceOf<ArrayItem<SecuredResource<TResourceStatic>[Rel]>>;
 
 export async function expectSensitiveRelationList<
   TResourceStatic extends ResourceShape<any>,
-  Prop extends keyof TResourceStatic['Relations'] & string,
+  Prop extends SecuredResourceKey<TResourceStatic>,
 >({
   app,
   role,

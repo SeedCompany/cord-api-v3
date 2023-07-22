@@ -40,15 +40,16 @@ export abstract class SecuredUserStatus extends SecuredEnum(UserStatus) {}
 export class User extends PinnableResource {
   static readonly Props = keysOf<User>();
   static readonly SecuredProps = keysOf<SecuredProps<User>>();
-  static readonly Relations = {
-    education: [Education],
-    organization: Organization,
-    partner: Partner,
-    unavailability: [Unavailability],
-    locations: [Location],
-    knownLanguage: [KnownLanguage],
-    projects: [Project],
-  } satisfies ResourceRelationsShape;
+  static readonly Relations = () =>
+    ({
+      education: [Education],
+      organization: Organization,
+      partner: Partner,
+      unavailability: [Unavailability],
+      locations: [Location],
+      knownLanguage: [KnownLanguage],
+      projects: [Project],
+    } satisfies ResourceRelationsShape);
 
   @Field()
   @DbUnique('EmailAddress')
