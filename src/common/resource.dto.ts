@@ -63,7 +63,10 @@ export type ResourceShape<T> = AbstractClassType<T> & {
   // An optional list of props that exist on the BaseNode in the DB.
   // Default should probably be considered the props on Resource class.
   BaseNodeProps?: string[];
-  Relations?: Record<string, any>; // Many<ResourceShape<any>>
+  Relations?: Record<
+    string,
+    ResourceShape<any> | [ResourceShape<any>] | undefined
+  >;
   /**
    * Define this resource as being a child of another.
    * This means it's _created_ and scoped under this other resource.
@@ -205,10 +208,12 @@ export class EnhancedResource<T extends ResourceShape<any>> {
     EnhancedRelation<T>
   > {
     return new Map(
-      Object.entries(this.type.Relations ?? {}).map(([rawName, type]) => {
+      Object.entries(this.type.Relations ?? {}).map(([rawName, rawType]) => {
         const name = rawName as keyof T['Relations'] & string;
-        const list = Array.isArray(type);
-        type = list ? type[0] : type;
+        const list = Array.isArray(rawType);
+        const type: ResourceShape<any> | undefined = list
+          ? rawType[0]!
+          : rawType;
         const resource: EnhancedResource<any> | undefined =
           type && isResourceClass(type) ? EnhancedResource.of(type) : undefined;
         const rel: EnhancedRelation<T> = { name, list, type, resource };

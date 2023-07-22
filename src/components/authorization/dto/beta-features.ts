@@ -13,8 +13,8 @@ export class BetaFeatures {
 
   // Declaring as relations as well so privileges can use.
   static readonly Relations = {
-    projectChangeRequests: '',
-    newProgressReports: '',
+    projectChangeRequests: undefined,
+    newProgressReports: undefined,
   } satisfies ResourceRelationsShape;
 
   @Field()

@@ -80,7 +80,7 @@ class Project extends Interfaces {
     budget: Budget, // currentBudget
     engagement: [Engagement], // why singular
     // edge case because it's writable for internships but not secured
-    sensitivity: Sensitivity,
+    sensitivity: undefined,
     ...Postable.Relations,
     changeRequests: [ProjectChangeRequest],
     ...Commentable.Relations,
