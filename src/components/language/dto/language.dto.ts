@@ -11,6 +11,7 @@ import {
   IntersectionType,
   NameField,
   Resource,
+  ResourceRelationsShape,
   SecuredBoolean,
   SecuredDate,
   SecuredInt,
@@ -88,7 +89,7 @@ export class Language extends Interfaces {
     ethnologue: EthnologueLanguage,
     locations: [Location], // a child list but not creating deleting...does it still count?
     ...Postable.Relations,
-  };
+  } satisfies ResourceRelationsShape;
 
   @NameField({
     description: `The real language name`,

@@ -13,6 +13,7 @@ import {
   IntersectionType,
   parentIdMiddleware,
   Resource,
+  ResourceRelationsShape,
   Secured,
   SecuredBoolean,
   SecuredDateNullable,
@@ -148,7 +149,7 @@ export class LanguageEngagement extends Engagement {
   static readonly Relations = {
     // why is this singular?
     product: [Product],
-  };
+  } satisfies ResourceRelationsShape;
   static readonly Parent = import('../../project/dto').then(
     (m) => m.TranslationProject,
   );

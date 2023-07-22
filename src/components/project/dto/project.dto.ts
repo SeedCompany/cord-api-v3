@@ -15,6 +15,7 @@ import {
   parentIdMiddleware,
   resolveByTypename,
   Resource,
+  ResourceRelationsShape,
   Secured,
   SecuredBoolean,
   SecuredDateNullable,
@@ -83,7 +84,7 @@ class Project extends Interfaces {
     ...Postable.Relations,
     changeRequests: [ProjectChangeRequest],
     ...Commentable.Relations,
-  };
+  } satisfies ResourceRelationsShape;
 
   @Field(() => ProjectType)
   readonly type: ProjectType;

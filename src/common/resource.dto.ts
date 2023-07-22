@@ -72,6 +72,8 @@ export type ResourceShape<T> = AbstractClassType<T> & {
   Parent?: Promise<any> | 'dynamic';
 };
 
+export type ResourceRelationsShape = ResourceShape<any>['Relations'];
+
 /**
  * A helper class to query the static info of a resource in a typed way.
  */

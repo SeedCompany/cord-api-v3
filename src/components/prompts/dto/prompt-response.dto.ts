@@ -7,6 +7,7 @@ import {
   IdField,
   IdOf,
   Resource,
+  ResourceRelationsShape,
   RichTextDocument,
   RichTextField,
   Secured,
@@ -62,7 +63,7 @@ export class PromptVariantResponse<
   static Relations = {
     // So the policies can specify
     responses: [VariantResponse],
-  };
+  } satisfies ResourceRelationsShape;
 
   readonly creator: Secured<IdOf<User>>;
 

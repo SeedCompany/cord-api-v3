@@ -7,6 +7,7 @@ import {
   ID,
   IntersectionType,
   Resource,
+  ResourceRelationsShape,
   Secured,
   SecuredBoolean,
   SecuredEnumList,
@@ -44,7 +45,7 @@ export class Partner extends Interfaces {
   static readonly Relations = {
     projects: [IProject],
     ...Postable.Relations,
-  };
+  } satisfies ResourceRelationsShape;
 
   readonly organization: Secured<ID>;
 

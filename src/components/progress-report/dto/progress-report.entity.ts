@@ -3,6 +3,7 @@ import { keys as keysOf } from 'ts-transformer-keys';
 import {
   Calculated,
   parentIdMiddleware,
+  ResourceRelationsShape,
   SecuredProperty,
   SecuredProps,
 } from '~/common';
@@ -31,7 +32,7 @@ export class ProgressReport extends IPeriodicReport {
     highlights: [ProgressReportHighlight],
     teamNews: [ProgressReportTeamNews],
     communityStories: [ProgressReportCommunityStory],
-  };
+  } satisfies ResourceRelationsShape;
 
   declare readonly type: ReportType.Progress;
 

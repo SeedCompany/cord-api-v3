@@ -3,6 +3,7 @@ import { keys as keysOf } from 'ts-transformer-keys';
 import {
   ID,
   Resource,
+  ResourceRelationsShape,
   SecuredProps,
   SetUnsecuredType,
   UnsecuredDto,
@@ -19,7 +20,7 @@ export class CommentThread extends Resource {
     keysOf<SecuredProps<CommentThread>>();
   static readonly Relations = {
     comments: [Comment],
-  };
+  } satisfies ResourceRelationsShape;
   static readonly Parent = 'dynamic';
 
   @Field(() => Comment)

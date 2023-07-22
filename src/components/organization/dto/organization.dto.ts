@@ -4,6 +4,7 @@ import {
   DbUnique,
   NameField,
   Resource,
+  ResourceRelationsShape,
   SecuredProperty,
   SecuredProps,
   SecuredString,
@@ -20,7 +21,7 @@ export class Organization extends Resource {
   static readonly SecuredProps = keysOf<SecuredProps<Organization>>();
   static readonly Relations = {
     locations: [Location],
-  };
+  } satisfies ResourceRelationsShape;
 
   @NameField()
   @DbUnique('OrgName')

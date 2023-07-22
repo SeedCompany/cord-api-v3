@@ -6,6 +6,7 @@ import {
   IntersectionType,
   NameField,
   Resource,
+  ResourceRelationsShape,
   SecuredEnum,
   SecuredProperty,
   SecuredProps,
@@ -47,7 +48,7 @@ export class User extends PinnableResource {
     locations: [Location],
     knownLanguage: [KnownLanguage],
     projects: [Project],
-  };
+  } satisfies ResourceRelationsShape;
 
   @Field()
   @DbUnique('EmailAddress')
