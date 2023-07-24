@@ -1,5 +1,5 @@
 import { Field, ObjectType } from '@nestjs/graphql';
-import { Country } from 'iso-3166-1/dist/iso-3166';
+import type { Country } from 'iso-3166-1/dist/iso-3166.js';
 
 @ObjectType({
   description: 'An entry of the ISO 3166-1 standard list for countries',
