@@ -1,4 +1,4 @@
-import { Field, InputType, Int, ObjectType } from '@nestjs/graphql';
+import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Transform, Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { uniq } from 'lodash';
@@ -76,9 +76,6 @@ export abstract class UpdateProject {
 
   @Field({ nullable: true })
   readonly presetInventory?: boolean;
-
-  @Field(() => Int, { nullable: true })
-  readonly anticipatedEngagementCount?: number;
 }
 
 @InputType()

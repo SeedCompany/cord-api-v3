@@ -85,14 +85,12 @@ export class EngagementService {
   ): Promise<LanguageEngagement> {
     const { languageId, projectId } = input;
 
-    if (languageId) {
-      await this.verifyRelationshipEligibility(
-        projectId,
-        ProjectType.Translation,
-        changeset,
-        languageId,
-      );
-    }
+    await this.verifyRelationshipEligibility(
+      projectId,
+      ProjectType.Translation,
+      changeset,
+      languageId,
+    );
 
     await this.verifyCreateEngagement(projectId, session);
 
@@ -109,7 +107,12 @@ export class EngagementService {
     });
 
     const { id, pnpId } = await this.repo.createLanguageEngagement(
-      input,
+      {
+        ...input,
+        nameWhenUnknown: languageId
+          ? undefined
+          : await this.determineEngagementName(projectId, 'Language'),
+      },
       changeset,
     );
 
@@ -134,6 +137,17 @@ export class EngagementService {
 
     return (await this.secure(event.engagement, session)) as LanguageEngagement;
   }
+
+  determineEngagementName = async (
+    projectId: ID,
+    type: 'Language' | 'Intern',
+  ) => {
+    const unknownEngagement = (await this.listUnknownByProjectId(projectId))[0];
+    const lastEngNameNumber = unknownEngagement?.name.split(' ')[1]; // there are only two: 'Language/Internship' and 'some number'
+    return `${type} ${
+      lastEngNameNumber ? parseInt(lastEngNameNumber) + 1 : '1'
+    }`;
+  };
 
   async createInternshipEngagement(
     input: CreateInternshipEngagement,
@@ -164,7 +178,12 @@ export class EngagementService {
     let growthPlanId;
     try {
       ({ id, growthPlanId } = await this.repo.createInternshipEngagement(
-        input,
+        {
+          ...input,
+          nameWhenUnknown: internId
+            ? undefined
+            : await this.determineEngagementName(projectId, 'Intern'),
+        },
         changeset,
       ));
     } catch (e) {
@@ -344,7 +363,7 @@ export class EngagementService {
       changes,
     );
 
-    const { pnp, ...simpleChanges } = changes;
+    const { pnp, languageId, ...simpleChanges } = changes;
 
     await this.files.updateDefinedFile(
       object.pnp,
@@ -353,10 +372,21 @@ export class EngagementService {
       session,
     );
 
+    if (languageId) {
+      await this.verifyNoDuplication(
+        input.id,
+        languageId,
+        ProjectType.Translation,
+      );
+      await this.repo.updateLanguage(input.id, languageId);
+    }
     try {
       await this.repo.updateLanguageProperties(
         object,
-        simpleChanges,
+        {
+          ...simpleChanges,
+          nameWhenUnknown: languageId ? null : object.nameWhenUnknown.value,
+        },
         changeset,
       );
     } catch (exception) {
@@ -408,8 +438,13 @@ export class EngagementService {
       'engagement',
     );
 
-    const { mentorId, countryOfOriginId, growthPlan, ...simpleChanges } =
-      changes;
+    const {
+      mentorId,
+      countryOfOriginId,
+      growthPlan,
+      internId,
+      ...simpleChanges
+    } = changes;
 
     await this.files.updateDefinedFile(
       object.growthPlan,
@@ -418,18 +453,29 @@ export class EngagementService {
       session,
     );
 
+    if (internId) {
+      await this.verifyNoDuplication(
+        input.id,
+        internId,
+        ProjectType.Internship,
+      );
+      await this.repo.updateIntern(input.id, internId);
+    }
+
     try {
+      if (countryOfOriginId) {
+        await this.repo.updateCountryOfOrigin(input.id, countryOfOriginId);
+      }
       if (mentorId) {
         await this.repo.updateMentor(input.id, mentorId);
       }
 
-      if (countryOfOriginId) {
-        await this.repo.updateCountryOfOrigin(input.id, countryOfOriginId);
-      }
-
       await this.repo.updateInternshipProperties(
         object,
-        simpleChanges,
+        {
+          ...simpleChanges,
+          nameWhenUnknown: internId ? null : object.nameWhenUnknown.value,
+        },
         changeset,
       );
     } catch (exception) {
@@ -502,6 +548,10 @@ export class EngagementService {
     return await mapListResults(results, (dto) => this.secure(dto, session));
   }
 
+  async listUnknownByProjectId(projectId: ID) {
+    return await this.repo.listUnknownNamesByProjectId(projectId);
+  }
+
   async listAllByProjectId(projectId: ID, session: Session) {
     return await this.repo.listAllByProjectId(projectId, session);
   }
@@ -543,15 +593,37 @@ export class EngagementService {
     return ids.length > 0;
   }
 
+  protected async verifyNoDuplication(
+    engagementId: ID,
+    langOrInternId: ID,
+    type: ProjectType,
+  ) {
+    const isTranslation = type === ProjectType.Translation;
+    const property = isTranslation ? 'language' : 'intern';
+    const result = await this.repo.verifyNoDuplication(
+      engagementId,
+      isTranslation,
+      property,
+      langOrInternId,
+    );
+    const label = isTranslation ? 'language' : 'person';
+    if (result?.projectId) {
+      throw new DuplicateException(
+        `engagement.${property}Id`,
+        `Engagement for this project and ${label} already exists`,
+      );
+    }
+  }
+
   protected async verifyRelationshipEligibility(
     projectId: ID,
     type: ProjectType,
     changeset?: ID,
     otherId?: ID,
-    nameWhenUnknown?: string,
   ): Promise<void> {
     const isTranslation = type === ProjectType.Translation;
     const property = isTranslation ? 'language' : 'intern';
+
     const result = await this.repo.verifyRelationshipEligibility(
       projectId,
       isTranslation,
@@ -586,7 +658,9 @@ export class EngagementService {
       );
     }
 
-    if (result.engagement) {
+    // This could just be another unknown engagement, so make sure that
+    // otherId is defined for this check.
+    if (result.engagement && otherId) {
       throw new DuplicateException(
         `engagement.${property}Id`,
         `Engagement for this project and ${label} already exists`,

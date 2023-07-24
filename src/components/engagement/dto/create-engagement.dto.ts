@@ -33,13 +33,7 @@ export abstract class CreateEngagement {
   @Field(() => EngagementStatus, { nullable: true })
   readonly status?: EngagementStatus;
 
-  @Field({
-    nullable: true,
-    description: stripIndent`
-      User can set when the language or intern for the 
-      engagement is unknown as of yet.
-    `,
-  })
+  // Used for API when generating the name if the language/intern is not known yet.
   readonly nameWhenUnknown?: string;
 }
 

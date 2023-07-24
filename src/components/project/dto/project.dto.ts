@@ -19,7 +19,6 @@ import {
   SecuredBoolean,
   SecuredDateNullable,
   SecuredDateTime,
-  SecuredIntNullable,
   SecuredProps,
   SecuredString,
   SecuredStringNullable,
@@ -150,18 +149,6 @@ class Project extends Interfaces {
   readonly financialReportPeriod: SecuredReportPeriod;
 
   readonly rootDirectory: Secured<ID | undefined>;
-
-  @Field({
-    description: stripIndent`
-      Often when a Project is in Early Conversations and Concept Development, we have an idea of how
-      many Engagements be a part of the Project, but don't knwo the exact Languages, People,
-      or Partners who will be Engaged.
-
-      This captures the number of anticipated engagements so that Leadership can know what may be coming
-      in future years and can forecast financial and personnel needs. 
-    `,
-  })
-  readonly anticipatedEngagementCount: SecuredIntNullable;
 
   @Field({
     description: stripIndent`

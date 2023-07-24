@@ -85,11 +85,12 @@ class Engagement extends ChangesetAwareResource {
   @Field()
   readonly disbursementCompleteDate: SecuredDateNullable;
 
+  @Calculated()
   @Field({
     description: stripIndent`
-    Set when we know what kind of engagement this is, but not
-    specifically what this is engaged to.
-    This can only be set when the id this is engaged to is not defined. 
+    Automatically set when we know what kind of engagement this is, but not
+    specifically what language/intern this is engaged to.
+    This is only set when the id this is engaged to is not defined. 
     For example, if this is a language engagement but the language is 
     unknown, the language ID would be null and this value would be set.
     Once an ID for language is set, this value would be set to null again.`,

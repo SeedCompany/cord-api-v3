@@ -308,6 +308,54 @@ export class EngagementRepository extends CommonRepository {
       .run();
   }
 
+  async updateIntern(id: ID, internId: ID) {
+    await this.db
+      .query()
+      .match([node('newInternUser', 'User', { id: internId })])
+      .match([node('internshipEngagement', 'InternshipEngagement', { id })])
+      .optionalMatch([
+        node('internshipEngagement'),
+        relation('out', 'rel', 'intern', ACTIVE),
+        node('oldInternUser', 'User'),
+      ])
+      .set({ values: { rel: { active: false } } })
+      .create([
+        node('internshipEngagement'),
+        relation('out', '', 'intern', {
+          active: true,
+          createdAt: DateTime.local(),
+        }),
+        node('newInternUser'),
+      ])
+      .return('internshipEngagement.id as id')
+      .logIt()
+      .run();
+  }
+
+  async updateLanguage(id: ID, languageId: ID) {
+    await this.db
+      .query()
+      .match([node('newLanguage', 'Language', { id: languageId })])
+      .match([node('languageEngagement', 'LanguageEngagement', { id })])
+      .optionalMatch([
+        node('languageEngagement'),
+        relation('out', 'rel', 'language', ACTIVE),
+        node('oldLanguage', 'Language'),
+      ])
+      .set({ values: { rel: { active: false } } })
+      .create([
+        node('languageEngagement'),
+        relation('out', '', 'language', {
+          active: true,
+          createdAt: DateTime.local(),
+        }),
+        node('newLanguage'),
+      ])
+      .return('languageEngagement.id as id')
+      .logIt()
+      .run();
+  }
+
   async updateCountryOfOrigin(id: ID, countryOfOriginId: ID) {
     await this.db
       .query()
@@ -405,6 +453,26 @@ export class EngagementRepository extends CommonRepository {
     return result!; // result from paginate() will always have 1 row.
   }
 
+  async listUnknownNamesByProjectId(projectId: ID) {
+    return await this.db
+      .query()
+      .match([
+        node('project', 'Project', { id: projectId }),
+        relation('out', '', 'engagement', ACTIVE),
+        node('node', 'Engagement'),
+      ])
+      .raw(`MATCH (node) WHERE NOT (node)-[:language|intern]->()`)
+      .match([
+        node('node'),
+        relation('out', 'r', 'nameWhenUnknown', ACTIVE),
+        node('name', 'Property'),
+      ])
+      .return<{ name: string }>('name.value as name')
+      .orderBy([['node.createdAt', 'DESC']])
+      .logIt()
+      .run();
+  }
+
   async listAllByProjectId(projectId: ID, session: Session) {
     return await this.db
       .query()
@@ -415,6 +483,7 @@ export class EngagementRepository extends CommonRepository {
       ])
       .apply(this.hydrate(session))
       .map('dto')
+      .logIt()
       .run();
   }
 
@@ -441,6 +510,30 @@ export class EngagementRepository extends CommonRepository {
     return rows.map((r) => r.id);
   }
 
+  async verifyNoDuplication(
+    engagementId: ID,
+    isTranslation: boolean,
+    property: 'language' | 'intern',
+    langOrInternId: ID,
+  ) {
+    return await this.db
+      .query()
+      .optionalMatch([
+        node('node', 'Engagement', { id: engagementId }),
+        relation('in', '', 'engagement'),
+        node('project', 'Project'),
+        relation('out', '', 'engagement'),
+        node('maybeDup', 'Engagement'),
+        relation('out', '', property, ACTIVE),
+        node('langOrIntern', isTranslation ? 'Language' : 'User', {
+          id: langOrInternId,
+        }),
+      ])
+      .return<{ projectId: ID }>(['project.id as projectId'])
+      .logIt()
+      .first();
+  }
+
   async verifyRelationshipEligibility(
     projectId: ID,
     isTranslation: boolean,
@@ -452,9 +545,13 @@ export class EngagementRepository extends CommonRepository {
       .query()
       .optionalMatch(node('project', 'Project', { id: projectId }))
       .optionalMatch(
-        node('other', isTranslation ? 'Language' : 'User', {
-          id: otherId,
-        }),
+        otherId
+          ? [
+              node('other', isTranslation ? 'Language' : 'User', {
+                id: otherId,
+              }),
+            ]
+          : [],
       )
       .optionalMatch([
         node('project'),

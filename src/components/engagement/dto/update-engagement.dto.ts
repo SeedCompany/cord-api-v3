@@ -43,9 +43,6 @@ export abstract class UpdateEngagement {
 
   @RichTextField({ nullable: true })
   readonly description?: RichTextDocument | null;
-
-  @Field({ nullable: true })
-  readonly nameWhenUnknown?: string;
 }
 
 @InputType()
