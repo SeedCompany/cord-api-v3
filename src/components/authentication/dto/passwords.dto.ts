@@ -1,8 +1,6 @@
 import { ArgsType, Field, InputType, ObjectType } from '@nestjs/graphql';
-import { Transform } from 'class-transformer';
 import { MinLength } from 'class-validator';
-import { toLower } from 'lodash';
-import { IsEmail, MutationPlaceholderOutput } from '../../../common';
+import { EmailField, MutationPlaceholderOutput } from '~/common';
 
 @InputType()
 export abstract class ResetPasswordInput {
@@ -31,9 +29,7 @@ export abstract class ChangePasswordOutput extends MutationPlaceholderOutput {}
 
 @ArgsType()
 export abstract class ForgotPasswordArgs {
-  @Field()
-  @IsEmail()
-  @Transform(({ value }) => toLower(value))
+  @EmailField()
   readonly email: string;
 }
 
