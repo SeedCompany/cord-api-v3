@@ -87,7 +87,6 @@ import {
           .whenAny(member, sensMediumOrLower).read,
       ])
       .children((c) => c.posts.read.create),
-    r.Post.read,
     r.ProjectMember.read.when(member).edit.create.delete,
     [r.StepProgress].flatMap((it) => [
       it.whenAll(member, variant('partner')).read,
