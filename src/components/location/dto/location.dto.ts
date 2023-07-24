@@ -1,5 +1,6 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
+import { RegisterResource } from '~/core/resources';
 import {
   DbLabel,
   DbUnique,
@@ -21,6 +22,7 @@ import { LocationType } from './location-type.enum';
 })
 export abstract class SecuredLocationType extends SecuredEnum(LocationType) {}
 
+@RegisterResource()
 @ObjectType({
   implements: [Resource],
 })
@@ -51,3 +53,9 @@ export class Location extends Resource {
   description: SecuredProperty.descriptionFor('a location'),
 })
 export class SecuredLocation extends SecuredProperty(Location) {}
+
+declare module '~/core/resources/map' {
+  interface ResourceMap {
+    Location: typeof Location;
+  }
+}
