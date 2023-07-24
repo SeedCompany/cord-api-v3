@@ -54,7 +54,7 @@ export class PolicyExecutor {
       const condition = isChildRelation
         ? grants.childRelations[prop]?.[action]
         : prop
-        ? (grants.propLevel[prop] ?? grants.objectLevel)[action]
+        ? grants.propLevel[prop]?.[action] ?? grants.objectLevel[action]
         : grants.objectLevel[action];
 
       if (condition == null) {
