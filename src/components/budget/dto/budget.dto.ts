@@ -5,6 +5,7 @@ import {
   DbLabel,
   IntersectionType,
   Resource,
+  ResourceRelationsShape,
   SecuredProperty,
   SecuredProps,
   Sensitivity,
@@ -25,7 +26,7 @@ export class Budget extends IntersectionType(ChangesetAware, Resource) {
   static readonly SecuredProps = keysOf<SecuredProps<Budget>>();
   static readonly Relations = {
     records: [BudgetRecord],
-  };
+  } satisfies ResourceRelationsShape;
   static readonly Parent = import('../../project/dto').then((m) => m.IProject);
 
   @Field(() => IProject)

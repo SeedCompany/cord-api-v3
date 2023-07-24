@@ -7,6 +7,7 @@ import {
   ID,
   IntersectionType,
   Resource,
+  ResourceRelationsShape,
   Secured,
   SecuredBoolean,
   SecuredEnumList,
@@ -41,10 +42,11 @@ export abstract class SecuredFinancialReportingTypes extends SecuredEnumList(
 export class Partner extends Interfaces {
   static readonly Props = keysOf<Partner>();
   static readonly SecuredProps = keysOf<SecuredProps<Partner>>();
-  static readonly Relations = {
-    projects: [IProject],
-    ...Postable.Relations,
-  };
+  static readonly Relations = () =>
+    ({
+      projects: [IProject],
+      ...Postable.Relations,
+    } satisfies ResourceRelationsShape);
 
   readonly organization: Secured<ID>;
 

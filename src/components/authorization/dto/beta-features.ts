@@ -1,6 +1,6 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { Calculated } from '~/common';
+import { Calculated, ResourceRelationsShape } from '~/common';
 import { Granter, ResourceGranter } from '../policy';
 
 // TODO move somewhere else
@@ -13,9 +13,9 @@ export class BetaFeatures {
 
   // Declaring as relations as well so privileges can use.
   static readonly Relations = {
-    projectChangeRequests: '',
-    newProgressReports: '',
-  };
+    projectChangeRequests: undefined,
+    newProgressReports: undefined,
+  } satisfies ResourceRelationsShape;
 
   @Field()
   projectChangeRequests: boolean;

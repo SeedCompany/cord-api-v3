@@ -1,5 +1,5 @@
 import { keys as keysOf } from 'ts-transformer-keys';
-import { Calculated, mapFromList } from '~/common';
+import { Calculated, mapFromList, ResourceRelationsShape } from '~/common';
 import { Role } from './role.dto';
 
 /**
@@ -21,5 +21,5 @@ export class AssignableRoles {
   static Relations = mapFromList(keysOf<Record<Role, boolean>>(), (role) => [
     role,
     undefined,
-  ]);
+  ]) satisfies ResourceRelationsShape;
 }

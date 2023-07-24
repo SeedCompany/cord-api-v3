@@ -89,6 +89,12 @@ const namingConvention = [
     format: ['camelCase'],
     leadingUnderscore: 'forbid',
   },
+  {
+    selector: 'memberLike',
+    modifiers: ['readonly', 'static'],
+    format: ['camelCase', 'PascalCase'],
+    leadingUnderscore: 'forbid',
+  },
   // allow `__typename` exception since it's a GQL standard.
   {
     selector: 'property',

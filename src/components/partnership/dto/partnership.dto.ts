@@ -6,6 +6,7 @@ import {
   ID,
   IntersectionType,
   Resource,
+  ResourceRelationsShape,
   Secured,
   SecuredBoolean,
   SecuredDateNullable,
@@ -47,7 +48,7 @@ export class Partnership extends IntersectionType(ChangesetAware, Resource) {
   static readonly Relations = {
     // why is this here? We have a relation to partner, not org...
     organization: Organization,
-  };
+  } satisfies ResourceRelationsShape;
   static readonly Parent = import('../../project/dto').then((m) => m.IProject);
 
   readonly project: ID;

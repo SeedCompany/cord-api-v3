@@ -15,6 +15,7 @@ import {
   parentIdMiddleware,
   resolveByTypename,
   Resource,
+  ResourceRelationsShape,
   Secured,
   SecuredBoolean,
   SecuredDateNullable,
@@ -71,19 +72,20 @@ const Interfaces: Type<
 class Project extends Interfaces {
   static readonly Props: string[] = keysOf<Project>();
   static readonly SecuredProps: string[] = keysOf<SecuredProps<Project>>();
-  static readonly Relations = {
-    rootDirectory: Directory,
-    member: [ProjectMember], // why singular
-    otherLocations: [Location],
-    partnership: [Partnership], // why singular
-    budget: Budget, // currentBudget
-    engagement: [Engagement], // why singular
-    // edge case because it's writable for internships but not secured
-    sensitivity: Sensitivity,
-    ...Postable.Relations,
-    changeRequests: [ProjectChangeRequest],
-    ...Commentable.Relations,
-  };
+  static readonly Relations = () =>
+    ({
+      rootDirectory: Directory,
+      member: [ProjectMember], // why singular
+      otherLocations: [Location],
+      partnership: [Partnership], // why singular
+      budget: Budget, // currentBudget
+      engagement: [Engagement], // why singular
+      // edge case because it's writable for internships but not secured
+      sensitivity: undefined,
+      ...Postable.Relations,
+      changeRequests: [ProjectChangeRequest],
+      ...Commentable.Relations,
+    } satisfies ResourceRelationsShape);
 
   @Field(() => ProjectType)
   readonly type: ProjectType;
