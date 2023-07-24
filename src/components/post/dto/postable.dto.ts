@@ -10,7 +10,6 @@ import { Post } from './post.dto';
   description: stripIndent`
     An object that can be used to enable Post discussions on a Node.
   `,
-  implements: Resource,
 })
 export abstract class Postable {
   static readonly Props: string[] = keysOf<Postable>();
