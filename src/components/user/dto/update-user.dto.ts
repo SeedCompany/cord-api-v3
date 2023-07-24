@@ -1,14 +1,8 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Transform, Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { toLower, uniq } from 'lodash';
-import {
-  ID,
-  IdField,
-  IsEmail,
-  IsIanaTimezone,
-  NameField,
-} from '../../../common';
+import { uniq } from 'lodash';
+import { EmailField, ID, IdField, IsIanaTimezone, NameField } from '~/common';
 import { Role } from '../../authorization';
 import { UserStatus } from './user-status.enum';
 import { User } from './user.dto';
@@ -18,9 +12,7 @@ export abstract class UpdateUser {
   @IdField()
   readonly id: ID;
 
-  @Field(() => String, { nullable: true })
-  @IsEmail()
-  @Transform(({ value }) => toLower(value))
+  @EmailField({ nullable: true })
   readonly email?: string | null;
 
   @NameField({ nullable: true })

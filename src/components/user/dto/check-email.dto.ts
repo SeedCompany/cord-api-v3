@@ -1,12 +1,8 @@
-import { ArgsType, Field } from '@nestjs/graphql';
-import { Transform } from 'class-transformer';
-import { toLower } from 'lodash';
-import { IsEmail } from '../../../common';
+import { ArgsType } from '@nestjs/graphql';
+import { EmailField } from '~/common';
 
 @ArgsType()
 export abstract class CheckEmailArgs {
-  @Field()
-  @IsEmail()
-  @Transform(({ value }) => toLower(value))
+  @EmailField()
   readonly email: string;
 }

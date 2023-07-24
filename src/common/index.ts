@@ -38,6 +38,7 @@ export { Session, LoggedInSession, AnonSession } from './session';
 export * from './types';
 export * from './validators';
 export * from './name-field';
+export * from './email-field';
 export * from './id-field';
 export * from './url.field';
 export * from './object-view';
