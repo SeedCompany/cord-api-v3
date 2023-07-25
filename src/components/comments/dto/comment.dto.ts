@@ -1,6 +1,7 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
+import { RegisterResource } from '~/core/resources';
 import {
   DateTimeField,
   ID,
@@ -9,6 +10,7 @@ import {
   SecuredRichText,
 } from '../../../common';
 
+@RegisterResource()
 @ObjectType({
   implements: [Resource],
 })
@@ -28,4 +30,10 @@ export class Comment extends Resource {
 
   @DateTimeField()
   readonly modifiedAt: DateTime;
+}
+
+declare module '~/core/resources/map' {
+  interface ResourceMap {
+    Comment: typeof Comment;
+  }
 }

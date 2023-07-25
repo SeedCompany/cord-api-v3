@@ -1,7 +1,6 @@
 import { Budget, BudgetRecord } from '../../budget/dto';
 import { Ceremony } from '../../ceremony/dto';
 import { Changeset } from '../../changeset/dto';
-import { Comment, Commentable, CommentThread } from '../../comments/dto';
 import {
   IEngagement as Engagement,
   InternshipEngagement,
@@ -51,13 +50,10 @@ import { BetaFeatures } from '../dto/beta-features';
 
 /** @deprecated Use {@link import('~/core').ResourcesHost.getMap} instead */
 export const LegacyResourceMap = {
-  Commentable,
   Budget,
   BudgetRecord,
   Ceremony,
   Changeset,
-  Comment,
-  CommentThread,
   Directory,
   Education,
   Engagement,
