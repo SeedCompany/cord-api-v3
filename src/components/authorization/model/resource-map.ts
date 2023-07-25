@@ -1,4 +1,3 @@
-import { Changeset } from '../../changeset/dto';
 import {
   IEngagement as Engagement,
   InternshipEngagement,
@@ -7,12 +6,6 @@ import {
 import { EthnoArt } from '../../ethno-art/dto';
 import { FieldRegion } from '../../field-region/dto';
 import { FieldZone } from '../../field-zone/dto';
-import {
-  Directory,
-  File,
-  IFileNode as FileNode,
-  FileVersion,
-} from '../../file/dto';
 import { Film } from '../../film/dto';
 import { FundingAccount } from '../../funding-account/dto';
 import { EthnologueLanguage, Language } from '../../language/dto';
@@ -48,17 +41,12 @@ import { BetaFeatures } from '../dto/beta-features';
 
 /** @deprecated Use {@link import('~/core').ResourcesHost.getMap} instead */
 export const LegacyResourceMap = {
-  Changeset,
-  Directory,
   Education,
   Engagement,
   EthnoArt,
   EthnologueLanguage,
   FieldRegion,
   FieldZone,
-  File,
-  FileNode,
-  FileVersion,
   Film,
   FundingAccount,
   InternshipEngagement,
