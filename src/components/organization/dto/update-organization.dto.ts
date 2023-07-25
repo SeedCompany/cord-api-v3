@@ -12,6 +12,9 @@ export abstract class UpdateOrganization {
   @NameField({ nullable: true })
   readonly name?: string;
 
+  @NameField({ nullable: true })
+  readonly acronym?: string | null;
+
   @Field({ nullable: true })
   readonly address?: string;
 }
