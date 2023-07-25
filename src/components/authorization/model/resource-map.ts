@@ -1,4 +1,3 @@
-import { Budget, BudgetRecord } from '../../budget/dto';
 import { Ceremony } from '../../ceremony/dto';
 import { Changeset } from '../../changeset/dto';
 import {
@@ -50,8 +49,6 @@ import { BetaFeatures } from '../dto/beta-features';
 
 /** @deprecated Use {@link import('~/core').ResourcesHost.getMap} instead */
 export const LegacyResourceMap = {
-  Budget,
-  BudgetRecord,
   Ceremony,
   Changeset,
   Directory,

@@ -1,5 +1,6 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
+import { RegisterResource } from '~/core';
 import { BaseNode } from '~/core/database/results';
 import {
   DbLabel,
@@ -18,6 +19,7 @@ import { IProject } from '../../project/dto';
 import { BudgetRecord } from './budget-record.dto';
 import { BudgetStatus } from './budget-status.enum';
 
+@RegisterResource()
 @ObjectType({
   implements: [Resource, ChangesetAware],
 })
@@ -55,3 +57,9 @@ export class Budget extends IntersectionType(ChangesetAware, Resource) {
   description: SecuredProperty.descriptionFor('a budget'),
 })
 export class SecuredBudget extends SecuredProperty(Budget) {}
+
+declare module '~/core/resources/map' {
+  interface ResourceMap {
+    Budget: typeof Budget;
+  }
+}

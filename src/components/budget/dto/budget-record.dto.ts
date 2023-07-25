@@ -1,5 +1,6 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
+import { RegisterResource } from '~/core';
 import { BaseNode } from '~/core/database/results';
 import {
   ID,
@@ -16,6 +17,7 @@ import { ScopedRole } from '../../authorization';
 import { ChangesetAware } from '../../changeset/dto';
 import { Budget } from './budget.dto';
 
+@RegisterResource()
 @ObjectType({
   implements: [Resource, ChangesetAware],
 })
@@ -43,4 +45,10 @@ export class BudgetRecord extends IntersectionType(ChangesetAware, Resource) {
   // A list of non-global roles the requesting user has available for this object.
   // This is just a cache, to prevent extra db lookups within the same request.
   declare readonly scope: ScopedRole[];
+}
+
+declare module '~/core/resources/map' {
+  interface ResourceMap {
+    BudgetRecord: typeof BudgetRecord;
+  }
 }
