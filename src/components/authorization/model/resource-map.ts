@@ -1,8 +1,3 @@
-import {
-  IEngagement as Engagement,
-  InternshipEngagement,
-  LanguageEngagement,
-} from '../../engagement/dto';
 import { EthnoArt } from '../../ethno-art/dto';
 import { FieldRegion } from '../../field-region/dto';
 import { FieldZone } from '../../field-zone/dto';
@@ -34,24 +29,19 @@ import {
 import { ProjectMember } from '../../project/project-member/dto';
 import { Story } from '../../story/dto';
 import { User } from '../../user/dto';
-import { Education } from '../../user/education/dto';
 import { Unavailability } from '../../user/unavailability/dto';
 import { AssignableRoles } from '../dto/assignable-roles';
 import { BetaFeatures } from '../dto/beta-features';
 
 /** @deprecated Use {@link import('~/core').ResourcesHost.getMap} instead */
 export const LegacyResourceMap = {
-  Education,
-  Engagement,
   EthnoArt,
   EthnologueLanguage,
   FieldRegion,
   FieldZone,
   Film,
   FundingAccount,
-  InternshipEngagement,
   Language,
-  LanguageEngagement,
   Organization,
   Partner,
   Partnership,

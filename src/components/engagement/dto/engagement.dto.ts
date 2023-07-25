@@ -3,6 +3,7 @@ import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive } from 'type-fest';
+import { RegisterResource } from '~/core';
 import { BaseNode } from '~/core/database/results';
 import {
   Calculated,
@@ -49,6 +50,7 @@ export type AnyEngagement = MergeExclusive<
 const ChangesetAwareResource: Type<Resource & ChangesetAware> =
   IntersectionType(Resource, ChangesetAware);
 
+@RegisterResource()
 @InterfaceType({
   resolveType: (val: AnyEngagement) => val.__typename,
   implements: [Resource, ChangesetAware],
@@ -140,6 +142,7 @@ class Engagement extends ChangesetAwareResource {
 // export as different names to maintain compatibility with our codebase.
 export { Engagement as IEngagement, AnyEngagement as Engagement };
 
+@RegisterResource()
 @ObjectType({
   implements: [Engagement],
 })
@@ -182,6 +185,7 @@ export class LanguageEngagement extends Engagement {
   readonly historicGoal: SecuredString;
 }
 
+@RegisterResource()
 @ObjectType({
   implements: [Engagement],
 })
@@ -214,3 +218,11 @@ export class InternshipEngagement extends Engagement {
 
 export const engagementRange = (engagement: UnsecuredDto<Engagement>) =>
   DateInterval.tryFrom(engagement.startDate, engagement.endDate);
+
+declare module '~/core/resources/map' {
+  interface ResourceMap {
+    Engagement: typeof Engagement;
+    InternshipEngagement: typeof InternshipEngagement;
+    LanguageEngagement: typeof LanguageEngagement;
+  }
+}

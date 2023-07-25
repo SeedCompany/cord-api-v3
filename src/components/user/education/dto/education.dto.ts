@@ -1,5 +1,6 @@
 import { Field, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
+import { RegisterResource } from '~/core';
 import {
   NameField,
   Resource,
@@ -25,6 +26,7 @@ registerEnumType(Degree, { name: 'Degree' });
 })
 export abstract class SecuredDegree extends SecuredEnum(Degree) {}
 
+@RegisterResource()
 @ObjectType({
   implements: [Resource],
 })
@@ -41,4 +43,10 @@ export class Education extends Resource {
 
   @NameField()
   readonly institution: SecuredString;
+}
+
+declare module '~/core/resources/map' {
+  interface ResourceMap {
+    Education: typeof Education;
+  }
 }
