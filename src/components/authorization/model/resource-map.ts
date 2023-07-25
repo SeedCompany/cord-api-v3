@@ -1,4 +1,3 @@
-import { Ceremony } from '../../ceremony/dto';
 import { Changeset } from '../../changeset/dto';
 import {
   IEngagement as Engagement,
@@ -49,7 +48,6 @@ import { BetaFeatures } from '../dto/beta-features';
 
 /** @deprecated Use {@link import('~/core').ResourcesHost.getMap} instead */
 export const LegacyResourceMap = {
-  Ceremony,
   Changeset,
   Directory,
   Education,
