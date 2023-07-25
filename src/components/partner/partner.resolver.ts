@@ -16,6 +16,7 @@ import {
   Session,
 } from '../../common';
 import { Loader, LoaderOf } from '../../core';
+import { LanguageLoader, SecuredLanguageNullable } from '../language';
 import { OrganizationLoader, SecuredOrganization } from '../organization';
 import { PartnerLoader, PartnerService } from '../partner';
 import {
@@ -79,6 +80,16 @@ export class PartnerResolver {
   ): Promise<SecuredUser> {
     return await mapSecuredValue(partner.pointOfContact, (id) =>
       users.load(id),
+    );
+  }
+
+  @ResolveField(() => SecuredLanguageNullable)
+  async languageOfWiderCommunication(
+    @Parent() partner: Partner,
+    @Loader(LanguageLoader) languages: LoaderOf<LanguageLoader>,
+  ): Promise<SecuredLanguageNullable> {
+    return await mapSecuredValue(partner.languageOfWiderCommunication, (id) =>
+      languages.load({ id, view: { active: true } }),
     );
   }
 
