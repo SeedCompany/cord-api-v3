@@ -59,7 +59,7 @@ import {
             'financialReportPeriod',
             'financialReportReceivedAt',
           )
-          .when(member).edit,
+          .read.when(member).edit,
       ])
       .children((c) => c.posts.edit),
     r.ProjectMember.read.when(member).edit.create.delete,

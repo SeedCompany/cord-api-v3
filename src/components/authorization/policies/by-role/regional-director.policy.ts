@@ -6,7 +6,7 @@ import { member, Policy, Role, sensMediumOrLower } from '../util';
 
   r.Partnership.read,
   r.Project.when(member).edit.specifically(
-    (p) => p.rootDirectory.when(sensMediumOrLower).read,
+    (p) => p.rootDirectory.edit.when(sensMediumOrLower).read,
   ),
 ])
 export class RegionalDirectorPolicy {}
