@@ -14,6 +14,7 @@ import {
   SecuredProperty,
   SecuredProps,
   SecuredString,
+  SecuredStringNullable,
   Sensitivity,
   SensitivityField,
 } from '../../../common';
@@ -68,7 +69,7 @@ export class Partner extends Interfaces {
   readonly active: SecuredBoolean;
 
   @Field()
-  readonly address: SecuredString;
+  readonly address: SecuredStringNullable;
 
   @DateTimeField()
   readonly modifiedAt: DateTime;

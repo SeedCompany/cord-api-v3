@@ -36,7 +36,7 @@ export abstract class CreatePartner {
   readonly active?: boolean;
 
   @NameField({ nullable: true })
-  readonly address?: string;
+  readonly address?: string | null;
 }
 
 @InputType()
