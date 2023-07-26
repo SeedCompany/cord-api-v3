@@ -3,6 +3,7 @@ import { Field, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { GraphQLString } from 'graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
+import { RegisterResource } from '~/core';
 import {
   Calculated,
   DbLabel,
@@ -42,6 +43,7 @@ export abstract class SecuredTags extends SecuredPropertyList<string>(
   GraphQLString,
 ) {}
 
+@RegisterResource()
 @ObjectType()
 export class EthnologueLanguage {
   static readonly Props = keysOf<EthnologueLanguage>();
@@ -79,6 +81,7 @@ export class EthnologueLanguage {
   readonly sensitivity: Sensitivity & SetUnsecuredType<never>;
 }
 
+@RegisterResource()
 @ObjectType({
   implements: [Resource, Pinnable, Postable],
 })
@@ -195,3 +198,10 @@ export class Language extends Interfaces {
   description: SecuredProperty.descriptionFor('a language'),
 })
 export class SecuredLanguage extends SecuredProperty(Language) {}
+
+declare module '~/core/resources/map' {
+  interface ResourceMap {
+    EthnologueLanguage: typeof EthnologueLanguage;
+    Language: typeof Language;
+  }
+}

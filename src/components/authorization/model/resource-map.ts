@@ -1,9 +1,7 @@
-import { EthnoArt } from '../../ethno-art/dto';
 import { FieldRegion } from '../../field-region/dto';
 import { FieldZone } from '../../field-zone/dto';
 import { Film } from '../../film/dto';
 import { FundingAccount } from '../../funding-account/dto';
-import { EthnologueLanguage, Language } from '../../language/dto';
 import { Organization } from '../../organization/dto';
 import { Partner } from '../../partner/dto';
 import { Partnership } from '../../partnership/dto';
@@ -35,13 +33,10 @@ import { BetaFeatures } from '../dto/beta-features';
 
 /** @deprecated Use {@link import('~/core').ResourcesHost.getMap} instead */
 export const LegacyResourceMap = {
-  EthnoArt,
-  EthnologueLanguage,
   FieldRegion,
   FieldZone,
   Film,
   FundingAccount,
-  Language,
   Organization,
   Partner,
   Partnership,
