@@ -8,6 +8,7 @@
     "experimentalDecorators": true,
     "useDefineForClassFields": true,
     "jsx": "react-jsx",
+    "lib": ["esnext"],
     "target": "esnext",
     "sourceMap": true,
     "outDir": "./dist",
