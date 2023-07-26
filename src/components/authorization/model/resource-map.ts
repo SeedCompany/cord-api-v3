@@ -4,12 +4,6 @@ import {
   IPeriodicReport as PeriodicReport,
 } from '../../periodic-report/dto';
 import { ProjectChangeRequest } from '../../project-change-request/dto';
-import {
-  InternshipProject,
-  IProject as Project,
-  TranslationProject,
-} from '../../project/dto';
-import { ProjectMember } from '../../project/project-member/dto';
 import { Story } from '../../story/dto';
 import { User } from '../../user/dto';
 import { Unavailability } from '../../user/unavailability/dto';
@@ -18,10 +12,6 @@ import { BetaFeatures } from '../dto/beta-features';
 
 /** @deprecated Use {@link import('~/core').ResourcesHost.getMap} instead */
 export const LegacyResourceMap = {
-  Project,
-  TranslationProject,
-  InternshipProject,
-  ProjectMember,
   PeriodicReport,
   FinancialReport,
   NarrativeReport,
