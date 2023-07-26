@@ -5,6 +5,7 @@ import * as fs from 'fs';
 import humanFormat from 'human-format';
 import { identity, isString, mapKeys, pickBy } from 'lodash';
 import { Duration } from 'luxon';
+import { URL } from 'node:url';
 import { join } from 'path';
 import { DurationIn } from '~/common';
 import { ILogger, Logger } from '../logger';
@@ -69,7 +70,7 @@ export class EnvironmentService implements Iterable<[string, string]> {
       string,
     URL | string
   > {
-    return this.wrap(key, (raw) => Object.freeze(new URL(raw)) as any);
+    return this.wrap(key, (raw) => Object.freeze(new URL(String(raw))) as any);
   }
 
   boolean(key: string) {

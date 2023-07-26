@@ -6,6 +6,7 @@ import { Type } from '@nestjs/common';
 import { Command } from '@smithy/smithy-client';
 import { pickBy } from 'lodash';
 import { DateTime, Duration } from 'luxon';
+import { URL } from 'node:url';
 import { assert } from 'ts-essentials';
 import { InputException } from '~/common';
 import { FileBucket, GetObjectOutput, SignedOp } from './file-bucket';
@@ -75,7 +76,7 @@ export abstract class LocalBucket<
           .toMillis(),
       },
     });
-    const url = new URL(this.options.baseUrl);
+    const url = new URL(this.options.baseUrl.toString());
     url.searchParams.set('signed', signed);
     return url.toString();
   }
