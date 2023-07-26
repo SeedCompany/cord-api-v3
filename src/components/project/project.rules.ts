@@ -82,7 +82,6 @@ export class ProjectRules {
     const mostRecentPreviousStep = (steps: ProjectStep[]) =>
       this.getMostRecentPreviousStep(id, steps, changeset);
 
-    /* eslint @typescript-eslint/switch-exhaustiveness-check: "error" */
     switch (step) {
       case ProjectStep.EarlyConversations:
         return {
@@ -815,6 +814,7 @@ export class ProjectRules {
           getNotifiers: () => this.getProjectTeamUserIds(id),
         };
     }
+    // @ts-expect-error This code should be unreachable, to prove the exhaustiveness of switch
     throw new UnreachableCaseError(step);
   }
 

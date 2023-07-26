@@ -1,26 +1,43 @@
 {
+  "extends": "@tsconfig/strictest/tsconfig.json",
   "compilerOptions": {
-    "strict": true,
-    "module": "esnext",
-    "moduleResolution": "bundler",
-    "esModuleInterop": true,
-    "emitDecoratorMetadata": true,
+    // Opt in to these settings
     "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "useDefineForClassFields": true,
-    "jsx": "react-jsx",
-    "lib": ["esnext"],
-    "target": "esnext",
-    "sourceMap": true,
-    "outDir": "./dist",
-    "incremental": true,
-    "typeRoots": [
-      "node_modules/@types",
-      "./typings"
-    ],
+
+    // Loosen these strict settings
+    // I'm ok treating `foo?: string` == `foo: string | undefined`
+    "exactOptionalPropertyTypes": false,
+    // IDE shows override methods, I'm not too worried about this.
+    "noImplicitOverride": false,
+    // I don't want extra syntax just because the type has dynamic keys.
+    // obj.key -> obj['key'] -- no thanks
+    "noPropertyAccessFromIndexSignature": false,
+    // We use classes for GQL schema declarations, but we don't instantiate them.
     "strictPropertyInitialization": false,
-    // Disabling for now, but it would be good to re-enable later
+    // I know JS allows throwing anything, so catch(e: unknown) is the "safest."
+    // In practice, though, all modern code we use throws Error objects.
+    // We also enforce this in our own codebase.
+    // Ideally, we could use an Error type in our catch blocks.
+    // But since only unknown or any is allowed, we'll use any.
     "useUnknownInCatchVariables": false,
-    "skipLibCheck": true,
+
+    // Disabling for now, but should be enabled & fixes applied
+    "noFallthroughCasesInSwitch": false,
+    "noUncheckedIndexedAccess": false,
+
+    // Handled by ESLint
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+
+    // Transform plugins
+    "plugins": [
+      { "transform": "typescript-transform-paths" },
+      { "transform": "ts-transformer-keys/transformer" },
+    ],
+
+    // Path resolution
     "baseUrl": ".",
     "paths": {
       "~/common": ["./src/common"],
@@ -28,10 +45,16 @@
       "~/core": ["./src/core"],
       "~/core/*": ["./src/core/*"],
     },
-    "plugins": [
-      { "transform": "typescript-transform-paths" },
-      { "transform": "ts-transformer-keys/transformer" },
-    ],
+
+    // Compilation
+    "lib": ["esnext"],
+    "target": "esnext",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "outDir": "./dist",
+    "sourceMap": true,
+    "incremental": true,
   },
   "include": ["src", "test"],
   "exclude": ["node_modules", "dist"]
