@@ -1,6 +1,5 @@
 import { FactoryProvider } from '@nestjs/common/interfaces';
 import { AsyncLocalStorage } from 'async_hooks';
-import { highlight } from 'cli-highlight';
 import { stripIndent } from 'common-tags';
 import { Connection } from 'cypher-query-builder';
 import type { Driver, Config as DriverConfig, Session } from 'neo4j-driver';
@@ -20,6 +19,7 @@ import {
   isNeo4jError,
   ServiceUnavailableError,
 } from './errors';
+import { highlight } from './highlight-cypher.util';
 import { ParameterTransformer } from './parameter-transformer.service';
 // eslint-disable-next-line import/no-duplicates
 import { Transaction } from './transaction';
@@ -255,7 +255,7 @@ const wrapQueryRun = (
               ? {
                   statement:
                     process.env.NODE_ENV !== 'production'
-                      ? highlight(statement, { language: 'cypher' })
+                      ? highlight(statement)
                       : statement,
                 }
               : {}),
