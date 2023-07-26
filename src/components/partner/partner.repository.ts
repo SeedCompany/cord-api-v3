@@ -58,6 +58,10 @@ export class PartnerRepository extends DtoRepository<
         createRelationships(Partner, 'out', {
           organization: ['Organization', input.organizationId],
           pointOfContact: ['User', input.pointOfContactId],
+          languageOfWiderCommunication: [
+            'Language',
+            input.languageOfWiderCommunicationId,
+          ],
         }),
       )
       .return<{ id: ID }>('node.id as id')
@@ -110,11 +114,17 @@ export class PartnerRepository extends DtoRepository<
           relation('out', '', 'pointOfContact', ACTIVE),
           node('pointOfContact', 'User'),
         ])
+        .optionalMatch([
+          node('node'),
+          relation('out', '', 'languageOfWiderCommunication', ACTIVE),
+          node('languageOfWiderCommunication', 'Language'),
+        ])
         .return<{ dto: UnsecuredDto<Partner> }>(
           merge('props', {
             sensitivity: 'sensitivity',
             organization: 'organization.id',
             pointOfContact: 'pointOfContact.id',
+            languageOfWiderCommunication: 'languageOfWiderCommunication.id',
             scope: 'scopedRoles',
             pinned: 'exists((:User { id: $requestingUser })-[:pinned]->(node))',
           }).as('dto'),

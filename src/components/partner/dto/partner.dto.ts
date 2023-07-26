@@ -5,6 +5,7 @@ import { keys as keysOf } from 'ts-transformer-keys';
 import {
   DateTimeField,
   ID,
+  IdOf,
   IntersectionType,
   Resource,
   ResourceRelationsShape,
@@ -69,6 +70,8 @@ export class Partner extends Interfaces {
 
   @Field()
   readonly address: SecuredString;
+
+  readonly languageOfWiderCommunication: Secured<IdOf<Language> | null>;
 
   @DateTimeField()
   readonly modifiedAt: DateTime;

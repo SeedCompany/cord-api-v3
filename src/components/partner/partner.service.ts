@@ -147,12 +147,24 @@ export class PartnerService {
       object,
       changes,
     );
-    const { pointOfContactId, ...simpleChanges } = changes;
+    const {
+      pointOfContactId,
+      languageOfWiderCommunicationId,
+      ...simpleChanges
+    } = changes;
 
     await this.repo.updateProperties(object, simpleChanges);
 
     if (pointOfContactId) {
       await this.repo.updatePointOfContact(input.id, pointOfContactId, session);
+    }
+    if (languageOfWiderCommunicationId) {
+      await this.repo.updateRelation(
+        'languageOfWiderCommunication',
+        'Language',
+        object.id,
+        languageOfWiderCommunicationId,
+      );
     }
 
     return await this.readOne(input.id, session);
