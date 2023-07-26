@@ -1,5 +1,6 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
+import { RegisterResource } from '~/core';
 import {
   Resource,
   SecuredDateTime,
@@ -7,6 +8,7 @@ import {
   SecuredString,
 } from '../../../../common';
 
+@RegisterResource()
 @ObjectType({
   implements: [Resource],
 })
@@ -23,4 +25,10 @@ export class Unavailability extends Resource {
 
   @Field()
   readonly end: SecuredDateTime;
+}
+
+declare module '~/core/resources/map' {
+  interface ResourceMap {
+    Unavailability: typeof Unavailability;
+  }
 }

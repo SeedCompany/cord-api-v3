@@ -1,10 +1,12 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { Calculated, ResourceRelationsShape } from '~/common';
+import { RegisterResource } from '~/core';
 import { Granter, ResourceGranter } from '../policy';
 
 // TODO move somewhere else
 
+@RegisterResource()
 @Calculated()
 @ObjectType()
 export class BetaFeatures {
@@ -34,5 +36,11 @@ export class BetaFeaturesGranter extends ResourceGranter<typeof BetaFeatures> {
 declare module '../policy/granters' {
   interface GrantersOverride {
     BetaFeatures: BetaFeaturesGranter;
+  }
+}
+
+declare module '~/core/resources/map' {
+  interface ResourceMap {
+    BetaFeatures: typeof BetaFeatures;
   }
 }

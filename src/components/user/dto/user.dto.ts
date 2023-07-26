@@ -1,6 +1,7 @@
 import { Type } from '@nestjs/common';
 import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
+import { RegisterResource } from '~/core';
 import {
   DbUnique,
   IntersectionType,
@@ -34,6 +35,7 @@ const PinnableResource: Type<Resource & Pinnable> = IntersectionType(
 })
 export abstract class SecuredUserStatus extends SecuredEnum(UserStatus) {}
 
+@RegisterResource()
 @ObjectType({
   implements: [Resource, Pinnable],
 })
@@ -89,3 +91,9 @@ export class User extends PinnableResource {
   description: SecuredProperty.descriptionFor('a user'),
 })
 export class SecuredUser extends SecuredProperty(User) {}
+
+declare module '~/core/resources/map' {
+  interface ResourceMap {
+    User: typeof User;
+  }
+}
