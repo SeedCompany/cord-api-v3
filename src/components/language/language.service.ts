@@ -16,8 +16,7 @@ import {
 } from '../../common';
 import { HandleIdLookup, ILogger, Logger, UniquenessError } from '../../core';
 import { mapListResults } from '../../core/database/results';
-import { AuthorizationService } from '../authorization/authorization.service';
-import { Powers } from '../authorization/dto/powers';
+import { Privileges } from '../authorization';
 import { EngagementService, EngagementStatus } from '../engagement';
 import {
   LocationListInput,
@@ -32,6 +31,7 @@ import {
 } from '../project';
 import {
   CreateLanguage,
+  EthnologueLanguage,
   Language,
   LanguageListInput,
   LanguageListOutput,
@@ -47,18 +47,15 @@ export class LanguageService {
     private readonly locationService: LocationService,
     private readonly projectService: ProjectService,
     private readonly engagementService: EngagementService,
-    private readonly authorizationService: AuthorizationService,
+    private readonly privileges: Privileges,
     private readonly repo: LanguageRepository,
     @Logger('language:service') private readonly logger: ILogger,
   ) {}
 
   async create(input: CreateLanguage, session: Session): Promise<Language> {
-    await this.authorizationService.checkPower(Powers.CreateLanguage, session);
+    this.privileges.for(session, Language).verifyCan('create');
 
-    await this.authorizationService.checkPower(
-      Powers.CreateEthnologueLanguage,
-      session,
-    );
+    this.privileges.for(session, EthnologueLanguage).verifyCan('create');
 
     try {
       const ethnologueId = await this.ethnologueLanguageService.create(
@@ -118,13 +115,7 @@ export class LanguageService {
     dto: UnsecuredDto<Language>,
     session: Session,
   ): Promise<Language> {
-    const securedProps = await this.authorizationService.secureProperties(
-      Language,
-      dto,
-      session,
-      undefined,
-      dto.effectiveSensitivity,
-    );
+    const securedProps = this.privileges.for(session, Language).secure(dto);
 
     const ethnologue = await this.ethnologueLanguageService.secure(
       dto.ethnologue,
@@ -159,11 +150,7 @@ export class LanguageService {
 
     const object = await this.readOne(input.id, session, view);
     const changes = this.repo.getActualChanges(object, input);
-    await this.authorizationService.verifyCanEditChanges(
-      Language,
-      object,
-      changes,
-    );
+    this.privileges.for(session, Language).verifyChanges(changes);
 
     const { ethnologue, ...simpleChanges } = changes;
 
