@@ -1,11 +1,12 @@
 import { highlight } from 'cli-highlight';
 import { Query } from 'cypher-query-builder';
-import { registerLanguage } from 'highlight.js';
+import Highlight from 'highlight.js';
 import { LogLevel } from '../../logger';
 
 if (process.env.NODE_ENV !== 'production') {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports,@typescript-eslint/no-var-requires
-  registerLanguage('cypher', require('highlightjs-cypher'));
+  void import('highlightjs-cypher' as any).then(({ default: cypher }) => {
+    Highlight.registerLanguage('cypher', cypher);
+  });
 }
 
 declare module 'cypher-query-builder/dist/typings/query' {

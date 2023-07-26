@@ -4,7 +4,7 @@ import {
   PipeTransform,
   Type,
 } from '@nestjs/common';
-import { CONTROLLER_WATERMARK } from '@nestjs/common/constants';
+import { CONTROLLER_WATERMARK } from '@nestjs/common/constants.js';
 import { Context } from '@nestjs/graphql';
 import { uniq } from 'lodash';
 import { DateTime } from 'luxon';

@@ -1,10 +1,10 @@
 import { node, relation } from 'cypher-query-builder';
-import { from as ix } from 'ix/asynciterable';
-import 'ix/add/asynciterable-operators/flatmap';
-import 'ix/add/asynciterable-operators/groupby';
-import 'ix/add/asynciterable-operators/map';
-import 'ix/add/asynciterable-operators/tap';
-import 'ix/add/asynciterable-operators/toarray';
+import { AsyncIterable } from 'ix';
+import 'ix/add/asynciterable-operators/flatmap.js';
+import 'ix/add/asynciterable-operators/groupby.js';
+import 'ix/add/asynciterable-operators/map.js';
+import 'ix/add/asynciterable-operators/tap.js';
+import 'ix/add/asynciterable-operators/toarray.js';
 import { sum } from 'lodash';
 import { ID, NotFoundException, Range, UnsecuredDto } from '../../../common';
 import { BaseMigration, Migration } from '../../../core';
@@ -19,6 +19,8 @@ import {
   UpdateDirectScriptureProduct,
 } from '../dto';
 import { ProductService } from '../product.service';
+
+const ix = AsyncIterable.from;
 
 /**
  * Split products up so that each product only references a single book.

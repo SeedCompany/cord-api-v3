@@ -1,13 +1,19 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { AsyncLocalStorage } from 'async_hooks';
 import { dropRightWhile } from 'lodash';
-import { Client, ClientBase, DatabaseError, Pool, PoolClient } from 'pg';
+import pg, {
+  type ClientBase,
+  type PoolClient,
+  type Pool as PoolType,
+} from 'pg';
 import { TracingService } from '../tracing';
+
+const { Client, DatabaseError, Pool } = pg;
 
 @Injectable()
 export class Pg {
   constructor(
-    private readonly pool: Pool,
+    @Inject(Pool) private readonly pool: PoolType,
     private readonly tracing: TracingService,
   ) {}
 

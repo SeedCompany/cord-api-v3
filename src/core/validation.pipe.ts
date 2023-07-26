@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { isEmpty } from 'lodash';
 import { SetRequired } from 'type-fest';
+import { fileURLToPath } from 'url';
 import { ClientException } from '../common/exceptions';
 import { jestSkipFileInExceptionSource } from './exception';
 
@@ -42,7 +43,7 @@ export class ValidationException extends ClientException {
       .join('\n');
     this.stack = this.stack!.replace('\n', '\n' + errorsAsString + '\n\n');
 
-    jestSkipFileInExceptionSource(this, __filename);
+    jestSkipFileInExceptionSource(this, fileURLToPath(import.meta.url));
   }
 }
 

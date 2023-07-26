@@ -1,5 +1,5 @@
-import { ExceptionHandler as NestExceptionHandler } from '@nestjs/core/errors/exception-handler';
-import { ExceptionsZone } from '@nestjs/core/errors/exceptions-zone';
+import { ExceptionHandler as NestExceptionHandler } from '@nestjs/core/errors/exception-handler.js';
+import { ExceptionsZone } from '@nestjs/core/errors/exceptions-zone.js';
 import { ILogger } from './logger.interface';
 
 /**

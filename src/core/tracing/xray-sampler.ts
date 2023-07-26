@@ -3,7 +3,7 @@ import {
   GqlExecutionContext,
   GqlContextType as GqlExeType,
 } from '@nestjs/graphql';
-import * as XRay from 'aws-xray-sdk-core';
+import XRay from 'aws-xray-sdk-core';
 import { GqlContextType } from '../../common';
 import { Sampler } from './sampler';
 import { Segment } from './tracing.service';

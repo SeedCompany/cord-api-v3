@@ -22,9 +22,9 @@ import { PostRepository } from './post.repository';
 export class PostService {
   constructor(
     @Inject(forwardRef(() => UserService))
-    private readonly userService: UserService,
+    private readonly userService: UserService & {},
     @Inject(forwardRef(() => AuthorizationService))
-    private readonly authorizationService: AuthorizationService,
+    private readonly authorizationService: AuthorizationService & {},
     private readonly repo: PostRepository,
     @Logger('post:service') private readonly logger: ILogger,
   ) {}
