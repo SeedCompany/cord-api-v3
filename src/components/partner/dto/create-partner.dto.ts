@@ -3,6 +3,7 @@ import { Transform, Type } from 'class-transformer';
 import { Matches, ValidateNested } from 'class-validator';
 import { uniq } from 'lodash';
 import { ID, IdField, IdOf, NameField } from '../../../common';
+import type { Language } from '../../language';
 import { FinancialReportingType } from '../../partnership/dto/financial-reporting-type';
 import { PartnerType } from './partner-type.enum';
 import { Partner } from './partner.dto';
