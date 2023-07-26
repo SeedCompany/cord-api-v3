@@ -2,6 +2,7 @@ import { Type } from '@nestjs/common';
 import { Field, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
+import { RegisterResource } from '~/core';
 import {
   DateTimeField,
   ID,
@@ -36,6 +37,7 @@ export abstract class SecuredFinancialReportingTypes extends SecuredEnumList(
   FinancialReportingType,
 ) {}
 
+@RegisterResource()
 @ObjectType({
   implements: [Resource, Pinnable, Postable],
 })
@@ -87,3 +89,9 @@ export class Partner extends Interfaces {
   description: SecuredProperty.descriptionFor('a partner'),
 })
 export class SecuredPartner extends SecuredProperty(Partner) {}
+
+declare module '~/core/resources/map' {
+  interface ResourceMap {
+    Partner: typeof Partner;
+  }
+}

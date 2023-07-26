@@ -1,8 +1,3 @@
-import { Film } from '../../film/dto';
-import { FundingAccount } from '../../funding-account/dto';
-import { Organization } from '../../organization/dto';
-import { Partner } from '../../partner/dto';
-import { Partnership } from '../../partnership/dto';
 import {
   FinancialReport,
   NarrativeReport,
@@ -31,11 +26,6 @@ import { BetaFeatures } from '../dto/beta-features';
 
 /** @deprecated Use {@link import('~/core').ResourcesHost.getMap} instead */
 export const LegacyResourceMap = {
-  Film,
-  FundingAccount,
-  Organization,
-  Partner,
-  Partnership,
   Post,
   Producible,
   Product,

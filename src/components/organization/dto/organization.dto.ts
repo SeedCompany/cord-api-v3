@@ -1,5 +1,6 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
+import { RegisterResource } from '~/core';
 import {
   DbUnique,
   NameField,
@@ -13,6 +14,7 @@ import {
 } from '../../../common';
 import { Location } from '../../location/dto';
 
+@RegisterResource()
 @ObjectType({
   implements: Resource,
 })
@@ -41,3 +43,9 @@ export class Organization extends Resource {
   description: SecuredProperty.descriptionFor('an organization'),
 })
 export class SecuredOrganization extends SecuredProperty(Organization) {}
+
+declare module '~/core/resources/map' {
+  interface ResourceMap {
+    Organization: typeof Organization;
+  }
+}

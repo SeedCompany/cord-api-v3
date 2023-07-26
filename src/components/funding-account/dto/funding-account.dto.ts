@@ -1,5 +1,6 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
+import { RegisterResource } from '~/core';
 import {
   DbLabel,
   DbUnique,
@@ -11,6 +12,7 @@ import {
   SecuredString,
 } from '../../../common';
 
+@RegisterResource()
 @ObjectType({
   implements: [Resource],
 })
@@ -31,3 +33,9 @@ export class FundingAccount extends Resource {
   description: SecuredProperty.descriptionFor('a funding account'),
 })
 export class SecuredFundingAccount extends SecuredProperty(FundingAccount) {}
+
+declare module '~/core/resources/map' {
+  interface ResourceMap {
+    FundingAccount: typeof FundingAccount;
+  }
+}

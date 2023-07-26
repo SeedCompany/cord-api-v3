@@ -1,5 +1,6 @@
 import { ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
+import { RegisterResource } from '~/core';
 import {
   DbUnique,
   NameField,
@@ -17,6 +18,7 @@ declare module '../../product/dto/producible.dto' {
 
 Object.assign(ProducibleType, { Film: 'Film' });
 
+@RegisterResource()
 @ObjectType({
   implements: [Producible, Resource],
 })
@@ -27,4 +29,10 @@ export class Film extends Producible {
   @NameField()
   @DbUnique()
   readonly name: SecuredString;
+}
+
+declare module '~/core/resources/map' {
+  interface ResourceMap {
+    Film: typeof Film;
+  }
 }
