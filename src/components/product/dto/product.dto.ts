@@ -3,6 +3,7 @@ import { stripIndent } from 'common-tags';
 import { startCase } from 'lodash';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive } from 'type-fest';
+import { RegisterResource } from '~/core';
 import {
   DbLabel,
   ID,
@@ -39,6 +40,7 @@ const resolveProductType = (product: AnyProduct | UnsecuredDto<AnyProduct>) =>
     ? OtherProduct
     : DirectScriptureProduct;
 
+@RegisterResource()
 @InterfaceType({
   resolveType: resolveProductType,
   implements: [Producible],
@@ -111,6 +113,7 @@ export class Product extends Producible {
   readonly placeholderDescription: SecuredStringNullable;
 }
 
+@RegisterResource()
 @ObjectType({
   implements: [Product],
   description: stripIndent`
@@ -150,6 +153,7 @@ export class DirectScriptureProduct extends Product {
   readonly pnpIndex?: number;
 }
 
+@RegisterResource()
 @ObjectType({
   implements: [Product],
   description: stripIndent`
@@ -208,6 +212,7 @@ export class DerivativeScriptureProduct extends Product {
   totalVerseEquivalents: number;
 }
 
+@RegisterResource()
 @ObjectType({
   implements: [Product],
   description:
@@ -253,3 +258,12 @@ export const asProductType =
     // is safe and this logic is sound.
     return product as any;
   };
+
+declare module '~/core/resources/map' {
+  interface ResourceMap {
+    Product: typeof Product;
+    DirectScriptureProduct: typeof DirectScriptureProduct;
+    DerivativeScriptureProduct: typeof DerivativeScriptureProduct;
+    OtherProduct: typeof OtherProduct;
+  }
+}

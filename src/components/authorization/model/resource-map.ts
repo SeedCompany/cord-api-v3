@@ -3,14 +3,6 @@ import {
   NarrativeReport,
   IPeriodicReport as PeriodicReport,
 } from '../../periodic-report/dto';
-import { Post } from '../../post/dto';
-import {
-  DerivativeScriptureProduct,
-  DirectScriptureProduct,
-  OtherProduct,
-  Producible,
-  Product,
-} from '../../product/dto';
 import { ProjectChangeRequest } from '../../project-change-request/dto';
 import {
   InternshipProject,
@@ -26,12 +18,6 @@ import { BetaFeatures } from '../dto/beta-features';
 
 /** @deprecated Use {@link import('~/core').ResourcesHost.getMap} instead */
 export const LegacyResourceMap = {
-  Post,
-  Producible,
-  Product,
-  DirectScriptureProduct,
-  DerivativeScriptureProduct,
-  OtherProduct,
   Project,
   TranslationProject,
   InternshipProject,
