@@ -11,7 +11,7 @@ import {
   SecuredStringList,
   SetUnsecuredType,
 } from '~/common';
-import { RegisterResource } from '~/core';
+import { RegisterResource } from '~/core/resources';
 import { ProgressReport } from '../dto';
 import { ProgressReportVarianceExplanationReasonOptions as ReasonOptions } from './reason-options';
 

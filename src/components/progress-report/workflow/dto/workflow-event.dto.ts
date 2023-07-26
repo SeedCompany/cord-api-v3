@@ -11,7 +11,7 @@ import {
   SecuredRichTextNullable,
   SetUnsecuredType,
 } from '~/common';
-import { RegisterResource } from '~/core';
+import { RegisterResource } from '~/core/resources';
 import { User } from '../../../user';
 import { ProgressReportStatus } from '../../dto';
 import { InternalTransition } from '../transitions';

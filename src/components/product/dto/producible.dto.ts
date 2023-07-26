@@ -6,6 +6,7 @@ import {
 } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { keys as keysOf } from 'ts-transformer-keys';
+import { RegisterResource } from '~/core/resources';
 import {
   Resource,
   SecuredProperty,
@@ -20,6 +21,7 @@ import {
   SecuredScriptureRanges,
 } from '../../scripture';
 
+@RegisterResource()
 @InterfaceType({
   description: 'Something that is _producible_ via a Product',
   resolveType: (p: ProducibleRef) => p.__typename,
@@ -64,3 +66,9 @@ export class SecuredProducible extends SecuredProperty(Producible, {
     i.e. A film named "Jesus Film".
   `,
 }) {}
+
+declare module '~/core/resources/map' {
+  interface ResourceMap {
+    Producible: typeof Producible;
+  }
+}

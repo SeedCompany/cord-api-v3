@@ -4,6 +4,7 @@ import { stripIndent } from 'common-tags';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive } from 'type-fest';
+import { RegisterResource } from '~/core/resources';
 import {
   DateInterval,
   DateTimeField,
@@ -57,6 +58,7 @@ const Interfaces: Type<
   ),
 );
 
+@RegisterResource()
 @InterfaceType({
   resolveType: (val: Project) => {
     if (val.type === ProjectType.Translation) {
@@ -177,6 +179,7 @@ class Project extends Interfaces {
 // export as different names to maintain compatibility with our codebase.
 export { Project as IProject, AnyProject as Project };
 
+@RegisterResource()
 @ObjectType({
   implements: [Project],
 })
@@ -187,6 +190,7 @@ export class TranslationProject extends Project {
   declare readonly type: ProjectType.Translation;
 }
 
+@RegisterResource()
 @ObjectType({
   implements: [Project],
 })
@@ -199,3 +203,11 @@ export class InternshipProject extends Project {
 
 export const projectRange = (project: UnsecuredDto<Project>) =>
   DateInterval.tryFrom(project.mouStart, project.mouEnd);
+
+declare module '~/core/resources/map' {
+  interface ResourceMap {
+    Project: typeof Project;
+    InternshipProject: typeof InternshipProject;
+    TranslationProject: typeof TranslationProject;
+  }
+}

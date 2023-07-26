@@ -7,7 +7,7 @@ import {
 import { Prompt } from '../../prompts/dto';
 import { PromptVariantResponseListService } from '../../prompts/prompt-variant-response.service';
 import { ProgressReport } from '../dto';
-import { ProgressReportHighlight as Highlight } from '../dto/hightlights.dto';
+import { ProgressReportHighlight as Highlight } from '../dto/highlights.dto';
 import { ProgressReportHighlightsRepository } from './progress-report-highlights.repository';
 
 @Injectable()

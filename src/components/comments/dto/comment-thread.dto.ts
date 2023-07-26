@@ -9,8 +9,10 @@ import {
   UnsecuredDto,
 } from '~/common';
 import { BaseNode } from '~/core/database/results';
+import { RegisterResource } from '~/core/resources';
 import { Comment } from './comment.dto';
 
+@RegisterResource()
 @ObjectType({
   implements: [Resource],
 })
@@ -30,4 +32,10 @@ export class CommentThread extends Resource {
   readonly parent: BaseNode;
 
   readonly creator: ID;
+}
+
+declare module '~/core/resources/map' {
+  interface ResourceMap {
+    CommentThread: typeof CommentThread;
+  }
 }
