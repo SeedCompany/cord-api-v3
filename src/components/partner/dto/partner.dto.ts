@@ -19,6 +19,7 @@ import {
   SensitivityField,
 } from '../../../common';
 import { ScopedRole } from '../../authorization';
+import type { Language } from '../../language';
 import { FinancialReportingType } from '../../partnership/dto/financial-reporting-type';
 import { Pinnable } from '../../pin/dto';
 import { Postable } from '../../post/dto';
