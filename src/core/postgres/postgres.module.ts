@@ -1,6 +1,6 @@
 import { Module, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { DateTime, Duration } from 'luxon';
-import { Pool, types } from 'pg';
+import { Pool, PoolConfig, types } from 'pg';
 import { builtins as TypeId } from 'pg-types';
 import { CalendarDate } from '../../common';
 import { ConfigService } from '../config/config.service';
@@ -14,7 +14,7 @@ import { Pg } from './pg.service';
       provide: Pool,
       useFactory(config: ConfigService, logger: ILogger) {
         const pool = new Pool({
-          ...config.postgres,
+          ...(config.postgres as PoolConfig), // typecast to undo deep readonly
           log: (message, err) => {
             if (err instanceof Error) {
               logger.error(message, { exception: err });
