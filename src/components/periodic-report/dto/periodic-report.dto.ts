@@ -1,5 +1,6 @@
 import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
+import { RegisterResource } from '~/core';
 import {
   Calculated,
   CalendarDate,
@@ -17,6 +18,7 @@ import { ScopedRole } from '../../authorization';
 import { DefinedFile } from '../../file';
 import { ReportType } from './report-type.enum';
 
+@RegisterResource()
 @Calculated()
 @InterfaceType({
   resolveType: (obj: PeriodicReport) =>
@@ -67,6 +69,7 @@ class PeriodicReport extends Resource {
 
 export { PeriodicReport as IPeriodicReport };
 
+@RegisterResource()
 @ObjectType({
   implements: [PeriodicReport],
 })
@@ -78,6 +81,7 @@ export class FinancialReport extends PeriodicReport {
   declare readonly type: ReportType.Financial;
 }
 
+@RegisterResource()
 @ObjectType({
   implements: [PeriodicReport],
 })
@@ -93,3 +97,11 @@ export class NarrativeReport extends PeriodicReport {
   description: SecuredProperty.descriptionFor('Secured Periodic Report'),
 })
 export class SecuredPeriodicReport extends SecuredProperty(PeriodicReport) {}
+
+declare module '~/core/resources/map' {
+  interface ResourceMap {
+    PeriodicReport: typeof PeriodicReport;
+    FinancialReport: typeof FinancialReport;
+    NarrativeReport: typeof NarrativeReport;
+  }
+}
