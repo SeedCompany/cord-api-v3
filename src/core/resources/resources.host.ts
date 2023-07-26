@@ -10,7 +10,6 @@ import {
   ResourceShape,
   ServerException,
 } from '~/common';
-import type { LegacyResourceMap } from '../../components/authorization/model/resource-map';
 import { ResourceMap } from './map';
 import { __privateDontUseThis } from './resource-map-holder';
 
@@ -30,16 +29,10 @@ export class ResourcesHost {
   constructor(private readonly gqlSchema: GraphQLSchemaHost) {}
 
   async getMap() {
-    // Deferred import until now to prevent circular dependency
-    const legacyPath = await import(
-      '../../components/authorization/model/resource-map'
-    );
-
     // @ts-expect-error Yeah we are assuming each type has been correctly
     // registered & type declared.
     const map: ResourceMap = {
       ...__privateDontUseThis,
-      ...(legacyPath.LegacyResourceMap as object),
     };
     return map;
   }
@@ -140,10 +133,4 @@ export class ResourcesHost {
     );
     return impls;
   }
-}
-
-type LegacyMap = typeof LegacyResourceMap;
-declare module '~/core/resources/map' {
-  // eslint-disable-next-line @typescript-eslint/no-empty-interface
-  interface ResourceMap extends LegacyMap {}
 }

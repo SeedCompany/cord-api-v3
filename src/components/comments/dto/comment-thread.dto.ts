@@ -8,8 +8,8 @@ import {
   SetUnsecuredType,
   UnsecuredDto,
 } from '~/common';
-import { RegisterResource } from '~/core';
 import { BaseNode } from '~/core/database/results';
+import { RegisterResource } from '~/core/resources';
 import { Comment } from './comment.dto';
 
 @RegisterResource()

@@ -1,6 +1,6 @@
 import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { RegisterResource } from '~/core';
+import { RegisterResource } from '~/core/resources';
 import {
   Calculated,
   CalendarDate,

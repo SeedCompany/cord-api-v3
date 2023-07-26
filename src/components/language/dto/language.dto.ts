@@ -3,7 +3,7 @@ import { Field, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { GraphQLString } from 'graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { RegisterResource } from '~/core';
+import { RegisterResource } from '~/core/resources';
 import {
   Calculated,
   DbLabel,

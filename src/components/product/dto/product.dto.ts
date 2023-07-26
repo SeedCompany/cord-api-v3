@@ -3,7 +3,7 @@ import { stripIndent } from 'common-tags';
 import { startCase } from 'lodash';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive } from 'type-fest';
-import { RegisterResource } from '~/core';
+import { RegisterResource } from '~/core/resources';
 import {
   DbLabel,
   ID,

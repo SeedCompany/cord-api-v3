@@ -3,8 +3,8 @@ import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive } from 'type-fest';
-import { RegisterResource } from '~/core';
 import { BaseNode } from '~/core/database/results';
+import { RegisterResource } from '~/core/resources';
 import {
   Calculated,
   DateInterval,

@@ -6,7 +6,7 @@ import {
 } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { RegisterResource } from '~/core';
+import { RegisterResource } from '~/core/resources';
 import {
   Resource,
   SecuredProperty,

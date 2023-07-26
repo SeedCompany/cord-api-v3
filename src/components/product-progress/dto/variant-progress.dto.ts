@@ -8,7 +8,7 @@ import {
   VariantInputField,
   VariantOf,
 } from '~/common';
-import { RegisterResource } from '~/core';
+import { RegisterResource } from '~/core/resources';
 import {
   ProductProgress,
   UnsecuredProductProgress,

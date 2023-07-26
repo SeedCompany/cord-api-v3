@@ -16,7 +16,7 @@ import {
   UpdatePromptVariantResponse,
 } from '../../prompts/dto';
 import { ProgressReport } from '../dto';
-import { HighlightVariant } from '../dto/hightlights.dto';
+import { HighlightVariant } from '../dto/highlights.dto';
 import { ProgressReportHighlightsService } from './progress-report-highlights.service';
 
 @Resolver(ProgressReport)

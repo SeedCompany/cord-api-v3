@@ -1,7 +1,7 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { RegisterResource } from '~/core';
+import { RegisterResource } from '~/core/resources';
 import {
   DateTimeField,
   Resource,

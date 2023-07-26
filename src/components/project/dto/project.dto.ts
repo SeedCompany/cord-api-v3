@@ -4,7 +4,7 @@ import { stripIndent } from 'common-tags';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive } from 'type-fest';
-import { RegisterResource } from '~/core';
+import { RegisterResource } from '~/core/resources';
 import {
   DateInterval,
   DateTimeField,

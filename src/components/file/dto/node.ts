@@ -3,7 +3,7 @@ import { stripIndent } from 'common-tags';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive, Opaque } from 'type-fest';
-import { RegisterResource } from '~/core';
+import { RegisterResource } from '~/core/resources';
 import {
   DateTimeField,
   ID,
