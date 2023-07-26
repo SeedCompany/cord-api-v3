@@ -1,5 +1,3 @@
-import { FieldRegion } from '../../field-region/dto';
-import { FieldZone } from '../../field-zone/dto';
 import { Film } from '../../film/dto';
 import { FundingAccount } from '../../funding-account/dto';
 import { Organization } from '../../organization/dto';
@@ -33,8 +31,6 @@ import { BetaFeatures } from '../dto/beta-features';
 
 /** @deprecated Use {@link import('~/core').ResourcesHost.getMap} instead */
 export const LegacyResourceMap = {
-  FieldRegion,
-  FieldZone,
   Film,
   FundingAccount,
   Organization,
