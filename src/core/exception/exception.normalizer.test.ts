@@ -1,4 +1,5 @@
-import * as Nest from '@nestjs/common/exceptions';
+// eslint-disable-next-line no-restricted-imports
+import * as Nest from '@nestjs/common';
 import { InputException, ServerException } from '~/common';
 import { ConstraintError } from '../database';
 import { ExceptionNormalizer } from './exception.normalizer';

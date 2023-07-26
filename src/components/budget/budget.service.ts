@@ -53,7 +53,7 @@ export class BudgetService {
   constructor(
     private readonly files: FileService,
     @Inject(forwardRef(() => AuthorizationService))
-    private readonly authorizationService: AuthorizationService,
+    private readonly authorizationService: AuthorizationService & {},
     private readonly budgetRepo: BudgetRepository,
     private readonly budgetRecordsRepo: BudgetRecordRepository,
     private readonly resources: ResourceResolver,

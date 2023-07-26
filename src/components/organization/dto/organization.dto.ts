@@ -9,6 +9,7 @@ import {
   SecuredProperty,
   SecuredProps,
   SecuredString,
+  SecuredStringNullable,
   Sensitivity,
   SensitivityField,
 } from '../../../common';
@@ -28,6 +29,9 @@ export class Organization extends Resource {
   @NameField()
   @DbUnique('OrgName')
   readonly name: SecuredString;
+
+  @NameField()
+  readonly acronym: SecuredStringNullable;
 
   @Field()
   readonly address: SecuredString;

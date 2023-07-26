@@ -32,7 +32,7 @@ export class LocationService {
   constructor(
     @Logger('location:service') private readonly logger: ILogger,
     @Inject(forwardRef(() => AuthorizationService))
-    private readonly authorizationService: AuthorizationService,
+    private readonly authorizationService: AuthorizationService & {},
     private readonly repo: LocationRepository,
     private readonly files: FileService,
   ) {}

@@ -1,12 +1,6 @@
-import { highlight } from 'cli-highlight';
 import { Query } from 'cypher-query-builder';
-import { registerLanguage } from 'highlight.js';
 import { LogLevel } from '../../logger';
-
-if (process.env.NODE_ENV !== 'production') {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports,@typescript-eslint/no-var-requires
-  registerLanguage('cypher', require('highlightjs-cypher'));
-}
+import { highlight } from '../highlight-cypher.util';
 
 declare module 'cypher-query-builder/dist/typings/query' {
   interface Query {
@@ -31,11 +25,9 @@ Query.prototype.logIt = function logIt(
     const result = orig();
     if (interpolate ?? process.env.NODE_ENV !== 'production') {
       let interpolated = query.interpolate();
-      interpolated = highlight(interpolated, {
-        language: 'cypher',
-      });
+      interpolated = highlight(interpolated);
       Object.defineProperty(result.params, 'interpolated', {
-        value: `\n${interpolated}\n`,
+        value: interpolated,
         enumerable: false,
       });
     }

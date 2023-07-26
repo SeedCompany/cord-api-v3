@@ -47,13 +47,13 @@ export class ProjectMemberService {
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
     @Inject(forwardRef(() => UserService))
-    private readonly userService: UserService,
+    private readonly userService: UserService & {},
     private readonly eventBus: IEventBus,
     @Inject(forwardRef(() => ProjectService))
-    private readonly projectService: ProjectService,
+    private readonly projectService: ProjectService & {},
     @Logger('project:member:service') private readonly logger: ILogger,
     @Inject(forwardRef(() => AuthorizationService))
-    private readonly authorizationService: AuthorizationService,
+    private readonly authorizationService: AuthorizationService & {},
     private readonly repo: ProjectMemberRepository,
   ) {}
 

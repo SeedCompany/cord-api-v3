@@ -62,13 +62,13 @@ export class ProjectRules {
   constructor(
     private readonly db: DatabaseService,
     @Inject(forwardRef(() => UserService))
-    private readonly userService: UserService,
+    private readonly userService: UserService & {},
     @Inject(forwardRef(() => ProjectService))
-    private readonly projectService: ProjectService,
+    private readonly projectService: ProjectService & {},
     @Inject(forwardRef(() => EngagementService))
-    private readonly engagements: EngagementService,
+    private readonly engagements: EngagementService & {},
     @Inject(forwardRef(() => AuthenticationService))
-    private readonly auth: AuthenticationService,
+    private readonly auth: AuthenticationService & {},
     private readonly configService: ConfigService,
     // eslint-disable-next-line @seedcompany/no-unused-vars
     @Logger('project:rules') private readonly logger: ILogger,

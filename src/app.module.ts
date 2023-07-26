@@ -85,3 +85,8 @@ assert(
   ],
 })
 export class AppModule {}
+
+// @ts-expect-error You just added a library that implicitly adds the DOM library;
+// please avoid this as we don't want DOM globals here in a Node app.
+// eslint-disable-next-line @typescript-eslint/no-unused-expressions
+typeof window;

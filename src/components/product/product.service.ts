@@ -64,7 +64,7 @@ export class ProductService {
   constructor(
     private readonly scriptureRefs: ScriptureReferenceService,
     @Inject(forwardRef(() => AuthorizationService))
-    private readonly authorizationService: AuthorizationService,
+    private readonly authorizationService: AuthorizationService & {},
     private readonly privileges: Privileges,
     private readonly repo: ProductRepository,
     private readonly resourceLoader: ResourceLoader,

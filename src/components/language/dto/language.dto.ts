@@ -199,6 +199,13 @@ export class Language extends Interfaces {
 })
 export class SecuredLanguage extends SecuredProperty(Language) {}
 
+@ObjectType({
+  description: SecuredProperty.descriptionFor('a language or null'),
+})
+export class SecuredLanguageNullable extends SecuredProperty(Language, {
+  nullable: true,
+}) {}
+
 declare module '~/core/resources/map' {
   interface ResourceMap {
     EthnologueLanguage: typeof EthnologueLanguage;

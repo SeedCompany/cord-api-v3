@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { EmailService } from '@seedcompany/nestjs-email';
-import { sign, verify } from 'jsonwebtoken';
+import JWT from 'jsonwebtoken';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
@@ -236,7 +236,7 @@ export class AuthenticationService {
       iat: Date.now(),
     };
 
-    return sign(payload, this.config.jwtKey);
+    return JWT.sign(payload, this.config.jwtKey);
   }
 
   private decodeJWT(token?: string) {
@@ -245,7 +245,7 @@ export class AuthenticationService {
     }
 
     try {
-      return verify(token, this.config.jwtKey) as JwtPayload;
+      return JWT.verify(token, this.config.jwtKey) as JwtPayload;
     } catch (exception) {
       this.logger.warning('Failed to validate JWT', {
         exception,

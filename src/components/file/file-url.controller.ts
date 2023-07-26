@@ -21,7 +21,7 @@ export class FileUrlController {
 
   constructor(
     @Inject(forwardRef(() => FileService))
-    private readonly files: FileService,
+    private readonly files: FileService & {},
     private readonly sessionHost: SessionInterceptor,
     private readonly httpAdapterHost: HttpAdapterHost,
   ) {}

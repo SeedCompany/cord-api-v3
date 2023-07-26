@@ -6,6 +6,7 @@ import { RegisterResource } from '~/core/resources';
 import {
   DateTimeField,
   ID,
+  IdOf,
   IntersectionType,
   Resource,
   ResourceRelationsShape,
@@ -19,6 +20,7 @@ import {
   SensitivityField,
 } from '../../../common';
 import { ScopedRole } from '../../authorization';
+import type { Language } from '../../language';
 import { FinancialReportingType } from '../../partnership/dto/financial-reporting-type';
 import { Pinnable } from '../../pin/dto';
 import { Postable } from '../../post/dto';
@@ -71,6 +73,8 @@ export class Partner extends Interfaces {
 
   @Field()
   readonly address: SecuredString;
+
+  readonly languageOfWiderCommunication: Secured<IdOf<Language> | null>;
 
   @DateTimeField()
   readonly modifiedAt: DateTime;

@@ -9,6 +9,9 @@ export abstract class CreateOrganization {
   @NameField()
   readonly name: string;
 
+  @NameField({ nullable: true })
+  readonly acronym?: string | null;
+
   @Field({ nullable: true })
   readonly address?: string;
 }
