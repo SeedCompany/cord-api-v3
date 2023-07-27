@@ -1,4 +1,4 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import {
   DuplicateException,
   ID,
@@ -12,8 +12,7 @@ import {
 } from '../../common';
 import { HandleIdLookup, ILogger, Logger } from '../../core';
 import { mapListResults } from '../../core/database/results';
-import { AuthorizationService } from '../authorization/authorization.service';
-import { Powers } from '../authorization/dto/powers';
+import { Privileges } from '../authorization';
 import {
   CreateFieldRegion,
   FieldRegion,
@@ -27,8 +26,7 @@ import { FieldRegionRepository } from './field-region.repository';
 export class FieldRegionService {
   constructor(
     @Logger('field-region:service') private readonly logger: ILogger,
-    @Inject(forwardRef(() => AuthorizationService))
-    private readonly authorizationService: AuthorizationService & {},
+    private readonly privileges: Privileges,
     private readonly repo: FieldRegionRepository,
   ) {}
 
@@ -36,10 +34,7 @@ export class FieldRegionService {
     input: CreateFieldRegion,
     session: Session,
   ): Promise<FieldRegion> {
-    await this.authorizationService.checkPower(
-      Powers.CreateFieldRegion,
-      session,
-    );
+    this.privileges.for(session, FieldRegion).verifyCan('create');
     if (!(await this.repo.isUnique(input.name))) {
       throw new DuplicateException(
         'fieldRegion.name',
@@ -83,11 +78,7 @@ export class FieldRegionService {
     dto: UnsecuredDto<FieldRegion>,
     session: Session,
   ): Promise<FieldRegion> {
-    const securedProps = await this.authorizationService.secureProperties(
-      FieldRegion,
-      dto,
-      session,
-    );
+    const securedProps = this.privileges.for(session, FieldRegion).secure(dto);
 
     return {
       ...dto,
@@ -102,11 +93,7 @@ export class FieldRegionService {
   ): Promise<FieldRegion> {
     const fieldRegion = await this.readOne(input.id, session);
     const changes = this.repo.getActualChanges(fieldRegion, input);
-    await this.authorizationService.verifyCanEditChanges(
-      FieldRegion,
-      fieldRegion,
-      changes,
-    );
+    this.privileges.for(session, FieldRegion).verifyChanges(changes);
     // update director
 
     await this.repo.updateProperties(fieldRegion, changes);
@@ -140,7 +127,7 @@ export class FieldRegionService {
     input: FieldRegionListInput,
     session: Session,
   ): Promise<FieldRegionListOutput> {
-    if (await this.authorizationService.canList(FieldRegion, session)) {
+    if (this.privileges.for(session, FieldRegion).can('read')) {
       const results = await this.repo.list(input, session);
       return await mapListResults(results, (dto) => this.secure(dto, session));
     } else {

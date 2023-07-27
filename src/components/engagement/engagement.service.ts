@@ -23,7 +23,6 @@ import {
 } from '../../core';
 import { mapListResults } from '../../core/database/results';
 import { Privileges } from '../authorization';
-import { AuthorizationService } from '../authorization/authorization.service';
 import { CeremonyService } from '../ceremony';
 import { FileService } from '../file';
 import { Location } from '../location/dto';
@@ -72,8 +71,6 @@ export class EngagementService {
     @Inject(forwardRef(() => ProjectService))
     private readonly projectService: ProjectService & {},
     private readonly eventBus: IEventBus,
-    @Inject(forwardRef(() => AuthorizationService))
-    private readonly authorizationService: AuthorizationService & {},
     private readonly resources: ResourceLoader,
     @Logger(`engagement:service`) private readonly logger: ILogger,
   ) {}
@@ -257,11 +254,12 @@ export class EngagementService {
   ): Promise<Engagement> {
     const isLanguageEngagement = dto.__typename === 'LanguageEngagement';
 
-    const securedProperties = await this.authorizationService.secureProperties(
-      isLanguageEngagement ? LanguageEngagement : InternshipEngagement,
-      dto,
-      session,
-    );
+    const securedProperties = this.privileges
+      .for(
+        session,
+        isLanguageEngagement ? LanguageEngagement : InternshipEngagement,
+      )
+      .secure(dto);
 
     const canDelete =
       dto.status !== EngagementStatus.InDevelopment &&
@@ -324,11 +322,7 @@ export class EngagementService {
 
     const { methodology: _, ...maybeChanges } = input;
     const changes = this.repo.getActualLanguageChanges(object, maybeChanges);
-    await this.authorizationService.verifyCanEditChanges(
-      LanguageEngagement,
-      object,
-      changes,
-    );
+    this.privileges.for(session, LanguageEngagement).verifyChanges(changes);
 
     const { pnp, ...simpleChanges } = changes;
 
@@ -387,12 +381,7 @@ export class EngagementService {
     )) as InternshipEngagement;
 
     const changes = this.repo.getActualInternshipChanges(object, input);
-    await this.authorizationService.verifyCanEditChanges(
-      InternshipEngagement,
-      object,
-      changes,
-      'engagement',
-    );
+    this.privileges.for(session, InternshipEngagement).verifyChanges(changes);
 
     const { mentorId, countryOfOriginId, growthPlan, ...simpleChanges } =
       changes;
@@ -497,12 +486,10 @@ export class EngagementService {
     input: ProductListInput,
     session: Session,
   ): Promise<SecuredProductList> {
-    const { product: perms } = await this.authorizationService.getPermissions({
-      resource: LanguageEngagement,
-      sessionOrUserId: session,
-      dto: engagement,
-    });
-    if (!perms.canRead) {
+    const privs = this.privileges.for(session, LanguageEngagement).all;
+    // TODO - need to dig some more to reassure myself that this is all good
+    // Not confident that I have the correct resource called here
+    if (!privs.language.read) {
       return SecuredList.Redacted;
     }
 
@@ -520,7 +507,7 @@ export class EngagementService {
     return {
       ...result,
       canRead: true,
-      canCreate: perms.canEdit,
+      canCreate: privs.language.edit,
     };
   }
 

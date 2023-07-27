@@ -12,8 +12,7 @@ import {
 } from '../../common';
 import { HandleIdLookup, ILogger, Logger } from '../../core';
 import { mapListResults } from '../../core/database/results';
-import { AuthorizationService } from '../authorization/authorization.service';
-import { Powers } from '../authorization/dto/powers';
+import { Privileges } from '../authorization';
 import {
   CreateFieldZone,
   FieldZone,
@@ -27,12 +26,12 @@ import { FieldZoneRepository } from './field-zone.repository';
 export class FieldZoneService {
   constructor(
     @Logger('field-zone:service') private readonly logger: ILogger,
-    private readonly authorizationService: AuthorizationService,
+    private readonly privileges: Privileges,
     private readonly repo: FieldZoneRepository,
   ) {}
 
   async create(input: CreateFieldZone, session: Session): Promise<FieldZone> {
-    await this.authorizationService.checkPower(Powers.CreateFieldZone, session);
+    this.privileges.for(session, FieldZone).verifyCan('create');
     if (!(await this.repo.isUnique(input.name))) {
       throw new DuplicateException(
         'fieldZone.name',
@@ -75,11 +74,7 @@ export class FieldZoneService {
     dto: UnsecuredDto<FieldZone>,
     session: Session,
   ): Promise<FieldZone> {
-    const securedProps = await this.authorizationService.secureProperties(
-      FieldZone,
-      dto,
-      session,
-    );
+    const securedProps = this.privileges.for(session, FieldZone).secure(dto);
 
     return {
       ...dto,
@@ -92,11 +87,7 @@ export class FieldZoneService {
     const fieldZone = await this.readOne(input.id, session);
 
     const changes = this.repo.getActualChanges(fieldZone, input);
-    await this.authorizationService.verifyCanEditChanges(
-      FieldZone,
-      fieldZone,
-      changes,
-    );
+    this.privileges.for(session, FieldZone).verifyChanges(changes);
 
     const { directorId, ...simpleChanges } = changes;
 
@@ -136,7 +127,7 @@ export class FieldZoneService {
     input: FieldZoneListInput,
     session: Session,
   ): Promise<FieldZoneListOutput> {
-    if (await this.authorizationService.canList(FieldZone, session)) {
+    if (this.privileges.for(session, FieldZone).can('read')) {
       const results = await this.repo.list(input, session);
       return await mapListResults(results, (dto) => this.secure(dto, session));
     } else {

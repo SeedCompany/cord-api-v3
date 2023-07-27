@@ -13,8 +13,6 @@ import {
 import { HandleIdLookup, ILogger, Logger } from '../../core';
 import { mapListResults } from '../../core/database/results';
 import { Privileges } from '../authorization';
-import { AuthorizationService } from '../authorization/authorization.service';
-import { Powers } from '../authorization/dto/powers';
 import { FinancialReportingType } from '../partnership/dto/financial-reporting-type';
 import {
   IProject,
@@ -36,8 +34,6 @@ import { PartnerRepository } from './partner.repository';
 export class PartnerService {
   constructor(
     @Logger('partner:service') private readonly logger: ILogger,
-    @Inject(forwardRef(() => AuthorizationService))
-    private readonly authorizationService: AuthorizationService & {},
     private readonly privileges: Privileges,
     @Inject(forwardRef(() => ProjectService))
     private readonly projectService: ProjectService & {},
@@ -45,7 +41,8 @@ export class PartnerService {
   ) {}
 
   async create(input: CreatePartner, session: Session): Promise<Partner> {
-    await this.authorizationService.checkPower(Powers.CreatePartner, session);
+    this.privileges.for(session, Partner).verifyCan('create');
+
     this.verifyFinancialReportingType(
       input.financialReportingTypes,
       input.types,
@@ -99,11 +96,7 @@ export class PartnerService {
   }
 
   private async secure(dto: UnsecuredDto<Partner>, session: Session) {
-    const securedProps = await this.authorizationService.secureProperties(
-      Partner,
-      dto,
-      session,
-    );
+    const securedProps = this.privileges.for(session, Partner).secure(dto);
 
     return {
       ...dto,
@@ -142,11 +135,7 @@ export class PartnerService {
     }
 
     const changes = this.repo.getActualChanges(object, input);
-    await this.authorizationService.verifyCanEditChanges(
-      Partner,
-      object,
-      changes,
-    );
+    this.privileges.for(session, Partner).verifyChanges(changes);
     const {
       pointOfContactId,
       languageOfWiderCommunicationId,

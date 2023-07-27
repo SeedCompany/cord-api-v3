@@ -1,4 +1,4 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import {
   DuplicateException,
   ID,
@@ -11,8 +11,7 @@ import {
 } from '../../common';
 import { ConfigService, HandleIdLookup, ILogger, Logger } from '../../core';
 import { mapListResults } from '../../core/database/results';
-import { AuthorizationService } from '../authorization/authorization.service';
-import { Powers } from '../authorization/dto/powers';
+import { Privileges } from '../authorization';
 import {
   LocationListInput,
   LocationService,
@@ -32,8 +31,7 @@ export class OrganizationService {
   constructor(
     @Logger('org:service') private readonly logger: ILogger,
     private readonly config: ConfigService,
-    @Inject(forwardRef(() => AuthorizationService))
-    private readonly authorizationService: AuthorizationService & {},
+    private readonly privileges: Privileges,
     private readonly locationService: LocationService,
     private readonly repo: OrganizationRepository,
   ) {}
@@ -42,10 +40,7 @@ export class OrganizationService {
     input: CreateOrganization,
     session: Session,
   ): Promise<Organization> {
-    await this.authorizationService.checkPower(
-      Powers.CreateOrganization,
-      session,
-    );
+    this.privileges.for(session, Organization).verifyCan('create');
 
     if (!(await this.repo.isUnique(input.name))) {
       throw new DuplicateException(
@@ -93,11 +88,7 @@ export class OrganizationService {
     dto: UnsecuredDto<Organization>,
     session: Session,
   ): Promise<Organization> {
-    const securedProps = await this.authorizationService.secureProperties(
-      Organization,
-      dto,
-      session,
-    );
+    const securedProps = this.privileges.for(session, Organization).secure(dto);
 
     return {
       ...dto,
@@ -113,12 +104,7 @@ export class OrganizationService {
     const organization = await this.readOne(input.id, session);
 
     const changes = this.repo.getActualChanges(organization, input);
-
-    await this.authorizationService.verifyCanEditChanges(
-      Organization,
-      organization,
-      changes,
-    );
+    this.privileges.for(session, Organization).verifyChanges(changes);
 
     return await this.repo.updateProperties(organization, changes);
   }

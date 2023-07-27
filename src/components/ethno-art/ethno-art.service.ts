@@ -12,8 +12,7 @@ import {
 import { HandleIdLookup, ILogger, Logger } from '../../core';
 import { ifDiff } from '../../core/database/changes';
 import { mapListResults } from '../../core/database/results';
-import { AuthorizationService } from '../authorization/authorization.service';
-import { Powers } from '../authorization/dto/powers';
+import { Privileges } from '../authorization';
 import { isScriptureEqual, ScriptureReferenceService } from '../scripture';
 import {
   CreateEthnoArt,
@@ -28,12 +27,12 @@ export class EthnoArtService {
   constructor(
     @Logger('ethno-art:service') private readonly logger: ILogger,
     private readonly scriptureRefs: ScriptureReferenceService,
-    private readonly authorizationService: AuthorizationService,
+    private readonly privileges: Privileges,
     private readonly repo: EthnoArtRepository,
   ) {}
 
   async create(input: CreateEthnoArt, session: Session): Promise<EthnoArt> {
-    await this.authorizationService.checkPower(Powers.CreateEthnoArt, session);
+    this.privileges.for(session, EthnoArt).verifyCan('create');
     if (!(await this.repo.isUnique(input.name))) {
       throw new DuplicateException(
         'ethnoArt.name',
@@ -83,16 +82,7 @@ export class EthnoArtService {
     dto: UnsecuredDto<EthnoArt>,
     session: Session,
   ): Promise<EthnoArt> {
-    const securedProps = await this.authorizationService.secureProperties(
-      EthnoArt,
-      {
-        ...dto,
-        scriptureReferences: this.scriptureRefs.parseList(
-          dto.scriptureReferences,
-        ),
-      },
-      session,
-    );
+    const securedProps = this.privileges.for(session, EthnoArt).secure(dto);
 
     return {
       ...dto,
@@ -117,12 +107,7 @@ export class EthnoArtService {
         ethnoArt.scriptureReferences.value,
       ),
     };
-
-    await this.authorizationService.verifyCanEditChanges(
-      EthnoArt,
-      ethnoArt,
-      changes,
-    );
+    this.privileges.for(session, EthnoArt).verifyChanges(changes);
 
     const { scriptureReferences, ...simpleChanges } = changes;
 

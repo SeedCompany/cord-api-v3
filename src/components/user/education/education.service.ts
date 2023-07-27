@@ -1,4 +1,4 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import {
   ID,
   NotFoundException,
@@ -9,8 +9,7 @@ import {
 } from '../../../common';
 import { HandleIdLookup, ILogger, Logger } from '../../../core';
 import { mapListResults } from '../../../core/database/results';
-import { Powers } from '../../authorization';
-import { AuthorizationService } from '../../authorization/authorization.service';
+import { Privileges } from '../../authorization';
 import {
   CreateEducation,
   Education,
@@ -24,13 +23,12 @@ import { EducationRepository } from './education.repository';
 export class EducationService {
   constructor(
     @Logger('education:service') private readonly logger: ILogger,
-    @Inject(forwardRef(() => AuthorizationService))
-    private readonly authorizationService: AuthorizationService & {},
+    private readonly privileges: Privileges,
     private readonly repo: EducationRepository,
   ) {}
 
   async create(input: CreateEducation, session: Session): Promise<Education> {
-    await this.authorizationService.checkPower(Powers.CreateEducation, session);
+    this.privileges.for(session, Education).verifyCan('create');
     // create education
     const result = await this.repo.create(input, session);
 
@@ -68,11 +66,7 @@ export class EducationService {
     dto: UnsecuredDto<Education>,
     session: Session,
   ): Promise<Education> {
-    const securedProps = await this.authorizationService.secureProperties(
-      Education,
-      dto,
-      session,
-    );
+    const securedProps = this.privileges.for(session, Education).secure(dto);
 
     return {
       ...dto,
@@ -92,11 +86,7 @@ export class EducationService {
     }
     const changes = this.repo.getActualChanges(ed, input);
     if (result.id !== session.userId) {
-      await this.authorizationService.verifyCanEditChanges(
-        Education,
-        ed,
-        changes,
-      );
+      this.privileges.for(session, Education).verifyChanges(changes);
     }
 
     await this.repo.updateProperties(ed, changes);

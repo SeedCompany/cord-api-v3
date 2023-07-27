@@ -1,4 +1,4 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import {
   ID,
   InputException,
@@ -11,7 +11,7 @@ import {
 } from '../../common';
 import { HandleIdLookup, ILogger, Logger } from '../../core';
 import { mapListResults } from '../../core/database/results';
-import { AuthorizationService } from '../authorization/authorization.service';
+import { Privileges } from '../authorization';
 import { CeremonyRepository } from './ceremony.repository';
 import {
   Ceremony,
@@ -24,8 +24,7 @@ import {
 @Injectable()
 export class CeremonyService {
   constructor(
-    @Inject(forwardRef(() => AuthorizationService))
-    private readonly authorizationService: AuthorizationService & {},
+    private readonly privileges: Privileges,
     private readonly ceremonyRepo: CeremonyRepository,
     @Logger('ceremony:service') private readonly logger: ILogger,
   ) {}
@@ -71,11 +70,7 @@ export class CeremonyService {
   }
 
   async secure(dto: UnsecuredDto<Ceremony>, session: Session) {
-    const securedProps = await this.authorizationService.secureProperties(
-      Ceremony,
-      dto,
-      session,
-    );
+    const securedProps = this.privileges.for(session, Ceremony).secure(dto);
 
     return {
       ...dto,
@@ -87,11 +82,8 @@ export class CeremonyService {
   async update(input: UpdateCeremony, session: Session): Promise<Ceremony> {
     const object = await this.readOne(input.id, session);
     const changes = this.ceremonyRepo.getActualChanges(object, input);
-    await this.authorizationService.verifyCanEditChanges(
-      Ceremony,
-      object,
-      changes,
-    );
+    this.privileges.for(session, Ceremony).verifyChanges(changes);
+
     return await this.ceremonyRepo.updateProperties(object, changes);
   }
 
