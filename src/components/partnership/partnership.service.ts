@@ -20,7 +20,6 @@ import {
 } from '../../core';
 import { mapListResults } from '../../core/database/results';
 import { Privileges } from '../authorization';
-import { AuthorizationService } from '../authorization/authorization.service';
 import { FileService } from '../file';
 import { Partner, PartnerService, PartnerType } from '../partner';
 import { IProject, ProjectService } from '../project';
@@ -49,8 +48,6 @@ export class PartnershipService {
     private readonly projectService: ProjectService & {},
     private readonly privileges: Privileges,
     private readonly eventBus: IEventBus,
-    @Inject(forwardRef(() => AuthorizationService))
-    private readonly authorizationService: AuthorizationService & {},
     private readonly repo: PartnershipRepository,
     private readonly resourceLoader: ResourceLoader,
     @Logger('partnership:service') private readonly logger: ILogger,
@@ -171,11 +168,7 @@ export class PartnershipService {
     dto: UnsecuredDto<Partnership>,
     session: Session,
   ): Promise<Partnership> {
-    const securedProps = await this.authorizationService.secureProperties(
-      Partnership,
-      dto,
-      session,
-    );
+    const securedProps = this.privileges.for(session, Partnership).secure(dto);
 
     return {
       ...dto,
@@ -231,11 +224,7 @@ export class PartnershipService {
     }
 
     const changes = this.repo.getActualChanges(object, input);
-    await this.authorizationService.verifyCanEditChanges(
-      Partnership,
-      object,
-      changes,
-    );
+    this.privileges.for(session, Partnership).verifyChanges(changes);
     const { mou, agreement, ...simpleChanges } = changes;
 
     if (changes.primary) {

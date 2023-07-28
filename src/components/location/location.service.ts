@@ -1,4 +1,4 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import {
   DuplicateException,
   ID,
@@ -14,8 +14,7 @@ import {
 } from '../../common';
 import { HandleIdLookup, ILogger, Logger } from '../../core';
 import { mapListResults } from '../../core/database/results';
-import { AuthorizationService } from '../authorization/authorization.service';
-import { Powers } from '../authorization/dto/powers';
+import { Privileges } from '../authorization';
 import { FileService } from '../file';
 import {
   CreateLocation,
@@ -31,14 +30,13 @@ import { LocationRepository } from './location.repository';
 export class LocationService {
   constructor(
     @Logger('location:service') private readonly logger: ILogger,
-    @Inject(forwardRef(() => AuthorizationService))
-    private readonly authorizationService: AuthorizationService & {},
+    private readonly privileges: Privileges,
     private readonly repo: LocationRepository,
     private readonly files: FileService,
   ) {}
 
   async create(input: CreateLocation, session: Session): Promise<Location> {
-    await this.authorizationService.checkPower(Powers.CreateLocation, session);
+    this.privileges.for(session, Location).verifyCan('create');
     const checkName = await this.repo.doesNameExist(input.name);
     if (checkName) {
       throw new DuplicateException(
@@ -87,11 +85,7 @@ export class LocationService {
     dto: UnsecuredDto<Location>,
     session: Session,
   ): Promise<Location> {
-    const securedProps = await this.authorizationService.secureProperties(
-      Location,
-      dto,
-      session,
-    );
+    const securedProps = this.privileges.for(session, Location).secure(dto);
 
     return {
       ...dto,
@@ -104,11 +98,7 @@ export class LocationService {
     const location = await this.readOne(input.id, session);
 
     const changes = this.repo.getActualChanges(location, input);
-    await this.authorizationService.verifyCanEditChanges(
-      Location,
-      location,
-      changes,
-    );
+    this.privileges.for(session, Location).verifyChanges(changes);
 
     const {
       fundingAccountId,
@@ -209,11 +199,7 @@ export class LocationService {
     input: LocationListInput,
     session: Session,
   ): Promise<SecuredLocationList> {
-    const perms = await this.authorizationService.getPermissions({
-      resource: label,
-      sessionOrUserId: session,
-      dto,
-    });
+    const perms = this.privileges.for(session, label);
 
     const results = await this.repo.listLocationsFromNodeNoSecGroups(
       label.name,
@@ -223,11 +209,11 @@ export class LocationService {
     );
 
     return {
-      ...(perms[rel].canRead
+      ...(perms.can('read')
         ? await mapListResults(results, (dto) => this.secure(dto, session))
         : SecuredList.Redacted),
-      canRead: perms[rel].canRead,
-      canCreate: perms[rel].canEdit,
+      canRead: perms.can('read'),
+      canCreate: perms.can('create'),
     };
   }
 }
