@@ -91,25 +91,27 @@ export async function createLanguage(
   const ethnologueLanguage: CreateEthnologueLanguage = {
     code: faker.helpers.replaceSymbols('???').toLowerCase(),
     provisionalCode: faker.helpers.replaceSymbols('???').toLowerCase(),
-    name: faker.name.firstName(),
-    population: faker.datatype.number(),
+    name: faker.person.firstName(),
+    // this represents the largest number that is less than the 32-bit max for GraphQL
+    population: faker.number.int({ max: 2147483647 }),
     ...input.ethnologue,
   };
   const language: CreateLanguage = {
-    name: faker.address.country() + '' + (await generateId()),
+    name: faker.location.country() + '' + (await generateId()),
     displayName: faker.company.name() + '' + (await generateId()),
-    displayNamePronunciation: faker.random.word(),
+    displayNamePronunciation: faker.lorem.word(),
     isDialect: faker.datatype.boolean(),
-    populationOverride: faker.datatype.number(),
-    registryOfDialectsCode: faker.datatype
-      .number({ min: 10000, max: 99999 })
+    // this represents the largest number that is less than the 32-bit max for GraphQL
+    populationOverride: faker.number.int({ max: 2147483647 }),
+    registryOfDialectsCode: faker.number
+      .int({ min: 10000, max: 99999 })
       .toString(),
     leastOfThese: faker.datatype.boolean(),
     leastOfTheseReason: faker.lorem.sentence(),
     ethnologue: ethnologueLanguage,
     signLanguageCode:
       faker.helpers.replaceSymbols('??').toUpperCase() +
-      faker.datatype.number({ min: 10, max: 99 }).toString(),
+      faker.number.int({ min: 10, max: 99 }).toString(),
     sponsorEstimatedEndDate: CalendarDate.fromISO('1991-01-01'),
     tags: ['tag1', 'tag2'],
     ...input,
@@ -146,7 +148,7 @@ export async function createLanguage(
 }
 
 export async function createLanguageMinimal(app: TestApp) {
-  const languageName = faker.address.country() + '' + (await generateId());
+  const languageName = faker.location.country() + '' + (await generateId());
   const result = await app.graphql.mutate(
     gql`
       mutation createLanguage($input: CreateLanguageInput!) {

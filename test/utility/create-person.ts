@@ -11,10 +11,10 @@ export async function createPerson(
 ) {
   const person: CreatePerson = {
     email: faker.internet.email(),
-    realFirstName: faker.name.firstName(),
-    realLastName: faker.name.lastName(),
-    displayFirstName: faker.name.firstName() + (await generateId()),
-    displayLastName: faker.name.lastName() + (await generateId()),
+    realFirstName: faker.person.firstName(),
+    realLastName: faker.person.lastName(),
+    displayFirstName: faker.person.firstName() + (await generateId()),
+    displayLastName: faker.person.lastName() + (await generateId()),
     phone: faker.phone.number(),
     timezone: 'America/Chicago',
     about: 'about detail' + (await generateId()),

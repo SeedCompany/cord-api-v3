@@ -16,7 +16,7 @@ export async function createProjectChangeRequest(
   const changeRequest: CreateProjectChangeRequest = {
     projectId: input.projectId!, // Project status should be Active
     types: [ProjectChangeRequestType.Other],
-    summary: faker.random.alpha(),
+    summary: faker.string.alpha(),
     ...input,
   };
 
