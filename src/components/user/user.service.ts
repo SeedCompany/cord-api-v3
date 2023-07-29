@@ -7,6 +7,7 @@ import {
   NotFoundException,
   ObjectView,
   SecuredList,
+  SecuredPropsPlusExtraKey,
   ServerException,
   Session,
   UnauthorizedException,
@@ -194,14 +195,30 @@ export class UserService {
     );
   }
 
+  async permissionsForListProp(prop: string, session: Session) {
+    const perms = this.privileges
+      .for(session, User)
+      .forEdge(prop as SecuredPropsPlusExtraKey<typeof User>);
+    return {
+      canCreate: perms.can('edit'),
+      canDelete: perms.can('edit'),
+      canEdit: perms.can('edit'),
+      canRead: perms.can('read'),
+      create: perms.can('edit'),
+      delete: perms.can('edit'),
+      edit: perms.can('edit'),
+      read: perms.can('read'),
+    };
+  }
+
   async listEducations(
     userId: ID,
     input: EducationListInput,
     session: Session,
   ): Promise<SecuredEducationList> {
-    const perms = this.privileges.for(session, User).all;
+    const perms = await this.permissionsForListProp('education', session);
 
-    if (!perms.education.read) {
+    if (!perms.read) {
       return SecuredList.Redacted;
     }
     const result = await this.educations.list(
@@ -216,8 +233,7 @@ export class UserService {
     );
     return {
       ...result,
-      canRead: true,
-      canCreate: perms.education.create,
+      ...perms,
     };
   }
 
@@ -226,9 +242,9 @@ export class UserService {
     input: OrganizationListInput,
     session: Session,
   ): Promise<SecuredOrganizationList> {
-    const perms = this.privileges.for(session, User).all;
+    const perms = await this.permissionsForListProp('organization', session);
 
-    if (!perms.organization.read) {
+    if (!perms.read) {
       return SecuredList.Redacted;
     }
     const result = await this.organizations.list(
@@ -244,8 +260,7 @@ export class UserService {
 
     return {
       ...result,
-      canRead: true,
-      canCreate: perms.organization.edit,
+      ...perms,
     };
   }
 
@@ -254,7 +269,7 @@ export class UserService {
     input: PartnerListInput,
     session: Session,
   ): Promise<SecuredPartnerList> {
-    const perms = this.privileges.for(session, User).all;
+    const perms = await this.permissionsForListProp('partner', session);
 
     const result = await this.partners.list(
       {
@@ -268,8 +283,7 @@ export class UserService {
     );
     return {
       ...result,
-      canRead: perms.partner.read,
-      canCreate: perms.partner.edit,
+      ...perms,
     };
   }
 
@@ -278,9 +292,9 @@ export class UserService {
     input: UnavailabilityListInput,
     session: Session,
   ): Promise<SecuredUnavailabilityList> {
-    const perms = this.privileges.for(session, User).all;
+    const perms = await this.permissionsForListProp('unavailability', session);
 
-    if (!perms.unavailability.read) {
+    if (!perms.read) {
       return SecuredList.Redacted;
     }
     const result = await this.unavailabilities.list(
@@ -296,9 +310,7 @@ export class UserService {
 
     return {
       ...result,
-      // test for false above
-      canRead: true,
-      canCreate: perms.unavailability.create,
+      ...perms,
     };
   }
 
