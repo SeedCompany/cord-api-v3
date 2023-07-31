@@ -15,7 +15,7 @@ export async function createLocation(
   input: Partial<CreateLocation> = {},
 ) {
   const location: CreateLocation = {
-    name: faker.random.word() + ' ' + faker.datatype.uuid(),
+    name: faker.lorem.word() + ' ' + faker.string.uuid(),
     type: LocationType.County,
     isoAlpha3: faker.helpers.arrayElement(countries()).alpha3,
     ...input,

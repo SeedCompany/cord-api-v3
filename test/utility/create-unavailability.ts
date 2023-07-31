@@ -15,7 +15,7 @@ export async function createUnavailability(
 ) {
   const unavailability: CreateUnavailability = {
     userId: input.userId!,
-    description: faker.address.country(),
+    description: faker.location.country(),
     start: DateTime.utc(),
     end: DateTime.utc().plus({ years: 1 }),
     ...input,

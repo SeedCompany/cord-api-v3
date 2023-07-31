@@ -49,7 +49,7 @@ describe('Region e2e', () => {
 
   it.skip('should have unique name', async () => {
     // Old test.  Attempt to create a region with a name that is taken will return the existing region
-    const name = faker.address.country() + ' Region';
+    const name = faker.location.country() + ' Region';
     await createRegion(app, {
       directorId: director.id,
       name,

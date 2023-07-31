@@ -100,7 +100,7 @@ describe('Project Changeset Aware e2e', () => {
     });
 
     // Update project with changeset
-    const newCRName = faker.random.word() + ' ' + faker.datatype.uuid();
+    const newCRName = faker.lorem.word() + ' ' + faker.string.uuid();
     const mutationResult = await app.graphql.mutate(
       gql`
         mutation updateProject($input: UpdateProjectInput!) {

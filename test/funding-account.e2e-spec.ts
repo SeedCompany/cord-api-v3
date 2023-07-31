@@ -61,7 +61,7 @@ describe('FundingAccount e2e', () => {
   it('update funding account', async () => {
     const st = await runAsAdmin(app, createFundingAccount);
     const newName = faker.company.name();
-    const newAccountNumber = faker.datatype.number({ min: 0, max: 9 });
+    const newAccountNumber = faker.number.int({ min: 0, max: 9 });
     await runAsAdmin(app, async () => {
       const result = await app.graphql.mutate(
         gql`
