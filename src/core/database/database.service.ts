@@ -126,7 +126,7 @@ export class DatabaseService {
     // database that may not exist.
     const session = this.db.driver.session();
     try {
-      const generalInfo = await session.readTransaction((tx) =>
+      const generalInfo = await session.executeRead((tx) =>
         tx
           .run(
             `
@@ -145,7 +145,7 @@ export class DatabaseService {
         throw new ServerException('Unable to determine server info');
       }
       // "Administration" command doesn't work with read transactions
-      const dbs = await session.writeTransaction((tx) =>
+      const dbs = await session.executeWrite((tx) =>
         tx.run('show databases yield *'),
       );
       const version = (info.get('version') as string).split('.').map(Number);
@@ -189,20 +189,19 @@ export class DatabaseService {
   private async runAdminCommand(
     action: 'CREATE' | 'DROP',
     dbName: string,
-    info: ServerInfo,
+    _info: ServerInfo,
   ) {
     // @ts-expect-error Yes this is private, but we have a special use case.
     // We need to run this query with a session that's not configured to use the
     // database we are trying to create.
     const session = this.db.driver.session();
-    const supportsWait = info.versionXY >= 4.2;
     try {
-      await session.writeTransaction((tx) =>
+      await session.executeWrite((tx) =>
         tx.run(
           compact([
             `${action} DATABASE $name`,
             action === 'CREATE' ? 'IF NOT EXISTS' : 'IF EXISTS',
-            supportsWait ? 'WAIT' : '',
+            'WAIT',
           ]).join(' '),
           {
             name: dbName,

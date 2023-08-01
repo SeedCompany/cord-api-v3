@@ -76,7 +76,6 @@
     "luxon": "^3.3.0",
     "nanoid": "^3.3.6",
     "neo4j-driver": "^5.10.0",
-    "neo4j-v4": "npm:neo4j-driver@^4.0.0",
     "nestjs-console": "^9.0.0",
     "p-retry": "^4.6.2",
     "pako": "^2.1.0",

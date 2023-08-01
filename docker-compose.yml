@@ -20,7 +20,7 @@ services:
       NEO4J_PASSWORD: admin
 
   db:
-    image: neo4j:4.4-enterprise
+    image: neo4j:5.10-enterprise
     ports:
       - 7474:7474
       - 7687:7687
@@ -29,7 +29,6 @@ services:
     environment:
       NEO4J_ACCEPT_LICENSE_AGREEMENT: 'yes'
       NEO4J_AUTH: neo4j/admin
-      NEO4JLABS_PLUGINS: '["apoc"]'
       NEO4J_PLUGINS: '["apoc"]'
 
   pg:
