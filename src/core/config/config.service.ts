@@ -166,7 +166,6 @@ export const makeConfig = (env: EnvironmentService) =>
         url = parsed.toString();
       }
       return {
-        version: Math.trunc(env.number('NEO4J_VERSION').optional(4)) as 4 | 5,
         url,
         username,
         password,
