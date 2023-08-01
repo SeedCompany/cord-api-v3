@@ -27,6 +27,7 @@ export class OrganizationRepository extends DtoRepository<
     const initialProps = {
       name: input.name,
       address: input.address,
+      acronym: input.acronym,
       canDelete: true,
     };
 

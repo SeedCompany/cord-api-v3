@@ -5,7 +5,6 @@ import { Column, Row } from '../../common/xlsx.util';
 import { Downloadable } from '../file';
 import { Pnp, ProgressSheet } from '../pnp';
 import { ProgressSummary as Progress } from './dto';
-import 'ix/add/iterable-operators/find';
 
 @Injectable()
 export class ProgressSummaryExtractor {

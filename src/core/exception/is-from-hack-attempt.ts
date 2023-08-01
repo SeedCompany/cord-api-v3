@@ -1,5 +1,8 @@
-import { ArgumentsHost } from '@nestjs/common';
-import { NotFoundException as NestjsNotFoundException } from '@nestjs/common/exceptions/not-found.exception';
+import {
+  ArgumentsHost,
+  // eslint-disable-next-line no-restricted-imports
+  NotFoundException as NestjsNotFoundException,
+} from '@nestjs/common';
 import { IncomingMessage } from 'http';
 
 export const isFromHackAttempt = (error: Error, args: ArgumentsHost) => {

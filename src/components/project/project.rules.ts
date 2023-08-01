@@ -62,13 +62,13 @@ export class ProjectRules {
   constructor(
     private readonly db: DatabaseService,
     @Inject(forwardRef(() => UserService))
-    private readonly userService: UserService,
+    private readonly userService: UserService & {},
     @Inject(forwardRef(() => ProjectService))
-    private readonly projectService: ProjectService,
+    private readonly projectService: ProjectService & {},
     @Inject(forwardRef(() => EngagementService))
-    private readonly engagements: EngagementService,
+    private readonly engagements: EngagementService & {},
     @Inject(forwardRef(() => AuthenticationService))
-    private readonly auth: AuthenticationService,
+    private readonly auth: AuthenticationService & {},
     private readonly configService: ConfigService,
     // eslint-disable-next-line @seedcompany/no-unused-vars
     @Logger('project:rules') private readonly logger: ILogger,
@@ -82,7 +82,6 @@ export class ProjectRules {
     const mostRecentPreviousStep = (steps: ProjectStep[]) =>
       this.getMostRecentPreviousStep(id, steps, changeset);
 
-    /* eslint @typescript-eslint/switch-exhaustiveness-check: "error" */
     switch (step) {
       case ProjectStep.EarlyConversations:
         return {
@@ -815,6 +814,7 @@ export class ProjectRules {
           getNotifiers: () => this.getProjectTeamUserIds(id),
         };
     }
+    // @ts-expect-error This code should be unreachable, to prove the exhaustiveness of switch
     throw new UnreachableCaseError(step);
   }
 

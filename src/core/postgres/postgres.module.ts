@@ -1,11 +1,13 @@
-import { Module, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { Inject, Module, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { DateTime, Duration } from 'luxon';
-import { Pool, types } from 'pg';
+import pg, { PoolConfig, type Pool as PoolType } from 'pg';
 import { builtins as TypeId } from 'pg-types';
 import { CalendarDate } from '../../common';
 import { ConfigService } from '../config/config.service';
 import { ILogger, LoggerToken } from '../logger';
 import { Pg } from './pg.service';
+
+const { Pool, types } = pg;
 
 @Module({
   exports: [Pg],
@@ -14,7 +16,7 @@ import { Pg } from './pg.service';
       provide: Pool,
       useFactory(config: ConfigService, logger: ILogger) {
         const pool = new Pool({
-          ...config.postgres,
+          ...(config.postgres as PoolConfig), // typecast to undo deep readonly
           log: (message, err) => {
             if (err instanceof Error) {
               logger.error(message, { exception: err });
@@ -38,7 +40,10 @@ import { Pg } from './pg.service';
   ],
 })
 export class PostgresModule implements OnModuleInit, OnModuleDestroy {
-  constructor(private readonly pool: Pool, private readonly pg: Pg) {}
+  constructor(
+    @Inject(Pool) private readonly pool: PoolType,
+    private readonly pg: Pg,
+  ) {}
 
   async onModuleInit() {
     const dateParser = (inner: (d: string) => any) => (val: any) => {

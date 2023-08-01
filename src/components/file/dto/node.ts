@@ -3,6 +3,7 @@ import { stripIndent } from 'common-tags';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive, Opaque } from 'type-fest';
+import { RegisterResource } from '~/core/resources';
 import {
   DateTimeField,
   ID,
@@ -38,6 +39,7 @@ export const resolveFileNode = (val: AnyFileNode) => {
   return type;
 };
 
+@RegisterResource()
 @InterfaceType({
   resolveType: resolveFileNode,
 })
@@ -87,6 +89,7 @@ abstract class BaseFile extends FileNode {
   readonly size: number;
 }
 
+@RegisterResource()
 @ObjectType({
   implements: [FileNode, Resource],
 })
@@ -94,9 +97,10 @@ export class FileVersion extends BaseFile {
   static readonly Props = keysOf<FileVersion>();
   static readonly SecuredProps = keysOf<SecuredProps<FileVersion>>();
 
-  readonly type: FileNodeType.FileVersion;
+  declare readonly type: FileNodeType.FileVersion;
 }
 
+@RegisterResource()
 @ObjectType({
   implements: [FileNode, Resource],
 })
@@ -104,7 +108,7 @@ export class File extends BaseFile {
   static readonly Props = keysOf<File>();
   static readonly SecuredProps = keysOf<SecuredProps<File>>();
 
-  readonly type: FileNodeType.File;
+  declare readonly type: FileNodeType.File;
 
   readonly latestVersionId: ID;
 
@@ -114,6 +118,7 @@ export class File extends BaseFile {
   readonly modifiedAt: DateTime;
 }
 
+@RegisterResource()
 @ObjectType({
   implements: [FileNode, Resource],
 })
@@ -121,7 +126,7 @@ export class Directory extends FileNode {
   static readonly Props = keysOf<Directory>();
   static readonly SecuredProps = keysOf<SecuredProps<Directory>>();
 
-  readonly type: FileNodeType.Directory;
+  declare readonly type: FileNodeType.Directory;
 
   @Field(() => Int, {
     description:
@@ -189,3 +194,12 @@ export const isFileVersion = (node: AnyFileNode): node is FileVersion =>
 export type Downloadable<T> = T & {
   download: () => Promise<Buffer>;
 };
+
+declare module '~/core/resources/map' {
+  interface ResourceMap {
+    Directory: typeof Directory;
+    File: typeof File;
+    FileNode: typeof FileNode;
+    FileVersion: typeof FileVersion;
+  }
+}

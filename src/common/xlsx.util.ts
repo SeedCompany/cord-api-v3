@@ -1,4 +1,4 @@
-import { from as iterableFrom, IterableX } from 'ix/iterable';
+import { Iterable } from 'ix';
 import { LazyGetter as Once } from 'lazy-get-decorator';
 import { assert } from 'ts-essentials';
 import {
@@ -263,8 +263,8 @@ abstract class Rangable<TSheet extends Sheet = Sheet> {
    * Iterate through the rows in this range.
    * Cell column is always the starting column.
    */
-  walkDown(): IterableX<Cell<TSheet>> {
-    return iterableFrom(
+  walkDown(): Iterable<Cell<TSheet>> {
+    return Iterable.from(
       function* (this: Rangable<TSheet>) {
         let current = this.start.row;
         while (current <= this.end.row) {
@@ -282,8 +282,8 @@ abstract class Rangable<TSheet extends Sheet = Sheet> {
    * Iterate through the columns in this range.
    * Cell row is always the starting row.
    */
-  walkRight(): IterableX<Cell<TSheet>> {
-    return iterableFrom(
+  walkRight(): Iterable<Cell<TSheet>> {
+    return Iterable.from(
       function* (this: Rangable<TSheet>) {
         let current = this.start.column;
         while (current <= this.end.column) {

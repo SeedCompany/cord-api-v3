@@ -2,11 +2,14 @@ import { Type } from '@nestjs/common';
 import { Field, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
+import { RegisterResource } from '~/core/resources';
 import {
   DateTimeField,
   ID,
+  IdOf,
   IntersectionType,
   Resource,
+  ResourceRelationsShape,
   Secured,
   SecuredBoolean,
   SecuredEnumList,
@@ -17,9 +20,10 @@ import {
   SensitivityField,
 } from '../../../common';
 import { ScopedRole } from '../../authorization';
+import type { Language } from '../../language';
 import { FinancialReportingType } from '../../partnership/dto/financial-reporting-type';
 import { Pinnable } from '../../pin/dto';
-import { Post, Postable } from '../../post/dto';
+import { Postable } from '../../post/dto';
 import { IProject } from '../../project/dto';
 import { SecuredPartnerTypes } from './partner-type.enum';
 
@@ -35,16 +39,18 @@ export abstract class SecuredFinancialReportingTypes extends SecuredEnumList(
   FinancialReportingType,
 ) {}
 
+@RegisterResource()
 @ObjectType({
   implements: [Resource, Pinnable, Postable],
 })
 export class Partner extends Interfaces {
   static readonly Props = keysOf<Partner>();
   static readonly SecuredProps = keysOf<SecuredProps<Partner>>();
-  static readonly Relations = {
-    projects: [IProject],
-    posts: [Post],
-  };
+  static readonly Relations = () =>
+    ({
+      projects: [IProject],
+      ...Postable.Relations,
+    } satisfies ResourceRelationsShape);
 
   readonly organization: Secured<ID>;
 
@@ -68,6 +74,8 @@ export class Partner extends Interfaces {
   @Field()
   readonly address: SecuredString;
 
+  readonly languageOfWiderCommunication: Secured<IdOf<Language> | null>;
+
   @DateTimeField()
   readonly modifiedAt: DateTime;
 
@@ -78,10 +86,16 @@ export class Partner extends Interfaces {
 
   // A list of non-global roles the requesting user has available for this object.
   // This is just a cache, to prevent extra db lookups within the same request.
-  readonly scope: ScopedRole[];
+  declare readonly scope: ScopedRole[];
 }
 
 @ObjectType({
   description: SecuredProperty.descriptionFor('a partner'),
 })
 export class SecuredPartner extends SecuredProperty(Partner) {}
+
+declare module '~/core/resources/map' {
+  interface ResourceMap {
+    Partner: typeof Partner;
+  }
+}

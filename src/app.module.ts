@@ -16,7 +16,6 @@ import { FileModule } from './components/file/file.module';
 import { FilmModule } from './components/film/film.module';
 import { FundingAccountModule } from './components/funding-account/funding-account.module';
 import { LanguageModule } from './components/language/language.module';
-import { LiteracyMaterialModule } from './components/literacy-material/literacy-material.module';
 import { LocationModule } from './components/location/location.module';
 import { OrganizationModule } from './components/organization/organization.module';
 import { PartnerModule } from './components/partner/partner.module';
@@ -34,7 +33,6 @@ import { ProjectModule } from './components/project/project.module';
 import { PromptsModule } from './components/prompts/prompts.module';
 import { ScriptureModule } from './components/scripture';
 import { SearchModule } from './components/search/search.module';
-import { SongModule } from './components/song/song.module';
 import { StoryModule } from './components/story/story.module';
 import { TimeZoneModule } from './components/timezone';
 import { UserModule } from './components/user/user.module';
@@ -59,14 +57,12 @@ assert(
     FileModule,
     FilmModule,
     LanguageModule,
-    LiteracyMaterialModule,
     EngagementModule,
     ProductModule,
     ProjectModule,
     LocationModule,
     OrganizationModule,
     ScriptureModule,
-    SongModule,
     StoryModule,
     UserModule,
     PartnershipModule,
@@ -89,3 +85,8 @@ assert(
   ],
 })
 export class AppModule {}
+
+// @ts-expect-error You just added a library that implicitly adds the DOM library;
+// please avoid this as we don't want DOM globals here in a Node app.
+// eslint-disable-next-line @typescript-eslint/no-unused-expressions
+typeof window;

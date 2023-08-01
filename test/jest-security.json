@@ -1,9 +1,5 @@
 {
-  "preset": "ts-jest",
-  "testTimeout": 100000,
-  "rootDir": "..",
+  "extends": "./jest-e2e.json",
   "roots": ["<rootDir>/test/security"],
-  "testEnvironment": "node",
-  "testRegex": ".security.ts$",
-  "setupFiles": ["./src/polyfills.ts", "./src/app.module.ts"]
+  "testRegex": ".security.ts$"
 }

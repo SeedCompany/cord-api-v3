@@ -127,7 +127,7 @@ describe('Project e2e', () => {
   });
 
   it('should have unique name', async () => {
-    const name = faker.random.word() + ' testProject';
+    const name = faker.lorem.word() + ' testProject';
     await createProject(app, { name, fieldRegionId: fieldRegion.id });
     await expect(
       createProject(app, { name, fieldRegionId: fieldRegion.id }),
@@ -199,7 +199,7 @@ describe('Project e2e', () => {
   it('should throw error if the location id is not valid', async () => {
     await expect(
       createProject(app, {
-        name: faker.datatype.uuid(),
+        name: faker.string.uuid(),
         type: ProjectType.Translation,
         fieldRegionId: 'invalid-location-id' as ID,
       }),
@@ -213,7 +213,7 @@ describe('Project e2e', () => {
 
   it('create & read project with budget and field region by id', async () => {
     const proj: CreateProject = {
-      name: faker.datatype.uuid(),
+      name: faker.string.uuid(),
       type: ProjectType.Translation,
       fieldRegionId: fieldRegion.id,
     };
@@ -290,7 +290,7 @@ describe('Project e2e', () => {
 
   it('update project', async () => {
     const project = await createProject(app, { fieldRegionId: fieldRegion.id });
-    const namenew = faker.random.word() + ' Project';
+    const namenew = faker.lorem.word() + ' Project';
 
     const result = await app.graphql.query(
       gql`
@@ -896,7 +896,7 @@ describe('Project e2e', () => {
   // #727 create without mouStart, mouEnd, estimatedSubmission
   it('can create without mouStart, mouEnd and estimatedSubmission', async () => {
     const project: CreateProject = {
-      name: faker.datatype.uuid(),
+      name: faker.string.uuid(),
       type: ProjectType.Translation,
       fieldRegionId: fieldRegion.id,
     };
@@ -923,7 +923,7 @@ describe('Project e2e', () => {
 
   it('can create without mouStart, if mouEnd is defined', async () => {
     const project: CreateProject = {
-      name: faker.datatype.uuid(),
+      name: faker.string.uuid(),
       type: ProjectType.Translation,
       mouEnd: CalendarDate.fromISO('1992-11-01'),
       estimatedSubmission: CalendarDate.fromISO('1993-11-01'),
@@ -958,7 +958,7 @@ describe('Project e2e', () => {
   it('should create budget records after updating project with mou dates', async () => {
     const org = await createOrganization(app);
     const proj = await createProject(app, {
-      name: faker.datatype.uuid() + ' project',
+      name: faker.string.uuid() + ' project',
       mouStart: undefined,
       mouEnd: undefined,
       fieldRegionId: fieldRegion.id,
@@ -1031,7 +1031,7 @@ describe('Project e2e', () => {
   it('after creating a partnership, should be able to query project and get organization', async () => {
     const org = await createOrganization(app);
     const project = await createProject(app, {
-      name: faker.datatype.uuid() + ' project',
+      name: faker.string.uuid() + ' project',
       fieldRegionId: fieldRegion.id,
     });
     const partnership: CreatePartnership = {

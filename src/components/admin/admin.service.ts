@@ -91,6 +91,7 @@ export class AdminService implements OnApplicationBootstrap {
     }
 
     // TODO do this a different way. Using a global like this can cause race conditions.
+    // @ts-expect-error this is the one spot we are conceding mutable.
     this.config.rootAdmin.id = id;
     this.logger.notice('Setting actual root user id', { id });
   }

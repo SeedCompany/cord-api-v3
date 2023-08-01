@@ -4,7 +4,7 @@ import {
   PipeTransform,
   Type,
 } from '@nestjs/common';
-import { CONTROLLER_WATERMARK } from '@nestjs/common/constants';
+import { CONTROLLER_WATERMARK } from '@nestjs/common/constants.js';
 import { Context } from '@nestjs/graphql';
 import { uniq } from 'lodash';
 import { DateTime } from 'luxon';
@@ -73,7 +73,7 @@ const HttpSession = createParamDecorator(
 );
 
 const SessionWatermark: ParameterDecorator = (target, key) =>
-  Reflect.defineMetadata('SESSION_WATERMARK', true, target.constructor, key);
+  Reflect.defineMetadata('SESSION_WATERMARK', true, target.constructor, key!);
 
 export const addScope = (session: Session, scope?: ScopedRole[]) => ({
   ...session,

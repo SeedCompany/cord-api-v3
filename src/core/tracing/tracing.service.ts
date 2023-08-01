@@ -1,6 +1,6 @@
 import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import { AsyncLocalStorage } from 'async_hooks';
-import * as XR from 'aws-xray-sdk-core';
+import XR from 'aws-xray-sdk-core';
 import { ServerException } from '../../common';
 
 @Injectable()

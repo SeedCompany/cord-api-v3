@@ -7,6 +7,7 @@ import {
   ProjectType,
 } from '../src/components/project';
 import {
+  createDirectProduct,
   createFundingAccount,
   createLanguageEngagement,
   createLocation,
@@ -26,7 +27,6 @@ import {
   TestUser,
   updateProject,
 } from './utility';
-import { createProduct } from './utility/create-product';
 import {
   changeProjectStep,
   stepsFromEarlyConversationToBeforeActive,
@@ -208,7 +208,7 @@ describe('Project-Workflow e2e', () => {
       });
 
       // Add products
-      await createProduct(app, {
+      await createDirectProduct(app, {
         engagementId: languageEngagement.id,
       });
     });

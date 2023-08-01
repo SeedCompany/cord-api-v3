@@ -57,7 +57,7 @@ import {
   ProductCompletionDescriptionSuggestionsInput,
   ProductListInput,
   ProgressMeasurement,
-  UpdateProduct,
+  UpdateDirectScriptureProduct,
 } from './dto';
 
 export type HydratedProductRow = Merge<
@@ -404,7 +404,7 @@ export class ProductRepository extends CommonRepository {
   }
 
   async updateProducible(
-    input: Except<UpdateProduct, 'scriptureReferences'>,
+    input: Except<UpdateDirectScriptureProduct, 'scriptureReferences'>,
     produces: ID,
   ) {
     await this.db

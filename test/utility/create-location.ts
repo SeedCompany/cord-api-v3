@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import countries from 'iso-3166-1/dist/iso-3166';
+import { all as countries } from 'iso-3166-1';
 import { ID, isValidId } from '../../src/common';
 import {
   CreateLocation,
@@ -15,9 +15,9 @@ export async function createLocation(
   input: Partial<CreateLocation> = {},
 ) {
   const location: CreateLocation = {
-    name: faker.random.word() + ' ' + faker.datatype.uuid(),
+    name: faker.lorem.word() + ' ' + faker.string.uuid(),
     type: LocationType.County,
-    isoAlpha3: faker.helpers.arrayElement(countries).alpha3,
+    isoAlpha3: faker.helpers.arrayElement(countries()).alpha3,
     ...input,
   };
 

@@ -1,11 +1,13 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { BaseNode } from '~/core/database/results';
+import { RegisterResource } from '~/core/resources';
 import {
   Calculated,
   ID,
   IntersectionType,
   Resource,
+  ResourceRelationsShape,
   Secured,
   SecuredBoolean,
   SecuredDateNullable,
@@ -38,6 +40,7 @@ export abstract class SecuredFinancialReportingType extends SecuredEnum(
   { nullable: true },
 ) {}
 
+@RegisterResource()
 @ObjectType({
   implements: [Resource, ChangesetAware],
 })
@@ -47,13 +50,13 @@ export class Partnership extends IntersectionType(ChangesetAware, Resource) {
   static readonly Relations = {
     // why is this here? We have a relation to partner, not org...
     organization: Organization,
-  };
+  } satisfies ResourceRelationsShape;
   static readonly Parent = import('../../project/dto').then((m) => m.IProject);
 
   readonly project: ID;
 
   @Field(() => IProject)
-  readonly parent: BaseNode;
+  declare readonly parent: BaseNode;
 
   @Field()
   readonly agreementStatus: SecuredPartnershipAgreementStatus;
@@ -98,5 +101,11 @@ export class Partnership extends IntersectionType(ChangesetAware, Resource) {
 
   // A list of non-global roles the requesting user has available for this object.
   // This is just a cache, to prevent extra db lookups within the same request.
-  readonly scope: ScopedRole[];
+  declare readonly scope: ScopedRole[];
+}
+
+declare module '~/core/resources/map' {
+  interface ResourceMap {
+    Partnership: typeof Partnership;
+  }
 }

@@ -18,7 +18,7 @@ import { CommentThread, CommentThreadListInput } from './dto';
 export class CommentThreadRepository extends DtoRepository(CommentThread) {
   constructor(
     @Inject(forwardRef(() => CommentRepository))
-    private readonly comments: CommentRepository,
+    private readonly comments: CommentRepository & {},
     db: DatabaseService,
   ) {
     super(db);

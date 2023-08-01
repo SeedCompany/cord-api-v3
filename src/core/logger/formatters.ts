@@ -1,17 +1,21 @@
+import { clc } from '@nestjs/common/utils/cli-colors.util.js';
 import { ppRaw as prettyPrint } from '@patarapolw/prettyprint';
-import { enabled as colorsEnabled, red, yellow } from 'colors/safe';
 import stringify from 'fast-safe-stringify';
 import { identity } from 'lodash';
 import { TransformableInfo as ScuffedTransformableInfo } from 'logform';
 import { DateTime } from 'luxon';
-import { relative } from 'path';
+import { dirname, relative } from 'path';
 import { StackFrame } from 'stack-trace';
 import * as stacktrace from 'stack-trace';
 import { MESSAGE } from 'triple-beam';
+import { fileURLToPath } from 'url';
 import { config, format, LogEntry } from 'winston';
 import { Exception } from '../../common/exceptions';
 import { maskSecrets as maskSecretsOfObj } from '../../common/mask-secrets';
 import { getNameFromEntry } from './logger.interface';
+
+const colorsEnabled = !process.env.NO_COLOR;
+const { red, yellow } = clc;
 
 export const AFTER_MESSAGE = Symbol('AFTER_MESSAGE');
 
@@ -132,7 +136,10 @@ const formatStackFrame = (t: StackFrame) => {
     return null;
   }
 
-  const file = relative(`${__dirname}/../../..`, absolute);
+  const file = relative(
+    `${dirname(fileURLToPath(import.meta.url))}/../../..`,
+    absolute,
+  );
   const location = `${file}:${t.getLineNumber()}:${t.getColumnNumber()}`;
 
   return (
@@ -185,7 +192,7 @@ export const printForCli = () =>
     // msg += green(`[Nest] ${info.pid}   - `);
     // msg += `${info.timestamp}   `;
     msg += typeof name === 'string' ? yellow(`[${name}] `) : '';
-    msg += info.message;
+    msg += info.message as string;
     msg += ` ${yellow(info.ms)}`;
     msg += printObj(info.metadata);
     if (info[AFTER_MESSAGE]) {

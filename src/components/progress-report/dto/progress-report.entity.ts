@@ -3,17 +3,18 @@ import { keys as keysOf } from 'ts-transformer-keys';
 import {
   Calculated,
   parentIdMiddleware,
+  ResourceRelationsShape,
   SecuredProperty,
   SecuredProps,
 } from '~/common';
-import { RegisterResource } from '~/core';
 import { BaseNode } from '~/core/database/results';
+import { RegisterResource } from '~/core/resources';
 import { LanguageEngagement } from '../../engagement/dto';
 import { DefinedFile } from '../../file';
 import { IPeriodicReport } from '../../periodic-report/dto/periodic-report.dto';
 import { ReportType } from '../../periodic-report/dto/report-type.enum';
 import { ProgressReportCommunityStory } from './community-stories.dto';
-import { ProgressReportHighlight } from './hightlights.dto';
+import { ProgressReportHighlight } from './highlights.dto';
 import { SecuredProgressReportStatus as SecuredStatus } from './progress-report-status.enum';
 import { ProgressReportTeamNews } from './team-news.dto';
 
@@ -31,15 +32,15 @@ export class ProgressReport extends IPeriodicReport {
     highlights: [ProgressReportHighlight],
     teamNews: [ProgressReportTeamNews],
     communityStories: [ProgressReportCommunityStory],
-  };
+  } satisfies ResourceRelationsShape;
 
   declare readonly type: ReportType.Progress;
 
   @Field(() => LanguageEngagement)
-  override readonly parent: BaseNode;
+  declare readonly parent: BaseNode;
 
   /** @deprecated */
-  readonly reportFile: DefinedFile;
+  declare readonly reportFile: DefinedFile;
 
   @Field(() => SecuredStatus, {
     middleware: [parentIdMiddleware],

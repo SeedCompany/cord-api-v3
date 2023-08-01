@@ -25,7 +25,7 @@ import {
 export class CeremonyService {
   constructor(
     @Inject(forwardRef(() => AuthorizationService))
-    private readonly authorizationService: AuthorizationService,
+    private readonly authorizationService: AuthorizationService & {},
     private readonly ceremonyRepo: CeremonyRepository,
     @Logger('ceremony:service') private readonly logger: ILogger,
   ) {}

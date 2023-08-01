@@ -166,7 +166,7 @@ export async function createLanguageEngagement(
     startDateOverride: DateTime.local(),
     endDateOverride: DateTime.local(),
     completeDate: DateTime.local(),
-    paratextRegistryId: faker.random.word(),
+    paratextRegistryId: faker.lorem.word(),
     ...input,
   };
   const result = await app.graphql.mutate(

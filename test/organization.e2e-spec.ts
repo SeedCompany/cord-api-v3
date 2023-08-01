@@ -310,16 +310,16 @@ describe('Organization e2e', () => {
     });
     //Create three projects, each beginning with lower or upper-cases
     await createOrganization(app, {
-      name: 'an Organization ' + faker.datatype.uuid(),
+      name: 'an Organization ' + faker.string.uuid(),
     });
     await createOrganization(app, {
-      name: 'Another Organization' + faker.datatype.uuid(),
+      name: 'Another Organization' + faker.string.uuid(),
     });
     await createOrganization(app, {
-      name: 'Big Organization' + faker.datatype.uuid(),
+      name: 'Big Organization' + faker.string.uuid(),
     });
     await createOrganization(app, {
-      name: 'big Organization also' + faker.datatype.uuid(),
+      name: 'big Organization also' + faker.string.uuid(),
     });
     const { organizations } = await app.graphql.query(Organizations, {
       input: {
@@ -341,16 +341,16 @@ describe('Organization e2e', () => {
     });
     //Create three projects, each beginning with lower or upper-cases
     await createOrganization(app, {
-      name: 'an Organization ' + faker.datatype.uuid(),
+      name: 'an Organization ' + faker.string.uuid(),
     });
     await createOrganization(app, {
-      name: 'Another Organization' + faker.datatype.uuid(),
+      name: 'Another Organization' + faker.string.uuid(),
     });
     await createOrganization(app, {
-      name: 'Big Organization' + faker.datatype.uuid(),
+      name: 'Big Organization' + faker.string.uuid(),
     });
     await createOrganization(app, {
-      name: 'big Organization also' + faker.datatype.uuid(),
+      name: 'big Organization also' + faker.string.uuid(),
     });
     const { organizations } = await app.graphql.query(Organizations, {
       input: {

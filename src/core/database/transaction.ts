@@ -1,9 +1,10 @@
 import { Connection } from 'cypher-query-builder';
 import { Duration, DurationLike } from 'luxon';
 import { Transaction as NeoTransaction } from 'neo4j-driver';
-import { ServerException } from '../../common';
+import { getPreviousList, ServerException } from '../../common';
 import { ILogger } from '../logger';
 import { PatchedConnection } from './cypher.factory';
+import { isNeo4jError } from './errors';
 
 export type Transaction = NeoTransaction & { queryLogger?: ILogger };
 
@@ -104,13 +105,30 @@ Connection.prototype.runInTransaction = async function withTransaction<R>(
       ? session.readTransaction.bind(session)
       : session.writeTransaction.bind(session);
 
+  const errorMap = new WeakMap<Error, Error>();
+
   try {
     return await runTransaction(
-      (tx) => {
+      async (tx) => {
         if (options?.queryLogger) {
           (tx as Transaction).queryLogger = options?.queryLogger;
         }
-        return this.transactionStorage.run(tx, inner);
+        try {
+          return await this.transactionStorage.run(tx, inner);
+        } catch (error) {
+          // If the error "wraps" a neo4j error, then
+          // throw that here and save the original.
+          // This allows neo4j to check if the error is retry-able.
+          // If it is, then this error doesn't matter; otherwise we'll unwrap below.
+          const maybeRetryableError = getPreviousList(error, true).find(
+            isNeo4jError,
+          );
+          if (maybeRetryableError) {
+            errorMap.set(maybeRetryableError, error);
+            throw maybeRetryableError;
+          }
+          throw error;
+        }
       },
       {
         timeout: options?.timeout
@@ -119,6 +137,9 @@ Connection.prototype.runInTransaction = async function withTransaction<R>(
         metadata: options?.metadata,
       },
     );
+  } catch (error) {
+    // Unwrap the original error if it was wrapped above.
+    throw errorMap.get(error) ?? error;
   } finally {
     await session.close();
   }

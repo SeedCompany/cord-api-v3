@@ -22,6 +22,7 @@ import {
 } from '../src/components/project';
 import { User } from '../src/components/user';
 import {
+  createDirectProduct,
   createFundingAccount,
   createInternshipEngagement,
   createInternshipEngagementWithMinimumValues,
@@ -44,7 +45,6 @@ import {
   TestUser,
   uploadFileContents,
 } from './utility';
-import { createProduct } from './utility/create-product';
 import {
   changeInternshipEngagementStatus,
   transitionEngagementToActive,
@@ -333,7 +333,7 @@ describe('Engagement e2e', () => {
 
     const updateFirstScripture = false;
     const updateLukePartnership = false;
-    const updateParatextRegistryId = faker.random.word();
+    const updateParatextRegistryId = faker.lorem.word();
 
     const result = await app.graphql.mutate(
       gql`
@@ -480,10 +480,10 @@ describe('Engagement e2e', () => {
       projectId: project.id,
     });
 
-    const product1 = await createProduct(app, {
+    const product1 = await createDirectProduct(app, {
       engagementId: languageEngagement.id,
     });
-    const product2 = await createProduct(app, {
+    const product2 = await createDirectProduct(app, {
       engagementId: languageEngagement.id,
     });
     const result = await app.graphql.query(

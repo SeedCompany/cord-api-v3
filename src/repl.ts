@@ -1,7 +1,7 @@
-import { clc } from '@nestjs/common/utils/cli-colors.util';
+import { clc } from '@nestjs/common/utils/cli-colors.util.js';
 import { NestFactory } from '@nestjs/core';
-import { assignToObject } from '@nestjs/core/repl/assign-to-object.util';
-import { ReplContext } from '@nestjs/core/repl/repl-context';
+import { assignToObject } from '@nestjs/core/repl/assign-to-object.util.js';
+import { ReplContext } from '@nestjs/core/repl/repl-context.js';
 import { bufferFromStream } from '@seedcompany/common';
 import { mkdir } from 'fs/promises';
 // eslint-disable-next-line no-restricted-imports

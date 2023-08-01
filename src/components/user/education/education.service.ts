@@ -25,7 +25,7 @@ export class EducationService {
   constructor(
     @Logger('education:service') private readonly logger: ILogger,
     @Inject(forwardRef(() => AuthorizationService))
-    private readonly authorizationService: AuthorizationService,
+    private readonly authorizationService: AuthorizationService & {},
     private readonly repo: EducationRepository,
   ) {}
 

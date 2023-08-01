@@ -146,16 +146,7 @@ export class ProductProgressService {
       );
     }
 
-    const cleanedInput = {
-      ...input,
-      steps: input.steps.map((sp) => ({
-        step: sp.step,
-        // Handle BC change with field rename
-        completed: sp.completed ?? sp.percentDone ?? null,
-      })),
-    };
-
-    cleanedInput.steps.forEach((step, index) => {
+    input.steps.forEach((step, index) => {
       if (!scope.steps.includes(step.step)) {
         throw new StepNotPlannedException(input.productId, step.step, index);
       }
@@ -167,7 +158,7 @@ export class ProductProgressService {
       }
     });
 
-    const progress = await this.repo.update(cleanedInput);
+    const progress = await this.repo.update(input);
     return this.secure(progress, this.privilegesFor(session, scope))!;
   }
 

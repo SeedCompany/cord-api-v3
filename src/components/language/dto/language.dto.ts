@@ -3,6 +3,7 @@ import { Field, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { GraphQLString } from 'graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
+import { RegisterResource } from '~/core/resources';
 import {
   Calculated,
   DbLabel,
@@ -11,6 +12,7 @@ import {
   IntersectionType,
   NameField,
   Resource,
+  ResourceRelationsShape,
   SecuredBoolean,
   SecuredDate,
   SecuredInt,
@@ -26,7 +28,7 @@ import {
 import { SetChangeType } from '../../../core/database/changes';
 import { Location } from '../../location/dto';
 import { Pinnable } from '../../pin/dto';
-import { Post, Postable } from '../../post/dto';
+import { Postable } from '../../post/dto';
 import { UpdateEthnologueLanguage } from './update-language.dto';
 
 const Interfaces: Type<Resource & Pinnable & Postable> = IntersectionType(
@@ -41,6 +43,7 @@ export abstract class SecuredTags extends SecuredPropertyList<string>(
   GraphQLString,
 ) {}
 
+@RegisterResource()
 @ObjectType()
 export class EthnologueLanguage {
   static readonly Props = keysOf<EthnologueLanguage>();
@@ -78,6 +81,7 @@ export class EthnologueLanguage {
   readonly sensitivity: Sensitivity & SetUnsecuredType<never>;
 }
 
+@RegisterResource()
 @ObjectType({
   implements: [Resource, Pinnable, Postable],
 })
@@ -87,8 +91,8 @@ export class Language extends Interfaces {
   static readonly Relations = {
     ethnologue: EthnologueLanguage,
     locations: [Location], // a child list but not creating deleting...does it still count?
-    posts: [Post],
-  };
+    ...Postable.Relations,
+  } satisfies ResourceRelationsShape;
 
   @NameField({
     description: `The real language name`,
@@ -194,3 +198,17 @@ export class Language extends Interfaces {
   description: SecuredProperty.descriptionFor('a language'),
 })
 export class SecuredLanguage extends SecuredProperty(Language) {}
+
+@ObjectType({
+  description: SecuredProperty.descriptionFor('a language or null'),
+})
+export class SecuredLanguageNullable extends SecuredProperty(Language, {
+  nullable: true,
+}) {}
+
+declare module '~/core/resources/map' {
+  interface ResourceMap {
+    EthnologueLanguage: typeof EthnologueLanguage;
+    Language: typeof Language;
+  }
+}

@@ -1,9 +1,13 @@
 import { ArgsType, Field, ObjectType } from '@nestjs/graphql';
-import { ID, IdField } from '../../../common';
+import { keys as keysOf } from 'ts-transformer-keys';
+import { ID, IdField, SecuredProps } from '~/common';
 import { LanguageProficiency } from './language-proficiency.enum';
 
 @ObjectType()
 export abstract class KnownLanguage {
+  static readonly Props = keysOf<KnownLanguage>();
+  static readonly SecuredProps = keysOf<SecuredProps<KnownLanguage>>();
+
   language: ID;
 
   @Field(() => LanguageProficiency)

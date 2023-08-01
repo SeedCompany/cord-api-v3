@@ -1,8 +1,8 @@
 import { applyDecorators } from '@nestjs/common';
 import { FieldOptions, TypeMetadataStorage } from '@nestjs/graphql';
 import { ReturnTypeFunc } from '@nestjs/graphql/dist/interfaces/return-type-func.interface';
-import { LazyMetadataStorage } from '@nestjs/graphql/dist/schema-builder/storages/lazy-metadata.storage';
-import { reflectTypeFromMetadata } from '@nestjs/graphql/dist/utils/reflection.utilts';
+import { LazyMetadataStorage } from '@nestjs/graphql/dist/schema-builder/storages/lazy-metadata.storage.js';
+import { reflectTypeFromMetadata } from '@nestjs/graphql/dist/utils/reflection.utilts.js';
 import { MinLength } from 'class-validator';
 import { DbSort } from './db-sort.decorator';
 import { Transform } from './transform.decorator';
@@ -47,18 +47,17 @@ const InferredTypeOrStringField =
           explicitTypeFn: typeFn,
           typeOptions: options,
         });
-      let getType;
-      let typeOptions;
+      let resolved;
       try {
-        ({ typeFn: getType, options: typeOptions } = resolveType());
+        resolved = resolveType();
       } catch {
-        ({ typeFn: getType, options: typeOptions } = resolveType(() => String));
+        resolved = resolveType(() => String);
       }
       TypeMetadataStorage.addClassFieldMetadata({
         name: propertyKey,
         schemaName: options.name || propertyKey,
-        typeFn: getType,
-        options: typeOptions,
+        typeFn: resolved.typeFn!,
+        options: resolved.options,
         target: prototype.constructor,
         description: options.description,
         deprecationReason: options.deprecationReason,

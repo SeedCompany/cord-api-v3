@@ -40,7 +40,7 @@ export class ProjectChangeRequestService {
     private readonly privileges: Privileges,
     private readonly eventBus: IEventBus,
     @Inject(forwardRef(() => ProjectService))
-    private readonly projects: ProjectService,
+    private readonly projects: ProjectService & {},
     private readonly repo: ProjectChangeRequestRepository,
   ) {}
 

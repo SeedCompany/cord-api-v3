@@ -46,7 +46,7 @@ describe('Partner e2e', () => {
     const pmcEntityCode = faker.helpers.replaceSymbols('???').toUpperCase();
     const globalInnovationsClient = true;
     const active = true;
-    const address = faker.address.city();
+    const address = faker.location.city();
 
     const result = await app.graphql.mutate(
       gql`

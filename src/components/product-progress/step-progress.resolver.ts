@@ -48,11 +48,4 @@ export class StepProgressResolver {
       factor != null ? (val / denominator) * factor : null,
     );
   }
-
-  @ResolveField(() => SecuredFloatNullable, {
-    deprecationReason: 'Use `StepProgress.completed` instead.',
-  })
-  percentDone(@Parent() { completed }: StepProgress) {
-    return completed;
-  }
 }

@@ -1,10 +1,12 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
+import { RegisterResource } from '~/core/resources';
 import { ID, SecuredProps, SecuredString } from '../../../common';
 import { Changeset } from '../../changeset/dto';
 import { SecuredProjectChangeRequestStatus } from './project-change-request-status.enum';
 import { SecuredProjectChangeRequestTypes } from './project-change-request-type.enum';
 
+@RegisterResource()
 @ObjectType({
   implements: [Changeset],
 })
@@ -13,7 +15,7 @@ export abstract class ProjectChangeRequest extends Changeset {
   static readonly SecuredProps = keysOf<SecuredProps<ProjectChangeRequest>>();
   static readonly Parent = import('../../project/dto').then((m) => m.IProject);
 
-  __typename: 'ProjectChangeRequest';
+  declare __typename: 'ProjectChangeRequest';
 
   readonly project: ID;
 
@@ -31,4 +33,10 @@ export abstract class ProjectChangeRequest extends Changeset {
       'Whether or not modifications can be made (via other mutations `changeset` input) with this change request',
   })
   readonly canEdit: boolean;
+}
+
+declare module '~/core/resources/map' {
+  interface ResourceMap {
+    ProjectChangeRequest: typeof ProjectChangeRequest;
+  }
 }

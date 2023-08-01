@@ -5,8 +5,8 @@ import {
   Scope,
 } from '@nestjs/common';
 import { Args, ArgsOptions, ID as IDType } from '@nestjs/graphql';
-import { Resolver } from '@nestjs/graphql/dist/enums/resolver.enum';
-import { RESOLVER_TYPE_METADATA as TypeKey } from '@nestjs/graphql/dist/graphql.constants';
+import { Resolver } from '@nestjs/graphql/dist/enums/resolver.enum.js';
+import { RESOLVER_TYPE_METADATA as TypeKey } from '@nestjs/graphql/dist/graphql.constants.js';
 import {
   ID,
   InputException,
@@ -45,7 +45,7 @@ export const ChangesetArg = (
     // method metadata is set after parameter metadata, so wait until next tick
     // to determine if method is query or mutation to set default description.
     process.nextTick(() => {
-      type = Reflect.getMetadata(TypeKey, (target as any)[methodName]);
+      type = Reflect.getMetadata(TypeKey, (target as any)[methodName!]);
       if (!type) {
         throw new ServerException(
           'Something went wrong trying to determine operation type',

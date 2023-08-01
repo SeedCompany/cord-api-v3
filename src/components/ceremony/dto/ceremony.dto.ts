@@ -1,5 +1,6 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
+import { RegisterResource } from '~/core/resources';
 import {
   Calculated,
   Resource,
@@ -12,6 +13,7 @@ import {
 } from '../../../common';
 import { CeremonyType } from './type.enum';
 
+@RegisterResource()
 @Calculated()
 @ObjectType({
   implements: [Resource],
@@ -45,3 +47,9 @@ export class Ceremony extends Resource {
   description: SecuredProperty.descriptionFor('a ceremony'),
 })
 export class SecuredCeremony extends SecuredProperty(Ceremony) {}
+
+declare module '~/core/resources/map' {
+  interface ResourceMap {
+    Ceremony: typeof Ceremony;
+  }
+}

@@ -25,7 +25,7 @@ export class UnavailabilityService {
   constructor(
     @Logger('unavailability:service') private readonly logger: ILogger,
     @Inject(forwardRef(() => AuthorizationService))
-    private readonly authorizationService: AuthorizationService,
+    private readonly authorizationService: AuthorizationService & {},
     private readonly repo: UnavailabilityRepository,
   ) {}
 

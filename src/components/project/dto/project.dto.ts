@@ -4,6 +4,7 @@ import { stripIndent } from 'common-tags';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive } from 'type-fest';
+import { RegisterResource } from '~/core/resources';
 import {
   DateInterval,
   DateTimeField,
@@ -15,6 +16,7 @@ import {
   parentIdMiddleware,
   resolveByTypename,
   Resource,
+  ResourceRelationsShape,
   Secured,
   SecuredBoolean,
   SecuredDateNullable,
@@ -37,8 +39,7 @@ import { Location } from '../../location/dto';
 import { Partnership } from '../../partnership/dto';
 import { SecuredReportPeriod } from '../../periodic-report/dto';
 import { Pinnable } from '../../pin/dto';
-import { Post } from '../../post/dto';
-import { Postable } from '../../post/dto/postable.dto';
+import { Postable } from '../../post/dto';
 import { ProjectChangeRequest } from '../../project-change-request/dto';
 import { ProjectMember } from '../project-member/dto';
 import { ProjectStatus } from './status.enum';
@@ -57,6 +58,7 @@ const Interfaces: Type<
   ),
 );
 
+@RegisterResource()
 @InterfaceType({
   resolveType: (val: Project) => {
     if (val.type === ProjectType.Translation) {
@@ -72,19 +74,20 @@ const Interfaces: Type<
 class Project extends Interfaces {
   static readonly Props: string[] = keysOf<Project>();
   static readonly SecuredProps: string[] = keysOf<SecuredProps<Project>>();
-  static readonly Relations = {
-    rootDirectory: Directory,
-    member: [ProjectMember], // why singular
-    otherLocations: [Location],
-    partnership: [Partnership], // why singular
-    budget: Budget, // currentBudget
-    engagement: [Engagement], // why singular
-    // edge case because it's writable for internships but not secured
-    sensitivity: Sensitivity,
-    posts: [Post], // from Postable interface
-    changeRequests: [ProjectChangeRequest],
-    ...Commentable.Relations,
-  };
+  static readonly Relations = () =>
+    ({
+      rootDirectory: Directory,
+      member: [ProjectMember], // why singular
+      otherLocations: [Location],
+      partnership: [Partnership], // why singular
+      budget: Budget, // currentBudget
+      engagement: [Engagement], // why singular
+      // edge case because it's writable for internships but not secured
+      sensitivity: undefined,
+      ...Postable.Relations,
+      changeRequests: [ProjectChangeRequest],
+      ...Commentable.Relations,
+    } satisfies ResourceRelationsShape);
 
   @Field(() => ProjectType)
   readonly type: ProjectType;
@@ -169,13 +172,14 @@ class Project extends Interfaces {
 
   // A list of non-global roles the requesting user has available for this object.
   // This is just a cache, to prevent extra db lookups within the same request.
-  readonly scope: ScopedRole[];
+  declare readonly scope: ScopedRole[];
 }
 
 // class name has to match schema name for interface resolvers to work.
 // export as different names to maintain compatibility with our codebase.
 export { Project as IProject, AnyProject as Project };
 
+@RegisterResource()
 @ObjectType({
   implements: [Project],
 })
@@ -183,9 +187,10 @@ export class TranslationProject extends Project {
   static readonly Props = keysOf<TranslationProject>();
   static readonly SecuredProps = keysOf<SecuredProps<TranslationProject>>();
 
-  readonly type: ProjectType.Translation;
+  declare readonly type: ProjectType.Translation;
 }
 
+@RegisterResource()
 @ObjectType({
   implements: [Project],
 })
@@ -193,8 +198,16 @@ export class InternshipProject extends Project {
   static readonly Props = keysOf<InternshipProject>();
   static readonly SecuredProps = keysOf<SecuredProps<InternshipProject>>();
 
-  readonly type: ProjectType.Internship;
+  declare readonly type: ProjectType.Internship;
 }
 
 export const projectRange = (project: UnsecuredDto<Project>) =>
   DateInterval.tryFrom(project.mouStart, project.mouEnd);
+
+declare module '~/core/resources/map' {
+  interface ResourceMap {
+    Project: typeof Project;
+    InternshipProject: typeof InternshipProject;
+    TranslationProject: typeof TranslationProject;
+  }
+}

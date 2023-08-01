@@ -4,9 +4,9 @@ import { Column } from '../../common/xlsx.util';
 import { ProductStep as Step } from '../product';
 import { PlanningSheet } from './planning-sheet';
 import { ProgressSheet } from './progress-sheet';
-import 'ix/add/iterable-operators/filter';
-import 'ix/add/iterable-operators/map';
-import 'ix/add/iterable-operators/toarray';
+import 'ix/add/iterable-operators/filter.js';
+import 'ix/add/iterable-operators/map.js';
+import 'ix/add/iterable-operators/toarray.js';
 
 /**
  * Fuzzy match available steps to their column address.

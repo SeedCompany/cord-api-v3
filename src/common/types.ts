@@ -49,7 +49,7 @@ export const PickType = BasePickType as <T, K extends keyof T>(
   classRef: AbstractClassType<T>,
   keys: readonly K[],
   decorator?: ClassDecoratorFactory,
-) => Type<Pick<T, typeof keys[number]>>;
+) => Type<Pick<T, (typeof keys)[number]>>;
 
 /**
  * The OmitType() function constructs a type by picking all properties from an
@@ -63,7 +63,7 @@ export const OmitType = BaseOmitType as <T, K extends keyof T>(
   classRef: AbstractClassType<T>,
   keys: readonly K[],
   decorator?: ClassDecoratorFactory,
-) => Type<Omit<T, typeof keys[number]>>;
+) => Type<Omit<T, (typeof keys)[number]>>;
 
 /**
  * The IntersectionType() function combines two types into one new type (class).

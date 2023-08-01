@@ -54,7 +54,7 @@ import {
   UpdateDerivativeScriptureProduct,
   UpdateDirectScriptureProduct,
   UpdateOtherProduct,
-  UpdateProduct,
+  UpdateBaseProduct as UpdateProduct,
 } from './dto';
 import { ProducibleType } from './dto/producible.dto';
 import { HydratedProductRow, ProductRepository } from './product.repository';
@@ -64,7 +64,7 @@ export class ProductService {
   constructor(
     private readonly scriptureRefs: ScriptureReferenceService,
     @Inject(forwardRef(() => AuthorizationService))
-    private readonly authorizationService: AuthorizationService,
+    private readonly authorizationService: AuthorizationService & {},
     private readonly privileges: Privileges,
     private readonly repo: ProductRepository,
     private readonly resourceLoader: ResourceLoader,
@@ -106,9 +106,9 @@ export class ProductService {
     }
 
     const otherInput: CreateOtherProduct | undefined =
-      'title' in input ? input : undefined;
+      'title' in input && input.title !== undefined ? input : undefined;
     const derivativeInput: CreateDerivativeScriptureProduct | undefined =
-      'produces' in input ? input : undefined;
+      'produces' in input && input.produces !== undefined ? input : undefined;
     const scriptureInput: CreateDirectScriptureProduct | undefined =
       !otherInput && !derivativeInput ? input : undefined;
 
@@ -154,7 +154,7 @@ export class ProductService {
     }
 
     const type =
-      'title' in input
+      'title' in input && input.title !== undefined
         ? ProducibleType.OtherProduct
         : producibleType ?? ProducibleType.DirectScriptureProduct;
     const availableSteps = getAvailableSteps({
@@ -170,7 +170,7 @@ export class ProductService {
     });
 
     const id =
-      'title' in input
+      'title' in input && input.title !== undefined
         ? await this.repo.createOther({ ...input, progressTarget, steps })
         : await this.repo.create({
             ...input,
@@ -370,44 +370,6 @@ export class ProductService {
       canDelete,
     };
     return direct;
-  }
-
-  /**
-   * @deprecated
-   */
-  async update(input: UpdateProduct, session: Session): Promise<AnyProduct> {
-    const currentProduct = await this.readOneUnsecured(input.id, session);
-
-    // If isDirectScriptureProduct
-    if (!currentProduct.produces) {
-      if (input.produces) {
-        throw new InputException(
-          'Cannot update produces on a Direct Scripture Product',
-          'product.produces',
-        );
-      }
-      //If current product is a Direct Scripture Product, cannot update scriptureReferencesOverride or produces
-      if (input.scriptureReferencesOverride) {
-        throw new InputException(
-          'Cannot update Scripture References Override on a Direct Scripture Product',
-          'product.scriptureReferencesOverride',
-        );
-      }
-      return await this.updateDirect(
-        input,
-        session,
-        asProductType(DirectScriptureProduct)(currentProduct),
-      );
-    }
-
-    // If current product is a Derivative Scripture Product, cannot update scriptureReferencesOverride
-    if (input.scriptureReferences) {
-      throw new InputException(
-        'Cannot update Scripture References on a Derivative Scripture Product',
-        'product.scriptureReferences',
-      );
-    }
-    return await this.updateDerivative(input, session, currentProduct);
   }
 
   async updateDirect(

@@ -4,6 +4,7 @@ import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive } from 'type-fest';
 import { BaseNode } from '~/core/database/results';
+import { RegisterResource } from '~/core/resources';
 import {
   Calculated,
   DateInterval,
@@ -13,6 +14,7 @@ import {
   IntersectionType,
   parentIdMiddleware,
   Resource,
+  ResourceRelationsShape,
   Secured,
   SecuredBoolean,
   SecuredDateNullable,
@@ -48,6 +50,7 @@ export type AnyEngagement = MergeExclusive<
 const ChangesetAwareResource: Type<Resource & ChangesetAware> =
   IntersectionType(Resource, ChangesetAware);
 
+@RegisterResource()
 @InterfaceType({
   resolveType: (val: AnyEngagement) => val.__typename,
   implements: [Resource, ChangesetAware],
@@ -60,12 +63,12 @@ class Engagement extends ChangesetAwareResource {
   static readonly SecuredProps: string[] = keysOf<SecuredProps<Engagement>>();
   static readonly Parent = import('../../project/dto').then((m) => m.IProject);
 
-  readonly __typename: 'LanguageEngagement' | 'InternshipEngagement';
+  declare readonly __typename: 'LanguageEngagement' | 'InternshipEngagement';
 
   readonly project: ID;
 
   @Field(() => IProject)
-  readonly parent: BaseNode;
+  declare readonly parent: BaseNode;
 
   @Field(() => SecuredEngagementStatus, {
     middleware: [parentIdMiddleware],
@@ -129,7 +132,7 @@ class Engagement extends ChangesetAwareResource {
 
   // A list of non-global roles the requesting user has available for this object.
   // This is just a cache, to prevent extra db lookups within the same request.
-  readonly scope: ScopedRole[];
+  declare readonly scope: ScopedRole[];
 
   @Field()
   readonly description: SecuredRichTextNullable;
@@ -139,6 +142,7 @@ class Engagement extends ChangesetAwareResource {
 // export as different names to maintain compatibility with our codebase.
 export { Engagement as IEngagement, AnyEngagement as Engagement };
 
+@RegisterResource()
 @ObjectType({
   implements: [Engagement],
 })
@@ -148,13 +152,13 @@ export class LanguageEngagement extends Engagement {
   static readonly Relations = {
     // why is this singular?
     product: [Product],
-  };
+  } satisfies ResourceRelationsShape;
   static readonly Parent = import('../../project/dto').then(
     (m) => m.TranslationProject,
   );
 
   @Field(() => TranslationProject)
-  readonly parent: BaseNode;
+  declare readonly parent: BaseNode;
 
   readonly language: Secured<ID>;
 
@@ -181,6 +185,7 @@ export class LanguageEngagement extends Engagement {
   readonly historicGoal: SecuredString;
 }
 
+@RegisterResource()
 @ObjectType({
   implements: [Engagement],
 })
@@ -192,7 +197,7 @@ export class InternshipEngagement extends Engagement {
   );
 
   @Field(() => InternshipProject)
-  readonly parent: BaseNode;
+  declare readonly parent: BaseNode;
 
   readonly countryOfOrigin: Secured<ID>;
 
@@ -213,3 +218,11 @@ export class InternshipEngagement extends Engagement {
 
 export const engagementRange = (engagement: UnsecuredDto<Engagement>) =>
   DateInterval.tryFrom(engagement.startDate, engagement.endDate);
+
+declare module '~/core/resources/map' {
+  interface ResourceMap {
+    Engagement: typeof Engagement;
+    InternshipEngagement: typeof InternshipEngagement;
+    LanguageEngagement: typeof LanguageEngagement;
+  }
+}

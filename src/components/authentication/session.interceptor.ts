@@ -32,7 +32,7 @@ import { AuthenticationService } from './authentication.service';
 export class SessionInterceptor implements NestInterceptor {
   constructor(
     @Inject(forwardRef(() => AuthenticationService))
-    private readonly auth: AuthenticationService,
+    private readonly auth: AuthenticationService & {},
     private readonly config: ConfigService,
   ) {}
 

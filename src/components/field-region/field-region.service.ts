@@ -28,7 +28,7 @@ export class FieldRegionService {
   constructor(
     @Logger('field-region:service') private readonly logger: ILogger,
     @Inject(forwardRef(() => AuthorizationService))
-    private readonly authorizationService: AuthorizationService,
+    private readonly authorizationService: AuthorizationService & {},
     private readonly repo: FieldRegionRepository,
   ) {}
 

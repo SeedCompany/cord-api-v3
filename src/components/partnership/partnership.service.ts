@@ -44,13 +44,13 @@ export class PartnershipService {
   constructor(
     private readonly files: FileService,
     @Inject(forwardRef(() => PartnerService))
-    private readonly partnerService: PartnerService,
+    private readonly partnerService: PartnerService & {},
     @Inject(forwardRef(() => ProjectService))
-    private readonly projectService: ProjectService,
+    private readonly projectService: ProjectService & {},
     private readonly privileges: Privileges,
     private readonly eventBus: IEventBus,
     @Inject(forwardRef(() => AuthorizationService))
-    private readonly authorizationService: AuthorizationService,
+    private readonly authorizationService: AuthorizationService & {},
     private readonly repo: PartnershipRepository,
     private readonly resourceLoader: ResourceLoader,
     @Logger('partnership:service') private readonly logger: ILogger,

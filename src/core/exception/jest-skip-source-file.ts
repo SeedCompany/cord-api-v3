@@ -1,4 +1,5 @@
-import { relative, resolve } from 'path';
+import { dirname, relative, resolve } from 'path';
+import { fileURLToPath } from 'url';
 
 /**
  * Modifies error stack to skip given filepath when determining
@@ -20,4 +21,7 @@ export const jestSkipFileInExceptionSource = (e: Error, filepath: string) => {
   return e;
 };
 
-const projectRoot = resolve(__dirname, '../..');
+const projectRoot = resolve(
+  dirname(fileURLToPath(import.meta.url)),
+  '../../..',
+);
