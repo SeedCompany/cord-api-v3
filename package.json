@@ -22,12 +22,10 @@
     "repl": "yarn start --entryFile repl",
     "gen-id": "ts-node -Te \"let g = require('./src/common/generate-id').generateId; for (let i = 0, l = process.argv[1] || 1; i < l; i++) { g().then(console.log) }\"",
     "lint": "eslint --ext .ts,.tsx --fix --max-warnings 0 .",
-    "test": "node --experimental-vm-modules $(yarn bin jest)",
-    "test:watch": "yarn test --watch",
-    "test:cov": "yarn test --coverage",
-    "test:debug": "node --experimental-vm-modules --inspect-brk $(yarn bin jest)",
-    "test:e2e": "yarn test --config ./test/jest-e2e.json",
-    "test:security": "yarn test --config ./test/jest-security.json",
+    "test": "yarn test:base --selectProjects Unit",
+    "test:e2e": "yarn test:base --selectProjects E2E",
+    "test:security": "yarn test:base --selectProjects Security",
+    "test:base": "node --experimental-vm-modules --inspect $(yarn bin jest)",
     "type-check": "tsc -p tsconfig.check.json"
   },
   "dependencies": {
@@ -116,6 +114,7 @@
     "@types/triple-beam": "^1.3.2",
     "@types/validator": "^13.7.17",
     "@typescript-eslint/parser": "^5.62.0",
+    "debugger-is-attached": "^1.2.0",
     "eslint": "^8.45.0",
     "eslint-plugin-no-only-tests": "^3.1.0",
     "eslint-plugin-typescript-sort-keys": "^2.3.0",
@@ -149,15 +148,5 @@
     "typescript": {
       "unplugged": true
     }
-  },
-  "jest": {
-    "preset": "ts-jest/presets/default-esm",
-    "roots": [
-      "<rootDir>/src"
-    ],
-    "setupFiles": [
-      "./src/polyfills.ts"
-    ],
-    "testEnvironment": "node"
   }
 }

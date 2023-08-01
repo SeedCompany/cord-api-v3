@@ -5140,6 +5140,7 @@ __metadata:
     common-tags: ^1.8.2
     cookie-parser: ^1.4.6
     cypher-query-builder: "patch:cypher-query-builder@6.0.4#./patches/cypher-query-builder.patch"
+    debugger-is-attached: ^1.2.0
     dotenv: ^16.3.1
     dotenv-expand: ^10.0.0
     eslint: ^8.45.0
@@ -5363,6 +5364,13 @@ __metadata:
   dependencies:
     ms: ^2.1.1
   checksum: b3d8c5940799914d30314b7c3304a43305fd0715581a919dacb8b3176d024a782062368405b47491516d2091d6462d4d11f2f4974a405048094f8bfebfa3071c
+  languageName: node
+  linkType: hard
+
+"debugger-is-attached@npm:^1.2.0":
+  version: 1.2.0
+  resolution: "debugger-is-attached@npm:1.2.0"
+  checksum: 76d29cf440bd93e5363e5f3fb5f06e5663b7ce54d8dfbdb269f495389f59613b8e2da5511b5823be4858f994c79c267b160a1d4ba0169dab9793f0747ad60190
   languageName: node
   linkType: hard
 
