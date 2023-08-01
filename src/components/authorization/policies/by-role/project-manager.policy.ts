@@ -84,7 +84,7 @@ import {
       .edit.specifically((p) => [
         p
           .many('rootDirectory', 'otherLocations', 'primaryLocation')
-          .whenAny(member, sensMediumOrLower).read,
+          .edit.whenAny(member, sensMediumOrLower).read,
       ])
       .children((c) => c.posts.read.create),
     r.ProjectMember.read.when(member).edit.create.delete,

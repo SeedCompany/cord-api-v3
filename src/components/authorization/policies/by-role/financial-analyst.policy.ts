@@ -20,7 +20,7 @@ import {
       r.Engagement.read
         .when(member)
         .create.delete.specifically((p) => [
-          p.many('disbursementCompleteDate', 'status').when(member).edit,
+          p.many('disbursementCompleteDate', 'status').edit,
         ]),
       r.LanguageEngagement.specifically((p) => [p.paratextRegistryId.none]),
     ),
@@ -59,7 +59,7 @@ import {
             'financialReportPeriod',
             'financialReportReceivedAt',
           )
-          .when(member).edit,
+          .read.when(member).edit,
       ])
       .children((c) => c.posts.edit),
     r.ProjectMember.read.when(member).edit.create.delete,
