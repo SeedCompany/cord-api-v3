@@ -1,5 +1,0 @@
-{
-  "extends": "./jest-e2e.json",
-  "roots": ["<rootDir>/test/security"],
-  "testRegex": ".security.ts$"
-}

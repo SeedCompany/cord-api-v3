@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { ModuleRef } from '@nestjs/core';
 import { EmailService } from '@seedcompany/nestjs-email';
 import JWT from 'jsonwebtoken';
 import { DateTime } from 'luxon';
@@ -16,7 +17,6 @@ import { ConfigService, ILogger, Logger } from '../../core';
 import { ForgotPassword } from '../../core/email/templates';
 import { Privileges, withoutScope } from '../authorization';
 import { AssignableRoles } from '../authorization/dto/assignable-roles';
-import { UserService } from '../user';
 import { AuthenticationRepository } from './authentication.repository';
 import { CryptoService } from './crypto.service';
 import { LoginInput, RegisterInput, ResetPasswordInput } from './dto';
@@ -32,10 +32,10 @@ export class AuthenticationService {
     private readonly config: ConfigService,
     private readonly crypto: CryptoService,
     private readonly email: EmailService,
-    private readonly userService: UserService,
     private readonly privileges: Privileges,
     @Logger('authentication:service') private readonly logger: ILogger,
     private readonly repo: AuthenticationRepository,
+    private readonly moduleRef: ModuleRef,
   ) {}
 
   async createToken(): Promise<string> {
@@ -53,7 +53,9 @@ export class AuthenticationService {
 
     let userId;
     try {
-      userId = await this.userService.create(input, session);
+      const userMod = await import('../user');
+      const users = this.moduleRef.get(userMod.UserService, { strict: false });
+      userId = await users.create(input, session);
     } catch (e) {
       // remap field prop as `email` field is at a different location in register() than createPerson()
       if (e instanceof DuplicateException && e.field === 'person.email') {

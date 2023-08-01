@@ -1,9 +1,0 @@
-{
-  "preset": "ts-jest/presets/default-esm",
-  "testTimeout": 100000,
-  "rootDir": "..",
-  "roots": ["<rootDir>/test"],
-  "testEnvironment": "node",
-  "testRegex": ".e2e-spec.ts$",
-  "setupFiles": ["./src/polyfills.ts", "./src/app.module.ts", "./test/jest.d.ts"]
-}

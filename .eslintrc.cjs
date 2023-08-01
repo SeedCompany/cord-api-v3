@@ -1,3 +1,4 @@
+// @ts-check
 const baseConfig = require('@seedcompany/eslint-plugin').configs.base;
 
 const oldRestrictedImports = [
