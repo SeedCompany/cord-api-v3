@@ -42,7 +42,7 @@
     "@nestjs/platform-express": "^10.1.0",
     "@patarapolw/prettyprint": "^1.0.3",
     "@seedcompany/common": ">=0.10 <1",
-    "@seedcompany/data-loader": "^0.5.2",
+    "@seedcompany/data-loader": "^0.5.4",
     "@seedcompany/nestjs-email": "^3.3.1",
     "argon2": "^0.30.3",
     "aws-xray-sdk-core": "^3.5.1",

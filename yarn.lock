@@ -2537,9 +2537,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@seedcompany/data-loader@npm:^0.5.2":
-  version: 0.5.2
-  resolution: "@seedcompany/data-loader@npm:0.5.2"
+"@seedcompany/data-loader@npm:^0.5.4":
+  version: 0.5.4
+  resolution: "@seedcompany/data-loader@npm:0.5.4"
   dependencies:
     "@nestjs/common": ^9 || ^10
     "@nestjs/core": ^9 || ^10
@@ -2550,10 +2550,7 @@ __metadata:
     "@nestjs/core": ^10
     "@nestjs/graphql": ">=7"
     reflect-metadata: ^0.1.12
-  peerDependenciesMeta:
-    "@nestjs/graphql":
-      optional: true
-  checksum: ef1cf1f1d869bb80487c5a755750823ee052d61e77d5bdf2200490ccecee76d1b62590d6e961472a995a6f287feb7f7c582cee71534fb1eab5f6f1edce69a2dc
+  checksum: be8904c8d2b95c160689b35e3b392d63efb13134b1ae2bd5a44d77021cccc0afd26f39ffe89e63c417fd9c64539433e801c07877fdb66d7cb0bd2f8763ca5136
   languageName: node
   linkType: hard
 
@@ -5111,7 +5108,7 @@ __metadata:
     "@nestjs/testing": ^10.1.0
     "@patarapolw/prettyprint": ^1.0.3
     "@seedcompany/common": ">=0.10 <1"
-    "@seedcompany/data-loader": ^0.5.2
+    "@seedcompany/data-loader": ^0.5.4
     "@seedcompany/eslint-plugin": ^3.4.1
     "@seedcompany/nestjs-email": ^3.3.1
     "@tsconfig/strictest": ^2.0.1
