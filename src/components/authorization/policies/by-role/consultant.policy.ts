@@ -14,6 +14,10 @@ import { member, Policy, Role } from '../util';
     r.Project,
     r.ProjectMember,
     r.PeriodicReport,
+    r.ProgressReportCommunityStory,
+    r.ProgressReportHighlight,
+    r.ProgressReportTeamNews,
+    r.ProgressReportVarianceExplanation,
     r.StepProgress,
   ].map((it) => it.when(member).read),
 
