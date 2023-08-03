@@ -2525,7 +2525,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@seedcompany/common@npm:>=0.10 <1, @seedcompany/common@npm:>=0.3.0 <1.0.0":
+"@seedcompany/common@npm:>=0.10 <1, @seedcompany/common@npm:>=0.10.0 <1.0.0, @seedcompany/common@npm:>=0.3.0 <1.0.0":
   version: 0.10.0
   resolution: "@seedcompany/common@npm:0.10.0"
   peerDependencies:
@@ -2607,6 +2607,15 @@ __metadata:
     react-dom: ">=17.0.0"
     reflect-metadata: ^0.1.12
   checksum: 1b0e87c9572cff295d0819cacb9e67cf71a53dddc051e1bf6f4bd97eb81f74ee79ac9a56b636adb0a391897fc53d9c76232e9cc3a9722f2da2e7ff2bf492be03
+  languageName: node
+  linkType: hard
+
+"@seedcompany/scripture@npm:^0.3.0":
+  version: 0.3.0
+  resolution: "@seedcompany/scripture@npm:0.3.0"
+  dependencies:
+    "@seedcompany/common": ">=0.10.0 <1.0.0"
+  checksum: 11c6ff339a156b825390be3d17f7499b5e5ecfe8a25c7369885691401fcb61303d4dd0212408e5d0ca6fa5892e856d5edfe512571896976f71d0cf1223787689
   languageName: node
   linkType: hard
 
@@ -5111,6 +5120,7 @@ __metadata:
     "@seedcompany/data-loader": ^0.5.4
     "@seedcompany/eslint-plugin": ^3.4.1
     "@seedcompany/nestjs-email": ^3.3.1
+    "@seedcompany/scripture": ^0.3.0
     "@tsconfig/strictest": ^2.0.1
     "@types/common-tags": ^1.8.1
     "@types/cookie-parser": ^1.4.3
