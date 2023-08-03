@@ -1,4 +1,4 @@
-import levenshtein from 'js-levenshtein-esm';
+import levenshtein from 'fastest-levenshtein';
 import { sortBy, startCase, without } from 'lodash';
 import { Column } from '../../common/xlsx.util';
 import { ProductStep as Step } from '../product';
@@ -32,7 +32,7 @@ export function findStepColumns(
     }
     const distances = remainingSteps.map((step) => {
       const humanLabel = startCase(step).replace(' And ', ' & ');
-      const distance = levenshtein(label, humanLabel);
+      const distance = levenshtein.distance(label, humanLabel);
       return [step, distance] as const;
     });
     // Pick the step that is the closest fuzzy match

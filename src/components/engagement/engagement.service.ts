@@ -64,7 +64,8 @@ export class EngagementService {
   constructor(
     private readonly repo: EngagementRepository,
     private readonly ceremonyService: CeremonyService,
-    private readonly products: ProductService,
+    @Inject(forwardRef(() => ProductService))
+    private readonly products: ProductService & {},
     private readonly config: ConfigService,
     private readonly files: FileService,
     private readonly engagementRules: EngagementRules,

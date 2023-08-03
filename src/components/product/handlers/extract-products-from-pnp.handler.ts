@@ -1,4 +1,5 @@
 import { asyncPool } from '@seedcompany/common';
+import { labelOfVerseRanges } from '@seedcompany/scripture';
 import { difference, groupBy, uniq } from 'lodash';
 import { DateTime } from 'luxon';
 import { ID, mapFromList, Session, UnsecuredDto } from '~/common';
@@ -9,7 +10,6 @@ import {
   EngagementUpdatedEvent,
 } from '../../engagement/events';
 import { FileService } from '../../file';
-import { labelOfScriptureRanges } from '../../scripture';
 import { StoryService } from '../../story';
 import {
   CreateDerivativeScriptureProduct,
@@ -210,12 +210,12 @@ export class ExtractProductsFromPnpHandler
 
       // Exact matches
       for (const row of rowsOfBook) {
-        const rowScriptureLabel = labelOfScriptureRanges(row.scripture);
+        const rowScriptureLabel = labelOfVerseRanges(row.scripture);
         const withMatches = existingProductsForBook.filter((existingRef) => {
           if (
             existingRef.scriptureRanges.length > 0 &&
             rowScriptureLabel ===
-              labelOfScriptureRanges(existingRef.scriptureRanges)
+              labelOfVerseRanges(existingRef.scriptureRanges)
           ) {
             return true;
           }

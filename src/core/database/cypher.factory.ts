@@ -66,8 +66,7 @@ export const CypherFactory: FactoryProvider<Connection> = {
     logger: ILogger,
     driverLogger: ILogger,
   ) => {
-    const { version, url, username, password, database, driverConfig } =
-      config.neo4j;
+    const { url, username, password, database, driverConfig } = config.neo4j;
 
     const driverLoggerAdapter: LoggerFunction = (neoLevel, message) => {
       const level =
@@ -109,9 +108,7 @@ export const CypherFactory: FactoryProvider<Connection> = {
       },
     };
 
-    const { auth, driver: driverConstructor } = await import(
-      version === 4 ? 'neo4j-v4' : 'neo4j-driver'
-    );
+    const { auth, driver: driverConstructor } = await import('neo4j-driver');
     const authToken = auth.basic(username, password);
 
     // @ts-expect-error yes we are patching the connection object

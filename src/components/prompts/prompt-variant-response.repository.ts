@@ -24,6 +24,7 @@ import {
   paginate,
   prefixNodeLabelsWithDeleted,
   QueryFragment,
+  requestingUser,
   sorting,
   updateProperty,
   variable,
@@ -92,6 +93,7 @@ export const PromptVariantResponseRepository = <
     protected hydrate(session: Session) {
       return (query: Query) =>
         query
+          .match(requestingUser(session))
           .apply(this.filterToReadable(session))
           .match([
             node('parent', 'BaseNode'),

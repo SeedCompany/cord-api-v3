@@ -1,9 +1,6 @@
+import { parseScripture, tryParseScripture } from '@seedcompany/scripture';
 import { Row } from '~/common/xlsx.util';
-import {
-  parseScripture,
-  ScriptureRange,
-  tryParseScripture,
-} from '../scripture';
+import { ScriptureRange } from '../scripture';
 import { WrittenScripturePlanningSheet } from './planning-sheet';
 
 export const extractScripture = (row: Row<WrittenScripturePlanningSheet>) => {
@@ -12,15 +9,15 @@ export const extractScripture = (row: Row<WrittenScripturePlanningSheet>) => {
   const scriptureFromBookCol = parseScripture(sheet.bookName(row));
 
   const common = {
-    bookName: scriptureFromBookCol[0].start.book,
+    bookName: scriptureFromBookCol[0].start.book.name,
     totalVerses,
   };
 
-  // If scripture from book column matches total count use it.
+  // If scripture from book column matches total count, use it.
   if (ScriptureRange.totalVerses(...scriptureFromBookCol) === totalVerses) {
     return {
       ...common,
-      scripture: scriptureFromBookCol,
+      scripture: scriptureFromBookCol.map(ScriptureRange.fromVerses),
     };
   }
 
@@ -32,7 +29,7 @@ export const extractScripture = (row: Row<WrittenScripturePlanningSheet>) => {
   ) {
     return {
       ...common,
-      scripture: scriptureFromNoteCol,
+      scripture: scriptureFromNoteCol.map(ScriptureRange.fromVerses),
     };
   }
 

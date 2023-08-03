@@ -56,6 +56,6 @@
     "sourceMap": true,
     "incremental": true,
   },
-  "include": ["src", "test"],
+  "include": ["src", "test", ".eslintrc.cjs", "jest.config.ts"],
   "exclude": ["node_modules", "dist"]
 }

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { compact } from 'lodash';
 import {
   CalendarDate,
@@ -45,8 +45,10 @@ export class LanguageService {
   constructor(
     private readonly ethnologueLanguageService: EthnologueLanguageService,
     private readonly locationService: LocationService,
-    private readonly projectService: ProjectService,
-    private readonly engagementService: EngagementService,
+    @Inject(forwardRef(() => ProjectService))
+    private readonly projectService: ProjectService & {},
+    @Inject(forwardRef(() => EngagementService))
+    private readonly engagementService: EngagementService & {},
     private readonly authorizationService: AuthorizationService,
     private readonly repo: LanguageRepository,
     @Logger('language:service') private readonly logger: ILogger,
