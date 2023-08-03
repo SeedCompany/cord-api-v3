@@ -1,7 +1,6 @@
+import { mergeVerseRanges, Range, Verse } from '@seedcompany/scripture';
 import { differenceWith } from 'lodash';
-import { Range } from '../../common';
 import { ScriptureRange } from './dto';
-import { mergeScriptureRangesToMinimalIds } from './merge-to-minimal-set';
 
 export const isScriptureEqual = (
   a: readonly ScriptureRange[],
@@ -14,15 +13,15 @@ export const isScriptureEqual = (
     // If one is empty and the other is not, then we know they aren't equal
     return false;
   }
-  const av = mergeScriptureRangesToMinimalIds(a);
-  const bv = mergeScriptureRangesToMinimalIds(b);
+  const av = mergeVerseRanges(a);
+  const bv = mergeVerseRanges(b);
   if (av.length !== bv.length) {
     // If the merged ranges are not the same length, we know they aren't equal
     return false;
   }
   // Otherwise, compare actual verses
-  const comparator = (aa: Range<number>, bb: Range<number>) => {
-    return aa.start === bb.start && aa.end === bb.end;
+  const comparator = (aa: Range<Verse>, bb: Range<Verse>) => {
+    return +aa.start === +bb.start && +aa.end === +bb.end;
   };
   return (
     differenceWith(av, bv, comparator).length === 0 &&

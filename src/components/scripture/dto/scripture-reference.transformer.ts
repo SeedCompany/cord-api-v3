@@ -1,8 +1,8 @@
 import { applyDecorators } from '@nestjs/common';
+import { Book } from '@seedcompany/scripture';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { Writable as Mutable } from 'type-fest';
-import { Book } from '../books';
 import { ScriptureReferenceInput } from './scripture-reference.dto';
 
 class ScriptureReferenceStartInput extends ScriptureReferenceInput {
@@ -21,13 +21,13 @@ class ScriptureReferenceEndInput extends ScriptureReferenceInput {
 
   set book(value: string) {
     this.bookName = value;
-    // when book is set, default the chapter & verse to last
-    // If they are also given on input then they will just be overridden
+    // When the book is set, default the chapter & verse to last.
+    // If they are also given on input, then they will just be overridden
     // after this. Also ignoring errors, as the validator reports better.
     try {
-      const book = Book.find(value);
-      (this as Mutable<this>).chapter = book.lastChapter.chapter;
-      (this as Mutable<this>).verse = book.lastChapter.lastVerse.verse;
+      const book = Book.named(value);
+      (this as Mutable<this>).chapter = book.lastChapter.index;
+      (this as Mutable<this>).verse = book.lastChapter.lastVerse.index;
     } catch (e) {
       // let validator will throw error
     }

@@ -8,6 +8,7 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
+import { Book, labelOfVerseRanges } from '@seedcompany/scripture';
 import { stripIndent } from 'common-tags';
 import { startCase } from 'lodash';
 import {
@@ -34,7 +35,6 @@ import {
   UpdateDirectScriptureProduct,
 } from '../product';
 import { ProjectLoader, TranslationProject } from '../project';
-import { Book, labelOfScriptureRanges } from '../scripture';
 import {
   AnyProduct,
   CreateOtherProduct,
@@ -146,10 +146,10 @@ export class ProductResolver {
       if (product.unspecifiedScripture.value) {
         const { book, totalVerses: verses } =
           product.unspecifiedScripture.value;
-        const totalVerses = Book.find(book).totalVerses;
+        const totalVerses = Book.named(book).totalVerses;
         return `${book} (${verses} / ${totalVerses} verses)`;
       }
-      return labelOfScriptureRanges(
+      return labelOfVerseRanges(
         product.scriptureReferences.value,
         collapseAfter,
       );

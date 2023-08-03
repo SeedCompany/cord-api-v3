@@ -1,13 +1,12 @@
 import { applyDecorators } from '@nestjs/common';
 import { Field, FieldOptions, InputType, ObjectType } from '@nestjs/graphql';
+import { Book, mergeVerseRanges, Verse } from '@seedcompany/scripture';
 import { Transform, Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { stripIndent } from 'common-tags';
 import { random, sumBy, times } from 'lodash';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { Range, SecuredPropertyList, SecuredProps } from '../../../common';
-import { Verse } from '../books';
-import { mergeScriptureRanges } from '../merge-to-minimal-set';
+import { Range, SecuredPropertyList, SecuredProps } from '~/common';
 import { IsValidOrder } from './scripture-range.validator';
 import {
   ScriptureReference,
@@ -38,7 +37,9 @@ export const ScriptureField = (options: FieldOptions) =>
     Type(() => ScriptureRangeInput),
     Transform(({ value }) => {
       try {
-        return value ? mergeScriptureRanges(value) : value;
+        return value
+          ? mergeVerseRanges(value).map(ScriptureRange.fromVerses)
+          : value;
       } catch (e) {
         return value;
       }
@@ -90,25 +91,41 @@ export abstract class ScriptureRange implements Range<ScriptureReference> {
     return mapRange(range, (p) => p.reference);
   }
 
-  static totalVerses(...ranges: ScriptureRange[]) {
-    return sumBy(ranges, (range) => {
-      const verseRange = ScriptureRange.fromReferences(range);
-      return verseRange.end - verseRange.start + 1;
-    });
+  static totalVerses(...ranges: Array<Range<Verse>>) {
+    return sumBy(ranges, (range) => +range.end - +range.start + 1);
   }
 
   static random() {
-    const start = Verse.random();
+    const startBook = Book.at(random(1, Book.at(-1).index));
+    const startChapter = startBook.chapter(
+      random(1, startBook.lastChapter.index),
+    );
+    const startVerse = startChapter.verse(
+      random(1, startChapter.lastVerse.index),
+    );
+    const endBook = Book.at(random(startBook.index, Book.at(-1).index));
+    const endChapter = endBook.chapter(
+      random(
+        endBook.equals(startBook) ? startChapter.index : 1,
+        endBook.lastChapter.index,
+      ),
+    );
+    const endVerse = endChapter.verse(
+      random(
+        endChapter.equals(startChapter) ? startVerse.index : 1,
+        endChapter.lastVerse.index,
+      ),
+    );
     return {
-      start: start.reference,
-      end: Verse.random(start).reference,
+      start: startVerse.reference,
+      end: endVerse.reference,
     };
   }
 
   static randomList(min = 2, max = 4) {
-    return mergeScriptureRanges(
+    return mergeVerseRanges(
       times(random(min, max)).map(ScriptureRange.random),
-    );
+    ).map(ScriptureRange.fromVerses);
   }
 }
 

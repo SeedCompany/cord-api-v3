@@ -1,3 +1,4 @@
+import { Book, labelOfVerseRanges, Verse } from '@seedcompany/scripture';
 import { node, relation } from 'cypher-query-builder';
 import { AsyncIterable } from 'ix';
 import 'ix/add/asynciterable-operators/flatmap.js';
@@ -10,8 +11,6 @@ import { ID, NotFoundException, Range, UnsecuredDto } from '../../../common';
 import { BaseMigration, Migration } from '../../../core';
 import { ACTIVE } from '../../../core/database/query';
 import { DbScriptureReferences, mapRange } from '../../scripture';
-import { Book, Verse } from '../../scripture/books';
-import { labelOfScriptureRanges } from '../../scripture/labels';
 import {
   asProductType,
   CreateDirectScriptureProduct,
@@ -75,14 +74,14 @@ export class SplitScriptureSpanningBooksMigration extends BaseMigration {
       if ('id' in input) {
         this.logger.info('Updating product', {
           id: input.id,
-          refs: labelOfScriptureRanges(input.scriptureReferences ?? []),
+          refs: labelOfVerseRanges(input.scriptureReferences ?? []),
         });
         await this.productService.updateDirect(input, this.fakeAdminSession);
         updated++;
         stats[input.id] = (stats[input.id] ?? 0) + 1;
       } else {
         this.logger.info('Creating product', {
-          refs: labelOfScriptureRanges(input.scriptureReferences ?? []),
+          refs: labelOfVerseRanges(input.scriptureReferences ?? []),
           ...input,
         });
         await this.productService.create(input, this.fakeAdminSession);

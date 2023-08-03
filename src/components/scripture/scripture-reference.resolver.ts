@@ -1,5 +1,5 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { Verse } from './books';
+import { Verse } from '@seedcompany/scripture';
 import { ScriptureReference } from './dto';
 
 @Resolver(ScriptureReference)

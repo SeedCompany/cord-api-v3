@@ -1,7 +1,7 @@
 import { Int, Parent, ResolveField, Resolver } from '@nestjs/graphql';
+import { labelOfVerseRange } from '@seedcompany/scripture';
 import { stripIndent } from 'common-tags';
 import { ScriptureRange } from './dto';
-import { labelOfScriptureRange } from './labels';
 
 @Resolver(ScriptureRange)
 export class ScriptureRangeResolver {
@@ -22,7 +22,7 @@ export class ScriptureRangeResolver {
     `,
   })
   label(@Parent() range: ScriptureRange): string {
-    return labelOfScriptureRange(range);
+    return labelOfVerseRange(range);
   }
 
   @ResolveField(() => Int, {

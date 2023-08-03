@@ -1,5 +1,6 @@
-import { Cell } from '../../common/xlsx.util';
-import { Book, parseScripture, ScriptureRange } from '../scripture';
+import { Book, parseScripture } from '@seedcompany/scripture';
+import { Cell } from '~/common/xlsx.util';
+import { ScriptureRange } from '../scripture';
 import { PlanningSheet } from './planning-sheet';
 import { ProgressSheet } from './progress-sheet';
 
@@ -19,7 +20,7 @@ export const isGoalRow = (cell: Cell<PlanningSheet | ProgressSheet>) => {
   }
 
   // Try as book name first since it's faster than parsing scripture string
-  const maybeBook = Book.tryFind(rawBook);
+  const maybeBook = rawBook ? Book.namedMaybe(rawBook) : undefined;
   if (maybeBook) {
     // Sanity check to ensure total verses given is plausible
     return versesToTranslate <= maybeBook.totalVerses;
@@ -34,7 +35,7 @@ export const isGoalRow = (cell: Cell<PlanningSheet | ProgressSheet>) => {
 
   const totalVersesInRange = ScriptureRange.totalVerses(...scriptureRanges);
 
-  // Treat range(s) as valid if the total verses the represents
-  // equals what's been given in other column.
+  // Treat range(s) as valid if the total verses represented
+  // equals what's been given in the other column.
   return versesToTranslate === totalVersesInRange;
 };

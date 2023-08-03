@@ -1,23 +1,17 @@
-import { sum, sumBy } from 'lodash';
-import { iterate, Range } from '../../common';
-import { Book, Verse } from './books';
-import {
-  BookDifficulty,
-  mapRange,
-  ScriptureRange,
-  UnspecifiedScripturePortion,
-} from './dto';
-import { mergeScriptureRanges } from './merge-to-minimal-set';
+import { Book, mergeVerseRanges, Verse } from '@seedcompany/scripture';
+import { sum } from 'lodash';
+import { iterate, Range } from '~/common';
+import { difficultyFactorOfBook } from './book-difficulty-factor';
+import { ScriptureRange, UnspecifiedScripturePortion } from './dto';
 
 export const getTotalVerseEquivalents = (
   ...refs: readonly ScriptureRange[]
 ) => {
-  const verses = mergeScriptureRanges(refs)
-    .map((range) => mapRange(range, Verse.fromRef))
+  const verses = mergeVerseRanges(refs)
     .flatMap((range) => iterate(splitRangeByBook(range)))
     .map((range) => {
-      const factor = factorOfBook(range.start.book);
-      return factor * (range.end.id - range.start.id + 1);
+      const factor = difficultyFactorOfBook(range.start.book);
+      return factor * ScriptureRange.totalVerses(range);
     });
   return sum(verses);
 };
@@ -25,15 +19,12 @@ export const getTotalVerseEquivalents = (
 export const getVerseEquivalentsFromUnspecified = (
   portion: UnspecifiedScripturePortion,
 ) => {
-  const factor = factorOfBook(Book.find(portion.book));
+  const factor = difficultyFactorOfBook(Book.named(portion.book));
   return factor * portion.totalVerses;
 };
 
 export const getTotalVerses = (...refs: readonly ScriptureRange[]) =>
-  sumBy(mergeScriptureRanges(refs), (range) => {
-    const { start, end } = mapRange(range, Verse.fromRef);
-    return end.id - start.id + 1;
-  });
+  ScriptureRange.totalVerses(...mergeVerseRanges(refs));
 
 function* splitRangeByBook({ start, end }: Range<Verse>) {
   while (start.book.name !== end.book.name) {
@@ -45,11 +36,3 @@ function* splitRangeByBook({ start, end }: Range<Verse>) {
   }
   yield { start, end };
 }
-
-const factorMap: Record<BookDifficulty, number> = {
-  Easy: 0.8,
-  Normal: 1,
-  Hard: 1.25,
-  Hardest: 1.5625,
-};
-const factorOfBook = (book: Book) => factorMap[book.difficulty];

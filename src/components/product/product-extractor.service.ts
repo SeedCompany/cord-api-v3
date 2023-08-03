@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { parseScripture } from '@seedcompany/scripture';
 import { assert } from 'ts-essentials';
 import { MergeExclusive } from 'type-fest';
 import { CalendarDate, entries } from '../../common';
@@ -15,11 +16,7 @@ import {
   stepPlanCompleteDate,
   WrittenScripturePlanningSheet,
 } from '../pnp';
-import {
-  parseScripture,
-  ScriptureRange,
-  UnspecifiedScripturePortion,
-} from '../scripture';
+import { ScriptureRange, UnspecifiedScripturePortion } from '../scripture';
 import { ProductStep as Step } from './dto';
 
 @Injectable()
@@ -104,7 +101,7 @@ const parseProductRow =
               // Ignore these two strings that are meaningless here
               ?.replace('Composite', '')
               .replace('other portions', '') ?? '',
-          );
+          ).map(ScriptureRange.fromVerses);
         } catch (e) {
           return [];
         }
