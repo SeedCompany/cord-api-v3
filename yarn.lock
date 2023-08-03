@@ -2130,6 +2130,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@leeoniya/ufuzzy@npm:^1.0.8":
+  version: 1.0.8
+  resolution: "@leeoniya/ufuzzy@npm:1.0.8"
+  checksum: 899a9269fa72c773c4806ff6ca7277a9ed69a8e3e7f0e8db9d3f4c9aa9c23d1d5c1df1e5cbea47d720af85ae6aa2ad88822443cd18ef94631876b96d23f4d7e2
+  languageName: node
+  linkType: hard
+
 "@lukeed/csprng@npm:^1.0.0":
   version: 1.1.0
   resolution: "@lukeed/csprng@npm:1.1.0"
@@ -5107,6 +5114,7 @@ __metadata:
     "@aws-sdk/s3-request-presigner": ^3.370.0
     "@faker-js/faker": ^8.0.2
     "@golevelup/nestjs-discovery": ^4.0.0
+    "@leeoniya/ufuzzy": ^1.0.8
     "@nestjs/apollo": ^12.0.7
     "@nestjs/cli": ^10.1.10
     "@nestjs/common": ^10.1.0

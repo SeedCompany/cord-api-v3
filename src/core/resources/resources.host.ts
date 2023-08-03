@@ -37,6 +37,11 @@ export class ResourcesHost {
     return map;
   }
 
+  async getNames() {
+    const map = await this.getMap();
+    return Object.keys(map) as Array<keyof ResourceMap>;
+  }
+
   async getEnhancedMap(): Promise<EnhancedResourceMap> {
     const map = await this.getMap();
     return mapValues(map, EnhancedResource.of) as any;

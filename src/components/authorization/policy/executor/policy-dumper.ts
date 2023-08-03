@@ -8,7 +8,15 @@ import { Command, Console } from 'nestjs-console';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { inspect } from 'util';
 import xlsx from 'xlsx';
-import { EnhancedResource, ID, mapFromList, Role, Session } from '~/common';
+import {
+  EnhancedResource,
+  firstOr,
+  ID,
+  mapFromList,
+  Role,
+  Session,
+} from '~/common';
+import { searchCamelCase } from '~/common/search-camel-case';
 import { ResourceLike, ResourcesHost } from '~/core';
 import {
   ChildListAction,
@@ -55,6 +63,15 @@ export class PolicyDumper {
     command: 'policy:dump <role> <resource>',
   })
   async dump(role: Role, resource: ResourceLike) {
+    role = firstOr(searchCamelCase(Role.all, role), notFound('role', role));
+    resource =
+      typeof resource === 'string'
+        ? firstOr(
+            searchCamelCase(await this.resources.getNames(), resource),
+            notFound('resource', resource),
+          )
+        : resource;
+
     const res = await this.resources.enhance(resource);
     const data = this.dumpRes(role, res);
 
@@ -169,3 +186,6 @@ interface DumpedRow {
   create?: Permission;
   delete?: Permission;
 }
+
+const notFound = (thing: string, input: string) => () =>
+  new Error(`Could not find ${thing} from "${input}"`);
