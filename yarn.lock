@@ -5147,6 +5147,7 @@ __metadata:
     express: ^4.18.2
     extensionless: ^1.4.5
     fast-safe-stringify: ^2.1.1
+    fastest-levenshtein: ^1.0.16
     got: ^13.0.0
     graphql: ^16.7.1
     graphql-parse-resolve-info: ^4.13.0
@@ -5157,7 +5158,6 @@ __metadata:
     iso-3166-1: ^2.1.1
     ix: ^5.0.0
     jest: ^29.6.1
-    js-levenshtein-esm: ^1.2.0
     jsonwebtoken: ^9.0.1
     lazy-get-decorator: ^2.2.1
     lint-staged: ^13.2.3
@@ -6477,6 +6477,13 @@ __metadata:
   bin:
     fxparser: src/cli/cli.js
   checksum: d32b22005504eeb207249bf40dc82d0994b5bb9ca9dcc731d335a1f425e47fe085b3cace3cf9d32172dd1a5544193c49e8615ca95b4bf95a4a4920a226b06d80
+  languageName: node
+  linkType: hard
+
+"fastest-levenshtein@npm:^1.0.16":
+  version: 1.0.16
+  resolution: "fastest-levenshtein@npm:1.0.16"
+  checksum: a78d44285c9e2ae2c25f3ef0f8a73f332c1247b7ea7fb4a191e6bb51aa6ee1ef0dfb3ed113616dcdc7023e18e35a8db41f61c8d88988e877cf510df8edafbc71
   languageName: node
   linkType: hard
 
@@ -8337,13 +8344,6 @@ __metadata:
     html-beautify: js/bin/html-beautify.js
     js-beautify: js/bin/js-beautify.js
   checksum: e1c2532ebf7fe70023408e16129671e928d7f3bb2ccd6fe0a75a2035cdb522d5450ff60865e893a158d8f0df0b677999adbdbdef61ae057a8c8b05e0603b27b2
-  languageName: node
-  linkType: hard
-
-"js-levenshtein-esm@npm:^1.2.0":
-  version: 1.2.0
-  resolution: "js-levenshtein-esm@npm:1.2.0"
-  checksum: 577c3e609d3f3b6ab46071638fee14f96a0a8a9148548d4da12d40cb1a12fd197a93d2ff1047a01562c892bad243e35431e015ab020535c9dead96da64a2c3dd
   languageName: node
   linkType: hard
 
