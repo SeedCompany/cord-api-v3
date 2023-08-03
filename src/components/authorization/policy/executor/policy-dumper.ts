@@ -4,6 +4,7 @@ import Chalk, { Chalk as ChalkInstance } from 'chalk';
 import Table from 'cli-table3';
 import { sortBy, startCase } from 'lodash';
 import { DateTime } from 'luxon';
+import { Command, Console } from 'nestjs-console';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { inspect } from 'util';
 import xlsx from 'xlsx';
@@ -20,6 +21,7 @@ import { CalculatedCondition, PolicyExecutor } from './policy-executor';
 
 type AnyResource = EnhancedResource<any>;
 
+@Console()
 @Injectable()
 export class PolicyDumper {
   constructor(
@@ -49,6 +51,9 @@ export class PolicyDumper {
     xlsx.writeFile(book, filename ?? 'permissions.xlsx');
   }
 
+  @Command({
+    command: 'policy:dump <role> <resource>',
+  })
   async dump(role: Role, resource: ResourceLike) {
     const res = await this.resources.enhance(resource);
     const data = this.dumpRes(role, res);
