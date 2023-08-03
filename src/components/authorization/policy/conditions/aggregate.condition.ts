@@ -58,12 +58,11 @@ export abstract class AggregateConditions<
 
   [inspect.custom](_depth: number, _options: InspectOptionsStylized) {
     const name = this instanceof AndConditions ? ' AND ' : ' OR ';
-    return this.conditions
-      .map((c) => {
-        const l = inspect(c);
-        return c instanceof AggregateConditions ? `(${l})` : l;
-      })
-      .join(name);
+    const asStrings = this.conditions.map((c) => {
+      const l = inspect(c);
+      return c instanceof AggregateConditions ? `(${l})` : l;
+    });
+    return [...new Set(asStrings)].join(name);
   }
 }
 
