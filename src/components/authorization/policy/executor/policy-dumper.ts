@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { cleanJoin, many, Many, Nil } from '@seedcompany/common';
+import { cleanJoin, many, Many, Nil, setOf } from '@seedcompany/common';
 import Chalk, { Chalk as ChalkInstance } from 'chalk';
 import Table from 'cli-table3';
-import { sortBy, startCase } from 'lodash';
+import { compact, sortBy, startCase } from 'lodash';
 import { DateTime } from 'luxon';
 import { Command, Console } from 'nestjs-console';
 import { keys as keysOf } from 'ts-transformer-keys';
@@ -73,18 +73,12 @@ export class PolicyDumper {
     const roles = search(rolesIn, [...Role.all], 'role').sort((a, b) =>
       a.localeCompare(b),
     );
-    const resBank = await this.resources.getNames();
-    const resources = await Promise.all(
-      search(resourcesIn, resBank, 'resource')
-        .sort((a, b) => a.localeCompare(b))
-        .map((res) => this.resources.enhance(res)),
-    );
+    const map = await this.resources.getEnhancedMap();
+    const resources = searchResources(resourcesIn, map);
 
     const data = roles.flatMap((role) =>
-      resources.flatMap((res) =>
-        this.dumpRes(role, res, {
-          props: roles.length === 1 && resources.length === 1,
-        }),
+      resources.flatMap((r) =>
+        this.dumpRes(role, r.resource, { props: r.props }),
       ),
     );
 
@@ -104,7 +98,7 @@ export class PolicyDumper {
             'Permissions',
             roles.length === 1 && `for ${chalk.italic(startCase(roles[0]))}`,
             resources.length === 1 &&
-              `for ${chalk.italic(startCase(resources[0].name))}`,
+              `for ${chalk.italic(startCase(resources[0].resource.name))}`,
           ]),
         ),
         colSpan: 4 + (showRoleCol ? 1 : 0) + (showResCol ? 1 : 0),
@@ -170,7 +164,7 @@ export class PolicyDumper {
   private dumpRes(
     role: Role,
     resource: AnyResource,
-    options: { props: boolean },
+    options: { props: boolean | ReadonlySet<string> },
   ): DumpedRow[] {
     const session: Session = {
       token: 'system',
@@ -197,7 +191,7 @@ export class PolicyDumper {
           resolve(action),
         ]),
       },
-      ...(options.props
+      ...(options.props !== false
         ? ([
             [resource.securedPropsPlusExtra, keysOf<Record<PropAction, ''>>()],
             [resource.childSingleKeys, keysOf<Record<ChildSingleAction, ''>>()],
@@ -205,12 +199,19 @@ export class PolicyDumper {
           ] as const)
         : []
       ).flatMap(([set, actions]) =>
-        [...set].map((prop) => ({
-          role,
-          resource,
-          edge: prop,
-          ...mapFromList(actions, (action) => [action, resolve(action, prop)]),
-        })),
+        [...set]
+          .filter(
+            (p) => typeof options.props === 'boolean' || options.props.has(p),
+          )
+          .map((prop) => ({
+            role,
+            resource,
+            edge: prop,
+            ...mapFromList(actions, (action) => [
+              action,
+              resolve(action, prop),
+            ]),
+          })),
       ),
     ];
   }
@@ -232,7 +233,7 @@ const search = <T extends string>(
   thing: string,
 ) => {
   const values = many(input);
-  if (values.some((v) => v === '*' || v === '_')) {
+  if (values.some(isWildcard)) {
     return bank;
   }
   return values
@@ -244,3 +245,59 @@ const search = <T extends string>(
       ),
     );
 };
+
+const searchResources = (
+  input: Many<string>,
+  map: Record<string, AnyResource>,
+) => {
+  const resNames = Object.keys(map);
+  const selections = many(input)
+    // Split by comma, but not inside curly braces
+    .flatMap((str) => compact(str.split(/,(?![^{}]*})/g).map((s) => s.trim())))
+    // Expand resource wildcards/multi-selects, split out props into tuple
+    .flatMap((r) => {
+      let propsIn: string | undefined;
+      [r, propsIn] = r.split('.');
+      propsIn = propsIn?.replace(/[{}]/g, '');
+      if (isWildcard(r)) {
+        return resNames.map((n) => [n, propsIn] as const);
+      }
+      r = r?.replace(/[{}]/g, '');
+      return csv(r).map((n) => [n, propsIn] as const);
+    })
+    .flatMap(([r, propsIn]) => {
+      const resName = firstOr(
+        searchCamelCase(resNames, r),
+        () => new Error(`Could not find resource from "${r}"`),
+      );
+      const resource = map[resName];
+
+      if (!propsIn) {
+        return { resource, props: false };
+      }
+
+      const availableProps = setOf<string>([
+        ...resource.securedPropsPlusExtra,
+        ...resource.childKeys,
+      ]);
+
+      if (isWildcard(propsIn)) {
+        return {
+          resource,
+          props: setOf([...availableProps].sort((a, b) => a.localeCompare(b))),
+        };
+      }
+
+      const found = csv(propsIn).flatMap((p) =>
+        searchCamelCase(availableProps, p),
+      );
+      return {
+        resource,
+        props: setOf(found.sort((a, b) => a.localeCompare(b))),
+      };
+    })
+    .sort((a, b) => a.resource.name.localeCompare(b.resource.name));
+  return selections;
+};
+
+const isWildcard = (str: string) => str === '*' || str === '_';
