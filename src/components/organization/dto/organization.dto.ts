@@ -14,6 +14,7 @@ import {
   SensitivityField,
 } from '../../../common';
 import { Location } from '../../location/dto';
+import { SecuredOrganizationReach } from './organization-reach.dto';
 import { SecuredOrganizationTypes } from './organization-type.dto';
 
 @RegisterResource()
@@ -45,6 +46,9 @@ export class Organization extends Resource {
 
   @Field()
   readonly types: SecuredOrganizationTypes;
+
+  @Field()
+  readonly reach: SecuredOrganizationReach;
 }
 
 @ObjectType({

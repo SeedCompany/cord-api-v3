@@ -29,6 +29,7 @@ export class OrganizationRepository extends DtoRepository<
       acronym: input.acronym,
       address: input.address,
       types: input.types ?? [],
+      reach: input.reach ?? [],
       canDelete: true,
     };
 
