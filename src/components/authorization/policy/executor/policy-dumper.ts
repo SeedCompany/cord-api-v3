@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { cleanJoin, many, Many, Nil, setOf } from '@seedcompany/common';
 import Chalk, { Chalk as ChalkInstance } from 'chalk';
 import Table from 'cli-table3';
-import { compact, sortBy, startCase } from 'lodash';
+import { compact, groupBy, sortBy, startCase } from 'lodash';
 import { DateTime } from 'luxon';
 import { Command, Console } from 'nestjs-console';
 import { keys as keysOf } from 'ts-transformer-keys';
@@ -70,9 +70,7 @@ export class PolicyDumper {
     rolesIn: Many<LiteralUnion<Role, string>>,
     resourcesIn: Many<ResourceLike & string>,
   ) {
-    const roles = search(rolesIn, [...Role.all], 'role').sort((a, b) =>
-      a.localeCompare(b),
-    );
+    const roles = search(rolesIn, [...Role.all], 'role');
     const map = await this.resources.getEnhancedMap();
     const resources = searchResources(resourcesIn, map);
 
@@ -236,7 +234,7 @@ const search = <T extends string>(
   if (values.some(isWildcard)) {
     return bank;
   }
-  return values
+  const results = values
     .flatMap(csv)
     .map((r) =>
       firstOr(
@@ -244,6 +242,7 @@ const search = <T extends string>(
         () => new Error(`Could not find ${thing} from "${r}"`),
       ),
     );
+  return [...new Set(results)].sort((a, b) => a.localeCompare(b));
 };
 
 const searchResources = (
@@ -282,22 +281,28 @@ const searchResources = (
       ]);
 
       if (isWildcard(propsIn)) {
-        return {
-          resource,
-          props: setOf([...availableProps].sort((a, b) => a.localeCompare(b))),
-        };
+        return { resource, props: availableProps };
       }
 
       const found = csv(propsIn).flatMap((p) =>
         searchCamelCase(availableProps, p),
       );
-      return {
-        resource,
-        props: setOf(found.sort((a, b) => a.localeCompare(b))),
-      };
+      return { resource, props: setOf(found) };
+    });
+
+  // Dedupe selections and sort alphabetically
+  return Object.values(groupBy(selections, (s) => s.resource.name))
+    .map((rows) => {
+      const resource = rows[0]!.resource;
+      const propList = [
+        ...new Set(
+          ...rows.flatMap((r) => (typeof r.props === 'boolean' ? [] : r.props)),
+        ),
+      ].sort((a, b) => a.localeCompare(b));
+      const props = propList.length === 0 ? false : setOf(propList);
+      return { resource, props };
     })
     .sort((a, b) => a.resource.name.localeCompare(b.resource.name));
-  return selections;
 };
 
 const isWildcard = (str: string) => str === '*' || str === '_';
