@@ -1,4 +1,5 @@
 import { Query } from 'cypher-query-builder';
+import { Class, Constructor } from 'type-fest';
 import { inspect, InspectOptionsStylized } from 'util';
 import { ResourceShape } from '~/common';
 import { Policy } from '../policy.factory';
@@ -81,7 +82,17 @@ export class AndConditions<
       return conditions[0];
     }
 
-    return new AndConditions<T>(conditions);
+    const merged = [...groupBy(conditions, byType).values()].flatMap(
+      (sames) => {
+        const same = sames[0]!;
+        return same.intersect ? same.intersect(sames) : sames;
+      },
+    );
+
+    if (merged.length === 1) {
+      return merged[0]!;
+    }
+    return new AndConditions<T>(merged);
   }
 }
 
@@ -102,9 +113,28 @@ export class OrConditions<
       c instanceof OrConditions ? c.conditions : c,
     );
 
-    return new OrConditions<T>(flattened);
+    const merged = [...groupBy(flattened, byType).values()].flatMap((sames) => {
+      const same = sames[0]!;
+      return same.union ? same.union(sames) : sames;
+    });
+
+    if (merged.length === 1) {
+      return merged[0]!;
+    }
+    return new OrConditions<T>(merged);
   }
 }
 
 export const all = AndConditions.from;
 export const any = OrConditions.from;
+
+const groupBy = <K, V>(items: readonly V[], by: (item: V) => K) =>
+  items.reduce((map, item) => {
+    const groupKey = by(item);
+    const prev = map.get(groupKey) ?? [];
+    map.set(groupKey, [...prev, item]);
+    return map;
+  }, new Map<K, V[]>());
+
+const byType = <T extends Class<any>>(item: InstanceType<T>) =>
+  item.constructor as Constructor<T>;
