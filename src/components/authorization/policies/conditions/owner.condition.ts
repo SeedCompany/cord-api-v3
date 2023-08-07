@@ -69,6 +69,14 @@ class OwnerCondition<
     ].join(' OR ');
   }
 
+  union(this: void, conditions: this[]) {
+    return conditions[0];
+  }
+
+  intersect(this: void, conditions: this[]) {
+    return conditions[0];
+  }
+
   [inspect.custom](_depth: number, _options: InspectOptionsStylized) {
     return `Owner`;
   }
