@@ -5,7 +5,7 @@ import { EnhancedResource, Session } from '~/common';
 import { QueryFragment } from '~/core/database/query';
 import { withoutScope } from '../../dto/role.dto';
 import { Permission } from '../builder/perm-granter';
-import { any, Condition } from '../conditions';
+import { Condition, OrConditions } from '../conditions';
 import { PolicyFactory } from '../policy.factory';
 
 export interface ResolveParams {
@@ -14,6 +14,7 @@ export interface ResolveParams {
   resource: EnhancedResource<any>;
   prop?: string;
   calculatedAsCondition?: boolean;
+  optimizeConditions?: boolean;
 }
 
 export interface FilterOptions {
@@ -30,6 +31,7 @@ export class PolicyExecutor {
     resource,
     prop,
     calculatedAsCondition,
+    optimizeConditions = false,
   }: ResolveParams): Permission {
     if (action !== 'read') {
       if (prop) {
@@ -72,7 +74,7 @@ export class PolicyExecutor {
     if (conditions.length === 0) {
       return false;
     }
-    return any(...conditions);
+    return OrConditions.fromAll(conditions, { optimize: optimizeConditions });
   }
 
   cypherFilter({

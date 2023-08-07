@@ -105,6 +105,13 @@ export class OrConditions<
   static from<T extends ResourceShape<any>>(
     ...conditions: Array<Condition<T>>
   ) {
+    return OrConditions.fromAll(conditions);
+  }
+
+  static fromAll<T extends ResourceShape<any>>(
+    conditions: Array<Condition<T>>,
+    { optimize = true }: { optimize?: boolean } = {},
+  ) {
     if (conditions.length === 1) {
       return conditions[0];
     }
@@ -112,6 +119,10 @@ export class OrConditions<
     const flattened = conditions.flatMap((c) =>
       c instanceof OrConditions ? c.conditions : c,
     );
+
+    if (!optimize) {
+      return new OrConditions(flattened);
+    }
 
     const merged = [...groupBy(flattened, byType).values()].flatMap((sames) => {
       const same = sames[0]!;
