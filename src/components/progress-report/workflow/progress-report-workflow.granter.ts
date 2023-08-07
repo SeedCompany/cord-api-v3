@@ -68,32 +68,38 @@ export class ProgressReportWorkflowEventGranter extends ResourceGranter<
   }
 }
 
+interface TransitionCheck {
+  id: ID[];
+  name?: TransitionName;
+  endStatus?: Status;
+}
+
 class TransitionCondition implements Condition<typeof Event> {
   private readonly allowedTransitionIds;
 
-  constructor(
-    allowedTransitions: readonly ID[],
-    private readonly transitionNames?: readonly TransitionName[],
-    private readonly endStatuses?: readonly Status[],
-  ) {
-    this.allowedTransitionIds = new Set(allowedTransitions);
+  protected constructor(private readonly checks: readonly TransitionCheck[]) {
+    this.allowedTransitionIds = new Set(checks.flatMap((c) => c.id));
   }
 
-  static fromName(allowedTransitions: readonly TransitionName[]) {
+  static fromName(transitions: readonly TransitionName[]) {
+    const allowed = new Set(transitions);
     return new TransitionCondition(
-      allowedTransitions.map((t) => Transitions[t].id),
-      allowedTransitions,
+      [...allowed].map((name) => ({
+        name,
+        id: [Transitions[name].id],
+      })),
     );
   }
 
   static fromEndStatus(statuses: readonly Status[]) {
     const allowed = new Set(statuses);
     return new TransitionCondition(
-      Object.values(Transitions)
-        .filter((t) => allowed.has(t.to))
-        .map((t) => t.id),
-      undefined,
-      statuses,
+      [...allowed].map((endStatus) => ({
+        endStatus,
+        id: Object.values(Transitions)
+          .filter((t) => allowed.has(t.to))
+          .map((t) => t.id),
+      })),
     );
   }
 
@@ -121,12 +127,63 @@ class TransitionCondition implements Condition<typeof Event> {
     return `node.transition IN ${String(required)}`;
   }
 
+  union(this: void, conditions: this[]) {
+    const checks = [
+      ...new Map(
+        conditions
+          .flatMap((condition) => condition.checks)
+          .map((check) => {
+            const key = check.name
+              ? `name:${check.name}`
+              : `status:${check.endStatus!}`;
+            return [key, check];
+          }),
+      ).values(),
+    ];
+    return new TransitionCondition(checks);
+  }
+
+  intersect(this: void, conditions: this[]) {
+    const checks = [...conditions[0].checks].filter((check1) =>
+      conditions.every((cond) =>
+        cond.checks.some(
+          (check2) =>
+            check1.name === check2.name ||
+            check1.endStatus === check2.endStatus,
+        ),
+      ),
+    );
+    return new TransitionCondition(checks);
+  }
+
   [inspect.custom](_depth: number, _options: InspectOptionsStylized) {
-    const filterName = this.transitionNames ? 'Transitions' : 'End Statuses';
-    const filterValues = (this.transitionNames ?? this.endStatuses ?? [])
-      .map((l) => `  ${l}`)
-      .join('\n');
-    return `${filterName} {\n${filterValues}\n}`;
+    const render = (label: string, items: readonly string[]) => {
+      const itemsStr = items.map((l) => `  ${l}`).join('\n');
+      return `${label} {\n${itemsStr}\n}`;
+    };
+    if (this.allowedTransitionIds.size === 0) {
+      return 'No Transitions';
+    }
+    const byName = this.checks.filter((c) => c.name);
+    const byEndStatus = this.checks.filter((c) => c.endStatus);
+    const transitions =
+      byName.length > 0
+        ? render(
+            'Transitions',
+            byName.map((c) => c.name!),
+          )
+        : undefined;
+    const endStatuses =
+      byEndStatus.length > 0
+        ? render(
+            'End Statuses',
+            byEndStatus.map((c) => c.endStatus!),
+          )
+        : undefined;
+    if (transitions && endStatuses) {
+      return `(${transitions} OR ${endStatuses})`;
+    }
+    return transitions ?? endStatuses!;
   }
 }
 
