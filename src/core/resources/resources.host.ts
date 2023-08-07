@@ -19,7 +19,7 @@ export type EnhancedResourceMap = {
 
 type LooseResourceName = LiteralUnion<keyof ResourceMap, string>;
 
-type ResourceRef =
+export type ResourceLike =
   | ResourceShape<any>
   | EnhancedResource<any>
   | LooseResourceName;
@@ -35,6 +35,11 @@ export class ResourcesHost {
       ...__privateDontUseThis,
     };
     return map;
+  }
+
+  async getNames() {
+    const map = await this.getMap();
+    return Object.keys(map) as Array<keyof ResourceMap>;
   }
 
   async getEnhancedMap(): Promise<EnhancedResourceMap> {
@@ -61,7 +66,7 @@ export class ResourcesHost {
     return await this.getByName(name as any);
   }
 
-  async verifyImplements(resource: ResourceRef, theInterface: ResourceRef) {
+  async verifyImplements(resource: ResourceLike, theInterface: ResourceLike) {
     const iface = await this.enhance(theInterface);
     if (!(await this.doesImplement(resource, iface))) {
       throw new InvalidIdForTypeException(
@@ -70,12 +75,12 @@ export class ResourcesHost {
     }
   }
 
-  async doesImplement(resource: ResourceRef, theInterface: ResourceRef) {
+  async doesImplement(resource: ResourceLike, theInterface: ResourceLike) {
     const interfaces = await this.getInterfaces(await this.enhance(resource));
     return interfaces.includes(await this.enhance(theInterface));
   }
 
-  private async enhance(ref: ResourceRef) {
+  async enhance(ref: ResourceLike) {
     return typeof ref === 'string'
       ? await this.getByDynamicName(ref)
       : EnhancedResource.of(ref);

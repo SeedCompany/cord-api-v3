@@ -1,4 +1,5 @@
 import { Query } from 'cypher-query-builder';
+import { inspect, InspectOptionsStylized } from 'util';
 import { ID, isIdLike, keys, Many } from '~/common';
 import { Granter, ResourceGranter } from '../../authorization';
 import { action } from '../../authorization/policy/builder/perm-granter';
@@ -70,13 +71,18 @@ export class ProgressReportWorkflowEventGranter extends ResourceGranter<
 class TransitionCondition implements Condition<typeof Event> {
   private readonly allowedTransitionIds;
 
-  constructor(allowedTransitions: readonly ID[]) {
+  constructor(
+    allowedTransitions: readonly ID[],
+    private readonly transitionNames?: readonly TransitionName[],
+    private readonly endStatuses?: readonly Status[],
+  ) {
     this.allowedTransitionIds = new Set(allowedTransitions);
   }
 
   static fromName(allowedTransitions: readonly TransitionName[]) {
     return new TransitionCondition(
       allowedTransitions.map((t) => Transitions[t].id),
+      allowedTransitions,
     );
   }
 
@@ -86,6 +92,8 @@ class TransitionCondition implements Condition<typeof Event> {
       Object.values(Transitions)
         .filter((t) => allowed.has(t.to))
         .map((t) => t.id),
+      undefined,
+      statuses,
     );
   }
 
@@ -111,6 +119,14 @@ class TransitionCondition implements Condition<typeof Event> {
       'allowedTransitions',
     );
     return `node.transition IN ${String(required)}`;
+  }
+
+  [inspect.custom](_depth: number, _options: InspectOptionsStylized) {
+    const filterName = this.transitionNames ? 'Transitions' : 'End Statuses';
+    const filterValues = (this.transitionNames ?? this.endStatuses ?? [])
+      .map((l) => `  ${l}`)
+      .join('\n');
+    return `${filterName} {\n${filterValues}\n}`;
   }
 }
 
