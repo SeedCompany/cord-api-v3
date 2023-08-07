@@ -12,7 +12,9 @@ export abstract class AggregateConditions<
   TResourceStatic extends ResourceShape<any>,
 > implements Condition<TResourceStatic>
 {
-  constructor(readonly conditions: Array<Condition<TResourceStatic>>) {}
+  protected constructor(
+    readonly conditions: Array<Condition<TResourceStatic>>,
+  ) {}
 
   attachPolicy(policy: Policy): Condition<TResourceStatic> {
     const newConditions = this.conditions.map(
@@ -71,6 +73,16 @@ export class AndConditions<
 > extends AggregateConditions<TResourceStatic> {
   protected readonly iteratorKey = 'every';
   protected readonly cypherJoiner = ' AND ';
+
+  static from<T extends ResourceShape<any>>(
+    ...conditions: Array<Condition<T>>
+  ) {
+    if (conditions.length === 1) {
+      return conditions[0];
+    }
+
+    return new AndConditions<T>(conditions);
+  }
 }
 
 export class OrConditions<
@@ -78,20 +90,21 @@ export class OrConditions<
 > extends AggregateConditions<TResourceStatic> {
   protected readonly iteratorKey = 'some';
   protected readonly cypherJoiner = ' OR ';
+
+  static from<T extends ResourceShape<any>>(
+    ...conditions: Array<Condition<T>>
+  ) {
+    if (conditions.length === 1) {
+      return conditions[0];
+    }
+
+    const flattened = conditions.flatMap((c) =>
+      c instanceof OrConditions ? c.conditions : c,
+    );
+
+    return new OrConditions<T>(flattened);
+  }
 }
 
-export const all = <T extends ResourceShape<any>>(
-  ...conditions: Array<Condition<T>>
-) =>
-  conditions.length === 1 ? conditions[0] : new AndConditions<T>(conditions);
-
-export const any = <T extends ResourceShape<any>>(
-  ...conditions: Array<Condition<T>>
-) =>
-  conditions.length === 1
-    ? conditions[0]
-    : new OrConditions<T>(
-        conditions.flatMap((c) =>
-          c instanceof OrConditions ? c.conditions : c,
-        ),
-      );
+export const all = AndConditions.from;
+export const any = OrConditions.from;
