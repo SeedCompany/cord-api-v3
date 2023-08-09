@@ -176,6 +176,7 @@ export class PolicyDumper {
         session,
         resource,
         calculatedAsCondition: true,
+        optimizeConditions: true,
         action,
         prop,
       });

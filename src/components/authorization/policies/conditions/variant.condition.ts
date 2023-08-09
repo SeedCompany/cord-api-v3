@@ -36,6 +36,18 @@ class VariantCondition<TResourceStatic extends ResourceShape<any>>
     return `node.variant = ${String(variants)}`; // TODO hand waving
   }
 
+  union(this: void, conditions: this[]) {
+    const variants = conditions.flatMap((cond) => [...cond.variants]);
+    return new VariantCondition(new Set(variants));
+  }
+
+  intersect(this: void, conditions: this[]) {
+    const variants = [...conditions[0].variants].filter((v) =>
+      conditions.every((cond) => cond.variants.has(v)),
+    );
+    return new VariantCondition(new Set(variants));
+  }
+
   [inspect.custom](_depth: number, _options: InspectOptionsStylized) {
     return `Variant(s) { ${[...this.variants].join(', ')} }`;
   }

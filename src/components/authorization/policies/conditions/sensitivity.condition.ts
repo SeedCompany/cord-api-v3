@@ -61,6 +61,23 @@ export class SensitivityCondition<
     return `${CQL_VAR} <= ${String(param)}`;
   }
 
+  union(conditions: this[]) {
+    return this.pickSens(conditions, 'highest');
+  }
+
+  intersect(conditions: this[]) {
+    return this.pickSens(conditions, 'lowest');
+  }
+
+  private pickSens(conditions: this[], sort: 'highest' | 'lowest') {
+    const ranked = conditions.sort(
+      sort === 'highest'
+        ? (a, b) => sensitivityRank[b.access] - sensitivityRank[a.access]
+        : (a, b) => sensitivityRank[a.access] - sensitivityRank[b.access],
+    );
+    return ranked[0]!;
+  }
+
   [inspect.custom](_depth: number, _options: InspectOptionsStylized) {
     const map = {
       High: 'Any',
