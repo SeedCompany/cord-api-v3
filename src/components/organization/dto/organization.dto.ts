@@ -14,6 +14,7 @@ import {
   SensitivityField,
 } from '../../../common';
 import { Location } from '../../location/dto';
+import { SecuredAddress } from './address.dto';
 import { SecuredOrganizationReach } from './organization-reach.dto';
 import { SecuredOrganizationTypes } from './organization-type.dto';
 
@@ -36,7 +37,7 @@ export class Organization extends Resource {
   readonly acronym: SecuredStringNullable;
 
   @Field()
-  readonly address: SecuredString;
+  readonly address: SecuredAddress;
 
   @SensitivityField({
     description:

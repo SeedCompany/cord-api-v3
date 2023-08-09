@@ -2,6 +2,7 @@ import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { NameField } from '../../../common';
+import { Address } from './address.dto';
 import { OrganizationReach } from './organization-reach.dto';
 import { OrganizationType } from './organization-type.dto';
 import { Organization } from './organization.dto';
@@ -15,7 +16,7 @@ export abstract class CreateOrganization {
   readonly acronym?: string | null;
 
   @Field({ nullable: true })
-  readonly address?: string;
+  readonly address?: Address;
 
   @Field(() => [OrganizationType], { nullable: true })
   readonly types?: readonly OrganizationType[];
