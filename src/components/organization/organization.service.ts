@@ -10,6 +10,7 @@ import {
   UnsecuredDto,
 } from '../../common';
 import { ConfigService, HandleIdLookup, ILogger, Logger } from '../../core';
+import { ifDiff } from '../../core/database/changes';
 import { mapListResults } from '../../core/database/results';
 import { Privileges } from '../authorization';
 import {
@@ -19,6 +20,7 @@ import {
 } from '../location';
 import {
   CreateOrganization,
+  isAddressEqual,
   Organization,
   OrganizationListInput,
   OrganizationListOutput,
@@ -95,15 +97,25 @@ export class OrganizationService {
     input: UpdateOrganization,
     session: Session,
   ): Promise<Organization> {
-    const organization = await this.readOne(input.id, session);
+    const organization = await this.repo.readOne(input.id, session);
 
-    const changes = this.repo.getActualChanges(organization, input);
+    const changes = {
+      ...this.repo.getActualChanges(organization, input),
+      address: ifDiff(isAddressEqual)(input.address, organization.address),
+    };
+
+    const securedOrganization = await this.secure(organization, session);
 
     this.privileges
-      .for(session, Organization, organization)
+      .for(session, Organization, securedOrganization)
       .verifyChanges(changes);
 
-    return await this.repo.updateProperties(organization, changes);
+    const { address, ...simpleChanges } = changes;
+
+    //TODO - update address
+    await this.repo.updateProperties(securedOrganization, simpleChanges);
+
+    return await this.readOne(input.id, session);
   }
 
   async delete(id: ID, session: Session): Promise<void> {
