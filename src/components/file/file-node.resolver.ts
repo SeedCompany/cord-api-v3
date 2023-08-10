@@ -3,8 +3,10 @@ import { stripIndent } from 'common-tags';
 import { AnonSession, Session } from '../../common';
 import { Loader, LoaderOf } from '../../core';
 import { User, UserLoader } from '../user';
-import { FileNode, IFileNode } from './dto';
+import { FileNode, IFileNode, isDirectory } from './dto';
 import { FileService } from './file.service';
+import { MediaByFileVersionLoader } from './media/media-by-file-version.loader';
+import { Media } from './media/media.dto';
 
 @Resolver(IFileNode)
 export class FileNodeResolver {
@@ -35,5 +37,18 @@ export class FileNodeResolver {
     @AnonSession() session: Session,
   ): Promise<readonly FileNode[]> {
     return await this.service.getParents(node.id, session);
+  }
+
+  @ResolveField(() => Media, {
+    nullable: true,
+  })
+  async media(
+    @Parent() node: FileNode,
+    @Loader(() => MediaByFileVersionLoader)
+    loader: LoaderOf<MediaByFileVersionLoader>,
+  ): Promise<Media | null> {
+    if (isDirectory(node)) return null;
+    const id = node.latestVersionId ?? node.id;
+    return await loader.load(id).catch(() => null);
   }
 }
