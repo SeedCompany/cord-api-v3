@@ -1,5 +1,5 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import { ID, IdField } from '../../../common';
+import { ID, IdField } from '~/common';
 
 @ObjectType()
 export abstract class RequestUploadOutput {
@@ -10,32 +10,6 @@ export abstract class RequestUploadOutput {
     description: 'A pre-signed url to upload the file to',
   })
   readonly url: string;
-}
-
-@InputType()
-export abstract class CreateFileVersionInput {
-  @IdField({
-    description: 'The ID returned from the `requestFileUpload` mutation',
-  })
-  readonly uploadId: ID;
-
-  @IdField({
-    description:
-      'The directory ID if creating a new file or the file ID if creating a new version',
-  })
-  readonly parentId: ID;
-
-  @Field({
-    description: 'The file name',
-  })
-  readonly name: string;
-
-  @Field({
-    description:
-      'Override the mime type of the file. Default pulls mime type defined on uploaded file',
-    nullable: true,
-  })
-  readonly mimeType?: string;
 }
 
 @InputType()
@@ -52,10 +26,19 @@ export abstract class CreateDefinedFileVersionInput {
 
   @Field({
     description:
-      'Override the mime type of the file version. Default pulls mime type defined on uploaded file',
+      'Override the mime type of the file. Default pulls mime type defined on uploaded file',
     nullable: true,
   })
   readonly mimeType?: string;
+}
+
+@InputType()
+export abstract class CreateFileVersionInput extends CreateDefinedFileVersionInput {
+  @IdField({
+    description:
+      'The directory ID if creating a new file or the file ID if creating a new version',
+  })
+  readonly parentId: ID;
 }
 
 @InputType()

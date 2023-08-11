@@ -442,9 +442,8 @@ export class FileService {
         await this.createFileVersion(
           {
             parentId: fileId,
-            uploadId: initialVersion.uploadId,
+            ...initialVersion,
             name: initialVersion.name ?? name,
-            mimeType: initialVersion.mimeType,
           },
           session,
         );
