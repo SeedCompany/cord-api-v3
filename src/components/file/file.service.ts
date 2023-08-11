@@ -248,6 +248,7 @@ export class FileService {
       uploadId,
       name,
       mimeType: mimeTypeOverride,
+      media,
     }: CreateFileVersionInput,
     session: Session,
   ): Promise<File> {
@@ -356,7 +357,11 @@ export class FileService {
 
     await this.mediaService.detectAndSave(
       this.asDownloadable(
-        { file: uploadId as IdOf<FileVersion>, mimeType },
+        {
+          file: uploadId as IdOf<FileVersion>,
+          mimeType,
+          ...media,
+        },
         uploadId,
       ),
     );

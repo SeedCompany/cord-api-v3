@@ -1,5 +1,6 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { ID, IdField } from '~/common';
+import { MediaUserMetadata } from '../media/media.dto';
 
 @ObjectType()
 export abstract class RequestUploadOutput {
@@ -30,6 +31,13 @@ export abstract class CreateDefinedFileVersionInput {
     nullable: true,
   })
   readonly mimeType?: string;
+
+  @Field({
+    description:
+      'Extra user media metadata. Note this is only saved if a media mime type is detected',
+    nullable: true,
+  })
+  readonly media?: MediaUserMetadata;
 }
 
 @InputType()
