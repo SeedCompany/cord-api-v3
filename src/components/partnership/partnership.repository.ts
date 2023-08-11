@@ -29,6 +29,7 @@ import {
   sorting,
   whereNotDeletedInChangeset,
 } from '../../core/database/query';
+import { File } from '../file';
 import {
   CreatePartnership,
   Partnership,
@@ -42,8 +43,8 @@ export class PartnershipRepository extends DtoRepository<
   [session: Session, view?: ObjectView]
 >(Partnership) {
   async create(input: CreatePartnership, session: Session, changeset?: ID) {
-    const mouId = await generateId();
-    const agreementId = await generateId();
+    const mouId = await generateId<File>();
+    const agreementId = await generateId<File>();
 
     const initialProps = {
       agreementStatus:

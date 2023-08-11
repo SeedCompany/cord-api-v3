@@ -7,11 +7,12 @@ import {
   DurationObjectUnits as DurationObject,
   Settings,
 } from 'luxon';
-import { ID } from '~/common';
+import { ID, IdOf } from '~/common';
 import { Role } from '../src/components/authorization';
 import {
   Directory,
   FileNodeType,
+  IFileNode,
   RequestUploadOutput,
 } from '../src/components/file';
 import { FileBucket, LocalBucket } from '../src/components/file/bucket';
@@ -46,7 +47,7 @@ import {
 
 export async function uploadFile(
   app: TestApp,
-  parentId: ID,
+  parentId: IdOf<IFileNode>,
   input: Partial<FakeFile> = {},
   uploadRequest?: RequestUploadOutput,
 ) {

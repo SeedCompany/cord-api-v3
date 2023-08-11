@@ -2,8 +2,8 @@ import { Field, InputType, Int, ObjectType } from '@nestjs/graphql';
 import { Min } from 'class-validator';
 import { DateTime } from 'luxon';
 import {
-  ID,
   IdField,
+  IdOf,
   Resource,
   RichTextDocument,
   RichTextField,
@@ -24,7 +24,7 @@ export class Prompt extends Resource {
   /** Fake DB entry for now. */
   static create({ id, text }: { id: string; text: string }): Prompt {
     return {
-      id: id as ID,
+      id: id as IdOf<Prompt>,
       createdAt: DateTime.now(),
       text: {
         canRead: true,
@@ -46,7 +46,7 @@ export class SecuredPrompt extends SecuredProperty(Prompt) {}
 @InputType()
 export abstract class PromptInput {
   @IdField()
-  readonly id: ID;
+  readonly id: IdOf<Prompt>;
 
   @RichTextField()
   readonly text?: RichTextDocument;

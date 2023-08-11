@@ -10,7 +10,7 @@ import { DataObject } from './data-object';
 import { DbLabel } from './db-label.decorator';
 import { getDbClassLabels, getDbPropertyLabels } from './db-label.helpers';
 import { ServerException } from './exceptions';
-import { ID, IdField } from './id-field';
+import { IdField, IdOf } from './id-field';
 import { DateTimeField } from './luxon.graphql';
 import { getParentTypes } from './parent-types';
 import { MaybeSecured, SecuredProps } from './secured-property';
@@ -42,7 +42,7 @@ export abstract class Resource extends DataObject {
   readonly __typename?: string;
 
   @IdField()
-  readonly id: ID;
+  readonly id: IdOf<this>;
 
   @DateTimeField()
   readonly createdAt: DateTime;

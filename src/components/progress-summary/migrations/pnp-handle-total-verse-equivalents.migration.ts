@@ -1,11 +1,12 @@
 import { asyncPool } from '@seedcompany/common';
 import { greaterThan, node, relation } from 'cypher-query-builder';
-import { ID } from '~/common';
+import { IdOf } from '~/common';
 import { BaseMigration, IEventBus, Migration } from '../../../core';
 import { ACTIVE } from '../../../core/database/query';
-import { FileService } from '../../file';
+import { FileService, FileVersion } from '../../file';
 import { PeriodicReportService } from '../../periodic-report';
 import { PeriodicReportUploadedEvent } from '../../periodic-report/events';
+import { ProgressReport } from '../../progress-report/dto';
 
 @Migration('2021-10-05T09:53:22')
 export class PnpHandleTotalVerseEquivalentsMigration extends BaseMigration {
@@ -73,10 +74,10 @@ export class PnpHandleTotalVerseEquivalentsMigration extends BaseMigration {
           .orderBy('version.createdAt', 'DESC')
           .raw('LIMIT 1'),
       )
-      .return<{ reportId: ID; versionId: ID }>([
-        'r.id as reportId',
-        'version.id as versionId',
-      ])
+      .return<{
+        reportId: IdOf<ProgressReport>;
+        versionId: IdOf<FileVersion>;
+      }>(['r.id as reportId', 'version.id as versionId'])
       .run();
     return result;
   }

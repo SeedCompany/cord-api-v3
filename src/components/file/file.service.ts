@@ -33,6 +33,7 @@ import {
   FileNode,
   FileNodeType,
   FileVersion,
+  IFileNode,
   isDirectory,
   isFile,
   isFileVersion,
@@ -53,7 +54,10 @@ export class FileService {
     @Logger('file:service') private readonly logger: ILogger,
   ) {}
 
-  async getDirectory(id: ID, session: Session): Promise<Directory> {
+  async getDirectory(
+    id: IdOf<Directory>,
+    session: Session,
+  ): Promise<Directory> {
     const node = await this.getFileNode(id, session);
     if (!isDirectory(node)) {
       throw new InputException('Node is not a directory');
@@ -61,7 +65,7 @@ export class FileService {
     return node;
   }
 
-  async getFile(id: ID, session: Session): Promise<File> {
+  async getFile(id: IdOf<File>, session: Session): Promise<File> {
     const node = await this.getFileNode(id, session);
     if (!isFile(node)) {
       throw new InputException('Node is not a file');
@@ -69,7 +73,10 @@ export class FileService {
     return node;
   }
 
-  async getFileVersion(id: ID, session: Session): Promise<FileVersion> {
+  async getFileVersion(
+    id: IdOf<FileVersion>,
+    session: Session,
+  ): Promise<FileVersion> {
     const node = await this.getFileNode(id, session);
     if (!isFileVersion(node)) {
       throw new InputException('Node is not a file version');
@@ -77,11 +84,14 @@ export class FileService {
     return node;
   }
 
-  asDownloadable<T extends object>(obj: T, fileVersionId: ID): Downloadable<T>;
+  asDownloadable<T extends object>(
+    obj: T,
+    fileVersionId: IdOf<FileVersion>,
+  ): Downloadable<T>;
   asDownloadable(fileVersion: FileVersion): Downloadable<FileVersion>;
   asDownloadable<T extends object>(
     obj: T,
-    fileVersionId?: ID,
+    fileVersionId?: IdOf<FileVersion>,
   ): Downloadable<T> {
     let downloading: Promise<Buffer> | undefined;
     return Object.assign(obj, {
@@ -96,12 +106,12 @@ export class FileService {
     });
   }
 
-  async getFileNode(id: ID, session?: Session): Promise<FileNode> {
+  async getFileNode(id: IdOf<IFileNode>, session?: Session): Promise<FileNode> {
     this.logger.debug(`getNode`, { id, userId: session?.userId });
     return await this.repo.getById(id, session);
   }
 
-  async getFileNodes(ids: readonly ID[], session: Session) {
+  async getFileNodes(ids: ReadonlyArray<IdOf<IFileNode>>, session: Session) {
     this.logger.debug(`getNodes`, { ids, userId: session.userId });
     return await this.repo.getByIds(ids, session);
   }
@@ -176,7 +186,10 @@ export class FileService {
     ]);
   }
 
-  async getParents(nodeId: ID, session: Session): Promise<readonly FileNode[]> {
+  async getParents(
+    nodeId: IdOf<IFileNode>,
+    session: Session,
+  ): Promise<readonly FileNode[]> {
     return await this.repo.getParentsById(nodeId, session);
   }
 
@@ -189,7 +202,7 @@ export class FileService {
   }
 
   async createDirectory(
-    parentId: ID | undefined,
+    parentId: IdOf<Directory> | undefined,
     name: string,
     session: Session,
   ): Promise<Directory> {
@@ -218,7 +231,7 @@ export class FileService {
   }
 
   async requestUpload(): Promise<RequestUploadOutput> {
-    const id = await generateId();
+    const id = await generateId<FileVersion>();
     const url = await this.bucket.getSignedUrl(PutObject, {
       Key: `temp/${id}`,
       signing: {
@@ -290,8 +303,12 @@ export class FileService {
 
     const fileId =
       parentType === FileNodeType.File
-        ? parentId
-        : await this.getOrCreateFileByName(parentId, name, session);
+        ? (parentId as IdOf<File>)
+        : await this.getOrCreateFileByName(
+            parentId as IdOf<Directory>,
+            name,
+            session,
+          );
     this.logger.debug('Creating file version', {
       parentId: fileId,
       fileName: name,
@@ -354,7 +371,7 @@ export class FileService {
   }
 
   private async validateParentNode(
-    id: ID,
+    id: IdOf<IFileNode>,
     isType: (type: FileNodeType) => boolean,
     typeMismatchError: string,
   ) {
@@ -373,7 +390,7 @@ export class FileService {
   }
 
   private async getOrCreateFileByName(
-    parentId: ID,
+    parentId: IdOf<Directory>,
     name: string,
     session: Session,
   ) {
@@ -384,14 +401,14 @@ export class FileService {
         fileName: name,
         fileId: node.id,
       });
-      return node.id;
+      return node.id as IdOf<File>;
     } catch (e) {
       if (!(e instanceof NotFoundException)) {
         throw e;
       }
     }
 
-    const fileId = await generateId();
+    const fileId = await generateId<File>();
     await this.repo.createFile({ fileId, name, session, parentId });
 
     this.logger.debug(
@@ -406,7 +423,7 @@ export class FileService {
   }
 
   async createDefinedFile(
-    fileId: ID,
+    fileId: IdOf<File>,
     name: string,
     session: Session,
     baseNodeId: ID,
@@ -493,7 +510,7 @@ export class FileService {
     return await this.getFileNode(input.id, session);
   }
 
-  async delete(id: ID, session: Session): Promise<void> {
+  async delete(id: IdOf<IFileNode>, session: Session): Promise<void> {
     const fileNode = await this.repo.getById(id, session);
     await this.repo.delete(fileNode, session);
   }

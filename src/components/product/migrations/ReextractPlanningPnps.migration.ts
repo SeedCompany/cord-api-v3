@@ -1,11 +1,12 @@
 import { ModuleRef } from '@nestjs/core';
 import { asyncPool } from '@seedcompany/common';
 import { node, relation } from 'cypher-query-builder';
-import { ID } from '~/common';
+import { ID, IdOf } from '~/common';
 import { BaseMigration, IEventBus, Migration } from '../../../core';
 import { ACTIVE } from '../../../core/database/query';
 import { EngagementRepository } from '../../engagement/engagement.repository';
 import { EngagementUpdatedEvent } from '../../engagement/events';
+import { FileVersion } from '../../file';
 import { ProductMethodology as Methodology } from '../dto';
 
 @Migration('2021-11-26T18:13:01')
@@ -99,7 +100,7 @@ export class ReextractPlanningPnpsMigration extends BaseMigration {
       )
       .return<{
         engId: ID;
-        pnpFileId: ID;
+        pnpFileId: IdOf<FileVersion>;
         pnpFileName: string;
         methodologies: Methodology[];
       }>([

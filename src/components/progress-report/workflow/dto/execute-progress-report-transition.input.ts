@@ -1,14 +1,14 @@
 import { Field, InputType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { ID, IdField, RichTextDocument, RichTextField } from '~/common';
-import { ProgressReportStatus } from '../../dto';
+import { ID, IdField, IdOf, RichTextDocument, RichTextField } from '~/common';
+import { ProgressReport, ProgressReportStatus } from '../../dto';
 
 @InputType()
 export abstract class ExecuteProgressReportTransitionInput {
   @IdField({
     description: 'The progress report ID to transition',
   })
-  readonly report: ID;
+  readonly report: IdOf<ProgressReport>;
 
   @IdField({
     description: stripIndent`

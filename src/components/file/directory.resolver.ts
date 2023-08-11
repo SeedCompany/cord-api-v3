@@ -9,8 +9,8 @@ import {
 import { stripIndent } from 'common-tags';
 import {
   AnonSession,
-  ID,
   IdArg,
+  IdOf,
   ListArg,
   LoggedInSession,
   Session,
@@ -35,7 +35,7 @@ export class DirectoryResolver {
 
   @Query(() => Directory)
   async directory(
-    @IdArg() id: ID,
+    @IdArg() id: IdOf<Directory>,
     @Loader(FileNodeLoader) files: LoaderOf<FileNodeLoader>,
   ): Promise<Directory> {
     return asDirectory(await files.load(id));

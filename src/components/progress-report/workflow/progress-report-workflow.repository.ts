@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { inArray, node, Query, relation } from 'cypher-query-builder';
 import {
   ID,
+  IdOf,
   NotFoundException,
   Order,
   RichTextDocument,
@@ -146,7 +147,7 @@ export class ProgressReportWorkflowRepository extends DtoRepository(
     return res.status;
   }
 
-  async changeStatus(report: ID, status: Status) {
+  async changeStatus(report: IdOf<ProgressReport>, status: Status) {
     await this.db.updateProperties({
       type: ProgressReport,
       object: { id: report },

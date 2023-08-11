@@ -15,6 +15,7 @@ import { isEmpty } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   ID,
+  IdOf,
   NotFoundException,
   ServerException,
   Session,
@@ -65,7 +66,7 @@ export class FileRepository extends CommonRepository {
     return this.getConstraintsFor(IFileNode);
   }
 
-  async getById(id: ID, _session?: Session): Promise<FileNode> {
+  async getById(id: IdOf<IFileNode>, _session?: Session): Promise<FileNode> {
     const result = await this.db
       .query()
       .matchNode('node', 'FileNode', { id })
@@ -75,7 +76,7 @@ export class FileRepository extends CommonRepository {
     return first(result);
   }
 
-  async getByIds(ids: readonly ID[], _session: Session) {
+  async getByIds(ids: ReadonlyArray<IdOf<IFileNode>>, _session: Session) {
     return await this.db
       .query()
       .matchNode('node', 'FileNode')
@@ -86,7 +87,7 @@ export class FileRepository extends CommonRepository {
   }
 
   async getByName(
-    parentId: ID,
+    parentId: IdOf<IFileNode>,
     name: string,
     _session: Session,
   ): Promise<FileNode> {
@@ -106,7 +107,7 @@ export class FileRepository extends CommonRepository {
   }
 
   async getParentsById(
-    id: ID,
+    id: IdOf<IFileNode>,
     _session: Session,
   ): Promise<readonly FileNode[]> {
     const result = await this.db
@@ -346,7 +347,7 @@ export class FileRepository extends CommonRepository {
       );
   }
 
-  async getBaseNode(id: ID) {
+  async getBaseNode(id: IdOf<IFileNode>) {
     return await this.db
       .query()
       .matchNode('node', 'FileNode', { id })
@@ -356,11 +357,11 @@ export class FileRepository extends CommonRepository {
   }
 
   async createDirectory(
-    parentId: ID | undefined,
+    parentId: IdOf<Directory> | undefined,
     name: string,
     session: Session,
     { public: isPublic }: { public?: boolean } = {},
-  ): Promise<ID> {
+  ): Promise<IdOf<Directory>> {
     const initialProps = {
       name,
       ...(isPublic ? { public: true } : {}),
@@ -377,7 +378,7 @@ export class FileRepository extends CommonRepository {
         }),
       )
       .apply(this.defaultPublicFromParent(isPublic))
-      .return<{ id: ID }>('node.id as id');
+      .return<{ id: IdOf<Directory> }>('node.id as id');
 
     const result = await createFile.first();
     if (!result) {
@@ -394,10 +395,10 @@ export class FileRepository extends CommonRepository {
     propOfNode,
     public: isPublic,
   }: {
-    fileId: ID;
+    fileId: IdOf<File>;
     name: string;
     session: Session;
-    parentId?: ID;
+    parentId?: IdOf<Directory>;
     propOfNode?: [baseNodeId: ID, propertyName: string];
     public?: boolean;
   }) {
@@ -424,7 +425,7 @@ export class FileRepository extends CommonRepository {
         }),
       )
       .apply(this.defaultPublicFromParent(isPublic))
-      .return<{ id: ID }>('node.id as id');
+      .return<{ id: IdOf<File> }>('node.id as id');
 
     const result = await createFile.first();
     if (!result) {
@@ -434,7 +435,7 @@ export class FileRepository extends CommonRepository {
   }
 
   async createFileVersion(
-    fileId: ID,
+    fileId: IdOf<File>,
     input: Pick<FileVersion, 'id' | 'name' | 'mimeType' | 'size'> & {
       public?: boolean;
     },
@@ -463,7 +464,7 @@ export class FileRepository extends CommonRepository {
         }),
       )
       .apply(this.defaultPublicFromParent(input.public))
-      .return<{ id: ID }>('node.id as id');
+      .return<{ id: IdOf<FileVersion> }>('node.id as id');
 
     const result = await createFile.first();
     if (!result) {
@@ -487,7 +488,11 @@ export class FileRepository extends CommonRepository {
     }
   }
 
-  async move(id: ID, newParentId: ID, session: Session): Promise<void> {
+  async move(
+    id: IdOf<IFileNode>,
+    newParentId: IdOf<Directory>,
+    session: Session,
+  ): Promise<void> {
     try {
       await this.db
         .query()

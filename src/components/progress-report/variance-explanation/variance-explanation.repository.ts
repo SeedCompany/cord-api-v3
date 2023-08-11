@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { inArray, node, Query, relation } from 'cypher-query-builder';
-import { ID, Session, UnsecuredDto } from '~/common';
+import { ID, IdOf, Session, UnsecuredDto } from '~/common';
 import { DtoRepository } from '~/core';
 import { DbChanges } from '~/core/database/changes';
 import {
@@ -38,7 +38,7 @@ export class ProgressReportVarianceExplanationRepository extends DtoRepository(
 
   protected hydrate() {
     const defaults: UnsecuredDto<VarianceExplanation> & ExpressionInput = {
-      report: 'report.id' as ID,
+      report: 'report.id' as IdOf<ProgressReport>,
       reasons: [],
       comments: null,
     };

@@ -10,9 +10,10 @@ import {
 } from '@nestjs/common';
 import { HttpAdapterHost } from '@nestjs/core';
 import { Request as IRequest } from 'express';
-import { ID } from '~/common';
+import { IdOf } from '~/common';
 import { loggedInSession as verifyLoggedIn } from '~/common/session';
 import { SessionInterceptor } from '../authentication/session.interceptor';
+import { IFileNode } from './dto';
 import { FileService } from './file.service';
 
 @Controller(FileUrlController.path)
@@ -28,7 +29,7 @@ export class FileUrlController {
 
   @Get(':fileId/:fileName?')
   async download(
-    @Param('fileId') fileId: ID,
+    @Param('fileId') fileId: IdOf<IFileNode>,
     @Request() request: IRequest,
     @Response() res: unknown,
   ) {

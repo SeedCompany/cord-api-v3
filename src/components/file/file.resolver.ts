@@ -10,8 +10,8 @@ import { stripIndent } from 'common-tags';
 import { URL } from 'url';
 import {
   AnonSession,
-  ID,
   IdArg,
+  IdOf,
   ListArg,
   LoggedInSession,
   Session,
@@ -40,7 +40,7 @@ export class FileResolver {
 
   @Query(() => File)
   async file(
-    @IdArg() id: ID,
+    @IdArg() id: IdOf<File>,
     @Loader(FileNodeLoader) files: LoaderOf<FileNodeLoader>,
   ): Promise<File> {
     return asFile(await files.load(id));
@@ -48,7 +48,7 @@ export class FileResolver {
 
   @Query(() => IFileNode)
   async fileNode(
-    @IdArg() id: ID,
+    @IdArg() id: IdOf<FileNode>,
     @Loader(FileNodeLoader) files: LoaderOf<FileNodeLoader>,
   ): Promise<FileNode> {
     return await files.load(id);
@@ -102,7 +102,7 @@ export class FileResolver {
     description: 'Delete a file node',
   })
   async deleteFileNode(
-    @IdArg() id: ID,
+    @IdArg() id: IdOf<IFileNode>,
     @LoggedInSession() session: Session,
   ): Promise<DeleteFileNodeOutput> {
     await this.service.delete(id, session);

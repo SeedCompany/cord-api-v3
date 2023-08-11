@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import { generateId, isValidId } from '../../src/common';
+import { generateId, IdOf, isValidId } from '../../src/common';
 import { RegisterInput } from '../../src/components/authentication';
 import { Powers, Role } from '../../src/components/authorization';
 import { User, UserStatus } from '../../src/components/user';
@@ -167,6 +167,7 @@ export async function registerUser(
   };
   return {
     ...actual,
+    id: actual.id as IdOf<TestUser>,
     login: loginMe,
     runAs: <R>(execution: () => Promise<R>) =>
       runInIsolatedSession(app, async () => {

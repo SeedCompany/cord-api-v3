@@ -24,7 +24,7 @@ import {
   PermissionsOf,
 } from '../authorization/authorization.service';
 import { ScopedRole } from '../authorization/dto';
-import { FileService } from '../file';
+import { File, FileService } from '../file';
 import { ProjectChangeRequest } from '../project-change-request/dto';
 import { BudgetRecordRepository } from './budget-record.repository';
 import { BudgetRepository } from './budget.repository';
@@ -74,7 +74,7 @@ export class BudgetService {
       throw new NotFoundException('project does not exist', 'budget.projectId');
     }
 
-    const universalTemplateFileId = await generateId();
+    const universalTemplateFileId = await generateId<File>();
 
     try {
       const budgetId = await this.budgetRepo.create(

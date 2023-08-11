@@ -3,6 +3,7 @@ import { asyncPool } from '@seedcompany/common';
 import { intersection, sumBy, uniq } from 'lodash';
 import {
   ID,
+  IdOf,
   InputException,
   mapFromList,
   NotFoundException,
@@ -352,6 +353,7 @@ export class ProductService {
     );
     const direct: DirectScriptureProduct = {
       ...dto,
+      id: dto.id as IdOf<DirectScriptureProduct>,
       totalVerses: dto.totalVerses ?? 0,
       totalVerseEquivalents: dto.totalVerseEquivalents ?? 0,
       ...securedProps,

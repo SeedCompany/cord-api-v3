@@ -2,8 +2,8 @@ import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { ArrayMaxSize, IsIn } from 'class-validator';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
-  ID,
   IdField,
+  IdOf,
   RichTextDocument,
   RichTextField,
   SecuredProps,
@@ -24,7 +24,7 @@ export abstract class ProgressReportVarianceExplanation {
   static readonly Parent = import('../dto').then((m) => m.ProgressReport);
   static readonly ConfirmThisClassPassesSensitivityToPolicies = true;
 
-  readonly report: ProgressReport & SetUnsecuredType<ID>;
+  readonly report: ProgressReport & SetUnsecuredType<IdOf<ProgressReport>>;
 
   @Field()
   readonly reasons: SecuredStringList;
@@ -38,7 +38,7 @@ export abstract class ProgressReportVarianceExplanationInput {
   @IdField({
     description: 'The progress report ID',
   })
-  readonly report: ID;
+  readonly report: IdOf<ProgressReport>;
 
   @Field(() => [String], { nullable: true })
   @IsIn([...ReasonOptions.instance.all], {

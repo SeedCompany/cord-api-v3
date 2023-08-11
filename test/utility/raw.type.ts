@@ -1,8 +1,10 @@
 import { DateTime } from 'luxon';
-import { ID } from '../../src/common';
+import { ID, IdOf } from '~/common';
 
 export type Raw<T> = T extends DateTime
   ? string
+  : T extends IdOf<infer U>
+  ? IdOf<U>
   : T extends ID
   ? ID
   : T extends Array<infer U>

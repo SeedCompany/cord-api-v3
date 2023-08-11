@@ -6,6 +6,7 @@ import {
   generateId,
   getDbClassLabels,
   ID,
+  IdOf,
   NotFoundException,
   Session,
   Variant,
@@ -22,7 +23,8 @@ import {
   variable,
 } from '../../core/database/query';
 import { PeriodicReportService, ReportType } from '../periodic-report';
-import { ProductStep } from '../product';
+import { AnyProduct, ProductStep } from '../product';
+import { ProgressReport } from '../progress-report/dto';
 import {
   ProductProgress,
   ProductProgressInput,
@@ -114,7 +116,7 @@ export class ProductProgressRepository {
           .return(collect('dto').as('progressList')),
       )
       .return<{
-        productId: ID;
+        productId: IdOf<AnyProduct>;
         variant: ProgressVariant;
         progressList: UnsecuredProductProgress[];
       }>(['product.id as productId', 'variant', 'progressList'])
@@ -153,7 +155,7 @@ export class ProductProgressRepository {
           .return(collect('dto').as('progressList')),
       )
       .return<{
-        reportId: ID;
+        reportId: IdOf<ProgressReport>;
         variant: ProgressVariant;
         progressList: UnsecuredProductProgress[];
       }>(['report.id as reportId', 'variant', 'progressList'])

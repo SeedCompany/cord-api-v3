@@ -16,6 +16,7 @@ import {
   ServerException,
   simpleSwitch,
 } from '../../../common';
+import { User } from '../../user';
 import { FileNodeType } from './type';
 
 /**
@@ -66,7 +67,7 @@ abstract class FileNode extends Resource {
   })
   readonly public: boolean;
 
-  readonly createdById: ID;
+  readonly createdById: IdOf<User>;
 }
 
 // class name has to match schema name for interface resolvers to work.
@@ -112,7 +113,7 @@ export class File extends BaseFile {
 
   readonly latestVersionId: ID;
 
-  readonly modifiedById: ID;
+  readonly modifiedById: IdOf<User>;
 
   @DateTimeField()
   readonly modifiedAt: DateTime;
@@ -140,9 +141,9 @@ export class Directory extends FileNode {
   })
   readonly totalFiles: number;
 
-  readonly firstFileCreated?: ID;
+  readonly firstFileCreated?: IdOf<File>;
 
-  readonly modifiedBy: ID;
+  readonly modifiedBy: IdOf<User>;
 
   @DateTimeField({
     description:
@@ -163,9 +164,11 @@ export abstract class SecuredFile extends SecuredProperty(File) {}
 
 /**
  * A reference to a secured defined file. The value is the ID of the file.
+ * @deprecated
  */
 export type DefinedFile = Secured<FileId>;
 
+/** @deprecated */
 export type FileId = ID & Opaque<string, 'FileId'>;
 
 export const isDirectory = (node: AnyFileNode): node is Directory =>

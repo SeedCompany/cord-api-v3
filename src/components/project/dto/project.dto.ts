@@ -11,6 +11,7 @@ import {
   DbLabel,
   DbUnique,
   ID,
+  IdOf,
   IntersectionType,
   NameField,
   parentIdMiddleware,
@@ -151,7 +152,7 @@ class Project extends Interfaces {
   @Field()
   readonly financialReportPeriod: SecuredReportPeriod;
 
-  readonly rootDirectory: Secured<ID | undefined>;
+  readonly rootDirectory: Secured<IdOf<Directory> | undefined>;
 
   @Field({
     description: stripIndent`
