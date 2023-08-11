@@ -1,4 +1,3 @@
-import { Type } from '@nestjs/common';
 import {
   IntersectionType as BaseIntersectionType,
   OmitType as BaseOmitType,
@@ -6,10 +5,12 @@ import {
   PickType as BasePickType,
 } from '@nestjs/graphql';
 import { ClassDecoratorFactory } from '@nestjs/graphql/dist/interfaces/class-decorator-factory.interface';
+import { AbstractClass, Class } from 'type-fest';
 import { NotImplementedException } from './exceptions';
 
 /**
  * Used for generic GraphQL types
+ * @deprecated Use AbstractClass from type-fest
  */
 export type AbstractClassType<T> = (abstract new (...args: any[]) => T) & {
   prototype: T;
@@ -33,9 +34,9 @@ export type PublicOf<T> = { [P in keyof T]: T[P] };
  *
  * @see https://docs.nestjs.com/graphql/mapped-types#partial
  */
-export const PartialType = BasePartialType as <T>(
-  classRef: AbstractClassType<T>,
-) => Type<Partial<T>>;
+export const PartialType = BasePartialType as <T, Args extends unknown[]>(
+  classRef: AbstractClass<T, Args>,
+) => Class<Partial<T>, Args>;
 
 /**
  * The PickType() function constructs a new type (class) by picking a set of
@@ -45,11 +46,15 @@ export const PartialType = BasePartialType as <T>(
  *
  * @see https://docs.nestjs.com/graphql/mapped-types#pick
  */
-export const PickType = BasePickType as <T, K extends keyof T>(
-  classRef: AbstractClassType<T>,
+export const PickType = BasePickType as <
+  T,
+  K extends keyof T,
+  Args extends unknown[],
+>(
+  classRef: AbstractClass<T, Args>,
   keys: readonly K[],
   decorator?: ClassDecoratorFactory,
-) => Type<Pick<T, (typeof keys)[number]>>;
+) => Class<Pick<T, (typeof keys)[number]>, Args>;
 
 /**
  * The OmitType() function constructs a type by picking all properties from an
@@ -59,11 +64,15 @@ export const PickType = BasePickType as <T, K extends keyof T>(
  *
  * @see https://docs.nestjs.com/graphql/mapped-types#omit
  */
-export const OmitType = BaseOmitType as <T, K extends keyof T>(
-  classRef: AbstractClassType<T>,
+export const OmitType = BaseOmitType as <
+  T,
+  K extends keyof T,
+  Args extends unknown[],
+>(
+  classRef: AbstractClass<T, Args>,
   keys: readonly K[],
   decorator?: ClassDecoratorFactory,
-) => Type<Omit<T, (typeof keys)[number]>>;
+) => Class<Omit<T, (typeof keys)[number]>, Args>;
 
 /**
  * The IntersectionType() function combines two types into one new type (class).
@@ -72,18 +81,15 @@ export const OmitType = BaseOmitType as <T, K extends keyof T>(
  *
  * @see https://docs.nestjs.com/graphql/mapped-types#intersection
  */
-export const IntersectionType = BaseIntersectionType as {
-  <A, B>(
-    classARef: abstract new (...args: any[]) => A,
-    classBRef: abstract new (...args: any[]) => B,
-    decorator?: ClassDecoratorFactory,
-  ): Type<A & B>;
-  <A, B>(
-    classARef: AbstractClassType<A>,
-    classBRef: AbstractClassType<B>,
-    decorator?: ClassDecoratorFactory,
-  ): Type<A & B>;
-};
+export const IntersectionType = BaseIntersectionType as <
+  A,
+  B,
+  Args extends unknown[],
+>(
+  classARef: AbstractClass<A, Args>,
+  classBRef: AbstractClass<B>,
+  decorator?: ClassDecoratorFactory,
+) => Class<A & B, Args>;
 
 function TODOFn(..._args: any[]) {
   throw new NotImplementedException();
