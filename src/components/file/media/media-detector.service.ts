@@ -36,7 +36,7 @@ export class MediaDetector {
     const stream = await file.stream();
 
     const result = await this.ffprobe(stream);
-    const { width, height, duration: rawDuration } = result.streams[0];
+    const { width, height, duration: rawDuration } = result.streams?.[0] ?? {};
 
     const d = rawDuration as string | number | undefined; // I've seen as string
     const duration = !d ? 0 : typeof d === 'string' ? parseFloat(d) : d;
@@ -54,7 +54,7 @@ export class MediaDetector {
     };
   }
 
-  private async ffprobe(stream: Readable): Promise<FFProbeResult> {
+  private async ffprobe(stream: Readable): Promise<Partial<FFProbeResult>> {
     const { stdout } = await execa(
       ffprobeBinary.path,
       [
@@ -72,6 +72,10 @@ export class MediaDetector {
         input: stream,
       },
     );
-    return JSON.parse(stdout);
+    try {
+      return JSON.parse(stdout);
+    } catch {
+      return {};
+    }
   }
 }
