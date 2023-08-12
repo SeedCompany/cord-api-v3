@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { cleanJoin, many, Many, Nil, setOf } from '@seedcompany/common';
-import Chalk, { Chalk as ChalkInstance } from 'chalk';
+import { Chalk, ChalkInstance } from 'chalk';
 import Table from 'cli-table3';
 import { compact, groupBy, sortBy, startCase } from 'lodash';
 import { DateTime } from 'luxon';
@@ -42,7 +42,7 @@ export class PolicyDumper {
   async writeXlsx(filename?: string) {
     const book = xlsx.utils.book_new();
 
-    const chalk = new Chalk.Instance({ level: 0 });
+    const chalk = new Chalk({ level: 0 });
     const resources = await this.selectResources();
     for (const role of Role.all) {
       const dumped = resources.flatMap((res) =>
@@ -83,7 +83,7 @@ export class PolicyDumper {
     const table = new Table({
       style: { compact: true },
     });
-    const chalk = new Chalk.Instance();
+    const chalk = new Chalk();
 
     const showRoleCol = roles.length > 1;
     const showResCol = resources.length > 1 || !showRoleCol;
