@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import execa from 'execa';
 import { FFProbeResult } from 'ffprobe';
 import { imageSize } from 'image-size';
+import { ISize as ImageSize } from 'image-size/dist/types/interface';
 import { Readable } from 'stream';
 import { Except } from 'type-fest';
 import { Downloadable } from '../dto';
@@ -16,7 +17,12 @@ export class MediaDetector {
     if (file.mimeType.startsWith('image/')) {
       const buffer = await file.download();
 
-      const size = imageSize(buffer);
+      let size: ImageSize = { width: 0, height: 0 };
+      try {
+        size = imageSize(buffer);
+      } catch (e) {
+        // ignore
+      }
 
       return {
         __typename: 'Image',
