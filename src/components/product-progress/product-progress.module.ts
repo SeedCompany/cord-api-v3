@@ -4,7 +4,6 @@ import { PeriodicReportModule } from '../periodic-report/periodic-report.module'
 import { ProductModule } from '../product/product.module';
 import { ProgressReportCreateProductConnectionResolver } from './create-product-connection.resolver';
 import * as handlers from './handlers';
-import { AddVariantToProgressMigration } from './migrations/AddVariantToProgress.migration';
 import { ProductConnectionResolver } from './product-connection.resolver';
 import { ProductProgressByProductLoader } from './product-progress-by-product.loader';
 import { ProductProgressByReportLoader } from './product-progress-by-report.loader';
@@ -29,7 +28,6 @@ import { StepProgressResolver } from './step-progress.resolver';
     ProductProgressRepository,
     StepProgressExtractor,
     ...Object.values(handlers),
-    AddVariantToProgressMigration,
   ],
   exports: [ProductProgressService],
 })
