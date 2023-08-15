@@ -11,41 +11,6 @@ import { fragments } from './fragments';
 import { gql } from './gql-tag';
 import { runAsAdmin } from './login';
 
-export async function listFieldRegions(app: TestApp) {
-  const result = await app.graphql.mutate(
-    gql`
-      query {
-        fieldRegions(input: {}) {
-          items {
-            ...fieldRegion
-          }
-        }
-      }
-      ${fragments.fieldRegion}
-    `,
-  );
-  const regions = result.fieldRegions.items;
-  expect(regions).toBeTruthy();
-  return regions;
-}
-
-export async function readOneRegion(app: TestApp, id: string) {
-  const result = await app.graphql.query(
-    gql`
-      query readOneRegion($id: ID!) {
-        fieldRegion(id: $id) {
-          ...fieldRegion
-        }
-      }
-      ${fragments.fieldRegion}
-    `,
-    { id },
-  );
-  const actual = result.fieldRegion;
-  expect(actual).toBeTruthy();
-  return actual;
-}
-
 export async function createRegion(
   app: TestApp,
   input: Partial<CreateFieldRegion> = {},
