@@ -20,7 +20,7 @@ import { CreatePost, Post, Postable, UpdatePost } from './dto';
 import { PostListInput, SecuredPostList } from './dto/list-posts.dto';
 import { PostRepository } from './post.repository';
 
-type CommentableRef = ID | BaseNode | Postable;
+type PostableRef = ID | BaseNode | Postable;
 
 @Injectable()
 export class PostService {
@@ -76,7 +76,7 @@ export class PostService {
     return await Promise.all(posts.map((dto) => this.secure(dto, session)));
   }
 
-  async loadPostable(resource: CommentableRef): Promise<Postable> {
+  async loadPostable(resource: PostableRef): Promise<Postable> {
     const parentNode = isIdLike(resource)
       ? await this.repo.getBaseNode(resource, Resource)
       : resource;
@@ -102,7 +102,7 @@ export class PostService {
     return this.privileges.for(session, Post).secure(dto);
   }
 
-  async getPermissionsFromResource(resource: CommentableRef, session: Session) {
+  async getPermissionsFromResource(resource: PostableRef, session: Session) {
     const parent = await this.loadPostable(resource);
     const parentType = await this.resourcesHost.getByName(
       parent.__typename as 'Postable',
@@ -147,9 +147,9 @@ export class PostService {
     input: PostListInput,
     session: Session,
   ): Promise<SecuredPostList> {
-    const perms = this.privileges.for(session, parentType, parent).all;
+    const perms = this.privileges.for(session, parentType, parent);
 
-    if (!perms.posts.read) {
+    if (!perms.can('read', 'posts')) {
       return SecuredList.Redacted;
     }
 
@@ -158,7 +158,7 @@ export class PostService {
     return {
       ...(await mapListResults(results, (dto) => this.secure(dto, session))),
       canRead: true, // false handled above
-      canCreate: perms.posts.create,
+      canCreate: perms.can('create', 'posts'),
     };
   }
 }
