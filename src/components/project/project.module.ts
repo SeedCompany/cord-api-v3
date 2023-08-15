@@ -12,7 +12,6 @@ import { UserModule } from '../user/user.module';
 import { ProjectEngagementConnectionResolver } from './engagement-connection.resolver';
 import * as handlers from './handlers';
 import { InternshipProjectResolver } from './internship-project.resolver';
-import * as migrations from './migrations';
 import { ProjectMemberModule } from './project-member/project-member.module';
 import { ProjectStepResolver } from './project-step.resolver';
 import { ProjectLoader } from './project.loader';
@@ -49,7 +48,6 @@ import { ProjectUserConnectionResolver } from './user-connection.resolver';
     ProjectRepository,
     ProjectLoader,
     ...Object.values(handlers),
-    ...Object.values(migrations),
   ],
   exports: [ProjectService, ProjectMemberModule, ProjectRules],
 })
