@@ -18,6 +18,7 @@ export * from './by-role/regional-director.policy';
 export * from './by-role/staff-member.policy';
 export * from './by-role/translator.policy';
 
+export * from './by-feature/engagements-create-delete.policy';
 export * from './by-feature/project-change-requests-beta.policy';
 export * from './by-feature/read-util-objects.policy';
 export * from './by-feature/user-can-edit-self.policy';
