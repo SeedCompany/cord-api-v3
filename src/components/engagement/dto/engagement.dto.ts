@@ -157,6 +157,8 @@ export class LanguageEngagement extends Engagement {
     (m) => m.TranslationProject,
   );
 
+  declare readonly __typename: 'LanguageEngagement';
+
   @Field(() => TranslationProject)
   declare readonly parent: BaseNode;
 
@@ -195,6 +197,8 @@ export class InternshipEngagement extends Engagement {
   static readonly Parent = import('../../project/dto').then(
     (m) => m.InternshipProject,
   );
+
+  declare readonly __typename: 'InternshipEngagement';
 
   @Field(() => InternshipProject)
   declare readonly parent: BaseNode;

@@ -277,7 +277,7 @@ export class EngagementService {
       >;
 
       return {
-        ...(dto as UnsecuredDto<LanguageEngagement>),
+        ...dto,
         ...secured,
         canDelete,
       };
@@ -288,7 +288,7 @@ export class EngagementService {
         false
       >;
       return {
-        ...(dto as UnsecuredDto<InternshipEngagement>),
+        ...dto,
         ...secured,
         methodologies: {
           ...secured.methodologies,
