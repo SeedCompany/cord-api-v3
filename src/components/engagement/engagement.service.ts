@@ -45,6 +45,7 @@ import {
   EngagementStatus,
   InternshipEngagement,
   LanguageEngagement,
+  resolveEngagementType,
   UpdateInternshipEngagement,
   UpdateLanguageEngagement,
 } from './dto';
@@ -259,7 +260,7 @@ export class EngagementService {
     const isLanguageEngagement = dto.__typename === 'LanguageEngagement';
 
     const securedProperties = await this.authorizationService.secureProperties(
-      isLanguageEngagement ? LanguageEngagement : InternshipEngagement,
+      resolveEngagementType(dto),
       dto,
       session,
     );

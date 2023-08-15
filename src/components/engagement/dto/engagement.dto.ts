@@ -50,9 +50,14 @@ export type AnyEngagement = MergeExclusive<
 const ChangesetAwareResource: Type<Resource & ChangesetAware> =
   IntersectionType(Resource, ChangesetAware);
 
+export const resolveEngagementType = (val: Pick<AnyEngagement, '__typename'>) =>
+  val.__typename === 'LanguageEngagement'
+    ? LanguageEngagement
+    : InternshipEngagement;
+
 @RegisterResource()
 @InterfaceType({
-  resolveType: (val: AnyEngagement) => val.__typename,
+  resolveType: resolveEngagementType,
   implements: [Resource, ChangesetAware],
 })
 /**
