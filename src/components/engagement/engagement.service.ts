@@ -256,15 +256,7 @@ export class EngagementService {
     dto: UnsecuredDto<Engagement>,
     session: Session,
   ): Promise<Engagement> {
-    const canDelete =
-      dto.status !== EngagementStatus.InDevelopment &&
-      !session.roles.includes(`global:Administrator`)
-        ? false
-        : await this.repo.checkDeletePermission(dto.id, session);
-    return {
-      ...this.privileges.for(session, resolveEngagementType(dto)).secure(dto),
-      canDelete,
-    };
+    return this.privileges.for(session, resolveEngagementType(dto)).secure(dto);
   }
 
   // UPDATE ////////////////////////////////////////////////////////
