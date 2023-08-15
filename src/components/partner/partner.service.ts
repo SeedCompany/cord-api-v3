@@ -16,6 +16,7 @@ import { HandleIdLookup, ILogger, Logger, ResourceLoader } from '../../core';
 import { mapListResults } from '../../core/database/results';
 import { Privileges } from '../authorization';
 import { Location, LocationLoader, LocationType } from '../location';
+import { isAddressEqual } from '../mailing-address/dto/is-address-equal';
 import { FinancialReportingType } from '../partnership/dto';
 import {
   IProject,
@@ -107,12 +108,13 @@ export class PartnerService {
   }
 
   async update(input: UpdatePartner, session: Session): Promise<Partner> {
-    const partner = await this.readOne(input.id, session);
+    const { address, ...simplePartnerProps } = input;
+    const object = await this.repo.readOne(input.id, session);
 
     if (
       !this.validateFinancialReportingType(
-        input.financialReportingTypes ?? partner.financialReportingTypes.value,
-        input.types ?? partner.types.value,
+        input.financialReportingTypes ?? object.financialReportingTypes,
+        input.types ?? object.types,
       )
     ) {
       if (input.financialReportingTypes && input.types) {
@@ -127,8 +129,26 @@ export class PartnerService {
       };
     }
 
-    const changes = this.repo.getActualChanges(partner, input);
-    this.privileges.for(session, Partner, partner).verifyChanges(changes);
+    const changes = this.repo.getActualChanges(object, {
+      ...simplePartnerProps,
+    });
+
+    const isAddressSame = isAddressEqual(address, object.address);
+    let changesToVerify;
+    if (!isAddressSame) {
+      changesToVerify = {
+        ...changes,
+        address: address,
+      };
+    } else {
+      changesToVerify = {
+        ...changes,
+      };
+    }
+    this.privileges
+      .for(session, Partner, object)
+      .verifyChanges(changesToVerify);
+
     const {
       pointOfContactId,
       languageOfWiderCommunicationId,
@@ -137,7 +157,9 @@ export class PartnerService {
       ...simpleChanges
     } = changes;
 
-    await this.repo.updateProperties(partner, simpleChanges);
+    if (Object.keys(simpleChanges).length > 0) {
+      await this.repo.updateProperties(object, simpleChanges);
+    }
 
     if (pointOfContactId !== undefined) {
       await this.repo.updateRelation(
@@ -152,7 +174,7 @@ export class PartnerService {
       await this.repo.updateRelation(
         'languageOfWiderCommunication',
         'Language',
-        partner.id,
+        object.id,
         languageOfWiderCommunicationId,
       );
     }
@@ -162,7 +184,7 @@ export class PartnerService {
 
       try {
         await this.repo.updateRelationList({
-          id: partner.id,
+          id: object.id,
           relation: 'countries',
           newList: countries,
         });
@@ -176,7 +198,7 @@ export class PartnerService {
     if (fieldRegions) {
       try {
         await this.repo.updateRelationList({
-          id: partner.id,
+          id: object.id,
           relation: 'fieldRegions',
           newList: fieldRegions,
         });
@@ -185,6 +207,10 @@ export class PartnerService {
           ? e.withField('partner.fieldRegions')
           : e;
       }
+    }
+
+    if (address && 'address' in changesToVerify) {
+      await this.repo.updatePartnerAddress(input.id, session, address);
     }
 
     return await this.readOne(input.id, session);

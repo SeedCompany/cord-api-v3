@@ -1,4 +1,5 @@
 import { faker } from '@faker-js/faker';
+import { Sensitivity } from '~/common';
 import {
   CreatePartner,
   Partner,
@@ -23,7 +24,15 @@ export async function createPartner(
     pmcEntityCode: faker.helpers.replaceSymbols('???').toUpperCase(),
     globalInnovationsClient: false,
     active: false,
-    address: faker.location.city(),
+    address: {
+      addressOne: '2 Partner Place',
+      addressTwo: 'Suite 200',
+      city: 'Partners',
+      state: 'PA',
+      zip: '12345',
+      country: 'US',
+      sensitivity: Sensitivity.Low,
+    },
     ...input,
   };
 

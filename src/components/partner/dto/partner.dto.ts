@@ -1,5 +1,6 @@
 import { Type } from '@nestjs/common';
 import { Field, ObjectType } from '@nestjs/graphql';
+import { ValidateNested } from 'class-validator';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { RegisterResource } from '~/core/resources';
@@ -23,7 +24,12 @@ import { Location } from '../../../components/location';
 import { ScopedRole } from '../../authorization';
 import { FieldRegion } from '../../field-region';
 import type { Language } from '../../language';
+<<<<<<< HEAD
 import { FinancialReportingType } from '../../partnership/dto';
+=======
+import { SecuredMailingAddress } from '../../mailing-address/dto';
+import { FinancialReportingType } from '../../partnership/dto/financial-reporting-type';
+>>>>>>> ec7433950 (Added @InputType() to Address DTO and temporarily commented outsome test code)
 import { Pinnable } from '../../pin/dto';
 import { Postable } from '../../post/dto';
 import { IProject } from '../../project/dto';
@@ -73,8 +79,9 @@ export class Partner extends Interfaces {
   @Field()
   readonly active: SecuredBoolean;
 
-  @Field()
-  readonly address: SecuredString;
+  @Field(() => SecuredMailingAddress)
+  @ValidateNested()
+  readonly address: SecuredMailingAddress;
 
   readonly languageOfWiderCommunication: Secured<IdOf<Language> | null>;
 

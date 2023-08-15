@@ -10,7 +10,6 @@ import {
   UnsecuredDto,
 } from '../../common';
 import { ConfigService, HandleIdLookup, ILogger, Logger } from '../../core';
-import { ifDiff } from '../../core/database/changes';
 import { mapListResults } from '../../core/database/results';
 import { Privileges } from '../authorization';
 import {
@@ -18,9 +17,9 @@ import {
   LocationService,
   SecuredLocationList,
 } from '../location';
+import { isAddressEqual } from '../mailing-address/dto/is-address-equal';
 import {
   CreateOrganization,
-  isAddressEqual,
   Organization,
   OrganizationListInput,
   OrganizationListOutput,
@@ -97,23 +96,37 @@ export class OrganizationService {
     input: UpdateOrganization,
     session: Session,
   ): Promise<Organization> {
+    const { address, ...simpleOrgProps } = input;
     const organization = await this.repo.readOne(input.id, session);
 
-    const changes = {
-      ...this.repo.getActualChanges(organization, input),
-      address: ifDiff(isAddressEqual)(input.address, organization.address),
-    };
+    const orgChanges = this.repo.getActualChanges(organization, {
+      ...simpleOrgProps,
+    });
 
-    const securedOrganization = await this.secure(organization, session);
+    const isAddressSame = isAddressEqual(address, organization.address);
+    let changesToVerify;
+    if (!isAddressSame) {
+      changesToVerify = {
+        ...orgChanges,
+        address: address,
+      };
+    } else {
+      changesToVerify = {
+        ...orgChanges,
+      };
+    }
+    if (Object.keys(orgChanges).length > 0 || 'address' in changesToVerify) {
+      this.privileges
+        .for(session, Organization, organization)
+        .verifyChanges(changesToVerify);
+    }
 
-    this.privileges
-      .for(session, Organization, securedOrganization)
-      .verifyChanges(changes);
-
-    const { address, ...simpleChanges } = changes;
-
-    //TODO - update address
-    await this.repo.updateProperties(securedOrganization, simpleChanges);
+    if (Object.keys(orgChanges).length > 0) {
+      await this.repo.updateProperties(organization, orgChanges);
+    }
+    if (address && 'address' in changesToVerify) {
+      await this.repo.updateOrgAddress(input.id, session, address);
+    }
 
     return await this.readOne(input.id, session);
   }

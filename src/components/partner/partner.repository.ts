@@ -5,6 +5,7 @@ import { ID, ServerException, Session, UnsecuredDto } from '../../common';
 import { DtoRepository } from '../../core';
 import {
   ACTIVE,
+  apoc,
   collect,
   createNode,
   createRelationships,
@@ -20,6 +21,7 @@ import {
   requestingUser,
   sorting,
 } from '../../core/database/query';
+import { MailingAddress } from '../mailing-address';
 import { CreatePartner, Partner, PartnerListInput } from './dto';
 
 @Injectable()
@@ -47,10 +49,14 @@ export class PartnerRepository extends DtoRepository<
       pmcEntityCode: input.pmcEntityCode,
       globalInnovationsClient: input.globalInnovationsClient,
       active: input.active,
-      address: input.address,
       modifiedAt: DateTime.local(),
       canDelete: true,
     };
+    const addressProps = {
+      ...input.address,
+      createdAt: DateTime.local(),
+    };
+
     const result = await this.db
       .query()
       .apply(matchRequestingUser(session))
@@ -67,12 +73,43 @@ export class PartnerRepository extends DtoRepository<
           countries: ['Location', input.countries],
         }),
       )
+      .apply((q) => {
+        return q.create([
+          node('node'),
+          relation('out', '', 'address', ACTIVE),
+          node('', ['MailingAddress', 'Property'], addressProps),
+        ]);
+      })
       .return<{ id: ID }>('node.id as id')
       .first();
     if (!result) {
       throw new ServerException('Failed to create partner');
     }
     return result.id;
+  }
+
+  async updatePartnerAddress(
+    id: ID,
+    session: Session,
+    addressToUpdate: MailingAddress,
+  ) {
+    const addressProps = {
+      ...addressToUpdate,
+      modifiedAt: DateTime.local(),
+    };
+    await this.db
+      .query()
+      .apply(matchRequestingUser(session))
+      .matchNode('node', 'Partner', { id })
+      .match([
+        node('node'),
+        relation('out', '', 'address', ACTIVE),
+        node('address', 'MailingAddress'),
+      ])
+      .setValues({
+        address: addressProps,
+      })
+      .run();
   }
 
   protected hydrate(session: Session) {
@@ -140,6 +177,11 @@ export class PartnerRepository extends DtoRepository<
           relation('out', '', 'languageOfWiderCommunication', ACTIVE),
           node('languageOfWiderCommunication', 'Language'),
         ])
+        .match([
+          node('node'),
+          relation('out', '', 'address', ACTIVE),
+          node('mailingAddress', 'MailingAddress'),
+        ])
         .return<{ dto: UnsecuredDto<Partner> }>(
           merge('props', {
             sensitivity: 'sensitivity',
@@ -150,6 +192,7 @@ export class PartnerRepository extends DtoRepository<
             countries: 'countriesIds',
             scope: 'scopedRoles',
             pinned: 'exists((:User { id: $requestingUser })-[:pinned]->(node))',
+            address: apoc.convert.toMap('mailingAddress'),
           }).as('dto'),
         );
   }
