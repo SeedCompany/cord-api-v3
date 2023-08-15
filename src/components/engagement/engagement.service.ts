@@ -6,7 +6,6 @@ import {
   NotFoundException,
   ObjectView,
   SecuredList,
-  SecuredResource,
   ServerException,
   Session,
   UnauthorizedException,
@@ -257,47 +256,15 @@ export class EngagementService {
     dto: UnsecuredDto<Engagement>,
     session: Session,
   ): Promise<Engagement> {
-    const isLanguageEngagement = dto.__typename === 'LanguageEngagement';
-
-    const securedProperties = await this.authorizationService.secureProperties(
-      resolveEngagementType(dto),
-      dto,
-      session,
-    );
-
     const canDelete =
       dto.status !== EngagementStatus.InDevelopment &&
       !session.roles.includes(`global:Administrator`)
         ? false
         : await this.repo.checkDeletePermission(dto.id, session);
-    if (isLanguageEngagement) {
-      // help TS understand that the secured props are for a LanguageEngagement
-      const secured = securedProperties as SecuredResource<
-        typeof LanguageEngagement,
-        false
-      >;
-
-      return {
-        ...dto,
-        ...secured,
-        canDelete,
-      };
-    } else {
-      // help TS understand that the secured props are for a InternshipEngagement
-      const secured = securedProperties as SecuredResource<
-        typeof InternshipEngagement,
-        false
-      >;
-      return {
-        ...dto,
-        ...secured,
-        methodologies: {
-          ...secured.methodologies,
-          value: secured.methodologies.value ?? [],
-        },
-        canDelete,
-      };
-    }
+    return {
+      ...this.privileges.for(session, resolveEngagementType(dto)).secure(dto),
+      canDelete,
+    };
   }
 
   // UPDATE ////////////////////////////////////////////////////////
