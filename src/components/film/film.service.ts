@@ -8,9 +8,8 @@ import {
   ServerException,
   Session,
   UnauthorizedException,
-  UnsecuredDto,
 } from '../../common';
-import { HandleIdLookup, ILogger, Logger } from '../../core';
+import { DbTypeOf, HandleIdLookup, ILogger, Logger } from '../../core';
 import { ifDiff } from '../../core/database/changes';
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
@@ -85,10 +84,7 @@ export class FilmService {
     return await Promise.all(films.map((dto) => this.secure(dto, session)));
   }
 
-  private async secure(
-    dto: UnsecuredDto<Film>,
-    session: Session,
-  ): Promise<Film> {
+  private async secure(dto: DbTypeOf<Film>, session: Session): Promise<Film> {
     const securedProps = await this.authorizationService.secureProperties(
       Film,
       {

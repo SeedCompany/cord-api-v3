@@ -229,29 +229,42 @@ export class ProductService {
   private mapDbRowToDto(row: HydratedProductRow): UnsecuredDto<AnyProduct> {
     const {
       isOverriding,
-      produces: producible,
+      produces: rawProducible,
       title,
       description,
+      scriptureReferences: rawScriptureReferences,
       ...props
     } = row;
+    const scriptureReferences = this.scriptureRefs.parseList(
+      rawScriptureReferences,
+    );
 
     if (title) {
       const dto: UnsecuredDto<OtherProduct> = {
         ...props,
         title,
         description,
+        scriptureReferences,
         __typename: 'OtherProduct',
       };
       return dto;
     }
 
-    if (!producible) {
+    if (!rawProducible) {
       const dto: UnsecuredDto<DirectScriptureProduct> = {
         ...props,
+        scriptureReferences,
         __typename: 'DirectScriptureProduct',
       };
       return dto;
     }
+
+    const producible = {
+      ...rawProducible,
+      scriptureReferences: this.scriptureRefs.parseList(
+        rawProducible.scriptureReferences,
+      ),
+    };
 
     const producibleType = this.resources.resolveType(
       producible.__typename,
@@ -262,10 +275,8 @@ export class ProductService {
       produces: { ...producible, __typename: producibleType },
       scriptureReferences: !isOverriding
         ? producible.scriptureReferences
-        : props.scriptureReferences,
-      scriptureReferencesOverride: !isOverriding
-        ? null
-        : props.scriptureReferences,
+        : scriptureReferences,
+      scriptureReferencesOverride: !isOverriding ? null : scriptureReferences,
       __typename: 'DerivativeScriptureProduct',
     };
     return dto;
@@ -277,20 +288,10 @@ export class ProductService {
   ): Promise<AnyProduct> {
     const canDelete = await this.repo.checkDeletePermission(dto.id, session);
 
-    const scriptureReferences = this.scriptureRefs.parseList(
-      dto.scriptureReferences,
-    );
-
     if (dto.produces) {
       const securedProps = await this.authorizationService.secureProperties(
         DerivativeScriptureProduct,
-        {
-          ...dto,
-          scriptureReferences,
-          scriptureReferencesOverride: dto.scriptureReferencesOverride
-            ? this.scriptureRefs.parseList(dto.scriptureReferences)
-            : dto.scriptureReferencesOverride,
-        },
+        dto,
         session,
       );
       const derivative: DerivativeScriptureProduct = {
@@ -316,10 +317,7 @@ export class ProductService {
     if (dto.title) {
       const securedProps = await this.authorizationService.secureProperties(
         OtherProduct,
-        {
-          ...dto,
-          scriptureReferences,
-        },
+        dto,
         session,
       );
       const other: OtherProduct = {
@@ -344,10 +342,7 @@ export class ProductService {
 
     const securedProps = await this.authorizationService.secureProperties(
       DirectScriptureProduct,
-      {
-        ...asProductType(DirectScriptureProduct)(dto),
-        scriptureReferences,
-      },
+      asProductType(DirectScriptureProduct)(dto),
       session,
     );
     const direct: DirectScriptureProduct = {
@@ -435,7 +430,7 @@ export class ProductService {
       )(input.unspecifiedScripture, current.unspecifiedScripture),
       scriptureReferences: ifDiff(isScriptureEqual)(
         input.scriptureReferences,
-        this.scriptureRefs.parseList(current.scriptureReferences),
+        current.scriptureReferences,
       ),
     };
     if (
@@ -534,7 +529,7 @@ export class ProductService {
         !compareNullable(isScriptureEqual)(
           input.scriptureReferencesOverride,
           current.scriptureReferencesOverride
-            ? this.scriptureRefs.parseList(current.scriptureReferencesOverride)
+            ? current.scriptureReferencesOverride
             : null,
         )
           ? input.scriptureReferencesOverride

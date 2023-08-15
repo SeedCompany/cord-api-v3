@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { DbTypeOf } from '~/core/database/db-type';
 import {
   DuplicateException,
   ID,
@@ -7,7 +8,6 @@ import {
   ServerException,
   Session,
   UnauthorizedException,
-  UnsecuredDto,
 } from '../../common';
 import { HandleIdLookup, ILogger, Logger } from '../../core';
 import { ifDiff } from '../../core/database/changes';
@@ -82,10 +82,7 @@ export class StoryService {
     return await Promise.all(stories.map((dto) => this.secure(dto, session)));
   }
 
-  private async secure(
-    dto: UnsecuredDto<Story>,
-    session: Session,
-  ): Promise<Story> {
+  private async secure(dto: DbTypeOf<Story>, session: Session): Promise<Story> {
     const securedProps = await this.authorizationService.secureProperties(
       Story,
       {

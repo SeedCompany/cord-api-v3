@@ -6,12 +6,12 @@ import {
 } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { keys as keysOf } from 'ts-transformer-keys';
+import { SetDbType } from '~/core/database';
 import { RegisterResource } from '~/core/resources';
 import {
   Resource,
   SecuredProperty,
   SecuredProps,
-  SetUnsecuredType,
   UnsecuredDto,
 } from '../../../common';
 import { SetChangeType } from '../../../core/database/changes';
@@ -37,7 +37,7 @@ export abstract class Producible extends Resource {
 
   @Field(() => SecuredScriptureRanges)
   readonly scriptureReferences: SecuredScriptureRanges &
-    SetUnsecuredType<DbScriptureReferences> &
+    SetDbType<DbScriptureReferences> &
     SetChangeType<'scriptureReferences', readonly ScriptureRangeInput[]>;
 }
 
