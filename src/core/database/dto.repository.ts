@@ -15,6 +15,7 @@ import {
 import { Privileges } from '../../components/authorization';
 import { DbChanges, getChanges } from './changes';
 import { CommonRepository } from './common.repository';
+import { DbTypeOf } from './db-type';
 import { OnIndex } from './indexer';
 import { matchProps } from './query';
 
@@ -137,7 +138,7 @@ export const DtoRepository = <
       return (query: Query) =>
         query
           .apply(matchProps())
-          .return<{ dto: UnsecuredDto<TResource> }>('props as dto');
+          .return<{ dto: DbTypeOf<TResource> }>('props as dto');
     }
 
     @OnIndex()

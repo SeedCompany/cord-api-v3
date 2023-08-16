@@ -7,9 +7,8 @@ import {
   ServerException,
   Session,
   UnauthorizedException,
-  UnsecuredDto,
 } from '../../common';
-import { HandleIdLookup, ILogger, Logger } from '../../core';
+import { DbTypeOf, HandleIdLookup, ILogger, Logger } from '../../core';
 import { ifDiff } from '../../core/database/changes';
 import { mapListResults } from '../../core/database/results';
 import { AuthorizationService } from '../authorization/authorization.service';
@@ -80,7 +79,7 @@ export class EthnoArtService {
   }
 
   private async secure(
-    dto: UnsecuredDto<EthnoArt>,
+    dto: DbTypeOf<EthnoArt>,
     session: Session,
   ): Promise<EthnoArt> {
     const securedProps = await this.authorizationService.secureProperties(
