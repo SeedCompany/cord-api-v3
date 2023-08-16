@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { DetectExistingMediaMigration } from './detect-existing-media.migration';
 import { DimensionsResolver } from './dimensions.resolver';
 import { MediaByFileVersionLoader } from './media-by-file-version.loader';
 import { MediaDetector } from './media-detector.service';
@@ -16,6 +17,7 @@ import { MediaService } from './media.service';
     MediaRepository,
     MediaResolver,
     MediaService,
+    DetectExistingMediaMigration,
   ],
   exports: [MediaService],
 })
