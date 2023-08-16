@@ -37,6 +37,8 @@ export const resolveMedia = (val: Pick<AnyMedia, '__typename'>) => {
 @ObjectType({ isAbstract: true })
 @DbLabel(/* none */)
 export class MediaUserMetadata extends DataObject {
+  static readonly Props: string[] = keysOf<MediaUserMetadata>();
+
   @NameField({
     description: stripIndent`
       A description of this media for accessibility, especially for screen readers.

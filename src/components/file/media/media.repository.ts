@@ -3,8 +3,15 @@ import { inArray, node, or, Query, relation } from 'cypher-query-builder';
 import { Except, RequireAtLeastOne } from 'type-fest';
 import { ID, ServerException } from '~/common';
 import { CommonRepository } from '~/core';
-import { createNode, createRelationships, merge } from '~/core/database/query';
-import { AnyMedia, Media, resolveMedia } from './media.dto';
+import {
+  ACTIVE,
+  apoc,
+  createNode,
+  createRelationships,
+  merge,
+  variable,
+} from '~/core/database/query';
+import { AnyMedia, Media, MediaUserMetadata, resolveMedia } from './media.dto';
 
 @Injectable()
 export class MediaRepository extends CommonRepository {
@@ -46,6 +53,7 @@ export class MediaRepository extends CommonRepository {
   async create(input: Except<AnyMedia, 'id'>) {
     const query = this.db
       .query()
+      .matchNode('fv', 'FileVersion', { id: input.file })
       .apply(
         await createNode(resolveMedia(input), {
           baseNodeProps: toDbShape(input),
@@ -53,16 +61,50 @@ export class MediaRepository extends CommonRepository {
       )
       .apply(
         createRelationships(Media, 'in', {
-          media: ['FileVersion', input.file],
+          media: variable('fv'),
         }),
       )
-      .return<{ id: ID }>('node.id as id');
+      // Grab the previous media node or null
+      .subQuery('fv', (sub) =>
+        sub
+          .optionalMatch([
+            node('fv'), // current is ignored since it's called out separately in this match
+            relation('out', '', 'parent', ACTIVE),
+            node('file', 'File'),
+            relation('in', '', 'parent', ACTIVE),
+            node('fvs', 'FileVersion'),
+          ])
+          .optionalMatch([
+            node('fvs'),
+            relation('out', '', 'media'),
+            node('prevMedia', 'Media'),
+          ])
+          .return('prevMedia')
+          .orderBy('fvs.createdAt', 'DESC')
+          .limit(1),
+      )
+      // Use previous user metadata as defaults for new media
+      .with('node, fv, prevMedia')
+      .setVariables(
+        {
+          node: String(
+            apoc.map.submap(
+              apoc.map.merge('node', 'prevMedia'),
+              MediaUserMetadata.Props.map((k) => `'${k}'`),
+              [],
+              false,
+            ),
+          ),
+        },
+        true,
+      )
+      .apply(this.hydrate());
 
     const result = await query.first();
     if (!result) {
       throw new ServerException('Failed to create media info');
     }
-    return result;
+    return result.dto;
   }
 
   async update(
