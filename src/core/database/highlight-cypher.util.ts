@@ -9,7 +9,15 @@ export function highlight(query: string) {
     padding: 0,
     theme,
   });
-  pretty = pretty.split('\n').slice(0, -1).join('\n');
+  pretty = pretty
+    .split('\n')
+    .slice(0, -1)
+    // strip off trailing spaces meant for a "code block background."
+    // we don't set a background color, and this makes copy/pasting into
+    // neo4j editor painful.
+    // eslint-disable-next-line no-control-regex
+    .map((line) => line.replace(/( )+\u001B\[39m$/, ''))
+    .join('\n');
   return pretty;
 }
 
