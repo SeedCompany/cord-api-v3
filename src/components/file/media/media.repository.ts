@@ -76,13 +76,13 @@ export class MediaRepository extends CommonRepository {
         node('node', 'Media', input.id ? { id: input.id } : {}),
       ])
       .setValues({ node: toDbShape(input) }, true)
-      .return<{ id: ID }>('node.id as id');
+      .apply(this.hydrate());
 
     const result = await query.first();
     if (!result) {
       throw new ServerException('Failed to save media info');
     }
-    return result;
+    return result.dto;
   }
 }
 

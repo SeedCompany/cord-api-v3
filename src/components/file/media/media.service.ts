@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { Except } from 'type-fest';
+import { Except, RequireAtLeastOne } from 'type-fest';
+import { NotFoundException, ServerException } from '~/common';
 import { Downloadable } from '../dto';
 import { MediaDetector } from './media-detector.service';
-import { Media } from './media.dto';
+import { AnyMedia, Media, MediaUserMetadata } from './media.dto';
 import { MediaRepository } from './media.repository';
 
 @Injectable()
@@ -18,5 +19,24 @@ export class MediaService {
       return;
     }
     await this.repo.create({ ...input, ...media });
+  }
+
+  async updateUserMetadata(
+    input: RequireAtLeastOne<Pick<AnyMedia, 'id' | 'file'>> & MediaUserMetadata,
+  ) {
+    try {
+      return await this.repo.update(input);
+    } catch (e) {
+      if (e instanceof ServerException) {
+        const exists = await this.repo.getBaseNode(
+          input.id ?? input.file!,
+          input.id ? 'Media' : 'FileVersion',
+        );
+        if (!exists) {
+          throw new NotFoundException('Media not found');
+        }
+      }
+      throw e;
+    }
   }
 }
