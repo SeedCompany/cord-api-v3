@@ -17,12 +17,10 @@ import {
     r.Directory.read.when(member).edit,
     r.Education.read,
     inherit(
-      r.Engagement.read
-        .when(member)
-        .create.delete.specifically((p) => [
-          p.many('disbursementCompleteDate', 'status').edit,
-        ]),
-      r.LanguageEngagement.specifically((p) => [p.paratextRegistryId.none]),
+      r.Engagement.when(member).specifically((p) => [
+        p.many('disbursementCompleteDate', 'status').edit,
+      ]),
+      r.LanguageEngagement.specifically((p) => p.paratextRegistryId.none),
     ),
     r.FieldRegion.read,
     r.FieldZone.read,

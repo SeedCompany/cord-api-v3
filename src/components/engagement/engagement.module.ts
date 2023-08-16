@@ -16,6 +16,7 @@ import * as handlers from './handlers';
 import { InternshipEngagementResolver } from './internship-engagement.resolver';
 import { InternshipPositionResolver } from './internship-position.resolver';
 import { LanguageEngagementResolver } from './language-engagement.resolver';
+import { FixNullMethodologiesMigration } from './migrations/fix-null-methodologies.migration';
 import { EngagementProductConnectionResolver } from './product-connection.resolver';
 
 @Module({
@@ -40,6 +41,7 @@ import { EngagementProductConnectionResolver } from './product-connection.resolv
     EngagementRepository,
     EngagementLoader,
     ...Object.values(handlers),
+    FixNullMethodologiesMigration,
   ],
   exports: [EngagementService, EngagementRepository],
 })

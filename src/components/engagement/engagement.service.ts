@@ -6,7 +6,6 @@ import {
   NotFoundException,
   ObjectView,
   SecuredList,
-  SecuredResource,
   ServerException,
   Session,
   UnauthorizedException,
@@ -45,6 +44,7 @@ import {
   EngagementStatus,
   InternshipEngagement,
   LanguageEngagement,
+  resolveEngagementType,
   UpdateInternshipEngagement,
   UpdateLanguageEngagement,
 } from './dto';
@@ -256,47 +256,7 @@ export class EngagementService {
     dto: UnsecuredDto<Engagement>,
     session: Session,
   ): Promise<Engagement> {
-    const isLanguageEngagement = dto.__typename === 'LanguageEngagement';
-
-    const securedProperties = await this.authorizationService.secureProperties(
-      isLanguageEngagement ? LanguageEngagement : InternshipEngagement,
-      dto,
-      session,
-    );
-
-    const canDelete =
-      dto.status !== EngagementStatus.InDevelopment &&
-      !session.roles.includes(`global:Administrator`)
-        ? false
-        : await this.repo.checkDeletePermission(dto.id, session);
-    if (isLanguageEngagement) {
-      // help TS understand that the secured props are for a LanguageEngagement
-      const secured = securedProperties as SecuredResource<
-        typeof LanguageEngagement,
-        false
-      >;
-
-      return {
-        ...(dto as UnsecuredDto<LanguageEngagement>),
-        ...secured,
-        canDelete,
-      };
-    } else {
-      // help TS understand that the secured props are for a InternshipEngagement
-      const secured = securedProperties as SecuredResource<
-        typeof InternshipEngagement,
-        false
-      >;
-      return {
-        ...(dto as UnsecuredDto<InternshipEngagement>),
-        ...secured,
-        methodologies: {
-          ...secured.methodologies,
-          value: secured.methodologies.value ?? [],
-        },
-        canDelete,
-      };
-    }
+    return this.privileges.for(session, resolveEngagementType(dto)).secure(dto);
   }
 
   // UPDATE ////////////////////////////////////////////////////////

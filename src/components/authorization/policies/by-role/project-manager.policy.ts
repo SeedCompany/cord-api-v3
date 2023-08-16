@@ -25,11 +25,9 @@ import {
     r.Ceremony.read.when(member).edit,
     r.Education.read.create,
     inherit(
-      r.Engagement.read
-        .when(member)
-        .edit.create.delete.specifically(
-          (p) => p.disbursementCompleteDate.read,
-        ),
+      r.Engagement.when(member).edit.specifically((p) => [
+        p.disbursementCompleteDate.read,
+      ]),
       r.LanguageEngagement.specifically((p) => [
         p.paratextRegistryId.when(member).read,
       ]),
