@@ -47,6 +47,12 @@ export abstract class UpdateEngagement {
 
 @InputType()
 export abstract class UpdateLanguageEngagement extends UpdateEngagement {
+  @IdField({
+    description: 'Leave null/undefined if language is not known yet.',
+    nullable: true,
+  })
+  readonly languageId?: ID | null;
+
   @Field({ nullable: true })
   readonly firstScripture?: boolean;
 
@@ -80,6 +86,12 @@ export abstract class UpdateLanguageEngagement extends UpdateEngagement {
 
 @InputType()
 export abstract class UpdateInternshipEngagement extends UpdateEngagement {
+  @IdField({
+    description: 'Leave null/undefined if intern is not known yet.',
+    nullable: true,
+  })
+  readonly internId?: ID | null;
+
   @IdField({ nullable: true })
   readonly mentorId?: ID;
 

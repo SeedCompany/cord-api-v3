@@ -32,14 +32,17 @@ export abstract class CreateEngagement {
 
   @Field(() => EngagementStatus, { nullable: true })
   readonly status?: EngagementStatus;
+
+  // Used for API when generating the name if the language/intern is not known yet.
+  readonly nameWhenUnknown?: string;
 }
 
 @InputType()
 export abstract class CreateLanguageEngagement extends CreateEngagement {
   static readonly Props = keysOf<CreateLanguageEngagement>();
 
-  @IdField()
-  readonly languageId: ID;
+  @IdField({ nullable: true })
+  readonly languageId?: ID;
 
   @Field({ nullable: true })
   readonly firstScripture?: boolean;
@@ -76,8 +79,8 @@ export abstract class CreateLanguageEngagement extends CreateEngagement {
 export abstract class CreateInternshipEngagement extends CreateEngagement {
   static readonly Props = keysOf<CreateInternshipEngagement>();
 
-  @IdField()
-  readonly internId: ID;
+  @IdField({ nullable: true })
+  readonly internId?: ID;
 
   @IdField({ nullable: true })
   readonly mentorId?: ID;

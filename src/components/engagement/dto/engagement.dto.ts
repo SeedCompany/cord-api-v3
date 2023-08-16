@@ -1,5 +1,6 @@
 import { Type } from '@nestjs/common';
 import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
+import { stripIndent } from 'common-tags';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive } from 'type-fest';
@@ -22,6 +23,7 @@ import {
   SecuredProps,
   SecuredRichTextNullable,
   SecuredString,
+  SecuredStringNullable,
   Sensitivity,
   SensitivityField,
   UnsecuredDto,
@@ -85,6 +87,18 @@ class Engagement extends ChangesetAwareResource {
 
   @Field()
   readonly disbursementCompleteDate: SecuredDateNullable;
+
+  @Calculated()
+  @Field({
+    description: stripIndent`
+    Automatically set when we know what kind of engagement this is, but not
+    specifically what language/intern this is engaged to.
+    This is only set when the id this is engaged to is not defined. 
+    For example, if this is a language engagement but the language is 
+    unknown, the language ID would be null and this value would be set.
+    Once an ID for language is set, this value would be set to null again.`,
+  })
+  readonly nameWhenUnknown: SecuredStringNullable;
 
   @Calculated()
   @Field()
@@ -160,7 +174,7 @@ export class LanguageEngagement extends Engagement {
   @Field(() => TranslationProject)
   declare readonly parent: BaseNode;
 
-  readonly language: Secured<ID>;
+  readonly language: Secured<ID | null>;
 
   @Field()
   readonly firstScripture: SecuredBoolean;
@@ -201,7 +215,7 @@ export class InternshipEngagement extends Engagement {
 
   readonly countryOfOrigin: Secured<ID>;
 
-  readonly intern: Secured<ID>;
+  readonly intern: Secured<ID | null>;
 
   readonly mentor: Secured<ID>;
 

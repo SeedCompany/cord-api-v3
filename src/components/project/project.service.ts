@@ -60,6 +60,7 @@ import {
   ProjectListInput,
   ProjectListOutput,
   ProjectStatus,
+  ProjectStep,
   ProjectType,
   SecuredProjectList,
   TranslationProject,
@@ -301,6 +302,11 @@ export class ProjectService {
         changes.step,
         changeset,
       );
+      await this.verifyNoUnknownEngagements(
+        input.id,
+        changes.step,
+        currentProject.step,
+      );
     }
 
     const {
@@ -392,6 +398,25 @@ export class ProjectService {
     );
     await this.eventBus.publish(event);
     return event.updated;
+  }
+  async verifyNoUnknownEngagements(
+    projectId: ID,
+    newStep: ProjectStep,
+    currentStep: ProjectStep,
+  ) {
+    const unknowns = await this.engagementService.listUnknownByProjectId(
+      projectId,
+    );
+    if (
+      unknowns.length > 1 &&
+      newStep === ProjectStep.PendingConsultantEndorsement &&
+      currentStep === ProjectStep.PrepForConsultantEndorsement
+    ) {
+      throw new InputException(
+        'Cannot advance because there are unknown engagements',
+        'project.status',
+      );
+    }
   }
 
   async delete(id: ID, session: Session): Promise<void> {
