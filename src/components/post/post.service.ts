@@ -62,11 +62,6 @@ export class PostService {
     }
   }
 
-  async readMany(ids: readonly ID[], session: Session) {
-    const posts = await this.repo.readMany(ids);
-    return posts.map((dto) => this.secure(dto, session));
-  }
-
   async update(input: UpdatePost, session: Session): Promise<Post> {
     const object = await this.repo.readOne(input.id, session);
 
@@ -118,14 +113,11 @@ export class PostService {
     };
   }
 
-  private secure(dto: UnsecuredDto<Post>, session: Session) {
+  secure(dto: UnsecuredDto<Post>, session: Session) {
     return this.privileges.for(session, Post).secure(dto);
   }
 
-  private async getPermissionsFromPostable(
-    resource: PostableRef,
-    session: Session,
-  ) {
+  async getPermissionsFromPostable(resource: PostableRef, session: Session) {
     const parent = await this.loadPostable(resource);
     const parentType = await this.resourcesHost.getByName(
       parent.__typename as 'Postable',
