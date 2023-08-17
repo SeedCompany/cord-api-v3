@@ -35,7 +35,7 @@ export class PostRepository extends DtoRepository(Post) {
           post: ['BaseNode', input.parentId],
         }),
       )
-      .return<{ id: ID }>('node.id as id')
+      .apply(this.hydrate())
       .first();
   }
 

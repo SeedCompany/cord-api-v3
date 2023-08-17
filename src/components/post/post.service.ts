@@ -48,7 +48,7 @@ export class PostService {
         throw new ServerException('Failed to create post');
       }
 
-      return await this.readOne(result.id, session);
+      return this.secure(result.dto, session);
     } catch (exception) {
       this.logger.warning('Failed to create post', {
         exception,
