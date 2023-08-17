@@ -16,7 +16,7 @@ export class PostLoader extends SessionAwareLoaderStrategy<Post> {
   async loadMany(ids: readonly ID[]) {
     const session = this.session;
 
-    const posts = await this.repo.readMany(ids);
+    const posts = await this.repo.readMany(ids, session);
 
     const parentIds = new Set(posts.map((post) => post.parent.properties.id));
     const parents = new Map(
