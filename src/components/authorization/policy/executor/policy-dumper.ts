@@ -86,7 +86,8 @@ export class PolicyDumper {
     const chalk = new Chalk();
 
     const showRoleCol = roles.length > 1;
-    const showResCol = resources.length > 1 || !showRoleCol;
+    const showResCol =
+      !showRoleCol || resources.length > 1 || resources.some((r) => r.props);
 
     // Table title
     table.push([
