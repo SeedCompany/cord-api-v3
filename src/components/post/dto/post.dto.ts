@@ -1,6 +1,7 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
+import { BaseNode } from '~/core/database/results';
 import { RegisterResource } from '~/core/resources';
 import {
   DateTimeField,
@@ -21,6 +22,8 @@ export class Post extends Resource {
   static readonly Props = keysOf<Post>();
   static readonly SecuredProps = keysOf<SecuredProps<Post>>();
   static readonly Parent = 'dynamic';
+
+  readonly parent: BaseNode;
 
   readonly creator: Secured<ID>;
 

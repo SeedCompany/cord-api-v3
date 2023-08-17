@@ -75,4 +75,20 @@ export class PostRepository extends DtoRepository(Post) {
       .first();
     return result!;
   }
+
+  protected hydrate() {
+    return (query: Query) =>
+      query
+        .match([
+          node('node'),
+          relation('in', '', 'post', ACTIVE),
+          node('parent', 'BaseNode'),
+        ])
+        .apply(matchProps())
+        .return<{ dto: DbTypeOf<Post> }>(
+          merge('props', {
+            parent: 'parent',
+          }).as('dto'),
+        );
+  }
 }
