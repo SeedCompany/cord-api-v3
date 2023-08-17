@@ -62,34 +62,28 @@ export class PostService {
     }
   }
 
-  async readOne(postId: ID, session: Session): Promise<Post> {
-    const dto = await this.repo.readOne(postId);
-    return this.secure(dto, session);
-  }
-
   async readMany(ids: readonly ID[], session: Session) {
     const posts = await this.repo.readMany(ids);
     return posts.map((dto) => this.secure(dto, session));
   }
 
   async update(input: UpdatePost, session: Session): Promise<Post> {
-    const object = await this.readOne(input.id, session);
+    const object = await this.repo.readOne(input.id, session);
 
     const changes = this.repo.getActualChanges(object, input);
     this.privileges.for(session, Post, object).verifyChanges(changes);
-    await this.repo.updateProperties(object, changes);
+    const updated = await this.repo.updateProperties(object, changes);
 
-    return await this.readOne(input.id, session);
+    return this.secure(updated, session);
   }
 
   async delete(id: ID, session: Session): Promise<void> {
-    const object = await this.readOne(id, session);
+    const object = await this.repo.readOne(id, session);
 
-    if (!object) {
-      throw new NotFoundException('Could not find post', 'post.id');
-    }
-
-    const perms = await this.getPermissionsFromPostable(id, session);
+    const perms = await this.getPermissionsFromPostable(
+      object.parent.properties.id,
+      session,
+    );
     perms.verifyCan('delete');
 
     try {
