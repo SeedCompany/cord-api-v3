@@ -1,10 +1,20 @@
 import { Injectable } from '@nestjs/common';
 import { Node, node, Query, relation } from 'cypher-query-builder';
+import { difference, union } from 'lodash';
 import { DateTime } from 'luxon';
-import { ID, Session, UnsecuredDto } from '../../../common';
+import {
+  generateId,
+  ID,
+  InputException,
+  MaybeAsync,
+  Role,
+  Session,
+  UnsecuredDto,
+} from '../../../common';
 import { DatabaseService, DtoRepository } from '../../../core';
 import {
   ACTIVE,
+  deleteBaseNode,
   matchPropsAndProjectSensAndScopedRoles,
   merge,
   oncePerProject,
@@ -12,7 +22,9 @@ import {
   property,
   requestingUser,
   sorting,
+  variable,
 } from '../../../core/database/query';
+import { User } from '../../user';
 import { UserRepository } from '../../user/user.repository';
 import {
   CreateProjectMember,
@@ -91,6 +103,151 @@ export class ProjectMemberRepository extends DtoRepository<
       ])
       .return<{ id: ID }>('projectMember.id as id')
       .first();
+  }
+
+  async assertValidRoles(
+    roles: Role[] | undefined,
+    forUser: () => MaybeAsync<User>,
+  ) {
+    if (!roles || roles.length === 0) {
+      return;
+    }
+    const user = await forUser();
+    const availableRoles = user.roles.value ?? [];
+    const forbiddenRoles = difference(roles, availableRoles);
+    if (forbiddenRoles.length) {
+      const forbiddenRolesStr = forbiddenRoles.join(', ');
+      throw new InputException(
+        `Role(s) ${forbiddenRolesStr} cannot be assigned to this project member`,
+        'input.roles',
+      );
+    }
+  }
+
+  async swapMembers(oldMemberId: ID, newMember: User) {
+    const projectsRoles = await this.db
+      .query()
+      .comment('swapMembers: get projects oldMember is apart of')
+      .matchNode('oldUser', 'User', { id: oldMemberId })
+      .match([
+        [
+          node('project', 'Project'),
+          relation('out', '', 'member', ACTIVE),
+          node('projectMember'),
+          relation('out', '', 'user'),
+          node('oldUser'),
+        ],
+        [
+          node('projectMember'),
+          relation('out', '', 'roles', ACTIVE),
+          node('rolesProp', 'Property'),
+        ],
+      ])
+      .return<{
+        projectId: ID;
+        oldProjectMemberId: ID;
+        oldMemberProjectRoles: Role[];
+      }>(
+        'project.id as projectId, projectMember.id as oldProjectMemberId, rolesProp.value as oldMemberProjectRoles',
+      )
+      .run();
+
+    const memberRoles = union(
+      projectsRoles.map((pRole) => pRole.oldMemberProjectRoles).flat(),
+    );
+
+    await this.assertValidRoles(memberRoles, () => {
+      return newMember;
+    });
+
+    const projectsRolesIds = projectsRoles
+      ? await Promise.all(
+          projectsRoles.map(async (projRole) => ({
+            memberId: await generateId(),
+            roles: projRole.oldMemberProjectRoles,
+            projectId: projRole.projectId,
+            oldProjectMemberId: projRole.oldProjectMemberId,
+          })),
+        )
+      : null;
+    if (!projectsRolesIds) return;
+
+    await this.db
+      .query()
+      .comment('swapMember: create new project members')
+      .unwind(projectsRolesIds, 'projectRolesId')
+      .subQuery('projectRolesId', (sub) =>
+        sub
+          .create([
+            [
+              node('newProjectMember', 'ProjectMember:BaseNode', {
+                createdAt: DateTime.local(),
+                id: variable('projectRolesId.memberId'),
+              }),
+            ],
+            ...property(
+              'roles',
+              variable('projectRolesId.roles'),
+              'newProjectMember',
+            ),
+            ...property('modifiedAt', DateTime.local(), 'newProjectMember'),
+          ])
+          .return('newProjectMember.id as newMemberId'),
+      )
+      .return<{ newMemberId: ID }>('newMemberId')
+      .run();
+
+    await this.db
+      .query()
+      .comment('connect new projectMember nodes to user and project')
+      .unwind(projectsRolesIds, 'projectRolesId')
+      .subQuery('projectRolesId', (sub) =>
+        sub
+          .match([
+            [
+              node('project', 'Project', {
+                id: variable('projectRolesId.projectId'),
+              }),
+            ],
+            [
+              node('projectMember', 'ProjectMember', {
+                id: variable('projectRolesId.memberId'),
+              }),
+            ],
+            [node('newMember', 'User', { id: newMember.id })],
+          ])
+          .create([
+            node('project'),
+            relation('out', '', 'member', {
+              active: true,
+              createdAt: DateTime.local(),
+            }),
+            node('projectMember'),
+            relation('out', '', 'user', {
+              active: true,
+              createdAt: DateTime.local(),
+            }),
+            node('newMember'),
+          ])
+          .return('newMember.id as newUserId'),
+      )
+      .return('newUserId')
+      .run();
+
+    await this.db
+      .query()
+      .comment('deleting old project member...')
+      .unwind(projectsRolesIds, 'projectRolesId')
+      .subQuery('projectRolesId', (sub) =>
+        sub
+          .matchNode('projectMember', {
+            id: variable('projectRolesId.oldProjectMemberId'),
+          })
+          .apply(deleteBaseNode('projectMember'))
+          .return('*'),
+      )
+      .return('*')
+      .run();
   }
 
   protected hydrate(session: Session) {
