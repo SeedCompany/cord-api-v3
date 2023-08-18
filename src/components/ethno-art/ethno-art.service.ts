@@ -11,8 +11,7 @@ import {
 import { DbTypeOf, HandleIdLookup, ILogger, Logger } from '../../core';
 import { ifDiff } from '../../core/database/changes';
 import { mapListResults } from '../../core/database/results';
-import { AuthorizationService } from '../authorization/authorization.service';
-import { Powers } from '../authorization/dto/powers';
+import { Privileges } from '../authorization';
 import { isScriptureEqual, ScriptureReferenceService } from '../scripture';
 import {
   CreateEthnoArt,
@@ -27,12 +26,12 @@ export class EthnoArtService {
   constructor(
     @Logger('ethno-art:service') private readonly logger: ILogger,
     private readonly scriptureRefs: ScriptureReferenceService,
-    private readonly authorizationService: AuthorizationService,
+    private readonly privileges: Privileges,
     private readonly repo: EthnoArtRepository,
   ) {}
 
   async create(input: CreateEthnoArt, session: Session): Promise<EthnoArt> {
-    await this.authorizationService.checkPower(Powers.CreateEthnoArt, session);
+    this.privileges.for(session, EthnoArt).verifyCan('create');
     if (!(await this.repo.isUnique(input.name))) {
       throw new DuplicateException(
         'ethnoArt.name',
@@ -82,28 +81,12 @@ export class EthnoArtService {
     dto: DbTypeOf<EthnoArt>,
     session: Session,
   ): Promise<EthnoArt> {
-    const securedProps = await this.authorizationService.secureProperties(
-      EthnoArt,
-      {
-        ...dto,
-        scriptureReferences: this.scriptureRefs.parseList(
-          dto.scriptureReferences,
-        ),
-      },
-      session,
-    );
-
-    return {
+    return this.privileges.for(session, EthnoArt).secure({
       ...dto,
-      ...securedProps,
-      scriptureReferences: {
-        ...securedProps.scriptureReferences,
-        value: securedProps.scriptureReferences.canRead
-          ? securedProps.scriptureReferences.value
-          : [],
-      },
-      canDelete: await this.repo.checkDeletePermission(dto.id, session),
-    };
+      scriptureReferences: this.scriptureRefs.parseList(
+        dto.scriptureReferences,
+      ),
+    });
   }
 
   async update(input: UpdateEthnoArt, session: Session): Promise<EthnoArt> {
@@ -117,11 +100,7 @@ export class EthnoArtService {
       ),
     };
 
-    await this.authorizationService.verifyCanEditChanges(
-      EthnoArt,
-      ethnoArt,
-      changes,
-    );
+    this.privileges.for(session, EthnoArt, ethnoArt).verifyChanges(changes);
 
     const { scriptureReferences, ...simpleChanges } = changes;
 

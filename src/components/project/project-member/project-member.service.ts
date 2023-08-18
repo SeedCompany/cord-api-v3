@@ -10,6 +10,7 @@ import {
   ID,
   InputException,
   isIdLike,
+  mapSecuredValue,
   NotFoundException,
   ObjectView,
   ServerException,
@@ -27,8 +28,7 @@ import {
 } from '../../../core';
 import { ACTIVE } from '../../../core/database/query';
 import { mapListResults } from '../../../core/database/results';
-import { Role } from '../../authorization';
-import { AuthorizationService } from '../../authorization/authorization.service';
+import { Privileges, Role } from '../../authorization';
 import { User, UserService } from '../../user';
 import { IProject } from '../dto';
 import { ProjectService } from '../project.service';
@@ -52,8 +52,7 @@ export class ProjectMemberService {
     @Inject(forwardRef(() => ProjectService))
     private readonly projectService: ProjectService & {},
     @Logger('project:member:service') private readonly logger: ILogger,
-    @Inject(forwardRef(() => AuthorizationService))
-    private readonly authorizationService: AuthorizationService & {},
+    private readonly privileges: Privileges,
     private readonly repo: ProjectMemberRepository,
   ) {}
 
@@ -97,7 +96,7 @@ export class ProjectMemberService {
       ? await this.projectService.readOneUnsecured(projectOrId, session)
       : projectOrId;
 
-    this.authorizationService.privileges
+    this.privileges
       .for(session, IProject, project)
       .verifyCan('create', 'member');
 
@@ -158,24 +157,15 @@ export class ProjectMemberService {
     dto: UnsecuredDto<ProjectMember>,
     session: Session,
   ): Promise<ProjectMember> {
-    const securedProps = await this.authorizationService.secureProperties(
-      ProjectMember,
-      dto,
-      session,
-    );
-
-    return {
+    const secured = this.privileges.for(session, ProjectMember).secure({
       ...dto,
-      ...securedProps,
-      user: {
-        ...securedProps.user,
-        value: await this.userService.secure(dto.user, session),
-      },
-      roles: {
-        ...securedProps.roles,
-        value: securedProps.roles.value ?? [],
-      },
-      canDelete: await this.repo.checkDeletePermission(dto.id, session), // TODO
+      roles: dto.roles ?? [],
+    });
+    return {
+      ...secured,
+      user: await mapSecuredValue(secured.user, (user) =>
+        this.userService.secure(user, session),
+      ),
     };
   }
 
@@ -196,11 +186,7 @@ export class ProjectMemberService {
     });
 
     const changes = this.repo.getActualChanges(object, input);
-    await this.authorizationService.verifyCanEditChanges(
-      ProjectMember,
-      object,
-      changes,
-    );
+    this.privileges.for(session, ProjectMember, object).verifyChanges(changes);
     await this.repo.updateProperties(object, changes);
     return await this.readOne(input.id, session);
   }

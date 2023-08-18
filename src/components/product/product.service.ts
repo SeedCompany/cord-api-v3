@@ -1,4 +1,4 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { intersection, sumBy, uniq } from 'lodash';
 import {
   ID,
@@ -21,7 +21,6 @@ import {
 } from '../../core';
 import { compareNullable, ifDiff, isSame } from '../../core/database/changes';
 import { Privileges } from '../authorization';
-import { AuthorizationService } from '../authorization/authorization.service';
 import { IEngagement } from '../engagement';
 import {
   getTotalVerseEquivalents,
@@ -62,8 +61,6 @@ import { HydratedProductRow, ProductRepository } from './product.repository';
 export class ProductService {
   constructor(
     private readonly scriptureRefs: ScriptureReferenceService,
-    @Inject(forwardRef(() => AuthorizationService))
-    private readonly authorizationService: AuthorizationService & {},
     private readonly privileges: Privileges,
     private readonly repo: ProductRepository,
     private readonly resourceLoader: ResourceLoader,
@@ -302,12 +299,9 @@ export class ProductService {
     );
     const changes = this.getDirectProductChanges(input, currentProduct);
 
-    await this.authorizationService.verifyCanEditChanges(
-      Product,
-      this.secure(currentProduct, session),
-      changes,
-      'product',
-    );
+    this.privileges
+      .for(session, DirectScriptureProduct, currentProduct)
+      .verifyChanges(changes, { pathPrefix: 'product' });
     const { scriptureReferences, unspecifiedScripture, ...simpleChanges } =
       changes;
 
@@ -385,13 +379,9 @@ export class ProductService {
     );
 
     const changes = this.getDerivativeProductChanges(input, currentProduct);
-
-    await this.authorizationService.verifyCanEditChanges(
-      Product,
-      this.secure(currentProduct, session),
-      changes,
-      'product',
-    );
+    this.privileges
+      .for(session, DerivativeScriptureProduct, currentProduct)
+      .verifyChanges(changes, { pathPrefix: 'product' });
 
     const { produces, scriptureReferencesOverride, ...simpleChanges } = changes;
 
@@ -489,12 +479,9 @@ export class ProductService {
       ),
     };
 
-    await this.authorizationService.verifyCanEditChanges(
-      Product,
-      this.secure(currentProduct, session),
-      changes,
-      null,
-    );
+    this.privileges
+      .for(session, OtherProduct, currentProduct)
+      .verifyChanges(changes, { pathPrefix: 'product' });
 
     await this.mergeCompletionDescription(changes, currentProduct);
 

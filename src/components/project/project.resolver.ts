@@ -241,7 +241,7 @@ export class ProjectResolver {
     @Loader(PartnershipLoader) partnerships: LoaderOf<PartnershipLoader>,
   ): Promise<SecuredPartnershipList> {
     const list = await this.projectService.listPartnerships(
-      project.id,
+      project,
       input,
       session,
       project.sensitivity,

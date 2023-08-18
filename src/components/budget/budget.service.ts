@@ -1,4 +1,4 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { intersection } from 'lodash';
 import {
   DuplicateException,
@@ -8,22 +8,14 @@ import {
   NotFoundException,
   ObjectView,
   Order,
-  ResourceShape,
   ServerException,
   Session,
   UnauthorizedException,
   viewOfChangeset,
 } from '../../common';
 import { HandleIdLookup, ILogger, Logger, ResourceResolver } from '../../core';
-import {
-  mapListResults,
-  parseSecuredProperties,
-} from '../../core/database/results';
-import {
-  AuthorizationService,
-  PermissionsOf,
-} from '../authorization/authorization.service';
-import { ScopedRole } from '../authorization/dto';
+import { mapListResults } from '../../core/database/results';
+import { Privileges, ScopedRole } from '../authorization';
 import { FileService } from '../file';
 import { ProjectChangeRequest } from '../project-change-request/dto';
 import { BudgetRecordRepository } from './budget-record.repository';
@@ -52,8 +44,7 @@ const canEditFinalizedBudgetRoles: readonly ScopedRole[] = [
 export class BudgetService {
   constructor(
     private readonly files: FileService,
-    @Inject(forwardRef(() => AuthorizationService))
-    private readonly authorizationService: AuthorizationService & {},
+    private readonly privileges: Privileges,
     private readonly budgetRepo: BudgetRepository,
     private readonly budgetRecordsRepo: BudgetRecordRepository,
     private readonly resources: ResourceResolver,
@@ -168,20 +159,10 @@ export class BudgetService {
 
     const result = await this.budgetRepo.readOne(id, session, view);
 
-    const perms = await this.authorizationService.getPermissions({
-      resource: Budget,
-      sessionOrUserId: session,
-      dto: result as ResourceShape<Budget>['prototype'],
-    });
-
-    const securedProps = parseSecuredProperties(
-      result,
-      perms as PermissionsOf<Budget>,
-      Budget.SecuredProps,
-    );
+    const privs = this.privileges.for(session, Budget, result);
 
     let records = null;
-    if (perms.records.canRead) {
+    if (privs.can('read', 'records')) {
       records = await this.listRecords(
         {
           sort: 'fiscalYear',
@@ -204,13 +185,11 @@ export class BudgetService {
       : undefined;
 
     return {
-      ...result,
-      ...securedProps,
+      ...privs.secure(result),
       // Show budget status as Pending, to allow budget record changes,
       // if we are in an editable change request.
       status: changeRequest?.canEdit ? BudgetStatus.Pending : result.status,
       records: records?.items || [],
-      canDelete: await this.budgetRepo.checkDeletePermission(id, session),
     };
   }
 
@@ -234,28 +213,14 @@ export class BudgetService {
 
     const result = await this.budgetRecordsRepo.readOne(id, { session, view });
 
-    const securedProps = await this.authorizationService.secureProperties(
-      BudgetRecord,
-      result,
-      session,
-    );
-
-    return {
-      ...result,
-      ...securedProps,
-      canDelete: await this.budgetRepo.checkDeletePermission(id, session),
-    };
+    return this.privileges.for(session, BudgetRecord).secure(result);
   }
 
   async update(input: UpdateBudget, session: Session): Promise<Budget> {
     const budget = await this.readOne(input.id, session);
 
     const changes = this.budgetRepo.getActualChanges(budget, input);
-    await this.authorizationService.verifyCanEditChanges(
-      Budget,
-      budget,
-      changes,
-    );
+    this.privileges.for(session, Budget, budget).verifyChanges(changes);
     const { universalTemplateFile, ...simpleChanges } = changes;
     await this.files.updateDefinedFile(
       budget.universalTemplateFile,
@@ -281,11 +246,7 @@ export class BudgetService {
     await this.verifyCanEdit(id, session, br.scope);
 
     const changes = this.budgetRecordsRepo.getActualChanges(br, input);
-    await this.authorizationService.verifyCanEditChanges(
-      BudgetRecord,
-      br,
-      changes,
-    );
+    this.privileges.for(session, BudgetRecord, br).verifyChanges(changes);
 
     try {
       const result = await this.budgetRecordsRepo.updateProperties(

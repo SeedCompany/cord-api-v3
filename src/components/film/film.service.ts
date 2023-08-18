@@ -12,8 +12,7 @@ import {
 import { DbTypeOf, HandleIdLookup, ILogger, Logger } from '../../core';
 import { ifDiff } from '../../core/database/changes';
 import { mapListResults } from '../../core/database/results';
-import { AuthorizationService } from '../authorization/authorization.service';
-import { Powers } from '../authorization/dto/powers';
+import { Privileges } from '../authorization';
 import { isScriptureEqual } from '../scripture';
 import { ScriptureReferenceService } from '../scripture/scripture-reference.service';
 import {
@@ -30,12 +29,12 @@ export class FilmService {
   constructor(
     @Logger('film:service') private readonly logger: ILogger,
     private readonly scriptureRefs: ScriptureReferenceService,
-    private readonly authorizationService: AuthorizationService,
+    private readonly privileges: Privileges,
     private readonly repo: FilmRepository,
   ) {}
 
   async create(input: CreateFilm, session: Session): Promise<Film> {
-    await this.authorizationService.checkPower(Powers.CreateFilm, session);
+    this.privileges.for(session, Film).verifyCan('create');
 
     if (!(await this.repo.isUnique(input.name))) {
       throw new DuplicateException(
@@ -85,28 +84,12 @@ export class FilmService {
   }
 
   private async secure(dto: DbTypeOf<Film>, session: Session): Promise<Film> {
-    const securedProps = await this.authorizationService.secureProperties(
-      Film,
-      {
-        ...dto,
-        scriptureReferences: this.scriptureRefs.parseList(
-          dto.scriptureReferences,
-        ),
-      },
-      session,
-    );
-
-    return {
+    return this.privileges.for(session, Film).secure({
       ...dto,
-      ...securedProps,
-      scriptureReferences: {
-        ...securedProps.scriptureReferences,
-        value: securedProps.scriptureReferences.canRead
-          ? securedProps.scriptureReferences.value
-          : [],
-      },
-      canDelete: await this.repo.checkDeletePermission(dto.id, session),
-    };
+      scriptureReferences: this.scriptureRefs.parseList(
+        dto.scriptureReferences,
+      ),
+    });
   }
 
   async update(input: UpdateFilm, session: Session): Promise<Film> {
@@ -118,7 +101,7 @@ export class FilmService {
         film.scriptureReferences.value,
       ),
     };
-    await this.authorizationService.verifyCanEditChanges(Film, film, changes);
+    this.privileges.for(session, Film, film).verifyChanges(changes);
     const { scriptureReferences, ...simpleChanges } = changes;
 
     await this.scriptureRefs.update(input.id, scriptureReferences);
@@ -153,7 +136,7 @@ export class FilmService {
   }
 
   async list(input: FilmListInput, session: Session): Promise<FilmListOutput> {
-    if (await this.authorizationService.canList(Film, session)) {
+    if (this.privileges.for(session, Film).can('read')) {
       const results = await this.repo.list(input, session);
       return await mapListResults(results, (dto) => this.secure(dto, session));
     } else {
