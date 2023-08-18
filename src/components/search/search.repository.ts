@@ -7,7 +7,7 @@ import {
   fullTextQuery,
 } from '../../core/database/query';
 import { BaseNode } from '../../core/database/results';
-import { SearchInput, SearchResult } from './dto';
+import { SearchInput } from './dto';
 
 @Injectable()
 export class SearchRepository extends CommonRepository {
@@ -56,7 +56,7 @@ export class SearchRepository extends CommonRepository {
       )
       .return<{
         node: BaseNode;
-        matchedProps: ReadonlyArray<keyof SearchResult>;
+        matchedProps: readonly string[];
       }>(['node', 'matchedProps']);
 
     return await query.run();
