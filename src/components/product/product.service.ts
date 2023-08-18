@@ -1,5 +1,4 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { asyncPool } from '@seedcompany/common';
 import { intersection, sumBy, uniq } from 'lodash';
 import {
   ID,
@@ -21,7 +20,6 @@ import {
   ResourceResolver,
 } from '../../core';
 import { compareNullable, ifDiff, isSame } from '../../core/database/changes';
-import { mapListResults } from '../../core/database/results';
 import { Privileges } from '../authorization';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { IEngagement } from '../engagement';
@@ -51,6 +49,7 @@ import {
   ProductListInput,
   ProductListOutput,
   ProductMethodology,
+  resolveProductType,
   UpdateDerivativeScriptureProduct,
   UpdateDirectScriptureProduct,
   UpdateOtherProduct,
@@ -195,7 +194,7 @@ export class ProductService {
     _view?: ObjectView,
   ): Promise<AnyProduct> {
     const dto = await this.readOneUnsecured(id, session);
-    return await this.secure(dto, session);
+    return this.secure(dto, session);
   }
 
   async readOneUnsecured(
@@ -215,7 +214,7 @@ export class ProductService {
     session: Session,
   ): Promise<readonly AnyProduct[]> {
     const rows = await this.readManyUnsecured(ids, session);
-    return await asyncPool(25, rows, (row) => this.secure(row, session));
+    return rows.map((row) => this.secure(row, session));
   }
 
   async readManyUnsecured(
@@ -232,19 +231,23 @@ export class ProductService {
       produces: rawProducible,
       title,
       description,
-      scriptureReferences: rawScriptureReferences,
-      ...props
+      ...rawProps
     } = row;
-    const scriptureReferences = this.scriptureRefs.parseList(
-      rawScriptureReferences,
-    );
+    const props = {
+      ...rawProps,
+      mediums: rawProps.mediums ?? [],
+      purposes: rawProps.purposes ?? [],
+      steps: rawProps.steps ?? [],
+      scriptureReferences: this.scriptureRefs.parseList(
+        rawProps.scriptureReferences,
+      ),
+    };
 
     if (title) {
       const dto: UnsecuredDto<OtherProduct> = {
         ...props,
         title,
         description,
-        scriptureReferences,
         __typename: 'OtherProduct',
       };
       return dto;
@@ -253,7 +256,8 @@ export class ProductService {
     if (!rawProducible) {
       const dto: UnsecuredDto<DirectScriptureProduct> = {
         ...props,
-        scriptureReferences,
+        totalVerses: props.totalVerses ?? 0,
+        totalVerseEquivalents: props.totalVerseEquivalents ?? 0,
         __typename: 'DirectScriptureProduct',
       };
       return dto;
@@ -275,96 +279,17 @@ export class ProductService {
       produces: { ...producible, __typename: producibleType },
       scriptureReferences: !isOverriding
         ? producible.scriptureReferences
-        : scriptureReferences,
-      scriptureReferencesOverride: !isOverriding ? null : scriptureReferences,
+        : props.scriptureReferences,
+      scriptureReferencesOverride: !isOverriding
+        ? null
+        : props.scriptureReferences,
       __typename: 'DerivativeScriptureProduct',
     };
     return dto;
   }
 
-  async secure(
-    dto: UnsecuredDto<AnyProduct>,
-    session: Session,
-  ): Promise<AnyProduct> {
-    const canDelete = await this.repo.checkDeletePermission(dto.id, session);
-
-    if (dto.produces) {
-      const securedProps = await this.authorizationService.secureProperties(
-        DerivativeScriptureProduct,
-        dto,
-        session,
-      );
-      const derivative: DerivativeScriptureProduct = {
-        ...dto,
-        ...securedProps,
-        mediums: {
-          ...securedProps.mediums,
-          value: securedProps.mediums.value ?? [],
-        },
-        purposes: {
-          ...securedProps.purposes,
-          value: securedProps.purposes.value ?? [],
-        },
-        steps: {
-          ...securedProps.steps,
-          value: securedProps.steps.value ?? [],
-        },
-        canDelete,
-      };
-      return derivative;
-    }
-
-    if (dto.title) {
-      const securedProps = await this.authorizationService.secureProperties(
-        OtherProduct,
-        dto,
-        session,
-      );
-      const other: OtherProduct = {
-        ...dto,
-        ...securedProps,
-        mediums: {
-          ...securedProps.mediums,
-          value: securedProps.mediums.value ?? [],
-        },
-        purposes: {
-          ...securedProps.purposes,
-          value: securedProps.purposes.value ?? [],
-        },
-        steps: {
-          ...securedProps.steps,
-          value: securedProps.steps.value ?? [],
-        },
-        canDelete,
-      };
-      return other;
-    }
-
-    const securedProps = await this.authorizationService.secureProperties(
-      DirectScriptureProduct,
-      asProductType(DirectScriptureProduct)(dto),
-      session,
-    );
-    const direct: DirectScriptureProduct = {
-      ...dto,
-      totalVerses: dto.totalVerses ?? 0,
-      totalVerseEquivalents: dto.totalVerseEquivalents ?? 0,
-      ...securedProps,
-      mediums: {
-        ...securedProps.mediums,
-        value: securedProps.mediums.value ?? [],
-      },
-      purposes: {
-        ...securedProps.purposes,
-        value: securedProps.purposes.value ?? [],
-      },
-      steps: {
-        ...securedProps.steps,
-        value: securedProps.steps.value ?? [],
-      },
-      canDelete,
-    };
-    return direct;
+  secure(dto: UnsecuredDto<AnyProduct>, session: Session): AnyProduct {
+    return this.privileges.for(session, resolveProductType(dto)).secure(dto);
   }
 
   async updateDirect(
@@ -379,7 +304,7 @@ export class ProductService {
 
     await this.authorizationService.verifyCanEditChanges(
       Product,
-      await this.secure(currentProduct, session),
+      this.secure(currentProduct, session),
       changes,
       'product',
     );
@@ -463,7 +388,7 @@ export class ProductService {
 
     await this.authorizationService.verifyCanEditChanges(
       Product,
-      await this.secure(currentProduct, session),
+      this.secure(currentProduct, session),
       changes,
       'product',
     );
@@ -566,7 +491,7 @@ export class ProductService {
 
     await this.authorizationService.verifyCanEditChanges(
       Product,
-      await this.secure(currentProduct, session),
+      this.secure(currentProduct, session),
       changes,
       null,
     );
@@ -574,7 +499,7 @@ export class ProductService {
     await this.mergeCompletionDescription(changes, currentProduct);
 
     const currentSecured = asProductType(OtherProduct)(
-      await this.secure(currentProduct, session),
+      this.secure(currentProduct, session),
     );
     return await this.repo.updateOther(currentSecured, changes);
   }
@@ -687,9 +612,12 @@ export class ProductService {
   ): Promise<ProductListOutput> {
     // all roles can list, so no need to check canList for now
     const results = await this.repo.list(input, session);
-    return await mapListResults(results, (row) =>
-      this.secure(this.mapDbRowToDto(row), session),
-    );
+    return {
+      ...results,
+      items: results.items.map((row) =>
+        this.secure(this.mapDbRowToDto(row), session),
+      ),
+    };
   }
 
   async loadProductIdsForBookAndVerse(
