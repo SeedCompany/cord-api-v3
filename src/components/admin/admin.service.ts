@@ -6,7 +6,6 @@ import { Transactional } from '~/core/database';
 import { ILogger, Logger } from '~/core/logger';
 import { AuthenticationService } from '../authentication';
 import { CryptoService } from '../authentication/crypto.service';
-import { AuthorizationService } from '../authorization/authorization.service';
 import { Powers, Role } from '../authorization/dto';
 import { AdminRepository } from './admin.repository';
 
@@ -16,7 +15,6 @@ export class AdminService implements OnApplicationBootstrap {
     private readonly config: ConfigService,
     private readonly authentication: AuthenticationService,
     private readonly crypto: CryptoService,
-    private readonly authorizationService: AuthorizationService,
     private readonly repo: AdminRepository,
     @Logger('admin:service') private readonly logger: ILogger,
     @Logger('admin:database') private readonly dbLogger: ILogger,

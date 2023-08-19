@@ -4,7 +4,6 @@ import {
   ChildListsKey,
   ChildSinglesKey,
   EnhancedResource,
-  isSecured,
   mapFromList,
   ResourceShape,
   SecuredPropsPlusExtraKey,
@@ -15,7 +14,6 @@ import {
   UnsecuredDto,
 } from '~/common';
 import { ChangesOf, isRelation } from '~/core/database/changes';
-import { DbPropsOfDto } from '~/core/database/results';
 import {
   AnyAction,
   ChildListAction,
@@ -174,11 +172,8 @@ export class UserResourcePrivileges<
     changes: ChangesOf<TResourceStatic['prototype']>,
     {
       pathPrefix: pathPrefixProp,
-      legacySecuredInstance,
     }: {
       pathPrefix?: string | null;
-      /** @deprecated */
-      legacySecuredInstance?: TResourceStatic['prototype'];
     } = {},
   ) {
     const pathPrefix =
@@ -194,13 +189,7 @@ export class UserResourcePrivileges<
       if (!this.resource.securedProps.has(dtoPropName)) {
         continue;
       }
-      if (
-        !legacySecuredInstance
-          ? this.can('edit', dtoPropName)
-          : isSecured(legacySecuredInstance[dtoPropName])
-          ? legacySecuredInstance[dtoPropName].canEdit
-          : true
-      ) {
+      if (this.can('edit', dtoPropName)) {
         continue;
       }
       const fullPath = compact([pathPrefix, prop]).join('.');
@@ -235,25 +224,6 @@ export class UserResourcePrivileges<
       ...securedProps,
       canDelete: perms.can('delete'),
     };
-  }
-
-  /**
-   * Takes the given dto which has unsecured props and returns the props that
-   * are supposed to be secured (unsecured props are omitted) as secured.
-   *
-   * @deprecated Use {@link secure} instead.
-   */
-  secureProps(
-    dto: DbPropsOfDto<TResourceStatic['prototype']>,
-  ): SecuredResource<TResourceStatic, false> {
-    const securedProps = mapFromList(this.resource.securedProps, (key) => {
-      const canRead = this.can('read', key);
-      const canEdit = this.can('edit', key);
-      let value = (dto as any)[key];
-      value = canRead ? value : Array.isArray(value) ? [] : undefined;
-      return [key, { value, canRead, canEdit }];
-    });
-    return securedProps as SecuredResource<TResourceStatic, false>;
   }
 
   /**
