@@ -1,6 +1,5 @@
 import { promises as fs } from 'fs';
 import { dirname, join } from 'path';
-import { Readable } from 'stream';
 import { NotFoundException } from '../../../common';
 import { FakeAwsFile, LocalBucket, LocalBucketOptions } from './local-bucket';
 
@@ -30,7 +29,8 @@ export class FilesystemBucket extends LocalBucket<FilesystemBucketOptions> {
 
   async getObject(key: string) {
     const rest = await this.headObject(key);
-    const Body = Readable.from(await this.readFile(key));
+    const handle = await fs.open(this.getPath(key));
+    const Body = handle.createReadStream();
     return { Body, ...rest };
   }
 
@@ -41,8 +41,8 @@ export class FilesystemBucket extends LocalBucket<FilesystemBucketOptions> {
     } catch (e) {
       throw new NotFoundException(e);
     }
-    const raw = await this.readFile(key + '.info');
-    const info = JSON.parse(raw.toString());
+    const raw = await fs.readFile(this.getPath(key) + '.info', 'utf-8');
+    const info = JSON.parse(raw);
     info.LastModified = new Date(info.LastModified);
 
     return info;
@@ -59,10 +59,6 @@ export class FilesystemBucket extends LocalBucket<FilesystemBucketOptions> {
   async deleteObject(key: string) {
     await fs.unlink(this.getPath(key));
     await fs.unlink(this.getPath(key) + '.info');
-  }
-
-  private async readFile(key: string) {
-    return await fs.readFile(this.getPath(key));
   }
 
   private async writeFile(key: string, data: any) {

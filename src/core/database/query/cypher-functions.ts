@@ -64,6 +64,8 @@ export const apoc = {
      * fromValues([key1, value1, key2, value2, ...])
      */
     fromValues: fn1('apoc.map.fromValues'),
+    merge,
+    submap: fn('apoc.map.submap'),
   },
   coll: {
     flatten: fn1('apoc.coll.flatten'),

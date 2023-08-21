@@ -1,6 +1,7 @@
 import { Field, Int, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { DateTime } from 'luxon';
+import { Readable } from 'stream';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive, Opaque } from 'type-fest';
 import { RegisterResource } from '~/core/resources';
@@ -193,6 +194,7 @@ export const isFileVersion = (node: AnyFileNode): node is FileVersion =>
 
 export type Downloadable<T> = T & {
   download: () => Promise<Buffer>;
+  stream: () => Promise<Readable>;
 };
 
 declare module '~/core/resources/map' {

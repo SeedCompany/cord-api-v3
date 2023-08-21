@@ -11,9 +11,11 @@ import { FileService } from './file.service';
 import { FilesBucketFactory } from './files-bucket.factory';
 import * as handlers from './handlers';
 import { LocalBucketController } from './local-bucket.controller';
+import { MediaUrlResolver } from './media-url.resolver';
+import { MediaModule } from './media/media.module';
 
 @Module({
-  imports: [forwardRef(() => AuthorizationModule)],
+  imports: [forwardRef(() => AuthorizationModule), MediaModule],
   providers: [
     DirectoryResolver,
     FilesBucketFactory,
@@ -21,11 +23,12 @@ import { LocalBucketController } from './local-bucket.controller';
     FileRepository,
     FileResolver,
     FileVersionResolver,
+    MediaUrlResolver,
     FileNodeLoader,
     FileService,
     ...Object.values(handlers),
   ],
   controllers: [FileUrlController, LocalBucketController],
-  exports: [FileService],
+  exports: [FileService, MediaModule],
 })
 export class FileModule {}
