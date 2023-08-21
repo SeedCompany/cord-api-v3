@@ -7,7 +7,6 @@ import {
   NotFoundException,
   ObjectView,
   SecuredList,
-  SecuredResource,
   ServerException,
   Session,
   UnauthorizedException,
@@ -23,10 +22,6 @@ import {
 import { property } from '../../core/database/query';
 import { mapListResults } from '../../core/database/results';
 import { Privileges, Role } from '../authorization';
-import {
-  AuthorizationService,
-  PermissionsOf,
-} from '../authorization/authorization.service';
 import { AssignableRoles } from '../authorization/dto/assignable-roles';
 import { LanguageService } from '../language';
 import {
@@ -75,8 +70,6 @@ export class UserService {
     @Inject(forwardRef(() => PartnerService))
     private readonly partners: PartnerService & {},
     private readonly unavailabilities: UnavailabilityService,
-    @Inject(forwardRef(() => AuthorizationService))
-    private readonly authorizationService: AuthorizationService & {},
     private readonly privileges: Privileges,
     private readonly locationService: LocationService,
     private readonly languageService: LanguageService,
@@ -112,15 +105,7 @@ export class UserService {
   }
 
   async secure(user: UnsecuredDto<User>, session: Session): Promise<User> {
-    const securedProps = this.privileges
-      .for(session, User, user)
-      .secureProps(user);
-
-    return {
-      ...user,
-      ...securedProps,
-      canDelete: await this.userRepo.checkDeletePermission(user.id, session),
-    };
+    return this.privileges.for(session, User).secure(user);
   }
 
   @Transactional()
@@ -130,7 +115,7 @@ export class UserService {
 
     const changes = this.userRepo.getActualChanges(user, input);
 
-    await this.authorizationService.verifyCanEditChanges(User, user, changes);
+    this.privileges.for(session, User, user).verifyChanges(changes);
 
     const { roles, email, ...simpleChanges } = changes;
 
@@ -201,25 +186,15 @@ export class UserService {
     );
   }
 
-  async permissionsForListProp(
-    prop: keyof PermissionsOf<SecuredResource<typeof User>>,
-    session: Session,
-  ) {
-    const perms = await this.authorizationService.getPermissions({
-      resource: User,
-      sessionOrUserId: session,
-    });
-    return { ...perms[prop], canCreate: perms[prop].canEdit };
-  }
-
   async listEducations(
     userId: ID,
     input: EducationListInput,
     session: Session,
   ): Promise<SecuredEducationList> {
-    const perms = await this.permissionsForListProp('education', session);
+    const user = await this.userRepo.readOne(userId, session);
+    const perms = this.privileges.for(session, User, user).all.education;
 
-    if (!perms.canRead) {
+    if (!perms.read) {
       return SecuredList.Redacted;
     }
     const result = await this.educations.list(
@@ -234,7 +209,8 @@ export class UserService {
     );
     return {
       ...result,
-      ...perms,
+      canRead: perms.read,
+      canCreate: perms.create,
     };
   }
 
@@ -243,9 +219,10 @@ export class UserService {
     input: OrganizationListInput,
     session: Session,
   ): Promise<SecuredOrganizationList> {
-    const perms = await this.permissionsForListProp('organization', session);
+    const user = await this.userRepo.readOne(userId, session);
+    const perms = this.privileges.for(session, User, user).all.organization;
 
-    if (!perms.canRead) {
+    if (!perms.read) {
       return SecuredList.Redacted;
     }
     const result = await this.organizations.list(
@@ -258,10 +235,10 @@ export class UserService {
       },
       session,
     );
-
     return {
       ...result,
-      ...perms,
+      canRead: perms.read,
+      canCreate: perms.edit,
     };
   }
 
@@ -270,7 +247,8 @@ export class UserService {
     input: PartnerListInput,
     session: Session,
   ): Promise<SecuredPartnerList> {
-    const perms = await this.permissionsForListProp('partner', session);
+    const user = await this.userRepo.readOne(userId, session);
+    const perms = this.privileges.for(session, User, user).all.partner;
     const result = await this.partners.list(
       {
         ...input,
@@ -283,7 +261,8 @@ export class UserService {
     );
     return {
       ...result,
-      ...perms,
+      canRead: perms.read,
+      canCreate: perms.edit,
     };
   }
 
@@ -292,9 +271,10 @@ export class UserService {
     input: UnavailabilityListInput,
     session: Session,
   ): Promise<SecuredUnavailabilityList> {
-    const perms = await this.permissionsForListProp('unavailability', session);
+    const user = await this.userRepo.readOne(userId, session);
+    const perms = this.privileges.for(session, User, user).all.unavailability;
 
-    if (!perms.canRead) {
+    if (!perms.read) {
       return SecuredList.Redacted;
     }
     const result = await this.unavailabilities.list(
@@ -310,7 +290,8 @@ export class UserService {
 
     return {
       ...result,
-      ...perms,
+      canRead: perms.read,
+      canCreate: perms.create,
     };
   }
 
@@ -354,11 +335,9 @@ export class UserService {
     session: Session,
   ): Promise<SecuredLocationList> {
     return await this.locationService.listLocationForResource(
-      User,
+      this.privileges.for(session, User, user).forEdge('locations'),
       user,
-      'locations',
       input,
-      session,
     );
   }
 
@@ -406,8 +385,9 @@ export class UserService {
     userId: ID,
     session: Session,
   ): Promise<readonly KnownLanguage[]> {
-    const perms = await this.permissionsForListProp('knownLanguage', session);
-    if (!perms.canRead) {
+    const user = await this.userRepo.readOne(userId, session);
+    const perms = this.privileges.for(session, User, user).all.knownLanguage;
+    if (!perms.read) {
       return [];
     }
     return await this.userRepo.listKnownLanguages(userId, session);

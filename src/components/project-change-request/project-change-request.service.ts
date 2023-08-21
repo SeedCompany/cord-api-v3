@@ -90,17 +90,8 @@ export class ProjectChangeRequestService {
     dto: UnsecuredDto<ProjectChangeRequest>,
     session: Session,
   ): Promise<ProjectChangeRequest> {
-    const securedProps = this.privileges
-      .for(session, ProjectChangeRequest)
-      .secureProps(dto);
     return {
-      ...dto,
-      ...securedProps,
-      types: {
-        ...securedProps.types,
-        value: securedProps.types.value ?? [],
-      },
-      canDelete: await this.db.checkDeletePermission(dto.id, session),
+      ...this.privileges.for(session, ProjectChangeRequest).secure(dto),
       __typename: 'ProjectChangeRequest',
     };
   }

@@ -7,8 +7,7 @@ import {
   UnsecuredDto,
 } from '../../../common';
 import { ILogger, Logger } from '../../../core';
-import { AuthorizationService } from '../../authorization/authorization.service';
-import { Powers } from '../../authorization/dto/powers';
+import { Privileges, withEffectiveSensitivity } from '../../authorization';
 import {
   CreateEthnologueLanguage,
   EthnologueLanguage,
@@ -19,16 +18,13 @@ import { EthnologueLanguageRepository } from './ethnologue-language.repository';
 @Injectable()
 export class EthnologueLanguageService {
   constructor(
-    private readonly authorizationService: AuthorizationService,
+    private readonly privileges: Privileges,
     @Logger('language:ethnologue:service') private readonly logger: ILogger,
     private readonly repo: EthnologueLanguageRepository,
   ) {}
 
   async create(input: CreateEthnologueLanguage, session: Session): Promise<ID> {
-    await this.authorizationService.checkPower(
-      Powers.CreateEthnologueLanguage,
-      session,
-    );
+    this.privileges.for(session, EthnologueLanguage).verifyCan('create');
 
     const result = await this.repo.create(input, session);
     if (!result) {
@@ -56,17 +52,11 @@ export class EthnologueLanguageService {
     sensitivity: Sensitivity,
     session: Session,
   ): Promise<EthnologueLanguage> {
-    const secured = await this.authorizationService.secureProperties(
-      EthnologueLanguage,
-      { ...dto, sensitivity },
-      session,
-    );
-
     return {
-      ...dto,
-      ...secured,
+      ...this.privileges
+        .for(session, EthnologueLanguage)
+        .secure(withEffectiveSensitivity(dto, sensitivity)),
       sensitivity,
-      canDelete: await this.repo.checkDeletePermission(dto.id, session),
     };
   }
 
@@ -80,11 +70,9 @@ export class EthnologueLanguageService {
     const ethnologueLanguage = await this.readOne(id, sensitivity, session);
 
     const changes = this.repo.getActualChanges(ethnologueLanguage, input);
-    await this.authorizationService.verifyCanEditChanges(
-      EthnologueLanguage,
-      ethnologueLanguage,
-      changes,
-    );
+    this.privileges
+      .for(session, EthnologueLanguage, ethnologueLanguage)
+      .verifyChanges(changes);
 
     try {
       await this.repo.updateProperties(ethnologueLanguage, changes);

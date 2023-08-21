@@ -26,9 +26,7 @@ import {
 } from '../../core';
 import { mapListResults } from '../../core/database/results';
 import { Privileges } from '../authorization';
-import { AuthorizationService } from '../authorization/authorization.service';
 import { ScopedRole } from '../authorization/dto';
-import { Powers } from '../authorization/dto/powers';
 import { BudgetService, BudgetStatus, SecuredBudget } from '../budget';
 import {
   EngagementListInput,
@@ -61,6 +59,7 @@ import {
   ProjectListOutput,
   ProjectStatus,
   ProjectType,
+  resolveProjectType,
   SecuredProjectList,
   TranslationProject,
   UpdateProject,
@@ -94,8 +93,6 @@ export class ProjectService {
     private readonly config: ConfigService,
     private readonly privileges: Privileges,
     private readonly eventBus: IEventBus,
-    @Inject(forwardRef(() => AuthorizationService))
-    private readonly authorizationService: AuthorizationService & {},
     private readonly projectRules: ProjectRules,
     private readonly repo: ProjectRepository,
     private readonly projectChangeRequests: ProjectChangeRequestService,
@@ -112,7 +109,7 @@ export class ProjectService {
         'project.sensitivity',
       );
     }
-    await this.authorizationService.checkPower(Powers.CreateProject, session);
+    this.privileges.for(session, IProject).verifyCan('create');
 
     await this.validateOtherResourceId(
       input.fieldRegionId,
@@ -235,30 +232,7 @@ export class ProjectService {
     project: UnsecuredDto<Project>,
     session: Session,
   ): Promise<Project> {
-    const securedProps = await this.authorizationService.secureProperties(
-      IProject,
-      project,
-      session,
-    );
-    return {
-      ...project,
-      ...securedProps,
-      primaryLocation: {
-        value: securedProps.primaryLocation.canRead
-          ? securedProps.primaryLocation.value
-          : null,
-        canRead: securedProps.primaryLocation.canRead,
-        canEdit: securedProps.primaryLocation.canEdit,
-      },
-      tags: {
-        ...securedProps.tags,
-        value: securedProps.tags.canRead ? securedProps.tags.value : [],
-      },
-      canDelete: isIdLike(session)
-        ? false // Assume email workflow that doesn't need to know this. Skip lookup.
-        : session.roles.includes('global:Administrator'),
-      __typename: `${project.type}Project`,
-    };
+    return this.privileges.for(session, IProject, project).secure(project);
   }
 
   async readOne(id: ID, session: Session, changeset?: ID): Promise<Project> {
@@ -285,14 +259,9 @@ export class ProjectService {
       );
 
     const changes = this.repo.getActualChanges(currentProject, input);
-    await this.authorizationService.verifyCanEditChanges(
-      currentProject.type === 'Translation'
-        ? TranslationProject
-        : InternshipProject,
-      await this.secure(currentProject, session),
-      changes,
-      'project',
-    );
+    this.privileges
+      .for(session, resolveProjectType(currentProject), currentProject)
+      .verifyChanges(changes, { pathPrefix: 'project' });
 
     if (changes.step && stepValidation) {
       await this.projectRules.verifyStepChange(
@@ -450,19 +419,13 @@ export class ProjectService {
       session,
       view,
     );
-
-    const perms = await this.authorizationService.getPermissions({
-      resource: IProject,
-      sessionOrUserId: session,
-      sensitivity: project.sensitivity,
-      otherRoles: project.scope,
-    });
+    const perms = this.privileges.for(session, IProject, project);
 
     return {
       ...result,
-      canRead: perms.engagement.canRead,
+      canRead: perms.can('read', 'engagement'),
       canCreate:
-        perms.engagement.canEdit &&
+        perms.can('create', 'engagement') &&
         (project.status === ProjectStatus.InDevelopment ||
           session.roles.includes('global:Administrator')),
     };
@@ -494,35 +457,35 @@ export class ProjectService {
   }
 
   async listPartnerships(
-    projectId: ID,
+    project: Project,
     input: PartnershipListInput,
     session: Session,
     sensitivity: Sensitivity,
     scope: ScopedRole[],
     changeset?: ID,
   ): Promise<SecuredPartnershipList> {
+    const currentProject = await this.readOneUnsecured(
+      project.id,
+      session,
+      changeset,
+    );
+
     const result = await this.partnerships.list(
       {
         ...input,
         filter: {
           ...input.filter,
-          projectId: projectId,
+          projectId: project.id,
         },
       },
       session,
       changeset,
     );
-
-    const perms = await this.authorizationService.getPermissions({
-      resource: IProject,
-      sessionOrUserId: session,
-      sensitivity,
-      otherRoles: scope,
-    });
+    const perms = this.privileges.for(session, IProject, currentProject);
     return {
       ...result,
-      canRead: perms.partnership.canRead,
-      canCreate: perms.partnership.canEdit,
+      canRead: perms.can('read', 'partnership'),
+      canCreate: perms.can('create', 'partnership'),
     };
   }
 
@@ -559,12 +522,9 @@ export class ProjectService {
     // we'll use this course all/nothing check. This, assuming role permissions
     // are set correctly, allows the users which can view all projects & their members
     // to use this feature.
-    const perms = await this.authorizationService.getPermissions({
-      resource: User,
-      sessionOrUserId: session,
-    });
+    const perms = this.privileges.for(session, User).all.projects;
 
-    if (!perms.projects.canRead) {
+    if (!perms.read) {
       return SecuredList.Redacted;
     }
 
@@ -629,11 +589,9 @@ export class ProjectService {
     session: Session,
   ): Promise<SecuredLocationList> {
     return await this.locationService.listLocationForResource(
-      IProject,
+      this.privileges.for(session, IProject, project).forEdge('otherLocations'),
       project,
-      'otherLocations',
       input,
-      session,
     );
   }
 
@@ -643,14 +601,11 @@ export class ProjectService {
     changeset?: ID,
   ): Promise<SecuredBudget> {
     let budgetToReturn;
+    const perms = this.privileges
+      .for(session, IProject, project)
+      .forEdge('budget');
 
-    const permsOfProject = await this.authorizationService.getPermissions({
-      resource: IProject,
-      sessionOrUserId: session,
-      dto: project,
-    });
-
-    if (permsOfProject.budget.canRead) {
+    if (perms.can('read')) {
       const budgets = await this.budgetService.listUnsecure(
         {
           filter: {
@@ -671,9 +626,9 @@ export class ProjectService {
 
     return {
       value: budgetToReturn,
-      canRead: permsOfProject.budget.canRead,
+      canRead: perms.can('read'),
       canEdit:
-        (permsOfProject.budget.canEdit &&
+        (perms.can('edit') &&
           budgetToReturn?.status === BudgetStatus.Pending) ||
         this.budgetService.canEditFinalized(
           session.roles.concat(project.scope),

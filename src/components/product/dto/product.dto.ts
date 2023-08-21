@@ -33,7 +33,9 @@ import { SecuredProductPurposes } from './product-purpose';
 import { SecuredProductSteps } from './product-step.enum';
 import { SecuredProgressMeasurement } from './progress-measurement.enum';
 
-const resolveProductType = (product: AnyProduct | UnsecuredDto<AnyProduct>) =>
+export const resolveProductType = (
+  product: AnyProduct | UnsecuredDto<AnyProduct>,
+) =>
   product.produces
     ? DerivativeScriptureProduct
     : product.title
