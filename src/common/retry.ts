@@ -1,11 +1,11 @@
 import { Duration, DurationLike } from 'luxon';
-import pRetry from 'p-retry';
+import pRetry, { Options } from 'p-retry';
 import { Merge } from 'type-fest';
 
 export { AbortError } from 'p-retry';
 
 export type RetryOptions = Merge<
-  pRetry.Options,
+  Options,
   {
     /**
      * The maximum time (in milliseconds) that the retried operation is allowed to run.

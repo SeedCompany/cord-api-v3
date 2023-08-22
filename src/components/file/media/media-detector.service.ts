@@ -1,6 +1,6 @@
 import ffprobeBinary from '@ffprobe-installer/ffprobe';
 import { Injectable } from '@nestjs/common';
-import execa from 'execa';
+import { execa } from 'execa';
 import { FFProbeResult } from 'ffprobe';
 import { imageSize } from 'image-size';
 import { ISize as ImageSize } from 'image-size/dist/types/interface';
