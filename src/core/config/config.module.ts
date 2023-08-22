@@ -11,9 +11,13 @@ import { VersionService } from './version.service';
       useFactory: (env: EnvironmentService) =>
         Object.assign(new ConfigService(), new (makeConfig(env))()),
     },
+    {
+      provide: 'CONFIG',
+      useExisting: ConfigService,
+    },
     EnvironmentService,
     VersionService,
   ],
-  exports: [ConfigService, VersionService],
+  exports: [ConfigService, 'CONFIG', VersionService],
 })
 export class ConfigModule {}

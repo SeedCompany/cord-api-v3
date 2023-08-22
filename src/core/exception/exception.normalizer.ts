@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 // eslint-disable-next-line no-restricted-imports
 import * as Nest from '@nestjs/common';
 import { compact, uniq } from 'lodash';
@@ -10,8 +10,8 @@ import {
   JsonSet,
   simpleSwitch,
 } from '~/common';
-import { ConfigService } from '~/core';
-import * as Neo from '../database';
+import type { ConfigService } from '~/core';
+import * as Neo from '../database/errors';
 import { isSrcFrame } from './is-src-frame';
 import { normalizeFramePath } from './normalize-frame-path';
 
@@ -25,7 +25,7 @@ export interface ExceptionJson {
 
 @Injectable()
 export class ExceptionNormalizer {
-  constructor(private readonly config?: ConfigService) {}
+  constructor(@Inject('CONFIG') private readonly config?: ConfigService) {}
 
   normalize(ex: Error): ExceptionJson {
     const {
