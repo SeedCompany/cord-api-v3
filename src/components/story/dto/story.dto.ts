@@ -8,15 +8,13 @@ import {
   SecuredProps,
   SecuredString,
 } from '../../../common';
-import { Producible, ProducibleType } from '../../product/dto/producible.dto';
+import { Producible } from '../../product/dto/producible.dto';
 
 declare module '../../product/dto/producible.dto' {
-  enum ProducibleType {
-    Story = 'Story',
+  interface ProducibleTypeEntries {
+    Story: true;
   }
 }
-
-Object.assign(ProducibleType, { Story: 'Story' });
 
 @RegisterResource()
 @ObjectType({
