@@ -40,7 +40,8 @@ import { WaitResolver } from './wait.resolver';
   providers: [
     AwsS3Factory,
     ExceptionNormalizer,
-    { provide: APP_FILTER, useClass: ExceptionFilter },
+    ExceptionFilter,
+    { provide: APP_FILTER, useExisting: ExceptionFilter },
     { provide: APP_PIPE, useClass: ValidationPipe },
     { provide: APP_INTERCEPTOR, useClass: TimeoutInterceptor },
     WaitResolver,

@@ -1,6 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { ApolloServerErrorCode as ApolloCode } from '@apollo/server/errors';
+import { Inject, Injectable } from '@nestjs/common';
 // eslint-disable-next-line no-restricted-imports
 import * as Nest from '@nestjs/common';
+import { setHas, setOf } from '@seedcompany/common';
+import { GraphQLError } from 'graphql';
 import { compact, uniq } from 'lodash';
 import {
   AbstractClassType,
@@ -10,8 +13,8 @@ import {
   JsonSet,
   simpleSwitch,
 } from '~/common';
-import { ConfigService } from '~/core';
-import * as Neo from '../database';
+import type { ConfigService } from '~/core';
+import * as Neo from '../database/errors';
 import { isSrcFrame } from './is-src-frame';
 import { normalizeFramePath } from './normalize-frame-path';
 
@@ -25,7 +28,7 @@ export interface ExceptionJson {
 
 @Injectable()
 export class ExceptionNormalizer {
-  constructor(private readonly config?: ConfigService) {}
+  constructor(@Inject('CONFIG') private readonly config?: ConfigService) {}
 
   normalize(ex: Error): ExceptionJson {
     const {
@@ -93,6 +96,21 @@ export class ExceptionNormalizer {
       };
     }
 
+    // Apollo Errors
+    if (ex instanceof GraphQLError) {
+      const codes = this.errorToCodes(ex);
+      const isClient = setHas(
+        apolloErrorCodesThatAreClientProblem,
+        ex.extensions.code!,
+      );
+      return { codes: [codes[0], 'GraphQL', isClient ? 'Client' : 'Server'] };
+    }
+
+    // Bad output from API, that doesn't match the schema
+    if (ex.message.startsWith('Cannot return null for non-nullable field')) {
+      return { codes: ['GraphQL', 'Server'] };
+    }
+
     // Fallback to generic Error
     return { codes: ['Server'] };
   }
@@ -158,3 +176,12 @@ export class ExceptionNormalizer {
     return type.name.replace(/(Exception|Error)$/, '');
   }
 }
+
+const apolloErrorCodesThatAreClientProblem = setOf([
+  ApolloCode.GRAPHQL_PARSE_FAILED,
+  ApolloCode.GRAPHQL_VALIDATION_FAILED,
+  ApolloCode.PERSISTED_QUERY_NOT_FOUND,
+  ApolloCode.PERSISTED_QUERY_NOT_SUPPORTED,
+  ApolloCode.BAD_USER_INPUT,
+  ApolloCode.BAD_REQUEST,
+]);

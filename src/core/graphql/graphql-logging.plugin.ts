@@ -4,10 +4,8 @@ import {
   GraphQLRequestListener as RequestListener,
 } from '@apollo/server';
 import { Plugin } from '@nestjs/apollo';
-import { GraphQLError } from 'graphql';
-import { GqlContextType as ContextType } from '../../common';
-import { maskSecrets } from '../../common/mask-secrets';
-import { isNeo4jError } from '../database/errors';
+import { GqlContextType as ContextType } from '~/common';
+import { maskSecrets } from '~/common/mask-secrets';
 import { ILogger, Logger } from '../logger';
 
 /**
@@ -31,43 +29,6 @@ export class GraphqlLoggingPlugin implements ApolloPlugin<ContextType> {
           ...maskSecrets(request.variables ?? {}),
         });
       },
-      didEncounterErrors: async ({ errors }) => {
-        for (const error of errors) {
-          this.onError(error);
-        }
-      },
     };
-  }
-
-  private onError(error: GraphQLError) {
-    // Assume Neo4jErrors are already logged if they need to be.
-    // For some reason they do not go through our ExceptionFilter.
-    if (isNeo4jError(error.originalError)) {
-      return;
-    }
-
-    // Assume errors with extensions have already been logged by our ExceptionFilter
-    // This means that these are native GraphQL errors
-    if (error.extensions) {
-      return;
-    }
-
-    const path = error.path?.join('.');
-    const pathInfo = path ? { path } : {};
-
-    if (!error.originalError) {
-      // Assume client schema error.
-      this.logger.warning('Invalid query', {
-        error: error.message,
-        ...pathInfo,
-      });
-      return;
-    }
-
-    // Assume server schema error.
-    this.logger.error('Invalid response for GraphQL schema', {
-      error: error.message,
-      ...pathInfo,
-    });
   }
 }
