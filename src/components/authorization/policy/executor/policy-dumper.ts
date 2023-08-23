@@ -44,7 +44,7 @@ export class PolicyDumper {
 
     const chalk = new Chalk({ level: 0 });
     const resources = await this.selectResources();
-    for (const role of Role.all) {
+    for (const role of Role) {
       const dumped = resources.flatMap((res) =>
         this.dumpRes(role, res, { props: true }),
       );
@@ -70,7 +70,7 @@ export class PolicyDumper {
     rolesIn: Many<LiteralUnion<Role, string>>,
     resourcesIn: Many<ResourceLike & string>,
   ) {
-    const roles = search(rolesIn, [...Role.all], 'role');
+    const roles = search(rolesIn, [...Role], 'role');
     const map = await this.resources.getEnhancedMap();
     const resources = searchResources(resourcesIn, map);
 
