@@ -12,7 +12,7 @@ import { Config as Neo4JDriverConfig } from 'neo4j-driver';
 import { PoolConfig } from 'pg';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { Class, Merge, ReadonlyDeep } from 'type-fest';
-import { csv, ID, keys, ServerException } from '../../common';
+import { csv, ID, ServerException } from '../../common';
 import { parseUri } from '../../components/file/bucket/parse-uri';
 import { ProgressReportStatus } from '../../components/progress-report/dto/progress-report-status.enum';
 import type { TransitionName as ProgressReportTransitionName } from '../../components/progress-report/workflow/transitions';
@@ -131,7 +131,7 @@ export const makeConfig = (env: EnvironmentService) =>
           .optional({}),
         forBypasses: env
           .map('PROGRESS_REPORT_EMAILS_FOR_BYPASSES', {
-            parseKey: keys(ProgressReportStatus),
+            parseKey: ProgressReportStatus,
             parseValue: csv,
           })
           .optional({}),
