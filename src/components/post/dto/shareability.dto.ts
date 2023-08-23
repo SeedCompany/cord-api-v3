@@ -1,22 +1,17 @@
-import { registerEnumType } from '@nestjs/graphql';
+import { EnumType, makeEnum } from '~/common';
 
-export enum PostShareability {
-  Membership = 'Membership',
-  ProjectTeam = 'ProjectTeam',
-  Internal = 'Internal',
-  AskToShareExternally = 'AskToShareExternally',
-  External = 'External',
-}
-
-registerEnumType(PostShareability, {
+export type PostShareability = EnumType<typeof PostShareability>;
+export const PostShareability = makeEnum({
   name: 'PostShareability',
-  valuesMap: {
-    ProjectTeam: {
+  values: [
+    { value: 'Membership', label: 'Team Members' },
+    {
+      value: 'ProjectTeam',
+      label: 'Team Members',
       deprecationReason: 'Use `Membership` instead',
-      description: `@label Team Members`,
     },
-    Membership: {
-      description: `@label Team Members`,
-    },
-  },
+    'Internal',
+    'AskToShareExternally',
+    'External',
+  ],
 });
