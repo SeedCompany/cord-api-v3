@@ -2,14 +2,18 @@ import { registerEnumType } from '@nestjs/graphql';
 import { cleanJoin, nonEnumerable, setHas } from '@seedcompany/common';
 import { inspect, InspectOptionsStylized } from 'util';
 
-export type EnumType<Enum> = Enum extends MadeEnum<infer Values, any>
+export type EnumType<Enum> = Enum extends MadeEnum<infer Values, any, any>
   ? Values
   : never;
 
-export type MadeEnum<Values extends string, Extra = unknown> = {
+export type MadeEnum<
+  Values extends string,
+  Extra = unknown,
+  ValueDeclaration = EnumValueDeclarationShape,
+> = {
   readonly [Value in Values & string]: Value;
 } & Readonly<Extra> &
-  EnumHelpers<Values>;
+  EnumHelpers<Values, ValueDeclaration>;
 
 interface EnumOptions<
   ValueDeclaration extends EnumValueDeclarationShape,
@@ -45,7 +49,11 @@ interface EnumOptions<
    * in order to prevent circular references.
    */
   readonly extra?: (
-    enumObject: MadeEnum<ValuesOfDeclarations<ValueDeclaration>>,
+    enumObject: MadeEnum<
+      ValuesOfDeclarations<ValueDeclaration>,
+      unknown,
+      NormalizedValueDeclaration<ValueDeclaration>
+    >,
   ) => Extra;
 }
 
@@ -59,7 +67,8 @@ export const makeEnum = <
   input: EnumOptions<ValueDeclaration, Extra>,
 ): MadeEnum<
   ValuesOfDeclarations<ValueDeclaration>,
-  [Extra] extends [never] ? unknown : Extra
+  [Extra] extends [never] ? unknown : Extra,
+  NormalizedValueDeclaration<ValueDeclaration>
 > => {
   const {
     name,
@@ -99,7 +108,7 @@ export const makeEnum = <
       const members = innerInspect(valueList).slice(1, -1).replace(/'/g, '');
       return `${label} {${members}}`;
     },
-  } satisfies EnumHelpers<string>;
+  } satisfies EnumHelpers<string, any>;
 
   Object.assign(object, helpers);
   nonEnumerable(object, ...Object.keys(helpers));
@@ -161,11 +170,28 @@ type ValuesOfDeclarations<ValueDeclaration extends EnumValueDeclarationShape> =
     ? Value
     : never;
 
-interface EnumHelpers<Values extends string> {
+/**
+ * This unifies all values to have the standard object shape, plus the extra
+ * properties as optional.
+ */
+type NormalizedValueDeclaration<Declaration extends EnumValueDeclarationShape> =
+  // For values that are objects, accept them as they are...
+  | (Extract<Declaration, EnumValueDeclarationObjectShape> &
+      // plus all the normal object keys
+      EnumValueDeclarationObjectShape<ValuesOfDeclarations<Declaration>>)
+  // For values that are strings, convert them to the standard shape...
+  | (EnumValueDeclarationObjectShape<Extract<Declaration, string>> &
+      // and include all the extra keys as optional
+      Partial<
+        Omit<
+          Extract<Declaration, EnumValueDeclarationObjectShape>,
+          keyof EnumValueDeclarationObjectShape
+        >
+      >);
+
+interface EnumHelpers<Values extends string, ValueDeclaration> {
   readonly values: ReadonlySet<Values>;
-  readonly entries: ReadonlyArray<
-    Readonly<EnumValueDeclarationObjectShape<Values>>
-  >;
+  readonly entries: ReadonlyArray<Readonly<ValueDeclaration>>;
   readonly has: <In extends string>(
     value: In & {},
   ) => value is In & Values & {};
