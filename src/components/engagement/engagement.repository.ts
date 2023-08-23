@@ -46,7 +46,6 @@ import {
   IEngagement,
   InternshipEngagement,
   LanguageEngagement,
-  OngoingEngagementStatuses,
 } from './dto';
 
 export type LanguageOrEngagementId = MergeExclusive<
@@ -434,7 +433,7 @@ export class EngagementRepository extends CommonRepository {
       ])
       .where({
         sn: {
-          value: inArray(difference(OngoingEngagementStatuses, excludes)),
+          value: inArray(difference([...EngagementStatus.Ongoing], excludes)),
         },
       })
       .return<{ id: ID }>('engagement.id as id')
