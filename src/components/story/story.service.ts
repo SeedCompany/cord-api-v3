@@ -7,13 +7,11 @@ import {
   ServerException,
   Session,
   UnauthorizedException,
-  UnsecuredDto,
-} from '../../common';
-import { HandleIdLookup, ILogger, Logger } from '../../core';
-import { ifDiff } from '../../core/database/changes';
-import { mapListResults } from '../../core/database/results';
-import { Powers } from '../authorization';
-import { AuthorizationService } from '../authorization/authorization.service';
+} from '~/common';
+import { DbTypeOf, HandleIdLookup, ILogger, Logger } from '~/core';
+import { ifDiff } from '~/core/database/changes';
+import { mapListResults } from '~/core/database/results';
+import { Privileges } from '../authorization';
 import { isScriptureEqual, ScriptureReferenceService } from '../scripture';
 import {
   CreateStory,
@@ -29,12 +27,12 @@ export class StoryService {
   constructor(
     @Logger('story:service') private readonly logger: ILogger,
     private readonly scriptureRefs: ScriptureReferenceService,
-    private readonly authorizationService: AuthorizationService,
+    private readonly privileges: Privileges,
     private readonly repo: StoryRepository,
   ) {}
 
   async create(input: CreateStory, session: Session): Promise<Story> {
-    await this.authorizationService.checkPower(Powers.CreateStory, session);
+    this.privileges.for(session, Story).verifyCan('create');
     if (!(await this.repo.isUnique(input.name))) {
       throw new DuplicateException(
         'story.name',
@@ -82,32 +80,13 @@ export class StoryService {
     return await Promise.all(stories.map((dto) => this.secure(dto, session)));
   }
 
-  private async secure(
-    dto: UnsecuredDto<Story>,
-    session: Session,
-  ): Promise<Story> {
-    const securedProps = await this.authorizationService.secureProperties(
-      Story,
-      {
-        ...dto,
-        scriptureReferences: this.scriptureRefs.parseList(
-          dto.scriptureReferences,
-        ),
-      },
-      session,
-    );
-
-    return {
+  private async secure(dto: DbTypeOf<Story>, session: Session): Promise<Story> {
+    return this.privileges.for(session, Story).secure({
       ...dto,
-      ...securedProps,
-      scriptureReferences: {
-        ...securedProps.scriptureReferences,
-        value: securedProps.scriptureReferences.canRead
-          ? securedProps.scriptureReferences.value
-          : [],
-      },
-      canDelete: await this.repo.checkDeletePermission(dto.id, session),
-    };
+      scriptureReferences: this.scriptureRefs.parseList(
+        dto.scriptureReferences,
+      ),
+    });
   }
 
   async update(input: UpdateStory, session: Session): Promise<Story> {
@@ -119,7 +98,7 @@ export class StoryService {
         story.scriptureReferences.value,
       ),
     };
-    await this.authorizationService.verifyCanEditChanges(Story, story, changes);
+    this.privileges.for(session, Story, story).verifyChanges(changes);
     const { scriptureReferences, ...simpleChanges } = changes;
 
     await this.scriptureRefs.update(input.id, scriptureReferences);

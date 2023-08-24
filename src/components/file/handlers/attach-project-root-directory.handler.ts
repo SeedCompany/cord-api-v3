@@ -1,12 +1,6 @@
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import {
-  ConfigService,
-  DatabaseService,
-  EventsHandler,
-  IEventHandler,
-} from '../../../core';
-import { AuthorizationService } from '../../authorization/authorization.service';
+import { DatabaseService, EventsHandler, IEventHandler } from '../../../core';
 import { ProjectCreatedEvent } from '../../project/events';
 import { FileService } from '../file.service';
 
@@ -17,8 +11,6 @@ export class AttachProjectRootDirectoryHandler
   constructor(
     private readonly files: FileService,
     private readonly db: DatabaseService,
-    private readonly config: ConfigService,
-    private readonly authorizationService: AuthorizationService,
   ) {}
 
   async handle(event: ProjectCreatedEvent) {

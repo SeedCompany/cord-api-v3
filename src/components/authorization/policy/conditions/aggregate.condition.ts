@@ -1,4 +1,5 @@
 import { Query } from 'cypher-query-builder';
+import { Class, Constructor } from 'type-fest';
 import { inspect, InspectOptionsStylized } from 'util';
 import { ResourceShape } from '~/common';
 import { Policy } from '../policy.factory';
@@ -12,7 +13,9 @@ export abstract class AggregateConditions<
   TResourceStatic extends ResourceShape<any>,
 > implements Condition<TResourceStatic>
 {
-  constructor(readonly conditions: Array<Condition<TResourceStatic>>) {}
+  protected constructor(
+    readonly conditions: Array<Condition<TResourceStatic>>,
+  ) {}
 
   attachPolicy(policy: Policy): Condition<TResourceStatic> {
     const newConditions = this.conditions.map(
@@ -58,12 +61,11 @@ export abstract class AggregateConditions<
 
   [inspect.custom](_depth: number, _options: InspectOptionsStylized) {
     const name = this instanceof AndConditions ? ' AND ' : ' OR ';
-    return this.conditions
-      .map((c) => {
-        const l = inspect(c);
-        return c instanceof AggregateConditions ? `(${l})` : l;
-      })
-      .join(name);
+    const asStrings = this.conditions.map((c) => {
+      const l = inspect(c);
+      return c instanceof AggregateConditions ? `(${l})` : l;
+    });
+    return [...new Set(asStrings)].join(name);
   }
 }
 
@@ -72,6 +74,26 @@ export class AndConditions<
 > extends AggregateConditions<TResourceStatic> {
   protected readonly iteratorKey = 'every';
   protected readonly cypherJoiner = ' AND ';
+
+  static from<T extends ResourceShape<any>>(
+    ...conditions: Array<Condition<T>>
+  ) {
+    if (conditions.length === 1) {
+      return conditions[0];
+    }
+
+    const merged = [...groupBy(conditions, byType).values()].flatMap(
+      (sames) => {
+        const same = sames[0]!;
+        return same.intersect ? same.intersect(sames) : sames;
+      },
+    );
+
+    if (merged.length === 1) {
+      return merged[0]!;
+    }
+    return new AndConditions<T>(merged);
+  }
 }
 
 export class OrConditions<
@@ -79,20 +101,51 @@ export class OrConditions<
 > extends AggregateConditions<TResourceStatic> {
   protected readonly iteratorKey = 'some';
   protected readonly cypherJoiner = ' OR ';
+
+  static from<T extends ResourceShape<any>>(
+    ...conditions: Array<Condition<T>>
+  ) {
+    return OrConditions.fromAll(conditions);
+  }
+
+  static fromAll<T extends ResourceShape<any>>(
+    conditions: Array<Condition<T>>,
+    { optimize = true }: { optimize?: boolean } = {},
+  ) {
+    if (conditions.length === 1) {
+      return conditions[0];
+    }
+
+    const flattened = conditions.flatMap((c) =>
+      c instanceof OrConditions ? c.conditions : c,
+    );
+
+    if (!optimize) {
+      return new OrConditions(flattened);
+    }
+
+    const merged = [...groupBy(flattened, byType).values()].flatMap((sames) => {
+      const same = sames[0]!;
+      return same.union ? same.union(sames) : sames;
+    });
+
+    if (merged.length === 1) {
+      return merged[0]!;
+    }
+    return new OrConditions<T>(merged);
+  }
 }
 
-export const all = <T extends ResourceShape<any>>(
-  ...conditions: Array<Condition<T>>
-) =>
-  conditions.length === 1 ? conditions[0] : new AndConditions<T>(conditions);
+export const all = AndConditions.from;
+export const any = OrConditions.from;
 
-export const any = <T extends ResourceShape<any>>(
-  ...conditions: Array<Condition<T>>
-) =>
-  conditions.length === 1
-    ? conditions[0]
-    : new OrConditions<T>(
-        conditions.flatMap((c) =>
-          c instanceof OrConditions ? c.conditions : c,
-        ),
-      );
+const groupBy = <K, V>(items: readonly V[], by: (item: V) => K) =>
+  items.reduce((map, item) => {
+    const groupKey = by(item);
+    const prev = map.get(groupKey) ?? [];
+    map.set(groupKey, [...prev, item]);
+    return map;
+  }, new Map<K, V[]>());
+
+const byType = <T extends Class<any>>(item: InstanceType<T>) =>
+  item.constructor as Constructor<T>;

@@ -1,4 +1,4 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import {
   ID,
   NotFoundException,
@@ -9,8 +9,7 @@ import {
 } from '../../../common';
 import { HandleIdLookup, ILogger, Logger } from '../../../core';
 import { mapListResults } from '../../../core/database/results';
-import { Powers } from '../../authorization';
-import { AuthorizationService } from '../../authorization/authorization.service';
+import { Privileges } from '../../authorization';
 import {
   CreateUnavailability,
   Unavailability,
@@ -24,8 +23,7 @@ import { UnavailabilityRepository } from './unavailability.repository';
 export class UnavailabilityService {
   constructor(
     @Logger('unavailability:service') private readonly logger: ILogger,
-    @Inject(forwardRef(() => AuthorizationService))
-    private readonly authorizationService: AuthorizationService & {},
+    private readonly privileges: Privileges,
     private readonly repo: UnavailabilityRepository,
   ) {}
 
@@ -34,10 +32,7 @@ export class UnavailabilityService {
     session: Session,
   ): Promise<Unavailability> {
     try {
-      await this.authorizationService.checkPower(
-        Powers.CreateUnavailability,
-        session,
-      );
+      this.privileges.for(session, Unavailability).verifyCan('create');
 
       // create and connect the Unavailability to the User.
       const id = await this.repo.create(input, session);
@@ -77,17 +72,7 @@ export class UnavailabilityService {
     dto: UnsecuredDto<Unavailability>,
     session: Session,
   ): Promise<Unavailability> {
-    const securedProps = await this.authorizationService.secureProperties(
-      Unavailability,
-      dto,
-      session,
-    );
-
-    return {
-      ...dto,
-      ...securedProps,
-      canDelete: await this.repo.checkDeletePermission(dto.id, session), // TODO
-    };
+    return this.privileges.for(session, Unavailability).secure(dto);
   }
 
   async update(
@@ -106,12 +91,11 @@ export class UnavailabilityService {
 
     const changes = this.repo.getActualChanges(unavailability, input);
 
+    // TODO move this condition into policies
     if (result.id !== session.userId) {
-      await this.authorizationService.verifyCanEditChanges(
-        Unavailability,
-        unavailability,
-        changes,
-      );
+      this.privileges
+        .for(session, Unavailability, unavailability)
+        .verifyChanges(changes);
     }
     return await this.repo.updateProperties(unavailability, changes);
   }

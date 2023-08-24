@@ -7,41 +7,6 @@ import { TestApp } from './create-app';
 import { fragments } from './fragments';
 import { gql } from './gql-tag';
 
-export async function listFundingAccounts(app: TestApp) {
-  const result = await app.graphql.mutate(
-    gql`
-      query {
-        fundingAccounts(input: {}) {
-          items {
-            ...fundingAccount
-          }
-        }
-      }
-      ${fragments.fundingAccount}
-    `,
-  );
-  const fundingAccounts = result.fundingAccounts.items;
-  expect(fundingAccounts).toBeTruthy();
-  return fundingAccounts;
-}
-
-export async function readOneFundingAccount(app: TestApp, id: string) {
-  const result = await app.graphql.query(
-    gql`
-      query readOneFundingAccount($id: ID!) {
-        fundingAccount(id: $id) {
-          ...fundingAccount
-        }
-      }
-      ${fragments.fundingAccount}
-    `,
-    { id },
-  );
-  const actual = result.fundingAccount;
-  expect(actual).toBeTruthy();
-  return actual;
-}
-
 export async function createFundingAccount(
   app: TestApp,
   input: Partial<CreateFundingAccount> = {},

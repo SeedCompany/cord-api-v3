@@ -1,8 +1,5 @@
 import { ContextFunction, PersistedQueryOptions } from '@apollo/server';
-import {
-  ApolloServerErrorCode as ApolloCode,
-  unwrapResolverError,
-} from '@apollo/server/errors';
+import { unwrapResolverError } from '@apollo/server/errors';
 import { ExpressContextFunctionArgument } from '@apollo/server/express4';
 import {
   ApolloServerPluginLandingPageLocalDefault,
@@ -14,8 +11,8 @@ import {
 } from '@apollo/utils.keyvaluecache';
 import { ApolloDriverConfig } from '@nestjs/apollo';
 import { Injectable } from '@nestjs/common';
-import { GqlOptionsFactory } from '@nestjs/graphql';
-import { setHas, setOf } from '@seedcompany/common';
+import { ModuleRef } from '@nestjs/core';
+import { GqlExecutionContext, GqlOptionsFactory } from '@nestjs/graphql';
 import {
   GraphQLErrorExtensions as ErrorExtensions,
   GraphQLFormattedError as FormattedError,
@@ -23,7 +20,6 @@ import {
   GraphQLScalarType,
   OperationDefinitionNode,
 } from 'graphql';
-import { compact } from 'lodash';
 import {
   GqlContextType,
   JsonSet,
@@ -34,6 +30,7 @@ import { getRegisteredScalars } from '../../common/scalars';
 import { CacheService } from '../cache';
 import { ConfigService } from '../config/config.service';
 import { VersionService } from '../config/version.service';
+import { ExceptionFilter } from '../exception/exception.filter';
 import { GraphqlTracingPlugin } from './graphql-tracing.plugin';
 
 declare module 'graphql/error/GraphQLError' {
@@ -51,6 +48,7 @@ export class GraphQLConfig implements GqlOptionsFactory {
     private readonly cache: CacheService,
     private readonly tracing: GraphqlTracingPlugin,
     private readonly versionService: VersionService,
+    private readonly moduleRef: ModuleRef,
   ) {}
 
   async createGqlOptions(): Promise<ApolloDriverConfig> {
@@ -113,14 +111,9 @@ export class GraphQLConfig implements GqlOptionsFactory {
     formatted: FormattedError,
     error: unknown | /* but probably a */ GraphQLError,
   ): FormattedError => {
-    // Probably the actual error thrown
-    const _original = unwrapResolverError(error);
+    const extensions = this.getErrorExtensions(formatted, error);
 
-    const extensions: ErrorExtensions = { ...formatted.extensions };
-
-    const codes = (extensions.codes ??= new JsonSet(
-      compact(this.resolveCodes(formatted, extensions.code)),
-    ));
+    const codes = (extensions.codes ??= new JsonSet(['Server']));
     delete extensions.code;
 
     // Schema & validation errors don't have meaningful stack traces, so remove them
@@ -137,26 +130,38 @@ export class GraphQLConfig implements GqlOptionsFactory {
     };
   };
 
-  private resolveCodes(error: FormattedError, code?: string) {
-    if (code && setHas(apolloErrorCodesThatAreClientProblem, code)) {
-      return [code, 'GraphQL', 'Client'];
+  private getErrorExtensions(
+    formatted: FormattedError,
+    error: unknown | /* but probably a */ GraphQLError,
+  ): ErrorExtensions {
+    // ExceptionNormalizer has already been called
+    if (formatted.extensions?.codes instanceof Set) {
+      return { ...formatted.extensions };
     }
-    if (
-      error.message.startsWith('Variable ') &&
-      [
-        /^Variable ".+" got invalid value .+ at ".+"; Field ".+" of required type ".+" was not provided\.$/,
-        /^Variable ".+" got invalid value .+ at ".+"; Field ".+" is not defined by type ".+"\..*$/,
-        /^Variable ".+" got invalid value .+; Expected type .+.$/,
-        /^Variable ".+" of type ".+" used in position expecting type ".+"\.$/,
-        /^Variable ".+" of required type ".+" was not provided\.$/,
-      ].some((rgx) => rgx.exec(error.message))
-    ) {
-      return ['GraphQL', 'Client'];
+
+    const original = unwrapResolverError(error);
+    // Safety check
+    if (!(original instanceof Error)) {
+      return { ...formatted.extensions };
     }
-    if (error.message.includes('Cannot return null for non-nullable field')) {
-      return [code, 'GraphQL', 'Server'];
+
+    // Some errors do not go through the global exception filter.
+    // I think ResolveField() calls is one of them.
+    // Explicitly call here, so exception is normalized, and errors are logged.
+    const fakeGqlContext = new GqlExecutionContext([]);
+    fakeGqlContext.setType('graphql');
+    let result: Error & { extensions: ErrorExtensions };
+    try {
+      this.moduleRef
+        .get(ExceptionFilter, { strict: false })
+        .catch(original, fakeGqlContext);
+    } catch (e) {
+      result = e;
     }
-    return [code, 'Server'];
+    return {
+      ...result!.extensions,
+      stacktrace: result!.stack!.split('\n'),
+    };
   }
 }
 
@@ -191,12 +196,3 @@ class GraphQLCacheAdapter implements KeyValueCache {
     await this.cache.delete(this.prefix + key);
   }
 }
-
-const apolloErrorCodesThatAreClientProblem = setOf([
-  ApolloCode.GRAPHQL_PARSE_FAILED,
-  ApolloCode.GRAPHQL_VALIDATION_FAILED,
-  ApolloCode.PERSISTED_QUERY_NOT_FOUND,
-  ApolloCode.PERSISTED_QUERY_NOT_SUPPORTED,
-  ApolloCode.BAD_USER_INPUT,
-  ApolloCode.BAD_REQUEST,
-]);

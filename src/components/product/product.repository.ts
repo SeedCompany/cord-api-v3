@@ -16,9 +16,13 @@ import {
   Range,
   ServerException,
   Session,
-  UnsecuredDto,
 } from '../../common';
-import { CommonRepository, DatabaseService, OnIndex } from '../../core';
+import {
+  CommonRepository,
+  DatabaseService,
+  DbTypeOf,
+  OnIndex,
+} from '../../core';
 import { DbChanges, getChanges } from '../../core/database/changes';
 import {
   ACTIVE,
@@ -51,7 +55,7 @@ import {
   DirectScriptureProduct,
   ProductMethodology as Methodology,
   OtherProduct,
-  ProducibleRef,
+  Producible,
   ProducibleType,
   Product,
   ProductCompletionDescriptionSuggestionsInput,
@@ -62,14 +66,14 @@ import {
 
 export type HydratedProductRow = Merge<
   Omit<
-    UnsecuredDto<
+    DbTypeOf<
       DirectScriptureProduct & DerivativeScriptureProduct & OtherProduct
     >,
     'scriptureReferencesOverride'
   >,
   {
     isOverriding: boolean;
-    produces: Merge<ProducibleRef, { __typename: string[] }> | null;
+    produces: Merge<DbTypeOf<Producible>, { __typename: string[] }> | null;
     unspecifiedScripture: UnspecifiedScripturePortion | null;
   }
 >;

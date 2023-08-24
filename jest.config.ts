@@ -37,12 +37,6 @@ export default async (): Promise<Config.InitialOptions> => {
         roots: ['src'],
       },
       e2e,
-      {
-        ...e2e,
-        displayName: 'Security',
-        roots: ['test/security'],
-        testRegex: '\\.security\\.ts$',
-      },
     ],
     // WebStorm doesn't need this as it adds the cli flag automatically.
     // I'm guessing VSCode needs it.

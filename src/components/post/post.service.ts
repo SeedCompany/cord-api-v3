@@ -1,8 +1,11 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { ILogger, Logger, ResourceLoader, ResourcesHost } from '~/core';
+import { BaseNode, isBaseNode } from '~/core/database/results';
 import {
-  EnhancedResource,
   ID,
   InputException,
+  InvalidIdForTypeException,
+  isIdLike,
   NotFoundException,
   Resource,
   SecuredList,
@@ -10,32 +13,34 @@ import {
   Session,
   UnsecuredDto,
 } from '../../common';
-import { ILogger, Logger } from '../../core';
-import { mapListResults } from '../../core/database/results';
-import { AuthorizationService } from '../authorization/authorization.service';
-import { UserService } from '../user';
+import { Privileges } from '../authorization';
 import { CreatePost, Post, Postable, UpdatePost } from './dto';
 import { PostListInput, SecuredPostList } from './dto/list-posts.dto';
 import { PostRepository } from './post.repository';
 
+type PostableRef = ID | BaseNode | Postable;
+
 @Injectable()
 export class PostService {
   constructor(
-    @Inject(forwardRef(() => UserService))
-    private readonly userService: UserService & {},
-    @Inject(forwardRef(() => AuthorizationService))
-    private readonly authorizationService: AuthorizationService & {},
+    private readonly privileges: Privileges,
     private readonly repo: PostRepository,
+    private readonly resources: ResourceLoader,
+    private readonly resourcesHost: ResourcesHost,
     @Logger('post:service') private readonly logger: ILogger,
   ) {}
 
   async create(input: CreatePost, session: Session): Promise<Post> {
-    // TODO: need to check if have a CreatePost power.
     if (!input.parentId) {
       throw new ServerException(
         'A post must be associated with a parent node.',
       );
     }
+    const perms = await this.getPermissionsFromPostable(
+      input.parentId,
+      session,
+    );
+    perms.verifyCan('create');
 
     try {
       const result = await this.repo.create(input, session);
@@ -43,7 +48,7 @@ export class PostService {
         throw new ServerException('Failed to create post');
       }
 
-      return await this.readOne(result.id, session);
+      return this.secure(result.dto, session);
     } catch (exception) {
       this.logger.warning('Failed to create post', {
         exception,
@@ -57,48 +62,24 @@ export class PostService {
     }
   }
 
-  async readOne(postId: ID, session: Session): Promise<Post> {
-    const dto = await this.repo.readOne(postId);
-    return await this.secure(dto, session);
-  }
-
-  async readMany(ids: readonly ID[], session: Session) {
-    const posts = await this.repo.readMany(ids);
-    return await Promise.all(posts.map((dto) => this.secure(dto, session)));
-  }
-
-  private async secure(
-    dto: UnsecuredDto<Post>,
-    session: Session,
-  ): Promise<Post> {
-    const securedProps = await this.authorizationService.secureProperties(
-      Post,
-      dto,
-      session,
-    );
-
-    return {
-      ...dto,
-      ...securedProps,
-      canDelete: await this.repo.checkDeletePermission(dto.id, session),
-    };
-  }
-
   async update(input: UpdatePost, session: Session): Promise<Post> {
-    const object = await this.readOne(input.id, session);
+    const object = await this.repo.readOne(input.id, session);
 
     const changes = this.repo.getActualChanges(object, input);
-    await this.repo.updateProperties(object, changes);
+    this.privileges.for(session, Post, object).verifyChanges(changes);
+    const updated = await this.repo.updateProperties(object, changes);
 
-    return await this.readOne(input.id, session);
+    return this.secure(updated, session);
   }
 
   async delete(id: ID, session: Session): Promise<void> {
-    const object = await this.readOne(id, session);
+    const object = await this.repo.readOne(id, session);
 
-    if (!object) {
-      throw new NotFoundException('Could not find post', 'post.id');
-    }
+    const perms = await this.getPermissionsFromPostable(
+      object.parent.properties.id,
+      session,
+    );
+    perms.verifyCan('delete');
 
     try {
       await this.repo.deleteNode(object);
@@ -112,26 +93,56 @@ export class PostService {
   }
 
   async securedList(
-    parentType: EnhancedResource<any>,
     parent: Postable & Resource,
     input: PostListInput,
     session: Session,
   ): Promise<SecuredPostList> {
-    const perms = await this.authorizationService.getPermissions({
-      resource: parentType,
-      sessionOrUserId: session,
-      dto: parent,
-    });
-    if (!perms.posts.canRead) {
+    const perms = await this.getPermissionsFromPostable(parent, session);
+
+    if (!perms.can('read')) {
       return SecuredList.Redacted;
     }
 
     const results = await this.repo.securedList(input, session);
 
     return {
-      ...(await mapListResults(results, (dto) => this.secure(dto, session))),
+      ...results,
+      items: results.items.map((dto) => this.secure(dto, session)),
       canRead: true, // false handled above
-      canCreate: perms.posts.canEdit,
+      canCreate: perms.can('create'),
     };
   }
+
+  secure(dto: UnsecuredDto<Post>, session: Session) {
+    return this.privileges.for(session, Post).secure(dto);
+  }
+
+  async getPermissionsFromPostable(resource: PostableRef, session: Session) {
+    const parent = await this.loadPostable(resource);
+    const parentType = await this.resourcesHost.getByName(
+      parent.__typename as 'Postable',
+    );
+    return this.privileges.for(session, parentType, parent).forEdge('posts');
+  }
+
+  private async loadPostable(resource: PostableRef): Promise<Postable> {
+    const parentNode = isIdLike(resource)
+      ? await this.repo.getBaseNode(resource, Resource)
+      : resource;
+    if (!parentNode) {
+      throw new NotFoundException('Resource does not exist', 'resourceId');
+    }
+    const parent = isBaseNode(parentNode)
+      ? ((await this.resources.loadByBaseNode(parentNode)) as Postable)
+      : parentNode;
+
+    try {
+      await this.resourcesHost.verifyImplements(parent.__typename, Postable);
+    } catch (e) {
+      throw new NonPostableType(e.message);
+    }
+    return parent;
+  }
 }
+
+class NonPostableType extends InvalidIdForTypeException {}

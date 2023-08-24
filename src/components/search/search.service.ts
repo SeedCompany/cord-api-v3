@@ -1,11 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { compact } from 'lodash';
-import { has, ID, NotFoundException, ServerException, Session } from '~/common';
+import { ID, NotFoundException, ServerException, Session } from '~/common';
 import { ResourceResolver, ResourcesHost } from '~/core';
-import {
-  AuthorizationService,
-  Permission,
-} from '../authorization/authorization.service';
+import { Privileges } from '../authorization';
 import { PartnerService } from '../partner';
 import {
   SearchableMap,
@@ -38,7 +35,7 @@ export class SearchService {
   constructor(
     private readonly resourceHost: ResourcesHost,
     private readonly resources: ResourceResolver,
-    private readonly auth: AuthorizationService,
+    private readonly privileges: Privileges,
     private readonly partners: PartnerService,
     private readonly repo: SearchRepository,
   ) {}
@@ -97,13 +94,13 @@ export class SearchService {
               return null;
             }
 
-            const perms = await this.auth.getPermissions({
-              resource: await this.resourceHost.getByName(hydrated.__typename),
-              dto: hydrated,
-              sessionOrUserId: session,
-            });
+            const resource = await this.resourceHost.getByName(
+              hydrated.__typename,
+            );
+            const perms = this.privileges.for(session, resource, hydrated).all;
             return matchedProps.some((key) =>
-              has(key, perms) ? (perms[key] as Permission).canRead : true,
+              // @ts-expect-error strict typing is hard for this dynamic use case.
+              key in perms ? perms[key].read : true,
             )
               ? hydrated
               : null;

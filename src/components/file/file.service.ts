@@ -7,12 +7,14 @@ import { bufferFromStream, cleanJoin } from '@seedcompany/common';
 import { Connection } from 'cypher-query-builder';
 import { intersection } from 'lodash';
 import { Duration } from 'luxon';
+import { Readable } from 'stream';
 import { withAddedPath } from '~/common/url.util';
 import {
   DuplicateException,
   DurationIn,
   generateId,
   ID,
+  IdOf,
   InputException,
   NotFoundException,
   ServerException,
@@ -42,6 +44,7 @@ import {
 } from './dto';
 import { FileUrlController as FileUrl } from './file-url.controller';
 import { FileRepository } from './file.repository';
+import { MediaService } from './media/media.service';
 
 @Injectable()
 export class FileService {
@@ -50,6 +53,7 @@ export class FileService {
     private readonly repo: FileRepository,
     private readonly db: Connection,
     private readonly config: ConfigService,
+    private readonly mediaService: MediaService,
     @Logger('file:service') private readonly logger: ILogger,
   ) {}
 
@@ -83,15 +87,18 @@ export class FileService {
     obj: T,
     fileVersionId?: ID,
   ): Downloadable<T> {
+    const id = fileVersionId ?? (obj as unknown as FileVersion).id;
+
     let downloading: Promise<Buffer> | undefined;
     return Object.assign(obj, {
-      download: () => {
-        if (!downloading) {
-          downloading = this.downloadFileVersion(
-            fileVersionId ?? (obj as unknown as FileVersion).id,
-          );
+      download: () =>
+        (downloading ??= this.downloadFileVersion(id).then(bufferFromStream)),
+      stream: async () => {
+        if (downloading) {
+          // If already buffering file, just use that instead of going to source.
+          return Readable.from(await downloading);
         }
-        return downloading;
+        return await this.downloadFileVersion(id);
       },
     });
   }
@@ -109,7 +116,7 @@ export class FileService {
   /**
    * Internal API method to download file contents from S3
    */
-  async downloadFileVersion(versionId: ID): Promise<Buffer> {
+  private async downloadFileVersion(versionId: ID): Promise<Readable> {
     let data;
     try {
       const obj = await this.bucket.getObject(versionId);
@@ -124,7 +131,7 @@ export class FileService {
       throw new NotFoundException('Could not find file contents');
     }
 
-    return await bufferFromStream(data);
+    return data;
   }
 
   async getUrl(node: FileNode) {
@@ -241,6 +248,7 @@ export class FileService {
       uploadId,
       name,
       mimeType: mimeTypeOverride,
+      media,
     }: CreateFileVersionInput,
     session: Session,
   ): Promise<File> {
@@ -347,6 +355,17 @@ export class FileService {
       }
     }
 
+    await this.mediaService.detectAndSave(
+      this.asDownloadable(
+        {
+          file: uploadId as IdOf<FileVersion>,
+          mimeType,
+          ...media,
+        },
+        uploadId,
+      ),
+    );
+
     // Change the file's name to match the latest version name
     await this.rename({ id: fileId, name }, session);
 
@@ -428,9 +447,8 @@ export class FileService {
         await this.createFileVersion(
           {
             parentId: fileId,
-            uploadId: initialVersion.uploadId,
+            ...initialVersion,
             name: initialVersion.name ?? name,
-            mimeType: initialVersion.mimeType,
           },
           session,
         );

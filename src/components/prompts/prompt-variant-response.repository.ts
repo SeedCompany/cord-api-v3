@@ -14,6 +14,7 @@ import {
   VariantOf,
 } from '~/common';
 import { DtoRepository } from '~/core';
+import { DbTypeOf } from '~/core/database/db-type';
 import { privileges } from '~/core/database/dto.repository';
 import {
   ACTIVE,
@@ -120,7 +121,7 @@ export const PromptVariantResponseRepository = <
               )
               .return('collect(response) as responses'),
           )
-          .return<{ dto: UnsecuredDto<InstanceType<TResourceStatic>> }>(
+          .return<{ dto: DbTypeOf<InstanceType<TResourceStatic>> }>(
             merge('node', {
               parent: 'parent',
               prompt: 'prompt.value',

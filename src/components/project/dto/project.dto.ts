@@ -58,6 +58,9 @@ const Interfaces: Type<
   ),
 );
 
+export const resolveProjectType = (val: Pick<AnyProject, 'type'>) =>
+  val.type === 'Translation' ? TranslationProject : InternshipProject;
+
 @RegisterResource()
 @InterfaceType({
   resolveType: (val: Project) => {

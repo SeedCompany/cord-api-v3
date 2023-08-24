@@ -6,8 +6,6 @@ import { ProgressReportCommunityStoryService } from './community-stories/progres
 import { ProgressReportHighlightsRepository } from './highlights/progress-report-highlights.repository';
 import { ProgressReportHighlightsResolver } from './highlights/progress-report-highlights.resolver';
 import { ProgressReportHighlightsService } from './highlights/progress-report-highlights.service';
-import { AddProgressReportStatusMigration } from './migrations/AddStatus.migration';
-import { UpdateExplanationReasonsMigration } from './migrations/UpdateExplanationReasons.migration';
 import { ProgressReportExtraForPeriodicInterfaceRepository } from './progress-report-extra-for-periodic-interface.repository';
 import { ProgressReportRepository } from './progress-report.repository';
 import { ProgressReportService } from './progress-report.service';
@@ -40,8 +38,6 @@ import { ProgressReportWorkflowModule } from './workflow/progress-report-workflo
     ProgressReportService,
     ProgressReportRepository,
     ProgressReportExtraForPeriodicInterfaceRepository,
-    AddProgressReportStatusMigration,
-    UpdateExplanationReasonsMigration,
   ],
   exports: [ProgressReportExtraForPeriodicInterfaceRepository],
 })

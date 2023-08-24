@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { node, Query } from 'cypher-query-builder';
-import { ID, Session, UnsecuredDto } from '../../common';
-import { DatabaseService, DtoRepository } from '../../core';
+import { ID, Session } from '../../common';
+import { DatabaseService, DbTypeOf, DtoRepository } from '../../core';
 import {
   createNode,
   matchProps,
@@ -52,7 +52,7 @@ export class FilmRepository extends DtoRepository(Film) {
       query
         .apply(matchProps())
         .subQuery('node', this.scriptureRefs.list())
-        .return<{ dto: UnsecuredDto<Film> }>(
+        .return<{ dto: DbTypeOf<Film> }>(
           merge('props', {
             scriptureReferences: 'scriptureReferences',
           }).as('dto'),

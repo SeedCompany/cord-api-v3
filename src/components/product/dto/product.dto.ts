@@ -3,6 +3,7 @@ import { stripIndent } from 'common-tags';
 import { startCase } from 'lodash';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive } from 'type-fest';
+import { SetDbType } from '~/core';
 import { RegisterResource } from '~/core/resources';
 import {
   DbLabel,
@@ -16,7 +17,6 @@ import {
   Sensitivity,
   SensitivityField,
   ServerException,
-  SetUnsecuredType,
   UnsecuredDto,
 } from '../../../common';
 import { SetChangeType } from '../../../core/database/changes';
@@ -33,7 +33,9 @@ import { SecuredProductPurposes } from './product-purpose';
 import { SecuredProductSteps } from './product-step.enum';
 import { SecuredProgressMeasurement } from './progress-measurement.enum';
 
-const resolveProductType = (product: AnyProduct | UnsecuredDto<AnyProduct>) =>
+export const resolveProductType = (
+  product: AnyProduct | UnsecuredDto<AnyProduct>,
+) =>
   product.produces
     ? DerivativeScriptureProduct
     : product.title
@@ -184,7 +186,7 @@ export class DerivativeScriptureProduct extends Product {
     `,
   })
   readonly scriptureReferencesOverride: SecuredScriptureRangesOverride &
-    SetUnsecuredType<DbScriptureReferences | null> &
+    SetDbType<DbScriptureReferences | null> &
     SetChangeType<
       'scriptureReferencesOverride',
       readonly ScriptureRangeInput[] | null

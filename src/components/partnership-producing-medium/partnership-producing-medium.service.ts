@@ -9,7 +9,7 @@ import {
   UnauthorizedException,
 } from '../../common';
 import { ResourceResolver } from '../../core';
-import { AuthorizationService } from '../authorization/authorization.service';
+import { Privileges } from '../authorization';
 import { LanguageEngagement } from '../engagement';
 import { IProject } from '../project';
 import {
@@ -21,7 +21,7 @@ import { PartnershipProducingMediumRepository } from './partnership-producing-me
 @Injectable()
 export class PartnershipProducingMediumService {
   constructor(
-    private readonly auth: AuthorizationService,
+    private readonly privileges: Privileges,
     private readonly resources: ResourceResolver,
     private readonly repo: PartnershipProducingMediumRepository,
   ) {}
@@ -30,13 +30,9 @@ export class PartnershipProducingMediumService {
     engagement: LanguageEngagement,
     session: Session,
   ): Promise<SecuredPartnershipsProducingMediums> {
-    const perms = await this.auth.getPermissions({
-      resource: IProject,
-      sessionOrUserId: session,
-      sensitivity: engagement.sensitivity,
-      otherRoles: engagement.scope,
-    });
-    if (!perms.partnership.canRead) {
+    const perms = this.privileges.for(session, IProject, engagement as any);
+
+    if (!perms.can('read', 'partnership')) {
       return SecuredList.Redacted;
     }
 
@@ -51,7 +47,7 @@ export class PartnershipProducingMediumService {
       total: list.length,
       hasMore: false,
       canRead: true,
-      canCreate: perms.partnership.canEdit,
+      canCreate: perms.can('create', 'partnership'),
     };
   }
 
@@ -70,13 +66,9 @@ export class PartnershipProducingMediumService {
       session,
     );
 
-    const perms = await this.auth.getPermissions({
-      resource: IProject,
-      sessionOrUserId: session,
-      sensitivity: engagement.sensitivity,
-      otherRoles: engagement.scope,
-    });
-    if (!perms.partnership.canEdit) {
+    const perms = this.privileges.for(session, IProject, engagement as any);
+
+    if (!perms.can('create', 'partnership')) {
       throw new UnauthorizedException(
         `You do not have permission to update the partnerships producing mediums for this engagement`,
       );

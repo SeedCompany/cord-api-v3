@@ -1,4 +1,4 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import {
   DuplicateException,
   ID,
@@ -6,7 +6,6 @@ import {
   ObjectView,
   ResourceShape,
   SecuredList,
-  SecuredResourceKey,
   ServerException,
   Session,
   UnauthorizedException,
@@ -14,8 +13,8 @@ import {
 } from '../../common';
 import { HandleIdLookup, ILogger, Logger } from '../../core';
 import { mapListResults } from '../../core/database/results';
-import { AuthorizationService } from '../authorization/authorization.service';
-import { Powers } from '../authorization/dto/powers';
+import { Privileges, UserEdgePrivileges } from '../authorization';
+import { PropAction } from '../authorization/policy/actions';
 import { FileService } from '../file';
 import {
   CreateLocation,
@@ -31,14 +30,13 @@ import { LocationRepository } from './location.repository';
 export class LocationService {
   constructor(
     @Logger('location:service') private readonly logger: ILogger,
-    @Inject(forwardRef(() => AuthorizationService))
-    private readonly authorizationService: AuthorizationService & {},
+    private readonly privileges: Privileges,
     private readonly repo: LocationRepository,
     private readonly files: FileService,
   ) {}
 
   async create(input: CreateLocation, session: Session): Promise<Location> {
-    await this.authorizationService.checkPower(Powers.CreateLocation, session);
+    this.privileges.for(session, Location).verifyCan('create');
     const checkName = await this.repo.doesNameExist(input.name);
     if (checkName) {
       throw new DuplicateException(
@@ -87,28 +85,14 @@ export class LocationService {
     dto: UnsecuredDto<Location>,
     session: Session,
   ): Promise<Location> {
-    const securedProps = await this.authorizationService.secureProperties(
-      Location,
-      dto,
-      session,
-    );
-
-    return {
-      ...dto,
-      ...securedProps,
-      canDelete: await this.repo.checkDeletePermission(dto.id, session),
-    };
+    return this.privileges.for(session, Location).secure(dto);
   }
 
   async update(input: UpdateLocation, session: Session): Promise<Location> {
     const location = await this.readOne(input.id, session);
 
     const changes = this.repo.getActualChanges(location, input);
-    await this.authorizationService.verifyCanEditChanges(
-      Location,
-      location,
-      changes,
-    );
+    this.privileges.for(session, Location, location).verifyChanges(changes);
 
     const {
       fundingAccountId,
@@ -202,32 +186,24 @@ export class LocationService {
     }
   }
 
-  async listLocationForResource<TResource extends ResourceShape<any>>(
-    label: TResource,
-    dto: TResource['prototype'],
-    rel: SecuredResourceKey<TResource>,
+  async listLocationForResource<TResourceStatic extends ResourceShape<any>>(
+    edge: UserEdgePrivileges<TResourceStatic, string, PropAction>,
+    dto: InstanceType<TResourceStatic>,
     input: LocationListInput,
-    session: Session,
   ): Promise<SecuredLocationList> {
-    const perms = await this.authorizationService.getPermissions({
-      resource: label,
-      sessionOrUserId: session,
-      dto,
-    });
-
     const results = await this.repo.listLocationsFromNodeNoSecGroups(
-      label.name,
-      rel,
+      edge.resource.dbLabel,
+      edge.key,
       dto.id,
       input,
     );
 
     return {
-      ...(perms[rel].canRead
-        ? await mapListResults(results, (dto) => this.secure(dto, session))
+      ...(edge.can('read')
+        ? await mapListResults(results, (dto) => this.secure(dto, edge.session))
         : SecuredList.Redacted),
-      canRead: perms[rel].canRead,
-      canCreate: perms[rel].canEdit,
+      canRead: edge.can('read'),
+      canCreate: edge.can('edit'),
     };
   }
 }

@@ -5,7 +5,6 @@ import { EthnoArtLoader } from './ethno-art.loader';
 import { EthnoArtRepository } from './ethno-art.repository';
 import { EthnoArtResolver } from './ethno-art.resolver';
 import { EthnoArtService } from './ethno-art.service';
-import * as migrations from './migrations';
 
 @Module({
   imports: [forwardRef(() => AuthorizationModule), ScriptureModule],
@@ -14,7 +13,6 @@ import * as migrations from './migrations';
     EthnoArtResolver,
     EthnoArtRepository,
     EthnoArtService,
-    ...Object.values(migrations),
   ],
   exports: [EthnoArtService],
 })

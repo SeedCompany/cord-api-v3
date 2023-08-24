@@ -7,7 +7,6 @@ import { LocationLoader } from './location.loader';
 import { LocationRepository } from './location.repository';
 import { LocationResolver } from './location.resolver';
 import { LocationService } from './location.service';
-import { AddLocationMapImageMigration } from './migrations/add-location-map-image.migration';
 
 @Module({
   imports: [
@@ -21,7 +20,6 @@ import { AddLocationMapImageMigration } from './migrations/add-location-map-imag
     LocationService,
     LocationRepository,
     LocationLoader,
-    AddLocationMapImageMigration,
   ],
   exports: [LocationService],
 })

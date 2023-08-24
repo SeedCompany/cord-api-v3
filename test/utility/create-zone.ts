@@ -7,41 +7,6 @@ import { fragments } from './fragments';
 import { gql } from './gql-tag';
 import { runAsAdmin } from './login';
 
-export async function listFieldZones(app: TestApp) {
-  const result = await app.graphql.mutate(
-    gql`
-      query {
-        fieldZones(input: {}) {
-          items {
-            ...fieldZone
-          }
-        }
-      }
-      ${fragments.fieldZone}
-    `,
-  );
-  const zones = result.fieldZones.items;
-  expect(zones).toBeTruthy();
-  return zones;
-}
-
-export async function readOneZone(app: TestApp, id: string) {
-  const result = await app.graphql.query(
-    gql`
-      query readOneZone($id: ID!) {
-        fieldZone(id: $id) {
-          ...fieldZone
-        }
-      }
-      ${fragments.fieldZone}
-    `,
-    { id },
-  );
-  const actual = result.fieldZone;
-  expect(actual).toBeTruthy();
-  return actual;
-}
-
 export async function createZone(
   app: TestApp,
   input: Partial<CreateFieldZone> = {},

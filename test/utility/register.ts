@@ -1,53 +1,12 @@
 import { faker } from '@faker-js/faker';
 import { generateId, isValidId } from '../../src/common';
 import { RegisterInput } from '../../src/components/authentication';
-import { Powers, Role } from '../../src/components/authorization';
+import { Role } from '../../src/components/authorization';
 import { User, UserStatus } from '../../src/components/user';
 import { TestApp } from './create-app';
 import { fragments, RawUser } from './fragments';
 import { gql } from './gql-tag';
 import { login, runAsAdmin, runInIsolatedSession } from './login';
-
-export async function readOneUser(app: TestApp, id: string) {
-  const result = await app.graphql.query(
-    gql`
-      query ReadUser($id: ID!) {
-        user(id: $id) {
-          ...user
-        }
-      }
-      ${fragments.user}
-    `,
-    { id },
-  );
-
-  const actual = result.user;
-  expect(actual).toBeTruthy();
-  expect(actual.id).toEqual(id);
-  // added because the permissions/dto are different from props read from graphql
-  actual.organization = actual.organizations;
-  actual.partner = actual.partners;
-  actual.unavailability = actual.unavailabilities;
-  return actual;
-}
-
-export async function listUsers(app: TestApp) {
-  const result = await app.graphql.mutate(
-    gql`
-      query {
-        users(input: {}) {
-          items {
-            ...user
-          }
-        }
-      }
-      ${fragments.user}
-    `,
-  );
-  const users = result.users.items;
-  expect(users).toBeTruthy();
-  return users;
-}
 
 export const generateRegisterInput = async (): Promise<RegisterInput> => ({
   ...(await generateRequireFieldsRegisterInput()),
@@ -174,16 +133,4 @@ export async function registerUser(
         return await execution();
       }),
   };
-}
-
-/**
- * @deprecated Use {@see registerUser} instead
- */
-export async function registerUserWithPower(
-  app: TestApp,
-  powers: Powers[],
-  input: Partial<RegisterInput> = {},
-): Promise<TestUser> {
-  const user = await registerUser(app, input);
-  return user;
 }

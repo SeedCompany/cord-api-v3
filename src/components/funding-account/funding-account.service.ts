@@ -12,8 +12,7 @@ import {
 } from '../../common';
 import { HandleIdLookup, ILogger, Logger } from '../../core';
 import { mapListResults } from '../../core/database/results';
-import { AuthorizationService } from '../authorization/authorization.service';
-import { Powers } from '../authorization/dto/powers';
+import { Privileges } from '../authorization';
 import {
   CreateFundingAccount,
   FundingAccount,
@@ -27,7 +26,7 @@ import { FundingAccountRepository } from './funding-account.repository';
 export class FundingAccountService {
   constructor(
     @Logger('funding-account:service') private readonly logger: ILogger,
-    private readonly authorizationService: AuthorizationService,
+    private readonly privileges: Privileges,
     private readonly repo: FundingAccountRepository,
   ) {}
 
@@ -35,10 +34,7 @@ export class FundingAccountService {
     input: CreateFundingAccount,
     session: Session,
   ): Promise<FundingAccount> {
-    await this.authorizationService.checkPower(
-      Powers.CreateFundingAccount,
-      session,
-    );
+    this.privileges.for(session, FundingAccount).verifyCan('create');
     if (!(await this.repo.isUnique(input.name))) {
       throw new DuplicateException(
         'fundingAccount.name',
@@ -92,16 +88,7 @@ export class FundingAccountService {
     dto: UnsecuredDto<FundingAccount>,
     session: Session,
   ): Promise<FundingAccount> {
-    const securedProps = await this.authorizationService.secureProperties(
-      FundingAccount,
-      dto,
-      session,
-    );
-    return {
-      ...dto,
-      ...securedProps,
-      canDelete: await this.repo.checkDeletePermission(dto.id, session),
-    };
+    return this.privileges.for(session, FundingAccount).secure(dto);
   }
 
   async update(
@@ -111,11 +98,9 @@ export class FundingAccountService {
     const fundingAccount = await this.readOne(input.id, session);
 
     const changes = this.repo.getActualChanges(fundingAccount, input);
-    await this.authorizationService.verifyCanEditChanges(
-      FundingAccount,
-      fundingAccount,
-      changes,
-    );
+    this.privileges
+      .for(session, FundingAccount, fundingAccount)
+      .verifyChanges(changes);
     return await this.repo.updateProperties(fundingAccount, changes);
   }
 
@@ -145,7 +130,7 @@ export class FundingAccountService {
     input: FundingAccountListInput,
     session: Session,
   ): Promise<FundingAccountListOutput> {
-    if (await this.authorizationService.canList(FundingAccount, session)) {
+    if (this.privileges.for(session, FundingAccount).can('read')) {
       const results = await this.repo.list(input, session);
       return await mapListResults(results, (dto) => this.secure(dto, session));
     } else {

@@ -22,14 +22,12 @@ import {
   createRelationships,
   matchChangesetAndChangedProps,
   matchProjectSens,
-  matchProps,
   matchPropsAndProjectSensAndScopedRoles,
   merge,
   paginate,
   requestingUser,
   sorting,
 } from '../../core/database/query';
-import { DbPropsOfDto } from '../../core/database/results';
 import { Privileges, Role } from '../authorization';
 import {
   CreateProject,
@@ -285,27 +283,6 @@ export class ProjectRepository extends CommonRepository {
         memberRoles: Role[][];
       }>();
     return await query.first();
-  }
-
-  async getChangesetProps(changeset: ID) {
-    const query = this.db
-      .query()
-      .match([
-        node('node', 'Project'),
-        relation('out', '', 'changeset', ACTIVE),
-        node('changeset', 'Changeset', { id: changeset }),
-      ])
-      .apply(matchProps({ view: { changeset }, optional: true }))
-      .return<{
-        props: Partial<DbPropsOfDto<Project>> & {
-          id: ID;
-          createdAt: DateTime;
-          type: ProjectType;
-        };
-      }>(['props']);
-
-    const result = await query.first();
-    return result?.props;
   }
 
   @OnIndex()

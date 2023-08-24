@@ -221,6 +221,7 @@ export class EngagementRepository extends CommonRepository {
     } = {
       ...mapFromList(CreateInternshipEngagement.Props, (k) => [k, undefined]),
       ...input,
+      methodologies: input.methodologies || [],
       status: input.status || EngagementStatus.InDevelopment,
       growthPlan: growthPlanId,
       initialEndDate: undefined,

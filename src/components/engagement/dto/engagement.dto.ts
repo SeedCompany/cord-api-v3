@@ -50,9 +50,14 @@ export type AnyEngagement = MergeExclusive<
 const ChangesetAwareResource: Type<Resource & ChangesetAware> =
   IntersectionType(Resource, ChangesetAware);
 
+export const resolveEngagementType = (val: Pick<AnyEngagement, '__typename'>) =>
+  val.__typename === 'LanguageEngagement'
+    ? LanguageEngagement
+    : InternshipEngagement;
+
 @RegisterResource()
 @InterfaceType({
-  resolveType: (val: AnyEngagement) => val.__typename,
+  resolveType: resolveEngagementType,
   implements: [Resource, ChangesetAware],
 })
 /**
@@ -157,6 +162,8 @@ export class LanguageEngagement extends Engagement {
     (m) => m.TranslationProject,
   );
 
+  declare readonly __typename: 'LanguageEngagement';
+
   @Field(() => TranslationProject)
   declare readonly parent: BaseNode;
 
@@ -195,6 +202,8 @@ export class InternshipEngagement extends Engagement {
   static readonly Parent = import('../../project/dto').then(
     (m) => m.InternshipProject,
   );
+
+  declare readonly __typename: 'InternshipEngagement';
 
   @Field(() => InternshipProject)
   declare readonly parent: BaseNode;
