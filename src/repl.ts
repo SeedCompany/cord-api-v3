@@ -3,6 +3,7 @@ import { NestFactory } from '@nestjs/core';
 import { assignToObject } from '@nestjs/core/repl/assign-to-object.util.js';
 import { ReplContext } from '@nestjs/core/repl/repl-context.js';
 import { bufferFromStream } from '@seedcompany/common';
+import * as fs from 'fs';
 import { mkdir } from 'fs/promises';
 // eslint-disable-next-line no-restricted-imports
 import * as lodash from 'lodash';
@@ -32,6 +33,7 @@ async function bootstrap() {
     '~/core'
   );
   const { AuthenticationService } = await import('./components/authentication');
+  const { Pnp } = await import('./components/pnp');
 
   const app = await NestFactory.createApplicationContext(AppModule, {
     abortOnError: false,
@@ -63,6 +65,7 @@ async function bootstrap() {
       roles: [`global:${role}`],
     }),
     Resources,
+    loadPnp: (filepath: string) => Pnp.fromBuffer(fs.readFileSync(filepath)),
   });
 
   if (!process.stdin.isTTY) {
