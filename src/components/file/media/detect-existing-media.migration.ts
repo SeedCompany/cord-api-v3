@@ -21,9 +21,16 @@ export class DetectExistingMediaMigration extends BaseMigration {
     const fileService = this.moduleRef.get(FileService, { strict: false });
     await asyncPool(5, this.grabFileVersionsToDetect(), async (f) => {
       this.logger.info('Detecting', f);
-      const d = fileService.asDownloadable(f, f.file);
-      const result = await this.mediaService.detectAndSave(d);
-      this.logger.info('Detected and saved media', { ...f, ...(result ?? {}) });
+      try {
+        const d = fileService.asDownloadable(f, f.file);
+        const result = await this.mediaService.detectAndSave(d);
+        this.logger.info('Detected and saved media', {
+          ...f,
+          ...(result ?? {}),
+        });
+      } catch (e) {
+        this.logger.error('Failed to detect media', { ...f, exception: e });
+      }
     });
   }
 
