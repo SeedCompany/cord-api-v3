@@ -8,7 +8,7 @@ import { FileVersion } from '../dto';
 import { FileService } from '../file.service';
 import { MediaService } from './media.service';
 
-@Migration('2023-08-16T15:00:00')
+@Migration('2023-08-24T15:00:00')
 export class DetectExistingMediaMigration extends BaseMigration {
   constructor(
     private readonly mediaService: MediaService,
@@ -20,15 +20,16 @@ export class DetectExistingMediaMigration extends BaseMigration {
   async up() {
     const fileService = this.moduleRef.get(FileService, { strict: false });
     await asyncPool(5, this.grabFileVersionsToDetect(), async (f) => {
+      this.logger.info('Detecting', f);
       const d = fileService.asDownloadable(f, f.file);
-      await this.mediaService.detectAndSave(d);
-      this.logger.info('Detected and saved media', { file: f.file });
+      const result = await this.mediaService.detectAndSave(d);
+      this.logger.info('Detected and saved media', { ...f, ...(result ?? {}) });
     });
   }
 
   private async *grabFileVersionsToDetect() {
     let page = 0;
-    const size = 1000;
+    const size = 100;
     do {
       this.logger.info(`Grabbing page of files to detect ${page}`);
 
@@ -40,9 +41,10 @@ export class DetectExistingMediaMigration extends BaseMigration {
           node('mt', 'Property'),
         ])
         .raw(
-          `where mt.value starts with 'video/'
+          `where not (fv)-[:media]->(:Media)
+            and (mt.value starts with 'video/'
               or mt.value starts with 'audio/'
-              or mt.value starts with 'image/'`,
+              or mt.value starts with 'image/')`,
         )
         .return<{ file: IdOf<FileVersion>; mimeType: string }>(
           'fv.id as file, mt.value as mimeType',

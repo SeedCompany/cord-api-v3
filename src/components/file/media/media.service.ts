@@ -16,9 +16,9 @@ export class MediaService {
   async detectAndSave(input: Downloadable<Except<Media, 'id' | '__typename'>>) {
     const media = await this.detector.detect(input);
     if (!media) {
-      return;
+      return null;
     }
-    await this.repo.create({ ...input, ...media });
+    return await this.repo.create({ ...input, ...media });
   }
 
   async updateUserMetadata(
