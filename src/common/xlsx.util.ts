@@ -1,3 +1,4 @@
+import { nonEnumerable } from '@seedcompany/common';
 import { Iterable } from 'ix';
 import { LazyGetter as Once } from 'lazy-get-decorator';
 import { assert } from 'ts-essentials';
@@ -17,6 +18,7 @@ export class WorkBook {
   private readonly sheets: Record<string, Sheet> = {};
   protected constructor(book: LibWorkBook | WorkBook) {
     this.book = book instanceof WorkBook ? book.book : book;
+    nonEnumerable(this, 'book' as any, 'sheets' as any);
   }
 
   static fromBuffer(buffer: Buffer) {
@@ -85,6 +87,7 @@ export class Sheet {
         throw new Error(`Cannot find ${this.name} sheet`);
       }
     }
+    nonEnumerable(this, 'workbook' as any, 'sheet' as any);
   }
 
   @Once() get hidden() {
@@ -203,7 +206,9 @@ export class Cell<TSheet extends Sheet = Sheet> {
     private readonly libSheet: WorkSheet,
     private readonly cell: CellObject | undefined,
     readonly address: CellAddress,
-  ) {}
+  ) {
+    nonEnumerable(this, 'libSheet' as any);
+  }
 
   @Once() get row() {
     return this.sheet.row(this.address.r + 1);
