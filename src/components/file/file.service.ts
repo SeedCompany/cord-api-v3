@@ -4,7 +4,6 @@ import {
 } from '@aws-sdk/client-s3';
 import { Injectable } from '@nestjs/common';
 import { bufferFromStream, cleanJoin, Nil } from '@seedcompany/common';
-import { Connection } from 'cypher-query-builder';
 import { fileTypeFromStream } from 'file-type';
 import { intersection } from 'lodash';
 import { Duration } from 'luxon';
@@ -23,7 +22,13 @@ import {
   UnauthorizedException,
 } from '~/common';
 import { withAddedPath } from '~/common/url.util';
-import { ConfigService, IEventBus, ILogger, Logger } from '~/core';
+import {
+  ConfigService,
+  IEventBus,
+  ILogger,
+  Logger,
+  RollbackManager,
+} from '~/core';
 import { FileBucket } from './bucket';
 import {
   CreateDefinedFileVersionInput,
@@ -56,7 +61,7 @@ export class FileService {
   constructor(
     private readonly bucket: FileBucket,
     private readonly repo: FileRepository,
-    private readonly db: Connection,
+    private readonly rollbacks: RollbackManager,
     private readonly config: ConfigService,
     private readonly mediaService: MediaService,
     private readonly eventBus: IEventBus,
@@ -384,28 +389,17 @@ export class FileService {
     if (existingUpload.status === 'rejected') {
       await this.bucket.moveObject(`temp/${uploadId}`, uploadId);
 
-      // A bit of a hacky way to move files back to the temp/ folder on
-      // mutation error / transaction rollback. This prevents orphaned files in bucket.
-      const tx = this.db.currentTransaction;
-      // The mutation can be retried multiple times, when neo4j deems the error
-      // is retry-able, but we only want to attach this rollback logic once.
-      if (tx && !(tx as any).__S3_ROLLBACK) {
-        (tx as any).__S3_ROLLBACK = true;
-
-        const orig = tx.rollback.bind(tx);
-        tx.rollback = async () => {
-          // Undo above operation by moving it back to temp folder.
-          await this.bucket
-            .moveObject(uploadId, `temp/${uploadId}`)
-            .catch((e) => {
-              this.logger.error('Failed to move file back to temp holding', {
-                uploadId,
-                exception: e,
-              });
+      // Undo the above operation by moving it back to temp folder.
+      this.rollbacks.add(async () => {
+        await this.bucket
+          .moveObject(uploadId, `temp/${uploadId}`)
+          .catch((e) => {
+            this.logger.error('Failed to move file back to temp holding', {
+              uploadId,
+              exception: e,
             });
-          await orig();
-        };
-      }
+          });
+      });
     }
 
     await this.mediaService.detectAndSave(fv, media);

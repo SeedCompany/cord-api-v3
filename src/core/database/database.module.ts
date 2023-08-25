@@ -9,6 +9,7 @@ import { DatabaseService } from './database.service';
 import { IndexerModule } from './indexer/indexer.module';
 import { MigrationModule } from './migration/migration.module';
 import { ParameterTransformer } from './parameter-transformer.service';
+import { RollbackManager } from './rollback-manager';
 import { TransactionalMutationsInterceptor } from './transactional-mutations.interceptor';
 
 @Module({
@@ -18,8 +19,9 @@ import { TransactionalMutationsInterceptor } from './transactional-mutations.int
     DatabaseService,
     ParameterTransformer,
     { provide: APP_INTERCEPTOR, useClass: TransactionalMutationsInterceptor },
+    RollbackManager,
   ],
-  exports: [CypherFactory, DatabaseService, IndexerModule],
+  exports: [CypherFactory, DatabaseService, IndexerModule, RollbackManager],
 })
 export class DatabaseModule implements OnApplicationShutdown {
   constructor(
