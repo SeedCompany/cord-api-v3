@@ -81,7 +81,6 @@ export class MediaDetector {
               'pipe:0',
             ],
             {
-              reject: false,
               input: stream,
               timeout: 10_000,
             },
