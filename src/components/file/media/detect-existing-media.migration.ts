@@ -1,5 +1,4 @@
 import { ModuleRef } from '@nestjs/core';
-import { asyncPool } from '@seedcompany/common';
 import { node, relation } from 'cypher-query-builder';
 import { IdOf } from '~/common';
 import { BaseMigration, Migration } from '~/core/database';
@@ -32,9 +31,11 @@ export class DetectExistingMediaMigration extends BaseMigration {
         this.logger.error('Failed to detect media', { ...f, exception: e });
       }
     };
-    await asyncPool(5, this.grabFileVersionsToDetect('image'), detect);
-    await asyncPool(1, this.grabFileVersionsToDetect('audio'), detect);
-    await asyncPool(1, this.grabFileVersionsToDetect('video'), detect);
+    for (const type of ['image', 'audio', 'video'] as const) {
+      for await (const file of this.grabFileVersionsToDetect(type)) {
+        await detect(file);
+      }
+    }
   }
 
   private async *grabFileVersionsToDetect(type: string) {
