@@ -4,7 +4,6 @@ import { execa } from 'execa';
 import { FFProbeResult } from 'ffprobe';
 import { imageSize } from 'image-size';
 import { ISize as ImageSize } from 'image-size/dist/types/interface';
-import { EPIPE } from 'node:constants';
 import { Readable } from 'stream';
 import { Except } from 'type-fest';
 import { retry } from '~/common/retry';
@@ -92,7 +91,7 @@ export class MediaDetector {
           // However, NodeJS converts/interrupts this as an EPIPE error.
           // https://github.com/sindresorhus/execa/issues/474#issuecomment-1640423498
           // I'm confused about positive vs negative exit codes, hence the abs.
-          if (probe instanceof Error && Math.abs(probe.exitCode) !== EPIPE) {
+          if (probe instanceof Error && (probe as any).code !== 'EPIPE') {
             throw probe;
           }
           return JSON.parse(probe.stdout);
