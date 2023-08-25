@@ -4,6 +4,7 @@ import { execa } from 'execa';
 import { FFProbeResult } from 'ffprobe';
 import { imageSize } from 'image-size';
 import { ISize as ImageSize } from 'image-size/dist/types/interface';
+import { EPIPE } from 'node:constants';
 import { Readable } from 'stream';
 import { Except } from 'type-fest';
 import { retry } from '~/common/retry';
@@ -68,7 +69,7 @@ export class MediaDetector {
     try {
       return await retry(
         async () => {
-          const { stdout } = await execa(
+          const probe = await execa(
             ffprobeBinary.path,
             [
               '-v',
@@ -81,11 +82,21 @@ export class MediaDetector {
               'pipe:0',
             ],
             {
+              reject: false, // just return error instead of throwing
               input: stream,
               timeout: 10_000,
             },
           );
-          return JSON.parse(stdout);
+          // Ffprobe stops reading stdin & exits as soon as it has enough info.
+          // This causes the input stream to SIGPIPE error.
+          // In shells, this is normal and does not result in an error.
+          // However, NodeJS converts/interrupts this as an EPIPE error.
+          // https://github.com/sindresorhus/execa/issues/474#issuecomment-1640423498
+          // I'm confused about positive vs negative exit codes, hence the abs.
+          if (probe instanceof Error && Math.abs(probe.exitCode) === EPIPE) {
+            throw probe;
+          }
+          return JSON.parse(probe.stdout);
         },
         {
           retries: 2,
