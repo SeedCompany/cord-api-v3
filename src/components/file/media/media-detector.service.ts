@@ -6,11 +6,15 @@ import { imageSize } from 'image-size';
 import { ISize as ImageSize } from 'image-size/dist/types/interface';
 import { Readable } from 'stream';
 import { Except } from 'type-fest';
+import { retry } from '~/common/retry';
+import { ILogger, Logger } from '~/core';
 import { Downloadable } from '../dto';
 import { AnyMedia, Media } from './media.dto';
 
 @Injectable()
 export class MediaDetector {
+  constructor(@Logger('media:detector') private readonly logger: ILogger) {}
+
   async detect(
     file: Downloadable<{ mimeType: string }>,
   ): Promise<Except<AnyMedia, Exclude<keyof Media, '__typename'>> | null> {
@@ -61,26 +65,38 @@ export class MediaDetector {
   }
 
   private async ffprobe(stream: Readable): Promise<Partial<FFProbeResult>> {
-    const { stdout } = await execa(
-      ffprobeBinary.path,
-      [
-        '-v',
-        'quiet',
-        '-print_format',
-        'json',
-        '-show_format',
-        '-show_streams',
-        '-i',
-        'pipe:0',
-      ],
-      {
-        reject: false,
-        input: stream,
-      },
-    );
     try {
-      return JSON.parse(stdout);
-    } catch {
+      return await retry(
+        async () => {
+          const { stdout } = await execa(
+            ffprobeBinary.path,
+            [
+              '-v',
+              'quiet',
+              '-print_format',
+              'json',
+              '-show_format',
+              '-show_streams',
+              '-i',
+              'pipe:0',
+            ],
+            {
+              reject: false,
+              input: stream,
+              timeout: 10_000,
+            },
+          );
+          return JSON.parse(stdout);
+        },
+        {
+          retries: 2,
+          onFailedAttempt: (exception) => {
+            const level = exception.retriesLeft > 0 ? 'warning' : 'error';
+            this.logger[level]('ffprobe failed', { exception });
+          },
+        },
+      );
+    } catch (e) {
       return {};
     }
   }
