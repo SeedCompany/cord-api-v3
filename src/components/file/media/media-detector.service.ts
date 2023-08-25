@@ -92,7 +92,7 @@ export class MediaDetector {
           // However, NodeJS converts/interrupts this as an EPIPE error.
           // https://github.com/sindresorhus/execa/issues/474#issuecomment-1640423498
           // I'm confused about positive vs negative exit codes, hence the abs.
-          if (probe instanceof Error && Math.abs(probe.exitCode) === EPIPE) {
+          if (probe instanceof Error && Math.abs(probe.exitCode) !== EPIPE) {
             throw probe;
           }
           return JSON.parse(probe.stdout);
