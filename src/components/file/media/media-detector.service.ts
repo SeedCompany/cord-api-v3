@@ -6,11 +6,15 @@ import { imageSize } from 'image-size';
 import { ISize as ImageSize } from 'image-size/dist/types/interface';
 import { Readable } from 'stream';
 import { Except } from 'type-fest';
+import { retry } from '~/common/retry';
+import { ILogger, Logger } from '~/core';
 import { Downloadable } from '../dto';
 import { AnyMedia, Media } from './media.dto';
 
 @Injectable()
 export class MediaDetector {
+  constructor(@Logger('media:detector') private readonly logger: ILogger) {}
+
   async detect(
     file: Downloadable<{ mimeType: string }>,
   ): Promise<Except<AnyMedia, Exclude<keyof Media, '__typename'>> | null> {
@@ -61,26 +65,48 @@ export class MediaDetector {
   }
 
   private async ffprobe(stream: Readable): Promise<Partial<FFProbeResult>> {
-    const { stdout } = await execa(
-      ffprobeBinary.path,
-      [
-        '-v',
-        'quiet',
-        '-print_format',
-        'json',
-        '-show_format',
-        '-show_streams',
-        '-i',
-        'pipe:0',
-      ],
-      {
-        reject: false,
-        input: stream,
-      },
-    );
     try {
-      return JSON.parse(stdout);
-    } catch {
+      return await retry(
+        async () => {
+          const probe = await execa(
+            ffprobeBinary.path,
+            [
+              '-print_format',
+              'json',
+              '-show_format',
+              '-show_streams',
+              '-i',
+              'pipe:0',
+            ],
+            {
+              reject: false, // just return error instead of throwing
+              input: stream,
+              timeout: 10_000,
+            },
+          );
+          this.logger.info('ffprobe result', probe);
+          // Ffprobe stops reading stdin & exits as soon as it has enough info.
+          // This causes the input stream to SIGPIPE error.
+          // In shells, this is normal and does not result in an error.
+          // However, NodeJS converts/interrupts this as an EPIPE error.
+          // https://github.com/sindresorhus/execa/issues/474#issuecomment-1640423498
+          if (probe instanceof Error && (probe as any).code !== 'EPIPE') {
+            throw probe;
+          }
+          if (probe.stdout.trim() === '') {
+            return {};
+          }
+          return JSON.parse(probe.stdout);
+        },
+        {
+          retries: 2,
+          onFailedAttempt: (exception) => {
+            const level = exception.retriesLeft > 0 ? 'warning' : 'error';
+            this.logger[level]('ffprobe failed', { exception });
+          },
+        },
+      );
+    } catch (e) {
       return {};
     }
   }

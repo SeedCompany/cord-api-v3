@@ -1,5 +1,4 @@
 import { ModuleRef } from '@nestjs/core';
-import { asyncPool } from '@seedcompany/common';
 import { node, relation } from 'cypher-query-builder';
 import { IdOf } from '~/common';
 import { BaseMigration, Migration } from '~/core/database';
@@ -19,15 +18,27 @@ export class DetectExistingMediaMigration extends BaseMigration {
 
   async up() {
     const fileService = this.moduleRef.get(FileService, { strict: false });
-    await asyncPool(5, this.grabFileVersionsToDetect(), async (f) => {
+    const detect = async (f: Row) => {
       this.logger.info('Detecting', f);
-      const d = fileService.asDownloadable(f, f.file);
-      const result = await this.mediaService.detectAndSave(d);
-      this.logger.info('Detected and saved media', { ...f, ...(result ?? {}) });
-    });
+      try {
+        const d = fileService.asDownloadable(f, f.file);
+        const result = await this.mediaService.detectAndSave(d);
+        this.logger.info('Detected and saved media', {
+          ...f,
+          ...(result ?? {}),
+        });
+      } catch (e) {
+        this.logger.error('Failed to detect media', { ...f, exception: e });
+      }
+    };
+    for (const type of ['image', 'audio', 'video'] as const) {
+      for await (const file of this.grabFileVersionsToDetect(type)) {
+        await detect(file);
+      }
+    }
   }
 
-  private async *grabFileVersionsToDetect() {
+  private async *grabFileVersionsToDetect(type: string) {
     let page = 0;
     const size = 100;
     do {
@@ -42,13 +53,9 @@ export class DetectExistingMediaMigration extends BaseMigration {
         ])
         .raw(
           `where not (fv)-[:media]->(:Media)
-            and (mt.value starts with 'video/'
-              or mt.value starts with 'audio/'
-              or mt.value starts with 'image/')`,
+            and mt.value starts with '${type}/'`,
         )
-        .return<{ file: IdOf<FileVersion>; mimeType: string }>(
-          'fv.id as file, mt.value as mimeType',
-        )
+        .return<Row>('fv.id as file, mt.value as mimeType')
         .orderBy('fv.createdAt')
         .skip(page * size)
         .limit(size)
@@ -62,4 +69,9 @@ export class DetectExistingMediaMigration extends BaseMigration {
       // eslint-disable-next-line no-constant-condition
     } while (true);
   }
+}
+
+interface Row {
+  file: IdOf<FileVersion>;
+  mimeType: string;
 }
