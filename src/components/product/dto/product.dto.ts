@@ -261,6 +261,14 @@ export const asProductType =
     return product as any;
   };
 
+declare module '../dto/producible.dto' {
+  interface ProducibleTypeEntries {
+    DirectScriptureProduct: true;
+    DerivativeScriptureProduct: true;
+    OtherProduct: true;
+  }
+}
+
 declare module '~/core/resources/map' {
   interface ResourceMap {
     Product: typeof Product;

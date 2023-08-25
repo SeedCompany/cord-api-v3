@@ -1,70 +1,41 @@
 import { Field, ObjectType, registerEnumType } from '@nestjs/graphql';
-import { partition } from 'lodash';
-import { SecuredEnum } from '../../../common';
+import { setOf } from '@seedcompany/common';
+import { EnumType, makeEnum, SecuredEnum } from '~/common';
 
-export enum EngagementStatus {
-  InDevelopment = 'InDevelopment',
-  DidNotDevelop = 'DidNotDevelop',
-  Rejected = 'Rejected',
-
-  Active = 'Active',
-
-  DiscussingTermination = 'DiscussingTermination',
-  DiscussingReactivation = 'DiscussingReactivation',
-  DiscussingChangeToPlan = 'DiscussingChangeToPlan',
-  DiscussingSuspension = 'DiscussingSuspension',
-
-  FinalizingCompletion = 'FinalizingCompletion',
-  ActiveChangedPlan = 'ActiveChangedPlan',
-  Suspended = 'Suspended',
-
-  Terminated = 'Terminated',
-  Completed = 'Completed',
-
-  /** @deprecated Legacy */
-  Converted = 'Converted',
-  /** @deprecated Legacy */
-  Unapproved = 'Unapproved',
-  /** @deprecated Legacy */
-  Transferred = 'Transferred',
-  /** @deprecated Legacy */
-  NotRenewed = 'NotRenewed',
-}
-
-const EngagementStatusTerminalMap: Record<EngagementStatus, boolean> = {
-  [EngagementStatus.InDevelopment]: false,
-  [EngagementStatus.DidNotDevelop]: true,
-  [EngagementStatus.Active]: false,
-  [EngagementStatus.DiscussingTermination]: false,
-  [EngagementStatus.DiscussingReactivation]: false,
-  [EngagementStatus.DiscussingChangeToPlan]: false,
-  [EngagementStatus.DiscussingSuspension]: false,
-  [EngagementStatus.FinalizingCompletion]: false,
-  [EngagementStatus.ActiveChangedPlan]: false,
-  [EngagementStatus.Suspended]: false,
-  [EngagementStatus.Terminated]: true,
-  [EngagementStatus.Completed]: true,
-  [EngagementStatus.Converted]: true,
-  [EngagementStatus.Unapproved]: true,
-  [EngagementStatus.Transferred]: true,
-  [EngagementStatus.NotRenewed]: true,
-  [EngagementStatus.Rejected]: true,
-};
-
-export const [TerminalEngagementStatuses, OngoingEngagementStatuses] =
-  partition(
-    Object.keys(EngagementStatusTerminalMap) as EngagementStatus[],
-    (k) => EngagementStatusTerminalMap[k],
-  );
-
-registerEnumType(EngagementStatus, {
+export type EngagementStatus = EnumType<typeof EngagementStatus>;
+export const EngagementStatus = makeEnum({
   name: 'EngagementStatus',
-  valuesMap: {
-    Converted: { deprecationReason: 'Legacy. Only used in historic data.' },
-    Unapproved: { deprecationReason: 'Legacy. Only used in historic data.' },
-    Transferred: { deprecationReason: 'Legacy. Only used in historic data.' },
-    NotRenewed: { deprecationReason: 'Legacy. Only used in historic data.' },
-  },
+  values: [
+    'InDevelopment',
+    { value: 'DidNotDevelop', terminal: true },
+    { value: 'Rejected', terminal: true },
+
+    'Active',
+
+    'DiscussingTermination',
+    'DiscussingReactivation',
+    'DiscussingChangeToPlan',
+    'DiscussingSuspension',
+
+    'FinalizingCompletion',
+    'ActiveChangedPlan',
+    'Suspended',
+
+    { value: 'Terminated', terminal: true },
+    { value: 'Completed', terminal: true },
+
+    ...(['Converted', 'Unapproved', 'Transferred', 'NotRenewed'] as const).map(
+      (value) => ({
+        value,
+        terminal: true,
+        deprecationReason: 'Legacy. Only used in historic data.',
+      }),
+    ),
+  ],
+  extra: ({ entries }) => ({
+    Terminal: setOf(entries.flatMap((v) => (v.terminal ? [v.value] : []))),
+    Ongoing: setOf(entries.flatMap((v) => (!v.terminal ? [v.value] : []))),
+  }),
 });
 
 @ObjectType({

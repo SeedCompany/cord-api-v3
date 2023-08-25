@@ -11,6 +11,7 @@ import { stripIndent } from 'common-tags';
 import { GraphQLBoolean, GraphQLScalarType, GraphQLString } from 'graphql';
 import { isObject } from 'lodash';
 import { Class, ConditionalKeys, ConditionalPick } from 'type-fest';
+import { MadeEnum } from './make-enum';
 import { ISecured } from './secured.interface';
 import { AbstractClassType } from './types';
 
@@ -89,7 +90,7 @@ export function SecuredEnum<
   EnumValue extends string,
   Nullable extends boolean | undefined = false,
 >(
-  valueClass: { [key in T]: EnumValue },
+  valueClass: { [key in T]: EnumValue } | MadeEnum<EnumValue>,
   options: SecuredPropertyOptions<Nullable> = {},
 ) {
   return InnerSecuredProperty<any, EnumValue, Nullable>(valueClass, options);
@@ -165,7 +166,7 @@ export function SecuredEnumList<
   EnumValue extends string,
   Nullable extends boolean | undefined = false,
 >(
-  valueClass: { [key in T]: EnumValue },
+  valueClass: { [key in T]: EnumValue } | MadeEnum<EnumValue>,
   options: SecuredPropertyOptions<Nullable> = {},
 ) {
   return SecuredList<EnumValue, EnumValue, Nullable>(

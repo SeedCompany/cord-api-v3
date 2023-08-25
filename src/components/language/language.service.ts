@@ -1,4 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { setHas, setOf } from '@seedcompany/common';
 import { compact } from 'lodash';
 import {
   CalendarDate,
@@ -255,17 +256,18 @@ export class LanguageService {
           this.engagementService.readOne(engagementId, session),
         ),
       );
+      const statusesToIgnore = setOf([
+        EngagementStatus.InDevelopment,
+        EngagementStatus.DidNotDevelop,
+        EngagementStatus.Unapproved,
+        EngagementStatus.Rejected,
+      ]);
       const dates = compact(
         engagments
           .filter(
             (engagement) =>
               engagement.status.value &&
-              ![
-                EngagementStatus.InDevelopment,
-                EngagementStatus.DidNotDevelop,
-                EngagementStatus.Unapproved,
-                EngagementStatus.Rejected,
-              ].includes(engagement.status.value),
+              !setHas(statusesToIgnore, engagement.status.value),
           )
           .map((engagement) => engagement.startDate.value),
       );
