@@ -72,8 +72,6 @@ export class MediaDetector {
           const probe = await execa(
             ffprobeBinary.path,
             [
-              '-v',
-              'quiet',
               '-print_format',
               'json',
               '-show_format',
@@ -87,6 +85,7 @@ export class MediaDetector {
               timeout: 10_000,
             },
           );
+          this.logger.info('ffprobe result', probe);
           // Ffprobe stops reading stdin & exits as soon as it has enough info.
           // This causes the input stream to SIGPIPE error.
           // In shells, this is normal and does not result in an error.
