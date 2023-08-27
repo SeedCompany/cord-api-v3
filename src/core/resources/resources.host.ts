@@ -81,6 +81,11 @@ export class ResourcesHost {
   }
 
   async enhance(ref: ResourceLike) {
+    // Safety check, since this very dynamic code, it's very possible the types are lying.
+    // @eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    if (ref == null) {
+      throw new ServerException('Resource reference is actually null');
+    }
     return typeof ref === 'string'
       ? await this.getByDynamicName(ref)
       : EnhancedResource.of(ref);
