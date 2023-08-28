@@ -132,8 +132,8 @@ export class SessionInterceptor implements NestInterceptor {
 }
 
 const assertValidRole = (role: string): Role => {
-  if (Role.all.has(role as Role)) {
-    return role as Role;
+  if (Role.has(role)) {
+    return role;
   }
   throw new InputException(
     `Invalid role "${role}" from "X-CORD-Impersonate-Role" header`,

@@ -18,7 +18,8 @@ import { CreatePost, Post, Postable, UpdatePost } from './dto';
 import { PostListInput, SecuredPostList } from './dto/list-posts.dto';
 import { PostRepository } from './post.repository';
 
-type PostableRef = ID | BaseNode | Postable;
+type ConcretePostable = Postable & { __typename: string };
+type PostableRef = ID | BaseNode | ConcretePostable;
 
 @Injectable()
 export class PostService {
@@ -93,7 +94,7 @@ export class PostService {
   }
 
   async securedList(
-    parent: Postable & Resource,
+    parent: ConcretePostable & Resource,
     input: PostListInput,
     session: Session,
   ): Promise<SecuredPostList> {
@@ -125,7 +126,7 @@ export class PostService {
     return this.privileges.for(session, parentType, parent).forEdge('posts');
   }
 
-  private async loadPostable(resource: PostableRef): Promise<Postable> {
+  private async loadPostable(resource: PostableRef): Promise<ConcretePostable> {
     const parentNode = isIdLike(resource)
       ? await this.repo.getBaseNode(resource, Resource)
       : resource;
@@ -133,7 +134,7 @@ export class PostService {
       throw new NotFoundException('Resource does not exist', 'resourceId');
     }
     const parent = isBaseNode(parentNode)
-      ? ((await this.resources.loadByBaseNode(parentNode)) as Postable)
+      ? ((await this.resources.loadByBaseNode(parentNode)) as ConcretePostable)
       : parentNode;
 
     try {

@@ -1,10 +1,8 @@
-import { registerEnumType } from '@nestjs/graphql';
+import { EnumType, makeEnum } from './make-enum';
 
-export enum Order {
-  ASC = 'ASC',
-  DESC = 'DESC',
-}
-registerEnumType(Order, {
+export type Order = EnumType<typeof Order>;
+export const Order = makeEnum({
   name: 'Order',
   description: 'A sort order either ascending or descending',
+  values: ['ASC', 'DESC'],
 });

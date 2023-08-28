@@ -1,14 +1,11 @@
-import {
-  Field,
-  InterfaceType,
-  ObjectType,
-  registerEnumType,
-} from '@nestjs/graphql';
+import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { SetDbType } from '~/core/database';
 import { RegisterResource } from '~/core/resources';
 import {
+  EnumType,
+  makeEnum,
   Resource,
   SecuredProperty,
   SecuredProps,
@@ -41,17 +38,15 @@ export abstract class Producible extends Resource {
     SetChangeType<'scriptureReferences', readonly ScriptureRangeInput[]>;
 }
 
-// Augment this enum with each implementation of Producible
-// via declaration merging
-export enum ProducibleType {
-  DirectScriptureProduct = 'DirectScriptureProduct',
-  DerivativeScriptureProduct = 'DerivativeScriptureProduct',
-  OtherProduct = 'OtherProduct',
-}
-
-registerEnumType(ProducibleType, {
+export type ProducibleType = EnumType<typeof ProducibleType>;
+export const ProducibleType = makeEnum({
   name: 'ProducibleType',
+  values: keysOf<ProducibleTypeEntries>(),
 });
+
+// Augment this with each implementation of Producible via declaration merging
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface ProducibleTypeEntries {}
 
 export type ProducibleRef = UnsecuredDto<Producible> & {
   __typename: ProducibleType;

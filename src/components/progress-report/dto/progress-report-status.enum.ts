@@ -1,18 +1,18 @@
-import { ObjectType, registerEnumType } from '@nestjs/graphql';
-import { exposeSrcOrder, SecuredEnum } from '~/common';
+import { ObjectType } from '@nestjs/graphql';
+import { EnumType, makeEnum, SecuredEnum } from '~/common';
 
-export enum ProgressReportStatus {
-  NotStarted = 'NotStarted',
-  InProgress = 'InProgress',
-  PendingTranslation = 'PendingTranslation',
-  InReview = 'InReview',
-  Approved = 'Approved',
-  Published = 'Published',
-}
-
-registerEnumType(ProgressReportStatus, {
+export type ProgressReportStatus = EnumType<typeof ProgressReportStatus>;
+export const ProgressReportStatus = makeEnum({
   name: 'ProgressReportStatus',
-  valuesMap: exposeSrcOrder(ProgressReportStatus),
+  values: [
+    'NotStarted',
+    'InProgress',
+    'PendingTranslation',
+    'InReview',
+    'Approved',
+    'Published',
+  ],
+  exposeOrder: true,
 });
 
 @ObjectType()

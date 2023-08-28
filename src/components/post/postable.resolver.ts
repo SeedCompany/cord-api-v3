@@ -1,4 +1,5 @@
-import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
+import { Info, Parent, ResolveField, Resolver } from '@nestjs/graphql';
+import { GraphQLResolveInfo } from 'graphql';
 import { ListArg, LoggedInSession, Resource, Session } from '~/common';
 import { Loader, LoaderOf } from '~/core';
 import { Postable } from './dto';
@@ -14,13 +15,17 @@ export class PostableResolver {
     description: 'List of posts belonging to the parent node.',
   })
   async posts(
+    @Info() info: GraphQLResolveInfo,
     @Parent() parent: Postable & Resource,
     @ListArg(PostListInput) input: PostListInput,
     @LoggedInSession() session: Session,
     @Loader(PostLoader) posts: LoaderOf<PostLoader>,
   ): Promise<SecuredPostList> {
     const list = await this.service.securedList(
-      parent,
+      {
+        ...parent,
+        __typename: info.parentType.name,
+      },
       {
         ...input,
         filter: {
