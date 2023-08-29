@@ -1547,16 +1547,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ffprobe-installer/ffprobe@npm:^2.1.1":
-  version: 2.1.1
-  resolution: "@ffprobe-installer/ffprobe@npm:2.1.1"
+"@ffprobe-installer/ffprobe@npm:^2.1.2":
+  version: 2.1.2
+  resolution: "@ffprobe-installer/ffprobe@npm:2.1.2"
   dependencies:
     "@ffprobe-installer/darwin-arm64": 5.0.1
     "@ffprobe-installer/darwin-x64": 5.1.0
-    "@ffprobe-installer/linux-arm": 5.1.0
-    "@ffprobe-installer/linux-arm64": 5.1.0
-    "@ffprobe-installer/linux-ia32": 5.1.0
-    "@ffprobe-installer/linux-x64": 5.1.0
+    "@ffprobe-installer/linux-arm": 5.2.0
+    "@ffprobe-installer/linux-arm64": 5.2.0
+    "@ffprobe-installer/linux-ia32": 5.2.0
+    "@ffprobe-installer/linux-x64": 5.2.0
     "@ffprobe-installer/win32-ia32": 5.1.0
     "@ffprobe-installer/win32-x64": 5.1.0
   dependenciesMeta:
@@ -1576,34 +1576,34 @@ __metadata:
       optional: true
     "@ffprobe-installer/win32-x64":
       optional: true
-  checksum: cbd74b8840257b710296683c3255515282c51c5ab88491490722aeb1789921e97a95634c81a47545dccee21b0d37d2e2e18449dd2da23ef163bc8fb714593de4
+  checksum: 46aa1533ab4d0aa9d7cac3008086aa6ba0979d0293fa5b58c4958d2b8f015f28f75278e73a5b47dbf9ca7fc0830a7c01fecbe2c8ed82a720e315560a32cb76c4
   languageName: node
   linkType: hard
 
-"@ffprobe-installer/linux-arm64@npm:5.1.0":
-  version: 5.1.0
-  resolution: "@ffprobe-installer/linux-arm64@npm:5.1.0"
+"@ffprobe-installer/linux-arm64@npm:5.2.0":
+  version: 5.2.0
+  resolution: "@ffprobe-installer/linux-arm64@npm:5.2.0"
   conditions: os=linux & cpu=arm64
   languageName: node
   linkType: hard
 
-"@ffprobe-installer/linux-arm@npm:5.1.0":
-  version: 5.1.0
-  resolution: "@ffprobe-installer/linux-arm@npm:5.1.0"
+"@ffprobe-installer/linux-arm@npm:5.2.0":
+  version: 5.2.0
+  resolution: "@ffprobe-installer/linux-arm@npm:5.2.0"
   conditions: os=linux & cpu=arm
   languageName: node
   linkType: hard
 
-"@ffprobe-installer/linux-ia32@npm:5.1.0":
-  version: 5.1.0
-  resolution: "@ffprobe-installer/linux-ia32@npm:5.1.0"
+"@ffprobe-installer/linux-ia32@npm:5.2.0":
+  version: 5.2.0
+  resolution: "@ffprobe-installer/linux-ia32@npm:5.2.0"
   conditions: os=linux & cpu=ia32
   languageName: node
   linkType: hard
 
-"@ffprobe-installer/linux-x64@npm:5.1.0":
-  version: 5.1.0
-  resolution: "@ffprobe-installer/linux-x64@npm:5.1.0"
+"@ffprobe-installer/linux-x64@npm:5.2.0":
+  version: 5.2.0
+  resolution: "@ffprobe-installer/linux-x64@npm:5.2.0"
   conditions: os=linux & cpu=x64
   languageName: node
   linkType: hard
@@ -5137,7 +5137,7 @@ __metadata:
     "@aws-sdk/client-s3": ^3.395.0
     "@aws-sdk/s3-request-presigner": ^3.395.0
     "@faker-js/faker": ^8.0.2
-    "@ffprobe-installer/ffprobe": ^2.1.1
+    "@ffprobe-installer/ffprobe": ^2.1.2
     "@golevelup/nestjs-discovery": ^4.0.0
     "@leeoniya/ufuzzy": ^1.0.8
     "@nestjs/apollo": ^12.0.7
