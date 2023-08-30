@@ -1,8 +1,9 @@
-import { Field, InputType, ObjectType } from '@nestjs/graphql';
+import { Field, ID as IDType, InputType, ObjectType } from '@nestjs/graphql';
 import { Transform, Type } from 'class-transformer';
 import { Matches, ValidateNested } from 'class-validator';
 import { uniq } from 'lodash';
-import { ID, IdField, IdOf, NameField } from '../../../common';
+import { ID, IdField, IdOf, IsId, NameField } from '../../../common';
+import { FieldRegion } from '../../field-region';
 import type { Language } from '../../language';
 import { FinancialReportingType } from '../../partnership/dto/financial-reporting-type';
 import { PartnerType } from './partner-type.enum';
@@ -41,6 +42,11 @@ export abstract class UpdatePartner {
 
   @IdField({ nullable: true })
   readonly languageOfWiderCommunicationId?: IdOf<Language> | null;
+
+  @Field(() => [IDType], { nullable: true })
+  @IsId({ each: true })
+  @Transform(({ value }) => (value ? uniq(value) : undefined))
+  readonly fieldRegions?: ReadonlyArray<IdOf<FieldRegion>>;
 }
 
 @InputType()

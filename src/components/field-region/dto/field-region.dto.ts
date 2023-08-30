@@ -8,6 +8,7 @@ import {
   Resource,
   Secured,
   SecuredProperty,
+  SecuredPropertyList,
   SecuredProps,
   SecuredString,
 } from '../../../common';
@@ -33,6 +34,11 @@ export class FieldRegion extends Resource {
   description: SecuredProperty.descriptionFor('a field region'),
 })
 export class SecuredFieldRegion extends SecuredProperty(FieldRegion) {}
+
+@ObjectType({
+  description: SecuredPropertyList.descriptionFor('a list of field regions'),
+})
+export class SecuredFieldRegions extends SecuredPropertyList(FieldRegion) {}
 
 declare module '~/core/resources/map' {
   interface ResourceMap {

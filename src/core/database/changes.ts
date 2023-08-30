@@ -53,7 +53,7 @@ type ChangeKey<Key extends keyof T & string, T> = T[Key] extends SetChangeType<
   : UnwrapSecured<T[Key]> extends FileId
   ? Key
   : NonNullable<UnwrapSecured<T[Key]>> extends ID
-  ? `${Key}Id` // our convention for relationships
+  ? `${Key}Id` // our convention for single relationships
   : Key;
 
 type ChangeOf<Val> = Val extends SetChangeType<any, infer Override>
