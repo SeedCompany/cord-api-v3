@@ -28,7 +28,7 @@
     "type-check": "tsc -p tsconfig.check.json"
   },
   "dependencies": {
-    "@apollo/server": "^4.9.1",
+    "@apollo/server": "^4.9.3",
     "@apollo/subgraph": "^2.5.2",
     "@aws-sdk/client-s3": "^3.395.0",
     "@aws-sdk/s3-request-presigner": "^3.395.0",
