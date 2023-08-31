@@ -167,9 +167,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@apollo/server@npm:^4.9.1":
-  version: 4.9.1
-  resolution: "@apollo/server@npm:4.9.1"
+"@apollo/server@npm:^4.9.3":
+  version: 4.9.3
+  resolution: "@apollo/server@npm:4.9.3"
   dependencies:
     "@apollo/cache-control-types": ^1.0.3
     "@apollo/server-gateway-interface": ^1.1.1
@@ -199,7 +199,7 @@ __metadata:
     whatwg-mimetype: ^3.0.0
   peerDependencies:
     graphql: ^16.6.0
-  checksum: d5299acfc8f0519adb5aed59e067880bdfd2528353711be07c935d0038ef95e06eecfc58af473011d215c92659f1858ae06c26fe9f70f865383d8e5457e17be5
+  checksum: 28537d7646669a5dc1302cfd75d8a9bf473459ee585c6b778d174628a2cfb3f89a5ac742eca7de2a779b6c9e3f30da509a8787a71227520d009ac190aa7a9207
   languageName: node
   linkType: hard
 
@@ -5132,7 +5132,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "cord-api-v3@workspace:."
   dependencies:
-    "@apollo/server": ^4.9.1
+    "@apollo/server": ^4.9.3
     "@apollo/subgraph": ^2.5.2
     "@aws-sdk/client-s3": ^3.395.0
     "@aws-sdk/s3-request-presigner": ^3.395.0
