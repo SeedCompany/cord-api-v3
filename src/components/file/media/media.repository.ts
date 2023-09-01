@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { inArray, node, or, Query, relation } from 'cypher-query-builder';
-import { RequireAtLeastOne } from 'type-fest';
+import { Except, RequireAtLeastOne } from 'type-fest';
 import {
   EnhancedResource,
   generateId,
@@ -47,20 +47,39 @@ export class MediaRepository extends CommonRepository {
 
   protected hydrate() {
     return (query: Query) =>
-      query.return<{ dto: AnyMedia }>(
-        merge('node', {
-          __typename: 'node.type',
-          file: 'fv.id',
-          dimensions: {
-            width: 'node.width',
-            height: 'node.height',
-          },
-        }).as('dto'),
-      );
+      query
+        .subQuery('fv', (sub) =>
+          sub
+            .comment('Find root file node')
+            .subQuery('fv', (sub2) =>
+              sub2
+                .raw('MATCH p=(fv)-[:parent*]->(node:FileNode)')
+                .return('node as root')
+                .orderBy('length(p)', 'DESC')
+                .raw('LIMIT 1'),
+            )
+            .comment('Get resource holding root file node')
+            .raw('MATCH (resource:BaseNode)-[rel]->(root)')
+            .raw('WHERE not resource:FileNode')
+            .return('[resource, type(rel)] as attachedTo')
+            .raw('LIMIT 1'),
+        )
+        .return<{ dto: AnyMedia }>(
+          merge('node', {
+            __typename: 'node.type',
+            file: 'fv.id',
+            dimensions: {
+              width: 'node.width',
+              height: 'node.height',
+            },
+            attachedTo: 'attachedTo',
+          }).as('dto'),
+        );
   }
 
   async save(
-    input: RequireAtLeastOne<Pick<AnyMedia, 'id' | 'file'>> & Partial<AnyMedia>,
+    input: RequireAtLeastOne<Pick<AnyMedia, 'id' | 'file'>> &
+      Partial<Except<AnyMedia, 'attachedTo'>>,
   ) {
     const res = input.__typename
       ? EnhancedResource.of(resolveMedia(input as AnyMedia))

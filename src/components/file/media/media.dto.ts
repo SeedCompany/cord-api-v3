@@ -20,6 +20,7 @@ import {
   ServerException,
   simpleSwitch,
 } from '~/common';
+import { BaseNode } from '~/core/database/results';
 import { FileVersion } from '../dto';
 
 export type AnyMedia = Image | Video | Audio;
@@ -77,6 +78,9 @@ export class Media extends MediaUserMetadata {
   readonly id: ID;
 
   readonly file: IdOf<FileVersion>;
+
+  /** The resource that holds the root file node that this media is attached to */
+  readonly attachedTo: [resource: BaseNode, relation: string];
 
   @Field(() => String)
   readonly mimeType: string;
