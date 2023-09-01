@@ -35,7 +35,7 @@ export const resolveMedia = (val: Pick<AnyMedia, '__typename'>) => {
 @InputType()
 @InterfaceType({ isAbstract: true })
 @ObjectType({ isAbstract: true })
-@DbLabel(/* none */)
+@DbLabel(null)
 export class MediaUserMetadata extends DataObject {
   static readonly Props: string[] = keysOf<MediaUserMetadata>();
 
