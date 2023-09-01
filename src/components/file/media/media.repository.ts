@@ -1,13 +1,29 @@
 import { Injectable } from '@nestjs/common';
 import { inArray, node, or, Query, relation } from 'cypher-query-builder';
 import { RequireAtLeastOne } from 'type-fest';
-import { EnhancedResource, generateId, ID, ServerException } from '~/common';
+import {
+  EnhancedResource,
+  generateId,
+  ID,
+  NotFoundException,
+  ServerException,
+} from '~/common';
 import { CommonRepository } from '~/core';
 import { ACTIVE, apoc, merge } from '~/core/database/query';
 import { AnyMedia, MediaUserMetadata, resolveMedia } from './media.dto';
 
 @Injectable()
 export class MediaRepository extends CommonRepository {
+  async readOne(input: RequireAtLeastOne<Pick<AnyMedia, 'id' | 'file'>>) {
+    const [media] = await this.readMany(
+      input.id ? { mediaIds: [input.id] } : { fvIds: [input.file!] },
+    );
+    if (!media) {
+      throw new NotFoundException('Media not found');
+    }
+    return media;
+  }
+
   async readMany(
     input: RequireAtLeastOne<Record<'fvIds' | 'mediaIds', readonly ID[]>>,
   ) {
