@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Nil } from '@seedcompany/common';
 import { clamp, round } from 'lodash';
 import { CalendarDate, fiscalQuarter, fiscalYear } from '../../common';
 import { Column, Row } from '../../common/xlsx.util';
@@ -38,16 +39,19 @@ const summaryFrom = (
 ): Progress | null => {
   let planned = fiscalYear.cell(plannedColumn).asNumber;
   let actual = fiscalYear.cell(actualColumn).asNumber;
-  if (!planned || !actual) {
+  if (!planned && !actual) {
     return null;
   }
-  if (round(planned, 4) > 1) {
-    // The PnP has the macro option to do calculations as percents or verse equivalents.
-    // We need to standardize as percents here.
-    planned /= fiscalYear.sheet.totalVerseEquivalents;
-    actual /= fiscalYear.sheet.totalVerseEquivalents;
-  }
-  planned = clamp(planned, 0, 1);
-  actual = clamp(actual, 0, 1);
+  const normalize = (val: number | Nil) => {
+    if (!val) return 0;
+    if (round(val, 4) > 1) {
+      // The PnP has the macro option to do calculations as percents or verse equivalents.
+      // We need to standardize as percents here.
+      val /= fiscalYear.sheet.totalVerseEquivalents;
+    }
+    return clamp(val, 0, 1);
+  };
+  planned = normalize(planned);
+  actual = normalize(actual);
   return { planned, actual };
 };
