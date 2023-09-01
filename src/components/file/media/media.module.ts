@@ -1,4 +1,5 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
+import { FileModule } from '../file.module';
 import { DetectExistingMediaMigration } from './detect-existing-media.migration';
 import { DimensionsResolver } from './dimensions.resolver';
 import { MediaByFileVersionLoader } from './media-by-file-version.loader';
@@ -9,6 +10,7 @@ import { MediaResolver } from './media.resolver';
 import { MediaService } from './media.service';
 
 @Module({
+  imports: [forwardRef(() => FileModule)],
   providers: [
     DimensionsResolver,
     MediaByFileVersionLoader,
