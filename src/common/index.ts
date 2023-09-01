@@ -3,6 +3,7 @@ export { Many, many, maybeMany, JsonSet, ArrayItem } from '@seedcompany/common';
 export * from './temporal';
 export * from './calculated.decorator';
 export * from './context.type';
+export * from './create-and-inject';
 export * from './data-object';
 export * from './date-filter.input';
 export { DbLabel } from './db-label.decorator';

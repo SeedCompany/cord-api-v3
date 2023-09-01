@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
+import { ModuleRef } from '@nestjs/core';
 import { RequireAtLeastOne } from 'type-fest';
 import {
+  createAndInject,
   IdOf,
   NotFoundException,
   Poll,
@@ -20,6 +22,7 @@ export class MediaService {
     private readonly detector: MediaDetector,
     private readonly repo: MediaRepository,
     private readonly eventBus: IEventBus,
+    private readonly moduleRef: ModuleRef,
   ) {}
 
   async detectAndSave(file: FileVersion, metadata?: MediaUserMetadata) {
@@ -40,7 +43,13 @@ export class MediaService {
   ) {
     const media = await this.repo.readOne(input);
     const poll = new Poll();
-    const event = new CanUpdateMediaUserMetadataEvent(media, input, poll);
+    const event = await createAndInject(
+      this.moduleRef,
+      CanUpdateMediaUserMetadataEvent,
+      media,
+      input,
+      poll,
+    );
     await this.eventBus.publish(event);
     if (!(poll.plurality && !poll.vetoed)) {
       throw new UnauthorizedException(
