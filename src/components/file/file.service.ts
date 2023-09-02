@@ -154,7 +154,9 @@ export class FileService {
       await this.bucket.headObject(id);
       return await this.bucket.getSignedUrl(GetObject, {
         Key: id,
-        ResponseContentDisposition: `attachment; filename="${node.name}"`,
+        ResponseContentDisposition: `attachment; filename="${encodeURIComponent(
+          node.name,
+        )}"`,
         ResponseContentType: node.mimeType,
         ResponseCacheControl: this.determineCacheHeader(node),
         signing: {
