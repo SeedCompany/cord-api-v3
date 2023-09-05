@@ -1,25 +1,29 @@
-import ffprobeBinary from '@ffprobe-installer/ffprobe';
-import { Injectable } from '@nestjs/common';
+import { path as ffprobeBinary } from '@ffprobe-installer/ffprobe';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { execa } from 'execa';
 import { FFProbeResult } from 'ffprobe';
 import { imageSize } from 'image-size';
 import { ISize as ImageSize } from 'image-size/dist/types/interface';
-import { Readable } from 'stream';
 import { Except } from 'type-fest';
 import { retry } from '~/common/retry';
 import { ILogger, Logger } from '~/core';
-import { Downloadable } from '../dto';
+import { FileVersion } from '../dto';
+import { FileService } from '../file.service';
 import { AnyMedia, Media } from './media.dto';
 
 @Injectable()
 export class MediaDetector {
-  constructor(@Logger('media:detector') private readonly logger: ILogger) {}
+  constructor(
+    @Inject(forwardRef(() => FileService))
+    private readonly files: FileService & {},
+    @Logger('media:detector') private readonly logger: ILogger,
+  ) {}
 
   async detect(
-    file: Downloadable<{ mimeType: string }>,
+    file: FileVersion,
   ): Promise<Except<AnyMedia, Exclude<keyof Media, '__typename'>> | null> {
     if (file.mimeType.startsWith('image/')) {
-      const buffer = await file.download();
+      const buffer = await this.files.asDownloadable(file).download();
 
       let size: ImageSize = { width: 0, height: 0 };
       try {
@@ -43,9 +47,9 @@ export class MediaDetector {
       return null;
     }
 
-    const stream = await file.stream();
+    const url = await this.files.getDownloadUrl(file);
 
-    const result = await this.ffprobe(stream);
+    const result = await this.ffprobe(url);
     const { width, height, duration: rawDuration } = result.streams?.[0] ?? {};
 
     const d = rawDuration as string | number | undefined; // I've seen as string
@@ -64,35 +68,25 @@ export class MediaDetector {
     };
   }
 
-  private async ffprobe(stream: Readable): Promise<Partial<FFProbeResult>> {
+  private async ffprobe(url: string): Promise<Partial<FFProbeResult>> {
     try {
       return await retry(
         async () => {
           const probe = await execa(
-            ffprobeBinary.path,
+            ffprobeBinary,
             [
+              '-v',
+              'error',
               '-print_format',
               'json',
               '-show_format',
               '-show_streams',
-              '-i',
-              'pipe:0',
+              url,
             ],
             {
-              reject: false, // just return error instead of throwing
-              input: stream,
               timeout: 10_000,
             },
           );
-          this.logger.info('ffprobe result', probe);
-          // Ffprobe stops reading stdin & exits as soon as it has enough info.
-          // This causes the input stream to SIGPIPE error.
-          // In shells, this is normal and does not result in an error.
-          // However, NodeJS converts/interrupts this as an EPIPE error.
-          // https://github.com/sindresorhus/execa/issues/474#issuecomment-1640423498
-          if (probe instanceof Error && (probe as any).code !== 'EPIPE') {
-            throw probe;
-          }
           if (probe.stdout.trim() === '') {
             return {};
           }

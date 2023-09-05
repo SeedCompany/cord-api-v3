@@ -154,7 +154,7 @@ export class FileRepository extends CommonRepository {
     return result!;
   }
 
-  private hydrate() {
+  hydrate() {
     return (query: Query) =>
       query
         .subQuery((sub) =>
@@ -463,13 +463,13 @@ export class FileRepository extends CommonRepository {
         }),
       )
       .apply(this.defaultPublicFromParent(input.public))
-      .return<{ id: ID }>('node.id as id');
+      .apply(this.hydrate());
 
     const result = await createFile.first();
     if (!result) {
       throw new ServerException('Failed to create file version');
     }
-    return result;
+    return result.dto as FileVersion;
   }
 
   async rename(fileNode: FileNode, newName: string): Promise<void> {
