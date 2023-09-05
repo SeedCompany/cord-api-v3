@@ -14,7 +14,6 @@ import {
   DurationIn,
   generateId,
   ID,
-  IdOf,
   InputException,
   NotFoundException,
   ServerException,
@@ -154,7 +153,9 @@ export class FileService {
       await this.bucket.headObject(id);
       return await this.bucket.getSignedUrl(GetObject, {
         Key: id,
-        ResponseContentDisposition: `attachment; filename="${node.name}"`,
+        ResponseContentDisposition: `attachment; filename="${encodeURIComponent(
+          node.name,
+        )}"`,
         ResponseContentType: node.mimeType,
         ResponseCacheControl: this.determineCacheHeader(node),
         signing: {
@@ -316,7 +317,7 @@ export class FileService {
     const mimeType =
       mimeTypeOverride ?? upload?.ContentType ?? 'application/octet-stream';
 
-    await this.repo.createFileVersion(
+    const fv = await this.repo.createFileVersion(
       fileId,
       {
         id: uploadId,
@@ -355,16 +356,7 @@ export class FileService {
       }
     }
 
-    await this.mediaService.detectAndSave(
-      this.asDownloadable(
-        {
-          file: uploadId as IdOf<FileVersion>,
-          mimeType,
-          ...media,
-        },
-        uploadId,
-      ),
-    );
+    await this.mediaService.detectAndSave(fv, media);
 
     // Change the file's name to match the latest version name
     await this.rename({ id: fileId, name }, session);

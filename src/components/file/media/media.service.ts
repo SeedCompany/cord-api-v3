@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { Except, RequireAtLeastOne } from 'type-fest';
-import { NotFoundException, ServerException } from '~/common';
-import { Downloadable } from '../dto';
+import { RequireAtLeastOne } from 'type-fest';
+import { IdOf, NotFoundException, ServerException } from '~/common';
+import { FileVersion } from '../dto';
 import { MediaDetector } from './media-detector.service';
-import { AnyMedia, Media, MediaUserMetadata } from './media.dto';
+import { AnyMedia, MediaUserMetadata } from './media.dto';
 import { MediaRepository } from './media.repository';
 
 @Injectable()
@@ -13,12 +13,17 @@ export class MediaService {
     private readonly repo: MediaRepository,
   ) {}
 
-  async detectAndSave(input: Downloadable<Except<Media, 'id' | '__typename'>>) {
-    const media = await this.detector.detect(input);
+  async detectAndSave(file: FileVersion, metadata?: MediaUserMetadata) {
+    const media = await this.detector.detect(file);
     if (!media) {
       return null;
     }
-    return await this.repo.create({ ...input, ...media });
+    return await this.repo.create({
+      file: file.id as IdOf<FileVersion>,
+      mimeType: file.mimeType,
+      ...media,
+      ...metadata,
+    });
   }
 
   async updateUserMetadata(
