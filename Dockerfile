@@ -1,9 +1,12 @@
 # Base node stage that sets up common config for dev & prod
 FROM public.ecr.aws/docker/library/node:18-slim as node
 
-# Add wget in for healthchecks
+# Install these native packages
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends ca-certificates wget curl \
+    && apt-get install -y --no-install-recommends \
+      ca-certificates wget curl \
+      # Install ffprobe from here, as the npm version is manually published and as of comment segfaults with urls
+      ffmpeg \
     && apt-get clean -q -y \
     && rm -rf /var/lib/apt/lists/*
 
