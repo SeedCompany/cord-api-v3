@@ -2496,15 +2496,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@seedcompany/common@npm:>=0.10 <1, @seedcompany/common@npm:>=0.10.0 <1.0.0, @seedcompany/common@npm:>=0.3.0 <1.0.0":
-  version: 0.10.0
-  resolution: "@seedcompany/common@npm:0.10.0"
+"@seedcompany/common@npm:>=0.10.0 <1.0.0, @seedcompany/common@npm:>=0.11 <1, @seedcompany/common@npm:>=0.3.0 <1.0.0":
+  version: 0.11.0
+  resolution: "@seedcompany/common@npm:0.11.0"
   peerDependencies:
     luxon: ^3.3.0
   peerDependenciesMeta:
     luxon:
       optional: true
-  checksum: 37c3580123e309c9d56e5b65dabc48e4175bc069c22ee315a4612befc75c0df9310705ee51f7baf1c717dc9068958e608a0f6008cda92b1c7b75c693daacc43f
+  checksum: 1e1df8f7c884ba191cd7653d8bea3ba93da05bb6af5f41722b679ace426deab71561741575a5ce20ccdd5d927b211e8af86e6bac312534cebd253e33e731b3a9
   languageName: node
   linkType: hard
 
@@ -5149,7 +5149,7 @@ __metadata:
     "@nestjs/schematics": ^10.0.2
     "@nestjs/testing": ^10.2.1
     "@patarapolw/prettyprint": ^1.0.3
-    "@seedcompany/common": ">=0.10 <1"
+    "@seedcompany/common": ">=0.11 <1"
     "@seedcompany/data-loader": ^0.5.4
     "@seedcompany/eslint-plugin": ^3.4.1
     "@seedcompany/nestjs-email": ^3.3.2
