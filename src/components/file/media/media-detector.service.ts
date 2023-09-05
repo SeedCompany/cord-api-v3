@@ -1,6 +1,7 @@
-import { path as ffprobeBinary } from '@ffprobe-installer/ffprobe';
+import npmFfprobe from '@ffprobe-installer/ffprobe';
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { execa } from 'execa';
+import { CachedByArg as Once } from '@seedcompany/common';
+import { $, execa } from 'execa';
 import { FFProbeResult } from 'ffprobe';
 import { imageSize } from 'image-size';
 import { ISize as ImageSize } from 'image-size/dist/types/interface';
@@ -69,11 +70,12 @@ export class MediaDetector {
   }
 
   private async ffprobe(url: string): Promise<Partial<FFProbeResult>> {
+    const binaryPath = await this.getFfprobeBinaryPath();
     try {
       return await retry(
         async () => {
           const probe = await execa(
-            ffprobeBinary,
+            binaryPath,
             [
               '-v',
               'error',
@@ -102,6 +104,16 @@ export class MediaDetector {
       );
     } catch (e) {
       return {};
+    }
+  }
+
+  @Once()
+  private async getFfprobeBinaryPath() {
+    try {
+      await retry(async () => await $`which ffprobe`, { retries: 3 });
+      return 'ffprobe';
+    } catch {
+      return npmFfprobe.path;
     }
   }
 }
