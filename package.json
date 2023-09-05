@@ -46,7 +46,7 @@
     "@seedcompany/data-loader": "^0.5.4",
     "@seedcompany/nestjs-email": "^3.3.2",
     "@seedcompany/scripture": "^0.3.0",
-    "argon2": "^0.31.0",
+    "argon2": "^0.31.1",
     "aws-xray-sdk-core": "^3.5.1",
     "chalk": "^5.3.0",
     "class-transformer": "^0.5.1",
