@@ -1,17 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { inArray, node, or, Query, relation } from 'cypher-query-builder';
-import { Except, RequireAtLeastOne } from 'type-fest';
-import { ID, ServerException } from '~/common';
+import { RequireAtLeastOne } from 'type-fest';
+import { EnhancedResource, generateId, ID, ServerException } from '~/common';
 import { CommonRepository } from '~/core';
-import {
-  ACTIVE,
-  apoc,
-  createNode,
-  createRelationships,
-  merge,
-  variable,
-} from '~/core/database/query';
-import { AnyMedia, Media, MediaUserMetadata, resolveMedia } from './media.dto';
+import { ACTIVE, apoc, merge } from '~/core/database/query';
+import { AnyMedia, MediaUserMetadata, resolveMedia } from './media.dto';
 
 @Injectable()
 export class MediaRepository extends CommonRepository {
@@ -50,19 +43,33 @@ export class MediaRepository extends CommonRepository {
       );
   }
 
-  async create(input: Except<AnyMedia, 'id'>) {
+  async save(
+    input: RequireAtLeastOne<Pick<AnyMedia, 'id' | 'file'>> & Partial<AnyMedia>,
+  ) {
+    const res = input.__typename
+      ? EnhancedResource.of(resolveMedia(input as AnyMedia))
+      : undefined;
     const query = this.db
       .query()
-      .matchNode('fv', 'FileVersion', { id: input.file })
-      .apply(
-        await createNode(resolveMedia(input), {
-          baseNodeProps: toDbShape(input),
-        }),
-      )
-      .apply(
-        createRelationships(Media, 'in', {
-          media: variable('fv'),
-        }),
+      .merge([
+        node('fv', 'FileVersion', input.file ? { id: input.file } : {}),
+        relation('out', '', 'media'),
+        node('node', 'Media', input.id ? { id: input.id } : {}),
+      ])
+      .onCreate.set({
+        values: { 'node.id': await generateId() },
+        variables: { 'node.createdAt': 'datetime()' },
+      })
+      .setValues({ node: toDbShape(input) }, true)
+      .with('node, fv')
+      // Update the labels if typename is given, and maybe changed.
+      .apply((q) =>
+        res
+          ? q.raw(
+              'CALL apoc.create.setLabels(node, $newLabels) yield node as labelsAdded',
+              { newLabels: res.dbLabels },
+            )
+          : q,
       )
       // Grab the previous media node or null
       .subQuery('fv', (sub) =>
@@ -81,7 +88,7 @@ export class MediaRepository extends CommonRepository {
           ])
           .return('prevMedia')
           .orderBy('fvs.createdAt', 'DESC')
-          .limit(1),
+          .raw('LIMIT 1'),
       )
       // Use previous user metadata as defaults for new media
       .with('node, fv, prevMedia')
@@ -98,26 +105,6 @@ export class MediaRepository extends CommonRepository {
         },
         true,
       )
-      .apply(this.hydrate());
-
-    const result = await query.first();
-    if (!result) {
-      throw new ServerException('Failed to create media info');
-    }
-    return result.dto;
-  }
-
-  async update(
-    input: RequireAtLeastOne<Pick<AnyMedia, 'id' | 'file'>> & Partial<AnyMedia>,
-  ) {
-    const query = this.db
-      .query()
-      .match([
-        node('fv', 'FileVersion', input.file ? { id: input.file } : {}),
-        relation('out', '', 'media'),
-        node('node', 'Media', input.id ? { id: input.id } : {}),
-      ])
-      .setValues({ node: toDbShape(input) }, true)
       .apply(this.hydrate());
 
     const result = await query.first();
