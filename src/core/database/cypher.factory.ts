@@ -37,7 +37,7 @@ const parseRoutingTable = (routingTableStr: string) => {
     return undefined;
   }
   return {
-    database: matched[1] === 'default database' ? null : matched[0],
+    database: matched[1] === 'default database' ? null : matched[1],
     expirationTime: parseInt(matched[2], 10),
     currentTime: parseInt(matched[3], 10),
     routers: csv(matched[4]),
@@ -66,7 +66,13 @@ export const CypherFactory: FactoryProvider<Connection> = {
     logger: ILogger,
     driverLogger: ILogger,
   ) => {
-    const { url, username, password, database, driverConfig } = config.neo4j;
+    const {
+      url,
+      username,
+      password,
+      database: databaseNameFromConfig,
+      driverConfig,
+    } = config.neo4j;
 
     const driverLoggerAdapter: LoggerFunction = (neoLevel, message) => {
       const level =
@@ -148,8 +154,13 @@ export const CypherFactory: FactoryProvider<Connection> = {
       if (!this.open) {
         return null;
       }
+
+      // Assume the default name to workaround routing table cache bug.
+      // https://github.com/neo4j/neo4j-javascript-driver/issues/1138
+      const resolvedDatabaseName = databaseNameFromConfig || 'neo4j';
+
       const session = this.driver.session({
-        database,
+        database: resolvedDatabaseName,
       });
 
       session.run = wrapQueryRun(session, logger, parameterTransformer);
