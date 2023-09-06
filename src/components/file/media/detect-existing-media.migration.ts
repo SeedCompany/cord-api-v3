@@ -17,6 +17,7 @@ export class DetectExistingMediaMigration extends BaseMigration {
 
   async up() {
     await this.fixVideoLabels();
+    await this.fixVideoBuggedDuration();
     await this.dropAllDuplicatedMedia();
 
     const detect = async (f: FileVersion) => {
@@ -87,6 +88,14 @@ export class DetectExistingMediaMigration extends BaseMigration {
     await this.db.query().raw`
       match (v:Video)
       set v:VisualMedia:TemporalMedia:Media
+    `.executeAndLogStats();
+  }
+
+  private async fixVideoBuggedDuration() {
+    await this.db.query().raw`
+      match (v:Video)
+      where v.duration is null
+      set v.duration = 0
     `.executeAndLogStats();
   }
 

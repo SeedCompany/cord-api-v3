@@ -126,7 +126,7 @@ const toDbShape = (input: Partial<AnyMedia>) => ({
           ? input.dimensions
           : // If not visual, ensure dimensions get cleared
             { width: null, height: null }),
-        ...(input.__typename === 'Audio'
+        ...(input.__typename === 'Audio' || input.__typename === 'Video'
           ? { duration: input.duration }
           : // If not temporal, ensure duration gets cleared
             { duration: null }),
