@@ -18,7 +18,7 @@ export class MediaService {
     if (!media) {
       return null;
     }
-    return await this.repo.create({
+    return await this.repo.save({
       file: file.id as IdOf<FileVersion>,
       mimeType: file.mimeType,
       ...media,
@@ -30,7 +30,7 @@ export class MediaService {
     input: RequireAtLeastOne<Pick<AnyMedia, 'id' | 'file'>> & MediaUserMetadata,
   ) {
     try {
-      return await this.repo.update(input);
+      return await this.repo.save(input);
     } catch (e) {
       if (e instanceof ServerException) {
         const exists = await this.repo.getBaseNode(
