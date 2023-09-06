@@ -7,6 +7,7 @@ import {
 } from '@nestjs/graphql';
 import { AnonSession, IdArg, IdOf, LoggedInSession, Session } from '~/common';
 import { Loader, LoaderOf } from '~/core';
+import { Privileges } from '../../authorization';
 import { Media } from '../../file';
 import { MediaLoader } from '../../file/media/media.loader';
 import { PeriodicReportLoader } from '../../periodic-report';
@@ -33,7 +34,10 @@ export class ProgressReportMediaProgressReportConnectionResolver {
 
 @Resolver(ReportMedia)
 export class ProgressReportMediaResolver {
-  constructor(private readonly service: ProgressReportMediaService) {}
+  constructor(
+    private readonly service: ProgressReportMediaService,
+    private readonly privileges: Privileges,
+  ) {}
 
   @ResolveField(() => Media)
   async media(
@@ -51,6 +55,14 @@ export class ProgressReportMediaResolver {
     @AnonSession() session: Session,
   ): Promise<readonly ReportMedia[]> {
     return await this.service.listOfRelated(media, session);
+  }
+
+  @ResolveField(() => Boolean)
+  canEdit(
+    @Parent() media: ReportMedia,
+    @AnonSession() session: Session,
+  ): boolean {
+    return this.privileges.for(session, ReportMedia, media).can('edit');
   }
 }
 

@@ -1,4 +1,5 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
+import { setOf } from '@seedcompany/common';
 import { stripIndent } from 'common-tags';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
@@ -42,6 +43,11 @@ export class ProgressReportMedia extends Merge(Resource, HasCategory) {
     (m) => m.ProgressReport,
   );
   static Variants = ProgressReportHighlight.Variants;
+  // Only the last variant is publicly visible (accessible by anyone anonymously)
+  // Saved in DB, so adjust with caution
+  static PublicVariants = setOf(
+    ProgressReportHighlight.Variants.slice(-1).map((v) => v.key),
+  );
 
   readonly report: IdOf<ProgressReport>;
 
