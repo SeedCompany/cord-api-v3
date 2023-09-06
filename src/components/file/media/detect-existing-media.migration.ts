@@ -6,7 +6,7 @@ import { FileVersion } from '../dto';
 import { FileRepository } from '../file.repository';
 import { MediaService } from './media.service';
 
-@Migration('2023-09-05T19:00:00')
+@Migration('2023-09-06T12:00:00')
 export class DetectExistingMediaMigration extends BaseMigration {
   constructor(
     private readonly mediaService: MediaService,
@@ -16,6 +16,7 @@ export class DetectExistingMediaMigration extends BaseMigration {
   }
 
   async up() {
+    await this.fixVideoLabels();
     await this.dropAllDuplicatedMedia();
 
     const detect = async (f: FileVersion) => {
@@ -80,6 +81,13 @@ export class DetectExistingMediaMigration extends BaseMigration {
       page++;
       // eslint-disable-next-line no-constant-condition
     } while (true);
+  }
+
+  private async fixVideoLabels() {
+    await this.db.query().raw`
+      match (v:Video)
+      set v:VisualMedia:TemporalMedia:Media
+    `.executeAndLogStats();
   }
 
   private async dropAllDuplicatedMedia() {
