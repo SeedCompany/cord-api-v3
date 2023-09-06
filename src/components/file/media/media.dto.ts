@@ -21,6 +21,7 @@ import {
   simpleSwitch,
 } from '~/common';
 import { BaseNode } from '~/core/database/results';
+import { RegisterResource } from '~/core/resources';
 import { FileVersion } from '../dto';
 
 export type AnyMedia = Image | Video | Audio;
@@ -68,6 +69,7 @@ export class MediaUserMetadata extends DataObject {
 @InterfaceType({
   resolveType: resolveMedia,
 })
+@RegisterResource()
 export class Media extends MediaUserMetadata {
   static readonly Props: string[] = keysOf<Media>();
   static readonly SecuredProps: string[] = keysOf<SecuredProps<Media>>();
@@ -140,4 +142,10 @@ export class Audio extends TemporalMedia {
   static readonly SecuredProps = keysOf<SecuredProps<Audio>>();
 
   declare __typename: 'Audio';
+}
+
+declare module '~/core/resources/map' {
+  interface ResourceMap {
+    Media: typeof Media;
+  }
 }
