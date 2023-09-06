@@ -74,7 +74,7 @@ export const createNode = async <TResourceStatic extends ResourceShape<any>>(
           ...entries(restInitialProps).map(([prop, value]) => [
             node('node'),
             relation('out', '', prop, { active: true, createdAt }),
-            node('', res.dbPropLabels[prop], {
+            node('', res.dbPropLabels[prop] ?? ['Property'], {
               createdAt,
               value,
             }),
