@@ -3,7 +3,7 @@ import { node, Query, relation } from 'cypher-query-builder';
 import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
 import { Maybe as Nullable } from 'graphql/jsutils/Maybe';
 import { DateTime } from 'luxon';
-import { ID, many, ResourceShape } from '~/common';
+import { EnhancedResource, ID, many, ResourceShape } from '~/common';
 import { ResourceMap } from '~/core';
 import { Variable } from '../query-augmentation/condition-variables';
 
@@ -74,19 +74,20 @@ type AnyDirectionalDefinition = Partial<
  * // Note how `user` is imported, not matched, and not returned.
  */
 export function createRelationships<TResourceStatic extends ResourceShape<any>>(
-  resource: TResourceStatic,
+  resource: TResourceStatic | EnhancedResource<TResourceStatic>,
   direction: RelationDirection,
   labelsToRelationships: RelationshipDefinition,
 ): (query: Query) => Query;
 export function createRelationships<TResourceStatic extends ResourceShape<any>>(
-  resource: TResourceStatic,
+  resource: TResourceStatic | EnhancedResource<TResourceStatic>,
   definition: AnyDirectionalDefinition,
 ): (query: Query) => Query;
 export function createRelationships<TResourceStatic extends ResourceShape<any>>(
-  resource: TResourceStatic,
+  resource: TResourceStatic | EnhancedResource<TResourceStatic>,
   directionOrDefinition: RelationDirection | AnyDirectionalDefinition,
   maybeLabelsToRelationships?: RelationshipDefinition,
 ) {
+  resource = EnhancedResource.of(resource);
   const normalizedArgs =
     typeof directionOrDefinition === 'string'
       ? { [directionOrDefinition]: maybeLabelsToRelationships }

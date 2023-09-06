@@ -7,6 +7,7 @@ import { MergeExclusive, Opaque } from 'type-fest';
 import { RegisterResource } from '~/core/resources';
 import {
   DateTimeField,
+  DbLabel,
   ID,
   InputException,
   NameField,
@@ -77,6 +78,7 @@ export { FileNode as IFileNode, AnyFileNode as FileNode };
 @ObjectType({
   isAbstract: true,
 })
+@DbLabel(null)
 /**
  * Both file and file version have these properties
  */
