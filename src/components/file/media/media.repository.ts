@@ -49,17 +49,27 @@ export class MediaRepository extends CommonRepository {
     const res = input.__typename
       ? EnhancedResource.of(resolveMedia(input as AnyMedia))
       : undefined;
+    const tempId = await generateId();
     const query = this.db
       .query()
-      .merge([
-        node('fv', 'FileVersion', input.file ? { id: input.file } : {}),
-        relation('out', '', 'media'),
-        node('node', 'Media', input.id ? { id: input.id } : {}),
+      .match([
+        input.file ? [node('fv', 'FileVersion', { id: input.file })] : [],
+        input.id ? [node('node', 'Media', { id: input.id })] : [],
       ])
-      .onCreate.set({
-        values: { 'node.id': await generateId() },
-        variables: { 'node.createdAt': 'datetime()' },
-      })
+      .apply((q) =>
+        input.file
+          ? q
+              .merge([
+                node('fv'),
+                relation('out', '', 'media'),
+                node('node', input.id ? undefined : 'Media'),
+              ])
+              .onCreate.set({
+                values: { 'node.id': tempId },
+                variables: { 'node.createdAt': 'datetime()' },
+              })
+          : q,
+      )
       .setValues({ node: toDbShape(input) }, true)
       .with('node, fv')
       // Update the labels if typename is given, and maybe changed.
@@ -126,7 +136,7 @@ const toDbShape = (input: Partial<AnyMedia>) => ({
           ? input.dimensions
           : // If not visual, ensure dimensions get cleared
             { width: null, height: null }),
-        ...(input.__typename === 'Audio'
+        ...(input.__typename === 'Audio' || input.__typename === 'Video'
           ? { duration: input.duration }
           : // If not temporal, ensure duration gets cleared
             { duration: null }),
