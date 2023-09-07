@@ -1,6 +1,4 @@
-import { node, relation } from 'cypher-query-builder';
-import { DateTime } from 'luxon';
-import { DatabaseService, EventsHandler, IEventHandler } from '../../../core';
+import { DatabaseService, EventsHandler, IEventHandler } from '~/core';
 import { ProjectCreatedEvent } from '../../project/events';
 import { FileService } from '../file.service';
 
@@ -15,32 +13,17 @@ export class AttachProjectRootDirectoryHandler
 
   async handle(event: ProjectCreatedEvent) {
     const { project, session } = event;
-    const { id } = project;
 
-    const rootDir = await this.files.createDirectory(
-      undefined,
-      `${id} root directory`,
+    const rootDirId = await this.files.createRootDirectory({
+      resource: project,
+      relation: 'rootDirectory',
+      name: `${project.id} root directory`,
       session,
-    );
+    });
 
-    await this.db
-      .query()
-      .match([
-        [node('project', 'Project', { id })],
-        [node('dir', 'Directory', { id: rootDir.id })],
-      ])
-      .create([
-        node('project'),
-        relation('out', '', 'rootDirectory', {
-          active: true,
-          createdAt: DateTime.local(),
-        }),
-        node('dir'),
-      ])
-      .run();
     event.project = {
       ...event.project,
-      rootDirectory: rootDir.id,
+      rootDirectory: rootDirId,
     };
 
     const folders = [
@@ -50,7 +33,7 @@ export class AttachProjectRootDirectoryHandler
       'Photos',
     ];
     for (const folder of folders) {
-      await this.files.createDirectory(rootDir.id, folder, session);
+      await this.files.createDirectory(rootDirId, folder, session);
     }
   }
 }

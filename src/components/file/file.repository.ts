@@ -26,6 +26,7 @@ import {
   ILogger,
   Logger,
   OnIndex,
+  ResourceRef,
 } from '../../core';
 import {
   ACTIVE,
@@ -400,6 +401,42 @@ export class FileRepository extends CommonRepository {
       .return<{ id: ID }>('node.id as id');
 
     const result = await createFile.first();
+    if (!result) {
+      throw new ServerException('Failed to create directory');
+    }
+    return result.id;
+  }
+
+  async createRootDirectory({
+    resource,
+    relation,
+    name,
+    public: isPublic,
+    session,
+  }: {
+    resource: ResourceRef<any>;
+    relation: string;
+    name: string;
+    public?: boolean;
+    session: Session;
+  }) {
+    const initialProps = {
+      name,
+      public: isPublic,
+    };
+
+    const query = this.db
+      .query()
+      .apply(await createNode(Directory, { initialProps }))
+      .apply(
+        createRelationships(Directory, {
+          in: { [relation]: ['BaseNode', resource.id] },
+          out: { createdBy: ['User', session.userId] },
+        }),
+      )
+      .return<{ id: ID }>('node.id as id');
+
+    const result = await query.first();
     if (!result) {
       throw new ServerException('Failed to create directory');
     }

@@ -227,6 +227,12 @@ export class FileService {
     return await this.getDirectory(id, session);
   }
 
+  async createRootDirectory(
+    ...args: Parameters<FileRepository['createRootDirectory']>
+  ) {
+    return await this.repo.createRootDirectory(...args);
+  }
+
   async requestUpload(): Promise<RequestUploadOutput> {
     const id = await generateId();
     const url = await this.bucket.getSignedUrl(PutObject, {
