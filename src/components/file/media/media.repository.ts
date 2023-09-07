@@ -115,6 +115,7 @@ export class MediaRepository extends CommonRepository {
         },
         true,
       )
+      .with('node, fv')
       .apply(this.hydrate());
 
     const result = await query.first();
