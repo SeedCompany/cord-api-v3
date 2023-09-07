@@ -3,10 +3,9 @@ import { DateTime } from 'luxon';
 import {
   // eslint-disable-next-line @seedcompany/no-unused-vars -- used in jsdoc
   DbLabel,
+  EnhancedResource,
   entries,
   generateId,
-  getDbClassLabels,
-  getDbPropertyLabels,
   ID,
   ResourceShape,
   UnsecuredDto,
@@ -47,9 +46,10 @@ type InitialPropsOf<T> = {
  * })
  */
 export const createNode = async <TResourceStatic extends ResourceShape<any>>(
-  resource: TResourceStatic,
+  resource: TResourceStatic | EnhancedResource<TResourceStatic>,
   { initialProps = {}, baseNodeProps = {} }: CreateNodeOptions<TResourceStatic>,
 ) => {
+  const res = EnhancedResource.of(resource);
   const {
     id = baseNodeProps.id ?? (await generateId()),
     createdAt = baseNodeProps.createdAt ?? DateTime.local(),
@@ -65,7 +65,7 @@ export const createNode = async <TResourceStatic extends ResourceShape<any>>(
       sub
         .create([
           [
-            node('node', getDbClassLabels(resource), {
+            node('node', res.dbLabels, {
               ...baseNodeProps,
               createdAt,
               id,
@@ -74,7 +74,7 @@ export const createNode = async <TResourceStatic extends ResourceShape<any>>(
           ...entries(restInitialProps).map(([prop, value]) => [
             node('node'),
             relation('out', '', prop, { active: true, createdAt }),
-            node('', getDbPropertyLabels(resource, prop), {
+            node('', res.dbPropLabels[prop] ?? ['Property'], {
               createdAt,
               value,
             }),
