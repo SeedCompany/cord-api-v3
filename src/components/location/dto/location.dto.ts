@@ -10,6 +10,7 @@ import {
   Secured,
   SecuredEnum,
   SecuredProperty,
+  SecuredPropertyList,
   SecuredProps,
   SecuredString,
   SecuredStringNullable,
@@ -53,6 +54,11 @@ export class Location extends Resource {
   description: SecuredProperty.descriptionFor('a location'),
 })
 export class SecuredLocation extends SecuredProperty(Location) {}
+
+@ObjectType({
+  description: SecuredPropertyList.descriptionFor('a list of locations'),
+})
+export class SecuredLocations extends SecuredPropertyList(Location) {}
 
 declare module '~/core/resources/map' {
   interface ResourceMap {

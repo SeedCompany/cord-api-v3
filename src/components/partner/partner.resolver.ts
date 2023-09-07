@@ -19,6 +19,7 @@ import {
 import { Loader, LoaderOf } from '../../core';
 import { FieldRegionLoader, SecuredFieldRegions } from '../field-region';
 import { LanguageLoader, SecuredLanguageNullable } from '../language';
+import { LocationLoader, SecuredLocations } from '../location';
 import { OrganizationLoader, SecuredOrganization } from '../organization';
 import { PartnerLoader, PartnerService } from '../partner';
 import {
@@ -101,6 +102,14 @@ export class PartnerResolver {
     @Loader(FieldRegionLoader) loader: LoaderOf<FieldRegionLoader>,
   ): Promise<SecuredFieldRegions> {
     return await loadSecuredIds(loader, partner.fieldRegions);
+  }
+
+  @ResolveField(() => SecuredLocations)
+  async countries(
+    @Parent() partner: Partner,
+    @Loader(LocationLoader) loader: LoaderOf<LocationLoader>,
+  ): Promise<SecuredLocations> {
+    return await loadSecuredIds(loader, partner.countries);
   }
 
   @ResolveField(() => SecuredProjectList, {

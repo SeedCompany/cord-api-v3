@@ -125,6 +125,7 @@ export class PartnerService {
       pointOfContactId,
       languageOfWiderCommunicationId,
       fieldRegions,
+      countries,
       ...simpleChanges
     } = changes;
 
@@ -146,6 +147,20 @@ export class PartnerService {
         partner.id,
         languageOfWiderCommunicationId,
       );
+    }
+
+    if (countries) {
+      try {
+        await this.repo.updateRelationList({
+          id: partner.id,
+          relation: 'countries',
+          newList: countries,
+        });
+      } catch (e) {
+        throw e instanceof InputException
+          ? e.withField('partner.countries')
+          : e;
+      }
     }
 
     if (fieldRegions) {

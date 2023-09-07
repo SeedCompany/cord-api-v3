@@ -64,6 +64,7 @@ export class PartnerRepository extends DtoRepository<
             input.languageOfWiderCommunicationId,
           ],
           fieldRegions: ['FieldRegion', input.fieldRegions],
+          countries: ['Location', input.countries],
         }),
       )
       .return<{ id: ID }>('node.id as id')
@@ -114,6 +115,15 @@ export class PartnerRepository extends DtoRepository<
             ])
             .return(collect('fieldRegions.id').as('fieldRegionsIds')),
         )
+        .subQuery('node', (sub) =>
+          sub
+            .match([
+              node('node'),
+              relation('out', '', 'countries'),
+              node('countries', 'Location'),
+            ])
+            .return(collect('countries.id').as('countriesIds')),
+        )
         .apply(matchProps())
         .optionalMatch([
           node('node'),
@@ -137,6 +147,7 @@ export class PartnerRepository extends DtoRepository<
             pointOfContact: 'pointOfContact.id',
             languageOfWiderCommunication: 'languageOfWiderCommunication.id',
             fieldRegions: 'fieldRegionsIds',
+            countries: 'countriesIds',
             scope: 'scopedRoles',
             pinned: 'exists((:User { id: $requestingUser })-[:pinned]->(node))',
           }).as('dto'),
