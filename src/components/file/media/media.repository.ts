@@ -154,10 +154,24 @@ export class MediaRepository extends CommonRepository {
       .apply(this.hydrate());
 
     const result = await query.first();
-    if (!result) {
-      throw new ServerException('Failed to save media info');
+    if (result) {
+      return result.dto;
     }
-    return result.dto;
+    if (input.file) {
+      const exists = await this.getBaseNode(input.file, 'FileVersion');
+      if (!exists) {
+        throw new NotFoundException(
+          'Media could not be saved to nonexistent file',
+        );
+      }
+    }
+    if (input.id) {
+      const exists = await this.getBaseNode(input.id, 'Media');
+      if (!exists) {
+        throw new NotFoundException('Media could not be found');
+      }
+    }
+    throw new ServerException('Failed to save media info');
   }
 }
 
