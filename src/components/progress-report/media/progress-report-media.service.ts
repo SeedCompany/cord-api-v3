@@ -7,7 +7,7 @@ import {
   UnsecuredDto,
 } from '~/common';
 import { DbTypeOf, ResourceLoader } from '~/core';
-import { Privileges } from '../../authorization';
+import { Privileges, withVariant } from '../../authorization';
 import { FileService } from '../../file';
 import { MediaService } from '../../file/media/media.service';
 import { ProgressReport as Report } from '../dto';
@@ -63,7 +63,9 @@ export class ProgressReportMediaService {
   async upload(input: UploadMedia, session: Session) {
     const report = await this.resources.load(Report, input.reportId);
 
-    this.privileges.for(session, Report, report).verifyCan('create', 'media');
+    this.privileges
+      .for(session, Report, withVariant(report, input.variant))
+      .verifyCan('create', 'media');
 
     const initialDto = await this.repo.create(input, session);
 
