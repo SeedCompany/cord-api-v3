@@ -6,6 +6,7 @@ import { ProgressReportMediaLoader } from './progress-report-media.loader';
 import { ProgressReportMediaRepository } from './progress-report-media.repository';
 import {
   ProgressReportMediaActionsResolver,
+  ProgressReportMediaListResolver,
   ProgressReportMediaProgressReportConnectionResolver,
   ProgressReportMediaResolver,
 } from './progress-report-media.resolver';
@@ -15,6 +16,7 @@ import { ProgressReportMediaService } from './progress-report-media.service';
   imports: [FileModule],
   providers: [
     ProgressReportMediaResolver,
+    ProgressReportMediaListResolver,
     ProgressReportMediaProgressReportConnectionResolver,
     ProgressReportMediaActionsResolver,
     ProgressReportMediaLoader,

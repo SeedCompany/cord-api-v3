@@ -5,9 +5,16 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { AnonSession, IdArg, IdOf, LoggedInSession, Session } from '~/common';
+import {
+  AnonSession,
+  IdArg,
+  IdOf,
+  LoggedInSession,
+  Session,
+  Variant,
+} from '~/common';
 import { Loader, LoaderOf } from '~/core';
-import { Privileges } from '../../authorization';
+import { Privileges, withVariant } from '../../authorization';
 import { Media } from '../../file';
 import { MediaLoader } from '../../file/media/media.loader';
 import { PeriodicReportLoader } from '../../periodic-report';
@@ -32,6 +39,26 @@ export class ProgressReportMediaProgressReportConnectionResolver {
     @AnonSession() session: Session,
   ): Promise<ReportMediaList> {
     return await this.service.listForReport(report, args, session);
+  }
+}
+
+@Resolver(ReportMediaList)
+export class ProgressReportMediaListResolver {
+  constructor(private readonly privileges: Privileges) {}
+
+  @ResolveField(() => [Variant], {
+    description: 'The variants the requester has access to upload',
+  })
+  uploadableVariants(
+    @Parent() { report }: ReportMediaList,
+    @AnonSession() session: Session,
+  ): ReadonlyArray<ReportMedia['variant']> {
+    const privileges = this.privileges.for(session, ProgressReport, report);
+    return ReportMedia.Variants.filter((variant) =>
+      privileges
+        .forContext(withVariant(privileges.context!, variant.key))
+        .can('create', 'media'),
+    );
   }
 }
 
