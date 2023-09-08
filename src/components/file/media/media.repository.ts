@@ -1,13 +1,29 @@
 import { Injectable } from '@nestjs/common';
 import { inArray, node, or, Query, relation } from 'cypher-query-builder';
-import { RequireAtLeastOne } from 'type-fest';
-import { EnhancedResource, generateId, ID, ServerException } from '~/common';
+import { Except, RequireAtLeastOne } from 'type-fest';
+import {
+  EnhancedResource,
+  generateId,
+  ID,
+  NotFoundException,
+  ServerException,
+} from '~/common';
 import { CommonRepository } from '~/core';
 import { ACTIVE, apoc, merge } from '~/core/database/query';
 import { AnyMedia, MediaUserMetadata, resolveMedia } from './media.dto';
 
 @Injectable()
 export class MediaRepository extends CommonRepository {
+  async readOne(input: RequireAtLeastOne<Pick<AnyMedia, 'id' | 'file'>>) {
+    const [media] = await this.readMany(
+      input.id ? { mediaIds: [input.id] } : { fvIds: [input.file!] },
+    );
+    if (!media) {
+      throw new NotFoundException('Media not found');
+    }
+    return media;
+  }
+
   async readMany(
     input: RequireAtLeastOne<Record<'fvIds' | 'mediaIds', readonly ID[]>>,
   ) {
@@ -31,20 +47,39 @@ export class MediaRepository extends CommonRepository {
 
   protected hydrate() {
     return (query: Query) =>
-      query.return<{ dto: AnyMedia }>(
-        merge('node', {
-          __typename: 'node.type',
-          file: 'fv.id',
-          dimensions: {
-            width: 'node.width',
-            height: 'node.height',
-          },
-        }).as('dto'),
-      );
+      query
+        .subQuery('fv', (sub) =>
+          sub
+            .comment('Find root file node')
+            .subQuery('fv', (sub2) =>
+              sub2
+                .raw('MATCH p=(fv)-[:parent*]->(node:FileNode)')
+                .return('node as root')
+                .orderBy('length(p)', 'DESC')
+                .raw('LIMIT 1'),
+            )
+            .comment('Get resource holding root file node')
+            .raw('MATCH (resource:BaseNode)-[rel]->(root)')
+            .raw('WHERE not resource:FileNode')
+            .return('[resource, type(rel)] as attachedTo')
+            .raw('LIMIT 1'),
+        )
+        .return<{ dto: AnyMedia }>(
+          merge('node', {
+            __typename: 'node.type',
+            file: 'fv.id',
+            dimensions: {
+              width: 'node.width',
+              height: 'node.height',
+            },
+            attachedTo: 'attachedTo',
+          }).as('dto'),
+        );
   }
 
   async save(
-    input: RequireAtLeastOne<Pick<AnyMedia, 'id' | 'file'>> & Partial<AnyMedia>,
+    input: RequireAtLeastOne<Pick<AnyMedia, 'id' | 'file'>> &
+      Partial<Except<AnyMedia, 'attachedTo'>>,
   ) {
     const res = input.__typename
       ? EnhancedResource.of(resolveMedia(input as AnyMedia))
@@ -119,10 +154,24 @@ export class MediaRepository extends CommonRepository {
       .apply(this.hydrate());
 
     const result = await query.first();
-    if (!result) {
-      throw new ServerException('Failed to save media info');
+    if (result) {
+      return result.dto;
     }
-    return result.dto;
+    if (input.file) {
+      const exists = await this.getBaseNode(input.file, 'FileVersion');
+      if (!exists) {
+        throw new NotFoundException(
+          'Media could not be saved to nonexistent file',
+        );
+      }
+    }
+    if (input.id) {
+      const exists = await this.getBaseNode(input.id, 'Media');
+      if (!exists) {
+        throw new NotFoundException('Media could not be found');
+      }
+    }
+    throw new ServerException('Failed to save media info');
   }
 }
 
