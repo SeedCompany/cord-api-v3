@@ -1,4 +1,4 @@
-import { Field, InputType, ObjectType } from '@nestjs/graphql';
+import { ArgsType, Field, InputType, ObjectType } from '@nestjs/graphql';
 import { setOf } from '@seedcompany/common';
 import { stripIndent } from 'common-tags';
 import { keys as keysOf } from 'ts-transformer-keys';
@@ -7,6 +7,8 @@ import {
   IdField,
   IdOf,
   IntersectionType as Merge,
+  PaginatedList,
+  PaginationInput,
   Resource,
   SecuredProps,
   Variant,
@@ -69,6 +71,16 @@ declare module '~/core/resources/map' {
   interface ResourceMap {
     ProgressReportMedia: typeof ProgressReportMedia;
   }
+}
+
+@ArgsType()
+export class ProgressReportMediaListArgs extends PaginationInput {}
+
+@ObjectType()
+export class ProgressReportMediaList extends PaginatedList(
+  ProgressReportMedia,
+) {
+  readonly report: ProgressReport;
 }
 
 @InputType()

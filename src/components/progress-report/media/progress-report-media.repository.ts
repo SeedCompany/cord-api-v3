@@ -17,12 +17,14 @@ import {
   matchProjectSens,
   merge,
   oncePerProject,
+  paginate,
   path,
   variable,
 } from '~/core/database/query';
 import { ProgressReport as Report } from '../dto';
 import { projectFromProgressReportChild } from '../once-per-project-from-progress-report-child.db-query';
 import {
+  ProgressReportMediaListArgs as ListArgs,
   ProgressReportMedia as ReportMedia,
   UpdateProgressReportMedia as UpdateMedia,
   UploadProgressReportMedia as UploadMedia,
@@ -33,7 +35,7 @@ export class ProgressReportMediaRepository extends DtoRepository<
   typeof ReportMedia,
   [Session]
 >(ReportMedia) {
-  async listForReport(report: Report, session: Session) {
+  async listForReport(report: Report, args: ListArgs, session: Session) {
     const query = this.db
       .query()
       .match([
@@ -41,9 +43,8 @@ export class ProgressReportMediaRepository extends DtoRepository<
         relation('out', '', 'media', ACTIVE),
         node('node', this.resource.dbLabel),
       ])
-      .apply(this.hydrate(session))
-      .map('dto');
-    return await query.run();
+      .apply(paginate(args, this.hydrate(session)));
+    return (await query.first())!;
   }
 
   async create(input: UploadMedia, session: Session) {

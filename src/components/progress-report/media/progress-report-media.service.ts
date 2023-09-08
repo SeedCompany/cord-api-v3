@@ -12,7 +12,9 @@ import { FileService } from '../../file';
 import { MediaService } from '../../file/media/media.service';
 import { ProgressReport as Report } from '../dto';
 import {
+  ProgressReportMediaListArgs as ListArgs,
   ProgressReportMedia as ReportMedia,
+  ProgressReportMediaList as ReportMediaList,
   UpdateProgressReportMedia as UpdateMedia,
   UploadProgressReportMedia as UploadMedia,
 } from './media.dto';
@@ -31,12 +33,16 @@ export class ProgressReportMediaService {
 
   async listForReport(
     report: Report,
+    args: ListArgs,
     session: Session,
-  ): Promise<readonly ReportMedia[]> {
-    const rows = await this.repo.listForReport(report, session);
-    return rows.map((row) =>
-      this.privileges.for(session, ReportMedia).secure(this.dbRowToDto(row)),
-    );
+  ): Promise<ReportMediaList> {
+    const privileges = this.privileges.for(session, ReportMedia);
+    const rows = await this.repo.listForReport(report, args, session);
+    return {
+      report,
+      ...rows,
+      items: rows.items.map((row) => privileges.secure(this.dbRowToDto(row))),
+    };
   }
 
   // TODO change to VGroup.id/items

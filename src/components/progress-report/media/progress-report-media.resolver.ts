@@ -13,7 +13,9 @@ import { MediaLoader } from '../../file/media/media.loader';
 import { PeriodicReportLoader } from '../../periodic-report';
 import { ProgressReport } from '../dto';
 import {
+  ProgressReportMediaListArgs as ListArgs,
   ProgressReportMedia as ReportMedia,
+  ProgressReportMediaList as ReportMediaList,
   UpdateProgressReportMedia as UpdateMedia,
   UploadProgressReportMedia as UploadMedia,
 } from './media.dto';
@@ -23,12 +25,13 @@ import { ProgressReportMediaService } from './progress-report-media.service';
 export class ProgressReportMediaProgressReportConnectionResolver {
   constructor(private readonly service: ProgressReportMediaService) {}
 
-  @ResolveField(() => [ReportMedia])
+  @ResolveField(() => ReportMediaList)
   async media(
     @Parent() report: ProgressReport,
+    @Args() args: ListArgs,
     @AnonSession() session: Session,
-  ): Promise<readonly ReportMedia[]> {
-    return await this.service.listForReport(report, session);
+  ): Promise<ReportMediaList> {
+    return await this.service.listForReport(report, args, session);
   }
 }
 
