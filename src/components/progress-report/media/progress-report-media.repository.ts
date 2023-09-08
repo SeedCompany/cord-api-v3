@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { node, not, Query, relation } from 'cypher-query-builder';
+import { inArray, node, not, Query, relation } from 'cypher-query-builder';
 import {
   generateId,
+  ID,
   InputException,
   NotFoundException,
   ServerException,
@@ -43,8 +44,30 @@ export class ProgressReportMediaRepository extends DtoRepository<
         relation('out', '', 'media', ACTIVE),
         node('node', this.resource.dbLabel),
       ])
+      .apply(projectFromProgressReportChild)
+      .apply(
+        this.privileges.forUser(session).filterToReadable({
+          wrapContext: oncePerProject,
+        }),
+      )
       .apply(paginate(args, this.hydrate(session)));
     return (await query.first())!;
+  }
+
+  async readMany(ids: readonly ID[], session: Session) {
+    return await this.db
+      .query()
+      .matchNode('node', this.resource.dbLabel)
+      .where({ 'node.id': inArray(ids) })
+      .apply(projectFromProgressReportChild)
+      .apply(
+        this.privileges.forUser(session).filterToReadable({
+          wrapContext: oncePerProject,
+        }),
+      )
+      .apply(this.hydrate(session))
+      .map('dto')
+      .run();
   }
 
   async create(input: UploadMedia, session: Session) {
@@ -149,13 +172,6 @@ export class ProgressReportMediaRepository extends DtoRepository<
   protected hydrate(session: Session) {
     return (query: Query) =>
       query
-        .apply(projectFromProgressReportChild)
-        // Only fine here since we don't paginate, otherwise this should be higher.
-        .apply(
-          this.privileges.forUser(session).filterToReadable({
-            wrapContext: oncePerProject,
-          }),
-        )
         .apply(matchProjectSens())
         .apply(matchProjectScopedRoles({ session, outputVar: 'scope' }))
         .match([
