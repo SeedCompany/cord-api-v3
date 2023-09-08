@@ -53,11 +53,10 @@ export class ProgressReportMediaListResolver {
     @Parent() { report }: ReportMediaList,
     @AnonSession() session: Session,
   ): ReadonlyArray<ReportMedia['variant']> {
-    const privileges = this.privileges.for(session, ProgressReport, report);
+    const context = report as any; // the report is fine for condition context
+    const privileges = this.privileges.for(session, ReportMedia);
     return ReportMedia.Variants.filter((variant) =>
-      privileges
-        .forContext(withVariant(privileges.context!, variant.key))
-        .can('create', 'media'),
+      privileges.forContext(withVariant(context, variant)).can('create'),
     );
   }
 }

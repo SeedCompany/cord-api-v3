@@ -13,7 +13,6 @@ import { LanguageEngagement } from '../../engagement/dto';
 import { DefinedFile } from '../../file';
 import { IPeriodicReport } from '../../periodic-report/dto/periodic-report.dto';
 import { ReportType } from '../../periodic-report/dto/report-type.enum';
-import { ProgressReportMedia } from '../media/media.dto';
 import { ProgressReportCommunityStory } from './community-stories.dto';
 import { ProgressReportHighlight } from './highlights.dto';
 import { SecuredProgressReportStatus as SecuredStatus } from './progress-report-status.enum';
@@ -33,7 +32,6 @@ export class ProgressReport extends IPeriodicReport {
     highlights: [ProgressReportHighlight],
     teamNews: [ProgressReportTeamNews],
     communityStories: [ProgressReportCommunityStory],
-    media: [ProgressReportMedia],
   } satisfies ResourceRelationsShape;
 
   declare readonly type: ReportType.Progress;

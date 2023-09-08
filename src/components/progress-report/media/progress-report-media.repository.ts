@@ -20,6 +20,7 @@ import {
   oncePerProject,
   paginate,
   path,
+  requestingUser,
   variable,
 } from '~/core/database/query';
 import { ProgressReport as Report } from '../dto';
@@ -44,6 +45,7 @@ export class ProgressReportMediaRepository extends DtoRepository<
         relation('out', '', 'media', ACTIVE),
         node('node', this.resource.dbLabel),
       ])
+      .match(requestingUser(session))
       .apply(projectFromProgressReportChild)
       .apply(
         this.privileges.forUser(session).filterToReadable({
@@ -60,6 +62,7 @@ export class ProgressReportMediaRepository extends DtoRepository<
       .matchNode('node', this.resource.dbLabel)
       .where({ 'node.id': inArray(ids) })
       .apply(projectFromProgressReportChild)
+      .match(requestingUser(session))
       .apply(
         this.privileges.forUser(session).filterToReadable({
           wrapContext: oncePerProject,
@@ -172,6 +175,7 @@ export class ProgressReportMediaRepository extends DtoRepository<
   protected hydrate(session: Session) {
     return (query: Query) =>
       query
+        .apply(projectFromProgressReportChild)
         .apply(matchProjectSens())
         .apply(matchProjectScopedRoles({ session, outputVar: 'scope' }))
         .match([

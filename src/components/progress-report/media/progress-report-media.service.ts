@@ -63,9 +63,10 @@ export class ProgressReportMediaService {
   async upload(input: UploadMedia, session: Session) {
     const report = await this.resources.load(Report, input.reportId);
 
+    const context = report as any; // the report is fine for condition context
     this.privileges
-      .for(session, Report, withVariant(report, input.variant))
-      .verifyCan('create', 'media');
+      .for(session, ReportMedia, withVariant(context, input.variant))
+      .verifyCan('create');
 
     const initialDto = await this.repo.create(input, session);
 
