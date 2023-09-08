@@ -24,6 +24,7 @@ import { member, Policy, Role, variant } from '../util';
       p.responses.whenAll(member, variant('draft')).edit,
     ]),
   ]),
+  r.ProgressReportMedia.whenAll(member, variant('draft')).create.edit,
   r.ProgressReportWorkflowEvent.transitions(
     'Start',
     'In Progress -> In Review',

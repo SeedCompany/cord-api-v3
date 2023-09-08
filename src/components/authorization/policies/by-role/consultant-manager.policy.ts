@@ -46,6 +46,7 @@ import { member, Policy, Role, sensMediumOrLower, sensOnlyLow } from '../util';
     r.ProgressReportCommunityStory,
     r.ProgressReportHighlight,
     r.ProgressReportTeamNews,
+    r.ProgressReportMedia,
     r.ProgressReportVarianceExplanation,
     r.StepProgress,
   ].map((it) => it.whenAny(member, sensMediumOrLower).read),

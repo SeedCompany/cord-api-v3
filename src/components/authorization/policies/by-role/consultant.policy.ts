@@ -17,6 +17,7 @@ import { member, Policy, Role } from '../util';
     r.ProgressReportCommunityStory,
     r.ProgressReportHighlight,
     r.ProgressReportTeamNews,
+    r.ProgressReportMedia,
     r.ProgressReportVarianceExplanation,
     r.StepProgress,
   ].map((it) => it.when(member).read),

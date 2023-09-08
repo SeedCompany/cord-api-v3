@@ -44,6 +44,8 @@ export class ProgressReportMedia extends Merge(Resource, HasCategory) {
   static readonly Parent = import('../dto/progress-report.entity').then(
     (m) => m.ProgressReport,
   );
+  static readonly ConfirmThisClassPassesSensitivityToPolicies = true;
+
   static Variants = ProgressReportHighlight.Variants;
   // Only the last variant is publicly visible (accessible by anyone anonymously)
   // Saved in DB, so adjust with caution
