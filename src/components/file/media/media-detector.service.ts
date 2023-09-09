@@ -53,8 +53,7 @@ export class MediaDetector {
     const result = await this.ffprobe(url);
     const { width, height, duration: rawDuration } = result.streams?.[0] ?? {};
 
-    const d = rawDuration as string | number | undefined; // I've seen as string
-    const duration = !d ? 0 : typeof d === 'string' ? parseFloat(d) : d;
+    const duration = rawDuration ? parseFloat(rawDuration) : 0;
 
     if (isAudio) {
       return { __typename: 'Audio', duration };
