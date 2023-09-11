@@ -9,6 +9,7 @@ import {
   AnonSession,
   IdArg,
   IdOf,
+  ListArg,
   LoggedInSession,
   Session,
   Variant,
@@ -20,7 +21,7 @@ import { MediaLoader } from '../../file/media/media.loader';
 import { PeriodicReportLoader } from '../../periodic-report';
 import { ProgressReport } from '../dto';
 import {
-  ProgressReportMediaListArgs as ListArgs,
+  ProgressReportMediaListInput as ListArgs,
   ProgressReportMedia as ReportMedia,
   ProgressReportMediaList as ReportMediaList,
   UpdateProgressReportMedia as UpdateMedia,
@@ -35,10 +36,10 @@ export class ProgressReportMediaProgressReportConnectionResolver {
   @ResolveField(() => ReportMediaList)
   async media(
     @Parent() report: ProgressReport,
-    @Args() args: ListArgs,
+    @ListArg(ListArgs) input: ListArgs,
     @AnonSession() session: Session,
   ): Promise<ReportMediaList> {
-    return await this.service.listForReport(report, args, session);
+    return await this.service.listForReport(report, input, session);
   }
 }
 

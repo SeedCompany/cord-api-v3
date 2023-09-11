@@ -12,7 +12,7 @@ import { FileService } from '../../file';
 import { MediaService } from '../../file/media/media.service';
 import { ProgressReport as Report } from '../dto';
 import {
-  ProgressReportMediaListArgs as ListArgs,
+  ProgressReportMediaListInput as ListArgs,
   ProgressReportMedia as ReportMedia,
   ProgressReportMediaList as ReportMediaList,
   UpdateProgressReportMedia as UpdateMedia,

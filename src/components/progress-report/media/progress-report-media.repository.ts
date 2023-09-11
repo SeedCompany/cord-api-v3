@@ -21,12 +21,13 @@ import {
   paginate,
   path,
   requestingUser,
+  sorting,
   variable,
 } from '~/core/database/query';
 import { ProgressReport as Report } from '../dto';
 import { projectFromProgressReportChild } from '../once-per-project-from-progress-report-child.db-query';
 import {
-  ProgressReportMediaListArgs as ListArgs,
+  ProgressReportMediaListInput as ListArgs,
   ProgressReportMedia as ReportMedia,
   UpdateProgressReportMedia as UpdateMedia,
   UploadProgressReportMedia as UploadMedia,
@@ -50,6 +51,19 @@ export class ProgressReportMediaRepository extends DtoRepository<
       .apply(
         this.privileges.forUser(session).filterToReadable({
           wrapContext: oncePerProject,
+        }),
+      )
+      .apply(
+        sorting(ReportMedia, args, {
+          variant: (q) => {
+            const vo = q.params.addParam(
+              ReportMedia.Variants.map((v) => v.key),
+              'variantsOrder',
+            );
+            return q.return<{ sortValue: number }>(
+              `apoc.coll.indexOf(${String(vo)}, node.variant) as sortValue`,
+            );
+          },
         }),
       )
       .apply(paginate(args, this.hydrate(session)));

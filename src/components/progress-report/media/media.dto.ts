@@ -1,4 +1,4 @@
-import { ArgsType, Field, InputType, ObjectType } from '@nestjs/graphql';
+import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { setOf } from '@seedcompany/common';
 import { stripIndent } from 'common-tags';
 import { keys as keysOf } from 'ts-transformer-keys';
@@ -8,9 +8,9 @@ import {
   IdOf,
   IntersectionType as Merge,
   PaginatedList,
-  PaginationInput,
   Resource,
   SecuredProps,
+  SortablePaginationInput,
   Variant,
   VariantInputField,
   VariantOf,
@@ -41,6 +41,7 @@ class HasCategory extends DataObject {
 export class ProgressReportMedia extends Merge(Resource, HasCategory) {
   static Props = keysOf<ProgressReportMedia>();
   static SecuredProps = keysOf<SecuredProps<ProgressReportMedia>>();
+  static BaseNodeProps = [...Resource.Props, 'category', 'creator', 'variant'];
   static readonly Parent = import('../dto/progress-report.entity').then(
     (m) => m.ProgressReport,
   );
@@ -75,8 +76,10 @@ declare module '~/core/resources/map' {
   }
 }
 
-@ArgsType()
-export class ProgressReportMediaListArgs extends PaginationInput {}
+@InputType()
+export class ProgressReportMediaListInput extends SortablePaginationInput({
+  defaultSort: 'createdAt',
+}) {}
 
 @ObjectType()
 export class ProgressReportMediaList extends PaginatedList(
