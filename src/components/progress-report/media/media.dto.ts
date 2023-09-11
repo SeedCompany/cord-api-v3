@@ -77,9 +77,18 @@ declare module '~/core/resources/map' {
 }
 
 @InputType()
-export class ProgressReportMediaListInput extends SortablePaginationInput({
+export class ProgressReportMediaListInput extends SortablePaginationInput<
+  'createdAt' | 'variant'
+>({
   defaultSort: 'createdAt',
-}) {}
+}) {
+  @VariantInputField(ProgressReportMedia, {
+    nullable: true,
+    many: true,
+    description: 'Filter to these specific variants',
+  })
+  variants?: ReadonlyArray<Variant<MediaVariant>>;
+}
 
 @ObjectType()
 export class ProgressReportMediaList extends PaginatedList(

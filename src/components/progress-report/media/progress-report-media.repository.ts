@@ -14,6 +14,7 @@ import {
   apoc,
   createNode,
   createRelationships,
+  filter,
   matchProjectScopedRoles,
   matchProjectSens,
   merge,
@@ -46,6 +47,16 @@ export class ProgressReportMediaRepository extends DtoRepository<
         relation('out', '', 'media', ACTIVE),
         node('node', this.resource.dbLabel),
       ])
+      .apply(
+        filter.builder(
+          { variants: args.variants },
+          {
+            variants: ({ value }) => ({
+              'node.variant': inArray(value.map((v) => v.key)),
+            }),
+          },
+        ),
+      )
       .match(requestingUser(session))
       .apply(projectFromProgressReportChild)
       .apply(
