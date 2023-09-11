@@ -1,3 +1,4 @@
+import { forwardRef, Inject } from '@nestjs/common';
 import { IdOf } from '~/common';
 import { LoaderFactory, SessionAwareLoaderStrategy } from '~/core';
 import { ProgressReportMedia as ReportMedia } from './media.dto';
@@ -8,7 +9,10 @@ export class ProgressReportMediaLoader extends SessionAwareLoaderStrategy<
   ReportMedia,
   IdOf<ReportMedia>
 > {
-  constructor(private readonly service: ProgressReportMediaService) {
+  constructor(
+    @Inject(forwardRef(() => ProgressReportMediaService))
+    private readonly service: ProgressReportMediaService & {},
+  ) {
     super();
   }
 

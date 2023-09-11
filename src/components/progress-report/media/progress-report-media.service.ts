@@ -60,6 +60,16 @@ export class ProgressReportMediaService {
     );
   }
 
+  async readFeaturedOfReport(
+    ids: ReadonlyArray<IdOf<Report>>,
+    session: Session,
+  ) {
+    const row = await this.repo.readFeaturedOfReport(ids, session);
+    return row.map((row) =>
+      this.privileges.for(session, ReportMedia).secure(this.dbRowToDto(row)),
+    );
+  }
+
   async upload(input: UploadMedia, session: Session) {
     const report = await this.resources.load(Report, input.reportId);
 

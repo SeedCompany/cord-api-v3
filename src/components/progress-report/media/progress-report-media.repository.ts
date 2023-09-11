@@ -3,6 +3,7 @@ import { inArray, node, not, Query, relation } from 'cypher-query-builder';
 import {
   generateId,
   ID,
+  IdOf,
   InputException,
   NotFoundException,
   ServerException,
@@ -86,6 +87,39 @@ export class ProgressReportMediaRepository extends DtoRepository<
       .query()
       .matchNode('node', this.resource.dbLabel)
       .where({ 'node.id': inArray(ids) })
+      .apply(projectFromProgressReportChild)
+      .match(requestingUser(session))
+      .apply(
+        this.privileges.forUser(session).filterToReadable({
+          wrapContext: oncePerProject,
+        }),
+      )
+      .apply(this.hydrate(session))
+      .map('dto')
+      .run();
+  }
+
+  async readFeaturedOfReport(
+    ids: ReadonlyArray<IdOf<Report>>,
+    session: Session,
+  ) {
+    return await this.db
+      .query()
+      .matchNode('report', 'ProgressReport')
+      .where({ 'report.id': inArray(ids) })
+      .subQuery('report', (sub) =>
+        sub
+          .match([
+            node('report'),
+            relation('out', '', 'media', ACTIVE),
+            node('node', this.resource.dbLabel, {
+              variant: ReportMedia.Variants.at(-1)!.key,
+            }),
+          ])
+          .return('node')
+          .orderBy('node.createdAt', 'DESC')
+          .raw('LIMIT 1'),
+      )
       .apply(projectFromProgressReportChild)
       .match(requestingUser(session))
       .apply(
