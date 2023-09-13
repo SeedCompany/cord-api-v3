@@ -31,7 +31,6 @@ import { member, Policy, Role, variant } from '../util';
   ]),
   [r.ProgressReportMedia].flatMap((it) => [
     it.when(member).read,
-    it.whenAll(member, variant('draft')).read,
     it.whenAll(member, variant('translated')).create.edit,
   ]),
   r.ProgressReportWorkflowEvent.transitions(
