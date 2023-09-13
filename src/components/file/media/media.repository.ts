@@ -103,7 +103,11 @@ export class MediaRepository extends CommonRepository {
                 values: { 'node.id': tempId },
                 variables: { 'node.createdAt': 'datetime()' },
               })
-          : q,
+          : q.match([
+              node('fv', 'FileVersion'),
+              relation('out', '', 'media'),
+              node('node'),
+            ]),
       )
       .setValues({ node: toDbShape(input) }, true)
       .with('node, fv')

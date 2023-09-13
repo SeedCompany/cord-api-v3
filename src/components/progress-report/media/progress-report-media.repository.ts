@@ -45,7 +45,7 @@ export class ProgressReportMediaRepository extends DtoRepository<
       .query()
       .match([
         node('report', 'ProgressReport', { id: report.id }),
-        relation('out', '', 'media', ACTIVE),
+        relation('out', '', 'child', ACTIVE),
         node('node', this.resource.dbLabel),
       ])
       .apply(
@@ -111,7 +111,7 @@ export class ProgressReportMediaRepository extends DtoRepository<
         sub
           .match([
             node('report'),
-            relation('out', '', 'media', ACTIVE),
+            relation('out', '', 'child', ACTIVE),
             node('node', this.resource.dbLabel, {
               variant: ReportMedia.Variants.at(-1)!.key,
             }),
@@ -137,26 +137,33 @@ export class ProgressReportMediaRepository extends DtoRepository<
     const query = this.db
       .query()
       .matchNode('report', 'ProgressReport', { id: input.reportId })
-      [
-        // Only create a new variant group if one isn't provided
-        // If one is given, it must already exist,
-        // which is why we aren't using merge.
-        input.variantGroup ? 'match' : 'create'
-      ](
-        node('variantGroup', 'VariantGroup', {
-          id: input.variantGroup ?? newVariantGroupId,
-        }),
-      )
-      // Block creation if the variant group already has this variant
-      .where(
-        not(
-          path([
-            node('variantGroup'),
-            relation('out', '', 'variant', ACTIVE),
-            node({ variant: input.variant.key }),
-          ]),
-        ),
-      )
+      .apply((q) => {
+        // Create a new variant group if one isn't provided
+        if (!input.variantGroup) {
+          return q
+            .createNode('variantGroup', 'VariantGroup', {
+              id: newVariantGroupId,
+            })
+            .with('report, variantGroup');
+        }
+        return (
+          q
+            // Look up existing VariantGroup
+            .matchNode('variantGroup', 'VariantGroup', {
+              id: input.variantGroup,
+            })
+            // Block media creation if the variant group already has this variant
+            .where(
+              not(
+                path([
+                  node('variantGroup'),
+                  relation('out', '', 'child', ACTIVE),
+                  node({ variant: input.variant.key }),
+                ]),
+              ),
+            )
+        );
+      })
       .apply(
         await createNode(this.resource, {
           baseNodeProps: {
@@ -167,11 +174,13 @@ export class ProgressReportMediaRepository extends DtoRepository<
         }),
       )
       .apply(
-        createRelationships(this.resource, {
-          in: {
-            variant: variable('variantGroup'),
-            media: variable('report'),
-          },
+        createRelationships(this.resource, 'in', {
+          child: variable('variantGroup'),
+        }),
+      )
+      .apply(
+        createRelationships(this.resource, 'in', {
+          child: variable('report'),
         }),
       )
       .return<{ dto: Omit<DbTypeOf<ReportMedia>, 'media' | 'file'> }>(
@@ -195,7 +204,7 @@ export class ProgressReportMediaRepository extends DtoRepository<
       .query()
       .match([
         node('vg', 'VariantGroup'),
-        relation('out', '', 'variant', ACTIVE),
+        relation('out', '', 'child', ACTIVE),
         node({ variant: input.variant.key }),
       ])
       .return('vg')
@@ -223,8 +232,8 @@ export class ProgressReportMediaRepository extends DtoRepository<
       .query()
       .match([
         node('variantGroup', 'VariantGroup', { id }),
-        relation('out', '', 'variant', ACTIVE),
-        node('variant'),
+        relation('out', '', 'child', ACTIVE),
+        node('variant', 'ProgressReportMedia'),
       ])
       .return('variant')
       .first();
@@ -240,12 +249,12 @@ export class ProgressReportMediaRepository extends DtoRepository<
         .match([
           [
             node('node'),
-            relation('in', '', 'media', ACTIVE),
+            relation('in', '', 'child', ACTIVE),
             node('report', 'ProgressReport'),
           ],
           [
             node('node'),
-            relation('in', '', 'variant', ACTIVE),
+            relation('in', '', 'child', ACTIVE),
             node('variantGroup', 'VariantGroup'),
           ],
           [
