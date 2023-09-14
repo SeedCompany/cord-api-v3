@@ -28,7 +28,9 @@ import {
   registerUser,
   requestFileUpload,
   runAsAdmin,
+  runInIsolatedSession,
   TestApp,
+  TestUser,
   uploadFileContents,
 } from './utility';
 import { RawProject } from './utility/fragments';
@@ -275,6 +277,93 @@ describe('ProgressReport Media e2e', () => {
     expect(updated.media.items).toHaveLength(0);
     expect(updated.media.total).toBe(0);
   });
+
+  describe('Featured Media', () => {
+    let marketing: TestUser;
+    beforeAll(async () => {
+      marketing = await runInIsolatedSession(app, async () => {
+        return await registerUser(app, { roles: ['Marketing'] });
+      });
+    });
+
+    it('Upload', async () => {
+      const before = await getFeaturedMedia(app, reportId);
+      expect(before).toBeNull();
+
+      const upload = await runInIsolatedSession(app, async () => {
+        await marketing.login();
+
+        const { id: uploadId, url } = await requestFileUpload(app);
+        await uploadFileContents(app, url, image);
+        return await uploadMedia(app, {
+          reportId,
+          variant: 'published' as any,
+          file: {
+            uploadId,
+            name: 'A picture',
+          },
+        });
+      });
+
+      const after = await getFeaturedMedia(app, reportId);
+      expect(after).not.toBeNull();
+      expect(after?.id).toEqual(upload.media.items[0].id);
+    });
+
+    it('Latest Wins', async () => {
+      const before = await getFeaturedMedia(app, reportId);
+      expect(before).toBeNull();
+
+      await runInIsolatedSession(app, async () => {
+        await marketing.login();
+
+        const upload1 = await requestFileUpload(app);
+        await uploadFileContents(app, upload1.url, image);
+        await uploadMedia(app, {
+          reportId,
+          variant: 'published' as any,
+          file: {
+            uploadId: upload1.id,
+            name: 'The picture',
+          },
+        });
+
+        const upload2 = await requestFileUpload(app);
+        await uploadFileContents(app, upload2.url, image);
+        await uploadMedia(app, {
+          reportId,
+          variant: 'published' as any,
+          file: {
+            uploadId: upload2.id,
+            name: 'The picture',
+            media: {
+              caption: 'The latest picture',
+            },
+          },
+        });
+      });
+
+      const after = await getFeaturedMedia(app, reportId);
+      expect(after).not.toBeNull();
+      expect(after?.media.caption).toEqual('The latest picture');
+    });
+
+    it('None if not published variant', async () => {
+      const { id: uploadId, url } = await requestFileUpload(app);
+      await uploadFileContents(app, url, image);
+      await uploadMedia(app, {
+        reportId,
+        variant: 'draft' as any,
+        file: {
+          uploadId,
+          name: 'A picture',
+        },
+      });
+
+      const featured = await getFeaturedMedia(app, reportId);
+      expect(featured).toBeNull();
+    });
+  });
 });
 
 async function uploadMedia(
@@ -303,6 +392,25 @@ async function uploadMedia(
     id: IdOf<ProgressReport>;
     media: PaginatedListType<RawReportMedia>;
   };
+}
+
+async function getFeaturedMedia(app: TestApp, id: IdOf<ProgressReport>) {
+  const { report } = await app.graphql.query(
+    gql`
+      query ($id: ID!) {
+        report: periodicReport(id: $id) {
+          ... on ProgressReport {
+            featuredMedia {
+              ...reportMedia
+            }
+          }
+        }
+      }
+      ${reportMediaFrag}
+    `,
+    { id },
+  );
+  return report.featuredMedia as RawReportMedia | null;
 }
 
 const reportMediaFrag = gql`
