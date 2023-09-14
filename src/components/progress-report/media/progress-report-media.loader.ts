@@ -1,7 +1,7 @@
 import { forwardRef, Inject } from '@nestjs/common';
 import { IdOf } from '~/common';
 import { LoaderFactory, SessionAwareLoaderStrategy } from '~/core';
-import { ProgressReportMedia as ReportMedia } from './media.dto';
+import { ProgressReportMedia as ReportMedia } from './dto';
 import { ProgressReportMediaService } from './progress-report-media.service';
 
 @LoaderFactory(() => ReportMedia)

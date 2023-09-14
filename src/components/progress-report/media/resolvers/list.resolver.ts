@@ -4,7 +4,7 @@ import { Privileges, withVariant } from '../../../authorization';
 import {
   ProgressReportMedia as ReportMedia,
   ProgressReportMediaList as ReportMediaList,
-} from '../media.dto';
+} from '../dto';
 
 @Resolver(ReportMediaList)
 export class ProgressReportMediaListResolver {

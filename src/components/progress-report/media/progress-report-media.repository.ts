@@ -33,7 +33,7 @@ import {
   ProgressReportMedia as ReportMedia,
   UpdateProgressReportMedia as UpdateMedia,
   UploadProgressReportMedia as UploadMedia,
-} from './media.dto';
+} from './dto';
 
 @Injectable()
 export class ProgressReportMediaRepository extends DtoRepository<

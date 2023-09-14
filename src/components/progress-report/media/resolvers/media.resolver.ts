@@ -16,7 +16,7 @@ import {
   ProgressReportMedia as ReportMedia,
   UpdateProgressReportMedia as UpdateMedia,
   UploadProgressReportMedia as UploadMedia,
-} from '../media.dto';
+} from '../dto';
 import { ProgressReportMediaService } from '../progress-report-media.service';
 
 @Resolver(ReportMedia)

@@ -12,7 +12,7 @@ import {
   ProgressReportMediaListInput as ListArgs,
   ProgressReportMedia as ReportMedia,
   ProgressReportMediaList as ReportMediaList,
-} from '../media.dto';
+} from '../dto';
 import { ProgressReportFeaturedMediaLoader } from '../progress-report-featured-media.loader';
 import { ProgressReportMediaService } from '../progress-report-media.service';
 

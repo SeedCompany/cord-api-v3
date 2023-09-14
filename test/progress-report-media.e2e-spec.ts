@@ -15,7 +15,7 @@ import {
   ProgressReportMedia,
   UpdateProgressReportMedia,
   UploadProgressReportMedia,
-} from '../src/components/progress-report/media/media.dto';
+} from '../src/components/progress-report/media/dto';
 import {
   createLanguage,
   createProject,

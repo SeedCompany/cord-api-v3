@@ -17,7 +17,7 @@ import {
   ProgressReportMediaList as ReportMediaList,
   UpdateProgressReportMedia as UpdateMedia,
   UploadProgressReportMedia as UploadMedia,
-} from './media.dto';
+} from './dto';
 import { ProgressReportMediaLoader } from './progress-report-media.loader';
 import { ProgressReportMediaRepository } from './progress-report-media.repository';
 

@@ -1,7 +1,7 @@
 import { EventsHandler, GqlContextHost, ResourceLoader } from '~/core';
 import { Privileges } from '../../../authorization';
 import { CanUpdateMediaUserMetadataEvent } from '../../../file/media/events/can-update-event';
-import { ProgressReportMedia as ReportMedia } from '../media.dto';
+import { ProgressReportMedia as ReportMedia } from '../dto';
 
 @EventsHandler(CanUpdateMediaUserMetadataEvent)
 export class ProgressReportUpdateMediaMetadataCheckHandler {

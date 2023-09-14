@@ -2,7 +2,7 @@ import { DataLoaderOptions } from '@seedcompany/data-loader';
 import { IdOf } from '~/common';
 import { LoaderFactory, SessionAwareLoaderStrategy } from '~/core';
 import { ProgressReport } from '../dto';
-import { ProgressReportMedia as ReportMedia } from './media.dto';
+import { ProgressReportMedia as ReportMedia } from './dto';
 import { ProgressReportMediaService } from './progress-report-media.service';
 
 @LoaderFactory()
