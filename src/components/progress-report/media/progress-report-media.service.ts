@@ -64,8 +64,8 @@ export class ProgressReportMediaService {
     ids: ReadonlyArray<IdOf<Report>>,
     session: Session,
   ) {
-    const row = await this.repo.readFeaturedOfReport(ids, session);
-    return row.map((row) =>
+    const rows = await this.repo.readFeaturedOfReport(ids, session);
+    return rows.map((row) =>
       this.privileges.for(session, ReportMedia).secure(this.dbRowToDto(row)),
     );
   }
