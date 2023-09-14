@@ -5,13 +5,10 @@ import { ProgressReportUpdateMediaMetadataCheckHandler } from './handlers/update
 import { ProgressReportFeaturedMediaLoader } from './progress-report-featured-media.loader';
 import { ProgressReportMediaLoader } from './progress-report-media.loader';
 import { ProgressReportMediaRepository } from './progress-report-media.repository';
-import {
-  ProgressReportMediaActionsResolver,
-  ProgressReportMediaListResolver,
-  ProgressReportMediaProgressReportConnectionResolver,
-  ProgressReportMediaResolver,
-} from './progress-report-media.resolver';
 import { ProgressReportMediaService } from './progress-report-media.service';
+import { ProgressReportMediaListResolver } from './resolvers/list.resolver';
+import { ProgressReportMediaResolver } from './resolvers/media.resolver';
+import { ProgressReportMediaProgressReportConnectionResolver } from './resolvers/report-connection.resolver';
 
 @Module({
   imports: [FileModule],
@@ -19,7 +16,6 @@ import { ProgressReportMediaService } from './progress-report-media.service';
     ProgressReportMediaResolver,
     ProgressReportMediaListResolver,
     ProgressReportMediaProgressReportConnectionResolver,
-    ProgressReportMediaActionsResolver,
     ProgressReportMediaLoader,
     ProgressReportFeaturedMediaLoader,
     ProgressReportMediaService,
