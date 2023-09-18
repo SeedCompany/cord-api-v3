@@ -2,6 +2,7 @@ import { ApolloDriver } from '@nestjs/apollo';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { GraphQLModule as NestGraphqlModule } from '@nestjs/graphql';
+import createUploadMiddleware from 'graphql-upload/graphqlUploadExpress.mjs';
 import { TracingModule } from '../tracing';
 import { GqlContextHost, GqlContextHostImpl } from './gql-context.host';
 import { GraphqlLoggingPlugin } from './graphql-logging.plugin';
@@ -34,6 +35,7 @@ export class GraphqlModule implements NestModule {
   constructor(private readonly middleware: GqlContextHostImpl) {}
 
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(this.middleware.use).forRoutes('*');
+    const uploadMiddleware = createUploadMiddleware();
+    consumer.apply(this.middleware.use, uploadMiddleware).forRoutes('*');
   }
 }
