@@ -14,14 +14,14 @@ export async function createRootDirectory(app: TestApp, name?: string) {
     .get(AuthenticationService)
     .resumeSession(app.graphql.authToken);
   const session = loggedInSession(rawSession);
-  const actual = await app
-    .get(FileService)
-    .createDirectory(undefined, name, session);
-
-  expect(actual).toBeTruthy();
-  expect(actual.name).toBe(name);
-
-  return actual;
+  const id = await app.get(FileService).createRootDirectory({
+    // An attachment point is required, so just use the current user.
+    resource: { __typename: 'User', id: session.userId },
+    relation: 'dir',
+    name,
+    session,
+  });
+  return await app.get(FileService).getDirectory(id, session);
 }
 
 export async function createDirectory(

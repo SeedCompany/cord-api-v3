@@ -3315,10 +3315,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/ffprobe@npm:^1.1.4":
-  version: 1.1.4
-  resolution: "@types/ffprobe@npm:1.1.4"
-  checksum: 98ffd218a32e5707a92a557e822d9079083a0b8195e44213889be1293b51ac6e02de1a287c2fdc2271b231f77c7289024357fbf635a25428c8c8ab95f6f6d3c1
+"@types/ffprobe@npm:^1.1.5":
+  version: 1.1.5
+  resolution: "@types/ffprobe@npm:1.1.5"
+  checksum: f62c0897c8f3d9ff866a6dfbe60f0b3bad3bef066d20ff20cbc7bc8687b5b3f1af840592c59a0c8415a88e6bd63ccd2ecc7527113a2850b07a22acd23e33cfb1
   languageName: node
   linkType: hard
 
@@ -5159,7 +5159,7 @@ __metadata:
     "@types/cookie-parser": ^1.4.3
     "@types/express": ^4.17.17
     "@types/express-serve-static-core": ^4.17.35
-    "@types/ffprobe": ^1.1.4
+    "@types/ffprobe": ^1.1.5
     "@types/jest": ^29.5.3
     "@types/jsonwebtoken": ^9.0.2
     "@types/lodash": ^4.14.197

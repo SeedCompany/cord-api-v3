@@ -4,6 +4,7 @@ import { DateTime } from 'luxon';
 import { Readable } from 'stream';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive, Opaque } from 'type-fest';
+import { BaseNode } from '~/core/database/results';
 import { RegisterResource } from '~/core/resources';
 import {
   DateTimeField,
@@ -69,6 +70,12 @@ abstract class FileNode extends Resource {
   readonly public: boolean;
 
   readonly createdById: ID;
+
+  /** The root FileNode. This could be self */
+  readonly root: BaseNode;
+
+  /** The resource the root FileNode is attached to */
+  readonly rootAttachedTo: [resource: BaseNode, relationName: string];
 }
 
 // class name has to match schema name for interface resolvers to work.

@@ -6,6 +6,7 @@ import { ProgressReportCommunityStoryService } from './community-stories/progres
 import { ProgressReportHighlightsRepository } from './highlights/progress-report-highlights.repository';
 import { ProgressReportHighlightsResolver } from './highlights/progress-report-highlights.resolver';
 import { ProgressReportHighlightsService } from './highlights/progress-report-highlights.service';
+import { ProgressReportMediaModule } from './media/progress-report-media.module';
 import { ProgressReportExtraForPeriodicInterfaceRepository } from './progress-report-extra-for-periodic-interface.repository';
 import { ProgressReportRepository } from './progress-report.repository';
 import { ProgressReportService } from './progress-report.service';
@@ -22,6 +23,7 @@ import { ProgressReportWorkflowModule } from './workflow/progress-report-workflo
     forwardRef(() => PeriodicReportModule),
     ProgressReportWorkflowModule,
     ProgressReportVarianceExplanationModule,
+    ProgressReportMediaModule,
   ],
   providers: [
     ProgressReportParentResolver,

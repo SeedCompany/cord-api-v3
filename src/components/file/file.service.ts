@@ -8,7 +8,6 @@ import { Connection } from 'cypher-query-builder';
 import { intersection } from 'lodash';
 import { Duration } from 'luxon';
 import { Readable } from 'stream';
-import { withAddedPath } from '~/common/url.util';
 import {
   DuplicateException,
   DurationIn,
@@ -19,8 +18,9 @@ import {
   ServerException,
   Session,
   UnauthorizedException,
-} from '../../common';
-import { ConfigService, ILogger, Logger } from '../../core';
+} from '~/common';
+import { withAddedPath } from '~/common/url.util';
+import { ConfigService, IEventBus, ILogger, Logger } from '~/core';
 import { FileBucket } from './bucket';
 import {
   CreateDefinedFileVersionInput,
@@ -41,6 +41,7 @@ import {
   RenameFileInput,
   RequestUploadOutput,
 } from './dto';
+import { AfterFileUploadEvent } from './events/after-file-upload.event';
 import { FileUrlController as FileUrl } from './file-url.controller';
 import { FileRepository } from './file.repository';
 import { MediaService } from './media/media.service';
@@ -53,6 +54,7 @@ export class FileService {
     private readonly db: Connection,
     private readonly config: ConfigService,
     private readonly mediaService: MediaService,
+    private readonly eventBus: IEventBus,
     @Logger('file:service') private readonly logger: ILogger,
   ) {}
 
@@ -225,6 +227,12 @@ export class FileService {
     return await this.getDirectory(id, session);
   }
 
+  async createRootDirectory(
+    ...args: Parameters<FileRepository['createRootDirectory']>
+  ) {
+    return await this.repo.createRootDirectory(...args);
+  }
+
   async requestUpload(): Promise<RequestUploadOutput> {
     const id = await generateId();
     const url = await this.bucket.getSignedUrl(PutObject, {
@@ -361,7 +369,11 @@ export class FileService {
     // Change the file's name to match the latest version name
     await this.rename({ id: fileId, name }, session);
 
-    return await this.getFile(fileId, session);
+    const file = await this.getFile(fileId, session);
+
+    await this.eventBus.publish(new AfterFileUploadEvent(file));
+
+    return file;
   }
 
   private async validateParentNode(

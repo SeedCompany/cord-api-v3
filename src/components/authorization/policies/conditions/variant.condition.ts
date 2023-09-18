@@ -33,7 +33,7 @@ class VariantCondition<TResourceStatic extends ResourceShape<any>>
 
   asCypherCondition(query: Query, _other: AsCypherParams<TResourceStatic>) {
     const variants = query.params.addParam([...this.variants], 'variants');
-    return `node.variant = ${String(variants)}`; // TODO hand waving
+    return `node.variant = ${String(variants)}`;
   }
 
   union(this: void, conditions: this[]) {

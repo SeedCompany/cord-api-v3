@@ -11,7 +11,7 @@ import {
 } from 'cypher-query-builder';
 import { Direction } from 'cypher-query-builder/dist/typings/clauses/order-by';
 import { AnyConditions } from 'cypher-query-builder/dist/typings/clauses/where-utils';
-import { isEmpty } from 'lodash';
+import { isEmpty, keyBy } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   ID,
@@ -26,6 +26,7 @@ import {
   ILogger,
   Logger,
   OnIndex,
+  ResourceRef,
 } from '../../core';
 import {
   ACTIVE,
@@ -174,7 +175,27 @@ export class FileRepository extends CommonRepository {
             .where({ node: hasLabel(FileNodeType.Directory) })
             .apply(this.hydrateDirectory()),
         )
-        .return<{ dto: FileNode }>('dto');
+        .subQuery('node', (sub) =>
+          sub
+            .raw('MATCH p=(node)-[:parent*0..]->(root:FileNode)')
+            .return('root')
+            .orderBy('length(p)', 'DESC')
+            .raw('LIMIT 1'),
+        )
+        .subQuery('root', (sub) =>
+          sub
+            .raw('MATCH (resource:BaseNode)-[rel]->(root)')
+            // Need to filter out FileNodes which are children of this dir
+            // (the schema was mistakenly pointing these relationships in the wrong direction)
+            // Also filter to ACTIVE, if applicable.
+            .raw(
+              'WHERE NOT resource:FileNode AND coalesce(rel.active, true) <> false',
+            )
+            .return('[resource, type(rel)] as rootAttachedTo'),
+        )
+        .return<{ dto: FileNode }>(
+          merge('dto', keyBy(['root', 'rootAttachedTo'])).as('dto'),
+        );
   }
 
   private hydrateFile() {
@@ -380,6 +401,42 @@ export class FileRepository extends CommonRepository {
       .return<{ id: ID }>('node.id as id');
 
     const result = await createFile.first();
+    if (!result) {
+      throw new ServerException('Failed to create directory');
+    }
+    return result.id;
+  }
+
+  async createRootDirectory({
+    resource,
+    relation,
+    name,
+    public: isPublic,
+    session,
+  }: {
+    resource: ResourceRef<any>;
+    relation: string;
+    name: string;
+    public?: boolean;
+    session: Session;
+  }) {
+    const initialProps = {
+      name,
+      public: isPublic,
+    };
+
+    const query = this.db
+      .query()
+      .apply(await createNode(Directory, { initialProps }))
+      .apply(
+        createRelationships(Directory, {
+          in: { [relation]: ['BaseNode', resource.id] },
+          out: { createdBy: ['User', session.userId] },
+        }),
+      )
+      .return<{ id: ID }>('node.id as id');
+
+    const result = await query.first();
     if (!result) {
       throw new ServerException('Failed to create directory');
     }

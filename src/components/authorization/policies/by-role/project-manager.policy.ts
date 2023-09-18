@@ -65,6 +65,11 @@ import {
         p.responses.whenAll(member, variant('draft', 'translated', 'fpm')).edit,
       ]),
     ]),
+    [r.ProgressReportMedia].flatMap((it) => [
+      it.whenAll(sensOnlyLow, variant('fpm', 'published')).read,
+      it.when(member).read,
+      it.whenAll(member, variant('draft', 'translated', 'fpm')).create.edit,
+    ]),
     r.ProgressReportVarianceExplanation.edit,
     r.ProgressReportWorkflowEvent.read.transitions(
       'Start',

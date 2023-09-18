@@ -21,14 +21,7 @@ import { ReportType } from './report-type.enum';
 @RegisterResource()
 @Calculated()
 @InterfaceType({
-  resolveType: (obj: PeriodicReport) =>
-    // Prevent circular dependency by lazily importing this.
-    // This file has the concretes which depend on the interface defined here
-    // so this interface file needs to finish loading before the merge file
-    // can be loaded
-    import('./merge-periodic-reports.dto').then((m) =>
-      m.resolveReportType(obj),
-    ),
+  resolveType: (obj: PeriodicReport) => `${obj.type}Report`,
   implements: [Resource],
 })
 class PeriodicReport extends Resource {

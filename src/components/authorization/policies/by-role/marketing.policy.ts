@@ -27,6 +27,7 @@ import {
       p.responses.read.when(variant('published')).edit,
     ]),
   ]),
+  r.ProgressReportMedia.read.when(variant('published')).create.edit,
   r.ProgressReportVarianceExplanation.read.specifically((p) => p.comments.none),
   r.ProgressReportWorkflowEvent.read.transitions('Publish').execute,
   r.Project.read

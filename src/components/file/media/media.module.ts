@@ -2,6 +2,7 @@ import { forwardRef, Module } from '@nestjs/common';
 import { FileModule } from '../file.module';
 import { DetectExistingMediaMigration } from './detect-existing-media.migration';
 import { DimensionsResolver } from './dimensions.resolver';
+import { CanUpdateMediaUserMetadataEvent } from './events/can-update-event';
 import { MediaByFileVersionLoader } from './media-by-file-version.loader';
 import { MediaDetector } from './media-detector.service';
 import { MediaLoader } from './media.loader';
@@ -20,6 +21,7 @@ import { MediaService } from './media.service';
     MediaResolver,
     MediaService,
     DetectExistingMediaMigration,
+    CanUpdateMediaUserMetadataEvent,
   ],
   exports: [MediaService],
 })
