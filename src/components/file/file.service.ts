@@ -515,14 +515,19 @@ export class FileService {
     }
   }
 
-  async updateDefinedFile(
+  async updateDefinedFile<
+    Input extends CreateDefinedFileVersionInput | undefined,
+  >(
     file: DefinedFile,
     field: string,
-    input: CreateDefinedFileVersionInput | undefined,
+    input: Input,
     session: Session,
-  ) {
-    if (!input) {
-      return;
+  ): Promise<
+    FileWithNewVersion | (Input extends NonNullable<Input> ? never : undefined)
+  > {
+    if (input == null) {
+      // @ts-expect-error idk why TS doesn't like this, but the signature is right.
+      return undefined;
     }
     if (!file.canRead || !file.canEdit || !file.value) {
       throw new UnauthorizedException(
@@ -531,7 +536,7 @@ export class FileService {
       );
     }
     try {
-      await this.createFileVersion(
+      return await this.createFileVersion(
         {
           parentId: file.value,
           ...input,
