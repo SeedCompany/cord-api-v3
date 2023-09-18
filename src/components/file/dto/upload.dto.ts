@@ -11,7 +11,11 @@ export abstract class RequestUploadOutput {
   readonly id: ID;
 
   @Field({
-    description: 'A pre-signed url to upload the file to',
+    description: stripIndent`
+      A temporary url to upload the file to.
+      It should be a an HTTP PUT request with the file as the body.
+      The Content-Type header should be set to the mime type of the file.
+    `,
   })
   readonly url: string;
 }
