@@ -72,22 +72,29 @@ export type VariantOf<TResourceStatic extends ResourceShape<any>> =
  */
 export const VariantInputField = <
   Res extends ResourceShape<any> & { Variants: readonly Variant[] },
+  Many extends undefined | true = undefined,
 >(
   resource: Res,
   options: Omit<FieldOptions, 'defaultValue'> & {
-    defaultValue?: Variant<VariantOf<Res>> | VariantOf<Res>;
+    many?: Many;
+    defaultValue?: Many extends true
+      ? ReadonlyArray<Variant<VariantOf<Res>> | VariantOf<Res>>
+      : Variant<VariantOf<Res>> | VariantOf<Res>;
   } = {},
 ) => {
-  const { defaultValue, ...rest } = options;
+  const { many, defaultValue, ...rest } = options;
 
   // Resolve default to variant object
-  const defaultVariant =
-    typeof defaultValue === 'string'
-      ? resource.Variants.find((v) => v.key === options.defaultValue)
-      : defaultValue;
+  const resolveVariant = (value: Variant<VariantOf<Res>> | VariantOf<Res>) =>
+    typeof value === 'string'
+      ? resource.Variants.find((v) => v.key === value)
+      : value;
+  const defaultVariant = many
+    ? (defaultValue as any[])?.map(resolveVariant)
+    : resolveVariant(defaultValue as VariantOf<Res>);
 
   return applyDecorators(
-    Field(() => IDType, {
+    Field(() => (many ? [IDType] : IDType), {
       // Don't put default value in schema as we are trying to keep specific
       // values out of schema, so they can be more dynamic.
       nullable: !!defaultValue,
@@ -97,11 +104,15 @@ export const VariantInputField = <
       if (value == null) {
         return defaultVariant;
       }
-      return resource.Variants.find((v) => v.key === value) ?? value;
+      if (many && Array.isArray(value)) {
+        return value.map(resolveVariant);
+      }
+      return resolveVariant(value);
     }),
     IsIn(resource.Variants, {
       message: ({ value }) =>
         `Variant with key "${String(value)}" was not found`,
+      each: many,
     }),
   );
 };

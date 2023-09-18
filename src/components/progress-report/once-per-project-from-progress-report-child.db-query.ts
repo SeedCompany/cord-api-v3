@@ -9,14 +9,15 @@ import { QueryFragment } from '~/core/database/query-augmentation/apply';
 export const oncePerProjectFromProgressReportChild =
   (inner: QueryFragment): QueryFragment =>
   (query) =>
-    query
-      .match([
-        node('project', 'Project'),
-        relation('out', '', 'engagement'),
-        node('', 'Engagement'),
-        relation('out', '', 'report'),
-        node('', 'ProgressReport'),
-        relation('out', '', 'child'),
-        node('node'),
-      ])
-      .apply(oncePerProject(inner));
+    query.apply(projectFromProgressReportChild).apply(oncePerProject(inner));
+
+export const projectFromProgressReportChild: QueryFragment = (query) =>
+  query.match([
+    node('project', 'Project'),
+    relation('out', '', 'engagement'),
+    node('', 'Engagement'),
+    relation('out', '', 'report'),
+    node('', 'ProgressReport'),
+    relation('out', '', 'child'),
+    node('node'),
+  ]);
