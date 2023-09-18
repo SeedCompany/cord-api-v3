@@ -48,6 +48,8 @@ import { FileUrlController as FileUrl } from './file-url.controller';
 import { FileRepository } from './file.repository';
 import { MediaService } from './media/media.service';
 
+type FileWithNewVersion = File & { newVersion: FileVersion };
+
 @Injectable()
 export class FileService {
   constructor(
@@ -256,7 +258,7 @@ export class FileService {
   async createFileVersion(
     input: CreateFileVersionInput,
     session: Session,
-  ): Promise<File> {
+  ): Promise<FileWithNewVersion> {
     const {
       parentId,
       file: uploadingFile,
@@ -398,9 +400,9 @@ export class FileService {
 
     const file = await this.getFile(fileId, session);
 
-    await this.eventBus.publish(new AfterFileUploadEvent(file));
+    await this.eventBus.publish(new AfterFileUploadEvent(file, fv));
 
-    return file;
+    return { ...file, newVersion: fv };
   }
 
   private async validateParentNode(
