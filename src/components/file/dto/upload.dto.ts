@@ -38,9 +38,13 @@ export abstract class CreateDefinedFileVersionInput {
   readonly file?: Promise<FileUpload>;
 
   @Field({
-    description: 'The file name',
+    description: stripIndent`
+      The file name. This is generally required.
+      It's only optional if \`file\` is provided.
+    `,
+    nullable: true,
   })
-  readonly name: string;
+  readonly name?: string;
 
   @Field({
     description:

@@ -93,6 +93,7 @@
     "reflect-metadata": "^0.1.13",
     "rimraf": "^5.0.1",
     "rxjs": "^7.8.1",
+    "sanitize-filename": "^1.6.3",
     "ts-essentials": "^9.3.2",
     "winston": "^3.10.0",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.0/xlsx-0.20.0.tgz",

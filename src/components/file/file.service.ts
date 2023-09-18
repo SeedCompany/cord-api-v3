@@ -8,6 +8,7 @@ import { Connection } from 'cypher-query-builder';
 import { fileTypeFromStream } from 'file-type';
 import { intersection } from 'lodash';
 import { Duration } from 'luxon';
+import sanitizeFilename from 'sanitize-filename';
 import { Readable } from 'stream';
 import {
   DuplicateException,
@@ -253,16 +254,17 @@ export class FileService {
    * the existing file with the same name or create a new file if not found.
    */
   async createFileVersion(
-    {
+    input: CreateFileVersionInput,
+    session: Session,
+  ): Promise<File> {
+    const {
       parentId,
       file: uploadingFile,
       uploadId,
-      name,
       mimeType: mimeTypeOverride,
       media,
-    }: CreateFileVersionInput,
-    session: Session,
-  ): Promise<File> {
+    } = input;
+
     const parentType = await this.validateParentNode(
       parentId,
       (type) => type !== FileNodeType.FileVersion,
@@ -290,6 +292,7 @@ export class FileService {
         Body: file.createReadStream(),
       });
     }
+    const name = await this.resolveName(undefined, input);
 
     const [tempUpload, existingUpload] = await Promise.allSettled([
       this.bucket.headObject(`temp/${uploadId}`),
@@ -419,6 +422,26 @@ export class FileService {
     return type;
   }
 
+  private async resolveName(
+    name?: string,
+    input?: CreateDefinedFileVersionInput,
+  ) {
+    if (name) {
+      return sanitizeFilename(name);
+    }
+    if (input?.name) {
+      return sanitizeFilename(input.name);
+    }
+    if (input?.file) {
+      const file = await input.file;
+      const sanitized = sanitizeFilename(file.filename);
+      if (sanitized) {
+        return sanitized;
+      }
+    }
+    throw new InputException('File name is required', 'name');
+  }
+
   private async getOrCreateFileByName(
     parentId: ID,
     name: string,
@@ -454,7 +477,7 @@ export class FileService {
 
   async createDefinedFile(
     fileId: ID,
-    name: string,
+    initialFileName: string | undefined,
     session: Session,
     baseNodeId: ID,
     propertyName: string,
@@ -462,6 +485,7 @@ export class FileService {
     field?: string,
     isPublic?: boolean,
   ) {
+    const name = await this.resolveName(initialFileName, initialVersion);
     await this.repo.createFile({
       fileId,
       name,
