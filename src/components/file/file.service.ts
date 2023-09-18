@@ -5,6 +5,7 @@ import {
 import { Injectable } from '@nestjs/common';
 import { bufferFromStream, cleanJoin } from '@seedcompany/common';
 import { Connection } from 'cypher-query-builder';
+import { fileTypeFromStream } from 'file-type';
 import { intersection } from 'lodash';
 import { Duration } from 'luxon';
 import { Readable } from 'stream';
@@ -281,9 +282,10 @@ export class FileService {
         );
       }
       const file = await uploadingFile;
+      const type = await fileTypeFromStream(file.createReadStream());
       await this.bucket.putObject({
         Key: `temp/${uploadId}`,
-        ContentType: file.mimetype,
+        ContentType: type?.mime ?? file.mimetype,
         ContentEncoding: file.encoding,
         Body: file.createReadStream(),
       });
