@@ -2,7 +2,12 @@ import { HeadObjectOutput } from '@aws-sdk/client-s3';
 import { Type } from '@nestjs/common';
 import { Command } from '@smithy/smithy-client';
 import { NotFoundException } from '~/common';
-import { FileBucket, GetObjectOutput, SignedOp } from './file-bucket';
+import {
+  FileBucket,
+  GetObjectOutput,
+  PutObjectInput,
+  SignedOp,
+} from './file-bucket';
 
 /**
  * A bucket that is composed of multiple other sources.
@@ -44,6 +49,12 @@ export class CompositeBucket extends FileBucket {
   async headObject(key: string): Promise<HeadObjectOutput> {
     const [_, output] = await this.selectSource(key);
     return output;
+  }
+
+  async putObject(input: PutObjectInput): Promise<void> {
+    await this.doAndThrowAllErrors(
+      this.writableSources.map((bucket) => bucket.putObject(input)),
+    );
   }
 
   async copyObject(oldKey: string, newKey: string): Promise<void> {

@@ -26,6 +26,10 @@ export class ReadonlyBucket extends FileBucket {
     return await this.source.headObject(key);
   }
 
+  async putObject(_input: unknown) {
+    throw new Error('File bucket is readonly and cannot put objects');
+  }
+
   async copyObject(_oldKey: string, _newKey: string) {
     throw new Error('File bucket is readonly and cannot copy objects');
   }

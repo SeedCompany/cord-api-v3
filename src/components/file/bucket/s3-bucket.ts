@@ -6,7 +6,7 @@ import { Duration } from 'luxon';
 import { join } from 'path/posix';
 import { Readable } from 'stream';
 import { NotFoundException } from '~/common';
-import { FileBucket, SignedOp } from './file-bucket';
+import { FileBucket, PutObjectInput, SignedOp } from './file-bucket';
 
 /**
  * A bucket that actually connects to S3.
@@ -56,6 +56,14 @@ export class S3Bucket extends FileBucket {
         Key: this.fullKey(key),
       })
       .catch(handleNotFound);
+  }
+
+  async putObject(input: PutObjectInput) {
+    await this.s3.putObject({
+      ...input,
+      Key: this.fullKey(input.Key),
+      Bucket: this.bucket,
+    });
   }
 
   async copyObject(oldKey: string, newKey: string) {
