@@ -254,6 +254,7 @@ export class FileService {
   async createFileVersion(
     {
       parentId,
+      file: uploadingFile,
       uploadId,
       name,
       mimeType: mimeTypeOverride,
@@ -261,6 +262,27 @@ export class FileService {
     }: CreateFileVersionInput,
     session: Session,
   ): Promise<File> {
+    if (uploadingFile) {
+      const prevExists = await this.bucket.headObject(uploadId).catch((e) => {
+        if (e instanceof NotFoundException) {
+          return false;
+        }
+        throw e;
+      });
+      if (prevExists) {
+        throw new InputException(
+          'A file with this ID already exists. Request an new upload ID.',
+        );
+      }
+      const file = await uploadingFile;
+      await this.bucket.putObject({
+        Key: `temp/${uploadId}`,
+        ContentType: file.mimetype,
+        ContentEncoding: file.encoding,
+        Body: file.createReadStream(),
+      });
+    }
+
     const [tempUpload, existingUpload] = await Promise.allSettled([
       this.bucket.headObject(`temp/${uploadId}`),
       this.bucket.headObject(uploadId),
