@@ -262,6 +262,12 @@ export class FileService {
     }: CreateFileVersionInput,
     session: Session,
   ): Promise<File> {
+    const parentType = await this.validateParentNode(
+      parentId,
+      (type) => type !== FileNodeType.FileVersion,
+      'Only files and directories can be parents of a file version',
+    );
+
     if (uploadingFile) {
       const prevExists = await this.bucket.headObject(uploadId).catch((e) => {
         if (e instanceof NotFoundException) {
@@ -320,12 +326,6 @@ export class FileService {
         }
       }
     }
-
-    const parentType = await this.validateParentNode(
-      parentId,
-      (type) => type !== FileNodeType.FileVersion,
-      'Only files and directories can be parents of a file version',
-    );
 
     const fileId =
       parentType === FileNodeType.File
