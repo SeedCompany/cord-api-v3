@@ -48,14 +48,8 @@ export class ExtractProductsFromPnpHandler
       event instanceof EngagementCreatedEvent
         ? event.engagement
         : event.updated;
-    const pnpFileId =
-      event instanceof EngagementCreatedEvent
-        ? event.input.pnp?.uploadId
-        : event.updates.pnp?.uploadId;
-    const methodology =
-      event instanceof EngagementCreatedEvent
-        ? event.input.methodology
-        : event.updates.methodology;
+    const pnpFileId = event.input.pnp?.uploadId;
+    const { methodology } = event.input;
     if (!pnpFileId || !methodology) {
       return;
     }
