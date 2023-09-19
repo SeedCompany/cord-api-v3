@@ -16,14 +16,14 @@ export class EngagementUpdatedEvent {
   ) {}
 
   isLanguageEngagement(): this is EngagementUpdatedEvent & {
-    engagement: UnsecuredDto<LanguageEngagement>;
+    updated: UnsecuredDto<LanguageEngagement>;
     updates: UpdateLanguageEngagement;
   } {
     return this.updated.__typename === 'LanguageEngagement';
   }
 
   isInternshipEngagement(): this is EngagementUpdatedEvent & {
-    engagement: UnsecuredDto<InternshipEngagement>;
+    updated: UnsecuredDto<InternshipEngagement>;
     updates: UpdateInternshipEngagement;
   } {
     return this.updated.__typename === 'InternshipEngagement';
