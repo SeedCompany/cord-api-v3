@@ -23,9 +23,13 @@ export abstract class RequestUploadOutput {
 @InputType()
 export abstract class CreateDefinedFileVersionInput {
   @IdField({
-    description: 'The ID returned from the `requestFileUpload` mutation',
+    description: stripIndent`
+      The ID returned from the \`requestFileUpload\` mutation.
+      This _can_ be skipped if \`file\` is provided.
+    `,
+    nullable: true,
   })
-  readonly uploadId: ID;
+  readonly uploadId?: ID;
 
   @Field(() => UploadScalar, {
     description: stripIndent`

@@ -262,10 +262,15 @@ export class FileService {
     const {
       parentId,
       file: uploadingFile,
-      uploadId,
+      uploadId: uploadIdInput,
       mimeType: mimeTypeOverride,
       media,
     } = input;
+    if (!uploadIdInput && !uploadingFile) {
+      throw new InputException('Upload ID is required', 'uploadId');
+    }
+
+    const uploadId = uploadIdInput ?? (await generateId());
 
     const parentType = await this.validateParentNode(
       parentId,
@@ -274,12 +279,14 @@ export class FileService {
     );
 
     if (uploadingFile) {
-      const prevExists = await this.bucket.headObject(uploadId).catch((e) => {
-        if (e instanceof NotFoundException) {
-          return false;
-        }
-        throw e;
-      });
+      const prevExists = uploadIdInput
+        ? await this.bucket.headObject(uploadId).catch((e) => {
+            if (e instanceof NotFoundException) {
+              return false;
+            }
+            throw e;
+          })
+        : false;
       if (prevExists) {
         throw new InputException(
           'A file with this ID already exists. Request an new upload ID.',
