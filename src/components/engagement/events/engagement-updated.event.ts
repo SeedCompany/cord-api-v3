@@ -11,20 +11,20 @@ export class EngagementUpdatedEvent {
   constructor(
     public updated: UnsecuredDto<Engagement>,
     readonly previous: UnsecuredDto<Engagement>,
-    readonly updates: UpdateLanguageEngagement | UpdateInternshipEngagement,
+    readonly input: UpdateLanguageEngagement | UpdateInternshipEngagement,
     readonly session: Session,
   ) {}
 
   isLanguageEngagement(): this is EngagementUpdatedEvent & {
-    engagement: UnsecuredDto<LanguageEngagement>;
-    updates: UpdateLanguageEngagement;
+    updated: UnsecuredDto<LanguageEngagement>;
+    input: UpdateLanguageEngagement;
   } {
     return this.updated.__typename === 'LanguageEngagement';
   }
 
   isInternshipEngagement(): this is EngagementUpdatedEvent & {
-    engagement: UnsecuredDto<InternshipEngagement>;
-    updates: UpdateInternshipEngagement;
+    updated: UnsecuredDto<InternshipEngagement>;
+    input: UpdateInternshipEngagement;
   } {
     return this.updated.__typename === 'InternshipEngagement';
   }

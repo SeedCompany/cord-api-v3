@@ -3,13 +3,20 @@ import {
   PutObjectCommand as PutObject,
 } from '@aws-sdk/client-s3';
 import { Type } from '@nestjs/common';
+import { bufferFromStream } from '@seedcompany/common';
 import { Command } from '@smithy/smithy-client';
 import { pickBy } from 'lodash';
 import { DateTime, Duration } from 'luxon';
 import { URL } from 'node:url';
+import { Readable } from 'stream';
 import { assert } from 'ts-essentials';
 import { InputException } from '~/common';
-import { FileBucket, GetObjectOutput, SignedOp } from './file-bucket';
+import {
+  FileBucket,
+  GetObjectOutput,
+  PutObjectInput,
+  SignedOp,
+} from './file-bucket';
 
 export interface LocalBucketOptions {
   baseUrl: URL;
@@ -61,6 +68,19 @@ export abstract class LocalBucket<
   abstract clear(): Promise<void>;
 
   protected abstract saveFile(key: string, file: FakeAwsFile): Promise<void>;
+
+  async putObject(input: PutObjectInput) {
+    const buffer =
+      input.Body instanceof Readable
+        ? await bufferFromStream(input.Body)
+        : Buffer.from(input.Body);
+    await this.saveFile(input.Key, {
+      LastModified: new Date(),
+      ...input,
+      Body: buffer,
+      ContentLength: buffer.byteLength,
+    });
+  }
 
   async getSignedUrl<TCommandInput extends object>(
     operation: Type<Command<TCommandInput, any, any>>,

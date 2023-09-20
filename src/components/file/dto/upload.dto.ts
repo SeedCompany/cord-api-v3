@@ -1,4 +1,7 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
+import { stripIndent } from 'common-tags';
+import UploadScalar from 'graphql-upload/GraphQLUpload.mjs';
+import type { FileUpload } from 'graphql-upload/Upload.mjs';
 import { ID, IdField } from '~/common';
 import { MediaUserMetadata } from '../media/media.dto';
 
@@ -8,7 +11,11 @@ export abstract class RequestUploadOutput {
   readonly id: ID;
 
   @Field({
-    description: 'A pre-signed url to upload the file to',
+    description: stripIndent`
+      A temporary url to upload the file to.
+      It should be a an HTTP PUT request with the file as the body.
+      The Content-Type header should be set to the mime type of the file.
+    `,
   })
   readonly url: string;
 }
@@ -16,14 +23,32 @@ export abstract class RequestUploadOutput {
 @InputType()
 export abstract class CreateDefinedFileVersionInput {
   @IdField({
-    description: 'The ID returned from the `requestFileUpload` mutation',
+    description: stripIndent`
+      The ID returned from the \`requestFileUpload\` mutation.
+      This _can_ be skipped if \`file\` is provided.
+    `,
+    nullable: true,
   })
-  readonly uploadId: ID;
+  readonly uploadId?: ID;
+
+  @Field(() => UploadScalar, {
+    description: stripIndent`
+      A file directly uploaded.
+      This is mainly here to allow usage with Apollo Studio/Sandbox.
+      For production, prefer the \`url\` from the \`RequestUploadOutput\`.
+    `,
+    nullable: true,
+  })
+  readonly file?: Promise<FileUpload>;
 
   @Field({
-    description: 'The file name',
+    description: stripIndent`
+      The file name. This is generally required.
+      It's only optional if \`file\` is provided.
+    `,
+    nullable: true,
   })
-  readonly name: string;
+  readonly name?: string;
 
   @Field({
     description:

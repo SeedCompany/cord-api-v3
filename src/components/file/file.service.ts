@@ -3,10 +3,13 @@ import {
   PutObjectCommand as PutObject,
 } from '@aws-sdk/client-s3';
 import { Injectable } from '@nestjs/common';
-import { bufferFromStream, cleanJoin } from '@seedcompany/common';
+import { bufferFromStream, cleanJoin, Nil } from '@seedcompany/common';
 import { Connection } from 'cypher-query-builder';
+import { fileTypeFromStream } from 'file-type';
 import { intersection } from 'lodash';
 import { Duration } from 'luxon';
+import mime from 'mime';
+import sanitizeFilename from 'sanitize-filename';
 import { Readable } from 'stream';
 import {
   DuplicateException,
@@ -45,6 +48,8 @@ import { AfterFileUploadEvent } from './events/after-file-upload.event';
 import { FileUrlController as FileUrl } from './file-url.controller';
 import { FileRepository } from './file.repository';
 import { MediaService } from './media/media.service';
+
+type FileWithNewVersion = File & { newVersion: FileVersion };
 
 @Injectable()
 export class FileService {
@@ -252,15 +257,60 @@ export class FileService {
    * the existing file with the same name or create a new file if not found.
    */
   async createFileVersion(
-    {
+    input: CreateFileVersionInput,
+    session: Session,
+  ): Promise<FileWithNewVersion> {
+    const {
       parentId,
-      uploadId,
-      name,
+      file: uploadingFile,
+      uploadId: uploadIdInput,
       mimeType: mimeTypeOverride,
       media,
-    }: CreateFileVersionInput,
-    session: Session,
-  ): Promise<File> {
+    } = input;
+    if (!uploadIdInput && !uploadingFile) {
+      throw new InputException('Upload ID is required', 'uploadId');
+    }
+
+    const uploadId = uploadIdInput ?? (await generateId());
+
+    const parentType = await this.validateParentNode(
+      parentId,
+      (type) => type !== FileNodeType.FileVersion,
+      'Only files and directories can be parents of a file version',
+    );
+
+    const name = await this.resolveName(undefined, input);
+
+    if (uploadingFile) {
+      const prevExists = uploadIdInput
+        ? await this.bucket.headObject(uploadId).catch((e) => {
+            if (e instanceof NotFoundException) {
+              return false;
+            }
+            throw e;
+          })
+        : false;
+      if (prevExists) {
+        throw new InputException(
+          'A file with this ID already exists. Request an new upload ID.',
+        );
+      }
+      const file = await uploadingFile;
+
+      let type: string | Nil = file.mimetype;
+      type = type === 'application/octet-stream' ? null : type;
+      type ??= (await fileTypeFromStream(file.createReadStream()))?.mime;
+      type ??= mime.getType(name);
+      type ??= 'application/octet-stream';
+
+      await this.bucket.putObject({
+        Key: `temp/${uploadId}`,
+        ContentType: type,
+        ContentEncoding: file.encoding,
+        Body: file.createReadStream(),
+      });
+    }
+
     const [tempUpload, existingUpload] = await Promise.allSettled([
       this.bucket.headObject(`temp/${uploadId}`),
       this.bucket.headObject(uploadId),
@@ -298,12 +348,6 @@ export class FileService {
         }
       }
     }
-
-    const parentType = await this.validateParentNode(
-      parentId,
-      (type) => type !== FileNodeType.FileVersion,
-      'Only files and directories can be parents of a file version',
-    );
 
     const fileId =
       parentType === FileNodeType.File
@@ -371,9 +415,9 @@ export class FileService {
 
     const file = await this.getFile(fileId, session);
 
-    await this.eventBus.publish(new AfterFileUploadEvent(file));
+    await this.eventBus.publish(new AfterFileUploadEvent(file, fv));
 
-    return file;
+    return { ...file, newVersion: fv };
   }
 
   private async validateParentNode(
@@ -393,6 +437,26 @@ export class FileService {
       throw new InputException(typeMismatchError, 'parentId');
     }
     return type;
+  }
+
+  private async resolveName(
+    name?: string,
+    input?: CreateDefinedFileVersionInput,
+  ) {
+    if (name) {
+      return sanitizeFilename(name);
+    }
+    if (input?.name) {
+      return sanitizeFilename(input.name);
+    }
+    if (input?.file) {
+      const file = await input.file;
+      const sanitized = sanitizeFilename(file.filename);
+      if (sanitized) {
+        return sanitized;
+      }
+    }
+    throw new InputException('File name is required', 'name');
   }
 
   private async getOrCreateFileByName(
@@ -430,7 +494,7 @@ export class FileService {
 
   async createDefinedFile(
     fileId: ID,
-    name: string,
+    initialFileName: string | undefined,
     session: Session,
     baseNodeId: ID,
     propertyName: string,
@@ -438,6 +502,7 @@ export class FileService {
     field?: string,
     isPublic?: boolean,
   ) {
+    const name = await this.resolveName(initialFileName, initialVersion);
     await this.repo.createFile({
       fileId,
       name,
@@ -465,14 +530,19 @@ export class FileService {
     }
   }
 
-  async updateDefinedFile(
+  async updateDefinedFile<
+    Input extends CreateDefinedFileVersionInput | undefined,
+  >(
     file: DefinedFile,
     field: string,
-    input: CreateDefinedFileVersionInput | undefined,
+    input: Input,
     session: Session,
-  ) {
-    if (!input) {
-      return;
+  ): Promise<
+    FileWithNewVersion | (Input extends NonNullable<Input> ? never : undefined)
+  > {
+    if (input == null) {
+      // @ts-expect-error idk why TS doesn't like this, but the signature is right.
+      return undefined;
     }
     if (!file.canRead || !file.canEdit || !file.value) {
       throw new UnauthorizedException(
@@ -481,7 +551,7 @@ export class FileService {
       );
     }
     try {
-      await this.createFileVersion(
+      return await this.createFileVersion(
         {
           parentId: file.value,
           ...input,
