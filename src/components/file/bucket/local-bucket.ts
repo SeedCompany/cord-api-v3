@@ -10,10 +10,10 @@ import { DateTime, Duration } from 'luxon';
 import { URL } from 'node:url';
 import { Readable } from 'stream';
 import { assert } from 'ts-essentials';
-import { InputException } from '~/common';
 import {
   FileBucket,
   GetObjectOutput,
+  InvalidSignedUrlException,
   PutObjectInput,
   SignedOp,
 } from './file-bucket';
@@ -108,27 +108,37 @@ export abstract class LocalBucket<
     operation: Type<Command<TCommandInput, any, any>>,
     url: string,
   ): SignedOp<TCommandInput> & { Key: string } {
-    let raw;
+    let u: URL;
     try {
-      raw = new URL(url).searchParams.get('signed');
+      u = new URL(url);
     } catch (e) {
-      raw = url;
+      u = new URL('http://localhost');
+      u.searchParams.set('signed', url);
     }
-    assert(typeof raw === 'string');
-    let parsed;
     try {
-      parsed = JSON.parse(raw) as SignedOp<TCommandInput> & {
+      const parsed = this.parseSignedUrl(u) as SignedOp<TCommandInput> & {
         operation: string;
-        Key: string;
       };
       assert(parsed.operation === operation.constructor.name);
+      return parsed;
+    } catch (e) {
+      throw new InvalidSignedUrlException(e);
+    }
+  }
+
+  parseSignedUrl(url: URL) {
+    const raw = url.searchParams.get('signed');
+    let parsed;
+    try {
+      parsed = JSON.parse(raw || '') as SignedOp<{ operation: string }>;
+      assert(typeof parsed.operation === 'string');
       assert(typeof parsed.Key === 'string');
       assert(typeof parsed.signing.expiresIn === 'number');
     } catch (e) {
-      throw new InputException(e);
+      throw new InvalidSignedUrlException(e);
     }
     if (DateTime.local() > DateTime.fromMillis(parsed.signing.expiresIn)) {
-      throw new InputException('url expired');
+      throw new InvalidSignedUrlException('URL expired');
     }
     return parsed;
   }

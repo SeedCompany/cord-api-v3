@@ -5,6 +5,7 @@ import { NotFoundException } from '~/common';
 import {
   FileBucket,
   GetObjectOutput,
+  InvalidSignedUrlException,
   PutObjectInput,
   SignedOp,
 } from './file-bucket';
@@ -39,6 +40,18 @@ export class CompositeBucket extends FileBucket {
       source = this.sources[0];
     }
     return await source.getSignedUrl(operation, input);
+  }
+
+  async parseSignedUrl(url: URL) {
+    const results = await Promise.allSettled(
+      this.sources.map(async (source) => await source.parseSignedUrl(url)),
+    );
+    for (const result of results) {
+      if (result.status === 'fulfilled') {
+        return result.value;
+      }
+    }
+    throw new InvalidSignedUrlException();
   }
 
   async getObject(key: string): Promise<GetObjectOutput> {

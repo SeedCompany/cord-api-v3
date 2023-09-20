@@ -18,6 +18,10 @@ export class ReadonlyBucket extends FileBucket {
     return await this.source.getSignedUrl(operation, input);
   }
 
+  async parseSignedUrl(url: URL) {
+    return await this.source.parseSignedUrl(url);
+  }
+
   async getObject(key: string) {
     return await this.source.getObject(key);
   }
