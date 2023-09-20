@@ -87,7 +87,7 @@ export abstract class LocalBucket<
     input: SignedOp<TCommandInput>,
   ) {
     const signed = JSON.stringify({
-      operation: operation.constructor.name,
+      operation: operation.name.replace(/Command$/, ''),
       ...input,
       signing: {
         ...input.signing,
@@ -119,7 +119,10 @@ export abstract class LocalBucket<
       const parsed = this.parseSignedUrl(u) as SignedOp<TCommandInput> & {
         operation: string;
       };
-      assert(parsed.operation === operation.constructor.name);
+      assert(
+        parsed.operation === operation.name ||
+          `${parsed.operation}Command` === operation.name,
+      );
       return parsed;
     } catch (e) {
       throw new InvalidSignedUrlException(e);
