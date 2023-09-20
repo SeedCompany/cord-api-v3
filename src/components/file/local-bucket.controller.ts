@@ -3,34 +3,30 @@ import {
   Get,
   Headers,
   Put,
-  Query,
   Request,
   Response,
 } from '@nestjs/common';
 import { Request as IRequest, Response as IResponse } from 'express';
 import { DateTime } from 'luxon';
+import { URL } from 'node:url';
 import rawBody from 'raw-body';
-import { InputException, ServerException } from '../../common';
-import { FileBucket, LocalBucket } from './bucket';
+import { InputException } from '~/common';
+import { FileBucket, InvalidSignedUrlException } from './bucket';
 
+/**
+ * This fakes S3 web hosting for use with LocalBuckets.
+ */
 @Controller(LocalBucketController.path)
 export class LocalBucketController {
   static path = '/local-bucket';
 
-  private readonly bucket: LocalBucket | undefined;
-  constructor(bucket: FileBucket) {
-    this.bucket = bucket instanceof LocalBucket ? bucket : undefined;
-  }
+  constructor(private readonly bucket: FileBucket) {}
 
   @Put()
   async upload(
     @Headers('content-type') contentType: string,
-    @Query('signed') signed: string,
     @Request() req: IRequest,
   ) {
-    if (!this.bucket) {
-      throw new ServerException('Cannot upload file here');
-    }
     // Chokes on json files because they are parsed with body-parser.
     // Need to disable it for this path or create a workaround.
     const contents = await rawBody(req);
@@ -38,20 +34,34 @@ export class LocalBucketController {
       throw new InputException();
     }
 
-    await this.bucket.upload(signed, {
+    const url = new URL(`https://localhost${req.url}`);
+    const parsed = await this.bucket.parseSignedUrl(url);
+    if (parsed.operation !== 'PutObject') {
+      throw new InvalidSignedUrlException();
+    }
+    await this.bucket.putObject({
+      Key: parsed.Key,
       Body: contents,
       ContentType: contentType,
     });
+
     return { ok: true };
   }
 
   @Get()
-  async download(@Query('signed') signed: string, @Response() res: IResponse) {
-    if (!this.bucket) {
-      throw new ServerException('Cannot download file here');
+  async download(@Request() req: IRequest, @Response() res: IResponse) {
+    const url = new URL(`https://localhost${req.url}`);
+    const { Key, operation, ...rest } = await this.bucket.parseSignedUrl(url);
+    if (operation !== 'GetObject') {
+      throw new InvalidSignedUrlException();
     }
-
-    const out = await this.bucket.download(signed);
+    const signedParams = Object.fromEntries(
+      Object.entries(rest).flatMap(([k, v]) =>
+        v != null ? [[k.replace(/^Response/, ''), v]] : [],
+      ),
+    );
+    const bucketObject = await this.bucket.getObject(Key);
+    const out = { ...bucketObject, ...signedParams };
 
     const headers = {
       'Cache-Control': out.CacheControl,

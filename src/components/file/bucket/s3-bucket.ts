@@ -3,11 +3,17 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { Type } from '@nestjs/common';
 import { bufferFromStream } from '@seedcompany/common';
 import { Command } from '@smithy/smithy-client';
+import got from 'got';
 import { Duration } from 'luxon';
 import { join } from 'path/posix';
 import { Readable } from 'stream';
 import { NotFoundException } from '~/common';
-import { FileBucket, PutObjectInput, SignedOp } from './file-bucket';
+import {
+  FileBucket,
+  InvalidSignedUrlException,
+  PutObjectInput,
+  SignedOp,
+} from './file-bucket';
 
 /**
  * A bucket that actually connects to S3.
@@ -35,6 +41,25 @@ export class S3Bucket extends FileBucket {
       ...signing,
       expiresIn: Duration.from(signing.expiresIn).as('seconds'),
     });
+  }
+
+  async parseSignedUrl(url: URL) {
+    if (
+      !url.hostname.startsWith(this.bucket + '.') ||
+      !url.hostname.endsWith('.amazonaws.com')
+    ) {
+      throw new InvalidSignedUrlException();
+    }
+
+    try {
+      await got.head(url);
+    } catch (e) {
+      throw new InvalidSignedUrlException(e);
+    }
+
+    const Key = url.pathname.slice(1);
+    const operation = url.searchParams.get('x-id')!;
+    return { Key, operation };
   }
 
   async getObject(key: string) {
