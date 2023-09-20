@@ -1,6 +1,7 @@
 import { NoSuchKey, S3 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { Type } from '@nestjs/common';
+import { bufferFromStream } from '@seedcompany/common';
 import { Command } from '@smithy/smithy-client';
 import { Duration } from 'luxon';
 import { join } from 'path/posix';
@@ -59,10 +60,18 @@ export class S3Bucket extends FileBucket {
   }
 
   async putObject(input: PutObjectInput) {
+    // S3 needs to know the content length either from body or the header.
+    // Since we streams don't have that, and we don't know from file, we need to
+    // buffer it. This way we can know the length to send to S3.
+    const fixedLengthBody =
+      input.Body instanceof Readable
+        ? await bufferFromStream(input.Body)
+        : input.Body;
     await this.s3.putObject({
       ...input,
       Key: this.fullKey(input.Key),
       Bucket: this.bucket,
+      Body: fixedLengthBody,
     });
   }
 
