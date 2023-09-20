@@ -5316,6 +5316,7 @@ __metadata:
     lodash: "npm:lodash-es@^4.17.21"
     lru-cache: ^7.18.3
     luxon: ^3.4.0
+    mime: beta
     nanoid: ^4.0.2
     neo4j-driver: ^5.12.0
     nestjs-console: ^9.0.0
@@ -9359,6 +9360,15 @@ __metadata:
   bin:
     mime: cli.js
   checksum: 1497ba7b9f6960694268a557eae24b743fd2923da46ec392b042469f4b901721ba0adcf8b0d3c2677839d0e243b209d76e5edcbd09cfdeffa2dfb6bb4df4b862
+  languageName: node
+  linkType: hard
+
+"mime@npm:beta":
+  version: 4.0.0-beta.1
+  resolution: "mime@npm:4.0.0-beta.1"
+  bin:
+    mime: bin/cli.js
+  checksum: b62b87e657a3340d39b0d6e6b40d7211c75e1574ee17da96e76ed69ce749034188e9a777ea190bee6008a6f0eb62694a9251f2cc20ba837d030e093eb7cf31ad
   languageName: node
   linkType: hard
 

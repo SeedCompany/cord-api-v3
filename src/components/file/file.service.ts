@@ -3,11 +3,12 @@ import {
   PutObjectCommand as PutObject,
 } from '@aws-sdk/client-s3';
 import { Injectable } from '@nestjs/common';
-import { bufferFromStream, cleanJoin } from '@seedcompany/common';
+import { bufferFromStream, cleanJoin, Nil } from '@seedcompany/common';
 import { Connection } from 'cypher-query-builder';
 import { fileTypeFromStream } from 'file-type';
 import { intersection } from 'lodash';
 import { Duration } from 'luxon';
+import mime from 'mime';
 import sanitizeFilename from 'sanitize-filename';
 import { Readable } from 'stream';
 import {
@@ -278,6 +279,8 @@ export class FileService {
       'Only files and directories can be parents of a file version',
     );
 
+    const name = await this.resolveName(undefined, input);
+
     if (uploadingFile) {
       const prevExists = uploadIdInput
         ? await this.bucket.headObject(uploadId).catch((e) => {
@@ -293,15 +296,20 @@ export class FileService {
         );
       }
       const file = await uploadingFile;
-      const type = await fileTypeFromStream(file.createReadStream());
+
+      let type: string | Nil = file.mimetype;
+      type = type === 'application/octet-stream' ? null : type;
+      type ??= (await fileTypeFromStream(file.createReadStream()))?.mime;
+      type ??= mime.getType(name);
+      type ??= 'application/octet-stream';
+
       await this.bucket.putObject({
         Key: `temp/${uploadId}`,
-        ContentType: type?.mime ?? file.mimetype,
+        ContentType: type,
         ContentEncoding: file.encoding,
         Body: file.createReadStream(),
       });
     }
-    const name = await this.resolveName(undefined, input);
 
     const [tempUpload, existingUpload] = await Promise.allSettled([
       this.bucket.headObject(`temp/${uploadId}`),
