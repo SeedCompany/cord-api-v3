@@ -7,6 +7,7 @@ export {
   defaultPermanentAfter,
 } from './properties/update-property';
 export * from './properties/update-properties';
+export * from './properties/update-relation-list';
 export * from './create-relationships';
 export * from './cypher-expression';
 export * from './cypher-functions';

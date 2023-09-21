@@ -4,7 +4,6 @@ import { LazyGetter as Once } from 'lazy-get-decorator';
 import { lowerCase } from 'lodash';
 import {
   EnhancedResource,
-  getDbClassLabels,
   getDbPropertyUnique,
   ID,
   NotFoundException,
@@ -93,7 +92,7 @@ export const DtoRepository = <
     async readMany(ids: readonly ID[], ...args: HydrateArgs) {
       return await this.db
         .query()
-        .matchNode('node', getDbClassLabels(resource)[0])
+        .matchNode('node', this.resource.dbLabel)
         .where({ 'node.id': inArray(ids) })
         .apply(this.hydrate(...args))
         .map('dto')
@@ -124,8 +123,17 @@ export const DtoRepository = <
         otherLabel,
         id,
         otherId,
-        getDbClassLabels(resource)[0],
+        this.resource.dbLabel,
       );
+    }
+
+    async updateRelationList(
+      options: Parameters<CommonRepository['updateRelationList']>[0],
+    ) {
+      await super.updateRelationList({
+        label: resource,
+        ...options,
+      });
     }
 
     /**

@@ -2,17 +2,19 @@ import { Inject, Injectable, Optional } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
+  EnhancedResource,
   getDbClassLabels,
   getDbPropertyUnique,
   ID,
   isIdLike,
+  NotFoundException,
   ResourceShape,
   ServerException,
   Session,
 } from '../../common';
 import { DatabaseService } from './database.service';
 import { createUniqueConstraint } from './indexer';
-import { ACTIVE } from './query';
+import { ACTIVE, updateRelationList } from './query';
 import { BaseNode } from './results';
 
 /**
@@ -88,6 +90,33 @@ export class CommonRepository {
         node('other'),
       ])
       .run();
+  }
+
+  async updateRelationList({
+    id,
+    label,
+    relation,
+    newList,
+  }: {
+    id: ID;
+    label?: string | EnhancedResource<any> | ResourceShape<any>;
+    relation: string;
+    newList: readonly ID[];
+  }) {
+    const resolvedLabel = !label
+      ? 'BaseNode'
+      : typeof label === 'string'
+      ? label
+      : EnhancedResource.of(label).dbLabel;
+    const node = await this.db
+      .query()
+      .matchNode('node', resolvedLabel, { id })
+      .apply(updateRelationList({ relation, newList }))
+      .return('node')
+      .first();
+    if (!node) {
+      throw new NotFoundException();
+    }
   }
 
   async checkDeletePermission(id: ID, session: Session | ID) {
