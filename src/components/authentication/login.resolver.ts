@@ -6,6 +6,7 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
+import { stripIndent } from 'common-tags';
 import { AnonSession, GqlContextType, Session } from '../../common';
 import { Loader, LoaderOf } from '../../core';
 import { Powers as Power, Privileges } from '../authorization';
@@ -21,7 +22,10 @@ export class LoginResolver {
   ) {}
 
   @Mutation(() => LoginOutput, {
-    description: 'Login a user',
+    description: stripIndent`
+      Login a user
+      @sensitive-secrets
+    `,
   })
   async login(
     @Args('input') input: LoginInput,
@@ -34,7 +38,10 @@ export class LoginResolver {
   }
 
   @Mutation(() => LogoutOutput, {
-    description: 'Logout a user',
+    description: stripIndent`
+      Logout a user
+      @sensitive-secrets
+    `,
   })
   async logout(
     @AnonSession() session: Session,

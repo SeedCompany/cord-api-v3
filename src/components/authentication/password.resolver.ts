@@ -1,4 +1,5 @@
 import { Args, Mutation, Resolver } from '@nestjs/graphql';
+import { stripIndent } from 'common-tags';
 import { AnonSession, LoggedInSession, Session } from '../../common';
 import { AuthenticationService } from './authentication.service';
 import {
@@ -15,7 +16,10 @@ export class PasswordResolver {
   constructor(private readonly authentication: AuthenticationService) {}
 
   @Mutation(() => ChangePasswordOutput, {
-    description: 'Change your password',
+    description: stripIndent`
+      Change your password
+      @sensitive-secrets
+    `,
   })
   async changePassword(
     @Args() { oldPassword, newPassword }: ChangePasswordArgs,
@@ -36,7 +40,10 @@ export class PasswordResolver {
   }
 
   @Mutation(() => ResetPasswordOutput, {
-    description: 'Reset Password',
+    description: stripIndent`
+      Reset Password
+      @sensitive-secrets
+    `,
   })
   async resetPassword(
     @Args('input') input: ResetPasswordInput,

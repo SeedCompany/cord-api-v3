@@ -6,6 +6,7 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
+import { stripIndent } from 'common-tags';
 import { AnonSession, GqlContextType, Session } from '../../common';
 import { Loader, LoaderOf } from '../../core';
 import { Powers as Power, Privileges } from '../authorization';
@@ -21,7 +22,10 @@ export class RegisterResolver {
   ) {}
 
   @Mutation(() => RegisterOutput, {
-    description: 'Register a new user',
+    description: stripIndent`
+      Register a new user
+      @sensitive-secrets
+    `,
   })
   async register(
     @Args('input') input: RegisterInput,
