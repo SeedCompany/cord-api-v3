@@ -2,7 +2,13 @@ import { HeadObjectOutput } from '@aws-sdk/client-s3';
 import { Type } from '@nestjs/common';
 import { Command } from '@smithy/smithy-client';
 import { NotFoundException } from '~/common';
-import { FileBucket, GetObjectOutput, SignedOp } from './file-bucket';
+import {
+  FileBucket,
+  GetObjectOutput,
+  InvalidSignedUrlException,
+  PutObjectInput,
+  SignedOp,
+} from './file-bucket';
 
 /**
  * A bucket that is composed of multiple other sources.
@@ -36,6 +42,18 @@ export class CompositeBucket extends FileBucket {
     return await source.getSignedUrl(operation, input);
   }
 
+  async parseSignedUrl(url: URL) {
+    const results = await Promise.allSettled(
+      this.sources.map(async (source) => await source.parseSignedUrl(url)),
+    );
+    for (const result of results) {
+      if (result.status === 'fulfilled') {
+        return result.value;
+      }
+    }
+    throw new InvalidSignedUrlException();
+  }
+
   async getObject(key: string): Promise<GetObjectOutput> {
     const [source] = await this.selectSource(key);
     return await source.getObject(key);
@@ -44,6 +62,12 @@ export class CompositeBucket extends FileBucket {
   async headObject(key: string): Promise<HeadObjectOutput> {
     const [_, output] = await this.selectSource(key);
     return output;
+  }
+
+  async putObject(input: PutObjectInput): Promise<void> {
+    await this.doAndThrowAllErrors(
+      this.writableSources.map((bucket) => bucket.putObject(input)),
+    );
   }
 
   async copyObject(oldKey: string, newKey: string): Promise<void> {

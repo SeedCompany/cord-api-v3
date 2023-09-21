@@ -3,13 +3,20 @@ import {
   PutObjectCommand as PutObject,
 } from '@aws-sdk/client-s3';
 import { Type } from '@nestjs/common';
+import { bufferFromStream } from '@seedcompany/common';
 import { Command } from '@smithy/smithy-client';
 import { pickBy } from 'lodash';
 import { DateTime, Duration } from 'luxon';
 import { URL } from 'node:url';
+import { Readable } from 'stream';
 import { assert } from 'ts-essentials';
-import { InputException } from '~/common';
-import { FileBucket, GetObjectOutput, SignedOp } from './file-bucket';
+import {
+  FileBucket,
+  GetObjectOutput,
+  InvalidSignedUrlException,
+  PutObjectInput,
+  SignedOp,
+} from './file-bucket';
 
 export interface LocalBucketOptions {
   baseUrl: URL;
@@ -62,12 +69,25 @@ export abstract class LocalBucket<
 
   protected abstract saveFile(key: string, file: FakeAwsFile): Promise<void>;
 
+  async putObject(input: PutObjectInput) {
+    const buffer =
+      input.Body instanceof Readable
+        ? await bufferFromStream(input.Body)
+        : Buffer.from(input.Body);
+    await this.saveFile(input.Key, {
+      LastModified: new Date(),
+      ...input,
+      Body: buffer,
+      ContentLength: buffer.byteLength,
+    });
+  }
+
   async getSignedUrl<TCommandInput extends object>(
     operation: Type<Command<TCommandInput, any, any>>,
     input: SignedOp<TCommandInput>,
   ) {
     const signed = JSON.stringify({
-      operation: operation.constructor.name,
+      operation: operation.name.replace(/Command$/, ''),
       ...input,
       signing: {
         ...input.signing,
@@ -88,27 +108,40 @@ export abstract class LocalBucket<
     operation: Type<Command<TCommandInput, any, any>>,
     url: string,
   ): SignedOp<TCommandInput> & { Key: string } {
-    let raw;
+    let u: URL;
     try {
-      raw = new URL(url).searchParams.get('signed');
+      u = new URL(url);
     } catch (e) {
-      raw = url;
+      u = new URL('http://localhost');
+      u.searchParams.set('signed', url);
     }
-    assert(typeof raw === 'string');
+    try {
+      const parsed = this.parseSignedUrl(u) as SignedOp<TCommandInput> & {
+        operation: string;
+      };
+      assert(
+        parsed.operation === operation.name ||
+          `${parsed.operation}Command` === operation.name,
+      );
+      return parsed;
+    } catch (e) {
+      throw new InvalidSignedUrlException(e);
+    }
+  }
+
+  parseSignedUrl(url: URL) {
+    const raw = url.searchParams.get('signed');
     let parsed;
     try {
-      parsed = JSON.parse(raw) as SignedOp<TCommandInput> & {
-        operation: string;
-        Key: string;
-      };
-      assert(parsed.operation === operation.constructor.name);
+      parsed = JSON.parse(raw || '') as SignedOp<{ operation: string }>;
+      assert(typeof parsed.operation === 'string');
       assert(typeof parsed.Key === 'string');
       assert(typeof parsed.signing.expiresIn === 'number');
     } catch (e) {
-      throw new InputException(e);
+      throw new InvalidSignedUrlException(e);
     }
     if (DateTime.local() > DateTime.fromMillis(parsed.signing.expiresIn)) {
-      throw new InputException('url expired');
+      throw new InvalidSignedUrlException('URL expired');
     }
     return parsed;
   }

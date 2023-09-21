@@ -72,20 +72,16 @@ export class PeriodicReportService {
     const updated = await this.repo.updateProperties(current, simpleChanges);
 
     if (reportFile) {
-      await this.files.updateDefinedFile(
+      const file = await this.files.updateDefinedFile(
         current.reportFile,
         'file',
-        input.reportFile,
-        session,
-      );
-      const newVersion = await this.files.getFileVersion(
-        reportFile.uploadId,
+        reportFile,
         session,
       );
       await this.eventBus.publish(
         new PeriodicReportUploadedEvent(
           updated,
-          this.files.asDownloadable(newVersion),
+          this.files.asDownloadable(file.newVersion),
           session,
         ),
       );

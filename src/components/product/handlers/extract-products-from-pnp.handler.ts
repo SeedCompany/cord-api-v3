@@ -48,19 +48,13 @@ export class ExtractProductsFromPnpHandler
       event instanceof EngagementCreatedEvent
         ? event.engagement
         : event.updated;
-    const pnpFileId =
-      event instanceof EngagementCreatedEvent
-        ? event.input.pnp?.uploadId
-        : event.updates.pnp?.uploadId;
-    const methodology =
-      event instanceof EngagementCreatedEvent
-        ? event.input.methodology
-        : event.updates.methodology;
-    if (!pnpFileId || !methodology) {
+    const { pnp: hasPnpInput, methodology } = event.input;
+    if (!hasPnpInput || !methodology) {
       return;
     }
 
-    const file = this.files.asDownloadable({ id: pnpFileId }, pnpFileId);
+    const pnp = await this.files.getFile(engagement.pnp, event.session);
+    const file = this.files.asDownloadable({}, pnp.latestVersionId);
 
     const availableSteps = getAvailableSteps({
       methodology,
@@ -70,7 +64,7 @@ export class ExtractProductsFromPnpHandler
       productRows = await this.extractor.extract(file, availableSteps);
     } catch (e) {
       this.logger.warning(e.message, {
-        id: file.id,
+        id: pnp.latestVersionId,
         exception: e,
       });
       return;

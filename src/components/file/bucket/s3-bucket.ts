@@ -1,12 +1,19 @@
 import { NoSuchKey, S3 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { Type } from '@nestjs/common';
+import { bufferFromStream } from '@seedcompany/common';
 import { Command } from '@smithy/smithy-client';
+import got from 'got';
 import { Duration } from 'luxon';
 import { join } from 'path/posix';
 import { Readable } from 'stream';
 import { NotFoundException } from '~/common';
-import { FileBucket, SignedOp } from './file-bucket';
+import {
+  FileBucket,
+  InvalidSignedUrlException,
+  PutObjectInput,
+  SignedOp,
+} from './file-bucket';
 
 /**
  * A bucket that actually connects to S3.
@@ -36,6 +43,25 @@ export class S3Bucket extends FileBucket {
     });
   }
 
+  async parseSignedUrl(url: URL) {
+    if (
+      !url.hostname.startsWith(this.bucket + '.') ||
+      !url.hostname.endsWith('.amazonaws.com')
+    ) {
+      throw new InvalidSignedUrlException();
+    }
+
+    try {
+      await got.head(url);
+    } catch (e) {
+      throw new InvalidSignedUrlException(e);
+    }
+
+    const Key = url.pathname.slice(1);
+    const operation = url.searchParams.get('x-id')!;
+    return { Key, operation };
+  }
+
   async getObject(key: string) {
     const file = await this.s3
       .getObject({
@@ -56,6 +82,22 @@ export class S3Bucket extends FileBucket {
         Key: this.fullKey(key),
       })
       .catch(handleNotFound);
+  }
+
+  async putObject(input: PutObjectInput) {
+    // S3 needs to know the content length either from body or the header.
+    // Since we streams don't have that, and we don't know from file, we need to
+    // buffer it. This way we can know the length to send to S3.
+    const fixedLengthBody =
+      input.Body instanceof Readable
+        ? await bufferFromStream(input.Body)
+        : input.Body;
+    await this.s3.putObject({
+      ...input,
+      Key: this.fullKey(input.Key),
+      Bucket: this.bucket,
+      Body: fixedLengthBody,
+    });
   }
 
   async copyObject(oldKey: string, newKey: string) {

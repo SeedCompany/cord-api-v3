@@ -7,3 +7,4 @@ export { DtoRepository } from './dto.repository';
 export * from './indexer';
 export * from './migration';
 export * from './db-type';
+export * from './rollback-manager';

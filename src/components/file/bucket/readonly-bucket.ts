@@ -18,12 +18,20 @@ export class ReadonlyBucket extends FileBucket {
     return await this.source.getSignedUrl(operation, input);
   }
 
+  async parseSignedUrl(url: URL) {
+    return await this.source.parseSignedUrl(url);
+  }
+
   async getObject(key: string) {
     return await this.source.getObject(key);
   }
 
   async headObject(key: string) {
     return await this.source.headObject(key);
+  }
+
+  async putObject(_input: unknown) {
+    throw new Error('File bucket is readonly and cannot put objects');
   }
 
   async copyObject(_oldKey: string, _newKey: string) {
