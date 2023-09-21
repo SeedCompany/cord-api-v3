@@ -117,15 +117,16 @@ export class AuthenticationService {
       );
     }
 
-    impersonatee = impersonatee
-      ? {
-          id: impersonatee?.id,
-          roles: [
-            ...(impersonatee.roles ?? []),
-            ...(result.impersonateeRoles ?? []),
-          ],
-        }
-      : undefined;
+    impersonatee =
+      impersonatee && result.userId
+        ? {
+            id: impersonatee?.id,
+            roles: [
+              ...(impersonatee.roles ?? []),
+              ...(result.impersonateeRoles ?? []),
+            ],
+          }
+        : undefined;
 
     const requesterSession: Session = {
       token,
