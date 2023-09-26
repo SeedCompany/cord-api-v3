@@ -116,7 +116,7 @@ export class OrganizationRepository extends DtoRepository<
             .raw('WHERE size(projList) = 0')
             .return(`'High' as sensitivity`),
         )
-        .match([
+        .optionalMatch([
           node('node'),
           relation('out', '', 'address', ACTIVE),
           node('mailingAddress', 'MailingAddress'),

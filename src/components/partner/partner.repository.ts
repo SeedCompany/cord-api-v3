@@ -177,7 +177,7 @@ export class PartnerRepository extends DtoRepository<
           relation('out', '', 'languageOfWiderCommunication', ACTIVE),
           node('languageOfWiderCommunication', 'Language'),
         ])
-        .match([
+        .optionalMatch([
           node('node'),
           relation('out', '', 'address', ACTIVE),
           node('mailingAddress', 'MailingAddress'),
