@@ -136,7 +136,7 @@ export class OrganizationRepository extends DtoRepository<
       .query()
       .matchNode('node', 'Organization')
       .match([
-        ...(filter.userId && session.userId
+        ...(filter?.userId && session.userId
           ? [
               node('node'),
               relation('in', '', 'organization', ACTIVE),
