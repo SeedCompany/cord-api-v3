@@ -79,7 +79,12 @@ export class Partner extends Interfaces {
   readonly languageOfWiderCommunication: Secured<IdOf<Language> | null>;
 
   readonly fieldRegions: Required<Secured<ReadonlyArray<IdOf<FieldRegion>>>>;
+
   readonly countries: Required<Secured<ReadonlyArray<IdOf<Location>>>>;
+
+  readonly languagesOfConsulting: Required<
+    Secured<ReadonlyArray<IdOf<Language>>>
+  >;
 
   @DateTimeField()
   readonly modifiedAt: DateTime;

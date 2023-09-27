@@ -53,6 +53,10 @@ export abstract class UpdatePartner {
   @IsId({ each: true })
   @Transform(({ value }) => (value ? uniq(value) : undefined))
   readonly fieldRegions?: ReadonlyArray<IdOf<FieldRegion>>;
+
+  @Field(() => [Language], { name: 'languagesOfConsulting', nullable: true })
+  @Transform(({ value }) => uniq(value))
+  readonly languagesOfConsulting?: ReadonlyArray<IdOf<Language>> = [];
 }
 
 @InputType()

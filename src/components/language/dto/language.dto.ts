@@ -194,6 +194,11 @@ export class Language extends Interfaces {
 export class SecuredLanguage extends SecuredProperty(Language) {}
 
 @ObjectType({
+  description: SecuredPropertyList.descriptionFor('a list of languages'),
+})
+export class SecuredLanguages extends SecuredPropertyList(Language) {}
+
+@ObjectType({
   description: SecuredProperty.descriptionFor('a language or null'),
 })
 export class SecuredLanguageNullable extends SecuredProperty(Language, {

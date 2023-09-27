@@ -14,11 +14,16 @@ import {
   loadSecuredIds,
   LoggedInSession,
   mapSecuredValue,
+  NotFoundException,
   Session,
 } from '../../common';
 import { Loader, LoaderOf } from '../../core';
 import { FieldRegionLoader, SecuredFieldRegions } from '../field-region';
-import { LanguageLoader, SecuredLanguageNullable } from '../language';
+import {
+  LanguageLoader,
+  SecuredLanguageNullable,
+  SecuredLanguages,
+} from '../language';
 import { LocationLoader, SecuredLocations } from '../location';
 import { OrganizationLoader, SecuredOrganization } from '../organization';
 import { PartnerLoader, PartnerService } from '../partner';
@@ -110,6 +115,28 @@ export class PartnerResolver {
     @Loader(LocationLoader) loader: LoaderOf<LocationLoader>,
   ): Promise<SecuredLocations> {
     return await loadSecuredIds(loader, partner.countries);
+  }
+  @ResolveField(() => SecuredLanguages)
+  async languagesOfConsulting(
+    @Parent() partner: Partner,
+    @Loader(LanguageLoader) loader: LoaderOf<LanguageLoader>,
+  ): Promise<SecuredLanguages> {
+    const languages = (
+      await loader.loadMany(partner.languagesOfConsulting.value)
+    ).flatMap((language) => {
+      if (language instanceof NotFoundException) {
+        return [];
+      } else if (language instanceof Error) {
+        throw language;
+      }
+
+      return language;
+    });
+
+    return {
+      ...partner.languagesOfConsulting,
+      value: languages,
+    };
   }
 
   @ResolveField(() => SecuredProjectList, {

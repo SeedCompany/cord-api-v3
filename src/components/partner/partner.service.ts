@@ -134,6 +134,7 @@ export class PartnerService {
       languageOfWiderCommunicationId,
       fieldRegions,
       countries,
+      languagesOfConsulting,
       ...simpleChanges
     } = changes;
 
@@ -185,6 +186,15 @@ export class PartnerService {
           ? e.withField('partner.fieldRegions')
           : e;
       }
+    }
+
+    if (languagesOfConsulting) {
+      await this.repo.updateRelationList({
+        id: object.id,
+        relation: 'languagesOfConsulting',
+        label: 'Language',
+        newList: languagesOfConsulting,
+      });
     }
 
     return await this.readOne(input.id, session);

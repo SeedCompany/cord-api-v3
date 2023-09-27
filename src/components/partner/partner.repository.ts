@@ -65,6 +65,7 @@ export class PartnerRepository extends DtoRepository<
           ],
           fieldRegions: ['FieldRegion', input.fieldRegions],
           countries: ['Location', input.countries],
+          languagesOfConsulting: ['Language', input.languagesOfConsulting],
         }),
       )
       .return<{ id: ID }>('node.id as id')
@@ -140,14 +141,27 @@ export class PartnerRepository extends DtoRepository<
           relation('out', '', 'languageOfWiderCommunication', ACTIVE),
           node('languageOfWiderCommunication', 'Language'),
         ])
+        .subQuery('node', (sub) =>
+          sub
+            .match([
+              node('node'),
+              relation('out', '', 'languagesOfConsulting', ACTIVE),
+              node('languagesOfConsulting', 'Language'),
+            ])
+            .return(
+              'collect(languageOfConsulting.id) as languagesOfConsultingIds',
+            ),
+        )
         .return<{ dto: UnsecuredDto<Partner> }>(
           merge('props', {
             sensitivity: 'sensitivity',
             organization: 'organization.id',
             pointOfContact: 'pointOfContact.id',
             languageOfWiderCommunication: 'languageOfWiderCommunication.id',
+
             fieldRegions: 'fieldRegionsIds',
             countries: 'countriesIds',
+            languagesOfConsulting: 'languageOfConsultingIds',
             scope: 'scopedRoles',
             pinned: 'exists((:User { id: $requestingUser })-[:pinned]->(node))',
           }).as('dto'),
