@@ -121,8 +121,16 @@ export class PartnerResolver {
     @Parent() partner: Partner,
     @Loader(LanguageLoader) loader: LoaderOf<LanguageLoader>,
   ): Promise<SecuredLanguages> {
+    const languagesOfConsultingForLoader =
+      partner.languagesOfConsulting.value.map(
+        (id) =>
+          ({
+            id,
+            view: { active: true },
+          } as const),
+      );
     const languages = (
-      await loader.loadMany(partner.languagesOfConsulting.value)
+      await loader.loadMany(languagesOfConsultingForLoader)
     ).flatMap((language) => {
       if (language instanceof NotFoundException) {
         return [];
