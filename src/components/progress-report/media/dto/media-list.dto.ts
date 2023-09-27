@@ -1,4 +1,4 @@
-import { InputType, ObjectType } from '@nestjs/graphql';
+import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import {
   PaginatedList,
   SortablePaginationInput,
@@ -27,4 +27,15 @@ export class ProgressReportMediaList extends PaginatedList(
   ProgressReportMedia,
 ) {
   readonly report: ProgressReport;
+}
+
+@ObjectType()
+export class AvailableProgressReportMediaVariant {
+  @Field(() => Variant)
+  readonly variant: Variant<MediaVariant>;
+
+  @Field({
+    description: 'Whether the user can upload/create media for this variant',
+  })
+  readonly canCreate: boolean;
 }
