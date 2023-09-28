@@ -17,11 +17,7 @@ export const deleteBaseNode = (nodeVar: string) => (query: Query) =>
       node('propertyNode', 'Property'),
     ])
     // Mark any parent base node relationships (pointing to the base node) as active = false.
-    .optionalMatch([
-      node(nodeVar),
-      relation('in', 'baseNodeRel'),
-      node('', 'BaseNode'),
-    ])
+    .optionalMatch([node(nodeVar), relation('in', 'baseNodeRel'), node()])
     .setValues({
       [`${nodeVar}.deletedAt`]: DateTime.local(),
       'baseNodeRel.active': false,
