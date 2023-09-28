@@ -47,12 +47,12 @@ describe('Partner e2e', () => {
     const globalInnovationsClient = true;
     const active = true;
     const address = {
-      addressOne: '200 Partner Blvd',
-      addressTwo: null,
-      city: 'Prosper',
-      state: 'TX',
-      zip: '22222',
-      country: 'US',
+      addressOne: faker.location.streetAddress(),
+      addressTwo: faker.location.buildingNumber(),
+      city: faker.location.city(),
+      state: faker.location.state(),
+      zip: faker.location.zipCode(),
+      country: faker.location.countryCode(),
     };
 
     const result = await app.graphql.mutate(

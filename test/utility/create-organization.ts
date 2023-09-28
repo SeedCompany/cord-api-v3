@@ -13,12 +13,12 @@ export async function createOrganization(
 ) {
   const name = input.name || faker.hacker.noun() + faker.company.name();
   const address = {
-    addressOne: '1 Org Street',
-    addressTwo: 'Suite 100',
-    city: 'Arlington',
-    state: 'TX',
-    zip: '12345',
-    country: 'US',
+    addressOne: faker.location.streetAddress(),
+    addressTwo: faker.location.buildingNumber(),
+    city: faker.location.city(),
+    state: faker.location.state(),
+    zip: faker.location.zipCode(),
+    country: faker.location.countryCode(),
   };
 
   const result = await app.graphql.mutate(
