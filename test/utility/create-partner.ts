@@ -1,4 +1,6 @@
 import { faker } from '@faker-js/faker';
+import { IdOf } from '~/common';
+import { Language } from '../../src/components/language';
 import {
   CreatePartner,
   Partner,
@@ -6,6 +8,7 @@ import {
 } from '../../src/components/partner';
 import { FinancialReportingType } from '../../src/components/partnership';
 import { TestApp } from './create-app';
+import { createLanguage } from './create-language';
 import { createOrganization } from './create-organization';
 import { createPerson } from './create-person';
 import { fragments } from './fragments';
@@ -18,6 +21,7 @@ export async function createPartner(
   const createPartner: CreatePartner = {
     organizationId: input.organizationId || (await createOrganization(app)).id,
     pointOfContactId: input.pointOfContactId || (await createPerson(app)).id,
+    languagesOfConsulting: [(await createLanguage(app)).id as IdOf<Language>],
     types: [PartnerType.Managing],
     financialReportingTypes: [FinancialReportingType.Funded],
     pmcEntityCode: faker.helpers.replaceSymbols('???').toUpperCase(),

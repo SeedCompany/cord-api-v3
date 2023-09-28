@@ -652,6 +652,11 @@ export const partner = gql`
       canRead
       canEdit
     }
+    languagesOfConsulting {
+      value
+      canRead
+      canEdit
+    }
   }
   ${org}
   ${user}

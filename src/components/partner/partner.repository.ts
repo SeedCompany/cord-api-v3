@@ -149,19 +149,28 @@ export class PartnerRepository extends DtoRepository<
               node('languagesOfConsulting', 'Language'),
             ])
             .return(
-              'collect(languageOfConsulting.id) as languagesOfConsultingIds',
+              'collect(languagesOfConsulting.id) as languagesOfConsultingIds',
             ),
         )
+        .with([
+          'node',
+          'languagesOfConsultingIds',
+          'props',
+          'sensitivity',
+          'organization',
+          'pointOfContact',
+          'languageOfWiderCommunication',
+          'scopedRoles',
+        ])
         .return<{ dto: UnsecuredDto<Partner> }>(
           merge('props', {
             sensitivity: 'sensitivity',
             organization: 'organization.id',
             pointOfContact: 'pointOfContact.id',
             languageOfWiderCommunication: 'languageOfWiderCommunication.id',
-
             fieldRegions: 'fieldRegionsIds',
             countries: 'countriesIds',
-            languagesOfConsulting: 'languageOfConsultingIds',
+            languagesOfConsulting: 'languagesOfConsultingIds',
             scope: 'scopedRoles',
             pinned: 'exists((:User { id: $requestingUser })-[:pinned]->(node))',
           }).as('dto'),
