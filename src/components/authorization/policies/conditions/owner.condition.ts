@@ -29,7 +29,11 @@ class OwnerCondition<
         return (object as MaybeSecured<User>).id;
       }
       const o = object as MaybeSecured<HasCreator>;
-      return isIdLike(o.creator) ? o.creator : o.creator.value;
+      return !o.creator
+        ? undefined
+        : isIdLike(o.creator)
+        ? o.creator
+        : o.creator.value;
     })();
     if (!creator) {
       Logger.warn(
