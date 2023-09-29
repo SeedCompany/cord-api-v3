@@ -134,17 +134,14 @@ export class PartnerService {
     });
 
     const isAddressSame = isAddressEqual(address, object.address);
-    let changesToVerify;
-    if (!isAddressSame) {
-      changesToVerify = {
-        ...changes,
-        address: address,
-      };
-    } else {
-      changesToVerify = {
-        ...changes,
-      };
-    }
+    const changesToVerify = !isAddressSame
+      ? {
+          ...changes,
+          address: address,
+        }
+      : {
+          ...changes,
+        };
     this.privileges
       .for(session, Partner, object)
       .verifyChanges(changesToVerify);

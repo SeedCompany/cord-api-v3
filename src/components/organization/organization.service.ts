@@ -104,17 +104,15 @@ export class OrganizationService {
     });
 
     const isAddressSame = isAddressEqual(address, organization.address);
-    let changesToVerify;
-    if (!isAddressSame) {
-      changesToVerify = {
-        ...orgChanges,
-        address: address,
-      };
-    } else {
-      changesToVerify = {
-        ...orgChanges,
-      };
-    }
+    const changesToVerify = !isAddressSame
+      ? {
+          ...orgChanges,
+          address: address,
+        }
+      : {
+          ...orgChanges,
+        };
+
     if (Object.keys(orgChanges).length > 0 || 'address' in changesToVerify) {
       this.privileges
         .for(session, Organization, organization)
