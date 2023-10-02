@@ -117,15 +117,16 @@ export class CommonRepository {
       : typeof label === 'string'
       ? label
       : EnhancedResource.of(label).dbLabel;
-    const node = await this.db
+    const res = await this.db
       .query()
       .matchNode('node', resolvedLabel, { id })
       .apply(updateRelationList({ relation, newList }))
-      .return('node')
+      .return('node, stats')
       .first();
-    if (!node) {
+    if (!res) {
       throw new NotFoundException();
     }
+    return res.stats;
   }
 
   async checkDeletePermission(id: ID, session: Session | ID) {

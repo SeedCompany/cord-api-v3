@@ -130,7 +130,7 @@ export const DtoRepository = <
     async updateRelationList(
       options: Parameters<CommonRepository['updateRelationList']>[0],
     ) {
-      await super.updateRelationList({
+      return await super.updateRelationList({
         label: resource,
         ...options,
       });
