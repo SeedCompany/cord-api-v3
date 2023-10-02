@@ -1,12 +1,12 @@
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
 import { DateTime } from 'luxon';
-import { ID, ServerException } from '~/common';
+import { ID, Role, ServerException } from '~/common';
 import { ConfigService } from '~/core/config/config.service';
 import { Transactional } from '~/core/database';
 import { ILogger, Logger } from '~/core/logger';
 import { AuthenticationService } from '../authentication';
 import { CryptoService } from '../authentication/crypto.service';
-import { Powers, Role } from '../authorization/dto';
+import { Power } from '../authorization/dto';
 import { AdminRepository } from './admin.repository';
 
 @Injectable()
@@ -84,8 +84,7 @@ export class AdminService implements OnApplicationBootstrap {
       });
 
       // set root user label & give all powers
-      const powers = Object.keys(Powers);
-      await this.repo.setUserLabel(powers, id);
+      await this.repo.setUserLabel([...Power.values], id);
     }
 
     // TODO do this a different way. Using a global like this can cause race conditions.

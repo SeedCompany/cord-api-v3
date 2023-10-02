@@ -13,7 +13,7 @@ import {
   UnauthenticatedException,
 } from '../../common';
 import { ConfigService, ILogger, Loader, LoaderOf, Logger } from '../../core';
-import { Powers as Power, Privileges } from '../authorization';
+import { Power, Privileges } from '../authorization';
 import { User, UserLoader } from '../user';
 import { AuthenticationService } from './authentication.service';
 import { SessionOutput } from './dto';

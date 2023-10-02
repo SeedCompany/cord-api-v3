@@ -3,7 +3,7 @@ import { DateTime } from 'luxon';
 import { DatabaseService, EventsHandler, IEventHandler } from '../../../core';
 import { EngagementCreatedEvent } from '../../engagement/events';
 import { CeremonyService } from '../ceremony.service';
-import { CeremonyType } from '../dto/type.enum';
+import { CeremonyType } from '../dto';
 
 @EventsHandler(EngagementCreatedEvent)
 export class CreateEngagementDefaultCeremonyHandler

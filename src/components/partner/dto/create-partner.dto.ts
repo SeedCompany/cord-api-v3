@@ -6,7 +6,7 @@ import { ID, IdField, IdOf, IsId, NameField } from '../../../common';
 import { Location } from '../../../components/location';
 import { FieldRegion } from '../../field-region';
 import type { Language } from '../../language';
-import { FinancialReportingType } from '../../partnership/dto/financial-reporting-type';
+import { FinancialReportingType } from '../../partnership/dto/financial-reporting-type.enum';
 import { PartnerType } from './partner-type.enum';
 import { Partner } from './partner.dto';
 

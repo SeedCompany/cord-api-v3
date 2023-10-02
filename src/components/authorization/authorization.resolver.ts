@@ -1,6 +1,6 @@
 import { Query, Resolver } from '@nestjs/graphql';
 import { AnonSession, Session } from '~/common';
-import { Powers as Power } from './dto';
+import { Power } from './dto';
 import { Privileges } from './policy';
 
 @Resolver()

@@ -1,25 +1,29 @@
-import { Field, ObjectType, registerEnumType } from '@nestjs/graphql';
+import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { RegisterResource } from '~/core/resources';
 import {
+  EnumType,
+  makeEnum,
   NameField,
   Resource,
   SecuredEnum,
   SecuredProperty,
   SecuredProps,
   SecuredString,
-} from '../../../../common';
+} from '~/common';
+import { RegisterResource } from '~/core/resources';
 
-export enum Degree {
-  Primary = 'Primary',
-  Secondary = 'Secondary',
-  Associates = 'Associates',
-  Bachelors = 'Bachelors',
-  Masters = 'Masters',
-  Doctorate = 'Doctorate',
-}
-
-registerEnumType(Degree, { name: 'Degree' });
+export type Degree = EnumType<typeof Degree>;
+export const Degree = makeEnum({
+  name: 'Degree',
+  values: [
+    'Primary',
+    'Secondary',
+    'Associates',
+    'Bachelors',
+    'Masters',
+    'Doctorate',
+  ],
+});
 
 @ObjectType({
   description: SecuredProperty.descriptionFor('a degree'),

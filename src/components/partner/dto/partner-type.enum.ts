@@ -1,15 +1,11 @@
-import { ObjectType, registerEnumType } from '@nestjs/graphql';
-import { SecuredEnumList } from '../../../common';
+import { ObjectType } from '@nestjs/graphql';
+import { EnumType, makeEnum, SecuredEnumList } from '~/common';
 
-export enum PartnerType {
-  Managing = 'Managing',
-  Funding = 'Funding',
-  Impact = 'Impact',
-  Technical = 'Technical',
-  Resource = 'Resource',
-}
-
-registerEnumType(PartnerType, { name: 'PartnerType' });
+export type PartnerType = EnumType<typeof PartnerType>;
+export const PartnerType = makeEnum({
+  name: 'PartnerType',
+  values: ['Managing', 'Funding', 'Impact', 'Technical', 'Resource'],
+});
 
 @ObjectType({
   description: SecuredEnumList.descriptionFor('partner types'),

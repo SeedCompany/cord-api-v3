@@ -6,7 +6,7 @@ import { CalendarDate, DateField, ID, IdField } from '../../../common';
 import { ChangesetIdField } from '../../changeset';
 import { CreateDefinedFileVersionInput } from '../../file/dto';
 import { PartnerType } from '../../partner/dto';
-import { FinancialReportingType } from './financial-reporting-type';
+import { FinancialReportingType } from './financial-reporting-type.enum';
 import { PartnershipAgreementStatus } from './partnership-agreement-status.enum';
 import { Partnership } from './partnership.dto';
 

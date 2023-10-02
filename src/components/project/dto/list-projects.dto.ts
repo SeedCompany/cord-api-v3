@@ -11,15 +11,15 @@ import {
   Sensitivity,
   SortablePaginationInput,
 } from '~/common';
+import { ProjectStatus } from './project-status.enum';
+import { ProjectStep } from './project-step.enum';
+import { ProjectType } from './project-type.enum';
 import {
   InternshipProject,
   IProject,
   Project,
   TranslationProject,
 } from './project.dto';
-import { ProjectStatus } from './status.enum';
-import { ProjectStep } from './step.enum';
-import { ProjectType } from './type.enum';
 
 @InputType()
 export abstract class ProjectFilters {

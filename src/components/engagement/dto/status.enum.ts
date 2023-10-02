@@ -1,4 +1,4 @@
-import { Field, ObjectType, registerEnumType } from '@nestjs/graphql';
+import { Field, ObjectType } from '@nestjs/graphql';
 import { setOf } from '@seedcompany/common';
 import { EnumType, makeEnum, SecuredEnum } from '~/common';
 
@@ -43,13 +43,12 @@ export const EngagementStatus = makeEnum({
 })
 export class SecuredEngagementStatus extends SecuredEnum(EngagementStatus) {}
 
-export enum EngagementTransitionType {
-  Neutral = 'Neutral',
-  Approve = 'Approve',
-  Reject = 'Reject',
-}
-registerEnumType(EngagementTransitionType, {
+export type EngagementTransitionType = EnumType<
+  typeof EngagementTransitionType
+>;
+export const EngagementTransitionType = makeEnum({
   name: 'EngagementTransitionType',
+  values: ['Neutral', 'Approve', 'Reject'],
 });
 
 @ObjectType()

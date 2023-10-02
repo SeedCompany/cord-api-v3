@@ -7,8 +7,8 @@ import {
   SecuredList,
   SortablePaginationInput,
 } from '~/common';
-import { ProductApproach } from './product-approach';
-import { ProductMethodology } from './product-methodology';
+import { ProductApproach } from './product-approach.enum';
+import { ProductMethodology } from './product-methodology.enum';
 import { AnyProduct, Product } from './product.dto';
 
 @InputType()

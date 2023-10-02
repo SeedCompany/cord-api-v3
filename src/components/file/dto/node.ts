@@ -19,7 +19,7 @@ import {
   ServerException,
   simpleSwitch,
 } from '../../../common';
-import { FileNodeType } from './type';
+import { FileNodeType } from './file-node-type.enum';
 
 /**
  * This should be used for TypeScript types as we'll always be passing around
@@ -107,7 +107,7 @@ export class FileVersion extends BaseFile {
   static readonly Props = keysOf<FileVersion>();
   static readonly SecuredProps = keysOf<SecuredProps<FileVersion>>();
 
-  declare readonly type: FileNodeType.FileVersion;
+  declare readonly type: 'FileVersion';
 }
 
 @RegisterResource()
@@ -118,7 +118,7 @@ export class File extends BaseFile {
   static readonly Props = keysOf<File>();
   static readonly SecuredProps = keysOf<SecuredProps<File>>();
 
-  declare readonly type: FileNodeType.File;
+  declare readonly type: 'File';
 
   readonly latestVersionId: ID;
 
@@ -136,7 +136,7 @@ export class Directory extends FileNode {
   static readonly Props = keysOf<Directory>();
   static readonly SecuredProps = keysOf<SecuredProps<Directory>>();
 
-  declare readonly type: FileNodeType.Directory;
+  declare readonly type: 'Directory';
 
   @Field(() => Int, {
     description:

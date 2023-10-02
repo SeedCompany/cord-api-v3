@@ -15,7 +15,7 @@ export class UpdateProjectBudgetStatusHandler
     if (!updates.step) {
       return;
     }
-    let budgetStatus = BudgetStatus.Current;
+    let budgetStatus: BudgetStatus = BudgetStatus.Current;
     if (
       stepToStatus(updates.step) !== ProjectStatus.Active ||
       previous.status === ProjectStatus.Active

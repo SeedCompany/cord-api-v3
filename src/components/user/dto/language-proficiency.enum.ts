@@ -1,12 +1,7 @@
-import { registerEnumType } from '@nestjs/graphql';
+import { EnumType, makeEnum } from '~/common';
 
-export enum LanguageProficiency {
-  Beginner = 'Beginner',
-  Conversational = 'Conversational',
-  Skilled = 'Skilled',
-  Fluent = 'Fluent',
-}
-
-registerEnumType(LanguageProficiency, {
+export type LanguageProficiency = EnumType<typeof LanguageProficiency>;
+export const LanguageProficiency = makeEnum({
   name: 'LanguageProficiency',
+  values: ['Beginner', 'Conversational', 'Skilled', 'Fluent'],
 });

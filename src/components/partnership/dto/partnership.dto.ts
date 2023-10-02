@@ -20,9 +20,9 @@ import { ScopedRole } from '../../authorization';
 import { ChangesetAware } from '../../changeset/dto';
 import { DefinedFile } from '../../file/dto';
 import { Organization } from '../../organization/dto';
-import { SecuredPartnerTypes } from '../../partner/dto/partner-type.enum';
+import { SecuredPartnerTypes } from '../../partner/dto';
 import { IProject } from '../../project/dto';
-import { FinancialReportingType } from './financial-reporting-type';
+import { FinancialReportingType } from './financial-reporting-type.enum';
 import { PartnershipAgreementStatus } from './partnership-agreement-status.enum';
 
 @ObjectType({

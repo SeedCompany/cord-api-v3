@@ -15,9 +15,9 @@ import {
   SensitivityField,
 } from '../../../common';
 import { ReportPeriod } from '../../periodic-report/dto';
+import { ProjectStep } from './project-step.enum';
+import { ProjectType } from './project-type.enum';
 import { IProject, Project } from './project.dto';
-import { ProjectStep } from './step.enum';
-import { ProjectType } from './type.enum';
 
 @InputType()
 export abstract class CreateProject {

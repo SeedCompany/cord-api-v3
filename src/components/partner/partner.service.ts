@@ -16,7 +16,7 @@ import { HandleIdLookup, ILogger, Logger, ResourceLoader } from '../../core';
 import { mapListResults } from '../../core/database/results';
 import { Privileges } from '../authorization';
 import { Location, LocationLoader, LocationType } from '../location';
-import { FinancialReportingType } from '../partnership/dto/financial-reporting-type';
+import { FinancialReportingType } from '../partnership/dto';
 import {
   IProject,
   ProjectListInput,

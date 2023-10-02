@@ -1,27 +1,27 @@
-import { ObjectType, registerEnumType } from '@nestjs/graphql';
-import { SecuredEnumList } from '../../../common';
+import { ObjectType } from '@nestjs/graphql';
+import { EnumType, makeEnum, SecuredEnumList } from '~/common';
 
-export enum ProductStep {
-  ExegesisAndFirstDraft = 'ExegesisAndFirstDraft',
-  TeamCheck = 'TeamCheck',
-  CommunityTesting = 'CommunityTesting',
-  BackTranslation = 'BackTranslation',
-  ConsultantCheck = 'ConsultantCheck',
-  InternalizationAndDrafting = 'InternalizationAndDrafting',
-  PeerRevision = 'PeerRevision',
-  ConsistencyCheckAndFinalEdits = 'ConsistencyCheckAndFinalEdits',
-  Craft = 'Craft',
-  Test = 'Test',
-  Check = 'Check',
-  Record = 'Record',
-  Develop = 'Develop',
-  Translate = 'Translate',
-  Completed = 'Completed',
-}
-
-registerEnumType(ProductStep, {
+export type ProductStep = EnumType<typeof ProductStep>;
+export const ProductStep = makeEnum({
   name: 'ProductStep',
   description: 'A step required to complete a product/"goal".',
+  values: [
+    'ExegesisAndFirstDraft',
+    'TeamCheck',
+    'CommunityTesting',
+    'BackTranslation',
+    'ConsultantCheck',
+    'InternalizationAndDrafting',
+    'PeerRevision',
+    'ConsistencyCheckAndFinalEdits',
+    'Craft',
+    'Test',
+    'Check',
+    'Record',
+    'Develop',
+    'Translate',
+    'Completed',
+  ],
 });
 
 @ObjectType({

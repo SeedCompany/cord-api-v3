@@ -11,7 +11,7 @@ import {
   Sensitivity,
   SensitivityField,
 } from '../../../common';
-import { CeremonyType } from './type.enum';
+import { CeremonyType } from './ceremony-type.enum';
 
 @RegisterResource()
 @Calculated()
