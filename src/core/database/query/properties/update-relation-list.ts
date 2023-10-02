@@ -68,7 +68,7 @@ export const updateRelationList =
             )
             .return('count(child) as totalCount'),
         )
-        .return(
+        .return<{ stats: { deletedCount: number; totalCount: number } }>(
           exp({
             deletedCount: 'deletedCount',
             totalCount: 'totalCount',

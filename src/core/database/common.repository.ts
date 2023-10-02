@@ -1,5 +1,5 @@
 import { Inject, Injectable, Optional } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
+import { inArray, node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   EnhancedResource,
@@ -39,19 +39,28 @@ export class CommonRepository {
 
   async getBaseNode(
     id: ID,
-    label?: string | ResourceShape<any>,
+    label?: string | ResourceShape<any> | EnhancedResource<any>,
   ): Promise<BaseNode | undefined> {
+    const res = await this.getBaseNodes([id], label);
+    return res[0];
+  }
+
+  async getBaseNodes(
+    ids: readonly ID[],
+    label?: string | ResourceShape<any> | EnhancedResource<any>,
+  ): Promise<readonly BaseNode[]> {
     const resolvedLabel = label
       ? typeof label === 'string'
         ? label
-        : getDbClassLabels(label)[0]
+        : EnhancedResource.of(label).dbLabel
       : 'BaseNode';
     return await this.db
       .query()
-      .matchNode('node', resolvedLabel, { id })
+      .matchNode('node', resolvedLabel)
+      .where({ 'node.id': inArray(ids) })
       .return<{ node: BaseNode }>('node')
       .map('node')
-      .first();
+      .run();
   }
 
   async updateRelation(
@@ -108,15 +117,16 @@ export class CommonRepository {
       : typeof label === 'string'
       ? label
       : EnhancedResource.of(label).dbLabel;
-    const node = await this.db
+    const res = await this.db
       .query()
       .matchNode('node', resolvedLabel, { id })
       .apply(updateRelationList({ relation, newList }))
-      .return('node')
+      .return('node, stats')
       .first();
-    if (!node) {
+    if (!res) {
       throw new NotFoundException();
     }
+    return res.stats;
   }
 
   async checkDeletePermission(id: ID, session: Session | ID) {
