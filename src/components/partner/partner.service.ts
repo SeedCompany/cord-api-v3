@@ -144,41 +144,20 @@ export class PartnerService {
     }
 
     if (fieldRegions) {
-      const { totalCount } = await this.repo.updateRelationList({
-        id: partner.id,
-        relation: 'fieldRegions',
-        newList: fieldRegions,
-      });
-
-      if (totalCount !== fieldRegions.length) {
-        await this.validateIds(
-          fieldRegions,
-          'FieldRegion',
-          'fieldRegionId',
-          'Field region not found',
-        );
+      try {
+        await this.repo.updateRelationList({
+          id: partner.id,
+          relation: 'fieldRegions',
+          newList: fieldRegions,
+        });
+      } catch (e) {
+        throw e instanceof InputException
+          ? e.withField('partner.fieldRegions')
+          : e;
       }
     }
 
     return await this.readOne(input.id, session);
-  }
-
-  protected async validateIds(
-    ids: readonly ID[],
-    label: string,
-    resourceField: string,
-    errMsg: string,
-  ): Promise<void> {
-    const validNodes = await this.repo.getBaseNodes(ids, label);
-    const validIds = new Set(
-      validNodes.map((validId) => validId.properties.id),
-    );
-
-    for (const id of ids) {
-      if (!validIds.has(id)) {
-        throw new NotFoundException(errMsg, `partner.${resourceField}[${id}]`);
-      }
-    }
   }
 
   async delete(id: ID, session: Session): Promise<void> {
