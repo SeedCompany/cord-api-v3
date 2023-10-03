@@ -1,4 +1,5 @@
 import { Inject, Injectable, Optional } from '@nestjs/common';
+import { setOf } from '@seedcompany/common';
 import { inArray, node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
@@ -6,6 +7,7 @@ import {
   getDbClassLabels,
   getDbPropertyUnique,
   ID,
+  InputException,
   isIdLike,
   NotFoundException,
   ResourceShape,
@@ -126,6 +128,13 @@ export class CommonRepository {
     if (!res) {
       throw new NotFoundException();
     }
+    if (res.stats.totalCount !== newList.length) {
+      const validNodes = await this.getBaseNodes(newList);
+      const validIds = setOf(validNodes.map((n) => n.properties.id));
+      throw new InvalidReferencesException(
+        newList.filter((id) => !validIds.has(id)),
+      );
+    }
     return res.stats;
   }
 
@@ -168,5 +177,11 @@ export class CommonRepository {
           : [];
       }),
     ];
+  }
+}
+
+export class InvalidReferencesException extends InputException {
+  constructor(readonly invalidIds: readonly ID[]) {
+    super('Could not find some IDs given');
   }
 }
