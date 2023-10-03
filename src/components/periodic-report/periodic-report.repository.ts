@@ -9,7 +9,6 @@ import {
   Query,
   relation,
 } from 'cypher-query-builder';
-import { AndConditions } from 'cypher-query-builder/src/clauses/where-utils';
 import {
   CalendarDate,
   generateId,
@@ -24,10 +23,10 @@ import {
   createNode,
   createRelationships,
   deleteBaseNode,
+  filter,
   matchPropsAndProjectSensAndScopedRoles,
   merge,
   paginate,
-  path,
   sorting,
   variable,
   Variable,
@@ -167,27 +166,23 @@ export class PeriodicReportRepository extends DtoRepository<
     const resource = input.type
       ? resolveReportType({ type: input.type })
       : IPeriodicReport;
+    const { type, parent, start, end } = input;
+    const filters = { type, parent, start, end };
     const result = await this.db
       .query()
       .matchNode('node', 'PeriodicReport')
-      .apply((q) => {
-        const conditions: AndConditions = {};
-
-        if (input.type) {
-          conditions.node = hasLabel(`${input.type}Report`);
-        }
-        if (input.parent) {
-          conditions.parent = path([
-            node('', 'BaseNode', { id: input.parent }),
+      .apply(
+        filter.builder(filters, {
+          parent: filter.pathExists((id) => [
+            node('', 'BaseNode', { id }),
             relation('out', '', 'report', ACTIVE),
             node('node'),
-          ]);
-        }
-
-        if (Object.keys(conditions).length > 0) {
-          q.where(conditions);
-        }
-      })
+          ]),
+          start: filter.dateTimeProp(),
+          end: filter.dateTimeProp(),
+          type: ({ value }) => hasLabel(`${value}Report`),
+        }),
+      )
       .apply(sorting(resource, input))
       .apply(paginate(input, this.hydrate(session)))
       .first();
