@@ -99,12 +99,12 @@ export class PartnerService {
   }
 
   async update(input: UpdatePartner, session: Session): Promise<Partner> {
-    const object = await this.readOne(input.id, session);
+    const partner = await this.readOne(input.id, session);
 
     if (
       !this.validateFinancialReportingType(
-        input.financialReportingTypes ?? object.financialReportingTypes.value,
-        input.types ?? object.types.value,
+        input.financialReportingTypes ?? partner.financialReportingTypes.value,
+        input.types ?? partner.types.value,
       )
     ) {
       if (input.financialReportingTypes && input.types) {
@@ -119,29 +119,66 @@ export class PartnerService {
       };
     }
 
-    const changes = this.repo.getActualChanges(object, input);
-    this.privileges.for(session, Partner, object).verifyChanges(changes);
+    const changes = this.repo.getActualChanges(partner, input);
+    this.privileges.for(session, Partner, partner).verifyChanges(changes);
     const {
       pointOfContactId,
       languageOfWiderCommunicationId,
+      fieldRegions,
       ...simpleChanges
     } = changes;
 
-    await this.repo.updateProperties(object, simpleChanges);
+    await this.repo.updateProperties(partner, simpleChanges);
 
     if (pointOfContactId) {
       await this.repo.updatePointOfContact(input.id, pointOfContactId, session);
     }
+
     if (languageOfWiderCommunicationId) {
       await this.repo.updateRelation(
         'languageOfWiderCommunication',
         'Language',
-        object.id,
+        partner.id,
         languageOfWiderCommunicationId,
       );
     }
 
+    if (fieldRegions) {
+      const { totalCount } = await this.repo.updateRelationList({
+        id: partner.id,
+        relation: 'fieldRegions',
+        newList: fieldRegions,
+      });
+
+      if (totalCount !== fieldRegions.length) {
+        await this.validateIds(
+          fieldRegions,
+          'FieldRegion',
+          'fieldRegionId',
+          'Field region not found',
+        );
+      }
+    }
+
     return await this.readOne(input.id, session);
+  }
+
+  protected async validateIds(
+    ids: readonly ID[],
+    label: string,
+    resourceField: string,
+    errMsg: string,
+  ): Promise<void> {
+    const validNodes = await this.repo.getBaseNodes(ids, label);
+    const validIds = new Set(
+      validNodes.map((validId) => validId.properties.id),
+    );
+
+    for (const id of ids) {
+      if (!validIds.has(id)) {
+        throw new NotFoundException(errMsg, `partner.${resourceField}[${id}]`);
+      }
+    }
   }
 
   async delete(id: ID, session: Session): Promise<void> {
