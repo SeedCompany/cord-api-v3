@@ -143,37 +143,6 @@ export class PartnerRepository extends DtoRepository<
         );
   }
 
-  async updatePointOfContact(id: ID, user: ID, session: Session) {
-    const createdAt = DateTime.local();
-    await this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .matchNode('partner', 'Partner', { id })
-      .matchNode('newPointOfContact', 'User', {
-        id: user,
-      })
-      .optionalMatch([
-        node('org'),
-        relation('out', 'oldPointOfContactRel', 'pointOfContact', {
-          active: true,
-        }),
-        node('pointOfContact', 'User'),
-      ])
-      .setValues({
-        'oldPointOfContactRel.active': false,
-      })
-      .with('*')
-      .create([
-        node('partner'),
-        relation('out', '', 'pointOfContact', {
-          active: true,
-          createdAt,
-        }),
-        node('newPointOfContact'),
-      ])
-      .run();
-  }
-
   async list({ filter, ...input }: PartnerListInput, session: Session) {
     const result = await this.db
       .query()

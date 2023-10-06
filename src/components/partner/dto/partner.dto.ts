@@ -55,7 +55,7 @@ export class Partner extends Interfaces {
 
   readonly organization: Secured<ID>;
 
-  readonly pointOfContact: Secured<ID>;
+  readonly pointOfContact: Secured<ID | null>;
 
   @Field()
   readonly types: SecuredPartnerTypes;

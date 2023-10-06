@@ -130,8 +130,13 @@ export class PartnerService {
 
     await this.repo.updateProperties(partner, simpleChanges);
 
-    if (pointOfContactId) {
-      await this.repo.updatePointOfContact(input.id, pointOfContactId, session);
+    if (pointOfContactId !== undefined) {
+      await this.repo.updateRelation(
+        'pointOfContact',
+        'User',
+        input.id,
+        pointOfContactId,
+      );
     }
 
     if (languageOfWiderCommunicationId) {

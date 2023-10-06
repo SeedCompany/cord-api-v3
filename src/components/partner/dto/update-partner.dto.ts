@@ -15,7 +15,7 @@ export abstract class UpdatePartner {
   readonly id: ID;
 
   @IdField({ nullable: true })
-  readonly pointOfContactId?: ID;
+  readonly pointOfContactId?: ID | null;
 
   @Field(() => [PartnerType], { nullable: true })
   @Transform(({ value }) => uniq(value))
