@@ -35,9 +35,12 @@ export class GraphqlModule implements NestModule {
   constructor(private readonly middleware: GqlContextHostImpl) {}
 
   configure(consumer: MiddlewareConsumer) {
+    // Always attach our GQL Context middleware.
+    // It has its own logic to handle non-gql requests.
+    consumer.apply(this.middleware.use).forRoutes('*');
+
+    // Attach the graphql-upload middleware to the graphql endpoint.
     const uploadMiddleware = createUploadMiddleware();
-    consumer
-      .apply(this.middleware.use, uploadMiddleware)
-      .forRoutes('/graphql', '/graphql/*');
+    consumer.apply(uploadMiddleware).forRoutes('/graphql', '/graphql/*');
   }
 }
