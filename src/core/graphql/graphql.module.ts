@@ -36,6 +36,8 @@ export class GraphqlModule implements NestModule {
 
   configure(consumer: MiddlewareConsumer) {
     const uploadMiddleware = createUploadMiddleware();
-    consumer.apply(this.middleware.use, uploadMiddleware).forRoutes('*');
+    consumer
+      .apply(this.middleware.use, uploadMiddleware)
+      .forRoutes('/graphql', '/graphql/*');
   }
 }

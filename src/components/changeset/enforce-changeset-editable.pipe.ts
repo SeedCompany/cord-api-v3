@@ -4,7 +4,12 @@ import {
   DataLoaderStrategy,
 } from '@seedcompany/data-loader';
 import { isPlainObject } from 'lodash';
-import { ID, InputException, isIdLike } from '../../common';
+import {
+  ID,
+  InputException,
+  isIdLike,
+  loadManyIgnoreMissingThrowAny,
+} from '~/common';
 import { GqlContextHost, NotGraphQLContext } from '../../core';
 import { ResourceLoaderRegistry } from '../../core/resources/loader.registry';
 import { Changeset } from './dto';
@@ -61,11 +66,8 @@ export class EnforceChangesetEditablePipe implements PipeTransform {
       this.loaderRegistry.loaders.get('Changeset')!.factory;
     const loader = await this.loaderContext.getLoader(loaderFactory, context);
 
-    const changesets = await loader.loadMany(ids);
+    const changesets = await loadManyIgnoreMissingThrowAny(loader, ids);
     for (const changeset of changesets) {
-      if (changeset instanceof Error) {
-        throw changeset;
-      }
       if (!changeset.editable) {
         throw new InputException('Changeset is not editable');
       }

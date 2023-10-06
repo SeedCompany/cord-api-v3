@@ -1,6 +1,6 @@
 import { Args, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { sortBy } from 'lodash';
-import { ClientException } from '~/common';
+import { loadManyIgnoreMissingThrowAny } from '~/common';
 import { Loader, LoaderOf } from '~/core';
 import { ProgressReport } from '../progress-report/dto';
 import {
@@ -30,16 +30,11 @@ export class ProgressReportConnectionResolver {
     @Loader(ProductProgressByReportLoader)
     loader: LoaderOf<ProductProgressByReportLoader>,
   ): Promise<ReadonlyArray<readonly ProductProgress[]>> {
-    const detailsOrErrors = await loader.loadMany(
+    const detailsOrErrors = await loadManyIgnoreMissingThrowAny(
+      loader,
       Progress.Variants.map((variant) => ({ report, variant })),
     );
     const details = detailsOrErrors.flatMap((entry) => {
-      if (entry instanceof Error) {
-        if (entry instanceof ClientException) {
-          return [];
-        }
-        throw entry;
-      }
       if (entry.details.length === 0) {
         return [];
       }

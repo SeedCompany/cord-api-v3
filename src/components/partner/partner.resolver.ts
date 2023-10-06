@@ -11,11 +11,13 @@ import {
   ID,
   IdArg,
   ListArg,
+  loadSecuredIds,
   LoggedInSession,
   mapSecuredValue,
   Session,
 } from '../../common';
 import { Loader, LoaderOf } from '../../core';
+import { FieldRegionLoader, SecuredFieldRegions } from '../field-region';
 import { LanguageLoader, SecuredLanguageNullable } from '../language';
 import { OrganizationLoader, SecuredOrganization } from '../organization';
 import { PartnerLoader, PartnerService } from '../partner';
@@ -91,6 +93,14 @@ export class PartnerResolver {
     return await mapSecuredValue(partner.languageOfWiderCommunication, (id) =>
       languages.load({ id, view: { active: true } }),
     );
+  }
+
+  @ResolveField(() => SecuredFieldRegions)
+  async fieldRegions(
+    @Parent() partner: Partner,
+    @Loader(FieldRegionLoader) loader: LoaderOf<FieldRegionLoader>,
+  ): Promise<SecuredFieldRegions> {
+    return await loadSecuredIds(loader, partner.fieldRegions);
   }
 
   @ResolveField(() => SecuredProjectList, {
