@@ -11,9 +11,9 @@ import {
   ID,
   IdArg,
   ListArg,
+  loadSecuredIds,
   LoggedInSession,
   mapSecuredValue,
-  NotFoundException,
   Session,
 } from '../../common';
 import { Loader, LoaderOf } from '../../core';
@@ -100,22 +100,7 @@ export class PartnerResolver {
     @Parent() partner: Partner,
     @Loader(FieldRegionLoader) loader: LoaderOf<FieldRegionLoader>,
   ): Promise<SecuredFieldRegions> {
-    const fieldRegions = (
-      await loader.loadMany(partner.fieldRegions.value)
-    ).flatMap((fieldRegion) => {
-      if (fieldRegion instanceof NotFoundException) {
-        return [];
-      } else if (fieldRegion instanceof Error) {
-        throw fieldRegion;
-      }
-
-      return fieldRegion;
-    });
-
-    return {
-      ...partner.fieldRegions,
-      value: fieldRegions,
-    };
+    return await loadSecuredIds(loader, partner.fieldRegions);
   }
 
   @ResolveField(() => SecuredProjectList, {
