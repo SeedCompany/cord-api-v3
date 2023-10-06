@@ -8,6 +8,7 @@ import { Prompt } from '../../prompts/dto';
 import { PromptVariantResponseListService } from '../../prompts/prompt-variant-response.service';
 import { ProgressReport } from '../dto';
 import { ProgressReportCommunityStory as CommunityStory } from '../dto/community-stories.dto';
+import { prompts } from './community-story-prompts';
 import { ProgressReportCommunityStoryRepository } from './progress-report-community-story.repository';
 
 @Injectable()
@@ -28,22 +29,3 @@ export class ProgressReportCommunityStoryService extends PromptVariantResponseLi
     );
   }
 }
-
-const prompts = [
-  Prompt.create({
-    id: 'bnrqZXOtEeW',
-    text: 'What are some responses you have seen in the community? Think of community outreach, youth camps, and other community events related to this project. (Ex: increased unity, freedom from false religions, less violence, etc.)',
-  }),
-  Prompt.create({
-    id: 'Bn3zwnzb3JN',
-    text: 'How was the translated Scripture used among the churches, local ministries, or other groups in the last quarter?',
-  }),
-  Prompt.create({
-    id: 'MsdfnoZkYda',
-    text: 'Share a specific example of how translated Scripture changed or challenged the way one person viewed themselves, others, and/or God. (Ex: in marriage, parenting, family life, personal growth, friendships, relationship with God, etc.)',
-  }),
-  Prompt.create({
-    id: 'P4FO95xsZ7A',
-    text: 'Tell how someone responded to the Scripture in a checking session. Was there a passage that was meaningful to this specific person? If yes, what did they discover?',
-  }),
-];
