@@ -15,7 +15,7 @@ export class ProgressReportHighlightsService extends PromptVariantResponseListSe
   ProgressReportHighlightsRepository,
 ) {
   protected async getPrompts(): Promise<readonly Prompt[]> {
-    return prompts;
+    return [];
   }
 
   protected async getPrivilegeContext(dto: UnsecuredDto<Highlight>) {
@@ -28,22 +28,3 @@ export class ProgressReportHighlightsService extends PromptVariantResponseListSe
     );
   }
 }
-
-const prompts = [
-  Prompt.create({
-    id: 'B3HOymZDiwi',
-    text: 'What are the biggest obstacles team members are facing in reaching their goals? How are they dealing with those obstacles? (Ex: translation difficulties, political unrest, suppression of faith)',
-  }),
-  Prompt.create({
-    id: '3rLRHtQKsyy',
-    text: 'What terms or concepts were difficult to find the right word for in the local language? Please explain how you found a solution.',
-  }),
-  Prompt.create({
-    id: 'zsuBZUOwy3b',
-    text: 'How has working on the translation affected team members or their families? Please give a specific example.',
-  }),
-  Prompt.create({
-    id: '1uzkzNwBRk3',
-    text: 'What are the biggest obstacles team members are facing in reaching their goals? How are they dealing with those obstacles? (Ex: translation difficulties, political unrest, suppression of faith)',
-  }),
-];

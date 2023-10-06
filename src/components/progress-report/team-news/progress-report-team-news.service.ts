@@ -9,6 +9,7 @@ import { PromptVariantResponseListService } from '../../prompts/prompt-variant-r
 import { ProgressReport } from '../dto';
 import { ProgressReportTeamNews as TeamNews } from '../dto/team-news.dto';
 import { ProgressReportTeamNewsRepository } from './progress-report-team-news.repository';
+import { prompts } from './team-news-prompts';
 
 @Injectable()
 export class ProgressReportTeamNewsService extends PromptVariantResponseListService(
@@ -28,10 +29,3 @@ export class ProgressReportTeamNewsService extends PromptVariantResponseListServ
     );
   }
 }
-
-const prompts = [
-  Prompt.create({
-    id: 'F4eY7VXhPpM',
-    text: 'News?',
-  }),
-];
