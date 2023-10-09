@@ -14,6 +14,8 @@ import {
   SensitivityField,
 } from '../../../common';
 import { Location } from '../../location/dto';
+import { SecuredOrganizationReach } from './organization-reach.dto';
+import { SecuredOrganizationTypes } from './organization-type.dto';
 
 @RegisterResource()
 @ObjectType({
@@ -41,6 +43,12 @@ export class Organization extends Resource {
       "Based on the projects' lowest sensitivity, and defaults to 'High' if no project is connected",
   })
   readonly sensitivity: Sensitivity;
+
+  @Field()
+  readonly types: SecuredOrganizationTypes;
+
+  @Field()
+  readonly reach: SecuredOrganizationReach;
 }
 
 @ObjectType({

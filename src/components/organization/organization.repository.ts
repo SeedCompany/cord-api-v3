@@ -26,8 +26,10 @@ export class OrganizationRepository extends DtoRepository<
   async create(input: CreateOrganization, session: Session) {
     const initialProps = {
       name: input.name,
-      address: input.address,
       acronym: input.acronym,
+      address: input.address,
+      types: input.types ?? [],
+      reach: input.reach ?? [],
       canDelete: true,
     };
 
