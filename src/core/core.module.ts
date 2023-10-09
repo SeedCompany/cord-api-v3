@@ -14,7 +14,6 @@ import { EventsModule } from './events';
 import { ExceptionFilter } from './exception/exception.filter';
 import { ExceptionNormalizer } from './exception/exception.normalizer';
 import { GraphqlModule } from './graphql';
-import { PostgresModule } from './postgres/postgres.module';
 import { ResourceModule } from './resources/resource.module';
 import { ScalarProviders } from './scalars.resolver';
 import { TimeoutInterceptor } from './timeout.interceptor';
@@ -34,7 +33,6 @@ import { WaitResolver } from './wait.resolver';
     GraphqlModule,
     EventsModule,
     TracingModule,
-    PostgresModule,
     ResourceModule,
   ],
   providers: [
@@ -59,7 +57,6 @@ import { WaitResolver } from './wait.resolver';
     EventsModule,
     ResourceModule,
     TracingModule,
-    PostgresModule,
   ],
 })
 export class CoreModule {}
