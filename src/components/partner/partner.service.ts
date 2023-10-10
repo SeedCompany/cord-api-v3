@@ -2,7 +2,9 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import {
   DuplicateException,
   ID,
+  IdOf,
   InputException,
+  loadManyIgnoreMissingThrowAny,
   NotFoundException,
   ObjectView,
   ServerException,
@@ -10,9 +12,10 @@ import {
   UnauthorizedException,
   UnsecuredDto,
 } from '../../common';
-import { HandleIdLookup, ILogger, Logger } from '../../core';
+import { HandleIdLookup, ILogger, Logger, ResourceLoader } from '../../core';
 import { mapListResults } from '../../core/database/results';
 import { Privileges } from '../authorization';
+import { Location, LocationLoader, LocationType } from '../location';
 import { FinancialReportingType } from '../partnership/dto/financial-reporting-type';
 import {
   IProject,
@@ -38,6 +41,7 @@ export class PartnerService {
     @Inject(forwardRef(() => ProjectService))
     private readonly projectService: ProjectService & {},
     private readonly repo: PartnerRepository,
+    private readonly resourceLoader: ResourceLoader,
   ) {}
 
   async create(input: CreatePartner, session: Session): Promise<Partner> {
@@ -53,6 +57,10 @@ export class PartnerService {
         'partner.organizationId',
         'Partner for organization already exists.',
       );
+    }
+
+    if (input.countries) {
+      await this.verifyCountries(input.countries);
     }
 
     const id = await this.repo.create(input, session);
@@ -125,6 +133,7 @@ export class PartnerService {
       pointOfContactId,
       languageOfWiderCommunicationId,
       fieldRegions,
+      countries,
       ...simpleChanges
     } = changes;
 
@@ -146,6 +155,22 @@ export class PartnerService {
         partner.id,
         languageOfWiderCommunicationId,
       );
+    }
+
+    if (countries) {
+      await this.verifyCountries(countries);
+
+      try {
+        await this.repo.updateRelationList({
+          id: partner.id,
+          relation: 'countries',
+          newList: countries,
+        });
+      } catch (e) {
+        throw e instanceof InputException
+          ? e.withField('partner.countries')
+          : e;
+      }
     }
 
     if (fieldRegions) {
@@ -233,5 +258,27 @@ export class PartnerService {
       !types?.includes(PartnerType.Managing)
       ? false
       : true;
+  }
+
+  private async verifyCountries(ids: ReadonlyArray<IdOf<Location>>) {
+    const loader = await this.resourceLoader.getLoader(LocationLoader);
+    const locations = await loadManyIgnoreMissingThrowAny(loader, ids);
+    const invalidIds = locations.flatMap((location) =>
+      location.type.value !== 'Country' ? location.id : [],
+    );
+    if (invalidIds.length === 0) {
+      return;
+    }
+    const ex = new LocationTypeException([LocationType.Country], invalidIds);
+    throw ex.withField('partner.countries');
+  }
+}
+
+class LocationTypeException extends InputException {
+  constructor(
+    readonly allowedTypes: readonly LocationType[],
+    readonly invalidIds: ID[],
+  ) {
+    super('Given locations do not match the expected type');
   }
 }

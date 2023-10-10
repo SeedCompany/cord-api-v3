@@ -19,6 +19,7 @@ import {
   Sensitivity,
   SensitivityField,
 } from '../../../common';
+import { Location } from '../../../components/location';
 import { ScopedRole } from '../../authorization';
 import { FieldRegion } from '../../field-region';
 import type { Language } from '../../language';
@@ -78,6 +79,7 @@ export class Partner extends Interfaces {
   readonly languageOfWiderCommunication: Secured<IdOf<Language> | null>;
 
   readonly fieldRegions: Required<Secured<ReadonlyArray<IdOf<FieldRegion>>>>;
+  readonly countries: Required<Secured<ReadonlyArray<IdOf<Location>>>>;
 
   @DateTimeField()
   readonly modifiedAt: DateTime;
