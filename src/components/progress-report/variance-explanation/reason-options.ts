@@ -21,7 +21,7 @@ export class ProgressReportVarianceExplanationReasonOptions extends DataObject {
     'Delayed hiring and/or replacement of personnel',
     'Economic/political/civil instability or unrest',
     'Late or delayed partner reporting',
-    'Partner organization issues currently being addressed.',
+    'Partner organization issues currently being addressed',
     'Health issues with team members or their families',
     'Team member passed away',
     'Security breach/teams in hiding',

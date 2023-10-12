@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { RenameReasonOptionMigration } from './migrations/rename.migration';
 import { ProgressReportVarianceExplanationLoader } from './variance-explanation.loader';
 import { ProgressReportVarianceExplanationRepository } from './variance-explanation.repository';
 import {
@@ -14,6 +15,7 @@ import { ProgressReportVarianceExplanationService } from './variance-explanation
     ProgressReportVarianceExplanationLoader,
     ProgressReportVarianceExplanationService,
     ProgressReportVarianceExplanationRepository,
+    RenameReasonOptionMigration,
   ],
 })
 export class ProgressReportVarianceExplanationModule {}
