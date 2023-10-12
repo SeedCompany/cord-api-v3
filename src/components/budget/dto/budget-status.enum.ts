@@ -1,10 +1,7 @@
-import { registerEnumType } from '@nestjs/graphql';
+import { EnumType, makeEnum } from '~/common';
 
-export enum BudgetStatus {
-  Pending = 'Pending',
-  Current = 'Current',
-  Superceded = 'Superceded',
-  Rejected = 'Rejected',
-}
-
-registerEnumType(BudgetStatus, { name: 'BudgetStatus' });
+export type BudgetStatus = EnumType<typeof BudgetStatus>;
+export const BudgetStatus = makeEnum({
+  name: 'BudgetStatus',
+  values: ['Pending', 'Current', 'Superceded', 'Rejected'],
+});

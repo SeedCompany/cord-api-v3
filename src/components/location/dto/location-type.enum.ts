@@ -1,19 +1,14 @@
-import { registerEnumType } from '@nestjs/graphql';
+import { EnumType, makeEnum } from '~/common';
 
-export enum LocationType {
-  Country = 'Country',
-  City = 'City',
-  County = 'County',
-  Region = 'Region',
-  State = 'State',
-  CrossBorderArea = 'CrossBorderArea',
-}
-
-registerEnumType(LocationType, {
+export type LocationType = EnumType<typeof LocationType>;
+export const LocationType = makeEnum({
   name: 'LocationType',
-  valuesMap: {
-    CrossBorderArea: {
-      description: `@label Cross-Border Area`,
-    },
-  },
+  values: [
+    'Country',
+    'City',
+    'County',
+    'Region',
+    'State',
+    { value: 'CrossBorderArea', label: 'Cross-Border Area' },
+  ],
 });

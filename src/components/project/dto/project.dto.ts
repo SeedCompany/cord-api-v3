@@ -42,9 +42,9 @@ import { Pinnable } from '../../pin/dto';
 import { Postable } from '../../post/dto';
 import { ProjectChangeRequest } from '../../project-change-request/dto';
 import { ProjectMember } from '../project-member/dto';
-import { ProjectStatus } from './status.enum';
-import { SecuredProjectStep } from './step.enum';
-import { ProjectType } from './type.enum';
+import { ProjectStatus } from './project-status.enum';
+import { SecuredProjectStep } from './project-step.enum';
+import { ProjectType } from './project-type.enum';
 
 type AnyProject = MergeExclusive<TranslationProject, InternshipProject>;
 
@@ -190,7 +190,7 @@ export class TranslationProject extends Project {
   static readonly Props = keysOf<TranslationProject>();
   static readonly SecuredProps = keysOf<SecuredProps<TranslationProject>>();
 
-  declare readonly type: ProjectType.Translation;
+  declare readonly type: 'Translation';
 }
 
 @RegisterResource()
@@ -201,7 +201,7 @@ export class InternshipProject extends Project {
   static readonly Props = keysOf<InternshipProject>();
   static readonly SecuredProps = keysOf<SecuredProps<InternshipProject>>();
 
-  declare readonly type: ProjectType.Internship;
+  declare readonly type: 'Internship';
 }
 
 export const projectRange = (project: UnsecuredDto<Project>) =>

@@ -27,9 +27,9 @@ import {
   SecuredUnspecifiedScripturePortion,
 } from '../../scripture';
 import { Producible, ProducibleRef, SecuredProducible } from './producible.dto';
-import { SecuredProductMediums } from './product-medium';
-import { SecuredMethodology } from './product-methodology';
-import { SecuredProductPurposes } from './product-purpose';
+import { SecuredProductMediums } from './product-medium.enum';
+import { SecuredMethodology } from './product-methodology.enum';
+import { SecuredProductPurposes } from './product-purpose.enum';
 import { SecuredProductSteps } from './product-step.enum';
 import { SecuredProgressMeasurement } from './progress-measurement.enum';
 

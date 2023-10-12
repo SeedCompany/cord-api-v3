@@ -10,9 +10,9 @@ import {
   ScriptureRangeInput,
   UnspecifiedScripturePortionInput,
 } from '../../scripture';
-import { ProductMedium } from './product-medium';
-import { ProductMethodology } from './product-methodology';
-import { ProductPurpose } from './product-purpose';
+import { ProductMedium } from './product-medium.enum';
+import { ProductMethodology } from './product-methodology.enum';
+import { ProductPurpose } from './product-purpose.enum';
 import { ProductStep as Step } from './product-step.enum';
 import { AnyProduct, Product } from './product.dto';
 import { ProgressMeasurement } from './progress-measurement.enum';

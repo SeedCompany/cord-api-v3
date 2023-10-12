@@ -6,10 +6,9 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { pick, startCase } from 'lodash';
 import { DeepWritable, Writable } from 'ts-essentials';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { EnhancedResource, many, mapFromList } from '~/common';
+import { EnhancedResource, many, mapFromList, Role } from '~/common';
 import { ResourcesHost } from '~/core/resources';
-import { Powers as Power } from '../dto/powers';
-import { Role } from '../dto/role.dto';
+import { Power } from '../dto';
 import { ChildListAction, ChildSingleAction } from './actions';
 import { extract, Permission, Permissions } from './builder/perm-granter';
 import {

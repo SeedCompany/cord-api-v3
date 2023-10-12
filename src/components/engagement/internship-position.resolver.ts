@@ -5,13 +5,9 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { difference, values } from 'lodash';
 import {
-  historic,
   InternshipDomain,
   InternshipPosition,
-  InternshipPositionToDomain,
-  InternshipPositionToProgram,
   InternshipProgram,
   SecuredInternPosition,
 } from './dto';
@@ -37,11 +33,13 @@ export class InternshipPositionResolver {
       'The available position options for the internship engagement.',
   })
   options(): InternshipPositionOptions[] {
-    return difference(values(InternshipPosition), historic).map((position) => ({
-      position,
-      domain: InternshipPositionToDomain[position],
-      program: InternshipPositionToProgram[position],
-    }));
+    return InternshipPosition.entries
+      .filter((position) => !position.historic)
+      .map((position) => ({
+        position: position.value,
+        domain: position.domain ?? null,
+        program: position.program!,
+      }));
   }
 
   @ResolveField(() => InternshipDomain, {
@@ -51,7 +49,10 @@ export class InternshipPositionResolver {
   domain(
     @Parent() { value: position }: SecuredInternPosition,
   ): InternshipDomain | null {
-    return position ? InternshipPositionToDomain[position] : null;
+    const domain = InternshipPosition.entries.find(
+      (entry) => position === entry.value,
+    )?.domain;
+    return position && domain ? domain : null;
   }
 
   @ResolveField(() => InternshipProgram, {
@@ -62,6 +63,9 @@ export class InternshipPositionResolver {
   program(
     @Parent() { value: position }: SecuredInternPosition,
   ): InternshipProgram | null {
-    return position ? InternshipPositionToProgram[position] : null;
+    const program = InternshipPosition.entries.find(
+      (entry) => position === entry.value,
+    )?.program;
+    return position && program ? program : null;
   }
 }

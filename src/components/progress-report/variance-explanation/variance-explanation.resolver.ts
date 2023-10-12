@@ -8,10 +8,7 @@ import {
 import { clamp } from 'lodash';
 import { AnonSession, LoggedInSession, Session } from '~/common';
 import { Loader, LoaderOf } from '~/core';
-import {
-  ScheduleStatus,
-  fromVariance as scheduleStatusFromVariance,
-} from '../../progress-summary/dto/schedule-status.enum';
+import { ScheduleStatus } from '../../progress-summary/dto';
 import { ProgressSummaryLoader } from '../../progress-summary/progress-summary.loader';
 import { ProgressReport } from '../dto';
 import { ProgressReportVarianceExplanationReasonOptions as ReasonOptions } from './reason-options';
@@ -87,6 +84,6 @@ export class ProgressReportVarianceExplanationReasonOptionsResolver {
     const actual = clamp(summary.actual, 0, 1);
     const planned = clamp(summary.planned, 0, 1);
     const variance = actual - planned;
-    return scheduleStatusFromVariance(variance);
+    return ScheduleStatus.fromVariance(variance);
   }
 }

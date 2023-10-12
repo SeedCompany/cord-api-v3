@@ -1,13 +1,8 @@
-import { registerEnumType } from '@nestjs/graphql';
+import { EnumType, makeEnum } from '~/common';
 
-export enum BookDifficulty {
-  Easy = 'Easy',
-  Normal = 'Normal',
-  Hard = 'Hard',
-  Hardest = 'Hardest',
-}
-
-registerEnumType(BookDifficulty, {
+export type BookDifficulty = EnumType<typeof BookDifficulty>;
+export const BookDifficulty = makeEnum({
   name: 'BookDifficulty',
   description: 'How hard is this book to translate?',
+  values: ['Easy', 'Normal', 'Hard', 'Hardest'],
 });

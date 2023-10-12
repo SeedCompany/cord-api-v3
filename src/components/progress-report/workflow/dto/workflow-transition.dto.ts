@@ -1,6 +1,6 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { ID, IdField } from '~/common';
-import { TransitionType } from '../../../project/dto/step.enum';
+import { TransitionType } from '../../../project/dto';
 import { ProgressReportStatus } from '../../dto';
 
 export { TransitionType };

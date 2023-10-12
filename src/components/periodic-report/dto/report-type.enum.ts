@@ -1,9 +1,7 @@
-import { registerEnumType } from '@nestjs/graphql';
+import { EnumType, makeEnum } from '~/common';
 
-export enum ReportType {
-  Financial = 'Financial',
-  Progress = 'Progress',
-  Narrative = 'Narrative',
-}
-
-registerEnumType(ReportType, { name: 'ReportType' });
+export type ReportType = EnumType<typeof ReportType>;
+export const ReportType = makeEnum({
+  name: 'ReportType',
+  values: ['Financial', 'Progress', 'Narrative'],
+});

@@ -23,7 +23,7 @@ import { Location } from '../../../components/location';
 import { ScopedRole } from '../../authorization';
 import { FieldRegion } from '../../field-region';
 import type { Language } from '../../language';
-import { FinancialReportingType } from '../../partnership/dto/financial-reporting-type';
+import { FinancialReportingType } from '../../partnership/dto';
 import { Pinnable } from '../../pin/dto';
 import { Postable } from '../../post/dto';
 import { IProject } from '../../project/dto';
