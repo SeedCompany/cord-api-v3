@@ -23,7 +23,9 @@ export class ProgressReportVarianceExplanationReasonOptions extends DataObject {
       to new values.
     `,
   })
-  readonly deprecated: ReadonlySet<string> = new JsonSet([]);
+  readonly deprecated: ReadonlySet<string> = new JsonSet([
+    'Delayed activities; activities did not occur; slow start of project',
+  ]);
 
   @Field(() => [String])
   readonly behind: ReadonlySet<string> = new JsonSet([
@@ -38,6 +40,9 @@ export class ProgressReportVarianceExplanationReasonOptions extends DataObject {
     'Security breach/teams in hiding',
     'Unstable internet',
     'Checking delayed because translation consultants not available',
+    'Natural disaster prevented team from working',
+    'Activities did not occur, rescheduled for later date',
+    'Slow start to project, but team expects to catch up',
   ]);
 
   @Field(() => [String])
