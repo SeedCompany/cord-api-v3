@@ -6,7 +6,7 @@ import {
   GlobalScopedRole,
   ScopedRole,
 } from '../../../components/authorization';
-import { ProjectType } from '../../../components/project/dto/type.enum';
+import { ProjectType } from '../../../components/project/dto/project-type.enum';
 import {
   apoc,
   coalesce,

@@ -1,17 +1,18 @@
-import { createUnionType, registerEnumType } from '@nestjs/graphql';
-import { ProjectStep } from './step.enum';
+import { createUnionType } from '@nestjs/graphql';
+import { EnumType, makeEnum } from '~/common';
+import { ProjectStep } from './project-step.enum';
 
-export enum ProjectStatus {
-  InDevelopment = 'InDevelopment',
-  Active = 'Active',
-  Terminated = 'Terminated',
-  Completed = 'Completed',
-  DidNotDevelop = 'DidNotDevelop',
-}
-
-registerEnumType(ProjectStatus, {
+export type ProjectStatus = EnumType<typeof ProjectStatus>;
+export const ProjectStatus = makeEnum({
   name: 'ProjectStatus',
   description: 'A alias for a group of project steps',
+  values: [
+    'InDevelopment',
+    'Active',
+    'Terminated',
+    'Completed',
+    'DidNotDevelop',
+  ],
 });
 
 const mapping: Record<ProjectStep, ProjectStatus> = {

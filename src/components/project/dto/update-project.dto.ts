@@ -15,8 +15,8 @@ import {
 } from '../../../common';
 import { ChangesetIdField } from '../../changeset';
 import { ReportPeriod } from '../../periodic-report/dto';
+import { ProjectStep } from './project-step.enum';
 import { IProject, Project } from './project.dto';
-import { ProjectStep } from './step.enum';
 
 @InputType()
 export abstract class UpdateProject {

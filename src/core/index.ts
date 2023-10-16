@@ -5,7 +5,6 @@ export * from './core.module';
 export * from './cache';
 export * from './graphql';
 export * from './database';
-export * from './postgres';
 export * from './events';
 export * from './resources';
 export * from './data-loader';

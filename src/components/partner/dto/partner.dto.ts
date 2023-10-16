@@ -19,10 +19,11 @@ import {
   Sensitivity,
   SensitivityField,
 } from '../../../common';
+import { Location } from '../../../components/location';
 import { ScopedRole } from '../../authorization';
 import { FieldRegion } from '../../field-region';
 import type { Language } from '../../language';
-import { FinancialReportingType } from '../../partnership/dto/financial-reporting-type';
+import { FinancialReportingType } from '../../partnership/dto';
 import { Pinnable } from '../../pin/dto';
 import { Postable } from '../../post/dto';
 import { IProject } from '../../project/dto';
@@ -55,7 +56,7 @@ export class Partner extends Interfaces {
 
   readonly organization: Secured<ID>;
 
-  readonly pointOfContact: Secured<ID>;
+  readonly pointOfContact: Secured<ID | null>;
 
   @Field()
   readonly types: SecuredPartnerTypes;
@@ -78,6 +79,7 @@ export class Partner extends Interfaces {
   readonly languageOfWiderCommunication: Secured<IdOf<Language> | null>;
 
   readonly fieldRegions: Required<Secured<ReadonlyArray<IdOf<FieldRegion>>>>;
+  readonly countries: Required<Secured<ReadonlyArray<IdOf<Location>>>>;
 
   @DateTimeField()
   readonly modifiedAt: DateTime;

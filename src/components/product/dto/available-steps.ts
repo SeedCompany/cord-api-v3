@@ -1,10 +1,10 @@
 import { ArgsType, Field } from '@nestjs/graphql';
 import { ProducibleType } from './producible.dto';
-import { ProductApproach as Approach } from './product-approach';
+import { ProductApproach as Approach } from './product-approach.enum';
 import {
   ApproachToMethodologies,
   ProductMethodology as Methodology,
-} from './product-methodology';
+} from './product-methodology.enum';
 import { ProductStep as Step } from './product-step.enum';
 
 @ArgsType()

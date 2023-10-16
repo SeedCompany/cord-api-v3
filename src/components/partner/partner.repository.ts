@@ -64,6 +64,7 @@ export class PartnerRepository extends DtoRepository<
             input.languageOfWiderCommunicationId,
           ],
           fieldRegions: ['FieldRegion', input.fieldRegions],
+          countries: ['Location', input.countries],
         }),
       )
       .return<{ id: ID }>('node.id as id')
@@ -114,6 +115,15 @@ export class PartnerRepository extends DtoRepository<
             ])
             .return(collect('fieldRegions.id').as('fieldRegionsIds')),
         )
+        .subQuery('node', (sub) =>
+          sub
+            .match([
+              node('node'),
+              relation('out', '', 'countries'),
+              node('countries', 'Location'),
+            ])
+            .return(collect('countries.id').as('countriesIds')),
+        )
         .apply(matchProps())
         .optionalMatch([
           node('node'),
@@ -137,41 +147,11 @@ export class PartnerRepository extends DtoRepository<
             pointOfContact: 'pointOfContact.id',
             languageOfWiderCommunication: 'languageOfWiderCommunication.id',
             fieldRegions: 'fieldRegionsIds',
+            countries: 'countriesIds',
             scope: 'scopedRoles',
             pinned: 'exists((:User { id: $requestingUser })-[:pinned]->(node))',
           }).as('dto'),
         );
-  }
-
-  async updatePointOfContact(id: ID, user: ID, session: Session) {
-    const createdAt = DateTime.local();
-    await this.db
-      .query()
-      .apply(matchRequestingUser(session))
-      .matchNode('partner', 'Partner', { id })
-      .matchNode('newPointOfContact', 'User', {
-        id: user,
-      })
-      .optionalMatch([
-        node('org'),
-        relation('out', 'oldPointOfContactRel', 'pointOfContact', {
-          active: true,
-        }),
-        node('pointOfContact', 'User'),
-      ])
-      .setValues({
-        'oldPointOfContactRel.active': false,
-      })
-      .with('*')
-      .create([
-        node('partner'),
-        relation('out', '', 'pointOfContact', {
-          active: true,
-          createdAt,
-        }),
-        node('newPointOfContact'),
-      ])
-      .run();
   }
 
   async list({ filter, ...input }: PartnerListInput, session: Session) {

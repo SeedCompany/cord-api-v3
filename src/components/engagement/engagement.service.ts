@@ -31,7 +31,7 @@ import {
   SecuredProductList,
 } from '../product';
 import { IProject, ProjectStatus } from '../project';
-import { ProjectType } from '../project/dto/type.enum';
+import { ProjectType } from '../project/dto';
 import { ProjectService } from '../project/project.service';
 import { User } from '../user/dto';
 import {

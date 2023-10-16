@@ -1,7 +1,7 @@
 import { createHash } from 'crypto';
 import { mapValues } from 'lodash';
 import { ID, Many, maybeMany, Role } from '~/common';
-import { ProgressReportStatus as Status } from '../dto/progress-report-status.enum';
+import { ProgressReportStatus as Status } from '../dto';
 import {
   ProgressReportWorkflowTransition as PublicTransition,
   TransitionType as Type,

@@ -2,9 +2,9 @@ import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { IsNotEmpty, ValidateNested } from 'class-validator';
 import { ID, IdField } from '../../../common';
+import { PostType } from './post-type.enum';
 import { Post } from './post.dto';
 import { PostShareability } from './shareability.dto';
-import { PostType } from './type.enum';
 
 @InputType()
 export abstract class UpdatePost {

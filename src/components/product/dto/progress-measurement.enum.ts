@@ -1,20 +1,11 @@
-import { ObjectType, registerEnumType } from '@nestjs/graphql';
-import { SecuredEnum } from '../../../common';
+import { ObjectType } from '@nestjs/graphql';
+import { EnumType, makeEnum, SecuredEnum } from '~/common';
 
-export enum ProgressMeasurement {
-  Percent = 'Percent',
-  Number = 'Number',
-  Boolean = 'Boolean',
-}
-
-registerEnumType(ProgressMeasurement, {
+export type ProgressMeasurement = EnumType<typeof ProgressMeasurement>;
+export const ProgressMeasurement = makeEnum({
   name: 'ProgressMeasurement',
   description: 'Measurement units for reporting progress',
-  valuesMap: {
-    Boolean: {
-      description: `@label Done / Not Done`,
-    },
-  },
+  values: ['Number', 'Percent', { value: 'Boolean', label: 'Done / Not Done' }],
 });
 
 @ObjectType({

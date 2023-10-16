@@ -9,7 +9,6 @@ import LRUCache from 'lru-cache';
 import { Duration, DurationLike } from 'luxon';
 import { nanoid } from 'nanoid';
 import { Config as Neo4JDriverConfig } from 'neo4j-driver';
-import { PoolConfig } from 'pg';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { Class, Merge, ReadonlyDeep } from 'type-fest';
 import { csv, ID, ServerException } from '../../common';
@@ -177,30 +176,8 @@ export const makeConfig = (env: EnvironmentService) =>
       };
     })();
 
-    postgres = (() => {
-      // Put the PG* env vars in the global env, so the library can use them.
-      // There's dozens of them, so we'll just pass them through implicitly.
-      for (const [key, value] of env) {
-        if (key.startsWith('PG')) {
-          process.env[key] = value;
-        }
-      }
-      /* eslint-disable @typescript-eslint/naming-convention */
-      const config: PoolConfig = {
-        application_name: env.string('PGAPPNAME').optional('cord_api'),
-        connectionString:
-          env.string('PGURI').optional() ??
-          env
-            .string('PGURL')
-            .optional('postgres://postgres:postgres@localhost/cord'),
-      };
-      /* eslint-enable @typescript-eslint/naming-convention */
-      return config;
-    })();
-
-    // Control which database is prioritized, while we migrate to postgres
-    database = env.string('DATABASE').optional('neo4j');
-    usePostgres = this.database.toLowerCase() === 'postgres';
+    // Control which database is prioritized, while we migrate.
+    databaseEngine = env.string('DATABASE').optional('neo4j').toLowerCase();
 
     dbIndexesCreate = env.boolean('DB_CREATE_INDEXES').optional(true);
     dbAutoMigrate = env

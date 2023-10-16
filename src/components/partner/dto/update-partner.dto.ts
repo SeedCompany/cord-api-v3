@@ -3,9 +3,10 @@ import { Transform, Type } from 'class-transformer';
 import { Matches, ValidateNested } from 'class-validator';
 import { uniq } from 'lodash';
 import { ID, IdField, IdOf, IsId, NameField } from '../../../common';
+import { Location } from '../../../components/location';
 import { FieldRegion } from '../../field-region';
 import type { Language } from '../../language';
-import { FinancialReportingType } from '../../partnership/dto/financial-reporting-type';
+import { FinancialReportingType } from '../../partnership/dto';
 import { PartnerType } from './partner-type.enum';
 import { Partner } from './partner.dto';
 
@@ -15,7 +16,7 @@ export abstract class UpdatePartner {
   readonly id: ID;
 
   @IdField({ nullable: true })
-  readonly pointOfContactId?: ID;
+  readonly pointOfContactId?: ID | null;
 
   @Field(() => [PartnerType], { nullable: true })
   @Transform(({ value }) => uniq(value))
@@ -42,6 +43,11 @@ export abstract class UpdatePartner {
 
   @IdField({ nullable: true })
   readonly languageOfWiderCommunicationId?: IdOf<Language> | null;
+
+  @Field(() => [IDType], { nullable: true })
+  @IsId({ each: true })
+  @Transform(({ value }) => (value ? uniq(value) : undefined))
+  readonly countries?: ReadonlyArray<IdOf<Location>>;
 
   @Field(() => [IDType], { nullable: true })
   @IsId({ each: true })

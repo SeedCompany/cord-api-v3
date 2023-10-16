@@ -1,6 +1,6 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { PaginatedList, PaginationInput } from '../../../common';
-import { ProductMethodology } from './product-methodology';
+import { ProductMethodology } from './product-methodology.enum';
 
 @InputType()
 export class ProductCompletionDescriptionSuggestionsInput extends PaginationInput {

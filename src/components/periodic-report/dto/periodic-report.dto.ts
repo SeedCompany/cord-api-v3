@@ -71,7 +71,7 @@ export class FinancialReport extends PeriodicReport {
   static readonly SecuredProps = keysOf<SecuredProps<FinancialReport>>();
   static readonly Parent = 'dynamic';
 
-  declare readonly type: ReportType.Financial;
+  declare readonly type: 'Financial';
 }
 
 @RegisterResource()
@@ -83,7 +83,7 @@ export class NarrativeReport extends PeriodicReport {
   static readonly SecuredProps = keysOf<SecuredProps<NarrativeReport>>();
   static readonly Parent = 'dynamic';
 
-  declare readonly type: ReportType.Narrative;
+  declare readonly type: 'Narrative';
 }
 
 @ObjectType({

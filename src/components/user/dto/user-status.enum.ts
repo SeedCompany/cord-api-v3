@@ -1,10 +1,7 @@
-import { registerEnumType } from '@nestjs/graphql';
+import { EnumType, makeEnum } from '~/common';
 
-export enum UserStatus {
-  Active = 'Active',
-  Disabled = 'Disabled',
-}
-
-registerEnumType(UserStatus, {
+export type UserStatus = EnumType<typeof UserStatus>;
+export const UserStatus = makeEnum({
   name: 'UserStatus',
+  values: ['Active', 'Disabled'],
 });

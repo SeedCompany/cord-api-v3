@@ -11,8 +11,8 @@ import {
   SecuredProps,
   SecuredString,
 } from '../../../common';
+import { PostType } from './post-type.enum';
 import { PostShareability } from './shareability.dto';
-import { PostType } from './type.enum';
 
 @RegisterResource()
 @ObjectType({

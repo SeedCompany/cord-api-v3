@@ -12,7 +12,6 @@ import { RegisterResource } from '~/core/resources';
 import { LanguageEngagement } from '../../engagement/dto';
 import { DefinedFile } from '../../file';
 import { IPeriodicReport } from '../../periodic-report/dto/periodic-report.dto';
-import { ReportType } from '../../periodic-report/dto/report-type.enum';
 import { ProgressReportCommunityStory } from './community-stories.dto';
 import { ProgressReportHighlight } from './highlights.dto';
 import { SecuredProgressReportStatus as SecuredStatus } from './progress-report-status.enum';
@@ -34,7 +33,7 @@ export class ProgressReport extends IPeriodicReport {
     communityStories: [ProgressReportCommunityStory],
   } satisfies ResourceRelationsShape;
 
-  declare readonly type: ReportType.Progress;
+  declare readonly type: 'Progress';
 
   @Field(() => LanguageEngagement)
   declare readonly parent: BaseNode;

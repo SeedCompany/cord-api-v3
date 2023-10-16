@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { Node, node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { ID, Range } from '../../common';
-import { DatabaseService } from '../../core';
-import { ACTIVE, collect } from '../../core/database/query';
+import { ID, Range } from '~/common';
+import { DatabaseService } from '~/core/database';
+import { ACTIVE, collect } from '~/core/database/query';
 import { ScriptureRange, ScriptureRangeInput } from './dto';
 
 export type DbScriptureReferences = ReadonlyArray<Node<Range<number>>>;

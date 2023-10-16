@@ -1,12 +1,11 @@
-import { ObjectType, registerEnumType } from '@nestjs/graphql';
-import { SecuredEnum, SecuredProperty } from '../../../common';
+import { ObjectType } from '@nestjs/graphql';
+import { EnumType, makeEnum, SecuredEnum, SecuredProperty } from '~/common';
 
-export enum ReportPeriod {
-  Monthly = 'Monthly',
-  Quarterly = 'Quarterly',
-}
-
-registerEnumType(ReportPeriod, { name: 'PeriodType' });
+export type ReportPeriod = EnumType<typeof ReportPeriod>;
+export const ReportPeriod = makeEnum({
+  name: 'PeriodType',
+  values: ['Monthly', 'Quarterly'],
+});
 
 @ObjectType({
   description: SecuredProperty.descriptionFor('report period'),

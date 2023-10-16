@@ -6,7 +6,7 @@ import {
   SecuredPropsPlusExtraKey,
   Session,
 } from '~/common';
-import { Powers as Power } from '../../dto/powers';
+import { Power } from '../../dto';
 import { MissingPowerException } from '../../missing-power.exception';
 import { ChildListAction, ChildSingleAction, PropAction } from '../actions';
 import { ResourceObjectContext } from '../object.type';

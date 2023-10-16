@@ -1,7 +1,7 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { FilterField, PaginatedList, SortablePaginationInput } from '~/common';
+import { FileNodeType } from './file-node-type.enum';
 import { Directory, File, FileNode, IFileNode } from './node';
-import { FileNodeType } from './type';
 
 @InputType()
 export abstract class FileFilters {

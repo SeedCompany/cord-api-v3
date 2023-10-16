@@ -157,13 +157,7 @@ export class Language extends Interfaces {
   @Field()
   readonly sponsorEstimatedEndDate: SecuredDate;
 
-  // Calculated. Not settable.
-  @SensitivityField({
-    description: stripIndent`
-      The language's sensitivity.
-      It's based on its most sensitive location.
-    `,
-  })
+  @SensitivityField()
   readonly sensitivity: Sensitivity;
 
   @Field()

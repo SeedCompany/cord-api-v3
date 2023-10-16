@@ -4,11 +4,7 @@ import { stripIndent } from 'common-tags';
 import { clamp } from 'lodash';
 import { simpleSwitch } from '../../common';
 import { ProgressFormat } from '../product-progress/dto';
-import { ProgressSummary } from './dto';
-import {
-  ScheduleStatus,
-  fromVariance as scheduleStatusFromVariance,
-} from './dto/schedule-status.enum';
+import { ProgressSummary, ScheduleStatus } from './dto';
 
 const formatArg: ArgsOptions = {
   name: 'format',
@@ -67,6 +63,6 @@ export class ProgressSummaryResolver {
   })
   scheduleStatus(@Parent() summary: ProgressSummary): ScheduleStatus {
     const variance = this.variance(summary, ProgressFormat.Decimal);
-    return scheduleStatusFromVariance(variance);
+    return ScheduleStatus.fromVariance(variance);
   }
 }
