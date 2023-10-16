@@ -2,18 +2,12 @@ import { Field, ID as IDType, InputType, ObjectType } from '@nestjs/graphql';
 import { Transform, Type } from 'class-transformer';
 import { Matches, ValidateNested } from 'class-validator';
 import { uniq } from 'lodash';
-<<<<<<< HEAD
-import { ID, IdField, IdOf, IsId, NameField } from '../../../common';
+import { ID, IdField, IdOf, IsId } from '../../../common';
+import { MailingAddress } from '../../../common/mailing-address';
 import { Location } from '../../../components/location';
 import { FieldRegion } from '../../field-region';
 import type { Language } from '../../language';
 import { FinancialReportingType } from '../../partnership/dto/financial-reporting-type.enum';
-=======
-import { ID, IdField, IdOf } from '../../../common';
-import type { Language } from '../../language';
-import { MailingAddress } from '../../mailing-address';
-import { FinancialReportingType } from '../../partnership/dto/financial-reporting-type';
->>>>>>> ec7433950 (Added @InputType() to Address DTO and temporarily commented outsome test code)
 import { PartnerType } from './partner-type.enum';
 import { Partner } from './partner.dto';
 

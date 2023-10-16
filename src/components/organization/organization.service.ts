@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { compareNullable, ifDiff } from '~/core/database/changes';
 import {
   DuplicateException,
   ID,
@@ -9,6 +10,7 @@ import {
   UnauthorizedException,
   UnsecuredDto,
 } from '../../common';
+import { isAddressEqual } from '../../common/mailing-address/dto/is-address-equal';
 import { ConfigService, HandleIdLookup, ILogger, Logger } from '../../core';
 import { mapListResults } from '../../core/database/results';
 import { Privileges } from '../authorization';
@@ -17,7 +19,6 @@ import {
   LocationService,
   SecuredLocationList,
 } from '../location';
-import { isAddressEqual } from '../mailing-address/dto/is-address-equal';
 import {
   CreateOrganization,
   Organization,
@@ -96,34 +97,23 @@ export class OrganizationService {
     input: UpdateOrganization,
     session: Session,
   ): Promise<Organization> {
-    const { address, ...simpleOrgProps } = input;
     const organization = await this.repo.readOne(input.id, session);
 
-    const orgChanges = this.repo.getActualChanges(organization, {
-      ...simpleOrgProps,
-    });
+    const changes = {
+      ...this.repo.getActualChanges(organization, input),
+      address: ifDiff(compareNullable(isAddressEqual))(
+        input.address,
+        organization.address,
+      ),
+    };
+    this.privileges
+      .for(session, Organization, organization)
+      .verifyChanges(changes);
 
-    const isAddressSame = isAddressEqual(address, organization.address);
-    const changesToVerify = !isAddressSame
-      ? {
-          ...orgChanges,
-          address: address,
-        }
-      : {
-          ...orgChanges,
-        };
-
-    if (Object.keys(orgChanges).length > 0 || 'address' in changesToVerify) {
-      this.privileges
-        .for(session, Organization, organization)
-        .verifyChanges(changesToVerify);
-    }
-
-    if (Object.keys(orgChanges).length > 0) {
-      await this.repo.updateProperties(organization, orgChanges);
-    }
-    if (address && 'address' in changesToVerify) {
-      await this.repo.updateOrgAddress(input.id, session, address);
+    const { address, ...simpleOrgProps } = changes;
+    await this.repo.updateProperties(organization, simpleOrgProps);
+    if (address !== undefined) {
+      await this.repo.updateOrgAddress(input.id, address);
     }
 
     return await this.readOne(input.id, session);

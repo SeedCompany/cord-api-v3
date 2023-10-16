@@ -20,16 +20,12 @@ import {
   Sensitivity,
   SensitivityField,
 } from '../../../common';
+import { SecuredMailingAddress } from '../../../common/mailing-address/dto';
 import { Location } from '../../../components/location';
 import { ScopedRole } from '../../authorization';
 import { FieldRegion } from '../../field-region';
 import type { Language } from '../../language';
-<<<<<<< HEAD
 import { FinancialReportingType } from '../../partnership/dto';
-=======
-import { SecuredMailingAddress } from '../../mailing-address/dto';
-import { FinancialReportingType } from '../../partnership/dto/financial-reporting-type';
->>>>>>> ec7433950 (Added @InputType() to Address DTO and temporarily commented outsome test code)
 import { Pinnable } from '../../pin/dto';
 import { Postable } from '../../post/dto';
 import { IProject } from '../../project/dto';

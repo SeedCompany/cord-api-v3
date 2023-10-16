@@ -14,8 +14,8 @@ import {
   Sensitivity,
   SensitivityField,
 } from '../../../common';
+import { SecuredMailingAddress } from '../../../common/mailing-address';
 import { Location } from '../../location/dto';
-import { SecuredMailingAddress } from '../../mailing-address';
 import { SecuredOrganizationReach } from './organization-reach.dto';
 import { SecuredOrganizationTypes } from './organization-type.dto';
 

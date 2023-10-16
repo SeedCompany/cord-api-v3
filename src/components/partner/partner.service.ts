@@ -1,4 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { compareNullable, ifDiff } from '~/core/database/changes';
 import {
   DuplicateException,
   ID,
@@ -12,11 +13,11 @@ import {
   UnauthorizedException,
   UnsecuredDto,
 } from '../../common';
+import { isAddressEqual } from '../../common/mailing-address/dto/is-address-equal';
 import { HandleIdLookup, ILogger, Logger, ResourceLoader } from '../../core';
 import { mapListResults } from '../../core/database/results';
 import { Privileges } from '../authorization';
 import { Location, LocationLoader, LocationType } from '../location';
-import { isAddressEqual } from '../mailing-address/dto/is-address-equal';
 import { FinancialReportingType } from '../partnership/dto';
 import {
   IProject,
@@ -108,7 +109,6 @@ export class PartnerService {
   }
 
   async update(input: UpdatePartner, session: Session): Promise<Partner> {
-    const { address, ...simplePartnerProps } = input;
     const object = await this.repo.readOne(input.id, session);
 
     if (
@@ -129,33 +129,28 @@ export class PartnerService {
       };
     }
 
-    const changes = this.repo.getActualChanges(object, {
-      ...simplePartnerProps,
-    });
-
-    const isAddressSame = isAddressEqual(address, object.address);
-    const changesToVerify = !isAddressSame
-      ? {
-          ...changes,
-          address: address,
-        }
-      : {
-          ...changes,
-        };
-    this.privileges
-      .for(session, Partner, object)
-      .verifyChanges(changesToVerify);
+    const changes = {
+      ...this.repo.getActualChanges(object, input),
+      address: ifDiff(compareNullable(isAddressEqual))(
+        input.address,
+        object.address,
+      ),
+    };
+    this.privileges.for(session, Partner, object).verifyChanges(changes);
 
     const {
       pointOfContactId,
       languageOfWiderCommunicationId,
       fieldRegions,
       countries,
+      address,
       ...simpleChanges
     } = changes;
 
-    if (Object.keys(simpleChanges).length > 0) {
-      await this.repo.updateProperties(object, simpleChanges);
+    await this.repo.updateProperties(object, simpleChanges);
+
+    if (address !== undefined) {
+      await this.repo.updatePartnerAddress(input.id, address);
     }
 
     if (pointOfContactId !== undefined) {
@@ -204,10 +199,6 @@ export class PartnerService {
           ? e.withField('partner.fieldRegions')
           : e;
       }
-    }
-
-    if (address && 'address' in changesToVerify) {
-      await this.repo.updatePartnerAddress(input.id, session, address);
     }
 
     return await this.readOne(input.id, session);

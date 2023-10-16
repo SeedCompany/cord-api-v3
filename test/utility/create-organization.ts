@@ -37,9 +37,7 @@ export async function createOrganization(
         organization: {
           ...input,
           name,
-          address: {
-            ...address,
-          },
+          address,
         },
       },
     },

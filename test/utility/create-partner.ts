@@ -1,5 +1,4 @@
 import { faker } from '@faker-js/faker';
-import { Sensitivity } from '~/common';
 import {
   CreatePartner,
   Partner,
@@ -31,7 +30,6 @@ export async function createPartner(
       state: faker.location.state(),
       zip: faker.location.zipCode(),
       country: faker.location.countryCode(),
-      sensitivity: Sensitivity.Low,
     },
     ...input,
   };

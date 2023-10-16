@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { ID, Session, UnsecuredDto } from '../../common';
+import { MailingAddress } from '../../common/mailing-address';
 import { DtoRepository } from '../../core';
 import {
   ACTIVE,
@@ -18,7 +19,6 @@ import {
   requestingUser,
   sorting,
 } from '../../core/database/query';
-import { MailingAddress } from '../mailing-address';
 import { CreateOrganization, Organization, OrganizationListInput } from './dto';
 
 @Injectable()
@@ -30,14 +30,9 @@ export class OrganizationRepository extends DtoRepository<
     const initialProps = {
       name: input.name,
       acronym: input.acronym,
-      address: input.address,
       types: input.types ?? [],
       reach: input.reach ?? [],
       canDelete: true,
-    };
-    const addressProps = {
-      ...input.address,
-      createdAt: DateTime.local(),
     };
 
     const query = this.db
@@ -48,38 +43,38 @@ export class OrganizationRepository extends DtoRepository<
           initialProps,
         }),
       )
-      .apply((q) => {
-        return q.create([
-          node('node'),
-          relation('out', '', 'address', ACTIVE),
-          node('', ['MailingAddress', 'Property'], addressProps),
-        ]);
-      })
+      .apply((q) =>
+        input.address
+          ? q.create([
+              node('node'),
+              relation('out', '', 'address', ACTIVE),
+              node('', ['MailingAddress', 'Property'], {
+                ...input.address,
+                createdAt: DateTime.now(),
+              }),
+            ])
+          : q,
+      )
       .return<{ id: ID }>('node.id as id');
     return await query.first();
   }
 
-  async updateOrgAddress(
-    id: ID,
-    session: Session,
-    addressToUpdate: MailingAddress,
-  ) {
-    const addressProps = {
-      ...addressToUpdate,
-      modifiedAt: DateTime.local(),
-    };
+  async updateOrgAddress(id: ID, addressToUpdate: MailingAddress | null) {
     await this.db
       .query()
-      .apply(matchRequestingUser(session))
       .matchNode('node', 'Organization', { id })
-      .match([
+      .merge([
         node('node'),
         relation('out', '', 'address', ACTIVE),
         node('address', 'MailingAddress'),
       ])
-      .setValues({
-        address: addressProps,
-      })
+      .apply((q) =>
+        !addressToUpdate
+          ? q.detachDelete('address')
+          : q.setValues({
+              address: { ...addressToUpdate, modifiedAt: DateTime.now() },
+            }),
+      )
       .run();
   }
 
@@ -136,7 +131,7 @@ export class OrganizationRepository extends DtoRepository<
       .query()
       .matchNode('node', 'Organization')
       .match([
-        ...(filter?.userId && session.userId
+        ...(filter.userId && session.userId
           ? [
               node('node'),
               relation('in', '', 'organization', ACTIVE),

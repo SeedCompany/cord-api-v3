@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { ID, ServerException, Session, UnsecuredDto } from '../../common';
+import { MailingAddress } from '../../common/mailing-address';
 import { DtoRepository } from '../../core';
 import {
   ACTIVE,
@@ -21,7 +22,6 @@ import {
   requestingUser,
   sorting,
 } from '../../core/database/query';
-import { MailingAddress } from '../mailing-address';
 import { CreatePartner, Partner, PartnerListInput } from './dto';
 
 @Injectable()
@@ -88,27 +88,22 @@ export class PartnerRepository extends DtoRepository<
     return result.id;
   }
 
-  async updatePartnerAddress(
-    id: ID,
-    session: Session,
-    addressToUpdate: MailingAddress,
-  ) {
-    const addressProps = {
-      ...addressToUpdate,
-      modifiedAt: DateTime.local(),
-    };
+  async updatePartnerAddress(id: ID, addressToUpdate: MailingAddress | null) {
     await this.db
       .query()
-      .apply(matchRequestingUser(session))
       .matchNode('node', 'Partner', { id })
       .match([
         node('node'),
         relation('out', '', 'address', ACTIVE),
         node('address', 'MailingAddress'),
       ])
-      .setValues({
-        address: addressProps,
-      })
+      .apply((q) =>
+        !addressToUpdate
+          ? q.detachDelete('address')
+          : q.setValues({
+              address: { ...addressToUpdate, modifiedAt: DateTime.now() },
+            }),
+      )
       .run();
   }
 
