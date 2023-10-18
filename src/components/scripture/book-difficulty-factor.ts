@@ -2,9 +2,10 @@ import { Book } from '@seedcompany/scripture';
 import { BookDifficulty } from './dto';
 
 export const difficultyFactorOfBook = (book: Book): number =>
-  factorMap[difficultyOfBook(book)];
+  factorMap[difficultyOfBook(book)] ?? 0;
 
-export const difficultyOfBook = (book: Book) => difficultyMap[book.name];
+export const difficultyOfBook = (book: Book): BookDifficulty =>
+  difficultyMap[book.name];
 
 const factorMap: Record<BookDifficulty, number> = {
   Easy: 0.8,
@@ -13,7 +14,7 @@ const factorMap: Record<BookDifficulty, number> = {
   Hardest: 1.5625,
 };
 
-const difficultyMap: Record<string, `${BookDifficulty}`> = {
+const difficultyMap: Record<string, BookDifficulty> = {
   Genesis: 'Normal',
   Exodus: 'Normal',
   Leviticus: 'Hard',
@@ -32,7 +33,7 @@ const difficultyMap: Record<string, `${BookDifficulty}`> = {
   Nehemiah: 'Normal',
   Esther: 'Easy',
   Job: 'Hardest',
-  Psalm: 'Hard',
+  Psalms: 'Hard',
   Proverbs: 'Hard',
   Ecclesiastes: 'Hard',
   'Song of Solomon': 'Hard',
