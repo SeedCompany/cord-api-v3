@@ -1,9 +1,10 @@
 import { Injectable, Optional } from '@nestjs/common';
+import { mapKeys } from '@seedcompany/common';
 import { parse as parseEnv } from 'dotenv';
 import { expand as dotEnvExpand } from 'dotenv-expand';
 import * as fs from 'fs';
 import humanFormat from 'human-format';
-import { identity, isString, mapKeys, pickBy } from 'lodash';
+import { identity, pickBy } from 'lodash';
 import { Duration } from 'luxon';
 import { URL } from 'node:url';
 import { join } from 'path';
@@ -28,9 +29,12 @@ export class EnvironmentService implements Iterable<[string, string]> {
     // as pairs could be passed in instead of in env files
     this.env = pickBy(process.env) as Record<string, string>;
 
-    const files = [`.env.${env}.local`, `.env.${env}`, `.env.local`, `.env`]
-      .filter(isString)
-      .map((file) => join(rootPath, file));
+    const files = [
+      `.env.${env}.local`,
+      `.env.${env}`,
+      `.env.local`,
+      `.env`,
+    ].map((file) => join(rootPath, file));
 
     for (const file of files) {
       if (!fs.existsSync(file)) {
@@ -55,7 +59,7 @@ export class EnvironmentService implements Iterable<[string, string]> {
     }
 
     // Convert all keys to uppercase
-    this.env = mapKeys(this.env, (_, key) => key.toUpperCase());
+    this.env = mapKeys(this.env, (key) => key.toUpperCase()).asRecord;
 
     this.logger.debug(`Loaded environment`, this.env);
   }

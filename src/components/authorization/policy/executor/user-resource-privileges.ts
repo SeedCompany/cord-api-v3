@@ -1,10 +1,10 @@
+import { cleanJoin, mapValues } from '@seedcompany/common';
 import { LazyGetter as Once } from 'lazy-get-decorator';
-import { compact, last, startCase } from 'lodash';
+import { startCase } from 'lodash';
 import {
   ChildListsKey,
   ChildSinglesKey,
   EnhancedResource,
-  mapFromList,
   ResourceShape,
   SecuredPropsPlusExtraKey,
   SecuredResource,
@@ -180,7 +180,7 @@ export class UserResourcePrivileges<
       pathPrefixProp ?? pathPrefixProp === null
         ? null
         : // Guess the input field path based on name convention
-          last(startCase(this.resource.name).split(' '))!.toLowerCase();
+          startCase(this.resource.name).split(' ').at(-1)!.toLowerCase();
 
     for (const prop of Object.keys(changes)) {
       const dtoPropName: any = isRelation(this.resource, prop)
@@ -192,7 +192,7 @@ export class UserResourcePrivileges<
       if (this.can('edit', dtoPropName)) {
         continue;
       }
-      const fullPath = compact([pathPrefix, prop]).join('.');
+      const fullPath = cleanJoin('.', [pathPrefix, prop]);
       throw new UnauthorizedException(
         `You do not have permission to update ${this.resource.name}.${prop}`,
         fullPath,
@@ -211,13 +211,16 @@ export class UserResourcePrivileges<
     // But it still can be used if given possible for use with condition wrapper functions.
     const perms = this.object ? this : this.forContext(dto);
 
-    const securedProps = mapFromList(this.resource.securedProps, (key) => {
-      const canRead = perms.can('read', key);
-      const canEdit = perms.can('edit', key);
-      let value = (dto as any)[key];
-      value = canRead ? value : Array.isArray(value) ? [] : undefined;
-      return [key, { value, canRead, canEdit }];
-    }) as SecuredResource<TResourceStatic, false>;
+    const securedProps = mapValues.fromList(
+      this.resource.securedProps,
+      (key) => {
+        const canRead = perms.can('read', key);
+        const canEdit = perms.can('edit', key);
+        let value = (dto as any)[key];
+        value = canRead ? value : Array.isArray(value) ? [] : undefined;
+        return { value, canRead, canEdit };
+      },
+    ).asRecord as SecuredResource<TResourceStatic, false>;
 
     return {
       ...dto,

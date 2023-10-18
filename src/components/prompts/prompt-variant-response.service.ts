@@ -1,9 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { mapKeys } from '@seedcompany/common';
 import { lowerCase } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   IdOf,
-  mapFromList,
   mapSecuredValue,
   NotFoundException,
   Resource,
@@ -128,10 +128,7 @@ export const PromptVariantResponseListService = <
     ): Promise<PromptVariantResponse<TVariant>> {
       const context = await this.getPrivilegeContext(dto);
       const privileges = this.resourcePrivileges.forUser(session, context);
-      const responses = mapFromList(dto.responses, (response) => [
-        response.variant,
-        response,
-      ]);
+      const responses = mapKeys.fromList(dto.responses, (r) => r.variant).asMap;
       const secured = privileges.secure(dto);
       return {
         ...secured,
@@ -145,10 +142,7 @@ export const PromptVariantResponseListService = <
           if (!variantPrivileges.can('read', 'responses')) {
             return [];
           }
-          // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-          const response = (responses as Partial<typeof responses>)[
-            variant.key
-          ];
+          const response = responses.get(variant.key);
           return {
             variant,
             response: {
@@ -239,19 +233,19 @@ export const PromptVariantResponseListService = <
         await this.repo.submitResponse(input, session);
       }
 
-      const responses = mapFromList(response.responses, (response) => [
-        response.variant,
-        response,
-      ]);
+      const responses = mapKeys.fromList(
+        response.responses,
+        (response) => response.variant,
+      ).asMap;
       const updated: UnsecuredDto<PromptVariantResponse<TVariant>> = {
         ...response,
         responses: this.resource.Variants.map(({ key }) => ({
-          ...responses[key],
+          ...responses.get(key),
           ...(variant.key === key
             ? {
                 variant: key,
                 response: input.response,
-                creator: responses[key]?.creator ?? session.userId,
+                creator: responses.get(key)?.creator ?? session.userId,
                 modifiedAt: DateTime.now(),
               }
             : {}),

@@ -1,5 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { Many } from 'lodash';
+import { Many } from '@seedcompany/common';
 import {
   DuplicateException,
   ID,

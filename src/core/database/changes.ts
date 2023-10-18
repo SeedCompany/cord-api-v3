@@ -1,4 +1,5 @@
-import { difference, isEmpty, omit, pickBy } from 'lodash';
+import { entries } from '@seedcompany/common';
+import { difference, omit, pickBy } from 'lodash';
 import { DateTime } from 'luxon';
 import { ConditionalKeys } from 'type-fest';
 import {
@@ -154,7 +155,10 @@ export const isSame = compareNullable((a: unknown, b: unknown) => {
     return +(a as number) === +(b as number);
   }
   if (Array.isArray(a) && Array.isArray(b)) {
-    return isEmpty(difference(a, b)) && isEmpty(difference(b, a));
+    return (
+      entries(difference(a, b)).length === 0 &&
+      entries(difference(b, a)).length === 0
+    );
   }
   return a === b;
 });

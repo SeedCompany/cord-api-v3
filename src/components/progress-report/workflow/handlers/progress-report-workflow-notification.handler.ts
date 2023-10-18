@@ -1,6 +1,7 @@
+import { entries, mapEntries } from '@seedcompany/common';
 import { EmailService } from '@seedcompany/nestjs-email';
 import { RequireExactlyOne } from 'type-fest';
-import { ID, mapFromList, Role, UnsecuredDto } from '~/common';
+import { ID, Role, UnsecuredDto } from '~/common';
 import {
   ConfigService,
   EventsHandler,
@@ -62,16 +63,16 @@ export class ProgressReportWorkflowNotificationHandler
       reportId,
     );
 
-    const userIdByEmail: Record<string, ID | undefined> = mapFromList(
+    const userIdByEmail = mapEntries(
       [
         ...(await this.getEnvNotifyees(next)),
         ...(await this.getProjectNotifyees(reportId, next)),
       ],
       ({ id, email }) => [email, id],
-    );
+    ).asMap;
 
     const notifications = await Promise.all(
-      Object.entries(userIdByEmail).map(([email, userId]) =>
+      entries(userIdByEmail).map(([email, userId]) =>
         this.prepareNotificationObject(
           reportId,
           previousStatus,

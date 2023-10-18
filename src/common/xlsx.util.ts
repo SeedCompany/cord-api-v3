@@ -1,4 +1,4 @@
-import { nonEnumerable } from '@seedcompany/common';
+import { mapEntries, nonEnumerable } from '@seedcompany/common';
 import { Iterable } from 'ix';
 import { LazyGetter as Once } from 'lazy-get-decorator';
 import { assert } from 'ts-essentials';
@@ -11,7 +11,6 @@ import {
 } from 'xlsx';
 import type { CellObject, WorkSheet } from 'xlsx';
 import { CalendarDate } from './temporal';
-import { mapFromList } from './util';
 
 export class WorkBook {
   private readonly book: LibWorkBook;
@@ -54,12 +53,12 @@ export class WorkBook {
     }
     return found;
   }
-  @Once() private get namedRanges() {
+  @Once() private get namedRanges(): Record<string, Range> {
     const rawList = this.book.Workbook?.Names ?? [];
-    return mapFromList(rawList, ({ Ref: ref, Name: name }) => {
+    return mapEntries(rawList, ({ Ref: ref, Name: name }, { SKIP }) => {
       const matched = /^'?([^']+)'?!([$\dA-Z]+(?::[$\dA-Z]+)?)$/.exec(ref);
-      return matched ? [name, this.sheet(matched[1]).range(matched[2])] : null;
-    });
+      return matched ? [name, this.sheet(matched[1]).range(matched[2])] : SKIP;
+    }).asRecord;
   }
 }
 

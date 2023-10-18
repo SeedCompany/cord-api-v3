@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
+import { entries, mapKeys } from '@seedcompany/common';
 import { Connection, node, Query, relation } from 'cypher-query-builder';
-import { compact, isEmpty, last, mapKeys, pickBy, startCase } from 'lodash';
+import { pickBy, startCase } from 'lodash';
 import {
   DuplicateException,
-  entries,
   ID,
   isIdLike,
   isSecured,
@@ -198,11 +198,11 @@ export class DatabaseService {
     try {
       await session.executeWrite((tx) =>
         tx.run(
-          compact([
+          [
             `${action} DATABASE $name`,
             action === 'CREATE' ? 'IF NOT EXISTS' : 'IF EXISTS',
             'WAIT',
-          ]).join(' '),
+          ].join(' '),
           {
             name: dbName,
           },
@@ -228,11 +228,12 @@ export class DatabaseService {
         : undefined,
     };
 
-    const options = !isEmpty(pickBy(parsedConfig, (v) => v !== undefined))
-      ? {
-          indexConfig: mapKeys(parsedConfig, (_, k) => `fulltext.${k}`),
-        }
-      : undefined;
+    const options =
+      entries(pickBy(parsedConfig, (v) => v !== undefined)).length > 0
+        ? {
+            indexConfig: mapKeys(parsedConfig, (k) => `fulltext.${k}`).asRecord,
+          }
+        : undefined;
     await this.query(
       `
         CREATE FULLTEXT INDEX ${name} IF NOT EXISTS
@@ -272,15 +273,15 @@ export class DatabaseService {
       await this.updateProperty({
         type,
         object,
-        key: prop as any,
-        value: change,
+        key: prop,
+        value: change as any,
         changeset,
         permanentAfter,
       });
 
       updated = {
         ...updated,
-        [prop]: isSecured(object[prop])
+        [prop]: isSecured(object[prop as any])
           ? // replace value in secured object keeping can* properties
             {
               ...object[prop],
@@ -359,7 +360,7 @@ export class DatabaseService {
       if (e instanceof UniquenessError) {
         throw new DuplicateException(
           // Guess the input field path based on name convention
-          `${last(startCase(label).split(' '))!.toLowerCase()}.${key}`,
+          `${startCase(label).split(' ').at(-1)!.toLowerCase()}.${key}`,
           `${startCase(label)} with this ${key} is already in use`,
           e,
         );

@@ -4,7 +4,7 @@ import {
   DiscoveryService,
 } from '@golevelup/nestjs-discovery';
 import { Module, OnModuleInit } from '@nestjs/common';
-import { groupBy } from 'lodash';
+import { groupToMapBy } from '@seedcompany/common';
 import { many } from '~/common';
 import { ConfigService } from '../../config/config.service';
 import { ILogger, Logger } from '../../logger';
@@ -31,11 +31,11 @@ export class IndexerModule implements OnModuleInit {
     const discovered =
       await this.discover.providerMethodsWithMetaAtKey<IndexMode>(DB_INDEX_KEY);
     this.logger.debug('Discovered indexers', { count: discovered.length });
-    const groupedByMode = groupBy(discovered, (d) => d.meta);
+    const groupedByMode = groupToMapBy(discovered, (d) => d.meta);
 
     const finishing = this.db.runOnceUntilCompleteAfterConnecting(
       async (serverInfo) => {
-        for (const [mode, discoveredOfMode] of Object.entries(groupedByMode)) {
+        for (const [mode, discoveredOfMode] of groupedByMode.entries()) {
           await this.db.conn.runInTransaction(
             () => this.doIndexing(discoveredOfMode, serverInfo),
             {
@@ -60,7 +60,7 @@ export class IndexerModule implements OnModuleInit {
   }
 
   async doIndexing(
-    discovered: Array<DiscoveredMethodWithMeta<unknown>>,
+    discovered: ReadonlyArray<DiscoveredMethodWithMeta<unknown>>,
     serverInfo: ServerInfo,
   ) {
     const indexers = discovered.map((h) => h.discoveredMethod);

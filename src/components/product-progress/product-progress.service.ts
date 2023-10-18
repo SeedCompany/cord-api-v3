@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
+import { mapEntries } from '@seedcompany/common';
 import {
   ID,
   InputException,
   isIdLike,
-  mapFromList,
   NotFoundException,
   Session,
   UnauthorizedException,
@@ -59,7 +59,10 @@ export class ProductProgressService {
     if (reports.length === 0) {
       return [];
     }
-    const reportMap = mapFromList(reports, (r) => [r.report.id, r.report]);
+    const reportMap = mapEntries(reports, ({ report }) => [
+      report.id,
+      report,
+    ]).asRecord;
     const rows = await this.repo.readAllProgressReportsForManyReports(reports);
     return rows.map((row): ProgressVariantByReportOutput => {
       const report = reportMap[row.reportId];
@@ -81,7 +84,10 @@ export class ProductProgressService {
     if (products.length === 0) {
       return [];
     }
-    const productMap = mapFromList(products, (p) => [p.product.id, p.product]);
+    const productMap = mapEntries(products, ({ product }) => [
+      product.id,
+      product,
+    ]).asRecord;
     const rows = await this.repo.readAllProgressReportsForManyProducts(
       products,
     );

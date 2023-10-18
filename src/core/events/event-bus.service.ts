@@ -1,8 +1,7 @@
 import { DiscoveryService } from '@golevelup/nestjs-discovery';
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
-import { FnLike } from '@seedcompany/common';
+import { FnLike, groupToMapBy, mapValues, sortBy } from '@seedcompany/common';
 import { stripIndent } from 'common-tags';
-import { groupBy, mapValues, orderBy } from 'lodash';
 import { ID, ServerException } from '../../common';
 import { ILogger, Logger } from '../logger';
 import {
@@ -83,10 +82,11 @@ export class SyncEventBus implements IEventBus, OnApplicationBootstrap {
         handler,
       }));
     });
-    const ordered = orderBy(flat, (entry) => entry.priority, 'desc');
-    const grouped = groupBy(ordered, (entry) => entry.id);
-    this.listenerMap = mapValues(grouped, (entries) =>
-      entries.map((e) => e.handler),
-    );
+    const grouped = groupToMapBy(flat, (entry) => entry.id);
+    this.listenerMap = mapValues(grouped, (_, entries) =>
+      sortBy(entries, [(entry) => entry.priority, 'desc']).map(
+        (e) => e.handler,
+      ),
+    ).asRecord;
   }
 }

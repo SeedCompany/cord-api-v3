@@ -10,9 +10,9 @@ import {
   GqlExecutionContext,
   GqlContextType as GqlRequestType,
 } from '@nestjs/graphql';
+import { csv } from '@seedcompany/common';
 import { Request } from 'express';
 import { GraphQLResolveInfo } from 'graphql';
-import { compact } from 'lodash';
 import {
   GqlContextType,
   ID,
@@ -144,8 +144,6 @@ function csvHeader(headerVal: Many<string> | undefined) {
   if (!headerVal) {
     return undefined;
   }
-  const items = many(headerVal).flatMap((itemCsv) =>
-    compact((itemCsv ?? '').split(',').map((role) => role.trim())),
-  );
+  const items = many(headerVal).flatMap((itemCsv) => csv(itemCsv ?? ''));
   return items && items.length > 0 ? items : undefined;
 }

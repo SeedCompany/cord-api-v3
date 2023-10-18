@@ -13,6 +13,7 @@ import { ApolloDriverConfig } from '@nestjs/apollo';
 import { Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { GqlExecutionContext, GqlOptionsFactory } from '@nestjs/graphql';
+import { mapKeys } from '@seedcompany/common';
 import {
   GraphQLErrorExtensions as ErrorExtensions,
   GraphQLFormattedError as FormattedError,
@@ -20,12 +21,7 @@ import {
   GraphQLScalarType,
   OperationDefinitionNode,
 } from 'graphql';
-import {
-  GqlContextType,
-  JsonSet,
-  mapFromList,
-  ServerException,
-} from '~/common';
+import { GqlContextType, JsonSet, ServerException } from '~/common';
 import { getRegisteredScalars } from '../../common/scalars';
 import { CacheService } from '../cache';
 import { ConfigService } from '../config/config.service';
@@ -59,9 +55,11 @@ export class GraphQLConfig implements GqlOptionsFactory {
       process.env.APOLLO_SERVER_USER_VERSION = version.hash;
     }
 
-    const scalars = mapFromList(getRegisteredScalars(), (scalar) =>
-      scalar instanceof GraphQLScalarType ? [scalar.name, scalar] : null,
-    );
+    const scalars = mapKeys.fromList(
+      getRegisteredScalars(),
+      (scalar, { SKIP }) =>
+        scalar instanceof GraphQLScalarType ? scalar.name : SKIP,
+    ).asRecord;
 
     return {
       autoSchemaFile: 'schema.graphql',

@@ -1,7 +1,8 @@
 import { DiscoveryService } from '@golevelup/nestjs-discovery';
 import { Injectable } from '@nestjs/common';
+import { many, mapEntries } from '@seedcompany/common';
 import { mapValues } from 'lodash';
-import { EnhancedResource, many, mapFromList } from '~/common';
+import { EnhancedResource } from '~/common';
 import { ResourcesHost } from '~/core/resources';
 import { discover } from './builder/granter.decorator';
 import {
@@ -23,8 +24,8 @@ export class GrantersFactory {
     const custom = Object.assign(
       {},
       ...discoveredGranters.map(
-        ({ meta: { resources, factory }, discoveredClass }) => {
-          return mapFromList(many(resources), (raw) => {
+        ({ meta: { resources, factory }, discoveredClass }) =>
+          mapEntries(many(resources), (raw) => {
             const res = EnhancedResource.of(raw);
             const granter =
               factory?.(res) ?? new discoveredClass.dependencyType(res);
@@ -34,8 +35,7 @@ export class GrantersFactory {
               );
             }
             return [res.name, granter];
-          });
-        },
+          }).asRecord,
       ),
     );
 

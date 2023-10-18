@@ -1,4 +1,5 @@
 import { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
+import { csv } from '@seedcompany/common';
 import {
   EmailModuleOptions,
   EmailOptionsFactory,
@@ -11,7 +12,7 @@ import { nanoid } from 'nanoid';
 import { Config as Neo4JDriverConfig } from 'neo4j-driver';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { Class, Merge, ReadonlyDeep } from 'type-fest';
-import { csv, ID, ServerException } from '../../common';
+import { ID, ServerException } from '~/common';
 import { parseUri } from '../../components/file/bucket/parse-uri';
 import { ProgressReportStatus } from '../../components/progress-report/dto/progress-report-status.enum';
 import type { TransitionName as ProgressReportTransitionName } from '../../components/progress-report/workflow/transitions';

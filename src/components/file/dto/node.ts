@@ -1,4 +1,5 @@
 import { Field, Int, InterfaceType, ObjectType } from '@nestjs/graphql';
+import { simpleSwitch } from '@seedcompany/common';
 import { stripIndent } from 'common-tags';
 import { DateTime } from 'luxon';
 import { Readable } from 'stream';
@@ -17,7 +18,6 @@ import {
   SecuredProperty,
   SecuredProps,
   ServerException,
-  simpleSwitch,
 } from '../../../common';
 import { FileNodeType } from './file-node-type.enum';
 

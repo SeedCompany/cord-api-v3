@@ -1,5 +1,6 @@
+import { sortBy } from '@seedcompany/common';
 import levenshtein from 'fastest-levenshtein';
-import { sortBy, startCase, without } from 'lodash';
+import { startCase, without } from 'lodash';
 import { Column } from '../../common/xlsx.util';
 import { ProductStep as Step } from '../product';
 import { PlanningSheet } from './planning-sheet';
