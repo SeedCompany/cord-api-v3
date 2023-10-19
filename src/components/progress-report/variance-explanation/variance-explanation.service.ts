@@ -1,8 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import { mapFromList, NotFoundException, Session } from '~/common';
+import {
+  InputException,
+  mapFromList,
+  NotFoundException,
+  Session,
+} from '~/common';
 import { ResourceLoader } from '~/core';
 import { Privileges } from '../../authorization';
 import { ProgressReport } from '../dto';
+import { ProgressReportVarianceExplanationReasonOptions as ReasonOptions } from './reason-options';
 import {
   ProgressReportVarianceExplanation as VarianceExplanation,
   ProgressReportVarianceExplanationInput as VarianceExplanationInput,
@@ -48,6 +54,18 @@ export class ProgressReportVarianceExplanationService {
     });
     if (Object.keys(changes).length === 0) {
       return report;
+    }
+
+    // Don't allow changing to a deprecated reason.
+    // Here to be nice and allow updating the comments even if the current
+    // reason is deprecated.
+    if (
+      changes.reasons?.some((r) => ReasonOptions.instance.deprecated.has(r))
+    ) {
+      throw new InputException(
+        'Reason is deprecated and cannot be used',
+        'reasons',
+      );
     }
 
     this.privilegesFor(session, report).verifyChanges(changes);
