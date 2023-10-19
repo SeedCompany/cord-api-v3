@@ -1,5 +1,6 @@
 import { applyDecorators } from '@nestjs/common';
 import { Field, FieldOptions, ObjectType } from '@nestjs/graphql';
+import { entries } from '@seedcompany/common';
 import { Transform } from 'class-transformer';
 import { IsIn } from 'class-validator';
 import { stripIndent } from 'common-tags';
@@ -8,7 +9,6 @@ import { ResourceShape } from '~/common/resource.dto';
 import { InputException } from './exceptions';
 import { IdField } from './id-field';
 import { Role } from './role.dto';
-import { entries } from './util';
 
 @ObjectType()
 export class Variant<Key extends string = string> {

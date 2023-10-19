@@ -1,6 +1,5 @@
+import { isNotFalsy, many, Many, setOf } from '@seedcompany/common';
 import { Query } from 'cypher-query-builder';
-import { compact, uniq } from 'lodash';
-import { many, Many } from '../../../common';
 import { Variable } from './condition-variables';
 import { withParent } from './root';
 import { SubClauseCollection } from './SubClauseCollection';
@@ -48,14 +47,12 @@ Query.prototype.subQuery = function subQuery(
   if (typeof subOrImport === 'function') {
     subOrImport(subQ);
   } else {
-    const imports = uniq(
-      compact(
-        many(subOrImport).flatMap((val) =>
-          val instanceof Variable ? varInExp(val) : val,
-        ),
-      ),
+    const imports = setOf(
+      many(subOrImport)
+        .flatMap((val) => (val instanceof Variable ? varInExp(val) : val))
+        .filter(isNotFalsy),
     );
-    subQ.with(imports);
+    subQ.with([...imports]);
     maybeSub!(subQ);
   }
 

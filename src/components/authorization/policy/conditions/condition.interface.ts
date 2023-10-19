@@ -57,12 +57,15 @@ export interface Condition<TResourceStatic extends ResourceShape<any>> {
    * This should not logically change anything, but rather just simplify unnecessary conditions.
    * Note: The current context, this, should not be used.
    */
-  union?(this: void, conditions: this[]): Condition<TResourceStatic>;
+  union?(this: void, conditions: readonly this[]): Condition<TResourceStatic>;
 
   /**
    * Intersect multiple conditions of this type together to a single one.
    * This should not logically change anything, but rather just simplify unnecessary conditions.
    * Note: The current context, this, should not be used.
    */
-  intersect?(this: void, conditions: this[]): Condition<TResourceStatic>;
+  intersect?(
+    this: void,
+    conditions: readonly this[],
+  ): Condition<TResourceStatic>;
 }

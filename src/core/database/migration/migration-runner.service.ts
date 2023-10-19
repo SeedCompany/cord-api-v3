@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { node } from 'cypher-query-builder';
-import { last } from 'lodash';
 import { DateTime } from 'luxon';
 import { ConfigService } from '../../config/config.service';
 import { ILogger, Logger } from '../../logger';
@@ -24,7 +23,7 @@ export class MigrationRunner {
     await this.runMigrations(discovered);
   }
 
-  async runMigrations(discovered: DiscoveredMigration[]) {
+  async runMigrations(discovered: readonly DiscoveredMigration[]) {
     const existing = await this.currentSchemaVersion();
 
     if (!existing) {
@@ -40,7 +39,7 @@ export class MigrationRunner {
       return;
     }
 
-    const latest = last(discovered)?.version ?? DateTime.local();
+    const latest = discovered.at(-1)?.version ?? DateTime.local();
     let current = existing;
     try {
       for (const migrator of migratorsToRun) {

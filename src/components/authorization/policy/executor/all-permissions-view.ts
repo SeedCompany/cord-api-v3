@@ -1,3 +1,4 @@
+import { mapValues } from '@seedcompany/common';
 import { startCase } from 'lodash';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { PascalCase } from 'type-fest';
@@ -5,7 +6,6 @@ import {
   ChildListsKey,
   ChildSinglesKey,
   EnhancedResource,
-  mapFromList,
   ResourceShape,
   SecuredPropsPlusExtraKey,
 } from '~/common';
@@ -78,17 +78,18 @@ type CompatAction = AnyAction | `can${PascalCase<AnyAction>}`;
 
 const compatMap = {
   forward: {
-    ...mapFromList(keysOf<Record<CompatAction, boolean>>(), (action) => [
-      action,
-      (action.startsWith('can')
-        ? action.slice(3).toLowerCase()
-        : action) as AnyAction,
-    ]),
+    ...mapValues.fromList(
+      keysOf<Record<CompatAction, boolean>>(),
+      (action) =>
+        (action.startsWith('can')
+          ? action.slice(3).toLowerCase()
+          : action) as AnyAction,
+    ).asRecord,
   },
   backward: {
-    ...mapFromList(keysOf<Record<AnyAction, boolean>>(), (action) => [
-      action,
-      `can${startCase(action)}` as CompatAction,
-    ]),
+    ...mapValues.fromList(
+      keysOf<Record<AnyAction, boolean>>(),
+      (action) => `can${startCase(action)}` as CompatAction,
+    ).asRecord,
   },
 };

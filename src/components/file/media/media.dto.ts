@@ -6,6 +6,7 @@ import {
   InterfaceType,
   ObjectType,
 } from '@nestjs/graphql';
+import { simpleSwitch } from '@seedcompany/common';
 import { stripIndent } from 'common-tags';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
@@ -18,7 +19,6 @@ import {
   NameField,
   SecuredProps,
   ServerException,
-  simpleSwitch,
 } from '~/common';
 import { BaseNode } from '~/core/database/results';
 import { RegisterResource } from '~/core/resources';

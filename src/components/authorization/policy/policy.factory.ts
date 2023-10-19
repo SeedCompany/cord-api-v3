@@ -3,10 +3,11 @@ import {
   DiscoveryService,
 } from '@golevelup/nestjs-discovery';
 import { Injectable, OnModuleInit } from '@nestjs/common';
+import { mapEntries, mapValues } from '@seedcompany/common';
 import { pick, startCase } from 'lodash';
 import { DeepWritable, Writable } from 'ts-essentials';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { EnhancedResource, many, mapFromList, Role } from '~/common';
+import { EnhancedResource, many, Role } from '~/common';
 import { ResourcesHost } from '~/core/resources';
 import { Power } from '../dto';
 import { ChildListAction, ChildSingleAction } from './actions';
@@ -143,11 +144,11 @@ export class PolicyFactory implements OnModuleInit {
     const intersectPermissions = (
       perms: Array<Permissions<string> | undefined>,
     ): Permissions<string> =>
-      mapFromList(allKeysOf(perms), (action) => {
+      mapEntries(allKeysOf(perms), (action, { SKIP }) => {
         const implActions = perms.map((g) => g?.[action] ?? false);
         const perm = this.mergePermission(implActions, all);
-        return perm ? [action, perm] : null;
-      });
+        return perm ? [action, perm] : SKIP;
+      }).asRecord;
 
     for (const interfaceRes of interfaceCandidates) {
       // Skip if policy already defines
@@ -169,21 +170,18 @@ export class PolicyFactory implements OnModuleInit {
 
       const interfaceGrants: ResourceGrants = {
         objectLevel: intersectPermissions(objectLevelPermissions),
-        propLevel: mapFromList(allKeysOf(propLevelPermissions), (prop) => {
-          const perms = intersectPermissions(
+        propLevel: mapValues.fromList(allKeysOf(propLevelPermissions), (prop) =>
+          intersectPermissions(
             propLevelPermissions.map((propLevel) => propLevel[prop]),
-          );
-          return [prop, perms];
-        }),
-        childRelations: mapFromList(
+          ),
+        ).asRecord,
+        childRelations: mapValues.fromList(
           allKeysOf(childRelationPermissions),
-          (prop) => {
-            const perms = intersectPermissions(
+          (prop) =>
+            intersectPermissions(
               childRelationPermissions.map((propLevel) => propLevel[prop]),
-            );
-            return [prop, perms];
-          },
-        ),
+            ),
+        ).asRecord,
       };
 
       grantMap.set(interfaceRes, interfaceGrants);

@@ -1,7 +1,8 @@
 /* eslint-disable no-case-declarations */
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { Many } from '@seedcompany/common';
 import { node, relation } from 'cypher-query-builder';
-import { first, intersection, Many, uniq } from 'lodash';
+import { first, intersection, uniq } from 'lodash';
 import { UnreachableCaseError } from 'ts-essentials';
 import { Promisable } from 'type-fest';
 import {

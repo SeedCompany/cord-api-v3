@@ -1,5 +1,3 @@
-import { has } from '../util';
-
 /**
  * The base of all of our exceptions.
  * Don't throw this, but rather a sub-class instead.
@@ -26,7 +24,7 @@ export class ClientException extends Exception {
 }
 
 export const hasPrevious = (e: Error): e is Error & { previous: Error } =>
-  has('previous', e) && e.previous instanceof Error;
+  'previous' in e && e.previous instanceof Error;
 
 export function getPreviousList(ex: Error, includeSelf: boolean) {
   const previous: Error[] = includeSelf ? [ex] : [];

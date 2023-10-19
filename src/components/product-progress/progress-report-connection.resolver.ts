@@ -1,5 +1,5 @@
 import { Args, Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { sortBy } from 'lodash';
+import { sortBy } from '@seedcompany/common';
 import { loadManyIgnoreMissingThrowAny } from '~/common';
 import { Loader, LoaderOf } from '~/core';
 import { ProgressReport } from '../progress-report/dto';

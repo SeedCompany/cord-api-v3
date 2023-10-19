@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { mapValues } from 'lodash';
+import { mapValues } from '@seedcompany/common';
 import { DateTime, Duration } from 'luxon';
 import * as Neo from 'neo4j-driver';
 import { CalendarDate, RichTextDocument } from '../../common';
@@ -60,7 +60,7 @@ export class ParameterTransformer {
     }
 
     if (typeof value === 'object') {
-      return mapValues(value, (v) => this.transformValue(v));
+      return mapValues(value, (_, v) => this.transformValue(v)).asRecord;
     }
 
     // eslint-disable-next-line @typescript-eslint/restrict-template-expressions

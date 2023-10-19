@@ -1,6 +1,6 @@
+import { entries } from '@seedcompany/common';
 import { stripIndent } from 'common-tags';
 import { Clause } from 'cypher-query-builder';
-import { isArray, isBoolean, isNumber, isObject, isString, map } from 'lodash';
 import { DateTime, Duration } from 'luxon';
 import { Integer, types as neo } from 'neo4j-driver';
 import { CalendarDate } from '../../../common';
@@ -23,16 +23,16 @@ function stringifyValue(value: unknown): string {
   if (value == null) {
     return 'null';
   }
-  if (isNumber(value) || isBoolean(value)) {
+  if (typeof value === 'number' || typeof value === 'boolean') {
     // This is how it's done upstream, and it works fine.
     // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
     return `${value}`;
   }
-  if (isString(value)) {
+  if (typeof value === 'string') {
     return `'${value}'`;
   }
-  if (isArray(value)) {
-    const str = map(value, stringifyValue).join(', ');
+  if (Array.isArray(value)) {
+    const str = value.map(stringifyValue).join(', ');
     return `[${str}]`;
   }
   if (CalendarDate.isDate(value)) {
@@ -52,10 +52,9 @@ function stringifyValue(value: unknown): string {
       ? `${neo.Integer.toNumber(value)}`
       : `'${neo.Integer.toString(value)}'`;
   }
-  if (isObject(value)) {
-    const pairs = map(
-      value,
-      (el, key) => `${quoteKey(key)}: ${stringifyValue(el)}`,
+  if (typeof value === 'object') {
+    const pairs = entries<any>(value).map(
+      ([key, el]) => `${quoteKey(key)}: ${stringifyValue(el)}`,
     );
     const str = pairs.join(', ');
     return `{ ${str} }`;

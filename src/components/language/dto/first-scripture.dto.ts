@@ -1,9 +1,9 @@
 import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
-import { has, ID, SecuredProperty } from '../../../common';
+import { ID, SecuredProperty } from '~/common';
 
 @InterfaceType({
   resolveType: (obj: FirstScripture) =>
-    has('engagement', obj)
+    'engagement' in obj
       ? InternalFirstScripture
       : obj.hasFirst
       ? ExternalFirstScripture

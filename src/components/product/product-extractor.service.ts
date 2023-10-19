@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
+import { entries } from '@seedcompany/common';
 import { parseScripture } from '@seedcompany/scripture';
 import { assert } from 'ts-essentials';
 import { MergeExclusive } from 'type-fest';
-import { CalendarDate, entries } from '../../common';
+import { CalendarDate } from '../../common';
 import { Cell, Column, Row } from '../../common/xlsx.util';
 import { Downloadable } from '../file';
 import {

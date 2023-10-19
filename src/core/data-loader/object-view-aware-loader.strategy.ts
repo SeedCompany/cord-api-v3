@@ -1,5 +1,5 @@
+import { groupBy } from '@seedcompany/common';
 import { DataLoaderOptions } from '@seedcompany/data-loader';
-import { groupBy } from 'lodash';
 import { ID, ObjectView, viewOfChangeset } from '~/common';
 import { ChangesetAware } from '../../components/changeset/dto';
 import { SessionAwareLoaderStrategy } from './session-aware-loader.strategy';
@@ -24,7 +24,7 @@ export abstract class ObjectViewAwareLoader<
   ): Promise<readonly T[]>;
 
   async loadMany(keys: readonly Key[]): Promise<readonly T[]> {
-    const grouped = Object.values(groupBy(keys, (key) => viewId(key.view)));
+    const grouped = groupBy(keys, (key) => viewId(key.view));
 
     const items = await Promise.all(
       grouped.map(async (keys) => {

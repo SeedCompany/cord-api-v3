@@ -1,6 +1,5 @@
-import { asyncPool } from '@seedcompany/common';
+import { asyncPool, setOf } from '@seedcompany/common';
 import { node, relation } from 'cypher-query-builder';
-import { union } from 'lodash';
 import { ID, ServerException, Session } from '~/common';
 import {
   DatabaseService,
@@ -122,10 +121,10 @@ export class ApplyFinalizedChangesetToEngagement
 
       // Trigger update event for all changed engagements
       // progress report sync is an example of a handler that needs to run
-      const allEngagementIds = union(
-        result?.engagementIds || [],
-        newResult?.engagementIds || [],
-      );
+      const allEngagementIds = setOf([
+        ...(result?.engagementIds ?? []),
+        ...(newResult?.engagementIds ?? []),
+      ]);
       await this.triggerUpdateEvent(allEngagementIds, session);
     } catch (exception) {
       throw new ServerException(
@@ -155,7 +154,7 @@ export class ApplyFinalizedChangesetToEngagement
       .run();
   }
 
-  async triggerUpdateEvent(ids: ID[], session: Session) {
+  async triggerUpdateEvent(ids: ReadonlySet<ID>, session: Session) {
     await asyncPool(1, ids, async (id) => {
       await this.engagementService.triggerUpdateEvent(id, session);
     });

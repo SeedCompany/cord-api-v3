@@ -1,23 +1,26 @@
 import { Injectable } from '@nestjs/common';
-import { cleanJoin, many, Many, Nil, setOf } from '@seedcompany/common';
+import {
+  cleanJoin,
+  csv,
+  groupBy,
+  isNotFalsy,
+  many,
+  Many,
+  mapValues,
+  Nil,
+  setOf,
+  sortBy,
+} from '@seedcompany/common';
 import { Chalk, ChalkInstance } from 'chalk';
 import Table from 'cli-table3';
-import { compact, groupBy, sortBy, startCase } from 'lodash';
+import { startCase } from 'lodash';
 import { DateTime } from 'luxon';
 import { Command, Console } from 'nestjs-console';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { LiteralUnion } from 'type-fest';
 import { inspect } from 'util';
 import xlsx from 'xlsx';
-import {
-  csv,
-  EnhancedResource,
-  firstOr,
-  ID,
-  mapFromList,
-  Role,
-  Session,
-} from '~/common';
+import { EnhancedResource, firstOr, ID, Role, Session } from '~/common';
 import { searchCamelCase } from '~/common/search-camel-case';
 import { ResourceLike, ResourcesHost } from '~/core';
 import {
@@ -186,10 +189,10 @@ export class PolicyDumper {
         role,
         resource,
         edge: undefined,
-        ...mapFromList(keysOf<Record<ResourceAction, boolean>>(), (action) => [
-          action,
-          resolve(action),
-        ]),
+        ...mapValues.fromList(
+          keysOf<Record<ResourceAction, boolean>>(),
+          (action) => resolve(action),
+        ).asRecord,
       },
       ...(options.props !== false
         ? ([
@@ -207,10 +210,8 @@ export class PolicyDumper {
             role,
             resource,
             edge: prop,
-            ...mapFromList(actions, (action) => [
-              action,
-              resolve(action, prop),
-            ]),
+            ...mapValues.fromList(actions, (action) => resolve(action, prop))
+              .asRecord,
           })),
       ),
     ];
@@ -254,7 +255,12 @@ const searchResources = (
   const resNames = Object.keys(map);
   const selections = many(input)
     // Split by comma, but not inside curly braces
-    .flatMap((str) => compact(str.split(/,(?![^{}]*})/g).map((s) => s.trim())))
+    .flatMap((str) =>
+      str
+        .split(/,(?![^{}]*})/g)
+        .map((s) => s.trim())
+        .filter(isNotFalsy),
+    )
     // Expand resource wildcards/multi-selects, split out props into tuple
     .flatMap((r) => {
       let propsIn: string | undefined;
@@ -293,7 +299,7 @@ const searchResources = (
     });
 
   // Dedupe selections and sort alphabetically
-  return Object.values(groupBy(selections, (s) => s.resource.name))
+  return groupBy(selections, (s) => s.resource.name)
     .map((rows) => {
       const resource = rows[0]!.resource;
       const propList = [

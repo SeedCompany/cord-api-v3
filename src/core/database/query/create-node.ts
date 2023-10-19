@@ -1,10 +1,10 @@
+import { entries } from '@seedcompany/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   // eslint-disable-next-line @seedcompany/no-unused-vars -- used in jsdoc
   DbLabel,
   EnhancedResource,
-  entries,
   generateId,
   ID,
   ResourceShape,

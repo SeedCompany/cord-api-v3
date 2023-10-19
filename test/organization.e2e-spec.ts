@@ -1,5 +1,6 @@
 import { faker } from '@faker-js/faker';
-import { orderBy, times } from 'lodash';
+import { sortBy } from '@seedcompany/common';
+import { times } from 'lodash';
 import { generateId, isValidId } from '../src/common';
 import { Role } from '../src/components/authorization';
 import { Organization } from '../src/components/organization';
@@ -328,9 +329,7 @@ describe('Organization e2e', () => {
       },
     });
     const items = organizations.items;
-    const sorted = orderBy(items, (org) => org.name.value.toLowerCase(), [
-      'asc',
-    ]);
+    const sorted = sortBy(items, (org: any) => org.name.value.toLowerCase());
     expect(sorted).toEqual(items);
   });
 
@@ -359,7 +358,8 @@ describe('Organization e2e', () => {
       },
     });
     const items = organizations.items;
-    const sorted = orderBy(items, (org) => org.name.value.toLowerCase(), [
+    const sorted = sortBy(items, [
+      (org: any) => org.name.value.toLowerCase(),
       'desc',
     ]);
     expect(sorted).toEqual(items);

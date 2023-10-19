@@ -1,14 +1,13 @@
 import { Injectable } from '@nestjs/common';
+import { mapEntries, simpleSwitch } from '@seedcompany/common';
 import { intersection, sumBy, uniq } from 'lodash';
 import {
   ID,
   InputException,
-  mapFromList,
   NotFoundException,
   ObjectView,
   ServerException,
   Session,
-  simpleSwitch,
   UnauthorizedException,
   UnsecuredDto,
 } from '../../common';
@@ -657,7 +656,7 @@ export class ProductService {
       engagementId,
       typeFilter,
     );
-    return mapFromList(productRefs, (ref) => [ref.pnpIndex, ref.id]);
+    return mapEntries(productRefs, ({ id, pnpIndex }) => [pnpIndex, id]).asMap;
   }
 
   async loadProductIdsWithProducibleNames(
@@ -665,7 +664,7 @@ export class ProductService {
     type?: ProducibleType,
   ) {
     const refs = await this.repo.listIdsWithProducibleNames(engagementId, type);
-    return mapFromList(refs, (ref) => [ref.name, ref.id]);
+    return mapEntries(refs, ({ id, name }) => [name, id]).asMap;
   }
 
   protected getMethodologiesByApproach(

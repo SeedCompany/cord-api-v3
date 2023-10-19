@@ -1,7 +1,7 @@
 import { Resolver } from '@nestjs/graphql';
+import { mapValues } from '@seedcompany/common';
 import { mkdir, readFile, writeFile } from 'fs/promises';
 import got from 'got';
-import { mapValues } from 'lodash';
 import { IanaCountry, TimeZone } from './timezone.dto';
 
 interface TzJson {
@@ -58,7 +58,7 @@ export class TimeZoneService {
 
     // Convert lists of codes to lists of their objects
     // This creates circular references, but GQL should handle it
-    const countries = mapValues(data.countries, (c) => {
+    const countries = mapValues(data.countries, (_, c) => {
       const o = c as unknown as IanaCountry;
       o.code = c.abbr;
       // @ts-expect-error we are converting c to o here. Using the same object is
@@ -66,11 +66,11 @@ export class TimeZoneService {
       delete c.abbr;
       o.zones = c.zones.map((zone) => data.zones[zone]) as any;
       return o;
-    });
-    const zones = mapValues(data.zones, (z) => {
+    }).asRecord;
+    const zones = mapValues(data.zones, (_, z) => {
       z.countries = z.countries.map((c) => data.countries[c]) as any;
       return z as unknown as TimeZone;
-    });
+    }).asRecord;
 
     return { zones, countries };
   }

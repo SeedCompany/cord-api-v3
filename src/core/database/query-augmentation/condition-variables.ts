@@ -2,6 +2,7 @@
  * This file patches pattern conditions to support referencing existing variables.
  * This is achieved by wrapping the variable name in a `variable()` call.
  */
+import { mapValues } from '@seedcompany/common';
 import { Clause, NodePattern } from 'cypher-query-builder';
 import type { Pattern as TSPattern } from 'cypher-query-builder/dist/typings/clauses/pattern';
 import type {
@@ -10,7 +11,6 @@ import type {
 } from 'cypher-query-builder/dist/typings/parameter-bag';
 import type { ParameterContainer as TSParameterContainer } from 'cypher-query-builder/dist/typings/parameter-container';
 import { Class } from 'type-fest';
-import { mapFromList } from '../../../common';
 
 // This class is not exported so grab it a hacky way
 const ParameterContainer = Object.getPrototypeOf(
@@ -52,9 +52,9 @@ ParameterBag.prototype.addParam = function addParam(
 };
 
 ParameterBag.prototype.getParams = function getParams(this: TSParameterBag) {
-  return mapFromList(Object.entries(this.parameterMap), ([name, param]) =>
-    param instanceof Variable ? null : ([name, param.value] as const),
-  );
+  return mapValues(this.parameterMap, (_, param, { SKIP }) =>
+    param instanceof Variable ? SKIP : param.value,
+  ).asRecord;
 };
 
 Pattern.prototype.setExpandedConditions = function (

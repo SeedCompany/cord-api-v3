@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { entries, mapKeys } from '@seedcompany/common';
 import {
   contains,
   hasLabel,
@@ -11,7 +12,6 @@ import {
 } from 'cypher-query-builder';
 import { Direction } from 'cypher-query-builder/dist/typings/clauses/order-by';
 import { AnyConditions } from 'cypher-query-builder/dist/typings/clauses/where-utils';
-import { isEmpty, keyBy } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   ID,
@@ -147,7 +147,7 @@ export class FileRepository extends CommonRepository {
         if (input?.filter?.type) {
           conditions.node = hasLabel(input.filter.type);
         }
-        return isEmpty(conditions) ? q : q.where(conditions);
+        return entries(conditions).length === 0 ? q : q.where(conditions);
       })
       .apply(sorting(resolveFileNode(parent), input))
       .apply(paginate(input, this.hydrate()))
@@ -194,7 +194,10 @@ export class FileRepository extends CommonRepository {
             .return('[resource, type(rel)] as rootAttachedTo'),
         )
         .return<{ dto: FileNode }>(
-          merge('dto', keyBy(['root', 'rootAttachedTo'])).as('dto'),
+          merge(
+            'dto',
+            mapKeys.fromList(['root', 'rootAttachedTo'], (k) => k).asRecord,
+          ).as('dto'),
         );
   }
 

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { compact } from 'lodash';
+import { isNotFalsy } from '@seedcompany/common';
 import { ID, NotFoundException, ServerException, Session } from '~/common';
 import { ResourceResolver, ResourcesHost } from '~/core';
 import { Privileges } from '../authorization';
@@ -109,7 +109,7 @@ export class SearchService {
     );
 
     return {
-      items: compact(hydrated).slice(0, input.count),
+      items: hydrated.filter(isNotFalsy).slice(0, input.count),
     };
   }
 

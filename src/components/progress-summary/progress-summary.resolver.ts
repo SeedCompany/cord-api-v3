@@ -1,8 +1,8 @@
 import { Args, Float, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { ArgsOptions } from '@nestjs/graphql/dist/decorators/args.decorator';
+import { simpleSwitch } from '@seedcompany/common';
 import { stripIndent } from 'common-tags';
 import { clamp } from 'lodash';
-import { simpleSwitch } from '../../common';
 import { ProgressFormat } from '../product-progress/dto';
 import { ProgressSummary, ScheduleStatus } from './dto';
 

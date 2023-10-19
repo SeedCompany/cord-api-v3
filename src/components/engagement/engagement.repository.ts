@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { mapValues, simpleSwitch } from '@seedcompany/common';
 import { inArray, node, Node, Query, relation } from 'cypher-query-builder';
 import { difference, pickBy } from 'lodash';
 import { DateTime } from 'luxon';
@@ -7,12 +8,10 @@ import {
   generateId,
   ID,
   labelForView,
-  mapFromList,
   NotFoundException,
   ObjectView,
   ServerException,
   Session,
-  simpleSwitch,
   typenameForView,
   UnsecuredDto,
   viewOfChangeset,
@@ -171,7 +170,8 @@ export class EngagementRepository extends CommonRepository {
       methodology: _,
       ...initialProps
     } = {
-      ...mapFromList(CreateLanguageEngagement.Props, (k) => [k, undefined]),
+      ...mapValues.fromList(CreateLanguageEngagement.Props, () => undefined)
+        .asRecord,
       ...input,
       status: input.status || EngagementStatus.InDevelopment,
       pnp: pnpId,
@@ -218,7 +218,8 @@ export class EngagementRepository extends CommonRepository {
       countryOfOriginId,
       ...initialProps
     } = {
-      ...mapFromList(CreateInternshipEngagement.Props, (k) => [k, undefined]),
+      ...mapValues.fromList(CreateInternshipEngagement.Props, () => undefined)
+        .asRecord,
       ...input,
       methodologies: input.methodologies || [],
       status: input.status || EngagementStatus.InDevelopment,
