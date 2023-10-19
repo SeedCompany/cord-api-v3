@@ -35,16 +35,6 @@ export const entries: <K extends string, V>(o: Record<K, V>) => Array<[K, V]> =
 export const keys: <K extends string>(o: Record<K, unknown>) => K[] =
   Object.keys as any;
 
-export const iterate = <T>(
-  iterator: Iterable<T> | IterableIterator<T>,
-): readonly T[] => {
-  const res: T[] = [];
-  for (const item of iterator) {
-    res.push(item);
-  }
-  return res;
-};
-
 /**
  * Work around `in` operator not narrowing type
  * https://github.com/microsoft/TypeScript/issues/21732
