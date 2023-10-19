@@ -1,4 +1,5 @@
 import { Field, ObjectType } from '@nestjs/graphql';
+import { stripIndent } from 'common-tags';
 import { LazyGetter as Once } from 'lazy-get-decorator';
 import { DataObject, JsonSet } from '~/common';
 
@@ -13,6 +14,16 @@ export class ProgressReportVarianceExplanationReasonOptions extends DataObject {
   @Once() get all(): ReadonlySet<string> {
     return new JsonSet([...this.behind, ...this.onTime, ...this.ahead]);
   }
+
+  @Field(() => [String], {
+    description: stripIndent`
+      A list of deprecated options.
+      If an option is deprecated, it is not available for selection/saving.
+      This allows rendering old options while enforcing a soft migration
+      to new values.
+    `,
+  })
+  readonly deprecated: ReadonlySet<string> = new JsonSet([]);
 
   @Field(() => [String])
   readonly behind: ReadonlySet<string> = new JsonSet([
