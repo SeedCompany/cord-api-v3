@@ -54,7 +54,7 @@ export abstract class CreatePartner {
   @Transform(({ value }) => uniq(value))
   readonly fieldRegions?: ReadonlyArray<IdOf<FieldRegion>> = [];
 
-  @Field(() => [Language], { name: 'languagesOfConsulting', nullable: true })
+  @Field(() => [IDType], { name: 'languagesOfConsulting', nullable: true })
   @Transform(({ value }) => uniq(value))
   readonly languagesOfConsulting?: ReadonlyArray<IdOf<Language>> = [];
 }

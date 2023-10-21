@@ -190,7 +190,7 @@ export class PartnerService {
 
     if (languagesOfConsulting) {
       await this.repo.updateRelationList({
-        id: object.id,
+        id: partner.id,
         relation: 'languagesOfConsulting',
         label: 'Language',
         newList: languagesOfConsulting,
