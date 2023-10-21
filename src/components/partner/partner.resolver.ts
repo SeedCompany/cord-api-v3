@@ -116,6 +116,7 @@ export class PartnerResolver {
   ): Promise<SecuredLocations> {
     return await loadSecuredIds(loader, partner.countries);
   }
+
   @ResolveField(() => SecuredLanguages)
   async languagesOfConsulting(
     @Parent() partner: Partner,
