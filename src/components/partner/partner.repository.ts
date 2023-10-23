@@ -125,6 +125,17 @@ export class PartnerRepository extends DtoRepository<
             ])
             .return(collect('countries.id').as('countriesIds')),
         )
+        .subQuery('node', (sub) =>
+          sub
+            .match([
+              node('node'),
+              relation('out', '', 'languagesOfConsulting', ACTIVE),
+              node('languagesOfConsulting', 'Language'),
+            ])
+            .return(
+              'collect(languagesOfConsulting.id) as languagesOfConsultingIds',
+            ),
+        )
         .apply(matchProps())
         .optionalMatch([
           node('node'),
@@ -140,27 +151,6 @@ export class PartnerRepository extends DtoRepository<
           node('node'),
           relation('out', '', 'languageOfWiderCommunication', ACTIVE),
           node('languageOfWiderCommunication', 'Language'),
-        ])
-        .subQuery('node', (sub) =>
-          sub
-            .match([
-              node('node'),
-              relation('out', '', 'languagesOfConsulting', ACTIVE),
-              node('languagesOfConsulting', 'Language'),
-            ])
-            .return(
-              'collect(languagesOfConsulting.id) as languagesOfConsultingIds',
-            ),
-        )
-        .with([
-          'node',
-          'languagesOfConsultingIds',
-          'props',
-          'sensitivity',
-          'organization',
-          'pointOfContact',
-          'languageOfWiderCommunication',
-          'scopedRoles',
         ])
         .return<{ dto: UnsecuredDto<Partner> }>(
           merge('props', {
