@@ -273,7 +273,7 @@ export class DatabaseService {
       await this.updateProperty({
         type,
         object,
-        key: prop,
+        key: prop as any,
         value: change as any,
         changeset,
         permanentAfter,

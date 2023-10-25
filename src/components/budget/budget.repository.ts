@@ -26,6 +26,7 @@ import {
   requestingUser,
   sorting,
 } from '../../core/database/query';
+import { FileId } from '../file';
 import { BudgetRecordRepository } from './budget-record.repository';
 import {
   Budget,
@@ -59,7 +60,7 @@ export class BudgetRepository extends DtoRepository<
 
   async create(
     input: CreateBudget,
-    universalTemplateFileId: ID,
+    universalTemplateFileId: FileId,
     session: Session,
   ) {
     const initialProps = {
