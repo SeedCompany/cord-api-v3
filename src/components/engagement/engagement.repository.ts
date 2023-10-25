@@ -162,7 +162,7 @@ export class EngagementRepository extends CommonRepository {
     input: CreateLanguageEngagement,
     changeset?: ID,
   ) {
-    const pnpId = (await generateId()) as FileId;
+    const pnpId = await generateId<FileId>();
 
     const {
       projectId,
@@ -209,7 +209,7 @@ export class EngagementRepository extends CommonRepository {
     input: CreateInternshipEngagement,
     changeset?: ID,
   ) {
-    const growthPlanId = (await generateId()) as FileId;
+    const growthPlanId = await generateId<FileId>();
 
     const {
       projectId,

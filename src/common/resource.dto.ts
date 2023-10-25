@@ -244,7 +244,9 @@ export class EnhancedResource<T extends ResourceShape<any>> {
     return this.dbLabels[0];
   }
   @Once()
-  get dbPropLabels() {
+  get dbPropLabels(): {
+    readonly [K in keyof T['prototype'] & string]?: readonly string[];
+  } {
     return mapValues.fromList(this.props, (prop) =>
       getDbPropertyLabels(this.type, prop),
     ).asRecord;

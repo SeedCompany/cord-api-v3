@@ -16,7 +16,7 @@ import {
 import { HandleIdLookup, ILogger, Logger, ResourceResolver } from '../../core';
 import { mapListResults } from '../../core/database/results';
 import { Privileges, ScopedRole } from '../authorization';
-import { FileService } from '../file';
+import { FileId, FileService } from '../file';
 import { ProjectChangeRequest } from '../project-change-request/dto';
 import { BudgetRecordRepository } from './budget-record.repository';
 import { BudgetRepository } from './budget.repository';
@@ -65,7 +65,7 @@ export class BudgetService {
       throw new NotFoundException('project does not exist', 'budget.projectId');
     }
 
-    const universalTemplateFileId = await generateId();
+    const universalTemplateFileId = await generateId<FileId>();
 
     try {
       const budgetId = await this.budgetRepo.create(

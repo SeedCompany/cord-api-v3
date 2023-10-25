@@ -7,7 +7,8 @@ const alphabet =
   '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 const size = 11;
 
-export const generateId = customAlphabet(alphabet, size) as () => Promise<ID>;
+export const generateId: <TID extends ID = ID>() => Promise<TID> =
+  customAlphabet(alphabet, size) as any;
 
 export const isValidId = (value: unknown): value is ID => {
   if (typeof value !== 'string') {
