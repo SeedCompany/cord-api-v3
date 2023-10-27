@@ -38,6 +38,10 @@ module default {
       default := false;
     };
 
+    multi link members := .<project[is Project::Member];
+    single link membership := (select .members filter .user.id = global currentUserId limit 1);
+    property isMember := exists .membership;
+
 #     multi link engagements := .<project[is Engagement];
     property engagementTotal := count(.<project[is Engagement]);
 
@@ -65,6 +69,7 @@ module Project {
     };
 
     property sensitivity := .project.sensitivity;
+    property isMember := .project.isMember;
   }
 
   scalar type Step extending enum<
