@@ -11,6 +11,14 @@ module default {
       annotation description := "The sensitivity of the language. This is a source / user settable.";
       default := Sensitivity.High;
     }
+    trigger recalculateProjectSens after update for each do (
+      update (
+        select __new__.projects
+        # Filter out projects without change, so modifiedAt isn't bumped
+        filter .sensitivity != max(.languages.sensitivity) ?? Sensitivity.High
+      )
+      set { sensitivity := max(.languages.sensitivity) ?? Sensitivity.High }
+    );
 
     required ethnologue: Ethnologue::Language {
       default := (insert Ethnologue::Language);
@@ -53,7 +61,10 @@ module default {
       or not exists .firstScriptureEngagement
     );
 
-    multi link engagements := .<language[is LanguageEngagement];
+    multi link engagements := (
+      # Similar to previous version but avoids https://github.com/edgedb/edgedb/issues/5846
+      select LanguageEngagement filter __source__ = .language
+    );
     multi link projects := .engagements.project;
   }
 

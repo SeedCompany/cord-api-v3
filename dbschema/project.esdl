@@ -54,6 +54,14 @@ module default {
   type TranslationProject extending Project {
     multi link engagements := .<project[is LanguageEngagement];
     multi link languages := .engagements.language;
+
+    trigger confirmProjectSens after update for each do (
+      assert(
+        __new__.sensitivity = max(__new__.languages.sensitivity) ?? Sensitivity.High,
+        message := "TranslationProject sensitivity is automatically set to \
+          (and required to be) the highest sensitivity Language engaged"
+      )
+    );
   }
 
   type InternshipProject extending Project {
