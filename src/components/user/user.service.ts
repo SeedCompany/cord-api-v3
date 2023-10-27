@@ -126,19 +126,17 @@ export class UserService {
     await this.userRepo.updateProperties(user, simpleChanges);
 
     // Update email
-    if (email !== undefined) {
-      try {
-        await this.userRepo.updateEmail(user, email);
-      } catch (e) {
-        if (e instanceof UniquenessError && e.label === 'EmailAddress') {
-          throw new DuplicateException(
-            'person.email',
-            'Email address is already in use',
-            e,
-          );
-        }
-        throw new ServerException('Failed to create user', e);
+    try {
+      await this.userRepo.updateEmail(user, email);
+    } catch (e) {
+      if (e instanceof UniquenessError && e.label === 'EmailAddress') {
+        throw new DuplicateException(
+          'person.email',
+          'Email address is already in use',
+          e,
+        );
       }
+      throw new ServerException('Failed to create user', e);
     }
 
     // Update roles
