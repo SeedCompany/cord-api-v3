@@ -1,10 +1,5 @@
 module default {
-  abstract type Engagement extending Resource {
-    required project: Project {
-      readonly := true;
-      on target delete delete source;
-    }
-
+  abstract type Engagement extending Project::Resource {
     required status: Engagement::Status {
       default := Engagement::Status.InDevelopment;
     }
@@ -43,8 +38,6 @@ module default {
     property initialEndDate: cal::local_date {
       rewrite insert, update using (.endDate if .status = Engagement::Status.InDevelopment else .initialEndDate);
     };
-
-    property sensitivity := .project.sensitivity;
 
     description: json;
   }

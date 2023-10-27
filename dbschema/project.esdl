@@ -58,6 +58,15 @@ module default {
 }
 
 module Project {
+  abstract type Resource extending default::Resource {
+    required project: default::Project {
+      readonly := true;
+      on target delete delete source;
+    };
+
+    property sensitivity := .project.sensitivity;
+  }
+
   scalar type Step extending enum<
     EarlyConversations,
     PendingConceptApproval,
