@@ -25,6 +25,12 @@ module default {
         else .lastReactivatedAt);
     }
 
+    required ceremony: Engagement::Ceremony {
+      readonly := true;
+      constraint exclusive;
+      on source delete delete target;
+    }
+
     completedDate: cal::local_date {
       annotation description := "Translation / Growth Plan complete date";
     }
@@ -50,6 +56,12 @@ module default {
       readonly := true;
     }
     constraint exclusive on ((.project, .language));
+
+    overloaded required ceremony: Engagement::DedicationCeremony {
+      default := (insert Engagement::DedicationCeremony {
+        createdAt := datetime_of_statement(),
+      });
+    };
 
     property firstScripture := (
       exists .language.firstScriptureEngagement
@@ -79,6 +91,12 @@ module default {
       readonly := true;
     }
     constraint exclusive on ((.project, .intern));
+
+    overloaded required ceremony: Engagement::CertificationCeremony {
+      default := (insert Engagement::CertificationCeremony {
+        createdAt := datetime_of_statement(),
+      });
+    };
 
     mentor: User;
 #     position: Engagement::InternPosition;
