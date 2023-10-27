@@ -125,4 +125,16 @@ module Engagement {
     Transferred,
     NotRenewed,
   >;
+
+  abstract type Resource extending Project::Resource {
+    required engagement: default::Engagement {
+      readonly := true;
+      on target delete delete source;
+    };
+
+    # Not yet supported
+    # overloaded required project: default::Project {
+    #   default := .engagement.project;
+    # };
+  }
 }

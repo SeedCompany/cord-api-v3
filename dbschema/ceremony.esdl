@@ -1,5 +1,5 @@
 module Engagement {
-  abstract type Ceremony extending default::Resource {
+  abstract type Ceremony extending Resource {
     required planned: bool {
       default := false;
     };
