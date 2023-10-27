@@ -20,11 +20,9 @@ module default {
         else .lastReactivatedAt);
     }
 
-    required ceremony: Engagement::Ceremony {
-      readonly := true;
-      constraint exclusive;
-      on source delete delete target;
-    }
+    required single link ceremony := assert_exists(assert_single(
+      .<engagement[is Engagement::Ceremony]
+    ));
 
     completedDate: cal::local_date {
       annotation description := "Translation / Growth Plan complete date";
@@ -50,12 +48,6 @@ module default {
     }
     constraint exclusive on ((.project, .language));
 
-    overloaded required ceremony: Engagement::DedicationCeremony {
-      default := (insert Engagement::DedicationCeremony {
-        createdAt := datetime_of_statement(),
-      });
-    };
-
     property firstScripture := (
       exists .language.firstScriptureEngagement
     );
@@ -75,6 +67,18 @@ module default {
     historicGoal: str {
       annotation deprecated := "Legacy data";
     }
+
+    # I want ceremony to be automatically created when engagement is created.
+    # Using computed & trigger to do this, because properties with default expressions
+    # cannot refer to links of inserted object.
+    # Aka a default expression cannot pass the project for the engagement through to the ceremony.
+    trigger connectDedicationCeremony after insert for each do (
+      insert Engagement::DedicationCeremony {
+        createdAt := datetime_of_statement(),
+        engagement := __new__,
+        project := __new__.project,
+      }
+    );
   }
 
   type InternshipEngagement extending Engagement {
@@ -85,17 +89,19 @@ module default {
     }
     constraint exclusive on ((.project, .intern));
 
-    overloaded required ceremony: Engagement::CertificationCeremony {
-      default := (insert Engagement::CertificationCeremony {
-        createdAt := datetime_of_statement(),
-      });
-    };
-
     mentor: User;
 #     position: Engagement::InternPosition;
 #     multi methodologies: ProductMethodology;
 #     countryOfOrigin: Location;
 #     growthPlan: File;
+
+    trigger connectCertificationCeremony after insert for each do (
+      insert Engagement::CertificationCeremony {
+        createdAt := datetime_of_statement(),
+        engagement := __new__,
+        project := __new__.project,
+      }
+    );
   }
 }
 
