@@ -11,10 +11,10 @@ import {
   ID,
   IdArg,
   ListArg,
+  loadManyIgnoreMissingThrowAny,
   loadSecuredIds,
   LoggedInSession,
   mapSecuredValue,
-  NotFoundException,
   Session,
 } from '../../common';
 import { Loader, LoaderOf } from '../../core';
@@ -122,30 +122,12 @@ export class PartnerResolver {
     @Parent() partner: Partner,
     @Loader(LanguageLoader) loader: LoaderOf<LanguageLoader>,
   ): Promise<SecuredLanguages> {
-    const languagesOfConsultingForLoader =
-      partner.languagesOfConsulting.value.map(
-        (id) =>
-          ({
-            id,
-            view: { active: true },
-          } as const),
-      );
-    const languages = (
-      await loader.loadMany(languagesOfConsultingForLoader)
-    ).flatMap((language) => {
-      if (language instanceof NotFoundException) {
-        return [];
-      } else if (language instanceof Error) {
-        throw language;
-      }
-
-      return language;
-    });
-
-    return {
-      ...partner.languagesOfConsulting,
-      value: languages,
-    };
+    const { value: ids, ...rest } = partner.languagesOfConsulting;
+    const value = await loadManyIgnoreMissingThrowAny(
+      loader,
+      ids.map((id) => ({ id, view: { active: true } } as const)),
+    );
+    return { ...rest, value };
   }
 
   @ResolveField(() => SecuredProjectList, {
