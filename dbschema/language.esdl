@@ -11,6 +11,7 @@ module default {
       annotation description := "The sensitivity of the language. This is a source / user settable.";
       default := Sensitivity.High;
     }
+    property effectiveSensitivity := max(.projects.sensitivity) ?? .sensitivity;
     trigger recalculateProjectSens after update for each do (
       update (
         select __new__.projects
@@ -66,6 +67,8 @@ module default {
       select LanguageEngagement filter __source__ = .language
     );
     multi link projects := .engagements.project;
+
+    property isMember := exists .projects.isMember;
   }
 
   scalar type population extending int32 {
