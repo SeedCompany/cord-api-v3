@@ -1,5 +1,6 @@
 import { Type } from '@nestjs/common';
 import { Field, ObjectType } from '@nestjs/graphql';
+import { ValidateNested } from 'class-validator';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { RegisterResource } from '~/core/resources';
@@ -19,6 +20,7 @@ import {
   Sensitivity,
   SensitivityField,
 } from '../../../common';
+import { SecuredMailingAddress } from '../../../common/mailing-address/dto';
 import { Location } from '../../../components/location';
 import { ScopedRole } from '../../authorization';
 import { FieldRegion } from '../../field-region';
@@ -73,8 +75,9 @@ export class Partner extends Interfaces {
   @Field()
   readonly active: SecuredBoolean;
 
-  @Field()
-  readonly address: SecuredString;
+  @Field(() => SecuredMailingAddress)
+  @ValidateNested()
+  readonly address: SecuredMailingAddress;
 
   readonly languageOfWiderCommunication: Secured<IdOf<Language> | null>;
 

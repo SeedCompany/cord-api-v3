@@ -12,7 +12,14 @@ export async function createOrganization(
   input: Partial<CreateOrganization> = {},
 ) {
   const name = input.name || faker.hacker.noun() + faker.company.name();
-  const address = input.address || faker.location.city();
+  const address = {
+    addressOne: faker.location.streetAddress(),
+    addressTwo: faker.location.buildingNumber(),
+    city: faker.location.city(),
+    state: faker.location.state(),
+    zip: faker.location.zipCode(),
+    country: faker.location.countryCode(),
+  };
 
   const result = await app.graphql.mutate(
     gql`

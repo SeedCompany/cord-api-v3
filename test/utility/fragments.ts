@@ -30,9 +30,16 @@ export const org = gql`
       canEdit
     }
     address {
-      value
       canRead
       canEdit
+      value {
+        addressOne
+        addressTwo
+        city
+        country
+        state
+        zip
+      }
     }
     locations {
       canRead
@@ -648,9 +655,16 @@ export const partner = gql`
       canEdit
     }
     address {
-      value
       canRead
       canEdit
+      value {
+        addressOne
+        addressTwo
+        city
+        country
+        state
+        zip
+      }
     }
   }
   ${org}

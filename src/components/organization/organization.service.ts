@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { compareNullable, ifDiff } from '~/core/database/changes';
 import {
   DuplicateException,
   ID,
@@ -9,6 +10,7 @@ import {
   UnauthorizedException,
   UnsecuredDto,
 } from '../../common';
+import { isAddressEqual } from '../../common/mailing-address/dto/is-address-equal';
 import { ConfigService, HandleIdLookup, ILogger, Logger } from '../../core';
 import { mapListResults } from '../../core/database/results';
 import { Privileges } from '../authorization';
@@ -95,15 +97,26 @@ export class OrganizationService {
     input: UpdateOrganization,
     session: Session,
   ): Promise<Organization> {
-    const organization = await this.readOne(input.id, session);
+    const organization = await this.repo.readOne(input.id, session);
 
-    const changes = this.repo.getActualChanges(organization, input);
-
+    const changes = {
+      ...this.repo.getActualChanges(organization, input),
+      address: ifDiff(compareNullable(isAddressEqual))(
+        input.address,
+        organization.address,
+      ),
+    };
     this.privileges
       .for(session, Organization, organization)
       .verifyChanges(changes);
 
-    return await this.repo.updateProperties(organization, changes);
+    const { address, ...simpleOrgProps } = changes;
+    await this.repo.updateProperties(organization, simpleOrgProps);
+    if (address !== undefined) {
+      await this.repo.updateOrgAddress(input.id, address);
+    }
+
+    return await this.readOne(input.id, session);
   }
 
   async delete(id: ID, session: Session): Promise<void> {

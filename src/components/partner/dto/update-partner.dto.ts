@@ -2,7 +2,8 @@ import { Field, ID as IDType, InputType, ObjectType } from '@nestjs/graphql';
 import { Transform, Type } from 'class-transformer';
 import { Matches, ValidateNested } from 'class-validator';
 import { uniq } from 'lodash';
-import { ID, IdField, IdOf, IsId, NameField } from '../../../common';
+import { ID, IdField, IdOf, IsId } from '../../../common';
+import { MailingAddress } from '../../../common/mailing-address';
 import { Location } from '../../../components/location';
 import { FieldRegion } from '../../field-region';
 import type { Language } from '../../language';
@@ -38,8 +39,9 @@ export abstract class UpdatePartner {
   @Field({ nullable: true })
   readonly active?: boolean;
 
-  @NameField({ nullable: true })
-  readonly address?: string;
+  @Field(() => MailingAddress, { nullable: true })
+  @ValidateNested()
+  readonly address?: MailingAddress | null;
 
   @IdField({ nullable: true })
   readonly languageOfWiderCommunicationId?: IdOf<Language> | null;

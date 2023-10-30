@@ -1,9 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
+import { DateTime } from 'luxon';
 import { ID, Session, UnsecuredDto } from '../../common';
+import { MailingAddress } from '../../common/mailing-address';
 import { DtoRepository } from '../../core';
 import {
   ACTIVE,
+  apoc,
   createNode,
   matchProjectScopedRoles,
   matchProjectSens,
@@ -27,7 +30,6 @@ export class OrganizationRepository extends DtoRepository<
     const initialProps = {
       name: input.name,
       acronym: input.acronym,
-      address: input.address,
       types: input.types ?? [],
       reach: input.reach ?? [],
       canDelete: true,
@@ -36,10 +38,44 @@ export class OrganizationRepository extends DtoRepository<
     const query = this.db
       .query()
       .apply(matchRequestingUser(session))
-      .apply(await createNode(Organization, { initialProps }))
+      .apply(
+        await createNode(Organization, {
+          initialProps,
+        }),
+      )
+      .apply((q) =>
+        input.address
+          ? q.create([
+              node('node'),
+              relation('out', '', 'address', ACTIVE),
+              node('', ['MailingAddress', 'Property'], {
+                ...input.address,
+                createdAt: DateTime.now(),
+              }),
+            ])
+          : q,
+      )
       .return<{ id: ID }>('node.id as id');
-
     return await query.first();
+  }
+
+  async updateOrgAddress(id: ID, addressToUpdate: MailingAddress | null) {
+    await this.db
+      .query()
+      .matchNode('node', 'Organization', { id })
+      .merge([
+        node('node'),
+        relation('out', '', 'address', ACTIVE),
+        node('address', 'MailingAddress'),
+      ])
+      .apply((q) =>
+        !addressToUpdate
+          ? q.detachDelete('address')
+          : q.setValues({
+              address: { ...addressToUpdate, modifiedAt: DateTime.now() },
+            }),
+      )
+      .run();
   }
 
   protected hydrate(session: Session) {
@@ -75,11 +111,17 @@ export class OrganizationRepository extends DtoRepository<
             .raw('WHERE size(projList) = 0')
             .return(`'High' as sensitivity`),
         )
+        .optionalMatch([
+          node('node'),
+          relation('out', '', 'address', ACTIVE),
+          node('mailingAddress', 'MailingAddress'),
+        ])
         .apply(matchProps())
         .return<{ dto: UnsecuredDto<Organization> }>(
           merge('props', {
             scope: 'scopedRoles',
             sensitivity: 'sensitivity',
+            address: apoc.convert.toMap('mailingAddress'),
           }).as('dto'),
         );
   }

@@ -1,4 +1,5 @@
 import { Field, ObjectType } from '@nestjs/graphql';
+import { ValidateNested } from 'class-validator';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { RegisterResource } from '~/core/resources';
 import {
@@ -13,6 +14,7 @@ import {
   Sensitivity,
   SensitivityField,
 } from '../../../common';
+import { SecuredMailingAddress } from '../../../common/mailing-address';
 import { Location } from '../../location/dto';
 import { SecuredOrganizationReach } from './organization-reach.dto';
 import { SecuredOrganizationTypes } from './organization-type.dto';
@@ -35,8 +37,9 @@ export class Organization extends Resource {
   @NameField()
   readonly acronym: SecuredStringNullable;
 
-  @Field()
-  readonly address: SecuredString;
+  @Field(() => SecuredMailingAddress)
+  @ValidateNested()
+  readonly address: SecuredMailingAddress;
 
   @SensitivityField({
     description:

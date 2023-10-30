@@ -23,7 +23,14 @@ export async function createPartner(
     pmcEntityCode: faker.helpers.replaceSymbols('???').toUpperCase(),
     globalInnovationsClient: false,
     active: false,
-    address: faker.location.city(),
+    address: {
+      addressOne: faker.location.streetAddress(),
+      addressTwo: faker.location.buildingNumber(),
+      city: faker.location.city(),
+      state: faker.location.state(),
+      zip: faker.location.zipCode(),
+      country: faker.location.countryCode(),
+    },
     ...input,
   };
 

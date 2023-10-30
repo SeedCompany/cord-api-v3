@@ -1,4 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { compareNullable, ifDiff } from '~/core/database/changes';
 import {
   DuplicateException,
   ID,
@@ -12,6 +13,7 @@ import {
   UnauthorizedException,
   UnsecuredDto,
 } from '../../common';
+import { isAddressEqual } from '../../common/mailing-address/dto/is-address-equal';
 import { HandleIdLookup, ILogger, Logger, ResourceLoader } from '../../core';
 import { mapListResults } from '../../core/database/results';
 import { Privileges } from '../authorization';
@@ -107,12 +109,12 @@ export class PartnerService {
   }
 
   async update(input: UpdatePartner, session: Session): Promise<Partner> {
-    const partner = await this.readOne(input.id, session);
+    const object = await this.repo.readOne(input.id, session);
 
     if (
       !this.validateFinancialReportingType(
-        input.financialReportingTypes ?? partner.financialReportingTypes.value,
-        input.types ?? partner.types.value,
+        input.financialReportingTypes ?? object.financialReportingTypes,
+        input.types ?? object.types,
       )
     ) {
       if (input.financialReportingTypes && input.types) {
@@ -127,17 +129,29 @@ export class PartnerService {
       };
     }
 
-    const changes = this.repo.getActualChanges(partner, input);
-    this.privileges.for(session, Partner, partner).verifyChanges(changes);
+    const changes = {
+      ...this.repo.getActualChanges(object, input),
+      address: ifDiff(compareNullable(isAddressEqual))(
+        input.address,
+        object.address,
+      ),
+    };
+    this.privileges.for(session, Partner, object).verifyChanges(changes);
+
     const {
       pointOfContactId,
       languageOfWiderCommunicationId,
       fieldRegions,
       countries,
+      address,
       ...simpleChanges
     } = changes;
 
-    await this.repo.updateProperties(partner, simpleChanges);
+    await this.repo.updateProperties(object, simpleChanges);
+
+    if (address !== undefined) {
+      await this.repo.updatePartnerAddress(input.id, address);
+    }
 
     if (pointOfContactId !== undefined) {
       await this.repo.updateRelation(
@@ -152,7 +166,7 @@ export class PartnerService {
       await this.repo.updateRelation(
         'languageOfWiderCommunication',
         'Language',
-        partner.id,
+        object.id,
         languageOfWiderCommunicationId,
       );
     }
@@ -162,7 +176,7 @@ export class PartnerService {
 
       try {
         await this.repo.updateRelationList({
-          id: partner.id,
+          id: object.id,
           relation: 'countries',
           newList: countries,
         });
@@ -176,7 +190,7 @@ export class PartnerService {
     if (fieldRegions) {
       try {
         await this.repo.updateRelationList({
-          id: partner.id,
+          id: object.id,
           relation: 'fieldRegions',
           newList: fieldRegions,
         });
