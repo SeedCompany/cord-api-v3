@@ -189,12 +189,17 @@ export class PartnerService {
     }
 
     if (languagesOfConsulting) {
-      await this.repo.updateRelationList({
-        id: partner.id,
-        relation: 'languagesOfConsulting',
-        label: 'Language',
-        newList: languagesOfConsulting,
-      });
+      try {
+        await this.repo.updateRelationList({
+          id: partner.id,
+          relation: 'languagesOfConsulting',
+          newList: languagesOfConsulting,
+        });
+      } catch (e) {
+        throw e instanceof InputException
+          ? e.withField('partner.languagesOfConsulting')
+          : e;
+      }
     }
 
     return await this.readOne(input.id, session);
