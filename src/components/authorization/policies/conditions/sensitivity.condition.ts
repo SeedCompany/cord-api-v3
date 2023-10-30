@@ -61,6 +61,10 @@ export class SensitivityCondition<
     return `${CQL_VAR} <= ${String(param)}`;
   }
 
+  asEdgeQLCondition() {
+    return `.sensitivity <= default::Sensitivity.${this.access}`;
+  }
+
   union(conditions: this[]) {
     return this.pickSens(conditions, 'highest');
   }

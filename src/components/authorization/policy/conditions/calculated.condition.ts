@@ -1,3 +1,4 @@
+import { ServerException } from '~/common';
 import { Condition } from './condition.interface';
 
 export class CalculatedCondition implements Condition {
@@ -5,7 +6,14 @@ export class CalculatedCondition implements Condition {
   isAllowed() {
     return false;
   }
-  asCypherCondition() {
-    return 'false';
+  asCypherCondition(): never {
+    throw new ServerException(
+      'Action is calculated, it should not be going to Cypher',
+    );
+  }
+  asEdgeQLCondition(): never {
+    throw new ServerException(
+      'Action is calculated, it should not be going to EdgeQL',
+    );
   }
 }

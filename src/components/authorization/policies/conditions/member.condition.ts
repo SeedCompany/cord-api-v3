@@ -11,7 +11,9 @@ import {
 } from '../../dto/role.dto';
 import {
   AsCypherParams,
+  AsEdgeQLParams,
   Condition,
+  eqlDoesIntersect,
   IsAllowedParams,
 } from '../../policy/conditions';
 
@@ -51,6 +53,13 @@ class MemberCondition<TResourceStatic extends ResourceWithScope>
   asCypherCondition(query: Query, other: AsCypherParams<TResourceStatic>) {
     const requester = String(Reflect.get(other, CQL_VAR));
     return `exists((project)-[:member { active: true }]->(:ProjectMember)-[:user]->(:User { id: ${requester} }))`;
+  }
+
+  asEdgeQLCondition({ resource }: AsEdgeQLParams<TResourceStatic>) {
+    if (resource.name === 'User' || resource.name === 'Unavailability') {
+      return 'exists { "Stubbed .isMember for User/Unavailability" }'; // TODO
+    }
+    return '.isMember';
   }
 
   union(this: void, conditions: this[]) {
@@ -99,6 +108,10 @@ class MemberWithRolesCondition<TResourceStatic extends ResourceWithScope>
       'requiredMemberRoles',
     );
     return `size(apoc.coll.intersection(${CQL_VAR}, ${String(required)})) > 0`;
+  }
+
+  asEdgeQLCondition() {
+    return eqlDoesIntersect('.membership.roles', this.roles, 'default::Role');
   }
 
   [inspect.custom](_depth: number, _options: InspectOptionsStylized) {

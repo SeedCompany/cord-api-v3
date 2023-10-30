@@ -6,6 +6,7 @@ import { ResourceShape } from '~/common';
 import { Policy } from '../policy.factory';
 import {
   AsCypherParams,
+  AsEdgeQLParams,
   Condition,
   IsAllowedParams,
 } from './condition.interface';
@@ -54,6 +55,17 @@ export abstract class AggregateConditions<
     const separator = this instanceof AndConditions ? ' AND ' : ' OR ';
     const inner = this.conditions
       .map((c) => c.asCypherCondition(query, other))
+      .join(separator);
+    return `(${inner})`;
+  }
+
+  asEdgeQLCondition(params: AsEdgeQLParams<TResourceStatic>): string {
+    if (this.conditions.length === 0) {
+      return 'true';
+    }
+    const separator = this instanceof AndConditions ? ' and ' : ' or ';
+    const inner = this.conditions
+      .map((c) => c.asEdgeQLCondition(params))
       .join(separator);
     return `(${inner})`;
   }

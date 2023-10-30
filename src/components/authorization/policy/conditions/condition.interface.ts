@@ -23,6 +23,11 @@ export type AsCypherParams<TResourceStatic extends ResourceShape<any>> = Omit<
   'object'
 >;
 
+export type AsEdgeQLParams<TResourceStatic extends ResourceShape<any>> = Pick<
+  IsAllowedParams<TResourceStatic>,
+  'resource'
+>;
+
 export interface Condition<
   TResourceStatic extends ResourceShape<any> = ResourceShape<any>,
 > {
@@ -54,6 +59,8 @@ export interface Condition<
     query: Query,
     other: AsCypherParams<TResourceStatic>,
   ): string;
+
+  asEdgeQLCondition(params: AsEdgeQLParams<TResourceStatic>): string;
 
   /**
    * Union multiple conditions of this type together to a single one.
