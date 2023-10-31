@@ -3,7 +3,6 @@
 *.gql
 *.graphql
 
-
 # Yarn / NPM
 .yarn/cache
 .yarn/unplugged
