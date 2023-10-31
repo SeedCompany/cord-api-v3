@@ -134,6 +134,7 @@ export class PartnerService {
       languageOfWiderCommunicationId,
       fieldRegions,
       countries,
+      languagesOfConsulting,
       ...simpleChanges
     } = changes;
 
@@ -183,6 +184,20 @@ export class PartnerService {
       } catch (e) {
         throw e instanceof InputException
           ? e.withField('partner.fieldRegions')
+          : e;
+      }
+    }
+
+    if (languagesOfConsulting) {
+      try {
+        await this.repo.updateRelationList({
+          id: partner.id,
+          relation: 'languagesOfConsulting',
+          newList: languagesOfConsulting,
+        });
+      } catch (e) {
+        throw e instanceof InputException
+          ? e.withField('partner.languagesOfConsulting')
           : e;
       }
     }
