@@ -1,23 +1,101 @@
-# Base node stage that sets up common config for dev & prod
-FROM public.ecr.aws/docker/library/node:18-slim as node
+ARG NODE_VERSION=18
+ARG NODE_IMAGE=public.ecr.aws/docker/library/node:${NODE_VERSION}-slim
+ARG EDGEDB_IMAGE=ghcr.io/edgedb/edgedb:3
+
+FROM ${NODE_IMAGE} as base-runtime
 
 # Install these native packages
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
+      # wget/curl for health checks
       ca-certificates wget curl \
       # Install ffprobe from here, as the npm version is manually published and as of comment segfaults with urls
       ffmpeg \
+    # Clean up cache to reduce image size
     && apt-get clean -q -y \
     && rm -rf /var/lib/apt/lists/*
+
+# Install EdgeDB CLI for running migrations during deployment
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.edgedb.com | sh -s -- -y --no-modify-path \
+    && mv /root/.local/bin/edgedb /usr/local/bin/edgedb
+
+FROM ${EDGEDB_IMAGE} as builder
+
+# Add curl to install node with
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+      ca-certificates curl
+
+# Install NodeJS & Yarn
+ARG NODE_VERSION
+RUN curl -fsSL https://deb.nodesource.com/setup_$NODE_VERSION.x | bash - && \
+    apt-get install -y nodejs && \
+    corepack enable && corepack prepare yarn@stable --activate
+
+WORKDIR /source
+
+ENV NODE_ENV=development \
+    # Ignore creds during this build process
+    EDGEDB_SERVER_SECURITY=insecure_dev_mode \
+    # Don't start/host the db server, just bootstrap & quit.
+    EDGEDB_SERVER_BOOTSTRAP_ONLY=1 \
+    # Don't flood log with cache debug messages
+    VERBOSE_YARN_LOG=discard
+
+# Install dependencies (in separate docker layer from app code)
+COPY .yarn .yarn
+COPY patches patches
+COPY package.json yarn.lock .yarnrc.yml ./
+RUN yarn install --immutable
+
+# Copy in application code
+COPY ./dbschema /dbschema
+COPY . .
+
+# region Generate EdgeDB TS/JS files
+RUN <<EOF
+set -e
+
+chown -R edgedb:edgedb /dbschema src
+
+# Hook `yarn edgedb:gen` into edgedb bootstrap.
+# This allows it to be ran in parallel to the db server running without a daemon
+mkdir -p /edgedb-bootstrap-late.d
+printf "#!/usr/bin/env bash\ncd /source \nyarn edgedb:gen" > /edgedb-bootstrap-late.d/01-generate-js.sh
+chmod +x /edgedb-bootstrap-late.d/01-generate-js.sh
+
+# Bootstrap the db to apply migrations and then generate the TS/JS from that.
+/usr/local/bin/docker-entrypoint.sh edgedb-server
+EOF
+# endregion
+
+# Build server
+RUN yarn build
+
+# Remove non-production files
+RUN rm -rf nest-cli.json tsconfig* test
+# Remove dev dependencies
+RUN yarn workspaces focus --all --production
+# Remove yarn cache to reduce image size
+RUN yarn cache clean --all
+
+FROM base-runtime as runtime
+
+WORKDIR /opt/cord-api
+
+# Copy built files from builder stage to this runtime stage
+COPY --from=builder /source /opt/cord-api
+
+# Grab latest timezone data
+RUN mkdir -p .cache && \
+    curl -o .cache/timezones https://raw.githubusercontent.com/moment/moment-timezone/master/data/meta/latest.json
 
 LABEL org.opencontainers.image.title="CORD API"
 LABEL org.opencontainers.image.vendor="Seed Company"
 LABEL org.opencontainers.image.source=https://github.com/SeedCompany/cord-api-v3
 LABEL org.opencontainers.image.licenses="MIT"
 
-WORKDIR /opt/cord-api
-
-ENV NODE_ENV=development PORT=80
+ENV NODE_ENV=production PORT=80
 
 EXPOSE 80
 
@@ -27,44 +105,3 @@ ARG GIT_HASH
 ARG GIT_BRANCH
 RUN echo GIT_HASH=$GIT_HASH > .env
 RUN echo GIT_BRANCH=$GIT_BRANCH >> .env
-
-# Dev stage that installs dependencies and copies project files
-# This stage can run everything
-FROM node as dev
-
-# Install dependencies (in separate docker layer from app code)
-COPY .yarn .yarn
-COPY patches patches
-COPY package.json yarn.lock .yarnrc.yml ./
-ENV VERBOSE_YARN_LOG=discard
-RUN yarn install --immutable
-
-# Copy application code
-COPY . .
-
-# Build server
-RUN yarn build
-
-
-# Temporary builder stage that cleans files from dev stage for production
-FROM dev as builder
-
-# Remove non-production code
-RUN rm -rf nest-cli.json tsconfig* test
-# Remove dev dependencies
-RUN yarn workspaces focus --all --production
-
-
-# Production stage which is clean from our base node stage
-# Since this is separate from dev/builder it won't include
-# the docker layers to get to the production files.
-# This reduces the image size by ~60%!
-FROM node as production
-
-# Copy everything from builder stage to this run stage
-COPY --from=builder /opt/cord-api .
-
-# Grab latest timezone data
-RUN mkdir -p .cache && curl -o .cache/timezones https://raw.githubusercontent.com/moment/moment-timezone/master/data/meta/latest.json
-
-ENV NODE_ENV=production

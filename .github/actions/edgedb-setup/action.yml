@@ -1,0 +1,11 @@
+name: Setup EdgeDB
+description: 'Setup EdgeDB server, migrate schema, generate TS files'
+runs:
+  using: composite
+  steps:
+    - name: Setup EdgeDB
+      uses: edgedb/setup-edgedb@abd93e5139e9f6a4320278a87022aef802086bad
+
+    - name: Generate EdgeDB TS files
+      shell: bash
+      run: yarn edgedb:gen

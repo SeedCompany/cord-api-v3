@@ -3,6 +3,11 @@
 *.gql
 *.graphql
 
+# edgedb generated
+src/core/edgedb/generated-client
+src/core/edgedb/schema.ts
+src/**/*.edgeql.ts
+
 # Yarn / NPM
 .yarn/cache
 .yarn/unplugged
