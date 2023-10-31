@@ -1,5 +1,5 @@
 module default {
-  type User extending Resource, Mixin::Pinnable {
+  type User extending Resource, Mixin::Pinnable, Mixin::Owned {
     email: str {
       constraint exclusive;
     };
