@@ -1,4 +1,5 @@
 import { Field, ObjectType } from '@nestjs/graphql';
+import { stripIndent } from 'common-tags';
 import { LazyGetter as Once } from 'lazy-get-decorator';
 import { DataObject, JsonSet } from '~/common';
 
@@ -14,6 +15,18 @@ export class ProgressReportVarianceExplanationReasonOptions extends DataObject {
     return new JsonSet([...this.behind, ...this.onTime, ...this.ahead]);
   }
 
+  @Field(() => [String], {
+    description: stripIndent`
+      A list of deprecated options.
+      If an option is deprecated, it is not available for selection/saving.
+      This allows rendering old options while enforcing a soft migration
+      to new values.
+    `,
+  })
+  readonly deprecated: ReadonlySet<string> = new JsonSet([
+    'Delayed activities; activities did not occur; slow start of project',
+  ]);
+
   @Field(() => [String])
   readonly behind: ReadonlySet<string> = new JsonSet([
     'Delayed activities; activities did not occur; slow start of project',
@@ -21,12 +34,15 @@ export class ProgressReportVarianceExplanationReasonOptions extends DataObject {
     'Delayed hiring and/or replacement of personnel',
     'Economic/political/civil instability or unrest',
     'Late or delayed partner reporting',
-    'Partner organization issues currently being addressed.',
+    'Partner organization issues currently being addressed',
     'Health issues with team members or their families',
     'Team member passed away',
     'Security breach/teams in hiding',
     'Unstable internet',
     'Checking delayed because translation consultants not available',
+    'Natural disaster prevented team from working',
+    'Activities did not occur, rescheduled for later date',
+    'Slow start to project, but team expects to catch up',
   ]);
 
   @Field(() => [String])

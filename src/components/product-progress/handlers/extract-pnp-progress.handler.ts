@@ -1,3 +1,4 @@
+import { mapOf } from '@seedcompany/common';
 import { EventsHandler, ILogger, Logger } from '../../../core';
 import { ReportType } from '../../periodic-report/dto';
 import { PeriodicReportUploadedEvent } from '../../periodic-report/events';
@@ -44,7 +45,7 @@ export class ExtractPnpProgressHandler {
           engagementId,
           ProducibleType.Story,
         )
-      : {};
+      : mapOf({});
     const scriptureProducts = progressRows[0].bookName
       ? await this.products.loadProductIdsForBookAndVerse(
           engagementId,
@@ -56,7 +57,7 @@ export class ExtractPnpProgressHandler {
     const updates = progressRows.flatMap((row) => {
       const { steps, ...rest } = row;
       if (row.story) {
-        const productId = storyProducts[row.story];
+        const productId = storyProducts.get(row.story);
         if (productId) {
           return { productId, steps };
         }

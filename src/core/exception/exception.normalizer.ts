@@ -2,16 +2,15 @@ import { ApolloServerErrorCode as ApolloCode } from '@apollo/server/errors';
 import { Inject, Injectable } from '@nestjs/common';
 // eslint-disable-next-line no-restricted-imports
 import * as Nest from '@nestjs/common';
-import { setHas, setOf } from '@seedcompany/common';
+import { isNotFalsy, setHas, setOf, simpleSwitch } from '@seedcompany/common';
 import { GraphQLError } from 'graphql';
-import { compact, uniq } from 'lodash';
+import { uniq } from 'lodash';
 import {
   AbstractClassType,
   Exception,
   getParentTypes,
   getPreviousList,
   JsonSet,
-  simpleSwitch,
 } from '~/common';
 import type { ConfigService } from '~/core';
 import * as Neo from '../database/errors';
@@ -149,11 +148,9 @@ export class ExceptionNormalizer {
   }
 
   private errorToCodes(ex: Error) {
-    return compact(
-      getParentTypes(ex.constructor as AbstractClassType<Error>).flatMap((e) =>
-        this.errorToCode(e as AbstractClassType<Error>, ex),
-      ),
-    );
+    return getParentTypes(ex.constructor as AbstractClassType<Error>)
+      .flatMap((e) => this.errorToCode(e as AbstractClassType<Error>, ex))
+      .filter(isNotFalsy);
   }
 
   private errorToCode(type: AbstractClassType<Error>, ex: Error) {

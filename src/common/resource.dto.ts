@@ -1,5 +1,5 @@
 import { Field, InterfaceType } from '@nestjs/graphql';
-import { cached, FnLike } from '@seedcompany/common';
+import { cached, FnLike, mapValues } from '@seedcompany/common';
 import { LazyGetter as Once } from 'lazy-get-decorator';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
@@ -15,12 +15,11 @@ import { DateTimeField } from './luxon.graphql';
 import { getParentTypes } from './parent-types';
 import { MaybeSecured, SecuredProps } from './secured-property';
 import { AbstractClassType } from './types';
-import { has, mapFromList } from './util';
 
 const hasTypename = (value: unknown): value is { __typename: string } =>
   value != null &&
   typeof value === 'object' &&
-  has('__typename', value) &&
+  '__typename' in value &&
   typeof value.__typename === 'string';
 
 export const resolveByTypename =
@@ -245,11 +244,12 @@ export class EnhancedResource<T extends ResourceShape<any>> {
     return this.dbLabels[0];
   }
   @Once()
-  get dbPropLabels() {
-    return mapFromList(this.props, (prop) => {
-      const labels = getDbPropertyLabels(this.type, prop);
-      return [prop, labels];
-    });
+  get dbPropLabels(): {
+    readonly [K in keyof T['prototype'] & string]?: readonly string[];
+  } {
+    return mapValues.fromList(this.props, (prop) =>
+      getDbPropertyLabels(this.type, prop),
+    ).asRecord;
   }
 }
 
@@ -265,7 +265,7 @@ export interface EnhancedRelation<TResourceStatic extends ResourceShape<any>> {
 export const isResourceClass = <T>(
   cls: AbstractClassType<T>,
 ): cls is ResourceShape<T> =>
-  has('Props', cls) && Array.isArray(cls.Props) && cls.Props.length > 0;
+  'Props' in cls && Array.isArray(cls.Props) && cls.Props.length > 0;
 
 export type MaybeUnsecuredInstance<TResourceStatic extends ResourceShape<any>> =
   MaybeSecured<InstanceType<TResourceStatic>>;

@@ -1,4 +1,4 @@
-import { compact } from 'lodash';
+import { cleanJoin } from '@seedcompany/common';
 import { User } from './dto';
 
 export const fullName = (
@@ -9,17 +9,17 @@ export const fullName = (
     >
   >,
 ) => {
-  const realName = compact([
-    user.realFirstName?.value ?? '',
-    user.realLastName?.value ?? '',
-  ]).join(' ');
+  const realName = cleanJoin(' ', [
+    user.realFirstName?.value,
+    user.realLastName?.value,
+  ]);
   if (realName) {
     return realName;
   }
-  const displayName = compact([
-    user.displayFirstName?.value ?? '',
-    user.displayLastName?.value ?? '',
-  ]).join(' ');
+  const displayName = cleanJoin(' ', [
+    user.displayFirstName?.value,
+    user.displayLastName?.value,
+  ]);
   if (displayName) {
     return displayName;
   }

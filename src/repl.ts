@@ -1,3 +1,4 @@
+import * as commonLib from '@seedcompany/common';
 import { runRepl } from '@seedcompany/nest';
 import * as fs from 'fs';
 // eslint-disable-next-line no-restricted-imports
@@ -7,7 +8,6 @@ import {
   CalendarDate,
   DateInterval,
   many,
-  mapFromList,
   maybeMany,
   Role,
   Session,
@@ -39,10 +39,9 @@ runRepl({
       Interval,
       CalendarDate,
       DateInterval,
-      mapFromList,
       many,
       maybeMany,
-      common,
+      common: { ...commonLib, ...common },
       // eslint-disable-next-line @typescript-eslint/naming-convention
       __: lodash, // single underscore is "last execution result"
       lodash,

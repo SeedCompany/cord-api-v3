@@ -3,7 +3,7 @@ import {
   Injectable,
   ValidationError,
 } from '@nestjs/common';
-import { isEmpty } from 'lodash';
+import { entries } from '@seedcompany/common';
 import { SetRequired } from 'type-fest';
 import { fileURLToPath } from 'url';
 import { ClientException } from '../common/exceptions';
@@ -66,10 +66,10 @@ const flattenValidationErrors = (
   e.reduce((obj, error) => {
     const { target: _, value: __, property, children, constraints } = error;
     const path = [...prefixes, property];
-    if (!isEmpty(constraints)) {
+    if (constraints && entries(constraints).length > 0) {
       obj[path.join('.')] = constraints;
     }
-    if (!isEmpty(children)) {
+    if (children && entries(children).length > 0) {
       flattenValidationErrors(children ?? [], obj, path);
     }
     return obj;

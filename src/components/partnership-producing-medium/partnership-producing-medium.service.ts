@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
+import { entries } from '@seedcompany/common';
 import { uniqBy } from 'lodash';
 import {
-  entries,
   ID,
   InputException,
   SecuredList,

@@ -1,4 +1,4 @@
-import { sortBy } from 'lodash';
+import { sortBy } from '@seedcompany/common';
 import { ID, Session } from '../../common';
 import { ILogger, Logger } from '../../core';
 import { ScriptureRange, ScriptureRangeInput } from './dto';

@@ -1,5 +1,5 @@
+import { mapValues } from '@seedcompany/common';
 import { createHash } from 'crypto';
-import { mapValues } from 'lodash';
 import { ID, Many, maybeMany, Role } from '~/common';
 import { ProgressReportStatus as Status } from '../dto';
 import {
@@ -111,13 +111,13 @@ function defineTransitions<Names extends string>(
 ) {
   return mapValues(
     obj,
-    (transition, name): InternalTransition => ({
+    (name, transition): InternalTransition => ({
       name: name as TransitionName,
       ...transition,
       from: maybeMany(transition.from),
       id: (transition.id ?? hashId(name)) as ID,
     }),
-  );
+  ).asRecord;
 }
 
 function hashId(name: string) {

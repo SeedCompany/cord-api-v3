@@ -1,6 +1,7 @@
+import { entries } from '@seedcompany/common';
 import { Query } from 'cypher-query-builder';
 import { inspect, InspectOptionsStylized } from 'util';
-import { ID, isIdLike, keys, Many } from '~/common';
+import { ID, isIdLike, Many } from '~/common';
 import { Granter, ResourceGranter } from '../../authorization';
 import { action } from '../../authorization/policy/builder/perm-granter';
 import { PropsGranterFn } from '../../authorization/policy/builder/resource-granter';
@@ -37,7 +38,7 @@ export class ProgressReportWorkflowEventGranter extends ResourceGranter<
    * Can read & execute all transitions.
    */
   get executeAll(): this {
-    return this.transitions(keys(Transitions)).execute;
+    return this.transitions(entries(Transitions).map(([k]) => k)).execute;
   }
 
   /**

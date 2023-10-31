@@ -1,6 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { setHas, setOf } from '@seedcompany/common';
-import { compact } from 'lodash';
+import { isNotFalsy, setHas, setOf, simpleSwitch } from '@seedcompany/common';
 import {
   CalendarDate,
   DuplicateException,
@@ -11,7 +10,6 @@ import {
   SecuredDate,
   ServerException,
   Session,
-  simpleSwitch,
   UnauthorizedException,
   UnsecuredDto,
 } from '../../common';
@@ -262,15 +260,14 @@ export class LanguageService {
         EngagementStatus.Unapproved,
         EngagementStatus.Rejected,
       ]);
-      const dates = compact(
-        engagments
-          .filter(
-            (engagement) =>
-              engagement.status.value &&
-              !setHas(statusesToIgnore, engagement.status.value),
-          )
-          .map((engagement) => engagement.startDate.value),
-      );
+      const dates = engagments
+        .filter(
+          (engagement) =>
+            engagement.status.value &&
+            !setHas(statusesToIgnore, engagement.status.value),
+        )
+        .map((engagement) => engagement.startDate.value)
+        .filter(isNotFalsy);
 
       const canRead = engagments.every(
         (engagement) => engagement.startDate.canRead,

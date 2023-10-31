@@ -124,6 +124,11 @@ const namingConvention = [
     format: ['camelCase'],
     leadingUnderscore: 'allow',
   },
+  {
+    selector: 'parameter',
+    modifiers: ['destructured'],
+    format: ['camelCase', 'UPPER_CASE'],
+  },
 ];
 
 /** @type {import('@typescript-eslint/utils').TSESLint.Linter.Config} */

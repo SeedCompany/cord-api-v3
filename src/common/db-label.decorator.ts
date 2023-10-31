@@ -1,4 +1,5 @@
-import { compact, uniq } from 'lodash';
+import { cleanSplit, isNotFalsy } from '@seedcompany/common';
+import { uniq } from 'lodash';
 
 export const DbLabelSymbol = Symbol('DbLabelSymbol');
 
@@ -11,10 +12,11 @@ export const DbLabel =
         : Reflect.getMetadata(DbLabelSymbol, target)) ?? [];
 
     const now = uniq(
-      compact([
+      [
         ...prev,
-        ...labels.flatMap((l) => l?.split(':').map((s) => s.trim())),
-      ]),
+        // Add labels split by `:`
+        ...labels.flatMap((l) => cleanSplit(l ?? '', ':')),
+      ].filter(isNotFalsy),
     );
 
     key

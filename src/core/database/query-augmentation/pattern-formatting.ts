@@ -1,3 +1,4 @@
+import { isNotFalsy } from '@seedcompany/common';
 import { stripIndent } from 'common-tags';
 import {
   Clause,
@@ -16,7 +17,7 @@ import type {
   TermListClause as TSTermListClause,
 } from 'cypher-query-builder/dist/typings/clauses/term-list-clause';
 import type { Parameter } from 'cypher-query-builder/dist/typings/parameter-bag';
-import { camelCase, compact, isPlainObject, map, reduce } from 'lodash';
+import { camelCase, isPlainObject } from 'lodash';
 import { Class } from 'type-fest';
 import { isExp } from '../query';
 
@@ -25,10 +26,10 @@ import { isExp } from '../query';
 const PatternClause = Object.getPrototypeOf(Create) as Class<TSPatternClause>;
 PatternClause.prototype.build = function build() {
   // @ts-expect-error private but we are using it
-  const patternStrings = map(this.patterns, (pattern) =>
-    reduce(pattern, (str: string, clause: Clause) => str + clause.build(), ''),
+  const patternStrings = this.patterns.map((pattern) =>
+    pattern.reduce((str: string, clause: Clause) => str + clause.build(), ''),
   );
-  return compact(patternStrings).join(',\n    ');
+  return patternStrings.filter(isNotFalsy).join(',\n    ');
 };
 
 // This class is not exported so grab it a hacky way
@@ -101,7 +102,7 @@ for (const Cls of [Match, Create, Merge]) {
 
 // Remove extra line breaks from empty clauses
 ClauseCollection.prototype.build = function build(this: ClauseCollection) {
-  const clauses = compact(this.clauses.map((c) => c.build()));
+  const clauses = this.clauses.map((c) => c.build()).filter(isNotFalsy);
   if (clauses.length === 0) {
     return '';
   }

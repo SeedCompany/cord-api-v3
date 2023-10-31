@@ -1,7 +1,7 @@
 import { ArgumentsHost, Catch, HttpStatus, Injectable } from '@nestjs/common';
 import { HttpAdapterHost } from '@nestjs/core';
 import { GqlContextType, GqlExceptionFilter } from '@nestjs/graphql';
-import { mapValues } from 'lodash';
+import { mapValues } from '@seedcompany/common';
 import { ConfigService } from '../config/config.service';
 import { ILogger, Logger, LogLevel } from '../logger';
 import { ValidationException } from '../validation.pipe';
@@ -91,8 +91,8 @@ export class ExceptionFilter implements GqlExceptionFilter {
       this.logger.notice(info.message, {
         inputErrors: mapValues(
           info.errors as ValidationException['errors'],
-          (constraints) => Object.values(constraints)[0],
-        ),
+          (_, constraints) => Object.values(constraints)[0],
+        ).asRecord,
       });
       return;
     }

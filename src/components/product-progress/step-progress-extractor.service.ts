@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
+import { entries } from '@seedcompany/common';
 import { assert } from 'ts-essentials';
 import { MergeExclusive } from 'type-fest';
-import { entries } from '../../common';
 import { Cell, Column, Row } from '../../common/xlsx.util';
 import { Downloadable } from '../file';
 import {

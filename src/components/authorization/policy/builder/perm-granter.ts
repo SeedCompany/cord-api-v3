@@ -1,4 +1,5 @@
-import { mapFromList, ResourceShape } from '~/common';
+import { mapValues } from '@seedcompany/common';
+import { ResourceShape } from '~/common';
 import { all, any, Condition } from '../conditions';
 
 export type Permissions<TAction extends string> = {
@@ -47,7 +48,7 @@ export abstract class PermGranter<
     const perm = cloned.stagedCondition ?? true;
     cloned.perms = [
       ...cloned.perms,
-      mapFromList(actions, (action) => [action, perm]),
+      mapValues.fromList(actions, () => perm).asRecord as Permissions<TAction>,
     ];
     return cloned;
   }

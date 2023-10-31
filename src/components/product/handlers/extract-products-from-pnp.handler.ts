@@ -1,8 +1,8 @@
-import { asyncPool } from '@seedcompany/common';
+import { asyncPool, groupBy, mapEntries, mapOf } from '@seedcompany/common';
 import { labelOfVerseRanges } from '@seedcompany/scripture';
-import { difference, groupBy, uniq } from 'lodash';
+import { difference, uniq } from 'lodash';
 import { DateTime } from 'luxon';
-import { ID, mapFromList, Session, UnsecuredDto } from '~/common';
+import { ID, Session, UnsecuredDto } from '~/common';
 import { EventsHandler, IEventHandler, ILogger, Logger } from '../../../core';
 import { Engagement } from '../../engagement';
 import {
@@ -176,21 +176,19 @@ export class ExtractProductsFromPnpHandler
           engagement.id,
           DerivativeScriptureProduct.name,
         )
-      : {};
+      : mapOf({});
 
     if (rows[0].story) {
       return rows.flatMap((row) => {
         if (!row.story) return [];
-        return { ...row, existingId: storyProducts[row.rowIndex] };
+        return { ...row, existingId: storyProducts.get(row.rowIndex) };
       });
     }
 
-    const actionableProductRows = Object.values(
+    const actionableProductRows = groupBy(rows, (row) => {
       // group by book name
-      groupBy(rows, (row) => {
-        return row.scripture[0]?.start.book ?? row.unspecifiedScripture?.book;
-      }),
-    ).flatMap((rowsOfBook) => {
+      return row.scripture[0]?.start.book ?? row.unspecifiedScripture?.book;
+    }).flatMap((rowsOfBook) => {
       const bookName =
         rowsOfBook[0].scripture[0]?.start.book ??
         rowsOfBook[0].unspecifiedScripture?.book;
@@ -259,7 +257,10 @@ export class ExtractProductsFromPnpHandler
         // All remaining are new
         return [
           ...matches,
-          ...nonExactMatches.map((row) => ({ ...row, existingId: undefined })),
+          ...nonExactMatches.map((row) => ({
+            ...row,
+            existingId: undefined,
+          })),
         ];
       }
 
@@ -291,12 +292,13 @@ export class ExtractProductsFromPnpHandler
       names,
       ProducibleType.Story,
     );
-    const existing = mapFromList(existingList, (row) => [row.name, row.id]);
+    const existing = mapEntries(existingList, (r) => [r.name, r.id]).asRecord;
+    const byName = { ...existing };
     const newNames = difference(names, Object.keys(existing));
     await asyncPool(3, newNames, async (name) => {
       const story = await this.stories.create({ name }, session);
-      existing[name] = story.id;
+      byName[name] = story.id;
     });
-    return existing;
+    return byName as Readonly<typeof byName>;
   }
 }

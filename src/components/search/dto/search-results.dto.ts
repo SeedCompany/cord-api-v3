@@ -1,6 +1,7 @@
 import { createUnionType } from '@nestjs/graphql';
+import { entries, simpleSwitch } from '@seedcompany/common';
 import { uniq } from 'lodash';
-import { EnumType, keys, makeEnum, simpleSwitch } from '~/common';
+import { EnumType, makeEnum } from '~/common';
 import { ResourceMap } from '~/core';
 import { EthnoArt } from '../../ethno-art/dto';
 import { FieldRegion } from '../../field-region/dto';
@@ -83,7 +84,7 @@ export type SearchableMap = {
   >;
 };
 
-export const SearchResultTypes = keys(publicSearchable);
+export const SearchResultTypes = entries(publicSearchable).map(([k]) => k);
 
 // __typename is a GQL thing to identify type at runtime
 // It makes sense to use this key to not conflict with actual properties and

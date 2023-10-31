@@ -1,8 +1,8 @@
 import { Provider } from '@nestjs/common';
+import { mapEntries } from '@seedcompany/common';
 import { promises as fs } from 'fs';
-import { identity, pickBy } from 'lodash';
+import { pickBy } from 'lodash';
 import { parse } from 'yaml';
-import { mapFromList } from '~/common';
 import { ConfigService } from '../config/config.service';
 import { LevelMatcher } from './level-matcher';
 import { LogLevel } from './logger.interface';
@@ -24,13 +24,13 @@ export const LevelMatcherProvider: Provider<Promise<LevelMatcher>> = {
 
     const envDefault = process.env.LOG_LEVEL_DEFAULT as LogLevel | undefined;
     // env levels take the form of a,b=level;c,d=level
-    const envLevels: Record<string, LogLevel> = mapFromList(
-      (process.env.LOG_LEVELS || '').split(';').flatMap((pair) => {
+    const envLevels = mapEntries(
+      (process.env.LOG_LEVELS || '').split(';'),
+      (pair, { SKIP }) => {
         const matched = /\s*([\w\s,\-:*]+)=\s*(\w+)\s*/.exec(pair);
-        return matched ? [[matched[1], matched[2]]] : [];
-      }),
-      identity,
-    );
+        return matched ? [matched[1], matched[2] as LogLevel] : SKIP;
+      },
+    ).asRecord;
 
     const levels = [envLevels, yamlOverrides.levels ?? {}, defaults.levels];
 

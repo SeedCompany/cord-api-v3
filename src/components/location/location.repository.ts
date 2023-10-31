@@ -19,6 +19,7 @@ import {
   paginate,
   sorting,
 } from '../../core/database/query';
+import { FileId } from '../file';
 import { CreateLocation, Location, LocationListInput } from './dto';
 
 @Injectable()
@@ -33,7 +34,7 @@ export class LocationRepository extends DtoRepository(Location) {
   }
 
   async create(input: CreateLocation, session: Session) {
-    const mapImageId = await generateId();
+    const mapImageId = await generateId<FileId>();
 
     const initialProps = {
       name: input.name,

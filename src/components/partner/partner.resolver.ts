@@ -11,6 +11,7 @@ import {
   ID,
   IdArg,
   ListArg,
+  loadManyIgnoreMissingThrowAny,
   loadSecuredIds,
   LoggedInSession,
   mapSecuredValue,
@@ -18,7 +19,11 @@ import {
 } from '../../common';
 import { Loader, LoaderOf } from '../../core';
 import { FieldRegionLoader, SecuredFieldRegions } from '../field-region';
-import { LanguageLoader, SecuredLanguageNullable } from '../language';
+import {
+  LanguageLoader,
+  SecuredLanguageNullable,
+  SecuredLanguages,
+} from '../language';
 import { LocationLoader, SecuredLocations } from '../location';
 import { OrganizationLoader, SecuredOrganization } from '../organization';
 import { PartnerLoader, PartnerService } from '../partner';
@@ -110,6 +115,19 @@ export class PartnerResolver {
     @Loader(LocationLoader) loader: LoaderOf<LocationLoader>,
   ): Promise<SecuredLocations> {
     return await loadSecuredIds(loader, partner.countries);
+  }
+
+  @ResolveField(() => SecuredLanguages)
+  async languagesOfConsulting(
+    @Parent() partner: Partner,
+    @Loader(LanguageLoader) loader: LoaderOf<LanguageLoader>,
+  ): Promise<SecuredLanguages> {
+    const { value: ids, ...rest } = partner.languagesOfConsulting;
+    const value = await loadManyIgnoreMissingThrowAny(
+      loader,
+      ids.map((id) => ({ id, view: { active: true } } as const)),
+    );
+    return { ...rest, value };
   }
 
   @ResolveField(() => SecuredProjectList, {

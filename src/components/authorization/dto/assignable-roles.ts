@@ -1,4 +1,5 @@
-import { Calculated, mapFromList, ResourceRelationsShape } from '~/common';
+import { mapValues } from '@seedcompany/common';
+import { Calculated, ResourceRelationsShape } from '~/common';
 import { RegisterResource } from '~/core/resources';
 import { Role } from './role.dto';
 
@@ -19,10 +20,8 @@ import { Role } from './role.dto';
 export class AssignableRoles {
   static Props = [];
   static SecuredProps = [];
-  static Relations = mapFromList([...Role], (role) => [
-    role,
-    undefined,
-  ]) satisfies ResourceRelationsShape;
+  static Relations = mapValues.fromList(Role, () => undefined)
+    .asRecord satisfies ResourceRelationsShape;
 }
 
 declare module '~/core/resources/map' {
