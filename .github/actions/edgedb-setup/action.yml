@@ -5,6 +5,8 @@ runs:
   steps:
     - name: Setup EdgeDB
       uses: edgedb/setup-edgedb@abd93e5139e9f6a4320278a87022aef802086bad
+      with:
+        cli-version: ^3
 
     - name: Generate EdgeDB TS files
       shell: bash
