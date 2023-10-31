@@ -6,6 +6,6 @@ import { IsEmail } from './validators';
 export const EmailField = (options: FieldOptions = {}) =>
   applyDecorators(
     Field(() => String, options),
-    Transform(({ value }) => value?.toLowerCase()),
+    Transform(({ value }) => (value ? value.toLowerCase() : value)),
     IsEmail(),
   );
