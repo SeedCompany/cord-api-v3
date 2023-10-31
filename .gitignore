@@ -2,7 +2,7 @@
 /dist
 *.gql
 *.graphql
-/data
+
 
 # Yarn / NPM
 .yarn/cache
