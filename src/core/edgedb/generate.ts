@@ -112,9 +112,18 @@ async function generateAll({
     client,
     root,
   });
-  addCustomScalarImports(
-    project.addSourceFileAtPath(generatedSchemaFile),
-    customScalars.values(),
+  const schemaFile = project.addSourceFileAtPath(generatedSchemaFile);
+  addCustomScalarImports(schemaFile, customScalars.values());
+
+  // Quick/naive fix for the type generated from
+  // Project::Resource extending default::Resource
+  schemaFile.replaceWithText(
+    schemaFile
+      .getFullText()
+      .replace(
+        'interface Resource extends Resource',
+        'interface Resource extends DefaultResource',
+      ) + '\ntype DefaultResource = Resource;\n',
   );
 
   await generateQueryFiles({ client, root });

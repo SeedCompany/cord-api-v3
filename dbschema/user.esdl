@@ -1,5 +1,5 @@
 module default {
-  type User extending Resource {
+  type User extending Resource, Mixin::Pinnable, Mixin::Owned {
     email: str {
       constraint exclusive;
     };
@@ -14,42 +14,22 @@ module default {
     phone: str;
     timezone: str;
     about: str;
-    required status: UserStatus {
-      default := UserStatus.Active;
+    required status: User::Status {
+      default := User::Status.Active;
     };
     multi roles: Role;
     title: str;
+    multi link pins: Mixin::Pinnable {
+      on target delete allow;
+    }
   }
-
-  scalar type UserStatus extending enum<Active, Disabled>;
-
-  scalar type Role extending enum<
-    Administrator,
-    BetaTester,
-    BibleTranslationLiaison,
-    Consultant,
-    ConsultantManager,
-    Controller,
-    ExperienceOperations,
-    FieldOperationsDirector,
-    FieldPartner,
-    FinancialAnalyst,
-    Fundraising,
-    Intern,
-    LeadFinancialAnalyst,
-    Leadership,
-    Liaison,
-    Marketing,
-    Mentor,
-    ProjectManager,
-    RegionalCommunicationsCoordinator,
-    RegionalDirector,
-    StaffMember,
-    Translator,
-  >;
 
   alias RootUser := (
       SELECT User
       FILTER .email = 'devops@tsco.org'
   );
+}
+
+module User {
+  scalar type Status extending enum<Active, Disabled>;
 }
