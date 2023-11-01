@@ -1,19 +1,19 @@
+import { entries } from '@seedcompany/common';
 import {
-  between,
-  greaterEqualTo,
+  comparisions,
   inArray,
   isNull,
-  lessEqualTo,
   node,
   not,
   Query,
   relation,
 } from 'cypher-query-builder';
 import { PatternCollection } from 'cypher-query-builder/dist/typings/clauses/pattern-clause';
+import { Comparator } from 'cypher-query-builder/dist/typings/clauses/where-comparators';
 import { AndConditions } from 'cypher-query-builder/src/clauses/where-utils';
 import { identity, isFunction } from 'lodash';
 import { ConditionalKeys } from 'type-fest';
-import { DateTimeFilter } from '../../../common';
+import { DateTimeFilter } from '~/common';
 import { ACTIVE } from './matching';
 import { path as pathPattern } from './where-path';
 
@@ -131,7 +131,7 @@ export const isPinned = pathExists<{ pinned?: boolean }, 'pinned'>([
 ]);
 
 export const dateTimeBaseNodeProp =
-  <T, K extends ConditionalKeys<Required<T>, DateTimeFilter>>(
+  <T, K extends ConditionalKeys<T, DateTimeFilter | undefined>>(
     prop?: string,
   ): Builder<T, K> =>
   ({ key, value }) => {
@@ -140,7 +140,7 @@ export const dateTimeBaseNodeProp =
   };
 
 export const dateTimeProp =
-  <T, K extends ConditionalKeys<Required<T>, DateTimeFilter>>(
+  <T, K extends ConditionalKeys<T, DateTimeFilter | undefined>>(
     prop?: string,
   ): Builder<T, K> =>
   ({ key, value, query }) => {
@@ -156,11 +156,19 @@ export const dateTimeProp =
     return { [prop ?? key]: { value: comparison } };
   };
 
-const comparisonOfDateTimeFilter = ({ after, before }: DateTimeFilter) =>
-  after && before
-    ? between(after, before)
-    : after
-    ? greaterEqualTo(after)
-    : before
-    ? lessEqualTo(before)
+export const comparisonOfDateTimeFilter = (
+  input: DateTimeFilter,
+): Comparator | undefined => {
+  const comparatorMap = {
+    afterInclusive: comparisions.greaterEqualTo,
+    after: comparisions.greaterThan,
+    beforeInclusive: comparisions.lessEqualTo,
+    before: comparisions.lessThan,
+  };
+  const comparators = entries(input).flatMap(([key, val]) =>
+    val ? comparatorMap[key](val) : [],
+  );
+  return comparators.length > 0
+    ? (...args) => comparators.map((comp) => comp(...args)).join(' AND ')
     : undefined;
+};

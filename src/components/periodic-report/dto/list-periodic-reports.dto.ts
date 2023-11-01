@@ -1,11 +1,14 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
+import { Type } from 'class-transformer';
+import { ValidateNested } from 'class-validator';
 import { stripIndent } from 'common-tags';
 import {
+  DateFilter,
   ID,
   PaginatedList,
   SecuredList,
   SortablePaginationInput,
-} from '../../../common';
+} from '~/common';
 import { PeriodicReport } from './merge-periodic-reports.dto';
 import { IPeriodicReport } from './periodic-report.dto';
 import { ReportType } from './report-type.enum';
@@ -24,6 +27,22 @@ export class PeriodicReportListInput extends SortablePaginationInput<
     nullable: true,
   })
   readonly type?: ReportType;
+
+  @Field({
+    nullable: true,
+    description: 'Filter reports on the start date',
+  })
+  @Type(() => DateFilter)
+  @ValidateNested()
+  readonly start?: DateFilter;
+
+  @Field({
+    nullable: true,
+    description: 'Filter reports on the end date',
+  })
+  @Type(() => DateFilter)
+  @ValidateNested()
+  readonly end?: DateFilter;
 
   readonly parent?: ID;
 }
