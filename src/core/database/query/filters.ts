@@ -131,7 +131,7 @@ export const isPinned = pathExists<{ pinned?: boolean }, 'pinned'>([
 ]);
 
 export const dateTimeBaseNodeProp =
-  <T, K extends ConditionalKeys<Required<T>, DateTimeFilter | undefined>>(
+  <T, K extends ConditionalKeys<T, DateTimeFilter | undefined>>(
     prop?: string,
   ): Builder<T, K> =>
   ({ key, value }) => {
