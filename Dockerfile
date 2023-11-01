@@ -21,16 +21,33 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.edgedb.com | sh -s -- -y --n
 
 FROM ${EDGEDB_IMAGE} as builder
 
-# Add curl to install node with
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-      ca-certificates curl
-
-# Install NodeJS & Yarn
+# region Install NodeJS
 ARG NODE_VERSION
-RUN curl -fsSL https://deb.nodesource.com/setup_$NODE_VERSION.x | bash - && \
-    apt-get install -y nodejs && \
-    corepack enable && corepack prepare yarn@stable --activate
+
+RUN <<EOF
+set -e
+
+apt-get update
+
+# Install necessary packages for downloading and verifying node repository info
+apt-get install -y --no-install-recommends ca-certificates curl gnupg
+
+# Download the node repository's GPG key and save it in the keyring directory
+mkdir -p /etc/apt/keyrings
+curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
+# Add the node repository's source list with its GPG key for package verification
+echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_${NODE_VERSION}.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list
+
+# Update again to recognize the new repository
+apt-get update
+
+apt-get install -y nodejs
+
+# Enable yarn via corepack
+corepack enable
+
+EOF
+# endregion
 
 WORKDIR /source
 
