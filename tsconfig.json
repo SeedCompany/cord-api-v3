@@ -26,6 +26,8 @@
     // Disabling for now, but should be enabled & fixes applied
     "noFallthroughCasesInSwitch": false,
     "noUncheckedIndexedAccess": false,
+    // Possibly enable later & fix. Might need if/when switching to non-tsc transpilation.
+    "isolatedModules": false,
 
     // Handled by ESLint
     "noUnusedLocals": false,
