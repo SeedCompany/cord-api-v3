@@ -59,7 +59,7 @@ jobs:
 
       - name: Enforce compatibility
         run: |
-          yarn dlx graphql-schema-diff \
+          corepack enable && yarn dlx graphql-schema-diff \
             --use-colors --fail-on-breaking-changes \
             ./base/schema.graphql ./head/schema.graphql
         if: ${{ !contains(github.event.pull_request.labels.*.name, 'breaking change') }}
