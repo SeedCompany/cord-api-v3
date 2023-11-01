@@ -15,7 +15,7 @@ jobs:
       matrix:
         ref: [base, head]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           ref: ${{ matrix.ref == 'base' && github.event.pull_request[matrix.ref].ref || '' }}
 
@@ -39,7 +39,7 @@ jobs:
     needs: [generate]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: actions/download-artifact@v3
         with:
