@@ -1,0 +1,6 @@
+name: Teardown EdgeDB
+runs:
+  using: composite
+  steps:
+    - run: edgedb instance stop -I gactions
+      shell: bash

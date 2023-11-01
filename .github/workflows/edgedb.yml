@@ -10,16 +10,19 @@ jobs:
       - name: Node Setup & Yarn Install
         uses: ./.github/actions/setup
 
-      - uses: edgedb/setup-edgedb@v1
-
-      - name: Generate EdgeDB TS files
-        shell: bash
-        run: yarn edgedb:gen
+      - name: EdgeDB Setup
+        uses: ./.github/actions/edgedb-setup
+        id: edgedb-init
+        with:
+          schema-dev-mode: 'false'
 
       - name: Schema Migrations In Sync
         run: yarn console edgedb migration status
-        if: github.event.pull_request.draft == false
+        if: github.event.pull_request.draft == false && steps.edgedb-init.outputs.schema-changed
 
       - name: Validate seed scripts are error free
         run: yarn edgedb:seed
         shell: bash
+
+      - name: EdgeDB Teardown
+        uses: ./.github/actions/edgedb-teardown

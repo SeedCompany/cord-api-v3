@@ -1,16 +1,48 @@
 name: Setup EdgeDB
 description: 'Setup EdgeDB server, migrate schema, generate TS files'
+
+inputs:
+  schema-dev-mode:
+    description: Whether dev migrations should be created based on schema files
+    default: 'true'
+
+outputs:
+  schema-changed:
+    value: ${{ steps.edgedb-schema.outputs.cache-hit != 'true' }}
+
 runs:
   using: composite
   steps:
-    - name: Setup EdgeDB
-      uses: edgedb/setup-edgedb@v1
+    - uses: actions/cache@v4
+      id: edgedb-init
+      with:
+        key: edgedb-service-${{ hashFiles('edgedb.toml') }}
+        path: |
+          /home/runner/.cache/edgedb
+          /home/runner/.config/edgedb
+          /home/runner/.local/share/edgedb
+
+    - uses: edgedb/setup-edgedb@v1
+      with:
+        instance-name: ghactions
+        server-version: ${{ steps.edgedb-init.outputs.cache-hit == 'true' && 'none' || 'stable' }}
+
+    # in case cached
+    - run: edgedb instance start -I gactions
+      shell: bash
 
     - run: edgedb configure set session_idle_transaction_timeout 5min
       shell: bash
 
-    - run: edgedb migrate --dev-mode
+    - uses: actions/cache@v4
+      id: edgedb-schema
+      with:
+        key: edgedb-schema-${{ hashFiles('dbschema/*.esdl') }}
+        path: dbschema/*.esdl
+
+    - run: edgedb migrate ${{ inputs.schema-dev-mode == 'true' && '--dev-mode' || '' }}
       shell: bash
+      if: steps.edgedb-init.outputs.schema-changed
 
     - name: Generate EdgeDB TS files
       shell: bash

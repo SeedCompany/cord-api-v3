@@ -34,3 +34,6 @@ jobs:
 
       - name: Lint
         run: yarn eslint --ext .ts,.tsx --max-warnings 0 .
+
+      - name: EdgeDB Teardown
+        uses: ./.github/actions/edgedb-teardown

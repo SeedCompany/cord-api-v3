@@ -34,6 +34,9 @@ jobs:
           name: ${{ matrix.ref }}-gql-schema
           path: schema.graphql
 
+      - name: EdgeDB Teardown
+        uses: ./.github/actions/edgedb-teardown
+
   graphql-diff:
     name: GraphQL Diff
     needs: [generate]
