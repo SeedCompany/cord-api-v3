@@ -3,15 +3,15 @@ module default {
     required name: str {
       constraint exclusive;
     };
-
+    
     required sensitivity: Sensitivity {
       annotation description := "The sensitivity of the project. \
         This is user settable for internships and calculated for translation projects";
       default := Sensitivity.High;
     };
-
+    
     departmentId: str;
-
+    
     required step: Project::Step {
       default := Project::Step.EarlyConversations;
     };
@@ -20,7 +20,7 @@ module default {
       rewrite update using (datetime_of_statement() if .step != __old__.step else .stepChangedAt);
     }
     property status := Project::statusFromStep(.step);
-
+    
     mouStart: cal::local_date;
     mouEnd: cal::local_date;
     constraint expression on (.mouEnd >= .mouStart);
@@ -28,33 +28,33 @@ module default {
       default := .mouEnd;
       rewrite update using (.mouEnd if .status = Project::Status.InDevelopment else .initialMouEnd);
     }
-
+    
     estimatedSubmission: cal::local_date;
-
+    
     financialReportReceivedAt: datetime;
     financialReportPeriod: ReportPeriod;
-
+    
     required presetInventory: bool {
       default := false;
     };
-
+    
     multi link members := .<project[is Project::Member];
     single link membership := (select .members filter .user.id = global currentUserId limit 1);
     property isMember := exists .membership;
-
+    
 #     multi link engagements := .<project[is Engagement];
     property engagementTotal := count(.<project[is Engagement]);
-
+    
 #       link primaryLocation: Location;
 #       link marketingLocation: Location;
 #       link fieldRegion: FieldRegion;
 #       link rootDirectory: Directory;
   }
-
+  
   type TranslationProject extending Project {
     multi link engagements := .<project[is LanguageEngagement];
     multi link languages := .engagements.language;
-
+    
     trigger confirmProjectSens after update for each do (
       assert(
         __new__.sensitivity = max(__new__.languages.sensitivity) ?? Sensitivity.High,
@@ -63,23 +63,23 @@ module default {
       )
     );
   }
-
+  
   type InternshipProject extending Project {
     multi link engagements := .<project[is InternshipEngagement];
   }
 }
-
+ 
 module Project {
   abstract type Resource extending default::Resource {
     required project: default::Project {
       readonly := true;
       on target delete delete source;
     };
-
+    
     property sensitivity := .project.sensitivity;
     property isMember := .project.isMember;
   }
-
+  
   scalar type Step extending enum<
     EarlyConversations,
     PendingConceptApproval,
@@ -110,7 +110,7 @@ module Project {
     Terminated,
     Completed,
   >;
-
+  
   scalar type Status extending enum<
     InDevelopment,
     Active,
@@ -118,7 +118,7 @@ module Project {
     Completed,
     DidNotDevelop,
   >;
-
+  
   function statusFromStep(step: Step) -> Status
     using (
       with dev := {

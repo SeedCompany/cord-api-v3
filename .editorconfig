@@ -10,3 +10,8 @@ trim_trailing_whitespace = true
 
 [*.md]
 trim_trailing_whitespace = false
+
+# Webstorm needs consistent indentation for syntax highlighting
+# with the textmate bundle hack.
+[*.esdl]
+trim_trailing_whitespace = false

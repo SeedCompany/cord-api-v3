@@ -5,7 +5,7 @@ module Project {
       on target delete delete source;
     };
     constraint exclusive on ((.project, .user));
-
+    
     multi roles: default::Role;
   }
 }

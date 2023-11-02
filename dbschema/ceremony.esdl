@@ -5,7 +5,7 @@ module Engagement {
     };
     estimatedDate: cal::local_date;
     actualDate: cal::local_date;
-
+    
     constraint exclusive on (.engagement);
     trigger prohibitDelete after delete for each do (
       assert(
