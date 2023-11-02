@@ -11,6 +11,8 @@ README*
 
 # Yarn / NPM
 !.yarnrc.yml
+!.yarn/keep
+!.yarn/patches
 !.yarn/plugins
 node_modules
 
