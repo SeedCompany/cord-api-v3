@@ -156,6 +156,13 @@ module Engagement {
       on target delete delete source;
     };
     
+    trigger enforceEngagementProject after insert, update for each do (
+      assert(
+        __new__.engagement.project = __new__.project,
+        message := "Given engagement must be for the same project as the given project."
+      )
+    );
+    
     # Not yet supported
     # overloaded required project: default::Project {
     #   default := .engagement.project;
