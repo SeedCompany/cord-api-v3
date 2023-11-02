@@ -3,7 +3,8 @@ import { createClient } from 'edgedb';
 import { KNOWN_TYPENAMES } from 'edgedb/dist/codecs/consts.js';
 import { ScalarCodec } from 'edgedb/dist/codecs/ifaces.js';
 import { Class } from 'type-fest';
-import { Client, EdgeDB } from './reexports';
+import { EdgeDB } from './edgedb.service';
+import { Client } from './reexports';
 import { LuxonCalendarDateCodec, LuxonDateTimeCodec } from './temporal.codecs';
 
 @Module({
@@ -21,10 +22,7 @@ import { LuxonCalendarDateCodec, LuxonDateTimeCodec } from './temporal.codecs';
         return client;
       },
     },
-    {
-      provide: EdgeDB,
-      useExisting: Client,
-    },
+    EdgeDB,
   ],
   exports: [EdgeDB, Client],
 })
