@@ -10,15 +10,20 @@ import {
   stringifyImports,
 } from '@edgedb/generate/dist/queries.js';
 import { groupBy, mapKeys } from '@seedcompany/common';
+import { stripIndent } from 'common-tags';
 import { $, adapter, Client, createClient } from 'edgedb';
 import { SCALAR_CODECS } from 'edgedb/dist/codecs/codecs.js';
 import { KNOWN_TYPENAMES } from 'edgedb/dist/codecs/consts.js';
+import { Cardinality } from 'edgedb/dist/ifaces.js';
+import { $ as $$ } from 'execa';
 import {
   IndentationText,
+  Node,
   Project,
   QuoteKind,
   SourceFile,
   SyntaxKind,
+  VariableDeclarationKind,
 } from 'ts-morph';
 
 const customScalarList: readonly CustomScalar[] = [
@@ -126,6 +131,141 @@ async function generateAll({
 
   await generateQueryFiles({ client, root });
   fixCustomScalarImportsInGeneratedEdgeqlFiles(project);
+
+  await generateInlineQueries({ client, project, root });
+}
+
+async function generateInlineQueries({
+  client,
+  project,
+  root,
+}: {
+  client: Client;
+  project: Project;
+  root: string;
+}) {
+  console.log('Generating queries for edgeql() calls...');
+
+  const grepForShortList =
+    await $$`grep -lR edgeql src --exclude-dir=src/core/edgedb`;
+  const shortList = project.addSourceFilesAtPaths(
+    grepForShortList.stdout.split('\n'),
+  );
+
+  const queries =
+    shortList.flatMap((file) =>
+      file.getDescendantsOfKind(SyntaxKind.CallExpression).flatMap((call) => {
+        if (call.getExpression().getText() !== 'edgeql') {
+          return [];
+        }
+        const args = call.getArguments();
+
+        // // 1000x slower to confirm edgeql import
+        // const defs = call
+        //   .getExpressionIfKindOrThrow(SyntaxKind.Identifier)
+        //   .getDefinitionNodes();
+        // if (
+        //   !defs[0].getSourceFile().getFilePath().endsWith('edgedb/edgeql.ts')
+        // ) {
+        //   return [];
+        // }
+
+        if (
+          args.length > 1 ||
+          (!Node.isStringLiteral(args[0]) &&
+            !Node.isNoSubstitutionTemplateLiteral(args[0]))
+        ) {
+          return [];
+        }
+
+        const query = args[0].getText().slice(1, -1);
+        return { query, call };
+      }),
+    ) ?? [];
+
+  const inlineQueriesFile = project.createSourceFile(
+    'src/core/edgedb/generated-client/inline-queries.ts',
+    `import type { TypedEdgeQL } from '../edgeql';`,
+    { overwrite: true },
+  );
+  const queryMap = inlineQueriesFile.addInterface({
+    name: 'InlineQueryMap',
+    isExported: true,
+  });
+
+  const imports = new Set<string>();
+  const seen = new Set<string>();
+  const cardinalityMap = new Map<string, $.Cardinality>();
+  for (const { query, call } of queries) {
+    // Prevent duplicate keys in QueryMap in the off chance that two queries are identical
+    if (seen.has(query)) {
+      continue;
+    }
+    seen.add(query);
+
+    const path = adapter.path.posix.relative(
+      root,
+      call.getSourceFile().getFilePath(),
+    );
+    const lineNumber = call.getStartLineNumber();
+    const source = `./${path}:${lineNumber}`;
+
+    let types;
+    let error;
+    try {
+      types = await $.analyzeQuery(client, query);
+      console.log(`   ${source}`);
+    } catch (err) {
+      error = err as Error;
+      console.log(`Error in query '${source}': ${String(err)}`);
+    }
+
+    if (types) {
+      // Save cardinality for use at runtime.
+      cardinalityMap.set(
+        stripIndent(query),
+        cardinalityMapping[types.cardinality],
+      );
+      // Add imports to the used imports list
+      [...types.imports].forEach((i) => imports.add(i));
+    }
+
+    queryMap.addProperty({
+      name: `[\`${query}\`]`,
+      type: types
+        ? `TypedEdgeQL<${types.args}, ${types.result}>`
+        : error
+        ? `{ ${error.name}: \`${error.message.trim()}\` }`
+        : 'unknown',
+      leadingTrivia:
+        (queryMap.getProperties().length > 0 ? '\n' : '') +
+        `/** {@link import('${path}')} L${lineNumber} */\n`,
+    });
+  }
+
+  addCustomScalarImports(
+    inlineQueriesFile,
+    [...imports].flatMap((i) => customScalars.get(i) ?? []),
+    0,
+  );
+  const builtIn = ['$', ...[...imports].filter((i) => !customScalars.has(i))];
+  inlineQueriesFile.insertImportDeclaration(0, {
+    isTypeOnly: true,
+    namedImports: builtIn,
+    moduleSpecifier: 'edgedb',
+  });
+
+  const cardinalitiesAsStr = JSON.stringify([...cardinalityMap], null, 2);
+  inlineQueriesFile.addVariableStatement({
+    isExported: true,
+    declarationKind: VariableDeclarationKind.Const,
+    declarations: [
+      {
+        name: 'InlineQueryCardinalityMap',
+        initializer: `new Map<string, \`\${$.Cardinality}\`>(${cardinalitiesAsStr})`,
+      },
+    ],
+  });
 }
 
 async function generateQueryFiles({
@@ -149,7 +289,7 @@ async function generateQueryFiles({
         path,
         types,
       });
-      const prettyPath = './' + adapter.path.posix.relative(srcDir, path);
+      const prettyPath = './' + adapter.path.posix.relative(root, path);
       console.log(`   ${prettyPath}`);
       await adapter.fs.writeFile(
         path + '.ts',
@@ -248,9 +388,10 @@ function createTsMorphProject() {
 function addCustomScalarImports(
   file: SourceFile,
   scalars: Iterable<CustomScalar>,
+  index = 2,
 ) {
-  file.insertImportDeclarations(
-    2,
+  return file.insertImportDeclarations(
+    index,
     [...scalars].map((scalar, i) => ({
       isTypeOnly: true,
       namedImports: [scalar.ts],
@@ -259,3 +400,11 @@ function addCustomScalarImports(
     })),
   );
 }
+
+const cardinalityMapping = {
+  [Cardinality.NO_RESULT]: $.Cardinality.Empty,
+  [Cardinality.AT_MOST_ONE]: $.Cardinality.AtMostOne,
+  [Cardinality.ONE]: $.Cardinality.One,
+  [Cardinality.MANY]: $.Cardinality.Many,
+  [Cardinality.AT_LEAST_ONE]: $.Cardinality.AtLeastOne,
+};
