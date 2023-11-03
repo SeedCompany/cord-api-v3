@@ -124,9 +124,9 @@ async function generateAll({
   // Project::Resource extending default::Resource
   schemaFile.addTypeAlias({ name: 'DefaultResource', type: 'Resource' });
   schemaFile
-    .getModule('Project')!
-    .getInterface('Resource')!
-    .removeExtends(0)
+    .getModule('Project')
+    ?.getInterface('Resource')
+    ?.removeExtends(0)
     .addExtends('DefaultResource');
 
   await generateQueryFiles({ client, root });
@@ -146,8 +146,9 @@ async function generateInlineQueries({
 }) {
   console.log('Generating queries for edgeql() calls...');
 
-  const grepForShortList =
-    await $$`grep -lR edgeql src --exclude-dir=src/core/edgedb`;
+  const grepForShortList = await $$({
+    reject: false,
+  })`grep -lR edgeql src --exclude-dir=src/core/edgedb`;
   const shortList = project.addSourceFilesAtPaths(
     grepForShortList.stdout.split('\n'),
   );
