@@ -149,9 +149,9 @@ async function generateInlineQueries({
   const grepForShortList = await $$({
     reject: false,
   })`grep -lR edgeql src --exclude-dir=src/core/edgedb`;
-  const shortList = project.addSourceFilesAtPaths(
-    grepForShortList.stdout.split('\n'),
-  );
+  const shortList = grepForShortList.stdout
+    ? project.addSourceFilesAtPaths(grepForShortList.stdout.split('\n'))
+    : [];
 
   const queries =
     shortList.flatMap((file) =>
