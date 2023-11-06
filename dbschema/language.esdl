@@ -1,6 +1,7 @@
 module default {
   type Language extending Resource, Mixin::Pinnable, Mixin::Taggable {
     required name: str;
+    index on (str_sortable(.name));
     
     required displayName: str {
       default := .name;
@@ -11,6 +12,8 @@ module default {
       annotation description := "The sensitivity of the language. This is a source / user settable.";
       default := Sensitivity.High;
     }
+    index on (.sensitivity);
+    
     property effectiveSensitivity := max(.projects.sensitivity) ?? .sensitivity;
     trigger recalculateProjectSens after update for each do (
       update (
@@ -69,6 +72,8 @@ module default {
     multi link projects := .engagements.project;
     
     property isMember := exists .projects.isMember;
+    
+    index on ((.name, .sensitivity, .leastOfThese, .isSignLanguage, .isDialect));
   }
   
   scalar type population extending int32 {
