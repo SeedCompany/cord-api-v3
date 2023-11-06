@@ -82,18 +82,20 @@ module default {
     
     trigger recalculateProjectSensOnInsert after insert for each do (
       update (
-        select __new__.project
-        # Filter out projects without change, so modifiedAt isn't bumped
-        filter .sensitivity != max(.languages.sensitivity) ?? Sensitivity.High
+        select TranslationProject
+        filter __new__ in .languages
+          # Filter out projects without change, so modifiedAt isn't bumped
+          and .sensitivity != max(.languages.sensitivity) ?? Sensitivity.High
       )
       set { sensitivity := max(.languages.sensitivity) ?? Sensitivity.High }
     );
     trigger recalculateProjectSensOnDelete after delete for each do (
       with removedLang := __old__.language
       update (
-        select __old__.project
-        # Filter out projects without change, so modifiedAt isn't bumped
-        filter .sensitivity != max((.languages except removedLang).sensitivity) ?? Sensitivity.High
+        select TranslationProject
+        filter __old__ in .languages
+          # Filter out projects without change, so modifiedAt isn't bumped
+          and .sensitivity != max((.languages except removedLang).sensitivity) ?? Sensitivity.High
       )
       set { sensitivity := max((.languages except removedLang).sensitivity) ?? Sensitivity.High }
     );

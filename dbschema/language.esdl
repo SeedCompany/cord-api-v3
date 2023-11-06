@@ -17,9 +17,10 @@ module default {
     property effectiveSensitivity := max(.projects.sensitivity) ?? .sensitivity;
     trigger recalculateProjectSens after update for each do (
       update (
-        select __new__.projects
-        # Filter out projects without change, so modifiedAt isn't bumped
-        filter .sensitivity != max(.languages.sensitivity) ?? Sensitivity.High
+        select TranslationProject
+        filter __new__ in .languages
+          # Filter out projects without change, so modifiedAt isn't bumped
+          and .sensitivity != max(.languages.sensitivity) ?? Sensitivity.High
       )
       set { sensitivity := max(.languages.sensitivity) ?? Sensitivity.High }
     );
