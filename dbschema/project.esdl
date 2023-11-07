@@ -1,10 +1,10 @@
 module default {
-  abstract type Project extending Resource, Mixin::Pinnable, Mixin::Taggable {
+  abstract type Project extending Resource, Mixin::Pinnable, Mixin::Taggable, Project::HasContext {
     required name: str {
       constraint exclusive;
     };
     
-    required ownSensitivity: Sensitivity {
+    overloaded required ownSensitivity: Sensitivity {
       annotation description := "The sensitivity of the project. \
         This is user settable for internships and calculated for translation projects";
       default := Sensitivity.High;
@@ -39,8 +39,7 @@ module default {
     };
     
     multi link members := .<project[is Project::Member];
-    single link membership := (select .members filter .user.id = global currentUserId limit 1);
-    property isMember := exists .membership;
+    single link membership := (select .members filter .user.id = global default::currentUserId limit 1);
     
 #     multi link engagements := .<project[is Engagement];
     property engagementTotal := count(.<project[is Engagement]);
@@ -76,8 +75,24 @@ module Project {
       on target delete delete source;
     };
     
-#     property sensitivity := .project.ownSensitivity;
+#     property sensitivity := .project.sensitivity;
     property isMember := .project.isMember;
+  }
+  
+  type Context {
+    multi projects: default::Project {
+      on target delete allow;
+    };
+  }
+  
+  abstract type HasContext {
+    required projectContext: Context {
+      default := (insert Context);
+    }
+    
+    ownSensitivity: default::Sensitivity;
+    required single property sensitivity := max(.projectContext.projects.ownSensitivity) ?? (.ownSensitivity ?? default::Sensitivity.High);
+    required single property isMember := exists .projectContext.projects.membership;
   }
   
   scalar type Step extending enum<
