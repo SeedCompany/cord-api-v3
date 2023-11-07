@@ -73,7 +73,11 @@ module default {
 }
  
 module Project {
-  abstract type Resource extending default::Resource, ContextAware {
+  abstract type Child extending default::Resource, ContextAware {
+    annotation description := "\
+      A type that is a child of a project. \
+      It will always have a reference to a single project that it is under.";
+    
     required project: default::Project {
       readonly := true;
       on target delete delete source;

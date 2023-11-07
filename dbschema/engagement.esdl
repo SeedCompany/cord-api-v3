@@ -1,5 +1,5 @@
 module default {
-  abstract type Engagement extending Project::Resource {
+  abstract type Engagement extending Project::Child {
     required status: Engagement::Status {
       default := Engagement::Status.InDevelopment;
     }
@@ -163,7 +163,11 @@ module Engagement {
     NotRenewed,
   >;
   
-  abstract type Resource extending Project::Resource {
+  abstract type Child extending Project::Child {
+    annotation description := "\
+      A type that is a child of an engagement. \
+      It will always have a reference to a single engagement & project that it is under.";
+    
     required engagement: default::Engagement {
       readonly := true;
       on target delete delete source;

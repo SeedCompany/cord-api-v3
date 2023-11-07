@@ -1,5 +1,5 @@
 module Project {
-  type Member extending Resource {
+  type Member extending Child {
     required user: default::User {
       readonly := true;
       on target delete delete source;

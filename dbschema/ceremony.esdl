@@ -1,5 +1,5 @@
 module Engagement {
-  abstract type Ceremony extending Resource {
+  abstract type Ceremony extending Child {
     required planned: bool {
       default := false;
     };
