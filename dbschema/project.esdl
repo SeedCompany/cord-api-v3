@@ -1,5 +1,5 @@
 module default {
-  abstract type Project extending Resource, Mixin::Pinnable, Mixin::Taggable, Project::HasContext {
+  abstract type Project extending Resource, Project::ContextAware, Mixin::Pinnable, Mixin::Taggable {
     required name: str {
       constraint exclusive;
     };
@@ -48,6 +48,10 @@ module default {
 #       link marketingLocation: Location;
 #       link fieldRegion: FieldRegion;
 #       link rootDirectory: Directory;
+    
+    overloaded link projectContext: Project::Context {
+      default := (insert Project::Context);
+    }
   }
   
   type TranslationProject extending Project {
@@ -69,30 +73,48 @@ module default {
 }
  
 module Project {
-  abstract type Resource extending default::Resource {
+  abstract type Resource extending default::Resource, ContextAware {
     required project: default::Project {
       readonly := true;
       on target delete delete source;
     };
     
-#     property sensitivity := .project.sensitivity;
-    property isMember := .project.isMember;
+    trigger enforceCorrectProjectContext after insert, update for each do (
+      assert(
+        __new__.project in __new__.projectContext.projects,
+        message := "Given project must be in given project context"
+      )
+    );
+  }
+  
+  abstract type ContextAware {
+    annotation description := "\
+      A type that has a project context, which allows it to be
+      aware of the sensitivity & current user membership for the associated context.";
+    
+    required projectContext: Context;
+    
+    optional ownSensitivity: default::Sensitivity {
+      annotation description := "\
+        A writable source of a sensitivity. \
+        This doesn't necessarily mean it be the same as .sensitivity, which is what is used for authorization.";
+    };
+    
+    required single property sensitivity :=
+      max(.projectContext.projects.ownSensitivity)
+      ?? (.ownSensitivity ?? default::Sensitivity.High);
+    required single property isMember := exists .projectContext.projects.membership;
   }
   
   type Context {
+    annotation description := "\
+      A type that holds a reference to a list of projects. \
+      This allows multiple objects to hold a reference to the same list. \
+      For example, Language & Ethnologue::Language share the same context / project list.";
+    
     multi projects: default::Project {
       on target delete allow;
     };
-  }
-  
-  abstract type HasContext {
-    required projectContext: Context {
-      default := (insert Context);
-    }
-    
-    ownSensitivity: default::Sensitivity;
-    required single property sensitivity := max(.projectContext.projects.ownSensitivity) ?? (.ownSensitivity ?? default::Sensitivity.High);
-    required single property isMember := exists .projectContext.projects.membership;
   }
   
   scalar type Step extending enum<

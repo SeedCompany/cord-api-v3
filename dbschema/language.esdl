@@ -1,5 +1,5 @@
 module default {
-  type Language extending Resource, Mixin::Pinnable, Mixin::Taggable, Project::HasContext {
+  type Language extending Resource, Project::ContextAware, Mixin::Pinnable, Mixin::Taggable {
     required name: str;
     index on (str_sortable(.name));
     
@@ -12,7 +12,6 @@ module default {
       annotation description := "The sensitivity of the language. This is a source / user settable.";
       default := Sensitivity.High;
     }
-#     index on (.ownSensitivity);
     
     trigger recalculateProjectSens after update for each do (
       update (
@@ -81,6 +80,10 @@ module default {
       select LanguageEngagement filter __source__ = .language
     );
     
+    overloaded link projectContext: Project::Context {
+      default := (insert Project::Context);
+    }
+    
     index on ((.name, .ownSensitivity, .leastOfThese, .isSignLanguage, .isDialect));
   }
   
@@ -90,7 +93,7 @@ module default {
 }
  
 module Ethnologue {
-  type Language extending Project::HasContext {
+  type Language extending Project::ContextAware {
     required language: default::Language {
       on target delete delete source;
       constraint exclusive;

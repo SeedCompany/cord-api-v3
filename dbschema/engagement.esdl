@@ -77,6 +77,7 @@ module default {
         createdAt := datetime_of_statement(),
         engagement := __new__,
         project := __new__.project,
+        projectContext := __new__.projectContext,
       }
     );
     
@@ -129,6 +130,7 @@ module default {
         createdAt := datetime_of_statement(),
         engagement := __new__,
         project := __new__.project,
+        projectContext := __new__.projectContext,
       }
     );
   }
