@@ -14,7 +14,6 @@ module default {
     }
 #     index on (.ownSensitivity);
     
-#     property sensitivity := max(.projects.ownSensitivity) ?? .ownSensitivity;
     trigger recalculateProjectSens after update for each do (
       update (
         select TranslationProject
@@ -31,10 +30,11 @@ module default {
     trigger connectEthnologue after insert for each do (
       insert Ethnologue::Language {
         language := __new__,
+        ownSensitivity := __new__.ownSensitivity,
         projectContext := __new__.projectContext
       }
     );
-    trigger matchEthnologueToOwnSens after insert, update for each do (
+    trigger matchEthnologueToOwnSens after update for each do (
       update __new__.ethnologue
       filter .ownSensitivity != __new__.ownSensitivity
       set { ownSensitivity := __new__.ownSensitivity }
