@@ -12,9 +12,9 @@ module default {
       annotation description := "The sensitivity of the language. This is a source / user settable.";
       default := Sensitivity.High;
     }
-    index on (.sensitivity);
+#     index on (.sensitivity);
     
-    property effectiveSensitivity := max(.projects.sensitivity) ?? .sensitivity;
+#     property effectiveSensitivity := max(.projects.sensitivity) ?? .sensitivity;
     trigger recalculateProjectSens after update for each do (
       update (
         select TranslationProject

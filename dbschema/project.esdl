@@ -76,7 +76,7 @@ module Project {
       on target delete delete source;
     };
     
-    property sensitivity := .project.sensitivity;
+#     property sensitivity := .project.sensitivity;
     property isMember := .project.isMember;
   }
   
