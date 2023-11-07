@@ -57,7 +57,7 @@ module default {
     
     trigger confirmProjectSens after update for each do (
       assert(
-        __new__.sensitivity = max(__new__.languages.sensitivity) ?? Sensitivity.High,
+        __new__.sensitivity = max(__new__.languages.ownSensitivity) ?? Sensitivity.High,
         message := "TranslationProject sensitivity is automatically set to \
           (and required to be) the highest sensitivity Language engaged"
       )

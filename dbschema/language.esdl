@@ -8,21 +8,21 @@ module default {
     }
     displayNamePronunciation: str;
     
-    required sensitivity: Sensitivity {
+    required ownSensitivity: Sensitivity {
       annotation description := "The sensitivity of the language. This is a source / user settable.";
       default := Sensitivity.High;
     }
-#     index on (.sensitivity);
+#     index on (.ownSensitivity);
     
-#     property effectiveSensitivity := max(.projects.sensitivity) ?? .sensitivity;
+#     property sensitivity := max(.projects.sensitivity) ?? .ownSensitivity;
     trigger recalculateProjectSens after update for each do (
       update (
         select TranslationProject
         filter __new__ in .languages
           # Filter out projects without change, so modifiedAt isn't bumped
-          and .sensitivity != max(.languages.sensitivity) ?? Sensitivity.High
+          and .sensitivity != max(.languages.ownSensitivity) ?? Sensitivity.High
       )
-      set { sensitivity := max(.languages.sensitivity) ?? Sensitivity.High }
+      set { sensitivity := max(.languages.ownSensitivity) ?? Sensitivity.High }
     );
     
     required ethnologue: Ethnologue::Language {
@@ -74,7 +74,7 @@ module default {
     
     property isMember := exists .projects.isMember;
     
-    index on ((.name, .sensitivity, .leastOfThese, .isSignLanguage, .isDialect));
+    index on ((.name, .ownSensitivity, .leastOfThese, .isSignLanguage, .isDialect));
   }
   
   scalar type population extending int32 {
