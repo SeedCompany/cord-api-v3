@@ -14,15 +14,15 @@ module default {
     }
 #     index on (.ownSensitivity);
     
-#     property sensitivity := max(.projects.sensitivity) ?? .ownSensitivity;
+#     property sensitivity := max(.projects.ownSensitivity) ?? .ownSensitivity;
     trigger recalculateProjectSens after update for each do (
       update (
         select TranslationProject
         filter __new__ in .languages
           # Filter out projects without change, so modifiedAt isn't bumped
-          and .sensitivity != max(.languages.ownSensitivity) ?? Sensitivity.High
+          and .ownSensitivity != max(.languages.ownSensitivity) ?? Sensitivity.High
       )
-      set { sensitivity := max(.languages.ownSensitivity) ?? Sensitivity.High }
+      set { ownSensitivity := max(.languages.ownSensitivity) ?? Sensitivity.High }
     );
     
     required ethnologue: Ethnologue::Language {

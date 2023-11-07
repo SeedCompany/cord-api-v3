@@ -4,7 +4,7 @@ module default {
       constraint exclusive;
     };
     
-    required sensitivity: Sensitivity {
+    required ownSensitivity: Sensitivity {
       annotation description := "The sensitivity of the project. \
         This is user settable for internships and calculated for translation projects";
       default := Sensitivity.High;
@@ -57,7 +57,7 @@ module default {
     
     trigger confirmProjectSens after update for each do (
       assert(
-        __new__.sensitivity = max(__new__.languages.ownSensitivity) ?? Sensitivity.High,
+        __new__.ownSensitivity = max(__new__.languages.ownSensitivity) ?? Sensitivity.High,
         message := "TranslationProject sensitivity is automatically set to \
           (and required to be) the highest sensitivity Language engaged"
       )
@@ -76,7 +76,7 @@ module Project {
       on target delete delete source;
     };
     
-#     property sensitivity := .project.sensitivity;
+#     property sensitivity := .project.ownSensitivity;
     property isMember := .project.isMember;
   }
   
