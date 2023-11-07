@@ -99,6 +99,15 @@ module default {
       )
       set { ownSensitivity := max((.languages except removedLang).ownSensitivity) ?? Sensitivity.High }
     );
+    
+    trigger addProjectToContextOfLanguage after insert for each do (
+      update __new__.language.projectContext
+      set { projects += __new__.project }
+    );
+    trigger removeProjectFromContextOfLanguage after delete for each do (
+      update __old__.language.projectContext
+      set { projects -= __old__.project }
+    );
   }
   
   type InternshipEngagement extending Engagement {

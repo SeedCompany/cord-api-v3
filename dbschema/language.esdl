@@ -1,5 +1,5 @@
 module default {
-  type Language extending Resource, Mixin::Pinnable, Mixin::Taggable {
+  type Language extending Resource, Mixin::Pinnable, Mixin::Taggable, Project::HasContext {
     required name: str;
     index on (str_sortable(.name));
     
@@ -8,7 +8,7 @@ module default {
     }
     displayNamePronunciation: str;
     
-    required ownSensitivity: Sensitivity {
+    overloaded required ownSensitivity: Sensitivity {
       annotation description := "The sensitivity of the language. This is a source / user settable.";
       default := Sensitivity.High;
     }
@@ -30,8 +30,14 @@ module default {
     ));
     trigger connectEthnologue after insert for each do (
       insert Ethnologue::Language {
-        language := __new__
+        language := __new__,
+        projectContext := __new__.projectContext
       }
+    );
+    trigger matchEthnologueToOwnSens after insert, update for each do (
+      update __new__.ethnologue
+      filter .ownSensitivity != __new__.ownSensitivity
+      set { ownSensitivity := __new__.ownSensitivity }
     );
     
     required isDialect: bool {
@@ -74,9 +80,6 @@ module default {
       # Similar to previous version but avoids https://github.com/edgedb/edgedb/issues/5846
       select LanguageEngagement filter __source__ = .language
     );
-    multi link projects := .engagements.project;
-    
-    property isMember := exists .projects.isMember;
     
     index on ((.name, .ownSensitivity, .leastOfThese, .isSignLanguage, .isDialect));
   }
@@ -87,7 +90,7 @@ module default {
 }
  
 module Ethnologue {
-  type Language {
+  type Language extending Project::HasContext {
     required language: default::Language {
       on target delete delete source;
       constraint exclusive;
