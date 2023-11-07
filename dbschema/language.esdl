@@ -25,10 +25,14 @@ module default {
       set { ownSensitivity := max(.languages.ownSensitivity) ?? Sensitivity.High }
     );
     
-    required ethnologue: Ethnologue::Language {
-      default := (insert Ethnologue::Language);
-      on source delete delete target;
-    }
+    required single link ethnologue := assert_exists(assert_single(
+      .<language[is Ethnologue::Language]
+    ));
+    trigger connectEthnologue after insert for each do (
+      insert Ethnologue::Language {
+        language := __new__
+      }
+    );
     
     required isDialect: bool {
       default := false;
@@ -84,6 +88,11 @@ module default {
  
 module Ethnologue {
   type Language {
+    required language: default::Language {
+      on target delete delete source;
+      constraint exclusive;
+    };
+    
     code: code {
       constraint exclusive;
     };
