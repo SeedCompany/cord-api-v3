@@ -1,30 +1,43 @@
 module default {
-  type Language extending Resource, Mixin::Pinnable, Mixin::Taggable {
+  type Language extending Resource, Project::ContextAware, Mixin::Pinnable, Mixin::Taggable {
     required name: str;
+    index on (str_sortable(.name));
     
     required displayName: str {
       default := .name;
     }
     displayNamePronunciation: str;
     
-    required sensitivity: Sensitivity {
+    overloaded required ownSensitivity: Sensitivity {
       annotation description := "The sensitivity of the language. This is a source / user settable.";
       default := Sensitivity.High;
     }
-    property effectiveSensitivity := max(.projects.sensitivity) ?? .sensitivity;
+    
     trigger recalculateProjectSens after update for each do (
       update (
-        select __new__.projects
-        # Filter out projects without change, so modifiedAt isn't bumped
-        filter .sensitivity != max(.languages.sensitivity) ?? Sensitivity.High
+        select TranslationProject
+        filter __new__ in .languages
+          # Filter out projects without change, so modifiedAt isn't bumped
+          and .ownSensitivity != max(.languages.ownSensitivity) ?? Sensitivity.High
       )
-      set { sensitivity := max(.languages.sensitivity) ?? Sensitivity.High }
+      set { ownSensitivity := max(.languages.ownSensitivity) ?? Sensitivity.High }
     );
     
-    required ethnologue: Ethnologue::Language {
-      default := (insert Ethnologue::Language);
-      on source delete delete target;
-    }
+    required single link ethnologue := assert_exists(assert_single(
+      .<language[is Ethnologue::Language]
+    ));
+    trigger connectEthnologue after insert for each do (
+      insert Ethnologue::Language {
+        language := __new__,
+        ownSensitivity := __new__.ownSensitivity,
+        projectContext := __new__.projectContext
+      }
+    );
+    trigger matchEthnologueToOwnSens after update for each do (
+      update __new__.ethnologue
+      filter .ownSensitivity != __new__.ownSensitivity
+      set { ownSensitivity := __new__.ownSensitivity }
+    );
     
     required isDialect: bool {
       default := false;
@@ -66,9 +79,12 @@ module default {
       # Similar to previous version but avoids https://github.com/edgedb/edgedb/issues/5846
       select LanguageEngagement filter __source__ = .language
     );
-    multi link projects := .engagements.project;
     
-    property isMember := exists .projects.isMember;
+    overloaded link projectContext: Project::Context {
+      default := (insert Project::Context);
+    }
+    
+    index on ((.name, .ownSensitivity, .leastOfThese, .isSignLanguage, .isDialect));
   }
   
   scalar type population extending int32 {
@@ -77,7 +93,12 @@ module default {
 }
  
 module Ethnologue {
-  type Language {
+  type Language extending Project::ContextAware {
+    required language: default::Language {
+      on target delete delete source;
+      constraint exclusive;
+    };
+    
     code: code {
       constraint exclusive;
     };

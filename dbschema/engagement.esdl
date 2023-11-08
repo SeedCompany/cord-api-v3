@@ -1,5 +1,5 @@
 module default {
-  abstract type Engagement extending Project::Resource {
+  abstract type Engagement extending Project::Child {
     required status: Engagement::Status {
       default := Engagement::Status.InDevelopment;
     }
@@ -77,25 +77,37 @@ module default {
         createdAt := datetime_of_statement(),
         engagement := __new__,
         project := __new__.project,
+        projectContext := __new__.projectContext,
       }
     );
     
     trigger recalculateProjectSensOnInsert after insert for each do (
       update (
-        select __new__.project
-        # Filter out projects without change, so modifiedAt isn't bumped
-        filter .sensitivity != max(.languages.sensitivity) ?? Sensitivity.High
+        select TranslationProject
+        filter __new__ in .languages
+          # Filter out projects without change, so modifiedAt isn't bumped
+          and .ownSensitivity != max(.languages.ownSensitivity) ?? Sensitivity.High
       )
-      set { sensitivity := max(.languages.sensitivity) ?? Sensitivity.High }
+      set { ownSensitivity := max(.languages.ownSensitivity) ?? Sensitivity.High }
     );
     trigger recalculateProjectSensOnDelete after delete for each do (
       with removedLang := __old__.language
       update (
-        select __old__.project
-        # Filter out projects without change, so modifiedAt isn't bumped
-        filter .sensitivity != max((.languages except removedLang).sensitivity) ?? Sensitivity.High
+        select TranslationProject
+        filter __old__ in .languages
+          # Filter out projects without change, so modifiedAt isn't bumped
+          and .ownSensitivity != max((.languages except removedLang).ownSensitivity) ?? Sensitivity.High
       )
-      set { sensitivity := max((.languages except removedLang).sensitivity) ?? Sensitivity.High }
+      set { ownSensitivity := max((.languages except removedLang).ownSensitivity) ?? Sensitivity.High }
+    );
+    
+    trigger addProjectToContextOfLanguage after insert for each do (
+      update __new__.language.projectContext
+      set { projects += __new__.project }
+    );
+    trigger removeProjectFromContextOfLanguage after delete for each do (
+      update __old__.language.projectContext
+      set { projects -= __old__.project }
     );
   }
   
@@ -118,6 +130,7 @@ module default {
         createdAt := datetime_of_statement(),
         engagement := __new__,
         project := __new__.project,
+        projectContext := __new__.projectContext,
       }
     );
   }
@@ -150,7 +163,11 @@ module Engagement {
     NotRenewed,
   >;
   
-  abstract type Resource extending Project::Resource {
+  abstract type Child extending Project::Child {
+    annotation description := "\
+      A type that is a child of an engagement. \
+      It will always have a reference to a single engagement & project that it is under.";
+    
     required engagement: default::Engagement {
       readonly := true;
       on target delete delete source;

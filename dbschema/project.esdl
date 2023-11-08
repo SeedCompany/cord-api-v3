@@ -1,10 +1,10 @@
 module default {
-  abstract type Project extending Resource, Mixin::Pinnable, Mixin::Taggable {
+  abstract type Project extending Resource, Project::ContextAware, Mixin::Pinnable, Mixin::Taggable {
     required name: str {
       constraint exclusive;
     };
     
-    required sensitivity: Sensitivity {
+    overloaded required ownSensitivity: Sensitivity {
       annotation description := "The sensitivity of the project. \
         This is user settable for internships and calculated for translation projects";
       default := Sensitivity.High;
@@ -39,8 +39,7 @@ module default {
     };
     
     multi link members := .<project[is Project::Member];
-    single link membership := (select .members filter .user.id = global currentUserId limit 1);
-    property isMember := exists .membership;
+    single link membership := (select .members filter .user.id = global default::currentUserId limit 1);
     
 #     multi link engagements := .<project[is Engagement];
     property engagementTotal := count(.<project[is Engagement]);
@@ -49,6 +48,10 @@ module default {
 #       link marketingLocation: Location;
 #       link fieldRegion: FieldRegion;
 #       link rootDirectory: Directory;
+    
+    overloaded link projectContext: Project::Context {
+      default := (insert Project::Context);
+    }
   }
   
   type TranslationProject extending Project {
@@ -57,7 +60,7 @@ module default {
     
     trigger confirmProjectSens after update for each do (
       assert(
-        __new__.sensitivity = max(__new__.languages.sensitivity) ?? Sensitivity.High,
+        __new__.ownSensitivity = max(__new__.languages.ownSensitivity) ?? Sensitivity.High,
         message := "TranslationProject sensitivity is automatically set to \
           (and required to be) the highest sensitivity Language engaged"
       )
@@ -70,14 +73,52 @@ module default {
 }
  
 module Project {
-  abstract type Resource extending default::Resource {
+  abstract type Child extending default::Resource, ContextAware {
+    annotation description := "\
+      A type that is a child of a project. \
+      It will always have a reference to a single project that it is under.";
+    
     required project: default::Project {
       readonly := true;
       on target delete delete source;
     };
     
-    property sensitivity := .project.sensitivity;
-    property isMember := .project.isMember;
+    trigger enforceCorrectProjectContext after insert, update for each do (
+      assert(
+        __new__.project in __new__.projectContext.projects,
+        message := "Given project must be in given project context"
+      )
+    );
+  }
+  
+  abstract type ContextAware {
+    annotation description := "\
+      A type that has a project context, which allows it to be
+      aware of the sensitivity & current user membership for the associated context.";
+    
+    required projectContext: Context;
+    
+    optional ownSensitivity: default::Sensitivity {
+      annotation description := "\
+        A writable source of a sensitivity. \
+        This doesn't necessarily mean it be the same as .sensitivity, which is what is used for authorization.";
+    };
+    
+    required single property sensitivity :=
+      max(.projectContext.projects.ownSensitivity)
+      ?? (.ownSensitivity ?? default::Sensitivity.High);
+    required single property isMember := exists .projectContext.projects.membership;
+  }
+  
+  type Context {
+    annotation description := "\
+      A type that holds a reference to a list of projects. \
+      This allows multiple objects to hold a reference to the same list. \
+      For example, Language & Ethnologue::Language share the same context / project list.";
+    
+    multi projects: default::Project {
+      on target delete allow;
+    };
   }
   
   scalar type Step extending enum<
