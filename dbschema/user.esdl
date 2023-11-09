@@ -1,16 +1,14 @@
 module default {
-  type User extending Resource, Mixin::Pinnable, Mixin::Owned {
+  type User extending Resource, Mixin::Named, Mixin::Pinnable, Mixin::Owned {
     email: str {
       constraint exclusive;
     };
-    required realFirstName: str;
-    required realLastName: str;
-    required displayFirstName: str {
-      default := .realFirstName;
+    required name: str {
+      default := .firstName ++ " " ++ .lastName;
+      rewrite update using (.firstName ++ " " ++ .lastName);
     };
-    required displayLastName: str {
-      default := .realLastName;
-    };
+    required firstName: str;
+    required lastName: str;
     phone: str;
     timezone: str;
     about: str;
