@@ -1,8 +1,5 @@
 module default {
-  type Language extending Resource, Project::ContextAware, Mixin::Pinnable, Mixin::Taggable {
-    required name: str;
-    index on (str_sortable(.name));
-    
+  type Language extending Resource, Project::ContextAware, Mixin::Named, Mixin::Pinnable, Mixin::Taggable {
     required displayName: str {
       default := .name;
     }
