@@ -47,7 +47,7 @@ module default {
 #       link primaryLocation: Location;
 #       link marketingLocation: Location;
 #       link fieldRegion: FieldRegion;
-#       link rootDirectory: Directory;
+    link rootDirectory: Directory;
     
     overloaded link projectContext: Project::Context {
       default := (insert Project::Context);
