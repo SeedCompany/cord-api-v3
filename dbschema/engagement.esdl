@@ -59,7 +59,7 @@ module default {
       default := false;
     };
     paratextRegistryId: str;
-#     pnp: File;
+    pnp: File;
     
     sentPrintingDate: cal::local_date {
       annotation deprecated := "Legacy data";
@@ -122,8 +122,8 @@ module default {
     mentor: User;
 #     position: Engagement::InternPosition;
 #     multi methodologies: ProductMethodology;
-#     countryOfOrigin: Location;
-#     growthPlan: File;
+    countryOfOrigin: Location;
+    growthPlan: File;
     
     trigger connectCertificationCeremony after insert for each do (
       insert Engagement::CertificationCeremony {
