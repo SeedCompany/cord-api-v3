@@ -91,10 +91,12 @@ export const CypherFactory: FactoryProvider<Connection> = {
           routingTable,
         });
       } else if (
-        level === LogLevel.ERROR &&
-        message.includes(
-          'experienced a fatal error {"code":"ServiceUnavailable","name":"Neo4jError"}',
-        )
+        (level === LogLevel.WARNING &&
+          message.includes('Failed to connect to server')) ||
+        (level === LogLevel.ERROR &&
+          message.includes(
+            'experienced a fatal error {"code":"ServiceUnavailable","name":"Neo4jError"}',
+          ))
       ) {
         // Change connection failure messages to debug.
         // Connection failures are thrown so they will get logged
