@@ -1,6 +1,6 @@
 module default {
-  abstract type Project extending Resource, Project::ContextAware, Mixin::Pinnable, Mixin::Taggable {
-    required name: str {
+  abstract type Project extending Resource, Project::ContextAware, Mixin::Named, Mixin::Pinnable, Mixin::Taggable {
+    overloaded name {
       constraint exclusive;
     };
     
