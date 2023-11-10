@@ -5,5 +5,7 @@ module default {
     }
     
     required director: User;
+    
+    fieldRegions := .<fieldZone[is FieldRegion];
   }
 }
