@@ -24,7 +24,7 @@ export class AdminService implements OnApplicationBootstrap {
     const finishing = this.repo.finishing(() => this.setupRootObjects());
     // Wait for root object setup when running tests, else just let it run in
     // background and allow webserver to start.
-    if (this.config.jest || this.config.isRepl) {
+    if (this.config.jest) {
       await finishing;
     } else {
       finishing.catch((exception) => {
