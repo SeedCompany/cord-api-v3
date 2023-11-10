@@ -52,6 +52,14 @@ module default {
     overloaded link projectContext: Project::Context {
       default := (insert Project::Context);
     }
+    # Setting the new project as its own context should be the immediate next thing that happens
+    # So enforce that that happens (as best we can), and assert that the context is ever only itself.
+    trigger enforceContext after update for each do (
+      assert(
+        __new__ in __new__.projectContext.projects and count(__new__.projectContext.projects) = 1,
+        message := "A Project's own context should be itself (no more or less)"
+      )
+    );
   }
   
   type TranslationProject extending Project {
