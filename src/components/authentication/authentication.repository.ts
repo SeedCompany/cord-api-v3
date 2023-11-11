@@ -22,6 +22,33 @@ interface EmailToken {
 export class AuthenticationRepository {
   constructor(private readonly db: DatabaseService) {}
 
+  async waitForRootUserId() {
+    let rootId: ID | undefined;
+    await this.db.waitForConnection(
+      {
+        forever: true,
+        maxTimeout: { seconds: 10 },
+      },
+      async () => {
+        // Ensure the root user exists, if not keep waiting
+        rootId = await this.getRootUserId();
+      },
+    );
+    return rootId!;
+  }
+
+  async getRootUserId() {
+    const node = await this.db
+      .query()
+      .matchNode('node', 'RootUser')
+      .return<{ id: ID }>('node.id as id')
+      .first();
+    if (!node) {
+      throw new ServerException('Could not find root user');
+    }
+    return node.id;
+  }
+
   async saveSessionToken(token: string) {
     const result = await this.db
       .query()
