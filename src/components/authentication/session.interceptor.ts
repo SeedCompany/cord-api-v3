@@ -11,6 +11,7 @@ import {
   GqlContextType as GqlRequestType,
 } from '@nestjs/graphql';
 import { csv } from '@seedcompany/common';
+import { isUUID } from 'class-validator';
 import { Request } from 'express';
 import { GraphQLResolveInfo } from 'graphql';
 import { from, lastValueFrom } from 'rxjs';
@@ -47,7 +48,10 @@ export class SessionInterceptor implements NestInterceptor {
     } else if (type === 'http') {
       session = await this.handleHttp(executionContext);
     }
-    const currentUserId = session?.userId;
+    // TODO temporarily check if UUID before applying global.
+    // Once migration is complete this can be removed.
+    const currentUserId =
+      session?.userId && isUUID(session.userId) ? session.userId : undefined;
     return from(
       this.edgeDB.withOptions(
         (options) => options.withGlobals({ currentUserId }),
