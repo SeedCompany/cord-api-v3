@@ -7,6 +7,7 @@ import { Class } from 'type-fest';
 import { EdgeDBTransactionalMutationsInterceptor } from './edgedb-transactional-mutations.interceptor';
 import { EdgeDB } from './edgedb.service';
 import { Options } from './options';
+import { OptionsContext } from './options.context';
 import { Client } from './reexports';
 import { LuxonCalendarDateCodec, LuxonDateTimeCodec } from './temporal.codecs';
 import { TransactionContext } from './transaction.context';
@@ -25,13 +26,14 @@ import { TransactionContext } from './transaction.context';
         session_idle_transaction_timeout: Duration.from({ minutes: 5 }),
       }),
     },
+    OptionsContext,
     {
       provide: Client,
-      inject: ['DEFAULT_OPTIONS'],
-      useFactory: (options: Options) => {
+      inject: [OptionsContext],
+      useFactory: (options: OptionsContext) => {
         const client = createClient();
 
-        Object.assign(client, { options });
+        Object.assign(client, { options: options.current });
 
         registerCustomScalarCodecs(client, [
           LuxonDateTimeCodec,
