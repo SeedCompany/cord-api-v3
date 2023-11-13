@@ -1,18 +1,29 @@
 import { Module, OnModuleDestroy } from '@nestjs/common';
-import { createClient } from 'edgedb';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { createClient, Duration } from 'edgedb';
 import { KNOWN_TYPENAMES } from 'edgedb/dist/codecs/consts.js';
 import { ScalarCodec } from 'edgedb/dist/codecs/ifaces.js';
 import { Class } from 'type-fest';
+import { EdgeDBTransactionalMutationsInterceptor } from './edgedb-transactional-mutations.interceptor';
 import { EdgeDB } from './edgedb.service';
 import { Client } from './reexports';
 import { LuxonCalendarDateCodec, LuxonDateTimeCodec } from './temporal.codecs';
+import { TransactionContext } from './transaction.context';
 
 @Module({
   providers: [
     {
       provide: Client,
       useFactory: () => {
-        const client = createClient();
+        const client = createClient().withConfig({
+          // Bump from 1 min, as needed by test suite.
+          // It's probably because we open & do more with in the transaction
+          // than is expected by the library.
+          // I'm not worried about this, and it's possible this can be removed
+          // after migration if app overall is faster without Neo4j.
+          // eslint-disable-next-line @typescript-eslint/naming-convention
+          session_idle_transaction_timeout: Duration.from({ minutes: 5 }),
+        });
 
         registerCustomScalarCodecs(client, [
           LuxonDateTimeCodec,
@@ -23,6 +34,11 @@ import { LuxonCalendarDateCodec, LuxonDateTimeCodec } from './temporal.codecs';
       },
     },
     EdgeDB,
+    TransactionContext,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: EdgeDBTransactionalMutationsInterceptor,
+    },
   ],
   exports: [EdgeDB, Client],
 })

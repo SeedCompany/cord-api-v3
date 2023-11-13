@@ -3,11 +3,11 @@ import { Injectable } from '@nestjs/common';
 import { $, Executor } from 'edgedb';
 import { TypedEdgeQL } from './edgeql';
 import { InlineQueryCardinalityMap } from './generated-client/inline-queries';
-import { Client } from './reexports';
+import { TransactionContext } from './transaction.context';
 
 @Injectable()
 export class EdgeDB {
-  constructor(private readonly client: Client) {}
+  constructor(private readonly executor: TransactionContext) {}
 
   /** Run a query from an edgeql string */
   run<R>(query: TypedEdgeQL<null, R>): Promise<R>;
@@ -36,23 +36,22 @@ export class EdgeDB {
       }
       const exeMethod = cardinalityToExecutorMethod[cardinality];
 
-      // eslint-disable-next-line @typescript-eslint/return-await
-      return await this.client[exeMethod](query.query, args);
+      return await this.executor.current[exeMethod](query.query, args);
     }
 
     if (query.run) {
       // eslint-disable-next-line @typescript-eslint/return-await
-      return await query.run(this.client);
+      return await query.run(this.executor.current);
     }
 
     if (typeof query === 'function') {
       // eslint-disable-next-line @typescript-eslint/return-await
-      return await query(this.client, args);
+      return await query(this.executor.current, args);
     }
 
     // For REPL, as this is untyped and assumes many/empty cardinality
     if (typeof query === 'string') {
-      return await this.client.query(query, args);
+      return await this.executor.current.query(query, args);
     }
 
     throw new Error('Could not figure out how to run given query');
