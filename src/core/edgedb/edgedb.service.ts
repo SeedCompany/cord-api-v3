@@ -50,6 +50,12 @@ export class EdgeDB {
 
   /** Run a query from the query builder */
   run<R>(query: { run: (client: Executor) => Promise<R> }): Promise<R>;
+  run<Args extends object, R>(
+    query: {
+      run: (client: Executor, args: Args) => Promise<R>;
+    },
+    args: Args,
+  ): Promise<R>;
 
   async run(query: any, args?: any) {
     if (query instanceof TypedEdgeQL) {
@@ -64,7 +70,7 @@ export class EdgeDB {
 
     if (query.run) {
       // eslint-disable-next-line @typescript-eslint/return-await
-      return await query.run(this.executor.current);
+      return await query.run(this.executor.current, args);
     }
 
     if (typeof query === 'function') {
