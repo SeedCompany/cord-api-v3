@@ -1,17 +1,24 @@
 /* eslint-disable @typescript-eslint/unified-signatures */
 import { Injectable } from '@nestjs/common';
 import { $, Executor } from 'edgedb';
+import { retry, RetryOptions } from '~/common/retry';
 import { TypedEdgeQL } from './edgeql';
 import { InlineQueryCardinalityMap } from './generated-client/inline-queries';
 import { OptionsContext, OptionsFn } from './options.context';
+import { Client } from './reexports';
 import { TransactionContext } from './transaction.context';
 
 @Injectable()
 export class EdgeDB {
   constructor(
+    private readonly client: Client,
     private readonly executor: TransactionContext,
     private readonly optionsContext: OptionsContext,
   ) {}
+
+  async waitForConnection(options?: RetryOptions) {
+    await retry(() => this.client.ensureConnected(), options);
+  }
 
   /**
    * Apply options to the scope of the given function.
