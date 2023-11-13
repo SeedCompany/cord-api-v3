@@ -101,12 +101,16 @@ async function generateAll({
     options: {
       out: generatedClientDir,
       updateIgnoreFile: false,
-      target: 'mts',
+      target: 'ts',
       forceOverwrite: true,
     },
     client,
     root,
   });
+  addJsExtensionToQueryBuilderDeepPathsOfEdgedbLibrary(
+    project,
+    generatedClientDir,
+  );
   changeCustomScalarsInQueryBuilder(project, generatedClientDir);
   changeImplicitIDTypeToOurCustomScalar(project, generatedClientDir);
 
@@ -322,6 +326,21 @@ function changeScalarCodecsToOurCustomTypes() {
   }
 }
 
+function addJsExtensionToQueryBuilderDeepPathsOfEdgedbLibrary(
+  project: Project,
+  generatedClientDir: string,
+) {
+  for (const file of project.addSourceFilesAtPaths(generatedClientDir + '/*')) {
+    const declarations = [
+      ...file.getImportDeclarations(),
+      ...file.getExportDeclarations(),
+    ].filter((d) => d.getModuleSpecifierValue()?.startsWith('edgedb/'));
+    for (const decl of declarations) {
+      decl.setModuleSpecifier(decl.getModuleSpecifierValue()! + '.js');
+    }
+  }
+}
+
 function changeCustomScalarsInQueryBuilder(
   project: Project,
   generatedClientDir: string,
@@ -329,7 +348,7 @@ function changeCustomScalarsInQueryBuilder(
   // Change $uuid scalar type alias to use ID type instead of string
   for (const scalars of groupBy(customScalars.values(), (s) => s.module)) {
     const moduleFile = project.addSourceFileAtPath(
-      `${generatedClientDir}/modules/${scalars[0]!.module}.mts`,
+      `${generatedClientDir}/modules/${scalars[0]!.module}.ts`,
     );
     for (const scalar of scalars) {
       const typeAlias = moduleFile.getTypeAliasOrThrow(`$${scalar.type}`);
@@ -349,7 +368,7 @@ function changeImplicitIDTypeToOurCustomScalar(
 ) {
   // Change implicit return shapes that are just the id to be ID type.
   const typesystem = project.addSourceFileAtPath(
-    `${generatedClientDir}/typesystem.mts`,
+    `${generatedClientDir}/typesystem.ts`,
   );
   addCustomScalarImports(typesystem, [customScalars.get('ID')!]);
   typesystem.replaceWithText(
