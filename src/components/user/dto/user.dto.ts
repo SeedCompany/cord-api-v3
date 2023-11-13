@@ -70,12 +70,12 @@ export class User extends PinnableResource {
   displayLastName: SecuredString;
 
   @Field()
-  phone: SecuredString;
+  phone: SecuredStringNullable;
 
   timezone: SecuredString;
 
   @Field()
-  about: SecuredString;
+  about: SecuredStringNullable;
 
   @Field()
   status: SecuredUserStatus;
@@ -84,7 +84,7 @@ export class User extends PinnableResource {
   roles: SecuredRoles;
 
   @Field()
-  title: SecuredString;
+  title: SecuredStringNullable;
 }
 
 @ObjectType({
