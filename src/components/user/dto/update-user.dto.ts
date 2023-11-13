@@ -27,15 +27,15 @@ export abstract class UpdateUser {
   @NameField({ nullable: true })
   readonly displayLastName?: string;
 
-  @Field({ nullable: true })
-  readonly phone?: string;
+  @Field(() => String, { nullable: true })
+  readonly phone?: string | null;
 
   @Field({ nullable: true })
   @IsIanaTimezone()
   readonly timezone?: string;
 
-  @Field({ nullable: true })
-  readonly about?: string;
+  @Field(() => String, { nullable: true })
+  readonly about?: string | null;
 
   @Field(() => UserStatus, { nullable: true })
   readonly status?: UserStatus;
@@ -44,8 +44,8 @@ export abstract class UpdateUser {
   @Transform(({ value }) => uniq(value))
   readonly roles?: Role[];
 
-  @Field({ nullable: true })
-  readonly title?: string;
+  @Field(() => String, { nullable: true })
+  readonly title?: string | null;
 }
 
 @InputType()

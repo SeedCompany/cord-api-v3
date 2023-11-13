@@ -24,15 +24,15 @@ export abstract class CreatePerson {
   @NameField()
   readonly displayLastName: string;
 
-  @Field({ nullable: true })
-  readonly phone?: string;
+  @Field(() => String, { nullable: true })
+  readonly phone?: string | null;
 
   @Field({ nullable: true })
   @IsIanaTimezone()
   readonly timezone?: string = 'America/Chicago';
 
-  @Field({ nullable: true })
-  readonly about?: string;
+  @Field(() => String, { nullable: true })
+  readonly about?: string | null;
 
   @Field(() => UserStatus, { nullable: true })
   readonly status?: UserStatus;
@@ -41,8 +41,8 @@ export abstract class CreatePerson {
   @Transform(({ value }) => uniq(value))
   readonly roles?: Role[];
 
-  @Field({ nullable: true })
-  readonly title?: string;
+  @Field(() => String, { nullable: true })
+  readonly title?: string | null;
 }
 
 @InputType()
