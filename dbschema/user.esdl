@@ -12,7 +12,9 @@ module default {
       default := .realLastName;
     };
     phone: str;
-    timezone: str;
+    required timezone: str {
+      default := 'America/Chicago';
+    };
     about: str;
     required status: User::Status {
       default := User::Status.Active;
