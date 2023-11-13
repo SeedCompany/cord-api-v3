@@ -3,11 +3,27 @@ import { Injectable } from '@nestjs/common';
 import { $, Executor } from 'edgedb';
 import { TypedEdgeQL } from './edgeql';
 import { InlineQueryCardinalityMap } from './generated-client/inline-queries';
+import { OptionsContext, OptionsFn } from './options.context';
 import { TransactionContext } from './transaction.context';
 
 @Injectable()
 export class EdgeDB {
-  constructor(private readonly executor: TransactionContext) {}
+  constructor(
+    private readonly executor: TransactionContext,
+    private readonly optionsContext: OptionsContext,
+  ) {}
+
+  /**
+   * Apply options to the scope of the given function.
+   * @example
+   * await EdgeDB.withOptions((options) => options.withGlobals({ ... }), async () => {
+   *   // Queries have the options applied
+   *   await EdgeDB.run(...);
+   * });
+   */
+  async withOptions<R>(applyOptions: OptionsFn, runWith: () => Promise<R>) {
+    return await this.optionsContext.withOptions(applyOptions, runWith);
+  }
 
   /** Run a query from an edgeql string */
   run<R>(query: TypedEdgeQL<null, R>): Promise<R>;
