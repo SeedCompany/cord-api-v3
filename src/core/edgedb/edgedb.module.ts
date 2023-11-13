@@ -6,6 +6,7 @@ import { ScalarCodec } from 'edgedb/dist/codecs/ifaces.js';
 import { Class } from 'type-fest';
 import { EdgeDBTransactionalMutationsInterceptor } from './edgedb-transactional-mutations.interceptor';
 import { EdgeDB } from './edgedb.service';
+import { Options } from './options';
 import { Client } from './reexports';
 import { LuxonCalendarDateCodec, LuxonDateTimeCodec } from './temporal.codecs';
 import { TransactionContext } from './transaction.context';
@@ -13,17 +14,24 @@ import { TransactionContext } from './transaction.context';
 @Module({
   providers: [
     {
+      provide: 'DEFAULT_OPTIONS',
+      useValue: Options.defaults().withConfig({
+        // Bump from 1 min, as needed by test suite.
+        // It's probably because we open & do more with in the transaction
+        // than is expected by the library.
+        // I'm not worried about this, and it's possible this can be removed
+        // after migration if app overall is faster without Neo4j.
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        session_idle_transaction_timeout: Duration.from({ minutes: 5 }),
+      }),
+    },
+    {
       provide: Client,
-      useFactory: () => {
-        const client = createClient().withConfig({
-          // Bump from 1 min, as needed by test suite.
-          // It's probably because we open & do more with in the transaction
-          // than is expected by the library.
-          // I'm not worried about this, and it's possible this can be removed
-          // after migration if app overall is faster without Neo4j.
-          // eslint-disable-next-line @typescript-eslint/naming-convention
-          session_idle_transaction_timeout: Duration.from({ minutes: 5 }),
-        });
+      inject: ['DEFAULT_OPTIONS'],
+      useFactory: (options: Options) => {
+        const client = createClient();
+
+        Object.assign(client, { options });
 
         registerCustomScalarCodecs(client, [
           LuxonDateTimeCodec,
