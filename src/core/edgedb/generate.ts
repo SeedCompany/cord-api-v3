@@ -124,15 +124,6 @@ async function generateAll({
   const schemaFile = project.addSourceFileAtPath(generatedSchemaFile);
   addCustomScalarImports(schemaFile, customScalars.values());
 
-  // Fix the type generated from
-  // Project::Resource extending default::Resource
-  schemaFile.addTypeAlias({ name: 'DefaultResource', type: 'Resource' });
-  schemaFile
-    .getModule('Project')
-    ?.getInterface('Resource')
-    ?.removeExtends(0)
-    .addExtends('DefaultResource');
-
   await generateQueryFiles({ client, root });
   fixCustomScalarImportsInGeneratedEdgeqlFiles(project);
 
