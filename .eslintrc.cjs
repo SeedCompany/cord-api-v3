@@ -184,6 +184,13 @@ const config = {
         '@typescript-eslint/method-signature-style': 'off',
       },
     },
+    {
+      files: './src/core/edgedb/generator/*.ts',
+      rules: {
+        // Scripts can use the console for logging
+        'no-console': 'off',
+      },
+    },
   ],
 };
 

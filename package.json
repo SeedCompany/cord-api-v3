@@ -21,7 +21,7 @@
     "start:prod": "node --experimental-loader=extensionless --enable-source-maps dist/main",
     "repl": "yarn start --entryFile repl",
     "gen-id": "ts-node -Te \"let g = require('./src/common/generate-id').generateId; for (let i = 0, l = process.argv[1] || 1; i < l; i++) { g().then(console.log) }\"",
-    "edgedb:gen": "node --loader ts-node/esm/transpile-only --experimental-loader=extensionless src/core/edgedb/generate.ts",
+    "edgedb:gen": "node --loader ts-node/esm/transpile-only --experimental-loader=extensionless src/core/edgedb/generator/run.ts",
     "lint": "eslint --ext .ts,.tsx --fix --max-warnings 0 .",
     "test": "yarn test:base --selectProjects Unit",
     "test:e2e": "yarn test:base --selectProjects E2E",
