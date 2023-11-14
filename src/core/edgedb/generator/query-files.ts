@@ -67,10 +67,7 @@ const pathsNeedingScalarImportFix = new Set<string>();
 // Patch into writeFile to check for custom scalar imports that will need to be fixed.
 adapter.fs.writeFile = new Proxy(adapter.fs.writeFile, {
   apply(target: any, thisArg: any, [path, content]: any[]) {
-    if (
-      !path.includes('generated-client') &&
-      content.match(customScalarImportCheck)
-    ) {
+    if (path.endsWith('.edgeql.ts') && content.match(customScalarImportCheck)) {
       pathsNeedingScalarImportFix.add(path);
     }
     return Reflect.apply(target, thisArg, [path, content]);
