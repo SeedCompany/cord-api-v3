@@ -23,6 +23,7 @@ export async function generateQueryBuilder({
   addJsExtensionDeepPathsOfEdgedbLibrary(qbDir);
   changeCustomScalars(qbDir);
   changeImplicitIDType(qbDir);
+  allowOrderingByEnums(qbDir);
 }
 
 function addJsExtensionDeepPathsOfEdgedbLibrary(qbDir: Directory) {
@@ -62,4 +63,12 @@ function changeImplicitIDType(qbDir: Directory) {
   typesystem.replaceWithText(
     typesystem.getFullText().replaceAll('{ id: string }', '{ id: ID }'),
   );
+}
+
+function allowOrderingByEnums(qbDir: Directory) {
+  const file = qbDir.getSourceFileOrThrow('select.ts');
+  file
+    .getTypeAliasOrThrow('OrderByExpr')
+    .setType('TypeSet<EnumType | ScalarType | ObjectType>');
+  file.fixMissingImports();
 }

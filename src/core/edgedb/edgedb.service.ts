@@ -1,17 +1,24 @@
 /* eslint-disable @typescript-eslint/unified-signatures */
 import { Injectable } from '@nestjs/common';
 import { $, Executor } from 'edgedb';
+import { retry, RetryOptions } from '~/common/retry';
 import { TypedEdgeQL } from './edgeql';
 import { InlineQueryCardinalityMap } from './generated-client/inline-queries';
 import { OptionsContext, OptionsFn } from './options.context';
+import { Client } from './reexports';
 import { TransactionContext } from './transaction.context';
 
 @Injectable()
 export class EdgeDB {
   constructor(
+    private readonly client: Client,
     private readonly executor: TransactionContext,
     private readonly optionsContext: OptionsContext,
   ) {}
+
+  async waitForConnection(options?: RetryOptions) {
+    await retry(() => this.client.ensureConnected(), options);
+  }
 
   /**
    * Apply options to the scope of the given function.
@@ -43,6 +50,12 @@ export class EdgeDB {
 
   /** Run a query from the query builder */
   run<R>(query: { run: (client: Executor) => Promise<R> }): Promise<R>;
+  run<Args extends object, R>(
+    query: {
+      run: (client: Executor, args: Args) => Promise<R>;
+    },
+    args: Args,
+  ): Promise<R>;
 
   async run(query: any, args?: any) {
     if (query instanceof TypedEdgeQL) {
@@ -57,7 +70,7 @@ export class EdgeDB {
 
     if (query.run) {
       // eslint-disable-next-line @typescript-eslint/return-await
-      return await query.run(this.executor.current);
+      return await query.run(this.executor.current, args);
     }
 
     if (typeof query === 'function') {
