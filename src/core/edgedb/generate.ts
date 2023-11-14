@@ -1,10 +1,10 @@
 /* eslint-disable no-console */
-import { generateQueryBuilder } from '@edgedb/generate/dist/edgeql-js.js';
+import { generateQueryBuilder as runQueryBuilderGenerator } from '@edgedb/generate/dist/edgeql-js.js';
 import {
   headerComment,
   scalarToLiteralMapping,
 } from '@edgedb/generate/dist/genutil.js';
-import { runInterfacesGenerator as generateTsSchema } from '@edgedb/generate/dist/interfaces.js';
+import { runInterfacesGenerator } from '@edgedb/generate/dist/interfaces.js';
 import {
   generateFiles,
   stringifyImports,
@@ -17,6 +17,7 @@ import { KNOWN_TYPENAMES } from 'edgedb/dist/codecs/consts.js';
 import { Cardinality } from 'edgedb/dist/ifaces.js';
 import { $ as $$ } from 'execa';
 import {
+  Directory,
   IndentationText,
   Node,
   Project,
@@ -62,6 +63,12 @@ adapter.fs.writeFile = new Proxy(adapter.fs.writeFile, {
   },
 });
 
+interface GeneratorParams {
+  client: Client;
+  root: Directory;
+  edgedbDir: Directory;
+}
+
 (async () => {
   const project = createTsMorphProject();
   const client = createClient({
@@ -69,8 +76,14 @@ adapter.fs.writeFile = new Proxy(adapter.fs.writeFile, {
   });
   await client.ensureConnected();
 
+  const params: GeneratorParams = {
+    client,
+    root: project.addDirectoryAtPath(''),
+    edgedbDir: project.addDirectoryAtPath('src/core/edgedb'),
+  };
+
   try {
-    await generateAll({ client, project });
+    await generateAll(params);
   } finally {
     await client.close();
   }
@@ -83,69 +96,62 @@ adapter.fs.writeFile = new Proxy(adapter.fs.writeFile, {
   process.exit(1);
 });
 
-async function generateAll({
-  client,
-  project,
-}: {
-  client: Client;
-  project: Project;
-}) {
-  const root = process.cwd();
-  const edgedbDir = 'src/core/edgedb';
-  const generatedClientDir = `${edgedbDir}/generated-client`;
-  const generatedSchemaFile = `${edgedbDir}/schema.ts`;
-
+async function generateAll(params: GeneratorParams) {
   changeScalarCodecsToOurCustomTypes();
+  await generateQueryBuilder(params);
+  await generateSchema(params);
+  await generateQueryFiles(params);
+  await generateInlineQueries(params);
+}
 
-  await generateQueryBuilder({
+async function generateQueryBuilder({
+  client,
+  root,
+  edgedbDir,
+}: GeneratorParams) {
+  const qbDir = edgedbDir.addDirectoryAtPath('generated-client');
+  await runQueryBuilderGenerator({
     options: {
-      out: generatedClientDir,
+      out: qbDir.getPath(),
       updateIgnoreFile: false,
       target: 'ts',
       forceOverwrite: true,
     },
     client,
-    root,
+    root: root.getPath(),
   });
-  addJsExtensionToQueryBuilderDeepPathsOfEdgedbLibrary(
-    project,
-    generatedClientDir,
-  );
-  changeCustomScalarsInQueryBuilder(project, generatedClientDir);
-  changeImplicitIDTypeToOurCustomScalar(project, generatedClientDir);
+  addJsExtensionToQueryBuilderDeepPathsOfEdgedbLibrary(qbDir);
+  changeCustomScalarsInQueryBuilder(qbDir);
+  changeImplicitIDTypeToOurCustomScalar(qbDir);
+}
 
-  await generateTsSchema({
+async function generateSchema({ client, root, edgedbDir }: GeneratorParams) {
+  const schemaFile = edgedbDir.addSourceFileAtPath('schema.ts');
+  await runInterfacesGenerator({
     options: {
-      file: generatedSchemaFile,
+      file: schemaFile.getFilePath(),
     },
     client,
-    root,
+    root: root.getPath(),
   });
-  const schemaFile = project.addSourceFileAtPath(generatedSchemaFile);
   addCustomScalarImports(schemaFile, customScalars.values());
-
-  await generateQueryFiles({ client, root });
-  fixCustomScalarImportsInGeneratedEdgeqlFiles(project);
-
-  await generateInlineQueries({ client, project, root });
 }
 
 async function generateInlineQueries({
   client,
-  project,
   root,
 }: {
   client: Client;
-  project: Project;
-  root: string;
+  root: Directory;
 }) {
   console.log('Generating queries for edgeql() calls...');
 
   const grepForShortList = await $$({
     reject: false,
+    cwd: root.getPath(),
   })`grep -lR edgeql src --exclude-dir=src/core/edgedb`;
   const shortList = grepForShortList.stdout
-    ? project.addSourceFilesAtPaths(grepForShortList.stdout.split('\n'))
+    ? root.addSourceFilesAtPaths(grepForShortList.stdout.split('\n'))
     : [];
 
   const queries =
@@ -179,7 +185,7 @@ async function generateInlineQueries({
       }),
     ) ?? [];
 
-  const inlineQueriesFile = project.createSourceFile(
+  const inlineQueriesFile = root.createSourceFile(
     'src/core/edgedb/generated-client/inline-queries.ts',
     `import type { TypedEdgeQL } from '../edgeql';`,
     { overwrite: true },
@@ -200,7 +206,7 @@ async function generateInlineQueries({
     seen.add(query);
 
     const path = adapter.path.posix.relative(
-      root,
+      root.getPath(),
       call.getSourceFile().getFilePath(),
     );
     const lineNumber = call.getStartLineNumber();
@@ -264,13 +270,8 @@ async function generateInlineQueries({
   });
 }
 
-async function generateQueryFiles({
-  client,
-  root,
-}: {
-  client: Client;
-  root: string;
-}) {
+async function generateQueryFiles({ client, root: rootDir }: GeneratorParams) {
+  const root = rootDir.getPath();
   const srcDir = adapter.path.join(root, 'src');
   const files = await adapter.walk(srcDir, {
     match: [/[^/]\.edgeql$/],
@@ -301,6 +302,8 @@ async function generateQueryFiles({
   }
   console.log(`Generating files for following queries:`);
   await Promise.all(files.map(generateFilesForQuery));
+
+  fixCustomScalarImportsInGeneratedEdgeqlFiles(rootDir);
 }
 
 function changeScalarCodecsToOurCustomTypes() {
@@ -318,10 +321,9 @@ function changeScalarCodecsToOurCustomTypes() {
 }
 
 function addJsExtensionToQueryBuilderDeepPathsOfEdgedbLibrary(
-  project: Project,
-  generatedClientDir: string,
+  qbDir: Directory,
 ) {
-  for (const file of project.addSourceFilesAtPaths(generatedClientDir + '/*')) {
+  for (const file of qbDir.addSourceFilesAtPaths('*')) {
     const declarations = [
       ...file.getImportDeclarations(),
       ...file.getExportDeclarations(),
@@ -332,14 +334,11 @@ function addJsExtensionToQueryBuilderDeepPathsOfEdgedbLibrary(
   }
 }
 
-function changeCustomScalarsInQueryBuilder(
-  project: Project,
-  generatedClientDir: string,
-) {
+function changeCustomScalarsInQueryBuilder(qbDir: Directory) {
   // Change $uuid scalar type alias to use ID type instead of string
   for (const scalars of groupBy(customScalars.values(), (s) => s.module)) {
-    const moduleFile = project.addSourceFileAtPath(
-      `${generatedClientDir}/modules/${scalars[0]!.module}.ts`,
+    const moduleFile = qbDir.addSourceFileAtPath(
+      `modules/${scalars[0]!.module}.ts`,
     );
     for (const scalar of scalars) {
       const typeAlias = moduleFile.getTypeAliasOrThrow(`$${scalar.type}`);
@@ -353,25 +352,20 @@ function changeCustomScalarsInQueryBuilder(
   }
 }
 
-function changeImplicitIDTypeToOurCustomScalar(
-  project: Project,
-  generatedClientDir: string,
-) {
+function changeImplicitIDTypeToOurCustomScalar(qbDir: Directory) {
   // Change implicit return shapes that are just the id to be ID type.
-  const typesystem = project.addSourceFileAtPath(
-    `${generatedClientDir}/typesystem.ts`,
-  );
+  const typesystem = qbDir.addSourceFileAtPath(`typesystem.ts`);
   addCustomScalarImports(typesystem, [customScalars.get('ID')!]);
   typesystem.replaceWithText(
     typesystem.getFullText().replaceAll('{ id: string }', '{ id: ID }'),
   );
 }
 
-function fixCustomScalarImportsInGeneratedEdgeqlFiles(project: Project) {
+function fixCustomScalarImportsInGeneratedEdgeqlFiles(root: Directory) {
   const toRemove = new Set(customScalars.keys());
   for (const path of pathsNeedingScalarImportFix) {
     const toAdd = new Set<CustomScalar>();
-    const file = project.addSourceFileAtPath(path);
+    const file = root.addSourceFileAtPath(path);
     file
       .getImportDeclarationOrThrow('edgedb')
       .getNamedImports()
