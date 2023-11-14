@@ -7,7 +7,9 @@ export async function generateSchema({
   root,
   edgedbDir,
 }: GeneratorParams) {
-  const schemaFile = edgedbDir.addSourceFileAtPath('schema.ts');
+  const schemaFile = edgedbDir.createSourceFile('schema.ts', undefined, {
+    overwrite: true,
+  });
   await runInterfacesGenerator({
     options: {
       file: schemaFile.getFilePath(),
@@ -15,5 +17,6 @@ export async function generateSchema({
     client,
     root: root.getPath(),
   });
+  await schemaFile.refreshFromFileSystem();
   addCustomScalarImports(schemaFile, customScalars.values());
 }

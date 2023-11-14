@@ -9,7 +9,7 @@ export async function generateQueryBuilder({
   root,
   edgedbDir,
 }: GeneratorParams) {
-  const qbDir = edgedbDir.addDirectoryAtPath('generated-client');
+  const qbDir = edgedbDir.createDirectory('generated-client');
   await runQueryBuilderGenerator({
     options: {
       out: qbDir.getPath(),
