@@ -6,6 +6,9 @@ runs:
     - name: Setup EdgeDB
       uses: edgedb/setup-edgedb@v1
 
+    - run: edgedb migrate --dev-mode
+      shell: bash
+
     - name: Generate EdgeDB TS files
       shell: bash
       run: yarn edgedb:gen
