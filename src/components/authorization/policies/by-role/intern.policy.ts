@@ -29,7 +29,7 @@ import { inherit, member, Policy, Role } from '../util';
       p.rootDirectory.edit,
       p.many(
         'departmentId',
-        'marketingLocation',
+        'marketingCountryOverride',
         'marketingRegionOverride',
         'fieldRegion',
       ).none,

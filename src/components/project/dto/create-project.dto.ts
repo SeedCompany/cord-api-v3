@@ -43,10 +43,11 @@ export abstract class CreateProject {
   readonly otherLocationIds?: ID[];
 
   @IdField({
-    description: 'A marketing primary location ID',
+    description:
+      'A Country Location ID for marketing (overriding the primary location)',
     nullable: true,
   })
-  readonly marketingLocationId?: ID;
+  readonly marketingCountryOverrideId?: ID;
 
   @IdField({
     description: 'A marketing region override location ID',

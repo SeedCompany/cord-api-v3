@@ -130,10 +130,10 @@ export class ProjectService {
       'One of the other locations was not found',
     );
     await this.validateOtherResourceId(
-      input.marketingLocationId,
+      input.marketingCountryOverrideId,
       'Location',
-      'marketingLocationId',
-      'Marketing location not found',
+      'marketingCountryOverrideId',
+      'Marketing Country Override not found',
     );
     await this.validateOtherResourceId(
       input.marketingRegionOverrideId,

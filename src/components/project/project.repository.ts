@@ -102,8 +102,8 @@ export class ProjectRepository extends CommonRepository {
         ])
         .optionalMatch([
           node('node'),
-          relation('out', '', 'marketingLocation', ACTIVE),
-          node('marketingLocation', 'Location'),
+          relation('out', '', 'marketingCountryOverride', ACTIVE),
+          node('marketingCountryOverride', 'Location'),
         ])
         .optionalMatch([
           node('node'),
@@ -135,7 +135,7 @@ export class ProjectRepository extends CommonRepository {
             pinned: 'exists((:User { id: $requestingUser })-[:pinned]->(node))',
             rootDirectory: 'rootDirectory.id',
             primaryLocation: 'primaryLocation.id',
-            marketingLocation: 'marketingLocation.id',
+            marketingCountryOverride: 'marketingCountryOverride.id',
             fieldRegion: 'fieldRegion.id',
             owningOrganization: 'organization.id',
             engagementTotal: 'engagementTotal',
@@ -161,7 +161,7 @@ export class ProjectRepository extends CommonRepository {
     const {
       primaryLocationId,
       fieldRegionId,
-      marketingLocationId,
+      marketingCountryOverrideId,
       marketingRegionOverrideId,
       otherLocationIds,
       type,
@@ -200,7 +200,7 @@ export class ProjectRepository extends CommonRepository {
           fieldRegion: ['FieldRegion', fieldRegionId],
           primaryLocation: ['Location', primaryLocationId],
           otherLocations: ['Location', otherLocationIds],
-          marketingLocation: ['Location', marketingLocationId],
+          marketingCountryOverride: ['Location', marketingCountryOverrideId],
           marketingRegionOverride: ['Location', marketingRegionOverrideId],
           owningOrganization: ['Organization', this.config.defaultOrg.id],
         }),
@@ -220,7 +220,7 @@ export class ProjectRepository extends CommonRepository {
   ) {
     const {
       primaryLocationId,
-      marketingLocationId,
+      marketingCountryOverrideId,
       marketingRegionOverrideId,
       fieldRegionId,
       ...simpleChanges
@@ -264,17 +264,17 @@ export class ProjectRepository extends CommonRepository {
       };
     }
 
-    if (marketingLocationId !== undefined) {
+    if (marketingCountryOverrideId !== undefined) {
       await this.updateRelation(
-        'marketingLocation',
+        'marketingCountryOverride',
         'Location',
         existing.id,
-        marketingLocationId,
+        marketingCountryOverrideId,
         'Project',
       );
       result = {
         ...result,
-        marketingLocation: marketingLocationId,
+        marketingCountryOverride: marketingCountryOverrideId,
       };
     }
 
