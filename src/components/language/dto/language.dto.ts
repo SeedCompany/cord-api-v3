@@ -14,12 +14,13 @@ import {
   Resource,
   ResourceRelationsShape,
   SecuredBoolean,
-  SecuredDate,
-  SecuredInt,
+  SecuredDateNullable,
+  SecuredIntNullable,
   SecuredProperty,
   SecuredPropertyList,
   SecuredProps,
   SecuredString,
+  SecuredStringNullable,
   Sensitivity,
   SensitivityField,
   SetUnsecuredType,
@@ -56,7 +57,7 @@ export class EthnologueLanguage {
   @Field({
     description: 'ISO 639-3 code',
   })
-  readonly code: SecuredString;
+  readonly code: SecuredStringNullable;
 
   @Field({
     description: stripIndent`
@@ -64,13 +65,13 @@ export class EthnologueLanguage {
       Used until official ethnologue code is created by SIL.
     `,
   })
-  readonly provisionalCode: SecuredString;
+  readonly provisionalCode: SecuredStringNullable;
 
   @NameField()
-  readonly name: SecuredString;
+  readonly name: SecuredStringNullable;
 
   @Field()
-  readonly population: SecuredInt;
+  readonly population: SecuredIntNullable;
 
   @Field()
   readonly canDelete: boolean;
@@ -113,7 +114,7 @@ export class Language extends Interfaces {
   @Field({
     description: 'The pronunciation of the display name',
   })
-  readonly displayNamePronunciation: SecuredString;
+  readonly displayNamePronunciation: SecuredStringNullable;
 
   @Field({
     description: `Whether this language is a dialect.`,
@@ -128,7 +129,7 @@ export class Language extends Interfaces {
   @Field({
     description: `An override for the ethnologue's population`,
   })
-  readonly populationOverride: SecuredInt;
+  readonly populationOverride: SecuredIntNullable;
 
   @Field({
     description: stripIndent`
@@ -138,7 +139,7 @@ export class Language extends Interfaces {
     `,
   })
   @DbUnique('RegistryOfDialectsCode')
-  readonly registryOfDialectsCode: SecuredString;
+  readonly registryOfDialectsCode: SecuredStringNullable;
 
   // consider making object
   @Field({
@@ -149,13 +150,13 @@ export class Language extends Interfaces {
   @Field({
     description: `Reason why this language is a part of the Least of These program.`,
   })
-  readonly leastOfTheseReason: SecuredString;
+  readonly leastOfTheseReason: SecuredStringNullable;
 
   @Field()
-  readonly signLanguageCode: SecuredString;
+  readonly signLanguageCode: SecuredStringNullable;
 
   @Field()
-  readonly sponsorEstimatedEndDate: SecuredDate;
+  readonly sponsorEstimatedEndDate: SecuredDateNullable;
 
   @SensitivityField()
   readonly sensitivity: Sensitivity;

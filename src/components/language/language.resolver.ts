@@ -17,7 +17,7 @@ import {
   ListArg,
   LoggedInSession,
   SecuredDate,
-  SecuredInt,
+  SecuredIntNullable,
   Session,
   viewOfChangeset,
 } from '../../common';
@@ -71,14 +71,14 @@ export class LanguageResolver {
       : undefined;
   }
 
-  @ResolveField(() => SecuredInt, {
+  @ResolveField(() => SecuredIntNullable, {
     description: stripIndent`
       The language's population.
       This is either the \`populationOverride\` if defined
       or the ethnologue population as a fallback.
     `,
   })
-  population(@Parent() language: Language): SecuredInt {
+  population(@Parent() language: Language): SecuredIntNullable {
     // Only check this prop so we don't return different numbers based on
     // authorization. This seems the most sane, but could double check with business.
     const { canRead, value } = language.populationOverride;
