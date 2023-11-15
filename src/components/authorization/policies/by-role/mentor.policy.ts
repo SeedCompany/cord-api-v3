@@ -28,7 +28,7 @@ import { inherit, member, Policy, Role } from '../util';
   r.Project.when(member)
     .read.specifically((p) => [
       p.rootDirectory.edit,
-      p.many('departmentId', 'marketingLocation', 'fieldRegion').none,
+      p.many('departmentId', 'marketingLocationOverride', 'fieldRegion').none,
     ])
     .children((c) => c.posts.edit),
   r.ProjectMember.when(member).read,
