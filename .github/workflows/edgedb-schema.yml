@@ -1,0 +1,12 @@
+name: EdgeDB Schema
+on:
+  pull_request:
+
+jobs:
+  clean:
+    name: Migration In Sync
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: edgedb/setup-edgedb@v1
+      - run: edgedb migration status
