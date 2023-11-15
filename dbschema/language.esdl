@@ -72,11 +72,13 @@ module default {
       or not exists .firstScriptureEngagement
     );
     
-    multi link engagements := (
+    engagements := (
       # Similar to previous version but avoids https://github.com/edgedb/edgedb/issues/5846
       select LanguageEngagement filter __source__ = .language
     );
-    
+    projects := (
+      select TranslationProject filter __source__ = .languages
+    );
     overloaded link projectContext: Project::Context {
       default := (insert Project::Context);
     }
