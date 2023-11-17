@@ -11,7 +11,7 @@ import { e, EdgeDB, isExclusivityViolation } from '~/core/edgedb';
 import { CreatePerson, User, UserListInput } from './dto';
 import { UserRepository } from './user.repository';
 
-const hydrate = e.shape(e.default.User, (user) => ({
+const hydrate = e.shape(e.User, (user) => ({
   ...user['*'],
   // Other links if needed
 }));
@@ -23,7 +23,7 @@ export class UserEdgedbRepository extends UserRepository {
   }
 
   async readOne(id: ID, _session: Session | ID) {
-    const query = e.select(e.default.User, (user) => ({
+    const query = e.select(e.User, (user) => ({
       ...hydrate(user),
       filter_single: { id },
     }));
@@ -36,7 +36,7 @@ export class UserEdgedbRepository extends UserRepository {
 
   async readMany(ids: readonly ID[], _session: Session | ID) {
     const query = e.params({ ids: e.array(e.uuid) }, ({ ids }) =>
-      e.select(e.default.User, (user) => ({
+      e.select(e.User, (user) => ({
         ...hydrate(user),
         filter: e.op(user.id, 'in', e.array_unpack(ids)),
       })),
@@ -46,7 +46,7 @@ export class UserEdgedbRepository extends UserRepository {
   }
 
   async doesEmailAddressExist(email: string) {
-    const query = e.select(e.default.User, () => ({
+    const query = e.select(e.User, () => ({
       filter_single: { email },
     }));
     const result = await this.edgedb.run(query);
@@ -54,8 +54,8 @@ export class UserEdgedbRepository extends UserRepository {
   }
 
   async list(input: UserListInput, _session: Session) {
-    const sortKey = input.sort as keyof (typeof e.default.User)['*'];
-    const all = e.select(e.default.User, (user) => ({
+    const sortKey = input.sort as keyof (typeof e.User)['*'];
+    const all = e.select(e.User, (user) => ({
       filter: e.all(
         input.filter.pinned != null
           ? e.op(user.pinned, '=', input.filter.pinned)
@@ -83,7 +83,7 @@ export class UserEdgedbRepository extends UserRepository {
   }
 
   async create(input: CreatePerson) {
-    const query = e.insert(e.default.User, { ...input });
+    const query = e.insert(e.User, { ...input });
     try {
       const result = await this.edgedb.run(query);
       return result.id;
@@ -103,7 +103,7 @@ export class UserEdgedbRepository extends UserRepository {
     user: User,
     email: string | null | undefined,
   ): Promise<void> {
-    const query = e.update(e.default.User, () => ({
+    const query = e.update(e.User, () => ({
       filter_single: { id: user.id },
       set: { email },
     }));
@@ -122,7 +122,7 @@ export class UserEdgedbRepository extends UserRepository {
   }
 
   async updateRoles(user: User, roles: Role[]): Promise<void> {
-    const query = e.update(e.default.User, () => ({
+    const query = e.update(e.User, () => ({
       filter_single: { id: user.id },
       set: { roles },
     }));
@@ -130,7 +130,7 @@ export class UserEdgedbRepository extends UserRepository {
   }
 
   async delete(id: ID, _session: Session, _object: User): Promise<void> {
-    const query = e.delete(e.default.User, () => ({
+    const query = e.delete(e.User, () => ({
       filter_single: { id },
     }));
     try {

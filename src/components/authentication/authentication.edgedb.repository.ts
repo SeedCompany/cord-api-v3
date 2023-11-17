@@ -20,7 +20,7 @@ export class AuthenticationEdgeDBRepository
   }
 
   async getRootUserId() {
-    const query = e.assert_exists(e.select(e.default.RootUser).assert_single());
+    const query = e.assert_exists(e.select(e.RootUser).assert_single());
     const result = await this.db.run(query);
     return result.id;
   }
@@ -31,7 +31,7 @@ export class AuthenticationEdgeDBRepository
   }
 
   async savePasswordHashOnUser(userId: ID, passwordHash: string) {
-    const user = e.select(e.default.User, () => ({
+    const user = e.select(e.User, () => ({
       filter_single: { id: userId },
     }));
     const query = e
@@ -61,7 +61,7 @@ export class AuthenticationEdgeDBRepository
   async connectSessionToUser(input: LoginInput, session: Session): Promise<ID> {
     const user = e.assert_exists(
       { message: 'User not found' },
-      e.select(e.default.User, () => ({
+      e.select(e.User, () => ({
         filter_single: { email: input.email },
       })),
     );
@@ -101,7 +101,7 @@ export class AuthenticationEdgeDBRepository
         scopedRoles: withScope('global', user.roles),
       }),
       impersonatee: e.assert_single(
-        e.select(e.default.User, (user) => ({
+        e.select(e.User, (user) => ({
           scopedRoles: withScope('global', user.roles),
           filter: e.op(user.id, '=', impersonateeId ?? e.cast(e.uuid, e.set())),
         })),
@@ -116,7 +116,7 @@ export class AuthenticationEdgeDBRepository
   }
 
   async rolesForUser(userId: ID) {
-    const query = e.select(e.default.User, (user) => ({
+    const query = e.select(e.User, (user) => ({
       scopedRoles: withScope('global', user.roles),
       filter_single: { id: userId },
     }));
@@ -145,7 +145,7 @@ export class AuthenticationEdgeDBRepository
   }
 
   async userByEmail(email: string) {
-    const query = e.select(e.default.User, () => ({
+    const query = e.select(e.User, () => ({
       filter_single: { email },
     }));
     const result = await this.db.run(query);
