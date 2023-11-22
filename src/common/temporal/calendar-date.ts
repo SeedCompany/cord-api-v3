@@ -92,6 +92,10 @@ export class CalendarDate
     return CalendarDate.fromDateTime(super.invalid(reason));
   }
 
+  static now() {
+    return CalendarDate.local();
+  }
+
   static local(
     year: number,
     month: number,
