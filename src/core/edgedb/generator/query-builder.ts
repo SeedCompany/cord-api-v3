@@ -22,6 +22,7 @@ export async function generateQueryBuilder({
   });
   addJsExtensionDeepPathsOfEdgedbLibrary(qbDir);
   changeCustomScalars(qbDir);
+  updateEdgeQLRenderingForOurCustomScalars(qbDir);
   changeImplicitIDType(qbDir);
   allowOrderingByEnums(qbDir);
   mergeDefaultTypesWithModuleNames(qbDir);
@@ -64,6 +65,23 @@ function changeImplicitIDType(qbDir: Directory) {
   typesystem.replaceWithText(
     typesystem.getFullText().replaceAll('{ id: string }', '{ id: ID }'),
   );
+}
+
+function updateEdgeQLRenderingForOurCustomScalars(qbDir: Directory) {
+  const file = qbDir.addSourceFileAtPath('toEdgeQL.ts');
+  file.insertImportDeclaration(1, {
+    namedImports: ['DateTime'],
+    moduleSpecifier: 'luxon',
+    leadingTrivia: '\n',
+  });
+  const condition = '  } else if (val instanceof Date) {\n';
+  const updated = file.getText().replace(
+    condition,
+    `  } else if (val instanceof DateTime) {
+    stringRep = \`'\${val.toISO()}'\`;
+` + condition,
+  );
+  file.replaceWithText(updated);
 }
 
 function allowOrderingByEnums(qbDir: Directory) {
