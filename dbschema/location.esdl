@@ -9,9 +9,8 @@ module default {
       constraint exclusive;
     };
     
-    #TODO - links
-    #fundingAccount: FundingAccount;
-    #defaultFieldRegion: FieldRegion;
+    fundingAccount: FundingAccount;
+    defaultFieldRegion: FieldRegion;
     mapImage: File;
   }
 }
