@@ -24,6 +24,6 @@ module Organization {
     Local,
     Regional,
     National,
-    Global
+    `Global`
   >;
 }
