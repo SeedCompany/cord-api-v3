@@ -317,16 +317,8 @@ export class ProjectService {
 
   async delete(id: ID, session: Session): Promise<void> {
     const object = await this.readOneUnsecured(id, session);
-    if (!object) {
-      throw new NotFoundException('Could not find project');
-    }
 
-    const { canDelete } = await this.secure(object, session);
-
-    if (!canDelete)
-      throw new UnauthorizedException(
-        'You do not have the permission to delete this Project',
-      );
+    this.privileges.for(session, IProject, object).verifyCan('delete');
 
     try {
       await this.repo.deleteNode(object);

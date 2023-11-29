@@ -7,7 +7,6 @@ import {
   ObjectView,
   ServerException,
   Session,
-  UnauthorizedException,
   UnsecuredDto,
   viewOfChangeset,
 } from '../../common';
@@ -241,18 +240,7 @@ export class PartnershipService {
   async delete(id: ID, session: Session, changeset?: ID): Promise<void> {
     const object = await this.readOne(id, session);
 
-    if (!object) {
-      throw new NotFoundException(
-        'Could not find partnership',
-        'partnership.id',
-      );
-    }
-    const canDelete = await this.repo.checkDeletePermission(id, session);
-
-    if (!canDelete)
-      throw new UnauthorizedException(
-        'You do not have the permission to delete this Partnership',
-      );
+    this.privileges.for(session, Partnership, object).verifyCan('delete');
 
     // only primary one partnership could be removed
     if (object.primary.value) {

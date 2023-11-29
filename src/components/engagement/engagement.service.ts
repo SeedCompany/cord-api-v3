@@ -8,7 +8,6 @@ import {
   SecuredList,
   ServerException,
   Session,
-  UnauthorizedException,
   UnsecuredDto,
   viewOfChangeset,
 } from '../../common';
@@ -365,14 +364,9 @@ export class EngagementService {
   async delete(id: ID, session: Session, changeset?: ID): Promise<void> {
     const object = await this.readOne(id, session);
 
-    if (!object) {
-      throw new NotFoundException('Could not find engagement', 'engagement.id');
-    }
-
-    if (!object.canDelete)
-      throw new UnauthorizedException(
-        'You do not have the permission to delete this Engagement',
-      );
+    this.privileges
+      .for(session, resolveEngagementType(object), object)
+      .verifyCan('delete');
 
     await this.verifyProjectStatus(object.project, session, changeset);
 

@@ -8,7 +8,6 @@ import {
   ObjectView,
   ServerException,
   Session,
-  UnauthorizedException,
   UnsecuredDto,
 } from '../../common';
 import {
@@ -573,16 +572,7 @@ export class ProductService {
   async delete(id: ID, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
 
-    if (!object) {
-      throw new NotFoundException('Could not find product', 'product.id');
-    }
-
-    const canDelete = await this.repo.checkDeletePermission(id, session);
-
-    if (!canDelete)
-      throw new UnauthorizedException(
-        'You do not have the permission to delete this Product',
-      );
+    this.privileges.for(session, Product, object).verifyCan('delete');
 
     try {
       await this.repo.deleteNode(object);
