@@ -5363,7 +5363,7 @@ __metadata:
     debugger-is-attached: "npm:^1.2.0"
     dotenv: "npm:^16.3.1"
     dotenv-expand: "npm:^10.0.0"
-    edgedb: "npm:^1.4.0"
+    edgedb: "patch:edgedb@npm%3A1.4.0#~/.yarn/patches/edgedb-npm-1.4.0-902d833279.patch"
     eslint: "npm:^8.52.0"
     eslint-plugin-no-only-tests: "npm:^3.1.0"
     eslint-plugin-typescript-sort-keys: "npm:^2.3.0"
@@ -5948,12 +5948,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"edgedb@npm:^1.4.0":
+"edgedb@npm:1.4.0":
   version: 1.4.0
   resolution: "edgedb@npm:1.4.0"
   bin:
     edgeql-js: dist/cli.js
   checksum: 9a71c212c0b8bb5f559b3e2f14f6f90961288bd946f8f1407e8cebdc935468fbd45210120d7b5d5e345620221fe0e43b3c1fe3b877365f2fce692a23306bd481
+  languageName: node
+  linkType: hard
+
+"edgedb@patch:edgedb@npm%3A1.4.0#~/.yarn/patches/edgedb-npm-1.4.0-902d833279.patch":
+  version: 1.4.0
+  resolution: "edgedb@patch:edgedb@npm%3A1.4.0#~/.yarn/patches/edgedb-npm-1.4.0-902d833279.patch::version=1.4.0&hash=e71bbb"
+  bin:
+    edgeql-js: dist/cli.js
+  checksum: f6eabbf93a2e22a5b050daf7ac779eafc186297f75febbae0aa8ea2e17f09f176cee67adc937c89139082d09cf08227aec402c91a0c2f5168b677428d234425a
   languageName: node
   linkType: hard
 
