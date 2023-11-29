@@ -105,7 +105,7 @@ export class CalendarDate
     second: number,
     millisecond: number,
     opts?: DateTimeJSOptions,
-  ): DateTime;
+  ): CalendarDate;
   static local(
     year: number,
     month: number,
@@ -114,7 +114,7 @@ export class CalendarDate
     minute: number,
     second: number,
     opts?: DateTimeJSOptions,
-  ): DateTime;
+  ): CalendarDate;
   static local(
     year: number,
     month: number,
@@ -122,23 +122,27 @@ export class CalendarDate
     hour: number,
     minute: number,
     opts?: DateTimeJSOptions,
-  ): DateTime;
+  ): CalendarDate;
   static local(
     year: number,
     month: number,
     day: number,
     hour: number,
     opts?: DateTimeJSOptions,
-  ): DateTime;
+  ): CalendarDate;
   static local(
     year: number,
     month: number,
     day: number,
     opts?: DateTimeJSOptions,
-  ): DateTime;
-  static local(year: number, month: number, opts?: DateTimeJSOptions): DateTime;
-  static local(year: number, opts?: DateTimeJSOptions): DateTime;
-  static local(opts?: DateTimeJSOptions): DateTime;
+  ): CalendarDate;
+  static local(
+    year: number,
+    month: number,
+    opts?: DateTimeJSOptions,
+  ): CalendarDate;
+  static local(year: number, opts?: DateTimeJSOptions): CalendarDate;
+  static local(opts?: DateTimeJSOptions): CalendarDate;
   static local(...args: any) {
     const dt = super.local(...args);
     return CalendarDate.fromDateTime(dt);
