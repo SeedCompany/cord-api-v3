@@ -64,6 +64,7 @@ module default {
     trigger createBudgetOnInsert after insert for each do (
       insert default::Budget {
         createdAt := datetime_of_statement(),
+        modifiedAt := datetime_of_statement(),
         project := __new__,
         projectContext := __new__.projectContext,
       }
