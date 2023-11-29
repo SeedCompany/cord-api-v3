@@ -23,6 +23,7 @@ export async function generateQueryBuilder({
   addJsExtensionDeepPathsOfEdgedbLibrary(qbDir);
   changeCustomScalars(qbDir);
   updateEdgeQLRenderingForOurCustomScalars(qbDir);
+  updateCastMapsForOurCustomScalars(qbDir);
   changeImplicitIDType(qbDir);
   allowOrderingByEnums(qbDir);
   mergeDefaultTypesWithModuleNames(qbDir);
@@ -65,6 +66,40 @@ function changeImplicitIDType(qbDir: Directory) {
   typesystem.replaceWithText(
     typesystem.getFullText().replaceAll('{ id: string }', '{ id: ID }'),
   );
+}
+
+function updateCastMapsForOurCustomScalars(qbDir: Directory) {
+  const file = qbDir.addSourceFileAtPath('castMaps.ts');
+  file.insertImportDeclaration(1, {
+    namedImports: ['DateTime'],
+    moduleSpecifier: 'luxon',
+  });
+  file.insertImportDeclaration(1, {
+    namedImports: ['CalendarDate'],
+    moduleSpecifier: '~/common',
+    leadingTrivia: '\n',
+  });
+  const updated = file
+    .getText()
+    // Update Luxon instances to point to correct scalar UUIDs
+    .replace(
+      '(type instanceof Date)',
+      '(type instanceof Date || (type instanceof DateTime && !(type instanceof CalendarDate)))',
+    )
+    .replace(
+      '(type instanceof edgedb.LocalDate)',
+      '(type instanceof edgedb.LocalDate || type instanceof CalendarDate)',
+    );
+  // Attempting to pick the right type based on shape.
+  // This doesn't fix any errors, and currently we are unable to distinguish
+  // CalendarDate from DateTime based on shape since they are the same.
+  // import * as _std from '../generated-client/modules/std';
+  // .replace(
+  //   '  T extends Date ? scalarWithConstType<_std.$datetime, T> :\n',
+  //   '  T extends CalendarDate ? scalarWithConstType<_cal.$local_date, T> :\n' +
+  //     '  T extends Date | DateTime ? scalarWithConstType<_std.$datetime, T> :\n',
+  // )
+  file.replaceWithText(updated);
 }
 
 function updateEdgeQLRenderingForOurCustomScalars(qbDir: Directory) {
