@@ -24,6 +24,12 @@ module default {
     multi link pins: Mixin::Pinnable {
       on target delete allow;
     }
+    multi link education: User::Education {
+      on target delete allow;
+    }
+    multi link unavailabilities: User::Unavailability {
+      on target delete allow;
+    }
   }
   
   alias RootUser := (
@@ -33,5 +39,25 @@ module default {
 }
  
 module User {
+  type Education extending default::Resource {
+    required degree: Degree;
+    required major: str;
+    required institution: str;
+  }
+  
+  type Unavailability extending default::Resource {
+    required description: str;
+    required dates: range<cal::local_date>;
+  }
+  
   scalar type Status extending enum<Active, Disabled>;
+  
+  scalar type Degree extending enum<
+    Primary,
+    Secondary,
+    Associates,
+    Bachelors,
+    Masters,
+    Doctorate
+  >;
 }
