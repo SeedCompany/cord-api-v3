@@ -61,7 +61,7 @@
     "cypher-query-builder": "patch:cypher-query-builder@6.0.4#.yarn/patches/cypher-query-builder.patch",
     "dotenv": "^16.3.1",
     "dotenv-expand": "^10.0.0",
-    "edgedb": "^1.4.0",
+    "edgedb": "patch:edgedb@npm%3A1.4.0#~/.yarn/patches/edgedb-npm-1.4.0-902d833279.patch",
     "execa": "^8.0.1",
     "express": "^4.18.2",
     "extensionless": "^1.7.0",

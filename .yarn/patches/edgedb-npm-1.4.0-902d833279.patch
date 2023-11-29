@@ -1,0 +1,12 @@
+diff --git a/dist/datatypes/datetime.d.ts b/dist/datatypes/datetime.d.ts
+index 3f9300f558bca2a95988c2f356e0b19c504e00d1..241d7fa97e09bd47001dbaca66e8080e683117b9 100644
+--- a/dist/datatypes/datetime.d.ts
++++ b/dist/datatypes/datetime.d.ts
+@@ -35,7 +35,6 @@ export declare class LocalTime {
+     valueOf(): any;
+ }
+ export declare class LocalDate {
+-    private readonly _date;
+     constructor(isoYear: number, isoMonth: number, isoDay: number);
+     get year(): number;
+     get month(): number;
