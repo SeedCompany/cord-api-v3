@@ -75,6 +75,7 @@ module default {
     trigger connectDedicationCeremony after insert for each do (
       insert Engagement::DedicationCeremony {
         createdAt := datetime_of_statement(),
+        modifiedAt := datetime_of_statement(),
         engagement := __new__,
         project := __new__.project,
         projectContext := __new__.projectContext,
@@ -128,6 +129,7 @@ module default {
     trigger connectCertificationCeremony after insert for each do (
       insert Engagement::CertificationCeremony {
         createdAt := datetime_of_statement(),
+        modifiedAt := datetime_of_statement(),
         engagement := __new__,
         project := __new__.project,
         projectContext := __new__.projectContext,

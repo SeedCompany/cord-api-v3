@@ -60,6 +60,15 @@ module default {
         message := "A Project's own context should be itself (no more or less)"
       )
     );
+    
+    trigger createBudgetOnInsert after insert for each do (
+      insert default::Budget {
+        createdAt := datetime_of_statement(),
+        modifiedAt := datetime_of_statement(),
+        project := __new__,
+        projectContext := __new__.projectContext,
+      }
+    );
   }
   
   type TranslationProject extending Project {
