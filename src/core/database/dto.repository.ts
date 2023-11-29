@@ -56,7 +56,12 @@ export const DtoRepository = <
         }
         label = defaultLabel;
       }
-      return await super.isUnique(value, label);
+      const exists = await this.db
+        .query()
+        .matchNode('node', label, { value })
+        .return('node')
+        .first();
+      return !exists;
     }
     @Once() private get uniqueLabel() {
       const labels = resource.Props.flatMap(
