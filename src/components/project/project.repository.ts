@@ -9,12 +9,7 @@ import {
   Session,
   UnsecuredDto,
 } from '../../common';
-import {
-  CommonRepository,
-  ConfigService,
-  DatabaseService,
-  OnIndex,
-} from '../../core';
+import { CommonRepository, ConfigService, OnIndex } from '../../core';
 import { ChangesOf, getChanges } from '../../core/database/changes';
 import {
   ACTIVE,
@@ -46,11 +41,10 @@ import { projectListFilter } from './list-filter.query';
 @Injectable()
 export class ProjectRepository extends CommonRepository {
   constructor(
-    db: DatabaseService,
     private readonly config: ConfigService,
     private readonly privileges: Privileges,
   ) {
-    super(db);
+    super();
   }
 
   async getRoles(session: Session) {

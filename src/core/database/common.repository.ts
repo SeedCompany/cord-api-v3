@@ -1,4 +1,4 @@
-import { Inject, Injectable, Optional } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { setOf } from '@seedcompany/common';
 import { inArray, node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
@@ -26,9 +26,6 @@ import { BaseNode } from './results';
 export class CommonRepository {
   @Inject(DatabaseService)
   protected db: DatabaseService;
-
-  // eslint-disable-next-line @typescript-eslint/no-empty-function,@typescript-eslint/no-useless-constructor
-  constructor(@Optional() _old?: unknown) {}
 
   async isUnique(value: string, label: string) {
     const exists = await this.db

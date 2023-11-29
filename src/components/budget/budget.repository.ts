@@ -12,7 +12,7 @@ import {
   UnsecuredDto,
   viewOfChangeset,
 } from '../../common';
-import { DatabaseService, DtoRepository } from '../../core';
+import { DtoRepository } from '../../core';
 import {
   ACTIVE,
   createNode,
@@ -43,11 +43,8 @@ export class BudgetRepository extends DtoRepository<
   typeof Budget,
   [session: Session, view?: ObjectView]
 >(Budget) {
-  constructor(
-    db: DatabaseService,
-    private readonly records: BudgetRecordRepository,
-  ) {
-    super(db);
+  constructor(private readonly records: BudgetRecordRepository) {
+    super();
   }
 
   async doesProjectExist(projectId: ID, session: Session) {

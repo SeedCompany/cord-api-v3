@@ -18,7 +18,7 @@ import {
   Session,
   UnsecuredDto,
 } from '../../common';
-import { DatabaseService, DtoRepository } from '../../core';
+import { DtoRepository } from '../../core';
 import {
   ACTIVE,
   createNode,
@@ -53,9 +53,8 @@ export class PeriodicReportRepository extends DtoRepository<
 >(IPeriodicReport) {
   constructor(
     private readonly progressRepo: ProgressReportExtraForPeriodicInterfaceRepository,
-    db: DatabaseService,
   ) {
-    super(db);
+    super();
   }
 
   async merge(input: MergePeriodicReports) {

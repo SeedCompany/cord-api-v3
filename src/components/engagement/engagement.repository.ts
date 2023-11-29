@@ -16,7 +16,7 @@ import {
   UnsecuredDto,
   viewOfChangeset,
 } from '../../common';
-import { CommonRepository, DatabaseService, OnIndex } from '../../core';
+import { CommonRepository, OnIndex } from '../../core';
 import { ChangesOf, getChanges } from '../../core/database/changes';
 import {
   ACTIVE,
@@ -56,8 +56,8 @@ export type LanguageOrEngagementId = MergeExclusive<
 
 @Injectable()
 export class EngagementRepository extends CommonRepository {
-  constructor(db: DatabaseService, private readonly privileges: Privileges) {
-    super(db);
+  constructor(private readonly privileges: Privileges) {
+    super();
   }
 
   async readOne(id: ID, session: Session, view?: ObjectView) {

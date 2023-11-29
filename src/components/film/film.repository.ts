@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { node, Query } from 'cypher-query-builder';
 import { ChangesOf } from '~/core/database/changes';
 import { ID, Session } from '../../common';
-import { DatabaseService, DbTypeOf, DtoRepository } from '../../core';
+import { DbTypeOf, DtoRepository } from '../../core';
 import {
   createNode,
   matchProps,
@@ -17,11 +17,8 @@ import { CreateFilm, Film, FilmListInput, UpdateFilm } from './dto';
 
 @Injectable()
 export class FilmRepository extends DtoRepository(Film) {
-  constructor(
-    private readonly scriptureRefs: ScriptureReferenceRepository,
-    db: DatabaseService,
-  ) {
-    super(db);
+  constructor(private readonly scriptureRefs: ScriptureReferenceRepository) {
+    super();
   }
 
   async create(input: CreateFilm, session: Session) {

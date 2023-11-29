@@ -3,7 +3,7 @@ import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { ChangesOf } from '~/core/database/changes';
 import { ID, Session, UnsecuredDto } from '../../common';
-import { DatabaseService, DtoRepository } from '../../core';
+import { DtoRepository } from '../../core';
 import {
   ACTIVE,
   createNode,
@@ -28,9 +28,8 @@ export class CommentRepository extends DtoRepository(Comment) {
   constructor(
     @Inject(forwardRef(() => CommentThreadRepository))
     readonly threads: CommentThreadRepository & {},
-    db: DatabaseService,
   ) {
-    super(db);
+    super();
   }
 
   async create(input: CreateCommentInput, session: Session) {

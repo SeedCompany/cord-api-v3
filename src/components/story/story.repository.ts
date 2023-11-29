@@ -3,7 +3,7 @@ import { Query } from 'cypher-query-builder';
 import { ChangesOf } from '~/core/database/changes';
 import { DbTypeOf } from '~/core/database/db-type';
 import { ID, Session } from '../../common';
-import { DatabaseService, DtoRepository } from '../../core';
+import { DtoRepository } from '../../core';
 import {
   createNode,
   matchProps,
@@ -17,11 +17,8 @@ import { CreateStory, Story, StoryListInput, UpdateStory } from './dto';
 
 @Injectable()
 export class StoryRepository extends DtoRepository(Story) {
-  constructor(
-    private readonly scriptureRefs: ScriptureReferenceRepository,
-    db: DatabaseService,
-  ) {
-    super(db);
+  constructor(private readonly scriptureRefs: ScriptureReferenceRepository) {
+    super();
   }
 
   async create(input: CreateStory, session: Session) {

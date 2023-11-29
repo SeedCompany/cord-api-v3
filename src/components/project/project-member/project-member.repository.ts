@@ -3,7 +3,7 @@ import { Node, node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { ChangesOf } from '~/core/database/changes';
 import { ID, Session, UnsecuredDto } from '../../../common';
-import { DatabaseService, DtoRepository } from '../../../core';
+import { DtoRepository } from '../../../core';
 import {
   ACTIVE,
   matchPropsAndProjectSensAndScopedRoles,
@@ -27,8 +27,8 @@ export class ProjectMemberRepository extends DtoRepository<
   typeof ProjectMember,
   [session: Session]
 >(ProjectMember) {
-  constructor(private readonly users: UserRepository, db: DatabaseService) {
-    super(db);
+  constructor(private readonly users: UserRepository) {
+    super();
   }
 
   async verifyRelationshipEligibility(projectId: ID, userId: ID) {
