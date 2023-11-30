@@ -358,12 +358,17 @@ export class EngagementService {
     );
 
     try {
-      if (mentorId) {
-        await this.repo.updateMentor(input.id, mentorId);
+      if (mentorId !== undefined) {
+        await this.repo.updateRelation('mentor', 'User', input.id, mentorId);
       }
 
-      if (countryOfOriginId) {
-        await this.repo.updateCountryOfOrigin(input.id, countryOfOriginId);
+      if (countryOfOriginId !== undefined) {
+        await this.repo.updateRelation(
+          'countryOfOrigin',
+          'Location',
+          input.id,
+          countryOfOriginId,
+        );
       }
 
       await this.repo.updateInternshipProperties(
