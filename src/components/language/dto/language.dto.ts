@@ -3,6 +3,7 @@ import { Field, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { GraphQLString } from 'graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
+import { e } from '~/core/edgedb';
 import { RegisterResource } from '~/core/resources';
 import {
   Calculated,
@@ -47,6 +48,7 @@ export abstract class SecuredTags extends SecuredPropertyList<string>(
 @RegisterResource()
 @ObjectType()
 export class EthnologueLanguage {
+  static readonly DB = e.Ethnologue.Language;
   static readonly Props = keysOf<EthnologueLanguage>();
   static readonly SecuredProps = keysOf<SecuredProps<EthnologueLanguage>>();
   // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -87,6 +89,7 @@ export class EthnologueLanguage {
   implements: [Resource, Pinnable, Postable],
 })
 export class Language extends Interfaces {
+  static readonly DB = e.Language;
   static readonly Props = keysOf<Language>();
   static readonly SecuredProps = keysOf<SecuredProps<Language>>();
   static readonly Relations = {

@@ -1,5 +1,6 @@
 import { ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
+import { e } from '~/core/edgedb';
 import { RegisterResource } from '~/core/resources';
 import {
   DbUnique,
@@ -18,6 +19,7 @@ import {
   implements: [Resource],
 })
 export class FieldRegion extends Resource {
+  static readonly DB = e.FieldRegion;
   static readonly Props = keysOf<FieldRegion>();
   static readonly SecuredProps = keysOf<SecuredProps<FieldRegion>>();
 

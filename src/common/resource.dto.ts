@@ -4,6 +4,7 @@ import { LazyGetter as Once } from 'lazy-get-decorator';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { inspect } from 'util';
+import { $, abstractType, e } from '~/core/edgedb/reexports';
 import { ScopedRole } from '../components/authorization';
 import { CalculatedSymbol } from './calculated.decorator';
 import { DataObject } from './data-object';
@@ -35,6 +36,7 @@ export const resolveByTypename =
 })
 @DbLabel('BaseNode')
 export abstract class Resource extends DataObject {
+  static readonly DB = abstractType(e.Resource);
   static readonly Props: string[] = keysOf<Resource>();
   static readonly SecuredProps: string[] = [];
 
@@ -59,6 +61,7 @@ export abstract class Resource extends DataObject {
 type Thunk<T> = T | (() => T);
 
 export type ResourceShape<T> = AbstractClassType<T> & {
+  DB?: $.$expr_PathNode;
   Props: string[];
   SecuredProps: string[];
   // An optional list of props that exist on the BaseNode in the DB.
@@ -234,6 +237,14 @@ export class EnhancedResource<T extends ResourceShape<any>> {
       return !!Reflect.getMetadata(CalculatedSymbol, this.type.prototype, prop);
     });
     return new Set(props);
+  }
+
+  get db(): T['DB'] & {} {
+    const type = this.type.DB;
+    if (!type) {
+      throw new ServerException(`No DB type defined for ${this.name}`);
+    }
+    return type;
   }
 
   @Once()

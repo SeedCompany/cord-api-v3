@@ -2,6 +2,7 @@ import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { SetDbType } from '~/core/database';
+import { abstractType, e } from '~/core/edgedb';
 import { RegisterResource } from '~/core/resources';
 import {
   EnumType,
@@ -29,6 +30,7 @@ import {
   implements: [Resource],
 })
 export abstract class Producible extends Resource {
+  static readonly DB = abstractType(e.Producible);
   static readonly Props: string[] = keysOf<Producible>();
   static readonly SecuredProps: string[] = keysOf<SecuredProps<Producible>>();
 
