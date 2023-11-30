@@ -16,6 +16,7 @@ runRepl({
   },
   extraContext: async (app) => {
     const { ResourcesHost } = await import('~/core');
+    const { e } = await import('~/core/edgedb');
     const { AuthenticationService } = await import(
       './components/authentication'
     );
@@ -27,6 +28,7 @@ runRepl({
     const Resources = await app.get(ResourcesHost).getEnhancedMap();
 
     return {
+      e,
       DateTime,
       Duration,
       Interval,
