@@ -365,7 +365,7 @@ export class EngagementService {
       if (countryOfOriginId !== undefined) {
         await this.repo.updateRelation(
           'countryOfOrigin',
-          'User',
+          'Location',
           input.id,
           countryOfOriginId,
         );
