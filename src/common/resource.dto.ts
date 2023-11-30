@@ -247,6 +247,10 @@ export class EnhancedResource<T extends ResourceShape<any>> {
     return type;
   }
 
+  get dbFQN(): (T['DB'] & {})['__element__']['__name__'] {
+    return this.db.__element__.__name__;
+  }
+
   @Once()
   get dbLabels() {
     return getDbClassLabels(this.type);

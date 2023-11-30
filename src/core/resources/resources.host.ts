@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { GraphQLSchemaHost } from '@nestjs/graphql';
-import { CachedByArg } from '@seedcompany/common';
+import { CachedByArg, mapKeys } from '@seedcompany/common';
 import { isObjectType } from 'graphql';
 import { mapValues } from 'lodash';
 import { LiteralUnion, ValueOf } from 'type-fest';
@@ -42,6 +42,7 @@ export class ResourcesHost {
     return Object.keys(map) as Array<keyof ResourceMap>;
   }
 
+  @CachedByArg()
   async getEnhancedMap(): Promise<EnhancedResourceMap> {
     const map = await this.getMap();
     return mapValues(map, EnhancedResource.of) as any;
@@ -64,6 +65,36 @@ export class ResourcesHost {
     name: LooseResourceName,
   ): Promise<EnhancedResource<ValueOf<ResourceMap>>> {
     return await this.getByName(name as any);
+  }
+
+  async getByEdgeDB(
+    fqn: string,
+  ): Promise<EnhancedResource<ValueOf<ResourceMap>>> {
+    fqn = fqn.includes('::') ? fqn : `default::${fqn}`;
+    const map = await this.edgeDBFQNMap();
+    const resource = map.get(fqn);
+    if (!resource) {
+      throw new ServerException(
+        `Unable to determine resource from ResourceMap for EdgeDB FQN: ${fqn}`,
+      );
+    }
+    return resource;
+  }
+
+  @CachedByArg()
+  private async edgeDBFQNMap() {
+    const map = await this.getEnhancedMap();
+    const fqnMap = mapKeys(
+      map as Record<string, EnhancedResource<any>>,
+      (_, r, { SKIP }) => {
+        try {
+          return r.dbFQN;
+        } catch (e) {
+          return SKIP;
+        }
+      },
+    ).asMap;
+    return fqnMap;
   }
 
   async verifyImplements(resource: ResourceLike, theInterface: ResourceLike) {
