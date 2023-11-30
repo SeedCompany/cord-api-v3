@@ -208,11 +208,11 @@ export class InternshipEngagement extends Engagement {
   @Field(() => InternshipProject)
   declare readonly parent: BaseNode;
 
-  readonly countryOfOrigin: Secured<ID>;
+  readonly countryOfOrigin: Secured<ID | null>;
 
   readonly intern: Secured<ID>;
 
-  readonly mentor: Secured<ID>;
+  readonly mentor: Secured<ID | null>;
 
   @Field()
   @DbLabel('InternPosition')
