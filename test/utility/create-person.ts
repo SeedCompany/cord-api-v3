@@ -1,8 +1,8 @@
 import { faker } from '@faker-js/faker';
 import { generateId, isValidId } from '../../src/common';
-import { CreatePerson, User } from '../../src/components/user';
+import { CreatePerson } from '../../src/components/user';
 import { TestApp } from './create-app';
-import { fragments } from './fragments';
+import { fragments, RawUser } from './fragments';
 import { gql } from './gql-tag';
 
 export async function createPerson(
@@ -39,7 +39,7 @@ export async function createPerson(
     },
   );
 
-  const actual: User = result.createPerson.user;
+  const actual: RawUser = result.createPerson.user;
   expect(actual).toBeTruthy();
 
   expect(isValidId(actual.id)).toBe(true);
