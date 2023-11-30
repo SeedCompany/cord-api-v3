@@ -8,18 +8,21 @@ import { gql } from './gql-tag';
 export async function createPerson(
   app: TestApp,
   input: Partial<CreatePerson> = {},
+  addDefaults = true,
 ) {
-  const person: CreatePerson = {
-    email: faker.internet.email(),
-    realFirstName: faker.person.firstName(),
-    realLastName: faker.person.lastName(),
-    displayFirstName: faker.person.firstName() + (await generateId()),
-    displayLastName: faker.person.lastName() + (await generateId()),
-    phone: faker.phone.number(),
-    timezone: 'America/Chicago',
-    about: 'about detail' + (await generateId()),
-    ...input,
-  };
+  const person: CreatePerson = !addDefaults
+    ? (input as CreatePerson)
+    : {
+        email: faker.internet.email(),
+        realFirstName: faker.person.firstName(),
+        realLastName: faker.person.lastName(),
+        displayFirstName: faker.person.firstName() + (await generateId()),
+        displayLastName: faker.person.lastName() + (await generateId()),
+        phone: faker.phone.number(),
+        timezone: 'America/Chicago',
+        about: 'about detail' + (await generateId()),
+        ...input,
+      };
 
   const result = await app.graphql.mutate(
     gql`

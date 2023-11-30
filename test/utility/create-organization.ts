@@ -6,6 +6,7 @@ import {
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
 import { gql } from './gql-tag';
+import { Raw } from './raw.type';
 
 export async function createOrganization(
   app: TestApp,
@@ -35,7 +36,7 @@ export async function createOrganization(
       },
     },
   );
-  const org: Organization = result.createOrganization.organization;
+  const org: Raw<Organization> = result.createOrganization.organization;
 
   expect(org).toBeTruthy();
 
