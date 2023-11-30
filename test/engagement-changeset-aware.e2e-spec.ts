@@ -375,24 +375,24 @@ describe('Engagement Changeset Aware e2e', () => {
     );
 
     // Delete engagement in changeset
-    let result = await app.graphql.mutate(
-      gql`
-        mutation deleteEngagement($id: ID!, $changeset: ID) {
-          deleteEngagement(id: $id, changeset: $changeset) {
-            __typename
+    await runAsAdmin(app, async () => {
+      await app.graphql.mutate(
+        gql`
+          mutation deleteEngagement($id: ID!, $changeset: ID) {
+            deleteEngagement(id: $id, changeset: $changeset) {
+              __typename
+            }
           }
-        }
-      `,
-      {
-        id: le.createLanguageEngagement.engagement.id,
-        changeset: changeset.id,
-      },
-    );
-    const actual: boolean | undefined = result.deleteEngagement;
-    expect(actual).toBeTruthy();
+        `,
+        {
+          id: le.createLanguageEngagement.engagement.id,
+          changeset: changeset.id,
+        },
+      );
+    });
 
     // List engagements without changeset
-    result = await readEngagements(app, project.id);
+    let result = await readEngagements(app, project.id);
     expect(result.project.engagements.items.length).toBe(1);
     // List engagements with changeset
     result = await readEngagements(app, project.id, changeset.id);

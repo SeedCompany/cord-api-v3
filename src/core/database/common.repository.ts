@@ -12,7 +12,6 @@ import {
   NotFoundException,
   ResourceShape,
   ServerException,
-  Session,
 } from '../../common';
 import { DatabaseService } from './database.service';
 import { createUniqueConstraint } from './indexer';
@@ -124,10 +123,6 @@ export class CommonRepository {
       );
     }
     return res.stats;
-  }
-
-  async checkDeletePermission(id: ID, session: Session | ID) {
-    return await this.db.checkDeletePermission(id, session);
   }
 
   async deleteNode(objectOrId: { id: ID } | ID, changeset?: ID) {

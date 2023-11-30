@@ -13,13 +13,7 @@ import {
 import { Direction } from 'cypher-query-builder/dist/typings/clauses/order-by';
 import { AnyConditions } from 'cypher-query-builder/dist/typings/clauses/where-utils';
 import { DateTime } from 'luxon';
-import {
-  ID,
-  NotFoundException,
-  ServerException,
-  Session,
-  UnauthorizedException,
-} from '../../common';
+import { ID, NotFoundException, ServerException, Session } from '../../common';
 import {
   CommonRepository,
   ILogger,
@@ -572,14 +566,7 @@ export class FileRepository extends CommonRepository {
     }
   }
 
-  async delete(fileNode: FileNode, session: Session): Promise<void> {
-    const canDelete = await this.db.checkDeletePermission(fileNode.id, session);
-
-    if (!canDelete)
-      throw new UnauthorizedException(
-        'You do not have the permission to delete this File item',
-      );
-
+  async delete(fileNode: FileNode, _session: Session): Promise<void> {
     try {
       await this.db.deleteNode(fileNode);
     } catch (exception) {

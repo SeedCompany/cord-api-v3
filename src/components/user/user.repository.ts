@@ -8,7 +8,6 @@ import {
   ID,
   ServerException,
   Session,
-  UnauthorizedException,
   UnsecuredDto,
 } from '../../common';
 import { DtoRepository, UniquenessError } from '../../core';
@@ -195,11 +194,8 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
   }
 
   async delete(id: ID, session: Session, object: User): Promise<void> {
-    const canDelete = await this.db.checkDeletePermission(id, session);
-    if (!canDelete)
-      throw new UnauthorizedException(
-        'You do not have the permission to delete this User',
-      );
+    const user = await this.readOne(id, session);
+    this.privileges.forUser(session, user).verifyCan('delete');
     try {
       await this.db.deleteNode(object);
     } catch (exception) {

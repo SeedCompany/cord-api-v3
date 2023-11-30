@@ -373,13 +373,6 @@ export class DatabaseService {
     }
   }
 
-  /**
-   * @deprecated Use Privileges.for().can('delete') or Privileges.for().secure(dto)
-   */
-  async checkDeletePermission(..._args: any[]) {
-    return true;
-  }
-
   async deleteNode(objectOrId: { id: ID } | ID) {
     const id = isIdLike(objectOrId) ? objectOrId : objectOrId.id;
     const query = this.db

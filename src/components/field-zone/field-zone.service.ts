@@ -2,12 +2,10 @@ import { Injectable } from '@nestjs/common';
 import {
   DuplicateException,
   ID,
-  NotFoundException,
   ObjectView,
   SecuredList,
   ServerException,
   Session,
-  UnauthorizedException,
   UnsecuredDto,
 } from '../../common';
 import { HandleIdLookup, ILogger, Logger } from '../../core';
@@ -91,16 +89,7 @@ export class FieldZoneService {
   async delete(id: ID, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
 
-    if (!object) {
-      throw new NotFoundException('Could not find Field Zone');
-    }
-
-    const canDelete = await this.repo.checkDeletePermission(id, session);
-
-    if (!canDelete)
-      throw new UnauthorizedException(
-        'You do not have the permission to delete this Field Zone',
-      );
+    this.privileges.for(session, FieldZone, object).verifyCan('delete');
 
     try {
       await this.repo.deleteNode(object);

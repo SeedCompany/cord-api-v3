@@ -2,12 +2,10 @@ import { Injectable } from '@nestjs/common';
 import {
   DuplicateException,
   ID,
-  NotFoundException,
   ObjectView,
   SecuredList,
   ServerException,
   Session,
-  UnauthorizedException,
 } from '../../common';
 import { DbTypeOf, HandleIdLookup, ILogger, Logger } from '../../core';
 import { ifDiff } from '../../core/database/changes';
@@ -114,16 +112,7 @@ export class FilmService {
   async delete(id: ID, session: Session): Promise<void> {
     const film = await this.readOne(id, session);
 
-    if (!film) {
-      throw new NotFoundException('Could not find Film');
-    }
-
-    const canDelete = await this.repo.checkDeletePermission(id, session);
-
-    if (!canDelete)
-      throw new UnauthorizedException(
-        'You do not have the permission to delete this Film',
-      );
+    this.privileges.for(session, Film, film).verifyCan('delete');
 
     try {
       await this.repo.deleteNode(film);

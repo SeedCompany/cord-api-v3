@@ -2,7 +2,6 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { CachedByArg } from '@seedcompany/common';
 import {
   ID,
-  NotFoundException,
   ObjectView,
   SecuredList,
   ServerException,
@@ -120,10 +119,6 @@ export class UserService {
 
   async delete(id: ID, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
-
-    if (!object) {
-      throw new NotFoundException('Could not find User');
-    }
     await this.userRepo.delete(id, session, object);
   }
 

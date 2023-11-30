@@ -2,11 +2,9 @@ import { Injectable } from '@nestjs/common';
 import {
   ID,
   InputException,
-  NotFoundException,
   ObjectView,
   ServerException,
   Session,
-  UnauthorizedException,
   UnsecuredDto,
 } from '../../common';
 import { HandleIdLookup, ILogger, Logger } from '../../core';
@@ -83,19 +81,8 @@ export class CeremonyService {
   async delete(id: ID, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
 
-    if (!object) {
-      throw new NotFoundException('Could not find ceremony', 'ceremony.id');
-    }
-
-    const canDelete = await this.ceremonyRepo.checkDeletePermission(
-      id,
-      session,
-    );
-
-    if (!canDelete)
-      throw new UnauthorizedException(
-        'You do not have the permission to delete this Ceremony',
-      );
+    // Only called internally, not exposed directly to users
+    // this.privileges.for(session, Ceremony, object).verifyCan('delete');
 
     try {
       await this.ceremonyRepo.deleteNode(object);

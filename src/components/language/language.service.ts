@@ -5,12 +5,10 @@ import {
   DuplicateException,
   ID,
   InputException,
-  NotFoundException,
   ObjectView,
   SecuredDate,
   ServerException,
   Session,
-  UnauthorizedException,
   UnsecuredDto,
 } from '../../common';
 import { HandleIdLookup, ILogger, Logger, UniquenessError } from '../../core';
@@ -157,16 +155,7 @@ export class LanguageService {
   async delete(id: ID, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
 
-    if (!object) {
-      throw new NotFoundException('Could not find language', 'language.id');
-    }
-
-    const canDelete = await this.repo.checkDeletePermission(id, session);
-
-    if (!canDelete)
-      throw new UnauthorizedException(
-        'You do not have the permission to delete this Language',
-      );
+    this.privileges.for(session, Language, object).verifyCan('delete');
 
     try {
       await this.repo.deleteNode(object);
