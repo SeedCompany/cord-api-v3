@@ -90,9 +90,8 @@ export class FieldRegionService {
     this.privileges
       .for(session, FieldRegion, fieldRegion)
       .verifyChanges(changes);
-    // update director
 
-    await this.repo.updateProperties(fieldRegion, changes);
+    await this.repo.update(fieldRegion, changes);
 
     return await this.readOne(input.id, session);
   }

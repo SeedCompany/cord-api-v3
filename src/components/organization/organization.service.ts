@@ -103,7 +103,7 @@ export class OrganizationService {
       .for(session, Organization, organization)
       .verifyChanges(changes);
 
-    return await this.repo.updateProperties(organization, changes);
+    return await this.repo.update(organization, changes);
   }
 
   async delete(id: ID, session: Session): Promise<void> {

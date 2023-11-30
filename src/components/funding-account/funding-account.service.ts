@@ -101,7 +101,7 @@ export class FundingAccountService {
     this.privileges
       .for(session, FundingAccount, fundingAccount)
       .verifyChanges(changes);
-    return await this.repo.updateProperties(fundingAccount, changes);
+    return await this.repo.update(fundingAccount, changes);
   }
 
   async delete(id: ID, session: Session): Promise<void> {

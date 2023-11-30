@@ -77,7 +77,7 @@ export class CeremonyService {
     const object = await this.readOne(input.id, session);
     const changes = this.ceremonyRepo.getActualChanges(object, input);
     this.privileges.for(session, Ceremony, object).verifyChanges(changes);
-    return await this.ceremonyRepo.updateProperties(object, changes);
+    return await this.ceremonyRepo.update(object, changes);
   }
 
   async delete(id: ID, session: Session): Promise<void> {

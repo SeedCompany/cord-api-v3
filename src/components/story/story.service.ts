@@ -102,7 +102,7 @@ export class StoryService {
     const { scriptureReferences, ...simpleChanges } = changes;
 
     await this.scriptureRefs.update(input.id, scriptureReferences);
-    await this.repo.updateProperties(story, simpleChanges);
+    await this.repo.update(story, simpleChanges);
 
     return await this.readOne(input.id, session);
   }

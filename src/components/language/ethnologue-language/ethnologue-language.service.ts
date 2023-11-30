@@ -75,7 +75,7 @@ export class EthnologueLanguageService {
       .verifyChanges(changes);
 
     try {
-      await this.repo.updateProperties(ethnologueLanguage, changes);
+      await this.repo.update(ethnologueLanguage, changes);
     } catch (exception) {
       this.logger.error('update failed', { exception });
       throw new ServerException(

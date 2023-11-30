@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Query } from 'cypher-query-builder';
+import { ChangesOf } from '~/core/database/changes';
 import { ID, Session } from '../../common';
 import { DatabaseService, DbTypeOf, DtoRepository } from '../../core';
 import {
@@ -10,7 +11,12 @@ import {
   sorting,
 } from '../../core/database/query';
 import { ScriptureReferenceRepository } from '../scripture';
-import { CreateEthnoArt, EthnoArt, EthnoArtListInput } from './dto';
+import {
+  CreateEthnoArt,
+  EthnoArt,
+  EthnoArtListInput,
+  UpdateEthnoArt,
+} from './dto';
 
 @Injectable()
 export class EthnoArtRepository extends DtoRepository(EthnoArt) {
@@ -20,7 +26,6 @@ export class EthnoArtRepository extends DtoRepository(EthnoArt) {
   ) {
     super(db);
   }
-
   async create(input: CreateEthnoArt, _session: Session) {
     const initialProps = {
       name: input.name,
@@ -31,6 +36,16 @@ export class EthnoArtRepository extends DtoRepository(EthnoArt) {
       .apply(await createNode(EthnoArt, { initialProps }))
       .return<{ id: ID }>('node.id as id')
       .first();
+  }
+
+  async update(
+    existing: EthnoArt,
+    simpleChanges: Omit<
+      ChangesOf<EthnoArt, UpdateEthnoArt>,
+      'scriptureReferences'
+    >,
+  ) {
+    await this.updateProperties(existing, simpleChanges);
   }
 
   async list(input: EthnoArtListInput, _session: Session) {

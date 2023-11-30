@@ -1,7 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { ID, ServerException, Session, UnsecuredDto } from '../../common';
+import { ChangesOf } from '~/core/database/changes';
+import {
+  ID,
+  InputException,
+  ServerException,
+  Session,
+  UnsecuredDto,
+} from '../../common';
 import { DtoRepository } from '../../core';
 import {
   ACTIVE,
@@ -20,7 +27,7 @@ import {
   requestingUser,
   sorting,
 } from '../../core/database/query';
-import { CreatePartner, Partner, PartnerListInput } from './dto';
+import { CreatePartner, Partner, PartnerListInput, UpdatePartner } from './dto';
 
 @Injectable()
 export class PartnerRepository extends DtoRepository<
@@ -74,6 +81,79 @@ export class PartnerRepository extends DtoRepository<
       throw new ServerException('Failed to create partner');
     }
     return result.id;
+  }
+
+  async update(partner: Partner, changes: ChangesOf<Partner, UpdatePartner>) {
+    const {
+      pointOfContactId,
+      languageOfWiderCommunicationId,
+      fieldRegions,
+      countries,
+      languagesOfConsulting,
+      ...simpleChanges
+    } = changes;
+
+    await this.updateProperties(partner, simpleChanges);
+
+    if (pointOfContactId !== undefined) {
+      await this.updateRelation(
+        'pointOfContact',
+        'User',
+        partner.id,
+        pointOfContactId,
+      );
+    }
+
+    if (languageOfWiderCommunicationId) {
+      await this.updateRelation(
+        'languageOfWiderCommunication',
+        'Language',
+        partner.id,
+        languageOfWiderCommunicationId,
+      );
+    }
+
+    if (countries) {
+      try {
+        await this.updateRelationList({
+          id: partner.id,
+          relation: 'countries',
+          newList: countries,
+        });
+      } catch (e) {
+        throw e instanceof InputException
+          ? e.withField('partner.countries')
+          : e;
+      }
+    }
+
+    if (fieldRegions) {
+      try {
+        await this.updateRelationList({
+          id: partner.id,
+          relation: 'fieldRegions',
+          newList: fieldRegions,
+        });
+      } catch (e) {
+        throw e instanceof InputException
+          ? e.withField('partner.fieldRegions')
+          : e;
+      }
+    }
+
+    if (languagesOfConsulting) {
+      try {
+        await this.updateRelationList({
+          id: partner.id,
+          relation: 'languagesOfConsulting',
+          newList: languagesOfConsulting,
+        });
+      } catch (e) {
+        throw e instanceof InputException
+          ? e.withField('partner.languagesOfConsulting')
+          : e;
+      }
+    }
   }
 
   protected hydrate(session: Session) {

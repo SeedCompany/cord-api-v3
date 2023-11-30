@@ -65,7 +65,7 @@ export class CommonRepository {
       .run();
   }
 
-  async updateRelation(
+  protected async updateRelation(
     relationName: string,
     otherLabel: string,
     id: ID,
@@ -103,7 +103,7 @@ export class CommonRepository {
       .run();
   }
 
-  async updateRelationList({
+  protected async updateRelationList({
     id,
     label,
     relation,

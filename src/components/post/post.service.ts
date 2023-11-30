@@ -68,7 +68,7 @@ export class PostService {
 
     const changes = this.repo.getActualChanges(object, input);
     this.privileges.for(session, Post, object).verifyChanges(changes);
-    const updated = await this.repo.updateProperties(object, changes);
+    const updated = await this.repo.update(object, changes);
 
     return this.secure(updated, session);
   }

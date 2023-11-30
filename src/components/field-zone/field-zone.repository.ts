@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
+import { ChangesOf } from '~/core/database/changes';
 import { ID, Session, UnsecuredDto } from '../../common';
 import { DtoRepository } from '../../core';
 import {
@@ -14,7 +15,12 @@ import {
   requestingUser,
   sorting,
 } from '../../core/database/query';
-import { CreateFieldZone, FieldZone, FieldZoneListInput } from './dto';
+import {
+  CreateFieldZone,
+  FieldZone,
+  FieldZoneListInput,
+  UpdateFieldZone,
+} from './dto';
 
 @Injectable()
 export class FieldZoneRepository extends DtoRepository(FieldZone) {
@@ -55,7 +61,20 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
         );
   }
 
-  async updateDirector(directorId: ID, id: ID) {
+  async update(
+    existing: FieldZone,
+    changes: ChangesOf<FieldZone, UpdateFieldZone>,
+  ) {
+    const { directorId, ...simpleChanges } = changes;
+
+    if (directorId) {
+      await this.updateDirector(directorId, existing.id);
+    }
+
+    await this.updateProperties(existing, simpleChanges);
+  }
+
+  private async updateDirector(directorId: ID, id: ID) {
     const createdAt = DateTime.local();
     const query = this.db
       .query()

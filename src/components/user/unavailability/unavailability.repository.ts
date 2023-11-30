@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
+import { ChangesOf } from '~/core/database/changes';
 import { ID, ServerException, Session } from '../../../common';
 import { DtoRepository } from '../../../core';
 import {
@@ -14,6 +15,7 @@ import {
   CreateUnavailability,
   Unavailability,
   UnavailabilityListInput,
+  UpdateUnavailability,
 } from './dto';
 
 @Injectable()
@@ -39,6 +41,13 @@ export class UnavailabilityRepository extends DtoRepository(Unavailability) {
       throw new ServerException('Could not create unavailability');
     }
     return result.id;
+  }
+
+  async update(
+    existing: Unavailability,
+    changes: ChangesOf<Unavailability, UpdateUnavailability>,
+  ) {
+    return await this.updateProperties(existing, changes);
   }
 
   async getUserIdByUnavailability(id: ID) {

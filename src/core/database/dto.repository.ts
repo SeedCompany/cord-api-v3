@@ -99,7 +99,7 @@ export const DtoRepository = <
         .run();
     }
 
-    async updateProperties<
+    protected async updateProperties<
       TObject extends Partial<TResource | UnsecuredDto<TResource>> & {
         id: ID;
       },
@@ -112,7 +112,7 @@ export const DtoRepository = <
       });
     }
 
-    async updateRelation(
+    protected async updateRelation(
       relationName: string,
       otherLabel: string,
       id: ID,
@@ -127,7 +127,7 @@ export const DtoRepository = <
       );
     }
 
-    async updateRelationList(
+    protected async updateRelationList(
       options: Parameters<CommonRepository['updateRelationList']>[0],
     ) {
       return await super.updateRelationList({

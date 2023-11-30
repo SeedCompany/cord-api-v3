@@ -109,23 +109,11 @@ export class UserService {
 
     this.privileges.for(session, User, user).verifyChanges(changes);
 
-    const { roles, email, ...simpleChanges } = changes;
-
-    if (roles) {
-      this.verifyRolesAreAssignable(session, roles);
+    if (changes.roles) {
+      this.verifyRolesAreAssignable(session, changes.roles);
     }
 
-    await this.userRepo.updateProperties(user, simpleChanges);
-
-    // Update email
-    if (email !== undefined) {
-      await this.userRepo.updateEmail(user, email);
-    }
-
-    // Update roles
-    if (roles) {
-      await this.userRepo.updateRoles(user, roles);
-    }
+    await this.userRepo.update(user, changes);
 
     return await this.readOne(input.id, session);
   }

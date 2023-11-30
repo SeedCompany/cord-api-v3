@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
+import { ChangesOf } from '~/core/database/changes';
 import { ID, Session } from '../../../common';
 import { DtoRepository } from '../../../core';
 import {
@@ -10,7 +11,12 @@ import {
   paginate,
   sorting,
 } from '../../../core/database/query';
-import { CreateEducation, Education, EducationListInput } from './dto';
+import {
+  CreateEducation,
+  Education,
+  EducationListInput,
+  UpdateEducation,
+} from './dto';
 
 @Injectable()
 export class EducationRepository extends DtoRepository(Education) {
@@ -45,6 +51,13 @@ export class EducationRepository extends DtoRepository(Education) {
       ])
       .return<{ id: ID }>('user.id as id')
       .first();
+  }
+
+  async update(
+    existing: Education,
+    changes: ChangesOf<Education, UpdateEducation>,
+  ) {
+    await this.updateProperties(existing, changes);
   }
 
   async list({ filter, ...input }: EducationListInput, _session: Session) {

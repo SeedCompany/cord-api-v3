@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
+import { ChangesOf } from '~/core/database/changes';
 import { ID, Session, UnsecuredDto } from '../../common';
 import { DtoRepository } from '../../core';
 import {
@@ -13,7 +14,12 @@ import {
   requestingUser,
   sorting,
 } from '../../core/database/query';
-import { CreateFieldRegion, FieldRegion, FieldRegionListInput } from './dto';
+import {
+  CreateFieldRegion,
+  FieldRegion,
+  FieldRegionListInput,
+  UpdateFieldRegion,
+} from './dto';
 
 @Injectable()
 export class FieldRegionRepository extends DtoRepository(FieldRegion) {
@@ -37,6 +43,19 @@ export class FieldRegionRepository extends DtoRepository(FieldRegion) {
       .return<{ id: ID }>('node.id as id');
 
     return await query.first();
+  }
+
+  async update(
+    existing: FieldRegion,
+    changes: ChangesOf<FieldRegion, UpdateFieldRegion>,
+  ) {
+    const { directorId, ...simpleChanges } = changes;
+
+    if (directorId) {
+      // TODO update director - lol this was never implemented
+    }
+
+    await this.updateProperties(existing, simpleChanges);
   }
 
   protected hydrate() {

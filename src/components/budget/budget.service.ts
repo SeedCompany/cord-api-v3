@@ -228,7 +228,7 @@ export class BudgetService {
       universalTemplateFile,
       session,
     );
-    return await this.budgetRepo.updateProperties(budget, simpleChanges);
+    return await this.budgetRepo.update(budget, simpleChanges);
   }
 
   async updateRecord(
@@ -249,7 +249,7 @@ export class BudgetService {
     this.privileges.for(session, BudgetRecord, br).verifyChanges(changes);
 
     try {
-      const result = await this.budgetRecordsRepo.updateProperties(
+      const result = await this.budgetRecordsRepo.update(
         br,
         changes,
         changeset,

@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
+import { ChangesOf } from '~/core/database/changes';
 import { ID, Session, UnsecuredDto } from '../../common';
 import { DtoRepository } from '../../core';
 import {
@@ -12,7 +13,12 @@ import {
   requestingUser,
   sorting,
 } from '../../core/database/query';
-import { Ceremony, CeremonyListInput, CreateCeremony } from './dto';
+import {
+  Ceremony,
+  CeremonyListInput,
+  CreateCeremony,
+  UpdateCeremony,
+} from './dto';
 
 @Injectable()
 export class CeremonyRepository extends DtoRepository<
@@ -33,6 +39,13 @@ export class CeremonyRepository extends DtoRepository<
       .apply(await createNode(Ceremony, { initialProps }))
       .return<{ id: ID }>('node.id as id')
       .first();
+  }
+
+  async update(
+    existing: Ceremony,
+    changes: ChangesOf<Ceremony, UpdateCeremony>,
+  ) {
+    return await this.updateProperties(existing, changes);
   }
 
   protected hydrate(session: Session) {

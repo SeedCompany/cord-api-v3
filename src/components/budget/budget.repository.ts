@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { inArray, node, Query, relation } from 'cypher-query-builder';
 import { pickBy } from 'lodash';
+import { ChangesOf } from '~/core/database/changes';
 import {
   ID,
   labelForView,
@@ -34,6 +35,7 @@ import {
   BudgetRecord,
   CreateBudget,
   BudgetStatus as Status,
+  UpdateBudget,
 } from './dto';
 
 @Injectable()
@@ -86,6 +88,16 @@ export class BudgetRepository extends DtoRepository<
     }
 
     return result.id;
+  }
+
+  async update(
+    existing: Budget,
+    simpleChanges: Omit<
+      ChangesOf<Budget, UpdateBudget>,
+      'universalTemplateFile'
+    >,
+  ) {
+    return await this.updateProperties(existing, simpleChanges);
   }
 
   async readMany(ids: readonly ID[], session: Session, view?: ObjectView) {

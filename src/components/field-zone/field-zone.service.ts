@@ -83,14 +83,7 @@ export class FieldZoneService {
     const changes = this.repo.getActualChanges(fieldZone, input);
     this.privileges.for(session, FieldZone, fieldZone).verifyChanges(changes);
 
-    const { directorId, ...simpleChanges } = changes;
-
-    // update director
-    if (directorId) {
-      await this.repo.updateDirector(directorId, input.id);
-    }
-
-    await this.repo.updateProperties(fieldZone, simpleChanges);
+    await this.repo.update(fieldZone, changes);
 
     return await this.readOne(input.id, session);
   }

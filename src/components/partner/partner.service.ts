@@ -129,78 +129,12 @@ export class PartnerService {
 
     const changes = this.repo.getActualChanges(partner, input);
     this.privileges.for(session, Partner, partner).verifyChanges(changes);
-    const {
-      pointOfContactId,
-      languageOfWiderCommunicationId,
-      fieldRegions,
-      countries,
-      languagesOfConsulting,
-      ...simpleChanges
-    } = changes;
 
-    await this.repo.updateProperties(partner, simpleChanges);
-
-    if (pointOfContactId !== undefined) {
-      await this.repo.updateRelation(
-        'pointOfContact',
-        'User',
-        input.id,
-        pointOfContactId,
-      );
+    if (changes.countries) {
+      await this.verifyCountries(changes.countries);
     }
 
-    if (languageOfWiderCommunicationId) {
-      await this.repo.updateRelation(
-        'languageOfWiderCommunication',
-        'Language',
-        partner.id,
-        languageOfWiderCommunicationId,
-      );
-    }
-
-    if (countries) {
-      await this.verifyCountries(countries);
-
-      try {
-        await this.repo.updateRelationList({
-          id: partner.id,
-          relation: 'countries',
-          newList: countries,
-        });
-      } catch (e) {
-        throw e instanceof InputException
-          ? e.withField('partner.countries')
-          : e;
-      }
-    }
-
-    if (fieldRegions) {
-      try {
-        await this.repo.updateRelationList({
-          id: partner.id,
-          relation: 'fieldRegions',
-          newList: fieldRegions,
-        });
-      } catch (e) {
-        throw e instanceof InputException
-          ? e.withField('partner.fieldRegions')
-          : e;
-      }
-    }
-
-    if (languagesOfConsulting) {
-      try {
-        await this.repo.updateRelationList({
-          id: partner.id,
-          relation: 'languagesOfConsulting',
-          newList: languagesOfConsulting,
-        });
-      } catch (e) {
-        throw e instanceof InputException
-          ? e.withField('partner.languagesOfConsulting')
-          : e;
-      }
-    }
+    await this.repo.update(partner, changes);
 
     return await this.readOne(input.id, session);
   }

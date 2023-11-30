@@ -9,6 +9,7 @@ import {
   Query,
   relation,
 } from 'cypher-query-builder';
+import { ChangesOf } from '~/core/database/changes';
 import {
   CalendarDate,
   generateId,
@@ -41,6 +42,7 @@ import {
   PeriodicReportListInput,
   ReportType,
   resolveReportType,
+  UpdatePeriodicReportInput,
 } from './dto';
 
 @Injectable()
@@ -160,6 +162,17 @@ export class PeriodicReportRepository extends DtoRepository<
         'report.id as id, interval',
       );
     return await query.run();
+  }
+
+  async update<T extends PeriodicReport | UnsecuredDto<PeriodicReport>>(
+    existing: T,
+    simpleChanges: Omit<
+      ChangesOf<PeriodicReport, UpdatePeriodicReportInput>,
+      'reportFile'
+    > &
+      Partial<Pick<PeriodicReport, 'start' | 'end'>>,
+  ) {
+    return await this.updateProperties(existing, simpleChanges);
   }
 
   async list(input: PeriodicReportListInput, session: Session) {
