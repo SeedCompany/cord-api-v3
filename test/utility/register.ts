@@ -24,7 +24,7 @@ export const generateRequireFieldsRegisterInput =
     realLastName: faker.person.lastName(),
     displayFirstName: faker.person.firstName() + (await generateId()),
     displayLastName: faker.person.lastName() + (await generateId()),
-    password: faker.internet.password(10),
+    password: faker.internet.password(),
     timezone: 'America/Chicago',
   });
 

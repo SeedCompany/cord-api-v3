@@ -26,7 +26,7 @@
     "lint": "eslint --ext .ts,.tsx --fix --max-warnings 0 .",
     "test": "yarn test:base --selectProjects Unit",
     "test:e2e": "yarn test:base --selectProjects E2E",
-    "test:base": "node --experimental-vm-modules --inspect $(yarn bin jest)",
+    "test:base": "NODE_NO_WARNINGS=1 node --experimental-vm-modules --inspect $(yarn bin jest)",
     "type-check": "tsc -p tsconfig.check.json"
   },
   "dependencies": {

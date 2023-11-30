@@ -1,8 +1,14 @@
 import { faker } from '@faker-js/faker';
-import { firstLettersOfWords, isValidId } from '../src/common';
-import { Role } from '../src/components/authorization';
+import { times } from 'lodash';
+import { firstLettersOfWords, isValidId } from '~/common';
+import { Organization } from '../src/components/organization';
 import { SecuredTimeZone } from '../src/components/timezone';
-import { UpdateUser, User, UserStatus } from '../src/components/user';
+import {
+  UpdateUser,
+  UpdateUserInput,
+  User,
+  UserStatus,
+} from '../src/components/user';
 import {
   createEducation,
   createOrganization,
@@ -16,17 +22,22 @@ import {
   gql,
   login,
   loginAsAdmin,
+  Raw,
   registerUser,
-  registerUserWithStrictInput,
+  runInIsolatedSession,
   TestApp,
 } from './utility';
+import { RawUser } from './utility/fragments';
 
 describe('User e2e', () => {
   let app: TestApp;
+  let org: Raw<Organization>;
 
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);
+    await loginAsAdmin(app);
+    org = await createOrganization(app);
   });
 
   afterAll(async () => {
@@ -34,15 +45,17 @@ describe('User e2e', () => {
   });
 
   it('read one user by id', async () => {
-    const fakeUser = await generateRegisterInput();
+    const { password: _, ...fakeUser } = await generateRegisterInput();
 
-    const user = await registerUser(app, fakeUser);
+    const user = await createPerson(app, fakeUser);
 
     const result = await app.graphql.query(
       gql`
         query user($id: ID!) {
           user(id: $id) {
             ...user
+            avatarLetters
+            fullName
           }
         }
         ${fragments.user}
@@ -52,7 +65,8 @@ describe('User e2e', () => {
       },
     );
 
-    const actual: User = result.user;
+    const actual: RawUser & { avatarLetters: string; fullName: string } =
+      result.user;
     expect(actual).toBeTruthy();
 
     expect(isValidId(actual.id)).toBe(true);
@@ -67,13 +81,14 @@ describe('User e2e', () => {
     );
     expect(actual.about.value).toBe(fakeUser.about);
     expect(actual.status.value).toBe(fakeUser.status);
+    expect(actual.avatarLetters).toBe(firstLettersOfWords(actual.fullName));
 
     return true;
   });
 
   it('create user with required input fields', async () => {
-    const user = await generateRequireFieldsRegisterInput();
-    const actual = await registerUserWithStrictInput(app, user);
+    const { password: _, ...user } = await generateRequireFieldsRegisterInput();
+    const actual = await createPerson(app, user, false);
 
     expect(isValidId(actual.id)).toBe(true);
     expect(actual.email.value).toBe(user.email.toLowerCase());
@@ -89,7 +104,7 @@ describe('User e2e', () => {
 
   it('update user', async () => {
     // create user first
-    const user = await registerUser(app);
+    const user = await createPerson(app);
 
     const fakeUser: UpdateUser = {
       id: user.id,
@@ -146,7 +161,7 @@ describe('User e2e', () => {
 
   it('delete user', async () => {
     // create user first
-    const user = await registerUser(app);
+    const user = await createPerson(app);
     const result = await app.graphql.query(
       gql`
         mutation deleteUser($id: ID!) {
@@ -168,12 +183,7 @@ describe('User e2e', () => {
 
   // LIST USERS
   it('list view of users', async () => {
-    await registerUser(app);
-    await registerUser(app);
-    await registerUser(app);
-    await registerUser(app);
-
-    await loginAsAdmin(app);
+    await Promise.all(times(4).map(() => createPerson(app)));
 
     const { users } = await app.graphql.query(gql`
       query {
@@ -192,10 +202,7 @@ describe('User e2e', () => {
   });
 
   it('assign organization to user', async () => {
-    const newUser = await registerUser(app, {
-      roles: [Role.FieldOperationsDirector, Role.LeadFinancialAnalyst],
-    });
-    const org = await createOrganization(app);
+    const newUser = await createPerson(app);
     await app.graphql.mutate(
       gql`
         mutation assignOrganizationToUser($orgId: ID!, $userId: ID!) {
@@ -211,13 +218,37 @@ describe('User e2e', () => {
         userId: newUser.id,
       },
     );
+
+    const result1 = await app.graphql.query(
+      gql`
+        query user($id: ID!) {
+          user(id: $id) {
+            ...user
+            organizations {
+              items {
+                ...org
+              }
+              hasMore
+              total
+              canRead
+              canCreate
+            }
+          }
+        }
+        ${fragments.user}
+        ${fragments.org}
+      `,
+      {
+        id: newUser.id,
+      },
+    );
+    const actual = result1.user;
+    expect(actual).toBeTruthy();
+    expect(actual.organizations.items[0].id).toBe(org.id);
   });
 
   it('remove organization from user', async () => {
-    const newUser = await registerUser(app, {
-      roles: [Role.FieldOperationsDirector, Role.LeadFinancialAnalyst],
-    });
-    const org = await createOrganization(app);
+    const newUser = await createPerson(app);
 
     // assign organization to user
     await app.graphql.mutate(
@@ -255,10 +286,7 @@ describe('User e2e', () => {
   });
 
   it('assign primary organization to user', async () => {
-    const newUser = await registerUser(app, {
-      roles: [Role.FieldOperationsDirector, Role.LeadFinancialAnalyst],
-    });
-    const org = await createOrganization(app);
+    const newUser = await createPerson(app);
     await app.graphql.mutate(
       gql`
         mutation assignOrganizationToUser(
@@ -284,10 +312,7 @@ describe('User e2e', () => {
   });
 
   it('remove primary organization from user', async () => {
-    const newUser = await registerUser(app, {
-      roles: [Role.FieldOperationsDirector, Role.LeadFinancialAnalyst],
-    });
-    const org = await createOrganization(app);
+    const newUser = await createPerson(app);
 
     // assign primary organization to user
     await app.graphql.mutate(
@@ -333,66 +358,8 @@ describe('User e2e', () => {
     // TODO after #430 is resolved, list orgs and make sure org is removed as primary
   });
 
-  it('read one users organizations', async () => {
-    const newUser = await registerUser(app, {
-      roles: [Role.FieldOperationsDirector, Role.LeadFinancialAnalyst],
-    });
-
-    const org = await createOrganization(app);
-    await app.graphql.mutate(
-      gql`
-        mutation assignOrganizationToUser(
-          $orgId: ID!
-          $userId: ID!
-          $primary: Boolean!
-        ) {
-          assignOrganizationToUser(
-            input: {
-              request: { orgId: $orgId, userId: $userId, primary: $primary }
-            }
-          ) {
-            __typename
-          }
-        }
-      `,
-      {
-        orgId: org.id,
-        userId: newUser.id,
-        primary: true,
-      },
-    );
-
-    const result1 = await app.graphql.query(
-      gql`
-        query user($id: ID!) {
-          user(id: $id) {
-            ...user
-            organizations {
-              items {
-                ...org
-              }
-              hasMore
-              total
-              canRead
-              canCreate
-            }
-          }
-        }
-        ${fragments.user}
-        ${fragments.org}
-      `,
-      {
-        id: newUser.id,
-      },
-    );
-    const actual = result1.user;
-    expect(actual).toBeTruthy();
-    expect(actual.organizations.items[0].id).toBe(org.id);
-    return true;
-  });
-
   it('read one users education', async () => {
-    const newUser = await registerUser(app);
+    const newUser = await createPerson(app);
     const edu = await createEducation(app, { userId: newUser.id });
 
     const result = await app.graphql.query(
@@ -424,10 +391,8 @@ describe('User e2e', () => {
     return true;
   });
 
-  it('read one users unavailablity', async () => {
-    const newUser = await registerUser(app, {
-      roles: [Role.FieldOperationsDirector],
-    });
+  it('read one users unavailability', async () => {
+    const newUser = await createPerson(app);
     const unavail = await createUnavailability(app, { userId: newUser.id });
 
     const result = await app.graphql.query(
@@ -459,101 +424,43 @@ describe('User e2e', () => {
     return true;
   });
 
-  it('read user avatar', async () => {
-    const fakeUser = await generateRegisterInput();
-    const newUser = await registerUser(app, fakeUser);
-
-    const result = await app.graphql.query(
-      gql`
-        query user($id: ID!) {
-          user(id: $id) {
-            ...user
-            avatarLetters
-            fullName
-          }
-        }
-        ${fragments.user}
-      `,
-      {
-        id: newUser.id,
-      },
-    );
-    const actual = result.user;
-    expect(actual.avatarLetters).toBe(firstLettersOfWords(actual.fullName));
-  });
-
-  it('list users with organizations', async () => {
-    const newUser = await registerUser(app, {
-      roles: [Role.FieldOperationsDirector, Role.LeadFinancialAnalyst],
-    });
-    const org = await createOrganization(app);
-
-    await app.graphql.mutate(
-      gql`
-        mutation assignOrganizationToUser(
-          $orgId: ID!
-          $userId: ID!
-          $primary: Boolean!
-        ) {
-          assignOrganizationToUser(
-            input: {
-              request: { orgId: $orgId, userId: $userId, primary: $primary }
-            }
-          ) {
-            __typename
-          }
-        }
-      `,
-      {
-        orgId: org.id,
-        userId: newUser.id,
-        primary: true,
-      },
-    );
-
-    const { user } = await app.graphql.query(
-      gql`
-        query user($id: ID!) {
-          user(id: $id) {
-            ...user
-            organizations {
-              items {
-                ...org
-              }
-              hasMore
-              total
-              canRead
-              canCreate
-            }
-          }
-        }
-        ${fragments.user}
-        ${fragments.org}
-      `,
-      {
-        id: newUser.id,
-      },
-    );
-    expect(user.organizations).toBeTruthy();
-    expect(user.organizations.items.length).toBeGreaterThanOrEqual(1);
-  });
-
-  it('should test Email is not case sensitive', async () => {
+  it('Email is case insensitive', async () => {
     const email = faker.internet.email().toUpperCase();
-    const password = faker.internet.password(10);
-    const user = await registerUser(app, { email, password });
-    expect(user.email.value).toBe(email.toLowerCase());
+    const password = faker.internet.password();
 
-    await login(app, { email: email.toLowerCase(), password });
-    await login(app, { email, password });
+    await runInIsolatedSession(app, async () => {
+      const user = await registerUser(app, { email, password });
+      expect(user.email.value).toBe(email.toLowerCase());
+
+      await login(app, { email: email.toLowerCase(), password });
+      await login(app, { email, password });
+    });
   });
 
-  it('create person - optional email', async () => {
-    await registerUser(app);
+  it('Email can be cleared', async () => {
+    const person = await createPerson(app);
 
-    const person = await createPerson(app, {
-      email: undefined,
-    });
-    expect(person.email.value).toBeNull();
+    const result = await app.graphql.mutate(
+      gql`
+        mutation updateUser($input: UpdateUserInput!) {
+          updateUser(input: $input) {
+            user {
+              email {
+                value
+              }
+            }
+          }
+        }
+      `,
+      {
+        input: {
+          user: {
+            id: person.id,
+            email: null,
+          },
+        } satisfies UpdateUserInput,
+      },
+    );
+    expect(result.updateUser.user.email.value).toBeNull();
   });
 });

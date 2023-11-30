@@ -3,7 +3,6 @@ import { isValidId } from '../src/common';
 import { Role } from '../src/components/authorization/dto/role.dto';
 import { FieldRegion } from '../src/components/field-region';
 import { FieldZone } from '../src/components/field-zone';
-import { User } from '../src/components/user';
 import {
   createPerson,
   createSession,
@@ -15,11 +14,12 @@ import {
 } from './utility';
 import { createRegion } from './utility/create-region';
 import { createZone } from './utility/create-zone';
+import { RawUser } from './utility/fragments';
 
 describe('Region e2e', () => {
   let app: TestApp;
-  let director: User;
-  let newDirector: User;
+  let director: RawUser;
+  let newDirector: RawUser;
   let fieldZone: FieldZone;
 
   beforeAll(async () => {
