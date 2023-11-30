@@ -9,6 +9,7 @@ import {
   Query,
   relation,
 } from 'cypher-query-builder';
+import { ChangesOf } from '~/core/database/changes';
 import {
   CalendarDate,
   generateId,
@@ -17,7 +18,7 @@ import {
   Session,
   UnsecuredDto,
 } from '../../common';
-import { DatabaseService, DtoRepository } from '../../core';
+import { DtoRepository } from '../../core';
 import {
   ACTIVE,
   createNode,
@@ -41,6 +42,7 @@ import {
   PeriodicReportListInput,
   ReportType,
   resolveReportType,
+  UpdatePeriodicReportInput,
 } from './dto';
 
 @Injectable()
@@ -51,9 +53,8 @@ export class PeriodicReportRepository extends DtoRepository<
 >(IPeriodicReport) {
   constructor(
     private readonly progressRepo: ProgressReportExtraForPeriodicInterfaceRepository,
-    db: DatabaseService,
   ) {
-    super(db);
+    super();
   }
 
   async merge(input: MergePeriodicReports) {
@@ -160,6 +161,17 @@ export class PeriodicReportRepository extends DtoRepository<
         'report.id as id, interval',
       );
     return await query.run();
+  }
+
+  async update<T extends PeriodicReport | UnsecuredDto<PeriodicReport>>(
+    existing: T,
+    simpleChanges: Omit<
+      ChangesOf<PeriodicReport, UpdatePeriodicReportInput>,
+      'reportFile'
+    > &
+      Partial<Pick<PeriodicReport, 'start' | 'end'>>,
+  ) {
+    return await this.updateProperties(existing, simpleChanges);
   }
 
   async list(input: PeriodicReportListInput, session: Session) {

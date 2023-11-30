@@ -286,28 +286,14 @@ export class EngagementService {
       .for(session, LanguageEngagement, object)
       .verifyChanges(changes);
 
-    const { pnp, ...simpleChanges } = changes;
-
     await this.files.updateDefinedFile(
       object.pnp,
       'engagement.pnp',
-      pnp,
+      changes.pnp,
       session,
     );
 
-    try {
-      await this.repo.updateLanguageProperties(
-        object,
-        simpleChanges,
-        changeset,
-      );
-    } catch (exception) {
-      this.logger.error('Error updating language engagement', { exception });
-      throw new ServerException(
-        'Could not update LanguageEngagement',
-        exception,
-      );
-    }
+    await this.repo.updateLanguage(object, changes, changeset);
 
     const updated = (await this.repo.readOne(
       input.id,
@@ -347,44 +333,14 @@ export class EngagementService {
       .for(session, InternshipEngagement, object)
       .verifyChanges(changes, { pathPrefix: 'engagement' });
 
-    const { mentorId, countryOfOriginId, growthPlan, ...simpleChanges } =
-      changes;
-
     await this.files.updateDefinedFile(
       object.growthPlan,
       'engagement.growthPlan',
-      growthPlan,
+      changes.growthPlan,
       session,
     );
 
-    try {
-      if (mentorId !== undefined) {
-        await this.repo.updateRelation('mentor', 'User', input.id, mentorId);
-      }
-
-      if (countryOfOriginId !== undefined) {
-        await this.repo.updateRelation(
-          'countryOfOrigin',
-          'Location',
-          input.id,
-          countryOfOriginId,
-        );
-      }
-
-      await this.repo.updateInternshipProperties(
-        object,
-        simpleChanges,
-        changeset,
-      );
-    } catch (exception) {
-      this.logger.warning('Failed to update InternshipEngagement', {
-        exception,
-      });
-      throw new ServerException(
-        'Could not update InternshipEngagement',
-        exception,
-      );
-    }
+    await this.repo.updateInternship(object, changes, changeset);
 
     const updated = (await this.repo.readOne(
       input.id,

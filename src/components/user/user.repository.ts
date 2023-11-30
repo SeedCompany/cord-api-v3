@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { inArray, node, Query, relation } from 'cypher-query-builder';
 import { difference } from 'lodash';
 import { DateTime } from 'luxon';
+import { ChangesOf } from '~/core/database/changes';
 import {
   DuplicateException,
   ID,
@@ -32,6 +33,7 @@ import {
   KnownLanguage,
   LanguageProficiency,
   RemoveOrganizationFromUser,
+  UpdateUser,
   User,
   UserListInput,
 } from './dto';
@@ -86,6 +88,18 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
       throw new ServerException('Failed to create user');
     }
     return result.id;
+  }
+
+  async update(existing: User, changes: ChangesOf<User, UpdateUser>) {
+    const { roles, email, ...simpleChanges } = changes;
+
+    await this.updateProperties(existing, simpleChanges);
+    if (email !== undefined) {
+      await this.updateEmail(existing, email);
+    }
+    if (roles) {
+      await this.updateRoles(existing, roles);
+    }
   }
 
   hydrate(requestingUserId: Session | ID) {

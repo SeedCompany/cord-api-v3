@@ -22,7 +22,6 @@ import {
 } from '../../common';
 import {
   CommonRepository,
-  DatabaseService,
   ILogger,
   Logger,
   OnIndex,
@@ -54,11 +53,8 @@ import {
 
 @Injectable()
 export class FileRepository extends CommonRepository {
-  constructor(
-    db: DatabaseService,
-    @Logger('file:repository') private readonly logger: ILogger,
-  ) {
-    super(db);
+  constructor(@Logger('file:repository') private readonly logger: ILogger) {
+    super();
   }
 
   @OnIndex()

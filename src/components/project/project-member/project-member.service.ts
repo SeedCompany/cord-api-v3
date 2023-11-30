@@ -187,7 +187,7 @@ export class ProjectMemberService {
 
     const changes = this.repo.getActualChanges(object, input);
     this.privileges.for(session, ProjectMember, object).verifyChanges(changes);
-    await this.repo.updateProperties(object, changes);
+    await this.repo.update(object, changes);
     return await this.readOne(input.id, session);
   }
 

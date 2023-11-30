@@ -149,7 +149,7 @@ export class LanguageService {
       );
     }
 
-    await this.repo.updateProperties(object, simpleChanges, view?.changeset);
+    await this.repo.update(object, simpleChanges, view?.changeset);
 
     return await this.readOne(input.id, session, view);
   }

@@ -1,8 +1,9 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
+import { ChangesOf } from '~/core/database/changes';
 import { ID, Session, UnsecuredDto } from '../../common';
-import { DatabaseService, DtoRepository } from '../../core';
+import { DtoRepository } from '../../core';
 import {
   ACTIVE,
   createNode,
@@ -15,16 +16,20 @@ import {
   variable,
 } from '../../core/database/query';
 import { CommentThreadRepository } from './comment-thread.repository';
-import { Comment, CommentListInput, CreateCommentInput } from './dto';
+import {
+  Comment,
+  CommentListInput,
+  CreateCommentInput,
+  UpdateCommentInput,
+} from './dto';
 
 @Injectable()
 export class CommentRepository extends DtoRepository(Comment) {
   constructor(
     @Inject(forwardRef(() => CommentThreadRepository))
     readonly threads: CommentThreadRepository & {},
-    db: DatabaseService,
   ) {
-    super(db);
+    super();
   }
 
   async create(input: CreateCommentInput, session: Session) {
@@ -54,6 +59,13 @@ export class CommentRepository extends DtoRepository(Comment) {
         'thread.id as threadId',
       ])
       .first();
+  }
+
+  async update(
+    existing: UnsecuredDto<Comment>,
+    changes: ChangesOf<Comment, UpdateCommentInput>,
+  ) {
+    await this.updateProperties(existing, changes);
   }
 
   override hydrate() {

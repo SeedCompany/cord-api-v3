@@ -20,7 +20,12 @@ import {
   sorting,
 } from '../../core/database/query';
 import { FileId } from '../file';
-import { CreateLocation, Location, LocationListInput } from './dto';
+import {
+  CreateLocation,
+  Location,
+  LocationListInput,
+  UpdateLocation,
+} from './dto';
 
 @Injectable()
 export class LocationRepository extends DtoRepository(Location) {
@@ -62,6 +67,36 @@ export class LocationRepository extends DtoRepository(Location) {
     }
 
     return { id: result.id, mapImageId };
+  }
+
+  async update(changes: UpdateLocation) {
+    const {
+      id,
+      fundingAccountId,
+      defaultFieldRegionId,
+      mapImage,
+      ...simpleChanges
+    } = changes;
+
+    await this.updateProperties({ id }, simpleChanges);
+
+    if (fundingAccountId !== undefined) {
+      await this.updateRelation(
+        'fundingAccount',
+        'FundingAccount',
+        id,
+        fundingAccountId,
+      );
+    }
+
+    if (defaultFieldRegionId !== undefined) {
+      await this.updateRelation(
+        'defaultFieldRegion',
+        'FieldRegion',
+        id,
+        defaultFieldRegionId,
+      );
+    }
   }
 
   protected hydrate() {

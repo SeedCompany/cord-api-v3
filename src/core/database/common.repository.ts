@@ -1,4 +1,4 @@
-import { Inject, Injectable, Optional } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { setOf } from '@seedcompany/common';
 import { inArray, node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
@@ -27,18 +27,6 @@ export class CommonRepository {
   @Inject(DatabaseService)
   protected db: DatabaseService;
 
-  // eslint-disable-next-line @typescript-eslint/no-empty-function,@typescript-eslint/no-useless-constructor
-  constructor(@Optional() _old?: unknown) {}
-
-  async isUnique(value: string, label: string) {
-    const exists = await this.db
-      .query()
-      .matchNode('node', label, { value })
-      .return('node')
-      .first();
-    return !exists;
-  }
-
   async getBaseNode(
     id: ID,
     label?: string | ResourceShape<any> | EnhancedResource<any>,
@@ -65,7 +53,7 @@ export class CommonRepository {
       .run();
   }
 
-  async updateRelation(
+  protected async updateRelation(
     relationName: string,
     otherLabel: string,
     id: ID,
@@ -103,7 +91,7 @@ export class CommonRepository {
       .run();
   }
 
-  async updateRelationList({
+  protected async updateRelationList({
     id,
     label,
     relation,

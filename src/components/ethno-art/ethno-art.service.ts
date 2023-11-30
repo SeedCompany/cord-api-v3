@@ -106,7 +106,7 @@ export class EthnoArtService {
 
     await this.scriptureRefs.update(input.id, scriptureReferences);
 
-    await this.repo.updateProperties(ethnoArt, simpleChanges);
+    await this.repo.update(ethnoArt, simpleChanges);
 
     return await this.readOne(input.id, session);
   }

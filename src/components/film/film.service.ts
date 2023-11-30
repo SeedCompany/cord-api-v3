@@ -44,7 +44,7 @@ export class FilmService {
     }
 
     try {
-      const result = await this.repo.createFilm(input, session);
+      const result = await this.repo.create(input, session);
 
       if (!result) {
         throw new ServerException('failed to create a film');
@@ -106,7 +106,7 @@ export class FilmService {
 
     await this.scriptureRefs.update(input.id, scriptureReferences);
 
-    await this.repo.updateProperties(film, simpleChanges);
+    await this.repo.update(film, simpleChanges);
 
     return await this.readOne(input.id, session);
   }

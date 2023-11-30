@@ -94,39 +94,7 @@ export class LocationService {
     const changes = this.repo.getActualChanges(location, input);
     this.privileges.for(session, Location, location).verifyChanges(changes);
 
-    const {
-      fundingAccountId,
-      defaultFieldRegionId,
-      mapImage,
-      ...simpleChanges
-    } = changes;
-
-    await this.repo.updateProperties(location, simpleChanges);
-
-    if (fundingAccountId !== undefined) {
-      await this.repo.updateRelation(
-        'fundingAccount',
-        'FundingAccount',
-        input.id,
-        fundingAccountId,
-      );
-    }
-
-    if (defaultFieldRegionId !== undefined) {
-      await this.repo.updateRelation(
-        'defaultFieldRegion',
-        'FieldRegion',
-        input.id,
-        defaultFieldRegionId,
-      );
-    }
-
-    await this.files.updateDefinedFile(
-      location.mapImage,
-      'location.mapImage',
-      mapImage,
-      session,
-    );
+    await this.repo.update({ id: input.id, ...changes });
 
     return await this.readOne(input.id, session);
   }

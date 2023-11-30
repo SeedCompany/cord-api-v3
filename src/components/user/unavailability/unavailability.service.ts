@@ -97,7 +97,7 @@ export class UnavailabilityService {
         .for(session, Unavailability, unavailability)
         .verifyChanges(changes);
     }
-    return await this.repo.updateProperties(unavailability, changes);
+    return await this.repo.update(unavailability, changes);
   }
 
   async delete(id: ID, session: Session): Promise<void> {

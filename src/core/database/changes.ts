@@ -33,7 +33,7 @@ export interface SetChangeType<Key, Value> {
   __update_type__?: { key: Key; value: Value };
 }
 
-export type ChangesOf<T> = {
+export type AnyChangesOf<T> = {
   [Key in keyof T & string as ChangeKey<
     Exclude<Key, keyof Resource>,
     T
@@ -43,6 +43,11 @@ export type ChangesOf<T> = {
   // all over the app.
   id?: ID;
 };
+
+export type ChangesOf<
+  TResource,
+  Changes extends AnyChangesOf<TResource>,
+> = Partial<Omit<Changes, keyof Resource> & AndModifiedAt<TResource>>;
 
 type ChangeKey<Key extends keyof T & string, T> = T[Key] extends SetChangeType<
   infer Override,
@@ -91,7 +96,7 @@ export const getChanges =
   <TResourceStatic extends ResourceShape<any>>(resource: TResourceStatic) =>
   <
     TResource extends MaybeUnsecuredInstance<TResourceStatic>,
-    Changes extends ChangesOf<TResource>,
+    Changes extends AnyChangesOf<TResource>,
   >(
     existingObject: TResource,
     changes: Changes &
@@ -100,8 +105,8 @@ export const getChanges =
       // It's a generic to ensure that if only a subset of the changes
       // are passed in we don't declare the return type having those omitted
       // properties.
-      Record<Exclude<keyof Changes, keyof ChangesOf<TResource>>, never>,
-  ): Partial<Omit<Changes, keyof Resource> & AndModifiedAt<TResource>> => {
+      Record<Exclude<keyof Changes, keyof AnyChangesOf<TResource>>, never>,
+  ): ChangesOf<TResource, Changes> => {
     const res = EnhancedResource.of(resource);
     const actual = pickBy(omit(changes, Resource.Props), (change, prop) => {
       if (change === undefined) {

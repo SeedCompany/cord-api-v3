@@ -1,7 +1,7 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { ID, Session, UnsecuredDto } from '../../common';
-import { DatabaseService, DtoRepository } from '../../core';
+import { DtoRepository } from '../../core';
 import {
   ACTIVE,
   createNode,
@@ -19,9 +19,8 @@ export class CommentThreadRepository extends DtoRepository(CommentThread) {
   constructor(
     @Inject(forwardRef(() => CommentRepository))
     private readonly comments: CommentRepository & {},
-    db: DatabaseService,
   ) {
-    super(db);
+    super();
   }
 
   async create(parent: ID, session: Session) {

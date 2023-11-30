@@ -69,7 +69,7 @@ export class PeriodicReportService {
 
     const { reportFile, ...simpleChanges } = changes;
 
-    const updated = await this.repo.updateProperties(current, simpleChanges);
+    const updated = await this.repo.update(current, simpleChanges);
 
     if (reportFile) {
       const file = await this.files.updateDefinedFile(
@@ -232,7 +232,7 @@ export class PeriodicReportService {
         // no change
         return;
       }
-      await this.repo.updateProperties(report, {
+      await this.repo.update(report, {
         start: at,
         end: at,
       });

@@ -16,7 +16,7 @@ export abstract class UpdateLocation {
   readonly name?: string;
 
   @Field(() => LocationType, { nullable: true })
-  readonly type: LocationType;
+  readonly type?: LocationType;
 
   @Field(() => String, {
     nullable: true,

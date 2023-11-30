@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
+import { ChangesOf } from '~/core/database/changes';
 import {
   ID,
   labelForView,
@@ -21,7 +22,13 @@ import {
   paginate,
   sorting,
 } from '../../core/database/query';
-import { BudgetRecord, BudgetRecordListInput, CreateBudgetRecord } from './dto';
+import {
+  Budget,
+  BudgetRecord,
+  BudgetRecordListInput,
+  CreateBudgetRecord,
+  UpdateBudgetRecord,
+} from './dto';
 
 interface BudgetRecordHydrateArgs {
   recordVar?: string;
@@ -64,6 +71,14 @@ export class BudgetRecordRepository extends DtoRepository<
       throw new ServerException('Failed to create a budget record');
     }
     return result.id;
+  }
+
+  async update(
+    existing: BudgetRecord,
+    changes: ChangesOf<Budget, UpdateBudgetRecord>,
+    changeset?: ID,
+  ) {
+    return await this.updateProperties(existing, changes, changeset);
   }
 
   async doesRecordExist(input: CreateBudgetRecord) {

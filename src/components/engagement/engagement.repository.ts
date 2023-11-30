@@ -16,8 +16,8 @@ import {
   UnsecuredDto,
   viewOfChangeset,
 } from '../../common';
-import { CommonRepository, DatabaseService, OnIndex } from '../../core';
-import { DbChanges, getChanges } from '../../core/database/changes';
+import { CommonRepository, OnIndex } from '../../core';
+import { ChangesOf, getChanges } from '../../core/database/changes';
 import {
   ACTIVE,
   coalesce,
@@ -45,6 +45,8 @@ import {
   IEngagement,
   InternshipEngagement,
   LanguageEngagement,
+  UpdateInternshipEngagement,
+  UpdateLanguageEngagement,
 } from './dto';
 
 export type LanguageOrEngagementId = MergeExclusive<
@@ -54,8 +56,8 @@ export type LanguageOrEngagementId = MergeExclusive<
 
 @Injectable()
 export class EngagementRepository extends CommonRepository {
-  constructor(db: DatabaseService, private readonly privileges: Privileges) {
-    super(db);
+  constructor(private readonly privileges: Privileges) {
+    super();
   }
 
   async readOne(id: ID, session: Session, view?: ObjectView) {
@@ -261,100 +263,52 @@ export class EngagementRepository extends CommonRepository {
 
   getActualLanguageChanges = getChanges(LanguageEngagement);
 
-  async updateLanguageProperties(
-    object: LanguageEngagement | UnsecuredDto<LanguageEngagement>,
-    changes: DbChanges<LanguageEngagement>,
+  async updateLanguage(
+    existing: LanguageEngagement | UnsecuredDto<LanguageEngagement>,
+    changes: ChangesOf<LanguageEngagement, UpdateLanguageEngagement>,
     changeset?: ID,
   ): Promise<void> {
+    const { pnp, ...simpleChanges } = changes;
+
     await this.db.updateProperties({
       type: LanguageEngagement,
-      object,
-      changes,
+      object: existing,
+      changes: simpleChanges,
       changeset,
     });
   }
 
   getActualInternshipChanges = getChanges(InternshipEngagement);
 
-  async updateMentor(id: ID, mentorId: ID) {
-    await this.db
-      .query()
-      .match([node('newMentorUser', 'User', { id: mentorId })])
-      .match([
-        node('internshipEngagement', 'InternshipEngagement', {
-          id,
-        }),
-      ])
-      .optionalMatch([
-        node('internshipEngagement'),
-        relation('out', 'rel', 'mentor', ACTIVE),
-        node('oldMentorUser', 'User'),
-      ])
-      .set({
-        values: {
-          rel: {
-            active: false,
-          },
-        },
-      })
-      .create([
-        node('internshipEngagement'),
-        relation('out', '', 'mentor', {
-          active: true,
-          createdAt: DateTime.local(),
-        }),
-        node('newMentorUser'),
-      ])
-      .return('internshipEngagement.id as id')
-      .run();
-  }
-
-  async updateCountryOfOrigin(id: ID, countryOfOriginId: ID) {
-    await this.db
-      .query()
-      .match([
-        node('newCountry', 'Location', {
-          id: countryOfOriginId,
-        }),
-      ])
-      .match([
-        node('internshipEngagement', 'InternshipEngagement', {
-          id,
-        }),
-      ])
-      .optionalMatch([
-        node('internshipEngagement'),
-        relation('out', 'rel', 'countryOfOrigin', ACTIVE),
-        node('oldCountry', 'Location'),
-      ])
-      .set({
-        values: {
-          rel: {
-            active: false,
-          },
-        },
-      })
-      .create([
-        node('internshipEngagement'),
-        relation('out', '', 'countryOfOrigin', {
-          active: true,
-          createdAt: DateTime.local(),
-        }),
-        node('newCountry'),
-      ])
-      .return('internshipEngagement.id as id')
-      .run();
-  }
-
-  async updateInternshipProperties(
-    object: InternshipEngagement | UnsecuredDto<InternshipEngagement>,
-    changes: DbChanges<InternshipEngagement>,
+  async updateInternship(
+    existing: InternshipEngagement | UnsecuredDto<InternshipEngagement>,
+    changes: ChangesOf<InternshipEngagement, UpdateInternshipEngagement>,
     changeset?: ID,
   ): Promise<void> {
+    const {
+      mentorId,
+      countryOfOriginId,
+      growthPlan: _,
+      ...simpleChanges
+    } = changes;
+
+    if (mentorId !== undefined) {
+      await this.updateRelation('mentor', 'User', existing.id, mentorId);
+    }
+
+    if (countryOfOriginId !== undefined) {
+      await this.updateRelation(
+        'countryOfOrigin',
+        'Location',
+        existing.id,
+        countryOfOriginId,
+      );
+    }
+
     await this.db.updateProperties({
       type: InternshipEngagement,
-      object,
-      changes,
+      object: existing,
+      changes: simpleChanges,
       changeset,
     });
   }
