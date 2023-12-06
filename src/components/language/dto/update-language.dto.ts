@@ -102,6 +102,9 @@ export abstract class UpdateLanguage {
   @Field(() => [String], { nullable: true })
   @Transform(({ value }) => uniq(value))
   readonly tags?: string[];
+
+  @Field({ nullable: true })
+  readonly isLanguageOfConsulting?: boolean;
 }
 
 @InputType()

@@ -32,6 +32,7 @@ export async function createLanguage(
       .int({ min: 10000, max: 99999 })
       .toString(),
     leastOfThese: faker.datatype.boolean(),
+    isLanguageOfConsulting: faker.datatype.boolean(),
     leastOfTheseReason: faker.lorem.sentence(),
     ethnologue: ethnologueLanguage,
     signLanguageCode:

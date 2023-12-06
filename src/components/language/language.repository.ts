@@ -56,6 +56,7 @@ export class LanguageRepository extends DtoRepository<
       displayName: input.displayName,
       sensitivity: input.sensitivity,
       isDialect: input.isDialect,
+      isLanguageOfConsulting: input.isLanguageOfConsulting,
       populationOverride: input.populationOverride,
       registryOfDialectsCode: input.registryOfDialectsCode,
       leastOfThese: input.leastOfThese,
@@ -191,6 +192,7 @@ export class LanguageRepository extends DtoRepository<
             relation('out', '', 'partner', ACTIVE),
             node('', 'Partner', { id }),
           ]),
+          isLanguageOfConsulting: filter.propVal(),
           presetInventory: ({ value, query }) => {
             query.apply(this.isPresetInventory()).with('*');
             const condition = equals('true', true);
