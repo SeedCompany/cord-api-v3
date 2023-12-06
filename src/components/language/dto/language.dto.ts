@@ -176,6 +176,9 @@ export class Language extends Interfaces {
   @Field()
   readonly tags: SecuredTags;
 
+  @Field()
+  readonly isLanguageOfConsulting: SecuredBoolean;
+
   @Calculated()
   @Field({
     description: stripIndent`

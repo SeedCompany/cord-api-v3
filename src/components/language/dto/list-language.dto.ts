@@ -46,6 +46,9 @@ export abstract class LanguageFilters {
     nullable: true,
   })
   readonly pinned?: boolean;
+
+  @Field({ nullable: true })
+  readonly isLanguageOfConsulting?: boolean;
 }
 
 @InputType()
