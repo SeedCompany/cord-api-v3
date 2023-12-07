@@ -63,6 +63,10 @@ module default {
     
     sponsorEstimatedEndDate: cal::local_date;
     
+    required isLanguageOfConsulting: bool {
+      default := false;
+    };
+    
     required hasExternalFirstScripture: bool {
       default := false;
     };
