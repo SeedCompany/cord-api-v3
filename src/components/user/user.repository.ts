@@ -84,10 +84,13 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
     if (!result) {
       throw new ServerException('Failed to create user');
     }
-    return result.id;
+    return result;
   }
 
-  async update(existing: User, changes: ChangesOf<User, UpdateUser>) {
+  async update(
+    existing: User,
+    changes: ChangesOf<User, UpdateUser>,
+  ): Promise<unknown> {
     const { roles, email, ...simpleChanges } = changes;
 
     await this.updateProperties(existing, simpleChanges);
@@ -97,6 +100,8 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
     if (roles) {
       await this.updateRoles(existing, roles);
     }
+
+    return undefined;
   }
 
   hydrate(requestingUserId: Session | ID) {

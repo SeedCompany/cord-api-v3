@@ -12,7 +12,7 @@ import { EducationModule } from './education/education.module';
 import { KnownLanguageRepository } from './known-language.repository';
 import { KnownLanguageResolver } from './known-language.resolver';
 import { UnavailabilityModule } from './unavailability/unavailability.module';
-import { UserEdgedbRepository } from './user.edgedb.repository';
+import { UserEdgeDBRepository } from './user.edgedb.repository';
 import { UserLoader } from './user.loader';
 import { UserRepository } from './user.repository';
 import { UserResolver } from './user.resolver';
@@ -36,7 +36,7 @@ import { UserService } from './user.service';
     AssignableRolesResolver,
     UserLoader,
     UserService,
-    splitDb(UserRepository, UserEdgedbRepository),
+    splitDb(UserRepository, UserEdgeDBRepository as any),
     KnownLanguageRepository,
   ],
   exports: [UserService, UserRepository, EducationModule, UnavailabilityModule],
