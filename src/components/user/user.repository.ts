@@ -29,8 +29,6 @@ import { Role } from '../authorization';
 import {
   AssignOrganizationToUser,
   CreatePerson,
-  KnownLanguage,
-  LanguageProficiency,
   RemoveOrganizationFromUser,
   UpdateUser,
   User,
@@ -218,68 +216,6 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
       .apply(paginate(input, this.hydrate(session.userId)))
       .first();
     return result!; // result from paginate() will always have 1 row.
-  }
-
-  async createKnownLanguage(
-    userId: ID,
-    languageId: ID,
-    languageProficiency: LanguageProficiency,
-  ): Promise<void> {
-    await this.db
-      .query()
-      .matchNode('user', 'User', { id: userId })
-      .matchNode('language', 'Language', { id: languageId })
-      .create([
-        node('user'),
-        relation('out', '', 'knownLanguage', {
-          active: true,
-          createdAt: DateTime.local(),
-          value: languageProficiency,
-        }),
-        node('language'),
-      ])
-      .run();
-  }
-
-  async deleteKnownLanguage(
-    userId: ID,
-    languageId: ID,
-    languageProficiency: LanguageProficiency,
-  ): Promise<void> {
-    await this.db
-      .query()
-      .matchNode('user', 'User', { id: userId })
-      .matchNode('language', 'Language', { id: languageId })
-      .match([
-        [
-          node('user'),
-          relation('out', 'rel', 'knownLanguage', {
-            active: true,
-            value: languageProficiency,
-          }),
-          node('language'),
-        ],
-      ])
-      .setValues({
-        'rel.active': false,
-      })
-      .run();
-  }
-
-  async listKnownLanguages(userId: ID, _session: Session) {
-    const results = await this.db
-      .query()
-      .match([
-        node('node', 'Language'),
-        relation('in', 'knownLanguageRel', 'knownLanguage', ACTIVE),
-        node('user', 'User', { id: userId }),
-      ])
-      .with('collect(distinct user) as users, node, knownLanguageRel')
-      .raw(`unwind users as user`)
-      .return(['knownLanguageRel.value as proficiency', 'node.id as language'])
-      .asResult<KnownLanguage>()
-      .run();
-    return results;
   }
 
   async doesEmailAddressExist(email: string) {

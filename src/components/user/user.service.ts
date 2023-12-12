@@ -14,7 +14,6 @@ import { property } from '../../core/database/query';
 import { mapListResults } from '../../core/database/results';
 import { Privileges, Role } from '../authorization';
 import { AssignableRoles } from '../authorization/dto/assignable-roles';
-import { LanguageService } from '../language';
 import {
   LocationListInput,
   LocationService,
@@ -33,19 +32,19 @@ import {
 import {
   AssignOrganizationToUser,
   CreatePerson,
-  KnownLanguage,
+  ModifyKnownLanguageArgs,
   RemoveOrganizationFromUser,
   UpdateUser,
   User,
   UserListInput,
   UserListOutput,
 } from './dto';
-import { LanguageProficiency } from './dto/language-proficiency.enum';
 import {
   EducationListInput,
   EducationService,
   SecuredEducationList,
 } from './education';
+import { KnownLanguageRepository } from './known-language.repository';
 import {
   SecuredUnavailabilityList,
   UnavailabilityListInput,
@@ -63,7 +62,7 @@ export class UserService {
     private readonly unavailabilities: UnavailabilityService,
     private readonly privileges: Privileges,
     private readonly locationService: LocationService,
-    private readonly languageService: LanguageService,
+    private readonly knownLanguages: KnownLanguageRepository,
     private readonly userRepo: UserRepository,
     @Logger('user:service') private readonly logger: ILogger,
   ) {}
@@ -303,56 +302,22 @@ export class UserService {
     );
   }
 
-  async createKnownLanguage(
-    userId: ID,
-    languageId: ID,
-    languageProficiency: LanguageProficiency,
-    _session: Session,
-  ): Promise<void> {
-    try {
-      await this.deleteKnownLanguage(
-        userId,
-        languageId,
-        languageProficiency,
-        _session,
-      );
-      await this.userRepo.createKnownLanguage(
-        userId,
-        languageId,
-        languageProficiency,
-      );
-    } catch (e) {
-      throw new ServerException('Could not create known language', e);
-    }
+  async createKnownLanguage(args: ModifyKnownLanguageArgs) {
+    await this.knownLanguages.delete(args);
+    await this.knownLanguages.create(args);
   }
 
-  async deleteKnownLanguage(
-    userId: ID,
-    languageId: ID,
-    languageProficiency: LanguageProficiency,
-    _session: Session,
-  ): Promise<void> {
-    try {
-      await this.userRepo.deleteKnownLanguage(
-        userId,
-        languageId,
-        languageProficiency,
-      );
-    } catch (e) {
-      throw new ServerException('Could not delete known language', e);
-    }
+  async deleteKnownLanguage(args: ModifyKnownLanguageArgs) {
+    await this.knownLanguages.delete(args);
   }
 
-  async listKnownLanguages(
-    userId: ID,
-    session: Session,
-  ): Promise<readonly KnownLanguage[]> {
+  async listKnownLanguages(userId: ID, session: Session) {
     const user = await this.userRepo.readOne(userId, session);
     const perms = this.privileges.for(session, User, user).all.knownLanguage;
     if (!perms.read) {
       return [];
     }
-    return await this.userRepo.listKnownLanguages(userId, session);
+    return await this.knownLanguages.list(userId);
   }
 
   async checkEmail(email: string): Promise<boolean> {

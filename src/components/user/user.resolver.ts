@@ -295,16 +295,10 @@ export class UserResolver {
   })
   async createKnownLanguage(
     @LoggedInSession() session: Session,
-    @Args()
-    { userId, languageId, languageProficiency }: ModifyKnownLanguageArgs,
+    @Args() args: ModifyKnownLanguageArgs,
   ): Promise<User> {
-    await this.userService.createKnownLanguage(
-      userId,
-      languageId,
-      languageProficiency,
-      session,
-    );
-    return await this.userService.readOne(userId, session);
+    await this.userService.createKnownLanguage(args);
+    return await this.userService.readOne(args.userId, session);
   }
 
   @Mutation(() => User, {
@@ -312,15 +306,9 @@ export class UserResolver {
   })
   async deleteKnownLanguage(
     @LoggedInSession() session: Session,
-    @Args()
-    { userId, languageId, languageProficiency }: ModifyKnownLanguageArgs,
+    @Args() args: ModifyKnownLanguageArgs,
   ): Promise<User> {
-    await this.userService.deleteKnownLanguage(
-      userId,
-      languageId,
-      languageProficiency,
-      session,
-    );
-    return await this.userService.readOne(userId, session);
+    await this.userService.deleteKnownLanguage(args);
+    return await this.userService.readOne(args.userId, session);
   }
 }
