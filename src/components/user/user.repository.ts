@@ -121,7 +121,7 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
         );
   }
 
-  async updateEmail(
+  private async updateEmail(
     user: User,
     email: string | null | undefined,
   ): Promise<void> {
@@ -151,7 +151,7 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
     }
   }
 
-  async updateRoles(user: User, roles: Role[]): Promise<void> {
+  private async updateRoles(user: User, roles: Role[]): Promise<void> {
     const removals = difference(user.roles.value, roles);
     const additions = difference(roles, user.roles.value);
 

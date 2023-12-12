@@ -3,7 +3,6 @@ import {
   DuplicateException,
   ID,
   NotFoundException,
-  Role,
   ServerException,
   Session,
 } from '~/common';
@@ -97,36 +96,6 @@ export class UserEdgedbRepository extends UserRepository {
       }
       throw new ServerException('Failed to create user', e);
     }
-  }
-
-  async updateEmail(
-    user: User,
-    email: string | null | undefined,
-  ): Promise<void> {
-    const query = e.update(e.User, () => ({
-      filter_single: { id: user.id },
-      set: { email },
-    }));
-    try {
-      await this.edgedb.run(query);
-    } catch (e) {
-      if (isExclusivityViolation(e, 'email')) {
-        throw new DuplicateException(
-          'person.email',
-          'Email address is already in use',
-          e,
-        );
-      }
-      throw e;
-    }
-  }
-
-  async updateRoles(user: User, roles: Role[]): Promise<void> {
-    const query = e.update(e.User, () => ({
-      filter_single: { id: user.id },
-      set: { roles },
-    }));
-    await this.edgedb.run(query);
   }
 
   async delete(id: ID, _session: Session, _object: User): Promise<void> {
