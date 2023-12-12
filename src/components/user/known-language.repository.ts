@@ -13,6 +13,8 @@ export class KnownLanguageRepository extends DtoRepository(KnownLanguage) {
     languageId,
     languageProficiency,
   }: ModifyKnownLanguageArgs) {
+    await this.delete({ userId, languageId, languageProficiency });
+
     await this.db
       .query()
       .matchNode('user', 'User', { id: userId })

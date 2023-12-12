@@ -303,7 +303,6 @@ export class UserService {
   }
 
   async createKnownLanguage(args: ModifyKnownLanguageArgs) {
-    await this.knownLanguages.delete(args);
     await this.knownLanguages.create(args);
   }
 
