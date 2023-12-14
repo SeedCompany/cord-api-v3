@@ -4,6 +4,7 @@ import { stripIndent } from 'common-tags';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive } from 'type-fest';
+import { abstractType, e } from '~/core/edgedb';
 import { RegisterResource } from '~/core/resources';
 import {
   DateInterval,
@@ -75,6 +76,7 @@ export const resolveProjectType = (val: Pick<AnyProject, 'type'>) =>
   implements: [Resource, Pinnable, Postable, ChangesetAware, Commentable],
 })
 class Project extends Interfaces {
+  static readonly DB = abstractType(e.Project);
   static readonly Props: string[] = keysOf<Project>();
   static readonly SecuredProps: string[] = keysOf<SecuredProps<Project>>();
   static readonly Relations = () =>
@@ -187,6 +189,7 @@ export { Project as IProject, AnyProject as Project };
   implements: [Project],
 })
 export class TranslationProject extends Project {
+  static readonly DB = e.TranslationProject;
   static readonly Props = keysOf<TranslationProject>();
   static readonly SecuredProps = keysOf<SecuredProps<TranslationProject>>();
 
@@ -198,6 +201,7 @@ export class TranslationProject extends Project {
   implements: [Project],
 })
 export class InternshipProject extends Project {
+  static readonly DB = e.InternshipProject;
   static readonly Props = keysOf<InternshipProject>();
   static readonly SecuredProps = keysOf<SecuredProps<InternshipProject>>();
 

@@ -4,6 +4,7 @@ import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive } from 'type-fest';
 import { BaseNode } from '~/core/database/results';
+import { abstractType, e } from '~/core/edgedb';
 import { RegisterResource } from '~/core/resources';
 import {
   Calculated,
@@ -64,6 +65,7 @@ export const resolveEngagementType = (val: Pick<AnyEngagement, '__typename'>) =>
  * This should be used for GraphQL but never for TypeScript types.
  */
 class Engagement extends ChangesetAwareResource {
+  static readonly DB = abstractType(e.Engagement);
   static readonly Props: string[] = keysOf<Engagement>();
   static readonly SecuredProps: string[] = keysOf<SecuredProps<Engagement>>();
   static readonly Parent = import('../../project/dto').then((m) => m.IProject);
@@ -152,6 +154,7 @@ export { Engagement as IEngagement, AnyEngagement as Engagement };
   implements: [Engagement],
 })
 export class LanguageEngagement extends Engagement {
+  static readonly DB = e.LanguageEngagement;
   static readonly Props = keysOf<LanguageEngagement>();
   static readonly SecuredProps = keysOf<SecuredProps<LanguageEngagement>>();
   static readonly Relations = {
@@ -197,6 +200,7 @@ export class LanguageEngagement extends Engagement {
   implements: [Engagement],
 })
 export class InternshipEngagement extends Engagement {
+  static readonly DB = e.InternshipEngagement;
   static readonly Props = keysOf<InternshipEngagement>();
   static readonly SecuredProps = keysOf<SecuredProps<InternshipEngagement>>();
   static readonly Parent = import('../../project/dto').then(

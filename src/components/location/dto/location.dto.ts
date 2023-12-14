@@ -1,5 +1,6 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
+import { e } from '~/core/edgedb';
 import { RegisterResource } from '~/core/resources';
 import {
   DbLabel,
@@ -28,6 +29,7 @@ export abstract class SecuredLocationType extends SecuredEnum(LocationType) {}
   implements: [Resource],
 })
 export class Location extends Resource {
+  static readonly DB = e.Location;
   static readonly Props = keysOf<Location>();
   static readonly SecuredProps = keysOf<SecuredProps<Location>>();
 

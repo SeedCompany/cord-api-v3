@@ -2,6 +2,7 @@ import { Type } from '@nestjs/common';
 import { Field, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
+import { e } from '~/core/edgedb';
 import { RegisterResource } from '~/core/resources';
 import {
   DateTimeField,
@@ -46,6 +47,7 @@ export abstract class SecuredFinancialReportingTypes extends SecuredEnumList(
   implements: [Resource, Pinnable, Postable],
 })
 export class Partner extends Interfaces {
+  static readonly DB = e.Partner;
   static readonly Props = keysOf<Partner>();
   static readonly SecuredProps = keysOf<SecuredProps<Partner>>();
   static readonly Relations = () =>

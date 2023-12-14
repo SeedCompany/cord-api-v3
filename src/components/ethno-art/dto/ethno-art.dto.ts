@@ -1,5 +1,6 @@
 import { ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
+import { e } from '~/core/edgedb';
 import { RegisterResource } from '~/core/resources';
 import {
   DbUnique,
@@ -21,6 +22,7 @@ declare module '../../product/dto/producible.dto' {
   implements: [Producible, Resource],
 })
 export class EthnoArt extends Producible {
+  static readonly DB = e.EthnoArt;
   static readonly Props = keysOf<EthnoArt>();
   static readonly SecuredProps = keysOf<SecuredProps<EthnoArt>>();
 

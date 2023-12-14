@@ -1,6 +1,7 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { BaseNode } from '~/core/database/results';
+import { e } from '~/core/edgedb';
 import { RegisterResource } from '~/core/resources';
 import {
   DbLabel,
@@ -24,6 +25,7 @@ import { BudgetStatus } from './budget-status.enum';
   implements: [Resource, ChangesetAware],
 })
 export class Budget extends IntersectionType(ChangesetAware, Resource) {
+  static readonly DB = e.Budget;
   static readonly Props = keysOf<Budget>();
   static readonly SecuredProps = keysOf<SecuredProps<Budget>>();
   static readonly Relations = {
