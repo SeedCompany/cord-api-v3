@@ -85,6 +85,9 @@ export class EdgeDB {
         return await this.executor.current.query(query, args);
       }
     } catch (e) {
+      // Ignore this call in stack trace. This puts the actual query as the first.
+      e.stack = e.stack!.replace(/^\s+at EdgeDB\.run.+\n/m, '');
+
       if (ExclusivityViolationError.is(e)) {
         throw ExclusivityViolationError.cast(e);
       }
