@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { $, Executor } from 'edgedb';
 import { retry, RetryOptions } from '~/common/retry';
 import { TypedEdgeQL } from './edgeql';
+import { ExclusivityViolationError } from './exclusivity-violation.error';
 import { InlineQueryCardinalityMap } from './generated-client/inline-queries';
 import { OptionsContext, OptionsFn } from './options.context';
 import { Client } from './reexports';
@@ -58,29 +59,36 @@ export class EdgeDB {
   ): Promise<R>;
 
   async run(query: any, args?: any) {
-    if (query instanceof TypedEdgeQL) {
-      const cardinality = InlineQueryCardinalityMap.get(query.query);
-      if (!cardinality) {
-        throw new Error(`Query was not found from inline query generation`);
+    try {
+      if (query instanceof TypedEdgeQL) {
+        const cardinality = InlineQueryCardinalityMap.get(query.query);
+        if (!cardinality) {
+          throw new Error(`Query was not found from inline query generation`);
+        }
+        const exeMethod = cardinalityToExecutorMethod[cardinality];
+
+        return await this.executor.current[exeMethod](query.query, args);
       }
-      const exeMethod = cardinalityToExecutorMethod[cardinality];
 
-      return await this.executor.current[exeMethod](query.query, args);
-    }
+      if (query.run) {
+        // eslint-disable-next-line @typescript-eslint/return-await
+        return await query.run(this.executor.current, args);
+      }
 
-    if (query.run) {
-      // eslint-disable-next-line @typescript-eslint/return-await
-      return await query.run(this.executor.current, args);
-    }
+      if (typeof query === 'function') {
+        // eslint-disable-next-line @typescript-eslint/return-await
+        return await query(this.executor.current, args);
+      }
 
-    if (typeof query === 'function') {
-      // eslint-disable-next-line @typescript-eslint/return-await
-      return await query(this.executor.current, args);
-    }
-
-    // For REPL, as this is untyped and assumes many/empty cardinality
-    if (typeof query === 'string') {
-      return await this.executor.current.query(query, args);
+      // For REPL, as this is untyped and assumes many/empty cardinality
+      if (typeof query === 'string') {
+        return await this.executor.current.query(query, args);
+      }
+    } catch (e) {
+      if (ExclusivityViolationError.is(e)) {
+        throw ExclusivityViolationError.cast(e);
+      }
+      throw e;
     }
 
     throw new Error('Could not figure out how to run given query');

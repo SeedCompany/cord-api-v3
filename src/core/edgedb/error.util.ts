@@ -1,5 +1,4 @@
-import { ConstraintViolationError } from 'edgedb';
+import { ExclusivityViolationError } from './exclusivity-violation.error';
 
 export const isExclusivityViolation = (e: unknown, property: string) =>
-  e instanceof ConstraintViolationError &&
-  e.message === `${property} violates exclusivity constraint`;
+  e instanceof ExclusivityViolationError && e.property === property;
