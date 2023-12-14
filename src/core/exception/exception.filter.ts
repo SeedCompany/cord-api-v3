@@ -62,6 +62,10 @@ export class ExceptionFilter implements GqlExceptionFilter {
       ? HttpStatus.FORBIDDEN
       : codes.has('Client')
       ? HttpStatus.BAD_REQUEST
+      : codes.has('Transient')
+      ? HttpStatus.SERVICE_UNAVAILABLE
+      : codes.has('NotImplemented')
+      ? HttpStatus.NOT_IMPLEMENTED
       : HttpStatus.INTERNAL_SERVER_ERROR;
 
     const out = {
