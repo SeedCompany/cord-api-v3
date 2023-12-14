@@ -2,9 +2,15 @@ import { ApolloServerErrorCode as ApolloCode } from '@apollo/server/errors';
 import { ArgumentsHost, Inject, Injectable } from '@nestjs/common';
 // eslint-disable-next-line no-restricted-imports
 import * as Nest from '@nestjs/common';
+import {
+  GqlContextType as ContextKey,
+  GqlExecutionContext,
+} from '@nestjs/graphql';
 import { isNotFalsy, setHas, setOf, simpleSwitch } from '@seedcompany/common';
-import { GraphQLError } from 'graphql';
-import { uniq } from 'lodash';
+import * as Edge from 'edgedb';
+import * as EdgeDBTags from 'edgedb/dist/errors/tags.js';
+import { GraphQLError, GraphQLResolveInfo } from 'graphql';
+import { lowerCase, uniq } from 'lodash';
 import {
   AbstractClassType,
   DuplicateException,
@@ -94,6 +100,20 @@ export class ExceptionNormalizer {
 
     if (ex instanceof ExclusivityViolationError) {
       ex = DuplicateException.fromDB(ex, context);
+    } else if (ex instanceof Edge.EdgeDBError) {
+      // Mask actual DB error with a nicer user error message.
+      let message = 'Failed';
+      if (context && context.getType<ContextKey>() === 'graphql') {
+        const gqlContext = GqlExecutionContext.create(context as any);
+        const info = gqlContext.getInfo<GraphQLResolveInfo>();
+        if (info.operation.operation === 'mutation') {
+          message += ` to ${lowerCase(info.fieldName)}`;
+        }
+      }
+      return {
+        message,
+        codes: this.errorToCodes(ex),
+      };
     }
 
     if (ex instanceof Exception) {
@@ -179,6 +199,13 @@ export class ExceptionNormalizer {
     }
     if (type === Nest.HttpException) {
       return (ex as Nest.HttpException).getStatus() < 500 ? 'Client' : 'Server';
+    }
+    if (type === Edge.EdgeDBError) {
+      const transient =
+        ex instanceof Edge.EdgeDBError &&
+        (ex.hasTag(EdgeDBTags.SHOULD_RECONNECT) ||
+          ex.hasTag(EdgeDBTags.SHOULD_RETRY));
+      return [...(transient ? ['Transient'] : []), 'Database', 'Server'];
     }
 
     return type.name.replace(/(Exception|Error)$/, '');
