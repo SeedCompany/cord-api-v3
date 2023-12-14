@@ -1,5 +1,5 @@
 import { ApolloServerErrorCode as ApolloCode } from '@apollo/server/errors';
-import { Inject, Injectable } from '@nestjs/common';
+import { ArgumentsHost, Inject, Injectable } from '@nestjs/common';
 // eslint-disable-next-line no-restricted-imports
 import * as Nest from '@nestjs/common';
 import { isNotFalsy, setHas, setOf, simpleSwitch } from '@seedcompany/common';
@@ -7,6 +7,7 @@ import { GraphQLError } from 'graphql';
 import { uniq } from 'lodash';
 import {
   AbstractClassType,
+  DuplicateException,
   Exception,
   getParentTypes,
   getPreviousList,
@@ -14,6 +15,7 @@ import {
 } from '~/common';
 import type { ConfigService } from '~/core';
 import * as Neo from '../database/errors';
+import { ExclusivityViolationError } from '../edgedb/exclusivity-violation.error';
 import { isSrcFrame } from './is-src-frame';
 import { normalizeFramePath } from './normalize-frame-path';
 
@@ -29,14 +31,14 @@ export interface ExceptionJson {
 export class ExceptionNormalizer {
   constructor(@Inject('CONFIG') private readonly config?: ConfigService) {}
 
-  normalize(ex: Error): ExceptionJson {
+  normalize(ex: Error, context?: ArgumentsHost): ExceptionJson {
     const {
       message = ex.message,
       stack = ex.stack,
       code: _,
       codes,
       ...extensions
-    } = this.gatherExtraInfo(ex);
+    } = this.gatherExtraInfo(ex, context);
     return {
       message,
       code: codes[0],
@@ -52,7 +54,10 @@ export class ExceptionNormalizer {
     };
   }
 
-  private gatherExtraInfo(ex: Error): Record<string, any> {
+  private gatherExtraInfo(
+    ex: Error,
+    context?: ArgumentsHost,
+  ): Record<string, any> {
     if (ex instanceof Nest.HttpException) {
       return this.httpException(ex);
     }
@@ -87,10 +92,16 @@ export class ExceptionNormalizer {
       };
     }
 
+    if (ex instanceof ExclusivityViolationError) {
+      ex = DuplicateException.fromDB(ex, context);
+    }
+
     if (ex instanceof Exception) {
       const { name, message, stack, previous, ...rest } = ex;
       return {
+        message,
         codes: this.errorToCodes(ex),
+        stack,
         ...rest,
       };
     }

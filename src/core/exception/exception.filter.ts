@@ -32,7 +32,7 @@ export class ExceptionFilter implements GqlExceptionFilter {
 
     let normalized: ExceptionJson;
     try {
-      normalized = this.normalizer.normalize(exception);
+      normalized = this.normalizer.normalize(exception, args);
     } catch (e) {
       throw exception;
     }
