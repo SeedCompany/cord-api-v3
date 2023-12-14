@@ -1,12 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import {
-  DuplicateException,
-  ID,
-  NotFoundException,
-  ServerException,
-  Session,
-} from '~/common';
-import { e, EdgeDB, isExclusivityViolation } from '~/core/edgedb';
+import { ID, NotFoundException, Session } from '~/common';
+import { e, EdgeDB } from '~/core/edgedb';
 import { CreatePerson, User, UserListInput } from './dto';
 import { UserRepository } from './user.repository';
 
@@ -83,29 +77,14 @@ export class UserEdgedbRepository extends UserRepository {
 
   async create(input: CreatePerson) {
     const query = e.insert(e.User, { ...input });
-    try {
-      const result = await this.edgedb.run(query);
-      return result.id;
-    } catch (e) {
-      if (isExclusivityViolation(e, 'email')) {
-        throw new DuplicateException(
-          'person.email',
-          'Email address is already in use',
-          e,
-        );
-      }
-      throw new ServerException('Failed to create user', e);
-    }
+    const result = await this.edgedb.run(query);
+    return result.id;
   }
 
   async delete(id: ID, _session: Session, _object: User): Promise<void> {
     const query = e.delete(e.User, () => ({
       filter_single: { id },
     }));
-    try {
-      await this.edgedb.run(query);
-    } catch (exception) {
-      throw new ServerException('Failed to delete', exception);
-    }
+    await this.edgedb.run(query);
   }
 }
