@@ -98,6 +98,22 @@ export class ExceptionNormalizer {
       };
     }
 
+    // Again, dig deep here to find connection errors.
+    // These would be the root problem that we'd want to expose.
+    const edgeError = exs.find(
+      (e): e is Edge.EdgeDBError => e instanceof Edge.EdgeDBError,
+    );
+    if (
+      edgeError &&
+      (edgeError instanceof Edge.AvailabilityError ||
+        edgeError instanceof Edge.ClientConnectionError)
+    ) {
+      return {
+        codes: this.errorToCodes(ex),
+        message: 'Failed to connect to CORD database',
+      };
+    }
+
     if (ex instanceof ExclusivityViolationError) {
       ex = DuplicateException.fromDB(ex, context);
     } else if (ex instanceof Edge.EdgeDBError) {
