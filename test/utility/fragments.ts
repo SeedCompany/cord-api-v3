@@ -321,6 +321,14 @@ export const language = gql`
             }
           }
         }
+        marketingRegion {
+          value {
+            id
+            name {
+              value
+            }
+          }
+        }
       }
     }
   }
@@ -1135,6 +1143,17 @@ export const fundingAccount = gql`
   }
 `;
 
+export const marketingRegion = gql`
+  fragment marketingRegion on Location {
+    id
+    name {
+      value
+      canRead
+      canEdit
+    }
+  }
+`;
+
 export const location = gql`
   fragment location on Location {
     id
@@ -1166,9 +1185,15 @@ export const location = gql`
         ...fieldRegion
       }
     }
+    marketingRegion {
+      value {
+        ...marketingRegion
+      }
+    }
   }
   ${fundingAccount}
   ${fieldRegion}
+  ${marketingRegion}
 `;
 
 export const projectChangeRequest = gql`
