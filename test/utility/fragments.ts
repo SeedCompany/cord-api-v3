@@ -81,6 +81,14 @@ export const org = gql`
             }
           }
         }
+        marketingRegion {
+          value {
+            id
+            name {
+              value
+            }
+          }
+        }
       }
     }
   }
