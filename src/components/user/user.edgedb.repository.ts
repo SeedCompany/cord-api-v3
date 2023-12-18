@@ -12,14 +12,7 @@ import type { UserRepository } from './user.repository';
 @Injectable()
 export class UserEdgeDBRepository
   extends RepoFor(User).withDefaults()
-  implements
-    Omit<
-      PublicOf<UserRepository>,
-      // hydrate is public (not default) and specific to Neo4j,
-      // but it will only be called by other neo4j repositories,
-      // so it doesn't have to match here
-      'hydrate'
-    >
+  implements PublicOf<UserRepository>
 {
   async doesEmailAddressExist(email: string) {
     const query = e.select(e.User, () => ({
@@ -42,5 +35,9 @@ export class UserEdgeDBRepository
   }
   removeOrganizationFromUser(args: RemoveOrganizationFromUser): Promise<void> {
     throw new NotImplementedException().with(args);
+  }
+
+  hydrateAsNeo4j(_session: unknown): any {
+    throw new NotImplementedException();
   }
 }

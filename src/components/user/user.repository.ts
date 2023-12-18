@@ -104,7 +104,7 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
     return undefined;
   }
 
-  hydrate(requestingUserId: Session | ID) {
+  protected hydrate(requestingUserId: Session | ID) {
     return (query: Query) =>
       query
         .subQuery('node', (sub) =>
@@ -346,5 +346,9 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
         .return('oldRel');
       await removePrimary.first();
     }
+  }
+
+  hydrateAsNeo4j(session: Session | ID) {
+    return this.hydrate(session);
   }
 }

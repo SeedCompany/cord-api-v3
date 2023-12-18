@@ -36,7 +36,7 @@ import { UserService } from './user.service';
     AssignableRolesResolver,
     UserLoader,
     UserService,
-    splitDb(UserRepository, UserEdgeDBRepository as any),
+    splitDb(UserRepository, UserEdgeDBRepository),
     KnownLanguageRepository,
   ],
   exports: [UserService, UserRepository, EducationModule, UnavailabilityModule],
