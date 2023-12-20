@@ -10,6 +10,7 @@ import {
   SecuredProps,
   SecuredString,
 } from '~/common';
+import { e } from '~/core/edgedb';
 import { RegisterResource } from '~/core/resources';
 
 export type Degree = EnumType<typeof Degree>;
@@ -35,6 +36,7 @@ export abstract class SecuredDegree extends SecuredEnum(Degree) {}
   implements: [Resource],
 })
 export class Education extends Resource {
+  static readonly DB = e.User.Education;
   static readonly Props = keysOf<Education>();
   static readonly SecuredProps = keysOf<SecuredProps<Education>>();
   static readonly Parent = import('../../dto').then((m) => m.User);

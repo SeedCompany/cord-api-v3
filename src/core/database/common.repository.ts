@@ -1,4 +1,4 @@
-import { Inject, Injectable, Optional } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { setOf } from '@seedcompany/common';
 import { inArray, node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
@@ -12,7 +12,6 @@ import {
   NotFoundException,
   ResourceShape,
   ServerException,
-  Session,
 } from '../../common';
 import { DatabaseService } from './database.service';
 import { createUniqueConstraint } from './indexer';
@@ -26,18 +25,6 @@ import { BaseNode } from './results';
 export class CommonRepository {
   @Inject(DatabaseService)
   protected db: DatabaseService;
-
-  // eslint-disable-next-line @typescript-eslint/no-empty-function,@typescript-eslint/no-useless-constructor
-  constructor(@Optional() _old?: unknown) {}
-
-  async isUnique(value: string, label: string) {
-    const exists = await this.db
-      .query()
-      .matchNode('node', label, { value })
-      .return('node')
-      .first();
-    return !exists;
-  }
 
   async getBaseNode(
     id: ID,
@@ -65,7 +52,7 @@ export class CommonRepository {
       .run();
   }
 
-  async updateRelation(
+  protected async updateRelation(
     relationName: string,
     otherLabel: string,
     id: ID,
@@ -103,7 +90,7 @@ export class CommonRepository {
       .run();
   }
 
-  async updateRelationList({
+  protected async updateRelationList({
     id,
     label,
     relation,
@@ -136,10 +123,6 @@ export class CommonRepository {
       );
     }
     return res.stats;
-  }
-
-  async checkDeletePermission(id: ID, session: Session | ID) {
-    return await this.db.checkDeletePermission(id, session);
   }
 
   async deleteNode(objectOrId: { id: ID } | ID, changeset?: ID) {

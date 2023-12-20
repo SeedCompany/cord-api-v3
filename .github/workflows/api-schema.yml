@@ -15,12 +15,15 @@ jobs:
       matrix:
         ref: [base, head]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           ref: ${{ matrix.ref == 'base' && github.event.pull_request[matrix.ref].ref || '' }}
 
       - name: Node Setup & Yarn Install
         uses: ./.github/actions/setup
+
+      - name: EdgeDB Setup
+        uses: ./.github/actions/edgedb-setup
 
       - name: Generate GraphQL Schema
         run: yarn start -- --gen-schema
@@ -36,7 +39,7 @@ jobs:
     needs: [generate]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: actions/download-artifact@v3
         with:
@@ -56,7 +59,7 @@ jobs:
 
       - name: Enforce compatibility
         run: |
-          yarn dlx graphql-schema-diff \
+          corepack enable && yarn dlx graphql-schema-diff \
             --use-colors --fail-on-breaking-changes \
             ./base/schema.graphql ./head/schema.graphql
         if: ${{ !contains(github.event.pull_request.labels.*.name, 'breaking change') }}

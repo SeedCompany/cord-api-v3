@@ -1,22 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { inArray, node, Query, relation } from 'cypher-query-builder';
+import { difference } from 'lodash';
 import { DateTime } from 'luxon';
+import { ChangesOf } from '~/core/database/changes';
 import {
   DuplicateException,
   ID,
   ServerException,
   Session,
-  UnauthorizedException,
   UnsecuredDto,
 } from '../../common';
-import {
-  ConfigService,
-  DatabaseService,
-  DtoRepository,
-  ILogger,
-  Logger,
-  UniquenessError,
-} from '../../core';
+import { DtoRepository, UniquenessError } from '../../core';
 import {
   ACTIVE,
   createNode,
@@ -35,8 +29,6 @@ import { Role } from '../authorization';
 import {
   AssignOrganizationToUser,
   CreatePerson,
-  KnownLanguage,
-  LanguageProficiency,
   RemoveOrganizationFromUser,
   UpdateUser,
   User,
@@ -47,14 +39,6 @@ import {
 export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
   User,
 ) {
-  constructor(
-    db: DatabaseService,
-    private readonly config: ConfigService,
-    @Logger('user:repository') private readonly logger: ILogger,
-  ) {
-    super(db);
-  }
-
   private readonly roleProperties = (roles?: Role[]) =>
     (roles || []).flatMap((role) =>
       property('roles', role, 'node', `role${role}`),
@@ -103,6 +87,18 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
     return result.id;
   }
 
+  async update(existing: User, changes: ChangesOf<User, UpdateUser>) {
+    const { roles, email, ...simpleChanges } = changes;
+
+    await this.updateProperties(existing, simpleChanges);
+    if (email !== undefined) {
+      await this.updateEmail(existing, email);
+    }
+    if (roles) {
+      await this.updateRoles(existing, roles);
+    }
+  }
+
   hydrate(requestingUserId: Session | ID) {
     return (query: Query) =>
       query
@@ -125,11 +121,11 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
         );
   }
 
-  async updateEmail(
+  private async updateEmail(
     user: User,
     email: string | null | undefined,
   ): Promise<void> {
-    await this.db
+    const query = this.db
       .query()
       .matchNode('node', 'User', { id: user.id })
       .apply(deactivateProperty({ resource: User, key: 'email' }))
@@ -140,21 +136,31 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
             )
           : q,
       )
-      .return('*')
-      .run();
+      .return('*');
+    try {
+      await query.run();
+    } catch (e) {
+      if (e instanceof UniquenessError && e.label === 'EmailAddress') {
+        throw new DuplicateException(
+          'person.email',
+          'Email address is already in use',
+          e,
+        );
+      }
+      throw e;
+    }
   }
 
-  async updateRoles(
-    input: UpdateUser,
-    removals: Role[],
-    additions: Role[],
-  ): Promise<void> {
+  private async updateRoles(user: User, roles: Role[]): Promise<void> {
+    const removals = difference(user.roles.value, roles);
+    const additions = difference(roles, user.roles.value);
+
     if (removals.length > 0) {
       await this.db
         .query()
         .match([
           node('user', ['User', 'BaseNode'], {
-            id: input.id,
+            id: user.id,
           }),
           relation('out', 'oldRoleRel', 'roles', ACTIVE),
           node('oldRoles', 'Property'),
@@ -177,7 +183,7 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
         .query()
         .match([
           node('node', ['User', 'BaseNode'], {
-            id: input.id,
+            id: user.id,
           }),
         ])
         .create([...this.roleProperties(additions)])
@@ -186,15 +192,11 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
   }
 
   async delete(id: ID, session: Session, object: User): Promise<void> {
-    const canDelete = await this.db.checkDeletePermission(id, session);
-    if (!canDelete)
-      throw new UnauthorizedException(
-        'You do not have the permission to delete this User',
-      );
+    const user = await this.readOne(id, session);
+    this.privileges.forUser(session, user).verifyCan('delete');
     try {
       await this.db.deleteNode(object);
     } catch (exception) {
-      this.logger.error('Failed to delete', { id, exception });
       throw new ServerException('Failed to delete', exception);
     }
   }
@@ -214,68 +216,6 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
       .apply(paginate(input, this.hydrate(session.userId)))
       .first();
     return result!; // result from paginate() will always have 1 row.
-  }
-
-  async createKnownLanguage(
-    userId: ID,
-    languageId: ID,
-    languageProficiency: LanguageProficiency,
-  ): Promise<void> {
-    await this.db
-      .query()
-      .matchNode('user', 'User', { id: userId })
-      .matchNode('language', 'Language', { id: languageId })
-      .create([
-        node('user'),
-        relation('out', '', 'knownLanguage', {
-          active: true,
-          createdAt: DateTime.local(),
-          value: languageProficiency,
-        }),
-        node('language'),
-      ])
-      .run();
-  }
-
-  async deleteKnownLanguage(
-    userId: ID,
-    languageId: ID,
-    languageProficiency: LanguageProficiency,
-  ): Promise<void> {
-    await this.db
-      .query()
-      .matchNode('user', 'User', { id: userId })
-      .matchNode('language', 'Language', { id: languageId })
-      .match([
-        [
-          node('user'),
-          relation('out', 'rel', 'knownLanguage', {
-            active: true,
-            value: languageProficiency,
-          }),
-          node('language'),
-        ],
-      ])
-      .setValues({
-        'rel.active': false,
-      })
-      .run();
-  }
-
-  async listKnownLanguages(userId: ID, _session: Session) {
-    const results = await this.db
-      .query()
-      .match([
-        node('node', 'Language'),
-        relation('in', 'knownLanguageRel', 'knownLanguage', ACTIVE),
-        node('user', 'User', { id: userId }),
-      ])
-      .with('collect(distinct user) as users, node, knownLanguageRel')
-      .raw(`unwind users as user`)
-      .return(['knownLanguageRel.value as proficiency', 'node.id as language'])
-      .asResult<KnownLanguage>()
-      .run();
-    return results;
   }
 
   async doesEmailAddressExist(email: string) {

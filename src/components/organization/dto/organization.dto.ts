@@ -1,5 +1,6 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
+import { e } from '~/core/edgedb';
 import { RegisterResource } from '~/core/resources';
 import {
   DbUnique,
@@ -22,6 +23,7 @@ import { SecuredOrganizationTypes } from './organization-type.dto';
   implements: Resource,
 })
 export class Organization extends Resource {
+  static readonly DB = e.Organization;
   static readonly Props = keysOf<Organization>();
   static readonly SecuredProps = keysOf<SecuredProps<Organization>>();
   static readonly Relations = {

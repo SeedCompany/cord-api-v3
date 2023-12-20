@@ -10,7 +10,7 @@ import { IndexerModule } from './indexer/indexer.module';
 import { MigrationModule } from './migration/migration.module';
 import { ParameterTransformer } from './parameter-transformer.service';
 import { RollbackManager } from './rollback-manager';
-import { TransactionalMutationsInterceptor } from './transactional-mutations.interceptor';
+import { Neo4jTransactionalMutationsInterceptor as TransactionalMutationsInterceptor } from './transactional-mutations.interceptor';
 
 @Module({
   imports: [IndexerModule, MigrationModule, ConfigModule, TracingModule],

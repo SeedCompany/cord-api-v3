@@ -9,6 +9,13 @@ declare module 'luxon/src/datetime' {
     toNeo4JDateTime(this: DateTime): Neo.DateTime<number>;
     toPostgres(this: DateTime): string;
     [inspect.custom](): string;
+
+    // Compatibility with EdgeDB's LocalDate which is a subset of Temporal.PlainDate
+    get dayOfWeek(): number;
+    get dayOfYear(): number;
+    get daysInWeek(): number;
+    get monthsInYear(): number;
+    get inLeapYear(): boolean;
   }
 }
 /* eslint-enable @typescript-eslint/method-signature-style */
@@ -39,3 +46,31 @@ DateTime.prototype[inspect.custom] = function (this: DateTime) {
   const str = this.toLocaleString(DateTime.DATETIME_SHORT_WITH_SECONDS);
   return `[DateTime] ${str}`;
 };
+
+Object.defineProperties(DateTime.prototype, {
+  dayOfWeek: {
+    get(this: DateTime) {
+      return this.weekday;
+    },
+  },
+  dayOfYear: {
+    get(this: DateTime) {
+      return this.ordinal;
+    },
+  },
+  daysInWeek: {
+    get(this: DateTime) {
+      return 7;
+    },
+  },
+  monthsInYear: {
+    get(this: DateTime) {
+      return 12;
+    },
+  },
+  inLeapYear: {
+    get(this: DateTime) {
+      return this.isInLeapYear;
+    },
+  },
+});

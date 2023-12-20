@@ -1,0 +1,26 @@
+module default {
+  scalar type Role extending enum<
+    Administrator,
+    BetaTester,
+    BibleTranslationLiaison,
+    Consultant,
+    ConsultantManager,
+    Controller,
+    ExperienceOperations,
+    FieldOperationsDirector,
+    FieldPartner,
+    FinancialAnalyst,
+    Fundraising,
+    Intern,
+    LeadFinancialAnalyst,
+    Leadership,
+    Liaison,
+    Marketing,
+    Mentor,
+    ProjectManager,
+    RegionalCommunicationsCoordinator,
+    RegionalDirector,
+    StaffMember,
+    Translator,
+  >;
+}

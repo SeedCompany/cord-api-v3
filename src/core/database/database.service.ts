@@ -127,18 +127,12 @@ export class DatabaseService {
     const session = this.db.driver.session();
     try {
       const generalInfo = await session.executeRead((tx) =>
-        tx
-          .run(
-            `
+        tx.run(`
           call dbms.components()
           yield versions, edition
           unwind versions as version
           return version, edition
-        `,
-          )
-          .catch((e) => {
-            throw createBetterError(e);
-          }),
+        `),
       );
       const info = generalInfo.records[0];
       if (!info) {
@@ -160,6 +154,8 @@ export class DatabaseService {
             r.get(version[0] >= 5 ? 'statusMessage' : 'error') || undefined,
         })),
       };
+    } catch (e) {
+      throw createBetterError(e);
     } finally {
       await session.close();
     }
@@ -375,13 +371,6 @@ export class DatabaseService {
     ) {
       throw new ServerException(`Could not find ${label}.${key} to update`);
     }
-  }
-
-  /**
-   * @deprecated Use Privileges.for().can('delete') or Privileges.for().secure(dto)
-   */
-  async checkDeletePermission(..._args: any[]) {
-    return true;
   }
 
   async deleteNode(objectOrId: { id: ID } | ID) {

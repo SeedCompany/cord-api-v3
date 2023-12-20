@@ -84,7 +84,7 @@ export class EducationService {
       this.privileges.for(session, Education, ed).verifyChanges(changes);
     }
 
-    await this.repo.updateProperties(ed, changes);
+    await this.repo.update(ed, changes);
     return await this.readOne(input.id, session);
   }
 

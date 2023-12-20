@@ -8,7 +8,6 @@ import {
   SecuredList,
   ServerException,
   Session,
-  UnauthorizedException,
   UnsecuredDto,
   viewOfChangeset,
 } from '../../common';
@@ -286,28 +285,14 @@ export class EngagementService {
       .for(session, LanguageEngagement, object)
       .verifyChanges(changes);
 
-    const { pnp, ...simpleChanges } = changes;
-
     await this.files.updateDefinedFile(
       object.pnp,
       'engagement.pnp',
-      pnp,
+      changes.pnp,
       session,
     );
 
-    try {
-      await this.repo.updateLanguageProperties(
-        object,
-        simpleChanges,
-        changeset,
-      );
-    } catch (exception) {
-      this.logger.error('Error updating language engagement', { exception });
-      throw new ServerException(
-        'Could not update LanguageEngagement',
-        exception,
-      );
-    }
+    await this.repo.updateLanguage(object, changes, changeset);
 
     const updated = (await this.repo.readOne(
       input.id,
@@ -347,39 +332,14 @@ export class EngagementService {
       .for(session, InternshipEngagement, object)
       .verifyChanges(changes, { pathPrefix: 'engagement' });
 
-    const { mentorId, countryOfOriginId, growthPlan, ...simpleChanges } =
-      changes;
-
     await this.files.updateDefinedFile(
       object.growthPlan,
       'engagement.growthPlan',
-      growthPlan,
+      changes.growthPlan,
       session,
     );
 
-    try {
-      if (mentorId) {
-        await this.repo.updateMentor(input.id, mentorId);
-      }
-
-      if (countryOfOriginId) {
-        await this.repo.updateCountryOfOrigin(input.id, countryOfOriginId);
-      }
-
-      await this.repo.updateInternshipProperties(
-        object,
-        simpleChanges,
-        changeset,
-      );
-    } catch (exception) {
-      this.logger.warning('Failed to update InternshipEngagement', {
-        exception,
-      });
-      throw new ServerException(
-        'Could not update InternshipEngagement',
-        exception,
-      );
-    }
+    await this.repo.updateInternship(object, changes, changeset);
 
     const updated = (await this.repo.readOne(
       input.id,
@@ -404,14 +364,9 @@ export class EngagementService {
   async delete(id: ID, session: Session, changeset?: ID): Promise<void> {
     const object = await this.readOne(id, session);
 
-    if (!object) {
-      throw new NotFoundException('Could not find engagement', 'engagement.id');
-    }
-
-    if (!object.canDelete)
-      throw new UnauthorizedException(
-        'You do not have the permission to delete this Engagement',
-      );
+    this.privileges
+      .for(session, resolveEngagementType(object), object)
+      .verifyCan('delete');
 
     await this.verifyProjectStatus(object.project, session, changeset);
 

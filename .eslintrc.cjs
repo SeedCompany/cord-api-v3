@@ -102,6 +102,17 @@ const namingConvention = [
     filter: '__typename',
     format: null,
   },
+  // allow exceptions for edgedb query builder
+  {
+    selector: 'objectLiteralProperty',
+    filter: 'filter_single',
+    format: null,
+  },
+  {
+    selector: 'objectLiteralProperty',
+    filter: 'order_by',
+    format: null,
+  },
   // Allow object literal keys to be anything if they are in quotes
   // Used mainly by cypher query builder
   {
@@ -171,6 +182,13 @@ const config = {
         // This doesn't matter here as this class won't be overridden.
         // Declaring them as methods keeps their color the same as the rest of the query methods.
         '@typescript-eslint/method-signature-style': 'off',
+      },
+    },
+    {
+      files: './src/core/edgedb/generator/*.ts',
+      rules: {
+        // Scripts can use the console for logging
+        'no-console': 'off',
       },
     },
   ],

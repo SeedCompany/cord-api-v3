@@ -1,6 +1,7 @@
 import { Type } from '@nestjs/common';
 import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
+import { e } from '~/core/edgedb';
 import { RegisterResource } from '~/core/resources';
 import {
   DbUnique,
@@ -40,6 +41,7 @@ export abstract class SecuredUserStatus extends SecuredEnum(UserStatus) {}
   implements: [Resource, Pinnable],
 })
 export class User extends PinnableResource {
+  static readonly DB = e.User;
   static readonly Props = keysOf<User>();
   static readonly SecuredProps = keysOf<SecuredProps<User>>();
   static readonly Relations = () =>
@@ -70,12 +72,12 @@ export class User extends PinnableResource {
   displayLastName: SecuredString;
 
   @Field()
-  phone: SecuredString;
+  phone: SecuredStringNullable;
 
   timezone: SecuredString;
 
   @Field()
-  about: SecuredString;
+  about: SecuredStringNullable;
 
   @Field()
   status: SecuredUserStatus;
@@ -84,7 +86,7 @@ export class User extends PinnableResource {
   roles: SecuredRoles;
 
   @Field()
-  title: SecuredString;
+  title: SecuredStringNullable;
 }
 
 @ObjectType({

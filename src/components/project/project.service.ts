@@ -272,23 +272,10 @@ export class ProjectService {
       );
     }
 
-    const {
-      primaryLocationId,
-      marketingLocationId,
-      fieldRegionId,
-      ...simpleChanges
-    } = changes;
-
-    let result = await this.repo.updateProperties(
-      currentProject,
-      simpleChanges,
-      changeset,
-    );
-
-    if (primaryLocationId) {
+    if (changes.primaryLocationId) {
       try {
         const location = await this.locationService.readOne(
-          primaryLocationId,
+          changes.primaryLocationId,
           session,
         );
         if (!location.fundingAccount.value) {
@@ -308,50 +295,15 @@ export class ProjectService {
         throw e;
       }
     }
-    if (primaryLocationId !== undefined) {
-      await this.repo.updateRelation(
-        'primaryLocation',
-        'Location',
-        input.id,
-        primaryLocationId,
-      );
-      result = {
-        ...result,
-        primaryLocation: primaryLocationId,
-      };
-    }
 
-    if (fieldRegionId !== undefined) {
-      await this.validateOtherResourceId(
-        fieldRegionId,
-        'FieldRegion',
-        'fieldRegionId',
-        'Field region not found',
-      );
-      await this.repo.updateRelation(
-        'fieldRegion',
-        'FieldRegion',
-        input.id,
-        fieldRegionId,
-      );
-      result = {
-        ...result,
-        fieldRegion: fieldRegionId,
-      };
-    }
+    await this.validateOtherResourceId(
+      changes.fieldRegionId,
+      'FieldRegion',
+      'fieldRegionId',
+      'Field region not found',
+    );
 
-    if (marketingLocationId !== undefined) {
-      await this.repo.updateRelation(
-        'marketingLocation',
-        'Location',
-        input.id,
-        marketingLocationId,
-      );
-      result = {
-        ...result,
-        marketingLocation: marketingLocationId,
-      };
-    }
+    const result = await this.repo.update(currentProject, changes, changeset);
 
     const event = new ProjectUpdatedEvent(
       result,
@@ -365,16 +317,8 @@ export class ProjectService {
 
   async delete(id: ID, session: Session): Promise<void> {
     const object = await this.readOneUnsecured(id, session);
-    if (!object) {
-      throw new NotFoundException('Could not find project');
-    }
 
-    const { canDelete } = await this.secure(object, session);
-
-    if (!canDelete)
-      throw new UnauthorizedException(
-        'You do not have the permission to delete this Project',
-      );
+    this.privileges.for(session, IProject, object).verifyCan('delete');
 
     try {
       await this.repo.deleteNode(object);

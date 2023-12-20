@@ -25,20 +25,20 @@ export abstract class CreateEthnologueLanguage {
   @IsAlpha()
   @IsLowercase()
   @ExactLength(3)
-  readonly code?: string;
+  readonly code?: string | null;
 
   @NameField({ nullable: true })
   @IsAlpha()
   @IsLowercase()
   @ExactLength(3)
-  readonly provisionalCode?: string;
+  readonly provisionalCode?: string | null;
 
   @NameField({ nullable: true })
-  readonly name?: string;
+  readonly name?: string | null;
 
   @Field(() => Int, { nullable: true })
   @IsPositive()
-  readonly population?: number;
+  readonly population?: number | null;
 }
 
 @InputType()
@@ -50,7 +50,7 @@ export abstract class CreateLanguage {
   readonly displayName: string;
 
   @NameField({ nullable: true })
-  readonly displayNamePronunciation?: string;
+  readonly displayNamePronunciation?: string | null;
 
   @Field({ nullable: true })
   readonly isDialect: boolean = false;
@@ -62,33 +62,33 @@ export abstract class CreateLanguage {
 
   @Field(() => Int, { nullable: true })
   @IsPositive()
-  readonly populationOverride: number;
+  readonly populationOverride: number | null;
 
   @NameField({ nullable: true })
   @ExactLength(5)
   @IsNumberString()
-  readonly registryOfDialectsCode?: string;
+  readonly registryOfDialectsCode?: string | null;
 
   @Field({ nullable: true })
   readonly leastOfThese: boolean = false;
 
   @NameField({ nullable: true })
-  readonly leastOfTheseReason?: string;
+  readonly leastOfTheseReason?: string | null;
 
   @Field({ nullable: true })
   readonly isSignLanguage?: boolean = false;
 
-  @Field({ nullable: true })
+  @NameField({ nullable: true })
   @Matches(/^[A-Z]{2}\d{2}$/, {
     message: 'Must be 2 uppercase letters followed by 2 digits',
   })
-  readonly signLanguageCode?: string;
+  readonly signLanguageCode?: string | null;
 
   @SensitivityField({ nullable: true })
   readonly sensitivity?: Sensitivity = Sensitivity.High;
 
   @DateField({ nullable: true })
-  readonly sponsorEstimatedEndDate?: CalendarDate;
+  readonly sponsorEstimatedEndDate?: CalendarDate | null;
 
   @Field({ nullable: true })
   readonly hasExternalFirstScripture?: boolean = false;

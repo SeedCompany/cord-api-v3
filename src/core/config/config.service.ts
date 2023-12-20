@@ -145,9 +145,7 @@ export const makeConfig = (env: EnvironmentService) =>
     frontendUrl = env.string('FRONTEND_URL').optional('http://localhost:3001');
 
     neo4j = (() => {
-      const driverConfig: Neo4JDriverConfig = {
-        maxTransactionRetryTime: 30_000,
-      };
+      const driverConfig: Neo4JDriverConfig = {};
       let url = env.string('NEO4J_URL').optional('bolt://localhost');
       const parsed = new URL(url);
       const username = env

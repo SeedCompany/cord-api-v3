@@ -1,5 +1,6 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
+import { e } from '~/core/edgedb';
 import { RegisterResource } from '~/core/resources';
 import {
   Calculated,
@@ -19,6 +20,7 @@ import { CeremonyType } from './ceremony-type.enum';
   implements: [Resource],
 })
 export class Ceremony extends Resource {
+  static readonly DB = e.Engagement.Ceremony;
   static readonly Props = keysOf<Ceremony>();
   static readonly SecuredProps = keysOf<SecuredProps<Ceremony>>();
   static readonly Parent = import('../../engagement/dto').then(

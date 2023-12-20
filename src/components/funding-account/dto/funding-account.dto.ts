@@ -1,5 +1,6 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
+import { e } from '~/core/edgedb';
 import { RegisterResource } from '~/core/resources';
 import {
   DbLabel,
@@ -17,6 +18,7 @@ import {
   implements: [Resource],
 })
 export class FundingAccount extends Resource {
+  static readonly DB = e.FundingAccount;
   static readonly Props = keysOf<FundingAccount>();
   static readonly SecuredProps = keysOf<SecuredProps<FundingAccount>>();
 

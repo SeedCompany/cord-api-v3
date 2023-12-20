@@ -10,7 +10,6 @@ import {
   Order,
   ServerException,
   Session,
-  UnauthorizedException,
   viewOfChangeset,
 } from '../../common';
 import { HandleIdLookup, ILogger, Logger, ResourceResolver } from '../../core';
@@ -228,7 +227,7 @@ export class BudgetService {
       universalTemplateFile,
       session,
     );
-    return await this.budgetRepo.updateProperties(budget, simpleChanges);
+    return await this.budgetRepo.update(budget, simpleChanges);
   }
 
   async updateRecord(
@@ -249,7 +248,7 @@ export class BudgetService {
     this.privileges.for(session, BudgetRecord, br).verifyChanges(changes);
 
     try {
-      const result = await this.budgetRecordsRepo.updateProperties(
+      const result = await this.budgetRecordsRepo.update(
         br,
         changes,
         changeset,
@@ -288,15 +287,7 @@ export class BudgetService {
   async delete(id: ID, session: Session): Promise<void> {
     const budget = await this.readOne(id, session);
 
-    if (!budget) {
-      throw new NotFoundException('Could not find Budget');
-    }
-
-    const canDelete = await this.budgetRepo.checkDeletePermission(id, session);
-    if (!canDelete)
-      throw new UnauthorizedException(
-        'You do not have the permission to delete this Budget',
-      );
+    this.privileges.for(session, Budget, budget).verifyCan('delete');
 
     // cascade delete each budget record in this budget
     await Promise.all(
@@ -320,19 +311,7 @@ export class BudgetService {
       viewOfChangeset(changeset),
     );
 
-    if (!br) {
-      throw new NotFoundException('Could not find Budget Record');
-    }
-
-    const canDelete = await this.budgetRecordsRepo.checkDeletePermission(
-      id,
-      session,
-    );
-
-    if (!canDelete)
-      throw new UnauthorizedException(
-        'You do not have the permission to delete this Budget Record',
-      );
+    this.privileges.for(session, BudgetRecord, br).verifyCan('delete');
 
     try {
       await this.budgetRecordsRepo.deleteNode(br, changeset);

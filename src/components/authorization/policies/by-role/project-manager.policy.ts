@@ -15,6 +15,7 @@ import {
     Role.assignable(r, [
       Role.Intern,
       Role.Liaison,
+      Role.BibleTranslationLiaison,
       Role.Mentor,
       Role.RegionalCommunicationsCoordinator,
       Role.Translator,

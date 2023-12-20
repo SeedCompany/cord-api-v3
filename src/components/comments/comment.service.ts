@@ -136,7 +136,7 @@ export class CommentService {
 
     const changes = this.repo.getActualChanges(object, input);
     this.privileges.for(session, Comment, object).verifyChanges(changes);
-    await this.repo.updateProperties(object, changes);
+    await this.repo.update(object, changes);
 
     return await this.readOne(input.id, session);
   }

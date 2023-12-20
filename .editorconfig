@@ -10,3 +10,13 @@ trim_trailing_whitespace = true
 
 [*.md]
 trim_trailing_whitespace = false
+
+# Webstorm needs consistent indentation for syntax highlighting
+# with the textmate bundle hack.
+[*.esdl]
+trim_trailing_whitespace = false
+
+# These are auto created and contain a hash of the content.
+# Removing whitespace counts as a hash change so avoid.
+[dbschema/migrations/*.edgeql]
+trim_trailing_whitespace = false

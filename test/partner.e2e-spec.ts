@@ -1,6 +1,6 @@
 import { faker } from '@faker-js/faker';
 import { Role } from '../src/components/authorization/dto';
-import { Partner, PartnerType } from '../src/components/partner';
+import { PartnerType } from '../src/components/partner';
 import { FinancialReportingType } from '../src/components/partnership';
 import {
   createOrganization,
@@ -12,6 +12,7 @@ import {
   fragments,
   gql,
   registerUser,
+  runAsAdmin,
   TestApp,
 } from './utility';
 
@@ -92,20 +93,21 @@ describe('Partner e2e', () => {
   it('delete partner', async () => {
     const org = await createOrganization(app);
     const pt = await createPartner(app, { organizationId: org.id });
-    const result = await app.graphql.mutate(
-      gql`
-        mutation deletePartner($id: ID!) {
-          deletePartner(id: $id) {
-            __typename
+
+    await runAsAdmin(app, async () => {
+      await app.graphql.mutate(
+        gql`
+          mutation deletePartner($id: ID!) {
+            deletePartner(id: $id) {
+              __typename
+            }
           }
-        }
-      `,
-      {
-        id: pt.id,
-      },
-    );
-    const actual: Partner | undefined = result.deletePartner;
-    expect(actual).toBeTruthy();
+        `,
+        {
+          id: pt.id,
+        },
+      );
+    });
   });
 
   it('list view of partners', async () => {

@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { node, Query } from 'cypher-query-builder';
+import { ChangesOf } from '~/core/database/changes';
 import { ID, Session } from '../../common';
-import { DatabaseService, DbTypeOf, DtoRepository } from '../../core';
+import { DbTypeOf, DtoRepository } from '../../core';
 import {
   createNode,
   matchProps,
@@ -12,18 +13,15 @@ import {
   sorting,
 } from '../../core/database/query';
 import { ScriptureReferenceRepository } from '../scripture';
-import { CreateFilm, Film, FilmListInput } from './dto';
+import { CreateFilm, Film, FilmListInput, UpdateFilm } from './dto';
 
 @Injectable()
 export class FilmRepository extends DtoRepository(Film) {
-  constructor(
-    private readonly scriptureRefs: ScriptureReferenceRepository,
-    db: DatabaseService,
-  ) {
-    super(db);
+  constructor(private readonly scriptureRefs: ScriptureReferenceRepository) {
+    super();
   }
 
-  async createFilm(input: CreateFilm, session: Session) {
+  async create(input: CreateFilm, session: Session) {
     const initialProps = {
       name: input.name,
       canDelete: true,
@@ -34,6 +32,13 @@ export class FilmRepository extends DtoRepository(Film) {
       .apply(await createNode(Film, { initialProps }))
       .return<{ id: ID }>('node.id as id')
       .first();
+  }
+
+  async update(
+    existing: Film,
+    simpleChanges: Omit<ChangesOf<Film, UpdateFilm>, 'scriptureReferences'>,
+  ) {
+    await this.updateProperties(existing, simpleChanges);
   }
 
   async list({ filter, ...input }: FilmListInput, session: Session) {

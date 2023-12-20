@@ -2,11 +2,9 @@ import { Injectable } from '@nestjs/common';
 import {
   DuplicateException,
   ID,
-  NotFoundException,
   ObjectView,
   ServerException,
   Session,
-  UnauthorizedException,
   UnsecuredDto,
 } from '../../common';
 import { ConfigService, HandleIdLookup, ILogger, Logger } from '../../core';
@@ -103,22 +101,13 @@ export class OrganizationService {
       .for(session, Organization, organization)
       .verifyChanges(changes);
 
-    return await this.repo.updateProperties(organization, changes);
+    return await this.repo.update(organization, changes);
   }
 
   async delete(id: ID, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
 
-    if (!object) {
-      throw new NotFoundException('Could not find Organization');
-    }
-
-    const canDelete = await this.repo.checkDeletePermission(id, session);
-
-    if (!canDelete)
-      throw new UnauthorizedException(
-        'You do not have the permission to delete this Organization',
-      );
+    this.privileges.for(session, Organization, object).verifyCan('delete');
 
     try {
       await this.repo.deleteNode(object);

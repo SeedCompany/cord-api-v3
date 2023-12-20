@@ -5,7 +5,6 @@ import {
   ObjectView,
   ServerException,
   Session,
-  UnauthorizedException,
   UnsecuredDto,
 } from '../../common';
 import {
@@ -136,12 +135,9 @@ export class ProjectChangeRequestService {
   async delete(id: ID, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
 
-    const canDelete = await this.db.checkDeletePermission(id, session);
-
-    if (!canDelete)
-      throw new UnauthorizedException(
-        'You do not have the permission to delete this project change request',
-      );
+    this.privileges
+      .for(session, ProjectChangeRequest, object)
+      .verifyCan('delete');
 
     try {
       await this.db.deleteNode(object);

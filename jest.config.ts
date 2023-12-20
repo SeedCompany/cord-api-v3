@@ -11,6 +11,10 @@ export default async (): Promise<Config.InitialOptions> => {
     testEnvironment: 'node',
     setupFiles: ['./test/jest.d.ts'],
     setupFilesAfterEnv: ['./src/polyfills.ts'],
+    moduleNameMapper: {
+      // Imports for *.edgeql files are really *.edgeql.ts files
+      [`(.+)\\.edgeql$`]: '$1.edgeql.ts',
+    },
   } satisfies Config.InitialProjectOptions;
 
   const e2e = {

@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { inArray, node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { ID, Session } from '~/common';
+import { ID, Session, UnsecuredDto } from '~/common';
 import { DbTypeOf, DtoRepository } from '~/core/database';
+import { ChangesOf } from '~/core/database/changes';
 import {
   ACTIVE,
   createNode,
@@ -13,7 +14,7 @@ import {
   paginate,
   sorting,
 } from '~/core/database/query';
-import { CreatePost, Post } from './dto';
+import { CreatePost, Post, UpdatePost } from './dto';
 import { PostListInput } from './dto/list-posts.dto';
 import { PostShareability } from './dto/shareability.dto';
 
@@ -40,6 +41,13 @@ export class PostRepository extends DtoRepository<typeof Post, [Session] | []>(
       )
       .apply(this.hydrate())
       .first();
+  }
+
+  async update(
+    existing: UnsecuredDto<Post>,
+    changes: ChangesOf<Post, UpdatePost>,
+  ) {
+    return await this.updateProperties(existing, changes);
   }
 
   async readMany(ids: readonly ID[], session: Session) {

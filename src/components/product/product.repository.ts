@@ -17,12 +17,7 @@ import {
   ServerException,
   Session,
 } from '../../common';
-import {
-  CommonRepository,
-  DatabaseService,
-  DbTypeOf,
-  OnIndex,
-} from '../../core';
+import { CommonRepository, DbTypeOf, OnIndex } from '../../core';
 import { DbChanges, getChanges } from '../../core/database/changes';
 import {
   ACTIVE,
@@ -80,11 +75,8 @@ export type HydratedProductRow = Merge<
 
 @Injectable()
 export class ProductRepository extends CommonRepository {
-  constructor(
-    private readonly scriptureRefs: ScriptureReferenceRepository,
-    db: DatabaseService,
-  ) {
-    super(db);
+  constructor(private readonly scriptureRefs: ScriptureReferenceRepository) {
+    super();
   }
 
   async readMany(ids: readonly ID[], session: Session) {

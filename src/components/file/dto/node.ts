@@ -6,6 +6,7 @@ import { Readable } from 'stream';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive, Opaque } from 'type-fest';
 import { BaseNode } from '~/core/database/results';
+import { abstractType, e } from '~/core/edgedb';
 import { RegisterResource } from '~/core/resources';
 import {
   DateTimeField,
@@ -50,6 +51,7 @@ export const resolveFileNode = (val: AnyFileNode) => {
  * This should be used for GraphQL but never for TypeScript types.
  */
 abstract class FileNode extends Resource {
+  static readonly DB = abstractType(e.File.Node);
   static readonly Props: string[] = keysOf<FileNode>();
   static readonly SecuredProps: string[] = keysOf<SecuredProps<FileNode>>();
 
@@ -104,6 +106,7 @@ abstract class BaseFile extends FileNode {
   implements: [FileNode, Resource],
 })
 export class FileVersion extends BaseFile {
+  static readonly DB = e.File.Version;
   static readonly Props = keysOf<FileVersion>();
   static readonly SecuredProps = keysOf<SecuredProps<FileVersion>>();
 
@@ -115,6 +118,7 @@ export class FileVersion extends BaseFile {
   implements: [FileNode, Resource],
 })
 export class File extends BaseFile {
+  static readonly DB = e.File;
   static readonly Props = keysOf<File>();
   static readonly SecuredProps = keysOf<SecuredProps<File>>();
 
@@ -133,6 +137,7 @@ export class File extends BaseFile {
   implements: [FileNode, Resource],
 })
 export class Directory extends FileNode {
+  static readonly DB = e.Directory;
   static readonly Props = keysOf<Directory>();
   static readonly SecuredProps = keysOf<SecuredProps<Directory>>();
 

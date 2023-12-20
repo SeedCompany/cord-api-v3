@@ -8,16 +8,28 @@ import { CalendarDate } from './temporal';
 })
 export abstract class DateFilter {
   @DateField({
-    description: 'After or equal to this day',
+    description: 'After this day',
     nullable: true,
   })
   after?: CalendarDate;
 
   @DateField({
-    description: 'Before or equal to this day',
+    description: 'After or equal to this day',
+    nullable: true,
+  })
+  afterInclusive?: CalendarDate;
+
+  @DateField({
+    description: 'Before this day',
     nullable: true,
   })
   before?: CalendarDate;
+
+  @DateField({
+    description: 'Before or equal to this day',
+    nullable: true,
+  })
+  beforeInclusive?: CalendarDate;
 }
 
 @InputType({
@@ -25,14 +37,26 @@ export abstract class DateFilter {
 })
 export abstract class DateTimeFilter {
   @DateTimeField({
-    description: 'After or equal to this time',
+    description: 'After this time',
     nullable: true,
   })
   after?: DateTime;
 
   @DateTimeField({
-    description: 'Before or equal to this time',
+    description: 'After or equal to this time',
+    nullable: true,
+  })
+  afterInclusive?: DateTime;
+
+  @DateTimeField({
+    description: 'Before this time',
     nullable: true,
   })
   before?: DateTime;
+
+  @DateTimeField({
+    description: 'Before or equal to this time',
+    nullable: true,
+  })
+  beforeInclusive?: DateTime;
 }

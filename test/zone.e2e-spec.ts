@@ -2,7 +2,6 @@ import { faker } from '@faker-js/faker';
 import { times } from 'lodash';
 import { isValidId } from '../src/common';
 import { FieldZone } from '../src/components/field-zone';
-import { User } from '../src/components/user';
 import {
   createPerson,
   createSession,
@@ -12,13 +11,13 @@ import {
   TestApp,
 } from './utility';
 import { createZone } from './utility/create-zone';
-import { fragments } from './utility/fragments';
+import { fragments, RawUser } from './utility/fragments';
 
 describe('Field Zone e2e', () => {
   let app: TestApp;
-  let director: User;
+  let director: RawUser;
 
-  let newDirector: User;
+  let newDirector: RawUser;
   beforeAll(async () => {
     app = await createTestApp();
     await createSession(app);

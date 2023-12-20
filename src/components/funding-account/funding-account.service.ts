@@ -7,7 +7,6 @@ import {
   SecuredList,
   ServerException,
   Session,
-  UnauthorizedException,
   UnsecuredDto,
 } from '../../common';
 import { HandleIdLookup, ILogger, Logger } from '../../core';
@@ -101,22 +100,13 @@ export class FundingAccountService {
     this.privileges
       .for(session, FundingAccount, fundingAccount)
       .verifyChanges(changes);
-    return await this.repo.updateProperties(fundingAccount, changes);
+    return await this.repo.update(fundingAccount, changes);
   }
 
   async delete(id: ID, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
 
-    if (!object) {
-      throw new NotFoundException('Could not find Funding Account');
-    }
-
-    const canDelete = await this.repo.checkDeletePermission(id, session);
-
-    if (!canDelete)
-      throw new UnauthorizedException(
-        'You do not have the permission to delete this Funding Account',
-      );
+    this.privileges.for(session, FundingAccount, object).verifyCan('delete');
 
     try {
       await this.repo.deleteNode(object);

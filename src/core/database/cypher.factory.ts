@@ -22,7 +22,7 @@ import {
 import { highlight } from './highlight-cypher.util';
 import { ParameterTransformer } from './parameter-transformer.service';
 // eslint-disable-next-line import/no-duplicates
-import { Transaction } from './transaction';
+import { Neo4jTransaction as Transaction } from './transaction';
 import { MyTransformer } from './transformer';
 // eslint-disable-next-line import/no-duplicates
 import './transaction'; // import our transaction augmentation
@@ -91,10 +91,12 @@ export const CypherFactory: FactoryProvider<Connection> = {
           routingTable,
         });
       } else if (
-        level === LogLevel.ERROR &&
-        message.includes(
-          'experienced a fatal error {"code":"ServiceUnavailable","name":"Neo4jError"}',
-        )
+        (level === LogLevel.WARNING &&
+          message.includes('Failed to connect to server')) ||
+        (level === LogLevel.ERROR &&
+          message.includes(
+            'experienced a fatal error {"code":"ServiceUnavailable","name":"Neo4jError"}',
+          ))
       ) {
         // Change connection failure messages to debug.
         // Connection failures are thrown so they will get logged

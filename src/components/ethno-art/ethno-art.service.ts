@@ -2,11 +2,9 @@ import { Injectable } from '@nestjs/common';
 import {
   DuplicateException,
   ID,
-  NotFoundException,
   ObjectView,
   ServerException,
   Session,
-  UnauthorizedException,
 } from '../../common';
 import { DbTypeOf, HandleIdLookup, ILogger, Logger } from '../../core';
 import { ifDiff } from '../../core/database/changes';
@@ -106,7 +104,7 @@ export class EthnoArtService {
 
     await this.scriptureRefs.update(input.id, scriptureReferences);
 
-    await this.repo.updateProperties(ethnoArt, simpleChanges);
+    await this.repo.update(ethnoArt, simpleChanges);
 
     return await this.readOne(input.id, session);
   }
@@ -114,16 +112,7 @@ export class EthnoArtService {
   async delete(id: ID, session: Session): Promise<void> {
     const ethnoArt = await this.readOne(id, session);
 
-    if (!ethnoArt) {
-      throw new NotFoundException('Could not find Ethno Art');
-    }
-
-    const canDelete = await this.repo.checkDeletePermission(id, session);
-    if (!canDelete) {
-      throw new UnauthorizedException(
-        'You do not have permissions to delete this Ethno Art',
-      );
-    }
+    this.privileges.for(session, EthnoArt, ethnoArt).verifyCan('delete');
 
     try {
       await this.repo.deleteNode(ethnoArt);

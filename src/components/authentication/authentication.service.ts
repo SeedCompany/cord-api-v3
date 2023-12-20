@@ -3,11 +3,13 @@ import { ModuleRef } from '@nestjs/core';
 import { EmailService } from '@seedcompany/nestjs-email';
 import JWT from 'jsonwebtoken';
 import { DateTime } from 'luxon';
+import { Writable } from 'ts-essentials';
 import {
   DuplicateException,
   GqlContextType,
   ID,
   InputException,
+  Role,
   ServerException,
   Session,
   UnauthenticatedException,
@@ -15,7 +17,7 @@ import {
 } from '../../common';
 import { ConfigService, ILogger, Logger } from '../../core';
 import { ForgotPassword } from '../../core/email/templates';
-import { Privileges, withoutScope } from '../authorization';
+import { Privileges, rolesForScope, withoutScope } from '../authorization';
 import { AssignableRoles } from '../authorization/dto/assignable-roles';
 import { AuthenticationRepository } from './authentication.repository';
 import { CryptoService } from './crypto.service';
@@ -164,6 +166,43 @@ export class AuthenticationService {
     return session;
   }
 
+  lazySessionForRootAdminUser(input?: Partial<Session>) {
+    const promiseOfRootId = this.repo.waitForRootUserId().then((id) => {
+      (session as Writable<Session>).userId = id;
+      return id;
+    });
+    const unresolvedId = 'unresolvedId' as ID;
+    const session: Session = {
+      token: 'system',
+      issuedAt: DateTime.now(),
+      userId: unresolvedId,
+      anonymous: false,
+      roles: ['global:Administrator'],
+      ...input,
+    };
+    type LazySession = Session &
+      Promise<Session> & { withRoles: (...roles: Role[]) => LazySession };
+    return new Proxy(session, {
+      get: (target: Session, p: string | symbol, receiver: any) => {
+        if (p === 'userId' && target.userId === unresolvedId) {
+          throw new ServerException(
+            'Have not yet connected to database to get root user ID',
+          );
+        }
+        if (p === 'withRoles') {
+          return (...roles: Role[]) =>
+            this.lazySessionForRootAdminUser({
+              roles: roles.map(rolesForScope('global')),
+            });
+        }
+        if (p === 'then') {
+          return (...args: any) =>
+            promiseOfRootId.then(() => session).then(...args);
+        }
+        return Reflect.get(target, p, receiver);
+      },
+    }) as LazySession;
+  }
   async sessionForUser(userId: ID): Promise<Session> {
     const roles = await this.repo.rolesForUser(userId);
     const session: Session = {

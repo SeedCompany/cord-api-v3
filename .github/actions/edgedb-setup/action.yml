@@ -1,0 +1,14 @@
+name: Setup EdgeDB
+description: 'Setup EdgeDB server, migrate schema, generate TS files'
+runs:
+  using: composite
+  steps:
+    - name: Setup EdgeDB
+      uses: edgedb/setup-edgedb@v1
+
+    - run: edgedb migrate --dev-mode
+      shell: bash
+
+    - name: Generate EdgeDB TS files
+      shell: bash
+      run: yarn edgedb:gen

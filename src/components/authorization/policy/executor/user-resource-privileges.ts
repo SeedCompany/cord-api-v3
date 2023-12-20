@@ -13,7 +13,7 @@ import {
   UnauthorizedException,
   UnsecuredDto,
 } from '~/common';
-import { ChangesOf, isRelation } from '~/core/database/changes';
+import { AnyChangesOf, isRelation } from '~/core/database/changes';
 import {
   AnyAction,
   ChildListAction,
@@ -169,7 +169,7 @@ export class UserResourcePrivileges<
    * Verifies the current user can make the changes specified to the given object.
    */
   verifyChanges(
-    changes: ChangesOf<TResourceStatic['prototype']>,
+    changes: AnyChangesOf<TResourceStatic['prototype']>,
     {
       pathPrefix: pathPrefixProp,
     }: {

@@ -3,6 +3,7 @@ import { Field, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { GraphQLString } from 'graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
+import { e } from '~/core/edgedb';
 import { RegisterResource } from '~/core/resources';
 import {
   Calculated,
@@ -14,12 +15,13 @@ import {
   Resource,
   ResourceRelationsShape,
   SecuredBoolean,
-  SecuredDate,
-  SecuredInt,
+  SecuredDateNullable,
+  SecuredIntNullable,
   SecuredProperty,
   SecuredPropertyList,
   SecuredProps,
   SecuredString,
+  SecuredStringNullable,
   Sensitivity,
   SensitivityField,
   SetUnsecuredType,
@@ -46,6 +48,7 @@ export abstract class SecuredTags extends SecuredPropertyList<string>(
 @RegisterResource()
 @ObjectType()
 export class EthnologueLanguage {
+  static readonly DB = e.Ethnologue.Language;
   static readonly Props = keysOf<EthnologueLanguage>();
   static readonly SecuredProps = keysOf<SecuredProps<EthnologueLanguage>>();
   // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -56,7 +59,7 @@ export class EthnologueLanguage {
   @Field({
     description: 'ISO 639-3 code',
   })
-  readonly code: SecuredString;
+  readonly code: SecuredStringNullable;
 
   @Field({
     description: stripIndent`
@@ -64,13 +67,13 @@ export class EthnologueLanguage {
       Used until official ethnologue code is created by SIL.
     `,
   })
-  readonly provisionalCode: SecuredString;
+  readonly provisionalCode: SecuredStringNullable;
 
   @NameField()
-  readonly name: SecuredString;
+  readonly name: SecuredStringNullable;
 
   @Field()
-  readonly population: SecuredInt;
+  readonly population: SecuredIntNullable;
 
   @Field()
   readonly canDelete: boolean;
@@ -86,6 +89,7 @@ export class EthnologueLanguage {
   implements: [Resource, Pinnable, Postable],
 })
 export class Language extends Interfaces {
+  static readonly DB = e.Language;
   static readonly Props = keysOf<Language>();
   static readonly SecuredProps = keysOf<SecuredProps<Language>>();
   static readonly Relations = {
@@ -113,7 +117,7 @@ export class Language extends Interfaces {
   @Field({
     description: 'The pronunciation of the display name',
   })
-  readonly displayNamePronunciation: SecuredString;
+  readonly displayNamePronunciation: SecuredStringNullable;
 
   @Field({
     description: `Whether this language is a dialect.`,
@@ -128,7 +132,7 @@ export class Language extends Interfaces {
   @Field({
     description: `An override for the ethnologue's population`,
   })
-  readonly populationOverride: SecuredInt;
+  readonly populationOverride: SecuredIntNullable;
 
   @Field({
     description: stripIndent`
@@ -138,7 +142,7 @@ export class Language extends Interfaces {
     `,
   })
   @DbUnique('RegistryOfDialectsCode')
-  readonly registryOfDialectsCode: SecuredString;
+  readonly registryOfDialectsCode: SecuredStringNullable;
 
   // consider making object
   @Field({
@@ -149,13 +153,13 @@ export class Language extends Interfaces {
   @Field({
     description: `Reason why this language is a part of the Least of These program.`,
   })
-  readonly leastOfTheseReason: SecuredString;
+  readonly leastOfTheseReason: SecuredStringNullable;
 
   @Field()
-  readonly signLanguageCode: SecuredString;
+  readonly signLanguageCode: SecuredStringNullable;
 
   @Field()
-  readonly sponsorEstimatedEndDate: SecuredDate;
+  readonly sponsorEstimatedEndDate: SecuredDateNullable;
 
   @SensitivityField()
   readonly sensitivity: Sensitivity;

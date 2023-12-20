@@ -7,6 +7,7 @@ import {
   Query,
   relation,
 } from 'cypher-query-builder';
+import { ChangesOf } from '~/core/database/changes';
 import {
   ID,
   labelForView,
@@ -37,7 +38,12 @@ import {
   variable,
 } from '../../core/database/query';
 import { ProjectStatus } from '../project';
-import { CreateLanguage, Language, LanguageListInput } from './dto';
+import {
+  CreateLanguage,
+  Language,
+  LanguageListInput,
+  UpdateLanguage,
+} from './dto';
 
 @Injectable()
 export class LanguageRepository extends DtoRepository<
@@ -75,6 +81,14 @@ export class LanguageRepository extends DtoRepository<
       .return<{ id: ID }>('node.id as id');
 
     return await createLanguage.first();
+  }
+
+  async update(
+    existing: Language,
+    simpleChanges: Omit<ChangesOf<Language, UpdateLanguage>, 'ethnologue'>,
+    changeset?: ID,
+  ) {
+    await this.updateProperties(existing, simpleChanges, changeset);
   }
 
   async readMany(ids: readonly ID[], session: Session, view?: ObjectView) {

@@ -9,7 +9,7 @@ import {
   Query,
   relation,
 } from 'cypher-query-builder';
-import { AndConditions } from 'cypher-query-builder/src/clauses/where-utils';
+import { ChangesOf } from '~/core/database/changes';
 import {
   CalendarDate,
   generateId,
@@ -18,16 +18,16 @@ import {
   Session,
   UnsecuredDto,
 } from '../../common';
-import { DatabaseService, DtoRepository } from '../../core';
+import { DtoRepository } from '../../core';
 import {
   ACTIVE,
   createNode,
   createRelationships,
   deleteBaseNode,
+  filter,
   matchPropsAndProjectSensAndScopedRoles,
   merge,
   paginate,
-  path,
   sorting,
   variable,
   Variable,
@@ -42,6 +42,7 @@ import {
   PeriodicReportListInput,
   ReportType,
   resolveReportType,
+  UpdatePeriodicReportInput,
 } from './dto';
 
 @Injectable()
@@ -52,9 +53,8 @@ export class PeriodicReportRepository extends DtoRepository<
 >(IPeriodicReport) {
   constructor(
     private readonly progressRepo: ProgressReportExtraForPeriodicInterfaceRepository,
-    db: DatabaseService,
   ) {
-    super(db);
+    super();
   }
 
   async merge(input: MergePeriodicReports) {
@@ -163,31 +163,38 @@ export class PeriodicReportRepository extends DtoRepository<
     return await query.run();
   }
 
+  async update<T extends PeriodicReport | UnsecuredDto<PeriodicReport>>(
+    existing: T,
+    simpleChanges: Omit<
+      ChangesOf<PeriodicReport, UpdatePeriodicReportInput>,
+      'reportFile'
+    > &
+      Partial<Pick<PeriodicReport, 'start' | 'end'>>,
+  ) {
+    return await this.updateProperties(existing, simpleChanges);
+  }
+
   async list(input: PeriodicReportListInput, session: Session) {
     const resource = input.type
       ? resolveReportType({ type: input.type })
       : IPeriodicReport;
+    const { type, parent, start, end } = input;
+    const filters = { type, parent, start, end };
     const result = await this.db
       .query()
       .matchNode('node', 'PeriodicReport')
-      .apply((q) => {
-        const conditions: AndConditions = {};
-
-        if (input.type) {
-          conditions.node = hasLabel(`${input.type}Report`);
-        }
-        if (input.parent) {
-          conditions.parent = path([
-            node('', 'BaseNode', { id: input.parent }),
+      .apply(
+        filter.builder(filters, {
+          parent: filter.pathExists((id) => [
+            node('', 'BaseNode', { id }),
             relation('out', '', 'report', ACTIVE),
             node('node'),
-          ]);
-        }
-
-        if (Object.keys(conditions).length > 0) {
-          q.where(conditions);
-        }
-      })
+          ]),
+          start: filter.dateTimeProp(),
+          end: filter.dateTimeProp(),
+          type: ({ value }) => hasLabel(`${value}Report`),
+        }),
+      )
       .apply(sorting(resource, input))
       .apply(paginate(input, this.hydrate(session)))
       .first();

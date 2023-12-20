@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { Node, node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
+import { ChangesOf } from '~/core/database/changes';
 import { ID, Session, UnsecuredDto } from '../../../common';
-import { DatabaseService, DtoRepository } from '../../../core';
+import { DtoRepository } from '../../../core';
 import {
   ACTIVE,
   matchPropsAndProjectSensAndScopedRoles,
@@ -18,6 +19,7 @@ import {
   CreateProjectMember,
   ProjectMember,
   ProjectMemberListInput,
+  UpdateProjectMember,
 } from './dto';
 
 @Injectable()
@@ -25,8 +27,8 @@ export class ProjectMemberRepository extends DtoRepository<
   typeof ProjectMember,
   [session: Session]
 >(ProjectMember) {
-  constructor(private readonly users: UserRepository, db: DatabaseService) {
-    super(db);
+  constructor(private readonly users: UserRepository) {
+    super();
   }
 
   async verifyRelationshipEligibility(projectId: ID, userId: ID) {
@@ -91,6 +93,13 @@ export class ProjectMemberRepository extends DtoRepository<
       ])
       .return<{ id: ID }>('projectMember.id as id')
       .first();
+  }
+
+  async update(
+    existing: ProjectMember,
+    changes: ChangesOf<ProjectMember, UpdateProjectMember>,
+  ) {
+    await this.updateProperties(existing, changes);
   }
 
   protected hydrate(session: Session) {

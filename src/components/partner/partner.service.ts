@@ -9,7 +9,6 @@ import {
   ObjectView,
   ServerException,
   Session,
-  UnauthorizedException,
   UnsecuredDto,
 } from '../../common';
 import { HandleIdLookup, ILogger, Logger, ResourceLoader } from '../../core';
@@ -129,94 +128,20 @@ export class PartnerService {
 
     const changes = this.repo.getActualChanges(partner, input);
     this.privileges.for(session, Partner, partner).verifyChanges(changes);
-    const {
-      pointOfContactId,
-      languageOfWiderCommunicationId,
-      fieldRegions,
-      countries,
-      languagesOfConsulting,
-      ...simpleChanges
-    } = changes;
 
-    await this.repo.updateProperties(partner, simpleChanges);
-
-    if (pointOfContactId !== undefined) {
-      await this.repo.updateRelation(
-        'pointOfContact',
-        'User',
-        input.id,
-        pointOfContactId,
-      );
+    if (changes.countries) {
+      await this.verifyCountries(changes.countries);
     }
 
-    if (languageOfWiderCommunicationId) {
-      await this.repo.updateRelation(
-        'languageOfWiderCommunication',
-        'Language',
-        partner.id,
-        languageOfWiderCommunicationId,
-      );
-    }
-
-    if (countries) {
-      await this.verifyCountries(countries);
-
-      try {
-        await this.repo.updateRelationList({
-          id: partner.id,
-          relation: 'countries',
-          newList: countries,
-        });
-      } catch (e) {
-        throw e instanceof InputException
-          ? e.withField('partner.countries')
-          : e;
-      }
-    }
-
-    if (fieldRegions) {
-      try {
-        await this.repo.updateRelationList({
-          id: partner.id,
-          relation: 'fieldRegions',
-          newList: fieldRegions,
-        });
-      } catch (e) {
-        throw e instanceof InputException
-          ? e.withField('partner.fieldRegions')
-          : e;
-      }
-    }
-
-    if (languagesOfConsulting) {
-      try {
-        await this.repo.updateRelationList({
-          id: partner.id,
-          relation: 'languagesOfConsulting',
-          newList: languagesOfConsulting,
-        });
-      } catch (e) {
-        throw e instanceof InputException
-          ? e.withField('partner.languagesOfConsulting')
-          : e;
-      }
-    }
+    await this.repo.update(partner, changes);
 
     return await this.readOne(input.id, session);
   }
 
   async delete(id: ID, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
-    if (!object) {
-      throw new NotFoundException('Could not find Partner');
-    }
 
-    const canDelete = await this.repo.checkDeletePermission(id, session);
-
-    if (!canDelete)
-      throw new UnauthorizedException(
-        'You do not have the permission to delete this Partner',
-      );
+    this.privileges.for(session, Partner, object).verifyCan('delete');
 
     try {
       await this.repo.deleteNode(object);

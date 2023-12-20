@@ -1,6 +1,7 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
+import { e } from '~/core/edgedb';
 import { RegisterResource } from '~/core/resources';
 import {
   DateTimeField,
@@ -19,6 +20,7 @@ import { SecuredUser, User } from '../../../user/dto';
   implements: [Resource],
 })
 export class ProjectMember extends Resource {
+  static readonly DB = e.Project.Member;
   static readonly Props = keysOf<ProjectMember>();
   static readonly SecuredProps = keysOf<SecuredProps<ProjectMember>>();
   static readonly Parent = import('../../dto').then((m) => m.IProject);

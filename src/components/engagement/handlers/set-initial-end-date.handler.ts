@@ -84,13 +84,13 @@ export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
       initialEndDate: initialEndDate || null,
     };
     if (engagement.__typename === 'LanguageEngagement') {
-      await this.engagementRepo.updateLanguageProperties(
+      await this.engagementRepo.updateLanguage(
         engagement as UnsecuredDto<LanguageEngagement>,
         updateInput,
         changeset,
       );
     } else {
-      await this.engagementRepo.updateInternshipProperties(
+      await this.engagementRepo.updateInternship(
         engagement as UnsecuredDto<InternshipEngagement>,
         updateInput,
         changeset,

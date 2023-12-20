@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { inArray, node, Query, relation } from 'cypher-query-builder';
 import { pickBy } from 'lodash';
+import { ChangesOf } from '~/core/database/changes';
 import {
   ID,
   labelForView,
@@ -11,7 +12,7 @@ import {
   UnsecuredDto,
   viewOfChangeset,
 } from '../../common';
-import { DatabaseService, DtoRepository } from '../../core';
+import { DtoRepository } from '../../core';
 import {
   ACTIVE,
   createNode,
@@ -34,6 +35,7 @@ import {
   BudgetRecord,
   CreateBudget,
   BudgetStatus as Status,
+  UpdateBudget,
 } from './dto';
 
 @Injectable()
@@ -41,11 +43,8 @@ export class BudgetRepository extends DtoRepository<
   typeof Budget,
   [session: Session, view?: ObjectView]
 >(Budget) {
-  constructor(
-    db: DatabaseService,
-    private readonly records: BudgetRecordRepository,
-  ) {
-    super(db);
+  constructor(private readonly records: BudgetRecordRepository) {
+    super();
   }
 
   async doesProjectExist(projectId: ID, session: Session) {
@@ -86,6 +85,16 @@ export class BudgetRepository extends DtoRepository<
     }
 
     return result.id;
+  }
+
+  async update(
+    existing: Budget,
+    simpleChanges: Omit<
+      ChangesOf<Budget, UpdateBudget>,
+      'universalTemplateFile'
+    >,
+  ) {
+    return await this.updateProperties(existing, simpleChanges);
   }
 
   async readMany(ids: readonly ID[], session: Session, view?: ObjectView) {

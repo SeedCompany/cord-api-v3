@@ -1,12 +1,3 @@
-# Hide yarn from GitHub's language detection & suppress in diffs
-/.yarn/** linguist-generated
-yarn.lock linguist-generated
-
 # Represent TS generated files as generated
 *.generated.tsx linguist-generated
 *.generated.ts linguist-generated
-
-# Represent postman files as generated
-*.postman_collection.json linguist-generated
-*.postman_environment.json linguist-generated
-*.postman_globals.json linguist-generated

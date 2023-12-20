@@ -11,9 +11,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Node Setup & Yarn Install
         uses: ./.github/actions/setup
+
+      - name: EdgeDB Setup
+        uses: ./.github/actions/edgedb-setup
 
       - name: Check for no duplicate dependencies
         run: yarn dedupe --check

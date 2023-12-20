@@ -1,10 +1,7 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { CachedByArg } from '@seedcompany/common';
-import { difference } from 'lodash';
 import {
-  DuplicateException,
   ID,
-  NotFoundException,
   ObjectView,
   SecuredList,
   ServerException,
@@ -12,18 +9,11 @@ import {
   UnauthorizedException,
   UnsecuredDto,
 } from '../../common';
-import {
-  HandleIdLookup,
-  ILogger,
-  Logger,
-  Transactional,
-  UniquenessError,
-} from '../../core';
+import { HandleIdLookup, ILogger, Logger, Transactional } from '../../core';
 import { property } from '../../core/database/query';
 import { mapListResults } from '../../core/database/results';
 import { Privileges, Role } from '../authorization';
 import { AssignableRoles } from '../authorization/dto/assignable-roles';
-import { LanguageService } from '../language';
 import {
   LocationListInput,
   LocationService,
@@ -42,19 +32,19 @@ import {
 import {
   AssignOrganizationToUser,
   CreatePerson,
-  KnownLanguage,
+  ModifyKnownLanguageArgs,
   RemoveOrganizationFromUser,
   UpdateUser,
   User,
   UserListInput,
   UserListOutput,
 } from './dto';
-import { LanguageProficiency } from './dto/language-proficiency.enum';
 import {
   EducationListInput,
   EducationService,
   SecuredEducationList,
 } from './education';
+import { KnownLanguageRepository } from './known-language.repository';
 import {
   SecuredUnavailabilityList,
   UnavailabilityListInput,
@@ -72,7 +62,7 @@ export class UserService {
     private readonly unavailabilities: UnavailabilityService,
     private readonly privileges: Privileges,
     private readonly locationService: LocationService,
-    private readonly languageService: LanguageService,
+    private readonly knownLanguages: KnownLanguageRepository,
     private readonly userRepo: UserRepository,
     @Logger('user:service') private readonly logger: ILogger,
   ) {}
@@ -117,46 +107,17 @@ export class UserService {
 
     this.privileges.for(session, User, user).verifyChanges(changes);
 
-    const { roles, email, ...simpleChanges } = changes;
-
-    if (roles) {
-      this.verifyRolesAreAssignable(session, roles);
+    if (changes.roles) {
+      this.verifyRolesAreAssignable(session, changes.roles);
     }
 
-    await this.userRepo.updateProperties(user, simpleChanges);
-
-    // Update email
-    if (email !== undefined) {
-      try {
-        await this.userRepo.updateEmail(user, email);
-      } catch (e) {
-        if (e instanceof UniquenessError && e.label === 'EmailAddress') {
-          throw new DuplicateException(
-            'person.email',
-            'Email address is already in use',
-            e,
-          );
-        }
-        throw new ServerException('Failed to create user', e);
-      }
-    }
-
-    // Update roles
-    if (roles) {
-      const removals = difference(user.roles.value, roles);
-      const additions = difference(roles, user.roles.value);
-      await this.userRepo.updateRoles(input, removals, additions);
-    }
+    await this.userRepo.update(user, changes);
 
     return await this.readOne(input.id, session);
   }
 
   async delete(id: ID, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
-
-    if (!object) {
-      throw new NotFoundException('Could not find User');
-    }
     await this.userRepo.delete(id, session, object);
   }
 
@@ -341,56 +302,21 @@ export class UserService {
     );
   }
 
-  async createKnownLanguage(
-    userId: ID,
-    languageId: ID,
-    languageProficiency: LanguageProficiency,
-    _session: Session,
-  ): Promise<void> {
-    try {
-      await this.deleteKnownLanguage(
-        userId,
-        languageId,
-        languageProficiency,
-        _session,
-      );
-      await this.userRepo.createKnownLanguage(
-        userId,
-        languageId,
-        languageProficiency,
-      );
-    } catch (e) {
-      throw new ServerException('Could not create known language', e);
-    }
+  async createKnownLanguage(args: ModifyKnownLanguageArgs) {
+    await this.knownLanguages.create(args);
   }
 
-  async deleteKnownLanguage(
-    userId: ID,
-    languageId: ID,
-    languageProficiency: LanguageProficiency,
-    _session: Session,
-  ): Promise<void> {
-    try {
-      await this.userRepo.deleteKnownLanguage(
-        userId,
-        languageId,
-        languageProficiency,
-      );
-    } catch (e) {
-      throw new ServerException('Could not delete known language', e);
-    }
+  async deleteKnownLanguage(args: ModifyKnownLanguageArgs) {
+    await this.knownLanguages.delete(args);
   }
 
-  async listKnownLanguages(
-    userId: ID,
-    session: Session,
-  ): Promise<readonly KnownLanguage[]> {
+  async listKnownLanguages(userId: ID, session: Session) {
     const user = await this.userRepo.readOne(userId, session);
     const perms = this.privileges.for(session, User, user).all.knownLanguage;
     if (!perms.read) {
       return [];
     }
-    return await this.userRepo.listKnownLanguages(userId, session);
+    return await this.knownLanguages.list(userId);
   }
 
   async checkEmail(email: string): Promise<boolean> {

@@ -9,13 +9,8 @@ import {
   Session,
   UnsecuredDto,
 } from '../../common';
-import {
-  CommonRepository,
-  ConfigService,
-  DatabaseService,
-  OnIndex,
-} from '../../core';
-import { DbChanges, getChanges } from '../../core/database/changes';
+import { CommonRepository, ConfigService, OnIndex } from '../../core';
+import { ChangesOf, getChanges } from '../../core/database/changes';
 import {
   ACTIVE,
   createNode,
@@ -46,11 +41,10 @@ import { projectListFilter } from './list-filter.query';
 @Injectable()
 export class ProjectRepository extends CommonRepository {
   constructor(
-    db: DatabaseService,
     private readonly config: ConfigService,
     private readonly privileges: Privileges,
   ) {
-    super(db);
+    super();
   }
 
   async getRoles(session: Session) {
@@ -211,35 +205,71 @@ export class ProjectRepository extends CommonRepository {
     return result.id;
   }
 
-  async updateProperties(
-    currentProject: UnsecuredDto<Project>,
-    simpleChanges: DbChanges<TranslationProject | InternshipProject>,
+  async update(
+    existing: UnsecuredDto<Project>,
+    changes: ChangesOf<Project, UpdateProject>,
     changeset?: ID,
   ) {
-    return await this.db.updateProperties({
+    const {
+      primaryLocationId,
+      marketingLocationId,
+      fieldRegionId,
+      ...simpleChanges
+    } = changes;
+
+    let result = await this.db.updateProperties({
       type:
-        currentProject.type === ProjectType.Translation
+        existing.type === ProjectType.Translation
           ? TranslationProject
           : InternshipProject,
-      object: currentProject,
+      object: existing,
       changes: simpleChanges,
       changeset,
     });
-  }
 
-  async updateRelation(
-    relationName: string,
-    otherLabel: string,
-    id: ID,
-    otherId: ID | null,
-  ) {
-    await super.updateRelation(
-      relationName,
-      otherLabel,
-      id,
-      otherId,
-      'Project',
-    );
+    if (primaryLocationId !== undefined) {
+      await this.updateRelation(
+        'primaryLocation',
+        'Location',
+        existing.id,
+        primaryLocationId,
+        'Project',
+      );
+      result = {
+        ...result,
+        primaryLocation: primaryLocationId,
+      };
+    }
+
+    if (fieldRegionId !== undefined) {
+      await this.updateRelation(
+        'fieldRegion',
+        'FieldRegion',
+        existing.id,
+        fieldRegionId,
+        'Project',
+      );
+      result = {
+        ...result,
+        fieldRegion: fieldRegionId,
+      };
+    }
+
+    if (marketingLocationId !== undefined) {
+      await this.updateRelation(
+        'marketingLocation',
+        'Location',
+        existing.id,
+        marketingLocationId,
+        'Project',
+      );
+      result = {
+        ...result,
+        marketingLocation: marketingLocationId,
+      };
+    }
+
+    return result;
   }
 
   async list(input: ProjectListInput, session: Session) {
@@ -261,28 +291,6 @@ export class ProjectRepository extends CommonRepository {
       .apply(paginate(input, this.hydrate(session.userId)))
       .first();
     return result!; // result from paginate() will always have 1 row.
-  }
-
-  async getMembershipRoles(projectId: ID | Project, session: Session) {
-    const query = this.db
-      .query()
-      .match([
-        node('node', 'Project', { id: projectId }),
-        relation('out', '', 'member', ACTIVE),
-        node('projectMember', 'ProjectMember'),
-        relation('out', '', 'user', ACTIVE),
-        node('user', 'User', { id: session.userId }),
-      ])
-      .match([
-        node('projectMember'),
-        relation('out', 'r', 'roles', ACTIVE),
-        node('roles', 'Property'),
-      ])
-      .return('collect(roles.value) as memberRoles')
-      .asResult<{
-        memberRoles: Role[][];
-      }>();
-    return await query.first();
   }
 
   @OnIndex()

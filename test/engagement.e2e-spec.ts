@@ -1347,7 +1347,8 @@ describe('Engagement e2e', () => {
     ).rejects.toThrowGqlError(
       errors.input({
         code: ['Unauthorized', 'Input'],
-        message: 'You do not have the permission to delete this Engagement',
+        message:
+          'You do not have the permission to delete this language engagement',
       }),
     );
   });
