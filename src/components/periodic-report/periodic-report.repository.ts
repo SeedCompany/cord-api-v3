@@ -182,7 +182,7 @@ export class PeriodicReportRepository extends DtoRepository<
     const filters = { type, parent, start, end };
     const result = await this.db
       .query()
-      .matchNode('node', 'PeriodicReport')
+      .matchNode('node', `${type || ''}Report`)
       .apply(
         filter.builder(filters, {
           parent: filter.pathExists((id) => [
@@ -192,6 +192,7 @@ export class PeriodicReportRepository extends DtoRepository<
           ]),
           start: filter.dateTimeProp(),
           end: filter.dateTimeProp(),
+          //TODO: determine how to fix this type filter
           type: ({ value }) => hasLabel(`${value}Report`),
         }),
       )
