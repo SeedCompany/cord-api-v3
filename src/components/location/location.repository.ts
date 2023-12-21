@@ -103,7 +103,7 @@ export class LocationRepository extends DtoRepository(Location) {
     if (marketingRegionId !== undefined) {
       await this.updateRelation(
         'marketingRegion',
-        'marketingRegion',
+        'Location',
         id,
         marketingRegionId,
       );
@@ -127,7 +127,7 @@ export class LocationRepository extends DtoRepository(Location) {
         .optionalMatch([
           node('node'),
           relation('out', '', 'marketingRegion', ACTIVE),
-          node('marketingRegion', 'marketingRegion'),
+          node('marketingRegion', 'Location'),
         ])
         .return<{ dto: UnsecuredDto<Location> }>(
           merge('props', {
