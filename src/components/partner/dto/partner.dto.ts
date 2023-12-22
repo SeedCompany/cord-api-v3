@@ -13,6 +13,7 @@ import {
   ResourceRelationsShape,
   Secured,
   SecuredBoolean,
+  SecuredDateNullable,
   SecuredEnumList,
   SecuredProperty,
   SecuredProps,
@@ -87,6 +88,9 @@ export class Partner extends Interfaces {
   readonly languagesOfConsulting: Required<
     Secured<ReadonlyArray<IdOf<Language>>>
   >;
+
+  @Field()
+  readonly startDate: SecuredDateNullable;
 
   @DateTimeField()
   readonly modifiedAt: DateTime;

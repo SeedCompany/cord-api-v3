@@ -3,6 +3,7 @@ import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { ChangesOf } from '~/core/database/changes';
 import {
+  CalendarDate,
   ID,
   InputException,
   ServerException,
@@ -54,6 +55,7 @@ export class PartnerRepository extends DtoRepository<
       pmcEntityCode: input.pmcEntityCode,
       globalInnovationsClient: input.globalInnovationsClient,
       active: input.active,
+      startDate: input.startDate ?? CalendarDate.local(),
       address: input.address,
       modifiedAt: DateTime.local(),
       canDelete: true,
