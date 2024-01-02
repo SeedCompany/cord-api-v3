@@ -117,7 +117,9 @@ export class ProjectMemberRepository extends DtoRepository<
           node('user', 'User'),
         ])
         .subQuery('user', (sub) =>
-          sub.with('user as node').apply(this.users.hydrate(session.userId)),
+          sub
+            .with('user as node')
+            .apply(this.users.hydrateAsNeo4j(session.userId)),
         )
         .return<{ dto: UnsecuredDto<ProjectMember> }>(
           merge('props', { user: 'dto' }).as('dto'),

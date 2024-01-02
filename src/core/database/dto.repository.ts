@@ -18,7 +18,7 @@ import { DbTypeOf } from './db-type';
 import { OnIndex } from './indexer';
 import { matchProps } from './query';
 
-export const privileges = Symbol('DtoRepository.privileges');
+export const privileges = Symbol.for('DtoRepository.privileges');
 
 /**
  * A repository for a simple DTO. This provides a few methods out of the box.
