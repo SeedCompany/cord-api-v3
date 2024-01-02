@@ -2,7 +2,15 @@ import { Field, ID as IDType, InputType, ObjectType } from '@nestjs/graphql';
 import { Transform, Type } from 'class-transformer';
 import { Matches, ValidateNested } from 'class-validator';
 import { uniq } from 'lodash';
-import { ID, IdField, IdOf, IsId, NameField } from '../../../common';
+import {
+  CalendarDate,
+  DateField,
+  ID,
+  IdField,
+  IdOf,
+  IsId,
+  NameField,
+} from '../../../common';
 import { Location } from '../../../components/location';
 import { FieldRegion } from '../../field-region';
 import type { Language } from '../../language';
@@ -57,6 +65,9 @@ export abstract class UpdatePartner {
   @Field(() => [IDType], { name: 'languagesOfConsulting', nullable: true })
   @Transform(({ value }) => (value ? uniq(value) : undefined))
   readonly languagesOfConsulting?: ReadonlyArray<IdOf<Language>>;
+
+  @DateField({ nullable: true })
+  readonly startDate?: CalendarDate | null;
 }
 
 @InputType()
