@@ -10,7 +10,7 @@ import * as stacktrace from 'stack-trace';
 import { MESSAGE } from 'triple-beam';
 import { fileURLToPath } from 'url';
 import { config, format, LogEntry } from 'winston';
-import { Exception } from '../../common/exceptions';
+import { hasPrevious } from '~/common';
 import { maskSecrets as maskSecretsOfObj } from '../../common/mask-secrets';
 import { getNameFromEntry } from './logger.interface';
 
@@ -77,9 +77,7 @@ export const exceptionInfo = () =>
     delete info.stack;
 
     const flatten = (ex: Error): Error[] =>
-      ex instanceof Exception && ex.previous
-        ? [ex, ...flatten(ex.previous)]
-        : [ex];
+      hasPrevious(ex) ? [ex, ...flatten(ex.previous)] : [ex];
 
     info.exceptions = flatten(info.exception).map((ex): ParsedError => {
       const { name: _, message, stack: __, ...other } = ex;

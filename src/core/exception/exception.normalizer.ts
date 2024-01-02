@@ -1,12 +1,19 @@
 import { ApolloServerErrorCode as ApolloCode } from '@apollo/server/errors';
-import { Inject, Injectable } from '@nestjs/common';
+import { ArgumentsHost, Inject, Injectable } from '@nestjs/common';
 // eslint-disable-next-line no-restricted-imports
 import * as Nest from '@nestjs/common';
+import {
+  GqlContextType as ContextKey,
+  GqlExecutionContext,
+} from '@nestjs/graphql';
 import { isNotFalsy, setHas, setOf, simpleSwitch } from '@seedcompany/common';
-import { GraphQLError } from 'graphql';
-import { uniq } from 'lodash';
+import * as Edge from 'edgedb';
+import * as EdgeDBTags from 'edgedb/dist/errors/tags.js';
+import { GraphQLError, GraphQLResolveInfo } from 'graphql';
+import { lowerCase, uniq } from 'lodash';
 import {
   AbstractClassType,
+  DuplicateException,
   Exception,
   getParentTypes,
   getPreviousList,
@@ -14,6 +21,7 @@ import {
 } from '~/common';
 import type { ConfigService } from '~/core';
 import * as Neo from '../database/errors';
+import { ExclusivityViolationError } from '../edgedb/exclusivity-violation.error';
 import { isSrcFrame } from './is-src-frame';
 import { normalizeFramePath } from './normalize-frame-path';
 
@@ -29,14 +37,14 @@ export interface ExceptionJson {
 export class ExceptionNormalizer {
   constructor(@Inject('CONFIG') private readonly config?: ConfigService) {}
 
-  normalize(ex: Error): ExceptionJson {
+  normalize(ex: Error, context?: ArgumentsHost): ExceptionJson {
     const {
       message = ex.message,
       stack = ex.stack,
       code: _,
       codes,
       ...extensions
-    } = this.gatherExtraInfo(ex);
+    } = this.gatherExtraInfo(ex, context);
     return {
       message,
       code: codes[0],
@@ -52,7 +60,10 @@ export class ExceptionNormalizer {
     };
   }
 
-  private gatherExtraInfo(ex: Error): Record<string, any> {
+  private gatherExtraInfo(
+    ex: Error,
+    context?: ArgumentsHost,
+  ): Record<string, any> {
     if (ex instanceof Nest.HttpException) {
       return this.httpException(ex);
     }
@@ -87,10 +98,46 @@ export class ExceptionNormalizer {
       };
     }
 
+    // Again, dig deep here to find connection errors.
+    // These would be the root problem that we'd want to expose.
+    const edgeError = exs.find(
+      (e): e is Edge.EdgeDBError => e instanceof Edge.EdgeDBError,
+    );
+    if (
+      edgeError &&
+      (edgeError instanceof Edge.AvailabilityError ||
+        edgeError instanceof Edge.ClientConnectionError)
+    ) {
+      return {
+        codes: this.errorToCodes(ex),
+        message: 'Failed to connect to CORD database',
+      };
+    }
+
+    if (ex instanceof ExclusivityViolationError) {
+      ex = DuplicateException.fromDB(ex, context);
+    } else if (ex instanceof Edge.EdgeDBError) {
+      // Mask actual DB error with a nicer user error message.
+      let message = 'Failed';
+      if (context && context.getType<ContextKey>() === 'graphql') {
+        const gqlContext = GqlExecutionContext.create(context as any);
+        const info = gqlContext.getInfo<GraphQLResolveInfo>();
+        if (info.operation.operation === 'mutation') {
+          message += ` to ${lowerCase(info.fieldName)}`;
+        }
+      }
+      return {
+        message,
+        codes: this.errorToCodes(ex),
+      };
+    }
+
     if (ex instanceof Exception) {
       const { name, message, stack, previous, ...rest } = ex;
       return {
+        message,
         codes: this.errorToCodes(ex),
+        stack,
         ...rest,
       };
     }
@@ -168,6 +215,13 @@ export class ExceptionNormalizer {
     }
     if (type === Nest.HttpException) {
       return (ex as Nest.HttpException).getStatus() < 500 ? 'Client' : 'Server';
+    }
+    if (type === Edge.EdgeDBError) {
+      const transient =
+        ex instanceof Edge.EdgeDBError &&
+        (ex.hasTag(EdgeDBTags.SHOULD_RECONNECT) ||
+          ex.hasTag(EdgeDBTags.SHOULD_RETRY));
+      return [...(transient ? ['Transient'] : []), 'Database', 'Server'];
     }
 
     return type.name.replace(/(Exception|Error)$/, '');
