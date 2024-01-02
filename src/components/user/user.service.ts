@@ -79,7 +79,7 @@ export class UserService {
       this.verifyRolesAreAssignable(session, input.roles);
     }
 
-    const id = await this.userRepo.create(input);
+    const { id } = await this.userRepo.create(input);
     return id;
   }
 

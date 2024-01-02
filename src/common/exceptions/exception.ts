@@ -29,8 +29,10 @@ export const hasPrevious = (e: Error): e is Error & { previous: Error } =>
 export function getPreviousList(ex: Error, includeSelf: boolean) {
   const previous: Error[] = includeSelf ? [ex] : [];
   let current = ex;
-  while (hasPrevious(current)) {
-    current = current.previous;
+  while (current.cause instanceof Error || hasPrevious(current)) {
+    current = hasPrevious(current)
+      ? current.previous
+      : (current.cause as Error);
     previous.push(current);
   }
   return previous;

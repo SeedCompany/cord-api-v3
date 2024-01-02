@@ -108,6 +108,9 @@ export class AuthenticationEdgeDBRepository
       ),
     }));
     const result = await this.db.run(query);
+    if (!result) {
+      return undefined;
+    }
     return {
       userId: result?.user?.id,
       roles: result?.user?.scopedRoles ?? [],
