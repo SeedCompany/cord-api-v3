@@ -3,7 +3,7 @@ module default {
     overloaded name {
       constraint exclusive;
     }
-
+    
     required accountNumber: int16 {
       constraint min_value(0);
       constraint max_value(9);

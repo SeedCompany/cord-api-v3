@@ -44,9 +44,17 @@ module default {
 #     multi link engagements := .<project[is Engagement];
     property engagementTotal := count(.<project[is Engagement]);
     
-#       link primaryLocation: Location;
-#       link marketingLocation: Location;
-#       link fieldRegion: FieldRegion;
+    primaryLocation: Location;
+    trigger enforceFundingAccount after update for each do (
+      assert(
+        any(__new__.primaryLocation.fundingAccount.accountNumber > 0)
+          or not exists __new__.primaryLocation, # allow clearing
+        message := "Project must have a primary location with a specified funding account"
+      )
+    );
+    marketingLocation: Location;
+    fieldRegion: FieldRegion;
+    
     link rootDirectory: Directory;
     
     overloaded link projectContext: Project::Context {
