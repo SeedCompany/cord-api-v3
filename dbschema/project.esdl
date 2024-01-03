@@ -10,7 +10,11 @@ module default {
       default := Sensitivity.High;
     };
     
-    departmentId: str;
+    departmentId: int32 {
+      constraint exclusive;
+      constraint min_value(10000);
+      constraint max_value(99999);
+    };
     
     required step: Project::Step {
       default := Project::Step.EarlyConversations;
