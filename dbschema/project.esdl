@@ -102,8 +102,8 @@ module Project {
     
     trigger enforceCorrectProjectContext after insert, update for each do (
       assert(
-        __new__.project in __new__.projectContext.projects,
-        message := "Given project must be in given project context"
+        __new__.projectContext = __new__.project.projectContext,
+        message := "Given project context must match given project's context"
       )
     );
   }
