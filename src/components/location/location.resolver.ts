@@ -87,12 +87,12 @@ export class LocationResolver {
   }
 
   @ResolveField(() => SecuredLocation)
-  async marketingRegion(
+  async defaultMarketingRegion(
     @Parent() location: Location,
-    @Loader(LocationLoader) marketingRegions: LoaderOf<LocationLoader>,
+    @Loader(LocationLoader) defaultMarketingRegions: LoaderOf<LocationLoader>,
   ): Promise<SecuredLocation> {
-    return await mapSecuredValue(location.marketingRegion, (id) =>
-      marketingRegions.load(id),
+    return await mapSecuredValue(location.defaultMarketingRegion, (id) =>
+      defaultMarketingRegions.load(id),
     );
   }
 

@@ -57,7 +57,7 @@ export class LocationRepository extends DtoRepository(Location) {
         createRelationships(Location, 'out', {
           fundingAccount: ['FundingAccount', input.fundingAccountId],
           defaultFieldRegion: ['FieldRegion', input.defaultFieldRegionId],
-          marketingRegion: ['Location', input.marketingRegionId],
+          defaultMarketingRegion: ['Location', input.defaultMarketingRegionId],
         }),
       )
       .return<{ id: ID }>('node.id as id');
@@ -75,7 +75,7 @@ export class LocationRepository extends DtoRepository(Location) {
       id,
       fundingAccountId,
       defaultFieldRegionId,
-      marketingRegionId,
+      defaultMarketingRegionId,
       mapImage,
       ...simpleChanges
     } = changes;
@@ -100,12 +100,12 @@ export class LocationRepository extends DtoRepository(Location) {
       );
     }
 
-    if (marketingRegionId !== undefined) {
+    if (defaultMarketingRegionId !== undefined) {
       await this.updateRelation(
-        'marketingRegion',
+        'defaultMarketingRegion',
         'Location',
         id,
-        marketingRegionId,
+        defaultMarketingRegionId,
       );
     }
   }
@@ -126,14 +126,14 @@ export class LocationRepository extends DtoRepository(Location) {
         ])
         .optionalMatch([
           node('node'),
-          relation('out', '', 'marketingRegion', ACTIVE),
-          node('marketingRegion', 'Location'),
+          relation('out', '', 'defaultMarketingRegion', ACTIVE),
+          node('defaultMarketingRegion', 'Location'),
         ])
         .return<{ dto: UnsecuredDto<Location> }>(
           merge('props', {
             fundingAccount: 'fundingAccount.id',
             defaultFieldRegion: 'defaultFieldRegion.id',
-            marketingRegion: 'marketingRegion.id',
+            defaultMarketingRegion: 'defaultMarketingRegion.id',
           }).as('dto'),
         );
   }

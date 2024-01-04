@@ -48,7 +48,7 @@ export class Location extends Resource {
 
   readonly defaultFieldRegion: Secured<ID | null>;
 
-  readonly marketingRegion: Secured<IdOf<Location> | null>;
+  readonly defaultMarketingRegion: Secured<IdOf<Location> | null>;
 
   readonly mapImage: DefinedFile;
 }

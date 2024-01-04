@@ -81,7 +81,7 @@ export const org = gql`
             }
           }
         }
-        marketingRegion {
+        defaultMarketingRegion {
           value {
             id
             name {
@@ -321,7 +321,7 @@ export const language = gql`
             }
           }
         }
-        marketingRegion {
+        defaultMarketingRegion {
           value {
             id
             name {
@@ -1143,8 +1143,8 @@ export const fundingAccount = gql`
   }
 `;
 
-export const marketingRegion = gql`
-  fragment marketingRegion on Location {
+export const defaultMarketingRegion = gql`
+  fragment defaultMarketingRegion on Location {
     id
     name {
       value
@@ -1185,15 +1185,15 @@ export const location = gql`
         ...fieldRegion
       }
     }
-    marketingRegion {
+    defaultMarketingRegion {
       value {
-        ...marketingRegion
+        ...defaultMarketingRegion
       }
     }
   }
   ${fundingAccount}
   ${fieldRegion}
-  ${marketingRegion}
+  ${defaultMarketingRegion}
 `;
 
 export const projectChangeRequest = gql`

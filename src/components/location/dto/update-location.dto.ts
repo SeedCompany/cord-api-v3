@@ -33,7 +33,7 @@ export abstract class UpdateLocation {
   readonly defaultFieldRegionId?: ID | null;
 
   @IdField({ nullable: true })
-  readonly marketingRegionId?: IdOf<Location>;
+  readonly defaultMarketingRegionId?: IdOf<Location>;
 
   @Field({ nullable: true })
   @Type(() => CreateDefinedFileVersionInput)
