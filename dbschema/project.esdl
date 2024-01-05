@@ -10,7 +10,32 @@ module default {
       default := Sensitivity.High;
     };
     
-    departmentId: str;
+    departmentId: int32 {
+      constraint exclusive;
+      constraint min_value(10000);
+      constraint max_value(99999);
+      rewrite update using (
+        if (
+          not exists .departmentId and
+          .status <= Project::Status.Active and
+          .step >= Project::Step.PendingFinanceConfirmation
+        ) then ((
+          with
+            fa := assert_exists(
+              __subject__.primaryLocation.fundingAccount,
+              message := "Project must have a primary location"
+            ),
+            existing := (
+              select detached Project.departmentId filter Project.primaryLocation.fundingAccount = fa
+            ),
+            available := (
+              range_unpack(range(fa.accountNumber * 10000 + 11, fa.accountNumber * 10000 + 9999))
+              except existing
+            )
+          select min(available)
+        )) else .departmentId
+      );
+    };
     
     required step: Project::Step {
       default := Project::Step.EarlyConversations;
@@ -44,9 +69,17 @@ module default {
 #     multi link engagements := .<project[is Engagement];
     property engagementTotal := count(.<project[is Engagement]);
     
-#       link primaryLocation: Location;
-#       link marketingLocation: Location;
-#       link fieldRegion: FieldRegion;
+    primaryLocation: Location;
+    trigger enforceFundingAccount after update for each do (
+      assert(
+        any(__new__.primaryLocation.fundingAccount.accountNumber > 0)
+          or not exists __new__.primaryLocation, # allow clearing
+        message := "Project must have a primary location with a specified funding account"
+      )
+    );
+    marketingLocation: Location;
+    fieldRegion: FieldRegion;
+    
     link rootDirectory: Directory;
     
     overloaded link projectContext: Project::Context {

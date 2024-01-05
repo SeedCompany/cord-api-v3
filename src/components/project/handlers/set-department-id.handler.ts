@@ -4,7 +4,12 @@ import {
   ServerException,
   UnsecuredDto,
 } from '../../../common';
-import { DatabaseService, EventsHandler, IEventHandler } from '../../../core';
+import {
+  ConfigService,
+  DatabaseService,
+  EventsHandler,
+  IEventHandler,
+} from '../../../core';
 import { Project, ProjectStep } from '../dto';
 import { ProjectUpdatedEvent } from '../events';
 
@@ -12,9 +17,16 @@ type SubscribedEvent = ProjectUpdatedEvent;
 
 @EventsHandler(ProjectUpdatedEvent)
 export class SetDepartmentId implements IEventHandler<SubscribedEvent> {
-  constructor(private readonly db: DatabaseService) {}
+  constructor(
+    private readonly db: DatabaseService,
+    private readonly config: ConfigService,
+  ) {}
 
   async handle(event: SubscribedEvent) {
+    if (this.config.databaseEngine === 'edgedb') {
+      return;
+    }
+
     const shouldSetDepartmentId =
       event.updates.step === ProjectStep.PendingFinanceConfirmation &&
       !event.updated.departmentId;
