@@ -5,6 +5,6 @@ import { FundingAccount } from './dto';
 import { FundingAccountRepository } from './funding-account.repository';
 
 @Injectable()
-export class FundingAccountEdgedbRepository
+export class FundingAccountEdgeDBRepository
   extends RepoFor(FundingAccount).withDefaults()
   implements PublicOf<FundingAccountRepository> {}
