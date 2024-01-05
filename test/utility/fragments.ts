@@ -81,14 +81,6 @@ export const org = gql`
             }
           }
         }
-        defaultMarketingRegion {
-          value {
-            id
-            name {
-              value
-            }
-          }
-        }
       }
     }
   }
@@ -314,14 +306,6 @@ export const language = gql`
           canRead
         }
         defaultFieldRegion {
-          value {
-            id
-            name {
-              value
-            }
-          }
-        }
-        defaultMarketingRegion {
           value {
             id
             name {
@@ -1143,8 +1127,8 @@ export const fundingAccount = gql`
   }
 `;
 
-export const defaultMarketingRegion = gql`
-  fragment defaultMarketingRegion on Location {
+export const locationName = gql`
+  fragment locationName on Location {
     id
     name {
       value
@@ -1187,13 +1171,13 @@ export const location = gql`
     }
     defaultMarketingRegion {
       value {
-        ...defaultMarketingRegion
+        ...locationName
       }
     }
   }
   ${fundingAccount}
   ${fieldRegion}
-  ${defaultMarketingRegion}
+  ${locationName}
 `;
 
 export const projectChangeRequest = gql`
