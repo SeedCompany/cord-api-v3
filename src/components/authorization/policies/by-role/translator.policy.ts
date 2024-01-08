@@ -40,7 +40,7 @@ import { member, Policy, Role, variant } from '../util';
   r.Project.when(member)
     .read.specifically((p) => [
       p.rootDirectory.edit,
-      p.many('departmentId', 'marketingLocationOverride', 'fieldRegion').none,
+      p.many('departmentId', 'marketingCountryOverride', 'fieldRegion').none,
     ])
     .children((c) => c.posts.edit),
   r.ProjectMember.when(member).read,

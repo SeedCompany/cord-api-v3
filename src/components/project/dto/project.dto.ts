@@ -120,7 +120,7 @@ class Project extends Interfaces {
 
   readonly primaryLocation: Secured<ID | null>;
 
-  readonly marketingLocationOverride: Secured<ID | null>;
+  readonly marketingCountryOverride: Secured<ID | null>;
 
   readonly fieldRegion: Secured<ID | null>;
 

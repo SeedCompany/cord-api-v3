@@ -307,11 +307,11 @@ export class ProjectResolver {
   }
 
   @ResolveField(() => SecuredLocation)
-  async marketingLocationOverride(
+  async marketingCountryOverride(
     @Parent() project: Project,
     @Loader(LocationLoader) locations: LoaderOf<LocationLoader>,
   ): Promise<SecuredLocation> {
-    return await mapSecuredValue(project.marketingLocationOverride, (id) =>
+    return await mapSecuredValue(project.marketingCountryOverride, (id) =>
       locations.load(id),
     );
   }

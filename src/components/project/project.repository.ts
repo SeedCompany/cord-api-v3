@@ -108,8 +108,8 @@ export class ProjectRepository extends CommonRepository {
         ])
         .optionalMatch([
           node('node'),
-          relation('out', '', 'marketingLocationOverride', ACTIVE),
-          node('marketingLocationOverride', 'Location'),
+          relation('out', '', 'marketingCountryOverride', ACTIVE),
+          node('marketingCountryOverride', 'Location'),
         ])
         .optionalMatch([
           node('node'),
@@ -136,7 +136,7 @@ export class ProjectRepository extends CommonRepository {
             pinned: 'exists((:User { id: $requestingUser })-[:pinned]->(node))',
             rootDirectory: 'rootDirectory.id',
             primaryLocation: 'primaryLocation.id',
-            marketingLocationOverride: 'marketingLocationOverride.id',
+            marketingCountryOverride: 'marketingCountryOverride.id',
             fieldRegion: 'fieldRegion.id',
             owningOrganization: 'organization.id',
             engagementTotal: 'engagementTotal',
@@ -161,7 +161,7 @@ export class ProjectRepository extends CommonRepository {
     const {
       primaryLocationId,
       fieldRegionId,
-      marketingLocationOverrideId,
+      marketingCountryOverrideId,
       otherLocationIds,
       type,
       ...initialProps
@@ -199,7 +199,7 @@ export class ProjectRepository extends CommonRepository {
           fieldRegion: ['FieldRegion', fieldRegionId],
           primaryLocation: ['Location', primaryLocationId],
           otherLocations: ['Location', otherLocationIds],
-          marketingLocationOverride: ['Location', marketingLocationOverrideId],
+          marketingCountryOverride: ['Location', marketingCountryOverrideId],
           owningOrganization: ['Organization', this.config.defaultOrg.id],
         }),
       )

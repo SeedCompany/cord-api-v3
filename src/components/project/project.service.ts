@@ -130,10 +130,10 @@ export class ProjectService {
       'One of the other locations was not found',
     );
     await this.validateOtherResourceId(
-      input.marketingLocationOverrideId,
+      input.marketingCountryOverrideId,
       'Location',
-      'marketingLocationOverrideId',
-      'Marketing location not found',
+      'marketingCountryOverrideId',
+      'Marketing Country not found',
     );
 
     try {
@@ -274,7 +274,7 @@ export class ProjectService {
 
     const {
       primaryLocationId,
-      marketingLocationOverrideId,
+      marketingCountryOverrideId,
       fieldRegionId,
       ...simpleChanges
     } = changes;
@@ -340,16 +340,16 @@ export class ProjectService {
       };
     }
 
-    if (marketingLocationOverrideId !== undefined) {
+    if (marketingCountryOverrideId !== undefined) {
       await this.repo.updateRelation(
-        'marketingLocationOverride',
+        'marketingCountryOverride',
         'Location',
         input.id,
-        marketingLocationOverrideId,
+        marketingCountryOverrideId,
       );
       result = {
         ...result,
-        marketingLocationOverride: marketingLocationOverrideId,
+        marketingCountryOverride: marketingCountryOverrideId,
       };
     }
 

@@ -36,7 +36,7 @@ export abstract class UpdateProject {
     description: 'A marketing primary location ID',
     nullable: true,
   })
-  readonly marketingLocationOverrideId?: ID | null;
+  readonly marketingCountryOverrideId?: ID | null;
 
   @IdField({
     description: 'A field region ID',
