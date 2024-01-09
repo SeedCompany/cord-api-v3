@@ -55,9 +55,15 @@ export class ScriptureReferenceService {
     }
   }
 
-  parseList(nodes: DbScriptureReferences) {
+  parseList(nodes: DbScriptureReferences | readonly ScriptureRangeInput[]) {
+    if (nodes.length === 0) {
+      return [] as const;
+    }
+    if (!('properties' in nodes[0])) {
+      return nodes as readonly ScriptureRange[];
+    }
     return sortBy(
-      nodes.map((row) => row.properties),
+      (nodes as DbScriptureReferences).map((row) => row.properties),
       [(range) => range.start, (range) => range.end],
     ).map(ScriptureRange.fromIds);
   }

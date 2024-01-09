@@ -35,7 +35,7 @@ export abstract class Producible extends Resource {
 
   @Field(() => SecuredScriptureRanges)
   readonly scriptureReferences: SecuredScriptureRanges &
-    SetDbType<DbScriptureReferences> &
+    SetDbType<DbScriptureReferences | readonly ScriptureRangeInput[]> &
     SetChangeType<'scriptureReferences', readonly ScriptureRangeInput[]>;
 }
 
