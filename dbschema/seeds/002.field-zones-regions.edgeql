@@ -4,7 +4,6 @@ with
     for name in {
       "Americas, Pacific, Eurasia",
       "Africa",
-      "Not Specified",
       "Asia"
     }
     union (
@@ -25,10 +24,9 @@ with
       ("Africa - Sahel", zones[1]),
       ("Africa - Congo Basin", zones[1]),
       ("Africa - Anglophone West", zones[1]),
-      ("any", zones[2]),
-      ("Asia - Islands", zones[3]),
-      ("Asia - South", zones[3]),
-      ("Asia - Mainland", zones[3]),
+      ("Asia - Islands", zones[2]),
+      ("Asia - South", zones[2]),
+      ("Asia - Mainland", zones[2]),
     }
     union (
       (select FieldRegion filter .name = region.0) ??

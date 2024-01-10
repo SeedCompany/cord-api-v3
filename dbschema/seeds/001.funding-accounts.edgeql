@@ -1,5 +1,4 @@
 for fa in {
-  ("Not Specified", 0),
   ("Asia - Mainland", 1),
   ("Africa", 2),
   ("Asia - Islands", 3),
