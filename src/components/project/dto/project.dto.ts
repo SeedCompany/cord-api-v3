@@ -4,12 +4,14 @@ import { stripIndent } from 'common-tags';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive } from 'type-fest';
+import { sortingForEnumIndex } from '~/core/database/query';
 import { abstractType, e } from '~/core/edgedb';
 import { RegisterResource } from '~/core/resources';
 import {
   DateInterval,
   DateTimeField,
   DbLabel,
+  DbSort,
   DbUnique,
   ID,
   IntersectionType,
@@ -44,7 +46,7 @@ import { Postable } from '../../post/dto';
 import { ProjectChangeRequest } from '../../project-change-request/dto';
 import { ProjectMember } from '../project-member/dto';
 import { ProjectStatus } from './project-status.enum';
-import { SecuredProjectStep } from './project-step.enum';
+import { ProjectStep, SecuredProjectStep } from './project-step.enum';
 import { ProjectType } from './project-type.enum';
 
 type AnyProject = MergeExclusive<TranslationProject, InternshipProject>;
@@ -114,10 +116,12 @@ class Project extends Interfaces {
     middleware: [parentIdMiddleware],
   })
   @DbLabel('ProjectStep')
+  @DbSort(sortingForEnumIndex(ProjectStep))
   readonly step: SecuredProjectStep;
 
   @Field(() => ProjectStatus)
   @DbLabel('ProjectStatus')
+  @DbSort(sortingForEnumIndex(ProjectStatus))
   readonly status: ProjectStatus;
 
   readonly primaryLocation: Secured<ID | null>;
