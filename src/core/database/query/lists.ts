@@ -3,13 +3,14 @@ import { identity } from 'rxjs';
 import {
   getDbSortTransformer,
   ID,
+  MadeEnum,
   Order,
   PaginatedListType,
   PaginationInput,
   Resource,
   ResourceShape,
 } from '~/common';
-import { collect } from './cypher-functions';
+import { apoc, collect } from './cypher-functions';
 import { ACTIVE } from './matching';
 
 /**
@@ -97,7 +98,7 @@ export const sorting =
     return query.comment`sorting(${sort})`
       .subQuery('*', matcher)
       .with('*')
-      .orderBy(sortTransformer('sortValue'), order);
+      .orderBy(`${sortTransformer('sortValue')}`, order);
   };
 
 const matchPropSort = (prop: string) => (query: Query) =>
@@ -111,6 +112,14 @@ const matchPropSort = (prop: string) => (query: Query) =>
 
 const matchBasePropSort = (prop: string) => (query: Query) =>
   query.return(`node.${prop} as sortValue`);
+
+export const sortingForEnumIndex =
+  <T extends string>(theEnum: MadeEnum<T>) =>
+  (variable: string) =>
+    apoc.coll.indexOf(
+      [...theEnum.values].map((v) => `"${v}"`),
+      variable,
+    );
 
 export const whereNotDeletedInChangeset = (changeset?: ID) => (query: Query) =>
   changeset
