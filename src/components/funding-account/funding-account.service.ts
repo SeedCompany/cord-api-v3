@@ -94,13 +94,14 @@ export class FundingAccountService {
     input: UpdateFundingAccount,
     session: Session,
   ): Promise<FundingAccount> {
-    const fundingAccount = await this.readOne(input.id, session);
+    const fundingAccount = await this.repo.readOne(input.id);
 
     const changes = this.repo.getActualChanges(fundingAccount, input);
     this.privileges
       .for(session, FundingAccount, fundingAccount)
       .verifyChanges(changes);
-    return await this.repo.update(fundingAccount, changes);
+    const updated = await this.repo.update(fundingAccount, changes);
+    return await this.secure(updated, session);
   }
 
   async delete(id: ID, session: Session): Promise<void> {

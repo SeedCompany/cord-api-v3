@@ -69,6 +69,7 @@ export const apoc = {
   },
   coll: {
     flatten: fn1('apoc.coll.flatten'),
+    indexOf: fn('apoc.coll.indexOf'),
   },
   convert: {
     /** Converts Neo4j node to object/map of the node's properties */
