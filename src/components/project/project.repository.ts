@@ -286,6 +286,14 @@ export class ProjectRepository extends CommonRepository {
             query
               .apply(matchProjectSens('node'))
               .return<{ sortValue: string }>('sensitivity as sortValue'),
+          engagements: (query) =>
+            query
+              .match([
+                node('node'),
+                relation('out', '', 'engagement'),
+                node('engagement', 'LanguageEngagement'),
+              ])
+              .return<{ sortValue: number }>('count(engagement) as sortValue'),
         }),
       )
       .apply(paginate(input, this.hydrate(session.userId)))
