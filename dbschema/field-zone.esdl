@@ -1,5 +1,5 @@
 module default {
-  type FieldZone extending Resource, Mixin::Named {
+  type FieldZone extending Mixin::Postable, Resource, Mixin::Named {
     overloaded name {
       constraint exclusive;
     }
