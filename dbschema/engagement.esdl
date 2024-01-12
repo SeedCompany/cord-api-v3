@@ -37,7 +37,7 @@ module default {
       rewrite insert, update using (.endDate if .status = Engagement::Status.InDevelopment else .initialEndDate);
     };
     
-    description: json;
+    description: RichText;
   }
   
   type LanguageEngagement extending Engagement {

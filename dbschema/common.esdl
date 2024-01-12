@@ -15,4 +15,6 @@ module default {
        )
     )
   );
+  
+  scalar type RichText extending json;
 }

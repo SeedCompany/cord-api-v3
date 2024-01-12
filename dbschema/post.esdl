@@ -14,7 +14,7 @@ module default {
     
     required type: Post::Type;
     required shareability: Post::Shareability;
-    required body: json;
+    required body: RichText;
     
     single property sensitivity := .container[is Project::ContextAware].sensitivity;
     single property isMember := .container[is Project::ContextAware].isMember;
