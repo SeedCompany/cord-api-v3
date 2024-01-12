@@ -1,7 +1,7 @@
 import { delay, mapEntries } from '@seedcompany/common';
 import { $, Client } from 'edgedb';
 import { KNOWN_TYPENAMES } from 'edgedb/dist/codecs/consts.js';
-import { ScalarCodec } from 'edgedb/dist/codecs/ifaces.js';
+import LRU from 'edgedb/dist/primitives/lru.js';
 import { retry } from '~/common/retry';
 import { ScalarCodecClass } from './type.util';
 
@@ -52,7 +52,7 @@ const register = (
   scalarIdsByName?: ReadonlyMap<string, string>,
 ) => {
   const registry = (client as any).pool._codecsRegistry;
-  const codecs: Map<string, ScalarCodec> = registry.customScalarCodecs;
+  const codecs: LRU<string, InstanceType<ScalarCodecClass>> = registry.codecs;
 
   for (const scalarCodec of scalarCodecs) {
     const typeName = `${scalarCodec.info.module}::${scalarCodec.info.type}`;
