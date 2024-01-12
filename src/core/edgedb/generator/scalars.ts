@@ -8,7 +8,7 @@ export const customScalars = mapEntries(codecs, (codec) => [
 ]).asMap;
 
 export function setTsTypesFromOurScalarCodecs() {
-  // this is used for schema interfaces
+  // this is used for schema interfaces & query builder
   for (const { info } of codecs) {
     const fqName = `${info.module}::${info.type}`;
     scalarToLiteralMapping[fqName].type = info.ts;
