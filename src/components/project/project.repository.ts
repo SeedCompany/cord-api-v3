@@ -115,6 +115,11 @@ export class ProjectRepository extends CommonRepository {
           relation('out', '', 'owningOrganization', ACTIVE),
           node('organization', 'Organization'),
         ])
+        .optionalMatch([
+          node('node'),
+          relation('out', '', 'marketingRegionOverride', ACTIVE),
+          node('marketingRegionOverride', 'Location'),
+        ])
         .subQuery('node', (sub) =>
           sub
             .match([
@@ -135,6 +140,7 @@ export class ProjectRepository extends CommonRepository {
             owningOrganization: 'organization.id',
             engagementTotal: 'engagementTotal',
             changeset: 'changeset.id',
+            marketingRegionOverride: 'marketingRegionOverride.id',
           }).as('dto'),
         );
   }
@@ -156,6 +162,7 @@ export class ProjectRepository extends CommonRepository {
       primaryLocationId,
       fieldRegionId,
       marketingLocationId,
+      marketingRegionOverrideId,
       otherLocationIds,
       type,
       ...initialProps
@@ -194,6 +201,7 @@ export class ProjectRepository extends CommonRepository {
           primaryLocation: ['Location', primaryLocationId],
           otherLocations: ['Location', otherLocationIds],
           marketingLocation: ['Location', marketingLocationId],
+          marketingRegionOverride: ['Location', marketingRegionOverrideId],
           owningOrganization: ['Organization', this.config.defaultOrg.id],
         }),
       )
@@ -213,6 +221,7 @@ export class ProjectRepository extends CommonRepository {
     const {
       primaryLocationId,
       marketingLocationId,
+      marketingRegionOverrideId,
       fieldRegionId,
       ...simpleChanges
     } = changes;
@@ -266,6 +275,20 @@ export class ProjectRepository extends CommonRepository {
       result = {
         ...result,
         marketingLocation: marketingLocationId,
+      };
+    }
+
+    if (marketingRegionOverrideId !== undefined) {
+      await this.updateRelation(
+        'marketingRegionOverride',
+        'Location',
+        existing.id,
+        marketingRegionOverrideId,
+        'Project',
+      );
+      result = {
+        ...result,
+        marketingRegionOverride: marketingRegionOverrideId,
       };
     }
 

@@ -135,6 +135,12 @@ export class ProjectService {
       'marketingLocationId',
       'Marketing location not found',
     );
+    await this.validateOtherResourceId(
+      input.marketingRegionOverrideId,
+      'Location',
+      'marketingRegionOverrideId',
+      'Marketing Region Override not found',
+    );
 
     try {
       const id = await this.repo.create(input);
