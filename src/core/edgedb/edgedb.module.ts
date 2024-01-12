@@ -27,12 +27,15 @@ import { TransactionContext } from './transaction.context';
     {
       provide: Client,
       inject: [OptionsContext],
-      useFactory: (options: OptionsContext) => {
-        const client = createClient();
+      useFactory: async (options: OptionsContext) => {
+        const client = createClient({
+          // Only for connection retry warnings. Skip.
+          logging: false,
+        });
 
         Object.assign(client, { options: options.current });
 
-        registerCustomScalarCodecs(client, codecs);
+        await registerCustomScalarCodecs(client, codecs);
 
         return client;
       },
