@@ -1,4 +1,4 @@
-export { DurationIn } from '@seedcompany/common/temporal/luxon';
+export type { DurationIn } from '@seedcompany/common/temporal/luxon';
 
 export * from './date-time';
 export * from './interval';

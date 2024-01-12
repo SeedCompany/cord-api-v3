@@ -1,6 +1,6 @@
 import { Client } from 'edgedb';
 import { Directory, SourceFile } from 'ts-morph';
-import { CustomScalar } from './scalars';
+import { ScalarInfo } from '../codecs';
 
 export interface GeneratorParams {
   client: Client;
@@ -10,7 +10,7 @@ export interface GeneratorParams {
 
 export function addCustomScalarImports(
   file: SourceFile,
-  scalars: Iterable<CustomScalar>,
+  scalars: Iterable<ScalarInfo>,
   index = 2,
 ) {
   return file.insertImportDeclarations(

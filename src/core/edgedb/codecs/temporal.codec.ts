@@ -2,10 +2,18 @@ import { InvalidArgumentError, LocalDate } from 'edgedb';
 import { DateTimeCodec, LocalDateCodec } from 'edgedb/dist/codecs/datetime.js';
 import { ReadBuffer, WriteBuffer } from 'edgedb/dist/primitives/buffer.js';
 import { DateTime } from 'luxon';
-import { CalendarDate } from '~/common';
+import { CalendarDate } from '~/common/temporal';
+import { ScalarInfo } from './type.util';
 
 export class LuxonDateTimeCodec extends DateTimeCodec {
-  static edgedbTypeName = 'std::datetime';
+  static info: ScalarInfo = {
+    module: 'std',
+    type: 'datetime',
+    ts: 'DateTime',
+    path: 'luxon',
+  };
+  tsType = DateTime.name;
+  importedType = true;
 
   encode(buf: WriteBuffer, object: unknown) {
     if (object instanceof Date) {
@@ -27,7 +35,14 @@ export class LuxonDateTimeCodec extends DateTimeCodec {
 }
 
 export class LuxonCalendarDateCodec extends LocalDateCodec {
-  static edgedbTypeName = 'cal::local_date';
+  static info: ScalarInfo = {
+    module: 'cal',
+    type: 'local_date',
+    ts: 'CalendarDate',
+    path: '~/common',
+  };
+  tsType = CalendarDate.name;
+  importedType = true;
 
   encode(buf: WriteBuffer, object: unknown) {
     if (object instanceof LocalDate) {
