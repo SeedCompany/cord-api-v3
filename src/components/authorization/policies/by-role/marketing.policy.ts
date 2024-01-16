@@ -36,6 +36,7 @@ import {
         .many('rootDirectory', 'primaryLocation', 'otherLocations')
         .whenAny(member, sensOnlyLow).read,
       p.marketingLocation.edit,
+      p.marketingRegionOverride.edit,
     ])
     .children((c) => c.posts.edit),
 ])
