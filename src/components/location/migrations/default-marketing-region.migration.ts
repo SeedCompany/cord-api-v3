@@ -1,63 +1,21 @@
+import { mapEntries } from '@seedcompany/common';
 import { node, relation } from 'cypher-query-builder';
+import { ValueOf } from 'type-fest';
 import { ID, IdOf } from '~/common';
 import { BaseMigration, Migration } from '~/core/database';
 import { ACTIVE } from '~/core/database/query';
 import { Location } from '../dto';
-import { UpdateLocation } from '../dto/update-location.dto';
 import { LocationService } from '../location.service';
 
-@Migration('2024-02-06T06:22:15')
+@Migration('2024-01-16T11:00:00')
 export class DefaultMarketingRegionMigration extends BaseMigration {
   constructor(private readonly locationService: LocationService) {
     super();
   }
   async up() {
     const session = this.fakeAdminSession;
-    const mRegions = await this.db
-      .query()
-      .match([
-        node('location', 'Location'),
-        relation('out', '', 'type', ACTIVE),
-        node('locType', 'LocationType'),
-      ])
-      .match([
-        node('location', 'Location'),
-        relation('out', '', 'name', ACTIVE),
-        node('locName', 'LocationName'),
-      ])
-      .raw('WHERE locType.value = "Region"')
-      .return<{ id: IdOf<Location>; locationName: string }>([
-        'location.id as id',
-        'locName.value as locationName',
-      ])
-      .run();
 
-    const countries = await this.db
-      .query()
-      .match([
-        node('location', 'Location'),
-        relation('out', '', 'type', ACTIVE),
-        node('locType', 'LocationType'),
-      ])
-      .match([
-        node('location', 'Location'),
-        relation('out', '', 'defaultFieldRegion', ACTIVE),
-        node('fieldRegion', 'FieldRegion'),
-      ])
-      .match([
-        node('fieldRegion', 'FieldRegion'),
-        relation('out', '', 'name', ACTIVE),
-        node('fieldRegionName', 'FieldRegionName'),
-      ])
-      .raw('WHERE locType.value = "Country"')
-      .return<{ id: ID; fieldRegionName: string; fieldRegionId: ID }>([
-        'location.id as id',
-        'fieldRegionName.value as fieldRegionName',
-        'fieldRegion.id as fieldRegionId',
-      ])
-      .run();
-
-    const fieldOperAreaMap: { [key: string]: string } = {
+    const fieldRegionNameToMarketingRegionName = {
       'Africa - Anglophone East': 'Africa',
       'Africa - Anglophone West': 'Africa',
       'Africa - Congo Basin': 'Africa',
@@ -69,33 +27,65 @@ export class DefaultMarketingRegionMigration extends BaseMigration {
       'Asia - Islands': 'Pacific',
       'Asia - Mainland': 'Asia',
       'Asia - South': 'Asia',
-      any: 'Not Specified',
-    };
+    } as const;
 
-    const marketingRegionIdMap: { [key: string]: IdOf<Location> } = {};
+    const marketingRegionList = await this.db
+      .query()
+      .match([
+        node('location', 'Location'),
+        relation('out', '', 'type', ACTIVE),
+        node('', 'LocationType', { value: 'Region' }),
+      ])
+      .match([
+        node('location'),
+        relation('out', '', 'name', ACTIVE),
+        node('locName', 'LocationName'),
+      ])
+      .return<{
+        id: IdOf<Location>;
+        name: ValueOf<typeof fieldRegionNameToMarketingRegionName>;
+      }>(['location.id as id', 'locName.value as name'])
+      .run();
+    const marketingRegionNameToId = mapEntries(marketingRegionList, (loc) => [
+      loc.name,
+      loc.id,
+    ]).asRecord;
 
-    mRegions.forEach((m) => {
-      marketingRegionIdMap[m.locationName] = m.id;
-    });
+    const countries = await this.db
+      .query()
+      .match([
+        node('location', 'Location'),
+        relation('out', '', 'type', ACTIVE),
+        node('', 'LocationType', { value: 'Country' }),
+      ])
+      .match([
+        node('location', 'Location'),
+        relation('out', '', 'defaultFieldRegion', ACTIVE),
+        node('fieldRegion', 'FieldRegion'),
+        relation('out', '', 'name', ACTIVE),
+        node('fieldRegionName', 'FieldRegionName'),
+      ])
+      .return<{
+        id: ID;
+        fieldRegionName: keyof typeof fieldRegionNameToMarketingRegionName;
+      }>(['location.id as id', 'fieldRegionName.value as fieldRegionName'])
+      .run();
 
-    for (const c of countries) {
-      const marketingRegionName = fieldOperAreaMap[c.fieldRegionName];
-
-      const marketingRegionId = marketingRegionIdMap[marketingRegionName];
-
+    for (const country of countries) {
+      const marketingRegionName =
+        fieldRegionNameToMarketingRegionName[country.fieldRegionName];
+      const marketingRegionId = marketingRegionNameToId[marketingRegionName];
       if (marketingRegionId === undefined) {
         continue;
       }
-      const locationToBeUpdated = await this.locationService.readOne(
-        c.id,
+
+      await this.locationService.update(
+        {
+          id: country.id,
+          defaultMarketingRegionId: marketingRegionId,
+        },
         session,
       );
-      const countryToUpdate: UpdateLocation = {
-        id: locationToBeUpdated.id,
-        defaultMarketingRegionId: marketingRegionId,
-      };
-
-      await this.locationService.update(countryToUpdate, session);
     }
   }
 }
