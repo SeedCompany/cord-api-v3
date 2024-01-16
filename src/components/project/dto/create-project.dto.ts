@@ -9,11 +9,13 @@ import {
   DateTimeField,
   ID,
   IdField,
+  IdOf,
   IsId,
   NameField,
   Sensitivity,
   SensitivityField,
 } from '../../../common';
+import { Location } from '../../location/dto';
 import { ReportPeriod } from '../../periodic-report/dto';
 import { ProjectStep } from './project-step.enum';
 import { ProjectType } from './project-type.enum';
@@ -45,6 +47,12 @@ export abstract class CreateProject {
     nullable: true,
   })
   readonly marketingLocationId?: ID;
+
+  @IdField({
+    description: 'A marketing region override location ID',
+    nullable: true,
+  })
+  readonly marketingRegionOverrideId?: IdOf<Location> | null;
 
   @IdField({
     description: 'A field region ID',
