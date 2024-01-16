@@ -326,6 +326,16 @@ export class ProjectResolver {
     );
   }
 
+  @ResolveField(() => SecuredLocation)
+  async marketingRegion(
+    @Parent() project: Project,
+    @Loader(LocationLoader) locations: LoaderOf<LocationLoader>,
+  ): Promise<SecuredLocation> {
+    return await mapSecuredValue(project.marketingRegion, (id) =>
+      locations.load(id),
+    );
+  }
+
   @ResolveField(() => SecuredFieldRegion)
   async fieldRegion(
     @Parent() project: Project,

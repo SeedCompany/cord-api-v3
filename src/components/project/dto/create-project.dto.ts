@@ -60,6 +60,12 @@ export abstract class CreateProject {
   })
   readonly fieldRegionId?: ID;
 
+  @IdField({
+    description: 'A marketing region ID',
+    nullable: true,
+  })
+  readonly marketingRegionId?: IdOf<Location> | null;
+
   @DateField({ nullable: true })
   readonly mouStart?: CalendarDate;
 
