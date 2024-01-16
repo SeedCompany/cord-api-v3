@@ -7,6 +7,7 @@ import { LocationLoader } from './location.loader';
 import { LocationRepository } from './location.repository';
 import { LocationResolver } from './location.resolver';
 import { LocationService } from './location.service';
+import { DefaultMarketingRegionMigration } from './migrations/default-marketing-region.migration';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { LocationService } from './location.service';
     LocationService,
     LocationRepository,
     LocationLoader,
+    DefaultMarketingRegionMigration,
   ],
   exports: [LocationService],
 })
