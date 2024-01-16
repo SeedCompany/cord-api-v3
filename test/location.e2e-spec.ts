@@ -160,7 +160,7 @@ describe('Location e2e', () => {
     expect(updated.defaultFieldRegion.value.id).toBe(newFieldRegion.id);
   });
 
-  fit('update location with defaultMarketingRegion', async () => {
+  it('update location with defaultMarketingRegion', async () => {
     const defaultMarketingRegion = await createLocation(app);
     const l = await createLocation(app, {
       defaultMarketingRegionId: defaultMarketingRegion.id as IdOf<Location>,
