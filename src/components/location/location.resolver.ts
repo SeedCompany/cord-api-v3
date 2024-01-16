@@ -30,6 +30,7 @@ import {
   Location,
   LocationListInput,
   LocationListOutput,
+  SecuredLocation,
   UpdateLocationInput,
   UpdateLocationOutput,
 } from './dto';
@@ -82,6 +83,16 @@ export class LocationResolver {
   ): Promise<SecuredFieldRegion> {
     return await mapSecuredValue(location.defaultFieldRegion, (id) =>
       fieldRegions.load(id),
+    );
+  }
+
+  @ResolveField(() => SecuredLocation)
+  async defaultMarketingRegion(
+    @Parent() location: Location,
+    @Loader(LocationLoader) defaultMarketingRegions: LoaderOf<LocationLoader>,
+  ): Promise<SecuredLocation> {
+    return await mapSecuredValue(location.defaultMarketingRegion, (id) =>
+      defaultMarketingRegions.load(id),
     );
   }
 

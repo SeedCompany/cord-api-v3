@@ -57,6 +57,7 @@ export class LocationRepository extends DtoRepository(Location) {
         createRelationships(Location, 'out', {
           fundingAccount: ['FundingAccount', input.fundingAccountId],
           defaultFieldRegion: ['FieldRegion', input.defaultFieldRegionId],
+          defaultMarketingRegion: ['Location', input.defaultMarketingRegionId],
         }),
       )
       .return<{ id: ID }>('node.id as id');
@@ -74,6 +75,7 @@ export class LocationRepository extends DtoRepository(Location) {
       id,
       fundingAccountId,
       defaultFieldRegionId,
+      defaultMarketingRegionId,
       mapImage,
       ...simpleChanges
     } = changes;
@@ -97,6 +99,15 @@ export class LocationRepository extends DtoRepository(Location) {
         defaultFieldRegionId,
       );
     }
+
+    if (defaultMarketingRegionId !== undefined) {
+      await this.updateRelation(
+        'defaultMarketingRegion',
+        'Location',
+        id,
+        defaultMarketingRegionId,
+      );
+    }
   }
 
   protected hydrate() {
@@ -113,10 +124,16 @@ export class LocationRepository extends DtoRepository(Location) {
           relation('out', '', 'defaultFieldRegion', ACTIVE),
           node('defaultFieldRegion', 'FieldRegion'),
         ])
+        .optionalMatch([
+          node('node'),
+          relation('out', '', 'defaultMarketingRegion', ACTIVE),
+          node('defaultMarketingRegion', 'Location'),
+        ])
         .return<{ dto: UnsecuredDto<Location> }>(
           merge('props', {
             fundingAccount: 'fundingAccount.id',
             defaultFieldRegion: 'defaultFieldRegion.id',
+            defaultMarketingRegion: 'defaultMarketingRegion.id',
           }).as('dto'),
         );
   }
