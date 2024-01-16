@@ -13,6 +13,7 @@ import { CommonRepository, ConfigService, OnIndex } from '../../core';
 import { ChangesOf, getChanges } from '../../core/database/changes';
 import {
   ACTIVE,
+  coalesce,
   createNode,
   createRelationships,
   matchChangesetAndChangedProps,
@@ -135,6 +136,10 @@ export class ProjectRepository extends CommonRepository {
             pinned: 'exists((:User { id: $requestingUser })-[:pinned]->(node))',
             rootDirectory: 'rootDirectory.id',
             primaryLocation: 'primaryLocation.id',
+            marketingCountry: coalesce(
+              'marketingCountryOverride.id',
+              'primaryLocation.id',
+            ),
             marketingCountryOverride: 'marketingCountryOverride.id',
             fieldRegion: 'fieldRegion.id',
             owningOrganization: 'organization.id',

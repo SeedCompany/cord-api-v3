@@ -8,6 +8,7 @@ import { sortingForEnumIndex } from '~/core/database/query';
 import { abstractType, e } from '~/core/edgedb';
 import { RegisterResource } from '~/core/resources';
 import {
+  Calculated,
   DateInterval,
   DateTimeField,
   DbLabel,
@@ -126,6 +127,9 @@ class Project extends Interfaces {
   readonly status: ProjectStatus;
 
   readonly primaryLocation: Secured<ID | null>;
+
+  @Calculated()
+  readonly marketingCountry: Secured<IdOf<Location> | null>;
 
   readonly marketingCountryOverride: Secured<ID | null>;
 
