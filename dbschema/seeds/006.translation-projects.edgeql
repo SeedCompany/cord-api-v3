@@ -60,6 +60,7 @@ select { `Added Projects` := new.name }
 filter count(new) > 0;
 
 # Update all projects to self reference for their context (has to be separate query)
+# https://github.com/edgedb/edgedb/issues/3960
 with updated := (
   for project in Project union (
     update project.projectContext

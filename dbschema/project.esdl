@@ -83,7 +83,10 @@ module default {
     link rootDirectory: Directory;
     
     overloaded link projectContext: Project::Context {
-      default := (insert Project::Context);
+      default := (insert Project::Context {
+        # https://github.com/edgedb/edgedb/issues/3960
+        # projects := {__subject__},
+      });
     }
     # Setting the new project as its own context should be the immediate next thing that happens
     # So enforce that that happens (as best we can), and assert that the context is ever only itself.
