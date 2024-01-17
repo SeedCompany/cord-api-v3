@@ -5,8 +5,7 @@ module default {
     }
     
     required accountNumber: int16 {
-      constraint min_value(0);
-      constraint max_value(9);
+      constraint expression on (__subject__ >= 0 and __subject__ <= 9);
     }
   }
 }

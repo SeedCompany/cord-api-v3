@@ -88,7 +88,7 @@ module default {
   }
   
   scalar type population extending int32 {
-    constraint min_value(0);
+    constraint expression on (__subject__ >= 0);
   }
 }
  

@@ -12,29 +12,29 @@ module default {
     
     departmentId: int32 {
       constraint exclusive;
-      constraint min_value(10000);
-      constraint max_value(99999);
-      rewrite update using (
-        if (
-          not exists .departmentId and
-          .status <= Project::Status.Active and
-          .step >= Project::Step.PendingFinanceConfirmation
-        ) then ((
-          with
-            fa := assert_exists(
-              __subject__.primaryLocation.fundingAccount,
-              message := "Project must have a primary location"
-            ),
-            existing := (
-              select detached Project.departmentId filter Project.primaryLocation.fundingAccount = fa
-            ),
-            available := (
-              range_unpack(range(fa.accountNumber * 10000 + 11, fa.accountNumber * 10000 + 9999))
-              except existing
-            )
-          select min(available)
-        )) else .departmentId
-      );
+      constraint expression on (__subject__ >= 10000 and __subject__ <= 99999);
+# Temporarily disabled. Upstream fix in progress.
+#       rewrite update using (
+#         if (
+#           not exists .departmentId and
+#           .status <= Project::Status.Active and
+#           .step >= Project::Step.PendingFinanceConfirmation
+#         ) then ((
+#           with
+#             fa := assert_exists(
+#               __subject__.primaryLocation.fundingAccount,
+#               message := "Project must have a primary location"
+#             ),
+#             existing := (
+#               select detached Project.departmentId filter Project.primaryLocation.fundingAccount = fa
+#             ),
+#             available := (
+#               range_unpack(range(fa.accountNumber * 10000 + 11, fa.accountNumber * 10000 + 9999))
+#               except existing
+#             )
+#           select min(available)
+#         )) else .departmentId
+#       );
     };
     
     required step: Project::Step {
@@ -83,7 +83,10 @@ module default {
     link rootDirectory: Directory;
     
     overloaded link projectContext: Project::Context {
-      default := (insert Project::Context);
+      default := (insert Project::Context {
+        # https://github.com/edgedb/edgedb/issues/3960
+        # projects := {__subject__},
+      });
     }
     # Setting the new project as its own context should be the immediate next thing that happens
     # So enforce that that happens (as best we can), and assert that the context is ever only itself.
