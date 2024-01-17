@@ -74,8 +74,8 @@ export class FieldRegionRepository extends DtoRepository(FieldRegion) {
         ])
         .return<{ dto: UnsecuredDto<FieldRegion> }>(
           merge('props', {
-            director: 'director.id',
-            fieldZone: 'fieldZone.id',
+            director: 'director { .id }',
+            fieldZone: 'fieldZone { .id }',
           }).as('dto'),
         );
   }

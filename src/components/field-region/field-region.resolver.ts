@@ -63,7 +63,9 @@ export class FieldRegionResolver {
     @Parent() fieldRegion: FieldRegion,
     @Loader(UserLoader) users: LoaderOf<UserLoader>,
   ): Promise<SecuredUser> {
-    return await mapSecuredValue(fieldRegion.director, (id) => users.load(id));
+    return await mapSecuredValue(fieldRegion.director, ({ id }) =>
+      users.load(id),
+    );
   }
 
   @ResolveField(() => SecuredFieldZone)
@@ -71,7 +73,7 @@ export class FieldRegionResolver {
     @Parent() fieldRegion: FieldRegion,
     @Loader(FieldZoneLoader) fieldZones: LoaderOf<FieldZoneLoader>,
   ): Promise<SecuredFieldZone> {
-    return await mapSecuredValue(fieldRegion.fieldZone, (id) =>
+    return await mapSecuredValue(fieldRegion.fieldZone, ({ id }) =>
       fieldZones.load(id),
     );
   }
