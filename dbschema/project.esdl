@@ -14,27 +14,28 @@ module default {
       constraint exclusive;
       constraint min_value(10000);
       constraint max_value(99999);
-      rewrite update using (
-        if (
-          not exists .departmentId and
-          .status <= Project::Status.Active and
-          .step >= Project::Step.PendingFinanceConfirmation
-        ) then ((
-          with
-            fa := assert_exists(
-              __subject__.primaryLocation.fundingAccount,
-              message := "Project must have a primary location"
-            ),
-            existing := (
-              select detached Project.departmentId filter Project.primaryLocation.fundingAccount = fa
-            ),
-            available := (
-              range_unpack(range(fa.accountNumber * 10000 + 11, fa.accountNumber * 10000 + 9999))
-              except existing
-            )
-          select min(available)
-        )) else .departmentId
-      );
+# Temporarily disabled. Upstream fix in progress.
+#       rewrite update using (
+#         if (
+#           not exists .departmentId and
+#           .status <= Project::Status.Active and
+#           .step >= Project::Step.PendingFinanceConfirmation
+#         ) then ((
+#           with
+#             fa := assert_exists(
+#               __subject__.primaryLocation.fundingAccount,
+#               message := "Project must have a primary location"
+#             ),
+#             existing := (
+#               select detached Project.departmentId filter Project.primaryLocation.fundingAccount = fa
+#             ),
+#             available := (
+#               range_unpack(range(fa.accountNumber * 10000 + 11, fa.accountNumber * 10000 + 9999))
+#               except existing
+#             )
+#           select min(available)
+#         )) else .departmentId
+#       );
     };
     
     required step: Project::Step {
