@@ -1,6 +1,7 @@
 import { Module, OnModuleDestroy } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { createClient, Duration } from 'edgedb';
+import type { ConfigService } from '~/core';
 import { codecs, registerCustomScalarCodecs } from './codecs';
 import { EdgeDBTransactionalMutationsInterceptor } from './edgedb-transactional-mutations.interceptor';
 import { EdgeDB } from './edgedb.service';
@@ -26,8 +27,8 @@ import { TransactionContext } from './transaction.context';
     OptionsContext,
     {
       provide: Client,
-      inject: [OptionsContext],
-      useFactory: async (options: OptionsContext) => {
+      inject: [OptionsContext, 'CONFIG'],
+      useFactory: async (options: OptionsContext, config: ConfigService) => {
         const client = createClient({
           // Only for connection retry warnings. Skip.
           logging: false,
@@ -35,7 +36,9 @@ import { TransactionContext } from './transaction.context';
 
         Object.assign(client, { options: options.current });
 
-        await registerCustomScalarCodecs(client, codecs);
+        if (config.databaseEngine === 'edgedb') {
+          await registerCustomScalarCodecs(client, codecs);
+        }
 
         return client;
       },
