@@ -12,8 +12,7 @@ module default {
     
     departmentId: int32 {
       constraint exclusive;
-      constraint min_value(10000);
-      constraint max_value(99999);
+      constraint expression on (__subject__ >= 10000 and __subject__ <= 99999);
 # Temporarily disabled. Upstream fix in progress.
 #       rewrite update using (
 #         if (

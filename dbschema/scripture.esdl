@@ -37,18 +37,15 @@ module Scripture {
     }
     required chapter: int16 {
       readonly := true;
-      constraint min_value(1);
-      constraint max_value(150); # Psalms
+      constraint expression on (__subject__ >= 1 and __subject__ <= 150); # Psalms
     }
     required verse: int16 {
       readonly := true;
-      constraint min_value(1);
-      constraint max_value(176); # Psalms 119
+      constraint expression on (__subject__ >= 1 and __subject__ <= 176); # Psalms 119
     }
     required verseId: int16 {
       readonly := true;
-      constraint min_value(0);
-      constraint max_value(31101);
+      constraint expression on (__subject__ >= 0 and __subject__ <= 31101);
     }
   }
 }
