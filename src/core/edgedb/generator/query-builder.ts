@@ -19,6 +19,7 @@ export async function generateQueryBuilder({
     },
     client,
     root: root.getPath(),
+    schemaDir: 'unused',
   });
   addJsExtensionDeepPathsOfEdgedbLibrary(qbDir);
   changeCustomScalars(qbDir);

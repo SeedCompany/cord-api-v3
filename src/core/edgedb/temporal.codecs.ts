@@ -20,9 +20,9 @@ export class LuxonDateTimeCodec extends DateTimeCodec {
     super.encode(buf, object.toJSDate());
   }
 
-  decode(buf: ReadBuffer): DateTime {
+  decode(buf: ReadBuffer) {
     const date: Date = super.decode(buf);
-    return DateTime.fromJSDate(date);
+    return DateTime.fromJSDate(date) as any;
   }
 }
 

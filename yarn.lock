@@ -1475,14 +1475,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@edgedb/generate@npm:^0.4.1":
-  version: 0.4.1
-  resolution: "@edgedb/generate@npm:0.4.1"
+"@edgedb/generate@npm:^0.5.0-canary.20240116T174045":
+  version: 0.5.0-canary.20240116T174045
+  resolution: "@edgedb/generate@npm:0.5.0-canary.20240116T174045"
   peerDependencies:
     edgedb: ^1.4.0
   bin:
     generate: dist/cli.js
-  checksum: c183d4562512c5df0ed0d1b13d26868bda7e3e950353caa55165f8437067d42e627b4a91e1f79c749470f2ae0cc1fe8c23ea9119397802c4465aad36eeb2b33a
+  checksum: 03fbb48152311124debdcda03f6d6e727d856900dcf677bac5e8be934834c8e56a13640887aac4143ab2474c8e64a366b60e9c0bcdc5f1cc607838efcf73bc9a
   languageName: node
   linkType: hard
 
@@ -5311,7 +5311,7 @@ __metadata:
     "@apollo/subgraph": "npm:^2.5.6"
     "@aws-sdk/client-s3": "npm:^3.440.0"
     "@aws-sdk/s3-request-presigner": "npm:^3.440.0"
-    "@edgedb/generate": "npm:^0.4.1"
+    "@edgedb/generate": "npm:^0.5.0-canary.20240116T174045"
     "@faker-js/faker": "npm:^8.2.0"
     "@ffprobe-installer/ffprobe": "npm:^2.1.2"
     "@golevelup/nestjs-discovery": "npm:^4.0.0"
@@ -5363,7 +5363,7 @@ __metadata:
     debugger-is-attached: "npm:^1.2.0"
     dotenv: "npm:^16.3.1"
     dotenv-expand: "npm:^10.0.0"
-    edgedb: "patch:edgedb@npm%3A1.4.0#~/.yarn/patches/edgedb-npm-1.4.0-902d833279.patch"
+    edgedb: "npm:^1.5.0-canary.20240116T174024"
     eslint: "npm:^8.52.0"
     eslint-plugin-no-only-tests: "npm:^3.1.0"
     eslint-plugin-typescript-sort-keys: "npm:^2.3.0"
@@ -5948,21 +5948,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"edgedb@npm:1.4.0":
-  version: 1.4.0
-  resolution: "edgedb@npm:1.4.0"
+"edgedb@npm:^1.5.0-canary.20240116T174024":
+  version: 1.5.0-canary.20240116T174024
+  resolution: "edgedb@npm:1.5.0-canary.20240116T174024"
   bin:
     edgeql-js: dist/cli.js
-  checksum: 9a71c212c0b8bb5f559b3e2f14f6f90961288bd946f8f1407e8cebdc935468fbd45210120d7b5d5e345620221fe0e43b3c1fe3b877365f2fce692a23306bd481
-  languageName: node
-  linkType: hard
-
-"edgedb@patch:edgedb@npm%3A1.4.0#~/.yarn/patches/edgedb-npm-1.4.0-902d833279.patch":
-  version: 1.4.0
-  resolution: "edgedb@patch:edgedb@npm%3A1.4.0#~/.yarn/patches/edgedb-npm-1.4.0-902d833279.patch::version=1.4.0&hash=e71bbb"
-  bin:
-    edgeql-js: dist/cli.js
-  checksum: f6eabbf93a2e22a5b050daf7ac779eafc186297f75febbae0aa8ea2e17f09f176cee67adc937c89139082d09cf08227aec402c91a0c2f5168b677428d234425a
+  checksum: b9ab24d25ac188b9bb95a578084a46c49dcb45ab6d41a6167ee7bcb4456804ecddfe2072ceb9fe2edd93d9bed4d946f14bf18dd949738d0574a36198e87af4f0
   languageName: node
   linkType: hard
 
