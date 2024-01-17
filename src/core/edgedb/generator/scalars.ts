@@ -1,39 +1,17 @@
 import { scalarToLiteralMapping } from '@edgedb/generate/dist/genutil.js';
-import { mapKeys } from '@seedcompany/common';
-import { SCALAR_CODECS } from 'edgedb/dist/codecs/codecs.js';
-import { KNOWN_TYPENAMES } from 'edgedb/dist/codecs/consts.js';
+import { mapEntries } from '@seedcompany/common';
+import { set } from 'lodash';
+import { codecs } from '../codecs';
 
-export const customScalars = mapKeys.fromList(
-  [
-    { module: 'std', type: 'uuid', ts: 'ID', path: '~/common' },
-    { module: 'std', type: 'datetime', ts: 'DateTime', path: 'luxon' },
-    {
-      module: 'cal',
-      type: 'local_date',
-      ts: 'CalendarDate',
-      path: '~/common',
-    },
-  ] satisfies CustomScalar[],
-  (s) => s.ts,
-).asMap;
+export const customScalars = mapEntries(codecs, (codec) => [
+  codec.info.ts,
+  codec.info,
+]).asMap;
 
-export interface CustomScalar {
-  module: string;
-  type: string;
-  ts: string;
-  path: string;
-}
-
-export function changeScalarCodecsToOurCustomTypes() {
-  for (const scalar of customScalars.values()) {
-    const fqName = `${scalar.module}::${scalar.type}`;
-
-    // codes are used for edgeql files
-    const id = KNOWN_TYPENAMES.get(fqName)!;
-    const codec = SCALAR_CODECS.get(id)!;
-    Object.assign(codec, { tsType: scalar.ts, importedType: true });
-
-    // this is used for schema interfaces
-    scalarToLiteralMapping[fqName].type = scalar.ts;
+export function setTsTypesFromOurScalarCodecs() {
+  // this is used for schema interfaces & query builder
+  for (const { info } of codecs) {
+    const fqName = `${info.module}::${info.type}`;
+    set(scalarToLiteralMapping, [fqName, 'type'], info.ts);
   }
 }

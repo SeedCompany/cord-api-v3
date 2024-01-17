@@ -19,9 +19,10 @@ export async function generateQueryBuilder({
     },
     client,
     root: root.getPath(),
+    schemaDir: 'unused',
   });
   addJsExtensionDeepPathsOfEdgedbLibrary(qbDir);
-  changeCustomScalars(qbDir);
+  fixCustomScalarsImports(qbDir);
   updateEdgeQLRenderingForOurCustomScalars(qbDir);
   updateCastMapsForOurCustomScalars(qbDir);
   changeImplicitIDType(qbDir);
@@ -41,20 +42,11 @@ function addJsExtensionDeepPathsOfEdgedbLibrary(qbDir: Directory) {
   }
 }
 
-function changeCustomScalars(qbDir: Directory) {
-  // Change $uuid scalar type alias to use ID type instead of string
+function fixCustomScalarsImports(qbDir: Directory) {
   for (const scalars of groupBy(customScalars.values(), (s) => s.module)) {
     const moduleFile = qbDir.addSourceFileAtPath(
       `modules/${scalars[0]!.module}.ts`,
     );
-    for (const scalar of scalars) {
-      const typeAlias = moduleFile.getTypeAliasOrThrow(`$${scalar.type}`);
-      typeAlias
-        .getFirstChildByKindOrThrow(SyntaxKind.TypeReference)
-        .getFirstChildByKindOrThrow(SyntaxKind.SyntaxList)
-        .getLastChildOrThrow()
-        .replaceWithText(scalar.ts);
-    }
     addCustomScalarImports(moduleFile, scalars);
   }
 }

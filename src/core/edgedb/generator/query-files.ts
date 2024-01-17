@@ -5,7 +5,8 @@ import {
 } from '@edgedb/generate/dist/queries.js';
 import { $, adapter } from 'edgedb';
 import { Directory } from 'ts-morph';
-import { CustomScalar, customScalars } from './scalars';
+import { ScalarInfo } from '../codecs';
+import { customScalars } from './scalars';
 import { addCustomScalarImports, GeneratorParams } from './util';
 
 export async function generateQueryFiles(params: GeneratorParams) {
@@ -45,7 +46,7 @@ const generateFilesForQuery =
 function fixCustomScalarImports(root: Directory) {
   const toRemove = new Set(customScalars.keys());
   for (const path of pathsNeedingScalarImportFix) {
-    const toAdd = new Set<CustomScalar>();
+    const toAdd = new Set<ScalarInfo>();
     const file = root.addSourceFileAtPath(path);
     file
       .getImportDeclarationOrThrow('edgedb')
