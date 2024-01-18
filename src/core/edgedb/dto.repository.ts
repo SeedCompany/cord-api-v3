@@ -218,20 +218,20 @@ export const RepoFor = <
       existing: Pick<Dto, 'id'>,
       input: UpdateShape<TResourceStatic['DB'] & {}>,
     ): Promise<Dto> {
-      const query = e.select(
-        e.update(this.resource.db, () => ({
-          filter_single: { id: existing.id } as any,
-          set: input,
-        })),
-        this.hydrate as any,
+      const object = e.cast(
+        this.resource.db,
+        e.cast(e.uuid, existing.id as ID),
       );
+      const updated = e.update(object, () => ({
+        set: input,
+      }));
+      const query = e.select(updated, this.hydrate as any);
       return (await this.db.run(query)) as Dto;
     }
 
     async delete(id: ID): Promise<void> {
-      const query = e.delete(this.resource.db, () => ({
-        filter_single: { id } as any,
-      }));
+      const existing = e.cast(this.resource.db, e.cast(e.uuid, id));
+      const query = e.delete(existing);
       await this.db.run(query);
     }
   }
