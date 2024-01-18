@@ -68,17 +68,23 @@ export class ResourcesHost {
   }
 
   async getByEdgeDB(
-    fqn: string,
+    name: string,
   ): Promise<EnhancedResource<ValueOf<ResourceMap>>> {
-    fqn = fqn.includes('::') ? fqn : `default::${fqn}`;
-    const map = await this.edgeDBFQNMap();
-    const resource = map.get(fqn);
-    if (!resource) {
-      throw new ServerException(
-        `Unable to determine resource from ResourceMap for EdgeDB FQN: ${fqn}`,
-      );
+    const fqnMap = await this.edgeDBFQNMap();
+    const resByFQN = fqnMap.get(
+      name.includes('::') ? name : `default::${name}`,
+    );
+    if (resByFQN) {
+      return resByFQN;
     }
-    return resource;
+    const nameMap = await this.getEnhancedMap();
+    const resByName = nameMap[name as keyof ResourceMap];
+    if (resByName) {
+      return resByName as any;
+    }
+    throw new ServerException(
+      `Unable to determine resource from ResourceMap for EdgeDB FQN: ${name}`,
+    );
   }
 
   @CachedByArg()
