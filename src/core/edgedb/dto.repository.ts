@@ -13,6 +13,7 @@ import { AbstractClass } from 'type-fest';
 import {
   EnhancedResource,
   ID,
+  isSortablePaginationInput,
   NotFoundException,
   PaginatedListType,
   PaginationInput,
@@ -198,8 +199,8 @@ export const RepoFor = <
             : e.all(e.set(...filters));
         return {
           ...(filter ? { filter } : {}),
-          ...(input instanceof SortablePaginationInput
-            ? { order_by: this.orderBy(obj, input as SortablePaginationInput) }
+          ...(isSortablePaginationInput(input)
+            ? { order_by: this.orderBy(obj, input) }
             : {}),
         };
       });
