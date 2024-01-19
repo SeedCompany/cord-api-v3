@@ -28,7 +28,7 @@ export type ResourceLike =
 export class ResourcesHost {
   constructor(private readonly gqlSchema: GraphQLSchemaHost) {}
 
-  async getMap() {
+  getMap() {
     // @ts-expect-error Yeah we are assuming each type has been correctly
     // registered & type declared.
     const map: ResourceMap = {
@@ -37,21 +37,21 @@ export class ResourcesHost {
     return map;
   }
 
-  async getNames() {
-    const map = await this.getMap();
+  getNames() {
+    const map = this.getMap();
     return Object.keys(map) as Array<keyof ResourceMap>;
   }
 
   @CachedByArg()
-  async getEnhancedMap(): Promise<EnhancedResourceMap> {
-    const map = await this.getMap();
+  getEnhancedMap(): EnhancedResourceMap {
+    const map = this.getMap();
     return mapValues(map, EnhancedResource.of) as any;
   }
 
-  async getByName<K extends keyof ResourceMap>(
+  getByName<K extends keyof ResourceMap>(
     name: K,
-  ): Promise<EnhancedResource<ValueOf<Pick<ResourceMap, K>>>> {
-    const map = await this.getEnhancedMap();
+  ): EnhancedResource<ValueOf<Pick<ResourceMap, K>>> {
+    const map = this.getEnhancedMap();
     const resource = map[name];
     if (!resource) {
       throw new ServerException(
@@ -61,23 +61,21 @@ export class ResourcesHost {
     return resource;
   }
 
-  async getByDynamicName(
+  getByDynamicName(
     name: LooseResourceName,
-  ): Promise<EnhancedResource<ValueOf<ResourceMap>>> {
-    return await this.getByName(name as any);
+  ): EnhancedResource<ValueOf<ResourceMap>> {
+    return this.getByName(name as any);
   }
 
-  async getByEdgeDB(
-    name: string,
-  ): Promise<EnhancedResource<ValueOf<ResourceMap>>> {
-    const fqnMap = await this.edgeDBFQNMap();
+  getByEdgeDB(name: string): EnhancedResource<ValueOf<ResourceMap>> {
+    const fqnMap = this.edgeDBFQNMap();
     const resByFQN = fqnMap.get(
       name.includes('::') ? name : `default::${name}`,
     );
     if (resByFQN) {
       return resByFQN;
     }
-    const nameMap = await this.getEnhancedMap();
+    const nameMap = this.getEnhancedMap();
     const resByName = nameMap[name as keyof ResourceMap];
     if (resByName) {
       return resByName as any;
@@ -88,8 +86,8 @@ export class ResourcesHost {
   }
 
   @CachedByArg()
-  private async edgeDBFQNMap() {
-    const map = await this.getEnhancedMap();
+  private edgeDBFQNMap() {
+    const map = this.getEnhancedMap();
     const fqnMap = mapKeys(
       map as Record<string, EnhancedResource<any>>,
       (_, r, { SKIP }) => {
@@ -103,34 +101,34 @@ export class ResourcesHost {
     return fqnMap;
   }
 
-  async verifyImplements(resource: ResourceLike, theInterface: ResourceLike) {
-    const iface = await this.enhance(theInterface);
-    if (!(await this.doesImplement(resource, iface))) {
+  verifyImplements(resource: ResourceLike, theInterface: ResourceLike) {
+    const iface = this.enhance(theInterface);
+    if (!this.doesImplement(resource, iface)) {
       throw new InvalidIdForTypeException(
         `Resource does not implement ${iface.name}`,
       );
     }
   }
 
-  async doesImplement(resource: ResourceLike, theInterface: ResourceLike) {
-    const interfaces = await this.getInterfaces(await this.enhance(resource));
-    return interfaces.includes(await this.enhance(theInterface));
+  doesImplement(resource: ResourceLike, theInterface: ResourceLike) {
+    const interfaces = this.getInterfaces(this.enhance(resource));
+    return interfaces.includes(this.enhance(theInterface));
   }
 
-  async enhance(ref: ResourceLike) {
+  enhance(ref: ResourceLike) {
     // Safety check, since this very dynamic code, it's very possible the types are lying.
     // @eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (ref == null) {
       throw new ServerException('Resource reference is actually null');
     }
     return typeof ref === 'string'
-      ? await this.getByDynamicName(ref)
+      ? this.getByDynamicName(ref)
       : EnhancedResource.of(ref);
   }
 
-  async getInterfaces(
+  getInterfaces(
     resource: EnhancedResource<any>,
-  ): Promise<ReadonlyArray<EnhancedResource<any>>> {
+  ): ReadonlyArray<EnhancedResource<any>> {
     // Use interfaces from GQL schema if it's available.
     // Otherwise, fallback to the interfaces from DTO class hierarchy.
     // The former doesn't work with CLI.
@@ -140,26 +138,26 @@ export class ResourcesHost {
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       this.gqlSchema.schema;
     } catch (e) {
-      return await this.getInterfacesFromClassType(resource);
+      return this.getInterfacesFromClassType(resource);
     }
-    return await this.getInterfacesFromGQLSchema(resource);
+    return this.getInterfacesFromGQLSchema(resource);
   }
 
   @CachedByArg()
-  private async getInterfacesFromClassType(
+  private getInterfacesFromClassType(
     resource: EnhancedResource<any>,
-  ): Promise<ReadonlyArray<EnhancedResource<any>>> {
-    const map = await this.getEnhancedMap();
+  ): ReadonlyArray<EnhancedResource<any>> {
+    const map = this.getEnhancedMap();
     const resSet = new Set<EnhancedResource<any>>(Object.values(map));
     return [...resource.interfaces].filter((i) => resSet.has(i));
   }
 
   @CachedByArg()
-  private async getInterfacesFromGQLSchema(
+  private getInterfacesFromGQLSchema(
     resource: EnhancedResource<any>,
-  ): Promise<ReadonlyArray<EnhancedResource<any>>> {
+  ): ReadonlyArray<EnhancedResource<any>> {
     const { schema } = this.gqlSchema;
-    const map = await this.getEnhancedMap();
+    const map = this.getEnhancedMap();
 
     const type = schema.getType(resource.name);
     if (!type || !isObjectType(type)) {
@@ -171,10 +169,10 @@ export class ResourcesHost {
   }
 
   @CachedByArg()
-  async getImplementations(
+  getImplementations(
     interfaceResource: EnhancedResource<any>,
-  ): Promise<ReadonlyArray<EnhancedResource<any>>> {
-    const map = await this.getEnhancedMap();
+  ): ReadonlyArray<EnhancedResource<any>> {
+    const map = this.getEnhancedMap();
     const impls = Object.values(map).filter((resource) =>
       resource.interfaces.has(interfaceResource),
     );

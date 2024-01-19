@@ -19,11 +19,11 @@ export class CanUpdateMediaUserMetadataEvent {
     @Optional() readonly allowUpdate: PollVoter<boolean>,
   ) {}
 
-  @Once() async getAttachedResource() {
+  @Once() getAttachedResource() {
     const attachedResName = this.resourceResolver.resolveTypeByBaseNode(
       this.media.attachedTo[0],
     );
-    const attachedResource = await this.resourceHost.getByName(attachedResName);
+    const attachedResource = this.resourceHost.getByName(attachedResName);
     return attachedResource;
   }
 }

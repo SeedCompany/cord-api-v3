@@ -67,7 +67,7 @@ export class CommentService {
 
   async getPermissionsFromResource(resource: CommentableRef, session: Session) {
     const parent = await this.loadCommentable(resource);
-    const parentType = await this.resourcesHost.getByName(
+    const parentType = this.resourcesHost.getByName(
       // I'd like to type this prop as this but somehow blows everything up.
       parent.__typename as 'Commentable',
     );
@@ -93,7 +93,7 @@ export class CommentService {
       : parentNode;
 
     try {
-      await this.resourcesHost.verifyImplements(parent.__typename, Commentable);
+      this.resourcesHost.verifyImplements(parent.__typename, Commentable);
     } catch (e) {
       throw new NonCommentableType(e.message);
     }

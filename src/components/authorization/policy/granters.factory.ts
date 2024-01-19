@@ -39,7 +39,7 @@ export class GrantersFactory {
       ),
     );
 
-    const ResourceMap = await this.resourcesHost.getEnhancedMap();
+    const ResourceMap = this.resourcesHost.getEnhancedMap();
 
     const resGranter: ResourcesGranter = mapValues(
       ResourceMap,
