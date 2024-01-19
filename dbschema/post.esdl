@@ -1,16 +1,8 @@
 module default {
   type Post extending Resource, Mixin::Embedded, Mixin::Owned {
-    # https://github.com/edgedb/edgedb/issues/6695
-    # overloaded required single link container: Mixin::Postable
-    overloaded required single link container {
+    overloaded required single link container: Mixin::Postable {
       on target delete delete source;
     };
-    trigger enforcePostable after insert, update for each do (
-      assert(
-        __new__.container is Mixin::Postable,
-        message := "A Post's container must be a Postable"
-      )
-    );
     
     required type: Post::Type;
     required shareability: Post::Shareability;
