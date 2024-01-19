@@ -14,13 +14,7 @@ import { Direction } from 'cypher-query-builder/dist/typings/clauses/order-by';
 import { AnyConditions } from 'cypher-query-builder/dist/typings/clauses/where-utils';
 import { DateTime } from 'luxon';
 import { ID, NotFoundException, ServerException, Session } from '../../common';
-import {
-  CommonRepository,
-  ILogger,
-  Logger,
-  OnIndex,
-  ResourceRef,
-} from '../../core';
+import { CommonRepository, ILogger, LinkTo, Logger, OnIndex } from '../../core';
 import {
   ACTIVE,
   createNode,
@@ -407,7 +401,7 @@ export class FileRepository extends CommonRepository {
     public: isPublic,
     session,
   }: {
-    resource: ResourceRef<any>;
+    resource: LinkTo<any>;
     relation: string;
     name: string;
     public?: boolean;

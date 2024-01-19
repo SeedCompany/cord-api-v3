@@ -18,14 +18,14 @@ import {
   UnsecuredDto,
   Variant,
 } from '~/common';
-import { ResourceRef } from '~/core';
+import { LinkToUnknown } from '~/core';
 import { BaseNode } from '~/core/database/results';
 import { User } from '../../user';
 import { Prompt, SecuredPrompt } from './prompt.dto';
 
 @ObjectType()
 export class PromptResponse extends Resource {
-  readonly parent: ResourceRef<any>;
+  readonly parent: LinkToUnknown;
 
   @Field()
   readonly prompt: SecuredPrompt;

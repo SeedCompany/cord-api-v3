@@ -1,10 +1,9 @@
 import { ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { e } from '~/core/edgedb';
-import { RegisterResource } from '~/core/resources';
+import { LinkTo, RegisterResource } from '~/core/resources';
 import {
   DbUnique,
-  ID,
   NameField,
   Resource,
   Secured,
@@ -26,7 +25,7 @@ export class FieldZone extends Resource {
   @DbUnique()
   readonly name: SecuredString;
 
-  readonly director: Secured<ID>;
+  readonly director: Secured<LinkTo<'User'>>;
 }
 
 @ObjectType({

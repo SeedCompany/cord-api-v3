@@ -62,7 +62,9 @@ export class FieldZoneResolver {
     @Parent() fieldZone: FieldZone,
     @Loader(UserLoader) users: LoaderOf<UserLoader>,
   ): Promise<SecuredUser> {
-    return await mapSecuredValue(fieldZone.director, (id) => users.load(id));
+    return await mapSecuredValue(fieldZone.director, ({ id }) =>
+      users.load(id),
+    );
   }
 
   @Mutation(() => CreateFieldZoneOutput, {

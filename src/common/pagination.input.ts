@@ -1,5 +1,6 @@
 import { PipeTransform, Type } from '@nestjs/common';
 import { Args, ArgsOptions, Field, InputType, Int } from '@nestjs/graphql';
+import { setHas } from '@seedcompany/common';
 import { Matches, Max, Min } from 'class-validator';
 import { stripIndent } from 'common-tags';
 import { DataObject } from './data-object';
@@ -27,6 +28,14 @@ export abstract class PaginationInput extends DataObject {
   @Min(1)
   readonly page: number = 1;
 }
+
+export const isPaginationInput = (input: unknown): input is PaginationInput =>
+  !!input &&
+  typeof input === 'object' &&
+  'count' in input &&
+  typeof input.count === 'number' &&
+  'page' in input &&
+  typeof input.page === 'number';
 
 @InputType({
   isAbstract: true,
@@ -61,6 +70,16 @@ export interface SortablePaginationInput<SortKey extends string = string>
   sort: SortKey;
   order: Order;
 }
+
+export const isSortablePaginationInput = (
+  input: unknown,
+): input is SortablePaginationInput =>
+  isPaginationInput(input) &&
+  'sort' in input &&
+  typeof input.sort === 'string' &&
+  'order' in input &&
+  typeof input.order === 'string' &&
+  setHas(Order.values, input.order);
 
 export const SortablePaginationInput = <SortKey extends string = string>({
   defaultSort,

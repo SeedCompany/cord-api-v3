@@ -13,9 +13,27 @@ import { ResourceResolver } from './resource-resolver.service';
 
 type SomeResourceType = ValueOf<ResourceMap>;
 
-export interface ResourceRef<Key extends keyof ResourceMap> {
+/**
+ * A reference to a resource with a dynamic / unknown type.
+ */
+export interface PolymorphicLinkTo<Key extends keyof ResourceMap> {
   __typename: Key;
   id: ID;
+}
+
+/**
+ * A reference to a resource with a dynamic / unknown type.
+ */
+export type LinkToUnknown = PolymorphicLinkTo<keyof ResourceMap>;
+
+/**
+ * A reference to a resource with a static / known type.
+ */
+export interface LinkTo<Key extends keyof ResourceMap> {
+  id: ID;
+  // Here for DX, and maybe type checking.
+  // Won't be used at runtime.
+  __typename?: Key;
 }
 
 @Injectable()
@@ -37,7 +55,7 @@ export class ResourceLoader {
   }
 
   async loadByRef<Key extends keyof ResourceMap>(
-    obj: ResourceRef<Key>,
+    obj: PolymorphicLinkTo<Key>,
     view?: ObjectView,
   ) {
     return await this.load(obj.__typename, obj.id, view);

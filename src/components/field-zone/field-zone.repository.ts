@@ -2,7 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { ChangesOf } from '~/core/database/changes';
-import { ID, Session, UnsecuredDto } from '../../common';
+import {
+  DuplicateException,
+  ID,
+  SecuredList,
+  ServerException,
+  Session,
+  UnsecuredDto,
+} from '../../common';
 import { DtoRepository } from '../../core';
 import {
   ACTIVE,
@@ -25,6 +32,13 @@ import {
 @Injectable()
 export class FieldZoneRepository extends DtoRepository(FieldZone) {
   async create(input: CreateFieldZone, session: Session) {
+    if (!(await this.isUnique(input.name))) {
+      throw new DuplicateException(
+        'fieldZone.name',
+        'FieldZone with this name already exists.',
+      );
+    }
+
     const initialProps = {
       name: input.name,
       canDelete: true,
@@ -42,7 +56,12 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
       )
       .return<{ id: ID }>('node.id as id');
 
-    return await query.first();
+    const result = await query.first();
+    if (!result) {
+      throw new ServerException('failed to create field zone');
+    }
+
+    return await this.readOne(result.id);
   }
 
   protected hydrate() {
@@ -56,13 +75,13 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
         ])
         .return<{ dto: UnsecuredDto<FieldZone> }>(
           merge('props', {
-            director: 'director.id',
+            director: 'director { .id }',
           }).as('dto'),
         );
   }
 
   async update(
-    existing: FieldZone,
+    existing: Pick<FieldZone, 'id'>,
     changes: ChangesOf<FieldZone, UpdateFieldZone>,
   ) {
     const { directorId, ...simpleChanges } = changes;
@@ -72,6 +91,8 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
     }
 
     await this.updateProperties(existing, simpleChanges);
+
+    return await this.readOne(existing.id);
   }
 
   private async updateDirector(directorId: ID, id: ID) {
@@ -103,6 +124,9 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
   }
 
   async list({ filter, ...input }: FieldZoneListInput, session: Session) {
+    if (!this.privileges.forUser(session).can('read')) {
+      return SecuredList.Redacted;
+    }
     const result = await this.db
       .query()
       .match(requestingUser(session))

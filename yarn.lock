@@ -1475,14 +1475,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@edgedb/generate@npm:^0.5.0-canary.20240116T174045":
-  version: 0.5.0-canary.20240116T174045
-  resolution: "@edgedb/generate@npm:0.5.0-canary.20240116T174045"
+"@edgedb/generate@npm:^0.5.0-canary.20240117T152712":
+  version: 0.5.0-canary.20240117T152712
+  resolution: "@edgedb/generate@npm:0.5.0-canary.20240117T152712"
   peerDependencies:
     edgedb: ^1.4.0
   bin:
     generate: dist/cli.js
-  checksum: 03fbb48152311124debdcda03f6d6e727d856900dcf677bac5e8be934834c8e56a13640887aac4143ab2474c8e64a366b60e9c0bcdc5f1cc607838efcf73bc9a
+  checksum: 417e4384aba4edca042bbf878fa993fcacbb62b14b0d74954ce1fe0d9e224f9163fad8c0513ea3b65f9215123e7b1f646ef1f7d8d71d5499f11070236689b566
   languageName: node
   linkType: hard
 
@@ -5311,7 +5311,7 @@ __metadata:
     "@apollo/subgraph": "npm:^2.5.6"
     "@aws-sdk/client-s3": "npm:^3.440.0"
     "@aws-sdk/s3-request-presigner": "npm:^3.440.0"
-    "@edgedb/generate": "npm:^0.5.0-canary.20240116T174045"
+    "@edgedb/generate": "npm:^0.5.0-canary.20240117T152712"
     "@faker-js/faker": "npm:^8.2.0"
     "@ffprobe-installer/ffprobe": "npm:^2.1.2"
     "@golevelup/nestjs-discovery": "npm:^4.0.0"

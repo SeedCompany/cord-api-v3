@@ -2,13 +2,14 @@ import { entries } from '@seedcompany/common';
 import { difference, omit, pickBy } from 'lodash';
 import { DateTime } from 'luxon';
 import { ConditionalKeys } from 'type-fest';
+import { LinkTo } from '~/core';
 import {
   EnhancedResource,
   ID,
+  MaybeSecured,
   MaybeUnsecuredInstance,
   Resource,
   ResourceShape,
-  Secured,
   unwrapSecured,
   UnwrapSecured,
 } from '../../common';
@@ -58,7 +59,7 @@ type ChangeKey<Key extends keyof T & string, T> = T[Key] extends SetChangeType<
     : never
   : UnwrapSecured<T[Key]> extends FileId
   ? Key
-  : NonNullable<UnwrapSecured<T[Key]>> extends ID
+  : NonNullable<UnwrapSecured<T[Key]>> extends ID | LinkTo<any>
   ? `${Key}Id` // our convention for single relationships
   : Key;
 
@@ -66,6 +67,8 @@ type ChangeOf<Val> = Val extends SetChangeType<any, infer Override>
   ? Override
   : UnwrapSecured<Val> extends FileId
   ? CreateDefinedFileVersionInput
+  : UnwrapSecured<Val> extends LinkTo<any>
+  ? ID
   : UnwrapSecured<Val>;
 
 /**
@@ -76,7 +79,7 @@ export type DbChanges<T> = DbAllowableChanges<T> &
 
 type DbAllowableChanges<T> = {
   [K in Exclude<
-    ConditionalKeys<Required<T>, NativeDbValue | Secured<NativeDbValue>>,
+    ConditionalKeys<Required<T>, MaybeSecured<NativeDbValue | LinkTo<any>>>,
     keyof Resource
   >]?: UnwrapSecured<T[K]> | Variable;
 };
@@ -113,7 +116,16 @@ export const getChanges =
         return false;
       }
       const key = isRelation(res, prop) ? prop.slice(0, -2) : prop;
-      const existing = unwrapSecured(existingObject[key]);
+      let existing = unwrapSecured(existingObject[key]);
+      // Unwrap existing refs of IDs to input IDs.
+      if (
+        typeof change === 'string' &&
+        existing &&
+        typeof existing === 'object' &&
+        typeof existing.id === 'string'
+      ) {
+        existing = existing.id;
+      }
       return !isSame(change, existing);
     });
 
