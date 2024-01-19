@@ -137,6 +137,7 @@ class Project extends Interfaces {
   readonly marketingCountryOverride: Secured<ID | null>;
 
   readonly marketingRegionOverride: Secured<IdOf<Location> | null>;
+
   readonly fieldRegion: Secured<ID | null>;
 
   readonly owningOrganization: Secured<ID | null>;
