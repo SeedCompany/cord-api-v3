@@ -6,7 +6,13 @@ import {
   GqlContextType as ContextKey,
   GqlExecutionContext,
 } from '@nestjs/graphql';
-import { isNotFalsy, setHas, setOf, simpleSwitch } from '@seedcompany/common';
+import {
+  entries,
+  isNotFalsy,
+  setHas,
+  setOf,
+  simpleSwitch,
+} from '@seedcompany/common';
 import * as Edge from 'edgedb';
 import * as EdgeDBTags from 'edgedb/dist/errors/tags.js';
 import { GraphQLError, GraphQLResolveInfo } from 'graphql';
@@ -17,11 +23,14 @@ import {
   Exception,
   getParentTypes,
   getPreviousList,
+  InputException,
   JsonSet,
+  NotFoundException,
 } from '~/common';
 import type { ConfigService } from '~/core';
 import * as Neo from '../database/errors';
 import { ExclusivityViolationError } from '../edgedb/exclusivity-violation.error';
+import { ResourcesHost } from '../resources/resources.host';
 import { isSrcFrame } from './is-src-frame';
 import { normalizeFramePath } from './normalize-frame-path';
 
@@ -35,7 +44,10 @@ export interface ExceptionJson {
 
 @Injectable()
 export class ExceptionNormalizer {
-  constructor(@Inject('CONFIG') private readonly config?: ConfigService) {}
+  constructor(
+    @Inject('CONFIG') private readonly config?: ConfigService,
+    private readonly resources?: ResourcesHost,
+  ) {}
 
   normalize(ex: Error, context?: ArgumentsHost): ExceptionJson {
     const {
@@ -119,6 +131,8 @@ export class ExceptionNormalizer {
         ? GqlExecutionContext.create(context as any)
         : undefined;
 
+    ex = this.wrapIDNotFoundError(ex, gqlContext);
+
     if (ex instanceof ExclusivityViolationError) {
       ex = DuplicateException.fromDB(ex, gqlContext);
     } else if (ex instanceof Edge.EdgeDBError) {
@@ -163,6 +177,43 @@ export class ExceptionNormalizer {
 
     // Fallback to generic Error
     return { codes: ['Server'] };
+  }
+
+  /**
+   * Convert ID not found database errors from user input
+   * to user input NotFound error with that input path.
+   */
+  private wrapIDNotFoundError(
+    ex: Error,
+    gqlContext: GqlExecutionContext | undefined,
+  ) {
+    if (!(ex instanceof Edge.CardinalityViolationError)) {
+      return ex;
+    }
+
+    const matched = ex.message.match(/'(.+)' with id '(.+)' does not exist/);
+    if (!matched) {
+      return ex;
+    }
+    const [_, type, id] = matched;
+
+    const inputPath = entries(InputException.getFlattenInput(gqlContext)).find(
+      ([_, value]) => value === id,
+    )?.[0];
+    if (!inputPath) {
+      return ex;
+    }
+
+    const typeName = this.resources
+      ? this.resources.getByEdgeDB(type).name
+      : type;
+    const wrapped = new NotFoundException(
+      `${typeName} could not be found`,
+      inputPath,
+      ex,
+    );
+    wrapped.stack = ex.stack;
+    return wrapped;
   }
 
   private httpException(ex: Nest.HttpException) {
