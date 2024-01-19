@@ -356,6 +356,16 @@ export class ProjectResolver {
     );
   }
 
+  @ResolveField(() => SecuredLocation)
+  async marketingRegion(
+    @Parent() project: Project,
+    @Loader(LocationLoader) locations: LoaderOf<LocationLoader>,
+  ): Promise<SecuredLocation> {
+    return await mapSecuredValue(project.marketingRegion, (id) =>
+      locations.load(id),
+    );
+  }
+
   @ResolveField()
   mouRange(@Parent() project: Project): SecuredDateRange {
     return SecuredDateRange.fromPair(project.mouStart, project.mouEnd);

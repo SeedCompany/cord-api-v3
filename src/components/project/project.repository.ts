@@ -146,6 +146,10 @@ export class ProjectRepository extends CommonRepository {
             engagementTotal: 'engagementTotal',
             changeset: 'changeset.id',
             marketingRegionOverride: 'marketingRegionOverride.id',
+            marketingRegion: coalesce(
+              'marketingRegionOverride.id',
+              // TODO: add coalose for marketingCountry.defaultMarketingRegion
+            ),
           }).as('dto'),
         );
   }

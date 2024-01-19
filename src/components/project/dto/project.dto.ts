@@ -131,6 +131,9 @@ class Project extends Interfaces {
   @Calculated()
   readonly marketingCountry: Secured<IdOf<Location> | null>;
 
+  @Calculated()
+  readonly marketingRegion: Secured<IdOf<Location> | null>;
+
   readonly marketingCountryOverride: Secured<ID | null>;
 
   readonly marketingRegionOverride: Secured<IdOf<Location> | null>;
