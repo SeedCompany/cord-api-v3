@@ -46,7 +46,7 @@ export class PolicyDumper {
     const book = xlsx.utils.book_new();
 
     const chalk = new Chalk({ level: 0 });
-    const resources = await this.selectResources();
+    const resources = this.selectResources();
     for (const role of Role) {
       const dumped = resources.flatMap((res) =>
         this.dumpRes(role, res, { props: true }),
@@ -74,7 +74,7 @@ export class PolicyDumper {
     resourcesIn: Many<ResourceLike & string>,
   ) {
     const roles = search(rolesIn, [...Role], 'role');
-    const map = await this.resources.getEnhancedMap();
+    const map = this.resources.getEnhancedMap();
     const resources = searchResources(resourcesIn, map);
 
     const data = roles.flatMap((role) =>
@@ -140,10 +140,10 @@ export class PolicyDumper {
     console.log(table.toString());
   }
 
-  private async selectResources(...filtered: AnyResource[]) {
+  private selectResources(...filtered: AnyResource[]) {
     const selectedResources = filtered.length
       ? filtered
-      : Object.values<AnyResource>(await this.resources.getEnhancedMap());
+      : Object.values<AnyResource>(this.resources.getEnhancedMap());
     return sortBy(selectedResources, (r) => r.name);
   }
 

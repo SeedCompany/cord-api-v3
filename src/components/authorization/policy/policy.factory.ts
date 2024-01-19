@@ -108,11 +108,11 @@ export class PolicyFactory implements OnModuleInit {
       }
     }
 
-    await this.defaultInterfacesFromImplementationsIntersection(grants);
-    await this.defaultImplementationsFromInterfaces(grants);
-    await this.defaultRelationEdgesToResourceLevel(grants);
+    this.defaultInterfacesFromImplementationsIntersection(grants);
+    this.defaultImplementationsFromInterfaces(grants);
+    this.defaultRelationEdgesToResourceLevel(grants);
 
-    const powers = await this.determinePowers(grants);
+    const powers = this.determinePowers(grants);
 
     const name = startCase(discoveredClass.name.replace(/Policy$/, ''));
     const policy: Policy = { name, roles, grants, powers };
@@ -125,17 +125,13 @@ export class PolicyFactory implements OnModuleInit {
    * Declare permissions of missing interfaces based on the intersection of
    * the permissions of its implementations
    */
-  private async defaultInterfacesFromImplementationsIntersection(
+  private defaultInterfacesFromImplementationsIntersection(
     grantMap: WritableGrants,
   ) {
     const interfaceCandidates = new Set(
-      (
-        await Promise.all(
-          [...grantMap.keys()].map((res) =>
-            this.resourcesHost.getInterfaces(res),
-          ),
-        )
-      ).flat(),
+      [...grantMap.keys()]
+        .map((res) => this.resourcesHost.getInterfaces(res))
+        .flat(),
     );
 
     const allKeysOf = (list: Array<object | undefined>) =>
@@ -156,7 +152,7 @@ export class PolicyFactory implements OnModuleInit {
         continue;
       }
 
-      const impls = await this.resourcesHost.getImplementations(interfaceRes);
+      const impls = this.resourcesHost.getImplementations(interfaceRes);
 
       // Skip if policy doesn't specify all implementations of the interface
       if (!(impls.length > 0 && impls.every((impl) => grantMap.has(impl)))) {
@@ -213,18 +209,18 @@ export class PolicyFactory implements OnModuleInit {
     }
   }
 
-  private async defaultImplementationsFromInterfaces(grants: WritableGrants) {
+  private defaultImplementationsFromInterfaces(grants: WritableGrants) {
     for (const resource of grants.keys()) {
-      const impls = await this.resourcesHost.getImplementations(resource);
+      const impls = this.resourcesHost.getImplementations(resource);
       for (const impl of impls) {
         if (grants.has(impl)) {
           continue;
         }
         // If policy doesn't specify this implementation then use most specific
         // interface given.
-        const interfaceToApply = (
-          await this.resourcesHost.getInterfaces(impl)
-        ).find((i) => grants.has(i));
+        const interfaceToApply = this.resourcesHost
+          .getInterfaces(impl)
+          .find((i) => grants.has(i));
         const interfacePerms = interfaceToApply && grants.get(interfaceToApply);
         if (!interfacePerms) {
           // Safety check, but this shouldn't ever happen, since we only got
@@ -236,7 +232,7 @@ export class PolicyFactory implements OnModuleInit {
     }
   }
 
-  private async defaultRelationEdgesToResourceLevel(grants: WritableGrants) {
+  private defaultRelationEdgesToResourceLevel(grants: WritableGrants) {
     for (const [resource, { childRelations }] of grants.entries()) {
       for (const rel of resource.relations.values()) {
         const type = rel.resource;
@@ -297,7 +293,7 @@ export class PolicyFactory implements OnModuleInit {
     return mergeConditions(...conditions);
   }
 
-  private async determinePowers(grants: Grants) {
+  private determinePowers(grants: Grants) {
     const powers = new Set<Power>();
     const pushPower = (str: string) => {
       const power = `Create${str}`;
@@ -313,7 +309,7 @@ export class PolicyFactory implements OnModuleInit {
       }
       pushPower(res.name);
 
-      const implementations = await this.resourcesHost.getImplementations(res);
+      const implementations = this.resourcesHost.getImplementations(res);
       for (const implementation of implementations) {
         if (grants.has(implementation)) {
           // If policy specifies this implementation then defer to its entry.

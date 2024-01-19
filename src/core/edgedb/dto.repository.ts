@@ -147,7 +147,7 @@ export const RepoFor = <
      * failed insert, after we finish migration.
      */
     async isUnique(value: string, fqn?: string) {
-      const res = fqn ? await this.resources.getByEdgeDB(fqn) : resource;
+      const res = fqn ? this.resources.getByEdgeDB(fqn) : resource;
       const query = e.select(e.Mixin.Named, (obj) => ({
         filter: e.op(
           e.op(obj.name, '=', value),

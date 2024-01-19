@@ -55,7 +55,7 @@ export class SearchService {
     // which is based on their first valid search label.
     const results = await this.repo.search({ ...input, type: types });
 
-    const ResourceMap = await this.resourceHost.getMap();
+    const ResourceMap = this.resourceHost.getMap();
 
     // Individually convert each result (id & type) to its search result
     // based on this.hydrators
@@ -94,9 +94,7 @@ export class SearchService {
               return null;
             }
 
-            const resource = await this.resourceHost.getByName(
-              hydrated.__typename,
-            );
+            const resource = this.resourceHost.getByName(hydrated.__typename);
             const perms = this.privileges.for(session, resource, hydrated).all;
             return matchedProps.some((key) =>
               // @ts-expect-error strict typing is hard for this dynamic use case.

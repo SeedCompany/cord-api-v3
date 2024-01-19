@@ -11,21 +11,21 @@ describe('ResourcesHost', () => {
     await import('../../app.module');
 
     host = new ResourcesHost(new GraphQLSchemaHost());
-    all = await host.getEnhancedMap();
+    all = host.getEnhancedMap();
   });
 
   describe('By EdgeDB', () => {
-    it('FQN', async () => {
-      const res = await host.getByEdgeDB('default::User');
+    it('FQN', () => {
+      const res = host.getByEdgeDB('default::User');
       expect(res).toBeDefined();
       expect(res).toBe(all.User);
     });
-    it('Implicit default module', async () => {
-      const res = await host.getByEdgeDB('User');
+    it('Implicit default module', () => {
+      const res = host.getByEdgeDB('User');
       expect(res).toBe(all.User);
     });
-    it('GQL Name different from FQN', async () => {
-      const res = await host.getByEdgeDB('Ceremony');
+    it('GQL Name different from FQN', () => {
+      const res = host.getByEdgeDB('Ceremony');
       expect(res).toBe(all.Ceremony);
     });
   });

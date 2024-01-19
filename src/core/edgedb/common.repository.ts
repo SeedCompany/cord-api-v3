@@ -37,7 +37,7 @@ export class CommonRepository implements PublicOf<Neo4jCommonRepository> {
   ): Promise<readonly BaseNode[]> {
     const res = fqn
       ? typeof fqn === 'string'
-        ? await this.resources.getByEdgeDB(fqn)
+        ? this.resources.getByEdgeDB(fqn)
         : EnhancedResource.of(fqn)
       : undefined;
     const query = e.params({ ids: e.array(e.uuid) }, ({ ids }) =>
@@ -51,17 +51,14 @@ export class CommonRepository implements PublicOf<Neo4jCommonRepository> {
     );
     const nodes = await this.db.run(query, { ids });
 
-    return await Promise.all(
-      nodes.map(async (node): Promise<BaseNode> => {
-        const res = await this.resources.getByEdgeDB(node._typeFQN_);
-        return {
-          identity: node.id,
-          labels: [res.dbLabel],
-          properties: {
-            id: node.id,
-            createdAt: node.createdAt,
-          },
-        };
+    return nodes.map(
+      (node): BaseNode => ({
+        identity: node.id,
+        labels: [this.resources.getByEdgeDB(node._typeFQN_).dbLabel],
+        properties: {
+          id: node.id,
+          createdAt: node.createdAt,
+        },
       }),
     );
   }
