@@ -1,3 +1,8 @@
+import { ArgumentsHost } from '@nestjs/common';
+import {
+  GqlContextType as ContextKey,
+  GqlExecutionContext,
+} from '@nestjs/graphql';
 import { ClientException } from './exception';
 
 export type InputExceptionArgs =
@@ -104,4 +109,35 @@ export class InputException extends ClientException {
     }
     return [message, field, previous] as const;
   }
+
+  static getFlattenInput(context?: ArgumentsHost) {
+    if (!context || context.getType<ContextKey>() !== 'graphql') {
+      return {};
+    }
+    const gqlContext =
+      context instanceof GqlExecutionContext
+        ? context
+        : GqlExecutionContext.create(context as any);
+    let gqlArgs = gqlContext.getArgs();
+
+    // unwind single `input` argument, based on our own conventions
+    if (Object.keys(gqlArgs).length === 1 && 'input' in gqlArgs) {
+      gqlArgs = gqlArgs.input;
+    }
+
+    return flattenObject(gqlArgs);
+  }
 }
+
+const flattenObject = (obj: object, prefix = '') => {
+  const result: Record<string, any> = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      const nestedObj = flattenObject(value, prefix + key + '.');
+      Object.assign(result, nestedObj);
+    } else {
+      result[prefix + key] = value;
+    }
+  }
+  return result;
+};

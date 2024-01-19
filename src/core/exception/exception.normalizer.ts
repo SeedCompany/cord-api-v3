@@ -114,13 +114,17 @@ export class ExceptionNormalizer {
       };
     }
 
+    const gqlContext =
+      context && context.getType<ContextKey>() === 'graphql'
+        ? GqlExecutionContext.create(context as any)
+        : undefined;
+
     if (ex instanceof ExclusivityViolationError) {
-      ex = DuplicateException.fromDB(ex, context);
+      ex = DuplicateException.fromDB(ex, gqlContext);
     } else if (ex instanceof Edge.EdgeDBError) {
       // Mask actual DB error with a nicer user error message.
       let message = 'Failed';
-      if (context && context.getType<ContextKey>() === 'graphql') {
-        const gqlContext = GqlExecutionContext.create(context as any);
+      if (gqlContext) {
         const info = gqlContext.getInfo<GraphQLResolveInfo>();
         if (info.operation.operation === 'mutation') {
           message += ` to ${lowerCase(info.fieldName)}`;
