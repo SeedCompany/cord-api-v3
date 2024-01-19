@@ -127,7 +127,10 @@ export class ExceptionNormalizer {
     }
 
     const gqlContext =
-      context && context.getType<ContextKey>() === 'graphql'
+      context &&
+      context.getType<ContextKey>() === 'graphql' &&
+      // schema input validation errors don't create an execution context correctly
+      !(ex instanceof GraphQLError)
         ? GqlExecutionContext.create(context as any)
         : undefined;
 
