@@ -1,15 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import {
-  DuplicateException,
   ID,
   ObjectView,
-  SecuredList,
   ServerException,
   Session,
   UnsecuredDto,
-} from '../../common';
-import { HandleIdLookup, ILogger, Logger } from '../../core';
-import { mapListResults } from '../../core/database/results';
+} from '~/common';
+import { HandleIdLookup, ILogger, Logger } from '~/core';
 import { Privileges } from '../authorization';
 import {
   CreateFieldRegion,
@@ -33,21 +30,8 @@ export class FieldRegionService {
     session: Session,
   ): Promise<FieldRegion> {
     this.privileges.for(session, FieldRegion).verifyCan('create');
-    if (!(await this.repo.isUnique(input.name))) {
-      throw new DuplicateException(
-        'fieldRegion.name',
-        'FieldRegion with this name already exists.',
-      );
-    }
-
-    const result = await this.repo.create(input, session);
-
-    if (!result) {
-      throw new ServerException('failed to create field region');
-    }
-
-    this.logger.debug(`field region created`, { id: result.id });
-    return await this.readOne(result.id, session);
+    const dto = await this.repo.create(input, session);
+    return this.secure(dto, session);
   }
 
   @HandleIdLookup(FieldRegion)
@@ -62,20 +46,15 @@ export class FieldRegionService {
     });
 
     const result = await this.repo.readOne(id);
-    return await this.secure(result, session);
+    return this.secure(result, session);
   }
 
   async readMany(ids: readonly ID[], session: Session) {
     const fieldRegions = await this.repo.readMany(ids);
-    return await Promise.all(
-      fieldRegions.map((dto) => this.secure(dto, session)),
-    );
+    return fieldRegions.map((dto) => this.secure(dto, session));
   }
 
-  private async secure(
-    dto: UnsecuredDto<FieldRegion>,
-    session: Session,
-  ): Promise<FieldRegion> {
+  private secure(dto: UnsecuredDto<FieldRegion>, session: Session) {
     return this.privileges.for(session, FieldRegion).secure(dto);
   }
 
@@ -83,15 +62,15 @@ export class FieldRegionService {
     input: UpdateFieldRegion,
     session: Session,
   ): Promise<FieldRegion> {
-    const fieldRegion = await this.readOne(input.id, session);
+    const fieldRegion = await this.repo.readOne(input.id);
+
     const changes = this.repo.getActualChanges(fieldRegion, input);
     this.privileges
       .for(session, FieldRegion, fieldRegion)
       .verifyChanges(changes);
 
-    await this.repo.update(fieldRegion, changes);
-
-    return await this.readOne(input.id, session);
+    const updated = await this.repo.update(fieldRegion, changes);
+    return this.secure(updated, session);
   }
 
   async delete(id: ID, session: Session): Promise<void> {
@@ -111,11 +90,10 @@ export class FieldRegionService {
     input: FieldRegionListInput,
     session: Session,
   ): Promise<FieldRegionListOutput> {
-    if (this.privileges.for(session, FieldRegion).can('read')) {
-      const results = await this.repo.list(input, session);
-      return await mapListResults(results, (dto) => this.secure(dto, session));
-    } else {
-      return SecuredList.Redacted;
-    }
+    const results = await this.repo.list(input, session);
+    return {
+      ...results,
+      items: results.items.map((dto) => this.secure(dto, session)),
+    };
   }
 }
