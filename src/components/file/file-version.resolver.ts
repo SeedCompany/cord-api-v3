@@ -10,8 +10,11 @@ export class FileVersionResolver {
   constructor(protected readonly service: FileService) {}
 
   @FileUrl.Resolver()
-  async url(@Parent() node: FileVersion) {
-    return await this.service.getUrl(node);
+  async url(
+    @Parent() node: FileVersion,
+    @FileUrl.DownloadArg() download: boolean,
+  ) {
+    return await this.service.getUrl(node, download);
   }
 
   @ResolveField(() => URL, {

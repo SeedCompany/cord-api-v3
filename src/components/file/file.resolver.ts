@@ -77,8 +77,8 @@ export class FileResolver {
   }
 
   @FileUrl.Resolver()
-  async url(@Parent() node: File) {
-    return await this.service.getUrl(node);
+  async url(@Parent() node: File, @FileUrl.DownloadArg() download: boolean) {
+    return await this.service.getUrl(node, download);
   }
 
   @ResolveField(() => URL, {
