@@ -1,8 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
+import {
+  DuplicateException,
+  ID,
+  SecuredList,
+  ServerException,
+  Session,
+  UnsecuredDto,
+} from '~/common';
+import { DtoRepository } from '~/core';
 import { ChangesOf } from '~/core/database/changes';
-import { ID, Session, UnsecuredDto } from '../../common';
-import { DtoRepository } from '../../core';
 import {
   ACTIVE,
   createNode,
@@ -13,7 +20,7 @@ import {
   paginate,
   requestingUser,
   sorting,
-} from '../../core/database/query';
+} from '~/core/database/query';
 import {
   CreateFieldRegion,
   FieldRegion,
@@ -24,6 +31,13 @@ import {
 @Injectable()
 export class FieldRegionRepository extends DtoRepository(FieldRegion) {
   async create(input: CreateFieldRegion, session: Session) {
+    if (!(await this.isUnique(input.name))) {
+      throw new DuplicateException(
+        'fieldRegion.name',
+        'FieldRegion with this name already exists.',
+      );
+    }
+
     const initialProps = {
       name: input.name,
       canDelete: true,
@@ -42,20 +56,31 @@ export class FieldRegionRepository extends DtoRepository(FieldRegion) {
       )
       .return<{ id: ID }>('node.id as id');
 
-    return await query.first();
+    const result = await query.first();
+    if (!result) {
+      throw new ServerException('failed to create field region');
+    }
+
+    return await this.readOne(result.id);
   }
 
   async update(
-    existing: FieldRegion,
+    existing: Pick<FieldRegion, 'id'>,
     changes: ChangesOf<FieldRegion, UpdateFieldRegion>,
   ) {
-    const { directorId, ...simpleChanges } = changes;
+    const { directorId, fieldZoneId, ...simpleChanges } = changes;
 
     if (directorId) {
       // TODO update director - lol this was never implemented
     }
 
+    if (fieldZoneId) {
+      // TODO update field zone - neither was this
+    }
+
     await this.updateProperties(existing, simpleChanges);
+
+    return await this.readOne(existing.id);
   }
 
   protected hydrate() {
@@ -74,13 +99,16 @@ export class FieldRegionRepository extends DtoRepository(FieldRegion) {
         ])
         .return<{ dto: UnsecuredDto<FieldRegion> }>(
           merge('props', {
-            director: 'director.id',
-            fieldZone: 'fieldZone.id',
+            director: 'director { .id }',
+            fieldZone: 'fieldZone { .id }',
           }).as('dto'),
         );
   }
 
   async list({ filter, ...input }: FieldRegionListInput, session: Session) {
+    if (!this.privileges.forUser(session).can('read')) {
+      return SecuredList.Redacted;
+    }
     const result = await this.db
       .query()
       .match(requestingUser(session))
