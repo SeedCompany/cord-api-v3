@@ -4,10 +4,6 @@ import { stripIndent } from 'common-tags';
 import { DateTime } from 'luxon';
 import { Readable } from 'stream';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { MergeExclusive } from 'type-fest';
-import { BaseNode } from '~/core/database/results';
-import { e } from '~/core/edgedb';
-import { RegisterResource } from '~/core/resources';
 import {
   DateTimeField,
   DbLabel,
@@ -20,17 +16,18 @@ import {
   SecuredProperty,
   SecuredProps,
   ServerException,
-} from '../../../common';
+} from '~/common';
+import { BaseNode } from '~/core/database/results';
+import { e } from '~/core/edgedb';
+import { RegisterResource } from '~/core/resources';
 import { FileNodeType } from './file-node-type.enum';
 
 /**
  * This should be used for TypeScript types as we'll always be passing around
  * concrete nodes.
  */
-export type AnyFileNode = MergeExclusive<
-  MergeExclusive<File, Directory>,
-  FileVersion
->;
+export type AnyFileNode = Omit<Directory | File | FileVersion, 'type'> &
+  Pick<FileNode, 'type'>;
 
 export const resolveFileNode = (val: AnyFileNode) => {
   const type = simpleSwitch(val.type, {
@@ -69,15 +66,15 @@ abstract class FileNode extends Resource {
   @Field({
     description: 'Is this available to anyone anonymously?',
   })
-  readonly public: boolean;
+  readonly public: boolean | null;
 
   readonly createdById: ID;
 
   /** The root FileNode. This could be self */
-  readonly root: BaseNode;
+  readonly root: BaseNode | null;
 
   /** The resource the root FileNode is attached to */
-  readonly rootAttachedTo: [resource: BaseNode, relationName: string];
+  readonly rootAttachedTo: readonly [resource: BaseNode, relationName: string];
 }
 
 // class name has to match schema name for interface resolvers to work.
@@ -189,6 +186,9 @@ export const asDirectory = (node: AnyFileNode) => {
   }
   return node;
 };
+
+export const isFileLike = (node: AnyFileNode): node is File | FileVersion =>
+  node.type !== FileNodeType.Directory;
 
 export const isFile = (node: AnyFileNode): node is File =>
   node.type === FileNodeType.File;

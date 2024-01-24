@@ -131,7 +131,7 @@ export class FileRepository extends CommonRepository {
     return result!;
   }
 
-  hydrate() {
+  protected hydrate() {
     return (query: Query) =>
       query
         .subQuery((sub) =>

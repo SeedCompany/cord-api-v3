@@ -72,6 +72,7 @@ export class DetectExistingMediaMigration extends BaseMigration {
             .limit(size),
         )
         .with('fv as node')
+        // @ts-expect-error private. This is old, w/e.
         .apply(fileRepo.hydrate())
         .map((row) => row.dto as FileVersion)
         .run();

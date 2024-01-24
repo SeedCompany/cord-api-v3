@@ -47,6 +47,7 @@ import {
   FileVersion,
   isDirectory,
   isFile,
+  isFileLike,
   isFileVersion,
   MoveFileInput,
   RenameFileInput,
@@ -172,7 +173,7 @@ export class FileService {
         ResponseContentDisposition: `${disposition}; filename="${encodeURIComponent(
           node.name,
         )}"`,
-        ResponseContentType: node.mimeType,
+        ResponseContentType: isFileLike(node) ? node.mimeType : undefined,
         ResponseCacheControl: this.determineCacheHeader(node),
         signing: {
           expiresIn: this.config.files.cacheTtl.version[

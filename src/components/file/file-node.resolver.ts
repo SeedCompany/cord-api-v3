@@ -3,7 +3,7 @@ import { stripIndent } from 'common-tags';
 import { AnonSession, Session } from '../../common';
 import { Loader, LoaderOf } from '../../core';
 import { User, UserLoader } from '../user';
-import { FileNode, IFileNode, isDirectory } from './dto';
+import { FileNode, IFileNode, isDirectory, isFile } from './dto';
 import { FileService } from './file.service';
 import { MediaByFileVersionLoader } from './media/media-by-file-version.loader';
 import { Media } from './media/media.dto';
@@ -48,7 +48,7 @@ export class FileNodeResolver {
     loader: LoaderOf<MediaByFileVersionLoader>,
   ): Promise<Media | null> {
     if (isDirectory(node)) return null;
-    const id = node.latestVersionId ?? node.id;
+    const id = isFile(node) ? node.latestVersionId : node.id;
     return await loader.load(id).catch(() => null);
   }
 }
