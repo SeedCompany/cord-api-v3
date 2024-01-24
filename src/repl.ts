@@ -25,7 +25,7 @@ runRepl({
     const session = app
       .get(AuthenticationService)
       .lazySessionForRootAdminUser();
-    const Resources = await app.get(ResourcesHost).getEnhancedMap();
+    const Resources = app.get(ResourcesHost).getEnhancedMap();
 
     return {
       e,

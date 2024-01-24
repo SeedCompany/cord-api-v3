@@ -120,7 +120,7 @@ export class PostService {
 
   async getPermissionsFromPostable(resource: PostableRef, session: Session) {
     const parent = await this.loadPostable(resource);
-    const parentType = await this.resourcesHost.getByName(
+    const parentType = this.resourcesHost.getByName(
       parent.__typename as 'Postable',
     );
     return this.privileges.for(session, parentType, parent).forEdge('posts');
@@ -138,7 +138,7 @@ export class PostService {
       : parentNode;
 
     try {
-      await this.resourcesHost.verifyImplements(parent.__typename, Postable);
+      this.resourcesHost.verifyImplements(parent.__typename, Postable);
     } catch (e) {
       throw new NonPostableType(e.message);
     }

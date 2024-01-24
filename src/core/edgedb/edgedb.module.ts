@@ -1,15 +1,13 @@
 import { Module, OnModuleDestroy } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { createClient, Duration } from 'edgedb';
-import { KNOWN_TYPENAMES } from 'edgedb/dist/codecs/consts.js';
-import { ScalarCodec } from 'edgedb/dist/codecs/ifaces.js';
-import { Class } from 'type-fest';
+import type { ConfigService } from '~/core';
+import { codecs, registerCustomScalarCodecs } from './codecs';
 import { EdgeDBTransactionalMutationsInterceptor } from './edgedb-transactional-mutations.interceptor';
 import { EdgeDB } from './edgedb.service';
 import { Options } from './options';
 import { OptionsContext } from './options.context';
 import { Client } from './reexports';
-import { LuxonCalendarDateCodec, LuxonDateTimeCodec } from './temporal.codecs';
 import { TransactionContext } from './transaction.context';
 
 @Module({
@@ -29,16 +27,18 @@ import { TransactionContext } from './transaction.context';
     OptionsContext,
     {
       provide: Client,
-      inject: [OptionsContext],
-      useFactory: (options: OptionsContext) => {
-        const client = createClient();
+      inject: [OptionsContext, 'CONFIG'],
+      useFactory: async (options: OptionsContext, config: ConfigService) => {
+        const client = createClient({
+          // Only for connection retry warnings. Skip.
+          logging: false,
+        });
 
         Object.assign(client, { options: options.current });
 
-        registerCustomScalarCodecs(client, [
-          LuxonDateTimeCodec,
-          LuxonCalendarDateCodec,
-        ]);
+        if (config.databaseEngine === 'edgedb') {
+          await registerCustomScalarCodecs(client, codecs);
+        }
 
         return client;
       },
@@ -59,15 +59,3 @@ export class EdgeDBModule implements OnModuleDestroy {
     await this.client.close();
   }
 }
-
-const registerCustomScalarCodecs = (
-  client: Client,
-  scalars: ReadonlyArray<Class<ScalarCodec> & { edgedbTypeName: string }>,
-) => {
-  const map: Map<string, ScalarCodec> = (client as any).pool._codecsRegistry
-    .customScalarCodecs;
-  for (const scalar of scalars) {
-    const uuid = KNOWN_TYPENAMES.get(scalar.edgedbTypeName)!;
-    map.set(uuid, new scalar(uuid));
-  }
-};

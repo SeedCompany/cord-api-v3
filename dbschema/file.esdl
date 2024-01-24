@@ -23,11 +23,11 @@ module File {
     public: bool;
     
     required createdBy: default::User {
-      default := <default::User>(global default::currentUserId);
+      default := default::currentUser;
     };
     required modifiedBy: default::User {
-      default := <default::User>(global default::currentUserId);
-      rewrite update using (<default::User>(global default::currentUserId));
+      default := default::currentUser;
+      rewrite update using (default::currentUser);
       # TODO trigger change up the tree
       # TODO trigger re-eval on node delete?
     };

@@ -1,10 +1,9 @@
 with
   root := (select RootUser),
-  zones := array_agg((
+  zones := (
     for name in {
       "Americas, Pacific, Eurasia",
       "Africa",
-      "Not Specified",
       "Asia"
     }
     union (
@@ -14,29 +13,38 @@ with
         director := root
       })
     )
-  )),
+  ),
+  new := (select zones filter .createdAt = datetime_of_statement())
+select { `Added Field Zones` := new.name }
+filter count(new) > 0;
+with
+  root := (select RootUser),
   regions := (
-    for region in {
-      ("Americas", zones[0]),
-      ("Pacific", zones[0]),
-      ("Eurasia", zones[0]),
-      ("Africa - Southern", zones[1]),
-      ("Africa - Anglophone East", zones[1]),
-      ("Africa - Sahel", zones[1]),
-      ("Africa - Congo Basin", zones[1]),
-      ("Africa - Anglophone West", zones[1]),
-      ("any", zones[2]),
-      ("Asia - Islands", zones[3]),
-      ("Asia - South", zones[3]),
-      ("Asia - Mainland", zones[3]),
+    for item in {
+      (zone := "Americas, Pacific, Eurasia", regions := {"Americas", "Pacific", "Eurasia"}),
+      (zone := "Africa", regions := {
+        "Africa - Southern",
+        "Africa - Anglophone East",
+        "Africa - Sahel",
+        "Africa - Congo Basin",
+        "Africa - Anglophone West"}),
+      (zone := "Asia", regions := {"Asia - Islands", "Asia - South", "Asia - Mainland"})
     }
     union (
-      (select FieldRegion filter .name = region.0) ??
-      (insert FieldRegion {
-        name := region.0,
-        fieldZone := region.1,
-        director := root
-      })
+      with zone := (select FieldZone filter .name = item.zone)
+      select (
+        for region in item.regions
+        union (
+          (select FieldRegion filter .name = region) ??
+          (insert FieldRegion {
+            name := region,
+            fieldZone := zone,
+            director := root
+          })
+        )
+      )
     )
-  )
-select regions;
+  ),
+  new := (select regions filter .createdAt = datetime_of_statement())
+select { `Added Field Regions` := new.name }
+filter count(new) > 0;

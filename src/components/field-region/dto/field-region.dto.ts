@@ -1,10 +1,7 @@
 import { ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { e } from '~/core/edgedb';
-import { RegisterResource } from '~/core/resources';
 import {
   DbUnique,
-  ID,
   NameField,
   Resource,
   Secured,
@@ -12,7 +9,9 @@ import {
   SecuredPropertyList,
   SecuredProps,
   SecuredString,
-} from '../../../common';
+} from '~/common';
+import { e } from '~/core/edgedb';
+import { LinkTo, RegisterResource } from '~/core/resources';
 
 @RegisterResource()
 @ObjectType({
@@ -27,9 +26,9 @@ export class FieldRegion extends Resource {
   @DbUnique()
   readonly name: SecuredString;
 
-  readonly fieldZone: Secured<ID>;
+  readonly fieldZone: Secured<LinkTo<'FieldZone'>>;
 
-  readonly director: Secured<ID>;
+  readonly director: Secured<LinkTo<'User'>>;
 }
 
 @ObjectType({

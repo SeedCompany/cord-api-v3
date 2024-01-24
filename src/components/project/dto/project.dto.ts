@@ -14,6 +14,7 @@ import {
   DbSort,
   DbUnique,
   ID,
+  IdOf,
   IntersectionType,
   NameField,
   parentIdMiddleware,
@@ -128,6 +129,7 @@ class Project extends Interfaces {
 
   readonly marketingLocation: Secured<ID | null>;
 
+  readonly marketingRegionOverride: Secured<IdOf<Location> | null>;
   readonly fieldRegion: Secured<ID | null>;
 
   readonly owningOrganization: Secured<ID | null>;

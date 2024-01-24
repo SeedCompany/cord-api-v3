@@ -1,10 +1,11 @@
 import { createClient } from 'edgedb';
 import { IndentationText, Project, QuoteKind } from 'ts-morph';
+import { codecs, registerCustomScalarCodecs } from '../codecs';
 import { generateSchema } from './generate-schema';
 import { generateInlineQueries } from './inline-queries';
 import { generateQueryBuilder } from './query-builder';
 import { generateQueryFiles } from './query-files';
-import { changeScalarCodecsToOurCustomTypes } from './scalars';
+import { setTsTypesFromOurScalarCodecs } from './scalars';
 import { GeneratorParams } from './util';
 
 (async () => {
@@ -29,7 +30,8 @@ import { GeneratorParams } from './util';
     edgedbDir: project.addDirectoryAtPath('src/core/edgedb'),
   };
 
-  changeScalarCodecsToOurCustomTypes();
+  await registerCustomScalarCodecs(client, codecs);
+  setTsTypesFromOurScalarCodecs();
 
   try {
     await generateQueryBuilder(params);

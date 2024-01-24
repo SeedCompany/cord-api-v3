@@ -16,6 +16,7 @@ export async function generateSchema({
     },
     client,
     root: root.getPath(),
+    schemaDir: 'unused',
   });
   await schemaFile.refreshFromFileSystem();
   addCustomScalarImports(schemaFile, customScalars.values());

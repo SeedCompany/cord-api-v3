@@ -1,6 +1,6 @@
 import { faker } from '@faker-js/faker';
 import { times } from 'lodash';
-import { generateId, isValidId } from '../src/common';
+import { generateId, IdOf, isValidId } from '../src/common';
 import { Location } from '../src/components/location';
 import {
   createFundingAccount,
@@ -158,6 +158,38 @@ describe('Location e2e', () => {
     const updated = result.updateLocation.location;
     expect(updated).toBeTruthy();
     expect(updated.defaultFieldRegion.value.id).toBe(newFieldRegion.id);
+  });
+
+  it('update location with defaultMarketingRegion', async () => {
+    const defaultMarketingRegion = await createLocation(app);
+    const l = await createLocation(app, {
+      defaultMarketingRegionId: defaultMarketingRegion.id as IdOf<Location>,
+    });
+    const newMarketingRegion = await createLocation(app);
+
+    const result = await app.graphql.mutate(
+      gql`
+        mutation updateLocation($input: UpdateLocationInput!) {
+          updateLocation(input: $input) {
+            location {
+              ...location
+            }
+          }
+        }
+        ${fragments.location}
+      `,
+      {
+        input: {
+          location: {
+            id: l.id,
+            defaultMarketingRegionId: newMarketingRegion.id,
+          },
+        },
+      },
+    );
+    const updated = result.updateLocation.location;
+    expect(updated).toBeTruthy();
+    expect(updated.defaultMarketingRegion.value.id).toBe(newMarketingRegion.id);
   });
 
   it('update location with funding account', async () => {

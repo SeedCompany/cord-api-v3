@@ -6,6 +6,7 @@ import {
   DbLabel,
   DbUnique,
   ID,
+  IdOf,
   NameField,
   Resource,
   Secured,
@@ -48,6 +49,8 @@ export class Location extends Resource {
   readonly fundingAccount: Secured<ID | null>;
 
   readonly defaultFieldRegion: Secured<ID | null>;
+
+  readonly defaultMarketingRegion: Secured<IdOf<Location> | null>;
 
   readonly mapImage: DefinedFile;
 }

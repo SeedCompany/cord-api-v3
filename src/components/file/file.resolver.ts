@@ -32,6 +32,7 @@ import {
   RequestUploadOutput,
 } from './dto';
 import { FileNodeLoader } from './file-node.loader';
+import * as FileUrl from './file-url.resolver-util';
 import { FileService } from './file.service';
 
 @Resolver(File)
@@ -75,15 +76,9 @@ export class FileResolver {
     return await this.service.listChildren(node, input, session);
   }
 
-  @ResolveField(() => URL, {
-    description: stripIndent`
-      A url to the file.
-
-      This url could require authentication.
-    `,
-  })
-  async url(@Parent() node: File) {
-    return await this.service.getUrl(node);
+  @FileUrl.Resolver()
+  async url(@Parent() node: File, @FileUrl.DownloadArg() download: boolean) {
+    return await this.service.getUrl(node, download);
   }
 
   @ResolveField(() => URL, {

@@ -1,5 +1,5 @@
 module default {
-  type Language extending Resource, Project::ContextAware, Mixin::Named, Mixin::Pinnable, Mixin::Taggable {
+  type Language extending Mixin::Postable, Resource, Project::ContextAware, Mixin::Named, Mixin::Pinnable, Mixin::Taggable {
     required displayName: str {
       default := .name;
     }
@@ -24,11 +24,12 @@ module default {
       .<language[is Ethnologue::Language]
     ));
     trigger connectEthnologue after insert for each do (
-      insert Ethnologue::Language {
+      (select Ethnologue::Language filter .language = __new__) ??
+      (insert Ethnologue::Language {
         language := __new__,
         ownSensitivity := __new__.ownSensitivity,
         projectContext := __new__.projectContext
-      }
+      })
     );
     trigger matchEthnologueToOwnSens after update for each do (
       update __new__.ethnologue
@@ -87,7 +88,7 @@ module default {
   }
   
   scalar type population extending int32 {
-    constraint min_value(0);
+    constraint expression on (__subject__ >= 0);
   }
 }
  

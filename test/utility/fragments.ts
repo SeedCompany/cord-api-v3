@@ -1127,6 +1127,17 @@ export const fundingAccount = gql`
   }
 `;
 
+export const locationName = gql`
+  fragment locationName on Location {
+    id
+    name {
+      value
+      canRead
+      canEdit
+    }
+  }
+`;
+
 export const location = gql`
   fragment location on Location {
     id
@@ -1158,9 +1169,15 @@ export const location = gql`
         ...fieldRegion
       }
     }
+    defaultMarketingRegion {
+      value {
+        ...locationName
+      }
+    }
   }
   ${fundingAccount}
   ${fieldRegion}
+  ${locationName}
 `;
 
 export const projectChangeRequest = gql`

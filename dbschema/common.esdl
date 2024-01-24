@@ -1,5 +1,6 @@
 module default {
   global currentUserId: uuid;
+  alias currentUser := <User>(global currentUserId);
   
   scalar type ReportPeriod extending enum<Monthly, Quarterly>;
   
@@ -15,4 +16,6 @@ module default {
        )
     )
   );
+  
+  scalar type RichText extending json;
 }

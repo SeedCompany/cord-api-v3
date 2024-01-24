@@ -1,8 +1,7 @@
-import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
+import { Parent, Resolver } from '@nestjs/graphql';
 import { Loader, LoaderOf } from '@seedcompany/data-loader';
-import { stripIndent } from 'common-tags';
-import { URL } from 'url';
 import { FileNodeLoader } from './file-node.loader';
+import * as FileUrl from './file-url.resolver-util';
 import { FileService } from './file.service';
 import { Media } from './media/media.dto';
 
@@ -10,18 +9,13 @@ import { Media } from './media/media.dto';
 export class MediaUrlResolver {
   constructor(protected readonly service: FileService) {}
 
-  @ResolveField(() => URL, {
-    description: stripIndent`
-      A url to the file version.
-
-      This url could require authentication.
-    `,
-  })
+  @FileUrl.Resolver()
   async url(
     @Parent() media: Media,
+    @FileUrl.DownloadArg() download: boolean,
     @Loader(FileNodeLoader) files: LoaderOf<FileNodeLoader>,
   ) {
     const node = await files.load(media.file);
-    return await this.service.getUrl(node);
+    return await this.service.getUrl(node, download);
   }
 }
