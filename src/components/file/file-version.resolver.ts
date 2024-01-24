@@ -2,19 +2,14 @@ import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { URL } from 'url';
 import { FileVersion } from './dto';
+import * as FileUrl from './file-url.resolver-util';
 import { FileService } from './file.service';
 
 @Resolver(FileVersion)
 export class FileVersionResolver {
   constructor(protected readonly service: FileService) {}
 
-  @ResolveField(() => URL, {
-    description: stripIndent`
-      A url to the file version.
-
-      This url could require authentication.
-    `,
-  })
+  @FileUrl.Resolver()
   async url(@Parent() node: FileVersion) {
     return await this.service.getUrl(node);
   }
