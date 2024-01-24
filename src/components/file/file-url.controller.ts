@@ -5,6 +5,7 @@ import {
   HttpStatus,
   Inject,
   Param,
+  Query,
   Request,
   Response,
 } from '@nestjs/common';
@@ -29,6 +30,7 @@ export class FileUrlController {
   @Get(':fileId/:fileName?')
   async download(
     @Param('fileId') fileId: ID,
+    @Query('download') download: '' | undefined,
     @Request() request: IRequest,
     @Response() res: unknown,
   ) {
@@ -41,7 +43,7 @@ export class FileUrlController {
 
     // TODO authorization using session
 
-    const url = await this.files.getDownloadUrl(node);
+    const url = await this.files.getDownloadUrl(node, download != null);
     const cacheControl = this.files.determineCacheHeader(node);
 
     const { httpAdapter } = this.httpAdapterHost;

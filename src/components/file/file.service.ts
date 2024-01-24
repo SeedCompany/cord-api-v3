@@ -145,27 +145,28 @@ export class FileService {
     return data;
   }
 
-  async getUrl(node: FileNode) {
+  async getUrl(node: FileNode, download: boolean) {
     const url = withAddedPath(
       this.config.hostUrl,
       FileUrl.path,
       isFile(node) ? node.latestVersionId : node.id,
       encodeURIComponent(node.name),
     );
-    return url.toString();
+    return url.toString() + (download ? '?download' : '');
   }
 
-  async getDownloadUrl(node: FileNode): Promise<string> {
+  async getDownloadUrl(node: FileNode, download = true): Promise<string> {
     if (isDirectory(node)) {
       throw new InputException('View directories via GraphQL API');
     }
     const id = isFile(node) ? node.latestVersionId : node.id;
+    const disposition = download ? 'attachment' : 'inline';
     try {
       // before sending link, first check if object exists in s3
       await this.bucket.headObject(id);
       return await this.bucket.getSignedUrl(GetObject, {
         Key: id,
-        ResponseContentDisposition: `attachment; filename="${encodeURIComponent(
+        ResponseContentDisposition: `${disposition}; filename="${encodeURIComponent(
           node.name,
         )}"`,
         ResponseContentType: node.mimeType,
