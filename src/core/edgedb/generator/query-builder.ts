@@ -1,6 +1,6 @@
 import { generateQueryBuilder as runQueryBuilderGenerator } from '@edgedb/generate/dist/edgeql-js.js';
 import { groupBy } from '@seedcompany/common';
-import { Directory, SyntaxKind } from 'ts-morph';
+import { Directory } from 'ts-morph';
 import { customScalars } from './scalars';
 import { addCustomScalarImports, GeneratorParams } from './util';
 
@@ -27,7 +27,6 @@ export async function generateQueryBuilder({
   updateCastMapsForOurCustomScalars(qbDir);
   changeImplicitIDType(qbDir);
   allowOrderingByEnums(qbDir);
-  mergeDefaultTypesWithModuleNames(qbDir);
 }
 
 function addJsExtensionDeepPathsOfEdgedbLibrary(qbDir: Directory) {
@@ -117,30 +116,4 @@ function allowOrderingByEnums(qbDir: Directory) {
     .getTypeAliasOrThrow('OrderByExpr')
     .setType('TypeSet<EnumType | ScalarType | ObjectType>');
   file.fixMissingImports();
-}
-
-function mergeDefaultTypesWithModuleNames(qbDir: Directory) {
-  const file = qbDir.getSourceFileOrThrow('index.ts');
-  const st = file.getVariableDeclarationOrThrow('ExportDefault');
-  const typeText = st.getTypeNodeOrThrow().getFullText();
-  const value = st.getInitializerIfKindOrThrow(
-    SyntaxKind.ObjectLiteralExpression,
-  );
-  // Regex is faster here than ts-morph type parsing
-  const conflicting = (
-    typeText.match(/Omit<typeof _default, (.+)>/)?.[1].split(/ \| /g) ?? []
-  ).map((s) => s.slice(1, -1));
-  let newTypeText = typeText;
-  for (const name of conflicting) {
-    newTypeText = newTypeText.replace(
-      `typeof _${name}`,
-      `typeof _${name} & typeof _default.${name}`,
-    );
-    value
-      .getPropertyOrThrow(`"${name}"`)
-      .asKindOrThrow(SyntaxKind.PropertyAssignment)
-      .getInitializerOrThrow()
-      .replaceWithText(`{ ..._${name}, ..._default.${name} }`);
-  }
-  st.setType(newTypeText);
 }
