@@ -44,7 +44,7 @@ import { member, Policy, Role, variant } from '../util';
         'departmentId',
         'marketingLocation',
         'marketingRegionOverride',
-        'fieldRegion',
+        'fieldRegionOverride',
       ).none,
     ])
     .children((c) => c.posts.edit),

@@ -107,8 +107,8 @@ export class ProjectRepository extends CommonRepository {
         ])
         .optionalMatch([
           node('node'),
-          relation('out', '', 'fieldRegion', ACTIVE),
-          node('fieldRegion', 'FieldRegion'),
+          relation('out', '', 'fieldRegionOverride', ACTIVE),
+          node('fieldRegionOverride', 'FieldRegion'),
         ])
         .optionalMatch([
           node('node'),
@@ -136,7 +136,7 @@ export class ProjectRepository extends CommonRepository {
             rootDirectory: 'rootDirectory.id',
             primaryLocation: 'primaryLocation.id',
             marketingLocation: 'marketingLocation.id',
-            fieldRegion: 'fieldRegion.id',
+            fieldRegionOverride: 'fieldRegionOverride.id',
             owningOrganization: 'organization.id',
             engagementTotal: 'engagementTotal',
             changeset: 'changeset.id',
@@ -160,7 +160,7 @@ export class ProjectRepository extends CommonRepository {
     const now = DateTime.local();
     const {
       primaryLocationId,
-      fieldRegionId,
+      fieldRegionOverrideId,
       marketingLocationId,
       marketingRegionOverrideId,
       otherLocationIds,
@@ -197,7 +197,7 @@ export class ProjectRepository extends CommonRepository {
       )
       .apply(
         createRelationships(IProject, 'out', {
-          fieldRegion: ['FieldRegion', fieldRegionId],
+          fieldRegionOverride: ['FieldRegion', fieldRegionOverrideId],
           primaryLocation: ['Location', primaryLocationId],
           otherLocations: ['Location', otherLocationIds],
           marketingLocation: ['Location', marketingLocationId],
@@ -222,7 +222,7 @@ export class ProjectRepository extends CommonRepository {
       primaryLocationId,
       marketingLocationId,
       marketingRegionOverrideId,
-      fieldRegionId,
+      fieldRegionOverrideId,
       ...simpleChanges
     } = changes;
 
@@ -250,17 +250,17 @@ export class ProjectRepository extends CommonRepository {
       };
     }
 
-    if (fieldRegionId !== undefined) {
+    if (fieldRegionOverrideId !== undefined) {
       await this.updateRelation(
-        'fieldRegion',
+        'fieldRegionOverride',
         'FieldRegion',
         existing.id,
-        fieldRegionId,
+        fieldRegionOverrideId,
         'Project',
       );
       result = {
         ...result,
-        fieldRegion: fieldRegionId,
+        fieldRegionOverride: fieldRegionOverrideId,
       };
     }
 

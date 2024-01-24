@@ -112,10 +112,10 @@ export class ProjectService {
     this.privileges.for(session, IProject).verifyCan('create');
 
     await this.validateOtherResourceId(
-      input.fieldRegionId,
+      input.fieldRegionOverrideId,
       'FieldRegion',
-      'fieldRegionId',
-      'Field region not found',
+      'fieldRegionOverrideId',
+      'Field region override not found',
     );
     await this.validateOtherResourceId(
       input.primaryLocationId,
@@ -303,10 +303,10 @@ export class ProjectService {
     }
 
     await this.validateOtherResourceId(
-      changes.fieldRegionId,
+      changes.fieldRegionOverrideId,
       'FieldRegion',
-      'fieldRegionId',
-      'Field region not found',
+      'fieldRegionOverrideId',
+      'Field region override not found',
     );
 
     const result = await this.repo.update(currentProject, changes, changeset);

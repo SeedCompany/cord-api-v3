@@ -15,6 +15,7 @@ import {
   SensitivityField,
 } from '../../../common';
 import { ChangesetIdField } from '../../changeset';
+import { FieldRegion } from '../../field-region/dto';
 import { Location } from '../../location/dto';
 import { ReportPeriod } from '../../periodic-report/dto';
 import { ProjectStep } from './project-step.enum';
@@ -50,7 +51,7 @@ export abstract class UpdateProject {
     description: 'A field region ID',
     nullable: true,
   })
-  readonly fieldRegionId?: ID | null;
+  readonly fieldRegionOverrideId?: IdOf<FieldRegion> | null;
 
   @DateField({ nullable: true })
   readonly mouStart?: CalendarDate | null;

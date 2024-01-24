@@ -37,6 +37,7 @@ import { Budget } from '../../budget/dto';
 import { ChangesetAware } from '../../changeset/dto';
 import { Commentable } from '../../comments';
 import { IEngagement as Engagement } from '../../engagement/dto';
+import { FieldRegion } from '../../field-region/dto';
 import { Directory } from '../../file/dto';
 import { SecuredTags } from '../../language/dto/language.dto';
 import { Location } from '../../location/dto';
@@ -130,7 +131,8 @@ class Project extends Interfaces {
   readonly marketingLocation: Secured<ID | null>;
 
   readonly marketingRegionOverride: Secured<IdOf<Location> | null>;
-  readonly fieldRegion: Secured<ID | null>;
+
+  readonly fieldRegionOverride: Secured<IdOf<FieldRegion> | null>;
 
   readonly owningOrganization: Secured<ID | null>;
 
