@@ -13,6 +13,7 @@ import { CommonRepository, ConfigService, OnIndex } from '../../core';
 import { ChangesOf, getChanges } from '../../core/database/changes';
 import {
   ACTIVE,
+  coalesce,
   createNode,
   createRelationships,
   matchChangesetAndChangedProps,
@@ -101,6 +102,11 @@ export class ProjectRepository extends CommonRepository {
           node('primaryLocation', 'Location'),
         ])
         .optionalMatch([
+          node('primaryLocation'),
+          relation('out', '', 'defaultFieldRegion', ACTIVE),
+          node('defaultFieldRegionByPrimaryLocation', 'FieldRegion'),
+        ])
+        .optionalMatch([
           node('node'),
           relation('out', '', 'marketingLocation', ACTIVE),
           node('marketingLocation', 'Location'),
@@ -137,6 +143,10 @@ export class ProjectRepository extends CommonRepository {
             primaryLocation: 'primaryLocation.id',
             marketingLocation: 'marketingLocation.id',
             fieldRegionOverride: 'fieldRegionOverride.id',
+            fieldRegion: coalesce(
+              'fieldRegionOverride.id',
+              'defaultFieldRegionByPrimaryLocation.id',
+            ),
             owningOrganization: 'organization.id',
             engagementTotal: 'engagementTotal',
             changeset: 'changeset.id',
