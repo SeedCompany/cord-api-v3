@@ -309,7 +309,9 @@ export class ProjectService {
       'Field region not found',
     );
 
-    const result = await this.repo.update(currentProject, changes, changeset);
+    await this.repo.update(currentProject, changes, changeset);
+    /* Added readOneUnsecured in order to hydrate and pull in computed fields. */
+    const result = await this.readOneUnsecured(currentProject.id, session);
 
     const event = new ProjectUpdatedEvent(
       result,
