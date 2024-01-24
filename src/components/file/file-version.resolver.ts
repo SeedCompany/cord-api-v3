@@ -1,6 +1,4 @@
-import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { stripIndent } from 'common-tags';
-import { URL } from 'url';
+import { Parent, Resolver } from '@nestjs/graphql';
 import { FileVersion } from './dto';
 import * as FileUrl from './file-url.resolver-util';
 import { FileService } from './file.service';
@@ -15,17 +13,5 @@ export class FileVersionResolver {
     @FileUrl.DownloadArg() download: boolean,
   ) {
     return await this.service.getUrl(node, download);
-  }
-
-  @ResolveField(() => URL, {
-    description: 'A direct url to download the file version',
-    deprecationReason: stripIndent`
-      Use \`url\` instead.
-
-      Note while this url is anonymous, the new field, \`url\` is not.
-    `,
-  })
-  downloadUrl(@Parent() node: FileVersion): Promise<string> {
-    return this.service.getDownloadUrl(node);
   }
 }
