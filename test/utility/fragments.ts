@@ -394,12 +394,12 @@ export const fileNode = gql`
     ... on FileVersion {
       mimeType
       size
-      downloadUrl
+      url
     }
     ... on File {
       mimeType
       size
-      downloadUrl
+      url
       modifiedAt
       modifiedBy {
         ...user
@@ -421,7 +421,7 @@ export type RawBaseFileNode = RawNode<
 >;
 export type RawDirectory = RawBaseFileNode;
 export type RawFileVersion = RawBaseFileNode &
-  RawNode<FileVersion, keyof IFileNode, { downloadUrl: string }>;
+  RawNode<FileVersion, keyof IFileNode, { url: string }>;
 export type RawFile = RawFileVersion &
   RawNode<
     File,
