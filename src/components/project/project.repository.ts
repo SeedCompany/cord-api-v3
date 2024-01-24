@@ -107,6 +107,16 @@ export class ProjectRepository extends CommonRepository {
           node('marketingCountryOverride', 'Location'),
         ])
         .optionalMatch([
+          node('marketingCountryOverride'),
+          relation('out', '', 'defaultMarketingRegion', ACTIVE),
+          node('defaultMarketingRegionByMarketingCountry', 'Location'),
+        ])
+        .optionalMatch([
+          node('primaryLocation'),
+          relation('out', '', 'defaultMarketingRegion', ACTIVE),
+          node('defaultMarketingRegionByPrimaryLocation', 'Location'),
+        ])
+        .optionalMatch([
           node('node'),
           relation('out', '', 'fieldRegion', ACTIVE),
           node('fieldRegion', 'FieldRegion'),
@@ -148,7 +158,8 @@ export class ProjectRepository extends CommonRepository {
             marketingRegionOverride: 'marketingRegionOverride.id',
             marketingRegion: coalesce(
               'marketingRegionOverride.id',
-              // TODO: add coalose for marketingCountry.defaultMarketingRegion
+              'defaultMarketingRegionByMarketingCountry.id ',
+              'defaultMarketingRegionByPrimaryLocation.id',
             ),
           }).as('dto'),
         );
