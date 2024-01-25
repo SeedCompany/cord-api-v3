@@ -36,7 +36,7 @@ with
     union (
       with
         language := assert_single((select Language filter .name = <str>engagement['language'])),
-        project := (select Project filter .name = <str>engagement['project']),
+        project := (select TranslationProject filter .name = <str>engagement['project']),
       select (
         (select LanguageEngagement filter .language = language and .project = project) ??
         (insert LanguageEngagement {
