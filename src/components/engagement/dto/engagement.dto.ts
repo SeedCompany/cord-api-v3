@@ -65,7 +65,7 @@ export const resolveEngagementType = (val: Pick<AnyEngagement, '__typename'>) =>
  * This should be used for GraphQL but never for TypeScript types.
  */
 class Engagement extends ChangesetAwareResource {
-  static readonly DB = abstractType(e.Engagement);
+  static readonly DB: any = abstractType(e.Engagement);
   static readonly Props: string[] = keysOf<Engagement>();
   static readonly SecuredProps: string[] = keysOf<SecuredProps<Engagement>>();
   static readonly Parent = import('../../project/dto').then((m) => m.IProject);
