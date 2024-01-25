@@ -17,6 +17,12 @@ export abstract class CreateOrganization {
   @Field({ nullable: true })
   readonly address?: string;
 
+  @Field({ nullable: true })
+  readonly website?: string;
+
+  @Field({ nullable: true })
+  readonly socialMedia?: string;
+
   @Field(() => [OrganizationType], { nullable: true })
   readonly types?: readonly OrganizationType[];
 

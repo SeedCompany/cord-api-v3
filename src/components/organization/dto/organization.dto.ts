@@ -47,6 +47,12 @@ export class Organization extends Resource {
   readonly sensitivity: Sensitivity;
 
   @Field()
+  readonly website: SecuredString;
+
+  @Field()
+  readonly socialMedia: SecuredString;
+
+  @Field()
   readonly types: SecuredOrganizationTypes;
 
   @Field()
