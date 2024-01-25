@@ -18,4 +18,9 @@ module default {
   );
   
   scalar type RichText extending json;
+  
+  # A fake function to produce valid EdgeQL syntax.
+  # This will be reflected to dynamically inject portable shapes in our EdgeQL queries.
+  function hydrate(typeName: str, scopedValue: json) -> str
+    using (typeName);
 }

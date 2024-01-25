@@ -1,18 +1,17 @@
 import { stripIndent } from 'common-tags';
-import { $, adapter, Client } from 'edgedb';
+import { $, adapter } from 'edgedb';
 import { Cardinality } from 'edgedb/dist/ifaces.js';
 import { $ as $$ } from 'execa';
-import { Directory, Node, SyntaxKind, VariableDeclarationKind } from 'ts-morph';
+import { Node, SyntaxKind, VariableDeclarationKind } from 'ts-morph';
+import { injectHydrators } from './inject-hydrators';
 import { customScalars } from './scalars';
-import { addCustomScalarImports } from './util';
+import { addCustomScalarImports, GeneratorParams } from './util';
 
 export async function generateInlineQueries({
   client,
   root,
-}: {
-  client: Client;
-  root: Directory;
-}) {
+  hydrators,
+}: GeneratorParams) {
   console.log('Generating queries for edgeql() calls...');
 
   const grepForShortList = await $$({
@@ -59,14 +58,17 @@ export async function generateInlineQueries({
     `import type { TypedEdgeQL } from '../edgeql';`,
     { overwrite: true },
   );
-  const queryMap = inlineQueriesFile.addInterface({
+  const queryMapType = inlineQueriesFile.addInterface({
     name: 'InlineQueryMap',
     isExported: true,
   });
 
   const imports = new Set<string>();
   const seen = new Set<string>();
-  const cardinalityMap = new Map<string, $.Cardinality>();
+  const queryMap = new Map<
+    string,
+    { query: string; cardinality: $.Cardinality }
+  >();
   for (const { query, call } of queries) {
     // Prevent duplicate keys in QueryMap in the off chance that two queries are identical
     if (seen.has(query)) {
@@ -84,7 +86,9 @@ export async function generateInlineQueries({
     let types;
     let error;
     try {
-      types = await $.analyzeQuery(client, query);
+      const injectedQuery = injectHydrators(query, hydrators);
+
+      types = await $.analyzeQuery(client, injectedQuery);
       console.log(`   ${source}`);
     } catch (err) {
       error = err as Error;
@@ -92,16 +96,16 @@ export async function generateInlineQueries({
     }
 
     if (types) {
-      // Save cardinality for use at runtime.
-      cardinalityMap.set(
-        stripIndent(query),
-        cardinalityMapping[types.cardinality],
-      );
+      // Save cardinality & hydrated query for use at runtime.
+      queryMap.set(stripIndent(query), {
+        query: injectHydrators(query, hydrators),
+        cardinality: cardinalityMapping[types.cardinality],
+      });
       // Add imports to the used imports list
       [...types.imports].forEach((i) => imports.add(i));
     }
 
-    queryMap.addProperty({
+    queryMapType.addProperty({
       name: `[\`${query}\`]`,
       type: types
         ? `TypedEdgeQL<${types.args}, ${types.result}>`
@@ -109,7 +113,7 @@ export async function generateInlineQueries({
         ? `{ ${error.name}: \`${error.message.trim()}\` }`
         : 'unknown',
       leadingTrivia:
-        (queryMap.getProperties().length > 0 ? '\n' : '') +
+        (queryMapType.getProperties().length > 0 ? '\n' : '') +
         `/** {@link import('${path}')} L${lineNumber} */\n`,
     });
   }
@@ -126,14 +130,14 @@ export async function generateInlineQueries({
     moduleSpecifier: 'edgedb',
   });
 
-  const cardinalitiesAsStr = JSON.stringify([...cardinalityMap], null, 2);
+  const queryMapAsStr = JSON.stringify([...queryMap], null, 2);
   inlineQueriesFile.addVariableStatement({
     isExported: true,
     declarationKind: VariableDeclarationKind.Const,
     declarations: [
       {
-        name: 'InlineQueryCardinalityMap',
-        initializer: `new Map<string, \`\${$.Cardinality}\`>(${cardinalitiesAsStr})`,
+        name: 'InlineQueryRuntimeMap',
+        initializer: `new Map<string, { query: string, cardinality: \`\${$.Cardinality}\` }>(${queryMapAsStr})`,
       },
     ],
   });

@@ -4,7 +4,7 @@ import { $, Executor } from 'edgedb';
 import { retry, RetryOptions } from '~/common/retry';
 import { TypedEdgeQL } from './edgeql';
 import { ExclusivityViolationError } from './exclusivity-violation.error';
-import { InlineQueryCardinalityMap } from './generated-client/inline-queries';
+import { InlineQueryRuntimeMap } from './generated-client/inline-queries';
 import { OptionsContext, OptionsFn } from './options.context';
 import { Client } from './reexports';
 import { TransactionContext } from './transaction.context';
@@ -61,13 +61,14 @@ export class EdgeDB {
   async run(query: any, args?: any) {
     try {
       if (query instanceof TypedEdgeQL) {
-        const cardinality = InlineQueryCardinalityMap.get(query.query);
-        if (!cardinality) {
+        const found = InlineQueryRuntimeMap.get(query.query);
+        if (!found) {
           throw new Error(`Query was not found from inline query generation`);
         }
-        const exeMethod = cardinalityToExecutorMethod[cardinality];
+        const exeMethod = cardinalityToExecutorMethod[found.cardinality];
 
-        return await this.executor.current[exeMethod](query.query, args);
+        // eslint-disable-next-line @typescript-eslint/return-await
+        return await this.executor.current[exeMethod](found.query, args);
       }
 
       if (query.run) {
