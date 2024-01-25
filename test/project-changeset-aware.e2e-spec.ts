@@ -1,6 +1,7 @@
 import { faker } from '@faker-js/faker';
-import { CalendarDate } from '../src/common';
+import { CalendarDate, IdOf } from '../src/common';
 import { Role } from '../src/components/authorization';
+import { FieldRegion } from '../src/components/field-region/dto';
 import { PartnerType } from '../src/components/partner';
 import { ProjectStep } from '../src/components/project';
 import {
@@ -62,7 +63,7 @@ const activeProject = async (app: TestApp) => {
     mouStart: undefined,
     mouEnd: undefined,
     primaryLocationId: location.id,
-    fieldRegionId: fieldRegion.id,
+    fieldRegionOverrideId: fieldRegion.id as IdOf<FieldRegion>,
   });
 
   await runAsAdmin(app, async () => {
