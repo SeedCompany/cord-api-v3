@@ -59,7 +59,7 @@ export abstract class CreateProject {
     description: 'A field region ID',
     nullable: true,
   })
-  readonly fieldRegionOverrideId?: IdOf<FieldRegion> | null;
+  readonly fieldRegionOverrideId?: IdOf<FieldRegion>;
 
   @DateField({ nullable: true })
   readonly mouStart?: CalendarDate;
