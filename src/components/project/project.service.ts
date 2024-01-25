@@ -311,7 +311,11 @@ export class ProjectService {
 
     await this.repo.update(currentProject, changes, changeset);
     /* Added readOneUnsecured in order to hydrate and pull in computed fields. */
-    const result = await this.readOneUnsecured(currentProject.id, session);
+    const result = await this.readOneUnsecured(
+      currentProject.id,
+      session,
+      changeset,
+    );
 
     const event = new ProjectUpdatedEvent(
       result,
