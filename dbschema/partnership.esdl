@@ -1,40 +1,41 @@
 module default {
-
   type Partnership extending Project::Child {
     required partner: Partner;
-    organization := .partner.organization;
     constraint exclusive on ((.project, .partner));
-    agreement: File;
-    required agreementStatus: Partnership::AgreementStatus {
-      default := Partnership::AgreementStatus.NotAttached;
+    organization := .partner.organization;
+    
+    required primary: bool {
+      default := false;
     };
-    mou: File; 
-    mouStatus: Partnership::AgreementStatus;
+    multi types: Partner::Type;
+    financialReportingType: Partnership::FinancialReportingType;
+    
     mouStart := .mouStartOverride ?? .project.mouStart;
     mouEnd := .mouEndOverride ?? .project.mouEnd;
     mouStartOverride: cal::local_date;
     mouEndOverride: cal::local_date;
-    multi types: Partner::Type;
-    financialReportingType: Partnership::FinancialReportingType;
-    required primary: bool {
-      default := false;
-    }
-
+    
+    agreement: File;
+    required agreementStatus: Partnership::AgreementStatus {
+      default := Partnership::AgreementStatus.NotAttached;
+    };
+    mou: File;
+    required mouStatus: Partnership::AgreementStatus {
+      default := Partnership::AgreementStatus.NotAttached;
+    };
   }
-
 }
-
+  
 module Partnership {
   scalar type AgreementStatus extending enum<
     NotAttached,
     AwaitingSignature,
     Signed
   >;
-
+  
   scalar type FinancialReportingType extending enum<
     Funded,
     FieldEngaged,
     Hybrid
   >;
-
 }
