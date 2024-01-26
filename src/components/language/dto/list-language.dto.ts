@@ -52,6 +52,12 @@ export abstract class LanguageFilters {
 
   @Field({ nullable: true })
   readonly isLanguageOfConsulting?: boolean;
+
+  @Field({ nullable: true })
+  readonly isLanguageOfWiderCommunication?: boolean;
+
+  @Field({ nullable: true })
+  readonly isLanguageOfReporting?: boolean;
 }
 
 @InputType()

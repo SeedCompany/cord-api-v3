@@ -89,6 +89,7 @@ export class PartnerRepository extends DtoRepository<
     const {
       pointOfContactId,
       languageOfWiderCommunicationId,
+      languageOfReportingId,
       fieldRegions,
       countries,
       languagesOfConsulting,
@@ -112,6 +113,15 @@ export class PartnerRepository extends DtoRepository<
         'Language',
         partner.id,
         languageOfWiderCommunicationId,
+      );
+    }
+
+    if (languageOfReportingId) {
+      await this.updateRelation(
+        'languageOfReporting',
+        'Language',
+        partner.id,
+        languageOfReportingId,
       );
     }
 
@@ -234,12 +244,18 @@ export class PartnerRepository extends DtoRepository<
           relation('out', '', 'languageOfWiderCommunication', ACTIVE),
           node('languageOfWiderCommunication', 'Language'),
         ])
+        .optionalMatch([
+          node('node'),
+          relation('out', '', 'languageOfReporting', ACTIVE),
+          node('languageOfReporting', 'Language'),
+        ])
         .return<{ dto: UnsecuredDto<Partner> }>(
           merge('props', {
             sensitivity: 'sensitivity',
             organization: 'organization.id',
             pointOfContact: 'pointOfContact.id',
             languageOfWiderCommunication: 'languageOfWiderCommunication.id',
+            languageOfReporting: 'languageOfReporting.id',
             fieldRegions: 'fieldRegionsIds',
             countries: 'countriesIds',
             languagesOfConsulting: 'languagesOfConsultingIds',

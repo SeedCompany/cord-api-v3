@@ -193,6 +193,8 @@ export class LanguageRepository extends DtoRepository<
             node('', 'Partner', { id }),
           ]),
           isLanguageOfConsulting: filter.propVal(),
+          isLanguageOfWiderCommunication: filter.propVal(),
+          isLanguageOfReporting: filter.propVal(),
           presetInventory: ({ value, query }) => {
             query.apply(this.isPresetInventory()).with('*');
             const condition = equals('true', true);

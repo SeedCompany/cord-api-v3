@@ -80,6 +80,8 @@ export class Partner extends Interfaces {
 
   readonly languageOfWiderCommunication: Secured<IdOf<Language> | null>;
 
+  readonly languageOfReporting: Secured<IdOf<Language> | null>;
+
   readonly fieldRegions: Required<Secured<ReadonlyArray<IdOf<FieldRegion>>>>;
 
   readonly countries: Required<Secured<ReadonlyArray<IdOf<Location>>>>;

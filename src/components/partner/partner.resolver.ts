@@ -103,6 +103,16 @@ export class PartnerResolver {
     );
   }
 
+  @ResolveField(() => SecuredLanguageNullable)
+  async languageOfReporting(
+    @Parent() partner: Partner,
+    @Loader(LanguageLoader) languages: LoaderOf<LanguageLoader>,
+  ): Promise<SecuredLanguageNullable> {
+    return await mapSecuredValue(partner.languageOfReporting, (id) =>
+      languages.load({ id, view: { active: true } }),
+    );
+  }
+
   @ResolveField(() => SecuredFieldRegions)
   async fieldRegions(
     @Parent() partner: Partner,

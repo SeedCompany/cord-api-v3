@@ -99,6 +99,12 @@ export abstract class CreateLanguage {
 
   @Field({ nullable: true })
   readonly isLanguageOfConsulting: boolean = false;
+
+  @Field({ nullable: true })
+  readonly isLanguageOfWiderCommunication: boolean;
+
+  @Field({ nullable: true })
+  readonly isLanguageOfReporting: boolean;
 }
 
 @InputType()
