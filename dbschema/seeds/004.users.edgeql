@@ -63,6 +63,18 @@ with
           "major": "Arboriculture",
           "institution": "Shire University"
         }
+      ],
+      "unavailabilities": [
+        {
+          "description": "Adventure year of saving Middle Earth",
+          "start": "2021-01-01",
+          "end": "2021-01-31"
+        },
+        {
+          "description": "Getting the garden back in order after the adventure",
+          "start": "2022-01-01",
+          "end": "2022-02-15"
+        }
       ]
     },
     {
@@ -113,6 +125,13 @@ with
           "major": "Swordsmanship",
           "institution": "Rivendell University"
         }
+      ],
+      "unavailabilities": [
+        {
+          "description": "Striding in the wilderness",
+          "start": "2018-01-01",
+          "end": "2018-09-30"
+        }
       ]
     }
   ]'),
@@ -135,6 +154,15 @@ with
               degree := <str>edu['degree'],
               major := <str>edu['major'],
               institution := <str>edu['institution']
+            }
+          )
+        ),
+        unavailabilities := (
+          for unavailability in json_array_unpack(user['unavailabilities'])
+          union (
+            insert User::Unavailability {
+              description := <str>unavailability['description'],
+              dates := range(<cal::local_date>unavailability['start'], <cal::local_date>unavailability['end'])
             }
           )
         )
