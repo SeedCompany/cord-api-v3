@@ -158,7 +158,7 @@ with
           )
         ),
         unavailabilities := (
-          for unavailability in json_array_unpack(user['unavailabilities'])
+          for unavailability in json_array_unpack(json_get(user, 'unavailabilities'))
           union (
             insert User::Unavailability {
               description := <str>unavailability['description'],
