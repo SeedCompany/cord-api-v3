@@ -24,14 +24,11 @@ export const IdsAndViewArg = () =>
 export class ObjectViewPipe implements PipeTransform {
   constructor(private readonly validator: ValidationPipe) {}
 
-  async transform({ id, changeset }: ChangesetIds) {
-    await this.validator.transform(
-      { id, changeset },
-      {
-        metatype: ChangesetIds,
-        type: 'body',
-      },
-    );
+  async transform(input: ChangesetIds) {
+    const { id, changeset } = await this.validator.transform(input, {
+      metatype: ChangesetIds,
+      type: 'body',
+    });
     const view: ObjectView = changeset ? { changeset } : { active: true };
     return { id, changeset, view };
   }
