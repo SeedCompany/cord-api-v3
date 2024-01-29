@@ -1,24 +1,9 @@
-import {
-  ValidationPipe as BaseValidationPipe,
-  Injectable,
-  ValidationError,
-} from '@nestjs/common';
+import { ValidationError } from '@nestjs/common';
 import { entries } from '@seedcompany/common';
 import { SetRequired } from 'type-fest';
 import { fileURLToPath } from 'url';
-import { ClientException } from '../common/exceptions';
-import { jestSkipFileInExceptionSource } from './exception';
-
-@Injectable()
-export class ValidationPipe extends BaseValidationPipe {
-  constructor() {
-    super({
-      transform: true,
-      skipMissingProperties: true,
-      exceptionFactory: (es) => new ValidationException(es),
-    });
-  }
-}
+import { ClientException } from '~/common/exceptions';
+import { jestSkipFileInExceptionSource } from '../exception';
 
 export class ValidationException extends ClientException {
   readonly errors: Record<string, Record<string, string>>;

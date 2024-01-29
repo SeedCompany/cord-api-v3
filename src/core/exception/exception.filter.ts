@@ -4,7 +4,7 @@ import { GqlContextType, GqlExceptionFilter } from '@nestjs/graphql';
 import { mapValues } from '@seedcompany/common';
 import { ConfigService } from '../config/config.service';
 import { ILogger, Logger, LogLevel } from '../logger';
-import { ValidationException } from '../validation.pipe';
+import { ValidationException } from '../validation';
 import { ExceptionJson, ExceptionNormalizer } from './exception.normalizer';
 import { isFromHackAttempt } from './is-from-hack-attempt';
 

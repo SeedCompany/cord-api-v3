@@ -1,7 +1,7 @@
 import { PipeTransform } from '@nestjs/common';
 import { Args, ArgsType } from '@nestjs/graphql';
-import { ID, IdField, ObjectView } from '../../../common';
-import { ValidationPipe } from '../../../core/validation.pipe';
+import { ID, IdField, ObjectView } from '~/common';
+import { ValidationPipe } from '~/core/validation';
 
 /**
  * A helper for id & changeset arguments.
