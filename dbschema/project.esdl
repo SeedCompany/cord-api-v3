@@ -81,6 +81,8 @@ module default {
     
     link rootDirectory: Directory;
     
+    partnerships := .<project[is Partnership];
+    
     overloaded link projectContext: Project::Context {
       default := (insert Project::Context {
         # https://github.com/edgedb/edgedb/issues/3960
