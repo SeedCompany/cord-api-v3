@@ -4,6 +4,7 @@ import { ChangesetAwareResolver } from './changeset-aware.resolver';
 import { ValidateChangesetEditablePipe } from './changeset.arg';
 import { ChangesetRepository } from './changeset.repository';
 import { ChangesetResolver } from './changeset.resolver';
+import { ObjectViewPipe } from './dto';
 import { EnforceChangesetEditablePipe } from './enforce-changeset-editable.pipe';
 
 @Module({
@@ -11,6 +12,7 @@ import { EnforceChangesetEditablePipe } from './enforce-changeset-editable.pipe'
     ChangesetAwareResolver,
     ChangesetResolver,
     ChangesetRepository,
+    ObjectViewPipe,
     { provide: APP_PIPE, useClass: EnforceChangesetEditablePipe },
     ValidateChangesetEditablePipe,
   ],

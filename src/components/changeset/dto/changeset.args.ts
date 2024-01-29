@@ -1,4 +1,4 @@
-import { PipeTransform } from '@nestjs/common';
+import { Injectable, PipeTransform } from '@nestjs/common';
 import { Args, ArgsType } from '@nestjs/graphql';
 import { ID, IdField, ObjectView } from '~/common';
 import { ValidationPipe } from '~/core/validation';
@@ -20,9 +20,12 @@ export type IdsAndView = ChangesetIds & { view: ObjectView };
 export const IdsAndViewArg = () =>
   Args({ type: () => ChangesetIds }, ObjectViewPipe);
 
-class ObjectViewPipe implements PipeTransform {
+@Injectable()
+export class ObjectViewPipe implements PipeTransform {
+  constructor(private readonly validator: ValidationPipe) {}
+
   async transform({ id, changeset }: ChangesetIds) {
-    await new ValidationPipe().transform(
+    await this.validator.transform(
       { id, changeset },
       {
         metatype: ChangesetIds,
