@@ -9,3 +9,10 @@ export const withAddedPath = (
   next.pathname = posix.join(next.pathname, ...pathSegments);
   return next;
 };
+
+export const externalUrlWithProtocol = (url: string) => {
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    url = 'https://' + url;
+  }
+  return url;
+};

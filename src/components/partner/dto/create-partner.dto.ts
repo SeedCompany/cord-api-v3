@@ -2,6 +2,7 @@ import { Field, ID as IDType, InputType, ObjectType } from '@nestjs/graphql';
 import { Transform, Type } from 'class-transformer';
 import { Matches, ValidateNested } from 'class-validator';
 import { uniq } from 'lodash';
+import { externalUrlWithProtocol } from '~/common/url.util';
 import {
   CalendarDate,
   DateField,
@@ -48,6 +49,12 @@ export abstract class CreatePartner {
 
   @NameField({ nullable: true })
   readonly address?: string;
+
+  @Field(() => [String], { nullable: true })
+  @Transform(({ value }) =>
+    value ? value.map((str: string) => externalUrlWithProtocol(str)) : null,
+  )
+  readonly urls?: string[];
 
   @IdField({ nullable: true })
   readonly languageOfWiderCommunicationId?: IdOf<Language> | null;
