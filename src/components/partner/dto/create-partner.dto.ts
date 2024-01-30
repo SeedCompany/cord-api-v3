@@ -50,11 +50,13 @@ export abstract class CreatePartner {
   @NameField({ nullable: true })
   readonly address?: string;
 
-  @Field(() => [String], { nullable: true })
-  @Transform(({ value }) =>
-    value ? value.map((str: string) => externalUrlWithProtocol(str)) : null,
-  )
-  readonly urls?: string[];
+  @Field(() => String, { nullable: true })
+  @Transform(({ value: str }) => (str ? externalUrlWithProtocol(str) : null))
+  readonly websiteUrl?: string;
+
+  @Field(() => String, { nullable: true })
+  @Transform(({ value: str }) => (str ? externalUrlWithProtocol(str) : null))
+  readonly socialUrl?: string;
 
   @IdField({ nullable: true })
   readonly languageOfWiderCommunicationId?: IdOf<Language> | null;
