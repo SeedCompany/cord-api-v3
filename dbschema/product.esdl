@@ -33,8 +33,8 @@ module default {
       on source delete delete target if orphan;
     };
     
-    #TODO - totalVerses: := ??? - add this computed field here after migration
-    #TODO - totalVerseEquivalents := ??? - add this computed field here after migration
+    totalVerses: int16;
+    totalVerseEquivalents: int32;
   }
   
   type DerivativeScriptureProduct extending Product {
@@ -46,8 +46,8 @@ module default {
     
     required composite: bool { default := false };
     
-    #TODO - totalVerses: := ??? - add this computed field here after migration
-    #TODO - totalVerseEquivalents := ??? - add this computed field here after migration  
+    totalVerses: int16;
+    totalVerseEquivalents: int32;
   }
   
   type OtherProduct extending Product {
