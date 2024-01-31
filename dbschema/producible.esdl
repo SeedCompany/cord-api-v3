@@ -18,6 +18,12 @@ module default {
         message := "`Producible.scripture` should have a `Scripture::Collection` with verses or be null/empty-set"
       )
     );
+    
+    trigger updateDerivativeProducts after update for each do (
+      update __new__.<produces[is DerivativeScriptureProduct]
+      filter __new__.scripture != __old__.scripture and not exists .scriptureOverride
+      set { scripture := __new__.scripture }
+    );
   }
   
   type EthnoArt extending Producible;

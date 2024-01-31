@@ -1,6 +1,7 @@
 module default {
   abstract type Product extending Engagement::Child {
-    overloaded engagement: LanguageEngagement;
+    # https://github.com/edgedb/edgedb/issues/6766
+    # overloaded engagement: LanguageEngagement;
     
     scripture: Scripture::Collection {
       on source delete delete target if orphan;
@@ -39,6 +40,14 @@ module default {
   
   type DerivativeScriptureProduct extending Product {
     required produces: default::Producible;
+    
+    overloaded scripture {
+      rewrite insert, update using (
+        # coalescing `??` bugged with links
+        # https://github.com/edgedb/edgedb/issues/6767
+        if exists .scriptureOverride then .scriptureOverride else .produces.scripture
+      );
+    };
     
     scriptureOverride: Scripture::Collection {
       on source delete delete target if orphan;
