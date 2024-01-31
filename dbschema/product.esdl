@@ -1,61 +1,61 @@
 module default {
   abstract type Product extending Engagement::Child {
     overloaded engagement: LanguageEngagement;
-
+    
     scriptureReferences: Scripture::Collection {
       on source delete delete target if orphan;
     };
-
+    
     multi mediums: Product::Medium;
     multi purposes: Product::Purpose;
     multi steps: Product::Step;
     methodology: Product::Methodology;
-
+    
     describeCompletion: str;
     placeholderDescription: str;
     pnpIndex: int16;
     progressTarget: int16;
     progressStepMeasurement: Product::ProgressMeasurement;
-
+    
     #TODO - category := ??? - add this computed field here after migration
-
+    
     # Enforce no empty collections for this type's use-case. Use null/empty-set instead.
     trigger denyEmptyScriptureCollection after insert, update for each do (
       assert(
         exists __new__.scriptureReferences.verses,
         message := "`Product.scriptureReferences` should have a `Scripture::Collection` with verses or be null/empty-set"
       )
-    );    
+    );
   }
-
+  
   type DirectScriptureProduct extending Product {
     unspecifiedScripture: Scripture::UnspecifiedPortion {
       on source delete delete target if orphan;
     };
-
+    
     #TODO - totalVerses: := ??? - add this computed field here after migration
     #TODO - totalVerseEquivalents := ??? - add this computed field here after migration
   }
-
+  
   type DerivativeScriptureProduct extending Product {
     required produces: default::Producible;
-
+    
     scriptureReferencesOverride: Scripture::Collection {
       on source delete delete target if orphan;
     };
-
+    
     required composite: bool { default := false };
-
+    
     #TODO - totalVerses: := ??? - add this computed field here after migration
     #TODO - totalVerseEquivalents := ??? - add this computed field here after migration  
   }
-
+  
   type OtherProduct extending Product {
     required title: str;
     description: str;
   }
 }
-
+  
 module Product {
   scalar type Medium extending enum<
     Print,
@@ -67,7 +67,7 @@ module Product {
     Video,
     Other
   >;
-
+  
   scalar type Methodology extending enum<
     Paratext,
     OtherWritten,
@@ -84,13 +84,13 @@ module Product {
     SignLanguage,
     OtherVisual,
   >;
-
+  
   scalar type ProgressMeasurement extending enum<
     Number,
     Percent,
     Boolean
   >;
-
+  
   scalar type Purpose extending enum<
     EvangelismChurchPlanting,
     ChurchLife,
@@ -98,7 +98,7 @@ module Product {
     SocialIssues,
     Discipleship
   >;
-
+  
   scalar type Step extending enum<
     ExegesisAndFirstDraft,
     TeamCheck,
