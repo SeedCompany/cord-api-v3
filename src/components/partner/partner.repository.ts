@@ -57,8 +57,8 @@ export class PartnerRepository extends DtoRepository<
       active: input.active,
       startDate: input.startDate ?? CalendarDate.local(),
       address: input.address,
-      websiteUrl: input.websiteUrl ?? '',
-      socialUrl: input.socialUrl ?? '',
+      websiteUrl: input.websiteUrl,
+      socialUrl: input.socialUrl,
       modifiedAt: DateTime.local(),
       canDelete: true,
     };

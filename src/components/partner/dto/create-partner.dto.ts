@@ -2,7 +2,6 @@ import { Field, ID as IDType, InputType, ObjectType } from '@nestjs/graphql';
 import { Transform, Type } from 'class-transformer';
 import { Matches, ValidateNested } from 'class-validator';
 import { uniq } from 'lodash';
-import { externalUrlWithProtocol } from '~/common/url.util';
 import {
   CalendarDate,
   DateField,
@@ -11,6 +10,7 @@ import {
   IdOf,
   IsId,
   NameField,
+  UrlField,
 } from '../../../common';
 import { Location } from '../../../components/location';
 import { FieldRegion } from '../../field-region';
@@ -50,13 +50,11 @@ export abstract class CreatePartner {
   @NameField({ nullable: true })
   readonly address?: string;
 
-  @Field(() => String, { nullable: true })
-  @Transform(({ value: str }) => (str ? externalUrlWithProtocol(str) : null))
-  readonly websiteUrl?: string;
+  @UrlField({ nullable: true })
+  readonly websiteUrl?: string | null;
 
-  @Field(() => String, { nullable: true })
-  @Transform(({ value: str }) => (str ? externalUrlWithProtocol(str) : null))
-  readonly socialUrl?: string;
+  @UrlField({ nullable: true })
+  readonly socialUrl?: string | null;
 
   @IdField({ nullable: true })
   readonly languageOfWiderCommunicationId?: IdOf<Language> | null;
