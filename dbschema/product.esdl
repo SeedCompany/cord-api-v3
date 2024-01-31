@@ -2,7 +2,7 @@ module default {
   abstract type Product extending Engagement::Child {
     overloaded engagement: LanguageEngagement;
     
-    scriptureReferences: Scripture::Collection {
+    scripture: Scripture::Collection {
       on source delete delete target if orphan;
     };
     
@@ -22,8 +22,8 @@ module default {
     # Enforce no empty collections for this type's use-case. Use null/empty-set instead.
     trigger denyEmptyScriptureCollection after insert, update for each do (
       assert(
-        exists __new__.scriptureReferences.verses,
-        message := "`Product.scriptureReferences` should have a `Scripture::Collection` with verses or be null/empty-set"
+        exists __new__.scripture.verses,
+        message := "`Product.scripture` should have a `Scripture::Collection` with verses or be null/empty-set"
       )
     );
   }
@@ -40,7 +40,7 @@ module default {
   type DerivativeScriptureProduct extending Product {
     required produces: default::Producible;
     
-    scriptureReferencesOverride: Scripture::Collection {
+    scriptureOverride: Scripture::Collection {
       on source delete delete target if orphan;
     };
     
