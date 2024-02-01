@@ -6,6 +6,7 @@ import {
 import { $, adapter } from 'edgedb';
 import { Directory } from 'ts-morph';
 import { ScalarInfo } from '../codecs';
+import { injectHydrators } from './inject-hydrators';
 import { customScalars } from './scalars';
 import { addCustomScalarImports, GeneratorParams } from './util';
 
@@ -21,13 +22,16 @@ export async function generateQueryFiles(params: GeneratorParams) {
 }
 
 const generateFilesForQuery =
-  ({ client, root }: GeneratorParams) =>
+  ({ client, root, hydrators }: GeneratorParams) =>
   async (path: string) => {
     const prettyPath = './' + adapter.path.posix.relative(root.getPath(), path);
     try {
       const query = await adapter.readFileUtf8(path);
       if (!query) return;
-      const types = await $.analyzeQuery(client, query);
+
+      const injectedQuery = injectHydrators(query, hydrators);
+
+      const types = await $.analyzeQuery(client, injectedQuery);
       const [{ imports, contents }] = generateFiles({
         target: 'ts',
         path,
