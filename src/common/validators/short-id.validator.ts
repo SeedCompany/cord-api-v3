@@ -1,6 +1,6 @@
 import { ArgumentMetadata, PipeTransform } from '@nestjs/common';
 import { ValidationOptions } from 'class-validator';
-import { ValidationException } from '../../core/validation.pipe';
+import { ValidationException } from '~/core/validation';
 import { isValidId } from '../generate-id';
 import { ValidateBy } from './validateBy';
 

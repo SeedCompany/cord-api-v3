@@ -1,5 +1,5 @@
 import { Global, Module } from '@nestjs/common';
-import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
+import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { DataLoaderModule } from '@seedcompany/data-loader';
 import { EmailModule } from '@seedcompany/nestjs-email';
 import { ConsoleModule } from 'nestjs-console';
@@ -19,7 +19,7 @@ import { ResourceModule } from './resources/resource.module';
 import { ScalarProviders } from './scalars.resolver';
 import { TimeoutInterceptor } from './timeout.interceptor';
 import { TracingModule } from './tracing';
-import { ValidationPipe } from './validation.pipe';
+import { ValidationModule } from './validation/validation.module';
 import { WaitResolver } from './wait.resolver';
 
 @Global()
@@ -36,13 +36,13 @@ import { WaitResolver } from './wait.resolver';
     EventsModule,
     TracingModule,
     ResourceModule,
+    ValidationModule,
   ],
   providers: [
     AwsS3Factory,
     ExceptionNormalizer,
     ExceptionFilter,
     { provide: APP_FILTER, useExisting: ExceptionFilter },
-    { provide: APP_PIPE, useClass: ValidationPipe },
     { provide: APP_INTERCEPTOR, useClass: TimeoutInterceptor },
     WaitResolver,
     ...ScalarProviders,
@@ -60,6 +60,7 @@ import { WaitResolver } from './wait.resolver';
     EventsModule,
     ResourceModule,
     TracingModule,
+    ValidationModule,
   ],
 })
 export class CoreModule {}

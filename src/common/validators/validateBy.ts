@@ -1,16 +1,25 @@
-import { FnLike } from '@seedcompany/common';
+import { Type } from '@nestjs/common';
 import {
   registerDecorator,
   ValidationOptions,
   ValidatorConstraintInterface,
 } from 'class-validator';
+import { MergeExclusive } from 'type-fest';
 
-export interface ValidateByOptions {
-  name: string;
-  constraints?: any[];
-  validator: ValidatorConstraintInterface | FnLike;
-  async?: boolean;
-}
+export type ValidateByOptions =
+  | MergeExclusive<
+      {
+        validator: ValidatorConstraintInterface;
+        name: string;
+        async?: boolean;
+        constraints?: any[];
+      },
+      {
+        validator: Type<ValidatorConstraintInterface>;
+        constraints?: any[];
+      }
+    >
+  | Type<ValidatorConstraintInterface>;
 
 export const ValidateBy =
   (
@@ -19,13 +28,11 @@ export const ValidateBy =
   ): PropertyDecorator =>
   (object: Record<string, any>, propertyName: string | symbol) => {
     registerDecorator({
-      name: options.name,
       target: object.constructor,
       propertyName: propertyName as string,
       options: validationOptions,
-      constraints: options.constraints,
-      validator: options.validator,
-      async: options.async,
+      ...options,
+      validator: typeof options === 'function' ? options : options.validator,
     });
   };
 
