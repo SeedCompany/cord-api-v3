@@ -1,7 +1,10 @@
 import { Module, OnModuleDestroy } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { createClient, Duration } from 'edgedb';
+import { IdResolver } from '~/common/validators/short-id.validator';
 import type { ConfigService } from '~/core';
+import { splitDb } from '../database/split-db.provider';
+import { AliasIdResolver } from './alias-id-resolver';
 import { codecs, registerCustomScalarCodecs } from './codecs';
 import { EdgeDBTransactionalMutationsInterceptor } from './edgedb-transactional-mutations.interceptor';
 import { EdgeDB } from './edgedb.service';
@@ -49,8 +52,9 @@ import { TransactionContext } from './transaction.context';
       provide: APP_INTERCEPTOR,
       useClass: EdgeDBTransactionalMutationsInterceptor,
     },
+    splitDb(IdResolver, AliasIdResolver),
   ],
-  exports: [EdgeDB, Client],
+  exports: [EdgeDB, Client, IdResolver],
 })
 export class EdgeDBModule implements OnModuleDestroy {
   constructor(private readonly client: Client) {}
