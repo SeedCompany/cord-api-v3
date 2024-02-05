@@ -102,6 +102,11 @@ export class ProjectRepository extends CommonRepository {
           node('primaryLocation', 'Location'),
         ])
         .optionalMatch([
+          node('primaryLocation'),
+          relation('out', '', 'defaultFieldRegion', ACTIVE),
+          node('defaultFieldRegionByPrimaryLocation', 'FieldRegion'),
+        ])
+        .optionalMatch([
           node('node'),
           relation('out', '', 'marketingCountryOverride', ACTIVE),
           node('marketingCountryOverride', 'Location'),
@@ -152,6 +157,10 @@ export class ProjectRepository extends CommonRepository {
             ),
             marketingCountryOverride: 'marketingCountryOverride.id',
             fieldRegionOverride: 'fieldRegionOverride.id',
+            fieldRegion: coalesce(
+              'fieldRegionOverride.id',
+              'defaultFieldRegionByPrimaryLocation.id',
+            ),
             owningOrganization: 'organization.id',
             engagementTotal: 'engagementTotal',
             changeset: 'changeset.id',

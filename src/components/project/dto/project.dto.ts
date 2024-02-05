@@ -141,6 +141,9 @@ class Project extends Interfaces {
 
   readonly fieldRegionOverride: Secured<IdOf<FieldRegion> | null>;
 
+  @Calculated()
+  readonly fieldRegion: Secured<IdOf<FieldRegion> | null>;
+
   readonly owningOrganization: Secured<ID | null>;
 
   @Field()
