@@ -31,7 +31,7 @@ import { inherit, member, Policy, Role } from '../util';
         'departmentId',
         'marketingCountryOverride',
         'marketingRegionOverride',
-        'fieldRegion',
+        'fieldRegionOverride',
       ).none,
     ])
     .children((c) => c.posts.edit),

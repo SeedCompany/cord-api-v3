@@ -1,5 +1,7 @@
+import { IdOf } from '~/common';
 import { Role } from '../src/components/authorization';
 import { EngagementStatus } from '../src/components/engagement';
+import { FieldRegion } from '../src/components/field-region';
 import { ProjectStep, ProjectType } from '../src/components/project';
 import {
   createFundingAccount,
@@ -80,7 +82,7 @@ describe('Engagement-Workflow e2e', () => {
         await updateProject(app, {
           id: transProject.id,
           primaryLocationId: location.id,
-          fieldRegionId: fieldRegion.id,
+          fieldRegionOverrideId: fieldRegion.id as IdOf<FieldRegion>,
         });
         for (const next of stepsFromEarlyConversationToBeforeActive) {
           await changeProjectStep(app, transProject.id, next);
@@ -111,7 +113,7 @@ describe('Engagement-Workflow e2e', () => {
         await updateProject(app, {
           id: internProject.id,
           primaryLocationId: location.id,
-          fieldRegionId: fieldRegion.id,
+          fieldRegionOverrideId: fieldRegion.id as IdOf<FieldRegion>,
         });
         for (const next of stepsFromEarlyConversationToBeforeActive) {
           await changeProjectStep(app, internProject.id, next);

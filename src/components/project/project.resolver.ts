@@ -340,6 +340,16 @@ export class ProjectResolver {
   }
 
   @ResolveField(() => SecuredFieldRegion)
+  async fieldRegionOverride(
+    @Parent() project: Project,
+    @Loader(FieldRegionLoader) fieldRegions: LoaderOf<FieldRegionLoader>,
+  ): Promise<SecuredFieldRegion> {
+    return await mapSecuredValue(project.fieldRegionOverride, (id) =>
+      fieldRegions.load(id),
+    );
+  }
+
+  @ResolveField(() => SecuredFieldRegion)
   async fieldRegion(
     @Parent() project: Project,
     @Loader(FieldRegionLoader) fieldRegions: LoaderOf<FieldRegionLoader>,

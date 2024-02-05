@@ -1,4 +1,6 @@
+import { IdOf } from '~/common';
 import { Role } from '../src/components/authorization';
+import { FieldRegion } from '../src/components/field-region';
 import { PartnershipAgreementStatus } from '../src/components/partnership';
 import {
   approveProjectChangeRequest,
@@ -69,7 +71,7 @@ const activeProject = async (app: TestApp) => {
 
   const project = await createProject(app, {
     primaryLocationId: location.id,
-    fieldRegionId: fieldRegion.id,
+    fieldRegionOverrideId: fieldRegion.id as IdOf<FieldRegion>,
   });
   await runAsAdmin(app, async () => {
     await transitionNewProjectToActive(app, project);

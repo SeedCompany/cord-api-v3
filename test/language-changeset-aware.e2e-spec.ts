@@ -1,4 +1,6 @@
 import { faker } from '@faker-js/faker';
+import { IdOf } from '~/common';
+import { FieldRegion } from '../src/components/field-region';
 import {
   approveProjectChangeRequest,
   createFundingAccount,
@@ -42,7 +44,7 @@ const activeProject = async (app: TestApp) => {
 
   const project = await createProject(app, {
     primaryLocationId: location.id,
-    fieldRegionId: fieldRegion.id,
+    fieldRegionOverrideId: fieldRegion.id as IdOf<FieldRegion>,
   });
   await transitionNewProjectToActive(app, project);
 

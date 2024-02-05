@@ -1,5 +1,6 @@
-import { CalendarDate } from '../src/common';
+import { CalendarDate, IdOf } from '../src/common';
 import { Role } from '../src/components/authorization';
+import { FieldRegion } from '../src/components/field-region';
 import { PartnerType } from '../src/components/partner';
 import {
   ProjectStatus,
@@ -141,7 +142,7 @@ describe('Project-Workflow e2e', () => {
       await updateProject(app, {
         id: project.id,
         primaryLocationId: location.id,
-        fieldRegionId: fieldRegion.id,
+        fieldRegionOverrideId: fieldRegion.id as IdOf<FieldRegion>,
       });
 
       let result = await app.graphql.query(
