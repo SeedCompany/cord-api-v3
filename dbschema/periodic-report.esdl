@@ -1,5 +1,5 @@
 module default {
-  abstract type PeriodicReport extending Mixin::Embedded {
+  abstract type PeriodicReport extending Resource, Mixin::Embedded {
     required `start`: cal::local_date;
     required `end`: cal::local_date;
 
