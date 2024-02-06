@@ -11,14 +11,14 @@ module default {
   }
 
   type FinancialReport extending PeriodicReport, Project::Child {
-    overloaded required single link container: Project;
+    overloaded container: Project;
   }
 
   type NarrativeReport extending PeriodicReport, Project::Child {
-    overloaded required single link container: Project;
+    overloaded container: Project;
   }
 
   type ProgressReport extending PeriodicReport, Engagement::Child {
-    overloaded required single link container: Engagement;
+    overloaded container: Engagement;
   }
 }
