@@ -36,12 +36,11 @@ const PinnableResource: Type<Resource & Pinnable> = IntersectionType(
 })
 export abstract class SecuredUserStatus extends SecuredEnum(UserStatus) {}
 
-@RegisterResource()
+@RegisterResource({ db: e.User })
 @ObjectType({
   implements: [Resource, Pinnable],
 })
 export class User extends PinnableResource {
-  static readonly DB = e.User;
   static readonly Props = keysOf<User>();
   static readonly SecuredProps = keysOf<SecuredProps<User>>();
   static readonly Relations = () =>
@@ -97,5 +96,8 @@ export class SecuredUser extends SecuredProperty(User) {}
 declare module '~/core/resources/map' {
   interface ResourceMap {
     User: typeof User;
+  }
+  interface ResourceDBMap {
+    User: typeof e.default.User;
   }
 }

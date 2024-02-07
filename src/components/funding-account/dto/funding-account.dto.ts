@@ -13,12 +13,11 @@ import {
   SecuredString,
 } from '../../../common';
 
-@RegisterResource()
+@RegisterResource({ db: e.FundingAccount })
 @ObjectType({
   implements: [Resource],
 })
 export class FundingAccount extends Resource {
-  static readonly DB = e.FundingAccount;
   static readonly Props = keysOf<FundingAccount>();
   static readonly SecuredProps = keysOf<SecuredProps<FundingAccount>>();
 
@@ -39,5 +38,8 @@ export class SecuredFundingAccount extends SecuredProperty(FundingAccount) {}
 declare module '~/core/resources/map' {
   interface ResourceMap {
     FundingAccount: typeof FundingAccount;
+  }
+  interface ResourceDBMap {
+    FundingAccount: typeof e.default.FundingAccount;
   }
 }

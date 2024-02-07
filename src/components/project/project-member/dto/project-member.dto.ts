@@ -15,12 +15,11 @@ import {
 import { SecuredRoles } from '../../../authorization';
 import { SecuredUser, User } from '../../../user/dto';
 
-@RegisterResource()
+@RegisterResource({ db: e.Project.Member })
 @ObjectType({
   implements: [Resource],
 })
 export class ProjectMember extends Resource {
-  static readonly DB = e.Project.Member;
   static readonly Props = keysOf<ProjectMember>();
   static readonly SecuredProps = keysOf<SecuredProps<ProjectMember>>();
   static readonly Parent = import('../../dto').then((m) => m.IProject);
@@ -43,5 +42,8 @@ export class ProjectMember extends Resource {
 declare module '~/core/resources/map' {
   interface ResourceMap {
     ProjectMember: typeof ProjectMember;
+  }
+  interface ResourceDBMap {
+    ProjectMember: typeof e.Project.Member;
   }
 }

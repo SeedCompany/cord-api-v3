@@ -31,12 +31,11 @@ export const Degree = makeEnum({
 })
 export abstract class SecuredDegree extends SecuredEnum(Degree) {}
 
-@RegisterResource()
+@RegisterResource({ db: e.User.Education })
 @ObjectType({
   implements: [Resource],
 })
 export class Education extends Resource {
-  static readonly DB = e.User.Education;
   static readonly Props = keysOf<Education>();
   static readonly SecuredProps = keysOf<SecuredProps<Education>>();
   static readonly Parent = import('../../dto').then((m) => m.User);
@@ -54,5 +53,8 @@ export class Education extends Resource {
 declare module '~/core/resources/map' {
   interface ResourceMap {
     Education: typeof Education;
+  }
+  interface ResourceDBMap {
+    Education: typeof e.User.Education;
   }
 }

@@ -17,12 +17,11 @@ declare module '../../product/dto/producible.dto' {
   }
 }
 
-@RegisterResource()
+@RegisterResource({ db: e.Film })
 @ObjectType({
   implements: [Producible, Resource],
 })
 export class Film extends Producible {
-  static readonly DB = e.Film;
   static readonly Props = keysOf<Film>();
   static readonly SecuredProps = keysOf<SecuredProps<Film>>();
 
@@ -34,5 +33,8 @@ export class Film extends Producible {
 declare module '~/core/resources/map' {
   interface ResourceMap {
     Film: typeof Film;
+  }
+  interface ResourceDBMap {
+    Film: typeof e.default.Film;
   }
 }

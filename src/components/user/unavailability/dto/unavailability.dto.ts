@@ -9,12 +9,11 @@ import {
   SecuredString,
 } from '../../../../common';
 
-@RegisterResource()
+@RegisterResource({ db: e.User.Unavailability })
 @ObjectType({
   implements: [Resource],
 })
 export class Unavailability extends Resource {
-  static readonly DB = e.User.Unavailability;
   static readonly Props = keysOf<Unavailability>();
   static readonly SecuredProps = keysOf<SecuredProps<Unavailability>>();
   static readonly Parent = import('../../dto').then((m) => m.User);
@@ -32,5 +31,8 @@ export class Unavailability extends Resource {
 declare module '~/core/resources/map' {
   interface ResourceMap {
     Unavailability: typeof Unavailability;
+  }
+  interface ResourceDBMap {
+    Unavailability: typeof e.User.Unavailability;
   }
 }

@@ -5,7 +5,7 @@ import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { inspect } from 'util';
 import type { ResourceDBMap, ResourceMap } from '~/core';
-import { $, abstractType, e } from '~/core/edgedb/reexports';
+import { $ } from '~/core/edgedb/reexports';
 import { ScopedRole } from '../components/authorization';
 import { CalculatedSymbol } from './calculated.decorator';
 import { DataObject } from './data-object';
@@ -37,7 +37,6 @@ export const resolveByTypename =
 })
 @DbLabel('BaseNode')
 export abstract class Resource extends DataObject {
-  static readonly DB = abstractType(e.Resource);
   static readonly Props: string[] = keysOf<Resource>();
   static readonly SecuredProps: string[] = [];
 
@@ -62,7 +61,6 @@ export abstract class Resource extends DataObject {
 type Thunk<T> = T | (() => T);
 
 export type ResourceShape<T> = AbstractClassType<T> & {
-  DB?: $.$expr_PathNode;
   Props: string[];
   SecuredProps: string[];
   // An optional list of props that exist on the BaseNode in the DB.
