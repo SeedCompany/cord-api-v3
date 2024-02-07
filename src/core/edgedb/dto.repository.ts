@@ -12,6 +12,7 @@ import { lowerCase } from 'lodash';
 import { AbstractClass } from 'type-fest';
 import {
   EnhancedResource,
+  DBType as GetDBType,
   ID,
   isSortablePaginationInput,
   NotFoundException,
@@ -41,22 +42,21 @@ import { $, e } from './reexports';
  */
 export const RepoFor = <
   TResourceStatic extends ResourceShape<any>,
-  DBType extends (TResourceStatic['DB'] & {})['__element__'],
-  HydratedShape extends objectTypeToSelectShape<DBType> = (TResourceStatic['DB'] & {})['*'],
+  DBPathNode extends GetDBType<TResourceStatic>,
+  DBType extends DBPathNode['__element__'],
+  HydratedShape extends objectTypeToSelectShape<DBType>,
 >(
   resourceIn: TResourceStatic,
-  options: {
-    hydrate?: ShapeFn<$.TypeSet<DBType>, HydratedShape>;
-  } = {},
+  {
+    hydrate,
+  }: {
+    hydrate: ShapeFn<$.TypeSet<DBType>, HydratedShape>;
+  },
 ) => {
   type Dto = $.computeObjectShape<DBType['__pointers__'], HydratedShape>;
 
   const resource = EnhancedResource.of(resourceIn);
-
-  const hydrate = e.shape(
-    resource.db,
-    (options.hydrate ?? ((obj: any) => obj['*'])) as any,
-  ) as (scope: unknown) => HydratedShape;
+  const dbType = resource.db as any as $.$expr_PathNode;
 
   @Injectable()
   abstract class Repository extends CommonRepository {
@@ -125,7 +125,7 @@ export const RepoFor = <
         offset: (input.page - 1) * input.count,
         limit: input.count + 1,
       }));
-      const items = e.select(thisPage, (obj) => ({
+      const items = e.select(thisPage, (obj: any) => ({
         ...this.hydrate(obj),
         limit: input.count,
       }));
@@ -179,8 +179,8 @@ export const RepoFor = <
 
     async readMany(ids: readonly ID[]): Promise<readonly Dto[]> {
       const query = e.params({ ids: e.array(e.uuid) }, ({ ids }) =>
-        e.select(this.resource.db, (obj: any) => ({
-          ...(this.hydrate(obj) as any),
+        e.select(dbType, (obj: any) => ({
+          ...this.hydrate(obj),
           filter: e.op(obj.id, 'in', e.array_unpack(ids)),
         })),
       );
@@ -189,7 +189,7 @@ export const RepoFor = <
     }
 
     async list(input: PaginationInput) {
-      const all = e.select(this.resource.db, (obj: any) => {
+      const all = e.select(dbType, (obj: any) => {
         const filters = many(this.listFilters(obj, input)).filter(isNotFalsy);
         const filter =
           filters.length === 0
@@ -209,7 +209,7 @@ export const RepoFor = <
 
     async create(input: Omit<InsertShape<DBType>, `@${string}`>): Promise<Dto> {
       const query = e.select(
-        e.insert(this.resource.db, input as any),
+        (e.insert as any)(dbType, input),
         this.hydrate as any,
       );
       return (await this.db.run(query)) as Dto;
@@ -217,7 +217,7 @@ export const RepoFor = <
 
     async update(
       existing: Pick<Dto, 'id'>,
-      input: UpdateShape<TResourceStatic['DB'] & {}>,
+      input: UpdateShape<DBPathNode>,
     ): Promise<Dto> {
       const object = e.cast(
         this.resource.db,

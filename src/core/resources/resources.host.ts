@@ -92,7 +92,7 @@ export class ResourcesHost {
       map as Record<string, EnhancedResource<any>>,
       (_, r, { SKIP }) => {
         try {
-          return r.dbFQN;
+          return r.dbFQN as string;
         } catch (e) {
           return SKIP;
         }
