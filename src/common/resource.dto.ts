@@ -283,14 +283,17 @@ export const isResourceClass = <T>(
 ): cls is ResourceShape<T> =>
   'Props' in cls && Array.isArray(cls.Props) && cls.Props.length > 0;
 
-export type ResourceName<TResourceStatic extends ResourceShape<any>> = {
-  [Name in keyof ResourceMap]: ResourceMap[Name] extends TResourceStatic // Only self or subclasses
-    ? TResourceStatic extends ResourceMap[Name] // Exclude subclasses
-      ? Name
-      : never
-    : never;
-}[keyof ResourceMap] &
-  string;
+export type ResourceName<TResourceStatic extends ResourceShape<any>> =
+  ResourceShape<any> extends TResourceStatic
+    ? string // short-circuit non-specific types
+    : {
+        [Name in keyof ResourceMap]: ResourceMap[Name] extends TResourceStatic // Only self or subclasses
+          ? TResourceStatic extends ResourceMap[Name] // Exclude subclasses
+            ? Name
+            : never
+          : never;
+      }[keyof ResourceMap] &
+        string;
 
 export type MaybeUnsecuredInstance<TResourceStatic extends ResourceShape<any>> =
   MaybeSecured<InstanceType<TResourceStatic>>;
