@@ -4,7 +4,7 @@ import { LazyGetter as Once } from 'lazy-get-decorator';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { inspect } from 'util';
-import type { ResourceMap } from '~/core';
+import type { ResourceDBMap, ResourceMap } from '~/core';
 import { $, abstractType, e } from '~/core/edgedb/reexports';
 import { ScopedRole } from '../components/authorization';
 import { CalculatedSymbol } from './calculated.decorator';
@@ -85,6 +85,9 @@ export type ResourceRelationsShape = ResourceShape<any>['Relations'];
  * A helper class to query the static info of a resource in a typed way.
  */
 export class EnhancedResource<T extends ResourceShape<any>> {
+  /** @internal */
+  static readonly dbTypes = new WeakMap<ResourceShape<any>, $.$expr_PathNode>();
+
   private constructor(readonly type: T) {}
   private static readonly refs = new WeakMap<
     ResourceShape<any>,
@@ -240,16 +243,16 @@ export class EnhancedResource<T extends ResourceShape<any>> {
     return new Set(props);
   }
 
-  get db(): T['DB'] & {} {
-    const type = this.type.DB;
+  get db(): DBType<T> {
+    const type = EnhancedResource.dbTypes.get(this.type);
     if (!type) {
       throw new ServerException(`No DB type defined for ${this.name}`);
     }
-    return type;
+    return type as any;
   }
 
-  get dbFQN(): (T['DB'] & {})['__element__']['__name__'] {
-    return this.db.__element__.__name__;
+  get dbFQN(): DBType<T>['__element__']['__name__'] {
+    return this.db.__element__.__name__ as any;
   }
 
   @Once()
@@ -294,6 +297,13 @@ export type ResourceName<TResourceStatic extends ResourceShape<any>> =
           : never;
       }[keyof ResourceMap] &
         string;
+
+export type DBType<TResourceStatic extends ResourceShape<any>> =
+  ResourceName<TResourceStatic> extends keyof ResourceDBMap
+    ? ResourceDBMap[ResourceName<TResourceStatic>] extends infer T extends $.$expr_PathNode
+      ? T
+      : never
+    : never;
 
 export type MaybeUnsecuredInstance<TResourceStatic extends ResourceShape<any>> =
   MaybeSecured<InstanceType<TResourceStatic>>;
