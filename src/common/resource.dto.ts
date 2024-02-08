@@ -249,9 +249,7 @@ export class EnhancedResource<T extends ResourceShape<any>> {
     return type as any;
   }
 
-  get dbFQN(): ResourceShape<any> extends T
-    ? string
-    : DBType<T>['__element__']['__name__'] {
+  get dbFQN(): ResourceShape<any> extends T ? string : DBName<DBType<T>> {
     return this.db.__element__.__name__ as any;
   }
 
@@ -306,6 +304,8 @@ export type DBType<TResourceStatic extends ResourceShape<any>> =
       ? T
       : never
     : never;
+
+export type DBName<T extends $.TypeSet> = T['__element__']['__name__'];
 
 export type MaybeUnsecuredInstance<TResourceStatic extends ResourceShape<any>> =
   MaybeSecured<InstanceType<TResourceStatic>>;
