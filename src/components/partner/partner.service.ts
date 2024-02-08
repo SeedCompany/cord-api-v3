@@ -14,6 +14,11 @@ import {
 import { HandleIdLookup, ILogger, Logger, ResourceLoader } from '../../core';
 import { mapListResults } from '../../core/database/results';
 import { Privileges } from '../authorization';
+import {
+  LanguageListInput,
+  LanguageService,
+  SecuredLanguageList,
+} from '../language';
 import { Location, LocationLoader, LocationType } from '../location';
 import { FinancialReportingType } from '../partnership/dto';
 import {
@@ -39,6 +44,8 @@ export class PartnerService {
     private readonly privileges: Privileges,
     @Inject(forwardRef(() => ProjectService))
     private readonly projectService: ProjectService & {},
+    @Inject(forwardRef(() => LanguageService))
+    private readonly languageService: LanguageService & {},
     private readonly repo: PartnerRepository,
     private readonly resourceLoader: ResourceLoader,
   ) {}
@@ -174,6 +181,23 @@ export class PartnerService {
     return {
       ...projectListOutput,
       canRead: true,
+      canCreate: this.privileges.for(session, IProject).can('create'),
+    };
+  }
+
+  async listLanguages(
+    partner: Partner,
+    input: LanguageListInput,
+    session: Session,
+  ): Promise<SecuredLanguageList> {
+    const languageListOutput = await this.languageService.list(
+      { ...input, filter: { ...input.filter, partnerId: partner.id } },
+      session,
+    );
+    return {
+      ...languageListOutput,
+      canRead: true,
+      // TODO - rethink through the privileges for this
       canCreate: this.privileges.for(session, IProject).can('create'),
     };
   }

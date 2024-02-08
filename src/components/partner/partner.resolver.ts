@@ -20,7 +20,9 @@ import {
 import { Loader, LoaderOf } from '../../core';
 import { FieldRegionLoader, SecuredFieldRegions } from '../field-region';
 import {
+  LanguageListInput,
   LanguageLoader,
+  SecuredLanguageList,
   SecuredLanguageNullable,
   SecuredLanguages,
 } from '../language';
@@ -140,6 +142,24 @@ export class PartnerResolver {
     @Loader(ProjectLoader) loader: LoaderOf<ProjectLoader>,
   ): Promise<SecuredProjectList> {
     const list = await this.partnerService.listProjects(
+      partner,
+      input,
+      session,
+    );
+    loader.primeAll(list.items);
+    return list;
+  }
+
+  @ResolveField(() => SecuredLanguageList, {
+    description: 'The list of projects the partner has a partnership with.',
+  })
+  async languages(
+    @AnonSession() session: Session,
+    @Parent() partner: Partner,
+    @ListArg(LanguageListInput) input: LanguageListInput,
+    @Loader(LanguageLoader) loader: LoaderOf<LanguageLoader>,
+  ): Promise<SecuredLanguageList> {
+    const list = await this.partnerService.listLanguages(
       partner,
       input,
       session,
