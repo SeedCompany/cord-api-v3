@@ -197,8 +197,8 @@ export class PartnerService {
     return {
       ...languageListOutput,
       canRead: true,
-      // TODO - rethink through the privileges for this
-      canCreate: this.privileges.for(session, IProject).can('create'),
+      // non-owned list
+      canCreate: false,
     };
   }
 
