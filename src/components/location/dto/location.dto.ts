@@ -25,12 +25,11 @@ import { LocationType } from './location-type.enum';
 })
 export abstract class SecuredLocationType extends SecuredEnum(LocationType) {}
 
-@RegisterResource()
+@RegisterResource({ db: e.Location })
 @ObjectType({
   implements: [Resource],
 })
 export class Location extends Resource {
-  static readonly DB = e.Location;
   static readonly Props = keysOf<Location>();
   static readonly SecuredProps = keysOf<SecuredProps<Location>>();
 
@@ -68,5 +67,8 @@ export class SecuredLocations extends SecuredPropertyList(Location) {}
 declare module '~/core/resources/map' {
   interface ResourceMap {
     Location: typeof Location;
+  }
+  interface ResourceDBMap {
+    Location: typeof e.default.Location;
   }
 }

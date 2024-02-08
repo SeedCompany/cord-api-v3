@@ -5,7 +5,7 @@ import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive } from 'type-fest';
 import { sortingForEnumIndex } from '~/core/database/query';
-import { abstractType, e } from '~/core/edgedb';
+import { e } from '~/core/edgedb';
 import { RegisterResource } from '~/core/resources';
 import {
   DateInterval,
@@ -65,7 +65,7 @@ const Interfaces: Type<
 export const resolveProjectType = (val: Pick<AnyProject, 'type'>) =>
   val.type === 'Translation' ? TranslationProject : InternshipProject;
 
-@RegisterResource()
+@RegisterResource({ db: e.Project })
 @InterfaceType({
   resolveType: (val: Project) => {
     if (val.type === ProjectType.Translation) {
@@ -79,7 +79,6 @@ export const resolveProjectType = (val: Pick<AnyProject, 'type'>) =>
   implements: [Resource, Pinnable, Postable, ChangesetAware, Commentable],
 })
 class Project extends Interfaces {
-  static readonly DB = abstractType(e.Project);
   static readonly Props: string[] = keysOf<Project>();
   static readonly SecuredProps: string[] = keysOf<SecuredProps<Project>>();
   static readonly Relations = () =>
@@ -190,24 +189,22 @@ class Project extends Interfaces {
 // export as different names to maintain compatibility with our codebase.
 export { Project as IProject, AnyProject as Project };
 
-@RegisterResource()
+@RegisterResource({ db: e.TranslationProject })
 @ObjectType({
   implements: [Project],
 })
 export class TranslationProject extends Project {
-  static readonly DB = e.TranslationProject;
   static readonly Props = keysOf<TranslationProject>();
   static readonly SecuredProps = keysOf<SecuredProps<TranslationProject>>();
 
   declare readonly type: 'Translation';
 }
 
-@RegisterResource()
+@RegisterResource({ db: e.InternshipProject })
 @ObjectType({
   implements: [Project],
 })
 export class InternshipProject extends Project {
-  static readonly DB = e.InternshipProject;
   static readonly Props = keysOf<InternshipProject>();
   static readonly SecuredProps = keysOf<SecuredProps<InternshipProject>>();
 
@@ -222,5 +219,10 @@ declare module '~/core/resources/map' {
     Project: typeof Project;
     InternshipProject: typeof InternshipProject;
     TranslationProject: typeof TranslationProject;
+  }
+  interface ResourceDBMap {
+    Project: typeof e.default.Project;
+    InternshipProject: typeof e.default.InternshipProject;
+    TranslationProject: typeof e.default.TranslationProject;
   }
 }

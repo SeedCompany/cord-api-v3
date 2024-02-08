@@ -20,12 +20,11 @@ import { IProject } from '../../project/dto';
 import { BudgetRecord } from './budget-record.dto';
 import { BudgetStatus } from './budget-status.enum';
 
-@RegisterResource()
+@RegisterResource({ db: e.Budget })
 @ObjectType({
   implements: [Resource, ChangesetAware],
 })
 export class Budget extends IntersectionType(ChangesetAware, Resource) {
-  static readonly DB = e.Budget;
   static readonly Props = keysOf<Budget>();
   static readonly SecuredProps = keysOf<SecuredProps<Budget>>();
   static readonly Relations = {
@@ -63,5 +62,8 @@ export class SecuredBudget extends SecuredProperty(Budget) {}
 declare module '~/core/resources/map' {
   interface ResourceMap {
     Budget: typeof Budget;
+  }
+  interface ResourceDBMap {
+    Budget: typeof e.default.Budget;
   }
 }

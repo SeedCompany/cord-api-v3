@@ -13,12 +13,11 @@ import {
 import { e } from '~/core/edgedb';
 import { LinkTo, RegisterResource } from '~/core/resources';
 
-@RegisterResource()
+@RegisterResource({ db: e.FieldRegion })
 @ObjectType({
   implements: [Resource],
 })
 export class FieldRegion extends Resource {
-  static readonly DB = e.FieldRegion;
   static readonly Props = keysOf<FieldRegion>();
   static readonly SecuredProps = keysOf<SecuredProps<FieldRegion>>();
 
@@ -44,5 +43,8 @@ export class SecuredFieldRegions extends SecuredPropertyList(FieldRegion) {}
 declare module '~/core/resources/map' {
   interface ResourceMap {
     FieldRegion: typeof FieldRegion;
+  }
+  interface ResourceDBMap {
+    FieldRegion: typeof e.default.FieldRegion;
   }
 }

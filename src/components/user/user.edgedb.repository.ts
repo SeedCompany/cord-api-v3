@@ -11,7 +11,9 @@ import type { UserRepository } from './user.repository';
 
 @Injectable()
 export class UserEdgeDBRepository
-  extends RepoFor(User).withDefaults()
+  extends RepoFor(User, {
+    hydrate: (user) => user['*'],
+  }).withDefaults()
   implements PublicOf<UserRepository>
 {
   async doesEmailAddressExist(email: string) {
