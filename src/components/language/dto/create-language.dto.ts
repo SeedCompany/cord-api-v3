@@ -96,6 +96,15 @@ export abstract class CreateLanguage {
   @Field(() => [String], { nullable: true })
   @Transform(({ value }) => uniq(value))
   readonly tags?: string[] = [];
+
+  @Field({ nullable: true })
+  readonly isLanguageOfConsulting: boolean = false;
+
+  @Field({ nullable: true })
+  readonly isLanguageOfWiderCommunication: boolean;
+
+  @Field({ nullable: true })
+  readonly isLanguageOfReporting: boolean;
 }
 
 @InputType()
