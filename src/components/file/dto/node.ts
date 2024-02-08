@@ -4,7 +4,7 @@ import { stripIndent } from 'common-tags';
 import { DateTime } from 'luxon';
 import { Readable } from 'stream';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { MergeExclusive, Opaque } from 'type-fest';
+import { MergeExclusive } from 'type-fest';
 import { BaseNode } from '~/core/database/results';
 import { e } from '~/core/edgedb';
 import { RegisterResource } from '~/core/resources';
@@ -12,6 +12,7 @@ import {
   DateTimeField,
   DbLabel,
   ID,
+  IdOf,
   InputException,
   NameField,
   Resource,
@@ -177,7 +178,7 @@ export abstract class SecuredFile extends SecuredProperty(File) {}
  */
 export type DefinedFile = Secured<FileId>;
 
-export type FileId = ID & Opaque<string, 'FileId'>;
+export type FileId = IdOf<'File'>;
 
 export const isDirectory = (node: AnyFileNode): node is Directory =>
   node.type === FileNodeType.Directory;
