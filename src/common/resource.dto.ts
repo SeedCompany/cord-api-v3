@@ -249,7 +249,9 @@ export class EnhancedResource<T extends ResourceShape<any>> {
     return type as any;
   }
 
-  get dbFQN(): DBType<T>['__element__']['__name__'] {
+  get dbFQN(): ResourceShape<any> extends T
+    ? string
+    : DBType<T>['__element__']['__name__'] {
     return this.db.__element__.__name__ as any;
   }
 
