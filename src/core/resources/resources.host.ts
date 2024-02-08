@@ -61,9 +61,7 @@ export class ResourcesHost {
     return resource;
   }
 
-  getByDynamicName(
-    name: LooseResourceName,
-  ): EnhancedResource<ValueOf<ResourceMap>> {
+  getByDynamicName(name: LooseResourceName): EnhancedResource<any> {
     return this.getByName(name as any);
   }
 
