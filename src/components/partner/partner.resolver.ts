@@ -151,7 +151,7 @@ export class PartnerResolver {
   }
 
   @ResolveField(() => SecuredLanguageList, {
-    description: 'The list of projects the partner has a partnership with.',
+    description: 'Languages of the partner's affiliated translation projects',
   })
   async languages(
     @AnonSession() session: Session,
