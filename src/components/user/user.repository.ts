@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { inArray, node, Query, relation } from 'cypher-query-builder';
 import { difference } from 'lodash';
 import { DateTime } from 'luxon';
-import { ChangesOf } from '~/core/database/changes';
 import {
   DuplicateException,
   ID,
@@ -87,21 +86,18 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
     return result;
   }
 
-  async update(
-    existing: User,
-    changes: ChangesOf<User, UpdateUser>,
-  ): Promise<unknown> {
-    const { roles, email, ...simpleChanges } = changes;
+  async update(changes: UpdateUser) {
+    const { id, roles, email, ...simpleChanges } = changes;
 
-    await this.updateProperties(existing, simpleChanges);
+    await this.updateProperties({ id }, simpleChanges);
     if (email !== undefined) {
-      await this.updateEmail(existing, email);
+      await this.updateEmail(id, email);
     }
     if (roles) {
-      await this.updateRoles(existing, roles);
+      await this.updateRoles(id, roles);
     }
 
-    return undefined;
+    return await this.readOne(id, id);
   }
 
   protected hydrate(requestingUserId: Session | ID) {
@@ -127,12 +123,12 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
   }
 
   private async updateEmail(
-    user: User,
+    id: ID,
     email: string | null | undefined,
   ): Promise<void> {
     const query = this.db
       .query()
-      .matchNode('node', 'User', { id: user.id })
+      .matchNode('node', 'User', { id })
       .apply(deactivateProperty({ resource: User, key: 'email' }))
       .apply((q) =>
         email
@@ -156,17 +152,16 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
     }
   }
 
-  private async updateRoles(user: User, roles: Role[]): Promise<void> {
-    const removals = difference(user.roles.value, roles);
-    const additions = difference(roles, user.roles.value);
+  private async updateRoles(id: ID, roles: Role[]): Promise<void> {
+    const { roles: existingRoles } = await this.readOne(id, id);
+    const removals = difference(existingRoles, roles);
+    const additions = difference(roles, existingRoles);
 
     if (removals.length > 0) {
       await this.db
         .query()
         .match([
-          node('user', ['User', 'BaseNode'], {
-            id: user.id,
-          }),
+          node('user', ['User', 'BaseNode'], { id }),
           relation('out', 'oldRoleRel', 'roles', ACTIVE),
           node('oldRoles', 'Property'),
         ])
@@ -186,11 +181,7 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
     if (additions.length > 0) {
       await this.db
         .query()
-        .match([
-          node('node', ['User', 'BaseNode'], {
-            id: user.id,
-          }),
-        ])
+        .match([node('node', ['User', 'BaseNode'], { id })])
         .create([...this.roleProperties(additions)])
         .run();
     }

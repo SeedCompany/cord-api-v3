@@ -111,9 +111,11 @@ export class UserService {
       this.verifyRolesAreAssignable(session, changes.roles);
     }
 
-    await this.userRepo.update(user, changes);
-
-    return await this.readOne(input.id, session);
+    const updated = await this.userRepo.update({
+      id: user.id,
+      ...changes,
+    });
+    return await this.secure(updated, session);
   }
 
   async delete(id: ID, session: Session): Promise<void> {
