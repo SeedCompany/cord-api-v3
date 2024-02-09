@@ -39,5 +39,6 @@ import {
       p.marketingRegionOverride.edit,
     ])
     .children((c) => c.posts.edit),
+  r.Language.specifically((p) => p.displayNamePronunciation.edit),
 ])
 export class MarketingPolicy {}
