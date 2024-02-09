@@ -1,6 +1,7 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import {
   FilterField,
+  ID,
   PaginatedList,
   SecuredList,
   SensitivitiesFilter,
@@ -46,6 +47,8 @@ export abstract class LanguageFilters {
     nullable: true,
   })
   readonly pinned?: boolean;
+
+  readonly partnerId?: ID;
 }
 
 @InputType()
