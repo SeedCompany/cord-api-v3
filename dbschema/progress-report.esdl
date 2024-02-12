@@ -2,6 +2,12 @@ module default {
   type ProgressReport extending PeriodicReport, Engagement::Child {
     overloaded container: LanguageEngagement;
     overloaded engagement: LanguageEngagement;
+    
+    multi link workflowEvents: ProgressReport::WorkflowEvent;
+    required status: ProgressReport::Status {
+      default := ProgressReport::Status.NotStarted;
+    };
+    
     single varianceExplanation := .<report[is ProgressReport::VarianceExplanation];
   }
 }
@@ -35,4 +41,15 @@ module ProgressReport {
 
     comments: default::RichText;
   }
+}
+
+module ProgressReport {
+  scalar type Status extending enum<
+    NotStarted,
+    InProgress,
+    PendingTranslation,
+    InReview,
+    Approved,
+    Published,
+  >; 
 }
