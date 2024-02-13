@@ -8,6 +8,7 @@ import {
 } from '@nestjs/graphql';
 import {
   AnonSession,
+  InvalidIdForTypeException,
   ListArg,
   LoggedInSession,
   mapSecuredValue,
@@ -17,7 +18,11 @@ import {
 import { Loader, LoaderOf } from '../../core';
 import { CeremonyLoader, SecuredCeremony } from '../ceremony';
 import { ChangesetIds, IdsAndView, IdsAndViewArg } from '../changeset/dto';
-import { EngagementLoader, EngagementService } from '../engagement';
+import {
+  EngagementLoader,
+  EngagementService,
+  LanguageEngagementListOutput,
+} from '../engagement';
 import {
   CreateInternshipEngagementInput,
   CreateInternshipEngagementOutput,
@@ -28,6 +33,7 @@ import {
   EngagementListInput,
   EngagementListOutput,
   IEngagement,
+  LanguageEngagement,
   UpdateInternshipEngagementInput,
   UpdateInternshipEngagementOutput,
   UpdateLanguageEngagementInput,
@@ -48,6 +54,20 @@ export class EngagementResolver {
     return await engagements.load(key);
   }
 
+  @Query(() => LanguageEngagement, {
+    description: 'Lookup a LanguageEngagement by ID',
+  })
+  async languageEngagement(
+    @IdsAndViewArg() key: IdsAndView,
+    @Loader(EngagementLoader) engagements: LoaderOf<EngagementLoader>,
+  ): Promise<Engagement> {
+    const engagement = await engagements.load(key);
+    if (engagement.__typename !== 'LanguageEngagement') {
+      throw new InvalidIdForTypeException();
+    }
+    return engagement;
+  }
+
   @Query(() => EngagementListOutput, {
     description: 'Look up engagements',
   })
@@ -58,6 +78,26 @@ export class EngagementResolver {
   ): Promise<EngagementListOutput> {
     const list = await this.service.list(input, session);
     engagements.primeAll(list.items);
+    return list;
+  }
+
+  @Query(() => LanguageEngagementListOutput, {
+    description: 'Look up language engagements',
+  })
+  async languageEngagements(
+    @ListArg(EngagementListInput) input: EngagementListInput,
+    @AnonSession() session: Session,
+    @Loader(EngagementLoader) engagements: LoaderOf<EngagementLoader>,
+  ): Promise<EngagementListOutput> {
+    const list = await this.service.list(
+      {
+        ...input,
+        filter: { ...input.filter, type: 'language' },
+      },
+      session,
+    );
+    engagements.primeAll(list.items);
+
     return list;
   }
 
