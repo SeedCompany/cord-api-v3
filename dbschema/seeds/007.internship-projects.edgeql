@@ -1,41 +1,39 @@
 with
   projectsJson := to_json('[
     {
-      "name": "Misty Mountains",
-      "step": "EarlyConversations",
-      "mouStart": "2020-01-01",
-      "mouEnd": "2023-12-30",
-      "estimatedSubmission": "2023-12-01",
+      "name": "Glorfindel - Exegetical Facilitator",
+      "step": "DiscussingChangeToPlan",
+      "mouStart": "2021-07-01",
+      "mouEnd": "2024-12-30",
+      "estimatedSubmission": "2024-10-01",
       "financialReportPeriod": "Monthly"
     },
     {
-      "name": "Arnor Lake",
-      "step": "FinalizingProposal",
-      "mouStart": "2015-01-01",
-      "mouEnd": "2018-12-30",
-      "estimatedSubmission": "2022-12-01",
+      "name": "Arwen Evenstar Intern",
+      "step": "PendingConceptApproval",
+      "mouStart": "2022-10-01",
+      "mouEnd": "2025-12-30",
+      "financialReportPeriod": "Quarterly"
+    },
+    {
+      "name": "Eomer of Rohan Intern",
+      "step": "Active",
+      "mouStart": "2022-02-01",
+      "mouEnd": "2026-06-30",
       "financialReportPeriod": "Monthly"
     },
     {
-      "name": "Lothlorien",
-      "step": "Active",
-      "mouStart": "2020-01-01",
-      "mouEnd": "2025-05-30",
+      "name": "Cohort of the Ents",
+      "step": "PendingFinancialEndorsement",
+      "mouStart": "2022-02-01",
+      "mouEnd": "2026-06-30",
       "financialReportPeriod": "Quarterly"
     },
     {
-      "name": "Emyn Muil",
-      "step": "Active",
-      "mouStart": "2019-03-01",
-      "mouEnd": "2022-10-30",
-      "financialReportPeriod": "Quarterly"
-    },
-    {
-      "name": "South Downs",
-      "step": "FinalizingCompletion",
-      "mouStart": "2020-01-01",
-      "mouEnd": "2023-12-30",
-      "estimatedSubmission": "2023-09-01",
+      "name": "Barliman Butterbur Intern",
+      "step": "OnHoldFinanceConfirmation",
+      "mouStart": "2018-02-01",
+      "mouEnd": "2022-07-30",
       "financialReportPeriod": "Monthly"
     }
   ]'),
@@ -43,8 +41,8 @@ with
     for project in json_array_unpack(projectsJson)
     union (
       select (
-        (select TranslationProject filter .name = <str>project['name']) ??
-        (insert TranslationProject {
+        (select InternshipProject filter .name = <str>project['name']) ??
+        (insert InternshipProject {
           name := <str>project['name'],
           step := <str>project['step'],
           mouStart := <cal::local_date>project['mouStart'],
@@ -56,7 +54,7 @@ with
     )
   ),
   new := (select projects filter .createdAt = datetime_of_statement())
-select { `Added Translation Projects` := new.name }
+select { `Added Internship Projects` := new.name }
 filter count(new) > 0;
 
 # Update all projects to self reference for their context (has to be separate query)
