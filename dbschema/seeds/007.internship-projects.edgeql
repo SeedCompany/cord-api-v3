@@ -54,7 +54,7 @@ with
     )
   ),
   new := (select projects filter .createdAt = datetime_of_statement())
-select { `Added Intership Projects` := new.name }
+select { `Added Internship Projects` := new.name }
 filter count(new) > 0;
 
 # Update all projects to self reference for their context (has to be separate query)
