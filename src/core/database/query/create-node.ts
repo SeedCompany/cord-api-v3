@@ -5,16 +5,16 @@ import {
   EnhancedResource,
   generateId,
   ID,
-  MaybeUnsecuredInstance,
   Resource,
   ResourceShape,
+  UnsecuredDto,
 } from '~/common';
 import { FileId } from '../../../components/file';
 import { Variable } from '../query-augmentation/condition-variables';
 
 export interface CreateNodeOptions<TResourceStatic extends ResourceShape<any>> {
   initialProps?: InitialPropsOf<
-    MaybeUnsecuredInstance<TResourceStatic> &
+    UnsecuredDto<InstanceType<TResourceStatic>> &
       Partial<Pick<Resource, 'id' | 'createdAt'>>
   >;
   baseNodeProps?: Record<string, any>;
