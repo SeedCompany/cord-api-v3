@@ -1,13 +1,21 @@
 import { LoaderOf } from '@seedcompany/data-loader';
-import { mapSecuredValue, NotFoundException, ServerException } from '~/common';
-import { DefinedFile, isFile, SecuredFile } from './dto';
+import {
+  isIdLike,
+  mapSecuredValue,
+  NotFoundException,
+  Secured,
+  ServerException,
+} from '~/common';
+import { LinkTo } from '~/core';
+import { FileId, isFile, SecuredFile } from './dto';
 import { FileNodeLoader } from './file-node.loader';
 
 export async function resolveDefinedFile(
   loader: LoaderOf<FileNodeLoader>,
-  input: DefinedFile,
+  input: Secured<FileId | LinkTo<'File'>>,
 ): Promise<SecuredFile> {
-  return await mapSecuredValue(input, async (fileId) => {
+  return await mapSecuredValue(input, async (file) => {
+    const fileId = isIdLike(file) ? file : file.id;
     try {
       const file = await loader.load(fileId);
       if (!isFile(file)) {

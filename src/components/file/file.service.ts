@@ -16,7 +16,9 @@ import {
   generateId,
   ID,
   InputException,
+  isIdLike,
   NotFoundException,
+  Secured,
   ServerException,
   Session,
   UnauthorizedException,
@@ -26,6 +28,7 @@ import {
   ConfigService,
   IEventBus,
   ILogger,
+  LinkTo,
   Logger,
   RollbackManager,
 } from '~/core';
@@ -33,10 +36,10 @@ import { FileBucket } from './bucket';
 import {
   CreateDefinedFileVersionInput,
   CreateFileVersionInput,
-  DefinedFile,
   Directory,
   Downloadable,
   File,
+  FileId,
   FileListInput,
   FileListOutput,
   FileNode,
@@ -528,7 +531,7 @@ export class FileService {
   async updateDefinedFile<
     Input extends CreateDefinedFileVersionInput | undefined,
   >(
-    file: DefinedFile,
+    file: Secured<FileId | LinkTo<'File'>>,
     field: string,
     input: Input,
     session: Session,
@@ -545,10 +548,11 @@ export class FileService {
         field,
       );
     }
+    const fileId = isIdLike(file.value) ? file.value : file.value.id;
     try {
       return await this.createFileVersion(
         {
-          parentId: file.value,
+          parentId: fileId,
           ...input,
         },
         session,

@@ -57,7 +57,7 @@ type ChangeKey<Key extends keyof T & string, T> = T[Key] extends SetChangeType<
   ? Override extends string
     ? Override
     : never
-  : UnwrapSecured<T[Key]> extends FileId
+  : UnwrapSecured<T[Key]> extends FileId | LinkTo<'File'>
   ? Key
   : NonNullable<UnwrapSecured<T[Key]>> extends ID | LinkTo<any>
   ? `${Key}Id` // our convention for single relationships
@@ -69,7 +69,7 @@ type ChangeOf<Val> = Val extends SetChangeType<any, infer Override>
       | RawChangeOf<UnwrapSecured<Val> & {}>
       | (UnwrapSecured<Val> extends null ? null : unknown);
 
-type RawChangeOf<Val> = Val extends FileId
+type RawChangeOf<Val> = Val extends FileId | LinkTo<'File'>
   ? CreateDefinedFileVersionInput
   : Val extends LinkTo<any>
   ? ID
