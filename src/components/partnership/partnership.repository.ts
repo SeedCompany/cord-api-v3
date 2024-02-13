@@ -163,6 +163,7 @@ export class PartnershipRepository extends DtoRepository<
           partner: 'partner.id',
           organization: 'org.id',
           changeset: 'changeset.id',
+          mou: { id: 'props.mou' },
         }).as('dto'),
       )
       .map('dto')

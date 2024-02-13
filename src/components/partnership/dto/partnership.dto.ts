@@ -1,7 +1,7 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { BaseNode } from '~/core/database/results';
-import { RegisterResource } from '~/core/resources';
+import { LinkTo, RegisterResource } from '~/core/resources';
 import {
   Calculated,
   ID,
@@ -61,7 +61,7 @@ export class Partnership extends IntersectionType(ChangesetAware, Resource) {
   @Field()
   readonly agreementStatus: SecuredPartnershipAgreementStatus;
 
-  readonly mou: DefinedFile;
+  readonly mou: Secured<LinkTo<'File'>>;
 
   @Field()
   readonly mouStatus: SecuredPartnershipAgreementStatus;
