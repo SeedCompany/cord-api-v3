@@ -19,6 +19,26 @@ with
     {
       "project": "South Downs",
       "members": ["Bilbo", "Peregrin"]
+    },
+    {
+      "project": "Glorfindel - Exegetical Facilitator",
+      "members": ["Aragorn", "Samwise"]
+    },
+    {
+      "project": "Arwen Evenstar Intern",
+      "members": ["Gandalf", "Frodo"]
+    },
+    {
+      "project": "Eomer of Rohan Intern",
+      "members": ["Bilbo"]
+    },
+    {
+      "project": "Cohort of the Ents",
+      "members": ["Gandalf", "Meriadoc", "Peregrin"]
+    },
+    {
+      "project": "Barliman Butterbur Intern",
+      "members": ["Gandalf", "Meriadoc", "Peregrin", "Bilbo", "Frodo", "Samwise"]
     }
   ]'),
   newMembers := (
@@ -28,7 +48,7 @@ with
       union (
         with
           existingUser := assert_single((select User filter .realFirstName = <str>member)),
-          existingProject := assert_single((select TranslationProject filter .name = <str>projectMembers['project'])),
+          existingProject := assert_single((select Project filter .name = <str>projectMembers['project'])),
         select (
           (select Project::Member filter .user = existingUser and .project = existingProject) ??
           (insert Project::Member {
