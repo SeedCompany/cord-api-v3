@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PublicOf } from '~/common';
+import { ID, PublicOf } from '~/common';
 import { e, RepoFor } from '~/core/edgedb';
 import { CreateLanguage, Language } from './dto';
 import { LanguageRepository } from './language.repository';
@@ -13,6 +13,7 @@ export class LanguageEdgeDBRepository
       firstScriptureEngagement: true,
       sensitivity: lang.ownSensitivity,
       effectiveSensitivity: lang.sensitivity,
+      presetInventory: e.bool(false), // Not implemented going forward
     }),
   }).customize((cls) => {
     return class extends cls {
@@ -40,6 +41,12 @@ export class LanguageEdgeDBRepository
     const lang = e.cast(e.Language, e.uuid(language.id));
     const query = lang.engagements.id;
 
+    return await this.db.run(query);
+  }
+
+  async hasFirstScriptureEngagement(id: ID) {
+    const lang = e.cast(e.Language, e.uuid(id));
+    const query = e.op('exists', lang.firstScriptureEngagement);
     return await this.db.run(query);
   }
 }

@@ -3,8 +3,6 @@ import { Field, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { GraphQLString } from 'graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { e } from '~/core/edgedb';
-import { RegisterResource } from '~/core/resources';
 import {
   Calculated,
   DbLabel,
@@ -26,8 +24,10 @@ import {
   SensitivityField,
   SetUnsecuredType,
   UnsecuredDto,
-} from '../../../common';
-import { SetChangeType } from '../../../core/database/changes';
+} from '~/common';
+import { SetChangeType } from '~/core/database/changes';
+import { e } from '~/core/edgedb';
+import { LinkTo, RegisterResource } from '~/core/resources';
 import { Location } from '../../location/dto';
 import { Pinnable } from '../../pin/dto';
 import { Postable } from '../../post/dto';
@@ -52,6 +52,8 @@ export class EthnologueLanguage {
   static readonly SecuredProps = keysOf<SecuredProps<EthnologueLanguage>>();
   // eslint-disable-next-line @typescript-eslint/naming-convention
   static readonly Parent = Promise.resolve().then(() => Language);
+
+  readonly __typename?: 'EthnologueLanguage';
 
   readonly id: ID;
 
@@ -80,7 +82,7 @@ export class EthnologueLanguage {
   @SensitivityField({
     description: "Based on the language's sensitivity",
   })
-  readonly sensitivity: Sensitivity & SetUnsecuredType<never>;
+  readonly sensitivity: Sensitivity;
 }
 
 @RegisterResource({ db: e.Language })
@@ -124,8 +126,10 @@ export class Language extends Interfaces {
 
   @Field(() => EthnologueLanguage)
   readonly ethnologue: EthnologueLanguage &
-    SetUnsecuredType<UnsecuredDto<EthnologueLanguage>> &
-    SetChangeType<'ethnologue', UpdateEthnologueLanguage>;
+    SetUnsecuredType<
+      UnsecuredDto<EthnologueLanguage> &
+        SetChangeType<'ethnologue', UpdateEthnologueLanguage>
+    >;
 
   @Field({
     description: `An override for the ethnologue's population`,
@@ -169,7 +173,7 @@ export class Language extends Interfaces {
   readonly hasExternalFirstScripture: SecuredBoolean;
 
   // Internal First Scripture == true via this engagement
-  readonly firstScriptureEngagement?: ID;
+  readonly firstScriptureEngagement?: LinkTo<'LanguageEngagement'> | null;
 
   @Field()
   readonly tags: SecuredTags;
@@ -184,7 +188,7 @@ export class Language extends Interfaces {
       This indicates the language & mention projects will be exposed to major investors.
     `,
   })
-  readonly presetInventory?: SecuredBoolean;
+  readonly presetInventory: SecuredBoolean;
 
   // Not returned, only used to cache the sensitivity for determining permissions
   readonly effectiveSensitivity: Sensitivity;
