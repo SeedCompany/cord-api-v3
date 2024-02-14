@@ -12,12 +12,11 @@ import {
   SecuredString,
 } from '../../../common';
 
-@RegisterResource()
+@RegisterResource({ db: e.FieldZone })
 @ObjectType({
   implements: [Resource],
 })
 export class FieldZone extends Resource {
-  static readonly DB = e.FieldZone;
   static readonly Props = keysOf<FieldZone>();
   static readonly SecuredProps = keysOf<SecuredProps<FieldZone>>();
 
@@ -36,5 +35,8 @@ export class SecuredFieldZone extends SecuredProperty(FieldZone) {}
 declare module '~/core/resources/map' {
   interface ResourceMap {
     FieldZone: typeof FieldZone;
+  }
+  interface ResourceDBMap {
+    FieldZone: typeof e.default.FieldZone;
   }
 }

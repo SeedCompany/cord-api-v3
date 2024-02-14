@@ -18,12 +18,11 @@ import { ScopedRole } from '../../authorization';
 import { ChangesetAware } from '../../changeset/dto';
 import { Budget } from './budget.dto';
 
-@RegisterResource()
+@RegisterResource({ db: e.Budget.Record })
 @ObjectType({
   implements: [Resource, ChangesetAware],
 })
 export class BudgetRecord extends IntersectionType(ChangesetAware, Resource) {
-  static readonly DB = e.Budget.Record;
   static readonly Props = keysOf<BudgetRecord>();
   static readonly SecuredProps = keysOf<SecuredProps<BudgetRecord>>();
   static readonly Parent = import('./budget.dto').then((m) => m.Budget);
@@ -52,5 +51,8 @@ export class BudgetRecord extends IntersectionType(ChangesetAware, Resource) {
 declare module '~/core/resources/map' {
   interface ResourceMap {
     BudgetRecord: typeof BudgetRecord;
+  }
+  interface ResourceDBMap {
+    BudgetRecord: typeof e.Budget.Record;
   }
 }

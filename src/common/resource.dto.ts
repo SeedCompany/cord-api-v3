@@ -4,7 +4,8 @@ import { LazyGetter as Once } from 'lazy-get-decorator';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { inspect } from 'util';
-import { $, abstractType, e } from '~/core/edgedb/reexports';
+import type { ResourceDBMap, ResourceMap } from '~/core';
+import { $, e } from '~/core/edgedb/reexports';
 import { ScopedRole } from '../components/authorization';
 import { CalculatedSymbol } from './calculated.decorator';
 import { DataObject } from './data-object';
@@ -36,7 +37,6 @@ export const resolveByTypename =
 })
 @DbLabel('BaseNode')
 export abstract class Resource extends DataObject {
-  static readonly DB = abstractType(e.Resource);
   static readonly Props: string[] = keysOf<Resource>();
   static readonly SecuredProps: string[] = [];
 
@@ -61,7 +61,6 @@ export abstract class Resource extends DataObject {
 type Thunk<T> = T | (() => T);
 
 export type ResourceShape<T> = AbstractClassType<T> & {
-  DB?: $.$expr_PathNode;
   Props: string[];
   SecuredProps: string[];
   // An optional list of props that exist on the BaseNode in the DB.
@@ -84,6 +83,9 @@ export type ResourceRelationsShape = ResourceShape<any>['Relations'];
  * A helper class to query the static info of a resource in a typed way.
  */
 export class EnhancedResource<T extends ResourceShape<any>> {
+  /** @internal */
+  static readonly dbTypes = new WeakMap<ResourceShape<any>, $.$expr_PathNode>();
+
   private constructor(readonly type: T) {}
   private static readonly refs = new WeakMap<
     ResourceShape<any>,
@@ -128,8 +130,8 @@ export class EnhancedResource<T extends ResourceShape<any>> {
       : undefined;
   }
 
-  get name() {
-    return this.type.name;
+  get name(): ResourceName<T> {
+    return this.type.name as any;
   }
 
   /**
@@ -239,16 +241,16 @@ export class EnhancedResource<T extends ResourceShape<any>> {
     return new Set(props);
   }
 
-  get db(): T['DB'] & {} {
-    const type = this.type.DB;
+  get db(): DBType<T> {
+    const type = EnhancedResource.dbTypes.get(this.type);
     if (!type) {
       throw new ServerException(`No DB type defined for ${this.name}`);
     }
-    return type;
+    return type as any;
   }
 
-  get dbFQN(): (T['DB'] & {})['__element__']['__name__'] {
-    return this.db.__element__.__name__;
+  get dbFQN(): ResourceShape<any> extends T ? string : DBName<DBType<T>> {
+    return this.db.__element__.__name__ as any;
   }
 
   @Once()
@@ -281,6 +283,29 @@ export const isResourceClass = <T>(
   cls: AbstractClassType<T>,
 ): cls is ResourceShape<T> =>
   'Props' in cls && Array.isArray(cls.Props) && cls.Props.length > 0;
+
+export type ResourceName<TResourceStatic extends ResourceShape<any>> =
+  ResourceShape<any> extends TResourceStatic
+    ? string // short-circuit non-specific types
+    : {
+        [Name in keyof ResourceMap]: ResourceMap[Name] extends TResourceStatic // Only self or subclasses
+          ? TResourceStatic extends ResourceMap[Name] // Exclude subclasses
+            ? Name
+            : never
+          : never;
+      }[keyof ResourceMap] &
+        string;
+
+export type DBType<TResourceStatic extends ResourceShape<any>> =
+  ResourceShape<any> extends TResourceStatic
+    ? typeof e.Resource // short-circuit non-specific types
+    : ResourceName<TResourceStatic> extends keyof ResourceDBMap
+    ? ResourceDBMap[ResourceName<TResourceStatic>] extends infer T extends $.$expr_PathNode
+      ? T
+      : never
+    : never;
+
+export type DBName<T extends $.TypeSet> = T['__element__']['__name__'];
 
 export type MaybeUnsecuredInstance<TResourceStatic extends ResourceShape<any>> =
   MaybeSecured<InstanceType<TResourceStatic>>;

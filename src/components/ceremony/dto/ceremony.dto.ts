@@ -14,13 +14,12 @@ import {
 } from '../../../common';
 import { CeremonyType } from './ceremony-type.enum';
 
-@RegisterResource()
+@RegisterResource({ db: e.Engagement.Ceremony })
 @Calculated()
 @ObjectType({
   implements: [Resource],
 })
 export class Ceremony extends Resource {
-  static readonly DB = e.Engagement.Ceremony;
   static readonly Props = keysOf<Ceremony>();
   static readonly SecuredProps = keysOf<SecuredProps<Ceremony>>();
   static readonly Parent = import('../../engagement/dto').then(
@@ -53,5 +52,8 @@ export class SecuredCeremony extends SecuredProperty(Ceremony) {}
 declare module '~/core/resources/map' {
   interface ResourceMap {
     Ceremony: typeof Ceremony;
+  }
+  interface ResourceDBMap {
+    Ceremony: typeof e.Engagement.Ceremony;
   }
 }

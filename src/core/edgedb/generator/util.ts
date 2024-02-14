@@ -1,11 +1,14 @@
 import { Client } from 'edgedb';
 import { Directory, SourceFile } from 'ts-morph';
 import { ScalarInfo } from '../codecs';
+import { HydratorMap } from './find-hydration-shapes';
 
 export interface GeneratorParams {
   client: Client;
   root: Directory;
   edgedbDir: Directory;
+  hydrators: HydratorMap;
+  errors: Error[];
 }
 
 export function addCustomScalarImports(
@@ -23,3 +26,6 @@ export function addCustomScalarImports(
     })),
   );
 }
+
+export const toFqn = (type: string) =>
+  type.includes(':') ? type : `default::${type}`;

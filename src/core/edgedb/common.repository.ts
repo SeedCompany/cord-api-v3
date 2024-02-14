@@ -41,7 +41,7 @@ export class CommonRepository implements PublicOf<Neo4jCommonRepository> {
         : EnhancedResource.of(fqn)
       : undefined;
     const query = e.params({ ids: e.array(e.uuid) }, ({ ids }) =>
-      e.select((res?.db ?? e.Object) as typeof e.Object, (obj) => ({
+      e.select(res?.db ?? e.Object, (obj) => ({
         id: true,
         // eslint-disable-next-line @typescript-eslint/naming-convention
         _typeFQN_: obj.__type__.name,

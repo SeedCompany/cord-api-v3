@@ -1,7 +1,7 @@
-import { PipeTransform } from '@nestjs/common';
+import { Injectable, PipeTransform } from '@nestjs/common';
 import { Args, ArgsType } from '@nestjs/graphql';
-import { ID, IdField, ObjectView } from '../../../common';
-import { ValidationPipe } from '../../../core/validation.pipe';
+import { ID, IdField, ObjectView } from '~/common';
+import { ValidationPipe } from '~/core/validation';
 
 /**
  * A helper for id & changeset arguments.
@@ -20,15 +20,15 @@ export type IdsAndView = ChangesetIds & { view: ObjectView };
 export const IdsAndViewArg = () =>
   Args({ type: () => ChangesetIds }, ObjectViewPipe);
 
-class ObjectViewPipe implements PipeTransform {
-  async transform({ id, changeset }: ChangesetIds) {
-    await new ValidationPipe().transform(
-      { id, changeset },
-      {
-        metatype: ChangesetIds,
-        type: 'body',
-      },
-    );
+@Injectable()
+export class ObjectViewPipe implements PipeTransform {
+  constructor(private readonly validator: ValidationPipe) {}
+
+  async transform(input: ChangesetIds) {
+    const { id, changeset } = await this.validator.transform(input, {
+      metatype: ChangesetIds,
+      type: 'body',
+    });
     const view: ObjectView = changeset ? { changeset } : { active: true };
     return { id, changeset, view };
   }

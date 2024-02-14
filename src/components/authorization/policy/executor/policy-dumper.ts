@@ -16,6 +16,7 @@ import Table from 'cli-table3';
 import { startCase } from 'lodash';
 import { DateTime } from 'luxon';
 import { Command, Console } from 'nestjs-console';
+import fs from 'node:fs/promises';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { LiteralUnion } from 'type-fest';
 import { inspect } from 'util';
@@ -63,7 +64,8 @@ export class PolicyDumper {
       xlsx.utils.book_append_sheet(book, sheet, startCase(role).slice(0, 31));
     }
 
-    xlsx.writeFile(book, filename ?? 'permissions.xlsx');
+    const buffer: Buffer = xlsx.write(book, { type: 'buffer' });
+    await fs.writeFile(filename ?? 'permissions.xlsx', buffer);
   }
 
   @Command({

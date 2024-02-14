@@ -14,9 +14,15 @@ module default {
     # Enforce no empty collections for this type's use-case. Use null/empty-set instead.
     trigger denyEmptyScriptureCollection after insert, update for each do (
       assert(
-        exists __new__.scripture.verses,
+        not exists __new__.scripture or exists __new__.scripture.verses,
         message := "`Producible.scripture` should have a `Scripture::Collection` with verses or be null/empty-set"
       )
+    );
+    
+    trigger updateDerivativeProducts after update for each do (
+      update __new__.<produces[is DerivativeScriptureProduct]
+      filter __new__.scripture != __old__.scripture and not exists .scriptureOverride
+      set { scripture := __new__.scripture }
     );
   }
   

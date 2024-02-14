@@ -4,4 +4,3 @@ export { Client } from 'edgedb/dist/baseClient.js';
 
 export { default as e, $infer } from './generated-client';
 export * as $ from './generated-client/reflection';
-export * from './abstract.type-util';

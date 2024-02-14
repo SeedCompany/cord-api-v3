@@ -3,14 +3,15 @@ import { GraphQLSchemaHost } from '@nestjs/graphql';
 import { CachedByArg, mapKeys } from '@seedcompany/common';
 import { isObjectType } from 'graphql';
 import { mapValues } from 'lodash';
-import { LiteralUnion, ValueOf } from 'type-fest';
+import { ConditionalKeys, LiteralUnion, ValueOf } from 'type-fest';
 import {
+  DBName,
   EnhancedResource,
   InvalidIdForTypeException,
   ResourceShape,
   ServerException,
 } from '~/common';
-import { ResourceMap } from './map';
+import { ResourceDBMap, ResourceMap } from './map';
 import { __privateDontUseThis } from './resource-map-holder';
 
 export type EnhancedResourceMap = {
@@ -23,6 +24,10 @@ export type ResourceLike =
   | ResourceShape<any>
   | EnhancedResource<any>
   | LooseResourceName;
+
+type ResourceNameFromDBName<K extends DBName<ValueOf<ResourceDBMap>>> =
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  ConditionalKeys<ResourceDBMap, { __element__: { __name__: K } }>;
 
 @Injectable()
 export class ResourcesHost {
@@ -61,13 +66,18 @@ export class ResourcesHost {
     return resource;
   }
 
-  getByDynamicName(
-    name: LooseResourceName,
-  ): EnhancedResource<ValueOf<ResourceMap>> {
+  getByDynamicName(name: LooseResourceName): EnhancedResource<any> {
     return this.getByName(name as any);
   }
 
-  getByEdgeDB(name: string): EnhancedResource<ValueOf<ResourceMap>> {
+  getByEdgeDB<K extends keyof ResourceMap>(
+    name: K,
+  ): EnhancedResource<ValueOf<Pick<ResourceMap, K>>>;
+  getByEdgeDB<K extends DBName<ValueOf<ResourceDBMap>>>(
+    name: K,
+  ): EnhancedResource<ValueOf<Pick<ResourceMap, ResourceNameFromDBName<K>>>>;
+  getByEdgeDB(name: string): EnhancedResource<any>;
+  getByEdgeDB(name: string) {
     const fqnMap = this.edgeDBFQNMap();
     const resByFQN = fqnMap.get(
       name.includes('::') ? name : `default::${name}`,

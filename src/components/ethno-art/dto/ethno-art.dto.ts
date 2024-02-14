@@ -17,12 +17,11 @@ declare module '../../product/dto/producible.dto' {
   }
 }
 
-@RegisterResource()
+@RegisterResource({ db: e.EthnoArt })
 @ObjectType({
   implements: [Producible, Resource],
 })
 export class EthnoArt extends Producible {
-  static readonly DB = e.EthnoArt;
   static readonly Props = keysOf<EthnoArt>();
   static readonly SecuredProps = keysOf<SecuredProps<EthnoArt>>();
 
@@ -34,5 +33,8 @@ export class EthnoArt extends Producible {
 declare module '~/core/resources/map' {
   interface ResourceMap {
     EthnoArt: typeof EthnoArt;
+  }
+  interface ResourceDBMap {
+    EthnoArt: typeof e.default.EthnoArt;
   }
 }

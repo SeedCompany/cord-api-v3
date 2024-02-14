@@ -17,7 +17,7 @@ module default {
     
     #address: str; #TODO - this needs figured out - needed on here and Organization?
     multi types: Partner::Type;
-    multi financialReportingTypes: Partner::FinancialReportingType;
+    multi financialReportingTypes: Partnership::FinancialReportingType;
     
     pointOfContact: User;
     languageOfWiderCommunication: Language;
@@ -39,12 +39,5 @@ module Partner {
     Impact,
     Technical,
     Resource
-  >;
-  
-  #TODO - probably move to Partnership?
-  scalar type FinancialReportingType extending enum<
-    Funded,
-    FieldEngaged,
-    Hybrid
   >;
 }

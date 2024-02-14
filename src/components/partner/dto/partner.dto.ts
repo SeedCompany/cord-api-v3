@@ -43,12 +43,11 @@ export abstract class SecuredFinancialReportingTypes extends SecuredEnumList(
   FinancialReportingType,
 ) {}
 
-@RegisterResource()
+@RegisterResource({ db: e.Partner })
 @ObjectType({
   implements: [Resource, Pinnable, Postable],
 })
 export class Partner extends Interfaces {
-  static readonly DB = e.Partner;
   static readonly Props = keysOf<Partner>();
   static readonly SecuredProps = keysOf<SecuredProps<Partner>>();
   static readonly Relations = () =>
@@ -113,5 +112,8 @@ export class SecuredPartner extends SecuredProperty(Partner) {}
 declare module '~/core/resources/map' {
   interface ResourceMap {
     Partner: typeof Partner;
+  }
+  interface ResourceDBMap {
+    Partner: typeof e.default.Partner;
   }
 }

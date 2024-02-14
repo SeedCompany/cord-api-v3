@@ -57,7 +57,7 @@ type ChangeKey<Key extends keyof T & string, T> = T[Key] extends SetChangeType<
   ? Override extends string
     ? Override
     : never
-  : UnwrapSecured<T[Key]> extends FileId
+  : UnwrapSecured<T[Key]> extends FileId | LinkTo<'File'>
   ? Key
   : NonNullable<UnwrapSecured<T[Key]>> extends ID | LinkTo<any>
   ? `${Key}Id` // our convention for single relationships
@@ -65,11 +65,15 @@ type ChangeKey<Key extends keyof T & string, T> = T[Key] extends SetChangeType<
 
 type ChangeOf<Val> = Val extends SetChangeType<any, infer Override>
   ? Override
-  : UnwrapSecured<Val> extends FileId
+  :
+      | RawChangeOf<UnwrapSecured<Val> & {}>
+      | (UnwrapSecured<Val> extends null ? null : unknown);
+
+type RawChangeOf<Val> = Val extends FileId | LinkTo<'File'>
   ? CreateDefinedFileVersionInput
-  : UnwrapSecured<Val> extends LinkTo<any>
+  : Val extends LinkTo<any>
   ? ID
-  : UnwrapSecured<Val>;
+  : Val;
 
 /**
  * Only props of T that can be written directly to DB

@@ -13,28 +13,27 @@ module default {
     departmentId: int32 {
       constraint exclusive;
       constraint expression on (__subject__ >= 10000 and __subject__ <= 99999);
-# Temporarily disabled. Upstream fix in progress.
-#       rewrite update using (
-#         if (
-#           not exists .departmentId and
-#           .status <= Project::Status.Active and
-#           .step >= Project::Step.PendingFinanceConfirmation
-#         ) then ((
-#           with
-#             fa := assert_exists(
-#               __subject__.primaryLocation.fundingAccount,
-#               message := "Project must have a primary location"
-#             ),
-#             existing := (
-#               select detached Project.departmentId filter Project.primaryLocation.fundingAccount = fa
-#             ),
-#             available := (
-#               range_unpack(range(fa.accountNumber * 10000 + 11, fa.accountNumber * 10000 + 9999))
-#               except existing
-#             )
-#           select min(available)
-#         )) else .departmentId
-#       );
+      rewrite update using (
+        if (
+          not exists .departmentId and
+          .status <= Project::Status.Active and
+          .step >= Project::Step.PendingFinanceConfirmation
+        ) then ((
+          with
+            fa := assert_exists(
+              __subject__.primaryLocation.fundingAccount,
+              message := "Project must have a primary location"
+            ),
+            existing := (
+              select detached Project.departmentId filter Project.primaryLocation.fundingAccount = fa
+            ),
+            available := (
+              range_unpack(range(fa.accountNumber * 10000 + 11, fa.accountNumber * 10000 + 9999))
+              except existing
+            )
+          select min(available)
+        )) else .departmentId
+      );
     };
     
     required step: Project::Step {
@@ -81,6 +80,8 @@ module default {
     fieldRegion: FieldRegion;
     
     link rootDirectory: Directory;
+    
+    partnerships := .<project[is Partnership];
     
     overloaded link projectContext: Project::Context {
       default := (insert Project::Context {

@@ -180,6 +180,17 @@ export class LanguageRepository extends DtoRepository<
           leastOfThese: filter.propVal(),
           isSignLanguage: filter.propVal(),
           isDialect: filter.propVal(),
+          partnerId: filter.pathExists((id) => [
+            node('node'),
+            relation('in', '', 'language', ACTIVE),
+            node('', 'LanguageEngagement'),
+            relation('in', '', 'engagement', ACTIVE),
+            node('', 'Project'),
+            relation('out', '', 'partnership', ACTIVE),
+            node('', 'Partnership'),
+            relation('out', '', 'partner', ACTIVE),
+            node('', 'Partner', { id }),
+          ]),
           presetInventory: ({ value, query }) => {
             query.apply(this.isPresetInventory()).with('*');
             const condition = equals('true', true);

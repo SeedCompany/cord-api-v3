@@ -2,7 +2,7 @@ import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { SetDbType } from '~/core/database';
-import { abstractType, e } from '~/core/edgedb';
+import { e } from '~/core/edgedb';
 import { RegisterResource } from '~/core/resources';
 import {
   EnumType,
@@ -19,7 +19,7 @@ import {
   SecuredScriptureRanges,
 } from '../../scripture';
 
-@RegisterResource()
+@RegisterResource({ db: e.Producible })
 @InterfaceType({
   description: 'Something that is _producible_ via a Product',
   resolveType: (p: ProducibleRef) => p.__typename,
@@ -30,7 +30,6 @@ import {
   implements: [Resource],
 })
 export abstract class Producible extends Resource {
-  static readonly DB = abstractType(e.Producible);
   static readonly Props: string[] = keysOf<Producible>();
   static readonly SecuredProps: string[] = keysOf<SecuredProps<Producible>>();
 
@@ -67,5 +66,8 @@ export class SecuredProducible extends SecuredProperty(Producible, {
 declare module '~/core/resources/map' {
   interface ResourceMap {
     Producible: typeof Producible;
+  }
+  interface ResourceDBMap {
+    Producible: typeof e.default.Producible;
   }
 }

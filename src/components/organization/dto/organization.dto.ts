@@ -18,12 +18,11 @@ import { Location } from '../../location/dto';
 import { SecuredOrganizationReach } from './organization-reach.dto';
 import { SecuredOrganizationTypes } from './organization-type.dto';
 
-@RegisterResource()
+@RegisterResource({ db: e.Organization })
 @ObjectType({
   implements: Resource,
 })
 export class Organization extends Resource {
-  static readonly DB = e.Organization;
   static readonly Props = keysOf<Organization>();
   static readonly SecuredProps = keysOf<SecuredProps<Organization>>();
   static readonly Relations = {
@@ -61,5 +60,8 @@ export class SecuredOrganization extends SecuredProperty(Organization) {}
 declare module '~/core/resources/map' {
   interface ResourceMap {
     Organization: typeof Organization;
+  }
+  interface ResourceDBMap {
+    Organization: typeof e.default.Organization;
   }
 }

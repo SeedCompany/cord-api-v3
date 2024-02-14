@@ -14,6 +14,7 @@ jobs:
 
       - name: Schema Migrations In Sync
         run: edgedb migration status
+        if: github.event.pull_request.draft == false
 
       - name: Validate seed scripts are error free
         run: yarn edgedb:seed

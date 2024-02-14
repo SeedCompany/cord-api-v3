@@ -45,10 +45,9 @@ export abstract class SecuredTags extends SecuredPropertyList<string>(
   GraphQLString,
 ) {}
 
-@RegisterResource()
+@RegisterResource({ db: e.Ethnologue.Language })
 @ObjectType()
 export class EthnologueLanguage {
-  static readonly DB = e.Ethnologue.Language;
   static readonly Props = keysOf<EthnologueLanguage>();
   static readonly SecuredProps = keysOf<SecuredProps<EthnologueLanguage>>();
   // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -84,12 +83,11 @@ export class EthnologueLanguage {
   readonly sensitivity: Sensitivity & SetUnsecuredType<never>;
 }
 
-@RegisterResource()
+@RegisterResource({ db: e.Language })
 @ObjectType({
   implements: [Resource, Pinnable, Postable],
 })
 export class Language extends Interfaces {
-  static readonly DB = e.Language;
   static readonly Props = keysOf<Language>();
   static readonly SecuredProps = keysOf<SecuredProps<Language>>();
   static readonly Relations = {
@@ -213,5 +211,9 @@ declare module '~/core/resources/map' {
   interface ResourceMap {
     EthnologueLanguage: typeof EthnologueLanguage;
     Language: typeof Language;
+  }
+  interface ResourceDBMap {
+    EthnologueLanguage: typeof e.Ethnologue.Language;
+    Language: typeof e.default.Language;
   }
 }

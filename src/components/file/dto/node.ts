@@ -4,14 +4,15 @@ import { stripIndent } from 'common-tags';
 import { DateTime } from 'luxon';
 import { Readable } from 'stream';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { MergeExclusive, Opaque } from 'type-fest';
+import { MergeExclusive } from 'type-fest';
 import { BaseNode } from '~/core/database/results';
-import { abstractType, e } from '~/core/edgedb';
+import { e } from '~/core/edgedb';
 import { RegisterResource } from '~/core/resources';
 import {
   DateTimeField,
   DbLabel,
   ID,
+  IdOf,
   InputException,
   NameField,
   Resource,
@@ -43,7 +44,7 @@ export const resolveFileNode = (val: AnyFileNode) => {
   return type;
 };
 
-@RegisterResource()
+@RegisterResource({ db: e.File.Node })
 @InterfaceType({
   resolveType: resolveFileNode,
 })
@@ -51,7 +52,6 @@ export const resolveFileNode = (val: AnyFileNode) => {
  * This should be used for GraphQL but never for TypeScript types.
  */
 abstract class FileNode extends Resource {
-  static readonly DB = abstractType(e.File.Node);
   static readonly Props: string[] = keysOf<FileNode>();
   static readonly SecuredProps: string[] = keysOf<SecuredProps<FileNode>>();
 
@@ -101,24 +101,22 @@ abstract class BaseFile extends FileNode {
   readonly size: number;
 }
 
-@RegisterResource()
+@RegisterResource({ db: e.File.Version })
 @ObjectType({
   implements: [FileNode, Resource],
 })
 export class FileVersion extends BaseFile {
-  static readonly DB = e.File.Version;
   static readonly Props = keysOf<FileVersion>();
   static readonly SecuredProps = keysOf<SecuredProps<FileVersion>>();
 
   declare readonly type: 'FileVersion';
 }
 
-@RegisterResource()
+@RegisterResource({ db: e.File })
 @ObjectType({
   implements: [FileNode, Resource],
 })
 export class File extends BaseFile {
-  static readonly DB = e.File;
   static readonly Props = keysOf<File>();
   static readonly SecuredProps = keysOf<SecuredProps<File>>();
 
@@ -132,12 +130,11 @@ export class File extends BaseFile {
   readonly modifiedAt: DateTime;
 }
 
-@RegisterResource()
+@RegisterResource({ db: e.Directory })
 @ObjectType({
   implements: [FileNode, Resource],
 })
 export class Directory extends FileNode {
-  static readonly DB = e.Directory;
   static readonly Props = keysOf<Directory>();
   static readonly SecuredProps = keysOf<SecuredProps<Directory>>();
 
@@ -181,7 +178,7 @@ export abstract class SecuredFile extends SecuredProperty(File) {}
  */
 export type DefinedFile = Secured<FileId>;
 
-export type FileId = ID & Opaque<string, 'FileId'>;
+export type FileId = IdOf<'File'>;
 
 export const isDirectory = (node: AnyFileNode): node is Directory =>
   node.type === FileNodeType.Directory;
@@ -217,5 +214,11 @@ declare module '~/core/resources/map' {
     File: typeof File;
     FileNode: typeof FileNode;
     FileVersion: typeof FileVersion;
+  }
+  interface ResourceDBMap {
+    Directory: typeof e.Directory;
+    File: typeof e.default.File;
+    FileNode: typeof e.File.Node;
+    FileVersion: typeof e.File.Version;
   }
 }

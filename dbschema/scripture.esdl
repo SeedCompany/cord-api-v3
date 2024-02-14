@@ -48,4 +48,15 @@ module Scripture {
       constraint expression on (__subject__ >= 0 and __subject__ <= 31101);
     }
   }
+  
+  type UnspecifiedPortion {
+    required book: str {
+      readonly := true;
+    }
+    
+    required totalVerses: int16 {
+      readonly := true;
+      constraint min_value(1);
+    }
+  }
 }
