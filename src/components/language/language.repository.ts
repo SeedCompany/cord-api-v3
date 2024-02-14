@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { simpleSwitch } from '@seedcompany/common';
 import {
   equals,
   inArray,
@@ -7,15 +8,16 @@ import {
   Query,
   relation,
 } from 'cypher-query-builder';
-import { ChangesOf } from '~/core/database/changes';
 import {
+  DuplicateException,
   ID,
   labelForView,
   ObjectView,
+  ServerException,
   Session,
   UnsecuredDto,
-} from '../../common';
-import { DtoRepository } from '../../core';
+} from '~/common';
+import { DtoRepository, UniquenessError } from '~/core';
 import {
   ACTIVE,
   any,
@@ -36,7 +38,7 @@ import {
   requestingUser,
   sorting,
   variable,
-} from '../../core/database/query';
+} from '~/core/database/query';
 import { ProjectStatus } from '../project';
 import {
   CreateLanguage,
@@ -44,13 +46,20 @@ import {
   LanguageListInput,
   UpdateLanguage,
 } from './dto';
+import { EthnologueLanguageService } from './ethnologue-language';
 
 @Injectable()
 export class LanguageRepository extends DtoRepository<
   typeof Language,
   [session: Session, view?: ObjectView]
 >(Language) {
-  async create(input: CreateLanguage, ethnologueId: ID, session: Session) {
+  constructor(
+    private readonly ethnologueLanguageService: EthnologueLanguageService,
+  ) {
+    super();
+  }
+
+  async create(input: CreateLanguage, session: Session) {
     const initialProps = {
       name: input.name,
       displayName: input.displayName,
@@ -69,6 +78,11 @@ export class LanguageRepository extends DtoRepository<
       canDelete: true,
     };
 
+    const ethnologueId = await this.ethnologueLanguageService.create(
+      input?.ethnologue,
+      session,
+    );
+
     const createLanguage = this.db
       .query()
       .apply(matchRequestingUser(session))
@@ -80,15 +94,44 @@ export class LanguageRepository extends DtoRepository<
       )
       .return<{ id: ID }>('node.id as id');
 
-    return await createLanguage.first();
+    let result;
+    try {
+      result = await createLanguage.first();
+    } catch (e) {
+      if (e instanceof UniquenessError) {
+        const prop =
+          simpleSwitch(e.label, {
+            LanguageName: 'name',
+            LanguageDisplayName: 'displayName',
+            RegistryOfDialectsCode: `registryOfDialectsCode`,
+          }) ?? e.label;
+        throw new DuplicateException(
+          `language.${prop}`,
+          `${prop} with value ${e.value} already exists`,
+          e,
+        );
+      }
+
+      throw new ServerException('Could not create language', e);
+    }
+
+    if (!result) {
+      throw new ServerException('Failed to create language');
+    }
+
+    return await this.readOne(result.id, session);
   }
 
   async update(
-    existing: Language,
-    simpleChanges: Omit<ChangesOf<Language, UpdateLanguage>, 'ethnologue'>,
+    changes: Omit<UpdateLanguage, 'ethnologue'>,
+    session: Session,
     changeset?: ID,
   ) {
-    await this.updateProperties(existing, simpleChanges, changeset);
+    const { id, ...simpleChanges } = changes;
+
+    await this.updateProperties({ id }, simpleChanges, changeset);
+
+    return await this.readOne(changes.id, session);
   }
 
   async readMany(ids: readonly ID[], session: Session, view?: ObjectView) {
@@ -219,30 +262,12 @@ export class LanguageRepository extends DtoRepository<
         node('engagement', 'LanguageEngagement'),
       ])
       .return(collect('engagement.id').as('engagementIds'))
-      .asResult<{ engagementIds: ID[] }>()
+      .asResult<{ engagementIds: readonly ID[] }>()
+      .map('engagementIds')
       .first();
   }
 
-  async verifyExternalFirstScripture(id: ID) {
-    return await this.db
-      .query()
-      .match([
-        node('language', 'Language', { id }),
-        relation('in', '', 'language', ACTIVE),
-        node('languageEngagement', 'LanguageEngagement'),
-        relation('out', '', 'firstScripture', ACTIVE),
-        node('firstScripture', 'Property'),
-      ])
-      .where({
-        firstScripture: {
-          value: true,
-        },
-      })
-      .return('languageEngagement')
-      .first();
-  }
-
-  isPresetInventory() {
+  private isPresetInventory() {
     return (query: Query) =>
       query.subQuery('node', (sub) =>
         sub
