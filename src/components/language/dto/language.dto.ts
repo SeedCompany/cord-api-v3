@@ -184,7 +184,7 @@ export class Language extends Interfaces {
       This indicates the language & mention projects will be exposed to major investors.
     `,
   })
-  readonly presetInventory: SecuredBoolean;
+  readonly presetInventory?: SecuredBoolean;
 
   // Not returned, only used to cache the sensitivity for determining permissions
   readonly effectiveSensitivity: Sensitivity;
