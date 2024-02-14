@@ -18,7 +18,7 @@ export class ProgressSummaryExtractor {
     return {
       reportPeriod: summaryFrom(yearRow, quarterCol, quarterCol),
       fiscalYear: summaryFrom(yearRow, ...sheet.columnsForFiscalYear),
-      cumulative: summaryFrom(yearRow, ...sheet.columnsForCumulative),
+      cumulative: findLatestCumulative(yearRow),
     };
   }
 }
@@ -30,6 +30,21 @@ const findFiscalYearRow = (sheet: ProgressSheet, fiscalYear: number) => {
     }
   }
   throw new Error('Unable to find fiscal year in pnp file');
+};
+
+const findLatestCumulative = (currentYear: Row<ProgressSheet>) => {
+  const { sheet } = currentYear;
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const summary = summaryFrom(currentYear, ...sheet.columnsForCumulative);
+    if (summary) {
+      return summary;
+    }
+    currentYear = currentYear.move(-1);
+    if (currentYear < sheet.summaryFiscalYears.start.row) {
+      return null;
+    }
+  }
 };
 
 const summaryFrom = (
