@@ -5,7 +5,7 @@ import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { inspect } from 'util';
 import type { ResourceDBMap, ResourceMap } from '~/core';
-import { $ } from '~/core/edgedb/reexports';
+import { $, e } from '~/core/edgedb/reexports';
 import { ScopedRole } from '../components/authorization';
 import { CalculatedSymbol } from './calculated.decorator';
 import { DataObject } from './data-object';
@@ -249,7 +249,7 @@ export class EnhancedResource<T extends ResourceShape<any>> {
     return type as any;
   }
 
-  get dbFQN(): DBType<T>['__element__']['__name__'] {
+  get dbFQN(): ResourceShape<any> extends T ? string : DBName<DBType<T>> {
     return this.db.__element__.__name__ as any;
   }
 
@@ -297,11 +297,15 @@ export type ResourceName<TResourceStatic extends ResourceShape<any>> =
         string;
 
 export type DBType<TResourceStatic extends ResourceShape<any>> =
-  ResourceName<TResourceStatic> extends keyof ResourceDBMap
+  ResourceShape<any> extends TResourceStatic
+    ? typeof e.Resource // short-circuit non-specific types
+    : ResourceName<TResourceStatic> extends keyof ResourceDBMap
     ? ResourceDBMap[ResourceName<TResourceStatic>] extends infer T extends $.$expr_PathNode
       ? T
       : never
     : never;
+
+export type DBName<T extends $.TypeSet> = T['__element__']['__name__'];
 
 export type MaybeUnsecuredInstance<TResourceStatic extends ResourceShape<any>> =
   MaybeSecured<InstanceType<TResourceStatic>>;
