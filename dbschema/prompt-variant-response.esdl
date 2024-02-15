@@ -5,9 +5,7 @@ module default {
   }
 
   abstract type VariantResponse extending Resource {
-    variant: VariantResponse::Variant {
-      default := VariantResponse::Variant.draft;
-    }
+    variant: VariantResponse::Variant;
     response: RichText;
     creator: User; # Need to figure out if there is a way to reuse the above creator here
   }
