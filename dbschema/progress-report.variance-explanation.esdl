@@ -1,5 +1,5 @@
 module ProgressReport {
-  type VarianceExplanation extending Engagement::Child {
+  type VarianceExplanation extending ProgressReport::Child {
     required report: default::ProgressReport {
       readonly := true;
     };
