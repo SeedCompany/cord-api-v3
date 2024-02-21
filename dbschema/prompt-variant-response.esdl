@@ -7,7 +7,20 @@ module default {
   abstract type VariantResponse extending Resource {
     variant: VariantResponse::Variant;
     response: RichText;
-    creator: User; # Need to figure out if there is a way to reuse the above creator here
+    creator: User;
+  }
+  
+  type PromptResponse extending Resource {
+    parent: str;
+    prompt: Prompt;
+    response: RichText;
+  }
+  
+  type Prompt extending Resource {
+    text: RichText;
+    shortLabel: str;
+    min: int16;
+    max: int16; 
   }
 }
 
