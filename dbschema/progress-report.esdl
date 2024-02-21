@@ -6,9 +6,10 @@ module default {
 }
 
 module ProgressReport {
-   abstract type Child extending default::Resource, ContextAware {
+   abstract type Child extending Engagement::Child, Project::ContextAware {
     annotation description := "\
       A type that is a child of a progress report. \
+
       It will always have a reference to a single progress report and engagement that it is under.";
     
     required progressReport: default::ProgressReport {
