@@ -12,12 +12,12 @@ module ProgressReport {
       A type that is a child of a progress report. \
 
       It will always have a reference to a single progress report and engagement that it is under.";
-    
+
     required report: default::ProgressReport {
       readonly := true;
       on target delete delete source;
     };
-    
+
     trigger enforceProgressReportEngagement after insert, update for each do (
       assert(
         __new__.report.engagement = __new__.engagement,
@@ -30,7 +30,7 @@ module ProgressReport {
     overloaded report {
       constraint exclusive;
     };
-    
+
     multi reasons: str; 
 
     comments: default::RichText;
