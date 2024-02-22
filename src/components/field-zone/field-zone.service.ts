@@ -61,7 +61,7 @@ export class FieldZoneService {
     const changes = this.repo.getActualChanges(fieldZone, input);
     this.privileges.for(session, FieldZone, fieldZone).verifyChanges(changes);
 
-    const updated = await this.repo.update(fieldZone, changes);
+    const updated = await this.repo.update({ id: input.id, ...changes });
     return this.secure(updated, session);
   }
 
