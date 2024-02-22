@@ -41,23 +41,21 @@ with
       with
         intern := assert_single((select User filter .realFirstName = <str>engagement['intern'])),
         project := (select InternshipProject filter .name = <str>engagement['project']),
-        mentor := assert_single((select User filter .realFirstName = <str>json_get(engagement, 'mentor'))),
-        countryOfOrigin := (select Location filter .name = <str>json_get(engagement, 'countryOfOrigin'))
       select (
         (select InternshipEngagement filter .intern = intern and .project = project) ??
         (insert InternshipEngagement {
           project := project,
-          intern := intern,
-          mentor := mentor,
           projectContext := project.projectContext,
+          intern := intern,
           status := <Engagement::Status>engagement['status'],
           startDateOverride := <cal::local_date>json_get(engagement, 'startDateOverride'),
           endDateOverride := <cal::local_date>json_get(engagement, 'endDateOverride'),
-          countryOfOrigin := countryOfOrigin
+          mentor := assert_single((select User filter .realFirstName = <str>json_get(engagement, 'mentor'))),
+          countryOfOrigin := (select Location filter .name = <str>json_get(engagement, 'countryOfOrigin')),
         })
       )
     )
   ),
   new := (select engagements filter .createdAt = datetime_of_statement())
-select { `Added Internship Engagements: Internship -> Project` := new.intern.realFirstName ++ ' ' ++ new.intern.realLastName ++ ' -> ' ++ new.project.name }
+select { `Added Internship Engagements: Intern -> Project` := new.intern.realFirstName ++ ' ' ++ new.intern.realLastName ++ ' -> ' ++ new.project.name }
 filter count(new) > 0;
