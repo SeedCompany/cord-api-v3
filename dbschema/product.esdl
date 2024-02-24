@@ -66,6 +66,11 @@ module default {
 }
   
 module Product {
+  type CompletionDescription extending default::PaginationInput {
+    query: str;
+    methodology: Methodology;
+  }
+
   scalar type Medium extending enum<
     Print,
     Web,

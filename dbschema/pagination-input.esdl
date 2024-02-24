@@ -11,9 +11,4 @@ module default {
       default := 1;
     };
   }
-
-  type ProductCompletionDescription extending PaginationInput {
-    query: str;
-    methodology: Product::Methodology;
-  }
 }
