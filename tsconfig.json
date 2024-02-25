@@ -37,6 +37,11 @@
     "plugins": [
       { "transform": "typescript-transform-paths" },
       { "transform": "./src/core/resources/plugin/index.js" },
+      {
+        "name": "gql.tada/ts-plugin",
+        "schema": "./schema.graphql",
+        "tadaOutputLocation": "./src/graphql-env.generated.d.ts"
+      },
     ],
 
     // Path resolution
@@ -46,6 +51,7 @@
       "~/common/*": ["./src/common/*"],
       "~/core": ["./src/core"],
       "~/core/*": ["./src/core/*"],
+      "~/graphql": ["./src/graphql"],
     },
 
     // Compilation

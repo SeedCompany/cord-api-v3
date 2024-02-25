@@ -18,6 +18,9 @@ jobs:
       - name: Gel Setup
         uses: ./.github/actions/gel-setup
 
+      - name: Generate GQL Schema
+        run: yarn start -- --gen-schema && yarn gql-tada generate output
+
       - name: Tests
         run: yarn test --reporters=github-actions
 
@@ -58,6 +61,9 @@ jobs:
 
       - name: Gel Setup
         uses: ./.github/actions/gel-setup
+
+      - name: Generate GQL Schema
+        run: yarn start -- --gen-schema && yarn gql-tada generate output
 
       - name: E2E Tests
         run: yarn test:e2e --shard=${{ matrix.shard }}/6 --reporters=github-actions
