@@ -66,7 +66,7 @@ module default {
 }
   
 module Product {
-  type CompletionDescription extending default::PaginationInput {
+  type CompletionDescription {
     query: str;
     methodology: Methodology;
   }
