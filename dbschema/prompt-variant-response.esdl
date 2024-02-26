@@ -1,34 +1,13 @@
 module default {
-  type PromptVariantResponse extending Resource {
-    creator: User;
-    multi link responses := VariantResponse;
+  type PromptVariantResponse extending Resource, Mixin::Embedded, Mixin::Owned {
+    promptId: str;
+    multi link responses: VariantResponse {
+      on source delete delete target;
+    }
   }
 
-  abstract type VariantResponse extending Resource {
-    variant: VariantResponse::Variant;
-    response: RichText;
-    creator: User;
-  }
-  
-  type PromptResponse extending Resource {
-    parent: str;
-    prompt: Prompt;
+  type VariantResponse extending Resource, Mixin::Owned {
+    required variant: str;
     response: RichText;
   }
-  
-  type Prompt extending Resource {
-    text: RichText;
-    shortLabel: str;
-    min: int16;
-    max: int16; 
-  }
-}
-
-module VariantResponse {
-  scalar type Variant extending enum<
-    draft,
-    translated,
-    fpm,
-    published,
-  >;
 }
