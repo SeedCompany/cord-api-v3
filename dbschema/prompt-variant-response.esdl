@@ -1,14 +1,13 @@
 module default {
-  type PromptVariantResponse extending Resource, Mixin::Embedded, Mixin::Owned {
-    required promptId: str;
-    # TODO - make the items in the list unique
-    multi link responses: VariantResponse {
-      on source delete delete target;
-    }
+  type PromptVariantResponse {
+    responses := .<uniqueResponse[is VariantResponse];
   }
-
-  type VariantResponse extending Mixin::Timestamped, Mixin::Owned {
+  
+  type VariantResponse {
+    required uniqueResponse: PromptVariantResponse;
     required variant: str;
     response: RichText;
+  
+    constraint exclusive on ((.uniqueResponse, .variant));
   }
 }
