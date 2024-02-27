@@ -1,3 +1,5 @@
+import { takeWhile } from 'lodash';
+import { ProjectStep } from '../../../project/dto';
 import {
   action,
   field,
@@ -9,6 +11,12 @@ import {
   sensOnlyLow,
   variant,
 } from '../util';
+
+// eslint-disable-next-line @seedcompany/no-unused-vars
+const stepsUntilFinancialEndorsement = takeWhile(
+  [...ProjectStep],
+  (s) => s !== ProjectStep.PendingFinancialEndorsement,
+);
 
 // NOTE: There could be other permissions for this role from other policies
 @Policy(
@@ -97,7 +105,8 @@ import {
           .whenAll(
             member,
             field('status', 'InDevelopment'),
-            //
+            // Only allow until financial endorsement
+            // field('step', stepsUntilFinancialEndorsement),
           )
           [action]('edit'),
       ])
