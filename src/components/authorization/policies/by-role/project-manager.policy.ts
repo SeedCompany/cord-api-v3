@@ -1,4 +1,6 @@
 import {
+  action,
+  field,
   inherit,
   member,
   Policy,
@@ -89,6 +91,15 @@ import {
         p
           .many('rootDirectory', 'otherLocations', 'primaryLocation')
           .edit.whenAny(member, sensMediumOrLower).read,
+        p
+          .many('mouStart', 'mouEnd')
+          .read //
+          .whenAll(
+            member,
+            field('status', 'InDevelopment'),
+            //
+          )
+          [action]('edit'),
       ])
       .children((c) => c.posts.read.create),
     r.ProjectMember.read.when(member).edit.create.delete,
