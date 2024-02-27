@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/method-signature-style */
+import { Many } from '@seedcompany/common';
 import { Query } from 'cypher-query-builder';
 import { EnhancedResource, ResourceShape, Session } from '~/common';
 import { ResourceObjectContext } from '../object.type';
@@ -57,7 +58,10 @@ export interface Condition<TResourceStatic extends ResourceShape<any>> {
    * This should not logically change anything, but rather just simplify unnecessary conditions.
    * Note: The current context, this, should not be used.
    */
-  union?(this: void, conditions: readonly this[]): Condition<TResourceStatic>;
+  union?(
+    this: void,
+    conditions: readonly this[],
+  ): Many<Condition<TResourceStatic>>;
 
   /**
    * Intersect multiple conditions of this type together to a single one.
@@ -67,5 +71,5 @@ export interface Condition<TResourceStatic extends ResourceShape<any>> {
   intersect?(
     this: void,
     conditions: readonly this[],
-  ): Condition<TResourceStatic>;
+  ): Many<Condition<TResourceStatic>>;
 }

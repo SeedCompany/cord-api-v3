@@ -20,7 +20,6 @@ import {
   matchChangesetAndChangedProps,
   matchPropsAndProjectSensAndScopedRoles,
   matchRequestingUser,
-  matchSession,
   merge,
   oncePerProject,
   paginate,
@@ -45,16 +44,6 @@ export class BudgetRepository extends DtoRepository<
 >(Budget) {
   constructor(private readonly records: BudgetRecordRepository) {
     super();
-  }
-
-  async doesProjectExist(projectId: ID, session: Session) {
-    const result = await this.db
-      .query()
-      .match(matchSession(session, { withAclRead: 'canReadProjects' }))
-      .match([node('project', 'Project', { id: projectId })])
-      .return('project.id')
-      .first();
-    return !!result;
   }
 
   async create(

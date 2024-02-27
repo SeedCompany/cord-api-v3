@@ -4,6 +4,7 @@ import { BaseNode } from '~/core/database/results';
 import { e } from '~/core/edgedb';
 import { RegisterResource } from '~/core/resources';
 import {
+  Calculated,
   DbLabel,
   IntersectionType,
   Resource,
@@ -20,6 +21,7 @@ import { IProject } from '../../project/dto';
 import { BudgetRecord } from './budget-record.dto';
 import { BudgetStatus } from './budget-status.enum';
 
+@Calculated()
 @RegisterResource({ db: e.Budget })
 @ObjectType({
   implements: [Resource, ChangesetAware],
@@ -27,9 +29,9 @@ import { BudgetStatus } from './budget-status.enum';
 export class Budget extends IntersectionType(ChangesetAware, Resource) {
   static readonly Props = keysOf<Budget>();
   static readonly SecuredProps = keysOf<SecuredProps<Budget>>();
-  static readonly Relations = {
+  static readonly Relations = (() => ({
     records: [BudgetRecord],
-  } satisfies ResourceRelationsShape;
+  })) satisfies ResourceRelationsShape;
   static readonly Parent = import('../../project/dto').then((m) => m.IProject);
 
   @Field(() => IProject)
