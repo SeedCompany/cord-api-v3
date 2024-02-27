@@ -2,18 +2,17 @@ module default {
   type ProgressReport extending PeriodicReport, Engagement::Child {
     overloaded container: LanguageEngagement;
     overloaded engagement: LanguageEngagement;
-    
-    multi link workflowEvents: ProgressReport::WorkflowEvent;
-    required status: ProgressReport::Status {
-      default := ProgressReport::Status.NotStarted;
-    };
-    
+
+    status := .latestEvent.status ?? ProgressReport::Status.NotStarted;
+    latestEvent := (select .workflowEvents order by .at desc limit 1);
+    workflowEvents := .<report[is ProgressReport::WorkflowEvent];
+
     single varianceExplanation := .<report[is ProgressReport::VarianceExplanation];
   }
 }
 
 module ProgressReport {
-   abstract type Child extending Engagement::Child {
+  abstract type Child extending Engagement::Child {
     annotation description := "\
       A type that is a child of a progress report. \
 
@@ -41,9 +40,30 @@ module ProgressReport {
 
     comments: default::RichText;
   }
-}
 
-module ProgressReport {
+  type WorkflowEvent {
+    required report: default::ProgressReport {
+      readonly := true;
+    };
+    required who: default::User {
+      readonly := true;
+      default := default::currentUser;
+    };
+    required at: datetime {
+      readonly := true;
+      default := datetime_of_statement();
+    };
+    transitionId: default::nanoid {
+      readonly := true;
+    };
+    required status: Status {
+      readonly := true;
+    };
+    notes: default::RichText {
+      readonly := true;
+    };
+  }
+
   scalar type Status extending enum<
     NotStarted,
     InProgress,
@@ -51,5 +71,5 @@ module ProgressReport {
     InReview,
     Approved,
     Published,
-  >; 
+  >;
 }
