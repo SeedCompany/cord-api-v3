@@ -4,6 +4,7 @@ import { BaseNode } from '~/core/database/results';
 import { e } from '~/core/edgedb';
 import { RegisterResource } from '~/core/resources';
 import {
+  Calculated,
   ID,
   IntersectionType,
   Resource,
@@ -18,6 +19,7 @@ import { ScopedRole } from '../../authorization';
 import { ChangesetAware } from '../../changeset/dto';
 import { Budget } from './budget.dto';
 
+@Calculated()
 @RegisterResource({ db: e.Budget.Record })
 @ObjectType({
   implements: [Resource, ChangesetAware],
@@ -30,8 +32,10 @@ export class BudgetRecord extends IntersectionType(ChangesetAware, Resource) {
   @Field(() => Budget)
   declare readonly parent: BaseNode;
 
+  @Calculated()
   readonly organization: Secured<ID>;
 
+  @Calculated()
   @Field()
   readonly fiscalYear: SecuredInt;
 

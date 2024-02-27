@@ -5,7 +5,6 @@ import {
   generateId,
   ID,
   InputException,
-  NotFoundException,
   ObjectView,
   Order,
   ServerException,
@@ -55,14 +54,6 @@ export class BudgetService {
     session: Session,
   ): Promise<Budget> {
     this.logger.debug('Creating budget', { projectId });
-
-    const projectExists = await this.budgetRepo.doesProjectExist(
-      projectId,
-      session,
-    );
-    if (!projectExists) {
-      throw new NotFoundException('project does not exist', 'budget.projectId');
-    }
 
     const universalTemplateFileId = await generateId<FileId>();
 
@@ -287,8 +278,6 @@ export class BudgetService {
   async delete(id: ID, session: Session): Promise<void> {
     const budget = await this.readOne(id, session);
 
-    this.privileges.for(session, Budget, budget).verifyCan('delete');
-
     // cascade delete each budget record in this budget
     await Promise.all(
       budget.records.map((br) => this.deleteRecord(br.id, session)),
@@ -305,16 +294,8 @@ export class BudgetService {
   }
 
   async deleteRecord(id: ID, session: Session, changeset?: ID): Promise<void> {
-    const br = await this.readOneRecord(
-      id,
-      session,
-      viewOfChangeset(changeset),
-    );
-
-    this.privileges.for(session, BudgetRecord, br).verifyCan('delete');
-
     try {
-      await this.budgetRecordsRepo.deleteNode(br, changeset);
+      await this.budgetRecordsRepo.deleteNode(id, changeset);
     } catch (e) {
       this.logger.warning('Failed to delete Budget Record', {
         exception: e,
