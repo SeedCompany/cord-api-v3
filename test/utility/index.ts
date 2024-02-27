@@ -1,6 +1,5 @@
 export * from './gql-tag';
 export * from './create-app';
-export * from './create-budget';
 export * from './create-education';
 export * from './create-file';
 export * from './create-film';

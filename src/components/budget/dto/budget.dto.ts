@@ -27,9 +27,9 @@ import { BudgetStatus } from './budget-status.enum';
 export class Budget extends IntersectionType(ChangesetAware, Resource) {
   static readonly Props = keysOf<Budget>();
   static readonly SecuredProps = keysOf<SecuredProps<Budget>>();
-  static readonly Relations = {
+  static readonly Relations = (() => ({
     records: [BudgetRecord],
-  } satisfies ResourceRelationsShape;
+  })) satisfies ResourceRelationsShape;
   static readonly Parent = import('../../project/dto').then((m) => m.IProject);
 
   @Field(() => IProject)
