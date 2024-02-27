@@ -17,6 +17,8 @@ module default {
     )
   );
   
+  scalar type nanoid extending str;
+  
   scalar type RichText extending json;
   
   # A fake function to produce valid EdgeQL syntax.
