@@ -1,6 +1,7 @@
 import { generateQueryBuilder as runQueryBuilderGenerator } from '@edgedb/generate/dist/edgeql-js.js';
 import { groupBy } from '@seedcompany/common';
 import { Directory } from 'ts-morph';
+import { codecs } from '../codecs';
 import { customScalars } from './scalars';
 import { addCustomScalarImports, GeneratorParams } from './util';
 
@@ -42,7 +43,10 @@ function addJsExtensionDeepPathsOfEdgedbLibrary(qbDir: Directory) {
 }
 
 function fixCustomScalarsImports(qbDir: Directory) {
-  for (const scalars of groupBy(customScalars.values(), (s) => s.module)) {
+  for (const scalars of groupBy(
+    codecs.map((c) => c.info),
+    (s) => s.module,
+  )) {
     const moduleFile = qbDir.addSourceFileAtPath(
       `modules/${scalars[0]!.module}.ts`,
     );
