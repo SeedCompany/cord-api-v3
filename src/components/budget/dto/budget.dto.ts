@@ -4,6 +4,7 @@ import { BaseNode } from '~/core/database/results';
 import { e } from '~/core/edgedb';
 import { RegisterResource } from '~/core/resources';
 import {
+  Calculated,
   DbLabel,
   IntersectionType,
   Resource,
@@ -20,6 +21,7 @@ import { IProject } from '../../project/dto';
 import { BudgetRecord } from './budget-record.dto';
 import { BudgetStatus } from './budget-status.enum';
 
+@Calculated()
 @RegisterResource({ db: e.Budget })
 @ObjectType({
   implements: [Resource, ChangesetAware],
