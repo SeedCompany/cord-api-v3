@@ -18,7 +18,7 @@ type SomeResourceType = ValueOf<ResourceMap>;
  */
 export interface PolymorphicLinkTo<Key extends keyof ResourceMap> {
   __typename: Key;
-  id: ID;
+  id: ID<Key>;
 }
 
 /**
@@ -30,7 +30,7 @@ export type LinkToUnknown = PolymorphicLinkTo<keyof ResourceMap>;
  * A reference to a resource with a static / known type.
  */
 export interface LinkTo<Key extends keyof ResourceMap> {
-  id: ID;
+  id: ID<Key>;
   // Here for DX, and maybe type checking.
   // Won't be used at runtime.
   __typename?: Key;
