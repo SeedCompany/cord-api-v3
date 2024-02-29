@@ -69,7 +69,7 @@ export class FieldRegionService {
       .for(session, FieldRegion, fieldRegion)
       .verifyChanges(changes);
 
-    const updated = await this.repo.update(fieldRegion, changes);
+    const updated = await this.repo.update({ id: input.id, ...changes });
     return this.secure(updated, session);
   }
 
