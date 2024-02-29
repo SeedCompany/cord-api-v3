@@ -100,7 +100,7 @@ export class FundingAccountService {
     this.privileges
       .for(session, FundingAccount, fundingAccount)
       .verifyChanges(changes);
-    const updated = await this.repo.update(fundingAccount, changes);
+    const updated = await this.repo.update({ id: input.id, ...changes });
     return await this.secure(updated, session);
   }
 

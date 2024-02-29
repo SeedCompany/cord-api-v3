@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { node } from 'cypher-query-builder';
-import { ChangesOf } from '~/core/database/changes';
-import { ID, Session, UnsecuredDto } from '../../common';
+import { ID, Session } from '../../common';
 import { DtoRepository } from '../../core';
 import {
   createNode,
@@ -34,11 +33,10 @@ export class FundingAccountRepository extends DtoRepository(FundingAccount) {
     return await query.first();
   }
 
-  async update(
-    existing: UnsecuredDto<FundingAccount>,
-    changes: ChangesOf<FundingAccount, UpdateFundingAccount>,
-  ) {
-    return await this.updateProperties(existing, changes);
+  async update(changes: UpdateFundingAccount) {
+    const { id, ...simpleChanges } = changes;
+    await this.updateProperties({ id }, simpleChanges);
+    return await this.readOne(id);
   }
 
   async list(input: FundingAccountListInput, session: Session) {
