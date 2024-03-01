@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { ChangesOf } from '~/core/database/changes';
 import {
   DuplicateException,
   ID,
@@ -80,19 +79,16 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
         );
   }
 
-  async update(
-    existing: Pick<FieldZone, 'id'>,
-    changes: ChangesOf<FieldZone, UpdateFieldZone>,
-  ) {
-    const { directorId, ...simpleChanges } = changes;
+  async update(input: UpdateFieldZone) {
+    const { id, directorId, ...simpleChanges } = input;
 
     if (directorId) {
-      await this.updateDirector(directorId, existing.id);
+      await this.updateDirector(directorId, id);
     }
 
-    await this.updateProperties(existing, simpleChanges);
+    await this.updateProperties({ id }, simpleChanges);
 
-    return await this.readOne(existing.id);
+    return await this.readOne(id);
   }
 
   private async updateDirector(directorId: ID, id: ID) {

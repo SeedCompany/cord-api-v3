@@ -9,7 +9,7 @@ import {
 } from '@seedcompany/common';
 import { LazyGetter as Once } from 'lazy-get-decorator';
 import { lowerCase } from 'lodash';
-import { AbstractClass } from 'type-fest';
+import { AbstractClass, Simplify } from 'type-fest';
 import {
   EnhancedResource,
   DBType as GetDBType,
@@ -217,15 +217,15 @@ export const RepoFor = <
     }
 
     async update(
-      existing: Pick<Dto, 'id'>,
-      input: EasyUpdateShape<DBPathNode>,
+      input: Simplify<EasyUpdateShape<DBPathNode>> & { id: ID },
     ): Promise<Dto> {
-      const object = e.cast(
-        this.resource.db,
-        e.cast(e.uuid, existing.id as ID),
-      );
+      const { id, ...changes } = input;
+      const object = e.cast(this.resource.db, e.cast(e.uuid, id));
       const updated = e.update(object, () => ({
-        set: mapToSetBlock(this.resource.db, input) as UpdateShape<DBPathNode>,
+        set: mapToSetBlock(
+          this.resource.db,
+          changes,
+        ) as UpdateShape<DBPathNode>,
       }));
       const query = e.select(updated, this.hydrate as any);
       return (await this.db.run(query)) as Dto;
