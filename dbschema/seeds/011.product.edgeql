@@ -12,13 +12,13 @@ with
                 "book": "Joshua",
                 "chapter": 24,
                 "verse": 33,
-                "verseId": 2
+                "verseId": 6509
               },
               "start": {
                 "book": "Joshua",
                 "chapter": 1,
                 "verse": 1,
-                "verseId": 1
+                "verseId": 5852
               }
             }
           ]
@@ -53,13 +53,13 @@ with
                 "book": "Proverbs",
                 "chapter": 31,
                 "verse": 31,
-                "verseId": 4
+                "verseId": 17315
               },
               "start": {
                 "book": "Proverbs",
                 "chapter": 1,
                 "verse": 1,
-                "verseId": 3
+                "verseId": 16401
               }
             }
           ]
@@ -90,13 +90,13 @@ with
                 "book": "Psalms",
                 "chapter": 150,
                 "verse": 6,
-                "verseId": 6
+                "verseId": 16400
                 },
               "start": {
                 "book": "Psalms",
                 "chapter": 1,
                 "verse": 1,
-                "verseId": 5
+                "verseId": 13940
               }
             }
           ]
@@ -127,13 +127,13 @@ with
                 "book": "Deuteronomy",
                 "chapter": 34,
                 "verse": 1,
-                "verseId": 8
+                "verseId": 5840
                 },
               "start": {
                 "book": "Deuteronomy",
                 "chapter": 1,
                 "verse": 1,
-                "verseId": 7
+                "verseId": 4893
               }
             }
           ]
@@ -158,13 +158,13 @@ with
                 "book": "Matthew",
                 "chapter": 28,
                 "verse": 20,
-                "verseId": 10
+                "verseId": 24215
               },
               "start": {
                 "book": "Matthew",
                 "chapter": 1,
                 "verse": 1,
-                "verseId": 9
+                "verseId": 23145
               }
             }
           ]
@@ -199,13 +199,13 @@ with
                 "book": "Revelation",
                 "chapter": 22,
                 "verse": 21,
-                "verseId": 12
+                "verseId": 31101
               },
               "start": {
                 "book": "Revelation",
                 "chapter": 1,
                 "verse": 1,
-                "verseId": 11
+                "verseId": 30698
               }
             }
           ]
@@ -240,13 +240,13 @@ with
                 "book": "Ruth",
                 "chapter": 4,
                 "verse": 22,
-                "verseId": 16
+                "verseId": 7212
               },
               "start": {
                 "book": "Ruth",
                 "chapter": 1,
                 "verse": 1,
-                "verseId": 15
+                "verseId": 7128
               }
             }
           ]
@@ -277,13 +277,13 @@ with
                 "book": "Jonah",
                 "chapter": 4,
                 "verse": 11,
-                "verseId": 18
+                "verseId": 22579
               },
               "start": {
                 "book": "Jonah",
                 "chapter": 1,
                 "verse": 1,
-                "verseId": 17
+                "verseId": 22532
               }
             }
           ]
@@ -315,13 +315,13 @@ with
                 "book": "Numbers",
                 "chapter": 36,
                 "verse": 13,
-                "verseId": 20
+                "verseId": 4892
               },
               "start": {
                 "book": "Numbers",
                 "chapter": 1,
                 "verse": 1,
-                "verseId": 19
+                "verseId": 3605
               }
             }
           ]
@@ -352,13 +352,13 @@ with
                 "book": "Psalms",
                 "chapter": 150,
                 "verse": 6,
-                "verseId": 22
+                "verseId": 16400
               },
               "start": {
                 "book": "Psalms",
                 "chapter": 1,
                 "verse": 1,
-                "verseId": 21
+                "verseId": 13940
               }
             }
           ]
@@ -383,13 +383,13 @@ with
                 "book": "Daniel",
                 "chapter": 12,
                 "verse": 13,
-                "verseId": 24
+                "verseId": 22094
               },
               "start": {
                 "book": "Daniel",
                 "chapter": 1,
                 "verse": 1,
-                "verseId": 23
+                "verseId": 21738
               }
             }
           ]
@@ -418,13 +418,13 @@ with
                 "book": "Haggai",
                 "chapter": 2,
                 "verse": 23,
-                "verseId": 26
+                "verseId": 22878
               },
               "start": {
                 "book": "Haggai",
                 "chapter": 1,
                 "verse": 1,
-                "verseId": 25
+                "verseId": 22841
               }
             }
           ]
@@ -453,13 +453,13 @@ with
                 "book": "Isaiah",
                 "chapter": 66,
                 "verse": 24,
-                "verseId": 28
+                "verseId": 18946
               },
               "start": {
                 "book": "Isaiah",
                 "chapter": 1,
                 "verse": 1,
-                "verseId": 27
+                "verseId": 17655
               }
             }
           ]
@@ -484,13 +484,13 @@ with
                 "book": "Obadiah",
                 "chapter": 1,
                 "verse": 21,
-                "verseId": 30
+                "verseId": 22531
               },
               "start": {
                 "book": "Obadiah",
                 "chapter": 1,
                 "verse": 1,
-                "verseId": 29
+                "verseId": 22511
               }
             }
           ]
@@ -520,13 +520,13 @@ with
                 "book": "Micah",
                 "chapter": 7,
                 "verse": 20,
-                "verseId": 32
+                "verseId": 22684
               },
               "start": {
                 "book": "Micah",
                 "chapter": 1,
                 "verse": 1,
-                "verseId": 31
+                "verseId": 22580
               }
             }
           ]
@@ -559,13 +559,13 @@ with
                 "book": "Numbers",
                 "chapter": 36,
                 "verse": 13,
-                "verseId": 34
+                "verseId": 4892
               },
               "start": {
                 "book": "Numbers",
                 "chapter": 1,
                 "verse": 1,
-                "verseId": 33
+                "verseId": 3605
               }
             }
           ]
@@ -598,13 +598,13 @@ with
                 "book": "Jeremiah",
                 "chapter": 52,
                 "verse": 34,
-                "verseId": 36
+                "verseId": 20310
               },
               "start": {
                 "book": "Jeremiah",
                 "chapter": 1,
                 "verse": 1,
-                "verseId": 35
+                "verseId": 18947
               }
             }
           ]
@@ -635,13 +635,13 @@ with
                 "book": "Zechariah",
                 "chapter": 14,
                 "verse": 21,
-                "verseId": 38
+                "verseId": 23089
               },
               "start": {
                 "book": "Zechariah",
                 "chapter": 1,
                 "verse": 1,
-                "verseId": 37
+                "verseId": 22879
               }
             }
           ]
@@ -671,13 +671,13 @@ with
                 "book": "Exodus",
                 "chapter": 40,
                 "verse": 38,
-                "verseId": 40
+                "verseId": 2745
               },
               "start": {
                 "book": "Exodus",
                 "chapter": 1,
                 "verse": 1,
-                "verseId": 39
+                "verseId": 1533
               }
             }
           ]
@@ -710,13 +710,13 @@ with
                 "book": "Song of Solomon",
                 "chapter": 8,
                 "verse": 14,
-                "verseId": 42
+                "verseId": 17654
               },
               "start": {
                 "book": "Song of Solomon",
                 "chapter": 1,
                 "verse": 1,
-                "verseId": 41
+                "verseId": 17538
               }
             }
           ]
