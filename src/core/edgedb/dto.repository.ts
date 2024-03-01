@@ -26,7 +26,6 @@ import { Privileges } from '../../components/authorization';
 import { getChanges } from '../database/changes';
 import { privileges } from '../database/dto.repository';
 import { CommonRepository } from './common.repository';
-import { InsertShape } from './generated-client/insert';
 import { $expr_PathNode, $linkPropify } from './generated-client/path';
 import {
   $expr_Select,
@@ -35,6 +34,8 @@ import {
   SelectModifiers,
 } from './generated-client/select';
 import { UpdateShape } from './generated-client/update';
+import { EasyInsertShape, EasyUpdateShape } from './query-util/easy-insert';
+import { mapToSetBlock } from './query-util/map-to-set-block';
 import { $, e } from './reexports';
 
 /**
@@ -207,9 +208,9 @@ export const RepoFor = <
       return await this.paginate(all as any, input);
     }
 
-    async create(input: Omit<InsertShape<DBType>, `@${string}`>): Promise<Dto> {
+    async create(input: EasyInsertShape<DBType>): Promise<Dto> {
       const query = e.select(
-        (e.insert as any)(dbType, input),
+        (e.insert as any)(dbType, mapToSetBlock(this.resource.db, input)),
         this.hydrate as any,
       );
       return (await this.db.run(query)) as Dto;
@@ -217,14 +218,14 @@ export const RepoFor = <
 
     async update(
       existing: Pick<Dto, 'id'>,
-      input: UpdateShape<DBPathNode>,
+      input: EasyUpdateShape<DBPathNode>,
     ): Promise<Dto> {
       const object = e.cast(
         this.resource.db,
         e.cast(e.uuid, existing.id as ID),
       );
       const updated = e.update(object, () => ({
-        set: input,
+        set: mapToSetBlock(this.resource.db, input) as UpdateShape<DBPathNode>,
       }));
       const query = e.select(updated, this.hydrate as any);
       return (await this.db.run(query)) as Dto;
