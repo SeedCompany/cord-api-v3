@@ -9,8 +9,9 @@ import {
 } from '@seedcompany/common';
 import { LazyGetter as Once } from 'lazy-get-decorator';
 import { lowerCase } from 'lodash';
-import { AbstractClass, Simplify } from 'type-fest';
+import { AbstractClass } from 'type-fest';
 import {
+  DBName,
   EnhancedResource,
   DBType as GetDBType,
   ID,
@@ -29,6 +30,7 @@ import { CommonRepository } from './common.repository';
 import { $expr_PathNode, $linkPropify } from './generated-client/path';
 import {
   $expr_Select,
+  normaliseShape,
   objectTypeToSelectShape,
   SelectFilterExpression,
   SelectModifiers,
@@ -43,21 +45,26 @@ import { $, e } from './reexports';
  */
 export const RepoFor = <
   TResourceStatic extends ResourceShape<any>,
-  DBPathNode extends GetDBType<TResourceStatic>,
-  DBType extends DBPathNode['__element__'],
-  HydratedShape extends objectTypeToSelectShape<DBType>,
+  Root extends GetDBType<TResourceStatic>,
+  HydratedShape extends objectTypeToSelectShape<Root['__element__']>,
 >(
   resourceIn: TResourceStatic,
   {
     hydrate,
   }: {
-    hydrate: ShapeFn<$.TypeSet<DBType>, HydratedShape>;
+    hydrate: ShapeFn<Root, HydratedShape>;
   },
 ) => {
-  type Dto = $.computeObjectShape<DBType['__pointers__'], HydratedShape>;
+  type Dto = $.BaseTypeToTsType<
+    $.ObjectType<
+      DBName<Root>,
+      Root['__element__']['__pointers__'],
+      normaliseShape<HydratedShape>
+    >
+  >;
 
   const resource = EnhancedResource.of(resourceIn);
-  const dbType = resource.db as any as $.$expr_PathNode;
+  const dbType = resource.db as Root;
 
   @Injectable()
   abstract class Repository extends CommonRepository {
@@ -98,14 +105,14 @@ export const RepoFor = <
     // region List Helpers
 
     protected listFilters(
-      _scope: ScopeOf<$.TypeSet<DBType>>,
+      _scope: ScopeOf<Root>,
       _input: any,
     ): Many<SelectFilterExpression | false | Nil> {
       return [];
     }
 
     protected orderBy<Scope extends $expr_PathNode>(
-      scope: ScopeOf<$.TypeSet<DBType>>,
+      scope: ScopeOf<Root>,
       input: SortablePaginationInput,
     ) {
       // TODO Validate this is a valid sort key
@@ -118,7 +125,7 @@ export const RepoFor = <
 
     protected async paginate(
       listOfAllQuery: $expr_Select<
-        $.TypeSet<$.ObjectType<DBType['__name__']>, $.Cardinality.Many>
+        $.TypeSet<$.ObjectType<DBName<Root>>, $.Cardinality.Many>
       >,
       input: PaginationInput,
     ) {
@@ -208,31 +215,26 @@ export const RepoFor = <
       return await this.paginate(all as any, input);
     }
 
-    async create(input: EasyInsertShape<DBType>): Promise<Dto> {
+    async create(input: EasyInsertShape<Root>): Promise<Dto> {
       const query = e.select(
-        (e.insert as any)(dbType, mapToSetBlock(this.resource.db, input)),
+        (e.insert as any)(dbType, mapToSetBlock(dbType, input)),
         this.hydrate as any,
       );
       return (await this.db.run(query)) as Dto;
     }
 
-    async update(
-      input: Simplify<EasyUpdateShape<DBPathNode>> & { id: ID },
-    ): Promise<Dto> {
+    async update(input: { id: ID } & EasyUpdateShape<Root>): Promise<Dto> {
       const { id, ...changes } = input;
-      const object = e.cast(this.resource.db, e.cast(e.uuid, id));
+      const object = e.cast(dbType, e.cast(e.uuid, id));
       const updated = e.update(object, () => ({
-        set: mapToSetBlock(
-          this.resource.db,
-          changes,
-        ) as UpdateShape<DBPathNode>,
+        set: mapToSetBlock(dbType, changes) as UpdateShape<Root>,
       }));
       const query = e.select(updated, this.hydrate as any);
       return (await this.db.run(query)) as Dto;
     }
 
     async delete(id: ID): Promise<void> {
-      const existing = e.cast(this.resource.db, e.cast(e.uuid, id));
+      const existing = e.cast(dbType, e.cast(e.uuid, id));
       const query = e.delete(existing);
       await this.db.run(query);
     }

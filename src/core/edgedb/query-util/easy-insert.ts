@@ -14,16 +14,22 @@ import {
 import { pointerIsOptional } from '../generated-client/insert';
 import { $ } from '../reexports';
 
-export type EasyInsertShape<El extends $.ObjectType> = $.typeutil.flatten<
-  RawInsertShape<El>
+export type EasyInsertShape<Root extends $.ObjectTypeSet> = $.typeutil.flatten<
+  RawInsertShape<Root>
 >;
 
-type RawInsertShape<El extends $.ObjectType> =
+export type EasyUpdateShape<Root extends $.ObjectTypeSet> = $.typeutil.flatten<
+  RawUpdateShape<Root>
+>;
+
+type RawInsertShape<Root extends $.ObjectTypeSet> =
   // short-circuit infinitely deep
-  $.ObjectType extends El
+  $.ObjectType extends Root['__element__']
     ? never
     : $.typeutil.stripNever<
-        $.stripNonInsertables<$.stripBacklinks<El['__pointers__']>>
+        $.stripNonInsertables<
+          $.stripBacklinks<Root['__element__']['__pointers__']>
+        >
       > extends infer Shape
     ? Shape extends $.ObjectTypePointers
       ? $.typeutil.addQuestionMarks<
@@ -37,17 +43,16 @@ type RawInsertShape<El extends $.ObjectType> =
       : never
     : never;
 
-export type EasyUpdateShape<Root extends $.ObjectTypeSet> =
-  $.typeutil.stripNever<
-    $.stripNonUpdateables<$.stripBacklinks<Root['__element__']['__pointers__']>>
-  > extends infer Shape
-    ? Shape extends $.ObjectTypePointers
-      ? UpdatePointerValues<ConditionalPick<Shape, $.PropertyDesc>> &
-          AddIdSuffixOptionForUpdate<
-            UpdatePointerValues<ConditionalPick<Shape, $.LinkDesc>>
-          >
-      : never
-    : never;
+type RawUpdateShape<Root extends $.ObjectTypeSet> = $.typeutil.stripNever<
+  $.stripNonUpdateables<$.stripBacklinks<Root['__element__']['__pointers__']>>
+> extends infer Shape
+  ? Shape extends $.ObjectTypePointers
+    ? UpdatePointerValues<ConditionalPick<Shape, $.PropertyDesc>> &
+        AddIdSuffixOptionForUpdate<
+          UpdatePointerValues<ConditionalPick<Shape, $.LinkDesc>>
+        >
+    : never
+  : never;
 
 type InsertPointerValues<Shape extends $.ObjectTypePointers> = {
   [k in keyof Shape]:

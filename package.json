@@ -61,7 +61,7 @@
     "cypher-query-builder": "patch:cypher-query-builder@6.0.4#.yarn/patches/cypher-query-builder.patch",
     "dotenv": "^16.3.1",
     "dotenv-expand": "^10.0.0",
-    "edgedb": "^1.5.0-canary.20240116T174024",
+    "edgedb": "^1.5.0-canary.20240301T204406",
     "execa": "^8.0.1",
     "express": "^4.18.2",
     "extensionless": "^1.7.0",
@@ -104,7 +104,7 @@
     "yaml": "^2.3.3"
   },
   "devDependencies": {
-    "@edgedb/generate": "^0.5.0-canary.20240117T152712",
+    "@edgedb/generate": "^0.5.0-canary.20240301T204428",
     "@nestjs/cli": "^10.2.1",
     "@nestjs/schematics": "^10.0.3",
     "@nestjs/testing": "^10.2.7",
