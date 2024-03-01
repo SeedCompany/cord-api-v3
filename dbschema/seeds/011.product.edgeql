@@ -53,13 +53,13 @@ with
                 "book": "Proverbs",
                 "chapter": 31,
                 "verse": 31,
-                "verseId": 3
+                "verseId": 4
               },
               "start": {
                 "book": "Proverbs",
                 "chapter": 1,
                 "verse": 1,
-                "verseId": 4
+                "verseId": 3
               }
             }
           ]
@@ -90,13 +90,13 @@ with
                 "book": "Psalms",
                 "chapter": 150,
                 "verse": 6,
-                "verseId": 5
+                "verseId": 6
                 },
               "start": {
                 "book": "Psalms",
                 "chapter": 1,
                 "verse": 1,
-                "verseId": 6
+                "verseId": 5
               }
             }
           ]
@@ -127,13 +127,13 @@ with
                 "book": "Deuteronomy",
                 "chapter": 34,
                 "verse": 1,
-                "verseId": 7
+                "verseId": 8
                 },
               "start": {
                 "book": "Deuteronomy",
                 "chapter": 1,
                 "verse": 1,
-                "verseId": 8
+                "verseId": 7
               }
             }
           ]
@@ -158,13 +158,13 @@ with
                 "book": "Matthew",
                 "chapter": 28,
                 "verse": 20,
-                "verseId": 9
+                "verseId": 10
               },
               "start": {
                 "book": "Matthew",
                 "chapter": 1,
                 "verse": 1,
-                "verseId": 10
+                "verseId": 9
               }
             }
           ]
@@ -199,13 +199,13 @@ with
                 "book": "Revelation",
                 "chapter": 22,
                 "verse": 21,
-                "verseId": 11
+                "verseId": 12
               },
               "start": {
                 "book": "Revelation",
                 "chapter": 1,
                 "verse": 1,
-                "verseId": 12
+                "verseId": 11
               }
             }
           ]
@@ -240,13 +240,13 @@ with
                 "book": "Ruth",
                 "chapter": 4,
                 "verse": 22,
-                "verseId": 15
+                "verseId": 16
               },
               "start": {
                 "book": "Ruth",
                 "chapter": 1,
                 "verse": 1,
-                "verseId": 16
+                "verseId": 15
               }
             }
           ]
@@ -277,13 +277,13 @@ with
                 "book": "Jonah",
                 "chapter": 4,
                 "verse": 11,
-                "verseId": 17
+                "verseId": 18
               },
               "start": {
                 "book": "Jonah",
                 "chapter": 1,
                 "verse": 1,
-                "verseId": 18
+                "verseId": 17
               }
             }
           ]
@@ -315,13 +315,13 @@ with
                 "book": "Numbers",
                 "chapter": 36,
                 "verse": 13,
-                "verseId": 19
+                "verseId": 20
               },
               "start": {
                 "book": "Numbers",
                 "chapter": 1,
                 "verse": 1,
-                "verseId": 20
+                "verseId": 19
               }
             }
           ]
@@ -352,13 +352,13 @@ with
                 "book": "Psalms",
                 "chapter": 150,
                 "verse": 6,
-                "verseId": 21
+                "verseId": 22
               },
               "start": {
                 "book": "Psalms",
                 "chapter": 1,
                 "verse": 1,
-                "verseId": 22
+                "verseId": 21
               }
             }
           ]
@@ -383,13 +383,13 @@ with
                 "book": "Daniel",
                 "chapter": 12,
                 "verse": 13,
-                "verseId": 23
+                "verseId": 24
               },
               "start": {
                 "book": "Daniel",
                 "chapter": 1,
                 "verse": 1,
-                "verseId": 24
+                "verseId": 23
               }
             }
           ]
@@ -418,13 +418,13 @@ with
                 "book": "Haggai",
                 "chapter": 2,
                 "verse": 23,
-                "verseId": 25
+                "verseId": 26
               },
               "start": {
                 "book": "Haggai",
                 "chapter": 1,
                 "verse": 1,
-                "verseId": 26
+                "verseId": 25
               }
             }
           ]
@@ -453,13 +453,13 @@ with
                 "book": "Isaiah",
                 "chapter": 66,
                 "verse": 24,
-                "verseId": 27
+                "verseId": 28
               },
               "start": {
                 "book": "Isaiah",
                 "chapter": 1,
                 "verse": 1,
-                "verseId": 28
+                "verseId": 27
               }
             }
           ]
@@ -484,13 +484,13 @@ with
                 "book": "Obadiah",
                 "chapter": 1,
                 "verse": 21,
-                "verseId": 29
+                "verseId": 30
               },
               "start": {
                 "book": "Obadiah",
                 "chapter": 1,
                 "verse": 1,
-                "verseId": 30
+                "verseId": 29
               }
             }
           ]
@@ -520,13 +520,13 @@ with
                 "book": "Micah",
                 "chapter": 7,
                 "verse": 20,
-                "verseId": 31
+                "verseId": 32
               },
               "start": {
                 "book": "Micah",
                 "chapter": 1,
                 "verse": 1,
-                "verseId": 32
+                "verseId": 31
               }
             }
           ]
@@ -559,13 +559,13 @@ with
                 "book": "Numbers",
                 "chapter": 36,
                 "verse": 13,
-                "verseId": 33
+                "verseId": 34
               },
               "start": {
                 "book": "Numbers",
                 "chapter": 1,
                 "verse": 1,
-                "verseId": 34
+                "verseId": 33
               }
             }
           ]
@@ -598,13 +598,13 @@ with
                 "book": "Jeremiah",
                 "chapter": 52,
                 "verse": 34,
-                "verseId": 35
+                "verseId": 36
               },
               "start": {
                 "book": "Jeremiah",
                 "chapter": 1,
                 "verse": 1,
-                "verseId": 36
+                "verseId": 35
               }
             }
           ]
@@ -635,13 +635,13 @@ with
                 "book": "Zechariah",
                 "chapter": 14,
                 "verse": 21,
-                "verseId": 37
+                "verseId": 38
               },
               "start": {
                 "book": "Zechariah",
                 "chapter": 1,
                 "verse": 1,
-                "verseId": 38
+                "verseId": 37
               }
             }
           ]
@@ -671,13 +671,13 @@ with
                 "book": "Exodus",
                 "chapter": 40,
                 "verse": 38,
-                "verseId": 39
+                "verseId": 40
               },
               "start": {
                 "book": "Exodus",
                 "chapter": 1,
                 "verse": 1,
-                "verseId": 40
+                "verseId": 39
               }
             }
           ]
@@ -710,13 +710,13 @@ with
                 "book": "Song of Solomon",
                 "chapter": 8,
                 "verse": 14,
-                "verseId": 41
+                "verseId": 42
               },
               "start": {
                 "book": "Song of Solomon",
                 "chapter": 1,
                 "verse": 1,
-                "verseId": 42
+                "verseId": 41
               }
             }
           ]
@@ -1010,71 +1010,76 @@ with
       "totalVerseEquivalents": 22
     }
     ]'),
-     products := (
+    products := (
         for directScriptureProduct in json_array_unpack(productsJson)
         union (
-          (select DirectScriptureProduct filter .project.name = <str>directScriptureProduct['project']
-           and (.scripture.label ?= <str>json_get(directScriptureProduct, 'scripture', 'label')
-                or .unspecifiedScripture.book ?= <str>json_get(directScriptureProduct, 'unspecifiedScripture', 'book'))) ??
-          (with
-            scripture := if (select exists json_get(directScriptureProduct,'scripture')) then (
-              insert Scripture::Collection {
-                  label := <str>directScriptureProduct['scripture']['label'],
-                  verses := (
-                      for verseRange in json_array_unpack(directScriptureProduct['scripture']['verses'])
-                      union (
-                          insert Scripture::VerseRange {
-                              label := <str>verseRange['label'],
-                              `start` := (
-                                  insert Scripture::Verse {
-                                      book := <str>verseRange['start']['book'],
-                                      chapter := <int16>verseRange['start']['chapter'],
-                                      verse := <int16>verseRange['start']['verse'],
-                                      verseId := <int16>verseRange['start']['verseId']
-                                  }
-                              ),
-                              `end` := (
-                                  insert Scripture::Verse {
-                                      book := <str>verseRange['end']['book'],
-                                      chapter := <int16>verseRange['end']['chapter'],
-                                      verse := <int16>verseRange['end']['verse'],
-                                      verseId := <int16>verseRange['end']['verseId']
-                                  }
-                              )
-                          }
+          with
+            engagement := assert_single((select Engagement filter .project.name = <str>directScriptureProduct['project'])),
+          select (
+            (select DirectScriptureProduct filter .engagement = engagement
+               and (.scripture.label ?= <str>json_get(directScriptureProduct, 'scripture', 'label')
+               or .unspecifiedScripture.book ?= <str>json_get(directScriptureProduct, 'unspecifiedScripture', 'book'))) ??
+            (insert DirectScriptureProduct {
+              project := engagement.project,
+              projectContext := engagement.projectContext,
+              engagement := engagement,
+              scripture := if (select exists json_get(directScriptureProduct,'scripture')) then (
+                  insert Scripture::Collection {
+                      label := <str>directScriptureProduct['scripture']['label'],
+                      verses := (
+                          for verseRange in json_array_unpack(directScriptureProduct['scripture']['verses'])
+                          union (
+                              insert Scripture::VerseRange {
+                                  label := <str>verseRange['label'],
+                                  `start` := (
+                                      insert Scripture::Verse {
+                                          book := <str>verseRange['start']['book'],
+                                          chapter := <int16>verseRange['start']['chapter'],
+                                          verse := <int16>verseRange['start']['verse'],
+                                          verseId := <int16>verseRange['start']['verseId']
+                                      }
+                                  ),
+                                  `end` := (
+                                      insert Scripture::Verse {
+                                          book := <str>verseRange['end']['book'],
+                                          chapter := <int16>verseRange['end']['chapter'],
+                                          verse := <int16>verseRange['end']['verse'],
+                                          verseId := <int16>verseRange['end']['verseId']
+                                      }
+                                  )
+                              }
+                          )
                       )
+                  })
+                  else {},
+              unspecifiedScripture := if (select exists json_get(directScriptureProduct,'unspecifiedScripture')) then (
+                  insert Scripture::UnspecifiedPortion {
+                        book := <str>(json_get(directScriptureProduct, 'unspecifiedScripture', 'book')),
+                        totalVerses := <int16>(json_get(directScriptureProduct, 'unspecifiedScripture', 'totalVerses'))
+                      }
                   )
-              })
-              else {},
-            engagement := assert_single((select Engagement filter .project.name = <str>directScriptureProduct['project']))
-        insert DirectScriptureProduct {
-          project := engagement.project,
-          projectContext := engagement.projectContext,
-          engagement := engagement,
-          scripture := scripture,
-          unspecifiedScripture := if (select exists json_get(directScriptureProduct,'unspecifiedScripture')) then (
-              insert Scripture::UnspecifiedPortion {
-                    book := <str>(json_get(directScriptureProduct, 'unspecifiedScripture', 'book')),
-                    totalVerses := <int16>(json_get(directScriptureProduct, 'unspecifiedScripture', 'totalVerses'))
-                  }
-              )
-              else {},
-          mediums := <str>json_array_unpack(json_get(directScriptureProduct,'mediums')),
-          purposes := <str>json_array_unpack(json_get(directScriptureProduct,'purposes')),
-          steps := <str>json_array_unpack(json_get(directScriptureProduct,'steps')),
-          methodology := <Product::Methodology>json_get(directScriptureProduct,'methodology'),
-          describeCompletion := <str>json_get(directScriptureProduct,'describeCompletion'),
-          placeholderDescription := <str>json_get(directScriptureProduct,'placeholderDescription'),
-          pnpIndex := <int16>json_get(directScriptureProduct,'pnpIndex'),
-          progressTarget := <int16>directScriptureProduct['progressTarget'],
-          progressStepMeasurement := <str>directScriptureProduct['progressStepMeasurement'],
-          totalVerses := <int16>json_get(directScriptureProduct, 'totalVerses'),
-          totalVerseEquivalents := <int32>json_get(directScriptureProduct, 'totalVerseEquivalents')
-        }
-      )
-    )),
+                  else {},
+              mediums := <str>json_array_unpack(json_get(directScriptureProduct,'mediums')),
+              purposes := <str>json_array_unpack(json_get(directScriptureProduct,'purposes')),
+              steps := <str>json_array_unpack(json_get(directScriptureProduct,'steps')),
+              methodology := <Product::Methodology>json_get(directScriptureProduct,'methodology'),
+              describeCompletion := <str>json_get(directScriptureProduct,'describeCompletion'),
+              placeholderDescription := <str>json_get(directScriptureProduct,'placeholderDescription'),
+              pnpIndex := <int16>json_get(directScriptureProduct,'pnpIndex'),
+              progressTarget := <int16>directScriptureProduct['progressTarget'],
+              progressStepMeasurement := <str>directScriptureProduct['progressStepMeasurement'],
+              totalVerses := <int16>json_get(directScriptureProduct, 'totalVerses'),
+              totalVerseEquivalents := <int32>json_get(directScriptureProduct, 'totalVerseEquivalents')
+            })
+           )
+          )
+        ),
       newProducts := (select products filter .createdAt = datetime_of_statement())
- select { `Added Scripture Products` := "Project: " ++ newProducts.project.name ++ ', Scripture Range: '
-         ++ newProducts.scripture.label ++ ' ' ++ <str>newProducts.scripture.verses.`start`.chapter ++ ' - ' ++ <str>newProducts.scripture.verses.`end`.chapter, `Total Scripture` := count(newProducts.scripture), `Added UnspecifiedScripture Products` := "Project: "
-         ++ newProducts.project.name ++ ', Unspecified Scripture Book: ' ++ newProducts.unspecifiedScripture.book, `Total UnspecifiedScripture` := count(newProducts.unspecifiedScripture)}
+ select { `Added Scripture Products` := newProducts.project.name ++ ': '
+         ++ newProducts.scripture.label ++ ' '
+         ++ <str>newProducts.scripture.verses.`start`.chapter ++ ' - '
+         ++ <str>newProducts.scripture.verses.`end`.chapter ,
+         `Added UnspecifiedScripture Products` := newProducts.project.name ++
+         ': ' ++ <str>newProducts.unspecifiedScripture.book ++ ' ' ++
+         <str>newProducts.unspecifiedScripture.totalVerses ++' verses'}
   filter count(newProducts) > 0;
