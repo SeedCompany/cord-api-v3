@@ -67,7 +67,7 @@ type ChangeOf<Val> = Val extends SetChangeType<any, infer Override>
   ? Override
   :
       | RawChangeOf<UnwrapSecured<Val> & {}>
-      | (UnwrapSecured<Val> extends null ? null : unknown);
+      | (null extends UnwrapSecured<Val> ? null : never);
 
 type RawChangeOf<Val> = Val extends FileId | LinkTo<'File'>
   ? CreateDefinedFileVersionInput
