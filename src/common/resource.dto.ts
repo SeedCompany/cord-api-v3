@@ -55,7 +55,7 @@ export abstract class Resource extends DataObject {
 
   // A list of non-global roles the requesting user has available for this object.
   // This is used by the authorization module to determine permissions.
-  readonly scope?: ScopedRole[];
+  readonly scope?: readonly ScopedRole[];
 }
 
 type Thunk<T> = T | (() => T);

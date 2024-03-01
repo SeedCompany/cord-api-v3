@@ -74,7 +74,7 @@ export abstract class UpdateProject {
 
   @Field(() => [String], { nullable: true })
   @Transform(({ value }) => uniq(value))
-  readonly tags?: string[];
+  readonly tags?: readonly string[];
 
   @DateTimeField({ nullable: true })
   readonly financialReportReceivedAt?: DateTime;

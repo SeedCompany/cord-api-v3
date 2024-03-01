@@ -39,7 +39,7 @@ export abstract class UpdatePartnership {
 
   @Field(() => [PartnerType], { nullable: true })
   @Transform(({ value }) => uniq(value))
-  readonly types?: PartnerType[];
+  readonly types?: readonly PartnerType[];
 
   @Field(() => FinancialReportingType, { nullable: true })
   readonly financialReportingType?: FinancialReportingType | null;

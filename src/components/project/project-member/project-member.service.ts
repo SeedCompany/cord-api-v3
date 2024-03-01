@@ -192,7 +192,7 @@ export class ProjectMemberService {
   }
 
   private async assertValidRoles(
-    roles: Role[] | undefined,
+    roles: readonly Role[] | undefined,
     forUser: () => MaybeAsync<User>,
   ) {
     if (!roles || roles.length === 0) {

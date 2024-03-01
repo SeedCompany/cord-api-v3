@@ -137,7 +137,7 @@ export class UserService {
     return assignableRoles;
   }
 
-  verifyRolesAreAssignable(session: Session, roles: Role[]) {
+  verifyRolesAreAssignable(session: Session, roles: readonly Role[]) {
     const allowed = this.getAssignableRoles(session);
     const invalid = roles.filter((role) => !allowed.has(role));
     if (invalid.length === 0) {
