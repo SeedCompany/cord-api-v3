@@ -40,7 +40,7 @@ export abstract class CreateProject {
     nullable: true,
   })
   @IsId({ each: true })
-  readonly otherLocationIds?: ID[];
+  readonly otherLocationIds?: ReadonlyArray<ID<'Location'>>;
 
   @IdField({
     description: 'A marketing primary location ID',

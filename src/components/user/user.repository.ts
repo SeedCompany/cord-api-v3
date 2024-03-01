@@ -38,7 +38,7 @@ import {
 export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
   User,
 ) {
-  private readonly roleProperties = (roles?: Role[]) =>
+  private readonly roleProperties = (roles?: readonly Role[]) =>
     (roles || []).flatMap((role) =>
       property('roles', role, 'node', `role${role}`),
     );
@@ -152,7 +152,7 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
     }
   }
 
-  private async updateRoles(id: ID, roles: Role[]): Promise<void> {
+  private async updateRoles(id: ID, roles: readonly Role[]): Promise<void> {
     const { roles: existingRoles } = await this.readOne(id, id);
     const removals = difference(existingRoles, roles);
     const additions = difference(roles, existingRoles);

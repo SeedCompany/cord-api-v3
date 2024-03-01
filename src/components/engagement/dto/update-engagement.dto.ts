@@ -90,7 +90,7 @@ export abstract class UpdateInternshipEngagement extends UpdateEngagement {
   readonly position?: InternshipPosition;
 
   @Field(() => [ProductMethodology], { nullable: true })
-  readonly methodologies?: ProductMethodology[];
+  readonly methodologies?: readonly ProductMethodology[];
 
   @Field({ nullable: true })
   @Type(() => CreateDefinedFileVersionInput)

@@ -19,7 +19,7 @@ export class CreateProjectMember {
   readonly projectId: ID | UnsecuredDto<Project>;
 
   @Field(() => [Role], { nullable: true })
-  readonly roles?: Role[];
+  readonly roles?: readonly Role[];
 }
 
 @InputType()
