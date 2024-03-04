@@ -204,8 +204,8 @@ export class AuthenticationRepository {
       )
       .return<{
         userId?: ID;
-        roles: ScopedRole[];
-        impersonateeRoles?: ScopedRole[];
+        roles: readonly ScopedRole[];
+        impersonateeRoles?: readonly ScopedRole[];
       }>([
         'user.id as userId',
         'roles',
