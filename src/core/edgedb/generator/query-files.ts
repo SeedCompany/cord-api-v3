@@ -3,7 +3,7 @@ import {
   generateFiles,
   stringifyImports,
 } from '@edgedb/generate/dist/queries.js';
-import { $, adapter } from 'edgedb';
+import { $, adapter, Client } from 'edgedb';
 import { Directory } from 'ts-morph';
 import { ScalarInfo } from '../codecs';
 import { injectHydrators } from './inject-hydrators';
@@ -31,7 +31,7 @@ const generateFilesForQuery =
 
       const injectedQuery = injectHydrators(query, hydrators);
 
-      const types = await $.analyzeQuery(client, injectedQuery);
+      const types = await analyzeQuery(client, injectedQuery);
       const [{ imports, contents }] = generateFiles({
         target: 'ts',
         path,
@@ -78,3 +78,25 @@ adapter.fs.writeFile = new Proxy(adapter.fs.writeFile, {
     return Reflect.apply(target, thisArg, [path, content]);
   },
 });
+
+/**
+ * Same thing as what upstream function does, just with readonly on the output type.
+ */
+export async function analyzeQuery(client: Client, query: string) {
+  const { cardinality, in: inCodec, out: outCodec } = await client.parse(query);
+  const args = $.generateTSTypeFromCodec(inCodec, $.Cardinality.One, {
+    readonly: true,
+    optionalNulls: true,
+  });
+  const result = $.generateTSTypeFromCodec(outCodec, cardinality, {
+    readonly: true,
+    optionalNulls: false,
+  });
+  return {
+    result: result.type,
+    args: args.type,
+    cardinality,
+    query,
+    imports: new Set([...args.imports, ...result.imports]),
+  };
+}

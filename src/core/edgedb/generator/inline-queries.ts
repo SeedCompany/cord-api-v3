@@ -4,6 +4,7 @@ import { Cardinality } from 'edgedb/dist/ifaces.js';
 import { $ as $$ } from 'execa';
 import { Node, SyntaxKind, VariableDeclarationKind } from 'ts-morph';
 import { injectHydrators } from './inject-hydrators';
+import { analyzeQuery } from './query-files';
 import { customScalars } from './scalars';
 import { addCustomScalarImports, GeneratorParams } from './util';
 
@@ -88,7 +89,7 @@ export async function generateInlineQueries({
     try {
       const injectedQuery = injectHydrators(query, hydrators);
 
-      types = await $.analyzeQuery(client, injectedQuery);
+      types = await analyzeQuery(client, injectedQuery);
       console.log(`   ${source}`);
     } catch (err) {
       error = err as Error;
