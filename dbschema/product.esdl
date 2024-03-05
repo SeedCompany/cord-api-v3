@@ -66,9 +66,11 @@ module default {
 }
   
 module Product {
-  type CompletionDescription {
-    query: str;
-    methodology: Methodology;
+  type KnownCompletionDescription {
+    required value: str;
+    required methodology: Methodology;
+    required createdAt: datetime;
+    required lastUsedAt: datetime;
   }
 
   scalar type Medium extending enum<
