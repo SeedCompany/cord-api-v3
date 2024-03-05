@@ -25,16 +25,16 @@ export abstract class UpdateEngagement {
   readonly id: ID;
 
   @DateField({ nullable: true })
-  readonly completeDate?: CalendarDate;
+  readonly completeDate?: CalendarDate | null;
 
   @DateField({ nullable: true })
-  readonly disbursementCompleteDate?: CalendarDate;
+  readonly disbursementCompleteDate?: CalendarDate | null;
 
   @DateField({ nullable: true })
-  readonly startDateOverride?: CalendarDate;
+  readonly startDateOverride?: CalendarDate | null;
 
   @DateField({ nullable: true })
-  readonly endDateOverride?: CalendarDate;
+  readonly endDateOverride?: CalendarDate | null;
 
   readonly initialEndDate?: CalendarDate | null;
 
@@ -87,7 +87,7 @@ export abstract class UpdateInternshipEngagement extends UpdateEngagement {
   readonly countryOfOriginId?: ID | null;
 
   @Field(() => InternshipPosition, { nullable: true })
-  readonly position?: InternshipPosition;
+  readonly position?: InternshipPosition | null;
 
   @Field(() => [ProductMethodology], { nullable: true })
   readonly methodologies?: readonly ProductMethodology[];

@@ -1,7 +1,7 @@
 import { entries } from '@seedcompany/common';
 import { difference, omit, pickBy } from 'lodash';
 import { DateTime } from 'luxon';
-import { ConditionalKeys } from 'type-fest';
+import { ConditionalKeys, IsAny } from 'type-fest';
 import { LinkTo } from '~/core';
 import {
   EnhancedResource,
@@ -13,7 +13,7 @@ import {
   unwrapSecured,
   UnwrapSecured,
 } from '../../common';
-import { CreateDefinedFileVersionInput, FileId } from '../../components/file';
+import { CreateDefinedFileVersionInput } from '../../components/file';
 import { Variable } from './query';
 import { NativeDbValue } from './results';
 
@@ -57,23 +57,35 @@ type ChangeKey<Key extends keyof T & string, T> = T[Key] extends SetChangeType<
   ? Override extends string
     ? Override
     : never
-  : UnwrapSecured<T[Key]> extends FileId | LinkTo<'File'>
-  ? Key
-  : NonNullable<UnwrapSecured<T[Key]>> extends ID | LinkTo<any>
-  ? `${Key}Id` // our convention for single relationships
-  : Key;
+  : UnwrapSecured<T[Key]> & {} extends infer Value
+  ? IsFileField<Value> extends true
+    ? Key // our file input fields don't add id suffix, because they are objects.
+    : Value extends ID | LinkTo<any>
+    ? `${Key}Id` // our convention for single relationships
+    : Key
+  : never;
 
 type ChangeOf<Val> = Val extends SetChangeType<any, infer Override>
   ? Override
   :
       | RawChangeOf<UnwrapSecured<Val> & {}>
-      | (UnwrapSecured<Val> extends null ? null : unknown);
+      | (null extends UnwrapSecured<Val> ? null : never);
 
-type RawChangeOf<Val> = Val extends FileId | LinkTo<'File'>
+type RawChangeOf<Val> = IsFileField<Val> extends true
   ? CreateDefinedFileVersionInput
   : Val extends LinkTo<any>
   ? ID
   : Val;
+
+type IsFileField<Val> = Val extends LinkTo<'File'>
+  ? true
+  : Val extends ID<infer IDType>
+  ? IsAny<IDType> extends true
+    ? false // ID == ID<any> != ID<'File'>
+    : IDType extends 'File'
+    ? true
+    : false
+  : false;
 
 /**
  * Only props of T that can be written directly to DB

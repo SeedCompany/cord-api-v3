@@ -80,7 +80,7 @@ export abstract class UpdateProject {
   readonly financialReportReceivedAt?: DateTime;
 
   @Field(() => ReportPeriod, { nullable: true })
-  readonly financialReportPeriod?: ReportPeriod;
+  readonly financialReportPeriod?: ReportPeriod | null;
 
   @Field({ nullable: true })
   readonly presetInventory?: boolean;
