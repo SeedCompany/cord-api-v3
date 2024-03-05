@@ -1,5 +1,5 @@
 module default {
-  abstract type ProgressSummary {
+  type ProgressSummary {
     required planned: float32;
     required actual: float32;
     
