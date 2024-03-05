@@ -8,6 +8,8 @@ module default {
     workflowEvents := .<report[is ProgressReport::WorkflowEvent];
 
     single varianceExplanation := .<report[is ProgressReport::VarianceExplanation];
+    
+    summaries := .<report[is ProgressSummary];
   }
 }
 

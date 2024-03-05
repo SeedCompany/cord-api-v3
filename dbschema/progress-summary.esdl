@@ -3,8 +3,13 @@ module default {
     required planned: float32;
     required actual: float32;
     
+    required report: ProgressReport; 
+    required period: ProgressSummary::Period;
+    
     totalVerses: int16;
     totalVerseEquivalents: int16;
+    
+    constraint exclusive on ((.report, .period));
   }
 }
 
