@@ -7,12 +7,11 @@ module default {
     required period: ProgressSummary::Period;
     
     totalVerses: int16;
-    totalVerseEquivalents: int16;
+    totalVerseEquivalents: float32;
     
     constraint exclusive on ((.report, .period));
   }
 }
-
 
 module ProgressSummary {
   scalar type Period extending enum<

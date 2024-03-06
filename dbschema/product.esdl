@@ -35,7 +35,7 @@ module default {
     };
     
     totalVerses: int16;
-    totalVerseEquivalents: int32;
+    totalVerseEquivalents: float32;
   }
   
   type DerivativeScriptureProduct extending Product {
@@ -56,7 +56,7 @@ module default {
     required composite: bool { default := false };
     
     totalVerses: int16;
-    totalVerseEquivalents: int32;
+    totalVerseEquivalents: float32;
   }
   
   type OtherProduct extending Product {
