@@ -1,17 +1,22 @@
 module default {
-  type ProductProgress extending Mixin::Timestamped {
-    product: Product;
-    report: PeriodicReport;
-    variant: VariantProgress::Variant;
-    multi steps: StepProgress;
-  }
   type StepProgress extending Mixin::Timestamped {
-    step: Product::Step;
+    required productProgress: ProductProgress;
+    required step: Product::Step;
     completed: float32;
+    
+    constraint exclusive on ((.productProgress, .step));
+  }
+  type ProductProgress extending Mixin::Timestamped {
+    required product: Product;
+    required report: ProgressReport;
+    required variant: ProductProgress::Variant;
+    steps := .<productProgress[is StepProgress];
+    
+    constraint exclusive on ((.report, .product, .variant));
   }
 }
 
-module VariantProgress {
+module ProductProgress {
   scalar type Variant extending enum<
     official,
     partner
