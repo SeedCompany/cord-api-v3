@@ -1069,7 +1069,7 @@ with
               progressTarget := <int16>directScriptureProduct['progressTarget'],
               progressStepMeasurement := <str>directScriptureProduct['progressStepMeasurement'],
               totalVerses := <int16>json_get(directScriptureProduct, 'totalVerses'),
-              totalVerseEquivalents := <int32>json_get(directScriptureProduct, 'totalVerseEquivalents')
+              totalVerseEquivalents := <float32>json_get(directScriptureProduct, 'totalVerseEquivalents')
             })
            )
           )
