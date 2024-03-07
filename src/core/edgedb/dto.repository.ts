@@ -68,21 +68,37 @@ export const RepoFor = <
 
   @Injectable()
   abstract class Repository extends CommonRepository {
-    static customize<Customized extends Repository>(
-      customizer: (cls: typeof Repository) => AbstractClass<Customized>,
+    static customize<Customized extends BaseCustomizedRepository>(
+      customizer: (
+        cls: typeof BaseCustomizedRepository,
+      ) => AbstractClass<Customized>,
     ): AbstractClass<
       Customized & Omit<DefaultDtoRepository, keyof Customized>
     > {
-      const customizedClass = customizer(Repository);
+      const customizedClass = customizer(BaseCustomizedRepository);
       const customMethodNames = setOf(
         Object.getOwnPropertyNames(customizedClass.prototype),
       );
-      const nonDeclaredDefaults = mapKeys(
-        Object.getOwnPropertyDescriptors(DefaultDtoRepository.prototype),
-        (name, _, { SKIP }) =>
-          typeof name === 'string' && customMethodNames.has(name) ? SKIP : name,
+      const defaultMethods = Object.getOwnPropertyDescriptors(
+        DefaultDtoRepository.prototype,
+      );
+      const nonDeclaredDefaults = mapKeys(defaultMethods, (name, _, { SKIP }) =>
+        typeof name === 'string' && customMethodNames.has(name) ? SKIP : name,
       ).asRecord;
       Object.defineProperties(customizedClass.prototype, nonDeclaredDefaults);
+
+      // Create defaults instance, once, when needed.
+      // Using this customized class instance, but swap out the customized methods for the default ones.
+      Object.defineProperty(customizedClass.prototype, 'defaults', {
+        get() {
+          const defaultsInstance = Object.defineProperties(
+            Object.create(this),
+            defaultMethods,
+          );
+          Object.defineProperty(this, 'defaults', { value: defaultsInstance }); // memoize, only once
+          return defaultsInstance;
+        },
+      });
 
       return customizedClass as any;
     }
@@ -237,6 +253,12 @@ export const RepoFor = <
       const existing = e.cast(dbType, e.cast(e.uuid, id));
       const query = e.delete(existing);
       await this.db.run(query);
+    }
+  }
+
+  class BaseCustomizedRepository extends Repository {
+    protected get defaults(): DefaultDtoRepository {
+      return this as any;
     }
   }
 
