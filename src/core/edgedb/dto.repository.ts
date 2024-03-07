@@ -202,15 +202,17 @@ export const RepoFor = <
     }
 
     async readMany(ids: readonly ID[]): Promise<readonly Dto[]> {
-      const query = e.params({ ids: e.array(e.uuid) }, ({ ids }) =>
+      const rows = await this.db.run(this.readManyQuery, { ids });
+      return rows as readonly Dto[];
+    }
+    private readonly readManyQuery = e.params(
+      { ids: e.array(e.uuid) },
+      ({ ids }) =>
         e.select(dbType, (obj: any) => ({
           ...this.hydrate(obj),
           filter: e.op(obj.id, 'in', e.array_unpack(ids)),
         })),
-      );
-      const rows = await this.db.run(query, { ids });
-      return rows as readonly Dto[];
-    }
+    );
 
     async list(input: PaginationInput) {
       const all = e.select(dbType, (obj: any) => {
