@@ -16,9 +16,6 @@ module ProgressReport::ProductProgress {
 
     required planned: float32;
     required actual: float32;
-
-    totalVerses: int16;
-    totalVerseEquivalents: float32;
   }
 
   scalar type Variant extending enum<
