@@ -13,13 +13,8 @@ module default {
 }
 
 module Media {
-  type Dimensions {
-    required width: int16;
-    required height: int16;
-  }
-  
   abstract type Visual extending default::Media {
-    required dimensions: Dimensions;
+    required dimensions: tuple<width: int16, height: int16>;
   }
   
   abstract type Temporal extending default::Media {
