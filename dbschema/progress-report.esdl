@@ -31,12 +31,22 @@ module ProgressReport {
     );
   }
 
+  type TeamNews extending ProgressReport::Child, Prompt::PromptVariantResponse {
+    overloaded container: default::ProgressReport;
+  }
+  type CommunityStory extending ProgressReport::Child, Prompt::PromptVariantResponse {
+    overloaded container: default::ProgressReport;
+  }
+  type Highlight extending ProgressReport::Child, Prompt::PromptVariantResponse {
+    overloaded container: default::ProgressReport;
+  }
+
   type VarianceExplanation extending ProgressReport::Child {
     overloaded report {
       constraint exclusive;
     };
 
-    multi reasons: str; 
+    multi reasons: str;
 
     comments: default::RichText;
   }

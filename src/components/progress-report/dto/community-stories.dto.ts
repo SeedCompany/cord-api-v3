@@ -1,10 +1,11 @@
 import { keys as keysOf } from 'ts-transformer-keys';
 import { SecuredProps, VariantOf } from '~/common';
+import { e } from '~/core/edgedb';
 import { RegisterResource } from '~/core/resources';
 import { PromptVariantResponse } from '../../prompts/dto';
 import { ProgressReportHighlight } from './highlights.dto';
 
-@RegisterResource()
+@RegisterResource({ db: e.ProgressReport.CommunityStory })
 export class ProgressReportCommunityStory extends PromptVariantResponse<CommunityStoryVariant> {
   static Props = keysOf<ProgressReportCommunityStory>();
   static SecuredProps = keysOf<SecuredProps<ProgressReportCommunityStory>>();
@@ -22,5 +23,8 @@ export type CommunityStoryVariant = VariantOf<
 declare module '~/core/resources/map' {
   interface ResourceMap {
     ProgressReportCommunityStory: typeof ProgressReportCommunityStory;
+  }
+  interface ResourceDBMap {
+    ProgressReportCommunityStory: typeof e.ProgressReport.CommunityStory;
   }
 }
