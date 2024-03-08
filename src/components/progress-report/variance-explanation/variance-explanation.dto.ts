@@ -11,11 +11,12 @@ import {
   SecuredStringList,
   SetUnsecuredType,
 } from '~/common';
+import { e } from '~/core/edgedb';
 import { RegisterResource } from '~/core/resources';
 import { ProgressReport } from '../dto';
 import { ProgressReportVarianceExplanationReasonOptions as ReasonOptions } from './reason-options';
 
-@RegisterResource()
+@RegisterResource({ db: e.ProgressReport.VarianceExplanation })
 @ObjectType()
 export abstract class ProgressReportVarianceExplanation {
   static Props = keysOf<ProgressReportVarianceExplanation>();
@@ -55,5 +56,8 @@ export abstract class ProgressReportVarianceExplanationInput {
 declare module '~/core/resources/map' {
   interface ResourceMap {
     ProgressReportVarianceExplanation: typeof ProgressReportVarianceExplanation;
+  }
+  interface ResourceDBMap {
+    ProgressReportVarianceExplanation: typeof e.ProgressReport.VarianceExplanation;
   }
 }

@@ -1,6 +1,7 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { BaseNode } from '~/core/database/results';
+import { e } from '~/core/edgedb';
 import { LinkTo, RegisterResource } from '~/core/resources';
 import {
   Calculated,
@@ -40,7 +41,7 @@ export abstract class SecuredFinancialReportingType extends SecuredEnum(
   { nullable: true },
 ) {}
 
-@RegisterResource()
+@RegisterResource({ db: e.Partnership })
 @ObjectType({
   implements: [Resource, ChangesetAware],
 })
@@ -107,5 +108,8 @@ export class Partnership extends IntersectionType(ChangesetAware, Resource) {
 declare module '~/core/resources/map' {
   interface ResourceMap {
     Partnership: typeof Partnership;
+  }
+  interface ResourceDBMap {
+    Partnership: typeof e.default.Partnership;
   }
 }

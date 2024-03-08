@@ -2,6 +2,7 @@ import { Field, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { BaseNode } from '~/core/database/results';
+import { e } from '~/core/edgedb';
 import { RegisterResource } from '~/core/resources';
 import {
   DateTimeField,
@@ -14,7 +15,7 @@ import {
 import { PostType } from './post-type.enum';
 import { PostShareability } from './shareability.dto';
 
-@RegisterResource()
+@RegisterResource({ db: e.Post })
 @ObjectType({
   implements: [Resource],
 })
@@ -43,5 +44,8 @@ export class Post extends Resource {
 declare module '~/core/resources/map' {
   interface ResourceMap {
     Post: typeof Post;
+  }
+  interface ResourceDBMap {
+    Post: typeof e.default.Post;
   }
 }
