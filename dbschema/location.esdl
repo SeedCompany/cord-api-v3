@@ -11,6 +11,7 @@ module default {
     
     fundingAccount: FundingAccount;
     defaultFieldRegion: FieldRegion;
+    defaultMarketingRegion: Location;
     mapImage: File;
   }
 }
