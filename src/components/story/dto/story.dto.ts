@@ -1,5 +1,6 @@
 import { ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
+import { e } from '~/core/edgedb';
 import { RegisterResource } from '~/core/resources';
 import {
   DbUnique,
@@ -16,7 +17,7 @@ declare module '../../product/dto/producible.dto' {
   }
 }
 
-@RegisterResource()
+@RegisterResource({ db: e.Story })
 @ObjectType({
   implements: [Producible, Resource],
 })
@@ -32,5 +33,8 @@ export class Story extends Producible {
 declare module '~/core/resources/map' {
   interface ResourceMap {
     Story: typeof Story;
+  }
+  interface ResourceDBMap {
+    Story: typeof e.default.Story;
   }
 }

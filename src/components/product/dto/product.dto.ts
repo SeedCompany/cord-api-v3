@@ -4,6 +4,7 @@ import { startCase } from 'lodash';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive } from 'type-fest';
 import { SetDbType } from '~/core';
+import { e } from '~/core/edgedb';
 import { RegisterResource } from '~/core/resources';
 import {
   DbLabel,
@@ -42,7 +43,7 @@ export const resolveProductType = (
     ? OtherProduct
     : DirectScriptureProduct;
 
-@RegisterResource()
+@RegisterResource({ db: e.Product })
 @InterfaceType({
   resolveType: resolveProductType,
   implements: [Producible],
@@ -115,7 +116,7 @@ export class Product extends Producible {
   readonly placeholderDescription: SecuredStringNullable;
 }
 
-@RegisterResource()
+@RegisterResource({ db: e.DirectScriptureProduct })
 @ObjectType({
   implements: [Product],
   description: stripIndent`
@@ -155,7 +156,7 @@ export class DirectScriptureProduct extends Product {
   readonly pnpIndex?: number;
 }
 
-@RegisterResource()
+@RegisterResource({ db: e.DerivativeScriptureProduct })
 @ObjectType({
   implements: [Product],
   description: stripIndent`
@@ -214,7 +215,7 @@ export class DerivativeScriptureProduct extends Product {
   totalVerseEquivalents: number;
 }
 
-@RegisterResource()
+@RegisterResource({ db: e.Product })
 @ObjectType({
   implements: [Product],
   description:
@@ -275,5 +276,11 @@ declare module '~/core/resources/map' {
     DirectScriptureProduct: typeof DirectScriptureProduct;
     DerivativeScriptureProduct: typeof DerivativeScriptureProduct;
     OtherProduct: typeof OtherProduct;
+  }
+  interface ResourceDBMap {
+    Product: typeof e.default.Product;
+    DirectScriptureProduct: typeof e.default.DirectScriptureProduct;
+    DerivativeScriptureProduct: typeof e.default.DerivativeScriptureProduct;
+    OtherProduct: typeof e.default.OtherProduct;
   }
 }

@@ -11,13 +11,14 @@ import {
   SecuredRichTextNullable,
   SetUnsecuredType,
 } from '~/common';
+import { e } from '~/core/edgedb';
 import { RegisterResource } from '~/core/resources';
 import { User } from '../../../user';
 import { ProgressReportStatus } from '../../dto';
 import { InternalTransition } from '../transitions';
 import { ProgressReportWorkflowTransition as PublicTransition } from './workflow-transition.dto';
 
-@RegisterResource()
+@RegisterResource({ db: e.ProgressReport.WorkflowEvent })
 @ObjectType()
 export abstract class ProgressReportWorkflowEvent {
   static readonly Props = keysOf<ProgressReportWorkflowEvent>();
@@ -49,5 +50,8 @@ export abstract class ProgressReportWorkflowEvent {
 declare module '~/core/resources/map' {
   interface ResourceMap {
     ProgressReportWorkflowEvent: typeof ProgressReportWorkflowEvent;
+  }
+  interface ResourceDBMap {
+    ProgressReportWorkflowEvent: typeof e.ProgressReport.WorkflowEvent;
   }
 }

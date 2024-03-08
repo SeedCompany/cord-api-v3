@@ -11,6 +11,7 @@ import {
   UnsecuredDto,
   Variant,
 } from '~/common';
+import { e } from '~/core/edgedb';
 import { RegisterResource } from '~/core/resources';
 import { Product, ProductStep } from '../../product';
 import { ProgressReport } from '../../progress-report/dto';
@@ -86,7 +87,7 @@ export type UnsecuredProductProgress = Merge<
   }
 >;
 
-@RegisterResource()
+@RegisterResource({ db: e.ProgressReport.ProductProgress.Step })
 @ObjectType({
   description: `The progress of a product's step for a given report`,
 })
@@ -119,5 +120,8 @@ export class StepProgress {
 declare module '~/core/resources/map' {
   interface ResourceMap {
     StepProgress: typeof StepProgress;
+  }
+  interface ResourceDBMap {
+    StepProgress: typeof e.ProgressReport.ProductProgress.Step;
   }
 }
