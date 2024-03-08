@@ -51,6 +51,24 @@ module ProgressReport {
     comments: default::RichText;
   }
 
+  module Media {
+    type VariantGroup;
+  }
+  type Media extending ProgressReport::Child, Mixin::Owned {
+    required file: default::File;
+    required single media := assert_exists(.file.media);
+
+    required variantGroup: ProgressReport::Media::VariantGroup;
+    required variant: str;
+    constraint exclusive on ((.variantGroup, .variant));
+    trigger deleteEmptyVariantGroup after delete for each do (
+      delete __old__.variantGroup
+      filter not exists (select Media filter .variantGroup = __old__.variantGroup)
+    );
+
+    category: str;
+  }
+
   type WorkflowEvent {
     required report: default::ProgressReport {
       readonly := true;
