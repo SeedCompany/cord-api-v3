@@ -1,6 +1,10 @@
 module default {
   abstract type Media {
-    required file: default::File;
+    required file: File::Version {
+      readonly := true;
+      constraint exclusive;
+    }
+
     required mimeType: str;
     
     altText: str;
