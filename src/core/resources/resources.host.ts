@@ -71,7 +71,11 @@ export class ResourcesHost {
 
   getByEdgeDB<Name extends ResourceNameLike | AllResourceDBNames>(
     name: Name,
-  ): EnhancedResource<ResourceStaticFromName<ResourceName<Name>>> {
+  ): EnhancedResource<
+    string extends Name
+      ? ResourceShape<any>
+      : ResourceStaticFromName<ResourceName<Name>>
+  > {
     const fqnMap = this.edgeDBFQNMap();
     const resByFQN = fqnMap.get(
       name.includes('::') ? name : `default::${name}`,

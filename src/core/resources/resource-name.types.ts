@@ -32,7 +32,7 @@ export type ResourceName<
   T,
   IncludeSubclasses extends boolean = false,
 > = IsAny<T> extends true
-  ? string // short-circuit and prevent many seemly random circular definitions
+  ? AllResourceNames // short-circuit and prevent many seemly random circular definitions
   : T extends AllResourceDBNames
   ? ResourceNameFromStatic<
       ResourceMap[ResourceNameFromDBName<T>],
