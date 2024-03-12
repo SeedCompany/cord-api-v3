@@ -131,9 +131,10 @@ export class LocationRepository extends DtoRepository(Location) {
         ])
         .return<{ dto: UnsecuredDto<Location> }>(
           merge('props', {
-            fundingAccount: 'fundingAccount.id',
-            defaultFieldRegion: 'defaultFieldRegion.id',
-            defaultMarketingRegion: 'defaultMarketingRegion.id',
+            mapImage: { id: 'props.mapImage' },
+            fundingAccount: 'fundingAccount {.id}',
+            defaultFieldRegion: 'defaultFieldRegion {.id}',
+            defaultMarketingRegion: 'defaultMarketingRegion {.id}',
           }).as('dto'),
         );
   }

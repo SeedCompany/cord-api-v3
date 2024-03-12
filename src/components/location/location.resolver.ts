@@ -71,7 +71,7 @@ export class LocationResolver {
     @Loader(FundingAccountLoader)
     fundingAccounts: LoaderOf<FundingAccountLoader>,
   ): Promise<SecuredFundingAccount> {
-    return await mapSecuredValue(location.fundingAccount, (id) =>
+    return await mapSecuredValue(location.fundingAccount, ({ id }) =>
       fundingAccounts.load(id),
     );
   }
@@ -81,7 +81,7 @@ export class LocationResolver {
     @Parent() location: Location,
     @Loader(FieldRegionLoader) fieldRegions: LoaderOf<FieldRegionLoader>,
   ): Promise<SecuredFieldRegion> {
-    return await mapSecuredValue(location.defaultFieldRegion, (id) =>
+    return await mapSecuredValue(location.defaultFieldRegion, ({ id }) =>
       fieldRegions.load(id),
     );
   }
@@ -91,7 +91,7 @@ export class LocationResolver {
     @Parent() location: Location,
     @Loader(LocationLoader) defaultMarketingRegions: LoaderOf<LocationLoader>,
   ): Promise<SecuredLocation> {
-    return await mapSecuredValue(location.defaultMarketingRegion, (id) =>
+    return await mapSecuredValue(location.defaultMarketingRegion, ({ id }) =>
       defaultMarketingRegions.load(id),
     );
   }
