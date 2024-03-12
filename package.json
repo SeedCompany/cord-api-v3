@@ -104,7 +104,7 @@
     "yaml": "^2.3.3"
   },
   "devDependencies": {
-    "@edgedb/generate": "^0.5.0-canary.20240301T204428",
+    "@edgedb/generate": "^0.5.0-canary.20240312T000951",
     "@nestjs/cli": "^10.2.1",
     "@nestjs/schematics": "^10.0.3",
     "@nestjs/testing": "^10.2.7",
