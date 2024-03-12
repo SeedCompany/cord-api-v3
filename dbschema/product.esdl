@@ -45,7 +45,10 @@ module default {
       rewrite insert, update using (
         # coalescing `??` bugged with links
         # https://github.com/edgedb/edgedb/issues/6767
-        if exists .scriptureOverride then .scriptureOverride else .produces.scripture
+        if exists .scriptureOverride then
+          if exists .scriptureOverride.verses then
+          .scriptureOverride else {}
+        else .produces.scripture
       );
     };
     
