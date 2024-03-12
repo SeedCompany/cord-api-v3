@@ -5,7 +5,7 @@ module default {
     };
     
     scripture: Scripture::Collection {
-      on source delete delete target if orphan;
+      on source delete delete target;
       # https://github.com/edgedb/edgedb/issues/5827
       # rewrite insert, update using (
       #   if exists .scripture.verses then .scripture else <Scripture::Collection>{}

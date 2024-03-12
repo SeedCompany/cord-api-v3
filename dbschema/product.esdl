@@ -4,7 +4,7 @@ module default {
     # overloaded engagement: LanguageEngagement;
     
     scripture: Scripture::Collection {
-      on source delete delete target if orphan;
+      on source delete delete target;
     };
     
     multi mediums: Product::Medium;
@@ -31,7 +31,7 @@ module default {
   
   type DirectScriptureProduct extending Product {
     unspecifiedScripture: Scripture::UnspecifiedPortion {
-      on source delete delete target if orphan;
+      on source delete delete target;
     };
     
     totalVerses: int16;
@@ -50,7 +50,7 @@ module default {
     };
     
     scriptureOverride: Scripture::Collection {
-      on source delete delete target if orphan;
+      on source delete delete target;
     };
     
     required composite: bool { default := false };
