@@ -19,13 +19,13 @@ module default {
       )
     );
     
-    trigger updateDerivativeProducts after update for each do (
-      update DerivativeScriptureProduct
-      filter DerivativeScriptureProduct.produces = __new__
-        and __new__.scripture != __old__.scripture
-        and not exists .scriptureOverride
-      set { scripture := __new__.scripture }
-    );
+    trigger updateDerivativeProducts after update for each
+      when (__old__.scripture ?!= __new__.scripture)
+      do (
+        update DerivativeScriptureProduct
+        filter .produces = __new__ and not exists .scriptureOverride
+        set { scripture := __new__.scripture }
+      );
   }
   
   type EthnoArt extending Producible;
