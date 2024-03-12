@@ -24,7 +24,7 @@ export interface CreateNodeOptions<TResourceStatic extends ResourceShape<any>> {
 type InitialPropsOf<T> = {
   [K in keyof T & string]?:
     | Variable
-    | (T[K] extends FileId | LinkTo<'File'> ? ID : T[K]);
+    | (T[K] & {} extends FileId | LinkTo<'File'> ? ID : T[K]);
 };
 
 /**
