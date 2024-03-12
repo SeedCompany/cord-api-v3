@@ -6,7 +6,7 @@ module Scripture {
     # Want to allow optional for now for DerivativeScriptureProduct's scripture override use-case
     multi verses: VerseRange {
       readonly := true;
-      on source delete delete target if orphan;
+      on source delete delete target;
     }
     ids := multirange(array_agg(.verses.ids));
   }
@@ -17,11 +17,11 @@ module Scripture {
     }
     required `start`: Verse {
       readonly := true;
-      on source delete delete target if orphan;
+      on source delete delete target;
     }
     required `end`: Verse {
       readonly := true;
-      on source delete delete target if orphan;
+      on source delete delete target;
     }
     ids := range(
       <int32>.`start`.verseId,

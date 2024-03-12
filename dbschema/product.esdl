@@ -4,7 +4,7 @@ module default {
     # overloaded engagement: LanguageEngagement;
     
     scripture: Scripture::Collection {
-      on source delete delete target if orphan;
+      on source delete delete target;
     };
     
     multi mediums: Product::Medium;
@@ -31,8 +31,14 @@ module default {
   
   type DirectScriptureProduct extending Product {
     unspecifiedScripture: Scripture::UnspecifiedPortion {
-      on source delete delete target if orphan;
+      on source delete delete target;
     };
+    trigger deleteOldUnspecifiedScripture after update for each
+      when (__old__.unspecifiedScripture ?!= __new__.unspecifiedScripture)
+      do (delete __old__.unspecifiedScripture);
+    trigger deleteOldScripture after update for each
+      when (__old__.scripture ?!= __new__.scripture)
+      do (delete __old__.scripture);
     
     totalVerses: int16;
     totalVerseEquivalents: float32;
@@ -45,13 +51,21 @@ module default {
       rewrite insert, update using (
         # coalescing `??` bugged with links
         # https://github.com/edgedb/edgedb/issues/6767
-        if exists .scriptureOverride then .scriptureOverride else .produces.scripture
+        if exists .scriptureOverride then
+          if exists .scriptureOverride.verses then
+          .scriptureOverride else {}
+        else .produces.scripture
       );
+      # This is not the source of truth, just a stored computed.
+      on source delete allow;
     };
     
     scriptureOverride: Scripture::Collection {
-      on source delete delete target if orphan;
+      on source delete delete target;
     };
+    trigger deleteOldScriptureOverride after update for each
+      when (__old__.scriptureOverride ?!= __new__.scriptureOverride)
+      do (delete __old__.scriptureOverride);
     
     required composite: bool { default := false };
     
