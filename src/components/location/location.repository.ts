@@ -2,13 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
+  DuplicateException,
   generateId,
   ID,
   ServerException,
   Session,
   UnsecuredDto,
-} from '../../common';
-import { DtoRepository } from '../../core';
+} from '~/common';
+import { DtoRepository } from '~/core';
 import {
   ACTIVE,
   createNode,
@@ -18,8 +19,8 @@ import {
   merge,
   paginate,
   sorting,
-} from '../../core/database/query';
-import { FileId } from '../file';
+} from '~/core/database/query';
+import { FileId, FileService } from '../file';
 import {
   CreateLocation,
   Location,
@@ -29,16 +30,18 @@ import {
 
 @Injectable()
 export class LocationRepository extends DtoRepository(Location) {
-  async doesNameExist(name: string) {
-    const result = await this.db
-      .query()
-      .match([node('name', 'LocationName', { value: name })])
-      .return('name')
-      .first();
-    return !!result;
+  constructor(private readonly files: FileService) {
+    super();
   }
-
   async create(input: CreateLocation, session: Session) {
+    const checkName = await this.doesNameExist(input.name);
+    if (checkName) {
+      throw new DuplicateException(
+        'location.name',
+        'Location with this name already exists.',
+      );
+    }
+
     const mapImageId = await generateId<FileId>();
 
     const initialProps = {
@@ -67,7 +70,20 @@ export class LocationRepository extends DtoRepository(Location) {
       throw new ServerException('Failed to create location');
     }
 
-    return { id: result.id, mapImageId };
+    const dto = await this.readOne(result.id);
+
+    await this.files.createDefinedFile(
+      mapImageId,
+      input.name,
+      session,
+      dto.id,
+      'mapImage',
+      input.mapImage,
+      'location.mapImage',
+      true,
+    );
+
+    return dto;
   }
 
   async update(changes: UpdateLocation) {
@@ -108,6 +124,8 @@ export class LocationRepository extends DtoRepository(Location) {
         defaultMarketingRegionId,
       );
     }
+
+    return await this.readOne(id);
   }
 
   protected hydrate() {
@@ -131,9 +149,10 @@ export class LocationRepository extends DtoRepository(Location) {
         ])
         .return<{ dto: UnsecuredDto<Location> }>(
           merge('props', {
-            fundingAccount: 'fundingAccount.id',
-            defaultFieldRegion: 'defaultFieldRegion.id',
-            defaultMarketingRegion: 'defaultMarketingRegion.id',
+            mapImage: { id: 'props.mapImage' },
+            fundingAccount: 'fundingAccount {.id}',
+            defaultFieldRegion: 'defaultFieldRegion {.id}',
+            defaultMarketingRegion: 'defaultMarketingRegion {.id}',
           }).as('dto'),
         );
   }
@@ -202,5 +221,14 @@ export class LocationRepository extends DtoRepository(Location) {
       .apply(paginate(input, this.hydrate()))
       .first();
     return result!; // result from paginate() will always have 1 row.
+  }
+
+  private async doesNameExist(name: string) {
+    const result = await this.db
+      .query()
+      .match([node('name', 'LocationName', { value: name })])
+      .return('name')
+      .first();
+    return !!result;
   }
 }
