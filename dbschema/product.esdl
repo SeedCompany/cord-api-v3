@@ -50,6 +50,8 @@ module default {
           .scriptureOverride else {}
         else .produces.scripture
       );
+      # This is not the source of truth, just a stored computed.
+      on source delete allow;
     };
     
     scriptureOverride: Scripture::Collection {
