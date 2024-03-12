@@ -39,7 +39,7 @@ import { GeneratorParams } from './util';
   try {
     params.hydrators = await findHydrationShapes(params);
     await generateQueryBuilder(params);
-    await generateSchema(params);
+    const _skipped = generateSchema; // Skipping for now. Not proven useful.
     await generateQueryFiles(params);
     await generateInlineQueries(params);
   } finally {
