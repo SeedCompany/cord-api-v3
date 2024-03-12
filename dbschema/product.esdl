@@ -33,6 +33,12 @@ module default {
     unspecifiedScripture: Scripture::UnspecifiedPortion {
       on source delete delete target;
     };
+    trigger deleteOldUnspecifiedScripture after update for each
+      when (__old__.unspecifiedScripture ?!= __new__.unspecifiedScripture)
+      do (delete __old__.unspecifiedScripture);
+    trigger deleteOldScripture after update for each
+      when (__old__.scripture ?!= __new__.scripture)
+      do (delete __old__.scripture);
     
     totalVerses: int16;
     totalVerseEquivalents: float32;
@@ -57,6 +63,9 @@ module default {
     scriptureOverride: Scripture::Collection {
       on source delete delete target;
     };
+    trigger deleteOldScriptureOverride after update for each
+      when (__old__.scriptureOverride ?!= __new__.scriptureOverride)
+      do (delete __old__.scriptureOverride);
     
     required composite: bool { default := false };
     
