@@ -20,8 +20,10 @@ module default {
     );
     
     trigger updateDerivativeProducts after update for each do (
-      update __new__.<produces[is DerivativeScriptureProduct]
-      filter __new__.scripture != __old__.scripture and not exists .scriptureOverride
+      update DerivativeScriptureProduct
+      filter DerivativeScriptureProduct.produces = __new__
+        and __new__.scripture != __old__.scripture
+        and not exists .scriptureOverride
       set { scripture := __new__.scripture }
     );
   }
