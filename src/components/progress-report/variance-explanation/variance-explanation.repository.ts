@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { inArray, node, Query, relation } from 'cypher-query-builder';
 import { ID, UnsecuredDto } from '~/common';
-import { DbTypeOf, DtoRepository } from '~/core';
+import { DtoRepository } from '~/core';
 import {
   ACTIVE,
   ExpressionInput,
@@ -53,9 +53,7 @@ export class ProgressReportVarianceExplanationRepository extends DtoRepository(
         .return('dto');
   }
 
-  async update(
-    changes: { id: ID } & Partial<VarianceExplanationInput>,
-  ): Promise<DbTypeOf<VarianceExplanation>> {
+  async update(changes: { id: ID } & Partial<VarianceExplanationInput>) {
     const { report, id, ...simpleChanges } = changes;
     await this.db
       .query()
