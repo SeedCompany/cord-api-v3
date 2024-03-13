@@ -1,8 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { inArray, node, Query, relation } from 'cypher-query-builder';
-import { ID, Session, UnsecuredDto } from '~/common';
-import { DtoRepository } from '~/core';
-import { DbChanges } from '~/core/database/changes';
+import { ID, UnsecuredDto } from '~/common';
+import { DbTypeOf, DtoRepository } from '~/core';
 import {
   ACTIVE,
   ExpressionInput,
@@ -10,7 +9,6 @@ import {
   merge,
   updateProperties,
 } from '~/core/database/query';
-import { ProgressReport } from '../dto';
 import {
   ProgressReportVarianceExplanation as VarianceExplanation,
   ProgressReportVarianceExplanationInput as VarianceExplanationInput,
@@ -20,12 +18,11 @@ import {
 export class ProgressReportVarianceExplanationRepository extends DtoRepository(
   VarianceExplanation,
 ) {
-  // @ts-expect-error It doesn't have match base signature
-  async readMany(reports: readonly ProgressReport[]) {
+  async readMany(ids: readonly ID[]) {
     return await this.db
       .query()
       .matchNode('report', 'ProgressReport')
-      .where({ 'report.id': inArray(reports.map((r) => r.id)) })
+      .where({ 'report.id': inArray(ids.map((id) => id)) })
       .optionalMatch([
         node('report'),
         relation('out', '', 'varianceExplanation', ACTIVE),
@@ -38,7 +35,7 @@ export class ProgressReportVarianceExplanationRepository extends DtoRepository(
 
   protected hydrate() {
     const defaults: UnsecuredDto<VarianceExplanation> & ExpressionInput = {
-      report: 'report.id' as ID,
+      report: { id: 'report.id' as ID },
       reasons: [],
       comments: null,
     };
@@ -57,13 +54,12 @@ export class ProgressReportVarianceExplanationRepository extends DtoRepository(
   }
 
   async update(
-    reportId: ID,
-    changes: DbChanges<VarianceExplanationInput>,
-    _session: Session,
-  ) {
+    changes: { id: ID } & Partial<VarianceExplanationInput>,
+  ): Promise<DbTypeOf<VarianceExplanation>> {
+    const { report, id, ...simpleChanges } = changes;
     await this.db
       .query()
-      .matchNode('report', 'ProgressReport', { id: reportId })
+      .matchNode('report', 'ProgressReport', { id })
       .merge([
         node('report'),
         relation('out', '', 'varianceExplanation', ACTIVE),
@@ -73,10 +69,12 @@ export class ProgressReportVarianceExplanationRepository extends DtoRepository(
       .apply(
         updateProperties({
           resource: VarianceExplanation,
-          changes,
+          changes: simpleChanges,
         }),
       )
       .return('*')
       .run();
+
+    return await this.readOne(id);
   }
 }
