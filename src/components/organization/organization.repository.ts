@@ -49,10 +49,10 @@ export class OrganizationRepository extends DtoRepository<
   }
 
   async update(
-    existing: Organization,
-    changes: ChangesOf<Organization, UpdateOrganization>,
+    input: UpdateOrganization,
   ) {
-    return await this.updateProperties(existing, changes);
+    await this.updateProperties({ id: input.id }, input);
+    await this.readOne(input.id);
   }
 
   protected hydrate(session: Session) {

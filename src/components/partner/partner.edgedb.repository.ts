@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ID, PaginatedListType, PublicOf, UnsecuredDto } from '~/common';
 import { e, RepoFor } from '~/core/edgedb';
-import { CreatePartner, Partner, UpdatePartner } from './dto';
+import { CreatePartner, Partner, PartnerListInput, UpdatePartner } from './dto';
 import { PartnerRepository } from './partner.repository';
 
 @Injectable()
@@ -25,6 +25,12 @@ export class PartnerEdgeDBRepository
         if (!input.organizationId) {
           throw new Error('Organization Must be provided');
         }
+
+        this.defaults.create({
+          projectContext:e.cast(e.Organization, e.uuid(input.organizationId)).projectContext,
+        })
+        const org = e.cast(e.Organization, e.uuid(input.organizationId));
+
         const pointOfContact = e.select(e.User, () => ({
           filter_single: { id: input.pointOfContactId! },
         }));
@@ -49,7 +55,7 @@ export class PartnerEdgeDBRepository
           e.set(...(input.countries ?? []).map((id) => e.uuid(id))),
         );
         // TODO - not sure on this how the project context works
-        const projectContext: any = null;
+        const projectContext = org.projectContext;
         const created = e.insert(e.Partner, {
           id: undefined,
           name: `partner-${input.organizationId}`,
@@ -73,7 +79,8 @@ export class PartnerEdgeDBRepository
       async update(input: UpdatePartner): Promise<void> {
         const updateInputs = Object.fromEntries(
           Object.entries(input).filter(
-            ([key, value]) => value !== undefined && value !== null,
+            ([key, value]) =>
+              value !== undefined && value !== null && key !== 'id',
           ),
         );
         const updatePartner = e.update(e.Partner, () => ({
@@ -88,17 +95,17 @@ export class PartnerEdgeDBRepository
       }
 
       async list(
-        input: any,
+        input: PartnerListInput,
       ): Promise<PaginatedListType<UnsecuredDto<Partner>>> {
-        return [] as any;
-      }
-
-      async readOne(input: any): Promise<any> {
-        return;
-      }
-
-      async readMany(input: any): Promise<any> {
-        return;
+        const user = e.select(e.User, () => ({
+          filter_single: { id: input.filter.userId! },
+        }));
+        const partnerList = e.select(e.Partner, () => ({
+          pointOfContact: user,
+        }));
+        const results = await this.db.run(partnerList);
+        // TODO - rethink as any
+        return { items: results as any, hasMore: false, total: results.length };
       }
     };
   })
@@ -108,6 +115,7 @@ export class PartnerEdgeDBRepository
     const organization = e.select(e.Organization, () => ({
       filter_single: { id: organizationId },
     }));
+    const org2 = e.cast(e.Organization, e.uuid(organizationId));
     const partner = e.select(e.Partner, () => ({
       filter_single: { organization },
     }));

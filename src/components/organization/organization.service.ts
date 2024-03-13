@@ -101,7 +101,7 @@ export class OrganizationService {
       .for(session, Organization, organization)
       .verifyChanges(changes);
 
-    return await this.repo.update(organization, changes);
+    return await this.repo.update({ id: input.id, ...changes });
   }
 
   async delete(id: ID, session: Session): Promise<void> {
