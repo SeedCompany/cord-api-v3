@@ -28,6 +28,7 @@ export class UserEdgeDBRepository
     return [
       input.filter.pinned != null &&
         e.op(user.pinned, '=', input.filter.pinned),
+      input.filter.userId && e.bool(false), // TODO: Implement this
       // More filters here when needed...
     ];
   }
