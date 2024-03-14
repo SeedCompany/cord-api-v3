@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { mapKeys } from '@seedcompany/common';
-import { ID, InputException, NotFoundException, Session } from '~/common';
+import { InputException, NotFoundException, Session } from '~/common';
 import { ResourceLoader } from '~/core';
 import { Privileges } from '../../authorization';
 import { ProgressReport } from '../dto';
@@ -20,10 +20,10 @@ export class ProgressReportVarianceExplanationService {
   ) {}
 
   async readMany(reports: readonly ProgressReport[], session: Session) {
-    const reportMap = mapKeys.fromList(reports, (r) => r.id).asRecord;
-    const dtos = await this.repo.readMany(Object.keys(reportMap) as ID[]);
+    const reportMap = mapKeys.fromList(reports, (r) => r.id).asMap;
+    const dtos = await this.repo.readMany([...reportMap.keys()]);
     return dtos.map((dto) => {
-      const report = reportMap[dto.report.id];
+      const report = reportMap.get(dto.report.id)!;
       const secured = this.privilegesFor(session, report).secure(dto);
       return { ...secured, report };
     });
