@@ -12,7 +12,7 @@ import {
   SetUnsecuredType,
 } from '~/common';
 import { e } from '~/core/edgedb';
-import { RegisterResource } from '~/core/resources';
+import { LinkTo, RegisterResource } from '~/core/resources';
 import { ProgressReport } from '../dto';
 import { ProgressReportVarianceExplanationReasonOptions as ReasonOptions } from './reason-options';
 
@@ -25,7 +25,7 @@ export abstract class ProgressReportVarianceExplanation {
   static readonly Parent = import('../dto').then((m) => m.ProgressReport);
   static readonly ConfirmThisClassPassesSensitivityToPolicies = true;
 
-  readonly report: ProgressReport & SetUnsecuredType<ID>;
+  readonly report: ProgressReport & SetUnsecuredType<LinkTo<'ProgressReport'>>;
 
   @Field()
   readonly reasons: SecuredStringList;
