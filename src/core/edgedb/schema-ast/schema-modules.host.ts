@@ -22,7 +22,7 @@ export class SchemaModulesHost {
     const filenames = await fs.readdir(directoryPath);
     const files = filenames.flatMap((filename) =>
       filename.endsWith('.esdl')
-        ? SchemaFile.of(path.join(directoryPath, filename))
+        ? SchemaFile.of(this.parser, path.join(directoryPath, filename))
         : [],
     );
     await Promise.all(files.map((file) => file.read()));
@@ -30,8 +30,6 @@ export class SchemaModulesHost {
   }
 
   private discoverTypes(file: SchemaFile) {
-    const root = this.parser.parse(file);
-
     const byFQN = new Map<string, SchemaType>();
     const walk = (node: SchemaNode) => {
       if (node instanceof SchemaType) {
@@ -42,7 +40,7 @@ export class SchemaModulesHost {
         walk(child);
       }
     };
-    walk(root);
+    walk(file.parse());
 
     return byFQN;
   }

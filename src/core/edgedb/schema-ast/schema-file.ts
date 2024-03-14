@@ -1,6 +1,7 @@
 import * as crypto from 'crypto';
 import fs from 'node:fs/promises';
 import { SchemaNode } from './ast-nodes';
+import type { CrudeAstParser } from './crude-ast-parser';
 import { Position } from './position';
 
 export class SchemaFile extends SchemaNode {
@@ -9,18 +10,21 @@ export class SchemaFile extends SchemaNode {
   #textHash: string;
   #initHash: string;
 
+  readonly parseFresh: boolean;
+  #parser: CrudeAstParser;
+
   get text() {
     return super.text;
   }
   set text(value: string) {
     super.text = value;
     const pos = value ? Position.full(value) : Position.EMPTY;
-    Object.assign(this, { outer: pos, inner: pos });
+    Object.assign(this, { outer: pos, inner: pos, parseFresh: false });
     this.#textHash = hash(value);
     this.#initHash ??= this.#textHash;
   }
 
-  static of(path: string, text = ''): SchemaFile {
+  static of(parser: CrudeAstParser, path: string, text = ''): SchemaFile {
     const instance = SchemaNode.cast(
       SchemaFile,
       {
@@ -31,9 +35,18 @@ export class SchemaFile extends SchemaNode {
         children: [],
         file: null as any, // circular reference assigned below
       },
-      { path },
+      { path, parseFresh: false },
     );
+    instance.#parser = parser;
     return Object.assign(instance, { file: instance });
+  }
+
+  parse() {
+    if (!this.parseFresh) {
+      this.#parser.parse(this);
+      Object.assign(this, { parseFresh: true });
+    }
+    return this;
   }
 
   async read() {
