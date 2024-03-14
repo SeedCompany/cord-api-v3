@@ -1385,6 +1385,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@babel/runtime-corejs3@npm:^7.16.5":
+  version: 7.24.0
+  resolution: "@babel/runtime-corejs3@npm:7.24.0"
+  dependencies:
+    core-js-pure: "npm:^3.30.2"
+    regenerator-runtime: "npm:^0.14.0"
+  checksum: 10c0/5ed3f35c8bd06cd7f398112577b440d8ed4dfbe95f35695990b739543c0199bccd09f2c4c7870a82b7088652bc365bdd3548e6306e603bc036afcecb580e3755
+  languageName: node
+  linkType: hard
+
 "@babel/runtime@npm:^7.14.6, @babel/runtime@npm:^7.20.7":
   version: 7.23.2
   resolution: "@babel/runtime@npm:7.23.2"
@@ -5421,6 +5431,7 @@ __metadata:
     typescript-transform-paths: "npm:^3.4.6"
     winston: "npm:^3.11.0"
     xlsx: "https://cdn.sheetjs.com/xlsx-0.20.0/xlsx-0.20.0.tgz"
+    xregexp: "npm:^5.1.1"
     yaml: "npm:^2.3.3"
   dependenciesMeta:
     "@apollo/protobufjs":
@@ -5433,6 +5444,13 @@ __metadata:
       unplugged: true
   languageName: unknown
   linkType: soft
+
+"core-js-pure@npm:^3.30.2":
+  version: 3.36.0
+  resolution: "core-js-pure@npm:3.36.0"
+  checksum: 10c0/1c5ecb37451bcebaa449e36285d27c4c79d5ff24b8bfd44491ce661cfc12b5c56471c847d306d21a56894338d00abea4993a6f8e07c71d4e887d1f71e410d22e
+  languageName: node
+  linkType: hard
 
 "core-util-is@npm:^1.0.3, core-util-is@npm:~1.0.0":
   version: 1.0.3
@@ -13215,6 +13233,15 @@ __metadata:
   bin:
     xlsx: ./bin/xlsx.njs
   checksum: 10c0/0037e0dba8457a279b1920a93d70bae5a5d4c17ef87dd8eacb75bf5300d7299fcc18b2bafc0d424323f5cc02d2698a31475cfbcbdb980e31534b14bf30f6a72c
+  languageName: node
+  linkType: hard
+
+"xregexp@npm:^5.1.1":
+  version: 5.1.1
+  resolution: "xregexp@npm:5.1.1"
+  dependencies:
+    "@babel/runtime-corejs3": "npm:^7.16.5"
+  checksum: 10c0/ae007c7898afd808e7664931228dc4bd38e65ebc24c66318416a038b4351cc73cc9b3b9cea1ab5ffd97933bf9b75afbf848f36e91d22b2416d6bd7d6fcfd2ee6
   languageName: node
   linkType: hard
 

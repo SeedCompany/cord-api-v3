@@ -11,6 +11,8 @@ import { EdgeDB } from './edgedb.service';
 import { Options } from './options';
 import { OptionsContext } from './options.context';
 import { Client } from './reexports';
+import { CrudeAstParser } from './schema-ast/crude-ast-parser';
+import { SchemaModulesHost } from './schema-ast/schema-modules.host';
 import { TransactionContext } from './transaction.context';
 
 @Module({
@@ -53,8 +55,10 @@ import { TransactionContext } from './transaction.context';
       useClass: EdgeDBTransactionalMutationsInterceptor,
     },
     splitDb(IdResolver, AliasIdResolver),
+    SchemaModulesHost,
+    CrudeAstParser,
   ],
-  exports: [EdgeDB, Client, IdResolver],
+  exports: [EdgeDB, Client, IdResolver, SchemaModulesHost],
 })
 export class EdgeDBModule implements OnModuleDestroy {
   constructor(private readonly client: Client) {}

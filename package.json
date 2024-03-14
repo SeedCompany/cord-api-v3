@@ -101,6 +101,7 @@
     "ts-essentials": "^9.4.1",
     "winston": "^3.11.0",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.0/xlsx-0.20.0.tgz",
+    "xregexp": "^5.1.1",
     "yaml": "^2.3.3"
   },
   "devDependencies": {
