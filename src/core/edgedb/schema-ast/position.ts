@@ -1,4 +1,6 @@
 export class Position {
+  static EMPTY = new Position(0, 0);
+
   static full(text: string) {
     return new Position(0, text.length);
   }

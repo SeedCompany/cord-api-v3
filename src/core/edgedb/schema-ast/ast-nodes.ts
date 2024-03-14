@@ -4,7 +4,14 @@ import { Position } from './position';
 import type { SchemaFile } from './schema-file';
 
 export class SchemaNode {
-  readonly text: string;
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  private _text: string;
+  get text() {
+    return this._text;
+  }
+  protected set text(value: string) {
+    this._text = value;
+  }
 
   readonly outer: Position;
   readonly inner: Position | null;
