@@ -10,7 +10,6 @@ export class VarianceExplanationEdgeDBRepository
     hydrate: (varianceExplanation) => ({
       ...varianceExplanation['*'],
       report: true,
-      comments: true,
     }),
   }).withDefaults()
   implements PublicOf<ProgressReportVarianceExplanationRepository> {}
