@@ -73,6 +73,6 @@ export class ProgressReportVarianceExplanationRepository extends DtoRepository(
       .return('*')
       .run();
 
-    return await this.readOne(id);
+    return undefined as unknown;
   }
 }
