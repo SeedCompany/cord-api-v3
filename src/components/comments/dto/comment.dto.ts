@@ -1,6 +1,7 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
+import { e } from '~/core/edgedb';
 import { RegisterResource } from '~/core/resources';
 import {
   DateTimeField,
@@ -10,7 +11,7 @@ import {
   SecuredRichText,
 } from '../../../common';
 
-@RegisterResource()
+@RegisterResource({ db: e.Comments.Comment })
 @ObjectType({
   implements: [Resource],
 })
@@ -35,5 +36,8 @@ export class Comment extends Resource {
 declare module '~/core/resources/map' {
   interface ResourceMap {
     Comment: typeof Comment;
+  }
+  interface ResourceDBMap {
+    Comment: typeof e.Comments.Comment;
   }
 }
