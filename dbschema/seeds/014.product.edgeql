@@ -1090,9 +1090,7 @@ with
     "project": "South Downs",
     "title": "Recording of Lametations",
     "description": "To help them understand it better.",
-    "mediums": [
-      "Other"
-      ],
+    "mediums": ["Other"],
     "steps": ["Completed"],
     "progressTarget": 100,
     "progressStepMeasurement": "Percent"
@@ -1100,10 +1098,7 @@ with
   {
     "project": "Misty Mountains",
     "title":  "7 new songs written and recorded",
-    "mediums": [
-      "Audio",
-      "Web"
-      ],
+    "mediums": ["Audio", "Web"],
     "steps": ["Completed"],
     "progressTarget": 100,
     "progressStepMeasurement": "Percent"
@@ -1112,9 +1107,7 @@ with
     "project": "Arnor Lake",
     "title":  "LOTR Stories",
     "description": "TBD",
-    "mediums": [
-      "TrainedStoryTellers"
-      ],
+    "mediums": ["TrainedStoryTellers"],
     "steps": ["Completed"],
     "progressTarget": 100,
     "progressStepMeasurement": "Percent"
@@ -1148,11 +1141,7 @@ with
   {
     "project": "Lothlorien",
     "title":  "An evangelistic tract for Drwarves translated from the Elvish.",
-    "mediums": [
-      "Video",
-      "Web",
-      "Other"
-      ],
+    "mediums": ["Video", "Web", "Other"],
     "methodology": "OtherWritten",
     "describeCompletion": "Completed = published digitally as a video on social media sites and as pdf text distributed by text messaging.",
     "progressTarget": 1,
@@ -1162,12 +1151,7 @@ with
     "project": "Misty Mountains",
     "title":  "2 plays",
     "description": "Two plays dipicting the good ol\' days of the Misty Mountains",
-    "mediums": [
-      "Web",
-      "Video",
-      "Audio",
-      "App"
-      ],
+    "mediums": ["Web", "Video", "Audio", "App"],
     "steps": ["Completed"],
     "methodology": "Film",
     "describeCompletion": "Completed = published digitally as text, audio, and video on a website, in the Dwarvish Leader app and on social media sites.",
@@ -1200,4 +1184,5 @@ with
     )
   ),
   newOtherProducts := (select otherProducts filter .createdAt = datetime_of_statement())
-  select { `Added Other Products` := newOtherProducts.project.name ++ ': ' ++ newOtherProducts.title }
+select { `Added Other Products` := newOtherProducts.project.name ++ ': ' ++ newOtherProducts.title }
+filter count(newOtherProducts) > 0;
