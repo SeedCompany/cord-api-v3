@@ -241,6 +241,9 @@ export class EnhancedResource<T extends ResourceShape<any>> {
     return new Set(props);
   }
 
+  get hasDB() {
+    return !!EnhancedResource.dbTypes.get(this.type);
+  }
   get db(): DBType<T> {
     const type = EnhancedResource.dbTypes.get(this.type);
     if (!type) {
