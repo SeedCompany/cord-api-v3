@@ -7,7 +7,7 @@ import { Position } from './position';
 export class SchemaFile extends SchemaNode {
   readonly path: string;
 
-  #textHash: string;
+  #textHash?: string;
   #initHash: string;
 
   readonly parseFresh: boolean;
@@ -20,8 +20,12 @@ export class SchemaFile extends SchemaNode {
     super.text = value;
     const pos = value ? Position.full(value) : Position.EMPTY;
     Object.assign(this, { outer: pos, inner: pos, parseFresh: false });
-    this.#textHash = hash(value);
-    this.#initHash ??= this.#textHash;
+    if (!this.#initHash) {
+      this.#textHash = hash(value);
+      this.#initHash = this.#textHash;
+    } else {
+      this.#textHash = undefined;
+    }
   }
 
   static of(parser: CrudeAstParser, path: string, text = ''): SchemaFile {
@@ -51,7 +55,7 @@ export class SchemaFile extends SchemaNode {
 
   async read() {
     this.text = await fs.readFile(this.path, 'utf8');
-    this.#initHash = this.#textHash;
+    this.#initHash = this.#textHash = hash(this.text);
     // clear previously parsed children
     Object.assign(this, { children: [] });
   }
@@ -59,6 +63,7 @@ export class SchemaFile extends SchemaNode {
     if (text != null) {
       this.text = text;
     }
+    this.#textHash ??= hash(this.text);
     if (this.#textHash === this.#initHash) {
       return;
     }
