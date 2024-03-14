@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { mapOf } from '@seedcompany/common';
-import fs from 'node:fs/promises';
-import * as path from 'path';
+import { glob } from 'glob';
 import { SchemaNode, SchemaType } from './ast-nodes';
 import { CrudeAstParser } from './crude-ast-parser';
 import { SchemaFile } from './schema-file';
@@ -18,12 +17,9 @@ export class SchemaModulesHost {
   }
 
   private async discoverFiles() {
-    const directoryPath = './dbschema';
-    const filenames = await fs.readdir(directoryPath);
-    const files = filenames.flatMap((filename) =>
-      filename.endsWith('.esdl')
-        ? SchemaFile.of(this.parser, path.join(directoryPath, filename))
-        : [],
+    const filenames = await glob('./dbschema/*.esdl');
+    const files = filenames.map((filename) =>
+      SchemaFile.of(this.parser, filename),
     );
     await Promise.all(files.map((file) => file.read()));
     return files;
