@@ -22,7 +22,7 @@ export class ProgressReportVarianceExplanationRepository extends DtoRepository(
     return await this.db
       .query()
       .matchNode('report', 'ProgressReport')
-      .where({ 'report.id': inArray(ids.map((id) => id)) })
+      .where({ 'report.id': inArray(ids) })
       .optionalMatch([
         node('report'),
         relation('out', '', 'varianceExplanation', ACTIVE),
