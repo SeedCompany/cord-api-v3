@@ -53,8 +53,8 @@ export class ProgressReportVarianceExplanationRepository extends DtoRepository(
         .return('dto');
   }
 
-  async update(changes: { id: ID } & Partial<VarianceExplanationInput>) {
-    const { report, id, ...simpleChanges } = changes;
+  async update(input: { id: ID } & Omit<VarianceExplanationInput, 'report'>) {
+    const { id, ...changes } = input;
     await this.db
       .query()
       .matchNode('report', 'ProgressReport', { id })
@@ -67,7 +67,7 @@ export class ProgressReportVarianceExplanationRepository extends DtoRepository(
       .apply(
         updateProperties({
           resource: VarianceExplanation,
-          changes: simpleChanges,
+          changes,
         }),
       )
       .return('*')
