@@ -2,12 +2,8 @@ import { Type } from '@nestjs/common';
 import { Field, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { e } from '~/core/edgedb';
-import { RegisterResource } from '~/core/resources';
 import {
   DateTimeField,
-  ID,
-  IdOf,
   IntersectionType,
   Resource,
   ResourceRelationsShape,
@@ -20,14 +16,13 @@ import {
   SecuredString,
   Sensitivity,
   SensitivityField,
-} from '../../../common';
-import { Location } from '../../../components/location';
+} from '~/common';
+import { e } from '~/core/edgedb';
+import { LinkTo, RegisterResource } from '~/core/resources';
 import { ScopedRole } from '../../authorization';
-import { FieldRegion } from '../../field-region';
-import type { Language } from '../../language';
-import { FinancialReportingType } from '../../partnership/dto';
+import { FinancialReportingType } from '../../partnership';
 import { Pinnable } from '../../pin/dto';
-import { Postable } from '../../post/dto';
+import { Postable } from '../../post';
 import { IProject } from '../../project/dto';
 import { SecuredPartnerTypes } from './partner-type.enum';
 
@@ -56,9 +51,9 @@ export class Partner extends Interfaces {
       ...Postable.Relations,
     } satisfies ResourceRelationsShape);
 
-  readonly organization: Secured<ID>;
+  readonly organization: Secured<LinkTo<'Organization'>>;
 
-  readonly pointOfContact: Secured<ID | null>;
+  readonly pointOfContact: Secured<LinkTo<'User'> | null>;
 
   @Field()
   readonly types: SecuredPartnerTypes;
@@ -78,14 +73,16 @@ export class Partner extends Interfaces {
   @Field()
   readonly address: SecuredString;
 
-  readonly languageOfWiderCommunication: Secured<IdOf<Language> | null>;
+  readonly languageOfWiderCommunication: Secured<LinkTo<'Language'> | null>;
 
-  readonly fieldRegions: Required<Secured<ReadonlyArray<IdOf<FieldRegion>>>>;
+  readonly fieldRegions: Required<
+    Secured<ReadonlyArray<LinkTo<'FieldRegion'>>>
+  >;
 
-  readonly countries: Required<Secured<ReadonlyArray<IdOf<Location>>>>;
+  readonly countries: Required<Secured<ReadonlyArray<LinkTo<'Location'>>>>;
 
   readonly languagesOfConsulting: Required<
-    Secured<ReadonlyArray<IdOf<Language>>>
+    Secured<ReadonlyArray<LinkTo<'Language'>>>
   >;
 
   @Field()
