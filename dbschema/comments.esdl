@@ -1,9 +1,9 @@
 module Comments {
   abstract type Aware extending default::Resource {
-    commentThreads := .<container[is default::Thread];
+    commentThreads := .<container[is Thread];
   }
 
-  type Thread extending Resource, Mixin::Embedded, Mixin::Owned {
+  type Thread extending default::Resource, Mixin::Embedded, Mixin::Owned {
     overloaded required single link container: Aware {
       on target delete delete source;
     };
@@ -12,10 +12,10 @@ module Comments {
     latestComment := (select .comments order by .createdAt desc limit 1);
   }
 
-  type Comment extending Resource, Mixin::Owned {
-    required body: default::RichText;
+  type Comment extending default::Resource, Mixin::Owned {
     required thread: Thread {
       on target delete delete source;
     };
+    required body: default::RichText;
   }
 }
