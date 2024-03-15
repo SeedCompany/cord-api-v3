@@ -53,6 +53,21 @@ export class SchemaFile extends SchemaNode {
     return this;
   }
 
+  insertBefore(position: Position, text: string) {
+    return this.insertAt(position.start, text);
+  }
+  insertAfter(position: Position, text: string) {
+    return this.insertAt(position.end, text);
+  }
+  insertAt(index: number, text: string) {
+    this.text = this.text.slice(0, index) + text + this.text.slice(index);
+    return this;
+  }
+  replaceText(replacer: (text: string) => string) {
+    this.text = replacer(this.text);
+    return this;
+  }
+
   async read() {
     this.text = await fs.readFile(this.path, 'utf8');
     this.#initHash = this.#textHash = hash(this.text);

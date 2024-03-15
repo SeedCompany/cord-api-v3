@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { EdgeDBAccessPolicyGenerator } from './edgedb-access-policy.generator';
 import { PolicyDumpCommand, PolicyDumper } from './executor/policy-dumper';
 import { PolicyExecutor } from './executor/policy-executor';
 import { Privileges } from './executor/privileges';
@@ -13,7 +14,8 @@ import { PolicyFactory } from './policy.factory';
     Privileges,
     PolicyDumper,
     PolicyDumpCommand,
+    EdgeDBAccessPolicyGenerator,
   ],
-  exports: [Privileges],
+  exports: [Privileges, EdgeDBAccessPolicyGenerator],
 })
 export class PolicyModule {}

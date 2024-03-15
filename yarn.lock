@@ -5396,6 +5396,7 @@ __metadata:
     human-format: "npm:^1.2.0"
     husky: "npm:^4.3.8"
     image-size: "npm:^1.0.2"
+    indent-string: "npm:^5.0.0"
     ioredis: "npm:^5.3.2"
     iso-3166-1: "npm:^2.1.1"
     ix: "npm:^5.0.0"
@@ -7763,6 +7764,13 @@ __metadata:
   version: 4.0.0
   resolution: "indent-string@npm:4.0.0"
   checksum: 10c0/1e1904ddb0cb3d6cce7cd09e27a90184908b7a5d5c21b92e232c93579d314f0b83c246ffb035493d0504b1e9147ba2c9b21df0030f48673fba0496ecd698161f
+  languageName: node
+  linkType: hard
+
+"indent-string@npm:^5.0.0":
+  version: 5.0.0
+  resolution: "indent-string@npm:5.0.0"
+  checksum: 10c0/8ee77b57d92e71745e133f6f444d6fa3ed503ad0e1bcd7e80c8da08b42375c07117128d670589725ed07b1978065803fa86318c309ba45415b7fe13e7f170220
   languageName: node
   linkType: hard
 
