@@ -54,30 +54,8 @@ module default {
       )
     );
 
-    access policy CanInsertGeneratedFromAppPoliciesForPartnership
-    allow insert using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        (
-          exists (<default::Role>{'Administrator', 'FieldOperationsDirector', 'LeadFinancialAnalyst', 'Controller'} intersect givenRoles)
-          or (
-            exists (<default::Role>{'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller'} intersect givenRoles)
-            and .isMember
-          )
-          or (
-            exists (<default::Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
-            and (
-              .isMember
-              or .sensitivity <= default::Sensitivity.Medium
-            )
-          )
-        )
-      )
-    );
-
-    access policy CanDeleteGeneratedFromAppPoliciesForPartnership
-    allow delete using (
+    access policy CanInsertDeleteGeneratedFromAppPoliciesForPartnership
+    allow insert, delete using (
       with
         givenRoles := (<default::User>(global default::currentUserId)).roles
       select (

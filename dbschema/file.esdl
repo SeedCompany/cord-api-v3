@@ -14,17 +14,8 @@ module default {
       )
     );
 
-    access policy CanInsertGeneratedFromAppPoliciesForDirectory
-    allow insert using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        default::Role.Administrator in givenRoles
-      )
-    );
-
-    access policy CanDeleteGeneratedFromAppPoliciesForDirectory
-    allow delete using (
+    access policy CanInsertDeleteGeneratedFromAppPoliciesForDirectory
+    allow insert, delete using (
       with
         givenRoles := (<default::User>(global default::currentUserId)).roles
       select (
@@ -55,17 +46,8 @@ module File {
       )
     );
 
-    access policy CanInsertGeneratedFromAppPoliciesForFileVersion
-    allow insert using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        default::Role.Administrator in givenRoles
-      )
-    );
-
-    access policy CanDeleteGeneratedFromAppPoliciesForFileVersion
-    allow delete using (
+    access policy CanInsertDeleteGeneratedFromAppPoliciesForFileVersion
+    allow insert, delete using (
       with
         givenRoles := (<default::User>(global default::currentUserId)).roles
       select (
@@ -108,17 +90,8 @@ module File {
       )
     );
 
-    access policy CanInsertGeneratedFromAppPoliciesForFileNode
-    allow insert using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        default::Role.Administrator in givenRoles
-      )
-    );
-
-    access policy CanDeleteGeneratedFromAppPoliciesForFileNode
-    allow delete using (
+    access policy CanInsertDeleteGeneratedFromAppPoliciesForFileNode
+    allow insert, delete using (
       with
         givenRoles := (<default::User>(global default::currentUserId)).roles
       select (

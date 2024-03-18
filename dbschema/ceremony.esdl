@@ -41,11 +41,8 @@ module Engagement {
       )
     );
 
-    access policy CanInsertGeneratedFromAppPoliciesForCeremony
-    allow insert;
-
-    access policy CanDeleteGeneratedFromAppPoliciesForCeremony
-    allow delete;
+    access policy CanInsertDeleteGeneratedFromAppPoliciesForCeremony
+    allow insert, delete;
   }
   type DedicationCeremony extending Ceremony {}
   type CertificationCeremony extending Ceremony {}

@@ -39,27 +39,8 @@ module Project {
       )
     );
 
-    access policy CanInsertGeneratedFromAppPoliciesForProjectMember
-    allow insert using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        (
-          exists (<default::Role>{'Administrator', 'ConsultantManager', 'ExperienceOperations', 'FieldOperationsDirector', 'LeadFinancialAnalyst', 'Controller'} intersect givenRoles)
-          or (
-            exists (<default::Role>{'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller'} intersect givenRoles)
-            and .isMember
-          )
-          or (
-            exists (<default::Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
-            and .isMember
-          )
-        )
-      )
-    );
-
-    access policy CanDeleteGeneratedFromAppPoliciesForProjectMember
-    allow delete using (
+    access policy CanInsertDeleteGeneratedFromAppPoliciesForProjectMember
+    allow insert, delete using (
       with
         givenRoles := (<default::User>(global default::currentUserId)).roles
       select (

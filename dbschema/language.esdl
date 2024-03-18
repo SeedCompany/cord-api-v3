@@ -117,17 +117,8 @@ module default {
       )
     );
 
-    access policy CanInsertGeneratedFromAppPoliciesForLanguage
-    allow insert using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        default::Role.Administrator in givenRoles
-      )
-    );
-
-    access policy CanDeleteGeneratedFromAppPoliciesForLanguage
-    allow delete using (
+    access policy CanInsertDeleteGeneratedFromAppPoliciesForLanguage
+    allow insert, delete using (
       with
         givenRoles := (<default::User>(global default::currentUserId)).roles
       select (
@@ -195,17 +186,8 @@ module Ethnologue {
       )
     );
 
-    access policy CanInsertGeneratedFromAppPoliciesForEthnologueLanguage
-    allow insert using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        default::Role.Administrator in givenRoles
-      )
-    );
-
-    access policy CanDeleteGeneratedFromAppPoliciesForEthnologueLanguage
-    allow delete using (
+    access policy CanInsertDeleteGeneratedFromAppPoliciesForEthnologueLanguage
+    allow insert, delete using (
       with
         givenRoles := (<default::User>(global default::currentUserId)).roles
       select (

@@ -19,17 +19,8 @@ module default {
       )
     );
 
-    access policy CanInsertGeneratedFromAppPoliciesForMedia
-    allow insert using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        default::Role.Administrator in givenRoles
-      )
-    );
-
-    access policy CanDeleteGeneratedFromAppPoliciesForMedia
-    allow delete using (
+    access policy CanInsertDeleteGeneratedFromAppPoliciesForMedia
+    allow insert, delete using (
       with
         givenRoles := (<default::User>(global default::currentUserId)).roles
       select (

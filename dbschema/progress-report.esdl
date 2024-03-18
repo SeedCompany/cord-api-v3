@@ -58,11 +58,8 @@ module default {
       )
     );
 
-    access policy CanInsertGeneratedFromAppPoliciesForProgressReport
-    allow insert;
-
-    access policy CanDeleteGeneratedFromAppPoliciesForProgressReport
-    allow delete;
+    access policy CanInsertDeleteGeneratedFromAppPoliciesForProgressReport
+    allow insert, delete;
   }
 }
 
@@ -301,17 +298,8 @@ module ProgressReport {
       )
     );
 
-    access policy CanInsertGeneratedFromAppPoliciesForProgressReportVarianceExplanation
-    allow insert using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        default::Role.Administrator in givenRoles
-      )
-    );
-
-    access policy CanDeleteGeneratedFromAppPoliciesForProgressReportVarianceExplanation
-    allow delete using (
+    access policy CanInsertDeleteGeneratedFromAppPoliciesForProgressReportVarianceExplanation
+    allow insert, delete using (
       with
         givenRoles := (<default::User>(global default::currentUserId)).roles
       select (

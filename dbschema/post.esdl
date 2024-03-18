@@ -59,17 +59,8 @@ module Mixin {
       )
     );
 
-    access policy CanInsertGeneratedFromAppPoliciesForPostable
-    allow insert using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        default::Role.Administrator in givenRoles
-      )
-    );
-
-    access policy CanDeleteGeneratedFromAppPoliciesForPostable
-    allow delete using (
+    access policy CanInsertDeleteGeneratedFromAppPoliciesForPostable
+    allow insert, delete using (
       with
         givenRoles := (<default::User>(global default::currentUserId)).roles
       select (

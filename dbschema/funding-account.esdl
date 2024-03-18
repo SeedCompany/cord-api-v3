@@ -17,17 +17,8 @@ module default {
       )
     );
 
-    access policy CanInsertGeneratedFromAppPoliciesForFundingAccount
-    allow insert using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        default::Role.Administrator in givenRoles
-      )
-    );
-
-    access policy CanDeleteGeneratedFromAppPoliciesForFundingAccount
-    allow delete using (
+    access policy CanInsertDeleteGeneratedFromAppPoliciesForFundingAccount
+    allow insert, delete using (
       with
         givenRoles := (<default::User>(global default::currentUserId)).roles
       select (

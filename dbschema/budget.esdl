@@ -26,11 +26,8 @@ module default {
       )
     );
 
-    access policy CanInsertGeneratedFromAppPoliciesForBudget
-    allow insert;
-
-    access policy CanDeleteGeneratedFromAppPoliciesForBudget
-    allow delete;
+    access policy CanInsertDeleteGeneratedFromAppPoliciesForBudget
+    allow insert, delete;
   }
 }
   
@@ -72,11 +69,8 @@ module Budget {
       )
     );
 
-    access policy CanInsertGeneratedFromAppPoliciesForBudgetRecord
-    allow insert;
-
-    access policy CanDeleteGeneratedFromAppPoliciesForBudgetRecord
-    allow delete;
+    access policy CanInsertDeleteGeneratedFromAppPoliciesForBudgetRecord
+    allow insert, delete;
   }
   
   scalar type Status extending enum<

@@ -58,17 +58,8 @@ module ProgressReport::ProductProgress {
       )
     );
 
-    access policy CanInsertGeneratedFromAppPoliciesForStepProgress
-    allow insert using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        default::Role.Administrator in givenRoles
-      )
-    );
-
-    access policy CanDeleteGeneratedFromAppPoliciesForStepProgress
-    allow delete using (
+    access policy CanInsertDeleteGeneratedFromAppPoliciesForStepProgress
+    allow insert, delete using (
       with
         givenRoles := (<default::User>(global default::currentUserId)).roles
       select (

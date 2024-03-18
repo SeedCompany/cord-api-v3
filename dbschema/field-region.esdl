@@ -16,17 +16,8 @@ module default {
       )
     );
 
-    access policy CanInsertGeneratedFromAppPoliciesForFieldRegion
-    allow insert using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        default::Role.Administrator in givenRoles
-      )
-    );
-
-    access policy CanDeleteGeneratedFromAppPoliciesForFieldRegion
-    allow delete using (
+    access policy CanInsertDeleteGeneratedFromAppPoliciesForFieldRegion
+    allow insert, delete using (
       with
         givenRoles := (<default::User>(global default::currentUserId)).roles
       select (
