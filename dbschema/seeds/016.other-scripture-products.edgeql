@@ -1,8 +1,8 @@
 with
-  otherProductJson := to_json('[
+productsJson := to_json($$[
   {
     "project": "South Downs",
-    "title": "Recording of Lametations",
+    "title": "Recording of Lamentations",
     "description": "To help them understand it better.",
     "mediums": ["Other"],
     "steps": ["Completed"],
@@ -57,46 +57,47 @@ with
     "title":  "An evangelistic tract for Drwarves translated from the Elvish.",
     "mediums": ["Video", "Web", "Other"],
     "methodology": "OtherWritten",
-    "describeCompletion": "Completed = published digitally as a video on social media sites and as pdf text distributed by text messaging.",
+    "describeCompletion": "Published digitally as a video on social media sites and as pdf text distributed by text messaging.",
     "progressTarget": 1,
     "progressStepMeasurement": "Boolean"
   },
   {
     "project": "Misty Mountains",
     "title":  "2 plays",
-    "description": "Two plays dipicting the good ol\' days of the Misty Mountains",
+    "description": "Two plays depicting the good ol' days of the Misty Mountains",
     "mediums": ["Web", "Video", "Audio", "App"],
     "steps": ["Completed"],
     "methodology": "Film",
-    "describeCompletion": "Completed = published digitally as text, audio, and video on a website, in the Dwarvish Leader app and on social media sites.",
+    "describeCompletion": "Published digitally as text, audio, and video on a website, in the Dwarvish Leader app and on social media sites.",
     "progressTarget": 2,
     "progressStepMeasurement": "Number"
   }
-  ]'),
-  otherProducts := (
-    for otherProduct in json_array_unpack(otherProductJson)
-    union (
-      with
-        engagement := assert_single((select Engagement filter .project.name = <str>otherProduct['project'])),
-      select (
-        (select OtherProduct filter .engagement = engagement and .title = <str>otherProduct['title']) ??
-        (insert OtherProduct {
-          project := engagement.project,
-          projectContext := engagement.projectContext,
-          engagement := engagement,
-          title := <str>otherProduct['title'],
-          description := <str>json_get(otherProduct, 'description'),
-          mediums := <str>json_array_unpack(json_get(otherProduct,'mediums')),
-          purposes := <str>json_array_unpack(json_get(otherProduct,'purposes')),
-          steps := <str>json_array_unpack(json_get(otherProduct,'steps')),
-          methodology := <Product::Methodology>json_get(otherProduct,'methodology'),
-          describeCompletion := <str>json_get(otherProduct,'describeCompletion'),
-          progressTarget := <int16>otherProduct['progressTarget'],
-          progressStepMeasurement := <str>otherProduct['progressStepMeasurement']
-        })
-      )
+]$$),
+
+products := (
+  for entry in json_array_unpack(productsJson)
+  union (
+    with engagement := assert_single((select Engagement filter .project.name = <str>entry['project']))
+    select (
+      (select OtherProduct filter .engagement = engagement and .title = <str>entry['title']) ??
+      (insert OtherProduct {
+        project := engagement.project,
+        projectContext := engagement.projectContext,
+        engagement := engagement,
+        title := <str>entry['title'],
+        description := <str>json_get(entry, 'description'),
+        mediums := <str>json_array_unpack(json_get(entry, 'mediums')),
+        purposes := <str>json_array_unpack(json_get(entry, 'purposes')),
+        steps := <str>json_array_unpack(json_get(entry, 'steps')),
+        methodology := <Product::Methodology>json_get(entry, 'methodology'),
+        describeCompletion := <str>json_get(entry, 'describeCompletion'),
+        progressTarget := <int16>entry['progressTarget'],
+        progressStepMeasurement := <str>entry['progressStepMeasurement']
+      })
     )
-  ),
-  newOtherProducts := (select otherProducts filter .createdAt = datetime_of_statement())
-select { `Added Other Products` := newOtherProducts.project.name ++ ': ' ++ newOtherProducts.title }
-filter count(newOtherProducts) > 0;
+  )
+),
+
+new := (select products filter .createdAt = datetime_of_statement())
+select { `Added Other Products` := new.project.name ++ ': ' ++ new.title }
+filter count(new) > 0;
