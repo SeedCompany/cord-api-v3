@@ -2,7 +2,11 @@ import { Query } from 'cypher-query-builder';
 import { inspect, InspectOptionsStylized } from 'util';
 import { ResourceShape, Sensitivity } from '~/common';
 import { matchProjectSens, rankSens } from '~/core/database/query';
-import { Condition, IsAllowedParams } from '../../policy/conditions';
+import {
+  AsEdgeQLParams,
+  Condition,
+  IsAllowedParams,
+} from '../../policy/conditions';
 
 const sensitivityRank = { High: 3, Medium: 2, Low: 1 };
 const CQL_VAR = 'sens';
@@ -61,8 +65,11 @@ export class SensitivityCondition<
     return `${CQL_VAR} <= ${String(param)}`;
   }
 
-  asEdgeQLCondition() {
-    return `.sensitivity <= default::Sensitivity.${this.access}`;
+  asEdgeQLCondition({ resource }: AsEdgeQLParams<TResourceStatic>) {
+    const eql = `.sensitivity <= default::Sensitivity.${this.access}`;
+    return resource.isEmbedded
+      ? `((.container[is Project::ContextAware]${eql}) ?? false)`
+      : eql;
   }
 
   union(conditions: this[]) {

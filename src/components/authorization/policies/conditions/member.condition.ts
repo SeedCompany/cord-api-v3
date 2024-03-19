@@ -59,7 +59,9 @@ class MemberCondition<TResourceStatic extends ResourceWithScope>
     if (resource.name === 'User' || resource.name === 'Unavailability') {
       return 'exists { "Stubbed .isMember for User/Unavailability" }'; // TODO
     }
-    return '.isMember';
+    return resource.isEmbedded
+      ? '(.container[is Project::ContextAware].isMember ?? false)'
+      : '.isMember';
   }
 
   union(this: void, conditions: this[]) {
