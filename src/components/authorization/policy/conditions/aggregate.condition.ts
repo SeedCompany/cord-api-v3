@@ -27,11 +27,9 @@ export abstract class AggregateConditions<
     return new this.constructor(newConditions);
   }
 
-  protected abstract readonly iteratorKey: 'some' | 'every';
   isAllowed(params: IsAllowedParams<TResourceStatic>) {
-    return this.conditions[this.iteratorKey]((condition) =>
-      condition.isAllowed(params),
-    );
+    const aggFn = this instanceof AndConditions ? 'every' : 'some';
+    return this.conditions[aggFn]((condition) => condition.isAllowed(params));
   }
 
   setupCypherContext(
@@ -46,7 +44,6 @@ export abstract class AggregateConditions<
     return query;
   }
 
-  protected abstract readonly cypherJoiner: string;
   asCypherCondition(
     query: Query,
     other: AsCypherParams<TResourceStatic>,
@@ -54,9 +51,10 @@ export abstract class AggregateConditions<
     if (this.conditions.length === 0) {
       return 'true';
     }
+    const separator = this instanceof AndConditions ? ' AND ' : ' OR ';
     const inner = this.conditions
       .map((c) => c.asCypherCondition(query, other))
-      .join(this.cypherJoiner);
+      .join(separator);
     return `(${inner})`;
   }
 
@@ -73,9 +71,6 @@ export abstract class AggregateConditions<
 export class AndConditions<
   TResourceStatic extends ResourceShape<any> = ResourceShape<any>,
 > extends AggregateConditions<TResourceStatic> {
-  protected readonly iteratorKey = 'every';
-  protected readonly cypherJoiner = ' AND ';
-
   static from<T extends ResourceShape<any>>(
     ...conditions: Array<Condition<T>>
   ) {
@@ -98,9 +93,6 @@ export class AndConditions<
 export class OrConditions<
   TResourceStatic extends ResourceShape<any> = ResourceShape<any>,
 > extends AggregateConditions<TResourceStatic> {
-  protected readonly iteratorKey = 'some';
-  protected readonly cypherJoiner = ' OR ';
-
   static from<T extends ResourceShape<any>>(
     ...conditions: Array<Condition<T>>
   ) {
