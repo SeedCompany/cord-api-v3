@@ -1,4 +1,4 @@
-import { groupBy } from '@seedcompany/common';
+import { groupBy, isNotNil, Nil } from '@seedcompany/common';
 import { Query } from 'cypher-query-builder';
 import { Class, Constructor } from 'type-fest';
 import { inspect, InspectOptionsStylized } from 'util';
@@ -84,10 +84,14 @@ export class AndConditions<
   TResourceStatic extends ResourceShape<any> = ResourceShape<any>,
 > extends AggregateConditions<TResourceStatic> {
   static from<T extends ResourceShape<any>>(
-    ...conditions: Array<Condition<T>>
+    ...conditionsIn: Array<Condition<T> | Nil>
   ) {
+    const conditions = conditionsIn.filter(isNotNil);
     if (conditions.length === 1) {
       return conditions[0];
+    }
+    if (conditions.length === 0) {
+      throw new Error('AndConditions requires at least one condition');
     }
 
     const merged = groupBy(conditions, byType).flatMap((sames) => {
@@ -106,17 +110,21 @@ export class OrConditions<
   TResourceStatic extends ResourceShape<any> = ResourceShape<any>,
 > extends AggregateConditions<TResourceStatic> {
   static from<T extends ResourceShape<any>>(
-    ...conditions: Array<Condition<T>>
+    ...conditions: Array<Condition<T> | Nil>
   ) {
     return OrConditions.fromAll(conditions);
   }
 
   static fromAll<T extends ResourceShape<any>>(
-    conditions: Array<Condition<T>>,
+    conditionsIn: Array<Condition<T> | Nil>,
     { optimize = true }: { optimize?: boolean } = {},
   ) {
+    const conditions = conditionsIn.filter(isNotNil);
     if (conditions.length === 1) {
       return conditions[0];
+    }
+    if (conditions.length === 0) {
+      throw new Error('OrConditions requires at least one condition');
     }
 
     const flattened = conditions.flatMap((c) =>
