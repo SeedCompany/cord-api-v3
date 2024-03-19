@@ -31,7 +31,8 @@ import {
   ResourceAction,
 } from '../actions';
 import { Permission } from '../builder/perm-granter';
-import { CalculatedCondition, PolicyExecutor } from './policy-executor';
+import { CalculatedCondition } from '../conditions';
+import { PolicyExecutor } from './policy-executor';
 
 type AnyResource = EnhancedResource<any>;
 

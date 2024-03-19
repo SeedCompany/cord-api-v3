@@ -5,7 +5,7 @@ import { EnhancedResource, Session } from '~/common';
 import { QueryFragment } from '~/core/database/query';
 import { withoutScope } from '../../dto/role.dto';
 import { Permission } from '../builder/perm-granter';
-import { Condition, OrConditions } from '../conditions';
+import { CalculatedCondition, OrConditions } from '../conditions';
 import { PolicyFactory } from '../policy.factory';
 
 export interface ResolveParams {
@@ -126,15 +126,5 @@ export class PolicyExecutor {
       return rolesSpecifiedByPolicyThatUserHas.length > 0;
     });
     return policies;
-  }
-}
-
-export class CalculatedCondition implements Condition {
-  static readonly instance = new CalculatedCondition();
-  isAllowed() {
-    return false;
-  }
-  asCypherCondition() {
-    return 'false';
   }
 }
