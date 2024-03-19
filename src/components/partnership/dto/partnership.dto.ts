@@ -5,7 +5,6 @@ import { e } from '~/core/edgedb';
 import { LinkTo, RegisterResource } from '~/core/resources';
 import {
   Calculated,
-  ID,
   IntersectionType,
   Resource,
   ResourceRelationsShape,
@@ -19,7 +18,6 @@ import {
 } from '../../../common';
 import { ScopedRole } from '../../authorization';
 import { ChangesetAware } from '../../changeset/dto';
-import { DefinedFile } from '../../file/dto';
 import { Organization } from '../../organization/dto';
 import { SecuredPartnerTypes } from '../../partner/dto';
 import { IProject } from '../../project/dto';
@@ -54,7 +52,7 @@ export class Partnership extends IntersectionType(ChangesetAware, Resource) {
   } satisfies ResourceRelationsShape;
   static readonly Parent = import('../../project/dto').then((m) => m.IProject);
 
-  readonly project: ID;
+  readonly project: LinkTo<'Project'>;
 
   @Field(() => IProject)
   declare readonly parent: BaseNode;
@@ -62,7 +60,7 @@ export class Partnership extends IntersectionType(ChangesetAware, Resource) {
   @Field()
   readonly agreementStatus: SecuredPartnershipAgreementStatus;
 
-  readonly mou: Secured<LinkTo<'File'>>;
+  readonly mou: Secured<LinkTo<'File'>> | null;
 
   @Field()
   readonly mouStatus: SecuredPartnershipAgreementStatus;
@@ -81,10 +79,10 @@ export class Partnership extends IntersectionType(ChangesetAware, Resource) {
   @Field()
   readonly mouEndOverride: SecuredDateNullable;
 
-  readonly agreement: DefinedFile;
+  readonly agreement: Secured<LinkTo<'File'>> | null;
 
-  readonly partner: Secured<ID>;
-  readonly organization: ID;
+  readonly partner: Secured<LinkTo<'Partner'>>;
+  readonly organization: LinkTo<'Organization'>;
 
   @Field()
   readonly types: SecuredPartnerTypes;
