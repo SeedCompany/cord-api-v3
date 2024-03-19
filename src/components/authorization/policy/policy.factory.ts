@@ -271,7 +271,7 @@ export class PolicyFactory implements OnModuleInit {
 
   private mergePermission(
     perms: ReadonlyArray<Permission | undefined>,
-    mergeConditions: (...conditions: Array<Condition<any>>) => Condition<any>,
+    mergeConditions: (...conditions: Condition[]) => Condition,
   ): Permission | undefined {
     const cleaned = perms.filter((p): p is Permission => p != null);
     if (cleaned.length === 0) {
@@ -287,7 +287,7 @@ export class PolicyFactory implements OnModuleInit {
       return true;
     }
     // Since we've checked for booleans above, this is safe.
-    const conditions = cleaned as Array<Condition<any>>;
+    const conditions = cleaned as Condition[];
     // This could result in duplicates entries for the same condition.
     // An optimization would be to de-dupe those.
     return mergeConditions(...conditions);

@@ -11,7 +11,7 @@ import {
 } from './condition.interface';
 
 export abstract class AggregateConditions<
-  TResourceStatic extends ResourceShape<any>,
+  TResourceStatic extends ResourceShape<any> = ResourceShape<any>,
 > implements Condition<TResourceStatic>
 {
   protected constructor(
@@ -71,7 +71,7 @@ export abstract class AggregateConditions<
 }
 
 export class AndConditions<
-  TResourceStatic extends ResourceShape<any>,
+  TResourceStatic extends ResourceShape<any> = ResourceShape<any>,
 > extends AggregateConditions<TResourceStatic> {
   protected readonly iteratorKey = 'every';
   protected readonly cypherJoiner = ' AND ';
@@ -96,7 +96,7 @@ export class AndConditions<
 }
 
 export class OrConditions<
-  TResourceStatic extends ResourceShape<any>,
+  TResourceStatic extends ResourceShape<any> = ResourceShape<any>,
 > extends AggregateConditions<TResourceStatic> {
   protected readonly iteratorKey = 'some';
   protected readonly cypherJoiner = ' OR ';

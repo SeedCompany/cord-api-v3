@@ -129,7 +129,7 @@ export class PolicyExecutor {
   }
 }
 
-export class CalculatedCondition implements Condition<any> {
+export class CalculatedCondition implements Condition {
   static readonly instance = new CalculatedCondition();
   isAllowed() {
     return false;

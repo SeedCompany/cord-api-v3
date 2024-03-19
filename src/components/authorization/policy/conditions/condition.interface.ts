@@ -23,7 +23,9 @@ export type AsCypherParams<TResourceStatic extends ResourceShape<any>> = Omit<
   'object'
 >;
 
-export interface Condition<TResourceStatic extends ResourceShape<any>> {
+export interface Condition<
+  TResourceStatic extends ResourceShape<any> = ResourceShape<any>,
+> {
   isAllowed(params: IsAllowedParams<TResourceStatic>): boolean;
 
   /**

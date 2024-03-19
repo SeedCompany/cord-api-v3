@@ -5,7 +5,7 @@ import { all, any, Condition } from '../conditions';
 export type Permissions<TAction extends string> = {
   readonly [A in TAction]?: Permission;
 };
-export type Permission = Condition<any> | boolean;
+export type Permission = Condition | boolean;
 
 /**
  * Add allowed actions.
