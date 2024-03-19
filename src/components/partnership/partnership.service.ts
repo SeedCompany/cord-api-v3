@@ -1,9 +1,7 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import {
-  DuplicateException,
   ID,
   InputException,
-  NotFoundException,
   ObjectView,
   ServerException,
   Session,
@@ -17,11 +15,10 @@ import {
   Logger,
   ResourceLoader,
 } from '../../core';
-import { mapListResults } from '../../core/database/results';
 import { Privileges } from '../authorization';
 import { FileService } from '../file';
 import { Partner, PartnerService, PartnerType } from '../partner';
-import { IProject, ProjectService } from '../project';
+import { ProjectService } from '../project';
 import {
   CreatePartnership,
   FinancialReportingType,
@@ -59,17 +56,6 @@ export class PartnershipService {
   ): Promise<Partnership> {
     const { projectId, partnerId } = input;
 
-    await this.verifyRelationshipEligibility(projectId, partnerId, changeset);
-
-    const projectResource = await this.resourceLoader.load(IProject, projectId);
-    const projectPrivileges = this.privileges.for(
-      session,
-      IProject,
-      projectResource,
-    );
-
-    projectPrivileges.verifyCan('create', 'partnership');
-
     const isFirstPartnership = await this.repo.isFirstPartnership(
       projectId,
       changeset,
@@ -84,7 +70,7 @@ export class PartnershipService {
     );
 
     try {
-      const { id, mouId, agreementId } = await this.repo.create(
+      const result = await this.repo.create(
         {
           ...input,
           primary,
@@ -93,35 +79,19 @@ export class PartnershipService {
         changeset,
       );
 
-      await this.files.createDefinedFile(
-        mouId,
-        `MOU`,
-        session,
-        id,
-        'mou',
-        input.mou,
-        'partnership.mou',
-      );
-
-      await this.files.createDefinedFile(
-        agreementId,
-        `Partner Agreement`,
-        session,
-        id,
-        'agreement',
-        input.agreement,
-        'partnership.agreement',
-      );
-
       if (primary) {
-        await this.repo.removePrimaryFromOtherPartnerships(id);
+        await this.repo.removePrimaryFromOtherPartnerships(result.id);
       }
 
       const partnership = await this.readOne(
-        id,
+        result.id,
         session,
         viewOfChangeset(changeset),
       );
+
+      this.privileges
+        .for(session, Partnership, partnership)
+        .verifyCan('create');
 
       await this.eventBus.publish(
         new PartnershipCreatedEvent(partnership, session),
@@ -129,10 +99,9 @@ export class PartnershipService {
 
       return partnership;
     } catch (exception) {
-      this.logger.warning('Failed to create partnership', {
-        exception,
-      });
-
+      if (exception instanceof InputException) {
+        throw exception;
+      }
       throw new ServerException('Failed to create partnership', exception);
     }
   }
@@ -143,40 +112,26 @@ export class PartnershipService {
     session: Session,
     view?: ObjectView,
   ): Promise<Partnership> {
-    const dto = await this.readOneUnsecured(id, session, view);
-    return await this.secure(dto, session);
-  }
-
-  async readOneUnsecured(
-    id: ID,
-    session: Session,
-    view?: ObjectView,
-  ): Promise<UnsecuredDto<Partnership>> {
-    this.logger.debug('readOne', { id, userId: session.userId });
-    return await this.repo.readOne(id, session, view);
+    const dto = await this.repo.readOne(id, session, view);
+    return this.secure(dto, session);
   }
 
   async readMany(ids: readonly ID[], session: Session, view?: ObjectView) {
     const partnerships = await this.repo.readMany(ids, session, view);
-    return await Promise.all(
-      partnerships.map((dto) => this.secure(dto, session)),
-    );
+    return partnerships.map((dto) => this.secure(dto, session));
   }
 
-  async secure(
-    dto: UnsecuredDto<Partnership>,
-    session: Session,
-  ): Promise<Partnership> {
+  secure(dto: UnsecuredDto<Partnership>, session: Session) {
     return this.privileges.for(session, Partnership).secure(dto);
   }
 
   async update(input: UpdatePartnership, session: Session, view?: ObjectView) {
     const existing = await this.repo.readOne(input.id, session, view);
     const partner = await this.partnerService.readOne(
-      existing.partner,
+      existing.partner.id,
       session,
     );
-    const object = await this.secure(existing, session);
+    const object = this.secure(existing, session);
 
     try {
       this.verifyFinancialReportingType(
@@ -212,19 +167,29 @@ export class PartnershipService {
       await this.repo.removePrimaryFromOtherPartnerships(input.id);
     }
 
-    await this.repo.update(object, simpleChanges, view?.changeset);
-    await this.files.updateDefinedFile(
-      object.mou,
-      'partnership.mou',
-      mou,
-      session,
+    await this.repo.update(
+      { id: object.id, ...simpleChanges },
+      view?.changeset,
     );
-    await this.files.updateDefinedFile(
-      object.agreement,
-      'partnership.agreement',
-      agreement,
-      session,
-    );
+
+    // TODO: remove negation. Temporary fix until file handling is refactored
+    if (!object.mou) {
+      await this.files.updateDefinedFile(
+        object.mou,
+        'partnership.mou',
+        mou,
+        session,
+      );
+    }
+    // TODO: remove negation. Temporary fix until file handling is refactored
+    if (!object.agreement) {
+      await this.files.updateDefinedFile(
+        object.agreement,
+        'partnership.agreement',
+        agreement,
+        session,
+      );
+    }
 
     const partnership = await this.readOne(input.id, session, view);
     const event = new PartnershipUpdatedEvent(
@@ -275,9 +240,10 @@ export class PartnershipService {
       partialInput,
     );
     const results = await this.repo.list(input, session, changeset);
-    return await mapListResults(results, (id) =>
-      this.readOne(id, session, viewOfChangeset(changeset)),
-    );
+    return {
+      ...results,
+      items: results.items.map((dto) => this.secure(dto, session)),
+    };
   }
 
   protected verifyFinancialReportingType(
@@ -300,39 +266,6 @@ export class PartnershipService {
       throw new InputException(
         'Financial reporting type can only be applied to managing partners',
         'partnership.financialReportingType',
-      );
-    }
-  }
-
-  protected async verifyRelationshipEligibility(
-    projectId: ID,
-    partnerId: ID,
-    changeset?: ID,
-  ): Promise<void> {
-    const result = await this.repo.verifyRelationshipEligibility(
-      projectId,
-      partnerId,
-      changeset,
-    );
-
-    if (!result.project) {
-      throw new NotFoundException(
-        'Could not find project',
-        'partnership.projectId',
-      );
-    }
-
-    if (!result.partner) {
-      throw new NotFoundException(
-        'Could not find partner',
-        'partnership.partnerId',
-      );
-    }
-
-    if (result.partnership) {
-      throw new DuplicateException(
-        'partnership.projectId',
-        'Partnership for this project and partner already exists',
       );
     }
   }
