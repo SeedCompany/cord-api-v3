@@ -55,13 +55,19 @@ class MemberCondition<TResourceStatic extends ResourceWithScope>
     return `exists((project)-[:member { active: true }]->(:ProjectMember)-[:user]->(:User { id: ${requester} }))`;
   }
 
+  setupEdgeQLContext({
+    resource,
+  }: AsEdgeQLParams<TResourceStatic>): Record<string, string> {
+    return resource.isEmbedded
+      ? { isMember: '(.container[is Project::ContextAware].isMember ?? false)' }
+      : {};
+  }
+
   asEdgeQLCondition({ resource }: AsEdgeQLParams<TResourceStatic>) {
     if (resource.name === 'User' || resource.name === 'Unavailability') {
       return 'exists { "Stubbed .isMember for User/Unavailability" }'; // TODO
     }
-    return resource.isEmbedded
-      ? '(.container[is Project::ContextAware].isMember ?? false)'
-      : '.isMember';
+    return resource.isEmbedded ? 'isMember' : '.isMember';
   }
 
   union(this: void, conditions: this[]) {

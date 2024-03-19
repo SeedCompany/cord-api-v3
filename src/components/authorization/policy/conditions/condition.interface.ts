@@ -60,6 +60,13 @@ export interface Condition<
     other: AsCypherParams<TResourceStatic>,
   ): string;
 
+  /**
+   * Add with statement aliases.
+   */
+  setupEdgeQLContext?(
+    params: AsEdgeQLParams<TResourceStatic>,
+  ): Record<string, string>;
+
   asEdgeQLCondition(params: AsEdgeQLParams<TResourceStatic>): string;
 
   /**

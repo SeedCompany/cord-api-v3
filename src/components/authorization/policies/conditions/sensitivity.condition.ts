@@ -65,11 +65,21 @@ export class SensitivityCondition<
     return `${CQL_VAR} <= ${String(param)}`;
   }
 
+  setupEdgeQLContext({
+    resource,
+  }: AsEdgeQLParams<TResourceStatic>): Record<string, string> {
+    if (resource.isEmbedded) {
+      const eql =
+        '(.container[is Project::ContextAware].sensitivity ?? default::Sensitivity.High)';
+      return { sensitivity: eql };
+    }
+    return {};
+  }
+
   asEdgeQLCondition({ resource }: AsEdgeQLParams<TResourceStatic>) {
-    const eql = `.sensitivity <= default::Sensitivity.${this.access}`;
-    return resource.isEmbedded
-      ? `((.container[is Project::ContextAware]${eql}) ?? false)`
-      : eql;
+    const lhs = resource.isEmbedded ? 'sensitivity' : '.sensitivity';
+    const rhs = `default::Sensitivity.${this.access}`;
+    return `${lhs} <= ${rhs}`;
   }
 
   union(conditions: this[]) {

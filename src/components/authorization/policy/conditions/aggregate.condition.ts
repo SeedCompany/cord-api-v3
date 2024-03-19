@@ -60,6 +60,14 @@ export abstract class AggregateConditions<
     return `(${inner})`;
   }
 
+  setupEdgeQLContext(params: AsEdgeQLParams<TResourceStatic>) {
+    const contexts = this.conditions.map(
+      (condition) => condition.setupEdgeQLContext?.(params) ?? {},
+    );
+    const merged = Object.assign({}, ...contexts);
+    return merged;
+  }
+
   asEdgeQLCondition(params: AsEdgeQLParams<TResourceStatic>): string {
     if (this.conditions.length === 0) {
       return 'true';

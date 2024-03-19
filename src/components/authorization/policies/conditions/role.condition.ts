@@ -19,12 +19,14 @@ export class RoleCondition implements Condition {
     return 'false';
   }
 
+  setupEdgeQLContext() {
+    return {
+      givenRoles: '(<default::User>(global default::currentUserId)).roles',
+    };
+  }
+
   asEdgeQLCondition() {
-    return eqlDoesIntersect(
-      '(<default::User>(global default::currentUserId)).roles',
-      this.allowed,
-      'default::Role',
-    );
+    return eqlDoesIntersect('givenRoles', this.allowed, 'default::Role');
   }
 
   union(this: void, conditions: this[]) {

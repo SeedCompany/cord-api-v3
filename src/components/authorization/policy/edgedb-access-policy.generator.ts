@@ -1,5 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { cleanJoin, mapEntries } from '@seedcompany/common';
+import { stripIndent } from 'common-tags';
 import addIndent from 'indent-string';
 import { startCase } from 'lodash';
 import { EnhancedResource } from '~/common';
@@ -48,10 +49,28 @@ export class EdgeDBAccessPolicyGenerator {
       resource.name
     }`;
 
-    const usingBodyEql =
+    const withAliases =
+      typeof perm === 'boolean'
+        ? {}
+        : perm.setupEdgeQLContext?.({ resource }) ?? {};
+    const withAliasesEql = Object.entries(withAliases)
+      .map(([key, value]) => `${key} := ${value}`)
+      .join(',\n');
+
+    const conditionEql =
       typeof perm === 'boolean'
         ? String(perm)
         : perm.asEdgeQLCondition({ resource });
+
+    const usingBodyEql = withAliasesEql
+      ? stripIndent`
+          with
+${addIndent(withAliasesEql, 6, { indent: '  ' })}
+          select (
+${addIndent(conditionEql, 6, { indent: '  ' })}
+          )
+        `
+      : conditionEql;
 
     const usingEql =
       perm === true
