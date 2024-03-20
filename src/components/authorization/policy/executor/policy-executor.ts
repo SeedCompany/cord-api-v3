@@ -97,7 +97,7 @@ export class PolicyExecutor {
       return true;
     }
 
-    const policies = this.policyFactory.getPolicies();
+    const policies = this.policyFactory.getDBPolicies();
 
     const conditions = [];
     for (const policy of policies) {

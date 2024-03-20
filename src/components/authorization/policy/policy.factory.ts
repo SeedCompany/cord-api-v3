@@ -39,9 +39,14 @@ export interface Policy {
   powers: Set<Power>;
 }
 
+interface PlainPolicy extends Pick<Policy, 'name' | 'roles'> {
+  grants: WritableGrants;
+}
+
 @Injectable()
 export class PolicyFactory implements OnModuleInit {
   private policies?: Policy[];
+  private dbPolicies?: Policy[];
 
   constructor(
     private readonly grantersFactory: GrantersFactory,
@@ -56,6 +61,13 @@ export class PolicyFactory implements OnModuleInit {
     return this.policies;
   }
 
+  getDBPolicies() {
+    if (!this.dbPolicies) {
+      throw new Error('Policies are not available yet.');
+    }
+    return this.dbPolicies;
+  }
+
   async onModuleInit() {
     const discoveredPolicies =
       await this.discovery.providersWithMetaAtKey<PolicyMetadata>(
@@ -64,18 +76,33 @@ export class PolicyFactory implements OnModuleInit {
 
     const resGranter = await this.grantersFactory.makeGranters();
 
-    this.policies = await Promise.all(
-      discoveredPolicies.map((discovered) =>
-        this.buildPolicy(resGranter, discovered),
-      ),
+    const plainPolicies = discoveredPolicies.map((discovered) =>
+      this.buildPlainPolicy(resGranter, discovered),
     );
+    this.policies = plainPolicies.map((plain) => {
+      const grants = cloneGrants(plain.grants);
+      this.defaultInterfacesFromAllImplementationsIntersection(grants);
+      this.defaultImplementationsFromInterfaces(grants);
+
+      return this.enhancePolicy({ ...plain, grants });
+    });
+    this.dbPolicies = plainPolicies.map((plain) => {
+      const grants = cloneGrants(plain.grants);
+      this.defaultInterfacesFromAllImplementationsIntersection(grants);
+      this.defaultImplementationsFromInterfaces(grants);
+
+      return this.enhancePolicy({ ...plain, grants });
+    });
   }
 
-  async buildPolicy(
+  private buildPlainPolicy(
     resGranter: ResourcesGranter,
     { meta, discoveredClass }: DiscoveredClassWithMeta<PolicyMetadata>,
-  ): Promise<Policy> {
+  ): PlainPolicy {
+    const name = startCase(discoveredClass.name.replace(/Policy$/, ''));
+
     const roles = meta.role === 'all' ? undefined : many(meta.role);
+
     const grants: WritableGrants = new Map();
     const resultList = many(meta.def(resGranter)).flat();
     for (const resourceGrant of resultList) {
@@ -108,24 +135,25 @@ export class PolicyFactory implements OnModuleInit {
       }
     }
 
-    this.defaultInterfacesFromImplementationsIntersection(grants);
-    this.defaultImplementationsFromInterfaces(grants);
-    this.defaultRelationEdgesToResourceLevel(grants);
+    return { name, roles, grants };
+  }
 
-    const powers = this.determinePowers(grants);
+  private enhancePolicy(plain: PlainPolicy): Policy {
+    this.defaultRelationEdgesToResourceLevel(plain.grants);
 
-    const name = startCase(discoveredClass.name.replace(/Policy$/, ''));
-    const policy: Policy = { name, roles, grants, powers };
+    const powers = this.determinePowers(plain.grants);
+
+    const policy: Policy = { ...plain, powers };
     this.attachPolicyToConditions(policy);
 
     return policy;
   }
 
   /**
-   * Declare permissions of missing interfaces based on the intersection of
-   * the permissions of its implementations
+   * Declare permissions of missing interfaces based on the intersection
+   * its implementations
    */
-  private defaultInterfacesFromImplementationsIntersection(
+  private defaultInterfacesFromAllImplementationsIntersection(
     grantMap: WritableGrants,
   ) {
     const interfaceCandidates = new Set(
@@ -321,3 +349,19 @@ export class PolicyFactory implements OnModuleInit {
     return powers;
   }
 }
+
+const cloneGrants = (grants: Grants): WritableGrants =>
+  new Map([
+    ...mapValues(grants, (_, grant) => ({
+      objectLevel: clonePermissions(grant.objectLevel),
+      propLevel: mapValues(grant.propLevel, (_, perms) =>
+        clonePermissions(perms),
+      ).asRecord,
+      childRelations: mapValues(grant.childRelations, (_, perms) =>
+        clonePermissions(perms),
+      ).asRecord,
+    })),
+  ]);
+
+const clonePermissions = (permissions: Permissions<string>) =>
+  mapEntries(permissions, (x) => x).asRecord;
