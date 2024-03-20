@@ -1,5 +1,5 @@
 import { many, mapEntries } from '@seedcompany/common';
-import { ID, ServerException } from '~/common';
+import { ServerException } from '~/common';
 import { $, e } from '../reexports';
 
 export const mapToSetBlock = (
@@ -37,10 +37,7 @@ export const mapToSetBlock = (
         ? null
         : pointer.__kind__ === 'property'
         ? value
-        : e.cast(
-            pointer.target,
-            e.set(...many(value).map((v) => e.uuid(v as ID))),
-          );
+        : e.cast(pointer.target, e.cast(e.uuid, e.set(...many(value))));
 
     return [pointerKey, eqlValue];
   }).asRecord;
