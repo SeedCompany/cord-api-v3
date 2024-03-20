@@ -108,11 +108,13 @@ export class CrudeAstParser {
       if (body != null) {
         block = block.slice(0, -1) + body + '}';
       }
-      // Reinstate the semicolon if it was stripped
-      if (text[text.indexOf(block) + block.length] === ';') {
-        block += ';';
-      }
-      block += '\n';
+
+      // Add suffix to outer block.
+      // This could be a semicolon, a trailing comment, and or a line break
+      const suffixStartIdx = text.indexOf(block) + block.length;
+      const suffixLineBreakAt = text.indexOf('\n', suffixStartIdx);
+      const suffix = text.slice(suffixStartIdx, suffixLineBreakAt + 1);
+      block += suffix;
 
       // If body is empty, don't consider it moving forward
       // also trim leading new lines & trailing spaces

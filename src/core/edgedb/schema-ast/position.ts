@@ -7,6 +7,9 @@ export class Position {
 
   static within(needle: string, haystack: string) {
     const start = haystack.indexOf(needle);
+    if (start === -1) {
+      throw new Error('Needle not found within haystack');
+    }
     return new Position(start, start + needle.length);
   }
 
