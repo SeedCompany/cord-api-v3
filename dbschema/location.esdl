@@ -14,19 +14,19 @@ module default {
     defaultMarketingRegion: Location;
     mapImage: File;
 
-    access policy CanReadGeneratedFromAppPoliciesForLocation
+    access policy CanSelectGeneratedFromAppPoliciesForLocation
     allow select using (
-      not exists default::currentUser
+      true
     );
-    access policy CanCreateGeneratedFromAppPoliciesForLocation
+
+    access policy CanInsertGeneratedFromAppPoliciesForLocation
     allow insert using (
-      not exists default::currentUser
-        or default::Role.Administrator in default::currentUser.roles
+      default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
     );
+
     access policy CanDeleteGeneratedFromAppPoliciesForLocation
     allow delete using (
-      not exists default::currentUser
-        or default::Role.Administrator in default::currentUser.roles
+      default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
     );
   }
 }

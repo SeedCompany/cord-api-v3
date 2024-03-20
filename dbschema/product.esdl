@@ -28,19 +28,19 @@ module default {
       )
     );
 
-    access policy CanReadGeneratedFromAppPoliciesForOtherProduct
+    access policy CanSelectGeneratedFromAppPoliciesForOtherProduct
     allow select using (
-      not exists default::currentUser
+      true
     );
-    access policy CanCreateGeneratedFromAppPoliciesForOtherProduct
+
+    access policy CanInsertGeneratedFromAppPoliciesForOtherProduct
     allow insert using (
-      not exists default::currentUser
-        or exists (<default::Role>{'Administrator', 'FieldOperationsDirector', 'ProjectManager', 'RegionalDirector'} intersect default::currentUser.roles)
+      exists (<default::Role>{'Administrator', 'FieldOperationsDirector', 'ProjectManager', 'RegionalDirector'} intersect (<default::User>(global default::currentUserId)).roles)
     );
+
     access policy CanDeleteGeneratedFromAppPoliciesForOtherProduct
     allow delete using (
-      not exists default::currentUser
-        or default::Role.Administrator in default::currentUser.roles
+      default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
     );
   }
   
@@ -58,19 +58,19 @@ module default {
     totalVerses: int16;
     totalVerseEquivalents: float32;
 
-    access policy CanReadGeneratedFromAppPoliciesForDirectScriptureProduct
+    access policy CanSelectGeneratedFromAppPoliciesForDirectScriptureProduct
     allow select using (
-      not exists default::currentUser
+      true
     );
-    access policy CanCreateGeneratedFromAppPoliciesForDirectScriptureProduct
+
+    access policy CanInsertGeneratedFromAppPoliciesForDirectScriptureProduct
     allow insert using (
-      not exists default::currentUser
-        or exists (<default::Role>{'Administrator', 'FieldOperationsDirector', 'ProjectManager', 'RegionalDirector'} intersect default::currentUser.roles)
+      exists (<default::Role>{'Administrator', 'FieldOperationsDirector', 'ProjectManager', 'RegionalDirector'} intersect (<default::User>(global default::currentUserId)).roles)
     );
+
     access policy CanDeleteGeneratedFromAppPoliciesForDirectScriptureProduct
     allow delete using (
-      not exists default::currentUser
-        or default::Role.Administrator in default::currentUser.roles
+      default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
     );
   }
   
@@ -102,19 +102,19 @@ module default {
     totalVerses: int16;
     totalVerseEquivalents: float32;
 
-    access policy CanReadGeneratedFromAppPoliciesForDerivativeScriptureProduct
+    access policy CanSelectGeneratedFromAppPoliciesForDerivativeScriptureProduct
     allow select using (
-      not exists default::currentUser
+      true
     );
-    access policy CanCreateGeneratedFromAppPoliciesForDerivativeScriptureProduct
+
+    access policy CanInsertGeneratedFromAppPoliciesForDerivativeScriptureProduct
     allow insert using (
-      not exists default::currentUser
-        or exists (<default::Role>{'Administrator', 'FieldOperationsDirector', 'ProjectManager', 'RegionalDirector'} intersect default::currentUser.roles)
+      exists (<default::Role>{'Administrator', 'FieldOperationsDirector', 'ProjectManager', 'RegionalDirector'} intersect (<default::User>(global default::currentUserId)).roles)
     );
+
     access policy CanDeleteGeneratedFromAppPoliciesForDerivativeScriptureProduct
     allow delete using (
-      not exists default::currentUser
-        or default::Role.Administrator in default::currentUser.roles
+      default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
     );
   }
   

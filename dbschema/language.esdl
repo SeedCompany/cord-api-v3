@@ -86,21 +86,41 @@ module default {
     
     index on ((.name, .ownSensitivity, .leastOfThese, .isSignLanguage, .isDialect));
 
-    access policy CanReadGeneratedFromAppPoliciesForLanguage
+    access policy CanSelectGeneratedFromAppPoliciesForLanguage
     allow select using (
-      not exists default::currentUser
-        or exists (<default::Role>{'Administrator', 'ConsultantManager', 'Controller', 'ExperienceOperations', 'FieldOperationsDirector', 'FinancialAnalyst', 'Fundraising', 'LeadFinancialAnalyst', 'Leadership', 'Marketing', 'ProjectManager', 'RegionalDirector', 'StaffMember'} intersect default::currentUser.roles)
-        or (exists (<default::Role>{'Consultant', 'FieldPartner', 'Intern', 'Mentor', 'Translator'} intersect default::currentUser.roles) and .isMember)
+      (
+        exists (<default::Role>{'Administrator', 'ConsultantManager', 'ExperienceOperations', 'LeadFinancialAnalyst', 'Controller', 'FinancialAnalyst', 'Fundraising', 'Marketing', 'Leadership', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'StaffMember'} intersect (<default::User>(global default::currentUserId)).roles)
+        or (
+          exists (<default::Role>{'Consultant', 'ConsultantManager'} intersect (<default::User>(global default::currentUserId)).roles)
+          and .isMember
+        )
+        or (
+          default::Role.FieldPartner in (<default::User>(global default::currentUserId)).roles
+          and .isMember
+        )
+        or (
+          default::Role.Intern in (<default::User>(global default::currentUserId)).roles
+          and .isMember
+        )
+        or (
+          default::Role.Mentor in (<default::User>(global default::currentUserId)).roles
+          and .isMember
+        )
+        or (
+          default::Role.Translator in (<default::User>(global default::currentUserId)).roles
+          and .isMember
+        )
+      )
     );
-    access policy CanCreateGeneratedFromAppPoliciesForLanguage
+
+    access policy CanInsertGeneratedFromAppPoliciesForLanguage
     allow insert using (
-      not exists default::currentUser
-        or default::Role.Administrator in default::currentUser.roles
+      default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
     );
+
     access policy CanDeleteGeneratedFromAppPoliciesForLanguage
     allow delete using (
-      not exists default::currentUser
-        or default::Role.Administrator in default::currentUser.roles
+      default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
     );
   }
   
@@ -125,24 +145,48 @@ module Ethnologue {
     name: str;
     population: default::population;
 
-    access policy CanReadGeneratedFromAppPoliciesForEthnologueLanguage
+    access policy CanSelectGeneratedFromAppPoliciesForEthnologueLanguage
     allow select using (
-      not exists default::currentUser
-        or exists (<default::Role>{'Administrator', 'ExperienceOperations', 'FieldOperationsDirector', 'Leadership', 'ProjectManager', 'RegionalDirector'} intersect default::currentUser.roles)
-        or (exists (<default::Role>{'Consultant', 'FieldPartner', 'Translator'} intersect default::currentUser.roles) and .isMember)
-        or (default::Role.ConsultantManager in default::currentUser.roles and (.sensitivity <= default::Sensitivity.Medium or .isMember))
-        or (default::Role.Fundraising in default::currentUser.roles and (.isMember or .sensitivity <= default::Sensitivity.Medium))
-        or (default::Role.Marketing in default::currentUser.roles and .sensitivity <= default::Sensitivity.Low)
+      (
+        exists (<default::Role>{'Administrator', 'ExperienceOperations', 'Leadership', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect (<default::User>(global default::currentUserId)).roles)
+        or (
+          default::Role.ConsultantManager in (<default::User>(global default::currentUserId)).roles
+          and .sensitivity <= default::Sensitivity.Medium
+        )
+        or (
+          exists (<default::Role>{'Consultant', 'ConsultantManager'} intersect (<default::User>(global default::currentUserId)).roles)
+          and .isMember
+        )
+        or (
+          default::Role.FieldPartner in (<default::User>(global default::currentUserId)).roles
+          and .isMember
+        )
+        or (
+          default::Role.Fundraising in (<default::User>(global default::currentUserId)).roles
+          and (
+            .isMember
+            or .sensitivity <= default::Sensitivity.Medium
+          )
+        )
+        or (
+          exists (<default::Role>{'Marketing', 'Fundraising', 'ExperienceOperations'} intersect (<default::User>(global default::currentUserId)).roles)
+          and .sensitivity <= default::Sensitivity.Low
+        )
+        or (
+          default::Role.Translator in (<default::User>(global default::currentUserId)).roles
+          and .isMember
+        )
+      )
     );
-    access policy CanCreateGeneratedFromAppPoliciesForEthnologueLanguage
+
+    access policy CanInsertGeneratedFromAppPoliciesForEthnologueLanguage
     allow insert using (
-      not exists default::currentUser
-        or default::Role.Administrator in default::currentUser.roles
+      default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
     );
+
     access policy CanDeleteGeneratedFromAppPoliciesForEthnologueLanguage
     allow delete using (
-      not exists default::currentUser
-        or default::Role.Administrator in default::currentUser.roles
+      default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
     );
   }
   

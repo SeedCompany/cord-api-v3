@@ -10,20 +10,19 @@ module default {
     altText: str;
     caption: str;
 
-    access policy CanReadGeneratedFromAppPoliciesForMedia
+    access policy CanSelectGeneratedFromAppPoliciesForMedia
     allow select using (
-      not exists default::currentUser
-        or exists (<default::Role>{'Administrator', 'Leadership'} intersect default::currentUser.roles)
+      exists (<default::Role>{'Administrator', 'Leadership'} intersect (<default::User>(global default::currentUserId)).roles)
     );
-    access policy CanCreateGeneratedFromAppPoliciesForMedia
+
+    access policy CanInsertGeneratedFromAppPoliciesForMedia
     allow insert using (
-      not exists default::currentUser
-        or default::Role.Administrator in default::currentUser.roles
+      default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
     );
+
     access policy CanDeleteGeneratedFromAppPoliciesForMedia
     allow delete using (
-      not exists default::currentUser
-        or default::Role.Administrator in default::currentUser.roles
+      default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
     );
   }
 }

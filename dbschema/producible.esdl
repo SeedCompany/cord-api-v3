@@ -27,68 +27,68 @@ module default {
         set { scripture := __new__.scripture }
       );
 
-    access policy CanReadGeneratedFromAppPoliciesForProducible
+    access policy CanSelectGeneratedFromAppPoliciesForProducible
     allow select using (
-      not exists default::currentUser
+      true
     );
-    access policy CanCreateGeneratedFromAppPoliciesForProducible
+
+    access policy CanInsertGeneratedFromAppPoliciesForProducible
     allow insert using (
-      not exists default::currentUser
-        or exists (<default::Role>{'Administrator', 'FieldOperationsDirector', 'ProjectManager', 'RegionalDirector'} intersect default::currentUser.roles)
+      exists (<default::Role>{'Administrator', 'FieldOperationsDirector', 'ProjectManager', 'RegionalDirector'} intersect (<default::User>(global default::currentUserId)).roles)
     );
+
     access policy CanDeleteGeneratedFromAppPoliciesForProducible
     allow delete using (
-      not exists default::currentUser
-        or default::Role.Administrator in default::currentUser.roles
+      default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
     );
   }
   
   type EthnoArt extending Producible {
-    access policy CanReadGeneratedFromAppPoliciesForEthnoArt
+    access policy CanSelectGeneratedFromAppPoliciesForEthnoArt
     allow select using (
-      not exists default::currentUser
+      true
     );
-    access policy CanCreateGeneratedFromAppPoliciesForEthnoArt
+
+    access policy CanInsertGeneratedFromAppPoliciesForEthnoArt
     allow insert using (
-      not exists default::currentUser
-        or exists (<default::Role>{'Administrator', 'FieldOperationsDirector', 'ProjectManager', 'RegionalDirector'} intersect default::currentUser.roles)
+      exists (<default::Role>{'Administrator', 'FieldOperationsDirector', 'ProjectManager', 'RegionalDirector'} intersect (<default::User>(global default::currentUserId)).roles)
     );
+
     access policy CanDeleteGeneratedFromAppPoliciesForEthnoArt
     allow delete using (
-      not exists default::currentUser
-        or default::Role.Administrator in default::currentUser.roles
+      default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
     );
   };
   type Film extending Producible {
-    access policy CanReadGeneratedFromAppPoliciesForFilm
+    access policy CanSelectGeneratedFromAppPoliciesForFilm
     allow select using (
-      not exists default::currentUser
+      true
     );
-    access policy CanCreateGeneratedFromAppPoliciesForFilm
+
+    access policy CanInsertGeneratedFromAppPoliciesForFilm
     allow insert using (
-      not exists default::currentUser
-        or exists (<default::Role>{'Administrator', 'FieldOperationsDirector', 'ProjectManager', 'RegionalDirector'} intersect default::currentUser.roles)
+      exists (<default::Role>{'Administrator', 'FieldOperationsDirector', 'ProjectManager', 'RegionalDirector'} intersect (<default::User>(global default::currentUserId)).roles)
     );
+
     access policy CanDeleteGeneratedFromAppPoliciesForFilm
     allow delete using (
-      not exists default::currentUser
-        or default::Role.Administrator in default::currentUser.roles
+      default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
     );
   };
   type Story extending Producible {
-    access policy CanReadGeneratedFromAppPoliciesForStory
+    access policy CanSelectGeneratedFromAppPoliciesForStory
     allow select using (
-      not exists default::currentUser
+      true
     );
-    access policy CanCreateGeneratedFromAppPoliciesForStory
+
+    access policy CanInsertGeneratedFromAppPoliciesForStory
     allow insert using (
-      not exists default::currentUser
-        or exists (<default::Role>{'Administrator', 'FieldOperationsDirector', 'ProjectManager', 'RegionalDirector'} intersect default::currentUser.roles)
+      exists (<default::Role>{'Administrator', 'FieldOperationsDirector', 'ProjectManager', 'RegionalDirector'} intersect (<default::User>(global default::currentUserId)).roles)
     );
+
     access policy CanDeleteGeneratedFromAppPoliciesForStory
     allow delete using (
-      not exists default::currentUser
-        or default::Role.Administrator in default::currentUser.roles
+      default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
     );
   };
 }

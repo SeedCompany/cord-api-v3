@@ -14,11 +14,37 @@ module Engagement {
       )
     );
 
-    access policy CanReadGeneratedFromAppPoliciesForCeremony
+    access policy CanSelectGeneratedFromAppPoliciesForCeremony
     allow select using (
-      not exists default::currentUser
-        or exists (<default::Role>{'Administrator', 'Controller', 'ExperienceOperations', 'FieldOperationsDirector', 'FieldPartner', 'FinancialAnalyst', 'Fundraising', 'LeadFinancialAnalyst', 'Leadership', 'Marketing', 'ProjectManager', 'RegionalDirector', 'StaffMember'} intersect default::currentUser.roles)
-        or (exists (<default::Role>{'Consultant', 'ConsultantManager', 'Intern', 'Mentor', 'Translator'} intersect default::currentUser.roles) and .isMember)
+      (
+        exists (<default::Role>{'Administrator', 'FieldOperationsDirector', 'FieldPartner', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller', 'Marketing', 'Fundraising', 'ExperienceOperations', 'Leadership', 'ProjectManager', 'RegionalDirector', 'StaffMember'} intersect (<default::User>(global default::currentUserId)).roles)
+        or (
+          exists (<default::Role>{'Consultant', 'ConsultantManager'} intersect (<default::User>(global default::currentUserId)).roles)
+          and .isMember
+        )
+        or (
+          default::Role.Intern in (<default::User>(global default::currentUserId)).roles
+          and .isMember
+        )
+        or (
+          default::Role.Mentor in (<default::User>(global default::currentUserId)).roles
+          and .isMember
+        )
+        or (
+          default::Role.Translator in (<default::User>(global default::currentUserId)).roles
+          and .isMember
+        )
+      )
+    );
+
+    access policy CanInsertGeneratedFromAppPoliciesForCeremony
+    allow insert using (
+      true
+    );
+
+    access policy CanDeleteGeneratedFromAppPoliciesForCeremony
+    allow delete using (
+      true
     );
   }
   type DedicationCeremony extending Ceremony {}

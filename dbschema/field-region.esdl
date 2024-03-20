@@ -7,20 +7,19 @@ module default {
     required fieldZone: FieldZone;
     required director: User;
 
-    access policy CanReadGeneratedFromAppPoliciesForFieldRegion
+    access policy CanSelectGeneratedFromAppPoliciesForFieldRegion
     allow select using (
-      not exists default::currentUser
-        or exists (<default::Role>{'Administrator', 'Consultant', 'ConsultantManager', 'Controller', 'ExperienceOperations', 'FieldOperationsDirector', 'FieldPartner', 'FinancialAnalyst', 'Fundraising', 'LeadFinancialAnalyst', 'Leadership', 'Marketing', 'ProjectManager', 'RegionalDirector', 'StaffMember'} intersect default::currentUser.roles)
+      exists (<default::Role>{'Administrator', 'Consultant', 'ConsultantManager', 'FieldPartner', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller', 'Marketing', 'Fundraising', 'ExperienceOperations', 'Leadership', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'StaffMember'} intersect (<default::User>(global default::currentUserId)).roles)
     );
-    access policy CanCreateGeneratedFromAppPoliciesForFieldRegion
+
+    access policy CanInsertGeneratedFromAppPoliciesForFieldRegion
     allow insert using (
-      not exists default::currentUser
-        or default::Role.Administrator in default::currentUser.roles
+      default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
     );
+
     access policy CanDeleteGeneratedFromAppPoliciesForFieldRegion
     allow delete using (
-      not exists default::currentUser
-        or default::Role.Administrator in default::currentUser.roles
+      default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
     );
   }
 }

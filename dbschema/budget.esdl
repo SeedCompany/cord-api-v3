@@ -8,11 +8,28 @@ module default {
     
     records := .<budget[is Budget::Record];
 
-    access policy CanReadGeneratedFromAppPoliciesForBudget
+    access policy CanSelectGeneratedFromAppPoliciesForBudget
     allow select using (
-      not exists default::currentUser
-        or exists (<default::Role>{'Administrator', 'Controller', 'ExperienceOperations', 'FieldOperationsDirector', 'FinancialAnalyst', 'Fundraising', 'LeadFinancialAnalyst', 'Leadership', 'Marketing', 'ProjectManager', 'RegionalDirector'} intersect default::currentUser.roles)
-        or (default::Role.ConsultantManager in default::currentUser.roles and (.isMember or .sensitivity <= default::Sensitivity.Medium))
+      (
+        exists (<default::Role>{'Administrator', 'FieldOperationsDirector', 'LeadFinancialAnalyst', 'Controller', 'FinancialAnalyst', 'Marketing', 'Fundraising', 'ExperienceOperations', 'Leadership', 'ProjectManager', 'RegionalDirector'} intersect (<default::User>(global default::currentUserId)).roles)
+        or (
+          default::Role.ConsultantManager in (<default::User>(global default::currentUserId)).roles
+          and (
+            .isMember
+            or .sensitivity <= default::Sensitivity.Medium
+          )
+        )
+      )
+    );
+
+    access policy CanInsertGeneratedFromAppPoliciesForBudget
+    allow insert using (
+      true
+    );
+
+    access policy CanDeleteGeneratedFromAppPoliciesForBudget
+    allow delete using (
+      true
     );
   }
 }
@@ -37,11 +54,28 @@ module Budget {
       on target delete delete source;
     };
 
-    access policy CanReadGeneratedFromAppPoliciesForBudgetRecord
+    access policy CanSelectGeneratedFromAppPoliciesForBudgetRecord
     allow select using (
-      not exists default::currentUser
-        or exists (<default::Role>{'Administrator', 'Controller', 'ExperienceOperations', 'FieldOperationsDirector', 'FinancialAnalyst', 'Fundraising', 'LeadFinancialAnalyst', 'Leadership', 'Marketing', 'ProjectManager', 'RegionalDirector'} intersect default::currentUser.roles)
-        or (default::Role.ConsultantManager in default::currentUser.roles and (.isMember or .sensitivity <= default::Sensitivity.Medium))
+      (
+        exists (<default::Role>{'Administrator', 'FieldOperationsDirector', 'LeadFinancialAnalyst', 'Controller', 'FinancialAnalyst', 'Marketing', 'Fundraising', 'ExperienceOperations', 'Leadership', 'ProjectManager', 'RegionalDirector'} intersect (<default::User>(global default::currentUserId)).roles)
+        or (
+          default::Role.ConsultantManager in (<default::User>(global default::currentUserId)).roles
+          and (
+            .isMember
+            or .sensitivity <= default::Sensitivity.Medium
+          )
+        )
+      )
+    );
+
+    access policy CanInsertGeneratedFromAppPoliciesForBudgetRecord
+    allow insert using (
+      true
+    );
+
+    access policy CanDeleteGeneratedFromAppPoliciesForBudgetRecord
+    allow delete using (
+      true
     );
   }
   

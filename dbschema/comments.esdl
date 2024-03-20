@@ -2,20 +2,19 @@ module Comments {
   abstract type Aware extending default::Resource {
     commentThreads := .<container[is Thread];
 
-    access policy CanReadGeneratedFromAppPoliciesForCommentable
+    access policy CanSelectGeneratedFromAppPoliciesForCommentable
     allow select using (
-      not exists default::currentUser
-        or exists (<default::Role>{'Administrator', 'Leadership'} intersect default::currentUser.roles)
+      exists (<default::Role>{'Administrator', 'Leadership'} intersect (<default::User>(global default::currentUserId)).roles)
     );
-    access policy CanCreateGeneratedFromAppPoliciesForCommentable
+
+    access policy CanInsertGeneratedFromAppPoliciesForCommentable
     allow insert using (
-      not exists default::currentUser
-        or default::Role.Administrator in default::currentUser.roles
+      default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
     );
+
     access policy CanDeleteGeneratedFromAppPoliciesForCommentable
     allow delete using (
-      not exists default::currentUser
-        or default::Role.Administrator in default::currentUser.roles
+      default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
     );
   }
 
@@ -27,22 +26,25 @@ module Comments {
     firstComment := (select .comments order by .createdAt asc limit 1);
     latestComment := (select .comments order by .createdAt desc limit 1);
 
-    access policy CanReadGeneratedFromAppPoliciesForCommentThread
+    access policy CanSelectGeneratedFromAppPoliciesForCommentThread
     allow select using (
-      not exists default::currentUser
-        or exists (<default::Role>{'Administrator', 'Leadership'} intersect default::currentUser.roles)
-        or (exists (<default::Role>{'BetaTester', 'BibleTranslationLiaison', 'Consultant', 'ConsultantManager', 'Controller', 'ExperienceOperations', 'FieldOperationsDirector', 'FieldPartner', 'FinancialAnalyst', 'Fundraising', 'Intern', 'LeadFinancialAnalyst', 'Liaison', 'Marketing', 'Mentor', 'ProjectManager', 'RegionalCommunicationsCoordinator', 'RegionalDirector', 'StaffMember', 'Translator'} intersect default::currentUser.roles) and (.isOwner ?? false))
+      (
+        exists (<default::Role>{'Administrator', 'Leadership'} intersect (<default::User>(global default::currentUserId)).roles)
+        or (.isOwner ?? false)
+      )
     );
-    access policy CanCreateGeneratedFromAppPoliciesForCommentThread
+
+    access policy CanInsertGeneratedFromAppPoliciesForCommentThread
     allow insert using (
-      not exists default::currentUser
-        or default::Role.Administrator in default::currentUser.roles
+      default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
     );
+
     access policy CanDeleteGeneratedFromAppPoliciesForCommentThread
     allow delete using (
-      not exists default::currentUser
-        or default::Role.Administrator in default::currentUser.roles
-        or (exists (<default::Role>{'BetaTester', 'BibleTranslationLiaison', 'Consultant', 'ConsultantManager', 'Controller', 'ExperienceOperations', 'FieldOperationsDirector', 'FieldPartner', 'FinancialAnalyst', 'Fundraising', 'Intern', 'LeadFinancialAnalyst', 'Leadership', 'Liaison', 'Marketing', 'Mentor', 'ProjectManager', 'RegionalCommunicationsCoordinator', 'RegionalDirector', 'StaffMember', 'Translator'} intersect default::currentUser.roles) and (.isOwner ?? false))
+      (
+        default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
+        or (.isOwner ?? false)
+      )
     );
   }
 
@@ -52,22 +54,25 @@ module Comments {
     };
     required body: default::RichText;
 
-    access policy CanReadGeneratedFromAppPoliciesForComment
+    access policy CanSelectGeneratedFromAppPoliciesForComment
     allow select using (
-      not exists default::currentUser
-        or exists (<default::Role>{'Administrator', 'Leadership'} intersect default::currentUser.roles)
-        or (exists (<default::Role>{'BetaTester', 'BibleTranslationLiaison', 'Consultant', 'ConsultantManager', 'Controller', 'ExperienceOperations', 'FieldOperationsDirector', 'FieldPartner', 'FinancialAnalyst', 'Fundraising', 'Intern', 'LeadFinancialAnalyst', 'Liaison', 'Marketing', 'Mentor', 'ProjectManager', 'RegionalCommunicationsCoordinator', 'RegionalDirector', 'StaffMember', 'Translator'} intersect default::currentUser.roles) and (.isOwner ?? false))
+      (
+        exists (<default::Role>{'Administrator', 'Leadership'} intersect (<default::User>(global default::currentUserId)).roles)
+        or (.isOwner ?? false)
+      )
     );
-    access policy CanCreateGeneratedFromAppPoliciesForComment
+
+    access policy CanInsertGeneratedFromAppPoliciesForComment
     allow insert using (
-      not exists default::currentUser
-        or default::Role.Administrator in default::currentUser.roles
+      default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
     );
+
     access policy CanDeleteGeneratedFromAppPoliciesForComment
     allow delete using (
-      not exists default::currentUser
-        or default::Role.Administrator in default::currentUser.roles
-        or (exists (<default::Role>{'BetaTester', 'BibleTranslationLiaison', 'Consultant', 'ConsultantManager', 'Controller', 'ExperienceOperations', 'FieldOperationsDirector', 'FieldPartner', 'FinancialAnalyst', 'Fundraising', 'Intern', 'LeadFinancialAnalyst', 'Leadership', 'Liaison', 'Marketing', 'Mentor', 'ProjectManager', 'RegionalCommunicationsCoordinator', 'RegionalDirector', 'StaffMember', 'Translator'} intersect default::currentUser.roles) and (.isOwner ?? false))
+      (
+        default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
+        or (.isOwner ?? false)
+      )
     );
   }
 }

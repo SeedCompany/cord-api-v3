@@ -8,20 +8,19 @@ module default {
       constraint expression on (__subject__ >= 0 and __subject__ <= 9);
     }
 
-    access policy CanReadGeneratedFromAppPoliciesForFundingAccount
+    access policy CanSelectGeneratedFromAppPoliciesForFundingAccount
     allow select using (
-      not exists default::currentUser
-        or exists (<default::Role>{'Administrator', 'ConsultantManager', 'Controller', 'FieldOperationsDirector', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Leadership', 'ProjectManager', 'RegionalDirector', 'StaffMember'} intersect default::currentUser.roles)
+      exists (<default::Role>{'Administrator', 'ConsultantManager', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller', 'Leadership', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'StaffMember'} intersect (<default::User>(global default::currentUserId)).roles)
     );
-    access policy CanCreateGeneratedFromAppPoliciesForFundingAccount
+
+    access policy CanInsertGeneratedFromAppPoliciesForFundingAccount
     allow insert using (
-      not exists default::currentUser
-        or default::Role.Administrator in default::currentUser.roles
+      default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
     );
+
     access policy CanDeleteGeneratedFromAppPoliciesForFundingAccount
     allow delete using (
-      not exists default::currentUser
-        or default::Role.Administrator in default::currentUser.roles
+      default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
     );
   }
 }

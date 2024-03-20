@@ -39,23 +39,60 @@ module default {
     
     description: RichText;
 
-    access policy CanReadGeneratedFromAppPoliciesForEngagement
+    access policy CanSelectGeneratedFromAppPoliciesForEngagement
     allow select using (
-      not exists default::currentUser
-        or exists (<default::Role>{'Administrator', 'Controller', 'ExperienceOperations', 'FieldOperationsDirector', 'FinancialAnalyst', 'Fundraising', 'LeadFinancialAnalyst', 'Leadership', 'Marketing', 'ProjectManager', 'RegionalDirector', 'StaffMember'} intersect default::currentUser.roles)
-        or (exists (<default::Role>{'Consultant', 'ConsultantManager', 'FieldPartner', 'Intern', 'Mentor', 'Translator'} intersect default::currentUser.roles) and .isMember)
+      (
+        exists (<default::Role>{'Administrator', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller', 'Marketing', 'Fundraising', 'ExperienceOperations', 'Leadership', 'StaffMember'} intersect (<default::User>(global default::currentUserId)).roles)
+        or (
+          exists (<default::Role>{'Consultant', 'ConsultantManager'} intersect (<default::User>(global default::currentUserId)).roles)
+          and .isMember
+        )
+        or (
+          default::Role.FieldPartner in (<default::User>(global default::currentUserId)).roles
+          and .isMember
+        )
+        or (
+          default::Role.Intern in (<default::User>(global default::currentUserId)).roles
+          and .isMember
+        )
+        or (
+          default::Role.Mentor in (<default::User>(global default::currentUserId)).roles
+          and .isMember
+        )
+        or (
+          exists (<default::Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect (<default::User>(global default::currentUserId)).roles)
+          and .isMember
+        )
+        or (
+          default::Role.Translator in (<default::User>(global default::currentUserId)).roles
+          and .isMember
+        )
+      )
     );
-    access policy CanCreateGeneratedFromAppPoliciesForEngagement
+
+    access policy CanInsertGeneratedFromAppPoliciesForEngagement
     allow insert using (
-      not exists default::currentUser
-        or default::Role.Administrator in default::currentUser.roles
-        or (exists (<default::Role>{'Controller', 'FieldOperationsDirector', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'ProjectManager', 'RegionalDirector'} intersect default::currentUser.roles) and .isMember)
+      (
+        default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
+        or (
+          exists (<default::Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller'} intersect (<default::User>(global default::currentUserId)).roles)
+          and .isMember
+        )
+      )
     );
+
     access policy CanDeleteGeneratedFromAppPoliciesForEngagement
     allow delete using (
-      not exists default::currentUser
-        or default::Role.Administrator in default::currentUser.roles
-        or (exists (<default::Role>{'Controller', 'FieldOperationsDirector', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'ProjectManager', 'RegionalDirector'} intersect default::currentUser.roles) and (.isMember and <str>.status = 'InDevelopment'))
+      (
+        default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
+        or (
+          exists (<default::Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller'} intersect (<default::User>(global default::currentUserId)).roles)
+          and (
+            .isMember
+            and <str>.status = 'InDevelopment'
+          )
+        )
+      )
     );
   }
   
@@ -130,23 +167,60 @@ module default {
       set { projects -= __old__.project }
     );
 
-    access policy CanReadGeneratedFromAppPoliciesForLanguageEngagement
+    access policy CanSelectGeneratedFromAppPoliciesForLanguageEngagement
     allow select using (
-      not exists default::currentUser
-        or exists (<default::Role>{'Administrator', 'ConsultantManager', 'Controller', 'ExperienceOperations', 'FieldOperationsDirector', 'FinancialAnalyst', 'Fundraising', 'LeadFinancialAnalyst', 'Leadership', 'Marketing', 'ProjectManager', 'RegionalDirector', 'StaffMember'} intersect default::currentUser.roles)
-        or (exists (<default::Role>{'Consultant', 'FieldPartner', 'Intern', 'Mentor', 'Translator'} intersect default::currentUser.roles) and .isMember)
+      (
+        exists (<default::Role>{'Administrator', 'ConsultantManager', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller', 'Marketing', 'Fundraising', 'ExperienceOperations', 'Leadership', 'StaffMember'} intersect (<default::User>(global default::currentUserId)).roles)
+        or (
+          exists (<default::Role>{'Consultant', 'ConsultantManager'} intersect (<default::User>(global default::currentUserId)).roles)
+          and .isMember
+        )
+        or (
+          default::Role.FieldPartner in (<default::User>(global default::currentUserId)).roles
+          and .isMember
+        )
+        or (
+          default::Role.Intern in (<default::User>(global default::currentUserId)).roles
+          and .isMember
+        )
+        or (
+          default::Role.Mentor in (<default::User>(global default::currentUserId)).roles
+          and .isMember
+        )
+        or (
+          exists (<default::Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect (<default::User>(global default::currentUserId)).roles)
+          and .isMember
+        )
+        or (
+          default::Role.Translator in (<default::User>(global default::currentUserId)).roles
+          and .isMember
+        )
+      )
     );
-    access policy CanCreateGeneratedFromAppPoliciesForLanguageEngagement
+
+    access policy CanInsertGeneratedFromAppPoliciesForLanguageEngagement
     allow insert using (
-      not exists default::currentUser
-        or default::Role.Administrator in default::currentUser.roles
-        or (exists (<default::Role>{'Controller', 'FieldOperationsDirector', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'ProjectManager', 'RegionalDirector'} intersect default::currentUser.roles) and .isMember)
+      (
+        default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
+        or (
+          exists (<default::Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller'} intersect (<default::User>(global default::currentUserId)).roles)
+          and .isMember
+        )
+      )
     );
+
     access policy CanDeleteGeneratedFromAppPoliciesForLanguageEngagement
     allow delete using (
-      not exists default::currentUser
-        or default::Role.Administrator in default::currentUser.roles
-        or (exists (<default::Role>{'Controller', 'FieldOperationsDirector', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'ProjectManager', 'RegionalDirector'} intersect default::currentUser.roles) and (.isMember and <str>.status = 'InDevelopment'))
+      (
+        default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
+        or (
+          exists (<default::Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller'} intersect (<default::User>(global default::currentUserId)).roles)
+          and (
+            .isMember
+            and <str>.status = 'InDevelopment'
+          )
+        )
+      )
     );
   }
   
@@ -174,23 +248,60 @@ module default {
       }
     );
 
-    access policy CanReadGeneratedFromAppPoliciesForInternshipEngagement
+    access policy CanSelectGeneratedFromAppPoliciesForInternshipEngagement
     allow select using (
-      not exists default::currentUser
-        or exists (<default::Role>{'Administrator', 'Controller', 'ExperienceOperations', 'FieldOperationsDirector', 'FinancialAnalyst', 'Fundraising', 'LeadFinancialAnalyst', 'Leadership', 'Marketing', 'ProjectManager', 'RegionalDirector', 'StaffMember'} intersect default::currentUser.roles)
-        or (exists (<default::Role>{'Consultant', 'ConsultantManager', 'FieldPartner', 'Intern', 'Mentor', 'Translator'} intersect default::currentUser.roles) and .isMember)
+      (
+        exists (<default::Role>{'Administrator', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller', 'Marketing', 'Fundraising', 'ExperienceOperations', 'Leadership', 'StaffMember'} intersect (<default::User>(global default::currentUserId)).roles)
+        or (
+          exists (<default::Role>{'Consultant', 'ConsultantManager'} intersect (<default::User>(global default::currentUserId)).roles)
+          and .isMember
+        )
+        or (
+          default::Role.FieldPartner in (<default::User>(global default::currentUserId)).roles
+          and .isMember
+        )
+        or (
+          default::Role.Intern in (<default::User>(global default::currentUserId)).roles
+          and .isMember
+        )
+        or (
+          default::Role.Mentor in (<default::User>(global default::currentUserId)).roles
+          and .isMember
+        )
+        or (
+          exists (<default::Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect (<default::User>(global default::currentUserId)).roles)
+          and .isMember
+        )
+        or (
+          default::Role.Translator in (<default::User>(global default::currentUserId)).roles
+          and .isMember
+        )
+      )
     );
-    access policy CanCreateGeneratedFromAppPoliciesForInternshipEngagement
+
+    access policy CanInsertGeneratedFromAppPoliciesForInternshipEngagement
     allow insert using (
-      not exists default::currentUser
-        or default::Role.Administrator in default::currentUser.roles
-        or (exists (<default::Role>{'Controller', 'FieldOperationsDirector', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'ProjectManager', 'RegionalDirector'} intersect default::currentUser.roles) and .isMember)
+      (
+        default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
+        or (
+          exists (<default::Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller'} intersect (<default::User>(global default::currentUserId)).roles)
+          and .isMember
+        )
+      )
     );
+
     access policy CanDeleteGeneratedFromAppPoliciesForInternshipEngagement
     allow delete using (
-      not exists default::currentUser
-        or default::Role.Administrator in default::currentUser.roles
-        or (exists (<default::Role>{'Controller', 'FieldOperationsDirector', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'ProjectManager', 'RegionalDirector'} intersect default::currentUser.roles) and (.isMember and <str>.status = 'InDevelopment'))
+      (
+        default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
+        or (
+          exists (<default::Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller'} intersect (<default::User>(global default::currentUserId)).roles)
+          and (
+            .isMember
+            and <str>.status = 'InDevelopment'
+          )
+        )
+      )
     );
   }
 }

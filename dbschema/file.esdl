@@ -5,20 +5,19 @@ module default {
       default := 0;
     };
 
-    access policy CanReadGeneratedFromAppPoliciesForDirectory
+    access policy CanSelectGeneratedFromAppPoliciesForDirectory
     allow select using (
-      not exists default::currentUser
-        or exists (<default::Role>{'Administrator', 'Controller', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Leadership'} intersect default::currentUser.roles)
+      exists (<default::Role>{'Administrator', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller', 'Leadership'} intersect (<default::User>(global default::currentUserId)).roles)
     );
-    access policy CanCreateGeneratedFromAppPoliciesForDirectory
+
+    access policy CanInsertGeneratedFromAppPoliciesForDirectory
     allow insert using (
-      not exists default::currentUser
-        or default::Role.Administrator in default::currentUser.roles
+      default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
     );
+
     access policy CanDeleteGeneratedFromAppPoliciesForDirectory
     allow delete using (
-      not exists default::currentUser
-        or default::Role.Administrator in default::currentUser.roles
+      default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
     );
   }
   
@@ -35,20 +34,19 @@ module File {
   type Version extending Node {
     required mimeType: str;
 
-    access policy CanReadGeneratedFromAppPoliciesForFileVersion
+    access policy CanSelectGeneratedFromAppPoliciesForFileVersion
     allow select using (
-      not exists default::currentUser
-        or exists (<default::Role>{'Administrator', 'Leadership'} intersect default::currentUser.roles)
+      exists (<default::Role>{'Administrator', 'Leadership'} intersect (<default::User>(global default::currentUserId)).roles)
     );
-    access policy CanCreateGeneratedFromAppPoliciesForFileVersion
+
+    access policy CanInsertGeneratedFromAppPoliciesForFileVersion
     allow insert using (
-      not exists default::currentUser
-        or default::Role.Administrator in default::currentUser.roles
+      default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
     );
+
     access policy CanDeleteGeneratedFromAppPoliciesForFileVersion
     allow delete using (
-      not exists default::currentUser
-        or default::Role.Administrator in default::currentUser.roles
+      default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
     );
   }
   
@@ -77,20 +75,19 @@ module File {
     }
 #     multi link children: Node;
 
-    access policy CanReadGeneratedFromAppPoliciesForFileNode
+    access policy CanSelectGeneratedFromAppPoliciesForFileNode
     allow select using (
-      not exists default::currentUser
-        or exists (<default::Role>{'Administrator', 'Leadership'} intersect default::currentUser.roles)
+      exists (<default::Role>{'Administrator', 'Leadership'} intersect (<default::User>(global default::currentUserId)).roles)
     );
-    access policy CanCreateGeneratedFromAppPoliciesForFileNode
+
+    access policy CanInsertGeneratedFromAppPoliciesForFileNode
     allow insert using (
-      not exists default::currentUser
-        or default::Role.Administrator in default::currentUser.roles
+      default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
     );
+
     access policy CanDeleteGeneratedFromAppPoliciesForFileNode
     allow delete using (
-      not exists default::currentUser
-        or default::Role.Administrator in default::currentUser.roles
+      default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
     );
   }
 }

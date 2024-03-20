@@ -31,23 +31,30 @@ module default {
       on target delete allow;
     }
 
-    access policy CanReadGeneratedFromAppPoliciesForUser
+    access policy CanSelectGeneratedFromAppPoliciesForUser
     allow select using (
-      not exists default::currentUser
-        or exists (<default::Role>{'Administrator', 'Consultant', 'ConsultantManager', 'Controller', 'ExperienceOperations', 'FieldOperationsDirector', 'FieldPartner', 'FinancialAnalyst', 'Fundraising', 'LeadFinancialAnalyst', 'Leadership', 'Marketing', 'ProjectManager', 'RegionalDirector', 'StaffMember'} intersect default::currentUser.roles)
-        or (exists (<default::Role>{'BetaTester', 'BibleTranslationLiaison', 'Liaison', 'RegionalCommunicationsCoordinator', 'Translator'} intersect default::currentUser.roles) and (.isOwner ?? false))
-        or (default::Role.Intern in default::currentUser.roles and (exists { "Stubbed .isMember for User/Unavailability" } or (.isOwner ?? false)))
-        or (default::Role.Mentor in default::currentUser.roles and (exists { "Stubbed .isMember for User/Unavailability" } or (.isOwner ?? false)))
+      (
+        exists (<default::Role>{'Administrator', 'Consultant', 'ConsultantManager', 'FieldPartner', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller', 'Marketing', 'Fundraising', 'ExperienceOperations', 'Leadership', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'StaffMember'} intersect (<default::User>(global default::currentUserId)).roles)
+        or (
+          default::Role.Intern in (<default::User>(global default::currentUserId)).roles
+          and exists { "Stubbed .isMember for User/Unavailability" }
+        )
+        or (
+          default::Role.Mentor in (<default::User>(global default::currentUserId)).roles
+          and exists { "Stubbed .isMember for User/Unavailability" }
+        )
+        or (.isOwner ?? false)
+      )
     );
-    access policy CanCreateGeneratedFromAppPoliciesForUser
+
+    access policy CanInsertGeneratedFromAppPoliciesForUser
     allow insert using (
-      not exists default::currentUser
-        or exists (<default::Role>{'Administrator', 'Consultant', 'ConsultantManager', 'Controller', 'FieldOperationsDirector', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'ProjectManager', 'RegionalDirector'} intersect default::currentUser.roles)
+      exists (<default::Role>{'Administrator', 'Consultant', 'ConsultantManager', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect (<default::User>(global default::currentUserId)).roles)
     );
+
     access policy CanDeleteGeneratedFromAppPoliciesForUser
     allow delete using (
-      not exists default::currentUser
-        or default::Role.Administrator in default::currentUser.roles
+      default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
     );
   }
   
@@ -63,20 +70,19 @@ module User {
     required major: str;
     required institution: str;
 
-    access policy CanReadGeneratedFromAppPoliciesForEducation
+    access policy CanSelectGeneratedFromAppPoliciesForEducation
     allow select using (
-      not exists default::currentUser
-        or exists (<default::Role>{'Administrator', 'ConsultantManager', 'Controller', 'ExperienceOperations', 'FieldOperationsDirector', 'FinancialAnalyst', 'Fundraising', 'LeadFinancialAnalyst', 'Leadership', 'Marketing', 'ProjectManager', 'RegionalDirector', 'StaffMember'} intersect default::currentUser.roles)
+      exists (<default::Role>{'Administrator', 'ConsultantManager', 'FieldOperationsDirector', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller', 'Marketing', 'Fundraising', 'ExperienceOperations', 'Leadership', 'ProjectManager', 'RegionalDirector', 'StaffMember'} intersect (<default::User>(global default::currentUserId)).roles)
     );
-    access policy CanCreateGeneratedFromAppPoliciesForEducation
+
+    access policy CanInsertGeneratedFromAppPoliciesForEducation
     allow insert using (
-      not exists default::currentUser
-        or exists (<default::Role>{'Administrator', 'FieldOperationsDirector', 'ProjectManager', 'RegionalDirector'} intersect default::currentUser.roles)
+      exists (<default::Role>{'Administrator', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect (<default::User>(global default::currentUserId)).roles)
     );
+
     access policy CanDeleteGeneratedFromAppPoliciesForEducation
     allow delete using (
-      not exists default::currentUser
-        or default::Role.Administrator in default::currentUser.roles
+      default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
     );
   }
   
@@ -84,21 +90,29 @@ module User {
     required description: str;
     required dates: range<cal::local_date>;
 
-    access policy CanReadGeneratedFromAppPoliciesForUnavailability
+    access policy CanSelectGeneratedFromAppPoliciesForUnavailability
     allow select using (
-      not exists default::currentUser
-        or exists (<default::Role>{'Administrator', 'Consultant', 'ConsultantManager', 'Controller', 'ExperienceOperations', 'FieldOperationsDirector', 'FieldPartner', 'FinancialAnalyst', 'Fundraising', 'LeadFinancialAnalyst', 'Leadership', 'Marketing', 'ProjectManager', 'RegionalDirector', 'StaffMember'} intersect default::currentUser.roles)
-        or (exists (<default::Role>{'Intern', 'Mentor'} intersect default::currentUser.roles) and exists { "Stubbed .isMember for User/Unavailability" })
+      (
+        exists (<default::Role>{'Administrator', 'Consultant', 'ConsultantManager', 'FieldPartner', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller', 'Marketing', 'Fundraising', 'ExperienceOperations', 'Leadership', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'StaffMember'} intersect (<default::User>(global default::currentUserId)).roles)
+        or (
+          default::Role.Intern in (<default::User>(global default::currentUserId)).roles
+          and exists { "Stubbed .isMember for User/Unavailability" }
+        )
+        or (
+          default::Role.Mentor in (<default::User>(global default::currentUserId)).roles
+          and exists { "Stubbed .isMember for User/Unavailability" }
+        )
+      )
     );
-    access policy CanCreateGeneratedFromAppPoliciesForUnavailability
+
+    access policy CanInsertGeneratedFromAppPoliciesForUnavailability
     allow insert using (
-      not exists default::currentUser
-        or exists (<default::Role>{'Administrator', 'FieldOperationsDirector', 'ProjectManager', 'RegionalDirector'} intersect default::currentUser.roles)
+      exists (<default::Role>{'Administrator', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect (<default::User>(global default::currentUserId)).roles)
     );
+
     access policy CanDeleteGeneratedFromAppPoliciesForUnavailability
     allow delete using (
-      not exists default::currentUser
-        or default::Role.Administrator in default::currentUser.roles
+      default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
     );
   }
   
