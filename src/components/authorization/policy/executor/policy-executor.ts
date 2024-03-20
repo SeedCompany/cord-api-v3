@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { CachedByArg } from '@seedcompany/common';
 import { identity, intersection } from 'lodash';
 import { EnhancedResource, Session } from '~/common';
@@ -8,6 +8,7 @@ import { RoleCondition } from '../../policies/conditions/role.condition';
 import { Permission } from '../builder/perm-granter';
 import { all, any, CalculatedCondition, OrConditions } from '../conditions';
 import { PolicyFactory } from '../policy.factory';
+import { ConditionOptimizer } from './condition-optimizer';
 
 export interface ResolveParams {
   action: string;
@@ -24,7 +25,11 @@ export interface FilterOptions {
 
 @Injectable()
 export class PolicyExecutor {
-  constructor(private readonly policyFactory: PolicyFactory) {}
+  constructor(
+    private readonly policyFactory: PolicyFactory,
+    @Inject(forwardRef(() => ConditionOptimizer))
+    private readonly conditionOptimizer: ConditionOptimizer & {},
+  ) {}
 
   resolve({
     action,
@@ -75,7 +80,12 @@ export class PolicyExecutor {
     if (conditions.length === 0) {
       return false;
     }
-    return OrConditions.fromAll(conditions, { optimize: optimizeConditions });
+    const merged = OrConditions.fromAll(conditions, {
+      optimize: optimizeConditions,
+    });
+    return optimizeConditions
+      ? this.conditionOptimizer.optimize(merged)
+      : merged;
   }
 
   forEdgeDB({
@@ -121,7 +131,7 @@ export class PolicyExecutor {
     if (conditions.length === 0) {
       return false;
     }
-    return any(...conditions);
+    return this.conditionOptimizer.optimize(any(...conditions));
   }
 
   cypherFilter({
