@@ -207,11 +207,10 @@ export const RepoFor = <
     }
     private readonly readManyQuery = e.params(
       { ids: e.array(e.uuid) },
-      ({ ids }) =>
-        e.select(dbType, (obj: any) => ({
-          ...this.hydrate(obj),
-          filter: e.op(obj.id, 'in', e.array_unpack(ids)),
-        })),
+      ({ ids }) => {
+        const entities = e.cast(dbType, e.array_unpack(ids));
+        return e.select(entities, this.hydrate as any);
+      },
     );
 
     async list(input: PaginationInput) {
