@@ -1,11 +1,12 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { cleanJoin, mapEntries } from '@seedcompany/common';
+import { cleanJoin, groupBy, mapEntries } from '@seedcompany/common';
 import { stripIndent } from 'common-tags';
 import addIndent from 'indent-string';
 import { startCase } from 'lodash';
 import { EnhancedResource } from '~/common';
 import { ResourceAction } from './actions';
 import { Permission } from './builder/perm-granter';
+import { Condition } from './conditions';
 import { PolicyExecutor } from './executor/policy-executor';
 
 @Injectable()
@@ -28,8 +29,12 @@ export class EdgeDBAccessPolicyGenerator {
       this.executor.forEdgeDB({ resource, action }),
     ]);
 
-    const policies = [...actionPerms].map(([action, perm]) => {
-      return this.makeSdlForAction(resource, action, perm);
+    const policies = groupBy(actionPerms, ([_, perm]) =>
+      Condition.id(perm),
+    ).map((group) => {
+      const actions = group.map(([action]) => action);
+      const perm = group[0][1];
+      return this.makeSdlForAction(resource, actions, perm);
     });
 
     return cleanJoin('\n\n', policies);
@@ -37,7 +42,7 @@ export class EdgeDBAccessPolicyGenerator {
 
   makeSdlForAction(
     resource: EnhancedResource<any>,
-    stmtType: string,
+    stmtTypes: string[],
     perm: Permission,
   ) {
     if (perm === false) {
@@ -45,9 +50,9 @@ export class EdgeDBAccessPolicyGenerator {
       return null;
     }
 
-    const name = `Can${startCase(stmtType)}GeneratedFromAppPoliciesFor${
-      resource.name
-    }`;
+    const name = `Can${stmtTypes
+      .map((action) => startCase(action))
+      .join('')}GeneratedFromAppPoliciesFor${resource.name}`;
 
     const withAliases =
       typeof perm === 'boolean'
@@ -76,7 +81,8 @@ ${addIndent(conditionEql, 6, { indent: '  ' })}
       perm === true
         ? ''
         : ` using (\n${addIndent(usingBodyEql, 1, { indent: '  ' })}\n)`;
-    const sdl = `access policy ${name}\nallow ${stmtType}${usingEql};`;
+    const actions = stmtTypes.join(', ');
+    const sdl = `access policy ${name}\nallow ${actions}${usingEql};`;
     return sdl;
   }
 }
