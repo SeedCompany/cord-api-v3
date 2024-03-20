@@ -1,5 +1,5 @@
 module ProgressReport::ProductProgress {
-  type Step extending Mixin::Timestamped {
+  type Step extending Mixin::Timestamped, Project::ContextAware {
     required report: default::ProgressReport;
     required product: default::Product;
     required variant: Variant;

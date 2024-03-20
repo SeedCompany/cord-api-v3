@@ -94,7 +94,9 @@ export type UnsecuredProductProgress = Merge<
 export class StepProgress {
   static readonly Props = keysOf<StepProgress>();
   static readonly SecuredProps = keysOf<SecuredProps<StepProgress>>();
-  static readonly Parent = 'dynamic'; // [Product, ProgressReport]
+  static readonly Parent = import('../../progress-report/dto').then(
+    (m) => m.ProgressReport, // technically ProgressReport & Product
+  );
   static readonly Variants = ProgressReportVariantProgress.Variants;
   static readonly ConfirmThisClassPassesSensitivityToPolicies = true;
 
