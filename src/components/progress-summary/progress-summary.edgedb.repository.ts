@@ -61,7 +61,7 @@ export class ProgressSummaryEdgeDBRepository
   ) {
     const reportEntity = e.cast(e.ProgressReport, e.uuid(report.id));
 
-    const preExists = e.select(Summary, (summary) => ({
+    const preExists = e.select(Summary, () => ({
       filter_single: { report: reportEntity, period: Period[period] },
     }));
     const created = e.insert(Summary, {
