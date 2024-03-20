@@ -48,9 +48,10 @@ export class EdgeDBAccessPolicyGenerator {
         ? String(perm)
         : perm.asEdgeQLCondition({ resource });
 
-    const usingEql = ` using (\n${addIndent(usingBodyEql, 1, {
-      indent: '  ',
-    })}\n)`;
+    const usingEql =
+      perm === true
+        ? ''
+        : ` using (\n${addIndent(usingBodyEql, 1, { indent: '  ' })}\n)`;
     const sdl = `access policy ${name}\nallow ${stmtType}${usingEql};`;
     return sdl;
   }
