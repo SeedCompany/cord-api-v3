@@ -21,7 +21,7 @@ export class CrudeAstParser {
         parentStart,
       );
       const innerAbsOffset = inner
-        ? Position.within(inner, parentText).shift(parentStart)
+        ? Position.within(inner, outer).shift(outerAbsOffset)
         : null;
 
       const rawChild = SchemaNode.from({
