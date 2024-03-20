@@ -55,14 +55,10 @@ module default {
     );
 
     access policy CanInsertGeneratedFromAppPoliciesForProgressReport
-    allow insert using (
-      true
-    );
+    allow insert;
 
     access policy CanDeleteGeneratedFromAppPoliciesForProgressReport
-    allow delete using (
-      true
-    );
+    allow delete;
   }
 }
 

@@ -29,9 +29,7 @@ module default {
     );
 
     access policy CanSelectGeneratedFromAppPoliciesForOtherProduct
-    allow select using (
-      true
-    );
+    allow select;
 
     access policy CanInsertGeneratedFromAppPoliciesForOtherProduct
     allow insert using (
@@ -59,9 +57,7 @@ module default {
     totalVerseEquivalents: float32;
 
     access policy CanSelectGeneratedFromAppPoliciesForDirectScriptureProduct
-    allow select using (
-      true
-    );
+    allow select;
 
     access policy CanInsertGeneratedFromAppPoliciesForDirectScriptureProduct
     allow insert using (
@@ -103,9 +99,7 @@ module default {
     totalVerseEquivalents: float32;
 
     access policy CanSelectGeneratedFromAppPoliciesForDerivativeScriptureProduct
-    allow select using (
-      true
-    );
+    allow select;
 
     access policy CanInsertGeneratedFromAppPoliciesForDerivativeScriptureProduct
     allow insert using (

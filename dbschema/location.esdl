@@ -15,9 +15,7 @@ module default {
     mapImage: File;
 
     access policy CanSelectGeneratedFromAppPoliciesForLocation
-    allow select using (
-      true
-    );
+    allow select;
 
     access policy CanInsertGeneratedFromAppPoliciesForLocation
     allow insert using (

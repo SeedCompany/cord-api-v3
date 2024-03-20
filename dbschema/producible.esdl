@@ -28,9 +28,7 @@ module default {
       );
 
     access policy CanSelectGeneratedFromAppPoliciesForProducible
-    allow select using (
-      true
-    );
+    allow select;
 
     access policy CanInsertGeneratedFromAppPoliciesForProducible
     allow insert using (
@@ -45,9 +43,7 @@ module default {
   
   type EthnoArt extending Producible {
     access policy CanSelectGeneratedFromAppPoliciesForEthnoArt
-    allow select using (
-      true
-    );
+    allow select;
 
     access policy CanInsertGeneratedFromAppPoliciesForEthnoArt
     allow insert using (
@@ -61,9 +57,7 @@ module default {
   };
   type Film extending Producible {
     access policy CanSelectGeneratedFromAppPoliciesForFilm
-    allow select using (
-      true
-    );
+    allow select;
 
     access policy CanInsertGeneratedFromAppPoliciesForFilm
     allow insert using (
@@ -77,9 +71,7 @@ module default {
   };
   type Story extending Producible {
     access policy CanSelectGeneratedFromAppPoliciesForStory
-    allow select using (
-      true
-    );
+    allow select;
 
     access policy CanInsertGeneratedFromAppPoliciesForStory
     allow insert using (

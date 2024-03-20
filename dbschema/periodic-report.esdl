@@ -47,14 +47,10 @@ module default {
     );
 
     access policy CanInsertGeneratedFromAppPoliciesForPeriodicReport
-    allow insert using (
-      true
-    );
+    allow insert;
 
     access policy CanDeleteGeneratedFromAppPoliciesForPeriodicReport
-    allow delete using (
-      true
-    );
+    allow delete;
   }
   
   type FinancialReport extending PeriodicReport, Project::Child {
@@ -98,14 +94,10 @@ module default {
     );
 
     access policy CanInsertGeneratedFromAppPoliciesForFinancialReport
-    allow insert using (
-      true
-    );
+    allow insert;
 
     access policy CanDeleteGeneratedFromAppPoliciesForFinancialReport
-    allow delete using (
-      true
-    );
+    allow delete;
   }
   
   type NarrativeReport extending PeriodicReport, Project::Child {
@@ -149,13 +141,9 @@ module default {
     );
 
     access policy CanInsertGeneratedFromAppPoliciesForNarrativeReport
-    allow insert using (
-      true
-    );
+    allow insert;
 
     access policy CanDeleteGeneratedFromAppPoliciesForNarrativeReport
-    allow delete using (
-      true
-    );
+    allow delete;
   }
 }
