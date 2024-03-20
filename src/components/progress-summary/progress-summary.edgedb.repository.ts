@@ -1,10 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { mapEntries } from '@seedcompany/common';
-import { $ } from 'edgedb';
 import { ID, PublicOf } from '~/common';
 import { CommonRepository, e } from '~/core/edgedb';
-import { $expr_Cast } from '~/core/edgedb/generated-client/cast';
-import { $ProgressReport } from '~/core/edgedb/generated-client/modules/default';
 import { ProgressReport } from '../progress-report/dto';
 import { ProgressSummary, SummaryPeriod } from './dto';
 import { ProgressSummaryRepository } from './progress-summary.repository';
@@ -23,10 +20,7 @@ export class ProgressSummaryEdgeDBRepository
   private readonly readManyQuery = e.params(
     { ids: e.array(e.uuid) },
     ({ ids }) => {
-      const reports = e.cast(
-        e.ProgressReport,
-        e.array_unpack(ids),
-      ) as any as $expr_Cast<$ProgressReport, $.Cardinality.Many>;
+      const reports = e.cast(e.ProgressReport, e.array_unpack(ids));
 
       return e.select(reports, (report) => {
         const scriptureProducts = e.op(
