@@ -2,6 +2,7 @@ import { Field, ID as IDType, InputType, ObjectType } from '@nestjs/graphql';
 import { Transform, Type } from 'class-transformer';
 import { Matches, ValidateNested } from 'class-validator';
 import { uniq } from 'lodash';
+import { LinkTo } from '~/core';
 import {
   CalendarDate,
   DateField,
@@ -10,9 +11,6 @@ import {
   IsId,
   NameField,
 } from '../../../common';
-import { Location } from '../../../components/location';
-import { FieldRegion } from '../../field-region';
-import type { Language } from '../../language';
 import { FinancialReportingType } from '../../partnership/dto/financial-reporting-type.enum';
 import { PartnerType } from './partner-type.enum';
 import { Partner } from './partner.dto';
@@ -49,21 +47,21 @@ export abstract class CreatePartner {
   readonly address?: string;
 
   @IdField({ nullable: true })
-  readonly languageOfWiderCommunicationId?: ID<Language> | null;
+  readonly languageOfWiderCommunicationId?: LinkTo<'Language'> | null;
 
   @Field(() => [IDType], { nullable: true })
   @IsId({ each: true })
   @Transform(({ value }) => uniq(value))
-  readonly countries?: ReadonlyArray<ID<Location>> = [];
+  readonly countries?: ReadonlyArray<LinkTo<'Location'>> = [];
 
   @Field(() => [IDType], { nullable: true })
   @IsId({ each: true })
   @Transform(({ value }) => uniq(value))
-  readonly fieldRegions?: ReadonlyArray<ID<FieldRegion>> = [];
+  readonly fieldRegions?: ReadonlyArray<LinkTo<'FieldRegion'>> = [];
 
   @Field(() => [IDType], { name: 'languagesOfConsulting', nullable: true })
   @Transform(({ value }) => uniq(value))
-  readonly languagesOfConsulting?: ReadonlyArray<ID<Language>> = [];
+  readonly languagesOfConsulting?: ReadonlyArray<LinkTo<'Language'>> = [];
 
   @DateField({ nullable: true })
   readonly startDate?: CalendarDate;

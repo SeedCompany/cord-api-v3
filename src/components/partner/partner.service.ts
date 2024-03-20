@@ -100,15 +100,15 @@ export class PartnerService {
     });
 
     const result = await this.repo.readOne(id, session);
-    return await this.secure(result, session);
+    return this.secure(result, session);
   }
 
   async readMany(ids: readonly ID[], session: Session) {
     const partners = await this.repo.readMany(ids, session);
-    return await Promise.all(partners.map((dto) => this.secure(dto, session)));
+    return partners.map((dto) => this.secure(dto, session));
   }
 
-  private async secure(dto: UnsecuredDto<Partner>, session: Session) {
+  private secure(dto: UnsecuredDto<Partner>, session: Session) {
     return this.privileges.for(session, Partner).secure(dto);
   }
 
