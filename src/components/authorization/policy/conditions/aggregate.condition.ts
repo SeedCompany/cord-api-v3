@@ -1,5 +1,6 @@
 import { groupBy, isNotNil, Nil } from '@seedcompany/common';
 import { Query } from 'cypher-query-builder';
+import addIndent from 'indent-string';
 import { Class, Constructor } from 'type-fest';
 import { inspect, InspectOptionsStylized } from 'util';
 import { ResourceShape } from '~/common';
@@ -63,11 +64,11 @@ export abstract class AggregateConditions<
     if (this.conditions.length === 0) {
       return 'true';
     }
-    const separator = this instanceof AndConditions ? ' and ' : ' or ';
+    const separator = this instanceof AndConditions ? '\nand ' : '\nor ';
     const inner = this.conditions
       .map((c) => c.asEdgeQLCondition(params))
       .join(separator);
-    return `(${inner})`;
+    return `(${addIndent('\n' + inner, 2)}\n)`;
   }
 
   [inspect.custom](_depth: number, _options: InspectOptionsStylized) {

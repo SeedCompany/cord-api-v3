@@ -1,5 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { mapEntries } from '@seedcompany/common';
+import addIndent from 'indent-string';
 import { startCase } from 'lodash';
 import { EnhancedResource } from '~/common';
 import { ResourceAction } from './actions';
@@ -47,7 +48,9 @@ export class EdgeDBAccessPolicyGenerator {
         ? String(perm)
         : perm.asEdgeQLCondition({ resource });
 
-    const usingEql = ` using (\n  ${usingBodyEql}\n)`;
+    const usingEql = ` using (\n${addIndent(usingBodyEql, 1, {
+      indent: '  ',
+    })}\n)`;
     const sdl = `access policy ${name}\nallow ${stmtType}${usingEql};`;
     return sdl;
   }
