@@ -85,6 +85,23 @@ module default {
     }
     
     index on ((.name, .ownSensitivity, .leastOfThese, .isSignLanguage, .isDialect));
+
+    access policy CanReadGeneratedFromAppPoliciesForLanguage
+    allow select using (
+      not exists default::currentUser
+        or exists (<default::Role>{'Administrator', 'ConsultantManager', 'Controller', 'ExperienceOperations', 'FieldOperationsDirector', 'FinancialAnalyst', 'Fundraising', 'LeadFinancialAnalyst', 'Leadership', 'Marketing', 'ProjectManager', 'RegionalDirector', 'StaffMember'} intersect default::currentUser.roles)
+        or (exists (<default::Role>{'Consultant', 'FieldPartner', 'Intern', 'Mentor', 'Translator'} intersect default::currentUser.roles) and .isMember)
+    );
+    access policy CanCreateGeneratedFromAppPoliciesForLanguage
+    allow insert using (
+      not exists default::currentUser
+        or default::Role.Administrator in default::currentUser.roles
+    );
+    access policy CanDeleteGeneratedFromAppPoliciesForLanguage
+    allow delete using (
+      not exists default::currentUser
+        or default::Role.Administrator in default::currentUser.roles
+    );
   }
   
   scalar type population extending int32 {
@@ -107,6 +124,26 @@ module Ethnologue {
     };
     name: str;
     population: default::population;
+
+    access policy CanReadGeneratedFromAppPoliciesForEthnologueLanguage
+    allow select using (
+      not exists default::currentUser
+        or exists (<default::Role>{'Administrator', 'ExperienceOperations', 'FieldOperationsDirector', 'Leadership', 'ProjectManager', 'RegionalDirector'} intersect default::currentUser.roles)
+        or (exists (<default::Role>{'Consultant', 'FieldPartner', 'Translator'} intersect default::currentUser.roles) and .isMember)
+        or (default::Role.ConsultantManager in default::currentUser.roles and (.sensitivity <= default::Sensitivity.Medium or .isMember))
+        or (default::Role.Fundraising in default::currentUser.roles and (.isMember or .sensitivity <= default::Sensitivity.Medium))
+        or (default::Role.Marketing in default::currentUser.roles and .sensitivity <= default::Sensitivity.Low)
+    );
+    access policy CanCreateGeneratedFromAppPoliciesForEthnologueLanguage
+    allow insert using (
+      not exists default::currentUser
+        or default::Role.Administrator in default::currentUser.roles
+    );
+    access policy CanDeleteGeneratedFromAppPoliciesForEthnologueLanguage
+    allow delete using (
+      not exists default::currentUser
+        or default::Role.Administrator in default::currentUser.roles
+    );
   }
   
   scalar type code extending str {

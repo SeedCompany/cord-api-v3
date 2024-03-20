@@ -38,6 +38,25 @@ module default {
     };
     
     description: RichText;
+
+    access policy CanReadGeneratedFromAppPoliciesForEngagement
+    allow select using (
+      not exists default::currentUser
+        or exists (<default::Role>{'Administrator', 'Controller', 'ExperienceOperations', 'FieldOperationsDirector', 'FinancialAnalyst', 'Fundraising', 'LeadFinancialAnalyst', 'Leadership', 'Marketing', 'ProjectManager', 'RegionalDirector', 'StaffMember'} intersect default::currentUser.roles)
+        or (exists (<default::Role>{'Consultant', 'ConsultantManager', 'FieldPartner', 'Intern', 'Mentor', 'Translator'} intersect default::currentUser.roles) and .isMember)
+    );
+    access policy CanCreateGeneratedFromAppPoliciesForEngagement
+    allow insert using (
+      not exists default::currentUser
+        or default::Role.Administrator in default::currentUser.roles
+        or (exists (<default::Role>{'Controller', 'FieldOperationsDirector', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'ProjectManager', 'RegionalDirector'} intersect default::currentUser.roles) and .isMember)
+    );
+    access policy CanDeleteGeneratedFromAppPoliciesForEngagement
+    allow delete using (
+      not exists default::currentUser
+        or default::Role.Administrator in default::currentUser.roles
+        or (exists (<default::Role>{'Controller', 'FieldOperationsDirector', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'ProjectManager', 'RegionalDirector'} intersect default::currentUser.roles) and (.isMember and <str>.status = 'InDevelopment'))
+    );
   }
   
   type LanguageEngagement extending Engagement {
@@ -110,6 +129,25 @@ module default {
       update __old__.language.projectContext
       set { projects -= __old__.project }
     );
+
+    access policy CanReadGeneratedFromAppPoliciesForLanguageEngagement
+    allow select using (
+      not exists default::currentUser
+        or exists (<default::Role>{'Administrator', 'ConsultantManager', 'Controller', 'ExperienceOperations', 'FieldOperationsDirector', 'FinancialAnalyst', 'Fundraising', 'LeadFinancialAnalyst', 'Leadership', 'Marketing', 'ProjectManager', 'RegionalDirector', 'StaffMember'} intersect default::currentUser.roles)
+        or (exists (<default::Role>{'Consultant', 'FieldPartner', 'Intern', 'Mentor', 'Translator'} intersect default::currentUser.roles) and .isMember)
+    );
+    access policy CanCreateGeneratedFromAppPoliciesForLanguageEngagement
+    allow insert using (
+      not exists default::currentUser
+        or default::Role.Administrator in default::currentUser.roles
+        or (exists (<default::Role>{'Controller', 'FieldOperationsDirector', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'ProjectManager', 'RegionalDirector'} intersect default::currentUser.roles) and .isMember)
+    );
+    access policy CanDeleteGeneratedFromAppPoliciesForLanguageEngagement
+    allow delete using (
+      not exists default::currentUser
+        or default::Role.Administrator in default::currentUser.roles
+        or (exists (<default::Role>{'Controller', 'FieldOperationsDirector', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'ProjectManager', 'RegionalDirector'} intersect default::currentUser.roles) and (.isMember and <str>.status = 'InDevelopment'))
+    );
   }
   
   type InternshipEngagement extending Engagement {
@@ -134,6 +172,25 @@ module default {
         project := __new__.project,
         projectContext := __new__.projectContext,
       }
+    );
+
+    access policy CanReadGeneratedFromAppPoliciesForInternshipEngagement
+    allow select using (
+      not exists default::currentUser
+        or exists (<default::Role>{'Administrator', 'Controller', 'ExperienceOperations', 'FieldOperationsDirector', 'FinancialAnalyst', 'Fundraising', 'LeadFinancialAnalyst', 'Leadership', 'Marketing', 'ProjectManager', 'RegionalDirector', 'StaffMember'} intersect default::currentUser.roles)
+        or (exists (<default::Role>{'Consultant', 'ConsultantManager', 'FieldPartner', 'Intern', 'Mentor', 'Translator'} intersect default::currentUser.roles) and .isMember)
+    );
+    access policy CanCreateGeneratedFromAppPoliciesForInternshipEngagement
+    allow insert using (
+      not exists default::currentUser
+        or default::Role.Administrator in default::currentUser.roles
+        or (exists (<default::Role>{'Controller', 'FieldOperationsDirector', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'ProjectManager', 'RegionalDirector'} intersect default::currentUser.roles) and .isMember)
+    );
+    access policy CanDeleteGeneratedFromAppPoliciesForInternshipEngagement
+    allow delete using (
+      not exists default::currentUser
+        or default::Role.Administrator in default::currentUser.roles
+        or (exists (<default::Role>{'Controller', 'FieldOperationsDirector', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'ProjectManager', 'RegionalDirector'} intersect default::currentUser.roles) and (.isMember and <str>.status = 'InDevelopment'))
     );
   }
 }

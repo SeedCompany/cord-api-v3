@@ -26,9 +26,69 @@ module default {
         filter .produces = __new__ and not exists .scriptureOverride
         set { scripture := __new__.scripture }
       );
+
+    access policy CanReadGeneratedFromAppPoliciesForProducible
+    allow select using (
+      not exists default::currentUser
+    );
+    access policy CanCreateGeneratedFromAppPoliciesForProducible
+    allow insert using (
+      not exists default::currentUser
+        or exists (<default::Role>{'Administrator', 'FieldOperationsDirector', 'ProjectManager', 'RegionalDirector'} intersect default::currentUser.roles)
+    );
+    access policy CanDeleteGeneratedFromAppPoliciesForProducible
+    allow delete using (
+      not exists default::currentUser
+        or default::Role.Administrator in default::currentUser.roles
+    );
   }
   
-  type EthnoArt extending Producible;
-  type Film extending Producible;
-  type Story extending Producible;
+  type EthnoArt extending Producible {
+    access policy CanReadGeneratedFromAppPoliciesForEthnoArt
+    allow select using (
+      not exists default::currentUser
+    );
+    access policy CanCreateGeneratedFromAppPoliciesForEthnoArt
+    allow insert using (
+      not exists default::currentUser
+        or exists (<default::Role>{'Administrator', 'FieldOperationsDirector', 'ProjectManager', 'RegionalDirector'} intersect default::currentUser.roles)
+    );
+    access policy CanDeleteGeneratedFromAppPoliciesForEthnoArt
+    allow delete using (
+      not exists default::currentUser
+        or default::Role.Administrator in default::currentUser.roles
+    );
+  };
+  type Film extending Producible {
+    access policy CanReadGeneratedFromAppPoliciesForFilm
+    allow select using (
+      not exists default::currentUser
+    );
+    access policy CanCreateGeneratedFromAppPoliciesForFilm
+    allow insert using (
+      not exists default::currentUser
+        or exists (<default::Role>{'Administrator', 'FieldOperationsDirector', 'ProjectManager', 'RegionalDirector'} intersect default::currentUser.roles)
+    );
+    access policy CanDeleteGeneratedFromAppPoliciesForFilm
+    allow delete using (
+      not exists default::currentUser
+        or default::Role.Administrator in default::currentUser.roles
+    );
+  };
+  type Story extending Producible {
+    access policy CanReadGeneratedFromAppPoliciesForStory
+    allow select using (
+      not exists default::currentUser
+    );
+    access policy CanCreateGeneratedFromAppPoliciesForStory
+    allow insert using (
+      not exists default::currentUser
+        or exists (<default::Role>{'Administrator', 'FieldOperationsDirector', 'ProjectManager', 'RegionalDirector'} intersect default::currentUser.roles)
+    );
+    access policy CanDeleteGeneratedFromAppPoliciesForStory
+    allow delete using (
+      not exists default::currentUser
+        or default::Role.Administrator in default::currentUser.roles
+    );
+  };
 }

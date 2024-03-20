@@ -114,6 +114,23 @@ module default {
         projectContext := __new__.projectContext,
       }
     );
+
+    access policy CanReadGeneratedFromAppPoliciesForProject
+    allow select using (
+      not exists default::currentUser
+        or exists (<default::Role>{'Administrator', 'ConsultantManager', 'Controller', 'ExperienceOperations', 'FieldOperationsDirector', 'FinancialAnalyst', 'Fundraising', 'LeadFinancialAnalyst', 'Leadership', 'Marketing', 'ProjectManager', 'RegionalDirector', 'StaffMember'} intersect default::currentUser.roles)
+        or (exists (<default::Role>{'Consultant', 'FieldPartner', 'Intern', 'Mentor', 'Translator'} intersect default::currentUser.roles) and .isMember)
+    );
+    access policy CanCreateGeneratedFromAppPoliciesForProject
+    allow insert using (
+      not exists default::currentUser
+        or exists (<default::Role>{'Administrator', 'FieldOperationsDirector', 'ProjectManager', 'RegionalDirector'} intersect default::currentUser.roles)
+    );
+    access policy CanDeleteGeneratedFromAppPoliciesForProject
+    allow delete using (
+      not exists default::currentUser
+        or default::Role.Administrator in default::currentUser.roles
+    );
   }
   
   type TranslationProject extending Project {
@@ -127,10 +144,44 @@ module default {
           (and required to be) the highest sensitivity Language engaged"
       )
     );
+
+    access policy CanReadGeneratedFromAppPoliciesForTranslationProject
+    allow select using (
+      not exists default::currentUser
+        or exists (<default::Role>{'Administrator', 'ConsultantManager', 'Controller', 'ExperienceOperations', 'FieldOperationsDirector', 'FinancialAnalyst', 'Fundraising', 'LeadFinancialAnalyst', 'Leadership', 'Marketing', 'ProjectManager', 'RegionalDirector', 'StaffMember'} intersect default::currentUser.roles)
+        or (exists (<default::Role>{'Consultant', 'FieldPartner', 'Intern', 'Mentor', 'Translator'} intersect default::currentUser.roles) and .isMember)
+    );
+    access policy CanCreateGeneratedFromAppPoliciesForTranslationProject
+    allow insert using (
+      not exists default::currentUser
+        or exists (<default::Role>{'Administrator', 'FieldOperationsDirector', 'ProjectManager', 'RegionalDirector'} intersect default::currentUser.roles)
+    );
+    access policy CanDeleteGeneratedFromAppPoliciesForTranslationProject
+    allow delete using (
+      not exists default::currentUser
+        or default::Role.Administrator in default::currentUser.roles
+    );
   }
   
   type InternshipProject extending Project {
     multi link engagements := .<project[is InternshipEngagement];
+
+    access policy CanReadGeneratedFromAppPoliciesForInternshipProject
+    allow select using (
+      not exists default::currentUser
+        or exists (<default::Role>{'Administrator', 'ConsultantManager', 'Controller', 'ExperienceOperations', 'FieldOperationsDirector', 'FinancialAnalyst', 'Fundraising', 'LeadFinancialAnalyst', 'Leadership', 'Marketing', 'ProjectManager', 'RegionalDirector', 'StaffMember'} intersect default::currentUser.roles)
+        or (exists (<default::Role>{'Consultant', 'FieldPartner', 'Intern', 'Mentor', 'Translator'} intersect default::currentUser.roles) and .isMember)
+    );
+    access policy CanCreateGeneratedFromAppPoliciesForInternshipProject
+    allow insert using (
+      not exists default::currentUser
+        or exists (<default::Role>{'Administrator', 'FieldOperationsDirector', 'ProjectManager', 'RegionalDirector'} intersect default::currentUser.roles)
+    );
+    access policy CanDeleteGeneratedFromAppPoliciesForInternshipProject
+    allow delete using (
+      not exists default::currentUser
+        or default::Role.Administrator in default::currentUser.roles
+    );
   }
 }
  

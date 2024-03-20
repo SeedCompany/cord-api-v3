@@ -4,6 +4,22 @@ module default {
     required totalFiles: int32 {
       default := 0;
     };
+
+    access policy CanReadGeneratedFromAppPoliciesForDirectory
+    allow select using (
+      not exists default::currentUser
+        or exists (<default::Role>{'Administrator', 'Controller', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Leadership'} intersect default::currentUser.roles)
+    );
+    access policy CanCreateGeneratedFromAppPoliciesForDirectory
+    allow insert using (
+      not exists default::currentUser
+        or default::Role.Administrator in default::currentUser.roles
+    );
+    access policy CanDeleteGeneratedFromAppPoliciesForDirectory
+    allow delete using (
+      not exists default::currentUser
+        or default::Role.Administrator in default::currentUser.roles
+    );
   }
   
   # TODO how to front latest version info?
@@ -18,6 +34,22 @@ module default {
 module File {
   type Version extending Node {
     required mimeType: str;
+
+    access policy CanReadGeneratedFromAppPoliciesForFileVersion
+    allow select using (
+      not exists default::currentUser
+        or exists (<default::Role>{'Administrator', 'Leadership'} intersect default::currentUser.roles)
+    );
+    access policy CanCreateGeneratedFromAppPoliciesForFileVersion
+    allow insert using (
+      not exists default::currentUser
+        or default::Role.Administrator in default::currentUser.roles
+    );
+    access policy CanDeleteGeneratedFromAppPoliciesForFileVersion
+    allow delete using (
+      not exists default::currentUser
+        or default::Role.Administrator in default::currentUser.roles
+    );
   }
   
   abstract type Node extending default::Resource, Mixin::Named {
@@ -44,5 +76,21 @@ module File {
       depth: int16; # todo enforce
     }
 #     multi link children: Node;
+
+    access policy CanReadGeneratedFromAppPoliciesForFileNode
+    allow select using (
+      not exists default::currentUser
+        or exists (<default::Role>{'Administrator', 'Leadership'} intersect default::currentUser.roles)
+    );
+    access policy CanCreateGeneratedFromAppPoliciesForFileNode
+    allow insert using (
+      not exists default::currentUser
+        or default::Role.Administrator in default::currentUser.roles
+    );
+    access policy CanDeleteGeneratedFromAppPoliciesForFileNode
+    allow delete using (
+      not exists default::currentUser
+        or default::Role.Administrator in default::currentUser.roles
+    );
   }
 }

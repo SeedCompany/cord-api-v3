@@ -9,6 +9,22 @@ module default {
     
     altText: str;
     caption: str;
+
+    access policy CanReadGeneratedFromAppPoliciesForMedia
+    allow select using (
+      not exists default::currentUser
+        or exists (<default::Role>{'Administrator', 'Leadership'} intersect default::currentUser.roles)
+    );
+    access policy CanCreateGeneratedFromAppPoliciesForMedia
+    allow insert using (
+      not exists default::currentUser
+        or default::Role.Administrator in default::currentUser.roles
+    );
+    access policy CanDeleteGeneratedFromAppPoliciesForMedia
+    allow delete using (
+      not exists default::currentUser
+        or default::Role.Administrator in default::currentUser.roles
+    );
   }
 }
 

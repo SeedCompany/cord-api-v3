@@ -13,6 +13,21 @@ module default {
     defaultFieldRegion: FieldRegion;
     defaultMarketingRegion: Location;
     mapImage: File;
+
+    access policy CanReadGeneratedFromAppPoliciesForLocation
+    allow select using (
+      not exists default::currentUser
+    );
+    access policy CanCreateGeneratedFromAppPoliciesForLocation
+    allow insert using (
+      not exists default::currentUser
+        or default::Role.Administrator in default::currentUser.roles
+    );
+    access policy CanDeleteGeneratedFromAppPoliciesForLocation
+    allow delete using (
+      not exists default::currentUser
+        or default::Role.Administrator in default::currentUser.roles
+    );
   }
 }
   

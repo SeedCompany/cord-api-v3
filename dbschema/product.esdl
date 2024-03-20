@@ -27,6 +27,21 @@ module default {
         message := "`Product.scripture` should have a `Scripture::Collection` with verses or be null/empty-set"
       )
     );
+
+    access policy CanReadGeneratedFromAppPoliciesForOtherProduct
+    allow select using (
+      not exists default::currentUser
+    );
+    access policy CanCreateGeneratedFromAppPoliciesForOtherProduct
+    allow insert using (
+      not exists default::currentUser
+        or exists (<default::Role>{'Administrator', 'FieldOperationsDirector', 'ProjectManager', 'RegionalDirector'} intersect default::currentUser.roles)
+    );
+    access policy CanDeleteGeneratedFromAppPoliciesForOtherProduct
+    allow delete using (
+      not exists default::currentUser
+        or default::Role.Administrator in default::currentUser.roles
+    );
   }
   
   type DirectScriptureProduct extending Product {
@@ -42,6 +57,21 @@ module default {
     
     totalVerses: int16;
     totalVerseEquivalents: float32;
+
+    access policy CanReadGeneratedFromAppPoliciesForDirectScriptureProduct
+    allow select using (
+      not exists default::currentUser
+    );
+    access policy CanCreateGeneratedFromAppPoliciesForDirectScriptureProduct
+    allow insert using (
+      not exists default::currentUser
+        or exists (<default::Role>{'Administrator', 'FieldOperationsDirector', 'ProjectManager', 'RegionalDirector'} intersect default::currentUser.roles)
+    );
+    access policy CanDeleteGeneratedFromAppPoliciesForDirectScriptureProduct
+    allow delete using (
+      not exists default::currentUser
+        or default::Role.Administrator in default::currentUser.roles
+    );
   }
   
   type DerivativeScriptureProduct extending Product {
@@ -71,6 +101,21 @@ module default {
     
     totalVerses: int16;
     totalVerseEquivalents: float32;
+
+    access policy CanReadGeneratedFromAppPoliciesForDerivativeScriptureProduct
+    allow select using (
+      not exists default::currentUser
+    );
+    access policy CanCreateGeneratedFromAppPoliciesForDerivativeScriptureProduct
+    allow insert using (
+      not exists default::currentUser
+        or exists (<default::Role>{'Administrator', 'FieldOperationsDirector', 'ProjectManager', 'RegionalDirector'} intersect default::currentUser.roles)
+    );
+    access policy CanDeleteGeneratedFromAppPoliciesForDerivativeScriptureProduct
+    allow delete using (
+      not exists default::currentUser
+        or default::Role.Administrator in default::currentUser.roles
+    );
   }
   
   type OtherProduct extending Product {
