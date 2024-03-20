@@ -15,7 +15,7 @@ export class ProgressSummaryLoader extends OrderedNestDataLoader<FetchedSummarie
 
   getOptions() {
     return {
-      propertyKey: 'reportId',
+      propertyKey: (row) => row.report.id,
     } satisfies LoaderOptionsOf<ProgressSummaryLoader>;
   }
 

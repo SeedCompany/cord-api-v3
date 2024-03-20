@@ -53,7 +53,7 @@ export class ProgressSummaryRepository extends CommonRepository {
       .return<{ dto: FetchedSummaries }>(
         merge(
           listConcat('collected', {
-            reportId: 'report.id',
+            report: 'report { .id }',
             totalVerses: 'totalVerses',
             totalVerseEquivalents: 'totalVerseEquivalents',
           }),
