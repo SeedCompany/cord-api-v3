@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { GraphQLSchemaHost } from '@nestjs/graphql';
 import { CachedByArg, mapKeys } from '@seedcompany/common';
 import { isObjectType } from 'graphql';
+import { LazyGetter as Once } from 'lazy-get-decorator';
 import { mapValues } from 'lodash';
 import { ValueOf } from 'type-fest';
 import {
@@ -71,9 +72,12 @@ export class ResourcesHost {
 
   getByEdgeDB<Name extends ResourceNameLike | AllResourceDBNames>(
     name: Name,
-  ): EnhancedResource<ResourceStaticFromName<ResourceName<Name>>> {
-    const fqnMap = this.edgeDBFQNMap();
-    const resByFQN = fqnMap.get(
+  ): EnhancedResource<
+    string extends Name
+      ? ResourceShape<any>
+      : ResourceStaticFromName<ResourceName<Name>>
+  > {
+    const resByFQN = this.byEdgeFQN.get(
       name.includes('::') ? name : `default::${name}`,
     );
     if (resByFQN) {
@@ -89,18 +93,11 @@ export class ResourcesHost {
     );
   }
 
-  @CachedByArg()
-  private edgeDBFQNMap() {
+  @Once() get byEdgeFQN() {
     const map = this.getEnhancedMap();
     const fqnMap = mapKeys(
       map as Record<string, EnhancedResource<any>>,
-      (_, r, { SKIP }) => {
-        try {
-          return r.dbFQN;
-        } catch (e) {
-          return SKIP;
-        }
-      },
+      (_, r, { SKIP }) => (r.hasDB ? r.dbFQN : SKIP),
     ).asMap;
     return fqnMap;
   }

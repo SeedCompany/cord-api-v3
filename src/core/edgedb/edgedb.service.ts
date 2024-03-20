@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/unified-signatures */
 import { Injectable } from '@nestjs/common';
 import { $, Executor } from 'edgedb';
+import { QueryArgs } from 'edgedb/dist/ifaces';
 import { retry, RetryOptions } from '~/common/retry';
 import { TypedEdgeQL } from './edgeql';
 import { ExclusivityViolationError } from './exclusivity-violation.error';
@@ -57,6 +58,9 @@ export class EdgeDB {
     },
     args: Args,
   ): Promise<R>;
+
+  /** Run raw EdgeQL without types */
+  run(query: string, args?: QueryArgs): Promise<unknown>;
 
   async run(query: any, args?: any) {
     try {
