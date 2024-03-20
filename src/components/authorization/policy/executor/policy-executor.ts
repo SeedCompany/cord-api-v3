@@ -4,8 +4,9 @@ import { identity, intersection } from 'lodash';
 import { EnhancedResource, Session } from '~/common';
 import { QueryFragment } from '~/core/database/query';
 import { withoutScope } from '../../dto/role.dto';
+import { RoleCondition } from '../../policies/conditions/role.condition';
 import { Permission } from '../builder/perm-granter';
-import { CalculatedCondition, OrConditions } from '../conditions';
+import { all, any, CalculatedCondition, OrConditions } from '../conditions';
 import { PolicyFactory } from '../policy.factory';
 
 export interface ResolveParams {
@@ -75,6 +76,52 @@ export class PolicyExecutor {
       return false;
     }
     return OrConditions.fromAll(conditions, { optimize: optimizeConditions });
+  }
+
+  forEdgeDB({
+    action,
+    resource,
+  }: Pick<ResolveParams, 'action' | 'resource'>): Permission {
+    if (action !== 'read' && resource.isCalculated) {
+      // users don't initiate calculated actions, so don't block with access policies
+      return true;
+    }
+
+    const policies = this.policyFactory.getPolicies();
+
+    const conditions = [];
+    for (const policy of policies) {
+      const grants = policy.grants.get(resource);
+      if (!grants) {
+        continue;
+      }
+
+      const condition = grants.objectLevel[action];
+      if (condition == null) {
+        continue;
+      }
+      if (condition === false) {
+        // Deny actions should not cross into other policies, continue executing.
+        continue;
+      }
+
+      const roleCondition =
+        policy.roles && policy.roles.length > 0
+          ? new RoleCondition(new Set(policy.roles))
+          : undefined;
+
+      if (!roleCondition && condition === true) {
+        // globally allowed
+        return true;
+      }
+      conditions.push(
+        all(roleCondition, condition !== true ? condition : null),
+      );
+    }
+    if (conditions.length === 0) {
+      return false;
+    }
+    return any(...conditions);
   }
 
   cypherFilter({
