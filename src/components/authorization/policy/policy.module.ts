@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { RoleAndExpUnionOptimizer } from '../policies/conditions/role-and-exp-union.optimizer';
 import { EdgeDBAccessPolicyGenerator } from './edgedb-access-policy.generator';
 import { ConditionOptimizer } from './executor/condition-optimizer';
 import { PolicyDumpCommand, PolicyDumper } from './executor/policy-dumper';
@@ -17,6 +18,7 @@ import { PolicyFactory } from './policy.factory';
     PolicyDumpCommand,
     ConditionOptimizer,
     EdgeDBAccessPolicyGenerator,
+    RoleAndExpUnionOptimizer,
   ],
   exports: [Privileges, EdgeDBAccessPolicyGenerator],
 })
