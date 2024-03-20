@@ -1,5 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { mapEntries } from '@seedcompany/common';
+import { cleanJoin, mapEntries } from '@seedcompany/common';
 import addIndent from 'indent-string';
 import { startCase } from 'lodash';
 import { EnhancedResource } from '~/common';
@@ -31,7 +31,7 @@ export class EdgeDBAccessPolicyGenerator {
       return this.makeSdlForAction(resource, action, perm);
     });
 
-    return policies.join('\n\n');
+    return cleanJoin('\n\n', policies);
   }
 
   makeSdlForAction(
@@ -39,6 +39,11 @@ export class EdgeDBAccessPolicyGenerator {
     stmtType: string,
     perm: Permission,
   ) {
+    if (perm === false) {
+      // App policies haven't declared any perms for this specific type.
+      return null;
+    }
+
     const name = `Can${startCase(stmtType)}GeneratedFromAppPoliciesFor${
       resource.name
     }`;
