@@ -88,39 +88,51 @@ module default {
 
     access policy CanSelectGeneratedFromAppPoliciesForLanguage
     allow select using (
-      (
-        exists (<default::Role>{'Administrator', 'ConsultantManager', 'ExperienceOperations', 'LeadFinancialAnalyst', 'Controller', 'FinancialAnalyst', 'Fundraising', 'Marketing', 'Leadership', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'StaffMember'} intersect (<default::User>(global default::currentUserId)).roles)
-        or (
-          exists (<default::Role>{'Consultant', 'ConsultantManager'} intersect (<default::User>(global default::currentUserId)).roles)
-          and .isMember
-        )
-        or (
-          default::Role.FieldPartner in (<default::User>(global default::currentUserId)).roles
-          and .isMember
-        )
-        or (
-          default::Role.Intern in (<default::User>(global default::currentUserId)).roles
-          and .isMember
-        )
-        or (
-          default::Role.Mentor in (<default::User>(global default::currentUserId)).roles
-          and .isMember
-        )
-        or (
-          default::Role.Translator in (<default::User>(global default::currentUserId)).roles
-          and .isMember
+      with
+        givenRoles := (<default::User>(global default::currentUserId)).roles
+      select (
+        (
+          exists (<default::Role>{'Administrator', 'ConsultantManager', 'ExperienceOperations', 'LeadFinancialAnalyst', 'Controller', 'FinancialAnalyst', 'Fundraising', 'Marketing', 'Leadership', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'StaffMember'} intersect givenRoles)
+          or (
+            exists (<default::Role>{'Consultant', 'ConsultantManager'} intersect givenRoles)
+            and .isMember
+          )
+          or (
+            default::Role.FieldPartner in givenRoles
+            and .isMember
+          )
+          or (
+            default::Role.Intern in givenRoles
+            and .isMember
+          )
+          or (
+            default::Role.Mentor in givenRoles
+            and .isMember
+          )
+          or (
+            default::Role.Translator in givenRoles
+            and .isMember
+          )
         )
       )
     );
 
     access policy CanInsertGeneratedFromAppPoliciesForLanguage
     allow insert using (
-      default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
+      with
+        givenRoles := (<default::User>(global default::currentUserId)).roles
+      select (
+        default::Role.Administrator in givenRoles
+      )
     );
 
     access policy CanDeleteGeneratedFromAppPoliciesForLanguage
     allow delete using (
-      default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
+      with
+        givenRoles := (<default::User>(global default::currentUserId)).roles
+      select (
+        default::Role.Administrator in givenRoles
+      )
     );
   }
   
@@ -147,46 +159,58 @@ module Ethnologue {
 
     access policy CanSelectGeneratedFromAppPoliciesForEthnologueLanguage
     allow select using (
-      (
-        exists (<default::Role>{'Administrator', 'ExperienceOperations', 'Leadership', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect (<default::User>(global default::currentUserId)).roles)
-        or (
-          default::Role.ConsultantManager in (<default::User>(global default::currentUserId)).roles
-          and .sensitivity <= default::Sensitivity.Medium
-        )
-        or (
-          exists (<default::Role>{'Consultant', 'ConsultantManager'} intersect (<default::User>(global default::currentUserId)).roles)
-          and .isMember
-        )
-        or (
-          default::Role.FieldPartner in (<default::User>(global default::currentUserId)).roles
-          and .isMember
-        )
-        or (
-          default::Role.Fundraising in (<default::User>(global default::currentUserId)).roles
-          and (
-            .isMember
-            or .sensitivity <= default::Sensitivity.Medium
+      with
+        givenRoles := (<default::User>(global default::currentUserId)).roles
+      select (
+        (
+          exists (<default::Role>{'Administrator', 'ExperienceOperations', 'Leadership', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
+          or (
+            default::Role.ConsultantManager in givenRoles
+            and .sensitivity <= default::Sensitivity.Medium
           )
-        )
-        or (
-          exists (<default::Role>{'Marketing', 'Fundraising', 'ExperienceOperations'} intersect (<default::User>(global default::currentUserId)).roles)
-          and .sensitivity <= default::Sensitivity.Low
-        )
-        or (
-          default::Role.Translator in (<default::User>(global default::currentUserId)).roles
-          and .isMember
+          or (
+            exists (<default::Role>{'Consultant', 'ConsultantManager'} intersect givenRoles)
+            and .isMember
+          )
+          or (
+            default::Role.FieldPartner in givenRoles
+            and .isMember
+          )
+          or (
+            default::Role.Fundraising in givenRoles
+            and (
+              .isMember
+              or .sensitivity <= default::Sensitivity.Medium
+            )
+          )
+          or (
+            exists (<default::Role>{'Marketing', 'Fundraising', 'ExperienceOperations'} intersect givenRoles)
+            and .sensitivity <= default::Sensitivity.Low
+          )
+          or (
+            default::Role.Translator in givenRoles
+            and .isMember
+          )
         )
       )
     );
 
     access policy CanInsertGeneratedFromAppPoliciesForEthnologueLanguage
     allow insert using (
-      default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
+      with
+        givenRoles := (<default::User>(global default::currentUserId)).roles
+      select (
+        default::Role.Administrator in givenRoles
+      )
     );
 
     access policy CanDeleteGeneratedFromAppPoliciesForEthnologueLanguage
     allow delete using (
-      default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
+      with
+        givenRoles := (<default::User>(global default::currentUserId)).roles
+      select (
+        default::Role.Administrator in givenRoles
+      )
     );
   }
   

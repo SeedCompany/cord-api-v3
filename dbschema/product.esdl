@@ -33,12 +33,20 @@ module default {
 
     access policy CanInsertGeneratedFromAppPoliciesForOtherProduct
     allow insert using (
-      exists (<default::Role>{'Administrator', 'FieldOperationsDirector', 'ProjectManager', 'RegionalDirector'} intersect (<default::User>(global default::currentUserId)).roles)
+      with
+        givenRoles := (<default::User>(global default::currentUserId)).roles
+      select (
+        exists (<default::Role>{'Administrator', 'FieldOperationsDirector', 'ProjectManager', 'RegionalDirector'} intersect givenRoles)
+      )
     );
 
     access policy CanDeleteGeneratedFromAppPoliciesForOtherProduct
     allow delete using (
-      default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
+      with
+        givenRoles := (<default::User>(global default::currentUserId)).roles
+      select (
+        default::Role.Administrator in givenRoles
+      )
     );
   }
   
@@ -61,12 +69,20 @@ module default {
 
     access policy CanInsertGeneratedFromAppPoliciesForDirectScriptureProduct
     allow insert using (
-      exists (<default::Role>{'Administrator', 'FieldOperationsDirector', 'ProjectManager', 'RegionalDirector'} intersect (<default::User>(global default::currentUserId)).roles)
+      with
+        givenRoles := (<default::User>(global default::currentUserId)).roles
+      select (
+        exists (<default::Role>{'Administrator', 'FieldOperationsDirector', 'ProjectManager', 'RegionalDirector'} intersect givenRoles)
+      )
     );
 
     access policy CanDeleteGeneratedFromAppPoliciesForDirectScriptureProduct
     allow delete using (
-      default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
+      with
+        givenRoles := (<default::User>(global default::currentUserId)).roles
+      select (
+        default::Role.Administrator in givenRoles
+      )
     );
   }
   
@@ -103,12 +119,20 @@ module default {
 
     access policy CanInsertGeneratedFromAppPoliciesForDerivativeScriptureProduct
     allow insert using (
-      exists (<default::Role>{'Administrator', 'FieldOperationsDirector', 'ProjectManager', 'RegionalDirector'} intersect (<default::User>(global default::currentUserId)).roles)
+      with
+        givenRoles := (<default::User>(global default::currentUserId)).roles
+      select (
+        exists (<default::Role>{'Administrator', 'FieldOperationsDirector', 'ProjectManager', 'RegionalDirector'} intersect givenRoles)
+      )
     );
 
     access policy CanDeleteGeneratedFromAppPoliciesForDerivativeScriptureProduct
     allow delete using (
-      default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
+      with
+        givenRoles := (<default::User>(global default::currentUserId)).roles
+      select (
+        default::Role.Administrator in givenRoles
+      )
     );
   }
   

@@ -9,17 +9,29 @@ module default {
 
     access policy CanSelectGeneratedFromAppPoliciesForFieldRegion
     allow select using (
-      exists (<default::Role>{'Administrator', 'Consultant', 'ConsultantManager', 'FieldPartner', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller', 'Marketing', 'Fundraising', 'ExperienceOperations', 'Leadership', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'StaffMember'} intersect (<default::User>(global default::currentUserId)).roles)
+      with
+        givenRoles := (<default::User>(global default::currentUserId)).roles
+      select (
+        exists (<default::Role>{'Administrator', 'Consultant', 'ConsultantManager', 'FieldPartner', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller', 'Marketing', 'Fundraising', 'ExperienceOperations', 'Leadership', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'StaffMember'} intersect givenRoles)
+      )
     );
 
     access policy CanInsertGeneratedFromAppPoliciesForFieldRegion
     allow insert using (
-      default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
+      with
+        givenRoles := (<default::User>(global default::currentUserId)).roles
+      select (
+        default::Role.Administrator in givenRoles
+      )
     );
 
     access policy CanDeleteGeneratedFromAppPoliciesForFieldRegion
     allow delete using (
-      default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
+      with
+        givenRoles := (<default::User>(global default::currentUserId)).roles
+      select (
+        default::Role.Administrator in givenRoles
+      )
     );
   }
 }

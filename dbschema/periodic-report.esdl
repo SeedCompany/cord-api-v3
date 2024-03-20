@@ -11,37 +11,43 @@ module default {
 
     access policy CanSelectGeneratedFromAppPoliciesForPeriodicReport
     allow select using (
-      (
-        exists (<default::Role>{'Administrator', 'ExperienceOperations', 'FieldOperationsDirector', 'FieldPartner', 'LeadFinancialAnalyst', 'Controller', 'FinancialAnalyst', 'Leadership', 'ProjectManager', 'RegionalDirector', 'StaffMember'} intersect (<default::User>(global default::currentUserId)).roles)
-        or (
-          default::Role.ConsultantManager in (<default::User>(global default::currentUserId)).roles
-          and (
-            (.container[is Project::ContextAware].isMember ?? false)
-            or ((.container[is Project::ContextAware].sensitivity <= default::Sensitivity.Medium) ?? false)
+      with
+        givenRoles := (<default::User>(global default::currentUserId)).roles,
+        isMember := (.container[is Project::ContextAware].isMember ?? false),
+        sensitivity := (.container[is Project::ContextAware].sensitivity ?? default::Sensitivity.High)
+      select (
+        (
+          exists (<default::Role>{'Administrator', 'ExperienceOperations', 'FieldOperationsDirector', 'FieldPartner', 'LeadFinancialAnalyst', 'Controller', 'FinancialAnalyst', 'Leadership', 'ProjectManager', 'RegionalDirector', 'StaffMember'} intersect givenRoles)
+          or (
+            default::Role.ConsultantManager in givenRoles
+            and (
+              isMember
+              or sensitivity <= default::Sensitivity.Medium
+            )
           )
-        )
-        or (
-          exists (<default::Role>{'Consultant', 'ConsultantManager'} intersect (<default::User>(global default::currentUserId)).roles)
-          and (.container[is Project::ContextAware].isMember ?? false)
-        )
-        or (
-          default::Role.Intern in (<default::User>(global default::currentUserId)).roles
-          and (.container[is Project::ContextAware].isMember ?? false)
-        )
-        or (
-          exists (<default::Role>{'Marketing', 'Fundraising', 'ExperienceOperations'} intersect (<default::User>(global default::currentUserId)).roles)
-          and (
-            (.container[is Project::ContextAware].isMember ?? false)
-            or ((.container[is Project::ContextAware].sensitivity <= default::Sensitivity.Medium) ?? false)
+          or (
+            exists (<default::Role>{'Consultant', 'ConsultantManager'} intersect givenRoles)
+            and isMember
           )
-        )
-        or (
-          default::Role.Mentor in (<default::User>(global default::currentUserId)).roles
-          and (.container[is Project::ContextAware].isMember ?? false)
-        )
-        or (
-          default::Role.Translator in (<default::User>(global default::currentUserId)).roles
-          and (.container[is Project::ContextAware].isMember ?? false)
+          or (
+            default::Role.Intern in givenRoles
+            and isMember
+          )
+          or (
+            exists (<default::Role>{'Marketing', 'Fundraising', 'ExperienceOperations'} intersect givenRoles)
+            and (
+              isMember
+              or sensitivity <= default::Sensitivity.Medium
+            )
+          )
+          or (
+            default::Role.Mentor in givenRoles
+            and isMember
+          )
+          or (
+            default::Role.Translator in givenRoles
+            and isMember
+          )
         )
       )
     );
@@ -58,37 +64,43 @@ module default {
 
     access policy CanSelectGeneratedFromAppPoliciesForFinancialReport
     allow select using (
-      (
-        exists (<default::Role>{'Administrator', 'ExperienceOperations', 'FieldOperationsDirector', 'FieldPartner', 'LeadFinancialAnalyst', 'Controller', 'FinancialAnalyst', 'Leadership', 'ProjectManager', 'RegionalDirector', 'StaffMember'} intersect (<default::User>(global default::currentUserId)).roles)
-        or (
-          default::Role.ConsultantManager in (<default::User>(global default::currentUserId)).roles
-          and (
-            (.container[is Project::ContextAware].isMember ?? false)
-            or ((.container[is Project::ContextAware].sensitivity <= default::Sensitivity.Medium) ?? false)
+      with
+        givenRoles := (<default::User>(global default::currentUserId)).roles,
+        isMember := (.container[is Project::ContextAware].isMember ?? false),
+        sensitivity := (.container[is Project::ContextAware].sensitivity ?? default::Sensitivity.High)
+      select (
+        (
+          exists (<default::Role>{'Administrator', 'ExperienceOperations', 'FieldOperationsDirector', 'FieldPartner', 'LeadFinancialAnalyst', 'Controller', 'FinancialAnalyst', 'Leadership', 'ProjectManager', 'RegionalDirector', 'StaffMember'} intersect givenRoles)
+          or (
+            default::Role.ConsultantManager in givenRoles
+            and (
+              isMember
+              or sensitivity <= default::Sensitivity.Medium
+            )
           )
-        )
-        or (
-          exists (<default::Role>{'Consultant', 'ConsultantManager'} intersect (<default::User>(global default::currentUserId)).roles)
-          and (.container[is Project::ContextAware].isMember ?? false)
-        )
-        or (
-          default::Role.Intern in (<default::User>(global default::currentUserId)).roles
-          and (.container[is Project::ContextAware].isMember ?? false)
-        )
-        or (
-          exists (<default::Role>{'Marketing', 'Fundraising', 'ExperienceOperations'} intersect (<default::User>(global default::currentUserId)).roles)
-          and (
-            (.container[is Project::ContextAware].isMember ?? false)
-            or ((.container[is Project::ContextAware].sensitivity <= default::Sensitivity.Medium) ?? false)
+          or (
+            exists (<default::Role>{'Consultant', 'ConsultantManager'} intersect givenRoles)
+            and isMember
           )
-        )
-        or (
-          default::Role.Mentor in (<default::User>(global default::currentUserId)).roles
-          and (.container[is Project::ContextAware].isMember ?? false)
-        )
-        or (
-          default::Role.Translator in (<default::User>(global default::currentUserId)).roles
-          and (.container[is Project::ContextAware].isMember ?? false)
+          or (
+            default::Role.Intern in givenRoles
+            and isMember
+          )
+          or (
+            exists (<default::Role>{'Marketing', 'Fundraising', 'ExperienceOperations'} intersect givenRoles)
+            and (
+              isMember
+              or sensitivity <= default::Sensitivity.Medium
+            )
+          )
+          or (
+            default::Role.Mentor in givenRoles
+            and isMember
+          )
+          or (
+            default::Role.Translator in givenRoles
+            and isMember
+          )
         )
       )
     );
@@ -105,37 +117,43 @@ module default {
 
     access policy CanSelectGeneratedFromAppPoliciesForNarrativeReport
     allow select using (
-      (
-        exists (<default::Role>{'Administrator', 'ExperienceOperations', 'FieldOperationsDirector', 'FieldPartner', 'LeadFinancialAnalyst', 'Controller', 'FinancialAnalyst', 'Leadership', 'ProjectManager', 'RegionalDirector', 'StaffMember'} intersect (<default::User>(global default::currentUserId)).roles)
-        or (
-          default::Role.ConsultantManager in (<default::User>(global default::currentUserId)).roles
-          and (
-            (.container[is Project::ContextAware].isMember ?? false)
-            or ((.container[is Project::ContextAware].sensitivity <= default::Sensitivity.Medium) ?? false)
+      with
+        givenRoles := (<default::User>(global default::currentUserId)).roles,
+        isMember := (.container[is Project::ContextAware].isMember ?? false),
+        sensitivity := (.container[is Project::ContextAware].sensitivity ?? default::Sensitivity.High)
+      select (
+        (
+          exists (<default::Role>{'Administrator', 'ExperienceOperations', 'FieldOperationsDirector', 'FieldPartner', 'LeadFinancialAnalyst', 'Controller', 'FinancialAnalyst', 'Leadership', 'ProjectManager', 'RegionalDirector', 'StaffMember'} intersect givenRoles)
+          or (
+            default::Role.ConsultantManager in givenRoles
+            and (
+              isMember
+              or sensitivity <= default::Sensitivity.Medium
+            )
           )
-        )
-        or (
-          exists (<default::Role>{'Consultant', 'ConsultantManager'} intersect (<default::User>(global default::currentUserId)).roles)
-          and (.container[is Project::ContextAware].isMember ?? false)
-        )
-        or (
-          default::Role.Intern in (<default::User>(global default::currentUserId)).roles
-          and (.container[is Project::ContextAware].isMember ?? false)
-        )
-        or (
-          exists (<default::Role>{'Marketing', 'Fundraising', 'ExperienceOperations'} intersect (<default::User>(global default::currentUserId)).roles)
-          and (
-            (.container[is Project::ContextAware].isMember ?? false)
-            or ((.container[is Project::ContextAware].sensitivity <= default::Sensitivity.Medium) ?? false)
+          or (
+            exists (<default::Role>{'Consultant', 'ConsultantManager'} intersect givenRoles)
+            and isMember
           )
-        )
-        or (
-          default::Role.Mentor in (<default::User>(global default::currentUserId)).roles
-          and (.container[is Project::ContextAware].isMember ?? false)
-        )
-        or (
-          default::Role.Translator in (<default::User>(global default::currentUserId)).roles
-          and (.container[is Project::ContextAware].isMember ?? false)
+          or (
+            default::Role.Intern in givenRoles
+            and isMember
+          )
+          or (
+            exists (<default::Role>{'Marketing', 'Fundraising', 'ExperienceOperations'} intersect givenRoles)
+            and (
+              isMember
+              or sensitivity <= default::Sensitivity.Medium
+            )
+          )
+          or (
+            default::Role.Mentor in givenRoles
+            and isMember
+          )
+          or (
+            default::Role.Translator in givenRoles
+            and isMember
+          )
         )
       )
     );

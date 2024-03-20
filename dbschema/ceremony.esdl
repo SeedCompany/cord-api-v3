@@ -16,23 +16,27 @@ module Engagement {
 
     access policy CanSelectGeneratedFromAppPoliciesForCeremony
     allow select using (
-      (
-        exists (<default::Role>{'Administrator', 'FieldOperationsDirector', 'FieldPartner', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller', 'Marketing', 'Fundraising', 'ExperienceOperations', 'Leadership', 'ProjectManager', 'RegionalDirector', 'StaffMember'} intersect (<default::User>(global default::currentUserId)).roles)
-        or (
-          exists (<default::Role>{'Consultant', 'ConsultantManager'} intersect (<default::User>(global default::currentUserId)).roles)
-          and .isMember
-        )
-        or (
-          default::Role.Intern in (<default::User>(global default::currentUserId)).roles
-          and .isMember
-        )
-        or (
-          default::Role.Mentor in (<default::User>(global default::currentUserId)).roles
-          and .isMember
-        )
-        or (
-          default::Role.Translator in (<default::User>(global default::currentUserId)).roles
-          and .isMember
+      with
+        givenRoles := (<default::User>(global default::currentUserId)).roles
+      select (
+        (
+          exists (<default::Role>{'Administrator', 'FieldOperationsDirector', 'FieldPartner', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller', 'Marketing', 'Fundraising', 'ExperienceOperations', 'Leadership', 'ProjectManager', 'RegionalDirector', 'StaffMember'} intersect givenRoles)
+          or (
+            exists (<default::Role>{'Consultant', 'ConsultantManager'} intersect givenRoles)
+            and .isMember
+          )
+          or (
+            default::Role.Intern in givenRoles
+            and .isMember
+          )
+          or (
+            default::Role.Mentor in givenRoles
+            and .isMember
+          )
+          or (
+            default::Role.Translator in givenRoles
+            and .isMember
+          )
         )
       )
     );

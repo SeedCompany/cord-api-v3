@@ -13,22 +13,34 @@ module default {
 
     access policy CanSelectGeneratedFromAppPoliciesForPost
     allow select using (
-      (
-        exists (<default::Role>{'Administrator', 'Leadership'} intersect (<default::User>(global default::currentUserId)).roles)
-        or (.isOwner ?? false)
+      with
+        givenRoles := (<default::User>(global default::currentUserId)).roles
+      select (
+        (
+          exists (<default::Role>{'Administrator', 'Leadership'} intersect givenRoles)
+          or (.isOwner ?? false)
+        )
       )
     );
 
     access policy CanInsertGeneratedFromAppPoliciesForPost
     allow insert using (
-      default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
+      with
+        givenRoles := (<default::User>(global default::currentUserId)).roles
+      select (
+        default::Role.Administrator in givenRoles
+      )
     );
 
     access policy CanDeleteGeneratedFromAppPoliciesForPost
     allow delete using (
-      (
-        default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
-        or (.isOwner ?? false)
+      with
+        givenRoles := (<default::User>(global default::currentUserId)).roles
+      select (
+        (
+          default::Role.Administrator in givenRoles
+          or (.isOwner ?? false)
+        )
       )
     );
   }
@@ -40,17 +52,29 @@ module Mixin {
 
     access policy CanSelectGeneratedFromAppPoliciesForPostable
     allow select using (
-      exists (<default::Role>{'Administrator', 'Leadership'} intersect (<default::User>(global default::currentUserId)).roles)
+      with
+        givenRoles := (<default::User>(global default::currentUserId)).roles
+      select (
+        exists (<default::Role>{'Administrator', 'Leadership'} intersect givenRoles)
+      )
     );
 
     access policy CanInsertGeneratedFromAppPoliciesForPostable
     allow insert using (
-      default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
+      with
+        givenRoles := (<default::User>(global default::currentUserId)).roles
+      select (
+        default::Role.Administrator in givenRoles
+      )
     );
 
     access policy CanDeleteGeneratedFromAppPoliciesForPostable
     allow delete using (
-      default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
+      with
+        givenRoles := (<default::User>(global default::currentUserId)).roles
+      select (
+        default::Role.Administrator in givenRoles
+      )
     );
   }
 }

@@ -11,45 +11,49 @@ module default {
 
     access policy CanSelectGeneratedFromAppPoliciesForProgressReport
     allow select using (
-      (
-        exists (<default::Role>{'Administrator', 'ExperienceOperations', 'FieldOperationsDirector', 'LeadFinancialAnalyst', 'Controller', 'FinancialAnalyst', 'Leadership', 'StaffMember'} intersect (<default::User>(global default::currentUserId)).roles)
-        or (
-          default::Role.ConsultantManager in (<default::User>(global default::currentUserId)).roles
-          and (
-            .isMember
-            or .sensitivity <= default::Sensitivity.Medium
+      with
+        givenRoles := (<default::User>(global default::currentUserId)).roles
+      select (
+        (
+          exists (<default::Role>{'Administrator', 'ExperienceOperations', 'FieldOperationsDirector', 'LeadFinancialAnalyst', 'Controller', 'FinancialAnalyst', 'Leadership', 'StaffMember'} intersect givenRoles)
+          or (
+            default::Role.ConsultantManager in givenRoles
+            and (
+              .isMember
+              or .sensitivity <= default::Sensitivity.Medium
+            )
           )
-        )
-        or (
-          exists (<default::Role>{'Consultant', 'ConsultantManager'} intersect (<default::User>(global default::currentUserId)).roles)
-          and .isMember
-        )
-        or (
-          default::Role.FieldPartner in (<default::User>(global default::currentUserId)).roles
-          and .isMember
-        )
-        or (
-          default::Role.Intern in (<default::User>(global default::currentUserId)).roles
-          and .isMember
-        )
-        or (
-          exists (<default::Role>{'Marketing', 'Fundraising', 'ExperienceOperations'} intersect (<default::User>(global default::currentUserId)).roles)
-          and (
-            .isMember
-            or .sensitivity <= default::Sensitivity.Medium
+          or (
+            exists (<default::Role>{'Consultant', 'ConsultantManager'} intersect givenRoles)
+            and .isMember
           )
-        )
-        or (
-          default::Role.Mentor in (<default::User>(global default::currentUserId)).roles
-          and .isMember
-        )
-        or (
-          exists (<default::Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect (<default::User>(global default::currentUserId)).roles)
-          and .isMember
-        )
-        or (
-          default::Role.Translator in (<default::User>(global default::currentUserId)).roles
-          and .isMember
+          or (
+            default::Role.FieldPartner in givenRoles
+            and .isMember
+          )
+          or (
+            default::Role.Intern in givenRoles
+            and .isMember
+          )
+          or (
+            exists (<default::Role>{'Marketing', 'Fundraising', 'ExperienceOperations'} intersect givenRoles)
+            and (
+              .isMember
+              or .sensitivity <= default::Sensitivity.Medium
+            )
+          )
+          or (
+            default::Role.Mentor in givenRoles
+            and .isMember
+          )
+          or (
+            exists (<default::Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
+            and .isMember
+          )
+          or (
+            default::Role.Translator in givenRoles
+            and .isMember
+          )
         )
       )
     );
@@ -87,48 +91,60 @@ module ProgressReport {
 
     access policy CanSelectGeneratedFromAppPoliciesForProgressReportTeamNews
     allow select using (
-      (
-        exists (<default::Role>{'Administrator', 'Leadership', 'Marketing', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect (<default::User>(global default::currentUserId)).roles)
-        or (
-          default::Role.ConsultantManager in (<default::User>(global default::currentUserId)).roles
-          and (
-            .isMember
-            or .sensitivity <= default::Sensitivity.Medium
+      with
+        givenRoles := (<default::User>(global default::currentUserId)).roles
+      select (
+        (
+          exists (<default::Role>{'Administrator', 'Leadership', 'Marketing', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
+          or (
+            default::Role.ConsultantManager in givenRoles
+            and (
+              .isMember
+              or .sensitivity <= default::Sensitivity.Medium
+            )
           )
-        )
-        or (
-          exists (<default::Role>{'Consultant', 'ConsultantManager'} intersect (<default::User>(global default::currentUserId)).roles)
-          and .isMember
-        )
-        or (
-          default::Role.FieldPartner in (<default::User>(global default::currentUserId)).roles
-          and .isMember
-        )
-        or (
-          default::Role.Translator in (<default::User>(global default::currentUserId)).roles
-          and .isMember
+          or (
+            exists (<default::Role>{'Consultant', 'ConsultantManager'} intersect givenRoles)
+            and .isMember
+          )
+          or (
+            default::Role.FieldPartner in givenRoles
+            and .isMember
+          )
+          or (
+            default::Role.Translator in givenRoles
+            and .isMember
+          )
         )
       )
     );
 
     access policy CanInsertGeneratedFromAppPoliciesForProgressReportTeamNews
     allow insert using (
-      (
-        default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
-        or (
-          default::Role.FieldPartner in (<default::User>(global default::currentUserId)).roles
-          and .isMember
-        )
-        or (
-          exists (<default::Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect (<default::User>(global default::currentUserId)).roles)
-          and .isMember
+      with
+        givenRoles := (<default::User>(global default::currentUserId)).roles
+      select (
+        (
+          default::Role.Administrator in givenRoles
+          or (
+            default::Role.FieldPartner in givenRoles
+            and .isMember
+          )
+          or (
+            exists (<default::Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
+            and .isMember
+          )
         )
       )
     );
 
     access policy CanDeleteGeneratedFromAppPoliciesForProgressReportTeamNews
     allow delete using (
-      default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
+      with
+        givenRoles := (<default::User>(global default::currentUserId)).roles
+      select (
+        default::Role.Administrator in givenRoles
+      )
     );
   }
   type CommunityStory extending ProgressReport::Child, Prompt::PromptVariantResponse {
@@ -136,48 +152,60 @@ module ProgressReport {
 
     access policy CanSelectGeneratedFromAppPoliciesForProgressReportCommunityStory
     allow select using (
-      (
-        exists (<default::Role>{'Administrator', 'Leadership', 'Marketing', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect (<default::User>(global default::currentUserId)).roles)
-        or (
-          default::Role.ConsultantManager in (<default::User>(global default::currentUserId)).roles
-          and (
-            .isMember
-            or .sensitivity <= default::Sensitivity.Medium
+      with
+        givenRoles := (<default::User>(global default::currentUserId)).roles
+      select (
+        (
+          exists (<default::Role>{'Administrator', 'Leadership', 'Marketing', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
+          or (
+            default::Role.ConsultantManager in givenRoles
+            and (
+              .isMember
+              or .sensitivity <= default::Sensitivity.Medium
+            )
           )
-        )
-        or (
-          exists (<default::Role>{'Consultant', 'ConsultantManager'} intersect (<default::User>(global default::currentUserId)).roles)
-          and .isMember
-        )
-        or (
-          default::Role.FieldPartner in (<default::User>(global default::currentUserId)).roles
-          and .isMember
-        )
-        or (
-          default::Role.Translator in (<default::User>(global default::currentUserId)).roles
-          and .isMember
+          or (
+            exists (<default::Role>{'Consultant', 'ConsultantManager'} intersect givenRoles)
+            and .isMember
+          )
+          or (
+            default::Role.FieldPartner in givenRoles
+            and .isMember
+          )
+          or (
+            default::Role.Translator in givenRoles
+            and .isMember
+          )
         )
       )
     );
 
     access policy CanInsertGeneratedFromAppPoliciesForProgressReportCommunityStory
     allow insert using (
-      (
-        default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
-        or (
-          default::Role.FieldPartner in (<default::User>(global default::currentUserId)).roles
-          and .isMember
-        )
-        or (
-          exists (<default::Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect (<default::User>(global default::currentUserId)).roles)
-          and .isMember
+      with
+        givenRoles := (<default::User>(global default::currentUserId)).roles
+      select (
+        (
+          default::Role.Administrator in givenRoles
+          or (
+            default::Role.FieldPartner in givenRoles
+            and .isMember
+          )
+          or (
+            exists (<default::Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
+            and .isMember
+          )
         )
       )
     );
 
     access policy CanDeleteGeneratedFromAppPoliciesForProgressReportCommunityStory
     allow delete using (
-      default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
+      with
+        givenRoles := (<default::User>(global default::currentUserId)).roles
+      select (
+        default::Role.Administrator in givenRoles
+      )
     );
   }
   type Highlight extending ProgressReport::Child, Prompt::PromptVariantResponse {
@@ -185,48 +213,60 @@ module ProgressReport {
 
     access policy CanSelectGeneratedFromAppPoliciesForProgressReportHighlight
     allow select using (
-      (
-        exists (<default::Role>{'Administrator', 'Leadership', 'Marketing', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect (<default::User>(global default::currentUserId)).roles)
-        or (
-          default::Role.ConsultantManager in (<default::User>(global default::currentUserId)).roles
-          and (
-            .isMember
-            or .sensitivity <= default::Sensitivity.Medium
+      with
+        givenRoles := (<default::User>(global default::currentUserId)).roles
+      select (
+        (
+          exists (<default::Role>{'Administrator', 'Leadership', 'Marketing', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
+          or (
+            default::Role.ConsultantManager in givenRoles
+            and (
+              .isMember
+              or .sensitivity <= default::Sensitivity.Medium
+            )
           )
-        )
-        or (
-          exists (<default::Role>{'Consultant', 'ConsultantManager'} intersect (<default::User>(global default::currentUserId)).roles)
-          and .isMember
-        )
-        or (
-          default::Role.FieldPartner in (<default::User>(global default::currentUserId)).roles
-          and .isMember
-        )
-        or (
-          default::Role.Translator in (<default::User>(global default::currentUserId)).roles
-          and .isMember
+          or (
+            exists (<default::Role>{'Consultant', 'ConsultantManager'} intersect givenRoles)
+            and .isMember
+          )
+          or (
+            default::Role.FieldPartner in givenRoles
+            and .isMember
+          )
+          or (
+            default::Role.Translator in givenRoles
+            and .isMember
+          )
         )
       )
     );
 
     access policy CanInsertGeneratedFromAppPoliciesForProgressReportHighlight
     allow insert using (
-      (
-        default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
-        or (
-          default::Role.FieldPartner in (<default::User>(global default::currentUserId)).roles
-          and .isMember
-        )
-        or (
-          exists (<default::Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect (<default::User>(global default::currentUserId)).roles)
-          and .isMember
+      with
+        givenRoles := (<default::User>(global default::currentUserId)).roles
+      select (
+        (
+          default::Role.Administrator in givenRoles
+          or (
+            default::Role.FieldPartner in givenRoles
+            and .isMember
+          )
+          or (
+            exists (<default::Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
+            and .isMember
+          )
         )
       )
     );
 
     access policy CanDeleteGeneratedFromAppPoliciesForProgressReportHighlight
     allow delete using (
-      default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
+      with
+        givenRoles := (<default::User>(global default::currentUserId)).roles
+      select (
+        default::Role.Administrator in givenRoles
+      )
     );
   }
 
@@ -241,30 +281,42 @@ module ProgressReport {
 
     access policy CanSelectGeneratedFromAppPoliciesForProgressReportVarianceExplanation
     allow select using (
-      (
-        exists (<default::Role>{'Administrator', 'Leadership', 'Marketing', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect (<default::User>(global default::currentUserId)).roles)
-        or (
-          default::Role.ConsultantManager in (<default::User>(global default::currentUserId)).roles
-          and (
-            .isMember
-            or .sensitivity <= default::Sensitivity.Medium
+      with
+        givenRoles := (<default::User>(global default::currentUserId)).roles
+      select (
+        (
+          exists (<default::Role>{'Administrator', 'Leadership', 'Marketing', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
+          or (
+            default::Role.ConsultantManager in givenRoles
+            and (
+              .isMember
+              or .sensitivity <= default::Sensitivity.Medium
+            )
           )
-        )
-        or (
-          exists (<default::Role>{'Consultant', 'ConsultantManager'} intersect (<default::User>(global default::currentUserId)).roles)
-          and .isMember
+          or (
+            exists (<default::Role>{'Consultant', 'ConsultantManager'} intersect givenRoles)
+            and .isMember
+          )
         )
       )
     );
 
     access policy CanInsertGeneratedFromAppPoliciesForProgressReportVarianceExplanation
     allow insert using (
-      default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
+      with
+        givenRoles := (<default::User>(global default::currentUserId)).roles
+      select (
+        default::Role.Administrator in givenRoles
+      )
     );
 
     access policy CanDeleteGeneratedFromAppPoliciesForProgressReportVarianceExplanation
     allow delete using (
-      default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
+      with
+        givenRoles := (<default::User>(global default::currentUserId)).roles
+      select (
+        default::Role.Administrator in givenRoles
+      )
     );
   }
 
@@ -287,81 +339,89 @@ module ProgressReport {
 
     access policy CanSelectGeneratedFromAppPoliciesForProgressReportMedia
     allow select using (
-      (
-        exists (<default::Role>{'Administrator', 'Leadership', 'Marketing'} intersect (<default::User>(global default::currentUserId)).roles)
-        or (
-          default::Role.ConsultantManager in (<default::User>(global default::currentUserId)).roles
-          and (
-            .isMember
-            or .sensitivity <= default::Sensitivity.Medium
-          )
-        )
-        or (
-          exists (<default::Role>{'Consultant', 'ConsultantManager'} intersect (<default::User>(global default::currentUserId)).roles)
-          and .isMember
-        )
-        or (
-          default::Role.FieldPartner in (<default::User>(global default::currentUserId)).roles
-          and (
-            .isMember
-            and <str>.variant = 'draft'
-          )
-        )
-        or (
-          exists (<default::Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect (<default::User>(global default::currentUserId)).roles)
-          and (
-            (
+      with
+        givenRoles := (<default::User>(global default::currentUserId)).roles
+      select (
+        (
+          exists (<default::Role>{'Administrator', 'Leadership', 'Marketing'} intersect givenRoles)
+          or (
+            default::Role.ConsultantManager in givenRoles
+            and (
               .isMember
-              and <str>.variant in {'draft', 'translated', 'fpm'}
+              or .sensitivity <= default::Sensitivity.Medium
             )
-            or (
-              .sensitivity <= default::Sensitivity.Low
-              and <str>.variant in {'fpm', 'published'}
-            )
-            or .isMember
           )
-        )
-        or (
-          default::Role.Translator in (<default::User>(global default::currentUserId)).roles
-          and (
-            (
+          or (
+            exists (<default::Role>{'Consultant', 'ConsultantManager'} intersect givenRoles)
+            and .isMember
+          )
+          or (
+            default::Role.FieldPartner in givenRoles
+            and (
               .isMember
-              and <str>.variant = 'translated'
+              and <str>.variant = 'draft'
             )
-            or .isMember
           )
+          or (
+            exists (<default::Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
+            and (
+              (
+                .isMember
+                and <str>.variant in {'draft', 'translated', 'fpm'}
+              )
+              or (
+                .sensitivity <= default::Sensitivity.Low
+                and <str>.variant in {'fpm', 'published'}
+              )
+              or .isMember
+            )
+          )
+          or (
+            default::Role.Translator in givenRoles
+            and (
+              (
+                .isMember
+                and <str>.variant = 'translated'
+              )
+              or .isMember
+            )
+          )
+          or (.isOwner ?? false)
         )
-        or (.isOwner ?? false)
       )
     );
 
     access policy CanInsertGeneratedFromAppPoliciesForProgressReportMedia
     allow insert using (
-      (
-        default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
-        or (
-          default::Role.FieldPartner in (<default::User>(global default::currentUserId)).roles
-          and (
-            .isMember
-            and <str>.variant = 'draft'
+      with
+        givenRoles := (<default::User>(global default::currentUserId)).roles
+      select (
+        (
+          default::Role.Administrator in givenRoles
+          or (
+            default::Role.FieldPartner in givenRoles
+            and (
+              .isMember
+              and <str>.variant = 'draft'
+            )
           )
-        )
-        or (
-          default::Role.Marketing in (<default::User>(global default::currentUserId)).roles
-          and <str>.variant = 'published'
-        )
-        or (
-          exists (<default::Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect (<default::User>(global default::currentUserId)).roles)
-          and (
-            .isMember
-            and <str>.variant in {'draft', 'translated', 'fpm'}
+          or (
+            default::Role.Marketing in givenRoles
+            and <str>.variant = 'published'
           )
-        )
-        or (
-          default::Role.Translator in (<default::User>(global default::currentUserId)).roles
-          and (
-            .isMember
-            and <str>.variant = 'translated'
+          or (
+            exists (<default::Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
+            and (
+              .isMember
+              and <str>.variant in {'draft', 'translated', 'fpm'}
+            )
+          )
+          or (
+            default::Role.Translator in givenRoles
+            and (
+              .isMember
+              and <str>.variant = 'translated'
+            )
           )
         )
       )
@@ -369,9 +429,13 @@ module ProgressReport {
 
     access policy CanDeleteGeneratedFromAppPoliciesForProgressReportMedia
     allow delete using (
-      (
-        default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
-        or (.isOwner ?? false)
+      with
+        givenRoles := (<default::User>(global default::currentUserId)).roles
+      select (
+        (
+          default::Role.Administrator in givenRoles
+          or (.isOwner ?? false)
+        )
       )
     );
   }
@@ -400,35 +464,47 @@ module ProgressReport {
 
     access policy CanSelectGeneratedFromAppPoliciesForProgressReportWorkflowEvent
     allow select using (
-      exists (<default::Role>{'Administrator', 'Leadership', 'Marketing', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect (<default::User>(global default::currentUserId)).roles)
+      with
+        givenRoles := (<default::User>(global default::currentUserId)).roles
+      select (
+        exists (<default::Role>{'Administrator', 'Leadership', 'Marketing', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
+      )
     );
 
     access policy CanInsertGeneratedFromAppPoliciesForProgressReportWorkflowEvent
     allow insert using (
-      (
-        default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
-        or (
-          default::Role.FieldPartner in (<default::User>(global default::currentUserId)).roles
-          and ((.transitionId in {'5da76b5163', 'cb18f58cbf', '651d2a4dcc', 'e14c52346b'}) ?? false)
-        )
-        or (
-          default::Role.Marketing in (<default::User>(global default::currentUserId)).roles
-          and ((.transitionId = '2d88e3cd6e') ?? false)
-        )
-        or (
-          exists (<default::Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect (<default::User>(global default::currentUserId)).roles)
-          and ((.transitionId in {'5da76b5163', 'cb18f58cbf', '651d2a4dcc', '580377ea2b', '0d854e832e', 'e14c52346b', '2b137bcd66', 'a0c0c48a8c', 'e3e11c86b9'}) ?? false)
-        )
-        or (
-          default::Role.Translator in (<default::User>(global default::currentUserId)).roles
-          and ((.transitionId in {'580377ea2b', '0d854e832e'}) ?? false)
+      with
+        givenRoles := (<default::User>(global default::currentUserId)).roles
+      select (
+        (
+          default::Role.Administrator in givenRoles
+          or (
+            default::Role.FieldPartner in givenRoles
+            and ((.transitionId in {'5da76b5163', 'cb18f58cbf', '651d2a4dcc', 'e14c52346b'}) ?? false)
+          )
+          or (
+            default::Role.Marketing in givenRoles
+            and ((.transitionId = '2d88e3cd6e') ?? false)
+          )
+          or (
+            exists (<default::Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
+            and ((.transitionId in {'5da76b5163', 'cb18f58cbf', '651d2a4dcc', '580377ea2b', '0d854e832e', 'e14c52346b', '2b137bcd66', 'a0c0c48a8c', 'e3e11c86b9'}) ?? false)
+          )
+          or (
+            default::Role.Translator in givenRoles
+            and ((.transitionId in {'580377ea2b', '0d854e832e'}) ?? false)
+          )
         )
       )
     );
 
     access policy CanDeleteGeneratedFromAppPoliciesForProgressReportWorkflowEvent
     allow delete using (
-      default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
+      with
+        givenRoles := (<default::User>(global default::currentUserId)).roles
+      select (
+        default::Role.Administrator in givenRoles
+      )
     );
   }
 

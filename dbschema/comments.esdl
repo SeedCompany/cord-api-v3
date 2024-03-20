@@ -4,17 +4,29 @@ module Comments {
 
     access policy CanSelectGeneratedFromAppPoliciesForCommentable
     allow select using (
-      exists (<default::Role>{'Administrator', 'Leadership'} intersect (<default::User>(global default::currentUserId)).roles)
+      with
+        givenRoles := (<default::User>(global default::currentUserId)).roles
+      select (
+        exists (<default::Role>{'Administrator', 'Leadership'} intersect givenRoles)
+      )
     );
 
     access policy CanInsertGeneratedFromAppPoliciesForCommentable
     allow insert using (
-      default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
+      with
+        givenRoles := (<default::User>(global default::currentUserId)).roles
+      select (
+        default::Role.Administrator in givenRoles
+      )
     );
 
     access policy CanDeleteGeneratedFromAppPoliciesForCommentable
     allow delete using (
-      default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
+      with
+        givenRoles := (<default::User>(global default::currentUserId)).roles
+      select (
+        default::Role.Administrator in givenRoles
+      )
     );
   }
 
@@ -28,22 +40,34 @@ module Comments {
 
     access policy CanSelectGeneratedFromAppPoliciesForCommentThread
     allow select using (
-      (
-        exists (<default::Role>{'Administrator', 'Leadership'} intersect (<default::User>(global default::currentUserId)).roles)
-        or (.isOwner ?? false)
+      with
+        givenRoles := (<default::User>(global default::currentUserId)).roles
+      select (
+        (
+          exists (<default::Role>{'Administrator', 'Leadership'} intersect givenRoles)
+          or (.isOwner ?? false)
+        )
       )
     );
 
     access policy CanInsertGeneratedFromAppPoliciesForCommentThread
     allow insert using (
-      default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
+      with
+        givenRoles := (<default::User>(global default::currentUserId)).roles
+      select (
+        default::Role.Administrator in givenRoles
+      )
     );
 
     access policy CanDeleteGeneratedFromAppPoliciesForCommentThread
     allow delete using (
-      (
-        default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
-        or (.isOwner ?? false)
+      with
+        givenRoles := (<default::User>(global default::currentUserId)).roles
+      select (
+        (
+          default::Role.Administrator in givenRoles
+          or (.isOwner ?? false)
+        )
       )
     );
   }
@@ -56,22 +80,34 @@ module Comments {
 
     access policy CanSelectGeneratedFromAppPoliciesForComment
     allow select using (
-      (
-        exists (<default::Role>{'Administrator', 'Leadership'} intersect (<default::User>(global default::currentUserId)).roles)
-        or (.isOwner ?? false)
+      with
+        givenRoles := (<default::User>(global default::currentUserId)).roles
+      select (
+        (
+          exists (<default::Role>{'Administrator', 'Leadership'} intersect givenRoles)
+          or (.isOwner ?? false)
+        )
       )
     );
 
     access policy CanInsertGeneratedFromAppPoliciesForComment
     allow insert using (
-      default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
+      with
+        givenRoles := (<default::User>(global default::currentUserId)).roles
+      select (
+        default::Role.Administrator in givenRoles
+      )
     );
 
     access policy CanDeleteGeneratedFromAppPoliciesForComment
     allow delete using (
-      (
-        default::Role.Administrator in (<default::User>(global default::currentUserId)).roles
-        or (.isOwner ?? false)
+      with
+        givenRoles := (<default::User>(global default::currentUserId)).roles
+      select (
+        (
+          default::Role.Administrator in givenRoles
+          or (.isOwner ?? false)
+        )
       )
     );
   }

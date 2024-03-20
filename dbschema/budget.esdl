@@ -10,13 +10,17 @@ module default {
 
     access policy CanSelectGeneratedFromAppPoliciesForBudget
     allow select using (
-      (
-        exists (<default::Role>{'Administrator', 'FieldOperationsDirector', 'LeadFinancialAnalyst', 'Controller', 'FinancialAnalyst', 'Marketing', 'Fundraising', 'ExperienceOperations', 'Leadership', 'ProjectManager', 'RegionalDirector'} intersect (<default::User>(global default::currentUserId)).roles)
-        or (
-          default::Role.ConsultantManager in (<default::User>(global default::currentUserId)).roles
-          and (
-            .isMember
-            or .sensitivity <= default::Sensitivity.Medium
+      with
+        givenRoles := (<default::User>(global default::currentUserId)).roles
+      select (
+        (
+          exists (<default::Role>{'Administrator', 'FieldOperationsDirector', 'LeadFinancialAnalyst', 'Controller', 'FinancialAnalyst', 'Marketing', 'Fundraising', 'ExperienceOperations', 'Leadership', 'ProjectManager', 'RegionalDirector'} intersect givenRoles)
+          or (
+            default::Role.ConsultantManager in givenRoles
+            and (
+              .isMember
+              or .sensitivity <= default::Sensitivity.Medium
+            )
           )
         )
       )
@@ -52,13 +56,17 @@ module Budget {
 
     access policy CanSelectGeneratedFromAppPoliciesForBudgetRecord
     allow select using (
-      (
-        exists (<default::Role>{'Administrator', 'FieldOperationsDirector', 'LeadFinancialAnalyst', 'Controller', 'FinancialAnalyst', 'Marketing', 'Fundraising', 'ExperienceOperations', 'Leadership', 'ProjectManager', 'RegionalDirector'} intersect (<default::User>(global default::currentUserId)).roles)
-        or (
-          default::Role.ConsultantManager in (<default::User>(global default::currentUserId)).roles
-          and (
-            .isMember
-            or .sensitivity <= default::Sensitivity.Medium
+      with
+        givenRoles := (<default::User>(global default::currentUserId)).roles
+      select (
+        (
+          exists (<default::Role>{'Administrator', 'FieldOperationsDirector', 'LeadFinancialAnalyst', 'Controller', 'FinancialAnalyst', 'Marketing', 'Fundraising', 'ExperienceOperations', 'Leadership', 'ProjectManager', 'RegionalDirector'} intersect givenRoles)
+          or (
+            default::Role.ConsultantManager in givenRoles
+            and (
+              .isMember
+              or .sensitivity <= default::Sensitivity.Medium
+            )
           )
         )
       )
