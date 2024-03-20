@@ -17,41 +17,14 @@ module default {
         (
           exists (<default::Role>{'Administrator', 'ExperienceOperations', 'FieldOperationsDirector', 'LeadFinancialAnalyst', 'Controller', 'FinancialAnalyst', 'Leadership', 'StaffMember'} intersect givenRoles)
           or (
-            default::Role.ConsultantManager in givenRoles
+            exists (<default::Role>{'ConsultantManager', 'Marketing', 'Fundraising', 'ExperienceOperations'} intersect givenRoles)
             and (
               .isMember
               or .sensitivity <= default::Sensitivity.Medium
             )
           )
           or (
-            exists (<default::Role>{'Consultant', 'ConsultantManager'} intersect givenRoles)
-            and .isMember
-          )
-          or (
-            default::Role.FieldPartner in givenRoles
-            and .isMember
-          )
-          or (
-            default::Role.Intern in givenRoles
-            and .isMember
-          )
-          or (
-            exists (<default::Role>{'Marketing', 'Fundraising', 'ExperienceOperations'} intersect givenRoles)
-            and (
-              .isMember
-              or .sensitivity <= default::Sensitivity.Medium
-            )
-          )
-          or (
-            default::Role.Mentor in givenRoles
-            and .isMember
-          )
-          or (
-            exists (<default::Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
-            and .isMember
-          )
-          or (
-            default::Role.Translator in givenRoles
+            exists (<default::Role>{'Consultant', 'ConsultantManager', 'FieldPartner', 'Intern', 'Mentor', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'Translator'} intersect givenRoles)
             and .isMember
           )
         )
@@ -101,15 +74,7 @@ module ProgressReport {
             )
           )
           or (
-            exists (<default::Role>{'Consultant', 'ConsultantManager'} intersect givenRoles)
-            and .isMember
-          )
-          or (
-            default::Role.FieldPartner in givenRoles
-            and .isMember
-          )
-          or (
-            default::Role.Translator in givenRoles
+            exists (<default::Role>{'Consultant', 'ConsultantManager', 'FieldPartner', 'Translator'} intersect givenRoles)
             and .isMember
           )
         )
@@ -124,11 +89,7 @@ module ProgressReport {
         (
           default::Role.Administrator in givenRoles
           or (
-            default::Role.FieldPartner in givenRoles
-            and .isMember
-          )
-          or (
-            exists (<default::Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
+            exists (<default::Role>{'FieldPartner', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
             and .isMember
           )
         )
@@ -162,15 +123,7 @@ module ProgressReport {
             )
           )
           or (
-            exists (<default::Role>{'Consultant', 'ConsultantManager'} intersect givenRoles)
-            and .isMember
-          )
-          or (
-            default::Role.FieldPartner in givenRoles
-            and .isMember
-          )
-          or (
-            default::Role.Translator in givenRoles
+            exists (<default::Role>{'Consultant', 'ConsultantManager', 'FieldPartner', 'Translator'} intersect givenRoles)
             and .isMember
           )
         )
@@ -185,11 +138,7 @@ module ProgressReport {
         (
           default::Role.Administrator in givenRoles
           or (
-            default::Role.FieldPartner in givenRoles
-            and .isMember
-          )
-          or (
-            exists (<default::Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
+            exists (<default::Role>{'FieldPartner', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
             and .isMember
           )
         )
@@ -223,15 +172,7 @@ module ProgressReport {
             )
           )
           or (
-            exists (<default::Role>{'Consultant', 'ConsultantManager'} intersect givenRoles)
-            and .isMember
-          )
-          or (
-            default::Role.FieldPartner in givenRoles
-            and .isMember
-          )
-          or (
-            default::Role.Translator in givenRoles
+            exists (<default::Role>{'Consultant', 'ConsultantManager', 'FieldPartner', 'Translator'} intersect givenRoles)
             and .isMember
           )
         )
@@ -246,11 +187,7 @@ module ProgressReport {
         (
           default::Role.Administrator in givenRoles
           or (
-            default::Role.FieldPartner in givenRoles
-            and .isMember
-          )
-          or (
-            exists (<default::Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
+            exists (<default::Role>{'FieldPartner', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
             and .isMember
           )
         )

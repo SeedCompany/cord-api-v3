@@ -23,7 +23,7 @@ module ProgressReport::ProductProgress {
             )
           )
           or (
-            exists (<default::Role>{'Consultant', 'ConsultantManager'} intersect givenRoles)
+            exists (<default::Role>{'Consultant', 'ConsultantManager', 'Intern', 'Mentor'} intersect givenRoles)
             and .isMember
           )
           or (
@@ -32,14 +32,6 @@ module ProgressReport::ProductProgress {
               .isMember
               and <str>.variant = 'partner'
             )
-          )
-          or (
-            default::Role.Intern in givenRoles
-            and .isMember
-          )
-          or (
-            default::Role.Mentor in givenRoles
-            and .isMember
           )
           or (
             exists (<default::Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)

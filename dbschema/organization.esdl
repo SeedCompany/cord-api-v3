@@ -17,19 +17,11 @@ module default {
         (
           exists (<default::Role>{'Administrator', 'ConsultantManager', 'LeadFinancialAnalyst', 'Controller', 'FinancialAnalyst', 'Leadership', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'StaffMember'} intersect givenRoles)
           or (
-            exists (<default::Role>{'Consultant', 'ConsultantManager'} intersect givenRoles)
+            exists (<default::Role>{'Consultant', 'ConsultantManager', 'FieldPartner'} intersect givenRoles)
             and .isMember
           )
           or (
-            default::Role.ExperienceOperations in givenRoles
-            and .sensitivity <= default::Sensitivity.Medium
-          )
-          or (
-            default::Role.FieldPartner in givenRoles
-            and .isMember
-          )
-          or (
-            default::Role.Fundraising in givenRoles
+            exists (<default::Role>{'ExperienceOperations', 'Fundraising'} intersect givenRoles)
             and .sensitivity <= default::Sensitivity.Medium
           )
           or (

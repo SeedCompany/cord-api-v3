@@ -94,23 +94,7 @@ module default {
         (
           exists (<default::Role>{'Administrator', 'ConsultantManager', 'ExperienceOperations', 'LeadFinancialAnalyst', 'Controller', 'FinancialAnalyst', 'Fundraising', 'Marketing', 'Leadership', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'StaffMember'} intersect givenRoles)
           or (
-            exists (<default::Role>{'Consultant', 'ConsultantManager'} intersect givenRoles)
-            and .isMember
-          )
-          or (
-            default::Role.FieldPartner in givenRoles
-            and .isMember
-          )
-          or (
-            default::Role.Intern in givenRoles
-            and .isMember
-          )
-          or (
-            default::Role.Mentor in givenRoles
-            and .isMember
-          )
-          or (
-            default::Role.Translator in givenRoles
+            exists (<default::Role>{'Consultant', 'ConsultantManager', 'FieldPartner', 'Intern', 'Mentor', 'Translator'} intersect givenRoles)
             and .isMember
           )
         )
@@ -160,11 +144,7 @@ module Ethnologue {
             and .sensitivity <= default::Sensitivity.Medium
           )
           or (
-            exists (<default::Role>{'Consultant', 'ConsultantManager'} intersect givenRoles)
-            and .isMember
-          )
-          or (
-            default::Role.FieldPartner in givenRoles
+            exists (<default::Role>{'Consultant', 'ConsultantManager', 'FieldPartner', 'Translator'} intersect givenRoles)
             and .isMember
           )
           or (
@@ -177,10 +157,6 @@ module Ethnologue {
           or (
             exists (<default::Role>{'Marketing', 'Fundraising', 'ExperienceOperations'} intersect givenRoles)
             and .sensitivity <= default::Sensitivity.Low
-          )
-          or (
-            default::Role.Translator in givenRoles
-            and .isMember
           )
         )
       )

@@ -38,15 +38,11 @@ module default {
       select (
         (
           exists (<default::Role>{'Administrator', 'Consultant', 'ConsultantManager', 'FieldPartner', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller', 'Marketing', 'Fundraising', 'ExperienceOperations', 'Leadership', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'StaffMember'} intersect givenRoles)
-          or (
-            default::Role.Intern in givenRoles
-            and exists { "Stubbed .isMember for User/Unavailability" }
-          )
-          or (
-            default::Role.Mentor in givenRoles
-            and exists { "Stubbed .isMember for User/Unavailability" }
-          )
           or (.isOwner ?? false)
+          or (
+            exists (<default::Role>{'Intern', 'Mentor'} intersect givenRoles)
+            and exists { "Stubbed .isMember for User/Unavailability" }
+          )
         )
       )
     );
@@ -122,11 +118,7 @@ module User {
         (
           exists (<default::Role>{'Administrator', 'Consultant', 'ConsultantManager', 'FieldPartner', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller', 'Marketing', 'Fundraising', 'ExperienceOperations', 'Leadership', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'StaffMember'} intersect givenRoles)
           or (
-            default::Role.Intern in givenRoles
-            and exists { "Stubbed .isMember for User/Unavailability" }
-          )
-          or (
-            default::Role.Mentor in givenRoles
+            exists (<default::Role>{'Intern', 'Mentor'} intersect givenRoles)
             and exists { "Stubbed .isMember for User/Unavailability" }
           )
         )

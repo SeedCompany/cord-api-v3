@@ -32,11 +32,7 @@ module default {
         (
           exists (<default::Role>{'Administrator', 'ConsultantManager', 'ExperienceOperations', 'LeadFinancialAnalyst', 'Controller', 'FinancialAnalyst', 'Marketing', 'Fundraising', 'Leadership', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
           or (
-            exists (<default::Role>{'Consultant', 'ConsultantManager'} intersect givenRoles)
-            and .isMember
-          )
-          or (
-            default::Role.FieldPartner in givenRoles
+            exists (<default::Role>{'Consultant', 'ConsultantManager', 'FieldPartner'} intersect givenRoles)
             and .isMember
           )
           or (

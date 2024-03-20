@@ -16,23 +16,7 @@ module Project {
         (
           exists (<default::Role>{'Administrator', 'ConsultantManager', 'ExperienceOperations', 'FieldOperationsDirector', 'LeadFinancialAnalyst', 'Controller', 'FinancialAnalyst', 'Marketing', 'Fundraising', 'Leadership', 'ProjectManager', 'RegionalDirector', 'StaffMember'} intersect givenRoles)
           or (
-            exists (<default::Role>{'Consultant', 'ConsultantManager'} intersect givenRoles)
-            and .isMember
-          )
-          or (
-            default::Role.FieldPartner in givenRoles
-            and .isMember
-          )
-          or (
-            default::Role.Intern in givenRoles
-            and .isMember
-          )
-          or (
-            default::Role.Mentor in givenRoles
-            and .isMember
-          )
-          or (
-            default::Role.Translator in givenRoles
+            exists (<default::Role>{'Consultant', 'ConsultantManager', 'FieldPartner', 'Intern', 'Mentor', 'Translator'} intersect givenRoles)
             and .isMember
           )
         )
@@ -47,11 +31,7 @@ module Project {
         (
           exists (<default::Role>{'Administrator', 'ConsultantManager', 'ExperienceOperations', 'FieldOperationsDirector', 'LeadFinancialAnalyst', 'Controller'} intersect givenRoles)
           or (
-            exists (<default::Role>{'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller'} intersect givenRoles)
-            and .isMember
-          )
-          or (
-            exists (<default::Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
+            exists (<default::Role>{'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
             and .isMember
           )
         )
