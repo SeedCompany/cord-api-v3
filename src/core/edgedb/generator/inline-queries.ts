@@ -1,6 +1,5 @@
 import { stripIndent } from 'common-tags';
 import { $, adapter } from 'edgedb';
-import { Cardinality } from 'edgedb/dist/ifaces.js';
 import { $ as $$ } from 'execa';
 import { Node, SyntaxKind, VariableDeclarationKind } from 'ts-morph';
 import { injectHydrators } from './inject-hydrators';
@@ -100,7 +99,7 @@ export async function generateInlineQueries({
       // Save cardinality & hydrated query for use at runtime.
       queryMap.set(stripIndent(query), {
         query: injectHydrators(query, hydrators),
-        cardinality: cardinalityMapping[types.cardinality],
+        cardinality: types.cardinality,
       });
       // Add imports to the used imports list
       [...types.imports].forEach((i) => imports.add(i));
@@ -143,11 +142,3 @@ export async function generateInlineQueries({
     ],
   });
 }
-
-const cardinalityMapping = {
-  [Cardinality.NO_RESULT]: $.Cardinality.Empty,
-  [Cardinality.AT_MOST_ONE]: $.Cardinality.AtMostOne,
-  [Cardinality.ONE]: $.Cardinality.One,
-  [Cardinality.MANY]: $.Cardinality.Many,
-  [Cardinality.AT_LEAST_ONE]: $.Cardinality.AtLeastOne,
-};
