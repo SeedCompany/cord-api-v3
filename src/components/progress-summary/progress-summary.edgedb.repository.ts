@@ -6,7 +6,7 @@ import { CommonRepository, e } from '~/core/edgedb';
 import { $expr_Cast } from '~/core/edgedb/generated-client/cast';
 import { $ProgressReport } from '~/core/edgedb/generated-client/modules/default';
 import { ProgressReport } from '../progress-report/dto';
-import { FetchedSummaries, ProgressSummary, SummaryPeriod } from './dto';
+import { ProgressSummary, SummaryPeriod } from './dto';
 import { ProgressSummaryRepository } from './progress-summary.repository';
 
 const { Period, Summary } = e.ProgressReport.ProductProgress;
@@ -16,9 +16,7 @@ export class ProgressSummaryEdgeDBRepository
   extends CommonRepository
   implements PublicOf<ProgressSummaryRepository>
 {
-  async readMany(
-    reportIds: ReadonlyArray<ID<ProgressReport>>,
-  ): Promise<FetchedSummaries[]> {
+  async readMany(reportIds: ReadonlyArray<ID<ProgressReport>>) {
     return await this.db.run(this.readManyQuery, { ids: reportIds });
   }
 
