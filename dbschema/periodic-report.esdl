@@ -39,30 +39,6 @@ module default {
   
   type FinancialReport extending PeriodicReport, Project::Child {
     overloaded container: Project;
-
-    access policy CanSelectGeneratedFromAppPoliciesForFinancialReport
-    allow select using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles,
-        isMember := (.container[is Project::ContextAware].isMember ?? false),
-        sensitivity := (.container[is Project::ContextAware].sensitivity ?? default::Sensitivity.High)
-      select (
-        (
-          exists (<default::Role>{'Administrator', 'ExperienceOperations', 'FieldOperationsDirector', 'FieldPartner', 'LeadFinancialAnalyst', 'Controller', 'FinancialAnalyst', 'Leadership', 'ProjectManager', 'RegionalDirector', 'StaffMember'} intersect givenRoles)
-          or (
-            exists (<default::Role>{'ConsultantManager', 'Marketing', 'Fundraising', 'ExperienceOperations'} intersect givenRoles)
-            and (
-              isMember
-              or sensitivity <= default::Sensitivity.Medium
-            )
-          )
-          or (
-            exists (<default::Role>{'Consultant', 'ConsultantManager', 'Intern', 'Mentor', 'Translator'} intersect givenRoles)
-            and isMember
-          )
-        )
-      )
-    );
   }
   
   type NarrativeReport extending PeriodicReport, Project::Child {
@@ -72,22 +48,11 @@ module default {
     allow select using (
       with
         givenRoles := (<default::User>(global default::currentUserId)).roles,
-        isMember := (.container[is Project::ContextAware].isMember ?? false),
-        sensitivity := (.container[is Project::ContextAware].sensitivity ?? default::Sensitivity.High)
+        isMember := (.container[is Project::ContextAware].isMember ?? false)
       select (
         (
-          exists (<default::Role>{'Administrator', 'ExperienceOperations', 'FieldOperationsDirector', 'FieldPartner', 'LeadFinancialAnalyst', 'Controller', 'FinancialAnalyst', 'Leadership', 'ProjectManager', 'RegionalDirector', 'StaffMember'} intersect givenRoles)
-          or (
-            exists (<default::Role>{'ConsultantManager', 'Marketing', 'Fundraising', 'ExperienceOperations'} intersect givenRoles)
-            and (
-              isMember
-              or sensitivity <= default::Sensitivity.Medium
-            )
-          )
-          or (
-            exists (<default::Role>{'Consultant', 'ConsultantManager', 'Intern', 'Mentor', 'Translator'} intersect givenRoles)
-            and isMember
-          )
+          exists (<default::Role>{'Consultant', 'ConsultantManager'} intersect givenRoles)
+          and isMember
         )
       )
     );

@@ -164,46 +164,7 @@ module default {
       with
         givenRoles := (<default::User>(global default::currentUserId)).roles
       select (
-        (
-          exists (<default::Role>{'Administrator', 'ConsultantManager', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller', 'Marketing', 'Fundraising', 'ExperienceOperations', 'Leadership', 'StaffMember'} intersect givenRoles)
-          or (
-            exists (<default::Role>{'Consultant', 'ConsultantManager', 'FieldPartner', 'Intern', 'Mentor', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'Translator'} intersect givenRoles)
-            and .isMember
-          )
-        )
-      )
-    );
-
-    access policy CanInsertGeneratedFromAppPoliciesForLanguageEngagement
-    allow insert using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        (
-          default::Role.Administrator in givenRoles
-          or (
-            exists (<default::Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller'} intersect givenRoles)
-            and .isMember
-          )
-        )
-      )
-    );
-
-    access policy CanDeleteGeneratedFromAppPoliciesForLanguageEngagement
-    allow delete using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        (
-          default::Role.Administrator in givenRoles
-          or (
-            exists (<default::Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller'} intersect givenRoles)
-            and (
-              .isMember
-              and <str>.status = 'InDevelopment'
-            )
-          )
-        )
+        default::Role.ConsultantManager in givenRoles
       )
     );
   }
@@ -230,54 +191,6 @@ module default {
         project := __new__.project,
         projectContext := __new__.projectContext,
       }
-    );
-
-    access policy CanSelectGeneratedFromAppPoliciesForInternshipEngagement
-    allow select using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        (
-          exists (<default::Role>{'Administrator', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller', 'Marketing', 'Fundraising', 'ExperienceOperations', 'Leadership', 'StaffMember'} intersect givenRoles)
-          or (
-            exists (<default::Role>{'Consultant', 'ConsultantManager', 'FieldPartner', 'Intern', 'Mentor', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'Translator'} intersect givenRoles)
-            and .isMember
-          )
-        )
-      )
-    );
-
-    access policy CanInsertGeneratedFromAppPoliciesForInternshipEngagement
-    allow insert using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        (
-          default::Role.Administrator in givenRoles
-          or (
-            exists (<default::Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller'} intersect givenRoles)
-            and .isMember
-          )
-        )
-      )
-    );
-
-    access policy CanDeleteGeneratedFromAppPoliciesForInternshipEngagement
-    allow delete using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        (
-          default::Role.Administrator in givenRoles
-          or (
-            exists (<default::Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller'} intersect givenRoles)
-            and (
-              .isMember
-              and <str>.status = 'InDevelopment'
-            )
-          )
-        )
-      )
     );
   }
 }

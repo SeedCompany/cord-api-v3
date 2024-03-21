@@ -49,70 +49,7 @@ module default {
     );
   }
   
-  type EthnoArt extending Producible {
-    access policy CanSelectGeneratedFromAppPoliciesForEthnoArt
-    allow select;
-
-    access policy CanInsertGeneratedFromAppPoliciesForEthnoArt
-    allow insert using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        exists (<default::Role>{'Administrator', 'FieldOperationsDirector', 'ProjectManager', 'RegionalDirector'} intersect givenRoles)
-      )
-    );
-
-    access policy CanDeleteGeneratedFromAppPoliciesForEthnoArt
-    allow delete using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        default::Role.Administrator in givenRoles
-      )
-    );
-  };
-  type Film extending Producible {
-    access policy CanSelectGeneratedFromAppPoliciesForFilm
-    allow select;
-
-    access policy CanInsertGeneratedFromAppPoliciesForFilm
-    allow insert using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        exists (<default::Role>{'Administrator', 'FieldOperationsDirector', 'ProjectManager', 'RegionalDirector'} intersect givenRoles)
-      )
-    );
-
-    access policy CanDeleteGeneratedFromAppPoliciesForFilm
-    allow delete using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        default::Role.Administrator in givenRoles
-      )
-    );
-  };
-  type Story extending Producible {
-    access policy CanSelectGeneratedFromAppPoliciesForStory
-    allow select;
-
-    access policy CanInsertGeneratedFromAppPoliciesForStory
-    allow insert using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        exists (<default::Role>{'Administrator', 'FieldOperationsDirector', 'ProjectManager', 'RegionalDirector'} intersect givenRoles)
-      )
-    );
-
-    access policy CanDeleteGeneratedFromAppPoliciesForStory
-    allow delete using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        default::Role.Administrator in givenRoles
-      )
-    );
-  };
+  type EthnoArt extending Producible;
+  type Film extending Producible;
+  type Story extending Producible;
 }

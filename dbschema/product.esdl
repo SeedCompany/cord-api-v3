@@ -27,27 +27,6 @@ module default {
         message := "`Product.scripture` should have a `Scripture::Collection` with verses or be null/empty-set"
       )
     );
-
-    access policy CanSelectGeneratedFromAppPoliciesForOtherProduct
-    allow select;
-
-    access policy CanInsertGeneratedFromAppPoliciesForOtherProduct
-    allow insert using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        exists (<default::Role>{'Administrator', 'FieldOperationsDirector', 'ProjectManager', 'RegionalDirector'} intersect givenRoles)
-      )
-    );
-
-    access policy CanDeleteGeneratedFromAppPoliciesForOtherProduct
-    allow delete using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        default::Role.Administrator in givenRoles
-      )
-    );
   }
   
   type DirectScriptureProduct extending Product {
@@ -63,27 +42,6 @@ module default {
     
     totalVerses: int16;
     totalVerseEquivalents: float32;
-
-    access policy CanSelectGeneratedFromAppPoliciesForDirectScriptureProduct
-    allow select;
-
-    access policy CanInsertGeneratedFromAppPoliciesForDirectScriptureProduct
-    allow insert using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        exists (<default::Role>{'Administrator', 'FieldOperationsDirector', 'ProjectManager', 'RegionalDirector'} intersect givenRoles)
-      )
-    );
-
-    access policy CanDeleteGeneratedFromAppPoliciesForDirectScriptureProduct
-    allow delete using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        default::Role.Administrator in givenRoles
-      )
-    );
   }
   
   type DerivativeScriptureProduct extending Product {
@@ -113,27 +71,6 @@ module default {
     
     totalVerses: int16;
     totalVerseEquivalents: float32;
-
-    access policy CanSelectGeneratedFromAppPoliciesForDerivativeScriptureProduct
-    allow select;
-
-    access policy CanInsertGeneratedFromAppPoliciesForDerivativeScriptureProduct
-    allow insert using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        exists (<default::Role>{'Administrator', 'FieldOperationsDirector', 'ProjectManager', 'RegionalDirector'} intersect givenRoles)
-      )
-    );
-
-    access policy CanDeleteGeneratedFromAppPoliciesForDerivativeScriptureProduct
-    allow delete using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        default::Role.Administrator in givenRoles
-      )
-    );
   }
   
   type OtherProduct extending Product {

@@ -160,76 +160,10 @@ module default {
           (and required to be) the highest sensitivity Language engaged"
       )
     );
-
-    access policy CanSelectGeneratedFromAppPoliciesForTranslationProject
-    allow select using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        (
-          exists (<default::Role>{'Administrator', 'ConsultantManager', 'ExperienceOperations', 'FieldOperationsDirector', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller', 'Fundraising', 'Leadership', 'Marketing', 'ProjectManager', 'RegionalDirector', 'StaffMember'} intersect givenRoles)
-          or (
-            exists (<default::Role>{'Consultant', 'ConsultantManager', 'FieldPartner', 'Intern', 'Mentor', 'RegionalDirector', 'FieldOperationsDirector', 'Translator'} intersect givenRoles)
-            and .isMember
-          )
-        )
-      )
-    );
-
-    access policy CanInsertGeneratedFromAppPoliciesForTranslationProject
-    allow insert using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        exists (<default::Role>{'Administrator', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
-      )
-    );
-
-    access policy CanDeleteGeneratedFromAppPoliciesForTranslationProject
-    allow delete using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        default::Role.Administrator in givenRoles
-      )
-    );
   }
   
   type InternshipProject extending Project {
     multi link engagements := .<project[is InternshipEngagement];
-
-    access policy CanSelectGeneratedFromAppPoliciesForInternshipProject
-    allow select using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        (
-          exists (<default::Role>{'Administrator', 'ConsultantManager', 'ExperienceOperations', 'FieldOperationsDirector', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller', 'Fundraising', 'Leadership', 'Marketing', 'ProjectManager', 'RegionalDirector', 'StaffMember'} intersect givenRoles)
-          or (
-            exists (<default::Role>{'Consultant', 'ConsultantManager', 'FieldPartner', 'Intern', 'Mentor', 'RegionalDirector', 'FieldOperationsDirector', 'Translator'} intersect givenRoles)
-            and .isMember
-          )
-        )
-      )
-    );
-
-    access policy CanInsertGeneratedFromAppPoliciesForInternshipProject
-    allow insert using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        exists (<default::Role>{'Administrator', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
-      )
-    );
-
-    access policy CanDeleteGeneratedFromAppPoliciesForInternshipProject
-    allow delete using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        default::Role.Administrator in givenRoles
-      )
-    );
   }
 }
  

@@ -15,18 +15,8 @@ module default {
         givenRoles := (<default::User>(global default::currentUserId)).roles
       select (
         (
-          exists (<default::Role>{'Administrator', 'ExperienceOperations', 'FieldOperationsDirector', 'LeadFinancialAnalyst', 'Controller', 'FinancialAnalyst', 'Leadership', 'StaffMember'} intersect givenRoles)
-          or (
-            exists (<default::Role>{'ConsultantManager', 'Marketing', 'Fundraising', 'ExperienceOperations'} intersect givenRoles)
-            and (
-              .isMember
-              or .sensitivity <= default::Sensitivity.Medium
-            )
-          )
-          or (
-            exists (<default::Role>{'Consultant', 'ConsultantManager', 'FieldPartner', 'Intern', 'Mentor', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'Translator'} intersect givenRoles)
-            and .isMember
-          )
+          exists (<default::Role>{'FieldPartner', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
+          and .isMember
         )
       )
     );

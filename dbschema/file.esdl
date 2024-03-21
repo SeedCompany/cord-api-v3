@@ -10,16 +10,7 @@ module default {
       with
         givenRoles := (<default::User>(global default::currentUserId)).roles
       select (
-        exists (<default::Role>{'Administrator', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller', 'Leadership'} intersect givenRoles)
-      )
-    );
-
-    access policy CanInsertDeleteGeneratedFromAppPoliciesForDirectory
-    allow insert, delete using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        default::Role.Administrator in givenRoles
+        exists (<default::Role>{'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller'} intersect givenRoles)
       )
     );
   }
@@ -36,24 +27,6 @@ module default {
 module File {
   type Version extending Node {
     required mimeType: str;
-
-    access policy CanSelectGeneratedFromAppPoliciesForFileVersion
-    allow select using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        exists (<default::Role>{'Administrator', 'Leadership'} intersect givenRoles)
-      )
-    );
-
-    access policy CanInsertDeleteGeneratedFromAppPoliciesForFileVersion
-    allow insert, delete using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        default::Role.Administrator in givenRoles
-      )
-    );
   }
   
   abstract type Node extending default::Resource, Mixin::Named {
