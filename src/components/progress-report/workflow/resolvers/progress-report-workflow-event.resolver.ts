@@ -11,6 +11,6 @@ export class ProgressReportWorkflowEventResolver {
     @Parent() event: WorkflowEvent,
     @Loader(UserLoader) users: LoaderOf<UserLoader>,
   ): Promise<SecuredUser> {
-    return await mapSecuredValue(event.who, (id) => users.load(id));
+    return await mapSecuredValue(event.who, ({ id }) => users.load(id));
   }
 }

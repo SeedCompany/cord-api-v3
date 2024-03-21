@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { inArray, node, Query, relation } from 'cypher-query-builder';
+import { SetRequired } from 'type-fest';
 import {
   ID,
   NotFoundException,
   Order,
-  RichTextDocument,
   Role,
   ServerException,
   Session,
@@ -20,8 +20,8 @@ import {
   sorting,
 } from '~/core/database/query';
 import { ProgressReport, ProgressReportStatus as Status } from '../dto';
+import { ExecuteProgressReportTransitionInput } from './dto/execute-progress-report-transition.input';
 import { ProgressReportWorkflowEvent as WorkflowEvent } from './dto/workflow-event.dto';
-import { InternalTransition } from './transitions';
 
 @Injectable()
 export class ProgressReportWorkflowRepository extends DtoRepository(
@@ -81,31 +81,11 @@ export class ProgressReportWorkflowRepository extends DtoRepository(
         );
   }
 
-  async recordTransition(
-    report: ID,
-    { id: transition, to: status }: InternalTransition,
-    session: Session,
-    notes?: RichTextDocument,
-  ) {
-    return await this.recordEvent(
+  async recordEvent(
+    {
       report,
-      { status, transition, notes },
-      session,
-    );
-  }
-
-  async recordBypass(
-    report: ID,
-    status: Status,
-    session: Session,
-    notes?: RichTextDocument,
-  ) {
-    return await this.recordEvent(report, { status, notes }, session);
-  }
-
-  private async recordEvent(
-    report: ID,
-    props: Record<string, any>,
+      ...props
+    }: SetRequired<ExecuteProgressReportTransitionInput, 'status'>,
     session: Session,
   ) {
     const result = await this.db
@@ -168,7 +148,7 @@ export class ProgressReportWorkflowRepository extends DtoRepository(
         relation('out', '', 'user', ACTIVE),
         node('user', 'User'),
       ])
-      .optionalMatch([
+      .match([
         node('user'),
         relation('out', '', 'email', ACTIVE),
         node('email', 'EmailAddress'),
@@ -181,27 +161,12 @@ export class ProgressReportWorkflowRepository extends DtoRepository(
       .return<{
         id: ID;
         email: string;
-        roles: Role[];
+        roles: readonly Role[];
       }>([
         'user.id as id',
         'email.value as email',
         'coalesce(role.value, []) as roles',
       ]);
-    return await query.run();
-  }
-
-  async getUserInfoByEmail(email: string) {
-    const query = this.db
-      .query()
-      .match([
-        node('email', 'EmailAddress', { value: email }),
-        relation('in', '', 'email', ACTIVE),
-        node('user', 'User'),
-      ])
-      .return<{
-        id?: ID;
-        email?: string;
-      }>(['user.id as id', 'email.value as email']);
     return await query.run();
   }
 
