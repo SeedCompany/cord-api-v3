@@ -21,7 +21,7 @@ import {
   SecuredLocationList,
 } from '../location';
 import {
-  Project,
+  IProject,
   ProjectListInput,
   ProjectService,
   SecuredProjectList,
@@ -190,40 +190,15 @@ export class LanguageService {
     input: ProjectListInput,
     session: Session,
   ): Promise<SecuredProjectList> {
-    const { page, count } = ProjectListInput.defaultValue(
-      ProjectListInput,
-      input,
-    );
-
-    const result: {
-      items: Project[];
-      hasMore: boolean;
-      total: number;
-    } = { items: [], hasMore: false, total: 0 };
-
-    let readProject = await this.repo.listProjects(language);
-
-    this.logger.debug(`list projects results`, { total: readProject.length });
-
-    result.total = readProject.length;
-    result.hasMore = count * page < result.total ?? true;
-
-    readProject = readProject.slice().splice((page - 1) * count, count);
-
-    result.items = await Promise.all(
-      readProject.map(
-        async (project) =>
-          await this.projectService.readOne(project.id, session),
-      ),
+    const projectListOutput = await this.projectService.list(
+      { ...input, filter: { ...input.filter, languageId: language.id } },
+      session,
     );
 
     return {
-      items: result.items,
-      hasMore: result.hasMore,
-      total: result.total,
-      //TODO: use the upcoming Roles service to determine permissions.
-      canCreate: true,
+      ...projectListOutput,
       canRead: true,
+      canCreate: this.privileges.for(session, IProject).can('create'),
     };
   }
 

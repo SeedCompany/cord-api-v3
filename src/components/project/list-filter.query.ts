@@ -64,6 +64,13 @@ export const projectListFilter = (input: ProjectListInput) =>
         ]),
       ],
     }),
+    languageId: filter.pathExists((id) => [
+      node('node'),
+      relation('out', '', 'engagement', ACTIVE),
+      node('', 'LanguageEngagement'),
+      relation('out', '', 'language', ACTIVE),
+      node('', 'Language', { id }),
+    ]),
     sensitivity:
       ({ value, query }) =>
       () =>
