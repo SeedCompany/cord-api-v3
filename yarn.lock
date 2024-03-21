@@ -4975,6 +4975,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"clipanion@npm:^4.0.0-rc.3":
+  version: 4.0.0-rc.3
+  resolution: "clipanion@npm:4.0.0-rc.3"
+  dependencies:
+    typanion: "npm:^3.8.0"
+  peerDependencies:
+    typanion: "*"
+  checksum: 10c0/5171fd04539b39b5483bd097d5f828da165fa47b4718378cb0bc3c2f70dfa11736f01727cfa4b9566fc8eabad03473e62ae98470c4c8d15c618ee1294e07169f
+  languageName: node
+  linkType: hard
+
 "cliui@npm:^7.0.2":
   version: 7.0.4
   resolution: "cliui@npm:7.0.4"
@@ -5148,13 +5159,6 @@ __metadata:
   version: 10.0.1
   resolution: "commander@npm:10.0.1"
   checksum: 10c0/53f33d8927758a911094adadda4b2cbac111a5b377d8706700587650fd8f45b0bbe336de4b5c3fe47fd61f420a3d9bd452b6e0e6e5600a7e74d7bf0174f6efe3
-  languageName: node
-  linkType: hard
-
-"commander@npm:^11.0.0, commander@npm:^11.1.0":
-  version: 11.1.0
-  resolution: "commander@npm:11.1.0"
-  checksum: 10c0/13cc6ac875e48780250f723fb81c1c1178d35c5decb1abb1b628b3177af08a8554e76b2c0f29de72d69eef7c864d12613272a71fabef8047922bc622ab75a179
   languageName: node
   linkType: hard
 
@@ -5356,7 +5360,7 @@ __metadata:
     class-transformer: "npm:^0.5.1"
     class-validator: "npm:^0.14.0"
     cli-table3: "npm:^0.6.3"
-    commander: "npm:^11.1.0"
+    clipanion: "npm:^4.0.0-rc.3"
     common-tags: "npm:^1.8.2"
     cookie-parser: "npm:^1.4.6"
     cypher-query-builder: "patch:cypher-query-builder@6.0.4#.yarn/patches/cypher-query-builder.patch"
@@ -5394,7 +5398,6 @@ __metadata:
     mime: "npm:beta"
     nanoid: "npm:^4.0.2"
     neo4j-driver: "npm:^5.14.0"
-    nestjs-console: "npm:^9.0.0"
     p-retry: "npm:^5.1.2"
     pako: "npm:^2.1.0"
     pkg-up: "npm:^4.0.0"
@@ -10259,18 +10262,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"nestjs-console@npm:^9.0.0":
-  version: 9.0.0
-  resolution: "nestjs-console@npm:9.0.0"
-  dependencies:
-    commander: "npm:^11.0.0"
-  peerDependencies:
-    "@nestjs/common": ^9.0.0 || ^10.0.0
-    "@nestjs/core": ^9.0.0 || ^10.0.0
-  checksum: 10c0/3203f4e78c6e593672808d59baf3ae74b5cb973599d6a92a5b0a0f0f6bb3b5a4f4347517e62a66db961bd35de966127c80468c7f8005ff2441a3c583c2365088
-  languageName: node
-  linkType: hard
-
 "no-case@npm:^2.2.0":
   version: 2.3.2
   resolution: "no-case@npm:2.3.2"
@@ -12585,6 +12576,13 @@ __metadata:
   peerDependencies:
     typescript: ">=2.8.0 || >= 3.2.0-dev || >= 3.3.0-dev || >= 3.4.0-dev || >= 3.5.0-dev || >= 3.6.0-dev || >= 3.6.0-beta || >= 3.7.0-dev || >= 3.7.0-beta"
   checksum: 10c0/02f19e458ec78ead8fffbf711f834ad8ecd2cc6ade4ec0320790713dccc0a412b99e7fd907c4cda2a1dc602c75db6f12e0108e87a5afad4b2f9e90a24cabd5a2
+  languageName: node
+  linkType: hard
+
+"typanion@npm:^3.8.0":
+  version: 3.14.0
+  resolution: "typanion@npm:3.14.0"
+  checksum: 10c0/8b03b19844e6955bfd906c31dc781bae6d7f1fb3ce4fe24b7501557013d4889ae5cefe671dafe98d87ead0adceb8afcb8bc16df7dc0bd2b7331bac96f3a7cae2
   languageName: node
   linkType: hard
 

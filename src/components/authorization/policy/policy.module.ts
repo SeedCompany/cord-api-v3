@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { PolicyDumper } from './executor/policy-dumper';
+import { PolicyDumpCommand, PolicyDumper } from './executor/policy-dumper';
 import { PolicyExecutor } from './executor/policy-executor';
 import { Privileges } from './executor/privileges';
 import { GrantersFactory } from './granters.factory';
@@ -12,6 +12,7 @@ import { PolicyFactory } from './policy.factory';
     PolicyExecutor,
     Privileges,
     PolicyDumper,
+    PolicyDumpCommand,
   ],
   exports: [Privileges],
 })
