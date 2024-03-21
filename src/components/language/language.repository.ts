@@ -210,7 +210,7 @@ export class LanguageRepository extends DtoRepository<
     return result!; // result from paginate() will always have 1 row.
   }
 
-  async sponsorStartDate(language: Language) {
+  async getEngagementIdsForLanguage(language: Language) {
     return await this.db
       .query()
       .match([
