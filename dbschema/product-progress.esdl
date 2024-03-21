@@ -16,6 +16,16 @@ module ProgressReport::ProductProgress {
         (
           exists (<default::Role>{'Administrator', 'FieldOperationsDirector', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller', 'Marketing', 'Fundraising', 'ExperienceOperations', 'Leadership', 'StaffMember'} intersect givenRoles)
           or (
+            default::Role.FieldPartner in givenRoles
+            and .isMember
+            and <str>.variant = 'partner'
+          )
+          or (
+            exists (<default::Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
+            and .isMember
+            and <str>.variant in {'official', 'partner'}
+          )
+          or (
             default::Role.ConsultantManager in givenRoles
             and (
               .isMember
@@ -25,26 +35,6 @@ module ProgressReport::ProductProgress {
           or (
             exists (<default::Role>{'Consultant', 'ConsultantManager', 'Intern', 'Mentor'} intersect givenRoles)
             and .isMember
-          )
-          or (
-            default::Role.FieldPartner in givenRoles
-            and (
-              .isMember
-              and <str>.variant = 'partner'
-            )
-          )
-          or (
-            exists (<default::Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
-            and (
-              (
-                .isMember
-                and <str>.variant = 'official'
-              )
-              or (
-                .isMember
-                and <str>.variant = 'partner'
-              )
-            )
           )
         )
       )

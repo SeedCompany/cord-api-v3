@@ -269,10 +269,8 @@ module ProgressReport {
           )
           or (
             default::Role.FieldPartner in givenRoles
-            and (
-              .isMember
-              and <str>.variant = 'draft'
-            )
+            and .isMember
+            and <str>.variant = 'draft'
           )
           or (
             exists (<default::Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
@@ -312,10 +310,8 @@ module ProgressReport {
           default::Role.Administrator in givenRoles
           or (
             default::Role.FieldPartner in givenRoles
-            and (
-              .isMember
-              and <str>.variant = 'draft'
-            )
+            and .isMember
+            and <str>.variant = 'draft'
           )
           or (
             default::Role.Marketing in givenRoles
@@ -323,17 +319,13 @@ module ProgressReport {
           )
           or (
             exists (<default::Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
-            and (
-              .isMember
-              and <str>.variant in {'draft', 'translated', 'fpm'}
-            )
+            and .isMember
+            and <str>.variant in {'draft', 'translated', 'fpm'}
           )
           or (
             default::Role.Translator in givenRoles
-            and (
-              .isMember
-              and <str>.variant = 'translated'
-            )
+            and .isMember
+            and <str>.variant = 'translated'
           )
         )
       )

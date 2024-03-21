@@ -78,10 +78,8 @@ module default {
           default::Role.Administrator in givenRoles
           or (
             exists (<default::Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller'} intersect givenRoles)
-            and (
-              .isMember
-              and <str>.status = 'InDevelopment'
-            )
+            and .isMember
+            and <str>.status = 'InDevelopment'
           )
         )
       )
