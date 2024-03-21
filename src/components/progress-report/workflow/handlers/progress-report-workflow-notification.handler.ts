@@ -76,7 +76,7 @@ export class ProgressReportWorkflowNotificationHandler
         this.prepareNotificationObject(
           reportId,
           previousStatus,
-          userId ? { userId } : { email },
+          userId ? { userId } : email ? { email } : { email: '' },
           workflowEvent,
           projectId,
           languageId,
@@ -131,7 +131,7 @@ export class ProgressReportWorkflowNotificationHandler
     );
     const report = await this.reportService.readOne(reportId, recipientSession);
     const changedBy = await this.userService.readOne(
-      unsecuredEvent.who,
+      unsecuredEvent.who.id,
       recipientSession,
     );
     const workflowEvent = this.workflowService.secure(

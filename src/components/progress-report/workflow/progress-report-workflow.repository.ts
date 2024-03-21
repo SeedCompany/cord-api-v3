@@ -180,28 +180,13 @@ export class ProgressReportWorkflowRepository extends DtoRepository(
       ])
       .return<{
         id: ID;
-        email: string;
+        email: string | null;
         roles: Role[];
       }>([
         'user.id as id',
         'email.value as email',
         'coalesce(role.value, []) as roles',
       ]);
-    return await query.run();
-  }
-
-  async getUserInfoByEmail(email: string) {
-    const query = this.db
-      .query()
-      .match([
-        node('email', 'EmailAddress', { value: email }),
-        relation('in', '', 'email', ACTIVE),
-        node('user', 'User'),
-      ])
-      .return<{
-        id?: ID;
-        email?: string;
-      }>(['user.id as id', 'email.value as email']);
     return await query.run();
   }
 
@@ -216,7 +201,7 @@ export class ProgressReportWorkflowRepository extends DtoRepository(
       .where({ 'email.value': inArray(emails) })
       .return<{
         id: ID;
-        email: string;
+        email: string | null;
       }>(['user.id as id, email.value as email']);
     return await query.run();
   }
