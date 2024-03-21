@@ -3,10 +3,9 @@ import { cleanJoin, groupBy, mapEntries } from '@seedcompany/common';
 import { stripIndent } from 'common-tags';
 import addIndent from 'indent-string';
 import { startCase } from 'lodash';
-import { EnhancedResource } from '~/common';
 import { ResourceAction } from './actions';
 import { Permission } from './builder/perm-granter';
-import { Condition } from './conditions';
+import { AsEdgeQLParams, Condition } from './conditions';
 import { PolicyExecutor } from './executor/policy-executor';
 
 @Injectable()
@@ -16,7 +15,8 @@ export class EdgeDBAccessPolicyGenerator {
     private readonly executor: PolicyExecutor & {},
   ) {}
 
-  makeSdl(resource: EnhancedResource<any>) {
+  makeSdl(params: AsEdgeQLParams<any>) {
+    const { resource } = params;
     const actions = {
       read: 'select',
       create: 'insert',
@@ -34,14 +34,14 @@ export class EdgeDBAccessPolicyGenerator {
     ).map((group) => {
       const actions = group.map(([action]) => action);
       const perm = group[0][1];
-      return this.makeSdlForAction(resource, actions, perm);
+      return this.makeSdlForAction(params, actions, perm);
     });
 
     return cleanJoin('\n\n', policies);
   }
 
   makeSdlForAction(
-    resource: EnhancedResource<any>,
+    params: AsEdgeQLParams<any>,
     stmtTypes: string[],
     perm: Permission,
   ) {
@@ -52,20 +52,16 @@ export class EdgeDBAccessPolicyGenerator {
 
     const name = `Can${stmtTypes
       .map((action) => startCase(action))
-      .join('')}GeneratedFromAppPoliciesFor${resource.name}`;
+      .join('')}GeneratedFromAppPoliciesFor${params.resource.name}`;
 
     const withAliases =
-      typeof perm === 'boolean'
-        ? {}
-        : perm.setupEdgeQLContext?.({ resource }) ?? {};
+      typeof perm === 'boolean' ? {} : perm.setupEdgeQLContext?.(params) ?? {};
     const withAliasesEql = Object.entries(withAliases)
       .map(([key, value]) => `${key} := ${value}`)
       .join(',\n');
 
     const conditionEql =
-      typeof perm === 'boolean'
-        ? String(perm)
-        : perm.asEdgeQLCondition({ resource });
+      typeof perm === 'boolean' ? String(perm) : perm.asEdgeQLCondition(params);
 
     const usingBodyEql = withAliasesEql
       ? stripIndent`

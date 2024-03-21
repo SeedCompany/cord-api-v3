@@ -14,6 +14,7 @@ import {
   AsEdgeQLParams,
   Condition,
   eqlDoesIntersect,
+  fqnRelativeTo,
   IsAllowedParams,
 } from '../../policy/conditions';
 
@@ -118,8 +119,9 @@ class MemberWithRolesCondition<TResourceStatic extends ResourceWithScope>
     return `size(apoc.coll.intersection(${CQL_VAR}, ${String(required)})) > 0`;
   }
 
-  asEdgeQLCondition() {
-    return eqlDoesIntersect('.membership.roles', this.roles, 'default::Role');
+  asEdgeQLCondition({ namespace }: AsEdgeQLParams<TResourceStatic>) {
+    const Role = fqnRelativeTo('default::Role', namespace);
+    return eqlDoesIntersect('.membership.roles', this.roles, Role);
   }
 
   [inspect.custom](_depth: number, _options: InspectOptionsStylized) {

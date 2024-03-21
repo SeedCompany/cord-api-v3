@@ -29,3 +29,10 @@ export const eqlLiteralSet = (items: Iterable<string>, castName?: string) => {
   const listStr = list.map((i) => `'${i}'`).join(', ');
   return castName ? `<${castName}>{${listStr}}` : `{${listStr}}`;
 };
+
+export const fqnRelativeTo = (fqn: string, currentNamespace: string) => {
+  const parts = fqn.split('::');
+  const name = parts.pop()!;
+  const givenNamespace = parts.join('::');
+  return givenNamespace === currentNamespace ? name : fqn;
+};

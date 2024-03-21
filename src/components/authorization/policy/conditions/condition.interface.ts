@@ -27,7 +27,7 @@ export type AsCypherParams<TResourceStatic extends ResourceShape<any>> = Omit<
 export type AsEdgeQLParams<TResourceStatic extends ResourceShape<any>> = Pick<
   IsAllowedParams<TResourceStatic>,
   'resource'
->;
+> & { namespace: string };
 
 export abstract class Condition<
   TResourceStatic extends ResourceShape<any> = ResourceShape<any>,

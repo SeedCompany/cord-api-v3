@@ -2,8 +2,10 @@ import { inspect } from 'util';
 import { Role } from '~/common';
 import { withoutScope } from '../../dto';
 import {
+  AsEdgeQLParams,
   Condition,
   eqlDoesIntersect,
+  fqnRelativeTo,
   IsAllowedParams,
 } from '../../policy/conditions';
 
@@ -19,14 +21,17 @@ export class RoleCondition implements Condition {
     return 'false';
   }
 
-  setupEdgeQLContext() {
+  setupEdgeQLContext({ namespace }: AsEdgeQLParams<any>) {
+    const User = fqnRelativeTo('default::User', namespace);
+    const currentUserId = fqnRelativeTo('default::currentUserId', namespace);
     return {
-      givenRoles: '(<default::User>(global default::currentUserId)).roles',
+      givenRoles: `(<${User}>(global ${currentUserId})).roles`,
     };
   }
 
-  asEdgeQLCondition() {
-    return eqlDoesIntersect('givenRoles', this.allowed, 'default::Role');
+  asEdgeQLCondition({ namespace }: AsEdgeQLParams<any>) {
+    const roleType = fqnRelativeTo('default::Role', namespace);
+    return eqlDoesIntersect('givenRoles', this.allowed, roleType);
   }
 
   union(this: void, conditions: this[]) {

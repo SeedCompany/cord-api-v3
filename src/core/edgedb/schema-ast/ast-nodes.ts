@@ -65,11 +65,15 @@ export class SchemaModule extends SchemaNode {
 export class SchemaType extends SchemaNode {
   readonly name: string;
 
-  getFQN() {
+  getModule() {
     if (!(this.parent instanceof SchemaModule)) {
       throw new Error('Expected parent to be a module');
     }
-    const fqn = [this.parent.getNamespace(), this.name].join('::');
+    return this.parent;
+  }
+
+  getFQN() {
+    const fqn = [this.getModule().getNamespace(), this.name].join('::');
     return fqn;
   }
 }

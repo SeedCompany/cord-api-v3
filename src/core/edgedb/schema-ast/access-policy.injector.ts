@@ -65,7 +65,10 @@ export class EdgeDBAccessPolicyInjector {
   }
 
   private injectForType(node: SchemaType, resource: EnhancedResource<any>) {
-    const policies = this.generator.makeSdl(resource);
+    const policies = this.generator.makeSdl({
+      resource,
+      namespace: node.getModule().getNamespace(),
+    });
     if (!policies) {
       return;
     }
