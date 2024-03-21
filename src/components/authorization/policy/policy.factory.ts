@@ -3,7 +3,7 @@ import {
   DiscoveryService,
 } from '@golevelup/nestjs-discovery';
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { mapEntries, mapValues } from '@seedcompany/common';
+import { entries, mapEntries, mapValues } from '@seedcompany/common';
 import { pick, startCase } from 'lodash';
 import { DeepWritable, Writable } from 'ts-essentials';
 import { keys as keysOf } from 'ts-transformer-keys';
@@ -88,8 +88,7 @@ export class PolicyFactory implements OnModuleInit {
     });
     this.dbPolicies = plainPolicies.map((plain) => {
       const grants = cloneGrants(plain.grants);
-      this.defaultInterfacesFromAllImplementationsIntersection(grants);
-      this.defaultImplementationsFromInterfaces(grants);
+      this.stripImplementationsMatchingInterfaces(grants);
 
       return this.enhancePolicy({ ...plain, grants });
     });
@@ -209,6 +208,48 @@ export class PolicyFactory implements OnModuleInit {
       };
 
       grantMap.set(interfaceRes, interfaceGrants);
+    }
+  }
+
+  private stripImplementationsMatchingInterfaces(grantMap: WritableGrants) {
+    const interfaceCandidates = new Set(
+      [...grantMap.keys()]
+        .map((res) => this.resourcesHost.getInterfaces(res))
+        .flat(),
+    );
+
+    for (const interfaceRes of interfaceCandidates) {
+      const interfaceGrants = grantMap.get(interfaceRes);
+      // Skip if policy hasn't declared
+      if (!interfaceCandidates) {
+        continue;
+      }
+
+      const impls = this.resourcesHost.getImplementations(interfaceRes);
+
+      for (const impl of impls) {
+        const implGrants = grantMap.get(impl);
+        if (!implGrants) {
+          continue;
+        }
+        // Only bother checking object level read/create/delete as that is all our DB AP's use
+        const isSame = entries(implGrants.objectLevel).every(
+          ([action, perm]) => {
+            if (action === 'edit') {
+              return true;
+            }
+            const ifacePerm = interfaceGrants?.objectLevel[action];
+            return (
+              ifacePerm &&
+              perm &&
+              Condition.id(ifacePerm) === Condition.id(perm)
+            );
+          },
+        );
+        if (isSame) {
+          grantMap.delete(impl);
+        }
+      }
     }
   }
 
