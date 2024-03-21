@@ -8,9 +8,9 @@ module default {
     access policy CanSelectGeneratedFromAppPoliciesForDirectory
     allow select using (
       with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
+        givenRoles := (<User>(global currentUserId)).roles
       select (
-        exists (<default::Role>{'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller'} intersect givenRoles)
+        exists (<Role>{'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller'} intersect givenRoles)
       )
     );
   }

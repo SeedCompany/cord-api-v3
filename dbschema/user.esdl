@@ -34,13 +34,13 @@ module default {
     access policy CanSelectGeneratedFromAppPoliciesForUser
     allow select using (
       with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
+        givenRoles := (<User>(global currentUserId)).roles
       select (
         (
-          exists (<default::Role>{'Administrator', 'Consultant', 'ConsultantManager', 'FieldPartner', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller', 'Marketing', 'Fundraising', 'ExperienceOperations', 'Leadership', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'StaffMember'} intersect givenRoles)
+          exists (<Role>{'Administrator', 'Consultant', 'ConsultantManager', 'FieldPartner', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller', 'Marketing', 'Fundraising', 'ExperienceOperations', 'Leadership', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'StaffMember'} intersect givenRoles)
           or (.isOwner ?? false)
           or (
-            exists (<default::Role>{'Intern', 'Mentor'} intersect givenRoles)
+            exists (<Role>{'Intern', 'Mentor'} intersect givenRoles)
             and exists { "Stubbed .isMember for User/Unavailability" }
           )
         )
@@ -50,18 +50,18 @@ module default {
     access policy CanInsertGeneratedFromAppPoliciesForUser
     allow insert using (
       with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
+        givenRoles := (<User>(global currentUserId)).roles
       select (
-        exists (<default::Role>{'Administrator', 'Consultant', 'ConsultantManager', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
+        exists (<Role>{'Administrator', 'Consultant', 'ConsultantManager', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
       )
     );
 
     access policy CanDeleteGeneratedFromAppPoliciesForUser
     allow delete using (
       with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
+        givenRoles := (<User>(global currentUserId)).roles
       select (
-        default::Role.Administrator in givenRoles
+        Role.Administrator in givenRoles
       )
     );
   }

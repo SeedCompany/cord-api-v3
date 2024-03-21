@@ -13,18 +13,18 @@ module default {
     access policy CanSelectGeneratedFromAppPoliciesForMedia
     allow select using (
       with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
+        givenRoles := (<User>(global currentUserId)).roles
       select (
-        exists (<default::Role>{'Administrator', 'Leadership'} intersect givenRoles)
+        exists (<Role>{'Administrator', 'Leadership'} intersect givenRoles)
       )
     );
 
     access policy CanInsertDeleteGeneratedFromAppPoliciesForMedia
     allow insert, delete using (
       with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
+        givenRoles := (<User>(global currentUserId)).roles
       select (
-        default::Role.Administrator in givenRoles
+        Role.Administrator in givenRoles
       )
     );
   }

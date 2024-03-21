@@ -12,21 +12,21 @@ module default {
     access policy CanSelectGeneratedFromAppPoliciesForPeriodicReport
     allow select using (
       with
-        givenRoles := (<default::User>(global default::currentUserId)).roles,
+        givenRoles := (<User>(global currentUserId)).roles,
         isMember := (.container[is Project::ContextAware].isMember ?? false),
-        sensitivity := (.container[is Project::ContextAware].sensitivity ?? default::Sensitivity.High)
+        sensitivity := (.container[is Project::ContextAware].sensitivity ?? Sensitivity.High)
       select (
         (
-          exists (<default::Role>{'Administrator', 'ExperienceOperations', 'FieldOperationsDirector', 'FieldPartner', 'LeadFinancialAnalyst', 'Controller', 'FinancialAnalyst', 'Leadership', 'ProjectManager', 'RegionalDirector', 'StaffMember'} intersect givenRoles)
+          exists (<Role>{'Administrator', 'ExperienceOperations', 'FieldOperationsDirector', 'FieldPartner', 'LeadFinancialAnalyst', 'Controller', 'FinancialAnalyst', 'Leadership', 'ProjectManager', 'RegionalDirector', 'StaffMember'} intersect givenRoles)
           or (
-            exists (<default::Role>{'ConsultantManager', 'Marketing', 'Fundraising', 'ExperienceOperations'} intersect givenRoles)
+            exists (<Role>{'ConsultantManager', 'Marketing', 'Fundraising', 'ExperienceOperations'} intersect givenRoles)
             and (
               isMember
-              or sensitivity <= default::Sensitivity.Medium
+              or sensitivity <= Sensitivity.Medium
             )
           )
           or (
-            exists (<default::Role>{'Consultant', 'ConsultantManager', 'Intern', 'Mentor', 'Translator'} intersect givenRoles)
+            exists (<Role>{'Consultant', 'ConsultantManager', 'Intern', 'Mentor', 'Translator'} intersect givenRoles)
             and isMember
           )
         )
@@ -47,11 +47,11 @@ module default {
     access policy CanSelectGeneratedFromAppPoliciesForNarrativeReport
     allow select using (
       with
-        givenRoles := (<default::User>(global default::currentUserId)).roles,
+        givenRoles := (<User>(global currentUserId)).roles,
         isMember := (.container[is Project::ContextAware].isMember ?? false)
       select (
         (
-          exists (<default::Role>{'Consultant', 'ConsultantManager'} intersect givenRoles)
+          exists (<Role>{'Consultant', 'ConsultantManager'} intersect givenRoles)
           and isMember
         )
       )

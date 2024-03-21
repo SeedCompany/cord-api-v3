@@ -14,10 +14,10 @@ module default {
     access policy CanSelectGeneratedFromAppPoliciesForPost
     allow select using (
       with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
+        givenRoles := (<User>(global currentUserId)).roles
       select (
         (
-          exists (<default::Role>{'Administrator', 'Leadership'} intersect givenRoles)
+          exists (<Role>{'Administrator', 'Leadership'} intersect givenRoles)
           or (.isOwner ?? false)
         )
       )
@@ -26,19 +26,19 @@ module default {
     access policy CanInsertGeneratedFromAppPoliciesForPost
     allow insert using (
       with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
+        givenRoles := (<User>(global currentUserId)).roles
       select (
-        default::Role.Administrator in givenRoles
+        Role.Administrator in givenRoles
       )
     );
 
     access policy CanDeleteGeneratedFromAppPoliciesForPost
     allow delete using (
       with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
+        givenRoles := (<User>(global currentUserId)).roles
       select (
         (
-          default::Role.Administrator in givenRoles
+          Role.Administrator in givenRoles
           or (.isOwner ?? false)
         )
       )

@@ -33,18 +33,18 @@ module default {
     access policy CanInsertGeneratedFromAppPoliciesForProducible
     allow insert using (
       with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
+        givenRoles := (<User>(global currentUserId)).roles
       select (
-        exists (<default::Role>{'Administrator', 'FieldOperationsDirector', 'ProjectManager', 'RegionalDirector'} intersect givenRoles)
+        exists (<Role>{'Administrator', 'FieldOperationsDirector', 'ProjectManager', 'RegionalDirector'} intersect givenRoles)
       )
     );
 
     access policy CanDeleteGeneratedFromAppPoliciesForProducible
     allow delete using (
       with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
+        givenRoles := (<User>(global currentUserId)).roles
       select (
-        default::Role.Administrator in givenRoles
+        Role.Administrator in givenRoles
       )
     );
   }

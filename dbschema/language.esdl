@@ -89,12 +89,12 @@ module default {
     access policy CanSelectGeneratedFromAppPoliciesForLanguage
     allow select using (
       with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
+        givenRoles := (<User>(global currentUserId)).roles
       select (
         (
-          exists (<default::Role>{'Administrator', 'ConsultantManager', 'ExperienceOperations', 'LeadFinancialAnalyst', 'Controller', 'FinancialAnalyst', 'Fundraising', 'Marketing', 'Leadership', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'StaffMember'} intersect givenRoles)
+          exists (<Role>{'Administrator', 'ConsultantManager', 'ExperienceOperations', 'LeadFinancialAnalyst', 'Controller', 'FinancialAnalyst', 'Fundraising', 'Marketing', 'Leadership', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'StaffMember'} intersect givenRoles)
           or (
-            exists (<default::Role>{'Consultant', 'ConsultantManager', 'FieldPartner', 'Intern', 'Mentor', 'Translator'} intersect givenRoles)
+            exists (<Role>{'Consultant', 'ConsultantManager', 'FieldPartner', 'Intern', 'Mentor', 'Translator'} intersect givenRoles)
             and .isMember
           )
         )
@@ -104,9 +104,9 @@ module default {
     access policy CanInsertDeleteGeneratedFromAppPoliciesForLanguage
     allow insert, delete using (
       with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
+        givenRoles := (<User>(global currentUserId)).roles
       select (
-        default::Role.Administrator in givenRoles
+        Role.Administrator in givenRoles
       )
     );
   }

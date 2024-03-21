@@ -11,15 +11,15 @@ module default {
     access policy CanSelectGeneratedFromAppPoliciesForBudget
     allow select using (
       with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
+        givenRoles := (<User>(global currentUserId)).roles
       select (
         (
-          exists (<default::Role>{'Administrator', 'FieldOperationsDirector', 'LeadFinancialAnalyst', 'Controller', 'FinancialAnalyst', 'Marketing', 'Fundraising', 'ExperienceOperations', 'Leadership', 'ProjectManager', 'RegionalDirector'} intersect givenRoles)
+          exists (<Role>{'Administrator', 'FieldOperationsDirector', 'LeadFinancialAnalyst', 'Controller', 'FinancialAnalyst', 'Marketing', 'Fundraising', 'ExperienceOperations', 'Leadership', 'ProjectManager', 'RegionalDirector'} intersect givenRoles)
           or (
-            default::Role.ConsultantManager in givenRoles
+            Role.ConsultantManager in givenRoles
             and (
               .isMember
-              or .sensitivity <= default::Sensitivity.Medium
+              or .sensitivity <= Sensitivity.Medium
             )
           )
         )

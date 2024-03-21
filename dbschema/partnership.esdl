@@ -27,24 +27,24 @@ module default {
     access policy CanSelectGeneratedFromAppPoliciesForPartnership
     allow select using (
       with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
+        givenRoles := (<User>(global currentUserId)).roles
       select (
         (
-          exists (<default::Role>{'Administrator', 'ConsultantManager', 'ExperienceOperations', 'LeadFinancialAnalyst', 'Controller', 'FinancialAnalyst', 'Marketing', 'Fundraising', 'Leadership', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
+          exists (<Role>{'Administrator', 'ConsultantManager', 'ExperienceOperations', 'LeadFinancialAnalyst', 'Controller', 'FinancialAnalyst', 'Marketing', 'Fundraising', 'Leadership', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
           or (
-            exists (<default::Role>{'Consultant', 'ConsultantManager', 'FieldPartner'} intersect givenRoles)
+            exists (<Role>{'Consultant', 'ConsultantManager', 'FieldPartner'} intersect givenRoles)
             and .isMember
           )
           or (
-            exists (<default::Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
+            exists (<Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
             and (
               .isMember
-              or .sensitivity <= default::Sensitivity.Medium
+              or .sensitivity <= Sensitivity.Medium
             )
           )
           or (
-            default::Role.StaffMember in givenRoles
-            and .sensitivity <= default::Sensitivity.Low
+            Role.StaffMember in givenRoles
+            and .sensitivity <= Sensitivity.Low
           )
         )
       )
@@ -53,19 +53,19 @@ module default {
     access policy CanInsertDeleteGeneratedFromAppPoliciesForPartnership
     allow insert, delete using (
       with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
+        givenRoles := (<User>(global currentUserId)).roles
       select (
         (
-          exists (<default::Role>{'Administrator', 'FieldOperationsDirector', 'LeadFinancialAnalyst', 'Controller'} intersect givenRoles)
+          exists (<Role>{'Administrator', 'FieldOperationsDirector', 'LeadFinancialAnalyst', 'Controller'} intersect givenRoles)
           or (
-            exists (<default::Role>{'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller'} intersect givenRoles)
+            exists (<Role>{'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller'} intersect givenRoles)
             and .isMember
           )
           or (
-            exists (<default::Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
+            exists (<Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
             and (
               .isMember
-              or .sensitivity <= default::Sensitivity.Medium
+              or .sensitivity <= Sensitivity.Medium
             )
           )
         )

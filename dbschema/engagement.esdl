@@ -42,12 +42,12 @@ module default {
     access policy CanSelectGeneratedFromAppPoliciesForEngagement
     allow select using (
       with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
+        givenRoles := (<User>(global currentUserId)).roles
       select (
         (
-          exists (<default::Role>{'Administrator', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller', 'Marketing', 'Fundraising', 'ExperienceOperations', 'Leadership', 'StaffMember'} intersect givenRoles)
+          exists (<Role>{'Administrator', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller', 'Marketing', 'Fundraising', 'ExperienceOperations', 'Leadership', 'StaffMember'} intersect givenRoles)
           or (
-            exists (<default::Role>{'Consultant', 'ConsultantManager', 'FieldPartner', 'Intern', 'Mentor', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'Translator'} intersect givenRoles)
+            exists (<Role>{'Consultant', 'ConsultantManager', 'FieldPartner', 'Intern', 'Mentor', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'Translator'} intersect givenRoles)
             and .isMember
           )
         )
@@ -57,12 +57,12 @@ module default {
     access policy CanInsertGeneratedFromAppPoliciesForEngagement
     allow insert using (
       with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
+        givenRoles := (<User>(global currentUserId)).roles
       select (
         (
-          default::Role.Administrator in givenRoles
+          Role.Administrator in givenRoles
           or (
-            exists (<default::Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller'} intersect givenRoles)
+            exists (<Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller'} intersect givenRoles)
             and .isMember
           )
         )
@@ -72,12 +72,12 @@ module default {
     access policy CanDeleteGeneratedFromAppPoliciesForEngagement
     allow delete using (
       with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
+        givenRoles := (<User>(global currentUserId)).roles
       select (
         (
-          default::Role.Administrator in givenRoles
+          Role.Administrator in givenRoles
           or (
-            exists (<default::Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller'} intersect givenRoles)
+            exists (<Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller'} intersect givenRoles)
             and .isMember
             and <str>.status = 'InDevelopment'
           )
@@ -160,9 +160,9 @@ module default {
     access policy CanSelectGeneratedFromAppPoliciesForLanguageEngagement
     allow select using (
       with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
+        givenRoles := (<User>(global currentUserId)).roles
       select (
-        default::Role.ConsultantManager in givenRoles
+        Role.ConsultantManager in givenRoles
       )
     );
   }

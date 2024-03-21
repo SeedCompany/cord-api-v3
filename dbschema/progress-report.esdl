@@ -12,10 +12,10 @@ module default {
     access policy CanSelectGeneratedFromAppPoliciesForProgressReport
     allow select using (
       with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
+        givenRoles := (<User>(global currentUserId)).roles
       select (
         (
-          exists (<default::Role>{'FieldPartner', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
+          exists (<Role>{'FieldPartner', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
           and .isMember
         )
       )

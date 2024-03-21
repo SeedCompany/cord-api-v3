@@ -20,9 +20,9 @@ module default {
     access policy CanInsertDeleteGeneratedFromAppPoliciesForLocation
     allow insert, delete using (
       with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
+        givenRoles := (<User>(global currentUserId)).roles
       select (
-        default::Role.Administrator in givenRoles
+        Role.Administrator in givenRoles
       )
     );
   }
