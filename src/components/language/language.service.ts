@@ -206,7 +206,7 @@ export class LanguageService {
     language: Language,
     session: Session,
   ): Promise<SecuredDate> {
-    const result = await this.repo.sponsorStartDate(language);
+    const result = await this.repo.getEngagementIdsForLanguage(language);
 
     if (!result) {
       throw new ServerException('Error fetching sponsorStartDate');
