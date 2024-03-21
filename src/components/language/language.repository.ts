@@ -210,22 +210,6 @@ export class LanguageRepository extends DtoRepository<
     return result!; // result from paginate() will always have 1 row.
   }
 
-  async listProjects(language: Language) {
-    const queryProject = this.db
-      .query()
-      .match([node('language', 'Language', { id: language.id })])
-      .match([
-        node('language'),
-        relation('in', '', 'language', ACTIVE),
-        node('', 'LanguageEngagement'),
-        relation('in', '', 'engagement', ACTIVE),
-        node('project', 'Project'),
-      ])
-      .return<{ id: ID }>({ project: [{ id: 'id' }] });
-
-    return await queryProject.run();
-  }
-
   async sponsorStartDate(language: Language) {
     return await this.db
       .query()
