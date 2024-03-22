@@ -251,7 +251,7 @@ export const RepoFor = <
 
     async create(input: EasyInsertShape<Root>): Promise<Dto> {
       const query = e.select(
-        (e.insert as any)(dbType, mapToSetBlock(dbType, input)),
+        (e.insert as any)(dbType, mapToSetBlock(dbType, input, false)),
         this.hydrate as any,
       );
       return (await this.db.run(query)) as Dto;
@@ -261,7 +261,7 @@ export const RepoFor = <
       const { id, ...changes } = input;
       const object = e.cast(dbType, e.cast(e.uuid, id));
       const updated = e.update(object, () => ({
-        set: mapToSetBlock(dbType, changes) as UpdateShape<Root>,
+        set: mapToSetBlock(dbType, changes, true) as UpdateShape<Root>,
       }));
       const query = e.select(updated, this.hydrate as any);
       return (await this.db.run(query)) as Dto;
