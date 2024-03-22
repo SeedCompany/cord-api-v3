@@ -2,5 +2,5 @@
 // Otherwise, for querying, use EdgeDb from below.
 export { Client } from 'edgedb/dist/baseClient.js';
 
-export { default as e, $infer } from './generated-client';
+export { default as e, type $infer } from './generated-client';
 export * as $ from './generated-client/reflection';
