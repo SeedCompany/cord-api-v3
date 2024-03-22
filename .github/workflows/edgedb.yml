@@ -16,6 +16,10 @@ jobs:
         run: edgedb migration status
         if: github.event.pull_request.draft == false
 
+      - name: Generate EdgeDB TS files
+        shell: bash
+        run: yarn edgedb:gen
+
       - name: Validate seed scripts are error free
         run: yarn edgedb:seed
         shell: bash
