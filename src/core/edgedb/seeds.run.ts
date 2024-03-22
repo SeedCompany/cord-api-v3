@@ -5,7 +5,12 @@ import { glob } from 'glob';
 import fs from 'node:fs/promises';
 import { inspect } from 'util';
 
-const db = createClient();
+const db = createClient().withConfig({
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  allow_user_specified_id: true,
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  apply_access_policies: false,
+});
 
 class SeedCommand extends Command {
   async execute() {
