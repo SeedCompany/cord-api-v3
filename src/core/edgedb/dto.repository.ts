@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import {
+  entries,
   isNotFalsy,
   many,
   Many,
@@ -13,9 +14,11 @@ import { AbstractClass } from 'type-fest';
 import {
   DBName,
   EnhancedResource,
+  EnumType,
   DBType as GetDBType,
   ID,
   isSortablePaginationInput,
+  makeEnum,
   NotFoundException,
   PaginatedListType,
   PaginationInput,
@@ -68,22 +71,36 @@ export const RepoFor = <
 
   @Injectable()
   abstract class Repository extends CommonRepository {
-    static customize<Customized extends BaseCustomizedRepository>(
+    static customize<
+      Customized extends BaseCustomizedRepository,
+      OmitKeys extends EnumType<typeof DefaultMethods>,
+    >(
       customizer: (
         cls: typeof BaseCustomizedRepository,
-      ) => AbstractClass<Customized>,
+        ctx: {
+          defaults: typeof DefaultMethods;
+        },
+      ) => AbstractClass<Customized> & {
+        omit?: readonly OmitKeys[];
+      },
     ): AbstractClass<
-      Customized & Omit<DefaultDtoRepository, keyof Customized>
+      Customized & Omit<DefaultDtoRepository, keyof Customized | OmitKeys>
     > {
-      const customizedClass = customizer(BaseCustomizedRepository);
+      const customizedClass = customizer(BaseCustomizedRepository, {
+        defaults: DefaultMethods,
+      });
       const customMethodNames = setOf(
         Object.getOwnPropertyNames(customizedClass.prototype),
       );
+      const omitKeys = new Set<string>(customizedClass.omit);
       const defaultMethods = Object.getOwnPropertyDescriptors(
         DefaultDtoRepository.prototype,
       );
       const nonDeclaredDefaults = mapKeys(defaultMethods, (name, _, { SKIP }) =>
-        typeof name === 'string' && customMethodNames.has(name) ? SKIP : name,
+        typeof name === 'string' &&
+        (customMethodNames.has(name) || omitKeys.has(name))
+          ? SKIP
+          : name,
       ).asRecord;
       Object.defineProperties(customizedClass.prototype, nonDeclaredDefaults);
 
@@ -256,6 +273,16 @@ export const RepoFor = <
       await this.db.run(query);
     }
   }
+
+  const DefaultMethods = makeEnum({
+    values: entries(
+      Object.getOwnPropertyDescriptors(DefaultDtoRepository.prototype),
+    ).flatMap(([key]) =>
+      typeof key === 'string'
+        ? (key as keyof DefaultDtoRepository & string)
+        : [],
+    ),
+  });
 
   class BaseCustomizedRepository extends Repository {
     protected get defaults(): DefaultDtoRepository {
