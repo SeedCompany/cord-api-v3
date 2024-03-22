@@ -13,9 +13,9 @@ import {
 } from '@seedcompany/common';
 import { Chalk, ChalkInstance } from 'chalk';
 import Table from 'cli-table3';
+import { Command, Option } from 'clipanion';
 import { startCase } from 'lodash';
 import { DateTime } from 'luxon';
-import { Command, Console } from 'nestjs-console';
 import fs from 'node:fs/promises';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { LiteralUnion } from 'type-fest';
@@ -23,7 +23,7 @@ import { inspect } from 'util';
 import xlsx from 'xlsx';
 import { EnhancedResource, firstOr, ID, Role, Session } from '~/common';
 import { searchCamelCase } from '~/common/search-camel-case';
-import { ResourceLike, ResourcesHost } from '~/core';
+import { InjectableCommand, ResourceLike, ResourcesHost } from '~/core';
 import {
   ChildListAction,
   ChildSingleAction,
@@ -35,7 +35,6 @@ import { CalculatedCondition, PolicyExecutor } from './policy-executor';
 
 type AnyResource = EnhancedResource<any>;
 
-@Console()
 @Injectable()
 export class PolicyDumper {
   constructor(
@@ -68,9 +67,6 @@ export class PolicyDumper {
     await fs.writeFile(filename ?? 'permissions.xlsx', buffer);
   }
 
-  @Command({
-    command: 'policy:dump <role> <resource>',
-  })
   async dump(
     rolesIn: Many<LiteralUnion<Role, string>>,
     resourcesIn: Many<ResourceLike & string>,
@@ -217,6 +213,20 @@ export class PolicyDumper {
           })),
       ),
     ];
+  }
+}
+
+@InjectableCommand()
+export class PolicyDumpCommand extends Command {
+  static paths = [['policy:dump']];
+  static usage = Command.Usage({});
+  role = Option.String({ required: true });
+  resource = Option.String({ required: true });
+  constructor(private readonly policyDumper: PolicyDumper) {
+    super();
+  }
+  async execute() {
+    await this.policyDumper.dump(this.role, this.resource);
   }
 }
 

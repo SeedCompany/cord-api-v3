@@ -2,9 +2,9 @@ import { Global, Module } from '@nestjs/common';
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { DataLoaderModule } from '@seedcompany/data-loader';
 import { EmailModule } from '@seedcompany/nestjs-email';
-import { ConsoleModule } from 'nestjs-console';
 import { AwsS3Factory } from './aws-s3.factory';
 import { CacheModule } from './cache/cache.module';
+import { CliModule } from './cli/cli.module';
 import { ConfigModule } from './config/config.module';
 import { ConfigService } from './config/config.service';
 import { CoreController } from './core.controller';
@@ -27,7 +27,7 @@ import { WaitResolver } from './wait.resolver';
   imports: [
     ConfigModule,
     CacheModule,
-    ConsoleModule,
+    CliModule,
     DatabaseModule,
     DataLoaderModule.registerAsync({ useClass: DataLoaderConfig }),
     EdgeDBModule,
