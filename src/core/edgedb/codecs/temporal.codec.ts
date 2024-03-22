@@ -39,7 +39,7 @@ export class LuxonCalendarDateCodec extends LocalDateCodec {
     module: 'cal',
     type: 'local_date',
     ts: 'CalendarDate',
-    path: '~/common',
+    path: '~/common/temporal/calendar-date',
   };
   tsType = CalendarDate.name;
   importedType = true;

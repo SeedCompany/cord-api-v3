@@ -15,11 +15,12 @@ export function addCustomScalarImports(
   file: SourceFile,
   scalars: Iterable<ScalarInfo>,
   index = 2,
+  isTypeOnly = true,
 ) {
   return file.insertImportDeclarations(
     index,
     [...scalars].map((scalar, i) => ({
-      isTypeOnly: true,
+      isTypeOnly,
       namedImports: [scalar.ts],
       moduleSpecifier: scalar.path,
       leadingTrivia: i === 0 ? '\n' : undefined,

@@ -67,15 +67,12 @@ function changeImplicitIDType(qbDir: Directory) {
 
 function updateCastMapsForOurCustomScalars(qbDir: Directory) {
   const file = qbDir.addSourceFileAtPath('castMaps.ts');
-  file.insertImportDeclaration(1, {
-    namedImports: ['DateTime'],
-    moduleSpecifier: 'luxon',
-  });
-  file.insertImportDeclaration(1, {
-    namedImports: ['CalendarDate'],
-    moduleSpecifier: '~/common',
-    leadingTrivia: '\n',
-  });
+  addCustomScalarImports(
+    file,
+    [customScalars.get('DateTime')!, customScalars.get('CalendarDate')!],
+    1,
+    false,
+  );
   const updated = file
     .getText()
     // Update Luxon instances to point to correct scalar UUIDs
@@ -101,11 +98,7 @@ function updateCastMapsForOurCustomScalars(qbDir: Directory) {
 
 function updateEdgeQLRenderingForOurCustomScalars(qbDir: Directory) {
   const file = qbDir.addSourceFileAtPath('toEdgeQL.ts');
-  file.insertImportDeclaration(1, {
-    namedImports: ['DateTime'],
-    moduleSpecifier: 'luxon',
-    leadingTrivia: '\n',
-  });
+  addCustomScalarImports(file, [customScalars.get('DateTime')!], 1, false);
   const condition = '  } else if (val instanceof Date) {\n';
   const updated = file.getText().replace(
     condition,
