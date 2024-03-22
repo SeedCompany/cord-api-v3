@@ -13,24 +13,6 @@ module Engagement {
         message := "Cannot delete ceremony while engagement still exists."
       )
     );
-
-    access policy CanSelectGeneratedFromAppPoliciesForCeremony
-    allow select using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        (
-          exists (<default::Role>{'Administrator', 'FieldOperationsDirector', 'FieldPartner', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller', 'Marketing', 'Fundraising', 'ExperienceOperations', 'Leadership', 'ProjectManager', 'RegionalDirector', 'StaffMember'} intersect givenRoles)
-          or (
-            exists (<default::Role>{'Consultant', 'ConsultantManager', 'Intern', 'Mentor', 'Translator'} intersect givenRoles)
-            and .isMember
-          )
-        )
-      )
-    );
-
-    access policy CanInsertDeleteGeneratedFromAppPoliciesForCeremony
-    allow insert, delete;
   }
   type DedicationCeremony extending Ceremony {}
   type CertificationCeremony extending Ceremony {}

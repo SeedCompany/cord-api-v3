@@ -38,52 +38,6 @@ module default {
     };
     
     description: RichText;
-
-    access policy CanSelectGeneratedFromAppPoliciesForEngagement
-    allow select using (
-      with
-        givenRoles := (<User>(global currentUserId)).roles
-      select (
-        (
-          exists (<Role>{'Administrator', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller', 'Marketing', 'Fundraising', 'ExperienceOperations', 'Leadership', 'StaffMember'} intersect givenRoles)
-          or (
-            exists (<Role>{'Consultant', 'ConsultantManager', 'FieldPartner', 'Intern', 'Mentor', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'Translator'} intersect givenRoles)
-            and .isMember
-          )
-        )
-      )
-    );
-
-    access policy CanInsertGeneratedFromAppPoliciesForEngagement
-    allow insert using (
-      with
-        givenRoles := (<User>(global currentUserId)).roles
-      select (
-        (
-          Role.Administrator in givenRoles
-          or (
-            exists (<Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller'} intersect givenRoles)
-            and .isMember
-          )
-        )
-      )
-    );
-
-    access policy CanDeleteGeneratedFromAppPoliciesForEngagement
-    allow delete using (
-      with
-        givenRoles := (<User>(global currentUserId)).roles
-      select (
-        (
-          Role.Administrator in givenRoles
-          or (
-            exists (<Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller'} intersect givenRoles)
-            and .isMember
-            and <str>.status = 'InDevelopment'
-          )
-        )
-      )
-    );
   }
   
   type LanguageEngagement extending Engagement {
@@ -155,15 +109,6 @@ module default {
     trigger removeProjectFromContextOfLanguage after delete for each do (
       update __old__.language.projectContext
       set { projects -= __old__.project }
-    );
-
-    access policy CanSelectGeneratedFromAppPoliciesForLanguageEngagement
-    allow select using (
-      with
-        givenRoles := (<User>(global currentUserId)).roles
-      select (
-        Role.ConsultantManager in givenRoles
-      )
     );
   }
   

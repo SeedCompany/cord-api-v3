@@ -85,30 +85,6 @@ module default {
     }
     
     index on ((.name, .ownSensitivity, .leastOfThese, .isSignLanguage, .isDialect));
-
-    access policy CanSelectGeneratedFromAppPoliciesForLanguage
-    allow select using (
-      with
-        givenRoles := (<User>(global currentUserId)).roles
-      select (
-        (
-          exists (<Role>{'Administrator', 'ConsultantManager', 'ExperienceOperations', 'LeadFinancialAnalyst', 'Controller', 'FinancialAnalyst', 'Fundraising', 'Marketing', 'Leadership', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'StaffMember'} intersect givenRoles)
-          or (
-            exists (<Role>{'Consultant', 'ConsultantManager', 'FieldPartner', 'Intern', 'Mentor', 'Translator'} intersect givenRoles)
-            and .isMember
-          )
-        )
-      )
-    );
-
-    access policy CanInsertDeleteGeneratedFromAppPoliciesForLanguage
-    allow insert, delete using (
-      with
-        givenRoles := (<User>(global currentUserId)).roles
-      select (
-        Role.Administrator in givenRoles
-      )
-    );
   }
   
   scalar type population extending int32 {
@@ -131,45 +107,6 @@ module Ethnologue {
     };
     name: str;
     population: default::population;
-
-    access policy CanSelectGeneratedFromAppPoliciesForEthnologueLanguage
-    allow select using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        (
-          exists (<default::Role>{'Administrator', 'ExperienceOperations', 'Leadership', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
-          or (
-            default::Role.ConsultantManager in givenRoles
-            and .sensitivity <= default::Sensitivity.Medium
-          )
-          or (
-            exists (<default::Role>{'Consultant', 'ConsultantManager', 'FieldPartner', 'Translator'} intersect givenRoles)
-            and .isMember
-          )
-          or (
-            default::Role.Fundraising in givenRoles
-            and (
-              .isMember
-              or .sensitivity <= default::Sensitivity.Medium
-            )
-          )
-          or (
-            exists (<default::Role>{'Marketing', 'Fundraising', 'ExperienceOperations'} intersect givenRoles)
-            and .sensitivity <= default::Sensitivity.Low
-          )
-        )
-      )
-    );
-
-    access policy CanInsertDeleteGeneratedFromAppPoliciesForEthnologueLanguage
-    allow insert, delete using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        default::Role.Administrator in givenRoles
-      )
-    );
   }
   
   scalar type code extending str {

@@ -9,24 +9,6 @@ module default {
     
     altText: str;
     caption: str;
-
-    access policy CanSelectGeneratedFromAppPoliciesForMedia
-    allow select using (
-      with
-        givenRoles := (<User>(global currentUserId)).roles
-      select (
-        exists (<Role>{'Administrator', 'Leadership'} intersect givenRoles)
-      )
-    );
-
-    access policy CanInsertDeleteGeneratedFromAppPoliciesForMedia
-    allow insert, delete using (
-      with
-        givenRoles := (<User>(global currentUserId)).roles
-      select (
-        Role.Administrator in givenRoles
-      )
-    );
   }
 }
 

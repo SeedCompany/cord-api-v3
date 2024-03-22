@@ -7,47 +7,6 @@ module ProgressReport::ProductProgress {
     constraint exclusive on ((.report, .product, .variant, .step));
 
     completed: float32;
-
-    access policy CanSelectGeneratedFromAppPoliciesForStepProgress
-    allow select using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        (
-          exists (<default::Role>{'Administrator', 'FieldOperationsDirector', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller', 'Marketing', 'Fundraising', 'ExperienceOperations', 'Leadership', 'StaffMember'} intersect givenRoles)
-          or (
-            default::Role.FieldPartner in givenRoles
-            and .isMember
-            and <str>.variant = 'partner'
-          )
-          or (
-            exists (<default::Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
-            and .isMember
-            and <str>.variant in {'official', 'partner'}
-          )
-          or (
-            default::Role.ConsultantManager in givenRoles
-            and (
-              .isMember
-              or .sensitivity <= default::Sensitivity.Medium
-            )
-          )
-          or (
-            exists (<default::Role>{'Consultant', 'ConsultantManager', 'Intern', 'Mentor'} intersect givenRoles)
-            and .isMember
-          )
-        )
-      )
-    );
-
-    access policy CanInsertDeleteGeneratedFromAppPoliciesForStepProgress
-    allow insert, delete using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        default::Role.Administrator in givenRoles
-      )
-    );
   }
 
   type Summary {

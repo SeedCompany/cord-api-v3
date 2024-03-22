@@ -23,54 +23,6 @@ module default {
     required mouStatus: Partnership::AgreementStatus {
       default := Partnership::AgreementStatus.NotAttached;
     };
-
-    access policy CanSelectGeneratedFromAppPoliciesForPartnership
-    allow select using (
-      with
-        givenRoles := (<User>(global currentUserId)).roles
-      select (
-        (
-          exists (<Role>{'Administrator', 'ConsultantManager', 'ExperienceOperations', 'LeadFinancialAnalyst', 'Controller', 'FinancialAnalyst', 'Marketing', 'Fundraising', 'Leadership', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
-          or (
-            exists (<Role>{'Consultant', 'ConsultantManager', 'FieldPartner'} intersect givenRoles)
-            and .isMember
-          )
-          or (
-            exists (<Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
-            and (
-              .isMember
-              or .sensitivity <= Sensitivity.Medium
-            )
-          )
-          or (
-            Role.StaffMember in givenRoles
-            and .sensitivity <= Sensitivity.Low
-          )
-        )
-      )
-    );
-
-    access policy CanInsertDeleteGeneratedFromAppPoliciesForPartnership
-    allow insert, delete using (
-      with
-        givenRoles := (<User>(global currentUserId)).roles
-      select (
-        (
-          exists (<Role>{'Administrator', 'FieldOperationsDirector', 'LeadFinancialAnalyst', 'Controller'} intersect givenRoles)
-          or (
-            exists (<Role>{'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller'} intersect givenRoles)
-            and .isMember
-          )
-          or (
-            exists (<Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
-            and (
-              .isMember
-              or .sensitivity <= Sensitivity.Medium
-            )
-          )
-        )
-      )
-    );
   }
 }
   

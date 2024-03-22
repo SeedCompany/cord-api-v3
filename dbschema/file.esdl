@@ -4,15 +4,6 @@ module default {
     required totalFiles: int32 {
       default := 0;
     };
-
-    access policy CanSelectGeneratedFromAppPoliciesForDirectory
-    allow select using (
-      with
-        givenRoles := (<User>(global currentUserId)).roles
-      select (
-        exists (<Role>{'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller'} intersect givenRoles)
-      )
-    );
   }
   
   # TODO how to front latest version info?
@@ -53,23 +44,5 @@ module File {
       depth: int16; # todo enforce
     }
 #     multi link children: Node;
-
-    access policy CanSelectGeneratedFromAppPoliciesForFileNode
-    allow select using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        exists (<default::Role>{'Administrator', 'Leadership'} intersect givenRoles)
-      )
-    );
-
-    access policy CanInsertDeleteGeneratedFromAppPoliciesForFileNode
-    allow insert, delete using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        default::Role.Administrator in givenRoles
-      )
-    );
   }
 }

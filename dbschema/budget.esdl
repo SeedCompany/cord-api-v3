@@ -7,27 +7,6 @@ module default {
     universalTemplate: File;
     
     records := .<budget[is Budget::Record];
-
-    access policy CanSelectGeneratedFromAppPoliciesForBudget
-    allow select using (
-      with
-        givenRoles := (<User>(global currentUserId)).roles
-      select (
-        (
-          exists (<Role>{'Administrator', 'FieldOperationsDirector', 'LeadFinancialAnalyst', 'Controller', 'FinancialAnalyst', 'Marketing', 'Fundraising', 'ExperienceOperations', 'Leadership', 'ProjectManager', 'RegionalDirector'} intersect givenRoles)
-          or (
-            Role.ConsultantManager in givenRoles
-            and (
-              .isMember
-              or .sensitivity <= Sensitivity.Medium
-            )
-          )
-        )
-      )
-    );
-
-    access policy CanInsertDeleteGeneratedFromAppPoliciesForBudget
-    allow insert, delete;
   }
 }
   
@@ -50,27 +29,6 @@ module Budget {
       readonly := true;
       on target delete delete source;
     };
-
-    access policy CanSelectGeneratedFromAppPoliciesForBudgetRecord
-    allow select using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        (
-          exists (<default::Role>{'Administrator', 'FieldOperationsDirector', 'LeadFinancialAnalyst', 'Controller', 'FinancialAnalyst', 'Marketing', 'Fundraising', 'ExperienceOperations', 'Leadership', 'ProjectManager', 'RegionalDirector'} intersect givenRoles)
-          or (
-            default::Role.ConsultantManager in givenRoles
-            and (
-              .isMember
-              or .sensitivity <= default::Sensitivity.Medium
-            )
-          )
-        )
-      )
-    );
-
-    access policy CanInsertDeleteGeneratedFromAppPoliciesForBudgetRecord
-    allow insert, delete;
   }
   
   scalar type Status extending enum<

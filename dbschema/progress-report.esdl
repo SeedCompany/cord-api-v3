@@ -8,18 +8,6 @@ module default {
     workflowEvents := .<report[is ProgressReport::WorkflowEvent];
 
     single varianceExplanation := .<report[is ProgressReport::VarianceExplanation];
-
-    access policy CanSelectGeneratedFromAppPoliciesForProgressReport
-    allow select using (
-      with
-        givenRoles := (<User>(global currentUserId)).roles
-      select (
-        (
-          exists (<Role>{'FieldPartner', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
-          and .isMember
-        )
-      )
-    );
   }
 }
 
@@ -45,150 +33,12 @@ module ProgressReport {
 
   type TeamNews extending ProgressReport::Child, Prompt::PromptVariantResponse {
     overloaded container: default::ProgressReport;
-
-    access policy CanSelectGeneratedFromAppPoliciesForProgressReportTeamNews
-    allow select using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        (
-          exists (<default::Role>{'Administrator', 'Leadership', 'Marketing', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
-          or (
-            default::Role.ConsultantManager in givenRoles
-            and (
-              .isMember
-              or .sensitivity <= default::Sensitivity.Medium
-            )
-          )
-          or (
-            exists (<default::Role>{'Consultant', 'ConsultantManager', 'FieldPartner', 'Translator'} intersect givenRoles)
-            and .isMember
-          )
-        )
-      )
-    );
-
-    access policy CanInsertGeneratedFromAppPoliciesForProgressReportTeamNews
-    allow insert using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        (
-          default::Role.Administrator in givenRoles
-          or (
-            exists (<default::Role>{'FieldPartner', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
-            and .isMember
-          )
-        )
-      )
-    );
-
-    access policy CanDeleteGeneratedFromAppPoliciesForProgressReportTeamNews
-    allow delete using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        default::Role.Administrator in givenRoles
-      )
-    );
   }
   type CommunityStory extending ProgressReport::Child, Prompt::PromptVariantResponse {
     overloaded container: default::ProgressReport;
-
-    access policy CanSelectGeneratedFromAppPoliciesForProgressReportCommunityStory
-    allow select using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        (
-          exists (<default::Role>{'Administrator', 'Leadership', 'Marketing', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
-          or (
-            default::Role.ConsultantManager in givenRoles
-            and (
-              .isMember
-              or .sensitivity <= default::Sensitivity.Medium
-            )
-          )
-          or (
-            exists (<default::Role>{'Consultant', 'ConsultantManager', 'FieldPartner', 'Translator'} intersect givenRoles)
-            and .isMember
-          )
-        )
-      )
-    );
-
-    access policy CanInsertGeneratedFromAppPoliciesForProgressReportCommunityStory
-    allow insert using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        (
-          default::Role.Administrator in givenRoles
-          or (
-            exists (<default::Role>{'FieldPartner', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
-            and .isMember
-          )
-        )
-      )
-    );
-
-    access policy CanDeleteGeneratedFromAppPoliciesForProgressReportCommunityStory
-    allow delete using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        default::Role.Administrator in givenRoles
-      )
-    );
   }
   type Highlight extending ProgressReport::Child, Prompt::PromptVariantResponse {
     overloaded container: default::ProgressReport;
-
-    access policy CanSelectGeneratedFromAppPoliciesForProgressReportHighlight
-    allow select using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        (
-          exists (<default::Role>{'Administrator', 'Leadership', 'Marketing', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
-          or (
-            default::Role.ConsultantManager in givenRoles
-            and (
-              .isMember
-              or .sensitivity <= default::Sensitivity.Medium
-            )
-          )
-          or (
-            exists (<default::Role>{'Consultant', 'ConsultantManager', 'FieldPartner', 'Translator'} intersect givenRoles)
-            and .isMember
-          )
-        )
-      )
-    );
-
-    access policy CanInsertGeneratedFromAppPoliciesForProgressReportHighlight
-    allow insert using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        (
-          default::Role.Administrator in givenRoles
-          or (
-            exists (<default::Role>{'FieldPartner', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
-            and .isMember
-          )
-        )
-      )
-    );
-
-    access policy CanDeleteGeneratedFromAppPoliciesForProgressReportHighlight
-    allow delete using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        default::Role.Administrator in givenRoles
-      )
-    );
   }
 
   type VarianceExplanation extending ProgressReport::Child {
@@ -199,37 +49,6 @@ module ProgressReport {
     multi reasons: str;
 
     comments: default::RichText;
-
-    access policy CanSelectGeneratedFromAppPoliciesForProgressReportVarianceExplanation
-    allow select using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        (
-          exists (<default::Role>{'Administrator', 'Leadership', 'Marketing', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
-          or (
-            default::Role.ConsultantManager in givenRoles
-            and (
-              .isMember
-              or .sensitivity <= default::Sensitivity.Medium
-            )
-          )
-          or (
-            exists (<default::Role>{'Consultant', 'ConsultantManager'} intersect givenRoles)
-            and .isMember
-          )
-        )
-      )
-    );
-
-    access policy CanInsertDeleteGeneratedFromAppPoliciesForProgressReportVarianceExplanation
-    allow insert, delete using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        default::Role.Administrator in givenRoles
-      )
-    );
   }
 
   module Media {
@@ -248,100 +67,6 @@ module ProgressReport {
     );
 
     category: str;
-
-    access policy CanSelectGeneratedFromAppPoliciesForProgressReportMedia
-    allow select using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        (
-          exists (<default::Role>{'Administrator', 'Leadership', 'Marketing'} intersect givenRoles)
-          or (
-            default::Role.ConsultantManager in givenRoles
-            and (
-              .isMember
-              or .sensitivity <= default::Sensitivity.Medium
-            )
-          )
-          or (
-            exists (<default::Role>{'Consultant', 'ConsultantManager'} intersect givenRoles)
-            and .isMember
-          )
-          or (
-            default::Role.FieldPartner in givenRoles
-            and .isMember
-            and <str>.variant = 'draft'
-          )
-          or (
-            exists (<default::Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
-            and (
-              (
-                .isMember
-                and <str>.variant in {'draft', 'translated', 'fpm'}
-              )
-              or (
-                .sensitivity <= default::Sensitivity.Low
-                and <str>.variant in {'fpm', 'published'}
-              )
-              or .isMember
-            )
-          )
-          or (
-            default::Role.Translator in givenRoles
-            and (
-              (
-                .isMember
-                and <str>.variant = 'translated'
-              )
-              or .isMember
-            )
-          )
-          or (.isOwner ?? false)
-        )
-      )
-    );
-
-    access policy CanInsertGeneratedFromAppPoliciesForProgressReportMedia
-    allow insert using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        (
-          default::Role.Administrator in givenRoles
-          or (
-            default::Role.FieldPartner in givenRoles
-            and .isMember
-            and <str>.variant = 'draft'
-          )
-          or (
-            default::Role.Marketing in givenRoles
-            and <str>.variant = 'published'
-          )
-          or (
-            exists (<default::Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
-            and .isMember
-            and <str>.variant in {'draft', 'translated', 'fpm'}
-          )
-          or (
-            default::Role.Translator in givenRoles
-            and .isMember
-            and <str>.variant = 'translated'
-          )
-        )
-      )
-    );
-
-    access policy CanDeleteGeneratedFromAppPoliciesForProgressReportMedia
-    allow delete using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        (
-          default::Role.Administrator in givenRoles
-          or (.isOwner ?? false)
-        )
-      )
-    );
   }
 
   type WorkflowEvent {
@@ -365,51 +90,6 @@ module ProgressReport {
     notes: default::RichText {
       readonly := true;
     };
-
-    access policy CanSelectGeneratedFromAppPoliciesForProgressReportWorkflowEvent
-    allow select using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        exists (<default::Role>{'Administrator', 'Leadership', 'Marketing', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
-      )
-    );
-
-    access policy CanInsertGeneratedFromAppPoliciesForProgressReportWorkflowEvent
-    allow insert using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        (
-          default::Role.Administrator in givenRoles
-          or (
-            default::Role.FieldPartner in givenRoles
-            and ((.transitionId in {'5da76b5163', 'cb18f58cbf', '651d2a4dcc', 'e14c52346b'}) ?? false)
-          )
-          or (
-            default::Role.Marketing in givenRoles
-            and ((.transitionId = '2d88e3cd6e') ?? false)
-          )
-          or (
-            exists (<default::Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
-            and ((.transitionId in {'5da76b5163', 'cb18f58cbf', '651d2a4dcc', '580377ea2b', '0d854e832e', 'e14c52346b', '2b137bcd66', 'a0c0c48a8c', 'e3e11c86b9'}) ?? false)
-          )
-          or (
-            default::Role.Translator in givenRoles
-            and ((.transitionId in {'580377ea2b', '0d854e832e'}) ?? false)
-          )
-        )
-      )
-    );
-
-    access policy CanDeleteGeneratedFromAppPoliciesForProgressReportWorkflowEvent
-    allow delete using (
-      with
-        givenRoles := (<default::User>(global default::currentUserId)).roles
-      select (
-        default::Role.Administrator in givenRoles
-      )
-    );
   }
 
   scalar type Status extending enum<

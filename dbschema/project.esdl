@@ -114,39 +114,6 @@ module default {
         projectContext := __new__.projectContext,
       }
     );
-
-    access policy CanSelectGeneratedFromAppPoliciesForProject
-    allow select using (
-      with
-        givenRoles := (<User>(global currentUserId)).roles
-      select (
-        (
-          exists (<Role>{'Administrator', 'ConsultantManager', 'ExperienceOperations', 'FieldOperationsDirector', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller', 'Fundraising', 'Leadership', 'Marketing', 'ProjectManager', 'RegionalDirector', 'StaffMember'} intersect givenRoles)
-          or (
-            exists (<Role>{'Consultant', 'ConsultantManager', 'FieldPartner', 'Intern', 'Mentor', 'RegionalDirector', 'FieldOperationsDirector', 'Translator'} intersect givenRoles)
-            and .isMember
-          )
-        )
-      )
-    );
-
-    access policy CanInsertGeneratedFromAppPoliciesForProject
-    allow insert using (
-      with
-        givenRoles := (<User>(global currentUserId)).roles
-      select (
-        exists (<Role>{'Administrator', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect givenRoles)
-      )
-    );
-
-    access policy CanDeleteGeneratedFromAppPoliciesForProject
-    allow delete using (
-      with
-        givenRoles := (<User>(global currentUserId)).roles
-      select (
-        Role.Administrator in givenRoles
-      )
-    );
   }
   
   type TranslationProject extending Project {

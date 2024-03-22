@@ -13,18 +13,6 @@ module default {
     defaultFieldRegion: FieldRegion;
     defaultMarketingRegion: Location;
     mapImage: File;
-
-    access policy CanSelectGeneratedFromAppPoliciesForLocation
-    allow select;
-
-    access policy CanInsertDeleteGeneratedFromAppPoliciesForLocation
-    allow insert, delete using (
-      with
-        givenRoles := (<User>(global currentUserId)).roles
-      select (
-        Role.Administrator in givenRoles
-      )
-    );
   }
 }
   
