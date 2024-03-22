@@ -5,6 +5,7 @@ import { $, e } from '../reexports';
 export const mapToSetBlock = (
   type: $.$expr_PathNode,
   changes: Record<string, any>,
+  enforceReadonly: boolean,
 ) => {
   const el = type.__element__;
   const pointers = el.__pointers__;
@@ -25,7 +26,15 @@ export const mapToSetBlock = (
         : (key as keyof typeof pointers);
 
     const pointer = pointers[pointerKey];
-    if (!pointer || pointer.readonly || pointer.computed) {
+    if (!pointer) {
+      throw new ServerException(`Cannot find ${el.__name__}.${pointerKey}`);
+    }
+    if (pointer.computed) {
+      throw new ServerException(
+        `Cannot set computed pointer ${el.__name__}.${pointerKey}`,
+      );
+    }
+    if (enforceReadonly && pointer.readonly) {
       throw new ServerException(`Cannot update ${el.__name__}.${pointerKey}`);
     }
     if (value === undefined) {
