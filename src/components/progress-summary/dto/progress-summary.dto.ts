@@ -1,7 +1,8 @@
 import { Field, Float, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { ID, SecuredProps } from '../../../common';
+import { SecuredProps } from '~/common';
+import { LinkTo } from '~/core/resources';
 
 @ObjectType({
   description: stripIndent`
@@ -32,9 +33,9 @@ export enum SummaryPeriod {
 }
 
 export type FetchedSummaries = {
-  reportId: ID;
+  report: LinkTo<'ProgressReport'>;
   // Total verses across all products in the engagement this summary is under
   totalVerses?: number;
   // Total verse equivalents across all products in the engagement this summary is under
   totalVerseEquivalents?: number;
-} & Record<SummaryPeriod, ProgressSummary | undefined>;
+} & Record<SummaryPeriod, ProgressSummary | null>;
