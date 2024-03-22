@@ -56,7 +56,7 @@ export class ProgressReportWorkflowEdgeDBRepository
           id: event.id,
           at: event.at,
           status: event.status,
-          transition: event.transitionId ?? {},
+          transition: event.transitionId,
           notes: event.notes,
           who: {
             id: event.who.id,
@@ -152,7 +152,7 @@ export class ProgressReportWorkflowEdgeDBRepository
     return results.project.members.map((member) => ({
       id: member.user.id,
       email: member.user.email,
-      roles: member.user.roles,
+      roles: member.user.roles.map((role) => role),
     }));
   }
 
