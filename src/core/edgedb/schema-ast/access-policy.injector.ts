@@ -26,15 +26,15 @@ export class EdgeDBAccessPolicyInjector {
     await this.ejectAll(files);
   }
 
-  private async injectAll(files: SchemaFile[]) {
+  async injectAll(files: SchemaFile[]) {
     await Promise.all(files.map((file) => this.injectForFile(file).write()));
   }
 
-  private async ejectAll(files: SchemaFile[]) {
+  async ejectAll(files: SchemaFile[]) {
     await Promise.all(files.map((file) => this.ejectFile(file).write()));
   }
 
-  private async discoverFiles() {
+  async discoverFiles() {
     const filenames = await glob('./dbschema/*.esdl');
     const files = filenames.map((filename) =>
       SchemaFile.of(this.parser, filename),

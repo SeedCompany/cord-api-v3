@@ -23,6 +23,7 @@
     "gen-id": "ts-node -Te \"let g = require('./src/common/generate-id').generateId; for (let i = 0, l = process.argv[1] || 1; i < l; i++) { g().then(console.log) }\"",
     "edgedb:gen": "node --loader ts-node/esm/transpile-only --experimental-loader=extensionless src/core/edgedb/generator/run.ts",
     "edgedb:seed": "node --loader ts-node/esm/transpile-only --experimental-loader=extensionless src/core/edgedb/seeds.run.ts",
+    "edgedb:migration": "yarn console edgedb migration",
     "lint": "eslint --ext .ts,.tsx --fix --max-warnings 0 .",
     "test": "yarn test:base --selectProjects Unit",
     "test:e2e": "yarn test:base --selectProjects E2E",
