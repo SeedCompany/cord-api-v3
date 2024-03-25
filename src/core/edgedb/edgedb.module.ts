@@ -11,9 +11,11 @@ import { EdgeDB } from './edgedb.service';
 import { Options } from './options';
 import { OptionsContext } from './options.context';
 import { Client } from './reexports';
+import { EdgeDBSchemaAstModule } from './schema-ast/schema-ast.module';
 import { TransactionContext } from './transaction.context';
 
 @Module({
+  imports: [EdgeDBSchemaAstModule],
   providers: [
     {
       provide: 'DEFAULT_OPTIONS',

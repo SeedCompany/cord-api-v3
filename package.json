@@ -23,6 +23,7 @@
     "gen-id": "ts-node -Te \"let g = require('./src/common/generate-id').generateId; for (let i = 0, l = process.argv[1] || 1; i < l; i++) { g().then(console.log) }\"",
     "edgedb:gen": "node --loader ts-node/esm/transpile-only --experimental-loader=extensionless src/core/edgedb/generator/run.ts",
     "edgedb:seed": "node --loader ts-node/esm/transpile-only --experimental-loader=extensionless src/core/edgedb/seeds.run.ts",
+    "edgedb:migration": "yarn console edgedb migration",
     "lint": "eslint --ext .ts,.tsx --fix --max-warnings 0 .",
     "test": "yarn test:base --selectProjects Unit",
     "test:e2e": "yarn test:base --selectProjects E2E",
@@ -76,6 +77,7 @@
     "graphql-upload": "^16.0.2",
     "human-format": "^1.2.0",
     "image-size": "^1.0.2",
+    "indent-string": "^5.0.0",
     "ioredis": "^5.3.2",
     "iso-3166-1": "^2.1.1",
     "ix": "^5.0.0",
@@ -101,6 +103,7 @@
     "ts-essentials": "^9.4.1",
     "winston": "^3.11.0",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.0/xlsx-0.20.0.tgz",
+    "xregexp": "^5.1.1",
     "yaml": "^2.3.3"
   },
   "devDependencies": {
