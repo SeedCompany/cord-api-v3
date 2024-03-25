@@ -6,7 +6,7 @@ export class NanoIDCodec extends StrCodec {
     module: 'default',
     type: 'nanoid',
     ts: 'ID',
-    path: '~/common',
+    path: '~/common/id-field',
   };
   tsType = 'ID';
   importedType = true;
