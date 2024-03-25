@@ -1,5 +1,4 @@
 import { Field, ObjectType } from '@nestjs/graphql';
-import { Nil } from '@seedcompany/common';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
@@ -37,7 +36,7 @@ export abstract class ProgressReportWorkflowEvent {
     nullable: true,
     description: 'THe transition taken, null if workflow was bypassed',
   })
-  readonly transition: (InternalTransition | Nil) & SetUnsecuredType<ID | Nil>;
+  readonly transition?: InternalTransition & SetUnsecuredType<ID | null>;
 
   @Field(() => ProgressReportStatus)
   readonly status: ProgressReportStatus;
