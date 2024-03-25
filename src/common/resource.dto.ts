@@ -153,6 +153,9 @@ export class EnhancedResource<T extends ResourceShape<any>> {
   get hasParent() {
     return !!this.type.Parent;
   }
+  get isEmbedded() {
+    return this.type.Parent === 'dynamic';
+  }
 
   @Once()
   get securedPropsPlusExtra(): ReadonlySet<

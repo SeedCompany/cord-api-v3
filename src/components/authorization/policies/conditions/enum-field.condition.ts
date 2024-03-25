@@ -4,7 +4,11 @@ import { startCase } from 'lodash';
 import { ConditionalKeys } from 'type-fest';
 import { inspect, InspectOptionsStylized } from 'util';
 import { ResourceShape, Secured } from '~/common';
-import { Condition, IsAllowedParams } from '../../policy/conditions';
+import {
+  Condition,
+  eqlInLiteralSet,
+  IsAllowedParams,
+} from '../../policy/conditions';
 
 export class EnumFieldCondition<
   TResourceStatic extends ResourceShape<any>,
@@ -34,6 +38,10 @@ export class EnumFieldCondition<
 
   asCypherCondition(_query: Query) {
     return `false`; // TODO
+  }
+
+  asEdgeQLCondition() {
+    return '<str>' + eqlInLiteralSet(`.${this.field}`, this.allowed);
   }
 
   union(conditions: this[]): Array<Condition<TResourceStatic>> {

@@ -1,17 +1,19 @@
-import { groupBy } from '@seedcompany/common';
+import { groupBy, isNotNil, Nil } from '@seedcompany/common';
 import { Query } from 'cypher-query-builder';
+import addIndent from 'indent-string';
 import { Class, Constructor } from 'type-fest';
 import { inspect, InspectOptionsStylized } from 'util';
 import { ResourceShape } from '~/common';
 import { Policy } from '../policy.factory';
 import {
   AsCypherParams,
+  AsEdgeQLParams,
   Condition,
   IsAllowedParams,
 } from './condition.interface';
 
 export abstract class AggregateConditions<
-  TResourceStatic extends ResourceShape<any>,
+  TResourceStatic extends ResourceShape<any> = ResourceShape<any>,
 > implements Condition<TResourceStatic>
 {
   protected constructor(
@@ -27,11 +29,9 @@ export abstract class AggregateConditions<
     return new this.constructor(newConditions);
   }
 
-  protected abstract readonly iteratorKey: 'some' | 'every';
   isAllowed(params: IsAllowedParams<TResourceStatic>) {
-    return this.conditions[this.iteratorKey]((condition) =>
-      condition.isAllowed(params),
-    );
+    const aggFn = this instanceof AndConditions ? 'every' : 'some';
+    return this.conditions[aggFn]((condition) => condition.isAllowed(params));
   }
 
   setupCypherContext(
@@ -46,7 +46,6 @@ export abstract class AggregateConditions<
     return query;
   }
 
-  protected abstract readonly cypherJoiner: string;
   asCypherCondition(
     query: Query,
     other: AsCypherParams<TResourceStatic>,
@@ -54,10 +53,30 @@ export abstract class AggregateConditions<
     if (this.conditions.length === 0) {
       return 'true';
     }
+    const separator = this instanceof AndConditions ? ' AND ' : ' OR ';
     const inner = this.conditions
       .map((c) => c.asCypherCondition(query, other))
-      .join(this.cypherJoiner);
+      .join(separator);
     return `(${inner})`;
+  }
+
+  setupEdgeQLContext(params: AsEdgeQLParams<TResourceStatic>) {
+    const contexts = this.conditions.map(
+      (condition) => condition.setupEdgeQLContext?.(params) ?? {},
+    );
+    const merged = Object.assign({}, ...contexts);
+    return merged;
+  }
+
+  asEdgeQLCondition(params: AsEdgeQLParams<TResourceStatic>): string {
+    if (this.conditions.length === 0) {
+      return 'true';
+    }
+    const separator = this instanceof AndConditions ? '\nand ' : '\nor ';
+    const inner = this.conditions
+      .map((c) => c.asEdgeQLCondition(params))
+      .join(separator);
+    return `(${addIndent('\n' + inner, 2)}\n)`;
   }
 
   [inspect.custom](_depth: number, _options: InspectOptionsStylized) {
@@ -71,16 +90,17 @@ export abstract class AggregateConditions<
 }
 
 export class AndConditions<
-  TResourceStatic extends ResourceShape<any>,
+  TResourceStatic extends ResourceShape<any> = ResourceShape<any>,
 > extends AggregateConditions<TResourceStatic> {
-  protected readonly iteratorKey = 'every';
-  protected readonly cypherJoiner = ' AND ';
-
   static from<T extends ResourceShape<any>>(
-    ...conditions: Array<Condition<T>>
+    ...conditionsIn: Array<Condition<T> | Nil>
   ) {
+    const conditions = conditionsIn.filter(isNotNil);
     if (conditions.length === 1) {
       return conditions[0];
+    }
+    if (conditions.length === 0) {
+      throw new Error('AndConditions requires at least one condition');
     }
 
     const merged = groupBy(conditions, byType).flatMap((sames) => {
@@ -96,23 +116,24 @@ export class AndConditions<
 }
 
 export class OrConditions<
-  TResourceStatic extends ResourceShape<any>,
+  TResourceStatic extends ResourceShape<any> = ResourceShape<any>,
 > extends AggregateConditions<TResourceStatic> {
-  protected readonly iteratorKey = 'some';
-  protected readonly cypherJoiner = ' OR ';
-
   static from<T extends ResourceShape<any>>(
-    ...conditions: Array<Condition<T>>
+    ...conditions: Array<Condition<T> | Nil>
   ) {
     return OrConditions.fromAll(conditions);
   }
 
   static fromAll<T extends ResourceShape<any>>(
-    conditions: Array<Condition<T>>,
+    conditionsIn: Array<Condition<T> | Nil>,
     { optimize = true }: { optimize?: boolean } = {},
   ) {
+    const conditions = conditionsIn.filter(isNotNil);
     if (conditions.length === 1) {
       return conditions[0];
+    }
+    if (conditions.length === 0) {
+      throw new Error('OrConditions requires at least one condition');
     }
 
     const flattened = conditions.flatMap((c) =>

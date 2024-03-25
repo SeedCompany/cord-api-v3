@@ -159,6 +159,7 @@ module Project {
       aware of the sensitivity & current user membership for the associated context.";
     
     required projectContext: Context;
+    index on (.projectContext);
     
     optional ownSensitivity: default::Sensitivity {
       annotation description := "\

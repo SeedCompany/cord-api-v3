@@ -4,6 +4,7 @@ import { Many, ResourceShape, Variant, VariantOf } from '~/common';
 import {
   AsCypherParams,
   Condition,
+  eqlInLiteralSet,
   IsAllowedParams,
 } from '../../policy/conditions';
 
@@ -13,7 +14,7 @@ export interface HasVariant {
   [VariantForCondition]: string;
 }
 
-class VariantCondition<TResourceStatic extends ResourceShape<any>>
+export class VariantCondition<TResourceStatic extends ResourceShape<any>>
   implements Condition<TResourceStatic>
 {
   constructor(readonly variants: ReadonlySet<VariantOf<TResourceStatic>>) {}
@@ -34,6 +35,10 @@ class VariantCondition<TResourceStatic extends ResourceShape<any>>
   asCypherCondition(query: Query, _other: AsCypherParams<TResourceStatic>) {
     const variants = query.params.addParam([...this.variants], 'variants');
     return `node.variant = ${String(variants)}`;
+  }
+
+  asEdgeQLCondition() {
+    return '<str>' + eqlInLiteralSet('.variant', this.variants);
   }
 
   union(this: void, conditions: this[]) {

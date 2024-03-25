@@ -1,12 +1,14 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { CachedByArg } from '@seedcompany/common';
 import { identity, intersection } from 'lodash';
 import { EnhancedResource, Session } from '~/common';
 import { QueryFragment } from '~/core/database/query';
 import { withoutScope } from '../../dto/role.dto';
+import { RoleCondition } from '../../policies/conditions/role.condition';
 import { Permission } from '../builder/perm-granter';
-import { Condition, OrConditions } from '../conditions';
+import { all, any, CalculatedCondition, OrConditions } from '../conditions';
 import { PolicyFactory } from '../policy.factory';
+import { ConditionOptimizer } from './condition-optimizer';
 
 export interface ResolveParams {
   action: string;
@@ -23,7 +25,11 @@ export interface FilterOptions {
 
 @Injectable()
 export class PolicyExecutor {
-  constructor(private readonly policyFactory: PolicyFactory) {}
+  constructor(
+    private readonly policyFactory: PolicyFactory,
+    @Inject(forwardRef(() => ConditionOptimizer))
+    private readonly conditionOptimizer: ConditionOptimizer & {},
+  ) {}
 
   resolve({
     action,
@@ -74,7 +80,62 @@ export class PolicyExecutor {
     if (conditions.length === 0) {
       return false;
     }
-    return OrConditions.fromAll(conditions, { optimize: optimizeConditions });
+    const merged = OrConditions.fromAll(conditions, {
+      optimize: optimizeConditions,
+    });
+    return optimizeConditions
+      ? this.conditionOptimizer.optimize(merged)
+      : merged;
+  }
+
+  forEdgeDB({
+    action,
+    resource,
+  }: Pick<ResolveParams, 'action' | 'resource'>): Permission {
+    if (action !== 'read' && resource.isCalculated) {
+      // users don't initiate calculated actions, so don't block with access policies
+      if ([...resource.interfaces].some((e) => e.hasDB)) {
+        // But don't duplicate AP if an interface has already declared
+        return false;
+      }
+      return true;
+    }
+
+    const policies = this.policyFactory.getDBPolicies();
+
+    const conditions = [];
+    for (const policy of policies) {
+      const grants = policy.grants.get(resource);
+      if (!grants) {
+        continue;
+      }
+
+      const condition = grants.objectLevel[action];
+      if (condition == null) {
+        continue;
+      }
+      if (condition === false) {
+        // Deny actions should not cross into other policies, continue executing.
+        continue;
+      }
+
+      const roleCondition =
+        policy.roles && policy.roles.length > 0
+          ? new RoleCondition(new Set(policy.roles))
+          : undefined;
+
+      if (!roleCondition && condition === true) {
+        // globally allowed
+        return true;
+      }
+      conditions.push(
+        all(roleCondition, condition !== true ? condition : null),
+      );
+    }
+    if (conditions.length === 0) {
+      return false;
+    }
+    return this.conditionOptimizer.optimize(any(...conditions));
   }
 
   cypherFilter({
@@ -126,15 +187,5 @@ export class PolicyExecutor {
       return rolesSpecifiedByPolicyThatUserHas.length > 0;
     });
     return policies;
-  }
-}
-
-export class CalculatedCondition implements Condition<any> {
-  static readonly instance = new CalculatedCondition();
-  isAllowed() {
-    return false;
-  }
-  asCypherCondition() {
-    return 'false';
   }
 }

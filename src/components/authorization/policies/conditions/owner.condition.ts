@@ -73,6 +73,10 @@ class OwnerCondition<
     ].join(' OR ');
   }
 
+  asEdgeQLCondition() {
+    return '(.isOwner ?? false)';
+  }
+
   union(this: void, conditions: this[]) {
     return conditions[0];
   }

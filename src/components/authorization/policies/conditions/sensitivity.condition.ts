@@ -2,7 +2,12 @@ import { Query } from 'cypher-query-builder';
 import { inspect, InspectOptionsStylized } from 'util';
 import { ResourceShape, Sensitivity } from '~/common';
 import { matchProjectSens, rankSens } from '~/core/database/query';
-import { Condition, IsAllowedParams } from '../../policy/conditions';
+import {
+  AsEdgeQLParams,
+  Condition,
+  fqnRelativeTo,
+  IsAllowedParams,
+} from '../../policy/conditions';
 
 const sensitivityRank = { High: 3, Medium: 2, Low: 1 };
 const CQL_VAR = 'sens';
@@ -59,6 +64,25 @@ export class SensitivityCondition<
     const ranked = sensitivityRank[this.access];
     const param = query.params.addParam(ranked, 'requiredSens');
     return `${CQL_VAR} <= ${String(param)}`;
+  }
+
+  setupEdgeQLContext({
+    resource,
+    namespace,
+  }: AsEdgeQLParams<TResourceStatic>): Record<string, string> {
+    const Sensitivity = fqnRelativeTo('default::Sensitivity', namespace);
+    if (resource.isEmbedded) {
+      const eql = `(.container[is Project::ContextAware].sensitivity ?? ${Sensitivity}.High)`;
+      return { sensitivity: eql };
+    }
+    return {};
+  }
+
+  asEdgeQLCondition({ resource, namespace }: AsEdgeQLParams<TResourceStatic>) {
+    const Sensitivity = fqnRelativeTo('default::Sensitivity', namespace);
+    const lhs = resource.isEmbedded ? 'sensitivity' : '.sensitivity';
+    const rhs = `${Sensitivity}.${this.access}`;
+    return `${lhs} <= ${rhs}`;
   }
 
   union(conditions: this[]) {
