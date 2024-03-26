@@ -1,3 +1,4 @@
+import type { Client } from 'edgedb/dist/baseClient.js';
 import {
   Options as EdgeDBOptions,
   RetryOptions,
@@ -24,10 +25,12 @@ export class Options extends EdgeDBOptions {
   withModuleAliases(aliases: { [name: string]: string }) {
     return this.withSession(this.session.withModuleAliases(aliases));
   }
-  withConfig(config: { [name: string]: any }) {
+  withConfig(config: Config) {
     return this.withSession(this.session.withConfig(config));
   }
   withGlobals(globals: { [name: string]: any }) {
     return this.withSession(this.session.withGlobals(globals));
   }
 }
+
+type Config = Parameters<Client['withConfig']>[0];
