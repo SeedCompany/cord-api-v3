@@ -22,11 +22,16 @@ runs:
           /home/runner/.config/edgedb
           /home/runner/.local/share/edgedb
 
+#    - run: edgedb project init --non-interactive --link --server-instance gactions --project-dir
+
     - uses: edgedb/setup-edgedb@v1
       with:
         instance-name: ghactions
         server-version: ${{ steps.edgedb-init.outputs.cache-hit == 'true' && 'none' || 'stable' }}
 
+    - run: edgedb instance stop -I ghactions
+      shell: bash
+      if: steps.edgedb-init.outputs.cache-hit != 'true'
     - run: edgedb instance start --foreground -I ghactions &
       shell: bash
       if: steps.edgedb-init.outputs.cache-hit != 'true'
