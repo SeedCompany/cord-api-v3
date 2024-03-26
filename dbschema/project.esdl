@@ -96,6 +96,7 @@ module default {
         # https://github.com/edgedb/edgedb/issues/3960
         # projects := {__subject__},
       });
+      on source delete delete target;
     }
     
     trigger createBudgetOnInsert after insert for each do (

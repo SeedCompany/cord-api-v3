@@ -8,6 +8,11 @@ module default {
     #address: str; #TODO - this needs figured out - needed on here and Partner?
     multi types: Organization::Type;
     multi reach: Organization::Reach;
+
+    overloaded link projectContext: Project::Context {
+      default := (insert Project::Context);
+      on source delete delete target;
+    }
   }
 }
   
