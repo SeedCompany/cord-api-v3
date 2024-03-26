@@ -27,9 +27,9 @@ runs:
         instance-name: ghactions
         server-version: ${{ steps.edgedb-init.outputs.cache-hit == 'true' && 'none' || 'stable' }}
 
-    # in case cached
-    - run: edgedb instance start -I gactions
+    - run: edgedb instance start --foreground -I gactions &
       shell: bash
+      if: steps.edgedb-init.outputs.cache-hit != 'true'
 
     - run: edgedb configure set session_idle_transaction_timeout 5min
       shell: bash
