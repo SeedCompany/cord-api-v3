@@ -1516,14 +1516,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@edgedb/generate@npm:^0.5.0-canary.20240312T000951":
-  version: 0.5.0-canary.20240312T155749
-  resolution: "@edgedb/generate@npm:0.5.0-canary.20240312T155749"
+"@edgedb/generate@npm:^0.5.0-canary.20240320T135053":
+  version: 0.5.0-canary.20240320T135053
+  resolution: "@edgedb/generate@npm:0.5.0-canary.20240320T135053"
   peerDependencies:
     edgedb: ^1.4.0
   bin:
     generate: dist/cli.js
-  checksum: 10c0/3539a71789746e8a60096f3a68084f5708de83a364fb80a1a5eb0294fa930c4838d9186d916831b97ef3eea93a7e8849bc1192a0147cfd977344f2e1a9dad256
+  checksum: 10c0/045a9356a7cd1a82fa20ead47ee4a65f13f2adbf779e80a12518f06be6d6196ebae20ef26285e3eade0b300b2b18fefa642b662371dba02719b1dbb6149ae3e9
   languageName: node
   linkType: hard
 
@@ -5434,7 +5434,7 @@ __metadata:
     "@apollo/subgraph": "npm:^2.5.6"
     "@aws-sdk/client-s3": "npm:^3.440.0"
     "@aws-sdk/s3-request-presigner": "npm:^3.440.0"
-    "@edgedb/generate": "npm:^0.5.0-canary.20240312T000951"
+    "@edgedb/generate": "npm:^0.5.0-canary.20240320T135053"
     "@faker-js/faker": "npm:^8.2.0"
     "@ffprobe-installer/ffprobe": "npm:^2.1.2"
     "@golevelup/nestjs-discovery": "npm:^4.0.0"
@@ -5486,7 +5486,7 @@ __metadata:
     debugger-is-attached: "npm:^1.2.0"
     dotenv: "npm:^16.3.1"
     dotenv-expand: "npm:^10.0.0"
-    edgedb: "npm:^1.5.0-canary.20240301T204406"
+    edgedb: "npm:^1.5.0-canary.20240320T135030"
     eslint: "npm:^8.52.0"
     eslint-plugin-no-only-tests: "npm:^3.1.0"
     eslint-plugin-typescript-sort-keys: "npm:^2.3.0"
@@ -6097,12 +6097,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"edgedb@npm:^1.5.0-canary.20240301T204406":
-  version: 1.5.0-canary.20240312T155727
-  resolution: "edgedb@npm:1.5.0-canary.20240312T155727"
+"edgedb@npm:^1.5.0-canary.20240320T135030":
+  version: 1.5.0-canary.20240320T135030
+  resolution: "edgedb@npm:1.5.0-canary.20240320T135030"
   bin:
     edgeql-js: dist/cli.js
-  checksum: 10c0/13e576484c30dff4e9b0bb1ab00166d7556f0af116115e36fa3370f7913f2e1ddbd85a3dcff12299868ca3ee9393d74fd73a07fee828b8e022e48346bb094fb0
+  checksum: 10c0/393d87a24c9cac4a1c5e62d5046306cd95b8520ceec70eb66047691301bb3ed729aacee1f1967b2c4ebac0380e586048c74ab140c008e806bccb4e7b554af63f
   languageName: node
   linkType: hard
 

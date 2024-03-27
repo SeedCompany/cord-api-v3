@@ -72,20 +72,18 @@ export class OrganizationService {
     });
 
     const result = await this.repo.readOne(orgId, session);
-    return await this.secure(result, session);
+    return this.secure(result, session);
   }
 
   async readMany(ids: readonly ID[], session: Session) {
     const organizations = await this.repo.readMany(ids, session);
-    return await Promise.all(
-      organizations.map((dto) => this.secure(dto, session)),
-    );
+    return organizations.map((dto) => this.secure(dto, session));
   }
 
-  private async secure(
+  private secure(
     dto: UnsecuredDto<Organization>,
     session: Session,
-  ): Promise<Organization> {
+  ): Organization {
     return this.privileges.for(session, Organization).secure(dto);
   }
 

@@ -85,7 +85,7 @@ export class PartnerRepository extends DtoRepository<
     return result.id;
   }
 
-  async update(partner: Partner, changes: ChangesOf<Partner, UpdatePartner>) {
+  async update(partner: UnsecuredDto<Partner>, changes: ChangesOf<Partner, UpdatePartner>) {
     const {
       pointOfContactId,
       languageOfWiderCommunicationId,

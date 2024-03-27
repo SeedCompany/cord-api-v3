@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
-import { ChangesOf } from '~/core/database/changes';
 import { ID, Session, UnsecuredDto } from '../../common';
 import { DtoRepository } from '../../core';
 import {
@@ -48,11 +47,9 @@ export class OrganizationRepository extends DtoRepository<
     return await query.first();
   }
 
-  async update(
-    input: UpdateOrganization,
-  ) {
+  async update(input: UnsecuredDto<UpdateOrganization>) {
     await this.updateProperties({ id: input.id }, input);
-    await this.readOne(input.id);
+    return await this.readOne(input.id);
   }
 
   protected hydrate(session: Session) {

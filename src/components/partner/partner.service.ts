@@ -113,7 +113,7 @@ export class PartnerService {
   }
 
   async update(input: UpdatePartner, session: Session): Promise<Partner> {
-    const partner = await this.readOne(input.id, session);
+    const partner = await this.repo.readOne(input.id, session);
 
     if (
       !this.validateFinancialReportingType(

@@ -26,13 +26,14 @@ export class PartnerEdgeDBRepository
           throw new Error('Organization Must be provided');
         }
 
-        this.defaults.create({
-          projectContext:e.cast(e.Organization, e.uuid(input.organizationId)).projectContext,
+        await this.defaults.create({
+          projectContext: e.cast(e.Organization, e.uuid(input.organizationId)).projectContext,
+          ...input,
         })
         const org = e.cast(e.Organization, e.uuid(input.organizationId));
 
         const pointOfContact = e.select(e.User, () => ({
-          filter_single: { id: input.pointOfContactId! },
+          filter_single: { id: input.pointOfContactId },
         }));
         const languageOfWiderCommunication = e.select(e.Language, () => ({
           filter_single: { id: input.languageOfWiderCommunicationId! },
