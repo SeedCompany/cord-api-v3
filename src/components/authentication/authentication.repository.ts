@@ -155,7 +155,7 @@ export class AuthenticationRepository {
     return result?.id;
   }
 
-  async deleteSessionToken(token: string): Promise<void> {
+  async disconnectUserFromSession(token: string): Promise<void> {
     await this.db
       .query()
       .raw(
