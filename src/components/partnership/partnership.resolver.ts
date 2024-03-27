@@ -81,7 +81,7 @@ export class PartnershipResolver {
     @Parent() partnership: Partnership,
     @Loader(PartnerLoader) partners: LoaderOf<PartnerLoader>,
   ): Promise<SecuredPartner> {
-    return await mapSecuredValue(partnership.partner, (id) =>
+    return await mapSecuredValue(partnership.partner, ({ id }) =>
       partners.load(id),
     );
   }
