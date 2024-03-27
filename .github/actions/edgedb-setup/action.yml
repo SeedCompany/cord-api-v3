@@ -33,7 +33,9 @@ runs:
       shell: bash
       if: steps.edgedb-init.outputs.cache-hit != 'true'
 
-    - run: edgedb project info --instance-name || edgedb project init --non-interactive --server-instance ghactions --link
+    - run: |
+        edgedb project info --instance-name || edgedb project init --non-interactive --server-instance ghactions --link;
+        edgedb instance start -I ghactions
       shell: bash
       if: steps.edgedb-init.outputs.cache-hit == 'true'
 
