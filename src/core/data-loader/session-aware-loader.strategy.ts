@@ -1,7 +1,7 @@
 import { Inject } from '@nestjs/common';
 import { DataLoaderStrategy } from '@seedcompany/data-loader';
 import { ID } from '~/common';
-import { NoSessionException } from '../../components/authentication/no-session.exception';
+import { sessionFromContext } from '~/common/session';
 import { GqlContextHost } from '../graphql';
 
 export abstract class SessionAwareLoaderStrategy<T, Key = ID, CachedKey = Key>
@@ -15,10 +15,6 @@ export abstract class SessionAwareLoaderStrategy<T, Key = ID, CachedKey = Key>
   private readonly contextHost: GqlContextHost;
 
   get session() {
-    const session = this.contextHost.context.session;
-    if (!session) {
-      throw new NoSessionException();
-    }
-    return session;
+    return sessionFromContext(this.contextHost.context);
   }
 }

@@ -1,3 +1,4 @@
+import { sessionFromContext } from '~/common/session';
 import { EventsHandler, GqlContextHost, ResourceLoader } from '~/core';
 import { Privileges } from '../../../authorization';
 import { CanUpdateMediaUserMetadataEvent } from '../../../file/media/events/can-update-event';
@@ -19,7 +20,7 @@ export class ProgressReportUpdateMediaMetadataCheckHandler {
     const reportMediaId = event.media.attachedTo[0].properties.id;
 
     const reportMedia = await this.resources.load(ReportMedia, reportMediaId);
-    const session = this.contextHost.context.session!;
+    const session = sessionFromContext(this.contextHost.context);
     const allowed = this.privileges
       .for(session, ReportMedia, reportMedia)
       .can('edit');

@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { OperationDefinitionNode } from 'graphql';
+import { BehaviorSubject } from 'rxjs';
 import { Session } from './session';
 
 /**
@@ -9,5 +10,5 @@ export interface GqlContextType {
   operation: OperationDefinitionNode;
   request?: Request;
   response?: Response;
-  session?: Session;
+  readonly session$: BehaviorSubject<Session | undefined>;
 }
