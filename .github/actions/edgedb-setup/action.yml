@@ -25,7 +25,6 @@ runs:
     - uses: edgedb/setup-edgedb@v1
       with:
         server-version: none
-      if: steps.edgedb-init.outputs.cache-hit != 'true'
 
     - run: edgedb server install
       shell: bash
