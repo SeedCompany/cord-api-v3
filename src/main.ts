@@ -18,6 +18,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     logger: bootstrapLogger,
   });
+
   const config = app.get(ConfigService);
 
   app.enableCors(config.cors as CorsOptions); // typecast to undo deep readonly
