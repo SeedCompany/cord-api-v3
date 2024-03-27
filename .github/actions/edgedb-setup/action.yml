@@ -22,19 +22,22 @@ runs:
           /home/runner/.config/edgedb
           /home/runner/.local/share/edgedb
 
-#    - run: edgedb project init --non-interactive --link --server-instance gactions --project-dir
-
     - uses: edgedb/setup-edgedb@v1
       with:
-        instance-name: ghactions
-        server-version: ${{ steps.edgedb-init.outputs.cache-hit == 'true' && 'none' || 'stable' }}
+        server-version: none
+      if: steps.edgedb-init.outputs.cache-hit != 'true'
 
-    - run: edgedb instance stop -I ghactions
+    - run: edgedb server install --latest
       shell: bash
       if: steps.edgedb-init.outputs.cache-hit != 'true'
-    - run: edgedb instance start --foreground -I ghactions &
+
+    - run: edgedb project init --non-interactive --server-instance ghactions
       shell: bash
       if: steps.edgedb-init.outputs.cache-hit != 'true'
+
+    - run: edgedb project init --non-interactive --server-instance ghactions --link
+      shell: bash
+      if: steps.edgedb-init.outputs.cache-hit == 'true'
 
     - run: edgedb configure set session_idle_transaction_timeout 5min
       shell: bash
