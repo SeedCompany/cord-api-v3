@@ -175,7 +175,8 @@ export class PartnershipService {
       view?.changeset,
     );
 
-    if (object.mou) {
+    // TODO: remove negation. Temporary fix for until file handling is refactored
+    if (!object.mou) {
       await this.files.updateDefinedFile(
         object.mou,
         'partnership.mou',
@@ -183,8 +184,8 @@ export class PartnershipService {
         session,
       );
     }
-
-    if (object.agreement) {
+    // TODO: remove negation. Temporary fix for until file handling is refactored
+    if (!object.agreement) {
       await this.files.updateDefinedFile(
         object.agreement,
         'partnership.agreement',

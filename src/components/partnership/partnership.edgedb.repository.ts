@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { Node } from 'cypher-query-builder';
 import { ID, PublicOf } from '~/common';
-import { RepoFor } from '~/core/edgedb';
+import { e, RepoFor } from '~/core/edgedb';
 import { Partnership } from './dto';
 import { PartnershipRepository } from './partnership.repository';
 
@@ -21,22 +20,15 @@ export class PartnershipEdgeDBRepository
   }).withDefaults()
   implements PublicOf<PartnershipRepository>
 {
-  verifyRelationshipEligibility(
+  async isFirstPartnership(
     projectId: ID,
-    partnerId: ID,
-    changeset?: ID | undefined,
-  ): Promise<{
-    partner?: Node | undefined;
-    project?: Node | undefined;
-    partnership?: Node | undefined;
-  }> {
-    throw new Error('Method not implemented.');
-  }
-  isFirstPartnership(
-    projectId: ID,
-    changeset?: ID | undefined,
+    _changeset?: ID | undefined,
   ): Promise<boolean> {
-    throw new Error('Method not implemented.');
+    const query = e.select(e.Partnership, (partnership) => ({
+      filter: e.op(partnership.project.id, '=', projectId),
+    }));
+    const partnership = await this.db.run(query);
+    return !partnership;
   }
   isAnyOtherPartnerships(id: ID): Promise<boolean> {
     throw new Error('Method not implemented.');

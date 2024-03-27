@@ -60,7 +60,7 @@ export class Partnership extends IntersectionType(ChangesetAware, Resource) {
   @Field()
   readonly agreementStatus: SecuredPartnershipAgreementStatus;
 
-  readonly mou: Secured<LinkTo<'File'>> | null;
+  readonly mou: Secured<LinkTo<'File'> | null>;
 
   @Field()
   readonly mouStatus: SecuredPartnershipAgreementStatus;
@@ -79,7 +79,7 @@ export class Partnership extends IntersectionType(ChangesetAware, Resource) {
   @Field()
   readonly mouEndOverride: SecuredDateNullable;
 
-  readonly agreement: Secured<LinkTo<'File'>> | null;
+  readonly agreement: Secured<LinkTo<'File'> | null>;
 
   readonly partner: Secured<LinkTo<'Partner'>>;
   readonly organization: LinkTo<'Organization'>;

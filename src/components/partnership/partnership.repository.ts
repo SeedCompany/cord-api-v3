@@ -236,7 +236,7 @@ export class PartnershipRepository extends DtoRepository<
     return result!; // result from paginate() will always have 1 row.
   }
 
-  async verifyRelationshipEligibility(
+  private async verifyRelationshipEligibility(
     projectId: ID,
     partnerId: ID,
     changeset?: ID,

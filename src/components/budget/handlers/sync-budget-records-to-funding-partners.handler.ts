@@ -100,9 +100,9 @@ export class SyncBudgetRecordsToFundingPartners
       return event.updated.id;
     }
     if (event instanceof PartnershipUpdatedEvent) {
-      return event.updated.project;
+      return event.updated.project.id;
     }
-    return event.partnership.project;
+    return event.partnership.project.id;
   }
 
   private async determineChangeset(event: SubscribedEvent) {
@@ -149,7 +149,7 @@ export class SyncBudgetRecordsToFundingPartners
     event: SubscribedEvent,
     changeset?: ID,
   ) {
-    const organizationId = partnership.organization;
+    const organizationId = partnership.organization.id;
 
     const previous = budget.records
       .filter((record) => record.organization === organizationId)
