@@ -89,9 +89,10 @@ export class AuthenticationEdgeDBRepository
     }
   }
 
-  async deleteSessionToken(token: string): Promise<void> {
-    const query = e.delete(e.Auth.Session, () => ({
+  async disconnectUserFromSession(token: string): Promise<void> {
+    const query = e.update(e.Auth.Session, () => ({
       filter_single: { token },
+      set: { user: null },
     }));
     await this.db.run(query);
   }

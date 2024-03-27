@@ -97,7 +97,7 @@ export class AuthenticationService {
   }
 
   async logout(token: string): Promise<void> {
-    await this.repo.deleteSessionToken(token);
+    await this.repo.disconnectUserFromSession(token);
   }
 
   async resumeSession(
