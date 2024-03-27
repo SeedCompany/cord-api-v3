@@ -39,7 +39,7 @@ import { TransactionContext } from './transaction.context';
           logging: false,
         });
 
-        Object.assign(client, { options: options.current });
+        Object.assign(client, { options: options.currentAsLazyRef });
 
         if (config.databaseEngine === 'edgedb') {
           await registerCustomScalarCodecs(client, codecs);
