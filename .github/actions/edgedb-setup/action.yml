@@ -27,9 +27,8 @@ runs:
         server-version: none
       if: steps.edgedb-init.outputs.cache-hit != 'true'
 
-    - run: edgedb server install --latest
+    - run: edgedb server install
       shell: bash
-      if: steps.edgedb-init.outputs.cache-hit != 'true'
 
     - run: edgedb project init --non-interactive --server-instance ghactions
       shell: bash
