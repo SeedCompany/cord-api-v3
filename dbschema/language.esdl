@@ -82,6 +82,7 @@ module default {
     );
     overloaded link projectContext: Project::Context {
       default := (insert Project::Context);
+      on source delete delete target;
     }
     
     index on ((.name, .ownSensitivity, .leastOfThese, .isSignLanguage, .isDialect));
