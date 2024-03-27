@@ -113,10 +113,7 @@ export class PartnerEdgeDBRepository
   implements PublicOf<PartnerRepository>
 {
   async partnerIdByOrg(organizationId: ID) {
-    const organization = e.select(e.Organization, () => ({
-      filter_single: { id: organizationId },
-    }));
-    const org2 = e.cast(e.Organization, e.uuid(organizationId));
+    const organization = e.cast(e.Organization, e.uuid(organizationId));
     const partner = e.select(e.Partner, () => ({
       filter_single: { organization },
     }));
