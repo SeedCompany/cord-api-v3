@@ -19,7 +19,10 @@ export class OptionsContext
   }
 
   get current() {
-    return lazyRef(() => this.getStore() ?? this.root);
+    return this.getStore() ?? this.root;
+  }
+  get currentAsLazyRef() {
+    return lazyRef(() => this.current);
   }
 
   onModuleDestroy() {
