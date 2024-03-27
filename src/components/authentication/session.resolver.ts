@@ -61,7 +61,8 @@ export class SessionResolver {
       token = await this.authentication.createToken();
       session = await this.authentication.resumeSession(token, impersonatee);
     }
-    context.session = session; // Set for data loaders invoked later in operation
+    // Set for data loaders invoked later in operation
+    context.session$.next(session);
 
     const userFromSession = session.anonymous ? undefined : session.userId;
 

@@ -4,6 +4,7 @@ import { EmailService } from '@seedcompany/nestjs-email';
 import JWT from 'jsonwebtoken';
 import { DateTime } from 'luxon';
 import { Writable } from 'ts-essentials';
+import { sessionFromContext } from '~/common/session';
 import {
   DuplicateException,
   GqlContextType,
@@ -89,11 +90,9 @@ export class AuthenticationService {
   }
 
   async updateSession(context: GqlContextType) {
-    if (!context.session) {
-      throw new NoSessionException();
-    }
-    const newSession = await this.resumeSession(context.session.token);
-    context.session = newSession; // replace session given with session pipe
+    const prev = sessionFromContext(context);
+    const newSession = await this.resumeSession(prev.token);
+    context.session$.next(newSession);
     return newSession;
   }
 

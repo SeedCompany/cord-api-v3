@@ -78,8 +78,10 @@ export class SessionInterceptor implements NestInterceptor {
     const ctx = gqlExecutionContext.getContext<GqlContextType>();
     const info = gqlExecutionContext.getInfo<GraphQLResolveInfo>();
 
-    if (!ctx.session && info.fieldName !== 'session') {
-      return (ctx.session = await this.hydrateSession(ctx));
+    if (!ctx.session$.value && info.fieldName !== 'session') {
+      const session = await this.hydrateSession(ctx);
+      ctx.session$.next(session);
+      return session;
     }
     return undefined;
   }
