@@ -29,58 +29,54 @@ export class AuthenticationEdgeDBRepository
   }
 
   async saveSessionToken(token: string) {
-    const query = e.insert(e.Auth.Session, { token });
-    await this.db.run(query);
+    await this.db.run(this.saveSessionTokenQuery, { token });
   }
+  private readonly saveSessionTokenQuery = e.params(
+    { token: e.str },
+    ({ token }) => e.insert(e.Auth.Session, { token }),
+  );
 
   async savePasswordHashOnUser(userId: ID, passwordHash: string) {
-    const user = e.select(e.User, () => ({
-      filter_single: { id: userId },
-    }));
-    const query = e
-      .insert(e.Auth.Identity, { user, passwordHash })
-      .unlessConflict((identity) => ({
-        on: identity.user,
-        else: e.update(e.Auth.Identity, () => ({
-          filter_single: { user },
-          set: { passwordHash },
-        })),
-      }));
-    await this.db.run(query);
+    await this.db.run(this.savePasswordHashOnUserQuery, {
+      userId,
+      passwordHash,
+    });
   }
+  private readonly savePasswordHashOnUserQuery = e.params(
+    { userId: e.uuid, passwordHash: e.str },
+    ({ userId, passwordHash }) => {
+      const user = e.cast(e.User, userId);
+      return e
+        .insert(e.Auth.Identity, { user, passwordHash })
+        .unlessConflict((identity) => ({
+          on: identity.user,
+          else: e.update(e.Auth.Identity, () => ({
+            filter_single: { user },
+            set: { passwordHash },
+          })),
+        }));
+    },
+  );
 
-  async getPasswordHash(
-    { email }: LoginInput,
-    _session: Session, // former impl asserted session was found, but not used.
-  ): Promise<string | undefined> {
-    const query = e.select(e.Auth.Identity, (identity) => ({
-      passwordHash: true,
-      filter_single: e.op(identity.user.email, '=', email),
-    }));
-    const result = await this.db.run(query);
-    return result?.passwordHash;
+  async getPasswordHash({ email }: LoginInput) {
+    return await this.db.run(this.getPasswordHashQuery, { email });
   }
+  private readonly getPasswordHashQuery = e.params(
+    { email: e.str },
+    ({ email }) => {
+      const identity = e.select(e.Auth.Identity, (identity) => ({
+        filter_single: e.op(identity.user.email, '=', email),
+      }));
+      return identity.passwordHash;
+    },
+  );
 
   async connectSessionToUser(input: LoginInput, session: Session): Promise<ID> {
-    const user = e.assert_exists(
-      { message: 'User not found' },
-      e.select(e.User, () => ({
-        filter_single: { email: input.email },
-      })),
-    );
-    const updateSession = e.assert_exists(
-      { message: 'Token not found' },
-      e.update(e.Auth.Session, () => ({
-        filter_single: { token: session.token },
-        set: { user },
-      })),
-    );
-    const query = e.select(updateSession, () => ({
-      user: true,
-    }));
     try {
-      const result = await this.db.run(query);
-      return result.user!.id;
+      return await this.db.run(this.connectUserFromSessionQuery, {
+        email: input.email,
+        token: session.token,
+      });
     } catch (e) {
       if (e instanceof IntegrityError) {
         throw new ServerException('Login failed', e);
@@ -88,82 +84,126 @@ export class AuthenticationEdgeDBRepository
       throw e;
     }
   }
+  private readonly connectUserFromSessionQuery = e.params(
+    { email: e.str, token: e.str },
+    ({ email, token }) => {
+      const user = e.assert_exists(
+        { message: 'User not found' },
+        e.select(e.User, () => ({
+          filter_single: { email },
+        })),
+      );
+      const updatedSession = e.assert_exists(
+        { message: 'Token not found' },
+        e.update(e.Auth.Session, () => ({
+          filter_single: { token },
+          set: { user },
+        })),
+      );
+      return e.assert_exists(updatedSession.user).id;
+    },
+  );
 
   async disconnectUserFromSession(token: string): Promise<void> {
-    const query = e.update(e.Auth.Session, () => ({
-      filter_single: { token },
-      set: { user: null },
-    }));
-    await this.db.run(query);
+    await this.db.run(this.disconnectUserFromSessionQuery, { token });
   }
+  private readonly disconnectUserFromSessionQuery = e.params(
+    { token: e.str },
+    ({ token }) =>
+      e.update(e.Auth.Session, () => ({
+        filter_single: { token },
+        set: { user: null },
+      })),
+  );
 
   async resumeSession(token: string, impersonateeId?: ID) {
-    const query = e.select(e.Auth.Session, () => ({
-      filter_single: { token },
-      user: (user) => ({
-        id: true,
-        scopedRoles: withScope('global', user.roles),
-      }),
-      impersonatee: e.assert_single(
-        e.select(e.User, (user) => ({
-          scopedRoles: withScope('global', user.roles),
-          filter: e.op(user.id, '=', impersonateeId ?? e.cast(e.uuid, e.set())),
-        })),
-      ),
-    }));
-    const result = await this.db.run(query);
-    if (!result) {
-      return undefined;
-    }
-    return {
-      userId: result?.user?.id,
-      roles: result?.user?.scopedRoles ?? [],
-      impersonateeRoles: result?.impersonatee?.scopedRoles,
-    };
+    return await this.db.run(this.resumeSessionQuery, {
+      token,
+      impersonateeId,
+    });
   }
+  private readonly resumeSessionQuery = e.params(
+    { token: e.str, impersonateeId: e.optional(e.uuid) },
+    ({ token, impersonateeId }) => {
+      // Not using object cast to avoid leaking not existent users to anonymous requests
+      const impersonatee = e.select(e.User, () => ({
+        filter_single: { id: impersonateeId },
+      }));
+      return e.select(e.Auth.Session, (session) => ({
+        filter_single: { token },
+        userId: session.user.id,
+        roles: withScope('global', session.user.roles),
+        impersonateeRoles: withScope('global', impersonatee.roles),
+      }));
+    },
+  );
 
   async rolesForUser(userId: ID) {
-    const query = e.select(e.User, (user) => ({
-      scopedRoles: withScope('global', user.roles),
-      filter_single: { id: userId },
-    }));
-    const result = await this.db.run(query);
-    return result?.scopedRoles ?? [];
+    return await this.db.run(this.rolesForUserQuery, { userId });
   }
+  private readonly rolesForUserQuery = e.params(
+    { userId: e.uuid },
+    ({ userId }) => {
+      const user = e.cast(e.User, userId);
+      return withScope('global', user.roles);
+    },
+  );
 
-  async getCurrentPasswordHash(session: Session): Promise<string | undefined> {
-    const query = e.select(e.Auth.Identity, (identity) => ({
-      passwordHash: true,
-      filter_single: e.op(identity.user.id, '=', session.userId),
-    }));
-    const result = await this.db.run(query);
-    return result?.passwordHash;
+  async getCurrentPasswordHash(session: Session) {
+    return await this.db.run(this.getCurrentPasswordHashQuery, {
+      userId: session.userId,
+    });
   }
+  private readonly getCurrentPasswordHashQuery = e.params(
+    { userId: e.uuid },
+    ({ userId }) => {
+      const user = e.cast(e.User, userId);
+      const identity = e.select(e.Auth.Identity, () => ({
+        filter_single: { user },
+      }));
+      return identity.passwordHash;
+    },
+  );
 
-  async updatePassword(
-    newPasswordHash: string,
-    session: Session,
-  ): Promise<void> {
-    const query = e.update(e.Auth.Identity, (identity) => ({
-      filter_single: e.op(identity.user.id, '=', session.userId),
-      set: { passwordHash: newPasswordHash },
-    }));
-    await this.db.run(query);
+  async updatePassword(newPasswordHash: string, session: Session) {
+    await this.db.run(this.updatePasswordQuery, {
+      userId: session.userId,
+      passwordHash: newPasswordHash,
+    });
   }
+  private readonly updatePasswordQuery = e.params(
+    { userId: e.uuid, passwordHash: e.str },
+    ({ userId, passwordHash }) => {
+      const user = e.cast(e.User, userId);
+      const identity = e.assert_exists(
+        e.select(e.Auth.Identity, () => ({
+          filter_single: { user },
+        })),
+      );
+      return e.update(identity, () => ({
+        set: { passwordHash },
+      }));
+    },
+  );
 
   async userByEmail(email: string) {
-    const query = e.select(e.User, () => ({
-      filter_single: { email },
-    }));
-    const result = await this.db.run(query);
-    return result?.id;
+    return await this.db.run(this.userByEmailQuery, { email });
   }
+  private readonly userByEmailQuery = e.params(
+    { email: e.str },
+    ({ email }) => {
+      const user = e.select(e.User, () => ({
+        filter_single: { email },
+      }));
+      return user.id;
+    },
+  );
 
-  async doesEmailAddressExist(email: string): Promise<boolean> {
+  async doesEmailAddressExist(email: string) {
     return !!(await this.userByEmail(email));
   }
 
-  async saveEmailToken(email: string, token: string): Promise<void> {
+  async saveEmailToken(email: string, token: string) {
     const query = e.insert(e.Auth.EmailToken, { email, token });
     await this.db.run(query);
   }
@@ -181,37 +221,57 @@ export class AuthenticationEdgeDBRepository
   async updatePasswordViaEmailToken(
     { email }: { email: string },
     passwordHash: string,
-  ): Promise<void> {
+  ) {
     const userId = await this.userByEmail(email);
     await this.savePasswordHashOnUser(userId!, passwordHash);
   }
 
   async removeAllEmailTokensForEmail(email: string) {
-    const query = e.delete(e.Auth.EmailToken, (et) => ({
-      filter: e.op(et.email, '=', email),
-    }));
-    await this.db.run(query);
+    await this.db.run(this.removeAllEmailTokensForEmailQuery, { email });
   }
+  private readonly removeAllEmailTokensForEmailQuery = e.params(
+    { email: e.str },
+    ({ email }) =>
+      e.delete(e.Auth.EmailToken, (et) => ({
+        filter: e.op(et.email, '=', email),
+      })),
+  );
 
   async deactivateAllOtherSessions(session: Session) {
-    const query = e.delete(e.Auth.Session, (s) => ({
-      filter: e.op(
-        e.op(s.user.id, '=', session.userId),
-        'and',
-        e.op(s.token, '!=', session.token),
-      ),
-    }));
-    await this.db.run(query);
+    await this.db.run(this.deactivateAllOtherSessionsQuery, {
+      userId: session.userId,
+      token: session.token,
+    });
   }
+  private readonly deactivateAllOtherSessionsQuery = e.params(
+    { userId: e.uuid, token: e.str },
+    ({ userId, token }) =>
+      e.update(e.Auth.Session, (s) => ({
+        filter: e.op(
+          e.op(s.user.id, '=', userId),
+          'and',
+          e.op(s.token, '!=', token),
+        ),
+        set: { user: null },
+      })),
+  );
 
   async deactivateAllOtherSessionsByEmail(email: string, session: Session) {
-    const query = e.delete(e.Auth.Session, (s) => ({
-      filter: e.op(
-        e.op(s.user.email, '=', email),
-        'and',
-        e.op(s.token, '!=', session.token),
-      ),
-    }));
-    await this.db.run(query);
+    await this.db.run(this.deactivateAllOtherSessionsByEmailQuery, {
+      email,
+      token: session.token,
+    });
   }
+  private readonly deactivateAllOtherSessionsByEmailQuery = e.params(
+    { email: e.str, token: e.str },
+    ({ email, token }) =>
+      e.update(e.Auth.Session, (s) => ({
+        filter: e.op(
+          e.op(s.user.email, '=', email),
+          'and',
+          e.op(s.token, '!=', token),
+        ),
+        set: { user: null },
+      })),
+  );
 }

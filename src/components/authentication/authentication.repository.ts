@@ -121,7 +121,7 @@ export class AuthenticationRepository {
       )
       .asResult<{ pash: string }>()
       .first();
-    return result?.pash;
+    return result?.pash ?? null;
   }
 
   async connectSessionToUser(input: LoginInput, session: Session) {
@@ -203,9 +203,9 @@ export class AuthenticationRepository {
           : null,
       )
       .return<{
-        userId?: ID;
+        userId: ID | null;
         roles: readonly ScopedRole[];
-        impersonateeRoles?: readonly ScopedRole[];
+        impersonateeRoles: readonly ScopedRole[] | null;
       }>([
         'user.id as userId',
         'roles',
@@ -213,7 +213,7 @@ export class AuthenticationRepository {
       ])
       .first();
 
-    return result;
+    return result ?? null;
   }
 
   async rolesForUser(user: ID) {
@@ -237,7 +237,7 @@ export class AuthenticationRepository {
       .return('password.value as passwordHash')
       .asResult<{ passwordHash: string }>()
       .first();
-    return result?.passwordHash;
+    return result?.passwordHash ?? null;
   }
 
   async updatePassword(
