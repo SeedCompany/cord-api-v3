@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DateTime } from 'luxon';
-import { e, EdgeDB, Options } from '~/core/edgedb';
+import { disableAccessPolicies, e, EdgeDB } from '~/core/edgedb';
 import { AdminRepository } from './admin.repository';
 
 @Injectable()
@@ -8,7 +8,7 @@ export class AdminEdgeDBRepository extends AdminRepository {
   private readonly edgedb: EdgeDB;
   constructor(edgedb: EdgeDB) {
     super();
-    this.edgedb = edgedb.withOptions(noAPs);
+    this.edgedb = edgedb.withOptions(disableAccessPolicies);
   }
 
   async finishing(callback: () => Promise<void>) {
@@ -59,9 +59,3 @@ export class AdminEdgeDBRepository extends AdminRepository {
     // nah
   }
 }
-
-const noAPs = (options: Options) =>
-  options.withConfig({
-    // eslint-disable-next-line @typescript-eslint/naming-convention
-    apply_access_policies: false,
-  });
