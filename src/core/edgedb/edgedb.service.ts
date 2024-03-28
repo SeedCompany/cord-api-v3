@@ -6,7 +6,7 @@ import { retry, RetryOptions } from '~/common/retry';
 import { TypedEdgeQL } from './edgeql';
 import { ExclusivityViolationError } from './exclusivity-violation.error';
 import { InlineQueryRuntimeMap } from './generated-client/inline-queries';
-import { OptionsContext, OptionsFn } from './options.context';
+import { OptionsContext, ApplyOptions as OptionsFn } from './options.context';
 import { Client } from './reexports';
 import { TransactionContext } from './transaction.context';
 
