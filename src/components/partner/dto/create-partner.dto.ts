@@ -10,6 +10,7 @@ import {
   IdOf,
   IsId,
   NameField,
+  UrlField,
 } from '../../../common';
 import { Location } from '../../../components/location';
 import { FieldRegion } from '../../field-region';
@@ -48,6 +49,12 @@ export abstract class CreatePartner {
 
   @NameField({ nullable: true })
   readonly address?: string;
+
+  @UrlField({ nullable: true })
+  readonly websiteUrl?: string | null;
+
+  @UrlField({ nullable: true })
+  readonly socialUrl?: string | null;
 
   @IdField({ nullable: true })
   readonly languageOfWiderCommunicationId?: IdOf<Language> | null;

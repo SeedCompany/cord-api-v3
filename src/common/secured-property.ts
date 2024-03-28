@@ -9,6 +9,7 @@ import {
 } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { GraphQLBoolean, GraphQLScalarType, GraphQLString } from 'graphql';
+import { GraphQLURL } from 'graphql-scalars';
 import { isObject } from 'lodash';
 import { Class, ConditionalKeys, ConditionalPick } from 'type-fest';
 import { MadeEnum } from './make-enum';
@@ -275,3 +276,12 @@ export abstract class SecuredFloatNullable extends SecuredProperty<
 export abstract class SecuredBoolean extends SecuredProperty<boolean>(
   GraphQLBoolean,
 ) {}
+
+@ObjectType({
+  description: SecuredProperty.descriptionFor('a secured URL string'),
+})
+export abstract class SecuredURLNullable extends SecuredProperty<
+  string,
+  string,
+  true
+>(GraphQLURL, { nullable: true }) {}

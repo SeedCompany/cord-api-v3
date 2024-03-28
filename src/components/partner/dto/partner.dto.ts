@@ -18,6 +18,7 @@ import {
   SecuredProperty,
   SecuredProps,
   SecuredString,
+  SecuredURLNullable,
   Sensitivity,
   SensitivityField,
 } from '../../../common';
@@ -77,6 +78,12 @@ export class Partner extends Interfaces {
 
   @Field()
   readonly address: SecuredString;
+
+  @Field()
+  readonly websiteUrl: SecuredURLNullable;
+
+  @Field()
+  readonly socialUrl: SecuredURLNullable;
 
   readonly languageOfWiderCommunication: Secured<IdOf<Language> | null>;
 
