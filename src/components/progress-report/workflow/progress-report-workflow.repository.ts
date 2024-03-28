@@ -4,7 +4,6 @@ import {
   ID,
   NotFoundException,
   Order,
-  RichTextDocument,
   Role,
   ServerException,
   Session,
@@ -21,7 +20,6 @@ import {
 } from '~/core/database/query';
 import { ProgressReport, ProgressReportStatus as Status } from '../dto';
 import { ProgressReportWorkflowEvent as WorkflowEvent } from './dto/workflow-event.dto';
-import { InternalTransition } from './transitions';
 
 @Injectable()
 export class ProgressReportWorkflowRepository extends DtoRepository(
@@ -81,33 +79,7 @@ export class ProgressReportWorkflowRepository extends DtoRepository(
         );
   }
 
-  async recordTransition(
-    report: ID,
-    { id: transition, to: status }: InternalTransition,
-    session: Session,
-    notes?: RichTextDocument,
-  ) {
-    return await this.recordEvent(
-      report,
-      { status, transition, notes },
-      session,
-    );
-  }
-
-  async recordBypass(
-    report: ID,
-    status: Status,
-    session: Session,
-    notes?: RichTextDocument,
-  ) {
-    return await this.recordEvent(report, { status, notes }, session);
-  }
-
-  private async recordEvent(
-    report: ID,
-    props: Record<string, any>,
-    session: Session,
-  ) {
+  async recordEvent(report: ID, props: Record<string, any>, session: Session) {
     const result = await this.db
       .query()
       .apply(

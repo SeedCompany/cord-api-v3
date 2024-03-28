@@ -3,7 +3,6 @@ import {
   ID,
   NotFoundException,
   PublicOf,
-  RichTextDocument,
   Session,
   UnsecuredDto,
 } from '~/common';
@@ -11,7 +10,6 @@ import { e, RepoFor } from '~/core/edgedb';
 import { ProgressReportStatus as Status } from '../dto';
 import { ProgressReportWorkflowEvent } from './dto/workflow-event.dto';
 import { ProgressReportWorkflowRepository } from './progress-report-workflow.repository';
-import { InternalTransition } from './transitions';
 
 @Injectable()
 export class ProgressReportWorkflowEdgeDBRepository
@@ -69,33 +67,7 @@ export class ProgressReportWorkflowEdgeDBRepository
   })
   implements PublicOf<ProgressReportWorkflowRepository>
 {
-  async recordTransition(
-    report: ID,
-    { id: transition, to: status }: InternalTransition,
-    session: Session,
-    notes?: RichTextDocument,
-  ) {
-    return await this.recordEvent(
-      report,
-      { status, transition, notes },
-      session,
-    );
-  }
-
-  async recordBypass(
-    report: ID,
-    status: Status,
-    session: Session,
-    notes?: RichTextDocument,
-  ) {
-    return await this.recordEvent(report, { status, notes }, session);
-  }
-
-  private async recordEvent(
-    report: ID,
-    props: Record<string, any>,
-    _session: Session,
-  ) {
+  async recordEvent(report: ID, props: Record<string, any>, _session: Session) {
     const query = e.select(
       e.insert(e.ProgressReport.WorkflowEvent, {
         report: e.select(e.ProgressReport, () => ({
