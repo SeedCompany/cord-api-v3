@@ -5,15 +5,13 @@ import {
   DateTimeField,
   ID,
   IdField,
-  IdOf,
   Secured,
   SecuredProps,
   SecuredRichTextNullable,
   SetUnsecuredType,
 } from '~/common';
 import { e } from '~/core/edgedb';
-import { RegisterResource } from '~/core/resources';
-import { User } from '../../../user';
+import { LinkTo, RegisterResource } from '~/core/resources';
 import { ProgressReportStatus } from '../../dto';
 import { InternalTransition } from '../transitions';
 import { ProgressReportWorkflowTransition as PublicTransition } from './workflow-transition.dto';
@@ -29,7 +27,7 @@ export abstract class ProgressReportWorkflowEvent {
   @IdField()
   readonly id: ID;
 
-  readonly who: Secured<IdOf<User>>;
+  readonly who: Secured<LinkTo<'User'>>;
 
   @DateTimeField()
   readonly at: DateTime;
@@ -38,7 +36,7 @@ export abstract class ProgressReportWorkflowEvent {
     nullable: true,
     description: 'THe transition taken, null if workflow was bypassed',
   })
-  readonly transition?: InternalTransition & SetUnsecuredType<ID>;
+  readonly transition?: InternalTransition & SetUnsecuredType<ID | null>;
 
   @Field(() => ProgressReportStatus)
   readonly status: ProgressReportStatus;
