@@ -3,18 +3,13 @@ import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { MergeExclusive } from 'type-fest';
-import { sortingForEnumIndex } from '~/core/database/query';
-import { e } from '~/core/edgedb';
-import { RegisterResource } from '~/core/resources';
+import { MergeExclusive, Simplify } from 'type-fest';
 import {
   DateInterval,
   DateTimeField,
   DbLabel,
   DbSort,
   DbUnique,
-  ID,
-  IdOf,
   IntersectionType,
   NameField,
   parentIdMiddleware,
@@ -25,13 +20,17 @@ import {
   SecuredBoolean,
   SecuredDateNullable,
   SecuredDateTime,
+  SecuredDateTimeNullable,
   SecuredProps,
   SecuredString,
   SecuredStringNullable,
   Sensitivity,
   SensitivityField,
   UnsecuredDto,
-} from '../../../common';
+} from '~/common';
+import { sortingForEnumIndex } from '~/core/database/query';
+import { e } from '~/core/edgedb';
+import { LinkTo, RegisterResource } from '~/core/resources';
 import { Budget } from '../../budget/dto';
 import { ChangesetAware } from '../../changeset/dto';
 import { Commentable } from '../../comments';
@@ -49,7 +48,9 @@ import { ProjectStatus } from './project-status.enum';
 import { ProjectStep, SecuredProjectStep } from './project-step.enum';
 import { ProjectType } from './project-type.enum';
 
-type AnyProject = MergeExclusive<TranslationProject, InternshipProject>;
+type AnyProject = Simplify<
+  MergeExclusive<TranslationProject, InternshipProject>
+>;
 
 const Interfaces: Type<
   Resource & Postable & ChangesetAware & Pinnable & Commentable
@@ -123,14 +124,14 @@ class Project extends Interfaces {
   @DbSort(sortingForEnumIndex(ProjectStatus))
   readonly status: ProjectStatus;
 
-  readonly primaryLocation: Secured<ID | null>;
+  readonly primaryLocation: Secured<LinkTo<'Location'> | null>;
 
-  readonly marketingLocation: Secured<ID | null>;
+  readonly marketingLocation: Secured<LinkTo<'Location'> | null>;
 
-  readonly marketingRegionOverride: Secured<IdOf<Location> | null>;
-  readonly fieldRegion: Secured<ID | null>;
+  readonly marketingRegionOverride: Secured<LinkTo<'Location'> | null>;
+  readonly fieldRegion: Secured<LinkTo<'FieldRegion'> | null>;
 
-  readonly owningOrganization: Secured<ID | null>;
+  readonly owningOrganization: Secured<LinkTo<'Organization'> | null>;
 
   @Field()
   readonly mouStart: SecuredDateNullable;
@@ -155,12 +156,12 @@ class Project extends Interfaces {
   readonly tags: SecuredTags;
 
   @Field()
-  readonly financialReportReceivedAt: SecuredDateTime;
+  readonly financialReportReceivedAt: SecuredDateTimeNullable;
 
   @Field()
   readonly financialReportPeriod: SecuredReportPeriod;
 
-  readonly rootDirectory: Secured<ID | undefined>;
+  readonly rootDirectory: Secured<LinkTo<'Directory'> | null>;
 
   @Field({
     description: stripIndent`

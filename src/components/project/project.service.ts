@@ -13,7 +13,7 @@ import {
   Session,
   UnauthorizedException,
   UnsecuredDto,
-} from '../../common';
+} from '~/common';
 import {
   ConfigService,
   HandleIdLookup,
@@ -22,8 +22,7 @@ import {
   Logger,
   Transactional,
   UniquenessError,
-} from '../../core';
-import { mapListResults } from '../../core/database/results';
+} from '~/core';
 import { Privileges, withoutScope } from '../authorization';
 import { BudgetService, BudgetStatus, SecuredBudget } from '../budget';
 import {
@@ -54,11 +53,9 @@ import {
   IProject,
   Project,
   ProjectListInput,
-  ProjectListOutput,
   ProjectStatus,
   ProjectType,
   resolveProjectType,
-  SecuredProjectList,
   TranslationProject,
   UpdateProject,
 } from './dto';
@@ -141,7 +138,7 @@ export class ProjectService {
     );
 
     try {
-      const id = await this.repo.create(input);
+      const { id } = await this.repo.create(input);
       const project = await this.readOneUnsecured(id, session);
 
       // Add creator to the project team with their global roles
@@ -229,16 +226,13 @@ export class ProjectService {
     return await Promise.all(projects.map((dto) => this.secure(dto, session)));
   }
 
-  async secure(
-    project: UnsecuredDto<Project>,
-    session: Session,
-  ): Promise<Project> {
+  secure(project: UnsecuredDto<Project>, session: Session) {
     return this.privileges.for(session, IProject, project).secure(project);
   }
 
   async readOne(id: ID, session: Session, changeset?: ID): Promise<Project> {
     const unsecured = await this.readOneUnsecured(id, session, changeset);
-    return await this.secure(unsecured, session);
+    return this.secure(unsecured, session);
   }
 
   @Transactional()
@@ -279,7 +273,7 @@ export class ProjectService {
           changes.primaryLocationId,
           session,
         );
-        if (!location.fundingAccount.value) {
+        if (!location.fundingAccount.value?.id) {
           throw new InputException(
             'Cannot connect location without a funding account',
             'project.primaryLocationId',
@@ -333,12 +327,12 @@ export class ProjectService {
     await this.eventBus.publish(new ProjectDeletedEvent(object, session));
   }
 
-  async list(
-    input: ProjectListInput,
-    session: Session,
-  ): Promise<ProjectListOutput> {
+  async list(input: ProjectListInput, session: Session) {
     const results = await this.repo.list(input, session);
-    return await mapListResults(results, (dto) => this.secure(dto, session));
+    return {
+      ...results,
+      items: results.items.map((dto) => this.secure(dto, session)),
+    };
   }
 
   async listEngagements(
@@ -453,7 +447,7 @@ export class ProjectService {
     userId: ID,
     input: ProjectListInput,
     session: Session,
-  ): Promise<SecuredProjectList> {
+  ) {
     // Instead of trying to handle which subset of projects should be included,
     // based on doing the work of seeing which project teams they can view,
     // we'll use this course all/nothing check. This, assuming role permissions
