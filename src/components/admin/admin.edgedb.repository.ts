@@ -5,8 +5,10 @@ import { AdminRepository } from './admin.repository';
 
 @Injectable()
 export class AdminEdgeDBRepository extends AdminRepository {
-  constructor(private readonly edgedb: EdgeDB) {
+  private readonly edgedb: EdgeDB;
+  constructor(edgedb: EdgeDB) {
     super();
+    this.edgedb = edgedb.withOptions(noAPs);
   }
 
   async finishing(callback: () => Promise<void>) {
@@ -24,9 +26,7 @@ export class AdminEdgeDBRepository extends AdminRepository {
       hash: u['<user[is Auth::Identity]'].passwordHash,
     }));
     const query = e.assert_exists(e.assert_single(rootUser));
-    const user = await this.edgedb.usingOptions(noAPs, () =>
-      this.edgedb.run(query),
-    );
+    const user = await this.edgedb.run(query);
     return {
       id: user.id,
       email: user.email ?? '',
@@ -48,7 +48,7 @@ export class AdminEdgeDBRepository extends AdminRepository {
           set: { passwordHash },
         })),
       }));
-    await this.edgedb.usingOptions(noAPs, () => this.edgedb.run(query));
+    await this.edgedb.run(query);
   }
 
   async checkDefaultOrg() {

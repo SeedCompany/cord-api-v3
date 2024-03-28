@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/unified-signatures */
-import { Injectable } from '@nestjs/common';
+import { Injectable, Optional } from '@nestjs/common';
 import { $, Executor } from 'edgedb';
 import { QueryArgs } from 'edgedb/dist/ifaces';
 import { retry, RetryOptions } from '~/common/retry';
 import { TypedEdgeQL } from './edgeql';
 import { ExclusivityViolationError } from './exclusivity-violation.error';
 import { InlineQueryRuntimeMap } from './generated-client/inline-queries';
-import { OptionsContext } from './options.context';
+import { ApplyOptions, OptionsContext } from './options.context';
 import { Client } from './reexports';
 import { TransactionContext } from './transaction.context';
 
@@ -16,10 +16,34 @@ export class EdgeDB {
     private readonly client: Client,
     private readonly executor: TransactionContext,
     private readonly optionsContext: OptionsContext,
+    @Optional() private readonly childOptions: ApplyOptions[] = [],
   ) {}
 
   async waitForConnection(options?: RetryOptions) {
     await retry(() => this.client.ensureConnected(), options);
+  }
+
+  /**
+   * Specialize the service to include these options.
+   * Note that these take priority over options defined with {@link usingOptions}
+   * @example
+   * await EdgeDB
+   *   .withOptions((options) => options.withGlobals({ ... }))
+   *   .run(...);
+   */
+  withOptions(applyOptions: ApplyOptions) {
+    const child = new EdgeDB(this.client, this.executor, this.optionsContext, [
+      ...this.childOptions,
+      applyOptions,
+    ]);
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    const orig = child.run;
+    child.run = ((...args: Parameters<EdgeDB['run']>) =>
+      child.childOptions.reduceRight(
+        (fn, option) => () => this.optionsContext.usingOptions(option, fn),
+        () => orig.apply(child, args),
+      )()) as EdgeDB['run'];
+    return child;
   }
 
   /**
