@@ -1,4 +1,10 @@
-import { forwardRef, Global, Module } from '@nestjs/common';
+import {
+  forwardRef,
+  Global,
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+} from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { splitDb } from '~/core';
 import { AuthorizationModule } from '../authorization/authorization.module';
@@ -7,6 +13,7 @@ import { AuthenticationEdgeDBRepository } from './authentication.edgedb.reposito
 import { AuthenticationRepository } from './authentication.repository';
 import { AuthenticationService } from './authentication.service';
 import { CryptoService } from './crypto.service';
+import { EdgeDBCurrentUserProvider } from './current-user.provider';
 import {
   LoginExtraInfoResolver,
   RegisterExtraInfoResolver,
@@ -37,6 +44,8 @@ import { SessionResolver } from './session.resolver';
     CryptoService,
     SessionInterceptor,
     { provide: APP_INTERCEPTOR, useExisting: SessionInterceptor },
+    EdgeDBCurrentUserProvider,
+    { provide: APP_INTERCEPTOR, useExisting: EdgeDBCurrentUserProvider },
   ],
   exports: [
     SessionInterceptor,
@@ -45,4 +54,12 @@ import { SessionResolver } from './session.resolver';
     AuthenticationRepository,
   ],
 })
-export class AuthenticationModule {}
+export class AuthenticationModule implements NestModule {
+  constructor(
+    private readonly currentUserProvider: EdgeDBCurrentUserProvider,
+  ) {}
+
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(this.currentUserProvider.use).forRoutes('*');
+  }
+}
