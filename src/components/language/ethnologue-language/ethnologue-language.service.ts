@@ -1,12 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import {
-  ID,
-  Sensitivity,
-  ServerException,
-  Session,
-  UnsecuredDto,
-} from '../../../common';
-import { ILogger, Logger } from '../../../core';
+import { ID, Sensitivity, Session, UnsecuredDto } from '~/common';
 import { Privileges, withEffectiveSensitivity } from '../../authorization';
 import {
   CreateEthnologueLanguage,
@@ -19,23 +12,16 @@ import { EthnologueLanguageRepository } from './ethnologue-language.repository';
 export class EthnologueLanguageService {
   constructor(
     private readonly privileges: Privileges,
-    @Logger('language:ethnologue:service') private readonly logger: ILogger,
     private readonly repo: EthnologueLanguageRepository,
   ) {}
 
   async create(input: CreateEthnologueLanguage, session: Session): Promise<ID> {
     this.privileges.for(session, EthnologueLanguage).verifyCan('create');
 
-    const result = await this.repo.create(input, session);
-    if (!result) {
-      throw new ServerException('Failed to create ethnologue language');
-    }
-
-    const id = result.id;
-
-    this.logger.debug(`ethnologue language created`, { id });
-
-    return id;
+    //TODO - remove the passed in languageId after migration
+    return (
+      await this.repo.create({ languageId: 'temp' as ID, ...input }, session)
+    ).id;
   }
 
   async readOne(
@@ -44,14 +30,14 @@ export class EthnologueLanguageService {
     session: Session,
   ): Promise<EthnologueLanguage> {
     const dto = await this.repo.readOne(id);
-    return await this.secure(dto, sensitivity, session);
+    return this.secure(dto, sensitivity, session);
   }
 
-  async secure(
+  secure(
     dto: UnsecuredDto<EthnologueLanguage>,
     sensitivity: Sensitivity,
     session: Session,
-  ): Promise<EthnologueLanguage> {
+  ) {
     return {
       ...this.privileges
         .for(session, EthnologueLanguage)
@@ -67,21 +53,13 @@ export class EthnologueLanguageService {
     session: Session,
   ) {
     if (!input) return;
-    const ethnologueLanguage = await this.readOne(id, sensitivity, session);
+    const ethnologueLanguage = await this.repo.readOne(id);
 
     const changes = this.repo.getActualChanges(ethnologueLanguage, input);
     this.privileges
       .for(session, EthnologueLanguage, ethnologueLanguage)
-      .verifyChanges(changes);
+      .verifyChanges(withEffectiveSensitivity(changes, sensitivity));
 
-    try {
-      await this.repo.update(ethnologueLanguage, changes);
-    } catch (exception) {
-      this.logger.error('update failed', { exception });
-      throw new ServerException(
-        'Failed to update ethnologue language',
-        exception,
-      );
-    }
+    await this.repo.update({ id: ethnologueLanguage.id, ...changes });
   }
 }

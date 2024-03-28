@@ -89,9 +89,15 @@ export abstract class ProjectFilters {
   })
   readonly presetInventory?: boolean;
 
-  readonly partnerId?: ID;
+  @Field({
+    nullable: true,
+    description: 'Only projects associated with this language"',
+  })
+  readonly languageId?: ID;
 
-  readonly userId?: ID;
+  readonly partnerId?: ID; // internal only
+
+  readonly userId?: ID; // internal only
 }
 
 @InputType()
