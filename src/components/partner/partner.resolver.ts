@@ -16,7 +16,7 @@ import {
   LoggedInSession,
   mapSecuredValue,
   Session,
-} from '../../common';
+} from '~/common';
 import { Loader, LoaderOf } from '../../core';
 import { FieldRegionLoader, SecuredFieldRegions } from '../field-region';
 import {
@@ -29,11 +29,8 @@ import {
 import { LocationLoader, SecuredLocations } from '../location';
 import { OrganizationLoader, SecuredOrganization } from '../organization';
 import { PartnerLoader, PartnerService } from '../partner';
-import {
-  ProjectListInput,
-  SecuredProjectList,
-} from '../project/dto/list-projects.dto';
-import { ProjectLoader } from '../project/project.loader';
+import { ProjectListInput, SecuredProjectList } from '../project';
+import { ProjectLoader } from '../project';
 import { SecuredUser, UserLoader } from '../user';
 import {
   CreatePartnerInput,
@@ -140,7 +137,7 @@ export class PartnerResolver {
     @Parent() partner: Partner,
     @ListArg(ProjectListInput) input: ProjectListInput,
     @Loader(ProjectLoader) loader: LoaderOf<ProjectLoader>,
-  ): Promise<SecuredProjectList> {
+  ) {
     const list = await this.partnerService.listProjects(
       partner,
       input,

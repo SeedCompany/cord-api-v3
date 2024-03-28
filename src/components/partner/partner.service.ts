@@ -10,9 +10,9 @@ import {
   ServerException,
   Session,
   UnsecuredDto,
-} from '../../common';
-import { HandleIdLookup, ILogger, Logger, ResourceLoader } from '../../core';
-import { mapListResults } from '../../core/database/results';
+} from '~/common';
+import { HandleIdLookup, ILogger, Logger, ResourceLoader } from '~/core';
+import { mapListResults } from '~/core/database/results';
 import { Privileges } from '../authorization';
 import {
   LanguageListInput,
@@ -20,13 +20,8 @@ import {
   SecuredLanguageList,
 } from '../language';
 import { Location, LocationLoader, LocationType } from '../location';
-import { FinancialReportingType } from '../partnership/dto';
-import {
-  IProject,
-  ProjectListInput,
-  ProjectService,
-  SecuredProjectList,
-} from '../project';
+import { FinancialReportingType } from '../partnership';
+import { IProject, ProjectListInput, ProjectService } from '../project';
 import {
   CreatePartner,
   Partner,
@@ -172,7 +167,7 @@ export class PartnerService {
     partner: Partner,
     input: ProjectListInput,
     session: Session,
-  ): Promise<SecuredProjectList> {
+  ) {
     const projectListOutput = await this.projectService.list(
       { ...input, filter: { ...input.filter, partnerId: partner.id } },
       session,
@@ -218,10 +213,9 @@ export class PartnerService {
     financialReportingTypes: readonly FinancialReportingType[] | undefined,
     types: readonly PartnerType[] | undefined,
   ) {
-    return financialReportingTypes?.length &&
-      !types?.includes(PartnerType.Managing)
-      ? false
-      : true;
+    return !(
+      financialReportingTypes?.length && !types?.includes(PartnerType.Managing)
+    );
   }
 
   private async verifyCountries(ids: ReadonlyArray<IdOf<Location>>) {

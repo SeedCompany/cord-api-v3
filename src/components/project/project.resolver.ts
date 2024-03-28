@@ -22,10 +22,10 @@ import {
   NotFoundException,
   SecuredDateRange,
   Session,
-} from '../../common';
+} from '~/common';
 import { Loader, LoaderOf } from '../../core';
 import { SecuredBudget } from '../budget';
-import { IdsAndView, IdsAndViewArg } from '../changeset/dto';
+import { IdsAndView, IdsAndViewArg } from '../changeset';
 import {
   EngagementListInput,
   EngagementLoader,
@@ -102,7 +102,7 @@ export class ProjectResolver {
     @ListArg(ProjectListInput) input: ProjectListInput,
     @Loader(ProjectLoader) projects: LoaderOf<ProjectLoader>,
     @AnonSession() session: Session,
-  ): Promise<ProjectListOutput> {
+  ) {
     const list = await this.projectService.list(input, session);
     projects.primeAll(list.items);
     return list;
@@ -115,7 +115,7 @@ export class ProjectResolver {
     @ListArg(ProjectListInput) input: ProjectListInput,
     @Loader(ProjectLoader) projects: LoaderOf<ProjectLoader>,
     @AnonSession() session: Session,
-  ): Promise<ProjectListOutput> {
+  ) {
     const list = await this.projectService.list(
       {
         ...input,
@@ -137,7 +137,7 @@ export class ProjectResolver {
     @ListArg(ProjectListInput) input: ProjectListInput,
     @Loader(ProjectLoader) projects: LoaderOf<ProjectLoader>,
     @AnonSession() session: Session,
-  ): Promise<ProjectListOutput> {
+  ) {
     const list = await this.projectService.list(
       {
         ...input,
@@ -272,7 +272,7 @@ export class ProjectResolver {
       );
     }
 
-    const dir = asDirectory(await files.load(project.rootDirectory.value));
+    const dir = asDirectory(await files.load(project.rootDirectory.value?.id));
     return {
       canRead: true,
       canEdit: false, // rootDirectory of project unchangeable
@@ -285,8 +285,8 @@ export class ProjectResolver {
     @Parent() project: Project,
     @Loader(LocationLoader) locations: LoaderOf<LocationLoader>,
   ): Promise<SecuredLocation> {
-    return await mapSecuredValue(project.primaryLocation, (id) =>
-      locations.load(id),
+    return await mapSecuredValue(project.primaryLocation, (loc) =>
+      locations.load(loc.id),
     );
   }
 
@@ -311,8 +311,8 @@ export class ProjectResolver {
     @Parent() project: Project,
     @Loader(LocationLoader) locations: LoaderOf<LocationLoader>,
   ): Promise<SecuredLocation> {
-    return await mapSecuredValue(project.marketingLocation, (id) =>
-      locations.load(id),
+    return await mapSecuredValue(project.marketingLocation, (loc) =>
+      locations.load(loc.id),
     );
   }
 
@@ -321,8 +321,8 @@ export class ProjectResolver {
     @Parent() project: Project,
     @Loader(LocationLoader) locations: LoaderOf<LocationLoader>,
   ): Promise<SecuredLocation> {
-    return await mapSecuredValue(project.marketingRegionOverride, (id) =>
-      locations.load(id),
+    return await mapSecuredValue(project.marketingRegionOverride, (loc) =>
+      locations.load(loc.id),
     );
   }
 
@@ -331,8 +331,8 @@ export class ProjectResolver {
     @Parent() project: Project,
     @Loader(FieldRegionLoader) fieldRegions: LoaderOf<FieldRegionLoader>,
   ): Promise<SecuredFieldRegion> {
-    return await mapSecuredValue(project.fieldRegion, (id) =>
-      fieldRegions.load(id),
+    return await mapSecuredValue(project.fieldRegion, (fr) =>
+      fieldRegions.load(fr.id),
     );
   }
 
@@ -341,8 +341,8 @@ export class ProjectResolver {
     @Parent() project: Project,
     @Loader(OrganizationLoader) organizations: LoaderOf<OrganizationLoader>,
   ): Promise<SecuredOrganization> {
-    return await mapSecuredValue(project.owningOrganization, (id) =>
-      organizations.load(id),
+    return await mapSecuredValue(project.owningOrganization, (org) =>
+      organizations.load(org.id),
     );
   }
 

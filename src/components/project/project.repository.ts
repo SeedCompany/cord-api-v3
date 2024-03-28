@@ -8,9 +8,9 @@ import {
   ServerException,
   Session,
   UnsecuredDto,
-} from '../../common';
-import { CommonRepository, ConfigService, OnIndex } from '../../core';
-import { ChangesOf, getChanges } from '../../core/database/changes';
+} from '~/common';
+import { CommonRepository, ConfigService, OnIndex } from '~/core';
+import { ChangesOf, getChanges } from '~/core/database/changes';
 import {
   ACTIVE,
   createNode,
@@ -22,7 +22,7 @@ import {
   paginate,
   requestingUser,
   sorting,
-} from '../../core/database/query';
+} from '~/core/database/query';
 import { Privileges, Role } from '../authorization';
 import {
   CreateProject,
@@ -246,7 +246,7 @@ export class ProjectRepository extends CommonRepository {
       );
       result = {
         ...result,
-        primaryLocation: primaryLocationId,
+        primaryLocation: primaryLocationId ? { id: primaryLocationId } : null,
       };
     }
 
@@ -260,7 +260,7 @@ export class ProjectRepository extends CommonRepository {
       );
       result = {
         ...result,
-        fieldRegion: fieldRegionId,
+        fieldRegion: fieldRegionId ? { id: fieldRegionId } : null,
       };
     }
 
@@ -274,7 +274,9 @@ export class ProjectRepository extends CommonRepository {
       );
       result = {
         ...result,
-        marketingLocation: marketingLocationId,
+        marketingLocation: marketingLocationId
+          ? { id: marketingLocationId }
+          : null,
       };
     }
 
@@ -288,7 +290,9 @@ export class ProjectRepository extends CommonRepository {
       );
       result = {
         ...result,
-        marketingRegionOverride: marketingRegionOverrideId,
+        marketingRegionOverride: marketingRegionOverrideId
+          ? { id: marketingRegionOverrideId }
+          : null,
       };
     }
 

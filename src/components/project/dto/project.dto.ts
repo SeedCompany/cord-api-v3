@@ -6,15 +6,13 @@ import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive } from 'type-fest';
 import { sortingForEnumIndex } from '~/core/database/query';
 import { e } from '~/core/edgedb';
-import { RegisterResource } from '~/core/resources';
+import { LinkTo, RegisterResource } from '~/core/resources';
 import {
   DateInterval,
   DateTimeField,
   DbLabel,
   DbSort,
   DbUnique,
-  ID,
-  IdOf,
   IntersectionType,
   NameField,
   parentIdMiddleware,
@@ -31,21 +29,21 @@ import {
   Sensitivity,
   SensitivityField,
   UnsecuredDto,
-} from '../../../common';
-import { ScopedRole } from '../../authorization/dto';
-import { Budget } from '../../budget/dto';
-import { ChangesetAware } from '../../changeset/dto';
+} from '~/common';
+import { ScopedRole } from '../../authorization';
+import { Budget } from '../../budget';
+import { ChangesetAware } from '../../changeset';
 import { Commentable } from '../../comments';
 import { IEngagement as Engagement } from '../../engagement/dto';
-import { Directory } from '../../file/dto';
-import { SecuredTags } from '../../language/dto/language.dto';
-import { Location } from '../../location/dto';
-import { Partnership } from '../../partnership/dto';
-import { SecuredReportPeriod } from '../../periodic-report/dto';
+import { Directory } from '../../file';
+import { SecuredTags } from '../../language';
+import { Location } from '../../location';
+import { Partnership } from '../../partnership';
+import { SecuredReportPeriod } from '../../periodic-report';
 import { Pinnable } from '../../pin/dto';
-import { Postable } from '../../post/dto';
+import { Postable } from '../../post';
 import { ProjectChangeRequest } from '../../project-change-request/dto';
-import { ProjectMember } from '../project-member/dto';
+import { ProjectMember } from '../project-member';
 import { ProjectStatus } from './project-status.enum';
 import { ProjectStep, SecuredProjectStep } from './project-step.enum';
 import { ProjectType } from './project-type.enum';
@@ -124,14 +122,14 @@ class Project extends Interfaces {
   @DbSort(sortingForEnumIndex(ProjectStatus))
   readonly status: ProjectStatus;
 
-  readonly primaryLocation: Secured<ID | null>;
+  readonly primaryLocation: Secured<LinkTo<'Location'> | null>;
 
-  readonly marketingLocation: Secured<ID | null>;
+  readonly marketingLocation: Secured<LinkTo<'Location'> | null>;
 
-  readonly marketingRegionOverride: Secured<IdOf<Location> | null>;
-  readonly fieldRegion: Secured<ID | null>;
+  readonly marketingRegionOverride: Secured<LinkTo<'Location'> | null>;
+  readonly fieldRegion: Secured<LinkTo<'FieldRegion'> | null>;
 
-  readonly owningOrganization: Secured<ID | null>;
+  readonly owningOrganization: Secured<LinkTo<'Organization'> | null>;
 
   @Field()
   readonly mouStart: SecuredDateNullable;
@@ -161,7 +159,7 @@ class Project extends Interfaces {
   @Field()
   readonly financialReportPeriod: SecuredReportPeriod;
 
-  readonly rootDirectory: Secured<ID | undefined>;
+  readonly rootDirectory: Secured<LinkTo<'Directory'> | undefined>;
 
   @Field({
     description: stripIndent`
