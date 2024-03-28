@@ -1,6 +1,7 @@
-import { CalendarDate, ID } from '../src/common';
+import { CalendarDate, ID, IdOf } from '../src/common';
 import { Role } from '../src/components/authorization';
 import { EngagementStatus } from '../src/components/engagement';
+import { FieldRegion } from '../src/components/field-region';
 import { Language } from '../src/components/language';
 import { ProjectStep } from '../src/components/project';
 import { ProjectChangeRequestType } from '../src/components/project-change-request/dto';
@@ -134,7 +135,7 @@ const activeProject = async (app: TestApp, projectId: ID) => {
   await updateProject(app, {
     id: projectId,
     primaryLocationId: location.id,
-    fieldRegionId: region.id,
+    fieldRegionOverrideId: region.id as IdOf<FieldRegion>,
   });
   await runAsAdmin(app, async () => {
     for (const next of [

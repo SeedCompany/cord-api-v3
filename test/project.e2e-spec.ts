@@ -5,6 +5,7 @@ import {
   CalendarDate,
   generateId,
   ID,
+  IdOf,
   isIdLike,
   Order,
   PaginatedListType,
@@ -128,9 +129,15 @@ describe('Project e2e', () => {
 
   it('should have unique name', async () => {
     const name = faker.lorem.word() + ' testProject';
-    await createProject(app, { name, fieldRegionId: fieldRegion.id });
+    await createProject(app, {
+      name,
+      fieldRegionOverrideId: fieldRegion.id as IdOf<FieldRegion>,
+    });
     await expect(
-      createProject(app, { name, fieldRegionId: fieldRegion.id }),
+      createProject(app, {
+        name,
+        fieldRegionOverrideId: fieldRegion.id as IdOf<FieldRegion>,
+      }),
     ).rejects.toThrowGqlError(
       errors.duplicate({
         message: 'Project with this name already exists',
@@ -140,7 +147,9 @@ describe('Project e2e', () => {
   });
 
   it('create & read project by id', async () => {
-    const project = await createProject(app, { fieldRegionId: fieldRegion.id });
+    const project = await createProject(app, {
+      fieldRegionOverrideId: fieldRegion.id as IdOf<FieldRegion>,
+    });
 
     const result = await app.graphql.query(
       gql`
@@ -201,12 +210,12 @@ describe('Project e2e', () => {
       createProject(app, {
         name: faker.string.uuid(),
         type: ProjectType.Translation,
-        fieldRegionId: 'invalid-location-id' as ID,
+        fieldRegionOverrideId: 'invalid-location-id' as IdOf<FieldRegion>,
       }),
     ).rejects.toThrowGqlError(
       errors.notFound({
-        message: 'Field region not found',
-        field: 'project.fieldRegionId',
+        message: 'Field region override not found',
+        field: 'project.fieldRegionOverrideId',
       }),
     );
   });
@@ -215,7 +224,7 @@ describe('Project e2e', () => {
     const proj: CreateProject = {
       name: faker.string.uuid(),
       type: ProjectType.Translation,
-      fieldRegionId: fieldRegion.id,
+      fieldRegionOverrideId: fieldRegion.id as IdOf<FieldRegion>,
     };
 
     const res = await app.graphql.mutate(
@@ -229,7 +238,7 @@ describe('Project e2e', () => {
                   ...budget
                 }
               }
-              fieldRegion {
+              fieldRegionOverride {
                 value {
                   id
                   name {
@@ -261,7 +270,7 @@ describe('Project e2e', () => {
                 ...budget
               }
             }
-            fieldRegion {
+            fieldRegionOverride {
               value {
                 id
                 name {
@@ -289,7 +298,9 @@ describe('Project e2e', () => {
   });
 
   it('update project', async () => {
-    const project = await createProject(app, { fieldRegionId: fieldRegion.id });
+    const project = await createProject(app, {
+      fieldRegionOverrideId: fieldRegion.id as IdOf<FieldRegion>,
+    });
     const namenew = faker.lorem.word() + ' Project';
 
     const result = await app.graphql.query(
@@ -314,7 +325,9 @@ describe('Project e2e', () => {
   });
 
   it('delete project', async () => {
-    const project = await createProject(app, { fieldRegionId: fieldRegion.id });
+    const project = await createProject(app, {
+      fieldRegionOverrideId: fieldRegion.id as IdOf<FieldRegion>,
+    });
     expect(project.id).toBeTruthy();
 
     // Only for admins, but we'll just run it as one to test functionality.
@@ -364,7 +377,7 @@ describe('Project e2e', () => {
         return await createProject(app, {
           name,
           type: ProjectType.Translation,
-          fieldRegionId: fieldRegion.id,
+          fieldRegionOverrideId: fieldRegion.id as IdOf<FieldRegion>,
         });
       }),
     );
@@ -399,7 +412,7 @@ describe('Project e2e', () => {
         async () =>
           await createProject(app, {
             type,
-            fieldRegionId: fieldRegion.id,
+            fieldRegionOverrideId: fieldRegion.id as IdOf<FieldRegion>,
           }),
       ),
     );
@@ -430,30 +443,32 @@ describe('Project e2e', () => {
       name: 'High Sensitivity Proj ' + (await generateId()),
       type: ProjectType.Internship,
       sensitivity: Sensitivity.High,
-      fieldRegionId: fieldRegion.id,
+      fieldRegionOverrideId: fieldRegion.id as IdOf<FieldRegion>,
     });
 
     await createProject(app, {
       name: 'Low Sensitivity Proj ' + (await generateId()),
       type: ProjectType.Internship,
       sensitivity: Sensitivity.Low,
-      fieldRegionId: fieldRegion.id,
+      fieldRegionOverrideId: fieldRegion.id as IdOf<FieldRegion>,
     });
 
     await createProject(app, {
       name: 'Med Sensitivity Proj ' + (await generateId()),
       type: ProjectType.Internship,
       sensitivity: Sensitivity.Medium,
-      fieldRegionId: fieldRegion.id,
+      fieldRegionOverrideId: fieldRegion.id as IdOf<FieldRegion>,
     });
 
     // Create two translation projects, one without language engagements and
     // one with 1 med and 1 low sensitivity eng translation project without engagements
-    await createProject(app, { fieldRegionId: fieldRegion.id });
+    await createProject(app, {
+      fieldRegionOverrideId: fieldRegion.id as IdOf<FieldRegion>,
+    });
 
     //with engagements, low and med sensitivity, project should eval to med
     const translationProjectWithEngagements = await createProject(app, {
-      fieldRegionId: fieldRegion.id,
+      fieldRegionOverrideId: fieldRegion.id as IdOf<FieldRegion>,
     });
 
     const [medSensitivityLanguage, lowSensitivityLanguage] = await runAsAdmin(
@@ -538,7 +553,7 @@ describe('Project e2e', () => {
         async () =>
           await createProject(app, {
             type,
-            fieldRegionId: fieldRegion.id,
+            fieldRegionOverrideId: fieldRegion.id as IdOf<FieldRegion>,
           }),
       ),
     );
@@ -569,11 +584,13 @@ describe('Project e2e', () => {
         async () =>
           await createProject(app, {
             type,
-            fieldRegionId: fieldRegion.id,
+            fieldRegionOverrideId: fieldRegion.id as IdOf<FieldRegion>,
           }),
       ),
     );
-    const project = await createProject(app, { fieldRegionId: fieldRegion.id });
+    const project = await createProject(app, {
+      fieldRegionOverrideId: fieldRegion.id as IdOf<FieldRegion>,
+    });
     await createPin(app, project.id, true);
 
     // filter pinned projects
@@ -628,7 +645,7 @@ describe('Project e2e', () => {
           await createProject(app, {
             type,
             presetInventory: true,
-            fieldRegionId: fieldRegion.id,
+            fieldRegionOverrideId: fieldRegion.id as IdOf<FieldRegion>,
           }),
       ),
     );
@@ -654,7 +671,9 @@ describe('Project e2e', () => {
   it('Project engagement and sensitivity connected to language engagements', async () => {
     // create 1 engagements in a project
     const numEngagements = 1;
-    const project = await createProject(app, { fieldRegionId: fieldRegion.id });
+    const project = await createProject(app, {
+      fieldRegionOverrideId: fieldRegion.id as IdOf<FieldRegion>,
+    });
     const language = await runAsAdmin(app, async () => {
       return await createLanguage(app, { sensitivity: Sensitivity.Medium });
     });
@@ -698,7 +717,7 @@ describe('Project e2e', () => {
 
     const project = await createProject(app, {
       type,
-      fieldRegionId: fieldRegion.id,
+      fieldRegionOverrideId: fieldRegion.id as IdOf<FieldRegion>,
     });
 
     await createInternshipEngagement(app, {
@@ -737,10 +756,13 @@ describe('Project e2e', () => {
     const projName = 'Fix the world ' + DateTime.local().toString();
     await createProject(app, {
       name: projName,
-      fieldRegionId: fieldRegion.id,
+      fieldRegionOverrideId: fieldRegion.id as IdOf<FieldRegion>,
     });
     await expect(
-      createProject(app, { name: projName, fieldRegionId: fieldRegion.id }),
+      createProject(app, {
+        name: projName,
+        fieldRegionOverrideId: fieldRegion.id as IdOf<FieldRegion>,
+      }),
     ).rejects.toThrowGqlError(
       errors.duplicate({
         message: 'Project with this name already exists',
@@ -752,7 +774,9 @@ describe('Project e2e', () => {
   it('List view of project members by projectId', async () => {
     //create 2 Project member
     const numProjectMembers = 2;
-    const project = await createProject(app, { fieldRegionId: fieldRegion.id });
+    const project = await createProject(app, {
+      fieldRegionOverrideId: fieldRegion.id as IdOf<FieldRegion>,
+    });
     const projectId = project.id;
 
     await runAsAdmin(app, async () => {
@@ -801,7 +825,7 @@ describe('Project e2e', () => {
     const type = ProjectType.Translation;
     const project = await createProject(app, {
       type,
-      fieldRegionId: fieldRegion.id,
+      fieldRegionOverrideId: fieldRegion.id as IdOf<FieldRegion>,
     });
 
     await Promise.all(
@@ -848,7 +872,7 @@ describe('Project e2e', () => {
       });
       const project = await createProject(app, {
         primaryLocationId: location.id,
-        fieldRegionId: fieldRegion.id,
+        fieldRegionOverrideId: fieldRegion.id as IdOf<FieldRegion>,
       });
 
       await transitionNewProjectToActive(app, project);
@@ -898,7 +922,7 @@ describe('Project e2e', () => {
     const project: CreateProject = {
       name: faker.string.uuid(),
       type: ProjectType.Translation,
-      fieldRegionId: fieldRegion.id,
+      fieldRegionOverrideId: fieldRegion.id as IdOf<FieldRegion>,
     };
 
     const { createProject } = await app.graphql.mutate(
@@ -927,7 +951,7 @@ describe('Project e2e', () => {
       type: ProjectType.Translation,
       mouEnd: CalendarDate.fromISO('1992-11-01'),
       estimatedSubmission: CalendarDate.fromISO('1993-11-01'),
-      fieldRegionId: fieldRegion.id,
+      fieldRegionOverrideId: fieldRegion.id as IdOf<FieldRegion>,
     };
 
     const { createProject } = await app.graphql.mutate(
@@ -961,7 +985,7 @@ describe('Project e2e', () => {
       name: faker.string.uuid() + ' project',
       mouStart: undefined,
       mouEnd: undefined,
-      fieldRegionId: fieldRegion.id,
+      fieldRegionOverrideId: fieldRegion.id as IdOf<FieldRegion>,
     });
 
     const partnership: CreatePartnership = {
@@ -1032,7 +1056,7 @@ describe('Project e2e', () => {
     const org = await createOrganization(app);
     const project = await createProject(app, {
       name: faker.string.uuid() + ' project',
-      fieldRegionId: fieldRegion.id,
+      fieldRegionOverrideId: fieldRegion.id as IdOf<FieldRegion>,
     });
     const partnership: CreatePartnership = {
       projectId: project.id,
@@ -1099,7 +1123,7 @@ describe('Project e2e', () => {
         const project = await createProject(app, {
           name,
           primaryLocationId: location.id,
-          fieldRegionId: fieldRegion.id,
+          fieldRegionOverrideId: fieldRegion.id as IdOf<FieldRegion>,
         });
         const updatedProject = await app.graphql.mutate(
           gql`

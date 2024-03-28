@@ -13,6 +13,7 @@ import { CommonRepository, ConfigService, OnIndex } from '../../core';
 import { ChangesOf, getChanges } from '../../core/database/changes';
 import {
   ACTIVE,
+  coalesce,
   createNode,
   createRelationships,
   matchChangesetAndChangedProps,
@@ -101,14 +102,29 @@ export class ProjectRepository extends CommonRepository {
           node('primaryLocation', 'Location'),
         ])
         .optionalMatch([
-          node('node'),
-          relation('out', '', 'marketingLocation', ACTIVE),
-          node('marketingLocation', 'Location'),
+          node('primaryLocation'),
+          relation('out', '', 'defaultFieldRegion', ACTIVE),
+          node('defaultFieldRegionByPrimaryLocation', 'FieldRegion'),
         ])
         .optionalMatch([
           node('node'),
-          relation('out', '', 'fieldRegion', ACTIVE),
-          node('fieldRegion', 'FieldRegion'),
+          relation('out', '', 'marketingCountryOverride', ACTIVE),
+          node('marketingCountryOverride', 'Location'),
+        ])
+        .optionalMatch([
+          node('marketingCountryOverride'),
+          relation('out', '', 'defaultMarketingRegion', ACTIVE),
+          node('defaultMarketingRegionByMarketingCountry', 'Location'),
+        ])
+        .optionalMatch([
+          node('primaryLocation'),
+          relation('out', '', 'defaultMarketingRegion', ACTIVE),
+          node('defaultMarketingRegionByPrimaryLocation', 'Location'),
+        ])
+        .optionalMatch([
+          node('node'),
+          relation('out', '', 'fieldRegionOverride', ACTIVE),
+          node('fieldRegionOverride', 'FieldRegion'),
         ])
         .optionalMatch([
           node('node'),
@@ -135,12 +151,25 @@ export class ProjectRepository extends CommonRepository {
             pinned: 'exists((:User { id: $requestingUser })-[:pinned]->(node))',
             rootDirectory: 'rootDirectory.id',
             primaryLocation: 'primaryLocation.id',
-            marketingLocation: 'marketingLocation.id',
-            fieldRegion: 'fieldRegion.id',
+            marketingCountry: coalesce(
+              'marketingCountryOverride.id',
+              'primaryLocation.id',
+            ),
+            marketingCountryOverride: 'marketingCountryOverride.id',
+            fieldRegionOverride: 'fieldRegionOverride.id',
+            fieldRegion: coalesce(
+              'fieldRegionOverride.id',
+              'defaultFieldRegionByPrimaryLocation.id',
+            ),
             owningOrganization: 'organization.id',
             engagementTotal: 'engagementTotal',
             changeset: 'changeset.id',
             marketingRegionOverride: 'marketingRegionOverride.id',
+            marketingRegion: coalesce(
+              'marketingRegionOverride.id',
+              'defaultMarketingRegionByMarketingCountry.id ',
+              'defaultMarketingRegionByPrimaryLocation.id',
+            ),
           }).as('dto'),
         );
   }
@@ -160,8 +189,8 @@ export class ProjectRepository extends CommonRepository {
     const now = DateTime.local();
     const {
       primaryLocationId,
-      fieldRegionId,
-      marketingLocationId,
+      fieldRegionOverrideId,
+      marketingCountryOverrideId,
       marketingRegionOverrideId,
       otherLocationIds,
       type,
@@ -197,10 +226,10 @@ export class ProjectRepository extends CommonRepository {
       )
       .apply(
         createRelationships(IProject, 'out', {
-          fieldRegion: ['FieldRegion', fieldRegionId],
+          fieldRegionOverride: ['FieldRegion', fieldRegionOverrideId],
           primaryLocation: ['Location', primaryLocationId],
           otherLocations: ['Location', otherLocationIds],
-          marketingLocation: ['Location', marketingLocationId],
+          marketingCountryOverride: ['Location', marketingCountryOverrideId],
           marketingRegionOverride: ['Location', marketingRegionOverrideId],
           owningOrganization: ['Organization', this.config.defaultOrg.id],
         }),
@@ -220,9 +249,9 @@ export class ProjectRepository extends CommonRepository {
   ) {
     const {
       primaryLocationId,
-      marketingLocationId,
+      marketingCountryOverrideId,
       marketingRegionOverrideId,
-      fieldRegionId,
+      fieldRegionOverrideId,
       ...simpleChanges
     } = changes;
 
@@ -250,31 +279,31 @@ export class ProjectRepository extends CommonRepository {
       };
     }
 
-    if (fieldRegionId !== undefined) {
+    if (fieldRegionOverrideId !== undefined) {
       await this.updateRelation(
-        'fieldRegion',
+        'fieldRegionOverride',
         'FieldRegion',
         existing.id,
-        fieldRegionId,
+        fieldRegionOverrideId,
         'Project',
       );
       result = {
         ...result,
-        fieldRegion: fieldRegionId,
+        fieldRegionOverride: fieldRegionOverrideId,
       };
     }
 
-    if (marketingLocationId !== undefined) {
+    if (marketingCountryOverrideId !== undefined) {
       await this.updateRelation(
-        'marketingLocation',
+        'marketingCountryOverride',
         'Location',
         existing.id,
-        marketingLocationId,
+        marketingCountryOverrideId,
         'Project',
       );
       result = {
         ...result,
-        marketingLocation: marketingLocationId,
+        marketingCountryOverride: marketingCountryOverrideId,
       };
     }
 

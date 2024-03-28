@@ -307,11 +307,24 @@ export class ProjectResolver {
   }
 
   @ResolveField(() => SecuredLocation)
-  async marketingLocation(
+  async marketingCountry(
     @Parent() project: Project,
     @Loader(LocationLoader) locations: LoaderOf<LocationLoader>,
   ): Promise<SecuredLocation> {
-    return await mapSecuredValue(project.marketingLocation, (id) =>
+    return await mapSecuredValue(
+      project.sensitivity === 'Low'
+        ? project.marketingCountry
+        : project.marketingRegion,
+      (id) => locations.load(id),
+    );
+  }
+
+  @ResolveField(() => SecuredLocation)
+  async marketingCountryOverride(
+    @Parent() project: Project,
+    @Loader(LocationLoader) locations: LoaderOf<LocationLoader>,
+  ): Promise<SecuredLocation> {
+    return await mapSecuredValue(project.marketingCountryOverride, (id) =>
       locations.load(id),
     );
   }
@@ -323,6 +336,16 @@ export class ProjectResolver {
   ): Promise<SecuredLocation> {
     return await mapSecuredValue(project.marketingRegionOverride, (id) =>
       locations.load(id),
+    );
+  }
+
+  @ResolveField(() => SecuredFieldRegion)
+  async fieldRegionOverride(
+    @Parent() project: Project,
+    @Loader(FieldRegionLoader) fieldRegions: LoaderOf<FieldRegionLoader>,
+  ): Promise<SecuredFieldRegion> {
+    return await mapSecuredValue(project.fieldRegionOverride, (id) =>
+      fieldRegions.load(id),
     );
   }
 
@@ -343,6 +366,29 @@ export class ProjectResolver {
   ): Promise<SecuredOrganization> {
     return await mapSecuredValue(project.owningOrganization, (id) =>
       organizations.load(id),
+    );
+  }
+
+  @ResolveField(() => SecuredLocation)
+  async marketingRegion(
+    @Parent() project: Project,
+    @Loader(LocationLoader) locations: LoaderOf<LocationLoader>,
+  ): Promise<SecuredLocation> {
+    return await mapSecuredValue(project.marketingRegion, (id) =>
+      locations.load(id),
+    );
+  }
+
+  @ResolveField(() => SecuredLocation)
+  async marketingLocation(
+    @Parent() project: Project,
+    @Loader(LocationLoader) locations: LoaderOf<LocationLoader>,
+  ): Promise<SecuredLocation> {
+    return await mapSecuredValue(
+      project.sensitivity === 'Low'
+        ? project.marketingCountry
+        : project.marketingRegion,
+      (id) => locations.load(id),
     );
   }
 

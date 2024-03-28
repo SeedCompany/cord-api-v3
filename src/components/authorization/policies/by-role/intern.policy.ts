@@ -29,9 +29,9 @@ import { inherit, member, Policy, Role } from '../util';
       p.rootDirectory.edit,
       p.many(
         'departmentId',
-        'marketingLocation',
+        'marketingCountryOverride',
         'marketingRegionOverride',
-        'fieldRegion',
+        'fieldRegionOverride',
       ).none,
     ])
     .children((c) => c.posts.edit),

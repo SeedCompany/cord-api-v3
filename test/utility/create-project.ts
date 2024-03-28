@@ -1,5 +1,6 @@
 import { faker } from '@faker-js/faker';
-import { CalendarDate, isValidId } from '~/common';
+import { CalendarDate, IdOf, isValidId } from '~/common';
+import { FieldRegion } from '../../src/components/field-region';
 import {
   CreateProject,
   ProjectStep,
@@ -22,11 +23,11 @@ export async function createProject(
     mouEnd: CalendarDate.fromISO('1992-01-01'),
     step: ProjectStep.EarlyConversations,
     tags: ['tag1', 'tag2'],
-    fieldRegionId:
-      input.fieldRegionId ||
-      (await runAsAdmin(app, async () => {
+    fieldRegionOverrideId:
+      input.fieldRegionOverrideId ||
+      ((await runAsAdmin(app, async () => {
         return (await createRegion(app)).id;
-      })),
+      })) as IdOf<FieldRegion>),
     presetInventory: true,
     ...input,
   };
