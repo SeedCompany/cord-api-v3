@@ -53,7 +53,7 @@ export class SessionInterceptor implements NestInterceptor {
     const currentUserId =
       session?.userId && isUUID(session.userId) ? session.userId : undefined;
     return from(
-      this.edgeDB.withOptions(
+      this.edgeDB.usingOptions(
         (options) => options.withGlobals({ currentUserId }),
         async () => await lastValueFrom(next.handle()),
       ),

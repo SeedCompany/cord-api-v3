@@ -13,7 +13,7 @@ export class OptionsContext
     super();
   }
 
-  async withOptions<R>(applyOptions: OptionsFn, runWith: () => Promise<R>) {
+  async usingOptions<R>(applyOptions: OptionsFn, runWith: () => Promise<R>) {
     const options = applyOptions(this.current);
     return await this.run(options, runWith);
   }

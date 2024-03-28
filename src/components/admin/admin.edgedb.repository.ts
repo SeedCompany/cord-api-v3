@@ -24,7 +24,7 @@ export class AdminEdgeDBRepository extends AdminRepository {
       hash: u['<user[is Auth::Identity]'].passwordHash,
     }));
     const query = e.assert_exists(e.assert_single(rootUser));
-    const user = await this.edgedb.withOptions(noAPs, () =>
+    const user = await this.edgedb.usingOptions(noAPs, () =>
       this.edgedb.run(query),
     );
     return {
@@ -48,7 +48,7 @@ export class AdminEdgeDBRepository extends AdminRepository {
           set: { passwordHash },
         })),
       }));
-    await this.edgedb.withOptions(noAPs, () => this.edgedb.run(query));
+    await this.edgedb.usingOptions(noAPs, () => this.edgedb.run(query));
   }
 
   async checkDefaultOrg() {
