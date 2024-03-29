@@ -221,7 +221,7 @@ export class PartnerRepository extends DtoRepository<
           sub
             .match([
               node('node'),
-              relation('out', '', 'languagesOfConsulting', ACTIVE),
+              relation('out', '', 'languagesOfConsulting'), // TODO: find out why these are not active when they are created
               node('languagesOfConsulting', 'Language'),
             ])
             .return(
@@ -241,7 +241,7 @@ export class PartnerRepository extends DtoRepository<
         ])
         .optionalMatch([
           node('node'),
-          relation('out', '', 'languageOfWiderCommunication', ACTIVE),
+          relation('out', '', 'languageOfWiderCommunication'), // TODO: find out why these are not active when they are created
           node('languageOfWiderCommunication', 'Language'),
         ])
         .optionalMatch([
