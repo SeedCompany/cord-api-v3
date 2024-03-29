@@ -74,6 +74,8 @@ export class EdgeDBCurrentUserProvider
     // Once migration is complete this can be removed.
     const currentUserId =
       session?.userId && isUUID(session.userId) ? session.userId : undefined;
-    optionsHolder.next((options) => options.withGlobals({ currentUserId }));
+    optionsHolder.next((options) =>
+      currentUserId ? options.withGlobals({ currentUserId }) : options,
+    );
   }
 }
