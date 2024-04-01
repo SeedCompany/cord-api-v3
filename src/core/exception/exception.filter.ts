@@ -90,6 +90,10 @@ export class ExceptionFilter implements GqlExceptionFilter {
       // Jest will log exceptions, don't duplicate.
       return;
     }
+    if (info.code === 'PersistedQueryNotFound') {
+      // This is the normal flow. Tells the client to send full operation to be cached.
+      return;
+    }
 
     if (info.codes.has('Validation')) {
       this.logger.notice(info.message, {
