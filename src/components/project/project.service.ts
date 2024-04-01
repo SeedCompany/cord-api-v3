@@ -25,8 +25,7 @@ import {
   UniquenessError,
 } from '../../core';
 import { mapListResults } from '../../core/database/results';
-import { Privileges } from '../authorization';
-import { ScopedRole } from '../authorization/dto';
+import { Privileges, ScopedRole, withoutScope } from '../authorization';
 import { BudgetService, BudgetStatus, SecuredBudget } from '../budget';
 import {
   EngagementListInput,
@@ -148,7 +147,7 @@ export class ProjectService {
       // get the creating user's roles. Assign them on this project.
       // I'm going direct for performance reasons
 
-      const roles = await this.repo.getRoles(session);
+      const roles = session.roles.map(withoutScope);
 
       let project = await this.readOneUnsecured(id, session);
       project = {
