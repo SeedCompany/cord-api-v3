@@ -74,7 +74,7 @@ export class AuthenticationService {
   }
 
   async login(input: LoginInput, session: Session): Promise<ID> {
-    const hash = await this.repo.getPasswordHash(input, session);
+    const hash = await this.repo.getPasswordHash(input);
 
     if (!(await this.crypto.verify(hash, input.password))) {
       throw new UnauthenticatedException('Invalid credentials');

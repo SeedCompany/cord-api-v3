@@ -95,16 +95,11 @@ export class AuthenticationRepository {
       .run();
   }
 
-  async getPasswordHash(input: LoginInput, session: Session) {
+  async getPasswordHash(input: LoginInput) {
     const result = await this.db
       .query()
       .raw(
         `
-    MATCH
-      (token:Token {
-        active: true,
-        value: $token
-      })
     MATCH
       (:EmailAddress {value: $email})
       <-[:email {active: true}]-
@@ -115,7 +110,6 @@ export class AuthenticationRepository {
       password.value as pash
     `,
         {
-          token: session.token,
           email: input.email,
         },
       )
