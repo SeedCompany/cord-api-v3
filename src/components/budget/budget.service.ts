@@ -12,7 +12,7 @@ import {
 } from '../../common';
 import { HandleIdLookup, ILogger, Logger, ResourceResolver } from '../../core';
 import { mapListResults } from '../../core/database/results';
-import { Privileges, ScopedRole } from '../authorization';
+import { Privileges } from '../authorization';
 import { FileId, FileService } from '../file';
 import { ProjectChangeRequest } from '../project-change-request/dto';
 import { BudgetRecordRepository } from './budget-record.repository';
@@ -30,12 +30,6 @@ import {
   UpdateBudget,
   UpdateBudgetRecord,
 } from './dto';
-
-const canEditFinalizedBudgetRoles: readonly ScopedRole[] = [
-  'global:Administrator',
-  'project:FinancialAnalyst',
-  'project:LeadFinancialAnalyst',
-];
 
 @Injectable()
 export class BudgetService {

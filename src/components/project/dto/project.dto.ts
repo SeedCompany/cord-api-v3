@@ -32,7 +32,6 @@ import {
   SensitivityField,
   UnsecuredDto,
 } from '../../../common';
-import { ScopedRole } from '../../authorization/dto';
 import { Budget } from '../../budget/dto';
 import { ChangesetAware } from '../../changeset/dto';
 import { Commentable } from '../../comments';

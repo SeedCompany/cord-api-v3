@@ -9,7 +9,6 @@ import {
   NotFoundException,
   ObjectView,
   SecuredList,
-  Sensitivity,
   ServerException,
   Session,
   UnauthorizedException,
@@ -25,7 +24,7 @@ import {
   UniquenessError,
 } from '../../core';
 import { mapListResults } from '../../core/database/results';
-import { Privileges, ScopedRole, withoutScope } from '../authorization';
+import { Privileges, withoutScope } from '../authorization';
 import { BudgetService, BudgetStatus, SecuredBudget } from '../budget';
 import {
   EngagementListInput,
