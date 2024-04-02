@@ -25,6 +25,8 @@ module default {
     required organization: Organization {
       readonly := true;
       constraint exclusive;
+      on source delete delete target;
+      on target delete delete source;
     };
     multi languagesOfConsulting: Language;
     multi fieldRegions: FieldRegion;

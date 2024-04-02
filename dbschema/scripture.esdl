@@ -7,6 +7,7 @@ module Scripture {
     multi verses: VerseRange {
       readonly := true;
       on source delete delete target;
+      on target delete deferred restrict;
     }
     ids := multirange(array_agg(.verses.ids));
   }
