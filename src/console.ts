@@ -1,7 +1,8 @@
 import { NestFactory } from '@nestjs/core';
 import { Builtins, runExit } from 'clipanion';
-import './polyfills';
+import { exit } from 'node:process';
 import { CommandDiscovery } from '~/core/cli/command.discovery';
+import './polyfills';
 
 async function bootstrap() {
   // Ensure src files are initialized here were init errors can be caught
@@ -21,6 +22,9 @@ async function bootstrap() {
   } finally {
     await app.close();
   }
+
+  // I believe it is Neo4j that keeps the event loop from being empty.
+  exit();
 }
 void bootstrap().catch((err: any) => {
   // eslint-disable-next-line no-console
