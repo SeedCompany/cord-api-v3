@@ -11,7 +11,7 @@ export class AuthenticationEdgeDBRepository
 {
   private readonly db: EdgeDB;
   constructor(db: EdgeDB) {
-    this.db = db.withOptions(disableAccessPolicies);
+    this.db = db.outsideOfTransactions().withOptions(disableAccessPolicies);
   }
 
   async waitForRootUserId() {

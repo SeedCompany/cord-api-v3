@@ -14,13 +14,30 @@ import { TransactionContext } from './transaction.context';
 export class EdgeDB {
   constructor(
     private readonly client: Client,
-    private readonly executor: TransactionContext,
+    private readonly transactionContext: TransactionContext,
     private readonly optionsContext: OptionsContext,
     @Optional() private readonly childOptions: ApplyOptions[] = [],
+    @Optional() private childExecutor?: Executor,
   ) {}
+
+  private clone() {
+    return new EdgeDB(
+      this.client,
+      this.transactionContext,
+      this.optionsContext,
+      [...this.childOptions],
+      this.childExecutor,
+    );
+  }
 
   async waitForConnection(options?: RetryOptions) {
     await retry(() => this.client.ensureConnected(), options);
+  }
+
+  outsideOfTransactions() {
+    const child = this.clone();
+    child.childExecutor = this.client;
+    return child;
   }
 
   /**
@@ -32,10 +49,8 @@ export class EdgeDB {
    *   .run(...);
    */
   withOptions(applyOptions: ApplyOptions) {
-    const child = new EdgeDB(this.client, this.executor, this.optionsContext, [
-      ...this.childOptions,
-      applyOptions,
-    ]);
+    const child = this.clone();
+    child.childOptions.push(applyOptions);
     // eslint-disable-next-line @typescript-eslint/unbound-method
     const orig = child.run;
     child.run = ((...args: Parameters<EdgeDB['run']>) =>
@@ -87,6 +102,7 @@ export class EdgeDB {
   run(query: string, args?: QueryArgs): Promise<unknown>;
 
   async run(query: any, args?: any) {
+    const executor = this.childExecutor ?? this.transactionContext.current;
     try {
       if (query instanceof TypedEdgeQL) {
         const found = InlineQueryRuntimeMap.get(query.query);
@@ -96,22 +112,22 @@ export class EdgeDB {
         const exeMethod = cardinalityToExecutorMethod[found.cardinality];
 
         // eslint-disable-next-line @typescript-eslint/return-await
-        return await this.executor.current[exeMethod](found.query, args);
+        return await executor[exeMethod](found.query, args);
       }
 
       if (query.run) {
         // eslint-disable-next-line @typescript-eslint/return-await
-        return await query.run(this.executor.current, args);
+        return await query.run(executor, args);
       }
 
       if (typeof query === 'function') {
         // eslint-disable-next-line @typescript-eslint/return-await
-        return await query(this.executor.current, args);
+        return await query(executor, args);
       }
 
       // For REPL, as this is untyped and assumes many/empty cardinality
       if (typeof query === 'string') {
-        return await this.executor.current.query(query, args);
+        return await executor.query(query, args);
       }
     } catch (e) {
       // Ignore this call in stack trace. This puts the actual query as the first.
