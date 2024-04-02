@@ -149,14 +149,10 @@ export class ProjectService {
         {
           userId: session.userId,
           roles: session.roles.map(withoutScope),
-          projectId: Object.assign({}, project, {
-            // Hack to suggest the current user is a member of the project,
-            // so the first member can be created.
-            isMember: true,
-            scope: ['member:true'],
-          }),
+          projectId: project,
         },
         session,
+        false,
       );
 
       const event = new ProjectCreatedEvent(project, session);
