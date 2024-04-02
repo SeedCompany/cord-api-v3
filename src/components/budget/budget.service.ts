@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { intersection } from 'lodash';
 import {
   DuplicateException,
   generateId,
@@ -237,7 +236,9 @@ export class BudgetService {
 
     const changes = this.budgetRecordsRepo.getActualChanges(br, input);
     this.privileges.for(session, BudgetRecord, br).verifyChanges(changes);
-    this.privileges.for(session, Budget, budget).verifyCan('edit');
+    this.privileges
+      .for(session, Budget, budget)
+      .verifyCan('edit', 'universalTemplateFile');
 
     try {
       const result = await this.budgetRecordsRepo.update(
