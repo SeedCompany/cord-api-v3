@@ -226,13 +226,12 @@ export class BudgetService {
       session,
       viewOfChangeset(changeset),
     );
-    const budget = await this.readOne(br.parent.properties.id, session);
 
     const changes = this.budgetRecordsRepo.getActualChanges(br, input);
     this.privileges.for(session, BudgetRecord, br).verifyChanges(changes);
-    this.privileges
-      .for(session, Budget, budget)
-      .verifyCan('edit', 'universalTemplateFile');
+    // TODO: add this back after the Budget "edit" if fixed
+    // const budget = await this.readOne(br.parent.properties.id, session);
+    // this.privileges.for(session, Budget, budget).verifyCan('edit');
 
     try {
       const result = await this.budgetRecordsRepo.update(
