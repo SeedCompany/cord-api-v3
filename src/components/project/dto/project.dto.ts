@@ -8,6 +8,7 @@ import { sortingForEnumIndex } from '~/core/database/query';
 import { e } from '~/core/edgedb';
 import { RegisterResource } from '~/core/resources';
 import {
+  Calculated,
   DateInterval,
   DateTimeField,
   DbLabel,
@@ -32,6 +33,7 @@ import {
   SensitivityField,
   UnsecuredDto,
 } from '../../../common';
+import { FieldRegion } from '../../../components/field-region/dto';
 import { ScopedRole } from '../../authorization/dto';
 import { Budget } from '../../budget/dto';
 import { ChangesetAware } from '../../changeset/dto';
@@ -126,10 +128,20 @@ class Project extends Interfaces {
 
   readonly primaryLocation: Secured<ID | null>;
 
-  readonly marketingLocation: Secured<ID | null>;
+  @Calculated()
+  readonly marketingCountry: Secured<IdOf<Location> | null>;
+
+  @Calculated()
+  readonly marketingRegion: Secured<IdOf<Location> | null>;
+
+  readonly marketingCountryOverride: Secured<ID | null>;
 
   readonly marketingRegionOverride: Secured<IdOf<Location> | null>;
-  readonly fieldRegion: Secured<ID | null>;
+
+  readonly fieldRegionOverride: Secured<IdOf<FieldRegion> | null>;
+
+  @Calculated()
+  readonly fieldRegion: Secured<IdOf<FieldRegion> | null>;
 
   readonly owningOrganization: Secured<ID | null>;
 

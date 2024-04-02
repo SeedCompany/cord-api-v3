@@ -112,10 +112,10 @@ export class ProjectService {
     this.privileges.for(session, IProject).verifyCan('create');
 
     await this.validateOtherResourceId(
-      input.fieldRegionId,
+      input.fieldRegionOverrideId,
       'FieldRegion',
-      'fieldRegionId',
-      'Field region not found',
+      'fieldRegionOverrideId',
+      'Field region override not found',
     );
     await this.validateOtherResourceId(
       input.primaryLocationId,
@@ -130,10 +130,10 @@ export class ProjectService {
       'One of the other locations was not found',
     );
     await this.validateOtherResourceId(
-      input.marketingLocationId,
+      input.marketingCountryOverrideId,
       'Location',
-      'marketingLocationId',
-      'Marketing location not found',
+      'marketingCountryOverrideId',
+      'Marketing Country Override not found',
     );
     await this.validateOtherResourceId(
       input.marketingRegionOverrideId,
@@ -303,13 +303,19 @@ export class ProjectService {
     }
 
     await this.validateOtherResourceId(
-      changes.fieldRegionId,
+      changes.fieldRegionOverrideId,
       'FieldRegion',
-      'fieldRegionId',
-      'Field region not found',
+      'fieldRegionOverrideId',
+      'Field region override not found',
     );
 
-    const result = await this.repo.update(currentProject, changes, changeset);
+    await this.repo.update(currentProject, changes, changeset);
+    /* Added readOneUnsecured in order to hydrate and pull in computed fields. */
+    const result = await this.readOneUnsecured(
+      currentProject.id,
+      session,
+      changeset,
+    );
 
     const event = new ProjectUpdatedEvent(
       result,

@@ -15,6 +15,7 @@ import {
   Sensitivity,
   SensitivityField,
 } from '../../../common';
+import { FieldRegion } from '../../../components/field-region';
 import { Location } from '../../location/dto';
 import { ReportPeriod } from '../../periodic-report/dto';
 import { ProjectStep } from './project-step.enum';
@@ -43,10 +44,11 @@ export abstract class CreateProject {
   readonly otherLocationIds?: ReadonlyArray<ID<'Location'>>;
 
   @IdField({
-    description: 'A marketing primary location ID',
+    description:
+      'A Country Location ID for marketing (overriding the primary location)',
     nullable: true,
   })
-  readonly marketingLocationId?: ID;
+  readonly marketingCountryOverrideId?: ID;
 
   @IdField({
     description: 'A marketing region override location ID',
@@ -58,7 +60,7 @@ export abstract class CreateProject {
     description: 'A field region ID',
     nullable: true,
   })
-  readonly fieldRegionId?: ID;
+  readonly fieldRegionOverrideId?: IdOf<FieldRegion>;
 
   @DateField({ nullable: true })
   readonly mouStart?: CalendarDate;

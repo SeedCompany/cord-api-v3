@@ -1,9 +1,10 @@
-import { ID } from '~/common';
+import { ID, IdOf } from '~/common';
 import {
   EngagementStatus,
   InternshipEngagement,
   LanguageEngagement,
 } from '../../src/components/engagement';
+import { FieldRegion } from '../../src/components/field-region';
 import { ProjectStep } from '../../src/components/project';
 import { TestApp } from './create-app';
 import { getCurrentEngagementStatus } from './create-engagement';
@@ -89,7 +90,7 @@ export const transitionEngagementToActive = async (
     await updateProject(app, {
       id: projectId,
       primaryLocationId: location.id,
-      fieldRegionId: fieldRegion.id,
+      fieldRegionOverrideId: fieldRegion.id as IdOf<FieldRegion>,
     });
     for (const next of stepsFromEarlyConversationToBeforeActive) {
       await changeProjectStep(app, projectId, next);

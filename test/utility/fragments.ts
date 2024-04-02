@@ -532,6 +532,14 @@ export const project = gql`
         }
       }
     }
+    fieldRegionOverride {
+      value {
+        id
+        name {
+          value
+        }
+      }
+    }
     primaryLocation {
       canRead
       canEdit

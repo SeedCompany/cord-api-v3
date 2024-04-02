@@ -42,9 +42,9 @@ import { member, Policy, Role, variant } from '../util';
       p.rootDirectory.edit,
       p.many(
         'departmentId',
-        'marketingLocation',
+        'marketingCountryOverride',
         'marketingRegionOverride',
-        'fieldRegion',
+        'fieldRegionOverride',
       ).none,
     ])
     .children((c) => c.posts.edit),
