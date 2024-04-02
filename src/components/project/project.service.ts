@@ -24,7 +24,7 @@ import {
   UniquenessError,
 } from '../../core';
 import { mapListResults } from '../../core/database/results';
-import { Privileges } from '../authorization';
+import { Privileges, withoutScope } from '../authorization';
 import { BudgetService, BudgetStatus, SecuredBudget } from '../budget';
 import {
   EngagementListInput,
@@ -142,24 +142,19 @@ export class ProjectService {
 
     try {
       const id = await this.repo.create(input);
+      const project = await this.readOneUnsecured(id, session);
 
-      // get the creating user's roles. Assign them on this project.
-      // I'm going direct for performance reasons
-
-      const roles = await this.repo.getRoles(session);
-
-      let project = await this.readOneUnsecured(id, session);
-      project = {
-        ...project,
-        scope: ['member:true', ...project.scope],
-      };
-
-      // Add creator to the project team if not in migration
+      // Add creator to the project team with their global roles
       await this.projectMembers.create(
         {
           userId: session.userId,
-          projectId: project,
-          roles,
+          roles: session.roles.map(withoutScope),
+          projectId: Object.assign({}, project, {
+            // Hack to suggest the current user is a member of the project,
+            // so the first member can be created.
+            isMember: true,
+            scope: ['member:true'],
+          }),
         },
         session,
       );

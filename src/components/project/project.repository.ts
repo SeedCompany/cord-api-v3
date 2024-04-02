@@ -23,7 +23,7 @@ import {
   requestingUser,
   sorting,
 } from '../../core/database/query';
-import { Privileges, Role } from '../authorization';
+import { Privileges } from '../authorization';
 import {
   CreateProject,
   InternshipProject,
@@ -45,19 +45,6 @@ export class ProjectRepository extends CommonRepository {
     private readonly privileges: Privileges,
   ) {
     super();
-  }
-
-  async getRoles(session: Session) {
-    const result = await this.db
-      .query()
-      .match([
-        node('user', 'User', { id: session.userId }),
-        relation('out', '', 'roles', ACTIVE),
-        node('roles', 'Property'),
-      ])
-      .return<{ roles: Role }>('roles.value as roles')
-      .run();
-    return result.map((row) => row.roles);
   }
 
   async readOne(id: ID, userId: ID, changeset?: ID) {
