@@ -401,12 +401,6 @@ export class ProjectService {
     session: Session,
     changeset?: ID,
   ): Promise<SecuredPartnershipList> {
-    const currentProject = await this.readOneUnsecured(
-      project.id,
-      session,
-      changeset,
-    );
-
     const result = await this.partnerships.list(
       {
         ...input,
@@ -418,7 +412,7 @@ export class ProjectService {
       session,
       changeset,
     );
-    const perms = this.privileges.for(session, IProject, currentProject);
+    const perms = this.privileges.for(session, IProject, project);
     return {
       ...result,
       canRead: perms.can('read', 'partnership'),
