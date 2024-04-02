@@ -9,7 +9,6 @@ import {
   NotFoundException,
   ObjectView,
   SecuredList,
-  Sensitivity,
   ServerException,
   Session,
   UnauthorizedException,
@@ -26,7 +25,6 @@ import {
 } from '../../core';
 import { mapListResults } from '../../core/database/results';
 import { Privileges } from '../authorization';
-import { ScopedRole } from '../authorization/dto';
 import { BudgetService, BudgetStatus, SecuredBudget } from '../budget';
 import {
   EngagementListInput,
@@ -410,8 +408,6 @@ export class ProjectService {
     project: Project,
     input: PartnershipListInput,
     session: Session,
-    sensitivity: Sensitivity,
-    scope: ScopedRole[],
     changeset?: ID,
   ): Promise<SecuredPartnershipList> {
     const currentProject = await this.readOneUnsecured(
