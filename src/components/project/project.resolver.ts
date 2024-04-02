@@ -244,8 +244,6 @@ export class ProjectResolver {
       project,
       input,
       session,
-      project.sensitivity,
-      project.scope,
       project.changeset,
     );
     partnerships.primeAll(list.items);

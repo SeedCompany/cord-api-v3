@@ -152,7 +152,7 @@ export class ProjectService {
       let project = await this.readOneUnsecured(id, session);
       project = {
         ...project,
-        scope: ['member:true', ...project.scope],
+        scope: ['member:true', ...session.roles],
       };
 
       // Add creator to the project team if not in migration
@@ -409,16 +409,8 @@ export class ProjectService {
     project: Project,
     input: PartnershipListInput,
     session: Session,
-    sensitivity: Sensitivity,
-    scope: ScopedRole[],
     changeset?: ID,
   ): Promise<SecuredPartnershipList> {
-    const currentProject = await this.readOneUnsecured(
-      project.id,
-      session,
-      changeset,
-    );
-
     const result = await this.partnerships.list(
       {
         ...input,
@@ -430,7 +422,7 @@ export class ProjectService {
       session,
       changeset,
     );
-    const perms = this.privileges.for(session, IProject, currentProject);
+    const perms = this.privileges.for(session, IProject, project);
     return {
       ...result,
       canRead: perms.can('read', 'partnership'),
@@ -576,12 +568,7 @@ export class ProjectService {
     return {
       value: budgetToReturn,
       canRead: perms.can('read'),
-      canEdit:
-        (perms.can('edit') &&
-          budgetToReturn?.status === BudgetStatus.Pending) ||
-        this.budgetService.canEditFinalized(
-          session.roles.concat(project.scope),
-        ),
+      canEdit: perms.can('edit'),
     };
   }
 

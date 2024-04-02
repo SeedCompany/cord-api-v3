@@ -179,10 +179,6 @@ class Project extends Interfaces {
    * This doesn't account for changesets or item filters.
    */
   readonly engagementTotal: number;
-
-  // A list of non-global roles the requesting user has available for this object.
-  // This is just a cache, to prevent extra db lookups within the same request.
-  declare readonly scope: ScopedRole[];
 }
 
 // class name has to match schema name for interface resolvers to work.

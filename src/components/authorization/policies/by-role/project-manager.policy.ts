@@ -31,7 +31,7 @@ const stepsUntilFinancialEndorsement = takeWhile(
       Role.Translator,
     ]),
 
-    r.Budget.read.when(member).edit,
+    r.Budget.read.whenAll(member, field('status', 'Pending')).edit,
     r.BudgetRecord.read.when(member).edit,
     r.Ceremony.read.when(member).edit,
     r.Education.read.create,

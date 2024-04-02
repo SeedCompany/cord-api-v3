@@ -233,10 +233,11 @@ export class BudgetService {
       session,
       viewOfChangeset(changeset),
     );
-    await this.verifyCanEdit(id, session, br.scope);
+    const budget = await this.readOne(br.parent.properties.id, session);
 
     const changes = this.budgetRecordsRepo.getActualChanges(br, input);
     this.privileges.for(session, BudgetRecord, br).verifyChanges(changes);
+    this.privileges.for(session, Budget, budget).verifyCan('edit');
 
     try {
       const result = await this.budgetRecordsRepo.update(
@@ -252,27 +253,6 @@ export class BudgetService {
       });
       throw e;
     }
-  }
-
-  private async verifyCanEdit(
-    recordId: ID,
-    session: Session,
-    scope: ScopedRole[],
-  ) {
-    if (this.canEditFinalized(session.roles.concat(scope))) {
-      return;
-    }
-    const status = await this.budgetRepo.getStatusByRecord(recordId);
-    if (status !== BudgetStatus.Pending) {
-      throw new InputException(
-        'Budget cannot be modified',
-        'budgetRecord.amount',
-      );
-    }
-  }
-
-  canEditFinalized(scopedRoles: ScopedRole[]) {
-    return intersection(scopedRoles, canEditFinalizedBudgetRoles).length > 0;
   }
 
   async delete(id: ID, session: Session): Promise<void> {
