@@ -15,8 +15,8 @@ import {
   Sensitivity,
   SensitivityField,
 } from '../../../common';
-import { ScopedRole } from '../../authorization';
 import { ChangesetAware } from '../../changeset/dto';
+import { BudgetStatus } from './budget-status.enum';
 import { Budget } from './budget.dto';
 
 @Calculated()
@@ -47,9 +47,7 @@ export class BudgetRecord extends IntersectionType(ChangesetAware, Resource) {
   })
   readonly sensitivity: Sensitivity;
 
-  // A list of non-global roles the requesting user has available for this object.
-  // This is just a cache, to prevent extra db lookups within the same request.
-  declare readonly scope: ScopedRole[];
+  readonly status: BudgetStatus;
 }
 
 declare module '~/core/resources/map' {

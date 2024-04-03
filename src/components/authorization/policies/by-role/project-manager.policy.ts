@@ -32,7 +32,7 @@ const stepsUntilFinancialEndorsement = takeWhile(
     ]),
 
     r.Budget.read.when(member).edit,
-    r.BudgetRecord.read.when(member).edit,
+    r.BudgetRecord.read.whenAll(member, field('status', 'Pending')).edit,
     r.Ceremony.read.when(member).edit,
     r.Education.read.create,
     inherit(

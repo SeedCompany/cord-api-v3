@@ -108,24 +108,6 @@ export class BudgetRepository extends DtoRepository<
       .run();
   }
 
-  async getStatusByRecord(recordId: ID) {
-    const result = await this.db
-      .query()
-      .match([
-        node('budgetRecord', 'BudgetRecord', { id: recordId }),
-        relation('in', '', 'record', ACTIVE),
-        node('budget', 'Budget'),
-        relation('out', '', 'status', ACTIVE),
-        node('status', 'Property'),
-      ])
-      .return<{ status: Status }>('status.value as status')
-      .first();
-    if (!result) {
-      throw new NotFoundException('Budget could not be found');
-    }
-    return result.status;
-  }
-
   async list({ filter, ...input }: BudgetListInput, session: Session) {
     const result = await this.db
       .query()

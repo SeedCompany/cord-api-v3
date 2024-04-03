@@ -577,12 +577,7 @@ export class ProjectService {
     return {
       value: budgetToReturn,
       canRead: perms.can('read'),
-      canEdit:
-        (perms.can('edit') &&
-          budgetToReturn?.status === BudgetStatus.Pending) ||
-        this.budgetService.canEditFinalized(
-          session.roles.concat(project.scope),
-        ),
+      canEdit: perms.can('edit'),
     };
   }
 
