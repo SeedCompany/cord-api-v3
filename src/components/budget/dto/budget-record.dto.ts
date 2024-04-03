@@ -16,6 +16,7 @@ import {
   SensitivityField,
 } from '../../../common';
 import { ChangesetAware } from '../../changeset/dto';
+import { BudgetStatus } from './budget-status.enum';
 import { Budget } from './budget.dto';
 
 @Calculated()
@@ -45,6 +46,8 @@ export class BudgetRecord extends IntersectionType(ChangesetAware, Resource) {
     description: "Based on the project's sensitivity",
   })
   readonly sensitivity: Sensitivity;
+
+  readonly status: BudgetStatus;
 }
 
 declare module '~/core/resources/map' {
