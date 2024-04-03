@@ -21,6 +21,7 @@ with
       "step": "Active",
       "mouStart": "2020-01-01",
       "mouEnd": "2025-05-30",
+      "primaryLocation": "Greece",
       "financialReportPeriod": "Quarterly"
     },
     {
@@ -28,6 +29,7 @@ with
       "step": "Active",
       "mouStart": "2019-03-01",
       "mouEnd": "2022-10-30",
+      "primaryLocation": "India",
       "financialReportPeriod": "Quarterly"
     },
     {
@@ -36,6 +38,7 @@ with
       "mouStart": "2020-01-01",
       "mouEnd": "2023-12-30",
       "estimatedSubmission": "2023-09-01",
+      "primaryLocation": "United States",
       "financialReportPeriod": "Monthly"
     }
   ]'),
@@ -50,6 +53,7 @@ with
           mouStart := <cal::local_date>project['mouStart'],
           mouEnd := <cal::local_date>project['mouEnd'],
           estimatedSubmission := <cal::local_date>json_get(project, 'estimatedSubmission'),
+          primaryLocation := (select Location filter .name = <str>json_get(project, 'primaryLocation')),
           financialReportPeriod := <str>project['financialReportPeriod']
         })
       )

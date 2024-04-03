@@ -5,6 +5,7 @@ with
       "step": "DiscussingChangeToPlan",
       "mouStart": "2021-07-01",
       "mouEnd": "2024-12-30",
+      "primaryLocation": "Sweden",
       "estimatedSubmission": "2024-10-01",
       "financialReportPeriod": "Monthly"
     },
@@ -20,6 +21,7 @@ with
       "step": "Active",
       "mouStart": "2022-02-01",
       "mouEnd": "2026-06-30",
+      "primaryLocation": "Egypt",
       "financialReportPeriod": "Monthly"
     },
     {
@@ -34,6 +36,7 @@ with
       "step": "OnHoldFinanceConfirmation",
       "mouStart": "2018-02-01",
       "mouEnd": "2022-07-30",
+      "primaryLocation": "Canada",
       "financialReportPeriod": "Monthly"
     }
   ]'),
@@ -48,6 +51,7 @@ with
           mouStart := <cal::local_date>project['mouStart'],
           mouEnd := <cal::local_date>project['mouEnd'],
           estimatedSubmission := <cal::local_date>json_get(project, 'estimatedSubmission'),
+          primaryLocation := (select Location filter .name = <str>json_get(project, 'primaryLocation')),
           financialReportPeriod := <str>project['financialReportPeriod']
         })
       )
