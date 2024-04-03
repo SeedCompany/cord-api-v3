@@ -154,6 +154,12 @@ export class ProjectService {
         session,
         false,
       );
+      // Skip another read query to fetch the fresh isMember flag
+      // and assign it directly.
+      Object.assign(project, {
+        isMember: true,
+        scope: ['member:true'],
+      });
 
       const event = new ProjectCreatedEvent(project, session);
       await this.eventBus.publish(event);
