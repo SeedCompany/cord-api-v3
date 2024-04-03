@@ -18,10 +18,10 @@ module default {
       default := Sensitivity.High;
     };
     
-    departmentId: int32 {
+    departmentId: str {
       constraint exclusive;
-      constraint expression on (__subject__ >= 10000 and __subject__ <= 99999);
-      rewrite update using (
+      constraint expression on (<int32>__subject__ > 0 and len(__subject__) = 5);
+      rewrite insert, update using (
         if (
           not exists .departmentId and
           .status <= Project::Status.Active and
@@ -36,7 +36,7 @@ module default {
               select detached Project.departmentId filter Project.primaryLocation.fundingAccount = fa
             ),
             available := (
-              range_unpack(range(fa.accountNumber * 10000 + 11, fa.accountNumber * 10000 + 9999))
+              <str>range_unpack(range(fa.accountNumber * 10000 + 11, fa.accountNumber * 10000 + 9999))
               except existing
             )
           select min(available)
