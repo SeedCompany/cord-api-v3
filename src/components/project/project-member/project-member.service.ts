@@ -90,23 +90,26 @@ export class ProjectMemberService {
   async create(
     { userId, projectId: projectOrId, ...input }: CreateProjectMember,
     session: Session,
+    enforcePerms = true,
   ): Promise<ProjectMember> {
     const projectId = isIdLike(projectOrId) ? projectOrId : projectOrId.id;
     const project = isIdLike(projectOrId)
       ? await this.projectService.readOneUnsecured(projectOrId, session)
       : projectOrId;
 
-    this.privileges
-      .for(session, IProject, project)
-      .verifyCan('create', 'member');
+    enforcePerms &&
+      this.privileges
+        .for(session, IProject, project)
+        .verifyCan('create', 'member');
 
     const id = await generateId();
     const createdAt = DateTime.local();
     await this.repo.verifyRelationshipEligibility(projectId, userId);
 
-    await this.assertValidRoles(input.roles, () =>
-      this.userService.readOne(userId, session),
-    );
+    enforcePerms &&
+      (await this.assertValidRoles(input.roles, () =>
+        this.userService.readOne(userId, session),
+      ));
 
     try {
       const memberQuery = await this.repo.create(

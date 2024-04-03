@@ -9,7 +9,6 @@ import {
   NotFoundException,
   ObjectView,
   SecuredList,
-  Sensitivity,
   ServerException,
   Session,
   UnauthorizedException,
@@ -25,8 +24,7 @@ import {
   UniquenessError,
 } from '../../core';
 import { mapListResults } from '../../core/database/results';
-import { Privileges } from '../authorization';
-import { ScopedRole } from '../authorization/dto';
+import { Privileges, withoutScope } from '../authorization';
 import { BudgetService, BudgetStatus, SecuredBudget } from '../budget';
 import {
   EngagementListInput,
@@ -144,27 +142,24 @@ export class ProjectService {
 
     try {
       const id = await this.repo.create(input);
+      const project = await this.readOneUnsecured(id, session);
 
-      // get the creating user's roles. Assign them on this project.
-      // I'm going direct for performance reasons
-
-      const roles = await this.repo.getRoles(session);
-
-      let project = await this.readOneUnsecured(id, session);
-      project = {
-        ...project,
-        scope: ['member:true', ...project.scope],
-      };
-
-      // Add creator to the project team if not in migration
+      // Add creator to the project team with their global roles
       await this.projectMembers.create(
         {
           userId: session.userId,
+          roles: session.roles.map(withoutScope),
           projectId: project,
-          roles,
         },
         session,
+        false,
       );
+      // Skip another read query to fetch the fresh isMember flag
+      // and assign it directly.
+      Object.assign(project, {
+        isMember: true,
+        scope: ['member:true'],
+      });
 
       const event = new ProjectCreatedEvent(project, session);
       await this.eventBus.publish(event);
@@ -410,16 +405,8 @@ export class ProjectService {
     project: Project,
     input: PartnershipListInput,
     session: Session,
-    sensitivity: Sensitivity,
-    scope: ScopedRole[],
     changeset?: ID,
   ): Promise<SecuredPartnershipList> {
-    const currentProject = await this.readOneUnsecured(
-      project.id,
-      session,
-      changeset,
-    );
-
     const result = await this.partnerships.list(
       {
         ...input,
@@ -431,7 +418,7 @@ export class ProjectService {
       session,
       changeset,
     );
-    const perms = this.privileges.for(session, IProject, currentProject);
+    const perms = this.privileges.for(session, IProject, project);
     return {
       ...result,
       canRead: perms.can('read', 'partnership'),
