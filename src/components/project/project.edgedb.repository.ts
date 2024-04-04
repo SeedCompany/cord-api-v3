@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { PublicOf } from '~/common';
-import { e, RepoFor } from '~/core/edgedb';
+import { e, RepoFor, ScopeOf } from '~/core/edgedb';
 import {
   CreateProject,
   InternshipProject,
   IProject,
+  ProjectListInput,
   TranslationProject,
 } from './dto';
 import { ProjectRepository } from './project.repository';
@@ -48,8 +49,6 @@ export class ProjectEdgeDBRepository
     hydrate,
   }).customize((cls) => {
     return class extends cls {
-      static omit = [];
-
       constructor(
         readonly translation: TranslationProjectEdgeDBRepository,
         readonly internship: InternshipProjectEdgeDBRepository,
@@ -64,4 +63,20 @@ export class ProjectEdgeDBRepository
       }
     };
   })
-  implements PublicOf<ProjectRepository> {}
+  implements PublicOf<ProjectRepository>
+{
+  protected listFilters(
+    project: ScopeOf<typeof e.Project>,
+    input: ProjectListInput,
+  ) {
+    return [
+      input.filter.type != null &&
+        e.op(
+          project.__type__.name,
+          '=',
+          `default::${input.filter.type}Project`,
+        ),
+      // More filters here when needed...
+    ];
+  }
+}
