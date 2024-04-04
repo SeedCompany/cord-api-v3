@@ -6,7 +6,7 @@ import { retry, RetryOptions } from '~/common/retry';
 import { TypedEdgeQL } from './edgeql';
 import { ExclusivityViolationError } from './exclusivity-violation.error';
 import { InlineQueryRuntimeMap } from './generated-client/inline-queries';
-import { OptionsContext, OptionsFn } from './options.context';
+import { OptionsContext } from './options.context';
 import { Client } from './reexports';
 import { TransactionContext } from './transaction.context';
 
@@ -25,13 +25,13 @@ export class EdgeDB {
   /**
    * Apply options to the scope of the given function.
    * @example
-   * await EdgeDB.withOptions((options) => options.withGlobals({ ... }), async () => {
+   * await EdgeDB.usingOptions((options) => options.withGlobals({ ... }), async () => {
    *   // Queries have the options applied
    *   await EdgeDB.run(...);
    * });
    */
-  async withOptions<R>(applyOptions: OptionsFn, runWith: () => Promise<R>) {
-    return await this.optionsContext.withOptions(applyOptions, runWith);
+  get usingOptions() {
+    return this.optionsContext.usingOptions.bind(this.optionsContext);
   }
 
   /** Run a query from an edgeql string */
@@ -42,12 +42,12 @@ export class EdgeDB {
     args: Args,
   ): Promise<R>;
 
-  /** Run a query from a edgeql file */
+  /** Run a query from an edgeql file */
   run<Args, R>(
     query: (client: Executor, args: Args) => Promise<R>,
     args: Args,
   ): Promise<R>;
-  /** Run a query from a edgeql file */
+  /** Run a query from an edgeql file */
   run<R>(query: (client: Executor) => Promise<R>): Promise<R>;
 
   /** Run a query from the query builder */

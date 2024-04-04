@@ -21,7 +21,8 @@ import {
   GraphQLScalarType,
   OperationDefinitionNode,
 } from 'graphql';
-import { GqlContextType, JsonSet, ServerException } from '~/common';
+import { BehaviorSubject } from 'rxjs';
+import { GqlContextType, JsonSet, ServerException, Session } from '~/common';
 import { getRegisteredScalars } from '../../common/scalars';
 import { CacheService } from '../cache';
 import { ConfigService } from '../config/config.service';
@@ -103,6 +104,7 @@ export class GraphQLConfig implements GqlOptionsFactory {
       request: req,
       response: res,
       operation: createFakeStubOperation(),
+      session$: new BehaviorSubject<Session | undefined>(undefined),
     });
 
   formatError = (
