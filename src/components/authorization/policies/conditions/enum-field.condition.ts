@@ -1,9 +1,9 @@
 import { groupBy } from '@seedcompany/common';
 import { Query } from 'cypher-query-builder';
-import { startCase } from 'lodash';
-import { ConditionalKeys } from 'type-fest';
+import { get, startCase } from 'lodash';
+import { Get, Paths } from 'type-fest';
 import { inspect, InspectOptionsStylized } from 'util';
-import { ResourceShape, Secured } from '~/common';
+import { ResourceShape, UnwrapSecured } from '~/common';
 import {
   Condition,
   eqlInLiteralSet,
@@ -12,25 +12,25 @@ import {
 
 export class EnumFieldCondition<
   TResourceStatic extends ResourceShape<any>,
-  Field extends string,
+  Path extends Paths<InstanceType<TResourceStatic>> & string,
 > implements Condition<TResourceStatic>
 {
   constructor(
-    private readonly field: Field,
-    private readonly allowed: ReadonlySet<FieldOf<TResourceStatic, Field>>,
+    private readonly path: Path,
+    private readonly allowed: ReadonlySet<ValueOfPath<TResourceStatic, Path>>,
   ) {}
 
   isAllowed({ object }: IsAllowedParams<TResourceStatic>) {
     // Double check at runtime that object has these, since they are usually
     // declared from DB, which cannot be verified.
     if (!object) {
-      throw new Error(`Needed object's ${this.field} but object wasn't given`);
+      throw new Error(`Needed object's ${this.path} but object wasn't given`);
     }
-    const actual = Reflect.get(object, this.field) as
-      | FieldOf<TResourceStatic, Field>
+    const actual = get(object, this.path) as
+      | ValueOfPath<TResourceStatic, Path>
       | undefined;
     if (!actual) {
-      throw new Error(`Needed object's ${this.field} but status wasn't found`);
+      throw new Error(`Needed object's ${this.path} but it wasn't found`);
     }
 
     return this.allowed.has(actual);
@@ -41,33 +41,33 @@ export class EnumFieldCondition<
   }
 
   asEdgeQLCondition() {
-    return '<str>' + eqlInLiteralSet(`.${this.field}`, this.allowed);
+    return '<str>' + eqlInLiteralSet(`.${this.path}`, this.allowed);
   }
 
   union(conditions: this[]): Array<Condition<TResourceStatic>> {
-    return groupBy(conditions, (c) => c.field).map((conditionsForField) => {
+    return groupBy(conditions, (c) => c.path).map((conditionsForField) => {
       const unioned = conditionsForField.flatMap((c) => [...c.allowed]);
       return new EnumFieldCondition(
-        conditionsForField[0].field,
+        conditionsForField[0].path,
         new Set(unioned),
       );
     });
   }
 
   intersect(conditions: this[]): Array<Condition<TResourceStatic>> {
-    return groupBy(conditions, (c) => c.field).map((conditionsForField) => {
+    return groupBy(conditions, (c) => c.path).map((conditionsForField) => {
       const intersected = [...conditionsForField[0].allowed].filter((v) =>
         conditionsForField.every((condition) => condition.allowed.has(v)),
       );
       return new EnumFieldCondition(
-        conditionsForField[0].field,
+        conditionsForField[0].path,
         new Set(intersected),
       );
     });
   }
 
   [inspect.custom](_depth: number, _options: InspectOptionsStylized) {
-    return `${startCase(this.field)} { ${[...this.allowed]
+    return `${startCase(this.path)} { ${[...this.allowed]
       .map((s) => startCase(s))
       .join(', ')} }`;
   }
@@ -78,33 +78,26 @@ export class EnumFieldCondition<
  */
 export function field<
   TResourceStatic extends ResourceShape<any>,
-  Field extends ConditionalKeys<
-    InstanceType<TResourceStatic>,
-    string | Secured<string>
-  > &
-    string,
+  Path extends Paths<InstanceType<TResourceStatic>> & string,
 >(
-  field: Field,
-  allowed: ManyIn<FieldOf<TResourceStatic, Field>>,
-  ...allowedMore: Array<ManyIn<FieldOf<TResourceStatic, Field>>>
+  path: Path,
+  allowed: ManyIn<ValueOfPath<TResourceStatic, Path>>,
+  ...allowedMore: Array<ManyIn<ValueOfPath<TResourceStatic, Path>>>
 ) {
   const flattened = new Set(
     [allowed, ...allowedMore].flatMap((v) =>
-      typeof v === 'string' ? [v] : [...v],
+      // Assume values are strings to normalize cardinality.
+      typeof v === 'string'
+        ? [v]
+        : [...(v as Array<ValueOfPath<TResourceStatic, Path>>)],
     ),
   );
-  return new EnumFieldCondition<TResourceStatic, Field>(field, flattened);
+  return new EnumFieldCondition<TResourceStatic, Path>(path, flattened);
 }
 
 type ManyIn<T extends string> = T | Iterable<T>;
 
-type FieldOf<
+type ValueOfPath<
   TResourceStatic extends ResourceShape<any>,
-  Field extends string,
-> = InstanceType<TResourceStatic> extends HasField<Field, infer Value>
-  ? `${Value}`
-  : never;
-
-type HasField<Field extends string, EnumValue extends string> = {
-  readonly [_ in Field]: EnumValue | Secured<EnumValue>;
-};
+  Path extends string,
+> = UnwrapSecured<Get<InstanceType<TResourceStatic>, Path>>;
