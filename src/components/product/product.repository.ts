@@ -16,9 +16,9 @@ import {
   Range,
   ServerException,
   Session,
-} from '../../common';
-import { CommonRepository, DbTypeOf, OnIndex } from '../../core';
-import { DbChanges, getChanges } from '../../core/database/changes';
+} from '~/common';
+import { CommonRepository, DbTypeOf, OnIndex } from '~/core/database';
+import { DbChanges, getChanges } from '~/core/database/changes';
 import {
   ACTIVE,
   collect,
@@ -33,14 +33,14 @@ import {
   merge,
   paginate,
   sorting,
-} from '../../core/database/query';
+} from '~/core/database/query';
+import { ScriptureReferenceRepository } from '../scripture';
 import {
   ScriptureRange,
   ScriptureRangeInput,
-  ScriptureReferenceRepository,
   UnspecifiedScripturePortion,
   UnspecifiedScripturePortionInput,
-} from '../scripture';
+} from '../scripture/dto';
 import {
   ApproachToMethodologies,
   CreateDerivativeScriptureProduct,

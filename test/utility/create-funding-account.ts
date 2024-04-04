@@ -2,7 +2,7 @@ import { faker } from '@faker-js/faker';
 import {
   CreateFundingAccount,
   FundingAccount,
-} from '../../src/components/funding-account';
+} from '../../src/components/funding-account/dto';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
 import { gql } from './gql-tag';

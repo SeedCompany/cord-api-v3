@@ -1,9 +1,8 @@
-import { CalendarDate, ID } from '../src/common';
-import { Role } from '../src/components/authorization';
-import { EngagementStatus } from '../src/components/engagement';
-import { Language } from '../src/components/language';
-import { ProjectStep } from '../src/components/project';
+import { CalendarDate, ID, Role } from '~/common';
+import { EngagementStatus } from '../src/components/engagement/dto';
+import { Language } from '../src/components/language/dto';
 import { ProjectChangeRequestType } from '../src/components/project-change-request/dto';
+import { ProjectStep } from '../src/components/project/dto';
 import {
   approveProjectChangeRequest,
   createFundingAccount,

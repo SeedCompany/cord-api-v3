@@ -1,4 +1,4 @@
-import { UpdateProject } from '../../src/components/project';
+import { UpdateProject } from '../../src/components/project/dto';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
 import { gql } from './gql-tag';

@@ -6,7 +6,8 @@ import {
   Session,
   UnsecuredDto,
 } from '~/common';
-import { DbTypeOf, ResourceLoader } from '~/core';
+import { ResourceLoader } from '~/core';
+import { DbTypeOf } from '~/core/database';
 import { Privileges, withVariant } from '../../authorization';
 import { FileService } from '../../file';
 import { MediaService } from '../../file/media/media.service';

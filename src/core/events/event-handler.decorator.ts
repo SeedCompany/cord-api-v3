@@ -1,6 +1,6 @@
 import { Type } from '@nestjs/common';
 import { nanoid } from 'nanoid';
-import { ID } from '../../common';
+import { ID } from '~/common';
 import {
   EVENT_METADATA,
   EventHandlerMetadata,

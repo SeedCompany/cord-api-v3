@@ -13,7 +13,7 @@ import {
 } from '~/common';
 import { e } from '~/core/edgedb';
 import { RegisterResource } from '~/core/resources';
-import { Product, ProductStep } from '../../product';
+import { Product, ProductStep } from '../../product/dto';
 import { ProgressReport } from '../../progress-report/dto';
 import {
   ProgressReportVariantProgress,

@@ -1,6 +1,6 @@
 import { promises as fs } from 'fs';
 import { dirname, join } from 'path';
-import { NotFoundException } from '../../../common';
+import { NotFoundException } from '~/common';
 import { FakeAwsFile, LocalBucket, LocalBucketOptions } from './local-bucket';
 
 export interface FilesystemBucketOptions extends LocalBucketOptions {

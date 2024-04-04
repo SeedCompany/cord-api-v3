@@ -1,7 +1,7 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
+import { ID, SecuredProps, SecuredString } from '~/common';
 import { RegisterResource } from '~/core/resources';
-import { ID, SecuredProps, SecuredString } from '../../../common';
 import { Changeset } from '../../changeset/dto';
 import { SecuredProjectChangeRequestStatus } from './project-change-request-status.enum';
 import { SecuredProjectChangeRequestTypes } from './project-change-request-type.enum';

@@ -8,10 +8,8 @@ import {
   Variant,
   VariantInputField,
 } from '~/common';
-import {
-  CreateDefinedFileVersionInput,
-  MediaUserMetadata,
-} from '../../../file';
+import { CreateDefinedFileVersionInput } from '../../../file/dto';
+import { MediaUserMetadata } from '../../../file/media/media.dto';
 import { ProgressReport } from '../../dto';
 import { MediaVariant, ProgressReportMedia, VariantGroup } from './media.dto';
 

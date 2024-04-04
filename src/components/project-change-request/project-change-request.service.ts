@@ -6,19 +6,14 @@ import {
   ServerException,
   Session,
   UnsecuredDto,
-} from '../../common';
-import {
-  ConfigService,
-  DatabaseService,
-  HandleIdLookup,
-  IEventBus,
-  ILogger,
-  Logger,
-} from '../../core';
-import { mapListResults } from '../../core/database/results';
+} from '~/common';
+import { HandleIdLookup, IEventBus, ILogger, Logger } from '~/core';
+import { DatabaseService } from '~/core/database';
+import { mapListResults } from '~/core/database/results';
 import { Privileges } from '../authorization';
-import { ChangesetFinalizingEvent } from '../changeset/events';
-import { ProjectService, ProjectStatus } from '../project';
+import { ChangesetFinalizingEvent } from '../changeset';
+import { ProjectService } from '../project';
+import { ProjectStatus } from '../project/dto';
 import {
   CreateProjectChangeRequest,
   ProjectChangeRequest,
@@ -34,7 +29,6 @@ import { ProjectChangeRequestRepository } from './project-change-request.reposit
 export class ProjectChangeRequestService {
   constructor(
     private readonly db: DatabaseService,
-    private readonly config: ConfigService,
     @Logger('project:change-request:service') private readonly logger: ILogger,
     private readonly privileges: Privileges,
     private readonly eventBus: IEventBus,

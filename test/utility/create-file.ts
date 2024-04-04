@@ -1,12 +1,12 @@
 import { faker } from '@faker-js/faker';
 import { assert, MarkOptional } from 'ts-essentials';
-import { ID } from '../../src/common';
+import { ID } from '~/common';
+import { FileBucket, LocalBucket } from '../../src/components/file/bucket';
 import {
   CreateFileVersionInput,
   FileListInput,
   RequestUploadOutput,
-} from '../../src/components/file';
-import { FileBucket, LocalBucket } from '../../src/components/file/bucket';
+} from '../../src/components/file/dto';
 import { mimeTypes } from '../../src/components/file/mimeTypes';
 import { TestApp } from './create-app';
 import { RawFile, RawFileNode, RawFileNodeChildren } from './fragments';

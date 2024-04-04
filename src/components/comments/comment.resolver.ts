@@ -5,9 +5,10 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { ID, IdArg, LoggedInSession, Session } from '../../common';
-import { Loader, LoaderOf } from '../../core';
-import { User, UserLoader } from '../user';
+import { ID, IdArg, LoggedInSession, Session } from '~/common';
+import { Loader, LoaderOf } from '~/core';
+import { UserLoader } from '../user';
+import { User } from '../user/dto';
 import { CommentService } from './comment.service';
 import {
   Comment,

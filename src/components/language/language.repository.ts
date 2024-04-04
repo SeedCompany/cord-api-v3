@@ -17,7 +17,7 @@ import {
   Session,
   UnsecuredDto,
 } from '~/common';
-import { DtoRepository, UniquenessError } from '~/core';
+import { DtoRepository, UniquenessError } from '~/core/database';
 import {
   ACTIVE,
   any,
@@ -38,7 +38,7 @@ import {
   sorting,
   variable,
 } from '~/core/database/query';
-import { ProjectStatus } from '../project';
+import { ProjectStatus } from '../project/dto';
 import {
   CreateLanguage,
   Language,

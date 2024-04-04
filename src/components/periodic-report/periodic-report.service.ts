@@ -9,9 +9,9 @@ import {
   ServerException,
   Session,
   UnsecuredDto,
-} from '../../common';
-import { HandleIdLookup, IEventBus, ILogger, Logger } from '../../core';
-import { Variable } from '../../core/database/query';
+} from '~/common';
+import { HandleIdLookup, IEventBus, ILogger, Logger } from '~/core';
+import { Variable } from '~/core/database/query';
 import { Privileges } from '../authorization';
 import { FileService } from '../file';
 import { ProgressReport } from '../progress-report/dto';

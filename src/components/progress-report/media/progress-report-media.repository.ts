@@ -9,7 +9,7 @@ import {
   ServerException,
   Session,
 } from '~/common';
-import { DbTypeOf, DtoRepository } from '~/core';
+import { DbTypeOf, DtoRepository } from '~/core/database';
 import {
   ACTIVE,
   createNode,

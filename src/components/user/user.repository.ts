@@ -5,11 +5,12 @@ import { DateTime } from 'luxon';
 import {
   DuplicateException,
   ID,
+  Role,
   ServerException,
   Session,
   UnsecuredDto,
-} from '../../common';
-import { DtoRepository, UniquenessError } from '../../core';
+} from '~/common';
+import { DtoRepository, UniquenessError } from '~/core/database';
 import {
   ACTIVE,
   createNode,
@@ -22,8 +23,7 @@ import {
   property,
   requestingUser,
   sorting,
-} from '../../core/database/query';
-import { Role } from '../authorization';
+} from '~/core/database/query';
 import {
   AssignOrganizationToUser,
   CreatePerson,

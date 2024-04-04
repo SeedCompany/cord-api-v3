@@ -6,8 +6,8 @@ import {
   ServerException,
   Session,
   UnsecuredDto,
-} from '../../common';
-import { HandleIdLookup, ILogger, Logger } from '../../core';
+} from '~/common';
+import { HandleIdLookup, ILogger, Logger } from '~/core';
 import { Privileges } from '../authorization';
 import { CeremonyRepository } from './ceremony.repository';
 import {

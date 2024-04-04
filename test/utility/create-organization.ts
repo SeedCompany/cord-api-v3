@@ -2,7 +2,7 @@ import { faker } from '@faker-js/faker';
 import {
   CreateOrganization,
   Organization,
-} from '../../src/components/organization';
+} from '../../src/components/organization/dto';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
 import { gql } from './gql-tag';

@@ -1,9 +1,12 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { mapSecuredValue } from '../../common';
-import { Loader, LoaderOf } from '../../core';
-import { FileNodeLoader, resolveDefinedFile, SecuredFile } from '../file';
-import { LocationLoader, SecuredLocation } from '../location';
-import { SecuredUser, UserLoader } from '../user';
+import { mapSecuredValue } from '~/common';
+import { Loader, LoaderOf } from '~/core';
+import { FileNodeLoader, resolveDefinedFile } from '../file';
+import { SecuredFile } from '../file/dto';
+import { LocationLoader } from '../location';
+import { SecuredLocation } from '../location/dto';
+import { UserLoader } from '../user';
+import { SecuredUser } from '../user/dto';
 import { InternshipEngagement } from './dto';
 
 @Resolver(InternshipEngagement)

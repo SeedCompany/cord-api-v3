@@ -1,4 +1,4 @@
-import { Session } from '../../../common';
+import { Session } from '~/common';
 import { Partnership, UpdatePartnership } from '../dto';
 
 export class PartnershipUpdatedEvent {

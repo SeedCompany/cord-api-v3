@@ -1,6 +1,6 @@
 import { Args, Mutation, Resolver } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { AnonSession, LoggedInSession, Session } from '../../common';
+import { AnonSession, LoggedInSession, Session } from '~/common';
 import { AuthenticationService } from './authentication.service';
 import {
   ChangePasswordArgs,

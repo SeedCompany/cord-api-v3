@@ -1,7 +1,8 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { Loader, LoaderOf } from '../../core';
-import { Language, LanguageLoader } from '../language';
-import { KnownLanguage } from './dto/known-language.dto';
+import { Loader, LoaderOf } from '~/core';
+import { LanguageLoader } from '../language';
+import { Language } from '../language/dto';
+import { KnownLanguage } from './dto';
 
 @Resolver(KnownLanguage)
 export class KnownLanguageResolver {

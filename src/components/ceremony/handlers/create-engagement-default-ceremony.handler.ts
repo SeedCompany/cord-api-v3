@@ -1,11 +1,7 @@
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import {
-  ConfigService,
-  DatabaseService,
-  EventsHandler,
-  IEventHandler,
-} from '~/core';
+import { ConfigService, EventsHandler, IEventHandler } from '~/core';
+import { DatabaseService } from '~/core/database';
 import { EngagementCreatedEvent } from '../../engagement/events';
 import { CeremonyService } from '../ceremony.service';
 import { CeremonyType } from '../dto';

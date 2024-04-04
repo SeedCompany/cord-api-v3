@@ -1,4 +1,4 @@
-import { ID } from '../../src/common';
+import { ID } from '~/common';
 import {
   Project,
   ProjectStep,

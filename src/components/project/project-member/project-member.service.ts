@@ -6,14 +6,16 @@ import {
   InputException,
   NotFoundException,
   ObjectView,
+  Role,
   ServerException,
   Session,
   UnauthorizedException,
   UnsecuredDto,
 } from '~/common';
 import { HandleIdLookup, ResourceLoader } from '~/core';
-import { Privileges, Role } from '../../authorization';
-import { User, UserService } from '../../user';
+import { Privileges } from '../../authorization';
+import { UserService } from '../../user';
+import { User } from '../../user/dto';
 import {
   CreateProjectMember,
   ProjectMember,

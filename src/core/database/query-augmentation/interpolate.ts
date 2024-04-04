@@ -3,7 +3,7 @@ import { stripIndent } from 'common-tags';
 import { Clause } from 'cypher-query-builder';
 import { DateTime, Duration } from 'luxon';
 import { Integer, types as neo } from 'neo4j-driver';
-import { CalendarDate } from '../../../common';
+import { CalendarDate } from '~/common';
 
 /**
  * Overridden to correctly interpolate null, undefined, and temporal values.

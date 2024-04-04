@@ -9,7 +9,6 @@ import {
   Query,
   relation,
 } from 'cypher-query-builder';
-import { ChangesOf } from '~/core/database/changes';
 import {
   CalendarDate,
   generateId,
@@ -17,8 +16,9 @@ import {
   Range,
   Session,
   UnsecuredDto,
-} from '../../common';
-import { DtoRepository } from '../../core';
+} from '~/common';
+import { DtoRepository } from '~/core/database';
+import { ChangesOf } from '~/core/database/changes';
 import {
   ACTIVE,
   createNode,
@@ -31,8 +31,8 @@ import {
   sorting,
   variable,
   Variable,
-} from '../../core/database/query';
-import { File } from '../file';
+} from '~/core/database/query';
+import { File } from '../file/dto';
 import { ProgressReportStatus as ProgressStatus } from '../progress-report/dto';
 import { ProgressReportExtraForPeriodicInterfaceRepository } from '../progress-report/progress-report-extra-for-periodic-interface.repository';
 import {

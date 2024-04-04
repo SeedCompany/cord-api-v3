@@ -11,8 +11,8 @@ import {
   ResourceShape,
   ServerException,
   UnwrapSecured,
-} from '../../common';
-import { AbortError, retry, RetryOptions } from '../../common/retry';
+} from '~/common';
+import { AbortError, retry, RetryOptions } from '~/common/retry';
 import { ConfigService } from '../config/config.service';
 import { ILogger, Logger } from '../logger';
 import { DbChanges } from './changes';

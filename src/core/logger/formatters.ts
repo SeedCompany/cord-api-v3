@@ -12,7 +12,7 @@ import { MESSAGE } from 'triple-beam';
 import { fileURLToPath } from 'url';
 import { config, format, LogEntry } from 'winston';
 import { getCauseList } from '~/common';
-import { maskSecrets as maskSecretsOfObj } from '../../common/mask-secrets';
+import { maskSecrets as maskSecretsOfObj } from '~/common/mask-secrets';
 import { getNameFromEntry } from './logger.interface';
 
 const colorsEnabled = !process.env.NO_COLOR;

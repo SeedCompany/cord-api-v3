@@ -1,6 +1,6 @@
 import { faker } from '@faker-js/faker';
-import { generateId, isValidId } from '../../src/common';
-import { CreatePerson } from '../../src/components/user';
+import { generateId, isValidId } from '~/common';
+import { CreatePerson } from '../../src/components/user/dto';
 import { TestApp } from './create-app';
 import { fragments, RawUser } from './fragments';
 import { gql } from './gql-tag';

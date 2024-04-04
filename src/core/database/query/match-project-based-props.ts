@@ -1,11 +1,11 @@
 import { oneLine } from 'common-tags';
 import { node, Query, relation } from 'cypher-query-builder';
+import { ID, Sensitivity, Session } from '~/common';
 import { QueryFragment, requestingUser, Variable } from '~/core/database/query';
-import { ID, Sensitivity, Session } from '../../../common';
 import {
   GlobalScopedRole,
   ScopedRole,
-} from '../../../components/authorization';
+} from '../../../components/authorization/dto';
 import { ProjectType } from '../../../components/project/dto/project-type.enum';
 import {
   apoc,

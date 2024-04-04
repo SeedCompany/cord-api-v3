@@ -11,7 +11,7 @@ import {
 } from '@nestjs/graphql';
 import XRay from 'aws-xray-sdk-core';
 import { Request, Response } from 'express';
-import { GqlContextType } from '../../common';
+import { GqlContextType } from '~/common';
 import { ConfigService } from '../config/config.service';
 import { Sampler } from './sampler';
 import { TracingService } from './tracing.service';

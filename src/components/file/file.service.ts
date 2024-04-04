@@ -24,14 +24,8 @@ import {
   UnauthorizedException,
 } from '~/common';
 import { withAddedPath } from '~/common/url.util';
-import {
-  ConfigService,
-  IEventBus,
-  ILogger,
-  LinkTo,
-  Logger,
-  RollbackManager,
-} from '~/core';
+import { ConfigService, IEventBus, ILogger, LinkTo, Logger } from '~/core';
+import { RollbackManager } from '~/core/database';
 import { FileBucket } from './bucket';
 import {
   CreateDefinedFileVersionInput,

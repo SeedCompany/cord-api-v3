@@ -1,6 +1,6 @@
 import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { ResourceShape } from '../../../common';
+import { ResourceShape } from '~/common';
 import { ACTIVE } from './matching';
 
 export const deleteBaseNode = (nodeVar: string) => (query: Query) =>

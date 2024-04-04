@@ -15,8 +15,8 @@ import {
   NameField,
   Sensitivity,
   SensitivityField,
-} from '../../../common';
-import { ExactLength } from '../../../common/validators/exactLength';
+} from '~/common';
+import { ExactLength } from '~/common/validators/exactLength';
 import { Language } from './language.dto';
 
 @InputType()

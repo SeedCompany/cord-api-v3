@@ -8,7 +8,7 @@ import {
   Session,
   UnsecuredDto,
 } from '~/common';
-import { DbTypeOf, DtoRepository } from '~/core';
+import { DbTypeOf, DtoRepository } from '~/core/database';
 import {
   createNode,
   matchProps,

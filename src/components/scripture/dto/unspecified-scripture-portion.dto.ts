@@ -1,6 +1,6 @@
 import { Field, InputType, Int, ObjectType } from '@nestjs/graphql';
 import { IsPositive } from 'class-validator';
-import { SecuredProperty } from '../../../common';
+import { SecuredProperty } from '~/common';
 import {
   IsValidBook,
   IsValidVerseTotal,

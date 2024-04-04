@@ -3,9 +3,6 @@ import { stripIndent } from 'common-tags';
 import { startCase } from 'lodash';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive } from 'type-fest';
-import { SetDbType } from '~/core';
-import { e } from '~/core/edgedb';
-import { RegisterResource } from '~/core/resources';
 import {
   DbLabel,
   ID,
@@ -19,14 +16,17 @@ import {
   SensitivityField,
   ServerException,
   UnsecuredDto,
-} from '../../../common';
-import { SetChangeType } from '../../../core/database/changes';
+} from '~/common';
+import { SetDbType } from '~/core/database';
+import { SetChangeType } from '~/core/database/changes';
+import { e } from '~/core/edgedb';
+import { RegisterResource } from '~/core/resources';
+import { DbScriptureReferences } from '../../scripture';
 import {
-  DbScriptureReferences,
   ScriptureRangeInput,
   SecuredScriptureRangesOverride,
   SecuredUnspecifiedScripturePortion,
-} from '../../scripture';
+} from '../../scripture/dto';
 import { Producible, ProducibleRef, SecuredProducible } from './producible.dto';
 import { SecuredProductMediums } from './product-medium.enum';
 import { SecuredMethodology } from './product-methodology.enum';

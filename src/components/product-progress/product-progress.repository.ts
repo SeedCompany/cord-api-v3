@@ -9,8 +9,8 @@ import {
   NotFoundException,
   Session,
   Variant,
-} from '../../common';
-import { DatabaseService } from '../../core';
+} from '~/common';
+import { DatabaseService } from '~/core/database';
 import {
   ACTIVE,
   collect,
@@ -20,9 +20,10 @@ import {
   merge,
   updateProperty,
   variable,
-} from '../../core/database/query';
-import { PeriodicReportService, ReportType } from '../periodic-report';
-import { ProductStep } from '../product';
+} from '~/core/database/query';
+import { PeriodicReportService } from '../periodic-report';
+import { ReportType } from '../periodic-report/dto';
+import { ProductStep } from '../product/dto';
 import {
   ProductProgress,
   ProductProgressInput,

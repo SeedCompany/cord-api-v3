@@ -2,9 +2,9 @@ import { faker } from '@faker-js/faker';
 import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { andCall } from '~/common';
+import { LogLevel } from '~/core/logger';
+import { LevelMatcher } from '~/core/logger/level-matcher';
 import { AppModule } from '../../src/app.module';
-import { LogLevel } from '../../src/core/logger';
-import { LevelMatcher } from '../../src/core/logger/level-matcher';
 import {
   createGraphqlClient,
   GraphQLTestClient,

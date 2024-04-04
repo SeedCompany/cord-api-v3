@@ -1,7 +1,5 @@
 import { Role } from '~/common';
 
-export * from '~/common/role.dto';
-
 export type ProjectScope = 'project';
 export type GlobalScope = 'global';
 

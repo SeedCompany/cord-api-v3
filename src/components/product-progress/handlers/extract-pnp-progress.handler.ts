@@ -1,8 +1,9 @@
 import { mapOf } from '@seedcompany/common';
-import { EventsHandler, ILogger, Logger } from '../../../core';
+import { EventsHandler, ILogger, Logger } from '~/core';
 import { ReportType } from '../../periodic-report/dto';
 import { PeriodicReportUploadedEvent } from '../../periodic-report/events';
-import { ProducibleType, ProductService } from '../../product';
+import { ProductService } from '../../product';
+import { ProducibleType } from '../../product/dto';
 import { isScriptureEqual } from '../../scripture';
 import { ProgressReportVariantProgress as Progress } from '../dto';
 import { ProductProgressService } from '../product-progress.service';

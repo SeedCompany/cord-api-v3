@@ -3,8 +3,8 @@ import {
   EngagementStatus,
   InternshipEngagement,
   LanguageEngagement,
-} from '../../src/components/engagement';
-import { ProjectStep } from '../../src/components/project';
+} from '../../src/components/engagement/dto';
+import { ProjectStep } from '../../src/components/project/dto';
 import { TestApp } from './create-app';
 import { getCurrentEngagementStatus } from './create-engagement';
 import { createFundingAccount } from './create-funding-account';

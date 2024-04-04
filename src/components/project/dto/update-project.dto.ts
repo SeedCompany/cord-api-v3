@@ -13,7 +13,7 @@ import {
   NameField,
   Sensitivity,
   SensitivityField,
-} from '../../../common';
+} from '~/common';
 import { ChangesetIdField } from '../../changeset';
 import { Location } from '../../location/dto';
 import { ReportPeriod } from '../../periodic-report/dto';

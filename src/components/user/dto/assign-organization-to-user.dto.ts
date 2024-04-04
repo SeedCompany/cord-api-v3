@@ -1,7 +1,7 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { ID, IdField, MutationPlaceholderOutput } from '../../../common';
+import { ID, IdField, MutationPlaceholderOutput } from '~/common';
 
 @InputType()
 export class AssignOrganizationToUser {

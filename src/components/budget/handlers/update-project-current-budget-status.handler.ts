@@ -1,5 +1,5 @@
-import { EventsHandler, IEventHandler } from '../../../core';
-import { ProjectStatus, stepToStatus } from '../../project';
+import { EventsHandler, IEventHandler } from '~/core';
+import { ProjectStatus, stepToStatus } from '../../project/dto';
 import { ProjectUpdatedEvent } from '../../project/events';
 import { BudgetService } from '../budget.service';
 import { BudgetStatus } from '../dto';

@@ -3,8 +3,8 @@ import {
   CreatePartner,
   Partner,
   PartnerType,
-} from '../../src/components/partner';
-import { FinancialReportingType } from '../../src/components/partnership';
+} from '../../src/components/partner/dto';
+import { FinancialReportingType } from '../../src/components/partnership/dto';
 import { TestApp } from './create-app';
 import { createOrganization } from './create-organization';
 import { createPerson } from './create-person';

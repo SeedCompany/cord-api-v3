@@ -20,13 +20,17 @@ import {
   SecuredIntNullable,
   Session,
   viewOfChangeset,
-} from '../../common';
-import { Loader, LoaderOf } from '../../core';
+} from '~/common';
+import { Loader, LoaderOf } from '~/core';
 import { IdsAndView, IdsAndViewArg } from '../changeset/dto';
-import { LocationListInput, SecuredLocationList } from '../location';
-import { LocationLoader } from '../location/location.loader';
-import { ProjectLoader, SecuredTranslationProjectList } from '../project';
-import { ProjectListInput, SecuredProjectList } from '../project/dto';
+import { LocationLoader } from '../location';
+import { LocationListInput, SecuredLocationList } from '../location/dto';
+import { ProjectLoader } from '../project';
+import {
+  ProjectListInput,
+  SecuredProjectList,
+  SecuredTranslationProjectList,
+} from '../project/dto';
 import {
   CreateLanguageInput,
   CreateLanguageOutput,

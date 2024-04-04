@@ -14,7 +14,7 @@ import {
   NameField,
   Sensitivity,
   SensitivityField,
-} from '../../../common';
+} from '~/common';
 import { Location } from '../../location/dto';
 import { ReportPeriod } from '../../periodic-report/dto';
 import { ProjectStep } from './project-step.enum';

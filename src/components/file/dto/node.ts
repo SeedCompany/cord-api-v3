@@ -5,9 +5,6 @@ import { DateTime } from 'luxon';
 import { Readable } from 'stream';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive } from 'type-fest';
-import { BaseNode } from '~/core/database/results';
-import { e } from '~/core/edgedb';
-import { RegisterResource } from '~/core/resources';
 import {
   DateTimeField,
   DbLabel,
@@ -20,7 +17,10 @@ import {
   SecuredProperty,
   SecuredProps,
   ServerException,
-} from '../../../common';
+} from '~/common';
+import { BaseNode } from '~/core/database/results';
+import { e } from '~/core/edgedb';
+import { RegisterResource } from '~/core/resources';
 import { FileNodeType } from './file-node-type.enum';
 
 /**

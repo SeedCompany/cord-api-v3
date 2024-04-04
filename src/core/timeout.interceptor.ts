@@ -11,7 +11,7 @@ import {
 import { Response } from 'express';
 import { fromEvent, Observable, race } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { GqlContextType, ServiceUnavailableException } from '../common';
+import { GqlContextType, ServiceUnavailableException } from '~/common';
 
 /**
  * Throws error when response timeouts.

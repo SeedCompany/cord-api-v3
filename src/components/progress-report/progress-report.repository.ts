@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { DtoRepository } from '~/core';
+import { DtoRepository } from '~/core/database';
 import { ProgressReport } from './dto';
 
 @Injectable()

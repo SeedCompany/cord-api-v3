@@ -16,7 +16,7 @@ import {
   UserResourcePrivileges,
   withVariant,
 } from '../authorization';
-import { Product } from '../product';
+import { Product } from '../product/dto';
 import type { ProgressReport } from '../progress-report/dto';
 import {
   ProductProgress,

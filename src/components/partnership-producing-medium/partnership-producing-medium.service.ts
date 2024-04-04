@@ -7,11 +7,11 @@ import {
   SecuredList,
   Session,
   UnauthorizedException,
-} from '../../common';
-import { ResourceResolver } from '../../core';
+} from '~/common';
+import { ResourceResolver } from '~/core';
 import { Privileges } from '../authorization';
-import { LanguageEngagement } from '../engagement';
-import { IProject } from '../project';
+import { LanguageEngagement } from '../engagement/dto';
+import { IProject } from '../project/dto';
 import {
   PartnershipProducingMediumInput,
   SecuredPartnershipsProducingMediums,

@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { entries } from '@seedcompany/common';
 import { assert } from 'ts-essentials';
 import { MergeExclusive } from 'type-fest';
-import { Cell, Column, Row } from '../../common/xlsx.util';
-import { Downloadable } from '../file';
+import { Cell, Column, Row } from '~/common/xlsx.util';
+import { Downloadable } from '../file/dto';
 import {
   extractScripture,
   findStepColumns,
@@ -14,8 +14,8 @@ import {
   ProgressSheet,
   WrittenScripturePlanningSheet,
 } from '../pnp';
-import { ProductStep as Step } from '../product';
-import { ScriptureRange } from '../scripture';
+import { ProductStep as Step } from '../product/dto';
+import { ScriptureRange } from '../scripture/dto';
 import { StepProgressInput } from './dto';
 
 type ExtractedRow = MergeExclusive<

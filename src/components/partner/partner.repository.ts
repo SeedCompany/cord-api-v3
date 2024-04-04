@@ -9,8 +9,8 @@ import {
   ServerException,
   Session,
   UnsecuredDto,
-} from '../../common';
-import { DtoRepository } from '../../core';
+} from '~/common';
+import { DtoRepository } from '~/core/database';
 import {
   ACTIVE,
   collect,
@@ -26,7 +26,7 @@ import {
   rankSens,
   requestingUser,
   sorting,
-} from '../../core/database/query';
+} from '~/core/database/query';
 import { CreatePartner, Partner, PartnerListInput, UpdatePartner } from './dto';
 
 @Injectable()

@@ -9,7 +9,8 @@ import {
   Session,
   UnsecuredDto,
 } from '~/common';
-import { CommonRepository, ConfigService, OnIndex } from '~/core';
+import { ConfigService } from '~/core';
+import { CommonRepository, OnIndex } from '~/core/database';
 import { ChangesOf, getChanges } from '~/core/database/changes';
 import {
   ACTIVE,

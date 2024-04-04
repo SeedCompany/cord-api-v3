@@ -9,7 +9,7 @@ import {
   Many,
   ObjectView,
   Session,
-} from '../../../common';
+} from '~/common';
 import { variable } from '../query-augmentation/condition-variables';
 import { apoc, collect, listConcat, merge } from './cypher-functions';
 

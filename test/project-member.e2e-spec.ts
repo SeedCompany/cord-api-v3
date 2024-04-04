@@ -1,8 +1,8 @@
 import { times } from 'lodash';
 import { DateTime, Interval } from 'luxon';
-import { isValidId } from '../src/common';
-import { Role } from '../src/components/authorization';
-import { Project, ProjectMember } from '../src/components/project';
+import { isValidId, Role } from '~/common';
+import { Project } from '../src/components/project/dto';
+import { ProjectMember } from '../src/components/project/project-member/dto';
 import {
   createPerson,
   createProject,

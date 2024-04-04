@@ -22,29 +22,29 @@ import {
   NotFoundException,
   SecuredDateRange,
   Session,
-} from '../../common';
-import { Loader, LoaderOf } from '../../core';
-import { SecuredBudget } from '../budget';
+} from '~/common';
+import { Loader, LoaderOf } from '~/core';
+import { SecuredBudget } from '../budget/dto';
 import { IdsAndView, IdsAndViewArg } from '../changeset/dto';
-import {
-  EngagementListInput,
-  EngagementLoader,
-  SecuredEngagementList,
-} from '../engagement';
-import { FieldRegionLoader, SecuredFieldRegion } from '../field-region';
-import { asDirectory, FileNodeLoader, SecuredDirectory } from '../file';
+import { EngagementLoader } from '../engagement';
+import { EngagementListInput, SecuredEngagementList } from '../engagement/dto';
+import { FieldRegionLoader } from '../field-region';
+import { SecuredFieldRegion } from '../field-region/dto';
+import { FileNodeLoader } from '../file';
+import { asDirectory, SecuredDirectory } from '../file/dto';
+import { LocationLoader } from '../location';
 import {
   LocationListInput,
-  LocationLoader,
   SecuredLocation,
   SecuredLocationList,
-} from '../location';
-import { OrganizationLoader, SecuredOrganization } from '../organization';
+} from '../location/dto';
+import { OrganizationLoader } from '../organization';
+import { SecuredOrganization } from '../organization/dto';
+import { PartnershipLoader } from '../partnership';
 import {
   PartnershipListInput,
-  PartnershipLoader,
   SecuredPartnershipList,
-} from '../partnership';
+} from '../partnership/dto';
 import { ProjectChangeRequestLoader } from '../project-change-request';
 import {
   ProjectChangeRequestListInput,
@@ -64,11 +64,11 @@ import {
   UpdateProjectInput,
   UpdateProjectOutput,
 } from './dto';
+import { ProjectMemberLoader } from './project-member';
 import {
   ProjectMemberListInput,
-  ProjectMemberLoader,
   SecuredProjectMemberList,
-} from './project-member';
+} from './project-member/dto';
 import { ProjectLoader } from './project.loader';
 import { ProjectService } from './project.service';
 

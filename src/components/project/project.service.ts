@@ -20,33 +20,28 @@ import {
   IEventBus,
   ILogger,
   Logger,
-  Transactional,
-  UniquenessError,
 } from '~/core';
-import { Privileges, withoutScope } from '../authorization';
-import { BudgetService, BudgetStatus, SecuredBudget } from '../budget';
-import {
-  EngagementListInput,
-  EngagementService,
-  SecuredEngagementList,
-} from '../engagement';
-import {
-  LocationListInput,
-  LocationService,
-  SecuredLocationList,
-} from '../location';
+import { Transactional, UniquenessError } from '~/core/database';
+import { Privileges } from '../authorization';
+import { withoutScope } from '../authorization/dto';
+import { BudgetService } from '../budget';
+import { BudgetStatus, SecuredBudget } from '../budget/dto';
+import { EngagementService } from '../engagement';
+import { EngagementListInput, SecuredEngagementList } from '../engagement/dto';
+import { LocationService } from '../location';
+import { LocationListInput, SecuredLocationList } from '../location/dto';
 import { PartnerService } from '../partner';
+import { PartnershipService } from '../partnership';
 import {
   PartnershipListInput,
-  PartnershipService,
   SecuredPartnershipList,
-} from '../partnership';
+} from '../partnership/dto';
 import { ProjectChangeRequestService } from '../project-change-request';
 import {
   ProjectChangeRequestListInput,
   SecuredProjectChangeRequestList,
 } from '../project-change-request/dto';
-import { User } from '../user';
+import { User } from '../user/dto';
 import {
   CreateProject,
   InternshipProject,
@@ -67,11 +62,11 @@ import {
   ProjectDeletedEvent,
   ProjectUpdatedEvent,
 } from './events';
+import { ProjectMemberService } from './project-member';
 import {
   ProjectMemberListInput,
-  ProjectMemberService,
   SecuredProjectMemberList,
-} from './project-member';
+} from './project-member/dto';
 import { ProjectRepository } from './project.repository';
 import { ProjectRules } from './project.rules';
 

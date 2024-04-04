@@ -1,5 +1,5 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import { PaginatedList, PaginationInput } from '../../../common';
+import { PaginatedList, PaginationInput } from '~/common';
 import { ProductMethodology } from './product-methodology.enum';
 
 @InputType()

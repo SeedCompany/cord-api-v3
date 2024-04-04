@@ -1,11 +1,6 @@
-import { ServerException } from '../../../common';
-import {
-  DatabaseService,
-  EventsHandler,
-  IEventHandler,
-  ILogger,
-  Logger,
-} from '../../../core';
+import { ServerException } from '~/common';
+import { EventsHandler, IEventHandler, ILogger, Logger } from '~/core';
+import { DatabaseService } from '~/core/database';
 import { IProject, ProjectStatus } from '../dto';
 import { ProjectCreatedEvent, ProjectUpdatedEvent } from '../events';
 

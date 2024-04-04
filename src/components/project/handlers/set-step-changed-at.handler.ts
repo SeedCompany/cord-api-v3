@@ -1,13 +1,7 @@
-import {
-  DatabaseService,
-  EventsHandler,
-  IEventHandler,
-  ILogger,
-  Logger,
-} from '../../../core';
+import { EventsHandler, IEventHandler, ILogger, Logger } from '~/core';
+import { DatabaseService } from '~/core/database';
 import { resolveProjectType } from '../dto';
 import { ProjectUpdatedEvent } from '../events';
-import { ProjectService } from '../project.service';
 
 @EventsHandler(ProjectUpdatedEvent)
 export class ProjectStepChangedAtHandler
@@ -15,7 +9,6 @@ export class ProjectStepChangedAtHandler
 {
   constructor(
     private readonly db: DatabaseService,
-    private readonly projectService: ProjectService,
     @Logger('project:step-changed-at') private readonly logger: ILogger,
   ) {}
 

@@ -1,18 +1,18 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { e } from '~/core/edgedb';
-import { RegisterResource } from '~/core/resources';
 import {
   DateTimeField,
   Resource,
   SecuredProps,
+  SecuredRoles,
   Sensitivity,
   SensitivityField,
   SetUnsecuredType,
   UnsecuredDto,
-} from '../../../../common';
-import { SecuredRoles } from '../../../authorization';
+} from '~/common';
+import { e } from '~/core/edgedb';
+import { RegisterResource } from '~/core/resources';
 import { SecuredUser, User } from '../../../user/dto';
 
 @RegisterResource({ db: e.Project.Member })

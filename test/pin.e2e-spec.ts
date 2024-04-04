@@ -1,4 +1,4 @@
-import { Role } from '../src/components/authorization';
+import { Role } from '~/common';
 import {
   createPin,
   createProject,

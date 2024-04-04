@@ -7,16 +7,15 @@ import {
   DurationObjectUnits as DurationObject,
   Settings,
 } from 'luxon';
-import { ID } from '~/common';
-import { Role } from '../src/components/authorization';
+import { ID, Role } from '~/common';
+import { DatabaseService } from '~/core/database';
+import { FileBucket, LocalBucket } from '../src/components/file/bucket';
 import {
   Directory,
   FileNodeType,
   RequestUploadOutput,
-} from '../src/components/file';
-import { FileBucket, LocalBucket } from '../src/components/file/bucket';
-import { User } from '../src/components/user';
-import { DatabaseService } from '../src/core';
+} from '../src/components/file/dto';
+import { User } from '../src/components/user/dto';
 import {
   createFileVersion,
   createSession,

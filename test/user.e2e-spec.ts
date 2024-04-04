@@ -1,14 +1,14 @@
 import { faker } from '@faker-js/faker';
 import { times } from 'lodash';
 import { firstLettersOfWords, isValidId } from '~/common';
-import { Organization } from '../src/components/organization';
-import { SecuredTimeZone } from '../src/components/timezone';
+import { Organization } from '../src/components/organization/dto';
+import { SecuredTimeZone } from '../src/components/timezone/timezone.dto';
 import {
   UpdateUser,
   UpdateUserInput,
   User,
   UserStatus,
-} from '../src/components/user';
+} from '../src/components/user/dto';
 import {
   createEducation,
   createOrganization,

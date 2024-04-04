@@ -1,7 +1,5 @@
 import { ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { e } from '~/core/edgedb';
-import { LinkTo, RegisterResource } from '~/core/resources';
 import {
   DbUnique,
   NameField,
@@ -10,7 +8,9 @@ import {
   SecuredProperty,
   SecuredProps,
   SecuredString,
-} from '../../../common';
+} from '~/common';
+import { e } from '~/core/edgedb';
+import { LinkTo, RegisterResource } from '~/core/resources';
 
 @RegisterResource({ db: e.FieldZone })
 @ObjectType({

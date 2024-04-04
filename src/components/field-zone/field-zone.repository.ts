@@ -8,8 +8,8 @@ import {
   ServerException,
   Session,
   UnsecuredDto,
-} from '../../common';
-import { DtoRepository } from '../../core';
+} from '~/common';
+import { DtoRepository } from '~/core/database';
 import {
   ACTIVE,
   createNode,
@@ -19,7 +19,7 @@ import {
   paginate,
   requestingUser,
   sorting,
-} from '../../core/database/query';
+} from '~/core/database/query';
 import {
   CreateFieldZone,
   FieldZone,

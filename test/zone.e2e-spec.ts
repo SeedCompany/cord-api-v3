@@ -1,16 +1,16 @@
 import { faker } from '@faker-js/faker';
 import { times } from 'lodash';
-import { isValidId } from '../src/common';
-import { FieldZone } from '../src/components/field-zone';
+import { isValidId } from '~/common';
+import { FieldZone } from '../src/components/field-zone/dto';
 import {
   createPerson,
   createSession,
   createTestApp,
+  createZone,
   gql,
   loginAsAdmin,
   TestApp,
 } from './utility';
-import { createZone } from './utility/create-zone';
 import { fragments, RawUser } from './utility/fragments';
 
 describe('Field Zone e2e', () => {
