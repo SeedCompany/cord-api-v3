@@ -207,6 +207,11 @@ export const RepoFor = <
     }
   }
 
+  const readManyQuery = e.params({ ids: e.array(e.uuid) }, ({ ids }) => {
+    const entities = e.cast(dbType, e.array_unpack(ids));
+    return e.select(entities, hydrate as any);
+  });
+
   class DefaultDtoRepository extends Repository {
     async readOne(id: ID) {
       const rows = await this.readMany([id]);
@@ -219,16 +224,9 @@ export const RepoFor = <
     }
 
     async readMany(ids: readonly ID[]): Promise<readonly Dto[]> {
-      const rows = await this.db.run(this.readManyQuery, { ids });
+      const rows = await this.db.run(readManyQuery, { ids });
       return rows as readonly Dto[];
     }
-    private readonly readManyQuery = e.params(
-      { ids: e.array(e.uuid) },
-      ({ ids }) => {
-        const entities = e.cast(dbType, e.array_unpack(ids));
-        return e.select(entities, this.hydrate as any);
-      },
-    );
 
     async list(input: PaginationInput) {
       const all = e.select(dbType, (obj: any) => {
