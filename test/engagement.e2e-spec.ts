@@ -1325,9 +1325,9 @@ describe('Engagement e2e', () => {
         projectId: project.id,
       }),
     ).rejects.toThrowGqlError(
-      errors.input({
-        message: 'The Project status is not in development',
-        field: 'project.status',
+      errors.unauthorized({
+        message:
+          'You do not have the permission to create engagement for this project',
       }),
     );
 
@@ -1345,8 +1345,7 @@ describe('Engagement e2e', () => {
         },
       ),
     ).rejects.toThrowGqlError(
-      errors.input({
-        code: ['Unauthorized', 'Input'],
+      errors.unauthorized({
         message:
           'You do not have the permission to delete this language engagement',
       }),
