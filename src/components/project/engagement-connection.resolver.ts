@@ -15,7 +15,7 @@ export class ProjectEngagementConnectionResolver {
   ) {
     if (onlyId) {
       return {
-        id: engagement.project,
+        id: engagement.project.id,
         changeset: engagement.changeset,
         // Used in Project.resolveType to resolve the concrete type
         type:
@@ -25,7 +25,7 @@ export class ProjectEngagementConnectionResolver {
       };
     }
     return await projects.load({
-      id: engagement.project,
+      id: engagement.project.id,
       view: viewOfChangeset(engagement.changeset),
     });
   }

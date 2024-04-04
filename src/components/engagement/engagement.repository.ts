@@ -137,7 +137,7 @@ export class EngagementRepository extends CommonRepository {
               view,
             ),
             parent: 'project',
-            project: 'project.id',
+            project: 'project { .id }',
             language: 'language.id',
             ceremony: 'ceremony.id',
             intern: 'intern.id',

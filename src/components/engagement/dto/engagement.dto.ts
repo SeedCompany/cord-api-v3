@@ -5,7 +5,7 @@ import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive } from 'type-fest';
 import { BaseNode } from '~/core/database/results';
 import { e } from '~/core/edgedb';
-import { RegisterResource } from '~/core/resources';
+import { LinkTo, RegisterResource } from '~/core/resources';
 import {
   Calculated,
   DateInterval,
@@ -71,7 +71,7 @@ class Engagement extends ChangesetAwareResource {
 
   declare readonly __typename: 'LanguageEngagement' | 'InternshipEngagement';
 
-  readonly project: ID;
+  readonly project: LinkTo<'Project'>;
 
   @Field(() => IProject)
   declare readonly parent: BaseNode;
