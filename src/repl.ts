@@ -1,6 +1,8 @@
 import * as commonLib from '@seedcompany/common';
 import { runRepl } from '@seedcompany/nest';
-import * as fs from 'fs';
+import * as scripture from '@seedcompany/scripture';
+import { readFileSync } from 'fs';
+import * as fs from 'fs/promises';
 // eslint-disable-next-line no-restricted-imports
 import * as lodash from 'lodash';
 import { DateTime, Duration, Interval } from 'luxon';
@@ -37,13 +39,16 @@ runRepl({
       many,
       maybeMany,
       common: { ...commonLib, ...common },
+      scripture,
+      ...lodash.pick(scripture, 'Book', 'Chapter', 'Verse'),
+      fs,
       // eslint-disable-next-line @typescript-eslint/naming-convention
       __: lodash, // single underscore is "last execution result"
       lodash,
       session,
       sessionFor: session.withRoles,
       Resources,
-      loadPnp: (filepath: string) => Pnp.fromBuffer(fs.readFileSync(filepath)),
+      loadPnp: (filepath: string) => Pnp.fromBuffer(readFileSync(filepath)),
     };
   },
 });

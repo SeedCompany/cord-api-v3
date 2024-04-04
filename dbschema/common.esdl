@@ -17,6 +17,8 @@ module default {
     )
   );
   
+  scalar type nanoid extending str;
+  
   scalar type RichText extending json;
   
   # A fake function to produce valid EdgeQL syntax.
@@ -26,15 +28,5 @@ module default {
   
   # Get the inclusive upper bound of the given date range.
   function date_range_get_upper(period: range<cal::local_date>) -> cal::local_date
-    using ((
-      with
-        e := assert_exists(range_get_upper(period))
-        # https://github.com/edgedb/edgedb/issues/6786
-        # e - <cal::date_duration>"1 day"
-        select cal::to_local_date(
-          <int64>cal::date_get(e, 'year'),
-          <int64>cal::date_get(e, 'month'),
-          <int64>cal::date_get(e, 'day') - 1,
-        )
-    ));
+    using (<cal::local_date><str>assert_exists(range_get_upper(period)) - <cal::date_duration>"1 day");
 }

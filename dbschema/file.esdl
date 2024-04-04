@@ -9,6 +9,9 @@ module default {
   # TODO how to front latest version info?
   type File extending File::Node {
     required mimeType: str;
+    required latestVersion: File::Version;
+
+    single media := .latestVersion.<file[is Media];
   }
 }
   

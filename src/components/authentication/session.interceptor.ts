@@ -11,10 +11,8 @@ import {
   GqlContextType as GqlRequestType,
 } from '@nestjs/graphql';
 import { csv } from '@seedcompany/common';
-import { isUUID } from 'class-validator';
 import { Request } from 'express';
 import { GraphQLResolveInfo } from 'graphql';
-import { from, lastValueFrom } from 'rxjs';
 import {
   GqlContextType,
   ID,
@@ -27,7 +25,6 @@ import {
   UnauthenticatedException,
 } from '~/common';
 import { ConfigService } from '~/core';
-import { EdgeDB } from '~/core/edgedb';
 import { rolesForScope } from '../authorization';
 import { AuthenticationService } from './authentication.service';
 
@@ -37,27 +34,17 @@ export class SessionInterceptor implements NestInterceptor {
     @Inject(forwardRef(() => AuthenticationService))
     private readonly auth: AuthenticationService & {},
     private readonly config: ConfigService,
-    private readonly edgeDB: EdgeDB,
   ) {}
 
   async intercept(executionContext: ExecutionContext, next: CallHandler) {
     const type = executionContext.getType<GqlRequestType>();
-    let session: Session | undefined;
     if (type === 'graphql') {
-      session = await this.handleGql(executionContext);
+      await this.handleGql(executionContext);
     } else if (type === 'http') {
-      session = await this.handleHttp(executionContext);
+      await this.handleHttp(executionContext);
     }
-    // TODO temporarily check if UUID before applying global.
-    // Once migration is complete this can be removed.
-    const currentUserId =
-      session?.userId && isUUID(session.userId) ? session.userId : undefined;
-    return from(
-      this.edgeDB.withOptions(
-        (options) => options.withGlobals({ currentUserId }),
-        async () => await lastValueFrom(next.handle()),
-      ),
-    );
+
+    return next.handle();
   }
 
   private async handleHttp(executionContext: ExecutionContext) {
@@ -70,7 +57,7 @@ export class SessionInterceptor implements NestInterceptor {
       return;
     }
     const request = executionContext.switchToHttp().getRequest();
-    return (request.session = await this.hydrateSession({ request }));
+    request.session = await this.hydrateSession({ request });
   }
 
   private async handleGql(executionContext: ExecutionContext) {
@@ -78,10 +65,10 @@ export class SessionInterceptor implements NestInterceptor {
     const ctx = gqlExecutionContext.getContext<GqlContextType>();
     const info = gqlExecutionContext.getInfo<GraphQLResolveInfo>();
 
-    if (!ctx.session && info.fieldName !== 'session') {
-      return (ctx.session = await this.hydrateSession(ctx));
+    if (!ctx.session$.value && info.fieldName !== 'session') {
+      const session = await this.hydrateSession(ctx);
+      ctx.session$.next(session);
     }
-    return undefined;
   }
 
   async hydrateSession(context: Pick<GqlContextType, 'request'>) {

@@ -13,7 +13,7 @@ export class SearchInput extends PaginationInput {
     nullable: true,
     description: 'Limit results to one of these types',
   })
-  type?: SearchType[];
+  type?: readonly SearchType[];
 }
 
 @ObjectType()
@@ -21,7 +21,7 @@ export abstract class SearchOutput {
   @Field(() => [SearchResult], {
     description: 'The search string to look for.',
   })
-  readonly items: SearchResult[];
+  readonly items: readonly SearchResult[];
 
   // skipping total, hasMore for now in-case it's hard to do.
 }

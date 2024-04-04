@@ -11,6 +11,7 @@ import {
   UnsecuredDto,
   Variant,
 } from '~/common';
+import { e } from '~/core/edgedb';
 import { RegisterResource } from '~/core/resources';
 import { Product, ProductStep } from '../../product';
 import { ProgressReport } from '../../progress-report/dto';
@@ -86,14 +87,16 @@ export type UnsecuredProductProgress = Merge<
   }
 >;
 
-@RegisterResource()
+@RegisterResource({ db: e.ProgressReport.ProductProgress.Step })
 @ObjectType({
   description: `The progress of a product's step for a given report`,
 })
 export class StepProgress {
   static readonly Props = keysOf<StepProgress>();
   static readonly SecuredProps = keysOf<SecuredProps<StepProgress>>();
-  static readonly Parent = 'dynamic'; // [Product, ProgressReport]
+  static readonly Parent = import('../../progress-report/dto').then(
+    (m) => m.ProgressReport, // technically ProgressReport & Product
+  );
   static readonly Variants = ProgressReportVariantProgress.Variants;
   static readonly ConfirmThisClassPassesSensitivityToPolicies = true;
 
@@ -119,5 +122,8 @@ export class StepProgress {
 declare module '~/core/resources/map' {
   interface ResourceMap {
     StepProgress: typeof StepProgress;
+  }
+  interface ResourceDBMap {
+    StepProgress: typeof e.ProgressReport.ProductProgress.Step;
   }
 }

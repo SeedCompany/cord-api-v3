@@ -2,12 +2,17 @@ module default {
   type ProgressReport extending PeriodicReport, Engagement::Child {
     overloaded container: LanguageEngagement;
     overloaded engagement: LanguageEngagement;
+
+    status := .latestEvent.status ?? ProgressReport::Status.NotStarted;
+    latestEvent := (select .workflowEvents order by .at desc limit 1);
+    workflowEvents := .<report[is ProgressReport::WorkflowEvent];
+
     single varianceExplanation := .<report[is ProgressReport::VarianceExplanation];
   }
 }
 
 module ProgressReport {
-   abstract type Child extending Engagement::Child {
+  abstract type Child extending Engagement::Child {
     annotation description := "\
       A type that is a child of a progress report. \
 
@@ -26,13 +31,73 @@ module ProgressReport {
     );
   }
 
+  type TeamNews extending ProgressReport::Child, Prompt::PromptVariantResponse {
+    overloaded container: default::ProgressReport;
+  }
+  type CommunityStory extending ProgressReport::Child, Prompt::PromptVariantResponse {
+    overloaded container: default::ProgressReport;
+  }
+  type Highlight extending ProgressReport::Child, Prompt::PromptVariantResponse {
+    overloaded container: default::ProgressReport;
+  }
+
   type VarianceExplanation extending ProgressReport::Child {
     overloaded report {
       constraint exclusive;
     };
 
-    multi reasons: str; 
+    multi reasons: str;
 
     comments: default::RichText;
   }
+
+  module Media {
+    type VariantGroup;
+  }
+  type Media extending ProgressReport::Child, Mixin::Owned {
+    required file: default::File;
+    required single media := assert_exists(.file.media);
+
+    required variantGroup: ProgressReport::Media::VariantGroup;
+    required variant: str;
+    constraint exclusive on ((.variantGroup, .variant));
+    trigger deleteEmptyVariantGroup after delete for each do (
+      delete __old__.variantGroup
+      filter not exists (select Media filter .variantGroup = __old__.variantGroup)
+    );
+
+    category: str;
+  }
+
+  type WorkflowEvent {
+    required report: default::ProgressReport {
+      readonly := true;
+    };
+    required who: default::User {
+      readonly := true;
+      default := default::currentUser;
+    };
+    required at: datetime {
+      readonly := true;
+      default := datetime_of_statement();
+    };
+    transitionId: default::nanoid {
+      readonly := true;
+    };
+    required status: Status {
+      readonly := true;
+    };
+    notes: default::RichText {
+      readonly := true;
+    };
+  }
+
+  scalar type Status extending enum<
+    NotStarted,
+    InProgress,
+    PendingTranslation,
+    InReview,
+    Approved,
+    Published,
+  >;
 }

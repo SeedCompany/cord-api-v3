@@ -1,12 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { DateTime } from 'luxon';
-import { e, EdgeDB } from '~/core/edgedb';
+import { disableAccessPolicies, e, EdgeDB } from '~/core/edgedb';
 import { AdminRepository } from './admin.repository';
 
 @Injectable()
 export class AdminEdgeDBRepository extends AdminRepository {
-  constructor(private readonly edgedb: EdgeDB) {
+  private readonly edgedb: EdgeDB;
+  constructor(edgedb: EdgeDB) {
     super();
+    this.edgedb = edgedb.withOptions(disableAccessPolicies);
   }
 
   async finishing(callback: () => Promise<void>) {

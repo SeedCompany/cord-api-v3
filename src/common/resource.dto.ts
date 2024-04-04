@@ -4,7 +4,7 @@ import { LazyGetter as Once } from 'lazy-get-decorator';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { inspect } from 'util';
-import type { ResourceDBMap, ResourceMap } from '~/core';
+import type { ResourceDBMap, ResourceName } from '~/core';
 import { $, e } from '~/core/edgedb/reexports';
 import { ScopedRole } from '../components/authorization';
 import { CalculatedSymbol } from './calculated.decorator';
@@ -55,7 +55,7 @@ export abstract class Resource extends DataObject {
 
   // A list of non-global roles the requesting user has available for this object.
   // This is used by the authorization module to determine permissions.
-  readonly scope?: ScopedRole[];
+  readonly scope?: readonly ScopedRole[];
 }
 
 type Thunk<T> = T | (() => T);
@@ -153,6 +153,9 @@ export class EnhancedResource<T extends ResourceShape<any>> {
   get hasParent() {
     return !!this.type.Parent;
   }
+  get isEmbedded() {
+    return this.type.Parent === 'dynamic';
+  }
 
   @Once()
   get securedPropsPlusExtra(): ReadonlySet<
@@ -241,6 +244,9 @@ export class EnhancedResource<T extends ResourceShape<any>> {
     return new Set(props);
   }
 
+  get hasDB() {
+    return !!EnhancedResource.dbTypes.get(this.type);
+  }
   get db(): DBType<T> {
     const type = EnhancedResource.dbTypes.get(this.type);
     if (!type) {
@@ -284,23 +290,11 @@ export const isResourceClass = <T>(
 ): cls is ResourceShape<T> =>
   'Props' in cls && Array.isArray(cls.Props) && cls.Props.length > 0;
 
-export type ResourceName<TResourceStatic extends ResourceShape<any>> =
-  ResourceShape<any> extends TResourceStatic
-    ? string // short-circuit non-specific types
-    : {
-        [Name in keyof ResourceMap]: ResourceMap[Name] extends TResourceStatic // Only self or subclasses
-          ? TResourceStatic extends ResourceMap[Name] // Exclude subclasses
-            ? Name
-            : never
-          : never;
-      }[keyof ResourceMap] &
-        string;
-
 export type DBType<TResourceStatic extends ResourceShape<any>> =
   ResourceShape<any> extends TResourceStatic
     ? typeof e.Resource // short-circuit non-specific types
-    : ResourceName<TResourceStatic> extends keyof ResourceDBMap
-    ? ResourceDBMap[ResourceName<TResourceStatic>] extends infer T extends $.$expr_PathNode
+    : ResourceName<TResourceStatic> extends `${infer Name extends keyof ResourceDBMap}`
+    ? ResourceDBMap[Name] extends infer T extends $.$expr_PathNode
       ? T
       : never
     : never;

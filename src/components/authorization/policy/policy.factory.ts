@@ -3,7 +3,7 @@ import {
   DiscoveryService,
 } from '@golevelup/nestjs-discovery';
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { mapEntries, mapValues } from '@seedcompany/common';
+import { entries, mapEntries, mapValues } from '@seedcompany/common';
 import { pick, startCase } from 'lodash';
 import { DeepWritable, Writable } from 'ts-essentials';
 import { keys as keysOf } from 'ts-transformer-keys';
@@ -39,9 +39,14 @@ export interface Policy {
   powers: Set<Power>;
 }
 
+interface PlainPolicy extends Pick<Policy, 'name' | 'roles'> {
+  grants: WritableGrants;
+}
+
 @Injectable()
 export class PolicyFactory implements OnModuleInit {
   private policies?: Policy[];
+  private dbPolicies?: Policy[];
 
   constructor(
     private readonly grantersFactory: GrantersFactory,
@@ -56,6 +61,13 @@ export class PolicyFactory implements OnModuleInit {
     return this.policies;
   }
 
+  getDBPolicies() {
+    if (!this.dbPolicies) {
+      throw new Error('Policies are not available yet.');
+    }
+    return this.dbPolicies;
+  }
+
   async onModuleInit() {
     const discoveredPolicies =
       await this.discovery.providersWithMetaAtKey<PolicyMetadata>(
@@ -64,18 +76,32 @@ export class PolicyFactory implements OnModuleInit {
 
     const resGranter = await this.grantersFactory.makeGranters();
 
-    this.policies = await Promise.all(
-      discoveredPolicies.map((discovered) =>
-        this.buildPolicy(resGranter, discovered),
-      ),
+    const plainPolicies = discoveredPolicies.map((discovered) =>
+      this.buildPlainPolicy(resGranter, discovered),
     );
+    this.policies = plainPolicies.map((plain) => {
+      const grants = cloneGrants(plain.grants);
+      this.defaultInterfacesFromAllImplementationsIntersection(grants);
+      this.defaultImplementationsFromInterfaces(grants);
+
+      return this.enhancePolicy({ ...plain, grants });
+    });
+    this.dbPolicies = plainPolicies.map((plain) => {
+      const grants = cloneGrants(plain.grants);
+      this.stripImplementationsMatchingInterfaces(grants);
+
+      return this.enhancePolicy({ ...plain, grants });
+    });
   }
 
-  async buildPolicy(
+  private buildPlainPolicy(
     resGranter: ResourcesGranter,
     { meta, discoveredClass }: DiscoveredClassWithMeta<PolicyMetadata>,
-  ): Promise<Policy> {
+  ): PlainPolicy {
+    const name = startCase(discoveredClass.name.replace(/Policy$/, ''));
+
     const roles = meta.role === 'all' ? undefined : many(meta.role);
+
     const grants: WritableGrants = new Map();
     const resultList = many(meta.def(resGranter)).flat();
     for (const resourceGrant of resultList) {
@@ -108,24 +134,25 @@ export class PolicyFactory implements OnModuleInit {
       }
     }
 
-    this.defaultInterfacesFromImplementationsIntersection(grants);
-    this.defaultImplementationsFromInterfaces(grants);
-    this.defaultRelationEdgesToResourceLevel(grants);
+    return { name, roles, grants };
+  }
 
-    const powers = this.determinePowers(grants);
+  private enhancePolicy(plain: PlainPolicy): Policy {
+    this.defaultRelationEdgesToResourceLevel(plain.grants);
 
-    const name = startCase(discoveredClass.name.replace(/Policy$/, ''));
-    const policy: Policy = { name, roles, grants, powers };
+    const powers = this.determinePowers(plain.grants);
+
+    const policy: Policy = { ...plain, powers };
     this.attachPolicyToConditions(policy);
 
     return policy;
   }
 
   /**
-   * Declare permissions of missing interfaces based on the intersection of
-   * the permissions of its implementations
+   * Declare permissions of missing interfaces based on the intersection
+   * its implementations
    */
-  private defaultInterfacesFromImplementationsIntersection(
+  private defaultInterfacesFromAllImplementationsIntersection(
     grantMap: WritableGrants,
   ) {
     const interfaceCandidates = new Set(
@@ -181,6 +208,48 @@ export class PolicyFactory implements OnModuleInit {
       };
 
       grantMap.set(interfaceRes, interfaceGrants);
+    }
+  }
+
+  private stripImplementationsMatchingInterfaces(grantMap: WritableGrants) {
+    const interfaceCandidates = new Set(
+      [...grantMap.keys()]
+        .map((res) => this.resourcesHost.getInterfaces(res))
+        .flat(),
+    );
+
+    for (const interfaceRes of interfaceCandidates) {
+      const interfaceGrants = grantMap.get(interfaceRes);
+      // Skip if policy hasn't declared
+      if (!interfaceCandidates) {
+        continue;
+      }
+
+      const impls = this.resourcesHost.getImplementations(interfaceRes);
+
+      for (const impl of impls) {
+        const implGrants = grantMap.get(impl);
+        if (!implGrants) {
+          continue;
+        }
+        // Only bother checking object level read/create/delete as that is all our DB AP's use
+        const isSame = entries(implGrants.objectLevel).every(
+          ([action, perm]) => {
+            if (action === 'edit') {
+              return true;
+            }
+            const ifacePerm = interfaceGrants?.objectLevel[action];
+            return (
+              ifacePerm &&
+              perm &&
+              Condition.id(ifacePerm) === Condition.id(perm)
+            );
+          },
+        );
+        if (isSame) {
+          grantMap.delete(impl);
+        }
+      }
     }
   }
 
@@ -271,7 +340,7 @@ export class PolicyFactory implements OnModuleInit {
 
   private mergePermission(
     perms: ReadonlyArray<Permission | undefined>,
-    mergeConditions: (...conditions: Array<Condition<any>>) => Condition<any>,
+    mergeConditions: (...conditions: Condition[]) => Condition,
   ): Permission | undefined {
     const cleaned = perms.filter((p): p is Permission => p != null);
     if (cleaned.length === 0) {
@@ -287,7 +356,7 @@ export class PolicyFactory implements OnModuleInit {
       return true;
     }
     // Since we've checked for booleans above, this is safe.
-    const conditions = cleaned as Array<Condition<any>>;
+    const conditions = cleaned as Condition[];
     // This could result in duplicates entries for the same condition.
     // An optimization would be to de-dupe those.
     return mergeConditions(...conditions);
@@ -321,3 +390,19 @@ export class PolicyFactory implements OnModuleInit {
     return powers;
   }
 }
+
+const cloneGrants = (grants: Grants): WritableGrants =>
+  new Map([
+    ...mapValues(grants, (_, grant) => ({
+      objectLevel: clonePermissions(grant.objectLevel),
+      propLevel: mapValues(grant.propLevel, (_, perms) =>
+        clonePermissions(perms),
+      ).asRecord,
+      childRelations: mapValues(grant.childRelations, (_, perms) =>
+        clonePermissions(perms),
+      ).asRecord,
+    })),
+  ]);
+
+const clonePermissions = (permissions: Permissions<string>) =>
+  mapEntries(permissions, (x) => x).asRecord;

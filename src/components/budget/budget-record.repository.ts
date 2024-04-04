@@ -163,6 +163,8 @@ export class BudgetRecordRepository extends DtoRepository<
             node('node'),
             relation('in', '', 'record'),
             node('budget', labelForView('Budget', view)),
+            relation('out', '', 'status', ACTIVE),
+            node('status'),
           ])
           .match([
             node('node'),
@@ -176,6 +178,7 @@ export class BudgetRecordRepository extends DtoRepository<
               parent: 'budget',
               organization: 'organization.id',
               changeset: 'changeset.id',
+              status: 'status.value',
             }).as(outputVar),
           ),
       );

@@ -12,8 +12,12 @@ jobs:
 
       - uses: edgedb/setup-edgedb@v1
 
+      - name: Generate EdgeDB TS files
+        shell: bash
+        run: yarn edgedb:gen
+
       - name: Schema Migrations In Sync
-        run: edgedb migration status
+        run: yarn console edgedb migration status
         if: github.event.pull_request.draft == false
 
       - name: Validate seed scripts are error free

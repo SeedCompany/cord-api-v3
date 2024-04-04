@@ -11,7 +11,7 @@ export abstract class UpdateProjectMember {
   readonly id: ID;
 
   @Field(() => [Role], { nullable: true })
-  readonly roles?: Role[];
+  readonly roles?: readonly Role[];
 }
 
 @InputType()

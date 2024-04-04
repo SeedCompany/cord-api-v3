@@ -6,7 +6,7 @@ runs:
     - name: Setup EdgeDB
       uses: edgedb/setup-edgedb@v1
 
-    - run: edgedb configure set session_idle_transaction_timeout 30s
+    - run: edgedb configure set session_idle_transaction_timeout 5min
       shell: bash
 
     - run: edgedb migrate --dev-mode

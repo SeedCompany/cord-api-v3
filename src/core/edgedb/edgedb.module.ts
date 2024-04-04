@@ -11,9 +11,11 @@ import { EdgeDB } from './edgedb.service';
 import { Options } from './options';
 import { OptionsContext } from './options.context';
 import { Client } from './reexports';
+import { EdgeDBSchemaAstModule } from './schema-ast/schema-ast.module';
 import { TransactionContext } from './transaction.context';
 
 @Module({
+  imports: [EdgeDBSchemaAstModule],
   providers: [
     {
       provide: 'DEFAULT_OPTIONS',
@@ -37,7 +39,7 @@ import { TransactionContext } from './transaction.context';
           logging: false,
         });
 
-        Object.assign(client, { options: options.current });
+        Object.assign(client, { options: options.currentAsLazyRef });
 
         if (config.databaseEngine === 'edgedb') {
           await registerCustomScalarCodecs(client, codecs);

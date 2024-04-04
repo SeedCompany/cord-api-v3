@@ -39,7 +39,7 @@ export abstract class CreatePerson {
 
   @Field(() => [Role], { nullable: true })
   @Transform(({ value }) => uniq(value))
-  readonly roles?: Role[];
+  readonly roles?: readonly Role[];
 
   @Field(() => String, { nullable: true })
   readonly title?: string | null;

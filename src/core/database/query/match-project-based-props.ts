@@ -160,7 +160,7 @@ export const matchUserGloballyScopedRoles =
           relation('out', '', 'roles', ACTIVE),
           node('role', 'Property'),
         ])
-        .return<{ [K in Output]: GlobalScopedRole[] }>(
+        .return<{ [K in Output]: readonly GlobalScopedRole[] }>(
           reduce(
             'scopedRoles',
             [],

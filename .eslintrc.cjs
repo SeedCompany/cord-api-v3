@@ -191,6 +191,13 @@ const config = {
         'no-console': 'off',
       },
     },
+    {
+      files: './dbschema/seeds/*.ts',
+      rules: {
+        'import/no-default-export': 'off',
+        // 'import/no-named-export': 'error',
+      },
+    },
   ],
 };
 

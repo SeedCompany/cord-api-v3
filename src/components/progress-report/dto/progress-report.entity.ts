@@ -8,6 +8,7 @@ import {
   SecuredProps,
 } from '~/common';
 import { BaseNode } from '~/core/database/results';
+import { e } from '~/core/edgedb';
 import { RegisterResource } from '~/core/resources';
 import { LanguageEngagement } from '../../engagement/dto';
 import { DefinedFile } from '../../file';
@@ -17,7 +18,7 @@ import { ProgressReportHighlight } from './highlights.dto';
 import { SecuredProgressReportStatus as SecuredStatus } from './progress-report-status.enum';
 import { ProgressReportTeamNews } from './team-news.dto';
 
-@RegisterResource()
+@RegisterResource({ db: e.ProgressReport })
 @ObjectType({
   implements: [IPeriodicReport],
 })
@@ -56,5 +57,8 @@ export class SecuredProgressReport extends SecuredProperty(ProgressReport) {}
 declare module '~/core/resources/map' {
   interface ResourceMap {
     ProgressReport: typeof ProgressReport;
+  }
+  interface ResourceDBMap {
+    ProgressReport: typeof e.default.ProgressReport;
   }
 }

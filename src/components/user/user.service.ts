@@ -111,9 +111,11 @@ export class UserService {
       this.verifyRolesAreAssignable(session, changes.roles);
     }
 
-    await this.userRepo.update(user, changes);
-
-    return await this.readOne(input.id, session);
+    const updated = await this.userRepo.update({
+      id: user.id,
+      ...changes,
+    });
+    return await this.secure(updated, session);
   }
 
   async delete(id: ID, session: Session): Promise<void> {
@@ -135,7 +137,7 @@ export class UserService {
     return assignableRoles;
   }
 
-  verifyRolesAreAssignable(session: Session, roles: Role[]) {
+  verifyRolesAreAssignable(session: Session, roles: readonly Role[]) {
     const allowed = this.getAssignableRoles(session);
     const invalid = roles.filter((role) => !allowed.has(role));
     if (invalid.length === 0) {

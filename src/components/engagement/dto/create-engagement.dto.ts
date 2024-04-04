@@ -89,7 +89,7 @@ export abstract class CreateInternshipEngagement extends CreateEngagement {
   readonly position?: InternshipPosition;
 
   @Field(() => [ProductMethodology], { nullable: true })
-  readonly methodologies?: ProductMethodology[];
+  readonly methodologies?: readonly ProductMethodology[];
 
   @Field({ nullable: true })
   @Type(() => CreateDefinedFileVersionInput)

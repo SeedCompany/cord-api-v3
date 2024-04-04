@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { inArray, node, relation } from 'cypher-query-builder';
-import { ID } from '../../common';
-import { CommonRepository } from '../../core';
-import { ACTIVE, listConcat, merge } from '../../core/database/query';
+import { ID } from '~/common';
+import { CommonRepository } from '~/core';
+import { ACTIVE, listConcat, merge } from '~/core/database/query';
 import { ProgressReport } from '../progress-report/dto';
 import { FetchedSummaries, ProgressSummary, SummaryPeriod } from './dto';
 
@@ -53,7 +53,7 @@ export class ProgressSummaryRepository extends CommonRepository {
       .return<{ dto: FetchedSummaries }>(
         merge(
           listConcat('collected', {
-            reportId: 'report.id',
+            report: 'report { .id }',
             totalVerses: 'totalVerses',
             totalVerseEquivalents: 'totalVerseEquivalents',
           }),

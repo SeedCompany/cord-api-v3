@@ -1,6 +1,8 @@
 import { generateQueryBuilder as runQueryBuilderGenerator } from '@edgedb/generate/dist/edgeql-js.js';
 import { groupBy } from '@seedcompany/common';
-import { Directory } from 'ts-morph';
+import type { ts } from '@ts-morph/common';
+import { Directory, Node } from 'ts-morph';
+import { codecs } from '../codecs';
 import { customScalars } from './scalars';
 import { addCustomScalarImports, GeneratorParams } from './util';
 
@@ -27,6 +29,7 @@ export async function generateQueryBuilder({
   updateCastMapsForOurCustomScalars(qbDir);
   changeImplicitIDType(qbDir);
   allowOrderingByEnums(qbDir);
+  adjustToImmutableTypes(qbDir);
 }
 
 function addJsExtensionDeepPathsOfEdgedbLibrary(qbDir: Directory) {
@@ -42,7 +45,10 @@ function addJsExtensionDeepPathsOfEdgedbLibrary(qbDir: Directory) {
 }
 
 function fixCustomScalarsImports(qbDir: Directory) {
-  for (const scalars of groupBy(customScalars.values(), (s) => s.module)) {
+  for (const scalars of groupBy(
+    codecs.map((c) => c.info),
+    (s) => s.module,
+  )) {
     const moduleFile = qbDir.addSourceFileAtPath(
       `modules/${scalars[0]!.module}.ts`,
     );
@@ -54,22 +60,19 @@ function changeImplicitIDType(qbDir: Directory) {
   // Change implicit return shapes that are just the id to be ID type.
   const typesystem = qbDir.addSourceFileAtPath(`typesystem.ts`);
   addCustomScalarImports(typesystem, [customScalars.get('ID')!]);
-  typesystem.replaceWithText(
-    typesystem.getFullText().replaceAll('{ id: string }', '{ id: ID }'),
+  replaceText(typesystem, (prev) =>
+    prev.replaceAll('{ id: string }', '{ id: ID }'),
   );
 }
 
 function updateCastMapsForOurCustomScalars(qbDir: Directory) {
   const file = qbDir.addSourceFileAtPath('castMaps.ts');
-  file.insertImportDeclaration(1, {
-    namedImports: ['DateTime'],
-    moduleSpecifier: 'luxon',
-  });
-  file.insertImportDeclaration(1, {
-    namedImports: ['CalendarDate'],
-    moduleSpecifier: '~/common',
-    leadingTrivia: '\n',
-  });
+  addCustomScalarImports(
+    file,
+    [customScalars.get('DateTime')!, customScalars.get('CalendarDate')!],
+    1,
+    false,
+  );
   const updated = file
     .getText()
     // Update Luxon instances to point to correct scalar UUIDs
@@ -95,11 +98,7 @@ function updateCastMapsForOurCustomScalars(qbDir: Directory) {
 
 function updateEdgeQLRenderingForOurCustomScalars(qbDir: Directory) {
   const file = qbDir.addSourceFileAtPath('toEdgeQL.ts');
-  file.insertImportDeclaration(1, {
-    namedImports: ['DateTime'],
-    moduleSpecifier: 'luxon',
-    leadingTrivia: '\n',
-  });
+  addCustomScalarImports(file, [customScalars.get('DateTime')!], 1, false);
   const condition = '  } else if (val instanceof Date) {\n';
   const updated = file.getText().replace(
     condition,
@@ -117,3 +116,30 @@ function allowOrderingByEnums(qbDir: Directory) {
     .setType('TypeSet<EnumType | ScalarType | ObjectType>');
   file.fixMissingImports();
 }
+
+function adjustToImmutableTypes(qbDir: Directory) {
+  const typesystem = qbDir.addSourceFileAtPath('typesystem.ts');
+  replaceText(typesystem.getTypeAliasOrThrow('ArrayTypeToTsType'), (prev) =>
+    prev.replace(': TsType[]', ': readonly TsType[]'),
+  );
+  replaceText(
+    typesystem.getTypeAliasOrThrow('NamedTupleTypeToTsType'),
+    (prev) => prev.replace('[k in ', 'readonly [/* applied */ k in '),
+  );
+  replaceText(typesystem.getTypeAliasOrThrow('computeObjectShape'), (prev) =>
+    !prev.includes('> = typeutil')
+      ? prev
+      : prev.replaceAll('> = typeutil', '> = Readonly<typeutil').slice(0, -1) +
+        '>;',
+  );
+  replaceText(typesystem.getTypeAliasOrThrow('computeTsTypeCard'), (prev) =>
+    prev
+      .replaceAll('? T[]', '? readonly T[]')
+      .replaceAll('? [T, ...T[]]', '? readonly [T, ...T[]]'),
+  );
+}
+
+const replaceText = <N extends ts.Node>(
+  node: Node<N>,
+  replacer: (prevText: string) => string,
+) => node.replaceWithText(replacer(node.getFullText()));

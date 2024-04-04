@@ -1,9 +1,5 @@
-import { ID } from '../../common';
-import {
-  LoaderFactory,
-  LoaderOptionsOf,
-  OrderedNestDataLoader,
-} from '../../core';
+import { ID } from '~/common';
+import { LoaderFactory, LoaderOptionsOf, OrderedNestDataLoader } from '~/core';
 import { FetchedSummaries } from './dto';
 import { ProgressSummaryRepository } from './progress-summary.repository';
 
@@ -15,7 +11,7 @@ export class ProgressSummaryLoader extends OrderedNestDataLoader<FetchedSummarie
 
   getOptions() {
     return {
-      propertyKey: 'reportId',
+      propertyKey: (row) => row.report.id,
     } satisfies LoaderOptionsOf<ProgressSummaryLoader>;
   }
 

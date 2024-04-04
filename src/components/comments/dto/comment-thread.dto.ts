@@ -9,10 +9,11 @@ import {
   UnsecuredDto,
 } from '~/common';
 import { BaseNode } from '~/core/database/results';
+import { e } from '~/core/edgedb';
 import { RegisterResource } from '~/core/resources';
 import { Comment } from './comment.dto';
 
-@RegisterResource()
+@RegisterResource({ db: e.Comments.Thread })
 @ObjectType({
   implements: [Resource],
 })
@@ -37,5 +38,8 @@ export class CommentThread extends Resource {
 declare module '~/core/resources/map' {
   interface ResourceMap {
     CommentThread: typeof CommentThread;
+  }
+  interface ResourceDBMap {
+    CommentThread: typeof e.Comments.Thread;
   }
 }

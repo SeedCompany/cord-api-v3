@@ -20,10 +20,10 @@ export class ProgressReportVarianceExplanationService {
   ) {}
 
   async readMany(reports: readonly ProgressReport[], session: Session) {
-    const reportMap = mapKeys.fromList(reports, (r) => r.id).asRecord;
-    const dtos = await this.repo.readMany(reports);
+    const reportMap = mapKeys.fromList(reports, (r) => r.id).asMap;
+    const dtos = await this.repo.readMany([...reportMap.keys()]);
     return dtos.map((dto) => {
-      const report = reportMap[dto.report];
+      const report = reportMap.get(dto.report.id)!;
       const secured = this.privilegesFor(session, report).secure(dto);
       return { ...secured, report };
     });
@@ -66,7 +66,7 @@ export class ProgressReportVarianceExplanationService {
 
     this.privilegesFor(session, report).verifyChanges(changes);
 
-    await this.repo.update(report.id, changes, session);
+    await this.repo.update({ id: report.id, ...changes });
 
     return report;
   }

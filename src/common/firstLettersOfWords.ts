@@ -41,5 +41,5 @@ export function firstLettersOfWords(
 
   return limit === Infinity || limit == null
     ? letters
-    : letters.substr(0, limit);
+    : letters.slice(0, limit);
 }

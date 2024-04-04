@@ -42,7 +42,7 @@ export class GraphqlTracingPlugin implements ApolloPlugin<ContextType> {
 
         return {
           executionDidEnd: async (err) => {
-            const userId = reqContext.contextValue.session?.userId;
+            const userId = reqContext.contextValue.session$.value?.userId;
             if (userId) {
               segment.setUser?.(userId);
             }

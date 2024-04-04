@@ -1,11 +1,12 @@
 /* eslint-disable @typescript-eslint/unified-signatures */
-import { Injectable } from '@nestjs/common';
+import { Injectable, Optional } from '@nestjs/common';
 import { $, Executor } from 'edgedb';
+import { QueryArgs } from 'edgedb/dist/ifaces';
 import { retry, RetryOptions } from '~/common/retry';
 import { TypedEdgeQL } from './edgeql';
 import { ExclusivityViolationError } from './exclusivity-violation.error';
 import { InlineQueryRuntimeMap } from './generated-client/inline-queries';
-import { OptionsContext, OptionsFn } from './options.context';
+import { ApplyOptions, OptionsContext } from './options.context';
 import { Client } from './reexports';
 import { TransactionContext } from './transaction.context';
 
@@ -13,24 +14,63 @@ import { TransactionContext } from './transaction.context';
 export class EdgeDB {
   constructor(
     private readonly client: Client,
-    private readonly executor: TransactionContext,
+    private readonly transactionContext: TransactionContext,
     private readonly optionsContext: OptionsContext,
+    @Optional() private readonly childOptions: ApplyOptions[] = [],
+    @Optional() private childExecutor?: Executor,
   ) {}
+
+  private clone() {
+    return new EdgeDB(
+      this.client,
+      this.transactionContext,
+      this.optionsContext,
+      [...this.childOptions],
+      this.childExecutor,
+    );
+  }
 
   async waitForConnection(options?: RetryOptions) {
     await retry(() => this.client.ensureConnected(), options);
   }
 
+  outsideOfTransactions() {
+    const child = this.clone();
+    child.childExecutor = this.client;
+    return child;
+  }
+
+  /**
+   * Specialize the service to include these options.
+   * Note that these take priority over options defined with {@link usingOptions}
+   * @example
+   * await EdgeDB
+   *   .withOptions((options) => options.withGlobals({ ... }))
+   *   .run(...);
+   */
+  withOptions(applyOptions: ApplyOptions) {
+    const child = this.clone();
+    child.childOptions.push(applyOptions);
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    const orig = child.run;
+    child.run = ((...args: Parameters<EdgeDB['run']>) =>
+      child.childOptions.reduceRight(
+        (fn, option) => () => this.optionsContext.usingOptions(option, fn),
+        () => orig.apply(child, args),
+      )()) as EdgeDB['run'];
+    return child;
+  }
+
   /**
    * Apply options to the scope of the given function.
    * @example
-   * await EdgeDB.withOptions((options) => options.withGlobals({ ... }), async () => {
+   * await EdgeDB.usingOptions((options) => options.withGlobals({ ... }), async () => {
    *   // Queries have the options applied
    *   await EdgeDB.run(...);
    * });
    */
-  async withOptions<R>(applyOptions: OptionsFn, runWith: () => Promise<R>) {
-    return await this.optionsContext.withOptions(applyOptions, runWith);
+  get usingOptions() {
+    return this.optionsContext.usingOptions.bind(this.optionsContext);
   }
 
   /** Run a query from an edgeql string */
@@ -41,12 +81,12 @@ export class EdgeDB {
     args: Args,
   ): Promise<R>;
 
-  /** Run a query from a edgeql file */
+  /** Run a query from an edgeql file */
   run<Args, R>(
     query: (client: Executor, args: Args) => Promise<R>,
     args: Args,
   ): Promise<R>;
-  /** Run a query from a edgeql file */
+  /** Run a query from an edgeql file */
   run<R>(query: (client: Executor) => Promise<R>): Promise<R>;
 
   /** Run a query from the query builder */
@@ -58,7 +98,11 @@ export class EdgeDB {
     args: Args,
   ): Promise<R>;
 
+  /** Run raw EdgeQL without types */
+  run(query: string, args?: QueryArgs): Promise<unknown>;
+
   async run(query: any, args?: any) {
+    const executor = this.childExecutor ?? this.transactionContext.current;
     try {
       if (query instanceof TypedEdgeQL) {
         const found = InlineQueryRuntimeMap.get(query.query);
@@ -68,22 +112,22 @@ export class EdgeDB {
         const exeMethod = cardinalityToExecutorMethod[found.cardinality];
 
         // eslint-disable-next-line @typescript-eslint/return-await
-        return await this.executor.current[exeMethod](found.query, args);
+        return await executor[exeMethod](found.query, args);
       }
 
       if (query.run) {
         // eslint-disable-next-line @typescript-eslint/return-await
-        return await query.run(this.executor.current, args);
+        return await query.run(executor, args);
       }
 
       if (typeof query === 'function') {
         // eslint-disable-next-line @typescript-eslint/return-await
-        return await query(this.executor.current, args);
+        return await query(executor, args);
       }
 
       // For REPL, as this is untyped and assumes many/empty cardinality
       if (typeof query === 'string') {
-        return await this.executor.current.query(query, args);
+        return await executor.query(query, args);
       }
     } catch (e) {
       // Ignore this call in stack trace. This puts the actual query as the first.

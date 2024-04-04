@@ -74,13 +74,13 @@ export abstract class UpdateProject {
 
   @Field(() => [String], { nullable: true })
   @Transform(({ value }) => uniq(value))
-  readonly tags?: string[];
+  readonly tags?: readonly string[];
 
   @DateTimeField({ nullable: true })
   readonly financialReportReceivedAt?: DateTime;
 
   @Field(() => ReportPeriod, { nullable: true })
-  readonly financialReportPeriod?: ReportPeriod;
+  readonly financialReportPeriod?: ReportPeriod | null;
 
   @Field({ nullable: true })
   readonly presetInventory?: boolean;

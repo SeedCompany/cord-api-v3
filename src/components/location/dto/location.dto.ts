@@ -1,12 +1,8 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { e } from '~/core/edgedb';
-import { RegisterResource } from '~/core/resources';
 import {
   DbLabel,
   DbUnique,
-  ID,
-  IdOf,
   NameField,
   Resource,
   Secured,
@@ -16,8 +12,9 @@ import {
   SecuredProps,
   SecuredString,
   SecuredStringNullable,
-} from '../../../common';
-import { DefinedFile } from '../../file/dto';
+} from '~/common';
+import { e } from '~/core/edgedb';
+import { LinkTo, RegisterResource } from '~/core/resources';
 import { LocationType } from './location-type.enum';
 
 @ObjectType({
@@ -45,13 +42,13 @@ export class Location extends Resource {
   @DbLabel('IsoAlpha3')
   readonly isoAlpha3: SecuredStringNullable;
 
-  readonly fundingAccount: Secured<ID | null>;
+  readonly fundingAccount: Secured<LinkTo<'FundingAccount'> | null>;
 
-  readonly defaultFieldRegion: Secured<ID | null>;
+  readonly defaultFieldRegion: Secured<LinkTo<'FieldRegion'> | null>;
 
-  readonly defaultMarketingRegion: Secured<IdOf<Location> | null>;
+  readonly defaultMarketingRegion: Secured<LinkTo<'Location'> | null>;
 
-  readonly mapImage: DefinedFile;
+  readonly mapImage: Secured<LinkTo<'File'> | null>;
 }
 
 @ObjectType({

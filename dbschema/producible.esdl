@@ -5,7 +5,7 @@ module default {
     };
     
     scripture: Scripture::Collection {
-      on source delete delete target if orphan;
+      on source delete delete target;
       # https://github.com/edgedb/edgedb/issues/5827
       # rewrite insert, update using (
       #   if exists .scripture.verses then .scripture else <Scripture::Collection>{}
@@ -19,11 +19,13 @@ module default {
       )
     );
     
-    trigger updateDerivativeProducts after update for each do (
-      update __new__.<produces[is DerivativeScriptureProduct]
-      filter __new__.scripture != __old__.scripture and not exists .scriptureOverride
-      set { scripture := __new__.scripture }
-    );
+    trigger updateDerivativeProducts after update for each
+      when (__old__.scripture ?!= __new__.scripture)
+      do (
+        update DerivativeScriptureProduct
+        filter .produces = __new__ and not exists .scriptureOverride
+        set { scripture := __new__.scripture }
+      );
   }
   
   type EthnoArt extending Producible;

@@ -1,4 +1,5 @@
 import { createClient } from 'edgedb';
+import fs from 'node:fs/promises';
 import { IndentationText, Project, QuoteKind } from 'ts-morph';
 import { codecs, registerCustomScalarCodecs } from '../codecs';
 import { findHydrationShapes } from './find-hydration-shapes';
@@ -39,7 +40,10 @@ import { GeneratorParams } from './util';
   try {
     params.hydrators = await findHydrationShapes(params);
     await generateQueryBuilder(params);
-    await generateSchema(params);
+
+    const _skipped = generateSchema; // Skipping for now. Not proven useful.
+    await fs.rm('src/core/edgedb/schema').catch(() => null);
+
     await generateQueryFiles(params);
     await generateInlineQueries(params);
   } finally {

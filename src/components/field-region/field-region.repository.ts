@@ -9,7 +9,6 @@ import {
   UnsecuredDto,
 } from '~/common';
 import { DtoRepository } from '~/core';
-import { ChangesOf } from '~/core/database/changes';
 import {
   ACTIVE,
   createNode,
@@ -64,11 +63,8 @@ export class FieldRegionRepository extends DtoRepository(FieldRegion) {
     return await this.readOne(result.id);
   }
 
-  async update(
-    existing: Pick<FieldRegion, 'id'>,
-    changes: ChangesOf<FieldRegion, UpdateFieldRegion>,
-  ) {
-    const { directorId, fieldZoneId, ...simpleChanges } = changes;
+  async update(changes: UpdateFieldRegion) {
+    const { id, directorId, fieldZoneId, ...simpleChanges } = changes;
 
     if (directorId) {
       // TODO update director - lol this was never implemented
@@ -78,9 +74,9 @@ export class FieldRegionRepository extends DtoRepository(FieldRegion) {
       // TODO update field zone - neither was this
     }
 
-    await this.updateProperties(existing, simpleChanges);
+    await this.updateProperties({ id }, simpleChanges);
 
-    return await this.readOne(existing.id);
+    return await this.readOne(id);
   }
 
   protected hydrate() {

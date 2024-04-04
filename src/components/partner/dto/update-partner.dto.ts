@@ -28,11 +28,11 @@ export abstract class UpdatePartner {
 
   @Field(() => [PartnerType], { nullable: true })
   @Transform(({ value }) => uniq(value))
-  readonly types?: PartnerType[];
+  readonly types?: readonly PartnerType[];
 
   @Field(() => [FinancialReportingType], { nullable: true })
   @Transform(({ value }) => uniq(value))
-  readonly financialReportingTypes?: FinancialReportingType[];
+  readonly financialReportingTypes?: readonly FinancialReportingType[];
 
   @Field({ nullable: true })
   @Matches(/^[A-Z]{3}$/, {

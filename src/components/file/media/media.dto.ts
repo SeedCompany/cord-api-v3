@@ -21,6 +21,7 @@ import {
   ServerException,
 } from '~/common';
 import { BaseNode } from '~/core/database/results';
+import { e } from '~/core/edgedb';
 import { RegisterResource } from '~/core/resources';
 import { FileVersion } from '../dto';
 
@@ -69,7 +70,7 @@ export class MediaUserMetadata extends DataObject {
 @InterfaceType({
   resolveType: resolveMedia,
 })
-@RegisterResource()
+@RegisterResource({ db: e.Media })
 export class Media extends MediaUserMetadata {
   static readonly Props: string[] = keysOf<Media>();
   static readonly SecuredProps: string[] = keysOf<SecuredProps<Media>>();
@@ -147,5 +148,8 @@ export class Audio extends TemporalMedia {
 declare module '~/core/resources/map' {
   interface ResourceMap {
     Media: typeof Media;
+  }
+  interface ResourceDBMap {
+    Media: typeof e.default.Media;
   }
 }

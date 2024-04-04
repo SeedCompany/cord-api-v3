@@ -4,6 +4,7 @@ import { EmailService } from '@seedcompany/nestjs-email';
 import JWT from 'jsonwebtoken';
 import { DateTime } from 'luxon';
 import { Writable } from 'ts-essentials';
+import { sessionFromContext } from '~/common/session';
 import {
   DuplicateException,
   GqlContextType,
@@ -73,7 +74,7 @@ export class AuthenticationService {
   }
 
   async login(input: LoginInput, session: Session): Promise<ID> {
-    const hash = await this.repo.getPasswordHash(input, session);
+    const hash = await this.repo.getPasswordHash(input);
 
     if (!(await this.crypto.verify(hash, input.password))) {
       throw new UnauthenticatedException('Invalid credentials');
@@ -89,16 +90,14 @@ export class AuthenticationService {
   }
 
   async updateSession(context: GqlContextType) {
-    if (!context.session) {
-      throw new NoSessionException();
-    }
-    const newSession = await this.resumeSession(context.session.token);
-    context.session = newSession; // replace session given with session pipe
+    const prev = sessionFromContext(context);
+    const newSession = await this.resumeSession(prev.token);
+    context.session$.next(newSession);
     return newSession;
   }
 
   async logout(token: string): Promise<void> {
-    await this.repo.deleteSessionToken(token);
+    await this.repo.disconnectUserFromSession(token);
   }
 
   async resumeSession(

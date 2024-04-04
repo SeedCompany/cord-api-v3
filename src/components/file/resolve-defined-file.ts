@@ -12,7 +12,7 @@ import { FileNodeLoader } from './file-node.loader';
 
 export async function resolveDefinedFile(
   loader: LoaderOf<FileNodeLoader>,
-  input: Secured<FileId | LinkTo<'File'>>,
+  input: Secured<FileId | LinkTo<'File'> | null>,
 ): Promise<SecuredFile> {
   return await mapSecuredValue(input, async (file) => {
     const fileId = isIdLike(file) ? file : file.id;

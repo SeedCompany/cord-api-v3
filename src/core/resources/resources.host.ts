@@ -2,32 +2,32 @@ import { Injectable } from '@nestjs/common';
 import { GraphQLSchemaHost } from '@nestjs/graphql';
 import { CachedByArg, mapKeys } from '@seedcompany/common';
 import { isObjectType } from 'graphql';
+import { LazyGetter as Once } from 'lazy-get-decorator';
 import { mapValues } from 'lodash';
-import { ConditionalKeys, LiteralUnion, ValueOf } from 'type-fest';
+import { ValueOf } from 'type-fest';
 import {
-  DBName,
   EnhancedResource,
   InvalidIdForTypeException,
   ResourceShape,
   ServerException,
 } from '~/common';
-import { ResourceDBMap, ResourceMap } from './map';
+import { ResourceMap } from './map';
 import { __privateDontUseThis } from './resource-map-holder';
+import {
+  AllResourceDBNames,
+  ResourceName,
+  ResourceNameLike,
+  ResourceStaticFromName,
+} from './resource-name.types';
 
 export type EnhancedResourceMap = {
   [K in keyof ResourceMap]: EnhancedResource<ResourceMap[K]>;
 };
 
-type LooseResourceName = LiteralUnion<keyof ResourceMap, string>;
-
 export type ResourceLike =
   | ResourceShape<any>
   | EnhancedResource<any>
-  | LooseResourceName;
-
-type ResourceNameFromDBName<K extends DBName<ValueOf<ResourceDBMap>>> =
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  ConditionalKeys<ResourceDBMap, { __element__: { __name__: K } }>;
+  | ResourceNameLike;
 
 @Injectable()
 export class ResourcesHost {
@@ -66,20 +66,18 @@ export class ResourcesHost {
     return resource;
   }
 
-  getByDynamicName(name: LooseResourceName): EnhancedResource<any> {
+  getByDynamicName(name: ResourceNameLike): EnhancedResource<any> {
     return this.getByName(name as any);
   }
 
-  getByEdgeDB<K extends keyof ResourceMap>(
-    name: K,
-  ): EnhancedResource<ValueOf<Pick<ResourceMap, K>>>;
-  getByEdgeDB<K extends DBName<ValueOf<ResourceDBMap>>>(
-    name: K,
-  ): EnhancedResource<ValueOf<Pick<ResourceMap, ResourceNameFromDBName<K>>>>;
-  getByEdgeDB(name: string): EnhancedResource<any>;
-  getByEdgeDB(name: string) {
-    const fqnMap = this.edgeDBFQNMap();
-    const resByFQN = fqnMap.get(
+  getByEdgeDB<Name extends ResourceNameLike | AllResourceDBNames>(
+    name: Name,
+  ): EnhancedResource<
+    string extends Name
+      ? ResourceShape<any>
+      : ResourceStaticFromName<ResourceName<Name>>
+  > {
+    const resByFQN = this.byEdgeFQN.get(
       name.includes('::') ? name : `default::${name}`,
     );
     if (resByFQN) {
@@ -95,18 +93,11 @@ export class ResourcesHost {
     );
   }
 
-  @CachedByArg()
-  private edgeDBFQNMap() {
+  @Once() get byEdgeFQN() {
     const map = this.getEnhancedMap();
     const fqnMap = mapKeys(
       map as Record<string, EnhancedResource<any>>,
-      (_, r, { SKIP }) => {
-        try {
-          return r.dbFQN;
-        } catch (e) {
-          return SKIP;
-        }
-      },
+      (_, r, { SKIP }) => (r.hasDB ? r.dbFQN : SKIP),
     ).asMap;
     return fqnMap;
   }

@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import {
+  entries,
   isNotFalsy,
   many,
   Many,
@@ -11,10 +12,13 @@ import { LazyGetter as Once } from 'lazy-get-decorator';
 import { lowerCase } from 'lodash';
 import { AbstractClass } from 'type-fest';
 import {
+  DBName,
   EnhancedResource,
+  EnumType,
   DBType as GetDBType,
   ID,
   isSortablePaginationInput,
+  makeEnum,
   NotFoundException,
   PaginatedListType,
   PaginationInput,
@@ -26,15 +30,17 @@ import { Privileges } from '../../components/authorization';
 import { getChanges } from '../database/changes';
 import { privileges } from '../database/dto.repository';
 import { CommonRepository } from './common.repository';
-import { InsertShape } from './generated-client/insert';
 import { $expr_PathNode, $linkPropify } from './generated-client/path';
 import {
   $expr_Select,
+  normaliseShape,
   objectTypeToSelectShape,
   SelectFilterExpression,
   SelectModifiers,
 } from './generated-client/select';
 import { UpdateShape } from './generated-client/update';
+import { EasyInsertShape, EasyUpdateShape } from './query-util/easy-insert';
+import { mapToSetBlock } from './query-util/map-to-set-block';
 import { $, e } from './reexports';
 
 /**
@@ -42,39 +48,74 @@ import { $, e } from './reexports';
  */
 export const RepoFor = <
   TResourceStatic extends ResourceShape<any>,
-  DBPathNode extends GetDBType<TResourceStatic>,
-  DBType extends DBPathNode['__element__'],
-  HydratedShape extends objectTypeToSelectShape<DBType>,
+  Root extends GetDBType<TResourceStatic>,
+  HydratedShape extends objectTypeToSelectShape<Root['__element__']>,
 >(
   resourceIn: TResourceStatic,
   {
     hydrate,
   }: {
-    hydrate: ShapeFn<$.TypeSet<DBType>, HydratedShape>;
+    hydrate: ShapeFn<Root, HydratedShape>;
   },
 ) => {
-  type Dto = $.computeObjectShape<DBType['__pointers__'], HydratedShape>;
+  type Dto = $.BaseTypeToTsType<
+    $.ObjectType<
+      DBName<Root>,
+      Root['__element__']['__pointers__'],
+      normaliseShape<HydratedShape>
+    >
+  >;
 
   const resource = EnhancedResource.of(resourceIn);
-  const dbType = resource.db as any as $.$expr_PathNode;
+  const dbType = resource.db as Root;
 
   @Injectable()
   abstract class Repository extends CommonRepository {
-    static customize<Customized extends Repository>(
-      customizer: (cls: typeof Repository) => AbstractClass<Customized>,
+    static customize<
+      Customized extends BaseCustomizedRepository,
+      OmitKeys extends EnumType<typeof DefaultMethods>,
+    >(
+      customizer: (
+        cls: typeof BaseCustomizedRepository,
+        ctx: {
+          defaults: typeof DefaultMethods;
+        },
+      ) => AbstractClass<Customized> & {
+        omit?: readonly OmitKeys[];
+      },
     ): AbstractClass<
-      Customized & Omit<DefaultDtoRepository, keyof Customized>
+      Customized & Omit<DefaultDtoRepository, keyof Customized | OmitKeys>
     > {
-      const customizedClass = customizer(Repository);
+      const customizedClass = customizer(BaseCustomizedRepository, {
+        defaults: DefaultMethods,
+      });
       const customMethodNames = setOf(
         Object.getOwnPropertyNames(customizedClass.prototype),
       );
-      const nonDeclaredDefaults = mapKeys(
-        Object.getOwnPropertyDescriptors(DefaultDtoRepository.prototype),
-        (name, _, { SKIP }) =>
-          typeof name === 'string' && customMethodNames.has(name) ? SKIP : name,
+      const omitKeys = new Set<string>(customizedClass.omit);
+      const defaultMethods = Object.getOwnPropertyDescriptors(
+        DefaultDtoRepository.prototype,
+      );
+      const nonDeclaredDefaults = mapKeys(defaultMethods, (name, _, { SKIP }) =>
+        typeof name === 'string' &&
+        (customMethodNames.has(name) || omitKeys.has(name))
+          ? SKIP
+          : name,
       ).asRecord;
       Object.defineProperties(customizedClass.prototype, nonDeclaredDefaults);
+
+      // Create defaults instance, once, when needed.
+      // Using this customized class instance, but swap out the customized methods for the default ones.
+      Object.defineProperty(customizedClass.prototype, 'defaults', {
+        get() {
+          const defaultsInstance = Object.defineProperties(
+            Object.create(this),
+            defaultMethods,
+          );
+          Object.defineProperty(this, 'defaults', { value: defaultsInstance }); // memoize, only once
+          return defaultsInstance;
+        },
+      });
 
       return customizedClass as any;
     }
@@ -97,14 +138,14 @@ export const RepoFor = <
     // region List Helpers
 
     protected listFilters(
-      _scope: ScopeOf<$.TypeSet<DBType>>,
+      _scope: ScopeOf<Root>,
       _input: any,
     ): Many<SelectFilterExpression | false | Nil> {
       return [];
     }
 
     protected orderBy<Scope extends $expr_PathNode>(
-      scope: ScopeOf<$.TypeSet<DBType>>,
+      scope: ScopeOf<Root>,
       input: SortablePaginationInput,
     ) {
       // TODO Validate this is a valid sort key
@@ -117,7 +158,7 @@ export const RepoFor = <
 
     protected async paginate(
       listOfAllQuery: $expr_Select<
-        $.TypeSet<$.ObjectType<DBType['__name__']>, $.Cardinality.Many>
+        $.TypeSet<$.ObjectType<DBName<Root>>, $.Cardinality.Many>
       >,
       input: PaginationInput,
     ) {
@@ -178,15 +219,16 @@ export const RepoFor = <
     }
 
     async readMany(ids: readonly ID[]): Promise<readonly Dto[]> {
-      const query = e.params({ ids: e.array(e.uuid) }, ({ ids }) =>
-        e.select(dbType, (obj: any) => ({
-          ...this.hydrate(obj),
-          filter: e.op(obj.id, 'in', e.array_unpack(ids)),
-        })),
-      );
-      const rows = await this.db.run(query, { ids });
+      const rows = await this.db.run(this.readManyQuery, { ids });
       return rows as readonly Dto[];
     }
+    private readonly readManyQuery = e.params(
+      { ids: e.array(e.uuid) },
+      ({ ids }) => {
+        const entities = e.cast(dbType, e.array_unpack(ids));
+        return e.select(entities, this.hydrate as any);
+      },
+    );
 
     async list(input: PaginationInput) {
       const all = e.select(dbType, (obj: any) => {
@@ -207,33 +249,44 @@ export const RepoFor = <
       return await this.paginate(all as any, input);
     }
 
-    async create(input: Omit<InsertShape<DBType>, `@${string}`>): Promise<Dto> {
+    async create(input: EasyInsertShape<Root>): Promise<Dto> {
       const query = e.select(
-        (e.insert as any)(dbType, input),
+        (e.insert as any)(dbType, mapToSetBlock(dbType, input, false)),
         this.hydrate as any,
       );
       return (await this.db.run(query)) as Dto;
     }
 
-    async update(
-      existing: Pick<Dto, 'id'>,
-      input: UpdateShape<DBPathNode>,
-    ): Promise<Dto> {
-      const object = e.cast(
-        this.resource.db,
-        e.cast(e.uuid, existing.id as ID),
-      );
+    async update(input: { id: ID } & EasyUpdateShape<Root>): Promise<Dto> {
+      const { id, ...changes } = input;
+      const object = e.cast(dbType, e.cast(e.uuid, id));
       const updated = e.update(object, () => ({
-        set: input,
+        set: mapToSetBlock(dbType, changes, true) as UpdateShape<Root>,
       }));
       const query = e.select(updated, this.hydrate as any);
       return (await this.db.run(query)) as Dto;
     }
 
     async delete(id: ID): Promise<void> {
-      const existing = e.cast(this.resource.db, e.cast(e.uuid, id));
+      const existing = e.cast(dbType, e.cast(e.uuid, id));
       const query = e.delete(existing);
       await this.db.run(query);
+    }
+  }
+
+  const DefaultMethods = makeEnum({
+    values: entries(
+      Object.getOwnPropertyDescriptors(DefaultDtoRepository.prototype),
+    ).flatMap(([key]) =>
+      typeof key === 'string'
+        ? (key as keyof DefaultDtoRepository & string)
+        : [],
+    ),
+  });
+
+  class BaseCustomizedRepository extends Repository {
+    protected get defaults(): DefaultDtoRepository {
+      return this as any;
     }
   }
 

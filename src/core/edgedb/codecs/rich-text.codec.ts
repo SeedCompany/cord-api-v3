@@ -9,7 +9,7 @@ export class RichTextCodec extends JSONCodec {
     module: 'default',
     type: 'RichText',
     ts: RichTextDocument.name,
-    path: '~/common',
+    path: '~/common/rich-text.scalar',
   };
   tsType = RichTextDocument.name;
   importedType = true;

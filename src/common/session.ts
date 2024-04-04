@@ -41,11 +41,12 @@ export function loggedInSession(session: Session): Session {
   return session;
 }
 
-const sessionFromContext = (context: GqlContextType) => {
-  if (!context.session) {
+export const sessionFromContext = (context: GqlContextType) => {
+  const session = context.session$.value;
+  if (!session) {
     throw new NoSessionException();
   }
-  return context.session;
+  return session;
 };
 
 export const LoggedInSession = () =>
