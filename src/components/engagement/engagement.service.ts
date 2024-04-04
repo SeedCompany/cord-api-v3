@@ -29,7 +29,7 @@ import {
   ProductService,
   SecuredProductList,
 } from '../product';
-import { IProject, ProjectStatus } from '../project';
+import { IProject } from '../project';
 import { ProjectType } from '../project/dto';
 import { ProjectService } from '../project/project.service';
 import { User } from '../user/dto';
@@ -94,7 +94,6 @@ export class EngagementService {
     if (input.firstScripture) {
       await this.verifyFirstScripture({ languageId });
     }
-    await this.verifyProjectStatus(projectId, session, changeset);
 
     this.verifyCreationStatus(input.status);
 
@@ -145,8 +144,6 @@ export class EngagementService {
     );
 
     await this.verifyCreateEngagement(projectId, session);
-
-    await this.verifyProjectStatus(projectId, session);
 
     this.verifyCreationStatus(input.status);
 
@@ -211,7 +208,10 @@ export class EngagementService {
 
   private async verifyCreateEngagement(projectId: ID, session: Session) {
     const project = await this.resources.load(IProject, projectId);
-    const projectPrivileges = this.privileges.for(session, IProject, project);
+    const projectPrivileges = this.privileges.for(session, IProject, {
+      ...project,
+      project,
+    } as any);
 
     projectPrivileges.verifyCan('create', 'engagement');
   }
@@ -368,8 +368,6 @@ export class EngagementService {
       .for(session, resolveEngagementType(object), object)
       .verifyCan('delete');
 
-    await this.verifyProjectStatus(object.project, session, changeset);
-
     await this.eventBus.publish(new EngagementWillDeleteEvent(object, session));
 
     try {
@@ -500,36 +498,6 @@ export class EngagementService {
       throw new InputException(
         'Another engagement has already been marked as having done the first scripture',
         'languageEngagement.firstScripture',
-      );
-    }
-  }
-
-  /**
-   * [BUSINESS RULE] Only Projects with a Status of 'In Development' can have Engagements created or deleted.
-   * [BUSINESS RULE] Only Projects with a Status of 'Active' and part of a changeset can have Engagements created or deleted.
-   */
-  protected async verifyProjectStatus(
-    projectId: ID,
-    session: Session,
-    changeset?: ID,
-  ) {
-    if (changeset || session.roles.includes('global:Administrator')) {
-      return;
-    }
-
-    let project;
-    try {
-      project = await this.projectService.readOne(projectId, session);
-    } catch (e) {
-      throw e instanceof NotFoundException
-        ? e.withField('engagement.projectId')
-        : e;
-    }
-
-    if (project.status !== ProjectStatus.InDevelopment) {
-      throw new InputException(
-        'The Project status is not in development',
-        'project.status',
       );
     }
   }
