@@ -1,5 +1,5 @@
-import { ID } from '../../common';
-import { LoaderFactory, OrderedNestDataLoader } from '../../core';
+import { ID } from '~/common';
+import { LoaderFactory, OrderedNestDataLoader } from '~/core';
 import { EthnoArt } from './dto';
 import { EthnoArtService } from './ethno-art.service';
 

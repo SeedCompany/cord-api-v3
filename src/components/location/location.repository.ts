@@ -9,7 +9,7 @@ import {
   Session,
   UnsecuredDto,
 } from '~/common';
-import { DtoRepository } from '~/core';
+import { DtoRepository } from '~/core/database';
 import {
   ACTIVE,
   createNode,
@@ -19,7 +19,8 @@ import {
   paginate,
   sorting,
 } from '~/core/database/query';
-import { FileId, FileService } from '../file';
+import { FileService } from '../file';
+import { FileId } from '../file/dto';
 import {
   CreateLocation,
   Location,

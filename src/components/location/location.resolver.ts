@@ -15,14 +15,14 @@ import {
   LoggedInSession,
   mapSecuredValue,
   Session,
-} from '../../common';
-import { Loader, LoaderOf } from '../../core';
-import { FieldRegionLoader, SecuredFieldRegion } from '../field-region';
-import { FileNodeLoader, resolveDefinedFile, SecuredFile } from '../file';
-import {
-  FundingAccountLoader,
-  SecuredFundingAccount,
-} from '../funding-account';
+} from '~/common';
+import { Loader, LoaderOf } from '~/core';
+import { FieldRegionLoader } from '../field-region';
+import { SecuredFieldRegion } from '../field-region/dto';
+import { FileNodeLoader, resolveDefinedFile } from '../file';
+import { SecuredFile } from '../file/dto';
+import { FundingAccountLoader } from '../funding-account';
+import { SecuredFundingAccount } from '../funding-account/dto';
 import {
   CreateLocationInput,
   CreateLocationOutput,

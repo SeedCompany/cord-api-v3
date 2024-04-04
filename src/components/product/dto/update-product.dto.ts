@@ -7,7 +7,7 @@ import {
   NameField,
   OmitType,
   PickType,
-} from '../../../common';
+} from '~/common';
 import {
   CreateBaseProduct,
   CreateDerivativeScriptureProduct,

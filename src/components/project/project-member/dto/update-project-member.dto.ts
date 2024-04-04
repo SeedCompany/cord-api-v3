@@ -1,8 +1,7 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { ID, IdField } from '../../../../common';
-import { Role } from '../../../authorization';
+import { ID, IdField, Role } from '~/common';
 import { ProjectMember } from './project-member.dto';
 
 @InputType()

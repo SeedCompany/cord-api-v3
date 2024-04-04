@@ -16,30 +16,28 @@ import {
   LoggedInSession,
   mapSecuredValue,
   Session,
-} from '../../common';
-import { Loader, LoaderOf } from '../../core';
-import {
-  EngagementListInput,
-  EngagementListOutput,
-  EngagementLoader,
-} from '../engagement';
-import { FieldRegionLoader, SecuredFieldRegions } from '../field-region';
+} from '~/common';
+import { Loader, LoaderOf } from '~/core';
+import { EngagementLoader } from '../engagement';
+import { EngagementListInput, EngagementListOutput } from '../engagement/dto';
+import { FieldRegionLoader } from '../field-region';
+import { SecuredFieldRegions } from '../field-region/dto';
+import { LanguageLoader } from '../language';
 import {
   LanguageListInput,
-  LanguageLoader,
   SecuredLanguageList,
   SecuredLanguageNullable,
   SecuredLanguages,
-} from '../language';
-import { LocationLoader, SecuredLocations } from '../location';
-import { OrganizationLoader, SecuredOrganization } from '../organization';
+} from '../language/dto';
+import { LocationLoader } from '../location';
+import { SecuredLocations } from '../location/dto';
+import { OrganizationLoader } from '../organization';
+import { SecuredOrganization } from '../organization/dto';
 import { PartnerLoader, PartnerService } from '../partner';
-import {
-  ProjectListInput,
-  SecuredProjectList,
-} from '../project/dto/list-projects.dto';
-import { ProjectLoader } from '../project/project.loader';
-import { SecuredUser, UserLoader } from '../user';
+import { ProjectLoader } from '../project';
+import { ProjectListInput, SecuredProjectList } from '../project/dto';
+import { UserLoader } from '../user';
+import { SecuredUser } from '../user/dto';
 import {
   CreatePartnerInput,
   CreatePartnerOutput,

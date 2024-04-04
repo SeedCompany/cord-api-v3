@@ -1,10 +1,5 @@
 import { greaterThan, inArray, node, relation } from 'cypher-query-builder';
-import {
-  ACTIVE,
-  filter,
-  matchProjectSens,
-  path,
-} from '../../core/database/query';
+import { ACTIVE, filter, matchProjectSens, path } from '~/core/database/query';
 import { ProjectListInput } from './dto';
 
 export const projectListFilter = (input: ProjectListInput) =>

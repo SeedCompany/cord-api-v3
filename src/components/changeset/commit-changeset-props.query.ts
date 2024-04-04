@@ -4,7 +4,7 @@ import {
   ACTIVE,
   INACTIVE,
   prefixNodeLabelsWithDeleted,
-} from '../../core/database/query';
+} from '~/core/database/query';
 
 export interface CommitChangesetPropsOptions {
   nodeVar?: string;

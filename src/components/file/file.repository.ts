@@ -13,8 +13,9 @@ import {
 import { Direction } from 'cypher-query-builder/dist/typings/clauses/order-by';
 import { AnyConditions } from 'cypher-query-builder/dist/typings/clauses/where-utils';
 import { DateTime } from 'luxon';
-import { ID, NotFoundException, ServerException, Session } from '../../common';
-import { CommonRepository, ILogger, LinkTo, Logger, OnIndex } from '../../core';
+import { ID, NotFoundException, ServerException, Session } from '~/common';
+import { ILogger, LinkTo, Logger } from '~/core';
+import { CommonRepository, OnIndex } from '~/core/database';
 import {
   ACTIVE,
   createNode,
@@ -25,8 +26,8 @@ import {
   paginate,
   sorting,
   variable,
-} from '../../core/database/query';
-import { BaseNode } from '../../core/database/results';
+} from '~/core/database/query';
+import { BaseNode } from '~/core/database/results';
 import {
   Directory,
   File,

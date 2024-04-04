@@ -6,16 +6,11 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import {
-  ID,
-  IdArg,
-  LoggedInSession,
-  mapSecuredValue,
-  Session,
-} from '../../common';
-import { Loader, LoaderOf } from '../../core';
+import { ID, IdArg, LoggedInSession, mapSecuredValue, Session } from '~/common';
+import { Loader, LoaderOf } from '~/core';
 import { PostLoader, PostService } from '../post';
-import { SecuredUser, UserLoader } from '../user';
+import { UserLoader } from '../user';
+import { SecuredUser } from '../user/dto';
 import {
   CreatePostInput,
   CreatePostOutput,

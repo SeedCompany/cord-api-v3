@@ -15,9 +15,9 @@ import {
   typenameForView,
   UnsecuredDto,
   viewOfChangeset,
-} from '../../common';
-import { CommonRepository, OnIndex } from '../../core';
-import { ChangesOf, getChanges } from '../../core/database/changes';
+} from '~/common';
+import { CommonRepository, OnIndex } from '~/core/database';
+import { ChangesOf, getChanges } from '~/core/database/changes';
 import {
   ACTIVE,
   coalesce,
@@ -33,10 +33,10 @@ import {
   requestingUser,
   sorting,
   whereNotDeletedInChangeset,
-} from '../../core/database/query';
+} from '~/core/database/query';
 import { Privileges } from '../authorization';
-import { FileId } from '../file';
-import { ProjectType } from '../project';
+import { FileId } from '../file/dto';
+import { ProjectType } from '../project/dto';
 import {
   CreateInternshipEngagement,
   CreateLanguageEngagement,

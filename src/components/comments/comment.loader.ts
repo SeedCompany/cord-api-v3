@@ -1,6 +1,6 @@
-import { ID } from '../../common';
-import { OrderedNestDataLoader } from '../../core';
-import { LoaderFactory } from '../../core/resources/loader.registry';
+import { ID } from '~/common';
+import { OrderedNestDataLoader } from '~/core';
+import { LoaderFactory } from '~/core/resources/loader.registry';
 import { CommentService } from './comment.service';
 import { Comment } from './dto';
 

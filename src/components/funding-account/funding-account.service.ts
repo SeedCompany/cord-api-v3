@@ -8,9 +8,9 @@ import {
   ServerException,
   Session,
   UnsecuredDto,
-} from '../../common';
-import { HandleIdLookup, ILogger, Logger } from '../../core';
-import { mapListResults } from '../../core/database/results';
+} from '~/common';
+import { HandleIdLookup, ILogger, Logger } from '~/core';
+import { mapListResults } from '~/core/database/results';
 import { Privileges } from '../authorization';
 import {
   CreateFundingAccount,

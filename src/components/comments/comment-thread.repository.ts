@@ -1,7 +1,7 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
-import { ID, Session, UnsecuredDto } from '../../common';
-import { DtoRepository } from '../../core';
+import { ID, Session, UnsecuredDto } from '~/common';
+import { DtoRepository } from '~/core/database';
 import {
   ACTIVE,
   createNode,
@@ -10,7 +10,7 @@ import {
   paginate,
   requestingUser,
   sorting,
-} from '../../core/database/query';
+} from '~/core/database/query';
 import { CommentRepository } from './comment.repository';
 import { CommentThread, CommentThreadListInput } from './dto';
 

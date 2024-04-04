@@ -13,8 +13,8 @@ import {
   Session,
   UnsecuredDto,
   viewOfChangeset,
-} from '../../common';
-import { DtoRepository } from '../../core';
+} from '~/common';
+import { DtoRepository } from '~/core/database';
 import {
   ACTIVE,
   coalesce,
@@ -30,8 +30,9 @@ import {
   requestingUser,
   sorting,
   whereNotDeletedInChangeset,
-} from '../../core/database/query';
-import { FileId, FileService } from '../file';
+} from '~/core/database/query';
+import { FileService } from '../file';
+import { FileId } from '../file/dto';
 import {
   CreatePartnership,
   Partnership,

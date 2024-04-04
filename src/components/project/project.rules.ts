@@ -8,22 +8,26 @@ import { Promisable } from 'type-fest';
 import {
   ID,
   maybeMany,
+  Role,
   ServerException,
   Session,
   UnauthorizedException,
   UnsecuredDto,
-} from '../../common';
-import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
-import { ACTIVE, INACTIVE } from '../../core/database/query';
+} from '~/common';
+import { ConfigService, ILogger, Logger } from '~/core';
+import { DatabaseService } from '~/core/database';
+import { ACTIVE, INACTIVE } from '~/core/database/query';
 import { AuthenticationService } from '../authentication';
-import { Role, withoutScope } from '../authorization';
-import { EngagementService, EngagementStatus } from '../engagement';
-import { ProjectType } from '../project';
-import { User, UserService } from '../user';
+import { withoutScope } from '../authorization/dto';
+import { EngagementService } from '../engagement';
+import { EngagementStatus } from '../engagement/dto';
+import { UserService } from '../user';
+import { User } from '../user/dto';
 import {
   Project,
   ProjectStep,
   ProjectStepTransition,
+  ProjectType,
   TransitionType,
 } from './dto';
 import { FinancialApproverRepository } from './financial-approver';

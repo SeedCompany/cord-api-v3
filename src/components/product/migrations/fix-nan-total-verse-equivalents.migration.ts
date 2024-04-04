@@ -2,7 +2,7 @@ import { node, relation } from 'cypher-query-builder';
 import { ID } from '~/common';
 import { BaseMigration, Migration } from '~/core/database';
 import { ACTIVE } from '~/core/database/query';
-import { getTotalVerseEquivalents } from '../../scripture/verse-equivalents';
+import { getTotalVerseEquivalents } from '../../scripture';
 import { ProductService } from '../product.service';
 
 @Migration('2023-10-27T09:47:07')

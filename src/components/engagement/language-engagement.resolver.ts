@@ -5,9 +5,10 @@ import {
   mapSecuredValue,
   Session,
   viewOfChangeset,
-} from '../../common';
-import { Loader, LoaderOf } from '../../core';
-import { FileNodeLoader, resolveDefinedFile, SecuredFile } from '../file';
+} from '~/common';
+import { Loader, LoaderOf } from '~/core';
+import { FileNodeLoader, resolveDefinedFile } from '../file';
+import { SecuredFile } from '../file/dto';
 import { LanguageLoader } from '../language';
 import { SecuredLanguage } from '../language/dto';
 import { ProductLoader } from '../product';

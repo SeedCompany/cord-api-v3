@@ -1,10 +1,5 @@
-import {
-  CalendarDate,
-  ID,
-  ServerException,
-  UnsecuredDto,
-} from '../../../common';
-import { EventsHandler, IEventHandler, ILogger, Logger } from '../../../core';
+import { CalendarDate, ID, ServerException, UnsecuredDto } from '~/common';
+import { EventsHandler, IEventHandler, ILogger, Logger } from '~/core';
 import {
   Engagement,
   EngagementStatus,

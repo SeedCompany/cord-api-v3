@@ -1,9 +1,8 @@
 import { faker } from '@faker-js/faker';
 import { sortBy } from '@seedcompany/common';
 import { times } from 'lodash';
-import { generateId, isValidId } from '../src/common';
-import { Role } from '../src/components/authorization';
-import { Organization } from '../src/components/organization';
+import { generateId, isValidId, Role } from '~/common';
+import { Organization } from '../src/components/organization/dto';
 import {
   createOrganization,
   createSession,

@@ -1,4 +1,4 @@
-import { UnauthenticatedException } from '../../common';
+import { UnauthenticatedException } from '~/common';
 
 /**
  * No session established for the user

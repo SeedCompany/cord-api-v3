@@ -18,8 +18,11 @@ import {
 } from '~/common';
 import { ResourceLoader } from '~/core';
 import { mapListResults } from '~/core/database/results';
-import { Privileges, UserResourcePrivileges } from '../authorization';
-import { withVariant } from '../authorization/policies/conditions';
+import {
+  Privileges,
+  UserResourcePrivileges,
+  withVariant,
+} from '../authorization';
 import {
   ChangePrompt,
   ChoosePrompt,

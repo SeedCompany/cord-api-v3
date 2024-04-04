@@ -1,12 +1,12 @@
-import { ServerException } from '../../../common';
+import { ServerException } from '~/common';
 import {
   ConfigService,
-  DatabaseService,
   EventsHandler,
   IEventHandler,
   ILogger,
   Logger,
-} from '../../../core';
+} from '~/core';
+import { DatabaseService } from '~/core/database';
 import {
   EngagementStatus,
   InternshipEngagement,

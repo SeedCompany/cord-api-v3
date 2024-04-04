@@ -1,5 +1,5 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import { Order, PaginatedList, SortablePaginationInput } from '../../../common';
+import { Order, PaginatedList, SortablePaginationInput } from '~/common';
 import { CommentThread } from './comment-thread.dto';
 import { Commentable } from './commentable.dto';
 

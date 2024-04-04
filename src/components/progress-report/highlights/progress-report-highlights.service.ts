@@ -1,9 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { UnsecuredDto } from '~/common';
-import {
-  withEffectiveSensitivity,
-  withScope,
-} from '../../authorization/policies/conditions';
+import { withEffectiveSensitivity, withScope } from '../../authorization';
 import { Prompt } from '../../prompts/dto';
 import { PromptVariantResponseListService } from '../../prompts/prompt-variant-response.service';
 import { ProgressReport } from '../dto';

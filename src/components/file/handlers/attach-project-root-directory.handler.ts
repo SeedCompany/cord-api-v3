@@ -1,4 +1,4 @@
-import { DatabaseService, EventsHandler, IEventHandler } from '~/core';
+import { EventsHandler, IEventHandler } from '~/core';
 import { ProjectCreatedEvent } from '../../project/events';
 import { FileService } from '../file.service';
 
@@ -6,10 +6,7 @@ import { FileService } from '../file.service';
 export class AttachProjectRootDirectoryHandler
   implements IEventHandler<ProjectCreatedEvent>
 {
-  constructor(
-    private readonly files: FileService,
-    private readonly db: DatabaseService,
-  ) {}
+  constructor(private readonly files: FileService) {}
 
   async handle(event: ProjectCreatedEvent) {
     const { project, session } = event;

@@ -1,16 +1,16 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { BaseNode } from '~/core/database/results';
-import { e } from '~/core/edgedb';
-import { LinkTo, RegisterResource } from '~/core/resources';
 import {
   DateTimeField,
   Resource,
   Secured,
   SecuredProps,
   SecuredString,
-} from '../../../common';
+} from '~/common';
+import { BaseNode } from '~/core/database/results';
+import { e } from '~/core/edgedb';
+import { LinkTo, RegisterResource } from '~/core/resources';
 import { PostType } from './post-type.enum';
 import { PostShareability } from './shareability.dto';
 

@@ -1,6 +1,6 @@
-import { Role } from '../src/components/authorization';
-import { EngagementStatus } from '../src/components/engagement';
-import { ProjectStep, ProjectType } from '../src/components/project';
+import { Role } from '~/common';
+import { EngagementStatus } from '../src/components/engagement/dto';
+import { ProjectStep, ProjectType } from '../src/components/project/dto';
 import {
   createFundingAccount,
   createInternshipEngagement,

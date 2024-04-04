@@ -1,8 +1,8 @@
 import { sortBy } from '@seedcompany/common';
 import levenshtein from 'fastest-levenshtein';
 import { startCase, without } from 'lodash';
-import { Column } from '../../common/xlsx.util';
-import { ProductStep as Step } from '../product';
+import { Column } from '~/common/xlsx.util';
+import { ProductStep as Step } from '../product/dto';
 import { PlanningSheet } from './planning-sheet';
 import { ProgressSheet } from './progress-sheet';
 import 'ix/add/iterable-operators/filter.js';

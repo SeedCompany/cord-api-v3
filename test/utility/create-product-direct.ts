@@ -1,10 +1,10 @@
-import { isValidId } from '../../src/common';
+import { isValidId } from '~/common';
 import {
   CreateDirectScriptureProduct,
   ProductMedium,
   ProductMethodology,
   ProductPurpose,
-} from '../../src/components/product';
+} from '../../src/components/product/dto';
 import { TestApp } from './create-app';
 import { fragments, RawProduct } from './fragments';
 import { gql } from './gql-tag';

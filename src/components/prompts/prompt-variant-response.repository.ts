@@ -13,7 +13,7 @@ import {
   VariantList,
   VariantOf,
 } from '~/common';
-import { DtoRepository } from '~/core';
+import { DtoRepository } from '~/core/database';
 import { DbTypeOf } from '~/core/database/db-type';
 import { privileges } from '~/core/database/dto.repository';
 import {

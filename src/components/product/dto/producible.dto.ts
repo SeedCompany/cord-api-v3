@@ -1,9 +1,6 @@
 import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { SetDbType } from '~/core/database';
-import { e } from '~/core/edgedb';
-import { RegisterResource } from '~/core/resources';
 import {
   EnumType,
   makeEnum,
@@ -11,13 +8,16 @@ import {
   SecuredProperty,
   SecuredProps,
   UnsecuredDto,
-} from '../../../common';
-import { SetChangeType } from '../../../core/database/changes';
+} from '~/common';
+import { SetDbType } from '~/core/database';
+import { SetChangeType } from '~/core/database/changes';
+import { e } from '~/core/edgedb';
+import { RegisterResource } from '~/core/resources';
+import { DbScriptureReferences } from '../../scripture';
 import {
-  DbScriptureReferences,
   ScriptureRangeInput,
   SecuredScriptureRanges,
-} from '../../scripture';
+} from '../../scripture/dto';
 
 @RegisterResource({ db: e.Producible })
 @InterfaceType({

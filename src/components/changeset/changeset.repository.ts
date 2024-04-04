@@ -8,10 +8,10 @@ import {
   or,
   relation,
 } from 'cypher-query-builder';
-import { ID, NotFoundException } from '../../common';
-import { DtoRepository } from '../../core';
-import { ACTIVE, path, variable } from '../../core/database/query';
-import { BaseNode } from '../../core/database/results';
+import { ID, NotFoundException } from '~/common';
+import { DtoRepository } from '~/core/database';
+import { ACTIVE, path, variable } from '~/core/database/query';
+import { BaseNode } from '~/core/database/results';
 import { Changeset, ChangesetDiff } from './dto';
 
 @Injectable()

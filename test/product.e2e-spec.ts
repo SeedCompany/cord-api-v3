@@ -1,8 +1,7 @@
 import { times } from 'lodash';
 import { Merge } from 'type-fest';
-import { Secured } from '../src/common';
-import { Role } from '../src/components/authorization';
-import { Film } from '../src/components/film';
+import { Role, Secured } from '~/common';
+import { Film } from '../src/components/film/dto';
 import {
   AnyProduct,
   DerivativeScriptureProduct as InternalDerivativeScriptureProduct,
@@ -11,9 +10,9 @@ import {
   ProductMedium,
   ProductMethodology,
   ProductPurpose,
-} from '../src/components/product';
-import { ScriptureRange } from '../src/components/scripture';
-import { Story } from '../src/components/story';
+} from '../src/components/product/dto';
+import { ScriptureRange } from '../src/components/scripture/dto';
+import { Story } from '../src/components/story/dto';
 import {
   createDerivativeProduct,
   createDirectProduct,

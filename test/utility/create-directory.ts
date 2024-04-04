@@ -1,7 +1,7 @@
 import { faker } from '@faker-js/faker';
 import { startCase } from 'lodash';
-import { ID } from '../../src/common';
-import { loggedInSession } from '../../src/common/session';
+import { ID } from '~/common';
+import { loggedInSession } from '~/common/session';
 import { AuthenticationService } from '../../src/components/authentication';
 import { FileService } from '../../src/components/file';
 import { TestApp } from './create-app';

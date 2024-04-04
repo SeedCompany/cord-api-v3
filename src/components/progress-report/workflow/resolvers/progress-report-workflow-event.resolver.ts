@@ -1,7 +1,8 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { mapSecuredValue } from '~/common';
 import { Loader, LoaderOf } from '~/core';
-import { SecuredUser, UserLoader } from '../../../user';
+import { UserLoader } from '../../../user';
+import { SecuredUser } from '../../../user/dto';
 import { ProgressReportWorkflowEvent as WorkflowEvent } from '../dto/workflow-event.dto';
 
 @Resolver(WorkflowEvent)

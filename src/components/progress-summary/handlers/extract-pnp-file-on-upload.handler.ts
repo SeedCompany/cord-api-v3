@@ -1,4 +1,4 @@
-import { EventsHandler, ILogger, Logger } from '../../../core';
+import { EventsHandler, ILogger, Logger } from '~/core';
 import { ReportType } from '../../periodic-report/dto';
 import { PeriodicReportUploadedEvent } from '../../periodic-report/events';
 import { SummaryPeriod } from '../dto';

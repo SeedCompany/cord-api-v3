@@ -1,11 +1,5 @@
 import { DateTimeUnit } from 'luxon';
-import {
-  CalendarDate,
-  DateInterval,
-  ID,
-  Range,
-  Session,
-} from '../../../common';
+import { CalendarDate, DateInterval, ID, Range, Session } from '~/common';
 import { ReportType } from '../dto';
 import { PeriodicReportService } from '../periodic-report.service';
 

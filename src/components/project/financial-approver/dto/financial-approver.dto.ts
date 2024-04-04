@@ -3,7 +3,7 @@ import { keys as keysOf } from 'ts-transformer-keys';
 import { ID, IdField, SecuredProps, UnsecuredDto } from '~/common';
 import { LinkTo, RegisterResource } from '~/core';
 import { e } from '~/core/edgedb';
-import { User } from '../../../user';
+import { User } from '../../../user/dto';
 import { ProjectType } from '../../dto';
 
 @RegisterResource({

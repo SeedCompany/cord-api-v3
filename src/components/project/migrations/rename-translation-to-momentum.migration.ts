@@ -1,4 +1,4 @@
-import { BaseMigration, Migration } from '~/core';
+import { BaseMigration, Migration } from '~/core/database';
 
 @Migration('2024-04-08T12:51:00')
 export class RenameTranslationToMomentumMigration extends BaseMigration {

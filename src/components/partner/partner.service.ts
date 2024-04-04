@@ -11,20 +11,15 @@ import {
 } from '~/common';
 import { HandleIdLookup, ResourceLoader } from '~/core';
 import { Privileges } from '../authorization';
-import { EngagementListInput, EngagementService } from '../engagement';
-import {
-  LanguageListInput,
-  LanguageService,
-  SecuredLanguageList,
-} from '../language';
-import { Location, LocationLoader, LocationType } from '../location';
+import { EngagementService } from '../engagement';
+import { EngagementListInput } from '../engagement/dto';
+import { LanguageService } from '../language';
+import { LanguageListInput, SecuredLanguageList } from '../language/dto';
+import { LocationLoader } from '../location';
+import { Location, LocationType } from '../location/dto';
 import { FinancialReportingType } from '../partnership/dto';
-import {
-  IProject,
-  ProjectListInput,
-  ProjectService,
-  SecuredProjectList,
-} from '../project';
+import { ProjectService } from '../project';
+import { IProject, ProjectListInput, SecuredProjectList } from '../project/dto';
 import {
   CreatePartner,
   Partner,

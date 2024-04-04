@@ -1,4 +1,4 @@
-import { User } from '../../src/components/user';
+import { User } from '../../src/components/user/dto';
 import { TestApp } from './create-app';
 import { gql } from './gql-tag';
 

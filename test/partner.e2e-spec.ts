@@ -1,7 +1,7 @@
 import { faker } from '@faker-js/faker';
-import { Role } from '../src/components/authorization/dto';
-import { PartnerType } from '../src/components/partner';
-import { FinancialReportingType } from '../src/components/partnership';
+import { Role } from '~/common';
+import { PartnerType } from '../src/components/partner/dto';
+import { FinancialReportingType } from '../src/components/partnership/dto';
 import {
   createOrganization,
   createPartner,

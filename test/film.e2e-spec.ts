@@ -1,9 +1,8 @@
 import { faker } from '@faker-js/faker';
 import { times } from 'lodash';
-import { isValidId } from '../src/common';
-import { Role } from '../src/components/authorization/dto/role.dto';
+import { isValidId, Role } from '~/common';
 import { Film } from '../src/components/film/dto';
-import { ScriptureRange } from '../src/components/scripture';
+import { ScriptureRange } from '../src/components/scripture/dto';
 import {
   createFilm,
   createSession,

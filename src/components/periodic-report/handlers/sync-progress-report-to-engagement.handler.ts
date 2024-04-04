@@ -1,10 +1,7 @@
-import { DateInterval, UnsecuredDto } from '../../../common';
-import { EventsHandler, IEventHandler, ILogger, Logger } from '../../../core';
-import {
-  Engagement,
-  engagementRange,
-  EngagementService,
-} from '../../engagement';
+import { DateInterval, UnsecuredDto } from '~/common';
+import { EventsHandler, IEventHandler, ILogger, Logger } from '~/core';
+import { EngagementService } from '../../engagement';
+import { Engagement, engagementRange } from '../../engagement/dto';
 import {
   EngagementCreatedEvent,
   EngagementUpdatedEvent,

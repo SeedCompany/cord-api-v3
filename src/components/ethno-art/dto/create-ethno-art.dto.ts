@@ -1,8 +1,8 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { NameField } from '../../../common';
-import { ScriptureField, ScriptureRangeInput } from '../../scripture';
+import { NameField } from '~/common';
+import { ScriptureField, ScriptureRangeInput } from '../../scripture/dto';
 import { EthnoArt } from './ethno-art.dto';
 
 @InputType()

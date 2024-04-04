@@ -5,7 +5,7 @@ import {
   SCALAR_TYPE_METADATA,
 } from '@nestjs/graphql/dist/graphql.constants.js';
 import { GraphQLScalarType } from 'graphql';
-import { getRegisteredScalars } from '../common/scalars';
+import { getRegisteredScalars } from '~/common/scalars';
 
 /**
  * Ensure every scalar has a use in schema to prevent compilation errors.

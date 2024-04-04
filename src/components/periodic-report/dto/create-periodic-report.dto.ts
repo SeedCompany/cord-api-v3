@@ -1,4 +1,4 @@
-import { CalendarDate, ID, Range, Session } from '../../../common';
+import { CalendarDate, ID, Range, Session } from '~/common';
 import { ReportType } from './report-type.enum';
 
 export abstract class MergePeriodicReports {

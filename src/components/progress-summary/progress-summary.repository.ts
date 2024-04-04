@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { inArray, node, relation } from 'cypher-query-builder';
 import { ID } from '~/common';
-import { CommonRepository } from '~/core';
+import { CommonRepository } from '~/core/database';
 import { ACTIVE, listConcat, merge } from '~/core/database/query';
 import { ProgressReport } from '../progress-report/dto';
 import { FetchedSummaries, ProgressSummary, SummaryPeriod } from './dto';

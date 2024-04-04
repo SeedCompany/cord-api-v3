@@ -7,10 +7,11 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import { sumBy } from 'lodash';
-import { LoggedInSession, Session } from '../../common';
-import { Loader, LoaderOf } from '../../core';
+import { LoggedInSession, Session } from '~/common';
+import { Loader, LoaderOf } from '~/core';
 import { BudgetService } from '../budget';
-import { FileNodeLoader, resolveDefinedFile, SecuredFile } from '../file';
+import { FileNodeLoader, resolveDefinedFile } from '../file';
+import { SecuredFile } from '../file/dto';
 import { Budget, UpdateBudgetInput, UpdateBudgetOutput } from './dto';
 
 @Resolver(Budget)

@@ -6,7 +6,7 @@ import { keys as keysOf } from 'ts-transformer-keys';
 import { inspect } from 'util';
 import type { ResourceDBMap, ResourceName } from '~/core';
 import { $, e } from '~/core/edgedb/reexports';
-import { ScopedRole } from '../components/authorization';
+import { ScopedRole } from '../components/authorization/dto';
 import { CalculatedSymbol } from './calculated.decorator';
 import { DataObject } from './data-object';
 import { DbLabel } from './db-label.decorator';

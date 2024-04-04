@@ -1,5 +1,8 @@
 import { generateId, isValidId } from '~/common';
-import { CreateFieldZone, FieldZone } from '../../src/components/field-zone';
+import {
+  CreateFieldZone,
+  FieldZone,
+} from '../../src/components/field-zone/dto';
 import { TestApp } from './create-app';
 import { createPerson } from './create-person';
 import { getUserFromSession } from './create-session';

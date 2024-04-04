@@ -1,8 +1,8 @@
-import { isValidId } from '../../src/common';
+import { isValidId } from '~/common';
 import {
   CreateProjectMember,
   ProjectMember,
-} from '../../src/components/project';
+} from '../../src/components/project/project-member/dto';
 import {
   createPerson,
   createProject,

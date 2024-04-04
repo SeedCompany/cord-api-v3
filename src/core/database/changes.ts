@@ -2,7 +2,6 @@ import { entries } from '@seedcompany/common';
 import { difference, omit, pickBy } from 'lodash';
 import { DateTime } from 'luxon';
 import { ConditionalKeys, IsAny } from 'type-fest';
-import { LinkTo } from '~/core';
 import {
   EnhancedResource,
   ID,
@@ -12,8 +11,9 @@ import {
   ResourceShape,
   unwrapSecured,
   UnwrapSecured,
-} from '../../common';
-import { CreateDefinedFileVersionInput } from '../../components/file';
+} from '~/common';
+import { LinkTo } from '~/core';
+import { CreateDefinedFileVersionInput } from '../../components/file/dto';
 import { Variable } from './query';
 import { NativeDbValue } from './results';
 

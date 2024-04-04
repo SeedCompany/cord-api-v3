@@ -1,8 +1,7 @@
 import { faker } from '@faker-js/faker';
-import { generateId, isValidId } from '../../src/common';
-import { RegisterInput } from '../../src/components/authentication';
-import { Role } from '../../src/components/authorization';
-import { User, UserStatus } from '../../src/components/user';
+import { generateId, isValidId, Role } from '~/common';
+import { RegisterInput } from '../../src/components/authentication/dto';
+import { User, UserStatus } from '../../src/components/user/dto';
 import { TestApp } from './create-app';
 import { fragments, RawUser } from './fragments';
 import { gql } from './gql-tag';

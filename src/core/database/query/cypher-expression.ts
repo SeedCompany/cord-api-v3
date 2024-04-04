@@ -1,6 +1,6 @@
 import { Merge } from 'cypher-query-builder';
 import { PatternCollection } from 'cypher-query-builder/dist/typings/clauses/pattern-clause';
-import { Many, ServerException } from '../../../common';
+import { Many, ServerException } from '~/common';
 import { quoteKey } from '../query-augmentation/interpolate';
 
 export type ExpressionInput =

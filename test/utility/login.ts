@@ -1,5 +1,5 @@
+import { ConfigService } from '~/core';
 import { LoginInput } from '../../src/components/authentication/dto';
-import { ConfigService } from '../../src/core';
 import { TestApp } from './create-app';
 import { createSession } from './create-session';
 import { gql } from './gql-tag';

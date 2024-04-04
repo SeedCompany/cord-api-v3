@@ -8,7 +8,7 @@ import {
   NotFoundException,
   ServerException,
 } from '~/common';
-import { CommonRepository } from '~/core';
+import { CommonRepository } from '~/core/database';
 import { ACTIVE, apoc, merge } from '~/core/database/query';
 import { AnyMedia, MediaUserMetadata, resolveMedia } from './media.dto';
 

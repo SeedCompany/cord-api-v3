@@ -1,15 +1,6 @@
-import {
-  ClientException,
-  ID,
-  ServerException,
-  UnsecuredDto,
-} from '../../../common';
-import {
-  ConfigService,
-  DatabaseService,
-  EventsHandler,
-  IEventHandler,
-} from '../../../core';
+import { ClientException, ID, ServerException, UnsecuredDto } from '~/common';
+import { ConfigService, EventsHandler, IEventHandler } from '~/core';
+import { DatabaseService } from '~/core/database';
 import { Project, ProjectStep, ProjectType } from '../dto';
 import { ProjectUpdatedEvent } from '../events';
 

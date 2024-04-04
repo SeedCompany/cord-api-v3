@@ -1,8 +1,6 @@
 import { Type } from '@nestjs/common';
 import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { e } from '~/core/edgedb';
-import { RegisterResource } from '~/core/resources';
 import {
   DbUnique,
   IntersectionType,
@@ -12,10 +10,12 @@ import {
   SecuredEnum,
   SecuredProperty,
   SecuredProps,
+  SecuredRoles,
   SecuredString,
   SecuredStringNullable,
-} from '../../../common';
-import { SecuredRoles } from '../../authorization';
+} from '~/common';
+import { e } from '~/core/edgedb';
+import { RegisterResource } from '~/core/resources';
 import { Location } from '../../location/dto';
 import { Organization } from '../../organization/dto';
 import { Partner } from '../../partner/dto';

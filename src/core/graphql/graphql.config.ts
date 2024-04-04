@@ -23,7 +23,7 @@ import {
 } from 'graphql';
 import { BehaviorSubject } from 'rxjs';
 import { GqlContextType, JsonSet, ServerException, Session } from '~/common';
-import { getRegisteredScalars } from '../../common/scalars';
+import { getRegisteredScalars } from '~/common/scalars';
 import { CacheService } from '../cache';
 import { ConfigService } from '../config/config.service';
 import { VersionService } from '../config/version.service';

@@ -1,8 +1,5 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { BaseNode } from '~/core/database/results';
-import { e } from '~/core/edgedb';
-import { LinkTo, RegisterResource } from '~/core/resources';
 import {
   Calculated,
   IntersectionType,
@@ -15,7 +12,10 @@ import {
   SecuredProps,
   Sensitivity,
   SensitivityField,
-} from '../../../common';
+} from '~/common';
+import { BaseNode } from '~/core/database/results';
+import { e } from '~/core/edgedb';
+import { LinkTo, RegisterResource } from '~/core/resources';
 import { ChangesetAware } from '../../changeset/dto';
 import { Organization } from '../../organization/dto';
 import { SecuredPartnerTypes } from '../../partner/dto';

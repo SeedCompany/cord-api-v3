@@ -1,10 +1,10 @@
 import { faker } from '@faker-js/faker';
 import { DateTime } from 'luxon';
-import { isValidId } from '../../src/common';
+import { isValidId } from '~/common';
 import {
   CreateUnavailability,
   Unavailability,
-} from '../../src/components/user/unavailability';
+} from '../../src/components/user/unavailability/dto';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
 import { gql } from './gql-tag';

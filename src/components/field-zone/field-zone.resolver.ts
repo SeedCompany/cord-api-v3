@@ -14,9 +14,10 @@ import {
   LoggedInSession,
   mapSecuredValue,
   Session,
-} from '../../common';
-import { Loader, LoaderOf } from '../../core';
-import { SecuredUser, UserLoader } from '../user';
+} from '~/common';
+import { Loader, LoaderOf } from '~/core';
+import { UserLoader } from '../user';
+import { SecuredUser } from '../user/dto';
 import {
   CreateFieldZoneInput,
   CreateFieldZoneOutput,

@@ -8,15 +8,9 @@ import {
   Session,
   UnauthorizedException,
   UnsecuredDto,
-} from '../../../common';
-import {
-  DatabaseService,
-  EventsHandler,
-  IEventHandler,
-  ILogger,
-  Logger,
-} from '../../../core';
-import { PartnerType } from '../../partner';
+} from '~/common';
+import { EventsHandler, IEventHandler, ILogger, Logger } from '~/core';
+import { PartnerType } from '../../partner/dto';
 import { PartnershipService } from '../../partnership';
 import { Partnership } from '../../partnership/dto';
 import {
@@ -49,7 +43,6 @@ export class SyncBudgetRecordsToFundingPartners
   implements IEventHandler<SubscribedEvent>
 {
   constructor(
-    private readonly db: DatabaseService,
     private readonly budgets: BudgetService,
     private readonly budgetRepo: BudgetRepository,
     private readonly partnershipService: PartnershipService,

@@ -3,31 +3,27 @@ import { CachedByArg } from '@seedcompany/common';
 import {
   ID,
   ObjectView,
+  Role,
   SecuredList,
   ServerException,
   Session,
   UnauthorizedException,
   UnsecuredDto,
-} from '../../common';
-import { HandleIdLookup, ILogger, Logger, Transactional } from '../../core';
-import { property } from '../../core/database/query';
-import { Privileges, Role } from '../authorization';
+} from '~/common';
+import { HandleIdLookup, ILogger, Logger } from '~/core';
+import { Transactional } from '~/core/database';
+import { property } from '~/core/database/query';
+import { Privileges } from '../authorization';
 import { AssignableRoles } from '../authorization/dto/assignable-roles';
-import {
-  LocationListInput,
-  LocationService,
-  SecuredLocationList,
-} from '../location';
+import { LocationService } from '../location';
+import { LocationListInput, SecuredLocationList } from '../location/dto';
+import { OrganizationService } from '../organization';
 import {
   OrganizationListInput,
-  OrganizationService,
   SecuredOrganizationList,
-} from '../organization';
-import {
-  PartnerListInput,
-  PartnerService,
-  SecuredPartnerList,
-} from '../partner';
+} from '../organization/dto';
+import { PartnerService } from '../partner';
+import { PartnerListInput, SecuredPartnerList } from '../partner/dto';
 import {
   AssignOrganizationToUser,
   CreatePerson,
@@ -38,17 +34,14 @@ import {
   UserListInput,
   UserListOutput,
 } from './dto';
-import {
-  EducationListInput,
-  EducationService,
-  SecuredEducationList,
-} from './education';
+import { EducationService } from './education';
+import { EducationListInput, SecuredEducationList } from './education/dto';
 import { KnownLanguageRepository } from './known-language.repository';
+import { UnavailabilityService } from './unavailability';
 import {
   SecuredUnavailabilityList,
   UnavailabilityListInput,
-  UnavailabilityService,
-} from './unavailability';
+} from './unavailability/dto';
 import { UserRepository } from './user.repository';
 
 @Injectable()

@@ -1,5 +1,5 @@
 import { Readable } from 'stream';
-import { NotFoundException } from '../../../common';
+import { NotFoundException } from '~/common';
 import { FakeAwsFile, LocalBucket } from './local-bucket';
 
 /**

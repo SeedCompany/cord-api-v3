@@ -2,7 +2,7 @@ import { DiscoveryService } from '@golevelup/nestjs-discovery';
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
 import { FnLike, groupToMapBy, mapValues, sortBy } from '@seedcompany/common';
 import { stripIndent } from 'common-tags';
-import { ID, ServerException } from '../../common';
+import { ID, ServerException } from '~/common';
 import { ILogger, Logger } from '../logger';
 import {
   EVENT_METADATA,

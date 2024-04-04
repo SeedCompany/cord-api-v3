@@ -1,9 +1,10 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { AnonSession, ListArg, Session } from '../../common';
-import { Loader, LoaderOf } from '../../core';
-import { User } from '../user';
+import { AnonSession, ListArg, Session } from '~/common';
+import { Loader, LoaderOf } from '~/core';
+import { User } from '../user/dto';
 import { ProjectListInput, SecuredProjectList } from './dto';
-import { ProjectLoader, ProjectService } from './index';
+import { ProjectLoader } from './project.loader';
+import { ProjectService } from './project.service';
 
 @Resolver(User)
 export class ProjectUserConnectionResolver {

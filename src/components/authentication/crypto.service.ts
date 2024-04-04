@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import * as argon2 from 'argon2';
 import { pickBy } from 'lodash';
 import { Except } from 'type-fest';
-import { ConfigService } from '../../core';
+import { ConfigService } from '~/core';
 
 @Injectable()
 export class CryptoService {

@@ -6,16 +6,13 @@ import {
   ListArg,
   LoggedInSession,
   Session,
-} from '../../common';
-import { Loader, LoaderOf } from '../../core';
-import {
-  DeleteEthnoArtOutput,
-  EthnoArtLoader,
-  EthnoArtService,
-} from '../ethno-art';
+} from '~/common';
+import { Loader, LoaderOf } from '~/core';
+import { EthnoArtLoader, EthnoArtService } from '../ethno-art';
 import {
   CreateEthnoArtInput,
   CreateEthnoArtOutput,
+  DeleteEthnoArtOutput,
   EthnoArt,
   EthnoArtListInput,
   EthnoArtListOutput,

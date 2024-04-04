@@ -7,10 +7,12 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { AnonSession, GqlContextType, Session } from '../../common';
-import { Loader, LoaderOf } from '../../core';
-import { Power, Privileges } from '../authorization';
-import { User, UserLoader } from '../user';
+import { AnonSession, GqlContextType, Session } from '~/common';
+import { Loader, LoaderOf } from '~/core';
+import { Privileges } from '../authorization';
+import { Power } from '../authorization/dto';
+import { UserLoader } from '../user';
+import { User } from '../user/dto';
 import { AuthenticationService } from './authentication.service';
 import { LoginInput, LoginOutput, LogoutOutput } from './dto';
 

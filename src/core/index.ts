@@ -5,7 +5,7 @@ export * from './core.module';
 export * from './cache';
 export * from './cli';
 export * from './graphql';
-export * from './database';
+export { splitDb, splitDb2 } from './database';
 export * from './events';
 export * from './resources';
 export * from './data-loader';

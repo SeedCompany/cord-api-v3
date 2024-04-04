@@ -4,14 +4,16 @@ import { node, relation } from 'cypher-query-builder';
 import { first, intersection } from 'lodash';
 import {
   ID,
+  Role,
   ServerException,
   Session,
   UnauthorizedException,
-} from '../../common';
-import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
-import { ACTIVE, INACTIVE } from '../../core/database/query';
-import { Role, withoutScope } from '../authorization';
-import { ProjectStep } from '../project';
+} from '~/common';
+import { ILogger, Logger } from '~/core';
+import { DatabaseService } from '~/core/database';
+import { ACTIVE, INACTIVE } from '~/core/database/query';
+import { withoutScope } from '../authorization/dto';
+import { ProjectStep } from '../project/dto';
 import {
   EngagementStatus,
   EngagementStatusTransition,
@@ -33,7 +35,6 @@ const rolesThatCanBypassWorkflow: Role[] = [Role.Administrator];
 export class EngagementRules {
   constructor(
     private readonly db: DatabaseService,
-    private readonly config: ConfigService,
     // eslint-disable-next-line @seedcompany/no-unused-vars
     @Logger('engagement:rules') private readonly logger: ILogger,
   ) {}

@@ -1,14 +1,9 @@
 import { Query } from 'cypher-query-builder';
 import { intersection } from 'lodash';
 import { inspect, InspectOptionsStylized } from 'util';
-import { ResourceShape } from '~/common';
+import { ResourceShape, Role } from '~/common';
 import { matchProjectScopedRoles, variable } from '~/core/database/query';
-import {
-  Role,
-  rolesForScope,
-  ScopedRole,
-  splitScope,
-} from '../../dto/role.dto';
+import { rolesForScope, ScopedRole, splitScope } from '../../dto/role.dto';
 import {
   AsCypherParams,
   AsEdgeQLParams,

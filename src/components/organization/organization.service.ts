@@ -8,11 +8,8 @@ import {
 } from '~/common';
 import { HandleIdLookup } from '~/core';
 import { Privileges } from '../authorization';
-import {
-  LocationListInput,
-  LocationService,
-  SecuredLocationList,
-} from '../location';
+import { LocationService } from '../location';
+import { LocationListInput, SecuredLocationList } from '../location/dto';
 import {
   CreateOrganization,
   Organization,
