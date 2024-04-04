@@ -130,6 +130,11 @@ export class EngagementRepository extends CommonRepository {
           relation('out', '', 'mouEnd', ACTIVE),
           node('mouEnd'),
         ])
+        .match([
+          node('project'),
+          relation('out', '', 'status', ACTIVE),
+          node('status'),
+        ])
         .return<{ dto: UnsecuredDto<Engagement> }>(
           merge('props', 'changedProps', {
             __typename: typenameForView(
@@ -137,7 +142,10 @@ export class EngagementRepository extends CommonRepository {
               view,
             ),
             parent: 'project',
-            project: 'project { .id }',
+            project: {
+              id: 'project.id',
+              status: 'status.value',
+            },
             language: 'language.id',
             ceremony: 'ceremony.id',
             intern: 'intern.id',

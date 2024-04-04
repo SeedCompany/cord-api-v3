@@ -364,15 +364,15 @@ export class ProjectService {
       session,
       view,
     );
-    const perms = this.privileges.for(session, IProject, project);
+    const perms = this.privileges.for(session, IProject, {
+      ...project,
+      project,
+    } as any);
 
     return {
       ...result,
       canRead: perms.can('read', 'engagement'),
-      canCreate:
-        perms.can('create', 'engagement') &&
-        (project.status === ProjectStatus.InDevelopment ||
-          session.roles.includes('global:Administrator')),
+      canCreate: perms.can('create', 'engagement'),
     };
   }
 
