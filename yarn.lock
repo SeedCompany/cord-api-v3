@@ -1485,14 +1485,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@edgedb/generate@npm:^0.5.0-canary.20240320T135053":
-  version: 0.5.0-canary.20240320T135053
-  resolution: "@edgedb/generate@npm:0.5.0-canary.20240320T135053"
+"@edgedb/generate@npm:^0.5.0-canary.20240408T143001":
+  version: 0.5.0-canary.20240408T143001
+  resolution: "@edgedb/generate@npm:0.5.0-canary.20240408T143001"
   peerDependencies:
     edgedb: ^1.4.0
   bin:
     generate: dist/cli.js
-  checksum: 10c0/045a9356a7cd1a82fa20ead47ee4a65f13f2adbf779e80a12518f06be6d6196ebae20ef26285e3eade0b300b2b18fefa642b662371dba02719b1dbb6149ae3e9
+  checksum: 10c0/c84fe33d109f0f3338ef2a220936fa3417309d3884dc3b5673130f0eeffaa4fd03d16a2dd703fa553e1a374696de3fca6d431dc251c01ddbea38a858fdc82ce9
   languageName: node
   linkType: hard
 
@@ -5325,7 +5325,7 @@ __metadata:
     "@apollo/subgraph": "npm:^2.5.6"
     "@aws-sdk/client-s3": "npm:^3.440.0"
     "@aws-sdk/s3-request-presigner": "npm:^3.440.0"
-    "@edgedb/generate": "npm:^0.5.0-canary.20240320T135053"
+    "@edgedb/generate": "npm:^0.5.0-canary.20240408T143001"
     "@faker-js/faker": "npm:^8.2.0"
     "@ffprobe-installer/ffprobe": "npm:^2.1.2"
     "@golevelup/nestjs-discovery": "npm:^4.0.0"
@@ -5377,7 +5377,7 @@ __metadata:
     debugger-is-attached: "npm:^1.2.0"
     dotenv: "npm:^16.3.1"
     dotenv-expand: "npm:^10.0.0"
-    edgedb: "npm:^1.5.0-canary.20240320T135030"
+    edgedb: "npm:^1.5.0-canary.20240408T142923"
     eslint: "npm:^8.52.0"
     eslint-plugin-no-only-tests: "npm:^3.1.0"
     eslint-plugin-typescript-sort-keys: "npm:^2.3.0"
@@ -5971,12 +5971,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"edgedb@npm:^1.5.0-canary.20240320T135030":
-  version: 1.5.0-canary.20240320T135030
-  resolution: "edgedb@npm:1.5.0-canary.20240320T135030"
+"edgedb@npm:^1.5.0-canary.20240408T142923":
+  version: 1.5.0-canary.20240408T142923
+  resolution: "edgedb@npm:1.5.0-canary.20240408T142923"
+  dependencies:
+    debug: "npm:^4.3.4"
+    env-paths: "npm:^3.0.0"
+    semver: "npm:^7.6.0"
+    which: "npm:^4.0.0"
   bin:
-    edgeql-js: dist/cli.js
-  checksum: 10c0/393d87a24c9cac4a1c5e62d5046306cd95b8520ceec70eb66047691301bb3ed729aacee1f1967b2c4ebac0380e586048c74ab140c008e806bccb4e7b554af63f
+    edgedb: dist/cli.mjs
+  checksum: 10c0/00ebb31762a533c9c277a2bc088eaf1c11ba8993c9e0bf8a4c0c20bf4f31d25e0d6530235fffb87ec4ed9f0879e1a5b408cb053e90c2c30ac9366087d3b127ef
   languageName: node
   linkType: hard
 
@@ -6110,6 +6115,13 @@ __metadata:
   version: 2.2.1
   resolution: "env-paths@npm:2.2.1"
   checksum: 10c0/285325677bf00e30845e330eec32894f5105529db97496ee3f598478e50f008c5352a41a30e5e72ec9de8a542b5a570b85699cd63bd2bc646dbcb9f311d83bc4
+  languageName: node
+  linkType: hard
+
+"env-paths@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "env-paths@npm:3.0.0"
+  checksum: 10c0/76dec878cee47f841103bacd7fae03283af16f0702dad65102ef0a556f310b98a377885e0f32943831eb08b5ab37842a323d02529f3dfd5d0a40ca71b01b435f
   languageName: node
   linkType: hard
 
@@ -11731,14 +11743,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"semver@npm:^7.3.5, semver@npm:^7.3.7, semver@npm:^7.3.8, semver@npm:^7.5.3, semver@npm:^7.5.4":
-  version: 7.5.4
-  resolution: "semver@npm:7.5.4"
+"semver@npm:^7.3.5, semver@npm:^7.3.7, semver@npm:^7.3.8, semver@npm:^7.5.3, semver@npm:^7.5.4, semver@npm:^7.6.0":
+  version: 7.6.0
+  resolution: "semver@npm:7.6.0"
   dependencies:
     lru-cache: "npm:^6.0.0"
   bin:
     semver: bin/semver.js
-  checksum: 10c0/5160b06975a38b11c1ab55950cb5b8a23db78df88275d3d8a42ccf1f29e55112ac995b3a26a522c36e3b5f76b0445f1eef70d696b8c7862a2b4303d7b0e7609e
+  checksum: 10c0/fbfe717094ace0aa8d6332d7ef5ce727259815bd8d8815700853f4faf23aacbd7192522f0dc5af6df52ef4fa85a355ebd2f5d39f554bd028200d6cf481ab9b53
   languageName: node
   linkType: hard
 

@@ -121,12 +121,13 @@ function allowOrderingByEnums(qbDir: Directory) {
 function adjustToImmutableTypes(qbDir: Directory) {
   const typesystem = qbDir.addSourceFileAtPath('typesystem.ts');
   replaceText(typesystem.getTypeAliasOrThrow('ArrayTypeToTsType'), (prev) =>
-    prev.replace(': TsType[]', ': readonly TsType[]'),
+    prev.replace(': BaseTypeToTsType', ': readonly BaseTypeToTsType'),
   );
-  replaceText(
-    typesystem.getTypeAliasOrThrow('NamedTupleTypeToTsType'),
-    (prev) => prev.replace('[k in ', 'readonly [/* applied */ k in '),
-  );
+  for (const alias of ['TupleItemsToTsType', 'NamedTupleTypeToTsType']) {
+    replaceText(typesystem.getTypeAliasOrThrow(alias), (prev) =>
+      prev.replace('[k in ', 'readonly [/* applied */ k in '),
+    );
+  }
   replaceText(typesystem.getTypeAliasOrThrow('computeObjectShape'), (prev) =>
     !prev.includes('> = typeutil')
       ? prev
