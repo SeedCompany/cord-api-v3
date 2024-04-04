@@ -1,6 +1,8 @@
 import { delay, mapEntries } from '@seedcompany/common';
 import { $, Client } from 'edgedb';
+import { INVALID_CODEC } from 'edgedb/dist/codecs/codecs.js';
 import { KNOWN_TYPENAMES } from 'edgedb/dist/codecs/consts.js';
+import type Event from 'edgedb/dist/primitives/event.js';
 import LRU from 'edgedb/dist/primitives/lru.js';
 import { retry } from '~/common/retry';
 import { ScalarCodecClass } from './type.util';
@@ -16,6 +18,7 @@ export const registerCustomScalarCodecs = async (
       scalar.id.replaceAll('-', ''),
     ]).asMap;
     register(client, codecs, scalarIdsByName);
+    invalidateSessionCodecs(client);
   }
 
   const connectedFast = await Promise.race([
@@ -52,8 +55,13 @@ const register = (
   scalarIdsByName?: ReadonlyMap<string, string>,
 ) => {
   const registry = (client as any).pool._codecsRegistry;
-  const codecs: LRU<string, InstanceType<ScalarCodecClass>> = registry.codecs;
 
+  // Clear registry to evict stale codecs
+  // Client will rebuild as needed
+  clearLRU(registry.codecs);
+  clearLRU(registry.codecsBuildCache);
+
+  const codecs: LRU<string, InstanceType<ScalarCodecClass>> = registry.codecs;
   for (const scalarCodec of scalarCodecs) {
     const typeName = `${scalarCodec.info.module}::${scalarCodec.info.type}`;
     const uuid =
@@ -63,4 +71,31 @@ const register = (
     }
     codecs.set(uuid, new scalarCodec(uuid));
   }
+};
+
+/**
+ * Invalidate possibly stale codecs for edgedb's Session
+ * This causes the driver to re-evaluate (once per pre-existing connection)
+ * the codec for the Session Based on our updated codec registry.
+ */
+function invalidateSessionCodecs(client: Client) {
+  for (const holder of (client as any).pool._holders) {
+    if (!holder._connection) {
+      continue;
+    }
+    const resetSessionCodec = () => {
+      holder._connection.stateCodec = INVALID_CODEC;
+    };
+    const inUse = holder._inUse as Event | null;
+    inUse ? void inUse.wait().then(resetSessionCodec) : resetSessionCodec();
+  }
+}
+
+const clearLRU = (lru: LRU<any, any>) => {
+  (lru as any).map.clear();
+  Object.assign((lru as any).deque, {
+    head: null,
+    tail: null,
+    len: 0,
+  });
 };

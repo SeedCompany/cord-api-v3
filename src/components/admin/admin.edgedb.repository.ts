@@ -1,12 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { DateTime } from 'luxon';
-import { e, EdgeDB, Options } from '~/core/edgedb';
+import { disableAccessPolicies, e, EdgeDB } from '~/core/edgedb';
 import { AdminRepository } from './admin.repository';
 
 @Injectable()
 export class AdminEdgeDBRepository extends AdminRepository {
-  constructor(private readonly edgedb: EdgeDB) {
+  private readonly edgedb: EdgeDB;
+  constructor(edgedb: EdgeDB) {
     super();
+    this.edgedb = edgedb.withOptions(disableAccessPolicies);
   }
 
   async finishing(callback: () => Promise<void>) {
@@ -24,9 +26,7 @@ export class AdminEdgeDBRepository extends AdminRepository {
       hash: u['<user[is Auth::Identity]'].passwordHash,
     }));
     const query = e.assert_exists(e.assert_single(rootUser));
-    const user = await this.edgedb.usingOptions(noAPs, () =>
-      this.edgedb.run(query),
-    );
+    const user = await this.edgedb.run(query);
     return {
       id: user.id,
       email: user.email ?? '',
@@ -48,7 +48,7 @@ export class AdminEdgeDBRepository extends AdminRepository {
           set: { passwordHash },
         })),
       }));
-    await this.edgedb.usingOptions(noAPs, () => this.edgedb.run(query));
+    await this.edgedb.run(query);
   }
 
   async checkDefaultOrg() {
@@ -59,9 +59,3 @@ export class AdminEdgeDBRepository extends AdminRepository {
     // nah
   }
 }
-
-const noAPs = (options: Options) =>
-  options.withConfig({
-    // eslint-disable-next-line @typescript-eslint/naming-convention
-    apply_access_policies: false,
-  });

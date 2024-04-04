@@ -95,16 +95,11 @@ export class AuthenticationRepository {
       .run();
   }
 
-  async getPasswordHash(input: LoginInput, session: Session) {
+  async getPasswordHash(input: LoginInput) {
     const result = await this.db
       .query()
       .raw(
         `
-    MATCH
-      (token:Token {
-        active: true,
-        value: $token
-      })
     MATCH
       (:EmailAddress {value: $email})
       <-[:email {active: true}]-
@@ -115,13 +110,12 @@ export class AuthenticationRepository {
       password.value as pash
     `,
         {
-          token: session.token,
           email: input.email,
         },
       )
       .asResult<{ pash: string }>()
       .first();
-    return result?.pash;
+    return result?.pash ?? null;
   }
 
   async connectSessionToUser(input: LoginInput, session: Session) {
@@ -155,7 +149,7 @@ export class AuthenticationRepository {
     return result?.id;
   }
 
-  async deleteSessionToken(token: string): Promise<void> {
+  async disconnectUserFromSession(token: string): Promise<void> {
     await this.db
       .query()
       .raw(
@@ -203,9 +197,9 @@ export class AuthenticationRepository {
           : null,
       )
       .return<{
-        userId?: ID;
+        userId: ID | null;
         roles: readonly ScopedRole[];
-        impersonateeRoles?: readonly ScopedRole[];
+        impersonateeRoles: readonly ScopedRole[] | null;
       }>([
         'user.id as userId',
         'roles',
@@ -213,7 +207,7 @@ export class AuthenticationRepository {
       ])
       .first();
 
-    return result;
+    return result ?? null;
   }
 
   async rolesForUser(user: ID) {
@@ -237,7 +231,7 @@ export class AuthenticationRepository {
       .return('password.value as passwordHash')
       .asResult<{ passwordHash: string }>()
       .first();
-    return result?.passwordHash;
+    return result?.passwordHash ?? null;
   }
 
   async updatePassword(
