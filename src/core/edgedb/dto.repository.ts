@@ -73,7 +73,7 @@ export const RepoFor = <
   abstract class Repository extends CommonRepository {
     static customize<
       Customized extends BaseCustomizedRepository,
-      OmitKeys extends EnumType<typeof DefaultMethods>,
+      OmitKeys extends EnumType<typeof DefaultMethods> = never,
     >(
       customizer: (
         cls: typeof BaseCustomizedRepository,
