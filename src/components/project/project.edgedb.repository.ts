@@ -13,7 +13,7 @@ const hydrate = e.shape(e.Project, (project) => ({
   ...project['*'],
   // default::TranslationProject -> Translation
   // default::InternshipProject -> Internship
-  type: project.__type__.name.slice(9, 7) as unknown as
+  type: project.__type__.name.slice(9, -7) as unknown as
     | 'Translation'
     | 'Internship',
   __typename: project.__type__.name,
