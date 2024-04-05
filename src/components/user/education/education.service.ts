@@ -8,7 +8,6 @@ import {
   UnsecuredDto,
 } from '../../../common';
 import { HandleIdLookup, ILogger, Logger } from '../../../core';
-import { mapListResults } from '../../../core/database/results';
 import { Privileges } from '../../authorization';
 import {
   CreateEducation,
@@ -52,7 +51,7 @@ export class EducationService {
     });
 
     const result = await this.repo.readOne(id);
-    return await this.secure(result, session);
+    return this.secure(result, session);
   }
 
   async readMany(ids: readonly ID[], session: Session) {
@@ -62,10 +61,7 @@ export class EducationService {
     );
   }
 
-  private async secure(
-    dto: UnsecuredDto<Education>,
-    session: Session,
-  ): Promise<Education> {
+  private secure(dto: UnsecuredDto<Education>, session: Session) {
     return this.privileges.for(session, Education).secure(dto);
   }
 
@@ -97,6 +93,9 @@ export class EducationService {
     session: Session,
   ): Promise<EducationListOutput> {
     const results = await this.repo.list(input, session);
-    return await mapListResults(results, (dto) => this.secure(dto, session));
+    return {
+      ...results,
+      items: results.items.map((dto) => this.secure(dto, session)),
+    };
   }
 }
