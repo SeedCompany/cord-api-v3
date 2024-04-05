@@ -357,7 +357,7 @@ export class ProjectResolver {
     @LoggedInSession() session: Session,
   ): Promise<CreateProjectOutput> {
     const project = await this.projectService.create(input, session);
-    const secured = await this.projectService.secure(project, session);
+    const secured = this.projectService.secure(project, session);
     return { project: secured };
   }
 
@@ -369,7 +369,7 @@ export class ProjectResolver {
     @LoggedInSession() session: Session,
   ): Promise<UpdateProjectOutput> {
     const project = await this.projectService.update(input, session, changeset);
-    const secured = await this.projectService.secure(project, session);
+    const secured = this.projectService.secure(project, session);
     return { project: secured };
   }
 
