@@ -35,6 +35,7 @@ import {
   $expr_Select,
   normaliseShape,
   objectTypeToSelectShape,
+  OrderByExpression,
   SelectFilterExpression,
   SelectModifiers,
 } from './generated-client/select';
@@ -143,6 +144,19 @@ export const RepoFor = <
     ): Many<SelectFilterExpression | false | Nil> {
       return [];
     }
+    protected applyFilter(
+      scope: ScopeOf<Root>,
+      input: any,
+    ): { filter: SelectFilterExpression } | {} {
+      const filters = many(this.listFilters(scope, input)).filter(isNotFalsy);
+      const filter =
+        filters.length === 0
+          ? null
+          : filters.length === 1
+          ? filters[0]
+          : e.all(e.set(...filters));
+      return filter ? { filter } : {};
+    }
 
     protected orderBy<Scope extends $expr_PathNode>(
       scope: ScopeOf<Root>,
@@ -154,6 +168,15 @@ export const RepoFor = <
         expression: scope[sortKey],
         direction: input.order,
       } as const;
+    }
+    protected applyOrderBy(
+      scope: ScopeOf<Root>,
+      input: PaginationInput,
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+    ): { order_by?: OrderByExpression } {
+      return isSortablePaginationInput(input)
+        ? { order_by: this.orderBy(scope, input) }
+        : {};
     }
 
     protected async paginate(
@@ -229,21 +252,10 @@ export const RepoFor = <
     }
 
     async list(input: PaginationInput) {
-      const all = e.select(dbType, (obj: any) => {
-        const filters = many(this.listFilters(obj, input)).filter(isNotFalsy);
-        const filter =
-          filters.length === 0
-            ? null
-            : filters.length === 1
-            ? filters[0]
-            : e.all(e.set(...filters));
-        return {
-          ...(filter ? { filter } : {}),
-          ...(isSortablePaginationInput(input)
-            ? { order_by: this.orderBy(obj, input) }
-            : {}),
-        };
-      });
+      const all = e.select(dbType, (obj: any) => ({
+        ...this.applyFilter(obj, input),
+        ...this.applyOrderBy(obj, input),
+      }));
       return await this.paginate(all as any, input);
     }
 
