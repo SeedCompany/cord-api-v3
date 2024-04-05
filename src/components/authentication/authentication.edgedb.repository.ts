@@ -204,19 +204,25 @@ export class AuthenticationEdgeDBRepository
   }
 
   async saveEmailToken(email: string, token: string) {
-    const query = e.insert(e.Auth.EmailToken, { email, token });
-    await this.db.run(query);
+    await this.db.run(this.saveEmailTokenQuery, { email, token });
   }
+  private readonly saveEmailTokenQuery = e.params(
+    { email: e.str, token: e.str },
+    ({ email, token }) => e.insert(e.Auth.EmailToken, { email, token }),
+  );
 
   async findEmailToken(token: string) {
-    const query = e.select(e.Auth.EmailToken, (et) => ({
-      ...et['*'],
-      createdOn: et.createdAt, // backwards compatibility
-      filter_single: { token },
-    }));
-    const result = await this.db.run(query);
-    return result ?? undefined;
+    return await this.db.run(this.findEmailTokenQuery, { token });
   }
+  private readonly findEmailTokenQuery = e.params(
+    { token: e.str },
+    ({ token }) =>
+      e.select(e.Auth.EmailToken, (et) => ({
+        ...et['*'],
+        createdOn: et.createdAt, // backwards compatibility
+        filter_single: { token },
+      })),
+  );
 
   async updatePasswordViaEmailToken(
     { email }: { email: string },

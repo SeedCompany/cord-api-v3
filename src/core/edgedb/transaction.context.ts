@@ -28,7 +28,7 @@ export class TransactionContext
           get: (target: typeof tx, p: string, receiver: any) => {
             const current = this.optionsContext.current.session;
             ensureCompatibleSession(txSession, current);
-            Reflect.get(target, p, receiver);
+            return Reflect.get(target, p, receiver);
           },
         });
 
