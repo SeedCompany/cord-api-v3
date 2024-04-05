@@ -8,9 +8,9 @@ import {
   ServerException,
   Session,
   UnsecuredDto,
-} from '../../common';
-import { CommonRepository, ConfigService, OnIndex } from '../../core';
-import { ChangesOf, getChanges } from '../../core/database/changes';
+} from '~/common';
+import { CommonRepository, ConfigService, OnIndex } from '~/core';
+import { ChangesOf, getChanges } from '~/core/database/changes';
 import {
   ACTIVE,
   createNode,
@@ -22,7 +22,7 @@ import {
   paginate,
   requestingUser,
   sorting,
-} from '../../core/database/query';
+} from '~/core/database/query';
 import { Privileges } from '../authorization';
 import {
   CreateProject,
@@ -197,7 +197,7 @@ export class ProjectRepository extends CommonRepository {
     if (!result) {
       throw new ServerException('Failed to create project');
     }
-    return result.id;
+    return result;
   }
 
   async update(
