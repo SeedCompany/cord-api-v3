@@ -41,29 +41,28 @@ export class InternshipProjectEdgeDBRepository extends RepoFor(
   },
 ).withDefaults() {}
 
+@Injectable()
 export class ProjectEdgeDBRepository
   extends RepoFor(IProject, {
     hydrate,
-  }).customize((cls) => {
-    @Injectable()
-    class Repo extends cls {
-      constructor(
-        readonly translation: TranslationProjectEdgeDBRepository,
-        readonly internship: InternshipProjectEdgeDBRepository,
-      ) {
-        super();
-      }
-
-      create(input: CreateProject) {
-        return input.type === 'Translation'
-          ? this.translation.create(input)
-          : this.internship.create(input);
-      }
-    }
-    return Repo;
+  }).withDefaults({
+    omit: ['create'],
   })
   implements PublicOf<ProjectRepository>
 {
+  constructor(
+    readonly translation: TranslationProjectEdgeDBRepository,
+    readonly internship: InternshipProjectEdgeDBRepository,
+  ) {
+    super();
+  }
+
+  create(input: CreateProject) {
+    return input.type === 'Translation'
+      ? this.translation.create(input)
+      : this.internship.create(input);
+  }
+
   protected listFilters(
     project: ScopeOf<typeof e.Project>,
     input: ProjectListInput,
