@@ -120,14 +120,14 @@ export class ProjectRepository extends CommonRepository {
           merge('props', 'changedProps', {
             type: 'node.type',
             pinned: 'exists((:User { id: $requestingUser })-[:pinned]->(node))',
-            rootDirectory: 'rootDirectory.id',
-            primaryLocation: 'primaryLocation.id',
-            marketingLocation: 'marketingLocation.id',
-            fieldRegion: 'fieldRegion.id',
-            owningOrganization: 'organization.id',
+            rootDirectory: 'rootDirectory { .id }',
+            primaryLocation: 'primaryLocation { .id }',
+            marketingLocation: 'marketingLocation { .id }',
+            fieldRegion: 'fieldRegion { .id }',
+            owningOrganization: 'organization { .id }',
             engagementTotal: 'engagementTotal',
             changeset: 'changeset.id',
-            marketingRegionOverride: 'marketingRegionOverride.id',
+            marketingRegionOverride: 'marketingRegionOverride { .id }',
           }).as('dto'),
         );
   }
@@ -233,7 +233,7 @@ export class ProjectRepository extends CommonRepository {
       );
       result = {
         ...result,
-        primaryLocation: primaryLocationId,
+        primaryLocation: primaryLocationId ? { id: primaryLocationId } : null,
       };
     }
 
@@ -247,7 +247,7 @@ export class ProjectRepository extends CommonRepository {
       );
       result = {
         ...result,
-        fieldRegion: fieldRegionId,
+        fieldRegion: fieldRegionId ? { id: fieldRegionId } : null,
       };
     }
 
@@ -261,7 +261,9 @@ export class ProjectRepository extends CommonRepository {
       );
       result = {
         ...result,
-        marketingLocation: marketingLocationId,
+        marketingLocation: marketingLocationId
+          ? { id: marketingLocationId }
+          : null,
       };
     }
 
@@ -275,7 +277,9 @@ export class ProjectRepository extends CommonRepository {
       );
       result = {
         ...result,
-        marketingRegionOverride: marketingRegionOverrideId,
+        marketingRegionOverride: marketingRegionOverrideId
+          ? { id: marketingRegionOverrideId }
+          : null,
       };
     }
 

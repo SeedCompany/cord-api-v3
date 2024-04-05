@@ -264,13 +264,13 @@ export class ProjectResolver {
         value: undefined,
       };
     }
-    if (!project.rootDirectory.value) {
+    if (!project.rootDirectory.value?.id) {
       throw new NotFoundException(
         'Could not find root directory associated to this project',
       );
     }
 
-    const dir = asDirectory(await files.load(project.rootDirectory.value));
+    const dir = asDirectory(await files.load(project.rootDirectory.value.id));
     return {
       canRead: true,
       canEdit: false, // rootDirectory of project unchangeable
@@ -283,7 +283,7 @@ export class ProjectResolver {
     @Parent() project: Project,
     @Loader(LocationLoader) locations: LoaderOf<LocationLoader>,
   ): Promise<SecuredLocation> {
-    return await mapSecuredValue(project.primaryLocation, (id) =>
+    return await mapSecuredValue(project.primaryLocation, ({ id }) =>
       locations.load(id),
     );
   }
@@ -309,7 +309,7 @@ export class ProjectResolver {
     @Parent() project: Project,
     @Loader(LocationLoader) locations: LoaderOf<LocationLoader>,
   ): Promise<SecuredLocation> {
-    return await mapSecuredValue(project.marketingLocation, (id) =>
+    return await mapSecuredValue(project.marketingLocation, ({ id }) =>
       locations.load(id),
     );
   }
@@ -319,7 +319,7 @@ export class ProjectResolver {
     @Parent() project: Project,
     @Loader(LocationLoader) locations: LoaderOf<LocationLoader>,
   ): Promise<SecuredLocation> {
-    return await mapSecuredValue(project.marketingRegionOverride, (id) =>
+    return await mapSecuredValue(project.marketingRegionOverride, ({ id }) =>
       locations.load(id),
     );
   }
@@ -329,7 +329,7 @@ export class ProjectResolver {
     @Parent() project: Project,
     @Loader(FieldRegionLoader) fieldRegions: LoaderOf<FieldRegionLoader>,
   ): Promise<SecuredFieldRegion> {
-    return await mapSecuredValue(project.fieldRegion, (id) =>
+    return await mapSecuredValue(project.fieldRegion, ({ id }) =>
       fieldRegions.load(id),
     );
   }
@@ -339,7 +339,7 @@ export class ProjectResolver {
     @Parent() project: Project,
     @Loader(OrganizationLoader) organizations: LoaderOf<OrganizationLoader>,
   ): Promise<SecuredOrganization> {
-    return await mapSecuredValue(project.owningOrganization, (id) =>
+    return await mapSecuredValue(project.owningOrganization, ({ id }) =>
       organizations.load(id),
     );
   }

@@ -23,7 +23,7 @@ export class AttachProjectRootDirectoryHandler
 
     event.project = {
       ...event.project,
-      rootDirectory: rootDirId,
+      rootDirectory: { id: rootDirId },
     };
 
     const folders = [
