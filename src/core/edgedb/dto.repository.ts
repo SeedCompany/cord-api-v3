@@ -272,12 +272,17 @@ export const RepoFor = <
     }
   }
 
+  type DefaultRepoOwnKeys = Exclude<
+    keyof DefaultDtoRepository,
+    keyof Repository
+  > &
+    string;
   const DefaultMethods = makeEnum({
     values: entries(
       Object.getOwnPropertyDescriptors(DefaultDtoRepository.prototype),
     ).flatMap(([key]) =>
-      typeof key === 'string'
-        ? (key as keyof DefaultDtoRepository & string)
+      typeof key === 'string' && key !== 'constructor'
+        ? (key as DefaultRepoOwnKeys)
         : [],
     ),
   });
