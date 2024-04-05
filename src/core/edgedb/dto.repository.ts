@@ -30,7 +30,7 @@ import { Privileges } from '../../components/authorization';
 import { getChanges } from '../database/changes';
 import { privileges } from '../database/dto.repository';
 import { CommonRepository } from './common.repository';
-import { $expr_PathNode, $linkPropify } from './generated-client/path';
+import type { $linkPropify } from './generated-client/path';
 import {
   $expr_Select,
   normaliseShape,
@@ -158,16 +158,15 @@ export const RepoFor = <
       return filter ? { filter } : {};
     }
 
-    protected orderBy<Scope extends $expr_PathNode>(
+    protected orderBy(
       scope: ScopeOf<Root>,
       input: SortablePaginationInput,
-    ) {
+    ): OrderByExpression {
       // TODO Validate this is a valid sort key
-      const sortKey = input.sort as keyof Scope['*'];
       return {
-        expression: scope[sortKey],
+        expression: (scope as any)[input.sort],
         direction: input.order,
-      } as const;
+      };
     }
     protected applyOrderBy(
       scope: ScopeOf<Root>,
