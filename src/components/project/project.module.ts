@@ -16,9 +16,8 @@ import { InternshipProjectResolver } from './internship-project.resolver';
 import { ProjectMemberModule } from './project-member/project-member.module';
 import { ProjectStepResolver } from './project-step.resolver';
 import {
-  InternshipProjectEdgeDBRepository,
+  ConcreteRepos,
   ProjectEdgeDBRepository,
-  TranslationProjectEdgeDBRepository,
 } from './project.edgedb.repository';
 import { ProjectLoader } from './project.loader';
 import { ProjectRepository } from './project.repository';
@@ -52,8 +51,7 @@ import { ProjectUserConnectionResolver } from './user-connection.resolver';
     ProjectStepResolver,
     ProjectRules,
     splitDb(ProjectRepository, ProjectEdgeDBRepository),
-    TranslationProjectEdgeDBRepository,
-    InternshipProjectEdgeDBRepository,
+    ...Object.values(ConcreteRepos),
     ProjectLoader,
     ...Object.values(handlers),
   ],

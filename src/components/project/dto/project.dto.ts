@@ -205,6 +205,11 @@ export class InternshipProject extends Project {
   declare readonly type: 'Internship';
 }
 
+export const ProjectConcretes = {
+  Translation: TranslationProject,
+  Internship: InternshipProject,
+} as const satisfies Record<ProjectType, typeof Project>;
+
 export const projectRange = (project: UnsecuredDto<Project>) =>
   DateInterval.tryFrom(project.mouStart, project.mouEnd);
 

@@ -1,13 +1,14 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Type } from '@nestjs/common';
+import { ModuleRef } from '@nestjs/core';
 import { PublicOf } from '~/common';
+import { grabInstances, InstanceMapOf } from '~/common/instance-maps';
 import { e, RepoFor } from '~/core/edgedb';
 import {
+  ProjectConcretes as ConcreteTypes,
   CreateProject,
-  InternshipProject,
   IProject,
-  TranslationProject,
 } from './dto';
-import { ProjectRepository } from './project.repository';
+import { ProjectRepository as Neo4jRepository } from './project.repository';
 
 const hydrate = e.shape(e.Project, (project) => ({
   ...project['*'],
@@ -26,40 +27,31 @@ const hydrate = e.shape(e.Project, (project) => ({
   owningOrganization: e.cast(e.uuid, null), // Not implemented going forward
 }));
 
-@Injectable()
-export class TranslationProjectEdgeDBRepository extends RepoFor(
-  TranslationProject,
-  {
-    hydrate,
-  },
-).withDefaults() {}
+export const ConcreteRepos = {
+  Translation: class TranslationProjectRepository extends RepoFor(
+    ConcreteTypes.Translation,
+    { hydrate },
+  ).withDefaults() {},
 
-@Injectable()
-export class InternshipProjectEdgeDBRepository extends RepoFor(
-  InternshipProject,
-  {
-    hydrate,
-  },
-).withDefaults() {}
+  Internship: class InternshipProjectRepository extends RepoFor(
+    ConcreteTypes.Internship,
+    { hydrate },
+  ).withDefaults() {},
+} satisfies Record<keyof typeof ConcreteTypes, Type>;
 
 @Injectable()
 export class ProjectEdgeDBRepository
-  extends RepoFor(IProject, {
-    hydrate,
-  }).customize((cls) => {
-    return class extends cls {
-      constructor(
-        readonly translation: TranslationProjectEdgeDBRepository,
-        readonly internship: InternshipProjectEdgeDBRepository,
-      ) {
-        super();
-      }
+  extends RepoFor(IProject, { hydrate }).withDefaults()
+  implements PublicOf<Neo4jRepository>
+{
+  protected readonly concretes: InstanceMapOf<typeof ConcreteRepos>;
 
-      create(input: CreateProject) {
-        return input.type === 'Translation'
-          ? this.translation.create(input)
-          : this.internship.create(input);
-      }
-    };
-  })
-  implements PublicOf<ProjectRepository> {}
+  constructor(moduleRef: ModuleRef) {
+    super();
+    this.concretes = grabInstances(moduleRef, ConcreteRepos);
+  }
+
+  async create(input: CreateProject) {
+    return await this.concretes[input.type].create(input);
+  }
+}
