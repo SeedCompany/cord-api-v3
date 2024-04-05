@@ -27,7 +27,6 @@ const hydrate = e.shape(e.Project, (project) => ({
   rootDirectory: true,
 }));
 
-@Injectable()
 export class TranslationProjectEdgeDBRepository extends RepoFor(
   TranslationProject,
   {
@@ -35,7 +34,6 @@ export class TranslationProjectEdgeDBRepository extends RepoFor(
   },
 ).withDefaults() {}
 
-@Injectable()
 export class InternshipProjectEdgeDBRepository extends RepoFor(
   InternshipProject,
   {
@@ -43,12 +41,12 @@ export class InternshipProjectEdgeDBRepository extends RepoFor(
   },
 ).withDefaults() {}
 
-@Injectable()
 export class ProjectEdgeDBRepository
   extends RepoFor(IProject, {
     hydrate,
   }).customize((cls) => {
-    return class extends cls {
+    @Injectable()
+    class Repo extends cls {
       constructor(
         readonly translation: TranslationProjectEdgeDBRepository,
         readonly internship: InternshipProjectEdgeDBRepository,
@@ -61,7 +59,8 @@ export class ProjectEdgeDBRepository
           ? this.translation.create(input)
           : this.internship.create(input);
       }
-    };
+    }
+    return Repo;
   })
   implements PublicOf<ProjectRepository>
 {
