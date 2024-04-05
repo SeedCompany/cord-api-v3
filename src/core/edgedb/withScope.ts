@@ -2,6 +2,7 @@ import { Role } from '~/common';
 import type { AuthScope } from '../../components/authorization';
 import e from './generated-client';
 import { orScalarLiteral } from './generated-client/castMaps';
+import { $str } from './generated-client/modules/std';
 import * as $ from './generated-client/reflection';
 
 /**
@@ -20,9 +21,6 @@ export const withScope = <
   roles: RoleExpr,
 ) =>
   e.op(e.str(scope + ':'), '++', e.cast(e.str, roles)) as $.$expr_Operator<
-    $.ScalarType<
-      'std::str',
-      `${Scope}:${Role}` // <-- TS str literal here
-    >,
+    $str<`${Scope}:${Role}`>,
     $.cardutil.paramCardinality<RoleExpr>
   >;
