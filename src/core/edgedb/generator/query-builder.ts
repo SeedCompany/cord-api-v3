@@ -30,6 +30,7 @@ export async function generateQueryBuilder({
   changeImplicitIDType(qbDir);
   allowOrderingByEnums(qbDir);
   adjustToImmutableTypes(qbDir);
+  addTypeNarrowingToStdScalars(qbDir);
 }
 
 function addJsExtensionDeepPathsOfEdgedbLibrary(qbDir: Directory) {
@@ -137,6 +138,16 @@ function adjustToImmutableTypes(qbDir: Directory) {
       .replaceAll('? T[]', '? readonly T[]')
       .replaceAll('? [T, ...T[]]', '? readonly [T, ...T[]]'),
   );
+}
+
+function addTypeNarrowingToStdScalars(qbDir: Directory) {
+  const std = qbDir.addSourceFileAtPath('modules/std.ts');
+  replaceText(std.getTypeAliasOrThrow('$str'), () => {
+    return `export type $str<E extends string = string> = $.ScalarType<'std::str', E>;`;
+  });
+  replaceText(std.getTypeAliasOrThrow('$json'), () => {
+    return `export type $json<E = unknown> = $.ScalarType<"std::json", E>;`;
+  });
 }
 
 const replaceText = <N extends ts.Node>(
