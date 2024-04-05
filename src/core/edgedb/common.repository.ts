@@ -11,10 +11,8 @@ import { e } from './reexports';
  */
 @Injectable()
 export class CommonRepository implements PublicOf<Neo4jCommonRepository> {
-  @Inject(EdgeDB)
-  protected readonly db: EdgeDB;
-  @Inject(ResourcesHost)
-  protected readonly resources: ResourcesHost;
+  @Inject() protected readonly db: EdgeDB;
+  @Inject() protected readonly resources: ResourcesHost;
 
   /**
    * Here for compatibility with the Neo4j version.
