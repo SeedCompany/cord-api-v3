@@ -1,5 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { cleanJoin, groupBy, mapEntries } from '@seedcompany/common';
+import { cleanJoin, entries, groupBy, mapEntries } from '@seedcompany/common';
 import { stripIndent } from 'common-tags';
 import addIndent from 'indent-string';
 import { startCase } from 'lodash';
@@ -18,13 +18,14 @@ export class EdgeDBAccessPolicyGenerator {
   makeSdl(params: AsEdgeQLParams<any>) {
     const { resource } = params;
     const actions = {
-      read: 'select',
-      create: 'insert',
+      select: 'read',
+      'update read': 'read',
+      'update write': 'edit',
+      insert: 'create',
       delete: 'delete',
-      // edit: 'update', // need fine grain; will handle at app level
-    } as const satisfies { [_ in ResourceAction]?: string };
+    } as const satisfies Record<string, ResourceAction>;
 
-    const actionPerms = mapEntries(actions, ([action, dbAction]) => [
+    const actionPerms = mapEntries(entries(actions), ([dbAction, action]) => [
       dbAction,
       this.executor.forEdgeDB({ resource, action }),
     ]);
@@ -51,7 +52,7 @@ export class EdgeDBAccessPolicyGenerator {
     }
 
     const name = `Can${stmtTypes
-      .map((action) => startCase(action))
+      .map((action) => startCase(action).replaceAll(/\s+/g, ''))
       .join('')}GeneratedFromAppPoliciesFor${params.resource.name}`;
 
     const withAliases =

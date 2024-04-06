@@ -92,13 +92,17 @@ export class PolicyExecutor {
     action,
     resource,
   }: Pick<ResolveParams, 'action' | 'resource'>): Permission {
+    const isDerivedInDB = [...resource.interfaces].some((e) => e.hasDB);
+
     if (action !== 'read' && resource.isCalculated) {
       // users don't initiate calculated actions, so don't block with access policies
-      if ([...resource.interfaces].some((e) => e.hasDB)) {
-        // But don't duplicate AP if an interface has already declared
-        return false;
-      }
-      return true;
+      // But don't duplicate AP if an interface has already declared
+      return !isDerivedInDB;
+    }
+
+    // let app handle edit permissions
+    if (action === 'edit') {
+      return !isDerivedInDB;
     }
 
     const policies = this.policyFactory.getDBPolicies();
