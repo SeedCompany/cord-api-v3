@@ -85,7 +85,9 @@ module default {
       )
     );
     marketingLocation: Location;
+    multi otherLocations: Location;
     fieldRegion: FieldRegion;
+    marketingRegionOverride: FieldRegion;
     
     link rootDirectory: Directory;
     
