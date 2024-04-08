@@ -17,7 +17,7 @@ export async function createProject(
 ) {
   const project: CreateProject = {
     name: faker.lorem.word() + ' ' + faker.string.uuid(),
-    type: ProjectType.Translation,
+    type: ProjectType.MomentumTranslation,
     mouStart: CalendarDate.fromISO('1991-01-01'),
     mouEnd: CalendarDate.fromISO('1992-01-01'),
     step: ProjectStep.EarlyConversations,

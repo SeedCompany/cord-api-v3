@@ -543,7 +543,9 @@ describe('Engagement e2e', () => {
   });
 
   it('updates ceremony for language engagement', async () => {
-    project = await createProject(app, { type: ProjectType.Translation });
+    project = await createProject(app, {
+      type: ProjectType.MomentumTranslation,
+    });
     language = await runAsAdmin(app, createLanguage);
     const languageEngagement = await createLanguageEngagement(app, {
       languageId: language.id,

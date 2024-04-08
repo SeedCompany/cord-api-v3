@@ -110,6 +110,14 @@ export const stringListProp =
     return { [prop ?? key]: { value: inArray(value as any) } };
   };
 
+export const stringListBaseNodeProp =
+  <T, K extends ConditionalKeys<Required<T>, readonly string[]>>(
+    prop?: string,
+  ): Builder<T, K> =>
+  ({ key, value }) => ({
+    node: { [prop ?? key]: inArray(value as any) },
+  });
+
 type PatternInput = Exclude<PatternCollection, any[][]>;
 
 export const pathExists =

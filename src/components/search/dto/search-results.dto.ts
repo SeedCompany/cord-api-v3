@@ -26,6 +26,8 @@ import {
 import { ProgressReport } from '../../progress-report/dto';
 import {
   InternshipProject,
+  MomentumTranslationProject,
+  MultiplicationTranslationProject,
   IProject as Project,
   TranslationProject,
 } from '../../project/dto';
@@ -39,7 +41,8 @@ const publicSearchable = {
   Organization,
   Partner,
   Language,
-  TranslationProject,
+  MomentumTranslationProject,
+  MultiplicationTranslationProject,
   InternshipProject,
   User,
   Film,
@@ -67,6 +70,7 @@ const privateSearchable = {
 // Only use if not a concrete type.
 const searchableAbstracts = {
   Project,
+  TranslationProject,
   Product,
   PeriodicReport,
 } as const;

@@ -119,7 +119,7 @@ export const matchProjectSens =
         .with(projectVar) // import
         .with(projectVar) // needed for where clause
         .raw(
-          `WHERE ${projectVar} IS NOT NULL AND ${projectVar}.type = "${ProjectType.Translation}"`,
+          `WHERE ${projectVar} IS NOT NULL AND ${projectVar}.type <> "${ProjectType.Internship}"`,
         )
         .optionalMatch([
           node(projectVar),
