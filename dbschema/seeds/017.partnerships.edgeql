@@ -7,8 +7,8 @@ partnershipsJson := to_json($$[
       "financialReportingType": "Funded",
       "agreementStatus": "NotAttached",
       "primary": true,
-      "types": ["Funding"],
-    },
+      "types": ["Funding"]
+    }
 ]$$),
 
 partnerships := (
