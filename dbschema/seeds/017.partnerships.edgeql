@@ -10,6 +10,24 @@ partnershipsJson := to_json($$[
       "types": ["Funding"]
   },
   {
+      "partner": "Ered Luin Translation Syndicate",
+      "project": "Emyn Muil",
+      "mouStatus": "NotAttached",
+      "financialReportingType": "FieldEngaged",
+      "agreementStatus": "NotAttached",
+      "primary": true,
+      "types": ["Funding"]
+  },
+  {
+        "partner": "Rohan Linguistics",
+        "project": "Emyn Muil",
+        "mouStatus": "NotAttached",
+        "financialReportingType": "FieldEngaged",
+        "agreementStatus": "NotAttached",
+        "primary": true,
+        "types": ["Funding", "Managing"]
+    },
+  {
       "partner": "Rhun For Zero",
       "project": "Emyn Muil",
       "mouStatus": "NotAttached",
