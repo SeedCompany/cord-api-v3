@@ -1,6 +1,5 @@
 import { Type } from '@nestjs/common';
 import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
-import { stripIndent } from 'common-tags';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive } from 'type-fest';
@@ -17,7 +16,6 @@ import {
   Resource,
   ResourceRelationsShape,
   Secured,
-  SecuredBoolean,
   SecuredDateNullable,
   SecuredDateTime,
   SecuredDateTimeNullable,
@@ -160,17 +158,6 @@ class Project extends Interfaces {
   readonly financialReportPeriod: SecuredReportPeriod;
 
   readonly rootDirectory: Secured<LinkTo<'Directory'> | null>;
-
-  @Field({
-    description: stripIndent`
-      Whether or not this project and its associated languages (via engagements)
-      are a part of our "Preset Inventory".
-
-      This indicates the project/language(s) will be exposed to major investors to directly fund.
-      It also means the project is committed to having quality, consistent reporting.
-    `,
-  })
-  readonly presetInventory: SecuredBoolean;
 
   /**
    * Optimization for {@see ProjectResolver.engagements}.

@@ -66,10 +66,6 @@ module default {
     financialReportReceivedAt: datetime;
     financialReportPeriod: ReportPeriod;
     
-    required presetInventory: bool {
-      default := false;
-    };
-    
     multi link members := .<project[is Project::Member];
     single link membership := (select .members filter .user.id = global default::currentUserId limit 1);
     
