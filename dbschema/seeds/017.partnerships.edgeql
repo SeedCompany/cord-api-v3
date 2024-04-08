@@ -1,5 +1,5 @@
 with
-partnershipsJson := to_json('[
+partnershipsJson := to_json($$[
   {
       "partner": "Rohan Linguistics",
       "project": "South Downs",
@@ -36,7 +36,7 @@ partnershipsJson := to_json('[
       "primary": true,
       "types": ["Managing", "Resource"]
   }
-]'),
+]$$),
 
 partnerships := (
   for entry in json_array_unpack(partnershipsJson)
