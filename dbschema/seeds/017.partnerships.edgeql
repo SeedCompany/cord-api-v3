@@ -1,58 +1,49 @@
 with
 partnershipsJson := to_json($$[
   {
-      "partner": "Rohan Linguistics",
       "project": "South Downs",
-      "mouStatus": "NotAttached",
-      "financialReportingType": "Funded",
+      "partner": "Rohan Linguistics",
+      "types": ["Funding"],
       "agreementStatus": "NotAttached",
-      "primary": true,
-      "types": ["Funding"]
+      "primary": true
   },
   {
-      "partner": "Ered Luin Translation Syndicate",
       "project": "Emyn Muil",
-      "mouStatus": "NotAttached",
-      "financialReportingType": "FieldEngaged",
+      "partner": "Ered Luin Translation Syndicate",
+      "types": ["Funding"],
       "agreementStatus": "NotAttached",
-      "primary": true,
-      "types": ["Funding"]
+      "primary": true
   },
   {
-        "partner": "Rohan Linguistics",
         "project": "Emyn Muil",
-        "mouStatus": "NotAttached",
+        "partner": "Rohan Linguistics",
+        "types": ["Funding", "Managing"],
         "financialReportingType": "FieldEngaged",
         "agreementStatus": "NotAttached",
-        "primary": true,
-        "types": ["Funding", "Managing"]
-    },
-  {
-      "partner": "Rhun For Zero",
-      "project": "Emyn Muil",
-      "mouStatus": "NotAttached",
-      "financialReportingType": "Hybrid",
-      "agreementStatus": "NotAttached",
-      "primary": false,
-      "types": ["Impact"]
+        "primary": true
   },
   {
-      "partner": "Eriador Church",
+      "project": "Emyn Muil",
+      "partner": "Rhun For Zero",
+      "types": ["Impact"],
+      "agreementStatus": "NotAttached",
+      "primary": false
+  },
+  {
       "project": "Arwen Evenstar Intern",
-      "mouStatus": "NotAttached",
+      "partner": "Eriador Church",
+      "types": ["Managing"],
       "financialReportingType": "Funded",
       "agreementStatus": "NotAttached",
-      "primary": true,
-      "types": ["Managing"]
+      "primary": true
   },
   {
-      "partner": "Gondor Foundation",
       "project": "Cohort of the Ents",
-      "mouStatus": "NotAttached",
+      "partner": "Gondor Foundation",
+      "types": ["Managing", "Resource"],
       "financialReportingType": "Hybrid",
       "agreementStatus": "NotAttached",
-      "primary": true,
-      "types": ["Managing", "Resource"]
+      "primary": true
   }
 ]$$),
 
@@ -68,10 +59,9 @@ partnerships := (
         project := project,
         partner := partner,
         projectContext := project.projectContext,
-        mouStatus := <str>json_get(entry, 'mouStatus'),
         financialReportingType := <str>json_get(entry, 'financialReportingType'),
         agreementStatus := <str>json_get(entry, 'agreementStatus'),
-        primary := <bool>json_get(entry, 'primary'),
+        primary := <bool>json_get(entry, 'primary') ?? true,
         types := <str>json_array_unpack(json_get(entry, 'types')),
       })
     )
