@@ -81,9 +81,6 @@ export abstract class UpdateProject {
 
   @Field(() => ReportPeriod, { nullable: true })
   readonly financialReportPeriod?: ReportPeriod | null;
-
-  @Field({ nullable: true })
-  readonly presetInventory?: boolean;
 }
 
 @InputType()

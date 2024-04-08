@@ -83,12 +83,6 @@ export abstract class ProjectFilters {
   })
   readonly onlyMultipleEngagements?: boolean;
 
-  @Field({
-    nullable: true,
-    description: 'Only projects that are (not) in the "Preset Inventory"',
-  })
-  readonly presetInventory?: boolean;
-
   readonly partnerId?: ID;
 
   readonly userId?: ID;

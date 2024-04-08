@@ -314,59 +314,6 @@ describe('Language e2e', () => {
     });
     expect(updated.hasExternalFirstScripture.value).toBe(true);
   });
-
-  it('presetInventory flag', async () => {
-    const project = await createProject(app, { presetInventory: true });
-    const language = await createLanguage(app);
-    await createLanguageEngagement(app, {
-      projectId: project.id,
-      languageId: language.id,
-    });
-
-    const { language: actual } = await app.graphql.query(
-      gql`
-        query language($id: ID!) {
-          language(id: $id) {
-            ...language
-          }
-        }
-        ${fragments.language}
-      `,
-      {
-        id: language.id,
-      },
-    );
-
-    expect(actual.presetInventory.value).toBe(true);
-  });
-
-  it('List view of languages by presetInventory flag', async () => {
-    const numLanguages = 2;
-
-    await Promise.all(times(numLanguages).map(() => createLanguage(app)));
-    // create presetInventory language
-    const project = await createProject(app, { presetInventory: true });
-    const language = await createLanguage(app);
-    await createLanguageEngagement(app, {
-      projectId: project.id,
-      languageId: language.id,
-    });
-
-    const { languages } = await app.graphql.query(gql`
-      query {
-        languages(input: { filter: { presetInventory: true } }) {
-          items {
-            ...language
-          }
-          hasMore
-          total
-        }
-      }
-      ${fragments.language}
-    `);
-
-    expect(languages.items.length).toBeGreaterThan(1);
-  });
 });
 
 async function updateLanguage(app: TestApp, update: Partial<UpdateLanguage>) {

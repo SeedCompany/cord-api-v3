@@ -6,7 +6,6 @@ import { keys as keysOf } from 'ts-transformer-keys';
 import { e } from '~/core/edgedb';
 import { RegisterResource } from '~/core/resources';
 import {
-  Calculated,
   DbLabel,
   DbUnique,
   ID,
@@ -173,18 +172,6 @@ export class Language extends Interfaces {
 
   @Field()
   readonly tags: SecuredTags;
-
-  @Calculated()
-  @Field({
-    description: stripIndent`
-      Whether or not this language is a part of our "Preset Inventory".
-
-      This is true if any engaged, non-closed, projects opt-in to this "Preset Inventory".
-
-      This indicates the language & mention projects will be exposed to major investors.
-    `,
-  })
-  readonly presetInventory: SecuredBoolean;
 
   // Not returned, only used to cache the sensitivity for determining permissions
   readonly effectiveSensitivity: Sensitivity;

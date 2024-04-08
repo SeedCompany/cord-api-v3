@@ -1,12 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import {
-  equals,
-  inArray,
-  node,
-  not,
-  Query,
-  relation,
-} from 'cypher-query-builder';
+import { inArray, node, Query, relation } from 'cypher-query-builder';
 import { ChangesOf } from '~/core/database/changes';
 import {
   ID,
@@ -18,11 +11,9 @@ import {
 import { DtoRepository } from '../../core';
 import {
   ACTIVE,
-  any,
   collect,
   createNode,
   createRelationships,
-  exp,
   filter,
   matchChangesetAndChangedProps,
   matchProjectScopedRoles,
@@ -37,7 +28,6 @@ import {
   sorting,
   variable,
 } from '../../core/database/query';
-import { ProjectStatus } from '../project';
 import {
   CreateLanguage,
   Language,
@@ -141,7 +131,6 @@ export class LanguageRepository extends DtoRepository<
           node('eth', 'EthnologueLanguage'),
         ])
         .apply(matchProps({ nodeName: 'eth', outputVar: 'ethProps' }))
-        .apply(this.isPresetInventory())
         .optionalMatch([
           node('node'),
           relation('in', '', 'language', ACTIVE),
@@ -153,7 +142,6 @@ export class LanguageRepository extends DtoRepository<
           merge('props', 'changedProps', {
             ethnologue: 'ethProps',
             pinned: 'exists((:User { id: $requestingUser })-[:pinned]->(node))',
-            presetInventory: 'presetInventory',
             firstScriptureEngagement: 'firstScriptureEngagement.id',
             scope: 'scopedRoles',
             changeset: 'changeset.id',
@@ -191,11 +179,6 @@ export class LanguageRepository extends DtoRepository<
             relation('out', '', 'partner', ACTIVE),
             node('', 'Partner', { id }),
           ]),
-          presetInventory: ({ value, query }) => {
-            query.apply(this.isPresetInventory()).with('*');
-            const condition = equals('true', true);
-            return { presetInventory: value ? condition : not(condition) };
-          },
           pinned: filter.isPinned,
         }),
       )
@@ -256,38 +239,5 @@ export class LanguageRepository extends DtoRepository<
       })
       .return('languageEngagement')
       .first();
-  }
-
-  isPresetInventory() {
-    return (query: Query) =>
-      query.subQuery('node', (sub) =>
-        sub
-          .optionalMatch([
-            node('node'),
-            relation('in', '', 'language', ACTIVE),
-            node('', 'LanguageEngagement'),
-            relation('in', '', 'engagement', ACTIVE),
-            node('project', 'Project'),
-            relation('out', '', 'status', ACTIVE),
-            node('status', 'ProjectStatus'),
-          ])
-          .where({
-            'status.value': inArray(
-              `['${ProjectStatus.InDevelopment}', '${ProjectStatus.Active}']`,
-              true,
-            ),
-          })
-          .return(
-            any(
-              'project',
-              collect('project'),
-              exp.path([
-                node('project'),
-                relation('out', '', 'presetInventory', ACTIVE),
-                node('', 'Property', { value: variable('true') }),
-              ]),
-            ).as('presetInventory'),
-          ),
-      );
   }
 }
