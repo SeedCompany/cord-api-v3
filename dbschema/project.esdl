@@ -149,7 +149,9 @@ module Project {
       A type that has a project context, which allows it to be
       aware of the sensitivity & current user membership for the associated context.";
     
-    required projectContext: Context;
+    required projectContext: Context {
+      on target delete delete source;
+    }
     index on (.projectContext);
     
     optional ownSensitivity: default::Sensitivity {
