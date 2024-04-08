@@ -83,6 +83,7 @@ export class SchemaFile extends SchemaNode {
       return;
     }
     await fs.writeFile(this.path, this.text, 'utf8');
+    this.#initHash = this.#textHash;
   }
 }
 
