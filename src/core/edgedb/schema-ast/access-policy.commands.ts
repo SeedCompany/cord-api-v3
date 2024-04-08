@@ -10,19 +10,18 @@ abstract class ApCommand extends Command {
   }
 }
 
-export class EdgeDBAccessPolicyWrapMigrateCommand extends ApCommand {
-  static paths = [['edgedb', 'migration']];
+export class EdgeDBAccessPolicyWrapCommand extends ApCommand {
+  static paths = [['edgedb']];
   static usage = Command.Usage({
     category: 'EdgeDB',
-    description:
-      'Wrap an EdgeDB migration command with access policies injected',
+    description: 'Wrap an EdgeDB command with access policies injected',
   });
   args = Option.Proxy();
   async execute() {
     const files = await this.injector.discoverFiles();
     await this.injector.injectAll(files);
     try {
-      await execa('edgedb', ['migration', ...this.args], {
+      await execa('edgedb', this.args, {
         stdio: 'inherit',
       });
     } catch {
