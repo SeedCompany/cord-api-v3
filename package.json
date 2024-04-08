@@ -12,7 +12,7 @@
     "postinstall": "ts-patch install || true",
     "build": "nest build",
     "clean": "rimraf -g dist schema.graphql 'src/core/edgedb/{generated-client,schema.ts}' 'src/**/*.edgeql.ts'",
-    "console": "node --import ./tools/ts-loader.js --import=extensionless/register src/console.ts",
+    "console": "node --loader ts-node/esm --import=extensionless/register src/console.ts",
     "console:prod": "node --import=extensionless/register dist/console.js",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "NODE_OPTIONS=\"${NODE_OPTIONS:-} --import=extensionless/register\" nest start",
