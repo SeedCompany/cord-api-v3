@@ -8,7 +8,34 @@ partnershipsJson := to_json($$[
       "agreementStatus": "NotAttached",
       "primary": true,
       "types": ["Funding"]
-    }
+  },
+  {
+      "partner": "Rhun For Zero",
+      "project": "Emyn Muil",
+      "mouStatus": "NotAttached",
+      "financialReportingType": "Hybrid",
+      "agreementStatus": "NotAttached",
+      "primary": false,
+      "types": ["Impact"]
+  },
+  {
+      "partner": "Eriador Church",
+      "project": "Arwen Evenstar Intern",
+      "mouStatus": "NotAttached",
+      "financialReportingType": "Funded",
+      "agreementStatus": "NotAttached",
+      "primary": true,
+      "types": ["Managing"]
+  },
+  {
+      "partner": "Gondor Foundation",
+      "project": "Cohort of the Ents",
+      "mouStatus": "NotAttached",
+      "financialReportingType": "Hybrid",
+      "agreementStatus": "NotAttached",
+      "primary": true,
+      "types": ["Managing", "Resource"]
+  }
 ]$$),
 
 partnerships := (
