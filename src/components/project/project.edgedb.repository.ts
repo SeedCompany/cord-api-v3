@@ -28,6 +28,7 @@ const hydrate = e.shape(e.Project, (project) => ({
   marketingRegionOverride: true,
   fieldRegion: true,
   owningOrganization: e.cast(e.uuid, null), // Not implemented going forward
+  presetInventory: e.bool(false), // Not implemented going forward
 }));
 
 export const ConcreteRepos = {

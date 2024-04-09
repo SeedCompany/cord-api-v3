@@ -27,6 +27,7 @@ export async function createProject(
       (await runAsAdmin(app, async () => {
         return (await createRegion(app)).id;
       })),
+    presetInventory: true,
     ...input,
   };
 

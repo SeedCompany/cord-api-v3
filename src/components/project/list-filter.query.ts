@@ -35,6 +35,7 @@ export const projectListFilter = (input: ProjectListInput) =>
       node('node'),
     ]),
     pinned: filter.isPinned,
+    presetInventory: filter.propVal(),
     partnerId: filter.pathExists((id) => [
       node('node'),
       relation('out', '', 'partnership', ACTIVE),
