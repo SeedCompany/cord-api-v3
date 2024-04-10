@@ -1,14 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import {
-  ID,
-  NotFoundException,
-  ObjectView,
-  ServerException,
-  Session,
-  UnsecuredDto,
-} from '../../../common';
-import { HandleIdLookup, ILogger, Logger } from '../../../core';
-import { mapListResults } from '../../../core/database/results';
+import { ID, ObjectView, Session, UnsecuredDto } from '~/common';
+import { HandleIdLookup, ILogger, Logger } from '~/core';
 import { Privileges } from '../../authorization';
 import {
   CreateEducation,
@@ -31,13 +23,7 @@ export class EducationService {
     this.privileges.for(session, Education).verifyCan('create');
     // create education
     const result = await this.repo.create(input, session);
-
-    if (!result) {
-      throw new ServerException('failed to create education');
-    }
-
-    this.logger.debug(`education created`, { id: result.id });
-    return await this.readOne(result.id, session);
+    return this.secure(result, session);
   }
 
   @HandleIdLookup(Education)
@@ -52,7 +38,7 @@ export class EducationService {
     });
 
     const result = await this.repo.readOne(id);
-    return await this.secure(result, session);
+    return this.secure(result, session);
   }
 
   async readMany(ids: readonly ID[], session: Session) {
@@ -62,30 +48,21 @@ export class EducationService {
     );
   }
 
-  private async secure(
-    dto: UnsecuredDto<Education>,
-    session: Session,
-  ): Promise<Education> {
+  private secure(dto: UnsecuredDto<Education>, session: Session) {
     return this.privileges.for(session, Education).secure(dto);
   }
 
   async update(input: UpdateEducation, session: Session): Promise<Education> {
-    const ed = await this.readOne(input.id, session);
+    const ed = await this.repo.readOne(input.id);
     const result = await this.repo.getUserIdByEducation(input.id);
-    if (!result) {
-      throw new NotFoundException(
-        'Could not find user associated with education',
-        'user.education',
-      );
-    }
     const changes = this.repo.getActualChanges(ed, input);
     // TODO move this condition into policies
     if (result.id !== session.userId) {
       this.privileges.for(session, Education, ed).verifyChanges(changes);
     }
 
-    await this.repo.update(ed, changes);
-    return await this.readOne(input.id, session);
+    const updated = await this.repo.update({ id: input.id, ...changes });
+    return this.secure(updated, session);
   }
 
   async delete(_id: ID, _session: Session): Promise<void> {
@@ -97,6 +74,9 @@ export class EducationService {
     session: Session,
   ): Promise<EducationListOutput> {
     const results = await this.repo.list(input, session);
-    return await mapListResults(results, (dto) => this.secure(dto, session));
+    return {
+      ...results,
+      items: results.items.map((dto) => this.secure(dto, session)),
+    };
   }
 }
