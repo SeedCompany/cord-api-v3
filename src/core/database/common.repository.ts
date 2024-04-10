@@ -12,7 +12,7 @@ import {
   NotFoundException,
   ResourceShape,
   ServerException,
-} from '../../common';
+} from '~/common';
 import { DatabaseService } from './database.service';
 import { createUniqueConstraint } from './indexer';
 import { ACTIVE, updateRelationList } from './query';
@@ -79,14 +79,19 @@ export class CommonRepository {
           // Ensure exactly one row is returned, for the create below
           .return('count(oldRel) as removedRelationCount'),
       )
-      .create([
-        node('node'),
-        relation('out', '', relationName, {
-          active: true,
-          createdAt: DateTime.local(),
-        }),
-        node('other'),
-      ])
+      .apply((q) =>
+        otherId
+          ? q.create([
+              node('node'),
+              relation('out', '', relationName, {
+                active: true,
+                createdAt: DateTime.local(),
+              }),
+              node('other'),
+            ])
+          : q,
+      )
+      .return('*')
       .run();
   }
 
