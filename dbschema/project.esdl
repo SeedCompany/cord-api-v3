@@ -107,7 +107,7 @@ module default {
     );
   }
   
-  type TranslationProject extending Project {
+  abstract type TranslationProject extending Project {
     multi link engagements := .<project[is LanguageEngagement];
     multi link languages := .engagements.language;
     
@@ -119,6 +119,11 @@ module default {
       )
     );
   }
+
+  type MomentumTranslationProject extending TranslationProject {
+    uid: uuid;
+  }
+  type MultiplicationTranslationProject extending TranslationProject;
   
   type InternshipProject extending Project {
     multi link engagements := .<project[is InternshipEngagement];
