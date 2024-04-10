@@ -2,7 +2,7 @@ import { entries, mapValues } from '@seedcompany/common';
 import type { e } from '~/core/edgedb';
 import type { SeedFn } from '~/core/edgedb/seeds.run';
 
-const translations: Input[] = [
+const momentumTranslation: Input[] = [
   {
     name: 'Misty Mountains',
     step: 'EarlyConversations',
@@ -102,7 +102,7 @@ export default (async function ({ e, db, print }) {
   const existing = new Set(await e.select(e.Project).name.run(db));
 
   const projectSeeds = entries({
-    Translation: translations,
+    MomentumTranslation: momentumTranslation,
     Internship: internships,
   }).flatMap(([type, list]) => list.map((item) => ({ type, ...item })));
 
