@@ -8,4 +8,5 @@ export const ProjectType = makeEnum({
     { value: 'MultiplicationTranslation', label: 'Multiplication' },
     'Internship',
   ],
+  exposeOrder: true,
 });
