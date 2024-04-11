@@ -23,11 +23,11 @@ import {
 
 @InputType()
 export abstract class ProjectFilters {
-  @Field(() => ProjectType, {
-    description: 'Only projects of this type',
+  @Field(() => [ProjectType], {
+    description: 'Only projects of these types',
     nullable: true,
   })
-  readonly type?: ProjectType;
+  readonly type?: ProjectType[];
 
   @Field(() => [Sensitivity], {
     description: 'Only projects with these sensitivities',

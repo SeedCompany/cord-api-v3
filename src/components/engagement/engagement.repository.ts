@@ -144,6 +144,7 @@ export class EngagementRepository extends CommonRepository {
             parent: 'project',
             project: {
               id: 'project.id',
+              type: 'project.type',
               status: 'status.value',
             },
             language: 'language.id',

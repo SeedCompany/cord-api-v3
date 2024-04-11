@@ -71,7 +71,7 @@ class Engagement extends ChangesetAwareResource {
 
   declare readonly __typename: 'LanguageEngagement' | 'InternshipEngagement';
 
-  readonly project: LinkTo<'Project'> & Pick<IProject, 'status'>;
+  readonly project: LinkTo<'Project'> & Pick<IProject, 'status' | 'type'>;
 
   @Field(() => IProject)
   declare readonly parent: BaseNode;

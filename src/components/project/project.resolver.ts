@@ -121,7 +121,10 @@ export class ProjectResolver {
         ...input,
         filter: {
           ...input.filter,
-          type: ProjectType.Translation,
+          type: [
+            ProjectType.MomentumTranslation,
+            ProjectType.MultiplicationTranslation,
+          ],
         },
       },
       session,
@@ -143,7 +146,7 @@ export class ProjectResolver {
         ...input,
         filter: {
           ...input.filter,
-          type: ProjectType.Internship,
+          type: [ProjectType.Internship],
         },
       },
       session,

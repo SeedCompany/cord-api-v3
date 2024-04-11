@@ -13,6 +13,7 @@ import { UserModule } from '../user/user.module';
 import { ProjectEngagementConnectionResolver } from './engagement-connection.resolver';
 import * as handlers from './handlers';
 import { InternshipProjectResolver } from './internship-project.resolver';
+import { RenameTranslationToMomentumMigration } from './migrations/rename-translation-to-momentum.migration';
 import { ProjectMemberModule } from './project-member/project-member.module';
 import { ProjectStepResolver } from './project-step.resolver';
 import {
@@ -54,6 +55,7 @@ import { ProjectUserConnectionResolver } from './user-connection.resolver';
     ...Object.values(ConcreteRepos),
     ProjectLoader,
     ...Object.values(handlers),
+    RenameTranslationToMomentumMigration,
   ],
   exports: [ProjectService, ProjectMemberModule, ProjectRules],
 })

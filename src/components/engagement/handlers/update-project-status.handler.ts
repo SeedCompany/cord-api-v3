@@ -121,7 +121,7 @@ export class UpdateProjectStatusHandler
           id,
           status,
         };
-        type === ProjectType.Translation
+        type !== ProjectType.Internship
           ? await this.engagementService.updateLanguageEngagement(
               updateInput,
               session,

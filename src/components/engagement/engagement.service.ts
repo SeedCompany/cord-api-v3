@@ -85,7 +85,7 @@ export class EngagementService {
     await this.verifyRelationshipEligibility(
       projectId,
       languageId,
-      ProjectType.Translation,
+      false,
       changeset,
     );
 
@@ -139,7 +139,7 @@ export class EngagementService {
     await this.verifyRelationshipEligibility(
       projectId,
       internId,
-      ProjectType.Internship,
+      true,
       changeset,
     );
 
@@ -437,15 +437,14 @@ export class EngagementService {
   protected async verifyRelationshipEligibility(
     projectId: ID,
     otherId: ID,
-    type: ProjectType,
+    isInternship: boolean,
     changeset?: ID,
   ): Promise<void> {
-    const isTranslation = type === ProjectType.Translation;
-    const property = isTranslation ? 'language' : 'intern';
+    const property = isInternship ? 'intern' : 'language';
     const result = await this.repo.verifyRelationshipEligibility(
       projectId,
       otherId,
-      isTranslation,
+      !isInternship,
       property,
       changeset,
     );
@@ -457,16 +456,20 @@ export class EngagementService {
       );
     }
 
-    if (result.project.properties.type !== type) {
+    const isActuallyInternship =
+      result.project.properties.type === ProjectType.Internship;
+    if (isActuallyInternship !== isInternship) {
       throw new InputException(
         `Only ${
-          isTranslation ? 'Language' : 'Internship'
-        } Engagements can be created on ${type} Projects`,
+          isInternship ? 'Internship' : 'Language'
+        } Engagements can be created on ${
+          isInternship ? 'Internship' : 'Translation'
+        } Projects`,
         `engagement.${property}Id`,
       );
     }
 
-    const label = isTranslation ? 'language' : 'person';
+    const label = isInternship ? 'person' : 'language';
     if (!result?.other) {
       throw new NotFoundException(
         `Could not find ${label}`,

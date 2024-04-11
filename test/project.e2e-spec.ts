@@ -200,7 +200,7 @@ describe('Project e2e', () => {
     await expect(
       createProject(app, {
         name: faker.string.uuid(),
-        type: ProjectType.Translation,
+        type: ProjectType.MomentumTranslation,
         fieldRegionId: 'invalid-location-id' as ID,
       }),
     ).rejects.toThrowGqlError(
@@ -214,7 +214,7 @@ describe('Project e2e', () => {
   it('create & read project with budget and field region by id', async () => {
     const proj: CreateProject = {
       name: faker.string.uuid(),
-      type: ProjectType.Translation,
+      type: ProjectType.MomentumTranslation,
       fieldRegionId: fieldRegion.id,
     };
 
@@ -363,7 +363,7 @@ describe('Project e2e', () => {
       unsorted.map(async (name) => {
         return await createProject(app, {
           name,
-          type: ProjectType.Translation,
+          type: ProjectType.MomentumTranslation,
           fieldRegionId: fieldRegion.id,
         });
       }),
@@ -393,7 +393,7 @@ describe('Project e2e', () => {
   it('List view of projects', async () => {
     // create 2 projects
     const numProjects = 2;
-    const type = ProjectType.Translation;
+    const type = ProjectType.MomentumTranslation;
     await Promise.all(
       times(numProjects).map(
         async () =>
@@ -406,7 +406,7 @@ describe('Project e2e', () => {
 
     const { projects } = await app.graphql.query(
       gql`
-        query projects($type: ProjectType!) {
+        query projects($type: [ProjectType!]) {
           projects(input: { filter: { type: $type } }) {
             items {
               ...project
@@ -532,7 +532,7 @@ describe('Project e2e', () => {
 
   it('List view of my projects', async () => {
     const numProjects = 2;
-    const type = ProjectType.Translation;
+    const type = ProjectType.MomentumTranslation;
     await Promise.all(
       times(numProjects).map(
         async () =>
@@ -563,7 +563,7 @@ describe('Project e2e', () => {
 
   it('List view of pinned/unpinned projects', async () => {
     const numProjects = 2;
-    const type = ProjectType.Translation;
+    const type = ProjectType.MomentumTranslation;
     await Promise.all(
       times(numProjects).map(
         async () =>
@@ -621,7 +621,7 @@ describe('Project e2e', () => {
 
   it('List view of presetInventory projects', async () => {
     const numProjects = 2;
-    const type = ProjectType.Translation;
+    const type = ProjectType.MomentumTranslation;
     await Promise.all(
       times(numProjects).map(
         async () =>
@@ -798,7 +798,7 @@ describe('Project e2e', () => {
   it('List view of partnerships by projectId', async () => {
     //create 2 partnerships in a project
     const numPartnerships = 2;
-    const type = ProjectType.Translation;
+    const type = ProjectType.MomentumTranslation;
     const project = await createProject(app, {
       type,
       fieldRegionId: fieldRegion.id,
@@ -897,7 +897,7 @@ describe('Project e2e', () => {
   it('can create without mouStart, mouEnd and estimatedSubmission', async () => {
     const project: CreateProject = {
       name: faker.string.uuid(),
-      type: ProjectType.Translation,
+      type: ProjectType.MomentumTranslation,
       fieldRegionId: fieldRegion.id,
     };
 
@@ -924,7 +924,7 @@ describe('Project e2e', () => {
   it('can create without mouStart, if mouEnd is defined', async () => {
     const project: CreateProject = {
       name: faker.string.uuid(),
-      type: ProjectType.Translation,
+      type: ProjectType.MomentumTranslation,
       mouEnd: CalendarDate.fromISO('1992-11-01'),
       estimatedSubmission: CalendarDate.fromISO('1993-11-01'),
       fieldRegionId: fieldRegion.id,

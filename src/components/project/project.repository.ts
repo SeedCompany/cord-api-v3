@@ -26,14 +26,12 @@ import {
 import { Privileges } from '../authorization';
 import {
   CreateProject,
-  InternshipProject,
   IProject,
   Project,
   ProjectListInput,
   ProjectStep,
-  ProjectType,
+  resolveProjectType,
   stepToStatus,
-  TranslationProject,
   UpdateProject,
 } from './dto';
 import { projectListFilter } from './list-filter.query';
@@ -174,13 +172,10 @@ export class ProjectRepository extends CommonRepository {
     const result = await this.db
       .query()
       .apply(
-        await createNode(
-          type === 'Translation' ? TranslationProject : InternshipProject,
-          {
-            initialProps,
-            baseNodeProps: { type },
-          },
-        ),
+        await createNode(resolveProjectType({ type }), {
+          initialProps,
+          baseNodeProps: { type },
+        }),
       )
       .apply(
         createRelationships(IProject, 'out', {
@@ -214,10 +209,7 @@ export class ProjectRepository extends CommonRepository {
     } = changes;
 
     let result = await this.db.updateProperties({
-      type:
-        existing.type === ProjectType.Translation
-          ? TranslationProject
-          : InternshipProject,
+      type: resolveProjectType({ type: existing.type }),
       object: existing,
       changes: simpleChanges,
       changeset,
@@ -289,7 +281,7 @@ export class ProjectRepository extends CommonRepository {
   async list(input: ProjectListInput, session: Session) {
     const result = await this.db
       .query()
-      .matchNode('node', `${input.filter.type ?? ''}Project`)
+      .matchNode('node', 'Project')
       .with('distinct(node) as node, node as project')
       .match(requestingUser(session))
       .apply(projectListFilter(input))

@@ -99,9 +99,9 @@ export class ProjectService {
     input: CreateProject,
     session: Session,
   ): Promise<UnsecuredDto<Project>> {
-    if (input.type === ProjectType.Translation && input.sensitivity) {
+    if (input.type !== ProjectType.Internship && input.sensitivity) {
       throw new InputException(
-        'Cannot set sensitivity on translation project',
+        'Can only set sensitivity on Internship Projects',
         'project.sensitivity',
       );
     }
@@ -187,7 +187,7 @@ export class ProjectService {
     view?: ObjectView,
   ): Promise<TranslationProject> {
     const project = await this.readOne(id, session, view?.changeset);
-    if (project.type !== ProjectType.Translation) {
+    if (project.type === ProjectType.Internship) {
       throw new Error('Project is not a translation project');
     }
     return project as TranslationProject;
@@ -248,9 +248,9 @@ export class ProjectService {
       session,
       changeset,
     );
-    if (input.sensitivity && currentProject.type === ProjectType.Translation)
+    if (input.sensitivity && currentProject.type !== ProjectType.Internship)
       throw new InputException(
-        'Cannot update sensitivity on Translation Project',
+        'Can only set sensitivity on Internship Projects',
         'project.sensitivity',
       );
 

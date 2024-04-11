@@ -32,8 +32,13 @@ const hydrate = e.shape(e.Project, (project) => ({
 }));
 
 export const ConcreteRepos = {
-  Translation: class TranslationProjectRepository extends RepoFor(
-    ConcreteTypes.Translation,
+  MomentumTranslation: class MomentumTranslationProjectRepository extends RepoFor(
+    ConcreteTypes.MomentumTranslation,
+    { hydrate },
+  ).withDefaults() {},
+
+  MultiplicationTranslation: class MultiplicationTranslationProjectRepository extends RepoFor(
+    ConcreteTypes.MultiplicationTranslation,
     { hydrate },
   ).withDefaults() {},
 
@@ -82,9 +87,12 @@ export class ProjectEdgeDBRepository
     { filter: input }: ProjectListInput,
   ) {
     return [
-      input.type != null &&
-        // https://github.com/edgedb/edgedb-js/issues/615
-        e.op(project.__type__.name, '=', `default::${input.type}Project`),
+      (input.type?.length ?? 0) > 0 &&
+        e.op(
+          project.__type__.name,
+          'in',
+          e.set(...input.type!.map((type) => `default::${type}Project`)),
+        ),
       (input.status?.length ?? 0) > 0 &&
         e.op(
           project.status,

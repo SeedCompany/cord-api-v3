@@ -43,7 +43,7 @@ describe('Engagement-Workflow e2e', () => {
   it("should have engagement status 'InDevelopment' when add language or internship engagement", async () => {
     // --- Translation Project with engagement
     const transProject = await createProject(app, {
-      type: ProjectType.Translation,
+      type: ProjectType.MomentumTranslation,
     });
     expect(transProject.step.value).toBe(ProjectStep.EarlyConversations);
 
@@ -66,7 +66,7 @@ describe('Engagement-Workflow e2e', () => {
     it('translation', async function () {
       // --- Translation project
       const transProject = await createProject(app, {
-        type: ProjectType.Translation,
+        type: ProjectType.MomentumTranslation,
       });
       const langEngagement = await createLanguageEngagement(app, {
         projectId: transProject.id,
@@ -130,7 +130,7 @@ describe('Engagement-Workflow e2e', () => {
     it('engagement completed', async function () {
       // --- Engagement to Active
       const transProject = await createProject(app, {
-        type: ProjectType.Translation,
+        type: ProjectType.MomentumTranslation,
       });
       const langEngagement = await createLanguageEngagement(app, {
         projectId: transProject.id,
@@ -169,7 +169,7 @@ describe('Engagement-Workflow e2e', () => {
 
     it('engagement terminated', async function () {
       const transProject = await createProject(app, {
-        type: ProjectType.Translation,
+        type: ProjectType.MomentumTranslation,
       });
       const langEngagement = await createLanguageEngagement(app, {
         projectId: transProject.id,
