@@ -30,11 +30,12 @@ import { Privileges } from '../../components/authorization';
 import { getChanges } from '../database/changes';
 import { privileges } from '../database/dto.repository';
 import { CommonRepository } from './common.repository';
-import { $expr_PathNode, $linkPropify } from './generated-client/path';
+import type { $linkPropify } from './generated-client/path';
 import {
   $expr_Select,
   normaliseShape,
   objectTypeToSelectShape,
+  OrderByExpression,
   SelectFilterExpression,
   SelectModifiers,
 } from './generated-client/select';
@@ -73,7 +74,7 @@ export const RepoFor = <
   abstract class Repository extends CommonRepository {
     static customize<
       Customized extends BaseCustomizedRepository,
-      OmitKeys extends EnumType<typeof DefaultMethods>,
+      OmitKeys extends EnumType<typeof DefaultMethods> = never,
     >(
       customizer: (
         cls: typeof BaseCustomizedRepository,
@@ -143,17 +144,38 @@ export const RepoFor = <
     ): Many<SelectFilterExpression | false | Nil> {
       return [];
     }
+    protected applyFilter(
+      scope: ScopeOf<Root>,
+      input: any,
+    ): { filter: SelectFilterExpression } | {} {
+      const filters = many(this.listFilters(scope, input)).filter(isNotFalsy);
+      const filter =
+        filters.length === 0
+          ? null
+          : filters.length === 1
+          ? filters[0]
+          : e.all(e.set(...filters));
+      return filter ? { filter } : {};
+    }
 
-    protected orderBy<Scope extends $expr_PathNode>(
+    protected orderBy(
       scope: ScopeOf<Root>,
       input: SortablePaginationInput,
-    ) {
+    ): OrderByExpression {
       // TODO Validate this is a valid sort key
-      const sortKey = input.sort as keyof Scope['*'];
       return {
-        expression: scope[sortKey],
+        expression: (scope as any)[input.sort],
         direction: input.order,
-      } as const;
+      };
+    }
+    protected applyOrderBy(
+      scope: ScopeOf<Root>,
+      input: PaginationInput,
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+    ): { order_by?: OrderByExpression } {
+      return isSortablePaginationInput(input)
+        ? { order_by: this.orderBy(scope, input) }
+        : {};
     }
 
     protected async paginate(
@@ -207,6 +229,11 @@ export const RepoFor = <
     }
   }
 
+  const readManyQuery = e.params({ ids: e.array(e.uuid) }, ({ ids }) => {
+    const entities = e.cast(dbType, e.array_unpack(ids));
+    return e.select(entities, hydrate as any);
+  });
+
   class DefaultDtoRepository extends Repository {
     async readOne(id: ID) {
       const rows = await this.readMany([id]);
@@ -219,33 +246,15 @@ export const RepoFor = <
     }
 
     async readMany(ids: readonly ID[]): Promise<readonly Dto[]> {
-      const rows = await this.db.run(this.readManyQuery, { ids });
+      const rows = await this.db.run(readManyQuery, { ids });
       return rows as readonly Dto[];
     }
-    private readonly readManyQuery = e.params(
-      { ids: e.array(e.uuid) },
-      ({ ids }) => {
-        const entities = e.cast(dbType, e.array_unpack(ids));
-        return e.select(entities, this.hydrate as any);
-      },
-    );
 
     async list(input: PaginationInput) {
-      const all = e.select(dbType, (obj: any) => {
-        const filters = many(this.listFilters(obj, input)).filter(isNotFalsy);
-        const filter =
-          filters.length === 0
-            ? null
-            : filters.length === 1
-            ? filters[0]
-            : e.all(e.set(...filters));
-        return {
-          ...(filter ? { filter } : {}),
-          ...(isSortablePaginationInput(input)
-            ? { order_by: this.orderBy(obj, input) }
-            : {}),
-        };
-      });
+      const all = e.select(dbType, (obj: any) => ({
+        ...this.applyFilter(obj, input),
+        ...this.applyOrderBy(obj, input),
+      }));
       return await this.paginate(all as any, input);
     }
 
@@ -274,12 +283,17 @@ export const RepoFor = <
     }
   }
 
+  type DefaultRepoOwnKeys = Exclude<
+    keyof DefaultDtoRepository,
+    keyof Repository
+  > &
+    string;
   const DefaultMethods = makeEnum({
     values: entries(
       Object.getOwnPropertyDescriptors(DefaultDtoRepository.prototype),
     ).flatMap(([key]) =>
-      typeof key === 'string'
-        ? (key as keyof DefaultDtoRepository & string)
+      typeof key === 'string' && key !== 'constructor'
+        ? (key as DefaultRepoOwnKeys)
         : [],
     ),
   });

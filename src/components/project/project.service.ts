@@ -13,7 +13,7 @@ import {
   Session,
   UnauthorizedException,
   UnsecuredDto,
-} from '../../common';
+} from '~/common';
 import {
   ConfigService,
   HandleIdLookup,
@@ -22,8 +22,7 @@ import {
   Logger,
   Transactional,
   UniquenessError,
-} from '../../core';
-import { mapListResults } from '../../core/database/results';
+} from '~/core';
 import { Privileges, withoutScope } from '../authorization';
 import { BudgetService, BudgetStatus, SecuredBudget } from '../budget';
 import {
@@ -54,7 +53,6 @@ import {
   IProject,
   Project,
   ProjectListInput,
-  ProjectListOutput,
   ProjectStatus,
   ProjectType,
   resolveProjectType,
@@ -101,9 +99,9 @@ export class ProjectService {
     input: CreateProject,
     session: Session,
   ): Promise<UnsecuredDto<Project>> {
-    if (input.type === ProjectType.Translation && input.sensitivity) {
+    if (input.type !== ProjectType.Internship && input.sensitivity) {
       throw new InputException(
-        'Cannot set sensitivity on translation project',
+        'Can only set sensitivity on Internship Projects',
         'project.sensitivity',
       );
     }
@@ -141,7 +139,7 @@ export class ProjectService {
     );
 
     try {
-      const id = await this.repo.create(input);
+      const { id } = await this.repo.create(input);
       const project = await this.readOneUnsecured(id, session);
 
       // Add creator to the project team with their global roles
@@ -189,7 +187,7 @@ export class ProjectService {
     view?: ObjectView,
   ): Promise<TranslationProject> {
     const project = await this.readOne(id, session, view?.changeset);
-    if (project.type !== ProjectType.Translation) {
+    if (project.type === ProjectType.Internship) {
       throw new Error('Project is not a translation project');
     }
     return project as TranslationProject;
@@ -229,16 +227,13 @@ export class ProjectService {
     return await Promise.all(projects.map((dto) => this.secure(dto, session)));
   }
 
-  async secure(
-    project: UnsecuredDto<Project>,
-    session: Session,
-  ): Promise<Project> {
+  secure(project: UnsecuredDto<Project>, session: Session) {
     return this.privileges.for(session, IProject, project).secure(project);
   }
 
   async readOne(id: ID, session: Session, changeset?: ID): Promise<Project> {
     const unsecured = await this.readOneUnsecured(id, session, changeset);
-    return await this.secure(unsecured, session);
+    return this.secure(unsecured, session);
   }
 
   @Transactional()
@@ -253,9 +248,9 @@ export class ProjectService {
       session,
       changeset,
     );
-    if (input.sensitivity && currentProject.type === ProjectType.Translation)
+    if (input.sensitivity && currentProject.type !== ProjectType.Internship)
       throw new InputException(
-        'Cannot update sensitivity on Translation Project',
+        'Can only set sensitivity on Internship Projects',
         'project.sensitivity',
       );
 
@@ -333,12 +328,12 @@ export class ProjectService {
     await this.eventBus.publish(new ProjectDeletedEvent(object, session));
   }
 
-  async list(
-    input: ProjectListInput,
-    session: Session,
-  ): Promise<ProjectListOutput> {
+  async list(input: ProjectListInput, session: Session) {
     const results = await this.repo.list(input, session);
-    return await mapListResults(results, (dto) => this.secure(dto, session));
+    return {
+      ...results,
+      items: results.items.map((dto) => this.secure(dto, session)),
+    };
   }
 
   async listEngagements(
@@ -364,15 +359,15 @@ export class ProjectService {
       session,
       view,
     );
-    const perms = this.privileges.for(session, IProject, project);
+    const perms = this.privileges.for(session, IProject, {
+      ...project,
+      project,
+    } as any);
 
     return {
       ...result,
       canRead: perms.can('read', 'engagement'),
-      canCreate:
-        perms.can('create', 'engagement') &&
-        (project.status === ProjectStatus.InDevelopment ||
-          session.roles.includes('global:Administrator')),
+      canCreate: perms.can('create', 'engagement'),
     };
   }
 

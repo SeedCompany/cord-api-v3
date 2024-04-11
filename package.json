@@ -4,7 +4,7 @@
   "license": "MIT",
   "packageManager": "yarn@4.1.1",
   "engines": {
-    "node": ">= 18.9"
+    "node": ">= 20.6"
   },
   "type": "module",
   "scripts": {
@@ -12,17 +12,17 @@
     "postinstall": "ts-patch install || true",
     "build": "nest build",
     "clean": "rimraf -g dist schema.graphql 'src/core/edgedb/{generated-client,schema.ts}' 'src/**/*.edgeql.ts'",
-    "console": "node --loader ts-node/esm --experimental-loader=extensionless src/console.ts",
-    "console:prod": "node --experimental-loader=extensionless dist/console.js",
+    "console": "node --loader ts-node/esm --import=extensionless/register src/console.ts",
+    "console:prod": "node --import=extensionless/register dist/console.js",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "start": "NODE_OPTIONS=\"${NODE_OPTIONS:-} --experimental-loader=extensionless\" nest start",
+    "start": "NODE_OPTIONS=\"${NODE_OPTIONS:-} --import=extensionless/register\" nest start",
     "start:dev": "yarn start --watch",
     "start:debug": "yarn start --debug --watch",
-    "start:prod": "node --experimental-loader=extensionless --enable-source-maps dist/main",
+    "start:prod": "node --import=extensionless/register --enable-source-maps dist/main",
     "repl": "yarn start --entryFile repl",
     "gen-id": "ts-node -Te \"let g = require('./src/common/generate-id').generateId; for (let i = 0, l = process.argv[1] || 1; i < l; i++) { g().then(console.log) }\"",
-    "edgedb:gen": "node --loader ts-node/esm/transpile-only --experimental-loader=extensionless src/core/edgedb/generator/run.ts",
-    "edgedb:seed": "node --loader ts-node/esm/transpile-only --experimental-loader=extensionless src/core/edgedb/seeds.run.ts",
+    "edgedb:gen": "node --import ./tools/ts-loader.js --import=extensionless/register src/core/edgedb/generator/run.ts",
+    "edgedb:seed": "node --import ./tools/ts-loader.js --import=extensionless/register src/core/edgedb/seeds.run.ts",
     "edgedb:migration": "yarn console edgedb migration",
     "lint": "eslint --ext .ts,.tsx --fix --max-warnings 0 .",
     "test": "yarn test:base --selectProjects Unit",
@@ -62,7 +62,7 @@
     "cypher-query-builder": "patch:cypher-query-builder@6.0.4#.yarn/patches/cypher-query-builder.patch",
     "dotenv": "^16.3.1",
     "dotenv-expand": "^10.0.0",
-    "edgedb": "^1.5.0-canary.20240320T135030",
+    "edgedb": "^1.5.0-canary.20240408T142923",
     "execa": "^8.0.1",
     "express": "^4.18.2",
     "extensionless": "^1.7.0",
@@ -107,7 +107,7 @@
     "yaml": "^2.3.3"
   },
   "devDependencies": {
-    "@edgedb/generate": "^0.5.0-canary.20240320T135053",
+    "@edgedb/generate": "^0.5.0-canary.20240408T143001",
     "@nestjs/cli": "^10.2.1",
     "@nestjs/schematics": "^10.0.3",
     "@nestjs/testing": "^10.2.7",
@@ -123,7 +123,7 @@
     "@types/jsonwebtoken": "^9.0.4",
     "@types/lodash": "^4.14.200",
     "@types/luxon": "^3.3.3",
-    "@types/node": "^18.18.8",
+    "@types/node": "^20.12.5",
     "@types/pako": "^2.0.2",
     "@types/prismjs": "^1.26.2",
     "@types/react": "^18.2.33",
@@ -143,7 +143,7 @@
     "ts-node": "^10.9.1",
     "ts-patch": "^3.0.2",
     "ts-transformer-keys": "^0.4.4",
-    "type-fest": "^4.6.0",
+    "type-fest": "^4.15.0",
     "typescript": "^5.2.2",
     "typescript-transform-paths": "^3.4.6"
   },

@@ -9,7 +9,7 @@ import { ProjectListInput } from './dto';
 
 export const projectListFilter = (input: ProjectListInput) =>
   filter.builder(input.filter, {
-    type: filter.skip, // already applied
+    type: filter.stringListBaseNodeProp(),
     status: filter.stringListProp(),
     onlyMultipleEngagements:
       ({ value, query }) =>

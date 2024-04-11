@@ -543,7 +543,9 @@ describe('Engagement e2e', () => {
   });
 
   it('updates ceremony for language engagement', async () => {
-    project = await createProject(app, { type: ProjectType.Translation });
+    project = await createProject(app, {
+      type: ProjectType.MomentumTranslation,
+    });
     language = await runAsAdmin(app, createLanguage);
     const languageEngagement = await createLanguageEngagement(app, {
       languageId: language.id,
@@ -1325,9 +1327,9 @@ describe('Engagement e2e', () => {
         projectId: project.id,
       }),
     ).rejects.toThrowGqlError(
-      errors.input({
-        message: 'The Project status is not in development',
-        field: 'project.status',
+      errors.unauthorized({
+        message:
+          'You do not have the permission to create engagement for this project',
       }),
     );
 
@@ -1345,8 +1347,7 @@ describe('Engagement e2e', () => {
         },
       ),
     ).rejects.toThrowGqlError(
-      errors.input({
-        code: ['Unauthorized', 'Input'],
+      errors.unauthorized({
         message:
           'You do not have the permission to delete this language engagement',
       }),

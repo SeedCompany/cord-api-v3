@@ -29,7 +29,7 @@ import {
   ProductService,
   SecuredProductList,
 } from '../product';
-import { IProject, ProjectStatus } from '../project';
+import { IProject } from '../project';
 import { ProjectType } from '../project/dto';
 import { ProjectService } from '../project/project.service';
 import { User } from '../user/dto';
@@ -85,7 +85,7 @@ export class EngagementService {
     await this.verifyRelationshipEligibility(
       projectId,
       languageId,
-      ProjectType.Translation,
+      false,
       changeset,
     );
 
@@ -94,7 +94,6 @@ export class EngagementService {
     if (input.firstScripture) {
       await this.verifyFirstScripture({ languageId });
     }
-    await this.verifyProjectStatus(projectId, session, changeset);
 
     this.verifyCreationStatus(input.status);
 
@@ -140,13 +139,11 @@ export class EngagementService {
     await this.verifyRelationshipEligibility(
       projectId,
       internId,
-      ProjectType.Internship,
+      true,
       changeset,
     );
 
     await this.verifyCreateEngagement(projectId, session);
-
-    await this.verifyProjectStatus(projectId, session);
 
     this.verifyCreationStatus(input.status);
 
@@ -211,7 +208,10 @@ export class EngagementService {
 
   private async verifyCreateEngagement(projectId: ID, session: Session) {
     const project = await this.resources.load(IProject, projectId);
-    const projectPrivileges = this.privileges.for(session, IProject, project);
+    const projectPrivileges = this.privileges.for(session, IProject, {
+      ...project,
+      project,
+    } as any);
 
     projectPrivileges.verifyCan('create', 'engagement');
   }
@@ -368,8 +368,6 @@ export class EngagementService {
       .for(session, resolveEngagementType(object), object)
       .verifyCan('delete');
 
-    await this.verifyProjectStatus(object.project, session, changeset);
-
     await this.eventBus.publish(new EngagementWillDeleteEvent(object, session));
 
     try {
@@ -439,15 +437,14 @@ export class EngagementService {
   protected async verifyRelationshipEligibility(
     projectId: ID,
     otherId: ID,
-    type: ProjectType,
+    isInternship: boolean,
     changeset?: ID,
   ): Promise<void> {
-    const isTranslation = type === ProjectType.Translation;
-    const property = isTranslation ? 'language' : 'intern';
+    const property = isInternship ? 'intern' : 'language';
     const result = await this.repo.verifyRelationshipEligibility(
       projectId,
       otherId,
-      isTranslation,
+      !isInternship,
       property,
       changeset,
     );
@@ -459,16 +456,20 @@ export class EngagementService {
       );
     }
 
-    if (result.project.properties.type !== type) {
+    const isActuallyInternship =
+      result.project.properties.type === ProjectType.Internship;
+    if (isActuallyInternship !== isInternship) {
       throw new InputException(
         `Only ${
-          isTranslation ? 'Language' : 'Internship'
-        } Engagements can be created on ${type} Projects`,
+          isInternship ? 'Internship' : 'Language'
+        } Engagements can be created on ${
+          isInternship ? 'Internship' : 'Translation'
+        } Projects`,
         `engagement.${property}Id`,
       );
     }
 
-    const label = isTranslation ? 'language' : 'person';
+    const label = isInternship ? 'person' : 'language';
     if (!result?.other) {
       throw new NotFoundException(
         `Could not find ${label}`,
@@ -500,36 +501,6 @@ export class EngagementService {
       throw new InputException(
         'Another engagement has already been marked as having done the first scripture',
         'languageEngagement.firstScripture',
-      );
-    }
-  }
-
-  /**
-   * [BUSINESS RULE] Only Projects with a Status of 'In Development' can have Engagements created or deleted.
-   * [BUSINESS RULE] Only Projects with a Status of 'Active' and part of a changeset can have Engagements created or deleted.
-   */
-  protected async verifyProjectStatus(
-    projectId: ID,
-    session: Session,
-    changeset?: ID,
-  ) {
-    if (changeset || session.roles.includes('global:Administrator')) {
-      return;
-    }
-
-    let project;
-    try {
-      project = await this.projectService.readOne(projectId, session);
-    } catch (e) {
-      throw e instanceof NotFoundException
-        ? e.withField('engagement.projectId')
-        : e;
-    }
-
-    if (project.status !== ProjectStatus.InDevelopment) {
-      throw new InputException(
-        'The Project status is not in development',
-        'project.status',
       );
     }
   }

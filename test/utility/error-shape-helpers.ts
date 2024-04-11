@@ -20,6 +20,8 @@ export const invalidId = (field = 'id'): Expectations =>
 
 export const input = extend({ code: 'Input' });
 
+export const unauthorized = extend({ code: ['Unauthorized', 'Input'] });
+
 export const duplicate = extend({ code: ['Duplicate', 'Input'] });
 
 export const notFound = extend({ code: 'NotFound' });

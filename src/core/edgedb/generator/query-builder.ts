@@ -30,6 +30,7 @@ export async function generateQueryBuilder({
   changeImplicitIDType(qbDir);
   allowOrderingByEnums(qbDir);
   adjustToImmutableTypes(qbDir);
+  addTypeNarrowingToStdScalars(qbDir);
 }
 
 function addJsExtensionDeepPathsOfEdgedbLibrary(qbDir: Directory) {
@@ -120,12 +121,13 @@ function allowOrderingByEnums(qbDir: Directory) {
 function adjustToImmutableTypes(qbDir: Directory) {
   const typesystem = qbDir.addSourceFileAtPath('typesystem.ts');
   replaceText(typesystem.getTypeAliasOrThrow('ArrayTypeToTsType'), (prev) =>
-    prev.replace(': TsType[]', ': readonly TsType[]'),
+    prev.replace(': BaseTypeToTsType', ': readonly BaseTypeToTsType'),
   );
-  replaceText(
-    typesystem.getTypeAliasOrThrow('NamedTupleTypeToTsType'),
-    (prev) => prev.replace('[k in ', 'readonly [/* applied */ k in '),
-  );
+  for (const alias of ['TupleItemsToTsType', 'NamedTupleTypeToTsType']) {
+    replaceText(typesystem.getTypeAliasOrThrow(alias), (prev) =>
+      prev.replace('[k in ', 'readonly [/* applied */ k in '),
+    );
+  }
   replaceText(typesystem.getTypeAliasOrThrow('computeObjectShape'), (prev) =>
     !prev.includes('> = typeutil')
       ? prev
@@ -137,6 +139,16 @@ function adjustToImmutableTypes(qbDir: Directory) {
       .replaceAll('? T[]', '? readonly T[]')
       .replaceAll('? [T, ...T[]]', '? readonly [T, ...T[]]'),
   );
+}
+
+function addTypeNarrowingToStdScalars(qbDir: Directory) {
+  const std = qbDir.addSourceFileAtPath('modules/std.ts');
+  replaceText(std.getTypeAliasOrThrow('$str'), () => {
+    return `export type $str<E extends string = string> = $.ScalarType<'std::str', E>;`;
+  });
+  replaceText(std.getTypeAliasOrThrow('$json'), () => {
+    return `export type $json<E = unknown> = $.ScalarType<"std::json", E>;`;
+  });
 }
 
 const replaceText = <N extends ts.Node>(

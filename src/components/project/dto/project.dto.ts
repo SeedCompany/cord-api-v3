@@ -1,37 +1,37 @@
 import { Type } from '@nestjs/common';
 import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
+import { simpleSwitch } from '@seedcompany/common';
 import { stripIndent } from 'common-tags';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive } from 'type-fest';
-import { sortingForEnumIndex } from '~/core/database/query';
-import { e } from '~/core/edgedb';
-import { RegisterResource } from '~/core/resources';
 import {
   DateInterval,
   DateTimeField,
   DbLabel,
   DbSort,
   DbUnique,
-  ID,
-  IdOf,
   IntersectionType,
   NameField,
   parentIdMiddleware,
-  resolveByTypename,
   Resource,
   ResourceRelationsShape,
   Secured,
   SecuredBoolean,
   SecuredDateNullable,
   SecuredDateTime,
+  SecuredDateTimeNullable,
   SecuredProps,
   SecuredString,
   SecuredStringNullable,
   Sensitivity,
   SensitivityField,
+  ServerException,
   UnsecuredDto,
-} from '../../../common';
+} from '~/common';
+import { sortingForEnumIndex } from '~/core/database/query';
+import { e } from '~/core/edgedb';
+import { LinkTo, RegisterResource } from '~/core/resources';
 import { Budget } from '../../budget/dto';
 import { ChangesetAware } from '../../changeset/dto';
 import { Commentable } from '../../comments';
@@ -49,7 +49,10 @@ import { ProjectStatus } from './project-status.enum';
 import { ProjectStep, SecuredProjectStep } from './project-step.enum';
 import { ProjectType } from './project-type.enum';
 
-type AnyProject = MergeExclusive<TranslationProject, InternshipProject>;
+type AnyProject = MergeExclusive<
+  MomentumTranslationProject,
+  MergeExclusive<MultiplicationTranslationProject, InternshipProject>
+>;
 
 const Interfaces: Type<
   Resource & Postable & ChangesetAware & Pinnable & Commentable
@@ -61,20 +64,17 @@ const Interfaces: Type<
   ),
 );
 
-export const resolveProjectType = (val: Pick<AnyProject, 'type'>) =>
-  val.type === 'Translation' ? TranslationProject : InternshipProject;
+export const resolveProjectType = (val: Pick<AnyProject, 'type'>) => {
+  const type = simpleSwitch(val.type, ProjectConcretes);
+  if (!type) {
+    throw new ServerException(`Could not resolve project type: '${val.type}'`);
+  }
+  return type;
+};
 
 @RegisterResource({ db: e.Project })
 @InterfaceType({
-  resolveType: (val: Project) => {
-    if (val.type === ProjectType.Translation) {
-      return TranslationProject;
-    }
-    if (val.type === ProjectType.Internship) {
-      return InternshipProject;
-    }
-    return resolveByTypename(Project.name)(val);
-  },
+  resolveType: resolveProjectType,
   implements: [Resource, Pinnable, Postable, ChangesetAware, Commentable],
 })
 class Project extends Interfaces {
@@ -123,14 +123,14 @@ class Project extends Interfaces {
   @DbSort(sortingForEnumIndex(ProjectStatus))
   readonly status: ProjectStatus;
 
-  readonly primaryLocation: Secured<ID | null>;
+  readonly primaryLocation: Secured<LinkTo<'Location'> | null>;
 
-  readonly marketingLocation: Secured<ID | null>;
+  readonly marketingLocation: Secured<LinkTo<'Location'> | null>;
 
-  readonly marketingRegionOverride: Secured<IdOf<Location> | null>;
-  readonly fieldRegion: Secured<ID | null>;
+  readonly marketingRegionOverride: Secured<LinkTo<'Location'> | null>;
+  readonly fieldRegion: Secured<LinkTo<'FieldRegion'> | null>;
 
-  readonly owningOrganization: Secured<ID | null>;
+  readonly owningOrganization: Secured<LinkTo<'Organization'> | null>;
 
   @Field()
   readonly mouStart: SecuredDateNullable;
@@ -155,12 +155,12 @@ class Project extends Interfaces {
   readonly tags: SecuredTags;
 
   @Field()
-  readonly financialReportReceivedAt: SecuredDateTime;
+  readonly financialReportReceivedAt: SecuredDateTimeNullable;
 
   @Field()
   readonly financialReportPeriod: SecuredReportPeriod;
 
-  readonly rootDirectory: Secured<ID | undefined>;
+  readonly rootDirectory: Secured<LinkTo<'Directory'> | null>;
 
   @Field({
     description: stripIndent`
@@ -185,14 +185,38 @@ class Project extends Interfaces {
 export { Project as IProject, AnyProject as Project };
 
 @RegisterResource({ db: e.TranslationProject })
-@ObjectType({
+@InterfaceType({
+  resolveType: resolveProjectType,
   implements: [Project],
 })
 export class TranslationProject extends Project {
   static readonly Props = keysOf<TranslationProject>();
   static readonly SecuredProps = keysOf<SecuredProps<TranslationProject>>();
+}
 
-  declare readonly type: 'Translation';
+@RegisterResource({ db: e.TranslationProject })
+@ObjectType({
+  implements: [TranslationProject],
+  description: 'Formerly known as our TranslationProjects',
+})
+export class MomentumTranslationProject extends TranslationProject {
+  static readonly Props = keysOf<MomentumTranslationProject>();
+  static readonly SecuredProps =
+    keysOf<SecuredProps<MomentumTranslationProject>>();
+
+  declare readonly type: 'MomentumTranslation';
+}
+
+@RegisterResource({ db: e.TranslationProject })
+@ObjectType({
+  implements: [TranslationProject],
+})
+export class MultiplicationTranslationProject extends TranslationProject {
+  static readonly Props = keysOf<MultiplicationTranslationProject>();
+  static readonly SecuredProps =
+    keysOf<SecuredProps<MultiplicationTranslationProject>>();
+
+  declare readonly type: 'MultiplicationTranslation';
 }
 
 @RegisterResource({ db: e.InternshipProject })
@@ -206,6 +230,12 @@ export class InternshipProject extends Project {
   declare readonly type: 'Internship';
 }
 
+export const ProjectConcretes = {
+  MomentumTranslation: MomentumTranslationProject,
+  MultiplicationTranslation: MultiplicationTranslationProject,
+  Internship: InternshipProject,
+} as const satisfies Record<ProjectType, typeof Project>;
+
 export const projectRange = (project: UnsecuredDto<Project>) =>
   DateInterval.tryFrom(project.mouStart, project.mouEnd);
 
@@ -214,10 +244,14 @@ declare module '~/core/resources/map' {
     Project: typeof Project;
     InternshipProject: typeof InternshipProject;
     TranslationProject: typeof TranslationProject;
+    MomentumTranslationProject: typeof MomentumTranslationProject;
+    MultiplicationTranslationProject: typeof MultiplicationTranslationProject;
   }
   interface ResourceDBMap {
     Project: typeof e.default.Project;
     InternshipProject: typeof e.default.InternshipProject;
     TranslationProject: typeof e.default.TranslationProject;
+    MomentumTranslationProject: typeof e.default.TranslationProject; // TODO
+    MultiplicationTranslationProject: typeof e.default.TranslationProject; // TODO
   }
 }

@@ -3,12 +3,20 @@ import { LoaderFactory, ObjectViewAwareLoader } from '../../core';
 import {
   InternshipProject,
   IProject,
+  MomentumTranslationProject,
+  MultiplicationTranslationProject,
   Project,
   TranslationProject,
 } from './dto';
 import { ProjectService } from './project.service';
 
-@LoaderFactory(() => [IProject, TranslationProject, InternshipProject])
+@LoaderFactory(() => [
+  IProject,
+  TranslationProject,
+  MomentumTranslationProject,
+  MultiplicationTranslationProject,
+  InternshipProject,
+])
 export class ProjectLoader extends ObjectViewAwareLoader<Project> {
   constructor(private readonly projects: ProjectService) {
     super();

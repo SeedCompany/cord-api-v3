@@ -18,10 +18,10 @@ module default {
       default := Sensitivity.High;
     };
     
-    departmentId: int32 {
+    departmentId: str {
       constraint exclusive;
-      constraint expression on (__subject__ >= 10000 and __subject__ <= 99999);
-      rewrite update using (
+      constraint expression on (<int32>__subject__ > 0 and len(__subject__) = 5);
+      rewrite insert, update using (
         if (
           not exists .departmentId and
           .status <= Project::Status.Active and
@@ -36,7 +36,7 @@ module default {
               select detached Project.departmentId filter Project.primaryLocation.fundingAccount = fa
             ),
             available := (
-              range_unpack(range(fa.accountNumber * 10000 + 11, fa.accountNumber * 10000 + 9999))
+              <str>range_unpack(range(fa.accountNumber * 10000 + 11, fa.accountNumber * 10000 + 9999))
               except existing
             )
           select min(available)
@@ -66,10 +66,6 @@ module default {
     financialReportReceivedAt: datetime;
     financialReportPeriod: ReportPeriod;
     
-    required presetInventory: bool {
-      default := false;
-    };
-    
     multi link members := .<project[is Project::Member];
     single link membership := (select .members filter .user.id = global default::currentUserId limit 1);
     
@@ -85,7 +81,9 @@ module default {
       )
     );
     marketingLocation: Location;
+    multi otherLocations: Location;
     fieldRegion: FieldRegion;
+    marketingRegionOverride: FieldRegion;
     
     link rootDirectory: Directory;
     
@@ -109,7 +107,7 @@ module default {
     );
   }
   
-  type TranslationProject extending Project {
+  abstract type TranslationProject extending Project {
     multi link engagements := .<project[is LanguageEngagement];
     multi link languages := .engagements.language;
     
@@ -121,6 +119,9 @@ module default {
       )
     );
   }
+
+  type MomentumTranslationProject extending TranslationProject;
+  type MultiplicationTranslationProject extending TranslationProject;
   
   type InternshipProject extending Project {
     multi link engagements := .<project[is InternshipEngagement];
@@ -151,7 +152,9 @@ module Project {
       A type that has a project context, which allows it to be
       aware of the sensitivity & current user membership for the associated context.";
     
-    required projectContext: Context;
+    required projectContext: Context {
+      on target delete delete source;
+    }
     index on (.projectContext);
     
     optional ownSensitivity: default::Sensitivity {

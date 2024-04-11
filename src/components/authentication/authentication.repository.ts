@@ -288,7 +288,7 @@ export class AuthenticationRepository {
       ])
       .asResult<EmailToken>()
       .first();
-    return result;
+    return result ?? null;
   }
 
   async updatePasswordViaEmailToken(

@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import {
   EdgeDBAccessPolicyEjectCommand,
   EdgeDBAccessPolicyInjectCommand,
-  EdgeDBAccessPolicyWrapMigrateCommand,
+  EdgeDBAccessPolicyWrapCommand,
 } from './access-policy.commands';
 import { EdgeDBAccessPolicyInjector } from './access-policy.injector';
 import { CrudeAstParser } from './crude-ast-parser';
@@ -11,7 +11,7 @@ import { CrudeAstParser } from './crude-ast-parser';
   providers: [
     CrudeAstParser,
     EdgeDBAccessPolicyInjector,
-    EdgeDBAccessPolicyWrapMigrateCommand,
+    EdgeDBAccessPolicyWrapCommand,
     EdgeDBAccessPolicyInjectCommand,
     EdgeDBAccessPolicyEjectCommand,
   ],

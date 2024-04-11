@@ -1,11 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import {
-  ID,
-  NotImplementedException,
-  PaginatedListType,
-  PublicOf,
-  UnsecuredDto,
-} from '~/common';
+import { ID, PublicOf, ServerException } from '~/common';
 import { e, RepoFor } from '~/core/edgedb';
 import { Location, LocationListInput } from './dto';
 import { LocationRepository } from './location.repository';
@@ -52,12 +46,27 @@ export class LocationEdgeDBRepository
     await this.db.run(query);
   }
 
-  listLocationsFromNodeNoSecGroups(
+  async listLocationsFromNodeNoSecGroups(
     label: string,
     rel: string,
     id: ID,
     input: LocationListInput,
-  ): Promise<PaginatedListType<UnsecuredDto<Location>>> {
-    throw new NotImplementedException().with(label, id, rel, input);
+  ) {
+    const res = this.resources.getByEdgeDB(label);
+    const node = e.cast(res.db, e.cast(e.uuid, id));
+    const locations = e.select(node)[
+      rel as keyof typeof node
+    ] as typeof e.Location;
+    if (!locations) {
+      throw new ServerException(`${label} does not have a "${rel}" link`);
+    }
+    if (locations.__element__.__name__ !== 'default::Location') {
+      throw new ServerException(`${label}.${rel} is not a link to Locations`);
+    }
+    const all = e.select(locations, (obj) => ({
+      ...this.applyFilter(obj, input),
+      ...this.applyOrderBy(obj, input),
+    }));
+    return await this.paginate(all, input);
   }
 }

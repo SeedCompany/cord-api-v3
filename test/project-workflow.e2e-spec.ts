@@ -78,7 +78,7 @@ describe('Project-Workflow e2e', () => {
   });
 
   it('should have default status as Pending for first budget with project creation', async () => {
-    const type = ProjectType.Translation;
+    const type = ProjectType.MomentumTranslation;
     const project = await createProject(app, { type });
 
     const queryProject = await app.graphql.query(

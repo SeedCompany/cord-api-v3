@@ -8,9 +8,9 @@ import {
   ServerException,
   Session,
   UnsecuredDto,
-} from '../../common';
-import { CommonRepository, ConfigService, OnIndex } from '../../core';
-import { ChangesOf, getChanges } from '../../core/database/changes';
+} from '~/common';
+import { CommonRepository, ConfigService, OnIndex } from '~/core';
+import { ChangesOf, getChanges } from '~/core/database/changes';
 import {
   ACTIVE,
   createNode,
@@ -22,18 +22,16 @@ import {
   paginate,
   requestingUser,
   sorting,
-} from '../../core/database/query';
+} from '~/core/database/query';
 import { Privileges } from '../authorization';
 import {
   CreateProject,
-  InternshipProject,
   IProject,
   Project,
   ProjectListInput,
   ProjectStep,
-  ProjectType,
+  resolveProjectType,
   stepToStatus,
-  TranslationProject,
   UpdateProject,
 } from './dto';
 import { projectListFilter } from './list-filter.query';
@@ -120,14 +118,14 @@ export class ProjectRepository extends CommonRepository {
           merge('props', 'changedProps', {
             type: 'node.type',
             pinned: 'exists((:User { id: $requestingUser })-[:pinned]->(node))',
-            rootDirectory: 'rootDirectory.id',
-            primaryLocation: 'primaryLocation.id',
-            marketingLocation: 'marketingLocation.id',
-            fieldRegion: 'fieldRegion.id',
-            owningOrganization: 'organization.id',
+            rootDirectory: 'rootDirectory { .id }',
+            primaryLocation: 'primaryLocation { .id }',
+            marketingLocation: 'marketingLocation { .id }',
+            fieldRegion: 'fieldRegion { .id }',
+            owningOrganization: 'organization { .id }',
             engagementTotal: 'engagementTotal',
             changeset: 'changeset.id',
-            marketingRegionOverride: 'marketingRegionOverride.id',
+            marketingRegionOverride: 'marketingRegionOverride { .id }',
           }).as('dto'),
         );
   }
@@ -174,13 +172,10 @@ export class ProjectRepository extends CommonRepository {
     const result = await this.db
       .query()
       .apply(
-        await createNode(
-          type === 'Translation' ? TranslationProject : InternshipProject,
-          {
-            initialProps,
-            baseNodeProps: { type },
-          },
-        ),
+        await createNode(resolveProjectType({ type }), {
+          initialProps,
+          baseNodeProps: { type },
+        }),
       )
       .apply(
         createRelationships(IProject, 'out', {
@@ -197,7 +192,7 @@ export class ProjectRepository extends CommonRepository {
     if (!result) {
       throw new ServerException('Failed to create project');
     }
-    return result.id;
+    return result;
   }
 
   async update(
@@ -214,10 +209,7 @@ export class ProjectRepository extends CommonRepository {
     } = changes;
 
     let result = await this.db.updateProperties({
-      type:
-        existing.type === ProjectType.Translation
-          ? TranslationProject
-          : InternshipProject,
+      type: resolveProjectType({ type: existing.type }),
       object: existing,
       changes: simpleChanges,
       changeset,
@@ -233,7 +225,7 @@ export class ProjectRepository extends CommonRepository {
       );
       result = {
         ...result,
-        primaryLocation: primaryLocationId,
+        primaryLocation: primaryLocationId ? { id: primaryLocationId } : null,
       };
     }
 
@@ -247,7 +239,7 @@ export class ProjectRepository extends CommonRepository {
       );
       result = {
         ...result,
-        fieldRegion: fieldRegionId,
+        fieldRegion: fieldRegionId ? { id: fieldRegionId } : null,
       };
     }
 
@@ -261,7 +253,9 @@ export class ProjectRepository extends CommonRepository {
       );
       result = {
         ...result,
-        marketingLocation: marketingLocationId,
+        marketingLocation: marketingLocationId
+          ? { id: marketingLocationId }
+          : null,
       };
     }
 
@@ -275,7 +269,9 @@ export class ProjectRepository extends CommonRepository {
       );
       result = {
         ...result,
-        marketingRegionOverride: marketingRegionOverrideId,
+        marketingRegionOverride: marketingRegionOverrideId
+          ? { id: marketingRegionOverrideId }
+          : null,
       };
     }
 
@@ -285,7 +281,7 @@ export class ProjectRepository extends CommonRepository {
   async list(input: ProjectListInput, session: Session) {
     const result = await this.db
       .query()
-      .matchNode('node', `${input.filter.type ?? ''}Project`)
+      .matchNode('node', 'Project')
       .with('distinct(node) as node, node as project')
       .match(requestingUser(session))
       .apply(projectListFilter(input))
@@ -294,7 +290,9 @@ export class ProjectRepository extends CommonRepository {
         sorting(IProject, input, {
           sensitivity: (query) =>
             query
-              .apply(matchProjectSens('node'))
+              .apply(
+                input.filter.sensitivity ? undefined : matchProjectSens('node'),
+              )
               .return<{ sortValue: string }>('sensitivity as sortValue'),
           engagements: (query) =>
             query
