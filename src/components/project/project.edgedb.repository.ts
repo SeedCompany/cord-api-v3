@@ -87,10 +87,9 @@ export class ProjectEdgeDBRepository
     { filter: input }: ProjectListInput,
   ) {
     return [
-      // TODO: add back after edgedb piece is fixed
-      // input.type != null &&
-      // https://github.com/edgedb/edgedb-js/issues/615
-      // e.op(project.__type__.name, '=', `default::${input.type}Project`),
+      input.type != null &&
+        // https://github.com/edgedb/edgedb-js/issues/615
+        e.op(project.__type__.name, '=', `default::${input.type}Project`),
       (input.status?.length ?? 0) > 0 &&
         e.op(
           project.status,
