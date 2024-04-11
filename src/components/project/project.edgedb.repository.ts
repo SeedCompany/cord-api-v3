@@ -88,8 +88,11 @@ export class ProjectEdgeDBRepository
   ) {
     return [
       input.type != null &&
-        // https://github.com/edgedb/edgedb-js/issues/615
-        e.op(project.__type__.name, '=', `default::${input.type}Project`),
+        e.op(
+          project.__type__.name,
+          'in',
+          input.type.map((type) => `default::${type}Project`),
+        ),
       (input.status?.length ?? 0) > 0 &&
         e.op(
           project.status,
