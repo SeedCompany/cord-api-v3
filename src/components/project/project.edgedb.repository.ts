@@ -132,6 +132,12 @@ export class ProjectEdgeDBRepository
         : []),
       input.mine != null && e.op(project.isMember, '=', input.mine),
       input.pinned != null && e.op(project.pinned, '=', input.pinned),
+      input.languageId &&
+        e.op(
+          e.uuid(input.languageId),
+          'in',
+          project.is(e.TranslationProject).languages.id,
+        ),
       input.partnerId &&
         e.op(e.uuid(input.partnerId), 'in', project.partnerships.partner.id),
       input.userId &&

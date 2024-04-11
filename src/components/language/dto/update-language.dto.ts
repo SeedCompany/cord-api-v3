@@ -59,7 +59,7 @@ export abstract class UpdateLanguage {
   readonly displayNamePronunciation?: string | null;
 
   @Field({ nullable: true })
-  readonly isDialect: boolean = false;
+  readonly isDialect?: boolean;
 
   @Field({ nullable: true })
   @Type(() => UpdateEthnologueLanguage)
@@ -68,7 +68,7 @@ export abstract class UpdateLanguage {
 
   @Field(() => Int, { nullable: true })
   @IsPositive()
-  readonly populationOverride: number | null;
+  readonly populationOverride?: number | null;
 
   @NameField({ nullable: true })
   @ExactLength(5)
@@ -76,7 +76,7 @@ export abstract class UpdateLanguage {
   readonly registryOfDialectsCode?: string | null;
 
   @Field({ nullable: true })
-  readonly leastOfThese: boolean = false;
+  readonly leastOfThese?: boolean;
 
   @NameField({ nullable: true })
   readonly leastOfTheseReason?: string | null;
