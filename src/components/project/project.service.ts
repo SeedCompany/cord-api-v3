@@ -51,6 +51,8 @@ import {
   CreateProject,
   InternshipProject,
   IProject,
+  MomentumTranslationProject,
+  MultiplicationTranslationProject,
   Project,
   ProjectListInput,
   ProjectStatus,
@@ -180,7 +182,11 @@ export class ProjectService {
     }
   }
 
-  @HandleIdLookup(TranslationProject)
+  @HandleIdLookup([
+    TranslationProject,
+    MomentumTranslationProject,
+    MultiplicationTranslationProject,
+  ])
   async readOneTranslation(
     id: ID,
     session: Session,
