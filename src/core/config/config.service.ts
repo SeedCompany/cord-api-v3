@@ -12,7 +12,7 @@ import { nanoid } from 'nanoid';
 import { Config as Neo4JDriverConfig } from 'neo4j-driver';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { Class, Merge, ReadonlyDeep } from 'type-fest';
-import { ID, ServerException } from '~/common';
+import { ID } from '~/common';
 import { parseUri } from '../../components/file/bucket/parse-uri';
 import { ProgressReportStatus } from '../../components/progress-report/dto/progress-report-status.enum';
 import type { TransitionName as ProgressReportTransitionName } from '../../components/progress-report/workflow/transitions';
@@ -20,12 +20,15 @@ import { DefaultTimezoneWrapper } from '../email/templates/formatted-date-time';
 import { FrontendUrlWrapper } from '../email/templates/frontend-url';
 import { LogLevel } from '../logger/logger.interface';
 import { EnvironmentService } from './environment.service';
+import { determineRootUser } from './root-user.config';
 
 const dur = Duration.from;
 
 type AppConfig = ReadonlyDeep<InstanceType<ReturnType<typeof makeConfig>>>;
 
 type HttpTimeoutOptions = AppConfig['httpTimeouts'];
+
+const isDev = process.env.NODE_ENV === 'development';
 
 export const makeConfig = (env: EnvironmentService) =>
   class ConfigService implements EmailOptionsFactory {
@@ -96,9 +99,7 @@ export const makeConfig = (env: EnvironmentService) =>
         send,
         open: this.jest
           ? false
-          : env
-              .boolean('EMAIL_OPEN')
-              .optional(!send && process.env.NODE_ENV === 'development'),
+          : env.boolean('EMAIL_OPEN').optional(!send && isDev),
         ses: {
           region: env.string('SES_REGION').optional(),
         },
@@ -200,24 +201,7 @@ export const makeConfig = (env: EnvironmentService) =>
       };
     })();
 
-    rootAdmin = (() => {
-      let rootId: ID;
-      return {
-        get id(): ID {
-          if (!rootId) {
-            throw new ServerException(
-              'Cannot access root admin ID before it is initialized',
-            );
-          }
-          return rootId;
-        },
-        set id(newId: ID) {
-          rootId = newId;
-        },
-        email: 'devops@tsco.org',
-        password: env.string('ROOT_ADMIN_PASSWORD').optional('admin'),
-      };
-    })();
+    rootUser = determineRootUser(env);
 
     passwordSecret = env.string('PASSWORD_SECRET').optional();
 

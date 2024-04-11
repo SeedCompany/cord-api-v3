@@ -1,5 +1,5 @@
 with
-  root := (select RootUser),
+  root := (select User order by .createdAt limit 1),
   zones := (
     for name in {
       "Americas, Pacific, Eurasia",
@@ -18,7 +18,7 @@ with
 select { `Added Field Zones` := new.name }
 filter count(new) > 0;
 with
-  root := (select RootUser),
+  root := (select User order by .createdAt limit 1),
   regions := (
     for item in {
       (zone := "Americas, Pacific, Eurasia", regions := {"Americas", "Pacific", "Eurasia"}),

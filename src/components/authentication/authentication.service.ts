@@ -165,7 +165,7 @@ export class AuthenticationService {
     return session;
   }
 
-  lazySessionForRootAdminUser(input?: Partial<Session>) {
+  lazySessionForRootUser(input?: Partial<Session>) {
     const promiseOfRootId = this.repo.waitForRootUserId().then((id) => {
       (session as Writable<Session>).userId = id;
       return id;
@@ -190,7 +190,7 @@ export class AuthenticationService {
         }
         if (p === 'withRoles') {
           return (...roles: Role[]) =>
-            this.lazySessionForRootAdminUser({
+            this.lazySessionForRootUser({
               roles: roles.map(rolesForScope('global')),
             });
         }

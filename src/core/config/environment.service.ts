@@ -9,7 +9,8 @@ import { Duration } from 'luxon';
 import { URL } from 'node:url';
 import { join } from 'path';
 import { DurationIn } from '~/common';
-import { ILogger, Logger } from '../logger';
+import { Logger } from '../logger/logger.decorator';
+import type { ILogger } from '../logger/logger.interface';
 
 /**
  * Handle reading values from environment and env files.
@@ -21,7 +22,8 @@ export class EnvironmentService implements Iterable<[string, string]> {
   private readonly env: Record<string, string>;
 
   constructor(
-    @Logger('config:environment') private readonly logger: ILogger,
+    @Logger('config:environment')
+    private readonly logger: ILogger | undefined = undefined,
     @Optional() rootPath = process.cwd(),
     @Optional() env = process.env.NODE_ENV || 'development',
   ) {
@@ -38,10 +40,10 @@ export class EnvironmentService implements Iterable<[string, string]> {
 
     for (const file of files) {
       if (!fs.existsSync(file)) {
-        this.logger.debug(`Skipping file`, { file });
+        this.logger?.debug(`Skipping file`, { file });
         continue;
       }
-      this.logger.debug(`Loading file`, { file });
+      this.logger?.debug(`Loading file`, { file });
 
       const parsed = parseEnv(fs.readFileSync(file));
 
@@ -61,7 +63,7 @@ export class EnvironmentService implements Iterable<[string, string]> {
     // Convert all keys to uppercase
     this.env = mapKeys(this.env, (key) => key.toUpperCase()).asRecord;
 
-    this.logger.debug(`Loaded environment`, this.env);
+    this.logger?.debug(`Loaded environment`, this.env);
   }
 
   string(key: string) {

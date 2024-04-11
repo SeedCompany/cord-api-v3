@@ -1,61 +1,52 @@
 import { Injectable } from '@nestjs/common';
-import { DateTime } from 'luxon';
+import { ID, Role } from '~/common';
 import { disableAccessPolicies, e, EdgeDB } from '~/core/edgedb';
-import { AdminRepository } from './admin.repository';
+import { AuthenticationRepository } from '../authentication/authentication.repository';
 
 @Injectable()
-export class AdminEdgeDBRepository extends AdminRepository {
-  private readonly edgedb: EdgeDB;
-  constructor(edgedb: EdgeDB) {
-    super();
-    this.edgedb = edgedb.withOptions(disableAccessPolicies);
+export class AdminEdgeDBRepository {
+  private readonly db: EdgeDB;
+  constructor(edgedb: EdgeDB, readonly auth: AuthenticationRepository) {
+    this.db = edgedb.withOptions(disableAccessPolicies);
   }
 
   async finishing(callback: () => Promise<void>) {
-    await this.edgedb.waitForConnection({
+    await this.db.waitForConnection({
       forever: true,
       maxTimeout: { seconds: 10 },
     });
     await callback();
   }
 
-  async checkExistingRoot() {
-    const rootUser = e.select(e.RootUser, (u) => ({
+  async doesRootUserExist(rootId: ID) {
+    const rootUser = e.select(e.User, (u) => ({
       id: true,
       email: true,
       hash: u['<user[is Auth::Identity]'].passwordHash,
+      filter_single: { id: rootId },
     }));
-    const query = e.assert_exists(e.assert_single(rootUser));
-    const user = await this.edgedb.run(query);
-    return {
-      id: user.id,
-      email: user.email ?? '',
-      hash: user.hash ?? '',
-    };
+    const query = e.assert_single(rootUser);
+    return await this.db.run(query);
   }
 
-  async mergeRootAdminUser(_email: string, passwordHash: string) {
-    // email is currently static for RootUser, so don't change.
-    const query = e
-      .insert(e.Auth.Identity, {
-        user: e.select(e.RootUser).assert_single(),
-        passwordHash,
-      })
-      .unlessConflict((identity) => ({
-        on: identity.user,
-        else: e.update(e.Auth.Identity, () => ({
-          filter: e.op(identity.user, '=', e.RootUser),
-          set: { passwordHash },
-        })),
-      }));
-    await this.edgedb.run(query);
+  async createRootUser(id: ID, email: string, passwordHash: string) {
+    const query = e.insert(e.User, {
+      id,
+      email,
+      realFirstName: 'Root',
+      realLastName: 'Admin',
+      roles: [Role.Administrator],
+    });
+    await this.db
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      .withOptions((o) => o.withConfig({ allow_user_specified_id: true }))
+      .run(query);
+    await this.auth.savePasswordHashOnUser(id, passwordHash);
   }
 
-  async checkDefaultOrg() {
-    return true;
-  }
-
-  async mergeAnonUser(_createdAt: DateTime, _anonUserId: string) {
-    // nah
+  async updateEmail(id: ID, email: string) {
+    const u = e.cast(e.User, e.uuid(id));
+    const query = e.update(u, () => ({ set: { email } }));
+    await this.db.run(query);
   }
 }

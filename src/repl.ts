@@ -24,9 +24,7 @@ runRepl({
     );
     const { Pnp } = await import('./components/pnp');
 
-    const session = app
-      .get(AuthenticationService)
-      .lazySessionForRootAdminUser();
+    const session = app.get(AuthenticationService).lazySessionForRootUser();
     const Resources = app.get(ResourcesHost).getEnhancedMap();
 
     return {
