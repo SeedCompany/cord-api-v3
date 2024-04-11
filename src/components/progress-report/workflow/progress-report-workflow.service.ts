@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import {
   ID,
   many,
+  RichTextDocument,
   Session,
   UnauthorizedException,
   UnsecuredDto,
@@ -13,7 +14,7 @@ import { ExecuteProgressReportTransitionInput } from './dto/execute-progress-rep
 import { ProgressReportWorkflowEvent as WorkflowEvent } from './dto/workflow-event.dto';
 import { WorkflowUpdatedEvent } from './events/workflow-updated.event';
 import { ProgressReportWorkflowRepository } from './progress-report-workflow.repository';
-import { Transitions } from './transitions';
+import { InternalTransition, Transitions } from './transitions';
 
 @Injectable()
 export class ProgressReportWorkflowService {
@@ -74,8 +75,8 @@ export class ProgressReportWorkflowService {
 
     const [unsecuredEvent] = await Promise.all([
       isTransition
-        ? this.repo.recordTransition(reportId, next, session, notes)
-        : this.repo.recordBypass(reportId, next, session, notes),
+        ? this.recordTransition(reportId, next, session, notes)
+        : this.recordBypass(reportId, next, session, notes),
       this.repo.changeStatus(reportId, isTransition ? next.to : next),
     ]);
 
@@ -110,5 +111,26 @@ export class ProgressReportWorkflowService {
       throw new UnauthorizedException('This transition is not available');
     }
     return transition;
+  }
+
+  async recordTransition(
+    report: ID,
+    { id: transition, to: status }: InternalTransition,
+    session: Session,
+    notes?: RichTextDocument,
+  ) {
+    return await this.repo.recordEvent(
+      { report, status, transition, notes },
+      session,
+    );
+  }
+
+  async recordBypass(
+    report: ID,
+    status: Status,
+    session: Session,
+    notes?: RichTextDocument,
+  ) {
+    return await this.repo.recordEvent({ report, status, notes }, session);
   }
 }

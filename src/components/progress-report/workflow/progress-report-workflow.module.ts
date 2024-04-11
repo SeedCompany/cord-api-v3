@@ -1,10 +1,12 @@
 import { forwardRef, Module } from '@nestjs/common';
+import { splitDb } from '~/core';
 import { LanguageModule } from '../../language/language.module';
 import { PeriodicReportModule } from '../../periodic-report/periodic-report.module';
 import { ProjectModule } from '../../project/project.module';
 import { UserModule } from '../../user/user.module';
 import * as handlers from './handlers';
 import { ProgressReportWorkflowEventLoader } from './progress-report-workflow-event.loader';
+import { ProgressReportWorkflowEdgeDBRepository } from './progress-report-workflow.edgedb.repository';
 import { ProgressReportWorkflowFlowchart } from './progress-report-workflow.flowchart';
 import { ProgressReportWorkflowEventGranter } from './progress-report-workflow.granter';
 import { ProgressReportWorkflowRepository } from './progress-report-workflow.repository';
@@ -29,7 +31,10 @@ import { ProgressReportWorkflowEventsResolver } from './resolvers/progress-repor
     ProgressReportWorkflowEventLoader,
     ProgressReportWorkflowService,
     ProgressReportWorkflowEventGranter,
-    ProgressReportWorkflowRepository,
+    splitDb(
+      ProgressReportWorkflowRepository,
+      ProgressReportWorkflowEdgeDBRepository,
+    ),
     ProgressReportWorkflowFlowchart,
     ...Object.values(handlers),
   ],
