@@ -120,9 +120,7 @@ module default {
     );
   }
 
-  type MomentumTranslationProject extending TranslationProject {
-    uid: uuid;
-  }
+  type MomentumTranslationProject extending TranslationProject;
   type MultiplicationTranslationProject extending TranslationProject;
   
   type InternshipProject extending Project {
