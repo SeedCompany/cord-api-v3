@@ -456,10 +456,9 @@ export class EngagementService {
       );
     }
 
-    if (
-      result.project.properties.type === ProjectType.Internship &&
-      !isInternship
-    ) {
+    const isActuallyInternship =
+      result.project.properties.type === ProjectType.Internship;
+    if (isActuallyInternship !== isInternship) {
       throw new InputException(
         `Only ${
           isInternship ? 'Internship' : 'Language'
