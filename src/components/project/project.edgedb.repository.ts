@@ -87,11 +87,11 @@ export class ProjectEdgeDBRepository
     { filter: input }: ProjectListInput,
   ) {
     return [
-      input.type != null &&
+      (input.type?.length ?? 0) > 0 &&
         e.op(
           project.__type__.name,
           'in',
-          input.type.map((type) => `default::${type}Project`),
+          e.set(...input.type!.map((type) => `default::${type}Project`)),
         ),
       (input.status?.length ?? 0) > 0 &&
         e.op(
