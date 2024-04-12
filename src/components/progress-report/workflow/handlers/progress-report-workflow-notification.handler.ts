@@ -112,9 +112,7 @@ export class ProgressReportWorkflowNotificationHandler
     projectId: ID,
     languageId: ID,
   ): Promise<EmailReportStatusNotification> {
-    const recipientId = receiver.userId
-      ? receiver.userId
-      : this.configService.rootAdmin.id;
+    const recipientId = receiver.userId ?? this.configService.rootUser.id;
     const recipientSession = await this.auth.sessionForUser(recipientId);
 
     const recipient = receiver.userId

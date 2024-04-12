@@ -1,12 +1,11 @@
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
 import { DateTime } from 'luxon';
-import { ID, Role, ServerException } from '~/common';
+import { Role, ServerException } from '~/common';
 import { ConfigService } from '~/core/config/config.service';
 import { Transactional } from '~/core/database';
 import { ILogger, Logger } from '~/core/logger';
 import { AuthenticationService } from '../authentication';
 import { CryptoService } from '../authentication/crypto.service';
-import { Power } from '../authorization/dto';
 import { AdminRepository } from './admin.repository';
 
 @Injectable()
@@ -23,7 +22,7 @@ export class AdminService implements OnApplicationBootstrap {
   async onApplicationBootstrap(): Promise<void> {
     const finishing = this.repo.finishing(() => this.setupRootObjects());
     // Wait for root object setup when running tests, else just let it run in
-    // background and allow webserver to start.
+    // the background and allow webserver to start.
     if (this.config.jest) {
       await finishing;
     } else {
@@ -44,7 +43,7 @@ export class AdminService implements OnApplicationBootstrap {
 
     await this.mergeAnonUser();
 
-    await this.mergeRootAdminUser();
+    await this.mergeRootUser();
 
     await this.mergeDefaultOrg();
   }
@@ -55,42 +54,34 @@ export class AdminService implements OnApplicationBootstrap {
     await this.repo.mergeAnonUser(createdAt, anonUserId);
   }
 
-  private async mergeRootAdminUser(): Promise<void> {
-    const { email, password } = this.config.rootAdmin;
+  private async mergeRootUser(): Promise<void> {
+    const { id, email, password } = this.config.rootUser;
 
-    let id: ID;
-
-    // see if root already exists
     const existing = await this.repo.checkExistingRoot();
-    if (existing) {
-      if (
-        existing.email !== email ||
-        !(await this.crypto.verify(existing.hash, password).catch(() => false))
-      ) {
-        this.logger.notice('Updating root user to match app configuration');
-        const hashedPassword = await this.crypto.hash(password);
-        await this.repo.mergeRootAdminUser(email, hashedPassword);
-      }
-      id = existing.id;
-    } else {
-      id = await this.authentication.register({
+    if (!existing) {
+      const tempId = await this.authentication.register({
         email,
         password,
         displayFirstName: 'Root',
         displayLastName: 'Admin',
         realFirstName: 'Root',
         realLastName: 'Admin',
-        roles: [Role.Administrator], // do not give root all the roles
+        roles: [Role.Administrator],
       });
-
-      // set root user label & give all powers
-      await this.repo.setUserLabel([...Power.values], id);
+      await this.repo.setRootUserLabel(tempId, id);
+    } else {
+      const passwordSame = await this.crypto
+        .verify(existing.hash, password)
+        .catch(() => false);
+      // Neo4j can handle ID changes, because it anchors off the RootUser label.
+      if (existing.id !== id || existing.email !== email || !passwordSame) {
+        this.logger.notice('Updating root user to match app configuration');
+        const hashedPassword = passwordSame
+          ? undefined
+          : await this.crypto.hash(password);
+        await this.repo.updateRootUser(id, email, hashedPassword);
+      }
     }
-
-    // TODO do this a different way. Using a global like this can cause race conditions.
-    // @ts-expect-error this is the one spot we are conceding mutable.
-    this.config.rootAdmin.id = id;
-    this.logger.notice('Setting actual root user id', { id });
   }
 
   private async mergeDefaultOrg(): Promise<void> {

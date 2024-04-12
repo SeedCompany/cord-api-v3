@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { IntegrityError } from 'edgedb';
 import { ID, PublicOf, ServerException, Session } from '~/common';
+import { RootUserAlias } from '~/core/config/root-user.config';
 import { disableAccessPolicies, e, EdgeDB, withScope } from '~/core/edgedb';
 import type { AuthenticationRepository } from './authentication.repository';
 import { LoginInput } from './dto';
@@ -23,9 +24,11 @@ export class AuthenticationEdgeDBRepository
   }
 
   async getRootUserId() {
-    const query = e.assert_exists(e.select(e.RootUser).assert_single());
-    const result = await this.db.run(query);
-    return result.id;
+    const rootAlias = e.select(e.Alias, () => ({
+      filter_single: { name: RootUserAlias },
+    }));
+    const query = e.assert_exists(rootAlias).target.id;
+    return await this.db.run(query);
   }
 
   async saveSessionToken(token: string) {

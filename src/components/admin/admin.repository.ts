@@ -47,7 +47,7 @@ export class AdminRepository extends CommonRepository {
       .first();
   }
 
-  async mergeRootAdminUser(email: string, hashedPassword: string) {
+  async updateRootUser(id: ID, email: string, hashedPassword?: string) {
     await this.db
       .query()
       .match([
@@ -58,18 +58,19 @@ export class AdminRepository extends CommonRepository {
         node('pw', 'Property'),
       ])
       .setValues({
+        root: { id },
         email: { value: email },
-        pw: { value: hashedPassword },
+        ...(hashedPassword ? { pw: { value: hashedPassword } } : {}),
       })
       .run();
   }
 
-  async setUserLabel(powers: string[], id: string) {
+  async setRootUserLabel(tempId: ID, id: ID) {
     await this.db
       .query()
-      .matchNode('user', 'User', { id })
+      .matchNode('user', 'User', { id: tempId })
       .setLabels({ user: 'RootUser' })
-      .setValues({ user: { powers } }, true)
+      .setValues({ user: { id } })
       .run();
   }
 

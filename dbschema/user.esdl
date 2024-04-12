@@ -31,11 +31,6 @@ module default {
       on target delete allow;
     }
   }
-  
-  alias RootUser := (
-      SELECT User
-      FILTER .email = 'devops@tsco.org'
-  );
 }
  
 module User {
