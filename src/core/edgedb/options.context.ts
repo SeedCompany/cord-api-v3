@@ -1,4 +1,4 @@
-import { Inject, Injectable, OnModuleDestroy } from '@nestjs/common';
+import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import { AsyncLocalStorage } from 'async_hooks';
 import {
   BehaviorSubject,
@@ -27,7 +27,7 @@ export class OptionsContext
 {
   private readonly root: OptionsLayer;
 
-  constructor(@Inject('DEFAULT_OPTIONS') root: Options) {
+  constructor(root: Options) {
     super();
     this.root = {
       options$: new BehaviorSubject(root),

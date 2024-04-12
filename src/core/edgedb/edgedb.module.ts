@@ -18,7 +18,7 @@ import { TransactionContext } from './transaction.context';
   imports: [EdgeDBSchemaAstModule],
   providers: [
     {
-      provide: 'DEFAULT_OPTIONS',
+      provide: Options,
       useValue: Options.defaults().withConfig({
         // Bump from 1 min, as needed by test suite.
         // It's probably because we open & do more with in the transaction
