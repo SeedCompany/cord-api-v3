@@ -1,11 +1,14 @@
 import { forwardRef, Module } from '@nestjs/common';
+import { splitDb } from '../../core';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { EngagementModule } from '../engagement/engagement.module';
 import { LocationModule } from '../location/location.module';
 import { ProjectModule } from '../project/project.module';
 import { EthnologueLanguageService } from './ethnologue-language';
+import { EthnologueLanguageEdgeDBRepository } from './ethnologue-language/ethnologue-language.edgedb.repository';
 import { EthnologueLanguageRepository } from './ethnologue-language/ethnologue-language.repository';
 import { InternalFirstScriptureResolver } from './internal-first-scripture.resolver';
+import { LanguageEdgeDBRepository } from './language.edgedb.repository';
 import { LanguageLoader } from './language.loader';
 import { LanguageRepository } from './language.repository';
 import { LanguageResolver } from './language.resolver';
@@ -22,8 +25,8 @@ import { LanguageService } from './language.service';
     LanguageResolver,
     LanguageService,
     EthnologueLanguageService,
-    EthnologueLanguageRepository,
-    LanguageRepository,
+    splitDb(EthnologueLanguageRepository, EthnologueLanguageEdgeDBRepository),
+    splitDb(LanguageRepository, LanguageEdgeDBRepository),
     LanguageLoader,
     InternalFirstScriptureResolver,
   ],
