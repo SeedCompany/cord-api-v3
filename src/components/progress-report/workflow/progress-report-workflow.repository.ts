@@ -76,7 +76,7 @@ export class ProgressReportWorkflowRepository extends DtoRepository(
         .return<{ dto: UnsecuredDto<WorkflowEvent> }>(
           merge('node', {
             at: 'node.createdAt',
-            who: 'who.id',
+            who: 'who { .id }',
           }).as('dto'),
         );
   }
