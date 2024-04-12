@@ -4,6 +4,14 @@ with
       "engagement": ["Misty Mountains", "English"],
       "estimatedDate": "2022-04-02",
       "actualDate": "2023-06-13"
+    },
+    {
+      "engagement": ["Arnor Lake", "Quenya"],
+      "estimatedDate": "2022-04-02"
+    },
+    {
+      "engagement": ["Emyn Muil", "Khuzdul"],
+      "estimatedDate": "2022-04-02"
     }
   ]$$),
   ceremonies := (
