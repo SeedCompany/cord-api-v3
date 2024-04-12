@@ -57,11 +57,14 @@ export class AdminRepository extends CommonRepository {
         relation('out', '', 'password', ACTIVE),
         node('pw', 'Property'),
       ])
-      .setValues({
-        root: { id },
-        email: { value: email },
-        ...(hashedPassword ? { pw: { value: hashedPassword } } : {}),
-      })
+      .setValues(
+        {
+          root: { id },
+          email: { value: email },
+          ...(hashedPassword ? { pw: { value: hashedPassword } } : {}),
+        },
+        true,
+      )
       .run();
   }
 
@@ -70,7 +73,7 @@ export class AdminRepository extends CommonRepository {
       .query()
       .matchNode('user', 'User', { id: tempId })
       .setLabels({ user: 'RootUser' })
-      .setValues({ user: { id } })
+      .setValues({ user: { id } }, true)
       .run();
   }
 
