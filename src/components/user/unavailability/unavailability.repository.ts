@@ -1,15 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { ChangesOf } from '~/core/database/changes';
-import { ID, ServerException } from '../../../common';
-import { DtoRepository } from '../../../core';
+import { ID, NotFoundException, ServerException } from '~/common';
+import { DtoRepository } from '~/core';
 import {
   ACTIVE,
   createNode,
   createRelationships,
   paginate,
   sorting,
-} from '../../../core/database/query';
+} from '~/core/database/query';
 import {
   CreateUnavailability,
   Unavailability,
@@ -38,18 +37,17 @@ export class UnavailabilityRepository extends DtoRepository(Unavailability) {
     if (!result) {
       throw new ServerException('Could not create unavailability');
     }
-    return result.id;
+    return await this.readOne(result.id);
   }
 
-  async update(
-    existing: Unavailability,
-    changes: ChangesOf<Unavailability, UpdateUnavailability>,
-  ) {
-    return await this.updateProperties(existing, changes);
+  async update(changes: UpdateUnavailability) {
+    const { id, ...simpleChanges } = changes;
+    await this.updateProperties({ id }, simpleChanges);
+    return await this.readOne(id);
   }
 
   async getUserIdByUnavailability(id: ID) {
-    return await this.db
+    const result = await this.db
       .query()
       .match([
         node('user', 'User'),
@@ -58,6 +56,14 @@ export class UnavailabilityRepository extends DtoRepository(Unavailability) {
       ])
       .return<{ id: ID }>('user.id as id')
       .first();
+
+    if (!result) {
+      throw new NotFoundException(
+        'Could not find user associated with unavailability',
+        'user.unavailability',
+      );
+    }
+    return result;
   }
 
   async list(input: UnavailabilityListInput) {
