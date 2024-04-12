@@ -32,17 +32,20 @@ export class AdminEdgeDBService implements OnApplicationBootstrap {
   private async setupRootUser(): Promise<void> {
     const root = this.config.rootUser;
 
-    const existing = await this.repo.doesRootUserExist(root.id);
+    const existing = await this.repo.doesRootUserExist();
     if (!existing) {
       this.logger.notice('Setting up root user');
-
-      // ID could've changed, so the old root user becomes stale here.
-      // This will also fail if trying to insert with an email that already exists.
-      // So if ID changes, but email doesn't, this will fail.
-      // I don't think it is safe to do anything else, so let this error happen.
       const hashed = await this.crypto.hash(root.password);
       await this.repo.createRootUser(root.id, root.email, hashed);
       return;
+    }
+
+    if (root.id !== existing.id) {
+      this.logger.notice(
+        'Stored root user ID differs from config, using stored value',
+      );
+      // TODO hack. Change notification handlers to pull from DB, instead of config
+      Object.assign(this.config.rootUser, { id: existing.id });
     }
 
     const passwordSame = await this.crypto

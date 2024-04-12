@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ID, Role } from '~/common';
+import { RootUserAlias } from '~/core/config/root-user.config';
 import { disableAccessPolicies, e, EdgeDB } from '~/core/edgedb';
 import { AuthenticationRepository } from '../authentication/authentication.repository';
 
@@ -18,24 +19,30 @@ export class AdminEdgeDBRepository {
     await callback();
   }
 
-  async doesRootUserExist(rootId: ID) {
-    const rootUser = e.select(e.User, (u) => ({
+  async doesRootUserExist() {
+    const rootAlias = e.select(e.Alias, () => ({
+      filter_single: { name: RootUserAlias },
+    }));
+    const rootUser = e.select(rootAlias.target.is(e.User), (u) => ({
       id: true,
       email: true,
       hash: u['<user[is Auth::Identity]'].passwordHash,
-      filter_single: { id: rootId },
     }));
     const query = e.assert_single(rootUser);
     return await this.db.run(query);
   }
 
   async createRootUser(id: ID, email: string, passwordHash: string) {
-    const query = e.insert(e.User, {
+    const newUser = e.insert(e.User, {
       id,
       email,
       realFirstName: 'Root',
       realLastName: 'Admin',
       roles: [Role.Administrator],
+    });
+    const query = e.insert(e.Alias, {
+      name: RootUserAlias,
+      target: newUser,
     });
     await this.db
       // eslint-disable-next-line @typescript-eslint/naming-convention

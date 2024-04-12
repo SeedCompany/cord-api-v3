@@ -1,5 +1,8 @@
 import { EnvironmentService } from '~/core/config/environment.service';
-import { determineRootUser } from '~/core/config/root-user.config';
+import {
+  determineRootUser,
+  RootUserAlias,
+} from '~/core/config/root-user.config';
 import type { SeedFn } from '~/core/edgedb/seeds.run';
 
 export default (async function ({ e, db, print }) {
@@ -13,7 +16,7 @@ export default (async function ({ e, db, print }) {
     // doesn't exist, create below
   }
 
-  const query = e.insert(e.User, {
+  const newUser = e.insert(e.User, {
     id: rootUser.id,
     email: rootUser.email,
     realFirstName: 'Root',
@@ -21,6 +24,10 @@ export default (async function ({ e, db, print }) {
     roles: ['Administrator'],
     createdAt: e.datetime('2021-02-13T15:29:18.603Z'),
     modifiedAt: e.datetime('2021-02-13T15:29:18.603Z'),
+  });
+  const query = e.insert(e.Alias, {
+    name: RootUserAlias,
+    target: newUser,
   });
   await query.run(db);
   print('Added Root User');

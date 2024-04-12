@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { IntegrityError } from 'edgedb';
 import { ID, PublicOf, ServerException, Session } from '~/common';
-import { ConfigService } from '~/core';
+import { RootUserAlias } from '~/core/config/root-user.config';
 import { disableAccessPolicies, e, EdgeDB, withScope } from '~/core/edgedb';
 import type { AuthenticationRepository } from './authentication.repository';
 import { LoginInput } from './dto';
@@ -11,7 +11,7 @@ export class AuthenticationEdgeDBRepository
   implements PublicOf<AuthenticationRepository>
 {
   private readonly db: EdgeDB;
-  constructor(db: EdgeDB, private readonly config: ConfigService) {
+  constructor(db: EdgeDB) {
     this.db = db.outsideOfTransactions().withOptions(disableAccessPolicies);
   }
 
@@ -24,8 +24,11 @@ export class AuthenticationEdgeDBRepository
   }
 
   async getRootUserId() {
-    const root = e.cast(e.User, e.uuid(this.config.rootUser.id));
-    return await this.db.run(root.id);
+    const rootAlias = e.select(e.Alias, () => ({
+      filter_single: { name: RootUserAlias },
+    }));
+    const query = e.assert_exists(rootAlias).target.id;
+    return await this.db.run(query);
   }
 
   async saveSessionToken(token: string) {

@@ -6,6 +6,8 @@ const isDev = process.env.NODE_ENV === 'development';
 
 export const UserNs = '7ee19032-2a96-474a-824d-a9c950b06f14';
 
+export const RootUserAlias = 'root';
+
 export const determineRootUser = (env: EnvironmentService) => {
   const user = JSON.parse(env.string('ROOT_USER').optional('{}')) as {
     [_ in 'id' | 'email' | 'password']?: string;
