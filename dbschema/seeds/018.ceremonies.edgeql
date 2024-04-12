@@ -10,14 +10,14 @@ with
     for ceremony in json_array_unpack(ceremoniesJson)
     union (
       with
-        languageEngagement := assert_exists((
+        engagement := assert_exists((
           select LanguageEngagement
             filter .project.name = <str>(ceremony['engagement'])[0]
             and .language.name = <str>(ceremony['engagement'])[1]
-          )),
-        engagement := (select Engagement filter .id = languageEngagement.id)
-      update Engagement::Ceremony filter .engagement = engagement set {
+          ))
+      update engagement.ceremony set {
         estimatedDate := <cal::local_date>json_get(ceremony, 'estimatedDate'),
+        planned := true,
         actualDate := <cal::local_date>json_get(ceremony, 'actualDate')
       }
     )
