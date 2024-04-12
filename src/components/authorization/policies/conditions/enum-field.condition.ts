@@ -3,7 +3,7 @@ import { Query } from 'cypher-query-builder';
 import { get, startCase } from 'lodash';
 import { Get, Paths } from 'type-fest';
 import { inspect, InspectOptionsStylized } from 'util';
-import { ResourceShape, UnwrapSecured } from '~/common';
+import { ResourceShape, unwrapSecured, UnwrapSecured } from '~/common';
 import {
   Condition,
   eqlInLiteralSet,
@@ -26,9 +26,10 @@ export class EnumFieldCondition<
     if (!object) {
       throw new Error(`Needed object's ${this.path} but object wasn't given`);
     }
-    const actual = get(object, this.path) as
-      | ValueOfPath<TResourceStatic, Path>
+    const value = get(object, this.path) as
+      | Get<InstanceType<TResourceStatic>, Path>
       | undefined;
+    const actual = unwrapSecured(value);
     if (!actual) {
       throw new Error(`Needed object's ${this.path} but it wasn't found`);
     }
