@@ -31,6 +31,8 @@ import {
   CreateLanguageInput,
   CreateLanguageOutput,
   DeleteLanguageOutput,
+  ExternalFirstScripture,
+  InternalFirstScripture,
   Language,
   LanguageListInput,
   LanguageListOutput,
@@ -97,8 +99,13 @@ export class LanguageResolver {
       return { canRead: false, canEdit: false };
     }
     const value = language.firstScriptureEngagement
-      ? { hasFirst: true, engagement: language.firstScriptureEngagement }
-      : { hasFirst: language.hasExternalFirstScripture.value! };
+      ? ({
+          hasFirst: true,
+          engagement: language.firstScriptureEngagement.id,
+        } satisfies InternalFirstScripture)
+      : ({
+          hasFirst: language.hasExternalFirstScripture.value!,
+        } satisfies ExternalFirstScripture);
     return { canRead: true, canEdit: false, value };
   }
 
