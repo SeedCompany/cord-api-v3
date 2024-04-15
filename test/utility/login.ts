@@ -20,7 +20,7 @@ export async function login(app: TestApp, input: Partial<LoginInput> = {}) {
 }
 
 export const loginAsAdmin = async (app: TestApp) => {
-  const { email, password } = app.get(ConfigService).rootAdmin;
+  const { email, password } = app.get(ConfigService).rootUser;
   await login(app, { email, password });
 };
 

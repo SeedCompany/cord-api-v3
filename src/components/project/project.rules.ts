@@ -1052,7 +1052,7 @@ export class ProjectRules {
     previousStep?: ProjectStep,
   ): Promise<EmailNotification> {
     const recipientId = notifier.includes('@')
-      ? this.configService.rootAdmin.id
+      ? this.configService.rootUser.id
       : (notifier as ID);
     const recipientSession = await this.auth.sessionForUser(recipientId);
     const recipient = notifier.includes('@')
