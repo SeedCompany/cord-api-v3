@@ -28,7 +28,6 @@ export async function generateQueryBuilder({
   updateEdgeQLRenderingForOurCustomScalars(qbDir);
   updateCastMapsForOurCustomScalars(qbDir);
   changeImplicitIDType(qbDir);
-  allowOrderingByEnums(qbDir);
   adjustToImmutableTypes(qbDir);
   addTypeNarrowingToStdScalars(qbDir);
 }
@@ -108,14 +107,6 @@ function updateEdgeQLRenderingForOurCustomScalars(qbDir: Directory) {
 ` + condition,
   );
   file.replaceWithText(updated);
-}
-
-function allowOrderingByEnums(qbDir: Directory) {
-  const file = qbDir.getSourceFileOrThrow('select.ts');
-  file
-    .getTypeAliasOrThrow('OrderByExpr')
-    .setType('TypeSet<EnumType | ScalarType | ObjectType>');
-  file.fixMissingImports();
 }
 
 function adjustToImmutableTypes(qbDir: Directory) {
