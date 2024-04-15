@@ -1,5 +1,7 @@
 import { forwardRef, Module } from '@nestjs/common';
+import { splitDb } from '~/core/database';
 import { AuthorizationModule } from '../../authorization/authorization.module';
+import { UnavailabilityEdgeDBRepository } from './unavailability.edgedb.repository';
 import { UnavailabilityLoader } from './unavailability.loader';
 import { UnavailabilityRepository } from './unavailability.repository';
 import { UnavailabilityResolver } from './unavailability.resolver';
@@ -10,7 +12,7 @@ import { UnavailabilityService } from './unavailability.service';
   providers: [
     UnavailabilityResolver,
     UnavailabilityService,
-    UnavailabilityRepository,
+    splitDb(UnavailabilityRepository, UnavailabilityEdgeDBRepository),
     UnavailabilityLoader,
   ],
   exports: [UnavailabilityService],
