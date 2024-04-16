@@ -3,10 +3,9 @@ import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { BaseNode } from '~/core/database/results';
 import { e } from '~/core/edgedb';
-import { RegisterResource } from '~/core/resources';
+import { LinkTo, RegisterResource } from '~/core/resources';
 import {
   DateTimeField,
-  ID,
   Resource,
   Secured,
   SecuredProps,
@@ -26,7 +25,7 @@ export class Post extends Resource {
 
   readonly parent: BaseNode;
 
-  readonly creator: Secured<ID>;
+  readonly creator: Secured<LinkTo<'User'>>;
 
   @Field(() => PostType)
   readonly type: PostType;

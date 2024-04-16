@@ -28,7 +28,7 @@ export class PromptVariantResponseResolver {
     @Parent() response: PromptVariantResponse,
     @Loader(UserLoader) users: LoaderOf<UserLoader>,
   ) {
-    return await mapSecuredValue(response.creator, users.load.bind(users));
+    return await mapSecuredValue(response.creator, ({ id }) => users.load(id));
   }
 }
 
@@ -39,6 +39,6 @@ export class VariantResponseResolver {
     @Parent() response: VariantResponse,
     @Loader(UserLoader) users: LoaderOf<UserLoader>,
   ) {
-    return await mapSecuredValue(response.creator, users.load.bind(users));
+    return await mapSecuredValue(response.creator, ({ id }) => users.load(id));
   }
 }
