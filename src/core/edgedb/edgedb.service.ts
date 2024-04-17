@@ -69,7 +69,7 @@ export class EdgeDB {
    *   await EdgeDB.run(...);
    * });
    */
-  get usingOptions() {
+  get usingOptions(): OptionsContext['usingOptions'] {
     return this.optionsContext.usingOptions.bind(this.optionsContext);
   }
 
