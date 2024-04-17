@@ -102,7 +102,7 @@ export const PromptVariantResponseRepository = <
             node('node'),
           ])
           .match([
-            node('parent'),
+            node('node'),
             relation('out', undefined, 'creator'),
             node('creator', 'User'),
           ])
