@@ -5,6 +5,7 @@ import JWT from 'jsonwebtoken';
 import { DateTime } from 'luxon';
 import { Writable } from 'ts-essentials';
 import { sessionFromContext } from '~/common/session';
+import { disableAccessPolicies, EdgeDB } from '~/core/edgedb';
 import {
   DuplicateException,
   GqlContextType,
@@ -38,6 +39,7 @@ export class AuthenticationService {
     private readonly privileges: Privileges,
     @Logger('authentication:service') private readonly logger: ILogger,
     private readonly repo: AuthenticationRepository,
+    private readonly edgedb: EdgeDB,
     private readonly moduleRef: ModuleRef,
   ) {}
 
@@ -61,7 +63,10 @@ export class AuthenticationService {
     try {
       const userMod = await import('../user');
       const users = this.moduleRef.get(userMod.UserService, { strict: false });
-      userId = await users.create(input, session);
+      userId = await this.edgedb.usingOptions(
+        disableAccessPolicies,
+        async () => await users.create(input, session),
+      );
     } catch (e) {
       // remap field prop as `email` field is at a different location in register() than createPerson()
       if (e instanceof DuplicateException && e.field === 'person.email') {
