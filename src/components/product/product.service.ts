@@ -10,16 +10,9 @@ import {
   Session,
   UnsecuredDto,
 } from '../../common';
-import {
-  HandleIdLookup,
-  ILogger,
-  Logger,
-  ResourceLoader,
-  ResourceResolver,
-} from '../../core';
+import { HandleIdLookup, ILogger, Logger, ResourceResolver } from '../../core';
 import { compareNullable, ifDiff, isSame } from '../../core/database/changes';
 import { Privileges } from '../authorization';
-import { IEngagement } from '../engagement';
 import {
   getTotalVerseEquivalents,
   getTotalVerses,
@@ -61,7 +54,6 @@ export class ProductService {
     private readonly scriptureRefs: ScriptureReferenceService,
     private readonly privileges: Privileges,
     private readonly repo: ProductRepository,
-    private readonly resourceLoader: ResourceLoader,
     private readonly resources: ResourceResolver,
     @Logger('product:service') private readonly logger: ILogger,
   ) {}
@@ -73,18 +65,6 @@ export class ProductService {
       | CreateOtherProduct,
     session: Session,
   ): Promise<AnyProduct> {
-    const engagementResource = await this.resourceLoader.load(
-      IEngagement,
-      input.engagementId,
-    );
-    const engagementPrivileges = this.privileges.for(
-      session,
-      IEngagement,
-      engagementResource,
-    );
-
-    engagementPrivileges.verifyCan('create');
-
     const engagement = await this.repo.getBaseNode(
       input.engagementId,
       'Engagement',
@@ -175,7 +155,13 @@ export class ProductService {
           });
 
     this.logger.debug(`product created`, { id });
-    return await this.readOne(id, session);
+    const created = await this.readOne(id, session);
+
+    this.privileges
+      .for(session, resolveProductType(created), created)
+      .verifyCan('create');
+
+    return created;
   }
 
   @HandleIdLookup([
