@@ -1,7 +1,7 @@
 // noinspection JSUnusedGlobalSymbols
 
 import { stripIndent } from 'common-tags';
-import { difference, omit } from 'lodash';
+import { difference } from 'lodash';
 import { many, Many } from '../../src/common';
 import { GqlError } from './create-graphql-client';
 
@@ -10,18 +10,22 @@ import { GqlError } from './create-graphql-client';
 expect.extend({
   toThrowGqlError(received: GqlError, expected?: ErrorExpectations) {
     expect(received).toBeInstanceOf(GqlError);
-    const error = received.raw;
     const { code, message, ...extensions } = expected ?? {};
-
     const expectedObj = {
       ...(code ? { codes: many(code) } : {}),
       ...(message ? { message } : {}),
       extensions,
     };
+
+    const {
+      codes: actualCodes,
+      stacktrace: _,
+      ...actualExtensions
+    } = received.raw.extensions;
     const actualObj = {
-      codes: error?.extensions?.codes ?? [],
-      message: error?.message,
-      extensions: omit(error?.extensions, 'code', 'codes', 'stacktrace'),
+      codes: actualCodes,
+      message: received.raw.message,
+      extensions: actualExtensions,
     };
 
     const codesPassed = expectedObj.codes

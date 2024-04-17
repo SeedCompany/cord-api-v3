@@ -6,6 +6,7 @@ import {
   GraphQLFormattedError,
   print,
 } from 'graphql';
+import { Merge } from 'type-fest';
 // eslint-disable-next-line import/no-duplicates
 import { ErrorExpectations } from './expect-gql-error';
 // eslint-disable-next-line import/no-duplicates -- ensures runtime execution
@@ -101,14 +102,14 @@ export class GqlError extends Error {
 
   static from(raw: RawGqlError) {
     const err = new GqlError(raw);
-    err.name = raw.extensions.code;
+    err.name = raw.extensions.codes[0];
     // must be after err constructor finishes to capture correctly.
     let frames = err.stack!.split('\n').slice(5);
-    if (raw.extensions.exception) {
-      frames = [...raw.extensions.exception.stacktrace, ...frames];
+    if (raw.extensions.stacktrace) {
+      frames = [...raw.extensions.stacktrace, ...frames];
     }
     err.message = raw.message;
-    err.stack = `${err.name}: ${err.message}\n` + frames.join('\n');
+    err.stack = `${err.name}: ${err.message}\n\n` + frames.join('\n');
     return err;
   }
 }
@@ -120,16 +121,15 @@ export type ExecutionResult<TData> = Omit<
   errors?: readonly RawGqlError[];
 };
 
-export type RawGqlError = Omit<GraphQLFormattedError, 'extensions'> & {
-  extensions: {
-    code: string;
-    codes: string[];
-    exception?: {
-      message: string;
-      stacktrace: string[];
+export type RawGqlError = Merge<
+  GraphQLFormattedError,
+  {
+    extensions: {
+      codes: readonly string[];
+      stacktrace?: readonly string[];
     };
-  } & AnyObject;
-};
+  }
+>;
 
 interface AnyObject {
   [key: string]: any;
