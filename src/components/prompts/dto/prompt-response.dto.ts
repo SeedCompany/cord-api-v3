@@ -18,9 +18,8 @@ import {
   UnsecuredDto,
   Variant,
 } from '~/common';
-import { LinkToUnknown } from '~/core';
+import { LinkTo, LinkToUnknown } from '~/core';
 import { BaseNode } from '~/core/database/results';
-import { User } from '../../user';
 import { Prompt, SecuredPrompt } from './prompt.dto';
 
 @ObjectType()
@@ -46,7 +45,7 @@ export abstract class VariantResponse<Key extends string = string> {
   @Field()
   readonly response: SecuredRichTextNullable;
 
-  readonly creator: Secured<IdOf<User>>;
+  readonly creator: Secured<LinkTo<'User'>>;
 
   @Field(() => DateTime, { nullable: true })
   readonly modifiedAt?: DateTime;
@@ -65,7 +64,7 @@ export class PromptVariantResponse<
     responses: [VariantResponse],
   } satisfies ResourceRelationsShape;
 
-  readonly creator: Secured<IdOf<User>>;
+  readonly creator: Secured<LinkTo<'User'>>;
 
   readonly parent: BaseNode;
 

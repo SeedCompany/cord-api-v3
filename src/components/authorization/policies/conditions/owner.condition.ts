@@ -1,7 +1,15 @@
 import { Logger } from '@nestjs/common';
 import { Query } from 'cypher-query-builder';
 import { inspect, InspectOptionsStylized } from 'util';
-import { ID, isIdLike, MaybeSecured, ResourceShape, Secured } from '~/common';
+import {
+  ID,
+  isIdLike,
+  MaybeSecured,
+  MaybeSecuredProp,
+  ResourceShape,
+  unwrapSecured,
+} from '~/common';
+import { type LinkTo } from '~/core/resources';
 import { User } from '../../../user/dto';
 import {
   AsCypherParams,
@@ -12,7 +20,7 @@ import {
 const CQL_VAR = 'requestingUser';
 
 export interface HasCreator {
-  creator: ID | Secured<ID>;
+  creator: MaybeSecuredProp<ID | LinkTo<'User'>>;
 }
 
 class OwnerCondition<
@@ -29,11 +37,11 @@ class OwnerCondition<
         return (object as MaybeSecured<User>).id;
       }
       const o = object as MaybeSecured<HasCreator>;
-      return !o.creator
-        ? undefined
-        : isIdLike(o.creator)
-        ? o.creator
-        : o.creator.value;
+      const creator = unwrapSecured(o.creator);
+      if (!creator) {
+        return undefined;
+      }
+      return isIdLike(creator) ? creator : creator.id;
     })();
     if (!creator) {
       Logger.warn(

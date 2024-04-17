@@ -24,7 +24,6 @@ export class PostRepository extends DtoRepository<typeof Post, [Session] | []>(
 ) {
   async create(input: CreatePost, session: Session) {
     const initialProps = {
-      creator: session.userId,
       type: input.type,
       shareability: input.shareability,
       body: input.body,
@@ -35,8 +34,13 @@ export class PostRepository extends DtoRepository<typeof Post, [Session] | []>(
       .apply(matchRequestingUser(session))
       .apply(await createNode(Post, { initialProps }))
       .apply(
-        createRelationships(Post, 'in', {
-          post: ['BaseNode', input.parentId],
+        createRelationships(Post, {
+          in: {
+            post: ['BaseNode', input.parentId],
+          },
+          out: {
+            creator: ['User', session.userId],
+          },
         }),
       )
       .apply(this.hydrate())
@@ -115,10 +119,16 @@ export class PostRepository extends DtoRepository<typeof Post, [Session] | []>(
           relation('in', '', 'post', ACTIVE),
           node('parent', 'BaseNode'),
         ])
+        .match([
+          node('node'),
+          relation('out', '', 'creator', ACTIVE),
+          node('creator', 'User'),
+        ])
         .apply(matchProps())
         .return<{ dto: DbTypeOf<Post> }>(
           merge('props', {
             parent: 'parent',
+            creator: 'creator { .id }',
           }).as('dto'),
         );
   }

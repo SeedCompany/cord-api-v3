@@ -12,7 +12,6 @@ import {
 import { DbTypeOf, DtoRepository } from '~/core';
 import {
   ACTIVE,
-  apoc,
   createNode,
   createRelationships,
   filter,
@@ -169,8 +168,12 @@ export class ProgressReportMediaRepository extends DtoRepository<
           baseNodeProps: {
             variant: input.variant.key,
             category: input.category,
-            creator: session.userId,
           },
+        }),
+      )
+      .apply(
+        createRelationships(this.resource, 'out', {
+          creator: ['User', session.userId],
         }),
       )
       .apply(
@@ -184,7 +187,10 @@ export class ProgressReportMediaRepository extends DtoRepository<
         }),
       )
       .return<{ dto: Omit<DbTypeOf<ReportMedia>, 'media' | 'file'> }>(
-        apoc.convert.toMap('node').as('dto'),
+        merge('node', {
+          report: 'report.id',
+          creator: 'creator { .id }',
+        }).as('dto'),
       );
     const results = await query.first();
     if (results) {
@@ -262,6 +268,11 @@ export class ProgressReportMediaRepository extends DtoRepository<
             relation('out', '', 'fileNode', ACTIVE),
             node('file', 'File'),
           ],
+          [
+            node('node'),
+            relation('out', '', 'creator', ACTIVE),
+            node('creator', 'User'),
+          ],
         ])
         .subQuery('file', (sub) =>
           sub
@@ -282,6 +293,7 @@ export class ProgressReportMediaRepository extends DtoRepository<
             variantGroup: 'variantGroup.id',
             file: 'file.id',
             media: 'media.id',
+            creator: 'creator { .id }',
             sensitivity: 'sensitivity',
             scope: 'scope',
           }).as('dto'),

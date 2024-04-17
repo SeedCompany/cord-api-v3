@@ -55,7 +55,7 @@ export class PostResolver {
     @Parent() post: Post,
     @Loader(UserLoader) users: LoaderOf<UserLoader>,
   ): Promise<SecuredUser> {
-    return await mapSecuredValue(post.creator, (id) => users.load(id));
+    return await mapSecuredValue(post.creator, ({ id }) => users.load(id));
   }
 
   @Mutation(() => UpdatePostOutput, {

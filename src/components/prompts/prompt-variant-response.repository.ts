@@ -102,6 +102,11 @@ export const PromptVariantResponseRepository = <
             node('node'),
           ])
           .match([
+            node('parent'),
+            relation('out', undefined, 'creator'),
+            node('creator', 'User'),
+          ])
+          .match([
             node('node'),
             relation('out', undefined, 'prompt'),
             node('prompt', 'Property'),
@@ -124,6 +129,7 @@ export const PromptVariantResponseRepository = <
           .return<{ dto: DbTypeOf<InstanceType<TResourceStatic>> }>(
             merge('node', {
               parent: 'parent',
+              creator: 'creator { .id }',
               prompt: 'prompt.value',
               responses: 'responses',
             }).as('dto'),
@@ -145,7 +151,6 @@ export const PromptVariantResponseRepository = <
         .apply(
           await createNode(resource, {
             baseNodeProps: {
-              creator: session.userId,
               createdAt,
               modifiedAt: createdAt,
             },
@@ -155,8 +160,13 @@ export const PromptVariantResponseRepository = <
           }),
         )
         .apply(
-          createRelationships(resource, 'in', {
-            child: ['BaseNode', input.resource],
+          createRelationships(resource, {
+            in: {
+              child: ['BaseNode', input.resource],
+            },
+            out: {
+              creator: ['User', session.userId],
+            },
           }),
         )
         .apply(this.hydrate(session))
@@ -176,7 +186,6 @@ export const PromptVariantResponseRepository = <
         baseNodeProps: {
           variant: input.variant,
           response: variable(responseVar.toString()),
-          creator: session.userId,
         },
       });
       await query
@@ -210,8 +219,13 @@ export const PromptVariantResponseRepository = <
                 .comment('create new response for variant')
                 .apply(newResponse)
                 .apply(
-                  createRelationships(resource, 'in', {
-                    child: variable('parent'),
+                  createRelationships(resource, {
+                    in: {
+                      child: variable('parent'),
+                    },
+                    out: {
+                      creator: ['User', session.userId],
+                    },
                   }),
                 )
                 .return('count(node) as updatedResponseCount'),

@@ -5,6 +5,7 @@ import { AdminEdgeDBRepository } from './admin.edgedb.repository';
 import { AdminEdgeDBService } from './admin.edgedb.service';
 import { AdminRepository } from './admin.repository';
 import { AdminService } from './admin.service';
+import { NormalizeCreatorMigration } from './migrations/normalize-creator.migration';
 
 @Module({
   imports: [AuthorizationModule],
@@ -16,6 +17,7 @@ import { AdminService } from './admin.service';
       // and each will only use their own.
       AdminEdgeDBRepository,
     ),
+    NormalizeCreatorMigration,
   ],
 })
 export class AdminModule {}
