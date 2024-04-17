@@ -33,6 +33,8 @@ export type SecuredKeys<Dto extends Record<string, any>> = ConditionalKeys<
 
 export type MaybeSecured<Dto> = Dto | UnsecuredDto<Dto>;
 
+export type MaybeSecuredProp<T> = T | Secured<T>;
+
 /**
  * Converts a DTO to unwrap its secured properties.
  * Non-secured properties are left as is.

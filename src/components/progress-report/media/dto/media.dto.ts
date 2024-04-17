@@ -9,11 +9,10 @@ import {
   Variant,
   VariantOf,
 } from '~/common';
-import { SetDbType } from '~/core';
+import { LinkTo, SetDbType } from '~/core';
 import { e } from '~/core/edgedb';
 import { RegisterResource } from '~/core/resources';
 import { FileId, Media } from '../../../file';
-import { User } from '../../../user';
 import { ProgressReport } from '../../dto';
 import { ProgressReportHighlight } from '../../dto/highlights.dto';
 import { MediaCategory } from '../media-category.enum';
@@ -53,7 +52,7 @@ export class ProgressReportMedia extends Resource {
   @IdField()
   readonly variantGroup: VariantGroup;
 
-  readonly creator: IdOf<User>;
+  readonly creator: LinkTo<'User'>;
 }
 
 export type MediaVariant = VariantOf<typeof ProgressReportMedia>;

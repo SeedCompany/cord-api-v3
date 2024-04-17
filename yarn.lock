@@ -1485,14 +1485,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@edgedb/generate@npm:^0.5.0-canary.20240408T143001":
-  version: 0.5.0-canary.20240408T143001
-  resolution: "@edgedb/generate@npm:0.5.0-canary.20240408T143001"
+"@edgedb/generate@npm:^0.5.2":
+  version: 0.5.2
+  resolution: "@edgedb/generate@npm:0.5.2"
+  dependencies:
+    "@iarna/toml": "npm:^2.2.5"
   peerDependencies:
-    edgedb: ^1.4.0
+    edgedb: ^1.5.0
   bin:
     generate: dist/cli.js
-  checksum: 10c0/c84fe33d109f0f3338ef2a220936fa3417309d3884dc3b5673130f0eeffaa4fd03d16a2dd703fa553e1a374696de3fca6d431dc251c01ddbea38a858fdc82ce9
+  checksum: 10c0/98fd2ebd7d6e3e92450148e54e39f75c53966d4b8006b6c14be05e9a4ac06ca7be13fc7615430fe1847bee890cd82d3ee0bdaed46afe4d74455d5e339f9f8a6a
   languageName: node
   linkType: hard
 
@@ -1781,6 +1783,13 @@ __metadata:
   version: 2.0.1
   resolution: "@humanwhocodes/object-schema@npm:2.0.1"
   checksum: 10c0/9dba24e59fdb4041829d92b693aacb778add3b6f612aaa9c0774f3b650c11a378cc64f042a59da85c11dae33df456580a3c36837b953541aed6ff94294f97fac
+  languageName: node
+  linkType: hard
+
+"@iarna/toml@npm:^2.2.5":
+  version: 2.2.5
+  resolution: "@iarna/toml@npm:2.2.5"
+  checksum: 10c0/d095381ad4554aca233b7cf5a91f243ef619e5e15efd3157bc640feac320545450d14b394aebbf6f02a2047437ced778ae598d5879a995441ab7b6c0b2c2f201
   languageName: node
   linkType: hard
 
@@ -5316,7 +5325,7 @@ __metadata:
     "@apollo/subgraph": "npm:^2.5.6"
     "@aws-sdk/client-s3": "npm:^3.440.0"
     "@aws-sdk/s3-request-presigner": "npm:^3.440.0"
-    "@edgedb/generate": "npm:^0.5.0-canary.20240408T143001"
+    "@edgedb/generate": "npm:^0.5.2"
     "@faker-js/faker": "npm:^8.2.0"
     "@ffprobe-installer/ffprobe": "npm:^2.1.2"
     "@golevelup/nestjs-discovery": "npm:^4.0.0"
@@ -5368,7 +5377,7 @@ __metadata:
     debugger-is-attached: "npm:^1.2.0"
     dotenv: "npm:^16.3.1"
     dotenv-expand: "npm:^10.0.0"
-    edgedb: "npm:^1.5.0-canary.20240408T142923"
+    edgedb: "npm:^1.5.0"
     eslint: "npm:^8.52.0"
     eslint-plugin-no-only-tests: "npm:^3.1.0"
     eslint-plugin-typescript-sort-keys: "npm:^2.3.0"
@@ -5962,9 +5971,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"edgedb@npm:^1.5.0-canary.20240408T142923":
-  version: 1.5.0-canary.20240408T142923
-  resolution: "edgedb@npm:1.5.0-canary.20240408T142923"
+"edgedb@npm:^1.5.0":
+  version: 1.5.0
+  resolution: "edgedb@npm:1.5.0"
   dependencies:
     debug: "npm:^4.3.4"
     env-paths: "npm:^3.0.0"
@@ -5972,7 +5981,7 @@ __metadata:
     which: "npm:^4.0.0"
   bin:
     edgedb: dist/cli.mjs
-  checksum: 10c0/00ebb31762a533c9c277a2bc088eaf1c11ba8993c9e0bf8a4c0c20bf4f31d25e0d6530235fffb87ec4ed9f0879e1a5b408cb053e90c2c30ac9366087d3b127ef
+  checksum: 10c0/2fb5f1e6712632ca847027e10a6da3aba044d8ca3b85b744beaa8ef00e711553b71628826b5dc507d3831699d484e794e819639e787dbc1d282612afbc631022
   languageName: node
   linkType: hard
 

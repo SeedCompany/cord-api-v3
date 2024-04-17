@@ -14,7 +14,7 @@ import {
 } from '../../common';
 import { ConfigService, ILogger, Loader, LoaderOf, Logger } from '../../core';
 import { Power, Privileges } from '../authorization';
-import { User, UserLoader } from '../user';
+import { User, UserLoader, UserService } from '../user';
 import { AuthenticationService } from './authentication.service';
 import { SessionOutput } from './dto';
 import { SessionInterceptor } from './session.interceptor';
@@ -26,6 +26,7 @@ export class SessionResolver {
     private readonly privileges: Privileges,
     private readonly config: ConfigService,
     private readonly sessionInt: SessionInterceptor,
+    private readonly users: UserService,
     @Logger('session:resolver') private readonly logger: ILogger,
   ) {}
 
@@ -105,12 +106,18 @@ export class SessionResolver {
   })
   async impersonator(
     @Parent() { session }: SessionOutput,
-    @Loader(UserLoader) users: LoaderOf<UserLoader>,
   ): Promise<User | null> {
     if (session.anonymous || !session.impersonator) {
       return null;
     }
-    return await users.load(session.impersonator.userId);
+    // Edge case: Load the impersonator, as the impersonator, rather than the impersonatee.
+    // They should still be able to see their own props from this field.
+    // Otherwise, it could be that the impersonatee can't see the impersonator's roles,
+    // and now the UI can't stop impersonating because it doesn't know the impersonator's roles.
+    return await this.users.readOne(
+      session.impersonator.userId,
+      session.impersonator, // instead of `session`
+    );
   }
 
   @ResolveField(() => [Power], { nullable: true })
