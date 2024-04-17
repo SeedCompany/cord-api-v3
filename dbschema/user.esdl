@@ -26,9 +26,11 @@ module default {
     }
     multi link education: User::Education {
       on target delete allow;
+      on source delete delete target;
     }
     multi link unavailabilities: User::Unavailability {
       on target delete allow;
+      on source delete delete target;
     }
   }
 }
