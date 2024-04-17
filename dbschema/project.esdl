@@ -28,19 +28,24 @@ module default {
           .step >= Project::Step.PendingFinanceConfirmation
         ) then ((
           with
-            fa := assert_exists(
-              __subject__.primaryLocation.fundingAccount,
-              message := "Project must have a primary location"
-            ),
-            existing := (
-              select detached Project.departmentId filter Project.primaryLocation.fundingAccount = fa
-            ),
-            available := (
-              <str>range_unpack(range(fa.accountNumber * 10000 + 11, fa.accountNumber * 10000 + 9999))
-              except existing
+            info := (
+              if __subject__ is MultiplicationTranslationProject
+                then (prefix := 8, startingOffset := 201)
+              else (
+                  prefix := (
+                    assert_exists(
+                      __subject__.primaryLocation.fundingAccount,
+                      message := "Project must have a primary location"
+                    ).accountNumber
+                  ),
+                  startingOffset := 11
+                )
+              ),
+            select min(
+              <str>range_unpack(range(info.prefix * 10000 + info.startingOffset, info.prefix * 10000 + 9999))
+              except detached Project.departmentId
             )
-          select min(available)
-        )) else .departmentId
+          )) else .departmentId
       );
     };
     
