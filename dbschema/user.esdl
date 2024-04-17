@@ -32,6 +32,7 @@ module default {
       on target delete allow;
       on source delete delete target;
     }
+    multi locations: Location;
   }
 }
  
