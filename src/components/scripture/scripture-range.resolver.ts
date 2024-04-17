@@ -1,7 +1,8 @@
-import { Int, Parent, ResolveField, Resolver } from '@nestjs/graphql';
+import { Float, Int, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { labelOfVerseRange } from '@seedcompany/scripture';
 import { stripIndent } from 'common-tags';
 import { ScriptureRange } from './dto';
+import { getTotalVerseEquivalents } from './verse-equivalents';
 
 @Resolver(ScriptureRange)
 export class ScriptureRangeResolver {
@@ -31,5 +32,12 @@ export class ScriptureRangeResolver {
   totalVerses(@Parent() range: ScriptureRange): number {
     const verseRange = ScriptureRange.fromReferences(range);
     return verseRange.end - verseRange.start + 1;
+  }
+  @ResolveField(() => Float, {
+    description:
+      'The total number of verse equivalents in this scripture range',
+  })
+  totalVerseEquivalents(@Parent() range: ScriptureRange): number {
+    return getTotalVerseEquivalents(range);
   }
 }

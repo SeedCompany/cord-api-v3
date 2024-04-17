@@ -1,11 +1,16 @@
-import { Book, mergeVerseRanges, Verse } from '@seedcompany/scripture';
+import {
+  Book,
+  mergeVerseRanges,
+  Verse,
+  VerseLike,
+} from '@seedcompany/scripture';
 import { sum } from 'lodash';
 import { Range } from '~/common';
 import { difficultyFactorOfBook } from './book-difficulty-factor';
 import { ScriptureRange, UnspecifiedScripturePortion } from './dto';
 
 export const getTotalVerseEquivalents = (
-  ...refs: readonly ScriptureRange[]
+  ...refs: ReadonlyArray<Range<VerseLike>>
 ) => {
   const verses = mergeVerseRanges(refs)
     .flatMap((range) => [...splitRangeByBook(range)])
