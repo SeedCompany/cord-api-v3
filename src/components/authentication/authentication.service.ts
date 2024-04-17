@@ -48,7 +48,10 @@ export class AuthenticationService {
     return token;
   }
 
-  async register(input: RegisterInput, session?: Session): Promise<ID> {
+  async register(
+    { password, ...input }: RegisterInput,
+    session?: Session,
+  ): Promise<ID> {
     // ensure no other tokens are associated with this user
     if (session) {
       await this.logout(session.token);
@@ -67,7 +70,7 @@ export class AuthenticationService {
       throw e;
     }
 
-    const passwordHash = await this.crypto.hash(input.password);
+    const passwordHash = await this.crypto.hash(password);
     await this.repo.savePasswordHashOnUser(userId, passwordHash);
 
     return userId;
