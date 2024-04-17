@@ -1,5 +1,6 @@
 export { Many, many, maybeMany, JsonSet, ArrayItem } from '@seedcompany/common';
 
+export * from './and-call';
 export * from './temporal';
 export * from './calculated.decorator';
 export * from './context.type';
