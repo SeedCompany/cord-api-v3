@@ -132,10 +132,8 @@ const formatStackFrame = (t: StackFrame) => {
     return null;
   }
 
-  const file = relative(
-    `${dirname(fileURLToPath(import.meta.url))}/../../..`,
-    absolute,
-  );
+  // Sometimes its prefixed with file:// other times not.
+  const file = relative(projectDir, absolute.replace(/^file:\/\//, ''));
   const location = `${file}:${t.getLineNumber()}:${t.getColumnNumber()}`;
 
   return (
@@ -144,6 +142,8 @@ const formatStackFrame = (t: StackFrame) => {
     (subject && location ? red(` (${location})`) : red(` ${location}`))
   );
 };
+
+const projectDir = `${dirname(fileURLToPath(import.meta.url))}/../../..`;
 
 export const formatException = () =>
   format((info: TransformableInfo) => {
