@@ -12,7 +12,7 @@ export class AuthenticationEdgeDBRepository
 {
   private readonly db: EdgeDB;
   constructor(db: EdgeDB) {
-    this.db = db.outsideOfTransactions().withOptions(disableAccessPolicies);
+    this.db = db.withOptions(disableAccessPolicies);
   }
 
   async waitForRootUserId() {
