@@ -5,6 +5,7 @@ import { AdminEdgeDBRepository } from './admin.edgedb.repository';
 import { AdminEdgeDBService } from './admin.edgedb.service';
 import { AdminRepository } from './admin.repository';
 import { AdminService } from './admin.service';
+import { NormalizeCreatorBaseNodeMigration } from './migrations/normalize-creator-base-node.migration';
 import { NormalizeCreatorMigration } from './migrations/normalize-creator.migration';
 
 @Module({
@@ -18,6 +19,7 @@ import { NormalizeCreatorMigration } from './migrations/normalize-creator.migrat
       AdminEdgeDBRepository,
     ),
     NormalizeCreatorMigration,
+    NormalizeCreatorBaseNodeMigration,
   ],
 })
 export class AdminModule {}
