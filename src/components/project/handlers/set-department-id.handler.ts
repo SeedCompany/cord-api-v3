@@ -10,7 +10,7 @@ import {
   EventsHandler,
   IEventHandler,
 } from '../../../core';
-import { Project, ProjectStep } from '../dto';
+import { Project, ProjectStep, ProjectType } from '../dto';
 import { ProjectUpdatedEvent } from '../events';
 
 type SubscribedEvent = ProjectUpdatedEvent;
@@ -55,7 +55,17 @@ export class SetDepartmentId implements IEventHandler<SubscribedEvent> {
   }
 
   private async assignDepartmentIdForProject(project: UnsecuredDto<Project>) {
-    const departmentIdPrefix = await this.getFundingAccountNumber(project);
+    const info =
+      project.type === ProjectType.MultiplicationTranslation
+        ? {
+            departmentIdPrefix: '8',
+            startingOffset: 201,
+          }
+        : {
+            departmentIdPrefix: await this.getFundingAccountNumber(project),
+            startingOffset: 11,
+          };
+
     const res = await this.db
       .query()
       .raw(
@@ -64,7 +74,7 @@ export class SetDepartmentId implements IEventHandler<SubscribedEvent> {
         MATCH ()-[:departmentId]-(departmentIdPropertyNode:Property)
         WHERE departmentIdPropertyNode.value STARTS WITH $departmentIdPrefix
         WITH collect(distinct(toInteger(right(departmentIdPropertyNode.value, 4)))) as listOfDepartmentIds
-        WITH [n IN range(11, 9999) WHERE NOT n IN listOfDepartmentIds] as listOfUnusedDepartmentIds
+        WITH [n IN range($startingOffset, 9999) WHERE NOT n IN listOfDepartmentIds] as listOfUnusedDepartmentIds
         WITH apoc.coll.shuffle(listOfUnusedDepartmentIds) AS randomizedIds
         WITH toString(randomizedIds[0]) AS nextIdBase
         WITH $departmentIdPrefix + substring("0000", 1, 4 - size(nextIdBase)) + nextIdBase as nextId
@@ -75,7 +85,7 @@ export class SetDepartmentId implements IEventHandler<SubscribedEvent> {
         CREATE (project)-[newDepartmentIdRelationship:departmentId { active: true, createdAt: datetime() }]->(:Property { createdAt: datetime(), value: departmentId })
         RETURN departmentId
         `,
-        { departmentIdPrefix: departmentIdPrefix, projectId: project.id },
+        { ...info, projectId: project.id },
       )
       .asResult<{ departmentId: ID }>()
       .first();
