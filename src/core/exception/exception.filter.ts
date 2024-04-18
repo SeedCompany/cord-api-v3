@@ -96,11 +96,14 @@ export class ExceptionFilter implements GqlExceptionFilter {
     }
 
     if (info.codes.has('Validation')) {
+      const inputErrors =
+        error instanceof ValidationException
+          ? mapValues(error.errors, (_, constraints) => {
+              return Object.values(constraints)[0];
+            }).asRecord
+          : undefined;
       this.logger.notice(info.message, {
-        inputErrors: mapValues(
-          info.errors as ValidationException['errors'],
-          (_, constraints) => Object.values(constraints)[0],
-        ).asRecord,
+        ...(inputErrors ? { inputErrors } : {}),
       });
       return;
     }
