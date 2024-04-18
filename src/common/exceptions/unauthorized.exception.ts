@@ -1,7 +1,5 @@
-import { HttpStatus } from '@nestjs/common';
 import { lowerCase } from 'lodash';
 import pluralize from 'plur';
-import { Writable as Mutable } from 'type-fest';
 import { EnhancedResource } from '../resource.dto';
 import { InputException, InputExceptionArgs } from './input.exception';
 
@@ -67,7 +65,6 @@ export class UnauthorizedException extends InputException {
 
   constructor(...args: InputExceptionArgs) {
     super(...InputException.parseArgs(`Insufficient permission`, args));
-    (this as Mutable<this>).status = HttpStatus.FORBIDDEN;
   }
 
   static fromPrivileges(

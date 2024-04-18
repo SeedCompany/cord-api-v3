@@ -124,7 +124,6 @@ export type RawGqlError = Omit<GraphQLFormattedError, 'extensions'> & {
   extensions: {
     code: string;
     codes: string[];
-    status: number;
     exception?: {
       message: string;
       stacktrace: string[];

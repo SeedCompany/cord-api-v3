@@ -21,13 +21,7 @@ expect.extend({
     const actualObj = {
       codes: error?.extensions?.codes ?? [],
       message: error?.message,
-      extensions: omit(
-        error?.extensions,
-        'code',
-        'codes',
-        'status',
-        'stacktrace',
-      ),
+      extensions: omit(error?.extensions, 'code', 'codes', 'stacktrace'),
     };
 
     const codesPassed = expectedObj.codes
