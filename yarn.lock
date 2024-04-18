@@ -1485,16 +1485,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@edgedb/generate@npm:^0.5.2":
-  version: 0.5.2
-  resolution: "@edgedb/generate@npm:0.5.2"
+"@edgedb/generate@npm:^0.5.3":
+  version: 0.5.3
+  resolution: "@edgedb/generate@npm:0.5.3"
   dependencies:
     "@iarna/toml": "npm:^2.2.5"
   peerDependencies:
     edgedb: ^1.5.0
   bin:
     generate: dist/cli.js
-  checksum: 10c0/98fd2ebd7d6e3e92450148e54e39f75c53966d4b8006b6c14be05e9a4ac06ca7be13fc7615430fe1847bee890cd82d3ee0bdaed46afe4d74455d5e339f9f8a6a
+  checksum: 10c0/7a9bc7c0f95b5135eb3bb75729b20b5abce3cc02f1d459c2b4e15746afa4dc1b45e8004d9b4cf80641bc04fdf649ea32a83b96164a3c36b99fcb489c0172ea26
   languageName: node
   linkType: hard
 
@@ -5305,7 +5305,7 @@ __metadata:
     "@apollo/subgraph": "npm:^2.5.6"
     "@aws-sdk/client-s3": "npm:^3.440.0"
     "@aws-sdk/s3-request-presigner": "npm:^3.440.0"
-    "@edgedb/generate": "npm:^0.5.2"
+    "@edgedb/generate": "npm:^0.5.3"
     "@faker-js/faker": "npm:^8.2.0"
     "@ffprobe-installer/ffprobe": "npm:^2.1.2"
     "@golevelup/nestjs-discovery": "npm:^4.0.0"
@@ -5357,7 +5357,7 @@ __metadata:
     debugger-is-attached: "npm:^1.2.0"
     dotenv: "npm:^16.3.1"
     dotenv-expand: "npm:^10.0.0"
-    edgedb: "npm:^1.5.0"
+    edgedb: "npm:^1.5.3"
     eslint: "npm:^8.52.0"
     eslint-plugin-no-only-tests: "npm:^3.1.0"
     eslint-plugin-typescript-sort-keys: "npm:^2.3.0"
@@ -5951,9 +5951,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"edgedb@npm:^1.5.0":
-  version: 1.5.0
-  resolution: "edgedb@npm:1.5.0"
+"edgedb@npm:^1.5.3":
+  version: 1.5.3
+  resolution: "edgedb@npm:1.5.3"
   dependencies:
     debug: "npm:^4.3.4"
     env-paths: "npm:^3.0.0"
@@ -5961,7 +5961,7 @@ __metadata:
     which: "npm:^4.0.0"
   bin:
     edgedb: dist/cli.mjs
-  checksum: 10c0/2fb5f1e6712632ca847027e10a6da3aba044d8ca3b85b744beaa8ef00e711553b71628826b5dc507d3831699d484e794e819639e787dbc1d282612afbc631022
+  checksum: 10c0/a87bfd3488dfbd3b68d04a1e7017dd38ad586edceb54c7fe9095b63538e03eb86ec835a3aa6f7f0094628e8bb3316ea34e8b1ac8013891e762361040a814896f
   languageName: node
   linkType: hard
 
