@@ -21,8 +21,8 @@ import {
   AbstractClassType,
   DuplicateException,
   Exception,
+  getCauseList,
   getParentTypes,
-  getPreviousList,
   InputException,
   JsonSet,
   NotFoundException,
@@ -84,7 +84,7 @@ export class ExceptionNormalizer {
     // failure, then return that as the error. This way we can have an "unknown"
     // failure for the specific action without having to check for this error
     // in every catch statement (assuming no further logic is done).
-    const exs = getPreviousList(ex, true);
+    const exs = getCauseList(ex);
     if (exs.some((e) => e instanceof Neo.ServiceUnavailableError)) {
       return {
         codes: [
@@ -154,7 +154,7 @@ export class ExceptionNormalizer {
     }
 
     if (ex instanceof Exception) {
-      const { name, message, stack, previous, ...rest } = ex;
+      const { name, message, stack, ...rest } = ex;
       return {
         message,
         codes: this.errorToCodes(ex),
