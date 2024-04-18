@@ -109,7 +109,8 @@ export class GqlError extends Error {
       frames = [...raw.extensions.stacktrace, ...frames];
     }
     err.message = raw.message;
-    err.stack = `${err.name}: ${err.message}\n\n` + frames.join('\n');
+    const codes = raw.extensions.codes.join(', ');
+    err.stack = `[${codes}]: ${err.message}\n\n` + frames.join('\n');
     return err;
   }
 }
