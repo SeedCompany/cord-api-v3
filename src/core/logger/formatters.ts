@@ -1,6 +1,7 @@
 import { clc } from '@nestjs/common/utils/cli-colors.util.js';
 import { ppRaw as prettyPrint } from '@patarapolw/prettyprint';
 import stringify from 'fast-safe-stringify';
+import addIndent from 'indent-string';
 import { identity } from 'lodash';
 import { TransformableInfo as ScuffedTransformableInfo } from 'logform';
 import { DateTime } from 'luxon';
@@ -156,7 +157,7 @@ export const formatException = () =>
     info[MESSAGE] = exs
       .map((ex, index) => {
         const formattedMessage =
-          (index > 0 ? 'Caused by: ' : '') +
+          (index > 0 ? '[cause]: ' : '') +
           formatMessage(
             ex.type,
             ex.message,
@@ -168,7 +169,7 @@ export const formatException = () =>
           .map(formatStackFrame)
           .filter(identity)
           .join('\n');
-        return formattedMessage + formattedTrace;
+        return addIndent(formattedMessage + formattedTrace, index * 2);
       })
       .join('\n');
 
