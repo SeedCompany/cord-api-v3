@@ -194,7 +194,7 @@ export class TranslationProject extends Project {
   static readonly SecuredProps = keysOf<SecuredProps<TranslationProject>>();
 }
 
-@RegisterResource({ db: e.TranslationProject })
+@RegisterResource({ db: e.MomentumTranslationProject })
 @ObjectType({
   implements: [TranslationProject],
   description: 'Formerly known as our TranslationProjects',
@@ -207,7 +207,7 @@ export class MomentumTranslationProject extends TranslationProject {
   declare readonly type: 'MomentumTranslation';
 }
 
-@RegisterResource({ db: e.TranslationProject })
+@RegisterResource({ db: e.MultiplicationTranslationProject })
 @ObjectType({
   implements: [TranslationProject],
 })
@@ -251,7 +251,7 @@ declare module '~/core/resources/map' {
     Project: typeof e.default.Project;
     InternshipProject: typeof e.default.InternshipProject;
     TranslationProject: typeof e.default.TranslationProject;
-    MomentumTranslationProject: typeof e.default.TranslationProject; // TODO
-    MultiplicationTranslationProject: typeof e.default.TranslationProject; // TODO
+    MomentumTranslationProject: typeof e.default.MomentumTranslationProject;
+    MultiplicationTranslationProject: typeof e.default.MultiplicationTranslationProject;
   }
 }
