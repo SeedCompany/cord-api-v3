@@ -2,13 +2,15 @@ import { Field, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { e } from '~/core/edgedb';
-import { RegisterResource } from '~/core/resources';
+import { LinkTo, RegisterResource } from '~/core/resources';
 import {
   DateTimeField,
   ID,
+  MaybeSecuredProp,
   Resource,
   SecuredProps,
   SecuredRichText,
+  SetUnsecuredType,
 } from '../../../common';
 
 @RegisterResource({ db: e.Comments.Comment })
@@ -22,9 +24,9 @@ export class Comment extends Resource {
     (m) => m.CommentThread,
   );
 
-  readonly thread: ID;
+  readonly thread: SetUnsecuredType<LinkTo<'CommentThread'>>;
 
-  readonly creator: ID;
+  readonly creator: MaybeSecuredProp<ID | LinkTo<'User'>>;
 
   @Field()
   readonly body: SecuredRichText;

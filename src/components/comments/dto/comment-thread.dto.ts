@@ -2,6 +2,7 @@ import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
   ID,
+  MaybeSecuredProp,
   Resource,
   ResourceRelationsShape,
   SecuredProps,
@@ -10,7 +11,7 @@ import {
 } from '~/common';
 import { BaseNode } from '~/core/database/results';
 import { e } from '~/core/edgedb';
-import { RegisterResource } from '~/core/resources';
+import { LinkTo, RegisterResource } from '~/core/resources';
 import { Comment } from './comment.dto';
 
 @RegisterResource({ db: e.Comments.Thread })
@@ -32,7 +33,7 @@ export class CommentThread extends Resource {
 
   readonly parent: BaseNode;
 
-  readonly creator: ID;
+  readonly creator: MaybeSecuredProp<ID | LinkTo<'User'>>;
 }
 
 declare module '~/core/resources/map' {
