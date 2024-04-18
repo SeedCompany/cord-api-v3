@@ -16,6 +16,7 @@ import {
 import * as Edge from 'edgedb';
 import * as EdgeDBTags from 'edgedb/dist/errors/tags.js';
 import { GraphQLError, GraphQLResolveInfo } from 'graphql';
+import addIndent from 'indent-string';
 import { lowerCase, uniq } from 'lodash';
 import {
   AbstractClassType,
@@ -52,7 +53,6 @@ export class ExceptionNormalizer {
   normalize(ex: Error, context?: ArgumentsHost): ExceptionJson {
     const {
       message = ex.message,
-      stack = ex.stack,
       code: _,
       codes,
       ...extensions
@@ -62,13 +62,7 @@ export class ExceptionNormalizer {
       code: codes[0],
       codes: new JsonSet(codes),
       ...extensions,
-      stack: stack
-        .split('\n')
-        .filter(isSrcFrame)
-        .map((frame: string) =>
-          this.config?.jest ? frame : normalizeFramePath(frame),
-        )
-        .join('\n'),
+      stack: this.getStack(ex),
     };
   }
 
@@ -158,7 +152,6 @@ export class ExceptionNormalizer {
       return {
         message,
         codes: this.errorToCodes(ex),
-        stack,
         ...rest,
       };
     }
@@ -215,8 +208,22 @@ export class ExceptionNormalizer {
       inputPath,
       ex,
     );
-    wrapped.stack = ex.stack;
     return wrapped;
+  }
+
+  private getStack(ex: Error) {
+    return getCauseList(ex)
+      .map((e) =>
+        (e.stack ?? e.message)
+          .split('\n')
+          .filter(isSrcFrame)
+          .map((frame: string) =>
+            this.config?.jest ? frame : normalizeFramePath(frame),
+          )
+          .join('\n'),
+      )
+      .map((e, i) => addIndent(i > 0 ? `[cause]: ${e}` : e, i * 2))
+      .join('\n');
   }
 
   private httpException(ex: Nest.HttpException) {
