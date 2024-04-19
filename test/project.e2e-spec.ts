@@ -1,6 +1,7 @@
 import { faker } from '@faker-js/faker';
 import { intersection, times } from 'lodash';
 import { DateTime } from 'luxon';
+import { v1 as uuid } from 'uuid';
 import {
   CalendarDate,
   generateId,
@@ -201,7 +202,7 @@ describe('Project e2e', () => {
       createProject(app, {
         name: faker.string.uuid(),
         type: ProjectType.MomentumTranslation,
-        fieldRegionId: 'invalid-location-id' as ID,
+        fieldRegionId: uuid() as ID,
       }),
     ).rejects.toThrowGqlError(
       errors.notFound({
