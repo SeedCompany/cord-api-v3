@@ -22,6 +22,7 @@ export class CreateEngagementDefaultCeremonyHandler
           ? CeremonyType.Dedication
           : CeremonyType.Certification,
     };
+    // if DB is Edge - do nothing
     const ceremonyId = await this.ceremonies.create(input);
 
     // connect ceremonyId to engagement

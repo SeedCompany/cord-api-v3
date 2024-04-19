@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { ChangesOf } from '~/core/database/changes';
-import { ID, Session, UnsecuredDto } from '../../common';
+import { ServerException, Session, UnsecuredDto } from '../../common';
 import { DtoRepository } from '../../core';
 import {
   ACTIVE,
@@ -32,11 +32,16 @@ export class CeremonyRepository extends DtoRepository<
       actualDate: input.actualDate,
       canDelete: true,
     };
-    return await this.db
+    const result = await this.db
       .query()
       .apply(await createNode(Ceremony, { initialProps }))
-      .return<{ id: ID }>('node.id as id')
+      .return<{ node: UnsecuredDto<Ceremony> }>('node')
       .first();
+
+    if (!result) {
+      throw new ServerException('failed to create a ceremony');
+    }
+    return result;
   }
 
   async update(

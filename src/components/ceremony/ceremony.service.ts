@@ -8,7 +8,6 @@ import {
   UnsecuredDto,
 } from '../../common';
 import { HandleIdLookup, ILogger, Logger } from '../../core';
-import { mapListResults } from '../../core/database/results';
 import { Privileges } from '../authorization';
 import { CeremonyRepository } from './ceremony.repository';
 import {
@@ -29,13 +28,9 @@ export class CeremonyService {
 
   async create(input: CreateCeremony): Promise<ID> {
     try {
-      const result = await this.ceremonyRepo.create(input);
+      const { node } = await this.ceremonyRepo.create(input);
 
-      if (!result) {
-        throw new ServerException('failed to create a ceremony');
-      }
-
-      return result.id;
+      return node.id;
     } catch (exception) {
       this.logger.warning('Failed to create ceremony', {
         exception,
@@ -57,17 +52,15 @@ export class CeremonyService {
     }
 
     const dto = await this.ceremonyRepo.readOne(id, session);
-    return await this.secure(dto, session);
+    return this.secure(dto, session);
   }
 
   async readMany(ids: readonly ID[], session: Session) {
     const ceremonies = await this.ceremonyRepo.readMany(ids, session);
-    return await Promise.all(
-      ceremonies.map((dto) => this.secure(dto, session)),
-    );
+    return ceremonies.map((dto) => this.secure(dto, session));
   }
 
-  async secure(dto: UnsecuredDto<Ceremony>, session: Session) {
+  secure(dto: UnsecuredDto<Ceremony>, session: Session) {
     return this.privileges.for(session, Ceremony).secure(dto);
   }
 
@@ -99,6 +92,9 @@ export class CeremonyService {
     session: Session,
   ): Promise<CeremonyListOutput> {
     const results = await this.ceremonyRepo.list(input, session);
-    return await mapListResults(results, (dto) => this.secure(dto, session));
+    return {
+      ...results,
+      items: results.items.map((dto) => this.secure(dto, session)),
+    };
   }
 }

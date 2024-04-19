@@ -1,5 +1,7 @@
 import { forwardRef, Module } from '@nestjs/common';
+import { splitDb } from '~/core';
 import { AuthorizationModule } from '../authorization/authorization.module';
+import { CeremonyEdgeDBRepository } from './ceremony.edgedb.repository';
 import { CeremonyLoader } from './ceremony.loader';
 import { CeremonyRepository } from './ceremony.repository';
 import { CeremonyResolver } from './ceremony.resolver';
@@ -11,7 +13,7 @@ import * as handlers from './handlers';
   providers: [
     CeremonyResolver,
     CeremonyService,
-    CeremonyRepository,
+    splitDb(CeremonyRepository, CeremonyEdgeDBRepository),
     CeremonyLoader,
     ...Object.values(handlers),
   ],
