@@ -27,6 +27,7 @@ import {
   InputException,
   JsonSet,
   NotFoundException,
+  ServerException,
 } from '~/common';
 import type { ConfigService } from '~/core';
 import * as Neo from '../database/errors';
@@ -133,7 +134,7 @@ export class ExceptionNormalizer {
         ? GqlExecutionContext.create(context as any)
         : undefined;
 
-    ex = this.wrapIDNotFoundError(ex, gqlContext);
+    ex = this.wrapIDNotFoundError(params, gqlContext);
 
     if (ex instanceof ExclusivityViolationError) {
       ex = DuplicateException.fromDB(ex, gqlContext);
@@ -185,7 +186,7 @@ export class ExceptionNormalizer {
    * to user input NotFound error with that input path.
    */
   private wrapIDNotFoundError(
-    ex: Error,
+    { ex, gql }: NormalizeParams,
     gqlContext: GqlExecutionContext | undefined,
   ) {
     if (!(ex instanceof Edge.CardinalityViolationError)) {
@@ -197,23 +198,39 @@ export class ExceptionNormalizer {
       return ex;
     }
     const [_, type, id] = matched;
+    const typeName = this.resources
+      ? this.resources.getByEdgeDB(type).name
+      : type;
+
+    if (gql?.path) {
+      // This error was thrown from a field resolver.
+      // Because this is not directly from user input, it is a server error.
+      // Still make the error nicer.
+      const wrapped = new ServerException(
+        `Field \`${gql.path.join('.')}\` failed to use valid ${typeName} id`,
+        ex,
+      );
+      return Object.assign(wrapped, { idNotFound: id });
+    }
 
     const inputPath = entries(InputException.getFlattenInput(gqlContext)).find(
       ([_, value]) => value === id,
     )?.[0];
     if (!inputPath) {
+      /*
+       TODO Just because we can't identify the input path we don't make the ex nicer?
+         NotFound requires a field, which is why we do this.
+         But is there a case where we have NotFound without a field?
+      */
       return ex;
     }
 
-    const typeName = this.resources
-      ? this.resources.getByEdgeDB(type).name
-      : type;
     const wrapped = new NotFoundException(
       `${typeName} could not be found`,
       inputPath,
       ex,
     );
-    return wrapped;
+    return Object.assign(wrapped, { idNotFound: id });
   }
 
   private getStack({ ex }: NormalizeParams) {
