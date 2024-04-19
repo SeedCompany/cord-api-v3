@@ -157,7 +157,7 @@ export class GraphQLConfig implements GqlOptionsFactory {
     // Some errors do not go through the global exception filter.
     // ResolveField() calls is one of them.
     // Normalized & log here.
-    const normalized = this.exceptionNormalizer.normalize(original);
+    const normalized = this.exceptionNormalizer.normalize({ ex: original });
     this.exceptionFilter.logIt(normalized, original);
     const { message, stack, ...extensions } = normalized;
     return {

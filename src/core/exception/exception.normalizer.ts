@@ -35,6 +35,12 @@ import { ResourcesHost } from '../resources/resources.host';
 import { isSrcFrame } from './is-src-frame';
 import { normalizeFramePath } from './normalize-frame-path';
 
+interface NormalizeParams {
+  ex: Error;
+  /** Errors thrown in Query/Mutation/Controller methods will have this. */
+  context?: ArgumentsHost;
+}
+
 export interface ExceptionJson {
   message: string;
   stack: string;
@@ -50,26 +56,26 @@ export class ExceptionNormalizer {
     private readonly resources?: ResourcesHost,
   ) {}
 
-  normalize(ex: Error, context?: ArgumentsHost): ExceptionJson {
+  normalize(params: NormalizeParams): ExceptionJson {
     const {
-      message = ex.message,
+      message = params.ex.message,
       code: _,
       codes,
       ...extensions
-    } = this.gatherExtraInfo(ex, context);
+    } = this.gatherExtraInfo(params);
     return {
       message,
       code: codes[0],
       codes: new JsonSet(codes),
       ...extensions,
-      stack: this.getStack(ex),
+      stack: this.getStack(params),
     };
   }
 
-  private gatherExtraInfo(
-    ex: Error,
-    context?: ArgumentsHost,
-  ): Record<string, any> {
+  private gatherExtraInfo(params: NormalizeParams): Record<string, any> {
+    let { ex } = params;
+    const { context } = params;
+
     if (ex instanceof Nest.HttpException) {
       return this.httpException(ex);
     }
@@ -208,7 +214,7 @@ export class ExceptionNormalizer {
     return wrapped;
   }
 
-  private getStack(ex: Error) {
+  private getStack({ ex }: NormalizeParams) {
     return getCauseList(ex)
       .map((e) =>
         (e.stack ?? e.message)
