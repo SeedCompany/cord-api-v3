@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { simpleSwitch } from '@seedcompany/common';
 import { DuplicateException, ID, ServerException, Session } from '~/common';
 import { DtoRepository, UniquenessError } from '~/core';
-import { createNode, matchRequestingUser } from '~/core/database/query';
+import { createNode } from '~/core/database/query';
 import {
   CreateEthnologueLanguage,
   EthnologueLanguage,
@@ -26,7 +26,6 @@ export class EthnologueLanguageRepository extends DtoRepository(
 
     const query = this.db
       .query()
-      .apply(matchRequestingUser(session))
       .apply(await createNode(EthnologueLanguage, { initialProps }))
       .return<{ id: ID }>('node.id as id');
 

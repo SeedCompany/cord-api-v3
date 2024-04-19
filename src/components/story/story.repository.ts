@@ -7,7 +7,6 @@ import { DtoRepository } from '../../core';
 import {
   createNode,
   matchProps,
-  matchRequestingUser,
   merge,
   paginate,
   sorting,
@@ -28,7 +27,6 @@ export class StoryRepository extends DtoRepository(Story) {
     };
     return await this.db
       .query()
-      .apply(matchRequestingUser(session))
       .apply(await createNode(Story, { initialProps }))
       .return<{ id: ID }>('node.id as id')
       .first();

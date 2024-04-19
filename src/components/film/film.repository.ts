@@ -6,7 +6,6 @@ import { DbTypeOf, DtoRepository } from '../../core';
 import {
   createNode,
   matchProps,
-  matchRequestingUser,
   merge,
   paginate,
   requestingUser,
@@ -28,7 +27,6 @@ export class FilmRepository extends DtoRepository(Film) {
     };
     return await this.db
       .query()
-      .apply(matchRequestingUser(session))
       .apply(await createNode(Film, { initialProps }))
       .return<{ id: ID }>('node.id as id')
       .first();

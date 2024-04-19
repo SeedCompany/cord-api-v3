@@ -7,7 +7,6 @@ import {
   ACTIVE,
   createNode,
   matchPropsAndProjectSensAndScopedRoles,
-  matchRequestingUser,
   oncePerProject,
   paginate,
   requestingUser,
@@ -35,7 +34,6 @@ export class CeremonyRepository extends DtoRepository<
     };
     return await this.db
       .query()
-      .apply(matchRequestingUser(session))
       .apply(await createNode(Ceremony, { initialProps }))
       .return<{ id: ID }>('node.id as id')
       .first();

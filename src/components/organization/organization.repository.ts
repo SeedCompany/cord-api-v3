@@ -9,7 +9,6 @@ import {
   matchProjectScopedRoles,
   matchProjectSens,
   matchProps,
-  matchRequestingUser,
   merge,
   oncePerProject,
   paginate,
@@ -41,7 +40,6 @@ export class OrganizationRepository extends DtoRepository<
 
     const query = this.db
       .query()
-      .apply(matchRequestingUser(session))
       .apply(await createNode(Organization, { initialProps }))
       .return<{ id: ID }>('node.id as id');
 

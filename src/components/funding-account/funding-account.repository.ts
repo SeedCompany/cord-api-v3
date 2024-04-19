@@ -4,7 +4,6 @@ import { ID, Session } from '../../common';
 import { DtoRepository } from '../../core';
 import {
   createNode,
-  matchRequestingUser,
   paginate,
   requestingUser,
   sorting,
@@ -26,7 +25,6 @@ export class FundingAccountRepository extends DtoRepository(FundingAccount) {
     };
     const query = this.db
       .query()
-      .apply(matchRequestingUser(session))
       .apply(await createNode(FundingAccount, { initialProps }))
       .return<{ id: ID }>('node.id as id');
 

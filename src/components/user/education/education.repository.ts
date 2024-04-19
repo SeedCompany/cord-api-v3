@@ -6,7 +6,6 @@ import {
   ACTIVE,
   createNode,
   createRelationships,
-  matchRequestingUser,
   paginate,
   sorting,
 } from '~/core/database/query';
@@ -28,7 +27,6 @@ export class EducationRepository extends DtoRepository(Education) {
 
     const query = this.db
       .query()
-      .apply(matchRequestingUser(session))
       .apply(await createNode(Education, { initialProps }))
       .apply(
         createRelationships(Education, 'in', {

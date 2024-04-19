@@ -21,7 +21,6 @@ import {
   createProperty,
   createRelationships,
   matchProps,
-  matchSession,
   merge,
   paginate,
   sorting,
@@ -536,7 +535,6 @@ export class FileRepository extends CommonRepository {
       await this.db
         .query()
         .match([
-          matchSession(session),
           [node('newParent', [], { id: newParentId })],
           [
             node('file', 'FileNode', { id }),

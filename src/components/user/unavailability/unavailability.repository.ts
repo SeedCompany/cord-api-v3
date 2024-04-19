@@ -7,7 +7,6 @@ import {
   ACTIVE,
   createNode,
   createRelationships,
-  matchRequestingUser,
   paginate,
   sorting,
 } from '../../../core/database/query';
@@ -28,7 +27,6 @@ export class UnavailabilityRepository extends DtoRepository(Unavailability) {
     };
     const query = this.db
       .query()
-      .apply(matchRequestingUser(session))
       .apply(await createNode(Unavailability, { initialProps }))
       .apply(
         createRelationships(Unavailability, 'in', {

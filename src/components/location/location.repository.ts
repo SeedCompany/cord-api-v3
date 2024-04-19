@@ -15,7 +15,6 @@ import {
   createNode,
   createRelationships,
   matchProps,
-  matchRequestingUser,
   merge,
   paginate,
   sorting,
@@ -54,7 +53,6 @@ export class LocationRepository extends DtoRepository(Location) {
 
     const query = this.db
       .query()
-      .apply(matchRequestingUser(session))
       .apply(await createNode(Location, { initialProps }))
       .apply(
         createRelationships(Location, 'out', {

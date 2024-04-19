@@ -19,7 +19,6 @@ import {
   createRelationships,
   matchChangesetAndChangedProps,
   matchPropsAndProjectSensAndScopedRoles,
-  matchRequestingUser,
   merge,
   oncePerProject,
   paginate,
@@ -59,7 +58,6 @@ export class BudgetRepository extends DtoRepository<
 
     const result = await this.db
       .query()
-      .apply(matchRequestingUser(session))
       .apply(await createNode(Budget, { initialProps }))
       .apply(
         createRelationships(Budget, 'in', {
