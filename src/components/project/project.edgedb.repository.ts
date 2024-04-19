@@ -65,7 +65,8 @@ export class ProjectEdgeDBRepository
   }
 
   async create(input: CreateProject) {
-    const { type, sensitivity, otherLocationIds, ...props } = input;
+    const { type, sensitivity, otherLocationIds, presetInventory, ...props } =
+      input;
     return await this.concretes[input.type].create({
       ...props,
       ownSensitivity: sensitivity,
