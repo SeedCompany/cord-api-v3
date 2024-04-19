@@ -34,6 +34,7 @@ export class ExceptionFilter implements GqlExceptionFilter {
     try {
       normalized = this.normalizer.normalize(exception, args);
     } catch (e) {
+      this.logger.error(`Failed to normalize exception`, { exception: e });
       throw exception;
     }
 
@@ -81,7 +82,7 @@ export class ExceptionFilter implements GqlExceptionFilter {
     httpAdapter.reply(res, out, status);
   }
 
-  private logIt(info: ExceptionJson, error: Error) {
+  logIt(info: ExceptionJson, error: Error) {
     if ('logProps' in error && error.logProps) {
       // Assume these have already been logged.
       return;
