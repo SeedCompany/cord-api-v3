@@ -30,8 +30,8 @@ import {
   ServerException,
 } from '~/common';
 import type { ConfigService } from '~/core';
+import { ExclusivityViolationError } from '~/core/edgedb/errors';
 import * as Neo from '../database/errors';
-import { ExclusivityViolationError } from '../edgedb/exclusivity-violation.error';
 import { ResourcesHost } from '../resources/resources.host';
 import { isSrcFrame } from './is-src-frame';
 import { normalizeFramePath } from './normalize-frame-path';

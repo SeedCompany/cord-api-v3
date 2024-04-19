@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/unified-signatures */
 import { Injectable, Optional } from '@nestjs/common';
-import { $, EdgeDBError, Executor } from 'edgedb';
+import { $, ConstraintViolationError, EdgeDBError, Executor } from 'edgedb';
 import { QueryArgs } from 'edgedb/dist/ifaces';
 import { retry, RetryOptions } from '~/common/retry';
 import { jestSkipFileInExceptionSource } from '../exception';
 import { TypedEdgeQL } from './edgeql';
-import { ExclusivityViolationError } from './exclusivity-violation.error';
+import { enhanceConstraintError } from './errors';
 import { InlineQueryRuntimeMap } from './generated-client/inline-queries';
 import { ApplyOptions, OptionsContext } from './options.context';
 import { Client } from './reexports';
@@ -146,8 +146,8 @@ export class EdgeDB {
         );
       }
 
-      if (ExclusivityViolationError.is(e)) {
-        throw ExclusivityViolationError.cast(e);
+      if (e instanceof ConstraintViolationError) {
+        throw enhanceConstraintError(e);
       }
       throw e;
     }
