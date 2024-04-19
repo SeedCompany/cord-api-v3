@@ -39,6 +39,8 @@ interface NormalizeParams {
   ex: Error;
   /** Errors thrown in Query/Mutation/Controller methods will have this. */
   context?: ArgumentsHost;
+  /** Errors thrown in ResolveField methods will have this. */
+  gql?: GraphQLError;
 }
 
 export interface ExceptionJson {
