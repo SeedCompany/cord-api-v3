@@ -69,7 +69,7 @@ export class PartnerService {
       await this.verifyCountries(input.countries);
     }
 
-    const id = await this.repo.create(input, session);
+    const id = await this.repo.create(input);
 
     this.logger.debug(`Partner created`, { id });
     return await this.readOne(id, session);

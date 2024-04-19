@@ -220,11 +220,7 @@ export class LanguageService {
     }
   }
 
-  async addLocation(
-    languageId: ID,
-    locationId: ID,
-    _session: Session,
-  ): Promise<void> {
+  async addLocation(languageId: ID, locationId: ID): Promise<void> {
     try {
       await this.locationService.addLocationToNode(
         'Language',
@@ -237,11 +233,7 @@ export class LanguageService {
     }
   }
 
-  async removeLocation(
-    languageId: ID,
-    locationId: ID,
-    _session: Session,
-  ): Promise<void> {
+  async removeLocation(languageId: ID, locationId: ID): Promise<void> {
     try {
       await this.locationService.removeLocationFromNode(
         'Language',

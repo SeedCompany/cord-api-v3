@@ -28,7 +28,7 @@ export class OrganizationRepository extends DtoRepository<
   typeof Organization,
   [session: Session]
 >(Organization) {
-  async create(input: CreateOrganization, session: Session) {
+  async create(input: CreateOrganization) {
     const initialProps = {
       name: input.name,
       acronym: input.acronym,

@@ -39,7 +39,7 @@ export class UserEdgeDBRepository
     throw new NotImplementedException().with(args);
   }
 
-  hydrateAsNeo4j(_session: unknown): any {
+  hydrateAsNeo4j(): never {
     throw new NotImplementedException();
   }
 }

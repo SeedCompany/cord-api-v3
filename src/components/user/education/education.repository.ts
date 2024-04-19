@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { ID, NotFoundException, ServerException, Session } from '~/common';
+import { ID, NotFoundException, ServerException } from '~/common';
 import { DtoRepository } from '~/core/database';
 import {
   ACTIVE,
@@ -18,7 +18,7 @@ import {
 
 @Injectable()
 export class EducationRepository extends DtoRepository(Education) {
-  async create(input: CreateEducation, session: Session) {
+  async create(input: CreateEducation) {
     const initialProps = {
       degree: input.degree,
       institution: input.institution,
@@ -68,7 +68,7 @@ export class EducationRepository extends DtoRepository(Education) {
     return await this.readOne(id);
   }
 
-  async list({ filter, ...input }: EducationListInput, _session: Session) {
+  async list({ filter, ...input }: EducationListInput) {
     const result = await this.db
       .query()
       .matchNode('node', 'Education')

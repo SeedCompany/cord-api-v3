@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Query } from 'cypher-query-builder';
 import { ChangesOf } from '~/core/database/changes';
 import { DbTypeOf } from '~/core/database/db-type';
-import { ID, Session } from '../../common';
+import { ID } from '../../common';
 import { DtoRepository } from '../../core';
 import {
   createNode,
@@ -20,7 +20,7 @@ export class StoryRepository extends DtoRepository(Story) {
     super();
   }
 
-  async create(input: CreateStory, session: Session) {
+  async create(input: CreateStory) {
     const initialProps = {
       name: input.name,
       canDelete: true,
@@ -39,7 +39,7 @@ export class StoryRepository extends DtoRepository(Story) {
     await this.updateProperties(existing, simpleChanges);
   }
 
-  async list({ filter, ...input }: StoryListInput, _session: Session) {
+  async list({ filter, ...input }: StoryListInput) {
     const result = await this.db
       .query()
       .matchNode('node', 'Story')

@@ -258,11 +258,7 @@ export class UserService {
     };
   }
 
-  async addLocation(
-    userId: ID,
-    locationId: ID,
-    _session: Session,
-  ): Promise<void> {
+  async addLocation(userId: ID, locationId: ID): Promise<void> {
     try {
       await this.locationService.addLocationToNode(
         'User',
@@ -275,11 +271,7 @@ export class UserService {
     }
   }
 
-  async removeLocation(
-    userId: ID,
-    locationId: ID,
-    _session: Session,
-  ): Promise<void> {
+  async removeLocation(userId: ID, locationId: ID): Promise<void> {
     try {
       await this.locationService.removeLocationFromNode(
         'User',
@@ -326,16 +318,12 @@ export class UserService {
     return !exists;
   }
 
-  async assignOrganizationToUser(
-    request: AssignOrganizationToUser,
-    _session: Session,
-  ) {
+  async assignOrganizationToUser(request: AssignOrganizationToUser) {
     await this.userRepo.assignOrganizationToUser(request);
   }
 
   async removeOrganizationFromUser(
     request: RemoveOrganizationFromUser,
-    _session: Session,
   ): Promise<void> {
     await this.userRepo.removeOrganizationFromUser(request);
   }

@@ -28,7 +28,7 @@ import {
 
 @Injectable()
 export class FieldRegionRepository extends DtoRepository(FieldRegion) {
-  async create(input: CreateFieldRegion, session: Session) {
+  async create(input: CreateFieldRegion) {
     if (!(await this.isUnique(input.name))) {
       throw new DuplicateException(
         'fieldRegion.name',

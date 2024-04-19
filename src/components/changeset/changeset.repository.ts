@@ -8,7 +8,7 @@ import {
   or,
   relation,
 } from 'cypher-query-builder';
-import { ID, NotFoundException, Session } from '../../common';
+import { ID, NotFoundException } from '../../common';
 import { DtoRepository } from '../../core';
 import { ACTIVE, path, variable } from '../../core/database/query';
 import { BaseNode } from '../../core/database/results';
@@ -16,7 +16,7 @@ import { Changeset, ChangesetDiff } from './dto';
 
 @Injectable()
 export class ChangesetRepository extends DtoRepository(Changeset) {
-  async difference(id: ID, _session: Session, parent?: ID) {
+  async difference(id: ID, parent?: ID) {
     const importVars = ['changeset', ...(parent ? ['parent'] : [])];
     const limitToParentSubTree = parent
       ? {

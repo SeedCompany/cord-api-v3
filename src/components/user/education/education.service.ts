@@ -22,7 +22,7 @@ export class EducationService {
   async create(input: CreateEducation, session: Session): Promise<Education> {
     this.privileges.for(session, Education).verifyCan('create');
     // create education
-    const result = await this.repo.create(input, session);
+    const result = await this.repo.create(input);
     return this.secure(result, session);
   }
 
@@ -65,7 +65,7 @@ export class EducationService {
     return this.secure(updated, session);
   }
 
-  async delete(_id: ID, _session: Session): Promise<void> {
+  async delete(_id: ID): Promise<void> {
     // Not Implemented
   }
 
@@ -73,7 +73,7 @@ export class EducationService {
     input: EducationListInput,
     session: Session,
   ): Promise<EducationListOutput> {
-    const results = await this.repo.list(input, session);
+    const results = await this.repo.list(input);
     return {
       ...results,
       items: results.items.map((dto) => this.secure(dto, session)),

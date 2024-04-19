@@ -45,11 +45,7 @@ export class BudgetRepository extends DtoRepository<
     super();
   }
 
-  async create(
-    input: CreateBudget,
-    universalTemplateFileId: FileId,
-    session: Session,
-  ) {
+  async create(input: CreateBudget, universalTemplateFileId: FileId) {
     const initialProps = {
       status: Status.Pending,
       universalTemplateFile: universalTemplateFileId,

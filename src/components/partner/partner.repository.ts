@@ -47,7 +47,7 @@ export class PartnerRepository extends DtoRepository<
     return result?.id;
   }
 
-  async create(input: CreatePartner, session: Session) {
+  async create(input: CreatePartner) {
     const initialProps = {
       types: input.types,
       financialReportingTypes: input.financialReportingTypes,

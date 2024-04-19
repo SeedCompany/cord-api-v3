@@ -20,7 +20,7 @@ export class FilmRepository extends DtoRepository(Film) {
     super();
   }
 
-  async create(input: CreateFilm, session: Session) {
+  async create(input: CreateFilm) {
     const initialProps = {
       name: input.name,
       canDelete: true,

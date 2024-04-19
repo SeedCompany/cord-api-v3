@@ -49,7 +49,7 @@ export class DirectoryResolver {
     @Parent() node: Directory,
     @ListArg(FileListInput) input: FileListInput,
   ): Promise<FileListOutput> {
-    return await this.service.listChildren(node, input, session);
+    return await this.service.listChildren(node, input);
   }
 
   @ResolveField(() => User, {

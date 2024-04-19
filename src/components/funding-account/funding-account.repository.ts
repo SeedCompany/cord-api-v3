@@ -17,7 +17,7 @@ import {
 
 @Injectable()
 export class FundingAccountRepository extends DtoRepository(FundingAccount) {
-  async create(input: CreateFundingAccount, session: Session) {
+  async create(input: CreateFundingAccount) {
     const initialProps = {
       name: input.name,
       accountNumber: input.accountNumber,

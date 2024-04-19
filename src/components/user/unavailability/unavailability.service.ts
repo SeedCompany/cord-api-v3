@@ -35,7 +35,7 @@ export class UnavailabilityService {
       this.privileges.for(session, Unavailability).verifyCan('create');
 
       // create and connect the Unavailability to the User.
-      const id = await this.repo.create(input, session);
+      const id = await this.repo.create(input);
 
       this.logger.debug(`Created user unavailability`, {
         id,
@@ -116,7 +116,7 @@ export class UnavailabilityService {
     input: UnavailabilityListInput,
     session: Session,
   ): Promise<UnavailabilityListOutput> {
-    const results = await this.repo.list(input, session);
+    const results = await this.repo.list(input);
     return await mapListResults(results, (dto) => this.secure(dto, session));
   }
 }

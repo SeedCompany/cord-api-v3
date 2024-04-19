@@ -39,7 +39,7 @@ export class StoryService {
     }
 
     try {
-      const result = await this.repo.create(input, session);
+      const result = await this.repo.create(input);
 
       if (!result) {
         throw new ServerException('failed to create a story');
@@ -124,7 +124,7 @@ export class StoryService {
     input: StoryListInput,
     session: Session,
   ): Promise<StoryListOutput> {
-    const results = await this.repo.list(input, session);
+    const results = await this.repo.list(input);
     return await mapListResults(results, (dto) => this.secure(dto, session));
   }
 }

@@ -82,7 +82,7 @@ export class EducationResolver {
     @LoggedInSession() session: Session,
     @IdArg() id: ID,
   ): Promise<DeleteEducationOutput> {
-    await this.service.delete(id, session);
+    await this.service.delete(id);
     return { success: true };
   }
 }

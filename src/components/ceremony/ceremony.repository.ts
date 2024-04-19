@@ -24,7 +24,7 @@ export class CeremonyRepository extends DtoRepository<
   typeof Ceremony,
   [session: Session]
 >(Ceremony) {
-  async create(input: CreateCeremony, session: Session) {
+  async create(input: CreateCeremony) {
     const initialProps = {
       type: input.type,
       planned: input.planned,

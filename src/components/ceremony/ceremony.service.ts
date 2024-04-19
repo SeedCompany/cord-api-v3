@@ -27,9 +27,9 @@ export class CeremonyService {
     @Logger('ceremony:service') private readonly logger: ILogger,
   ) {}
 
-  async create(input: CreateCeremony, session: Session): Promise<ID> {
+  async create(input: CreateCeremony): Promise<ID> {
     try {
-      const result = await this.ceremonyRepo.create(input, session);
+      const result = await this.ceremonyRepo.create(input);
 
       if (!result) {
         throw new ServerException('failed to create a ceremony');

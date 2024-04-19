@@ -155,7 +155,7 @@ export class LocationRepository extends DtoRepository(Location) {
         );
   }
 
-  async list({ filter, ...input }: LocationListInput, _session: Session) {
+  async list({ filter, ...input }: LocationListInput) {
     const result = await this.db
       .query()
       .matchNode('node', 'Location')

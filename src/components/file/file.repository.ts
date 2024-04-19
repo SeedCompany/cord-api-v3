@@ -49,7 +49,7 @@ export class FileRepository extends CommonRepository {
     return this.getConstraintsFor(IFileNode);
   }
 
-  async getById(id: ID, _session?: Session): Promise<FileNode> {
+  async getById(id: ID): Promise<FileNode> {
     const result = await this.db
       .query()
       .matchNode('node', 'FileNode', { id })
@@ -59,7 +59,7 @@ export class FileRepository extends CommonRepository {
     return first(result);
   }
 
-  async getByIds(ids: readonly ID[], _session: Session) {
+  async getByIds(ids: readonly ID[]) {
     return await this.db
       .query()
       .matchNode('node', 'FileNode')
@@ -69,11 +69,7 @@ export class FileRepository extends CommonRepository {
       .run();
   }
 
-  async getByName(
-    parentId: ID,
-    name: string,
-    _session: Session,
-  ): Promise<FileNode> {
+  async getByName(parentId: ID, name: string): Promise<FileNode> {
     const result = await this.db
       .query()
       .match([
@@ -89,10 +85,7 @@ export class FileRepository extends CommonRepository {
     return first(result);
   }
 
-  async getParentsById(
-    id: ID,
-    _session: Session,
-  ): Promise<readonly FileNode[]> {
+  async getParentsById(id: ID): Promise<readonly FileNode[]> {
     const result = await this.db
       .query()
       .match([
@@ -530,7 +523,7 @@ export class FileRepository extends CommonRepository {
     }
   }
 
-  async move(id: ID, newParentId: ID, session: Session): Promise<void> {
+  async move(id: ID, newParentId: ID): Promise<void> {
     try {
       await this.db
         .query()
@@ -558,7 +551,7 @@ export class FileRepository extends CommonRepository {
     }
   }
 
-  async delete(fileNode: FileNode, _session: Session): Promise<void> {
+  async delete(fileNode: FileNode): Promise<void> {
     try {
       await this.db.deleteNode(fileNode);
     } catch (exception) {

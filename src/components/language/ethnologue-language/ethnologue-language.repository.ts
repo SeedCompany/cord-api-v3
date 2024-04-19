@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { simpleSwitch } from '@seedcompany/common';
-import { DuplicateException, ID, ServerException, Session } from '~/common';
+import { DuplicateException, ID, ServerException } from '~/common';
 import { DtoRepository, UniquenessError } from '~/core';
 import { createNode } from '~/core/database/query';
 import {
@@ -13,10 +13,7 @@ import {
 export class EthnologueLanguageRepository extends DtoRepository(
   EthnologueLanguage,
 ) {
-  async create(
-    input: CreateEthnologueLanguage & { languageId: ID },
-    session: Session,
-  ) {
+  async create(input: CreateEthnologueLanguage & { languageId: ID }) {
     const initialProps = {
       code: input.code,
       provisionalCode: input.provisionalCode,
