@@ -131,7 +131,7 @@ export class EdgeDB {
       }
     } catch (e) {
       // Ignore this call in stack trace. This puts the actual query as the first.
-      e.stack = e.stack!.replace(/^\s+at EdgeDB\.run.+\n/m, '');
+      e.stack = e.stack!.replace(/^\s+at(?: async)? EdgeDB\.run.+$\n/m, '');
 
       if (ExclusivityViolationError.is(e)) {
         throw ExclusivityViolationError.cast(e);
