@@ -42,7 +42,7 @@ module User {
   
   type Unavailability extending default::Resource {
     required description: str;
-    required dates: range<cal::local_date>;
+    required dates: range<datetime>;
   }
   
   scalar type Status extending enum<Active, Disabled>;
