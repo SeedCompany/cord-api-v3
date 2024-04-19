@@ -120,7 +120,10 @@ export class GraphQLConfig implements GqlOptionsFactory {
     formatted: FormattedError,
     error: unknown | /* but probably a */ GraphQLError,
   ): FormattedError => {
-    const extensions = this.getErrorExtensions(formatted, error);
+    const { message, ...extensions } = this.getErrorExtensions(
+      formatted,
+      error,
+    );
 
     const codes = (extensions.codes ??= new JsonSet(['Server']));
     delete extensions.code;
@@ -132,7 +135,8 @@ export class GraphQLConfig implements GqlOptionsFactory {
     }
 
     return {
-      message: formatted.message,
+      message:
+        message && typeof message === 'string' ? message : formatted.message,
       extensions,
       locations: formatted.locations,
       path: formatted.path,
@@ -159,7 +163,7 @@ export class GraphQLConfig implements GqlOptionsFactory {
     // Normalized & log here.
     const normalized = this.exceptionNormalizer.normalize({ ex: original });
     this.exceptionFilter.logIt(normalized, original);
-    const { message, stack, ...extensions } = normalized;
+    const { stack, ...extensions } = normalized;
     return {
       ...extensions,
       stacktrace: stack.split('\n'),
