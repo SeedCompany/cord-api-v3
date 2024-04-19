@@ -21,11 +21,6 @@ export const requestingUser = (session: Session | ID) => {
   return n;
 };
 
-export const matchRequestingUser =
-  ({ userId }: Pick<Session, 'userId'>) =>
-  (query: Query) =>
-    query.match(requestingUser(userId));
-
 /**
  * Same as `{ active: true }` but it doesn't create a bound parameter
  */
@@ -126,31 +121,4 @@ export const property = (
       value,
     }),
   ],
-];
-
-export const matchSession = (
-  session: Session,
-  {
-    // eslint-disable-next-line @seedcompany/no-unused-vars
-    withAclEdit,
-    // eslint-disable-next-line @seedcompany/no-unused-vars
-    withAclRead,
-    requestingUserConditions = {},
-  }: {
-    withAclEdit?: string;
-    withAclRead?: string;
-    requestingUserConditions?: Record<string, any>;
-  } = {},
-) => [
-  node('token', 'Token', {
-    active: true,
-    value: session.token,
-  }),
-  relation('in', '', 'token', {
-    active: true,
-  }),
-  node('requestingUser', 'User', {
-    id: session.userId,
-    ...requestingUserConditions,
-  }),
 ];

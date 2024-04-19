@@ -3,7 +3,7 @@ import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { ID, Session } from '../../common';
 import { DatabaseService } from '../../core';
-import { matchRequestingUser, requestingUser } from '../../core/database/query';
+import { requestingUser } from '../../core/database/query';
 
 @Injectable()
 export class PinRepository {
@@ -27,7 +27,7 @@ export class PinRepository {
     await this.db
       .query()
       .match(node('node', 'BaseNode', { id }))
-      .apply(matchRequestingUser(session))
+      .match(requestingUser(session))
       .merge([
         node('requestingUser'),
         relation('out', 'rel', 'pinned'),
