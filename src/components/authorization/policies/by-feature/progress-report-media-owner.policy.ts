@@ -1,4 +1,4 @@
-import { owner, Policy } from '../util';
+import { creator, Policy } from '../util';
 
-@Policy('all', (r) => r.ProgressReportMedia.when(owner).edit.delete)
+@Policy('all', (r) => r.ProgressReportMedia.when(creator).edit.delete)
 export class ProgressReportMediaOwnerPolicy {}

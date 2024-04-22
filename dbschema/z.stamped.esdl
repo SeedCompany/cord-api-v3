@@ -8,6 +8,8 @@ module Mixin {
       default := default::currentUser;
       rewrite update using (default::currentUser);
     };
+
+    required isCreator := .createdBy ?= <default::User>(global default::currentUserId) 
   }
 
   abstract type Timestamped {
