@@ -7,7 +7,7 @@ import {
   Session,
   UnsecuredDto,
 } from '../../common';
-import { HandleIdLookup, ILogger, Logger } from '../../core';
+import { DbTypeOf, HandleIdLookup, ILogger, Logger } from '../../core';
 import { Privileges } from '../authorization';
 import { CeremonyRepository } from './ceremony.repository';
 import {
@@ -64,15 +64,18 @@ export class CeremonyService {
     return this.privileges.for(session, Ceremony).secure(dto);
   }
 
-  async update(input: UpdateCeremony, session: Session): Promise<Ceremony> {
-    const object = await this.readOne(input.id, session);
+  async update(
+    input: UpdateCeremony,
+    session: Session,
+  ): Promise<DbTypeOf<Ceremony>> {
+    const object = await this.ceremonyRepo.readOne(input.id, session);
     const changes = this.ceremonyRepo.getActualChanges(object, input);
     this.privileges.for(session, Ceremony, object).verifyChanges(changes);
     return await this.ceremonyRepo.update(object, changes);
   }
 
   async delete(id: ID, session: Session): Promise<void> {
-    const object = await this.readOne(id, session);
+    const object = await this.ceremonyRepo.readOne(id, session);
 
     // Only called internally, not exposed directly to users
     // this.privileges.for(session, Ceremony, object).verifyCan('delete');
