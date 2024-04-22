@@ -31,8 +31,7 @@ export class ProjectStepChangedNotificationHandler
     }
 
     const recipients = await this.projectRules.getNotifications(
-      event.updated.id,
-      event.updated.step,
+      event.updated,
       event.session.userId,
       event.previous.step,
     );

@@ -267,7 +267,7 @@ export class ProjectService {
 
     if (changes.step && stepValidation) {
       await this.projectRules.verifyStepChange(
-        input.id,
+        currentProject,
         session,
         changes.step,
         changeset,
