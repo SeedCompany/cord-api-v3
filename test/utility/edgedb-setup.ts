@@ -7,12 +7,15 @@ export const ephemeralEdgeDB = async () => {
   }
 
   const db = createClient();
+  const config = await db.resolveConnectionParams();
+  // Workaround old default fallback. Didn't hit locally, but did in CI.
+  const main = config.branch === 'edgedb' ? 'main' : config.branch;
 
   await dropStale(db);
 
   const branch = `test_${Date.now()}`;
 
-  await db.execute(`create schema branch ${branch} from main`);
+  await db.execute(`create schema branch ${branch} from ${main}`);
 
   const cleanup = async () => {
     await db.execute(`drop branch ${branch}`);
