@@ -1,7 +1,7 @@
 import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import { AsyncLocalStorage } from 'async_hooks';
 import { EdgeDBError, Executor } from 'edgedb';
-import { getPreviousList } from '~/common';
+import { getCauseList } from '~/common';
 import { Client } from './reexports';
 
 @Injectable()
@@ -25,7 +25,7 @@ export class TransactionContext
           // throw that here and save the original.
           // This allows EdgeDB to check if the error is retry-able.
           // If it is, then this error doesn't matter; otherwise we'll unwrap below.
-          const maybeRetryableError = getPreviousList(error, true).find(
+          const maybeRetryableError = getCauseList(error).find(
             (e) => e instanceof EdgeDBError,
           );
           if (maybeRetryableError) {

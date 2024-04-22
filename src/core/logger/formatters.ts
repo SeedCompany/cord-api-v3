@@ -1,6 +1,7 @@
 import { clc } from '@nestjs/common/utils/cli-colors.util.js';
 import { ppRaw as prettyPrint } from '@patarapolw/prettyprint';
 import stringify from 'fast-safe-stringify';
+import addIndent from 'indent-string';
 import { identity } from 'lodash';
 import { TransformableInfo as ScuffedTransformableInfo } from 'logform';
 import { DateTime } from 'luxon';
@@ -10,7 +11,7 @@ import * as stacktrace from 'stack-trace';
 import { MESSAGE } from 'triple-beam';
 import { fileURLToPath } from 'url';
 import { config, format, LogEntry } from 'winston';
-import { hasPrevious } from '~/common';
+import { getCauseList } from '~/common';
 import { maskSecrets as maskSecretsOfObj } from '../../common/mask-secrets';
 import { getNameFromEntry } from './logger.interface';
 
@@ -76,10 +77,7 @@ export const exceptionInfo = () =>
     // stack should not be used. I think it's only NestJS so we should handle there.
     delete info.stack;
 
-    const flatten = (ex: Error): Error[] =>
-      hasPrevious(ex) ? [ex, ...flatten(ex.previous)] : [ex];
-
-    info.exceptions = flatten(info.exception).map((ex): ParsedError => {
+    info.exceptions = getCauseList(info.exception).map((ex): ParsedError => {
       const { name: _, message, stack: __, ...other } = ex;
       const stack = ex.stack!;
       const type = ex.constructor.name || stack.slice(0, stack.indexOf(':'));
@@ -134,10 +132,8 @@ const formatStackFrame = (t: StackFrame) => {
     return null;
   }
 
-  const file = relative(
-    `${dirname(fileURLToPath(import.meta.url))}/../../..`,
-    absolute,
-  );
+  // Sometimes its prefixed with file:// other times not.
+  const file = relative(projectDir, absolute.replace(/^file:\/\//, ''));
   const location = `${file}:${t.getLineNumber()}:${t.getColumnNumber()}`;
 
   return (
@@ -146,6 +142,8 @@ const formatStackFrame = (t: StackFrame) => {
     (subject && location ? red(` (${location})`) : red(` ${location}`))
   );
 };
+
+const projectDir = `${dirname(fileURLToPath(import.meta.url))}/../../..`;
 
 export const formatException = () =>
   format((info: TransformableInfo) => {
@@ -159,7 +157,7 @@ export const formatException = () =>
     info[MESSAGE] = exs
       .map((ex, index) => {
         const formattedMessage =
-          (index > 0 ? 'Caused by: ' : '') +
+          (index > 0 ? '[cause]: ' : '') +
           formatMessage(
             ex.type,
             ex.message,
@@ -171,7 +169,7 @@ export const formatException = () =>
           .map(formatStackFrame)
           .filter(identity)
           .join('\n');
-        return formattedMessage + formattedTrace;
+        return addIndent(formattedMessage + formattedTrace, index * 2);
       })
       .join('\n');
 

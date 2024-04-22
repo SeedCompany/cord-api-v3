@@ -1,10 +1,11 @@
 /* eslint-disable @typescript-eslint/unified-signatures */
 import { Injectable, Optional } from '@nestjs/common';
-import { $, Executor } from 'edgedb';
+import { $, ConstraintViolationError, EdgeDBError, Executor } from 'edgedb';
 import { QueryArgs } from 'edgedb/dist/ifaces';
 import { retry, RetryOptions } from '~/common/retry';
+import { jestSkipFileInExceptionSource } from '../exception';
 import { TypedEdgeQL } from './edgeql';
-import { ExclusivityViolationError } from './exclusivity-violation.error';
+import { enhanceConstraintError } from './errors';
 import { InlineQueryRuntimeMap } from './generated-client/inline-queries';
 import { ApplyOptions, OptionsContext } from './options.context';
 import { Client } from './reexports';
@@ -131,10 +132,22 @@ export class EdgeDB {
       }
     } catch (e) {
       // Ignore this call in stack trace. This puts the actual query as the first.
-      e.stack = e.stack!.replace(/^\s+at EdgeDB\.run.+\n/m, '');
+      e.stack = e.stack!.replace(/^\s+at(?: async)? EdgeDB\.run.+$\n/m, '');
 
-      if (ExclusivityViolationError.is(e)) {
-        throw ExclusivityViolationError.cast(e);
+      // Don't present abstract repositories as the src block in jest reports
+      // for DB execution errors.
+      // There shouldn't be anything specific to there to be helpful.
+      // This is a bit of a broad assumption though, so only do for jest and
+      // keep the frame for actual use from users/devs.
+      if (e instanceof EdgeDBError) {
+        jestSkipFileInExceptionSource(
+          e,
+          /^\s+at .+src[/|\\]core[/|\\]edgedb[/|\\].+\.repository\..+$\n/gm,
+        );
+      }
+
+      if (e instanceof ConstraintViolationError) {
+        throw enhanceConstraintError(e);
       }
       throw e;
     }

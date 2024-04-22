@@ -1,7 +1,7 @@
 import { Connection } from 'cypher-query-builder';
 import { Duration, DurationLike } from 'luxon';
 import { Transaction as NeoTransaction } from 'neo4j-driver';
-import { getPreviousList, ServerException } from '../../common';
+import { getCauseList, ServerException } from '../../common';
 import { ILogger } from '../logger';
 import { PatchedConnection } from './cypher.factory';
 import { isNeo4jError } from './errors';
@@ -120,9 +120,7 @@ Connection.prototype.runInTransaction = async function withTransaction<R>(
           // throw that here and save the original.
           // This allows neo4j to check if the error is retry-able.
           // If it is, then this error doesn't matter; otherwise we'll unwrap below.
-          const maybeRetryableError = getPreviousList(error, true).find(
-            isNeo4jError,
-          );
+          const maybeRetryableError = getCauseList(error).find(isNeo4jError);
           if (maybeRetryableError) {
             errorMap.set(maybeRetryableError, error);
             throw maybeRetryableError;

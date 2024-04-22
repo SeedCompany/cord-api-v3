@@ -13,7 +13,7 @@ describe('ExceptionNormalizer', () => {
   describe('HttpException', () => {
     it('simple', () => {
       const ex = new Nest.NotFoundException();
-      const res = sut.normalize(ex);
+      const res = sut.normalize({ ex });
       expect(res.message).toEqual('Not Found');
       expect(res.code).toEqual('NotFound');
       expect(res.codes).toEqual(['NotFound', 'Client']);
@@ -21,7 +21,7 @@ describe('ExceptionNormalizer', () => {
 
     it('custom message', () => {
       const ex = new Nest.NotFoundException('Could not find resource');
-      const res = sut.normalize(ex);
+      const res = sut.normalize({ ex });
       expect(res.message).toEqual('Could not find resource');
       expect(res.code).toEqual('NotFound');
       expect(res.codes).toEqual(['NotFound', 'Client']);
@@ -32,7 +32,7 @@ describe('ExceptionNormalizer', () => {
         'Could not find resource',
         'CustomNotFound',
       );
-      const res = sut.normalize(ex);
+      const res = sut.normalize({ ex });
       expect(res.message).toEqual('Could not find resource');
       expect(res.code).toEqual('CustomNotFound');
       expect(res.codes).toEqual(['CustomNotFound', 'NotFound', 'Client']);
@@ -43,7 +43,7 @@ describe('ExceptionNormalizer', () => {
         { message: 'Could not find resource', foo: 'bar' },
         'Ignored',
       );
-      const res = sut.normalize(ex);
+      const res = sut.normalize({ ex });
       expect(res.message).toEqual('Could not find resource');
       expect(res.code).toEqual('NotFound');
       expect(res.codes).toEqual(['NotFound', 'Client']);
@@ -59,7 +59,7 @@ describe('ExceptionNormalizer', () => {
         },
         'Ignored',
       );
-      const res = sut.normalize(ex);
+      const res = sut.normalize({ ex });
       expect(res.message).toEqual('Could not find resource');
       expect(res.code).toEqual('CustomNotFound');
       expect(res.codes).toEqual(['CustomNotFound', 'NotFound', 'Client']);
@@ -71,7 +71,7 @@ describe('ExceptionNormalizer', () => {
         { description: 'Could not find resource' },
         'Ignored',
       );
-      const res = sut.normalize(ex);
+      const res = sut.normalize({ ex });
       expect(res.message).toEqual('Not Found Exception');
       expect(res.code).toEqual('NotFound');
       expect(res.codes).toEqual(['NotFound', 'Client']);
@@ -80,7 +80,7 @@ describe('ExceptionNormalizer', () => {
 
     it('BadRequestException', () => {
       const ex = new Nest.BadRequestException('what happened');
-      const res = sut.normalize(ex);
+      const res = sut.normalize({ ex });
       expect(res.message).toEqual('what happened');
       expect(res.code).toEqual('Input');
       expect(res.codes).toEqual(['Input', 'Client']);
@@ -88,14 +88,14 @@ describe('ExceptionNormalizer', () => {
 
     it('ForbiddenException', () => {
       const ex = new Nest.ForbiddenException();
-      const res = sut.normalize(ex);
+      const res = sut.normalize({ ex });
       expect(res.code).toEqual('Unauthorized');
       expect(res.codes).toEqual(['Unauthorized', 'Client']);
     });
 
     it('UnauthorizedException', () => {
       const ex = new Nest.UnauthorizedException();
-      const res = sut.normalize(ex);
+      const res = sut.normalize({ ex });
       expect(res.code).toEqual('Unauthenticated');
       expect(res.codes).toEqual(['Unauthenticated', 'Client']);
     });
@@ -103,7 +103,7 @@ describe('ExceptionNormalizer', () => {
 
   it('ServerException', () => {
     const ex = new ServerException('what happened');
-    const res = sut.normalize(ex);
+    const res = sut.normalize({ ex });
     expect(res.message).toEqual('what happened');
     expect(res.code).toEqual('Server');
     expect(res.codes).toEqual(['Server']);
@@ -111,7 +111,7 @@ describe('ExceptionNormalizer', () => {
 
   it('InputException', () => {
     const ex = new InputException('what happened', 'field.name');
-    const res = sut.normalize(ex);
+    const res = sut.normalize({ ex });
     expect(res.message).toEqual('what happened');
     expect(res.code).toEqual('Input');
     expect(res.codes).toEqual(['Input', 'Client']);
@@ -120,7 +120,7 @@ describe('ExceptionNormalizer', () => {
 
   it('Generic Error', () => {
     const ex = new Error('what happened');
-    const res = sut.normalize(ex);
+    const res = sut.normalize({ ex });
     expect(res.message).toEqual('what happened');
     expect(res.code).toEqual('Server');
     expect(res.codes).toEqual(['Server']);
@@ -128,7 +128,7 @@ describe('ExceptionNormalizer', () => {
 
   it('Unknown Error', () => {
     const ex = new ConstraintError('what happened');
-    const res = sut.normalize(ex);
+    const res = sut.normalize({ ex });
     expect(res.message).toEqual('what happened');
     expect(res.code).toEqual('Server');
     expect(res.codes).toEqual(['Server']);
