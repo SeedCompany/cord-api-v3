@@ -76,6 +76,8 @@ module default {
       insert Engagement::DedicationCeremony {
         createdAt := datetime_of_statement(),
         modifiedAt := datetime_of_statement(),
+        createdBy := assert_exists(currentUser),
+        modifiedBy := assert_exists(currentUser),
         engagement := __new__,
         project := __new__.project,
         projectContext := __new__.projectContext,
@@ -128,6 +130,8 @@ module default {
       insert Engagement::CertificationCeremony {
         createdAt := datetime_of_statement(),
         modifiedAt := datetime_of_statement(),
+        createdBy := assert_exists(currentUser),
+        modifiedBy := assert_exists(currentUser),
         engagement := __new__,
         project := __new__.project,
         projectContext := __new__.projectContext,

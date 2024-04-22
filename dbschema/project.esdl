@@ -106,6 +106,8 @@ module default {
       insert default::Budget {
         createdAt := datetime_of_statement(),
         modifiedAt := datetime_of_statement(),
+        createdBy := assert_exists(currentUser),
+        modifiedBy := assert_exists(currentUser),
         project := __new__,
         projectContext := __new__.projectContext,
       }
