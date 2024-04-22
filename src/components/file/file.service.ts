@@ -119,12 +119,12 @@ export class FileService {
 
   async getFileNode(id: ID, session?: Session): Promise<FileNode> {
     this.logger.debug(`getNode`, { id, userId: session?.userId });
-    return await this.repo.getById(id, session);
+    return await this.repo.getById(id);
   }
 
   async getFileNodes(ids: readonly ID[], session: Session) {
     this.logger.debug(`getNodes`, { ids, userId: session.userId });
-    return await this.repo.getByIds(ids, session);
+    return await this.repo.getByIds(ids);
   }
 
   /**
@@ -200,14 +200,13 @@ export class FileService {
     ]);
   }
 
-  async getParents(nodeId: ID, session: Session): Promise<readonly FileNode[]> {
-    return await this.repo.getParentsById(nodeId, session);
+  async getParents(nodeId: ID): Promise<readonly FileNode[]> {
+    return await this.repo.getParentsById(nodeId);
   }
 
   async listChildren(
     parent: FileNode,
     input: FileListInput | undefined,
-    _session: Session,
   ): Promise<FileListOutput> {
     return await this.repo.getChildrenById(parent, input);
   }
@@ -224,7 +223,7 @@ export class FileService {
         'Directories can only be created under directories',
       );
       try {
-        await this.repo.getByName(parentId, name, session);
+        await this.repo.getByName(parentId, name);
         throw new DuplicateException(
           'name',
           'Node with this name already exists in this directory',
@@ -409,7 +408,7 @@ export class FileService {
     await this.mediaService.detectAndSave(fv, media);
 
     // Change the file's name to match the latest version name
-    await this.rename({ id: fileId, name }, session);
+    await this.rename({ id: fileId, name });
 
     const file = await this.getFile(fileId, session);
 
@@ -463,7 +462,7 @@ export class FileService {
     session: Session,
   ) {
     try {
-      const node = await this.repo.getByName(parentId, name, session);
+      const node = await this.repo.getByName(parentId, name);
       this.logger.debug('Using existing file matching given name', {
         parentId,
         fileName: name,
@@ -565,27 +564,27 @@ export class FileService {
     }
   }
 
-  async rename(input: RenameFileInput, session: Session): Promise<void> {
-    const fileNode = await this.repo.getById(input.id, session);
+  async rename(input: RenameFileInput): Promise<void> {
+    const fileNode = await this.repo.getById(input.id);
     if (fileNode.name !== input.name) {
       await this.repo.rename(fileNode, input.name);
     }
   }
 
   async move(input: MoveFileInput, session: Session): Promise<FileNode> {
-    const fileNode = await this.repo.getById(input.id, session);
+    const fileNode = await this.repo.getById(input.id);
 
     if (input.name) {
       await this.repo.rename(fileNode, input.name);
     }
 
-    await this.repo.move(input.id, input.parentId, session);
+    await this.repo.move(input.id, input.parentId);
 
     return await this.getFileNode(input.id, session);
   }
 
-  async delete(id: ID, session: Session): Promise<void> {
-    const fileNode = await this.repo.getById(id, session);
-    await this.repo.delete(fileNode, session);
+  async delete(id: ID): Promise<void> {
+    const fileNode = await this.repo.getById(id);
+    await this.repo.delete(fileNode);
   }
 }

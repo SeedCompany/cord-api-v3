@@ -14,7 +14,6 @@ import {
   createNode,
   createRelationships,
   matchProps,
-  matchRequestingUser,
   merge,
   paginate,
   requestingUser,
@@ -29,7 +28,7 @@ import {
 
 @Injectable()
 export class FieldRegionRepository extends DtoRepository(FieldRegion) {
-  async create(input: CreateFieldRegion, session: Session) {
+  async create(input: CreateFieldRegion) {
     if (!(await this.isUnique(input.name))) {
       throw new DuplicateException(
         'fieldRegion.name',
@@ -45,7 +44,6 @@ export class FieldRegionRepository extends DtoRepository(FieldRegion) {
     // create field region
     const query = this.db
       .query()
-      .apply(matchRequestingUser(session))
       .apply(await createNode(FieldRegion, { initialProps }))
       .apply(
         createRelationships(FieldRegion, 'out', {

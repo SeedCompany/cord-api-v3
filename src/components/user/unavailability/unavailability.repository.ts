@@ -1,13 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { ChangesOf } from '~/core/database/changes';
-import { ID, ServerException, Session } from '../../../common';
+import { ID, ServerException } from '../../../common';
 import { DtoRepository } from '../../../core';
 import {
   ACTIVE,
   createNode,
   createRelationships,
-  matchRequestingUser,
   paginate,
   sorting,
 } from '../../../core/database/query';
@@ -20,7 +19,7 @@ import {
 
 @Injectable()
 export class UnavailabilityRepository extends DtoRepository(Unavailability) {
-  async create(input: CreateUnavailability, session: Session) {
+  async create(input: CreateUnavailability) {
     const initialProps = {
       description: input.description,
       start: input.start,
@@ -28,7 +27,6 @@ export class UnavailabilityRepository extends DtoRepository(Unavailability) {
     };
     const query = this.db
       .query()
-      .apply(matchRequestingUser(session))
       .apply(await createNode(Unavailability, { initialProps }))
       .apply(
         createRelationships(Unavailability, 'in', {
@@ -62,7 +60,7 @@ export class UnavailabilityRepository extends DtoRepository(Unavailability) {
       .first();
   }
 
-  async list(input: UnavailabilityListInput, _session: Session) {
+  async list(input: UnavailabilityListInput) {
     const result = await this.db
       .query()
       .matchNode('node', 'Unavailability')

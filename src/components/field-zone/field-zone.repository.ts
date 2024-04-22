@@ -15,7 +15,6 @@ import {
   createNode,
   createRelationships,
   matchProps,
-  matchRequestingUser,
   merge,
   paginate,
   requestingUser,
@@ -30,7 +29,7 @@ import {
 
 @Injectable()
 export class FieldZoneRepository extends DtoRepository(FieldZone) {
-  async create(input: CreateFieldZone, session: Session) {
+  async create(input: CreateFieldZone) {
     if (!(await this.isUnique(input.name))) {
       throw new DuplicateException(
         'fieldZone.name',
@@ -46,7 +45,6 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
     // create field zone
     const query = this.db
       .query()
-      .apply(matchRequestingUser(session))
       .apply(await createNode(FieldZone, { initialProps }))
       .apply(
         createRelationships(FieldZone, 'out', {

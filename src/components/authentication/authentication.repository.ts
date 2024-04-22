@@ -224,7 +224,7 @@ export class AuthenticationRepository {
     const result = await this.db
       .query()
       .match([
-        node('requestingUser', 'User', { id: session.userId }),
+        requestingUser(session),
         relation('out', '', 'password', ACTIVE),
         node('password', 'Property'),
       ])

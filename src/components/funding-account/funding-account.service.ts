@@ -42,7 +42,7 @@ export class FundingAccountService {
     }
 
     try {
-      const result = await this.repo.create(input, session);
+      const result = await this.repo.create(input);
 
       if (!result) {
         throw new ServerException('Failed to create funding account');

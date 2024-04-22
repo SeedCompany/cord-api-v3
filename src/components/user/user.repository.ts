@@ -17,7 +17,6 @@ import {
   deactivateProperty,
   filter,
   matchProps,
-  matchRequestingUser,
   merge,
   paginate,
   property,
@@ -201,7 +200,6 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
     const result = await this.db
       .query()
       .matchNode('node', 'User')
-      .apply(matchRequestingUser(session))
       .apply(
         filter.builder(input.filter, {
           pinned: filter.isPinned,

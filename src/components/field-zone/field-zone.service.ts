@@ -27,7 +27,7 @@ export class FieldZoneService {
 
   async create(input: CreateFieldZone, session: Session): Promise<FieldZone> {
     this.privileges.for(session, FieldZone).verifyCan('create');
-    const dto = await this.repo.create(input, session);
+    const dto = await this.repo.create(input);
     return this.secure(dto, session);
   }
 

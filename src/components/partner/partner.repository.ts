@@ -20,7 +20,6 @@ import {
   matchProjectScopedRoles,
   matchProjectSens,
   matchProps,
-  matchRequestingUser,
   merge,
   oncePerProject,
   paginate,
@@ -48,7 +47,7 @@ export class PartnerRepository extends DtoRepository<
     return result?.id;
   }
 
-  async create(input: CreatePartner, session: Session) {
+  async create(input: CreatePartner) {
     const initialProps = {
       types: input.types,
       financialReportingTypes: input.financialReportingTypes,
@@ -62,7 +61,6 @@ export class PartnerRepository extends DtoRepository<
     };
     const result = await this.db
       .query()
-      .apply(matchRequestingUser(session))
       .apply(await createNode(Partner, { initialProps }))
       .apply(
         createRelationships(Partner, 'out', {

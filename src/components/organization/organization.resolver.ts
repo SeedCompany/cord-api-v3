@@ -130,7 +130,7 @@ export class OrganizationResolver {
     @LoggedInSession() session: Session,
     @Args() { organizationId, locationId }: ModifyLocationArgs,
   ): Promise<Organization> {
-    await this.orgs.addLocation(organizationId, locationId, session);
+    await this.orgs.addLocation(organizationId, locationId);
     return await this.orgs.readOne(organizationId, session);
   }
 
@@ -141,7 +141,7 @@ export class OrganizationResolver {
     @LoggedInSession() session: Session,
     @Args() { organizationId, locationId }: ModifyLocationArgs,
   ): Promise<Organization> {
-    await this.orgs.removeLocation(organizationId, locationId, session);
+    await this.orgs.removeLocation(organizationId, locationId);
     return await this.orgs.readOne(organizationId, session);
   }
 }

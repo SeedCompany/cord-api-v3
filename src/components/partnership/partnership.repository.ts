@@ -22,7 +22,6 @@ import {
   matchChangesetAndChangedProps,
   matchProps,
   matchPropsAndProjectSensAndScopedRoles,
-  matchRequestingUser,
   merge,
   oncePerProject,
   paginate,
@@ -64,7 +63,6 @@ export class PartnershipRepository extends DtoRepository<
 
     const result = await this.db
       .query()
-      .apply(matchRequestingUser(session))
       .apply(await createNode(Partnership, { initialProps }))
       .apply(
         createRelationships(Partnership, {

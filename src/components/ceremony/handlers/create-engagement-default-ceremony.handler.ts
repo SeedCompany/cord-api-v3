@@ -15,14 +15,14 @@ export class CreateEngagementDefaultCeremonyHandler
   ) {}
 
   async handle(event: EngagementCreatedEvent) {
-    const { engagement, session } = event;
+    const { engagement } = event;
     const input = {
       type:
         engagement.__typename === 'LanguageEngagement'
           ? CeremonyType.Dedication
           : CeremonyType.Certification,
     };
-    const ceremonyId = await this.ceremonies.create(input, session);
+    const ceremonyId = await this.ceremonies.create(input);
 
     // connect ceremonyId to engagement
     await this.db

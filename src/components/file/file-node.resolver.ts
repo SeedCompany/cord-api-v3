@@ -34,9 +34,9 @@ export class FileNodeResolver {
   })
   async parents(
     @Parent() node: FileNode,
-    @AnonSession() session: Session,
+    @AnonSession() _session: Session,
   ): Promise<readonly FileNode[]> {
-    return await this.service.getParents(node.id, session);
+    return await this.service.getParents(node.id);
   }
 
   @ResolveField(() => Media, {

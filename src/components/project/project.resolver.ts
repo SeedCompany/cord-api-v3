@@ -394,7 +394,7 @@ export class ProjectResolver {
     @LoggedInSession() session: Session,
     @Args() { projectId, locationId }: ModifyOtherLocationArgs,
   ): Promise<Project> {
-    await this.projectService.addOtherLocation(projectId, locationId, session);
+    await this.projectService.addOtherLocation(projectId, locationId);
     return await this.projectService.readOne(projectId, session);
   }
 
@@ -405,11 +405,7 @@ export class ProjectResolver {
     @LoggedInSession() session: Session,
     @Args() { projectId, locationId }: ModifyOtherLocationArgs,
   ): Promise<Project> {
-    await this.projectService.removeOtherLocation(
-      projectId,
-      locationId,
-      session,
-    );
+    await this.projectService.removeOtherLocation(projectId, locationId);
     return await this.projectService.readOne(projectId, session);
   }
 }

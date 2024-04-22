@@ -19,9 +19,7 @@ export class EthnologueLanguageService {
     this.privileges.for(session, EthnologueLanguage).verifyCan('create');
 
     //TODO - remove the passed in languageId after migration
-    return (
-      await this.repo.create({ languageId: 'temp' as ID, ...input }, session)
-    ).id;
+    return (await this.repo.create({ languageId: 'temp' as ID, ...input })).id;
   }
 
   async readOne(

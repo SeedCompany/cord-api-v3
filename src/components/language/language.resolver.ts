@@ -202,7 +202,7 @@ export class LanguageResolver {
     @LoggedInSession() session: Session,
     @Args() { languageId, locationId }: ModifyLocationArgs,
   ): Promise<Language> {
-    await this.langService.addLocation(languageId, locationId, session);
+    await this.langService.addLocation(languageId, locationId);
     return await this.langService.readOne(languageId, session);
   }
 
@@ -213,7 +213,7 @@ export class LanguageResolver {
     @LoggedInSession() session: Session,
     @Args() { languageId, locationId }: ModifyLocationArgs,
   ): Promise<Language> {
-    await this.langService.removeLocation(languageId, locationId, session);
+    await this.langService.removeLocation(languageId, locationId);
     return await this.langService.readOne(languageId, session);
   }
 }
