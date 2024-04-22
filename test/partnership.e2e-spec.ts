@@ -1,4 +1,5 @@
 import { sample, times } from 'lodash';
+import { v1 as uuid } from 'uuid';
 import { CalendarDate, ID } from '../src/common';
 import { Role } from '../src/components/authorization';
 import { PartnerType } from '../src/components/partner';
@@ -275,7 +276,7 @@ describe('Partnership e2e', () => {
     await expect(
       createPartnership(app, {
         projectId: project.id,
-        partnerId: 'fakePartner' as ID,
+        partnerId: uuid() as ID,
       }),
     ).rejects.toThrowGqlError(
       errors.notFound({
@@ -288,7 +289,7 @@ describe('Partnership e2e', () => {
   it('create partnership does not create if projectId is invalid', async () => {
     await expect(
       createPartnership(app, {
-        projectId: 'fakeProject' as ID,
+        projectId: uuid() as ID,
       }),
     ).rejects.toThrowGqlError(
       errors.notFound({

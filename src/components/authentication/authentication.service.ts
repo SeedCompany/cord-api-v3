@@ -5,6 +5,7 @@ import JWT from 'jsonwebtoken';
 import { DateTime } from 'luxon';
 import { Writable } from 'ts-essentials';
 import { sessionFromContext } from '~/common/session';
+import { disableAccessPolicies, EdgeDB } from '~/core/edgedb';
 import {
   DuplicateException,
   GqlContextType,
@@ -38,6 +39,7 @@ export class AuthenticationService {
     private readonly privileges: Privileges,
     @Logger('authentication:service') private readonly logger: ILogger,
     private readonly repo: AuthenticationRepository,
+    private readonly edgedb: EdgeDB,
     private readonly moduleRef: ModuleRef,
   ) {}
 
@@ -48,7 +50,10 @@ export class AuthenticationService {
     return token;
   }
 
-  async register(input: RegisterInput, session?: Session): Promise<ID> {
+  async register(
+    { password, ...input }: RegisterInput,
+    session?: Session,
+  ): Promise<ID> {
     // ensure no other tokens are associated with this user
     if (session) {
       await this.logout(session.token);
@@ -58,7 +63,10 @@ export class AuthenticationService {
     try {
       const userMod = await import('../user');
       const users = this.moduleRef.get(userMod.UserService, { strict: false });
-      userId = await users.create(input, session);
+      userId = await this.edgedb.usingOptions(
+        disableAccessPolicies,
+        async () => await users.create(input, session),
+      );
     } catch (e) {
       // remap field prop as `email` field is at a different location in register() than createPerson()
       if (e instanceof DuplicateException && e.field === 'person.email') {
@@ -67,7 +75,7 @@ export class AuthenticationService {
       throw e;
     }
 
-    const passwordHash = await this.crypto.hash(input.password);
+    const passwordHash = await this.crypto.hash(password);
     await this.repo.savePasswordHashOnUser(userId, passwordHash);
 
     return userId;

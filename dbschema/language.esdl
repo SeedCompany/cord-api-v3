@@ -71,7 +71,9 @@ module default {
       (exists .firstScriptureEngagement and not .hasExternalFirstScripture)
       or not exists .firstScriptureEngagement
     );
-    
+
+    multi locations: Location;
+
     engagements := (
       # Similar to previous version but avoids https://github.com/edgedb/edgedb/issues/5846
       select LanguageEngagement filter __source__ = .language
