@@ -79,14 +79,14 @@ export class ProjectRules {
 
   private async getStepRule(
     step: ProjectStep,
-    project: UnsecuredDto<Project>,
+    id: ID,
+    projectType: ProjectType,
     changeset?: ID,
   ): Promise<StepRule> {
-    const id = project.id;
     const mostRecentPreviousStep = (steps: ProjectStep[]) =>
-      this.getMostRecentPreviousStep(project.id, steps, changeset);
+      this.getMostRecentPreviousStep(id, steps, changeset);
     const isMultiplication =
-      project.type === ProjectType.MultiplicationTranslation;
+      projectType === ProjectType.MultiplicationTranslation;
 
     switch (step) {
       case ProjectStep.EarlyConversations:
@@ -888,22 +888,21 @@ export class ProjectRules {
   async getAvailableTransitions(
     projectId: ID,
     session: Session,
+    projectType: ProjectType,
     currentUserRoles?: Role[],
     changeset?: ID,
   ): Promise<ProjectStepTransition[]> {
     if (session.anonymous) {
       return [];
     }
-    const project = await this.projectService.readOneUnsecured(
-      projectId,
-      session,
-    );
+
     const currentStep = await this.getCurrentStep(projectId, changeset);
 
     // get roles that can approve the current step
     const { approvers, transitions } = await this.getStepRule(
       currentStep,
-      project,
+      projectId,
+      projectType,
       changeset,
     );
 
@@ -937,6 +936,7 @@ export class ProjectRules {
     const transitions = await this.getAvailableTransitions(
       project.id,
       session,
+      project.type,
       currentUserRoles,
       changeset,
     );
@@ -998,12 +998,13 @@ export class ProjectRules {
   ): Promise<EmailNotification[]> {
     const { getNotifiers: arrivalNotifiers } = await this.getStepRule(
       project.step,
-      project,
+      project.id,
+      project.type,
       changeset,
     );
 
     const transitionNotifiers = (
-      await this.getStepRule(previousStep, project)
+      await this.getStepRule(previousStep, project.id, project.type)
     ).transitions.find((t) => t.to === project.step)?.notifiers;
 
     const resolve = async (notifiers?: Notifiers) =>
