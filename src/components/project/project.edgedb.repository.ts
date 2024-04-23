@@ -101,14 +101,10 @@ export class ProjectEdgeDBRepository
         e.op(
           project.status,
           'in',
-          e.set(...input.status!.map((s) => e.cast(e.Project.Status, s))),
+          e.cast(e.Project.Status, e.set(...input.status!)),
         ),
       (input.step?.length ?? 0) > 0 &&
-        e.op(
-          project.step,
-          'in',
-          e.set(...input.step!.map((s) => e.cast(e.Project.Step, s))),
-        ),
+        e.op(project.step, 'in', e.cast(e.Project.Step, e.set(...input.step!))),
       input.onlyMultipleEngagements && e.op(project.engagementTotal, '>', 1),
       ...(input.createdAt
         ? [
@@ -160,7 +156,7 @@ export class ProjectEdgeDBRepository
         e.op(
           project.sensitivity,
           'in',
-          e.set(...input.sensitivity!.map((s) => e.cast(e.Sensitivity, s))),
+          e.cast(e.Sensitivity, e.set(...input.sensitivity!)),
         ),
     ];
   }
