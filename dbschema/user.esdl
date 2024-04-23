@@ -1,5 +1,9 @@
 module default {
-  type User extending Resource, Mixin::Pinnable {
+  abstract type Actor {
+    multi roles: Role;
+  }
+
+  type User extending Resource, Actor, Mixin::Pinnable {
     email: str {
       constraint exclusive;
     };
@@ -19,7 +23,6 @@ module default {
     required status: User::Status {
       default := User::Status.Active;
     };
-    multi roles: Role;
     title: str;
     multi link pins: Mixin::Pinnable {
       on target delete allow;
@@ -33,6 +36,10 @@ module default {
       on source delete delete target;
     }
     multi locations: Location;
+  }
+
+  type SystemAgent extending Actor, Mixin::Named {
+    overloaded name { constraint exclusive };
   }
 }
  
