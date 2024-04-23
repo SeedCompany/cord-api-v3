@@ -31,7 +31,7 @@ export class ProjectMemberRepository extends DtoRepository<
     super();
   }
 
-  async verifyRelationshipEligibility(projectId: ID, userId: ID) {
+  async verifyRelationshipEligibility?(projectId: ID, userId: ID) {
     return await this.db
       .query()
       .optionalMatch(node('user', 'User', { id: userId }))

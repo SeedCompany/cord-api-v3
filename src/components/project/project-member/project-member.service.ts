@@ -1,11 +1,8 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { MaybeAsync } from '@seedcompany/common';
-import { node, Query, relation } from 'cypher-query-builder';
-import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
 import { difference } from 'lodash';
 import { DateTime } from 'luxon';
 import {
-  DuplicateException,
   generateId,
   ID,
   InputException,
@@ -18,15 +15,7 @@ import {
   UnauthorizedException,
   UnsecuredDto,
 } from '../../../common';
-import {
-  ConfigService,
-  DatabaseService,
-  HandleIdLookup,
-  IEventBus,
-  ILogger,
-  Logger,
-} from '../../../core';
-import { ACTIVE } from '../../../core/database/query';
+import { HandleIdLookup, ILogger, Logger } from '../../../core';
 import { mapListResults } from '../../../core/database/results';
 import { Privileges, Role } from '../../authorization';
 import { User, UserService } from '../../user';
@@ -44,48 +33,14 @@ import { ProjectMemberRepository } from './project-member.repository';
 @Injectable()
 export class ProjectMemberService {
   constructor(
-    private readonly db: DatabaseService,
-    private readonly config: ConfigService,
     @Inject(forwardRef(() => UserService))
     private readonly userService: UserService & {},
-    private readonly eventBus: IEventBus,
     @Inject(forwardRef(() => ProjectService))
     private readonly projectService: ProjectService & {},
     @Logger('project:member:service') private readonly logger: ILogger,
     private readonly privileges: Privileges,
     private readonly repo: ProjectMemberRepository,
   ) {}
-
-  protected async verifyRelationshipEligibility(
-    projectId: ID,
-    userId: ID,
-  ): Promise<void> {
-    const result = await this.repo.verifyRelationshipEligibility(
-      projectId,
-      userId,
-    );
-
-    if (!result?.project) {
-      throw new NotFoundException(
-        'Could not find project',
-        'projectMember.projectId',
-      );
-    }
-
-    if (!result?.user) {
-      throw new NotFoundException(
-        'Could not find person',
-        'projectMember.userId',
-      );
-    }
-
-    if (result.member) {
-      throw new DuplicateException(
-        'projectMember.userId',
-        'Person is already a member of this project',
-      );
-    }
-  }
 
   async create(
     { userId, projectId: projectOrId, ...input }: CreateProjectMember,
@@ -104,7 +59,8 @@ export class ProjectMemberService {
 
     const id = await generateId();
     const createdAt = DateTime.local();
-    await this.repo.verifyRelationshipEligibility(projectId, userId);
+    this.repo.verifyRelationshipEligibility &&
+      (await this.repo.verifyRelationshipEligibility(projectId, userId));
 
     enforcePerms &&
       (await this.assertValidRoles(input.roles, () =>
@@ -156,16 +112,14 @@ export class ProjectMemberService {
     );
   }
 
-  private async secure(
-    dto: UnsecuredDto<ProjectMember>,
-    session: Session,
-  ): Promise<ProjectMember> {
+  private async secure(dto: UnsecuredDto<ProjectMember>, session: Session) {
     const secured = this.privileges.for(session, ProjectMember).secure({
       ...dto,
       roles: dto.roles ?? [],
     });
     return {
       ...secured,
+      // I think this needs to remain async because of the userService call
       user: await mapSecuredValue(secured.user, (user) =>
         this.userService.secure(user, session),
       ),
@@ -240,19 +194,5 @@ export class ProjectMemberService {
   ): Promise<ProjectMemberListOutput> {
     const results = await this.repo.list(input, session);
     return await mapListResults(results, (dto) => this.secure(dto, session));
-  }
-
-  protected filterByProject(
-    query: Query,
-    projectId: ID,
-    relationshipType: string,
-    relationshipDirection: RelationDirection,
-    label: string,
-  ) {
-    query.match([
-      node('project', 'Project', { id: projectId }),
-      relation(relationshipDirection, '', relationshipType, ACTIVE),
-      node('node', label),
-    ]);
   }
 }
