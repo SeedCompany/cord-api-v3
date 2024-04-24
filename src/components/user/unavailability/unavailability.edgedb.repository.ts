@@ -14,8 +14,6 @@ export class UnavailabilityEdgeDBRepository
   extends RepoFor(Unavailability, {
     hydrate: (unavailability) => ({
       ...unavailability['*'],
-      start: e.assert_exists(e.range_get_lower(unavailability.dates)),
-      end: e.assert_exists(e.range_get_upper(unavailability.dates)),
     }),
   }).customize((cls) => {
     return class extends cls {
