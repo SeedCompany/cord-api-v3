@@ -13,7 +13,7 @@ export const ephemeralEdgeDB = async () => {
 
   await dropStale(db);
 
-  const branch = `test_${Date.now()}`;
+  const branch = `test_${Date.now()}_${String(Math.random()).slice(2)}`;
 
   await db.execute(`create schema branch ${branch} from ${main}`);
 
@@ -34,7 +34,7 @@ async function dropStale(db: Client) {
     if (!name.startsWith('test_')) {
       return false;
     }
-    const ts = Number(name.slice(5));
+    const ts = Number(name.split('_')[1]);
     if (isNaN(ts)) {
       return false;
     }
