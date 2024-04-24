@@ -6,9 +6,6 @@ runs:
     - name: Setup EdgeDB
       uses: edgedb/setup-edgedb@v1
 
-    - run: edgedb configure set session_idle_transaction_timeout 5min
-      shell: bash
-
     - name: Generate EdgeDB TS files
       shell: bash
       run: yarn edgedb:gen
