@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { Range } from 'edgedb';
 import { ID, PublicOf } from '~/common';
-import { e, RepoFor } from '~/core/edgedb';
+import { e, RepoFor, ScopeOf } from '~/core/edgedb';
 import {
   CreateUnavailability,
   Unavailability,
+  UnavailabilityListInput,
   UpdateUnavailability,
 } from './dto';
 import { UnavailabilityRepository } from './unavailability.repository';
@@ -14,8 +15,6 @@ export class UnavailabilityEdgeDBRepository
   extends RepoFor(Unavailability, {
     hydrate: (unavailability) => ({
       ...unavailability['*'],
-      start: e.assert_exists(e.range_get_lower(unavailability.dates)),
-      end: e.assert_exists(e.range_get_upper(unavailability.dates)),
     }),
   }).customize((cls) => {
     return class extends cls {
@@ -32,7 +31,7 @@ export class UnavailabilityEdgeDBRepository
         }));
         const query = e.select(inserted, (u) => ({
           ...this.hydrate(u),
-          updatedUser, // Attach to query, so it is executed.
+          updatedUser: e.alias(updatedUser), // Attach to query, so it is executed.
         }));
         return await this.db.run(query);
       }
@@ -66,5 +65,19 @@ export class UnavailabilityEdgeDBRepository
       })),
     );
     return await this.db.run(query);
+  }
+
+  protected listFilters(
+    unavailability: ScopeOf<typeof e.User.Unavailability>,
+    { filter: input }: UnavailabilityListInput,
+  ) {
+    return [
+      input.userId &&
+        e.op(
+          e.cast(e.User, e.uuid(input.userId)),
+          'in',
+          unavailability['<unavailabilities[is User]'],
+        ),
+    ];
   }
 }

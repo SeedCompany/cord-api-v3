@@ -46,6 +46,8 @@ module User {
   type Unavailability extending default::Resource {
     required description: str;
     required dates: range<datetime>;
+    `start` := assert_exists(range_get_lower(.dates));
+    `end` := assert_exists(range_get_upper(.dates));
   }
   
   scalar type Status extending enum<Active, Disabled>;

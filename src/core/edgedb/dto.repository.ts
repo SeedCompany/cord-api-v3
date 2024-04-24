@@ -12,6 +12,7 @@ import { LazyGetter as Once } from 'lazy-get-decorator';
 import { lowerCase } from 'lodash';
 import { AbstractClass } from 'type-fest';
 import {
+  ClientException,
   DBName,
   EnhancedResource,
   EnumType,
@@ -162,7 +163,11 @@ export const RepoFor = <
       scope: ScopeOf<Root>,
       input: SortablePaginationInput,
     ): OrderByExpression {
-      // TODO Validate this is a valid sort key
+      if (!(input.sort in scope.__element__.__pointers__)) {
+        throw new ClientException(
+          `'${input.sort}' is not a valid sort key for '${resource.name}'`,
+        );
+      }
       return {
         expression: (scope as any)[input.sort],
         direction: input.order,
