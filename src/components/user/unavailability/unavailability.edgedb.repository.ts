@@ -31,7 +31,7 @@ export class UnavailabilityEdgeDBRepository
         }));
         const query = e.select(inserted, (u) => ({
           ...this.hydrate(u),
-          updatedUser, // Attach to query, so it is executed.
+          updatedUser: e.alias(updatedUser), // Attach to query, so it is executed.
         }));
         return await this.db.run(query);
       }
