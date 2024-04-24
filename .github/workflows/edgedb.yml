@@ -10,11 +10,10 @@ jobs:
       - name: Node Setup & Yarn Install
         uses: ./.github/actions/setup
 
-      - uses: edgedb/setup-edgedb@v1
-
-      - name: Generate EdgeDB TS files
-        shell: bash
-        run: yarn edgedb:gen
+      - name: EdgeDB Setup
+        uses: ./.github/actions/edgedb-setup
+        with:
+          dsn: ${{ secrets.EDGEDB_DSN }}
 
       - name: Inject Access Policies
         run: yarn console edgedb ap inject
@@ -26,3 +25,7 @@ jobs:
       - name: Validate seed scripts are error free
         run: yarn edgedb:seed
         shell: bash
+
+      - name: EdgeDB Teardown
+        uses: ./.github/actions/edgedb-teardown
+        if: always()

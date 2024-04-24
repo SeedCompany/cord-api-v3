@@ -1,10 +1,25 @@
 name: Setup EdgeDB
 description: 'Setup EdgeDB server, migrate schema, generate TS files'
+
+inputs:
+  dsn:
+    description: EdgeDB DSN
+
 runs:
   using: composite
   steps:
     - name: Setup EdgeDB
       uses: edgedb/setup-edgedb@v1
+      with:
+        cli-version: nightly
+        server-dsn: ${{ inputs.dsn }}
+
+    - name: Branch & Migrate
+      shell: bash
+      run: |
+        edgedb branch create github_$GITHUB_RUN_ID_$GITHUB_JOB
+        edgedb branch switch github_$GITHUB_RUN_ID_$GITHUB_JOB
+        edgedb migrate
 
     - name: Generate EdgeDB TS files
       shell: bash

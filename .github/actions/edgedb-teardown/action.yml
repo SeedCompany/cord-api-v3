@@ -1,0 +1,9 @@
+name: Teardown EdgeDB
+runs:
+  using: composite
+  steps:
+    - name: Delete Branch
+      shell: bash
+      run: |
+        edgedb branch switch main
+        edgedb branch drop github_$GITHUB_RUN_ID_$GITHUB_JOB --non-interactive

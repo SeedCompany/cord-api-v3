@@ -17,9 +17,15 @@ jobs:
 
       - name: EdgeDB Setup
         uses: ./.github/actions/edgedb-setup
+        with:
+          dsn: ${{ secrets.EDGEDB_DSN }}
 
       - name: Tests
         run: yarn test --reporters=github-actions
+
+      - name: EdgeDB Teardown
+        uses: ./.github/actions/edgedb-teardown
+        if: always()
 
   E2E:
     name: E2E Tests (${{ matrix.database }} ${{ matrix.shard }}/6)
@@ -58,6 +64,8 @@ jobs:
 
       - name: EdgeDB Setup
         uses: ./.github/actions/edgedb-setup
+        with:
+          dsn: ${{ secrets.EDGEDB_DSN }}
 
       - name: E2E Tests
         run: yarn test:e2e --shard=${{ matrix.shard }}/6 --reporters=github-actions
@@ -65,3 +73,7 @@ jobs:
           NEO4J_VERSION: ${{ matrix.neo4j-version }}
           DATABASE: ${{ matrix.database }}
         continue-on-error: ${{ matrix.database == 'edgedb' }}
+
+      - name: EdgeDB Teardown
+        uses: ./.github/actions/edgedb-teardown
+        if: always()
