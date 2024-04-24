@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { Range } from 'edgedb';
 import { ID, PublicOf } from '~/common';
-import { e, RepoFor } from '~/core/edgedb';
+import { e, RepoFor, ScopeOf } from '~/core/edgedb';
 import {
   CreateUnavailability,
   Unavailability,
+  UnavailabilityListInput,
   UpdateUnavailability,
 } from './dto';
 import { UnavailabilityRepository } from './unavailability.repository';
@@ -64,5 +65,19 @@ export class UnavailabilityEdgeDBRepository
       })),
     );
     return await this.db.run(query);
+  }
+
+  protected listFilters(
+    unavailability: ScopeOf<typeof e.User.Unavailability>,
+    { filter: input }: UnavailabilityListInput,
+  ) {
+    return [
+      input.userId &&
+        e.op(
+          e.cast(e.User, e.uuid(input.userId)),
+          'in',
+          unavailability['<unavailabilities[is User]'],
+        ),
+    ];
   }
 }
