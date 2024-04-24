@@ -1,6 +1,6 @@
 ARG NODE_VERSION=20
 ARG NODE_IMAGE=public.ecr.aws/docker/library/node:${NODE_VERSION}-slim
-ARG EDGEDB_IMAGE=ghcr.io/edgedb/edgedb:4
+ARG EDGEDB_IMAGE=ghcr.io/edgedb/edgedb:5
 
 FROM ${NODE_IMAGE} as base-runtime
 
