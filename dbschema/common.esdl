@@ -1,6 +1,7 @@
 module default {
-  global currentUserId: uuid;
-  alias currentUser := <User>(global currentUserId);
+  global currentActorId: uuid;
+  global currentActor := (select Actor filter .id = global currentActorId);
+  global currentUser := (select User filter .id = global currentActorId);
   
   scalar type ReportPeriod extending enum<Monthly, Quarterly>;
   

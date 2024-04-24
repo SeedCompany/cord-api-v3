@@ -6,7 +6,7 @@ module Prompt {
     responses := .<pvr[is VariantResponse];
   }
 
-  type VariantResponse extending Mixin::UserStamped, Mixin::Timestamped {
+  type VariantResponse extending Mixin::Audited {
     annotation description := "A response (for a variant) to an instance of a prompt.";
 
     required pvr: PromptVariantResponse;

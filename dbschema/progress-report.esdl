@@ -75,7 +75,7 @@ module ProgressReport {
     };
     required who: default::User {
       readonly := true;
-      default := default::currentUser;
+      default := global default::currentUser;
     };
     required at: datetime {
       readonly := true;

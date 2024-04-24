@@ -127,7 +127,7 @@ export class EdgeDB {
       segment.sql = {
         // eslint-disable-next-line @typescript-eslint/naming-convention
         database_version: 'EdgeDB',
-        user: this.optionsContext.current.session.globals.currentUserId,
+        user: this.optionsContext.current.session.globals.currentActorId,
       };
 
       try {

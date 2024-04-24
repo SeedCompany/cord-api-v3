@@ -1,15 +1,15 @@
 module Mixin {
-  abstract type UserStamped {
-    required createdBy: default::User {
+  abstract type Audited extending Timestamped {
+    required createdBy: default::Actor {
       readonly := true;
-      default := default::currentUser;
+      default := global default::currentActor;
     };
-    required modifiedBy: default::User {
-      default := default::currentUser;
-      rewrite update using (default::currentUser);
+    required modifiedBy: default::Actor {
+      default := global default::currentActor;
+      rewrite update using (global default::currentActor);
     };
 
-    required isCreator := .createdBy ?= <default::User>(global default::currentUserId) 
+    required isCreator := .createdBy ?= global default::currentActor;
   }
 
   abstract type Timestamped {

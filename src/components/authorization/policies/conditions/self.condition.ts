@@ -3,7 +3,9 @@ import { inspect, InspectOptionsStylized } from 'util';
 import { User } from '../../../user/dto';
 import {
   AsCypherParams,
+  AsEdgeQLParams,
   Condition,
+  fqnRelativeTo,
   IsAllowedParams,
 } from '../../policy/conditions';
 
@@ -40,8 +42,9 @@ class SelfCondition<TResourceStatic extends typeof User>
     return `node:User AND node.id = ${requester}`;
   }
 
-  asEdgeQLCondition() {
-    return '.id ?= global default::currentUserId';
+  asEdgeQLCondition({ namespace }: AsEdgeQLParams<any>) {
+    const currentId = fqnRelativeTo('default::currentActorId', namespace);
+    return `.id ?= global ${currentId}`;
   }
 
   union(this: void, conditions: this[]) {

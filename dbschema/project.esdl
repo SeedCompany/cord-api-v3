@@ -72,7 +72,7 @@ module default {
     financialReportPeriod: ReportPeriod;
     
     multi link members := .<project[is Project::Member];
-    single link membership := (select .members filter .user.id = global default::currentUserId limit 1);
+    single link membership := (select .members filter .user = global default::currentUser limit 1);
     
 #     multi link engagements := .<project[is Engagement];
     property engagementTotal := count(.<project[is Engagement]);
@@ -106,8 +106,8 @@ module default {
       insert default::Budget {
         createdAt := datetime_of_statement(),
         modifiedAt := datetime_of_statement(),
-        createdBy := assert_exists(currentUser),
-        modifiedBy := assert_exists(currentUser),
+        createdBy := assert_exists(global currentActor),
+        modifiedBy := assert_exists(global currentActor),
         project := __new__,
         projectContext := __new__.projectContext,
       }
