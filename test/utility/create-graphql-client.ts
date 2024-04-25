@@ -33,9 +33,10 @@ export const createGraphqlClient = async (
   let authToken = '';
 
   const execute = <TData = AnyObject, TVars = AnyObject>(
-    query: DocumentNode | string,
+    doc: DocumentNode | string,
     variables?: TVars,
   ) => {
+    const query = typeof doc === 'string' ? doc : print(doc);
     const result = got
       .post({
         url: `${url}/graphql`,
@@ -44,8 +45,12 @@ export const createGraphqlClient = async (
           ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
         },
         json: {
-          query: typeof query === 'string' ? query : print(query),
+          query,
           variables,
+        },
+        retry: {
+          // Retry queries, not mutations
+          methods: query.trim().startsWith('query') ? ['POST'] : [],
         },
       })
       .json<ExecutionResult<TData>>()
