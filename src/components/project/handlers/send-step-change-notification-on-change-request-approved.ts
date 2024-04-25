@@ -1,6 +1,5 @@
 import { EmailService } from '@seedcompany/nestjs-email';
 import { node, relation } from 'cypher-query-builder';
-import { UnsecuredDto } from '../../../common';
 import {
   ConfigService,
   DatabaseService,
@@ -56,11 +55,11 @@ export class SendStepChangeNotificationsOnChangeRequestApproved
       .with('node, currentStep, previousStep')
       .orderBy('previousStep.createdAt', 'DESC')
       .return<{
-        project: UnsecuredDto<Project>;
+        project: Pick<Project, 'id' | 'type'>;
         currentStep: ProjectStep;
         previousStep: ProjectStep;
       }>(
-        'node as project, currentStep.value as currentStep, collect(previousStep.value)[0] as previousStep',
+        'node { .id, .type } as project, currentStep.value as currentStep, collect(previousStep.value)[0] as previousStep',
       )
       .first();
 
@@ -73,7 +72,9 @@ export class SendStepChangeNotificationsOnChangeRequestApproved
     }
 
     const recipients = await this.projectRules.getNotifications(
-      result.project,
+      result.project.id,
+      result.project.type,
+      result.currentStep,
       event.session.userId,
       result.previousStep,
     );

@@ -981,21 +981,23 @@ export class ProjectRules {
   }
 
   async getNotifications(
-    project: UnsecuredDto<Project>,
+    projectId: ID,
+    projectType: ProjectType,
+    step: ProjectStep,
     changedById: ID,
     previousStep: ProjectStep,
     changeset?: ID,
   ): Promise<EmailNotification[]> {
     const { getNotifiers: arrivalNotifiers } = await this.getStepRule(
-      project.step,
-      project.id,
-      project.type,
+      step,
+      projectId,
+      projectType,
       changeset,
     );
 
     const transitionNotifiers = (
-      await this.getStepRule(previousStep, project.id, project.type)
-    ).transitions.find((t) => t.to === project.step)?.notifiers;
+      await this.getStepRule(previousStep, projectId, projectType)
+    ).transitions.find((t) => t.to === step)?.notifiers;
 
     const resolve = async (notifiers?: Notifiers) =>
       maybeMany(
@@ -1017,7 +1019,7 @@ export class ProjectRules {
       recipientIds.map((recipientId) =>
         this.getEmailNotificationObject(
           changedById,
-          project.id,
+          projectId,
           recipientId,
           previousStep,
         ),
