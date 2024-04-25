@@ -373,16 +373,6 @@ export class ProjectRules {
             ...(isMultiplication
               ? [
                   {
-                    to: ProjectStep.Active,
-                    type: TransitionType.Approve,
-                    label: 'Confirm Project 🎉',
-                    notifiers: async () => [
-                      ...(await this.getRoleEmails(Role.Controller)),
-                      'project_approval@tsco.org',
-                      'projects@tsco.org',
-                    ],
-                  },
-                  {
                     to: ProjectStep.PendingRegionalDirectorApproval,
                     type: TransitionType.Reject,
                     label: 'Send Back for Corrections',
@@ -394,16 +384,6 @@ export class ProjectRules {
                   },
                 ]
               : [
-                  {
-                    to: ProjectStep.Active,
-                    type: TransitionType.Approve,
-                    label: 'Confirm Project 🎉',
-                    notifiers: async () => [
-                      ...(await this.getRoleEmails(Role.Controller)),
-                      'project_approval@tsco.org',
-                      'projects@tsco.org',
-                    ],
-                  },
                   {
                     to: ProjectStep.OnHoldFinanceConfirmation,
                     type: TransitionType.Neutral,
@@ -420,6 +400,16 @@ export class ProjectRules {
                     label: 'Reject',
                   },
                 ]),
+            {
+              to: ProjectStep.Active,
+              type: TransitionType.Approve,
+              label: 'Confirm Project 🎉',
+              notifiers: async () => [
+                ...(await this.getRoleEmails(Role.Controller)),
+                'project_approval@tsco.org',
+                'projects@tsco.org',
+              ],
+            },
           ],
           getNotifiers: async () => [
             ...(await this.getProjectTeamUserIds(id)),
