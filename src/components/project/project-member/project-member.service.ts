@@ -59,8 +59,7 @@ export class ProjectMemberService {
 
     const id = await generateId();
     const createdAt = DateTime.local();
-    this.repo.verifyRelationshipEligibility &&
-      (await this.repo.verifyRelationshipEligibility(projectId, userId));
+    await this.repo.verifyRelationshipEligibility(projectId, userId);
 
     enforcePerms &&
       (await this.assertValidRoles(input.roles, () =>
