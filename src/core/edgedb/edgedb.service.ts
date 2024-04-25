@@ -2,6 +2,8 @@
 import { Injectable, Optional } from '@nestjs/common';
 import { $, ConstraintViolationError, EdgeDBError, Executor } from 'edgedb';
 import { QueryArgs } from 'edgedb/dist/ifaces';
+import { dirname, resolve } from 'path';
+import { fileURLToPath } from 'url';
 import { retry, RetryOptions } from '~/common/retry';
 import { TracingService } from '~/core/tracing';
 import { jestSkipFileInExceptionSource } from '../exception';
@@ -107,11 +109,26 @@ export class EdgeDB {
 
   async run(query: any, args?: any) {
     const executor = this.childExecutor ?? this.transactionContext.current;
-    return await this.tracing.capture('EdgeDB Query', async (segment) => {
+
+    const queryName =
+      new Error().stack
+        ?.split('\n')
+        .slice(2)
+        .find(
+          (frm) => frm.includes(projectDir) && !frm.includes('/core/edgedb/'),
+        )
+        ?.split(/\s+/)[2]
+        .replaceAll(/(EdgeDB|Repository)/g, '') ?? 'Query';
+
+    return await this.tracing.capture(queryName, async (segment) => {
       // Show this segment separately in the service map
       segment.namespace = 'remote';
       // Help ID the segment as being for a database
-      segment.sql = {};
+      segment.sql = {
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        database_version: 'EdgeDB',
+        user: this.optionsContext.current.session.globals.currentUserId,
+      };
 
       try {
         if (query instanceof TypedEdgeQL) {
@@ -173,3 +190,7 @@ const cardinalityToExecutorMethod = {
   AtLeastOne: 'query',
   Empty: 'query',
 } satisfies Record<`${$.Cardinality}`, keyof Executor>;
+
+const projectDir = resolve(
+  `${dirname(fileURLToPath(import.meta.url))}/../../..`,
+);
