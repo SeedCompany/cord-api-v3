@@ -21,17 +21,11 @@ export class RoleCondition implements Condition {
     return 'false';
   }
 
-  setupEdgeQLContext({ namespace }: AsEdgeQLParams<any>) {
-    const User = fqnRelativeTo('default::User', namespace);
-    const currentUserId = fqnRelativeTo('default::currentUserId', namespace);
-    return {
-      givenRoles: `(<${User}>(global ${currentUserId})).roles`,
-    };
-  }
-
   asEdgeQLCondition({ namespace }: AsEdgeQLParams<any>) {
+    const currentRoles =
+      'global ' + fqnRelativeTo('default::currentRoles', namespace);
     const roleType = fqnRelativeTo('default::Role', namespace);
-    return eqlDoesIntersect('givenRoles', this.allowed, roleType);
+    return eqlDoesIntersect(currentRoles, this.allowed, roleType);
   }
 
   union(this: void, conditions: this[]) {

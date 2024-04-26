@@ -2,7 +2,8 @@ module default {
   global currentActorId: uuid;
   global currentActor := (select Actor filter .id = global currentActorId);
   global currentUser := (select User filter .id = global currentActorId);
-  
+  global currentRoles := (global currentActor).roles;
+
   scalar type ReportPeriod extending enum<Monthly, Quarterly>;
   
   # Helper function to workaround native support for sort ignoring accents
