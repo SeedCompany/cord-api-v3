@@ -1,24 +1,23 @@
 import { Injectable } from '@nestjs/common';
 import { PublicOf } from '~/common';
-import { DbTypeOf } from '~/core';
-import { ChangesOf } from '~/core/database/changes';
 import { RepoFor } from '~/core/edgedb';
 import { CeremonyRepository } from './ceremony.repository';
-import { Ceremony, CreateCeremony, UpdateCeremony } from './dto';
+import { Ceremony, CreateCeremony } from './dto';
 
 @Injectable()
 export class CeremonyEdgeDBRepository
   extends RepoFor(Ceremony, {
     hydrate: (ceremony) => ({ ...ceremony['*'], engagement: true }),
-  }).customize((cls) => {
+  }).customize((cls, { defaults }) => {
     return class extends cls {
+      static omit = [
+        defaults.update,
+        defaults.list,
+        defaults.readMany,
+        defaults.readOne,
+      ];
       async create(input: CreateCeremony): Promise<any> {
-        return;
-      }
-      async update(
-        existing: DbTypeOf<Ceremony>,
-        changes: ChangesOf<Ceremony, UpdateCeremony>,
-      ) {
+        // EdgeDB creates these ceremonies in the process of creating the parent
         return;
       }
     };
