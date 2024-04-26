@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
-import { ChangesOf } from '~/core/database/changes';
 import { ServerException, Session, UnsecuredDto } from '../../common';
 import { DtoRepository } from '../../core';
 import {
@@ -44,11 +43,12 @@ export class CeremonyRepository extends DtoRepository<
     return result;
   }
 
-  async update(
-    existing: Ceremony,
-    changes: ChangesOf<Ceremony, UpdateCeremony>,
-  ) {
-    return await this.updateProperties(existing, changes);
+  async update(changes: UpdateCeremony) {
+    const { id, ...simpleChanges } = changes;
+    await this.updateProperties({ id }, simpleChanges);
+    // I don't understand why something like funding-account does not require args but this one does?
+    // I also don't feel like I know what args or where they should come from so feel stuck
+    return await this.readOne(id);
   }
 
   protected hydrate(session: Session) {
