@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { ChangesOf } from '~/core/database/changes';
 import { ServerException, Session, UnsecuredDto } from '../../common';
-import { DbTypeOf, DtoRepository } from '../../core';
+import { DtoRepository } from '../../core';
 import {
   ACTIVE,
   createNode,
@@ -45,7 +45,7 @@ export class CeremonyRepository extends DtoRepository<
   }
 
   async update(
-    existing: DbTypeOf<Ceremony>,
+    existing: Ceremony,
     changes: ChangesOf<Ceremony, UpdateCeremony>,
   ) {
     return await this.updateProperties(existing, changes);
