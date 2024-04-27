@@ -6,7 +6,7 @@ import {
   Calculated,
   Resource,
   SecuredBoolean,
-  SecuredDate,
+  SecuredDateNullable,
   SecuredProperty,
   SecuredProps,
   Sensitivity,
@@ -33,10 +33,10 @@ export class Ceremony extends Resource {
   readonly planned: SecuredBoolean;
 
   @Field()
-  readonly estimatedDate: SecuredDate;
+  readonly estimatedDate: SecuredDateNullable;
 
   @Field()
-  readonly actualDate: SecuredDate;
+  readonly actualDate: SecuredDateNullable;
 
   @SensitivityField({
     description: "Based on the project's sensitivity",
