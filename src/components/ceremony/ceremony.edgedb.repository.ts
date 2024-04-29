@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { PublicOf } from '~/common';
+import { NotImplementedException, PublicOf } from '~/common';
 import { castToEnum, RepoFor } from '~/core/edgedb';
 import { CeremonyRepository } from './ceremony.repository';
-import { Ceremony, CeremonyType } from './dto';
+import { Ceremony, CeremonyType, CreateCeremony } from './dto';
 
 @Injectable()
 export class CeremonyEdgeDBRepository
@@ -15,7 +15,7 @@ export class CeremonyEdgeDBRepository
   }).withDefaults()
   implements PublicOf<CeremonyRepository>
 {
-  override create() {
-    // nothing needed here
+  override create(input: CreateCeremony): never {
+    throw new NotImplementedException();
   }
 }

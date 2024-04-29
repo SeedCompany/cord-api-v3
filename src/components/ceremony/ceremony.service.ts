@@ -7,7 +7,7 @@ import {
   Session,
   UnsecuredDto,
 } from '../../common';
-import { DbTypeOf, HandleIdLookup, ILogger, Logger } from '../../core';
+import { HandleIdLookup, ILogger, Logger } from '../../core';
 import { Privileges } from '../authorization';
 import { CeremonyRepository } from './ceremony.repository';
 import {
@@ -64,10 +64,7 @@ export class CeremonyService {
     return this.privileges.for(session, Ceremony).secure(dto);
   }
 
-  async update(
-    input: UpdateCeremony,
-    session: Session,
-  ): Promise<DbTypeOf<Ceremony>> {
+  async update(input: UpdateCeremony, session: Session): Promise<Ceremony> {
     const object = await this.repo.readOne(input.id, session);
     const changes = this.repo.getActualChanges(object, input);
     this.privileges.for(session, Ceremony, object).verifyChanges(changes);
@@ -78,7 +75,7 @@ export class CeremonyService {
       },
       session,
     );
-    return updated;
+    return this.secure(updated, session);
   }
 
   async delete(id: ID, session: Session): Promise<void> {

@@ -1,7 +1,5 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { e } from '~/core/edgedb';
-import { RegisterResource } from '~/core/resources';
 import {
   Calculated,
   Resource,
@@ -11,7 +9,9 @@ import {
   SecuredProps,
   Sensitivity,
   SensitivityField,
-} from '../../../common';
+} from '~/common';
+import { e } from '~/core/edgedb';
+import { RegisterResource } from '~/core/resources';
 import { CeremonyType } from './ceremony-type.enum';
 
 @RegisterResource({ db: e.Engagement.Ceremony })

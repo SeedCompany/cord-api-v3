@@ -1,5 +1,5 @@
 import { Field, InputType } from '@nestjs/graphql';
-import { CalendarDate, DateField } from '../../../common';
+import { CalendarDate, DateField } from '~/common';
 import { CeremonyType } from './ceremony-type.enum';
 
 @InputType()

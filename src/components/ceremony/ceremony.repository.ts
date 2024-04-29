@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
-import { ID, ServerException, Session, UnsecuredDto } from '../../common';
-import { DtoRepository } from '../../core';
+import { ID, ServerException, Session, UnsecuredDto } from '~/common';
+import { DtoRepository } from '~/core';
 import {
   ACTIVE,
   createNode,
@@ -10,7 +10,7 @@ import {
   paginate,
   requestingUser,
   sorting,
-} from '../../core/database/query';
+} from '~/core/database/query';
 import {
   Ceremony,
   CeremonyListInput,
