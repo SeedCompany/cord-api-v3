@@ -27,17 +27,9 @@ export class CeremonyService {
   ) {}
 
   async create(input: CreateCeremony): Promise<ID> {
-    try {
-      const { id } = await this.repo.create(input);
+    const { id } = await this.repo.create(input);
 
-      return id;
-    } catch (exception) {
-      this.logger.warning('Failed to create ceremony', {
-        exception,
-      });
-
-      throw exception;
-    }
+    return id;
   }
 
   @HandleIdLookup(Ceremony)
