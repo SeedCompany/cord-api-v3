@@ -1,35 +1,30 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
+import { Loader, LoaderOf } from '@seedcompany/data-loader';
 import { stripIndent } from 'common-tags';
-import { AnonSession, ID, Session } from '../../common';
+import { AnonSession, ID, Session, viewOfChangeset } from '~/common';
 import { ProjectStepTransition, SecuredProjectStep } from './dto';
+import { ProjectLoader } from './project.loader';
 import { ProjectRules } from './project.rules';
-import { ProjectService } from './project.service';
 
 @Resolver(SecuredProjectStep)
 export class ProjectStepResolver {
-  constructor(
-    private readonly projectRules: ProjectRules,
-    private readonly projectService: ProjectService,
-  ) {}
+  constructor(private readonly projectRules: ProjectRules) {}
 
   @ResolveField(() => [ProjectStepTransition], {
     description: 'The available steps a project can be transitioned to.',
   })
   async transitions(
-    @Parent()
-    step: SecuredProjectStep & {
-      parentId: ID;
-      changeset?: ID;
-    },
+    @Parent() step: SecuredProjectStep & { parentId: ID; changeset?: ID },
+    @Loader(ProjectLoader) projects: LoaderOf<ProjectLoader>,
     @AnonSession() session: Session,
   ): Promise<ProjectStepTransition[]> {
     if (!step.canRead || !step.canEdit || !step.value) {
       return [];
     }
-    const project = await this.projectService.readOneUnsecured(
-      step.parentId,
-      session,
-    );
+    const project = await projects.load({
+      id: step.parentId,
+      view: viewOfChangeset(step.changeset),
+    });
     return await this.projectRules.getAvailableTransitions(
       step.parentId,
       session,
