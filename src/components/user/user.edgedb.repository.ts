@@ -13,7 +13,7 @@ import type { UserRepository } from './user.repository';
 export class UserEdgeDBRepository
   extends RepoFor(User, {
     hydrate: (user) => user['*'],
-  }).withDefaults()
+  })
   implements PublicOf<UserRepository>
 {
   async doesEmailAddressExist(email: string) {

@@ -12,5 +12,5 @@ export class FieldRegionEdgeDBRepository
       director: true,
       fieldZone: true,
     }),
-  }).withDefaults()
+  })
   implements PublicOf<FieldRegionRepository> {}
