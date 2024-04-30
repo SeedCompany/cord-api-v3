@@ -1,7 +1,6 @@
 // noinspection JSUnusedGlobalSymbols
 
 import { stripIndent } from 'common-tags';
-import { difference } from 'lodash';
 import { many, Many } from '../../src/common';
 import { GqlError } from './create-graphql-client';
 
@@ -28,21 +27,18 @@ expect.extend({
       extensions: actualExtensions,
     };
 
-    const codesPassed = expectedObj.codes
-      ? difference(expectedObj.codes, actualObj.codes).length === 0
-      : true;
-    const messagePassed = expectedObj.message
-      ? expectedObj.message === actualObj.message
-      : true;
-    const extensionsPassed =
-      Object.keys(expectedObj.extensions).length > 0
-        ? !!this.utils.subsetEquality.call(
-            this,
-            expectedObj.extensions,
-            actualObj.extensions,
-            this.customTesters,
-          )
-        : true;
+    const codesPassed = this.equals(
+      expect.arrayContaining(expectedObj.codes ?? []),
+      actualObj.codes,
+    );
+    const messagePassed = this.equals(
+      expectedObj.message ?? expect.anything(),
+      actualObj.message,
+    );
+    const extensionsPassed = this.equals(
+      expect.objectContaining(expectedObj.extensions),
+      expectedObj.extensions,
+    );
     const pass = codesPassed && messagePassed && extensionsPassed;
 
     const genMessage = () => stripIndent`
