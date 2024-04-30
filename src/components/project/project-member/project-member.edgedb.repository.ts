@@ -1,6 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { ID, Resource } from '~/common';
+import {
+  ID,
+  InputException,
+  NotFoundException,
+  Role,
+  UnsecuredDto,
+} from '~/common';
 import { e, RepoFor, ScopeOf } from '~/core/edgedb';
+import { User } from '../../user';
 import {
   CreateProjectMember,
   ProjectMember,
@@ -63,21 +70,107 @@ export class ProjectMemberEdgeDBRepository extends RepoFor(ProjectMember, {
       return await this.paginate(query, input);
     }
 
-    async update(
-      existing: ProjectMember,
-      changes: Partial<
-        Omit<UpdateProjectMember, keyof Resource> &
-          Pick<ProjectMember, 'modifiedAt'>
-      >,
-    ) {
-      // Adapt the roles property to the expected type
-      const adaptedExisting = {
-        ...existing,
-        roles: existing.roles.value,
+    async update(input: UpdateProjectMember) {
+      const { id, ...changes } = input;
+      const existing = await this.defaults.readOne(id);
+      const adaptedChanges = {
+        ...changes,
+        roles: changes.roles ?? existing.roles,
       };
 
-      // Pass through to the generated update method
-      await this.defaults.update({ ...adaptedExisting, ...changes });
+      return await this.defaults.update({
+        ...existing,
+        ...adaptedChanges,
+      });
+    }
+
+    async assertValidRoles(
+      roles: readonly Role[] | undefined,
+      forUser: () => UnsecuredDto<User>,
+    ) {
+      if (!roles || roles.length === 0) {
+        return;
+      }
+
+      const user = forUser();
+      const availableRoles = user.roles ?? [];
+
+      const forbiddenRoles = roles.filter(
+        (role) => !availableRoles.includes(role),
+      );
+
+      if (forbiddenRoles.length) {
+        const forbiddenRolesStr = forbiddenRoles.join(', ');
+        throw new InputException(
+          `Role(s) ${forbiddenRolesStr} cannot be assigned to this project member`,
+          'input.roles',
+        );
+      }
+    }
+
+    async verifyRelationshipEligibility(projectId: ID, userId: ID) {
+      const query = e.select({
+        project: e
+          .select(e.Project, (project) => ({
+            filter: e.op(project.id, '=', e.uuid(projectId)),
+          }))
+          .assert_single(),
+        user: e
+          .select(e.User, (user) => ({
+            filter: e.op(user.id, '=', e.uuid(userId)),
+          }))
+          .assert_single(),
+        member: e.select(e.Project.Member, (member) => ({
+          filter: e.op(
+            e.op(member.project.id, '=', e.uuid(projectId)),
+            'and',
+            e.op(member.user.id, '=', e.uuid(userId)),
+          ),
+          limit: 1,
+        })),
+      });
+
+      const result = await this.db.run(query);
+
+      if (!result.project) {
+        throw new NotFoundException(
+          'Could not find project',
+          'projectMember.projectId',
+        );
+      }
+
+      if (!result.user) {
+        throw new NotFoundException(
+          'Could not find person',
+          'projectMember.userId',
+        );
+      }
+
+      const member = result.member.length > 0 ? result.member[0] : undefined;
+
+      return {
+        project: result.project
+          ? {
+              identity: result.project.id,
+              labels: ['Project'],
+              properties: {},
+            }
+          : undefined,
+        user: result.user
+          ? {
+              identity: result.user.id,
+              labels: ['User'],
+              properties: {},
+            }
+          : undefined,
+        member: member
+          ? {
+              identity: member.id,
+              labels: ['ProjectMember'],
+              properties: {},
+            }
+          : undefined,
+      };
     }
 
     protected listFilters(

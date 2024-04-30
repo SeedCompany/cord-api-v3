@@ -7,7 +7,7 @@ import {
   LoggedInSession,
   Session,
 } from '../../../common';
-import { Loader, LoaderOf } from '../../../core';
+import { DbTypeOf, Loader, LoaderOf } from '../../../core';
 import { ProjectMemberLoader, ProjectMemberService } from '../project-member';
 import {
   CreateProjectMemberInput,
@@ -66,7 +66,7 @@ export class ProjectMemberResolver {
   async updateProjectMember(
     @LoggedInSession() session: Session,
     @Args('input') { projectMember: input }: UpdateProjectMemberInput,
-  ): Promise<UpdateProjectMemberOutput> {
+  ): Promise<{ projectMember: DbTypeOf<ProjectMember> }> {
     const projectMember = await this.service.update(input, session);
     return { projectMember };
   }

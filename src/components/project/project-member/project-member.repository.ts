@@ -1,9 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { Node, node, Query, relation } from 'cypher-query-builder';
+import { difference } from 'lodash';
 import { DateTime } from 'luxon';
-import { ChangesOf } from '~/core/database/changes';
-import { ID, Session, UnsecuredDto } from '../../../common';
-import { DtoRepository } from '../../../core';
+import {
+  DuplicateException,
+  ID,
+  InputException,
+  NotFoundException,
+  Role,
+  ServerException,
+  Session,
+  UnauthorizedException,
+  UnsecuredDto,
+} from '../../../common';
+import { DtoRepository, ILogger, Logger } from '../../../core';
 import {
   ACTIVE,
   matchPropsAndProjectSensAndScopedRoles,
@@ -14,6 +24,7 @@ import {
   requestingUser,
   sorting,
 } from '../../../core/database/query';
+import { User } from '../../user';
 import { UserRepository } from '../../user/user.repository';
 import {
   CreateProjectMember,
@@ -21,18 +32,23 @@ import {
   ProjectMemberListInput,
   UpdateProjectMember,
 } from './dto';
+import { ProjectMemberService } from './project-member.service';
 
 @Injectable()
 export class ProjectMemberRepository extends DtoRepository<
   typeof ProjectMember,
   [session: Session]
 >(ProjectMember) {
-  constructor(private readonly users: UserRepository) {
+  constructor(
+    private readonly users: UserRepository,
+    @Logger('project:member:repository') private readonly logger: ILogger,
+    private readonly service: ProjectMemberService,
+  ) {
     super();
   }
 
   async verifyRelationshipEligibility(projectId: ID, userId: ID) {
-    return await this.db
+    const result = await this.db
       .query()
       .optionalMatch(node('user', 'User', { id: userId }))
       .optionalMatch(node('project', 'Project', { id: projectId }))
@@ -46,6 +62,29 @@ export class ProjectMemberRepository extends DtoRepository<
       .return(['user', 'project', 'member'])
       .asResult<{ user?: Node; project?: Node; member?: Node }>()
       .first();
+
+    if (!result?.project) {
+      throw new NotFoundException(
+        'Could not find project',
+        'projectMember.projectId',
+      );
+    }
+
+    if (!result?.user) {
+      throw new NotFoundException(
+        'Could not find person',
+        'projectMember.userId',
+      );
+    }
+
+    if (result.member) {
+      throw new DuplicateException(
+        'projectMember.userId',
+        'Person is already a member of this project',
+      );
+    }
+
+    return result;
   }
 
   async create(
@@ -91,15 +130,47 @@ export class ProjectMemberRepository extends DtoRepository<
         }),
         node('user'),
       ])
-      .return<{ id: ID }>('projectMember.id as id')
+      .return<{ id: ID }>('projectMember')
       .first();
   }
 
-  async update(
-    existing: ProjectMember,
-    changes: ChangesOf<ProjectMember, UpdateProjectMember>,
-  ) {
+  async update(input: UpdateProjectMember, session: Session) {
+    const existing = await this.readOne(input.id, session);
+    await this.assertValidRoles(input.roles, () => {
+      const user = existing.user;
+      if (!user) {
+        throw new UnauthorizedException(
+          'Cannot read user to verify roles available',
+        );
+      }
+      return user;
+    });
+    const changes = this.getActualChanges(existing, input);
+    this.service.privileges
+      .for(session, ProjectMember, existing)
+      .verifyChanges(changes);
+
     await this.updateProperties(existing, changes);
+    return await this.readOne(existing.id, session);
+  }
+
+  async assertValidRoles(
+    roles: readonly Role[] | undefined,
+    forUser: () => UnsecuredDto<User>,
+  ) {
+    if (!roles || roles.length === 0) {
+      return;
+    }
+    const user = forUser();
+    const availableRoles = user.roles ?? [];
+    const forbiddenRoles = difference(roles, availableRoles);
+    if (forbiddenRoles.length) {
+      const forbiddenRolesStr = forbiddenRoles.join(', ');
+      throw new InputException(
+        `Role(s) ${forbiddenRolesStr} cannot be assigned to this project member`,
+        'input.roles',
+      );
+    }
   }
 
   protected hydrate(session: Session) {
@@ -162,5 +233,26 @@ export class ProjectMemberRepository extends DtoRepository<
       .apply(paginate(input, this.hydrate(session)))
       .first();
     return result!; // result from paginate() will always have 1 row.
+  }
+
+  async delete(id: ID, session: Session): Promise<void> {
+    const object = await this.readOne(id, session);
+
+    if (!object) {
+      throw new NotFoundException(
+        'Could not find project member',
+        'projectMember.id',
+      );
+    }
+
+    try {
+      await this.deleteNode(object);
+    } catch (exception) {
+      this.logger.warning('Failed to delete project member', {
+        exception,
+      });
+
+      throw new ServerException('Failed to delete project member', exception);
+    }
   }
 }

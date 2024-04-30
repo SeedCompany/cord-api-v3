@@ -12,13 +12,12 @@ import {
   ObjectView,
   ServerException,
   Session,
-  UnauthorizedException,
   UnsecuredDto,
 } from '../../../common';
-import { HandleIdLookup, ILogger, Logger } from '../../../core';
+import { DbTypeOf, HandleIdLookup, ILogger, Logger } from '../../../core';
 import { mapListResults } from '../../../core/database/results';
 import { Privileges, Role } from '../../authorization';
-import { User, UserService } from '../../user';
+import { User, UserRepository, UserService } from '../../user';
 import { IProject } from '../dto';
 import { ProjectService } from '../project.service';
 import {
@@ -38,8 +37,9 @@ export class ProjectMemberService {
     @Inject(forwardRef(() => ProjectService))
     private readonly projectService: ProjectService & {},
     @Logger('project:member:service') private readonly logger: ILogger,
-    private readonly privileges: Privileges,
+    readonly privileges: Privileges,
     private readonly repo: ProjectMemberRepository,
+    private readonly userRepo: UserRepository,
   ) {}
 
   async create(
@@ -62,9 +62,9 @@ export class ProjectMemberService {
     await this.repo.verifyRelationshipEligibility(projectId, userId);
 
     enforcePerms &&
-      (await this.assertValidRoles(input.roles, () =>
-        this.userService.readOne(userId, session),
-      ));
+      (await this.assertValidRoles(input.roles, () => {
+        return this.userService.readOne(userId, session);
+      }));
 
     try {
       const memberQuery = await this.repo.create(
@@ -128,23 +128,8 @@ export class ProjectMemberService {
   async update(
     input: UpdateProjectMember,
     session: Session,
-  ): Promise<ProjectMember> {
-    const object = await this.readOne(input.id, session);
-
-    await this.assertValidRoles(input.roles, () => {
-      const user = object.user.value;
-      if (!user) {
-        throw new UnauthorizedException(
-          'Cannot read user to verify roles available',
-        );
-      }
-      return user;
-    });
-
-    const changes = this.repo.getActualChanges(object, input);
-    this.privileges.for(session, ProjectMember, object).verifyChanges(changes);
-    await this.repo.update(object, changes);
-    return await this.readOne(input.id, session);
+  ): Promise<DbTypeOf<ProjectMember>> {
+    return await this.repo.update(input, session);
   }
 
   private async assertValidRoles(
@@ -167,24 +152,7 @@ export class ProjectMemberService {
   }
 
   async delete(id: ID, session: Session): Promise<void> {
-    const object = await this.readOne(id, session);
-
-    if (!object) {
-      throw new NotFoundException(
-        'Could not find project member',
-        'projectMember.id',
-      );
-    }
-
-    try {
-      await this.repo.deleteNode(object);
-    } catch (exception) {
-      this.logger.warning('Failed to delete project member', {
-        exception,
-      });
-
-      throw new ServerException('Failed to delete project member', exception);
-    }
+    return await this.repo.delete(id, session);
   }
 
   async list(
