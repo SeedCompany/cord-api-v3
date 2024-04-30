@@ -1,6 +1,5 @@
 import { EmailService } from '@seedcompany/nestjs-email';
 import { node, relation } from 'cypher-query-builder';
-import { ID } from '../../../common';
 import {
   ConfigService,
   DatabaseService,
@@ -12,7 +11,7 @@ import {
 import { ACTIVE, INACTIVE } from '../../../core/database/query';
 import { ProjectStepChanged } from '../../../core/email/templates';
 import { ProjectChangeRequestApprovedEvent } from '../../project-change-request/events';
-import { ProjectStep } from '../dto';
+import { Project, ProjectStep } from '../dto';
 import { ProjectRules } from '../project.rules';
 
 type SubscribedEvent = ProjectChangeRequestApprovedEvent;
@@ -56,11 +55,11 @@ export class SendStepChangeNotificationsOnChangeRequestApproved
       .with('node, currentStep, previousStep')
       .orderBy('previousStep.createdAt', 'DESC')
       .return<{
-        projectId: ID;
+        project: Pick<Project, 'id' | 'type'>;
         currentStep: ProjectStep;
         previousStep: ProjectStep;
       }>(
-        'node.id as projectId, currentStep.value as currentStep, collect(previousStep.value)[0] as previousStep',
+        'node { .id, .type } as project, currentStep.value as currentStep, collect(previousStep.value)[0] as previousStep',
       )
       .first();
 
@@ -73,7 +72,8 @@ export class SendStepChangeNotificationsOnChangeRequestApproved
     }
 
     const recipients = await this.projectRules.getNotifications(
-      result.projectId,
+      result.project.id,
+      result.project.type,
       result.currentStep,
       event.session.userId,
       result.previousStep,
@@ -81,7 +81,7 @@ export class SendStepChangeNotificationsOnChangeRequestApproved
 
     this.logger.info('Notifying', {
       emails: recipients.map((r) => r.recipient.email.value),
-      projectId: result.projectId,
+      projectId: result.project.id,
       step: result.currentStep,
       previousStep: result.previousStep,
     });
