@@ -335,12 +335,12 @@ export class ProjectRules {
                     type: TransitionType.Reject,
                     label: 'Send Back for Corrections',
                   },
-                  {
-                    to: ProjectStep.Rejected,
-                    type: TransitionType.Reject,
-                    label: 'Reject',
-                  },
                 ]),
+            {
+              to: ProjectStep.Rejected,
+              type: TransitionType.Reject,
+              label: 'Reject',
+            },
           ],
           getNotifiers: () => this.getProjectTeamUserIds(id),
         };
