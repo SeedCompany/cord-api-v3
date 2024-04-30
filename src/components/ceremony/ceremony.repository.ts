@@ -1,8 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
-import { ChangesOf } from '~/core/database/changes';
-import { ID, Session, UnsecuredDto } from '../../common';
-import { DtoRepository } from '../../core';
+import { ID, ServerException, Session, UnsecuredDto } from '~/common';
+import { DtoRepository } from '~/core';
 import {
   ACTIVE,
   createNode,
@@ -11,7 +10,7 @@ import {
   paginate,
   requestingUser,
   sorting,
-} from '../../core/database/query';
+} from '~/core/database/query';
 import {
   Ceremony,
   CeremonyListInput,
@@ -32,18 +31,22 @@ export class CeremonyRepository extends DtoRepository<
       actualDate: input.actualDate,
       canDelete: true,
     };
-    return await this.db
+    const result = await this.db
       .query()
       .apply(await createNode(Ceremony, { initialProps }))
       .return<{ id: ID }>('node.id as id')
       .first();
+
+    if (!result) {
+      throw new ServerException('failed to create a ceremony');
+    }
+    return result;
   }
 
-  async update(
-    existing: Ceremony,
-    changes: ChangesOf<Ceremony, UpdateCeremony>,
-  ) {
-    return await this.updateProperties(existing, changes);
+  async update(changes: UpdateCeremony, session: Session) {
+    const { id, ...simpleChanges } = changes;
+    await this.updateProperties({ id }, simpleChanges);
+    return await this.readOne(id, session);
   }
 
   protected hydrate(session: Session) {

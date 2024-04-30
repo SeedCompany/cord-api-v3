@@ -6,7 +6,7 @@ import {
   ListArg,
   LoggedInSession,
   Session,
-} from '../../common';
+} from '~/common';
 import { Loader, LoaderOf } from '../../core';
 import { CeremonyLoader, CeremonyService } from '../ceremony';
 import {
