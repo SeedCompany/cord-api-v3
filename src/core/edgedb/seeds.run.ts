@@ -1,9 +1,14 @@
 import { many, MaybeAsync } from '@seedcompany/common';
 import { BaseContext, Command, runExit } from 'clipanion';
 import { Client, createClient, Executor } from 'edgedb';
+import type { QueryArgs } from 'edgedb/dist/ifaces';
 import { glob } from 'glob';
 import fs from 'node:fs/promises';
+import { BehaviorSubject } from 'rxjs';
 import { inspect } from 'util';
+import { ID } from '~/common';
+import { Options } from './options';
+import { OptionsContext, OptionsFn } from './options.context';
 import { e } from './reexports';
 
 type Query = string | QBQuery;
@@ -17,17 +22,30 @@ export type SeedFn = (
 
 interface SeedParams {
   e: typeof e;
-  runAndPrint: (query: Query) => Promise<void>;
+  runAndPrint: (query: Query, args?: QueryArgs) => Promise<void>;
   db: Client;
   print: (something: unknown) => void;
   context: BaseContext;
+  actorId: BehaviorSubject<ID | undefined>;
 }
 
-const db = createClient().withConfig({
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  allow_user_specified_id: true,
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  apply_access_policies: false,
+const optionsContext = new OptionsContext(
+  new Options().withConfig({
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    allow_user_specified_id: true,
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    apply_access_policies: false,
+  }),
+);
+const db = createClient();
+optionsContext.attachToClient(db);
+
+const actor = new BehaviorSubject<ID | undefined>(undefined);
+const actorOptions = new BehaviorSubject<OptionsFn>((opts) => opts);
+actor.subscribe((actor) => {
+  actorOptions.next((options) =>
+    actor ? options.withGlobals({ currentActorId: actor }) : options,
+  );
 });
 
 class SeedCommand extends Command {
@@ -43,11 +61,11 @@ class SeedCommand extends Command {
       }
     };
 
-    const runAndPrint = async (query: Query) => {
+    const runAndPrint = async (query: Query, args?: QueryArgs) => {
       try {
         const rows =
           typeof query === 'string'
-            ? await db.query(query)
+            ? await db.query(query, args)
             : await query.run(db);
         printResult(rows);
       } catch (e) {
@@ -61,6 +79,7 @@ class SeedCommand extends Command {
       print: printResult,
       runAndPrint,
       e,
+      actorId: actor,
     };
 
     for (const file of files) {
@@ -89,7 +108,9 @@ class SeedCommand extends Command {
 
   async validateAndExecute() {
     try {
-      return await super.validateAndExecute();
+      return await optionsContext.usingOptions(actorOptions, async () => {
+        return await super.validateAndExecute();
+      });
     } finally {
       await db.close();
     }

@@ -6,7 +6,7 @@ const agents = [
   { name: 'External Mailing Group', roles: ['Leadership'] },
 ];
 
-export default (async function ({ runAndPrint }) {
+export default (async function ({ runAndPrint, e, db, actorId }) {
   await runAndPrint(
     `
       with
@@ -24,4 +24,12 @@ export default (async function ({ runAndPrint }) {
     `,
     { agentsJson: agents },
   );
+
+  const getGhost = e.assert_exists(
+    e.select(e.SystemAgent, () => ({
+      filter_single: { name: 'Ghost' },
+    })),
+  );
+  const ghost = await getGhost.run(db);
+  actorId.next(ghost.id);
 } satisfies SeedFn);
