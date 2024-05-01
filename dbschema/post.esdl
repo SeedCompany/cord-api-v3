@@ -1,5 +1,5 @@
 module default {
-  type Post extending Resource, Mixin::Embedded, Mixin::Owned {
+  type Post extending Resource, Mixin::Embedded {
     overloaded required single link container: Mixin::Postable {
       on target delete delete source;
     };

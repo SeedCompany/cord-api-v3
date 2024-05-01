@@ -72,10 +72,10 @@ export class EdgeDBCurrentUserProvider
   ) {
     // TODO temporarily check if UUID before applying global.
     // Once migration is complete this can be removed.
-    const currentUserId =
+    const currentActorId =
       session?.userId && isUUID(session.userId) ? session.userId : undefined;
     optionsHolder.next((options) =>
-      currentUserId ? options.withGlobals({ currentUserId }) : options,
+      currentActorId ? options.withGlobals({ currentActorId }) : options,
     );
   }
 }

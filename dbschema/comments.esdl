@@ -3,7 +3,7 @@ module Comments {
     commentThreads := .<container[is Thread];
   }
 
-  type Thread extending default::Resource, Mixin::Embedded, Mixin::Owned {
+  type Thread extending default::Resource, Mixin::Embedded {
     overloaded required single link container: Aware {
       on target delete delete source;
     };
@@ -12,7 +12,7 @@ module Comments {
     latestComment := (select .comments order by .createdAt desc limit 1);
   }
 
-  type Comment extending default::Resource, Mixin::Owned {
+  type Comment extending default::Resource {
     required thread: Thread {
       on target delete delete source;
     };

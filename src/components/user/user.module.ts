@@ -7,6 +7,9 @@ import { LocationModule } from '../location/location.module';
 import { OrganizationModule } from '../organization/organization.module';
 import { PartnerModule } from '../partner/partner.module';
 import { TimeZoneModule } from '../timezone';
+import { ActorEdgeDBRepository } from './actor.edgedb.repository';
+import { ActorNeo4jRepository } from './actor.neo4j.repository';
+import { ActorRepository } from './actor.repository';
 import { AssignableRolesResolver } from './assignable-roles.resolver';
 import { EducationModule } from './education/education.module';
 import { KnownLanguageRepository } from './known-language.repository';
@@ -38,7 +41,17 @@ import { UserService } from './user.service';
     UserService,
     splitDb(UserRepository, UserEdgeDBRepository),
     KnownLanguageRepository,
+    {
+      ...splitDb(ActorNeo4jRepository, ActorEdgeDBRepository),
+      provide: ActorRepository,
+    },
   ],
-  exports: [UserService, UserRepository, EducationModule, UnavailabilityModule],
+  exports: [
+    UserService,
+    UserRepository,
+    ActorRepository,
+    EducationModule,
+    UnavailabilityModule,
+  ],
 })
 export class UserModule {}

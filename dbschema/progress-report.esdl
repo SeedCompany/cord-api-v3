@@ -54,7 +54,7 @@ module ProgressReport {
   module Media {
     type VariantGroup;
   }
-  type Media extending ProgressReport::Child, Mixin::Owned {
+  type Media extending ProgressReport::Child {
     required file: default::File;
     required single media := assert_exists(.file.media);
 
@@ -75,7 +75,7 @@ module ProgressReport {
     };
     required who: default::User {
       readonly := true;
-      default := default::currentUser;
+      default := global default::currentUser;
     };
     required at: datetime {
       readonly := true;

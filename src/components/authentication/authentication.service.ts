@@ -21,6 +21,7 @@ import { ConfigService, ILogger, Logger } from '../../core';
 import { ForgotPassword } from '../../core/email/templates';
 import { Privileges, rolesForScope, withoutScope } from '../authorization';
 import { AssignableRoles } from '../authorization/dto/assignable-roles';
+import { ActorRepository } from '../user/actor.repository';
 import { AuthenticationRepository } from './authentication.repository';
 import { CryptoService } from './crypto.service';
 import { LoginInput, RegisterInput, ResetPasswordInput } from './dto';
@@ -40,6 +41,7 @@ export class AuthenticationService {
     @Logger('authentication:service') private readonly logger: ILogger,
     private readonly repo: AuthenticationRepository,
     private readonly edgedb: EdgeDB,
+    private readonly actors: ActorRepository,
     private readonly moduleRef: ModuleRef,
   ) {}
 
@@ -116,7 +118,10 @@ export class AuthenticationService {
 
     const { iat } = this.decodeJWT(token);
 
-    const result = await this.repo.resumeSession(token, impersonatee?.id);
+    const [result, anon] = await Promise.all([
+      this.repo.resumeSession(token, impersonatee?.id),
+      this.actors.getAnonymous(),
+    ]);
 
     if (!result) {
       this.logger.debug('Failed to find active token in database', { token });
@@ -140,7 +145,7 @@ export class AuthenticationService {
     const requesterSession: Session = {
       token,
       issuedAt: DateTime.fromMillis(iat),
-      userId: result.userId ?? ('anonuserid' as ID),
+      userId: result.userId ?? anon.id,
       anonymous: !result.userId,
       roles: result.roles,
     };
