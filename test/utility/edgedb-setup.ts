@@ -18,7 +18,7 @@ export const ephemeralEdgeDB = async () => {
   await db.execute(`create schema branch ${branch} from ${main}`);
 
   const cleanup = async () => {
-    await db.execute(`drop branch ${branch}`);
+    await db.execute(`drop branch ${branch} force`);
     await db.close();
   };
 
