@@ -3,11 +3,16 @@ import { ID, Role } from '~/common';
 import { RootUserAlias } from '~/core/config/root-user.config';
 import { disableAccessPolicies, e, EdgeDB } from '~/core/edgedb';
 import { AuthenticationRepository } from '../authentication/authentication.repository';
+import { ActorRepository } from '../user/actor.repository';
 
 @Injectable()
 export class AdminEdgeDBRepository {
   private readonly db: EdgeDB;
-  constructor(edgedb: EdgeDB, readonly auth: AuthenticationRepository) {
+  constructor(
+    edgedb: EdgeDB,
+    readonly auth: AuthenticationRepository,
+    readonly actors: ActorRepository,
+  ) {
     this.db = edgedb.withOptions(disableAccessPolicies);
   }
 
@@ -33,6 +38,8 @@ export class AdminEdgeDBRepository {
   }
 
   async createRootUser(id: ID, email: string, passwordHash: string) {
+    const ghost = await this.actors.getGhost();
+
     const newUser = e.insert(e.User, {
       id,
       email,
@@ -45,8 +52,12 @@ export class AdminEdgeDBRepository {
       target: newUser,
     });
     await this.db
-      // eslint-disable-next-line @typescript-eslint/naming-convention
-      .withOptions((o) => o.withConfig({ allow_user_specified_id: true }))
+      .withOptions((o) =>
+        o
+          // eslint-disable-next-line @typescript-eslint/naming-convention
+          .withConfig({ allow_user_specified_id: true })
+          .withGlobals({ currentActorId: ghost.id }),
+      )
       .run(query);
     await this.auth.savePasswordHashOnUser(id, passwordHash);
   }
