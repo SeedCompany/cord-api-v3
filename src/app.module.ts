@@ -29,6 +29,7 @@ import { ProductModule } from './components/product/product.module';
 import { ProgressReportModule } from './components/progress-report/progress-report.module';
 import { ProgressSummaryModule } from './components/progress-summary/progress-summary.module';
 import { ProjectChangeRequestModule } from './components/project-change-request/project-change-request.module';
+import { FinancialApproverModule } from './components/project/financial-approver/financial-approver.module';
 import { ProjectModule } from './components/project/project.module';
 import { PromptsModule } from './components/prompts/prompts.module';
 import { ScriptureModule } from './components/scripture';
@@ -82,6 +83,7 @@ assert(
     PartnershipProducingMediumModule,
     ProgressReportModule,
     PromptsModule,
+    FinancialApproverModule,
   ],
 })
 export class AppModule {}
