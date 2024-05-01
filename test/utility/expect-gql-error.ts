@@ -60,8 +60,8 @@ expect.extend({
           !messagePassed
             ? stripIndent`
                 Message:
-                  ${this.utils.EXPECTED_COLOR(expectedObj.message)}
-                  ${this.utils.RECEIVED_COLOR(actualObj.message)}
+                  ${this.utils.printExpected(expectedObj.message)}
+                  ${this.utils.printReceived(actualObj.message)}
               `.replace(/\n/g, '\n        ')
             : ''
         }
