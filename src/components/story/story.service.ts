@@ -1,16 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import {
-  DuplicateException,
   ID,
   ObjectView,
   ServerException,
   Session,
+  UnsecuredDto,
 } from '~/common';
-import { DbTypeOf, HandleIdLookup, ILogger, Logger } from '~/core';
+import { HandleIdLookup } from '~/core';
 import { ifDiff } from '~/core/database/changes';
-import { mapListResults } from '~/core/database/results';
 import { Privileges } from '../authorization';
-import { isScriptureEqual, ScriptureReferenceService } from '../scripture';
+import { isScriptureEqual } from '../scripture';
 import {
   CreateStory,
   Story,
@@ -23,86 +22,44 @@ import { StoryRepository } from './story.repository';
 @Injectable()
 export class StoryService {
   constructor(
-    @Logger('story:service') private readonly logger: ILogger,
-    private readonly scriptureRefs: ScriptureReferenceService,
     private readonly privileges: Privileges,
     private readonly repo: StoryRepository,
   ) {}
 
   async create(input: CreateStory, session: Session): Promise<Story> {
-    this.privileges.for(session, Story).verifyCan('create');
-    if (!(await this.repo.isUnique(input.name))) {
-      throw new DuplicateException(
-        'story.name',
-        'Story with this name already exists.',
-      );
-    }
-
-    try {
-      const result = await this.repo.create(input);
-
-      if (!result) {
-        throw new ServerException('failed to create a story');
-      }
-
-      await this.scriptureRefs.create(
-        result.id,
-        input.scriptureReferences,
-        session,
-      );
-
-      this.logger.debug(`story created`, { id: result.id });
-      return await this.readOne(result.id, session);
-    } catch (exception) {
-      this.logger.error(`Could not create story`, {
-        exception,
-        userId: session.userId,
-      });
-      throw new ServerException('Could not create story', exception);
-    }
+    const dto = await this.repo.create(input, session);
+    this.privileges.for(session, Story, dto).verifyCan('create');
+    return this.secure(dto, session);
   }
 
   @HandleIdLookup(Story)
   async readOne(id: ID, session: Session, _view?: ObjectView): Promise<Story> {
-    this.logger.debug(`Read Story`, {
-      id,
-      userId: session.userId,
-    });
-
     const result = await this.repo.readOne(id);
-    return await this.secure(result, session);
+    return this.secure(result, session);
   }
 
   async readMany(ids: readonly ID[], session: Session) {
     const stories = await this.repo.readMany(ids);
-    return await Promise.all(stories.map((dto) => this.secure(dto, session)));
+    return stories.map((dto) => this.secure(dto, session));
   }
 
-  private async secure(dto: DbTypeOf<Story>, session: Session): Promise<Story> {
-    return this.privileges.for(session, Story).secure({
-      ...dto,
-      scriptureReferences: this.scriptureRefs.parseList(
-        dto.scriptureReferences,
-      ),
-    });
+  private secure(dto: UnsecuredDto<Story>, session: Session): Story {
+    return this.privileges.for(session, Story).secure(dto);
   }
 
   async update(input: UpdateStory, session: Session): Promise<Story> {
-    const story = await this.readOne(input.id, session);
+    const story = await this.repo.readOne(input.id);
     const changes = {
       ...this.repo.getActualChanges(story, input),
       scriptureReferences: ifDiff(isScriptureEqual)(
         input.scriptureReferences,
-        story.scriptureReferences.value,
+        story.scriptureReferences,
       ),
     };
     this.privileges.for(session, Story, story).verifyChanges(changes);
-    const { scriptureReferences, ...simpleChanges } = changes;
 
-    await this.scriptureRefs.update(input.id, scriptureReferences);
-    await this.repo.update(story, simpleChanges);
-
-    return await this.readOne(input.id, session);
+    const updated = await this.repo.update({ id: input.id, ...changes });
+    return this.secure(updated, session);
   }
 
   async delete(id: ID, session: Session): Promise<void> {
@@ -113,11 +70,8 @@ export class StoryService {
     try {
       await this.repo.deleteNode(story);
     } catch (exception) {
-      this.logger.error('Failed to delete', { id, exception });
       throw new ServerException('Failed to delete', exception);
     }
-
-    this.logger.debug(`deleted story with id`, { id });
   }
 
   async list(
@@ -125,6 +79,9 @@ export class StoryService {
     session: Session,
   ): Promise<StoryListOutput> {
     const results = await this.repo.list(input);
-    return await mapListResults(results, (dto) => this.secure(dto, session));
+    return {
+      ...results,
+      items: results.items.map((dto) => this.secure(dto, session)),
+    };
   }
 }
