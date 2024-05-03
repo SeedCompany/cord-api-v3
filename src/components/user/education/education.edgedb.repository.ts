@@ -8,7 +8,7 @@ import { EducationRepository } from './education.repository';
 export class EducationEdgeDBRepository
   extends RepoFor(Education, {
     hydrate: (education) => education['*'],
-  }).withDefaults()
+  })
   implements PublicOf<EducationRepository>
 {
   async getUserIdByEducation(id: ID) {

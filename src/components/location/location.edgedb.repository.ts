@@ -14,7 +14,7 @@ export class LocationEdgeDBRepository
       mapImage: true,
       defaultMarketingRegion: true,
     }),
-  }).withDefaults()
+  })
   implements PublicOf<LocationRepository>
 {
   async addLocationToNode(label: string, id: ID, rel: string, locationId: ID) {

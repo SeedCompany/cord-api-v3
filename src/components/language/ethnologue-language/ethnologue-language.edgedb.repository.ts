@@ -11,5 +11,5 @@ export class EthnologueLanguageEdgeDBRepository
       ...ethnoLang['*'],
       language: ethnoLang.language['*'],
     }),
-  }).withDefaults()
+  })
   implements PublicOf<EthnologueLanguageRepository> {}

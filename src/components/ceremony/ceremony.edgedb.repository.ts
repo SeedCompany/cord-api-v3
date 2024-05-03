@@ -12,10 +12,7 @@ export class CeremonyEdgeDBRepository
       engagement: true,
       type: castToEnum(ceremony.__type__.name.slice(12, -8), CeremonyType),
     }),
-  }).customize((cls, { defaults }) => {
-    return class extends cls {
-      static omit = [defaults.create];
-    };
+    omit: ['create'],
   })
   implements PublicOf<CeremonyRepository>
 {

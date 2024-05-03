@@ -52,12 +52,14 @@ export const RepoFor = <
   TResourceStatic extends ResourceShape<any>,
   Root extends GetDBType<TResourceStatic>,
   HydratedShape extends objectTypeToSelectShape<Root['__element__']>,
+  const OmitKeys extends EnumType<typeof DefaultMethods> = never,
 >(
   resourceIn: TResourceStatic,
   {
     hydrate,
   }: {
     hydrate: ShapeFn<Root, HydratedShape>;
+    omit?: readonly OmitKeys[];
   },
 ) => {
   type Dto = $.BaseTypeToTsType<
@@ -73,6 +75,7 @@ export const RepoFor = <
 
   @Injectable()
   abstract class Repository extends CommonRepository {
+    // TODO clean up
     static customize<
       Customized extends BaseCustomizedRepository,
       OmitKeys extends EnumType<typeof DefaultMethods> = never,
@@ -120,9 +123,6 @@ export const RepoFor = <
       });
 
       return customizedClass as any;
-    }
-    static withDefaults() {
-      return DefaultDtoRepository;
     }
 
     @Inject(Privileges)
@@ -309,7 +309,9 @@ export const RepoFor = <
     }
   }
 
-  return Repository;
+  return Repository.customize<BaseCustomizedRepository, OmitKeys & {}>(
+    (cls) => cls,
+  );
 };
 
 type ShapeFn<

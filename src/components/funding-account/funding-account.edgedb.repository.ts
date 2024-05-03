@@ -8,5 +8,5 @@ import { FundingAccountRepository } from './funding-account.repository';
 export class FundingAccountEdgeDBRepository
   extends RepoFor(FundingAccount, {
     hydrate: (fa) => fa['*'],
-  }).withDefaults()
+  })
   implements PublicOf<FundingAccountRepository> {}
