@@ -63,8 +63,11 @@ export class AdminEdgeDBRepository {
   }
 
   async updateEmail(id: ID, email: string) {
+    const ghost = await this.actors.getGhost();
     const u = e.cast(e.User, e.uuid(id));
     const query = e.update(u, () => ({ set: { email } }));
-    await this.db.run(query);
+    await this.db
+      .withOptions((o) => o.withGlobals({ currentActorId: ghost.id }))
+      .run(query);
   }
 }
