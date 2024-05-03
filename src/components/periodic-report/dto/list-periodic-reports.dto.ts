@@ -17,7 +17,7 @@ import { ReportType } from './report-type.enum';
 export class PeriodicReportListInput extends SortablePaginationInput<
   keyof PeriodicReport
 >({
-  defaultSort: 'end',
+  defaultSort: 'start',
 }) {
   @Field(() => ReportType, {
     description: stripIndent`
