@@ -9,7 +9,6 @@ import {
   createNode,
   createRelationships,
   matchProps,
-  matchRequestingUser,
   merge,
   paginate,
   sorting,
@@ -31,7 +30,6 @@ export class PostRepository extends DtoRepository<typeof Post, [Session] | []>(
     };
     return await this.db
       .query()
-      .apply(matchRequestingUser(session))
       .apply(await createNode(Post, { initialProps }))
       .apply(
         createRelationships(Post, {

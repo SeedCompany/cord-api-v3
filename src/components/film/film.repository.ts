@@ -6,7 +6,6 @@ import { DbTypeOf, DtoRepository } from '../../core';
 import {
   createNode,
   matchProps,
-  matchRequestingUser,
   merge,
   paginate,
   requestingUser,
@@ -21,14 +20,13 @@ export class FilmRepository extends DtoRepository(Film) {
     super();
   }
 
-  async create(input: CreateFilm, session: Session) {
+  async create(input: CreateFilm) {
     const initialProps = {
       name: input.name,
       canDelete: true,
     };
     return await this.db
       .query()
-      .apply(matchRequestingUser(session))
       .apply(await createNode(Film, { initialProps }))
       .return<{ id: ID }>('node.id as id')
       .first();

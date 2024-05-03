@@ -90,7 +90,7 @@ export class LocationService {
     session: Session,
   ): Promise<LocationListOutput> {
     // no canList check needed because all roles can list
-    const results = await this.repo.list(input, session);
+    const results = await this.repo.list(input);
 
     return {
       ...results,

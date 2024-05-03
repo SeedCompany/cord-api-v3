@@ -3,36 +3,23 @@
  * Don't throw this, but rather a sub-class instead.
  */
 export abstract class Exception extends Error {
-  /**
-   * Basically just to group exceptions into client/server groups.
-   * This may be removed later.
-   */
-  abstract readonly status: number;
+  declare cause?: Error;
 
-  constructor(message: string, readonly previous?: Error) {
-    super(message);
+  constructor(message: string, cause?: Error) {
+    super(message, { cause });
     this.name = this.constructor.name;
   }
 }
 
-export class ServerException extends Exception {
-  readonly status: number = 500;
-}
+export class ServerException extends Exception {}
 
-export class ClientException extends Exception {
-  readonly status: number = 400;
-}
+export class ClientException extends Exception {}
 
-export const hasPrevious = (e: Error): e is Error & { previous: Error } =>
-  'previous' in e && e.previous instanceof Error;
-
-export function getPreviousList(ex: Error, includeSelf: boolean) {
+export function getCauseList(ex: Error, includeSelf = true): readonly Error[] {
   const previous: Error[] = includeSelf ? [ex] : [];
   let current = ex;
-  while (current.cause instanceof Error || hasPrevious(current)) {
-    current = hasPrevious(current)
-      ? current.previous
-      : (current.cause as Error);
+  while (current.cause instanceof Error) {
+    current = current.cause;
     previous.push(current);
   }
   return previous;

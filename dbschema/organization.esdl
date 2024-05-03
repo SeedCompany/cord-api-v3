@@ -9,6 +9,8 @@ module default {
     multi types: Organization::Type;
     multi reach: Organization::Reach;
 
+    multi locations: Location;
+
     overloaded link projectContext: Project::Context {
       default := (insert Project::Context);
       on source delete delete target;

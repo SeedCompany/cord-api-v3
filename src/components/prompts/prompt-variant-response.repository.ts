@@ -244,7 +244,7 @@ export const PromptVariantResponseRepository = <
         .executeAndLogStats();
     }
 
-    async changePrompt(input: ChangePrompt, _session: Session) {
+    async changePrompt(input: ChangePrompt) {
       // @ts-expect-error uhhhh yolo ¯\_(ツ)_/¯
       const resource: typeof PromptVariantResponse = this.resource.type;
       await this.db

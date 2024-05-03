@@ -162,7 +162,10 @@ with
           union (
             insert User::Unavailability {
               description := <str>unavailability['description'],
-              dates := range(<cal::local_date>unavailability['start'], <cal::local_date>unavailability['end'])
+              dates := range(
+                to_datetime(<cal::local_datetime><cal::local_date>unavailability['start'], 'America/Chicago'),
+                to_datetime(<cal::local_datetime><cal::local_date>unavailability['end'], 'America/Chicago')
+              )
             }
           )
         )

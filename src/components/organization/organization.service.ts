@@ -47,7 +47,7 @@ export class OrganizationService {
       );
     }
 
-    const result = await this.repo.create(input, session);
+    const result = await this.repo.create(input);
 
     if (!result) {
       throw new ServerException('failed to create default org');
@@ -127,11 +127,7 @@ export class OrganizationService {
     return await mapListResults(results, (dto) => this.secure(dto, session));
   }
 
-  async addLocation(
-    organizationId: ID,
-    locationId: ID,
-    _session: Session,
-  ): Promise<void> {
+  async addLocation(organizationId: ID, locationId: ID): Promise<void> {
     try {
       await this.locationService.addLocationToNode(
         'Organization',
@@ -144,11 +140,7 @@ export class OrganizationService {
     }
   }
 
-  async removeLocation(
-    organizationId: ID,
-    locationId: ID,
-    _session: Session,
-  ): Promise<void> {
+  async removeLocation(organizationId: ID, locationId: ID): Promise<void> {
     try {
       await this.locationService.removeLocationFromNode(
         'Organization',

@@ -1,6 +1,6 @@
 ARG NODE_VERSION=20
 ARG NODE_IMAGE=public.ecr.aws/docker/library/node:${NODE_VERSION}-slim
-ARG EDGEDB_IMAGE=ghcr.io/edgedb/edgedb:4
+ARG EDGEDB_IMAGE=ghcr.io/edgedb/edgedb:5
 
 FROM ${NODE_IMAGE} as base-runtime
 
@@ -56,6 +56,8 @@ ENV NODE_ENV=development \
     EDGEDB_SERVER_SECURITY=insecure_dev_mode \
     # Don't start/host the db server, just bootstrap & quit.
     EDGEDB_SERVER_BOOTSTRAP_ONLY=1 \
+    # Temporary until upstream stale default of "edgedb" is resolved
+    EDGEDB_SERVER_DATABASE=main \
     # Don't flood log with cache debug messages
     VERBOSE_YARN_LOG=discard
 

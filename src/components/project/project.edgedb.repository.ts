@@ -1,7 +1,8 @@
 import { Injectable, Type } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
+import { LazyGetter } from 'lazy-get-decorator';
 import { PublicOf, SortablePaginationInput, UnsecuredDto } from '~/common';
-import { grabInstances, InstanceMapOf } from '~/common/instance-maps';
+import { grabInstances } from '~/common/instance-maps';
 import { ChangesOf } from '~/core/database/changes';
 import { castToEnum, e, RepoFor, ScopeOf } from '~/core/edgedb';
 import {
@@ -57,18 +58,21 @@ export class ProjectEdgeDBRepository
   })
   implements PublicOf<Neo4jRepository>
 {
-  protected readonly concretes: InstanceMapOf<typeof ConcreteRepos>;
-
-  constructor(moduleRef: ModuleRef) {
+  constructor(private readonly moduleRef: ModuleRef) {
     super();
-    this.concretes = grabInstances(moduleRef, ConcreteRepos);
+  }
+
+  @LazyGetter() protected get concretes() {
+    return grabInstances(this.moduleRef, ConcreteRepos);
   }
 
   async create(input: CreateProject) {
-    const { type, sensitivity, ...props } = input;
+    const { type, sensitivity, otherLocationIds, presetInventory, ...props } =
+      input;
     return await this.concretes[input.type].create({
       ...props,
       ownSensitivity: sensitivity,
+      otherLocations: otherLocationIds,
     });
   }
 
@@ -97,14 +101,10 @@ export class ProjectEdgeDBRepository
         e.op(
           project.status,
           'in',
-          e.set(...input.status!.map((s) => e.cast(e.Project.Status, s))),
+          e.cast(e.Project.Status, e.set(...input.status!)),
         ),
       (input.step?.length ?? 0) > 0 &&
-        e.op(
-          project.step,
-          'in',
-          e.set(...input.step!.map((s) => e.cast(e.Project.Step, s))),
-        ),
+        e.op(project.step, 'in', e.cast(e.Project.Step, e.set(...input.step!))),
       input.onlyMultipleEngagements && e.op(project.engagementTotal, '>', 1),
       ...(input.createdAt
         ? [
@@ -156,7 +156,7 @@ export class ProjectEdgeDBRepository
         e.op(
           project.sensitivity,
           'in',
-          e.set(...input.sensitivity!.map((s) => e.cast(e.Sensitivity, s))),
+          e.cast(e.Sensitivity, e.set(...input.sensitivity!)),
         ),
     ];
   }

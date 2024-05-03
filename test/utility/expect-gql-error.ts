@@ -1,7 +1,6 @@
 // noinspection JSUnusedGlobalSymbols
 
 import { stripIndent } from 'common-tags';
-import { difference, omit } from 'lodash';
 import { many, Many } from '../../src/common';
 import { GqlError } from './create-graphql-client';
 
@@ -10,41 +9,36 @@ import { GqlError } from './create-graphql-client';
 expect.extend({
   toThrowGqlError(received: GqlError, expected?: ErrorExpectations) {
     expect(received).toBeInstanceOf(GqlError);
-    const error = received.raw;
     const { code, message, ...extensions } = expected ?? {};
-
     const expectedObj = {
       ...(code ? { codes: many(code) } : {}),
       ...(message ? { message } : {}),
       extensions,
     };
+
+    const {
+      codes: actualCodes,
+      stacktrace: _,
+      ...actualExtensions
+    } = received.raw.extensions;
     const actualObj = {
-      codes: error?.extensions?.codes ?? [],
-      message: error?.message,
-      extensions: omit(
-        error?.extensions,
-        'code',
-        'codes',
-        'status',
-        'stacktrace',
-      ),
+      codes: actualCodes,
+      message: received.raw.message,
+      extensions: actualExtensions,
     };
 
-    const codesPassed = expectedObj.codes
-      ? difference(expectedObj.codes, actualObj.codes).length === 0
-      : true;
-    const messagePassed = expectedObj.message
-      ? expectedObj.message === actualObj.message
-      : true;
-    const extensionsPassed =
-      Object.keys(expectedObj.extensions).length > 0
-        ? !!this.utils.subsetEquality.call(
-            this,
-            expectedObj.extensions,
-            actualObj.extensions,
-            this.customTesters,
-          )
-        : true;
+    const codesPassed = this.equals(
+      expect.arrayContaining(expectedObj.codes ?? []),
+      actualObj.codes,
+    );
+    const messagePassed = this.equals(
+      expectedObj.message ?? expect.anything(),
+      actualObj.message,
+    );
+    const extensionsPassed = this.equals(
+      expect.objectContaining(expectedObj.extensions),
+      expectedObj.extensions,
+    );
     const pass = codesPassed && messagePassed && extensionsPassed;
 
     const genMessage = () => stripIndent`
@@ -66,8 +60,8 @@ expect.extend({
           !messagePassed
             ? stripIndent`
                 Message:
-                  ${this.utils.EXPECTED_COLOR(expectedObj.message)}
-                  ${this.utils.RECEIVED_COLOR(actualObj.message)}
+                  ${this.utils.printExpected(expectedObj.message)}
+                  ${this.utils.printReceived(actualObj.message)}
               `.replace(/\n/g, '\n        ')
             : ''
         }

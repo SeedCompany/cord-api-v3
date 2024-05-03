@@ -1,10 +1,14 @@
 /* eslint-disable @typescript-eslint/unified-signatures */
 import { Injectable, Optional } from '@nestjs/common';
-import { $, Executor } from 'edgedb';
+import { $, ConstraintViolationError, EdgeDBError, Executor } from 'edgedb';
 import { QueryArgs } from 'edgedb/dist/ifaces';
+import { dirname, resolve } from 'path';
+import { fileURLToPath } from 'url';
 import { retry, RetryOptions } from '~/common/retry';
+import { TracingService } from '~/core/tracing';
+import { jestSkipFileInExceptionSource } from '../exception';
 import { TypedEdgeQL } from './edgeql';
-import { ExclusivityViolationError } from './exclusivity-violation.error';
+import { enhanceConstraintError } from './errors';
 import { InlineQueryRuntimeMap } from './generated-client/inline-queries';
 import { ApplyOptions, OptionsContext } from './options.context';
 import { Client } from './reexports';
@@ -16,6 +20,7 @@ export class EdgeDB {
     private readonly client: Client,
     private readonly transactionContext: TransactionContext,
     private readonly optionsContext: OptionsContext,
+    private readonly tracing: TracingService,
     @Optional() private readonly childOptions: ApplyOptions[] = [],
     @Optional() private childExecutor?: Executor,
   ) {}
@@ -25,6 +30,7 @@ export class EdgeDB {
       this.client,
       this.transactionContext,
       this.optionsContext,
+      this.tracing,
       [...this.childOptions],
       this.childExecutor,
     );
@@ -69,7 +75,7 @@ export class EdgeDB {
    *   await EdgeDB.run(...);
    * });
    */
-  get usingOptions() {
+  get usingOptions(): OptionsContext['usingOptions'] {
     return this.optionsContext.usingOptions.bind(this.optionsContext);
   }
 
@@ -103,43 +109,77 @@ export class EdgeDB {
 
   async run(query: any, args?: any) {
     const executor = this.childExecutor ?? this.transactionContext.current;
-    try {
-      if (query instanceof TypedEdgeQL) {
-        const found = InlineQueryRuntimeMap.get(query.query);
-        if (!found) {
-          throw new Error(`Query was not found from inline query generation`);
+
+    const queryName =
+      new Error().stack
+        ?.split('\n')
+        .slice(2)
+        .find(
+          (frm) => frm.includes(projectDir) && !frm.includes('/core/edgedb/'),
+        )
+        ?.split(/\s+/)[2]
+        .replaceAll(/(EdgeDB|Repository)/g, '') ?? 'Query';
+
+    return await this.tracing.capture(queryName, async (segment) => {
+      // Show this segment separately in the service map
+      segment.namespace = 'remote';
+      // Help ID the segment as being for a database
+      segment.sql = {
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        database_version: 'EdgeDB',
+        user: this.optionsContext.current.session.globals.currentActorId,
+      };
+
+      try {
+        if (query instanceof TypedEdgeQL) {
+          const found = InlineQueryRuntimeMap.get(query.query);
+          if (!found) {
+            throw new Error(`Query was not found from inline query generation`);
+          }
+          const exeMethod = cardinalityToExecutorMethod[found.cardinality];
+
+          // eslint-disable-next-line @typescript-eslint/return-await
+          return await executor[exeMethod](found.query, args);
         }
-        const exeMethod = cardinalityToExecutorMethod[found.cardinality];
 
-        // eslint-disable-next-line @typescript-eslint/return-await
-        return await executor[exeMethod](found.query, args);
+        if (query.run) {
+          // eslint-disable-next-line @typescript-eslint/return-await
+          return await query.run(executor, args);
+        }
+
+        if (typeof query === 'function') {
+          // eslint-disable-next-line @typescript-eslint/return-await
+          return await query(executor, args);
+        }
+
+        // For REPL, as this is untyped and assumes many/empty cardinality
+        if (typeof query === 'string') {
+          return await executor.query(query, args);
+        }
+      } catch (e) {
+        // Ignore this call in stack trace. This puts the actual query as the first.
+        e.stack = e.stack!.replace(/^\s+at(?: async)? EdgeDB\.run.+$\n/m, '');
+
+        // Don't present abstract repositories as the src block in jest reports
+        // for DB execution errors.
+        // There shouldn't be anything specific to there to be helpful.
+        // This is a bit of a broad assumption though, so only do for jest and
+        // keep the frame for actual use from users/devs.
+        if (e instanceof EdgeDBError) {
+          jestSkipFileInExceptionSource(
+            e,
+            /^\s+at .+src[/|\\]core[/|\\]edgedb[/|\\].+\.repository\..+$\n/gm,
+          );
+        }
+
+        if (e instanceof ConstraintViolationError) {
+          throw enhanceConstraintError(e);
+        }
+        throw e;
       }
 
-      if (query.run) {
-        // eslint-disable-next-line @typescript-eslint/return-await
-        return await query.run(executor, args);
-      }
-
-      if (typeof query === 'function') {
-        // eslint-disable-next-line @typescript-eslint/return-await
-        return await query(executor, args);
-      }
-
-      // For REPL, as this is untyped and assumes many/empty cardinality
-      if (typeof query === 'string') {
-        return await executor.query(query, args);
-      }
-    } catch (e) {
-      // Ignore this call in stack trace. This puts the actual query as the first.
-      e.stack = e.stack!.replace(/^\s+at EdgeDB\.run.+\n/m, '');
-
-      if (ExclusivityViolationError.is(e)) {
-        throw ExclusivityViolationError.cast(e);
-      }
-      throw e;
-    }
-
-    throw new Error('Could not figure out how to run given query');
+      throw new Error('Could not figure out how to run given query');
+    });
   }
 }
 
@@ -150,3 +190,7 @@ const cardinalityToExecutorMethod = {
   AtLeastOne: 'query',
   Empty: 'query',
 } satisfies Record<`${$.Cardinality}`, keyof Executor>;
+
+const projectDir = resolve(
+  `${dirname(fileURLToPath(import.meta.url))}/../../..`,
+);

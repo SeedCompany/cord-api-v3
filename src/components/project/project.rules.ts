@@ -11,12 +11,14 @@ import {
   ServerException,
   Session,
   UnauthorizedException,
+  UnsecuredDto,
 } from '../../common';
 import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
 import { ACTIVE, INACTIVE } from '../../core/database/query';
 import { AuthenticationService } from '../authentication';
 import { Role, withoutScope } from '../authorization';
 import { EngagementService, EngagementStatus } from '../engagement';
+import { ProjectType } from '../project';
 import { User, UserService } from '../user';
 import {
   Project,
@@ -78,10 +80,13 @@ export class ProjectRules {
   private async getStepRule(
     step: ProjectStep,
     id: ID,
+    projectType: ProjectType,
     changeset?: ID,
   ): Promise<StepRule> {
     const mostRecentPreviousStep = (steps: ProjectStep[]) =>
       this.getMostRecentPreviousStep(id, steps, changeset);
+    const isMultiplication =
+      projectType === ProjectType.MultiplicationTranslation;
 
     switch (step) {
       case ProjectStep.EarlyConversations:
@@ -93,11 +98,26 @@ export class ProjectRules {
             Role.FieldOperationsDirector,
           ],
           transitions: [
-            {
-              to: ProjectStep.PendingConceptApproval,
-              type: TransitionType.Approve,
-              label: 'Submit for Concept Approval',
-            },
+            ...(isMultiplication
+              ? [
+                  {
+                    to: ProjectStep.PendingRegionalDirectorApproval,
+                    type: TransitionType.Approve,
+                    label: 'Submit for Regional Director Approval',
+                  },
+                  {
+                    to: ProjectStep.PendingFinanceConfirmation,
+                    type: TransitionType.Approve,
+                    label: 'Submit for Finance Confirmation',
+                  },
+                ]
+              : [
+                  {
+                    to: ProjectStep.PendingConceptApproval,
+                    type: TransitionType.Approve,
+                    label: 'Submit for Concept Approval',
+                  },
+                ]),
             {
               to: ProjectStep.DidNotDevelop,
               type: TransitionType.Reject,
@@ -281,21 +301,41 @@ export class ProjectRules {
             Role.FieldOperationsDirector,
           ],
           transitions: [
-            {
-              to: ProjectStep.PendingFinanceConfirmation,
-              type: TransitionType.Approve,
-              label: 'Approve Project',
-            },
-            {
-              to: ProjectStep.PendingZoneDirectorApproval,
-              type: TransitionType.Approve,
-              label: 'Approve for Zonal Director Review',
-            },
-            {
-              to: ProjectStep.FinalizingProposal,
-              type: TransitionType.Reject,
-              label: 'Send Back for Corrections',
-            },
+            ...(isMultiplication
+              ? [
+                  {
+                    to: ProjectStep.EarlyConversations,
+                    type: TransitionType.Reject,
+                    label: 'Send Back for Corrections',
+                  },
+                  {
+                    to: ProjectStep.PendingFinanceConfirmation,
+                    type: TransitionType.Approve,
+                    label: 'Submit for Finance Confirmation',
+                  },
+                  {
+                    to: ProjectStep.DidNotDevelop,
+                    type: TransitionType.Reject,
+                    label: 'End Development',
+                  },
+                ]
+              : [
+                  {
+                    to: ProjectStep.PendingFinanceConfirmation,
+                    type: TransitionType.Approve,
+                    label: 'Approve Project',
+                  },
+                  {
+                    to: ProjectStep.PendingZoneDirectorApproval,
+                    type: TransitionType.Approve,
+                    label: 'Approve for Zonal Director Review',
+                  },
+                  {
+                    to: ProjectStep.FinalizingProposal,
+                    type: TransitionType.Reject,
+                    label: 'Send Back for Corrections',
+                  },
+                ]),
             {
               to: ProjectStep.Rejected,
               type: TransitionType.Reject,
@@ -330,6 +370,36 @@ export class ProjectRules {
         return {
           approvers: [Role.Administrator, Role.Controller],
           transitions: [
+            ...(isMultiplication
+              ? [
+                  {
+                    to: ProjectStep.PendingRegionalDirectorApproval,
+                    type: TransitionType.Reject,
+                    label: 'Send Back for Corrections',
+                  },
+                  {
+                    to: ProjectStep.DidNotDevelop,
+                    type: TransitionType.Reject,
+                    label: 'End Development',
+                  },
+                ]
+              : [
+                  {
+                    to: ProjectStep.OnHoldFinanceConfirmation,
+                    type: TransitionType.Neutral,
+                    label: 'Hold Project for Confirmation',
+                  },
+                  {
+                    to: ProjectStep.FinalizingProposal,
+                    type: TransitionType.Reject,
+                    label: 'Send Back for Corrections',
+                  },
+                  {
+                    to: ProjectStep.Rejected,
+                    type: TransitionType.Reject,
+                    label: 'Reject',
+                  },
+                ]),
             {
               to: ProjectStep.Active,
               type: TransitionType.Approve,
@@ -339,21 +409,6 @@ export class ProjectRules {
                 'project_approval@tsco.org',
                 'projects@tsco.org',
               ],
-            },
-            {
-              to: ProjectStep.OnHoldFinanceConfirmation,
-              type: TransitionType.Neutral,
-              label: 'Hold Project for Confirmation',
-            },
-            {
-              to: ProjectStep.FinalizingProposal,
-              type: TransitionType.Reject,
-              label: 'Send Back for Corrections',
-            },
-            {
-              to: ProjectStep.Rejected,
-              type: TransitionType.Reject,
-              label: 'Reject',
             },
           ],
           getNotifiers: async () => [
@@ -823,6 +878,7 @@ export class ProjectRules {
   async getAvailableTransitions(
     projectId: ID,
     session: Session,
+    projectType: ProjectType,
     currentUserRoles?: Role[],
     changeset?: ID,
   ): Promise<ProjectStepTransition[]> {
@@ -836,6 +892,7 @@ export class ProjectRules {
     const { approvers, transitions } = await this.getStepRule(
       currentStep,
       projectId,
+      projectType,
       changeset,
     );
 
@@ -854,7 +911,7 @@ export class ProjectRules {
   }
 
   async verifyStepChange(
-    projectId: ID,
+    project: UnsecuredDto<Project>,
     session: Session,
     nextStep: ProjectStep,
     changeset?: ID,
@@ -867,8 +924,9 @@ export class ProjectRules {
     }
 
     const transitions = await this.getAvailableTransitions(
-      projectId,
+      project.id,
       session,
+      project.type,
       currentUserRoles,
       changeset,
     );
@@ -924,6 +982,7 @@ export class ProjectRules {
 
   async getNotifications(
     projectId: ID,
+    projectType: ProjectType,
     step: ProjectStep,
     changedById: ID,
     previousStep: ProjectStep,
@@ -932,11 +991,12 @@ export class ProjectRules {
     const { getNotifiers: arrivalNotifiers } = await this.getStepRule(
       step,
       projectId,
+      projectType,
       changeset,
     );
 
     const transitionNotifiers = (
-      await this.getStepRule(previousStep, projectId)
+      await this.getStepRule(previousStep, projectId, projectType)
     ).transitions.find((t) => t.to === step)?.notifiers;
 
     const resolve = async (notifiers?: Notifiers) =>

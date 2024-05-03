@@ -7,15 +7,18 @@ export const ephemeralEdgeDB = async () => {
   }
 
   const db = createClient();
+  const config = await db.resolveConnectionParams();
+  // Workaround old default fallback. Didn't hit locally, but did in CI.
+  const main = config.branch === 'edgedb' ? 'main' : config.branch;
 
   await dropStale(db);
 
-  const branch = `test_${Date.now()}`;
+  const branch = `test_${Date.now()}_${String(Math.random()).slice(2)}`;
 
-  await db.execute(`create schema branch ${branch} from main`);
+  await db.execute(`create schema branch ${branch} from ${main}`);
 
   const cleanup = async () => {
-    await db.execute(`drop branch ${branch}`);
+    await db.execute(`drop branch ${branch} force`);
     await db.close();
   };
 
@@ -27,21 +30,18 @@ export const ephemeralEdgeDB = async () => {
 async function dropStale(db: Client) {
   const branches = await db.query<string>('select sys::Database.name');
 
-  const stale = branches.flatMap((name) => {
+  const stale = branches.filter((name) => {
     if (!name.startsWith('test_')) {
-      return [];
+      return false;
     }
-    const ts = Number(name.slice(5));
+    const ts = Number(name.split('_')[1]);
     if (isNaN(ts)) {
-      return [];
+      return false;
     }
     const createdAt = DateTime.fromMillis(ts);
-    return createdAt.diffNow().as('hours') > 4 ? name : [];
+    // more than 1 hour old
+    return createdAt.diffNow().as('hours') < -1;
   });
-  if (stale.length === 0) {
-    return;
-  }
-  await db.execute('drop branch array_unpack(<array<string>>$branches)', {
-    branches: stale,
-  });
+
+  await Promise.all(stale.map((branch) => db.execute(`drop branch ${branch}`)));
 }

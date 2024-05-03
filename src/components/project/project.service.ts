@@ -267,7 +267,7 @@ export class ProjectService {
 
     if (changes.step && stepValidation) {
       await this.projectRules.verifyStepChange(
-        input.id,
+        currentProject,
         session,
         changes.step,
         changeset,
@@ -484,11 +484,7 @@ export class ProjectService {
     };
   }
 
-  async addOtherLocation(
-    projectId: ID,
-    locationId: ID,
-    _session: Session,
-  ): Promise<void> {
+  async addOtherLocation(projectId: ID, locationId: ID): Promise<void> {
     try {
       await this.locationService.addLocationToNode(
         'Project',
@@ -501,11 +497,7 @@ export class ProjectService {
     }
   }
 
-  async removeOtherLocation(
-    projectId: ID,
-    locationId: ID,
-    _session: Session,
-  ): Promise<void> {
+  async removeOtherLocation(projectId: ID, locationId: ID): Promise<void> {
     try {
       await this.locationService.removeLocationFromNode(
         'Project',

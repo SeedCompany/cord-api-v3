@@ -1,5 +1,6 @@
 import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import { AsyncLocalStorage } from 'async_hooks';
+import type { Client } from 'edgedb';
 import {
   BehaviorSubject,
   combineLatest,
@@ -89,6 +90,9 @@ export class OptionsContext
   }
   get currentAsLazyRef() {
     return lazyRef(() => this.current);
+  }
+  attachToClient(client: Client) {
+    Object.assign(client, { options: this.currentAsLazyRef });
   }
 
   onModuleDestroy() {

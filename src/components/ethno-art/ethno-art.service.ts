@@ -38,7 +38,7 @@ export class EthnoArtService {
     }
 
     try {
-      const result = await this.repo.create(input, session);
+      const result = await this.repo.create(input);
 
       if (!result) {
         throw new ServerException('Failed to create ethno art');
@@ -127,7 +127,7 @@ export class EthnoArtService {
   async list(input: EthnoArtListInput, session: Session) {
     // -- don't need a check for canList. all roles are allowed to see at least one prop,
     //    and this isn't a sensitive component.
-    const results = await this.repo.list(input, session);
+    const results = await this.repo.list(input);
     return await mapListResults(results, (dto) => this.secure(dto, session));
   }
 }

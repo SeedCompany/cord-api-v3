@@ -5,6 +5,7 @@ import JWT from 'jsonwebtoken';
 import { DateTime } from 'luxon';
 import { Writable } from 'ts-essentials';
 import { sessionFromContext } from '~/common/session';
+import { disableAccessPolicies, EdgeDB } from '~/core/edgedb';
 import {
   DuplicateException,
   GqlContextType,
@@ -20,6 +21,7 @@ import { ConfigService, ILogger, Logger } from '../../core';
 import { ForgotPassword } from '../../core/email/templates';
 import { Privileges, rolesForScope, withoutScope } from '../authorization';
 import { AssignableRoles } from '../authorization/dto/assignable-roles';
+import { ActorRepository } from '../user/actor.repository';
 import { AuthenticationRepository } from './authentication.repository';
 import { CryptoService } from './crypto.service';
 import { LoginInput, RegisterInput, ResetPasswordInput } from './dto';
@@ -38,6 +40,8 @@ export class AuthenticationService {
     private readonly privileges: Privileges,
     @Logger('authentication:service') private readonly logger: ILogger,
     private readonly repo: AuthenticationRepository,
+    private readonly edgedb: EdgeDB,
+    private readonly actors: ActorRepository,
     private readonly moduleRef: ModuleRef,
   ) {}
 
@@ -48,7 +52,10 @@ export class AuthenticationService {
     return token;
   }
 
-  async register(input: RegisterInput, session?: Session): Promise<ID> {
+  async register(
+    { password, ...input }: RegisterInput,
+    session?: Session,
+  ): Promise<ID> {
     // ensure no other tokens are associated with this user
     if (session) {
       await this.logout(session.token);
@@ -58,7 +65,10 @@ export class AuthenticationService {
     try {
       const userMod = await import('../user');
       const users = this.moduleRef.get(userMod.UserService, { strict: false });
-      userId = await users.create(input, session);
+      userId = await this.edgedb.usingOptions(
+        disableAccessPolicies,
+        async () => await users.create(input, session),
+      );
     } catch (e) {
       // remap field prop as `email` field is at a different location in register() than createPerson()
       if (e instanceof DuplicateException && e.field === 'person.email') {
@@ -67,7 +77,7 @@ export class AuthenticationService {
       throw e;
     }
 
-    const passwordHash = await this.crypto.hash(input.password);
+    const passwordHash = await this.crypto.hash(password);
     await this.repo.savePasswordHashOnUser(userId, passwordHash);
 
     return userId;
@@ -108,7 +118,10 @@ export class AuthenticationService {
 
     const { iat } = this.decodeJWT(token);
 
-    const result = await this.repo.resumeSession(token, impersonatee?.id);
+    const [result, anon] = await Promise.all([
+      this.repo.resumeSession(token, impersonatee?.id),
+      this.actors.getAnonymous(),
+    ]);
 
     if (!result) {
       this.logger.debug('Failed to find active token in database', { token });
@@ -132,7 +145,7 @@ export class AuthenticationService {
     const requesterSession: Session = {
       token,
       issuedAt: DateTime.fromMillis(iat),
-      userId: result.userId ?? ('anonuserid' as ID),
+      userId: result.userId ?? anon.id,
       anonymous: !result.userId,
       roles: result.roles,
     };

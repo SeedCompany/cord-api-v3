@@ -30,7 +30,6 @@ import {
   matchProjectScopedRoles,
   matchProjectSens,
   matchProps,
-  matchRequestingUser,
   merge,
   oncePerProject,
   paginate,
@@ -85,7 +84,6 @@ export class LanguageRepository extends DtoRepository<
 
     const createLanguage = this.db
       .query()
-      .apply(matchRequestingUser(session))
       .apply(await createNode(Language, { initialProps }))
       .apply(
         createRelationships(Language, 'out', {

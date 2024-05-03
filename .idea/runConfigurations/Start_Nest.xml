@@ -1,5 +1,0 @@
-<component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Start Nest" type="NodeJSConfigurationType" application-parameters="start --debug --watch" path-to-js-file="node_modules/.bin/nest" working-dir="$PROJECT_DIR$">
-    <method v="2" />
-  </configuration>
-</component>

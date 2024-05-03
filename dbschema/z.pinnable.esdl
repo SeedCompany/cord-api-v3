@@ -1,5 +1,8 @@
 module Mixin {
   abstract type Pinnable {
-    property pinned := __source__ in (<default::User>global default::currentUserId).pins;
+    property pinned := (
+      with user := (select default::User filter .id = global default::currentActorId) 
+      select __source__ in user.pins
+    );
   };
 };

@@ -4,7 +4,7 @@ export * from './options';
 export type { OptionsFn } from './options.context';
 export * from './edgedb.service';
 export * from './withScope';
-export * from './exclusivity-violation.error';
+export * from './errors/exclusivity-violation.error';
 export * from './common.repository';
 export * from './dto.repository';
 export * from './query-util/disable-access-policies.option';

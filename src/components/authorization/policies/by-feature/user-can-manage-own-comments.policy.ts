@@ -1,8 +1,8 @@
-import { owner, Policy } from '../util';
+import { creator, Policy } from '../util';
 
-@Policy('all', (r) => [
-  r.Post.when(owner).edit.delete,
-  r.CommentThread.when(owner).edit.delete,
-  r.Comment.when(owner).edit.delete,
-])
+@Policy('all', (r) =>
+  [r.Post, r.CommentThread, r.Comment].flatMap(
+    (it) => it.when(creator).edit.delete,
+  ),
+)
 export class UserCanManageOwnCommentsPolicy {}

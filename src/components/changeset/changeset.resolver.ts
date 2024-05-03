@@ -31,7 +31,7 @@ export class ChangesetResolver {
     })
     parent?: ID,
   ): Promise<ChangesetDiff> {
-    const diff = await this.repo.difference(changeset.id, session, parent);
+    const diff = await this.repo.difference(changeset.id, parent);
     const load = (node: BaseNode, view?: ObjectView) =>
       this.resources.loadByBaseNode(node, view ?? { changeset: changeset.id });
     const [added, removed, changed] = await Promise.all([

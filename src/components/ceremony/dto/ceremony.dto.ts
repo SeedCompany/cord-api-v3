@@ -1,17 +1,17 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { e } from '~/core/edgedb';
-import { RegisterResource } from '~/core/resources';
 import {
   Calculated,
   Resource,
   SecuredBoolean,
-  SecuredDate,
+  SecuredDateNullable,
   SecuredProperty,
   SecuredProps,
   Sensitivity,
   SensitivityField,
-} from '../../../common';
+} from '~/common';
+import { e } from '~/core/edgedb';
+import { RegisterResource } from '~/core/resources';
 import { CeremonyType } from './ceremony-type.enum';
 
 @RegisterResource({ db: e.Engagement.Ceremony })
@@ -33,10 +33,10 @@ export class Ceremony extends Resource {
   readonly planned: SecuredBoolean;
 
   @Field()
-  readonly estimatedDate: SecuredDate;
+  readonly estimatedDate: SecuredDateNullable;
 
   @Field()
-  readonly actualDate: SecuredDate;
+  readonly actualDate: SecuredDateNullable;
 
   @SensitivityField({
     description: "Based on the project's sensitivity",

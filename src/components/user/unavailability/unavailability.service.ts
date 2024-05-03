@@ -1,14 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import {
-  ID,
-  NotFoundException,
-  ObjectView,
-  ServerException,
-  Session,
-  UnsecuredDto,
-} from '../../../common';
-import { HandleIdLookup, ILogger, Logger } from '../../../core';
-import { mapListResults } from '../../../core/database/results';
+import { ID, ObjectView, Session, UnsecuredDto } from '~/common';
+import { HandleIdLookup } from '~/core';
 import { Privileges } from '../../authorization';
 import {
   CreateUnavailability,
@@ -22,7 +14,6 @@ import { UnavailabilityRepository } from './unavailability.repository';
 @Injectable()
 export class UnavailabilityService {
   constructor(
-    @Logger('unavailability:service') private readonly logger: ILogger,
     private readonly privileges: Privileges,
     private readonly repo: UnavailabilityRepository,
   ) {}
@@ -31,24 +22,9 @@ export class UnavailabilityService {
     input: CreateUnavailability,
     session: Session,
   ): Promise<Unavailability> {
-    try {
-      this.privileges.for(session, Unavailability).verifyCan('create');
-
-      // create and connect the Unavailability to the User.
-      const id = await this.repo.create(input, session);
-
-      this.logger.debug(`Created user unavailability`, {
-        id,
-        userId: input.userId,
-      });
-
-      return await this.readOne(id, session);
-    } catch {
-      this.logger.error(`Could not create unavailability`, {
-        userId: input.userId,
-      });
-      throw new ServerException('Could not create unavailability');
-    }
+    this.privileges.for(session, Unavailability).verifyCan('create');
+    const result = await this.repo.create(input);
+    return this.secure(result, session);
   }
 
   @HandleIdLookup(Unavailability)
@@ -58,20 +34,15 @@ export class UnavailabilityService {
     _view?: ObjectView,
   ): Promise<Unavailability> {
     const result = await this.repo.readOne(id);
-    return await this.secure(result, session);
+    return this.secure(result, session);
   }
 
   async readMany(ids: readonly ID[], session: Session) {
     const unavailabilities = await this.repo.readMany(ids);
-    return await Promise.all(
-      unavailabilities.map((dto) => this.secure(dto, session)),
-    );
+    return unavailabilities.map((dto) => this.secure(dto, session));
   }
 
-  private async secure(
-    dto: UnsecuredDto<Unavailability>,
-    session: Session,
-  ): Promise<Unavailability> {
+  private secure(dto: UnsecuredDto<Unavailability>, session: Session) {
     return this.privileges.for(session, Unavailability).secure(dto);
   }
 
@@ -79,36 +50,21 @@ export class UnavailabilityService {
     input: UpdateUnavailability,
     session: Session,
   ): Promise<Unavailability> {
-    const unavailability = await this.readOne(input.id, session);
-
+    const unavailability = await this.repo.readOne(input.id);
     const result = await this.repo.getUserIdByUnavailability(input.id);
-    if (!result) {
-      throw new NotFoundException(
-        'Could not find user associated with unavailability',
-        'user.unavailability',
-      );
-    }
-
     const changes = this.repo.getActualChanges(unavailability, input);
-
     // TODO move this condition into policies
     if (result.id !== session.userId) {
       this.privileges
         .for(session, Unavailability, unavailability)
         .verifyChanges(changes);
     }
-    return await this.repo.update(unavailability, changes);
+    const updated = await this.repo.update({ id: input.id, ...changes });
+    return this.secure(updated, session);
   }
 
-  async delete(id: ID, session: Session): Promise<void> {
-    this.logger.debug(`mutation delete unavailability`);
-    const ua = await this.readOne(id, session);
-    if (!ua) {
-      throw new NotFoundException(
-        'Unavailability not found',
-        'unavailability.id',
-      );
-    }
+  async delete(id: ID, _session: Session): Promise<void> {
+    const ua = await this.repo.readOne(id);
     await this.repo.deleteNode(ua);
   }
 
@@ -116,7 +72,10 @@ export class UnavailabilityService {
     input: UnavailabilityListInput,
     session: Session,
   ): Promise<UnavailabilityListOutput> {
-    const results = await this.repo.list(input, session);
-    return await mapListResults(results, (dto) => this.secure(dto, session));
+    const results = await this.repo.list(input);
+    return {
+      ...results,
+      items: results.items.map((dto) => this.secure(dto, session)),
+    };
   }
 }

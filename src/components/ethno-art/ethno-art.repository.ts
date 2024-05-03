@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Query } from 'cypher-query-builder';
 import { ChangesOf } from '~/core/database/changes';
-import { ID, Session } from '../../common';
+import { ID } from '../../common';
 import { DbTypeOf, DtoRepository } from '../../core';
 import {
   createNode,
@@ -23,7 +23,7 @@ export class EthnoArtRepository extends DtoRepository(EthnoArt) {
   constructor(private readonly scriptureRefs: ScriptureReferenceRepository) {
     super();
   }
-  async create(input: CreateEthnoArt, _session: Session) {
+  async create(input: CreateEthnoArt) {
     const initialProps = {
       name: input.name,
       canDelete: true,
@@ -45,7 +45,7 @@ export class EthnoArtRepository extends DtoRepository(EthnoArt) {
     await this.updateProperties(existing, simpleChanges);
   }
 
-  async list(input: EthnoArtListInput, _session: Session) {
+  async list(input: EthnoArtListInput) {
     const result = await this.db
       .query()
       .matchNode('node', 'EthnoArt')

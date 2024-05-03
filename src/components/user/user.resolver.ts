@@ -253,7 +253,7 @@ export class UserResolver {
     @LoggedInSession() session: Session,
     @Args() { userId, locationId }: ModifyLocationArgs,
   ): Promise<User> {
-    await this.userService.addLocation(userId, locationId, session);
+    await this.userService.addLocation(userId, locationId);
     return await this.userService.readOne(userId, session);
   }
 
@@ -264,7 +264,7 @@ export class UserResolver {
     @LoggedInSession() session: Session,
     @Args() { userId, locationId }: ModifyLocationArgs,
   ): Promise<User> {
-    await this.userService.removeLocation(userId, locationId, session);
+    await this.userService.removeLocation(userId, locationId);
     return await this.userService.readOne(userId, session);
   }
 
@@ -275,7 +275,7 @@ export class UserResolver {
     @LoggedInSession() session: Session,
     @Args('input') input: AssignOrganizationToUserInput,
   ): Promise<AssignOrganizationToUserOutput> {
-    await this.userService.assignOrganizationToUser(input.request, session);
+    await this.userService.assignOrganizationToUser(input.request);
     return { success: true };
   }
 
@@ -286,7 +286,7 @@ export class UserResolver {
     @LoggedInSession() session: Session,
     @Args('input') input: RemoveOrganizationFromUserInput,
   ): Promise<RemoveOrganizationFromUserOutput> {
-    await this.userService.removeOrganizationFromUser(input.request, session);
+    await this.userService.removeOrganizationFromUser(input.request);
     return { success: true };
   }
 

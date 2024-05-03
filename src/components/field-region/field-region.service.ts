@@ -30,7 +30,7 @@ export class FieldRegionService {
     session: Session,
   ): Promise<FieldRegion> {
     this.privileges.for(session, FieldRegion).verifyCan('create');
-    const dto = await this.repo.create(input, session);
+    const dto = await this.repo.create(input);
     return this.secure(dto, session);
   }
 

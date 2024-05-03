@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { splitDb } from '~/core';
 import { AuthorizationModule } from '../authorization/authorization.module';
+import { UserModule } from '../user/user.module';
 import { AdminEdgeDBRepository } from './admin.edgedb.repository';
 import { AdminEdgeDBService } from './admin.edgedb.service';
 import { AdminRepository } from './admin.repository';
@@ -9,7 +10,7 @@ import { NormalizeCreatorBaseNodeMigration } from './migrations/normalize-creato
 import { NormalizeCreatorMigration } from './migrations/normalize-creator.migration';
 
 @Module({
-  imports: [AuthorizationModule],
+  imports: [AuthorizationModule, UserModule],
   providers: [
     splitDb(AdminService, AdminEdgeDBService),
     splitDb(

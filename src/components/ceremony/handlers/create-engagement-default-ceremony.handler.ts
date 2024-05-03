@@ -1,6 +1,11 @@
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { DatabaseService, EventsHandler, IEventHandler } from '../../../core';
+import {
+  ConfigService,
+  DatabaseService,
+  EventsHandler,
+  IEventHandler,
+} from '~/core';
 import { EngagementCreatedEvent } from '../../engagement/events';
 import { CeremonyService } from '../ceremony.service';
 import { CeremonyType } from '../dto';
@@ -11,18 +16,22 @@ export class CreateEngagementDefaultCeremonyHandler
 {
   constructor(
     private readonly ceremonies: CeremonyService,
+    private readonly config: ConfigService,
     private readonly db: DatabaseService,
   ) {}
 
   async handle(event: EngagementCreatedEvent) {
-    const { engagement, session } = event;
+    const { engagement } = event;
     const input = {
       type:
         engagement.__typename === 'LanguageEngagement'
           ? CeremonyType.Dedication
           : CeremonyType.Certification,
     };
-    const ceremonyId = await this.ceremonies.create(input, session);
+    if (this.config.databaseEngine === 'edgedb') {
+      return;
+    }
+    const ceremonyId = await this.ceremonies.create(input);
 
     // connect ceremonyId to engagement
     await this.db

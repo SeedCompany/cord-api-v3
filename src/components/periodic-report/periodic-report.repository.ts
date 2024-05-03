@@ -205,15 +205,22 @@ export class PeriodicReportRepository extends DtoRepository<
     return (query: Query) =>
       query.comment`matchCurrentDue()`
         .match([
-          node('baseNode', 'BaseNode', { id: parentId }),
-          relation('out', '', 'report', ACTIVE),
-          node('node', `${reportType}Report`),
-          relation('out', '', 'end', ACTIVE),
-          node('end', 'Property'),
+          [
+            node('baseNode', 'BaseNode', { id: parentId }),
+            relation('out', '', 'report', ACTIVE),
+            node('node', `${reportType}Report`),
+            relation('out', '', 'end', ACTIVE),
+            node('end', 'Property'),
+          ],
+          [
+            node('node'),
+            relation('out', '', 'start', ACTIVE),
+            node('start', 'Property'),
+          ],
         ])
         .raw(`WHERE end.value < date()`)
-        .with('node, end')
-        .orderBy('end.value', 'desc')
+        .with('node, start')
+        .orderBy('start.value', 'desc')
         .limit(1);
   }
 

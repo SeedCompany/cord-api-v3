@@ -36,7 +36,7 @@ export class XRayMiddleware implements NestMiddleware, NestInterceptor {
     root.addIncomingRequestData(reqData);
     // Use public DNS as url instead of specific IP
     // @ts-expect-error xray library types suck
-    root.http.request.url = this.config.hostUrl + req.originalUrl;
+    root.http.request.url = this.config.hostUrl + req.originalUrl.slice(1);
 
     // Add to segment so interceptor can access without having to calculate again.
     Object.defineProperty(reqData, 'traceData', {

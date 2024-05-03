@@ -73,7 +73,7 @@ export class FileResolver {
     @Parent() node: File,
     @ListArg(FileListInput) input: FileListInput,
   ): Promise<FileListOutput> {
-    return await this.service.listChildren(node, input, session);
+    return await this.service.listChildren(node, input);
   }
 
   @FileUrl.Resolver()
@@ -98,9 +98,9 @@ export class FileResolver {
   })
   async deleteFileNode(
     @IdArg() id: ID,
-    @LoggedInSession() session: Session,
+    @LoggedInSession() _session: Session,
   ): Promise<DeleteFileNodeOutput> {
-    await this.service.delete(id, session);
+    await this.service.delete(id);
     return { success: true };
   }
 
@@ -136,7 +136,7 @@ export class FileResolver {
     @Args('input') input: RenameFileInput,
     @LoggedInSession() session: Session,
   ): Promise<FileNode> {
-    await this.service.rename(input, session);
+    await this.service.rename(input);
     return await this.service.getFileNode(input.id, session);
   }
 

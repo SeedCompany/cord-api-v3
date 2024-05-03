@@ -54,7 +54,6 @@ export class BudgetService {
       const budgetId = await this.budgetRepo.create(
         { projectId, ...input },
         universalTemplateFileId,
-        session,
       );
 
       this.logger.debug(`Created Budget`, {

@@ -32,8 +32,9 @@ export class ExceptionFilter implements GqlExceptionFilter {
 
     let normalized: ExceptionJson;
     try {
-      normalized = this.normalizer.normalize(exception, args);
+      normalized = this.normalizer.normalize({ ex: exception, context: args });
     } catch (e) {
+      this.logger.error(`Failed to normalize exception`, { exception: e });
       throw exception;
     }
 
@@ -81,7 +82,7 @@ export class ExceptionFilter implements GqlExceptionFilter {
     httpAdapter.reply(res, out, status);
   }
 
-  private logIt(info: ExceptionJson, error: Error) {
+  logIt(info: ExceptionJson, error: Error) {
     if ('logProps' in error && error.logProps) {
       // Assume these have already been logged.
       return;
@@ -96,11 +97,14 @@ export class ExceptionFilter implements GqlExceptionFilter {
     }
 
     if (info.codes.has('Validation')) {
+      const inputErrors =
+        error instanceof ValidationException
+          ? mapValues(error.errors, (_, constraints) => {
+              return Object.values(constraints)[0];
+            }).asRecord
+          : undefined;
       this.logger.notice(info.message, {
-        inputErrors: mapValues(
-          info.errors as ValidationException['errors'],
-          (_, constraints) => Object.values(constraints)[0],
-        ).asRecord,
+        ...(inputErrors ? { inputErrors } : {}),
       });
       return;
     }

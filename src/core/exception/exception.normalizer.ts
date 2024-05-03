@@ -16,23 +16,33 @@ import {
 import * as Edge from 'edgedb';
 import * as EdgeDBTags from 'edgedb/dist/errors/tags.js';
 import { GraphQLError, GraphQLResolveInfo } from 'graphql';
+import addIndent from 'indent-string';
 import { lowerCase, uniq } from 'lodash';
 import {
   AbstractClassType,
   DuplicateException,
   Exception,
+  getCauseList,
   getParentTypes,
-  getPreviousList,
   InputException,
   JsonSet,
   NotFoundException,
+  ServerException,
 } from '~/common';
 import type { ConfigService } from '~/core';
+import { ExclusivityViolationError } from '~/core/edgedb/errors';
 import * as Neo from '../database/errors';
-import { ExclusivityViolationError } from '../edgedb/exclusivity-violation.error';
 import { ResourcesHost } from '../resources/resources.host';
 import { isSrcFrame } from './is-src-frame';
 import { normalizeFramePath } from './normalize-frame-path';
+
+interface NormalizeParams {
+  ex: Error;
+  /** Errors thrown in Query/Mutation/Controller methods will have this. */
+  context?: ArgumentsHost;
+  /** Errors thrown in ResolveField methods will have this. */
+  gql?: GraphQLError;
+}
 
 export interface ExceptionJson {
   message: string;
@@ -49,33 +59,26 @@ export class ExceptionNormalizer {
     private readonly resources?: ResourcesHost,
   ) {}
 
-  normalize(ex: Error, context?: ArgumentsHost): ExceptionJson {
+  normalize(params: NormalizeParams): ExceptionJson {
     const {
-      message = ex.message,
-      stack = ex.stack,
+      message = params.ex.message,
       code: _,
       codes,
       ...extensions
-    } = this.gatherExtraInfo(ex, context);
+    } = this.gatherExtraInfo(params);
     return {
       message,
       code: codes[0],
       codes: new JsonSet(codes),
       ...extensions,
-      stack: stack
-        .split('\n')
-        .filter(isSrcFrame)
-        .map((frame: string) =>
-          this.config?.jest ? frame : normalizeFramePath(frame),
-        )
-        .join('\n'),
+      stack: this.getStack(params),
     };
   }
 
-  private gatherExtraInfo(
-    ex: Error,
-    context?: ArgumentsHost,
-  ): Record<string, any> {
+  private gatherExtraInfo(params: NormalizeParams): Record<string, any> {
+    let { ex } = params;
+    const { context } = params;
+
     if (ex instanceof Nest.HttpException) {
       return this.httpException(ex);
     }
@@ -84,7 +87,7 @@ export class ExceptionNormalizer {
     // failure, then return that as the error. This way we can have an "unknown"
     // failure for the specific action without having to check for this error
     // in every catch statement (assuming no further logic is done).
-    const exs = getPreviousList(ex, true);
+    const exs = getCauseList(ex);
     if (exs.some((e) => e instanceof Neo.ServiceUnavailableError)) {
       return {
         codes: [
@@ -127,14 +130,11 @@ export class ExceptionNormalizer {
     }
 
     const gqlContext =
-      context &&
-      context.getType<ContextKey>() === 'graphql' &&
-      // schema input validation errors don't create an execution context correctly
-      !(ex instanceof GraphQLError)
+      context && context.getType<ContextKey>() === 'graphql'
         ? GqlExecutionContext.create(context as any)
         : undefined;
 
-    ex = this.wrapIDNotFoundError(ex, gqlContext);
+    ex = this.wrapIDNotFoundError(params, gqlContext);
 
     if (ex instanceof ExclusivityViolationError) {
       ex = DuplicateException.fromDB(ex, gqlContext);
@@ -154,11 +154,10 @@ export class ExceptionNormalizer {
     }
 
     if (ex instanceof Exception) {
-      const { name, message, stack, previous, ...rest } = ex;
+      const { name, message, stack, ...rest } = ex;
       return {
         message,
         codes: this.errorToCodes(ex),
-        stack,
         ...rest,
       };
     }
@@ -187,7 +186,7 @@ export class ExceptionNormalizer {
    * to user input NotFound error with that input path.
    */
   private wrapIDNotFoundError(
-    ex: Error,
+    { ex, gql }: NormalizeParams,
     gqlContext: GqlExecutionContext | undefined,
   ) {
     if (!(ex instanceof Edge.CardinalityViolationError)) {
@@ -199,24 +198,54 @@ export class ExceptionNormalizer {
       return ex;
     }
     const [_, type, id] = matched;
+    const typeName = this.resources
+      ? this.resources.getByEdgeDB(type).name
+      : type;
+
+    if (gql?.path) {
+      // This error was thrown from a field resolver.
+      // Because this is not directly from user input, it is a server error.
+      // Still make the error nicer.
+      const wrapped = new ServerException(
+        `Field \`${gql.path.join('.')}\` failed to use valid ${typeName} id`,
+        ex,
+      );
+      return Object.assign(wrapped, { idNotFound: id });
+    }
 
     const inputPath = entries(InputException.getFlattenInput(gqlContext)).find(
       ([_, value]) => value === id,
     )?.[0];
     if (!inputPath) {
+      /*
+       TODO Just because we can't identify the input path we don't make the ex nicer?
+         NotFound requires a field, which is why we do this.
+         But is there a case where we have NotFound without a field?
+      */
       return ex;
     }
 
-    const typeName = this.resources
-      ? this.resources.getByEdgeDB(type).name
-      : type;
     const wrapped = new NotFoundException(
       `${typeName} could not be found`,
       inputPath,
       ex,
     );
-    wrapped.stack = ex.stack;
-    return wrapped;
+    return Object.assign(wrapped, { idNotFound: id });
+  }
+
+  private getStack({ ex }: NormalizeParams) {
+    return getCauseList(ex)
+      .map((e) =>
+        (e.stack ?? e.message)
+          .split('\n')
+          .filter(isSrcFrame)
+          .map((frame: string) =>
+            this.config?.jest ? frame : normalizeFramePath(frame),
+          )
+          .join('\n'),
+      )
+      .map((e, i) => addIndent(i > 0 ? `[cause]: ${e}` : e, i * 2))
+      .join('\n');
   }
 
   private httpException(ex: Nest.HttpException) {

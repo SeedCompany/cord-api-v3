@@ -25,15 +25,9 @@ module File {
     # optional to have tri-state. idk if needed but that's what I implemented in neo4j
     public: bool;
     
-    required createdBy: default::User {
-      default := default::currentUser;
-    };
-    required modifiedBy: default::User {
-      default := default::currentUser;
-      rewrite update using (default::currentUser);
-      # TODO trigger change up the tree
-      # TODO trigger re-eval on node delete?
-    };
+    # TODO trigger change up the tree
+    # TODO trigger re-eval on node delete?
+    # modifiedBy: default::User
     
     # TODO trigger directories evaluate
     required size: int64;

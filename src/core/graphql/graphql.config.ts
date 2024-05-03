@@ -12,7 +12,7 @@ import {
 import { ApolloDriverConfig } from '@nestjs/apollo';
 import { Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
-import { GqlExecutionContext, GqlOptionsFactory } from '@nestjs/graphql';
+import { GqlOptionsFactory } from '@nestjs/graphql';
 import { mapKeys } from '@seedcompany/common';
 import {
   GraphQLErrorExtensions as ErrorExtensions,
@@ -28,6 +28,7 @@ import { CacheService } from '../cache';
 import { ConfigService } from '../config/config.service';
 import { VersionService } from '../config/version.service';
 import { ExceptionFilter } from '../exception/exception.filter';
+import { ExceptionNormalizer } from '../exception/exception.normalizer';
 import { GraphqlTracingPlugin } from './graphql-tracing.plugin';
 
 declare module 'graphql/error/GraphQLError' {
@@ -40,13 +41,21 @@ declare module 'graphql/error/GraphQLError' {
 
 @Injectable()
 export class GraphQLConfig implements GqlOptionsFactory {
+  private readonly exceptionNormalizer: ExceptionNormalizer;
+  private readonly exceptionFilter: ExceptionFilter;
+
   constructor(
     private readonly config: ConfigService,
     private readonly cache: CacheService,
     private readonly tracing: GraphqlTracingPlugin,
     private readonly versionService: VersionService,
-    private readonly moduleRef: ModuleRef,
-  ) {}
+    moduleRef: ModuleRef,
+  ) {
+    [this.exceptionNormalizer, this.exceptionFilter] = [
+      moduleRef.get(ExceptionNormalizer, { strict: false }),
+      moduleRef.get(ExceptionFilter, { strict: false }),
+    ];
+  }
 
   async createGqlOptions(): Promise<ApolloDriverConfig> {
     // Apply git hash to Apollo Studio.
@@ -111,7 +120,10 @@ export class GraphQLConfig implements GqlOptionsFactory {
     formatted: FormattedError,
     error: unknown | /* but probably a */ GraphQLError,
   ): FormattedError => {
-    const extensions = this.getErrorExtensions(formatted, error);
+    const { message, ...extensions } = this.getErrorExtensions(
+      formatted,
+      error,
+    );
 
     const codes = (extensions.codes ??= new JsonSet(['Server']));
     delete extensions.code;
@@ -123,7 +135,8 @@ export class GraphQLConfig implements GqlOptionsFactory {
     }
 
     return {
-      message: formatted.message,
+      message:
+        message && typeof message === 'string' ? message : formatted.message,
       extensions,
       locations: formatted.locations,
       path: formatted.path,
@@ -146,21 +159,17 @@ export class GraphQLConfig implements GqlOptionsFactory {
     }
 
     // Some errors do not go through the global exception filter.
-    // I think ResolveField() calls is one of them.
-    // Explicitly call here, so exception is normalized, and errors are logged.
-    const fakeGqlContext = new GqlExecutionContext([]);
-    fakeGqlContext.setType('graphql');
-    let result: Error & { extensions: ErrorExtensions };
-    try {
-      this.moduleRef
-        .get(ExceptionFilter, { strict: false })
-        .catch(original, fakeGqlContext);
-    } catch (e) {
-      result = e;
-    }
+    // ResolveField() calls is one of them.
+    // Normalized & log here.
+    const normalized = this.exceptionNormalizer.normalize({
+      ex: original,
+      gql: error instanceof GraphQLError ? error : undefined,
+    });
+    this.exceptionFilter.logIt(normalized, original);
+    const { stack, ...extensions } = normalized;
     return {
-      ...result!.extensions,
-      stacktrace: result!.stack!.split('\n'),
+      ...extensions,
+      stacktrace: stack.split('\n'),
     };
   }
 }

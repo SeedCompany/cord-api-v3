@@ -29,8 +29,6 @@ export class DuplicateException extends InputException {
     ).find((path) => property === path || path.endsWith('.' + property));
     property = guessedPath ?? property;
 
-    const ex = new DuplicateException(property, message, exception);
-    ex.stack = exception.stack;
-    return ex;
+    return new DuplicateException(property, message, exception);
   }
 }

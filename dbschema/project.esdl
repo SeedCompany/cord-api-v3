@@ -28,19 +28,24 @@ module default {
           .step >= Project::Step.PendingFinanceConfirmation
         ) then ((
           with
-            fa := assert_exists(
-              __subject__.primaryLocation.fundingAccount,
-              message := "Project must have a primary location"
-            ),
-            existing := (
-              select detached Project.departmentId filter Project.primaryLocation.fundingAccount = fa
-            ),
-            available := (
-              <str>range_unpack(range(fa.accountNumber * 10000 + 11, fa.accountNumber * 10000 + 9999))
-              except existing
+            info := (
+              if __subject__ is MultiplicationTranslationProject
+                then (prefix := 8, startingOffset := 201)
+              else (
+                  prefix := (
+                    assert_exists(
+                      __subject__.primaryLocation.fundingAccount,
+                      message := "Project must have a primary location"
+                    ).accountNumber
+                  ),
+                  startingOffset := 11
+                )
+              ),
+            select min(
+              <str>range_unpack(range(info.prefix * 10000 + info.startingOffset, info.prefix * 10000 + 9999))
+              except detached Project.departmentId
             )
-          select min(available)
-        )) else .departmentId
+          )) else .departmentId
       );
     };
     
@@ -67,7 +72,7 @@ module default {
     financialReportPeriod: ReportPeriod;
     
     multi link members := .<project[is Project::Member];
-    single link membership := (select .members filter .user.id = global default::currentUserId limit 1);
+    single link membership := (select .members filter .user = global default::currentUser limit 1);
     
 #     multi link engagements := .<project[is Engagement];
     property engagementTotal := count(.<project[is Engagement]);
@@ -101,6 +106,8 @@ module default {
       insert default::Budget {
         createdAt := datetime_of_statement(),
         modifiedAt := datetime_of_statement(),
+        createdBy := assert_exists(global currentActor),
+        modifiedBy := assert_exists(global currentActor),
         project := __new__,
         projectContext := __new__.projectContext,
       }

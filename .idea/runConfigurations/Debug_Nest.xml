@@ -1,5 +1,0 @@
-<component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Debug Nest" type="ChromiumRemoteDebugType" factoryName="Chromium Remote" activateToolWindowBeforeRun="false" port="9229" restartOnDisconnect="true">
-    <method v="2" />
-  </configuration>
-</component>
