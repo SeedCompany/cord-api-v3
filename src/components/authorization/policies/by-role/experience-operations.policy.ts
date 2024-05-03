@@ -13,7 +13,7 @@ import { member, Policy, Role, sensMediumOrLower } from '../util';
     .children((c) => c.posts.edit),
   r.Partnership.read,
   r.PeriodicReport.read,
-  r.Project.read,
+  r.Project.read.specifically((p) => [p.marketingLocation.edit]),
   r.ProjectMember.edit.create.delete,
 ])
 export class ExperienceOperationsPolicy {}
