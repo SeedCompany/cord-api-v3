@@ -1,4 +1,4 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable, UnauthorizedException } from "@nestjs/common";
 import { MaybeAsync } from '@seedcompany/common';
 import { difference } from 'lodash';
 import { DateTime } from 'luxon';
@@ -129,7 +129,21 @@ export class ProjectMemberService {
     input: UpdateProjectMember,
     session: Session,
   ): Promise<DbTypeOf<ProjectMember>> {
-    return await this.repo.update(input, session);
+    const object = await this.repo.readOne(input.id, session);
+
+    await this.assertValidRoles(input.roles, () => {
+      const user = object.user;
+      if (!user) {
+        throw new UnauthorizedException(
+          'Cannot read user to verify roles available',
+        );
+      }
+      return user as unknown as MaybeAsync<User>;
+    });
+
+    const changes = this.repo.getActualChanges(object, input);
+    this.privileges.for(session, ProjectMember, object).verifyChanges(changes);
+    return await this.repo.update(object, changes, session);
   }
 
   private async assertValidRoles(

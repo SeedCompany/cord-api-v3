@@ -42,7 +42,6 @@ export class ProjectMemberRepository extends DtoRepository<
   constructor(
     private readonly users: UserRepository,
     @Logger('project:member:repository') private readonly logger: ILogger,
-    private readonly service: ProjectMemberService,
   ) {
     super();
   }
@@ -134,43 +133,9 @@ export class ProjectMemberRepository extends DtoRepository<
       .first();
   }
 
-  async update(input: UpdateProjectMember, session: Session) {
-    const existing = await this.readOne(input.id, session);
-    await this.assertValidRoles(input.roles, () => {
-      const user = existing.user;
-      if (!user) {
-        throw new UnauthorizedException(
-          'Cannot read user to verify roles available',
-        );
-      }
-      return user;
-    });
-    const changes = this.getActualChanges(existing, input);
-    this.service.privileges
-      .for(session, ProjectMember, existing)
-      .verifyChanges(changes);
-
-    await this.updateProperties(existing, changes);
-    return await this.readOne(existing.id, session);
-  }
-
-  async assertValidRoles(
-    roles: readonly Role[] | undefined,
-    forUser: () => UnsecuredDto<User>,
-  ) {
-    if (!roles || roles.length === 0) {
-      return;
-    }
-    const user = forUser();
-    const availableRoles = user.roles ?? [];
-    const forbiddenRoles = difference(roles, availableRoles);
-    if (forbiddenRoles.length) {
-      const forbiddenRolesStr = forbiddenRoles.join(', ');
-      throw new InputException(
-        `Role(s) ${forbiddenRolesStr} cannot be assigned to this project member`,
-        'input.roles',
-      );
-    }
+  async update(input: UpdateProjectMember, changes: any, session: Session) {
+    await this.updateProperties(input, changes);
+    return await this.readOne(input.id, session);
   }
 
   protected hydrate(session: Session) {
