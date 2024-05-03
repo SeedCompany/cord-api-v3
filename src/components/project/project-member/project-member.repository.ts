@@ -1,16 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { Node, node, Query, relation } from 'cypher-query-builder';
-import { difference } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   DuplicateException,
   ID,
-  InputException,
   NotFoundException,
-  Role,
   ServerException,
   Session,
-  UnauthorizedException,
   UnsecuredDto,
 } from '../../../common';
 import { DtoRepository, ILogger, Logger } from '../../../core';
@@ -24,7 +20,6 @@ import {
   requestingUser,
   sorting,
 } from '../../../core/database/query';
-import { User } from '../../user';
 import { UserRepository } from '../../user/user.repository';
 import {
   CreateProjectMember,
@@ -32,7 +27,6 @@ import {
   ProjectMemberListInput,
   UpdateProjectMember,
 } from './dto';
-import { ProjectMemberService } from './project-member.service';
 
 @Injectable()
 export class ProjectMemberRepository extends DtoRepository<
