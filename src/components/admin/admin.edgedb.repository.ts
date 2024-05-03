@@ -69,8 +69,6 @@ export class AdminEdgeDBRepository {
     await this.db
       .withOptions((o) =>
         o
-          // eslint-disable-next-line @typescript-eslint/naming-convention
-          .withConfig({ allow_user_specified_id: true })
           .withGlobals({ currentActorId: ghost.id }),
       )
       .run(query);
