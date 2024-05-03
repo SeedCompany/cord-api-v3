@@ -63,8 +63,16 @@ export class AdminEdgeDBRepository {
   }
 
   async updateEmail(id: ID, email: string) {
+    const ghost = await this.actors.getGhost();
     const u = e.cast(e.User, e.uuid(id));
     const query = e.update(u, () => ({ set: { email } }));
-    await this.db.run(query);
+    await this.db
+      .withOptions((o) =>
+        o
+          // eslint-disable-next-line @typescript-eslint/naming-convention
+          .withConfig({ allow_user_specified_id: true })
+          .withGlobals({ currentActorId: ghost.id }),
+      )
+      .run(query);
   }
 }
