@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import process from 'node:process';
 import { assert } from 'ts-essentials';
 import { keys } from 'ts-transformer-keys';
 import { AdminModule } from './components/admin/admin.module';
@@ -42,6 +43,10 @@ assert(
   keys<{ foo: string }>().length === 1,
   'Sanity check for key transformer failed',
 );
+
+if (process.env.NODE_ENV !== 'production') {
+  Error.stackTraceLimit = Infinity;
+}
 
 @Module({
   imports: [
