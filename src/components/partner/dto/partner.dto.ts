@@ -67,7 +67,7 @@ export class Partner extends Interfaces {
   readonly financialReportingTypes: SecuredFinancialReportingTypes;
 
   @Field()
-  readonly pmcEntityCode: SecuredString;
+  readonly pmcEntityCode: SecuredStringNullable;
 
   @Field()
   readonly globalInnovationsClient: SecuredBoolean;
@@ -76,7 +76,7 @@ export class Partner extends Interfaces {
   readonly active: SecuredBoolean;
 
   @Field()
-  readonly address: SecuredString;
+  readonly address: SecuredStringNullable;
 
   readonly languageOfWiderCommunication: Secured<IdOf<Language> | null>;
 

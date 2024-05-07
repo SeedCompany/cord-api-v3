@@ -37,7 +37,7 @@ export class Organization extends Resource {
   readonly acronym: SecuredStringNullable;
 
   @Field()
-  readonly address: SecuredString;
+  readonly address: SecuredStringNullable;
 
   @SensitivityField({
     description:
