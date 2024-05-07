@@ -28,46 +28,26 @@ export class PartnershipEdgeDBRepository
   })
   implements PublicOf<PartnershipRepository>
 {
-  async isFirstPartnership(projectId: ID): Promise<boolean> {
-    const query = e.select(e.Partnership, (partnership) => ({
-      filter: e.op(partnership.project.id, '=', projectId),
-    }));
-    const partnership = await this.db.run(query);
-    return !partnership;
+  async isFirstPartnership(projectId: ID) {
+    const project = e.cast(e.Project, e.uuid(projectId));
+    const query = e.op('not', e.op('exists', project.partnerships));
+    return await this.db.run(query);
   }
 
-  async isAnyOtherPartnerships(id: ID): Promise<boolean> {
-    const otherPartnerships = await this.matchOtherPartnerships(id);
-    return otherPartnerships.length > 0;
+  async isAnyOtherPartnerships(id: ID) {
+    const query = e.op('exists', this.matchOtherPartnerships(id));
+    return await this.db.run(query);
   }
 
-  async removePrimaryFromOtherPartnerships(id: ID): Promise<void> {
-    const otherPartnershipIds = (await this.matchOtherPartnerships(id)).map(
-      (obj) => obj.id,
-    );
-
-    const otherPartnerships = e.cast(
-      e.Partnership,
-      e.cast(e.uuid, e.set(...otherPartnershipIds)),
-    );
-
-    const query = e.update(otherPartnerships, () => ({
-      set: {
-        primary: false,
-      },
+  async removePrimaryFromOtherPartnerships(id: ID) {
+    const query = e.update(this.matchOtherPartnerships(id), () => ({
+      set: { primary: false },
     }));
-
     await this.db.run(query);
   }
 
   private matchOtherPartnerships(id: ID) {
-    const currentPartnership = e.cast(e.Partnership, e.cast(e.uuid, id));
-    const query = e.select(e.Partnership, (partnership) => ({
-      filter:
-        e.op(partnership.project.id, '=', currentPartnership.project.id) &&
-        e.op(partnership.id, '!=', currentPartnership.id),
-    }));
-
-    return this.db.run(query);
+    const partnership = e.cast(e.Partnership, e.cast(e.uuid, id));
+    return e.op(partnership.project.partnerships, 'except', partnership);
   }
 }
