@@ -8,6 +8,6 @@ export class NanoIDCodec extends StrCodec {
     ts: 'ID',
     path: '~/common/id-field',
   };
-  tsType = 'ID';
-  importedType = true;
+  tsType = NanoIDCodec.info.ts;
+  tsModule = NanoIDCodec.info.path;
 }
