@@ -87,6 +87,7 @@ export class PartnerRepository extends DtoRepository<
     const {
       pointOfContactId,
       languageOfWiderCommunicationId,
+      languageOfReportingId,
       fieldRegions,
       countries,
       languagesOfConsulting,
@@ -110,6 +111,15 @@ export class PartnerRepository extends DtoRepository<
         'Language',
         partner.id,
         languageOfWiderCommunicationId,
+      );
+    }
+
+    if (languageOfReportingId) {
+      await this.updateRelation(
+        'languageOfReporting',
+        'Language',
+        partner.id,
+        languageOfReportingId,
       );
     }
 
@@ -209,7 +219,7 @@ export class PartnerRepository extends DtoRepository<
           sub
             .match([
               node('node'),
-              relation('out', '', 'languagesOfConsulting', ACTIVE),
+              relation('out', '', 'languagesOfConsulting'), // TODO: find out why these are not active when they are created
               node('languagesOfConsulting', 'Language'),
             ])
             .return(
@@ -229,8 +239,13 @@ export class PartnerRepository extends DtoRepository<
         ])
         .optionalMatch([
           node('node'),
-          relation('out', '', 'languageOfWiderCommunication', ACTIVE),
+          relation('out', '', 'languageOfWiderCommunication'), // TODO: find out why these are not active when they are created
           node('languageOfWiderCommunication', 'Language'),
+        ])
+        .optionalMatch([
+          node('node'),
+          relation('out', '', 'languageOfReporting', ACTIVE),
+          node('languageOfReporting', 'Language'),
         ])
         .return<{ dto: UnsecuredDto<Partner> }>(
           merge('props', {
@@ -238,6 +253,7 @@ export class PartnerRepository extends DtoRepository<
             organization: 'organization.id',
             pointOfContact: 'pointOfContact.id',
             languageOfWiderCommunication: 'languageOfWiderCommunication.id',
+            languageOfReporting: 'languageOfReporting.id',
             fieldRegions: 'fieldRegionsIds',
             countries: 'countriesIds',
             languagesOfConsulting: 'languagesOfConsultingIds',

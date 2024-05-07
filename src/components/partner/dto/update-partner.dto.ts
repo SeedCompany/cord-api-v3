@@ -52,6 +52,9 @@ export abstract class UpdatePartner {
   @IdField({ nullable: true })
   readonly languageOfWiderCommunicationId?: IdOf<Language> | null;
 
+  @IdField({ nullable: true })
+  readonly languageOfReportingId?: IdOf<Language> | null;
+
   @Field(() => [IDType], { nullable: true })
   @IsId({ each: true })
   @Transform(({ value }) => (value ? uniq(value) : undefined))

@@ -49,6 +49,15 @@ export abstract class LanguageFilters {
   readonly pinned?: boolean;
 
   readonly partnerId?: ID;
+
+  @Field({ nullable: true })
+  readonly isLanguageOfConsulting?: boolean;
+
+  @Field({ nullable: true })
+  readonly isLanguageOfWiderCommunication?: boolean;
+
+  @Field({ nullable: true })
+  readonly isLanguageOfReporting?: boolean;
 }
 
 @InputType()
