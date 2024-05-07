@@ -166,7 +166,7 @@ export class ProjectMemberService {
     });
     return {
       ...secured,
-      user: await mapSecuredValue(secured.user, (user) =>
+      user: await mapSecuredValue(secured.user, async (user) =>
         this.userService.secure(user, session),
       ),
     };
