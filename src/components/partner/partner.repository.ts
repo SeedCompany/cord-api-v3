@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { ChangesOf } from '~/core/database/changes';
 import {
   CalendarDate,
+  DuplicateException,
   ID,
   InputException,
   ServerException,
@@ -47,7 +47,15 @@ export class PartnerRepository extends DtoRepository<
     return result?.id;
   }
 
-  async create(input: CreatePartner) {
+  async create(input: CreatePartner, session: Session) {
+    const partnerExists = await this.partnerIdByOrg(input.organizationId);
+    if (partnerExists) {
+      throw new DuplicateException(
+        'partner.organizationId',
+        'Partner for organization already exists.',
+      );
+    }
+
     const initialProps = {
       types: input.types,
       financialReportingTypes: input.financialReportingTypes,
@@ -80,11 +88,13 @@ export class PartnerRepository extends DtoRepository<
     if (!result) {
       throw new ServerException('Failed to create partner');
     }
-    return result.id;
+
+    return await this.readOne(result.id, session);
   }
 
-  async update(partner: Partner, changes: ChangesOf<Partner, UpdatePartner>) {
+  async update(changes: UpdatePartner, session: Session) {
     const {
+      id,
       pointOfContactId,
       languageOfWiderCommunicationId,
       fieldRegions,
@@ -93,13 +103,13 @@ export class PartnerRepository extends DtoRepository<
       ...simpleChanges
     } = changes;
 
-    await this.updateProperties(partner, simpleChanges);
+    await this.updateProperties({ id }, simpleChanges);
 
     if (pointOfContactId !== undefined) {
       await this.updateRelation(
         'pointOfContact',
         'User',
-        partner.id,
+        changes.id,
         pointOfContactId,
       );
     }
@@ -108,7 +118,7 @@ export class PartnerRepository extends DtoRepository<
       await this.updateRelation(
         'languageOfWiderCommunication',
         'Language',
-        partner.id,
+        changes.id,
         languageOfWiderCommunicationId,
       );
     }
@@ -116,7 +126,7 @@ export class PartnerRepository extends DtoRepository<
     if (countries) {
       try {
         await this.updateRelationList({
-          id: partner.id,
+          id: changes.id,
           relation: 'countries',
           newList: countries,
         });
@@ -130,7 +140,7 @@ export class PartnerRepository extends DtoRepository<
     if (fieldRegions) {
       try {
         await this.updateRelationList({
-          id: partner.id,
+          id: changes.id,
           relation: 'fieldRegions',
           newList: fieldRegions,
         });
@@ -144,7 +154,7 @@ export class PartnerRepository extends DtoRepository<
     if (languagesOfConsulting) {
       try {
         await this.updateRelationList({
-          id: partner.id,
+          id: changes.id,
           relation: 'languagesOfConsulting',
           newList: languagesOfConsulting,
         });
@@ -154,6 +164,8 @@ export class PartnerRepository extends DtoRepository<
           : e;
       }
     }
+
+    return await this.readOne(id, session);
   }
 
   protected hydrate(session: Session) {
@@ -194,7 +206,7 @@ export class PartnerRepository extends DtoRepository<
               relation('out', '', 'fieldRegions'),
               node('fieldRegions', 'FieldRegion'),
             ])
-            .return(collect('fieldRegions.id').as('fieldRegionsIds')),
+            .return(collect('fieldRegions { .id }').as('fieldRegions')),
         )
         .subQuery('node', (sub) =>
           sub
@@ -203,7 +215,7 @@ export class PartnerRepository extends DtoRepository<
               relation('out', '', 'countries'),
               node('countries', 'Location'),
             ])
-            .return(collect('countries.id').as('countriesIds')),
+            .return(collect('countries { .id }').as('countries')),
         )
         .subQuery('node', (sub) =>
           sub
@@ -213,7 +225,9 @@ export class PartnerRepository extends DtoRepository<
               node('languagesOfConsulting', 'Language'),
             ])
             .return(
-              'collect(languagesOfConsulting.id) as languagesOfConsultingIds',
+              collect('languagesOfConsulting { .id }').as(
+                'languagesOfConsulting',
+              ),
             ),
         )
         .apply(matchProps())
@@ -235,12 +249,13 @@ export class PartnerRepository extends DtoRepository<
         .return<{ dto: UnsecuredDto<Partner> }>(
           merge('props', {
             sensitivity: 'sensitivity',
-            organization: 'organization.id',
-            pointOfContact: 'pointOfContact.id',
-            languageOfWiderCommunication: 'languageOfWiderCommunication.id',
-            fieldRegions: 'fieldRegionsIds',
-            countries: 'countriesIds',
-            languagesOfConsulting: 'languagesOfConsultingIds',
+            organization: 'organization { .id }',
+            pointOfContact: 'pointOfContact { .id }',
+            languageOfWiderCommunication:
+              'languageOfWiderCommunication { .id }',
+            fieldRegions: 'fieldRegions',
+            countries: 'countries',
+            languagesOfConsulting: 'languagesOfConsulting',
             scope: 'scopedRoles',
             pinned: 'exists((:User { id: $requestingUser })-[:pinned]->(node))',
           }).as('dto'),

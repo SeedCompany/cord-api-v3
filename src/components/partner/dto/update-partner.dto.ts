@@ -7,13 +7,9 @@ import {
   DateField,
   ID,
   IdField,
-  IdOf,
   IsId,
   NameField,
-} from '../../../common';
-import { Location } from '../../../components/location';
-import { FieldRegion } from '../../field-region';
-import type { Language } from '../../language';
+} from '~/common';
 import { FinancialReportingType } from '../../partnership/dto';
 import { PartnerType } from './partner-type.enum';
 import { Partner } from './partner.dto';
@@ -50,21 +46,21 @@ export abstract class UpdatePartner {
   readonly address?: string;
 
   @IdField({ nullable: true })
-  readonly languageOfWiderCommunicationId?: IdOf<Language> | null;
+  readonly languageOfWiderCommunicationId?: ID<'Language'> | null;
 
   @Field(() => [IDType], { nullable: true })
   @IsId({ each: true })
   @Transform(({ value }) => (value ? uniq(value) : undefined))
-  readonly countries?: ReadonlyArray<IdOf<Location>>;
+  readonly countries?: ReadonlyArray<ID<'Location'>>;
 
   @Field(() => [IDType], { nullable: true })
   @IsId({ each: true })
   @Transform(({ value }) => (value ? uniq(value) : undefined))
-  readonly fieldRegions?: ReadonlyArray<IdOf<FieldRegion>>;
+  readonly fieldRegions?: ReadonlyArray<ID<'FieldRegion'>>;
 
   @Field(() => [IDType], { name: 'languagesOfConsulting', nullable: true })
   @Transform(({ value }) => (value ? uniq(value) : undefined))
-  readonly languagesOfConsulting?: ReadonlyArray<IdOf<Language>>;
+  readonly languagesOfConsulting?: ReadonlyArray<ID<'Language'>>;
 
   @DateField({ nullable: true })
   readonly startDate?: CalendarDate | null;
