@@ -4,6 +4,8 @@ import { IsUrl } from 'class-validator';
 import { GraphQLError, Kind, ValueNode } from 'graphql';
 import { URL } from 'url';
 import ValidatorJS from 'validator';
+import { externalUrlWithProtocol } from '~/common/url.util';
+import { Transform } from './transform.decorator';
 
 export const UrlField = ({
   url,
@@ -19,9 +21,16 @@ export const UrlField = ({
       require_tld: false,
       ...url,
     }),
+    Transform(({ value: str }) => {
+      return str
+        ? url?.require_protocol
+          ? externalUrlWithProtocol(str)
+          : str
+        : null;
+    }),
   );
 
-@Scalar('URL', () => URL)
+@Scalar('CustomURL', () => URL)
 export class UrlScalar implements CustomScalar<string, string | null> {
   description =
     'A field whose value conforms to the standard URL format as specified in RFC3986: https://www.ietf.org/rfc/rfc3986.txt.';
