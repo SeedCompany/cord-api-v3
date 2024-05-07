@@ -1,19 +1,27 @@
 import { Injectable } from '@nestjs/common';
 import { Node, node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { ChangesOf } from '~/core/database/changes';
-import { ID, Session, UnsecuredDto } from '../../../common';
-import { DtoRepository } from '../../../core';
+import {
+  DuplicateException,
+  ID,
+  isIdLike,
+  NotFoundException,
+  ServerException,
+  Session,
+  UnsecuredDto,
+} from '~/common';
+import { DtoRepository } from '~/core/database';
 import {
   ACTIVE,
+  createNode,
+  createRelationships,
   matchPropsAndProjectSensAndScopedRoles,
   merge,
   oncePerProject,
   paginate,
-  property,
   requestingUser,
   sorting,
-} from '../../../core/database/query';
+} from '~/core/database/query';
 import { UserRepository } from '../../user/user.repository';
 import {
   CreateProjectMember,
@@ -31,8 +39,8 @@ export class ProjectMemberRepository extends DtoRepository<
     super();
   }
 
-  async verifyRelationshipEligibility(projectId: ID, userId: ID) {
-    return await this.db
+  private async verifyRelationshipEligibility(projectId: ID, userId: ID) {
+    const result = await this.db
       .query()
       .optionalMatch(node('user', 'User', { id: userId }))
       .optionalMatch(node('project', 'Project', { id: projectId }))
@@ -43,63 +51,69 @@ export class ProjectMemberRepository extends DtoRepository<
         relation('out', '', 'user', ACTIVE),
         node('user'),
       ])
-      .return(['user', 'project', 'member'])
-      .asResult<{ user?: Node; project?: Node; member?: Node }>()
+      .return<{ user?: Node; project?: Node; member?: Node }>([
+        'user',
+        'project',
+        'member',
+      ])
       .first();
+
+    if (!result?.project) {
+      throw new NotFoundException(
+        'Could not find project',
+        'projectMember.projectId',
+      );
+    }
+    if (!result?.user) {
+      throw new NotFoundException(
+        'Could not find person',
+        'projectMember.userId',
+      );
+    }
+    if (result.member) {
+      throw new DuplicateException(
+        'projectMember.userId',
+        'Person is already a member of this project',
+      );
+    }
   }
 
   async create(
-    { userId, projectId, ...input }: CreateProjectMember,
-    id: ID,
+    { userId, projectId: projectOrId, ...input }: CreateProjectMember,
     session: Session,
-    createdAt: DateTime,
   ) {
-    const createProjectMember = this.db
-      .query()
-      .create([
-        [
-          node('newProjectMember', 'ProjectMember:BaseNode', {
-            createdAt,
-            id,
-          }),
-        ],
-        ...property('roles', input.roles, 'newProjectMember'),
-        ...property('modifiedAt', createdAt, 'newProjectMember'),
-      ])
-      .return<{ id: ID }>('newProjectMember.id as id');
-    await createProjectMember.first();
+    const projectId = isIdLike(projectOrId) ? projectOrId : projectOrId.id;
 
-    // connect the Project to the ProjectMember
-    // and connect ProjectMember to User
-    return await this.db
+    await this.verifyRelationshipEligibility(projectId, userId);
+
+    const created = await this.db
       .query()
-      .match([
-        [node('user', 'User', { id: userId })],
-        [node('project', 'Project', { id: projectId })],
-        [node('projectMember', 'ProjectMember', { id })],
-      ])
-      .create([
-        node('project'),
-        relation('out', '', 'member', {
-          active: true,
-          createdAt: DateTime.local(),
+      .apply(
+        await createNode(ProjectMember, {
+          initialProps: {
+            roles: input.roles ?? [],
+            modifiedAt: DateTime.local(),
+          },
         }),
-        node('projectMember'),
-        relation('out', '', 'user', {
-          active: true,
-          createdAt: DateTime.local(),
+      )
+      .apply(
+        createRelationships(ProjectMember, {
+          in: { member: ['Project', projectId] },
+          out: { user: ['User', userId] },
         }),
-        node('user'),
-      ])
-      .return<{ id: ID }>('projectMember.id as id')
+      )
+      .apply(this.hydrate(session))
+      .map('dto')
       .first();
+    if (!created) {
+      throw new ServerException('Failed to create project member');
+    }
+    return created;
   }
 
-  async update(
-    existing: ProjectMember,
-    changes: ChangesOf<ProjectMember, UpdateProjectMember>,
-  ) {
-    await this.updateProperties(existing, changes);
+  async update({ id, ...changes }: UpdateProjectMember, session: Session) {
+    await this.updateProperties({ id }, changes);
+    return await this.readOne(id, session);
   }
 
   protected hydrate(session: Session) {
