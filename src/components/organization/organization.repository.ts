@@ -1,8 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
-import { ChangesOf } from '~/core/database/changes';
-import { ID, Session, UnsecuredDto } from '../../common';
-import { DtoRepository } from '../../core';
+import {
+  DuplicateException,
+  ID,
+  ServerException,
+  Session,
+  UnsecuredDto,
+} from '~/common';
+import { DtoRepository } from '~/core/database';
 import {
   ACTIVE,
   createNode,
@@ -15,7 +20,7 @@ import {
   rankSens,
   requestingUser,
   sorting,
-} from '../../core/database/query';
+} from '~/core/database/query';
 import {
   CreateOrganization,
   Organization,
@@ -28,7 +33,14 @@ export class OrganizationRepository extends DtoRepository<
   typeof Organization,
   [session: Session]
 >(Organization) {
-  async create(input: CreateOrganization) {
+  async create(input: CreateOrganization, session: Session) {
+    if (!(await this.isUnique(input.name))) {
+      throw new DuplicateException(
+        'organization.name',
+        'Organization with this name already exists',
+      );
+    }
+
     const initialProps = {
       name: input.name,
       acronym: input.acronym,
@@ -43,14 +55,18 @@ export class OrganizationRepository extends DtoRepository<
       .apply(await createNode(Organization, { initialProps }))
       .return<{ id: ID }>('node.id as id');
 
-    return await query.first();
+    const result = await query.first();
+    if (!result) {
+      throw new ServerException('Failed to create organization');
+    }
+
+    return await this.readOne(result.id, session);
   }
 
-  async update(
-    existing: Organization,
-    changes: ChangesOf<Organization, UpdateOrganization>,
-  ) {
-    return await this.updateProperties(existing, changes);
+  async update(changes: UpdateOrganization, session: Session) {
+    const { id, ...simpleChanges } = changes;
+    await this.updateProperties({ id }, simpleChanges);
+    return await this.readOne(id, session);
   }
 
   protected hydrate(session: Session) {

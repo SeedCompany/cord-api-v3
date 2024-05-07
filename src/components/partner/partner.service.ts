@@ -1,8 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import {
-  DuplicateException,
   ID,
-  IdOf,
   InputException,
   loadManyIgnoreMissingThrowAny,
   NotFoundException,
@@ -10,9 +8,8 @@ import {
   ServerException,
   Session,
   UnsecuredDto,
-} from '../../common';
-import { HandleIdLookup, ILogger, Logger, ResourceLoader } from '../../core';
-import { mapListResults } from '../../core/database/results';
+} from '~/common';
+import { HandleIdLookup, ResourceLoader } from '~/core';
 import { Privileges } from '../authorization';
 import {
   LanguageListInput,
@@ -40,7 +37,6 @@ import { PartnerRepository } from './partner.repository';
 @Injectable()
 export class PartnerService {
   constructor(
-    @Logger('partner:service') private readonly logger: ILogger,
     private readonly privileges: Privileges,
     @Inject(forwardRef(() => ProjectService))
     private readonly projectService: ProjectService & {},
@@ -51,36 +47,23 @@ export class PartnerService {
   ) {}
 
   async create(input: CreatePartner, session: Session): Promise<Partner> {
-    this.privileges.for(session, Partner).verifyCan('create');
     this.verifyFinancialReportingType(
       input.financialReportingTypes,
       input.types,
     );
 
-    const partnerExists = await this.repo.partnerIdByOrg(input.organizationId);
-    if (partnerExists) {
-      throw new DuplicateException(
-        'partner.organizationId',
-        'Partner for organization already exists.',
-      );
-    }
-
     if (input.countries) {
       await this.verifyCountries(input.countries);
     }
 
-    const id = await this.repo.create(input);
+    const created = await this.repo.create(input, session);
 
-    this.logger.debug(`Partner created`, { id });
-    return await this.readOne(id, session);
+    this.privileges.for(session, Partner, created).verifyCan('create');
+
+    return this.secure(created, session);
   }
 
   async readOnePartnerByOrgId(id: ID, session: Session): Promise<Partner> {
-    this.logger.debug(`Read Partner by Org Id`, {
-      id: id,
-      userId: session.userId,
-    });
-
     const partnerId = await this.repo.partnerIdByOrg(id);
     if (!partnerId)
       throw new NotFoundException('No Partner Exists for this Org Id');
@@ -94,31 +77,26 @@ export class PartnerService {
     session: Session,
     _view?: ObjectView,
   ): Promise<Partner> {
-    this.logger.debug(`Read Partner by Partner Id`, {
-      id: id,
-      userId: session.userId,
-    });
-
     const result = await this.repo.readOne(id, session);
-    return await this.secure(result, session);
+    return this.secure(result, session);
   }
 
   async readMany(ids: readonly ID[], session: Session) {
     const partners = await this.repo.readMany(ids, session);
-    return await Promise.all(partners.map((dto) => this.secure(dto, session)));
+    return partners.map((dto) => this.secure(dto, session));
   }
 
-  private async secure(dto: UnsecuredDto<Partner>, session: Session) {
+  private secure(dto: UnsecuredDto<Partner>, session: Session) {
     return this.privileges.for(session, Partner).secure(dto);
   }
 
   async update(input: UpdatePartner, session: Session): Promise<Partner> {
-    const partner = await this.readOne(input.id, session);
+    const partner = await this.repo.readOne(input.id, session);
 
     if (
       !this.validateFinancialReportingType(
-        input.financialReportingTypes ?? partner.financialReportingTypes.value,
-        input.types ?? partner.types.value,
+        input.financialReportingTypes ?? partner.financialReportingTypes,
+        input.types ?? partner.types,
       )
     ) {
       if (input.financialReportingTypes && input.types) {
@@ -140,9 +118,15 @@ export class PartnerService {
       await this.verifyCountries(changes.countries);
     }
 
-    await this.repo.update(partner, changes);
+    const updated = await this.repo.update(
+      {
+        id: partner.id,
+        ...changes,
+      },
+      session,
+    );
 
-    return await this.readOne(input.id, session);
+    return this.secure(updated, session);
   }
 
   async delete(id: ID, session: Session): Promise<void> {
@@ -153,11 +137,8 @@ export class PartnerService {
     try {
       await this.repo.deleteNode(object);
     } catch (exception: any) {
-      this.logger.error('Failed to delete', { id, exception });
       throw new ServerException('Failed to delete', exception);
     }
-
-    this.logger.debug(`deleted partner with id`, { id });
   }
 
   async list(
@@ -165,7 +146,10 @@ export class PartnerService {
     session: Session,
   ): Promise<PartnerListOutput> {
     const results = await this.repo.list(input, session);
-    return await mapListResults(results, (dto) => this.secure(dto, session));
+    return {
+      ...results,
+      items: results.items.map((dto) => this.secure(dto, session)),
+    };
   }
 
   async listProjects(
@@ -224,7 +208,7 @@ export class PartnerService {
       : true;
   }
 
-  private async verifyCountries(ids: ReadonlyArray<IdOf<Location>>) {
+  private async verifyCountries(ids: ReadonlyArray<ID<Location>>) {
     const loader = await this.resourceLoader.getLoader(LocationLoader);
     const locations = await loadManyIgnoreMissingThrowAny(loader, ids);
     const invalidIds = locations.flatMap((location) =>

@@ -73,8 +73,10 @@ type ChangeOf<Val> = Val extends SetChangeType<any, infer Override>
 
 type RawChangeOf<Val> = IsFileField<Val> extends true
   ? CreateDefinedFileVersionInput
-  : Val extends LinkTo<any>
-  ? ID
+  : Val extends LinkTo<infer X>
+  ? ID<X>
+  : Val extends ReadonlyArray<LinkTo<infer X>>
+  ? ReadonlyArray<ID<X>>
   : Val;
 
 type IsFileField<Val> = Val extends LinkTo<'File'>
@@ -133,7 +135,7 @@ export const getChanges =
       }
       const key = isRelation(res, prop) ? prop.slice(0, -2) : prop;
       let existing = unwrapSecured(existingObject[key]);
-      // Unwrap existing refs of IDs to input IDs.
+      // Unwrap existing LinkTo to input ID.
       if (
         typeof change === 'string' &&
         existing &&
@@ -141,6 +143,16 @@ export const getChanges =
         typeof existing.id === 'string'
       ) {
         existing = existing.id;
+      }
+      // Unwrap existing LinkTo[] to input ID[].
+      if (
+        Array.isArray(change) &&
+        typeof change[0] === 'string' &&
+        Array.isArray(existing) &&
+        typeof existing[0] === 'object' &&
+        typeof existing[0].id === 'string'
+      ) {
+        existing = existing.map(({ id }) => id);
       }
       return !isSame(change, existing);
     });

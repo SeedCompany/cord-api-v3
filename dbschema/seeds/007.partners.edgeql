@@ -112,6 +112,7 @@ with
           organization := organization,
           projectContext := organization.projectContext,
           name := organization.name,
+          address := organization.address,
           pmcEntityCode := <str>partner['pmcEntityCode'],
           types := <str>json_array_unpack(partner['types']),
           financialReportingTypes := <str>json_array_unpack(partner['financialReportingTypes']),
