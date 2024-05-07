@@ -31,6 +31,8 @@ module default {
     multi languagesOfConsulting: Language;
     multi fieldRegions: FieldRegion;
     multi countries: Location;
+
+    startDate: cal::local_date;
   }
 }
   
