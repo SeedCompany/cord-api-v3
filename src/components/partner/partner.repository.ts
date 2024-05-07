@@ -44,7 +44,7 @@ export class PartnerRepository extends DtoRepository<
       ])
       .return<{ id: ID }>('partner.id as id')
       .first();
-    return result?.id;
+    return result?.id ?? null;
   }
 
   async create(input: CreatePartner, session: Session) {
