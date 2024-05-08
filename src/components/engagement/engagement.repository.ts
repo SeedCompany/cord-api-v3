@@ -382,6 +382,25 @@ export class EngagementRepository extends CommonRepository {
       .run();
   }
 
+  async listAllByPartnerId(partnerId: ID, session: Session) {
+    const results = await this.db
+      .query()
+      .match([
+        node('node'),
+        relation('in', '', 'engagement', ACTIVE),
+        node('', 'Project'),
+        relation('out', '', 'partnership', ACTIVE),
+        node('', 'Partnership'),
+        relation('out', '', 'partner', ACTIVE),
+        node('', 'Partner', { id: partnerId }),
+      ])
+      .apply(this.hydrate(session))
+      .map('dto')
+      .run();
+
+    return results;
+  }
+
   async getOngoingEngagementIds(
     projectId: ID,
     excludes: EngagementStatus[] = [],

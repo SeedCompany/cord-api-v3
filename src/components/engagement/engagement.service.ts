@@ -398,6 +398,10 @@ export class EngagementService {
     return await this.repo.listAllByProjectId(projectId, session);
   }
 
+  async listAllByPartnerId(partnerId: ID, session: Session) {
+    return await this.repo.listAllByPartnerId(partnerId, session);
+  }
+
   async listProducts(
     engagement: LanguageEngagement,
     input: ProductListInput,

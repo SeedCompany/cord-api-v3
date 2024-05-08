@@ -11,6 +11,7 @@ import {
 } from '~/common';
 import { HandleIdLookup, ResourceLoader } from '~/core';
 import { Privileges } from '../authorization';
+import { EngagementListInput, EngagementService } from '../engagement';
 import {
   LanguageListInput,
   LanguageService,
@@ -40,6 +41,8 @@ export class PartnerService {
     private readonly privileges: Privileges,
     @Inject(forwardRef(() => ProjectService))
     private readonly projectService: ProjectService & {},
+    @Inject(forwardRef(() => EngagementService))
+    private readonly engagementService: EngagementService & {},
     @Inject(forwardRef(() => LanguageService))
     private readonly languageService: LanguageService & {},
     private readonly repo: PartnerRepository,
@@ -183,6 +186,20 @@ export class PartnerService {
       canRead: true,
       // non-owned list
       canCreate: false,
+    };
+  }
+  async listEngagements(
+    partner: Partner,
+    input: EngagementListInput,
+    session: Session,
+  ): Promise<any> {
+    const languageListOutput = await this.engagementService.listAllByPartnerId(
+      partner.id,
+      session,
+    );
+    return {
+      ...languageListOutput,
+      // non-owned list
     };
   }
 
