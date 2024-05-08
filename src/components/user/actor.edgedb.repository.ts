@@ -8,7 +8,7 @@ export class ActorEdgeDBRepository extends ActorRepository {
   private readonly db: EdgeDB;
   constructor(edgedb: EdgeDB) {
     super();
-    this.db = edgedb.withOptions(disableAccessPolicies);
+    this.db = edgedb.outsideOfTransactions().withOptions(disableAccessPolicies);
   }
 
   protected async upsertAgent(name: string, roles?: readonly Role[]) {

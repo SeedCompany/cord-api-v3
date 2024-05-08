@@ -1,14 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import {
-  DuplicateException,
   ID,
   ObjectView,
   ServerException,
   Session,
   UnsecuredDto,
-} from '../../common';
-import { ConfigService, HandleIdLookup, ILogger, Logger } from '../../core';
-import { mapListResults } from '../../core/database/results';
+} from '~/common';
+import { HandleIdLookup } from '~/core';
 import { Privileges } from '../authorization';
 import {
   LocationListInput,
@@ -27,8 +25,6 @@ import { OrganizationRepository } from './organization.repository';
 @Injectable()
 export class OrganizationService {
   constructor(
-    @Logger('org:service') private readonly logger: ILogger,
-    private readonly config: ConfigService,
     private readonly privileges: Privileges,
     private readonly locationService: LocationService,
     private readonly repo: OrganizationRepository,
@@ -38,26 +34,11 @@ export class OrganizationService {
     input: CreateOrganization,
     session: Session,
   ): Promise<Organization> {
-    this.privileges.for(session, Organization).verifyCan('create');
+    const created = await this.repo.create(input, session);
 
-    if (!(await this.repo.isUnique(input.name))) {
-      throw new DuplicateException(
-        'organization.name',
-        'Organization with this name already exists',
-      );
-    }
+    this.privileges.for(session, Organization, created).verifyCan('create');
 
-    const result = await this.repo.create(input);
-
-    if (!result) {
-      throw new ServerException('failed to create default org');
-    }
-
-    const id = result.id;
-
-    this.logger.debug(`organization created`, { id });
-
-    return await this.readOne(id, session);
+    return this.secure(created, session);
   }
 
   @HandleIdLookup(Organization)
@@ -66,26 +47,19 @@ export class OrganizationService {
     session: Session,
     _view?: ObjectView,
   ): Promise<Organization> {
-    this.logger.debug(`Read Organization`, {
-      id: orgId,
-      userId: session.userId,
-    });
-
     const result = await this.repo.readOne(orgId, session);
-    return await this.secure(result, session);
+    return this.secure(result, session);
   }
 
   async readMany(ids: readonly ID[], session: Session) {
     const organizations = await this.repo.readMany(ids, session);
-    return await Promise.all(
-      organizations.map((dto) => this.secure(dto, session)),
-    );
+    return organizations.map((dto) => this.secure(dto, session));
   }
 
-  private async secure(
+  private secure(
     dto: UnsecuredDto<Organization>,
     session: Session,
-  ): Promise<Organization> {
+  ): Organization {
     return this.privileges.for(session, Organization).secure(dto);
   }
 
@@ -101,7 +75,12 @@ export class OrganizationService {
       .for(session, Organization, organization)
       .verifyChanges(changes);
 
-    return await this.repo.update(organization, changes);
+    const updated = await this.repo.update(
+      { id: input.id, ...changes },
+      session,
+    );
+
+    return this.secure(updated, session);
   }
 
   async delete(id: ID, session: Session): Promise<void> {
@@ -112,11 +91,8 @@ export class OrganizationService {
     try {
       await this.repo.deleteNode(object);
     } catch (exception) {
-      this.logger.error('Failed to delete', { id, exception });
       throw new ServerException('Failed to delete', exception);
     }
-
-    this.logger.debug(`deleted organization with id`, { id });
   }
 
   async list(
@@ -124,7 +100,10 @@ export class OrganizationService {
     session: Session,
   ): Promise<OrganizationListOutput> {
     const results = await this.repo.list(input, session);
-    return await mapListResults(results, (dto) => this.secure(dto, session));
+    return {
+      ...results,
+      items: results.items.map((dto) => this.secure(dto, session)),
+    };
   }
 
   async addLocation(organizationId: ID, locationId: ID): Promise<void> {

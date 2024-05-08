@@ -8,6 +8,6 @@ export class OurUUIDCodec extends UUIDCodec {
     ts: 'ID',
     path: '~/common/id-field',
   };
-  tsType = 'ID';
-  importedType = true;
+  tsType = OurUUIDCodec.info.ts;
+  tsModule = OurUUIDCodec.info.path;
 }

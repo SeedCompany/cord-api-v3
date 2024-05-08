@@ -4,8 +4,7 @@ import { $ as $$ } from 'execa';
 import { Node, SyntaxKind, VariableDeclarationKind } from 'ts-morph';
 import { injectHydrators } from './inject-hydrators';
 import { analyzeQuery } from './query-files';
-import { customScalars } from './scalars';
-import { addCustomScalarImports, GeneratorParams } from './util';
+import { GeneratorParams } from './util';
 
 export async function generateInlineQueries({
   client,
@@ -63,7 +62,9 @@ export async function generateInlineQueries({
     isExported: true,
   });
 
-  const imports = new Set<string>();
+  let imports = new $.ImportMap();
+  imports.add('edgedb', '$'); // for Cardinality
+
   const seen = new Set<string>();
   const queryMap = new Map<
     string,
@@ -102,7 +103,7 @@ export async function generateInlineQueries({
         cardinality: types.cardinality,
       });
       // Add imports to the used imports list
-      [...types.imports].forEach((i) => imports.add(i));
+      imports = imports.merge(types.importMap);
     }
 
     queryMapType.addProperty({
@@ -118,17 +119,14 @@ export async function generateInlineQueries({
     });
   }
 
-  addCustomScalarImports(
-    inlineQueriesFile,
-    [...imports].flatMap((i) => customScalars.get(i) ?? []),
+  inlineQueriesFile.insertImportDeclarations(
     0,
+    [...imports].map(([module, specifiers]) => ({
+      isTypeOnly: true,
+      namedImports: [...specifiers],
+      moduleSpecifier: module,
+    })),
   );
-  const builtIn = ['$', ...[...imports].filter((i) => !customScalars.has(i))];
-  inlineQueriesFile.insertImportDeclaration(0, {
-    isTypeOnly: true,
-    namedImports: builtIn,
-    moduleSpecifier: 'edgedb',
-  });
 
   const queryMapAsStr = JSON.stringify([...queryMap], null, 2);
   inlineQueriesFile.addVariableStatement({

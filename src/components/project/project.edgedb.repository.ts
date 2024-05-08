@@ -36,26 +36,22 @@ export const ConcreteRepos = {
   MomentumTranslation: class MomentumTranslationProjectRepository extends RepoFor(
     ConcreteTypes.MomentumTranslation,
     { hydrate },
-  ).withDefaults() {},
+  ) {},
 
   MultiplicationTranslation: class MultiplicationTranslationProjectRepository extends RepoFor(
     ConcreteTypes.MultiplicationTranslation,
     { hydrate },
-  ).withDefaults() {},
+  ) {},
 
   Internship: class InternshipProjectRepository extends RepoFor(
     ConcreteTypes.Internship,
     { hydrate },
-  ).withDefaults() {},
+  ) {},
 } satisfies Record<keyof typeof ConcreteTypes, Type>;
 
 @Injectable()
 export class ProjectEdgeDBRepository
-  extends RepoFor(IProject, { hydrate }).customize((cls, { defaults }) => {
-    return class extends cls {
-      static omit = [defaults.create, defaults.update];
-    };
-  })
+  extends RepoFor(IProject, { hydrate, omit: ['create', 'update'] })
   implements PublicOf<Neo4jRepository>
 {
   constructor(private readonly moduleRef: ModuleRef) {

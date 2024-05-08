@@ -11,5 +11,5 @@ export class VarianceExplanationEdgeDBRepository
       ...varianceExplanation['*'],
       report: true,
     }),
-  }).withDefaults()
+  })
   implements PublicOf<Neo4jRepository> {}

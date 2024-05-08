@@ -2,10 +2,14 @@ import type { Node } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { ID, isIdLike } from '~/common';
 
-export type BaseNode = Node<{
-  id: ID;
-  createdAt: DateTime;
-}>;
+export interface BaseNode {
+  identity: string;
+  labels: readonly string[];
+  properties: {
+    id: ID;
+    createdAt: DateTime;
+  };
+}
 
 export const isBaseNode = (value: unknown): value is BaseNode =>
   isNode(value) && isIdLike(value.properties.id);

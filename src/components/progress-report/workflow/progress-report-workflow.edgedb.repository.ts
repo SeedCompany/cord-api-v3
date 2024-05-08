@@ -16,18 +16,16 @@ export class ProgressReportWorkflowEdgeDBRepository
       who: true,
       transition: event.transitionId,
     }),
-  }).customize((cls, { defaults }) => {
-    return class extends cls {
-      static omit = [defaults.create, defaults.update, defaults.delete];
-      async list(reportId: ID) {
-        const progressReport = e.cast(e.ProgressReport, e.uuid(reportId));
-        const query = e.select(progressReport.workflowEvents, this.hydrate);
-        return await this.db.run(query);
-      }
-    };
+    omit: ['list', 'create', 'update', 'delete'],
   })
   implements PublicOf<ProgressReportWorkflowRepository>
 {
+  async list(reportId: ID) {
+    const progressReport = e.cast(e.ProgressReport, e.uuid(reportId));
+    const query = e.select(progressReport.workflowEvents, this.hydrate);
+    return await this.db.run(query);
+  }
+
   async recordEvent({
     report,
     ...props

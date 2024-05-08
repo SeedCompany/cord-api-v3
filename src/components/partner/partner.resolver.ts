@@ -78,7 +78,7 @@ export class PartnerResolver {
     @Parent() partner: Partner,
     @Loader(OrganizationLoader) organizations: LoaderOf<OrganizationLoader>,
   ): Promise<SecuredOrganization> {
-    return await mapSecuredValue(partner.organization, (id) =>
+    return await mapSecuredValue(partner.organization, ({ id }) =>
       organizations.load(id),
     );
   }
@@ -88,7 +88,7 @@ export class PartnerResolver {
     @Parent() partner: Partner,
     @Loader(UserLoader) users: LoaderOf<UserLoader>,
   ): Promise<SecuredUser> {
-    return await mapSecuredValue(partner.pointOfContact, (id) =>
+    return await mapSecuredValue(partner.pointOfContact, ({ id }) =>
       users.load(id),
     );
   }
@@ -98,8 +98,9 @@ export class PartnerResolver {
     @Parent() partner: Partner,
     @Loader(LanguageLoader) languages: LoaderOf<LanguageLoader>,
   ): Promise<SecuredLanguageNullable> {
-    return await mapSecuredValue(partner.languageOfWiderCommunication, (id) =>
-      languages.load({ id, view: { active: true } }),
+    return await mapSecuredValue(
+      partner.languageOfWiderCommunication,
+      ({ id }) => languages.load({ id, view: { active: true } }),
     );
   }
 
@@ -108,7 +109,10 @@ export class PartnerResolver {
     @Parent() partner: Partner,
     @Loader(FieldRegionLoader) loader: LoaderOf<FieldRegionLoader>,
   ): Promise<SecuredFieldRegions> {
-    return await loadSecuredIds(loader, partner.fieldRegions);
+    return await loadSecuredIds(loader, {
+      ...partner.fieldRegions,
+      value: partner.fieldRegions.value.map((region) => region.id),
+    });
   }
 
   @ResolveField(() => SecuredLocations)
@@ -116,7 +120,10 @@ export class PartnerResolver {
     @Parent() partner: Partner,
     @Loader(LocationLoader) loader: LoaderOf<LocationLoader>,
   ): Promise<SecuredLocations> {
-    return await loadSecuredIds(loader, partner.countries);
+    return await loadSecuredIds(loader, {
+      ...partner.countries,
+      value: partner.countries.value.map((country) => country.id),
+    });
   }
 
   @ResolveField(() => SecuredLanguages)
@@ -124,10 +131,10 @@ export class PartnerResolver {
     @Parent() partner: Partner,
     @Loader(LanguageLoader) loader: LoaderOf<LanguageLoader>,
   ): Promise<SecuredLanguages> {
-    const { value: ids, ...rest } = partner.languagesOfConsulting;
+    const { value: languages, ...rest } = partner.languagesOfConsulting;
     const value = await loadManyIgnoreMissingThrowAny(
       loader,
-      ids.map((id) => ({ id, view: { active: true } } as const)),
+      languages.map(({ id }) => ({ id, view: { active: true } } as const)),
     );
     return { ...rest, value };
   }

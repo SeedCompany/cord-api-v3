@@ -15,7 +15,8 @@ module default {
       constraint regexp(r'^[A-Z]{3}$');
     }
     
-    #address: str; #TODO - this needs figured out - needed on here and Organization?
+    #TODO - this needs figured out - needed on here and Organization?
+    address: str;
     multi types: Partner::Type;
     multi financialReportingTypes: Partnership::FinancialReportingType;
     
@@ -31,6 +32,8 @@ module default {
     multi languagesOfConsulting: Language;
     multi fieldRegions: FieldRegion;
     multi countries: Location;
+
+    startDate: cal::local_date;
   }
 }
   

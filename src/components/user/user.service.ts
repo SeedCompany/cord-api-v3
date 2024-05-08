@@ -11,7 +11,6 @@ import {
 } from '../../common';
 import { HandleIdLookup, ILogger, Logger, Transactional } from '../../core';
 import { property } from '../../core/database/query';
-import { mapListResults } from '../../core/database/results';
 import { Privileges, Role } from '../authorization';
 import { AssignableRoles } from '../authorization/dto/assignable-roles';
 import {
@@ -86,15 +85,15 @@ export class UserService {
   @HandleIdLookup(User)
   async readOne(id: ID, session: Session, _view?: ObjectView): Promise<User> {
     const user = await this.userRepo.readOne(id, session);
-    return await this.secure(user, session);
+    return this.secure(user, session);
   }
 
   async readMany(ids: readonly ID[], session: Session) {
     const users = await this.userRepo.readMany(ids, session);
-    return await Promise.all(users.map((dto) => this.secure(dto, session)));
+    return users.map((dto) => this.secure(dto, session));
   }
 
-  async secure(user: UnsecuredDto<User>, session: Session): Promise<User> {
+  secure(user: UnsecuredDto<User>, session: Session): User {
     return this.privileges.for(session, User).secure(user);
   }
 
@@ -115,7 +114,7 @@ export class UserService {
       id: user.id,
       ...changes,
     });
-    return await this.secure(updated, session);
+    return this.secure(updated, session);
   }
 
   async delete(id: ID, session: Session): Promise<void> {
@@ -125,7 +124,10 @@ export class UserService {
 
   async list(input: UserListInput, session: Session): Promise<UserListOutput> {
     const results = await this.userRepo.list(input, session);
-    return await mapListResults(results, (dto) => this.secure(dto, session));
+    return {
+      ...results,
+      items: results.items.map((dto) => this.secure(dto, session)),
+    };
   }
 
   @CachedByArg({ weak: true })

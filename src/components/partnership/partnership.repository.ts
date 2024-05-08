@@ -2,15 +2,17 @@ import { Injectable } from '@nestjs/common';
 import { Node, node, Query, relation } from 'cypher-query-builder';
 import { pickBy } from 'lodash';
 import { DateTime } from 'luxon';
-import { ChangesOf } from '~/core/database/changes';
 import {
+  DuplicateException,
   generateId,
   ID,
   labelForView,
+  NotFoundException,
   ObjectView,
   ServerException,
   Session,
   UnsecuredDto,
+  viewOfChangeset,
 } from '../../common';
 import { DtoRepository } from '../../core';
 import {
@@ -29,7 +31,7 @@ import {
   sorting,
   whereNotDeletedInChangeset,
 } from '../../core/database/query';
-import { FileId } from '../file';
+import { FileId, FileService } from '../file';
 import {
   CreatePartnership,
   Partnership,
@@ -43,7 +45,13 @@ export class PartnershipRepository extends DtoRepository<
   typeof Partnership,
   [session: Session, view?: ObjectView]
 >(Partnership) {
+  constructor(private readonly files: FileService) {
+    super();
+  }
   async create(input: CreatePartnership, session: Session, changeset?: ID) {
+    const { projectId, partnerId } = input;
+    await this.verifyRelationshipEligibility(projectId, partnerId, changeset);
+
     const mouId = await generateId<FileId>();
     const agreementId = await generateId<FileId>();
 
@@ -80,18 +88,38 @@ export class PartnershipRepository extends DtoRepository<
     if (!result) {
       throw new ServerException('Failed to create partnership');
     }
-    return { id: result.id, mouId, agreementId };
+
+    await this.files.createDefinedFile(
+      mouId,
+      `MOU`,
+      session,
+      result.id,
+      'mou',
+      input.mou,
+      'partnership.mou',
+    );
+
+    await this.files.createDefinedFile(
+      agreementId,
+      `Partner Agreement`,
+      session,
+      result.id,
+      'agreement',
+      input.agreement,
+      'partnership.agreement',
+    );
+
+    return result;
   }
 
   async update(
-    existing: Partnership,
-    simpleChanges: Omit<
-      ChangesOf<Partnership, UpdatePartnership>,
-      'mou' | 'agreement'
-    >,
+    changes: Omit<UpdatePartnership, 'mou' | 'agreement'>,
     changeset?: ID,
   ) {
-    await this.updateProperties(existing, simpleChanges, changeset);
+    const { id, ...simpleChanges } = changes;
+    await this.updateProperties({ id }, simpleChanges, changeset);
+
+    return undefined as unknown;
   }
 
   async readMany(ids: readonly ID[], session: Session, view?: ObjectView) {
@@ -124,48 +152,56 @@ export class PartnershipRepository extends DtoRepository<
               : q,
           ),
       )
-      .match([
-        node('node'),
-        relation('out', '', 'partner'),
-        node('partner', 'Partner'),
-        relation('out', '', 'organization', ACTIVE),
-        node('org', 'Organization'),
-      ])
-      .apply(matchPropsAndProjectSensAndScopedRoles(session, { view }))
-      .apply(matchChangesetAndChangedProps(view?.changeset))
-      .apply(matchProps({ nodeName: 'project', outputVar: 'projectProps' }))
-      .apply(
-        matchProps({
-          nodeName: 'project',
-          view,
-          optional: true,
-          outputVar: 'projectChangedProps',
-        }),
-      )
-      .return<{ dto: UnsecuredDto<Partnership> }>(
-        merge('props', 'changedProps', {
-          mouStart: coalesce(
-            'changedProps.mouStartOverride',
-            'props.mouStartOverride',
-            'projectChangedProps.mouStart',
-            'projectProps.mouStart',
-          ),
-          mouEnd: coalesce(
-            'changedProps.mouEndOverride',
-            'props.mouEndOverride',
-            'projectChangedProps.mouEnd',
-            'projectProps.mouEnd',
-          ),
-          parent: 'project',
-          project: 'project.id',
-          partner: 'partner.id',
-          organization: 'org.id',
-          changeset: 'changeset.id',
-          mou: { id: 'props.mou' },
-        }).as('dto'),
-      )
+      .apply(this.hydrate(session, view))
       .map('dto')
       .run();
+  }
+
+  protected override hydrate(session: Session, view?: ObjectView) {
+    return (query: Query) =>
+      query
+        .match([
+          node('project'),
+          relation('out', '', 'partnership'),
+          node('node'),
+          relation('out', '', 'partner'),
+          node('partner', 'Partner'),
+          relation('out', '', 'organization', ACTIVE),
+          node('org', 'Organization'),
+        ])
+        .apply(matchPropsAndProjectSensAndScopedRoles(session, { view }))
+        .apply(matchChangesetAndChangedProps(view?.changeset))
+        .apply(matchProps({ nodeName: 'project', outputVar: 'projectProps' }))
+        .apply(
+          matchProps({
+            nodeName: 'project',
+            view,
+            optional: true,
+            outputVar: 'projectChangedProps',
+          }),
+        )
+        .return<{ dto: UnsecuredDto<Partnership> }>(
+          merge('props', 'changedProps', {
+            mouStart: coalesce(
+              'changedProps.mouStartOverride',
+              'props.mouStartOverride',
+              'projectChangedProps.mouStart',
+              'projectProps.mouStart',
+            ),
+            mouEnd: coalesce(
+              'changedProps.mouEndOverride',
+              'props.mouEndOverride',
+              'projectChangedProps.mouEnd',
+              'projectProps.mouEnd',
+            ),
+            parent: 'project',
+            project: 'project { .id }',
+            partner: 'partner { .id }',
+            organization: 'org { .id }',
+            changeset: 'changeset.id',
+            mou: { id: 'props.mou' },
+          }).as('dto'),
+        );
   }
 
   async list(input: PartnershipListInput, session: Session, changeset?: ID) {
@@ -195,7 +231,6 @@ export class PartnershipRepository extends DtoRepository<
               : q,
           ),
       )
-
       .match(requestingUser(session))
       .apply(
         this.privileges.forUser(session).filterToReadable({
@@ -203,17 +238,17 @@ export class PartnershipRepository extends DtoRepository<
         }),
       )
       .apply(sorting(Partnership, input))
-      .apply(paginate(input))
+      .apply(paginate(input, this.hydrate(session, viewOfChangeset(changeset))))
       .first();
     return result!; // result from paginate() will always have 1 row.
   }
 
-  async verifyRelationshipEligibility(
+  private async verifyRelationshipEligibility(
     projectId: ID,
     partnerId: ID,
     changeset?: ID,
   ) {
-    return (
+    const result =
       (await this.db
         .query()
         .optionalMatch(node('partner', 'Partner', { id: partnerId }))
@@ -253,8 +288,29 @@ export class PartnershipRepository extends DtoRepository<
         )
         .return(['partner', 'project', 'partnership'])
         .asResult<{ partner?: Node; project?: Node; partnership?: Node }>()
-        .first()) ?? {}
-    );
+        .first()) ?? {};
+
+    if (!result.project) {
+      throw new NotFoundException(
+        'Could not find project',
+        'partnership.projectId',
+      );
+    }
+
+    if (!result.partner) {
+      throw new NotFoundException(
+        'Could not find partner',
+        'partnership.partnerId',
+      );
+    }
+
+    if (result.partnership) {
+      throw new DuplicateException(
+        'partnership.projectId',
+        'Partnership for this project and partner already exists',
+      );
+    }
+    return result;
   }
 
   async isFirstPartnership(projectId: ID, changeset?: ID) {

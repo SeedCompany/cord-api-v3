@@ -1,37 +1,19 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { MaybeAsync } from '@seedcompany/common';
-import { node, Query, relation } from 'cypher-query-builder';
-import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
 import { difference } from 'lodash';
-import { DateTime } from 'luxon';
 import {
-  DuplicateException,
-  generateId,
   ID,
   InputException,
-  isIdLike,
-  mapSecuredValue,
   NotFoundException,
   ObjectView,
   ServerException,
   Session,
   UnauthorizedException,
   UnsecuredDto,
-} from '../../../common';
-import {
-  ConfigService,
-  DatabaseService,
-  HandleIdLookup,
-  IEventBus,
-  ILogger,
-  Logger,
-} from '../../../core';
-import { ACTIVE } from '../../../core/database/query';
-import { mapListResults } from '../../../core/database/results';
+} from '~/common';
+import { HandleIdLookup, ResourceLoader } from '~/core';
 import { Privileges, Role } from '../../authorization';
 import { User, UserService } from '../../user';
-import { IProject } from '../dto';
-import { ProjectService } from '../project.service';
 import {
   CreateProjectMember,
   ProjectMember,
@@ -44,88 +26,29 @@ import { ProjectMemberRepository } from './project-member.repository';
 @Injectable()
 export class ProjectMemberService {
   constructor(
-    private readonly db: DatabaseService,
-    private readonly config: ConfigService,
     @Inject(forwardRef(() => UserService))
     private readonly userService: UserService & {},
-    private readonly eventBus: IEventBus,
-    @Inject(forwardRef(() => ProjectService))
-    private readonly projectService: ProjectService & {},
-    @Logger('project:member:service') private readonly logger: ILogger,
+    private readonly resources: ResourceLoader,
     private readonly privileges: Privileges,
     private readonly repo: ProjectMemberRepository,
   ) {}
 
-  protected async verifyRelationshipEligibility(
-    projectId: ID,
-    userId: ID,
-  ): Promise<void> {
-    const result = await this.repo.verifyRelationshipEligibility(
-      projectId,
-      userId,
-    );
-
-    if (!result?.project) {
-      throw new NotFoundException(
-        'Could not find project',
-        'projectMember.projectId',
-      );
-    }
-
-    if (!result?.user) {
-      throw new NotFoundException(
-        'Could not find person',
-        'projectMember.userId',
-      );
-    }
-
-    if (result.member) {
-      throw new DuplicateException(
-        'projectMember.userId',
-        'Person is already a member of this project',
-      );
-    }
-  }
-
   async create(
-    { userId, projectId: projectOrId, ...input }: CreateProjectMember,
+    input: CreateProjectMember,
     session: Session,
     enforcePerms = true,
   ): Promise<ProjectMember> {
-    const projectId = isIdLike(projectOrId) ? projectOrId : projectOrId.id;
-    const project = isIdLike(projectOrId)
-      ? await this.projectService.readOneUnsecured(projectOrId, session)
-      : projectOrId;
-
-    enforcePerms &&
-      this.privileges
-        .for(session, IProject, project)
-        .verifyCan('create', 'member');
-
-    const id = await generateId();
-    const createdAt = DateTime.local();
-    await this.repo.verifyRelationshipEligibility(projectId, userId);
-
     enforcePerms &&
       (await this.assertValidRoles(input.roles, () =>
-        this.userService.readOne(userId, session),
+        this.resources.load('User', input.userId),
       ));
 
-    try {
-      const memberQuery = await this.repo.create(
-        { userId, projectId, ...input },
-        id,
-        session,
-        createdAt,
-      );
-      if (!memberQuery) {
-        throw new ServerException('Failed to create project member');
-      }
+    const created = await this.repo.create(input, session);
 
-      return await this.readOne(id, session);
-    } catch (exception) {
-      throw new ServerException('Could not create project member', exception);
-    }
+    enforcePerms &&
+      this.privileges.for(session, ProjectMember, created).verifyCan('create');
+
+    return this.secure(created, session);
   }
 
   @HandleIdLookup(ProjectMember)
@@ -134,10 +57,6 @@ export class ProjectMemberService {
     session: Session,
     _view?: ObjectView,
   ): Promise<ProjectMember> {
-    this.logger.debug(`read one`, {
-      id,
-      userId: session.userId,
-    });
     if (!id) {
       throw new NotFoundException(
         'No project member id to search for',
@@ -146,29 +65,33 @@ export class ProjectMemberService {
     }
 
     const dto = await this.repo.readOne(id, session);
-    return await this.secure(dto, session);
+    return this.secure(dto, session);
   }
 
   async readMany(ids: readonly ID[], session: Session) {
     const projectMembers = await this.repo.readMany(ids, session);
-    return await Promise.all(
-      projectMembers.map((dto) => this.secure(dto, session)),
-    );
+    return projectMembers.map((dto) => this.secure(dto, session));
   }
 
-  private async secure(
+  private secure(
     dto: UnsecuredDto<ProjectMember>,
     session: Session,
-  ): Promise<ProjectMember> {
-    const secured = this.privileges.for(session, ProjectMember).secure({
-      ...dto,
-      roles: dto.roles ?? [],
-    });
+  ): ProjectMember {
+    const { user, ...secured } = this.privileges
+      .for(session, ProjectMember)
+      .secure(dto);
     return {
       ...secured,
-      user: await mapSecuredValue(secured.user, (user) =>
-        this.userService.secure(user, session),
-      ),
+      user: {
+        ...user,
+        value:
+          user.value && user.canRead
+            ? this.userService.secure(
+                user.value as unknown as UnsecuredDto<User>,
+                session,
+              )
+            : undefined,
+      },
     };
   }
 
@@ -190,8 +113,12 @@ export class ProjectMemberService {
 
     const changes = this.repo.getActualChanges(object, input);
     this.privileges.for(session, ProjectMember, object).verifyChanges(changes);
-    await this.repo.update(object, changes);
-    return await this.readOne(input.id, session);
+
+    const updated = await this.repo.update(
+      { id: object.id, ...changes },
+      session,
+    );
+    return this.secure(updated, session);
   }
 
   private async assertValidRoles(
@@ -216,20 +143,11 @@ export class ProjectMemberService {
   async delete(id: ID, session: Session): Promise<void> {
     const object = await this.readOne(id, session);
 
-    if (!object) {
-      throw new NotFoundException(
-        'Could not find project member',
-        'projectMember.id',
-      );
-    }
+    this.privileges.for(session, ProjectMember, object).verifyCan('delete');
 
     try {
       await this.repo.deleteNode(object);
     } catch (exception) {
-      this.logger.warning('Failed to delete project member', {
-        exception,
-      });
-
       throw new ServerException('Failed to delete project member', exception);
     }
   }
@@ -239,20 +157,9 @@ export class ProjectMemberService {
     session: Session,
   ): Promise<ProjectMemberListOutput> {
     const results = await this.repo.list(input, session);
-    return await mapListResults(results, (dto) => this.secure(dto, session));
-  }
-
-  protected filterByProject(
-    query: Query,
-    projectId: ID,
-    relationshipType: string,
-    relationshipDirection: RelationDirection,
-    label: string,
-  ) {
-    query.match([
-      node('project', 'Project', { id: projectId }),
-      relation(relationshipDirection, '', relationshipType, ACTIVE),
-      node('node', label),
-    ]);
+    return {
+      ...results,
+      items: results.items.map((dto) => this.secure(dto, session)),
+    };
   }
 }

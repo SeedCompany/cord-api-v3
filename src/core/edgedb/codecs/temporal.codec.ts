@@ -12,8 +12,8 @@ export class LuxonDateTimeCodec extends DateTimeCodec {
     ts: 'DateTime',
     path: 'luxon',
   };
-  tsType = DateTime.name;
-  importedType = true;
+  tsType = LuxonDateTimeCodec.info.ts;
+  tsModule = LuxonDateTimeCodec.info.path;
 
   encode(buf: WriteBuffer, object: unknown) {
     if (object instanceof Date) {
@@ -41,8 +41,8 @@ export class LuxonCalendarDateCodec extends LocalDateCodec {
     ts: 'CalendarDate',
     path: '~/common/temporal/calendar-date',
   };
-  tsType = CalendarDate.name;
-  importedType = true;
+  tsType = LuxonCalendarDateCodec.info.ts;
+  tsModule = LuxonCalendarDateCodec.info.path;
 
   encode(buf: WriteBuffer, object: unknown) {
     if (object instanceof LocalDate) {

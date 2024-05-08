@@ -11,8 +11,8 @@ export class RichTextCodec extends JSONCodec {
     ts: RichTextDocument.name,
     path: '~/common/rich-text.scalar',
   };
-  tsType = RichTextDocument.name;
-  importedType = true;
+  tsType = RichTextCodec.info.ts;
+  tsModule = RichTextCodec.info.path;
 
   encode(buf: WriteBuffer, object: unknown) {
     if (!(object instanceof RichTextDocument)) {
