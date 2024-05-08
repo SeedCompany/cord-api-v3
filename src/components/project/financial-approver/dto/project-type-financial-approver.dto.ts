@@ -17,7 +17,6 @@ export class ProjectTypeFinancialApprover extends Resource {
   static readonly SecuredProps =
     keysOf<SecuredProps<ProjectTypeFinancialApprover>>();
 
-  @Field(() => User)
   readonly user: LinkTo<'User'> & Pick<UnsecuredDto<User>, 'email'>;
 
   @Field(() => [ProjectType])
