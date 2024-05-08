@@ -13,6 +13,14 @@ module default {
     defaultFieldRegion: FieldRegion;
     defaultMarketingRegion: Location;
     mapImage: File;
+
+    access policy CanSelectUpdateReadUpdateWriteGeneratedFromAppPoliciesForLocation
+    allow select, update read, update write;
+
+    access policy CanInsertDeleteGeneratedFromAppPoliciesForLocation
+    allow insert, delete using (
+      Role.Administrator in global currentRoles
+    );
   }
 }
   

@@ -9,6 +9,19 @@ module default {
     
     altText: str;
     caption: str;
+
+    access policy CanSelectUpdateReadGeneratedFromAppPoliciesForMedia
+    allow select, update read using (
+      exists (<Role>{'Administrator', 'Leadership'} intersect global currentRoles)
+    );
+
+    access policy CanUpdateWriteGeneratedFromAppPoliciesForMedia
+    allow update write;
+
+    access policy CanInsertDeleteGeneratedFromAppPoliciesForMedia
+    allow insert, delete using (
+      Role.Administrator in global currentRoles
+    );
   }
 }
 

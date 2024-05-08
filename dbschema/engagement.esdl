@@ -38,6 +38,44 @@ module default {
     };
     
     description: RichText;
+
+    access policy CanSelectUpdateReadGeneratedFromAppPoliciesForEngagement
+    allow select, update read using (
+      (
+        exists (<Role>{'Administrator', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller', 'Marketing', 'Fundraising', 'ExperienceOperations', 'Leadership', 'StaffMember'} intersect global currentRoles)
+        or (
+          exists (<Role>{'Consultant', 'ConsultantManager', 'FieldPartner', 'Intern', 'Mentor', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'Translator'} intersect global currentRoles)
+          and .isMember
+        )
+      )
+    );
+
+    access policy CanUpdateWriteGeneratedFromAppPoliciesForEngagement
+    allow update write;
+
+    access policy CanInsertGeneratedFromAppPoliciesForEngagement
+    allow insert using (
+      (
+        Role.Administrator in global currentRoles
+        or (
+          exists (<Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller'} intersect global currentRoles)
+          and .isMember
+          and <str>.project.status = 'InDevelopment'
+        )
+      )
+    );
+
+    access policy CanDeleteGeneratedFromAppPoliciesForEngagement
+    allow delete using (
+      (
+        Role.Administrator in global currentRoles
+        or (
+          exists (<Role>{'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller'} intersect global currentRoles)
+          and .isMember
+          and <str>.status = 'InDevelopment'
+        )
+      )
+    );
   }
   
   type LanguageEngagement extending Engagement {
@@ -109,6 +147,11 @@ module default {
     trigger removeProjectFromContextOfLanguage after delete for each do (
       update __old__.language.projectContext
       set { projects -= __old__.project }
+    );
+
+    access policy CanSelectUpdateReadGeneratedFromAppPoliciesForLanguageEngagement
+    allow select, update read using (
+      Role.ConsultantManager in global currentRoles
     );
   }
   

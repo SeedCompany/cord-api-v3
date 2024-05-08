@@ -112,6 +112,30 @@ module default {
         projectContext := __new__.projectContext,
       }
     );
+
+    access policy CanSelectUpdateReadGeneratedFromAppPoliciesForProject
+    allow select, update read using (
+      (
+        exists (<Role>{'Administrator', 'ConsultantManager', 'ExperienceOperations', 'FieldOperationsDirector', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller', 'Fundraising', 'Leadership', 'Marketing', 'ProjectManager', 'RegionalDirector', 'StaffMember'} intersect global currentRoles)
+        or (
+          exists (<Role>{'Consultant', 'ConsultantManager', 'FieldPartner', 'Intern', 'Mentor', 'RegionalDirector', 'FieldOperationsDirector', 'Translator'} intersect global currentRoles)
+          and .isMember
+        )
+      )
+    );
+
+    access policy CanUpdateWriteGeneratedFromAppPoliciesForProject
+    allow update write;
+
+    access policy CanInsertGeneratedFromAppPoliciesForProject
+    allow insert using (
+      exists (<Role>{'Administrator', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect global currentRoles)
+    );
+
+    access policy CanDeleteGeneratedFromAppPoliciesForProject
+    allow delete using (
+      Role.Administrator in global currentRoles
+    );
   }
   
   abstract type TranslationProject extending Project {
