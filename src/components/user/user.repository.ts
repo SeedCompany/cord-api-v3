@@ -200,6 +200,7 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
     const result = await this.db
       .query()
       .matchNode('node', 'User')
+      .match(requestingUser(session))
       .apply(
         filter.builder(input.filter, {
           pinned: filter.isPinned,
