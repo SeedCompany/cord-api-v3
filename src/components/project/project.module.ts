@@ -11,6 +11,7 @@ import { PartnershipModule } from '../partnership/partnership.module';
 import { ProjectChangeRequestModule } from '../project-change-request/project-change-request.module';
 import { UserModule } from '../user/user.module';
 import { ProjectEngagementConnectionResolver } from './engagement-connection.resolver';
+import { FinancialApproverModule } from './financial-approver/financial-approver.module';
 import * as handlers from './handlers';
 import { InternshipProjectResolver } from './internship-project.resolver';
 import { RenameTranslationToMomentumMigration } from './migrations/rename-translation-to-momentum.migration';
@@ -41,6 +42,7 @@ import { ProjectUserConnectionResolver } from './user-connection.resolver';
     forwardRef(() => AuthorizationModule),
     PartnerModule,
     forwardRef(() => OrganizationModule),
+    FinancialApproverModule,
   ],
   providers: [
     ProjectResolver,
