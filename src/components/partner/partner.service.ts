@@ -192,15 +192,14 @@ export class PartnerService {
     partner: Partner,
     input: EngagementListInput,
     session: Session,
-  ): Promise<any> {
-    const languageListOutput = await this.engagementService.listAllByPartnerId(
-      partner.id,
+  ) {
+    return await this.engagementService.list(
+      {
+        ...input,
+        filter: { ...input.filter, partnerId: partner.id },
+      },
       session,
     );
-    return {
-      ...languageListOutput,
-      // non-owned list
-    };
   }
 
   protected verifyFinancialReportingType(

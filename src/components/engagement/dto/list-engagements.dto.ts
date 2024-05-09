@@ -23,7 +23,7 @@ export abstract class EngagementFilters {
 
   readonly projectId?: ID;
 
-  readonly partnerId?: ID;
+  readonly partnerId?: ID<'Partner'>;
 }
 
 @InputType()

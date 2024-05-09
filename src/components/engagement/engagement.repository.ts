@@ -23,6 +23,7 @@ import {
   coalesce,
   createNode,
   createRelationships,
+  filter,
   INACTIVE,
   matchChangesetAndChangedProps,
   matchPropsAndProjectSensAndScopedRoles,
@@ -359,6 +360,21 @@ export class EngagementRepository extends CommonRepository {
       )
       .match(requestingUser(session))
       .apply(
+        filter.builder(input.filter, {
+          type: filter.skip,
+          projectId: filter.skip,
+          partnerId: filter.pathExists((id) => [
+            node('node'),
+            relation('in', '', 'engagement'),
+            node('', 'Project'),
+            relation('out', '', 'partnership', ACTIVE),
+            node('', 'Partnership'),
+            relation('out', '', 'partner'),
+            node('', 'Partner', { id }),
+          ]),
+        }),
+      )
+      .apply(
         this.privileges.for(session, IEngagement).filterToReadable({
           wrapContext: oncePerProject,
         }),
@@ -380,25 +396,6 @@ export class EngagementRepository extends CommonRepository {
       .apply(this.hydrate(session))
       .map('dto')
       .run();
-  }
-
-  async listAllByPartnerId(partnerId: ID, session: Session) {
-    const results = await this.db
-      .query()
-      .match([
-        node('node'),
-        relation('in', '', 'engagement', ACTIVE),
-        node('', 'Project'),
-        relation('out', '', 'partnership', ACTIVE),
-        node('', 'Partnership'),
-        relation('out', '', 'partner', ACTIVE),
-        node('', 'Partner', { id: partnerId }),
-      ])
-      .apply(this.hydrate(session))
-      .map('dto')
-      .run();
-
-    return results;
   }
 
   async getOngoingEngagementIds(
