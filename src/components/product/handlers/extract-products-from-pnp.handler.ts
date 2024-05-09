@@ -53,7 +53,7 @@ export class ExtractProductsFromPnpHandler
       return;
     }
 
-    const pnp = await this.files.getFile(engagement.pnp, event.session);
+    const pnp = await this.files.getFile(engagement.pnp.id, event.session);
     const file = this.files.asDownloadable({}, pnp.latestVersionId);
 
     const availableSteps = getAvailableSteps({

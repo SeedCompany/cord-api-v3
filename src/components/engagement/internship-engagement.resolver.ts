@@ -24,7 +24,7 @@ export class InternshipEngagementResolver {
     @Parent() engagement: InternshipEngagement,
     @Loader(UserLoader) users: LoaderOf<UserLoader>,
   ): Promise<SecuredUser> {
-    return await mapSecuredValue(engagement.intern, (id) => users.load(id));
+    return await mapSecuredValue(engagement.intern, ({ id }) => users.load(id));
   }
 
   @ResolveField(() => SecuredUser)
@@ -32,7 +32,7 @@ export class InternshipEngagementResolver {
     @Parent() engagement: InternshipEngagement,
     @Loader(UserLoader) users: LoaderOf<UserLoader>,
   ): Promise<SecuredUser> {
-    return await mapSecuredValue(engagement.mentor, (id) => users.load(id));
+    return await mapSecuredValue(engagement.mentor, ({ id }) => users.load(id));
   }
 
   @ResolveField(() => SecuredLocation)
@@ -40,7 +40,7 @@ export class InternshipEngagementResolver {
     @Parent() engagement: InternshipEngagement,
     @Loader(LocationLoader) locations: LoaderOf<LocationLoader>,
   ): Promise<SecuredLocation> {
-    return await mapSecuredValue(engagement.countryOfOrigin, (id) =>
+    return await mapSecuredValue(engagement.countryOfOrigin, ({ id }) =>
       locations.load(id),
     );
   }

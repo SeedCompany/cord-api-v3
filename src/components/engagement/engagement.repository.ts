@@ -5,8 +5,10 @@ import { difference, pickBy } from 'lodash';
 import { DateTime } from 'luxon';
 import { MergeExclusive } from 'type-fest';
 import {
+  DuplicateException,
   generateId,
   ID,
+  InputException,
   labelForView,
   NotFoundException,
   ObjectView,
@@ -17,7 +19,7 @@ import {
   viewOfChangeset,
 } from '~/common';
 import { CommonRepository, OnIndex } from '~/core/database';
-import { ChangesOf, getChanges } from '~/core/database/changes';
+import { getChanges } from '~/core/database/changes';
 import {
   ACTIVE,
   coalesce,
@@ -38,14 +40,17 @@ import {
   whereNotDeletedInChangeset,
 } from '~/core/database/query';
 import { Privileges } from '../authorization';
+import { FileService } from '../file';
 import { FileId } from '../file/dto';
 import { languageSorters } from '../language/language.repository';
+import { Location } from '../location/dto';
 import {
   matchCurrentDue,
   progressReportSorters,
 } from '../periodic-report/periodic-report.repository';
 import { ProjectType } from '../project/dto';
 import { projectSorters } from '../project/project.repository';
+import { User } from '../user/dto';
 import {
   CreateInternshipEngagement,
   CreateLanguageEngagement,
@@ -55,6 +60,7 @@ import {
   IEngagement,
   InternshipEngagement,
   LanguageEngagement,
+  resolveEngagementType,
   UpdateInternshipEngagement,
   UpdateLanguageEngagement,
 } from './dto';
@@ -66,7 +72,10 @@ export type LanguageOrEngagementId = MergeExclusive<
 
 @Injectable()
 export class EngagementRepository extends CommonRepository {
-  constructor(private readonly privileges: Privileges) {
+  constructor(
+    private readonly privileges: Privileges,
+    private readonly files: FileService,
+  ) {
     super();
   }
 
@@ -177,10 +186,9 @@ export class EngagementRepository extends CommonRepository {
         );
   }
 
-  // CREATE ///////////////////////////////////////////////////////////
-
   async createLanguageEngagement(
     input: CreateLanguageEngagement,
+    session: Session,
     changeset?: ID,
   ) {
     const pnpId = await generateId<FileId>();
@@ -204,6 +212,17 @@ export class EngagementRepository extends CommonRepository {
       canDelete: true,
     };
 
+    await this.verifyRelationshipEligibility(
+      projectId,
+      languageId,
+      false,
+      changeset,
+    );
+
+    if (input.firstScripture) {
+      await this.verifyFirstScripture({ languageId });
+    }
+
     const query = this.db
       .query()
       .apply(await createNode(LanguageEngagement, { initialProps }))
@@ -223,11 +242,22 @@ export class EngagementRepository extends CommonRepository {
       throw new ServerException('Could not create Language Engagement');
     }
 
-    return { id: result.id, pnpId };
+    await this.files.createDefinedFile(
+      pnpId,
+      `PNP`,
+      session,
+      result.id,
+      'pnp',
+      input.pnp,
+      'engagement.pnp',
+    );
+
+    return await this.readOne(result.id, session, viewOfChangeset(changeset));
   }
 
   async createInternshipEngagement(
     input: CreateInternshipEngagement,
+    session: Session,
     changeset?: ID,
   ) {
     const growthPlanId = await generateId<FileId>();
@@ -253,6 +283,13 @@ export class EngagementRepository extends CommonRepository {
       canDelete: true,
     };
 
+    await this.verifyRelationshipEligibility(
+      projectId,
+      internId,
+      true,
+      changeset,
+    );
+
     const query = this.db
       .query()
       .apply(await createNode(InternshipEngagement, { initialProps }))
@@ -272,67 +309,125 @@ export class EngagementRepository extends CommonRepository {
       .return<{ id: ID }>('node.id as id');
     const result = await query.first();
     if (!result) {
-      throw new NotFoundException();
+      if (mentorId && !(await this.getBaseNode(mentorId, User))) {
+        throw new NotFoundException(
+          'Could not find mentor',
+          'engagement.mentorId',
+        );
+      }
+
+      if (
+        countryOfOriginId &&
+        !(await this.getBaseNode(countryOfOriginId, Location))
+      ) {
+        throw new NotFoundException(
+          'Could not find country of origin',
+          'engagement.countryOfOriginId',
+        );
+      }
+
+      throw new ServerException('Could not create Internship Engagement');
     }
 
-    return { id: result.id, growthPlanId };
-  }
+    await this.files.createDefinedFile(
+      growthPlanId,
+      `Growth Plan`,
+      session,
+      result.id,
+      'growthPlan',
+      input.growthPlan,
+      'engagement.growthPlan',
+    );
 
-  // UPDATE ///////////////////////////////////////////////////////////
+    return await this.readOne(result.id, session, viewOfChangeset(changeset));
+  }
 
   getActualLanguageChanges = getChanges(LanguageEngagement);
 
   async updateLanguage(
-    existing: LanguageEngagement | UnsecuredDto<LanguageEngagement>,
-    changes: ChangesOf<LanguageEngagement, UpdateLanguageEngagement>,
+    changes: UpdateLanguageEngagement & {
+      id: ID;
+      firstScripture?: boolean;
+    },
+    session: Session,
     changeset?: ID,
-  ): Promise<void> {
-    const { pnp, ...simpleChanges } = changes;
+  ) {
+    const { id, firstScripture, pnp, ...simpleChanges } = changes;
+
+    if (pnp) {
+      const engagement = await this.readOne(id, session);
+      const secureEngagement = this.secure(engagement, session);
+
+      if (secureEngagement.pnp) {
+        await this.files.updateDefinedFile(
+          secureEngagement.pnp,
+          'engagement.pnp',
+          pnp,
+          session,
+        );
+      }
+    }
+
+    if (firstScripture) {
+      await this.verifyFirstScripture({ engagementId: id });
+    }
 
     await this.db.updateProperties({
       type: LanguageEngagement,
-      object: existing,
+      object: { id },
       changes: simpleChanges,
       changeset,
     });
+
+    return await this.readOne(id, session);
   }
 
   getActualInternshipChanges = getChanges(InternshipEngagement);
 
   async updateInternship(
-    existing: InternshipEngagement | UnsecuredDto<InternshipEngagement>,
-    changes: ChangesOf<InternshipEngagement, UpdateInternshipEngagement>,
+    changes: UpdateInternshipEngagement & { id: ID },
+    session: Session,
     changeset?: ID,
-  ): Promise<void> {
-    const {
-      mentorId,
-      countryOfOriginId,
-      growthPlan: _,
-      ...simpleChanges
-    } = changes;
+  ) {
+    const { id, mentorId, countryOfOriginId, growthPlan, ...simpleChanges } =
+      changes;
+
+    if (growthPlan) {
+      const engagement = await this.readOne(id, session);
+      const secureEngagement = this.secure(engagement, session);
+
+      if (secureEngagement.growthPlan) {
+        await this.files.updateDefinedFile(
+          secureEngagement.growthPlan,
+          'engagement.growthPlan',
+          growthPlan,
+          session,
+        );
+      }
+    }
 
     if (mentorId !== undefined) {
-      await this.updateRelation('mentor', 'User', existing.id, mentorId);
+      await this.updateRelation('mentor', 'User', id, mentorId);
     }
 
     if (countryOfOriginId !== undefined) {
       await this.updateRelation(
         'countryOfOrigin',
         'Location',
-        existing.id,
+        id,
         countryOfOriginId,
       );
     }
 
     await this.db.updateProperties({
       type: InternshipEngagement,
-      object: existing,
+      object: { id },
       changes: simpleChanges,
       changeset,
     });
-  }
 
-  // LIST ///////////////////////////////////////////////////////////
+    return await this.readOne(id, session);
+  }
 
   async list(input: EngagementListInput, session: Session, changeset?: ID) {
     const label =
@@ -435,18 +530,19 @@ export class EngagementRepository extends CommonRepository {
     return rows.map((r) => r.id);
   }
 
-  async verifyRelationshipEligibility(
+  protected async verifyRelationshipEligibility(
     projectId: ID,
     otherId: ID,
-    isTranslation: boolean,
-    property: 'language' | 'intern',
+    isInternship: boolean,
     changeset?: ID,
   ) {
-    return await this.db
+    const property = isInternship ? 'intern' : 'language';
+
+    const result = await this.db
       .query()
       .optionalMatch(node('project', 'Project', { id: projectId }))
       .optionalMatch(
-        node('other', isTranslation ? 'Language' : 'User', {
+        node('other', !isInternship ? 'Language' : 'User', {
           id: otherId,
         }),
       )
@@ -475,9 +571,48 @@ export class EngagementRepository extends CommonRepository {
         engagement?: Node;
       }>()
       .first();
+
+    if (!result?.project) {
+      throw new NotFoundException(
+        'Could not find project',
+        'engagement.projectId',
+      );
+    }
+
+    const isActuallyInternship =
+      result.project.properties.type === ProjectType.Internship;
+    if (isActuallyInternship !== isInternship) {
+      throw new InputException(
+        `Only ${
+          isInternship ? 'Internship' : 'Language'
+        } Engagements can be created on ${
+          isInternship ? 'Internship' : 'Translation'
+        } Projects`,
+        `engagement.${property}Id`,
+      );
+    }
+
+    const label = isInternship ? 'person' : 'language';
+    if (!result?.other) {
+      throw new NotFoundException(
+        `Could not find ${label}`,
+        `engagement.${property}Id`,
+      );
+    }
+
+    if (result.engagement) {
+      throw new DuplicateException(
+        `engagement.${property}Id`,
+        `Engagement for this project and ${label} already exists`,
+      );
+    }
+
+    return result;
   }
 
-  async doesLanguageHaveExternalFirstScripture(id: LanguageOrEngagementId) {
+  private async doesLanguageHaveExternalFirstScripture(
+    id: LanguageOrEngagementId,
+  ) {
     const result = await this.db
       .query()
       .apply(this.matchLanguageOrEngagement(id))
@@ -491,7 +626,9 @@ export class EngagementRepository extends CommonRepository {
     return !!result;
   }
 
-  async doOtherEngagementsHaveFirstScripture(id: LanguageOrEngagementId) {
+  private async doOtherEngagementsHaveFirstScripture(
+    id: LanguageOrEngagementId,
+  ) {
     const result = await this.db
       .query()
       .apply(this.matchLanguageOrEngagement(id))
@@ -521,6 +658,30 @@ export class EngagementRepository extends CommonRepository {
             node('language', 'Language'),
           ])
         : query.match([node('language', 'Language', { id: languageId })]);
+  }
+
+  /**
+   * if firstScripture is true, validate that the engagement
+   * is the only engagement for the language that has firstScripture=true
+   * that the language doesn't have hasExternalFirstScripture=true
+   */
+  private async verifyFirstScripture(id: LanguageOrEngagementId) {
+    if (await this.doesLanguageHaveExternalFirstScripture(id)) {
+      throw new InputException(
+        'First scripture has already been marked as having been done externally',
+        'languageEngagement.firstScripture',
+      );
+    }
+    if (await this.doOtherEngagementsHaveFirstScripture(id)) {
+      throw new InputException(
+        'Another engagement has already been marked as having done the first scripture',
+        'languageEngagement.firstScripture',
+      );
+    }
+  }
+
+  private secure(dto: UnsecuredDto<Engagement>, session: Session): Engagement {
+    return this.privileges.for(session, resolveEngagementType(dto)).secure(dto);
   }
 
   @OnIndex()
