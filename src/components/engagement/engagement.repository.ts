@@ -339,7 +339,7 @@ export class EngagementRepository extends CommonRepository {
           .match([
             node('project', 'Project', pickBy({ id: input.filter.projectId })),
             relation('out', '', 'engagement', ACTIVE),
-            node('node', 'Engagement'),
+            node('node', label),
           ])
           .apply(whereNotDeletedInChangeset(changeset))
           .return(['node', 'project'])
