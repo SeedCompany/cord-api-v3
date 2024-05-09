@@ -1,11 +1,13 @@
-import { CalendarDate, ID, ServerException, UnsecuredDto } from '~/common';
-import { EventsHandler, IEventHandler, ILogger, Logger } from '~/core';
 import {
-  Engagement,
-  EngagementStatus,
-  InternshipEngagement,
-  LanguageEngagement,
-} from '../dto';
+  CalendarDate,
+  ID,
+  ServerException,
+  Session,
+  UnsecuredDto,
+} from '~/common';
+import { EventsHandler, IEventHandler, ILogger, Logger } from '~/core';
+import { Privileges } from '../../authorization';
+import { Engagement, EngagementStatus } from '../dto';
 import { EngagementRepository } from '../engagement.repository';
 import { EngagementService } from '../engagement.service';
 import { EngagementCreatedEvent, EngagementUpdatedEvent } from '../events';
@@ -17,6 +19,7 @@ export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
   constructor(
     private readonly engagementRepo: EngagementRepository,
     private readonly engagementService: EngagementService,
+    private readonly privileges: Privileges,
     @Logger('engagement:set-initial-end-date') private readonly logger: ILogger,
   ) {}
 
@@ -46,6 +49,7 @@ export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
       await this.updateEngagementInitialEndDate(
         engagement,
         initialEndDate,
+        event.session,
         engagement.changeset,
       );
       const updatedEngagement = {
@@ -73,6 +77,7 @@ export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
   private async updateEngagementInitialEndDate(
     engagement: UnsecuredDto<Engagement>,
     initialEndDate: CalendarDate | null | undefined,
+    session: Session,
     changeset?: ID,
   ) {
     const updateInput = {
@@ -80,14 +85,21 @@ export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
     };
     if (engagement.__typename === 'LanguageEngagement') {
       await this.engagementRepo.updateLanguage(
-        engagement as UnsecuredDto<LanguageEngagement>,
-        updateInput,
+        {
+          id: engagement.id,
+          firstScripture: engagement.firstScripture,
+          ...updateInput,
+        },
+        session,
         changeset,
       );
     } else {
       await this.engagementRepo.updateInternship(
-        engagement as UnsecuredDto<InternshipEngagement>,
-        updateInput,
+        {
+          id: engagement.id,
+          ...updateInput,
+        },
+        session,
         changeset,
       );
     }

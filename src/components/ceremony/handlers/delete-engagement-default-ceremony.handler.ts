@@ -9,8 +9,8 @@ export class DetachEngagementRootDirectoryHandler
   constructor(private readonly ceremonies: CeremonyService) {}
 
   async handle({ engagement, session }: EngagementWillDeleteEvent) {
-    const ceremonyId = engagement?.ceremony?.value;
-    if (!ceremonyId) {
+    const ceremony = engagement?.ceremony?.value;
+    if (!ceremony) {
       return;
     }
 
@@ -19,6 +19,6 @@ export class DetachEngagementRootDirectoryHandler
       return;
     }
 
-    await this.ceremonies.delete(ceremonyId, session);
+    await this.ceremonies.delete(ceremony.id, session);
   }
 }
