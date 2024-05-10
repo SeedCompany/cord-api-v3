@@ -181,7 +181,7 @@ export class PartnerResolver {
   }
 
   @ResolveField(() => EngagementListOutput, {
-    description: "Engagements of the partner's affiliated translation projects",
+    description: "Engagements of the partner's affiliated projects",
   })
   async engagements(
     @AnonSession() session: Session,
