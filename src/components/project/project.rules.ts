@@ -55,7 +55,7 @@ export interface EmailNotification {
     'email' | 'displayFirstName' | 'displayLastName' | 'timezone'
   >;
   changedBy: Pick<User, 'id' | 'displayFirstName' | 'displayLastName'>;
-  project: Pick<Project, 'id' | 'modifiedAt' | 'name' | 'step'>;
+  project: Pick<Project, 'id' | 'modifiedAt' | 'name' | 'step' | 'type'>;
   previousStep?: ProjectStep;
 }
 
