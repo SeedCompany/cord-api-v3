@@ -18,6 +18,11 @@ import {
   Session,
 } from '../../common';
 import { Loader, LoaderOf } from '../../core';
+import {
+  EngagementListInput,
+  EngagementListOutput,
+  EngagementLoader,
+} from '../engagement';
 import { FieldRegionLoader, SecuredFieldRegions } from '../field-region';
 import {
   LanguageListInput,
@@ -167,6 +172,24 @@ export class PartnerResolver {
     @Loader(LanguageLoader) loader: LoaderOf<LanguageLoader>,
   ): Promise<SecuredLanguageList> {
     const list = await this.partnerService.listLanguages(
+      partner,
+      input,
+      session,
+    );
+    loader.primeAll(list.items);
+    return list;
+  }
+
+  @ResolveField(() => EngagementListOutput, {
+    description: "Engagements of the partner's affiliated translation projects",
+  })
+  async engagements(
+    @AnonSession() session: Session,
+    @Parent() partner: Partner,
+    @ListArg(EngagementListInput) input: EngagementListInput,
+    @Loader(EngagementLoader) loader: LoaderOf<EngagementLoader>,
+  ): Promise<EngagementListOutput> {
+    const list = await this.partnerService.listEngagements(
       partner,
       input,
       session,
