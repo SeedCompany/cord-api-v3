@@ -63,6 +63,8 @@ export function ProjectStepChanged({
               value={project.modifiedAt}
               timezone={recipient.timezone.value}
             />
+            <br />
+            Project Type: {project.type}
           </Text>
           <HideInText>
             <Button href={projectUrl} paddingTop={16}>

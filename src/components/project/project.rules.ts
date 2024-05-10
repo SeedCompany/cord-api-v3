@@ -26,6 +26,7 @@ import {
   ProjectStepTransition,
   TransitionType,
 } from './dto';
+import { FinancialApproverRepository } from './financial-approver';
 import { ProjectService } from './project.service';
 
 type EmailAddress = string;
@@ -54,7 +55,7 @@ export interface EmailNotification {
     'email' | 'displayFirstName' | 'displayLastName' | 'timezone'
   >;
   changedBy: Pick<User, 'id' | 'displayFirstName' | 'displayLastName'>;
-  project: Pick<Project, 'id' | 'modifiedAt' | 'name' | 'step'>;
+  project: Pick<Project, 'id' | 'modifiedAt' | 'name' | 'step' | 'type'>;
   previousStep?: ProjectStep;
 }
 
@@ -73,6 +74,7 @@ export class ProjectRules {
     @Inject(forwardRef(() => AuthenticationService))
     private readonly auth: AuthenticationService & {},
     private readonly configService: ConfigService,
+    private readonly financialApproverRepo: FinancialApproverRepository,
     // eslint-disable-next-line @seedcompany/no-unused-vars
     @Logger('project:rules') private readonly logger: ILogger,
   ) {}
@@ -85,6 +87,10 @@ export class ProjectRules {
   ): Promise<StepRule> {
     const mostRecentPreviousStep = (steps: ProjectStep[]) =>
       this.getMostRecentPreviousStep(id, steps, changeset);
+    const financialApprovers = async () =>
+      (await this.financialApproverRepo.read(projectType)).map(
+        ({ user }) => user.id,
+      );
     const isMultiplication =
       projectType === ProjectType.MultiplicationTranslation;
 
@@ -405,7 +411,7 @@ export class ProjectRules {
               type: TransitionType.Approve,
               label: 'Confirm Project 🎉',
               notifiers: async () => [
-                ...(await this.getRoleEmails(Role.Controller)),
+                ...(await financialApprovers()),
                 'project_approval@tsco.org',
                 'projects@tsco.org',
               ],
@@ -413,7 +419,7 @@ export class ProjectRules {
           ],
           getNotifiers: async () => [
             ...(await this.getProjectTeamUserIds(id)),
-            ...(await this.getRoleEmails(Role.Controller)),
+            ...(await financialApprovers()),
           ],
         };
       case ProjectStep.OnHoldFinanceConfirmation:
@@ -425,7 +431,7 @@ export class ProjectRules {
               type: TransitionType.Approve,
               label: 'Confirm Project 🎉',
               notifiers: async () => [
-                ...(await this.getRoleEmails(Role.Controller)),
+                ...(await financialApprovers()),
                 'project_approval@tsco.org',
                 'projects@tsco.org',
               ],
@@ -443,7 +449,7 @@ export class ProjectRules {
           ],
           getNotifiers: async () => [
             ...(await this.getProjectTeamUserIds(id)),
-            ...(await this.getRoleEmails(Role.Controller)),
+            ...(await financialApprovers()),
           ],
         };
       case ProjectStep.Active:
@@ -500,7 +506,7 @@ export class ProjectRules {
           ],
           getNotifiers: async () => [
             ...(await this.getProjectTeamUserIds(id)),
-            ...(await this.getRoleEmails(Role.Controller)),
+            ...(await financialApprovers()),
             'project_extension@tsco.org',
             'project_revision@tsco.org',
           ],
@@ -598,7 +604,7 @@ export class ProjectRules {
           ],
           getNotifiers: async () => [
             ...(await this.getProjectTeamUserIds(id)),
-            ...(await this.getRoleEmails(Role.Controller)),
+            ...(await financialApprovers()),
             'project_extension@tsco.org',
             'project_revision@tsco.org',
           ],
@@ -1044,22 +1050,6 @@ export class ProjectRules {
       .return<{ ids: ID[] }>('collect(user.id) as ids')
       .first();
     return users?.ids ?? [];
-  }
-
-  private async getRoleEmails(role: Role): Promise<string[]> {
-    const emails = await this.db
-      .query()
-      .match([
-        node('email', 'EmailAddress'),
-        relation('in', '', 'email', ACTIVE),
-        node('user', 'User'),
-        relation('out', '', 'roles', ACTIVE),
-        node('role', 'Property', { value: role }),
-      ])
-      .return<{ emails: string[] }>('collect(email.value) as emails')
-      .first();
-
-    return emails?.emails ?? [];
   }
 
   /** Of the given steps which one was the most recent previous step */
