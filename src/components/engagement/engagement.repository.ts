@@ -23,6 +23,7 @@ import {
   coalesce,
   createNode,
   createRelationships,
+  filter,
   INACTIVE,
   matchChangesetAndChangedProps,
   matchPropsAndProjectSensAndScopedRoles,
@@ -338,7 +339,7 @@ export class EngagementRepository extends CommonRepository {
           .match([
             node('project', 'Project', pickBy({ id: input.filter.projectId })),
             relation('out', '', 'engagement', ACTIVE),
-            node('node', 'Engagement'),
+            node('node', label),
           ])
           .apply(whereNotDeletedInChangeset(changeset))
           .return(['node', 'project'])
@@ -358,6 +359,21 @@ export class EngagementRepository extends CommonRepository {
           ),
       )
       .match(requestingUser(session))
+      .apply(
+        filter.builder(input.filter, {
+          type: filter.skip,
+          projectId: filter.skip,
+          partnerId: filter.pathExists((id) => [
+            node('node'),
+            relation('in', '', 'engagement'),
+            node('', 'Project'),
+            relation('out', '', 'partnership', ACTIVE),
+            node('', 'Partnership'),
+            relation('out', '', 'partner'),
+            node('', 'Partner', { id }),
+          ]),
+        }),
+      )
       .apply(
         this.privileges.for(session, IEngagement).filterToReadable({
           wrapContext: oncePerProject,
