@@ -16,11 +16,13 @@ import {
 } from '~/common';
 import { ConfigService, ILogger, Logger } from '~/core';
 import { DatabaseService } from '~/core/database';
-import { ACTIVE, INACTIVE } from '~/core/database/query';
+import { ACTIVE, INACTIVE, merge } from '~/core/database/query';
 import { AuthenticationService } from '../authentication';
 import { withoutScope } from '../authorization/dto';
 import { EngagementService } from '../engagement';
 import { EngagementStatus } from '../engagement/dto';
+import { OrganizationService } from '../organization';
+import { Organization } from '../organization/dto';
 import { UserService } from '../user';
 import { User } from '../user/dto';
 import {
@@ -61,6 +63,7 @@ export interface EmailNotification {
   changedBy: Pick<User, 'id' | 'displayFirstName' | 'displayLastName'>;
   project: Pick<Project, 'id' | 'modifiedAt' | 'name' | 'step' | 'type'>;
   previousStep?: ProjectStep;
+  primaryPartnerName?: string | undefined;
 }
 
 const rolesThatCanBypassWorkflow: Role[] = [Role.Administrator];
@@ -75,6 +78,7 @@ export class ProjectRules {
     private readonly projectService: ProjectService & {},
     @Inject(forwardRef(() => EngagementService))
     private readonly engagements: EngagementService & {},
+    private readonly organizations: OrganizationService,
     @Inject(forwardRef(() => AuthenticationService))
     private readonly auth: AuthenticationService & {},
     private readonly configService: ConfigService,
@@ -1099,6 +1103,35 @@ export class ProjectRules {
     return result.steps;
   }
 
+  async getPrimaryOrganizationByProjectId(id: ID) {
+    const result = await this.db
+      .query()
+      .match([
+        node('project', 'Project', { id }),
+        relation('out', '', 'partnership', ACTIVE),
+        node('partnership', 'Partnership'),
+        relation('out', '', 'primary', ACTIVE),
+        node('primary', 'Property', { value: true }),
+      ])
+      .with('partnership')
+      .match([
+        node('partnership'),
+        relation('out', '', 'partner', ACTIVE),
+        node('', 'Partner'),
+        relation('out', '', 'organization', ACTIVE),
+        node('org', 'Organization'),
+        relation('out', '', 'name', ACTIVE),
+        node('name', 'Property'),
+      ])
+      .return<{ dto: UnsecuredDto<Organization> }>(
+        merge('org', {
+          name: 'name.value',
+        }).as('dto'),
+      )
+      .first();
+    return result?.dto ?? null;
+  }
+
   private async getEmailNotificationObject(
     changedById: ID,
     projectId: ID,
@@ -1135,11 +1168,24 @@ export class ProjectRules {
       recipientSession,
     );
 
+    const organization = await this.getPrimaryOrganizationByProjectId(
+      projectId,
+    );
+    let orgName;
+    if (organization) {
+      const org = await this.organizations.readOne(
+        organization.id,
+        recipientSession,
+      );
+      orgName = org.name.value;
+    }
+
     return {
       changedBy,
       project,
       recipient,
       previousStep,
+      primaryPartnerName: orgName,
     };
   }
 }
