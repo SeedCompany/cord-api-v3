@@ -115,22 +115,20 @@ export class UpdateProjectStatusHandler
     type: ProjectType,
     session: Session,
   ) {
-    await Promise.all(
-      engagementIds.map(async (id) => {
-        const updateInput = {
-          id,
-          status,
-        };
-        type !== ProjectType.Internship
-          ? await this.engagementService.updateLanguageEngagement(
-              updateInput,
-              session,
-            )
-          : await this.engagementService.updateInternshipEngagement(
-              updateInput,
-              session,
-            );
-      }),
-    );
+    for await (const id of engagementIds) {
+      const updateInput = {
+        id,
+        status,
+      };
+      type !== ProjectType.Internship
+        ? await this.engagementService.updateLanguageEngagement(
+            updateInput,
+            session,
+          )
+        : await this.engagementService.updateInternshipEngagement(
+            updateInput,
+            session,
+          );
+    }
   }
 }
