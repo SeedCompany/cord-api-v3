@@ -9,4 +9,10 @@ export class ProjectRulesRepository extends CommonRepository {
     const project = e.select(e.cast(e.Project, e.cast(e.uuid, id)));
     return await this.db.run(project.step);
   }
+
+  //TODO:  Still needs to be tested
+  async getProjectTeamUserIds(id: ID) {
+    const project = e.select(e.cast(e.Project, e.cast(e.uuid, id)));
+    return (await this.db.run(project.members.user)).map((u) => u.id);
+  }
 }

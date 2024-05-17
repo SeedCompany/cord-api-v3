@@ -48,4 +48,19 @@ export class ProjectRulesNeo4jRepository
 
     return currentStep;
   }
+
+  async getProjectTeamUserIds(id: ID): Promise<ID[]> {
+    const users = await this.db
+      .query()
+      .match([
+        node('', 'Project', { id }),
+        relation('out', '', 'member', ACTIVE),
+        node('', 'ProjectMember'),
+        relation('out', '', 'user', ACTIVE),
+        node('user', 'User'),
+      ])
+      .return<{ ids: ID[] }>('collect(user.id) as ids')
+      .first();
+    return users?.ids ?? [];
+  }
 }
