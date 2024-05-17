@@ -16,6 +16,7 @@ import * as handlers from './handlers';
 import { InternshipProjectResolver } from './internship-project.resolver';
 import { RenameTranslationToMomentumMigration } from './migrations/rename-translation-to-momentum.migration';
 import { ProjectMemberModule } from './project-member/project-member.module';
+import { ProjectRules } from './project-rules/project.rules';
 import { ProjectStepResolver } from './project-step.resolver';
 import {
   ConcreteRepos,
@@ -24,7 +25,6 @@ import {
 import { ProjectLoader } from './project.loader';
 import { ProjectRepository } from './project.repository';
 import { ProjectResolver } from './project.resolver';
-import { ProjectRules } from './project.rules';
 import { ProjectService } from './project.service';
 import { TranslationProjectResolver } from './translation-project.resolver';
 import { ProjectUserConnectionResolver } from './user-connection.resolver';

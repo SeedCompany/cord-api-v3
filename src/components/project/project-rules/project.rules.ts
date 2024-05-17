@@ -12,22 +12,22 @@ import {
   Session,
   UnauthorizedException,
   UnsecuredDto,
-} from '../../common';
-import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
-import { ACTIVE, INACTIVE } from '../../core/database/query';
-import { AuthenticationService } from '../authentication';
-import { Role, withoutScope } from '../authorization';
-import { EngagementService, EngagementStatus } from '../engagement';
-import { ProjectType } from '../project';
-import { User, UserService } from '../user';
+} from '../../../common';
+import { ConfigService, DatabaseService, ILogger, Logger } from '../../../core';
+import { ACTIVE, INACTIVE } from '../../../core/database/query';
+import { AuthenticationService } from '../../authentication';
+import { Role, withoutScope } from '../../authorization';
+import { EngagementService, EngagementStatus } from '../../engagement';
+import { User, UserService } from '../../user';
 import {
   Project,
   ProjectStep,
   ProjectStepTransition,
+  ProjectType,
   TransitionType,
-} from './dto';
-import { FinancialApproverRepository } from './financial-approver';
-import { ProjectService } from './project.service';
+} from '../dto';
+import { FinancialApproverRepository } from '../financial-approver';
+import { ProjectService } from '../project.service';
 
 type EmailAddress = string;
 

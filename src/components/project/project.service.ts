@@ -72,8 +72,8 @@ import {
   ProjectMemberService,
   SecuredProjectMemberList,
 } from './project-member';
+import { ProjectRules } from './project-rules/project.rules';
 import { ProjectRepository } from './project.repository';
-import { ProjectRules } from './project.rules';
 
 @Injectable()
 export class ProjectService {

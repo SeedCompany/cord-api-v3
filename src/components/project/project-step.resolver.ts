@@ -3,8 +3,8 @@ import { Loader, LoaderOf } from '@seedcompany/data-loader';
 import { stripIndent } from 'common-tags';
 import { AnonSession, ID, Session, viewOfChangeset } from '~/common';
 import { ProjectStepTransition, SecuredProjectStep } from './dto';
+import { ProjectRules } from './project-rules/project.rules';
 import { ProjectLoader } from './project.loader';
-import { ProjectRules } from './project.rules';
 
 @Resolver(SecuredProjectStep)
 export class ProjectStepResolver {

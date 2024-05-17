@@ -12,7 +12,7 @@ import { ACTIVE, INACTIVE } from '../../../core/database/query';
 import { ProjectStepChanged } from '../../../core/email/templates';
 import { ProjectChangeRequestApprovedEvent } from '../../project-change-request/events';
 import { Project, ProjectStep } from '../dto';
-import { ProjectRules } from '../project.rules';
+import { ProjectRules } from '../project-rules/project.rules';
 
 type SubscribedEvent = ProjectChangeRequestApprovedEvent;
 

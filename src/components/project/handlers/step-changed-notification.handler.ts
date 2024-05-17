@@ -8,7 +8,7 @@ import {
 } from '../../../core';
 import { ProjectStepChanged } from '../../../core/email/templates';
 import { ProjectUpdatedEvent } from '../events';
-import { ProjectRules } from '../project.rules';
+import { ProjectRules } from '../project-rules/project.rules';
 
 @EventsHandler([ProjectUpdatedEvent, -10])
 export class ProjectStepChangedNotificationHandler
