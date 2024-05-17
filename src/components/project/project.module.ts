@@ -16,6 +16,7 @@ import * as handlers from './handlers';
 import { InternshipProjectResolver } from './internship-project.resolver';
 import { RenameTranslationToMomentumMigration } from './migrations/rename-translation-to-momentum.migration';
 import { ProjectMemberModule } from './project-member/project-member.module';
+import { ProjectRulesModule } from './project-rules/project-rules.module';
 import { ProjectRules } from './project-rules/project.rules';
 import { ProjectStepResolver } from './project-step.resolver';
 import {
@@ -43,6 +44,7 @@ import { ProjectUserConnectionResolver } from './user-connection.resolver';
     PartnerModule,
     forwardRef(() => OrganizationModule),
     FinancialApproverModule,
+    ProjectRulesModule,
   ],
   providers: [
     ProjectResolver,
