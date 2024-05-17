@@ -28,6 +28,7 @@ import {
 } from '../dto';
 import { FinancialApproverRepository } from '../financial-approver';
 import { ProjectService } from '../project.service';
+import { ProjectRulesRepository } from './project.rules.repository';
 
 type EmailAddress = string;
 
@@ -75,6 +76,7 @@ export class ProjectRules {
     private readonly auth: AuthenticationService & {},
     private readonly configService: ConfigService,
     private readonly financialApproverRepo: FinancialApproverRepository,
+    private readonly projectRulesRepo: ProjectRulesRepository,
     // eslint-disable-next-line @seedcompany/no-unused-vars
     @Logger('project:rules') private readonly logger: ILogger,
   ) {}
@@ -130,7 +132,7 @@ export class ProjectRules {
               label: 'End Development',
             },
           ],
-          getNotifiers: () => this.getProjectTeamUserIds(id),
+          getNotifiers: () => this.projectRulesRepo.getProjectTeamUserIds(id),
         };
       case ProjectStep.PendingConceptApproval:
         return {
@@ -156,7 +158,7 @@ export class ProjectRules {
               label: 'Reject',
             },
           ],
-          getNotifiers: () => this.getProjectTeamUserIds(id),
+          getNotifiers: () => this.projectRulesRepo.getProjectTeamUserIds(id),
         };
       case ProjectStep.PrepForConsultantEndorsement:
         return {
@@ -183,7 +185,7 @@ export class ProjectRules {
               label: 'End Development',
             },
           ],
-          getNotifiers: () => this.getProjectTeamUserIds(id),
+          getNotifiers: () => this.projectRulesRepo.getProjectTeamUserIds(id),
         };
       case ProjectStep.PendingConsultantEndorsement:
         return {
@@ -207,7 +209,7 @@ export class ProjectRules {
               label: 'Do Not Endorse Plan',
             },
           ],
-          getNotifiers: () => this.getProjectTeamUserIds(id),
+          getNotifiers: () => this.projectRulesRepo.getProjectTeamUserIds(id),
         };
       case ProjectStep.PrepForFinancialEndorsement:
         return {
@@ -239,7 +241,7 @@ export class ProjectRules {
               label: 'End Development',
             },
           ],
-          getNotifiers: () => this.getProjectTeamUserIds(id),
+          getNotifiers: () => this.projectRulesRepo.getProjectTeamUserIds(id),
         };
       case ProjectStep.PendingFinancialEndorsement:
         return {
@@ -260,7 +262,7 @@ export class ProjectRules {
               label: 'Do Not Endorse Project Plan',
             },
           ],
-          getNotifiers: () => this.getProjectTeamUserIds(id),
+          getNotifiers: () => this.projectRulesRepo.getProjectTeamUserIds(id),
         };
       case ProjectStep.FinalizingProposal:
         return {
@@ -297,7 +299,7 @@ export class ProjectRules {
               label: 'End Development',
             },
           ],
-          getNotifiers: () => this.getProjectTeamUserIds(id),
+          getNotifiers: () => this.projectRulesRepo.getProjectTeamUserIds(id),
         };
       case ProjectStep.PendingRegionalDirectorApproval:
         return {
@@ -348,7 +350,7 @@ export class ProjectRules {
               label: 'Reject',
             },
           ],
-          getNotifiers: () => this.getProjectTeamUserIds(id),
+          getNotifiers: () => this.projectRulesRepo.getProjectTeamUserIds(id),
         };
       case ProjectStep.PendingZoneDirectorApproval:
         return {
@@ -370,7 +372,7 @@ export class ProjectRules {
               label: 'Reject',
             },
           ],
-          getNotifiers: () => this.getProjectTeamUserIds(id),
+          getNotifiers: () => this.projectRulesRepo.getProjectTeamUserIds(id),
         };
       case ProjectStep.PendingFinanceConfirmation:
         return {
@@ -418,7 +420,7 @@ export class ProjectRules {
             },
           ],
           getNotifiers: async () => [
-            ...(await this.getProjectTeamUserIds(id)),
+            ...(await this.projectRulesRepo.getProjectTeamUserIds(id)),
             ...(await financialApprovers()),
           ],
         };
@@ -448,7 +450,7 @@ export class ProjectRules {
             },
           ],
           getNotifiers: async () => [
-            ...(await this.getProjectTeamUserIds(id)),
+            ...(await this.projectRulesRepo.getProjectTeamUserIds(id)),
             ...(await financialApprovers()),
           ],
         };
@@ -477,7 +479,7 @@ export class ProjectRules {
               label: 'Finalize Completion',
             },
           ],
-          getNotifiers: () => this.getProjectTeamUserIds(id),
+          getNotifiers: () => this.projectRulesRepo.getProjectTeamUserIds(id),
         };
       case ProjectStep.ActiveChangedPlan:
         return {
@@ -505,7 +507,7 @@ export class ProjectRules {
             },
           ],
           getNotifiers: async () => [
-            ...(await this.getProjectTeamUserIds(id)),
+            ...(await this.projectRulesRepo.getProjectTeamUserIds(id)),
             ...(await financialApprovers()),
             'project_extension@tsco.org',
             'project_revision@tsco.org',
@@ -540,7 +542,7 @@ export class ProjectRules {
             },
           ],
           getNotifiers: async () => [
-            ...(await this.getProjectTeamUserIds(id)),
+            ...(await this.projectRulesRepo.getProjectTeamUserIds(id)),
             'project_extension@tsco.org',
             'project_revision@tsco.org',
           ],
@@ -574,7 +576,7 @@ export class ProjectRules {
             },
           ],
           getNotifiers: async () => [
-            ...(await this.getProjectTeamUserIds(id)),
+            ...(await this.projectRulesRepo.getProjectTeamUserIds(id)),
             'project_extension@tsco.org',
             'project_revision@tsco.org',
           ],
@@ -603,7 +605,7 @@ export class ProjectRules {
             },
           ],
           getNotifiers: async () => [
-            ...(await this.getProjectTeamUserIds(id)),
+            ...(await this.projectRulesRepo.getProjectTeamUserIds(id)),
             ...(await financialApprovers()),
             'project_extension@tsco.org',
             'project_revision@tsco.org',
@@ -633,7 +635,7 @@ export class ProjectRules {
             },
           ],
           getNotifiers: async () => [
-            ...(await this.getProjectTeamUserIds(id)),
+            ...(await this.projectRulesRepo.getProjectTeamUserIds(id)),
             'project_suspension@tsco.org',
           ],
         };
@@ -665,7 +667,7 @@ export class ProjectRules {
             },
           ],
           getNotifiers: async () => [
-            ...(await this.getProjectTeamUserIds(id)),
+            ...(await this.projectRulesRepo.getProjectTeamUserIds(id)),
             'project_suspension@tsco.org',
           ],
         };
@@ -690,7 +692,7 @@ export class ProjectRules {
             },
           ],
           getNotifiers: async () => [
-            ...(await this.getProjectTeamUserIds(id)),
+            ...(await this.projectRulesRepo.getProjectTeamUserIds(id)),
             'project_suspension@tsco.org',
           ],
         };
@@ -715,7 +717,7 @@ export class ProjectRules {
             },
           ],
           getNotifiers: async () => [
-            ...(await this.getProjectTeamUserIds(id)),
+            ...(await this.projectRulesRepo.getProjectTeamUserIds(id)),
             'project_suspension@tsco.org',
           ],
         };
@@ -744,7 +746,7 @@ export class ProjectRules {
             },
           ],
           getNotifiers: async () => [
-            ...(await this.getProjectTeamUserIds(id)),
+            ...(await this.projectRulesRepo.getProjectTeamUserIds(id)),
             'project_suspension@tsco.org',
           ],
         };
@@ -774,7 +776,7 @@ export class ProjectRules {
             },
           ],
           getNotifiers: async () => [
-            ...(await this.getProjectTeamUserIds(id)),
+            ...(await this.projectRulesRepo.getProjectTeamUserIds(id)),
             'project_termination@tsco.org',
           ],
         };
@@ -808,7 +810,7 @@ export class ProjectRules {
             },
           ],
           getNotifiers: async () => [
-            ...(await this.getProjectTeamUserIds(id)),
+            ...(await this.projectRulesRepo.getProjectTeamUserIds(id)),
             'project_termination@tsco.org',
           ],
         };
@@ -846,7 +848,7 @@ export class ProjectRules {
             },
           ],
           getNotifiers: async () => [
-            ...(await this.getProjectTeamUserIds(id)),
+            ...(await this.projectRulesRepo.getProjectTeamUserIds(id)),
             'project_closing@tsco.org',
           ],
         };
@@ -855,7 +857,7 @@ export class ProjectRules {
           approvers: [Role.Administrator],
           transitions: [],
           getNotifiers: async () => [
-            ...(await this.getProjectTeamUserIds(id)),
+            ...(await this.projectRulesRepo.getProjectTeamUserIds(id)),
             'project_termination@tsco.org',
           ],
         };
@@ -864,7 +866,7 @@ export class ProjectRules {
           approvers: [Role.Administrator],
           transitions: [],
           getNotifiers: async () => [
-            ...(await this.getProjectTeamUserIds(id)),
+            ...(await this.projectRulesRepo.getProjectTeamUserIds(id)),
             'project_closing@tsco.org',
           ],
         };
@@ -874,7 +876,7 @@ export class ProjectRules {
         return {
           approvers: [],
           transitions: [],
-          getNotifiers: () => this.getProjectTeamUserIds(id),
+          getNotifiers: () => this.projectRulesRepo.getProjectTeamUserIds(id),
         };
     }
     // @ts-expect-error This code should be unreachable, to prove the exhaustiveness of switch
@@ -892,7 +894,10 @@ export class ProjectRules {
       return [];
     }
 
-    const currentStep = await this.getCurrentStep(projectId, changeset);
+    const currentStep = await this.projectRulesRepo.getCurrentStep(
+      projectId,
+      changeset,
+    );
 
     // get roles that can approve the current step
     const { approvers, transitions } = await this.getStepRule(
@@ -948,44 +953,6 @@ export class ProjectRules {
     }
   }
 
-  private async getCurrentStep(id: ID, changeset?: ID) {
-    let currentStep;
-    if (changeset) {
-      const result = await this.db
-        .query()
-        .match([
-          node('project', 'Project', { id }),
-          relation('out', '', 'step', INACTIVE),
-          node('step', 'Property'),
-          relation('in', '', 'changeset', ACTIVE),
-          node('', 'Changeset', { id: changeset }),
-        ])
-        .raw('return step.value as step')
-        .asResult<{ step: ProjectStep }>()
-        .first();
-      currentStep = result?.step;
-    }
-    if (!currentStep) {
-      const result = await this.db
-        .query()
-        .match([
-          node('project', 'Project', { id }),
-          relation('out', '', 'step', ACTIVE),
-          node('step', 'Property'),
-        ])
-        .raw('return step.value as step')
-        .asResult<{ step: ProjectStep }>()
-        .first();
-      currentStep = result?.step;
-    }
-
-    if (!currentStep) {
-      throw new ServerException('current step not found');
-    }
-
-    return currentStep;
-  }
-
   async getNotifications(
     projectId: ID,
     projectType: ProjectType,
@@ -1035,21 +1002,6 @@ export class ProjectRules {
     this.logger.debug('notifying: ', notifications);
 
     return notifications;
-  }
-
-  private async getProjectTeamUserIds(id: ID): Promise<ID[]> {
-    const users = await this.db
-      .query()
-      .match([
-        node('', 'Project', { id }),
-        relation('out', '', 'member', ACTIVE),
-        node('', 'ProjectMember'),
-        relation('out', '', 'user', ACTIVE),
-        node('user', 'User'),
-      ])
-      .return<{ ids: ID[] }>('collect(user.id) as ids')
-      .first();
-    return users?.ids ?? [];
   }
 
   /** Of the given steps which one was the most recent previous step */
