@@ -1,20 +1,17 @@
 /* eslint-disable no-case-declarations */
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { Many } from '@seedcompany/common';
-import { node, relation } from 'cypher-query-builder';
 import { first, intersection, uniq } from 'lodash';
 import { UnreachableCaseError } from 'ts-essentials';
 import { Promisable } from 'type-fest';
 import {
   ID,
   maybeMany,
-  ServerException,
   Session,
   UnauthorizedException,
   UnsecuredDto,
 } from '../../../common';
 import { ConfigService, DatabaseService, ILogger, Logger } from '../../../core';
-import { ACTIVE, INACTIVE } from '../../../core/database/query';
 import { AuthenticationService } from '../../authentication';
 import { Role, withoutScope } from '../../authorization';
 import { EngagementService, EngagementStatus } from '../../engagement';
@@ -1010,41 +1007,11 @@ export class ProjectRules {
     steps: ProjectStep[],
     changeset?: ID,
   ): Promise<ProjectStep> {
-    const prevSteps = await this.getPreviousSteps(id, changeset);
+    const prevSteps = await this.projectRulesRepo.getPreviousSteps(
+      id,
+      changeset,
+    );
     return first(intersection(prevSteps, steps)) ?? steps[0];
-  }
-
-  /** A list of the project's previous steps ordered most recent to furthest in the past */
-  private async getPreviousSteps(
-    id: ID,
-    changeset?: ID,
-  ): Promise<ProjectStep[]> {
-    const result = await this.db
-      .query()
-      .match([
-        ...(changeset
-          ? [
-              node('changeset', 'Changeset', { id: changeset }),
-              relation('in', '', 'changeset', ACTIVE),
-            ]
-          : []),
-        node('node', 'Project', { id }),
-        relation('out', '', 'step', changeset ? undefined : INACTIVE),
-        node('prop'),
-      ])
-      .apply((q) =>
-        changeset
-          ? q.raw('WHERE NOT (changeset)-[:changeset {active:true}]->(prop)')
-          : q,
-      )
-      .with('prop')
-      .orderBy('prop.createdAt', 'DESC')
-      .return<{ steps: ProjectStep[] }>(`collect(prop.value) as steps`)
-      .first();
-    if (!result) {
-      throw new ServerException("Failed to determine project's previous steps");
-    }
-    return result.steps;
   }
 
   private async getEmailNotificationObject(

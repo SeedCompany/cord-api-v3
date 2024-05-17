@@ -63,4 +63,34 @@ export class ProjectRulesNeo4jRepository
       .first();
     return users?.ids ?? [];
   }
+
+  /** A list of the project's previous steps ordered most recent to furthest in the past */
+  async getPreviousSteps(id: ID, changeset?: ID): Promise<ProjectStep[]> {
+    const result = await this.db
+      .query()
+      .match([
+        ...(changeset
+          ? [
+              node('changeset', 'Changeset', { id: changeset }),
+              relation('in', '', 'changeset', ACTIVE),
+            ]
+          : []),
+        node('node', 'Project', { id }),
+        relation('out', '', 'step', changeset ? undefined : INACTIVE),
+        node('prop'),
+      ])
+      .apply((q) =>
+        changeset
+          ? q.raw('WHERE NOT (changeset)-[:changeset {active:true}]->(prop)')
+          : q,
+      )
+      .with('prop')
+      .orderBy('prop.createdAt', 'DESC')
+      .return<{ steps: ProjectStep[] }>(`collect(prop.value) as steps`)
+      .first();
+    if (!result) {
+      throw new ServerException("Failed to determine project's previous steps");
+    }
+    return result.steps;
+  }
 }
