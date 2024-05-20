@@ -1,19 +1,18 @@
 import { faker } from '@faker-js/faker';
-import { isValidId } from '../src/common';
-import { Role } from '../src/components/authorization/dto/role.dto';
-import { FieldRegion } from '../src/components/field-region';
-import { FieldZone } from '../src/components/field-zone';
+import { isValidId, Role } from '~/common';
+import { FieldRegion } from '../src/components/field-region/dto';
+import { FieldZone } from '../src/components/field-zone/dto';
 import {
   createPerson,
+  createRegion,
   createSession,
   createTestApp,
+  createZone,
   fragments,
   gql,
   loginAsAdmin,
   TestApp,
 } from './utility';
-import { createRegion } from './utility/create-region';
-import { createZone } from './utility/create-zone';
 import { RawUser } from './utility/fragments';
 
 describe('Region e2e', () => {

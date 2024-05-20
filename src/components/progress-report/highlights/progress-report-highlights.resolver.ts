@@ -7,7 +7,8 @@ import {
 } from '@nestjs/graphql';
 import { AnonSession, IdArg, IdOf, LoggedInSession, Session } from '~/common';
 import { Loader, LoaderOf } from '~/core';
-import { PeriodicReport, PeriodicReportLoader } from '../../periodic-report';
+import { PeriodicReportLoader } from '../../periodic-report';
+import { PeriodicReport } from '../../periodic-report/dto';
 import {
   ChangePrompt,
   ChoosePrompt,

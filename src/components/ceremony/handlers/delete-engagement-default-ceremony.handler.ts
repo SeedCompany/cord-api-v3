@@ -1,4 +1,4 @@
-import { DatabaseService, EventsHandler, IEventHandler } from '../../../core';
+import { EventsHandler, IEventHandler } from '~/core';
 import { EngagementWillDeleteEvent } from '../../engagement/events';
 import { CeremonyService } from '../ceremony.service';
 
@@ -6,10 +6,7 @@ import { CeremonyService } from '../ceremony.service';
 export class DetachEngagementRootDirectoryHandler
   implements IEventHandler<EngagementWillDeleteEvent>
 {
-  constructor(
-    private readonly ceremonies: CeremonyService,
-    private readonly db: DatabaseService,
-  ) {}
+  constructor(private readonly ceremonies: CeremonyService) {}
 
   async handle({ engagement, session }: EngagementWillDeleteEvent) {
     const ceremonyId = engagement?.ceremony?.value;

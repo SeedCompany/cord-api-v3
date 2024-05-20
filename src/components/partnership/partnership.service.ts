@@ -7,17 +7,18 @@ import {
   Session,
   UnsecuredDto,
   viewOfChangeset,
-} from '../../common';
+} from '~/common';
 import {
   HandleIdLookup,
   IEventBus,
   ILogger,
   Logger,
   ResourceLoader,
-} from '../../core';
+} from '~/core';
 import { Privileges } from '../authorization';
 import { FileService } from '../file';
-import { Partner, PartnerService, PartnerType } from '../partner';
+import { PartnerService } from '../partner';
+import { Partner, PartnerType } from '../partner/dto';
 import { ProjectService } from '../project';
 import {
   CreatePartnership,

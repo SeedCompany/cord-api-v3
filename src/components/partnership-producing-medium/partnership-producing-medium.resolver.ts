@@ -5,9 +5,10 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { ID, IdArg, LoggedInSession, Session } from '../../common';
-import { Loader, LoaderOf } from '../../core';
-import { Partnership, PartnershipLoader } from '../partnership';
+import { ID, IdArg, LoggedInSession, Session } from '~/common';
+import { Loader, LoaderOf } from '~/core';
+import { PartnershipLoader } from '../partnership';
+import { Partnership } from '../partnership/dto';
 import {
   PartnershipProducingMedium,
   PartnershipProducingMediumInput,

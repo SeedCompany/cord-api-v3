@@ -1,4 +1,6 @@
-import { AndConditions, Condition, Optimizer, OrConditions } from './index';
+import { AndConditions, OrConditions } from './aggregate.condition';
+import { Condition } from './condition.interface';
+import { Optimizer } from './optimizer.interface';
 
 @Optimizer.register()
 export class FlattenAggregateOptimizer implements Optimizer {

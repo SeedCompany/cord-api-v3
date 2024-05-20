@@ -1,4 +1,4 @@
-import { EventsHandler, IEventHandler } from '../../../core';
+import { EventsHandler, IEventHandler } from '~/core';
 import { ProjectCreatedEvent } from '../../project/events';
 import { BudgetService } from '../budget.service';
 

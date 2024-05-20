@@ -2,14 +2,14 @@ import { EmailService } from '@seedcompany/nestjs-email';
 import { node, relation } from 'cypher-query-builder';
 import {
   ConfigService,
-  DatabaseService,
   EventsHandler,
   IEventHandler,
   ILogger,
   Logger,
-} from '../../../core';
-import { ACTIVE, INACTIVE } from '../../../core/database/query';
-import { ProjectStepChanged } from '../../../core/email/templates';
+} from '~/core';
+import { DatabaseService } from '~/core/database';
+import { ACTIVE, INACTIVE } from '~/core/database/query';
+import { ProjectStepChanged } from '~/core/email/templates';
 import { ProjectChangeRequestApprovedEvent } from '../../project-change-request/events';
 import { Project, ProjectStep } from '../dto';
 import { ProjectRules } from '../project.rules';

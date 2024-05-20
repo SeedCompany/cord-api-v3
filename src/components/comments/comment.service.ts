@@ -22,8 +22,8 @@ import {
   CommentThreadList,
   CommentThreadListInput,
   CreateCommentInput,
+  UpdateCommentInput,
 } from './dto';
-import { UpdateCommentInput } from './dto/update-comment.dto';
 
 type CommentableRef = ID | BaseNode | Commentable;
 

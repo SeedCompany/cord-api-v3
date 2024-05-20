@@ -1,6 +1,6 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import { ID, IdField, SecuredList } from '../../../common';
-import { ProductMedium as Medium } from '../../product';
+import { ID, IdField, SecuredList } from '~/common';
+import { ProductMedium as Medium } from '../../product/dto';
 
 @ObjectType()
 export class PartnershipProducingMedium {

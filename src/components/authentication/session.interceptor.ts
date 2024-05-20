@@ -25,7 +25,7 @@ import {
   UnauthenticatedException,
 } from '~/common';
 import { ConfigService } from '~/core';
-import { rolesForScope } from '../authorization';
+import { rolesForScope } from '../authorization/dto';
 import { AuthenticationService } from './authentication.service';
 
 @Injectable()

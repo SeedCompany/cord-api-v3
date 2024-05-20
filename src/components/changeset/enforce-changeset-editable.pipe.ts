@@ -10,8 +10,8 @@ import {
   isIdLike,
   loadManyIgnoreMissingThrowAny,
 } from '~/common';
-import { GqlContextHost, NotGraphQLContext } from '../../core';
-import { ResourceLoaderRegistry } from '../../core/resources/loader.registry';
+import { GqlContextHost, NotGraphQLContext } from '~/core';
+import { ResourceLoaderRegistry } from '~/core/resources/loader.registry';
 import { Changeset } from './dto';
 import { shouldValidateEditability } from './validate-editability.decorator';
 

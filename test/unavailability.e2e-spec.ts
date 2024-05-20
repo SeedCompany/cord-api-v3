@@ -1,9 +1,8 @@
 import { faker } from '@faker-js/faker';
 import { times } from 'lodash';
-import { isValidId } from '../src/common';
-import { Role } from '../src/components/authorization';
-import { User } from '../src/components/user';
-import { Unavailability } from '../src/components/user/unavailability';
+import { isValidId, Role } from '~/common';
+import { User } from '../src/components/user/dto';
+import { Unavailability } from '../src/components/user/unavailability/dto';
 import {
   createSession,
   createTestApp,

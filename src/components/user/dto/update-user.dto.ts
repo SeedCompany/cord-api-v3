@@ -2,8 +2,14 @@ import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Transform, Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { uniq } from 'lodash';
-import { EmailField, ID, IdField, IsIanaTimezone, NameField } from '~/common';
-import { Role } from '../../authorization';
+import {
+  EmailField,
+  ID,
+  IdField,
+  IsIanaTimezone,
+  NameField,
+  Role,
+} from '~/common';
 import { UserStatus } from './user-status.enum';
 import { User } from './user.dto';
 

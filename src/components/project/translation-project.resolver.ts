@@ -1,14 +1,15 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { AnonSession, ListArg, Session } from '../../common';
-import { Loader, LoaderOf } from '../../core';
+import { AnonSession, ListArg, Session } from '~/common';
+import { Loader, LoaderOf } from '~/core';
+import { EngagementLoader } from '../engagement';
 import {
   EngagementListInput,
   SecuredEngagementList,
   SecuredLanguageEngagementList,
 } from '../engagement/dto';
-import { EngagementLoader } from '../engagement/engagement.loader';
-import { Project, ProjectService, TranslationProject } from './index';
+import { Project, TranslationProject } from './dto';
+import { ProjectService } from './project.service';
 
 @Resolver(TranslationProject)
 export class TranslationProjectResolver {

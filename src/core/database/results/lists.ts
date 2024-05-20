@@ -1,4 +1,4 @@
-import { PaginatedListType } from '../../../common';
+import { PaginatedListType } from '~/common';
 
 export const mapListResults = async <T, R>(
   results: PaginatedListType<T>,

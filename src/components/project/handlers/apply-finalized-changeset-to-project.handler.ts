@@ -1,16 +1,13 @@
 import { node, relation } from 'cypher-query-builder';
-import { ServerException } from '../../../common';
+import { ServerException } from '~/common';
+import { EventsHandler, IEventHandler, ILogger, Logger } from '~/core';
+import { DatabaseService } from '~/core/database';
+import { ACTIVE, INACTIVE } from '~/core/database/query';
 import {
-  DatabaseService,
-  EventsHandler,
-  IEventHandler,
-  ILogger,
-  Logger,
-} from '../../../core';
-import { ACTIVE, INACTIVE } from '../../../core/database/query';
-import { commitChangesetProps } from '../../changeset/commit-changeset-props.query';
-import { ChangesetFinalizingEvent } from '../../changeset/events';
-import { rejectChangesetProps } from '../../changeset/reject-changeset-props.query';
+  ChangesetFinalizingEvent,
+  commitChangesetProps,
+  rejectChangesetProps,
+} from '../../changeset';
 
 type SubscribedEvent = ChangesetFinalizingEvent;
 

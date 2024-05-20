@@ -1,15 +1,15 @@
 import { ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { e } from '~/core/edgedb';
-import { RegisterResource } from '~/core/resources';
 import {
   DbUnique,
   NameField,
   Resource,
   SecuredProps,
   SecuredString,
-} from '../../../common';
-import { Producible } from '../../product/dto/producible.dto';
+} from '~/common';
+import { e } from '~/core/edgedb';
+import { RegisterResource } from '~/core/resources';
+import { Producible } from '../../product/dto';
 
 declare module '../../product/dto/producible.dto' {
   interface ProducibleTypeEntries {

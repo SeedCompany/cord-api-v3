@@ -4,8 +4,6 @@ import { EmailService } from '@seedcompany/nestjs-email';
 import JWT from 'jsonwebtoken';
 import { DateTime } from 'luxon';
 import { Writable } from 'ts-essentials';
-import { sessionFromContext } from '~/common/session';
-import { disableAccessPolicies, EdgeDB } from '~/core/edgedb';
 import {
   DuplicateException,
   GqlContextType,
@@ -16,10 +14,13 @@ import {
   Session,
   UnauthenticatedException,
   UnauthorizedException,
-} from '../../common';
-import { ConfigService, ILogger, Logger } from '../../core';
-import { ForgotPassword } from '../../core/email/templates';
-import { Privileges, rolesForScope, withoutScope } from '../authorization';
+} from '~/common';
+import { sessionFromContext } from '~/common/session';
+import { ConfigService, ILogger, Logger } from '~/core';
+import { disableAccessPolicies, EdgeDB } from '~/core/edgedb';
+import { ForgotPassword } from '~/core/email/templates';
+import { Privileges } from '../authorization';
+import { rolesForScope, withoutScope } from '../authorization/dto';
 import { AssignableRoles } from '../authorization/dto/assignable-roles';
 import { ActorRepository } from '../user/actor.repository';
 import { AuthenticationRepository } from './authentication.repository';

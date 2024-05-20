@@ -16,24 +16,19 @@ import {
   ListArg,
   LoggedInSession,
   Session,
-} from '../../common';
-import { Loader, LoaderOf } from '../../core';
-import {
-  LocationListInput,
-  LocationLoader,
-  SecuredLocationList,
-} from '../location';
+} from '~/common';
+import { Loader, LoaderOf } from '~/core';
+import { LocationLoader } from '../location';
+import { LocationListInput, SecuredLocationList } from '../location/dto';
+import { OrganizationLoader } from '../organization';
 import {
   OrganizationListInput,
-  OrganizationLoader,
   SecuredOrganizationList,
-} from '../organization';
-import {
-  PartnerListInput,
-  PartnerLoader,
-  SecuredPartnerList,
-} from '../partner';
-import { SecuredTimeZone, TimeZoneService } from '../timezone';
+} from '../organization/dto';
+import { PartnerLoader } from '../partner';
+import { PartnerListInput, SecuredPartnerList } from '../partner/dto';
+import { TimeZoneService } from '../timezone';
+import { SecuredTimeZone } from '../timezone/timezone.dto';
 import {
   AssignOrganizationToUserInput,
   AssignOrganizationToUserOutput,
@@ -41,6 +36,8 @@ import {
   CreatePersonInput,
   CreatePersonOutput,
   DeleteUserOutput,
+  KnownLanguage,
+  ModifyKnownLanguageArgs,
   RemoveOrganizationFromUserInput,
   RemoveOrganizationFromUserOutput,
   UpdateUserInput,
@@ -49,21 +46,14 @@ import {
   UserListInput,
   UserListOutput,
 } from './dto';
-import {
-  KnownLanguage,
-  ModifyKnownLanguageArgs,
-} from './dto/known-language.dto';
-import {
-  EducationListInput,
-  EducationLoader,
-  SecuredEducationList,
-} from './education';
+import { EducationLoader } from './education';
+import { EducationListInput, SecuredEducationList } from './education/dto';
 import { fullName } from './fullName';
+import { UnavailabilityLoader } from './unavailability';
 import {
   SecuredUnavailabilityList,
   UnavailabilityListInput,
-  UnavailabilityLoader,
-} from './unavailability';
+} from './unavailability/dto';
 import { UserLoader } from './user.loader';
 import { UserService } from './user.service';
 

@@ -5,8 +5,8 @@ import {
   IEventHandler,
   ILogger,
   Logger,
-} from '../../../core';
-import { ProjectStepChanged } from '../../../core/email/templates';
+} from '~/core';
+import { ProjectStepChanged } from '~/core/email/templates';
 import { ProjectUpdatedEvent } from '../events';
 import { ProjectRules } from '../project.rules';
 

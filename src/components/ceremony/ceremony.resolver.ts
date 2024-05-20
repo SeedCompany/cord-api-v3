@@ -7,7 +7,7 @@ import {
   LoggedInSession,
   Session,
 } from '~/common';
-import { Loader, LoaderOf } from '../../core';
+import { Loader, LoaderOf } from '~/core';
 import { CeremonyLoader, CeremonyService } from '../ceremony';
 import {
   Ceremony,

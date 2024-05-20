@@ -10,7 +10,7 @@ import {
   UnsecuredDto,
 } from '~/common';
 import { LinkTo } from '~/core';
-import { FileId } from '../../../components/file';
+import { FileId } from '../../../components/file/dto';
 import { Variable } from '../query-augmentation/condition-variables';
 
 export interface CreateNodeOptions<TResourceStatic extends ResourceShape<any>> {

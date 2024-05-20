@@ -1,7 +1,7 @@
 import { Field, InputType, Int, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { Max, Min, ValidateNested } from 'class-validator';
-import { NameField } from '../../../common';
+import { NameField } from '~/common';
 import { FundingAccount } from './funding-account.dto';
 
 @InputType()

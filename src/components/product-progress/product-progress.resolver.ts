@@ -5,10 +5,11 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { LoggedInSession, Session } from '../../common';
-import { Loader, LoaderOf } from '../../core';
+import { LoggedInSession, Session } from '~/common';
+import { Loader, LoaderOf } from '~/core';
 import { PeriodicReportLoader } from '../periodic-report';
-import { Product, ProductLoader } from '../product';
+import { ProductLoader } from '../product';
+import { Product } from '../product/dto';
 import { ProgressReport } from '../progress-report/dto';
 import { ProductProgress, ProductProgressInput } from './dto';
 import { ProductProgressService } from './product-progress.service';

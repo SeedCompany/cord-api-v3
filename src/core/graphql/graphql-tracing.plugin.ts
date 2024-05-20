@@ -6,7 +6,7 @@ import {
 import { Plugin } from '@nestjs/apollo';
 import { FieldMiddleware } from '@nestjs/graphql';
 import { GraphQLResolveInfo as ResolveInfo, ResponsePath } from 'graphql';
-import { GqlContextType as ContextType } from '../../common';
+import { GqlContextType as ContextType } from '~/common';
 import { Segment, TracingService } from '../tracing';
 
 @Plugin()

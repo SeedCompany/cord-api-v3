@@ -6,7 +6,7 @@ import {
   LoggedInSession,
   NotImplementedException,
   Session,
-} from '../../common';
+} from '~/common';
 import { PinnedListInput, PinnedListOutput } from './dto';
 import { PinService } from './pin.service';
 

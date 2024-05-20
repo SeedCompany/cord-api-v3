@@ -1,7 +1,7 @@
 import { Transformer } from 'cypher-query-builder';
 import { DateTime, Duration, FixedOffsetZone } from 'luxon';
 import * as Neo from 'neo4j-driver';
-import { CalendarDate, RichTextDocument } from '../../common';
+import { CalendarDate, RichTextDocument } from '~/common';
 
 // @ts-expect-error Convert private methods to protected
 class PatchedTransformer extends Transformer {

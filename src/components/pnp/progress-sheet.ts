@@ -1,5 +1,5 @@
 import { LazyGetter as Once } from 'lazy-get-decorator';
-import { Column, Range, Row, Sheet, WorkBook } from '../../common/xlsx.util';
+import { Column, Range, Row, Sheet, WorkBook } from '~/common/xlsx.util';
 
 export abstract class ProgressSheet extends Sheet {
   static register(book: WorkBook) {

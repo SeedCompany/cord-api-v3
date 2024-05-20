@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { ID, NotFoundException, ServerException } from '~/common';
-import { DtoRepository } from '~/core';
+import { DtoRepository } from '~/core/database';
 import {
   ACTIVE,
   createNode,

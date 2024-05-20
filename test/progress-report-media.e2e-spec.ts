@@ -6,9 +6,9 @@ import {
   PaginatedListType,
   Variant,
 } from '~/common';
-import { CreateLanguageEngagement } from '../src/components/engagement';
-import { Media } from '../src/components/file';
-import { Language } from '../src/components/language';
+import { CreateLanguageEngagement } from '../src/components/engagement/dto';
+import { Media } from '../src/components/file/media/media.dto';
+import { Language } from '../src/components/language/dto';
 import { ProgressReport } from '../src/components/progress-report/dto';
 import {
   MediaVariant,

@@ -9,7 +9,8 @@ import {
 import { LoggedInSession, Session } from '~/common';
 import { Loader, LoaderOf } from '~/core';
 import { Privileges } from '../../authorization';
-import { User, UserLoader } from '../../user';
+import { UserLoader } from '../../user';
+import { User } from '../../user/dto';
 import { ProjectType } from '../dto/project-type.enum';
 import { FinancialApprover, FinancialApproverInput } from './dto';
 import { FinancialApproverRepository } from './financial-approver.repository';

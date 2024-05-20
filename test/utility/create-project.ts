@@ -4,7 +4,7 @@ import {
   CreateProject,
   ProjectStep,
   ProjectType,
-} from '../../src/components/project';
+} from '../../src/components/project/dto';
 import { TestApp } from './create-app';
 import { createRegion } from './create-region';
 import { fragments, RawProject } from './fragments';

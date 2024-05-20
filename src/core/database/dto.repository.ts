@@ -10,7 +10,7 @@ import {
   ResourceShape,
   ServerException,
   UnsecuredDto,
-} from '../../common';
+} from '~/common';
 import { Privileges } from '../../components/authorization';
 import { DbChanges, getChanges } from './changes';
 import { CommonRepository } from './common.repository';

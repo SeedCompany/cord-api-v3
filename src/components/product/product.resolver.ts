@@ -20,21 +20,21 @@ import {
   ListArg,
   LoggedInSession,
   Session,
-} from '../../common';
-import { Loader, LoaderOf } from '../../core';
+} from '~/common';
+import { Loader, LoaderOf } from '~/core';
 import { IdsAndView, IdsAndViewArg } from '../changeset/dto';
+import { ProductLoader, ProductService } from '../product';
 import {
   AvailableStepsOptions,
   CreateDerivativeScriptureProduct,
   CreateDirectScriptureProduct,
   getAvailableSteps,
-  ProductLoader,
-  ProductService,
   ProductStep as Step,
   UpdateDerivativeScriptureProduct,
   UpdateDirectScriptureProduct,
-} from '../product';
-import { ProjectLoader, TranslationProject } from '../project';
+} from '../product/dto';
+import { ProjectLoader } from '../project';
+import { TranslationProject } from '../project/dto';
 import {
   AnyProduct,
   CreateOtherProduct,

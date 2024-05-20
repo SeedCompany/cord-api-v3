@@ -1,5 +1,5 @@
-import { ID, ObjectView } from '../../common';
-import { LoaderFactory, ObjectViewAwareLoader } from '../../core';
+import { ID, ObjectView } from '~/common';
+import { LoaderFactory, ObjectViewAwareLoader } from '~/core';
 import { Partnership } from './dto';
 import { PartnershipService } from './partnership.service';
 

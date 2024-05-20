@@ -1,11 +1,10 @@
-import { CalendarDate } from '../src/common';
-import { Role } from '../src/components/authorization';
-import { PartnerType } from '../src/components/partner';
+import { CalendarDate, Role } from '~/common';
+import { PartnerType } from '../src/components/partner/dto';
 import {
   ProjectStatus,
   ProjectStep,
   ProjectType,
-} from '../src/components/project';
+} from '../src/components/project/dto';
 import {
   createDirectProduct,
   createFundingAccount,

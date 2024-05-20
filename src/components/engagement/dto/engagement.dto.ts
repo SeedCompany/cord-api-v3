@@ -3,9 +3,6 @@ import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive } from 'type-fest';
-import { BaseNode } from '~/core/database/results';
-import { e } from '~/core/edgedb';
-import { LinkTo, RegisterResource } from '~/core/resources';
 import {
   Calculated,
   DateInterval,
@@ -26,8 +23,11 @@ import {
   Sensitivity,
   SensitivityField,
   UnsecuredDto,
-} from '../../../common';
-import { ScopedRole } from '../../authorization';
+} from '~/common';
+import { BaseNode } from '~/core/database/results';
+import { e } from '~/core/edgedb';
+import { LinkTo, RegisterResource } from '~/core/resources';
+import { ScopedRole } from '../../authorization/dto';
 import { ChangesetAware } from '../../changeset/dto';
 import { DefinedFile } from '../../file/dto';
 import { Product, SecuredMethodologies } from '../../product/dto';

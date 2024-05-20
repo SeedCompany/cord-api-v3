@@ -3,7 +3,7 @@ import { CachedByArg } from '@seedcompany/common';
 import { identity, intersection } from 'lodash';
 import { EnhancedResource, Session } from '~/common';
 import { QueryFragment } from '~/core/database/query';
-import { withoutScope } from '../../dto/role.dto';
+import { withoutScope } from '../../dto';
 import { RoleCondition } from '../../policies/conditions/role.condition';
 import { Permission } from '../builder/perm-granter';
 import { all, any, CalculatedCondition, OrConditions } from '../conditions';

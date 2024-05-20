@@ -7,7 +7,7 @@ import {
   Resource,
   Session,
 } from '~/common';
-import { Loader, LoaderOf } from '../../core';
+import { Loader, LoaderOf } from '~/core';
 import { CommentThreadLoader } from './comment-thread.loader';
 import { CommentService } from './comment.service';
 import { Commentable, CommentThreadList, CommentThreadListInput } from './dto';

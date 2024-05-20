@@ -16,13 +16,10 @@ import {
   ListArg,
   LoggedInSession,
   Session,
-} from '../../common';
-import { Loader, LoaderOf } from '../../core';
-import {
-  LocationListInput,
-  LocationLoader,
-  SecuredLocationList,
-} from '../location';
+} from '~/common';
+import { Loader, LoaderOf } from '~/core';
+import { LocationLoader } from '../location';
+import { LocationListInput, SecuredLocationList } from '../location/dto';
 import { OrganizationLoader, OrganizationService } from '../organization';
 import {
   CreateOrganizationInput,

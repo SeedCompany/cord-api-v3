@@ -1,7 +1,7 @@
 import { Connection } from 'cypher-query-builder';
 import { Duration, DurationLike } from 'luxon';
 import { Transaction as NeoTransaction } from 'neo4j-driver';
-import { getCauseList, ServerException } from '../../common';
+import { getCauseList, ServerException } from '~/common';
 import { ILogger } from '../logger';
 import { PatchedConnection } from './cypher.factory';
 import { isNeo4jError } from './errors';

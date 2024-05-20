@@ -6,8 +6,8 @@ import {
   ListArg,
   LoggedInSession,
   Session,
-} from '../../../common';
-import { Loader, LoaderOf } from '../../../core';
+} from '~/common';
+import { Loader, LoaderOf } from '~/core';
 import { ProjectMemberLoader, ProjectMemberService } from '../project-member';
 import {
   CreateProjectMemberInput,

@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { ID } from '~/common';
-import { DtoRepository } from '~/core';
+import { DtoRepository } from '~/core/database';
 import { ACTIVE } from '~/core/database/query';
 import { KnownLanguage, ModifyKnownLanguageArgs } from './dto';
 

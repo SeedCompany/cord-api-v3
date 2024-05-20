@@ -1,7 +1,7 @@
 import { faker } from '@faker-js/faker';
 import { times } from 'lodash';
-import { generateId, IdOf, isValidId } from '../src/common';
-import { Location } from '../src/components/location';
+import { generateId, IdOf, isValidId } from '~/common';
+import { Location } from '../src/components/location/dto';
 import {
   createFundingAccount,
   createLocation,

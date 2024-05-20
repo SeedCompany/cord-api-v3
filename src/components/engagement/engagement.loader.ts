@@ -1,5 +1,5 @@
-import { ID, ObjectView } from '../../common';
-import { LoaderFactory, ObjectViewAwareLoader } from '../../core';
+import { ID, ObjectView } from '~/common';
+import { LoaderFactory, ObjectViewAwareLoader } from '~/core';
 import {
   Engagement,
   IEngagement,

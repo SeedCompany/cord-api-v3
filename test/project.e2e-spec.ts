@@ -9,21 +9,21 @@ import {
   isIdLike,
   Order,
   PaginatedListType,
+  Role,
   Sensitivity,
-} from '../src/common';
-import { Role } from '../src/components/authorization';
+} from '~/common';
 import { BudgetStatus } from '../src/components/budget/dto';
-import { FieldRegion } from '../src/components/field-region';
-import { Location } from '../src/components/location';
-import { PartnerType } from '../src/components/partner';
-import { CreatePartnership } from '../src/components/partnership';
+import { FieldRegion } from '../src/components/field-region/dto';
+import { Location } from '../src/components/location/dto';
+import { PartnerType } from '../src/components/partner/dto';
+import { CreatePartnership } from '../src/components/partnership/dto';
 import {
   CreateProject,
   Project,
   ProjectListInput,
   ProjectStep,
   ProjectType,
-} from '../src/components/project';
+} from '../src/components/project/dto';
 import {
   createFundingAccount,
   createInternshipEngagement,

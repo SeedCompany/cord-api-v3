@@ -1,5 +1,5 @@
 import { Field, Float, ObjectType } from '@nestjs/graphql';
-import { SecuredProperty } from '../../common';
+import { SecuredProperty } from '~/common';
 
 @ObjectType({
   description: 'An IANA Time Zone',

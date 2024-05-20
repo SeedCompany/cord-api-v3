@@ -3,7 +3,7 @@ import { Type } from 'class-transformer';
 import { Min, ValidateNested } from 'class-validator';
 import { stripIndent } from 'common-tags';
 import { ID, IdField } from '~/common';
-import { ProductStep } from '../../product';
+import { ProductStep } from '../../product/dto';
 import { VariantProgressArg } from './variant-progress.dto';
 
 @InputType()

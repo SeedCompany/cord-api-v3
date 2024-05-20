@@ -1,12 +1,12 @@
 import { faker } from '@faker-js/faker';
 import { DateTime } from 'luxon';
-import { ID, isValidId } from '../../src/common';
+import { ID, isValidId } from '~/common';
 import {
   CreateInternshipEngagement,
   CreateLanguageEngagement,
   InternshipPosition,
-} from '../../src/components/engagement';
-import { ProductMethodology } from '../../src/components/product';
+} from '../../src/components/engagement/dto';
+import { ProductMethodology } from '../../src/components/product/dto';
 import { TestApp } from './create-app';
 import { createLanguage } from './create-language';
 import { createLocation } from './create-location';

@@ -15,9 +15,10 @@ import {
   ListArg,
   LoggedInSession,
   Session,
-} from '../../common';
-import { Loader, LoaderOf } from '../../core';
-import { User, UserLoader } from '../user';
+} from '~/common';
+import { Loader, LoaderOf } from '~/core';
+import { UserLoader } from '../user';
+import { User } from '../user/dto';
 import {
   asFile,
   CreateFileVersionInput,

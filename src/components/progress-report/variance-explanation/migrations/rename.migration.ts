@@ -1,5 +1,5 @@
 import { node, relation } from 'cypher-query-builder';
-import { BaseMigration, Migration } from '~/core';
+import { BaseMigration, Migration } from '~/core/database';
 import { ACTIVE } from '~/core/database/query';
 
 @Migration('2023-10-12T11:00:00')

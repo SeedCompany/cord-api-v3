@@ -1,17 +1,17 @@
 import { sample, times } from 'lodash';
 import { v1 as uuid } from 'uuid';
-import { CalendarDate, ID } from '../src/common';
-import { Role } from '../src/components/authorization';
-import { PartnerType } from '../src/components/partner';
+import { CalendarDate, ID, Role } from '~/common';
+import { PartnerType } from '../src/components/partner/dto';
 import {
   FinancialReportingType,
   Partnership,
   PartnershipAgreementStatus,
   UpdatePartnershipInput,
-} from '../src/components/partnership';
+} from '../src/components/partnership/dto';
 import { Project } from '../src/components/project/dto';
 import {
   createPartner,
+  createPartnership,
   createProject,
   createSession,
   createTestApp,
@@ -22,7 +22,6 @@ import {
   registerUser,
   TestApp,
 } from './utility';
-import { createPartnership } from './utility/create-partnership';
 
 describe('Partnership e2e', () => {
   let app: TestApp;

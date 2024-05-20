@@ -1,6 +1,6 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { Secured } from '../../common';
-import { ResourceLoader } from '../../core';
+import { Secured } from '~/common';
+import { ResourceLoader } from '~/core';
 import { ProducibleRef, SecuredProducible } from './dto';
 
 @Resolver(SecuredProducible)

@@ -1,6 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { ILogger, Logger, ResourceLoader, ResourcesHost } from '~/core';
-import { BaseNode, isBaseNode } from '~/core/database/results';
 import {
   ID,
   InputException,
@@ -12,7 +10,9 @@ import {
   ServerException,
   Session,
   UnsecuredDto,
-} from '../../common';
+} from '~/common';
+import { ILogger, Logger, ResourceLoader, ResourcesHost } from '~/core';
+import { BaseNode, isBaseNode } from '~/core/database/results';
 import { Privileges } from '../authorization';
 import { CreatePost, Post, Postable, UpdatePost } from './dto';
 import { PostListInput, SecuredPostList } from './dto/list-posts.dto';

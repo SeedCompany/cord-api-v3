@@ -1,4 +1,4 @@
-import { Session, UnsecuredDto } from '../../../common';
+import { Session, UnsecuredDto } from '~/common';
 import { Changeset } from '../dto';
 
 /**

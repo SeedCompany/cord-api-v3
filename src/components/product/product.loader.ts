@@ -1,9 +1,9 @@
-import { ID } from '../../common';
+import { ID } from '~/common';
 import {
   LoaderFactory,
   OrderedNestDataLoader,
   OrderedNestDataLoaderOptions,
-} from '../../core';
+} from '~/core';
 import {
   AnyProduct,
   DerivativeScriptureProduct,

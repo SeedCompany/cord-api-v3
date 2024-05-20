@@ -1,8 +1,9 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { AnonSession, Session } from '../../common';
-import { Loader, LoaderOf } from '../../core';
-import { User, UserLoader } from '../user';
+import { AnonSession, Session } from '~/common';
+import { Loader, LoaderOf } from '~/core';
+import { UserLoader } from '../user';
+import { User } from '../user/dto';
 import { FileNode, IFileNode, isDirectory } from './dto';
 import { FileService } from './file.service';
 import { MediaByFileVersionLoader } from './media/media-by-file-version.loader';

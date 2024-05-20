@@ -1,7 +1,6 @@
 import { mapValues } from '@seedcompany/common';
-import { Calculated, ResourceRelationsShape } from '~/common';
+import { Calculated, ResourceRelationsShape, Role } from '~/common';
 import { RegisterResource } from '~/core/resources';
-import { Role } from './role.dto';
 
 /**
  * A special type of object that declares what roles a user can assign to another user.

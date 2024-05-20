@@ -1,12 +1,12 @@
 import { MergeExclusive, RequireAtLeastOne } from 'type-fest';
-import { ID, Session, UnsecuredDto } from '../../../common';
-import { EventsHandler, IEventHandler } from '../../../core';
+import { ID, Session, UnsecuredDto } from '~/common';
+import { EventsHandler, IEventHandler } from '~/core';
 import {
   Project,
   ProjectStatus,
   ProjectStep,
   ProjectType,
-} from '../../project';
+} from '../../project/dto';
 import { ProjectUpdatedEvent } from '../../project/events';
 import { EngagementStatus } from '../dto';
 import { EngagementRepository } from '../engagement.repository';

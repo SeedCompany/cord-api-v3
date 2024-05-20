@@ -1,4 +1,4 @@
-import { Role } from './dto';
+import { Role } from '~/common';
 import { AssignableRoles } from './dto/assignable-roles';
 import { Granter, ResourceGranter } from './policy';
 

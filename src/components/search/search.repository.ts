@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { CommonRepository, OnIndex, OnIndexParams } from '../../core';
+import { CommonRepository, OnIndex, OnIndexParams } from '~/core/database';
 import {
   ACTIVE,
   escapeLuceneSyntax,
   fullTextQuery,
-} from '../../core/database/query';
-import { BaseNode } from '../../core/database/results';
+} from '~/core/database/query';
+import { BaseNode } from '~/core/database/results';
 import { SearchInput } from './dto';
 
 @Injectable()

@@ -2,7 +2,7 @@ import { S3 } from '@aws-sdk/client-s3';
 import { FactoryProvider } from '@nestjs/common';
 import { resolve } from 'path';
 import { withAddedPath } from '~/common/url.util';
-import { ConfigService } from '../../core';
+import { ConfigService } from '~/core';
 import {
   CompositeBucket,
   FileBucket,

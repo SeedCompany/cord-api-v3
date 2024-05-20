@@ -1,5 +1,5 @@
 import { InputType, ObjectType } from '@nestjs/graphql';
-import { PaginatedList, SortablePaginationInput } from '../../../common';
+import { PaginatedList, SortablePaginationInput } from '~/common';
 import { FundingAccount } from './funding-account.dto';
 
 @InputType()
