@@ -28,6 +28,7 @@ import { ProjectRules } from './project.rules';
 import { ProjectService } from './project.service';
 import { TranslationProjectResolver } from './translation-project.resolver';
 import { ProjectUserConnectionResolver } from './user-connection.resolver';
+import { ProjectWorkflowModule } from './workflow/project-workflow.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { ProjectUserConnectionResolver } from './user-connection.resolver';
     PartnerModule,
     forwardRef(() => OrganizationModule),
     FinancialApproverModule,
+    ProjectWorkflowModule,
   ],
   providers: [
     ProjectResolver,
