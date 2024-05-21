@@ -8,6 +8,7 @@ import { Command } from '@smithy/smithy-client';
 import { pickBy } from 'lodash';
 import { DateTime, Duration } from 'luxon';
 import { URL } from 'node:url';
+import { firstValueFrom, Observable } from 'rxjs';
 import { Readable } from 'stream';
 import { assert } from 'ts-essentials';
 import {
@@ -19,7 +20,7 @@ import {
 } from './file-bucket';
 
 export interface LocalBucketOptions {
-  baseUrl: URL;
+  baseUrl: Observable<URL>;
 }
 
 export type FakeAwsFile = Required<Pick<GetObjectOutput, 'ContentType'>> &
@@ -96,7 +97,8 @@ export abstract class LocalBucket<
           .toMillis(),
       },
     });
-    const url = new URL(this.options.baseUrl.toString());
+    const baseUrl = await firstValueFrom(this.options.baseUrl);
+    const url = new URL(baseUrl.toString());
     url.searchParams.set('signed', signed);
     return url.toString();
   }
