@@ -28,6 +28,7 @@ const hydrate = e.shape(e.Project, (project) => ({
   marketingLocation: true,
   marketingRegionOverride: true,
   fieldRegion: true,
+  stepChangedAt: e.op(project.latestWorkflowEvent.at, '??', project.createdAt),
   owningOrganization: e.cast(e.uuid, null), // Not implemented going forward
   presetInventory: e.bool(false), // Not implemented going forward
 }));

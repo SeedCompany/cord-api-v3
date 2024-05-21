@@ -1,6 +1,5 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { Loader, LoaderOf } from '@seedcompany/data-loader';
-import { stripIndent } from 'common-tags';
 import { AnonSession, ID, Session, viewOfChangeset } from '~/common';
 import { ProjectStepTransition, SecuredProjectStep } from './dto';
 import { ProjectLoader } from './project.loader';
@@ -12,6 +11,7 @@ export class ProjectStepResolver {
 
   @ResolveField(() => [ProjectStepTransition], {
     description: 'The available steps a project can be transitioned to.',
+    deprecationReason: 'Use `transitions2` instead.',
   })
   async transitions(
     @Parent() step: SecuredProjectStep & { parentId: ID; changeset?: ID },
@@ -32,17 +32,5 @@ export class ProjectStepResolver {
       undefined,
       step.changeset,
     );
-  }
-
-  @ResolveField(() => Boolean, {
-    description: stripIndent`
-      Is the current user allowed to bypass transitions entirely
-      and change the step to any other step?
-   `,
-  })
-  async canBypassTransitions(
-    @AnonSession() session: Session,
-  ): Promise<boolean> {
-    return await this.projectRules.canBypassWorkflow(session);
   }
 }

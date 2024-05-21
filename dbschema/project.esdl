@@ -49,14 +49,10 @@ module default {
       );
     };
     
-    required step: Project::Step {
-      default := Project::Step.EarlyConversations;
-    };
-    required stepChangedAt: datetime {
-      default := .createdAt;
-      rewrite update using (datetime_of_statement() if .step != __old__.step else .stepChangedAt);
-    }
-    property status := Project::statusFromStep(.step);
+    status := Project::statusFromStep(.step);
+    step := .latestWorkflowEvent.step ?? Project::Step.EarlyConversations;
+    latestWorkflowEvent := (select .workflowEvents order by .at desc limit 1);
+    workflowEvents := .<project[is Project::WorkflowEvent];
     
     mouStart: cal::local_date;
     mouEnd: cal::local_date;
@@ -199,7 +195,30 @@ module Project {
       on target delete allow;
     };
   }
-  
+
+  type WorkflowEvent {
+    required project: default::Project {
+      readonly := true;
+    };
+    required who: default::Actor {
+      readonly := true;
+      default := global default::currentActor;
+    };
+    required at: datetime {
+      readonly := true;
+      default := datetime_of_statement();
+    };
+    transitionId: uuid {
+      readonly := true;
+    };
+    required step: Step {
+      readonly := true;
+    };
+    notes: default::RichText {
+      readonly := true;
+    };
+  }
+
   scalar type Step extending enum<
     EarlyConversations,
     PendingConceptApproval,
