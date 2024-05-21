@@ -17,6 +17,7 @@ export function ProjectStepChanged({
   changedBy,
   previousStep: oldStepVal,
   recipient,
+  primaryPartnerName,
 }: StepChangeNotification) {
   const projectUrl = useFrontendUrl(`/projects/${project.id}`);
   const projectName = project.name.value;
@@ -65,6 +66,10 @@ export function ProjectStepChanged({
             />
             <br />
             Project Type: {project.type}
+            <br />
+            {primaryPartnerName ? (
+              <>Primary Partner: {primaryPartnerName}</>
+            ) : null}
           </Text>
           <HideInText>
             <Button href={projectUrl} paddingTop={16}>
