@@ -7,6 +7,7 @@ import {
   print,
 } from 'graphql';
 import { Merge } from 'type-fest';
+import { ConfigService } from '~/core';
 // eslint-disable-next-line import/no-duplicates
 import { ErrorExpectations } from './expect-gql-error';
 // eslint-disable-next-line import/no-duplicates -- ensures runtime execution
@@ -29,6 +30,7 @@ export const createGraphqlClient = async (
 ): Promise<GraphQLTestClient> => {
   await app.listen(0);
   const url = await app.getUrl();
+  app.get(ConfigService).hostUrl$.next(new URL(url) as URL & string);
 
   let authToken = '';
 
