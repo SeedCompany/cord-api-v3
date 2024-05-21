@@ -144,7 +144,7 @@ export class FileService {
 
   async getUrl(node: FileNode, download: boolean) {
     const url = withAddedPath(
-      this.config.hostUrl,
+      this.config.hostUrl$.value,
       FileUrl.path,
       isFile(node) ? node.latestVersionId : node.id,
       encodeURIComponent(node.name),

@@ -10,6 +10,7 @@ import LRUCache from 'lru-cache';
 import { Duration, DurationLike } from 'luxon';
 import { nanoid } from 'nanoid';
 import { Config as Neo4JDriverConfig } from 'neo4j-driver';
+import { BehaviorSubject } from 'rxjs';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { Class, Merge, ReadonlyDeep } from 'type-fest';
 import { ID } from '~/common';
@@ -35,9 +36,9 @@ export const makeConfig = (env: EnvironmentService) =>
     port = env.number('port').optional(3000);
     // The port where the app is being hosted. i.e. a docker bound port
     publicPort = env.number('public_port').optional(this.port);
-    hostUrl = env
-      .url('host_url')
-      .optional(`http://localhost:${this.publicPort}`);
+    hostUrl$ = new BehaviorSubject(
+      env.url('host_url').optional(`http://localhost:${this.publicPort}`),
+    );
 
     graphQL = {
       persistedQueries: {
