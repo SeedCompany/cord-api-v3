@@ -1,7 +1,7 @@
 import { faker } from '@faker-js/faker';
-import { assert, MarkOptional } from 'ts-essentials';
+import got from 'got';
+import { MarkOptional } from 'ts-essentials';
 import { ID } from '~/common';
-import { FileBucket, LocalBucket } from '../../src/components/file/bucket';
 import {
   CreateFileVersionInput,
   FileListInput,
@@ -52,18 +52,14 @@ export const uploadFileContents = async (
     ...generateFakeFile(),
     ...input,
   };
-  const {
-    content: Body,
-    mimeType: ContentType,
-    size: ContentLength,
-  } = completeInput;
+  const { content, mimeType } = completeInput;
 
-  const bucket = app.get(FileBucket);
-  assert(bucket instanceof LocalBucket);
-  await bucket.upload(url, {
-    Body,
-    ContentType,
-    ContentLength,
+  await got.put(url, {
+    headers: {
+      'Content-Type': mimeType,
+    },
+    body: content,
+    enableUnixSockets: true,
   });
 
   return completeInput;
