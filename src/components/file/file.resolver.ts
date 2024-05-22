@@ -7,7 +7,6 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { URL } from 'url';
 import {
   AnonSession,
   ID,
@@ -80,18 +79,6 @@ export class FileResolver {
   @FileUrl.Resolver()
   async url(@Parent() node: File, @FileUrl.DownloadArg() download: boolean) {
     return await this.service.getUrl(node, download);
-  }
-
-  @ResolveField(() => URL, {
-    description: 'A direct url to download the file',
-    deprecationReason: stripIndent`
-      Use \`url\` instead.
-
-      Note while this url is anonymous, the new field, \`url\` is not.
-    `,
-  })
-  downloadUrl(@Parent() node: File): Promise<string> {
-    return this.service.getDownloadUrl(node);
   }
 
   @Mutation(() => DeleteFileNodeOutput, {
