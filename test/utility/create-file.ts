@@ -13,15 +13,18 @@ import { RawFile, RawFileNode, RawFileNodeChildren } from './fragments';
 import * as fragments from './fragments';
 import { gql } from './gql-tag';
 
-export const generateFakeFile = () => ({
-  name: faker.system.fileName(),
-  content: Buffer.from(
+export const generateFakeFile = () => {
+  const content = Buffer.from(
     faker.image.dataUri({ width: 200, height: 200 }).split(',')[1],
     'base64',
-  ),
-  size: faker.number.int(1_000_000),
-  mimeType: faker.helpers.arrayElement(mimeTypes).name,
-});
+  );
+  return {
+    name: faker.system.fileName(),
+    content: content,
+    size: content.length,
+    mimeType: faker.helpers.arrayElement(mimeTypes).name,
+  };
+};
 
 export type FakeFile = ReturnType<typeof generateFakeFile>;
 
