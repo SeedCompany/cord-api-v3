@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import { bufferFromStream } from '@seedcompany/common';
+import got from 'got';
 import { startCase, times } from 'lodash';
 import {
   DateTime,
@@ -104,13 +104,18 @@ function resetNow() {
 }
 
 const expectEqualContent = async (
-  bucket: LocalBucket,
+  app: TestApp,
   url: string,
   expected: FakeFile,
 ) => {
-  const actualFile = await bucket.download(url);
-  const contents = await bufferFromStream(actualFile.Body);
-  expect(contents.toString()).toEqual(expected.content.toString());
+  const expectedContents = expected.content;
+  const actualContents = await got(url, {
+    headers: {
+      Authorization: `Bearer ${app.graphql.authToken}`,
+    },
+    enableUnixSockets: true,
+  }).buffer();
+  expect(expectedContents).toEqual(actualContents);
 };
 
 describe('File e2e', () => {
@@ -156,7 +161,7 @@ describe('File e2e', () => {
       expect(modifiedAt.diffNow().as('seconds')).toBeGreaterThan(-30);
       const createdAt = DateTime.fromISO(file.createdAt);
       expect(createdAt.diffNow().as('seconds')).toBeGreaterThan(-30);
-      await expectEqualContent(bucket, file.downloadUrl, fakeFile);
+      await expectEqualContent(app, file.url, fakeFile);
       expect(file.parents[0].id).toEqual(root.id);
     }
   });
@@ -177,7 +182,7 @@ describe('File e2e', () => {
     expect(version.createdBy.id).toEqual(me.id);
     const createdAt = DateTime.fromISO(version.createdAt);
     expect(createdAt.diffNow().as('seconds')).toBeGreaterThan(-30);
-    await expectEqualContent(bucket, file.downloadUrl, fakeFile);
+    await expectEqualContent(app, file.url, fakeFile);
     expect(version.parents[0].id).toEqual(file.id);
   });
 
@@ -216,7 +221,7 @@ describe('File e2e', () => {
     input: FakeFile,
   ) {
     expect(updated.id).toEqual(initial.id);
-    await expectEqualContent(bucket, updated.downloadUrl, input);
+    await expectEqualContent(app, updated.url, input);
     expect(updated.size).toEqual(input.size);
     expect(updated.mimeType).toEqual(input.mimeType);
     const createdAt = DateTime.fromISO(updated.createdAt);

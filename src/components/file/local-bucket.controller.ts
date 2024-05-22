@@ -5,6 +5,7 @@ import {
   Put,
   Request,
   Response,
+  StreamableFile,
 } from '@nestjs/common';
 import { Request as IRequest, Response as IResponse } from 'express';
 import { DateTime } from 'luxon';
@@ -49,7 +50,10 @@ export class LocalBucketController {
   }
 
   @Get()
-  async download(@Request() req: IRequest, @Response() res: IResponse) {
+  async download(
+    @Request() req: IRequest,
+    @Response({ passthrough: true }) res: IResponse,
+  ) {
     const url = new URL(`https://localhost${req.url}`);
     const { Key, operation, ...rest } = await this.bucket.parseSignedUrl(url);
     if (operation !== 'GetObject') {
@@ -84,6 +88,6 @@ export class LocalBucketController {
       }
     }
 
-    out.Body.pipe(res);
+    return new StreamableFile(out.Body);
   }
 }
