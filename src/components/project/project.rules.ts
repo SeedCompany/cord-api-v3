@@ -25,15 +25,12 @@ import { OrganizationService } from '../organization';
 import { Organization } from '../organization/dto';
 import { UserService } from '../user';
 import { User } from '../user/dto';
-import {
-  Project,
-  ProjectStep,
-  ProjectStepTransition,
-  ProjectType,
-  TransitionType,
-} from './dto';
+import { Project, ProjectStep, ProjectType } from './dto';
 import { FinancialApproverRepository } from './financial-approver';
 import { ProjectService } from './project.service';
+import { ProjectWorkflowTransition, TransitionType } from './workflow/dto';
+
+type ProjectStepTransition = Omit<ProjectWorkflowTransition, 'id'>;
 
 type EmailAddress = string;
 
@@ -916,7 +913,10 @@ export class ProjectRules {
       return [];
     }
 
-    return transitions;
+    return transitions.map((t) => ({
+      id: t.to, // TODO stubbed
+      ...t,
+    }));
   }
 
   async canBypassWorkflow(session: Session) {
