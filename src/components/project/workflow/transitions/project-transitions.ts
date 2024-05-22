@@ -1,4 +1,5 @@
-import { ProjectStep as Step, TransitionType as Type } from '../../dto';
+import { ProjectStep as Step } from '../../dto';
+import { TransitionType as Type } from '../dto';
 import { defineTransitions } from './types';
 
 export type TransitionName = keyof typeof Transitions;
