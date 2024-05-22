@@ -28,7 +28,7 @@ export class ProgressReportWorkflowFlowchart {
       // },
     };
     const graph = [
-      `%%${JSON.stringify({ init: config })}%%`,
+      `%%{ init: ${JSON.stringify(config)} }%%`,
       'flowchart TD',
       ...Object.entries(styles).flatMap(([type, style]) => {
         const str = Object.entries(style)
