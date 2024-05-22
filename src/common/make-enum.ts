@@ -1,5 +1,5 @@
 import { registerEnumType } from '@nestjs/graphql';
-import { cleanJoin, nonEnumerable, setHas } from '@seedcompany/common';
+import { cleanJoin, mapKeys, nonEnumerable } from '@seedcompany/common';
 import { inspect, InspectOptionsStylized } from 'util';
 
 export type EnumType<Enum> = Enum extends MadeEnum<infer Values, any, any>
@@ -82,6 +82,7 @@ export const makeEnum = <
     (value: EnumValueDeclarationShape): EnumValueDeclarationObjectShape =>
       typeof value === 'string' ? { value } : value,
   );
+  const entryMap = mapKeys.fromList(entries, (e) => e.value).asMap;
 
   const object = Object.fromEntries(entries.map((v) => [v.value, v.value]));
 
@@ -92,7 +93,14 @@ export const makeEnum = <
     entries,
     [Symbol.iterator]: () => values.values(),
     // @ts-expect-error Ignoring generics for implementation.
-    has: (value: string) => setHas(values, value),
+    has: (value: string) => entryMap.has(value),
+    entry: (value: string) => {
+      const entry = entryMap.get(value);
+      if (!entry) {
+        throw new Error(`${name ?? 'Enum'} does not have member: "${value}"`);
+      }
+      return entry;
+    },
     [inspect.custom]: (
       depth: number,
       options: InspectOptionsStylized,
@@ -192,6 +200,7 @@ type NormalizedValueDeclaration<Declaration extends EnumValueDeclarationShape> =
 interface EnumHelpers<Values extends string, ValueDeclaration> {
   readonly values: ReadonlySet<Values>;
   readonly entries: ReadonlyArray<Readonly<ValueDeclaration>>;
+  readonly entry: (value: Values) => Readonly<ValueDeclaration>;
   readonly has: <In extends string>(
     value: In & {},
   ) => value is In & Values & {};
