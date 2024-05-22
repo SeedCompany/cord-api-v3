@@ -1,7 +1,7 @@
 /* eslint-disable no-case-declarations */
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { first, intersection, startCase } from 'lodash';
+import { first, intersection } from 'lodash';
 import {
   ID,
   Role,
@@ -384,9 +384,9 @@ export class EngagementRules {
     );
     if (!validNextStatus) {
       throw new UnauthorizedException(
-        `One or more engagements cannot be changed to ${startCase(
-          nextStatus,
-        )}. Please check engagement statuses.`,
+        `One or more engagements cannot be changed to ${
+          EngagementStatus.entry(nextStatus).label
+        }. Please check engagement statuses.`,
         'engagement.status',
       );
     }

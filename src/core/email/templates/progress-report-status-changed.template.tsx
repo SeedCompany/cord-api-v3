@@ -4,7 +4,6 @@ import {
   Section,
   Text,
 } from '@seedcompany/nestjs-email/templates';
-import { startCase } from 'lodash';
 import { fiscalQuarter, fiscalYear } from '~/common';
 import { Language } from '../../../components/language/dto';
 import { PeriodicReport } from '../../../components/periodic-report/dto';
@@ -49,8 +48,12 @@ export function ProgressReportStatusChanged({
     report.start,
   )} FY${fiscalYear(report.start)}`;
 
-  const oldStatus = startCase(previousStatusVal) || undefined;
-  const newStatus = startCase(newStatusVal) || undefined;
+  const oldStatus = previousStatusVal
+    ? ProgressReportStatus.entry(previousStatusVal).label
+    : undefined;
+  const newStatus = newStatusVal
+    ? ProgressReportStatus.entry(newStatusVal).label
+    : undefined;
 
   return (
     <EmailTemplate
