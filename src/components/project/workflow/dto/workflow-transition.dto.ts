@@ -1,11 +1,14 @@
 import { Field, ObjectType } from '@nestjs/graphql';
-import { ID, IdField } from '~/common';
-import { TransitionType } from '../../../project/dto';
+import { EnumType, ID, IdField, makeEnum } from '~/common';
 import { ProjectStep } from '../../dto';
 
-export { TransitionType };
+export type TransitionType = EnumType<typeof TransitionType>;
+export const TransitionType = makeEnum({
+  name: 'TransitionType',
+  values: ['Neutral', 'Approve', 'Reject'],
+});
 
-@ObjectType()
+@ObjectType('ProjectStepTransition')
 export abstract class ProjectWorkflowTransition {
   @IdField()
   readonly id: ID;
@@ -18,4 +21,10 @@ export abstract class ProjectWorkflowTransition {
 
   @Field(() => TransitionType)
   readonly type: TransitionType;
+
+  @Field(() => Boolean, { defaultValue: false })
+  readonly disabled?: boolean;
+
+  @Field(() => String, { nullable: true })
+  readonly disabledReason?: string;
 }
