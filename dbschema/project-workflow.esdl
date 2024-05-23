@@ -12,7 +12,7 @@ module Project {
       readonly := true;
       default := datetime_of_statement();
     };
-    transitionId: uuid {
+    transitionKey: uuid {
       readonly := true;
     };
     required step: Step {

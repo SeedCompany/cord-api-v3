@@ -44,7 +44,7 @@ export class ProjectWorkflowService {
     return {
       ...secured,
       transition: dto.transition
-        ? Object.values(Transitions).find((t) => t.id === dto.transition) ??
+        ? Object.values(Transitions).find((t) => t.key === dto.transition) ??
           null
         : null,
     };
@@ -59,7 +59,7 @@ export class ProjectWorkflowService {
         (t.from ? many(t.from).includes(currentStep) : true) &&
         // I don't have a good way to type this right now.
         // Context usage is still fuzzy when conditions need different shapes.
-        p.forContext({ transition: t.id } as any).can('create'),
+        p.forContext({ transition: t.key } as any).can('create'),
     );
     return available;
   }
@@ -88,7 +88,7 @@ export class ProjectWorkflowService {
       {
         project: projectId,
         ...(typeof next !== 'string'
-          ? { transition: next.id, step: next.to }
+          ? { transition: next.key, step: next.to }
           : { step: next }),
         notes,
       },
@@ -114,7 +114,7 @@ export class ProjectWorkflowService {
     current: Project,
     session: Session,
   ) {
-    const { transition: transitionId, step: overrideStatus } = input;
+    const { transition: transitionKey, step: overrideStatus } = input;
 
     if (overrideStatus) {
       if (!this.canBypass(session)) {
@@ -126,7 +126,7 @@ export class ProjectWorkflowService {
     }
 
     const available = this.getAvailableTransitions(current, session);
-    const transition = available.find((t) => t.id === transitionId);
+    const transition = available.find((t) => t.key === transitionKey);
     if (!transition) {
       throw new UnauthorizedException('This transition is not available');
     }
@@ -147,7 +147,7 @@ export class ProjectWorkflowService {
     await this.executeTransition(
       {
         project: currentProject.id,
-        ...(transition ? { transition: transition.id } : { bypassTo: step }),
+        ...(transition ? { transition: transition.key } : { bypassTo: step }),
       },
       session,
     );
