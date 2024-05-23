@@ -26,5 +26,6 @@ import { ProjectWorkflowEventsResolver } from './resolvers/project-workflow-even
     }),
     ProjectWorkflowFlowchart,
   ],
+  exports: [ProjectWorkflowService],
 })
 export class ProjectWorkflowModule {}
