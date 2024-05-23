@@ -5,6 +5,7 @@ import { ID, Many, maybeMany, Role } from '~/common';
 import { ProjectStep as Step } from '../../dto';
 import { ProjectWorkflowTransition as PublicTransition } from '../dto/workflow-transition.dto';
 import { TransitionCondition } from './conditions';
+import { DynamicStep } from './dynamic-step';
 import type { TransitionName } from './project-transitions';
 
 const PROJECT_TRANSITION_NAMESPACE = '8297b9a1-b50b-4ec9-9021-a0347424b3ec';
@@ -14,6 +15,7 @@ export type TransitionInput = Merge<
   {
     key?: ID | string;
     from?: Many<Step>;
+    to: Step | DynamicStep;
     conditions?: Many<TransitionCondition>;
     notify?: {
       /**
@@ -24,17 +26,21 @@ export type TransitionInput = Merge<
   }
 >;
 
-export interface InternalTransition extends PublicTransition {
-  name: TransitionName;
-  from?: readonly Step[];
-  conditions?: readonly TransitionCondition[];
-  notify?: {
-    /**
-     * Notify project members with these roles, e.g. [Role.Marketing]
-     */
-    membersWithRoles?: readonly Role[];
-  };
-}
+export type InternalTransition = Merge<
+  PublicTransition,
+  {
+    name: TransitionName;
+    from?: readonly Step[];
+    to: Step | DynamicStep;
+    conditions?: readonly TransitionCondition[];
+    notify?: {
+      /**
+       * Notify project members with these roles, e.g. [Role.Marketing]
+       */
+      membersWithRoles?: readonly Role[];
+    };
+  }
+>;
 
 export const defineTransitions = <Names extends string>(
   obj: Record<Names, TransitionInput>,

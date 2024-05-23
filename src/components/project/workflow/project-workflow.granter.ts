@@ -97,7 +97,8 @@ class TransitionCondition implements Condition<typeof Event> {
       [...allowed].map((endStatus) => ({
         endStatus,
         key: Object.values(Transitions)
-          .filter((t) => allowed.has(t.to))
+          // TODO handle dynamic to?
+          .filter((t) => typeof t.to === 'string' && allowed.has(t.to))
           .map((t) => t.key),
       })),
     );

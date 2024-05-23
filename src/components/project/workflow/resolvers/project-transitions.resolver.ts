@@ -31,7 +31,7 @@ export class ProjectTransitionsResolver {
       id: status.parentId,
       view: viewOfChangeset(status.changeset),
     });
-    return this.workflow.getAvailableTransitions(project, session);
+    return await this.workflow.getAvailableTransitions(project, session);
   }
 
   @ResolveField(() => Boolean, {
