@@ -8,8 +8,7 @@ import {
 } from '~/common';
 import { IEventBus, ResourceLoader } from '~/core';
 import { Privileges } from '../../authorization';
-import { Project } from '../dto';
-import { ProjectLoader } from '../project.loader';
+import { Project, ProjectStep } from '../dto';
 import {
   ExecuteProjectTransitionInput,
   ProjectWorkflowEvent as WorkflowEvent,
@@ -52,10 +51,12 @@ export class ProjectWorkflowService {
   }
 
   getAvailableTransitions(project: Project, session: Session) {
+    const currentStep = project.step.value!;
+
     const p = this.privileges.for(session, WorkflowEvent);
     const available = Object.values(Transitions).filter(
       (t) =>
-        (t.from ? many(t.from).includes(project.step.value!) : true) &&
+        (t.from ? many(t.from).includes(currentStep) : true) &&
         // I don't have a good way to type this right now.
         // Context usage is still fuzzy when conditions need different shapes.
         p.forContext({ transition: t.id } as any).can('create'),
@@ -73,6 +74,7 @@ export class ProjectWorkflowService {
   ) {
     const { project: projectId, notes } = input;
 
+    const { ProjectLoader } = await import('../project.loader');
     const projects = await this.resources.getLoader(ProjectLoader);
     const loaderKey = {
       id: projectId,
@@ -129,5 +131,25 @@ export class ProjectWorkflowService {
       throw new UnauthorizedException('This transition is not available');
     }
     return transition;
+  }
+
+  /** @deprecated */
+  async executeTransitionLegacy(
+    currentProject: Project,
+    step: ProjectStep,
+    session: Session,
+  ) {
+    const transitions = this.getAvailableTransitions(currentProject, session);
+    // Pick the first matching to step.
+    // Lack of detail is one of the reasons why this is legacy logic.
+    const transition = transitions.find((t) => t.to === step);
+
+    await this.executeTransition(
+      {
+        project: currentProject.id,
+        ...(transition ? { transition: transition.id } : { bypassTo: step }),
+      },
+      session,
+    );
   }
 }

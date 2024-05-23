@@ -5,6 +5,7 @@ import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { MergeExclusive } from 'type-fest';
 import {
+  Calculated,
   DateInterval,
   DateTimeField,
   DbLabel,
@@ -114,11 +115,13 @@ class Project extends Interfaces {
   })
   @DbLabel('ProjectStep')
   @DbSort(sortingForEnumIndex(ProjectStep))
+  @Calculated()
   readonly step: SecuredProjectStep;
 
   @Field(() => ProjectStatus)
   @DbLabel('ProjectStatus')
   @DbSort(sortingForEnumIndex(ProjectStatus))
+  @Calculated()
   readonly status: ProjectStatus;
 
   readonly primaryLocation: Secured<LinkTo<'Location'> | null>;
@@ -141,6 +144,7 @@ class Project extends Interfaces {
   readonly initialMouEnd: SecuredDateNullable;
 
   @Field()
+  @Calculated()
   readonly stepChangedAt: SecuredDateTime;
 
   @Field()
