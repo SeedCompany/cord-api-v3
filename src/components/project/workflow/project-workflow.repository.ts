@@ -10,7 +10,7 @@ export class ProjectWorkflowRepository extends RepoFor(ProjectWorkflowEvent, {
     id: true,
     who: true,
     at: true,
-    transition: event.transitionId,
+    transition: event.transitionKey,
     step: true,
     notes: true,
   }),
@@ -32,7 +32,7 @@ export class ProjectWorkflowRepository extends RepoFor(ProjectWorkflowEvent, {
   ) {
     const created = e.insert(e.Project.WorkflowEvent, {
       project: e.cast(e.Project, e.uuid(project)),
-      transitionId: props.transition,
+      transitionKey: props.transition,
       step: props.step,
       notes: props.notes,
     });

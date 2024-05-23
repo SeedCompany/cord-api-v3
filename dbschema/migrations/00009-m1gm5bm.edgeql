@@ -1,4 +1,4 @@
-CREATE MIGRATION m16rjlkpazwt77e4pglcrwryqb233qrxtlg34nophypmqtm4nbxy7q
+CREATE MIGRATION m1ipyz27ib3tsxltvx3w2fjojxiw75drzuz4j2edtoctf4zzmwke6a
     ONTO m1gq2hsptfudyqzcqhaz3o5ikdckynzcdegdixqtrdtnisldpyqv6a
 {
   CREATE TYPE Project::WorkflowEvent {
@@ -19,7 +19,7 @@ CREATE MIGRATION m16rjlkpazwt77e4pglcrwryqb233qrxtlg34nophypmqtm4nbxy7q
     CREATE PROPERTY notes: default::RichText {
       SET readonly := true;
     };
-    CREATE PROPERTY transitionId: std::uuid {
+    CREATE PROPERTY transitionKey: std::uuid {
       SET readonly := true;
     };
   };

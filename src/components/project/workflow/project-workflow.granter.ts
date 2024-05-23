@@ -69,16 +69,16 @@ export class ProjectWorkflowEventGranter extends ResourceGranter<typeof Event> {
 }
 
 interface TransitionCheck {
-  id: ID[];
+  key: ID[];
   name?: TransitionName;
   endStatus?: Status;
 }
 
 class TransitionCondition implements Condition<typeof Event> {
-  private readonly allowedTransitionIds;
+  private readonly allowedTransitionKeys;
 
   protected constructor(private readonly checks: readonly TransitionCheck[]) {
-    this.allowedTransitionIds = new Set(checks.flatMap((c) => c.id));
+    this.allowedTransitionKeys = new Set(checks.flatMap((c) => c.key));
   }
 
   static fromName(transitions: readonly TransitionName[]) {
@@ -86,7 +86,7 @@ class TransitionCondition implements Condition<typeof Event> {
     return new TransitionCondition(
       [...allowed].map((name) => ({
         name,
-        id: [Transitions[name].id],
+        key: [Transitions[name].key],
       })),
     );
   }
@@ -96,9 +96,9 @@ class TransitionCondition implements Condition<typeof Event> {
     return new TransitionCondition(
       [...allowed].map((endStatus) => ({
         endStatus,
-        id: Object.values(Transitions)
+        key: Object.values(Transitions)
           .filter((t) => allowed.has(t.to))
-          .map((t) => t.id),
+          .map((t) => t.key),
       })),
     );
   }
@@ -109,19 +109,19 @@ class TransitionCondition implements Condition<typeof Event> {
       // These should be treated as false without error.
       return false;
     }
-    const transitionId = object.transition;
-    if (!transitionId) {
+    const transitionKey = object.transition;
+    if (!transitionKey) {
       return false;
     }
-    return this.allowedTransitionIds.has(
-      isIdLike(transitionId) ? transitionId : transitionId.id,
+    return this.allowedTransitionKeys.has(
+      isIdLike(transitionKey) ? transitionKey : transitionKey.key,
     );
   }
 
   asCypherCondition(query: Query) {
     // TODO bypasses to statuses won't work with this. How should these be filtered?
     const required = query.params.addParam(
-      this.allowedTransitionIds,
+      this.allowedTransitionKeys,
       'allowedTransitions',
     );
     return `node.transition IN ${String(required)}`;
@@ -130,8 +130,8 @@ class TransitionCondition implements Condition<typeof Event> {
   asEdgeQLCondition() {
     // TODO bypasses to statuses won't work with this. How should these be filtered?
     const transitionAllowed = eqlInLiteralSet(
-      '.transitionId',
-      this.allowedTransitionIds,
+      '.transitionKey',
+      this.allowedTransitionKeys,
     );
     // If no transition then false
     return `((${transitionAllowed}) ?? false)`;
@@ -171,7 +171,7 @@ class TransitionCondition implements Condition<typeof Event> {
       const itemsStr = items.map((l) => `  ${l}`).join('\n');
       return `${label} {\n${itemsStr}\n}`;
     };
-    if (this.allowedTransitionIds.size === 0) {
+    if (this.allowedTransitionKeys.size === 0) {
       return 'No Transitions';
     }
     const byName = this.checks.filter((c) => c.name);
