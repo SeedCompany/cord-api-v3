@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { SetRequired } from 'type-fest';
 import { ID, Session } from '~/common';
-import { e, RepoFor } from '~/core/edgedb';
+import { e, edgeql, RepoFor } from '~/core/edgedb';
+import { ProjectStep } from '../dto';
 import { ExecuteProjectTransitionInput, ProjectWorkflowEvent } from './dto';
 
 @Injectable()
@@ -38,5 +39,24 @@ export class ProjectWorkflowRepository extends RepoFor(ProjectWorkflowEvent, {
     });
     const query = e.select(created, this.hydrate);
     return await this.db.run(query);
+  }
+
+  async mostRecentStep(
+    projectId: ID<'Project'>,
+    steps: readonly ProjectStep[],
+  ) {
+    const query = edgeql(`
+      with
+       project := <Project><uuid>$projectId,
+       steps := array_unpack(<array<Project::Step>>$steps),
+       mostRecentEvent := (
+        select project.workflowEvents
+        filter .step in steps if exists steps else true
+        order by .at desc
+        limit 1
+      )
+      select mostRecentEvent.step
+    `);
+    return await this.db.run(query, { projectId, steps });
   }
 }
