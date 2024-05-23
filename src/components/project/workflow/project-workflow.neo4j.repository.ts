@@ -1,17 +1,25 @@
 import { Injectable } from '@nestjs/common';
 import { inArray, node, Query, relation } from 'cypher-query-builder';
 import { SetRequired } from 'type-fest';
-import { ID, Order, PublicOf, Session, UnsecuredDto } from '~/common';
+import {
+  ID,
+  Order,
+  PublicOf,
+  ServerException,
+  Session,
+  UnsecuredDto,
+} from '~/common';
 import { DtoRepository } from '~/core/database';
 import {
   ACTIVE,
   createNode,
   createRelationships,
+  INACTIVE,
   merge,
   requestingUser,
   sorting,
 } from '~/core/database/query';
-import { IProject } from '../dto';
+import { IProject, ProjectStep } from '../dto';
 import {
   ExecuteProjectTransitionInput,
   ProjectWorkflowEvent as WorkflowEvent,
@@ -101,5 +109,27 @@ export class ProjectWorkflowNeo4jRepository
     });
 
     return event;
+  }
+
+  async mostRecentStep(
+    projectId: ID<'Project'>,
+    steps: readonly ProjectStep[],
+  ) {
+    const result = await this.db
+      .query()
+      .match([
+        node('node', 'Project', { id: projectId }),
+        relation('out', '', 'step', INACTIVE),
+        node('prop'),
+      ])
+      .where({ 'prop.value': inArray(steps) })
+      .with('prop')
+      .orderBy('prop.createdAt', 'DESC')
+      .return<{ step: ProjectStep }>(`prop.value as step`)
+      .first();
+    if (!result) {
+      throw new ServerException("Failed to determine project's previous steps");
+    }
+    return result.step ?? null;
   }
 }

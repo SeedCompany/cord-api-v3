@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { ModuleRef } from '@nestjs/core';
 import {
   ID,
   many,
@@ -24,6 +25,7 @@ export class ProjectWorkflowService {
     private readonly resources: ResourceLoader,
     private readonly repo: ProjectWorkflowRepository,
     private readonly eventBus: IEventBus,
+    private readonly moduleRef: ModuleRef,
   ) {}
 
   async list(report: Project, session: Session): Promise<WorkflowEvent[]> {
@@ -50,7 +52,7 @@ export class ProjectWorkflowService {
     };
   }
 
-  getAvailableTransitions(project: Project, session: Session) {
+  async getAvailableTransitions(project: Project, session: Session) {
     const currentStep = project.step.value!;
 
     const p = this.privileges.for(session, WorkflowEvent);
@@ -61,7 +63,29 @@ export class ProjectWorkflowService {
         // Context usage is still fuzzy when conditions need different shapes.
         p.forContext({ transition: t.key } as any).can('create'),
     );
-    return available;
+
+    const dynamicTos = available.flatMap((transition) =>
+      typeof transition.to !== 'string' ? transition.to : [],
+    );
+    const resolvedTos = new Map(
+      await Promise.all(
+        dynamicTos.map(
+          async (to) =>
+            [
+              to,
+              await to.resolve({ project, moduleRef: this.moduleRef }),
+            ] as const,
+        ),
+      ),
+    );
+
+    return available.map((transition) => ({
+      ...transition,
+      to:
+        typeof transition.to !== 'string'
+          ? resolvedTos.get(transition.to)!
+          : transition.to,
+    }));
   }
 
   canBypass(session: Session) {
@@ -82,7 +106,7 @@ export class ProjectWorkflowService {
     } as const;
     const previous = await projects.load(loaderKey);
 
-    const next = this.validateExecutionInput(input, previous, session);
+    const next = await this.validateExecutionInput(input, previous, session);
 
     const unsecuredEvent = await this.repo.recordEvent(
       {
@@ -109,7 +133,7 @@ export class ProjectWorkflowService {
     return updated;
   }
 
-  private validateExecutionInput(
+  private async validateExecutionInput(
     input: ExecuteProjectTransitionInput,
     current: Project,
     session: Session,
@@ -125,7 +149,7 @@ export class ProjectWorkflowService {
       return overrideStatus;
     }
 
-    const available = this.getAvailableTransitions(current, session);
+    const available = await this.getAvailableTransitions(current, session);
     const transition = available.find((t) => t.key === transitionKey);
     if (!transition) {
       throw new UnauthorizedException('This transition is not available');
@@ -139,7 +163,10 @@ export class ProjectWorkflowService {
     step: ProjectStep,
     session: Session,
   ) {
-    const transitions = this.getAvailableTransitions(currentProject, session);
+    const transitions = await this.getAvailableTransitions(
+      currentProject,
+      session,
+    );
     // Pick the first matching to step.
     // Lack of detail is one of the reasons why this is legacy logic.
     const transition = transitions.find((t) => t.to === step);
