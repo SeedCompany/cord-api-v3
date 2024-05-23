@@ -1,4 +1,5 @@
 import { Field, ObjectType } from '@nestjs/graphql';
+import { stripIndent } from 'common-tags';
 import { EnumType, ID, IdField, makeEnum } from '~/common';
 import { ProjectStep } from '../../dto';
 
@@ -8,10 +9,24 @@ export const TransitionType = makeEnum({
   values: ['Neutral', 'Approve', 'Reject'],
 });
 
-@ObjectType('ProjectStepTransition')
+@ObjectType('ProjectStepTransition', {
+  description: stripIndent`
+    A transition for the project workflow.
+
+    This is not a normalized entity.
+    A transition represented by its \`key\` can have different field values
+    based on the project's state.
+  `,
+})
 export abstract class ProjectWorkflowTransition {
-  @IdField()
-  readonly id: ID;
+  @IdField({
+    description: stripIndent`
+      An local identifier for this transition.
+      It cannot be used to globally identify a transition.
+      It is passed to \`transitionProject\`.
+    `,
+  })
+  readonly key: ID;
 
   @Field(() => ProjectStep)
   readonly to: ProjectStep;

@@ -12,7 +12,7 @@ export abstract class ExecuteProjectTransitionInput {
 
   @IdField({
     description: stripIndent`
-      Execute this transition.
+      The transition \`key\` to execute.
       This is required unless specifying bypassing the workflow with a \`step\` input.
     `,
     nullable: true,

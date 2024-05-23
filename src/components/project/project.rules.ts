@@ -30,7 +30,7 @@ import { FinancialApproverRepository } from './financial-approver';
 import { ProjectService } from './project.service';
 import { ProjectWorkflowTransition, TransitionType } from './workflow/dto';
 
-type ProjectStepTransition = Omit<ProjectWorkflowTransition, 'id'>;
+type ProjectStepTransition = Omit<ProjectWorkflowTransition, 'key'>;
 
 type EmailAddress = string;
 

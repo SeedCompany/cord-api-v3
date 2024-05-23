@@ -12,7 +12,7 @@ const PROJECT_TRANSITION_NAMESPACE = '8297b9a1-b50b-4ec9-9021-a0347424b3ec';
 export type TransitionInput = Merge<
   PublicTransition,
   {
-    id?: ID | string;
+    key?: ID | string;
     from?: Many<Step>;
     conditions?: Many<TransitionCondition>;
     notify?: {
@@ -45,7 +45,7 @@ export const defineTransitions = <Names extends string>(
       name: name as TransitionName,
       ...transition,
       from: maybeMany(transition.from),
-      id: (transition.id ?? hashId(name)) as ID,
+      key: (transition.key ?? hashId(name)) as ID,
       conditions: maybeMany(transition.conditions),
     }),
   ).asRecord;
