@@ -12,7 +12,7 @@ export class ProjectWorkflowRepository extends RepoFor(ProjectWorkflowEvent, {
     who: true,
     at: true,
     transition: event.transitionKey,
-    step: true,
+    to: true,
     notes: true,
   }),
   omit: ['list', 'create', 'update', 'delete', 'readMany'],
@@ -34,7 +34,7 @@ export class ProjectWorkflowRepository extends RepoFor(ProjectWorkflowEvent, {
     const created = e.insert(e.Project.WorkflowEvent, {
       project: e.cast(e.Project, e.uuid(project)),
       transitionKey: props.transition,
-      step: props.step,
+      to: props.step,
       notes: props.notes,
     });
     const query = e.select(created, this.hydrate);
@@ -51,11 +51,11 @@ export class ProjectWorkflowRepository extends RepoFor(ProjectWorkflowEvent, {
        steps := array_unpack(<array<Project::Step>>$steps),
        mostRecentEvent := (
         select project.workflowEvents
-        filter .step in steps if exists steps else true
+        filter .to in steps if exists steps else true
         order by .at desc
         limit 1
       )
-      select mostRecentEvent.step
+      select mostRecentEvent.to
     `);
     return await this.db.run(query, { projectId, steps });
   }

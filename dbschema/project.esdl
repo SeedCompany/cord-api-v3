@@ -50,7 +50,7 @@ module default {
     };
     
     status := Project::statusFromStep(.step);
-    step := .latestWorkflowEvent.step ?? Project::Step.EarlyConversations;
+    step := .latestWorkflowEvent.to ?? Project::Step.EarlyConversations;
     latestWorkflowEvent := (select .workflowEvents order by .at desc limit 1);
     workflowEvents := .<project[is Project::WorkflowEvent];
     
@@ -211,7 +211,7 @@ module Project {
     transitionKey: uuid {
       readonly := true;
     };
-    required step: Step {
+    required to: Step {
       readonly := true;
     };
     notes: default::RichText {
