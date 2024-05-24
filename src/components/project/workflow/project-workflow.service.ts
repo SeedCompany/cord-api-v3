@@ -55,36 +55,64 @@ export class ProjectWorkflowService {
   async getAvailableTransitions(project: Project, session: Session) {
     const currentStep = project.step.value!;
 
-    const p = this.privileges.for(session, WorkflowEvent);
-    const available = Object.values(Transitions).filter(
-      (t) =>
-        (t.from ? many(t.from).includes(currentStep) : true) &&
-        // I don't have a good way to type this right now.
-        // Context usage is still fuzzy when conditions need different shapes.
-        p.forContext({ transition: t.key } as any).can('create'),
+    let available = Object.values(Transitions);
+
+    // Filter out non applicable transitions
+    available = available.filter((t) =>
+      t.from ? many(t.from).includes(currentStep) : true,
     );
 
-    const dynamicTos = available.flatMap((transition) =>
-      typeof transition.to !== 'string' ? transition.to : [],
+    // Filter out transitions without authorization to execute
+    const p = this.privileges.for(session, WorkflowEvent);
+    available = available.filter((t) =>
+      // I don't have a good way to type this right now.
+      // Context usage is still fuzzy when conditions need different shapes.
+      p.forContext({ transition: t.key } as any).can('create'),
     );
-    const resolvedTos = new Map(
+
+    const params = { project, moduleRef: this.moduleRef };
+
+    // Resolve conditions & filter as needed
+    const conditions = available.flatMap((t) => t.conditions ?? []);
+    const resolvedConditions = new Map(
       await Promise.all(
-        dynamicTos.map(
-          async (to) =>
-            [
-              to,
-              await to.resolve({ project, moduleRef: this.moduleRef }),
-            ] as const,
+        [...new Set(conditions)].map(
+          async (condition) =>
+            [condition, await condition.resolve(params)] as const,
         ),
       ),
     );
+    available = available.flatMap((t) => {
+      const conditions =
+        t.conditions?.map((c) => resolvedConditions.get(c)!) ?? [];
+      if (conditions.some((c) => c.status === 'OMIT')) {
+        return [];
+      }
+      if (conditions.every((c) => c.status === 'ENABLED')) {
+        return t;
+      }
+      const disabledReasons = conditions.flatMap((c) =>
+        c.status === 'DISABLED' ? c.disabledReason ?? [] : [],
+      );
+      return {
+        ...t,
+        disabled: true,
+        disabledReason: disabledReasons.join('\n'), // TODO split to list
+      };
+    });
 
-    return available.map((transition) => ({
-      ...transition,
-      to:
-        typeof transition.to !== 'string'
-          ? resolvedTos.get(transition.to)!
-          : transition.to,
+    // Resolve dynamic to steps
+    const dynamicTos = available.flatMap((t) =>
+      typeof t.to !== 'string' ? t.to : [],
+    );
+    const resolvedTos = new Map(
+      await Promise.all(
+        dynamicTos.map(async (to) => [to, await to.resolve(params)] as const),
+      ),
+    );
+    return available.map((t) => ({
+      ...t,
+      to: typeof t.to !== 'string' ? resolvedTos.get(t.to)! : t.to,
     }));
   }
 
