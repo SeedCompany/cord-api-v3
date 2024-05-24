@@ -1,11 +1,12 @@
 import { mapValues } from '@seedcompany/common';
 import { Merge } from 'type-fest';
 import * as uuid from 'uuid';
-import { ID, Many, maybeMany, Role } from '~/common';
+import { ID, Many, maybeMany } from '~/common';
 import { ProjectStep as Step } from '../../dto';
 import { ProjectWorkflowTransition as PublicTransition } from '../dto/workflow-transition.dto';
 import { TransitionCondition } from './conditions';
 import { DynamicStep } from './dynamic-step';
+import { TransitionNotifier } from './notifiers';
 import type { TransitionName } from './project-transitions';
 
 const PROJECT_TRANSITION_NAMESPACE = '8297b9a1-b50b-4ec9-9021-a0347424b3ec';
@@ -17,12 +18,7 @@ export type TransitionInput = Merge<
     from?: Many<Step>;
     to: Step | DynamicStep;
     conditions?: Many<TransitionCondition>;
-    notify?: {
-      /**
-       * Notify project members with these roles, e.g. [Role.Marketing]
-       */
-      membersWithRoles?: readonly Role[];
-    };
+    notifiers?: Many<TransitionNotifier>;
   }
 >;
 
@@ -33,12 +29,7 @@ export type InternalTransition = Merge<
     from?: readonly Step[];
     to: Step | DynamicStep;
     conditions?: readonly TransitionCondition[];
-    notify?: {
-      /**
-       * Notify project members with these roles, e.g. [Role.Marketing]
-       */
-      membersWithRoles?: readonly Role[];
-    };
+    notifiers?: readonly TransitionNotifier[];
   }
 >;
 
@@ -53,6 +44,7 @@ export const defineTransitions = <Names extends string>(
       from: maybeMany(transition.from),
       key: (transition.key ?? hashId(name)) as ID,
       conditions: maybeMany(transition.conditions),
+      notifiers: maybeMany(transition.notifiers),
     }),
   ).asRecord;
 
