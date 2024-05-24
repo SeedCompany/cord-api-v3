@@ -49,7 +49,7 @@ module default {
       );
     };
 
-    step := .latestWorkflowEvent.step ?? Project::Step.EarlyConversations;
+    step := .latestWorkflowEvent.to ?? Project::Step.EarlyConversations;
     status := Project::statusFromStep(.step);
     latestWorkflowEvent := (select .workflowEvents order by .at desc limit 1);
     workflowEvents := .<project[is Project::WorkflowEvent];

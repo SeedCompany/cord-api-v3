@@ -15,7 +15,7 @@ module Project {
     transitionKey: uuid {
       readonly := true;
     };
-    required step: Step {
+    required to: Step {
       readonly := true;
     };
     notes: default::RichText {
