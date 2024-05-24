@@ -39,8 +39,10 @@ export abstract class ProjectWorkflowEvent {
     | (InternalTransition & SetUnsecuredType<ID | null>)
     | null;
 
+  // TODO maybe add `from`?
+
   @Field(() => ProjectStep)
-  readonly step: ProjectStep;
+  readonly to: ProjectStep;
 
   @Field()
   readonly notes: SecuredRichTextNullable;

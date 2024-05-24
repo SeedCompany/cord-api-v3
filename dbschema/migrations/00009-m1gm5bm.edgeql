@@ -1,4 +1,4 @@
-CREATE MIGRATION m1ipyz27ib3tsxltvx3w2fjojxiw75drzuz4j2edtoctf4zzmwke6a
+CREATE MIGRATION m1urrlyf3tq3uotjkdxpwmlf5z3qqfrzlepjptx6l5cxkw45fy526a
     ONTO m1gq2hsptfudyqzcqhaz3o5ikdckynzcdegdixqtrdtnisldpyqv6a
 {
   CREATE TYPE Project::WorkflowEvent {
@@ -9,7 +9,7 @@ CREATE MIGRATION m1ipyz27ib3tsxltvx3w2fjojxiw75drzuz4j2edtoctf4zzmwke6a
       SET default := (std::datetime_of_statement());
       SET readonly := true;
     };
-    CREATE REQUIRED PROPERTY step: Project::Step {
+    CREATE REQUIRED PROPERTY to: Project::Step {
       SET readonly := true;
     };
     CREATE REQUIRED LINK who: default::Actor {
@@ -39,13 +39,13 @@ CREATE MIGRATION m1ipyz27ib3tsxltvx3w2fjojxiw75drzuz4j2edtoctf4zzmwke6a
     project := project,
     who := (select SystemAgent filter .name = "Ghost"),
     at := project.stepChangedAt,
-    step := project.step
+    to := project.step
   };
 
   ALTER TYPE default::Project {
     ALTER PROPERTY step {
       RESET default;
-      USING ((.latestWorkflowEvent.step ?? Project::Step.EarlyConversations));
+      USING ((.latestWorkflowEvent.to ?? Project::Step.EarlyConversations));
       RESET OPTIONALITY;
     };
     DROP PROPERTY stepChangedAt;

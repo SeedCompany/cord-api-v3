@@ -105,7 +105,7 @@ export class ProjectWorkflowNeo4jRepository
     await this.db.updateProperties({
       type: IProject,
       object: { id: project },
-      changes: { step: event.step, stepChangedAt: event.at },
+      changes: { step: event.to, stepChangedAt: event.at },
     });
 
     return event;
