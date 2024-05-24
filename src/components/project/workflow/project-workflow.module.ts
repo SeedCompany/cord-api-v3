@@ -1,5 +1,8 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { splitDb2 } from '~/core';
+import { UserModule } from '../../user/user.module';
+import { ProjectModule } from '../project.module';
+import { ProjectWorkflowNotificationHandler } from './handlers/project-workflow-notification.handler';
 import { ProjectWorkflowEventLoader } from './project-workflow-event.loader';
 import { ProjectWorkflowFlowchart } from './project-workflow.flowchart';
 import { ProjectWorkflowEventGranter } from './project-workflow.granter';
@@ -12,6 +15,7 @@ import { ProjectWorkflowEventResolver } from './resolvers/project-workflow-event
 import { ProjectWorkflowEventsResolver } from './resolvers/project-workflow-events.resolver';
 
 @Module({
+  imports: [forwardRef(() => UserModule), forwardRef(() => ProjectModule)],
   providers: [
     ProjectTransitionsResolver,
     ProjectExecuteTransitionResolver,
@@ -25,6 +29,7 @@ import { ProjectWorkflowEventsResolver } from './resolvers/project-workflow-even
       edge: ProjectWorkflowRepository,
     }),
     ProjectWorkflowFlowchart,
+    ProjectWorkflowNotificationHandler,
   ],
   exports: [ProjectWorkflowService],
 })

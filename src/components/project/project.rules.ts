@@ -17,6 +17,7 @@ import {
 import { ConfigService, ILogger, Logger } from '~/core';
 import { DatabaseService } from '~/core/database';
 import { ACTIVE, INACTIVE, merge } from '~/core/database/query';
+import { ProjectStepChangedProps as EmailNotification } from '~/core/email/templates';
 import { AuthenticationService } from '../authentication';
 import { withoutScope } from '../authorization/dto';
 import { EngagementService } from '../engagement';
@@ -24,7 +25,6 @@ import { EngagementStatus } from '../engagement/dto';
 import { OrganizationService } from '../organization';
 import { Organization } from '../organization/dto';
 import { UserService } from '../user';
-import { User } from '../user/dto';
 import { Project, ProjectStep, ProjectType } from './dto';
 import { FinancialApproverRepository } from './financial-approver';
 import { ProjectService } from './project.service';
@@ -50,17 +50,6 @@ interface StepRule {
   transitions: Transition[];
   // Users/emails to notify when the project arrives at this step
   getNotifiers?: Notifiers;
-}
-
-export interface EmailNotification {
-  recipient: Pick<
-    User,
-    'email' | 'displayFirstName' | 'displayLastName' | 'timezone'
-  >;
-  changedBy: Pick<User, 'id' | 'displayFirstName' | 'displayLastName'>;
-  project: Pick<Project, 'id' | 'modifiedAt' | 'name' | 'step' | 'type'>;
-  previousStep?: ProjectStep;
-  primaryPartnerName?: string | undefined;
 }
 
 const rolesThatCanBypassWorkflow: Role[] = [Role.Administrator];
