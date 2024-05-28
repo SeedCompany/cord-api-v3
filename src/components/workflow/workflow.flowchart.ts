@@ -1,6 +1,6 @@
 import { startCase } from 'lodash';
 import open from 'open';
-import pako from 'pako';
+import { deflateSync as deflate } from 'zlib';
 import { Workflow } from './define-workflow';
 
 export const WorkflowFlowchart = <W extends Workflow>(workflow: W) => {
@@ -76,9 +76,8 @@ export const WorkflowFlowchart = <W extends Workflow>(workflow: W) => {
     }
 
     private compressAndB64encode(str: string) {
-      const data = Buffer.from(str, 'utf8');
-      const compressed = pako.deflate(data, { level: 9 });
-      const result = Buffer.from(compressed)
+      const compressed = deflate(str, { level: 9 });
+      const result = compressed
         .toString('base64')
         .replace(/\+/g, '-')
         .replace(/\//g, '_');
