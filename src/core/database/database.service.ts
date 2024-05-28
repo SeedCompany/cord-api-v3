@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { entries, mapKeys } from '@seedcompany/common';
 import { Connection, node, Query, relation } from 'cypher-query-builder';
+import { LazyGetter } from 'lazy-get-decorator';
 import { pickBy, startCase } from 'lodash';
+import { Duration } from 'luxon';
+import { defer, firstValueFrom, shareReplay } from 'rxjs';
 import {
   DuplicateException,
   ID,
@@ -120,7 +123,19 @@ export class DatabaseService {
     return q;
   }
 
-  async getServerInfo(): Promise<ServerInfo> {
+  async getServerInfo() {
+    return await firstValueFrom(this.serverInfo$);
+  }
+  @LazyGetter() private get serverInfo$() {
+    return defer(() => this.queryServerInfo()).pipe(
+      shareReplay({
+        refCount: false,
+        bufferSize: 1,
+        windowTime: Duration.from('3 mins').toMillis(),
+      }),
+    );
+  }
+  private async queryServerInfo(): Promise<ServerInfo> {
     // @ts-expect-error Yes this is private, but we have a special use case.
     // We need to run this query with a session that's not configured to use the
     // database that may not exist.
