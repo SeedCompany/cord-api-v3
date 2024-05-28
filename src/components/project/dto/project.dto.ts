@@ -80,6 +80,7 @@ export const resolveProjectType = (val: Pick<AnyProject, 'type'>) => {
 class Project extends Interfaces {
   static readonly Props: string[] = keysOf<Project>();
   static readonly SecuredProps: string[] = keysOf<SecuredProps<Project>>();
+  static readonly BaseNodeProps = [...Resource.Props, 'type'];
   static readonly Relations = () =>
     ({
       rootDirectory: Directory,
