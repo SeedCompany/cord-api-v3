@@ -10340,6 +10340,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"neo4j-driver-core@patch:neo4j-driver-core@npm%3A5.20.0#~/.yarn/patches/neo4j-driver-core-npm-5.20.0-99216f6938.patch":
+  version: 5.20.0
+  resolution: "neo4j-driver-core@patch:neo4j-driver-core@npm%3A5.20.0#~/.yarn/patches/neo4j-driver-core-npm-5.20.0-99216f6938.patch::version=5.20.0&hash=60e3d3"
+  checksum: 10c0/957b21375a430ae1973dac04adcdd2806595e5811c70ed46d2273f6df36c977ce94a7dedbf0dd2d7b5bf724ae06c1f86a29550ddabd6c532304257ecbe74a0c8
+  languageName: node
+  linkType: hard
+
 "neo4j-driver@npm:^5.20.0, neo4j-driver@npm:^5.9.0":
   version: 5.20.0
   resolution: "neo4j-driver@npm:5.20.0"
