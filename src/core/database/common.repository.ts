@@ -13,9 +13,10 @@ import {
   ResourceShape,
   ServerException,
 } from '~/common';
+import { ResourceLike, ResourcesHost } from '../resources';
 import { DatabaseService } from './database.service';
 import { createUniqueConstraint } from './indexer';
-import { ACTIVE, updateRelationList } from './query';
+import { ACTIVE, deleteBaseNode, updateRelationList } from './query';
 import { BaseNode } from './results';
 
 /**
@@ -23,8 +24,8 @@ import { BaseNode } from './results';
  */
 @Injectable()
 export class CommonRepository {
-  @Inject(DatabaseService)
-  protected db: DatabaseService;
+  @Inject() protected db: DatabaseService;
+  @Inject() protected readonly resources: ResourcesHost;
 
   async getBaseNode(
     id: ID,
@@ -132,18 +133,26 @@ export class CommonRepository {
 
   async deleteNode(
     objectOrId: { id: ID } | ID,
-    { changeset }: { changeset?: ID } = {},
+    { changeset, resource }: { changeset?: ID; resource?: ResourceLike } = {},
   ) {
+    const id = isIdLike(objectOrId) ? objectOrId : objectOrId.id;
+    const label = resource
+      ? this.resources.enhance(resource).dbLabel
+      : 'BaseNode';
     if (!changeset) {
-      await this.db.deleteNode(objectOrId);
+      await this.db
+        .query()
+        .matchNode('node', label, { id })
+        .apply(deleteBaseNode('node'))
+        .return('*')
+        .run();
       return;
     }
     try {
-      const id = isIdLike(objectOrId) ? objectOrId : objectOrId.id;
       await this.db
         .query()
-        .match([node('node', 'BaseNode', { id })])
-        .match([node('changeset', 'Changeset', { id: changeset })])
+        .match(node('node', label, { id }))
+        .match(node('changeset', 'Changeset', { id: changeset }))
         .merge([
           node('changeset'),
           relation('out', 'rel', 'changeset'),

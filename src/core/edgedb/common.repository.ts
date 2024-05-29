@@ -61,9 +61,13 @@ export class CommonRepository implements PublicOf<Neo4jCommonRepository> {
     );
   }
 
-  async deleteNode(objectOrId: { id: ID } | ID, _: { changeset?: ID } = {}) {
+  async deleteNode(
+    objectOrId: { id: ID } | ID,
+    { resource }: { changeset?: ID; resource?: ResourceLike } = {},
+  ) {
     const id = isIdLike(objectOrId) ? objectOrId : objectOrId.id;
-    const query = e.delete(e.Object, () => ({
+    const type = resource ? this.resources.enhance(resource).db : e.Object;
+    const query = e.delete(type, () => ({
       filter_single: { id },
     }));
     await this.db.run(query);
