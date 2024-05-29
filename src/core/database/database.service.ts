@@ -4,7 +4,7 @@ import { Connection, node, Query, relation } from 'cypher-query-builder';
 import { LazyGetter } from 'lazy-get-decorator';
 import { pickBy, startCase } from 'lodash';
 import { Duration } from 'luxon';
-import { defer, firstValueFrom, shareReplay } from 'rxjs';
+import { defer, firstValueFrom, shareReplay, takeUntil } from 'rxjs';
 import {
   DuplicateException,
   ID,
@@ -18,6 +18,7 @@ import {
 import { AbortError, retry, RetryOptions } from '~/common/retry';
 import { ConfigService } from '../config/config.service';
 import { ILogger, Logger } from '../logger';
+import { ShutdownHook } from '../shutdown.hook';
 import { DbChanges } from './changes';
 import {
   createBetterError,
@@ -59,6 +60,7 @@ export class DatabaseService {
   constructor(
     private readonly db: Connection,
     private readonly config: ConfigService,
+    private readonly shutdown$: ShutdownHook,
     @Logger('database:service') private readonly logger: ILogger,
   ) {}
 
@@ -128,6 +130,7 @@ export class DatabaseService {
   }
   @LazyGetter() private get serverInfo$() {
     return defer(() => this.queryServerInfo()).pipe(
+      takeUntil(this.shutdown$),
       shareReplay({
         refCount: false,
         bufferSize: 1,
