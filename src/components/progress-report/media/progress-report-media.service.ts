@@ -126,9 +126,7 @@ export class ProgressReportMediaService {
       .verifyCan('delete');
 
     await this.repo.deleteNode(id);
-    if (await this.repo.isVariantGroupEmpty(media.variantGroup)) {
-      await this.repo.deleteNode(media.variantGroup);
-    }
+    await this.repo.deleteVariantGroupIfEmpty(media.variantGroup);
 
     return media.report;
   }

@@ -14,6 +14,7 @@ import {
   ACTIVE,
   createNode,
   createRelationships,
+  deleteBaseNode,
   filter,
   matchProjectScopedRoles,
   matchProjectSens,
@@ -233,17 +234,14 @@ export class ProgressReportMediaRepository extends DtoRepository<
       .run();
   }
 
-  async isVariantGroupEmpty(id: string) {
-    const hasVariant = await this.db
+  async deleteVariantGroupIfEmpty(id: string) {
+    await this.db
       .query()
-      .match([
-        node('variantGroup', 'VariantGroup', { id }),
-        relation('out', '', 'child', ACTIVE),
-        node('variant', 'ProgressReportMedia'),
-      ])
-      .return('variant')
-      .first();
-    return !hasVariant;
+      .match(node('variantGroup', 'VariantGroup', { id }))
+      .raw('where not exists((variantGroup)-[:child { active: true }]->())')
+      .apply(deleteBaseNode('variantGroup'))
+      .return('*')
+      .executeAndLogStats();
   }
 
   protected hydrate(session: Session) {
