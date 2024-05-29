@@ -16,7 +16,7 @@ import { DbChanges, getChanges } from './changes';
 import { CommonRepository } from './common.repository';
 import { DbTypeOf } from './db-type';
 import { OnIndex } from './indexer';
-import { matchProps } from './query';
+import { deleteBaseNode, matchProps } from './query';
 
 export const privileges = Symbol.for('DtoRepository.privileges');
 
@@ -102,6 +102,15 @@ export const DtoRepository = <
         .apply(this.hydrate(...args))
         .map('dto')
         .run();
+    }
+
+    async delete(id: ID) {
+      const query = this.db
+        .query()
+        .matchNode('node', this.resource.dbLabel, { id })
+        .apply(deleteBaseNode('node'))
+        .return('*');
+      await query.run();
     }
 
     protected async updateProperties<
