@@ -1,82 +1,62 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { DateTime } from 'luxon';
-import { ID, PublicOf, Session } from '~/common';
+import { ID, PublicOf } from '~/common';
+import { CommonRepository } from '~/core/database';
 import { Client } from '~/core/edgedb';
 import { PinRepository } from './pin.repository';
 
 @Injectable()
-export class PinEdgeDBRepository implements PublicOf<PinRepository> {
-  constructor(@Inject(Client) private readonly client: Client) {}
+export class PinEdgeDBRepository
+  extends CommonRepository
+  implements PublicOf<PinRepository>
+{
+  constructor(@Inject(Client) private readonly client: Client) {
+    super();
+  }
 
-  async isPinned(id: ID, session: Session): Promise<boolean> {
-    const res: boolean | null = await this.client.querySingle(
+  async isPinned(id: ID): Promise<boolean> {
+    const result = await this.client.querySingle(
       `
-      select exists(
-        select BaseNode {
-          id,
-          pinned_by := .<pinned[is User]> {
-            id
-          }
+    select exists(
+      select global currentUser {
+        pins: {
+          id
         }
-        filter .id = <uuid>$id
-        and .pinned_by.id = <uuid>$userId
-      );
-    `,
-      {
-        id,
-        userId: session.userId,
-      },
-    );
-
-    return Boolean(res);
-  }
-
-  async add(id: ID, session: Session): Promise<void> {
-    const createdAt = DateTime.local();
-
-    await this.client.query(
-      `
-      with BaseNode := (
-        select BaseNode
-        filter .id = <uuid>$id
-      ),
-      User := (
-        select User
-        filter .id = <uuid>$userId
-      )
-      insert PinnedRelation {
-        node := BaseNode,
-        user := User,
-        createdAt := <datetime>$createdAt
       }
-      unless conflict on (.node, .user)
+      filter <uuid>$id in global currentUser.pins.id
+    )
     `,
       {
         id,
-        userId: session.userId,
-        createdAt: createdAt.toJSDate(),
+      },
+    );
+
+    return result as boolean;
+  }
+
+  async add(id: ID): Promise<void> {
+    await this.client.query(
+      `
+      update global currentUser
+      set {
+        pins += <Mixin::Pinnable><uuid>$id
+      }
+    `,
+      {
+        id,
       },
     );
   }
 
-  async remove(id: ID, session: Session): Promise<void> {
+  async remove(id: ID): Promise<void> {
     await this.client.query(
       `
-      with BaseNode := (
-        select BaseNode
-        filter .id = <uuid>$id
-      ),
-      User := (
-        select User
-        filter .id = <uuid>$userId
-      )
-      delete PinnedRelation
-      filter .node = BaseNode
-        and .user = User
+      update global currentUser
+      set {
+        pins -= <Mixin::Pinnable><uuid>$id
+      }
     `,
       {
         id,
-        userId: session.userId,
       },
     );
   }
