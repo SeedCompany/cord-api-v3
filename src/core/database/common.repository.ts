@@ -130,7 +130,10 @@ export class CommonRepository {
     return res.stats;
   }
 
-  async deleteNode(objectOrId: { id: ID } | ID, changeset?: ID) {
+  async deleteNode(
+    objectOrId: { id: ID } | ID,
+    { changeset }: { changeset?: ID } = {},
+  ) {
     if (!changeset) {
       await this.db.deleteNode(objectOrId);
       return;
