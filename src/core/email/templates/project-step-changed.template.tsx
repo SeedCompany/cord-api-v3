@@ -1,3 +1,4 @@
+import { cleanJoin } from '@seedcompany/common';
 import {
   Button,
   Column,
@@ -5,9 +6,11 @@ import {
   Section,
   Text,
 } from '@seedcompany/nestjs-email/templates';
-import { startCase } from 'lodash';
 import { EmailNotification as StepChangeNotification } from '../../../components/project';
-import { ProjectType } from '../../../components/project/dto/project-type.enum';
+import {
+  ProjectStep as Step,
+  ProjectType as Type,
+} from '../../../components/project/dto';
 import { EmailTemplate, Heading } from './base';
 import { FormattedDateTime } from './formatted-date-time';
 import { useFrontendUrl } from './frontend-url';
@@ -22,28 +25,22 @@ export function ProjectStepChanged({
 }: StepChangeNotification) {
   const projectUrl = useFrontendUrl(`/projects/${project.id}`);
   const projectName = project.name.value;
-  const projectType = project.type;
-  const oldStep = startCase(oldStepVal) || undefined;
-  const newStep = startCase(project.step.value) || undefined;
-  const multiplicationTitle =
-    projectName && newStep && primaryPartnerName
-      ? `${projectType} - ${projectName} - ${primaryPartnerName} - is pending ${newStep} approval`
-      : projectName && newStep
-      ? `${projectType} - ${projectName} - is pending ${newStep} approval`
-      : `${projectType} - Project Status Change`;
-  const momentumTitle =
-    projectName && oldStep && newStep
-      ? `${projectName} changed from ${oldStep} to ${newStep}`
-      : 'Project Status Change';
+  const projectType = Type.entry(project.type);
+  const oldStep = oldStepVal ? Step.entry(oldStepVal).label : undefined;
+  const newStep = project.step.value
+    ? Step.entry(project.step.value).label
+    : undefined;
+
+  const isMultiplication = projectType.value === Type.MultiplicationTranslation;
+  const title = cleanJoin(' - ', [
+    isMultiplication && projectType.label,
+    projectName ?? 'Project',
+    isMultiplication && primaryPartnerName,
+    newStep ? `is ${newStep}` : 'Status Change',
+  ]);
 
   return (
-    <EmailTemplate
-      title={
-        projectType === ProjectType.MultiplicationTranslation
-          ? multiplicationTitle
-          : momentumTitle
-      }
-    >
+    <EmailTemplate title={title}>
       <Heading>
         {projectName && newStep ? (
           <>
