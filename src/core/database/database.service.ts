@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { entries, mapKeys } from '@seedcompany/common';
 import { Connection, node, Query, relation } from 'cypher-query-builder';
+import { LazyGetter } from 'lazy-get-decorator';
 import { pickBy, startCase } from 'lodash';
+import { Duration } from 'luxon';
+import { defer, firstValueFrom, shareReplay, takeUntil } from 'rxjs';
 import {
   DuplicateException,
   ID,
@@ -15,6 +18,7 @@ import {
 import { AbortError, retry, RetryOptions } from '~/common/retry';
 import { ConfigService } from '../config/config.service';
 import { ILogger, Logger } from '../logger';
+import { ShutdownHook } from '../shutdown.hook';
 import { DbChanges } from './changes';
 import {
   createBetterError,
@@ -56,6 +60,7 @@ export class DatabaseService {
   constructor(
     private readonly db: Connection,
     private readonly config: ConfigService,
+    private readonly shutdown$: ShutdownHook,
     @Logger('database:service') private readonly logger: ILogger,
   ) {}
 
@@ -120,7 +125,20 @@ export class DatabaseService {
     return q;
   }
 
-  async getServerInfo(): Promise<ServerInfo> {
+  async getServerInfo() {
+    return await firstValueFrom(this.serverInfo$);
+  }
+  @LazyGetter() private get serverInfo$() {
+    return defer(() => this.queryServerInfo()).pipe(
+      takeUntil(this.shutdown$),
+      shareReplay({
+        refCount: false,
+        bufferSize: 1,
+        windowTime: Duration.from('3 mins').toMillis(),
+      }),
+    );
+  }
+  private async queryServerInfo(): Promise<ServerInfo> {
     // @ts-expect-error Yes this is private, but we have a special use case.
     // We need to run this query with a session that's not configured to use the
     // database that may not exist.
@@ -171,7 +189,7 @@ export class DatabaseService {
     if (!dbName || info.databases.some((db) => db.name === dbName)) {
       return; // already exists or assuming default exists
     }
-    await this.runAdminCommand('CREATE', dbName, info);
+    await this.runAdminCommand('CREATE', dbName);
   }
 
   async dropDb() {
@@ -179,14 +197,10 @@ export class DatabaseService {
     if (!dbName) {
       return; // don't drop the default db
     }
-    await this.runAdminCommand('DROP', dbName, await this.getServerInfo());
+    await this.runAdminCommand('DROP', dbName);
   }
 
-  private async runAdminCommand(
-    action: 'CREATE' | 'DROP',
-    dbName: string,
-    _info: ServerInfo,
-  ) {
+  private async runAdminCommand(action: 'CREATE' | 'DROP', dbName: string) {
     // @ts-expect-error Yes this is private, but we have a special use case.
     // We need to run this query with a session that's not configured to use the
     // database we are trying to create.

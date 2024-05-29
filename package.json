@@ -88,7 +88,7 @@
     "luxon": "^3.4.3",
     "mime": "beta",
     "nanoid": "^4.0.2",
-    "neo4j-driver": "^5.14.0",
+    "neo4j-driver": "^5.20.0",
     "p-retry": "^5.1.2",
     "pako": "^2.1.0",
     "pkg-up": "^4.0.0",
@@ -150,6 +150,8 @@
   },
   "resolutions": {
     "cypher-query-builder/neo4j-driver": "^5.9.0",
+    "neo4j-driver-bolt-connection@npm:5.20.0": "patch:neo4j-driver-bolt-connection@npm%3A5.20.0#~/.yarn/patches/neo4j-driver-bolt-connection-npm-5.20.0-1f7809f435.patch",
+    "neo4j-driver-core@npm:5.20.0": "patch:neo4j-driver-core@npm%3A5.20.0#~/.yarn/patches/neo4j-driver-core-npm-5.20.0-99216f6938.patch",
     "@apollo/server-plugin-landing-page-graphql-playground": "npm:empty-npm-package@*",
     "@nestjs/cli/fork-ts-checker-webpack-plugin": "npm:empty-npm-package@*",
     "@nestjs/cli/webpack": "npm:empty-npm-package@*",
