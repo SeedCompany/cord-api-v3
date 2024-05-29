@@ -189,7 +189,7 @@ export class DatabaseService {
     if (!dbName || info.databases.some((db) => db.name === dbName)) {
       return; // already exists or assuming default exists
     }
-    await this.runAdminCommand('CREATE', dbName, info);
+    await this.runAdminCommand('CREATE', dbName);
   }
 
   async dropDb() {
@@ -197,14 +197,10 @@ export class DatabaseService {
     if (!dbName) {
       return; // don't drop the default db
     }
-    await this.runAdminCommand('DROP', dbName, await this.getServerInfo());
+    await this.runAdminCommand('DROP', dbName);
   }
 
-  private async runAdminCommand(
-    action: 'CREATE' | 'DROP',
-    dbName: string,
-    _info: ServerInfo,
-  ) {
+  private async runAdminCommand(action: 'CREATE' | 'DROP', dbName: string) {
     // @ts-expect-error Yes this is private, but we have a special use case.
     // We need to run this query with a session that's not configured to use the
     // database we are trying to create.
