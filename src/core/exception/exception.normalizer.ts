@@ -138,7 +138,7 @@ export class ExceptionNormalizer {
 
     if (ex instanceof ExclusivityViolationError) {
       ex = DuplicateException.fromDB(ex, gqlContext);
-    } else if (ex instanceof Edge.EdgeDBError) {
+    } else if (ex instanceof Edge.EdgeDBError || Neo.isNeo4jError(ex)) {
       // Mask actual DB error with a nicer user error message.
       let message = 'Failed';
       if (gqlContext) {
