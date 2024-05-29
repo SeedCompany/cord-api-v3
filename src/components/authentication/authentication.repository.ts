@@ -28,6 +28,7 @@ export class AuthenticationRepository {
       {
         forever: true,
         maxTimeout: { seconds: 10 },
+        unref: true,
       },
       async () => {
         // Ensure the root user exists, if not keep waiting
