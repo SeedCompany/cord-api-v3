@@ -24,6 +24,15 @@ export const IsNotMultiplication: TransitionCondition = {
   },
 };
 
+export const IsMultiplication: TransitionCondition = {
+  description: 'Only if multiplication',
+  resolve({ project }: ResolveParams) {
+    return {
+      status: project.type === 'MultiplicationTranslation' ? 'ENABLED' : 'OMIT',
+    };
+  },
+};
+
 export const RequireOngoingEngagementsToBeFinalizingCompletion: TransitionCondition =
   {
     description:

@@ -25,3 +25,4 @@ export const BackTo = (...steps: ProjectStep[]): DynamicStep => ({
 });
 
 export const BackToActive = BackTo(Step.Active, Step.ActiveChangedPlan);
+export const BackToMostRecent = (steps: ProjectStep[]) => BackTo(...steps);
