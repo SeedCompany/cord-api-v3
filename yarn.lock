@@ -5430,7 +5430,7 @@ __metadata:
     luxon: "npm:^3.4.3"
     mime: "npm:beta"
     nanoid: "npm:^4.0.2"
-    neo4j-driver: "npm:^5.14.0"
+    neo4j-driver: "npm:^5.20.0"
     p-retry: "npm:^5.1.2"
     pako: "npm:^2.1.0"
     pkg-up: "npm:^4.0.0"
@@ -10311,32 +10311,32 @@ __metadata:
   languageName: node
   linkType: hard
 
-"neo4j-driver-bolt-connection@npm:5.14.0":
-  version: 5.14.0
-  resolution: "neo4j-driver-bolt-connection@npm:5.14.0"
+"neo4j-driver-bolt-connection@npm:5.20.0":
+  version: 5.20.0
+  resolution: "neo4j-driver-bolt-connection@npm:5.20.0"
   dependencies:
     buffer: "npm:^6.0.3"
-    neo4j-driver-core: "npm:5.14.0"
+    neo4j-driver-core: "npm:5.20.0"
     string_decoder: "npm:^1.3.0"
-  checksum: 10c0/5e070a4b307473ffc51d90fc3423e173af3e8ce11b398feca5e86b22655e3ed8b113af8e13e1fae2e08a1bea24a00db84c0c6fbee37b6897589a15ebf712348b
+  checksum: 10c0/a60b51192a37a5c86b7fcdbac4ef56a647c3ebe8596ab813b7354188ee3659426f14aaad7fa1025ebc5e07eecabe89c8f2e33d95663c9cd8e49263c12c287c22
   languageName: node
   linkType: hard
 
-"neo4j-driver-core@npm:5.14.0":
-  version: 5.14.0
-  resolution: "neo4j-driver-core@npm:5.14.0"
-  checksum: 10c0/e432a8e7054ba7ecd4d4767bcb0d5a8ea79c35235ae383c5b5fb6195920714e8c124659cc116493e60b86565f4a3ab7e32211f14ea175cb659451327e6309df6
+"neo4j-driver-core@npm:5.20.0":
+  version: 5.20.0
+  resolution: "neo4j-driver-core@npm:5.20.0"
+  checksum: 10c0/162ef4953bf04643c7d21b777b5cc0a9fb01aad7e9098bae5eb272de9d88d877808c43406f04db4c245306f501af31f7f5d9d3115f0f635758af394bae5fba17
   languageName: node
   linkType: hard
 
-"neo4j-driver@npm:^5.14.0, neo4j-driver@npm:^5.9.0":
-  version: 5.14.0
-  resolution: "neo4j-driver@npm:5.14.0"
+"neo4j-driver@npm:^5.20.0, neo4j-driver@npm:^5.9.0":
+  version: 5.20.0
+  resolution: "neo4j-driver@npm:5.20.0"
   dependencies:
-    neo4j-driver-bolt-connection: "npm:5.14.0"
-    neo4j-driver-core: "npm:5.14.0"
+    neo4j-driver-bolt-connection: "npm:5.20.0"
+    neo4j-driver-core: "npm:5.20.0"
     rxjs: "npm:^7.8.1"
-  checksum: 10c0/e6b5def70af63a756c23e0e10153c95bf454b07540024bbe166b9b5bd954cfca0e79c2be101ec7bf1832d1a58650ac74acb330f903e40b3213a7727a83cb64d0
+  checksum: 10c0/1ed4cc3bcf4d0a5f6742aa5a2224ee1f1006ccedd5e62e3c15d612e4dd46d1ec67f1039a69aa008123da1ec74ff5369f760cb9e068b49b1624efbcdf622671a1
   languageName: node
   linkType: hard
 

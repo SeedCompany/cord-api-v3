@@ -88,7 +88,7 @@
     "luxon": "^3.4.3",
     "mime": "beta",
     "nanoid": "^4.0.2",
-    "neo4j-driver": "^5.14.0",
+    "neo4j-driver": "^5.20.0",
     "p-retry": "^5.1.2",
     "pako": "^2.1.0",
     "pkg-up": "^4.0.0",
