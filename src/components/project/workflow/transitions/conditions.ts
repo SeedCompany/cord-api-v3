@@ -6,10 +6,19 @@ import { ResolveParams } from './dynamic-step';
 type Condition = TransitionCondition<ResolveParams>;
 
 export const IsNotMultiplication: Condition = {
-  description: 'Only if non-multiplication',
+  description: 'Momentum / Internship',
   resolve({ project }) {
     return {
       status: project.type !== 'MultiplicationTranslation' ? 'ENABLED' : 'OMIT',
+    };
+  },
+};
+
+export const IsMultiplication: Condition = {
+  description: 'Multiplication',
+  resolve({ project }) {
+    return {
+      status: project.type === 'MultiplicationTranslation' ? 'ENABLED' : 'OMIT',
     };
   },
 };
