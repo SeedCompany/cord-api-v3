@@ -265,7 +265,7 @@ export class BudgetService {
 
   async deleteRecord(id: ID, session: Session, changeset?: ID): Promise<void> {
     try {
-      await this.budgetRecordsRepo.deleteNode(id, changeset);
+      await this.budgetRecordsRepo.deleteNode(id, { changeset });
     } catch (e) {
       this.logger.warning('Failed to delete Budget Record', {
         exception: e,

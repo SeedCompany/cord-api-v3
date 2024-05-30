@@ -232,6 +232,16 @@ export const RepoFor = <
     async getBaseNodes(ids: readonly ID[], fqn?: ResourceLike) {
       return await super.getBaseNodes(ids, fqn ?? resource);
     }
+
+    async deleteNode(
+      objectOrId: { id: ID } | ID,
+      options: { changeset?: ID; resource?: ResourceLike } = {},
+    ) {
+      await super.deleteNode(objectOrId, {
+        resource: this.resource,
+        ...options,
+      });
+    }
   }
 
   const readManyQuery = e.params({ ids: e.array(e.uuid) }, ({ ids }) => {

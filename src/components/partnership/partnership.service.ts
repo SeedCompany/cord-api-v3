@@ -224,7 +224,7 @@ export class PartnershipService {
     );
 
     try {
-      await this.repo.deleteNode(object, changeset);
+      await this.repo.deleteNode(object, { changeset });
     } catch (exception) {
       this.logger.error('Failed to delete', { id, exception });
       throw new ServerException('Failed to delete', exception);
