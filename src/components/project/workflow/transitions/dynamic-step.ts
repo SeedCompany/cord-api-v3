@@ -11,12 +11,12 @@ export interface ResolveParams {
 export interface DynamicStep {
   description: string;
   resolve: (params: ResolveParams) => Promisable<ProjectStep>;
+  relatedSteps?: ProjectStep[];
 }
 
 export const BackTo = (...steps: ProjectStep[]): DynamicStep => ({
-  description: `Back to step <${steps
-    .map((step) => ProjectStep.entry(step).label)
-    .join(' / ')}>`,
+  description: 'Back',
+  relatedSteps: steps,
   async resolve({ project, moduleRef }: ResolveParams) {
     const repo = moduleRef.get(ProjectWorkflowRepository);
     const found = await repo.mostRecentStep(project.id, steps);
