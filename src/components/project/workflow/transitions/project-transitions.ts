@@ -643,35 +643,4 @@ export const Transitions = defineTransitions({
     conditions: RequireOngoingEngagementsToBeFinalizingCompletion,
     notifiers: [TeamMembers, EmailDistros('project_closing@tsco.org')],
   },
-
-  Terminated: {
-    from: Step.Terminated,
-    to: Step.Terminated,
-    label: 'Terminated',
-    type: Type.Neutral,
-    notifiers: [TeamMembers, EmailDistros('project_termination@tsco.org')],
-  },
-
-  Completed: {
-    from: Step.Completed,
-    to: Step.Completed,
-    label: 'Completed',
-    type: Type.Neutral,
-    notifiers: [TeamMembers, EmailDistros('project_closing@tsco.org')],
-  },
-
-  DidNotDevelop: {
-    from: Step.DidNotDevelop,
-    to: Step.DidNotDevelop,
-    label: 'Did Not Develop',
-    type: Type.Neutral,
-  },
-
-  Rejected: {
-    from: Step.Rejected,
-    to: Step.Rejected,
-    label: 'Rejected',
-    type: Type.Neutral,
-    notifiers: TeamMembers,
-  },
 });

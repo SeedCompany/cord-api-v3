@@ -16,7 +16,7 @@ export interface TransitionCondition {
 }
 
 export const IsNotMultiplication: TransitionCondition = {
-  description: 'Only if non-multiplication',
+  description: 'Momentum / Internship',
   resolve({ project }: ResolveParams) {
     return {
       status: project.type !== 'MultiplicationTranslation' ? 'ENABLED' : 'OMIT',
@@ -25,7 +25,7 @@ export const IsNotMultiplication: TransitionCondition = {
 };
 
 export const IsMultiplication: TransitionCondition = {
-  description: 'Only if multiplication',
+  description: 'Multiplication',
   resolve({ project }: ResolveParams) {
     return {
       status: project.type === 'MultiplicationTranslation' ? 'ENABLED' : 'OMIT',
