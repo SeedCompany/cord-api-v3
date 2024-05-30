@@ -11,9 +11,8 @@ export interface ResolveParams {
 export const BackTo = (
   ...steps: ProjectStep[]
 ): DynamicState<Step, ResolveParams> => ({
-  description: `Back to step <${steps
-    .map((step) => ProjectStep.entry(step).label)
-    .join(' / ')}>`,
+  description: 'Back',
+  relatedStates: steps,
   async resolve({ project, moduleRef }: ResolveParams) {
     const repo = moduleRef.get(ProjectWorkflowRepository);
     const found = await repo.mostRecentStep(project.id, steps);
