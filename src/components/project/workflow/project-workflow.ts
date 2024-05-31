@@ -268,8 +268,8 @@ export const ProjectWorkflow = defineWorkflow({
   },
 
   // Pending Finance Confirmation
-  'Pending Finance Confirmation -> Active': {
-    from: Step.PendingFinanceConfirmation,
+  'Pending & On Hold Finance Confirmation -> Active': {
+    from: [Step.PendingFinanceConfirmation, Step.OnHoldFinanceConfirmation],
     to: Step.Active,
     label: 'Confirm Project 🎉',
     type: Type.Approve,
@@ -302,45 +302,16 @@ export const ProjectWorkflow = defineWorkflow({
     conditions: IsNotMultiplication,
     notifiers: [FinancialApprovers],
   },
-  'Pending Finance Confirmation -> Finalizing Proposal': {
-    from: Step.PendingFinanceConfirmation,
+  'Pending & On Hold Finance Confirmation -> Finalizing Proposal': {
+    from: [Step.PendingFinanceConfirmation, Step.OnHoldFinanceConfirmation],
     to: Step.FinalizingProposal,
     label: 'Send Back for Corrections',
     type: Type.Reject,
     conditions: IsNotMultiplication,
     notifiers: [FinancialApprovers],
   },
-  'Pending Finance Confirmation -> Rejected': {
-    from: Step.PendingFinanceConfirmation,
-    to: Step.Rejected,
-    label: 'Reject',
-    type: Type.Reject,
-    conditions: IsNotMultiplication,
-    notifiers: [FinancialApprovers],
-  },
-
-  // On Hold Finance Confirmation
-  'On Hold Finance Confirmation -> Active': {
-    from: Step.OnHoldFinanceConfirmation,
-    to: Step.Active,
-    label: 'Confirm Project 🎉',
-    type: Type.Approve,
-    conditions: IsNotMultiplication,
-    notifiers: [
-      FinancialApprovers,
-      EmailDistros('project_approval@tsco.org', 'projects@tsco.org'),
-    ],
-  },
-  'On Hold Finance Confirmation -> Finalizing Proposal': {
-    from: Step.OnHoldFinanceConfirmation,
-    to: Step.FinalizingProposal,
-    label: 'Send Back for Corrections',
-    type: Type.Reject,
-    conditions: IsNotMultiplication,
-    notifiers: [FinancialApprovers],
-  },
-  'On Hold Finance Confirmation -> Rejected': {
-    from: Step.OnHoldFinanceConfirmation,
+  'Pending & On Hold Finance Confirmation -> Rejected': {
+    from: [Step.PendingFinanceConfirmation, Step.OnHoldFinanceConfirmation],
     to: Step.Rejected,
     label: 'Reject',
     type: Type.Reject,
@@ -410,50 +381,63 @@ export const ProjectWorkflow = defineWorkflow({
   },
 
   // Pending Change To Plan Approval
-  'Pending Change To Plan Approval & Confirmation -> Discussing Change To Plan':
-    {
-      from: [
-        Step.PendingChangeToPlanApproval,
-        Step.PendingChangeToPlanConfirmation,
-      ],
-      to: Step.DiscussingChangeToPlan,
-      label: 'Send Back for Corrections',
-      type: Type.Reject,
-      notifiers: [
-        FinancialApprovers,
-        EmailDistros('project_extension@tsco.org', 'project_revision@tsco.org'),
-      ],
-    },
+  'Pending Change To Plan Approval -> Discussing Change To Plan': {
+    from: Step.PendingChangeToPlanApproval,
+    to: Step.DiscussingChangeToPlan,
+    label: 'Send Back for Corrections',
+    type: Type.Reject,
+    notifiers: EmailDistros(
+      'project_extension@tsco.org',
+      'project_revision@tsco.org',
+    ),
+  },
   'Pending Change To Plan Approval -> Pending Change To Plan Confirmation': {
     from: Step.PendingChangeToPlanApproval,
     to: Step.PendingChangeToPlanConfirmation,
     label: 'Approve Change to Plan',
     type: Type.Approve,
-    notifiers: [
-      FinancialApprovers,
-      EmailDistros('project_extension@tsco.org', 'project_revision@tsco.org'),
-    ],
+    notifiers: EmailDistros(
+      'project_extension@tsco.org',
+      'project_revision@tsco.org',
+    ),
   },
-  'Pending Change To Plan Approval & Confirmation -> Back To Active': {
-    from: [
-      Step.PendingChangeToPlanApproval,
-      Step.PendingChangeToPlanConfirmation,
-    ],
+  'Pending Change To Plan Approval -> Back To Active': {
+    from: Step.PendingChangeToPlanApproval,
     to: BackToActive,
     label: 'Reject Change to Plan',
+    type: Type.Reject,
+    notifiers: EmailDistros(
+      'project_extension@tsco.org',
+      'project_revision@tsco.org',
+    ),
+  },
+
+  // Pending Change To Plan Confirmation
+  'Pending Change To Plan Confirmation -> Discussing Change To Plan': {
+    from: Step.PendingChangeToPlanConfirmation,
+    to: Step.DiscussingChangeToPlan,
+    label: 'Send Back for Corrections',
     type: Type.Reject,
     notifiers: [
       FinancialApprovers,
       EmailDistros('project_extension@tsco.org', 'project_revision@tsco.org'),
     ],
   },
-
-  // Pending Change To Plan Confirmation
   'Pending Change To Plan Confirmation -> Active Changed Plan': {
     from: Step.PendingChangeToPlanConfirmation,
     to: Step.ActiveChangedPlan,
     label: 'Approve Change to Plan',
     type: Type.Approve,
+    notifiers: [
+      FinancialApprovers,
+      EmailDistros('project_extension@tsco.org', 'project_revision@tsco.org'),
+    ],
+  },
+  'Pending Change To Plan Confirmation -> Back To Active': {
+    from: Step.PendingChangeToPlanConfirmation,
+    to: BackToActive,
+    label: 'Reject Change to Plan',
+    type: Type.Reject,
     notifiers: [
       FinancialApprovers,
       EmailDistros('project_extension@tsco.org', 'project_revision@tsco.org'),
@@ -562,19 +546,18 @@ export const ProjectWorkflow = defineWorkflow({
     type: Type.Approve,
     notifiers: EmailDistros('project_termination@tsco.org'),
   },
-  'Discussing Termination & Pending Termination Approval -> Back To Most Recent':
-    {
-      from: [Step.DiscussingTermination, Step.PendingTerminationApproval],
-      to: BackTo(
-        Step.Active,
-        Step.ActiveChangedPlan,
-        Step.DiscussingReactivation,
-        Step.Suspended,
-      ),
-      label: 'Will Not Terminate',
-      type: Type.Neutral,
-      notifiers: EmailDistros('project_termination@tsco.org'),
-    },
+  'Discussing Termination -> Back To Most Recent': {
+    from: Step.DiscussingTermination,
+    to: BackTo(
+      Step.Active,
+      Step.ActiveChangedPlan,
+      Step.DiscussingReactivation,
+      Step.Suspended,
+    ),
+    label: 'Will Not Terminate',
+    type: Type.Neutral,
+    notifiers: EmailDistros('project_termination@tsco.org'),
+  },
 
   // Pending Termination Approval
   'Pending Termination Approval -> Terminated': {
@@ -589,6 +572,18 @@ export const ProjectWorkflow = defineWorkflow({
     to: Step.DiscussingTermination,
     label: 'Send Back for Corrections',
     type: Type.Reject,
+    notifiers: EmailDistros('project_termination@tsco.org'),
+  },
+  'Pending Termination Approval -> Back To Most Recent': {
+    from: Step.PendingTerminationApproval,
+    to: BackTo(
+      Step.Active,
+      Step.ActiveChangedPlan,
+      Step.DiscussingReactivation,
+      Step.Suspended,
+    ),
+    label: 'Will Not Terminate',
+    type: Type.Neutral,
     notifiers: EmailDistros('project_termination@tsco.org'),
   },
 
