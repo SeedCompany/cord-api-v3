@@ -10,12 +10,15 @@ export type EnumType<Enum> = Enum extends MadeEnum<infer Values, any, any>
 
 export type MadeEnum<
   Values extends string,
-  Extra = unknown,
   ValueDeclaration = EnumValueDeclarationShape,
+  Extra = unknown,
 > = {
   readonly [Value in Values & string]: Value;
-} & Readonly<Extra> &
-  EnumHelpers<Values, ValueDeclaration & ImplicitValueDeclarationShape<Values>>;
+} & EnumHelpers<
+  Values,
+  ValueDeclaration & ImplicitValueDeclarationShape<Values>
+> &
+  Readonly<Extra>;
 
 interface EnumOptions<
   ValueDeclaration extends EnumValueDeclarationShape,
@@ -72,8 +75,8 @@ export const makeEnum = <
   input: EnumOptions<ValueDeclaration, Extra>,
 ): MadeEnum<
   ValuesOfDeclarations<ValueDeclaration>,
-  [Extra] extends [never] ? unknown : Extra,
-  NormalizedValueDeclaration<ValueDeclaration>
+  NormalizedValueDeclaration<ValueDeclaration>,
+  [Extra] extends [never] ? unknown : Extra
 > => {
   const {
     name,
