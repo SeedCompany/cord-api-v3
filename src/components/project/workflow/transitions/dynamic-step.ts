@@ -1,5 +1,5 @@
 import { ModuleRef } from '@nestjs/core';
-import { Promisable } from 'type-fest';
+import { DynamicState } from '../../../workflow/transitions/dynamic-state';
 import { Project, ProjectStep, ProjectStep as Step } from '../../dto';
 import { ProjectWorkflowRepository } from '../project-workflow.repository';
 
@@ -8,12 +8,9 @@ export interface ResolveParams {
   moduleRef: ModuleRef;
 }
 
-export interface DynamicStep {
-  description: string;
-  resolve: (params: ResolveParams) => Promisable<ProjectStep>;
-}
-
-export const BackTo = (...steps: ProjectStep[]): DynamicStep => ({
+export const BackTo = (
+  ...steps: ProjectStep[]
+): DynamicState<Step, ResolveParams> => ({
   description: `Back to step <${steps
     .map((step) => ProjectStep.entry(step).label)
     .join(' / ')}>`,

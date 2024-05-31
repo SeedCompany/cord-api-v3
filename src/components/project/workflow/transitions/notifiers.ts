@@ -1,57 +1,42 @@
-import { Many } from '@seedcompany/common';
-import { MergeExclusive, Promisable } from 'type-fest';
-import { ID, Role } from '~/common';
+import { Role } from '~/common';
 import { ConfigService } from '~/core';
+import { TransitionNotifier } from '../../../workflow/transitions/notifiers';
 import { FinancialApproverRepository } from '../../financial-approver';
 import { ProjectMemberRepository } from '../../project-member/project-member.repository';
 import { ResolveParams } from './dynamic-step';
 
-export interface TransitionNotifier {
-  description: string;
-  resolve: (params: ResolveParams) => Promisable<Many<Notifier>>;
-}
+type Notifier = TransitionNotifier<ResolveParams>;
 
-export type Notifier = MergeExclusive<
-  {
-    id: ID<'User'>;
-    email?: string | null;
-  },
-  {
-    id?: ID<'User'> | null;
-    email: string;
-  }
->;
-
-export const TeamMembers: TransitionNotifier = {
+export const TeamMembers: Notifier = {
   description: 'The project members',
-  async resolve({ project, moduleRef }: ResolveParams) {
+  async resolve({ project, moduleRef }) {
     return await moduleRef
       .get(ProjectMemberRepository, { strict: false })
       .listAsNotifiers(project.id);
   },
 };
 
-export const TeamMembersWithRole = (...roles: Role[]): TransitionNotifier => ({
+export const TeamMembersWithRole = (...roles: Role[]): Notifier => ({
   description: 'The project members',
-  async resolve({ project, moduleRef }: ResolveParams) {
+  async resolve({ project, moduleRef }) {
     return await moduleRef
       .get(ProjectMemberRepository, { strict: false })
       .listAsNotifiers(project.id, roles);
   },
 });
 
-export const FinancialApprovers: TransitionNotifier = {
+export const FinancialApprovers: Notifier = {
   description: 'All financial approvers according to the project type',
-  async resolve({ project, moduleRef }: ResolveParams) {
+  async resolve({ project, moduleRef }) {
     const repo = moduleRef.get(FinancialApproverRepository, { strict: false });
     const approvers = await repo.read(project.type);
     return approvers.map((approver) => approver.user);
   },
 };
 
-export const EmailDistros = (...emails: string[]) => ({
+export const EmailDistros = (...emails: string[]): Notifier => ({
   description: `These email addresses: ${emails.join(', ')}`,
-  resolve({ moduleRef }: ResolveParams) {
+  resolve({ moduleRef }) {
     const config = moduleRef.get(ConfigService, { strict: false });
     if (!config.email.notifyDistributionLists) {
       return [];

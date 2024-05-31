@@ -17,9 +17,10 @@ import { AuthenticationService } from '../../../authentication';
 import { ProjectService } from '../../../project';
 import { UserService } from '../../../user';
 import { User } from '../../../user/dto';
+import { Notifier } from '../../../workflow/transitions/notifiers';
 import { Project, ProjectStep } from '../../dto';
 import { ProjectTransitionedEvent } from '../events/project-transitioned.event';
-import { Notifier, TeamMembers } from '../transitions/notifiers';
+import { TeamMembers } from '../transitions/notifiers';
 
 @EventsHandler(ProjectTransitionedEvent)
 export class ProjectWorkflowNotificationHandler

@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { inArray, node, Query, relation } from 'cypher-query-builder';
-import { SetRequired } from 'type-fest';
 import { ID, Order, PublicOf, Session, UnsecuredDto } from '~/common';
 import { DtoRepository } from '~/core/database';
 import {
@@ -75,7 +74,10 @@ export class ProjectWorkflowNeo4jRepository
   }
 
   async recordEvent(
-    { project, ...props }: SetRequired<ExecuteProjectTransitionInput, 'step'>,
+    {
+      project,
+      ...props
+    }: Omit<ExecuteProjectTransitionInput, 'bypassTo'> & { to: ProjectStep },
     session: Session,
   ) {
     const result = await this.db

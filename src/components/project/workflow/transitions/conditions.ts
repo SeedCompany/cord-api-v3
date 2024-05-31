@@ -1,41 +1,30 @@
-import { Promisable } from 'type-fest';
 import { EngagementService } from '../../../engagement';
 import { EngagementStatus } from '../../../engagement/dto';
+import { TransitionCondition } from '../../../workflow/transitions/conditions';
 import { ResolveParams } from './dynamic-step';
 
-export interface TransitionCondition {
-  description: string;
-  resolve: (params: ResolveParams) => Promisable<{
-    status: 'ENABLED' | 'DISABLED' | 'OMIT';
-    /**
-     * If not allowed, present transition anyway, as disabled,
-     * and include this string explaining why.
-     */
-    disabledReason?: string;
-  }>;
-}
+type Condition = TransitionCondition<ResolveParams>;
 
-export const IsNotMultiplication: TransitionCondition = {
+export const IsNotMultiplication: Condition = {
   description: 'Only if non-multiplication',
-  resolve({ project }: ResolveParams) {
+  resolve({ project }) {
     return {
       status: project.type !== 'MultiplicationTranslation' ? 'ENABLED' : 'OMIT',
     };
   },
 };
 
-export const RequireOngoingEngagementsToBeFinalizingCompletion: TransitionCondition =
-  {
-    description:
-      'All engagements must be Finalizing Completion or in a terminal status',
-    async resolve({ project, moduleRef }: ResolveParams) {
-      const repo = moduleRef.get(EngagementService, { strict: false });
-      const hasOngoing = await repo.hasOngoing(project.id, [
-        EngagementStatus.FinalizingCompletion,
-      ]);
-      return {
-        status: hasOngoing ? 'DISABLED' : 'ENABLED',
-        disabledReason: `The project cannot be completed since some ongoing engagements are not "Finalizing Completion"`,
-      };
-    },
-  };
+export const RequireOngoingEngagementsToBeFinalizingCompletion: Condition = {
+  description:
+    'All engagements must be Finalizing Completion or in a terminal status',
+  async resolve({ project, moduleRef }) {
+    const repo = moduleRef.get(EngagementService, { strict: false });
+    const hasOngoing = await repo.hasOngoing(project.id, [
+      EngagementStatus.FinalizingCompletion,
+    ]);
+    return {
+      status: hasOngoing ? 'DISABLED' : 'ENABLED',
+      disabledReason: `The project cannot be completed since some ongoing engagements are not "Finalizing Completion"`,
+    };
+  },
+};
