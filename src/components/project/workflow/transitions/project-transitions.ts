@@ -1,5 +1,8 @@
+import { TransitionType as Type } from '../../../workflow/dto';
+import { defineTransitions } from '../../../workflow/transitions/types';
 import { ProjectStep as Step } from '../../dto';
 import { TransitionType as Type } from '../dto';
+import { ResolveParams } from './dynamic-step';
 import { defineTransitions } from './types';
 
 export type TransitionName = keyof typeof Transitions;
@@ -8,7 +11,9 @@ export type TransitionName = keyof typeof Transitions;
 // Therefore, these should generally flow down.
 // "Back" transitions should come before/above "forward" transitions.
 
-export const Transitions = defineTransitions({
+export const Transitions = defineTransitions<Step, ResolveParams>({
+  namespaceId: '8297b9a1-b50b-4ec9-9021-a0347424b3ec',
+})({
   'Early Conversations -> Pending Concept Approval': {
     from: Step.EarlyConversations,
     to: Step.PendingConceptApproval,

@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { SetRequired } from 'type-fest';
 import { ID, Session } from '~/common';
 import { e, edgeql, RepoFor } from '~/core/edgedb';
 import { ProjectStep } from '../dto';
@@ -28,14 +27,16 @@ export class ProjectWorkflowRepository extends RepoFor(ProjectWorkflowEvent, {
   }
 
   async recordEvent(
-    { project, ...props }: SetRequired<ExecuteProjectTransitionInput, 'step'>,
+    input: Omit<ExecuteProjectTransitionInput, 'bypassTo'> & {
+      to: ProjectStep;
+    },
     _session: Session,
   ) {
     const created = e.insert(e.Project.WorkflowEvent, {
-      project: e.cast(e.Project, e.uuid(project)),
-      transitionKey: props.transition,
-      to: props.step,
-      notes: props.notes,
+      project: e.cast(e.Project, e.uuid(input.project)),
+      transitionKey: input.transition,
+      to: input.to,
+      notes: input.notes,
     });
     const query = e.select(created, this.hydrate);
     return await this.db.run(query);

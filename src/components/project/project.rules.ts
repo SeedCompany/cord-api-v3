@@ -25,10 +25,11 @@ import { EngagementStatus } from '../engagement/dto';
 import { OrganizationService } from '../organization';
 import { Organization } from '../organization/dto';
 import { UserService } from '../user';
+import { TransitionType } from '../workflow/dto';
 import { Project, ProjectStep, ProjectType } from './dto';
 import { FinancialApproverRepository } from './financial-approver';
 import { ProjectService } from './project.service';
-import { ProjectWorkflowTransition, TransitionType } from './workflow/dto';
+import { ProjectWorkflowTransition } from './workflow/dto';
 
 type ProjectStepTransition = Omit<ProjectWorkflowTransition, 'key'>;
 

@@ -1,9 +1,7 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { ID, IdField } from '~/common';
-import { TransitionType } from '../../../project/workflow/dto';
+import { TransitionType } from '../../../workflow/dto';
 import { ProgressReportStatus } from '../../dto';
-
-export { TransitionType };
 
 @ObjectType()
 export abstract class ProgressReportWorkflowTransition {
