@@ -84,20 +84,30 @@ export const ProjectWorkflow = defineWorkflow({
     type: Type.Approve,
     conditions: IsNotMultiplication,
   },
-  'Prep for Consultant Endorsement -> Pending Concept Approval': {
-    from: Step.PrepForConsultantEndorsement,
-    to: Step.PendingConceptApproval,
-    label: 'Resubmit for Concept Approval',
-    type: Type.Neutral,
-    conditions: IsNotMultiplication,
-  },
-  'Prep for Consultant Endorsement -> Did Not Develop': {
-    from: Step.PrepForConsultantEndorsement,
-    to: Step.DidNotDevelop,
-    label: 'End Development',
-    type: Type.Reject,
-    conditions: IsNotMultiplication,
-  },
+  'Prep for Consultant & Financial Endorsement & Finalizing Proposal -> Pending Concept Approval':
+    {
+      from: [
+        Step.PrepForConsultantEndorsement,
+        Step.PrepForFinancialEndorsement,
+        Step.FinalizingProposal,
+      ],
+      to: Step.PendingConceptApproval,
+      label: 'Resubmit for Concept Approval',
+      type: Type.Neutral,
+      conditions: IsNotMultiplication,
+    },
+  'Prep for Consultant & Financial Endorsement & Finalizing Proposal -> Did Not Develop':
+    {
+      from: [
+        Step.PrepForConsultantEndorsement,
+        Step.PrepForFinancialEndorsement,
+        Step.FinalizingProposal,
+      ],
+      to: Step.DidNotDevelop,
+      label: 'End Development',
+      type: Type.Reject,
+      conditions: IsNotMultiplication,
+    },
 
   // Pending Consultant Endorsement
   'Pending Consultant Endorsement -> Prep for Financial Endorsement With Consultant Endorsement':
@@ -125,27 +135,14 @@ export const ProjectWorkflow = defineWorkflow({
     type: Type.Approve,
     conditions: IsNotMultiplication,
   },
-  'Prep for Financial Endorsement -> Pending Consultant Endorsement': {
-    from: Step.PrepForFinancialEndorsement,
-    to: Step.PendingConsultantEndorsement,
-    label: 'Resubmit for Consultant Endorsement',
-    type: Type.Neutral,
-    conditions: IsNotMultiplication,
-  },
-  'Prep for Financial Endorsement -> Pending Concept Approval': {
-    from: Step.PrepForFinancialEndorsement,
-    to: Step.PendingConceptApproval,
-    label: 'Resubmit for Concept Approval',
-    type: Type.Neutral,
-    conditions: IsNotMultiplication,
-  },
-  'Prep for Financial Endorsement -> Did Not Develop': {
-    from: Step.PrepForFinancialEndorsement,
-    to: Step.DidNotDevelop,
-    label: 'End Development',
-    type: Type.Reject,
-    conditions: IsNotMultiplication,
-  },
+  'Prep for Financial Endorsement & Finalizing Proposal -> Pending Consultant Endorsement':
+    {
+      from: [Step.PrepForFinancialEndorsement, Step.FinalizingProposal],
+      to: Step.PendingConsultantEndorsement,
+      label: 'Resubmit for Consultant Endorsement',
+      type: Type.Neutral,
+      conditions: IsNotMultiplication,
+    },
 
   // Pending Financial Endorsement
   'Pending Financial Endorsement -> Finalizing Proposal With Financial Endorsement':
@@ -178,27 +175,6 @@ export const ProjectWorkflow = defineWorkflow({
     to: Step.PendingFinancialEndorsement,
     label: 'Resubmit for Financial Endorsement',
     type: Type.Neutral,
-    conditions: IsNotMultiplication,
-  },
-  'Finalizing Proposal -> Pending Consultant Endorsement': {
-    from: Step.FinalizingProposal,
-    to: Step.PendingConsultantEndorsement,
-    label: 'Resubmit for Consultant Endorsement',
-    type: Type.Neutral,
-    conditions: IsNotMultiplication,
-  },
-  'Finalizing Proposal -> Pending Concept Approval': {
-    from: Step.FinalizingProposal,
-    to: Step.PendingConceptApproval,
-    label: 'Resubmit for Concept Approval',
-    type: Type.Neutral,
-    conditions: IsNotMultiplication,
-  },
-  'Finalizing Proposal -> Did Not Develop': {
-    from: Step.FinalizingProposal,
-    to: Step.DidNotDevelop,
-    label: 'End Development',
-    type: Type.Reject,
     conditions: IsNotMultiplication,
   },
 
@@ -491,8 +467,8 @@ export const ProjectWorkflow = defineWorkflow({
     type: Type.Neutral,
     notifiers: EmailDistros('project_suspension@tsco.org'),
   },
-  'Suspended -> Discussing Termination': {
-    from: Step.Suspended,
+  'Suspended & Discussing Reactivation -> Discussing Termination': {
+    from: [Step.Suspended, Step.DiscussingReactivation],
     to: Step.DiscussingTermination,
     label: 'Discuss Termination',
     type: Type.Neutral,
@@ -505,13 +481,6 @@ export const ProjectWorkflow = defineWorkflow({
     to: Step.PendingReactivationApproval,
     label: 'Submit for Approval',
     type: Type.Approve,
-    notifiers: EmailDistros('project_suspension@tsco.org'),
-  },
-  'Discussing Reactivation -> Discussing Termination': {
-    from: Step.DiscussingReactivation,
-    to: Step.DiscussingTermination,
-    label: 'Discuss Termination',
-    type: Type.Neutral,
     notifiers: EmailDistros('project_suspension@tsco.org'),
   },
 
