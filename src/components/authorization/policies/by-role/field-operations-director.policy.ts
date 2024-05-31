@@ -15,6 +15,11 @@ import { Policy, Role } from '../util';
   r.Product.edit.create.delete,
   r.Project.edit,
   r.ProjectMember.edit.create.delete,
+  r.ProjectWorkflowEvent.read.transitions(
+    'Pending Zone Director Approval -> Pending Finance Confirmation',
+    'Pending Zone Director Approval -> Finalizing Proposal',
+    'Pending Zone Director Approval -> Rejected',
+  ).execute,
   r.PeriodicReport.edit,
   r.StepProgress.edit,
 ])
