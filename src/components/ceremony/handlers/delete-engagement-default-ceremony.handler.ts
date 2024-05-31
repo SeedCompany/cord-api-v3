@@ -1,4 +1,4 @@
-import { EventsHandler, IEventHandler } from '~/core';
+import { ConfigService, EventsHandler, IEventHandler } from '~/core';
 import { EngagementWillDeleteEvent } from '../../engagement/events';
 import { CeremonyService } from '../ceremony.service';
 
@@ -6,7 +6,10 @@ import { CeremonyService } from '../ceremony.service';
 export class DetachEngagementRootDirectoryHandler
   implements IEventHandler<EngagementWillDeleteEvent>
 {
-  constructor(private readonly ceremonies: CeremonyService) {}
+  constructor(
+    private readonly ceremonies: CeremonyService,
+    private readonly config: ConfigService,
+  ) {}
 
   async handle({ engagement, session }: EngagementWillDeleteEvent) {
     const ceremony = engagement?.ceremony?.value;
@@ -16,6 +19,10 @@ export class DetachEngagementRootDirectoryHandler
 
     // TODO Ceremony should be changeset aware
     if (engagement.changeset) {
+      return;
+    }
+
+    if (this.config.databaseEngine === 'edgedb') {
       return;
     }
 
