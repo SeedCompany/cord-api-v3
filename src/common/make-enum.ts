@@ -2,7 +2,6 @@ import { registerEnumType } from '@nestjs/graphql';
 import { cleanJoin, mapKeys, nonEnumerable } from '@seedcompany/common';
 import { lowerCase } from 'lodash';
 import { titleCase } from 'title-case';
-import { SetRequired } from 'type-fest';
 import { inspect, InspectOptionsStylized } from 'util';
 
 export type EnumType<Enum> = Enum extends MadeEnum<infer Values, any, any>
@@ -16,7 +15,7 @@ export type MadeEnum<
 > = {
   readonly [Value in Values & string]: Value;
 } & Readonly<Extra> &
-  EnumHelpers<Values, ValueDeclaration>;
+  EnumHelpers<Values, ValueDeclaration & ImplicitValueDeclarationShape<Values>>;
 
 interface EnumOptions<
   ValueDeclaration extends EnumValueDeclarationShape,
@@ -52,9 +51,12 @@ interface EnumOptions<
    * in order to prevent circular references.
    */
   readonly extra?: (
-    enumObject: MadeEnum<
+    // MadeEnum without Extras & ImplicitValueDeclarationShape
+    enumObject: {
+      readonly [Value in ValuesOfDeclarations<ValueDeclaration> &
+        string]: Value;
+    } & EnumHelpers<
       ValuesOfDeclarations<ValueDeclaration>,
-      unknown,
       NormalizedValueDeclaration<ValueDeclaration>
     >,
   ) => Extra;
@@ -179,6 +181,10 @@ interface EnumValueDeclarationObjectShape<Value extends string = string> {
   readonly deprecationReason?: string;
 }
 
+type ImplicitValueDeclarationShape<Value extends string> = Required<
+  Pick<EnumValueDeclarationObjectShape<Value>, 'value' | 'label'>
+>;
+
 type ValuesOfDeclarations<ValueDeclaration extends EnumValueDeclarationShape> =
   ValueDeclaration extends string
     ? ValueDeclaration
@@ -191,21 +197,19 @@ type ValuesOfDeclarations<ValueDeclaration extends EnumValueDeclarationShape> =
  * properties as optional.
  */
 type NormalizedValueDeclaration<Declaration extends EnumValueDeclarationShape> =
-  SetRequired<Pick<EnumValueDeclarationObjectShape<any>, 'label'>, 'label'> &
-    // For values that are objects, accept them as they are...
-    (| (Extract<Declaration, EnumValueDeclarationObjectShape> &
-          // plus all the normal object keys
-          EnumValueDeclarationObjectShape<ValuesOfDeclarations<Declaration>>)
-      // For values that are strings, convert them to the standard shape...
-      | (EnumValueDeclarationObjectShape<Extract<Declaration, string>> &
-          // and include all the extra keys as optional
-          Partial<
-            Omit<
-              Extract<Declaration, EnumValueDeclarationObjectShape>,
-              keyof EnumValueDeclarationObjectShape
-            >
-          >)
-    );
+  // For values that are objects, accept them as they are...
+  | (Extract<Declaration, EnumValueDeclarationObjectShape> &
+      // plus all the normal object keys
+      EnumValueDeclarationObjectShape<ValuesOfDeclarations<Declaration>>)
+  // For values that are strings, convert them to the standard shape...
+  | (EnumValueDeclarationObjectShape<Extract<Declaration, string>> &
+      // and include all the extra keys as optional
+      Partial<
+        Omit<
+          Extract<Declaration, EnumValueDeclarationObjectShape>,
+          keyof EnumValueDeclarationObjectShape
+        >
+      >);
 
 interface EnumHelpers<Values extends string, ValueDeclaration> {
   readonly values: ReadonlySet<Values>;
