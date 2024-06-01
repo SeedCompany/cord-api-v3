@@ -27,6 +27,7 @@ import {
   sortWith,
 } from '~/core/database/query';
 import { Privileges } from '../authorization';
+import { locationSorters } from '../location/location.repository';
 import {
   CreateProject,
   IProject,
@@ -314,4 +315,19 @@ export const projectSorters = defineSorters(IProject, {
         node('engagement', 'LanguageEngagement'),
       ])
       .return<SortCol>('count(engagement) as sortValue'),
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  'primaryLocation.*': (query, input) =>
+    query
+      .with('node as proj')
+      .match([
+        node('proj'),
+        relation('out', '', 'primaryLocation', ACTIVE),
+        node('node'),
+      ])
+      .apply(sortWith(locationSorters, input))
+      .union()
+      .with('node')
+      .with('node as proj')
+      .raw('where not exists((node)-[:primaryLocation { active: true }]->())')
+      .return<SortCol>('null as sortValue'),
 });
