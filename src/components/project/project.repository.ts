@@ -16,13 +16,15 @@ import {
   ACTIVE,
   createNode,
   createRelationships,
+  defineSorters,
   matchChangesetAndChangedProps,
   matchProjectSens,
   matchPropsAndProjectSensAndScopedRoles,
   merge,
   paginate,
   requestingUser,
-  sorting,
+  SortCol,
+  sortWith,
 } from '~/core/database/query';
 import { Privileges } from '../authorization';
 import {
@@ -287,24 +289,7 @@ export class ProjectRepository extends CommonRepository {
       .match(requestingUser(session))
       .apply(projectListFilter(input))
       .apply(this.privileges.for(session, IProject).filterToReadable())
-      .apply(
-        sorting(IProject, input, {
-          sensitivity: (query) =>
-            query
-              .apply(
-                input.filter.sensitivity ? undefined : matchProjectSens('node'),
-              )
-              .return<{ sortValue: string }>('sensitivity as sortValue'),
-          engagements: (query) =>
-            query
-              .match([
-                node('node'),
-                relation('out', '', 'engagement'),
-                node('engagement', 'LanguageEngagement'),
-              ])
-              .return<{ sortValue: number }>('count(engagement) as sortValue'),
-        }),
-      )
+      .apply(sortWith(projectSorters, input))
       .apply(paginate(input, this.hydrate(session.userId)))
       .first();
     return result!; // result from paginate() will always have 1 row.
@@ -315,3 +300,18 @@ export class ProjectRepository extends CommonRepository {
     return this.getConstraintsFor(IProject);
   }
 }
+
+export const projectSorters = defineSorters(IProject, {
+  sensitivity: (query) =>
+    query
+      .apply(matchProjectSens('node', 'sortValue'))
+      .return<SortCol>('sortValue'),
+  engagements: (query) =>
+    query
+      .match([
+        node('node'),
+        relation('out', '', 'engagement'),
+        node('engagement', 'LanguageEngagement'),
+      ])
+      .return<SortCol>('count(engagement) as sortValue'),
+});
