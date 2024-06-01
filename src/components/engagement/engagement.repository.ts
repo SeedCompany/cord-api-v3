@@ -27,17 +27,21 @@ import {
   filter,
   INACTIVE,
   matchChangesetAndChangedProps,
+  matchProjectSens,
   matchPropsAndProjectSensAndScopedRoles,
   merge,
   oncePerProject,
   paginate,
   requestingUser,
+  SortCol,
   sortWith,
   whereNotDeletedInChangeset,
 } from '~/core/database/query';
 import { Privileges } from '../authorization';
 import { FileId } from '../file/dto';
+import { languageSorters } from '../language/language.repository';
 import { ProjectType } from '../project/dto';
+import { projectSorters } from '../project/project.repository';
 import {
   CreateInternshipEngagement,
   CreateLanguageEngagement,
@@ -516,4 +520,28 @@ export class EngagementRepository extends CommonRepository {
   }
 }
 
-export const engagementSorters = defineSorters(IEngagement, {});
+export const engagementSorters = defineSorters(IEngagement, {
+  sensitivity: (query) =>
+    query
+      .match([node('project'), relation('out', '', 'engagement'), node('node')])
+      .apply(matchProjectSens())
+      .return<{ sortValue: unknown }>('sensitivity as sortValue'),
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  'language.*': (query, input) =>
+    query
+      .with('node as eng')
+      .match([node('eng'), relation('out', '', 'language'), node('node')])
+      .apply(sortWith(languageSorters, input))
+      // Use null for all internship engagements
+      .union()
+      .with('node')
+      .with('node as eng')
+      .raw('where eng:InternshipEngagement')
+      .return<SortCol>('null as sortValue'),
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  'project.*': (query, input) =>
+    query
+      .with('node as eng')
+      .match([node('eng'), relation('in', '', 'engagement'), node('node')])
+      .apply(sortWith(projectSorters, input)),
+});
