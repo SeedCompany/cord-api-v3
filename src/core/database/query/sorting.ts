@@ -1,3 +1,4 @@
+import { entries } from '@seedcompany/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { identity } from 'rxjs';
 import { LiteralUnion } from 'type-fest';
@@ -50,15 +51,23 @@ export const sorting = <TResourceStatic extends ResourceShape<any>>(
  */
 export const sortWith = <Field extends string>(
   config: (input: Sort<Field>) => Sort<Field> & SortMatch<Field>,
-  input: Sort<Field>,
+  input: Sort<Field> & SortInternals,
 ) => {
-  const { transformer, matcher, order } = config(input);
+  const { transformer, matcher, sort, order } = config(input);
+
+  const transformerRef = input.transformerRef ?? { current: transformer };
+
+  const subInput = { sort, order, sub: true, transformerRef };
+  if (input.sub) {
+    transformerRef.current = transformer;
+    return (query: Query) => matcher(query, subInput);
+  }
 
   return (query: Query) =>
     query.comment`sorting(${input.sort})`
-      .subQuery('*', (sub) => matcher(sub, input))
+      .subQuery('*', (sub) => matcher(sub, subInput))
       .with('*')
-      .orderBy(`${transformer('sortValue')}`, order);
+      .orderBy(`${transformerRef.current('sortValue')}`, order);
 };
 
 /**
@@ -77,6 +86,19 @@ export const sortWith = <Field extends string>(
  *     // This "matcher" function should end with a return clause that
  *     // emits `sortValue`
  *     .return<SortCol>('x as sortValue')
+ *
+ *   // The ability to nest sorting into relationships is possible.
+ *   // This is done by appending `.*` to the key.
+ *   // For example, the sort field could be "parent.name"
+ *   'parent.*': (query, input) => query
+ *     // Again match as needed
+ *     .match(...)
+ *     // Call sortWith with the sorters of the relationship type.
+ *     // These matchers are also given the current sort _input_
+ *     // (second arg above) which can be passed down like this.
+ *     // `sortWith` understands this nesting and will remove the `parent.`
+ *     // prefix before matching the nested sorters.
+ *     .apply(sortWith(userSorters, input))
  * });
  * ```
  */
@@ -92,6 +114,14 @@ export const defineSorters =
     const exactCustom = matchers[sort];
     if (exactCustom) {
       return { ...common, matcher: exactCustom };
+    }
+
+    const [matchedPrefix, subCustom] = entries(matchers).find(
+      ([key]) => key.endsWith('.*') && sort.startsWith(key.slice(0, -1)),
+    ) ?? [null, null];
+    if (matchedPrefix && subCustom) {
+      const subField = sort.slice(matchedPrefix.length - 1);
+      return { ...common, matcher: subCustom, sort: subField };
     }
 
     const baseNodeProps = resource.BaseNodeProps ?? Resource.Props;
@@ -124,7 +154,7 @@ type SortFieldOf<TResourceStatic extends ResourceShape<any>> = LiteralUnion<
 
 type SortMatcher<Field extends string> = (
   query: Query,
-  input: Sort<Field>,
+  input: Sort<Field> & SortInternals,
 ) => Query<SortCol>;
 
 type SortMatchers<Field extends string> = Partial<
@@ -134,6 +164,13 @@ type SortMatchers<Field extends string> = Partial<
 interface Sort<Field extends string> {
   sort: Field;
   order: Order;
+}
+
+interface SortInternals {
+  /** @internal */
+  sub?: boolean;
+  /** @internal */
+  transformerRef?: { current: SortTransformer };
 }
 
 interface SortMatch<SortKey extends string> {
