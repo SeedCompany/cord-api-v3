@@ -40,6 +40,10 @@ import {
 import { Privileges } from '../authorization';
 import { FileId } from '../file/dto';
 import { languageSorters } from '../language/language.repository';
+import {
+  matchCurrentDue,
+  progressReportSorters,
+} from '../periodic-report/periodic-report.repository';
 import { ProjectType } from '../project/dto';
 import { projectSorters } from '../project/project.repository';
 import {
@@ -556,6 +560,28 @@ export const engagementSorters = defineSorters(IEngagement, {
       .with('node as eng')
       .match([node('eng'), relation('in', '', 'engagement'), node('node')])
       .apply(sortWith(projectSorters, input)),
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  'currentProgressReportDue.*': (query, input) =>
+    query
+      .subQuery('node', (sub) =>
+        sub
+          .with('node as parent')
+          .apply(matchCurrentDue(undefined, 'Progress'))
+          .return('collect(node) as reports'),
+      )
+      .subQuery('reports', (sub) =>
+        sub
+          .with('reports')
+          .raw('where size(reports) = 0')
+          .return('null as sortValue')
+          .union()
+          .with('reports')
+          .with('reports')
+          .raw('where size(reports) <> 0')
+          .raw('unwind reports as node')
+          .apply(sortWith(progressReportSorters, input)),
+      )
+      .return('sortValue'),
 });
 
 const matchNames = (query: Query) =>
