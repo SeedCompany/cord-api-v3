@@ -42,6 +42,7 @@ import {
 import { ProjectStatus } from '../project/dto';
 import {
   CreateLanguage,
+  EthnologueLanguage,
   Language,
   LanguageListInput,
   UpdateLanguage,
@@ -324,4 +325,17 @@ export class LanguageRepository extends DtoRepository<
   }
 }
 
-export const languageSorters = defineSorters(Language, {});
+export const languageSorters = defineSorters(Language, {
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  'ethnologue.*': (query, input) =>
+    query
+      .with('node as lang')
+      .match([
+        node('lang'),
+        relation('out', '', 'ethnologue'),
+        node('node', 'EthnologueLanguage'),
+      ])
+      .apply(sortWith(ethnologueSorters, input)),
+});
+
+const ethnologueSorters = defineSorters(EthnologueLanguage, {});
