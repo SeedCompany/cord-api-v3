@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { mapValues, simpleSwitch } from '@seedcompany/common';
+import { cleanJoin, mapValues, simpleSwitch } from '@seedcompany/common';
 import { inArray, node, Node, Query, relation } from 'cypher-query-builder';
 import { difference, pickBy } from 'lodash';
 import { DateTime } from 'luxon';
@@ -521,6 +521,18 @@ export class EngagementRepository extends CommonRepository {
 }
 
 export const engagementSorters = defineSorters(IEngagement, {
+  nameProjectFirst: (query) =>
+    query
+      .apply(matchNames)
+      .return<SortCol>(
+        multiPropsAsSortString(['projectName', 'languageName', 'dfn', 'dln']),
+      ),
+  nameProjectLast: (query) =>
+    query
+      .apply(matchNames)
+      .return<SortCol>(
+        multiPropsAsSortString(['languageName', 'dfn', 'dln', 'projectName']),
+      ),
   sensitivity: (query) =>
     query
       .match([node('project'), relation('out', '', 'engagement'), node('node')])
@@ -545,3 +557,37 @@ export const engagementSorters = defineSorters(IEngagement, {
       .match([node('eng'), relation('in', '', 'engagement'), node('node')])
       .apply(sortWith(projectSorters, input)),
 });
+
+const matchNames = (query: Query) =>
+  query
+    .match([
+      node('project'),
+      relation('out', '', 'name', ACTIVE),
+      node('projectName', 'Property'),
+    ])
+    .optionalMatch([
+      node('node'),
+      relation('out', '', 'language'),
+      node('', 'Language'),
+      relation('out', '', 'name', ACTIVE),
+      node('languageName', 'Property'),
+    ])
+    .optionalMatch([
+      [node('node'), relation('out', '', 'intern'), node('intern', 'User')],
+      [
+        node('intern'),
+        relation('out', '', 'displayFirstName', ACTIVE),
+        node('dfn', 'Property'),
+      ],
+      [
+        node('intern'),
+        relation('out', '', 'displayLastName', ACTIVE),
+        node('dln', 'Property'),
+      ],
+    ]);
+
+const multiPropsAsSortString = (props: string[]) =>
+  cleanJoin(
+    ' + ',
+    props.map((prop) => `coalesce(${prop}.value, "")`),
+  ) + ' as sortValue';
