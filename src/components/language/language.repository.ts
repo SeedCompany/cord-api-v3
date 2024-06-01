@@ -24,6 +24,7 @@ import {
   collect,
   createNode,
   createRelationships,
+  defineSorters,
   exp,
   filter,
   matchChangesetAndChangedProps,
@@ -35,7 +36,7 @@ import {
   paginate,
   rankSens,
   requestingUser,
-  sorting,
+  sortWith,
   variable,
 } from '~/core/database/query';
 import { ProjectStatus } from '../project/dto';
@@ -245,7 +246,7 @@ export class LanguageRepository extends DtoRepository<
           wrapContext: oncePerProject,
         }),
       )
-      .apply(sorting(Language, input))
+      .apply(sortWith(languageSorters, input))
       .apply(paginate(input, this.hydrate(session)))
       .first();
     return result!; // result from paginate() will always have 1 row.
@@ -322,3 +323,5 @@ export class LanguageRepository extends DtoRepository<
       );
   }
 }
+
+export const languageSorters = defineSorters(Language, {});

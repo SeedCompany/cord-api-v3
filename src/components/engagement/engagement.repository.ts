@@ -23,6 +23,7 @@ import {
   coalesce,
   createNode,
   createRelationships,
+  defineSorters,
   filter,
   INACTIVE,
   matchChangesetAndChangedProps,
@@ -31,7 +32,7 @@ import {
   oncePerProject,
   paginate,
   requestingUser,
-  sorting,
+  sortWith,
   whereNotDeletedInChangeset,
 } from '~/core/database/query';
 import { Privileges } from '../authorization';
@@ -379,7 +380,7 @@ export class EngagementRepository extends CommonRepository {
           wrapContext: oncePerProject,
         }),
       )
-      .apply(sorting(IEngagement, input))
+      .apply(sortWith(engagementSorters, input))
       .apply(paginate(input, this.hydrate(session, viewOfChangeset(changeset))))
       .first();
     return result!; // result from paginate() will always have 1 row.
@@ -514,3 +515,5 @@ export class EngagementRepository extends CommonRepository {
     return this.getConstraintsFor(IEngagement);
   }
 }
+
+export const engagementSorters = defineSorters(IEngagement, {});

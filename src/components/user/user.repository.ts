@@ -16,13 +16,14 @@ import {
   createNode,
   createProperty,
   deactivateProperty,
+  defineSorters,
   filter,
   matchProps,
   merge,
   paginate,
   property,
   requestingUser,
-  sorting,
+  sortWith,
 } from '~/core/database/query';
 import {
   AssignOrganizationToUser,
@@ -207,7 +208,7 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
         }),
       )
       .apply(this.privileges.forUser(session).filterToReadable())
-      .apply(sorting(User, input))
+      .apply(sortWith(userSorters, input))
       .apply(paginate(input, this.hydrate(session.userId)))
       .first();
     return result!; // result from paginate() will always have 1 row.
@@ -342,3 +343,5 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
     return this.hydrate(session);
   }
 }
+
+export const userSorters = defineSorters(User, {});
