@@ -2,11 +2,13 @@ import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
   Calculated,
+  DbSort,
   parentIdMiddleware,
   ResourceRelationsShape,
   SecuredProperty,
   SecuredProps,
 } from '~/common';
+import { sortingForEnumIndex } from '~/core/database/query';
 import { BaseNode } from '~/core/database/results';
 import { e } from '~/core/edgedb';
 import { RegisterResource } from '~/core/resources';
@@ -15,7 +17,10 @@ import { DefinedFile } from '../../file/dto';
 import { IPeriodicReport } from '../../periodic-report/dto/periodic-report.dto';
 import { ProgressReportCommunityStory } from './community-stories.dto';
 import { ProgressReportHighlight } from './highlights.dto';
-import { SecuredProgressReportStatus as SecuredStatus } from './progress-report-status.enum';
+import {
+  SecuredProgressReportStatus as SecuredStatus,
+  ProgressReportStatus as Status,
+} from './progress-report-status.enum';
 import { ProgressReportTeamNews } from './team-news.dto';
 
 @RegisterResource({ db: e.ProgressReport })
@@ -46,6 +51,7 @@ export class ProgressReport extends IPeriodicReport {
     middleware: [parentIdMiddleware],
   })
   @Calculated()
+  @DbSort(sortingForEnumIndex(Status))
   readonly status: SecuredStatus;
 }
 
