@@ -1,7 +1,6 @@
-import { entries } from '@seedcompany/common';
 import { Query } from 'cypher-query-builder';
 import { inspect, InspectOptionsStylized } from 'util';
-import { ID, isIdLike, MadeEnum, Many, ResourceShape } from '~/common';
+import { ID, isIdLike, Many } from '~/common';
 import { ResourceGranter } from '../authorization';
 import { action } from '../authorization/policy/builder/perm-granter';
 import { PropsGranterFn } from '../authorization/policy/builder/resource-granter';
@@ -10,20 +9,13 @@ import {
   eqlInLiteralSet,
   IsAllowedParams,
 } from '../authorization/policy/conditions';
-import { WorkflowEvent } from './dto';
-import { InternalTransition } from './transitions';
+import { Workflow } from './define-workflow';
 
-export function WorkflowEventGranter<
-  State extends string,
-  Names extends string,
-  EventClass extends ResourceShape<
-    ReturnType<typeof WorkflowEvent>['prototype']
-  >,
->(
-  state: MadeEnum<State>,
-  transitions: Record<Names, InternalTransition<State, Names, any>>,
-  _event: EventClass,
-) {
+export function WorkflowEventGranter<W extends Workflow>(workflow: W) {
+  type State = Workflow['state'];
+  type Names = Workflow['transition']['name'];
+  type EventClass = Workflow['eventResource'];
+
   abstract class WorkflowEventGranterClass extends ResourceGranter<EventClass> {
     get read() {
       return this[action]('read');
@@ -43,7 +35,7 @@ export function WorkflowEventGranter<
      * Can read & execute all transitions.
      */
     get executeAll(): this {
-      return this.transitions(entries(transitions).map(([k]) => k)).execute;
+      return this.transitions(workflow.transitions.map((t) => t.name)).execute;
     }
 
     /**
@@ -54,7 +46,7 @@ export function WorkflowEventGranter<
     }
 
     isTransitions(...transitions: Array<Many<Names>>) {
-      return TransitionCondition.fromName(transitions.flat() as Names[]);
+      return TransitionCondition.fromName(transitions.flat());
     }
 
     transitions(...transitions: Array<Many<Names>>) {
@@ -62,7 +54,7 @@ export function WorkflowEventGranter<
     }
 
     isState(...states: Array<Many<State>>) {
-      return TransitionCondition.fromEndState(states.flat() as State[]);
+      return TransitionCondition.fromEndState(states.flat());
     }
 
     state(...states: Array<Many<State>>) {
@@ -92,7 +84,7 @@ export function WorkflowEventGranter<
       return new TransitionCondition(
         [...allowed].map((name) => ({
           name,
-          key: [transitions[name].key],
+          key: [workflow.transitions.find((t) => t.name === name)!.key],
         })),
       );
     }
@@ -102,10 +94,10 @@ export function WorkflowEventGranter<
       return new TransitionCondition(
         [...allowed].map((endState) => ({
           endStatus: endState,
-          key: entries(transitions)
+          key: workflow.transitions
             // TODO handle dynamic to?
-            .filter(([_, t]) => typeof t.to === 'string' && allowed.has(t.to))
-            .map(([_, t]) => t.key),
+            .filter((t) => typeof t.to === 'string' && allowed.has(t.to))
+            .map((t) => t.key),
         })),
       );
     }

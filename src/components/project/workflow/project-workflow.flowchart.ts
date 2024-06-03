@@ -1,12 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { WorkflowFlowchart } from '../../workflow/workflow.flowchart';
-import { ProjectStep } from '../dto';
-import { ProjectWorkflowEvent } from './dto';
-import { Transitions } from './transitions';
+import { ProjectWorkflow } from './project-workflow';
 
 @Injectable()
 export class ProjectWorkflowFlowchart extends WorkflowFlowchart(
-  ProjectStep,
-  Transitions,
-  ProjectWorkflowEvent,
+  ProjectWorkflow,
 ) {}

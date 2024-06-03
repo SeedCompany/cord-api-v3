@@ -9,13 +9,13 @@ import { TransitionNotifier } from './notifiers';
 
 export type TransitionInput<State extends string, Context> = Merge<
   ReturnType<typeof PublicTransition<State>>['prototype'],
-  {
+  Readonly<{
     key?: ID | string;
     from?: Many<State>;
     to: State | DynamicState<State, Context>;
     conditions?: Many<TransitionCondition<Context>>;
     notifiers?: Many<TransitionNotifier<Context>>;
-  }
+  }>
 >;
 
 export type InternalTransition<
@@ -24,13 +24,13 @@ export type InternalTransition<
   Context,
 > = Merge<
   TransitionInput<State, Context>,
-  {
+  Readonly<{
     name: Names;
     key: ID;
     from?: ReadonlySet<State>;
     conditions?: ReadonlyArray<TransitionCondition<Context>>;
     notifiers?: ReadonlyArray<TransitionNotifier<Context>>;
-  }
+  }>
 >;
 
 export const defineTransitions =

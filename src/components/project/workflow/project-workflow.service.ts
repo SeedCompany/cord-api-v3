@@ -12,15 +12,11 @@ import {
   ProjectWorkflowEvent as WorkflowEvent,
 } from './dto';
 import { ProjectTransitionedEvent } from './events/project-transitioned.event';
+import { ProjectWorkflow } from './project-workflow';
 import { ProjectWorkflowRepository } from './project-workflow.repository';
-import { Transitions } from './transitions';
 
 @Injectable()
-export class ProjectWorkflowService extends WorkflowService(
-  ProjectStep,
-  Transitions,
-  WorkflowEvent,
-) {
+export class ProjectWorkflowService extends WorkflowService(ProjectWorkflow) {
   constructor(
     private readonly resources: ResourceLoader,
     private readonly repo: ProjectWorkflowRepository,

@@ -1,22 +1,9 @@
 import { startCase } from 'lodash';
 import open from 'open';
 import pako from 'pako';
-import { MadeEnum, ResourceShape } from '~/common';
-import { WorkflowEvent as WorkflowEventFn } from './dto';
-import { InternalTransition } from './transitions';
+import { Workflow } from './define-workflow';
 
-type WorkflowEvent = ReturnType<typeof WorkflowEventFn>['prototype'];
-
-export const WorkflowFlowchart = <
-  State extends string,
-  Names extends string,
-  Context,
-  EventClass extends ResourceShape<WorkflowEvent>,
->(
-  stateEnum: MadeEnum<State>,
-  transitions: Record<Names, InternalTransition<State, Names, Context>>,
-  eventResource: EventClass,
-) => {
+export const WorkflowFlowchart = <W extends Workflow>(workflow: W) => {
   abstract class WorkflowFlowchartClass {
     /** Generate a flowchart in mermaid markup. */
     generate() {
@@ -48,11 +35,11 @@ export const WorkflowFlowchart = <
           return str ? `classDef ${type} ${str}` : [];
         }),
         '',
-        ...Object.keys(stateEnum).map(
+        ...[...workflow.states].map(
           (status) => `${status}(${startCase(status)}):::State`,
         ),
         '',
-        ...Object.values(transitions).flatMap((t) => {
+        ...workflow.transitions.flatMap((t) => {
           return [
             `%% ${t.name}`,
             `${t.id}{{ ${t.label} }}:::${t.type}`,
