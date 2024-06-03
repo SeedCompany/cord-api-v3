@@ -23,6 +23,7 @@ import {
   ACTIVE,
   createNode,
   createRelationships,
+  defineSorters,
   deleteBaseNode,
   filter,
   matchPropsAndProjectSensAndScopedRoles,
@@ -33,8 +34,14 @@ import {
   Variable,
 } from '~/core/database/query';
 import { File } from '../file/dto';
-import { ProgressReportStatus as ProgressStatus } from '../progress-report/dto';
-import { ProgressReportExtraForPeriodicInterfaceRepository } from '../progress-report/progress-report-extra-for-periodic-interface.repository';
+import {
+  ProgressReport,
+  ProgressReportStatus as ProgressStatus,
+} from '../progress-report/dto';
+import {
+  ProgressReportExtraForPeriodicInterfaceRepository,
+  progressReportExtrasSorters,
+} from '../progress-report/progress-report-extra-for-periodic-interface.repository';
 import {
   IPeriodicReport,
   MergePeriodicReports,
@@ -445,3 +452,10 @@ export class PeriodicReportRepository extends DtoRepository<
         );
   }
 }
+
+export const periodicReportSorters = defineSorters(IPeriodicReport, {});
+
+export const progressReportSorters = defineSorters(ProgressReport, {
+  ...periodicReportSorters.matchers,
+  ...progressReportExtrasSorters.matchers,
+});
