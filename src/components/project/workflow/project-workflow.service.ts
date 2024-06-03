@@ -121,7 +121,7 @@ export class ProjectWorkflowService extends WorkflowService(ProjectWorkflow) {
     await this.executeTransition(
       {
         project: currentProject.id,
-        ...(transition ? { transition: transition.key } : { step }),
+        ...(transition ? { transition: transition.key } : { bypassTo: step }),
       },
       session,
     );
