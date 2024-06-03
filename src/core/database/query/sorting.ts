@@ -100,14 +100,23 @@ export const sortWith = <Field extends string>(
  *     // prefix before matching the nested sorters.
  *     .apply(sortWith(userSorters, input))
  * });
+ *
+ * // Sorters can "extend" others too.
+ * // Defined sorters have their declared matchers exposed on the `matchers` property.
+ * // So they can be spread/picked/etc. into a new object.
+ * // For example, say Manager extends User, and we want to add some sorters
+ * // for that type but keep the User ones as well.
+ * const managerSorters = defineSorters(Manager, {
+ *   ...userSorters.matchers,
+ *   // Add some new ones
+ * });
  * ```
  */
-export const defineSorters =
-  <TResourceStatic extends ResourceShape<any>>(
-    resource: TResourceStatic,
-    matchers: SortMatchers<SortFieldOf<TResourceStatic>>,
-  ) =>
-  ({ sort, order }: Sort<SortFieldOf<TResourceStatic>>) => {
+export const defineSorters = <TResourceStatic extends ResourceShape<any>>(
+  resource: TResourceStatic,
+  matchers: SortMatchers<SortFieldOf<TResourceStatic>>,
+) => {
+  const fn = ({ sort, order }: Sort<SortFieldOf<TResourceStatic>>) => {
     const transformer = getDbSortTransformer(resource, sort) ?? identity;
     const common = { sort, order, transformer };
 
@@ -129,6 +138,9 @@ export const defineSorters =
     const matcher = (isBaseNodeProp ? matchBasePropSort : matchPropSort)(sort);
     return { ...common, matcher };
   };
+  fn.matchers = matchers;
+  return fn;
+};
 
 const matchPropSort = (prop: string) => (query: Query) =>
   query
