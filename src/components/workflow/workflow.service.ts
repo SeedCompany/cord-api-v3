@@ -1,63 +1,37 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { entries, Nil } from '@seedcompany/common';
-import {
-  ID,
-  MadeEnum,
-  ResourceShape,
-  Session,
-  UnauthorizedException,
-} from '~/common';
+import { Nil } from '@seedcompany/common';
+import { ID, Session, UnauthorizedException } from '~/common';
 import { Privileges } from '../authorization';
-import {
-  ExecuteTransitionInput as ExecuteTransitionInputFn,
-  WorkflowEvent as WorkflowEventFn,
-} from './dto';
-import { InternalTransition } from './transitions';
+import { Workflow } from './define-workflow';
+import { ExecuteTransitionInput as ExecuteTransitionInputFn } from './dto';
 
 type ExecuteTransitionInput = ReturnType<
   typeof ExecuteTransitionInputFn
 >['prototype'];
-type WorkflowEvent = ReturnType<typeof WorkflowEventFn>['prototype'];
 
-export const WorkflowService = <
-  State extends string,
-  Names extends string,
-  Context,
-  EventClass extends ResourceShape<WorkflowEvent>,
->(
-  stateEnum: MadeEnum<State>,
-  transitionMap: Record<Names, InternalTransition<State, Names, Context>>,
-  eventResource: EventClass,
-) => {
+export const WorkflowService = <W extends Workflow>(workflow: W) => {
   @Injectable()
   abstract class WorkflowServiceClass {
     @Inject() protected readonly privileges: Privileges;
-    protected readonly transitions = entries(transitionMap).map(([_, t]) => t);
+    protected readonly workflow = workflow;
 
-    protected transitionByKey(
-      key: ID | Nil,
-      to: State,
-    ):
-      | (Omit<InternalTransition<State, Names, Context>, 'to'> & {
-          to: State;
-        })
-      | null {
+    protected transitionByKey(key: ID | Nil, to: W['state']) {
       if (!key) {
         return null;
       }
-      const t = this.transitions.find((t) => t.key === key);
+      const t = this.workflow.transitions.find((t) => t.key === key);
       if (!t) {
         return null;
       }
-      return { ...t, to };
+      return { ...(t as W['transition']), to };
     }
 
     protected async resolveAvailable(
-      currentState: State,
-      dynamicContext: Context,
+      currentState: W['state'],
+      dynamicContext: W['context'],
       session: Session,
     ) {
-      let available = this.transitions;
+      let available = this.workflow.transitions;
 
       // Filter out non applicable transitions
       available = available.filter((t) =>
@@ -65,7 +39,7 @@ export const WorkflowService = <
       );
 
       // Filter out transitions without authorization to execute
-      const p = this.privileges.for(session, eventResource);
+      const p = this.privileges.for(session, workflow.eventResource);
       available = available.filter((t) =>
         // I don't have a good way to type this right now.
         // Context usage is still fuzzy when conditions need different shapes.
@@ -112,20 +86,20 @@ export const WorkflowService = <
           }),
         ),
       );
-      return available.map((t) => ({
+      return available.map((t): W['resolvedTransition'] => ({
         ...t,
         to: typeof t.to !== 'string' ? resolvedTos.get(t.to)! : t.to,
       }));
     }
 
     canBypass(session: Session) {
-      return this.privileges.for(session, eventResource).can('create');
+      return this.privileges.for(session, workflow.eventResource).can('create');
     }
 
     protected getBypassIfValid(
       input: ExecuteTransitionInput,
       session: Session,
-    ): State | undefined {
+    ): W['state'] | undefined {
       if (!input.bypassTo) {
         return undefined;
       }

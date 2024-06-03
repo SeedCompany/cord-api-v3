@@ -1,29 +1,11 @@
-import {
-  cacheable,
-  cleanJoin,
-  entries,
-  simpleSwitch,
-} from '@seedcompany/common';
+import { cacheable, cleanJoin, simpleSwitch } from '@seedcompany/common';
 import open from 'open';
 import * as uuid from 'uuid';
 import { deflateSync as deflate } from 'zlib';
-import { MadeEnum, ResourceShape } from '~/common';
-import { WorkflowEvent as WorkflowEventFn } from './dto';
-import { InternalTransition } from './transitions';
+import { Workflow } from './define-workflow';
 import { DynamicState } from './transitions/dynamic-state';
 
-type WorkflowEvent = ReturnType<typeof WorkflowEventFn>['prototype'];
-
-export const WorkflowFlowchart = <
-  State extends string,
-  Names extends string,
-  Context,
-  EventClass extends ResourceShape<WorkflowEvent>,
->(
-  stateEnum: MadeEnum<State>,
-  transitions: Record<Names, InternalTransition<State, Names, Context>>,
-  eventResource: EventClass,
-) => {
+export const WorkflowFlowchart = <W extends Workflow>(workflow: W) => {
   abstract class WorkflowFlowchartClass {
     /** Generate a flowchart in mermaid markup. */
     generateMarkup() {
@@ -44,18 +26,18 @@ export const WorkflowFlowchart = <
         },
       };
       const dynamicToId = cacheable(
-        new Map<DynamicState<State, Context>, string>(),
+        new Map<DynamicState<W['state'], W['context']>, string>(),
         () => uuid.v1().replaceAll(/-/g, ''),
       );
-      const usedStates = new Set<State>();
-      const useState = (state: State) => {
+      const usedStates = new Set<W['state']>();
+      const useState = (state: W['state']) => {
         usedStates.add(state);
         return state;
       };
 
       const graph = cleanJoin('\n', [
         'flowchart TD',
-        ...entries(transitions).flatMap(([_, t]) => {
+        ...workflow.transitions.flatMap((t) => {
           const key = t.key.replaceAll(/-/g, '');
           const to =
             typeof t.to === 'string'
@@ -79,8 +61,8 @@ export const WorkflowFlowchart = <
           ].join('\n');
         }),
         '',
-        ...[...stateEnum].map((state) => {
-          const { label } = stateEnum.entry(state);
+        ...[...workflow.states].map((state) => {
+          const { label } = workflow.states.entry(state);
           const className = `${usedStates.has(state) ? '' : 'Unused'}State`;
           return `${state}(${label}):::${className}`;
         }),
