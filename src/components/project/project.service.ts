@@ -262,12 +262,14 @@ export class ProjectService {
       .for(session, resolveProjectType(currentProject), currentProject)
       .verifyChanges(changes, { pathPrefix: 'project' });
 
+    let updated = currentProject;
     if (changedStep) {
       await this.workflow.executeTransitionLegacy(
         this.secure(currentProject, session),
         changedStep,
         session,
       );
+      updated = await this.readOneUnsecured(input.id, session, changeset);
     }
 
     if (changes.primaryLocationId) {
@@ -301,10 +303,10 @@ export class ProjectService {
       'Field region not found',
     );
 
-    const result = await this.repo.update(currentProject, changes, changeset);
+    updated = await this.repo.update(updated, changes, changeset);
 
     const event = new ProjectUpdatedEvent(
-      result,
+      updated,
       currentProject,
       input,
       session,
