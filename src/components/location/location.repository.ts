@@ -14,10 +14,11 @@ import {
   ACTIVE,
   createNode,
   createRelationships,
+  defineSorters,
   matchProps,
   merge,
   paginate,
-  sorting,
+  sortWith,
 } from '~/core/database/query';
 import { FileService } from '../file';
 import { FileId } from '../file/dto';
@@ -160,7 +161,7 @@ export class LocationRepository extends DtoRepository(Location) {
     const result = await this.db
       .query()
       .matchNode('node', 'Location')
-      .apply(sorting(Location, input))
+      .apply(sortWith(locationSorters, input))
       .apply(paginate(input, this.hydrate()))
       .first();
     return result!; // result from paginate() will always have 1 row.
@@ -216,7 +217,7 @@ export class LocationRepository extends DtoRepository(Location) {
         relation('in', '', rel, ACTIVE),
         node(`${label.toLowerCase()}`, label, { id }),
       ])
-      .apply(sorting(Location, input))
+      .apply(sortWith(locationSorters, input))
       .apply(paginate(input, this.hydrate()))
       .first();
     return result!; // result from paginate() will always have 1 row.
@@ -231,3 +232,5 @@ export class LocationRepository extends DtoRepository(Location) {
     return !!result;
   }
 }
+
+export const locationSorters = defineSorters(Location, {});

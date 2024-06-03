@@ -13,6 +13,7 @@ export * from './cypher-expression';
 export * from './cypher-functions';
 export * from './full-text';
 export * from './lists';
+export * from './sorting';
 export * from './matching';
 export * from './deletes';
 export * from './match-project-based-props';

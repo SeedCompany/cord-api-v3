@@ -100,7 +100,7 @@ export const SortablePaginationInput = <SortKey extends string = string>({
       description: 'The field in which to sort on',
       defaultValue: defaultSort,
     })
-    @Matches(/^[A-Za-z0-9_]+$/)
+    @Matches(/^[A-Za-z0-9_.]+$/)
     readonly sort: SortKey = defaultSort;
 
     @Field(() => Order, {

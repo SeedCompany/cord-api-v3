@@ -23,6 +23,7 @@ import {
   ACTIVE,
   createNode,
   createRelationships,
+  defineSorters,
   deleteBaseNode,
   filter,
   matchPropsAndProjectSensAndScopedRoles,
@@ -33,8 +34,14 @@ import {
   Variable,
 } from '~/core/database/query';
 import { File } from '../file/dto';
-import { ProgressReportStatus as ProgressStatus } from '../progress-report/dto';
-import { ProgressReportExtraForPeriodicInterfaceRepository } from '../progress-report/progress-report-extra-for-periodic-interface.repository';
+import {
+  ProgressReport,
+  ProgressReportStatus as ProgressStatus,
+} from '../progress-report/dto';
+import {
+  ProgressReportExtraForPeriodicInterfaceRepository,
+  progressReportExtrasSorters,
+} from '../progress-report/progress-report-extra-for-periodic-interface.repository';
 import {
   IPeriodicReport,
   MergePeriodicReports,
@@ -202,26 +209,7 @@ export class PeriodicReportRepository extends DtoRepository<
   }
 
   matchCurrentDue(parentId: ID | Variable, reportType: ReportType) {
-    return (query: Query) =>
-      query.comment`matchCurrentDue()`
-        .match([
-          [
-            node('baseNode', 'BaseNode', { id: parentId }),
-            relation('out', '', 'report', ACTIVE),
-            node('node', `${reportType}Report`),
-            relation('out', '', 'end', ACTIVE),
-            node('end', 'Property'),
-          ],
-          [
-            node('node'),
-            relation('out', '', 'start', ACTIVE),
-            node('start', 'Property'),
-          ],
-        ])
-        .raw(`WHERE end.value < date()`)
-        .with('node, start')
-        .orderBy('start.value', 'desc')
-        .limit(1);
+    return matchCurrentDue(parentId, reportType);
   }
 
   async getByDate(
@@ -273,7 +261,7 @@ export class PeriodicReportRepository extends DtoRepository<
     const res = await this.db
       .query()
       .match([
-        node('baseNode', 'BaseNode', { id: parentId }),
+        node('parent', 'BaseNode', { id: parentId }),
         relation('out', '', 'report', ACTIVE),
         node('node', `${reportType}Report`),
         relation('out', '', 'end', ACTIVE),
@@ -445,3 +433,33 @@ export class PeriodicReportRepository extends DtoRepository<
         );
   }
 }
+
+export const matchCurrentDue =
+  (parentId: ID | Variable | undefined, reportType: ReportType) =>
+  (query: Query) =>
+    query.comment`matchCurrentDue()`
+      .match([
+        [
+          node('parent', 'BaseNode', parentId ? { id: parentId } : undefined),
+          relation('out', '', 'report', ACTIVE),
+          node('node', `${reportType}Report`),
+          relation('out', '', 'end', ACTIVE),
+          node('end', 'Property'),
+        ],
+        [
+          node('node'),
+          relation('out', '', 'start', ACTIVE),
+          node('start', 'Property'),
+        ],
+      ])
+      .raw(`WHERE end.value < date()`)
+      .with('node, start')
+      .orderBy('start.value', 'desc')
+      .limit(1);
+
+export const periodicReportSorters = defineSorters(IPeriodicReport, {});
+
+export const progressReportSorters = defineSorters(ProgressReport, {
+  ...periodicReportSorters.matchers,
+  ...progressReportExtrasSorters.matchers,
+});
