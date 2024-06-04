@@ -9,6 +9,7 @@ import { member, Policy, Role, sensMediumOrLower } from '../util';
     (p) => p.rootDirectory.edit.when(sensMediumOrLower).read,
   ),
   r.ProjectWorkflowEvent.read.transitions(
+    'Early Conversations -> Pending Finance Confirmation',
     'Pending Concept Approval -> Prep for Consultant Endorsement',
     'Pending Concept Approval -> Early Conversations',
     'Pending Concept Approval -> Rejected',
