@@ -12,13 +12,18 @@ export type MadeEnum<
   Values extends string,
   ValueDeclaration = EnumValueDeclarationShape,
   Extra = unknown,
-> = {
-  readonly [Value in Values & string]: Value;
-} & EnumHelpers<
+> = EnumHelpers<
   Values,
   ValueDeclaration & ImplicitValueDeclarationShape<Values>
 > &
-  Readonly<Extra>;
+  Readonly<Extra> &
+  // Allow direct access to the values if they're strict.
+  // For generic `string` we don't allow this.
+  // This allows strict values to be compatible with generic values.
+  // MadeEnum<string> = MadeEnum<X>
+  (string extends Values
+    ? unknown // ignore addition
+    : { readonly [Value in Values & string]: Value });
 
 interface EnumOptions<
   ValueDeclaration extends EnumValueDeclarationShape,
@@ -217,7 +222,7 @@ type NormalizedValueDeclaration<Declaration extends EnumValueDeclarationShape> =
 interface EnumHelpers<Values extends string, ValueDeclaration> {
   readonly values: ReadonlySet<Values>;
   readonly entries: ReadonlyArray<Readonly<ValueDeclaration>>;
-  readonly entry: (value: Values) => Readonly<ValueDeclaration>;
+  readonly entry: <V extends Values>(value: V) => Readonly<ValueDeclaration>;
   readonly has: <In extends string>(
     value: In & {},
   ) => value is In & Values & {};
