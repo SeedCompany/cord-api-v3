@@ -195,7 +195,7 @@ export const ProjectWorkflow = defineWorkflow({
   'Pending Regional Director Approval -> Pending Zone Director Approval': {
     from: Step.PendingRegionalDirectorApproval,
     to: Step.PendingZoneDirectorApproval,
-    label: 'Approve for Zonal Director Review',
+    label: 'Approve for Field Ops Director Review',
     type: Type.Approve,
     conditions: IsNotMultiplication,
   },
