@@ -1,4 +1,11 @@
-import { cacheable, cleanJoin, cmpBy, simpleSwitch } from '@seedcompany/common';
+import {
+  cacheable,
+  cleanJoin,
+  cmpBy,
+  groupBy,
+  many,
+  simpleSwitch,
+} from '@seedcompany/common';
 import open from 'open';
 import * as uuid from 'uuid';
 import { deflateSync as deflate } from 'zlib';
@@ -35,7 +42,11 @@ export const WorkflowFlowchart = <W extends Workflow>(workflow: W) => {
         return state;
       };
 
-      const transitionLines = workflow.transitions
+      const transitionEndIds = cacheable(new Map<string, string>(), () =>
+        uuid.v1().replaceAll(/-/g, ''),
+      );
+
+      const transitions = workflow.transitions
         .toSorted(
           cmpBy((t) => {
             const endState =
@@ -45,8 +56,10 @@ export const WorkflowFlowchart = <W extends Workflow>(workflow: W) => {
             );
           }),
         )
-        .flatMap((t) => {
-          const key = t.key.replaceAll(/-/g, '');
+        .map((t) => {
+          const endStateId =
+            typeof t.to === 'string' ? useState(t.to) : dynamicToId(t.to);
+          const endId = transitionEndIds(t.label + '\0' + endStateId);
           const to =
             typeof t.to === 'string'
               ? `--> ${useState(t.to)}`
@@ -55,19 +68,32 @@ export const WorkflowFlowchart = <W extends Workflow>(workflow: W) => {
                   .map(useState)
                   .join(' & ')}`
               : `--> ${dynamicToId(t.to)}`;
+          const endHalf = `${endId}{{ ${t.label} }}:::${t.type} ${to}`;
+
           const conditions = t.conditions
             ? '--"' + t.conditions.map((c) => c.description).join('\\n') + '"'
             : '';
           const from = (t.from ? [...t.from].map(useState) : ['*(*)']).join(
             ' & ',
           );
-          return [
-            `%% ${t.name}`,
-            `${key}{{ ${t.label} }}:::${t.type}`,
-            `${from} ${conditions}--- ${key} ${to}`,
-            '',
-          ].join('\n');
+          const startHalf = `${from} ${conditions}--- ${endId}`;
+
+          return { transition: t, startHalf, endHalf };
         });
+
+      const transitionStarts = groupBy(transitions, (t) => t.startHalf).map(
+        (ts) =>
+          ts
+            .map((t) => '%% ' + t.transition.name)
+            .concat(ts[0].startHalf)
+            .join('\n'),
+      );
+      const transitionEnds = groupBy(transitions, (t) => t.endHalf).map((ts) =>
+        ts
+          .map((t) => '%% ' + t.transition.name)
+          .concat(ts[0].endHalf)
+          .join('\n'),
+      );
 
       const stateLines = [...workflow.states].map((state) => {
         const { label } = workflow.states.entry(state);
@@ -82,14 +108,15 @@ export const WorkflowFlowchart = <W extends Workflow>(workflow: W) => {
         return str ? `classDef ${type} ${str}` : [];
       });
 
-      const graph = cleanJoin('\n', [
-        'flowchart TD',
-        ...stateLines,
-        '',
-        ...transitionLines,
-        '',
-        ...styleLines,
-      ]);
+      const graph = [
+        'flowchart TD', //
+        stateLines,
+        transitionStarts,
+        transitionEnds,
+        styleLines,
+      ]
+        .flatMap((x) => [...many(x), ''])
+        .join('\n');
 
       return graph;
     }
