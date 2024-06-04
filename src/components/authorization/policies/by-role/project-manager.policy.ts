@@ -95,7 +95,6 @@ const stepsUntilFinancialEndorsement = takeWhile(
     ).execute,
     r.ProjectWorkflowEvent.read.transitions(
       'Early Conversations -> Pending Regional Director Approval',
-      'Early Conversations -> Pending Finance Confirmation',
       'Early Conversations -> Pending Concept Approval',
       'Early Conversations -> Did Not Develop',
       'Prep for Consultant Endorsement -> Pending Consultant Endorsement',
