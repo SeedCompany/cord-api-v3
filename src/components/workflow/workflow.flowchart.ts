@@ -35,44 +35,50 @@ export const WorkflowFlowchart = <W extends Workflow>(workflow: W) => {
         return state;
       };
 
+      const transitionLines = workflow.transitions.flatMap((t) => {
+        const key = t.key.replaceAll(/-/g, '');
+        const to =
+          typeof t.to === 'string'
+            ? `--> ${useState(t.to)}`
+            : t.to.relatedStates
+            ? `-."${t.to.description}".-> ${t.to.relatedStates
+                .map(useState)
+                .join(' & ')}`
+            : `--> ${dynamicToId(t.to)}`;
+        const conditions = t.conditions
+          ? '--"' + t.conditions.map((c) => c.description).join('\\n') + '"'
+          : '';
+        const from = (t.from ? [...t.from].map(useState) : ['*(*)']).join(
+          ' & ',
+        );
+        return [
+          `%% ${t.name}`,
+          `${key}{{ ${t.label} }}:::${t.type}`,
+          `${from} ${conditions}--- ${key} ${to}`,
+          '',
+        ].join('\n');
+      });
+
+      const stateLines = [...workflow.states].map((state) => {
+        const { label } = workflow.states.entry(state);
+        const className = `${usedStates.has(state) ? '' : 'Unused'}State`;
+        return `${state}(${label}):::${className}`;
+      });
+
+      const styleLines = Object.entries(styles).flatMap(([type, style]) => {
+        const str = Object.entries(style)
+          .map(([key, value]) => `${key}:${value}`)
+          .join(',');
+        return str ? `classDef ${type} ${str}` : [];
+      });
+
       const graph = cleanJoin('\n', [
         'flowchart TD',
-        ...workflow.transitions.flatMap((t) => {
-          const key = t.key.replaceAll(/-/g, '');
-          const to =
-            typeof t.to === 'string'
-              ? `--> ${useState(t.to)}`
-              : t.to.relatedStates
-              ? `-."${t.to.description}".-> ${t.to.relatedStates
-                  .map(useState)
-                  .join(' & ')}`
-              : `--> ${dynamicToId(t.to)}`;
-          const conditions = t.conditions
-            ? '--"' + t.conditions.map((c) => c.description).join('\\n') + '"'
-            : '';
-          const from = (t.from ? [...t.from].map(useState) : ['*(*)']).join(
-            ' & ',
-          );
-          return [
-            `%% ${t.name}`,
-            `${key}{{ ${t.label} }}:::${t.type}`,
-            `${from} ${conditions}--- ${key} ${to}`,
-            '',
-          ].join('\n');
-        }),
+        ...stateLines,
         '',
-        ...[...workflow.states].map((state) => {
-          const { label } = workflow.states.entry(state);
-          const className = `${usedStates.has(state) ? '' : 'Unused'}State`;
-          return `${state}(${label}):::${className}`;
-        }),
+        ...transitionLines,
         '',
-        ...Object.entries(styles).flatMap(([type, style]) => {
-          const str = Object.entries(style)
-            .map(([key, value]) => `${key}:${value}`)
-            .join(',');
-          return str ? `classDef ${type} ${str}` : [];
-        }),
+        ...styleLines,
       ]);
 
       return graph;
