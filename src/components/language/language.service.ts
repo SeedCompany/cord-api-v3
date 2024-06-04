@@ -13,7 +13,7 @@ import {
 import { HandleIdLookup, ILogger, Logger } from '~/core';
 import { Privileges } from '../authorization';
 import { EngagementService } from '../engagement';
-import { EngagementStatus } from '../engagement/dto';
+import { EngagementListInput, EngagementStatus } from '../engagement/dto';
 import { LocationService } from '../location';
 import { LocationListInput, SecuredLocationList } from '../location/dto';
 import { ProjectService } from '../project';
@@ -162,6 +162,22 @@ export class LanguageService {
       ...projectListOutput,
       canRead: true,
       canCreate: this.privileges.for(session, IProject).can('create'),
+    };
+  }
+
+  async listEngagements(
+    language: Language,
+    input: EngagementListInput,
+    session: Session,
+  ) {
+    const list = await this.engagementService.list(
+      { ...input, filter: { ...input.filter, languageId: language.id } },
+      session,
+    );
+    return {
+      ...list,
+      canRead: true,
+      canCreate: false,
     };
   }
 
