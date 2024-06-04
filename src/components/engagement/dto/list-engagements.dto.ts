@@ -23,6 +23,8 @@ export abstract class EngagementFilters {
 
   readonly projectId?: ID;
 
+  readonly languageId?: ID;
+
   readonly partnerId?: ID<'Partner'>;
 }
 

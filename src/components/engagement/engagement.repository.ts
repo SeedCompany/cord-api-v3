@@ -381,6 +381,11 @@ export class EngagementRepository extends CommonRepository {
             relation('out', '', 'partner'),
             node('', 'Partner', { id }),
           ]),
+          languageId: filter.pathExists((id) => [
+            node('node'),
+            relation('out', '', 'language'),
+            node('', 'Language', { id }),
+          ]),
         }),
       )
       .apply(
