@@ -13,7 +13,10 @@ export const ProjectStep = makeEnum({
     'PendingFinancialEndorsement',
     'FinalizingProposal',
     'PendingRegionalDirectorApproval',
-    'PendingZoneDirectorApproval',
+    {
+      value: 'PendingZoneDirectorApproval',
+      label: 'Pending Field Operations Approval',
+    },
     'PendingFinanceConfirmation',
     'OnHoldFinanceConfirmation',
     'DidNotDevelop',
