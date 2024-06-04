@@ -1,4 +1,4 @@
-import { cacheable, cleanJoin, simpleSwitch } from '@seedcompany/common';
+import { cacheable, cleanJoin, cmpBy, simpleSwitch } from '@seedcompany/common';
 import open from 'open';
 import * as uuid from 'uuid';
 import { deflateSync as deflate } from 'zlib';
@@ -35,29 +35,39 @@ export const WorkflowFlowchart = <W extends Workflow>(workflow: W) => {
         return state;
       };
 
-      const transitionLines = workflow.transitions.flatMap((t) => {
-        const key = t.key.replaceAll(/-/g, '');
-        const to =
-          typeof t.to === 'string'
-            ? `--> ${useState(t.to)}`
-            : t.to.relatedStates
-            ? `-."${t.to.description}".-> ${t.to.relatedStates
-                .map(useState)
-                .join(' & ')}`
-            : `--> ${dynamicToId(t.to)}`;
-        const conditions = t.conditions
-          ? '--"' + t.conditions.map((c) => c.description).join('\\n') + '"'
-          : '';
-        const from = (t.from ? [...t.from].map(useState) : ['*(*)']).join(
-          ' & ',
-        );
-        return [
-          `%% ${t.name}`,
-          `${key}{{ ${t.label} }}:::${t.type}`,
-          `${from} ${conditions}--- ${key} ${to}`,
-          '',
-        ].join('\n');
-      });
+      const transitionLines = workflow.transitions
+        .toSorted(
+          cmpBy((t) => {
+            const endState =
+              typeof t.to === 'string' ? t.to : t.to.relatedStates?.[0];
+            return workflow.states.entries.findIndex(
+              (e) => e.value === endState,
+            );
+          }),
+        )
+        .flatMap((t) => {
+          const key = t.key.replaceAll(/-/g, '');
+          const to =
+            typeof t.to === 'string'
+              ? `--> ${useState(t.to)}`
+              : t.to.relatedStates
+              ? `-."${t.to.description}".-> ${t.to.relatedStates
+                  .map(useState)
+                  .join(' & ')}`
+              : `--> ${dynamicToId(t.to)}`;
+          const conditions = t.conditions
+            ? '--"' + t.conditions.map((c) => c.description).join('\\n') + '"'
+            : '';
+          const from = (t.from ? [...t.from].map(useState) : ['*(*)']).join(
+            ' & ',
+          );
+          return [
+            `%% ${t.name}`,
+            `${key}{{ ${t.label} }}:::${t.type}`,
+            `${from} ${conditions}--- ${key} ${to}`,
+            '',
+          ].join('\n');
+        });
 
       const stateLines = [...workflow.states].map((state) => {
         const { label } = workflow.states.entry(state);
