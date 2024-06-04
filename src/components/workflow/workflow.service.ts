@@ -121,7 +121,7 @@ export const findTransition = <T extends { key: ID }>(
 ) => {
   const transition = transitions.find((t) => t.key === needle);
   if (!transition) {
-    throw new UnauthorizedException('This transition is not available');
+    throw new UnauthorizedException('This transition does not exist.');
   }
   return transition;
 };
