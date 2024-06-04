@@ -76,7 +76,7 @@ export const WorkflowFlowchart = <W extends Workflow>(workflow: W) => {
           const from = (t.from ? [...t.from].map(useState) : ['*(*)']).join(
             ' & ',
           );
-          const startHalf = `${from} ${conditions}--- ${endId}`;
+          const startHalf = `${from} ${conditions}--> ${endId}`;
 
           return { transition: t, startHalf, endHalf };
         });
