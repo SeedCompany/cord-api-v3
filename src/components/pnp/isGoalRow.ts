@@ -1,6 +1,6 @@
 import { Book, parseScripture } from '@seedcompany/scripture';
 import { Cell } from '~/common/xlsx.util';
-import { ScriptureRange } from '../scripture';
+import { ScriptureRange } from '../scripture/dto';
 import { PlanningSheet } from './planning-sheet';
 import { ProgressSheet } from './progress-sheet';
 

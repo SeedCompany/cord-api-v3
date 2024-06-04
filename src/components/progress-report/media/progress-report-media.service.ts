@@ -6,7 +6,8 @@ import {
   Session,
   UnsecuredDto,
 } from '~/common';
-import { DbTypeOf, ResourceLoader } from '~/core';
+import { ResourceLoader } from '~/core';
+import { DbTypeOf } from '~/core/database';
 import { Privileges, withVariant } from '../../authorization';
 import { FileService } from '../../file';
 import { MediaService } from '../../file/media/media.service';
@@ -125,9 +126,7 @@ export class ProgressReportMediaService {
       .verifyCan('delete');
 
     await this.repo.deleteNode(id);
-    if (await this.repo.isVariantGroupEmpty(media.variantGroup)) {
-      await this.repo.deleteNode(media.variantGroup);
-    }
+    await this.repo.deleteVariantGroupIfEmpty(media.variantGroup);
 
     return media.report;
   }

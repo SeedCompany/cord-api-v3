@@ -2,7 +2,7 @@ import { applyDecorators } from '@nestjs/common';
 import { Field, FieldOptions } from '@nestjs/graphql';
 import { Transform } from 'class-transformer';
 import { uniq } from 'lodash';
-import { rankSens } from '../core/database/query';
+import { rankSens } from '~/core/database/query';
 import { DbSort } from './db-sort.decorator';
 import { EnumType, makeEnum } from './make-enum';
 

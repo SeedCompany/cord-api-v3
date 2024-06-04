@@ -1,8 +1,7 @@
 import { faker } from '@faker-js/faker';
 import { times } from 'lodash';
-import { isValidId } from '../src/common';
-import { Role } from '../src/components/authorization/dto/role.dto';
-import { FundingAccount } from '../src/components/funding-account';
+import { isValidId, Role } from '~/common';
+import { FundingAccount } from '../src/components/funding-account/dto';
 import {
   createFundingAccount,
   createSession,

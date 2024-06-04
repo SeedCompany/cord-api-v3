@@ -2559,6 +2559,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@sec-ant/readable-stream@npm:^0.4.1":
+  version: 0.4.1
+  resolution: "@sec-ant/readable-stream@npm:0.4.1"
+  checksum: 10c0/64e9e9cf161e848067a5bf60cdc04d18495dc28bb63a8d9f8993e4dd99b91ad34e4b563c85de17d91ffb177ec17a0664991d2e115f6543e73236a906068987af
+  languageName: node
+  linkType: hard
+
 "@seedcompany/common@npm:>0.3 <1, @seedcompany/common@npm:>=0.10.0 <1.0.0, @seedcompany/common@npm:>=0.13.1 <1, @seedcompany/common@npm:>=0.3.0 <1.0.0":
   version: 0.13.2
   resolution: "@seedcompany/common@npm:0.13.2"
@@ -2687,10 +2694,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sindresorhus/is@npm:^5.2.0":
-  version: 5.6.0
-  resolution: "@sindresorhus/is@npm:5.6.0"
-  checksum: 10c0/66727344d0c92edde5760b5fd1f8092b717f2298a162a5f7f29e4953e001479927402d9d387e245fb9dc7d3b37c72e335e93ed5875edfc5203c53be8ecba1b52
+"@sindresorhus/is@npm:^6.3.1":
+  version: 6.3.1
+  resolution: "@sindresorhus/is@npm:6.3.1"
+  checksum: 10c0/2432ca411aafe7840818493360ba795db07ce7e8efd2bc994736fdbda175e99fa7d6614c7f41a72b28bae68603a86dbd0d810ba45d1ba7c5881929d54049360c
   languageName: node
   linkType: hard
 
@@ -3502,10 +3509,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/http-cache-semantics@npm:^4.0.2":
-  version: 4.0.3
-  resolution: "@types/http-cache-semantics@npm:4.0.3"
-  checksum: 10c0/46e8e4d9ff8d032f0a12d08fb7250fc67ede0d566f9a5b3d92384098fb46a3892d3ec377600a1d73ea8a67a979b882f7b9ff5e29524fb76b8e1c44a0dbe04ecf
+"@types/http-cache-semantics@npm:^4.0.4":
+  version: 4.0.4
+  resolution: "@types/http-cache-semantics@npm:4.0.4"
+  checksum: 10c0/51b72568b4b2863e0fe8d6ce8aad72a784b7510d72dc866215642da51d84945a9459fa89f49ec48f1e9a1752e6a78e85a4cda0ded06b1c73e727610c925f9ce6
   languageName: node
   linkType: hard
 
@@ -4709,18 +4716,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cacheable-request@npm:^10.2.8":
-  version: 10.2.14
-  resolution: "cacheable-request@npm:10.2.14"
+"cacheable-request@npm:^12.0.1":
+  version: 12.0.1
+  resolution: "cacheable-request@npm:12.0.1"
   dependencies:
-    "@types/http-cache-semantics": "npm:^4.0.2"
-    get-stream: "npm:^6.0.1"
+    "@types/http-cache-semantics": "npm:^4.0.4"
+    get-stream: "npm:^9.0.1"
     http-cache-semantics: "npm:^4.1.1"
-    keyv: "npm:^4.5.3"
+    keyv: "npm:^4.5.4"
     mimic-response: "npm:^4.0.0"
-    normalize-url: "npm:^8.0.0"
+    normalize-url: "npm:^8.0.1"
     responselike: "npm:^3.0.0"
-  checksum: 10c0/41b6658db369f20c03128227ecd219ca7ac52a9d24fc0f499cc9aa5d40c097b48b73553504cebd137024d957c0ddb5b67cf3ac1439b136667f3586257763f88d
+  checksum: 10c0/3ccc26519c8dd0821fcb21fa00781e55f05ab6e1da1487fbbee9c8c03435a3cf72c29a710a991cebe398fb9a5274e2a772fc488546d402db8dc21310764ed83a
   languageName: node
   linkType: hard
 
@@ -5402,7 +5409,7 @@ __metadata:
     fastest-levenshtein: "npm:^1.0.16"
     file-type: "npm:^18.6.0"
     glob: "npm:^10.3.10"
-    got: "npm:^13.0.0"
+    got: "npm:^14.3.0"
     graphql: "npm:^16.8.1"
     graphql-parse-resolve-info: "npm:^4.14.0"
     graphql-scalars: "npm:^1.22.4"
@@ -5423,7 +5430,7 @@ __metadata:
     luxon: "npm:^3.4.3"
     mime: "npm:beta"
     nanoid: "npm:^4.0.2"
-    neo4j-driver: "npm:^5.14.0"
+    neo4j-driver: "npm:^5.20.0"
     p-retry: "npm:^5.1.2"
     pako: "npm:^2.1.0"
     pkg-up: "npm:^4.0.0"
@@ -5435,6 +5442,7 @@ __metadata:
     rimraf: "npm:^5.0.5"
     rxjs: "npm:^7.8.1"
     sanitize-filename: "npm:^1.6.3"
+    title-case: "npm:^4.3.1"
     ts-essentials: "npm:^9.4.1"
     ts-jest: "npm:^29.1.1"
     ts-morph: "npm:^19.0.0"
@@ -7000,10 +7008,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"form-data-encoder@npm:^2.1.2":
-  version: 2.1.4
-  resolution: "form-data-encoder@npm:2.1.4"
-  checksum: 10c0/4c06ae2b79ad693a59938dc49ebd020ecb58e4584860a90a230f80a68b026483b022ba5e4143cff06ae5ac8fd446a0b500fabc87bbac3d1f62f2757f8dabcaf7
+"form-data-encoder@npm:^4.0.2":
+  version: 4.0.2
+  resolution: "form-data-encoder@npm:4.0.2"
+  checksum: 10c0/559d3130e265316452434eaf68d68560fb36392ff4d04614683419de4fb43c3dbe152dc303599fae382ce24d3451a6d3d289d3bcc182ae3d8ad32e7ce8e35e53
   languageName: node
   linkType: hard
 
@@ -7182,6 +7190,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"get-stream@npm:^9.0.1":
+  version: 9.0.1
+  resolution: "get-stream@npm:9.0.1"
+  dependencies:
+    "@sec-ant/readable-stream": "npm:^0.4.1"
+    is-stream: "npm:^4.0.1"
+  checksum: 10c0/d70e73857f2eea1826ac570c3a912757dcfbe8a718a033fa0c23e12ac8e7d633195b01710e0559af574cbb5af101009b42df7b6f6b29ceec8dbdf7291931b948
+  languageName: node
+  linkType: hard
+
 "get-symbol-description@npm:^1.0.0":
   version: 1.0.0
   resolution: "get-symbol-description@npm:1.0.0"
@@ -7323,22 +7341,22 @@ __metadata:
   languageName: node
   linkType: hard
 
-"got@npm:^13.0.0":
-  version: 13.0.0
-  resolution: "got@npm:13.0.0"
+"got@npm:^14.3.0":
+  version: 14.3.0
+  resolution: "got@npm:14.3.0"
   dependencies:
-    "@sindresorhus/is": "npm:^5.2.0"
+    "@sindresorhus/is": "npm:^6.3.1"
     "@szmarczak/http-timer": "npm:^5.0.1"
     cacheable-lookup: "npm:^7.0.0"
-    cacheable-request: "npm:^10.2.8"
+    cacheable-request: "npm:^12.0.1"
     decompress-response: "npm:^6.0.0"
-    form-data-encoder: "npm:^2.1.2"
-    get-stream: "npm:^6.0.1"
-    http2-wrapper: "npm:^2.1.10"
+    form-data-encoder: "npm:^4.0.2"
+    get-stream: "npm:^8.0.1"
+    http2-wrapper: "npm:^2.2.1"
     lowercase-keys: "npm:^3.0.0"
-    p-cancelable: "npm:^3.0.0"
+    p-cancelable: "npm:^4.0.1"
     responselike: "npm:^3.0.0"
-  checksum: 10c0/d6a4648dc46f1f9df2637b8730d4e664349a93cb6df62c66dfbb48f7887ba79742a1cc90739a4eb1c15f790ca838ff641c5cdecdc877993627274aeb0f02b92d
+  checksum: 10c0/c2fe6a1411cd6f3334bda48b4b027035e0c4a0587344c652f193d4ca7b782d43ec29b1781c796572f4621676eeafe36d2bd9e371cb7e1d1982e65f3630a4dcb6
   languageName: node
   linkType: hard
 
@@ -7628,13 +7646,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"http2-wrapper@npm:^2.1.10":
-  version: 2.2.0
-  resolution: "http2-wrapper@npm:2.2.0"
+"http2-wrapper@npm:^2.2.1":
+  version: 2.2.1
+  resolution: "http2-wrapper@npm:2.2.1"
   dependencies:
     quick-lru: "npm:^5.1.1"
     resolve-alpn: "npm:^1.2.0"
-  checksum: 10c0/cb4a41a9b4948a607bb27b4e745af5396e01a5e074da4c7ea0d3ce41acd9cef69de373a67d321728bb651fd9701a23c80e8991c9ad5128dab10e9da28a8b6c72
+  checksum: 10c0/7207201d3c6e53e72e510c9b8912e4f3e468d3ecc0cf3bf52682f2aac9cd99358b896d1da4467380adc151cf97c412bedc59dc13dae90c523f42053a7449eedb
   languageName: node
   linkType: hard
 
@@ -8172,6 +8190,13 @@ __metadata:
   version: 3.0.0
   resolution: "is-stream@npm:3.0.0"
   checksum: 10c0/eb2f7127af02ee9aa2a0237b730e47ac2de0d4e76a4a905a50a11557f2339df5765eaea4ceb8029f1efa978586abe776908720bfcb1900c20c6ec5145f6f29d8
+  languageName: node
+  linkType: hard
+
+"is-stream@npm:^4.0.1":
+  version: 4.0.1
+  resolution: "is-stream@npm:4.0.1"
+  checksum: 10c0/2706c7f19b851327ba374687bc4a3940805e14ca496dc672b9629e744d143b1ad9c6f1b162dece81c7bfbc0f83b32b61ccc19ad2e05aad2dd7af347408f60c7f
   languageName: node
   linkType: hard
 
@@ -9030,7 +9055,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"keyv@npm:^4.5.3":
+"keyv@npm:^4.5.3, keyv@npm:^4.5.4":
   version: 4.5.4
   resolution: "keyv@npm:4.5.4"
   dependencies:
@@ -10286,32 +10311,50 @@ __metadata:
   languageName: node
   linkType: hard
 
-"neo4j-driver-bolt-connection@npm:5.14.0":
-  version: 5.14.0
-  resolution: "neo4j-driver-bolt-connection@npm:5.14.0"
+"neo4j-driver-bolt-connection@npm:5.20.0":
+  version: 5.20.0
+  resolution: "neo4j-driver-bolt-connection@npm:5.20.0"
   dependencies:
     buffer: "npm:^6.0.3"
-    neo4j-driver-core: "npm:5.14.0"
+    neo4j-driver-core: "npm:5.20.0"
     string_decoder: "npm:^1.3.0"
-  checksum: 10c0/5e070a4b307473ffc51d90fc3423e173af3e8ce11b398feca5e86b22655e3ed8b113af8e13e1fae2e08a1bea24a00db84c0c6fbee37b6897589a15ebf712348b
+  checksum: 10c0/a60b51192a37a5c86b7fcdbac4ef56a647c3ebe8596ab813b7354188ee3659426f14aaad7fa1025ebc5e07eecabe89c8f2e33d95663c9cd8e49263c12c287c22
   languageName: node
   linkType: hard
 
-"neo4j-driver-core@npm:5.14.0":
-  version: 5.14.0
-  resolution: "neo4j-driver-core@npm:5.14.0"
-  checksum: 10c0/e432a8e7054ba7ecd4d4767bcb0d5a8ea79c35235ae383c5b5fb6195920714e8c124659cc116493e60b86565f4a3ab7e32211f14ea175cb659451327e6309df6
-  languageName: node
-  linkType: hard
-
-"neo4j-driver@npm:^5.14.0, neo4j-driver@npm:^5.9.0":
-  version: 5.14.0
-  resolution: "neo4j-driver@npm:5.14.0"
+"neo4j-driver-bolt-connection@patch:neo4j-driver-bolt-connection@npm%3A5.20.0#~/.yarn/patches/neo4j-driver-bolt-connection-npm-5.20.0-1f7809f435.patch":
+  version: 5.20.0
+  resolution: "neo4j-driver-bolt-connection@patch:neo4j-driver-bolt-connection@npm%3A5.20.0#~/.yarn/patches/neo4j-driver-bolt-connection-npm-5.20.0-1f7809f435.patch::version=5.20.0&hash=c7fd0b"
   dependencies:
-    neo4j-driver-bolt-connection: "npm:5.14.0"
-    neo4j-driver-core: "npm:5.14.0"
+    buffer: "npm:^6.0.3"
+    neo4j-driver-core: "npm:5.20.0"
+    string_decoder: "npm:^1.3.0"
+  checksum: 10c0/81c33ad9203a1d948deffca4d98b6ed162e46f9bdf1e2867fa4e9361a6e63c7b61208432d84ccd7ef9c0fcac7ff8b9e8ccc80226a28d102f195fe53d5d517347
+  languageName: node
+  linkType: hard
+
+"neo4j-driver-core@npm:5.20.0":
+  version: 5.20.0
+  resolution: "neo4j-driver-core@npm:5.20.0"
+  checksum: 10c0/162ef4953bf04643c7d21b777b5cc0a9fb01aad7e9098bae5eb272de9d88d877808c43406f04db4c245306f501af31f7f5d9d3115f0f635758af394bae5fba17
+  languageName: node
+  linkType: hard
+
+"neo4j-driver-core@patch:neo4j-driver-core@npm%3A5.20.0#~/.yarn/patches/neo4j-driver-core-npm-5.20.0-99216f6938.patch":
+  version: 5.20.0
+  resolution: "neo4j-driver-core@patch:neo4j-driver-core@npm%3A5.20.0#~/.yarn/patches/neo4j-driver-core-npm-5.20.0-99216f6938.patch::version=5.20.0&hash=60e3d3"
+  checksum: 10c0/957b21375a430ae1973dac04adcdd2806595e5811c70ed46d2273f6df36c977ce94a7dedbf0dd2d7b5bf724ae06c1f86a29550ddabd6c532304257ecbe74a0c8
+  languageName: node
+  linkType: hard
+
+"neo4j-driver@npm:^5.20.0, neo4j-driver@npm:^5.9.0":
+  version: 5.20.0
+  resolution: "neo4j-driver@npm:5.20.0"
+  dependencies:
+    neo4j-driver-bolt-connection: "npm:5.20.0"
+    neo4j-driver-core: "npm:5.20.0"
     rxjs: "npm:^7.8.1"
-  checksum: 10c0/e6b5def70af63a756c23e0e10153c95bf454b07540024bbe166b9b5bd954cfca0e79c2be101ec7bf1832d1a58650ac74acb330f903e40b3213a7727a83cb64d0
+  checksum: 10c0/1ed4cc3bcf4d0a5f6742aa5a2224ee1f1006ccedd5e62e3c15d612e4dd46d1ec67f1039a69aa008123da1ec74ff5369f760cb9e068b49b1624efbcdf622671a1
   languageName: node
   linkType: hard
 
@@ -10444,10 +10487,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"normalize-url@npm:^8.0.0":
-  version: 8.0.0
-  resolution: "normalize-url@npm:8.0.0"
-  checksum: 10c0/09582d56acd562d89849d9239852c2aff225c72be726556d6883ff36de50006803d32a023c10e917bcc1c55f73f3bb16434f67992fe9b61906a3db882192753c
+"normalize-url@npm:^8.0.1":
+  version: 8.0.1
+  resolution: "normalize-url@npm:8.0.1"
+  checksum: 10c0/eb439231c4b84430f187530e6fdac605c5048ef4ec556447a10c00a91fc69b52d8d8298d9d608e68d3e0f7dc2d812d3455edf425e0f215993667c3183bcab1ef
   languageName: node
   linkType: hard
 
@@ -10698,10 +10741,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"p-cancelable@npm:^3.0.0":
-  version: 3.0.0
-  resolution: "p-cancelable@npm:3.0.0"
-  checksum: 10c0/948fd4f8e87b956d9afc2c6c7392de9113dac817cb1cecf4143f7a3d4c57ab5673614a80be3aba91ceec5e4b69fd8c869852d7e8048bc3d9273c4c36ce14b9aa
+"p-cancelable@npm:^4.0.1":
+  version: 4.0.1
+  resolution: "p-cancelable@npm:4.0.1"
+  checksum: 10c0/12636623f46784ba962b6fe7a1f34d021f1d9a2cc12c43e270baa715ea872d5c8c7d9f086ed420b8b9817e91d9bbe92c14c90e5dddd4a9968c81a2a7aef7089d
   languageName: node
   linkType: hard
 
@@ -12358,6 +12401,13 @@ __metadata:
   version: 2.3.8
   resolution: "through@npm:2.3.8"
   checksum: 10c0/4b09f3774099de0d4df26d95c5821a62faee32c7e96fb1f4ebd54a2d7c11c57fe88b0a0d49cf375de5fee5ae6bf4eb56dbbf29d07366864e2ee805349970d3cc
+  languageName: node
+  linkType: hard
+
+"title-case@npm:^4.3.1":
+  version: 4.3.1
+  resolution: "title-case@npm:4.3.1"
+  checksum: 10c0/10bb67f3ae5cf4043b4050f5c4b3ae7fdaeef6c55bcb646d08a3567d4233f02d10f3ea55add7d8dbf55e1a320b49b79cb0b5d4ce39701a500de62cc8860d9bc8
   languageName: node
   linkType: hard
 

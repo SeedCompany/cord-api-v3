@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import { ID, isValidId } from '../../src/common';
+import { ID, isValidId } from '~/common';
 import {
   CreateProjectChangeRequest,
   ProjectChangeRequest,

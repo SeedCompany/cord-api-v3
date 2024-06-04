@@ -63,7 +63,7 @@ export class StoryService {
   }
 
   async delete(id: ID, session: Session): Promise<void> {
-    const story = await this.readOne(id, session);
+    const story = await this.repo.readOne(id);
 
     this.privileges.for(session, Story, story).verifyCan('delete');
 

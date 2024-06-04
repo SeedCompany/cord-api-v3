@@ -1,7 +1,5 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { e } from '~/core/edgedb';
-import { RegisterResource } from '~/core/resources';
 import {
   DbLabel,
   DbUnique,
@@ -11,7 +9,9 @@ import {
   SecuredProperty,
   SecuredProps,
   SecuredString,
-} from '../../../common';
+} from '~/common';
+import { e } from '~/core/edgedb';
+import { RegisterResource } from '~/core/resources';
 
 @RegisterResource({ db: e.FundingAccount })
 @ObjectType({

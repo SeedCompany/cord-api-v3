@@ -4,12 +4,12 @@ import { IsPositive, ValidateNested } from 'class-validator';
 import { stripIndent } from 'common-tags';
 import { uniq } from 'lodash';
 import { DateTime } from 'luxon';
-import { ID, IdField, NameField } from '../../../common';
+import { ID, IdField, NameField } from '~/common';
 import {
   ScriptureField,
   ScriptureRangeInput,
   UnspecifiedScripturePortionInput,
-} from '../../scripture';
+} from '../../scripture/dto';
 import { ProductMedium } from './product-medium.enum';
 import { ProductMethodology } from './product-methodology.enum';
 import { ProductPurpose } from './product-purpose.enum';

@@ -1,7 +1,7 @@
 import { DateTimeUnit } from 'luxon';
-import { DateInterval } from '../../../common';
-import { EventsHandler, IEventHandler, ILogger, Logger } from '../../../core';
-import { projectRange } from '../../project';
+import { DateInterval } from '~/common';
+import { EventsHandler, IEventHandler, ILogger, Logger } from '~/core';
+import { projectRange } from '../../project/dto';
 import { ProjectUpdatedEvent } from '../../project/events';
 import { ReportPeriod, ReportType } from '../dto';
 import { PeriodicReportService } from '../periodic-report.service';

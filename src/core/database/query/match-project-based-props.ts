@@ -1,11 +1,11 @@
 import { oneLine } from 'common-tags';
 import { node, Query, relation } from 'cypher-query-builder';
+import { ID, Sensitivity, Session } from '~/common';
 import { QueryFragment, requestingUser, Variable } from '~/core/database/query';
-import { ID, Sensitivity, Session } from '../../../common';
 import {
   GlobalScopedRole,
   ScopedRole,
-} from '../../../components/authorization';
+} from '../../../components/authorization/dto';
 import { ProjectType } from '../../../components/project/dto/project-type.enum';
 import {
   apoc,
@@ -100,7 +100,10 @@ export const matchProjectScopedRoles =
     );
 
 export const matchProjectSens =
-  (projectVar = 'project') =>
+  <const Output extends string = 'sensitivity'>(
+    projectVar = 'project',
+    output: Output = 'sensitivity' as Output,
+  ) =>
   <R>(query: Query<R>) =>
     query.comment`matchProjectSens()`.subQuery((sub) =>
       sub
@@ -114,7 +117,7 @@ export const matchProjectSens =
           relation('out', '', 'sensitivity', ACTIVE),
           node('projSens', 'Property'),
         ])
-        .return('projSens.value as sensitivity')
+        .return(`projSens.value as ${output}`)
         .union()
         .with(projectVar) // import
         .with(projectVar) // needed for where clause
@@ -134,7 +137,7 @@ export const matchProjectSens =
         .orderBy(rankSens('langSens.value'), 'DESC')
         // Prevent single row with project from expanding to more here via multiple engagement matches
         .raw('LIMIT 1')
-        .return(coalesce('langSens.value', '"High"').as('sensitivity'))
+        .return(coalesce('langSens.value', '"High"').as(output))
         // If the cardinality of this subquery is zero, no rows will be returned at all.
         // So, if no projects are matched (optional matching), we still need to have a cardinality > 0 in order to continue
         // https://neo4j.com/developer/kb/conditional-cypher-execution/#_the_subquery_must_return_a_row_for_the_outer_query_to_continue
@@ -143,7 +146,7 @@ export const matchProjectSens =
         .with(projectVar)
         .raw(`WHERE ${projectVar} IS NULL`)
         // TODO this doesn't work for languages without projects. They should use their own sensitivity not High.
-        .return<{ sensitivity: Sensitivity }>('"High" as sensitivity'),
+        .return<Record<Output, Sensitivity>>(`"High" as ${output}`),
     );
 
 export const matchUserGloballyScopedRoles =

@@ -9,19 +9,18 @@ import {
   ServerException,
   Session,
   UnsecuredDto,
-} from '../../common';
-import { HandleIdLookup, ILogger, Logger, ResourceResolver } from '../../core';
-import { compareNullable, ifDiff, isSame } from '../../core/database/changes';
+} from '~/common';
+import { HandleIdLookup, ILogger, Logger, ResourceResolver } from '~/core';
+import { compareNullable, ifDiff, isSame } from '~/core/database/changes';
 import { Privileges } from '../authorization';
 import {
   getTotalVerseEquivalents,
   getTotalVerses,
   getVerseEquivalentsFromUnspecified,
   isScriptureEqual,
-  ScriptureRange,
   ScriptureReferenceService,
-  UnspecifiedScripturePortion,
 } from '../scripture';
+import { ScriptureRange, UnspecifiedScripturePortion } from '../scripture/dto';
 import {
   AnyProduct,
   asProductType,
@@ -33,6 +32,7 @@ import {
   getAvailableSteps,
   MethodologyToApproach,
   OtherProduct,
+  ProducibleType,
   Product,
   ProductApproach,
   ProductCompletionDescriptionSuggestionsInput,
@@ -45,7 +45,6 @@ import {
   UpdateOtherProduct,
   UpdateBaseProduct as UpdateProduct,
 } from './dto';
-import { ProducibleType } from './dto/producible.dto';
 import { HydratedProductRow, ProductRepository } from './product.repository';
 
 @Injectable()

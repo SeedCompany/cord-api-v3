@@ -9,10 +9,12 @@ import {
   Variant,
   VariantOf,
 } from '~/common';
-import { LinkTo, SetDbType } from '~/core';
+import { LinkTo } from '~/core';
+import { SetDbType } from '~/core/database';
 import { e } from '~/core/edgedb';
 import { RegisterResource } from '~/core/resources';
-import { FileId, Media } from '../../../file';
+import { FileId } from '../../../file/dto';
+import { Media } from '../../../file/media/media.dto';
 import { ProgressReport } from '../../dto';
 import { ProgressReportHighlight } from '../../dto/highlights.dto';
 import { MediaCategory } from '../media-category.enum';

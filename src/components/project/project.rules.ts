@@ -8,24 +8,31 @@ import { Promisable } from 'type-fest';
 import {
   ID,
   maybeMany,
+  Role,
   ServerException,
   Session,
   UnauthorizedException,
   UnsecuredDto,
-} from '../../common';
-import { ConfigService, DatabaseService, ILogger, Logger } from '../../core';
-import { ACTIVE, INACTIVE } from '../../core/database/query';
+} from '~/common';
+import { ConfigService, ILogger, Logger } from '~/core';
+import { DatabaseService } from '~/core/database';
+import { ACTIVE, INACTIVE, merge } from '~/core/database/query';
 import { AuthenticationService } from '../authentication';
-import { Role, withoutScope } from '../authorization';
-import { EngagementService, EngagementStatus } from '../engagement';
-import { ProjectType } from '../project';
-import { User, UserService } from '../user';
+import { withoutScope } from '../authorization/dto';
+import { EngagementService } from '../engagement';
+import { EngagementStatus } from '../engagement/dto';
+import { OrganizationService } from '../organization';
+import { Organization } from '../organization/dto';
+import { UserService } from '../user';
+import { User } from '../user/dto';
 import {
   Project,
   ProjectStep,
   ProjectStepTransition,
+  ProjectType,
   TransitionType,
 } from './dto';
+import { FinancialApproverRepository } from './financial-approver';
 import { ProjectService } from './project.service';
 
 type EmailAddress = string;
@@ -54,8 +61,9 @@ export interface EmailNotification {
     'email' | 'displayFirstName' | 'displayLastName' | 'timezone'
   >;
   changedBy: Pick<User, 'id' | 'displayFirstName' | 'displayLastName'>;
-  project: Pick<Project, 'id' | 'modifiedAt' | 'name' | 'step'>;
+  project: Pick<Project, 'id' | 'modifiedAt' | 'name' | 'step' | 'type'>;
   previousStep?: ProjectStep;
+  primaryPartnerName?: string | undefined;
 }
 
 const rolesThatCanBypassWorkflow: Role[] = [Role.Administrator];
@@ -70,9 +78,11 @@ export class ProjectRules {
     private readonly projectService: ProjectService & {},
     @Inject(forwardRef(() => EngagementService))
     private readonly engagements: EngagementService & {},
+    private readonly organizations: OrganizationService,
     @Inject(forwardRef(() => AuthenticationService))
     private readonly auth: AuthenticationService & {},
     private readonly configService: ConfigService,
+    private readonly financialApproverRepo: FinancialApproverRepository,
     // eslint-disable-next-line @seedcompany/no-unused-vars
     @Logger('project:rules') private readonly logger: ILogger,
   ) {}
@@ -85,6 +95,10 @@ export class ProjectRules {
   ): Promise<StepRule> {
     const mostRecentPreviousStep = (steps: ProjectStep[]) =>
       this.getMostRecentPreviousStep(id, steps, changeset);
+    const financialApprovers = async () =>
+      (await this.financialApproverRepo.read(projectType)).map(
+        ({ user }) => user.id,
+      );
     const isMultiplication =
       projectType === ProjectType.MultiplicationTranslation;
 
@@ -405,7 +419,7 @@ export class ProjectRules {
               type: TransitionType.Approve,
               label: 'Confirm Project 🎉',
               notifiers: async () => [
-                ...(await this.getRoleEmails(Role.Controller)),
+                ...(await financialApprovers()),
                 'project_approval@tsco.org',
                 'projects@tsco.org',
               ],
@@ -413,7 +427,7 @@ export class ProjectRules {
           ],
           getNotifiers: async () => [
             ...(await this.getProjectTeamUserIds(id)),
-            ...(await this.getRoleEmails(Role.Controller)),
+            ...(await financialApprovers()),
           ],
         };
       case ProjectStep.OnHoldFinanceConfirmation:
@@ -425,7 +439,7 @@ export class ProjectRules {
               type: TransitionType.Approve,
               label: 'Confirm Project 🎉',
               notifiers: async () => [
-                ...(await this.getRoleEmails(Role.Controller)),
+                ...(await financialApprovers()),
                 'project_approval@tsco.org',
                 'projects@tsco.org',
               ],
@@ -443,7 +457,7 @@ export class ProjectRules {
           ],
           getNotifiers: async () => [
             ...(await this.getProjectTeamUserIds(id)),
-            ...(await this.getRoleEmails(Role.Controller)),
+            ...(await financialApprovers()),
           ],
         };
       case ProjectStep.Active:
@@ -500,7 +514,7 @@ export class ProjectRules {
           ],
           getNotifiers: async () => [
             ...(await this.getProjectTeamUserIds(id)),
-            ...(await this.getRoleEmails(Role.Controller)),
+            ...(await financialApprovers()),
             'project_extension@tsco.org',
             'project_revision@tsco.org',
           ],
@@ -598,7 +612,7 @@ export class ProjectRules {
           ],
           getNotifiers: async () => [
             ...(await this.getProjectTeamUserIds(id)),
-            ...(await this.getRoleEmails(Role.Controller)),
+            ...(await financialApprovers()),
             'project_extension@tsco.org',
             'project_revision@tsco.org',
           ],
@@ -1046,22 +1060,6 @@ export class ProjectRules {
     return users?.ids ?? [];
   }
 
-  private async getRoleEmails(role: Role): Promise<string[]> {
-    const emails = await this.db
-      .query()
-      .match([
-        node('email', 'EmailAddress'),
-        relation('in', '', 'email', ACTIVE),
-        node('user', 'User'),
-        relation('out', '', 'roles', ACTIVE),
-        node('role', 'Property', { value: role }),
-      ])
-      .return<{ emails: string[] }>('collect(email.value) as emails')
-      .first();
-
-    return emails?.emails ?? [];
-  }
-
   /** Of the given steps which one was the most recent previous step */
   private async getMostRecentPreviousStep(
     id: ID,
@@ -1105,6 +1103,35 @@ export class ProjectRules {
     return result.steps;
   }
 
+  async getPrimaryOrganizationByProjectId(id: ID) {
+    const result = await this.db
+      .query()
+      .match([
+        node('project', 'Project', { id }),
+        relation('out', '', 'partnership', ACTIVE),
+        node('partnership', 'Partnership'),
+        relation('out', '', 'primary', ACTIVE),
+        node('primary', 'Property', { value: true }),
+      ])
+      .with('partnership')
+      .match([
+        node('partnership'),
+        relation('out', '', 'partner', ACTIVE),
+        node('', 'Partner'),
+        relation('out', '', 'organization', ACTIVE),
+        node('org', 'Organization'),
+        relation('out', '', 'name', ACTIVE),
+        node('name', 'Property'),
+      ])
+      .return<{ dto: UnsecuredDto<Organization> }>(
+        merge('org', {
+          name: 'name.value',
+        }).as('dto'),
+      )
+      .first();
+    return result?.dto ?? null;
+  }
+
   private async getEmailNotificationObject(
     changedById: ID,
     projectId: ID,
@@ -1141,11 +1168,24 @@ export class ProjectRules {
       recipientSession,
     );
 
+    const organization = await this.getPrimaryOrganizationByProjectId(
+      projectId,
+    );
+    let orgName;
+    if (organization) {
+      const org = await this.organizations.readOne(
+        organization.id,
+        recipientSession,
+      );
+      orgName = org.name.value;
+    }
+
     return {
       changedBy,
       project,
       recipient,
       previousStep,
+      primaryPartnerName: orgName,
     };
   }
 }

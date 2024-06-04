@@ -9,7 +9,7 @@ import { Context } from '@nestjs/graphql';
 import { uniq } from 'lodash';
 import { DateTime } from 'luxon';
 import { NoSessionException } from '../components/authentication/no-session.exception';
-import { ScopedRole } from '../components/authorization';
+import { ScopedRole } from '../components/authorization/dto';
 import { GqlContextType } from './context.type';
 import { UnauthenticatedException } from './exceptions';
 import { ID } from './id-field';

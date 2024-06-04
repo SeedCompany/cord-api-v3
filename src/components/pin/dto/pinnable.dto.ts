@@ -1,5 +1,5 @@
 import { Field, InterfaceType } from '@nestjs/graphql';
-import { ID, IdField } from '../../../common';
+import { ID, IdField } from '~/common';
 
 @InterfaceType({
   description: 'An item that can be pinned',

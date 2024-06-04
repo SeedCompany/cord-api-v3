@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { mapValues, simpleSwitch } from '@seedcompany/common';
+import { cleanJoin, mapValues, simpleSwitch } from '@seedcompany/common';
 import { inArray, node, Node, Query, relation } from 'cypher-query-builder';
 import { difference, pickBy } from 'lodash';
 import { DateTime } from 'luxon';
@@ -15,27 +15,37 @@ import {
   typenameForView,
   UnsecuredDto,
   viewOfChangeset,
-} from '../../common';
-import { CommonRepository, OnIndex } from '../../core';
-import { ChangesOf, getChanges } from '../../core/database/changes';
+} from '~/common';
+import { CommonRepository, OnIndex } from '~/core/database';
+import { ChangesOf, getChanges } from '~/core/database/changes';
 import {
   ACTIVE,
   coalesce,
   createNode,
   createRelationships,
+  defineSorters,
+  filter,
   INACTIVE,
   matchChangesetAndChangedProps,
+  matchProjectSens,
   matchPropsAndProjectSensAndScopedRoles,
   merge,
   oncePerProject,
   paginate,
   requestingUser,
-  sorting,
+  SortCol,
+  sortWith,
   whereNotDeletedInChangeset,
-} from '../../core/database/query';
+} from '~/core/database/query';
 import { Privileges } from '../authorization';
-import { FileId } from '../file';
-import { ProjectType } from '../project';
+import { FileId } from '../file/dto';
+import { languageSorters } from '../language/language.repository';
+import {
+  matchCurrentDue,
+  progressReportSorters,
+} from '../periodic-report/periodic-report.repository';
+import { ProjectType } from '../project/dto';
+import { projectSorters } from '../project/project.repository';
 import {
   CreateInternshipEngagement,
   CreateLanguageEngagement,
@@ -338,7 +348,7 @@ export class EngagementRepository extends CommonRepository {
           .match([
             node('project', 'Project', pickBy({ id: input.filter.projectId })),
             relation('out', '', 'engagement', ACTIVE),
-            node('node', 'Engagement'),
+            node('node', label),
           ])
           .apply(whereNotDeletedInChangeset(changeset))
           .return(['node', 'project'])
@@ -359,11 +369,31 @@ export class EngagementRepository extends CommonRepository {
       )
       .match(requestingUser(session))
       .apply(
+        filter.builder(input.filter, {
+          type: filter.skip,
+          projectId: filter.skip,
+          partnerId: filter.pathExists((id) => [
+            node('node'),
+            relation('in', '', 'engagement'),
+            node('', 'Project'),
+            relation('out', '', 'partnership', ACTIVE),
+            node('', 'Partnership'),
+            relation('out', '', 'partner'),
+            node('', 'Partner', { id }),
+          ]),
+          languageId: filter.pathExists((id) => [
+            node('node'),
+            relation('out', '', 'language'),
+            node('', 'Language', { id }),
+          ]),
+        }),
+      )
+      .apply(
         this.privileges.for(session, IEngagement).filterToReadable({
           wrapContext: oncePerProject,
         }),
       )
-      .apply(sorting(IEngagement, input))
+      .apply(sortWith(engagementSorters, input))
       .apply(paginate(input, this.hydrate(session, viewOfChangeset(changeset))))
       .first();
     return result!; // result from paginate() will always have 1 row.
@@ -498,3 +528,97 @@ export class EngagementRepository extends CommonRepository {
     return this.getConstraintsFor(IEngagement);
   }
 }
+
+export const engagementSorters = defineSorters(IEngagement, {
+  nameProjectFirst: (query) =>
+    query
+      .apply(matchNames)
+      .return<SortCol>(
+        multiPropsAsSortString(['projectName', 'languageName', 'dfn', 'dln']),
+      ),
+  nameProjectLast: (query) =>
+    query
+      .apply(matchNames)
+      .return<SortCol>(
+        multiPropsAsSortString(['languageName', 'dfn', 'dln', 'projectName']),
+      ),
+  sensitivity: (query) =>
+    query
+      .match([node('project'), relation('out', '', 'engagement'), node('node')])
+      .apply(matchProjectSens())
+      .return<{ sortValue: unknown }>('sensitivity as sortValue'),
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  'language.*': (query, input) =>
+    query
+      .with('node as eng')
+      .match([node('eng'), relation('out', '', 'language'), node('node')])
+      .apply(sortWith(languageSorters, input))
+      // Use null for all internship engagements
+      .union()
+      .with('node')
+      .with('node as eng')
+      .raw('where eng:InternshipEngagement')
+      .return<SortCol>('null as sortValue'),
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  'project.*': (query, input) =>
+    query
+      .with('node as eng')
+      .match([node('eng'), relation('in', '', 'engagement'), node('node')])
+      .apply(sortWith(projectSorters, input)),
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  'currentProgressReportDue.*': (query, input) =>
+    query
+      .subQuery('node', (sub) =>
+        sub
+          .with('node as parent')
+          .apply(matchCurrentDue(undefined, 'Progress'))
+          .return('collect(node) as reports'),
+      )
+      .subQuery('reports', (sub) =>
+        sub
+          .with('reports')
+          .raw('where size(reports) = 0')
+          .return('null as sortValue')
+          .union()
+          .with('reports')
+          .with('reports')
+          .raw('where size(reports) <> 0')
+          .raw('unwind reports as node')
+          .apply(sortWith(progressReportSorters, input)),
+      )
+      .return('sortValue'),
+});
+
+const matchNames = (query: Query) =>
+  query
+    .match([
+      node('project'),
+      relation('out', '', 'name', ACTIVE),
+      node('projectName', 'Property'),
+    ])
+    .optionalMatch([
+      node('node'),
+      relation('out', '', 'language'),
+      node('', 'Language'),
+      relation('out', '', 'name', ACTIVE),
+      node('languageName', 'Property'),
+    ])
+    .optionalMatch([
+      [node('node'), relation('out', '', 'intern'), node('intern', 'User')],
+      [
+        node('intern'),
+        relation('out', '', 'displayFirstName', ACTIVE),
+        node('dfn', 'Property'),
+      ],
+      [
+        node('intern'),
+        relation('out', '', 'displayLastName', ACTIVE),
+        node('dln', 'Property'),
+      ],
+    ]);
+
+const multiPropsAsSortString = (props: string[]) =>
+  cleanJoin(
+    ' + ',
+    props.map((prop) => `coalesce(${prop}.value, "")`),
+  ) + ' as sortValue';

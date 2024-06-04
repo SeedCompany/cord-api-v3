@@ -1,8 +1,7 @@
 import { faker } from '@faker-js/faker';
-import { CalendarDate } from '../src/common';
-import { Role } from '../src/components/authorization';
-import { PartnerType } from '../src/components/partner';
-import { ProjectStep } from '../src/components/project';
+import { CalendarDate, Role } from '~/common';
+import { PartnerType } from '../src/components/partner/dto';
+import { ProjectStep } from '../src/components/project/dto';
 import {
   approveProjectChangeRequest,
   createFundingAccount,

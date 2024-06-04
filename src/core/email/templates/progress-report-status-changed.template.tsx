@@ -4,14 +4,13 @@ import {
   Section,
   Text,
 } from '@seedcompany/nestjs-email/templates';
-import { startCase } from 'lodash';
 import { fiscalQuarter, fiscalYear } from '~/common';
-import { Language } from '../../../components/language';
-import { PeriodicReport } from '../../../components/periodic-report';
+import { Language } from '../../../components/language/dto';
+import { PeriodicReport } from '../../../components/periodic-report/dto';
 import { ProgressReportStatus } from '../../../components/progress-report/dto';
 import { ProgressReportWorkflowEvent } from '../../../components/progress-report/workflow/dto/workflow-event.dto';
-import { Project } from '../../../components/project';
-import { User } from '../../../components/user';
+import { Project } from '../../../components/project/dto';
+import { User } from '../../../components/user/dto';
 import { EmailTemplate, Heading } from './base';
 import { FormattedDateTime } from './formatted-date-time';
 import { useFrontendUrl } from './frontend-url';
@@ -49,8 +48,12 @@ export function ProgressReportStatusChanged({
     report.start,
   )} FY${fiscalYear(report.start)}`;
 
-  const oldStatus = startCase(previousStatusVal) || undefined;
-  const newStatus = startCase(newStatusVal) || undefined;
+  const oldStatus = previousStatusVal
+    ? ProgressReportStatus.entry(previousStatusVal).label
+    : undefined;
+  const newStatus = newStatusVal
+    ? ProgressReportStatus.entry(newStatusVal).label
+    : undefined;
 
   return (
     <EmailTemplate

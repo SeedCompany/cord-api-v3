@@ -1,11 +1,11 @@
 import { faker } from '@faker-js/faker';
 import { all as countries } from 'iso-3166-1';
-import { isValidId } from '../../src/common';
+import { isValidId } from '~/common';
 import {
   CreateLocation,
   Location,
   LocationType,
-} from '../../src/components/location';
+} from '../../src/components/location/dto';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
 import { gql } from './gql-tag';

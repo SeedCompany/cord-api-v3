@@ -2,7 +2,7 @@ import { generateId, isValidId } from '~/common';
 import {
   CreateFieldRegion,
   FieldRegion,
-} from '../../src/components/field-region';
+} from '../../src/components/field-region/dto';
 import { TestApp } from './create-app';
 import { createPerson } from './create-person';
 import { getUserFromSession } from './create-session';

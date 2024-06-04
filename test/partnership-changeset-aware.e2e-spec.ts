@@ -1,5 +1,5 @@
-import { Role } from '../src/components/authorization';
-import { PartnershipAgreementStatus } from '../src/components/partnership';
+import { Role } from '~/common';
+import { PartnershipAgreementStatus } from '../src/components/partnership/dto';
 import {
   approveProjectChangeRequest,
   createFundingAccount,

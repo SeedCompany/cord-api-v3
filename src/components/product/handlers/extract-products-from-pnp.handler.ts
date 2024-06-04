@@ -3,8 +3,8 @@ import { labelOfVerseRanges } from '@seedcompany/scripture';
 import { difference, uniq } from 'lodash';
 import { DateTime } from 'luxon';
 import { ID, Session, UnsecuredDto } from '~/common';
-import { EventsHandler, IEventHandler, ILogger, Logger } from '../../../core';
-import { Engagement } from '../../engagement';
+import { EventsHandler, IEventHandler, ILogger, Logger } from '~/core';
+import { Engagement } from '../../engagement/dto';
 import {
   EngagementCreatedEvent,
   EngagementUpdatedEvent,

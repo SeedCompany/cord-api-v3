@@ -1,5 +1,5 @@
-import { ID, InputException } from '../../common';
-import { ProductStep } from '../product';
+import { ID, InputException } from '~/common';
+import { ProductStep } from '../product/dto';
 
 export class StepNotPlannedException extends InputException {
   constructor(

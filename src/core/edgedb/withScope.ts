@@ -1,5 +1,5 @@
 import { Role } from '~/common';
-import type { AuthScope } from '../../components/authorization';
+import type { AuthScope } from '../../components/authorization/dto';
 import e from './generated-client';
 import { orScalarLiteral } from './generated-client/castMaps';
 import { $str } from './generated-client/modules/std';

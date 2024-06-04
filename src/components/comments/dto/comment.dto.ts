@@ -1,15 +1,15 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { e } from '~/core/edgedb';
-import { RegisterResource } from '~/core/resources';
 import {
   DateTimeField,
   ID,
   Resource,
   SecuredProps,
   SecuredRichText,
-} from '../../../common';
+} from '~/common';
+import { e } from '~/core/edgedb';
+import { RegisterResource } from '~/core/resources';
 
 @RegisterResource({ db: e.Comments.Comment })
 @ObjectType({

@@ -1,5 +1,5 @@
-import { fullFiscalQuarter } from '../../common';
-import { Cell } from '../../common/xlsx.util';
+import { fullFiscalQuarter } from '~/common';
+import { Cell } from '~/common/xlsx.util';
 import { Pnp } from './pnp';
 import { ProgressSheet } from './progress-sheet';
 

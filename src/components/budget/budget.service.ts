@@ -9,11 +9,12 @@ import {
   ServerException,
   Session,
   viewOfChangeset,
-} from '../../common';
-import { HandleIdLookup, ILogger, Logger, ResourceResolver } from '../../core';
-import { mapListResults } from '../../core/database/results';
+} from '~/common';
+import { HandleIdLookup, ILogger, Logger, ResourceResolver } from '~/core';
+import { mapListResults } from '~/core/database/results';
 import { Privileges } from '../authorization';
-import { FileId, FileService } from '../file';
+import { FileService } from '../file';
+import { FileId } from '../file/dto';
 import { ProjectChangeRequest } from '../project-change-request/dto';
 import { BudgetRecordRepository } from './budget-record.repository';
 import { BudgetRepository } from './budget.repository';
@@ -264,7 +265,7 @@ export class BudgetService {
 
   async deleteRecord(id: ID, session: Session, changeset?: ID): Promise<void> {
     try {
-      await this.budgetRecordsRepo.deleteNode(id, changeset);
+      await this.budgetRecordsRepo.deleteNode(id, { changeset });
     } catch (e) {
       this.logger.warning('Failed to delete Budget Record', {
         exception: e,

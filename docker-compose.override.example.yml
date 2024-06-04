@@ -1,5 +1,4 @@
 # Copy this file to docker-compose.override.yml to use
-version: '3.7'
 services:
 
   db:

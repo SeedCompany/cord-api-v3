@@ -11,10 +11,12 @@ import {
   GqlContextType,
   ServerException,
   UnauthenticatedException,
-} from '../../common';
-import { ConfigService, ILogger, Loader, LoaderOf, Logger } from '../../core';
-import { Power, Privileges } from '../authorization';
-import { User, UserLoader, UserService } from '../user';
+} from '~/common';
+import { ConfigService, ILogger, Loader, LoaderOf, Logger } from '~/core';
+import { Privileges } from '../authorization';
+import { Power } from '../authorization/dto';
+import { UserLoader, UserService } from '../user';
+import { User } from '../user/dto';
 import { AuthenticationService } from './authentication.service';
 import { SessionOutput } from './dto';
 import { SessionInterceptor } from './session.interceptor';

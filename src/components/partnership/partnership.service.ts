@@ -7,17 +7,18 @@ import {
   Session,
   UnsecuredDto,
   viewOfChangeset,
-} from '../../common';
+} from '~/common';
 import {
   HandleIdLookup,
   IEventBus,
   ILogger,
   Logger,
   ResourceLoader,
-} from '../../core';
+} from '~/core';
 import { Privileges } from '../authorization';
 import { FileService } from '../file';
-import { Partner, PartnerService, PartnerType } from '../partner';
+import { PartnerService } from '../partner';
+import { Partner, PartnerType } from '../partner/dto';
 import { ProjectService } from '../project';
 import {
   CreatePartnership,
@@ -223,7 +224,7 @@ export class PartnershipService {
     );
 
     try {
-      await this.repo.deleteNode(object, changeset);
+      await this.repo.deleteNode(object, { changeset });
     } catch (exception) {
       this.logger.error('Failed to delete', { id, exception });
       throw new ServerException('Failed to delete', exception);

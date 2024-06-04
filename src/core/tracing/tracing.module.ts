@@ -47,12 +47,15 @@ export class TracingModule implements OnModuleInit, NestModule {
       XRay.middleware.disableCentralizedSampling();
     }
 
-    XRay.SegmentUtils.setServiceData({
-      name: this.config.hostUrl.toString(),
-      version: (await this.version.version).toString(),
-      runtime: process.release?.name ?? 'unknown',
-      // eslint-disable-next-line @typescript-eslint/naming-convention
-      runtime_version: process.version,
+    const version = await this.version.version;
+    this.config.hostUrl$.subscribe((hostUrl) => {
+      XRay.SegmentUtils.setServiceData({
+        name: hostUrl.toString(),
+        version: version.toString(),
+        runtime: process.release?.name ?? 'unknown',
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        runtime_version: process.version,
+      });
     });
 
     if (this.config.xray.daemonAddress) {

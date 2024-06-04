@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import { CreateFilm, Film } from '../../src/components/film';
+import { CreateFilm, Film } from '../../src/components/film/dto';
 import { TestApp } from './create-app';
 import { fragments } from './fragments';
 import { gql } from './gql-tag';

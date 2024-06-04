@@ -1,6 +1,5 @@
 import { ResolveField, Resolver } from '@nestjs/graphql';
-import { AnonSession, Session } from '~/common';
-import { Role, SecuredRoles } from '../authorization';
+import { AnonSession, Role, SecuredRoles, Session } from '~/common';
 import { UserService } from './user.service';
 
 @Resolver(SecuredRoles)

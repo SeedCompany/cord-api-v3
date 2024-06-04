@@ -1,7 +1,5 @@
 import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { e } from '~/core/edgedb';
-import { RegisterResource } from '~/core/resources';
 import {
   Calculated,
   CalendarDate,
@@ -13,10 +11,12 @@ import {
   SecuredStringNullable,
   Sensitivity,
   SensitivityField,
-} from '../../../common';
-import { BaseNode as DbBaseNode } from '../../../core/database/results';
-import { ScopedRole } from '../../authorization';
-import { DefinedFile } from '../../file';
+} from '~/common';
+import { BaseNode as DbBaseNode } from '~/core/database/results';
+import { e } from '~/core/edgedb';
+import { RegisterResource } from '~/core/resources';
+import { ScopedRole } from '../../authorization/dto';
+import { DefinedFile } from '../../file/dto';
 import { ReportType } from './report-type.enum';
 
 @RegisterResource({ db: e.PeriodicReport })

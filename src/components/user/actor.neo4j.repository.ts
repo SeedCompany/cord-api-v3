@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { node } from 'cypher-query-builder';
 import { ID, Role } from '~/common';
-import { DatabaseService } from '~/core';
+import { DatabaseService } from '~/core/database';
 import { ActorRepository } from './actor.repository';
 
 @Injectable()

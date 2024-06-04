@@ -17,13 +17,14 @@ import {
   Session,
   UnsecuredDto,
 } from '~/common';
-import { DtoRepository, UniquenessError } from '~/core';
+import { DtoRepository, UniquenessError } from '~/core/database';
 import {
   ACTIVE,
   any,
   collect,
   createNode,
   createRelationships,
+  defineSorters,
   exp,
   filter,
   matchChangesetAndChangedProps,
@@ -35,12 +36,13 @@ import {
   paginate,
   rankSens,
   requestingUser,
-  sorting,
+  sortWith,
   variable,
 } from '~/core/database/query';
-import { ProjectStatus } from '../project';
+import { ProjectStatus } from '../project/dto';
 import {
   CreateLanguage,
+  EthnologueLanguage,
   Language,
   LanguageListInput,
   UpdateLanguage,
@@ -245,7 +247,7 @@ export class LanguageRepository extends DtoRepository<
           wrapContext: oncePerProject,
         }),
       )
-      .apply(sorting(Language, input))
+      .apply(sortWith(languageSorters, input))
       .apply(paginate(input, this.hydrate(session)))
       .first();
     return result!; // result from paginate() will always have 1 row.
@@ -322,3 +324,18 @@ export class LanguageRepository extends DtoRepository<
       );
   }
 }
+
+export const languageSorters = defineSorters(Language, {
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  'ethnologue.*': (query, input) =>
+    query
+      .with('node as lang')
+      .match([
+        node('lang'),
+        relation('out', '', 'ethnologue'),
+        node('node', 'EthnologueLanguage'),
+      ])
+      .apply(sortWith(ethnologueSorters, input)),
+});
+
+const ethnologueSorters = defineSorters(EthnologueLanguage, {});

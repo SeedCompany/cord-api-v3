@@ -1,60 +1,118 @@
 import { Injectable } from '@nestjs/common';
-import { node, Query } from 'cypher-query-builder';
-import { ChangesOf } from '~/core/database/changes';
-import { ID, Session } from '../../common';
-import { DbTypeOf, DtoRepository } from '../../core';
+import { Query } from 'cypher-query-builder';
+import {
+  DuplicateException,
+  ID,
+  PaginatedListType,
+  ServerException,
+  Session,
+  UnsecuredDto,
+} from '~/common';
+import { DbTypeOf, DtoRepository } from '~/core/database';
 import {
   createNode,
   matchProps,
   merge,
   paginate,
-  requestingUser,
   sorting,
-} from '../../core/database/query';
-import { ScriptureReferenceRepository } from '../scripture';
+} from '~/core/database/query';
+import {
+  ScriptureReferenceRepository,
+  ScriptureReferenceService,
+} from '../scripture';
 import { CreateFilm, Film, FilmListInput, UpdateFilm } from './dto';
 
 @Injectable()
 export class FilmRepository extends DtoRepository(Film) {
-  constructor(private readonly scriptureRefs: ScriptureReferenceRepository) {
+  constructor(
+    private readonly scriptureRefsRepository: ScriptureReferenceRepository,
+    private readonly scriptureRefsService: ScriptureReferenceService,
+  ) {
     super();
   }
 
-  async create(input: CreateFilm) {
+  async create(input: CreateFilm, session: Session) {
+    if (!(await this.isUnique(input.name))) {
+      throw new DuplicateException(
+        'film.name',
+        'Film with this name already exists',
+      );
+    }
+
     const initialProps = {
       name: input.name,
       canDelete: true,
     };
-    return await this.db
+    const result = await this.db
       .query()
       .apply(await createNode(Film, { initialProps }))
       .return<{ id: ID }>('node.id as id')
       .first();
+
+    if (!result) {
+      throw new ServerException('failed to create a film');
+    }
+
+    await this.scriptureRefsService.create(
+      result.id,
+      input.scriptureReferences,
+      session,
+    );
+
+    return await this.readOne(result.id);
   }
 
-  async update(
-    existing: Film,
-    simpleChanges: Omit<ChangesOf<Film, UpdateFilm>, 'scriptureReferences'>,
-  ) {
-    await this.updateProperties(existing, simpleChanges);
+  async update(input: UpdateFilm) {
+    const { id, name, scriptureReferences } = input;
+    await this.updateProperties({ id }, { name });
+    if (scriptureReferences !== undefined) {
+      await this.scriptureRefsService.update(id, scriptureReferences);
+    }
+    return await this.readOne(input.id);
   }
 
-  async list({ filter, ...input }: FilmListInput, session: Session) {
+  async readOne(id: ID) {
+    return (await super.readOne(id)) as UnsecuredDto<Film>;
+  }
+
+  async readMany(
+    ids: readonly ID[],
+  ): Promise<ReadonlyArray<UnsecuredDto<Film>>> {
+    const items = await super.readMany(ids);
+    return items.map((r) => ({
+      ...r,
+      scriptureReferences: this.scriptureRefsService.parseList(
+        r.scriptureReferences,
+      ),
+    }));
+  }
+
+  async list({
+    filter,
+    ...input
+  }: FilmListInput): Promise<PaginatedListType<UnsecuredDto<Film>>> {
     const result = await this.db
       .query()
-      .match(requestingUser(session))
-      .match(node('node', 'Film'))
+      .matchNode('node', 'Film')
       .apply(sorting(Film, input))
       .apply(paginate(input, this.hydrate()))
       .first();
-    return result!; // result from paginate() will always have 1 row.
+    return {
+      ...result!,
+      items: result!.items.map((r) => ({
+        ...r,
+        scriptureReferences: this.scriptureRefsService.parseList(
+          r.scriptureReferences,
+        ),
+      })),
+    };
   }
 
   protected hydrate() {
     return (query: Query) =>
       query
         .apply(matchProps())
-        .subQuery('node', this.scriptureRefs.list())
+        .subQuery('node', this.scriptureRefsRepository.list())
         .return<{ dto: DbTypeOf<Film> }>(
           merge('props', {
             scriptureReferences: 'scriptureReferences',

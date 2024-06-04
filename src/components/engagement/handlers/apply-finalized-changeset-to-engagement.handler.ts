@@ -1,17 +1,14 @@
 import { asyncPool, setOf } from '@seedcompany/common';
 import { node, relation } from 'cypher-query-builder';
 import { ID, ServerException, Session } from '~/common';
+import { EventsHandler, IEventHandler, ILogger, Logger } from '~/core';
+import { DatabaseService } from '~/core/database';
+import { ACTIVE, deleteBaseNode, INACTIVE } from '~/core/database/query';
 import {
-  DatabaseService,
-  EventsHandler,
-  IEventHandler,
-  ILogger,
-  Logger,
-} from '../../../core';
-import { ACTIVE, deleteBaseNode, INACTIVE } from '../../../core/database/query';
-import { commitChangesetProps } from '../../changeset/commit-changeset-props.query';
-import { ChangesetFinalizingEvent } from '../../changeset/events';
-import { rejectChangesetProps } from '../../changeset/reject-changeset-props.query';
+  ChangesetFinalizingEvent,
+  commitChangesetProps,
+  rejectChangesetProps,
+} from '../../changeset';
 import { EngagementService } from '../engagement.service';
 
 type SubscribedEvent = ChangesetFinalizingEvent;

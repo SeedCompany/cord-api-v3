@@ -23,13 +23,13 @@ async function bootstrap() {
   app.enableCors(config.cors as CorsOptions); // typecast to undo deep readonly
   app.use(cookieParser());
 
-  app.setGlobalPrefix(config.hostUrl.pathname.slice(1));
+  app.setGlobalPrefix(config.hostUrl$.value.pathname.slice(1));
 
   config.applyTimeouts(app.getHttpServer(), config.httpTimeouts);
 
   app.enableShutdownHooks();
   await app.listen(config.port, () => {
-    app.get(Logger).log(`Listening at ${config.hostUrl}`);
+    app.get(Logger).log(`Listening at ${config.hostUrl$.value}graphql`);
   });
 }
 bootstrap().catch((err) => {

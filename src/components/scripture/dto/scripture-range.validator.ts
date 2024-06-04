@@ -1,6 +1,6 @@
 import { ValidationArguments } from 'class-validator';
 import { Merge } from 'type-fest';
-import { createValidationDecorator } from '../../../common/validators/validateBy';
+import { createValidationDecorator } from '~/common/validators/validateBy';
 import { ScriptureRange } from './scripture-range.dto';
 
 // We assume this is only used on the ScriptureRange object

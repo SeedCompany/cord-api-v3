@@ -1,7 +1,7 @@
 // noinspection JSUnusedGlobalSymbols
 
 import { stripIndent } from 'common-tags';
-import { many, Many } from '../../src/common';
+import { many, Many } from '~/common';
 import { GqlError } from './create-graphql-client';
 
 // Consider replacing with Jest 29.4+ feature: https://jestjs.io/docs/expect#expectaddequalitytesterstesters

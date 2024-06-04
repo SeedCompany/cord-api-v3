@@ -17,6 +17,7 @@ import { ExceptionNormalizer } from './exception/exception.normalizer';
 import { GraphqlModule } from './graphql';
 import { ResourceModule } from './resources/resource.module';
 import { ScalarProviders } from './scalars.resolver';
+import { ShutdownHookProvider } from './shutdown.hook';
 import { TimeoutInterceptor } from './timeout.interceptor';
 import { TracingModule } from './tracing';
 import { ValidationModule } from './validation/validation.module';
@@ -46,6 +47,7 @@ import { WaitResolver } from './wait.resolver';
     { provide: APP_INTERCEPTOR, useClass: TimeoutInterceptor },
     WaitResolver,
     ...ScalarProviders,
+    ShutdownHookProvider,
   ],
   controllers: [CoreController],
   exports: [
@@ -59,6 +61,7 @@ import { WaitResolver } from './wait.resolver';
     EmailModule,
     EventsModule,
     ResourceModule,
+    ShutdownHookProvider,
     TracingModule,
     ValidationModule,
   ],

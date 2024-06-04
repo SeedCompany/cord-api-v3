@@ -24,14 +24,8 @@ import {
   UnauthorizedException,
 } from '~/common';
 import { withAddedPath } from '~/common/url.util';
-import {
-  ConfigService,
-  IEventBus,
-  ILogger,
-  LinkTo,
-  Logger,
-  RollbackManager,
-} from '~/core';
+import { ConfigService, IEventBus, ILogger, LinkTo, Logger } from '~/core';
+import { RollbackManager } from '~/core/database';
 import { FileBucket } from './bucket';
 import {
   CreateDefinedFileVersionInput,
@@ -150,7 +144,7 @@ export class FileService {
 
   async getUrl(node: FileNode, download: boolean) {
     const url = withAddedPath(
-      this.config.hostUrl,
+      this.config.hostUrl$.value,
       FileUrl.path,
       isFile(node) ? node.latestVersionId : node.id,
       encodeURIComponent(node.name),

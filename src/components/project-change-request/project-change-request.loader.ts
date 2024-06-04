@@ -1,5 +1,5 @@
-import { ID } from '../../common';
-import { LoaderFactory, OrderedNestDataLoader } from '../../core';
+import { ID } from '~/common';
+import { LoaderFactory, OrderedNestDataLoader } from '~/core';
 import { Changeset } from '../changeset/dto';
 import { ProjectChangeRequest } from './dto';
 import { ProjectChangeRequestService } from './project-change-request.service';

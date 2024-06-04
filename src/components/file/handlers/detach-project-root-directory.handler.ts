@@ -1,4 +1,4 @@
-import { EventsHandler, IEventHandler } from '../../../core';
+import { EventsHandler, IEventHandler } from '~/core';
 import { ProjectCreatedEvent, ProjectDeletedEvent } from '../../project/events';
 
 @EventsHandler(ProjectDeletedEvent)

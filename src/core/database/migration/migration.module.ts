@@ -18,9 +18,11 @@ export class MigrationModule implements OnModuleInit {
   ) {}
 
   async onModuleInit() {
+    const entryCmd = process.argv.join('');
     if (
       !this.config.dbAutoMigrate ||
-      process.argv.join('').includes('console')
+      entryCmd.includes('console') ||
+      entryCmd.includes('repl')
     ) {
       return;
     }

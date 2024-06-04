@@ -5,25 +5,26 @@ import { DateTime } from 'luxon';
 import {
   DuplicateException,
   ID,
+  Role,
   ServerException,
   Session,
   UnsecuredDto,
-} from '../../common';
-import { DtoRepository, UniquenessError } from '../../core';
+} from '~/common';
+import { DtoRepository, UniquenessError } from '~/core/database';
 import {
   ACTIVE,
   createNode,
   createProperty,
   deactivateProperty,
+  defineSorters,
   filter,
   matchProps,
   merge,
   paginate,
   property,
   requestingUser,
-  sorting,
-} from '../../core/database/query';
-import { Role } from '../authorization';
+  sortWith,
+} from '~/core/database/query';
 import {
   AssignOrganizationToUser,
   CreatePerson,
@@ -207,7 +208,7 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
         }),
       )
       .apply(this.privileges.forUser(session).filterToReadable())
-      .apply(sorting(User, input))
+      .apply(sortWith(userSorters, input))
       .apply(paginate(input, this.hydrate(session.userId)))
       .first();
     return result!; // result from paginate() will always have 1 row.
@@ -342,3 +343,5 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
     return this.hydrate(session);
   }
 }
+
+export const userSorters = defineSorters(User, {});

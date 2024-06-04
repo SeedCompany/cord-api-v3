@@ -176,6 +176,19 @@ module Project {
     required single property isMember := exists .projectContext.projects.membership;
   }
   
+  scalar type Type extending enum<
+    MomentumTranslation,
+    MultiplicationTranslation,
+    Internship
+  >;
+
+  type FinancialApprover {
+    required user: default::User {
+      constraint exclusive;
+    };
+    required multi projectTypes: Type;
+  }
+  
   type Context {
     annotation description := "\
       A type that holds a reference to a list of projects. \

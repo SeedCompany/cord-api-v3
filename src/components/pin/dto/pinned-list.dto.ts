@@ -1,5 +1,5 @@
 import { InputType, ObjectType } from '@nestjs/graphql';
-import { PaginatedList, PaginationInput } from '../../../common';
+import { PaginatedList, PaginationInput } from '~/common';
 import { Pinnable } from './pinnable.dto';
 
 @InputType()

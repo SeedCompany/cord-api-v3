@@ -10,7 +10,7 @@ import {
   Session,
   UnsecuredDto,
   viewOfChangeset,
-} from '../../common';
+} from '~/common';
 import {
   ConfigService,
   HandleIdLookup,
@@ -18,20 +18,16 @@ import {
   ILogger,
   Logger,
   ResourceLoader,
-} from '../../core';
-import { mapListResults } from '../../core/database/results';
+} from '~/core';
+import { mapListResults } from '~/core/database/results';
 import { Privileges } from '../authorization';
 import { CeremonyService } from '../ceremony';
 import { FileService } from '../file';
 import { Location } from '../location/dto';
-import {
-  ProductListInput,
-  ProductService,
-  SecuredProductList,
-} from '../product';
-import { IProject } from '../project';
-import { ProjectType } from '../project/dto';
-import { ProjectService } from '../project/project.service';
+import { ProductService } from '../product';
+import { ProductListInput, SecuredProductList } from '../product/dto';
+import { ProjectService } from '../project';
+import { IProject, ProjectType } from '../project/dto';
 import { User } from '../user/dto';
 import {
   CreateInternshipEngagement,
@@ -371,7 +367,7 @@ export class EngagementService {
     await this.eventBus.publish(new EngagementWillDeleteEvent(object, session));
 
     try {
-      await this.repo.deleteNode(object, changeset);
+      await this.repo.deleteNode(object, { changeset });
     } catch (e) {
       this.logger.warning('Failed to delete Engagement', {
         exception: e,

@@ -19,6 +19,7 @@ export class AuthenticationEdgeDBRepository
     await this.db.waitForConnection({
       forever: true,
       maxTimeout: { seconds: 10 },
+      unref: true,
     });
     return await this.getRootUserId();
   }

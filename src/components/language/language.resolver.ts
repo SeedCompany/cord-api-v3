@@ -20,13 +20,19 @@ import {
   SecuredIntNullable,
   Session,
   viewOfChangeset,
-} from '../../common';
-import { Loader, LoaderOf } from '../../core';
+} from '~/common';
+import { Loader, LoaderOf } from '~/core';
 import { IdsAndView, IdsAndViewArg } from '../changeset/dto';
-import { LocationListInput, SecuredLocationList } from '../location';
-import { LocationLoader } from '../location/location.loader';
-import { ProjectLoader, SecuredTranslationProjectList } from '../project';
-import { ProjectListInput, SecuredProjectList } from '../project/dto';
+import { EngagementLoader } from '../engagement';
+import { EngagementListInput, SecuredEngagementList } from '../engagement/dto';
+import { LocationLoader } from '../location';
+import { LocationListInput, SecuredLocationList } from '../location/dto';
+import { ProjectLoader } from '../project';
+import {
+  ProjectListInput,
+  SecuredProjectList,
+  SecuredTranslationProjectList,
+} from '../project/dto';
 import {
   CreateLanguageInput,
   CreateLanguageOutput,
@@ -141,6 +147,24 @@ export class LanguageResolver {
     @Loader(ProjectLoader) loader: LoaderOf<ProjectLoader>,
   ): Promise<SecuredProjectList> {
     const list = await this.langService.listProjects(language, input, session);
+    loader.primeAll(list.items);
+    return list;
+  }
+
+  @ResolveField(() => SecuredEngagementList, {
+    description: "The list of the language's engagements.",
+  })
+  async engagements(
+    @AnonSession() session: Session,
+    @Parent() language: Language,
+    @ListArg(EngagementListInput) input: EngagementListInput,
+    @Loader(EngagementLoader) loader: LoaderOf<EngagementLoader>,
+  ): Promise<SecuredEngagementList> {
+    const list = await this.langService.listEngagements(
+      language,
+      input,
+      session,
+    );
     loader.primeAll(list.items);
     return list;
   }

@@ -1,11 +1,11 @@
-import { CalendarDate, ID, isValidId } from '../../src/common';
-import { PartnerType } from '../../src/components/partner';
+import { CalendarDate, ID, isValidId } from '~/common';
+import { PartnerType } from '../../src/components/partner/dto';
 import {
   CreatePartnership,
   FinancialReportingType,
   Partnership,
   PartnershipAgreementStatus,
-} from '../../src/components/partnership';
+} from '../../src/components/partnership/dto';
 import { TestApp } from './create-app';
 import { createPartner } from './create-partner';
 import { createProject } from './create-project';

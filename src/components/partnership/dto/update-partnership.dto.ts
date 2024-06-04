@@ -2,7 +2,7 @@ import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Transform, Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { uniq } from 'lodash';
-import { CalendarDate, DateField, ID, IdField } from '../../../common';
+import { CalendarDate, DateField, ID, IdField } from '~/common';
 import { ChangesetIdField } from '../../changeset';
 import { CreateDefinedFileVersionInput } from '../../file/dto';
 import { PartnerType } from '../../partner/dto';

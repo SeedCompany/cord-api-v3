@@ -3,9 +3,9 @@ import { entries } from '@seedcompany/common';
 import { parseScripture } from '@seedcompany/scripture';
 import { assert } from 'ts-essentials';
 import { MergeExclusive } from 'type-fest';
-import { CalendarDate } from '../../common';
-import { Cell, Column, Row } from '../../common/xlsx.util';
-import { Downloadable } from '../file';
+import { CalendarDate } from '~/common';
+import { Cell, Column, Row } from '~/common/xlsx.util';
+import { Downloadable } from '../file/dto';
 import {
   extractScripture,
   findStepColumns,
@@ -17,7 +17,7 @@ import {
   stepPlanCompleteDate,
   WrittenScripturePlanningSheet,
 } from '../pnp';
-import { ScriptureRange, UnspecifiedScripturePortion } from '../scripture';
+import { ScriptureRange, UnspecifiedScripturePortion } from '../scripture/dto';
 import { ProductStep as Step } from './dto';
 
 @Injectable()

@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { startCase } from 'lodash';
 import open from 'open';
 import pako from 'pako';
 import { ProgressReportStatus as Status } from '../dto';
@@ -28,7 +27,7 @@ export class ProgressReportWorkflowFlowchart {
       // },
     };
     const graph = [
-      `%%${JSON.stringify({ init: config })}%%`,
+      `%%{ init: ${JSON.stringify(config)} }%%`,
       'flowchart TD',
       ...Object.entries(styles).flatMap(([type, style]) => {
         const str = Object.entries(style)
@@ -37,8 +36,8 @@ export class ProgressReportWorkflowFlowchart {
         return str ? `classDef ${type} ${str}` : [];
       }),
       '',
-      ...Object.keys(Status).map(
-        (status) => `${status}(${startCase(status)}):::State`,
+      ...Status.entries.map(
+        (status) => `${status.value}(${status.label}):::State`,
       ),
       '',
       ...Object.values(Transitions).flatMap((t) => {

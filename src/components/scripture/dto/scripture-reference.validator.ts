@@ -2,7 +2,7 @@ import { applyDecorators } from '@nestjs/common';
 import { Book, Chapter } from '@seedcompany/scripture';
 import { ValidationArguments } from 'class-validator';
 import { Merge } from 'type-fest';
-import { createValidationDecorator } from '../../../common/validators/validateBy';
+import { createValidationDecorator } from '~/common/validators/validateBy';
 import { NormalizeBook } from './book.transformer';
 import { ScriptureReference } from './scripture-reference.dto';
 import { UnspecifiedScripturePortionInput } from './unspecified-scripture-portion.dto';

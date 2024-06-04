@@ -16,3 +16,16 @@ export const splitDb = <T>(
       return await moduleRef.create<T>(cls);
     },
   } satisfies Provider);
+
+export const splitDb2 = <T>(
+  token: Type<T>,
+  repos: { edge: Type<PublicOf<T>>; neo4j: Type<PublicOf<T>> },
+) =>
+  ({
+    provide: token,
+    inject: [ModuleRef, ConfigService],
+    useFactory: async (moduleRef: ModuleRef, config: ConfigService) => {
+      const cls = config.databaseEngine === 'edgedb' ? repos.edge : repos.neo4j;
+      return await moduleRef.create<T>(cls);
+    },
+  } satisfies Provider);

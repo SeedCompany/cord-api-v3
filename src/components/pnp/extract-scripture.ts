@@ -1,6 +1,6 @@
 import { parseScripture, tryParseScripture } from '@seedcompany/scripture';
 import { Row } from '~/common/xlsx.util';
-import { ScriptureRange } from '../scripture';
+import { ScriptureRange } from '../scripture/dto';
 import { WrittenScripturePlanningSheet } from './planning-sheet';
 
 export const extractScripture = (row: Row<WrittenScripturePlanningSheet>) => {

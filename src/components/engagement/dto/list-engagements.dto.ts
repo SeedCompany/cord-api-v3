@@ -22,6 +22,10 @@ export abstract class EngagementFilters {
   readonly type?: 'language' | 'internship';
 
   readonly projectId?: ID;
+
+  readonly languageId?: ID;
+
+  readonly partnerId?: ID<'Partner'>;
 }
 
 @InputType()

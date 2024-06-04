@@ -1,4 +1,4 @@
-import { Session, UnsecuredDto } from '../../../common';
+import { Session, UnsecuredDto } from '~/common';
 import { ProjectChangeRequest } from '../dto';
 
 export class ProjectChangeRequestApprovedEvent {

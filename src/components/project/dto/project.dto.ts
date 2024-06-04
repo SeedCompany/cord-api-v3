@@ -34,10 +34,10 @@ import { e } from '~/core/edgedb';
 import { LinkTo, RegisterResource } from '~/core/resources';
 import { Budget } from '../../budget/dto';
 import { ChangesetAware } from '../../changeset/dto';
-import { Commentable } from '../../comments';
+import { Commentable } from '../../comments/dto';
 import { IEngagement as Engagement } from '../../engagement/dto';
 import { Directory } from '../../file/dto';
-import { SecuredTags } from '../../language/dto/language.dto';
+import { SecuredTags } from '../../language/dto';
 import { Location } from '../../location/dto';
 import { Partnership } from '../../partnership/dto';
 import { SecuredReportPeriod } from '../../periodic-report/dto';
@@ -80,6 +80,7 @@ export const resolveProjectType = (val: Pick<AnyProject, 'type'>) => {
 class Project extends Interfaces {
   static readonly Props: string[] = keysOf<Project>();
   static readonly SecuredProps: string[] = keysOf<SecuredProps<Project>>();
+  static readonly BaseNodeProps = [...Resource.Props, 'type'];
   static readonly Relations = () =>
     ({
       rootDirectory: Directory,

@@ -1,5 +1,5 @@
 import { Except, Merge, MergeExclusive } from 'type-fest';
-import { ID, Secured } from '../../src/common';
+import { ID, Secured } from '~/common';
 import {
   IEngagement,
   InternshipEngagement,
@@ -11,11 +11,11 @@ import {
   FileVersion,
   IFileNode,
   SecuredFile,
-} from '../../src/components/file';
+} from '../../src/components/file/dto';
 import { SecuredLanguage } from '../../src/components/language/dto';
 import { Product, ProductApproach } from '../../src/components/product/dto';
-import { Project } from '../../src/components/project';
-import { User } from '../../src/components/user';
+import { Project } from '../../src/components/project/dto';
+import { User } from '../../src/components/user/dto';
 import { gql } from './gql-tag';
 import { Raw } from './raw.type';
 
@@ -394,12 +394,12 @@ export const fileNode = gql`
     ... on FileVersion {
       mimeType
       size
-      downloadUrl
+      url
     }
     ... on File {
       mimeType
       size
-      downloadUrl
+      url
       modifiedAt
       modifiedBy {
         ...user
@@ -421,7 +421,7 @@ export type RawBaseFileNode = RawNode<
 >;
 export type RawDirectory = RawBaseFileNode;
 export type RawFileVersion = RawBaseFileNode &
-  RawNode<FileVersion, keyof IFileNode, { downloadUrl: string }>;
+  RawNode<FileVersion, keyof IFileNode, { url: string }>;
 export type RawFile = RawFileVersion &
   RawNode<
     File,

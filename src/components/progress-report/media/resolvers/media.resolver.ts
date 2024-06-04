@@ -8,7 +8,7 @@ import {
 import { AnonSession, IdArg, IdOf, LoggedInSession, Session } from '~/common';
 import { Loader, LoaderOf } from '~/core';
 import { Privileges } from '../../../authorization';
-import { Media } from '../../../file';
+import { Media } from '../../../file/media/media.dto';
 import { MediaLoader } from '../../../file/media/media.loader';
 import { PeriodicReportLoader } from '../../../periodic-report';
 import { ProgressReport } from '../../dto';

@@ -1,5 +1,5 @@
-import { WorkBook } from '../../common/xlsx.util';
-import { Downloadable } from '../file';
+import { WorkBook } from '~/common/xlsx.util';
+import { Downloadable } from '../file/dto';
 import { PlanningSheet } from './planning-sheet';
 import { ProgressSheet } from './progress-sheet';
 

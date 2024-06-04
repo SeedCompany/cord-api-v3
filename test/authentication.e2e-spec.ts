@@ -2,7 +2,7 @@ import { faker } from '@faker-js/faker';
 import { jest } from '@jest/globals';
 import { EmailService } from '@seedcompany/nestjs-email';
 import { Connection } from 'cypher-query-builder';
-import { isValidId } from '../src/common';
+import { isValidId } from '~/common';
 import {
   createSession,
   createTestApp,

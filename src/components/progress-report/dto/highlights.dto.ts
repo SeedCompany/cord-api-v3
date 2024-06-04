@@ -1,8 +1,7 @@
 import { keys as keysOf } from 'ts-transformer-keys';
-import { SecuredProps, Variant, VariantOf } from '~/common';
+import { Role, SecuredProps, Variant, VariantOf } from '~/common';
 import { e } from '~/core/edgedb';
 import { RegisterResource } from '~/core/resources';
-import { Role } from '../../authorization';
 import { PromptVariantResponse } from '../../prompts/dto';
 
 const variants = Variant.createList({

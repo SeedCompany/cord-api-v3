@@ -1,5 +1,5 @@
-import { ID } from '../../common';
-import { LoaderFactory, OrderedNestDataLoader } from '../../core';
+import { ID } from '~/common';
+import { LoaderFactory, OrderedNestDataLoader } from '~/core';
 import { Partner } from './dto';
 import { PartnerService } from './partner.service';
 

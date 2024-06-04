@@ -9,7 +9,8 @@ import {
   Session,
 } from '~/common';
 import { Loader, LoaderOf, ResourceLoader } from '~/core';
-import { User, UserLoader } from '../user';
+import { UserLoader } from '../user';
+import { User } from '../user/dto';
 import { CommentThreadLoader } from './comment-thread.loader';
 import { CommentLoader } from './comment.loader';
 import { CommentService } from './comment.service';

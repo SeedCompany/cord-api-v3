@@ -1,27 +1,30 @@
 import { faker } from '@faker-js/faker';
-import { assert, MarkOptional } from 'ts-essentials';
-import { ID } from '../../src/common';
+import got from 'got';
+import { MarkOptional } from 'ts-essentials';
+import { ID } from '~/common';
 import {
   CreateFileVersionInput,
   FileListInput,
   RequestUploadOutput,
-} from '../../src/components/file';
-import { FileBucket, LocalBucket } from '../../src/components/file/bucket';
+} from '../../src/components/file/dto';
 import { mimeTypes } from '../../src/components/file/mimeTypes';
 import { TestApp } from './create-app';
 import { RawFile, RawFileNode, RawFileNodeChildren } from './fragments';
 import * as fragments from './fragments';
 import { gql } from './gql-tag';
 
-export const generateFakeFile = () => ({
-  name: faker.system.fileName(),
-  content: Buffer.from(
+export const generateFakeFile = () => {
+  const content = Buffer.from(
     faker.image.dataUri({ width: 200, height: 200 }).split(',')[1],
     'base64',
-  ),
-  size: faker.number.int(1_000_000),
-  mimeType: faker.helpers.arrayElement(mimeTypes).name,
-});
+  );
+  return {
+    name: faker.system.fileName(),
+    content: content,
+    size: content.length,
+    mimeType: faker.helpers.arrayElement(mimeTypes).name,
+  };
+};
 
 export type FakeFile = ReturnType<typeof generateFakeFile>;
 
@@ -49,18 +52,14 @@ export const uploadFileContents = async (
     ...generateFakeFile(),
     ...input,
   };
-  const {
-    content: Body,
-    mimeType: ContentType,
-    size: ContentLength,
-  } = completeInput;
+  const { content, mimeType } = completeInput;
 
-  const bucket = app.get(FileBucket);
-  assert(bucket instanceof LocalBucket);
-  await bucket.upload(url, {
-    Body,
-    ContentType,
-    ContentLength,
+  await got.put(url, {
+    headers: {
+      'Content-Type': mimeType,
+    },
+    body: content,
+    enableUnixSockets: true,
   });
 
   return completeInput;

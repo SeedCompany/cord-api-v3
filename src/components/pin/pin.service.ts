@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ID, Session } from '../../common';
+import { ID, Session } from '~/common';
 import { PinRepository } from './pin.repository';
 
 @Injectable()

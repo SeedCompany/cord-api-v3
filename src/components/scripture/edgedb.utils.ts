@@ -13,7 +13,7 @@ const verse = e.tuple({
   book: e.str,
   chapter: e.int16,
   verse: e.int16,
-  verseId: e.int32,
+  verseId: e.int16,
 });
 
 const verseRangeType = e.tuple({
@@ -66,13 +66,13 @@ export const insert = (param: $expr_Param<string, typeof type>) => {
           book: e.cast(e.str, start.book),
           chapter: e.cast(e.int16, start.chapter),
           verse: e.cast(e.int16, start.verse),
-          verseId: e.cast(e.int32, start.verseId),
+          verseId: e.cast(e.int16, start.verseId),
         }),
         end: e.insert(e.Scripture.Verse, {
           book: e.cast(e.str, end.book),
           chapter: e.cast(e.int16, end.chapter),
           verse: e.cast(e.int16, end.verse),
-          verseId: e.cast(e.int32, end.verseId),
+          verseId: e.cast(e.int16, end.verseId),
         }),
       });
     }),

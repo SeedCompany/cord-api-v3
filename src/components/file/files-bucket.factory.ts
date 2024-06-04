@@ -1,8 +1,9 @@
 import { S3 } from '@aws-sdk/client-s3';
 import { FactoryProvider } from '@nestjs/common';
 import { resolve } from 'path';
+import { map } from 'rxjs/operators';
 import { withAddedPath } from '~/common/url.util';
-import { ConfigService } from '../../core';
+import { ConfigService } from '~/core';
 import {
   CompositeBucket,
   FileBucket,
@@ -21,7 +22,9 @@ export const FilesBucketFactory: FactoryProvider = {
   useFactory: (s3: S3, config: ConfigService) => {
     const { sources } = config.files;
 
-    const baseUrl = withAddedPath(config.hostUrl, LocalBucketController.path);
+    const baseUrl = config.hostUrl$.pipe(
+      map((hostUrl) => withAddedPath(hostUrl, LocalBucketController.path)),
+    );
 
     const files: FileFactory = ({ path }) =>
       new FilesystemBucket({

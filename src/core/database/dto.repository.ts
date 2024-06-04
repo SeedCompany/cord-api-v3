@@ -10,8 +10,9 @@ import {
   ResourceShape,
   ServerException,
   UnsecuredDto,
-} from '../../common';
+} from '~/common';
 import { Privileges } from '../../components/authorization';
+import { ResourceLike } from '../resources';
 import { DbChanges, getChanges } from './changes';
 import { CommonRepository } from './common.repository';
 import { DbTypeOf } from './db-type';
@@ -102,6 +103,16 @@ export const DtoRepository = <
         .apply(this.hydrate(...args))
         .map('dto')
         .run();
+    }
+
+    async deleteNode(
+      objectOrId: { id: ID } | ID,
+      options: { changeset?: ID; resource?: ResourceLike } = {},
+    ) {
+      await super.deleteNode(objectOrId, {
+        resource: this.resource,
+        ...options,
+      });
     }
 
     protected async updateProperties<

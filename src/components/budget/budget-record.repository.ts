@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
-import { ChangesOf } from '~/core/database/changes';
 import {
   ID,
   labelForView,
@@ -9,8 +8,9 @@ import {
   ServerException,
   Session,
   UnsecuredDto,
-} from '../../common';
-import { DtoRepository } from '../../core';
+} from '~/common';
+import { DtoRepository } from '~/core/database';
+import { ChangesOf } from '~/core/database/changes';
 import {
   ACTIVE,
   createNode,
@@ -21,7 +21,7 @@ import {
   merge,
   paginate,
   sorting,
-} from '../../core/database/query';
+} from '~/core/database/query';
 import {
   Budget,
   BudgetRecord,

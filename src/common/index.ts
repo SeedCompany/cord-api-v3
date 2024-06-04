@@ -9,7 +9,7 @@ export * from './data-object';
 export * from './date-filter.input';
 export { DbLabel } from './db-label.decorator';
 export * from './db-label.helpers';
-export * from './db-sort.decorator';
+export { DbSort } from './db-sort.decorator';
 export * from './db-unique.decorator';
 export * from './disabled.decorator';
 export * from './mutation-placeholder.output';

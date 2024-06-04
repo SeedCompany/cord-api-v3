@@ -1,6 +1,6 @@
 import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { ACTIVE, INACTIVE } from '../../core/database/query';
+import { ACTIVE, INACTIVE } from '~/core/database/query';
 
 export interface RejectChangesetPropsOptions {
   nodeVar?: string;

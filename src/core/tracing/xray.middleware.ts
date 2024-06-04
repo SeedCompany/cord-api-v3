@@ -11,7 +11,7 @@ import {
 } from '@nestjs/graphql';
 import XRay from 'aws-xray-sdk-core';
 import { Request, Response } from 'express';
-import { GqlContextType } from '../../common';
+import { GqlContextType } from '~/common';
 import { ConfigService } from '../config/config.service';
 import { Sampler } from './sampler';
 import { TracingService } from './tracing.service';
@@ -36,7 +36,8 @@ export class XRayMiddleware implements NestMiddleware, NestInterceptor {
     root.addIncomingRequestData(reqData);
     // Use public DNS as url instead of specific IP
     // @ts-expect-error xray library types suck
-    root.http.request.url = this.config.hostUrl + req.originalUrl.slice(1);
+    root.http.request.url =
+      this.config.hostUrl$.value + req.originalUrl.slice(1);
 
     // Add to segment so interceptor can access without having to calculate again.
     Object.defineProperty(reqData, 'traceData', {

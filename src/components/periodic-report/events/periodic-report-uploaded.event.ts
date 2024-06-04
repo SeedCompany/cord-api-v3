@@ -1,5 +1,5 @@
-import { Session } from '../../../common';
-import { Downloadable, FileNode } from '../../file';
+import { Session } from '~/common';
+import { Downloadable, FileNode } from '../../file/dto';
 import { PeriodicReport } from '../dto';
 
 /**

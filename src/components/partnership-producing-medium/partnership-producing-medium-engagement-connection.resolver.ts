@@ -1,7 +1,7 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { AnonSession, Session } from '../../common';
-import { LanguageEngagement } from '../engagement';
+import { AnonSession, Session } from '~/common';
+import { LanguageEngagement } from '../engagement/dto';
 import { SecuredPartnershipsProducingMediums } from './dto/partnership-producing-medium.dto';
 import { PartnershipProducingMediumService } from './partnership-producing-medium.service';
 

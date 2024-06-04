@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { mapValues } from '@seedcompany/common';
 import { DateTime, Duration } from 'luxon';
 import * as Neo from 'neo4j-driver';
-import { CalendarDate, RichTextDocument } from '../../common';
+import { CalendarDate, RichTextDocument } from '~/common';
 import { isNeoDate, isNeoDateTime, isNeoDuration } from './transformer';
 
 /**

@@ -14,11 +14,13 @@ import {
   SecuredDateRange,
   Session,
   viewOfChangeset,
-} from '../../common';
-import { Loader, LoaderOf } from '../../core';
+} from '~/common';
+import { Loader, LoaderOf } from '~/core';
 import { ChangesetIds, IdsAndView, IdsAndViewArg } from '../changeset/dto';
-import { FileNodeLoader, resolveDefinedFile, SecuredFile } from '../file';
-import { PartnerLoader, SecuredPartner } from '../partner';
+import { FileNodeLoader, resolveDefinedFile } from '../file';
+import { SecuredFile } from '../file/dto';
+import { PartnerLoader } from '../partner';
+import { SecuredPartner } from '../partner/dto';
 import { PartnershipLoader, PartnershipService } from '../partnership';
 import {
   CreatePartnershipInput,
