@@ -20,7 +20,7 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.edgedb.com | sh -s -- -y --n
     && mv /root/.local/bin/edgedb /usr/local/bin/edgedb
 
 # Enable yarn via corepack
-corepack enable
+RUN corepack enable
 
 FROM ${EDGEDB_IMAGE} as builder
 
