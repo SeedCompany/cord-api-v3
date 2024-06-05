@@ -100,6 +100,11 @@ export const WorkflowService = <W extends Workflow>(workflow: W) => {
       input: ExecuteTransitionInput,
       session: Session,
     ): W['state'] | undefined {
+      // Verify transition key is valid
+      if (input.transition) {
+        this.workflow.transitionByKey(input.transition);
+      }
+
       if (!input.bypassTo) {
         return undefined;
       }

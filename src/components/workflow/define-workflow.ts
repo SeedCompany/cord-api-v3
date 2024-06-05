@@ -5,8 +5,8 @@ import {
   ID,
   MadeEnum,
   maybeMany,
+  NotFoundException,
   ResourceShape,
-  UnauthorizedException,
 } from '~/common';
 import { WorkflowEvent } from './dto';
 import { InternalTransition, TransitionInput } from './transitions/types';
@@ -67,7 +67,7 @@ export const defineWorkflow =
       transitionByKey: (key: ID) => {
         const transition = workflow.transitions.find((t) => t.key === key);
         if (!transition) {
-          throw new UnauthorizedException('This transition is not available');
+          throw new NotFoundException('Transition does not exist');
         }
         return transition;
       },
