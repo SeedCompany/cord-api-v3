@@ -19,6 +19,9 @@ RUN apt-get update \
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.edgedb.com | sh -s -- -y --no-modify-path \
     && mv /root/.local/bin/edgedb /usr/local/bin/edgedb
 
+# Enable yarn via corepack
+RUN corepack enable
+
 FROM ${EDGEDB_IMAGE} as builder
 
 # region Install NodeJS
