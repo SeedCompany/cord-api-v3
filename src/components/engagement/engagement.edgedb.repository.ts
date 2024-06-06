@@ -3,10 +3,12 @@ import { difference } from 'lodash';
 import { ID, PublicOf, Session } from '~/common';
 import { castToEnum, e, RepoFor } from '~/core/edgedb';
 import {
+  CreateInternshipEngagement,
   CreateLanguageEngagement,
   EngagementListInput,
   EngagementStatus,
   IEngagement,
+  UpdateInternshipEngagement,
   UpdateLanguageEngagement,
 } from './dto';
 import { EngagementRepository } from './engagement.repository';
@@ -70,14 +72,93 @@ export class EngagementEdgeDBRepository
     return await this.db.run(query);
   }
 
-  //getActualLanguageChanges = this.getActualChanges(LanguageEngagement);
-
-  async updateLanguage(
-    { id, ...changes }: UpdateLanguageEngagement,
+  async createInternshipEngagement(
+    input: CreateInternshipEngagement,
     _session: Session,
     _changeset?: ID,
   ) {
-    return await this.defaults.update({ id, ...changes });
+    const { projectId, internId, mentorId, countryOfOriginId, ...props } =
+      input;
+
+    const project = e.cast(e.InternshipProject, e.uuid(projectId));
+    const intern = e.cast(e.User, e.uuid(internId));
+    const mentor = mentorId ? e.cast(e.User, e.uuid(mentorId)) : e.set();
+    const countryOfOrigin = countryOfOriginId
+      ? e.cast(e.Location, e.uuid(countryOfOriginId))
+      : e.set();
+
+    const createdInternshipEngagement = e.insert(e.InternshipEngagement, {
+      project: project as any,
+      projectContext: project.projectContext,
+      intern: intern,
+      mentor: mentor,
+      countryOfOrigin: countryOfOrigin,
+      growthPlan: undefined as any, //TODO
+      ...props,
+    });
+
+    const query = e.select(createdInternshipEngagement, internshipHydrate);
+
+    return await this.db.run(query);
+  }
+
+  getActualLanguageChanges = this.getActualChanges(LanguageEngagement);
+
+  async updateLanguage(
+    changes: UpdateLanguageEngagement,
+    _session: Session,
+    _changeset?: ID,
+  ) {
+    const { id, pnp, ...simpleChanges } = changes;
+
+    const languageEngagement = e.cast(e.LanguageEngagement, e.uuid(id));
+
+    if (pnp) {
+      //TODO
+    }
+
+    const updated = e.update(languageEngagement, () => ({
+      set: {
+        ...simpleChanges,
+      },
+    }));
+
+    const query = e.select(updated, languageHydrate);
+
+    return await this.db.run(query);
+  }
+
+  getActualInternshipChanges = this.getActualChanges(InternshipEngagement);
+
+  async updateInternship(
+    changes: UpdateInternshipEngagement,
+    _session: Session,
+    _changeset?: ID,
+  ) {
+    const { id, mentorId, countryOfOriginId, growthPlan, ...simpleChanges } =
+      changes;
+
+    const internshipEngagement = e.cast(e.InternshipEngagement, e.uuid(id));
+    const mentor = mentorId ? e.cast(e.User, e.uuid(mentorId)) : e.set();
+    const countryOfOrigin = countryOfOriginId
+      ? e.cast(e.Location, e.uuid(countryOfOriginId))
+      : e.set();
+
+    if (growthPlan) {
+      //TODO
+    }
+
+    const updated = e.update(internshipEngagement, () => ({
+      set: {
+        ...simpleChanges,
+        mentor,
+        countryOfOrigin,
+      },
+    }));
+
+    const query = e.select(updated, internshipHydrate);
+
+    return await this.db.run(query);
   }
 
   async list(input: EngagementListInput, _session: Session, _changeset?: ID) {
@@ -85,8 +166,8 @@ export class EngagementEdgeDBRepository
   }
 
   async listAllByProjectId(projectId: ID, _session: Session) {
-    const project = e.cast(e.TranslationProject, e.uuid(projectId));
-    const query = e.select(project, languageHydrate);
+    const project = e.cast(e.Project, e.uuid(projectId));
+    const query = e.select(project, hydrate);
 
     return await this.db.run(query);
   }
@@ -95,7 +176,7 @@ export class EngagementEdgeDBRepository
     projectId: ID,
     excludes: EngagementStatus[] = [],
   ) {
-    const project = e.cast(e.TranslationProject, e.uuid(projectId));
+    const project = e.cast(e.Project, e.uuid(projectId));
 
     const ongoingExceptExclusions = e.cast(
       e.Engagement.Status,
