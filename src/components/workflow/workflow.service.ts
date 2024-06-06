@@ -31,6 +31,7 @@ export const WorkflowService = <W extends Workflow>(workflow: W) => {
       dynamicContext: W['context'],
       session: Session,
     ) {
+      const dynamicContextWithSession = { ...dynamicContext, session };
       let available = this.workflow.transitions;
 
       // Filter out non applicable transitions
@@ -52,7 +53,10 @@ export const WorkflowService = <W extends Workflow>(workflow: W) => {
         await Promise.all(
           [...new Set(conditions)].map(
             async (condition) =>
-              [condition, await condition.resolve(dynamicContext)] as const,
+              [
+                condition,
+                await condition.resolve(dynamicContextWithSession),
+              ] as const,
           ),
         ),
       );

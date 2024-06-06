@@ -1,3 +1,4 @@
+import { ScopedRole } from '../../../authorization/dto';
 import { EngagementService } from '../../../engagement';
 import { EngagementStatus } from '../../../engagement/dto';
 import { TransitionCondition } from '../../../workflow/transitions/conditions';
@@ -20,6 +21,35 @@ export const IsMultiplication: Condition = {
     return {
       status: project.type === 'MultiplicationTranslation' ? 'ENABLED' : 'OMIT',
     };
+  },
+};
+
+export const hasValidRoleForProjectType: Condition = {
+  description: 'Validate role by project type',
+  resolve({ project, session }) {
+    const validRoles: ScopedRole[] = [
+      'global:Administrator',
+      'global:Consultant',
+      'global:ConsultantManager',
+    ];
+    const hasAtLeastOneValidRole = validRoles.some((role) =>
+      session?.roles.includes(role),
+    );
+
+    switch (project.type) {
+      case 'MomentumTranslation':
+        return {
+          status: 'ENABLED',
+        };
+      case 'Internship':
+        return {
+          status: hasAtLeastOneValidRole ? 'ENABLED' : 'OMIT',
+        };
+      default:
+        return {
+          status: 'OMIT',
+        };
+    }
   },
 };
 

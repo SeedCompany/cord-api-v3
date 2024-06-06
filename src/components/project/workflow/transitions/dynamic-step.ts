@@ -1,4 +1,5 @@
 import { ModuleRef } from '@nestjs/core';
+import { Session } from '~/common';
 import { DynamicState } from '../../../workflow/transitions/dynamic-state';
 import { Project, ProjectStep, ProjectStep as Step } from '../../dto';
 import { ProjectWorkflowRepository } from '../project-workflow.repository';
@@ -6,6 +7,7 @@ import { ProjectWorkflowRepository } from '../project-workflow.repository';
 export interface ResolveParams {
   project: Project;
   moduleRef: ModuleRef;
+  session?: Session;
 }
 
 export const BackTo = (

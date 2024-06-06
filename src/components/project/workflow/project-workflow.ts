@@ -3,6 +3,7 @@ import { TransitionType as Type } from '../../workflow/dto';
 import { ProjectStep as Step } from '../dto';
 import { ProjectWorkflowEvent } from './dto';
 import {
+  hasValidRoleForProjectType,
   IsMultiplication,
   IsNotMultiplication,
   RequireOngoingEngagementsToBeFinalizingCompletion,
@@ -116,7 +117,7 @@ export const ProjectWorkflow = defineWorkflow({
       to: Step.PrepForFinancialEndorsement,
       label: 'Endorse Plan',
       type: Type.Approve,
-      conditions: IsNotMultiplication,
+      conditions: [IsNotMultiplication, hasValidRoleForProjectType],
     },
   'Pending Consultant Endorsement -> Prep for Financial Endorsement Without Consultant Endorsement':
     {
@@ -124,7 +125,7 @@ export const ProjectWorkflow = defineWorkflow({
       to: Step.PrepForFinancialEndorsement,
       label: 'Do Not Endorse Plan',
       type: Type.Neutral,
-      conditions: IsNotMultiplication,
+      conditions: [IsNotMultiplication, hasValidRoleForProjectType],
     },
 
   // Prep for Financial Endorsement
