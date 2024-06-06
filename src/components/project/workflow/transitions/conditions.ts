@@ -53,6 +53,16 @@ export const hasValidRoleForProjectType: Condition = {
   },
 };
 
+export const hasEngagement: Condition = {
+  description: 'Has an engagement',
+  resolve({ project }) {
+    return {
+      status: project.engagementTotal > 0 ? 'ENABLED' : 'DISABLED',
+      disabledReason: `The project requires an engagement`,
+    };
+  },
+};
+
 export const RequireOngoingEngagementsToBeFinalizingCompletion: Condition = {
   description:
     'All engagements must be Finalizing Completion or in a terminal status',
