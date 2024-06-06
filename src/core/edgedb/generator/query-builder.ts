@@ -1,5 +1,5 @@
 import { generateQueryBuilder as runQueryBuilderGenerator } from '@edgedb/generate/dist/edgeql-js.js';
-import { groupBy } from '@seedcompany/common';
+import { groupBy, many, Many } from '@seedcompany/common';
 import type { ts } from '@ts-morph/common';
 import { Directory, Node } from 'ts-morph';
 import { codecs } from '../codecs';
@@ -30,6 +30,13 @@ export async function generateQueryBuilder({
   changeImplicitIDType(qbDir);
   adjustToImmutableTypes(qbDir);
   addTypeNarrowingToStdScalars(qbDir);
+  fixAncestorOverloads(qbDir, {
+    'default::LanguageEngagement': 'project',
+    'default::InternshipEngagement': 'project',
+    'default::ProgressReport': ['container', 'engagement'],
+    'ProgressReport::CommunityStory': 'container',
+    'ProgressReport::Highlight': 'container',
+  });
 }
 
 function addJsExtensionDeepPathsOfEdgedbLibrary(qbDir: Directory) {
@@ -140,6 +147,32 @@ function addTypeNarrowingToStdScalars(qbDir: Directory) {
   replaceText(std.getTypeAliasOrThrow('$json'), () => {
     return `export type $json<E = unknown> = $.ScalarType<"std::json", E>;`;
   });
+}
+
+/**
+ * Fixes shapes of types that have overloaded a pointer from an ancestor/grandparent.
+ * Currently, the QB only works with overloaded pointers of a direct parent.
+ */
+function fixAncestorOverloads(
+  qbDir: Directory,
+  fqnTypePointerMap: Record<string, Many<string>>,
+) {
+  for (const [fqn, pointers] of Object.entries(fqnTypePointerMap)) {
+    const module = qbDir.addSourceFileAtPath(
+      `modules/${fqn.split('::').slice(0, -1).join('/')}.ts`,
+    );
+    const type = fqn.split('::').pop()!;
+    const pointerStr = many(pointers)
+      .map((p) => `"${p}"`)
+      .join(' | ');
+    const shape = module.getTypeAliasOrThrow(`$${type}λShape`);
+    replaceText(shape, (prev) =>
+      prev.replaceAll(
+        /(?<==.+)[\w._$]+λShape/g,
+        (parent) => `Omit<${parent}, ${pointerStr}>`,
+      ),
+    );
+  }
 }
 
 const replaceText = <N extends ts.Node>(
