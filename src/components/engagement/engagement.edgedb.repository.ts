@@ -22,9 +22,7 @@ const hydrate = e.shape(e.Engagement, (engagement) => ({
   ]),
   parent: e.tuple({
     identity: engagement.project.id,
-    // labels: e.array_agg(
-    //   e.set(engagement.project.__type__.name.slice(9, null)),
-    // ),
+    labels: e.array_agg(e.set(engagement.project.__type__.name.slice(9, null))),
   }),
 }));
 
