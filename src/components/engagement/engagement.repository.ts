@@ -168,7 +168,9 @@ export class EngagementRepository extends CommonRepository {
           relation('out', '', 'status', ACTIVE),
           node('status'),
         ])
-        .return<{ dto: UnsecuredDto<Engagement> }>(
+        .return<{
+          dto: UnsecuredDto<LanguageEngagement | InternshipEngagement>;
+        }>(
           merge('props', 'changedProps', {
             __typename: typenameForView(
               ['LanguageEngagement', 'InternshipEngagement'],
@@ -266,7 +268,11 @@ export class EngagementRepository extends CommonRepository {
       'engagement.pnp',
     );
 
-    return await this.readOne(result.id, session, viewOfChangeset(changeset));
+    return (await this.readOne(
+      result.id,
+      session,
+      viewOfChangeset(changeset),
+    )) as UnsecuredDto<LanguageEngagement>;
   }
 
   async createInternshipEngagement(
@@ -499,7 +505,7 @@ export class EngagementRepository extends CommonRepository {
   async getOngoingEngagementIds(
     projectId: ID,
     excludes: EngagementStatus[] = [],
-  ) {
+  ): Promise<readonly ID[]> {
     const rows = await this.db
       .query()
       .match([

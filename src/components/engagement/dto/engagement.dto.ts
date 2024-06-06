@@ -14,10 +14,10 @@ import {
   Secured,
   SecuredBoolean,
   SecuredDateNullable,
-  SecuredDateTime,
+  SecuredDateTimeNullable,
   SecuredProps,
   SecuredRichTextNullable,
-  SecuredString,
+  SecuredStringNullable,
   Sensitivity,
   SensitivityField,
   UnsecuredDto,
@@ -116,17 +116,17 @@ class Engagement extends Interfaces {
 
   @Field()
   // Convert from date to datetime at migration
-  readonly lastSuspendedAt: SecuredDateTime;
+  readonly lastSuspendedAt: SecuredDateTimeNullable;
 
   @Field()
   // Convert from date to datetime at migration
-  readonly lastReactivatedAt: SecuredDateTime;
+  readonly lastReactivatedAt: SecuredDateTimeNullable;
 
   @Field({
     description: 'The last time the engagement status was modified',
   })
   // Convert from last terminated/completed at migration
-  readonly statusModifiedAt: SecuredDateTime;
+  readonly statusModifiedAt: SecuredDateTimeNullable;
 
   @DateTimeField()
   readonly modifiedAt: DateTime;
@@ -176,12 +176,12 @@ export class LanguageEngagement extends Engagement {
   readonly sentPrintingDate: SecuredDateNullable;
 
   @Field()
-  readonly paratextRegistryId: SecuredString;
+  readonly paratextRegistryId: SecuredStringNullable;
 
-  readonly pnp: Secured<LinkTo<'File'>>;
+  readonly pnp: Secured<LinkTo<'File'> | null>;
 
   @Field()
-  readonly historicGoal: SecuredString;
+  readonly historicGoal: SecuredStringNullable;
 }
 
 @RegisterResource({ db: e.InternshipEngagement })
@@ -214,11 +214,16 @@ export class InternshipEngagement extends Engagement {
   @DbLabel('ProductMethodology')
   readonly methodologies: SecuredMethodologies;
 
-  readonly growthPlan: Secured<LinkTo<'File'>>;
+  readonly growthPlan: Secured<LinkTo<'File'> | null>;
 }
 
 export const engagementRange = (engagement: UnsecuredDto<Engagement>) =>
   DateInterval.tryFrom(engagement.startDate, engagement.endDate);
+
+export const EngagementConcretes = {
+  LanguageEngagement: LanguageEngagement,
+  InternshipEngagement: InternshipEngagement,
+} as const satisfies Record<Engagement['__typename'], typeof Engagement>;
 
 declare module '~/core/resources/map' {
   interface ResourceMap {
