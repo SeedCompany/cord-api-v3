@@ -111,7 +111,7 @@ export class UpdateProjectStatusHandler
 
   private async updateEngagements(
     status: EngagementStatus,
-    engagementIds: ID[],
+    engagementIds: readonly ID[],
     type: ProjectType,
     session: Session,
   ) {

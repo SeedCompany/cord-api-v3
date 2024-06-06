@@ -1,11 +1,15 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Type } from '@nestjs/common';
+import { ModuleRef } from '@nestjs/core';
+import { LazyGetter } from 'lazy-get-decorator';
 import { difference } from 'lodash';
 import { ID, PublicOf, Session } from '~/common';
+import { grabInstances } from '~/common/instance-maps';
 import { castToEnum, e, RepoFor } from '~/core/edgedb';
+import { ProjectType } from '../project/dto';
 import {
+  EngagementConcretes as ConcreteTypes,
   CreateInternshipEngagement,
   CreateLanguageEngagement,
-  EngagementListInput,
   EngagementStatus,
   IEngagement,
   UpdateInternshipEngagement,
@@ -13,61 +17,103 @@ import {
 } from './dto';
 import { EngagementRepository } from './engagement.repository';
 
-const hydrate = e.shape(e.Engagement, (engagement) => ({
+const baseHydrate = e.shape(e.Engagement, (engagement) => ({
   ...engagement['*'],
-  ceremony: true,
   __typename: castToEnum(engagement.__type__.name.slice(9, null), [
     'LanguageEngagement',
     'InternshipEngagement',
   ]),
+  project: e.select(engagement.project, (project) => ({
+    id: true,
+    status: true,
+    type: castToEnum(project.__type__.name.slice(9, -7), ProjectType),
+  })),
   parent: e.tuple({
     identity: engagement.project.id,
     labels: e.array_agg(e.set(engagement.project.__type__.name.slice(9, null))),
+    properties: e.tuple({
+      id: engagement.project.id,
+      createdAt: engagement.project.createdAt,
+    }),
   }),
+  ceremony: true,
+  completeDate: engagement.completedDate, // TODO fix in schema
 }));
 
-const languageHydrate = e.shape(e.LanguageEngagement, (engagement) => ({
-  ...hydrate,
-  project: engagement.project,
-  language: engagement.language,
-  pnp: engagement.pnp,
+const languageHydrate = e.shape(e.LanguageEngagement, (le) => ({
+  ...le['*'],
+  ...baseHydrate(le),
+  __typename: castToEnum(le.__type__.name.slice(9, null), [
+    'LanguageEngagement',
+  ]),
+  language: true,
+  pnp: true,
 }));
 
-const internshipHydrate = e.shape(e.InternshipEngagement, (engagement) => ({
-  ...hydrate,
-  project: engagement.project,
-  intern: engagement.intern,
-  mentor: engagement.mentor,
-  countryOfOrigin: engagement.countryOfOrigin,
-  growthPlan: engagement.growthPlan,
+const internshipHydrate = e.shape(e.InternshipEngagement, (ie) => ({
+  ...ie['*'],
+  ...baseHydrate(ie),
+  __typename: castToEnum(ie.__type__.name.slice(9, null), [
+    'InternshipEngagement',
+  ]),
+  intern: true,
+  mentor: true,
+  countryOfOrigin: true,
+  growthPlan: true,
 }));
+
+const hydrate = e.shape(e.Engagement, (engagement) => ({
+  ...languageHydrate(engagement),
+  ...internshipHydrate(engagement),
+  __typename: castToEnum(engagement.__type__.name.slice(9, null), [
+    'LanguageEngagement',
+    'InternshipEngagement',
+  ]),
+}));
+
+export const ConcreteRepos = {
+  LanguageEngagement: class LanguageEngagementRepository extends RepoFor(
+    ConcreteTypes.LanguageEngagement,
+    { hydrate: languageHydrate, omit: ['create', 'update'] },
+  ) {
+    async create(input: CreateLanguageEngagement) {
+      const project = e.cast(e.TranslationProject, e.uuid(input.projectId));
+      return await this.defaults.create({
+        ...input,
+        projectContext: project.projectContext,
+      });
+    }
+
+    async update({ id, ...changes }: UpdateLanguageEngagement) {
+      return await this.defaults.update({ id, ...changes });
+    }
+  },
+
+  InternshipEngagement: class InternshipEngagementRepository extends RepoFor(
+    ConcreteTypes.InternshipEngagement,
+    { hydrate: internshipHydrate },
+  ) {},
+} satisfies Record<keyof typeof ConcreteTypes, Type>;
 
 @Injectable()
 export class EngagementEdgeDBRepository
   extends RepoFor(IEngagement, { hydrate, omit: ['create', 'update'] })
   implements PublicOf<EngagementRepository>
 {
+  constructor(private readonly moduleRef: ModuleRef) {
+    super();
+  }
+
+  @LazyGetter() protected get concretes() {
+    return grabInstances(this.moduleRef, ConcreteRepos);
+  }
+
   async createLanguageEngagement(
     input: CreateLanguageEngagement,
     _session: Session,
     _changeset?: ID,
   ) {
-    const { projectId, languageId, pnp, ...props } = input;
-
-    const project = e.cast(e.TranslationProject, e.uuid(projectId));
-    const language = e.cast(e.Language, e.uuid(languageId));
-
-    const createdLanguageEngagement = e.insert(e.LanguageEngagement, {
-      project: project as any,
-      language: language,
-      projectContext: project.projectContext,
-      pnp: undefined, //TODO
-      ...props,
-    });
-
-    const query = e.select(createdLanguageEngagement, languageHydrate);
-
-    return await this.db.run(query);
+    return await this.concretes.LanguageEngagement.create(input);
   }
 
   async createInternshipEngagement(
@@ -100,33 +146,17 @@ export class EngagementEdgeDBRepository
     return await this.db.run(query);
   }
 
-  getActualLanguageChanges = this.getActualChanges(LanguageEngagement);
-
-  async updateLanguage(
-    changes: UpdateLanguageEngagement,
-    _session: Session,
-    _changeset?: ID,
-  ) {
-    const { id, pnp, ...simpleChanges } = changes;
-
-    const languageEngagement = e.cast(e.LanguageEngagement, e.uuid(id));
-
-    if (pnp) {
-      //TODO
-    }
-
-    const updated = e.update(languageEngagement, () => ({
-      set: {
-        ...simpleChanges,
-      },
-    }));
-
-    const query = e.select(updated, languageHydrate);
-
-    return await this.db.run(query);
+  get getActualLanguageChanges() {
+    return this.concretes.LanguageEngagement.getActualChanges;
   }
 
-  getActualInternshipChanges = this.getActualChanges(InternshipEngagement);
+  async updateLanguage(input: UpdateLanguageEngagement) {
+    return await this.concretes.LanguageEngagement.update(input);
+  }
+
+  get getActualInternshipChanges() {
+    return this.concretes.InternshipEngagement.getActualChanges;
+  }
 
   async updateInternship(
     changes: UpdateInternshipEngagement,
@@ -158,11 +188,6 @@ export class EngagementEdgeDBRepository
 
     return await this.db.run(query);
   }
-
-  async list(input: EngagementListInput, _session: Session, _changeset?: ID) {
-    return await this.defaults.list(input);
-  }
-
   async listAllByProjectId(projectId: ID, _session: Session) {
     const project = e.cast(e.Project, e.uuid(projectId));
     const query = e.select(project, hydrate);
@@ -181,10 +206,10 @@ export class EngagementEdgeDBRepository
       e.set(...difference([...EngagementStatus.Ongoing], excludes)),
     );
 
-    const query = e.select(project.engagements, (eng) => ({
+    const engagements = e.select(project.engagements, (eng) => ({
       filter: e.op(eng.status, 'in', ongoingExceptExclusions),
     }));
 
-    return await this.db.run(query);
+    return await this.db.run(engagements.id);
   }
 }
