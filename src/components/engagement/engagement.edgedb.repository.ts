@@ -1,35 +1,50 @@
 import { Injectable } from '@nestjs/common';
 import { difference } from 'lodash';
 import { ID, PublicOf, Session } from '~/common';
-import { e, RepoFor } from '~/core/edgedb';
+import { castToEnum, e, RepoFor } from '~/core/edgedb';
 import {
   CreateLanguageEngagement,
   EngagementListInput,
   EngagementStatus,
-  LanguageEngagement,
+  IEngagement,
   UpdateLanguageEngagement,
 } from './dto';
 import { EngagementRepository } from './engagement.repository';
 
+const hydrate = e.shape(e.Engagement, (engagement) => ({
+  ...engagement['*'],
+  ceremony: true,
+  __typename: castToEnum(engagement.__type__.name.slice(9, null), [
+    'LanguageEngagement',
+    'InternshipEngagement',
+  ]),
+  parent: e.tuple({
+    identity: engagement.project.id,
+    // labels: e.array_agg(
+    //   e.set(engagement.project.__type__.name.slice(9, null)),
+    // ),
+  }),
+}));
+
+const languageHydrate = e.shape(e.LanguageEngagement, (engagement) => ({
+  ...hydrate,
+  project: engagement.project,
+  language: engagement.language,
+  pnp: engagement.pnp,
+}));
+
+const internshipHydrate = e.shape(e.InternshipEngagement, (engagement) => ({
+  ...hydrate,
+  project: engagement.project,
+  intern: engagement.intern,
+  mentor: engagement.mentor,
+  countryOfOrigin: engagement.countryOfOrigin,
+  growthPlan: engagement.growthPlan,
+}));
+
 @Injectable()
 export class EngagementEdgeDBRepository
-  extends RepoFor(LanguageEngagement, {
-    hydrate: (engagement) => ({
-      ...engagement['*'],
-      project: true,
-      language: true,
-      ceremony: true,
-      pnp: true,
-      parent: e.tuple({
-        identity: engagement.project.id,
-        // labels: e.array_agg(
-        //   e.set(engagement.project.__type__.name.slice(9, null)),
-        // ),
-      }),
-      completeDate: engagement.completedDate,
-    }),
-    omit: ['create', 'update'],
-  })
+  extends RepoFor(IEngagement, { hydrate, omit: ['create', 'update'] })
   implements PublicOf<EngagementRepository>
 {
   async createLanguageEngagement(
@@ -50,7 +65,7 @@ export class EngagementEdgeDBRepository
       ...props,
     });
 
-    const query = e.select(createdLanguageEngagement, this.hydrate);
+    const query = e.select(createdLanguageEngagement, languageHydrate);
 
     return await this.db.run(query);
   }
@@ -71,10 +86,7 @@ export class EngagementEdgeDBRepository
 
   async listAllByProjectId(projectId: ID, _session: Session) {
     const project = e.cast(e.TranslationProject, e.uuid(projectId));
-
-    const query = e.select(e.LanguageEngagement, () => ({
-      filter_single: { project },
-    }));
+    const query = e.select(project, languageHydrate);
 
     return await this.db.run(query);
   }
@@ -90,12 +102,8 @@ export class EngagementEdgeDBRepository
       e.set(...difference([...EngagementStatus.Ongoing], excludes)),
     );
 
-    const query = e.select(e.LanguageEngagement, (eng) => ({
-      filter: e.op(
-        e.op('exists', project),
-        'and',
-        e.op(eng.status, 'in', ongoingExceptExclusions),
-      ),
+    const query = e.select(project.engagements, (eng) => ({
+      filter: e.op(eng.status, 'in', ongoingExceptExclusions),
     }));
 
     return await this.db.run(query);
