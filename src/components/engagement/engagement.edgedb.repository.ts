@@ -181,8 +181,7 @@ export class EngagementEdgeDBRepository
     projectId: ID,
     excludes: EngagementStatus[] = [],
   ) {
-    const translationProject = e.cast(e.TranslationProject, e.uuid(projectId));
-    const internshipProject = e.cast(e.InternshipProject, e.uuid(projectId));
+    const project = e.cast(e.Project, e.uuid(projectId));
 
     const ongoingExceptExclusions = e.cast(
       e.Engagement.Status,
@@ -191,11 +190,7 @@ export class EngagementEdgeDBRepository
 
     const engagements = e.select(e.Engagement, (eng) => ({
       filter: e.op(
-        e.op(
-          e.op(eng.project, '=', translationProject),
-          'or',
-          e.op(eng.project, '=', internshipProject),
-        ),
+        e.op(eng.project, '=', project),
         'and',
         e.op(eng.status, 'in', ongoingExceptExclusions),
       ),
