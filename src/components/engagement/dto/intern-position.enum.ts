@@ -20,18 +20,18 @@ export const InternshipProgram = makeEnum({
   `,
 });
 
+const historic = { deprecationReason: 'Legacy. Only used in historic data.' };
+
 export type InternshipPosition = EnumType<typeof InternshipPosition>;
 export const InternshipPosition = makeEnum({
   name: 'InternshipPosition',
   values: [
     {
       value: 'ConsultantInTraining',
-      domain: null,
       program: InternshipProgram.QualityAssurance,
     },
     {
       value: 'MidLevelQualityAssurance',
-      domain: null,
       program: InternshipProgram.QualityAssurance,
     },
 
@@ -92,46 +92,34 @@ export const InternshipPosition = makeEnum({
       domain: InternshipDomain.FieldPrograms,
       program: InternshipProgram.CapacityBuilding,
     },
-    // historic
     {
+      ...historic,
       value: 'OtherAttached',
       domain: InternshipDomain.FieldPrograms,
       program: InternshipProgram.QualityAssurance,
-      historic: true,
     },
     {
+      ...historic,
       value: 'OtherTranslationCapacity',
       domain: InternshipDomain.FieldPrograms,
       program: InternshipProgram.QualityAssurance,
-      historic: true,
     },
     {
+      ...historic,
       value: 'OtherPartnershipCapacity',
       domain: InternshipDomain.Leadership,
       program: InternshipProgram.CapacityBuilding,
-      historic: true,
     },
     {
+      ...historic,
       value: 'ExegeticalFacilitator',
-      domain: null,
       program: InternshipProgram.QualityAssurance,
-      historic: true,
     },
     {
+      ...historic,
       value: 'TranslationFacilitator',
       domain: InternshipDomain.FieldPrograms,
       program: InternshipProgram.CapacityBuilding,
-      historic: true,
-    },
-    {
-      value: 'ExegeticalFacilitator',
-      deprecationReason: 'Legacy. Only used in historic data.',
-      historic: true,
-    },
-    {
-      value: 'TranslationFacilitator',
-      deprecationReason: 'Legacy. Only used in historic data.',
-      historic: true,
     },
   ],
 });
