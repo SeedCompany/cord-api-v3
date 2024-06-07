@@ -1,13 +1,11 @@
-import { Type } from '@nestjs/common';
 import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
   DbUnique,
-  IntersectionType,
+  IntersectTypes,
   NameField,
   Resource,
   ResourceRelationsShape,
-  SecuredEnum,
   SecuredProperty,
   SecuredProps,
   SecuredRoles,
@@ -24,23 +22,15 @@ import { IProject as Project } from '../../project/dto';
 import { Education } from '../education/dto';
 import { Unavailability } from '../unavailability/dto';
 import { KnownLanguage } from './known-language.dto';
-import { UserStatus } from './user-status.enum';
+import { SecuredUserStatus } from './user-status.enum';
 
-const PinnableResource: Type<Resource & Pinnable> = IntersectionType(
-  Resource,
-  Pinnable,
-);
-
-@ObjectType({
-  description: SecuredProperty.descriptionFor('a user status'),
-})
-export abstract class SecuredUserStatus extends SecuredEnum(UserStatus) {}
+const Interfaces = IntersectTypes(Resource, Pinnable);
 
 @RegisterResource({ db: e.User })
 @ObjectType({
-  implements: [Resource, Pinnable],
+  implements: Interfaces.members,
 })
-export class User extends PinnableResource {
+export class User extends Interfaces {
   static readonly Props = keysOf<User>();
   static readonly SecuredProps = keysOf<SecuredProps<User>>();
   static readonly Relations = () =>

@@ -2,13 +2,12 @@ import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
   Calculated,
-  IntersectionType,
+  IntersectTypes,
   Resource,
   ResourceRelationsShape,
   Secured,
   SecuredBoolean,
   SecuredDateNullable,
-  SecuredEnum,
   SecuredProps,
   Sensitivity,
   SensitivityField,
@@ -20,29 +19,16 @@ import { ChangesetAware } from '../../changeset/dto';
 import { Organization } from '../../organization/dto';
 import { SecuredPartnerTypes } from '../../partner/dto';
 import { IProject } from '../../project/dto';
-import { FinancialReportingType } from './financial-reporting-type.enum';
-import { PartnershipAgreementStatus } from './partnership-agreement-status.enum';
+import { SecuredFinancialReportingType } from './financial-reporting-type.enum';
+import { SecuredPartnershipAgreementStatus } from './partnership-agreement-status.enum';
 
-@ObjectType({
-  description: SecuredEnum.descriptionFor('a partnership agreement status'),
-})
-export abstract class SecuredPartnershipAgreementStatus extends SecuredEnum(
-  PartnershipAgreementStatus,
-) {}
-
-@ObjectType({
-  description: SecuredEnum.descriptionFor('partnership funding type'),
-})
-export abstract class SecuredFinancialReportingType extends SecuredEnum(
-  FinancialReportingType,
-  { nullable: true },
-) {}
+const Interfaces = IntersectTypes(Resource, ChangesetAware);
 
 @RegisterResource({ db: e.Partnership })
 @ObjectType({
-  implements: [Resource, ChangesetAware],
+  implements: Interfaces.members,
 })
-export class Partnership extends IntersectionType(ChangesetAware, Resource) {
+export class Partnership extends Interfaces {
   static readonly Props = keysOf<Partnership>();
   static readonly SecuredProps = keysOf<SecuredProps<Partnership>>();
   static readonly Relations = {

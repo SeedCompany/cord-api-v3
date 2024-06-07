@@ -1,4 +1,3 @@
-import { Type } from '@nestjs/common';
 import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { simpleSwitch } from '@seedcompany/common';
 import { stripIndent } from 'common-tags';
@@ -11,7 +10,7 @@ import {
   DbLabel,
   DbSort,
   DbUnique,
-  IntersectionType,
+  IntersectTypes,
   NameField,
   parentIdMiddleware,
   Resource,
@@ -54,14 +53,12 @@ type AnyProject = MergeExclusive<
   MergeExclusive<MultiplicationTranslationProject, InternshipProject>
 >;
 
-const Interfaces: Type<
-  Resource & Postable & ChangesetAware & Pinnable & Commentable
-> = IntersectionType(
+const Interfaces = IntersectTypes(
   Resource,
-  IntersectionType(
-    Commentable,
-    IntersectionType(Postable, IntersectionType(ChangesetAware, Pinnable)),
-  ),
+  ChangesetAware,
+  Pinnable,
+  Postable,
+  Commentable,
 );
 
 export const resolveProjectType = (val: Pick<AnyProject, 'type'>) => {
@@ -75,7 +72,7 @@ export const resolveProjectType = (val: Pick<AnyProject, 'type'>) => {
 @RegisterResource({ db: e.Project })
 @InterfaceType({
   resolveType: resolveProjectType,
-  implements: [Resource, Pinnable, Postable, ChangesetAware, Commentable],
+  implements: Interfaces.members,
 })
 class Project extends Interfaces {
   static readonly Props: string[] = keysOf<Project>();
