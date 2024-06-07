@@ -524,7 +524,7 @@ export class FileService {
   async updateDefinedFile<
     Input extends CreateDefinedFileVersionInput | undefined,
   >(
-    file: Secured<FileId | LinkTo<'File'>>,
+    file: Secured<FileId | LinkTo<'File'> | null>,
     field: string,
     input: Input,
     session: Session,
