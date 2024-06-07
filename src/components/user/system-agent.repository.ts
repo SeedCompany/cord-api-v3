@@ -4,7 +4,7 @@ import { Role } from '~/common';
 import { SystemAgent } from './dto';
 
 @Injectable()
-export abstract class ActorRepository {
+export abstract class SystemAgentRepository {
   @CachedByArg()
   async getAnonymous() {
     return await this.upsertAgent('Anonymous');

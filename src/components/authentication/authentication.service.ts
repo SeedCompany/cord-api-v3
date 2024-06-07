@@ -22,7 +22,7 @@ import { ForgotPassword } from '~/core/email/templates';
 import { Privileges } from '../authorization';
 import { rolesForScope, withoutScope } from '../authorization/dto';
 import { AssignableRoles } from '../authorization/dto/assignable-roles';
-import { ActorRepository } from '../user/actor.repository';
+import { SystemAgentRepository } from '../user/system-agent.repository';
 import { AuthenticationRepository } from './authentication.repository';
 import { CryptoService } from './crypto.service';
 import { LoginInput, RegisterInput, ResetPasswordInput } from './dto';
@@ -42,7 +42,7 @@ export class AuthenticationService {
     @Logger('authentication:service') private readonly logger: ILogger,
     private readonly repo: AuthenticationRepository,
     private readonly edgedb: EdgeDB,
-    private readonly actors: ActorRepository,
+    private readonly agents: SystemAgentRepository,
     private readonly moduleRef: ModuleRef,
   ) {}
 
@@ -121,7 +121,7 @@ export class AuthenticationService {
 
     const [result, anon] = await Promise.all([
       this.repo.resumeSession(token, impersonatee?.id),
-      this.actors.getAnonymous(),
+      this.agents.getAnonymous(),
     ]);
 
     if (!result) {

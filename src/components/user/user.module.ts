@@ -7,15 +7,15 @@ import { LocationModule } from '../location/location.module';
 import { OrganizationModule } from '../organization/organization.module';
 import { PartnerModule } from '../partner/partner.module';
 import { TimeZoneModule } from '../timezone';
-import { ActorEdgeDBRepository } from './actor.edgedb.repository';
 import { ActorLoader } from './actor.loader';
-import { ActorNeo4jRepository } from './actor.neo4j.repository';
-import { ActorRepository } from './actor.repository';
 import { AssignableRolesResolver } from './assignable-roles.resolver';
 import { EducationModule } from './education/education.module';
 import { KnownLanguageRepository } from './known-language.repository';
 import { KnownLanguageResolver } from './known-language.resolver';
 import { AddActorLabelMigration } from './migrations/add-actor-label.migration';
+import { SystemAgentEdgeDBRepository } from './system-agent.edgedb.repository';
+import { SystemAgentNeo4jRepository } from './system-agent.neo4j.repository';
+import { SystemAgentRepository } from './system-agent.repository';
 import { UnavailabilityModule } from './unavailability/unavailability.module';
 import { UserEdgeDBRepository } from './user.edgedb.repository';
 import { UserLoader } from './user.loader';
@@ -45,15 +45,15 @@ import { UserService } from './user.service';
     splitDb(UserRepository, UserEdgeDBRepository),
     KnownLanguageRepository,
     {
-      ...splitDb(ActorNeo4jRepository, ActorEdgeDBRepository),
-      provide: ActorRepository,
+      ...splitDb(SystemAgentNeo4jRepository, SystemAgentEdgeDBRepository),
+      provide: SystemAgentRepository,
     },
     AddActorLabelMigration,
   ],
   exports: [
     UserService,
     UserRepository,
-    ActorRepository,
+    SystemAgentRepository,
     EducationModule,
     UnavailabilityModule,
   ],

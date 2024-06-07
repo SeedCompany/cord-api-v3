@@ -2,10 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { node } from 'cypher-query-builder';
 import { ID, Role } from '~/common';
 import { DatabaseService } from '~/core/database';
-import { ActorRepository } from './actor.repository';
+import { SystemAgentRepository } from './system-agent.repository';
 
 @Injectable()
-export class ActorNeo4jRepository extends ActorRepository {
+export class SystemAgentNeo4jRepository extends SystemAgentRepository {
   constructor(private readonly db: DatabaseService) {
     super();
   }

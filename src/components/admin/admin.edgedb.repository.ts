@@ -3,7 +3,7 @@ import { ID, Role } from '~/common';
 import { RootUserAlias } from '~/core/config/root-user.config';
 import { disableAccessPolicies, e, EdgeDB } from '~/core/edgedb';
 import { AuthenticationRepository } from '../authentication/authentication.repository';
-import { ActorRepository } from '../user/actor.repository';
+import { SystemAgentRepository } from '../user/system-agent.repository';
 
 @Injectable()
 export class AdminEdgeDBRepository {
@@ -11,7 +11,7 @@ export class AdminEdgeDBRepository {
   constructor(
     edgedb: EdgeDB,
     readonly auth: AuthenticationRepository,
-    readonly actors: ActorRepository,
+    readonly agents: SystemAgentRepository,
   ) {
     this.db = edgedb.withOptions(disableAccessPolicies);
   }
@@ -38,7 +38,7 @@ export class AdminEdgeDBRepository {
   }
 
   async createRootUser(id: ID, email: string, passwordHash: string) {
-    const ghost = await this.actors.getGhost();
+    const ghost = await this.agents.getGhost();
 
     const newUser = e.insert(e.User, {
       id,
@@ -63,7 +63,7 @@ export class AdminEdgeDBRepository {
   }
 
   async updateEmail(id: ID, email: string) {
-    const ghost = await this.actors.getGhost();
+    const ghost = await this.agents.getGhost();
     const u = e.cast(e.User, e.uuid(id));
     const query = e.update(u, () => ({ set: { email } }));
     await this.db

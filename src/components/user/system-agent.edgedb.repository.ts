@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { Role } from '~/common';
 import { disableAccessPolicies, EdgeDB, edgeql } from '~/core/edgedb';
-import { ActorRepository } from './actor.repository';
+import { SystemAgentRepository } from './system-agent.repository';
 
 @Injectable()
-export class ActorEdgeDBRepository extends ActorRepository {
+export class SystemAgentEdgeDBRepository extends SystemAgentRepository {
   private readonly db: EdgeDB;
   constructor(edgedb: EdgeDB) {
     super();
