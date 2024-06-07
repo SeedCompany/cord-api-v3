@@ -359,7 +359,11 @@ export class EngagementRepository extends CommonRepository {
       'engagement.growthPlan',
     );
 
-    return await this.readOne(result.id, session, viewOfChangeset(changeset));
+    return (await this.readOne(
+      result.id,
+      session,
+      viewOfChangeset(changeset),
+    )) as UnsecuredDto<InternshipEngagement>;
   }
 
   getActualLanguageChanges = getChanges(LanguageEngagement);
