@@ -14,6 +14,7 @@ import { AssignableRolesResolver } from './assignable-roles.resolver';
 import { EducationModule } from './education/education.module';
 import { KnownLanguageRepository } from './known-language.repository';
 import { KnownLanguageResolver } from './known-language.resolver';
+import { AddActorLabelMigration } from './migrations/add-actor-label.migration';
 import { UnavailabilityModule } from './unavailability/unavailability.module';
 import { UserEdgeDBRepository } from './user.edgedb.repository';
 import { UserLoader } from './user.loader';
@@ -45,6 +46,7 @@ import { UserService } from './user.service';
       ...splitDb(ActorNeo4jRepository, ActorEdgeDBRepository),
       provide: ActorRepository,
     },
+    AddActorLabelMigration,
   ],
   exports: [
     UserService,

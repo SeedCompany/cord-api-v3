@@ -13,7 +13,7 @@ export class ActorNeo4jRepository extends ActorRepository {
   protected async upsertAgent(name: string, roles?: readonly Role[]) {
     const res = await this.db
       .query()
-      .merge(node('agent', 'SystemAgent', { name }))
+      .merge(node('agent', ['SystemAgent', 'Actor'], { name }))
       .onCreate.set({
         variables: {
           'agent.id': 'apoc.create.uuid()',
