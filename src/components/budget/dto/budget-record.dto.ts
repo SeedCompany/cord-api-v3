@@ -3,7 +3,7 @@ import { keys as keysOf } from 'ts-transformer-keys';
 import {
   Calculated,
   ID,
-  IntersectionType,
+  IntersectTypes,
   Resource,
   Secured,
   SecuredFloatNullable,
@@ -19,12 +19,14 @@ import { ChangesetAware } from '../../changeset/dto';
 import { BudgetStatus } from './budget-status.enum';
 import { Budget } from './budget.dto';
 
+const Interfaces = IntersectTypes(Resource, ChangesetAware);
+
 @Calculated()
 @RegisterResource({ db: e.Budget.Record })
 @ObjectType({
-  implements: [Resource, ChangesetAware],
+  implements: Interfaces.members,
 })
-export class BudgetRecord extends IntersectionType(ChangesetAware, Resource) {
+export class BudgetRecord extends Interfaces {
   static readonly Props = keysOf<BudgetRecord>();
   static readonly SecuredProps = keysOf<SecuredProps<BudgetRecord>>();
   static readonly Parent = import('./budget.dto').then((m) => m.Budget);

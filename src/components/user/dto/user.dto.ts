@@ -1,9 +1,8 @@
-import { Type } from '@nestjs/common';
 import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
   DbUnique,
-  IntersectionType,
+  IntersectTypes,
   NameField,
   Resource,
   ResourceRelationsShape,
@@ -25,16 +24,13 @@ import { Unavailability } from '../unavailability/dto';
 import { KnownLanguage } from './known-language.dto';
 import { SecuredUserStatus } from './user-status.enum';
 
-const PinnableResource: Type<Resource & Pinnable> = IntersectionType(
-  Resource,
-  Pinnable,
-);
+const Interfaces = IntersectTypes(Resource, Pinnable);
 
 @RegisterResource({ db: e.User })
 @ObjectType({
-  implements: [Resource, Pinnable],
+  implements: Interfaces.members,
 })
-export class User extends PinnableResource {
+export class User extends Interfaces {
   static readonly Props = keysOf<User>();
   static readonly SecuredProps = keysOf<SecuredProps<User>>();
   static readonly Relations = () =>

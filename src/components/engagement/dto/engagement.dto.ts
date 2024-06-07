@@ -1,4 +1,3 @@
-import { Type } from '@nestjs/common';
 import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
@@ -9,7 +8,7 @@ import {
   DateTimeField,
   DbLabel,
   ID,
-  IntersectionType,
+  IntersectTypes,
   parentIdMiddleware,
   Resource,
   ResourceRelationsShape,
@@ -48,8 +47,7 @@ export type AnyEngagement = MergeExclusive<
   InternshipEngagement
 >;
 
-const ChangesetAwareResource: Type<Resource & ChangesetAware> =
-  IntersectionType(Resource, ChangesetAware);
+const Interfaces = IntersectTypes(Resource, ChangesetAware);
 
 export const resolveEngagementType = (val: Pick<AnyEngagement, '__typename'>) =>
   val.__typename === 'LanguageEngagement'
@@ -59,12 +57,12 @@ export const resolveEngagementType = (val: Pick<AnyEngagement, '__typename'>) =>
 @RegisterResource({ db: e.Engagement })
 @InterfaceType({
   resolveType: resolveEngagementType,
-  implements: [Resource, ChangesetAware],
+  implements: Interfaces.members,
 })
 /**
  * This should be used for GraphQL but never for TypeScript types.
  */
-class Engagement extends ChangesetAwareResource {
+class Engagement extends Interfaces {
   static readonly Props: string[] = keysOf<Engagement>();
   static readonly SecuredProps: string[] = keysOf<SecuredProps<Engagement>>();
   static readonly Parent = import('../../project/dto').then((m) => m.IProject);

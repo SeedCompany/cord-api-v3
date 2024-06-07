@@ -1,10 +1,9 @@
-import { Type } from '@nestjs/common';
 import { Field, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
   DateTimeField,
-  IntersectionType,
+  IntersectTypes,
   Resource,
   ResourceRelationsShape,
   Secured,
@@ -24,14 +23,11 @@ import { Postable } from '../../post/dto';
 import { IProject } from '../../project/dto';
 import { SecuredPartnerTypes } from './partner-type.enum';
 
-const Interfaces: Type<Resource & Pinnable & Postable> = IntersectionType(
-  Resource,
-  IntersectionType(Pinnable, Postable),
-);
+const Interfaces = IntersectTypes(Resource, Pinnable, Postable);
 
 @RegisterResource({ db: e.Partner })
 @ObjectType({
-  implements: [Resource, Pinnable, Postable],
+  implements: Interfaces.members,
 })
 export class Partner extends Interfaces {
   static readonly Props = keysOf<Partner>();
