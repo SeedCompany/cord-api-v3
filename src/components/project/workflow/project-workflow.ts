@@ -3,7 +3,7 @@ import { TransitionType as Type } from '../../workflow/dto';
 import { ProjectStep as Step } from '../dto';
 import { ProjectWorkflowEvent } from './dto';
 import {
-  hasEngagement,
+  HasEngagement,
   hasValidRoleForProjectType,
   IsMultiplication,
   IsNotMultiplication,
@@ -121,7 +121,7 @@ export const ProjectWorkflow = defineWorkflow({
       conditions: [
         IsNotMultiplication,
         hasValidRoleForProjectType,
-        hasEngagement,
+        HasEngagement,
       ],
     },
   'Pending Consultant Endorsement -> Prep for Financial Endorsement Without Consultant Endorsement':
@@ -133,7 +133,7 @@ export const ProjectWorkflow = defineWorkflow({
       conditions: [
         IsNotMultiplication,
         hasValidRoleForProjectType,
-        hasEngagement,
+        HasEngagement,
       ],
     },
 
