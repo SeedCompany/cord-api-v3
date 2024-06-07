@@ -40,35 +40,46 @@ const baseHydrate = e.shape(e.Engagement, (engagement) => ({
   completeDate: engagement.completedDate, // TODO fix in schema
 }));
 
-const languageHydrate = e.shape(e.LanguageEngagement, (le) => ({
-  ...le['*'],
-  ...baseHydrate(le),
-  __typename: castToEnum(le.__type__.name.slice(9, null), [
-    'LanguageEngagement',
-  ]),
+const languageExtraHydrate = e.shape(e.LanguageEngagement, (le) => ({
   language: true,
+  firstScripture: true,
+  lukePartnership: true,
+  openToInvestorVisit: true,
+  sentPrintingDate: true,
+  paratextRegistryId: true,
   pnp: true,
+  historicGoal: true,
 }));
 
-const internshipHydrate = e.shape(e.InternshipEngagement, (ie) => ({
-  ...ie['*'],
-  ...baseHydrate(ie),
-  __typename: castToEnum(ie.__type__.name.slice(9, null), [
-    'InternshipEngagement',
-  ]),
+const internshipExtraHydrate = e.shape(e.InternshipEngagement, (ie) => ({
+  countryOfOrigin: true,
   intern: true,
   mentor: true,
-  countryOfOrigin: true,
+  position: true,
+  methodologies: true,
   growthPlan: true,
 }));
 
-const hydrate = e.shape(e.Engagement, (engagement) => ({
-  ...languageHydrate(engagement),
-  ...internshipHydrate(engagement),
-  __typename: castToEnum(engagement.__type__.name.slice(9, null), [
+const languageHydrate = e.shape(e.LanguageEngagement, (le) => ({
+  ...baseHydrate(le),
+  ...languageExtraHydrate(le),
+  __typename: castToEnum(le.__type__.name.slice(9, null), [
     'LanguageEngagement',
+  ]),
+}));
+
+const internshipHydrate = e.shape(e.InternshipEngagement, (ie) => ({
+  ...baseHydrate(ie),
+  ...internshipExtraHydrate(ie),
+  __typename: castToEnum(ie.__type__.name.slice(9, null), [
     'InternshipEngagement',
   ]),
+}));
+
+const hydrate = e.shape(e.Engagement, (engagement) => ({
+  ...baseHydrate(engagement),
+  ...languageExtraHydrate(engagement),
+  ...internshipExtraHydrate(engagement),
 }));
 
 export const ConcreteRepos = {
