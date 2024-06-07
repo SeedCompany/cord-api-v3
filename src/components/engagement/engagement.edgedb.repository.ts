@@ -121,29 +121,7 @@ export class EngagementEdgeDBRepository
     _session: Session,
     _changeset?: ID,
   ) {
-    const { projectId, internId, mentorId, countryOfOriginId, ...props } =
-      input;
-
-    const project = e.cast(e.InternshipProject, e.uuid(projectId));
-    const intern = e.cast(e.User, e.uuid(internId));
-    const mentor = mentorId ? e.cast(e.User, e.uuid(mentorId)) : e.set();
-    const countryOfOrigin = countryOfOriginId
-      ? e.cast(e.Location, e.uuid(countryOfOriginId))
-      : e.set();
-
-    const createdInternshipEngagement = e.insert(e.InternshipEngagement, {
-      project: project as any,
-      projectContext: project.projectContext,
-      intern: intern,
-      mentor: mentor,
-      countryOfOrigin: countryOfOrigin,
-      growthPlan: undefined as any, //TODO
-      ...props,
-    });
-
-    const query = e.select(createdInternshipEngagement, internshipHydrate);
-
-    return await this.db.run(query);
+    return await this.concretes.InternshipEngagement.create(input);
   }
 
   get getActualLanguageChanges() {
@@ -199,15 +177,24 @@ export class EngagementEdgeDBRepository
     projectId: ID,
     excludes: EngagementStatus[] = [],
   ) {
-    const project = e.cast(e.Project, e.uuid(projectId));
+    const translationProject = e.cast(e.TranslationProject, e.uuid(projectId));
+    const internshipProject = e.cast(e.InternshipProject, e.uuid(projectId));
 
     const ongoingExceptExclusions = e.cast(
       e.Engagement.Status,
       e.set(...difference([...EngagementStatus.Ongoing], excludes)),
     );
 
-    const engagements = e.select(project.engagements, (eng) => ({
-      filter: e.op(eng.status, 'in', ongoingExceptExclusions),
+    const engagements = e.select(e.Engagement, (eng) => ({
+      filter: e.op(
+        e.op(
+          e.op(eng.project, '=', translationProject),
+          'or',
+          e.op(eng.project, '=', internshipProject),
+        ),
+        'and',
+        e.op(eng.status, 'in', ongoingExceptExclusions),
+      ),
     }));
 
     return await this.db.run(engagements.id);
