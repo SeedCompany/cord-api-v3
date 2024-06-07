@@ -98,6 +98,7 @@ export class ProjectWorkflowNeo4jRepository
       type: IProject,
       object: { id: project },
       changes: { step: event.step, stepChangedAt: event.at },
+      permanentAfter: null,
     });
 
     return event;
