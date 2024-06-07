@@ -10,7 +10,6 @@ import {
   Secured,
   SecuredBoolean,
   SecuredDateNullable,
-  SecuredEnumList,
   SecuredProperty,
   SecuredProps,
   SecuredStringNullable,
@@ -19,7 +18,7 @@ import {
 } from '~/common';
 import { e } from '~/core/edgedb';
 import { LinkTo, RegisterResource } from '~/core/resources';
-import { FinancialReportingType } from '../../partnership/dto';
+import { SecuredFinancialReportingTypes } from '../../partnership/dto';
 import { Pinnable } from '../../pin/dto';
 import { Postable } from '../../post/dto';
 import { IProject } from '../../project/dto';
@@ -29,13 +28,6 @@ const Interfaces: Type<Resource & Pinnable & Postable> = IntersectionType(
   Resource,
   IntersectionType(Pinnable, Postable),
 );
-
-@ObjectType({
-  description: SecuredEnumList.descriptionFor('financial reporting types'),
-})
-export abstract class SecuredFinancialReportingTypes extends SecuredEnumList(
-  FinancialReportingType,
-) {}
 
 @RegisterResource({ db: e.Partner })
 @ObjectType({

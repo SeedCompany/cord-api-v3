@@ -7,7 +7,6 @@ import {
   NameField,
   Resource,
   ResourceRelationsShape,
-  SecuredEnum,
   SecuredProperty,
   SecuredProps,
   SecuredRoles,
@@ -24,17 +23,12 @@ import { IProject as Project } from '../../project/dto';
 import { Education } from '../education/dto';
 import { Unavailability } from '../unavailability/dto';
 import { KnownLanguage } from './known-language.dto';
-import { UserStatus } from './user-status.enum';
+import { SecuredUserStatus } from './user-status.enum';
 
 const PinnableResource: Type<Resource & Pinnable> = IntersectionType(
   Resource,
   Pinnable,
 );
-
-@ObjectType({
-  description: SecuredProperty.descriptionFor('a user status'),
-})
-export abstract class SecuredUserStatus extends SecuredEnum(UserStatus) {}
 
 @RegisterResource({ db: e.User })
 @ObjectType({
