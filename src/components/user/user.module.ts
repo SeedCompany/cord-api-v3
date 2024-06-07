@@ -8,6 +8,7 @@ import { OrganizationModule } from '../organization/organization.module';
 import { PartnerModule } from '../partner/partner.module';
 import { TimeZoneModule } from '../timezone';
 import { ActorEdgeDBRepository } from './actor.edgedb.repository';
+import { ActorLoader } from './actor.loader';
 import { ActorNeo4jRepository } from './actor.neo4j.repository';
 import { ActorRepository } from './actor.repository';
 import { AssignableRolesResolver } from './assignable-roles.resolver';
@@ -39,6 +40,7 @@ import { UserService } from './user.service';
     UserResolver,
     AssignableRolesResolver,
     UserLoader,
+    ActorLoader,
     UserService,
     splitDb(UserRepository, UserEdgeDBRepository),
     KnownLanguageRepository,
