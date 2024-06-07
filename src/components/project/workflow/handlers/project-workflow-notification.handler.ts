@@ -63,16 +63,14 @@ export class ProjectWorkflowNotificationHandler
       toStep: event.workflowEvent.to,
     });
 
-    const changedBy = await this.users.readOneUnsecured(
-      workflowEvent.who.id,
-      this.config.rootUser.id,
-    );
-    const project = await this.projects.readOneUnsecured(
-      event.project.id,
-      this.config.rootUser.id,
-    );
-
-    let primaryPartnerName: string | undefined; // TODO
+    const [changedBy, project, primaryPartnerName] = await Promise.all([
+      this.users.readOneUnsecured(
+        workflowEvent.who.id,
+        this.config.rootUser.id,
+      ),
+      this.projects.readOneUnsecured(event.project.id, this.config.rootUser.id),
+      this.projects.getPrimaryOrganizationName(event.project.id),
+    ]);
 
     await asyncPool(1, notifyees, async (notifier) => {
       if (!notifier.email) {
@@ -94,8 +92,8 @@ export class ProjectWorkflowNotificationHandler
     notifier: Notifier,
     changedBy: UnsecuredDto<User>,
     project: UnsecuredDto<Project>,
-    previousStep?: ProjectStep,
-    primaryPartnerName?: string,
+    previousStep: ProjectStep,
+    primaryPartnerName: string | null,
   ): Promise<ProjectStepChangedProps> {
     const recipientId = notifier.id ?? this.config.rootUser.id;
     const recipientSession = await this.auth.sessionForUser(recipientId);

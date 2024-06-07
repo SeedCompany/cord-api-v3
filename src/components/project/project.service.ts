@@ -559,6 +559,10 @@ export class ProjectService {
     };
   }
 
+  async getPrimaryOrganizationName(id: ID) {
+    return await this.repo.getPrimaryOrganizationName(id);
+  }
+
   protected async validateOtherResourceId(
     ids: Many<ID> | null | undefined,
     label: string,

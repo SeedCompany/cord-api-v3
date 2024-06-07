@@ -24,8 +24,8 @@ export interface ProjectStepChangedProps {
   >;
   changedBy: Pick<User, 'id' | 'displayFirstName' | 'displayLastName'>;
   project: Pick<Project, 'id' | 'modifiedAt' | 'name' | 'step' | 'type'>;
-  previousStep?: Step;
-  primaryPartnerName?: string | undefined;
+  previousStep: Step;
+  primaryPartnerName: string | null;
 }
 
 export function ProjectStepChanged({
