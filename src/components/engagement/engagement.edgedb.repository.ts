@@ -166,9 +166,13 @@ export class EngagementEdgeDBRepository
 
     return await this.db.run(query);
   }
+
   async listAllByProjectId(projectId: ID, _session: Session) {
     const project = e.cast(e.Project, e.uuid(projectId));
-    const query = e.select(project, hydrate);
+    const query = e.select(e.Engagement, (eng) => ({
+      filter: e.op(eng.project, '=', project),
+      ...hydrate(eng),
+    }));
 
     return await this.db.run(query);
   }
