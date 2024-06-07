@@ -1,3 +1,4 @@
+export * from './actor.dto';
 export * from './user.dto';
 export * from './list-users.dto';
 export * from './create-person.dto';
