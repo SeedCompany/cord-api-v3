@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { splitDb2 } from '~/core';
+import { StepHistoryToWorkflowEventsMigration } from './migrations/step-history-to-workflow-events.migration';
 import { ProjectWorkflowEventLoader } from './project-workflow-event.loader';
 import { ProjectWorkflowFlowchart } from './project-workflow.flowchart';
 import { ProjectWorkflowEventGranter } from './project-workflow.granter';
@@ -25,6 +26,7 @@ import { ProjectWorkflowEventsResolver } from './resolvers/project-workflow-even
       edge: ProjectWorkflowRepository,
     }),
     ProjectWorkflowFlowchart,
+    StepHistoryToWorkflowEventsMigration,
   ],
   exports: [ProjectWorkflowService],
 })
