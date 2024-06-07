@@ -13,7 +13,10 @@ import {
 import { RegisterResource } from '~/core';
 import { e } from '~/core/edgedb';
 
-@RegisterResource({ db: e.Actor })
+@RegisterResource({
+  db: e.Actor,
+  skipAccessPolicies: true,
+})
 @InterfaceType({
   resolveType: resolveByTypename(Actor.name),
 })
