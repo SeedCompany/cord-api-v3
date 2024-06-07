@@ -23,7 +23,6 @@ import {
 import { ProjectLoader } from './project.loader';
 import { ProjectRepository } from './project.repository';
 import { ProjectResolver } from './project.resolver';
-import { ProjectRules } from './project.rules';
 import { ProjectService } from './project.service';
 import { TranslationProjectResolver } from './translation-project.resolver';
 import { ProjectUserConnectionResolver } from './user-connection.resolver';
@@ -52,13 +51,12 @@ import { ProjectWorkflowModule } from './workflow/project-workflow.module';
     ProjectEngagementConnectionResolver,
     ProjectUserConnectionResolver,
     ProjectService,
-    ProjectRules,
     splitDb(ProjectRepository, ProjectEdgeDBRepository),
     ...Object.values(ConcreteRepos),
     ProjectLoader,
     ...Object.values(handlers),
     RenameTranslationToMomentumMigration,
   ],
-  exports: [ProjectService, ProjectMemberModule, ProjectRules],
+  exports: [ProjectService, ProjectMemberModule],
 })
 export class ProjectModule {}
