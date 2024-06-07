@@ -34,7 +34,7 @@ export class InternshipPositionResolver {
   })
   options(): InternshipPositionOptions[] {
     return InternshipPosition.entries
-      .filter((position) => !position.historic)
+      .filter((position) => !position.deprecationReason)
       .map((position) => ({
         position: position.value,
         domain: position.domain ?? null,
