@@ -121,8 +121,8 @@ module default {
     constraint exclusive on ((.project, .intern));
     
     mentor: User;
-#     position: Engagement::InternPosition;
-#     multi methodologies: ProductMethodology;
+    position: Engagement::InternPosition;
+    multi methodologies: Product::Methodology;
     countryOfOrigin: Location;
     growthPlan: File;
     
@@ -167,6 +167,27 @@ module Engagement {
     NotRenewed,
   >;
   
+  scalar type InternPosition extending enum<
+    ConsultantInTraining,
+    MidLevelQualityAssurance,
+    LeadershipDevelopment,
+    Mobilization,
+    Personnel,
+    Communication,
+    Administration,
+    Technology,
+    Finance,
+    LanguageProgramManager,
+    Literacy,
+    OralityFacilitator,
+    ScriptureEngagement,
+    OtherAttached,
+    OtherTranslationCapacity,
+    OtherPartnershipCapacity,
+    ExegeticalFacilitator,
+    TranslationFacilitator,
+  >;
+
   abstract type Child extending Project::Child {
     annotation description := "\
       A type that is a child of an engagement. \
