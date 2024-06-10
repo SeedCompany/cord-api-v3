@@ -5,7 +5,6 @@ import {
   ObjectView,
   Session,
   UnsecuredDto,
-  unwrapSecured,
   viewOfChangeset,
 } from '~/common';
 import {
@@ -174,7 +173,6 @@ export class EngagementService {
     const updated = await this.repo.updateLanguage(
       {
         id: object.id,
-        firstScripture: unwrapSecured(object.firstScripture) ?? false,
         ...changes,
       },
       session,

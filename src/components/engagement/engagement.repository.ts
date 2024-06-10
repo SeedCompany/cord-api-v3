@@ -355,10 +355,7 @@ export class EngagementRepository extends CommonRepository {
   getActualLanguageChanges = getChanges(LanguageEngagement);
 
   async updateLanguage(
-    changes: UpdateLanguageEngagement & {
-      id: ID;
-      firstScripture?: boolean;
-    },
+    changes: UpdateLanguageEngagement,
     session: Session,
     changeset?: ID,
   ) {
