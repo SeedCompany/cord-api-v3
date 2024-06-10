@@ -59,6 +59,7 @@ describe('Engagement e2e', () => {
   let app: TestApp;
   let project: Raw<Project>;
   let internshipProject: Raw<Project>;
+  let translationProject: Raw<Project>;
   let language: Language;
   let location: Location;
   let user: TestUser;
@@ -812,7 +813,9 @@ describe('Engagement e2e', () => {
         mentorId: mentor.id,
       }),
     ).rejects.toThrowGqlError(
-      errors.notFound({ message: 'Could not find project' }),
+      errors.notFound({
+        message: expect.stringMatching(/Could not find project/i),
+      }),
     );
     await expect(
       createInternshipEngagement(app, {
@@ -857,6 +860,9 @@ describe('Engagement e2e', () => {
   });
 
   it('language engagement creation fails and lets you know why if your ids are bad', async () => {
+    translationProject = await createProject(app, {
+      type: ProjectType.MomentumTranslation,
+    });
     const invalidId = await generateId();
     await expect(
       createLanguageEngagement(app, {
@@ -864,11 +870,13 @@ describe('Engagement e2e', () => {
         languageId: language.id,
       }),
     ).rejects.toThrowGqlError(
-      errors.notFound({ message: 'Could not find project' }),
+      errors.notFound({
+        message: expect.stringMatching(/Could not find project/i),
+      }),
     );
     await expect(
       createLanguageEngagement(app, {
-        projectId: project.id,
+        projectId: translationProject.id,
         languageId: invalidId,
       }),
     ).rejects.toThrowGqlError(

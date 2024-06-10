@@ -362,7 +362,7 @@ export class EngagementRepository extends CommonRepository {
     session: Session,
     changeset?: ID,
   ) {
-    const { id, firstScripture, pnp, ...simpleChanges } = changes;
+    const { id, pnp, ...simpleChanges } = changes;
 
     if (pnp) {
       const engagement = await this.readOne(id, session);
@@ -378,7 +378,7 @@ export class EngagementRepository extends CommonRepository {
       }
     }
 
-    if (firstScripture) {
+    if (changes.firstScripture) {
       await this.verifyFirstScripture({ engagementId: id });
     }
 
