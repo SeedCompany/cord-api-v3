@@ -97,7 +97,6 @@ export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
       await this.engagementRepo.updateLanguage(
         {
           id: engagement.id,
-          firstScripture: engagement.firstScripture,
           ...updateInput,
         },
         session,
