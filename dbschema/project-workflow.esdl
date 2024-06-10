@@ -21,6 +21,21 @@ module Project {
     notes: default::RichText {
       readonly := true;
     };
+
+    trigger setProjectStep after insert for all do (
+      update default::Project
+      filter default::Project in __new__.project
+      set {
+        step := default::Project.latestWorkflowEvent.to ?? Project::Step.EarlyConversations
+      }
+    );
+    trigger refreshProjectStep after delete for all do (
+      update default::Project
+      filter default::Project in __old__.project
+      set {
+        step := default::Project.latestWorkflowEvent.to ?? Project::Step.EarlyConversations
+      }
+    );
   }
 
   scalar type Step extending enum<

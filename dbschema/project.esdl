@@ -49,10 +49,19 @@ module default {
       );
     };
 
-    step := .latestWorkflowEvent.to ?? Project::Step.EarlyConversations;
+    required step: Project::Step {
+      default := Project::Step.EarlyConversations;
+    };
     status := Project::statusFromStep(.step);
     latestWorkflowEvent := (select .workflowEvents order by .at desc limit 1);
     workflowEvents := .<project[is Project::WorkflowEvent];
+    trigger assertMatchingLatestWorkflowEvent after insert, update for each do (
+      assert(
+        __new__.latestWorkflowEvent.to ?= __new__.step
+        or (not exists __new__.latestWorkflowEvent and __new__.step = Project::Step.EarlyConversations),
+        message := "Project step must match the latest workflow event"
+      )
+    );
 
     mouStart: cal::local_date;
     mouEnd: cal::local_date;
