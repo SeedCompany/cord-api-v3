@@ -3,7 +3,10 @@ import { Nil } from '@seedcompany/common';
 import { ID, Session, UnauthorizedException } from '~/common';
 import { Privileges } from '../authorization';
 import { Workflow } from './define-workflow';
-import { ExecuteTransitionInput as ExecuteTransitionInputFn } from './dto';
+import {
+  ExecuteTransitionInput as ExecuteTransitionInputFn,
+  SerializedWorkflow,
+} from './dto';
 import { withTransitionKey } from './workflow.granter';
 
 type ExecuteTransitionInput = ReturnType<
@@ -118,6 +121,10 @@ export const WorkflowService = <W extends Workflow>(workflow: W) => {
         );
       }
       return input.bypassTo;
+    }
+
+    serialize() {
+      return SerializedWorkflow.from(this.workflow);
     }
   }
 
