@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { CachedByArg } from '@seedcompany/common';
-import { ID, Role } from '~/common';
+import { Role } from '~/common';
+import { SystemAgent } from './dto';
 
 @Injectable()
-export abstract class ActorRepository {
+export abstract class SystemAgentRepository {
   @CachedByArg()
   async getAnonymous() {
     return await this.upsertAgent('Anonymous');
@@ -22,5 +23,5 @@ export abstract class ActorRepository {
   protected abstract upsertAgent(
     name: string,
     roles?: readonly Role[],
-  ): Promise<{ id: ID; name: string; roles: readonly Role[] }>;
+  ): Promise<SystemAgent>;
 }

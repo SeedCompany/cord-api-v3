@@ -29,6 +29,7 @@ import {
   AssignOrganizationToUser,
   CreatePerson,
   RemoveOrganizationFromUser,
+  SystemAgent,
   UpdateUser,
   User,
   UserListInput,
@@ -38,6 +39,25 @@ import {
 export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
   User,
 ) {
+  async readManyActors(ids: readonly ID[], session: Session) {
+    return await this.db
+      .query()
+      .raw('', { ids })
+      .matchNode('user', 'User')
+      .where({ 'user.id': inArray('ids', true) })
+      .apply(this.hydrate(session))
+      .union()
+      .matchNode('agent', 'SystemAgent')
+      .where({ 'agent.id': inArray('ids', true) })
+      .return<{ dto: UnsecuredDto<User | SystemAgent> }>(
+        merge('agent', {
+          __typename: '"SystemAgent"',
+        }).as('dto'),
+      )
+      .map('dto')
+      .run();
+  }
+
   private readonly roleProperties = (roles?: readonly Role[]) =>
     (roles || []).flatMap((role) =>
       property('roles', role, 'node', `role${role}`),
@@ -116,6 +136,7 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
         .match(requestingUser(requestingUserId))
         .return<{ dto: UnsecuredDto<User> }>(
           merge({ email: null }, 'props', {
+            __typename: '"User"',
             roles: 'roles',
             pinned: 'exists((requestingUser)-[:pinned]->(node))',
           }).as('dto'),

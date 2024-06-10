@@ -29,6 +29,7 @@ import {
   CreatePerson,
   ModifyKnownLanguageArgs,
   RemoveOrganizationFromUser,
+  SystemAgent,
   UpdateUser,
   User,
   UserListInput,
@@ -84,6 +85,18 @@ export class UserService {
   async readMany(ids: readonly ID[], session: Session) {
     const users = await this.userRepo.readMany(ids, session);
     return users.map((dto) => this.secure(dto, session));
+  }
+
+  async readManyActors(
+    ids: readonly ID[],
+    session: Session,
+  ): Promise<ReadonlyArray<User | SystemAgent>> {
+    const users = await this.userRepo.readManyActors(ids, session);
+    return users.map((dto) =>
+      dto.__typename === 'User'
+        ? this.secure(dto, session)
+        : (dto as SystemAgent),
+    );
   }
 
   secure(user: UnsecuredDto<User>, session: Session): User {
