@@ -9,7 +9,7 @@ import {
 } from '~/common';
 import { SecuredProjectStep } from '../../dto';
 import { ProjectLoader } from '../../project.loader';
-import { ProjectWorkflowTransition } from '../dto/workflow-transition.dto';
+import { ProjectWorkflowTransition } from '../dto';
 import { ProjectWorkflowService } from '../project-workflow.service';
 
 @Resolver(SecuredProjectStep)
@@ -17,7 +17,8 @@ export class ProjectTransitionsResolver {
   constructor(private readonly workflow: ProjectWorkflowService) {}
 
   @ResolveField(() => [ProjectWorkflowTransition], {
-    description: 'The available steps a project can be transitioned to.',
+    description:
+      'The transitions currently available to execute for this project',
   })
   async transitions(
     @Parent() status: SecuredProjectStep & ParentIdMiddlewareAdditions,
@@ -37,7 +38,7 @@ export class ProjectTransitionsResolver {
   @ResolveField(() => Boolean, {
     description: stripIndent`
       Is the current user allowed to bypass transitions entirely
-      and change the status to any other step?
+      and change to any other state?
    `,
   })
   async canBypassTransitions(
