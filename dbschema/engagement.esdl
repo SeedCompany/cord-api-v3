@@ -51,7 +51,20 @@ module default {
     property firstScripture := (
       exists .language.firstScriptureEngagement
     );
-    
+
+    trigger denyDuplicateFirstScriptureBasedOnExternal after insert, update for each do ( 
+      assert(
+        not __new__.firstScripture or not exists __new__.language.hasExternalFirstScripture,
+        message := "First scripture has already been marked as having been done externally"
+      )
+    );
+    trigger denyDuplicateFirstScriptureBasedOnOtherEngagement after insert, update for each do (
+      assert( 
+        not exists (select __new__.language.engagements filter .firstScripture),
+        message := "Another engagement has already been marked as having done the first scripture"
+      )
+    );
+
     required lukePartnership: bool {
       default := false;
     };
