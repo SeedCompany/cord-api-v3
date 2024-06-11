@@ -178,11 +178,12 @@ export class EngagementRepository extends CommonRepository {
             ),
             parent: 'project',
             project: {
-              id: 'project { .id }',
+              id: 'project.id',
               type: 'project.type',
               status: 'status.value',
             },
             language: 'language { .id }',
+            pnp: { id: 'props.pnp' },
             ceremony: 'ceremony { .id }',
             intern: 'intern { .id }',
             countryOfOrigin: 'countryOfOrigin { .id }',
