@@ -9,6 +9,7 @@ import {
   ResourceShape,
 } from '~/common';
 import { WorkflowEvent } from './dto';
+import { TransitionNotifier } from './transitions/notifiers';
 import { InternalTransition, TransitionInput } from './transitions/types';
 
 export const defineWorkflow =
@@ -31,6 +32,10 @@ export const defineWorkflow =
      * context: defineContext<X>
      */
     context: () => Context;
+    /**
+     * Notifiers that apply to all transitions by default.
+     */
+    defaultNotifiers?: ReadonlyArray<TransitionNotifier<Context>>;
   }) =>
   <TransitionNames extends string>(
     obj: Record<TransitionNames, TransitionInput<State, Context>>,
@@ -46,7 +51,10 @@ export const defineWorkflow =
         from: transition.from ? setOf(many(transition.from)) : undefined,
         key: (transition.key ?? uuid.v5(name, input.id)) as ID,
         conditions: maybeMany(transition.conditions),
-        notifiers: maybeMany(transition.notifiers),
+        notifiers: [
+          ...(input.defaultNotifiers ?? []),
+          ...(maybeMany(transition.notifiers) ?? []),
+        ],
       }),
     ).asRecord as Record<
       TransitionNames,

@@ -20,7 +20,6 @@ import { User } from '../../../user/dto';
 import { Notifier } from '../../../workflow/transitions/notifiers';
 import { Project, ProjectStep } from '../../dto';
 import { ProjectTransitionedEvent } from '../events/project-transitioned.event';
-import { TeamMembers } from '../transitions/notifiers';
 
 @EventsHandler(ProjectTransitionedEvent)
 export class ProjectWorkflowNotificationHandler
@@ -41,11 +40,8 @@ export class ProjectWorkflowNotificationHandler
     const { previousStep, next, workflowEvent } = event;
     const transition = typeof next !== 'string' ? next : undefined;
 
-    const notifiers = [
-      TeamMembers,
-      ...(transition?.notifiers ?? []),
-      // TODO on bypass: keep notifying members? add anyone else?
-    ];
+    // TODO on bypass: keep notifying members? add anyone else?
+    const notifiers = transition?.notifiers ?? [];
 
     const params = { project: event.project, moduleRef: this.moduleRef };
     const notifyees = (
