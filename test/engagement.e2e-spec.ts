@@ -1065,7 +1065,7 @@ describe('Engagement e2e', () => {
       );
       expect(toCompletedTransition.disabled).toBe(true);
       expect(toCompletedTransition.disabledReason).toBe(
-        'The project cannot be completed since some engagements have a non-terminal status',
+        'The project cannot be completed since some ongoing engagements are not "Finalizing Completion"',
       );
     });
 
