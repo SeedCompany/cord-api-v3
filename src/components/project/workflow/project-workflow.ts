@@ -13,7 +13,7 @@ import {
   ResolveParams,
 } from './transitions/dynamic-step';
 import {
-  EmailDistros,
+  EmailDistro,
   FinancialApprovers,
   TeamMembers,
 } from './transitions/notifiers';
@@ -21,6 +21,16 @@ import {
 // This also controls the order shown in the UI.
 // Therefore, these should generally flow down.
 // "Back" transitions should come before/above "forward" transitions.
+
+const Distros = {
+  Projects: EmailDistro('projects@tsco.org'),
+  Approval: EmailDistro('project_approval@tsco.org'),
+  Extension: EmailDistro('project_extension@tsco.org'),
+  Revision: EmailDistro('project_revision@tsco.org'),
+  Suspension: EmailDistro('project_suspension@tsco.org'),
+  Termination: EmailDistro('project_termination@tsco.org'),
+  Closing: EmailDistro('project_closing@tsco.org'),
+};
 
 export const ProjectWorkflow = defineWorkflow({
   id: '8297b9a1-b50b-4ec9-9021-a0347424b3ec',
@@ -254,10 +264,7 @@ export const ProjectWorkflow = defineWorkflow({
     to: Step.Active,
     label: 'Confirm Project 🎉',
     type: Type.Approve,
-    notifiers: [
-      FinancialApprovers,
-      EmailDistros('project_approval@tsco.org', 'projects@tsco.org'),
-    ],
+    notifiers: [FinancialApprovers, Distros.Approval, Distros.Projects],
   },
   'Pending Finance Confirmation -> Pending Regional Director Approval': {
     from: Step.PendingFinanceConfirmation,
@@ -306,30 +313,21 @@ export const ProjectWorkflow = defineWorkflow({
     to: Step.DiscussingChangeToPlan,
     label: 'Discuss Change to Plan',
     type: Type.Neutral,
-    notifiers: [
-      FinancialApprovers,
-      EmailDistros('project_extension@tsco.org', 'project_revision@tsco.org'),
-    ],
+    notifiers: [FinancialApprovers, Distros.Extension, Distros.Revision],
   },
   'Active -> Discussing Termination': {
     from: [Step.Active, Step.ActiveChangedPlan],
     to: Step.DiscussingTermination,
     label: 'Discuss Termination',
     type: Type.Neutral,
-    notifiers: [
-      FinancialApprovers,
-      EmailDistros('project_extension@tsco.org', 'project_revision@tsco.org'),
-    ],
+    notifiers: [FinancialApprovers, Distros.Extension, Distros.Revision],
   },
   'Active -> Finalizing Completion': {
     from: [Step.Active, Step.ActiveChangedPlan],
     to: Step.FinalizingCompletion,
     label: 'Finalize Completion',
     type: Type.Approve,
-    notifiers: [
-      FinancialApprovers,
-      EmailDistros('project_extension@tsco.org', 'project_revision@tsco.org'),
-    ],
+    notifiers: [FinancialApprovers, Distros.Extension, Distros.Revision],
   },
 
   // Disucssing Change To Plan
@@ -338,27 +336,21 @@ export const ProjectWorkflow = defineWorkflow({
     to: Step.PendingChangeToPlanApproval,
     label: 'Submit for Approval',
     type: Type.Approve,
-    notifiers: [
-      EmailDistros('project_extension@tsco.org', 'project_revision@tsco.org'),
-    ],
+    notifiers: [Distros.Extension, Distros.Revision],
   },
   'Discussing Change To Plan -> Discussing Suspension': {
     from: Step.DiscussingChangeToPlan,
     to: Step.DiscussingSuspension,
     label: 'Discuss Suspension',
     type: Type.Neutral,
-    notifiers: [
-      EmailDistros('project_extension@tsco.org', 'project_revision@tsco.org'),
-    ],
+    notifiers: [Distros.Extension, Distros.Revision],
   },
   'Discussing Change To Plan -> Back To Active': {
     from: Step.DiscussingChangeToPlan,
     to: BackToActive,
     label: 'Will Not Change Plan',
     type: Type.Neutral,
-    notifiers: [
-      EmailDistros('project_extension@tsco.org', 'project_revision@tsco.org'),
-    ],
+    notifiers: [Distros.Extension, Distros.Revision],
   },
 
   // Pending Change To Plan Approval
@@ -367,30 +359,21 @@ export const ProjectWorkflow = defineWorkflow({
     to: Step.DiscussingChangeToPlan,
     label: 'Send Back for Corrections',
     type: Type.Reject,
-    notifiers: EmailDistros(
-      'project_extension@tsco.org',
-      'project_revision@tsco.org',
-    ),
+    notifiers: [Distros.Extension, Distros.Revision],
   },
   'Pending Change To Plan Approval -> Pending Change To Plan Confirmation': {
     from: Step.PendingChangeToPlanApproval,
     to: Step.PendingChangeToPlanConfirmation,
     label: 'Approve Change to Plan',
     type: Type.Approve,
-    notifiers: EmailDistros(
-      'project_extension@tsco.org',
-      'project_revision@tsco.org',
-    ),
+    notifiers: [Distros.Extension, Distros.Revision],
   },
   'Pending Change To Plan Approval -> Back To Active': {
     from: Step.PendingChangeToPlanApproval,
     to: BackToActive,
     label: 'Reject Change to Plan',
     type: Type.Reject,
-    notifiers: EmailDistros(
-      'project_extension@tsco.org',
-      'project_revision@tsco.org',
-    ),
+    notifiers: [Distros.Extension, Distros.Revision],
   },
 
   // Pending Change To Plan Confirmation
@@ -399,30 +382,21 @@ export const ProjectWorkflow = defineWorkflow({
     to: Step.DiscussingChangeToPlan,
     label: 'Send Back for Corrections',
     type: Type.Reject,
-    notifiers: [
-      FinancialApprovers,
-      EmailDistros('project_extension@tsco.org', 'project_revision@tsco.org'),
-    ],
+    notifiers: [FinancialApprovers, Distros.Extension, Distros.Revision],
   },
   'Pending Change To Plan Confirmation -> Active Changed Plan': {
     from: Step.PendingChangeToPlanConfirmation,
     to: Step.ActiveChangedPlan,
     label: 'Approve Change to Plan',
     type: Type.Approve,
-    notifiers: [
-      FinancialApprovers,
-      EmailDistros('project_extension@tsco.org', 'project_revision@tsco.org'),
-    ],
+    notifiers: [FinancialApprovers, Distros.Extension, Distros.Revision],
   },
   'Pending Change To Plan Confirmation -> Back To Active': {
     from: Step.PendingChangeToPlanConfirmation,
     to: BackToActive,
     label: 'Reject Change to Plan',
     type: Type.Reject,
-    notifiers: [
-      FinancialApprovers,
-      EmailDistros('project_extension@tsco.org', 'project_revision@tsco.org'),
-    ],
+    notifiers: [FinancialApprovers, Distros.Extension, Distros.Revision],
   },
 
   // Discussing Suspension
@@ -431,14 +405,14 @@ export const ProjectWorkflow = defineWorkflow({
     to: Step.PendingSuspensionApproval,
     label: 'Submit for Approval',
     type: Type.Neutral,
-    notifiers: EmailDistros('project_suspension@tsco.org'),
+    notifiers: Distros.Suspension,
   },
   'Discussing Suspension -> Back To Active': {
     from: Step.DiscussingSuspension,
     to: BackToActive,
     label: 'Will Not Suspend',
     type: Type.Neutral,
-    notifiers: EmailDistros('project_suspension@tsco.org'),
+    notifiers: Distros.Suspension,
   },
 
   // Pending Suspension Approval
@@ -447,21 +421,21 @@ export const ProjectWorkflow = defineWorkflow({
     to: Step.DiscussingSuspension,
     label: 'Send Back for Corrections',
     type: Type.Reject,
-    notifiers: EmailDistros('project_suspension@tsco.org'),
+    notifiers: Distros.Suspension,
   },
   'Pending Suspension Approval -> Suspended': {
     from: Step.PendingSuspensionApproval,
     to: Step.Suspended,
     label: 'Approve Suspension',
     type: Type.Approve,
-    notifiers: EmailDistros('project_suspension@tsco.org'),
+    notifiers: Distros.Suspension,
   },
   'Pending Suspension Approval -> Back To Active': {
     from: Step.PendingSuspensionApproval,
     to: BackToActive,
     label: 'Reject Suspension',
     type: Type.Reject,
-    notifiers: EmailDistros('project_suspension@tsco.org'),
+    notifiers: Distros.Suspension,
   },
 
   // Suspended
@@ -470,14 +444,14 @@ export const ProjectWorkflow = defineWorkflow({
     to: Step.DiscussingReactivation,
     label: 'Discuss Reactivation',
     type: Type.Neutral,
-    notifiers: EmailDistros('project_suspension@tsco.org'),
+    notifiers: Distros.Suspension,
   },
   'Suspended & Discussing Reactivation -> Discussing Termination': {
     from: [Step.Suspended, Step.DiscussingReactivation],
     to: Step.DiscussingTermination,
     label: 'Discuss Termination',
     type: Type.Neutral,
-    notifiers: EmailDistros('project_suspension@tsco.org'),
+    notifiers: Distros.Suspension,
   },
 
   // Discussing Reactivation
@@ -486,7 +460,7 @@ export const ProjectWorkflow = defineWorkflow({
     to: Step.PendingReactivationApproval,
     label: 'Submit for Approval',
     type: Type.Approve,
-    notifiers: EmailDistros('project_suspension@tsco.org'),
+    notifiers: Distros.Suspension,
   },
 
   // Pending Reactivation Approval
@@ -495,21 +469,21 @@ export const ProjectWorkflow = defineWorkflow({
     to: Step.ActiveChangedPlan,
     label: 'Approve Reactivation',
     type: Type.Approve,
-    notifiers: EmailDistros('project_suspension@tsco.org'),
+    notifiers: Distros.Suspension,
   },
   'Pending Reactivation Approval -> Discussing Reactivation': {
     from: Step.PendingReactivationApproval,
     to: Step.DiscussingReactivation,
     label: 'Send Back for Corrections',
     type: Type.Reject,
-    notifiers: EmailDistros('project_suspension@tsco.org'),
+    notifiers: Distros.Suspension,
   },
   'Pending Reactivation Approval -> Discussing Termination': {
     from: Step.PendingReactivationApproval,
     to: Step.DiscussingTermination,
     label: 'Discuss Termination',
     type: Type.Neutral,
-    notifiers: EmailDistros('project_suspension@tsco.org'),
+    notifiers: Distros.Suspension,
   },
 
   // Discussing Termination
@@ -518,7 +492,7 @@ export const ProjectWorkflow = defineWorkflow({
     to: Step.PendingTerminationApproval,
     label: 'Submit for Approval',
     type: Type.Approve,
-    notifiers: EmailDistros('project_termination@tsco.org'),
+    notifiers: Distros.Termination,
   },
   'Discussing Termination -> Back To Most Recent': {
     from: Step.DiscussingTermination,
@@ -530,7 +504,7 @@ export const ProjectWorkflow = defineWorkflow({
     ),
     label: 'Will Not Terminate',
     type: Type.Neutral,
-    notifiers: EmailDistros('project_termination@tsco.org'),
+    notifiers: Distros.Termination,
   },
 
   // Pending Termination Approval
@@ -539,14 +513,14 @@ export const ProjectWorkflow = defineWorkflow({
     to: Step.Terminated,
     label: 'Approve Termination',
     type: Type.Approve,
-    notifiers: EmailDistros('project_termination@tsco.org'),
+    notifiers: Distros.Termination,
   },
   'Pending Termination Approval -> Discussing Termination': {
     from: Step.PendingTerminationApproval,
     to: Step.DiscussingTermination,
     label: 'Send Back for Corrections',
     type: Type.Reject,
-    notifiers: EmailDistros('project_termination@tsco.org'),
+    notifiers: Distros.Termination,
   },
   'Pending Termination Approval -> Back To Most Recent': {
     from: Step.PendingTerminationApproval,
@@ -558,7 +532,7 @@ export const ProjectWorkflow = defineWorkflow({
     ),
     label: 'Will Not Terminate',
     type: Type.Neutral,
-    notifiers: EmailDistros('project_termination@tsco.org'),
+    notifiers: Distros.Termination,
   },
 
   // Finalizing Completion
@@ -567,7 +541,7 @@ export const ProjectWorkflow = defineWorkflow({
     to: BackToActive,
     label: 'Still Working',
     type: Type.Neutral,
-    notifiers: EmailDistros('project_closing@tsco.org'),
+    notifiers: Distros.Closing,
   },
   'Finalizing Completion -> Completed': {
     from: Step.FinalizingCompletion,
@@ -575,6 +549,6 @@ export const ProjectWorkflow = defineWorkflow({
     label: 'Complete 🎉',
     type: Type.Approve,
     conditions: RequireOngoingEngagementsToBeFinalizingCompletion,
-    notifiers: EmailDistros('project_closing@tsco.org'),
+    notifiers: Distros.Closing,
   },
 });

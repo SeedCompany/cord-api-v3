@@ -8,7 +8,7 @@ import { ResolveParams } from './dynamic-step';
 type Notifier = TransitionNotifier<ResolveParams>;
 
 export const TeamMembers: Notifier = {
-  description: 'The project members',
+  description: 'Project members',
   async resolve({ project, moduleRef }) {
     return await moduleRef
       .get(ProjectMemberRepository, { strict: false })
@@ -17,7 +17,9 @@ export const TeamMembers: Notifier = {
 };
 
 export const TeamMembersWithRole = (...roles: Role[]): Notifier => ({
-  description: 'The project members',
+  description: `Project members with one of these roles: ${roles
+    .map((r) => Role.entry(r).label)
+    .join(', ')}`,
   async resolve({ project, moduleRef }) {
     return await moduleRef
       .get(ProjectMemberRepository, { strict: false })
@@ -26,7 +28,7 @@ export const TeamMembersWithRole = (...roles: Role[]): Notifier => ({
 });
 
 export const FinancialApprovers: Notifier = {
-  description: 'All financial approvers according to the project type',
+  description: 'Financial approvers for the project type',
   async resolve({ project, moduleRef }) {
     const repo = moduleRef.get(FinancialApproverRepository, { strict: false });
     const approvers = await repo.read(project.type);
@@ -34,13 +36,13 @@ export const FinancialApprovers: Notifier = {
   },
 };
 
-export const EmailDistros = (...emails: string[]): Notifier => ({
-  description: `These email addresses: ${emails.join(', ')}`,
+export const EmailDistro = (email: string): Notifier => ({
+  description: email,
   resolve({ moduleRef }) {
     const config = moduleRef.get(ConfigService, { strict: false });
     if (!config.email.notifyDistributionLists) {
       return [];
     }
-    return emails.map((email) => ({ email }));
+    return { email };
   },
 });
