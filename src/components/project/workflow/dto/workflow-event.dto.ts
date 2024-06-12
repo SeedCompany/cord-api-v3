@@ -16,6 +16,7 @@ export abstract class ProjectWorkflowEvent extends WorkflowEvent(
   static readonly Props = keysOf<ProjectWorkflowEvent>();
   static readonly SecuredProps = keysOf<SecuredProps<ProjectWorkflowEvent>>();
   static readonly BaseNodeProps = WorkflowEvent.BaseNodeProps;
+  static readonly ConfirmThisClassPassesSensitivityToPolicies = true;
 }
 
 declare module '~/core/resources/map' {

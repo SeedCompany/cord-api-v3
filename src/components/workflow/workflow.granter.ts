@@ -11,10 +11,12 @@ import {
 } from '../authorization/policy/conditions';
 import { Workflow } from './define-workflow';
 
-export function WorkflowEventGranter<W extends Workflow>(workflow: W) {
+export function WorkflowEventGranter<
+  W extends Workflow,
+  EventClass extends W['eventResource'],
+>(workflow: W) {
   type State = Workflow['state'];
   type Names = Workflow['transition']['name'];
-  type EventClass = Workflow['eventResource'];
 
   abstract class WorkflowEventGranterClass extends ResourceGranter<EventClass> {
     get read() {
