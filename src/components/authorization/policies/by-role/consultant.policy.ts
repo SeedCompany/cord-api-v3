@@ -38,5 +38,9 @@ import { member, Policy, Role } from '../util';
   ]),
   r.Unavailability.read,
   r.User.read.create,
+  r.ProjectWorkflowEvent.read.transitions(
+    'Pending Consultant Endorsement -> Prep for Financial Endorsement With Consultant Endorsement',
+    'Pending Consultant Endorsement -> Prep for Financial Endorsement Without Consultant Endorsement',
+  ).execute,
 ])
 export class ConsultantPolicy {}

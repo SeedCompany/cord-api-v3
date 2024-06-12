@@ -16,7 +16,6 @@ import * as handlers from './handlers';
 import { InternshipProjectResolver } from './internship-project.resolver';
 import { RenameTranslationToMomentumMigration } from './migrations/rename-translation-to-momentum.migration';
 import { ProjectMemberModule } from './project-member/project-member.module';
-import { ProjectStepResolver } from './project-step.resolver';
 import {
   ConcreteRepos,
   ProjectEdgeDBRepository,
@@ -24,10 +23,10 @@ import {
 import { ProjectLoader } from './project.loader';
 import { ProjectRepository } from './project.repository';
 import { ProjectResolver } from './project.resolver';
-import { ProjectRules } from './project.rules';
 import { ProjectService } from './project.service';
 import { TranslationProjectResolver } from './translation-project.resolver';
 import { ProjectUserConnectionResolver } from './user-connection.resolver';
+import { ProjectWorkflowModule } from './workflow/project-workflow.module';
 
 @Module({
   imports: [
@@ -43,6 +42,7 @@ import { ProjectUserConnectionResolver } from './user-connection.resolver';
     PartnerModule,
     forwardRef(() => OrganizationModule),
     FinancialApproverModule,
+    ProjectWorkflowModule,
   ],
   providers: [
     ProjectResolver,
@@ -51,14 +51,12 @@ import { ProjectUserConnectionResolver } from './user-connection.resolver';
     ProjectEngagementConnectionResolver,
     ProjectUserConnectionResolver,
     ProjectService,
-    ProjectStepResolver,
-    ProjectRules,
     splitDb(ProjectRepository, ProjectEdgeDBRepository),
     ...Object.values(ConcreteRepos),
     ProjectLoader,
     ...Object.values(handlers),
     RenameTranslationToMomentumMigration,
   ],
-  exports: [ProjectService, ProjectMemberModule, ProjectRules],
+  exports: [ProjectService, ProjectMemberModule],
 })
 export class ProjectModule {}

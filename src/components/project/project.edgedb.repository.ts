@@ -1,7 +1,7 @@
 import { Injectable, Type } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { LazyGetter } from 'lazy-get-decorator';
-import { PublicOf, SortablePaginationInput, UnsecuredDto } from '~/common';
+import { ID, PublicOf, SortablePaginationInput, UnsecuredDto } from '~/common';
 import { grabInstances } from '~/common/instance-maps';
 import { ChangesOf } from '~/core/database/changes';
 import { castToEnum, e, RepoFor, ScopeOf } from '~/core/edgedb';
@@ -28,6 +28,7 @@ const hydrate = e.shape(e.Project, (project) => ({
   marketingLocation: true,
   marketingRegionOverride: true,
   fieldRegion: true,
+  stepChangedAt: e.op(project.latestWorkflowEvent.at, '??', project.createdAt),
   owningOrganization: e.cast(e.uuid, null), // Not implemented going forward
   presetInventory: e.bool(false), // Not implemented going forward
 }));
@@ -80,6 +81,17 @@ export class ProjectEdgeDBRepository
       id: existing.id,
       ...changes,
     });
+  }
+
+  async getPrimaryOrganizationName(id: ID) {
+    const project = e.cast(e.Project, e.uuid(id));
+    const primary = e
+      .select(project.partnerships, (p) => ({
+        filter: e.op(p.primary, '=', true),
+      }))
+      .assert_single();
+    const query = primary.partner.organization.name;
+    return await this.db.run(query);
   }
 
   protected listFilters(

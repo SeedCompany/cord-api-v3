@@ -296,6 +296,32 @@ export class ProjectRepository extends CommonRepository {
     return result!; // result from paginate() will always have 1 row.
   }
 
+  async getPrimaryOrganizationName(id: ID) {
+    const name = await this.db
+      .query()
+      .match([
+        node('project', 'Project', { id }),
+        relation('out', '', 'partnership', ACTIVE),
+        node('partnership', 'Partnership'),
+        relation('out', '', 'primary', ACTIVE),
+        node('primary', 'Property', { value: true }),
+      ])
+      .with('partnership')
+      .match([
+        node('partnership'),
+        relation('out', '', 'partner', ACTIVE),
+        node('', 'Partner'),
+        relation('out', '', 'organization', ACTIVE),
+        node('org', 'Organization'),
+        relation('out', '', 'name', ACTIVE),
+        node('name', 'Property'),
+      ])
+      .return<{ name: string }>('name.value as name')
+      .map('name')
+      .first();
+    return name ?? null;
+  }
+
   @OnIndex()
   private createIndexes() {
     return this.getConstraintsFor(IProject);

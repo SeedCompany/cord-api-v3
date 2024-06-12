@@ -61,6 +61,12 @@ import {
       ])
       .children((c) => c.posts.edit),
     r.ProjectMember.read.when(member).edit.create.delete,
+    r.ProjectWorkflowEvent.read.transitions(
+      'Pending Financial Endorsement -> Finalizing Proposal With Financial Endorsement',
+      'Pending Financial Endorsement -> Finalizing Proposal Without Financial Endorsement',
+      'Finalizing Completion -> Back To Active',
+      'Finalizing Completion -> Completed',
+    ).execute,
     r.PeriodicReport.read.when(member).edit,
     r.StepProgress.read,
     r.Unavailability.read,

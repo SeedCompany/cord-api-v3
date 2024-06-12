@@ -16,9 +16,9 @@ import {
   Project,
   ProjectStatus,
   ProjectStep,
-  ProjectStepTransition,
   ProjectType,
 } from '../src/components/project/dto';
+import { ProjectWorkflowTransition } from '../src/components/project/workflow/dto';
 import { User } from '../src/components/user/dto';
 import {
   createDirectProduct,
@@ -1057,7 +1057,7 @@ describe('Engagement e2e', () => {
 
       const toCompletedTransition =
         projectQueryResult.project.step.transitions.find(
-          (t: ProjectStepTransition) => t.to === 'Completed',
+          (t: ProjectWorkflowTransition) => t.to === 'Completed',
         );
 
       expect(projectQueryResult.project.step.value).toBe(
@@ -1065,7 +1065,7 @@ describe('Engagement e2e', () => {
       );
       expect(toCompletedTransition.disabled).toBe(true);
       expect(toCompletedTransition.disabledReason).toBe(
-        'The project cannot be completed since some engagements have a non-terminal status',
+        'The project cannot be completed since some ongoing engagements are not "Finalizing Completion"',
       );
     });
 

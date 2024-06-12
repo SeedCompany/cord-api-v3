@@ -68,7 +68,7 @@ import {
   SecuredProjectMemberList,
 } from './project-member/dto';
 import { ProjectRepository } from './project.repository';
-import { ProjectRules } from './project.rules';
+import { ProjectWorkflowService } from './workflow/project-workflow.service';
 
 @Injectable()
 export class ProjectService {
@@ -86,7 +86,7 @@ export class ProjectService {
     private readonly config: ConfigService,
     private readonly privileges: Privileges,
     private readonly eventBus: IEventBus,
-    private readonly projectRules: ProjectRules,
+    private readonly workflow: ProjectWorkflowService,
     private readonly repo: ProjectRepository,
     private readonly projectChangeRequests: ProjectChangeRequestService,
     @Logger('project:service') private readonly logger: ILogger,
@@ -242,7 +242,6 @@ export class ProjectService {
     input: UpdateProject,
     session: Session,
     changeset?: ID,
-    stepValidation = true,
   ): Promise<UnsecuredDto<Project>> {
     const currentProject = await this.readOneUnsecured(
       input.id,
@@ -255,18 +254,22 @@ export class ProjectService {
         'project.sensitivity',
       );
 
-    const changes = this.repo.getActualChanges(currentProject, input);
+    const { step: changedStep, ...changes } = this.repo.getActualChanges(
+      currentProject,
+      input,
+    );
     this.privileges
       .for(session, resolveProjectType(currentProject), currentProject)
       .verifyChanges(changes, { pathPrefix: 'project' });
 
-    if (changes.step && stepValidation) {
-      await this.projectRules.verifyStepChange(
-        currentProject,
+    let updated = currentProject;
+    if (changedStep) {
+      await this.workflow.executeTransitionLegacy(
+        this.secure(currentProject, session),
+        changedStep,
         session,
-        changes.step,
-        changeset,
       );
+      updated = await this.readOneUnsecured(input.id, session, changeset);
     }
 
     if (changes.primaryLocationId) {
@@ -300,10 +303,10 @@ export class ProjectService {
       'Field region not found',
     );
 
-    const result = await this.repo.update(currentProject, changes, changeset);
+    updated = await this.repo.update(updated, changes, changeset);
 
     const event = new ProjectUpdatedEvent(
-      result,
+      updated,
       currentProject,
       input,
       session,
@@ -554,6 +557,10 @@ export class ProjectService {
       canRead: perms.can('read'),
       canEdit: perms.can('edit'),
     };
+  }
+
+  async getPrimaryOrganizationName(id: ID) {
+    return await this.repo.getPrimaryOrganizationName(id);
   }
 
   protected async validateOtherResourceId(
