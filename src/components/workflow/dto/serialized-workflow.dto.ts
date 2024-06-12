@@ -149,7 +149,7 @@ export class SerializedWorkflow extends DataObject {
     };
     const dynamicToId = cacheable(
       new Map<DynamicState<W['state'], W['context']>, string>(),
-      () => uuid.v1(),
+      ({ resolve, ...props }) => uuid.v5(JSON.stringify(props), workflow.id),
     );
     return {
       id: workflow.id,
