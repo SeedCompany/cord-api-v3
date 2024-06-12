@@ -1,7 +1,8 @@
 import { createUnionType, Field, ObjectType } from '@nestjs/graphql';
 import { cacheable } from '@seedcompany/common';
+import { stripIndent } from 'common-tags';
 import * as uuid from 'uuid';
-import { DataObject, ID, IdField } from '~/common';
+import { DataObject, ID, IdField, Role } from '~/common';
 import { Workflow } from '../define-workflow';
 import { DynamicState } from '../transitions/dynamic-state';
 import { TransitionType } from './workflow-transition.dto';
@@ -61,6 +62,40 @@ export class SerializedWorkflowNotifier extends DataObject {
   readonly label: string;
 }
 
+@ObjectType('WorkflowTransitionPermission', {
+  description: stripIndent`
+    A permission for a transition.
+
+    This will either have \`readEvent\` or \`execute\` as a boolean,
+    specifying the action this permission defines.
+    If this is true, there could still be a condition that must be met,
+    described by the \`condition\` field.
+  `,
+})
+export class SerializedWorkflowTransitionPermission extends DataObject {
+  @Field(() => Role)
+  role: Role;
+
+  @Field({
+    description:
+      'The action for this permission is conditional, described by this field.',
+    nullable: true,
+  })
+  condition?: string;
+
+  @Field({
+    description: 'Can this role read historical events for this transition?',
+    nullable: true,
+  })
+  readEvent?: boolean;
+
+  @Field({
+    description: 'Can this role execute this transition?',
+    nullable: true,
+  })
+  execute?: boolean;
+}
+
 @ObjectType('WorkflowTransition')
 export class SerializedWorkflowTransition extends DataObject {
   @IdField()
@@ -86,6 +121,9 @@ export class SerializedWorkflowTransition extends DataObject {
 
   @Field(() => [SerializedWorkflowNotifier])
   readonly notifiers: readonly SerializedWorkflowNotifier[];
+
+  @Field(() => [SerializedWorkflowTransitionPermission])
+  readonly permissions: readonly SerializedWorkflowTransitionPermission[];
 }
 
 @ObjectType('Workflow')
@@ -99,7 +137,12 @@ export class SerializedWorkflow extends DataObject {
   @Field(() => [SerializedWorkflowTransition])
   readonly transitions: readonly SerializedWorkflowTransition[];
 
-  static from<W extends Workflow>(workflow: W): SerializedWorkflow {
+  static from<W extends Workflow>(
+    workflow: W,
+    getPermissions: (
+      transition: W['transition'],
+    ) => readonly SerializedWorkflowTransitionPermission[],
+  ): SerializedWorkflow {
     const serializeState = (state: Workflow['state']) => {
       const { value, label } = workflow.states.entry(state);
       return { value, label };
@@ -134,6 +177,7 @@ export class SerializedWorkflow extends DataObject {
         notifiers: (transition.notifiers ?? []).map((notifier) => ({
           label: notifier.description,
         })),
+        permissions: getPermissions(transition),
       })),
     };
   }

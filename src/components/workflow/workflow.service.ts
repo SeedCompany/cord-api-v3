@@ -7,6 +7,7 @@ import {
   ExecuteTransitionInput as ExecuteTransitionInputFn,
   SerializedWorkflow,
 } from './dto';
+import { transitionPermissionSerializer } from './permission.serializer';
 import { withTransitionKey } from './workflow.granter';
 
 type ExecuteTransitionInput = ReturnType<
@@ -124,7 +125,10 @@ export const WorkflowService = <W extends Workflow>(workflow: W) => {
     }
 
     serialize() {
-      return SerializedWorkflow.from(this.workflow);
+      return SerializedWorkflow.from(
+        this.workflow,
+        transitionPermissionSerializer(this.workflow, this.privileges),
+      );
     }
   }
 
