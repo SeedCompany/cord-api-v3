@@ -2,7 +2,6 @@ import { setOf } from '@seedcompany/common';
 import { DateTime } from 'luxon';
 import { ID, Role, Session } from '~/common';
 import { Privileges, UserResourcePrivileges } from '../authorization';
-import { Permission } from '../authorization/policy/builder/perm-granter';
 import { Condition } from '../authorization/policy/conditions';
 import { Workflow } from './define-workflow';
 import { SerializedWorkflowTransitionPermission as SerializedTransitionPermission } from './dto/serialized-workflow.dto';
@@ -47,22 +46,15 @@ const resolve = (
   p: UserResourcePrivileges<any>,
   action: string,
   transitionKey: ID,
-): Permission => {
-  const c = p.resolve({
+) =>
+  p.resolve({
     action,
-    calculatedAsCondition: true,
     optimizeConditions: true,
+    conditionResolver: (condition) =>
+      condition instanceof TransitionCondition
+        ? condition.allowedTransitionKeys.has(transitionKey)
+        : undefined,
   });
 
-  if (typeof c === 'boolean') {
-    return c;
-  }
-  // Cheaply resolve transition condition.
-  if (c instanceof TransitionCondition) {
-    return c.allowedTransitionKeys.has(transitionKey);
-  }
-
-  return c;
-};
 const renderCondition = (c: boolean | Condition) =>
   typeof c === 'boolean' ? undefined : Condition.id(c);

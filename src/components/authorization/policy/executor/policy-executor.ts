@@ -6,7 +6,16 @@ import { QueryFragment } from '~/core/database/query';
 import { withoutScope } from '../../dto';
 import { RoleCondition } from '../../policies/conditions/role.condition';
 import { Permission } from '../builder/perm-granter';
-import { all, any, CalculatedCondition, OrConditions } from '../conditions';
+import {
+  AggregateConditions,
+  all,
+  AndConditions,
+  any,
+  CalculatedCondition,
+  Condition,
+  OrConditions,
+} from '../conditions';
+import { visitCondition } from '../conditions/condition-visitor';
 import { PolicyFactory } from '../policy.factory';
 import { ConditionOptimizer } from './condition-optimizer';
 
@@ -17,6 +26,10 @@ export interface ResolveParams {
   prop?: string;
   calculatedAsCondition?: boolean;
   optimizeConditions?: boolean;
+  /**
+   * A function to partially resolve conditions.
+   */
+  conditionResolver?: (condition: Condition) => boolean | undefined;
 }
 
 export interface FilterOptions {
@@ -38,6 +51,7 @@ export class PolicyExecutor {
     prop,
     calculatedAsCondition,
     optimizeConditions = false,
+    conditionResolver,
   }: ResolveParams): Permission {
     if (action !== 'read') {
       if (prop) {
@@ -80,12 +94,20 @@ export class PolicyExecutor {
     if (conditions.length === 0) {
       return false;
     }
-    const merged = OrConditions.fromAll(conditions, {
+    let condition = OrConditions.fromAll(conditions, {
       optimize: optimizeConditions,
     });
-    return optimizeConditions
-      ? this.conditionOptimizer.optimize(merged)
-      : merged;
+    if (conditionResolver) {
+      const resolved = this.partialResolve(condition, conditionResolver);
+      if (typeof resolved === 'boolean') {
+        return resolved;
+      }
+      condition = resolved;
+    }
+    if (optimizeConditions) {
+      condition = this.conditionOptimizer.optimize(condition);
+    }
+    return condition;
   }
 
   forEdgeDB({
@@ -176,6 +198,54 @@ export class PolicyExecutor {
         .with('*')
         .raw(`WHERE ${perm.asCypherCondition(query, other)}`);
     };
+  }
+
+  private partialResolve(
+    condition: Condition,
+    resolver: (condition: Condition) => boolean | undefined,
+  ): Permission {
+    const partialResolutions = new Map<Condition, boolean>();
+    visitCondition(condition, (cc) => {
+      const result = resolver(cc);
+      if (result != null) {
+        partialResolutions.set(cc, result);
+      }
+    });
+
+    const walkAndReform = (c: Condition): Permission => {
+      if (partialResolutions.has(c)) {
+        return partialResolutions.get(c)!;
+      }
+
+      if (!(c instanceof AggregateConditions)) {
+        return c;
+      }
+
+      let changed = false;
+      const children = c.conditions.map((sub) => {
+        const next = walkAndReform(sub);
+        if (next !== sub) {
+          changed = true;
+        }
+        return next;
+      });
+      // Only change aggregate identity if children have changed
+      if (!changed) {
+        return c;
+      }
+      if (c instanceof AndConditions) {
+        return children.some((perm) => perm === false)
+          ? false
+          : all(...children.filter((perm): perm is Condition => perm !== true));
+      } else {
+        return children.some((perm) => perm === true)
+          ? true
+          : any(
+              ...children.filter((perm): perm is Condition => perm !== false),
+            );
+      }
+    };
+    return walkAndReform(condition);
   }
 
   @CachedByArg({ weak: true })
