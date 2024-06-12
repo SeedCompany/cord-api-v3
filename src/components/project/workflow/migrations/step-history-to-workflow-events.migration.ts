@@ -2,7 +2,7 @@ import { ModuleRef } from '@nestjs/core';
 import { node, relation } from 'cypher-query-builder';
 import { chunk } from 'lodash';
 import { DateTime } from 'luxon';
-import { ID } from '~/common';
+import { Disabled, ID } from '~/common';
 import { BaseMigration, Migration } from '~/core/database';
 import { ACTIVE, variable } from '~/core/database/query';
 import { SystemAgentRepository } from '../../../user/system-agent.repository';
@@ -10,7 +10,9 @@ import { Project, ProjectStep, ProjectType } from '../../dto';
 import { ProjectWorkflowRepository } from '../project-workflow.repository';
 import { ProjectWorkflowService } from '../project-workflow.service';
 
-@Migration('2024-06-07T18:00:02')
+@Disabled('Until we confirm transitions with product')(
+  Migration('2024-06-07T18:00:02'),
+)
 export class StepHistoryToWorkflowEventsMigration extends BaseMigration {
   constructor(
     private readonly agents: SystemAgentRepository,
