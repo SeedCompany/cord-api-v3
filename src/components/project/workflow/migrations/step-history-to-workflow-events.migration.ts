@@ -75,6 +75,7 @@ export class StepHistoryToWorkflowEventsMigration extends BaseMigration {
             moduleRef: this.moduleRef,
             migrationPrevStep: prev.value,
           },
+          project,
           // We don't know who did it, so we can't confirm this was an official
           // transition instead of a bypass.
           // Guess that it was if a transition exists.

@@ -4,6 +4,7 @@ import { ID, Session, UnauthorizedException } from '~/common';
 import { Privileges } from '../authorization';
 import { Workflow } from './define-workflow';
 import { ExecuteTransitionInput as ExecuteTransitionInputFn } from './dto';
+import { withTransitionKey } from './workflow.granter';
 
 type ExecuteTransitionInput = ReturnType<
   typeof ExecuteTransitionInputFn
@@ -29,6 +30,7 @@ export const WorkflowService = <W extends Workflow>(workflow: W) => {
     protected async resolveAvailable(
       currentState: W['state'],
       dynamicContext: W['context'],
+      privilegeContext: object,
       session: Session,
     ) {
       let available = this.workflow.transitions;
@@ -43,7 +45,9 @@ export const WorkflowService = <W extends Workflow>(workflow: W) => {
       available = available.filter((t) =>
         // I don't have a good way to type this right now.
         // Context usage is still fuzzy when conditions need different shapes.
-        p.forContext({ transition: t.key } as any).can('create'),
+        p
+          .forContext(withTransitionKey(privilegeContext, t.key) as any)
+          .can('create'),
       );
 
       // Resolve conditions & filter as needed

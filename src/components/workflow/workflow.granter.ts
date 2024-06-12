@@ -1,6 +1,6 @@
 import { Query } from 'cypher-query-builder';
 import { inspect, InspectOptionsStylized } from 'util';
-import { ID, isIdLike, Many } from '~/common';
+import { ID, Many } from '~/common';
 import { ResourceGranter } from '../authorization';
 import { action } from '../authorization/policy/builder/perm-granter';
 import { PropsGranterFn } from '../authorization/policy/builder/resource-granter';
@@ -108,13 +108,11 @@ export function WorkflowEventGranter<W extends Workflow>(workflow: W) {
         // These should be treated as false without error.
         return false;
       }
-      const transitionKey = object.transition;
+      const transitionKey = Reflect.get(object, TransitionKey);
       if (!transitionKey) {
         return false;
       }
-      return this.allowedTransitionKeys.has(
-        isIdLike(transitionKey) ? transitionKey : transitionKey.key,
-      );
+      return this.allowedTransitionKeys.has(transitionKey);
     }
 
     asCypherCondition(query: Query) {
@@ -191,3 +189,15 @@ export function WorkflowEventGranter<W extends Workflow>(workflow: W) {
 
   return WorkflowEventGranterClass;
 }
+
+const TransitionKey = Symbol('TransitionKey');
+
+export const withTransitionKey = <T extends object>(
+  obj: T,
+  transitionKey: ID,
+) =>
+  Object.defineProperty(obj, TransitionKey, {
+    value: transitionKey,
+    enumerable: false,
+    configurable: true,
+  });

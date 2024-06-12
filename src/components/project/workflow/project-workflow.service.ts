@@ -50,6 +50,7 @@ export class ProjectWorkflowService extends WorkflowService(ProjectWorkflow) {
     return await this.resolveAvailable(
       project.step.value!,
       { project, moduleRef: this.moduleRef },
+      project,
       session,
     );
   }
