@@ -2,7 +2,13 @@ import { Injectable, Type } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { LazyGetter } from 'lazy-get-decorator';
 import { difference } from 'lodash';
-import { ID, PublicOf, Session } from '~/common';
+import {
+  ID,
+  NotImplementedException,
+  PublicOf,
+  Session,
+  UnsecuredDto,
+} from '~/common';
 import { grabInstances } from '~/common/instance-maps';
 import { castToEnum, e, RepoFor } from '~/core/edgedb';
 import { ProjectType } from '../project/dto';
@@ -12,6 +18,8 @@ import {
   CreateLanguageEngagement,
   EngagementStatus,
   IEngagement,
+  InternshipEngagement,
+  LanguageEngagement,
   UpdateInternshipEngagement,
   UpdateLanguageEngagement,
 } from './dto';
@@ -40,24 +48,24 @@ const baseHydrate = e.shape(e.Engagement, (engagement) => ({
   completeDate: engagement.completedDate, // TODO fix in schema
 }));
 
-const languageExtraHydrate = e.shape(e.LanguageEngagement, (le) => ({
-  language: true,
-  firstScripture: true,
-  lukePartnership: true,
-  openToInvestorVisit: true,
-  sentPrintingDate: true,
-  paratextRegistryId: true,
-  pnp: true,
-  historicGoal: true,
+const languageExtraHydrate = e.shape(e.LanguageEngagement, () => ({
+  ...e.is(e.LanguageEngagement, { language: true }),
+  ...e.is(e.LanguageEngagement, { firstScripture: true }),
+  ...e.is(e.LanguageEngagement, { lukePartnership: true }),
+  ...e.is(e.LanguageEngagement, { openToInvestorVisit: true }),
+  ...e.is(e.LanguageEngagement, { sentPrintingDate: true }),
+  ...e.is(e.LanguageEngagement, { paratextRegistryId: true }),
+  ...e.is(e.LanguageEngagement, { pnp: true }),
+  ...e.is(e.LanguageEngagement, { historicGoal: true }),
 }));
 
-const internshipExtraHydrate = e.shape(e.InternshipEngagement, (ie) => ({
-  countryOfOrigin: true,
-  intern: true,
-  mentor: true,
-  position: true,
-  methodologies: true,
-  growthPlan: true,
+const internshipExtraHydrate = e.shape(e.InternshipEngagement, () => ({
+  ...e.is(e.InternshipEngagement, { countryOfOrigin: true }),
+  ...e.is(e.InternshipEngagement, { intern: true }),
+  ...e.is(e.InternshipEngagement, { mentor: true }),
+  ...e.is(e.InternshipEngagement, { position: true }),
+  ...e.is(e.InternshipEngagement, { methodologies: true }),
+  ...e.is(e.InternshipEngagement, { growthPlan: true }),
 }));
 
 const languageHydrate = e.shape(e.LanguageEngagement, (le) => ({
@@ -78,8 +86,8 @@ const internshipHydrate = e.shape(e.InternshipEngagement, (ie) => ({
 
 const hydrate = e.shape(e.Engagement, (engagement) => ({
   ...baseHydrate(engagement),
-  ...languageExtraHydrate(engagement),
-  ...internshipExtraHydrate(engagement),
+  ...languageHydrate(engagement),
+  ...internshipHydrate(engagement),
 }));
 
 export const ConcreteRepos = {
@@ -102,8 +110,20 @@ export const ConcreteRepos = {
 
   InternshipEngagement: class InternshipEngagementRepository extends RepoFor(
     ConcreteTypes.InternshipEngagement,
-    { hydrate: internshipHydrate },
-  ) {},
+    { hydrate: internshipHydrate, omit: ['create', 'update'] },
+  ) {
+    async create(input: CreateInternshipEngagement) {
+      const project = e.cast(e.InternshipProject, e.uuid(input.projectId));
+      return await this.defaults.create({
+        ...input,
+        projectContext: project.projectContext,
+      });
+    }
+
+    async update({ id, ...changes }: UpdateInternshipEngagement) {
+      return await this.defaults.update({ id, ...changes });
+    }
+  },
 } satisfies Record<keyof typeof ConcreteTypes, Type>;
 
 @Injectable()
@@ -139,53 +159,36 @@ export class EngagementEdgeDBRepository
     return this.concretes.LanguageEngagement.getActualChanges;
   }
 
-  async updateLanguage(input: UpdateLanguageEngagement) {
-    return await this.concretes.LanguageEngagement.update(input);
-  }
-
   get getActualInternshipChanges() {
     return this.concretes.InternshipEngagement.getActualChanges;
   }
 
+  async updateLanguage(input: UpdateLanguageEngagement) {
+    return await this.concretes.LanguageEngagement.update(input);
+  }
+
   async updateInternship(
-    changes: UpdateInternshipEngagement,
+    input: UpdateInternshipEngagement,
     _session: Session,
     _changeset?: ID,
   ) {
-    const { id, mentorId, countryOfOriginId, growthPlan, ...simpleChanges } =
-      changes;
-
-    const internshipEngagement = e.cast(e.InternshipEngagement, e.uuid(id));
-    const mentor = mentorId ? e.cast(e.User, e.uuid(mentorId)) : e.set();
-    const countryOfOrigin = countryOfOriginId
-      ? e.cast(e.Location, e.uuid(countryOfOriginId))
-      : e.set();
-
-    if (growthPlan) {
-      //TODO
-    }
-
-    const updated = e.update(internshipEngagement, () => ({
-      set: {
-        ...simpleChanges,
-        mentor,
-        countryOfOrigin,
-      },
-    }));
-
-    const query = e.select(updated, internshipHydrate);
-
-    return await this.db.run(query);
+    return await this.concretes.InternshipEngagement.update(input);
   }
 
-  async listAllByProjectId(projectId: ID, _session: Session) {
-    const project = e.cast(e.Project, e.uuid(projectId));
-    const query = e.select(e.Engagement, (eng) => ({
-      filter: e.op(eng.project, '=', project),
-      ...hydrate(eng),
-    }));
+  async listAllByProjectId(
+    projectId: ID,
+    _session: Session,
+  ): Promise<
+    ReadonlyArray<UnsecuredDto<LanguageEngagement | InternshipEngagement>>
+  > {
+    throw new NotImplementedException().with(projectId);
+    // const project = e.cast(e.Project, e.uuid(projectId));
+    // const query = e.select(e.Engagement, (eng) => ({
+    //   filter: e.op(eng.project, '=', project),
+    //   ...hydrate(eng),
+    // }));
 
-    return await this.db.run(query);
+    // return await this.db.run(query);
   }
 
   async getOngoingEngagementIds(
