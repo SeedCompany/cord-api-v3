@@ -86,12 +86,12 @@ export class LanguageService {
     if (input.hasExternalFirstScripture) {
       await this.verifyExternalFirstScripture(input.id);
     }
-
+    const { ethnologue, ...simpleProps } = input;
     const language = await this.repo.readOne(input.id, session, view);
-    const changes = this.repo.getActualChanges(language, input);
-    this.privileges.for(session, Language, language).verifyChanges(changes);
-
-    const { ethnologue, ...simpleChanges } = changes;
+    const simpleChanges = this.repo.getActualChanges(language, simpleProps);
+    this.privileges
+      .for(session, Language, language)
+      .verifyChanges(simpleChanges);
 
     if (ethnologue) {
       await this.ethnologueLanguageService.update(

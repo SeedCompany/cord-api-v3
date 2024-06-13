@@ -54,6 +54,9 @@ export class EthnologueLanguageService {
     const ethnologueLanguage = await this.repo.readOne(id);
 
     const changes = this.repo.getActualChanges(ethnologueLanguage, input);
+    if (Object.keys(changes).length === 0) {
+      return;
+    }
     this.privileges
       .for(session, EthnologueLanguage, ethnologueLanguage)
       .verifyChanges(withEffectiveSensitivity(changes, sensitivity));
