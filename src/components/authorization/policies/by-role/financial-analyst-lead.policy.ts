@@ -1,4 +1,5 @@
 import { member, Policy, Role, sensMediumOrLower } from '../util';
+import * as FA from './financial-analyst.policy';
 
 // NOTE: There could be other permissions for this role from other policies
 @Policy([Role.LeadFinancialAnalyst, Role.Controller], (r) => [
@@ -35,6 +36,7 @@ import { member, Policy, Role, sensMediumOrLower } from '../util';
       'financialReportReceivedAt',
     ).edit,
   ]),
+  r.ProjectWorkflowEvent.transitions(...FA.projectTransitions).execute,
   r.ProjectMember.edit.create.delete,
 ])
 export class FinancialAnalystLeadPolicy {}

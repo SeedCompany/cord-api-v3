@@ -1,5 +1,6 @@
 import { takeWhile } from 'lodash';
 import { ProjectStep } from '../../../project/dto';
+import { ProjectWorkflow } from '../../../project/workflow/project-workflow';
 import {
   action,
   field,
@@ -17,6 +18,39 @@ const stepsUntilFinancialEndorsement = takeWhile(
   [...ProjectStep],
   (s) => s !== ProjectStep.PendingFinancialEndorsement,
 );
+
+export const projectTransitions = ProjectWorkflow.pickNames([
+  'Early Conversations -> Pending Regional Director Approval',
+  'Early Conversations -> Pending Concept Approval',
+  'Early Conversations -> Did Not Develop',
+  'Prep for Consultant Endorsement -> Pending Consultant Endorsement',
+  'Prep for Consultant & Financial Endorsement & Finalizing Proposal -> Pending Concept Approval',
+  'Prep for Consultant & Financial Endorsement & Finalizing Proposal -> Did Not Develop',
+  'Pending Consultant Endorsement -> Prep for Financial Endorsement With Consultant Endorsement',
+  'Pending Consultant Endorsement -> Prep for Financial Endorsement Without Consultant Endorsement',
+  'Prep for Financial Endorsement -> Pending Financial Endorsement',
+  'Prep for Financial Endorsement & Finalizing Proposal -> Pending Consultant Endorsement',
+  'Finalizing Proposal -> Pending Regional Director Approval',
+  'Finalizing Proposal -> Pending Financial Endorsement',
+  'Active -> Discussing Change To Plan',
+  'Active -> Discussing Termination',
+  'Active -> Finalizing Completion',
+  'Discussing Change To Plan -> Pending Change To Plan Approval',
+  'Discussing Change To Plan -> Discussing Suspension',
+  'Discussing Change To Plan -> Back To Active',
+  'Pending Change To Plan Approval -> Discussing Change To Plan',
+  'Pending Change To Plan Approval -> Pending Change To Plan Confirmation',
+  'Pending Change To Plan Approval -> Back To Active',
+  'Discussing Suspension -> Pending Suspension Approval',
+  'Discussing Suspension -> Back To Active',
+  'Suspended -> Discussing Reactivation',
+  'Suspended & Discussing Reactivation -> Discussing Termination',
+  'Discussing Reactivation -> Pending Reactivation Approval',
+  'Discussing Termination -> Pending Termination Approval',
+  'Discussing Termination -> Back To Most Recent',
+  'Finalizing Completion -> Back To Active',
+  'Finalizing Completion -> Completed',
+]);
 
 // NOTE: There could be other permissions for this role from other policies
 @Policy(
@@ -93,37 +127,9 @@ const stepsUntilFinancialEndorsement = takeWhile(
       'Review Reject',
       'Review Approve',
     ).execute,
-    r.ProjectWorkflowEvent.read.transitions(
-      'Early Conversations -> Pending Regional Director Approval',
-      'Early Conversations -> Pending Concept Approval',
-      'Early Conversations -> Did Not Develop',
-      'Prep for Consultant Endorsement -> Pending Consultant Endorsement',
-      'Prep for Consultant & Financial Endorsement & Finalizing Proposal -> Pending Concept Approval',
-      'Prep for Consultant & Financial Endorsement & Finalizing Proposal -> Did Not Develop',
-      'Pending Consultant Endorsement -> Prep for Financial Endorsement With Consultant Endorsement',
-      'Pending Consultant Endorsement -> Prep for Financial Endorsement Without Consultant Endorsement',
-      'Prep for Financial Endorsement -> Pending Financial Endorsement',
-      'Prep for Financial Endorsement & Finalizing Proposal -> Pending Consultant Endorsement',
-      'Finalizing Proposal -> Pending Regional Director Approval',
-      'Finalizing Proposal -> Pending Financial Endorsement',
-      'Active -> Discussing Change To Plan',
-      'Active -> Discussing Termination',
-      'Active -> Finalizing Completion',
-      'Discussing Change To Plan -> Pending Change To Plan Approval',
-      'Discussing Change To Plan -> Discussing Suspension',
-      'Discussing Change To Plan -> Back To Active',
-      'Pending Change To Plan Approval -> Discussing Change To Plan',
-      'Pending Change To Plan Approval -> Pending Change To Plan Confirmation',
-      'Pending Change To Plan Approval -> Back To Active',
-      'Discussing Suspension -> Pending Suspension Approval',
-      'Discussing Suspension -> Back To Active',
-      'Suspended -> Discussing Reactivation',
-      'Suspended & Discussing Reactivation -> Discussing Termination',
-      'Discussing Reactivation -> Pending Reactivation Approval',
-      'Discussing Termination -> Pending Termination Approval',
-      'Discussing Termination -> Back To Most Recent',
-      'Finalizing Completion -> Back To Active',
-      'Finalizing Completion -> Completed',
+    r.ProjectWorkflowEvent.read.whenAll(
+      member,
+      r.ProjectWorkflowEvent.isTransitions(...projectTransitions),
     ).execute,
     r.Project.read.create
       .when(member)

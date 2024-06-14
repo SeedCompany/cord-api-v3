@@ -1,4 +1,5 @@
 import { member, Policy, Role, sensMediumOrLower } from '../util';
+import * as PM from './project-manager.policy';
 
 // NOTE: There could be other permissions for this role from other policies
 @Policy([Role.RegionalDirector, Role.FieldOperationsDirector], (r) => [
@@ -8,6 +9,7 @@ import { member, Policy, Role, sensMediumOrLower } from '../util';
   r.Project.when(member).edit.specifically(
     (p) => p.rootDirectory.edit.when(sensMediumOrLower).read,
   ),
+  r.ProjectWorkflowEvent.transitions(...PM.projectTransitions).execute,
   r.ProjectWorkflowEvent.read.transitions(
     'Early Conversations -> Pending Finance Confirmation',
     'Pending Concept Approval -> Prep for Consultant Endorsement',

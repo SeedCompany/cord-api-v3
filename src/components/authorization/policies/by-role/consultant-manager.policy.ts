@@ -1,4 +1,5 @@
 import { member, Policy, Role, sensMediumOrLower, sensOnlyLow } from '../util';
+import * as Consultant from './consultant.policy';
 
 // NOTE: There could be other permissions for this role from other policies
 @Policy(Role.ConsultantManager, (r) => [
@@ -40,6 +41,7 @@ import { member, Policy, Role, sensMediumOrLower, sensOnlyLow } from '../util';
       p.rootDirectory.whenAny(member, sensMediumOrLower).edit,
     ])
     .children((c) => [c.posts.edit]),
+  r.ProjectWorkflowEvent.transitions(...Consultant.projectTransitions).execute,
   [
     r.PeriodicReport,
     r.ProgressReportCommunityStory,
