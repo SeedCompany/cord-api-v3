@@ -16,10 +16,15 @@ import {
 } from './dto';
 import { ProjectRepository as Neo4jRepository } from './project.repository';
 
-const hydrate = e.shape(e.Project, (project) => ({
-  ...project['*'],
+export const projectRefShape = e.shape(e.Project, (project) => ({
+  id: true,
   // default::TranslationProject -> Translation, etc.
   type: castToEnum(project.__type__.name.slice(9, -7), ProjectType),
+}));
+
+const hydrate = e.shape(e.Project, (project) => ({
+  ...project['*'],
+  ...projectRefShape(project),
   // default::TranslationProject -> TranslationProject, etc.
   __typename: project.__type__.name.slice(9, null),
 
