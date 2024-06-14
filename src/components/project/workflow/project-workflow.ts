@@ -3,8 +3,8 @@ import { TransitionType as Type } from '../../workflow/dto';
 import { ProjectStep as Step } from '../dto';
 import { ProjectWorkflowEvent } from './dto';
 import {
+  IsMomentumInternship,
   IsMultiplication,
-  IsNotMultiplication,
   RequireOngoingEngagementsToBeFinalizingCompletion,
 } from './transitions/conditions';
 import {
@@ -59,7 +59,7 @@ export const ProjectWorkflow = defineWorkflow({
     to: Step.PendingConceptApproval,
     label: 'Submit for Concept Approval',
     type: Type.Approve,
-    conditions: IsNotMultiplication,
+    conditions: IsMomentumInternship,
   },
   'Early Conversations -> Did Not Develop': {
     from: Step.EarlyConversations,
@@ -198,14 +198,14 @@ export const ProjectWorkflow = defineWorkflow({
     to: Step.PendingZoneDirectorApproval,
     label: 'Approve for Field Ops Director Review',
     type: Type.Approve,
-    conditions: IsNotMultiplication,
+    conditions: IsMomentumInternship,
   },
   'Pending Regional Director Approval -> Finalizing Proposal': {
     from: Step.PendingRegionalDirectorApproval,
     to: Step.FinalizingProposal,
     label: 'Send Back for Corrections',
     type: Type.Reject,
-    conditions: IsNotMultiplication,
+    conditions: IsMomentumInternship,
   },
   'Pending Regional Director Approval -> Did Not Develop': {
     from: Step.PendingRegionalDirectorApproval,
@@ -268,7 +268,7 @@ export const ProjectWorkflow = defineWorkflow({
     to: Step.OnHoldFinanceConfirmation,
     label: 'Hold Project for Confirmation',
     type: Type.Neutral,
-    conditions: IsNotMultiplication,
+    conditions: IsMomentumInternship,
     notifiers: [FinancialApprovers],
   },
   'Pending & On Hold Finance Confirmation -> Finalizing Proposal': {
@@ -276,7 +276,7 @@ export const ProjectWorkflow = defineWorkflow({
     to: Step.FinalizingProposal,
     label: 'Send Back for Corrections',
     type: Type.Reject,
-    conditions: IsNotMultiplication,
+    conditions: IsMomentumInternship,
     notifiers: [FinancialApprovers],
   },
   'Pending & On Hold Finance Confirmation -> Rejected': {
