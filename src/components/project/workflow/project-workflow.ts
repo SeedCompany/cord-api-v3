@@ -40,6 +40,8 @@ export const ProjectWorkflow = defineWorkflow({
   context: defineContext<ResolveParams>,
   defaultNotifiers: [TeamMembers],
 })({
+  // In Development
+  // region
   'Early Conversations -> Pending Regional Director Approval': {
     from: Step.EarlyConversations,
     to: Step.PendingRegionalDirectorApproval,
@@ -68,7 +70,6 @@ export const ProjectWorkflow = defineWorkflow({
     type: Type.Reject,
   },
 
-  // Pending Concept Approval
   'Pending Concept Approval -> Prep for Consultant Endorsement': {
     from: Step.PendingConceptApproval,
     to: Step.PrepForConsultantEndorsement,
@@ -88,7 +89,6 @@ export const ProjectWorkflow = defineWorkflow({
     type: Type.Reject,
   },
 
-  // Prep for Consultant Endorsement
   'Prep for Consultant Endorsement -> Pending Consultant Endorsement': {
     from: Step.PrepForConsultantEndorsement,
     to: Step.PendingConsultantEndorsement,
@@ -118,7 +118,6 @@ export const ProjectWorkflow = defineWorkflow({
       type: Type.Reject,
     },
 
-  // Pending Consultant Endorsement
   'Pending Consultant Endorsement -> Prep for Financial Endorsement With Consultant Endorsement':
     {
       from: Step.PendingConsultantEndorsement,
@@ -134,7 +133,6 @@ export const ProjectWorkflow = defineWorkflow({
       type: Type.Neutral,
     },
 
-  // Prep for Financial Endorsement
   'Prep for Financial Endorsement -> Pending Financial Endorsement': {
     from: Step.PrepForFinancialEndorsement,
     to: Step.PendingFinancialEndorsement,
@@ -149,7 +147,6 @@ export const ProjectWorkflow = defineWorkflow({
       type: Type.Neutral,
     },
 
-  // Pending Financial Endorsement
   'Pending Financial Endorsement -> Finalizing Proposal With Financial Endorsement':
     {
       from: Step.PendingFinancialEndorsement,
@@ -165,7 +162,6 @@ export const ProjectWorkflow = defineWorkflow({
       type: Type.Neutral,
     },
 
-  // Finalizing Proposal
   'Finalizing Proposal -> Pending Regional Director Approval': {
     from: Step.FinalizingProposal,
     to: Step.PendingRegionalDirectorApproval,
@@ -179,7 +175,6 @@ export const ProjectWorkflow = defineWorkflow({
     type: Type.Neutral,
   },
 
-  // Pending Regional Director Approval
   'Pending Regional Director Approval -> Early Conversations': {
     from: Step.PendingRegionalDirectorApproval,
     to: Step.EarlyConversations,
@@ -220,7 +215,6 @@ export const ProjectWorkflow = defineWorkflow({
     type: Type.Reject,
   },
 
-  // Pending Zone Director Approval
   'Pending Zone Director Approval -> Pending Finance Confirmation': {
     from: Step.PendingZoneDirectorApproval,
     to: Step.PendingFinanceConfirmation,
@@ -240,7 +234,6 @@ export const ProjectWorkflow = defineWorkflow({
     type: Type.Reject,
   },
 
-  // Pending Finance Confirmation
   'Pending & On Hold Finance Confirmation -> Active': {
     from: [Step.PendingFinanceConfirmation, Step.OnHoldFinanceConfirmation],
     to: Step.Active,
@@ -286,8 +279,10 @@ export const ProjectWorkflow = defineWorkflow({
     type: Type.Reject,
     notifiers: [FinancialApprovers],
   },
+  //endregion
 
   // Active
+  // region
   'Active -> Discussing Change To Plan': {
     from: [Step.Active, Step.ActiveChangedPlan],
     to: Step.DiscussingChangeToPlan,
@@ -310,7 +305,6 @@ export const ProjectWorkflow = defineWorkflow({
     notifiers: [FinancialApprovers, Distros.Extension, Distros.Revision],
   },
 
-  // Disucssing Change To Plan
   'Discussing Change To Plan -> Pending Change To Plan Approval': {
     from: Step.DiscussingChangeToPlan,
     to: Step.PendingChangeToPlanApproval,
@@ -333,7 +327,6 @@ export const ProjectWorkflow = defineWorkflow({
     notifiers: [Distros.Extension, Distros.Revision],
   },
 
-  // Pending Change To Plan Approval
   'Pending Change To Plan Approval -> Discussing Change To Plan': {
     from: Step.PendingChangeToPlanApproval,
     to: Step.DiscussingChangeToPlan,
@@ -356,7 +349,6 @@ export const ProjectWorkflow = defineWorkflow({
     notifiers: [Distros.Extension, Distros.Revision],
   },
 
-  // Pending Change To Plan Confirmation
   'Pending Change To Plan Confirmation -> Discussing Change To Plan': {
     from: Step.PendingChangeToPlanConfirmation,
     to: Step.DiscussingChangeToPlan,
@@ -379,7 +371,6 @@ export const ProjectWorkflow = defineWorkflow({
     notifiers: [FinancialApprovers, Distros.Extension, Distros.Revision],
   },
 
-  // Discussing Suspension
   'Discussing Suspension -> Pending Suspension Approval': {
     from: Step.DiscussingSuspension,
     to: Step.PendingSuspensionApproval,
@@ -395,7 +386,6 @@ export const ProjectWorkflow = defineWorkflow({
     notifiers: Distros.Suspension,
   },
 
-  // Pending Suspension Approval
   'Pending Suspension Approval -> Discussing Suspension': {
     from: Step.PendingSuspensionApproval,
     to: Step.DiscussingSuspension,
@@ -418,7 +408,6 @@ export const ProjectWorkflow = defineWorkflow({
     notifiers: Distros.Suspension,
   },
 
-  // Suspended
   'Suspended -> Discussing Reactivation': {
     from: Step.Suspended,
     to: Step.DiscussingReactivation,
@@ -434,7 +423,6 @@ export const ProjectWorkflow = defineWorkflow({
     notifiers: Distros.Suspension,
   },
 
-  // Discussing Reactivation
   'Discussing Reactivation -> Pending Reactivation Approval': {
     from: Step.DiscussingReactivation,
     to: Step.PendingReactivationApproval,
@@ -443,7 +431,6 @@ export const ProjectWorkflow = defineWorkflow({
     notifiers: Distros.Suspension,
   },
 
-  // Pending Reactivation Approval
   'Pending Reactivation Approval -> Active Changed Plan': {
     from: Step.PendingReactivationApproval,
     to: Step.ActiveChangedPlan,
@@ -466,7 +453,6 @@ export const ProjectWorkflow = defineWorkflow({
     notifiers: Distros.Suspension,
   },
 
-  // Discussing Termination
   'Discussing Termination -> Pending Termination Approval': {
     from: Step.DiscussingTermination,
     to: Step.PendingTerminationApproval,
@@ -487,7 +473,6 @@ export const ProjectWorkflow = defineWorkflow({
     notifiers: Distros.Termination,
   },
 
-  // Pending Termination Approval
   'Pending Termination Approval -> Terminated': {
     from: Step.PendingTerminationApproval,
     to: Step.Terminated,
@@ -515,7 +500,6 @@ export const ProjectWorkflow = defineWorkflow({
     notifiers: Distros.Termination,
   },
 
-  // Finalizing Completion
   'Finalizing Completion -> Back To Active': {
     from: Step.FinalizingCompletion,
     to: BackToActive,
@@ -531,4 +515,5 @@ export const ProjectWorkflow = defineWorkflow({
     conditions: RequireOngoingEngagementsToBeFinalizingCompletion,
     notifiers: Distros.Closing,
   },
+  // endregion
 });
