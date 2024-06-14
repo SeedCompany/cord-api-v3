@@ -28,7 +28,6 @@ import { member, Policy, Role, sensMediumOrLower, sensOnlyLow } from '../util';
   ]),
   r.Project.read
     .specifically((p) => [
-      p.many('step', 'stepChangedAt').edit,
       p
         .many(
           'financialReportPeriod',

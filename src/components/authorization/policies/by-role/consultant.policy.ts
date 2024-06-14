@@ -33,9 +33,7 @@ import { member, Policy, Role } from '../util';
   r.NarrativeReport.when(member).edit.create,
   r.Organization.specifically((p) => p.address.none),
   r.Partner.specifically((p) => p.pointOfContact.none),
-  r.Project.when(member).specifically((p) => [
-    p.many('step', 'stepChangedAt', 'rootDirectory').edit,
-  ]),
+  r.Project.when(member).specifically((p) => p.rootDirectory.edit),
   r.Unavailability.read,
   r.User.read.create,
   r.ProjectWorkflowEvent.read.transitions(
