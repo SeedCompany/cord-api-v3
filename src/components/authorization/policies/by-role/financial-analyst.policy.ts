@@ -8,12 +8,13 @@ import {
   sensOnlyLow,
 } from '../util';
 
-export const projectTransitions = ProjectWorkflow.pickNames(
-  'Pending Financial Endorsement -> Finalizing Proposal With Financial Endorsement',
-  'Pending Financial Endorsement -> Finalizing Proposal Without Financial Endorsement',
-  'Finalizing Completion -> Back To Active',
-  'Finalizing Completion -> Completed',
-);
+export const projectTransitions = () =>
+  ProjectWorkflow.pickNames(
+    'Pending Financial Endorsement -> Finalizing Proposal With Financial Endorsement',
+    'Pending Financial Endorsement -> Finalizing Proposal Without Financial Endorsement',
+    'Finalizing Completion -> Back To Active',
+    'Finalizing Completion -> Completed',
+  );
 
 // NOTE: There could be other permissions for this role from other policies
 @Policy(
@@ -71,7 +72,7 @@ export const projectTransitions = ProjectWorkflow.pickNames(
     r.ProjectMember.read.when(member).edit.create.delete,
     r.ProjectWorkflowEvent.read.whenAll(
       member,
-      r.ProjectWorkflowEvent.isTransitions(...projectTransitions),
+      r.ProjectWorkflowEvent.isTransitions(projectTransitions),
     ).execute,
     r.PeriodicReport.read.when(member).edit,
     r.StepProgress.read,

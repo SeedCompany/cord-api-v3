@@ -36,7 +36,7 @@ import * as FA from './financial-analyst.policy';
       'financialReportReceivedAt',
     ).edit,
   ]),
-  r.ProjectWorkflowEvent.transitions(...FA.projectTransitions).execute,
+  r.ProjectWorkflowEvent.transitions(FA.projectTransitions).execute,
   r.ProjectMember.edit.create.delete,
 ])
 export class FinancialAnalystLeadPolicy {}

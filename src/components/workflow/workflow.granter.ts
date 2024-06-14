@@ -48,11 +48,16 @@ export function WorkflowEventGranter<
       return this[action]('create');
     }
 
-    isTransitions(...transitions: Array<Many<Names>>) {
-      return TransitionCondition.fromName(workflow(), transitions.flat());
+    isTransitions(
+      ...transitions: Array<Many<Names> | (() => Iterable<Names>)>
+    ) {
+      return TransitionCondition.fromName(
+        workflow(),
+        transitions.flatMap((t) => (typeof t === 'function' ? [...t()] : t)),
+      );
     }
 
-    transitions(...transitions: Array<Many<Names>>) {
+    transitions(...transitions: Array<Many<Names> | (() => Iterable<Names>)>) {
       return this.when(this.isTransitions(...transitions));
     }
 

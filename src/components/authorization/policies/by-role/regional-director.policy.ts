@@ -9,7 +9,7 @@ import * as PM from './project-manager.policy';
   r.Project.when(member).edit.specifically(
     (p) => p.rootDirectory.edit.when(sensMediumOrLower).read,
   ),
-  r.ProjectWorkflowEvent.transitions(...PM.projectTransitions).execute,
+  r.ProjectWorkflowEvent.transitions(PM.projectTransitions).execute,
   r.ProjectWorkflowEvent.read.transitions(
     'Early Conversations -> Pending Finance Confirmation',
     'Pending Concept Approval -> Prep for Consultant Endorsement',

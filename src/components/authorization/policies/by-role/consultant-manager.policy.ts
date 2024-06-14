@@ -41,7 +41,7 @@ import * as Consultant from './consultant.policy';
       p.rootDirectory.whenAny(member, sensMediumOrLower).edit,
     ])
     .children((c) => [c.posts.edit]),
-  r.ProjectWorkflowEvent.transitions(...Consultant.projectTransitions).execute,
+  r.ProjectWorkflowEvent.transitions(Consultant.projectTransitions).execute,
   [
     r.PeriodicReport,
     r.ProgressReportCommunityStory,
