@@ -234,15 +234,39 @@ export class PolicyExecutor {
         return c;
       }
       if (c instanceof AndConditions) {
-        return children.some((perm) => perm === false)
-          ? false
-          : all(...children.filter((perm): perm is Condition => perm !== true));
+        // a && b && c
+        // a && false && true = false
+        if (children.some((perm) => perm === false)) {
+          return false;
+        }
+        const remainingConditions = children.filter(
+          (perm): perm is Condition => perm !== true,
+        );
+        // true && true && true = true
+        if (remainingConditions.length === 0) {
+          // no children were false, no children were conditions
+          // aka all children are true
+          return true;
+        }
+        // a && true && true = a
+        return all(...remainingConditions);
       } else {
-        return children.some((perm) => perm === true)
-          ? true
-          : any(
-              ...children.filter((perm): perm is Condition => perm !== false),
-            );
+        // a || b || c
+        // a || false || true = true
+        if (children.some((perm) => perm === true)) {
+          return true;
+        }
+        const remainingConditions = children.filter(
+          (perm): perm is Condition => perm !== false,
+        );
+        // false || false || false = false
+        if (remainingConditions.length === 0) {
+          // no children were true, no children were conditions
+          // aka all children are false
+          return false;
+        }
+        // a || false || false = a
+        return any(...remainingConditions);
       }
     };
     return walkAndReform(condition);
