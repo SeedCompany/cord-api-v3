@@ -27,8 +27,6 @@ export const projectTransitions = () =>
     'Prep for Consultant Endorsement -> Pending Consultant Endorsement',
     'Prep for Consultant & Financial Endorsement & Finalizing Proposal -> Pending Concept Approval',
     'Prep for Consultant & Financial Endorsement & Finalizing Proposal -> Did Not Develop',
-    'Pending Consultant Endorsement -> Prep for Financial Endorsement With Consultant Endorsement',
-    'Pending Consultant Endorsement -> Prep for Financial Endorsement Without Consultant Endorsement',
     'Prep for Financial Endorsement -> Pending Financial Endorsement',
     'Prep for Financial Endorsement & Finalizing Proposal -> Pending Consultant Endorsement',
     'Finalizing Proposal -> Pending Regional Director Approval',
@@ -51,6 +49,12 @@ export const projectTransitions = () =>
     'Discussing Termination -> Back To Most Recent',
     'Finalizing Completion -> Back To Active',
     'Finalizing Completion -> Completed',
+  ]);
+
+export const momentumProjectsTransitions = () =>
+  ProjectWorkflow.pickNames([
+    'Pending Consultant Endorsement -> Prep for Financial Endorsement With Consultant Endorsement',
+    'Pending Consultant Endorsement -> Prep for Financial Endorsement Without Consultant Endorsement',
   ]);
 
 // NOTE: There could be other permissions for this role from other policies
@@ -131,6 +135,12 @@ export const projectTransitions = () =>
     r.ProjectWorkflowEvent.read.whenAll(
       member,
       r.ProjectWorkflowEvent.isTransitions(projectTransitions),
+    ).execute,
+    // PMs can also endorse for consultant for momentum projects
+    r.ProjectWorkflowEvent.whenAll(
+      field('project.type', 'MomentumTranslation'),
+      member,
+      r.ProjectWorkflowEvent.isTransitions(momentumProjectsTransitions),
     ).execute,
     r.Project.read.create
       .when(member)
