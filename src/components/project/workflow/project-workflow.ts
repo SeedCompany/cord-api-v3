@@ -74,21 +74,18 @@ export const ProjectWorkflow = defineWorkflow({
     to: Step.PrepForConsultantEndorsement,
     label: 'Approve Concept',
     type: Type.Approve,
-    conditions: IsNotMultiplication,
   },
   'Pending Concept Approval -> Early Conversations': {
     from: Step.PendingConceptApproval,
     to: Step.EarlyConversations,
     label: 'Send Back for Corrections',
     type: Type.Reject,
-    conditions: IsNotMultiplication,
   },
   'Pending Concept Approval -> Rejected': {
     from: Step.PendingConceptApproval,
     to: Step.Rejected,
     label: 'Reject',
     type: Type.Reject,
-    conditions: IsNotMultiplication,
   },
 
   // Prep for Consultant Endorsement
@@ -97,7 +94,6 @@ export const ProjectWorkflow = defineWorkflow({
     to: Step.PendingConsultantEndorsement,
     label: 'Submit for Consultant Endorsement',
     type: Type.Approve,
-    conditions: IsNotMultiplication,
   },
   'Prep for Consultant & Financial Endorsement & Finalizing Proposal -> Pending Concept Approval':
     {
@@ -109,7 +105,6 @@ export const ProjectWorkflow = defineWorkflow({
       to: Step.PendingConceptApproval,
       label: 'Resubmit for Concept Approval',
       type: Type.Neutral,
-      conditions: IsNotMultiplication,
     },
   'Prep for Consultant & Financial Endorsement & Finalizing Proposal -> Did Not Develop':
     {
@@ -121,7 +116,6 @@ export const ProjectWorkflow = defineWorkflow({
       to: Step.DidNotDevelop,
       label: 'End Development',
       type: Type.Reject,
-      conditions: IsNotMultiplication,
     },
 
   // Pending Consultant Endorsement
@@ -131,7 +125,6 @@ export const ProjectWorkflow = defineWorkflow({
       to: Step.PrepForFinancialEndorsement,
       label: 'Endorse Plan',
       type: Type.Approve,
-      conditions: IsNotMultiplication,
     },
   'Pending Consultant Endorsement -> Prep for Financial Endorsement Without Consultant Endorsement':
     {
@@ -139,7 +132,6 @@ export const ProjectWorkflow = defineWorkflow({
       to: Step.PrepForFinancialEndorsement,
       label: 'Do Not Endorse Plan',
       type: Type.Neutral,
-      conditions: IsNotMultiplication,
     },
 
   // Prep for Financial Endorsement
@@ -148,7 +140,6 @@ export const ProjectWorkflow = defineWorkflow({
     to: Step.PendingFinancialEndorsement,
     label: 'Submit for Financial Endorsement',
     type: Type.Approve,
-    conditions: IsNotMultiplication,
   },
   'Prep for Financial Endorsement & Finalizing Proposal -> Pending Consultant Endorsement':
     {
@@ -156,7 +147,6 @@ export const ProjectWorkflow = defineWorkflow({
       to: Step.PendingConsultantEndorsement,
       label: 'Resubmit for Consultant Endorsement',
       type: Type.Neutral,
-      conditions: IsNotMultiplication,
     },
 
   // Pending Financial Endorsement
@@ -166,7 +156,6 @@ export const ProjectWorkflow = defineWorkflow({
       to: Step.FinalizingProposal,
       label: 'Endorse Project Plan',
       type: Type.Approve,
-      conditions: IsNotMultiplication,
     },
   'Pending Financial Endorsement -> Finalizing Proposal Without Financial Endorsement':
     {
@@ -174,7 +163,6 @@ export const ProjectWorkflow = defineWorkflow({
       to: Step.FinalizingProposal,
       label: 'Do Not Endorse Project Plan',
       type: Type.Neutral,
-      conditions: IsNotMultiplication,
     },
 
   // Finalizing Proposal
@@ -183,14 +171,12 @@ export const ProjectWorkflow = defineWorkflow({
     to: Step.PendingRegionalDirectorApproval,
     label: 'Submit for Approval',
     type: Type.Approve,
-    conditions: IsNotMultiplication,
   },
   'Finalizing Proposal -> Pending Financial Endorsement': {
     from: Step.FinalizingProposal,
     to: Step.PendingFinancialEndorsement,
     label: 'Resubmit for Financial Endorsement',
     type: Type.Neutral,
-    conditions: IsNotMultiplication,
   },
 
   // Pending Regional Director Approval
@@ -226,7 +212,6 @@ export const ProjectWorkflow = defineWorkflow({
     to: Step.DidNotDevelop,
     label: 'End Development',
     type: Type.Reject,
-    conditions: IsMultiplication,
   },
   'Pending Regional Director Approval -> Rejected': {
     from: Step.PendingRegionalDirectorApproval,
@@ -241,21 +226,18 @@ export const ProjectWorkflow = defineWorkflow({
     to: Step.PendingFinanceConfirmation,
     label: 'Approve Project',
     type: Type.Approve,
-    conditions: IsNotMultiplication,
   },
   'Pending Zone Director Approval -> Finalizing Proposal': {
     from: Step.PendingZoneDirectorApproval,
     to: Step.FinalizingProposal,
     label: 'Send Back for Corrections',
     type: Type.Reject,
-    conditions: IsNotMultiplication,
   },
   'Pending Zone Director Approval -> Rejected': {
     from: Step.PendingZoneDirectorApproval,
     to: Step.Rejected,
     label: 'Reject',
     type: Type.Reject,
-    conditions: IsNotMultiplication,
   },
 
   // Pending Finance Confirmation
@@ -279,7 +261,6 @@ export const ProjectWorkflow = defineWorkflow({
     to: Step.DidNotDevelop,
     label: 'End Development',
     type: Type.Reject,
-    conditions: IsMultiplication,
     notifiers: [FinancialApprovers],
   },
   'Pending Finance Confirmation -> On Hold Finance Confirmation': {
@@ -303,7 +284,6 @@ export const ProjectWorkflow = defineWorkflow({
     to: Step.Rejected,
     label: 'Reject',
     type: Type.Reject,
-    conditions: IsNotMultiplication,
     notifiers: [FinancialApprovers],
   },
 
