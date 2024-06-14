@@ -14,11 +14,15 @@ type ExecuteTransitionInput = ReturnType<
   typeof ExecuteTransitionInputFn
 >['prototype'];
 
-export const WorkflowService = <W extends Workflow>(workflow: W) => {
+export const WorkflowService = <W extends Workflow>(workflow: () => W) => {
   @Injectable()
   abstract class WorkflowServiceClass {
     @Inject() protected readonly privileges: Privileges;
-    protected readonly workflow = workflow;
+    protected readonly workflow: W;
+
+    constructor() {
+      this.workflow = workflow();
+    }
 
     protected transitionByKey(key: ID | Nil, to: W['state']) {
       if (!key) {
@@ -45,7 +49,7 @@ export const WorkflowService = <W extends Workflow>(workflow: W) => {
       );
 
       // Filter out transitions without authorization to execute
-      const p = this.privileges.for(session, workflow.eventResource);
+      const p = this.privileges.for(session, this.workflow.eventResource);
       available = available.filter((t) =>
         // I don't have a good way to type this right now.
         // Context usage is still fuzzy when conditions need different shapes.
@@ -101,7 +105,9 @@ export const WorkflowService = <W extends Workflow>(workflow: W) => {
     }
 
     canBypass(session: Session) {
-      return this.privileges.for(session, workflow.eventResource).can('create');
+      return this.privileges
+        .for(session, this.workflow.eventResource)
+        .can('create');
     }
 
     protected getBypassIfValid(

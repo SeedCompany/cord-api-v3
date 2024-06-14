@@ -1,7 +1,7 @@
 import type { UnsecuredDto } from '~/common';
 import type { Project, ProjectStep } from '../../dto';
 import type { ProjectWorkflowEvent as WorkflowEvent } from '../dto';
-import { ProjectWorkflow } from '../project-workflow';
+import type { ProjectWorkflow } from '../project-workflow';
 
 export class ProjectTransitionedEvent {
   constructor(

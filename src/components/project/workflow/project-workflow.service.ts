@@ -16,7 +16,9 @@ import { ProjectWorkflow } from './project-workflow';
 import { ProjectWorkflowRepository } from './project-workflow.repository';
 
 @Injectable()
-export class ProjectWorkflowService extends WorkflowService(ProjectWorkflow) {
+export class ProjectWorkflowService extends WorkflowService(
+  () => ProjectWorkflow,
+) {
   constructor(
     private readonly resources: ResourceLoader,
     private readonly repo: ProjectWorkflowRepository,
