@@ -138,7 +138,7 @@ export const momentumProjectsTransitions = () =>
     ).execute,
     // PMs can also endorse for consultant for momentum projects
     r.ProjectWorkflowEvent.whenAll(
-      field('project.type', 'MomentumTranslation'),
+      field('project.type', 'MomentumTranslation', 'Momentum'),
       member,
       r.ProjectWorkflowEvent.isTransitions(momentumProjectsTransitions),
     ).execute,

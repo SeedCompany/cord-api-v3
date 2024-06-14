@@ -18,6 +18,7 @@ export class EnumFieldCondition<
   constructor(
     private readonly path: Path,
     private readonly allowed: ReadonlySet<ValueOfPath<TResourceStatic, Path>>,
+    private readonly customId?: string,
   ) {}
 
   isAllowed({ object }: IsAllowedParams<TResourceStatic>) {
@@ -51,6 +52,7 @@ export class EnumFieldCondition<
       return new EnumFieldCondition(
         conditionsForField[0].path,
         new Set(unioned),
+        conditions.length === 1 ? conditions[0].customId : undefined,
       );
     });
   }
@@ -63,11 +65,15 @@ export class EnumFieldCondition<
       return new EnumFieldCondition(
         conditionsForField[0].path,
         new Set(intersected),
+        conditions.length === 1 ? conditions[0].customId : undefined,
       );
     });
   }
 
   [inspect.custom](_depth: number, _options: InspectOptionsStylized) {
+    if (this.customId) {
+      return this.customId;
+    }
     return `${startCase(this.path)} { ${[...this.allowed]
       .map((s) => startCase(s))
       .join(', ')} }`;
@@ -83,17 +89,19 @@ export function field<
 >(
   path: Path,
   allowed: ManyIn<ValueOfPath<TResourceStatic, Path>>,
-  ...allowedMore: Array<ManyIn<ValueOfPath<TResourceStatic, Path>>>
+  customId?: string,
 ) {
   const flattened = new Set(
-    [allowed, ...allowedMore].flatMap((v) =>
-      // Assume values are strings to normalize cardinality.
-      typeof v === 'string'
-        ? [v]
-        : [...(v as Array<ValueOfPath<TResourceStatic, Path>>)],
-    ),
+    // Assume values are strings to normalize cardinality.
+    typeof allowed === 'string'
+      ? [allowed]
+      : [...(allowed as Array<ValueOfPath<TResourceStatic, Path>>)],
   );
-  return new EnumFieldCondition<TResourceStatic, Path>(path, flattened);
+  return new EnumFieldCondition<TResourceStatic, Path>(
+    path,
+    flattened,
+    customId,
+  );
 }
 
 type ManyIn<T extends string> = T | Iterable<T>;
