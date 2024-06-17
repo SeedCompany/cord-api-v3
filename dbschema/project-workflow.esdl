@@ -1,5 +1,5 @@
 module Project {
-  type WorkflowEvent {
+  type WorkflowEvent extending ContextAware {
     required project: default::Project {
       readonly := true;
       on target delete delete source;
