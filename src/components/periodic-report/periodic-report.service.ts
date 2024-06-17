@@ -1,10 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import {
   type CalendarDate,
-  CreationFailed,
   DateInterval,
   type ID,
-  NotFoundException,
   type ObjectView,
   type Range,
   type UnsecuredDto,
@@ -43,20 +41,15 @@ export class PeriodicReportService {
     if (input.intervals.length === 0) {
       return;
     }
-    try {
-      const result = await this.repo.merge(input);
-      this.logger.info(`Merged ${input.type.toLowerCase()} reports`, {
-        existing: input.intervals.length - result.length,
-        new: result.length,
-        parent: input.parent,
-        newIntervals: result.map(({ interval }) =>
-          DateInterval.fromObject(interval).toISO(),
-        ),
-      });
-    } catch (exception) {
-      const Report = resolveReportType({ type: input.type });
-      throw new CreationFailed(Report);
-    }
+    const result = await this.repo.merge(input);
+    this.logger.info(`Merged ${input.type.toLowerCase()} reports`, {
+      existing: input.intervals.length - result.length,
+      new: result.length,
+      parent: input.parent,
+      newIntervals: result.map(({ interval }) =>
+        DateInterval.fromObject(interval).toISO(),
+      ),
+    });
   }
 
   async update(input: UpdatePeriodicReportInput) {
@@ -69,11 +62,22 @@ export class PeriodicReportService {
 
     const { reportFile, ...simpleChanges } = changes;
 
-    const updated = await this.repo.update(current, simpleChanges);
+    const updated = this.secure(
+      await this.repo.update(
+        {
+          id: current.id,
+          start: current.start,
+          end: current.end,
+          ...simpleChanges,
+        },
+        session,
+      ),
+      session,
+    );
 
     if (reportFile) {
       const file = await this.files.updateDefinedFile(
-        current.reportFile,
+        this.secure(current, session).reportFile,
         'file',
         reportFile,
       );
@@ -203,10 +207,7 @@ export class PeriodicReportService {
         // no change
         return;
       }
-      await this.repo.update(report, {
-        start: at,
-        end: at,
-      });
+      await this.repo.update({ id: report.id, start: at, end: at }, session);
     } else {
       await this.merge({
         intervals: [{ start: at, end: at }],
