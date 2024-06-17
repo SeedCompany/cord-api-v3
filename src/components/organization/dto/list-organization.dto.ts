@@ -19,7 +19,7 @@ export class OrganizationListInput extends SortablePaginationInput<
 >({
   defaultSort: 'name',
 }) {
-  @FilterField(OrganizationFilters, { internal: true })
+  @FilterField(() => OrganizationFilters, { internal: true })
   readonly filter: OrganizationFilters;
 }
 

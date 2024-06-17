@@ -24,7 +24,7 @@ export class FileListInput extends SortablePaginationInput<
 >({
   defaultSort: 'name',
 }) {
-  @FilterField(FileFilters)
+  @FilterField(() => FileFilters)
   readonly filter?: FileFilters;
 }
 

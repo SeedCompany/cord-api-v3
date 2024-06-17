@@ -19,7 +19,7 @@ export class PostListInput extends SortablePaginationInput<keyof Post>({
   defaultSort: 'createdAt',
   defaultOrder: Order.DESC,
 }) {
-  @FilterField(PostFilters, { internal: true })
+  @FilterField(() => PostFilters, { internal: true })
   readonly filter: PostFilters;
 }
 

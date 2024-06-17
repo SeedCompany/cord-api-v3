@@ -100,7 +100,7 @@ export abstract class ProjectFilters {
 export class ProjectListInput extends SortablePaginationInput<keyof IProject>({
   defaultSort: 'name',
 }) {
-  @FilterField(ProjectFilters)
+  @FilterField(() => ProjectFilters)
   readonly filter: ProjectFilters;
 }
 
