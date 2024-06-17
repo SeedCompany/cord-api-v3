@@ -368,7 +368,7 @@ export const ProjectWorkflow = defineWorkflow({
     from: Step.DiscussingSuspension,
     to: Step.PendingSuspensionApproval,
     label: 'Submit for Approval',
-    type: Type.Neutral,
+    type: Type.Approve,
     notifiers: Distros.Suspension,
   },
   'End Suspension Discussion': {
