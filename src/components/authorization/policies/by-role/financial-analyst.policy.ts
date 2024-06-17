@@ -10,10 +10,10 @@ import {
 
 export const projectTransitions = () =>
   ProjectWorkflow.pickNames(
-    'Pending Financial Endorsement -> Finalizing Proposal With Financial Endorsement',
-    'Pending Financial Endorsement -> Finalizing Proposal Without Financial Endorsement',
-    'Finalizing Completion -> Back To Active',
-    'Finalizing Completion -> Completed',
+    'Finance Endorses Proposal',
+    'Finance Opposes Proposal',
+    'Not Ready for Completion',
+    'Complete',
   );
 
 // NOTE: There could be other permissions for this role from other policies

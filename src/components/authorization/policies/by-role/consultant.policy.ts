@@ -3,8 +3,8 @@ import { member, Policy, Role } from '../util';
 
 export const projectTransitions = () =>
   ProjectWorkflow.pickNames(
-    'Pending Consultant Endorsement -> Prep for Financial Endorsement With Consultant Endorsement',
-    'Pending Consultant Endorsement -> Prep for Financial Endorsement Without Consultant Endorsement',
+    'Consultant Endorses Proposal',
+    'Consultant Opposes Proposal',
   );
 
 // NOTE: There could be other permissions for this role from other policies
