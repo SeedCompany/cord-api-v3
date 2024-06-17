@@ -44,7 +44,7 @@ class PeriodicReport extends Resource {
   @Field()
   readonly skippedReason: SecuredStringNullable;
 
-  readonly reportFile: DefinedFile;
+  readonly reportFile: DefinedFile; //TODO? - Secured<LinkTo<'File'> | null>
 
   @SensitivityField({
     description: "Based on the project's sensitivity",
