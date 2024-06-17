@@ -1,6 +1,23 @@
-import { ClauseCollection, Query } from 'cypher-query-builder';
+import { Clause, ClauseCollection, Query } from 'cypher-query-builder';
+import type { ParameterBag } from 'cypher-query-builder/dist/typings/parameter-bag';
 
 export class SubClauseCollection extends ClauseCollection {
+  useParameterBag(newBag: ParameterBag) {
+    super.useParameterBag(newBag);
+    this.assignBagRecursive(this, newBag);
+  }
+
+  private assignBagRecursive(clause: Clause, newBag: ParameterBag) {
+    // @ts-expect-error protected, but we want it to reference the outer one
+    // without having to import the parameters.
+    clause.parameterBag = newBag;
+    if (clause instanceof ClauseCollection) {
+      for (const sub of clause.getClauses()) {
+        this.assignBagRecursive(sub, newBag);
+      }
+    }
+  }
+
   build() {
     return this.clauses
       .flatMap((clause) => {
