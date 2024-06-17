@@ -9,7 +9,7 @@ export abstract class FilmFilters {}
 export class FilmListInput extends SortablePaginationInput<keyof Film>({
   defaultSort: 'name',
 }) {
-  @FilterField(FilmFilters, { internal: true })
+  @FilterField(() => FilmFilters, { internal: true })
   readonly filter: FilmFilters;
 }
 

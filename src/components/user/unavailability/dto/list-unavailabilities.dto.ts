@@ -21,7 +21,7 @@ export class UnavailabilityListInput extends SortablePaginationInput<
   defaultSort: 'start',
   defaultOrder: Order.DESC,
 }) {
-  @FilterField(UnavailabilityFilters, { internal: true })
+  @FilterField(() => UnavailabilityFilters, { internal: true })
   readonly filter: UnavailabilityFilters;
 }
 

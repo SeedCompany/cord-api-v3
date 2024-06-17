@@ -20,7 +20,7 @@ export abstract class BudgetFilters {
 export class BudgetListInput extends SortablePaginationInput<keyof Budget>({
   defaultSort: 'status',
 }) {
-  @FilterField(BudgetFilters, { internal: true })
+  @FilterField(() => BudgetFilters, { internal: true })
   readonly filter: BudgetFilters;
 }
 
