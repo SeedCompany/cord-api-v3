@@ -52,6 +52,7 @@ import {
   progressReportSorters,
 } from '../periodic-report/periodic-report.repository';
 import { ProjectType } from '../project/dto';
+import { projectFilters } from '../project/project-filters.query';
 import { projectSorters } from '../project/project.repository';
 import {
   CreateInternshipEngagement,
@@ -540,6 +541,15 @@ export const engagementFilters = filter.define(() => EngagementFilters, {
     relation('out', '', 'language'),
     node('', 'Language', { id }),
   ]),
+  project: filter.sub(() => projectFilters)((sub) =>
+    sub
+      .with('node as eng')
+      .match([
+        node('eng'),
+        relation('in', '', 'engagement'),
+        node('node', 'Project'),
+      ]),
+  ),
 });
 
 export const engagementSorters = defineSorters(IEngagement, {
