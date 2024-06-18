@@ -275,6 +275,7 @@ export const languageFilters = filter.define(() => LanguageFilters, {
   leastOfThese: filter.propVal(),
   isSignLanguage: filter.propVal(),
   isDialect: filter.propVal(),
+  registryOfDialectsCode: filter.propPartialVal(),
   partnerId: filter.pathExists((id) => [
     node('node'),
     relation('in', '', 'language', ACTIVE),

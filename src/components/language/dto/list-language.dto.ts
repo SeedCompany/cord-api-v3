@@ -66,6 +66,11 @@ export abstract class LanguageFilters {
   })
   readonly pinned?: boolean;
 
+  @Field({
+    nullable: true,
+  })
+  readonly registryOfDialectsCode?: string;
+
   readonly partnerId?: ID;
 
   @FilterField(() => EthnologueLanguageFilters)
