@@ -304,9 +304,9 @@ export const languageFilters = filter.define(() => LanguageFilters, {
 });
 
 const ethnologueFilters = filter.define(() => EthnologueLanguageFilters, {
-  code: filter.propVal(),
-  provisionalCode: filter.propVal(),
-  name: filter.propVal(),
+  code: filter.propPartialVal(),
+  provisionalCode: filter.propPartialVal(),
+  name: filter.propPartialVal(),
 });
 
 const isPresetInventory = (query: Query) =>

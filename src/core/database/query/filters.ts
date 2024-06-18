@@ -6,6 +6,7 @@ import {
   node,
   not,
   Query,
+  regexp,
   relation,
 } from 'cypher-query-builder';
 import { PatternCollection } from 'cypher-query-builder/dist/typings/clauses/pattern-clause';
@@ -108,6 +109,23 @@ export const propVal =
       node('', 'Property', { value }),
     ]);
     return { [prop ?? key]: cond };
+  };
+
+export const propPartialVal =
+  <T, K extends ConditionalKeys<Required<T>, string>>(
+    prop?: string,
+  ): Builder<T, K> =>
+  ({ key, value: v, query }) => {
+    const value = v as string; // don't know why TS can't figure this out
+    if (!value.trim()) {
+      return undefined;
+    }
+    query.match([
+      node('node'),
+      relation('out', '', prop ?? key, ACTIVE),
+      node(prop ?? key, 'Property'),
+    ]);
+    return { [prop ?? key]: { value: regexp(`.*${value}.*`, true) } };
   };
 
 export const stringListProp =
