@@ -38,7 +38,7 @@ import {
   stepToStatus,
   UpdateProject,
 } from './dto';
-import { projectFilters } from './list-filter.query';
+import { projectFilters } from './project-filters.query';
 
 @Injectable()
 export class ProjectRepository extends CommonRepository {
