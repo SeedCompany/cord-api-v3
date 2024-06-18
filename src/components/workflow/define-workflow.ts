@@ -51,7 +51,7 @@ export const defineWorkflow =
         ...transition,
         from: transition.from ? setOf(many(transition.from)) : undefined,
         key: (transition.key ?? uuid.v5(name, input.id)) as ID,
-        conditions: maybeMany(transition.conditions),
+        conditions: maybeMany(transition.conditions) ?? [],
         notifiers: [
           ...(input.defaultNotifiers ?? []),
           ...(maybeMany(transition.notifiers) ?? []),

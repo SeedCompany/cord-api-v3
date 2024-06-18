@@ -26,7 +26,7 @@ export type InternalTransition<
     name: Names;
     key: ID;
     from?: ReadonlySet<State>;
-    conditions?: ReadonlyArray<TransitionCondition<Context>>;
-    notifiers?: ReadonlyArray<TransitionNotifier<Context>>;
+    conditions: ReadonlyArray<TransitionCondition<Context>>;
+    notifiers: ReadonlyArray<TransitionNotifier<Context>>;
   }>
 >;

@@ -59,7 +59,7 @@ export const WorkflowService = <W extends Workflow>(workflow: () => W) => {
       );
 
       // Resolve conditions & filter as needed
-      const conditions = available.flatMap((t) => t.conditions ?? []);
+      const conditions = available.flatMap((t) => t.conditions);
       const resolvedConditions = new Map(
         await Promise.all(
           [...new Set(conditions)].map(
@@ -69,8 +69,7 @@ export const WorkflowService = <W extends Workflow>(workflow: () => W) => {
         ),
       );
       available = available.flatMap((t) => {
-        const conditions =
-          t.conditions?.map((c) => resolvedConditions.get(c)!) ?? [];
+        const conditions = t.conditions.map((c) => resolvedConditions.get(c)!);
         if (conditions.some((c) => c.status === 'OMIT')) {
           return [];
         }

@@ -75,9 +75,10 @@ export const WorkflowFlowchart = <W extends Workflow>(workflow: () => W) => {
               : `--> ${dynamicToId(t.to)}`;
           const endHalf = `${endId}{{ ${t.label} }}:::${t.type} ${to}`;
 
-          const conditions = t.conditions
-            ? '--"' + t.conditions.map((c) => c.description).join('\\n') + '"'
-            : '';
+          const conditions =
+            t.conditions.length > 0
+              ? '--"' + t.conditions.map((c) => c.description).join('\\n') + '"'
+              : '';
           const from = (t.from ? [...t.from].map(useState) : ['*(*)']).join(
             ' & ',
           );
