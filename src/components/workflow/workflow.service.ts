@@ -2,6 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { Nil } from '@seedcompany/common';
 import { ID, Session, UnauthorizedException } from '~/common';
 import { Privileges } from '../authorization';
+import { MissingContextException } from '../authorization/policy/conditions';
 import { Workflow } from './define-workflow';
 import {
   ExecuteTransitionInput as ExecuteTransitionInputFn,
@@ -104,9 +105,18 @@ export const WorkflowService = <W extends Workflow>(workflow: () => W) => {
     }
 
     canBypass(session: Session) {
-      return this.privileges
-        .for(session, this.workflow.eventResource)
-        .can('create');
+      try {
+        return this.privileges
+          .for(session, this.workflow.eventResource)
+          .can('create');
+      } catch (e) {
+        if (e instanceof MissingContextException) {
+          // Missing context, means a condition was required.
+          // Therefore, bypass is not allowed, as the convention is "condition-less execute"
+          return false;
+        }
+        throw e;
+      }
     }
 
     protected getBypassIfValid(
