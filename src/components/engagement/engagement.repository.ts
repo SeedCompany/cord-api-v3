@@ -50,6 +50,7 @@ import {
   CreateInternshipEngagement,
   CreateLanguageEngagement,
   Engagement,
+  EngagementFilters,
   EngagementListInput,
   EngagementStatus,
   IEngagement,
@@ -368,26 +369,7 @@ export class EngagementRepository extends CommonRepository {
           ),
       )
       .match(requestingUser(session))
-      .apply(
-        filter.builder(input.filter ?? {}, {
-          type: filter.skip,
-          projectId: filter.skip,
-          partnerId: filter.pathExists((id) => [
-            node('node'),
-            relation('in', '', 'engagement'),
-            node('', 'Project'),
-            relation('out', '', 'partnership', ACTIVE),
-            node('', 'Partnership'),
-            relation('out', '', 'partner'),
-            node('', 'Partner', { id }),
-          ]),
-          languageId: filter.pathExists((id) => [
-            node('node'),
-            relation('out', '', 'language'),
-            node('', 'Language', { id }),
-          ]),
-        }),
-      )
+      .apply(engagementFilters(input.filter))
       .apply(
         this.privileges.for(session, IEngagement).filterToReadable({
           wrapContext: oncePerProject,
@@ -528,6 +510,25 @@ export class EngagementRepository extends CommonRepository {
     return this.getConstraintsFor(IEngagement);
   }
 }
+
+export const engagementFilters = filter.define(() => EngagementFilters, {
+  type: filter.skip,
+  projectId: filter.skip,
+  partnerId: filter.pathExists((id) => [
+    node('node'),
+    relation('in', '', 'engagement'),
+    node('', 'Project'),
+    relation('out', '', 'partnership', ACTIVE),
+    node('', 'Partnership'),
+    relation('out', '', 'partner'),
+    node('', 'Partner', { id }),
+  ]),
+  languageId: filter.pathExists((id) => [
+    node('node'),
+    relation('out', '', 'language'),
+    node('', 'Language', { id }),
+  ]),
+});
 
 export const engagementSorters = defineSorters(IEngagement, {
   nameProjectFirst: (query) =>
