@@ -2,7 +2,11 @@ import { ModuleRef } from '@nestjs/core';
 import { node, relation } from 'cypher-query-builder';
 import { chunk } from 'lodash';
 import { DateTime } from 'luxon';
+<<<<<<< HEAD
 import { ID } from '~/common';
+=======
+import { Disabled, ID } from '~/common';
+>>>>>>> f308f17e6 (Engagement Workflow v2)
 import { BaseMigration, Migration } from '~/core/database';
 import { ACTIVE, variable } from '~/core/database/query';
 import { SystemAgentRepository } from '../../../user/system-agent.repository';
@@ -80,7 +84,11 @@ export class EngagementStatusHistoryToWorkflowEventsMigration extends BaseMigrat
           {
             engagement: fakeEngagement,
             moduleRef: this.moduleRef,
+<<<<<<< HEAD
             migrationPrevStates: prev,
+=======
+            migrationPrevSteps: prev,
+>>>>>>> f308f17e6 (Engagement Workflow v2)
           },
           engagement,
           // We don't know who did it, so we can't confirm this was an official
