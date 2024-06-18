@@ -43,6 +43,7 @@ import { ProjectStatus } from '../project/dto';
 import {
   CreateLanguage,
   EthnologueLanguage,
+  EthnologueLanguageFilters,
   Language,
   LanguageFilters,
   LanguageListInput,
@@ -291,6 +292,21 @@ export const languageFilters = filter.define(() => LanguageFilters, {
     return { presetInventory: value ? condition : not(condition) };
   },
   pinned: filter.isPinned,
+  ethnologue: filter.sub(() => ethnologueFilters)((sub) =>
+    sub
+      .with('node as lang')
+      .match([
+        node('lang'),
+        relation('out', '', 'ethnologue'),
+        node('node', 'EthnologueLanguage'),
+      ]),
+  ),
+});
+
+const ethnologueFilters = filter.define(() => EthnologueLanguageFilters, {
+  code: filter.propVal(),
+  provisionalCode: filter.propVal(),
+  name: filter.propVal(),
 });
 
 const isPresetInventory = (query: Query) =>

@@ -11,6 +11,24 @@ import {
 import { Language } from './language.dto';
 
 @InputType()
+export abstract class EthnologueLanguageFilters {
+  @Field({
+    nullable: true,
+  })
+  readonly code?: string;
+
+  @Field({
+    nullable: true,
+  })
+  readonly provisionalCode?: string;
+
+  @Field({
+    nullable: true,
+  })
+  readonly name?: string;
+}
+
+@InputType()
 export abstract class LanguageFilters {
   @Field(() => [Sensitivity], {
     description: 'Only languages with these sensitivities',
@@ -49,6 +67,9 @@ export abstract class LanguageFilters {
   readonly pinned?: boolean;
 
   readonly partnerId?: ID;
+
+  @FilterField(() => EthnologueLanguageFilters)
+  readonly ethnologue?: EthnologueLanguageFilters & {};
 }
 
 @InputType()
