@@ -12,7 +12,10 @@ import {
   BackToActive,
   ResolveParams,
 } from './transitions/dynamic-step';
-import { ImplicitlyNotifyTeamMembers } from './transitions/enhancers';
+import {
+  ApprovalFromEarlyConversationsRequiresEngagements,
+  ImplicitlyNotifyTeamMembers,
+} from './transitions/enhancers';
 import { EmailDistro, FinancialApprovers } from './transitions/notifiers';
 
 // This also controls the order shown in the UI.
@@ -37,6 +40,7 @@ export const ProjectWorkflow = defineWorkflow({
   context: defineContext<ResolveParams>,
   transitionEnhancers: [
     ImplicitlyNotifyTeamMembers, //
+    ApprovalFromEarlyConversationsRequiresEngagements,
   ],
 })({
   // In Development
