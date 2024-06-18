@@ -171,10 +171,10 @@ export class SerializedWorkflow extends DataObject {
                 relatedStates:
                   transition.to.relatedStates?.map(serializeState) ?? [],
               },
-        conditions: (transition.conditions ?? []).map((condition) => ({
+        conditions: transition.conditions.map((condition) => ({
           label: condition.description,
         })),
-        notifiers: (transition.notifiers ?? []).map((notifier) => ({
+        notifiers: transition.notifiers.map((notifier) => ({
           label: notifier.description,
         })),
         permissions: getPermissions(transition),

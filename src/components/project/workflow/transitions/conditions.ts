@@ -23,6 +23,16 @@ export const IsMultiplication: Condition = {
   },
 };
 
+export const HasEngagement: Condition = {
+  description: 'Has an engagement',
+  resolve({ project }) {
+    return {
+      status: project.engagementTotal > 0 ? 'ENABLED' : 'DISABLED',
+      disabledReason: `Create an engagement first`,
+    };
+  },
+};
+
 export const RequireOngoingEngagementsToBeFinalizingCompletion: Condition = {
   description:
     'All engagements must be Finalizing Completion or in a terminal status',

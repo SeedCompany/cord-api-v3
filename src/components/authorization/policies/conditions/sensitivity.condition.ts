@@ -7,6 +7,7 @@ import {
   Condition,
   fqnRelativeTo,
   IsAllowedParams,
+  MissingContextException,
 } from '../../policy/conditions';
 
 const sensitivityRank = { High: 3, Medium: 2, Low: 1 };
@@ -32,14 +33,14 @@ export class SensitivityCondition<
     // Double check at runtime that object has these, since they are usually
     // declared from DB which cannot be verified.
     if (!object) {
-      throw new Error("Needed object's sensitivity but object wasn't given");
+      throw new MissingContextException();
     }
     const actual: Sensitivity | undefined =
       Reflect.get(object, EffectiveSensitivity) ??
       Reflect.get(object, 'sensitivity');
 
     if (!actual) {
-      throw new Error(
+      throw new MissingContextException(
         "Needed object's sensitivity but object's sensitivity wasn't given",
       );
     }

@@ -2,6 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { Nil } from '@seedcompany/common';
 import { ID, Session, UnauthorizedException } from '~/common';
 import { Privileges } from '../authorization';
+import { MissingContextException } from '../authorization/policy/conditions';
 import { Workflow } from './define-workflow';
 import {
   ExecuteTransitionInput as ExecuteTransitionInputFn,
@@ -59,7 +60,7 @@ export const WorkflowService = <W extends Workflow>(workflow: () => W) => {
       );
 
       // Resolve conditions & filter as needed
-      const conditions = available.flatMap((t) => t.conditions ?? []);
+      const conditions = available.flatMap((t) => t.conditions);
       const resolvedConditions = new Map(
         await Promise.all(
           [...new Set(conditions)].map(
@@ -69,8 +70,7 @@ export const WorkflowService = <W extends Workflow>(workflow: () => W) => {
         ),
       );
       available = available.flatMap((t) => {
-        const conditions =
-          t.conditions?.map((c) => resolvedConditions.get(c)!) ?? [];
+        const conditions = t.conditions.map((c) => resolvedConditions.get(c)!);
         if (conditions.some((c) => c.status === 'OMIT')) {
           return [];
         }
@@ -105,9 +105,18 @@ export const WorkflowService = <W extends Workflow>(workflow: () => W) => {
     }
 
     canBypass(session: Session) {
-      return this.privileges
-        .for(session, this.workflow.eventResource)
-        .can('create');
+      try {
+        return this.privileges
+          .for(session, this.workflow.eventResource)
+          .can('create');
+      } catch (e) {
+        if (e instanceof MissingContextException) {
+          // Missing context, means a condition was required.
+          // Therefore, bypass is not allowed, as the convention is "condition-less execute"
+          return false;
+        }
+        throw e;
+      }
     }
 
     protected getBypassIfValid(

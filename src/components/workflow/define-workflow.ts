@@ -1,4 +1,4 @@
-import { many, mapValues, setOf } from '@seedcompany/common';
+import { entries, many, setOf } from '@seedcompany/common';
 import * as uuid from 'uuid';
 import {
   EnumType,
@@ -10,7 +10,6 @@ import {
   ResourceShape,
 } from '~/common';
 import { WorkflowEvent } from './dto';
-import { TransitionNotifier } from './transitions/notifiers';
 import { InternalTransition, TransitionInput } from './transitions/types';
 
 export const defineWorkflow =
@@ -34,33 +33,31 @@ export const defineWorkflow =
      */
     context: () => Context;
     /**
-     * Notifiers that apply to all transitions by default.
+     * Middleware functions to adapt built transitions.
      */
-    defaultNotifiers?: ReadonlyArray<TransitionNotifier<Context>>;
+    transitionEnhancers?: Many<TransitionEnhancer<State, Context>>;
   }) =>
   <TransitionNames extends string>(
     obj: Record<TransitionNames, TransitionInput<State, Context>>,
   ) => {
-    const transitions = mapValues(
-      obj,
-      (
-        name,
-        transition,
-      ): InternalTransition<State, TransitionNames, Context> => ({
+    const enhancers = many(input.transitionEnhancers ?? []);
+
+    const transitions = entries(obj).map(([name, transition]) => {
+      const normalized: InternalTransition<State, TransitionNames, Context> = {
         name,
         ...transition,
         from: transition.from ? setOf(many(transition.from)) : undefined,
         key: (transition.key ?? uuid.v5(name, input.id)) as ID,
-        conditions: maybeMany(transition.conditions),
-        notifiers: [
-          ...(input.defaultNotifiers ?? []),
-          ...(maybeMany(transition.notifiers) ?? []),
-        ],
-      }),
-    ).asRecord as Record<
-      TransitionNames,
-      InternalTransition<State, TransitionNames, Context>
-    >;
+        conditions: maybeMany(transition.conditions) ?? [],
+        notifiers: maybeMany(transition.notifiers) ?? [],
+      };
+      const enhanced = enhancers.reduce(
+        (t, enhancer) => enhancer(t),
+        normalized,
+      );
+      return enhanced;
+    });
+
     const workflow: Workflow<
       Name,
       Context,
@@ -71,7 +68,7 @@ export const defineWorkflow =
     > = {
       ...input,
       id: input.id as ID,
-      transitions: Object.values(transitions),
+      transitions,
       eventResource: input.event,
       transitionByKey: (key: ID) => {
         const transition = workflow.transitions.find((t) => t.key === key);
@@ -137,3 +134,7 @@ export interface Workflow<
     ...keys: Array<Many<Names>>
   ) => ReadonlySet<Names>;
 }
+
+export type TransitionEnhancer<State extends string, Context> = (
+  transition: InternalTransition<State, any, Context>,
+) => InternalTransition<State, any, Context>;
