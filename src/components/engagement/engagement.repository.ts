@@ -46,7 +46,10 @@ import {
 } from '~/core/database/query';
 import { Privileges } from '../authorization';
 import { FileId } from '../file/dto';
-import { languageSorters } from '../language/language.repository';
+import {
+  languageFilters,
+  languageSorters,
+} from '../language/language.repository';
 import {
   matchCurrentDue,
   progressReportSorters,
@@ -548,6 +551,15 @@ export const engagementFilters = filter.define(() => EngagementFilters, {
         node('eng'),
         relation('in', '', 'engagement'),
         node('node', 'Project'),
+      ]),
+  ),
+  language: filter.sub(() => languageFilters)((sub) =>
+    sub
+      .with('node as eng')
+      .match([
+        node('eng'),
+        relation('out', '', 'language'),
+        node('node', 'Language'),
       ]),
   ),
 });

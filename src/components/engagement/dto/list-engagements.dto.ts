@@ -6,6 +6,7 @@ import {
   SecuredList,
   SortablePaginationInput,
 } from '~/common';
+import { LanguageFilters } from '../../language/dto';
 import { ProjectFilters } from '../../project/dto';
 import {
   Engagement,
@@ -27,6 +28,8 @@ export abstract class EngagementFilters {
   readonly project?: ProjectFilters & {};
 
   readonly languageId?: ID;
+  @FilterField(() => LanguageFilters)
+  readonly language?: LanguageFilters & {};
 
   readonly partnerId?: ID<'Partner'>;
 }
