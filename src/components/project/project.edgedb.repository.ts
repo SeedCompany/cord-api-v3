@@ -101,6 +101,7 @@ export class ProjectEdgeDBRepository
     project: ScopeOf<typeof e.Project>,
     { filter: input }: ProjectListInput,
   ) {
+    if (!input) return [];
     return [
       (input.type?.length ?? 0) > 0 &&
         e.op(

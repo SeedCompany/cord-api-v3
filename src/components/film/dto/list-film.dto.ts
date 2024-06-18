@@ -10,7 +10,7 @@ export class FilmListInput extends SortablePaginationInput<keyof Film>({
   defaultSort: 'name',
 }) {
   @FilterField(() => FilmFilters, { internal: true })
-  readonly filter: FilmFilters;
+  readonly filter?: FilmFilters;
 }
 
 @ObjectType()

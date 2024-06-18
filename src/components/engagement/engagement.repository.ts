@@ -336,7 +336,7 @@ export class EngagementRepository extends CommonRepository {
 
   async list(input: EngagementListInput, session: Session, changeset?: ID) {
     const label =
-      simpleSwitch(input.filter.type, {
+      simpleSwitch(input.filter?.type, {
         language: 'LanguageEngagement',
         internship: 'InternshipEngagement',
       }) ?? 'Engagement';
@@ -346,14 +346,14 @@ export class EngagementRepository extends CommonRepository {
       .subQuery((sub) =>
         sub
           .match([
-            node('project', 'Project', pickBy({ id: input.filter.projectId })),
+            node('project', 'Project', pickBy({ id: input.filter?.projectId })),
             relation('out', '', 'engagement', ACTIVE),
             node('node', label),
           ])
           .apply(whereNotDeletedInChangeset(changeset))
           .return(['node', 'project'])
           .apply((q) =>
-            changeset && input.filter.projectId
+            changeset && input.filter?.projectId
               ? q
                   .union()
                   .match([
@@ -369,7 +369,7 @@ export class EngagementRepository extends CommonRepository {
       )
       .match(requestingUser(session))
       .apply(
-        filter.builder(input.filter, {
+        filter.builder(input.filter ?? {}, {
           type: filter.skip,
           projectId: filter.skip,
           partnerId: filter.pathExists((id) => [

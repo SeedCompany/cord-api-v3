@@ -35,7 +35,7 @@ export class EngagementListInput extends SortablePaginationInput<
   defaultSort: 'createdAt',
 }) {
   @FilterField(() => EngagementFilters)
-  readonly filter: EngagementFilters;
+  readonly filter?: EngagementFilters;
 }
 
 @ObjectType()

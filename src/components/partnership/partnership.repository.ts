@@ -211,14 +211,14 @@ export class PartnershipRepository extends DtoRepository<
       .subQuery((s) =>
         s
           .match([
-            node('project', 'Project', pickBy({ id: input.filter.projectId })),
+            node('project', 'Project', pickBy({ id: input.filter?.projectId })),
             relation('out', '', 'partnership', ACTIVE),
             node('node', 'Partnership'),
           ])
           .apply(whereNotDeletedInChangeset(changeset))
           .return(['node', 'project'])
           .apply((q) =>
-            changeset && input.filter.projectId
+            changeset && input.filter?.projectId
               ? q
                   .union()
                   .match([

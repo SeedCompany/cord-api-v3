@@ -3,7 +3,7 @@ import { ACTIVE, filter, matchProjectSens, path } from '~/core/database/query';
 import { ProjectListInput } from './dto';
 
 export const projectListFilter = (input: ProjectListInput) =>
-  filter.builder(input.filter, {
+  filter.builder(input.filter ?? {}, {
     type: filter.stringListBaseNodeProp(),
     status: filter.stringListProp(),
     onlyMultipleEngagements:

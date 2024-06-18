@@ -25,7 +25,7 @@ export class PartnerListInput extends SortablePaginationInput<keyof Partner>({
   defaultSort: 'createdAt',
 }) {
   @FilterField(() => PartnerFilters)
-  readonly filter: PartnerFilters;
+  readonly filter?: PartnerFilters;
 }
 
 @ObjectType()

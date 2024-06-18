@@ -16,7 +16,7 @@ export class UserListInput extends SortablePaginationInput<keyof User>({
   defaultSort: 'id', // TODO How to sort on name?
 }) {
   @FilterField(() => UserFilters)
-  readonly filter: UserFilters;
+  readonly filter?: UserFilters;
 }
 
 @ObjectType()

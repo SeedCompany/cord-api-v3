@@ -1,9 +1,8 @@
 import { applyDecorators } from '@nestjs/common';
 import { Field } from '@nestjs/graphql';
-import { Transform, Type } from 'class-transformer';
+import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { Constructor, HasRequiredKeys } from 'type-fest';
-import { DefaultValue } from './default-value';
 import { AbstractClassType } from './types';
 
 /**
@@ -24,11 +23,8 @@ export const FilterField = <T extends object>(
       : [
           Field(type as unknown as () => Constructor<T>, {
             nullable: true,
-            defaultValue: {} as unknown as T, // Only for GQL schema & not always applied in TS
           }),
         ]),
     Type(type),
     ValidateNested(),
-    DefaultValue.Set({}), // Default when omitted
-    Transform(({ value }) => value || {}), // null -> {}
   );

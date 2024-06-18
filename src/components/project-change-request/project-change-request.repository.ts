@@ -72,7 +72,7 @@ export class ProjectChangeRequestRepository extends DtoRepository<
       .query()
       .match([
         node('node', 'ProjectChangeRequest'),
-        ...(input.filter.projectId
+        ...(input.filter?.projectId
           ? [
               relation('in', '', 'changeset', ACTIVE),
               node('project', 'Project', {

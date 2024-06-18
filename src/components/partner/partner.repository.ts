@@ -267,7 +267,7 @@ export class PartnerRepository extends DtoRepository<
       .query()
       .matchNode('node', 'Partner')
       .match([
-        ...(filter.userId && session.userId
+        ...(filter?.userId && session.userId
           ? [
               node('node'),
               relation('out', '', 'organization', ACTIVE),
@@ -279,7 +279,7 @@ export class PartnerRepository extends DtoRepository<
       ])
       .match(requestingUser(session))
       .apply(
-        filters.builder(filter, {
+        filters.builder(filter ?? {}, {
           pinned: filters.isPinned,
           userId: filters.skip, // already applied above
         }),

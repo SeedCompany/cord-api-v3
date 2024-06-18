@@ -10,7 +10,7 @@ export class StoryListInput extends SortablePaginationInput<keyof Story>({
   defaultSort: 'name',
 }) {
   @FilterField(() => StoryFilters, { internal: true })
-  readonly filter: StoryFilters;
+  readonly filter?: StoryFilters;
 }
 
 @ObjectType()

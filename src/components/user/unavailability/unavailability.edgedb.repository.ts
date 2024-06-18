@@ -70,6 +70,7 @@ export class UnavailabilityEdgeDBRepository
     unavailability: ScopeOf<typeof e.User.Unavailability>,
     { filter: input }: UnavailabilityListInput,
   ) {
+    if (!input) return [];
     return [
       input.userId &&
         e.op(

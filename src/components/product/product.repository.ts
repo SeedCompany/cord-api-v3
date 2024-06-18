@@ -489,7 +489,7 @@ export class ProductRepository extends CommonRepository {
       .query()
       .matchNode('node', 'Product')
       .match([
-        ...(input.filter.engagementId
+        ...(input.filter?.engagementId
           ? [
               node('node'),
               relation('in', '', 'product', ACTIVE),
@@ -500,7 +500,7 @@ export class ProductRepository extends CommonRepository {
           : []),
       ])
       .apply((q) => {
-        const { approach, methodology, ...rest } = input.filter;
+        const { approach, methodology, ...rest } = input.filter ?? {};
         const merged = [
           ...(approach ? ApproachToMethodologies[approach] : []),
           ...(methodology ? [methodology] : []),

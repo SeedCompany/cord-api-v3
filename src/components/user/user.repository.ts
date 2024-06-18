@@ -224,7 +224,7 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
       .matchNode('node', 'User')
       .match(requestingUser(session))
       .apply(
-        filter.builder(input.filter, {
+        filter.builder(input.filter ?? {}, {
           pinned: filter.isPinned,
         }),
       )
