@@ -24,7 +24,6 @@ export const FilterField = <T extends object>(
       : [
           Field(type as unknown as () => Constructor<T>, {
             nullable: true,
-            defaultValue: {} as unknown as T, // Only for GQL schema & not always applied in TS
           }),
         ]),
     Type(type),
