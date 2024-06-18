@@ -14,6 +14,7 @@ import {
   AsCypherParams,
   Condition,
   IsAllowedParams,
+  MissingContextException,
 } from '../../policy/conditions';
 
 const CQL_VAR = 'requestingUser';
@@ -27,7 +28,7 @@ class CreatorCondition<TResourceStatic extends ResourceShape<HasCreator>>
 {
   isAllowed({ object, session }: IsAllowedParams<TResourceStatic>) {
     if (!object) {
-      throw new Error("Needed object but wasn't given");
+      throw new MissingContextException();
     }
 
     const creator = (() => {

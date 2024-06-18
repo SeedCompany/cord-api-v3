@@ -8,6 +8,7 @@ import {
   Condition,
   eqlInLiteralSet,
   IsAllowedParams,
+  MissingContextException,
 } from '../../policy/conditions';
 
 export class EnumFieldCondition<
@@ -25,14 +26,18 @@ export class EnumFieldCondition<
     // Double check at runtime that object has these, since they are usually
     // declared from DB, which cannot be verified.
     if (!object) {
-      throw new Error(`Needed object's ${this.path} but object wasn't given`);
+      throw new MissingContextException(
+        `Needed object's ${this.path} but object wasn't given`,
+      );
     }
     const value = get(object, this.path) as
       | Get<InstanceType<TResourceStatic>, Path>
       | undefined;
     const actual = unwrapSecured(value);
     if (!actual) {
-      throw new Error(`Needed object's ${this.path} but it wasn't found`);
+      throw new MissingContextException(
+        `Needed object's ${this.path} but it wasn't found`,
+      );
     }
 
     return this.allowed.has(actual);
