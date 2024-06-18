@@ -12,11 +12,8 @@ import {
   BackToActive,
   ResolveParams,
 } from './transitions/dynamic-step';
-import {
-  EmailDistro,
-  FinancialApprovers,
-  TeamMembers,
-} from './transitions/notifiers';
+import { ImplicitlyNotifyTeamMembers } from './transitions/enhancers';
+import { EmailDistro, FinancialApprovers } from './transitions/notifiers';
 
 // This also controls the order shown in the UI.
 // Therefore, these should generally flow down.
@@ -38,7 +35,9 @@ export const ProjectWorkflow = defineWorkflow({
   states: Step,
   event: ProjectWorkflowEvent,
   context: defineContext<ResolveParams>,
-  defaultNotifiers: [TeamMembers],
+  transitionEnhancers: [
+    ImplicitlyNotifyTeamMembers, //
+  ],
 })({
   // In Development
   // region
