@@ -8,10 +8,12 @@ module default {
     Mixin::Pinnable,
     Mixin::Taggable
   {
+    type := <Project::Type>.__type__.name[9:-7];
+
     overloaded name {
       constraint exclusive;
     };
-    
+
     overloaded required ownSensitivity: Sensitivity {
       annotation description := "The sensitivity of the project. \
         This is user settable for internships and calculated for translation projects";

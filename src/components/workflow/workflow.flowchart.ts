@@ -12,8 +12,13 @@ import { deflateSync as deflate } from 'zlib';
 import { Workflow } from './define-workflow';
 import { DynamicState } from './transitions/dynamic-state';
 
-export const WorkflowFlowchart = <W extends Workflow>(workflow: W) => {
+export const WorkflowFlowchart = <W extends Workflow>(workflow: () => W) => {
   abstract class WorkflowFlowchartClass {
+    protected workflow: W;
+    constructor() {
+      this.workflow = workflow();
+    }
+
     /** Generate a flowchart in mermaid markup. */
     generateMarkup() {
       const rgbHexAddAlpha = (rgb: string, alpha: number) =>
@@ -46,12 +51,12 @@ export const WorkflowFlowchart = <W extends Workflow>(workflow: W) => {
         uuid.v1().replaceAll(/-/g, ''),
       );
 
-      const transitions = workflow.transitions
+      const transitions = this.workflow.transitions
         .toSorted(
           cmpBy((t) => {
             const endState =
               typeof t.to === 'string' ? t.to : t.to.relatedStates?.[0];
-            return workflow.states.entries.findIndex(
+            return this.workflow.states.entries.findIndex(
               (e) => e.value === endState,
             );
           }),
@@ -95,8 +100,8 @@ export const WorkflowFlowchart = <W extends Workflow>(workflow: W) => {
           .join('\n'),
       );
 
-      const stateLines = [...workflow.states].map((state) => {
-        const { label } = workflow.states.entry(state);
+      const stateLines = [...this.workflow.states].map((state) => {
+        const { label } = this.workflow.states.entry(state);
         const className = `${usedStates.has(state) ? '' : 'Unused'}State`;
         return `${state}(${label}):::${className}`;
       });

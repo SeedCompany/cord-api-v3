@@ -5,7 +5,7 @@ import { ProjectWorkflow } from './project-workflow';
 
 @Granter(Event)
 export class ProjectWorkflowEventGranter extends WorkflowEventGranter(
-  ProjectWorkflow,
+  () => ProjectWorkflow,
 ) {}
 
 declare module '../../authorization/policy/granters' {

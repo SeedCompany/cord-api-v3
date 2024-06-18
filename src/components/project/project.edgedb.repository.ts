@@ -4,22 +4,25 @@ import { LazyGetter } from 'lazy-get-decorator';
 import { ID, PublicOf, SortablePaginationInput, UnsecuredDto } from '~/common';
 import { grabInstances } from '~/common/instance-maps';
 import { ChangesOf } from '~/core/database/changes';
-import { castToEnum, e, RepoFor, ScopeOf } from '~/core/edgedb';
+import { e, RepoFor, ScopeOf } from '~/core/edgedb';
 import {
   ProjectConcretes as ConcreteTypes,
   CreateProject,
   IProject,
   Project,
   ProjectListInput,
-  ProjectType,
   UpdateProject,
 } from './dto';
 import { ProjectRepository as Neo4jRepository } from './project.repository';
 
+export const projectRefShape = e.shape(e.Project, () => ({
+  id: true,
+  type: true,
+}));
+
 const hydrate = e.shape(e.Project, (project) => ({
   ...project['*'],
-  // default::TranslationProject -> Translation, etc.
-  type: castToEnum(project.__type__.name.slice(9, -7), ProjectType),
+  ...projectRefShape(project),
   // default::TranslationProject -> TranslationProject, etc.
   __typename: project.__type__.name.slice(9, null),
 

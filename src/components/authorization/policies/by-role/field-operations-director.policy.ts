@@ -16,9 +16,9 @@ import { Policy, Role } from '../util';
   r.Project.edit,
   r.ProjectMember.edit.create.delete,
   r.ProjectWorkflowEvent.read.transitions(
-    'Pending Zone Director Approval -> Pending Finance Confirmation',
-    'Pending Zone Director Approval -> Finalizing Proposal',
-    'Pending Zone Director Approval -> Rejected',
+    'Field Ops Approves Proposal',
+    'Field Ops Requests Proposal Changes',
+    'Field Ops Rejects Proposal',
   ).execute,
   r.PeriodicReport.edit,
   r.StepProgress.edit,

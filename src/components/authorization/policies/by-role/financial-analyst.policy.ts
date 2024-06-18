@@ -1,3 +1,4 @@
+import { ProjectWorkflow } from '../../../project/workflow/project-workflow';
 import {
   inherit,
   member,
@@ -6,6 +7,14 @@ import {
   sensMediumOrLower,
   sensOnlyLow,
 } from '../util';
+
+export const projectTransitions = () =>
+  ProjectWorkflow.pickNames(
+    'Finance Endorses Proposal',
+    'Finance Opposes Proposal',
+    'Not Ready for Completion',
+    'Complete',
+  );
 
 // NOTE: There could be other permissions for this role from other policies
 @Policy(
@@ -61,11 +70,9 @@ import {
       ])
       .children((c) => c.posts.edit),
     r.ProjectMember.read.when(member).edit.create.delete,
-    r.ProjectWorkflowEvent.read.transitions(
-      'Pending Financial Endorsement -> Finalizing Proposal With Financial Endorsement',
-      'Pending Financial Endorsement -> Finalizing Proposal Without Financial Endorsement',
-      'Finalizing Completion -> Back To Active',
-      'Finalizing Completion -> Completed',
+    r.ProjectWorkflowEvent.read.whenAll(
+      member,
+      r.ProjectWorkflowEvent.isTransitions(projectTransitions),
     ).execute,
     r.PeriodicReport.read.when(member).edit,
     r.StepProgress.read,

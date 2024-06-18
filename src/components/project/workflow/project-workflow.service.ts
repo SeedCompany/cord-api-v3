@@ -16,7 +16,9 @@ import { ProjectWorkflow } from './project-workflow';
 import { ProjectWorkflowRepository } from './project-workflow.repository';
 
 @Injectable()
-export class ProjectWorkflowService extends WorkflowService(ProjectWorkflow) {
+export class ProjectWorkflowService extends WorkflowService(
+  () => ProjectWorkflow,
+) {
   constructor(
     private readonly resources: ResourceLoader,
     private readonly repo: ProjectWorkflowRepository,
@@ -50,7 +52,7 @@ export class ProjectWorkflowService extends WorkflowService(ProjectWorkflow) {
     return await this.resolveAvailable(
       project.step.value!,
       { project, moduleRef: this.moduleRef },
-      project,
+      { ...project, project },
       session,
     );
   }

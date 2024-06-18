@@ -4,5 +4,5 @@ import { ProjectWorkflow } from './project-workflow';
 
 @Injectable()
 export class ProjectWorkflowFlowchart extends WorkflowFlowchart(
-  ProjectWorkflow,
+  () => ProjectWorkflow,
 ) {}

@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ID, Session } from '~/common';
 import { e, edgeql, RepoFor } from '~/core/edgedb';
 import { ProjectStep } from '../dto';
+import { projectRefShape } from '../project.edgedb.repository';
 import { ExecuteProjectTransitionInput, ProjectWorkflowEvent } from './dto';
 
 @Injectable()
@@ -13,6 +14,7 @@ export class ProjectWorkflowRepository extends RepoFor(ProjectWorkflowEvent, {
     transition: event.transitionKey,
     to: true,
     notes: true,
+    project: projectRefShape,
   }),
   omit: ['list', 'create', 'update', 'delete', 'readMany'],
 }) {
@@ -32,8 +34,10 @@ export class ProjectWorkflowRepository extends RepoFor(ProjectWorkflowEvent, {
     },
     _session: Session,
   ) {
+    const project = e.cast(e.Project, e.uuid(input.project));
     const created = e.insert(e.Project.WorkflowEvent, {
-      project: e.cast(e.Project, e.uuid(input.project)),
+      project,
+      projectContext: project.projectContext,
       transitionKey: input.transition,
       to: input.to,
       notes: input.notes,

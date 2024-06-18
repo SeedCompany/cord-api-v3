@@ -140,7 +140,11 @@ export default (async function ({ e, db, print }) {
 
     if (step !== 'EarlyConversations') {
       await e
-        .insert(e.Project.WorkflowEvent, { project: projectRef, to: step })
+        .insert(e.Project.WorkflowEvent, {
+          project: projectRef,
+          projectContext: projectRef.projectContext,
+          to: step,
+        })
         .run(db);
     }
   }

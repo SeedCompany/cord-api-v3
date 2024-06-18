@@ -61,6 +61,8 @@ export class ProjectWorkflowNeo4jRepository
     return (query: Query) =>
       query
         .match([
+          node('project', 'Project'),
+          relation('out', '', 'workflowEvent', ACTIVE),
           node('node'),
           relation('out', undefined, 'who'),
           node('who', 'User'),
@@ -69,6 +71,7 @@ export class ProjectWorkflowNeo4jRepository
           merge('node', {
             at: 'node.createdAt',
             who: 'who { .id }',
+            project: 'project { .id, .type }',
           }).as('dto'),
         );
   }

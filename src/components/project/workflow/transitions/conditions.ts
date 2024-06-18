@@ -5,7 +5,7 @@ import { ResolveParams } from './dynamic-step';
 
 type Condition = TransitionCondition<ResolveParams>;
 
-export const IsNotMultiplication: Condition = {
+export const IsMomentumInternship: Condition = {
   description: 'Momentum / Internship',
   resolve({ project }) {
     return {

@@ -58,7 +58,7 @@ export class CrudeAstParser {
       return [SchemaModule, { name: module[1] }];
     }
 
-    const type = /^(?:abstract\s+)?type\s+(\S+)/i.exec(input.text);
+    const type = /^(?:abstract\s+)?type\s+(?!:=)(\S+)/i.exec(input.text);
     if (type) {
       return [SchemaType, { name: type[1] }];
     }

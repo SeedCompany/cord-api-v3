@@ -14,7 +14,7 @@ import { Workflow } from './define-workflow';
 export function WorkflowEventGranter<
   W extends Workflow,
   EventClass extends W['eventResource'],
->(workflow: W) {
+>(workflow: () => W) {
   type State = Workflow['state'];
   type Names = Workflow['transition']['name'];
 
@@ -37,7 +37,8 @@ export function WorkflowEventGranter<
      * Can read & execute all transitions.
      */
     get executeAll(): this {
-      return this.transitions(workflow.transitions.map((t) => t.name)).execute;
+      return this.transitions(workflow().transitions.map((t) => t.name))
+        .execute;
     }
 
     /**
@@ -47,16 +48,21 @@ export function WorkflowEventGranter<
       return this[action]('create');
     }
 
-    isTransitions(...transitions: Array<Many<Names>>) {
-      return TransitionCondition.fromName(workflow, transitions.flat());
+    isTransitions(
+      ...transitions: Array<Many<Names> | (() => Iterable<Names>)>
+    ) {
+      return TransitionCondition.fromName(
+        workflow(),
+        transitions.flatMap((t) => (typeof t === 'function' ? [...t()] : t)),
+      );
     }
 
-    transitions(...transitions: Array<Many<Names>>) {
+    transitions(...transitions: Array<Many<Names> | (() => Iterable<Names>)>) {
       return this.when(this.isTransitions(...transitions));
     }
 
     isState(...states: Array<Many<State>>) {
-      return TransitionCondition.fromEndState(workflow, states.flat());
+      return TransitionCondition.fromEndState(workflow(), states.flat());
     }
 
     state(...states: Array<Many<State>>) {

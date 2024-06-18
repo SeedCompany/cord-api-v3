@@ -4,6 +4,7 @@ import {
   EnumType,
   ID,
   MadeEnum,
+  Many,
   maybeMany,
   NotFoundException,
   ResourceShape,
@@ -79,6 +80,9 @@ export const defineWorkflow =
         }
         return transition;
       },
+      pickNames: <Names extends TransitionNames>(
+        ...transitions: Array<Many<Names>>
+      ) => setOf(transitions.flat() as Names[]),
       // type-only props
       event: undefined as any,
       state: undefined as any,
@@ -129,4 +133,7 @@ export interface Workflow<
   /** type only */
   readonly resolvedTransition: Omit<Transition, 'to'> & { to: State };
   readonly transitionByKey: (key: ID) => Transition;
+  readonly pickNames: <Names extends TransitionNames>(
+    ...keys: Array<Many<Names>>
+  ) => ReadonlySet<Names>;
 }

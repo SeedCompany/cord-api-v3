@@ -1,4 +1,11 @@
+import { ProjectWorkflow } from '../../../project/workflow/project-workflow';
 import { member, Policy, Role } from '../util';
+
+export const projectTransitions = () =>
+  ProjectWorkflow.pickNames(
+    'Consultant Endorses Proposal',
+    'Consultant Opposes Proposal',
+  );
 
 // NOTE: There could be other permissions for this role from other policies
 @Policy([Role.Consultant, Role.ConsultantManager], (r) => [
@@ -33,14 +40,12 @@ import { member, Policy, Role } from '../util';
   r.NarrativeReport.when(member).edit.create,
   r.Organization.specifically((p) => p.address.none),
   r.Partner.specifically((p) => p.pointOfContact.none),
-  r.Project.when(member).specifically((p) => [
-    p.many('step', 'stepChangedAt', 'rootDirectory').edit,
-  ]),
+  r.Project.when(member).specifically((p) => p.rootDirectory.edit),
   r.Unavailability.read,
   r.User.read.create,
-  r.ProjectWorkflowEvent.read.transitions(
-    'Pending Consultant Endorsement -> Prep for Financial Endorsement With Consultant Endorsement',
-    'Pending Consultant Endorsement -> Prep for Financial Endorsement Without Consultant Endorsement',
+  r.ProjectWorkflowEvent.read.whenAll(
+    member,
+    r.ProjectWorkflowEvent.isTransitions(projectTransitions),
   ).execute,
 ])
 export class ConsultantPolicy {}
