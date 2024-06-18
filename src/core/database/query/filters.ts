@@ -1,4 +1,4 @@
-import { entries } from '@seedcompany/common';
+import { entries, Nil } from '@seedcompany/common';
 import {
   comparisions,
   inArray,
@@ -12,7 +12,7 @@ import { PatternCollection } from 'cypher-query-builder/dist/typings/clauses/pat
 import { Comparator } from 'cypher-query-builder/dist/typings/clauses/where-comparators';
 import { AndConditions } from 'cypher-query-builder/src/clauses/where-utils';
 import { identity, isFunction } from 'lodash';
-import { ConditionalKeys } from 'type-fest';
+import { AbstractClass, ConditionalKeys } from 'type-fest';
 import { DateTimeFilter } from '~/common';
 import { ACTIVE } from './matching';
 import { path as pathPattern } from './where-path';
@@ -29,6 +29,19 @@ export interface BuilderArgs<T, K extends keyof T = keyof T> {
 export type Builders<T> = {
   [K in keyof Required<T>]: Builder<T, K>;
 };
+
+/**
+ * A helper to define filters for the given filter class type.
+ * Functions can do nothing, adjust the query, return an object to add conditions to
+ * the where clause, or return a function which will be called after the where clause.
+ */
+export const define =
+  <T extends Record<string, any>>(
+    filterClass: () => AbstractClass<T>,
+    builders: Builders<T>,
+  ) =>
+  (filters: T | Nil) =>
+    builder(filters ?? {}, builders);
 
 /**
  * A helper to split filters given and call their respective functions.
