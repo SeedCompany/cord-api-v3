@@ -1,6 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { cleanJoin, mapValues, simpleSwitch } from '@seedcompany/common';
-import { inArray, node, Node, Query, relation } from 'cypher-query-builder';
+import {
+  hasLabel,
+  inArray,
+  node,
+  Node,
+  Query,
+  relation,
+} from 'cypher-query-builder';
 import { difference, pickBy } from 'lodash';
 import { DateTime } from 'luxon';
 import { MergeExclusive } from 'type-fest';
@@ -336,12 +343,6 @@ export class EngagementRepository extends CommonRepository {
   // LIST ///////////////////////////////////////////////////////////
 
   async list(input: EngagementListInput, session: Session, changeset?: ID) {
-    const label =
-      simpleSwitch(input.filter?.type, {
-        language: 'LanguageEngagement',
-        internship: 'InternshipEngagement',
-      }) ?? 'Engagement';
-
     const result = await this.db
       .query()
       .subQuery((sub) =>
@@ -349,7 +350,7 @@ export class EngagementRepository extends CommonRepository {
           .match([
             node('project', 'Project', pickBy({ id: input.filter?.projectId })),
             relation('out', '', 'engagement', ACTIVE),
-            node('node', label),
+            node('node', 'Engagement'),
           ])
           .apply(whereNotDeletedInChangeset(changeset))
           .return(['node', 'project'])
@@ -360,7 +361,7 @@ export class EngagementRepository extends CommonRepository {
                   .match([
                     node('project', 'Project', { id: input.filter.projectId }),
                     relation('out', '', 'engagement', INACTIVE),
-                    node('node', label),
+                    node('node', 'Engagement'),
                     relation('in', '', 'changeset', ACTIVE),
                     node('changeset', 'Changeset', { id: changeset }),
                   ])
@@ -512,7 +513,14 @@ export class EngagementRepository extends CommonRepository {
 }
 
 export const engagementFilters = filter.define(() => EngagementFilters, {
-  type: filter.skip,
+  type: ({ value }) => ({
+    node: hasLabel(
+      simpleSwitch(value, {
+        language: 'LanguageEngagement',
+        internship: 'InternshipEngagement',
+      })!,
+    ),
+  }),
   projectId: filter.skip,
   partnerId: filter.pathExists((id) => [
     node('node'),
