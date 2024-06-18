@@ -193,3 +193,24 @@ export const comparisonOfDateTimeFilter = (
     ? (...args) => comparators.map((comp) => comp(...args)).join(' AND ')
     : undefined;
 };
+
+export const sub =
+  <Input extends Record<string, any>>(
+    subBuilder: () => (input: Partial<Input>) => (q: Query) => void,
+  ) =>
+  <
+    // TODO this doesn't enforce Input type on Outer property
+    K extends string,
+    Outer extends Partial<Record<K, Partial<Input>>>,
+  >(
+    matchSubNode: (sub: Query) => Query,
+  ): Builder<Outer, K> =>
+  ({ key, value, query }) =>
+    query
+      .subQuery('node', (sub) =>
+        sub
+          .apply(matchSubNode)
+          .apply(subBuilder()(value))
+          .return(`true as ${key}FiltersApplied`),
+      )
+      .with('*');
