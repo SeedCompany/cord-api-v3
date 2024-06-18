@@ -27,7 +27,7 @@ export class ProjectMemberListInput extends SortablePaginationInput<
   defaultSort: 'createdAt',
 }) {
   @FilterField(() => ProjectMemberFilters)
-  readonly filter: ProjectMemberFilters;
+  readonly filter?: ProjectMemberFilters;
 }
 
 @ObjectType()

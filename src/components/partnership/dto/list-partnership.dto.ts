@@ -20,7 +20,7 @@ export class PartnershipListInput extends SortablePaginationInput<
   defaultSort: 'createdAt',
 }) {
   @FilterField(() => PartnershipFilters, { internal: true })
-  readonly filter: PartnershipFilters;
+  readonly filter?: PartnershipFilters;
 }
 
 @ObjectType()

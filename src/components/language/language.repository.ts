@@ -218,7 +218,7 @@ export class LanguageRepository extends DtoRepository<
       // match requesting user once (instead of once per row)
       .match(requestingUser(session))
       .apply(
-        filter.builder(input.filter, {
+        filter.builder(input.filter ?? {}, {
           sensitivity: filter.stringListProp(),
           leastOfThese: filter.propVal(),
           isSignLanguage: filter.propVal(),

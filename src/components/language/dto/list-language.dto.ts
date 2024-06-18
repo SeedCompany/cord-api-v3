@@ -56,7 +56,7 @@ export class LanguageListInput extends SortablePaginationInput<keyof Language>({
   defaultSort: 'name',
 }) {
   @FilterField(() => LanguageFilters)
-  readonly filter: LanguageFilters;
+  readonly filter?: LanguageFilters;
 }
 
 @ObjectType()

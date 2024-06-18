@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
+import { pickBy } from 'lodash';
 import {
   ID,
   labelForView,
@@ -131,10 +132,14 @@ export class BudgetRecordRepository extends DtoRepository<
     session: Session,
     view?: ObjectView,
   ) {
-    const { budgetId } = input.filter;
+    const { budgetId } = input.filter ?? {};
     const result = await this.db
       .query()
-      .matchNode('budget', labelForView('Budget', view), { id: budgetId })
+      .matchNode(
+        'budget',
+        labelForView('Budget', view),
+        pickBy({ id: budgetId }),
+      )
       .apply(this.recordsOfBudget({ view }))
       .apply(sorting(BudgetRecord, input))
       .apply(paginate(input))

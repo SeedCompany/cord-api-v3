@@ -108,7 +108,7 @@ export class BudgetRepository extends DtoRepository<
       .match([
         node('node', 'Budget'),
         relation('in', '', 'budget', ACTIVE),
-        node('project', 'Project', pickBy({ id: filter.projectId })),
+        node('project', 'Project', pickBy({ id: filter?.projectId })),
       ])
       .match(requestingUser(session))
       .apply(
@@ -126,7 +126,7 @@ export class BudgetRepository extends DtoRepository<
     const result = await this.db
       .query()
       .match([
-        ...(filter.projectId
+        ...(filter?.projectId
           ? [
               node('node', 'Budget'),
               relation('in', '', 'budget', ACTIVE),

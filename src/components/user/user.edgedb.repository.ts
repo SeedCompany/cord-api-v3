@@ -47,6 +47,7 @@ export class UserEdgeDBRepository
   }
 
   protected listFilters(user: ScopeOf<typeof e.User>, input: UserListInput) {
+    if (!input.filter) return [];
     return [
       input.filter.pinned != null &&
         e.op(user.pinned, '=', input.filter.pinned),

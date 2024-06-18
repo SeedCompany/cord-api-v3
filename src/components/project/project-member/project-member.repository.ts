@@ -148,13 +148,13 @@ export class ProjectMemberRepository extends DtoRepository<
         node(
           'project',
           'Project',
-          filter.projectId ? { id: filter.projectId } : {},
+          filter?.projectId ? { id: filter.projectId } : {},
         ),
         relation('out', '', 'member'),
         node('node', 'ProjectMember'),
       ])
       .apply((q) =>
-        filter.roles
+        filter?.roles
           ? q
               .match([
                 node('node'),

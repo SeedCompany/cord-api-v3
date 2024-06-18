@@ -101,7 +101,7 @@ export class ProjectListInput extends SortablePaginationInput<keyof IProject>({
   defaultSort: 'name',
 }) {
   @FilterField(() => ProjectFilters)
-  readonly filter: ProjectFilters;
+  readonly filter?: ProjectFilters;
 }
 
 @ObjectType()

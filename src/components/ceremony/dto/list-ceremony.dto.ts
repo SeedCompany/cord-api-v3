@@ -19,7 +19,7 @@ export class CeremonyListInput extends SortablePaginationInput<
   defaultSort: 'projectName',
 }) {
   @FilterField(() => CeremonyFilters)
-  readonly filter: CeremonyFilters;
+  readonly filter?: CeremonyFilters;
 }
 
 @ObjectType()

@@ -18,7 +18,7 @@ export class LocationListInput extends SortablePaginationInput<keyof Location>({
   defaultSort: 'name',
 }) {
   @FilterField(() => LocationFilters, { internal: true })
-  readonly filter: LocationFilters;
+  readonly filter?: LocationFilters;
 }
 
 @ObjectType()

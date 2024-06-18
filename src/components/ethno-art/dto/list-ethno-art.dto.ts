@@ -10,7 +10,7 @@ export class EthnoArtListInput extends SortablePaginationInput<keyof EthnoArt>({
   defaultSort: 'name',
 }) {
   @FilterField(() => EthnoArtFilters, { internal: true })
-  readonly filter: EthnoArtFilters;
+  readonly filter?: EthnoArtFilters;
 }
 
 @ObjectType()

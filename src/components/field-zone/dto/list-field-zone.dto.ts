@@ -20,7 +20,7 @@ export class FieldZoneListInput extends SortablePaginationInput<
   defaultSort: 'name',
 }) {
   @FilterField(() => FieldZoneFilters, { internal: true })
-  readonly filter: FieldZoneFilters;
+  readonly filter?: FieldZoneFilters;
 }
 
 @ObjectType()

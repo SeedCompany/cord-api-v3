@@ -54,6 +54,7 @@ export class ProjectMemberEdgeDBRepository
     member: ScopeOf<typeof e.Project.Member>,
     { filter: input }: ProjectMemberListInput,
   ) {
+    if (!input) return [];
     return [
       (input.roles?.length ?? 0) > 0 &&
         e.op(

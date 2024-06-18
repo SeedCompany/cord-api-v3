@@ -73,7 +73,7 @@ export class EducationRepository extends DtoRepository(Education) {
       .query()
       .matchNode('node', 'Education')
       .match([
-        ...(filter.userId
+        ...(filter?.userId
           ? [
               node('node'),
               relation('in', '', 'education', ACTIVE),
