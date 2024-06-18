@@ -521,7 +521,11 @@ export const engagementFilters = filter.define(() => EngagementFilters, {
       })!,
     ),
   }),
-  projectId: filter.skip,
+  projectId: filter.pathExists((id) => [
+    node('node'),
+    relation('in', '', 'engagement'),
+    node('project', 'Project', { id }),
+  ]),
   partnerId: filter.pathExists((id) => [
     node('node'),
     relation('in', '', 'engagement'),
