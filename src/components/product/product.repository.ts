@@ -27,7 +27,7 @@ import {
   deactivateProperty,
   escapeLuceneSyntax,
   filter,
-  fullTextQuery,
+  FullTextIndex,
   matchProps,
   matchPropsAndProjectSensAndScopedRoles,
   merge,
@@ -552,7 +552,7 @@ export class ProductRepository extends CommonRepository {
       .query()
       .apply((q) =>
         query
-          ? q.apply(fullTextQuery('ProductCompletionDescription', query))
+          ? q.apply(ProductCompletionDescriptionIndex.search(query))
           : q.matchNode('node', 'ProductCompletionDescription'),
       )
       .apply((q) =>
@@ -569,14 +569,10 @@ export class ProductRepository extends CommonRepository {
 
   @OnIndex('schema')
   private async createCompletionDescriptionIndex() {
-    await this.db.createFullTextIndex(
-      'ProductCompletionDescription',
-      ['ProductCompletionDescription'],
-      ['value'],
-      {
-        analyzer: 'standard-folding',
-      },
-    );
+    await this.db
+      .query()
+      .apply(ProductCompletionDescriptionIndex.create())
+      .run();
   }
 
   @OnIndex()
@@ -584,3 +580,10 @@ export class ProductRepository extends CommonRepository {
     return this.getConstraintsFor(Product);
   }
 }
+
+const ProductCompletionDescriptionIndex = FullTextIndex({
+  indexName: 'ProductCompletionDescription',
+  labels: 'ProductCompletionDescription',
+  properties: 'value',
+  analyzer: 'standard-folding',
+});

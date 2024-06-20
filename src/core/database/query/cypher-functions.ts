@@ -1,4 +1,5 @@
 import { exp, ExpressionInput } from './cypher-expression';
+import { IndexFullTextQueryNodes } from './full-text';
 
 /** Create a function with a name that takes a variable number of arguments */
 const fn =
@@ -111,3 +112,11 @@ export const any = (
   list: ExpressionInput,
   predicate: ExpressionInput,
 ) => fn('any')(`${variable} IN ${exp(list)} WHERE ${exp(predicate)}`);
+
+export const db = {
+  index: {
+    fulltext: {
+      queryNodes: IndexFullTextQueryNodes,
+    },
+  },
+};
