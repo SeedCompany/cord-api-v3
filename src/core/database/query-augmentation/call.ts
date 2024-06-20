@@ -1,28 +1,77 @@
-import { Query } from 'cypher-query-builder';
+import { entries } from '@seedcompany/common';
+import { Clause, Query } from 'cypher-query-builder';
+import { Parameter } from 'cypher-query-builder/dist/typings/parameter-bag';
+import { isExp, variable } from '../query';
+import type { YieldTerms } from './yield';
 
 declare module 'cypher-query-builder/dist/typings/query' {
   interface Query {
     /**
-     * Apply custom query modifications while maintaining the fluent chain.
+     * Call a procedure.
      *
-     * @deprecated Use {@link apply}() instead.
-     *
-     * In the future this could be changed to utilize native neo4j call logic.
+     * Args can be an array of positional args, or an object of named args.
+     * Objects are still converted to positional args, so the order matters.
+     * Objects allow the query parameters to be named for better readability.
      */
-    call<A extends any[], R extends this | Query<any> | void>(
-      fn: (query: this, ...args: A) => R,
-      ...args: A
-    ): R extends void ? this : R;
+    call(procedure: ProcedureCall): this;
+    call(procedureName: string, args?: ProcedureArgs): this;
   }
 }
 
-Query.prototype.call = function call<
-  A extends any[],
-  R extends Query<any> | void,
->(
+Query.prototype.call = function call(
   this: Query,
-  fn: (q: Query, ...args: A) => R,
-  ...args: A
-): R extends void ? Query : R {
-  return (fn(this, ...args) || this) as Exclude<R, void>;
+  procedure: ProcedureCall | string,
+  args?: ProcedureArgs,
+) {
+  const call =
+    typeof procedure === 'string'
+      ? { procedureName: procedure, args: args ?? [] }
+      : procedure;
+  const clause = new Procedure(call.procedureName, call.args);
+  const next = this.continueChainClause(clause);
+  return call.yieldTerms ? next.yield(call.yieldTerms) : next;
 };
+
+interface ProcedureCall<Y extends string = string> {
+  procedureName: string;
+  args: ProcedureArgs;
+  yieldTerms?: YieldTerms<Y>;
+}
+type ProcedureArgs = Record<string, any> | any[];
+
+class Procedure extends Clause {
+  private readonly params: Parameter[];
+  constructor(public name: string, public args: Record<string, any> | any[]) {
+    super();
+    this.params = (
+      Array.isArray(args)
+        ? args.map((value) => [undefined, value] as const)
+        : entries(this.args as Record<string, any>)
+    ).map(([key, value]) =>
+      isExp(value) ? variable(value) : this.addParam(value, key),
+    );
+  }
+  build() {
+    return `CALL ${this.name}(${this.params.join(', ')})`;
+  }
+}
+
+export const procedure =
+  <const Y extends string>(
+    procedureName: string,
+    // eslint-disable-next-line @seedcompany/no-unused-vars
+    yieldDefs: readonly Y[],
+  ) =>
+  (args: ProcedureArgs) => ({
+    procedureName,
+    args,
+    yield: (yieldTerms: YieldTerms<Y>) =>
+      Object.assign(
+        (query: Query) => query.call(procedureName, args).yield(yieldTerms),
+        {
+          procedureName,
+          args,
+          yieldTerms,
+        },
+      ),
+  });

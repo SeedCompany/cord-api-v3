@@ -4,7 +4,7 @@ import { CommonRepository, OnIndex, OnIndexParams } from '~/core/database';
 import {
   ACTIVE,
   escapeLuceneSyntax,
-  fullTextQuery,
+  FullTextIndex,
 } from '~/core/database/query';
 import { BaseNode } from '~/core/database/results';
 import { SearchInput } from './dto';
@@ -13,9 +13,7 @@ import { SearchInput } from './dto';
 export class SearchRepository extends CommonRepository {
   @OnIndex('schema')
   protected async applyIndexes({ db }: OnIndexParams) {
-    await db.createFullTextIndex('propValue', ['Property'], ['value'], {
-      analyzer: 'standard-folding',
-    });
+    await db.query().apply(GlobalIndex.create()).run();
   }
 
   /**
@@ -36,8 +34,7 @@ export class SearchRepository extends CommonRepository {
 
           .union()
 
-          .raw('', { query: lucene })
-          .apply(fullTextQuery('propValue', '$query', ['node as property']))
+          .call(GlobalIndex.search(lucene).yield({ node: 'property' }))
           .match([node('node'), relation('out', 'r', ACTIVE), node('property')])
           .return(['node', 'collect(type(r)) as matchedProps'])
           // The input.count is going to be applied once the results are 'filtered'
@@ -62,3 +59,10 @@ export class SearchRepository extends CommonRepository {
     return await query.run();
   }
 }
+
+const GlobalIndex = FullTextIndex({
+  indexName: 'propValue',
+  labels: 'Property',
+  properties: 'value',
+  analyzer: 'standard-folding',
+});

@@ -114,9 +114,10 @@ export class MediaRepository extends CommonRepository {
       // Update the labels if typename is given, and maybe changed.
       .apply((q) =>
         res
-          ? q.raw(
-              'CALL apoc.create.setLabels(node, $newLabels) yield node as labelsAdded',
-              { newLabels: res.dbLabels },
+          ? q.call(
+              apoc.create
+                .setLabels('node', res.dbLabels)
+                .yield({ node: 'labelsAdded' }),
             )
           : q,
       )
