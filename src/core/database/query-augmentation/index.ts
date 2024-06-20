@@ -11,3 +11,4 @@ import './map';
 import './pattern-formatting';
 import './subquery';
 import './summary';
+import './yield';
