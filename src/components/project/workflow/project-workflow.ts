@@ -137,6 +137,7 @@ export const ProjectWorkflow = defineWorkflow({
     to: Step.PendingFinancialEndorsement,
     label: 'Submit for Financial Endorsement',
     type: Type.Approve,
+    notifiers: [FinancialApprovers],
   },
   'Re-request Consultant Endorsement': {
     from: [Step.PrepForFinancialEndorsement, Step.FinalizingProposal],
@@ -183,6 +184,7 @@ export const ProjectWorkflow = defineWorkflow({
     to: Step.PendingFinanceConfirmation,
     label: 'Approve Project',
     type: Type.Approve,
+    notifiers: [FinancialApprovers],
   },
   'RD Approves Proposal & Defers to Fields Ops': {
     from: Step.PendingRegionalDirectorApproval,
@@ -216,6 +218,7 @@ export const ProjectWorkflow = defineWorkflow({
     to: Step.PendingFinanceConfirmation,
     label: 'Approve Project',
     type: Type.Approve,
+    notifiers: [FinancialApprovers],
   },
   'Field Ops Requests Proposal Changes': {
     from: Step.PendingZoneDirectorApproval,
@@ -235,7 +238,7 @@ export const ProjectWorkflow = defineWorkflow({
     to: Step.Active,
     label: 'Confirm Project 🎉',
     type: Type.Approve,
-    notifiers: [FinancialApprovers, Distros.Approval, Distros.Projects],
+    notifiers: [Distros.Approval, Distros.Projects],
   },
   'Finance Requests Multiplication Changes': {
     from: Step.PendingFinanceConfirmation,
@@ -243,14 +246,12 @@ export const ProjectWorkflow = defineWorkflow({
     label: 'Send Back for Corrections',
     type: Type.Reject,
     conditions: IsMultiplication,
-    notifiers: [FinancialApprovers],
   },
   'Finance Ends Development': {
     from: Step.PendingFinanceConfirmation,
     to: Step.DidNotDevelop,
     label: 'End Development',
     type: Type.Reject,
-    notifiers: [FinancialApprovers],
   },
   'Finance Holds for Confirmation': {
     from: Step.PendingFinanceConfirmation,
@@ -258,7 +259,6 @@ export const ProjectWorkflow = defineWorkflow({
     label: 'Hold Project for Confirmation',
     type: Type.Neutral,
     conditions: IsMomentumInternship,
-    notifiers: [FinancialApprovers],
   },
   'Finance Requests Proposal Changes': {
     from: [Step.PendingFinanceConfirmation, Step.OnHoldFinanceConfirmation],
@@ -266,14 +266,12 @@ export const ProjectWorkflow = defineWorkflow({
     label: 'Send Back for Corrections',
     type: Type.Reject,
     conditions: IsMomentumInternship,
-    notifiers: [FinancialApprovers],
   },
   'Finance Rejects Proposal': {
     from: [Step.PendingFinanceConfirmation, Step.OnHoldFinanceConfirmation],
     to: Step.Rejected,
     label: 'Reject',
     type: Type.Reject,
-    notifiers: [FinancialApprovers],
   },
   //endregion
 
@@ -284,21 +282,21 @@ export const ProjectWorkflow = defineWorkflow({
     to: Step.DiscussingChangeToPlan,
     label: 'Discuss Change to Plan',
     type: Type.Neutral,
-    notifiers: [FinancialApprovers, Distros.Extension, Distros.Revision],
+    notifiers: [Distros.Extension, Distros.Revision],
   },
   'Discuss Terminating Active Project': {
     from: [Step.Active, Step.ActiveChangedPlan],
     to: Step.DiscussingTermination,
     label: 'Discuss Termination',
     type: Type.Neutral,
-    notifiers: [FinancialApprovers, Distros.Extension, Distros.Revision],
+    notifiers: [Distros.Extension, Distros.Revision],
   },
   'Finalize Completion': {
     from: [Step.Active, Step.ActiveChangedPlan],
     to: Step.FinalizingCompletion,
     label: 'Finalize Completion',
     type: Type.Approve,
-    notifiers: [FinancialApprovers, Distros.Extension, Distros.Revision],
+    notifiers: [Distros.Extension, Distros.Revision],
   },
 
   'Request Change To Plan Approval': {
@@ -335,7 +333,7 @@ export const ProjectWorkflow = defineWorkflow({
     to: Step.PendingChangeToPlanConfirmation,
     label: 'Approve Change to Plan',
     type: Type.Approve,
-    notifiers: [Distros.Extension, Distros.Revision],
+    notifiers: [FinancialApprovers, Distros.Extension, Distros.Revision],
   },
   'Reject Change To Plan': {
     from: Step.PendingChangeToPlanApproval,
@@ -350,21 +348,21 @@ export const ProjectWorkflow = defineWorkflow({
     to: Step.DiscussingChangeToPlan,
     label: 'Send Back for Corrections',
     type: Type.Reject,
-    notifiers: [FinancialApprovers, Distros.Extension, Distros.Revision],
+    notifiers: [Distros.Extension, Distros.Revision],
   },
   'Finance Approves Change To Plan': {
     from: Step.PendingChangeToPlanConfirmation,
     to: Step.ActiveChangedPlan,
     label: 'Approve Change to Plan',
     type: Type.Approve,
-    notifiers: [FinancialApprovers, Distros.Extension, Distros.Revision],
+    notifiers: [Distros.Extension, Distros.Revision],
   },
   'Finance Rejects Change To Plan': {
     from: Step.PendingChangeToPlanConfirmation,
     to: BackToActive,
     label: 'Reject Change to Plan',
     type: Type.Reject,
-    notifiers: [FinancialApprovers, Distros.Extension, Distros.Revision],
+    notifiers: [Distros.Extension, Distros.Revision],
   },
 
   'Request Suspension Approval': {
