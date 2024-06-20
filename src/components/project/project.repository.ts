@@ -17,6 +17,7 @@ import {
   createNode,
   createRelationships,
   defineSorters,
+  FullTextIndex,
   matchChangesetAndChangedProps,
   matchProjectSens,
   matchPropsAndProjectSensAndScopedRoles,
@@ -323,7 +324,18 @@ export class ProjectRepository extends CommonRepository {
   private createIndexes() {
     return this.getConstraintsFor(IProject);
   }
+  @OnIndex('schema')
+  private async createSchemaIndexes() {
+    await this.db.query().apply(ProjectNameIndex.create()).run();
+  }
 }
+
+export const ProjectNameIndex = FullTextIndex({
+  indexName: 'ProjectName',
+  labels: 'ProjectName',
+  properties: 'value',
+  analyzer: 'standard-folding',
+});
 
 export const projectSorters = defineSorters(IProject, {
   sensitivity: (query) =>
