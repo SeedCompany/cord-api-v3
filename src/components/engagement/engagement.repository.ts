@@ -525,6 +525,7 @@ export const engagementFilters = filter.define(() => EngagementFilters, {
       })!,
     ),
   }),
+  status: filter.stringListProp(),
   projectId: filter.pathExists((id) => [
     node('node'),
     relation('in', '', 'engagement'),

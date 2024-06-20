@@ -14,6 +14,7 @@ import {
   InternshipEngagement,
   LanguageEngagement,
 } from './engagement.dto';
+import { EngagementStatus } from './status.enum';
 
 @InputType()
 export abstract class EngagementFilters {
@@ -22,6 +23,11 @@ export abstract class EngagementFilters {
     nullable: true,
   })
   readonly type?: 'language' | 'internship';
+
+  @Field(() => [EngagementStatus], {
+    nullable: true,
+  })
+  readonly status?: readonly EngagementStatus[];
 
   readonly projectId?: ID;
   @FilterField(() => ProjectFilters)
