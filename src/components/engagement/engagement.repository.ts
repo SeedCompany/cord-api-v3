@@ -1,6 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { cleanJoin, mapValues, simpleSwitch } from '@seedcompany/common';
-import { inArray, node, Node, Query, relation } from 'cypher-query-builder';
+import {
+  hasLabel,
+  inArray,
+  node,
+  Node,
+  Query,
+  relation,
+} from 'cypher-query-builder';
 import { difference, pickBy } from 'lodash';
 import { DateTime } from 'luxon';
 import { MergeExclusive } from 'type-fest';
@@ -39,17 +46,22 @@ import {
 } from '~/core/database/query';
 import { Privileges } from '../authorization';
 import { FileId } from '../file/dto';
-import { languageSorters } from '../language/language.repository';
+import {
+  languageFilters,
+  languageSorters,
+} from '../language/language.repository';
 import {
   matchCurrentDue,
   progressReportSorters,
 } from '../periodic-report/periodic-report.repository';
 import { ProjectType } from '../project/dto';
+import { projectFilters } from '../project/project-filters.query';
 import { projectSorters } from '../project/project.repository';
 import {
   CreateInternshipEngagement,
   CreateLanguageEngagement,
   Engagement,
+  EngagementFilters,
   EngagementListInput,
   EngagementStatus,
   IEngagement,
@@ -335,12 +347,6 @@ export class EngagementRepository extends CommonRepository {
   // LIST ///////////////////////////////////////////////////////////
 
   async list(input: EngagementListInput, session: Session, changeset?: ID) {
-    const label =
-      simpleSwitch(input.filter?.type, {
-        language: 'LanguageEngagement',
-        internship: 'InternshipEngagement',
-      }) ?? 'Engagement';
-
     const result = await this.db
       .query()
       .subQuery((sub) =>
@@ -348,7 +354,7 @@ export class EngagementRepository extends CommonRepository {
           .match([
             node('project', 'Project', pickBy({ id: input.filter?.projectId })),
             relation('out', '', 'engagement', ACTIVE),
-            node('node', label),
+            node('node', 'Engagement'),
           ])
           .apply(whereNotDeletedInChangeset(changeset))
           .return(['node', 'project'])
@@ -359,7 +365,7 @@ export class EngagementRepository extends CommonRepository {
                   .match([
                     node('project', 'Project', { id: input.filter.projectId }),
                     relation('out', '', 'engagement', INACTIVE),
-                    node('node', label),
+                    node('node', 'Engagement'),
                     relation('in', '', 'changeset', ACTIVE),
                     node('changeset', 'Changeset', { id: changeset }),
                   ])
@@ -368,26 +374,7 @@ export class EngagementRepository extends CommonRepository {
           ),
       )
       .match(requestingUser(session))
-      .apply(
-        filter.builder(input.filter ?? {}, {
-          type: filter.skip,
-          projectId: filter.skip,
-          partnerId: filter.pathExists((id) => [
-            node('node'),
-            relation('in', '', 'engagement'),
-            node('', 'Project'),
-            relation('out', '', 'partnership', ACTIVE),
-            node('', 'Partnership'),
-            relation('out', '', 'partner'),
-            node('', 'Partner', { id }),
-          ]),
-          languageId: filter.pathExists((id) => [
-            node('node'),
-            relation('out', '', 'language'),
-            node('', 'Language', { id }),
-          ]),
-        }),
-      )
+      .apply(engagementFilters(input.filter))
       .apply(
         this.privileges.for(session, IEngagement).filterToReadable({
           wrapContext: oncePerProject,
@@ -528,6 +515,55 @@ export class EngagementRepository extends CommonRepository {
     return this.getConstraintsFor(IEngagement);
   }
 }
+
+export const engagementFilters = filter.define(() => EngagementFilters, {
+  type: ({ value }) => ({
+    node: hasLabel(
+      simpleSwitch(value, {
+        language: 'LanguageEngagement',
+        internship: 'InternshipEngagement',
+      })!,
+    ),
+  }),
+  status: filter.stringListProp(),
+  projectId: filter.pathExists((id) => [
+    node('node'),
+    relation('in', '', 'engagement'),
+    node('project', 'Project', { id }),
+  ]),
+  partnerId: filter.pathExists((id) => [
+    node('node'),
+    relation('in', '', 'engagement'),
+    node('', 'Project'),
+    relation('out', '', 'partnership', ACTIVE),
+    node('', 'Partnership'),
+    relation('out', '', 'partner'),
+    node('', 'Partner', { id }),
+  ]),
+  languageId: filter.pathExists((id) => [
+    node('node'),
+    relation('out', '', 'language'),
+    node('', 'Language', { id }),
+  ]),
+  project: filter.sub(() => projectFilters)((sub) =>
+    sub
+      .with('node as eng')
+      .match([
+        node('eng'),
+        relation('in', '', 'engagement'),
+        node('node', 'Project'),
+      ]),
+  ),
+  language: filter.sub(() => languageFilters)((sub) =>
+    sub
+      .with('node as eng')
+      .match([
+        node('eng'),
+        relation('out', '', 'language'),
+        node('node', 'Language'),
+      ]),
+  ),
+});
 
 export const engagementSorters = defineSorters(IEngagement, {
   nameProjectFirst: (query) =>

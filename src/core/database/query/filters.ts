@@ -1,4 +1,4 @@
-import { entries } from '@seedcompany/common';
+import { entries, Nil } from '@seedcompany/common';
 import {
   comparisions,
   inArray,
@@ -6,13 +6,14 @@ import {
   node,
   not,
   Query,
+  regexp,
   relation,
 } from 'cypher-query-builder';
 import { PatternCollection } from 'cypher-query-builder/dist/typings/clauses/pattern-clause';
 import { Comparator } from 'cypher-query-builder/dist/typings/clauses/where-comparators';
 import { AndConditions } from 'cypher-query-builder/src/clauses/where-utils';
 import { identity, isFunction } from 'lodash';
-import { ConditionalKeys } from 'type-fest';
+import { AbstractClass, ConditionalKeys } from 'type-fest';
 import { DateTimeFilter } from '~/common';
 import { ACTIVE } from './matching';
 import { path as pathPattern } from './where-path';
@@ -29,6 +30,19 @@ export interface BuilderArgs<T, K extends keyof T = keyof T> {
 export type Builders<T> = {
   [K in keyof Required<T>]: Builder<T, K>;
 };
+
+/**
+ * A helper to define filters for the given filter class type.
+ * Functions can do nothing, adjust the query, return an object to add conditions to
+ * the where clause, or return a function which will be called after the where clause.
+ */
+export const define =
+  <T extends Record<string, any>>(
+    filterClass: () => AbstractClass<T>,
+    builders: Builders<T>,
+  ) =>
+  (filters: T | Nil) =>
+    builder(filters ?? {}, builders);
 
 /**
  * A helper to split filters given and call their respective functions.
@@ -95,6 +109,23 @@ export const propVal =
       node('', 'Property', { value }),
     ]);
     return { [prop ?? key]: cond };
+  };
+
+export const propPartialVal =
+  <T, K extends ConditionalKeys<Required<T>, string>>(
+    prop?: string,
+  ): Builder<T, K> =>
+  ({ key, value: v, query }) => {
+    const value = v as string; // don't know why TS can't figure this out
+    if (!value.trim()) {
+      return undefined;
+    }
+    query.match([
+      node('node'),
+      relation('out', '', prop ?? key, ACTIVE),
+      node(prop ?? key, 'Property'),
+    ]);
+    return { [prop ?? key]: { value: regexp(`.*${value}.*`, true) } };
   };
 
 export const stringListProp =
@@ -180,3 +211,24 @@ export const comparisonOfDateTimeFilter = (
     ? (...args) => comparators.map((comp) => comp(...args)).join(' AND ')
     : undefined;
 };
+
+export const sub =
+  <Input extends Record<string, any>>(
+    subBuilder: () => (input: Partial<Input>) => (q: Query) => void,
+  ) =>
+  <
+    // TODO this doesn't enforce Input type on Outer property
+    K extends string,
+    Outer extends Partial<Record<K, Partial<Input>>>,
+  >(
+    matchSubNode: (sub: Query) => Query,
+  ): Builder<Outer, K> =>
+  ({ key, value, query }) =>
+    query
+      .subQuery('node', (sub) =>
+        sub
+          .apply(matchSubNode)
+          .apply(subBuilder()(value))
+          .return(`true as ${key}FiltersApplied`),
+      )
+      .with('*');

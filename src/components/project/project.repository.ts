@@ -38,7 +38,7 @@ import {
   stepToStatus,
   UpdateProject,
 } from './dto';
-import { projectListFilter } from './list-filter.query';
+import { projectFilters } from './project-filters.query';
 
 @Injectable()
 export class ProjectRepository extends CommonRepository {
@@ -285,7 +285,7 @@ export class ProjectRepository extends CommonRepository {
       .matchNode('node', 'Project')
       .with('distinct(node) as node, node as project')
       .match(requestingUser(session))
-      .apply(projectListFilter(input))
+      .apply(projectFilters(input.filter))
       .apply(this.privileges.for(session, IProject).filterToReadable())
       .apply(sortWith(projectSorters, input))
       .apply(paginate(input, this.hydrate(session.userId)))
