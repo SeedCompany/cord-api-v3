@@ -2,6 +2,7 @@ import { entries } from '@seedcompany/common';
 import { Clause, Query } from 'cypher-query-builder';
 import { Parameter } from 'cypher-query-builder/dist/typings/parameter-bag';
 import { isExp, variable } from '../query';
+import type { YieldTerms } from './yield';
 
 declare module 'cypher-query-builder/dist/typings/query' {
   interface Query {
@@ -22,16 +23,19 @@ Query.prototype.call = function call(
   procedure: ProcedureCall | string,
   args?: ProcedureArgs,
 ) {
-  const clause =
+  const call =
     typeof procedure === 'string'
-      ? new Procedure(procedure, args ?? [])
-      : new Procedure(procedure.name, procedure.args);
-  return this.continueChainClause(clause);
+      ? { procedureName: procedure, args: args ?? [] }
+      : procedure;
+  const clause = new Procedure(call.procedureName, call.args);
+  const next = this.continueChainClause(clause);
+  return call.yieldTerms ? next.yield(call.yieldTerms) : next;
 };
 
-interface ProcedureCall {
-  name: string;
+interface ProcedureCall<Y extends string = string> {
+  procedureName: string;
   args: ProcedureArgs;
+  yieldTerms?: YieldTerms<Y>;
 }
 type ProcedureArgs = Record<string, any> | any[];
 
@@ -51,3 +55,23 @@ class Procedure extends Clause {
     return `CALL ${this.name}(${this.params.join(', ')})`;
   }
 }
+
+export const procedure =
+  <const Y extends string>(
+    procedureName: string,
+    // eslint-disable-next-line @seedcompany/no-unused-vars
+    yieldDefs: readonly Y[],
+  ) =>
+  (args: ProcedureArgs) => ({
+    procedureName,
+    args,
+    yield: (yieldTerms: YieldTerms<Y>) =>
+      Object.assign(
+        (query: Query) => query.call(procedureName, args).yield(yieldTerms),
+        {
+          procedureName,
+          args,
+          yieldTerms,
+        },
+      ),
+  });

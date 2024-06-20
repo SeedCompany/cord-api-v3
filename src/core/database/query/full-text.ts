@@ -2,6 +2,7 @@ import { entries, isNotNil, many, Many, mapKeys } from '@seedcompany/common';
 import { Query } from 'cypher-query-builder';
 import { pickBy } from 'lodash';
 import { LiteralUnion } from 'type-fest';
+import { procedure } from '../query-augmentation/call';
 import { CypherExpression, exp, isExp } from './cypher-expression';
 import { db } from './cypher-functions';
 
@@ -59,23 +60,17 @@ export const FullTextIndex = (config: {
      */
     search: (
       query: string,
-      config: {
-        yield?: Many<string>;
+      options: {
         skip?: number;
         limit?: number;
         analyzer?: Analyzer;
       } = {},
     ) => {
-      const { yield: yieldTerms = ['node'], ...options } = config;
-
       // fallback to "" when no query is given, so that no results are
       // returned instead of the procedure failing
       query = query.trim() || '""';
 
-      return (q: Query) =>
-        q
-          .call(db.index.fulltext.queryNodes(indexName, query, options))
-          .yield(yieldTerms);
+      return db.index.fulltext.queryNodes(indexName, query, options);
     },
   };
 };
@@ -95,17 +90,15 @@ export const IndexFullTextQueryNodes = (
         analyzer?: string;
       }
     | CypherExpression,
-) => ({
-  name: 'db.index.fulltext.queryNodes',
-  args: {
+) =>
+  procedure('db.index.fulltext.queryNodes', ['node', 'score'])({
     indexName,
     query,
     ...(options &&
     (Object.values(options).filter(isNotNil).length > 0 || isExp(options))
       ? { options }
       : undefined),
-  },
-});
+  });
 
 type Analyzer = LiteralUnion<KnownAnalyzer, string>;
 

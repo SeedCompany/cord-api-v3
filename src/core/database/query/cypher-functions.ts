@@ -1,3 +1,4 @@
+import { procedure } from '../query-augmentation/call';
 import { exp, ExpressionInput } from './cypher-expression';
 import { IndexFullTextQueryNodes } from './full-text';
 
@@ -77,10 +78,8 @@ export const apoc = {
     toMap: fn1('apoc.convert.toMap'),
   },
   create: {
-    setLabels: (node: ExpressionInput, labels: readonly string[]) => ({
-      name: 'apoc.create.setLabels',
-      args: { node: exp(node), labels },
-    }),
+    setLabels: (node: ExpressionInput, labels: readonly string[]) =>
+      procedure('apoc.create.setLabels', ['node'])({ node: exp(node), labels }),
   },
 };
 

@@ -552,7 +552,9 @@ export class ProductRepository extends CommonRepository {
       .query()
       .apply((q) =>
         query
-          ? q.apply(ProductCompletionDescriptionIndex.search(query))
+          ? q.call(
+              ProductCompletionDescriptionIndex.search(query).yield('node'),
+            )
           : q.matchNode('node', 'ProductCompletionDescription'),
       )
       .apply((q) =>

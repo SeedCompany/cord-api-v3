@@ -114,9 +114,11 @@ export class MediaRepository extends CommonRepository {
       // Update the labels if typename is given, and maybe changed.
       .apply((q) =>
         res
-          ? q
-              .call(apoc.create.setLabels('node', res.dbLabels))
-              .yield('node as labelsAdded')
+          ? q.call(
+              apoc.create
+                .setLabels('node', res.dbLabels)
+                .yield({ node: 'labelsAdded' }),
+            )
           : q,
       )
       // Grab the previous media node or null

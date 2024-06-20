@@ -34,7 +34,7 @@ export class SearchRepository extends CommonRepository {
 
           .union()
 
-          .apply(GlobalIndex.search(lucene, { yield: 'node as property' }))
+          .call(GlobalIndex.search(lucene).yield({ node: 'property' }))
           .match([node('node'), relation('out', 'r', ACTIVE), node('property')])
           .return(['node', 'collect(type(r)) as matchedProps'])
           // The input.count is going to be applied once the results are 'filtered'
