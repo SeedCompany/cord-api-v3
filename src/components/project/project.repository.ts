@@ -138,10 +138,7 @@ export class ProjectRepository extends CommonRepository {
     currentProject: UnsecuredDto<Project>,
     input: UpdateProject,
   ) {
-    return getChanges(IProject)(currentProject, {
-      ...input,
-      ...(input.step ? { status: stepToStatus(input.step) } : {}),
-    });
+    return getChanges(IProject)(currentProject, input);
   }
 
   async create(input: CreateProject) {

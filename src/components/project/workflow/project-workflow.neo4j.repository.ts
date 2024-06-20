@@ -11,7 +11,7 @@ import {
   requestingUser,
   sorting,
 } from '~/core/database/query';
-import { IProject, ProjectStep } from '../dto';
+import { IProject, ProjectStep, stepToStatus } from '../dto';
 import {
   ExecuteProjectTransitionInput,
   ProjectWorkflowEvent as WorkflowEvent,
@@ -67,11 +67,22 @@ export class ProjectWorkflowNeo4jRepository
           relation('out', undefined, 'who'),
           node('who', 'User'),
         ])
-        .return<{ dto: UnsecuredDto<WorkflowEvent> }>(
+        .match([
+          node('project'),
+          relation('out', '', 'step', ACTIVE),
+          node('step', 'Property'),
+        ])
+        .return<{
+          dto: UnsecuredDto<WorkflowEvent> & {
+            project: { previousStep: ProjectStep };
+          };
+        }>(
           merge('node', {
             at: 'node.createdAt',
             who: 'who { .id }',
-            project: 'project { .id, .type }',
+            project: merge('project { .id, .type }', {
+              previousStep: 'step.value',
+            }),
           }).as('dto'),
         );
   }
@@ -100,10 +111,17 @@ export class ProjectWorkflowNeo4jRepository
       .first();
     const event = result!.dto;
 
+    const prevStatus = stepToStatus(event.project.previousStep);
+    const nextStatus = stepToStatus(event.to);
+
     await this.db.updateProperties({
       type: IProject,
       object: { id: project },
-      changes: { step: event.to, stepChangedAt: event.at },
+      changes: {
+        step: event.to,
+        stepChangedAt: event.at,
+        status: prevStatus === nextStatus ? undefined : nextStatus,
+      },
       permanentAfter: null,
     });
 
