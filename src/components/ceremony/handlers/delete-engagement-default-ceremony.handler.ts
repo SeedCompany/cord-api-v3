@@ -1,4 +1,4 @@
-import { EventsHandler, IEventHandler } from '~/core';
+import { ConfigService, EventsHandler, IEventHandler } from '~/core';
 import { EngagementWillDeleteEvent } from '../../engagement/events';
 import { CeremonyService } from '../ceremony.service';
 
@@ -6,11 +6,14 @@ import { CeremonyService } from '../ceremony.service';
 export class DetachEngagementRootDirectoryHandler
   implements IEventHandler<EngagementWillDeleteEvent>
 {
-  constructor(private readonly ceremonies: CeremonyService) {}
+  constructor(
+    private readonly ceremonies: CeremonyService,
+    private readonly config: ConfigService,
+  ) {}
 
   async handle({ engagement, session }: EngagementWillDeleteEvent) {
-    const ceremonyId = engagement?.ceremony?.value;
-    if (!ceremonyId) {
+    const ceremony = engagement?.ceremony?.value;
+    if (!ceremony) {
       return;
     }
 
@@ -19,6 +22,10 @@ export class DetachEngagementRootDirectoryHandler
       return;
     }
 
-    await this.ceremonies.delete(ceremonyId, session);
+    if (this.config.databaseEngine === 'edgedb') {
+      return;
+    }
+
+    await this.ceremonies.delete(ceremony.id, session);
   }
 }

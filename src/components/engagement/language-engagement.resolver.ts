@@ -25,7 +25,7 @@ export class LanguageEngagementResolver {
     @Parent() engagement: LanguageEngagement,
     @Loader(LanguageLoader) languages: LoaderOf<LanguageLoader>,
   ): Promise<SecuredLanguage> {
-    return await mapSecuredValue(engagement.language, (id) =>
+    return await mapSecuredValue(engagement.language, ({ id }) =>
       languages.load({ id, view: viewOfChangeset(engagement.changeset) }),
     );
   }

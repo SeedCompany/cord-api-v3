@@ -31,9 +31,11 @@ import {
   matchProps,
   matchPropsAndProjectSensAndScopedRoles,
   merge,
+  oncePerProject,
   paginate,
   sorting,
 } from '~/core/database/query';
+import { Privileges } from '../authorization';
 import { ScriptureReferenceRepository } from '../scripture';
 import {
   ScriptureRange,
@@ -75,7 +77,10 @@ export type HydratedProductRow = Merge<
 
 @Injectable()
 export class ProductRepository extends CommonRepository {
-  constructor(private readonly scriptureRefs: ScriptureReferenceRepository) {
+  constructor(
+    private readonly scriptureRefs: ScriptureReferenceRepository,
+    private readonly privileges: Privileges,
+  ) {
     super();
   }
 
@@ -514,6 +519,11 @@ export class ProductRepository extends CommonRepository {
           },
         )(q);
       })
+      .apply(
+        this.privileges.for(session, Product).filterToReadable({
+          wrapContext: oncePerProject,
+        }),
+      )
       .apply(sorting(Product, input))
       .apply(paginate(input, this.hydrate(session)))
       .first();
