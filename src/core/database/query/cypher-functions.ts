@@ -76,6 +76,12 @@ export const apoc = {
     /** Converts Neo4j node to object/map of the node's properties */
     toMap: fn1('apoc.convert.toMap'),
   },
+  create: {
+    setLabels: (node: ExpressionInput, labels: readonly string[]) => ({
+      name: 'apoc.create.setLabels',
+      args: { node: exp(node), labels },
+    }),
+  },
 };
 
 /**
