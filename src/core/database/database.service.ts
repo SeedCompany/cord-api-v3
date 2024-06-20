@@ -160,10 +160,12 @@ export class DatabaseService {
       const dbs = await session.executeWrite((tx) =>
         tx.run('show databases yield *'),
       );
-      const version = (info.get('version') as string).split('.').map(Number);
+      const versionParts = (info.get('version') as string).split('.');
+      const version = versionParts.map(Number) as ServerInfo['version'];
+      const versionXY = Number(versionParts.slice(0, 2).join('.'));
       return {
-        version: version as ServerInfo['version'],
-        versionXY: version[0] + version[1] / 10,
+        version,
+        versionXY,
         edition: info.get('edition'),
         databases: dbs.records.map((r) => ({
           name: r.get('name'),
