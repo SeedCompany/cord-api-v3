@@ -2,24 +2,7 @@
  * This file patches pattern conditions to support referencing existing variables.
  * This is achieved by wrapping the variable name in a `variable()` call.
  */
-import { Clause, NodePattern } from 'cypher-query-builder';
-import type { Pattern as TSPattern } from 'cypher-query-builder/dist/typings/clauses/pattern';
-import type {
-  Parameter as TSParameter,
-  ParameterBag as TSParameterBag,
-} from 'cypher-query-builder/dist/typings/parameter-bag';
-import type { ParameterContainer as TSParameterContainer } from 'cypher-query-builder/dist/typings/parameter-container';
-import { Class } from 'type-fest';
-
-// This class is not exported so grab it a hacky way
-const ParameterContainer = Object.getPrototypeOf(
-  Clause,
-) as Class<TSParameterContainer>;
-const ParameterBag = new ParameterContainer().getParameterBag()
-  .constructor as Class<TSParameterBag>;
-const Parameter = new ParameterBag().addParam('')
-  .constructor as Class<TSParameter>;
-const Pattern = Object.getPrototypeOf(NodePattern) as Class<TSPattern>;
+import { Parameter, ParameterBag, Pattern } from 'cypher-query-builder';
 
 export class Variable extends Parameter {
   constructor(variable: string, name = variable) {
@@ -36,9 +19,10 @@ export class Variable extends Parameter {
  */
 export const variable = (expression: string) => new Variable(expression);
 
+// eslint-disable-next-line @typescript-eslint/unbound-method
 const origAddParam = ParameterBag.prototype.addParam;
 ParameterBag.prototype.addParam = function addParam(
-  this: TSParameterBag,
+  this: ParameterBag,
   value: any | Variable,
   name?: string,
 ) {
@@ -48,7 +32,7 @@ ParameterBag.prototype.addParam = function addParam(
 };
 
 Pattern.prototype.setExpandedConditions = function (
-  this: TSPattern,
+  this: Pattern,
   expanded: boolean,
 ) {
   if (this.useExpandedConditions !== expanded) {
