@@ -1,5 +1,5 @@
 diff --git a/dist/cjs5.js b/dist/cjs5.js
-index 2956424bcab153c6d7a6f24f80ae7aac6a82d62a..108858d5ac65801739a3f022b07113ebb0ef68d9 100644
+index 2956424bcab153c6d7a6f24f80ae7aac6a82d62a..92921394496f972735ed0ff3ebd6a5c38ae0817f 100644
 --- a/dist/cjs5.js
 +++ b/dist/cjs5.js
 @@ -1006,10 +1006,13 @@ var comparisions = {
@@ -18,6 +18,20 @@ index 2956424bcab153c6d7a6f24f80ae7aac6a82d62a..108858d5ac65801739a3f022b07113eb
      return parts.join(' ');
    };
  }
+@@ -3868,4 +3871,13 @@ exports.regexp = regexp;
+ exports.relation = relation;
+ exports.startsWith = startsWith;
+ exports.xor = xor;
++exports.WhereOp = WhereOp;
++exports.stringCons = stringCons;
++exports.Precedence = Precedence;
++exports.Pattern = Pattern;
++exports.PatternClause = PatternClause;
++exports.Parameter = Parameter;
++exports.ParameterBag = ParameterBag;
++exports.ParameterContainer = ParameterContainer;
++exports.TermListClause = TermListClause;
+ //# sourceMappingURL=cjs5.js.map
 diff --git a/dist/typings/builder.d.ts b/dist/typings/builder.d.ts
 index 1c17b5c3f0127cd5aaf03185120e7f72321e2805..b91875030036d20f47d4dda0d9e3eeb22bb9949d 100644
 --- a/dist/typings/builder.d.ts
@@ -44,6 +58,21 @@ index 1c17b5c3f0127cd5aaf03185120e7f72321e2805..b91875030036d20f47d4dda0d9e3eeb2
      /**
       * Adds a [skip]{@link https://neo4j.com/docs/developer-manual/current/cypher/clauses/skip}
       * clause to the query.
+diff --git a/dist/typings/clauses/index.d.ts b/dist/typings/clauses/index.d.ts
+index 32d022ed1018f0c30d5033967facb17f4ea9ba6e..bc3b23b44359fb0cdad832da03ed1f11cc30ef54 100644
+--- a/dist/typings/clauses/index.d.ts
++++ b/dist/typings/clauses/index.d.ts
+@@ -20,6 +20,10 @@ export { OrderBy } from './order-by';
+ export { Merge } from './merge';
+ export { OnMatch } from './on-match';
+ export { OnCreate } from './on-create';
++export { Pattern } from './pattern';
++export { PatternClause } from './pattern-clause';
++export { TermListClause } from './term-list-clause';
++export {WhereOp, stringCons, Precedence} from './where-utils';
+ export { and, or, xor, not, operators } from './where-operators';
+ export { equals, greaterThan, greaterEqualTo, lessThan, lessEqualTo, startsWith, endsWith, contains, inArray, hasLabel, exists, between, isNull, regexp, comparisions, } from './where-comparators';
+ /**
 diff --git a/dist/typings/clauses/where-comparators.d.ts b/dist/typings/clauses/where-comparators.d.ts
 index 386c07740c1a24bf3194e5fc59c390b3da500266..1a3027df7872fecbe7df4bd0f6d5c11bac637df6 100644
 --- a/dist/typings/clauses/where-comparators.d.ts
@@ -78,6 +107,16 @@ index ad53c58fc2a173403b0ad584ea95c1c26a579538..cc36d50cc8f577e2debe6043fa998e1e
 -    stream<R = any>(query: Query): Observable<Dictionary<R>>;
 +    stream<R>(query: Query<R>): Observable<R>;
  }
+diff --git a/dist/typings/index.d.ts b/dist/typings/index.d.ts
+index e048614470c60a98cb4f34fd2e34b441d9b3befa..713aa03f4814f4913152870eac1ca413ad1e0026 100644
+--- a/dist/typings/index.d.ts
++++ b/dist/typings/index.d.ts
+@@ -5,3 +5,5 @@ export * from './clause-collection';
+ export * from './clauses';
+ export * from './query';
+ export * from './transformer';
++export {Parameter, ParameterBag} from './parameter-bag';
++export {ParameterContainer} from './parameter-container';
 diff --git a/dist/typings/query.d.ts b/dist/typings/query.d.ts
 index b31088b60c221927a701e16f03e4a3ffcfddb19f..4e1d858d9b089f915238c955e532ddefd928a0db 100644
 --- a/dist/typings/query.d.ts

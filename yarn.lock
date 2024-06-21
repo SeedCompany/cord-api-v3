@@ -5386,7 +5386,7 @@ __metadata:
     clipanion: "npm:^4.0.0-rc.3"
     common-tags: "npm:^1.8.2"
     cookie-parser: "npm:^1.4.6"
-    cypher-query-builder: "patch:cypher-query-builder@6.0.4#.yarn/patches/cypher-query-builder.patch"
+    cypher-query-builder: "patch:cypher-query-builder@npm%3A6.0.4#~/.yarn/patches/cypher-query-builder-npm-6.0.4-e8707a5e8e.patch"
     debugger-is-attached: "npm:^1.2.0"
     dotenv: "npm:^16.3.1"
     dotenv-expand: "npm:^10.0.0"
@@ -5589,9 +5589,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cypher-query-builder@patch:cypher-query-builder@6.0.4#.yarn/patches/cypher-query-builder.patch::locator=cord-api-v3%40workspace%3A.":
+"cypher-query-builder@patch:cypher-query-builder@npm%3A6.0.4#~/.yarn/patches/cypher-query-builder-npm-6.0.4-e8707a5e8e.patch":
   version: 6.0.4
-  resolution: "cypher-query-builder@patch:cypher-query-builder@npm%3A6.0.4#.yarn/patches/cypher-query-builder.patch::version=6.0.4&hash=4dba1c&locator=cord-api-v3%40workspace%3A."
+  resolution: "cypher-query-builder@patch:cypher-query-builder@npm%3A6.0.4#~/.yarn/patches/cypher-query-builder-npm-6.0.4-e8707a5e8e.patch::version=6.0.4&hash=5ae1ee"
   dependencies:
     "@types/lodash": "npm:^4.14.136"
     "@types/node": "npm:^12.6.1"
@@ -5600,7 +5600,7 @@ __metadata:
     node-cleanup: "npm:^2.1.2"
     rxjs: "npm:^6.5.2"
     tslib: "npm:^1.10.0"
-  checksum: 10c0/3d1e45fd19a40019426051f272a5455e8745a659dec80f0f0d64e39757249bf13f52c2a42f7525880af6c6327dd5fcfff55d9bb447f4e27c3360a3f71a23adf4
+  checksum: 10c0/018f61a14d85d2b82e403baa48ce6455cd7c7992cd1c70bbe6ad6c6b40b7a7fb8fd0acb78446513ef3e431e6f345ca41325425c324ca4263215bf9bbce7e01cb
   languageName: node
   linkType: hard
 
