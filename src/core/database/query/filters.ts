@@ -1,6 +1,7 @@
-import { entries, Nil } from '@seedcompany/common';
+import { cleanSplit, entries, Nil } from '@seedcompany/common';
 import {
   comparisions,
+  greaterThan,
   inArray,
   isNull,
   node,
@@ -238,27 +239,55 @@ export const sub =
 export const fullText =
   ({
     index,
+    escapeLucene = true,
+    toLucene,
+    minScore = 0,
     matchToNode,
   }: {
     index: () => FullTextIndex;
+    escapeLucene?: boolean;
+    toLucene?: (input: string) => string;
+    minScore?: number;
     matchToNode: (query: Query) => Query;
   }) =>
   <T, K extends ConditionalKeys<T, string | undefined>>({
-    value: input,
+    value,
     key: field,
     query,
   }: BuilderArgs<T, K>) => {
-    if (!input || typeof input !== 'string') {
+    if (!value || typeof value !== 'string') {
       return null;
     }
-    const escaped = escapeLuceneSyntax(input);
 
-    const lucene = `*${escaped}*`;
+    let input: string = value;
+
+    input = escapeLucene ? escapeLuceneSyntax(input) : input;
+
+    const lucene =
+      toLucene?.(input) ??
+      // Default to each word being matched.
+      // And for each word...
+      cleanSplit(input, ' ')
+        .map((term) => {
+          const adjusted = [
+            // fuzzy (distance) search with boosted priority
+            `${term}~^2`,
+            // word prefixes in case the distance is too great
+            `*${term}*`,
+          ].join(' OR ');
+          return `(${adjusted})`;
+        })
+        .join(' AND ');
 
     query
       .subQuery((q) =>
         q
-          .call(index().search(lucene, { limit: 100 }).yield({ node: 'match' }))
+          .call(
+            index()
+              .search(lucene, { limit: 100 })
+              .yield({ node: 'match', score: true }),
+          )
+          .where({ score: greaterThan(minScore) })
           .apply(matchToNode)
           .return(collect('distinct node').as(`${field}Matches`)),
       )

@@ -59,6 +59,8 @@ export const FullTextIndex = (config: {
      *
      * NOTE: the `query` is Lucene syntax.
      * If this is coming from user input, consider using the {@link escapeLuceneSyntax} function.
+     *
+     * @see https://lucene.apache.org/core/2_9_4/queryparsersyntax.html
      */
     search: (
       query: string,

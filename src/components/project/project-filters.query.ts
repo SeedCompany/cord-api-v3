@@ -12,6 +12,7 @@ export const projectFilters = filter.define(() => ProjectFilters, {
         relation('out', '', 'name', ACTIVE),
         node('match'),
       ]),
+    minScore: 0.8,
   }),
   type: filter.stringListBaseNodeProp(),
   status: filter.stringListProp(),
