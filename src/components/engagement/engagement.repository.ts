@@ -543,6 +543,9 @@ export const engagementFilters = filter.define(() => EngagementFilters, {
         relation('out', '', undefined, ACTIVE),
         node('match'),
       ]),
+    // UI joins project & language/intern names with dash
+    // Remove it from search if users type it
+    normalizeInput: (v) => v.replaceAll(/ -/g, ''),
   }),
   projectId: filter.pathExists((id) => [
     node('node'),

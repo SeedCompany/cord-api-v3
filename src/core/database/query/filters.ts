@@ -239,12 +239,14 @@ export const sub =
 export const fullText =
   ({
     index,
+    normalizeInput,
     escapeLucene = true,
     toLucene,
     minScore = 0,
     matchToNode,
   }: {
     index: () => FullTextIndex;
+    normalizeInput?: (input: string) => string;
     escapeLucene?: boolean;
     toLucene?: (input: string) => string;
     minScore?: number;
@@ -261,6 +263,7 @@ export const fullText =
 
     let input: string = value;
 
+    input = normalizeInput ? normalizeInput(input) : input;
     input = escapeLucene ? escapeLuceneSyntax(input) : input;
 
     const lucene =
