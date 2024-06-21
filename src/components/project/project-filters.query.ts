@@ -1,8 +1,19 @@
 import { greaterThan, inArray, node, relation } from 'cypher-query-builder';
 import { ACTIVE, filter, matchProjectSens, path } from '~/core/database/query';
 import { ProjectFilters } from './dto';
+import { ProjectNameIndex } from './project.repository';
 
 export const projectFilters = filter.define(() => ProjectFilters, {
+  name: filter.fullText({
+    index: () => ProjectNameIndex,
+    matchToNode: (q) =>
+      q.match([
+        node('node', 'Project'),
+        relation('out', '', 'name', ACTIVE),
+        node('match'),
+      ]),
+    minScore: 0.8,
+  }),
   type: filter.stringListBaseNodeProp(),
   status: filter.stringListProp(),
   onlyMultipleEngagements:

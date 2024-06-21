@@ -30,6 +30,11 @@ export abstract class EthnologueLanguageFilters {
 
 @InputType()
 export abstract class LanguageFilters {
+  @Field({
+    nullable: true,
+  })
+  readonly name?: string;
+
   @Field(() => [Sensitivity], {
     description: 'Only languages with these sensitivities',
     nullable: true,

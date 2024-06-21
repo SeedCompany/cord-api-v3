@@ -52,15 +52,19 @@ export class User extends Interfaces {
   email: SecuredStringNullable;
 
   @NameField()
+  @DbLabel('UserName')
   realFirstName: SecuredString;
 
   @NameField()
+  @DbLabel('UserName')
   realLastName: SecuredString;
 
   @NameField()
+  @DbLabel('UserName')
   displayFirstName: SecuredString;
 
   @NameField()
+  @DbLabel('UserName')
   displayLastName: SecuredString;
 
   @Field()

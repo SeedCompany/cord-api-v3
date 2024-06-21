@@ -23,6 +23,11 @@ import {
 
 @InputType()
 export abstract class ProjectFilters {
+  @Field({
+    nullable: true,
+  })
+  readonly name?: string;
+
   @Field(() => [ProjectType], {
     description: 'Only projects of these types',
     nullable: true,

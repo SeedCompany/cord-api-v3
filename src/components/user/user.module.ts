@@ -13,6 +13,7 @@ import { EducationModule } from './education/education.module';
 import { KnownLanguageRepository } from './known-language.repository';
 import { KnownLanguageResolver } from './known-language.resolver';
 import { AddActorLabelMigration } from './migrations/add-actor-label.migration';
+import { AddUserNameLabelMigration } from './migrations/add-user-name-label.migration';
 import { SystemAgentEdgeDBRepository } from './system-agent.edgedb.repository';
 import { SystemAgentNeo4jRepository } from './system-agent.neo4j.repository';
 import { SystemAgentRepository } from './system-agent.repository';
@@ -49,6 +50,7 @@ import { UserService } from './user.service';
       provide: SystemAgentRepository,
     },
     AddActorLabelMigration,
+    AddUserNameLabelMigration,
   ],
   exports: [
     UserService,

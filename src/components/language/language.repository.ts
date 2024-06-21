@@ -17,7 +17,7 @@ import {
   Session,
   UnsecuredDto,
 } from '~/common';
-import { DtoRepository, UniquenessError } from '~/core/database';
+import { DtoRepository, OnIndex, UniquenessError } from '~/core/database';
 import {
   ACTIVE,
   any,
@@ -27,6 +27,7 @@ import {
   defineSorters,
   exp,
   filter,
+  FullTextIndex,
   matchChangesetAndChangedProps,
   matchProjectScopedRoles,
   matchProjectSens,
@@ -268,9 +269,23 @@ export class LanguageRepository extends DtoRepository<
       .first();
     return !!res;
   }
+
+  @OnIndex('schema')
+  private async createSchemaIndexes() {
+    await this.db.query().apply(NameIndex.create()).run();
+  }
 }
 
 export const languageFilters = filter.define(() => LanguageFilters, {
+  name: filter.fullText({
+    index: () => NameIndex,
+    matchToNode: (q) =>
+      q.match([
+        node('node', 'Language'),
+        relation('out', '', undefined, ACTIVE),
+        node('match'),
+      ]),
+  }),
   sensitivity: filter.stringListProp(),
   leastOfThese: filter.propVal(),
   isSignLanguage: filter.propVal(),
@@ -355,3 +370,10 @@ export const languageSorters = defineSorters(Language, {
 });
 
 const ethnologueSorters = defineSorters(EthnologueLanguage, {});
+
+const NameIndex = FullTextIndex({
+  indexName: 'LanguageName',
+  labels: ['LanguageName', 'LanguageDisplayName'],
+  properties: 'value',
+  analyzer: 'standard-folding',
+});

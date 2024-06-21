@@ -1,6 +1,7 @@
-import { entries, Nil } from '@seedcompany/common';
+import { cleanSplit, entries, Nil } from '@seedcompany/common';
 import {
   comparisions,
+  greaterThan,
   inArray,
   isNull,
   node,
@@ -14,6 +15,9 @@ import { Comparator } from 'cypher-query-builder/dist/typings/clauses/where-comp
 import { identity, isFunction } from 'lodash';
 import { AbstractClass, ConditionalKeys } from 'type-fest';
 import { DateTimeFilter } from '~/common';
+import { variable } from '../query-augmentation/condition-variables';
+import { collect } from './cypher-functions';
+import { escapeLuceneSyntax, FullTextIndex } from './full-text';
 import { ACTIVE } from './matching';
 import { WhereAndList } from './where-and-list';
 import { path as pathPattern } from './where-path';
@@ -232,3 +236,80 @@ export const sub =
           .return(`true as ${key}FiltersApplied`),
       )
       .with('*');
+
+export const fullText =
+  ({
+    index,
+    normalizeInput,
+    separateQueryForEachWord,
+    escapeLucene = true,
+    toLucene,
+    minScore = 0,
+    matchToNode,
+  }: {
+    index: () => FullTextIndex;
+    normalizeInput?: (input: string) => string;
+    separateQueryForEachWord?: boolean;
+    escapeLucene?: boolean;
+    toLucene?: (input: string) => string;
+    minScore?: number;
+    matchToNode: (query: Query) => Query;
+  }) =>
+  <T, K extends ConditionalKeys<T, string | undefined>>({
+    value,
+    key: field,
+    query,
+  }: BuilderArgs<T, K>) => {
+    if (!value || typeof value !== 'string') {
+      return null;
+    }
+
+    const normalized = normalizeInput
+      ? normalizeInput(value as string)
+      : (value as string);
+
+    let input = separateQueryForEachWord
+      ? cleanSplit(normalized, ' ')
+      : [normalized];
+
+    input = escapeLucene ? input.map(escapeLuceneSyntax) : input;
+
+    toLucene ??= (query) =>
+      // Default to each word being matched.
+      // And for each word...
+      cleanSplit(query, ' ')
+        .map((term) => {
+          const adjusted = [
+            // fuzzy (distance) search with boosted priority
+            `${term}~^2`,
+            // word prefixes in case the distance is too great
+            `*${term}*`,
+          ].join(' OR ');
+          return `(${adjusted})`;
+        })
+        .join(' AND ');
+
+    query
+      .subQuery((q) =>
+        q
+          .unwind(input.map(toLucene!), 'query')
+          .subQuery('query', (qq) =>
+            qq
+              .call(
+                index()
+                  .search(variable('query'), { limit: 100 })
+                  .yield({ node: 'match', score: true }),
+              )
+              .where({ score: greaterThan(minScore) })
+              .apply(matchToNode)
+              .return(collect('distinct node').as(`${field}Matches`)),
+          )
+          .return(collect(`${field}Matches`).as(`${field}MatchSets`)),
+      )
+      .with('*');
+
+    return {
+      node: () =>
+        `all(${`${field}Matches`} in ${`${field}MatchSets`} where node in ${`${field}Matches`})`,
+    };
+  };
