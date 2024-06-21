@@ -15,6 +15,7 @@ import { Comparator } from 'cypher-query-builder/dist/typings/clauses/where-comp
 import { identity, isFunction } from 'lodash';
 import { AbstractClass, ConditionalKeys } from 'type-fest';
 import { DateTimeFilter } from '~/common';
+import { variable } from '../query-augmentation/condition-variables';
 import { collect } from './cypher-functions';
 import { escapeLuceneSyntax, FullTextIndex } from './full-text';
 import { ACTIVE } from './matching';
@@ -240,6 +241,7 @@ export const fullText =
   ({
     index,
     normalizeInput,
+    separateQueryForEachWord,
     escapeLucene = true,
     toLucene,
     minScore = 0,
@@ -247,6 +249,7 @@ export const fullText =
   }: {
     index: () => FullTextIndex;
     normalizeInput?: (input: string) => string;
+    separateQueryForEachWord?: boolean;
     escapeLucene?: boolean;
     toLucene?: (input: string) => string;
     minScore?: number;
@@ -261,16 +264,20 @@ export const fullText =
       return null;
     }
 
-    let input: string = value;
+    const normalized = normalizeInput
+      ? normalizeInput(value as string)
+      : (value as string);
 
-    input = normalizeInput ? normalizeInput(input) : input;
-    input = escapeLucene ? escapeLuceneSyntax(input) : input;
+    let input = separateQueryForEachWord
+      ? cleanSplit(normalized, ' ')
+      : [normalized];
 
-    const lucene =
-      toLucene?.(input) ??
+    input = escapeLucene ? input.map(escapeLuceneSyntax) : input;
+
+    toLucene ??= (query) =>
       // Default to each word being matched.
       // And for each word...
-      cleanSplit(input, ' ')
+      cleanSplit(query, ' ')
         .map((term) => {
           const adjusted = [
             // fuzzy (distance) search with boosted priority
@@ -285,16 +292,24 @@ export const fullText =
     query
       .subQuery((q) =>
         q
-          .call(
-            index()
-              .search(lucene, { limit: 100 })
-              .yield({ node: 'match', score: true }),
+          .unwind(input.map(toLucene!), 'query')
+          .subQuery('query', (qq) =>
+            qq
+              .call(
+                index()
+                  .search(variable('query'), { limit: 100 })
+                  .yield({ node: 'match', score: true }),
+              )
+              .where({ score: greaterThan(minScore) })
+              .apply(matchToNode)
+              .return(collect('distinct node').as(`${field}Matches`)),
           )
-          .where({ score: greaterThan(minScore) })
-          .apply(matchToNode)
-          .return(collect('distinct node').as(`${field}Matches`)),
+          .return(collect(`${field}Matches`).as(`${field}MatchSets`)),
       )
       .with('*');
 
-    return { node: inArray(`${field}Matches`, true) };
+    return {
+      node: () =>
+        `all(${`${field}Matches`} in ${`${field}MatchSets`} where node in ${`${field}Matches`})`,
+    };
   };

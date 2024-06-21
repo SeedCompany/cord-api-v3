@@ -546,6 +546,11 @@ export const engagementFilters = filter.define(() => EngagementFilters, {
     // UI joins project & language/intern names with dash
     // Remove it from search if users type it
     normalizeInput: (v) => v.replaceAll(/ -/g, ''),
+    // Treat each word as a separate search term
+    // Each word could point to a different node
+    // i.e. "project - language"
+    separateQueryForEachWord: true,
+    minScore: 0.9,
   }),
   projectId: filter.pathExists((id) => [
     node('node'),

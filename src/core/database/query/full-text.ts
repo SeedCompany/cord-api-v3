@@ -3,6 +3,7 @@ import { Query } from 'cypher-query-builder';
 import { pickBy } from 'lodash';
 import { LiteralUnion } from 'type-fest';
 import { procedure } from '../query-augmentation/call';
+import { Variable } from '../query-augmentation/condition-variables';
 import { CypherExpression, exp, isExp } from './cypher-expression';
 import { db } from './cypher-functions';
 
@@ -63,7 +64,7 @@ export const FullTextIndex = (config: {
      * @see https://lucene.apache.org/core/2_9_4/queryparsersyntax.html
      */
     search: (
-      query: string,
+      query: string | Variable,
       options: {
         skip?: number;
         limit?: number;
@@ -72,7 +73,7 @@ export const FullTextIndex = (config: {
     ) => {
       // fallback to "" when no query is given, so that no results are
       // returned instead of the procedure failing
-      query = query.trim() || '""';
+      query = typeof query === 'string' ? query.trim() || '""' : query;
 
       return db.index.fulltext.queryNodes(indexName, query, options);
     },
@@ -85,8 +86,8 @@ export const escapeLuceneSyntax = (query: string) =>
     .replace(/\b(OR|AND|NOT)\b/g, (char) => `"${char}"`);
 
 export const IndexFullTextQueryNodes = (
-  indexName: string,
-  query: string,
+  indexName: string | Variable,
+  query: string | Variable,
   options?:
     | {
         skip?: number;
