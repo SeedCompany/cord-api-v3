@@ -7,23 +7,19 @@ import {
   Match,
   Merge,
   NodePattern,
+  PatternClause,
   Raw,
   Return,
+  TermListClause,
   With,
 } from 'cypher-query-builder';
-import type { PatternClause as TSPatternClause } from 'cypher-query-builder/dist/typings/clauses/pattern-clause';
-import type {
-  Term,
-  TermListClause as TSTermListClause,
-} from 'cypher-query-builder/dist/typings/clauses/term-list-clause';
+import type { Term } from 'cypher-query-builder/dist/typings/clauses/term-list-clause';
 import type { Parameter } from 'cypher-query-builder/dist/typings/parameter-bag';
 import { camelCase, isPlainObject } from 'lodash';
-import { Class } from 'type-fest';
 import { isExp } from '../query';
 
 // Add line breaks for each pattern when there's multiple per statement
 // And ignore empty patterns
-const PatternClause = Object.getPrototypeOf(Create) as Class<TSPatternClause>;
 PatternClause.prototype.build = function build() {
   // @ts-expect-error private but we are using it
   const patternStrings = this.patterns.map((pattern) =>
@@ -31,9 +27,6 @@ PatternClause.prototype.build = function build() {
   );
   return patternStrings.filter(isNotFalsy).join(',\n    ');
 };
-
-// This class is not exported so grab it a hacky way
-const TermListClause = Object.getPrototypeOf(With) as Class<TSTermListClause>;
 
 // Change With & Return clauses to not alias as same variable since cypher as
 // problems with it sometimes.
@@ -76,7 +69,7 @@ TermListClause.prototype.stringifyTerm = function stringifyTerm(term: Term) {
 // If the term list clause has no terms render empty string instead of broken cypher
 for (const Cls of [With, Return]) {
   const origBuild = Cls.prototype.build;
-  Cls.prototype.build = function build(this: TSTermListClause) {
+  Cls.prototype.build = function build(this: TermListClause) {
     if (TermListClause.prototype.build.call(this) === '') {
       return '';
     }
@@ -92,7 +85,7 @@ Raw.prototype.build = function build() {
 // If the pattern clause has no patterns render empty string instead of broken cypher
 for (const Cls of [Match, Create, Merge]) {
   const origBuild = Cls.prototype.build;
-  Cls.prototype.build = function build(this: TSPatternClause) {
+  Cls.prototype.build = function build(this: PatternClause) {
     if (PatternClause.prototype.build.call(this) === '') {
       return '';
     }
