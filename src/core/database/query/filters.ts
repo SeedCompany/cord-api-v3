@@ -14,6 +14,8 @@ import { Comparator } from 'cypher-query-builder/dist/typings/clauses/where-comp
 import { identity, isFunction } from 'lodash';
 import { AbstractClass, ConditionalKeys } from 'type-fest';
 import { DateTimeFilter } from '~/common';
+import { collect } from './cypher-functions';
+import { escapeLuceneSyntax, FullTextIndex } from './full-text';
 import { ACTIVE } from './matching';
 import { WhereAndList } from './where-and-list';
 import { path as pathPattern } from './where-path';
@@ -232,3 +234,35 @@ export const sub =
           .return(`true as ${key}FiltersApplied`),
       )
       .with('*');
+
+export const fullText =
+  ({
+    index,
+    matchToNode,
+  }: {
+    index: () => FullTextIndex;
+    matchToNode: (query: Query) => Query;
+  }) =>
+  <T, K extends ConditionalKeys<T, string | undefined>>({
+    value: input,
+    key: field,
+    query,
+  }: BuilderArgs<T, K>) => {
+    if (!input || typeof input !== 'string') {
+      return null;
+    }
+    const escaped = escapeLuceneSyntax(input);
+
+    const lucene = `*${escaped}*`;
+
+    query
+      .subQuery((q) =>
+        q
+          .call(index().search(lucene, { limit: 100 }).yield({ node: 'match' }))
+          .apply(matchToNode)
+          .return(collect('distinct node').as(`${field}Matches`)),
+      )
+      .with('*');
+
+    return { node: inArray(`${field}Matches`, true) };
+  };

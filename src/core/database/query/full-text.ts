@@ -6,6 +6,8 @@ import { procedure } from '../query-augmentation/call';
 import { CypherExpression, exp, isExp } from './cypher-expression';
 import { db } from './cypher-functions';
 
+export type FullTextIndex = ReturnType<typeof FullTextIndex>;
+
 /**
  * @see https://neo4j.com/docs/cypher-manual/current/indexes/semantic-indexes/full-text-indexes/
  */
