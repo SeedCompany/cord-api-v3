@@ -2,11 +2,12 @@ import { ServerException } from '~/common';
 import { EventsHandler, IEventHandler, ILogger, Logger } from '~/core';
 import { DatabaseService } from '~/core/database';
 import { IProject, ProjectStatus } from '../dto';
-import { ProjectCreatedEvent, ProjectUpdatedEvent } from '../events';
+import { ProjectCreatedEvent } from '../events';
+import { ProjectTransitionedEvent } from '../workflow/events/project-transitioned.event';
 
-type SubscribedEvent = ProjectCreatedEvent | ProjectUpdatedEvent;
+type SubscribedEvent = ProjectCreatedEvent | ProjectTransitionedEvent;
 
-@EventsHandler(ProjectCreatedEvent, ProjectUpdatedEvent)
+@EventsHandler(ProjectCreatedEvent, ProjectTransitionedEvent)
 export class SetInitialMouEnd implements IEventHandler<SubscribedEvent> {
   constructor(
     private readonly db: DatabaseService,
@@ -19,10 +20,10 @@ export class SetInitialMouEnd implements IEventHandler<SubscribedEvent> {
       event: event.constructor.name,
     });
 
-    const project = 'project' in event ? event.project : event.updated;
+    const { project } = event;
 
     if (
-      event instanceof ProjectUpdatedEvent && // allow setting initial if creating with non-in-dev status
+      event instanceof ProjectTransitionedEvent && // allow setting initial if creating with non-in-dev status
       project.status !== ProjectStatus.InDevelopment
     ) {
       return;
@@ -40,8 +41,8 @@ export class SetInitialMouEnd implements IEventHandler<SubscribedEvent> {
         },
       });
 
-      if (event instanceof ProjectUpdatedEvent) {
-        event.updated = updatedProject;
+      if (event instanceof ProjectTransitionedEvent) {
+        event.project = updatedProject;
       } else {
         event.project = updatedProject;
       }

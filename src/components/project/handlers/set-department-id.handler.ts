@@ -1,12 +1,18 @@
 import { ClientException, ID, ServerException, UnsecuredDto } from '~/common';
 import { ConfigService, EventsHandler, IEventHandler } from '~/core';
 import { DatabaseService } from '~/core/database';
-import { Project, ProjectStep, ProjectType } from '../dto';
-import { ProjectUpdatedEvent } from '../events';
+import {
+  Project,
+  ProjectStatus,
+  ProjectStep,
+  ProjectType,
+  stepToStatus,
+} from '../dto';
+import { ProjectTransitionedEvent } from '../workflow/events/project-transitioned.event';
 
-type SubscribedEvent = ProjectUpdatedEvent;
+type SubscribedEvent = ProjectTransitionedEvent;
 
-@EventsHandler(ProjectUpdatedEvent)
+@EventsHandler(ProjectTransitionedEvent)
 export class SetDepartmentId implements IEventHandler<SubscribedEvent> {
   constructor(
     private readonly db: DatabaseService,
@@ -18,23 +24,33 @@ export class SetDepartmentId implements IEventHandler<SubscribedEvent> {
       return;
     }
 
+    const step = event.workflowEvent.to;
+    const status = stepToStatus(step);
+
     const shouldSetDepartmentId =
-      event.updates.step === ProjectStep.PendingFinanceConfirmation &&
-      !event.updated.departmentId;
+      !event.project.departmentId &&
+      ProjectStatus.entries.findIndex((s) => s.value === status) <=
+        ProjectStatus.entries.findIndex(
+          (s) => s.value === ProjectStatus.Active,
+        ) &&
+      ProjectStep.entries.findIndex((s) => s.value === step) >=
+        ProjectStep.entries.findIndex(
+          (s) => s.value === ProjectStep.PendingFinanceConfirmation,
+        );
     if (!shouldSetDepartmentId) {
       return;
     }
 
-    if (!event.updated.primaryLocation) {
+    if (!event.project.primaryLocation) {
       throw new ClientException('Primary Location on project must be set');
     }
 
     try {
       const departmentId = await this.assignDepartmentIdForProject(
-        event.updated,
+        event.project,
       );
-      event.updated = {
-        ...event.updated,
+      event.project = {
+        ...event.project,
         departmentId,
       };
     } catch (exception) {

@@ -1,12 +1,19 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
-import { ID, Session, UnsecuredDto } from '~/common';
-import { IEventBus, ResourceLoader } from '~/core';
+import {
+  ID,
+  MaybeSecured,
+  Session,
+  UnsecuredDto,
+  unwrapSecured,
+} from '~/common';
+import { IEventBus } from '~/core';
 import {
   findTransition,
   WorkflowService,
 } from '../../workflow/workflow.service';
 import { Project, ProjectStep } from '../dto';
+import { ProjectService } from '../project.service';
 import {
   ExecuteProjectTransitionInput,
   ProjectWorkflowEvent as WorkflowEvent,
@@ -20,7 +27,8 @@ export class ProjectWorkflowService extends WorkflowService(
   () => ProjectWorkflow,
 ) {
   constructor(
-    private readonly resources: ResourceLoader,
+    @Inject(forwardRef(() => ProjectService))
+    private readonly projects: ProjectService & {},
     private readonly repo: ProjectWorkflowRepository,
     private readonly eventBus: IEventBus,
     private readonly moduleRef: ModuleRef,
@@ -48,9 +56,12 @@ export class ProjectWorkflowService extends WorkflowService(
     };
   }
 
-  async getAvailableTransitions(project: Project, session: Session) {
+  async getAvailableTransitions(
+    project: MaybeSecured<Project>,
+    session: Session,
+  ) {
     return await this.resolveAvailable(
-      project.step.value!,
+      unwrapSecured(project.step)!,
       { project, moduleRef: this.moduleRef },
       { ...project, project },
       session,
@@ -63,13 +74,7 @@ export class ProjectWorkflowService extends WorkflowService(
   ) {
     const { project: projectId, notes } = input;
 
-    const { ProjectLoader } = await import('../project.loader');
-    const projects = await this.resources.getLoader(ProjectLoader);
-    const loaderKey = {
-      id: projectId,
-      view: { active: true },
-    } as const;
-    const previous = await projects.load(loaderKey);
+    const previous = await this.projects.readOneUnsecured(projectId, session);
 
     const next =
       this.getBypassIfValid(input, session) ??
@@ -89,18 +94,18 @@ export class ProjectWorkflowService extends WorkflowService(
       session,
     );
 
-    projects.clear(loaderKey);
-    const updated = await projects.load(loaderKey);
+    const updated = await this.projects.readOneUnsecured(projectId, session);
 
     const event = new ProjectTransitionedEvent(
       updated,
-      previous.step.value!,
+      previous.step,
       next,
       unsecuredEvent,
+      session,
     );
     await this.eventBus.publish(event);
 
-    return updated;
+    return this.projects.secure(updated, session);
   }
 
   /** @deprecated */
