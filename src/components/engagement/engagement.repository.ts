@@ -32,6 +32,7 @@ import {
   createRelationships,
   defineSorters,
   filter,
+  FullTextIndex,
   INACTIVE,
   matchChangesetAndChangedProps,
   matchProjectSens,
@@ -514,6 +515,12 @@ export class EngagementRepository extends CommonRepository {
   private createIndexes() {
     return this.getConstraintsFor(IEngagement);
   }
+  @OnIndex('schema')
+  private async createSchemaIndexes() {
+    await this.db.query().apply(NameIndex.create()).run();
+    await this.db.query().apply(LanguageNameIndex.create()).run();
+    await this.db.query().apply(InternshipNameIndex.create()).run();
+  }
 }
 
 export const engagementFilters = filter.define(() => EngagementFilters, {
@@ -526,6 +533,17 @@ export const engagementFilters = filter.define(() => EngagementFilters, {
     ),
   }),
   status: filter.stringListProp(),
+  name: filter.fullText({
+    index: () => NameIndex,
+    matchToNode: (q) =>
+      q.match([
+        node('node', 'Engagement'),
+        relation('either', '', undefined, ACTIVE),
+        node('', 'BaseNode'),
+        relation('out', '', undefined, ACTIVE),
+        node('match'),
+      ]),
+  }),
   projectId: filter.pathExists((id) => [
     node('node'),
     relation('in', '', 'engagement'),
@@ -658,3 +676,22 @@ const multiPropsAsSortString = (props: string[]) =>
     ' + ',
     props.map((prop) => `coalesce(${prop}.value, "")`),
   ) + ' as sortValue';
+
+const NameIndex = FullTextIndex({
+  indexName: 'EngagementName',
+  labels: ['ProjectName', 'LanguageName', 'LanguageDisplayName', 'UserName'],
+  properties: 'value',
+  analyzer: 'standard-folding',
+});
+const LanguageNameIndex = FullTextIndex({
+  indexName: 'LanguageEngagementName',
+  labels: ['ProjectName', 'LanguageName', 'LanguageDisplayName'],
+  properties: 'value',
+  analyzer: 'standard-folding',
+});
+const InternshipNameIndex = FullTextIndex({
+  indexName: 'InternshipEngagementName',
+  labels: ['ProjectName', 'UserName'],
+  properties: 'value',
+  analyzer: 'standard-folding',
+});

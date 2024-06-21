@@ -24,6 +24,11 @@ export abstract class EngagementFilters {
   })
   readonly type?: 'language' | 'internship';
 
+  @Field({
+    nullable: true,
+  })
+  readonly name?: string;
+
   @Field(() => [EngagementStatus], {
     nullable: true,
   })
