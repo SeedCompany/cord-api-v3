@@ -11,11 +11,11 @@ import {
 } from 'cypher-query-builder';
 import { PatternCollection } from 'cypher-query-builder/dist/typings/clauses/pattern-clause';
 import { Comparator } from 'cypher-query-builder/dist/typings/clauses/where-comparators';
-import { AndConditions } from 'cypher-query-builder/src/clauses/where-utils';
 import { identity, isFunction } from 'lodash';
 import { AbstractClass, ConditionalKeys } from 'type-fest';
 import { DateTimeFilter } from '~/common';
 import { ACTIVE } from './matching';
+import { WhereAndList } from './where-and-list';
 import { path as pathPattern } from './where-path';
 
 export type Builder<T, K extends keyof T = keyof T> = (
@@ -55,7 +55,7 @@ export const builder =
     const type = filters.constructor === Object ? null : filters.constructor;
     query.comment(type?.name ?? 'Filters');
 
-    let conditions: AndConditions = {};
+    const conditions = [];
     const afters: Array<(query: Query) => Query> = [];
     for (const key of Object.keys(builders)) {
       const value = filters[key];
@@ -70,11 +70,11 @@ export const builder =
         afters.push(res);
         continue;
       }
-      conditions = { ...conditions, ...res };
+      conditions.push(res);
     }
 
-    if (Object.keys(conditions).length > 0) {
-      query.where(conditions);
+    if (conditions.length > 0) {
+      query.where(new WhereAndList(conditions));
     }
     for (const after of afters) {
       after(query);
