@@ -13,6 +13,7 @@ export const ProjectStatus = makeEnum({
     'Completed',
     'DidNotDevelop',
   ],
+  exposeOrder: true,
 });
 
 const mapping: Record<ProjectStep, ProjectStatus> = {

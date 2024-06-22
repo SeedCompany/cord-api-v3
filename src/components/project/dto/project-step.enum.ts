@@ -37,6 +37,7 @@ export const ProjectStep = makeEnum({
     'Terminated',
     'Completed',
   ],
+  exposeOrder: true,
 });
 
 @ObjectType({
