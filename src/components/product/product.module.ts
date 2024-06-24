@@ -4,6 +4,7 @@ import { FileModule } from '../file/file.module';
 import { ScriptureModule } from '../scripture';
 import { StoryModule } from '../story/story.module';
 import * as handlers from './handlers';
+import { BackfillEmptyMediumsMigration } from './migrations/backfill-empty-mediums.migration';
 import { FixNaNTotalVerseEquivalentsMigration } from './migrations/fix-nan-total-verse-equivalents.migration';
 import { ProducibleResolver } from './producible.resolver';
 import { ProductExtractor } from './product-extractor.service';
@@ -27,6 +28,7 @@ import { ProductService } from './product.service';
     ProductRepository,
     ProductExtractor,
     FixNaNTotalVerseEquivalentsMigration,
+    BackfillEmptyMediumsMigration,
     ...Object.values(handlers),
   ],
   exports: [ProductService],
