@@ -8,7 +8,7 @@ import {
   Query,
   relation,
 } from 'cypher-query-builder';
-import { difference, pickBy } from 'lodash';
+import { difference, pickBy, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { MergeExclusive } from 'type-fest';
 import {
@@ -609,6 +609,26 @@ export const engagementSorters = defineSorters(IEngagement, {
       .match([node('project'), relation('out', '', 'engagement'), node('node')])
       .apply(matchProjectSens())
       .return<{ sortValue: unknown }>('sensitivity as sortValue'),
+  ...mapValues.fromList(
+    ['startDate', 'endDate'],
+    (field) => (query: Query) =>
+      query
+        .optionalMatch([
+          node('node'),
+          relation('out', '', `${field}Override`, ACTIVE),
+          node('override', 'Property'),
+        ])
+        .optionalMatch([
+          node('node'),
+          relation('in', '', 'engagement'),
+          node('project'),
+          relation('out', '', `mou${upperFirst(field.slice(0, -4))}`, ACTIVE),
+          node('projProp'),
+        ])
+        .return<{ sortValue: unknown }>(
+          coalesce('override.value', 'projProp.value').as('sortValue'),
+        ),
+  ).asRecord,
   // eslint-disable-next-line @typescript-eslint/naming-convention
   'language.*': (query, input) =>
     query
