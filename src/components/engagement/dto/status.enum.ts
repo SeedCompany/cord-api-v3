@@ -11,16 +11,15 @@ export const EngagementStatus = makeEnum({
     { value: 'Rejected', terminal: true },
 
     'Active',
+    'ActiveChangedPlan',
 
     'DiscussingTermination',
     'DiscussingReactivation',
     'DiscussingChangeToPlan',
     'DiscussingSuspension',
-
-    'FinalizingCompletion',
-    'ActiveChangedPlan',
     'Suspended',
 
+    'FinalizingCompletion',
     { value: 'Terminated', terminal: true },
     { value: 'Completed', terminal: true },
 
@@ -32,6 +31,7 @@ export const EngagementStatus = makeEnum({
       }),
     ),
   ],
+  exposeOrder: true,
   extra: ({ entries }) => ({
     Terminal: setOf(entries.flatMap((v) => (v.terminal ? [v.value] : []))),
     Ongoing: setOf(entries.flatMap((v) => (!v.terminal ? [v.value] : []))),
