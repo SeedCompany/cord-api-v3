@@ -10,6 +10,7 @@ export type Sensitivity = EnumType<typeof Sensitivity>;
 export const Sensitivity = makeEnum({
   name: 'Sensitivity',
   values: ['Low', 'Medium', 'High'],
+  exposeOrder: true,
 });
 
 export const SensitivityField = (options: FieldOptions = {}) =>
