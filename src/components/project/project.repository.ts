@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { inArray, node, Query, relation } from 'cypher-query-builder';
+import { inArray, node, not, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   ID,
@@ -23,6 +23,7 @@ import {
   matchPropsAndProjectSensAndScopedRoles,
   merge,
   paginate,
+  path,
   requestingUser,
   SortCol,
   sortWith,
@@ -351,18 +352,20 @@ export const projectSorters = defineSorters(IProject, {
       ])
       .return<SortCol>('count(engagement) as sortValue'),
   // eslint-disable-next-line @typescript-eslint/naming-convention
-  'primaryLocation.*': (query, input) =>
-    query
-      .with('node as proj')
-      .match([
-        node('proj'),
-        relation('out', '', 'primaryLocation', ACTIVE),
-        node('node'),
-      ])
+  'primaryLocation.*': (query, input) => {
+    const getPath = (anon = false) => [
+      node('project'),
+      relation('out', '', 'primaryLocation', ACTIVE),
+      node(anon ? '' : 'node'),
+    ];
+    return query
+      .with('node as project')
+      .match(getPath())
       .apply(sortWith(locationSorters, input))
       .union()
       .with('node')
-      .with('node as proj')
-      .raw('where not exists((node)-[:primaryLocation { active: true }]->())')
-      .return<SortCol>('null as sortValue'),
+      .with('node as project')
+      .where(not(path(getPath(true))))
+      .return<SortCol>('null as sortValue');
+  },
 });
