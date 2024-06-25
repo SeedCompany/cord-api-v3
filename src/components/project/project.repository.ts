@@ -31,6 +31,7 @@ import {
 } from '~/core/database/query';
 import { Privileges } from '../authorization';
 import { locationSorters } from '../location/location.repository';
+import { partnershipSorters } from '../partnership/partnership.repository';
 import {
   CreateProject,
   IProject,
@@ -371,6 +372,25 @@ export const projectSorters = defineSorters(IProject, {
       .with('node as project')
       .match(getPath())
       .apply(sortWith(locationSorters, input))
+      .union()
+      .with('node')
+      .with('node as project')
+      .where(not(path(getPath(true))))
+      .return<SortCol>('null as sortValue');
+  },
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  'primaryPartnership.*': (query, input) => {
+    const getPath = (anon = false) => [
+      node('project'),
+      relation('out', '', 'partnership', ACTIVE),
+      node(anon ? '' : 'node', 'Partnership'),
+      relation('out', '', 'primary', ACTIVE),
+      node('', 'Property', { value: variable('true') }),
+    ];
+    return query
+      .with('node as project')
+      .match(getPath())
+      .apply(sortWith(partnershipSorters, input))
       .union()
       .with('node')
       .with('node as project')
