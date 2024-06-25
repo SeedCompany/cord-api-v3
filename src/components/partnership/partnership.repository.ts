@@ -35,6 +35,7 @@ import {
 } from '~/core/database/query';
 import { FileService } from '../file';
 import { FileId } from '../file/dto';
+import { partnerFilters, partnerSorters } from '../partner/partner.repository';
 import {
   CreatePartnership,
   Partnership,
@@ -405,6 +406,26 @@ export class PartnershipRepository extends DtoRepository<
 
 export const partnershipFilters = filter.define(() => PartnershipFilters, {
   projectId: filter.skip,
+  partner: filter.sub(() => partnerFilters)((sub) =>
+    sub
+      .with('node as partnership')
+      .match([
+        node('partnership'),
+        relation('out', '', 'partner'),
+        node('node', 'Partner'),
+      ]),
+  ),
 });
 
-export const partnershipSorters = defineSorters(Partnership, {});
+export const partnershipSorters = defineSorters(Partnership, {
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  'partner.*': (query, input) =>
+    query
+      .with('node as partnership')
+      .match([
+        node('partnership'),
+        relation('out', '', 'partner'),
+        node('node', 'Partner'),
+      ])
+      .apply(sortWith(partnerSorters, input)),
+});
