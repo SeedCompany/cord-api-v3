@@ -16,6 +16,7 @@ import {
   collect,
   createNode,
   createRelationships,
+  defineSorters,
   filter as filters,
   matchProjectScopedRoles,
   matchProjectSens,
@@ -25,9 +26,15 @@ import {
   paginate,
   rankSens,
   requestingUser,
-  sorting,
+  sortWith,
 } from '~/core/database/query';
-import { CreatePartner, Partner, PartnerListInput, UpdatePartner } from './dto';
+import {
+  CreatePartner,
+  Partner,
+  PartnerFilters,
+  PartnerListInput,
+  UpdatePartner,
+} from './dto';
 
 @Injectable()
 export class PartnerRepository extends DtoRepository<
@@ -262,28 +269,12 @@ export class PartnerRepository extends DtoRepository<
         );
   }
 
-  async list({ filter, ...input }: PartnerListInput, session: Session) {
+  async list(input: PartnerListInput, session: Session) {
     const result = await this.db
       .query()
       .matchNode('node', 'Partner')
-      .match([
-        ...(filter?.userId && session.userId
-          ? [
-              node('node'),
-              relation('out', '', 'organization', ACTIVE),
-              node('', 'Organization'),
-              relation('in', '', 'organization', ACTIVE),
-              node('user', 'User', { id: filter.userId }),
-            ]
-          : []),
-      ])
       .match(requestingUser(session))
-      .apply(
-        filters.builder(filter ?? {}, {
-          pinned: filters.isPinned,
-          userId: filters.skip, // already applied above
-        }),
-      )
+      .apply(partnerFilters(input.filter))
       .apply(
         this.privileges.forUser(session).filterToReadable({
           wrapContext: (inner) => (query) =>
@@ -298,22 +289,33 @@ export class PartnerRepository extends DtoRepository<
               .apply(oncePerProject(inner)),
         }),
       )
-      .apply(
-        sorting(Partner, input, {
-          name: (query) =>
-            query
-              .match([
-                node('node'),
-                relation('out', '', 'organization', ACTIVE),
-                node('organization', 'Organization'),
-                relation('out', '', 'name', ACTIVE),
-                node('prop', 'Property'),
-              ])
-              .return<{ sortValue: string }>('prop.value as sortValue'),
-        }),
-      )
+      .apply(sortWith(partnerSorters, input))
       .apply(paginate(input, this.hydrate(session)))
       .first();
     return result!; // result from paginate() will always have 1 row.
   }
 }
+
+export const partnerFilters = filters.define(() => PartnerFilters, {
+  pinned: filters.isPinned,
+  userId: filters.pathExists((id) => [
+    node('node'),
+    relation('out', '', 'organization', ACTIVE),
+    node('', 'Organization'),
+    relation('in', '', 'organization', ACTIVE),
+    node('', 'User', { id }),
+  ]),
+});
+
+export const partnerSorters = defineSorters(Partner, {
+  name: (query) =>
+    query
+      .match([
+        node('node'),
+        relation('out', '', 'organization', ACTIVE),
+        node('organization', 'Organization'),
+        relation('out', '', 'name', ACTIVE),
+        node('prop', 'Property'),
+      ])
+      .return<{ sortValue: string }>('prop.value as sortValue'),
+});

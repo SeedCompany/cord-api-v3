@@ -11,6 +11,8 @@ import { DtoRepository } from '~/core/database';
 import {
   ACTIVE,
   createNode,
+  defineSorters,
+  filter,
   matchProjectScopedRoles,
   matchProjectSens,
   matchProps,
@@ -19,11 +21,12 @@ import {
   paginate,
   rankSens,
   requestingUser,
-  sorting,
+  sortWith,
 } from '~/core/database/query';
 import {
   CreateOrganization,
   Organization,
+  OrganizationFilters,
   OrganizationListInput,
   UpdateOrganization,
 } from './dto';
@@ -111,20 +114,12 @@ export class OrganizationRepository extends DtoRepository<
         );
   }
 
-  async list({ filter, ...input }: OrganizationListInput, session: Session) {
+  async list(input: OrganizationListInput, session: Session) {
     const query = this.db
       .query()
       .matchNode('node', 'Organization')
-      .match([
-        ...(filter?.userId && session.userId
-          ? [
-              node('node'),
-              relation('in', '', 'organization', ACTIVE),
-              node('user', 'User', { id: filter.userId }),
-            ]
-          : []),
-      ])
       .match(requestingUser(session))
+      .apply(organizationFilters(input.filter))
       .apply(
         this.privileges.forUser(session).filterToReadable({
           wrapContext: (inner) => (query) =>
@@ -141,8 +136,18 @@ export class OrganizationRepository extends DtoRepository<
               .apply(oncePerProject(inner)),
         }),
       )
-      .apply(sorting(Organization, input))
+      .apply(sortWith(organizationSorters, input))
       .apply(paginate(input, this.hydrate(session)));
     return (await query.first())!; // result from paginate() will always have 1 row.
   }
 }
+
+export const organizationFilters = filter.define(() => OrganizationFilters, {
+  userId: filter.pathExists((id) => [
+    node('node'),
+    relation('in', '', 'organization', ACTIVE),
+    node('', 'User', { id }),
+  ]),
+});
+
+export const organizationSorters = defineSorters(Organization, {});
