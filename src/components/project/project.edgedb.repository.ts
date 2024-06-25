@@ -27,6 +27,11 @@ const hydrate = e.shape(e.Project, (project) => ({
   __typename: project.__type__.name.slice(9, null),
 
   rootDirectory: true,
+  primaryPartnership: e
+    .select(project.partnerships, (p) => ({
+      filter: e.op(p.primary, '=', true),
+    }))
+    .assert_single(),
   primaryLocation: true,
   marketingLocation: true,
   marketingRegionOverride: true,

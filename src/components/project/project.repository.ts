@@ -27,6 +27,7 @@ import {
   requestingUser,
   SortCol,
   sortWith,
+  variable,
 } from '~/core/database/query';
 import { Privileges } from '../authorization';
 import { locationSorters } from '../location/location.repository';
@@ -88,6 +89,13 @@ export class ProjectRepository extends CommonRepository {
         ])
         .optionalMatch([
           node('node'),
+          relation('out', '', 'partnership', ACTIVE),
+          node('primaryPartnership', 'Partnership'),
+          relation('out', '', 'primary', ACTIVE),
+          node('', 'Property', { value: variable('true') }),
+        ])
+        .optionalMatch([
+          node('node'),
           relation('out', '', 'primaryLocation', ACTIVE),
           node('primaryLocation', 'Location'),
         ])
@@ -125,6 +133,7 @@ export class ProjectRepository extends CommonRepository {
             type: 'node.type',
             pinned: 'exists((:User { id: $requestingUser })-[:pinned]->(node))',
             rootDirectory: 'rootDirectory { .id }',
+            primaryPartnership: 'primaryPartnership { .id }',
             primaryLocation: 'primaryLocation { .id }',
             marketingLocation: 'marketingLocation { .id }',
             fieldRegion: 'fieldRegion { .id }',
