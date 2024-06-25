@@ -7,12 +7,13 @@ import {
   Session,
   UnsecuredDto,
 } from '~/common';
-import { DtoRepository } from '~/core/database';
+import { DtoRepository, OnIndex } from '~/core/database';
 import {
   ACTIVE,
   createNode,
   defineSorters,
   filter,
+  FullTextIndex,
   matchProjectScopedRoles,
   matchProjectSens,
   matchProps,
@@ -140,6 +141,11 @@ export class OrganizationRepository extends DtoRepository<
       .apply(paginate(input, this.hydrate(session)));
     return (await query.first())!; // result from paginate() will always have 1 row.
   }
+
+  @OnIndex('schema')
+  private async createSchemaIndexes() {
+    await this.db.query().apply(OrgNameIndex.create()).run();
+  }
 }
 
 export const organizationFilters = filter.define(() => OrganizationFilters, {
@@ -148,6 +154,23 @@ export const organizationFilters = filter.define(() => OrganizationFilters, {
     relation('in', '', 'organization', ACTIVE),
     node('', 'User', { id }),
   ]),
+  name: filter.fullText({
+    index: () => OrgNameIndex,
+    matchToNode: (q) =>
+      q.match([
+        node('node', 'Organization'),
+        relation('out', '', 'name', ACTIVE),
+        node('match'),
+      ]),
+    minScore: 0.8,
+  }),
 });
 
 export const organizationSorters = defineSorters(Organization, {});
+
+const OrgNameIndex = FullTextIndex({
+  indexName: 'OrganizationName',
+  labels: 'OrgName',
+  properties: 'value',
+  analyzer: 'standard-folding',
+});
