@@ -1,5 +1,12 @@
 import { greaterThan, inArray, node, relation } from 'cypher-query-builder';
-import { ACTIVE, filter, matchProjectSens, path } from '~/core/database/query';
+import {
+  ACTIVE,
+  filter,
+  matchProjectSens,
+  path,
+  variable,
+} from '~/core/database/query';
+import { partnershipFilters } from '../partnership/partnership.repository';
 import { ProjectFilters } from './dto';
 import { ProjectNameIndex } from './project.repository';
 
@@ -85,4 +92,15 @@ export const projectFilters = filter.define(() => ProjectFilters, {
             .with('*')
             .where({ sensitivity: inArray(value) })
         : query,
+  primaryPartnership: filter.sub(() => partnershipFilters)((sub) =>
+    sub
+      .with('node as project')
+      .match([
+        node('project'),
+        relation('out', '', 'partnership', ACTIVE),
+        node('node', 'Partnership'),
+        relation('out', '', 'primary', ACTIVE),
+        node('', 'Property', { value: variable('true') }),
+      ]),
+  ),
 });

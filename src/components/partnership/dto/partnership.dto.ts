@@ -8,6 +8,7 @@ import {
   Secured,
   SecuredBoolean,
   SecuredDateNullable,
+  SecuredProperty,
   SecuredProps,
   Sensitivity,
   SensitivityField,
@@ -92,3 +93,8 @@ declare module '~/core/resources/map' {
     Partnership: typeof e.default.Partnership;
   }
 }
+
+@ObjectType({
+  description: SecuredProperty.descriptionFor('a partnership'),
+})
+export class SecuredPartnership extends SecuredProperty(Partnership) {}

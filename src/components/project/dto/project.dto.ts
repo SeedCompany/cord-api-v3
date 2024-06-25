@@ -124,6 +124,8 @@ class Project extends Interfaces {
   @Calculated()
   readonly status: ProjectStatus;
 
+  readonly primaryPartnership: Secured<LinkTo<'Partnership'> | null>;
+
   readonly primaryLocation: Secured<LinkTo<'Location'> | null>;
 
   readonly marketingLocation: Secured<LinkTo<'Location'> | null>;

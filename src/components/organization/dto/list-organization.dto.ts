@@ -1,4 +1,4 @@
-import { InputType, ObjectType } from '@nestjs/graphql';
+import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import {
   FilterField,
   ID,
@@ -10,6 +10,11 @@ import { Organization } from './organization.dto';
 
 @InputType()
 export abstract class OrganizationFilters {
+  @Field({
+    nullable: true,
+  })
+  readonly name?: string;
+
   readonly userId?: ID;
 }
 

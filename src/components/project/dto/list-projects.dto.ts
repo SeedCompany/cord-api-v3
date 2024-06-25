@@ -11,6 +11,7 @@ import {
   Sensitivity,
   SortablePaginationInput,
 } from '~/common';
+import { PartnershipFilters } from '../../partnership/dto';
 import { ProjectStatus } from './project-status.enum';
 import { ProjectStep } from './project-step.enum';
 import { ProjectType } from './project-type.enum';
@@ -99,6 +100,9 @@ export abstract class ProjectFilters {
   readonly partnerId?: ID;
 
   readonly userId?: ID;
+
+  @FilterField(() => PartnershipFilters)
+  readonly primaryPartnership?: PartnershipFilters & {};
 }
 
 @InputType()

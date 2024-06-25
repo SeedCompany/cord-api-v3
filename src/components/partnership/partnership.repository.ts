@@ -20,6 +20,8 @@ import {
   coalesce,
   createNode,
   createRelationships,
+  defineSorters,
+  filter,
   INACTIVE,
   matchChangesetAndChangedProps,
   matchProps,
@@ -28,15 +30,17 @@ import {
   oncePerProject,
   paginate,
   requestingUser,
-  sorting,
+  sortWith,
   whereNotDeletedInChangeset,
 } from '~/core/database/query';
 import { FileService } from '../file';
 import { FileId } from '../file/dto';
+import { partnerFilters, partnerSorters } from '../partner/partner.repository';
 import {
   CreatePartnership,
   Partnership,
   PartnershipAgreementStatus,
+  PartnershipFilters,
   PartnershipListInput,
   UpdatePartnership,
 } from './dto';
@@ -233,12 +237,13 @@ export class PartnershipRepository extends DtoRepository<
           ),
       )
       .match(requestingUser(session))
+      .apply(partnershipFilters(input.filter))
       .apply(
         this.privileges.forUser(session).filterToReadable({
           wrapContext: oncePerProject,
         }),
       )
-      .apply(sorting(Partnership, input))
+      .apply(sortWith(partnershipSorters, input))
       .apply(paginate(input, this.hydrate(session, viewOfChangeset(changeset))))
       .first();
     return result!; // result from paginate() will always have 1 row.
@@ -398,3 +403,29 @@ export class PartnershipRepository extends DtoRepository<
     };
   }
 }
+
+export const partnershipFilters = filter.define(() => PartnershipFilters, {
+  projectId: filter.skip,
+  partner: filter.sub(() => partnerFilters)((sub) =>
+    sub
+      .with('node as partnership')
+      .match([
+        node('partnership'),
+        relation('out', '', 'partner'),
+        node('node', 'Partner'),
+      ]),
+  ),
+});
+
+export const partnershipSorters = defineSorters(Partnership, {
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  'partner.*': (query, input) =>
+    query
+      .with('node as partnership')
+      .match([
+        node('partnership'),
+        relation('out', '', 'partner'),
+        node('node', 'Partner'),
+      ])
+      .apply(sortWith(partnerSorters, input)),
+});

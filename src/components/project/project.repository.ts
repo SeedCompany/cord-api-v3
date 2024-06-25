@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { inArray, node, Query, relation } from 'cypher-query-builder';
+import { inArray, node, not, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   ID,
@@ -23,12 +23,15 @@ import {
   matchPropsAndProjectSensAndScopedRoles,
   merge,
   paginate,
+  path,
   requestingUser,
   SortCol,
   sortWith,
+  variable,
 } from '~/core/database/query';
 import { Privileges } from '../authorization';
 import { locationSorters } from '../location/location.repository';
+import { partnershipSorters } from '../partnership/partnership.repository';
 import {
   CreateProject,
   IProject,
@@ -87,6 +90,13 @@ export class ProjectRepository extends CommonRepository {
         ])
         .optionalMatch([
           node('node'),
+          relation('out', '', 'partnership', ACTIVE),
+          node('primaryPartnership', 'Partnership'),
+          relation('out', '', 'primary', ACTIVE),
+          node('', 'Property', { value: variable('true') }),
+        ])
+        .optionalMatch([
+          node('node'),
           relation('out', '', 'primaryLocation', ACTIVE),
           node('primaryLocation', 'Location'),
         ])
@@ -124,6 +134,7 @@ export class ProjectRepository extends CommonRepository {
             type: 'node.type',
             pinned: 'exists((:User { id: $requestingUser })-[:pinned]->(node))',
             rootDirectory: 'rootDirectory { .id }',
+            primaryPartnership: 'primaryPartnership { .id }',
             primaryLocation: 'primaryLocation { .id }',
             marketingLocation: 'marketingLocation { .id }',
             fieldRegion: 'fieldRegion { .id }',
@@ -351,18 +362,39 @@ export const projectSorters = defineSorters(IProject, {
       ])
       .return<SortCol>('count(engagement) as sortValue'),
   // eslint-disable-next-line @typescript-eslint/naming-convention
-  'primaryLocation.*': (query, input) =>
-    query
-      .with('node as proj')
-      .match([
-        node('proj'),
-        relation('out', '', 'primaryLocation', ACTIVE),
-        node('node'),
-      ])
+  'primaryLocation.*': (query, input) => {
+    const getPath = (anon = false) => [
+      node('project'),
+      relation('out', '', 'primaryLocation', ACTIVE),
+      node(anon ? '' : 'node'),
+    ];
+    return query
+      .with('node as project')
+      .match(getPath())
       .apply(sortWith(locationSorters, input))
       .union()
       .with('node')
-      .with('node as proj')
-      .raw('where not exists((node)-[:primaryLocation { active: true }]->())')
-      .return<SortCol>('null as sortValue'),
+      .with('node as project')
+      .where(not(path(getPath(true))))
+      .return<SortCol>('null as sortValue');
+  },
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  'primaryPartnership.*': (query, input) => {
+    const getPath = (anon = false) => [
+      node('project'),
+      relation('out', '', 'partnership', ACTIVE),
+      node(anon ? '' : 'node', 'Partnership'),
+      relation('out', '', 'primary', ACTIVE),
+      node('', 'Property', { value: variable('true') }),
+    ];
+    return query
+      .with('node as project')
+      .match(getPath())
+      .apply(sortWith(partnershipSorters, input))
+      .union()
+      .with('node')
+      .with('node as project')
+      .where(not(path(getPath(true))))
+      .return<SortCol>('null as sortValue');
+  },
 });
