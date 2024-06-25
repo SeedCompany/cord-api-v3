@@ -1,16 +1,15 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { AnonSession, ParentIdMiddlewareAdditions, Session } from '~/common';
-import { ResourceLoader } from '~/core';
+import { Loader, LoaderOf, ResourceLoader } from '~/core';
 import { EngagementStatusTransition, SecuredEngagementStatus } from './dto';
-//import { EngagementRules } from './engagement.rules';
+import { EngagementLoader } from './engagement.loader';
 import { EngagementWorkflowService } from './workflow/engagement-workflow.service';
 
 @Resolver(SecuredEngagementStatus)
 export class EngagementStatusResolver {
   constructor(
     private readonly resources: ResourceLoader,
-    //private readonly engagementRules: EngagementRules,
     private readonly engagementWorkflowService: EngagementWorkflowService,
   ) {}
 
@@ -20,20 +19,19 @@ export class EngagementStatusResolver {
   async transitions(
     @Parent()
     status: SecuredEngagementStatus & ParentIdMiddlewareAdditions,
+    @Loader(EngagementLoader) engagements: LoaderOf<EngagementLoader>,
     @AnonSession() session: Session,
   ): Promise<EngagementStatusTransition[]> {
     if (!status.canRead || !status.canEdit || !status.value) {
       return [];
     }
-    const { EngagementLoader } = await import('./engagement.loader');
-    const engagements = await this.resources.getLoader(EngagementLoader);
     const loaderKey = {
       id: status.parentId,
       view: { active: true },
     } as const;
-    const previous = await engagements.load(loaderKey);
+    const engagement = await engagements.load(loaderKey);
     return await this.engagementWorkflowService.getAvailableTransitions(
-      previous,
+      engagement,
       session,
     );
   }
