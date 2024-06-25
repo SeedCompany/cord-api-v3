@@ -17,6 +17,7 @@ import {
   createNode,
   createRelationships,
   defineSorters,
+  filter,
   filter as filters,
   matchProjectScopedRoles,
   matchProjectSens,
@@ -28,6 +29,10 @@ import {
   requestingUser,
   sortWith,
 } from '~/core/database/query';
+import {
+  organizationFilters,
+  organizationSorters,
+} from '../organization/organization.repository';
 import {
   CreatePartner,
   Partner,
@@ -305,6 +310,15 @@ export const partnerFilters = filters.define(() => PartnerFilters, {
     relation('in', '', 'organization', ACTIVE),
     node('', 'User', { id }),
   ]),
+  organization: filter.sub(() => organizationFilters)((sub) =>
+    sub
+      .with('node as partner')
+      .match([
+        node('partner'),
+        relation('out', '', 'organization'),
+        node('node', 'Organization'),
+      ]),
+  ),
 });
 
 export const partnerSorters = defineSorters(Partner, {
@@ -318,4 +332,14 @@ export const partnerSorters = defineSorters(Partner, {
         node('prop', 'Property'),
       ])
       .return<{ sortValue: string }>('prop.value as sortValue'),
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  'organization.*': (query, input) =>
+    query
+      .with('node as partner')
+      .match([
+        node('partner'),
+        relation('out', '', 'organization'),
+        node('node', 'Organization'),
+      ])
+      .apply(sortWith(organizationSorters, input)),
 });

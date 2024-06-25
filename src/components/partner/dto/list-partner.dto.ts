@@ -6,6 +6,7 @@ import {
   SecuredList,
   SortablePaginationInput,
 } from '~/common';
+import { OrganizationFilters } from '../../organization/dto';
 import { Partner } from './partner.dto';
 
 @InputType()
@@ -18,6 +19,9 @@ export abstract class PartnerFilters {
     nullable: true,
   })
   readonly pinned?: boolean;
+
+  @FilterField(() => OrganizationFilters)
+  readonly organization?: OrganizationFilters & {};
 }
 
 @InputType()
