@@ -7,7 +7,7 @@ module default {
     workflowEvents := .<engagement[is Engagement::WorkflowEvent];
     trigger assertMatchingLatestWorkflowEvent after insert, update for each do (
       assert(
-        __new__.latestWorkflowEvent.to ?= __new__.status,
+        __new__.latestWorkflowEvent.to ?= __new__.status
         or (not exists __new__.latestWorkflowEvent and __new__.status = Engagement::Status.InDevelopment),
         message := "Engagement status must match the latest workflow event"
       )

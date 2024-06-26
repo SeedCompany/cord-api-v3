@@ -1,5 +1,5 @@
 module Engagement {
-  type WorkflowEvent extending ContextAware {
+  type WorkflowEvent extending Project::ContextAware {
     required engagement: default::Engagement {
       readonly := true;
       on target delete delete source;
