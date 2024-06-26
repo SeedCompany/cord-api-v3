@@ -36,6 +36,31 @@ module default {
       on source delete delete target;
     }
     multi locations: Location;
+
+    access policy CanSelectUpdateReadGeneratedFromAppPoliciesForUser
+    allow select, update read using (
+      (
+        exists (<Role>{'Administrator', 'Consultant', 'ConsultantManager', 'FieldPartner', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller', 'Marketing', 'Fundraising', 'ExperienceOperations', 'Leadership', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'StaffMember'} intersect global currentRoles)
+        or .id ?= global currentActorId
+        or (
+          exists (<Role>{'Intern', 'Mentor'} intersect global currentRoles)
+          and exists { "Stubbed .isMember for User/Unavailability" }
+        )
+      )
+    );
+
+    access policy CanUpdateWriteGeneratedFromAppPoliciesForUser
+    allow update write;
+
+    access policy CanInsertGeneratedFromAppPoliciesForUser
+    allow insert using (
+      exists (<Role>{'Administrator', 'Consultant', 'ConsultantManager', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect global currentRoles)
+    );
+
+    access policy CanDeleteGeneratedFromAppPoliciesForUser
+    allow delete using (
+      Role.Administrator in global currentRoles
+    );
   }
 
   type SystemAgent extending Actor, Mixin::Named {
@@ -48,6 +73,24 @@ module User {
     required degree: Degree;
     required major: str;
     required institution: str;
+
+    access policy CanSelectUpdateReadGeneratedFromAppPoliciesForEducation
+    allow select, update read using (
+      exists (<default::Role>{'Administrator', 'ConsultantManager', 'FieldOperationsDirector', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller', 'Marketing', 'Fundraising', 'ExperienceOperations', 'Leadership', 'ProjectManager', 'RegionalDirector', 'StaffMember'} intersect global default::currentRoles)
+    );
+
+    access policy CanUpdateWriteGeneratedFromAppPoliciesForEducation
+    allow update write;
+
+    access policy CanInsertGeneratedFromAppPoliciesForEducation
+    allow insert using (
+      exists (<default::Role>{'Administrator', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect global default::currentRoles)
+    );
+
+    access policy CanDeleteGeneratedFromAppPoliciesForEducation
+    allow delete using (
+      default::Role.Administrator in global default::currentRoles
+    );
   }
   
   type Unavailability extending default::Resource {
@@ -55,6 +98,30 @@ module User {
     required dates: range<datetime>;
     `start` := assert_exists(range_get_lower(.dates));
     `end` := assert_exists(range_get_upper(.dates));
+
+    access policy CanSelectUpdateReadGeneratedFromAppPoliciesForUnavailability
+    allow select, update read using (
+      (
+        exists (<default::Role>{'Administrator', 'Consultant', 'ConsultantManager', 'FieldPartner', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller', 'Marketing', 'Fundraising', 'ExperienceOperations', 'Leadership', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'StaffMember'} intersect global default::currentRoles)
+        or (
+          exists (<default::Role>{'Intern', 'Mentor'} intersect global default::currentRoles)
+          and exists { "Stubbed .isMember for User/Unavailability" }
+        )
+      )
+    );
+
+    access policy CanUpdateWriteGeneratedFromAppPoliciesForUnavailability
+    allow update write;
+
+    access policy CanInsertGeneratedFromAppPoliciesForUnavailability
+    allow insert using (
+      exists (<default::Role>{'Administrator', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect global default::currentRoles)
+    );
+
+    access policy CanDeleteGeneratedFromAppPoliciesForUnavailability
+    allow delete using (
+      default::Role.Administrator in global default::currentRoles
+    );
   }
   
   scalar type Status extending enum<Active, Disabled>;

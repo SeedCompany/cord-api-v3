@@ -87,6 +87,25 @@ module default {
     }
     
     index on ((.name, .ownSensitivity, .leastOfThese, .isSignLanguage, .isDialect));
+
+    access policy CanSelectUpdateReadGeneratedFromAppPoliciesForLanguage
+    allow select, update read using (
+      (
+        exists (<Role>{'Administrator', 'ConsultantManager', 'ExperienceOperations', 'LeadFinancialAnalyst', 'Controller', 'FinancialAnalyst', 'Fundraising', 'Marketing', 'Leadership', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'StaffMember'} intersect global currentRoles)
+        or (
+          exists (<Role>{'Consultant', 'ConsultantManager', 'FieldPartner', 'Intern', 'Mentor', 'Translator'} intersect global currentRoles)
+          and .isMember
+        )
+      )
+    );
+
+    access policy CanUpdateWriteGeneratedFromAppPoliciesForLanguage
+    allow update write;
+
+    access policy CanInsertDeleteGeneratedFromAppPoliciesForLanguage
+    allow insert, delete using (
+      Role.Administrator in global currentRoles
+    );
   }
   
   scalar type population extending int32 {
@@ -109,6 +128,40 @@ module Ethnologue {
     };
     name: str;
     population: default::population;
+
+    access policy CanSelectUpdateReadGeneratedFromAppPoliciesForEthnologueLanguage
+    allow select, update read using (
+      (
+        exists (<default::Role>{'Administrator', 'ExperienceOperations', 'Leadership', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector'} intersect global default::currentRoles)
+        or (
+          default::Role.ConsultantManager in global default::currentRoles
+          and .sensitivity <= default::Sensitivity.Medium
+        )
+        or (
+          exists (<default::Role>{'Consultant', 'ConsultantManager', 'FieldPartner', 'Translator'} intersect global default::currentRoles)
+          and .isMember
+        )
+        or (
+          default::Role.Fundraising in global default::currentRoles
+          and (
+            .isMember
+            or .sensitivity <= default::Sensitivity.Medium
+          )
+        )
+        or (
+          exists (<default::Role>{'Marketing', 'Fundraising', 'ExperienceOperations'} intersect global default::currentRoles)
+          and .sensitivity <= default::Sensitivity.Low
+        )
+      )
+    );
+
+    access policy CanUpdateWriteGeneratedFromAppPoliciesForEthnologueLanguage
+    allow update write;
+
+    access policy CanInsertDeleteGeneratedFromAppPoliciesForEthnologueLanguage
+    allow insert, delete using (
+      default::Role.Administrator in global default::currentRoles
+    );
   }
   
   scalar type code extending str {

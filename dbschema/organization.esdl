@@ -16,6 +16,41 @@ module default {
       default := (insert Project::Context);
       on source delete delete target;
     }
+
+    access policy CanSelectUpdateReadGeneratedFromAppPoliciesForOrganization
+    allow select, update read using (
+      (
+        exists (<Role>{'Administrator', 'ConsultantManager', 'LeadFinancialAnalyst', 'Controller', 'FinancialAnalyst', 'Leadership', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'StaffMember'} intersect global currentRoles)
+        or (
+          exists (<Role>{'Consultant', 'ConsultantManager', 'FieldPartner'} intersect global currentRoles)
+          and .isMember
+        )
+        or (
+          exists (<Role>{'ExperienceOperations', 'Fundraising'} intersect global currentRoles)
+          and .sensitivity <= Sensitivity.Medium
+        )
+        or (
+          Role.Marketing in global currentRoles
+          and (
+            .isMember
+            or .sensitivity <= Sensitivity.Low
+          )
+        )
+      )
+    );
+
+    access policy CanUpdateWriteGeneratedFromAppPoliciesForOrganization
+    allow update write;
+
+    access policy CanInsertGeneratedFromAppPoliciesForOrganization
+    allow insert using (
+      exists (<Role>{'Administrator', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller'} intersect global currentRoles)
+    );
+
+    access policy CanDeleteGeneratedFromAppPoliciesForOrganization
+    allow delete using (
+      exists (<Role>{'Administrator', 'Controller'} intersect global currentRoles)
+    );
   }
 }
   
