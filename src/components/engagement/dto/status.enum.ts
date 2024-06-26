@@ -19,6 +19,8 @@ export const EngagementStatus = makeEnum({
     'DiscussingSuspension',
     'Suspended',
 
+    'Suspended',
+
     'FinalizingCompletion',
     { value: 'Terminated', terminal: true },
     { value: 'Completed', terminal: true },
