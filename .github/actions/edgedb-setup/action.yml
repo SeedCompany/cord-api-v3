@@ -2,7 +2,7 @@ name: Setup EdgeDB
 description: 'Setup EdgeDB server, migrate schema, generate TS files'
 
 env:
-  BRANCH: github_${{ github.event.number }}_${{ env.GITHUB_RUN_ID }}_${{ env.GITHUB_RUN_ATTEMPT }}_${{ env.GITHUB_JOB }}
+  BRANCH: github_${{ env.GITHUB_RUN_ID }}_${{ env.GITHUB_RUN_ATTEMPT }}_${{ env.GITHUB_JOB }}
 
 runs:
   using: composite
