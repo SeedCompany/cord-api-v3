@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
-import { Session, UnsecuredDto } from '~/common';
+import { ID, Session, UnsecuredDto } from '~/common';
 import { IEventBus, ResourceLoader } from '~/core';
 import {
   findTransition,
@@ -13,7 +13,7 @@ import {
 } from './dto';
 import { EngagementWorkflow } from './engagement-workflow';
 import { EngagementWorkflowRepository } from './engagement-workflow.repository';
-//import { EngagementTransitionedEvent } from './events/engagement-transitioned.event';
+import { EngagementTransitionedEvent } from './events/engagement-transitioned.event';
 
 @Injectable()
 export class EngagementWorkflowService extends WorkflowService(
@@ -28,15 +28,18 @@ export class EngagementWorkflowService extends WorkflowService(
     super();
   }
 
-  // async list(report: Project, session: Session): Promise<WorkflowEvent[]> {
-  //   const dtos = await this.repo.list(report.id, session);
-  //   return dtos.map((dto) => this.secure(dto, session));
-  // }
+  async list(
+    engagement: Engagement,
+    session: Session,
+  ): Promise<WorkflowEvent[]> {
+    const dtos = await this.repo.list(engagement.id, session);
+    return dtos.map((dto) => this.secure(dto, session));
+  }
 
-  // async readMany(ids: readonly ID[], session: Session) {
-  //   const dtos = await this.repo.readMany(ids, session);
-  //   return dtos.map((dto) => this.secure(dto, session));
-  // }
+  async readMany(ids: readonly ID[], session: Session) {
+    const dtos = await this.repo.readMany(ids, session);
+    return dtos.map((dto) => this.secure(dto, session));
+  }
 
   private secure(
     dto: UnsecuredDto<WorkflowEvent>,
@@ -100,13 +103,13 @@ export class EngagementWorkflowService extends WorkflowService(
     engagements.clear(loaderKey);
     const updated = await engagements.load(loaderKey);
 
-    // const event = new EngagementTransitionedEvent(
-    //   updated,
-    //   previous.status.value!,
-    //   next,
-    //   unsecuredEvent,
-    // );
-    // await this.eventBus.publish(event);
+    const event = new EngagementTransitionedEvent(
+      updated,
+      previous.status.value!,
+      next,
+      unsecuredEvent,
+    );
+    await this.eventBus.publish(event);
 
     return updated;
   }
@@ -121,8 +124,7 @@ export class EngagementWorkflowService extends WorkflowService(
       currentEngagement,
       session,
     );
-    // Pick the first matching to step.
-    // Lack of detail is one of the reasons why this is legacy logic.
+
     const transition = transitions.find((t) => t.to === step);
 
     await this.executeTransition(

@@ -5,7 +5,7 @@ import { EngagementWorkflowEvent } from './dto';
 import {
   BackTo,
   BackToActive,
-  ResolveParams,
+  ResolveEngagementParams,
 } from './transitions/dynamic-step';
 
 // This also controls the order shown in the UI.
@@ -16,7 +16,7 @@ export const EngagementWorkflow = defineWorkflow({
   name: 'Engagement',
   states: Step,
   event: EngagementWorkflowEvent,
-  context: defineContext<ResolveParams>,
+  context: defineContext<ResolveEngagementParams>,
 })({
   Reject: {
     from: Step.InDevelopment,
