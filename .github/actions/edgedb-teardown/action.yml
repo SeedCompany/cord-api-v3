@@ -6,4 +6,6 @@ runs:
       shell: bash
       run: |
         edgedb branch switch main
-        edgedb branch drop github_$GITHUB_RUN_ID_$GITHUB_JOB --non-interactive
+        edgedb branch drop github_$PR_NUMBER_$GITHUB_RUN_ID_$GITHUB_RUN_ATTEMPT_$GITHUB_JOB
+      env:
+        PR_NUMBER: ${{ github.event.number }}

@@ -13,9 +13,11 @@ runs:
     - name: Branch & Migrate
       shell: bash
       run: |
-        edgedb branch create github_$GITHUB_RUN_ID_$GITHUB_JOB
-        edgedb branch switch github_$GITHUB_RUN_ID_$GITHUB_JOB
+        edgedb branch create github_$PR_NUMBER_$GITHUB_RUN_ID_$GITHUB_RUN_ATTEMPT_$GITHUB_JOB
+        edgedb branch switch github_$PR_NUMBER_$GITHUB_RUN_ID_$GITHUB_RUN_ATTEMPT_$GITHUB_JOB
         edgedb migrate
+      env:
+        PR_NUMBER: ${{ github.event.number }}
 
     - name: Generate EdgeDB TS files
       shell: bash
