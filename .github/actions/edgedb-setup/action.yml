@@ -8,7 +8,7 @@ runs:
       uses: edgedb/setup-edgedb@v1
       with:
         cli-version: nightly
-        server-dsn: none
+        server-version: none
 
     - name: Branch & Migrate
       shell: bash
