@@ -1,9 +1,6 @@
 name: Setup EdgeDB
 description: 'Setup EdgeDB server, migrate schema, generate TS files'
 
-env:
-  BRANCH: github_${{ env.GITHUB_RUN_ID }}_${{ env.GITHUB_RUN_ATTEMPT }}_${{ env.GITHUB_JOB }}
-
 runs:
   using: composite
   steps:
@@ -22,6 +19,8 @@ runs:
         edgedb branch switch $BRANCH
         echo "Applying new migrations to branch $BRANCH"
         edgedb migrate
+      env:
+        BRANCH: github_${{ github.event.number }}_${{ env.GITHUB_RUN_ID }}_${{ env.GITHUB_RUN_ATTEMPT }}_${{ env.GITHUB_JOB }}
 
     - name: Generate EdgeDB TS files
       shell: bash
