@@ -7,6 +7,10 @@ on:
       - synchronize
       - labeled
 
+env:
+  EDGEDB_INSTANCE: ${{ secrets.EDGEDB_INSTANCE }}
+  EDGEDB_SECRET_KEY: ${{ secrets.EDGEDB_SECRET_KEY }}
+
 jobs:
   generate:
     name: Generate
@@ -24,8 +28,6 @@ jobs:
 
       - name: EdgeDB Setup
         uses: ./.github/actions/edgedb-setup
-        with:
-          dsn: ${{ secrets.EDGEDB_DSN }}
 
       - name: Generate GraphQL Schema
         run: yarn start -- --gen-schema

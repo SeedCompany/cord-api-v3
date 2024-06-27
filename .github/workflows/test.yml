@@ -6,6 +6,10 @@ on:
       - master
       - develop
 
+env:
+  EDGEDB_INSTANCE: ${{ secrets.EDGEDB_INSTANCE }}
+  EDGEDB_SECRET_KEY: ${{ secrets.EDGEDB_SECRET_KEY }}
+
 jobs:
   Unit:
     runs-on: ubuntu-latest
@@ -17,8 +21,6 @@ jobs:
 
       - name: EdgeDB Setup
         uses: ./.github/actions/edgedb-setup
-        with:
-          dsn: ${{ secrets.EDGEDB_DSN }}
 
       - name: Tests
         run: yarn test --reporters=github-actions
@@ -64,8 +66,6 @@ jobs:
 
       - name: EdgeDB Setup
         uses: ./.github/actions/edgedb-setup
-        with:
-          dsn: ${{ secrets.EDGEDB_DSN }}
 
       - name: E2E Tests
         run: yarn test:e2e --shard=${{ matrix.shard }}/6 --reporters=github-actions
