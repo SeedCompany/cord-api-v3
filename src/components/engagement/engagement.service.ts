@@ -46,7 +46,6 @@ import {
   EngagementRepository,
   LanguageOrEngagementId,
 } from './engagement.repository';
-//import { EngagementRules } from './engagement.rules';
 import {
   EngagementCreatedEvent,
   EngagementUpdatedEvent,
@@ -63,7 +62,6 @@ export class EngagementService {
     private readonly products: ProductService & {},
     private readonly config: ConfigService,
     private readonly files: FileService,
-    //private readonly engagementRules: EngagementRules,
     private readonly engagementWorkflow: EngagementWorkflowService,
     private readonly privileges: Privileges,
     @Inject(forwardRef(() => ProjectService))
@@ -265,14 +263,6 @@ export class EngagementService {
       await this.verifyFirstScripture({ engagementId: input.id });
     }
 
-    // if (input.status) {
-    //   await this.engagementWorkflow.verifyStatusChange(
-    //     input.id,
-    //     session,
-    //     input.status,
-    //   );
-    // }
-
     const previous = await this.repo.readOne(input.id, session, view);
     const object = (await this.secure(previous, session)) as LanguageEngagement;
 
@@ -317,14 +307,6 @@ export class EngagementService {
     changeset?: ID,
   ): Promise<InternshipEngagement> {
     const view: ObjectView = viewOfChangeset(changeset);
-    // if (input.status) {
-    //   await this.engagementWorkflow.verifyStatusChange(
-    //     input.id,
-    //     session,
-    //     input.status,
-    //     changeset,
-    //   );
-    // }
 
     const previous = await this.repo.readOne(input.id, session, view);
     const object = (await this.secure(
