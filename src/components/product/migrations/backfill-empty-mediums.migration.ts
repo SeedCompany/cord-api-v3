@@ -7,16 +7,16 @@ import { updateProperty, variable } from '~/core/database/query';
 import { ProductMedium as Medium, Product } from '../dto';
 import { ProductService } from '../product.service';
 
-@Migration('2024-06-24T09:00:00')
+@Migration('2024-06-24T09:00:01')
 export class BackfillEmptyMediumsMigration extends BaseMigration {
   constructor(private readonly productService: ProductService) {
     super();
   }
 
   async up() {
-    const engagements = await this.db.query<
-      Array<{ id: ID; mediums: Medium[] }>
-    >().raw`
+    const engagements = await this.db.query<{
+      products: Array<{ id: ID; mediums: Medium[] }>;
+    }>().raw`
       match (eng:Engagement)
       where exists((eng)-[:product { active: true }]->(:Product)-[:mediums { active: true }]->(:Property { value: [] }))
       match (eng)-[:product { active: true }]->(prod:Product)-[:mediums { active: true }]->(mediums:Property)
@@ -28,7 +28,7 @@ export class BackfillEmptyMediumsMigration extends BaseMigration {
       `Found ${engagements.length} engagements with some empty mediums`,
     );
 
-    const updates = engagements.flatMap((products) => {
+    const updates = engagements.flatMap(({ products }) => {
       const grouped = groupBy(products, (p) =>
         uniq(p.mediums)
           .sort((a, b) => a.localeCompare(b))
