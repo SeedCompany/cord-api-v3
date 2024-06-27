@@ -13,7 +13,6 @@ import {
 } from './dto';
 import { EngagementWorkflow } from './engagement-workflow';
 import { EngagementWorkflowRepository } from './engagement-workflow.repository';
-import { EngagementTransitionedEvent } from './events/engagement-transitioned.event';
 
 @Injectable()
 export class EngagementWorkflowService extends WorkflowService(
@@ -89,7 +88,7 @@ export class EngagementWorkflowService extends WorkflowService(
         input.transition,
       );
 
-    const unsecuredEvent = await this.repo.recordEvent(
+    await this.repo.recordEvent(
       {
         engagement: engagementId,
         ...(typeof next !== 'string'
@@ -101,17 +100,7 @@ export class EngagementWorkflowService extends WorkflowService(
     );
 
     engagements.clear(loaderKey);
-    const updated = await engagements.load(loaderKey);
-
-    const event = new EngagementTransitionedEvent(
-      updated,
-      previous.status.value!,
-      next,
-      unsecuredEvent,
-    );
-    await this.eventBus.publish(event);
-
-    return updated;
+    return await engagements.load(loaderKey);
   }
 
   /** @deprecated */
