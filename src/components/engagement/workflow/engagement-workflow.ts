@@ -43,7 +43,7 @@ export const EngagementWorkflow = defineWorkflow({
     type: Type.Neutral,
   },
   'Discuss Suspension': {
-    from: [Step.Active, Step.ActiveChangedPlan, Step.DiscussingChangeToPlan],
+    from: [Step.Active, Step.ActiveChangedPlan],
     to: Step.DiscussingSuspension,
     label: 'Discuss Susupension',
     type: Type.Neutral,
@@ -76,6 +76,12 @@ export const EngagementWorkflow = defineWorkflow({
     from: Step.DiscussingChangeToPlan,
     to: BackToActive,
     label: 'Will Not Change Plan',
+    type: Type.Neutral,
+  },
+  'Discussing Change to Plan -> Discussing Suspension': {
+    from: [Step.DiscussingChangeToPlan],
+    to: Step.DiscussingSuspension,
+    label: 'Discuss Susupension',
     type: Type.Neutral,
   },
   'Approve Suspension': {
