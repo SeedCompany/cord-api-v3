@@ -285,6 +285,9 @@ export const makeConfig = (env: EnvironmentService) =>
           secure: true,
           // Allow 3rd party (other domains)
           sameSite: 'none',
+          // Don't share cookie value between top level domains.
+          // Required for 3rd party use.
+          partitioned: true,
         }),
       };
     };
