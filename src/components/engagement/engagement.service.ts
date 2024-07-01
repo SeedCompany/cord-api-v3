@@ -279,7 +279,6 @@ export class EngagementService {
       session,
     );
 
-    let updated = previous;
     if (changes.status) {
       await this.engagementWorkflow.executeTransitionLegacy(
         object,
@@ -289,7 +288,7 @@ export class EngagementService {
     }
     await this.repo.updateLanguage(object, changes, changeset);
 
-    updated = (await this.repo.readOne(
+    const updated = (await this.repo.readOne(
       input.id,
       session,
       view,
