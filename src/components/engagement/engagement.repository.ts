@@ -571,9 +571,12 @@ export const engagementFilters = filter.define(() => EngagementFilters, {
     relation('out', '', 'language'),
     node('', 'Language', { id }),
   ]),
-  project: filter.sub(() => projectFilters)((sub) =>
+  project: filter.sub(
+    () => projectFilters,
+    'requestingUser',
+  )((sub) =>
     sub
-      .with('node as eng')
+      .with('node as eng, requestingUser')
       .match([
         node('eng'),
         relation('in', '', 'engagement'),
