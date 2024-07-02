@@ -44,16 +44,15 @@ module Engagement {
     Rejected,
     
     Active,
+    ActiveChangedPlan,
     
     DiscussingTermination,
     DiscussingReactivation,
     DiscussingChangeToPlan,
     DiscussingSuspension,
-    
-    FinalizingCompletion,
-    ActiveChangedPlan,
     Suspended,
     
+    FinalizingCompletion,
     Terminated,
     Completed,
     
