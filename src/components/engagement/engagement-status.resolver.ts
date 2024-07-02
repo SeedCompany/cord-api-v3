@@ -1,12 +1,17 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { AnonSession, ParentIdMiddlewareAdditions, Session } from '~/common';
+import { Loader, LoaderOf, ResourceLoader } from '~/core';
 import { EngagementStatusTransition, SecuredEngagementStatus } from './dto';
-import { EngagementRules } from './engagement.rules';
+import { EngagementLoader } from './engagement.loader';
+import { EngagementWorkflowService } from './workflow/engagement-workflow.service';
 
 @Resolver(SecuredEngagementStatus)
 export class EngagementStatusResolver {
-  constructor(private readonly engagementRules: EngagementRules) {}
+  constructor(
+    private readonly resources: ResourceLoader,
+    private readonly engagementWorkflowService: EngagementWorkflowService,
+  ) {}
 
   @ResolveField(() => [EngagementStatusTransition], {
     description: 'The available statuses a engagement can be transitioned to.',
@@ -14,16 +19,20 @@ export class EngagementStatusResolver {
   async transitions(
     @Parent()
     status: SecuredEngagementStatus & ParentIdMiddlewareAdditions,
+    @Loader(EngagementLoader) engagements: LoaderOf<EngagementLoader>,
     @AnonSession() session: Session,
   ): Promise<EngagementStatusTransition[]> {
     if (!status.canRead || !status.canEdit || !status.value) {
       return [];
     }
-    return await this.engagementRules.getAvailableTransitions(
-      status.parentId,
+    const loaderKey = {
+      id: status.parentId,
+      view: { active: true },
+    } as const;
+    const engagement = await engagements.load(loaderKey);
+    return await this.engagementWorkflowService.getAvailableTransitions(
+      engagement,
       session,
-      undefined,
-      status.changeset,
     );
   }
 
@@ -36,6 +45,6 @@ export class EngagementStatusResolver {
   async canBypassTransitions(
     @AnonSession() session: Session,
   ): Promise<boolean> {
-    return await this.engagementRules.canBypassWorkflow(session);
+    return await this.engagementWorkflowService.canBypassWorkflow(session);
   }
 }

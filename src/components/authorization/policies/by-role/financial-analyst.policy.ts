@@ -31,6 +31,10 @@ export const projectTransitions = () =>
       ]),
       r.LanguageEngagement.specifically((p) => p.paratextRegistryId.none),
     ),
+    r.EngagementWorkflowEvent.read.transitions(
+      'Not Ready for Completion',
+      'Complete',
+    ).execute,
     r.FieldRegion.read,
     r.FieldZone.read,
     r.FinancialReport.edit,
