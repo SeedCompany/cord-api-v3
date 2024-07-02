@@ -1,4 +1,4 @@
-import { cleanSplit, entries, Nil } from '@seedcompany/common';
+import { cleanSplit, entries, many, Many, Nil } from '@seedcompany/common';
 import {
   comparisions,
   greaterThan,
@@ -219,6 +219,7 @@ export const comparisonOfDateTimeFilter = (
 export const sub =
   <Input extends Record<string, any>>(
     subBuilder: () => (input: Partial<Input>) => (q: Query) => void,
+    extraInput?: Many<string>,
   ) =>
   <
     // TODO this doesn't enforce Input type on Outer property
@@ -229,7 +230,7 @@ export const sub =
   ): Builder<Outer, K> =>
   ({ key, value, query }) =>
     query
-      .subQuery('node', (sub) =>
+      .subQuery(['node', ...many(extraInput ?? [])], (sub) =>
         sub
           .apply(matchSubNode)
           .apply(subBuilder()(value))
