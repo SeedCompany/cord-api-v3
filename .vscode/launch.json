@@ -14,7 +14,7 @@
       "name": "vscode-jest-tests.v2",
       "request": "launch",
       "args": [
-        "test",
+        "test:base",
         "--",
         "--runInBand",
         "--watchAll=false",

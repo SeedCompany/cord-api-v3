@@ -1,33 +1,42 @@
 import { Injectable, Type } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { LazyGetter } from 'lazy-get-decorator';
-import { PublicOf, SortablePaginationInput, UnsecuredDto } from '~/common';
+import { ID, PublicOf, SortablePaginationInput, UnsecuredDto } from '~/common';
 import { grabInstances } from '~/common/instance-maps';
 import { ChangesOf } from '~/core/database/changes';
-import { castToEnum, e, RepoFor, ScopeOf } from '~/core/edgedb';
+import { e, RepoFor, ScopeOf } from '~/core/edgedb';
 import {
   ProjectConcretes as ConcreteTypes,
   CreateProject,
   IProject,
   Project,
   ProjectListInput,
-  ProjectType,
   UpdateProject,
 } from './dto';
 import { ProjectRepository as Neo4jRepository } from './project.repository';
 
+export const projectRefShape = e.shape(e.Project, () => ({
+  id: true,
+  type: true,
+}));
+
 const hydrate = e.shape(e.Project, (project) => ({
   ...project['*'],
-  // default::TranslationProject -> Translation, etc.
-  type: castToEnum(project.__type__.name.slice(9, -7), ProjectType),
+  ...projectRefShape(project),
   // default::TranslationProject -> TranslationProject, etc.
   __typename: project.__type__.name.slice(9, null),
 
   rootDirectory: true,
+  primaryPartnership: e
+    .select(project.partnerships, (p) => ({
+      filter: e.op(p.primary, '=', true),
+    }))
+    .assert_single(),
   primaryLocation: true,
   marketingLocation: true,
   marketingRegionOverride: true,
   fieldRegion: true,
+  stepChangedAt: e.op(project.latestWorkflowEvent.at, '??', project.createdAt),
   owningOrganization: e.cast(e.uuid, null), // Not implemented going forward
   presetInventory: e.bool(false), // Not implemented going forward
 }));
@@ -82,10 +91,22 @@ export class ProjectEdgeDBRepository
     });
   }
 
+  async getPrimaryOrganizationName(id: ID) {
+    const project = e.cast(e.Project, e.uuid(id));
+    const primary = e
+      .select(project.partnerships, (p) => ({
+        filter: e.op(p.primary, '=', true),
+      }))
+      .assert_single();
+    const query = primary.partner.organization.name;
+    return await this.db.run(query);
+  }
+
   protected listFilters(
     project: ScopeOf<typeof e.Project>,
     { filter: input }: ProjectListInput,
   ) {
+    if (!input) return [];
     return [
       (input.type?.length ?? 0) > 0 &&
         e.op(

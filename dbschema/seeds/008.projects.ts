@@ -111,7 +111,7 @@ export default (async function ({ e, db, print }) {
     return;
   }
 
-  for (const { type, ...project } of newProjects) {
+  for (const { type, step, ...project } of newProjects) {
     const insertQ = e.insert(e[`${type}Project`], {
       ...project,
       ...mapValues.fromList(
@@ -137,6 +137,16 @@ export default (async function ({ e, db, print }) {
       set: { projects: projectRef },
     }));
     await pcQuery.run(db);
+
+    if (step !== 'EarlyConversations') {
+      await e
+        .insert(e.Project.WorkflowEvent, {
+          project: projectRef,
+          projectContext: projectRef.projectContext,
+          to: step,
+        })
+        .run(db);
+    }
   }
   print({ 'Added Projects': newProjects.map((t) => t.name) });
 } satisfies SeedFn);

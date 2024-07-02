@@ -1,4 +1,3 @@
-import { Type } from '@nestjs/common';
 import { Field, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { GraphQLString } from 'graphql';
@@ -8,7 +7,7 @@ import {
   DbLabel,
   DbUnique,
   ID,
-  IntersectionType,
+  IntersectTypes,
   NameField,
   Resource,
   ResourceRelationsShape,
@@ -32,11 +31,6 @@ import { Location } from '../../location/dto';
 import { Pinnable } from '../../pin/dto';
 import { Postable } from '../../post/dto';
 import { UpdateEthnologueLanguage } from './update-language.dto';
-
-const Interfaces: Type<Resource & Pinnable & Postable> = IntersectionType(
-  Resource,
-  IntersectionType(Pinnable, Postable),
-);
 
 @ObjectType({
   description: SecuredPropertyList.descriptionFor('tags'),
@@ -85,9 +79,11 @@ export class EthnologueLanguage {
   readonly sensitivity: Sensitivity;
 }
 
+const Interfaces = IntersectTypes(Resource, Pinnable, Postable);
+
 @RegisterResource({ db: e.Language })
 @ObjectType({
-  implements: [Resource, Pinnable, Postable],
+  implements: Interfaces.members,
 })
 export class Language extends Interfaces {
   static readonly Props = keysOf<Language>();

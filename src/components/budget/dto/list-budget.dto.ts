@@ -20,8 +20,8 @@ export abstract class BudgetFilters {
 export class BudgetListInput extends SortablePaginationInput<keyof Budget>({
   defaultSort: 'status',
 }) {
-  @FilterField(BudgetFilters, { internal: true })
-  readonly filter: BudgetFilters;
+  @FilterField(() => BudgetFilters, { internal: true })
+  readonly filter?: BudgetFilters;
 }
 
 @ObjectType()
@@ -45,7 +45,7 @@ export class BudgetRecordListInput extends SortablePaginationInput<
 }) {
   @Type(() => BudgetRecordFilters)
   @ValidateNested()
-  readonly filter: BudgetRecordFilters;
+  readonly filter?: BudgetRecordFilters;
 }
 
 @ObjectType()

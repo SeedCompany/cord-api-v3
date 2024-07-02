@@ -6,11 +6,15 @@ import {
   SecuredList,
   SortablePaginationInput,
 } from '~/common';
+import { PartnerFilters } from '../../partner/dto';
 import { Partnership } from './partnership.dto';
 
 @InputType()
 export abstract class PartnershipFilters {
   readonly projectId?: ID;
+
+  @FilterField(() => PartnerFilters)
+  readonly partner?: PartnerFilters & {};
 }
 
 @InputType()
@@ -19,8 +23,8 @@ export class PartnershipListInput extends SortablePaginationInput<
 >({
   defaultSort: 'createdAt',
 }) {
-  @FilterField(PartnershipFilters, { internal: true })
-  readonly filter: PartnershipFilters;
+  @FilterField(() => PartnershipFilters, { internal: true })
+  readonly filter?: PartnershipFilters;
 }
 
 @ObjectType()

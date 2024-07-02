@@ -6,8 +6,9 @@ import {
   ProjectStatus,
   ProjectStep,
   ProjectType,
+  stepToStatus,
 } from '../../project/dto';
-import { ProjectUpdatedEvent } from '../../project/events';
+import { ProjectTransitionedEvent } from '../../project/workflow/events/project-transitioned.event';
 import { EngagementStatus } from '../dto';
 import { EngagementRepository } from '../engagement.repository';
 import { EngagementService } from '../engagement.service';
@@ -72,39 +73,53 @@ type Condition = MergeExclusive<
   { step: ProjectStep }
 >;
 
-const changeMatcher =
-  (previous: UnsecuredDto<Project>, updated: UnsecuredDto<Project>) =>
-  ({ from, to }: Change) => {
+type ProjectState = Pick<UnsecuredDto<Project>, 'status' | 'step'>;
+const changeMatcher = (previousStep: ProjectStep, updatedStep: ProjectStep) => {
+  const previous: ProjectState = {
+    step: previousStep,
+    status: stepToStatus(previousStep),
+  };
+  const updated: ProjectState = {
+    step: updatedStep,
+    status: stepToStatus(updatedStep),
+  };
+  return ({ from, to }: Change) => {
     const toMatches = to ? matches(to, updated) : !matches(from!, updated);
     const fromMatches = from
       ? matches(from, previous)
       : !matches(to!, previous);
     return toMatches && fromMatches;
   };
-const matches = (cond: Condition, p: UnsecuredDto<Project>) =>
+};
+const matches = (cond: Condition, p: ProjectState) =>
   cond.step ? cond.step === p.step : cond.status === p.status;
 
-@EventsHandler(ProjectUpdatedEvent)
-export class UpdateProjectStatusHandler
-  implements IEventHandler<ProjectUpdatedEvent>
+@EventsHandler(ProjectTransitionedEvent)
+export class UpdateEngagementStatusHandler
+  implements IEventHandler<ProjectTransitionedEvent>
 {
   constructor(
     private readonly repo: EngagementRepository,
     private readonly engagementService: EngagementService,
   ) {}
 
-  async handle({ previous, updated, session }: ProjectUpdatedEvent) {
+  async handle({
+    project,
+    previousStep,
+    workflowEvent,
+    session,
+  }: ProjectTransitionedEvent) {
     const engagementStatus = changes.find(
-      changeMatcher(previous, updated),
+      changeMatcher(previousStep, workflowEvent.to),
     )?.newStatus;
     if (!engagementStatus) return;
 
-    const engagementIds = await this.repo.getOngoingEngagementIds(updated.id);
+    const engagementIds = await this.repo.getOngoingEngagementIds(project.id);
 
     await this.updateEngagements(
       engagementStatus,
       engagementIds,
-      updated.type,
+      project.type,
       session,
     );
   }

@@ -41,8 +41,8 @@ export abstract class ProductFilters {
 export class ProductListInput extends SortablePaginationInput<keyof Product>({
   defaultSort: 'createdAt',
 }) {
-  @FilterField(ProductFilters)
-  readonly filter: ProductFilters;
+  @FilterField(() => ProductFilters)
+  readonly filter?: ProductFilters;
 }
 
 @ObjectType()

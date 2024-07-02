@@ -11,6 +11,7 @@ import {
   eqlDoesIntersect,
   fqnRelativeTo,
   IsAllowedParams,
+  MissingContextException,
 } from '../../policy/conditions';
 
 const CQL_VAR = 'membershipRoles';
@@ -159,7 +160,9 @@ export const withScope = <T extends object>(obj: T, roles: ScopedRole[]) =>
 
 export const getScope = (object?: HasScope): ScopedRole[] => {
   if (!object) {
-    throw new Error("Needed object's scoped roles but object wasn't given");
+    throw new MissingContextException(
+      "Needed object's scoped roles but object wasn't given",
+    );
   }
 
   return Reflect.get(object, ScopedRoles) ?? Reflect.get(object, 'scope') ?? [];

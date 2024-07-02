@@ -11,7 +11,30 @@ import {
 import { Language } from './language.dto';
 
 @InputType()
+export abstract class EthnologueLanguageFilters {
+  @Field({
+    nullable: true,
+  })
+  readonly code?: string;
+
+  @Field({
+    nullable: true,
+  })
+  readonly provisionalCode?: string;
+
+  @Field({
+    nullable: true,
+  })
+  readonly name?: string;
+}
+
+@InputType()
 export abstract class LanguageFilters {
+  @Field({
+    nullable: true,
+  })
+  readonly name?: string;
+
   @Field(() => [Sensitivity], {
     description: 'Only languages with these sensitivities',
     nullable: true,
@@ -48,15 +71,23 @@ export abstract class LanguageFilters {
   })
   readonly pinned?: boolean;
 
+  @Field({
+    nullable: true,
+  })
+  readonly registryOfDialectsCode?: string;
+
   readonly partnerId?: ID;
+
+  @FilterField(() => EthnologueLanguageFilters)
+  readonly ethnologue?: EthnologueLanguageFilters & {};
 }
 
 @InputType()
 export class LanguageListInput extends SortablePaginationInput<keyof Language>({
   defaultSort: 'name',
 }) {
-  @FilterField(LanguageFilters)
-  readonly filter: LanguageFilters;
+  @FilterField(() => LanguageFilters)
+  readonly filter?: LanguageFilters;
 }
 
 @ObjectType()

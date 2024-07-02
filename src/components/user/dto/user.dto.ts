@@ -1,13 +1,12 @@
-import { Type } from '@nestjs/common';
 import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
+  DbLabel,
   DbUnique,
-  IntersectionType,
+  IntersectTypes,
   NameField,
   Resource,
   ResourceRelationsShape,
-  SecuredEnum,
   SecuredProperty,
   SecuredProps,
   SecuredRoles,
@@ -23,24 +22,18 @@ import { Pinnable } from '../../pin/dto';
 import { IProject as Project } from '../../project/dto';
 import { Education } from '../education/dto';
 import { Unavailability } from '../unavailability/dto';
+import { Actor } from './actor.dto';
 import { KnownLanguage } from './known-language.dto';
-import { UserStatus } from './user-status.enum';
+import { SecuredUserStatus } from './user-status.enum';
 
-const PinnableResource: Type<Resource & Pinnable> = IntersectionType(
-  Resource,
-  Pinnable,
-);
-
-@ObjectType({
-  description: SecuredProperty.descriptionFor('a user status'),
-})
-export abstract class SecuredUserStatus extends SecuredEnum(UserStatus) {}
+const Interfaces = IntersectTypes(Resource, Actor, Pinnable);
 
 @RegisterResource({ db: e.User })
 @ObjectType({
-  implements: [Resource, Pinnable],
+  implements: Interfaces.members,
 })
-export class User extends PinnableResource {
+@DbLabel('User', 'Actor')
+export class User extends Interfaces {
   static readonly Props = keysOf<User>();
   static readonly SecuredProps = keysOf<SecuredProps<User>>();
   static readonly Relations = () =>
@@ -59,15 +52,19 @@ export class User extends PinnableResource {
   email: SecuredStringNullable;
 
   @NameField()
+  @DbLabel('UserName')
   realFirstName: SecuredString;
 
   @NameField()
+  @DbLabel('UserName')
   realLastName: SecuredString;
 
   @NameField()
+  @DbLabel('UserName')
   displayFirstName: SecuredString;
 
   @NameField()
+  @DbLabel('UserName')
   displayLastName: SecuredString;
 
   @Field()

@@ -27,7 +27,7 @@ import {
   deactivateProperty,
   escapeLuceneSyntax,
   filter,
-  fullTextQuery,
+  FullTextIndex,
   matchProps,
   matchPropsAndProjectSensAndScopedRoles,
   merge,
@@ -489,7 +489,7 @@ export class ProductRepository extends CommonRepository {
       .query()
       .matchNode('node', 'Product')
       .match([
-        ...(input.filter.engagementId
+        ...(input.filter?.engagementId
           ? [
               node('node'),
               relation('in', '', 'product', ACTIVE),
@@ -500,7 +500,7 @@ export class ProductRepository extends CommonRepository {
           : []),
       ])
       .apply((q) => {
-        const { approach, methodology, ...rest } = input.filter;
+        const { approach, methodology, ...rest } = input.filter ?? {};
         const merged = [
           ...(approach ? ApproachToMethodologies[approach] : []),
           ...(methodology ? [methodology] : []),
@@ -552,7 +552,9 @@ export class ProductRepository extends CommonRepository {
       .query()
       .apply((q) =>
         query
-          ? q.apply(fullTextQuery('ProductCompletionDescription', query))
+          ? q.call(
+              ProductCompletionDescriptionIndex.search(query).yield('node'),
+            )
           : q.matchNode('node', 'ProductCompletionDescription'),
       )
       .apply((q) =>
@@ -569,14 +571,10 @@ export class ProductRepository extends CommonRepository {
 
   @OnIndex('schema')
   private async createCompletionDescriptionIndex() {
-    await this.db.createFullTextIndex(
-      'ProductCompletionDescription',
-      ['ProductCompletionDescription'],
-      ['value'],
-      {
-        analyzer: 'standard-folding',
-      },
-    );
+    await this.db
+      .query()
+      .apply(ProductCompletionDescriptionIndex.create())
+      .run();
   }
 
   @OnIndex()
@@ -584,3 +582,10 @@ export class ProductRepository extends CommonRepository {
     return this.getConstraintsFor(Product);
   }
 }
+
+const ProductCompletionDescriptionIndex = FullTextIndex({
+  indexName: 'ProductCompletionDescription',
+  labels: 'ProductCompletionDescription',
+  properties: 'value',
+  analyzer: 'standard-folding',
+});

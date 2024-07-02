@@ -2,9 +2,9 @@ import { ID } from '~/common';
 import {
   Project,
   ProjectStep,
-  ProjectStepTransition,
   SecuredProjectStep,
 } from '../../src/components/project/dto';
+import { ProjectWorkflowTransition } from '../../src/components/project/workflow/dto';
 import { TestApp } from './create-app';
 import { gql } from './gql-tag';
 import { Raw } from './raw.type';
@@ -35,7 +35,7 @@ export const stepsFromEarlyConversationToBeforeTerminated = [
 ];
 
 type SecuredStep = SecuredProjectStep & {
-  transitions: ProjectStepTransition[];
+  transitions: ProjectWorkflowTransition[];
 };
 
 export const changeProjectStep = async (

@@ -17,7 +17,7 @@ import {
   Session,
   UnsecuredDto,
 } from '~/common';
-import { DtoRepository, UniquenessError } from '~/core/database';
+import { DtoRepository, OnIndex, UniquenessError } from '~/core/database';
 import {
   ACTIVE,
   any,
@@ -27,6 +27,7 @@ import {
   defineSorters,
   exp,
   filter,
+  FullTextIndex,
   matchChangesetAndChangedProps,
   matchProjectScopedRoles,
   matchProjectSens,
@@ -43,7 +44,9 @@ import { ProjectStatus } from '../project/dto';
 import {
   CreateLanguage,
   EthnologueLanguage,
+  EthnologueLanguageFilters,
   Language,
+  LanguageFilters,
   LanguageListInput,
   UpdateLanguage,
 } from './dto';
@@ -184,7 +187,7 @@ export class LanguageRepository extends DtoRepository<
           node('eth', 'EthnologueLanguage'),
         ])
         .apply(matchProps({ nodeName: 'eth', outputVar: 'ethProps' }))
-        .apply(this.isPresetInventory())
+        .apply(isPresetInventory)
         .optionalMatch([
           node('node'),
           relation('in', '', 'language', ACTIVE),
@@ -217,31 +220,7 @@ export class LanguageRepository extends DtoRepository<
       ])
       // match requesting user once (instead of once per row)
       .match(requestingUser(session))
-      .apply(
-        filter.builder(input.filter, {
-          sensitivity: filter.stringListProp(),
-          leastOfThese: filter.propVal(),
-          isSignLanguage: filter.propVal(),
-          isDialect: filter.propVal(),
-          partnerId: filter.pathExists((id) => [
-            node('node'),
-            relation('in', '', 'language', ACTIVE),
-            node('', 'LanguageEngagement'),
-            relation('in', '', 'engagement', ACTIVE),
-            node('', 'Project'),
-            relation('out', '', 'partnership', ACTIVE),
-            node('', 'Partnership'),
-            relation('out', '', 'partner', ACTIVE),
-            node('', 'Partner', { id }),
-          ]),
-          presetInventory: ({ value, query }) => {
-            query.apply(this.isPresetInventory()).with('*');
-            const condition = equals('true', true);
-            return { presetInventory: value ? condition : not(condition) };
-          },
-          pinned: filter.isPinned,
-        }),
-      )
+      .apply(languageFilters(input.filter))
       .apply(
         this.privileges.forUser(session).filterToReadable({
           wrapContext: oncePerProject,
@@ -291,39 +270,91 @@ export class LanguageRepository extends DtoRepository<
     return !!res;
   }
 
-  private isPresetInventory() {
-    return (query: Query) =>
-      query.subQuery('node', (sub) =>
-        sub
-          .optionalMatch([
-            node('node'),
-            relation('in', '', 'language', ACTIVE),
-            node('', 'LanguageEngagement'),
-            relation('in', '', 'engagement', ACTIVE),
-            node('project', 'Project'),
-            relation('out', '', 'status', ACTIVE),
-            node('status', 'ProjectStatus'),
-          ])
-          .where({
-            'status.value': inArray(
-              `['${ProjectStatus.InDevelopment}', '${ProjectStatus.Active}']`,
-              true,
-            ),
-          })
-          .return(
-            any(
-              'project',
-              collect('project'),
-              exp.path([
-                node('project'),
-                relation('out', '', 'presetInventory', ACTIVE),
-                node('', 'Property', { value: variable('true') }),
-              ]),
-            ).as('presetInventory'),
-          ),
-      );
+  @OnIndex('schema')
+  private async createSchemaIndexes() {
+    await this.db.query().apply(NameIndex.create()).run();
   }
 }
+
+export const languageFilters = filter.define(() => LanguageFilters, {
+  name: filter.fullText({
+    index: () => NameIndex,
+    matchToNode: (q) =>
+      q.match([
+        node('node', 'Language'),
+        relation('out', '', undefined, ACTIVE),
+        node('match'),
+      ]),
+  }),
+  sensitivity: filter.stringListProp(),
+  leastOfThese: filter.propVal(),
+  isSignLanguage: filter.propVal(),
+  isDialect: filter.propVal(),
+  registryOfDialectsCode: filter.propPartialVal(),
+  partnerId: filter.pathExists((id) => [
+    node('node'),
+    relation('in', '', 'language', ACTIVE),
+    node('', 'LanguageEngagement'),
+    relation('in', '', 'engagement', ACTIVE),
+    node('', 'Project'),
+    relation('out', '', 'partnership', ACTIVE),
+    node('', 'Partnership'),
+    relation('out', '', 'partner', ACTIVE),
+    node('', 'Partner', { id }),
+  ]),
+  presetInventory: ({ value, query }) => {
+    query.apply(isPresetInventory).with('*');
+    const condition = equals('true', true);
+    return { presetInventory: value ? condition : not(condition) };
+  },
+  pinned: filter.isPinned,
+  ethnologue: filter.sub(() => ethnologueFilters)((sub) =>
+    sub
+      .with('node as lang')
+      .match([
+        node('lang'),
+        relation('out', '', 'ethnologue'),
+        node('node', 'EthnologueLanguage'),
+      ]),
+  ),
+});
+
+const ethnologueFilters = filter.define(() => EthnologueLanguageFilters, {
+  code: filter.propPartialVal(),
+  provisionalCode: filter.propPartialVal(),
+  name: filter.propPartialVal(),
+});
+
+const isPresetInventory = (query: Query) =>
+  query.subQuery('node', (sub) =>
+    sub
+      .optionalMatch([
+        node('node'),
+        relation('in', '', 'language', ACTIVE),
+        node('', 'LanguageEngagement'),
+        relation('in', '', 'engagement', ACTIVE),
+        node('project', 'Project'),
+        relation('out', '', 'status', ACTIVE),
+        node('status', 'ProjectStatus'),
+      ])
+      .where({
+        'status.value': inArray(
+          `['${ProjectStatus.InDevelopment}', '${ProjectStatus.Active}']`,
+          true,
+        ),
+      })
+      .return(
+        any(
+          'project',
+          collect('project'),
+          exp.path([
+            node('project'),
+            relation('out', '', 'presetInventory', ACTIVE),
+            node('', 'Property', { value: variable('true') }),
+          ]),
+        ).as('presetInventory'),
+      ),
+  );
 
 export const languageSorters = defineSorters(Language, {
   // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -339,3 +370,10 @@ export const languageSorters = defineSorters(Language, {
 });
 
 const ethnologueSorters = defineSorters(EthnologueLanguage, {});
+
+const NameIndex = FullTextIndex({
+  indexName: 'LanguageName',
+  labels: ['LanguageName', 'LanguageDisplayName'],
+  properties: 'value',
+  analyzer: 'standard-folding',
+});

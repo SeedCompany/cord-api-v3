@@ -1,11 +1,9 @@
 import { mapValues } from '@seedcompany/common';
 import { createHash } from 'crypto';
 import { ID, Many, maybeMany, Role } from '~/common';
+import { TransitionType as Type } from '../../workflow/dto';
 import { ProgressReportStatus as Status } from '../dto';
-import {
-  ProgressReportWorkflowTransition as PublicTransition,
-  TransitionType as Type,
-} from './dto/workflow-transition.dto';
+import { ProgressReportWorkflowTransition as PublicTransition } from './dto/workflow-transition.dto';
 
 // This also controls the order shown in the UI.
 // Therefore, these should generally flow down.

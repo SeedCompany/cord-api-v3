@@ -8,10 +8,12 @@ module default {
     Mixin::Pinnable,
     Mixin::Taggable
   {
+    type := <Project::Type>.__type__.name[9:-7];
+
     overloaded name {
       constraint exclusive;
     };
-    
+
     overloaded required ownSensitivity: Sensitivity {
       annotation description := "The sensitivity of the project. \
         This is user settable for internships and calculated for translation projects";
@@ -48,16 +50,21 @@ module default {
           )) else .departmentId
       );
     };
-    
+
     required step: Project::Step {
       default := Project::Step.EarlyConversations;
     };
-    required stepChangedAt: datetime {
-      default := .createdAt;
-      rewrite update using (datetime_of_statement() if .step != __old__.step else .stepChangedAt);
-    }
-    property status := Project::statusFromStep(.step);
-    
+    status := Project::statusFromStep(.step);
+    latestWorkflowEvent := (select .workflowEvents order by .at desc limit 1);
+    workflowEvents := .<project[is Project::WorkflowEvent];
+    trigger assertMatchingLatestWorkflowEvent after insert, update for each do (
+      assert(
+        __new__.latestWorkflowEvent.to ?= __new__.step
+        or (not exists __new__.latestWorkflowEvent and __new__.step = Project::Step.EarlyConversations),
+        message := "Project step must match the latest workflow event"
+      )
+    );
+
     mouStart: cal::local_date;
     mouEnd: cal::local_date;
     constraint expression on (.mouEnd >= .mouStart);
@@ -199,83 +206,4 @@ module Project {
       on target delete allow;
     };
   }
-  
-  scalar type Step extending enum<
-    EarlyConversations,
-    PendingConceptApproval,
-    PrepForConsultantEndorsement,
-    PendingConsultantEndorsement,
-    PrepForFinancialEndorsement,
-    PendingFinancialEndorsement,
-    FinalizingProposal,
-    PendingRegionalDirectorApproval,
-    PendingZoneDirectorApproval,
-    PendingFinanceConfirmation,
-    OnHoldFinanceConfirmation,
-    DidNotDevelop,
-    Rejected,
-    Active,
-    ActiveChangedPlan,
-    DiscussingChangeToPlan,
-    PendingChangeToPlanApproval,
-    PendingChangeToPlanConfirmation,
-    DiscussingSuspension,
-    PendingSuspensionApproval,
-    Suspended,
-    DiscussingReactivation,
-    PendingReactivationApproval,
-    DiscussingTermination,
-    PendingTerminationApproval,
-    FinalizingCompletion,
-    Terminated,
-    Completed,
-  >;
-  
-  scalar type Status extending enum<
-    InDevelopment,
-    Active,
-    Terminated,
-    Completed,
-    DidNotDevelop,
-  >;
-  
-  function statusFromStep(step: Step) -> Status
-    using (
-      with dev := {
-        Step.EarlyConversations,
-        Step.PendingConceptApproval,
-        Step.PrepForConsultantEndorsement,
-        Step.PendingConsultantEndorsement,
-        Step.PrepForFinancialEndorsement,
-        Step.PendingFinancialEndorsement,
-        Step.FinalizingProposal,
-        Step.PendingRegionalDirectorApproval,
-        Step.PendingZoneDirectorApproval,
-        Step.PendingFinanceConfirmation,
-        Step.OnHoldFinanceConfirmation,
-      },
-      active := {
-        Step.Active,
-        Step.ActiveChangedPlan,
-        Step.DiscussingChangeToPlan,
-        Step.PendingChangeToPlanApproval,
-        Step.PendingChangeToPlanConfirmation,
-        Step.DiscussingSuspension,
-        Step.PendingSuspensionApproval,
-        Step.Suspended,
-        Step.DiscussingReactivation,
-        Step.PendingReactivationApproval,
-        Step.DiscussingTermination,
-        Step.PendingTerminationApproval,
-        Step.FinalizingCompletion,
-      }
-    select
-      Status.InDevelopment if step in dev else
-      Status.Active        if step in active else
-      Status.DidNotDevelop if step = Step.DidNotDevelop else
-      Status.DidNotDevelop if step = Step.Rejected else
-      Status.Terminated    if step = Step.Terminated else
-      Status.Completed     if step = Step.Completed else
-      Status.InDevelopment
-    )
 }

@@ -6,6 +6,7 @@ import {
   ID,
   isIdLike,
   NotFoundException,
+  Role,
   ServerException,
   Session,
   UnsecuredDto,
@@ -147,13 +148,13 @@ export class ProjectMemberRepository extends DtoRepository<
         node(
           'project',
           'Project',
-          filter.projectId ? { id: filter.projectId } : {},
+          filter?.projectId ? { id: filter.projectId } : {},
         ),
         relation('out', '', 'member'),
         node('node', 'ProjectMember'),
       ])
       .apply((q) =>
-        filter.roles
+        filter?.roles
           ? q
               .match([
                 node('node'),
@@ -176,5 +177,42 @@ export class ProjectMemberRepository extends DtoRepository<
       .apply(paginate(input, this.hydrate(session)))
       .first();
     return result!; // result from paginate() will always have 1 row.
+  }
+
+  async listAsNotifiers(projectId: ID, roles?: Role[]) {
+    return await this.db
+      .query()
+      .match([
+        node('', 'Project', { id: projectId }),
+        relation('out', '', 'member', ACTIVE),
+        node('node', 'ProjectMember'),
+        relation('out', '', 'user', ACTIVE),
+        node('user', 'User'),
+      ])
+      .apply((q) =>
+        roles
+          ? q
+              .match([
+                node('node'),
+                relation('out', '', 'roles', ACTIVE),
+                node('role', 'Property'),
+              ])
+              .raw(
+                `WHERE size(apoc.coll.intersection(role.value, $filteredRoles)) > 0`,
+                { filteredRoles: roles },
+              )
+          : q,
+      )
+      .with('user')
+      .optionalMatch([
+        node('user'),
+        relation('out', '', 'email', ACTIVE),
+        node('email', 'EmailAddress'),
+      ])
+      .return<{ id: ID; email: string | null }>([
+        'user.id as id',
+        'email.value as email',
+      ])
+      .run();
   }
 }

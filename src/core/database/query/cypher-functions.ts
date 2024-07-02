@@ -1,4 +1,6 @@
+import { procedure } from '../query-augmentation/call';
 import { exp, ExpressionInput } from './cypher-expression';
+import { IndexFullTextQueryNodes } from './full-text';
 
 /** Create a function with a name that takes a variable number of arguments */
 const fn =
@@ -75,6 +77,10 @@ export const apoc = {
     /** Converts Neo4j node to object/map of the node's properties */
     toMap: fn1('apoc.convert.toMap'),
   },
+  create: {
+    setLabels: (node: ExpressionInput, labels: readonly string[]) =>
+      procedure('apoc.create.setLabels', ['node'])({ node: exp(node), labels }),
+  },
 };
 
 /**
@@ -111,3 +117,11 @@ export const any = (
   list: ExpressionInput,
   predicate: ExpressionInput,
 ) => fn('any')(`${variable} IN ${exp(list)} WHERE ${exp(predicate)}`);
+
+export const db = {
+  index: {
+    fulltext: {
+      queryNodes: IndexFullTextQueryNodes,
+    },
+  },
+};

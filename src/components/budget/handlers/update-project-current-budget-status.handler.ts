@@ -1,58 +1,51 @@
 import { EventsHandler, IEventHandler } from '~/core';
 import { ProjectStatus, stepToStatus } from '../../project/dto';
-import { ProjectUpdatedEvent } from '../../project/events';
+import { ProjectTransitionedEvent } from '../../project/workflow/events/project-transitioned.event';
 import { BudgetService } from '../budget.service';
 import { BudgetStatus } from '../dto';
 
-@EventsHandler(ProjectUpdatedEvent)
+@EventsHandler(ProjectTransitionedEvent)
 export class UpdateProjectBudgetStatusHandler
-  implements IEventHandler<ProjectUpdatedEvent>
+  implements IEventHandler<ProjectTransitionedEvent>
 {
   constructor(private readonly budgets: BudgetService) {}
 
-  async handle({ previous, updates, session }: ProjectUpdatedEvent) {
-    // Continue if project just became active
-    if (!updates.step) {
-      return;
-    }
-    let budgetStatus: BudgetStatus = BudgetStatus.Current;
+  async handle(event: ProjectTransitionedEvent) {
+    const { project, session } = event;
+
+    const prevStatus = stepToStatus(event.previousStep);
+    const nextStatus = stepToStatus(event.workflowEvent.to);
+
+    let change: [from: BudgetStatus, to: BudgetStatus] | undefined;
     if (
-      stepToStatus(updates.step) !== ProjectStatus.Active ||
-      previous.status === ProjectStatus.Active
+      prevStatus === ProjectStatus.InDevelopment &&
+      nextStatus === ProjectStatus.Active
     ) {
-      // If Project status became In Dev from Active
-      if (
-        previous.status === ProjectStatus.Active &&
-        stepToStatus(updates.step) === ProjectStatus.InDevelopment
-      ) {
-        budgetStatus = BudgetStatus.Pending;
-      } else {
-        return;
-      }
+      change = [BudgetStatus.Pending, BudgetStatus.Current];
+    } else if (
+      prevStatus === ProjectStatus.Active &&
+      nextStatus === ProjectStatus.InDevelopment
+    ) {
+      change = [BudgetStatus.Current, BudgetStatus.Pending];
+    }
+    if (!change) {
+      return;
     }
 
     const budgets = await this.budgets.list(
       {
         filter: {
-          projectId: previous.id,
+          projectId: project.id,
         },
       },
       session,
     );
 
-    const budget = budgets.items.find(
-      (b) =>
-        b.status ===
-        (budgetStatus === BudgetStatus.Current
-          ? BudgetStatus.Pending
-          : BudgetStatus.Current),
-    );
+    const budget = budgets.items.find((b) => b.status === change![0]);
     if (!budget) {
-      // no pending or current budget, nothing to do
       return;
     }
 
-    // Set pending budget to current, now that the project is active
-    await this.budgets.update({ id: budget.id, status: budgetStatus }, session);
+    await this.budgets.update({ id: budget.id, status: change[1] }, session);
   }
 }

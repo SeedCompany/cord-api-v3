@@ -6,12 +6,15 @@ import {
   SecuredList,
   SortablePaginationInput,
 } from '~/common';
+import { LanguageFilters } from '../../language/dto';
+import { ProjectFilters } from '../../project/dto';
 import {
   Engagement,
   IEngagement,
   InternshipEngagement,
   LanguageEngagement,
 } from './engagement.dto';
+import { EngagementStatus } from './status.enum';
 
 @InputType()
 export abstract class EngagementFilters {
@@ -21,9 +24,23 @@ export abstract class EngagementFilters {
   })
   readonly type?: 'language' | 'internship';
 
+  @Field({
+    nullable: true,
+  })
+  readonly name?: string;
+
+  @Field(() => [EngagementStatus], {
+    nullable: true,
+  })
+  readonly status?: readonly EngagementStatus[];
+
   readonly projectId?: ID;
+  @FilterField(() => ProjectFilters)
+  readonly project?: ProjectFilters & {};
 
   readonly languageId?: ID;
+  @FilterField(() => LanguageFilters)
+  readonly language?: LanguageFilters & {};
 
   readonly partnerId?: ID<'Partner'>;
 }
@@ -34,8 +51,8 @@ export class EngagementListInput extends SortablePaginationInput<
 >({
   defaultSort: 'createdAt',
 }) {
-  @FilterField(EngagementFilters)
-  readonly filter: EngagementFilters;
+  @FilterField(() => EngagementFilters)
+  readonly filter?: EngagementFilters;
 }
 
 @ObjectType()

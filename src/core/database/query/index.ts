@@ -11,7 +11,7 @@ export * from './properties/update-relation-list';
 export * from './create-relationships';
 export * from './cypher-expression';
 export * from './cypher-functions';
-export * from './full-text';
+export { FullTextIndex, escapeLuceneSyntax } from './full-text';
 export * from './lists';
 export * from './sorting';
 export * from './matching';

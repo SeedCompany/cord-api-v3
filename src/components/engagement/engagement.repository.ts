@@ -1,7 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { cleanJoin, mapValues, simpleSwitch } from '@seedcompany/common';
-import { inArray, node, Node, Query, relation } from 'cypher-query-builder';
-import { difference, pickBy } from 'lodash';
+import {
+  hasLabel,
+  inArray,
+  node,
+  Node,
+  Query,
+  relation,
+} from 'cypher-query-builder';
+import { difference, pickBy, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { MergeExclusive } from 'type-fest';
 import {
@@ -25,6 +32,7 @@ import {
   createRelationships,
   defineSorters,
   filter,
+  FullTextIndex,
   INACTIVE,
   matchChangesetAndChangedProps,
   matchProjectSens,
@@ -39,17 +47,22 @@ import {
 } from '~/core/database/query';
 import { Privileges } from '../authorization';
 import { FileId } from '../file/dto';
-import { languageSorters } from '../language/language.repository';
+import {
+  languageFilters,
+  languageSorters,
+} from '../language/language.repository';
 import {
   matchCurrentDue,
   progressReportSorters,
 } from '../periodic-report/periodic-report.repository';
 import { ProjectType } from '../project/dto';
+import { projectFilters } from '../project/project-filters.query';
 import { projectSorters } from '../project/project.repository';
 import {
   CreateInternshipEngagement,
   CreateLanguageEngagement,
   Engagement,
+  EngagementFilters,
   EngagementListInput,
   EngagementStatus,
   IEngagement,
@@ -335,31 +348,25 @@ export class EngagementRepository extends CommonRepository {
   // LIST ///////////////////////////////////////////////////////////
 
   async list(input: EngagementListInput, session: Session, changeset?: ID) {
-    const label =
-      simpleSwitch(input.filter.type, {
-        language: 'LanguageEngagement',
-        internship: 'InternshipEngagement',
-      }) ?? 'Engagement';
-
     const result = await this.db
       .query()
       .subQuery((sub) =>
         sub
           .match([
-            node('project', 'Project', pickBy({ id: input.filter.projectId })),
+            node('project', 'Project', pickBy({ id: input.filter?.projectId })),
             relation('out', '', 'engagement', ACTIVE),
-            node('node', label),
+            node('node', 'Engagement'),
           ])
           .apply(whereNotDeletedInChangeset(changeset))
           .return(['node', 'project'])
           .apply((q) =>
-            changeset && input.filter.projectId
+            changeset && input.filter?.projectId
               ? q
                   .union()
                   .match([
                     node('project', 'Project', { id: input.filter.projectId }),
                     relation('out', '', 'engagement', INACTIVE),
-                    node('node', label),
+                    node('node', 'Engagement'),
                     relation('in', '', 'changeset', ACTIVE),
                     node('changeset', 'Changeset', { id: changeset }),
                   ])
@@ -368,26 +375,7 @@ export class EngagementRepository extends CommonRepository {
           ),
       )
       .match(requestingUser(session))
-      .apply(
-        filter.builder(input.filter, {
-          type: filter.skip,
-          projectId: filter.skip,
-          partnerId: filter.pathExists((id) => [
-            node('node'),
-            relation('in', '', 'engagement'),
-            node('', 'Project'),
-            relation('out', '', 'partnership', ACTIVE),
-            node('', 'Partnership'),
-            relation('out', '', 'partner'),
-            node('', 'Partner', { id }),
-          ]),
-          languageId: filter.pathExists((id) => [
-            node('node'),
-            relation('out', '', 'language'),
-            node('', 'Language', { id }),
-          ]),
-        }),
-      )
+      .apply(engagementFilters(input.filter))
       .apply(
         this.privileges.for(session, IEngagement).filterToReadable({
           wrapContext: oncePerProject,
@@ -527,7 +515,84 @@ export class EngagementRepository extends CommonRepository {
   private createIndexes() {
     return this.getConstraintsFor(IEngagement);
   }
+  @OnIndex('schema')
+  private async createSchemaIndexes() {
+    await this.db.query().apply(NameIndex.create()).run();
+    await this.db.query().apply(LanguageNameIndex.create()).run();
+    await this.db.query().apply(InternshipNameIndex.create()).run();
+  }
 }
+
+export const engagementFilters = filter.define(() => EngagementFilters, {
+  type: ({ value }) => ({
+    node: hasLabel(
+      simpleSwitch(value, {
+        language: 'LanguageEngagement',
+        internship: 'InternshipEngagement',
+      })!,
+    ),
+  }),
+  status: filter.stringListProp(),
+  name: filter.fullText({
+    index: () => NameIndex,
+    matchToNode: (q) =>
+      q.match([
+        node('node', 'Engagement'),
+        relation('either', '', undefined, ACTIVE),
+        node('', 'BaseNode'),
+        relation('out', '', undefined, ACTIVE),
+        node('match'),
+      ]),
+    // UI joins project & language/intern names with dash
+    // Remove it from search if users type it
+    normalizeInput: (v) => v.replaceAll(/ -/g, ''),
+    // Treat each word as a separate search term
+    // Each word could point to a different node
+    // i.e. "project - language"
+    separateQueryForEachWord: true,
+    minScore: 0.9,
+  }),
+  projectId: filter.pathExists((id) => [
+    node('node'),
+    relation('in', '', 'engagement'),
+    node('project', 'Project', { id }),
+  ]),
+  partnerId: filter.pathExists((id) => [
+    node('node'),
+    relation('in', '', 'engagement'),
+    node('', 'Project'),
+    relation('out', '', 'partnership', ACTIVE),
+    node('', 'Partnership'),
+    relation('out', '', 'partner'),
+    node('', 'Partner', { id }),
+  ]),
+  languageId: filter.pathExists((id) => [
+    node('node'),
+    relation('out', '', 'language'),
+    node('', 'Language', { id }),
+  ]),
+  project: filter.sub(
+    () => projectFilters,
+    'requestingUser',
+  )((sub) =>
+    sub
+      .with('node as eng, requestingUser')
+      .match([
+        node('eng'),
+        relation('in', '', 'engagement'),
+        node('node', 'Project'),
+      ]),
+  ),
+  language: filter.sub(() => languageFilters)((sub) =>
+    sub
+      .with('node as eng')
+      .match([
+        node('eng'),
+        relation('out', '', 'language'),
+        node('node', 'Language'),
+      ]),
+  ),
+});
 
 export const engagementSorters = defineSorters(IEngagement, {
   nameProjectFirst: (query) =>
@@ -547,6 +612,26 @@ export const engagementSorters = defineSorters(IEngagement, {
       .match([node('project'), relation('out', '', 'engagement'), node('node')])
       .apply(matchProjectSens())
       .return<{ sortValue: unknown }>('sensitivity as sortValue'),
+  ...mapValues.fromList(
+    ['startDate', 'endDate'],
+    (field) => (query: Query) =>
+      query
+        .optionalMatch([
+          node('node'),
+          relation('out', '', `${field}Override`, ACTIVE),
+          node('override', 'Property'),
+        ])
+        .optionalMatch([
+          node('node'),
+          relation('in', '', 'engagement'),
+          node('project'),
+          relation('out', '', `mou${upperFirst(field.slice(0, -4))}`, ACTIVE),
+          node('projProp'),
+        ])
+        .return<{ sortValue: unknown }>(
+          coalesce('override.value', 'projProp.value').as('sortValue'),
+        ),
+  ).asRecord,
   // eslint-disable-next-line @typescript-eslint/naming-convention
   'language.*': (query, input) =>
     query
@@ -622,3 +707,22 @@ const multiPropsAsSortString = (props: string[]) =>
     ' + ',
     props.map((prop) => `coalesce(${prop}.value, "")`),
   ) + ' as sortValue';
+
+const NameIndex = FullTextIndex({
+  indexName: 'EngagementName',
+  labels: ['ProjectName', 'LanguageName', 'LanguageDisplayName', 'UserName'],
+  properties: 'value',
+  analyzer: 'standard-folding',
+});
+const LanguageNameIndex = FullTextIndex({
+  indexName: 'LanguageEngagementName',
+  labels: ['ProjectName', 'LanguageName', 'LanguageDisplayName'],
+  properties: 'value',
+  analyzer: 'standard-folding',
+});
+const InternshipNameIndex = FullTextIndex({
+  indexName: 'InternshipEngagementName',
+  labels: ['ProjectName', 'UserName'],
+  properties: 'value',
+  analyzer: 'standard-folding',
+});

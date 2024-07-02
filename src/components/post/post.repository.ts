@@ -68,7 +68,7 @@ export class PostRepository extends DtoRepository<typeof Post, [Session] | []>(
       .query()
       .match([
         node('node', 'Post'),
-        ...(filter.parentId
+        ...(filter?.parentId
           ? [
               relation('in', '', 'post', ACTIVE),
               node('', 'BaseNode', {

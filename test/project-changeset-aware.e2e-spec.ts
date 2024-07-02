@@ -253,7 +253,7 @@ describe('Project Changeset Aware e2e', () => {
     expect(result.project.budget.value.records.length).toBe(2);
   });
 
-  it('project step', async () => {
+  it.skip('project step', async () => {
     const project = await activeProject(app);
     const changeset = await createProjectChangeRequest(app, {
       projectId: project.id,

@@ -6,6 +6,7 @@ import {
   Condition,
   eqlInLiteralSet,
   IsAllowedParams,
+  MissingContextException,
 } from '../../policy/conditions';
 
 const VariantForCondition = Symbol('Variant');
@@ -21,7 +22,7 @@ export class VariantCondition<TResourceStatic extends ResourceShape<any>>
 
   isAllowed({ object }: IsAllowedParams<TResourceStatic>) {
     if (!object) {
-      throw new Error("Needed object but wasn't given");
+      throw new MissingContextException();
     }
 
     const current = Reflect.get(

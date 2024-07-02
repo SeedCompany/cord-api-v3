@@ -19,8 +19,8 @@ export class EducationListInput extends SortablePaginationInput<
 >({
   defaultSort: 'institution',
 }) {
-  @FilterField(EducationFilters, { internal: true })
-  readonly filter: EducationFilters;
+  @FilterField(() => EducationFilters, { internal: true })
+  readonly filter?: EducationFilters;
 }
 
 @ObjectType()

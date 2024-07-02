@@ -11,6 +11,7 @@ import {
   Sensitivity,
   SortablePaginationInput,
 } from '~/common';
+import { PartnershipFilters } from '../../partnership/dto';
 import { ProjectStatus } from './project-status.enum';
 import { ProjectStep } from './project-step.enum';
 import { ProjectType } from './project-type.enum';
@@ -23,6 +24,11 @@ import {
 
 @InputType()
 export abstract class ProjectFilters {
+  @Field({
+    nullable: true,
+  })
+  readonly name?: string;
+
   @Field(() => [ProjectType], {
     description: 'Only projects of these types',
     nullable: true,
@@ -94,14 +100,17 @@ export abstract class ProjectFilters {
   readonly partnerId?: ID;
 
   readonly userId?: ID;
+
+  @FilterField(() => PartnershipFilters)
+  readonly primaryPartnership?: PartnershipFilters & {};
 }
 
 @InputType()
 export class ProjectListInput extends SortablePaginationInput<keyof IProject>({
   defaultSort: 'name',
 }) {
-  @FilterField(ProjectFilters)
-  readonly filter: ProjectFilters;
+  @FilterField(() => ProjectFilters)
+  readonly filter?: ProjectFilters;
 }
 
 @ObjectType()

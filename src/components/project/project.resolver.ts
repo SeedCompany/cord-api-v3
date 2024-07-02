@@ -43,6 +43,7 @@ import { SecuredOrganization } from '../organization/dto';
 import { PartnershipLoader } from '../partnership';
 import {
   PartnershipListInput,
+  SecuredPartnership,
   SecuredPartnershipList,
 } from '../partnership/dto';
 import { ProjectChangeRequestLoader } from '../project-change-request';
@@ -279,6 +280,16 @@ export class ProjectResolver {
       canEdit: false, // rootDirectory of project unchangeable
       value: dir,
     };
+  }
+
+  @ResolveField(() => SecuredPartnership)
+  async primaryPartnership(
+    @Parent() project: Project,
+    @Loader(PartnershipLoader) partnerships: LoaderOf<PartnershipLoader>,
+  ): Promise<SecuredPartnership> {
+    return await mapSecuredValue(project.primaryPartnership, ({ id }) =>
+      partnerships.load({ id, view: { active: true } }),
+    );
   }
 
   @ResolveField(() => SecuredLocation)

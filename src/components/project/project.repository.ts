@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { inArray, node, Query, relation } from 'cypher-query-builder';
+import { inArray, node, not, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   ID,
@@ -17,17 +17,21 @@ import {
   createNode,
   createRelationships,
   defineSorters,
+  FullTextIndex,
   matchChangesetAndChangedProps,
   matchProjectSens,
   matchPropsAndProjectSensAndScopedRoles,
   merge,
   paginate,
+  path,
   requestingUser,
   SortCol,
   sortWith,
+  variable,
 } from '~/core/database/query';
 import { Privileges } from '../authorization';
 import { locationSorters } from '../location/location.repository';
+import { partnershipSorters } from '../partnership/partnership.repository';
 import {
   CreateProject,
   IProject,
@@ -38,7 +42,7 @@ import {
   stepToStatus,
   UpdateProject,
 } from './dto';
-import { projectListFilter } from './list-filter.query';
+import { projectFilters } from './project-filters.query';
 
 @Injectable()
 export class ProjectRepository extends CommonRepository {
@@ -86,6 +90,13 @@ export class ProjectRepository extends CommonRepository {
         ])
         .optionalMatch([
           node('node'),
+          relation('out', '', 'partnership', ACTIVE),
+          node('primaryPartnership', 'Partnership'),
+          relation('out', '', 'primary', ACTIVE),
+          node('', 'Property', { value: variable('true') }),
+        ])
+        .optionalMatch([
+          node('node'),
           relation('out', '', 'primaryLocation', ACTIVE),
           node('primaryLocation', 'Location'),
         ])
@@ -123,6 +134,7 @@ export class ProjectRepository extends CommonRepository {
             type: 'node.type',
             pinned: 'exists((:User { id: $requestingUser })-[:pinned]->(node))',
             rootDirectory: 'rootDirectory { .id }',
+            primaryPartnership: 'primaryPartnership { .id }',
             primaryLocation: 'primaryLocation { .id }',
             marketingLocation: 'marketingLocation { .id }',
             fieldRegion: 'fieldRegion { .id }',
@@ -138,10 +150,7 @@ export class ProjectRepository extends CommonRepository {
     currentProject: UnsecuredDto<Project>,
     input: UpdateProject,
   ) {
-    return getChanges(IProject)(currentProject, {
-      ...input,
-      ...(input.step ? { status: stepToStatus(input.step) } : {}),
-    });
+    return getChanges(IProject)(currentProject, input);
   }
 
   async create(input: CreateProject) {
@@ -288,7 +297,7 @@ export class ProjectRepository extends CommonRepository {
       .matchNode('node', 'Project')
       .with('distinct(node) as node, node as project')
       .match(requestingUser(session))
-      .apply(projectListFilter(input))
+      .apply(projectFilters(input.filter))
       .apply(this.privileges.for(session, IProject).filterToReadable())
       .apply(sortWith(projectSorters, input))
       .apply(paginate(input, this.hydrate(session.userId)))
@@ -296,11 +305,48 @@ export class ProjectRepository extends CommonRepository {
     return result!; // result from paginate() will always have 1 row.
   }
 
+  async getPrimaryOrganizationName(id: ID) {
+    const name = await this.db
+      .query()
+      .match([
+        node('project', 'Project', { id }),
+        relation('out', '', 'partnership', ACTIVE),
+        node('partnership', 'Partnership'),
+        relation('out', '', 'primary', ACTIVE),
+        node('primary', 'Property', { value: true }),
+      ])
+      .with('partnership')
+      .match([
+        node('partnership'),
+        relation('out', '', 'partner', ACTIVE),
+        node('', 'Partner'),
+        relation('out', '', 'organization', ACTIVE),
+        node('org', 'Organization'),
+        relation('out', '', 'name', ACTIVE),
+        node('name', 'Property'),
+      ])
+      .return<{ name: string }>('name.value as name')
+      .map('name')
+      .first();
+    return name ?? null;
+  }
+
   @OnIndex()
   private createIndexes() {
     return this.getConstraintsFor(IProject);
   }
+  @OnIndex('schema')
+  private async createSchemaIndexes() {
+    await this.db.query().apply(ProjectNameIndex.create()).run();
+  }
 }
+
+export const ProjectNameIndex = FullTextIndex({
+  indexName: 'ProjectName',
+  labels: 'ProjectName',
+  properties: 'value',
+  analyzer: 'standard-folding',
+});
 
 export const projectSorters = defineSorters(IProject, {
   sensitivity: (query) =>
@@ -316,18 +362,39 @@ export const projectSorters = defineSorters(IProject, {
       ])
       .return<SortCol>('count(engagement) as sortValue'),
   // eslint-disable-next-line @typescript-eslint/naming-convention
-  'primaryLocation.*': (query, input) =>
-    query
-      .with('node as proj')
-      .match([
-        node('proj'),
-        relation('out', '', 'primaryLocation', ACTIVE),
-        node('node'),
-      ])
+  'primaryLocation.*': (query, input) => {
+    const getPath = (anon = false) => [
+      node('project'),
+      relation('out', '', 'primaryLocation', ACTIVE),
+      node(anon ? '' : 'node'),
+    ];
+    return query
+      .with('node as project')
+      .match(getPath())
       .apply(sortWith(locationSorters, input))
       .union()
       .with('node')
-      .with('node as proj')
-      .raw('where not exists((node)-[:primaryLocation { active: true }]->())')
-      .return<SortCol>('null as sortValue'),
+      .with('node as project')
+      .where(not(path(getPath(true))))
+      .return<SortCol>('null as sortValue');
+  },
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  'primaryPartnership.*': (query, input) => {
+    const getPath = (anon = false) => [
+      node('project'),
+      relation('out', '', 'partnership', ACTIVE),
+      node(anon ? '' : 'node', 'Partnership'),
+      relation('out', '', 'primary', ACTIVE),
+      node('', 'Property', { value: variable('true') }),
+    ];
+    return query
+      .with('node as project')
+      .match(getPath())
+      .apply(sortWith(partnershipSorters, input))
+      .union()
+      .with('node')
+      .with('node as project')
+      .where(not(path(getPath(true))))
+      .return<SortCol>('null as sortValue');
+  },
 });

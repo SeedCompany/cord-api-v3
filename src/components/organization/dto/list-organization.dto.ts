@@ -1,4 +1,4 @@
-import { InputType, ObjectType } from '@nestjs/graphql';
+import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import {
   FilterField,
   ID,
@@ -10,6 +10,11 @@ import { Organization } from './organization.dto';
 
 @InputType()
 export abstract class OrganizationFilters {
+  @Field({
+    nullable: true,
+  })
+  readonly name?: string;
+
   readonly userId?: ID;
 }
 
@@ -19,8 +24,8 @@ export class OrganizationListInput extends SortablePaginationInput<
 >({
   defaultSort: 'name',
 }) {
-  @FilterField(OrganizationFilters, { internal: true })
-  readonly filter: OrganizationFilters;
+  @FilterField(() => OrganizationFilters, { internal: true })
+  readonly filter?: OrganizationFilters;
 }
 
 @ObjectType()

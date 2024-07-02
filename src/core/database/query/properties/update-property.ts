@@ -1,3 +1,4 @@
+import { Nil } from '@seedcompany/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime, Duration, DurationLikeObject as MyDuration } from 'luxon';
 import {
@@ -37,7 +38,7 @@ export type UpdatePropertyOptions<
     /**
      * The property is permanent after this given duration.
      */
-    permanentAfter?: Variable | DurationIn;
+    permanentAfter?: Variable | DurationIn | Nil;
   };
 
 export interface PropUpdateStat {

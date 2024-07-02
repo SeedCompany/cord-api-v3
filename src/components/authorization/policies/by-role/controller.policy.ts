@@ -5,5 +5,16 @@ import { Policy, Role } from '../util';
   // keep multiline format
   r.Organization.delete,
   r.Partner.delete,
+  r.ProjectWorkflowEvent.read.transitions(
+    'Finance Approves Proposal',
+    'Finance Holds for Confirmation',
+    'Finance Requests Proposal Changes',
+    'Finance Requests Multiplication Changes',
+    'Finance Rejects Proposal',
+    'Finance Ends Development',
+    'Finance Approves Change To Plan',
+    'Finance Requests Changes for Change To Plan',
+    'Finance Rejects Change To Plan',
+  ).execute,
 ])
 export class ControllerPolicy {}

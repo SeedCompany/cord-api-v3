@@ -1,5 +1,6 @@
 import { takeWhile } from 'lodash';
 import { ProjectStep } from '../../../project/dto';
+import { ProjectWorkflow } from '../../../project/workflow/project-workflow';
 import {
   action,
   field,
@@ -17,6 +18,44 @@ const stepsUntilFinancialEndorsement = takeWhile(
   [...ProjectStep],
   (s) => s !== ProjectStep.PendingFinancialEndorsement,
 );
+
+export const projectTransitions = () =>
+  ProjectWorkflow.pickNames(
+    'Propose Multiplication',
+    'Request Concept Approval',
+    'End Conversation',
+    'Request Consultant Endorsement',
+    'Re-request Concept Approval',
+    'End Proposal',
+    'Request Financial Endorsement',
+    'Re-request Consultant Endorsement',
+    'Request Proposal Approval',
+    'Re-request Financial Endorsement',
+    'Discuss Change To Plan',
+    'Discuss Terminating Active Project',
+    'Finalize Completion',
+    'Request Change To Plan Approval',
+    'Discuss Suspension out of Change to Plan Discussion',
+    'End Change To Plan Discussion',
+    'Request Changes for Change To Plan',
+    'Approve Change To Plan',
+    'Reject Change To Plan',
+    'Request Suspension Approval',
+    'End Suspension Discussion',
+    'Discuss Reactivation',
+    'Discuss Terminating Suspended Project',
+    'Request Reactivation Approval',
+    'Request Termination Approval',
+    'End Termination Discussion',
+    'Not Ready for Completion',
+    'Complete',
+  );
+
+export const momentumProjectsTransitions = () =>
+  ProjectWorkflow.pickNames(
+    'Consultant Endorses Proposal',
+    'Consultant Opposes Proposal',
+  );
 
 // NOTE: There could be other permissions for this role from other policies
 @Policy(
@@ -92,6 +131,16 @@ const stepsUntilFinancialEndorsement = takeWhile(
       'In Review -> Needs Translation',
       'Review Reject',
       'Review Approve',
+    ).execute,
+    r.ProjectWorkflowEvent.read.whenAll(
+      member,
+      r.ProjectWorkflowEvent.isTransitions(projectTransitions),
+    ).execute,
+    // PMs can also endorse for consultant for momentum projects
+    r.ProjectWorkflowEvent.whenAll(
+      field('project.type', 'MomentumTranslation', 'Momentum'),
+      member,
+      r.ProjectWorkflowEvent.isTransitions(momentumProjectsTransitions),
     ).execute,
     r.Project.read.create
       .when(member)

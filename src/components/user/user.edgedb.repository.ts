@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { NotImplementedException, PublicOf } from '~/common';
+import { ID, NotImplementedException, PublicOf } from '~/common';
 import { e, RepoFor, ScopeOf } from '~/core/edgedb';
 import {
   AssignOrganizationToUser,
@@ -9,13 +9,35 @@ import {
 } from './dto';
 import type { UserRepository } from './user.repository';
 
+const hydrateUser = e.shape(e.User, (user) => ({
+  ...user['*'],
+  __typename: e.str('User'),
+}));
+const hydrateSystemAgent = e.shape(e.SystemAgent, (agent) => ({
+  ...agent['*'],
+  __typename: e.str('SystemAgent'),
+}));
+
 @Injectable()
 export class UserEdgeDBRepository
-  extends RepoFor(User, {
-    hydrate: (user) => user['*'],
-  })
+  extends RepoFor(User, { hydrate: hydrateUser })
   implements PublicOf<UserRepository>
 {
+  async readManyActors(ids: readonly ID[]) {
+    const res = await this.db.run(this.readManyActorsQuery, { ids });
+    return [...res.users, ...res.agents];
+  }
+  private readonly readManyActorsQuery = e.params(
+    { ids: e.array(e.uuid) },
+    ({ ids }) => {
+      const actors = e.cast(e.Actor, e.array_unpack(ids));
+      return e.select({
+        users: e.select(actors.is(e.User), hydrateUser),
+        agents: e.select(actors.is(e.SystemAgent), hydrateSystemAgent),
+      });
+    },
+  );
+
   async doesEmailAddressExist(email: string) {
     const query = e.select(e.User, () => ({
       filter_single: { email },
@@ -25,6 +47,7 @@ export class UserEdgeDBRepository
   }
 
   protected listFilters(user: ScopeOf<typeof e.User>, input: UserListInput) {
+    if (!input.filter) return [];
     return [
       input.filter.pinned != null &&
         e.op(user.pinned, '=', input.filter.pinned),

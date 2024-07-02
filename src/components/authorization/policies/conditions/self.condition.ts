@@ -7,6 +7,7 @@ import {
   Condition,
   fqnRelativeTo,
   IsAllowedParams,
+  MissingContextException,
 } from '../../policy/conditions';
 
 const CQL_VAR = 'requestingUser';
@@ -16,7 +17,7 @@ class SelfCondition<TResourceStatic extends typeof User>
 {
   isAllowed({ object, session }: IsAllowedParams<TResourceStatic>) {
     if (!object) {
-      throw new Error("Needed user object but wasn't given");
+      throw new MissingContextException();
     }
     return object.id === session.userId;
   }

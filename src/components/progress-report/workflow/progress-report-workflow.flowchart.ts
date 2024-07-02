@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import open from 'open';
-import pako from 'pako';
+import { deflateSync as deflate } from 'zlib';
 import { ProgressReportStatus as Status } from '../dto';
 import { Transitions } from './transitions';
 
@@ -77,8 +77,7 @@ export class ProgressReportWorkflowFlowchart {
   }
 
   private compressAndB64encode(str: string) {
-    const data = Buffer.from(str, 'utf8');
-    const compressed = pako.deflate(data, { level: 9 });
+    const compressed = deflate(str, { level: 9 });
     const result = Buffer.from(compressed)
       .toString('base64')
       .replace(/\+/g, '-')

@@ -72,7 +72,7 @@ export class CeremonyRepository extends DtoRepository<
         node('', 'Engagement'),
         relation('in', '', 'engagement', ACTIVE),
         node('project', 'Project'),
-        ...(filter.type
+        ...(filter?.type
           ? [
               relation('out', '', 'type', ACTIVE),
               node('name', 'Property', { value: filter.type }),

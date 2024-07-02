@@ -85,6 +85,8 @@ export type ResourceRelationsShape = ResourceShape<any>['Relations'];
 export class EnhancedResource<T extends ResourceShape<any>> {
   /** @internal */
   static readonly dbTypes = new WeakMap<ResourceShape<any>, $.$expr_PathNode>();
+  /** @internal */
+  static readonly dbSkipAccessPolicies = new Set<string>();
 
   private constructor(readonly type: T) {}
   private static readonly refs = new WeakMap<
@@ -253,6 +255,10 @@ export class EnhancedResource<T extends ResourceShape<any>> {
       throw new ServerException(`No DB type defined for ${this.name}`);
     }
     return type as any;
+  }
+
+  get generateAccessPolicies() {
+    return this.hasDB && !EnhancedResource.dbSkipAccessPolicies.has(this.dbFQN);
   }
 
   get dbFQN(): ResourceShape<any> extends T ? string : DBName<DBType<T>> {

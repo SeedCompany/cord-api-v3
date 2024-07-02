@@ -1,20 +1,25 @@
-import { entries } from '@seedcompany/common';
+import { cleanSplit, entries, many, Many, Nil } from '@seedcompany/common';
 import {
   comparisions,
+  greaterThan,
   inArray,
   isNull,
   node,
   not,
   Query,
+  regexp,
   relation,
 } from 'cypher-query-builder';
 import { PatternCollection } from 'cypher-query-builder/dist/typings/clauses/pattern-clause';
 import { Comparator } from 'cypher-query-builder/dist/typings/clauses/where-comparators';
-import { AndConditions } from 'cypher-query-builder/src/clauses/where-utils';
 import { identity, isFunction } from 'lodash';
-import { ConditionalKeys } from 'type-fest';
+import { AbstractClass, ConditionalKeys } from 'type-fest';
 import { DateTimeFilter } from '~/common';
+import { variable } from '../query-augmentation/condition-variables';
+import { collect } from './cypher-functions';
+import { escapeLuceneSyntax, FullTextIndex } from './full-text';
 import { ACTIVE } from './matching';
+import { WhereAndList } from './where-and-list';
 import { path as pathPattern } from './where-path';
 
 export type Builder<T, K extends keyof T = keyof T> = (
@@ -31,6 +36,19 @@ export type Builders<T> = {
 };
 
 /**
+ * A helper to define filters for the given filter class type.
+ * Functions can do nothing, adjust the query, return an object to add conditions to
+ * the where clause, or return a function which will be called after the where clause.
+ */
+export const define =
+  <T extends Record<string, any>>(
+    filterClass: () => AbstractClass<T>,
+    builders: Builders<T>,
+  ) =>
+  (filters: T | Nil) =>
+    builder(filters ?? {}, builders);
+
+/**
  * A helper to split filters given and call their respective functions.
  * Functions can do nothing, adjust query, return an object to add conditions to
  * the where clause, or return a function which will be called after the where clause.
@@ -41,7 +59,7 @@ export const builder =
     const type = filters.constructor === Object ? null : filters.constructor;
     query.comment(type?.name ?? 'Filters');
 
-    let conditions: AndConditions = {};
+    const conditions = [];
     const afters: Array<(query: Query) => Query> = [];
     for (const key of Object.keys(builders)) {
       const value = filters[key];
@@ -56,11 +74,11 @@ export const builder =
         afters.push(res);
         continue;
       }
-      conditions = { ...conditions, ...res };
+      conditions.push(res);
     }
 
-    if (Object.keys(conditions).length > 0) {
-      query.where(conditions);
+    if (conditions.length > 0) {
+      query.where(new WhereAndList(conditions));
     }
     for (const after of afters) {
       after(query);
@@ -95,6 +113,23 @@ export const propVal =
       node('', 'Property', { value }),
     ]);
     return { [prop ?? key]: cond };
+  };
+
+export const propPartialVal =
+  <T, K extends ConditionalKeys<Required<T>, string>>(
+    prop?: string,
+  ): Builder<T, K> =>
+  ({ key, value: v, query }) => {
+    const value = v as string; // don't know why TS can't figure this out
+    if (!value.trim()) {
+      return undefined;
+    }
+    query.match([
+      node('node'),
+      relation('out', '', prop ?? key, ACTIVE),
+      node(prop ?? key, 'Property'),
+    ]);
+    return { [prop ?? key]: { value: regexp(`.*${value}.*`, true) } };
   };
 
 export const stringListProp =
@@ -180,3 +215,102 @@ export const comparisonOfDateTimeFilter = (
     ? (...args) => comparators.map((comp) => comp(...args)).join(' AND ')
     : undefined;
 };
+
+export const sub =
+  <Input extends Record<string, any>>(
+    subBuilder: () => (input: Partial<Input>) => (q: Query) => void,
+    extraInput?: Many<string>,
+  ) =>
+  <
+    // TODO this doesn't enforce Input type on Outer property
+    K extends string,
+    Outer extends Partial<Record<K, Partial<Input>>>,
+  >(
+    matchSubNode: (sub: Query) => Query,
+  ): Builder<Outer, K> =>
+  ({ key, value, query }) =>
+    query
+      .subQuery(['node', ...many(extraInput ?? [])], (sub) =>
+        sub
+          .apply(matchSubNode)
+          .apply(subBuilder()(value))
+          .return(`true as ${key}FiltersApplied`),
+      )
+      .with('*');
+
+export const fullText =
+  ({
+    index,
+    normalizeInput,
+    separateQueryForEachWord,
+    escapeLucene = true,
+    toLucene,
+    minScore = 0,
+    matchToNode,
+  }: {
+    index: () => FullTextIndex;
+    normalizeInput?: (input: string) => string;
+    separateQueryForEachWord?: boolean;
+    escapeLucene?: boolean;
+    toLucene?: (input: string) => string;
+    minScore?: number;
+    matchToNode: (query: Query) => Query;
+  }) =>
+  <T, K extends ConditionalKeys<T, string | undefined>>({
+    value,
+    key: field,
+    query,
+  }: BuilderArgs<T, K>) => {
+    if (!value || typeof value !== 'string') {
+      return null;
+    }
+
+    const normalized = normalizeInput
+      ? normalizeInput(value as string)
+      : (value as string);
+
+    let input = separateQueryForEachWord
+      ? cleanSplit(normalized, ' ')
+      : [normalized];
+
+    input = escapeLucene ? input.map(escapeLuceneSyntax) : input;
+
+    toLucene ??= (query) =>
+      // Default to each word being matched.
+      // And for each word...
+      cleanSplit(query, ' ')
+        .map((term) => {
+          const adjusted = [
+            // fuzzy (distance) search with boosted priority
+            `${term}~^2`,
+            // word prefixes in case the distance is too great
+            `*${term}*`,
+          ].join(' OR ');
+          return `(${adjusted})`;
+        })
+        .join(' AND ');
+
+    query
+      .subQuery((q) =>
+        q
+          .unwind(input.map(toLucene!), 'query')
+          .subQuery('query', (qq) =>
+            qq
+              .call(
+                index()
+                  .search(variable('query'), { limit: 100 })
+                  .yield({ node: 'match', score: true }),
+              )
+              .where({ score: greaterThan(minScore) })
+              .apply(matchToNode)
+              .return(collect('distinct node').as(`${field}Matches`)),
+          )
+          .return(collect(`${field}Matches`).as(`${field}MatchSets`)),
+      )
+      .with('*');
+
+    return {
+      node: () =>
+        `all(${`${field}Matches`} in ${`${field}MatchSets`} where node in ${`${field}Matches`})`,
+    };
+  };

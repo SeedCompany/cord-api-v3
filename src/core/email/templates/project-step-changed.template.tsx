@@ -6,15 +6,27 @@ import {
   Section,
   Text,
 } from '@seedcompany/nestjs-email/templates';
-import { EmailNotification as StepChangeNotification } from '../../../components/project';
 import {
+  Project,
   ProjectStep as Step,
   ProjectType as Type,
 } from '../../../components/project/dto';
+import { User } from '../../../components/user/dto';
 import { EmailTemplate, Heading } from './base';
 import { FormattedDateTime } from './formatted-date-time';
 import { useFrontendUrl } from './frontend-url';
 import { UserRef } from './user-ref';
+
+export interface ProjectStepChangedProps {
+  recipient: Pick<
+    User,
+    'email' | 'displayFirstName' | 'displayLastName' | 'timezone'
+  >;
+  changedBy: Pick<User, 'id' | 'displayFirstName' | 'displayLastName'>;
+  project: Pick<Project, 'id' | 'modifiedAt' | 'name' | 'step' | 'type'>;
+  previousStep: Step;
+  primaryPartnerName: string | null;
+}
 
 export function ProjectStepChanged({
   project,
@@ -22,7 +34,7 @@ export function ProjectStepChanged({
   previousStep: oldStepVal,
   recipient,
   primaryPartnerName,
-}: StepChangeNotification) {
+}: ProjectStepChangedProps) {
   const projectUrl = useFrontendUrl(`/projects/${project.id}`);
   const projectName = project.name.value;
   const projectType = Type.entry(project.type);

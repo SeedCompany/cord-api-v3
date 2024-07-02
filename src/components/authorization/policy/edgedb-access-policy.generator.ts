@@ -17,6 +17,11 @@ export class EdgeDBAccessPolicyGenerator {
 
   makeSdl(params: AsEdgeQLParams<any>) {
     const { resource } = params;
+
+    if (!resource.generateAccessPolicies) {
+      return undefined;
+    }
+
     const actions = {
       select: 'read',
       'update read': 'read',

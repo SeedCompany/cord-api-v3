@@ -19,8 +19,8 @@ export class ProjectChangeRequestListInput extends SortablePaginationInput<
 >({
   defaultSort: 'createdAt',
 }) {
-  @FilterField(ProjectChangeRequestFilters, { internal: true })
-  readonly filter: ProjectChangeRequestFilters;
+  @FilterField(() => ProjectChangeRequestFilters, { internal: true })
+  readonly filter?: ProjectChangeRequestFilters;
 }
 
 @ObjectType()
