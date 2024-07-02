@@ -9,13 +9,14 @@ import {
   Session,
   UnsecuredDto,
 } from '~/common';
-import { DtoRepository } from '~/core/database';
+import { DtoRepository, OnIndex } from '~/core/database';
 import {
   ACTIVE,
   createNode,
   createRelationships,
   defineSorters,
   filter,
+  FullTextIndex,
   matchProps,
   merge,
   paginate,
@@ -234,14 +235,35 @@ export class LocationRepository extends DtoRepository(Location) {
       .first();
     return !!result;
   }
+
+  @OnIndex('schema')
+  private async createSchemaIndexes() {
+    await this.db.query().apply(NameIndex.create()).run();
+  }
 }
 
 export const locationSorters = defineSorters(Location, {});
 
 export const locationFilters = filter.define(() => LocationFilters, {
+  name: filter.fullText({
+    index: () => NameIndex,
+    matchToNode: (q) =>
+      q.match([
+        node('node', 'Location'),
+        relation('out', '', undefined, ACTIVE),
+        node('match'),
+      ]),
+  }),
   fundingAccountId: filter.pathExists((id) => [
     node('node'),
     relation('out', '', 'fundingAccount', ACTIVE),
     node('', 'FundingAccount', { id }),
   ]),
+});
+
+const NameIndex = FullTextIndex({
+  indexName: 'LocationName',
+  labels: 'LocationName',
+  properties: 'value',
+  analyzer: 'standard-folding',
 });
