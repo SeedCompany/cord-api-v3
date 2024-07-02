@@ -53,17 +53,17 @@ export class EngagementWorkflowRepository extends RepoFor(
     steps: readonly EngagementStatus[],
   ) {
     const query = edgeql(`
-        with
-         engagement := <Engagement><uuid>$engagementId,
-         steps := array_unpack(<array<Engagement::Status>>$steps),
-         mostRecentEvent := (
+      with
+       engagement := <Engagement><uuid>$engagementId,
+        steps := array_unpack(<array<Engagement::Status>>$steps),
+        mostRecentEvent := (
           select engagement.workflowEvents
           filter .to in steps if exists steps else true
           order by .at desc
           limit 1
         )
-        select mostRecentEvent.to
-      `);
+      select mostRecentEvent.to
+    `);
     return await this.db.run(query, { engagementId, steps });
   }
 }
