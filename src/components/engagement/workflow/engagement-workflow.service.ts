@@ -1,12 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { ID, Session, UnsecuredDto } from '~/common';
-import { IEventBus, ResourceLoader } from '~/core';
 import {
   findTransition,
   WorkflowService,
 } from '../../workflow/workflow.service';
 import { Engagement, EngagementStatus } from '../dto';
+import { EngagementService } from '../engagement.service';
 import {
   ExecuteEngagementTransitionInput,
   EngagementWorkflowEvent as WorkflowEvent,
@@ -19,9 +19,9 @@ export class EngagementWorkflowService extends WorkflowService(
   () => EngagementWorkflow,
 ) {
   constructor(
-    private readonly resources: ResourceLoader,
+    @Inject(forwardRef(() => EngagementService))
+    private readonly engagements: EngagementService & {},
     private readonly repo: EngagementWorkflowRepository,
-    private readonly eventBus: IEventBus,
     private readonly moduleRef: ModuleRef,
   ) {
     super();
@@ -73,13 +73,7 @@ export class EngagementWorkflowService extends WorkflowService(
   ) {
     const { engagement: engagementId, notes } = input;
 
-    const { EngagementLoader } = await import('../engagement.loader');
-    const engagements = await this.resources.getLoader(EngagementLoader);
-    const loaderKey = {
-      id: engagementId,
-      view: { active: true },
-    } as const;
-    const previous = await engagements.load(loaderKey);
+    const previous = await this.engagements.readOne(engagementId, session);
 
     const next =
       this.getBypassIfValid(input, session) ??
@@ -99,8 +93,7 @@ export class EngagementWorkflowService extends WorkflowService(
       session,
     );
 
-    engagements.clear(loaderKey);
-    return await engagements.load(loaderKey);
+    return await this.engagements.readOne(engagementId, session);
   }
 
   /** @deprecated */
