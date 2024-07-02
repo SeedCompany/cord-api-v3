@@ -7,7 +7,7 @@ import { ProjectWorkflowRepository } from '../project-workflow.repository';
 export interface ResolveParams {
   project: MaybeSecured<Project>;
   moduleRef: ModuleRef;
-  migrationPrevStep?: ProjectStep;
+  migrationPrevSteps?: ProjectStep[];
 }
 
 export const BackTo = (
@@ -15,9 +15,9 @@ export const BackTo = (
 ): DynamicState<Step, ResolveParams> => ({
   description: 'Back',
   relatedStates: steps,
-  async resolve({ project, moduleRef, migrationPrevStep }) {
-    if (migrationPrevStep) {
-      return migrationPrevStep;
+  async resolve({ project, moduleRef, migrationPrevSteps }) {
+    if (migrationPrevSteps) {
+      return migrationPrevSteps.find((s) => steps.includes(s)) ?? steps[0];
     }
     const repo = moduleRef.get(ProjectWorkflowRepository);
     const found = await repo.mostRecentStep(project.id, steps);
