@@ -65,7 +65,7 @@ export class ProjectWorkflowNeo4jRepository
           relation('out', '', 'workflowEvent', ACTIVE),
           node('node'),
           relation('out', undefined, 'who'),
-          node('who', 'User'),
+          node('who', 'Actor'),
         ])
         .match([
           node('project'),
@@ -104,7 +104,7 @@ export class ProjectWorkflowNeo4jRepository
       .apply(
         createRelationships(WorkflowEvent, {
           in: { workflowEvent: ['Project', project] },
-          out: { who: ['User', session.userId] },
+          out: { who: ['Actor', session.userId] },
         }),
       )
       .apply(this.hydrate())
