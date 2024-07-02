@@ -37,7 +37,7 @@ export class ProjectWorkflowNotificationHandler
   ) {}
 
   async handle(event: ProjectTransitionedEvent) {
-    const { previousStep, next, workflowEvent } = event;
+    const { previousStep, next, workflowEvent, session } = event;
     const transition = typeof next !== 'string' ? next : undefined;
 
     // TODO on bypass: keep notifying members? add anyone else?
@@ -46,7 +46,15 @@ export class ProjectWorkflowNotificationHandler
     const params = { project: event.project, moduleRef: this.moduleRef };
     const notifyees = (
       await Promise.all(notifiers.map((notifier) => notifier.resolve(params)))
-    ).flat();
+    )
+      .flat()
+      .filter(
+        (n) =>
+          // Not current user
+          n.id !== session.userId &&
+          // Only email notifications right now
+          n.email,
+      );
 
     if (notifyees.length === 0) {
       return;
