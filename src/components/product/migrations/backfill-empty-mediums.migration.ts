@@ -1,13 +1,13 @@
 import { groupBy } from '@seedcompany/common';
 import { node } from 'cypher-query-builder';
-import { chunk, uniq } from 'lodash';
+import { uniq } from 'lodash';
 import { ID } from '~/common';
 import { BaseMigration, Migration } from '~/core/database';
 import { updateProperty, variable } from '~/core/database/query';
 import { ProductMedium as Medium, Product } from '../dto';
 import { ProductService } from '../product.service';
 
-@Migration('2024-06-24T09:00:02')
+@Migration('2024-07-01T09:00:00')
 export class BackfillEmptyMediumsMigration extends BaseMigration {
   constructor(private readonly productService: ProductService) {
     super();
@@ -47,20 +47,18 @@ export class BackfillEmptyMediumsMigration extends BaseMigration {
       `Resolves to ${updates.length} products to assign mediums to`,
     );
 
-    for (const updateChunk of chunk(updates, 50)) {
-      await this.db
-        .query()
-        .unwind(updateChunk, 'update')
-        .match(node('product', 'Product', { id: variable('update.id') }))
-        .apply(
-          updateProperty({
-            resource: Product,
-            key: 'mediums',
-            value: variable('update.mediums'),
-          }),
-        )
-        .return<{ id: ID }>('product.id as id')
-        .executeAndLogStats();
-    }
+    await this.db
+      .query()
+      .unwind(updates, 'update')
+      .match(node('node', 'Product', { id: variable('update.id') }))
+      .apply(
+        updateProperty({
+          resource: Product,
+          key: 'mediums',
+          value: variable('update.mediums'),
+        }),
+      )
+      .return<{ id: ID }>('node.id as id')
+      .executeAndLogStats();
   }
 }
