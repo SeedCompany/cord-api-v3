@@ -10,7 +10,7 @@ import { Project, ProjectStep, ProjectType } from '../../dto';
 import { ProjectWorkflowRepository } from '../project-workflow.repository';
 import { ProjectWorkflowService } from '../project-workflow.service';
 
-@Migration('2024-06-22T09:00:00')
+@Migration('2024-07-02T14:00:00')
 export class StepHistoryToWorkflowEventsMigration extends BaseMigration {
   constructor(
     private readonly agents: SystemAgentRepository,
@@ -57,23 +57,27 @@ export class StepHistoryToWorkflowEventsMigration extends BaseMigration {
         this.logger.notice(`Processing project ${i + 1}/${projects.length}`);
       }
 
-      for (const [i, step] of steps.entries()) {
+      for (const [i, next] of steps.entries()) {
         if (i === 0) {
           continue;
         }
-        const prev = steps[i - 1]!;
+        const current = steps[i - 1]!;
+        const prev = steps
+          .slice(0, Math.max(0, i - 2))
+          .map((s) => s.value)
+          .reverse();
         const fakeProject: Project = {
           id: project.id,
           type: project.type,
-          step: { value: step.value, canRead: true, canEdit: true },
+          step: { value: current.value, canRead: true, canEdit: true },
         } as any;
         // @ts-expect-error private but this is a migration
         const transitions = await this.workflow.resolveAvailable(
-          step.value,
+          current.value,
           {
             project: fakeProject,
             moduleRef: this.moduleRef,
-            migrationPrevStep: prev.value,
+            migrationPrevSteps: prev,
           },
           project,
           // We don't know who did it, so we can't confirm this was an official
@@ -82,13 +86,13 @@ export class StepHistoryToWorkflowEventsMigration extends BaseMigration {
           this.fakeAdminSession,
         );
 
-        const transition = transitions.find((t) => t.to === step.value)?.key;
+        const transition = transitions.find((t) => t.to === next.value)?.key;
 
         events.push({
           project: project.id,
-          to: step.value,
+          to: next.value,
           transition,
-          at: step.createdAt,
+          at: next.createdAt,
         });
       }
     }
