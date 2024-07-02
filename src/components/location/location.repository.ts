@@ -15,6 +15,7 @@ import {
   createNode,
   createRelationships,
   defineSorters,
+  filter,
   matchProps,
   merge,
   paginate,
@@ -25,6 +26,7 @@ import { FileId } from '../file/dto';
 import {
   CreateLocation,
   Location,
+  LocationFilters,
   LocationListInput,
   UpdateLocation,
 } from './dto';
@@ -157,10 +159,11 @@ export class LocationRepository extends DtoRepository(Location) {
         );
   }
 
-  async list({ filter, ...input }: LocationListInput) {
+  async list(input: LocationListInput) {
     const result = await this.db
       .query()
       .matchNode('node', 'Location')
+      .apply(locationFilters(input.filter))
       .apply(sortWith(locationSorters, input))
       .apply(paginate(input, this.hydrate()))
       .first();
@@ -234,3 +237,11 @@ export class LocationRepository extends DtoRepository(Location) {
 }
 
 export const locationSorters = defineSorters(Location, {});
+
+export const locationFilters = filter.define(() => LocationFilters, {
+  fundingAccountId: filter.pathExists((id) => [
+    node('node'),
+    relation('out', '', 'fundingAccount', ACTIVE),
+    node('', 'FundingAccount', { id }),
+  ]),
+});
