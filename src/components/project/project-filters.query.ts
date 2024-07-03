@@ -47,6 +47,13 @@ export const projectFilters = filter.define(() => ProjectFilters, {
     relation('in', '', 'member'),
     node('node'),
   ]),
+  isMember: filter.pathExistsWhenTrue([
+    node('requestingUser'),
+    relation('in', '', 'user'),
+    node('', 'ProjectMember'),
+    relation('in', '', 'member'),
+    node('node'),
+  ]),
   pinned: filter.isPinned,
   presetInventory: filter.propVal(),
   partnerId: filter.pathExists((id) => [
