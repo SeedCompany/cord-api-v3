@@ -147,7 +147,7 @@ export class ProjectEdgeDBRepository
               e.op(project.modifiedAt, '<=', input.modifiedAt.beforeInclusive),
           ]
         : []),
-      input.mine != null && e.op(project.isMember, '=', input.mine),
+      input.isMember != null && e.op(project.isMember, '=', input.isMember),
       input.pinned != null && e.op(project.pinned, '=', input.pinned),
       input.languageId &&
         e.op(

@@ -81,8 +81,15 @@ export abstract class ProjectFilters {
   @Field({
     nullable: true,
     description: 'only mine',
+    deprecationReason: 'Use `isMember` instead.',
   })
   readonly mine?: boolean;
+
+  @Field({
+    nullable: true,
+    description: 'Only projects that the requesting user is a member of',
+  })
+  readonly isMember?: boolean;
 
   @Field({
     nullable: true,
