@@ -107,6 +107,9 @@ WORKDIR /opt/cord-api
 # Copy built files from builder stage to this runtime stage
 COPY --from=builder /source /opt/cord-api
 
+# Cache current yarn version
+RUN corepack install
+
 # Grab latest timezone data
 RUN mkdir -p .cache && \
     curl -o .cache/timezones https://raw.githubusercontent.com/moment/moment-timezone/master/data/meta/latest.json

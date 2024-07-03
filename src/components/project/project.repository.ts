@@ -133,6 +133,7 @@ export class ProjectRepository extends CommonRepository {
           merge('props', 'changedProps', {
             type: 'node.type',
             pinned: 'exists((:User { id: $requestingUser })-[:pinned]->(node))',
+            isMember: '"member:true" in props.scope',
             rootDirectory: 'rootDirectory { .id }',
             primaryPartnership: 'primaryPartnership { .id }',
             primaryLocation: 'primaryLocation { .id }',
