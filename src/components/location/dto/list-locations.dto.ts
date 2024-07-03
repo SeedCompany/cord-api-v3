@@ -1,4 +1,4 @@
-import { InputType, ObjectType } from '@nestjs/graphql';
+import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import {
   FilterField,
   ID,
@@ -10,6 +10,11 @@ import { Location } from './location.dto';
 
 @InputType()
 export abstract class LocationFilters {
+  @Field({
+    nullable: true,
+  })
+  readonly name?: string;
+
   readonly fundingAccountId?: ID;
 }
 
@@ -17,7 +22,7 @@ export abstract class LocationFilters {
 export class LocationListInput extends SortablePaginationInput<keyof Location>({
   defaultSort: 'name',
 }) {
-  @FilterField(() => LocationFilters, { internal: true })
+  @FilterField(() => LocationFilters)
   readonly filter?: LocationFilters;
 }
 

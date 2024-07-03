@@ -44,11 +44,12 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
       .query()
       .raw('', { ids })
       .matchNode('user', 'User')
-      .where({ 'user.id': inArray('ids', true) })
+      .where({ 'user.id': inArray('$ids', true) })
+      .with('user as node')
       .apply(this.hydrate(session))
       .union()
       .matchNode('agent', 'SystemAgent')
-      .where({ 'agent.id': inArray('ids', true) })
+      .where({ 'agent.id': inArray('$ids', true) })
       .return<{ dto: UnsecuredDto<User | SystemAgent> }>(
         merge('agent', {
           __typename: '"SystemAgent"',

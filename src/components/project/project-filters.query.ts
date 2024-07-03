@@ -6,6 +6,7 @@ import {
   path,
   variable,
 } from '~/core/database/query';
+import { locationFilters } from '../location/location.repository';
 import { partnershipFilters } from '../partnership/partnership.repository';
 import { ProjectFilters } from './dto';
 import { ProjectNameIndex } from './project.repository';
@@ -101,6 +102,15 @@ export const projectFilters = filter.define(() => ProjectFilters, {
         node('node', 'Partnership'),
         relation('out', '', 'primary', ACTIVE),
         node('', 'Property', { value: variable('true') }),
+      ]),
+  ),
+  primaryLocation: filter.sub(() => locationFilters)((sub) =>
+    sub
+      .with('node as project')
+      .match([
+        node('project'),
+        relation('out', '', 'primaryLocation', ACTIVE),
+        node('node', 'Location'),
       ]),
   ),
 });
