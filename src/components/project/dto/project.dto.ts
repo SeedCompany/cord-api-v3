@@ -167,6 +167,11 @@ class Project extends Interfaces {
   readonly rootDirectory: Secured<LinkTo<'Directory'> | null>;
 
   @Field({
+    description: 'Is the requesting user a member of this project?',
+  })
+  readonly isMember: boolean;
+
+  @Field({
     description: stripIndent`
       Whether or not this project and its associated languages (via engagements)
       are a part of our "Preset Inventory".
