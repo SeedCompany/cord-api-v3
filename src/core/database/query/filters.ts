@@ -257,17 +257,19 @@ export const fullText =
     matchToNode: (query: Query) => Query;
   }) =>
   <T, K extends ConditionalKeys<T, string | undefined>>({
-    value,
+    value: raw,
     key: field,
     query,
   }: BuilderArgs<T, K>) => {
-    if (!value || typeof value !== 'string') {
+    if (!raw || typeof raw !== 'string') {
+      return null;
+    }
+    const value = (raw as string).trim();
+    if (!value) {
       return null;
     }
 
-    const normalized = normalizeInput
-      ? normalizeInput(value as string)
-      : (value as string);
+    const normalized = normalizeInput ? normalizeInput(value) : value;
 
     let input = separateQueryForEachWord
       ? cleanSplit(normalized, ' ')
