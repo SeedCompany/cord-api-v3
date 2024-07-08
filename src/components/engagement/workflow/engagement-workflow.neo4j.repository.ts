@@ -1,13 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { inArray, node, Query, relation } from 'cypher-query-builder';
-import {
-  ID,
-  Order,
-  PublicOf,
-  ServerException,
-  Session,
-  UnsecuredDto,
-} from '~/common';
+import { ID, Order, PublicOf, Session, UnsecuredDto } from '~/common';
 import { DtoRepository } from '~/core/database';
 import {
   ACTIVE,
@@ -18,7 +11,6 @@ import {
   requestingUser,
   sorting,
 } from '~/core/database/query';
-import { ProjectStep } from '../../project/dto';
 import { EngagementStatus, IEngagement } from '../dto';
 import {
   ExecuteEngagementTransitionInput,
@@ -137,59 +129,5 @@ export class EngagementWorkflowNeo4jRepository
       .return<{ step: EngagementStatus }>(`prop.value as step`)
       .first();
     return result?.step ?? null;
-  }
-
-  async getCurrentProjectStep(engagementId: ID, changeset?: ID) {
-    const result = await this.db
-      .query()
-      .match([
-        node('engagement', 'Engagement', { id: engagementId }),
-        relation('in', '', 'engagement'), // Removed active true due to changeset aware
-        node('project', 'Project'),
-      ])
-      .raw('return project.id as projectId')
-      .asResult<{ projectId: ID }>()
-      .first();
-
-    if (!result?.projectId) {
-      throw new ServerException(`Could not find project`);
-    }
-    const projectId = result.projectId;
-
-    let currentStep;
-    if (changeset) {
-      const result = await this.db
-        .query()
-        .match([
-          node('project', 'Project', { id: projectId }),
-          relation('out', '', 'step', INACTIVE),
-          node('step', 'Property'),
-          relation('in', '', 'changeset', ACTIVE),
-          node('', 'Changeset', { id: changeset }),
-        ])
-        .raw('return step.value as step')
-        .asResult<{ step: ProjectStep }>()
-        .first();
-      currentStep = result?.step;
-    }
-    if (!currentStep) {
-      const result = await this.db
-        .query()
-        .match([
-          node('project', 'Project', { id: projectId }),
-          relation('out', '', 'step', ACTIVE),
-          node('step', 'Property'),
-        ])
-        .raw('return step.value as step')
-        .asResult<{ step: ProjectStep }>()
-        .first();
-      currentStep = result?.step;
-    }
-
-    if (!currentStep) {
-      throw new ServerException(`Could not find project's step`);
-    }
-
-    return currentStep;
   }
 }

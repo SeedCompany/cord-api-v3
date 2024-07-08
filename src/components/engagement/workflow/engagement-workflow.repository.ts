@@ -69,11 +69,4 @@ export class EngagementWorkflowRepository extends RepoFor(
     `);
     return await this.db.run(query, { engagementId, steps });
   }
-
-  async getCurrentProjectStep(engagementId: ID) {
-    const engagement = e.cast(e.Engagement, e.uuid(engagementId));
-    const project = e.cast(e.Project, engagement.project.id);
-    const query = e.select(project.step);
-    return await this.db.run(query);
-  }
 }

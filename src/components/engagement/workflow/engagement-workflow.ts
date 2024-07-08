@@ -4,6 +4,7 @@ import { EngagementStatus as Status } from '../dto';
 import { EngagementWorkflowEvent } from './dto';
 import { BackTo, BackToActive } from './transitions/back';
 import { EngagementWorkflowContext } from './transitions/context';
+import { ProjectStep } from './transitions/project-step';
 
 // This also controls the order shown in the UI.
 // Therefore, these should generally flow down.
@@ -20,18 +21,21 @@ export const EngagementWorkflow = defineWorkflow({
     to: Status.Rejected,
     label: 'Reject',
     type: Type.Reject,
+    conditions: ProjectStep('Rejected'),
   },
   'End Development': {
     from: Status.InDevelopment,
     to: Status.DidNotDevelop,
     label: 'End Development',
     type: Type.Reject,
+    conditions: ProjectStep('DidNotDevelop'),
   },
   'Approve to Active': {
     from: Status.InDevelopment,
     to: Status.Active,
     label: 'Approve',
     type: Type.Approve,
+    conditions: ProjectStep('Active'),
   },
   'Discuss Change To Plan': {
     from: [Status.Active, Status.ActiveChangedPlan],
