@@ -73,7 +73,18 @@ export const defineWorkflow =
       transitionByKey: (key: ID) => {
         const transition = workflow.transitions.find((t) => t.key === key);
         if (!transition) {
-          throw new NotFoundException('Transition does not exist');
+          throw new NotFoundException(
+            `${workflow.name} workflow transition for key "${key}" does not exist.`,
+          );
+        }
+        return transition;
+      },
+      transitionByName: (name: TransitionNames) => {
+        const transition = workflow.transitions.find((t) => t.name === name);
+        if (!transition) {
+          throw new NotFoundException(
+            `${workflow.name} workflow transition named "${name}" does not exist`,
+          );
         }
         return transition;
       },
@@ -130,6 +141,9 @@ export interface Workflow<
   /** type only */
   readonly resolvedTransition: Omit<Transition, 'to'> & { to: State };
   readonly transitionByKey: (key: ID) => Transition;
+  readonly transitionByName: <Names extends TransitionNames>(
+    name: Names,
+  ) => Transition;
   readonly pickNames: <Names extends TransitionNames>(
     ...keys: Array<Many<Names>>
   ) => ReadonlySet<Names>;

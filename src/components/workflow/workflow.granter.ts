@@ -102,7 +102,7 @@ export class TransitionCondition<W extends Workflow>
     return new TransitionCondition(
       [...allowed].map((name) => ({
         name,
-        key: [workflow.transitions.find((t) => t.name === name)!.key],
+        key: [workflow.transitionByName(name).key],
       })),
     );
   }
