@@ -59,10 +59,6 @@ export class EngagementWorkflowService extends WorkflowService(
     );
   }
 
-  async canBypassWorkflow(session: Session) {
-    return this.canBypass(session);
-  }
-
   canBypass(session: Session) {
     return this.privileges.for(session, WorkflowEvent).can('create');
   }
