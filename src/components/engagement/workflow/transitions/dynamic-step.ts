@@ -10,21 +10,21 @@ import { EngagementWorkflowRepository } from '../engagement-workflow.repository'
 export interface ResolveEngagementParams {
   engagement: Engagement;
   moduleRef: ModuleRef;
-  migrationPrevSteps?: EngagementStatus[];
+  migrationPrevStates?: EngagementStatus[];
 }
 
 export const BackTo = (
-  ...steps: EngagementStatus[]
+  ...states: EngagementStatus[]
 ): DynamicState<Step, ResolveEngagementParams> => ({
   description: 'Back',
-  relatedStates: steps,
-  async resolve({ engagement, moduleRef, migrationPrevSteps }) {
-    if (migrationPrevSteps) {
-      return migrationPrevSteps.find((s) => steps.includes(s)) ?? steps[0];
+  relatedStates: states,
+  async resolve({ engagement, moduleRef, migrationPrevStates }) {
+    if (migrationPrevStates) {
+      return migrationPrevStates.find((s) => states.includes(s)) ?? states[0];
     }
     const repo = moduleRef.get(EngagementWorkflowRepository);
-    const found = await repo.mostRecentStep(engagement.id, steps);
-    return found ?? steps[0] ?? EngagementStatus.InDevelopment;
+    const found = await repo.mostRecentStep(engagement.id, states);
+    return found ?? states[0] ?? EngagementStatus.InDevelopment;
   },
 });
 
