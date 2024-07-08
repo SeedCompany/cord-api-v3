@@ -16,21 +16,21 @@ export const EngagementWorkflow = defineWorkflow({
   event: EngagementWorkflowEvent,
   context: defineContext<EngagementWorkflowContext>,
 })({
-  Reject: {
+  'Reject Proposal': {
     from: Status.InDevelopment,
     to: Status.Rejected,
     label: 'Reject',
     type: Type.Reject,
     conditions: ProjectStep('Rejected'),
   },
-  'End Development': {
+  'End Proposal': {
     from: Status.InDevelopment,
     to: Status.DidNotDevelop,
     label: 'End Development',
     type: Type.Reject,
     conditions: ProjectStep('DidNotDevelop'),
   },
-  'Approve to Active': {
+  'Approve Proposal': {
     from: Status.InDevelopment,
     to: Status.Active,
     label: 'Approve',
@@ -46,7 +46,7 @@ export const EngagementWorkflow = defineWorkflow({
   'Discuss Suspension': {
     from: [Status.Active, Status.ActiveChangedPlan],
     to: Status.DiscussingSuspension,
-    label: 'Discuss Susupension',
+    label: 'Discuss Suspension',
     type: Type.Neutral,
   },
   'Discuss Termination': {
@@ -67,22 +67,22 @@ export const EngagementWorkflow = defineWorkflow({
     label: 'Finalize Completion',
     type: Type.Approve,
   },
-  'Approve Change to Plan': {
+  'Approve Change To Plan': {
     from: Status.DiscussingChangeToPlan,
     to: Status.ActiveChangedPlan,
     label: 'Approve Change to Plan',
     type: Type.Approve,
   },
-  'Will Not Change Plan': {
+  'End Change To Plan Discussion': {
     from: Status.DiscussingChangeToPlan,
     to: BackToActive,
     label: 'Will Not Change Plan',
     type: Type.Neutral,
   },
-  'Discussing Change to Plan -> Discussing Suspension': {
+  'Discuss Suspension out of Change to Plan Discussion': {
     from: [Status.DiscussingChangeToPlan],
     to: Status.DiscussingSuspension,
-    label: 'Discuss Susupension',
+    label: 'Discuss Suspension',
     type: Type.Neutral,
   },
   'Approve Suspension': {
@@ -91,7 +91,7 @@ export const EngagementWorkflow = defineWorkflow({
     label: 'Approve Suspension',
     type: Type.Approve,
   },
-  'Will Not Suspend': {
+  'End Suspension Discussion': {
     from: Status.DiscussingSuspension,
     to: BackToActive,
     label: 'Will Not Suspend',
