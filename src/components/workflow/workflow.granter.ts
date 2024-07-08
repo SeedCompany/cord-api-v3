@@ -15,8 +15,8 @@ export function WorkflowEventGranter<
   W extends Workflow,
   EventClass extends W['eventResource'],
 >(workflow: () => W) {
-  type State = Workflow['state'];
-  type Names = Workflow['transition']['name'];
+  type State = W['state'];
+  type Names = W['transition']['name'];
 
   abstract class WorkflowEventGranterClass extends ResourceGranter<EventClass> {
     get read() {
