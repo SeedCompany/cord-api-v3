@@ -51,8 +51,13 @@ export class Partner extends Interfaces {
   @Field()
   readonly pmcEntityCode: SecuredStringNullable;
 
+  @Field({
+    deprecationReason: 'Use `growthPartnersClient` instead',
+  })
+  readonly globalInnovationsClient?: SecuredBoolean;
+
   @Field()
-  readonly globalInnovationsClient: SecuredBoolean;
+  readonly growthPartnersClient: SecuredBoolean;
 
   @Field()
   readonly active: SecuredBoolean;

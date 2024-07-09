@@ -36,8 +36,14 @@ export abstract class UpdatePartner {
   })
   readonly pmcEntityCode?: string;
 
-  @Field({ nullable: true })
+  @Field({
+    nullable: true,
+    deprecationReason: 'Use `growthPartnersClient` instead',
+  })
   readonly globalInnovationsClient?: boolean;
+
+  @Field({ nullable: true })
+  readonly growthPartnersClient?: boolean;
 
   @Field({ nullable: true })
   readonly active?: boolean;

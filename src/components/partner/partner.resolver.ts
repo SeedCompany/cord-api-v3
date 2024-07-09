@@ -15,6 +15,7 @@ import {
   loadSecuredIds,
   LoggedInSession,
   mapSecuredValue,
+  SecuredBoolean,
   Session,
 } from '~/common';
 import { Loader, LoaderOf } from '~/core';
@@ -84,6 +85,11 @@ export class PartnerResolver {
     return await mapSecuredValue(partner.organization, ({ id }) =>
       organizations.load(id),
     );
+  }
+
+  @ResolveField()
+  growthPartnersClient(@Parent() partner: Partner): SecuredBoolean {
+    return partner.growthPartnersClient ?? partner.globalInnovationsClient;
   }
 
   @ResolveField(() => SecuredUser)

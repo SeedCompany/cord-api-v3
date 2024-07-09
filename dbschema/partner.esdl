@@ -7,7 +7,8 @@ module default {
     required active: bool {
       default := true;
     };
-    required globalInnovationsClient: bool {
+
+    required growthPartnersClient: bool {
       default := false;
     };
     

@@ -21,7 +21,7 @@ export async function createPartner(
     types: [PartnerType.Managing],
     financialReportingTypes: [FinancialReportingType.Funded],
     pmcEntityCode: faker.helpers.replaceSymbols('???').toUpperCase(),
-    globalInnovationsClient: false,
+    growthPartnersClient: false,
     active: false,
     address: faker.location.city(),
     ...input,

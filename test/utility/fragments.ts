@@ -637,7 +637,7 @@ export const partner = gql`
       canRead
       canEdit
     }
-    globalInnovationsClient {
+    growthPartnersClient {
       value
       canRead
       canEdit

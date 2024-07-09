@@ -45,7 +45,7 @@ describe('Partner e2e', () => {
     const types = [PartnerType.Funding, PartnerType.Managing];
     const financialReportingTypes = [FinancialReportingType.FieldEngaged];
     const pmcEntityCode = faker.helpers.replaceSymbols('???').toUpperCase();
-    const globalInnovationsClient = true;
+    const growthPartnersClient = true;
     const active = true;
     const address = faker.location.city();
 
@@ -68,7 +68,7 @@ describe('Partner e2e', () => {
             types,
             financialReportingTypes,
             pmcEntityCode,
-            globalInnovationsClient,
+            growthPartnersClient,
             active,
             address,
           },
@@ -83,9 +83,7 @@ describe('Partner e2e', () => {
       financialReportingTypes,
     );
     expect(updated.pmcEntityCode.value).toEqual(pmcEntityCode);
-    expect(updated.globalInnovationsClient.value).toEqual(
-      globalInnovationsClient,
-    );
+    expect(updated.growthPartnersClient.value).toEqual(growthPartnersClient);
     expect(updated.active.value).toEqual(active);
     expect(updated.address.value).toEqual(address);
   });

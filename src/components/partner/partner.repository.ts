@@ -72,7 +72,7 @@ export class PartnerRepository extends DtoRepository<
       types: input.types,
       financialReportingTypes: input.financialReportingTypes,
       pmcEntityCode: input.pmcEntityCode,
-      globalInnovationsClient: input.globalInnovationsClient,
+      growthPartnersClient: input.growthPartnersClient,
       active: input.active,
       startDate: input.startDate ?? CalendarDate.local(),
       address: input.address,
