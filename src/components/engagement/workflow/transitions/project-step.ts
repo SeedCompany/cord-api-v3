@@ -12,7 +12,11 @@ export const ProjectStep = (...steps: Step[]): Condition => {
     [...stepSet].map((step) => Step.entry(step).label).join(' / ');
   return {
     description,
-    resolve({ engagement }) {
+    resolve({ engagement, migrationPrevStates }) {
+      if (migrationPrevStates) {
+        // Skip for migration, since it is easier and not applicable for historic data in current use.
+        return { status: 'ENABLED' };
+      }
       return {
         status: steps.includes(engagement.project.step)
           ? 'ENABLED'

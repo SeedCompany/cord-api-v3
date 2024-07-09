@@ -2,7 +2,7 @@ import { ModuleRef } from '@nestjs/core';
 import { node, relation } from 'cypher-query-builder';
 import { chunk } from 'lodash';
 import { DateTime } from 'luxon';
-import { Disabled, ID } from '~/common';
+import { ID } from '~/common';
 import { BaseMigration, Migration } from '~/core/database';
 import { ACTIVE, variable } from '~/core/database/query';
 import { SystemAgentRepository } from '../../../user/system-agent.repository';
@@ -10,7 +10,7 @@ import { Engagement, EngagementStatus } from '../../dto';
 import { EngagementWorkflowRepository } from '../engagement-workflow.repository';
 import { EngagementWorkflowService } from '../engagement-workflow.service';
 
-@Disabled('Until Carson reviews')(Migration('2024-07-05T09:00:02'))
+@Migration('2024-07-05T09:00:02')
 export class EngagementStatusHistoryToWorkflowEventsMigration extends BaseMigration {
   constructor(
     private readonly agents: SystemAgentRepository,
