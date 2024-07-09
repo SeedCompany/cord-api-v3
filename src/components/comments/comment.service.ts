@@ -5,6 +5,7 @@ import {
   isIdLike,
   NotFoundException,
   Resource,
+  SecuredList,
   ServerException,
   Session,
   UnsecuredDto,
@@ -156,7 +157,13 @@ export class CommentService {
     input: CommentThreadListInput,
     session: Session,
   ): Promise<CommentThreadList> {
-    await this.verifyCanView(parent, session);
+    const perms = await this.getPermissionsFromResource(parent, session);
+
+    // Do check here since we don't filter in the db query.
+    // Will need to be updated with DB switch.
+    if (!perms.can('read')) {
+      return { ...SecuredList.Redacted, parent };
+    }
 
     const results = await this.repo.threads.list(parent.id, input, session);
 
@@ -164,6 +171,8 @@ export class CommentService {
       ...results,
       items: results.items.map((dto) => this.secureThread(dto, session)),
       parent,
+      canRead: true,
+      canCreate: perms.can('create'),
     };
   }
 
