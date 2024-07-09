@@ -21,14 +21,12 @@ export const EngagementWorkflow = defineWorkflow({
     to: Status.Rejected,
     label: 'Reject',
     type: Type.Reject,
-    conditions: ProjectStep('Rejected'),
   },
   'End Proposal': {
     from: Status.InDevelopment,
     to: Status.DidNotDevelop,
     label: 'End Development',
     type: Type.Reject,
-    conditions: ProjectStep('DidNotDevelop'),
   },
   'Approve Proposal': {
     from: Status.InDevelopment,
