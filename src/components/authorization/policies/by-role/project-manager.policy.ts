@@ -1,4 +1,5 @@
 import { takeWhile } from 'lodash';
+import { EngagementWorkflow } from '../../../engagement/workflow/engagement-workflow';
 import { ProjectStep } from '../../../project/dto';
 import { ProjectWorkflow } from '../../../project/workflow/project-workflow';
 import {
@@ -57,6 +58,22 @@ export const momentumProjectsTransitions = () =>
     'Consultant Opposes Proposal',
   );
 
+export const engagementTransitions = () =>
+  EngagementWorkflow.pickNames(
+    'End Proposal',
+    'Discuss Change To Plan',
+    'Discuss Suspension out of Change to Plan Discussion',
+    'End Change To Plan Discussion',
+    'Discuss Suspension',
+    'End Suspension Discussion',
+    'Discuss Reactivation',
+    'Discuss Termination',
+    'End Termination Discussion',
+    'Finalize Completion',
+    'Not Ready for Completion',
+    'Complete',
+  );
+
 // NOTE: There could be other permissions for this role from other policies
 @Policy(
   [Role.ProjectManager, Role.RegionalDirector, Role.FieldOperationsDirector],
@@ -82,22 +99,9 @@ export const momentumProjectsTransitions = () =>
         p.paratextRegistryId.when(member).read,
       ]),
     ),
-    r.EngagementWorkflowEvent.read.transitions(
-      'Discuss Change To Plan',
-      'Discuss Suspension',
-      'Discuss Termination',
-      'Finalize Completion',
-      'Approve Change To Plan',
-      'End Change To Plan Discussion',
-      'Discuss Suspension out of Change to Plan Discussion',
-      'End Suspension Discussion',
-      'Approve Suspension',
-      'Approve Reactivation',
-      'Discuss Reactivation',
-      'End Termination Discussion',
-      'Approve Termination',
-      'Not Ready for Completion',
-      'Complete',
+    r.EngagementWorkflowEvent.read.whenAll(
+      member,
+      r.EngagementWorkflowEvent.isTransitions(engagementTransitions),
     ).execute,
     r.EthnologueLanguage.read,
     r.FieldRegion.read,

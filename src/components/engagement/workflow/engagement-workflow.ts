@@ -115,6 +115,7 @@ export const EngagementWorkflow = defineWorkflow({
       Status.Active,
       Status.ActiveChangedPlan,
       Status.DiscussingReactivation,
+      Status.DiscussingSuspension,
       Status.Suspended,
     ),
     label: 'Will Not Terminate',
