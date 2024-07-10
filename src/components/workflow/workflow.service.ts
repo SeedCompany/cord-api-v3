@@ -150,11 +150,11 @@ export const WorkflowService = <W extends Workflow>(workflow: () => W) => {
   return WorkflowServiceClass;
 };
 
-export const findTransition = <T extends { key: ID }>(
+export const findTransition = <T extends { key: ID; disabled?: boolean }>(
   transitions: readonly T[],
   needle: ExecuteTransitionInput['transition'],
 ) => {
-  const transition = transitions.find((t) => t.key === needle);
+  const transition = transitions.find((t) => t.key === needle && !t.disabled);
   if (!transition) {
     throw new UnauthorizedException('This transition is not available');
   }
