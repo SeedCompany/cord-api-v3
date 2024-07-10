@@ -15,17 +15,8 @@ import { EngagementService } from '../engagement.service';
 
 const changes: Change[] = [
   {
-    to: { status: ProjectStatus.Active },
-    newStatus: EngagementStatus.Active,
-  },
-  {
     to: { step: ProjectStep.ActiveChangedPlan },
     newStatus: EngagementStatus.ActiveChangedPlan,
-  },
-  {
-    from: { status: ProjectStatus.Active },
-    to: { status: ProjectStatus.InDevelopment },
-    newStatus: EngagementStatus.InDevelopment,
   },
   {
     to: { step: ProjectStep.DiscussingChangeToPlan },
@@ -62,6 +53,15 @@ const changes: Change[] = [
   {
     to: { step: ProjectStep.Terminated },
     newStatus: EngagementStatus.Terminated,
+  },
+  {
+    to: { status: ProjectStatus.Active },
+    newStatus: EngagementStatus.Active,
+  },
+  {
+    from: { status: ProjectStatus.Active },
+    to: { status: ProjectStatus.InDevelopment },
+    newStatus: EngagementStatus.InDevelopment,
   },
 ];
 
