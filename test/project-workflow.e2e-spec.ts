@@ -69,10 +69,6 @@ describe('Project-Workflow e2e', () => {
   it('should have project step', async () => {
     const project = await createProject(app);
     expect(project.step.value).toBe(ProjectStep.EarlyConversations);
-  });
-
-  it('should have project status', async () => {
-    const project = await createProject(app);
     expect(project.status).toBe(ProjectStatus.InDevelopment);
   });
 

@@ -1,13 +1,12 @@
 import { ID } from '~/common';
+import { IProject, ProjectStep } from '../../src/components/project/dto';
 import {
-  Project,
-  ProjectStep,
-  SecuredProjectStep,
-} from '../../src/components/project/dto';
-import { ProjectWorkflowTransition } from '../../src/components/project/workflow/dto';
+  ExecuteProjectTransitionInput,
+  ProjectWorkflowTransition,
+} from '../../src/components/project/workflow/dto';
 import { TestApp } from './create-app';
 import { gql } from './gql-tag';
-import { Raw } from './raw.type';
+import { runAsAdmin } from './login';
 
 export const stepsFromEarlyConversationToBeforeActive = [
   ProjectStep.PendingConceptApproval,
@@ -34,50 +33,81 @@ export const stepsFromEarlyConversationToBeforeTerminated = [
   ProjectStep.PendingTerminationApproval,
 ];
 
-type SecuredStep = SecuredProjectStep & {
-  transitions: ProjectWorkflowTransition[];
-};
-
 export const changeProjectStep = async (
   app: TestApp,
   id: ID,
   to: ProjectStep,
-): Promise<SecuredStep> => {
+) => {
+  const project = await transitionProject(app, { project: id, bypassTo: to });
+  return project.step.transitions;
+};
+
+export const forceProjectTo = async (
+  app: TestApp,
+  project: ID,
+  bypassTo: ProjectStep,
+) =>
+  await runAsAdmin(app, async () => {
+    return await transitionProject(app, { project, bypassTo });
+  });
+
+export const transitionProject = async (
+  app: TestApp,
+  input: ExecuteProjectTransitionInput,
+) => {
   const result = await app.graphql.mutate(
     gql`
-      mutation updateProject($id: ID!, $step: ProjectStep!) {
-        updateProject(input: { project: { id: $id, step: $step } }) {
-          project {
-            step {
-              canRead
-              canEdit
-              value
-              transitions {
-                to
-                type
-                label
-              }
+      mutation TransitionProject($input: ExecuteProjectTransitionInput!) {
+        transitionProject(input: $input) {
+          step {
+            canRead
+            canEdit
+            value
+            transitions {
+              key
+              label
+              to
+              type
+              disabled
+              disabledReason
             }
           }
+          status
         }
       }
     `,
-    {
-      id,
-      step: to,
-    },
+    { input },
   );
-  return result.updateProject.project.step.transitions;
+  return await (result.transitionProject as ReturnType<
+    typeof getProjectTransitions
+  >);
 };
 
-export const transitionNewProjectToActive = async (
-  app: TestApp,
-  project: Raw<Project>,
-) => {
-  for (const next of [
-    ...stepsFromEarlyConversationToBeforeActive,
-    ProjectStep.Active,
-  ]) {
-    await changeProjectStep(app, project.id, next);
-  }
+export const getProjectTransitions = async (app: TestApp, project: ID) => {
+  const result = await app.graphql.mutate(
+    gql`
+      query ProjectTransitions($project: ID!) {
+        project(id: $project) {
+          step {
+            canRead
+            canEdit
+            value
+            transitions {
+              key
+              label
+              to
+              type
+              disabled
+              disabledReason
+            }
+          }
+          status
+        }
+      }
+    `,
+    { project },
+  );
+  return result.project as Pick<IProject, 'step' | 'status'> & {
+    step: { transitions: ProjectWorkflowTransition[] };
+  };
 };
