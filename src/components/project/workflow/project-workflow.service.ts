@@ -13,7 +13,7 @@ import {
   findTransition,
   WorkflowService,
 } from '../../workflow/workflow.service';
-import { IProject, type Project, type ProjectStep } from '../dto';
+import { IProject, type Project } from '../dto';
 import { ProjectService } from '../project.service';
 import {
   type ExecuteProjectTransitionInput,
@@ -109,28 +109,5 @@ export class ProjectWorkflowService extends WorkflowService(
     await this.eventBus.publish(event);
 
     return this.projects.secure(event.project, session);
-  }
-
-  /** @deprecated */
-  async executeTransitionLegacy(
-    currentProject: Project,
-    step: ProjectStep,
-    session: Session,
-  ) {
-    const transitions = await this.getAvailableTransitions(
-      currentProject,
-      session,
-    );
-    // Pick the first matching to step.
-    // Lack of detail is one of the reasons why this is legacy logic.
-    const transition = transitions.find((t) => t.to === step);
-
-    await this.executeTransition(
-      {
-        project: currentProject.id,
-        ...(transition ? { transition: transition.key } : { bypassTo: step }),
-      },
-      session,
-    );
   }
 }
