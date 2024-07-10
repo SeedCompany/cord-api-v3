@@ -1,10 +1,6 @@
 import { faker } from '@faker-js/faker';
 import { CalendarDate, isValidId } from '~/common';
-import {
-  CreateProject,
-  ProjectStep,
-  ProjectType,
-} from '../../src/components/project/dto';
+import { CreateProject, ProjectType } from '../../src/components/project/dto';
 import { TestApp } from './create-app';
 import { createRegion } from './create-region';
 import { fragments, RawProject } from './fragments';
@@ -20,7 +16,6 @@ export async function createProject(
     type: ProjectType.MomentumTranslation,
     mouStart: CalendarDate.fromISO('1991-01-01'),
     mouEnd: CalendarDate.fromISO('1992-01-01'),
-    step: ProjectStep.EarlyConversations,
     tags: ['tag1', 'tag2'],
     fieldRegionId:
       input.fieldRegionId ||

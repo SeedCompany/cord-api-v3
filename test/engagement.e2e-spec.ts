@@ -1016,7 +1016,6 @@ describe('Engagement e2e', () => {
     });
 
     const project = await createProject(app, {
-      step: ProjectStep.EarlyConversations,
       primaryLocationId: location.id,
     });
     await createLanguageEngagement(app, {
@@ -1116,7 +1115,6 @@ describe('Engagement e2e', () => {
         return location;
       });
       const project = await createProject(app, {
-        step: ProjectStep.EarlyConversations,
         primaryLocationId: location.id,
       });
       expect(project.status).toBe(ProjectStatus.InDevelopment);
@@ -1307,7 +1305,6 @@ describe('Engagement e2e', () => {
       return location;
     });
     const project = await createProject(app, {
-      step: ProjectStep.EarlyConversations,
       primaryLocationId: location.id,
     });
     const engagement = await createLanguageEngagement(app, {
