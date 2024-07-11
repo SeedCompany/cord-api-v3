@@ -23,6 +23,10 @@ const changes: Change[] = [
     newStatus: EngagementStatus.DiscussingChangeToPlan,
   },
   {
+    to: { step: ProjectStep.DiscussingSuspension },
+    newStatus: EngagementStatus.DiscussingSuspension,
+  },
+  {
     to: { step: ProjectStep.Suspended },
     newStatus: EngagementStatus.Suspended,
   },
