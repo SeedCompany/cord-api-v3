@@ -119,8 +119,9 @@ export class ProjectWorkflowNeo4jRepository
       object: { id: project },
       changes: {
         step: event.to,
-        stepChangedAt: event.at,
         status: prevStatus === nextStatus ? undefined : nextStatus,
+        stepChangedAt: event.at,
+        modifiedAt: event.at,
       },
       permanentAfter: null,
     });
