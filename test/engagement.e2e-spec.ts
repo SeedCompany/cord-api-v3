@@ -14,11 +14,9 @@ import { Location } from '../src/components/location/dto';
 import { ProductMethodology } from '../src/components/product/dto';
 import {
   Project,
-  ProjectStatus,
   ProjectStep,
   ProjectType,
 } from '../src/components/project/dto';
-import { ProjectWorkflowTransition } from '../src/components/project/workflow/dto';
 import { User } from '../src/components/user/dto';
 import {
   createDirectProduct,
@@ -50,9 +48,10 @@ import {
 } from './utility/transition-engagement';
 import {
   changeProjectStep,
+  forceProjectTo,
+  getProjectTransitions,
   stepsFromEarlyConversationToBeforeActive,
-  stepsFromEarlyConversationToBeforeCompleted,
-  stepsFromEarlyConversationToBeforeTerminated,
+  transitionProject,
 } from './utility/transition-project';
 
 describe('Engagement e2e', () => {
@@ -1006,7 +1005,7 @@ describe('Engagement e2e', () => {
     );
   });
 
-  it('should not enable a Project step transition if the step is FinalizingCompletion and there are Engagements with non-terminal statuses', async () => {
+  it('Projects cannot be completed with engagements not finalizing or terminal', async () => {
     const location = await runAsAdmin(app, async () => {
       const fundingAccount = await createFundingAccount(app);
       const location = await createLocation(app, {
@@ -1016,98 +1015,81 @@ describe('Engagement e2e', () => {
     });
 
     const project = await createProject(app, {
-      step: ProjectStep.EarlyConversations,
       primaryLocationId: location.id,
     });
     await createLanguageEngagement(app, {
       projectId: project.id,
     });
 
+    // Change the project & engagement to FinalizingCompletion
+    await forceProjectTo(app, project.id, 'FinalizingCompletion');
+
+    // Add another engagement not FinalizingCompletion
     await runAsAdmin(app, async () => {
-      for (const next of stepsFromEarlyConversationToBeforeCompleted) {
-        await changeProjectStep(app, project.id, next);
-      }
-      /**
-       * https://github.com/SeedCompany/cord-api-v3/issues/2526
-       * Need to another non-terminal Engagement (Not FinalizingCompletion)
-       */
       await createLanguageEngagement(app, {
         projectId: project.id,
       });
-      const projectQueryResult = await app.graphql.query(
-        gql`
-          query project($id: ID!) {
-            project(id: $id) {
-              id
-              step {
-                value
-                transitions {
-                  to
-                  disabled
-                  disabledReason
-                }
-              }
-            }
-          }
-        `,
-        {
-          id: project.id,
-        },
-      );
-
-      const toCompletedTransition =
-        projectQueryResult.project.step.transitions.find(
-          (t: ProjectWorkflowTransition) => t.to === 'Completed',
-        );
-
-      expect(projectQueryResult.project.step.value).toBe(
-        ProjectStep.FinalizingCompletion,
-      );
-      expect(toCompletedTransition.disabled).toBe(true);
-      expect(toCompletedTransition.disabledReason).toBe(
-        'The project cannot be completed since some ongoing engagements are not "Finalizing Completion"',
-      );
     });
 
-    // can't complete a project if you're not an admin and transition is disabled because of non terminal engagements
-    await app.graphql
-      .mutate(
-        gql`
-          mutation updateProject($id: ID!, $step: ProjectStep) {
-            updateProject(input: { project: { id: $id, step: $step } }) {
-              project {
-                id
-                engagements {
-                  items {
-                    id
-                    status {
-                      value
-                    }
-                  }
-                }
-              }
-            }
-          }
-        `,
-        {
-          id: project.id,
-          step: ProjectStep.Completed,
-        },
-      )
-      .expectError();
+    // Read available transitions
+    const {
+      step: { transitions },
+    } = await getProjectTransitions(app, project.id);
+
+    const toCompletedTransition = transitions.find((t) => t.to === 'Completed');
+
+    expect(toCompletedTransition?.disabled).toBe(true);
+    expect(toCompletedTransition?.disabledReason).toBe(
+      'The project cannot be completed since some ongoing engagements are not "Finalizing Completion"',
+    );
+
+    await expect(
+      transitionProject(app, {
+        project: project.id,
+        transition: toCompletedTransition?.key,
+      }),
+    ).rejects.toThrowGqlError(
+      errors.unauthorized({
+        message: 'This transition is not available',
+      }),
+    );
   });
 
   it.each([
-    [EngagementStatus.Active, stepsFromEarlyConversationToBeforeActive],
-    [EngagementStatus.DidNotDevelop, []],
-    [EngagementStatus.Rejected, stepsFromEarlyConversationToBeforeActive],
-    [EngagementStatus.Terminated, stepsFromEarlyConversationToBeforeTerminated],
+    [
+      ProjectStep.PendingFinanceConfirmation,
+      ProjectStep.Active,
+      EngagementStatus.Active,
+    ],
+    [
+      ProjectStep.EarlyConversations,
+      ProjectStep.DidNotDevelop,
+      EngagementStatus.DidNotDevelop,
+    ],
+    [
+      ProjectStep.PendingFinanceConfirmation,
+      ProjectStep.Rejected,
+      EngagementStatus.Rejected,
+    ],
+    [
+      ProjectStep.PendingTerminationApproval,
+      ProjectStep.Terminated,
+      EngagementStatus.Terminated,
+    ],
     // this only happens when an admin overrides to completed
     // this is prohibited if there are non terminal engagements
-    [EngagementStatus.Completed, stepsFromEarlyConversationToBeforeCompleted],
+    [
+      ProjectStep.FinalizingCompletion,
+      ProjectStep.Completed,
+      EngagementStatus.Completed,
+    ],
   ])(
     'should update Engagement status to match Project step when it becomes %s',
-    async (newStatus: EngagementStatus, steps: ProjectStep[] | []) => {
+    async (
+      currentStepSetup: ProjectStep,
+      nextStep: ProjectStep,
+      expectedNewStatus: EngagementStatus,
+    ) => {
       const location = await runAsAdmin(app, async () => {
         const fundingAccount = await createFundingAccount(app);
         const location = await createLocation(app, {
@@ -1116,51 +1098,51 @@ describe('Engagement e2e', () => {
         return location;
       });
       const project = await createProject(app, {
-        step: ProjectStep.EarlyConversations,
         primaryLocationId: location.id,
       });
-      expect(project.status).toBe(ProjectStatus.InDevelopment);
-
       const engagement = await createLanguageEngagement(app, {
         projectId: project.id,
       });
-      expect(engagement.status.value === EngagementStatus.InDevelopment).toBe(
-        true,
-      );
-      await runAsAdmin(app, async () => {
-        for (const next of steps) {
-          await changeProjectStep(app, project.id, next);
-        }
+      const {
+        step: { transitions },
+      } = await forceProjectTo(app, project.id, currentStepSetup);
 
-        const result = await app.graphql.mutate(
-          gql`
-            mutation updateProject($id: ID!, $step: ProjectStep) {
-              updateProject(input: { project: { id: $id, step: $step } }) {
-                project {
+      // ignoring proper transition permissions
+      await runAsAdmin(app, async () => {
+        const transition = transitions.find((t) => t.to === nextStep);
+        await transitionProject(app, {
+          project: project.id,
+          transition: transition?.key,
+        });
+      });
+
+      const {
+        project: { engagements },
+      } = await app.graphql.query(
+        gql`
+          query ($id: ID!) {
+            project(id: $id) {
+              id
+              engagements {
+                items {
                   id
-                  engagements {
-                    items {
-                      id
-                      status {
-                        value
-                      }
-                    }
+                  status {
+                    value
                   }
                 }
               }
             }
-          `,
-          {
-            id: project.id,
-            step: newStatus,
-          },
-        );
-
-        const actual = result.updateProject.project.engagements.items.find(
-          (e: { id: ID }) => e.id === engagement.id,
-        );
-        expect(actual.status.value).toBe(EngagementStatus[newStatus]);
-      });
+          }
+        `,
+        {
+          id: project.id,
+          step: expectedNewStatus,
+        },
+      );
+      const actual = engagements.items.find(
+        (e: { id: ID }) => e.id === engagement.id,
+      );
+      expect(actual.status.value).toBe(expectedNewStatus);
     },
   );
 
@@ -1307,7 +1289,6 @@ describe('Engagement e2e', () => {
       return location;
     });
     const project = await createProject(app, {
-      step: ProjectStep.EarlyConversations,
       primaryLocationId: location.id,
     });
     const engagement = await createLanguageEngagement(app, {

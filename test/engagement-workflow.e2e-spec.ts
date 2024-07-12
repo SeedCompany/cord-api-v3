@@ -45,7 +45,6 @@ describe('Engagement-Workflow e2e', () => {
     const transProject = await createProject(app, {
       type: ProjectType.MomentumTranslation,
     });
-    expect(transProject.step.value).toBe(ProjectStep.EarlyConversations);
 
     const langEngagement = await createLanguageEngagement(app, {
       projectId: transProject.id,
