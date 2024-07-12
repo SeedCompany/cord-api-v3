@@ -2,7 +2,6 @@ import { CalendarDate, ID, Role } from '~/common';
 import { EngagementStatus } from '../src/components/engagement/dto';
 import { Language } from '../src/components/language/dto';
 import { ProjectChangeRequestType } from '../src/components/project-change-request/dto';
-import { ProjectStep } from '../src/components/project/dto';
 import {
   approveProjectChangeRequest,
   createFundingAccount,
@@ -22,10 +21,7 @@ import {
   updateProject,
 } from './utility';
 import { fragments } from './utility/fragments';
-import {
-  changeProjectStep,
-  stepsFromEarlyConversationToBeforeActive,
-} from './utility/transition-project';
+import { forceProjectTo } from './utility/transition-project';
 
 const readEngagements = (app: TestApp, id: string, changeset?: string) =>
   app.graphql.query(
@@ -135,14 +131,7 @@ const activeProject = async (app: TestApp, projectId: ID) => {
     primaryLocationId: location.id,
     fieldRegionId: region.id,
   });
-  await runAsAdmin(app, async () => {
-    for (const next of [
-      ...stepsFromEarlyConversationToBeforeActive,
-      ProjectStep.Active,
-    ]) {
-      await changeProjectStep(app, projectId, next);
-    }
-  });
+  await forceProjectTo(app, projectId, 'Active');
 };
 
 describe('Engagement Changeset Aware e2e', () => {

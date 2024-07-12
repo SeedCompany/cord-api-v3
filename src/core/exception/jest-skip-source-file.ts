@@ -19,7 +19,7 @@ export const jestSkipFileInExceptionSource = (
     return e;
   }
 
-  const all = filepath instanceof RegExp && filepath.global;
+  const all = filepath instanceof RegExp ? filepath.global : true;
   e.stack = e.stack?.[all ? 'replaceAll' : 'replace'](filepath, (substr) => {
     const path = substr.match(/\s+at /)
       ? stacktrace.parse({ stack: 'Error \n' + substr } as any)[0].getFileName()

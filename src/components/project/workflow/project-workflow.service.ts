@@ -105,7 +105,7 @@ export class ProjectWorkflowService extends WorkflowService(
     );
     await this.eventBus.publish(event);
 
-    return this.projects.secure(updated, session);
+    return this.projects.secure(event.project, session);
   }
 
   /** @deprecated */

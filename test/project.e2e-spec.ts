@@ -21,7 +21,6 @@ import {
   CreateProject,
   Project,
   ProjectListInput,
-  ProjectStep,
   ProjectType,
 } from '../src/components/project/dto';
 import {
@@ -50,7 +49,7 @@ import {
   TestApp,
   TestUser,
 } from './utility';
-import { transitionNewProjectToActive } from './utility/transition-project';
+import { forceProjectTo } from './utility/transition-project';
 
 const deleteProject =
   (app: TestApp) => async (id: ID | string | { id: ID | string }) =>
@@ -852,45 +851,44 @@ describe('Project e2e', () => {
         fieldRegionId: fieldRegion.id,
       });
 
-      await transitionNewProjectToActive(app, project);
+      const {
+        step: { transitions },
+      } = await forceProjectTo(app, project.id, 'PendingFinanceConfirmation');
 
-      const result = await app.graphql.mutate(
+      // Ensure the result from the change to Active returns the correct budget status
+      const { updatedProject } = await app.graphql.mutate(
         gql`
-          mutation updateProject($id: ID!, $step: ProjectStep!) {
-            updateProject(input: { project: { id: $id, step: $step } }) {
-              project {
-                departmentId {
-                  value
-                }
-                initialMouEnd {
-                  value
-                }
-                budget {
-                  value {
-                    status
-                  }
+          mutation updateProject($input: ExecuteProjectTransitionInput!) {
+            updatedProject: transitionProject(input: $input) {
+              departmentId {
+                value
+              }
+              initialMouEnd {
+                value
+              }
+              budget {
+                value {
+                  status
                 }
               }
             }
           }
         `,
         {
-          id: project.id,
-          // Ensure the result from the change to Active returns the correct budget status
-          step: ProjectStep.Active,
+          input: {
+            project: project.id,
+            transition: transitions.find((t) => t.to === 'Active')?.key,
+          },
         },
       );
 
-      expect(result?.updateProject.project.budget.value.status).toBe(
-        BudgetStatus.Current,
-      );
-      expect(result?.updateProject.project.departmentId.value).toContain(
+      expect(updatedProject.budget.value.status).toBe(BudgetStatus.Current);
+      // TODO move this assertion
+      expect(updatedProject.departmentId.value).toContain(
         fundingAccount.accountNumber.value?.toString(),
       );
-      // Ensure the initialMouEnd is updated to mouEnd value
-      expect(result?.updateProject.project.initialMouEnd.value).toBe(
-        project.mouEnd.value,
-      );
+      // TODO move this assertion
+      expect(updatedProject.initialMouEnd.value).toBe(project.mouEnd.value);
     });
   });
 
@@ -1102,32 +1100,30 @@ describe('Project e2e', () => {
           primaryLocationId: location.id,
           fieldRegionId: fieldRegion.id,
         });
-        const updatedProject = await app.graphql.mutate(
+        const result = await app.graphql.mutate(
           gql`
-            mutation updateProject($id: ID!, $step: ProjectStep!) {
-              updateProject(input: { project: { id: $id, step: $step } }) {
-                project {
-                  departmentId {
-                    value
-                  }
+            mutation updateProject($id: ID!) {
+              project: transitionProject(
+                # updating to this step assigns a dept id
+                input: { project: $id, bypassTo: PendingFinanceConfirmation }
+              ) {
+                departmentId {
+                  value
                 }
               }
             }
           `,
           {
             id: project.id,
-            // updating to this step assigns a dept id
-            step: ProjectStep.PendingFinanceConfirmation,
           },
         );
-        return updatedProject.updateProject.project;
+        return result.project;
       };
-      const projects = await Promise.all(
-        ['1', '2'].map(async (i) => {
-          return await createAndUpdateProject(i);
-        }),
+      const [project1, project2] = await runAsAdmin(app, () =>
+        Promise.all(
+          ['1', '2'].map(async (i) => await createAndUpdateProject(i)),
+        ),
       );
-      const [project1, project2] = projects;
 
       expect(project1.departmentId.value).not.toBe(project2.departmentId.value);
     });

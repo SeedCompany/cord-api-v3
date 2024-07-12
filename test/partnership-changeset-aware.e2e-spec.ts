@@ -17,7 +17,7 @@ import {
   TestApp,
 } from './utility';
 import { fragments } from './utility/fragments';
-import { transitionNewProjectToActive } from './utility/transition-project';
+import { forceProjectTo } from './utility/transition-project';
 
 const readPartnerships = (app: TestApp, id: string, changeset?: string) =>
   app.graphql.query(
@@ -71,9 +71,7 @@ const activeProject = async (app: TestApp) => {
     primaryLocationId: location.id,
     fieldRegionId: fieldRegion.id,
   });
-  await runAsAdmin(app, async () => {
-    await transitionNewProjectToActive(app, project);
-  });
+  await forceProjectTo(app, project.id, 'Active');
 
   return project;
 };
