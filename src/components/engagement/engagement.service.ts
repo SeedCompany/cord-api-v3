@@ -222,6 +222,12 @@ export class EngagementService {
   }
 
   // READ ///////////////////////////////////////////////////////////
+  async readOneUnsecured(
+    id: ID,
+    session: Session,
+  ): Promise<UnsecuredDto<Engagement>> {
+    return await this.repo.readOne(id, session);
+  }
 
   @HandleIdLookup([LanguageEngagement, InternshipEngagement])
   async readOne(
@@ -294,7 +300,7 @@ export class EngagementService {
       view,
     )) as UnsecuredDto<LanguageEngagement>;
 
-    const event = new EngagementUpdatedEvent(updated, previous, input, session);
+    const event = new EngagementUpdatedEvent(updated, previous, session, input);
     await this.eventBus.publish(event);
 
     return (await this.secure(event.updated, session)) as LanguageEngagement;
@@ -342,7 +348,7 @@ export class EngagementService {
       view,
     )) as UnsecuredDto<InternshipEngagement>;
 
-    const event = new EngagementUpdatedEvent(updated, previous, input, session);
+    const event = new EngagementUpdatedEvent(updated, previous, session, input);
     await this.eventBus.publish(event);
 
     return (await this.secure(event.updated, session)) as InternshipEngagement;
@@ -350,7 +356,7 @@ export class EngagementService {
 
   async triggerUpdateEvent(id: ID, session: Session) {
     const object = await this.repo.readOne(id, session);
-    const event = new EngagementUpdatedEvent(object, object, { id }, session);
+    const event = new EngagementUpdatedEvent(object, object, session, { id });
     await this.eventBus.publish(event);
   }
 

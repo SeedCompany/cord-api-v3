@@ -1,12 +1,14 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { ID, Session, UnsecuredDto } from '~/common';
+import { IEventBus } from '~/core';
 import {
   findTransition,
   WorkflowService,
 } from '../../workflow/workflow.service';
 import { Engagement, EngagementStatus } from '../dto';
 import { EngagementService } from '../engagement.service';
+import { EngagementUpdatedEvent } from '../events';
 import {
   ExecuteEngagementTransitionInput,
   EngagementWorkflowEvent as WorkflowEvent,
@@ -23,6 +25,7 @@ export class EngagementWorkflowService extends WorkflowService(
     private readonly engagements: EngagementService & {},
     private readonly repo: EngagementWorkflowRepository,
     private readonly moduleRef: ModuleRef,
+    private readonly eventBus: IEventBus,
   ) {
     super();
   }
@@ -62,15 +65,22 @@ export class EngagementWorkflowService extends WorkflowService(
   async executeTransition(
     input: ExecuteEngagementTransitionInput,
     session: Session,
+    // eslint-disable-next-line @typescript-eslint/no-inferrable-types
+    isLegacy: boolean = false,
   ) {
     const { engagement: engagementId, notes } = input;
 
-    const previous = await this.engagements.readOne(engagementId, session);
+    const previous = await this.engagements.readOneUnsecured(
+      engagementId,
+      session,
+    );
+    const object = await this.engagements.secure(previous, session);
+    //const previous = await this.engagements.readOne(engagementId, session);
 
     const next =
       this.getBypassIfValid(input, session) ??
       findTransition(
-        await this.getAvailableTransitions(previous, session),
+        await this.getAvailableTransitions(object, session),
         input.transition,
       );
 
@@ -85,7 +95,16 @@ export class EngagementWorkflowService extends WorkflowService(
       session,
     );
 
-    return await this.engagements.readOne(engagementId, session);
+    const updated = await this.engagements.readOneUnsecured(
+      engagementId,
+      session,
+    );
+    if (!isLegacy) {
+      const event = new EngagementUpdatedEvent(updated, previous, session);
+      await this.eventBus.publish(event);
+      return await this.engagements.secure(event.updated, session);
+    }
+    return await this.engagements.secure(updated, session);
   }
 
   /** @deprecated */
@@ -100,13 +119,13 @@ export class EngagementWorkflowService extends WorkflowService(
     );
 
     const transition = transitions.find((t) => t.to === step);
-
     await this.executeTransition(
       {
         engagement: currentEngagement.id,
         ...(transition ? { transition: transition.key } : { bypassTo: step }),
       },
       session,
+      true,
     );
   }
 }
