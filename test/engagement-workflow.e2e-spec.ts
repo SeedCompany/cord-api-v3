@@ -1,6 +1,7 @@
 import { Role } from '~/common';
 import { EngagementStatus } from '../src/components/engagement/dto';
 import {
+  createFundingAccount,
   createLanguageEngagement,
   createLocation,
   createProject,
@@ -34,7 +35,10 @@ describe('Engagement-Workflow e2e', () => {
     });
 
     const location = await runAsAdmin(app, async () => {
-      const location = await createLocation(app, {});
+      const fundingAccount = await createFundingAccount(app);
+      const location = await createLocation(app, {
+        fundingAccountId: fundingAccount.id,
+      });
       return location;
     });
     project = await createProject(app, {
