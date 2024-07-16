@@ -2,10 +2,12 @@ import { Role } from '~/common';
 import { EngagementStatus } from '../src/components/engagement/dto';
 import {
   createLanguageEngagement,
+  createLocation,
   createProject,
   createSession,
   createTestApp,
   registerUser,
+  runAsAdmin,
   TestApp,
   TestUser,
 } from './utility';
@@ -31,7 +33,14 @@ describe('Engagement-Workflow e2e', () => {
       roles: [Role.ProjectManager],
     });
 
-    project = await createProject(app, {});
+    const location = await runAsAdmin(app, async () => {
+      const location = await createLocation(app, {});
+      return location;
+    });
+    project = await createProject(app, {
+      primaryLocationId: location.id,
+    });
+
     engagement = await createLanguageEngagement(app, {
       projectId: project.id,
     });
