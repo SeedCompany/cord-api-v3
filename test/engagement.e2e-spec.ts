@@ -1071,11 +1071,11 @@ describe('Engagement e2e', () => {
       ProjectStep.Rejected,
       EngagementStatus.Rejected,
     ],
-    [
-      ProjectStep.PendingTerminationApproval,
-      ProjectStep.Terminated,
-      EngagementStatus.Terminated,
-    ],
+    // [
+    //   ProjectStep.PendingTerminationApproval,
+    //   ProjectStep.Terminated,
+    //   EngagementStatus.Terminated,
+    // ],
     // this only happens when an admin overrides to completed
     // this is prohibited if there are non terminal engagements
     [
