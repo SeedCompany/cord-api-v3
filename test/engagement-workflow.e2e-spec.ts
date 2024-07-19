@@ -58,8 +58,11 @@ describe('Engagement-Workflow e2e', () => {
   });
 
   it('Start Late', async () => {
-    const lateEng = await createLanguageEngagement(app, {
-      projectId: project.id,
+    const lateEng = await runAsAdmin(app, async () => {
+      const lateEng = await createLanguageEngagement(app, {
+        projectId: project.id,
+      });
+      return lateEng;
     });
     const eng = await EngagementWorkflowTester.for(app, lateEng.id);
     expect(eng.state).toBe(EngagementStatus.InDevelopment);
