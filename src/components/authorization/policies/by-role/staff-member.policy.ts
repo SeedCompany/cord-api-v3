@@ -13,7 +13,7 @@ import { inherit, Policy, Role, sensOnlyLow } from '../util';
   r.FundingAccount.read,
   r.Language.read.specifically((p) => [
     p.locations.when(sensOnlyLow).read,
-    p.registryOfDialectsCode.none,
+    p.registryOfLanguageVarietiesCode.none,
     p.signLanguageCode.none,
   ]),
   r.Organization.read.specifically((p) => [

@@ -18,6 +18,7 @@ import {
   LoggedInSession,
   SecuredDate,
   SecuredIntNullable,
+  SecuredStringNullable,
   Session,
   viewOfChangeset,
 } from '~/common';
@@ -97,6 +98,14 @@ export class LanguageResolver {
         ? value ?? language.ethnologue.population.value
         : undefined,
     };
+  }
+
+  @ResolveField(() => SecuredStringNullable, {
+    deprecationReason:
+      'Use registryOfLanguageVarieties instead of registryOfDialectsCode',
+  })
+  registryOfDialectsCode(@Parent() language: Language): SecuredStringNullable {
+    return language.registryOfLanguageVarietiesCode ?? null;
   }
 
   @ResolveField()

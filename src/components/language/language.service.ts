@@ -86,9 +86,10 @@ export class LanguageService {
     if (input.hasExternalFirstScripture) {
       await this.verifyExternalFirstScripture(input.id);
     }
+    const { registryOfDialectsCode, ...props } = input;
 
     const language = await this.repo.readOne(input.id, session, view);
-    const changes = this.repo.getActualChanges(language, input);
+    const changes = this.repo.getActualChanges(language, props);
     this.privileges.for(session, Language, language).verifyChanges(changes);
 
     const { ethnologue, ...simpleChanges } = changes;

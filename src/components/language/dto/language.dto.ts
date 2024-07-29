@@ -139,8 +139,8 @@ export class Language extends Interfaces {
       https://globalrecordings.net/en/rod
     `,
   })
-  @DbUnique('RegistryOfDialectsCode')
-  readonly registryOfDialectsCode: SecuredStringNullable;
+  @DbUnique('RegistryOfLanguageVarietiesCode')
+  readonly registryOfLanguageVarietiesCode: SecuredStringNullable;
 
   // consider making object
   @Field({

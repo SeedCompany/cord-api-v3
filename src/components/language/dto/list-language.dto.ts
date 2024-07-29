@@ -74,7 +74,7 @@ export abstract class LanguageFilters {
   @Field({
     nullable: true,
   })
-  readonly registryOfDialectsCode?: string;
+  readonly registryOfLanguageVarietiesCode?: string;
 
   readonly partnerId?: ID;
 

@@ -13,7 +13,7 @@ import { inherit, member, Policy, Role } from '../util';
         'leastOfThese',
         'leastOfTheseReason',
         'name',
-        'registryOfDialectsCode',
+        'registryOfLanguageVarietiesCode',
         'signLanguageCode',
         'sponsorEstimatedEndDate',
       ).none,

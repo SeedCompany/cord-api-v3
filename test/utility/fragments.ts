@@ -203,7 +203,7 @@ export const language = gql`
       canEdit
       canRead
     }
-    registryOfDialectsCode {
+    registryOfLanguageVarietiesCode {
       value
       canEdit
       canRead

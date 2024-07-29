@@ -11,7 +11,11 @@ import * as Consultant from './consultant.policy';
   r.Language.read.specifically(
     (p) =>
       p
-        .many('registryOfDialectsCode', 'signLanguageCode', 'locations')
+        .many(
+          'registryOfLanguageVarietiesCode',
+          'signLanguageCode',
+          'locations',
+        )
         .whenAny(member, sensMediumOrLower).read,
   ),
   r.LanguageEngagement.edit.specifically((p) => [

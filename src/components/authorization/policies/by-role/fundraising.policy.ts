@@ -4,7 +4,7 @@ import { member, Policy, Role, sensMediumOrLower } from '../util';
 @Policy(Role.Fundraising, (r) => [
   r.EthnologueLanguage.whenAny(member, sensMediumOrLower).read,
   r.Language.read.specifically((p) => [
-    p.registryOfDialectsCode.whenAny(member, sensMediumOrLower).read,
+    p.registryOfLanguageVarietiesCode.whenAny(member, sensMediumOrLower).read,
     p.signLanguageCode.whenAny(member, sensMediumOrLower).read,
     p.locations.whenAny(member, sensMediumOrLower).read,
   ]),

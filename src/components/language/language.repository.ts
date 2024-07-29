@@ -70,7 +70,7 @@ export class LanguageRepository extends DtoRepository<
       sensitivity: input.sensitivity,
       isDialect: input.isDialect,
       populationOverride: input.populationOverride,
-      registryOfDialectsCode: input.registryOfDialectsCode,
+      registryOfLanguageVarietiesCode: input.registryOfLanguageVarietiesCode,
       leastOfThese: input.leastOfThese,
       leastOfTheseReason: input.leastOfTheseReason,
       displayNamePronunciation: input.displayNamePronunciation,
@@ -106,7 +106,7 @@ export class LanguageRepository extends DtoRepository<
           simpleSwitch(e.label, {
             LanguageName: 'name',
             LanguageDisplayName: 'displayName',
-            RegistryOfDialectsCode: `registryOfDialectsCode`,
+            RegistryOfLanguageAndVariantsCode: `registryOfLanguageAndVariantsCode`,
           }) ?? e.label;
         throw new DuplicateException(
           `language.${prop}`,
@@ -290,7 +290,7 @@ export const languageFilters = filter.define(() => LanguageFilters, {
   leastOfThese: filter.propVal(),
   isSignLanguage: filter.propVal(),
   isDialect: filter.propVal(),
-  registryOfDialectsCode: filter.propPartialVal(),
+  registryOfLanguageVarietiesCode: filter.propPartialVal(),
   partnerId: filter.pathExists((id) => [
     node('node'),
     relation('in', '', 'language', ACTIVE),
