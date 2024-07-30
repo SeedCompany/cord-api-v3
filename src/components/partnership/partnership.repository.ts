@@ -406,6 +406,7 @@ export class PartnershipRepository extends DtoRepository<
 
 export const partnershipFilters = filter.define(() => PartnershipFilters, {
   projectId: filter.skip,
+  types: filter.intersectsProp(),
   partner: filter.sub(() => partnerFilters)((sub) =>
     sub
       .with('node as partnership')

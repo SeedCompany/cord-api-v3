@@ -16,6 +16,7 @@ import { identity, isFunction } from 'lodash';
 import { AbstractClass, ConditionalKeys } from 'type-fest';
 import { DateTimeFilter } from '~/common';
 import { variable } from '../query-augmentation/condition-variables';
+import { intersects } from './comparators';
 import { collect } from './cypher-functions';
 import { escapeLuceneSyntax, FullTextIndex } from './full-text';
 import { ACTIVE } from './matching';
@@ -130,6 +131,20 @@ export const propPartialVal =
       node(prop ?? key, 'Property'),
     ]);
     return { [prop ?? key]: { value: regexp(`.*${value}.*`, true) } };
+  };
+
+export const intersectsProp =
+  <T, K extends ConditionalKeys<Required<T>, readonly string[]>>(
+    prop?: string,
+  ): Builder<T, K> =>
+  ({ key, value, query }) => {
+    prop ??= key;
+    query.match([
+      node('node'),
+      relation('out', '', prop, ACTIVE),
+      node(prop, 'Property'),
+    ]);
+    return { [`${prop}.value`]: intersects(value as readonly string[], prop) };
   };
 
 export const stringListProp =
