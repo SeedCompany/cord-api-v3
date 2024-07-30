@@ -72,7 +72,7 @@ with
           displayNamePronunciation := <str>language['displayNamePronunciation'],
           ownSensitivity := <Sensitivity>json_get(language, 'sensitivity'),
           isDialect := <bool>json_get(language, 'isDialect') ?? false,
-          registryOfDialectsCode := <str>json_get(language, 'registryOfDialectsCode'),
+          registryOfLanguageVarietiesCode := <str>json_get(language, 'registryOfLanguageVarietiesCode'),
           leastOfThese := <bool>json_get(language, 'leastOfThese') ?? false,
           isSignLanguage := exists json_get(language, 'signLanguageCode'),
           signLanguageCode := <str>json_get(language, 'signLanguageCode'),
