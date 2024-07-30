@@ -109,6 +109,11 @@ export abstract class ProjectFilters {
 
   readonly userId?: ID;
 
+  @FilterField(() => PartnershipFilters, {
+    description: 'Only projects with _any_ partnerships matching these filters',
+  })
+  readonly partnerships?: PartnershipFilters & {};
+
   @FilterField(() => PartnershipFilters)
   readonly primaryPartnership?: PartnershipFilters & {};
 
