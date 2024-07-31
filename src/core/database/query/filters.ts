@@ -222,9 +222,13 @@ export const comparisonOfDateTimeFilter = (
     after: comparisions.greaterThan,
     beforeInclusive: comparisions.lessEqualTo,
     before: comparisions.lessThan,
+    isNull:
+      (val: boolean | any): Comparator =>
+      (_, name) =>
+        `${name} ${val ? 'IS' : 'IS NOT'} NULL`,
   };
   const comparators = entries(input).flatMap(([key, val]) =>
-    val ? comparatorMap[key](val) : [],
+    val != null ? comparatorMap[key](val) : [],
   );
   return comparators.length > 0
     ? (...args) => comparators.map((comp) => comp(...args)).join(' AND ')
