@@ -101,11 +101,10 @@ export class LanguageResolver {
   }
 
   @ResolveField(() => SecuredStringNullable, {
-    deprecationReason:
-      'Use registryOfLanguageVarieties instead of registryOfDialectsCode',
+    deprecationReason: 'Use `registryOfLanguageVarieties` instead',
   })
   registryOfDialectsCode(@Parent() language: Language): SecuredStringNullable {
-    return language.registryOfLanguageVarietiesCode ?? null;
+    return language.registryOfLanguageVarietiesCode;
   }
 
   @ResolveField()
