@@ -40,6 +40,8 @@ export const projectFilters = filter.define(() => ProjectFilters, {
   step: filter.stringListProp(),
   createdAt: filter.dateTimeBaseNodeProp(),
   modifiedAt: filter.dateTimeProp(),
+  mouStart: filter.dateTimeProp(),
+  mouEnd: filter.dateTimeProp(),
   mine: filter.pathExistsWhenTrue([
     node('requestingUser'),
     relation('in', '', 'user'),

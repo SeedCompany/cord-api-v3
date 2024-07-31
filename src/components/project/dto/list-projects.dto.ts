@@ -2,6 +2,7 @@ import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import {
+  DateFilter,
   DateTimeFilter,
   FilterField,
   ID,
@@ -77,6 +78,20 @@ export abstract class ProjectFilters {
   @Type(() => DateTimeFilter)
   @ValidateNested()
   readonly modifiedAt?: DateTimeFilter;
+
+  @Field({
+    nullable: true,
+  })
+  @Type(() => DateFilter)
+  @ValidateNested()
+  readonly mouStart?: DateFilter;
+
+  @Field({
+    nullable: true,
+  })
+  @Type(() => DateFilter)
+  @ValidateNested()
+  readonly mouEnd?: DateFilter;
 
   @Field({
     nullable: true,
