@@ -439,7 +439,6 @@ export const partnershipFilters = filter.define(() => PartnershipFilters, {
         node('node', 'Partner'),
       ]),
   ),
-  types: filter.skip,
 });
 
 export const partnershipSorters = defineSorters(Partnership, {
