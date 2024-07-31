@@ -32,24 +32,22 @@ export class PartnershipEdgeDBRepository
   async readManyByProjectAndPartner(
     input: readonly PartnershipByProjectAndPartnerInput[],
   ) {
-    const results = [];
-    for (const item of input) {
-      const project = e.cast(e.Project, e.uuid(item.project));
-      const partner = e.cast(e.Partner, e.uuid(item.partner));
-
-      const query = e.select(e.Partnership, (partnership) => ({
-        ...this.hydrate(partnership),
-        filter: e.op(
-          e.op(partnership.project, '=', project),
-          'and',
-          e.op(partnership.partner, '=', partner),
-        ),
-      }));
-      const result = await this.db.run(query);
-      results.push(...result);
-    }
-    return results;
+    return await this.db.run(this.readManyByProjectAndPartnerQuery, { input });
   }
+  private readonly readManyByProjectAndPartnerQuery = e.params(
+    { input: e.array(e.tuple({ project: e.uuid, partner: e.uuid })) },
+    ({ input }) =>
+      e.for(e.array_unpack(input), ({ project, partner }) =>
+        e.select(e.Partnership, (partnership) => ({
+          ...this.hydrate(partnership),
+          filter: e.op(
+            e.op(partnership.project, '=', e.cast(e.Project, project)),
+            'and',
+            e.op(partnership.partner, '=', e.cast(e.Partner, partner)),
+          ),
+        })),
+      ),
+  );
 
   async isFirstPartnership(projectId: ID) {
     const project = e.cast(e.Project, e.uuid(projectId));
