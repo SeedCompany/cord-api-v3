@@ -6,6 +6,7 @@ import { FileModule } from '../file/file.module';
 import { PartnerModule } from '../partner/partner.module';
 import { ProjectModule } from '../project/project.module';
 import * as handlers from './handlers';
+import { PartnershipByProjectAndPartnerLoader } from './partnership-by-project-and-partner.loader';
 import { PartnershipEdgeDBRepository } from './partnership.edgedb.repository';
 import { PartnershipLoader } from './partnership.loader';
 import { PartnershipRepository } from './partnership.repository';
@@ -25,6 +26,7 @@ import { PartnershipService } from './partnership.service';
     PartnershipService,
     splitDb(PartnershipRepository, PartnershipEdgeDBRepository),
     PartnershipLoader,
+    PartnershipByProjectAndPartnerLoader,
     ...Object.values(handlers),
   ],
   exports: [PartnershipService],
