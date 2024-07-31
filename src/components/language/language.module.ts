@@ -13,7 +13,7 @@ import { LanguageLoader } from './language.loader';
 import { LanguageRepository } from './language.repository';
 import { LanguageResolver } from './language.resolver';
 import { LanguageService } from './language.service';
-import { MigrateRegistryOfDialectToRegistryOfLanguageVarieties } from './migrations/rename-rod-to-rolv.migration';
+import { RegistryOfDialectToRegistryOfLanguageVarietiesMigration } from './migrations/rename-rod-to-rolv.migration';
 
 @Module({
   imports: [
@@ -30,7 +30,7 @@ import { MigrateRegistryOfDialectToRegistryOfLanguageVarieties } from './migrati
     splitDb(LanguageRepository, LanguageEdgeDBRepository),
     LanguageLoader,
     InternalFirstScriptureResolver,
-    MigrateRegistryOfDialectToRegistryOfLanguageVarieties,
+    RegistryOfDialectToRegistryOfLanguageVarietiesMigration,
   ],
   exports: [LanguageService],
 })

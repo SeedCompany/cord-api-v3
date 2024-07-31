@@ -3,7 +3,7 @@ import { BaseMigration, Migration } from '~/core/database';
 import { collect, variable } from '~/core/database/query';
 
 @Migration('2024-07-30T13:02:06')
-export class MigrateRegistryOfDialectToRegistryOfLanguageVarieties extends BaseMigration {
+export class RegistryOfDialectToRegistryOfLanguageVarietiesMigration extends BaseMigration {
   async up() {
     await this.db
       .query()
