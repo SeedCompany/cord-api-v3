@@ -37,7 +37,7 @@ export const projectTransitions = () =>
     r.FundingAccount.read,
     r.Language.read.specifically((p) => [
       p.locations.when(sensOnlyLow).read,
-      p.many('registryOfDialectsCode', 'signLanguageCode').none,
+      p.many('registryOfLanguageVarietiesCode', 'signLanguageCode').none,
     ]),
     r.Organization.read.create.whenAny(member, sensMediumOrLower).edit,
     r.Partner.read.create

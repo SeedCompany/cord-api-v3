@@ -35,7 +35,7 @@ export class EthnologueLanguageRepository extends DtoRepository(
           simpleSwitch(e.label, {
             LanguageName: 'name',
             LanguageDisplayName: 'displayName',
-            RegistryOfDialectsCode: `registryOfDialectsCode`,
+            RegistryOfLanguageVarietiesCode: 'registryOfLanguageVarietiesCode',
           }) ?? e.label;
         throw new DuplicateException(
           `language.${prop}`,

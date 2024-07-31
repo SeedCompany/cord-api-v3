@@ -64,10 +64,18 @@ export abstract class CreateLanguage {
   @IsPositive()
   readonly populationOverride: number | null;
 
-  @NameField({ nullable: true })
+  @NameField({
+    nullable: true,
+    deprecationReason: 'Use registryOfLanguageVarietiesCode instead',
+  })
   @ExactLength(5)
   @IsNumberString()
   readonly registryOfDialectsCode?: string | null;
+
+  @NameField({ nullable: true })
+  @ExactLength(5)
+  @IsNumberString()
+  readonly registryOfLanguageVarietiesCode?: string | null;
 
   @Field({ nullable: true })
   readonly leastOfThese: boolean = false;
