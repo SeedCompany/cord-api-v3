@@ -41,11 +41,11 @@ import {
   CreatePartnership,
   Partnership,
   PartnershipAgreementStatus,
-  PartnershipByProjectAndPartnerInput,
   PartnershipFilters,
   PartnershipListInput,
   UpdatePartnership,
 } from './dto';
+import type { PartnershipByProjectAndPartnerInput } from './partnership-by-project-and-partner.loader';
 
 @Injectable()
 export class PartnershipRepository extends DtoRepository<
@@ -160,6 +160,25 @@ export class PartnershipRepository extends DtoRepository<
           ),
       )
       .apply(this.hydrate(session, view))
+      .map('dto')
+      .run();
+  }
+
+  async readManyByProjectAndPartner(
+    input: readonly PartnershipByProjectAndPartnerInput[],
+    session: Session,
+  ) {
+    return await this.db
+      .query()
+      .unwind([...input], 'input')
+      .match([
+        node('project', 'Project', { id: variable('input.project.id') }),
+        relation('out', '', 'partnership', ACTIVE),
+        node('node'),
+        relation('out', '', 'partner', ACTIVE),
+        node('partner', 'Partner', { id: variable('input.partner.id') }),
+      ])
+      .apply(this.hydrate(session))
       .map('dto')
       .run();
   }
@@ -403,27 +422,6 @@ export class PartnershipRepository extends DtoRepository<
         .raw('WHERE partnership <> otherPartnership')
         .with('otherPartnership');
     };
-  }
-
-  async loadPartnershipByProjectAndPartner(
-    input: readonly PartnershipByProjectAndPartnerInput[],
-    session: Session,
-  ) {
-    const results = await this.db
-      .query()
-      .unwind([...input], 'input')
-      .match([
-        node('project', 'Project', { id: variable('input.project.id') }),
-        relation('out', '', 'partnership', ACTIVE),
-        node('node'),
-        relation('out', '', 'partner', ACTIVE),
-        node('partner', 'Partner', { id: variable('input.partner.id') }),
-      ])
-      .apply(this.hydrate(session))
-      .map('dto')
-      .run();
-
-    return results;
   }
 }
 

@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { ID, PublicOf } from '~/common';
 import { e, RepoFor } from '~/core/edgedb';
-import { Partnership, PartnershipByProjectAndPartnerInput } from './dto';
+import { Partnership } from './dto';
+import type { PartnershipByProjectAndPartnerInput } from './partnership-by-project-and-partner.loader';
 import { PartnershipRepository } from './partnership.repository';
 
 @Injectable()
@@ -28,6 +29,28 @@ export class PartnershipEdgeDBRepository
   })
   implements PublicOf<PartnershipRepository>
 {
+  async readManyByProjectAndPartner(
+    input: readonly PartnershipByProjectAndPartnerInput[],
+  ) {
+    const results = [];
+    for (const item of input) {
+      const project = e.cast(e.Project, e.uuid(item.project));
+      const partner = e.cast(e.Partner, e.uuid(item.partner));
+
+      const query = e.select(e.Partnership, (partnership) => ({
+        ...this.hydrate(partnership),
+        filter: e.op(
+          e.op(partnership.project, '=', project),
+          'and',
+          e.op(partnership.partner, '=', partner),
+        ),
+      }));
+      const result = await this.db.run(query);
+      results.push(...result);
+    }
+    return results;
+  }
+
   async isFirstPartnership(projectId: ID) {
     const project = e.cast(e.Project, e.uuid(projectId));
     const query = e.op('not', e.op('exists', project.partnerships));
@@ -49,28 +72,5 @@ export class PartnershipEdgeDBRepository
   private matchOtherPartnerships(id: ID) {
     const partnership = e.cast(e.Partnership, e.cast(e.uuid, id));
     return e.op(partnership.project.partnerships, 'except', partnership);
-  }
-
-  async loadPartnershipByProjectAndPartner(
-    input: readonly PartnershipByProjectAndPartnerInput[],
-  ) {
-    const results = [];
-    for (const item of input) {
-      const { projectId, partnerId } = item;
-      const project = e.cast(e.Project, e.uuid(projectId));
-      const partner = e.cast(e.Partner, e.uuid(partnerId));
-
-      const query = e.select(e.Partnership, (partnership) => ({
-        ...this.hydrate(partnership),
-        filter: e.op(
-          e.op(partnership.project, '=', project),
-          'and',
-          e.op(partnership.partner, '=', partner),
-        ),
-      }));
-      const result = await this.db.run(query);
-      results.push(...result);
-    }
-    return results;
   }
 }

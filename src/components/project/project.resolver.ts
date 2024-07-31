@@ -266,8 +266,8 @@ export class ProjectResolver {
     loader: LoaderOf<PartnershipByProjectAndPartnerLoader>,
   ): Promise<Partnership> {
     const result = await loader.load({
-      project: { id: project.id },
-      partner: { id: partnerId },
+      project: project.id,
+      partner: partnerId,
     });
     return result.partnership;
   }

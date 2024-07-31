@@ -1,14 +1,20 @@
+import { ID } from '~/common';
 import {
   LoaderFactory,
   LoaderOptionsOf,
   SessionAwareLoaderStrategy,
 } from '~/core';
-import { Partnership, PartnershipByProjectAndPartnerInput } from './dto';
+import { Partnership } from './dto';
 import { PartnershipService } from './partnership.service';
+
+export interface PartnershipByProjectAndPartnerInput {
+  project: ID<'Project'>;
+  partner: ID<'Partner'>;
+}
 
 @LoaderFactory()
 export class PartnershipByProjectAndPartnerLoader extends SessionAwareLoaderStrategy<
-  { input: PartnershipByProjectAndPartnerInput; partnership: Partnership },
+  { id: PartnershipByProjectAndPartnerInput; partnership: Partnership },
   PartnershipByProjectAndPartnerInput,
   string
 > {
@@ -18,17 +24,11 @@ export class PartnershipByProjectAndPartnerLoader extends SessionAwareLoaderStra
 
   getOptions() {
     return {
-      propertyKey: (x) => x.input,
-      cacheKeyFn: (partnership) =>
-        `${partnership.project.id}:${partnership.partner.id}`,
+      cacheKeyFn: (input) => `${input.project}:${input.partner}`,
     } satisfies LoaderOptionsOf<PartnershipByProjectAndPartnerLoader>;
   }
 
   async loadMany(input: readonly PartnershipByProjectAndPartnerInput[]) {
-    const partnerships = await this.service.loadPartnershipByProjectAndPartner(
-      input,
-      this.session,
-    );
-    return partnerships;
+    return await this.service.readManyByProjectAndPartner(input, this.session);
   }
 }
