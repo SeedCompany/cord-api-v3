@@ -290,6 +290,9 @@ export const languageFilters = filter.define(() => LanguageFilters, {
   leastOfThese: filter.propVal(),
   isSignLanguage: filter.propVal(),
   isDialect: filter.propVal(),
+  registryOfDialectsCode: filter.propPartialVal(
+    'registryOfLanguageVarietiesCode',
+  ),
   registryOfLanguageVarietiesCode: filter.propPartialVal(),
   partnerId: filter.pathExists((id) => [
     node('node'),
