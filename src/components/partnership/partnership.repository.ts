@@ -172,11 +172,11 @@ export class PartnershipRepository extends DtoRepository<
       .query()
       .unwind([...input], 'input')
       .match([
-        node('project', 'Project', { id: variable('input.project.id') }),
+        node('project', 'Project', { id: variable('input.project') }),
         relation('out', '', 'partnership', ACTIVE),
         node('node'),
         relation('out', '', 'partner', ACTIVE),
-        node('partner', 'Partner', { id: variable('input.partner.id') }),
+        node('partner', 'Partner', { id: variable('input.partner') }),
       ])
       .apply(this.hydrate(session))
       .map('dto')
