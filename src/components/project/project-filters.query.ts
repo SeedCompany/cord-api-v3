@@ -100,6 +100,15 @@ export const projectFilters = filter.define(() => ProjectFilters, {
             .with('*')
             .where({ sensitivity: inArray(value) })
         : query,
+  partnerships: filter.sub(() => partnershipFilters)((sub) =>
+    sub
+      .with('node as project')
+      .match([
+        node('project'),
+        relation('out', '', 'partnership', ACTIVE),
+        node('node', 'Partnership'),
+      ]),
+  ),
   primaryPartnership: filter.sub(() => partnershipFilters)((sub) =>
     sub
       .with('node as project')

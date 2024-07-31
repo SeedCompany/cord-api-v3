@@ -1,5 +1,5 @@
 import { applyDecorators } from '@nestjs/common';
-import { Field } from '@nestjs/graphql';
+import { Field, FieldOptions } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { Constructor, HasRequiredKeys } from 'type-fest';
@@ -15,7 +15,7 @@ export const FilterField = <T extends object>(
      * There are no external fields on the filter, so don't expose to GQL.
      */
     internal?: boolean;
-  },
+  } & Pick<FieldOptions, 'description'>,
 ): PropertyDecorator =>
   applyDecorators(
     ...(options?.internal
@@ -23,6 +23,7 @@ export const FilterField = <T extends object>(
       : [
           Field(type as unknown as () => Constructor<T>, {
             nullable: true,
+            description: options?.description,
           }),
         ]),
     Type(type),
