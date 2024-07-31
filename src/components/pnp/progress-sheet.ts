@@ -1,5 +1,7 @@
 import { LazyGetter as Once } from 'lazy-get-decorator';
+import { CalendarDate } from '~/common';
 import { Column, Range, Row, Sheet, WorkBook } from '~/common/xlsx.util';
+import type { PlanningSheet } from './planning-sheet';
 
 export abstract class ProgressSheet extends Sheet {
   static register(book: WorkBook) {
@@ -16,6 +18,14 @@ export abstract class ProgressSheet extends Sheet {
   }
   isOBS(): this is OralStoryingProgressSheet {
     return this instanceof OralStoryingProgressSheet;
+  }
+
+  get isValid() {
+    const rev = this.book.sheet<PlanningSheet>('Planning').revision;
+    if (rev && rev < CalendarDate.local(2024, 4)) {
+      return null;
+    }
+    return this.cell('A1').asNumber === 2;
   }
 
   get stepLabels() {

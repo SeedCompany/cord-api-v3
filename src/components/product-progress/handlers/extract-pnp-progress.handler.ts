@@ -1,4 +1,5 @@
 import { mapOf } from '@seedcompany/common';
+import { InputException } from '~/common';
 import { EventsHandler, ILogger, Logger } from '~/core';
 import { ReportType } from '../../periodic-report/dto';
 import { PeriodicReportUploadedEvent } from '../../periodic-report/events';
@@ -21,6 +22,13 @@ export class ExtractPnpProgressHandler {
   async handle(event: PeriodicReportUploadedEvent) {
     if (event.report.type !== ReportType.Progress) {
       return;
+    }
+
+    const valid = await this.extractor.isValid(event.file);
+    if (valid === false) {
+      throw new InputException(
+        'Please fix the invalid (red) cells and re-upload',
+      );
     }
 
     // parse progress data from pnp spreadsheet
