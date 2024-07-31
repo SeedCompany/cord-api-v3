@@ -89,7 +89,11 @@ export class LanguageService {
     const { registryOfDialectsCode, ...props } = input;
 
     const language = await this.repo.readOne(input.id, session, view);
-    const changes = this.repo.getActualChanges(language, props);
+    const changes = this.repo.getActualChanges(language, {
+      ...props,
+      registryOfLanguageVarietiesCode:
+        props.registryOfLanguageVarietiesCode ?? registryOfDialectsCode,
+    });
     this.privileges.for(session, Language, language).verifyChanges(changes);
 
     const { ethnologue, ...simpleChanges } = changes;

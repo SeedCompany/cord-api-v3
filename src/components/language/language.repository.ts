@@ -70,7 +70,8 @@ export class LanguageRepository extends DtoRepository<
       sensitivity: input.sensitivity,
       isDialect: input.isDialect,
       populationOverride: input.populationOverride,
-      registryOfLanguageVarietiesCode: input.registryOfLanguageVarietiesCode,
+      registryOfLanguageVarietiesCode:
+        input.registryOfLanguageVarietiesCode ?? input.registryOfDialectsCode,
       leastOfThese: input.leastOfThese,
       leastOfTheseReason: input.leastOfTheseReason,
       displayNamePronunciation: input.displayNamePronunciation,
