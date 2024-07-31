@@ -4,7 +4,7 @@ with
       "name": "English",
       "displayNamePronunciation": "[ENG-lish]",
       "sensitivity": "Low",
-      "registryOfDialectsCode": "00120",
+      "registryOfLanguageVarietiesCode": "00120",
       "populationOverride": 100000,
       "ethnologue": {
         "code": "eng",
@@ -15,7 +15,7 @@ with
       "name": "Quenya",
       "displayNamePronunciation": "[KWEN-ya]",
       "sensitivity": "Medium",
-      "registryOfDialectsCode": "99931",
+      "registryOfLanguageVarietiesCode": "99931",
       "populationOverride": 500000,
       "leastOfThese": true,
       "ethnologue": {
@@ -27,7 +27,7 @@ with
       "name": "Sindarin",
       "displayNamePronunciation": "[sin-DAR-in]",
       "sensitivity": "Medium",
-      "registryOfDialectsCode": "12345",
+      "registryOfLanguageVarietiesCode": "12345",
       "hasExternalFirstScripture": true,
       "ethnologue": {
         "code": "sdn",
@@ -39,7 +39,7 @@ with
       "name": "Khuzdul",
       "displayNamePronunciation": "[KUHZ-dul]",
       "sensitivity": "High",
-      "registryOfDialectsCode": "22225",
+      "registryOfLanguageVarietiesCode": "22225",
       "leastOfThese": true,
       "hasExternalFirstScripture": true,
       "ethnologue": {
@@ -51,7 +51,7 @@ with
       "name": "Westron",
       "displayNamePronunciation": "[WEST-ron]",
       "sensitivity": "Low",
-      "registryOfDialectsCode": "78910",
+      "registryOfLanguageVarietiesCode": "78910",
       "isSignLanguage": true,
       "signLanguageCode": "WT10",
       "ethnologue": {
