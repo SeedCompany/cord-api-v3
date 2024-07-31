@@ -2,7 +2,7 @@ import { node, relation } from 'cypher-query-builder';
 import { BaseMigration, Migration } from '~/core/database';
 import { collect, variable } from '~/core/database/query';
 
-@Migration('2024-07-30T13:02:06')
+@Migration('2024-07-30T13:02:07')
 export class RegistryOfDialectToRegistryOfLanguageVarietiesMigration extends BaseMigration {
   async up() {
     await this.db
@@ -20,6 +20,13 @@ export class RegistryOfDialectToRegistryOfLanguageVarietiesMigration extends Bas
       ])
       .yield('total')
       .return('total')
+      .executeAndLogStats();
+
+    await this.db
+      .query()
+      .match(node('node', 'RegistryOfDialectsCode'))
+      .setLabels({ node: 'RegistryOfLanguageVarietiesCode' })
+      .removeLabels({ node: 'RegistryOfDialectsCode' })
       .executeAndLogStats();
   }
 }
