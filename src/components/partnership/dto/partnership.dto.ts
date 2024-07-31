@@ -12,6 +12,7 @@ import {
   SecuredProps,
   Sensitivity,
   SensitivityField,
+  UnsecuredDto,
 } from '~/common';
 import { BaseNode } from '~/core/database/results';
 import { e } from '~/core/edgedb';
@@ -22,6 +23,10 @@ import { SecuredPartnerTypes } from '../../partner/dto';
 import { IProject } from '../../project/dto';
 import { SecuredFinancialReportingType } from './financial-reporting-type.enum';
 import { SecuredPartnershipAgreementStatus } from './partnership-agreement-status.enum';
+
+export type PartnershipByProjectAndPartnerInput = UnsecuredDto<
+  Pick<Partnership, 'project' | 'partner'>
+>;
 
 const Interfaces = IntersectTypes(Resource, ChangesetAware);
 

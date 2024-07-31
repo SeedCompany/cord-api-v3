@@ -24,6 +24,7 @@ import {
   CreatePartnership,
   FinancialReportingType,
   Partnership,
+  PartnershipByProjectAndPartnerInput,
   PartnershipListInput,
   PartnershipListOutput,
   UpdatePartnership,
@@ -269,5 +270,20 @@ export class PartnershipService {
         'partnership.financialReportingType',
       );
     }
+  }
+
+  async loadPartnershipByProjectAndPartner(
+    input: readonly PartnershipByProjectAndPartnerInput[],
+    session: Session,
+  ) {
+    const partnerships = await this.repo.loadPartnershipByProjectAndPartner(
+      input,
+      session,
+    );
+    const results = partnerships.map((dto) => ({
+      input: dto,
+      partnership: this.secure(dto, session),
+    }));
+    return results;
   }
 }

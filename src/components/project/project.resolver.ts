@@ -42,10 +42,12 @@ import { OrganizationLoader } from '../organization';
 import { SecuredOrganization } from '../organization/dto';
 import { PartnershipLoader } from '../partnership';
 import {
+  Partnership,
   PartnershipListInput,
   SecuredPartnership,
   SecuredPartnershipList,
 } from '../partnership/dto';
+import { PartnershipByProjectAndPartnerLoader } from '../partnership/partnership-by-project-and-partner.loader';
 import { ProjectChangeRequestLoader } from '../project-change-request';
 import {
   ProjectChangeRequestListInput,
@@ -252,6 +254,20 @@ export class ProjectResolver {
     );
     partnerships.primeAll(list.items);
     return list;
+  }
+
+  @ResolveField(() => Partnership)
+  async partnership(
+    @Parent() project: Project,
+    @IdArg({ name: 'partner' }) partnerId: ID,
+    @Loader(PartnershipByProjectAndPartnerLoader)
+    loader: LoaderOf<PartnershipByProjectAndPartnerLoader>,
+  ): Promise<Partnership> {
+    const result = await loader.load({
+      project: { id: project.id },
+      partner: { id: partnerId },
+    });
+    return result.partnership;
   }
 
   @ResolveField(() => SecuredDirectory, {

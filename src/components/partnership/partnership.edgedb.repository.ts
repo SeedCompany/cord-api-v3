@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ID, PublicOf } from '~/common';
 import { e, RepoFor } from '~/core/edgedb';
-import { Partnership } from './dto';
+import { Partnership, PartnershipByProjectAndPartnerInput } from './dto';
 import { PartnershipRepository } from './partnership.repository';
 
 @Injectable()
@@ -49,5 +49,28 @@ export class PartnershipEdgeDBRepository
   private matchOtherPartnerships(id: ID) {
     const partnership = e.cast(e.Partnership, e.cast(e.uuid, id));
     return e.op(partnership.project.partnerships, 'except', partnership);
+  }
+
+  async loadPartnershipByProjectAndPartner(
+    input: readonly PartnershipByProjectAndPartnerInput[],
+  ) {
+    const results = [];
+    for (const item of input) {
+      const { projectId, partnerId } = item;
+      const project = e.cast(e.Project, e.uuid(projectId));
+      const partner = e.cast(e.Partner, e.uuid(partnerId));
+
+      const query = e.select(e.Partnership, (partnership) => ({
+        ...this.hydrate(partnership),
+        filter: e.op(
+          e.op(partnership.project, '=', project),
+          'and',
+          e.op(partnership.partner, '=', partner),
+        ),
+      }));
+      const result = await this.db.run(query);
+      results.push(...result);
+    }
+    return results;
   }
 }
