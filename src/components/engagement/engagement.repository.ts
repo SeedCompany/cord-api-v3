@@ -519,6 +519,7 @@ export class EngagementRepository extends CommonRepository {
   @OnIndex('schema')
   private async createSchemaIndexes() {
     await this.db.query().apply(NameIndex.create()).run();
+    await this.db.query().apply(EngagedNameIndex.create()).run();
     await this.db.query().apply(LanguageNameIndex.create()).run();
     await this.db.query().apply(InternshipNameIndex.create()).run();
   }
@@ -550,6 +551,22 @@ export const engagementFilters = filter.define(() => EngagementFilters, {
     // Treat each word as a separate search term
     // Each word could point to a different node
     // i.e. "project - language"
+    separateQueryForEachWord: true,
+    minScore: 0.9,
+  }),
+  engagedName: filter.fullText({
+    index: () => EngagedNameIndex,
+    matchToNode: (q) =>
+      q.match([
+        node('node', 'Engagement'),
+        relation('out', '', undefined, ACTIVE),
+        node('', 'BaseNode'),
+        relation('out', '', undefined, ACTIVE),
+        node('match'),
+      ]),
+    // Treat each word as a separate search term
+    // Each word could point to a different node
+    // i.e. "first - last"
     separateQueryForEachWord: true,
     minScore: 0.9,
   }),
@@ -721,6 +738,12 @@ const multiPropsAsSortString = (props: string[]) =>
 const NameIndex = FullTextIndex({
   indexName: 'EngagementName',
   labels: ['ProjectName', 'LanguageName', 'LanguageDisplayName', 'UserName'],
+  properties: 'value',
+  analyzer: 'standard-folding',
+});
+const EngagedNameIndex = FullTextIndex({
+  indexName: 'EngagedName',
+  labels: ['LanguageName', 'LanguageDisplayName', 'UserName'],
   properties: 'value',
   analyzer: 'standard-folding',
 });
