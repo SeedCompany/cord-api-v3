@@ -5,6 +5,11 @@ import { User } from './user.dto';
 @InputType()
 export abstract class UserFilters {
   @Field({
+    nullable: true,
+  })
+  readonly name?: string;
+
+  @Field({
     description: 'Only users that are pinned/unpinned by the requesting user',
     nullable: true,
   })

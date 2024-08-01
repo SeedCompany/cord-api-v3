@@ -10,7 +10,7 @@ import {
   Session,
   UnsecuredDto,
 } from '~/common';
-import { DtoRepository, UniquenessError } from '~/core/database';
+import { DtoRepository, OnIndex, UniquenessError } from '~/core/database';
 import {
   ACTIVE,
   createNode,
@@ -18,6 +18,7 @@ import {
   deactivateProperty,
   defineSorters,
   filter,
+  FullTextIndex,
   matchProps,
   merge,
   paginate,
@@ -32,6 +33,7 @@ import {
   SystemAgent,
   UpdateUser,
   User,
+  UserFilters,
   UserListInput,
 } from './dto';
 
@@ -224,11 +226,7 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
       .query()
       .matchNode('node', 'User')
       .match(requestingUser(session))
-      .apply(
-        filter.builder(input.filter ?? {}, {
-          pinned: filter.isPinned,
-        }),
-      )
+      .apply(userFilters(input.filter))
       .apply(this.privileges.forUser(session).filterToReadable())
       .apply(sortWith(userSorters, input))
       .apply(paginate(input, this.hydrate(session.userId)))
@@ -364,6 +362,36 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
   hydrateAsNeo4j(session: Session | ID) {
     return this.hydrate(session);
   }
+
+  @OnIndex('schema')
+  private async createSchemaIndexes() {
+    await this.db.query().apply(NameIndex.create()).run();
+  }
 }
 
+export const userFilters = filter.define(() => UserFilters, {
+  pinned: filter.isPinned,
+  name: filter.fullText({
+    index: () => NameIndex,
+    matchToNode: (q) =>
+      q.match([
+        node('node', 'User'),
+        relation('out', '', undefined, ACTIVE),
+        node('match'),
+      ]),
+    // Treat each word as a separate search term
+    // Each word could point to a different node
+    // i.e. "first last"
+    separateQueryForEachWord: true,
+    minScore: 0.9,
+  }),
+});
+
 export const userSorters = defineSorters(User, {});
+
+const NameIndex = FullTextIndex({
+  indexName: 'UserName',
+  labels: 'UserName',
+  properties: 'value',
+  analyzer: 'standard-folding',
+});
