@@ -8,6 +8,7 @@ import {
 } from '~/common';
 import { LanguageFilters } from '../../language/dto';
 import { ProjectFilters } from '../../project/dto';
+import { UserFilters } from '../../user/dto';
 import {
   Engagement,
   IEngagement,
@@ -26,6 +27,8 @@ export abstract class EngagementFilters {
 
   @Field({
     nullable: true,
+    description:
+      'Only engagements whose project or engaged entity (language / user) name match',
   })
   readonly name?: string;
 
@@ -38,9 +41,19 @@ export abstract class EngagementFilters {
   @FilterField(() => ProjectFilters)
   readonly project?: ProjectFilters & {};
 
+  @Field({
+    nullable: true,
+    description:
+      'Only engagements whose engaged entity (language / user) name match',
+  })
+  readonly engagedName?: string;
+
   readonly languageId?: ID;
   @FilterField(() => LanguageFilters)
   readonly language?: LanguageFilters & {};
+
+  @FilterField(() => UserFilters)
+  readonly intern?: UserFilters & {};
 
   readonly partnerId?: ID<'Partner'>;
 }
