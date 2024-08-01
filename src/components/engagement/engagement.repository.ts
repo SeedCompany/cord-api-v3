@@ -58,6 +58,7 @@ import {
 import { ProjectType } from '../project/dto';
 import { projectFilters } from '../project/project-filters.query';
 import { projectSorters } from '../project/project.repository';
+import { userFilters } from '../user';
 import {
   CreateInternshipEngagement,
   CreateLanguageEngagement,
@@ -590,6 +591,15 @@ export const engagementFilters = filter.define(() => EngagementFilters, {
         node('eng'),
         relation('out', '', 'language'),
         node('node', 'Language'),
+      ]),
+  ),
+  intern: filter.sub(() => userFilters)((sub) =>
+    sub
+      .with('node as eng')
+      .match([
+        node('eng'),
+        relation('out', '', 'intern'),
+        node('node', 'User'),
       ]),
   ),
 });
