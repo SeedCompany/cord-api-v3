@@ -40,6 +40,8 @@ export const projectFilters = filter.define(() => ProjectFilters, {
   step: filter.stringListProp(),
   createdAt: filter.dateTimeBaseNodeProp(),
   modifiedAt: filter.dateTimeProp(),
+  mouStart: filter.dateTimeProp(),
+  mouEnd: filter.dateTimeProp(),
   mine: filter.pathExistsWhenTrue([
     node('requestingUser'),
     relation('in', '', 'user'),
@@ -100,6 +102,15 @@ export const projectFilters = filter.define(() => ProjectFilters, {
             .with('*')
             .where({ sensitivity: inArray(value) })
         : query,
+  partnerships: filter.sub(() => partnershipFilters)((sub) =>
+    sub
+      .with('node as project')
+      .match([
+        node('project'),
+        relation('out', '', 'partnership', ACTIVE),
+        node('node', 'Partnership'),
+      ]),
+  ),
   primaryPartnership: filter.sub(() => partnershipFilters)((sub) =>
     sub
       .with('node as project')

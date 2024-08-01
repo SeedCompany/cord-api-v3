@@ -134,13 +134,13 @@ export class Language extends Interfaces {
 
   @Field({
     description: stripIndent`
-      Registry of Dialects Code.
-      5 digit number including leading zeros.
-      https://globalrecordings.net/en/rod
+      Harvest Information System's (HIS) Registry Of Language Varieties' (ROLV) code.
+      A 5 digit number including leading zeros.
+      https://globalrecordings.net/en/rolv
     `,
   })
-  @DbUnique('RegistryOfDialectsCode')
-  readonly registryOfDialectsCode: SecuredStringNullable;
+  @DbUnique('RegistryOfLanguageVarietiesCode')
+  readonly registryOfLanguageVarietiesCode: SecuredStringNullable;
 
   // consider making object
   @Field({

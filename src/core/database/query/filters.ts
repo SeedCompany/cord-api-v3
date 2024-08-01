@@ -16,6 +16,7 @@ import { identity, isFunction } from 'lodash';
 import { AbstractClass, ConditionalKeys } from 'type-fest';
 import { DateTimeFilter } from '~/common';
 import { variable } from '../query-augmentation/condition-variables';
+import { intersects } from './comparators';
 import { collect } from './cypher-functions';
 import { escapeLuceneSyntax, FullTextIndex } from './full-text';
 import { ACTIVE } from './matching';
@@ -132,6 +133,20 @@ export const propPartialVal =
     return { [prop ?? key]: { value: regexp(`.*${value}.*`, true) } };
   };
 
+export const intersectsProp =
+  <T, K extends ConditionalKeys<Required<T>, readonly string[]>>(
+    prop?: string,
+  ): Builder<T, K> =>
+  ({ key, value, query }) => {
+    prop ??= key;
+    query.match([
+      node('node'),
+      relation('out', '', prop, ACTIVE),
+      node(prop, 'Property'),
+    ]);
+    return { [`${prop}.value`]: intersects(value as readonly string[], prop) };
+  };
+
 export const stringListProp =
   <T, K extends ConditionalKeys<Required<T>, readonly string[]>>(
     prop?: string,
@@ -207,9 +222,13 @@ export const comparisonOfDateTimeFilter = (
     after: comparisions.greaterThan,
     beforeInclusive: comparisions.lessEqualTo,
     before: comparisions.lessThan,
+    isNull:
+      (val: boolean | any): Comparator =>
+      (_, name) =>
+        `${name} ${val ? 'IS' : 'IS NOT'} NULL`,
   };
   const comparators = entries(input).flatMap(([key, val]) =>
-    val ? comparatorMap[key](val) : [],
+    val != null ? comparatorMap[key](val) : [],
   );
   return comparators.length > 0
     ? (...args) => comparators.map((comp) => comp(...args)).join(' AND ')
@@ -234,7 +253,11 @@ export const sub =
         sub
           .apply(matchSubNode)
           .apply(subBuilder()(value))
-          .return(`true as ${key}FiltersApplied`),
+          .return(`true as ${key}FiltersApplied`)
+          // Prevent filter from increasing cardinality above 1.
+          // This happens with `1-Many` relationships matched in `matchSubNode`.
+          // Note they are allowed to reduce cardinality to 0.
+          .raw('limit 1'),
       )
       .with('*');
 

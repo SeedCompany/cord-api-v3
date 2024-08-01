@@ -73,8 +73,12 @@ export abstract class LanguageFilters {
 
   @Field({
     nullable: true,
+    deprecationReason: 'Use `registryOfLanguageVarietiesCode` instead',
   })
   readonly registryOfDialectsCode?: string;
+
+  @Field({ nullable: true })
+  readonly registryOfLanguageVarietiesCode?: string;
 
   readonly partnerId?: ID;
 

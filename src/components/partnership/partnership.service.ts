@@ -33,6 +33,7 @@ import {
   PartnershipUpdatedEvent,
   PartnershipWillDeleteEvent,
 } from './events';
+import type { PartnershipByProjectAndPartnerInput } from './partnership-by-project-and-partner.loader';
 import { PartnershipRepository } from './partnership.repository';
 
 @Injectable()
@@ -120,6 +121,20 @@ export class PartnershipService {
   async readMany(ids: readonly ID[], session: Session, view?: ObjectView) {
     const partnerships = await this.repo.readMany(ids, session, view);
     return partnerships.map((dto) => this.secure(dto, session));
+  }
+
+  async readManyByProjectAndPartner(
+    input: readonly PartnershipByProjectAndPartnerInput[],
+    session: Session,
+  ) {
+    const partnerships = await this.repo.readManyByProjectAndPartner(
+      input,
+      session,
+    );
+    return partnerships.map((dto) => ({
+      id: { project: dto.project.id, partner: dto.partner.id },
+      partnership: this.secure(dto, session),
+    }));
   }
 
   secure(dto: UnsecuredDto<Partnership>, session: Session) {

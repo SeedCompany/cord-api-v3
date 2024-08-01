@@ -40,7 +40,7 @@ module default {
       default := false;
     }
     
-    registryOfDialectsCode: str {
+    registryOfLanguageVarietiesCode: str {
       constraint exclusive;
       constraint regexp(r'^[0-9]{5}$');
     }

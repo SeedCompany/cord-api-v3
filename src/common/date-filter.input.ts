@@ -1,4 +1,4 @@
-import { InputType } from '@nestjs/graphql';
+import { Field, InputType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import { DateField, DateTimeField } from './luxon.graphql';
 import { CalendarDate } from './temporal';
@@ -30,6 +30,9 @@ export abstract class DateFilter {
     nullable: true,
   })
   beforeInclusive?: CalendarDate;
+
+  @Field({ description: 'Whether the field is null or not', nullable: true })
+  isNull?: boolean;
 }
 
 @InputType({
@@ -59,4 +62,7 @@ export abstract class DateTimeFilter {
     nullable: true,
   })
   beforeInclusive?: DateTime;
+
+  @Field({ description: 'Whether the field is null or not', nullable: true })
+  isNull?: boolean;
 }

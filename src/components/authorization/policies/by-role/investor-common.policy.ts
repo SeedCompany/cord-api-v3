@@ -21,7 +21,7 @@ import {
   r.FieldRegion.read,
   r.FieldZone.read,
   r.Language.read.specifically((p) => [
-    p.registryOfDialectsCode.when(sensOnlyLow).read,
+    p.registryOfLanguageVarietiesCode.when(sensOnlyLow).read,
     p.signLanguageCode.when(sensOnlyLow).read,
     p.locations.whenAny(member, sensOnlyLow).read,
   ]),

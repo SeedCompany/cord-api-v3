@@ -1,4 +1,6 @@
-import { InputType, ObjectType } from '@nestjs/graphql';
+import { Field, InputType, ObjectType } from '@nestjs/graphql';
+import { Transform } from 'class-transformer';
+import { uniq } from 'lodash';
 import {
   FilterField,
   ID,
@@ -6,7 +8,7 @@ import {
   SecuredList,
   SortablePaginationInput,
 } from '~/common';
-import { PartnerFilters } from '../../partner/dto';
+import { PartnerFilters, PartnerType } from '../../partner/dto';
 import { Partnership } from './partnership.dto';
 
 @InputType()
@@ -15,6 +17,15 @@ export abstract class PartnershipFilters {
 
   @FilterField(() => PartnerFilters)
   readonly partner?: PartnerFilters & {};
+
+  @Field(() => [PartnerType], { nullable: true })
+  @Transform(({ value }) => {
+    const types = uniq(value);
+    return types.length > 0 && types.length < PartnerType.values.size
+      ? types
+      : undefined;
+  })
+  readonly types?: readonly PartnerType[];
 }
 
 @InputType()

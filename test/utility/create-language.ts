@@ -28,7 +28,7 @@ export async function createLanguage(
     isDialect: faker.datatype.boolean(),
     // this represents the largest number that is less than the 32-bit max for GraphQL
     populationOverride: faker.number.int({ max: 2147483647 }),
-    registryOfDialectsCode: faker.number
+    registryOfLanguageVarietiesCode: faker.number
       .int({ min: 10000, max: 99999 })
       .toString(),
     leastOfThese: faker.datatype.boolean(),

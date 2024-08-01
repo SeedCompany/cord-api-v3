@@ -2,6 +2,7 @@ import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import {
+  DateFilter,
   DateTimeFilter,
   FilterField,
   ID,
@@ -80,6 +81,20 @@ export abstract class ProjectFilters {
 
   @Field({
     nullable: true,
+  })
+  @Type(() => DateFilter)
+  @ValidateNested()
+  readonly mouStart?: DateFilter;
+
+  @Field({
+    nullable: true,
+  })
+  @Type(() => DateFilter)
+  @ValidateNested()
+  readonly mouEnd?: DateFilter;
+
+  @Field({
+    nullable: true,
     description: 'only mine',
     deprecationReason: 'Use `isMember` instead.',
   })
@@ -108,6 +123,11 @@ export abstract class ProjectFilters {
   readonly partnerId?: ID;
 
   readonly userId?: ID;
+
+  @FilterField(() => PartnershipFilters, {
+    description: 'Only projects with _any_ partnerships matching these filters',
+  })
+  readonly partnerships?: PartnershipFilters & {};
 
   @FilterField(() => PartnershipFilters)
   readonly primaryPartnership?: PartnershipFilters & {};
