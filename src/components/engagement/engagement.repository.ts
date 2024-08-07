@@ -619,6 +619,40 @@ export const engagementFilters = filter.define(() => EngagementFilters, {
         node('node', 'User'),
       ]),
   ),
+  startDate: filter.dateTime(({ query }) => {
+    query.optionalMatch([
+      [
+        node('node'),
+        relation('out', '', 'startDateOverride', ACTIVE),
+        node('startDateOverride', 'Property'),
+      ],
+      [
+        node('node'),
+        relation('in', '', 'engagement'),
+        node('project', 'Project'),
+        relation('out', '', 'mouStart', ACTIVE),
+        node('mouStart', 'Property'),
+      ],
+    ]);
+    return coalesce('startDateOverride.value', 'mouStart.value');
+  }),
+  endDate: filter.dateTime(({ query }) => {
+    query.optionalMatch([
+      [
+        node('node'),
+        relation('out', '', 'endDateOverride', ACTIVE),
+        node('endDateOverride', 'Property'),
+      ],
+      [
+        node('node'),
+        relation('in', '', 'engagement'),
+        node('project', 'Project'),
+        relation('out', '', 'mouEnd', ACTIVE),
+        node('mouEnd', 'Property'),
+      ],
+    ]);
+    return coalesce('endDateOverride.value', 'mouEnd.value');
+  }),
 });
 
 export const engagementSorters = defineSorters(IEngagement, {
