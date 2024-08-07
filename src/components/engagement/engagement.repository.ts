@@ -619,6 +619,8 @@ export const engagementFilters = filter.define(() => EngagementFilters, {
         node('node', 'User'),
       ]),
   ),
+  startDate: filter.dateTimeProp(),
+  endDate: filter.dateTimeProp(),
 });
 
 export const engagementSorters = defineSorters(IEngagement, {
