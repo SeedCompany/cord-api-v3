@@ -56,7 +56,7 @@ export class PeriodicReportGelRepository
     );
     const resource = e.cast(enhancedResource.db, e.uuid(parentId));
 
-    const report = e.select(e.PeriodicReport, (report) => ({
+    const report = e.select(resource, (report) => ({
       filter: e.all(
         e.set(
           e.op(resource.id, '=', report.container.id),
@@ -64,10 +64,11 @@ export class PeriodicReportGelRepository
           e.op(report.end, '>=', date),
         ),
       ),
-      ...report.is(resolveReportType(reportType)),
     }));
 
-    return this.db.run(report);
+    const query = e.select(report, this.hydrate);
+
+    return await this.db.run(query);
   }
 
   getCurrentDue(
