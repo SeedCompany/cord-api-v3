@@ -13,7 +13,10 @@ export class ProjectMemberEdgeDBRepository
   extends RepoFor(ProjectMember, {
     hydrate: (member) => ({
       ...member['*'],
-      user: member.user['*'],
+      user: {
+        ...member.user['*'],
+        __typename: member.user.__type__.name.slice(9, null),
+      },
     }),
     omit: ['create'],
   })

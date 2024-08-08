@@ -14,6 +14,7 @@ export class LanguageEdgeDBRepository
       sensitivity: lang.ownSensitivity,
       effectiveSensitivity: lang.sensitivity,
       presetInventory: e.bool(false), // Not implemented going forward
+      __typename: lang.__type__.name.slice(9, null),
     }),
     omit: ['create'],
   })

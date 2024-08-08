@@ -15,6 +15,7 @@ import {
 } from '~/common';
 import { e } from '~/core/edgedb';
 import { RegisterResource } from '~/core/resources';
+import { Commentable } from '../../comments/dto';
 import { Location } from '../../location/dto';
 import { Organization } from '../../organization/dto';
 import { Partner } from '../../partner/dto';
@@ -26,7 +27,7 @@ import { Actor } from './actor.dto';
 import { KnownLanguage } from './known-language.dto';
 import { SecuredUserStatus } from './user-status.enum';
 
-const Interfaces = IntersectTypes(Resource, Actor, Pinnable);
+const Interfaces = IntersectTypes(Resource, Actor, Pinnable, Commentable);
 
 @RegisterResource({ db: e.User })
 @ObjectType({
@@ -45,6 +46,7 @@ export class User extends Interfaces {
       locations: [Location],
       knownLanguage: [KnownLanguage],
       projects: [Project],
+      ...Commentable.Relations,
     } satisfies ResourceRelationsShape);
 
   @Field()

@@ -15,6 +15,7 @@ export class PartnerEdgeDBRepository
       fieldRegions: true,
       countries: true,
       languagesOfConsulting: true,
+      __typename: partner.__type__.name.slice(9, null),
     }),
     omit: ['create'],
   })

@@ -17,13 +17,14 @@ import {
 } from '~/common';
 import { e } from '~/core/edgedb';
 import { LinkTo, RegisterResource } from '~/core/resources';
+import { Commentable } from '../../comments/dto';
 import { SecuredFinancialReportingTypes } from '../../partnership/dto';
 import { Pinnable } from '../../pin/dto';
 import { Postable } from '../../post/dto';
 import { IProject } from '../../project/dto';
 import { SecuredPartnerTypes } from './partner-type.enum';
 
-const Interfaces = IntersectTypes(Resource, Pinnable, Postable);
+const Interfaces = IntersectTypes(Resource, Pinnable, Postable, Commentable);
 
 @RegisterResource({ db: e.Partner })
 @ObjectType({
@@ -36,6 +37,7 @@ export class Partner extends Interfaces {
     ({
       projects: [IProject],
       ...Postable.Relations,
+      ...Commentable.Relations,
     } satisfies ResourceRelationsShape);
 
   readonly organization: Secured<LinkTo<'Organization'>>;
