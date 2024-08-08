@@ -11,8 +11,8 @@ export class EngagementUpdatedEvent {
   constructor(
     public updated: UnsecuredDto<Engagement>,
     readonly previous: UnsecuredDto<Engagement>,
-    readonly input: UpdateLanguageEngagement | UpdateInternshipEngagement,
     readonly session: Session,
+    readonly input?: UpdateLanguageEngagement | UpdateInternshipEngagement,
   ) {}
 
   isLanguageEngagement(): this is EngagementUpdatedEvent & {

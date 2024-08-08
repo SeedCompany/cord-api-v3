@@ -83,14 +83,14 @@ export abstract class WorkflowTester<
   private cachedTransitions: {
     state: W['state'];
     actorId: string;
-    transitions: Transition[];
+    transitions: readonly Transition[];
   };
 
-  protected abstract fetchTransitions(): Promise<Transition[]>;
+  protected abstract fetchTransitions(): Promise<readonly Transition[]>;
 
   protected abstract doExecute(
     input: InstanceType<ReturnType<typeof ExecuteTransitionInput<W['state']>>>,
-  ): Promise<{ state: W['state']; transitions: Transition[] }>;
+  ): Promise<{ state: W['state']; transitions: readonly Transition[] }>;
 }
 
 export class ProjectWorkflowTester extends WorkflowTester<

@@ -3,6 +3,14 @@ import { Policy, Role } from '../util';
 // NOTE: There could be other permissions for this role from other policies
 @Policy(Role.Controller, (r) => [
   // keep multiline format
+  r.EngagementWorkflowEvent.read.transitions(
+    'Reject Proposal',
+    'End Proposal',
+    'Approve Proposal',
+    'Approve Change To Plan',
+    'End Change To Plan Discussion',
+    'Discuss Suspension out of Change to Plan Discussion',
+  ).execute,
   r.Organization.delete,
   r.Partner.delete,
   r.ProjectWorkflowEvent.read.transitions(

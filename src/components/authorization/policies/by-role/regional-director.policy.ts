@@ -34,5 +34,12 @@ import * as PM from './project-manager.policy';
     'Request Changes for Termination',
     'End Termination Discussion By Approver',
   ).execute,
+  r.EngagementWorkflowEvent.transitions(
+    PM.engagementTransitions,
+    'Reject Proposal',
+    'Approve Suspension',
+    'Approve Reactivation',
+    'Approve Termination',
+  ).execute,
 ])
 export class RegionalDirectorPolicy {}
