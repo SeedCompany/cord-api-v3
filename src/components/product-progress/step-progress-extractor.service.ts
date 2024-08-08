@@ -42,6 +42,11 @@ type ExtractedRow = MergeExclusive<
 
 @Injectable()
 export class StepProgressExtractor {
+  async isValid(file: Downloadable<unknown>) {
+    const pnp = await Pnp.fromDownloadable(file);
+    return pnp.progress.isValid;
+  }
+
   async extract(file: Downloadable<unknown>) {
     const pnp = await Pnp.fromDownloadable(file);
     const sheet = pnp.progress;
