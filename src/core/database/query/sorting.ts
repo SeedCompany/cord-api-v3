@@ -67,7 +67,12 @@ export const sortWith = <Field extends string>(
     query.comment`sorting(${input.sort})`
       .subQuery('*', (sub) => matcher(sub, subInput))
       .with('*')
-      .orderBy(`${transformerRef.current('sortValue')}`, order);
+      .apply((query) => {
+        const val = String(transformerRef.current('sortValue'));
+        return order === 'ASC'
+          ? query.orderBy(val)
+          : query.orderBy([`${val} IS NOT NULL`, val], order);
+      });
 };
 
 /**
