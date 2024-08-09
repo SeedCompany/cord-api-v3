@@ -188,30 +188,35 @@ export const isPinned = pathExists<{ pinned?: boolean }, 'pinned'>([
   node('node'),
 ]);
 
-export const dateTimeBaseNodeProp =
-  <T, K extends ConditionalKeys<T, DateTimeFilter | undefined>>(
-    prop?: string,
-  ): Builder<T, K> =>
-  ({ key, value }) => {
-    const comparison = comparisonOfDateTimeFilter(value);
-    return comparison ? { node: { [prop ?? key]: comparison } } : null;
-  };
+export const dateTimeBaseNodeProp = <
+  T,
+  K extends ConditionalKeys<T, DateTimeFilter | undefined>,
+>(
+  prop?: string,
+): Builder<T, K> => dateTime(({ key }) => `node.${prop ?? key}`);
 
-export const dateTimeProp =
-  <T, K extends ConditionalKeys<T, DateTimeFilter | undefined>>(
-    prop?: string,
-  ): Builder<T, K> =>
-  ({ key, value, query }) => {
-    const comparison = comparisonOfDateTimeFilter(value);
-    if (!comparison) {
-      return null;
-    }
+export const dateTimeProp = <
+  T,
+  K extends ConditionalKeys<T, DateTimeFilter | undefined>,
+>(
+  prop?: string,
+): Builder<T, K> =>
+  dateTime(({ key, query }) => {
     query.match([
       node('node'),
       relation('out', '', prop ?? key, ACTIVE),
       node(prop ?? key, 'Property'),
     ]);
-    return { [prop ?? key]: { value: comparison } };
+    return `${prop ?? key}.value`;
+  });
+
+export const dateTime =
+  <T, K extends ConditionalKeys<T, DateTimeFilter | undefined>>(
+    getLhs: (args: BuilderArgs<T, K>) => string,
+  ): Builder<T, K> =>
+  (args) => {
+    const comparator = comparisonOfDateTimeFilter(args.value);
+    return comparator ? { [getLhs(args)]: comparator } : null;
   };
 
 export const comparisonOfDateTimeFilter = (

@@ -67,7 +67,12 @@ export const sortWith = <Field extends string>(
     query.comment`sorting(${input.sort})`
       .subQuery('*', (sub) => matcher(sub, subInput))
       .with('*')
-      .orderBy(`${transformerRef.current('sortValue')}`, order);
+      .apply((query) => {
+        const val = String(transformerRef.current('sortValue'));
+        return order === 'ASC'
+          ? query.orderBy(val)
+          : query.orderBy([`${val} IS NOT NULL`, val], order);
+      });
 };
 
 /**
@@ -135,14 +140,14 @@ export const defineSorters = <TResourceStatic extends ResourceShape<any>>(
 
     const baseNodeProps = resource.BaseNodeProps ?? Resource.Props;
     const isBaseNodeProp = baseNodeProps.includes(sort);
-    const matcher = (isBaseNodeProp ? matchBasePropSort : matchPropSort)(sort);
+    const matcher = (isBaseNodeProp ? basePropSorter : propSorter)(sort);
     return { ...common, matcher };
   };
   fn.matchers = matchers;
   return fn;
 };
 
-const matchPropSort = (prop: string) => (query: Query) =>
+export const propSorter = (prop: string) => (query: Query) =>
   query
     .match([
       node('node'),
@@ -151,7 +156,7 @@ const matchPropSort = (prop: string) => (query: Query) =>
     ])
     .return<SortCol>('sortProp.value as sortValue');
 
-const matchBasePropSort = (prop: string) => (query: Query) =>
+export const basePropSorter = (prop: string) => (query: Query) =>
   query.return<SortCol>(`node.${prop} as sortValue`);
 
 export interface SortCol {

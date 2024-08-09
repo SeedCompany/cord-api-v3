@@ -1,5 +1,8 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
+import { Type } from 'class-transformer';
+import { ValidateNested } from 'class-validator';
 import {
+  DateFilter,
   FilterField,
   ID,
   PaginatedList,
@@ -56,6 +59,20 @@ export abstract class EngagementFilters {
   readonly intern?: UserFilters & {};
 
   readonly partnerId?: ID<'Partner'>;
+
+  @Field({
+    nullable: true,
+  })
+  @Type(() => DateFilter)
+  @ValidateNested()
+  readonly startDate?: DateFilter;
+
+  @Field({
+    nullable: true,
+  })
+  @Type(() => DateFilter)
+  @ValidateNested()
+  readonly endDate?: DateFilter;
 }
 
 @InputType()
