@@ -35,6 +35,7 @@ import {
   merge,
   oncePerProject,
   paginate,
+  propSorter,
   rankSens,
   requestingUser,
   sortWith,
@@ -371,6 +372,9 @@ export const languageSorters = defineSorters(Language, {
         node('node', 'EthnologueLanguage'),
       ])
       .apply(sortWith(ethnologueSorters, input)),
+  ['registryOfDialectsCode' as any]: propSorter(
+    'registryOfLanguageVarietiesCode',
+  ),
 });
 
 const ethnologueSorters = defineSorters(EthnologueLanguage, {});
