@@ -129,6 +129,41 @@ module default {
         projectContext := __new__.projectContext,
       }
     );
+
+    trigger createPeriodicReportsOnInsert after insert for each do (
+      with
+        interval := (select 
+          if __new__.financialReportPeriod = default::ReportPeriod.Monthly then '1' else '3'),
+        reportRanges := Project::create_periodic_report_ranges(
+          __new__.mouStart,
+          __new__.mouEnd,
+          interval
+        )
+      for reportRange in reportRanges 
+      union (
+        (insert default::FinancialReport {
+          createdAt := datetime_of_statement(),
+          modifiedAt := datetime_of_statement(),
+          createdBy := assert_exists(global currentActor),
+          modifiedBy := assert_exists(global currentActor),
+          project := __new__,
+          projectContext := __new__.projectContext,
+          container := __new__,
+          period := reportRange
+          #receivedDate := __new__.financialReportReceivedAt, //TODO - what is this at the project level?
+        }),
+        (insert default::NarrativeReport {
+          createdAt := datetime_of_statement(),
+          modifiedAt := datetime_of_statement(),
+          createdBy := assert_exists(global currentActor),
+          modifiedBy := assert_exists(global currentActor),
+          project := __new__,
+          projectContext := __new__.projectContext,
+          container := __new__,
+          period := reportRange
+        })
+      )
+    )
   }
   
   abstract type TranslationProject extending Project {
@@ -216,4 +251,22 @@ module Project {
       on target delete allow;
     };
   }
+
+  # creates the ranges for the given start and end dates based upon the given month interval
+  function create_periodic_report_ranges(startDate: cal::local_date, endDate: cal::local_date, 
+    monthInterval: str) -> set of range<cal::local_date>
+    using (
+      with
+        reportingPeriod := range(<cal::local_date>startDate, <cal::local_date>endDate),
+        reportPeriodStartDates := range_unpack(reportingPeriod, <cal::date_duration>(monthInterval ++ ' month')),
+        reportPeriodRanges := (
+          for firstDayOfMonth in reportPeriodStartDates
+          union (
+            with
+              firstDayOfNextMonth := (select firstDayOfMonth + <cal::relative_duration>(monthInterval ++ ' month')),
+              lastDayOfMonth := firstDayOfNextMonth - <cal::relative_duration>'1 day'
+            select range(<cal::local_date>firstDayOfMonth, <cal::local_date>lastDayOfMonth)
+          ))
+      select reportPeriodRanges
+  )
 }
