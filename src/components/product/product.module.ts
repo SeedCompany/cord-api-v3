@@ -1,6 +1,7 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { FileModule } from '../file/file.module';
+import { PnpExtractionResultModule } from '../pnp/extraction-result/pnp-extraction-result.module';
 import { ScriptureModule } from '../scripture';
 import { StoryModule } from '../story/story.module';
 import * as handlers from './handlers';
@@ -20,6 +21,7 @@ import { ProductService } from './product.service';
     ScriptureModule,
     FileModule,
     StoryModule,
+    PnpExtractionResultModule,
   ],
   providers: [
     ProductResolver,
