@@ -23,6 +23,7 @@ import {
     r.ProgressReportHighlight,
     r.ProgressReportTeamNews,
   ].flatMap((it) => [
+    it.create,
     it.read.specifically((p) => [
       p.responses.read.when(variant('published')).edit,
     ]),
