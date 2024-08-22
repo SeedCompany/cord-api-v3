@@ -252,8 +252,14 @@ export class Cell<TSheet extends Sheet = Sheet> {
       : undefined;
   }
 
-  toString() {
+  get fqn() {
+    return `${this.sheet.name}!${this.ref}`;
+  }
+  get ref() {
     return `${this.column.a1}${this.row.a1}`;
+  }
+  toString() {
+    return this.ref;
   }
 }
 
@@ -301,8 +307,11 @@ abstract class Rangable<TSheet extends Sheet = Sheet> {
     );
   }
 
-  toString() {
+  get ref() {
     return `${this.sheet.name}!${this.start.toString()}:${this.end.toString()}`;
+  }
+  toString() {
+    return this.ref;
   }
 }
 
