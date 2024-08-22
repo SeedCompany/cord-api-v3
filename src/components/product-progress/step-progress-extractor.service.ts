@@ -14,6 +14,7 @@ import {
   ProgressSheet,
   WrittenScripturePlanningSheet,
 } from '../pnp';
+import { PnpProgressExtractionResult } from '../pnp/extraction-result';
 import { ProductStep as Step } from '../product/dto';
 import { ScriptureRange } from '../scripture/dto';
 import { StepProgressInput } from './dto';
@@ -42,7 +43,10 @@ type ExtractedRow = MergeExclusive<
 
 @Injectable()
 export class StepProgressExtractor {
-  async extract(file: Downloadable<unknown>) {
+  async extract(
+    file: Downloadable<unknown>,
+    result: PnpProgressExtractionResult,
+  ) {
     const pnp = await Pnp.fromDownloadable(file);
     const sheet = pnp.progress;
 

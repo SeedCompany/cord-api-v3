@@ -18,6 +18,8 @@ export class ExtractPnpFileOnUploadHandler {
       return;
     }
 
+    const result = event.pnpResult;
+
     this.logger.info('Extracting progress summary', {
       report: event.report.id,
       userId: event.session.userId,
@@ -26,7 +28,11 @@ export class ExtractPnpFileOnUploadHandler {
 
     let extracted;
     try {
-      extracted = await this.extractor.extract(event.file, event.report.start);
+      extracted = await this.extractor.extract(
+        event.file,
+        event.report.start,
+        result,
+      );
     } catch (e) {
       this.logger.warning(e.message, {
         name: event.file.name,

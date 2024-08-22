@@ -6,6 +6,7 @@ import { DateTime } from 'luxon';
 import { ID, Session } from '~/common';
 import { ILogger, Logger } from '~/core';
 import { Downloadable, FileVersion } from '../file/dto';
+import { PnpExtractionResult } from '../pnp/extraction-result';
 import { StoryService } from '../story';
 import {
   CreateDerivativeScriptureProduct,
@@ -36,14 +37,16 @@ export class PnpProductSyncService {
     engagementId,
     availableSteps,
     pnp,
+    result,
   }: {
     engagementId: ID<'LanguageEngagement'>;
     availableSteps: readonly ProductStep[];
     pnp: Downloadable<FileVersion>;
+    result: PnpExtractionResult;
   }) {
     let productRows;
     try {
-      productRows = await this.extractor.extract(pnp, availableSteps);
+      productRows = await this.extractor.extract(pnp, availableSteps, result);
     } catch (e) {
       this.logger.warning(e.message, {
         id: pnp.id,
@@ -52,10 +55,15 @@ export class PnpProductSyncService {
       return [];
     }
     if (productRows.length === 0) {
+      // TODO: PnP Extraction Problem
       return [];
     }
 
-    return await this.matchRowsToProductChanges(engagementId, productRows);
+    return await this.matchRowsToProductChanges(
+      engagementId,
+      productRows,
+      result,
+    );
   }
 
   /**
@@ -65,6 +73,7 @@ export class PnpProductSyncService {
   private async matchRowsToProductChanges(
     engagementId: ID<'LanguageEngagement'>,
     rows: readonly ExtractedRow[],
+    result: PnpExtractionResult,
   ) {
     const scriptureProducts = rows[0].bookName
       ? await this.products.loadProductIdsForBookAndVerse(

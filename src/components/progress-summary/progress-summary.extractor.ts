@@ -5,11 +5,16 @@ import { CalendarDate, fiscalQuarter, fiscalYear } from '~/common';
 import { Column, Row } from '~/common/xlsx.util';
 import { Downloadable } from '../file/dto';
 import { Pnp, ProgressSheet } from '../pnp';
+import { PnpProgressExtractionResult } from '../pnp/extraction-result';
 import { ProgressSummary as Progress } from './dto';
 
 @Injectable()
 export class ProgressSummaryExtractor {
-  async extract(file: Downloadable<unknown>, date: CalendarDate) {
+  async extract(
+    file: Downloadable<unknown>,
+    date: CalendarDate,
+    result: PnpProgressExtractionResult,
+  ) {
     const pnp = await Pnp.fromDownloadable(file);
     const sheet = pnp.progress;
 

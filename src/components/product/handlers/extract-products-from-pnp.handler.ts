@@ -4,6 +4,7 @@ import {
   EngagementUpdatedEvent,
 } from '../../engagement/events';
 import { FileService } from '../../file';
+import { PnpPlanningExtractionResult } from '../../pnp/extraction-result';
 import { getAvailableSteps } from '../dto';
 import { PnpProductSyncService } from '../pnp-product-sync.service';
 
@@ -39,10 +40,13 @@ export class ExtractProductsFromPnpHandler
     );
     const pnp = this.files.asDownloadable(fv);
 
+    const result = new PnpPlanningExtractionResult();
+
     const actionableProductRows = await this.syncer.parse({
       engagementId: engagement.id,
       availableSteps,
       pnp,
+      result,
     });
 
     await this.syncer.save({

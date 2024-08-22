@@ -17,14 +17,16 @@ import {
   stepPlanCompleteDate,
   WrittenScripturePlanningSheet,
 } from '../pnp';
+import { PnpPlanningExtractionResult } from '../pnp/extraction-result';
 import { ScriptureRange, UnspecifiedScripturePortion } from '../scripture/dto';
-import { ProductStep as Step } from './dto';
+import { ProductStep, ProductStep as Step } from './dto';
 
 @Injectable()
 export class ProductExtractor {
   async extract(
     file: Downloadable<unknown>,
-    availableSteps: readonly Step[],
+    availableSteps: readonly ProductStep[],
+    result: PnpPlanningExtractionResult,
   ): Promise<readonly ExtractedRow[]> {
     const pnp = await Pnp.fromDownloadable(file);
     const sheet = pnp.planning;

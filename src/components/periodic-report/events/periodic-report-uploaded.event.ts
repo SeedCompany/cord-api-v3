@@ -1,5 +1,7 @@
+import { LazyGetter as Once } from 'lazy-get-decorator';
 import { Session } from '~/common';
 import { Downloadable, FileNode } from '../../file/dto';
+import { PnpProgressExtractionResult } from '../../pnp/extraction-result';
 import { PeriodicReport } from '../dto';
 
 /**
@@ -11,4 +13,8 @@ export class PeriodicReportUploadedEvent {
     readonly file: Downloadable<FileNode>,
     readonly session: Session,
   ) {}
+
+  @Once() get pnpResult() {
+    return new PnpProgressExtractionResult();
+  }
 }
