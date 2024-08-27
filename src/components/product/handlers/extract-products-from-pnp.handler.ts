@@ -40,7 +40,7 @@ export class ExtractProductsFromPnpHandler
     );
     const pnp = this.files.asDownloadable(fv);
 
-    const result = new PnpPlanningExtractionResult();
+    const result = new PnpPlanningExtractionResult(pnp.id);
 
     const actionableProductRows = await this.syncer.parse({
       engagementId: engagement.id,

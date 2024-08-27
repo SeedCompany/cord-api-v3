@@ -1,7 +1,8 @@
 import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { many, Many } from '@seedcompany/common';
 import { stripIndent } from 'common-tags';
-import { EnumType, makeEnum } from '~/common';
+import * as uuid from 'uuid';
+import { EnumType, ID, IdField, makeEnum } from '~/common';
 import { InlineMarkdownScalar } from '~/common/markdown.scalar';
 import { Cell } from '~/common/xlsx.util';
 
@@ -13,6 +14,9 @@ export const PnpProblemSeverity = makeEnum({
 
 @ObjectType()
 export class PnpProblem {
+  @IdField()
+  readonly id: ID;
+
   @Field(() => PnpProblemSeverity)
   readonly severity: PnpProblemSeverity;
 
@@ -38,17 +42,30 @@ export class PnpProblem {
 
 @InterfaceType()
 export abstract class PnpExtractionResult {
+  constructor(private readonly fileVersionId: ID<'FileVersion'>) {}
+
   @Field(() => [PnpProblem])
   readonly problems: PnpProblem[] = [];
 
   addProblem(
-    problem: Omit<PnpProblem, 'groups' | 'source'> & {
+    problem: Omit<PnpProblem, 'id' | 'groups' | 'source'> & {
+      id?: string;
       groups?: Many<string>;
       source: Cell;
     },
   ) {
+    const id = (problem.id ??
+      uuid.v5(
+        [this.fileVersionId, problem.message, problem.source.fqn].join('\0'),
+        ID_NS,
+      )) as ID;
+
+    // Ignore dupes
+    if (this.problems.some((p) => p.id === id)) return;
+
     this.problems.push({
       ...problem,
+      id,
       groups: [problem.source.sheet.name, ...many(problem.groups ?? [])],
       source: problem.source.fqn,
     });
@@ -58,3 +75,5 @@ export abstract class PnpExtractionResult {
 export class PnpPlanningExtractionResult extends PnpExtractionResult {}
 @ObjectType({ implements: PnpExtractionResult })
 export class PnpProgressExtractionResult extends PnpExtractionResult {}
+
+const ID_NS = 'bab2666a-a0f5-4168-977d-7ef6399503f9';

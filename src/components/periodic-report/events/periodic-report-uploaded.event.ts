@@ -15,6 +15,6 @@ export class PeriodicReportUploadedEvent {
   ) {}
 
   @Once() get pnpResult() {
-    return new PnpProgressExtractionResult();
+    return new PnpProgressExtractionResult(this.file.id);
   }
 }
