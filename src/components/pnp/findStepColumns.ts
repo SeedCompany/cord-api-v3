@@ -14,7 +14,7 @@ import 'ix/add/iterable-operators/toarray.js';
  */
 export function findStepColumns(
   sheet: PlanningSheet | ProgressSheet,
-  availableSteps: readonly Step[] = Object.values(Step),
+  availableSteps: readonly Step[] = [...Step],
 ) {
   const matchedColumns: Partial<Record<Step, Column>> = {};
   let remainingSteps = availableSteps;
