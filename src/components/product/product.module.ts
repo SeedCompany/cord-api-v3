@@ -7,7 +7,7 @@ import * as handlers from './handlers';
 import { BackfillEmptyMediumsMigration } from './migrations/backfill-empty-mediums.migration';
 import { FixNaNTotalVerseEquivalentsMigration } from './migrations/fix-nan-total-verse-equivalents.migration';
 import { ProducibleResolver } from './producible.resolver';
-import { ProductExtractor } from './product-extractor.service';
+import { ProductExtractor } from './product.extractor';
 import { ProductLoader } from './product.loader';
 import { ProductRepository } from './product.repository';
 import { ProductResolver } from './product.resolver';

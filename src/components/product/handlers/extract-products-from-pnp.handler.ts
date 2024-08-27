@@ -21,7 +21,7 @@ import {
   UpdateDerivativeScriptureProduct,
   UpdateDirectScriptureProduct,
 } from '../dto';
-import { ExtractedRow, ProductExtractor } from '../product-extractor.service';
+import { ExtractedRow, ProductExtractor } from '../product.extractor';
 import { ProductRepository } from '../product.repository';
 import { ProductService } from '../product.service';
 
