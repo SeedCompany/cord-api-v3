@@ -31,15 +31,27 @@ export class ProductExtractor {
     const pnp = await Pnp.fromDownloadable(file);
     const sheet = pnp.planning;
 
-    const stepColumns = findStepColumns(sheet, availableSteps);
-    const progressStepColumns = findStepColumns(pnp.progress, availableSteps);
+    const stepColumns = findStepColumns(sheet, result, availableSteps);
+    const progressStepColumns = findStepColumns(
+      pnp.progress,
+      undefined,
+      availableSteps,
+    );
 
     const productRows = sheet.goals
       .walkDown()
-      .filter(isGoalRow)
-      .map(parseProductRow(pnp, stepColumns, progressStepColumns))
+      .filter((cell) => isGoalRow(cell, result))
+      .map(parseProductRow(pnp, stepColumns, progressStepColumns, result))
       .filter((row) => row.steps.length > 0)
       .toArray();
+
+    if (productRows.length === 0) {
+      result.addProblem({
+        severity: 'Error',
+        message: `No goals found`,
+        source: pnp.planning.goals.start,
+      });
+    }
 
     // Ignoring for now because not sure how to track progress
     const _otherRows = sheet.isOBS()
@@ -63,6 +75,7 @@ const parseProductRow =
     pnp: Pnp,
     stepColumns: Record<Step, Column>,
     progressStepColumns: Record<Step, Column>,
+    result: PnpPlanningExtractionResult,
   ) =>
   (cell: Cell<PlanningSheet>, index: number): ExtractedRow => {
     const sheet = cell.sheet;
@@ -71,31 +84,32 @@ const parseProductRow =
     const progressRow = pnp.progress.goals.start.row.a1 + rowIndex;
 
     const steps = entries(stepColumns).flatMap(([step, column]) => {
-      const plannedCompleteDate = stepPlanCompleteDate(sheet.cell(column, row));
+      const plannedCell = sheet.cell(column, row);
       const progressCell = pnp.progress.cell(
         progressStepColumns[step],
         progressRow,
       );
 
       if (
-        !isGoalStepPlannedInsideProject(pnp, plannedCompleteDate) ||
-        isProgressCompletedOutsideProject(pnp, progressCell)
+        !isGoalStepPlannedInsideProject(pnp, plannedCell, step, result) ||
+        isProgressCompletedOutsideProject(pnp, progressCell, step, result)
       ) {
         return [];
       }
-
-      return { step, plannedCompleteDate };
+      const plannedCompleteDate = stepPlanCompleteDate(plannedCell)!;
+      return { step, plannedCompleteDate: plannedCompleteDate };
     });
 
     const common = {
       rowIndex: row.a1 - sheet.goals.start.row.a1 + 1,
       order: index + 1,
       steps,
-      note: sheet.myNote(row),
+      note: sheet.myNote(row).asString,
+      source: cell,
     };
 
     if (sheet.isOBS()) {
-      const story = sheet.storyName(row)!; // Asserting bc loop verified this
+      const story = sheet.storyName(row).asString!; // Asserting bc loop verified this
       const scripture = (() => {
         try {
           return parseScripture(
@@ -109,7 +123,7 @@ const parseProductRow =
           return [];
         }
       })();
-      const totalVerses = sheet.totalVerses(row);
+      const totalVerses = sheet.totalVerses(row).asNumber;
       return {
         ...common,
         story,
@@ -123,7 +137,7 @@ const parseProductRow =
 
     return {
       ...common,
-      ...extractScripture(row as Row<WrittenScripturePlanningSheet>),
+      ...extractScripture(row as Row<WrittenScripturePlanningSheet>, result),
     };
   };
 
@@ -153,4 +167,5 @@ export type ExtractedRow = MergeExclusive<
   rowIndex: number;
   steps: ReadonlyArray<{ step: Step; plannedCompleteDate: CalendarDate }>;
   note: string | undefined;
+  source: Cell<PlanningSheet>;
 };

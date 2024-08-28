@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { asyncPool, groupBy, mapEntries, mapOf } from '@seedcompany/common';
 import { labelOfVerseRanges } from '@seedcompany/scripture';
+import { stripIndent } from 'common-tags';
 import { difference, uniq } from 'lodash';
 import { DateTime } from 'luxon';
 import { ID, Session } from '~/common';
@@ -55,7 +56,6 @@ export class PnpProductSyncService {
       return [];
     }
     if (productRows.length === 0) {
-      // TODO: PnP Extraction Problem
       return [];
     }
 
@@ -175,12 +175,27 @@ export class PnpProductSyncService {
         ];
       }
 
+      // Future matching idea:
       // If multiple total cells changed without the rows changing,
       // then rowIndex/pnpIndex could be used to correctly match them.
       // If rows changed though like inserting a row pushing multiple down,
       // this wouldn't work without more logic.
 
-      // Not sure how to handle remaining so doing nothing with them
+      nonExactMatches.forEach(({ source }) => {
+        const goalName = source.asString!;
+        const myNoteCell = source.sheet.myNote(source.row, false);
+        result.addProblem({
+          severity: 'Error',
+          groups: 'Unable to distinguish goal row to goal in CORD',
+          message: stripIndent`
+            _${goalName}_ \`${source.ref}\` is ambiguous with other rows.
+            Please declare the exact scripture reference
+            in the _My Notes_ cell \`${myNoteCell.ref}\`.
+          `,
+          source,
+        });
+      });
+
       return matches;
     });
     return actionableProductRows;

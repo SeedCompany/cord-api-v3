@@ -69,7 +69,7 @@ export class WrittenScriptureProgressSheet extends ProgressSheet {
     let row = this.goalsStart.row;
     while (
       row < lastRow &&
-      this.bookName(row) !== 'Other Goals and Milestones'
+      this.bookName(row).asString !== 'Other Goals and Milestones'
     ) {
       row = row.move(1);
     }
@@ -77,10 +77,10 @@ export class WrittenScriptureProgressSheet extends ProgressSheet {
   }
 
   bookName(goalRow: Row) {
-    return this.cell('P', goalRow).asString;
+    return this.cell('P', goalRow);
   }
   totalVerses(goalRow: Row) {
-    return this.cell('Q', goalRow).asNumber;
+    return this.cell('Q', goalRow);
   }
 }
 
@@ -88,7 +88,7 @@ export class OralStoryingProgressSheet extends ProgressSheet {
   protected goalStartColumn = this.column('Q');
 
   storyName(goalRow: Row) {
-    return this.cell('Q', goalRow).asString;
+    return this.cell('Q', goalRow);
   }
   scriptureReference(goalRow: Row) {
     return this.cell('R', goalRow).asString;
