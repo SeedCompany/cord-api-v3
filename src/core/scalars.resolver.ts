@@ -22,7 +22,7 @@ for (const scalar of getRegisteredScalars()) {
   const typeFn =
     scalar instanceof GraphQLScalarType
       ? () => scalar
-      : Reflect.getMetadata(SCALAR_TYPE_METADATA, scalar);
+      : Reflect.getMetadata(SCALAR_TYPE_METADATA, scalar) ?? (() => scalar);
 
   const key = `unstable_stub${name}`;
   const cls = ScalarResolver.prototype as any;

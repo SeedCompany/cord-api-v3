@@ -3,6 +3,7 @@ import levenshtein from 'fastest-levenshtein';
 import { startCase, without } from 'lodash';
 import { Column } from '~/common/xlsx.util';
 import { ProductStep as Step } from '../product/dto';
+import { PnpExtractionResult } from './extraction-result';
 import { PlanningSheet } from './planning-sheet';
 import { ProgressSheet } from './progress-sheet';
 import 'ix/add/iterable-operators/filter.js';
@@ -14,16 +15,17 @@ import 'ix/add/iterable-operators/toarray.js';
  */
 export function findStepColumns(
   sheet: PlanningSheet | ProgressSheet,
-  availableSteps: readonly Step[] = Object.values(Step),
+  result?: PnpExtractionResult,
+  availableSteps: readonly Step[] = [...Step],
 ) {
   const matchedColumns: Partial<Record<Step, Column>> = {};
   let remainingSteps = availableSteps;
   const possibleSteps = sheet.stepLabels
     .walkRight()
     .filter((cell) => !!cell.asString)
-    .map((cell) => ({ label: cell.asString!, column: cell.column }))
+    .map((cell) => ({ label: cell.asString!, column: cell.column, cell }))
     .toArray();
-  possibleSteps.forEach(({ label, column }, index) => {
+  possibleSteps.forEach(({ label, column, cell }, index) => {
     if (index === possibleSteps.length - 1) {
       // The last step should always be called Completed in CORD per Seth.
       // Written PnP already match, but OBS calls it Record. This is mislabeled
@@ -43,6 +45,12 @@ export function findStepColumns(
       ([_, distance]) => distance,
     )[0]?.[0];
     if (!chosen) {
+      result?.addProblem({
+        severity: 'Error',
+        groups: 'The step header label is non standard',
+        message: `"${label}" \`${cell.ref}\` is not a standard step label`,
+        source: cell,
+      });
       return;
     }
     matchedColumns[chosen] = column;

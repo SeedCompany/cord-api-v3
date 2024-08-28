@@ -1,4 +1,5 @@
 import { forwardRef, Module } from '@nestjs/common';
+import { FileModule } from '../file/file.module';
 import { PeriodicReportModule } from '../periodic-report/periodic-report.module';
 import { ProgressReportCommunityStoryRepository } from './community-stories/progress-report-community-story.repository';
 import { ProgressReportCommunityStoryResolver } from './community-stories/progress-report-community-story.resolver';
@@ -12,6 +13,7 @@ import { ProgressReportRepository } from './progress-report.repository';
 import { ProgressReportService } from './progress-report.service';
 import { ProgressReportEngagementConnectionResolver } from './resolvers/progress-report-engagement-connection.resolver';
 import { ProgressReportParentResolver } from './resolvers/progress-report-parent.resolver';
+import { ReextractPnpResolver } from './resolvers/reextract-pnp.resolver';
 import { ProgressReportTeamNewsRepository } from './team-news/progress-report-team-news.repository';
 import { ProgressReportTeamNewsResolver } from './team-news/progress-report-team-news.resolver';
 import { ProgressReportTeamNewsService } from './team-news/progress-report-team-news.service';
@@ -24,10 +26,12 @@ import { ProgressReportWorkflowModule } from './workflow/progress-report-workflo
     ProgressReportWorkflowModule,
     ProgressReportVarianceExplanationModule,
     ProgressReportMediaModule,
+    FileModule,
   ],
   providers: [
     ProgressReportParentResolver,
     ProgressReportEngagementConnectionResolver,
+    ReextractPnpResolver,
     ProgressReportTeamNewsResolver,
     ProgressReportTeamNewsService,
     ProgressReportTeamNewsRepository,

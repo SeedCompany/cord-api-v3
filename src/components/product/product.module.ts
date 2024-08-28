@@ -6,8 +6,9 @@ import { StoryModule } from '../story/story.module';
 import * as handlers from './handlers';
 import { BackfillEmptyMediumsMigration } from './migrations/backfill-empty-mediums.migration';
 import { FixNaNTotalVerseEquivalentsMigration } from './migrations/fix-nan-total-verse-equivalents.migration';
+import { PnpProductSyncService } from './pnp-product-sync.service';
 import { ProducibleResolver } from './producible.resolver';
-import { ProductExtractor } from './product-extractor.service';
+import { ProductExtractor } from './product.extractor';
 import { ProductLoader } from './product.loader';
 import { ProductRepository } from './product.repository';
 import { ProductResolver } from './product.resolver';
@@ -27,10 +28,11 @@ import { ProductService } from './product.service';
     ProductService,
     ProductRepository,
     ProductExtractor,
+    PnpProductSyncService,
     FixNaNTotalVerseEquivalentsMigration,
     BackfillEmptyMediumsMigration,
     ...Object.values(handlers),
   ],
-  exports: [ProductService],
+  exports: [ProductService, PnpProductSyncService],
 })
 export class ProductModule {}

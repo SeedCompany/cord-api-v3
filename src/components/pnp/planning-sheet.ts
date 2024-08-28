@@ -43,6 +43,18 @@ export abstract class PlanningSheet extends Sheet {
 
   abstract readonly stepLabels: Range;
 
+  goalName(row: Row): Cell {
+    const goal = this.isWritten()
+      ? this.bookName(row)
+      : this.isOBS()
+      ? this.storyName(row)
+      : undefined;
+    if (!goal) {
+      throw new Error('Could not determine goal name cell');
+    }
+    return goal;
+  }
+
   get goals(): Range<PlanningSheet> {
     return this.range(this.goalsStart, this.goalsEnd);
   }
@@ -51,17 +63,15 @@ export abstract class PlanningSheet extends Sheet {
     return this.sheetRange.end.row.cell('Q');
   }
 
-  myNote(goalRow: Row) {
-    return (
-      this.myNotesColumn.cell(goalRow).asString ??
-      this.myNotesFallbackCell?.asString
-    );
+  myNote(goalRow: Row, fallback = true) {
+    const cell = this.myNotesColumn.cell(goalRow);
+    return !fallback || cell.asString ? cell : this.myNotesFallbackCell ?? cell;
   }
   protected abstract myNotesFallbackCell: Cell | undefined;
   protected abstract myNotesColumn: Column;
 
   totalVerses(goalRow: Row) {
-    return this.cell('T', goalRow).asNumber;
+    return this.cell('T', goalRow);
   }
 }
 
@@ -74,7 +84,7 @@ export class WrittenScripturePlanningSheet extends PlanningSheet {
   protected myNotesFallbackCell = this.cell('AI16');
 
   bookName(goalRow: Row) {
-    return this.cell('Q', goalRow).asString;
+    return this.cell('Q', goalRow);
   }
 
   @Once() get goalsEnd() {
@@ -82,7 +92,7 @@ export class WrittenScripturePlanningSheet extends PlanningSheet {
     let row = this.goalsStart.row;
     while (
       row < lastRow &&
-      this.bookName(row) !== 'Other Goals and Milestones'
+      this.bookName(row).asString !== 'Other Goals and Milestones'
     ) {
       row = row.move(1);
     }
@@ -99,7 +109,7 @@ export class OralStoryingPlanningSheet extends PlanningSheet {
   protected myNotesFallbackCell = undefined;
 
   storyName(goalRow: Row) {
-    return this.cell('Q', goalRow).asString;
+    return this.cell('Q', goalRow);
   }
   scriptureReference(goalRow: Row) {
     return this.cell('R', goalRow).asString;
