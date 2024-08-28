@@ -14,6 +14,7 @@ import {
   ProgressSheet,
   WrittenScripturePlanningSheet,
 } from '../pnp';
+import { PnpProgressExtractionResult } from '../pnp/extraction-result';
 import { ProductStep as Step } from '../product/dto';
 import { ScriptureRange } from '../scripture/dto';
 import { StepProgressInput } from './dto';
@@ -42,17 +43,20 @@ type ExtractedRow = MergeExclusive<
 
 @Injectable()
 export class StepProgressExtractor {
-  async extract(file: Downloadable<unknown>) {
+  async extract(
+    file: Downloadable<unknown>,
+    result: PnpProgressExtractionResult,
+  ) {
     const pnp = await Pnp.fromDownloadable(file);
     const sheet = pnp.progress;
 
     const stepColumns = findStepColumns(sheet);
-    const planningStepColumns = findStepColumns(pnp.planning);
+    const planningStepColumns = findStepColumns(pnp.planning, result);
 
     return sheet.goals
       .walkDown()
-      .filter(isGoalRow)
-      .map(parseProgressRow(pnp, stepColumns, planningStepColumns))
+      .filter((cell) => isGoalRow(cell))
+      .map(parseProgressRow(pnp, stepColumns, planningStepColumns, result))
       .filter((row) => row.steps.length > 0)
       .toArray();
   }
@@ -63,6 +67,7 @@ const parseProgressRow =
     pnp: Pnp,
     stepColumns: Record<Step, Column>,
     planningStepColumns: Record<Step, Column>,
+    result: PnpProgressExtractionResult,
   ) =>
   (cell: Cell<ProgressSheet>, index: number): ExtractedRow => {
     const sheet = cell.sheet;
@@ -81,8 +86,8 @@ const parseProgressRow =
 
         const cell = sheet.cell(column, row);
         if (
-          !isGoalStepPlannedInsideProject(pnp, fiscalYear) ||
-          isProgressCompletedOutsideProject(pnp, cell)
+          !isGoalStepPlannedInsideProject(pnp, fiscalYear, step, result) ||
+          isProgressCompletedOutsideProject(pnp, cell, step, result)
         ) {
           return [];
         }
@@ -98,14 +103,17 @@ const parseProgressRow =
     };
 
     if (sheet.isOBS()) {
-      const story = sheet.storyName(row)!; // Asserting bc loop verified this
+      const story = sheet.storyName(row).asString!; // Asserting bc loop verified this
       return { ...common, story };
     }
 
     assert(sheet.isWritten());
     return {
       ...common,
-      ...extractScripture(planningRow as Row<WrittenScripturePlanningSheet>),
+      ...extractScripture(
+        planningRow as Row<WrittenScripturePlanningSheet>,
+        result,
+      ),
     };
   };
 

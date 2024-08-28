@@ -24,6 +24,7 @@ import { PartnershipProducingMediumModule } from './components/partnership-produ
 import { PartnershipModule } from './components/partnership/partnership.module';
 import { PeriodicReportModule } from './components/periodic-report/periodic-report.module';
 import { PinModule } from './components/pin/pin.module';
+import { PnpExtractionResultModule } from './components/pnp/extraction-result/pnp-extraction-result.module';
 import { PostModule } from './components/post/post.module';
 import { ProductProgressModule } from './components/product-progress/product-progress.module';
 import { ProductModule } from './components/product/product.module';
@@ -87,6 +88,7 @@ if (process.env.NODE_ENV !== 'production') {
     PartnershipProducingMediumModule,
     ProgressReportModule,
     PromptsModule,
+    PnpExtractionResultModule,
   ],
 })
 export class AppModule {}
