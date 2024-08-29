@@ -319,7 +319,17 @@ export type DBType<TResourceStatic extends ResourceShape<any>> =
       : never
     : never;
 
+/**
+ * The name of the EdgeDB type, it could be abstract.
+ */
 export type DBName<T extends $.TypeSet> = T['__element__']['__name__'];
+/**
+ * The name(s) of the concrete EdgeDB types.
+ * If the type is abstract, then it is a string union of the concrete type's names.
+ * If the type is concrete, then it is just the name, just as {@link DBName}.
+ */
+export type DBNames<T extends $.ObjectTypeSet> =
+  T['__element__']['__polyTypenames__'];
 
 export type MaybeUnsecuredInstance<TResourceStatic extends ResourceShape<any>> =
   MaybeSecured<InstanceType<TResourceStatic>>;

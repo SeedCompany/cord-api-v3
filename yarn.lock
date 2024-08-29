@@ -1485,16 +1485,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@edgedb/generate@npm:^0.6.0-canary.20240506T235941":
-  version: 0.6.0-canary.20240506T235941
-  resolution: "@edgedb/generate@npm:0.6.0-canary.20240506T235941"
+"@edgedb/generate@github:CarsonF/edgedb-js#workspace=@edgedb/generate&head=temp-host":
+  version: 0.5.5
+  resolution: "@edgedb/generate@https://github.com/CarsonF/edgedb-js.git#workspace=%40edgedb%2Fgenerate&commit=4c238572cae9762323c5ed359f399f6c76c3d2e5"
   dependencies:
     "@iarna/toml": "npm:^2.2.5"
+    debug: "npm:^4.3.4"
   peerDependencies:
-    edgedb: ^1.5.0
+    edgedb: ^1.5.10
   bin:
     generate: dist/cli.js
-  checksum: 10c0/67f42c695caa0d586f62bd62d1d5ffd810d78bdc60f88d2135cb6fec3f065a31f2e69a45ca8745be05f9f881f22d739f2f8053505354dba497876c3742fb2d8a
+  checksum: 10c0/b6527c8d92b53be49c4d859b2267224f52651eaf53fed5120a3954c6f1b82b6b1cb8afc4e1d99ee936f02be914d944ca69e39d057d618d456090e19d9756c49a
   languageName: node
   linkType: hard
 
@@ -5339,7 +5340,7 @@ __metadata:
     "@apollo/subgraph": "npm:^2.5.6"
     "@aws-sdk/client-s3": "npm:^3.440.0"
     "@aws-sdk/s3-request-presigner": "npm:^3.440.0"
-    "@edgedb/generate": "npm:^0.6.0-canary.20240506T235941"
+    "@edgedb/generate": "github:CarsonF/edgedb-js#workspace=@edgedb/generate&head=temp-host"
     "@faker-js/faker": "npm:^8.2.0"
     "@ffprobe-installer/ffprobe": "npm:^2.1.2"
     "@golevelup/nestjs-discovery": "npm:^4.0.0"
@@ -5390,7 +5391,7 @@ __metadata:
     debugger-is-attached: "npm:^1.2.0"
     dotenv: "npm:^16.3.1"
     dotenv-expand: "npm:^10.0.0"
-    edgedb: "npm:^1.6.0-canary.20240506T235920"
+    edgedb: "npm:^1.6.0-canary.20240827T111834"
     eslint: "npm:^8.52.0"
     eslint-plugin-no-only-tests: "npm:^3.1.0"
     eslint-plugin-typescript-sort-keys: "npm:^2.3.0"
@@ -5984,17 +5985,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"edgedb@npm:^1.6.0-canary.20240506T235920":
-  version: 1.6.0-canary.20240506T235920
-  resolution: "edgedb@npm:1.6.0-canary.20240506T235920"
+"edgedb@npm:^1.6.0-canary.20240827T111834":
+  version: 1.6.0-canary.20240827T111834
+  resolution: "edgedb@npm:1.6.0-canary.20240827T111834"
   dependencies:
     debug: "npm:^4.3.4"
     env-paths: "npm:^3.0.0"
-    semver: "npm:^7.6.0"
+    semver: "npm:^7.6.2"
+    shell-quote: "npm:^1.8.1"
     which: "npm:^4.0.0"
   bin:
     edgedb: dist/cli.mjs
-  checksum: 10c0/3bff45a41ac35a1b92a776caedb48d53d568c8e0b4a56f28405490b8e8570f5261b032fcb659914185def3c422c5ae944a5dcc3853d1efaf86b2eec7d60da98c
+  checksum: 10c0/9bdf05484f2bbffc398bd6ca75628b056baaa51114bbfecc72382fd593619510ae319adfe15879138a90f64ff52ab9b159a87bed0472e05046a0ab19493f257e
   languageName: node
   linkType: hard
 
@@ -9407,15 +9409,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lru-cache@npm:^6.0.0":
-  version: 6.0.0
-  resolution: "lru-cache@npm:6.0.0"
-  dependencies:
-    yallist: "npm:^4.0.0"
-  checksum: 10c0/cb53e582785c48187d7a188d3379c181b5ca2a9c78d2bce3e7dee36f32761d1c42983da3fe12b55cb74e1779fa94cdc2e5367c028a9b35317184ede0c07a30a9
-  languageName: node
-  linkType: hard
-
 "lru-cache@npm:^7.10.1, lru-cache@npm:^7.14.1, lru-cache@npm:^7.18.3":
   version: 7.18.3
   resolution: "lru-cache@npm:7.18.3"
@@ -11772,14 +11765,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"semver@npm:^7.3.5, semver@npm:^7.3.7, semver@npm:^7.3.8, semver@npm:^7.5.3, semver@npm:^7.5.4, semver@npm:^7.6.0":
-  version: 7.6.0
-  resolution: "semver@npm:7.6.0"
-  dependencies:
-    lru-cache: "npm:^6.0.0"
+"semver@npm:^7.3.5, semver@npm:^7.3.7, semver@npm:^7.3.8, semver@npm:^7.5.3, semver@npm:^7.5.4, semver@npm:^7.6.2":
+  version: 7.6.3
+  resolution: "semver@npm:7.6.3"
   bin:
     semver: bin/semver.js
-  checksum: 10c0/fbfe717094ace0aa8d6332d7ef5ce727259815bd8d8815700853f4faf23aacbd7192522f0dc5af6df52ef4fa85a355ebd2f5d39f554bd028200d6cf481ab9b53
+  checksum: 10c0/88f33e148b210c153873cb08cfe1e281d518aaa9a666d4d148add6560db5cd3c582f3a08ccb91f38d5f379ead256da9931234ed122057f40bb5766e65e58adaf
   languageName: node
   linkType: hard
 
@@ -11878,6 +11869,13 @@ __metadata:
   version: 3.0.0
   resolution: "shebang-regex@npm:3.0.0"
   checksum: 10c0/1dbed0726dd0e1152a92696c76c7f06084eb32a90f0528d11acd764043aacf76994b2fb30aa1291a21bd019d6699164d048286309a278855ee7bec06cf6fb690
+  languageName: node
+  linkType: hard
+
+"shell-quote@npm:^1.8.1":
+  version: 1.8.1
+  resolution: "shell-quote@npm:1.8.1"
+  checksum: 10c0/8cec6fd827bad74d0a49347057d40dfea1e01f12a6123bf82c4649f3ef152fc2bc6d6176e6376bffcd205d9d0ccb4f1f9acae889384d20baff92186f01ea455a
   languageName: node
   linkType: hard
 
