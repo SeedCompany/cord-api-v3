@@ -25,7 +25,6 @@ import {
 import { BaseNode } from '~/core/database/results';
 import { e } from '~/core/edgedb';
 import { LinkTo, RegisterResource } from '~/core/resources';
-import { ScopedRole } from '../../authorization/dto';
 import { ChangesetAware } from '../../changeset/dto';
 import { Product, SecuredMethodologies } from '../../product/dto';
 import {
@@ -131,10 +130,6 @@ class Engagement extends Interfaces {
 
   @DateTimeField()
   readonly modifiedAt: DateTime;
-
-  // A list of non-global roles the requesting user has available for this object.
-  // This is just a cache, to prevent extra db lookups within the same request.
-  declare readonly scope: ScopedRole[];
 
   @Field()
   readonly description: SecuredRichTextNullable;
