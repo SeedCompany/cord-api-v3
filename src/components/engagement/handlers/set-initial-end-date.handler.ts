@@ -1,5 +1,11 @@
 import { CalendarDate, ID, ServerException, UnsecuredDto } from '~/common';
-import { EventsHandler, IEventHandler, ILogger, Logger } from '~/core';
+import {
+  ConfigService,
+  EventsHandler,
+  IEventHandler,
+  ILogger,
+  Logger,
+} from '~/core';
 import {
   Engagement,
   EngagementStatus,
@@ -17,10 +23,14 @@ export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
   constructor(
     private readonly engagementRepo: EngagementRepository,
     private readonly engagementService: EngagementService,
+    private readonly config: ConfigService,
     @Logger('engagement:set-initial-end-date') private readonly logger: ILogger,
   ) {}
 
   async handle(event: SubscribedEvent) {
+    if (this.config.databaseEngine === 'edgedb') {
+      return;
+    }
     this.logger.debug('Engagement mutation, set initial end date', {
       ...event,
       event: event.constructor.name,
