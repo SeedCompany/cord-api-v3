@@ -28,7 +28,7 @@ export class ExtractProductsFromPnpHandler
         ? event.engagement
         : event.updated;
     const { pnp: hasPnpInput, methodology } = event.input;
-    if (!hasPnpInput || !methodology) {
+    if (!engagement.pnp || !hasPnpInput || !methodology) {
       return;
     }
     const availableSteps = getAvailableSteps({ methodology });

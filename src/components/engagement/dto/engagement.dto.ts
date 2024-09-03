@@ -183,7 +183,7 @@ export class LanguageEngagement extends Engagement {
   @Field()
   readonly paratextRegistryId: SecuredString;
 
-  readonly pnp: Secured<LinkTo<'File'>>;
+  readonly pnp: Secured<LinkTo<'File'> | null>;
 
   @Field()
   readonly historicGoal: SecuredString;
@@ -219,7 +219,7 @@ export class InternshipEngagement extends Engagement {
   @DbLabel('ProductMethodology')
   readonly methodologies: SecuredMethodologies;
 
-  readonly growthPlan: Secured<LinkTo<'File'>>;
+  readonly growthPlan: Secured<LinkTo<'File'> | null>;
 }
 
 export const engagementRange = (engagement: UnsecuredDto<Engagement>) =>
