@@ -48,7 +48,7 @@ export class CreateEngagementDefaultCeremonyHandler
 
     event.engagement = {
       ...engagement,
-      ceremony: ceremonyId,
+      ceremony: { id: ceremonyId },
     };
   }
 }

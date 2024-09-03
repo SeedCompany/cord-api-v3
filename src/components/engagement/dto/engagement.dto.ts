@@ -7,7 +7,6 @@ import {
   DateInterval,
   DateTimeField,
   DbLabel,
-  ID,
   IntersectTypes,
   parentIdMiddleware,
   Resource,
@@ -28,7 +27,6 @@ import { e } from '~/core/edgedb';
 import { LinkTo, RegisterResource } from '~/core/resources';
 import { ScopedRole } from '../../authorization/dto';
 import { ChangesetAware } from '../../changeset/dto';
-import { DefinedFile } from '../../file/dto';
 import { Product, SecuredMethodologies } from '../../product/dto';
 import {
   InternshipProject,
@@ -80,7 +78,7 @@ class Engagement extends Interfaces {
   @DbLabel('EngagementStatus')
   readonly status: SecuredEngagementStatus;
 
-  readonly ceremony: Secured<ID>;
+  readonly ceremony: Secured<LinkTo<'Ceremony'>>;
 
   @Field({
     description: 'Translation / Growth Plan complete date',
@@ -166,7 +164,7 @@ export class LanguageEngagement extends Engagement {
   @Field(() => TranslationProject)
   declare readonly parent: BaseNode;
 
-  readonly language: Secured<ID>;
+  readonly language: Secured<LinkTo<'Language'>>;
 
   @Field()
   readonly firstScripture: SecuredBoolean;
@@ -185,7 +183,7 @@ export class LanguageEngagement extends Engagement {
   @Field()
   readonly paratextRegistryId: SecuredString;
 
-  readonly pnp: DefinedFile;
+  readonly pnp: Secured<LinkTo<'File'>>;
 
   @Field()
   readonly historicGoal: SecuredString;
@@ -207,11 +205,11 @@ export class InternshipEngagement extends Engagement {
   @Field(() => InternshipProject)
   declare readonly parent: BaseNode;
 
-  readonly countryOfOrigin: Secured<ID | null>;
+  readonly countryOfOrigin: Secured<LinkTo<'Location'> | null>;
 
-  readonly intern: Secured<ID>;
+  readonly intern: Secured<LinkTo<'User'>>;
 
-  readonly mentor: Secured<ID | null>;
+  readonly mentor: Secured<LinkTo<'User'> | null>;
 
   @Field()
   @DbLabel('InternPosition')
@@ -221,7 +219,7 @@ export class InternshipEngagement extends Engagement {
   @DbLabel('ProductMethodology')
   readonly methodologies: SecuredMethodologies;
 
-  readonly growthPlan: DefinedFile;
+  readonly growthPlan: Secured<LinkTo<'File'>>;
 }
 
 export const engagementRange = (engagement: UnsecuredDto<Engagement>) =>

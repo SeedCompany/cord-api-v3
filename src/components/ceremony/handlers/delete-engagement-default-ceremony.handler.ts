@@ -16,7 +16,7 @@ export class DetachEngagementRootDirectoryHandler
       return;
     }
 
-    const ceremonyId = engagement?.ceremony?.value;
+    const ceremonyId = engagement?.ceremony?.value?.id;
     if (!ceremonyId) {
       return;
     }
