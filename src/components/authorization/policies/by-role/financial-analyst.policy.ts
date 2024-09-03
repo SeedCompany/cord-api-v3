@@ -1,3 +1,4 @@
+import { EngagementWorkflow } from '../../../engagement/workflow/engagement-workflow';
 import { ProjectWorkflow } from '../../../project/workflow/project-workflow';
 import {
   inherit,
@@ -16,6 +17,9 @@ export const projectTransitions = () =>
     'Complete',
   );
 
+export const engagementTransitions = () =>
+  EngagementWorkflow.pickNames('Not Ready for Completion', 'Complete');
+
 // NOTE: There could be other permissions for this role from other policies
 @Policy(
   [Role.FinancialAnalyst, Role.LeadFinancialAnalyst, Role.Controller],
@@ -31,6 +35,10 @@ export const projectTransitions = () =>
       ]),
       r.LanguageEngagement.specifically((p) => p.paratextRegistryId.none),
     ),
+    r.EngagementWorkflowEvent.read.whenAll(
+      member,
+      r.EngagementWorkflowEvent.isTransitions(engagementTransitions),
+    ).execute,
     r.FieldRegion.read,
     r.FieldZone.read,
     r.FinancialReport.edit,

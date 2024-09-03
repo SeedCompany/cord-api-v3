@@ -6,11 +6,9 @@ import { LanguageModule } from '../language/language.module';
 import { LocationModule } from '../location/location.module';
 import { ProductModule } from '../product/product.module';
 import { ProjectModule } from '../project/project.module';
-import { EngagementStatusResolver } from './engagement-status.resolver';
 import { EngagementLoader } from './engagement.loader';
 import { EngagementRepository } from './engagement.repository';
 import { EngagementResolver } from './engagement.resolver';
-import { EngagementRules } from './engagement.rules';
 import { EngagementService } from './engagement.service';
 import * as handlers from './handlers';
 import { InternshipEngagementResolver } from './internship-engagement.resolver';
@@ -18,6 +16,7 @@ import { InternshipPositionResolver } from './internship-position.resolver';
 import { LanguageEngagementResolver } from './language-engagement.resolver';
 import { FixNullMethodologiesMigration } from './migrations/fix-null-methodologies.migration';
 import { EngagementProductConnectionResolver } from './product-connection.resolver';
+import { EngagementWorkflowModule } from './workflow/engagement-workflow.module';
 
 @Module({
   imports: [
@@ -28,15 +27,14 @@ import { EngagementProductConnectionResolver } from './product-connection.resolv
     forwardRef(() => LanguageModule),
     forwardRef(() => LocationModule),
     forwardRef(() => ProjectModule),
+    EngagementWorkflowModule,
   ],
   providers: [
     EngagementResolver,
     LanguageEngagementResolver,
     InternshipEngagementResolver,
-    EngagementStatusResolver,
     InternshipPositionResolver,
     EngagementProductConnectionResolver,
-    EngagementRules,
     EngagementService,
     EngagementRepository,
     EngagementLoader,

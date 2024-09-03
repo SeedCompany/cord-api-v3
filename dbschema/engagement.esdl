@@ -3,6 +3,15 @@ module default {
     required status: Engagement::Status {
       default := Engagement::Status.InDevelopment;
     }
+    latestWorkflowEvent := (select .workflowEvents order by .at desc limit 1);
+    workflowEvents := .<engagement[is Engagement::WorkflowEvent];
+    trigger assertMatchingLatestWorkflowEvent after insert, update for each do (
+      assert(
+        __new__.latestWorkflowEvent.to ?= __new__.status
+        or (not exists __new__.latestWorkflowEvent and __new__.status = Engagement::Status.InDevelopment),
+        message := "Engagement status must match the latest workflow event"
+      )
+    );
     statusModifiedAt: datetime {
       rewrite update using (datetime_of_statement() if .status != __old__.status else .statusModifiedAt);
     }
@@ -141,31 +150,6 @@ module default {
 }
  
 module Engagement {
-  scalar type Status extending enum<
-    InDevelopment,
-    DidNotDevelop,
-    Rejected,
-    
-    Active,
-    
-    DiscussingTermination,
-    DiscussingReactivation,
-    DiscussingChangeToPlan,
-    DiscussingSuspension,
-    
-    FinalizingCompletion,
-    ActiveChangedPlan,
-    Suspended,
-    
-    Terminated,
-    Completed,
-    
-    # deprecated / legacy
-    Converted,
-    Unapproved,
-    Transferred,
-    NotRenewed,
-  >;
   
   scalar type InternPosition extending enum<
     ConsultantInTraining,

@@ -46,12 +46,12 @@ import {
   EngagementRepository,
   LanguageOrEngagementId,
 } from './engagement.repository';
-import { EngagementRules } from './engagement.rules';
 import {
   EngagementCreatedEvent,
   EngagementUpdatedEvent,
   EngagementWillDeleteEvent,
 } from './events';
+import { EngagementWorkflowService } from './workflow/engagement-workflow.service';
 
 @Injectable()
 export class EngagementService {
@@ -62,7 +62,7 @@ export class EngagementService {
     private readonly products: ProductService & {},
     private readonly config: ConfigService,
     private readonly files: FileService,
-    private readonly engagementRules: EngagementRules,
+    private readonly engagementWorkflow: EngagementWorkflowService,
     private readonly privileges: Privileges,
     @Inject(forwardRef(() => ProjectService))
     private readonly projectService: ProjectService & {},
@@ -222,6 +222,12 @@ export class EngagementService {
   }
 
   // READ ///////////////////////////////////////////////////////////
+  async readOneUnsecured(
+    id: ID,
+    session: Session,
+  ): Promise<UnsecuredDto<Engagement>> {
+    return await this.repo.readOne(id, session);
+  }
 
   @HandleIdLookup([LanguageEngagement, InternshipEngagement])
   async readOne(
@@ -263,15 +269,6 @@ export class EngagementService {
       await this.verifyFirstScripture({ engagementId: input.id });
     }
 
-    if (input.status) {
-      await this.engagementRules.verifyStatusChange(
-        input.id,
-        session,
-        input.status,
-        changeset,
-      );
-    }
-
     const previous = await this.repo.readOne(input.id, session, view);
     const object = (await this.secure(previous, session)) as LanguageEngagement;
 
@@ -288,6 +285,13 @@ export class EngagementService {
       session,
     );
 
+    if (changes.status) {
+      await this.engagementWorkflow.executeTransitionLegacy(
+        object,
+        changes.status,
+        session,
+      );
+    }
     await this.repo.updateLanguage(object, changes, changeset);
 
     const updated = (await this.repo.readOne(
@@ -296,7 +300,7 @@ export class EngagementService {
       view,
     )) as UnsecuredDto<LanguageEngagement>;
 
-    const event = new EngagementUpdatedEvent(updated, previous, input, session);
+    const event = new EngagementUpdatedEvent(updated, previous, session, input);
     await this.eventBus.publish(event);
 
     return (await this.secure(event.updated, session)) as LanguageEngagement;
@@ -308,14 +312,6 @@ export class EngagementService {
     changeset?: ID,
   ): Promise<InternshipEngagement> {
     const view: ObjectView = viewOfChangeset(changeset);
-    if (input.status) {
-      await this.engagementRules.verifyStatusChange(
-        input.id,
-        session,
-        input.status,
-        changeset,
-      );
-    }
 
     const previous = await this.repo.readOne(input.id, session, view);
     const object = (await this.secure(
@@ -328,6 +324,15 @@ export class EngagementService {
       .for(session, InternshipEngagement, object)
       .verifyChanges(changes, { pathPrefix: 'engagement' });
 
+    let updated = previous;
+    if (changes.status) {
+      await this.engagementWorkflow.executeTransitionLegacy(
+        object,
+        changes.status,
+        session,
+      );
+    }
+
     await this.files.updateDefinedFile(
       object.growthPlan,
       'engagement.growthPlan',
@@ -337,13 +342,13 @@ export class EngagementService {
 
     await this.repo.updateInternship(object, changes, changeset);
 
-    const updated = (await this.repo.readOne(
+    updated = (await this.repo.readOne(
       input.id,
       session,
       view,
     )) as UnsecuredDto<InternshipEngagement>;
 
-    const event = new EngagementUpdatedEvent(updated, previous, input, session);
+    const event = new EngagementUpdatedEvent(updated, previous, session, input);
     await this.eventBus.publish(event);
 
     return (await this.secure(event.updated, session)) as InternshipEngagement;
@@ -351,7 +356,7 @@ export class EngagementService {
 
   async triggerUpdateEvent(id: ID, session: Session) {
     const object = await this.repo.readOne(id, session);
-    const event = new EngagementUpdatedEvent(object, object, { id }, session);
+    const event = new EngagementUpdatedEvent(object, object, session, { id });
     await this.eventBus.publish(event);
   }
 
