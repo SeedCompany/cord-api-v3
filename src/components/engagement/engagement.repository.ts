@@ -502,7 +502,7 @@ export class EngagementRepository extends CommonRepository {
   async getOngoingEngagementIds(
     projectId: ID,
     excludes: EngagementStatus[] = [],
-  ) {
+  ): Promise<readonly ID[]> {
     const rows = await this.db
       .query()
       .match([
