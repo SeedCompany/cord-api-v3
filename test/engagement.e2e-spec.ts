@@ -811,7 +811,9 @@ describe('Engagement e2e', () => {
         mentorId: mentor.id,
       }),
     ).rejects.toThrowGqlError(
-      errors.notFound({ message: 'Could not find project' }),
+      errors.notFound({
+        message: expect.stringMatching(/Could not find project/i),
+      }),
     );
     await expect(
       createInternshipEngagement(app, {
@@ -863,7 +865,9 @@ describe('Engagement e2e', () => {
         languageId: language.id,
       }),
     ).rejects.toThrowGqlError(
-      errors.notFound({ message: 'Could not find project' }),
+      errors.notFound({
+        message: expect.stringMatching(/Could not find project/i),
+      }),
     );
     await expect(
       createLanguageEngagement(app, {

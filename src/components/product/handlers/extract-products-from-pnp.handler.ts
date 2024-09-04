@@ -28,12 +28,12 @@ export class ExtractProductsFromPnpHandler
         ? event.engagement
         : event.updated;
     const { pnp: hasPnpInput, methodology } = event.input;
-    if (!hasPnpInput || !methodology) {
+    if (!engagement.pnp || !hasPnpInput || !methodology) {
       return;
     }
     const availableSteps = getAvailableSteps({ methodology });
 
-    const file = await this.files.getFile(engagement.pnp, event.session);
+    const file = await this.files.getFile(engagement.pnp.id, event.session);
     const fv = await this.files.getFileVersion(
       file.latestVersionId,
       event.session,
