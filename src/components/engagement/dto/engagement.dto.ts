@@ -7,6 +7,7 @@ import {
   DateInterval,
   DateTimeField,
   DbLabel,
+  DBNames,
   IntersectTypes,
   parentIdMiddleware,
   Resource,
@@ -47,7 +48,7 @@ export type AnyEngagement = MergeExclusive<
 const Interfaces = IntersectTypes(Resource, ChangesetAware);
 
 export const resolveEngagementType = (val: Pick<AnyEngagement, '__typename'>) =>
-  val.__typename === 'LanguageEngagement'
+  val.__typename === 'default::LanguageEngagement'
     ? LanguageEngagement
     : InternshipEngagement;
 
@@ -65,7 +66,7 @@ class Engagement extends Interfaces {
   static readonly Parent = import('../../project/dto').then((m) => m.IProject);
   static readonly resolve = resolveEngagementType;
 
-  declare readonly __typename: 'LanguageEngagement' | 'InternshipEngagement';
+  declare readonly __typename: DBNames<typeof e.Engagement>;
 
   readonly project: LinkTo<'Project'> & Pick<IProject, 'status' | 'type'>;
 
@@ -155,7 +156,7 @@ export class LanguageEngagement extends Engagement {
     (m) => m.TranslationProject,
   );
 
-  declare readonly __typename: 'LanguageEngagement';
+  declare readonly __typename: DBNames<typeof e.LanguageEngagement>;
 
   @Field(() => TranslationProject)
   declare readonly parent: BaseNode;
@@ -196,7 +197,7 @@ export class InternshipEngagement extends Engagement {
     (m) => m.InternshipProject,
   );
 
-  declare readonly __typename: 'InternshipEngagement';
+  declare readonly __typename: DBNames<typeof e.InternshipEngagement>;
 
   @Field(() => InternshipProject)
   declare readonly parent: BaseNode;
