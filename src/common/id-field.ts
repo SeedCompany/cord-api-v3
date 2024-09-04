@@ -2,11 +2,7 @@ import { applyDecorators } from '@nestjs/common';
 import { Field, FieldOptions, ID as IDType } from '@nestjs/graphql';
 import { ValidationOptions } from 'class-validator';
 import { IsAny, IsNever, Tagged } from 'type-fest';
-import type {
-  AllResourceDBNames,
-  ResourceName,
-  ResourceNameLike,
-} from '~/core';
+import type { ResourceName, ResourceNameLike } from '~/core';
 import { IsId } from './validators';
 
 export const IdField = ({
@@ -40,4 +36,4 @@ type IDTag<Kind> = IsAny<Kind> extends true
     : Kind
   : never;
 
-type IDKindLike = ResourceNameLike | AllResourceDBNames | object;
+type IDKindLike = ResourceNameLike | object;

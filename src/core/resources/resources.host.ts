@@ -14,7 +14,6 @@ import {
 import { ResourceMap } from './map';
 import { __privateDontUseThis } from './resource-map-holder';
 import {
-  AllResourceDBNames,
   ResourceName,
   ResourceNameLike,
   ResourceStaticFromName,
@@ -70,7 +69,7 @@ export class ResourcesHost {
     return this.getByName(name as any);
   }
 
-  getByEdgeDB<Name extends ResourceNameLike | AllResourceDBNames>(
+  getByEdgeDB<Name extends ResourceNameLike>(
     name: Name,
   ): EnhancedResource<
     string extends Name
