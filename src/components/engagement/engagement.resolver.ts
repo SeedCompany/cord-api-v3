@@ -60,7 +60,7 @@ export class EngagementResolver {
     @Loader(EngagementLoader) engagements: LoaderOf<EngagementLoader>,
   ): Promise<Engagement> {
     const engagement = await engagements.load(key);
-    if (engagement.__typename !== 'LanguageEngagement') {
+    if (LanguageEngagement.resolve(engagement) !== LanguageEngagement) {
       throw new InvalidIdForTypeException();
     }
     return engagement;

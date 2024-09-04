@@ -63,6 +63,7 @@ class Engagement extends Interfaces {
   static readonly Props: string[] = keysOf<Engagement>();
   static readonly SecuredProps: string[] = keysOf<SecuredProps<Engagement>>();
   static readonly Parent = import('../../project/dto').then((m) => m.IProject);
+  static readonly resolve = resolveEngagementType;
 
   declare readonly __typename: 'LanguageEngagement' | 'InternshipEngagement';
 
