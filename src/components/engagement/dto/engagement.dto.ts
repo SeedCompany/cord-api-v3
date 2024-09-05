@@ -222,6 +222,11 @@ export class InternshipEngagement extends Engagement {
 export const engagementRange = (engagement: UnsecuredDto<Engagement>) =>
   DateInterval.tryFrom(engagement.startDate, engagement.endDate);
 
+export const EngagementConcretes = {
+  LanguageEngagement,
+  InternshipEngagement,
+};
+
 declare module '~/core/resources/map' {
   interface ResourceMap {
     Engagement: typeof Engagement;
