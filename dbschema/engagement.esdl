@@ -24,7 +24,7 @@ module default {
       .<engagement[is Engagement::Ceremony]
     ));
     
-    completedDate: cal::local_date {
+    completeDate: cal::local_date {
       annotation description := "Translation / Growth Plan complete date";
     }
     disbursementCompleteDate: cal::local_date;

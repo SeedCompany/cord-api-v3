@@ -33,7 +33,7 @@ const baseHydrate = e.shape(e.Engagement, (engagement) => ({
     }),
   }),
   ceremony: true,
-  completeDate: engagement.completedDate, // TODO fix in schema
+  completeDate: true,
 }));
 
 const languageExtraHydrate = {
