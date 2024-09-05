@@ -1,7 +1,8 @@
 import { Injectable, Type } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { LazyGetter } from 'lazy-get-decorator';
-import { PublicOf } from '~/common';
+import { difference } from 'lodash';
+import { ID, PublicOf } from '~/common';
 import { grabInstances } from '~/common/instance-maps';
 import { e, RepoFor } from '~/core/edgedb';
 import {
@@ -9,6 +10,7 @@ import {
   CreateInternshipEngagement,
   CreateLanguageEngagement,
   IEngagement,
+  EngagementStatus as Status,
   UpdateInternshipEngagement,
   UpdateLanguageEngagement,
 } from './dto';
@@ -77,15 +79,33 @@ export const ConcreteRepos = {
     ConcreteTypes.LanguageEngagement,
     {
       hydrate: languageHydrate,
+      omit: ['create'],
     },
-  ) {},
+  ) {
+    async create(input: CreateLanguageEngagement) {
+      const project = e.cast(e.TranslationProject, e.uuid(input.projectId));
+      return await this.defaults.create({
+        ...input,
+        projectContext: project.projectContext,
+      });
+    }
+  },
 
   InternshipEngagement: class InternshipEngagementRepository extends RepoFor(
     ConcreteTypes.InternshipEngagement,
     {
       hydrate: internshipHydrate,
+      omit: ['create'],
     },
-  ) {},
+  ) {
+    async create(input: CreateInternshipEngagement) {
+      const project = e.cast(e.InternshipProject, e.uuid(input.projectId));
+      return await this.defaults.create({
+        ...input,
+        projectContext: project.projectContext,
+      });
+    }
+  },
 } satisfies Record<keyof typeof ConcreteTypes, Type>;
 
 @Injectable()
@@ -126,5 +146,34 @@ export class EngagementEdgeDBRepository
 
   async updateInternship(input: UpdateInternshipEngagement) {
     return await this.concretes.InternshipEngagement.update(input);
+  }
+
+  async listAllByProjectId(projectId: ID) {
+    const project = e.cast(e.Project, e.uuid(projectId));
+    const query = e.select(e.Engagement, (eng) => ({
+      filter: e.op(eng.project, '=', project),
+      ...hydrate(eng),
+    }));
+
+    return await this.db.run(query);
+  }
+
+  async getOngoingEngagementIds(projectId: ID, excludes: Status[] = []) {
+    const project = e.cast(e.Project, e.uuid(projectId));
+
+    const ongoingExceptExclusions = e.cast(
+      e.Engagement.Status,
+      e.set(...difference([...Status.Ongoing], excludes)),
+    );
+
+    const engagements = e.select(e.Engagement, (eng) => ({
+      filter: e.op(
+        e.op(eng.project, '=', project),
+        'and',
+        e.op(eng.status, 'in', ongoingExceptExclusions),
+      ),
+    }));
+
+    return await this.db.run(engagements.id);
   }
 }
