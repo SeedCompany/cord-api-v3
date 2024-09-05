@@ -30,7 +30,9 @@ export type ResourceLike =
 
 @Injectable()
 export class ResourcesHost {
-  constructor(private readonly gqlSchema: GraphQLSchemaHost) {}
+  constructor(private readonly gqlSchema: GraphQLSchemaHost) {
+    EnhancedResource.resourcesHost = this;
+  }
 
   getMap() {
     // @ts-expect-error Yeah we are assuming each type has been correctly
