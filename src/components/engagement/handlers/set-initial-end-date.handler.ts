@@ -6,7 +6,7 @@ import {
   ILogger,
   Logger,
 } from '~/core';
-import { EngagementStatus } from '../dto';
+import { EngagementStatus, LanguageEngagement } from '../dto';
 import { EngagementRepository } from '../engagement.repository';
 import { EngagementService } from '../engagement.service';
 import { EngagementCreatedEvent, EngagementUpdatedEvent } from '../events';
@@ -49,7 +49,7 @@ export class SetInitialEndDate implements IEventHandler<SubscribedEvent> {
       const initialEndDate = engagement.endDate;
 
       const type =
-        engagement.__typename === 'LanguageEngagement'
+        LanguageEngagement.resolve(engagement) === LanguageEngagement
           ? 'Language'
           : 'Internship';
       await this.engagementRepo[`update${type}`](

@@ -1,4 +1,5 @@
 import { forwardRef, Module } from '@nestjs/common';
+import { splitDb } from '~/core';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { CeremonyModule } from '../ceremony/ceremony.module';
 import { FileModule } from '../file/file.module';
@@ -7,6 +8,7 @@ import { LocationModule } from '../location/location.module';
 import { ProductModule } from '../product/product.module';
 import { ProjectModule } from '../project/project.module';
 import { EngagementStatusResolver } from './engagement-status.resolver';
+import { EngagementEdgeDBRepository } from './engagement.edgedb.repository';
 import { EngagementLoader } from './engagement.loader';
 import { EngagementRepository } from './engagement.repository';
 import { EngagementResolver } from './engagement.resolver';
@@ -38,7 +40,7 @@ import { EngagementProductConnectionResolver } from './product-connection.resolv
     EngagementProductConnectionResolver,
     EngagementRules,
     EngagementService,
-    EngagementRepository,
+    splitDb(EngagementRepository, EngagementEdgeDBRepository),
     EngagementLoader,
     ...Object.values(handlers),
     FixNullMethodologiesMigration,

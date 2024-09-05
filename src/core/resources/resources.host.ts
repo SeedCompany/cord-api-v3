@@ -4,7 +4,6 @@ import { CachedByArg, mapKeys } from '@seedcompany/common';
 import { isObjectType } from 'graphql';
 import { LazyGetter as Once } from 'lazy-get-decorator';
 import { mapValues } from 'lodash';
-import { ValueOf } from 'type-fest';
 import {
   EnhancedResource,
   InvalidIdForTypeException,
@@ -14,7 +13,7 @@ import {
 import { ResourceMap } from './map';
 import { __privateDontUseThis } from './resource-map-holder';
 import {
-  AllResourceDBNames,
+  AllResourceNames,
   ResourceName,
   ResourceNameLike,
   ResourceStaticFromName,
@@ -31,7 +30,9 @@ export type ResourceLike =
 
 @Injectable()
 export class ResourcesHost {
-  constructor(private readonly gqlSchema: GraphQLSchemaHost) {}
+  constructor(private readonly gqlSchema: GraphQLSchemaHost) {
+    EnhancedResource.resourcesHost = this;
+  }
 
   getMap() {
     // @ts-expect-error Yeah we are assuming each type has been correctly
@@ -53,24 +54,27 @@ export class ResourcesHost {
     return mapValues(map, EnhancedResource.of) as any;
   }
 
-  getByName<K extends keyof ResourceMap>(
-    name: K,
-  ): EnhancedResource<ValueOf<Pick<ResourceMap, K>>> {
+  getByName<Name extends AllResourceNames>(
+    name: Name,
+  ): EnhancedResource<ResourceStaticFromName<ResourceName<Name>>> {
+    if (name.includes('::')) {
+      return this.getByEdgeDB(name) as any;
+    }
     const map = this.getEnhancedMap();
-    const resource = map[name];
+    const resource = map[name as keyof ResourceMap];
     if (!resource) {
       throw new ServerException(
         `Unable to determine resource from ResourceMap for type: ${name}`,
       );
     }
-    return resource;
+    return resource as any;
   }
 
   getByDynamicName(name: ResourceNameLike): EnhancedResource<any> {
     return this.getByName(name as any);
   }
 
-  getByEdgeDB<Name extends ResourceNameLike | AllResourceDBNames>(
+  getByEdgeDB<Name extends ResourceNameLike>(
     name: Name,
   ): EnhancedResource<
     string extends Name

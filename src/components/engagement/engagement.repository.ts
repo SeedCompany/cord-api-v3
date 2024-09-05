@@ -36,6 +36,7 @@ import {
   filter,
   FullTextIndex,
   INACTIVE,
+  listConcat,
   matchChangesetAndChangedProps,
   matchProjectSens,
   matchPropsAndProjectSensAndScopedRoles,
@@ -169,9 +170,12 @@ export class EngagementRepository extends CommonRepository {
         ])
         .return<{ dto: UnsecuredDto<Engagement> }>(
           merge('props', 'changedProps', {
-            __typename: typenameForView(
-              ['LanguageEngagement', 'InternshipEngagement'],
-              view,
+            __typename: listConcat(
+              '"default::"',
+              typenameForView(
+                ['LanguageEngagement', 'InternshipEngagement'],
+                view,
+              ),
             ),
             parent: 'project',
             project: {

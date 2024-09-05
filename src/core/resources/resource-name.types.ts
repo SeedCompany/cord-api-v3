@@ -2,8 +2,9 @@ import { ConditionalKeys, IsAny, LiteralUnion, ValueOf } from 'type-fest';
 import { DBName, ResourceShape } from '~/common';
 import { ResourceDBMap, ResourceMap } from './map';
 
-export type AllResourceNames = keyof ResourceMap;
+export type AllResourceAppNames = keyof ResourceMap;
 export type AllResourceDBNames = DBName<ValueOf<ResourceDBMap>>;
+export type AllResourceNames = AllResourceAppNames | AllResourceDBNames;
 export type ResourceNameLike = LiteralUnion<AllResourceNames, string>;
 
 //region ResourceName
@@ -32,13 +33,13 @@ export type ResourceName<
   T,
   IncludeSubclasses extends boolean = false,
 > = IsAny<T> extends true
-  ? AllResourceNames // short-circuit and prevent many seemly random circular definitions
+  ? AllResourceAppNames // short-circuit and prevent many seemly random circular definitions
   : T extends AllResourceDBNames
   ? ResourceNameFromStatic<
       ResourceMap[ResourceNameFromDBName<T>],
       IncludeSubclasses
     >
-  : T extends AllResourceNames
+  : T extends AllResourceAppNames
   ? ResourceNameFromStatic<ResourceMap[T], IncludeSubclasses>
   : T extends ResourceShape<any>
   ? ResourceNameFromStatic<T, IncludeSubclasses>

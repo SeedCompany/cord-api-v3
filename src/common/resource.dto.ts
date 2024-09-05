@@ -4,7 +4,12 @@ import { LazyGetter as Once } from 'lazy-get-decorator';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { inspect } from 'util';
-import type { ResourceDBMap, ResourceName } from '~/core';
+import type {
+  ResourceDBMap,
+  ResourceLike,
+  ResourceName,
+  ResourcesHost,
+} from '~/core';
 import { $, e } from '~/core/edgedb/reexports';
 import { ScopedRole } from '../components/authorization/dto';
 import { CalculatedSymbol } from './calculated.decorator';
@@ -27,7 +32,7 @@ const hasTypename = (value: unknown): value is { __typename: string } =>
 export const resolveByTypename =
   (interfaceName: string) => (value: unknown) => {
     if (hasTypename(value)) {
-      return value.__typename;
+      return EnhancedResource.resolve(value.__typename).name;
     }
     throw new ServerException(`Cannot resolve ${interfaceName} type`);
   };
@@ -87,12 +92,21 @@ export class EnhancedResource<T extends ResourceShape<any>> {
   static readonly dbTypes = new WeakMap<ResourceShape<any>, $.$expr_PathNode>();
   /** @internal */
   static readonly dbSkipAccessPolicies = new Set<string>();
+  /** @internal */
+  static resourcesHost?: ResourcesHost;
 
   private constructor(readonly type: T) {}
   private static readonly refs = new WeakMap<
     ResourceShape<any>,
     EnhancedResource<any>
   >();
+
+  static resolve(ref: ResourceLike) {
+    if (!EnhancedResource.resourcesHost) {
+      throw new ServerException('Cannot resolve without ResourcesHost');
+    }
+    return EnhancedResource.resourcesHost.enhance(ref);
+  }
 
   static of<T extends ResourceShape<any>>(
     resource: T | EnhancedResource<T>,
@@ -305,7 +319,17 @@ export type DBType<TResourceStatic extends ResourceShape<any>> =
       : never
     : never;
 
+/**
+ * The name of the EdgeDB type, it could be abstract.
+ */
 export type DBName<T extends $.TypeSet> = T['__element__']['__name__'];
+/**
+ * The name(s) of the concrete EdgeDB types.
+ * If the type is abstract, then it is a string union of the concrete type's names.
+ * If the type is concrete, then it is just the name, just as {@link DBName}.
+ */
+export type DBNames<T extends $.ObjectTypeSet> =
+  T['__element__']['__polyTypenames__'];
 
 export type MaybeUnsecuredInstance<TResourceStatic extends ResourceShape<any>> =
   MaybeSecured<InstanceType<TResourceStatic>>;

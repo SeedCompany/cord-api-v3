@@ -66,7 +66,9 @@ export const RepoFor = <
     $.ObjectType<
       DBName<Root>,
       Root['__element__']['__pointers__'],
-      normaliseShape<HydratedShape>
+      normaliseShape<HydratedShape>,
+      Root['__element__']['__exclusives__'],
+      Root['__element__']['__polyTypenames__']
     >
   >;
 
@@ -198,7 +200,7 @@ export const RepoFor = <
         limit: input.count,
       }));
       const query = e.select({
-        items,
+        items: items as any,
         total: e.count(listOfAllQuery),
         hasMore: e.op(e.count(thisPage), '>', input.count),
       });

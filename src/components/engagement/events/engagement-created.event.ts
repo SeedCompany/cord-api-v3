@@ -18,13 +18,13 @@ export class EngagementCreatedEvent {
     engagement: UnsecuredDto<LanguageEngagement>;
     input: CreateLanguageEngagement;
   } {
-    return this.engagement.__typename === 'LanguageEngagement';
+    return LanguageEngagement.resolve(this.engagement) === LanguageEngagement;
   }
 
   isInternshipEngagement(): this is EngagementCreatedEvent & {
     engagement: UnsecuredDto<InternshipEngagement>;
     input: CreateInternshipEngagement;
   } {
-    return this.engagement.__typename === 'InternshipEngagement';
+    return LanguageEngagement.resolve(this.engagement) === InternshipEngagement;
   }
 }
