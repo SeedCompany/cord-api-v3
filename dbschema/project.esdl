@@ -156,16 +156,16 @@ module default {
 
     trigger addRemovePeriodicReports after update for each 
       when (
-        __old__.mouStart != __new__.mouStart
-        or __old__.mouEnd != __new__.mouEnd
-        or __old__.financialReportPeriod != __new__.financialReportPeriod
+        __old__.mouStart ?!= __new__.mouStart
+        or __old__.mouEnd ?!= __new__.mouEnd
+        or __old__.financialReportPeriod ?!= __new__.financialReportPeriod
       ) 
       do (
       with
-        existingReportPeriods := (
-            select FinancialReport
+        existingReports := (
+            select PeriodicReport
             filter .container.id = __old__.id
-        ).period,
+        ),
         interval := (
           select (if __new__.financialReportPeriod = default::ReportPeriod.Monthly then '1' else '3')
           ),
@@ -174,13 +174,13 @@ module default {
           __new__.mouEnd,
           interval
         )
-      if __old__.financialReportPeriod != __new__.financialReportPeriod (
+      select (if __old__.financialReportPeriod ?!= __new__.financialReportPeriod then (
         with
           reportPeriodsWithoutFiles := (
-            select existingReportPeriods
+            select existingReports
             filter not exists .reportFile
           ),
-          deletedReportPeriods : = (
+          deletedReportPeriods := (
             for reportPeriod in reportPeriodsWithoutFiles 
             union (
               delete reportPeriod
@@ -213,14 +213,14 @@ module default {
         with
           requestedReportPeriodsForInsertion := (
             select requestedReportPeriods
-            filter requestedReportPeriods not in existingReportPeriods
+            filter requestedReportPeriods not in existingReports.period
           ),
           requestedReportPeriodsForDeletion := (
-            select existingReportPeriods
-            filter existingReportPeriods not in requestedReportPeriods
+            select existingReports.period
+            filter existingReports.period not in requestedReportPeriods
           ),
-          applicableReportPeriodsForDeletion := (
-            select PeriodicReport[is FinancialReport | NarrativeReport]
+          applicableReportsForDeletion := (
+            select PeriodicReport
             filter .period in requestedReportPeriodsForDeletion
               and not exists .reportFile
           ),
@@ -247,11 +247,13 @@ module default {
               period := reportPeriod
             })
           ))
-        for reportPeriod in applicableReportPeriodsForDeletion 
+        for report in applicableReportsForDeletion 
         union (
-          delete reportPeriod
+          delete report
+          # filter report is typeof default::FinancialReport
+          #  or report is typeof default::NarrativeReport
         )
-      )
+      ))
     );
   }
   
