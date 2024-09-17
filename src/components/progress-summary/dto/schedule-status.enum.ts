@@ -9,7 +9,7 @@ export const ScheduleStatus = makeEnum({
       if (variance > 1 || variance < -1) {
         throw new Error('Variance should be a decimal between [-1, 1]');
       }
-      return variance > 0.3
+      return variance > 0.1
         ? status.Ahead
         : variance < -0.1
         ? status.Behind
