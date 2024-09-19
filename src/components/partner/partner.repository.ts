@@ -260,6 +260,7 @@ export class PartnerRepository extends DtoRepository<
         ])
         .return<{ dto: UnsecuredDto<Partner> }>(
           merge('props', {
+            __typename: '"Partner"',
             sensitivity: 'sensitivity',
             organization: 'organization { .id }',
             pointOfContact: 'pointOfContact { .id }',
