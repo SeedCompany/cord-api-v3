@@ -7,9 +7,11 @@ import { mapValues } from 'lodash';
 import {
   EnhancedResource,
   InvalidIdForTypeException,
+  Resource,
   ResourceShape,
   ServerException,
 } from '~/common';
+import { e } from '../edgedb/reexports';
 import { ResourceMap } from './map';
 import { __privateDontUseThis } from './resource-map-holder';
 import {
@@ -18,6 +20,7 @@ import {
   ResourceNameLike,
   ResourceStaticFromName,
 } from './resource-name.types';
+import { RegisterResource } from './resource.decorator';
 
 export type EnhancedResourceMap = {
   [K in keyof ResourceMap]: EnhancedResource<ResourceMap[K]>;
@@ -27,6 +30,16 @@ export type ResourceLike =
   | ResourceShape<any>
   | EnhancedResource<any>
   | ResourceNameLike;
+
+RegisterResource({ db: e.Resource })(Resource);
+declare module '~/core/resources/map' {
+  interface ResourceMap {
+    Resource: typeof Resource;
+  }
+  interface ResourceDBMap {
+    Resource: typeof e.Resource;
+  }
+}
 
 @Injectable()
 export class ResourcesHost {
