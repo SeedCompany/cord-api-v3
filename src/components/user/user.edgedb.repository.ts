@@ -9,7 +9,7 @@ import {
 } from './dto';
 import type { UserRepository } from './user.repository';
 
-const hydrateUser = e.shape(e.User, (user) => ({
+export const hydrateUser = e.shape(e.User, (user) => ({
   ...user['*'],
   __typename: e.str('User'),
 }));
