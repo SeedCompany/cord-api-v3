@@ -131,34 +131,8 @@ export class ResourcesHost {
       : EnhancedResource.of(ref);
   }
 
+  @CachedByArg()
   getInterfaces(
-    resource: EnhancedResource<any>,
-  ): ReadonlyArray<EnhancedResource<any>> {
-    // Use interfaces from GQL schema if it's available.
-    // Otherwise, fallback to the interfaces from DTO class hierarchy.
-    // The former doesn't work with CLI.
-    // The latter doesn't work for IntersectionTypes.
-    // Hoping to resolve with https://github.com/nestjs/graphql/pull/2435
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      this.gqlSchema.schema;
-    } catch (e) {
-      return this.getInterfacesFromClassType(resource);
-    }
-    return this.getInterfacesFromGQLSchema(resource);
-  }
-
-  @CachedByArg()
-  private getInterfacesFromClassType(
-    resource: EnhancedResource<any>,
-  ): ReadonlyArray<EnhancedResource<any>> {
-    const map = this.getEnhancedMap();
-    const resSet = new Set<EnhancedResource<any>>(Object.values(map));
-    return [...resource.interfaces].filter((i) => resSet.has(i));
-  }
-
-  @CachedByArg()
-  private getInterfacesFromGQLSchema(
     resource: EnhancedResource<any>,
   ): ReadonlyArray<EnhancedResource<any>> {
     const { schema } = this.gqlSchema;
