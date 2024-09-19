@@ -3,7 +3,7 @@ module default {
     multi roles: Role;
   }
 
-  type User extending Resource, Actor, Mixin::Pinnable {
+  type User extending Comments::Aware, Resource, Actor, Mixin::Pinnable {
     email: str {
       constraint exclusive;
     };

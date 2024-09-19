@@ -27,6 +27,7 @@ import { BaseNode } from '~/core/database/results';
 import { e } from '~/core/edgedb';
 import { LinkTo, RegisterResource } from '~/core/resources';
 import { ChangesetAware } from '../../changeset/dto';
+import { Commentable } from '../../comments/dto';
 import { Product, SecuredMethodologies } from '../../product/dto';
 import {
   InternshipProject,
@@ -45,7 +46,7 @@ export type AnyEngagement = MergeExclusive<
   InternshipEngagement
 >;
 
-const Interfaces = IntersectTypes(Resource, ChangesetAware);
+const Interfaces = IntersectTypes(Resource, ChangesetAware, Commentable);
 
 export const resolveEngagementType = (val: Pick<AnyEngagement, '__typename'>) =>
   val.__typename === 'default::LanguageEngagement'
@@ -63,6 +64,9 @@ export const resolveEngagementType = (val: Pick<AnyEngagement, '__typename'>) =>
 class Engagement extends Interfaces {
   static readonly Props: string[] = keysOf<Engagement>();
   static readonly SecuredProps: string[] = keysOf<SecuredProps<Engagement>>();
+  static readonly Relations = {
+    ...Commentable.Relations,
+  } satisfies ResourceRelationsShape;
   static readonly Parent = import('../../project/dto').then((m) => m.IProject);
   static readonly resolve = resolveEngagementType;
 
@@ -149,6 +153,7 @@ export class LanguageEngagement extends Engagement {
   static readonly Props = keysOf<LanguageEngagement>();
   static readonly SecuredProps = keysOf<SecuredProps<LanguageEngagement>>();
   static readonly Relations = {
+    ...Engagement.Relations,
     // why is this singular?
     product: [Product],
   } satisfies ResourceRelationsShape;

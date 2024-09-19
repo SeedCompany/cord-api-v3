@@ -3,7 +3,9 @@ import { keys as keysOf } from 'ts-transformer-keys';
 import {
   Calculated,
   DbSort,
+  IntersectTypes,
   parentIdMiddleware,
+  Resource,
   ResourceRelationsShape,
   SecuredProperty,
   SecuredProps,
@@ -12,6 +14,7 @@ import { sortingForEnumIndex } from '~/core/database/query';
 import { BaseNode } from '~/core/database/results';
 import { e } from '~/core/edgedb';
 import { RegisterResource } from '~/core/resources';
+import { Commentable } from '../../comments/dto';
 import { LanguageEngagement } from '../../engagement/dto';
 import { DefinedFile } from '../../file/dto';
 import { IPeriodicReport } from '../../periodic-report/dto/periodic-report.dto';
@@ -23,11 +26,13 @@ import {
 } from './progress-report-status.enum';
 import { ProgressReportTeamNews } from './team-news.dto';
 
+const Interfaces = IntersectTypes(IPeriodicReport, Resource, Commentable);
+
 @RegisterResource({ db: e.ProgressReport })
 @ObjectType({
-  implements: [IPeriodicReport],
+  implements: Interfaces.members,
 })
-export class ProgressReport extends IPeriodicReport {
+export class ProgressReport extends Interfaces {
   static readonly Props = keysOf<ProgressReport>();
   static readonly SecuredProps = keysOf<SecuredProps<ProgressReport>>();
   static readonly Parent = import('../../engagement/dto').then(
@@ -37,6 +42,7 @@ export class ProgressReport extends IPeriodicReport {
     highlights: [ProgressReportHighlight],
     teamNews: [ProgressReportTeamNews],
     communityStories: [ProgressReportCommunityStory],
+    ...Commentable.Relations,
   } satisfies ResourceRelationsShape;
 
   declare readonly type: 'Progress';
