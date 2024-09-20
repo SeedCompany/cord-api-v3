@@ -3,7 +3,7 @@ import { stripIndent } from 'common-tags';
 import {
   ID,
   IdField,
-  IntersectionType,
+  IntersectTypes,
   NameField,
   OmitType,
   PickType,
@@ -26,7 +26,7 @@ export abstract class UpdateBaseProduct extends OmitType(CreateBaseProduct, [
 }
 
 @InputType()
-export abstract class UpdateDirectScriptureProduct extends IntersectionType(
+export abstract class UpdateDirectScriptureProduct extends IntersectTypes(
   UpdateBaseProduct,
   PickType(CreateDirectScriptureProduct, [
     'scriptureReferences',
@@ -38,7 +38,7 @@ export abstract class UpdateDirectScriptureProduct extends IntersectionType(
 }
 
 @InputType()
-export abstract class UpdateDerivativeScriptureProduct extends IntersectionType(
+export abstract class UpdateDerivativeScriptureProduct extends IntersectTypes(
   UpdateBaseProduct,
   PickType(CreateDerivativeScriptureProduct, [
     'scriptureReferencesOverride',

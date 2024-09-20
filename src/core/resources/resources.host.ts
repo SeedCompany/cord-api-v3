@@ -7,9 +7,11 @@ import { mapValues } from 'lodash';
 import {
   EnhancedResource,
   InvalidIdForTypeException,
+  Resource,
   ResourceShape,
   ServerException,
 } from '~/common';
+import { e } from '../edgedb/reexports';
 import { ResourceMap } from './map';
 import { __privateDontUseThis } from './resource-map-holder';
 import {
@@ -18,6 +20,7 @@ import {
   ResourceNameLike,
   ResourceStaticFromName,
 } from './resource-name.types';
+import { RegisterResource } from './resource.decorator';
 
 export type EnhancedResourceMap = {
   [K in keyof ResourceMap]: EnhancedResource<ResourceMap[K]>;
@@ -27,6 +30,16 @@ export type ResourceLike =
   | ResourceShape<any>
   | EnhancedResource<any>
   | ResourceNameLike;
+
+RegisterResource({ db: e.Resource })(Resource);
+declare module '~/core/resources/map' {
+  interface ResourceMap {
+    Resource: typeof Resource;
+  }
+  interface ResourceDBMap {
+    Resource: typeof e.Resource;
+  }
+}
 
 @Injectable()
 export class ResourcesHost {
@@ -131,34 +144,8 @@ export class ResourcesHost {
       : EnhancedResource.of(ref);
   }
 
+  @CachedByArg()
   getInterfaces(
-    resource: EnhancedResource<any>,
-  ): ReadonlyArray<EnhancedResource<any>> {
-    // Use interfaces from GQL schema if it's available.
-    // Otherwise, fallback to the interfaces from DTO class hierarchy.
-    // The former doesn't work with CLI.
-    // The latter doesn't work for IntersectionTypes.
-    // Hoping to resolve with https://github.com/nestjs/graphql/pull/2435
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      this.gqlSchema.schema;
-    } catch (e) {
-      return this.getInterfacesFromClassType(resource);
-    }
-    return this.getInterfacesFromGQLSchema(resource);
-  }
-
-  @CachedByArg()
-  private getInterfacesFromClassType(
-    resource: EnhancedResource<any>,
-  ): ReadonlyArray<EnhancedResource<any>> {
-    const map = this.getEnhancedMap();
-    const resSet = new Set<EnhancedResource<any>>(Object.values(map));
-    return [...resource.interfaces].filter((i) => resSet.has(i));
-  }
-
-  @CachedByArg()
-  private getInterfacesFromGQLSchema(
     resource: EnhancedResource<any>,
   ): ReadonlyArray<EnhancedResource<any>> {
     const { schema } = this.gqlSchema;
