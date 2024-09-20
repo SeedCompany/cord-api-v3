@@ -10,6 +10,7 @@ import {
   Zone,
   ZoneOptions,
 } from 'luxon';
+import type { DefaultValidity, IfValid } from 'luxon/src/_util';
 import { inspect } from 'util';
 import { DateInterval } from './date-interval';
 
@@ -21,17 +22,19 @@ import { DateInterval } from './date-interval';
  * Whether or not we need/want it to be type compatible with DateTime has yet to
  * be determined - currently it is.
  */
-export class CalendarDate
+export class CalendarDate<IsValid extends boolean = DefaultValidity>
   // @ts-expect-error library doesn't explicitly support extension
-  extends DateTime
+  extends DateTime<IsValid>
 {
   static isDate(o: any): o is CalendarDate {
     return o instanceof CalendarDate;
   }
 
-  static fromDateTime(dt: DateTime): CalendarDate {
+  static fromDateTime<IsValid extends boolean>(
+    dt: DateTime<IsValid>,
+  ): CalendarDate<IsValid> {
     return Object.assign(
-      new CalendarDate(),
+      new CalendarDate<IsValid>(),
       dt instanceof CalendarDate ? dt : dt.startOf('day'),
     );
   }
@@ -44,7 +47,7 @@ export class CalendarDate
     super({});
   }
 
-  toISO(_options?: ToISOTimeOptions): string {
+  toISO(_options?: ToISOTimeOptions) {
     return this.toISODate();
   }
 
@@ -88,7 +91,7 @@ export class CalendarDate
     return CalendarDate.fromDateTime(super.fromFormat(text, format, opts));
   }
 
-  static invalid(reason: any): CalendarDate {
+  static invalid(reason: any) {
     return CalendarDate.fromDateTime(super.invalid(reason));
   }
 
@@ -207,52 +210,60 @@ export class CalendarDate
     return CalendarDate.fromDateTime(super.utc(...args));
   }
 
-  until(other: CalendarDate): DateInterval {
-    return DateInterval.fromDateTimes(this, other);
+  until(other: CalendarDate): IfValid<DateInterval, DateTime<false>, IsValid> {
+    return DateInterval.fromDateTimes(this as DateTime, other) as IfValid<
+      DateInterval,
+      DateTime<false>,
+      IsValid
+    >;
   }
 
-  endOf(unit: DateTimeUnit): CalendarDate {
-    return CalendarDate.fromDateTime(super.endOf(unit));
+  endOf(unit: DateTimeUnit): this {
+    return CalendarDate.fromDateTime(super.endOf(unit) as DateTime) as this;
   }
 
-  minus(duration: DurationLike): CalendarDate {
-    return CalendarDate.fromDateTime(super.minus(duration));
+  minus(duration: DurationLike): this {
+    return CalendarDate.fromDateTime(super.minus(duration) as DateTime) as this;
   }
 
-  plus(duration: DurationLike): CalendarDate {
-    return CalendarDate.fromDateTime(super.plus(duration));
+  plus(duration: DurationLike): this {
+    return CalendarDate.fromDateTime(super.plus(duration) as DateTime) as this;
   }
 
-  reconfigure(properties: LocaleOptions): CalendarDate {
-    return CalendarDate.fromDateTime(super.reconfigure(properties));
+  reconfigure(properties: LocaleOptions): this {
+    return CalendarDate.fromDateTime(
+      super.reconfigure(properties) as DateTime,
+    ) as this;
   }
 
-  set(values: DateObjectUnits): CalendarDate {
-    return CalendarDate.fromDateTime(super.set(values));
+  set(values: DateObjectUnits): this {
+    return CalendarDate.fromDateTime(super.set(values) as DateTime) as this;
   }
 
-  setLocale(locale: string): CalendarDate {
-    return CalendarDate.fromDateTime(super.setLocale(locale));
+  setLocale(locale: string): this {
+    return CalendarDate.fromDateTime(
+      super.setLocale(locale) as DateTime,
+    ) as this;
   }
 
   setZone(_zone: string | Zone, _options?: ZoneOptions): CalendarDate {
+    return this as CalendarDate; // noop
+  }
+
+  startOf(unit: DateTimeUnit): this {
+    return CalendarDate.fromDateTime(super.startOf(unit) as DateTime) as this;
+  }
+
+  toLocal() {
     return this; // noop
   }
 
-  startOf(unit: DateTimeUnit): CalendarDate {
-    return CalendarDate.fromDateTime(super.startOf(unit));
-  }
-
-  toLocal(): CalendarDate {
-    return this; // noop
-  }
-
-  toUTC(): CalendarDate {
+  toUTC() {
     return this; // noop
   }
 
   toPostgres() {
-    return this.toSQLDate();
+    return this.toSQLDate()!;
   }
 
   [inspect.custom]() {

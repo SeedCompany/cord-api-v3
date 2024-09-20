@@ -37,14 +37,12 @@ export class DateInterval
   }
 
   protected constructor(config: Required<IntervalObject>) {
-    config.start =
-      config.start instanceof CalendarDate
-        ? config.start
-        : CalendarDate.fromDateTime(config.start);
-    config.end =
-      config.end instanceof CalendarDate
-        ? config.end
-        : CalendarDate.fromDateTime(config.end);
+    config.start = CalendarDate.isDate(config.start)
+      ? config.start
+      : CalendarDate.fromDateTime(config.start);
+    config.end = CalendarDate.isDate(config.end)
+      ? config.end
+      : CalendarDate.fromDateTime(config.end);
     super(config);
   }
 
