@@ -11,6 +11,7 @@ import {
   paginate,
   sortWith,
 } from '~/core/database/query';
+import { engagementFilters } from '../engagement/engagement.repository';
 import { progressReportSorters } from '../periodic-report/periodic-report.repository';
 import {
   ProgressReport,
@@ -80,5 +81,14 @@ export const progressReportFilters = filter.define(
     ]),
     start: filter.dateTimeProp(),
     end: filter.dateTimeProp(),
+    engagement: filter.sub(() => engagementFilters)((sub) =>
+      sub
+        .with('node as report')
+        .match([
+          node('report'),
+          relation('in', '', 'report'),
+          node('node', 'Engagement'),
+        ]),
+    ),
   },
 );

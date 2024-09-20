@@ -6,6 +6,7 @@ import {
   PickType,
   SecuredList,
 } from '~/common';
+import { EngagementFilters } from '../../engagement/dto';
 import { PeriodicReportListInput } from '../../periodic-report/dto';
 import { ProgressReport } from './progress-report.entity';
 
@@ -13,7 +14,10 @@ import { ProgressReport } from './progress-report.entity';
 export abstract class ProgressReportFilters extends PickType(
   PeriodicReportListInput,
   ['start', 'end', 'parent'],
-) {}
+) {
+  @FilterField(() => EngagementFilters)
+  readonly engagement?: EngagementFilters & {};
+}
 
 @InputType()
 export class ProgressReportListInput extends OmitType(PeriodicReportListInput, [
