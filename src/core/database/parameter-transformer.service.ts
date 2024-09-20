@@ -33,11 +33,11 @@ export class ParameterTransformer {
       return value;
     }
 
-    if (value instanceof CalendarDate) {
+    if (CalendarDate.isDate(value)) {
       return value.toNeo4JDate();
     }
 
-    if (value instanceof DateTime) {
+    if (DateTime.isDateTime(value)) {
       return value.toNeo4JDateTime();
     }
 
