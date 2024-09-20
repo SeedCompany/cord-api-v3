@@ -81,6 +81,7 @@ export const progressReportFilters = filter.define(
     ]),
     start: filter.dateTimeProp(),
     end: filter.dateTimeProp(),
+    status: filter.stringListProp(),
     engagement: filter.sub(() => engagementFilters)((sub) =>
       sub
         .with('node as report')
