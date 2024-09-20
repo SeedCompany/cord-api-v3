@@ -1,10 +1,9 @@
-import { ContextFunction } from '@apollo/server';
-import { ExpressContextFunctionArgument } from '@apollo/server/express4';
 import {
   ApolloServerPluginLandingPageLocalDefault,
   ApolloServerPluginLandingPageProductionDefault,
 } from '@apollo/server/plugin/landingPage/default';
-import { ApolloDriverConfig } from '@nestjs/apollo';
+import { ApolloFastifyContextFunctionArgument } from '@as-integrations/fastify';
+import { ApolloDriverConfig as DriverConfig } from '@nestjs/apollo';
 import { Injectable } from '@nestjs/common';
 import { GqlOptionsFactory } from '@nestjs/graphql';
 import { CacheService } from '@seedcompany/cache';
@@ -29,7 +28,7 @@ export class GraphqlOptions implements GqlOptionsFactory {
     private readonly errorFormatter: GraphqlErrorFormatter,
   ) {}
 
-  async createGqlOptions(): Promise<ApolloDriverConfig> {
+  async createGqlOptions(): Promise<DriverConfig> {
     // Apply git hash to Apollo Studio.
     // They only look for env, so applying that way.
     const version = await this.versionService.version;
@@ -44,6 +43,7 @@ export class GraphqlOptions implements GqlOptionsFactory {
     ).asRecord;
 
     return {
+      path: '/graphql/:opName?',
       autoSchemaFile: 'schema.graphql',
       context: this.context,
       playground: false,
@@ -80,14 +80,15 @@ export class GraphqlOptions implements GqlOptionsFactory {
     };
   }
 
-  context: ContextFunction<[ExpressContextFunctionArgument], GqlContextType> =
-    async ({ req, res }) => ({
-      [isGqlContext.KEY]: true,
-      request: req,
-      response: res,
-      operation: createFakeStubOperation(),
-      session$: new BehaviorSubject<Session | undefined>(undefined),
-    });
+  context = (
+    ...[request, response]: ApolloFastifyContextFunctionArgument
+  ): GqlContextType => ({
+    [isGqlContext.KEY]: true,
+    request,
+    response,
+    operation: createFakeStubOperation(),
+    session$: new BehaviorSubject<Session | undefined>(undefined),
+  });
 }
 
 export const createFakeStubOperation = () => {

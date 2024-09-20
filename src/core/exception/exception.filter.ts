@@ -26,7 +26,7 @@ export class ExceptionFilter implements GqlExceptionFilter {
 
     const hack = isFromHackAttempt(exception, args);
     if (hack) {
-      hack.destroy();
+      hack.raw.destroy();
       return;
     }
 
