@@ -47,14 +47,14 @@ export class EdgeDBCurrentUserProvider
       const { request, session$ } =
         GqlExecutionContext.create(context).getContext();
       if (request) {
-        const optionsHolder = this.optionsHolderByRequest.get(request)!;
+        const optionsHolder = this.optionsHolderByRequest.get(request.raw)!;
         session$.subscribe((session) => {
           this.applyToOptions(session, optionsHolder);
         });
       }
     } else if (type === 'http') {
       const request = context.switchToHttp().getRequest();
-      const optionsHolder = this.optionsHolderByRequest.get(request)!;
+      const optionsHolder = this.optionsHolderByRequest.get(request.raw)!;
       this.applyToOptions(request.session, optionsHolder);
     }
 

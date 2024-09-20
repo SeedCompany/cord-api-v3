@@ -37,11 +37,6 @@ const oldRestrictedImports = [
     importNames: ['Dictionary', 'SafeDictionary'],
     message: 'Use a type with strict keys instead',
   },
-  {
-    name: 'express-serve-static-core',
-    importNames: ['Dictionary'],
-    message: 'Use a type with strict keys instead',
-  },
 ];
 
 /** @type {import('@seedcompany/eslint-plugin').ImportRestriction[]} */
