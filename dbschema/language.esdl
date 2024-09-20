@@ -1,5 +1,13 @@
 module default {
-  type Language extending Mixin::Postable, Resource, Project::ContextAware, Mixin::Named, Mixin::Pinnable, Mixin::Taggable {
+  type Language extending
+    Mixin::Postable,
+    Comments::Aware,
+    Resource,
+    Project::ContextAware,
+    Mixin::Named,
+    Mixin::Pinnable,
+    Mixin::Taggable
+  {
     required displayName: str {
       default := .name;
     }

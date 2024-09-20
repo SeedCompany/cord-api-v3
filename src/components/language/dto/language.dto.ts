@@ -27,6 +27,7 @@ import {
 import { SetChangeType } from '~/core/database/changes';
 import { e } from '~/core/edgedb';
 import { LinkTo, RegisterResource } from '~/core/resources';
+import { Commentable } from '../../comments/dto';
 import { Location } from '../../location/dto';
 import { Pinnable } from '../../pin/dto';
 import { Postable } from '../../post/dto';
@@ -79,7 +80,7 @@ export class EthnologueLanguage {
   readonly sensitivity: Sensitivity;
 }
 
-const Interfaces = IntersectTypes(Resource, Pinnable, Postable);
+const Interfaces = IntersectTypes(Resource, Pinnable, Postable, Commentable);
 
 @RegisterResource({ db: e.Language })
 @ObjectType({
@@ -92,6 +93,7 @@ export class Language extends Interfaces {
     ethnologue: EthnologueLanguage,
     locations: [Location], // a child list but not creating deleting...does it still count?
     ...Postable.Relations,
+    ...Commentable.Relations,
   } satisfies ResourceRelationsShape;
 
   @NameField({

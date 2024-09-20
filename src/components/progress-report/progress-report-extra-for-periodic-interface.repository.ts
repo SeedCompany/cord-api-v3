@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import {
   CreateNodeOptions,
   defineSorters,
+  exp,
   QueryFragment,
 } from '~/core/database/query';
 import { MergePeriodicReports } from '../periodic-report/dto';
@@ -24,7 +25,12 @@ export class ProgressReportExtraForPeriodicInterfaceRepository {
   }
 
   extraHydrate(): QueryFragment {
-    return (query) => query.return('{} as extra');
+    return (query) =>
+      query.return(
+        exp({
+          __typename: '"ProgressReport"',
+        }).as('extra'),
+      );
   }
 }
 

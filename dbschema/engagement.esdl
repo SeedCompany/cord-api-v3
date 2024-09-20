@@ -1,5 +1,5 @@
 module default {
-  abstract type Engagement extending Project::Child {
+  abstract type Engagement extending Project::Child, Comments::Aware {
     required status: Engagement::Status {
       default := Engagement::Status.InDevelopment;
     }

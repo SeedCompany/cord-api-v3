@@ -1,5 +1,5 @@
 module default {
-  type ProgressReport extending PeriodicReport, Engagement::Child {
+  type ProgressReport extending PeriodicReport, Engagement::Child, Comments::Aware {
     overloaded container: LanguageEngagement;
     overloaded engagement: LanguageEngagement;
 

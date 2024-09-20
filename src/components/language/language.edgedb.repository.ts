@@ -8,6 +8,7 @@ import { LanguageRepository } from './language.repository';
 export class LanguageEdgeDBRepository
   extends RepoFor(Language, {
     hydrate: (lang) => ({
+      __typename: e.str('Language'),
       ...lang['*'],
       ethnologue: lang.ethnologue['*'],
       firstScriptureEngagement: true,
