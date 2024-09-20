@@ -1,22 +1,20 @@
 import { Module } from '@nestjs/common';
+import { CacheModule as LibCacheModule } from '@seedcompany/cache';
+import { LruStore } from '@seedcompany/cache/stores/lru';
+import { RedisStore } from '@seedcompany/cache/stores/redis';
 import Redis from 'ioredis';
 import { ConfigService } from '../config/config.service';
 import { ILogger, LoggerToken } from '../logger';
-import { CacheBackingService } from './backing.interface';
-import { CacheService } from './cache.service';
-import { InMemoryCache } from './in-memory.cache';
-import { RedisCache } from './redis.cache';
 
 @Module({
-  providers: [
-    CacheService,
-    {
-      provide: CacheBackingService,
+  imports: [
+    LibCacheModule.registerAsync({
       inject: [ConfigService, LoggerToken('redis')],
       useFactory: (config: ConfigService, logger: ILogger) => {
         const connStr = config.redis.url;
         if (!connStr) {
-          return new InMemoryCache(config.lruCache);
+          const store = new LruStore(config.lruCache);
+          return { store };
         }
         const redis = new Redis(connStr);
         redis.on('ready', () => {
@@ -25,10 +23,11 @@ import { RedisCache } from './redis.cache';
         redis.on('error', (error) => {
           logger.error('Connection encountered an error', { error });
         });
-        return new RedisCache(redis);
+        const store = new RedisStore(redis);
+        return { store };
       },
-    },
+    }),
   ],
-  exports: [CacheService],
+  exports: [LibCacheModule],
 })
 export class CacheModule {}
