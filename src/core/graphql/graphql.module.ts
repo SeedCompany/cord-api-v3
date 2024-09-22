@@ -2,9 +2,6 @@ import { YogaDriver } from '@graphql-yoga/nestjs';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { GraphQLModule as NestGraphqlModule } from '@nestjs/graphql';
-import processUploadRequest, {
-  UploadOptions,
-} from 'graphql-upload/processRequest.mjs';
 import { HttpAdapterHost } from '~/core/http';
 import { TracingModule } from '../tracing';
 import { GqlContextHost, GqlContextHostImpl } from './gql-context.host';
@@ -15,8 +12,6 @@ import { GraphqlTracingPlugin } from './graphql-tracing.plugin';
 import { GraphqlOptions } from './graphql.options';
 
 import './types';
-
-const FileUploadOptions: UploadOptions = {};
 
 @Module({
   imports: [TracingModule],
@@ -59,23 +54,8 @@ export class GraphqlModule implements NestModule {
 
     // Setup file upload handling
     const fastify = this.app.httpAdapter.getInstance();
-    const multipartRequests = new WeakSet();
-    fastify.addContentTypeParser(
-      'multipart/form-data',
-      (req, payload, done) => {
-        multipartRequests.add(req);
-        done(null);
-      },
+    fastify.addContentTypeParser('multipart/form-data', (req, payload, done) =>
+      done(null),
     );
-    fastify.addHook('preValidation', async (req, reply) => {
-      if (!multipartRequests.has(req) || !req.url.startsWith('/graphql')) {
-        return;
-      }
-      req.body = await processUploadRequest(
-        req.raw,
-        reply.raw,
-        FileUploadOptions,
-      );
-    });
   }
 }
