@@ -1,8 +1,6 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import UploadScalar from 'graphql-upload/GraphQLUpload.mjs';
-import type { FileUpload } from 'graphql-upload/Upload.mjs';
-import { ID, IdField } from '~/common';
+import { FileUpload, FileUploadScalar, ID, IdField } from '~/common';
 import { MediaUserMetadata } from '../media/media.dto';
 
 @ObjectType()
@@ -31,15 +29,15 @@ export abstract class CreateDefinedFileVersionInput {
   })
   readonly uploadId?: ID;
 
-  @Field(() => UploadScalar, {
+  @Field(() => FileUploadScalar, {
     description: stripIndent`
       A file directly uploaded.
       This is mainly here to allow usage with Apollo Studio/Sandbox.
-      For production, prefer the \`url\` from the \`RequestUploadOutput\`.
+      For production, prefer a PUT request to the \`url\` from the \`RequestUploadOutput\`.
     `,
     nullable: true,
   })
-  readonly file?: Promise<FileUpload>;
+  readonly file?: FileUpload;
 
   @Field({
     description: stripIndent`
