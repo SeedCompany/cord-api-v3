@@ -37,10 +37,18 @@ export class SyncProgressReportToEngagementDateRange
   }
 
   async handle(event: SubscribedEvent) {
-    this.logger.debug('Engagement mutation, syncing progress reports', {
-      ...event,
-      event: event.constructor.name,
-    });
+    // Only LanguageEngagements
+    if (
+      !(
+        ((event instanceof EngagementCreatedEvent ||
+          event instanceof EngagementUpdatedEvent) &&
+          event.isLanguageEngagement()) ||
+        (event instanceof ProjectUpdatedEvent &&
+          event.updated.type.includes('Translation'))
+      )
+    ) {
+      return;
+    }
 
     if (
       (event instanceof EngagementCreatedEvent && event.engagement.changeset) ||
@@ -50,6 +58,11 @@ export class SyncProgressReportToEngagementDateRange
       // until changeset is approved and another update event is fired.
       return;
     }
+
+    this.logger.debug('Engagement mutation, syncing progress reports', {
+      ...event,
+      event: event.constructor.name,
+    });
 
     const engagements =
       event instanceof ProjectUpdatedEvent
