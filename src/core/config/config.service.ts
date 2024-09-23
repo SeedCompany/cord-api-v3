@@ -6,7 +6,7 @@ import {
 } from '@seedcompany/nestjs-email';
 import { CookieOptions } from 'express';
 import type { Server as HttpServer } from 'http';
-import LRUCache from 'lru-cache';
+import { LRUCache } from 'lru-cache';
 import { Duration, DurationLike } from 'luxon';
 import { nanoid } from 'nanoid';
 import { Config as Neo4JDriverConfig } from 'neo4j-driver';
@@ -51,7 +51,7 @@ export const makeConfig = (env: EnvironmentService) =>
       ttl: env.duration('LRU_CACHE_TTL').optional()?.as('milliseconds'),
       max: env.number('LRU_CACHE_MAX').optional(),
       maxSize: env.number('LRU_CACHE_MAX_SIZE').optional('30MB'),
-    } satisfies LRUCache.Options<string, unknown>;
+    } satisfies LRUCache.Options<string, unknown, unknown>;
 
     httpTimeouts = {
       /** @see HttpServer.keepAliveTimeout */

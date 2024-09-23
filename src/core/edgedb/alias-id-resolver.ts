@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { isUUID } from 'class-validator';
 import DataLoader from 'dataloader';
-import LRU from 'lru-cache';
+import { LRUCache as LRU } from 'lru-cache';
 import { ID, NotFoundException } from '~/common';
 import { IdResolver } from '~/common/validators/short-id.validator';
 import { ILogger, Logger } from '~/core/logger';
@@ -21,7 +21,7 @@ export class AliasIdResolver implements IdResolver {
       // and there's no cache invalidation, we'll just use an LRU cache
       cacheMap: new LRU({
         max: 10_000,
-      }),
+      }) as DataLoader.CacheMap<ID, Promise<ID>>,
     });
   }
 

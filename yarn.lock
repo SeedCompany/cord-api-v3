@@ -2567,6 +2567,37 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@seedcompany/cache@npm:^1.1.0":
+  version: 1.1.0
+  resolution: "@seedcompany/cache@npm:1.1.0"
+  dependencies:
+    "@nestjs/common": "npm:^10"
+    "@nestjs/core": "npm:^10"
+    "@seedcompany/common": "npm:>0.3 <1"
+    "@types/luxon": "npm:^3.2.0"
+    luxon: "npm:^3.3.0"
+    type-fest: "npm:^4.26.1"
+  peerDependencies:
+    "@nestjs/cache-manager": ^2
+    "@nestjs/common": ^9 || ^10
+    "@nestjs/core": ^9 || ^10
+    ioredis: ^5
+    keyv: ^4
+    lru-cache: ^9 || ^10 || ^11
+    reflect-metadata: ^0.1.12
+  peerDependenciesMeta:
+    "@nestjs/cache-manager":
+      optional: true
+    ioredis:
+      optional: true
+    keyv:
+      optional: true
+    lru-cache:
+      optional: true
+  checksum: 10c0/9e0d741b0f94f5b4385d6e610fbec12cd1b41f9549e9974d17fb0e97a214aca89d5d73ee185e37b10b8e95ac90bc144b5af3123a6f58a5051454645eb5ffae4f
+  languageName: node
+  linkType: hard
+
 "@seedcompany/common@npm:>0.3 <1, @seedcompany/common@npm:>=0.10.0 <1.0.0, @seedcompany/common@npm:>=0.13.1 <1, @seedcompany/common@npm:>=0.3.0 <1.0.0":
   version: 0.13.2
   resolution: "@seedcompany/common@npm:0.13.2"
@@ -3628,7 +3659,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/luxon@npm:^3.4.2":
+"@types/luxon@npm:^3.2.0, @types/luxon@npm:^3.4.2":
   version: 3.4.2
   resolution: "@types/luxon@npm:3.4.2"
   checksum: 10c0/d835467de3daf7e17ba78b50bb5a14efd94272439ca067990d71332a54b311544459c69623eddd243b511b28d70194c9591a9ee8cf9c038962c965f991affd7e
@@ -5354,6 +5385,7 @@ __metadata:
     "@nestjs/schematics": "npm:^10.0.3"
     "@nestjs/testing": "npm:^10.2.7"
     "@patarapolw/prettyprint": "npm:^1.0.3"
+    "@seedcompany/cache": "npm:^1.1.0"
     "@seedcompany/common": "npm:>=0.13.1 <1"
     "@seedcompany/data-loader": "npm:^0.5.4"
     "@seedcompany/eslint-plugin": "npm:^3.4.1"
@@ -5419,7 +5451,7 @@ __metadata:
     lazy-get-decorator: "npm:^2.2.1"
     lint-staged: "npm:^14.0.1"
     lodash: "npm:lodash-es@^4.17.21"
-    lru-cache: "npm:^7.18.3"
+    lru-cache: "npm:^11.0.1"
     luxon: "npm:^3.5.0"
     mime: "npm:beta"
     nanoid: "npm:^4.0.2"
@@ -9400,6 +9432,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"lru-cache@npm:^11.0.1":
+  version: 11.0.1
+  resolution: "lru-cache@npm:11.0.1"
+  checksum: 10c0/8bad6603dc67eb5b03520fba05bce5df6473dbba58ac4c6067ed088d29225a0a04416bb1462acd8c1f819d1fbf37920446a1c36bafd9c384bcc54cee0d3b697a
+  languageName: node
+  linkType: hard
+
 "lru-cache@npm:^5.1.1":
   version: 5.1.1
   resolution: "lru-cache@npm:5.1.1"
@@ -9409,14 +9448,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lru-cache@npm:^7.10.1, lru-cache@npm:^7.14.1, lru-cache@npm:^7.18.3":
+"lru-cache@npm:^7.10.1, lru-cache@npm:^7.14.1":
   version: 7.18.3
   resolution: "lru-cache@npm:7.18.3"
   checksum: 10c0/b3a452b491433db885beed95041eb104c157ef7794b9c9b4d647be503be91769d11206bb573849a16b4cc0d03cbd15ffd22df7960997788b74c1d399ac7a4fed
   languageName: node
   linkType: hard
 
-"luxon@npm:^3.5.0":
+"luxon@npm:^3.3.0, luxon@npm:^3.5.0":
   version: 3.5.0
   resolution: "luxon@npm:3.5.0"
   checksum: 10c0/335789bba95077db831ef99894edadeb23023b3eb2137a1b56acd0d290082b691cf793143d69e30bc069ec95f0b49f36419f48e951c68014f19ffe12045e3494
@@ -12710,10 +12749,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"type-fest@npm:^4.15.0":
-  version: 4.15.0
-  resolution: "type-fest@npm:4.15.0"
-  checksum: 10c0/677a7da18dbbe07668bdf47fcb976fdcbea77e118156a7245182fdf65633d69228ce773b0022d507636945a8f22b593e09a3c08f695d2aecf96f035ff0186825
+"type-fest@npm:^4.15.0, type-fest@npm:^4.26.1":
+  version: 4.26.1
+  resolution: "type-fest@npm:4.26.1"
+  checksum: 10c0/d2719ff8d380befe8a3c61068f37f28d6fa2849fd140c5d2f0f143099e371da6856aad7c97e56b83329d45bfe504afe9fd936a7cff600cc0d46aa9ffb008d6c6
   languageName: node
   linkType: hard
 
