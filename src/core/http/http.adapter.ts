@@ -1,3 +1,4 @@
+import compression from '@fastify/compress';
 import cookieParser from '@fastify/cookie';
 import cors from '@fastify/cors';
 // eslint-disable-next-line @seedcompany/no-restricted-imports
@@ -6,6 +7,7 @@ import {
   FastifyAdapter,
   NestFastifyApplication,
 } from '@nestjs/platform-fastify';
+import * as zlib from 'node:zlib';
 import { ConfigService } from '~/core/config/config.service';
 import type { CookieOptions, CorsOptions, IResponse } from './types';
 
@@ -20,6 +22,15 @@ export class HttpAdapterHost extends HttpAdapterHostImpl<HttpAdapter> {}
 
 export class HttpAdapter extends FastifyAdapter {
   async configure(app: NestFastifyApplication, config: ConfigService) {
+    await app.register(compression, {
+      brotliOptions: {
+        params: {
+          // This API returns text (JSON), so optimize for that
+          [zlib.constants.BROTLI_PARAM_MODE]: zlib.constants.BROTLI_MODE_TEXT,
+        },
+      },
+    });
+
     await app.register(cors, {
       // typecast to undo deep readonly
       ...(config.cors as CorsOptions),
