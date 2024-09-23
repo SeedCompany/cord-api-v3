@@ -2,6 +2,7 @@ import {
   OmitType as BaseOmitType,
   PartialType as BasePartialType,
   PickType as BasePickType,
+  // eslint-disable-next-line @seedcompany/no-restricted-imports
   IntersectionType,
 } from '@nestjs/graphql';
 import { ClassDecoratorFactory } from '@nestjs/graphql/dist/interfaces/class-decorator-factory.interface';
