@@ -151,10 +151,7 @@ export class EnhancedResource<T extends ResourceShape<any>> {
   }
 
   /**
-   * An ordered set of interfaces the resource.
-   *
-   * Note: This doesn't work with mapped types
-   * i.e. {@link import('@nestjs/graphql').IntersectionType}
+   * An semi-ordered set of interfaces the resource.
    */
   @Once()
   get interfaces(): ReadonlySet<EnhancedResource<any>> {
