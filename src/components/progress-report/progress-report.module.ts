@@ -8,6 +8,7 @@ import { ProgressReportHighlightsRepository } from './highlights/progress-report
 import { ProgressReportHighlightsResolver } from './highlights/progress-report-highlights.resolver';
 import { ProgressReportHighlightsService } from './highlights/progress-report-highlights.service';
 import { ProgressReportMediaModule } from './media/progress-report-media.module';
+import { DropInternshipProgressReportsMigration } from './migrations/drop-internship-progress-reports.migration';
 import { ProgressReportExtraForPeriodicInterfaceRepository } from './progress-report-extra-for-periodic-interface.repository';
 import { ProgressReportRepository } from './progress-report.repository';
 import { ProgressReportService } from './progress-report.service';
@@ -46,6 +47,7 @@ import { ProgressReportWorkflowModule } from './workflow/progress-report-workflo
     ProgressReportService,
     ProgressReportRepository,
     ProgressReportExtraForPeriodicInterfaceRepository,
+    DropInternshipProgressReportsMigration,
   ],
   exports: [ProgressReportExtraForPeriodicInterfaceRepository],
 })
