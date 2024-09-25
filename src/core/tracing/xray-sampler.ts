@@ -21,6 +21,10 @@ export class XraySampler implements Sampler {
             .request
         : context.switchToHttp().getRequest();
 
+    if (!req) {
+      return false;
+    }
+
     // eslint-disable-next-line @typescript-eslint/ban-types
     const rule: String | string | boolean | null | undefined =
       // @ts-expect-error not typed but it exists

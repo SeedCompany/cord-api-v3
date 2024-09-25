@@ -58,8 +58,7 @@ export class EdgeDBCurrentUserProvider
     } else if (type === 'http') {
       const request = context.switchToHttp().getRequest();
       const optionsHolder = this.optionsHolderByRequest.get(request)!;
-      const session: Session | undefined = request.session;
-      this.applyToOptions(session, optionsHolder);
+      this.applyToOptions(request.session, optionsHolder);
     }
 
     return next.handle();
