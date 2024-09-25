@@ -78,6 +78,16 @@ const restrictedImports = [
     replacement: { importName: 'IntersectTypes', path: '~/common' },
     message: 'Use our wrapper that allows for varargs & provides members array',
   },
+  {
+    importNames: 'HttpAdapterHost',
+    path: '@nestjs/core',
+    replacement: { path: '~/core/http' },
+  },
+  {
+    importNames: 'NestMiddleware',
+    path: '@nestjs/common',
+    replacement: { importName: 'HttpMiddleware', path: '~/core/http' },
+  },
 ];
 
 const namingConvention = [

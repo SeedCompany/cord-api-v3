@@ -1,6 +1,6 @@
 import { ApolloServerErrorCode as ApolloCode } from '@apollo/server/errors';
 import { ArgumentsHost, Inject, Injectable } from '@nestjs/common';
-// eslint-disable-next-line no-restricted-imports
+// eslint-disable-next-line no-restricted-imports,@seedcompany/no-restricted-imports
 import * as Nest from '@nestjs/common';
 import {
   GqlContextType as ContextKey,

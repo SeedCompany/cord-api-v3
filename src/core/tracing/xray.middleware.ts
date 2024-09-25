@@ -3,15 +3,17 @@ import {
   ExecutionContext,
   Injectable,
   NestInterceptor,
-  NestMiddleware,
 } from '@nestjs/common';
 import {
   GqlExecutionContext,
   GqlContextType as GqlExeType,
 } from '@nestjs/graphql';
 import XRay from 'aws-xray-sdk-core';
-import { Request, Response } from 'express';
 import { GqlContextType } from '~/common';
+import {
+  HttpMiddleware as NestMiddleware,
+  IResponse as Response,
+} from '~/core/http';
 import { ConfigService } from '../config/config.service';
 import { Sampler } from './sampler';
 import { TracingService } from './tracing.service';
@@ -27,7 +29,7 @@ export class XRayMiddleware implements NestMiddleware, NestInterceptor {
   /**
    * Setup root segment for request/response.
    */
-  use(req: Request, res: Response, next: () => void) {
+  use: NestMiddleware['use'] = (req, res, next) => {
     const traceData = XRay.utils.processTraceData(
       req.header('x-amzn-trace-id'),
     );
@@ -62,7 +64,7 @@ export class XRayMiddleware implements NestMiddleware, NestInterceptor {
     });
 
     this.tracing.segmentStorage.run(root, next);
-  }
+  };
 
   /**
    * Determine if segment should be traced/sampled.

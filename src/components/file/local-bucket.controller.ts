@@ -7,11 +7,11 @@ import {
   Response,
   StreamableFile,
 } from '@nestjs/common';
-import { Request as IRequest, Response as IResponse } from 'express';
 import { DateTime } from 'luxon';
 import { URL } from 'node:url';
 import rawBody from 'raw-body';
 import { InputException } from '~/common';
+import { IRequest, IResponse } from '~/core/http';
 import { FileBucket, InvalidSignedUrlException } from './bucket';
 
 /**

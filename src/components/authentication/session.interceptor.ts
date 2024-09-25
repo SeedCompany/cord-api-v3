@@ -11,7 +11,6 @@ import {
   GqlContextType as GqlRequestType,
 } from '@nestjs/graphql';
 import { csv } from '@seedcompany/common';
-import { Request } from 'express';
 import { GraphQLResolveInfo } from 'graphql';
 import {
   GqlContextType,
@@ -25,6 +24,7 @@ import {
   UnauthenticatedException,
 } from '~/common';
 import { ConfigService } from '~/core';
+import { IRequest } from '~/core/http';
 import { rolesForScope } from '../authorization/dto';
 import { AuthenticationService } from './authentication.service';
 
@@ -87,7 +87,7 @@ export class SessionInterceptor implements NestInterceptor {
     );
   }
 
-  private getTokenFromAuthHeader(req: Request | undefined): string | null {
+  private getTokenFromAuthHeader(req: IRequest | undefined): string | null {
     const header = req?.headers?.authorization;
 
     if (!header) {
@@ -100,7 +100,7 @@ export class SessionInterceptor implements NestInterceptor {
     return header.replace('Bearer ', '');
   }
 
-  private getTokenFromCookie(req: Request | undefined): string | null {
+  private getTokenFromCookie(req: IRequest | undefined): string | null {
     return req?.cookies?.[this.config.sessionCookie.name] || null;
   }
 

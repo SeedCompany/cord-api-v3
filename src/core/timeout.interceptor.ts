@@ -8,10 +8,10 @@ import {
   GqlExecutionContext,
   GqlContextType as GqlExeType,
 } from '@nestjs/graphql';
-import { Response } from 'express';
 import { fromEvent, Observable, race } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { GqlContextType, ServiceUnavailableException } from '~/common';
+import { IResponse as Response } from '~/core/http';
 
 /**
  * Throws error when response timeouts.

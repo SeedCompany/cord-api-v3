@@ -4,33 +4,32 @@ import {
   ExecutionContext,
   Injectable,
   NestInterceptor,
-  NestMiddleware,
 } from '@nestjs/common';
 import {
   GqlExecutionContext,
   GqlContextType as GqlRequestType,
 } from '@nestjs/graphql';
 import { isUUID } from 'class-validator';
-import { Request, Response } from 'express';
 import { BehaviorSubject, identity } from 'rxjs';
 import { GqlContextType, Session } from '~/common';
 import { EdgeDB, OptionsFn } from '~/core/edgedb';
+import { HttpMiddleware } from '~/core/http';
 
 @Injectable()
 @Plugin()
 export class EdgeDBCurrentUserProvider
-  implements NestMiddleware, NestInterceptor
+  implements HttpMiddleware, NestInterceptor
 {
   // A map to transfer the options' holder
   // between the creation in middleware and the use in the interceptor.
   private readonly optionsHolderByRequest = new WeakMap<
-    Request,
+    Parameters<HttpMiddleware['use']>[0],
     BehaviorSubject<OptionsFn>
   >();
 
   constructor(private readonly edgedb: EdgeDB) {}
 
-  use = (req: Request, res: Response, next: () => void) => {
+  use: HttpMiddleware['use'] = (req, res, next) => {
     // Create holder to use later to add current user to globals after it is fetched
     const optionsHolder = new BehaviorSubject<OptionsFn>(identity);
     this.optionsHolderByRequest.set(req, optionsHolder);

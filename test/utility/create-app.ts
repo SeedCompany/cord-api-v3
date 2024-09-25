@@ -2,6 +2,7 @@ import { faker } from '@faker-js/faker';
 import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { andCall } from '~/common';
+import { HttpAdapter } from '~/core/http';
 import { LogLevel } from '~/core/logger';
 import { LevelMatcher } from '~/core/logger/level-matcher';
 import { AppModule } from '../../src/app.module';
@@ -33,7 +34,7 @@ export const createTestApp = async () => {
       .useValue(db?.options)
       .compile();
 
-    const app = moduleFixture.createNestApplication<TestApp>();
+    const app = moduleFixture.createNestApplication<TestApp>(new HttpAdapter());
     await app.init();
     app.graphql = await createGraphqlClient(app);
 

@@ -1,23 +1,34 @@
 import { Logger } from '@nestjs/common';
-import { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
 import { NestFactory } from '@nestjs/core';
 import cookieParser from 'cookie-parser';
+import type { CorsOptions, NestHttpApplication } from '~/core/http';
 import './polyfills';
 
 async function bootstrap() {
   // Ensure src files are initialized here were init errors can be caught
   const { AppModule } = await import('./app.module');
   const { bootstrapLogger, ConfigService } = await import('./core');
+  const { HttpAdapter } = await import('./core/http');
 
   if (process.argv.includes('--gen-schema')) {
-    const app = await NestFactory.create(AppModule, { logger: false });
+    const app = await NestFactory.create<NestHttpApplication>(
+      AppModule,
+      new HttpAdapter(),
+      {
+        logger: false,
+      },
+    );
     await app.init();
     process.exit(0);
   }
 
-  const app = await NestFactory.create(AppModule, {
-    logger: bootstrapLogger,
-  });
+  const app = await NestFactory.create<NestHttpApplication>(
+    AppModule,
+    new HttpAdapter(),
+    {
+      logger: bootstrapLogger,
+    },
+  );
   const config = app.get(ConfigService);
 
   app.enableCors(config.cors as CorsOptions); // typecast to undo deep readonly
