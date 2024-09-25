@@ -9,10 +9,9 @@ import {
   Request,
   Response,
 } from '@nestjs/common';
-import { HttpAdapterHost } from '@nestjs/core';
-import { Request as IRequest } from 'express';
 import { ID } from '~/common';
 import { loggedInSession as verifyLoggedIn } from '~/common/session';
+import { HttpAdapterHost, IRequest, IResponse } from '~/core/http';
 import { SessionInterceptor } from '../authentication/session.interceptor';
 import { FileService } from './file.service';
 
@@ -32,7 +31,7 @@ export class FileUrlController {
     @Param('fileId') fileId: ID,
     @Query('download') download: '' | undefined,
     @Request() request: IRequest,
-    @Response() res: unknown,
+    @Response() res: IResponse,
   ) {
     const node = await this.files.getFileNode(fileId);
 

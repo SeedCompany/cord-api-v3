@@ -1,7 +1,7 @@
 import { ArgumentsHost, Catch, HttpStatus, Injectable } from '@nestjs/common';
-import { HttpAdapterHost } from '@nestjs/core';
-import { GqlContextType, GqlExceptionFilter } from '@nestjs/graphql';
+import { GqlExceptionFilter } from '@nestjs/graphql';
 import { mapValues } from '@seedcompany/common';
+import { HttpAdapterHost } from '~/core/http';
 import { ConfigService } from '../config/config.service';
 import { ILogger, Logger, LogLevel } from '../logger';
 import { ValidationException } from '../validation';
@@ -40,7 +40,7 @@ export class ExceptionFilter implements GqlExceptionFilter {
 
     this.logIt(normalized, exception);
 
-    if (args.getType<GqlContextType>() === 'graphql') {
+    if (args.getType() === 'graphql') {
       this.respondToGraphQL(normalized, args);
     }
     this.respondToHttp(normalized, args);

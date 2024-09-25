@@ -9,13 +9,11 @@ import {
   ExecutionContext,
   Injectable,
   NestInterceptor,
-  NestMiddleware,
   OnModuleDestroy,
 } from '@nestjs/common';
-import { GqlContextType as ContextKey } from '@nestjs/graphql';
 import { AsyncLocalStorage } from 'async_hooks';
-import { Request, Response } from 'express';
 import { GqlContextType as ContextType } from '~/common';
+import { HttpMiddleware as NestMiddleware } from '~/core/http';
 import { AsyncLocalStorageNoContextException } from '../async-local-storage-no-context.exception';
 
 /**
@@ -63,14 +61,14 @@ export class GqlContextHostImpl
     if (
       !store.ctx &&
       store.execution &&
-      store.execution.getType<ContextKey>() !== 'graphql'
+      store.execution.getType() !== 'graphql'
     ) {
       throw new NotGraphQLContext(message);
     }
     throw new Error(message);
   }
 
-  use = (req: Request, res: Response, next: () => void) => {
+  use: NestMiddleware['use'] = (req, res, next) => {
     // Connect middleware is the only place we get a function where we can
     // completely wrap the request for the use of an ALS context.
     this.attachScope(next);

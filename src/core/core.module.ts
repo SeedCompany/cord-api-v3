@@ -15,6 +15,7 @@ import { EventsModule } from './events';
 import { ExceptionFilter } from './exception/exception.filter';
 import { ExceptionNormalizer } from './exception/exception.normalizer';
 import { GraphqlModule } from './graphql';
+import { HttpModule } from './http';
 import { ResourceModule } from './resources/resource.module';
 import { ScalarProviders } from './scalars.resolver';
 import { ShutdownHookProvider } from './shutdown.hook';
@@ -26,6 +27,7 @@ import { WaitResolver } from './wait.resolver';
 @Global()
 @Module({
   imports: [
+    HttpModule,
     ConfigModule,
     CacheModule,
     CliModule,
@@ -51,6 +53,7 @@ import { WaitResolver } from './wait.resolver';
   ],
   controllers: [CoreController],
   exports: [
+    HttpModule,
     AwsS3Factory,
     ConfigModule,
     CacheModule,

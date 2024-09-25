@@ -10,6 +10,8 @@ import { GraphqlSessionPlugin } from './graphql-session.plugin';
 import { GraphqlTracingPlugin } from './graphql-tracing.plugin';
 import { GraphQLConfig } from './graphql.config';
 
+import './types';
+
 @Module({
   imports: [TracingModule],
   providers: [
