@@ -6,12 +6,8 @@ import {
   Injectable,
   NestInterceptor,
 } from '@nestjs/common';
-import {
-  GqlExecutionContext,
-  GqlContextType as GqlRequestType,
-} from '@nestjs/graphql';
+import { GqlExecutionContext } from '@nestjs/graphql';
 import { csv } from '@seedcompany/common';
-import { GraphQLResolveInfo } from 'graphql';
 import {
   GqlContextType,
   ID,
@@ -37,7 +33,7 @@ export class SessionInterceptor implements NestInterceptor {
   ) {}
 
   async intercept(executionContext: ExecutionContext, next: CallHandler) {
-    const type = executionContext.getType<GqlRequestType>();
+    const type = executionContext.getType();
     if (type === 'graphql') {
       await this.handleGql(executionContext);
     } else if (type === 'http') {
@@ -62,8 +58,8 @@ export class SessionInterceptor implements NestInterceptor {
 
   private async handleGql(executionContext: ExecutionContext) {
     const gqlExecutionContext = GqlExecutionContext.create(executionContext);
-    const ctx = gqlExecutionContext.getContext<GqlContextType>();
-    const info = gqlExecutionContext.getInfo<GraphQLResolveInfo>();
+    const ctx = gqlExecutionContext.getContext();
+    const info = gqlExecutionContext.getInfo();
 
     if (!ctx.session$.value && info.fieldName !== 'session') {
       const session = await this.hydrateSession(ctx);

@@ -2,10 +2,7 @@ import { ApolloServerErrorCode as ApolloCode } from '@apollo/server/errors';
 import { ArgumentsHost, Inject, Injectable } from '@nestjs/common';
 // eslint-disable-next-line no-restricted-imports,@seedcompany/no-restricted-imports
 import * as Nest from '@nestjs/common';
-import {
-  GqlContextType as ContextKey,
-  GqlExecutionContext,
-} from '@nestjs/graphql';
+import { GqlExecutionContext } from '@nestjs/graphql';
 import {
   entries,
   isNotFalsy,
@@ -15,7 +12,7 @@ import {
 } from '@seedcompany/common';
 import * as Edge from 'edgedb';
 import * as EdgeDBTags from 'edgedb/dist/errors/tags.js';
-import { GraphQLError, GraphQLResolveInfo } from 'graphql';
+import { GraphQLError } from 'graphql';
 import addIndent from 'indent-string';
 import { lowerCase, uniq } from 'lodash';
 import {
@@ -130,7 +127,7 @@ export class ExceptionNormalizer {
     }
 
     const gqlContext =
-      context && context.getType<ContextKey>() === 'graphql'
+      context && context.getType() === 'graphql'
         ? GqlExecutionContext.create(context as any)
         : undefined;
 
@@ -142,7 +139,7 @@ export class ExceptionNormalizer {
       // Mask actual DB error with a nicer user error message.
       let message = 'Failed';
       if (gqlContext) {
-        const info = gqlContext.getInfo<GraphQLResolveInfo>();
+        const info = gqlContext.getInfo();
         if (info.operation.operation === 'mutation') {
           message += ` to ${lowerCase(info.fieldName)}`;
         }

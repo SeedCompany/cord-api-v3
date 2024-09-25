@@ -4,12 +4,8 @@ import {
   Injectable,
   NestInterceptor,
 } from '@nestjs/common';
-import {
-  GqlExecutionContext,
-  GqlContextType as GqlExeType,
-} from '@nestjs/graphql';
+import { GqlExecutionContext } from '@nestjs/graphql';
 import XRay from 'aws-xray-sdk-core';
-import { GqlContextType } from '~/common';
 import { HttpMiddleware as NestMiddleware } from '~/core/http';
 import { ConfigService } from '../config/config.service';
 import { Sampler } from './sampler';
@@ -101,9 +97,8 @@ export class XRayMiddleware implements NestMiddleware, NestInterceptor {
 
     // Pretty specific to configuration outside of this module...
     const res =
-      context.getType<GqlExeType>() === 'graphql'
-        ? GqlExecutionContext.create(context).getContext<GqlContextType>()
-            .response
+      context.getType() === 'graphql'
+        ? GqlExecutionContext.create(context).getContext().response
         : context.switchToHttp().getResponse();
 
     if (res && root instanceof XRay.Segment) {

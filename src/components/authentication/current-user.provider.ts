@@ -5,13 +5,10 @@ import {
   Injectable,
   NestInterceptor,
 } from '@nestjs/common';
-import {
-  GqlExecutionContext,
-  GqlContextType as GqlRequestType,
-} from '@nestjs/graphql';
+import { GqlExecutionContext } from '@nestjs/graphql';
 import { isUUID } from 'class-validator';
 import { BehaviorSubject, identity } from 'rxjs';
-import { GqlContextType, Session } from '~/common';
+import { Session } from '~/common';
 import { EdgeDB, OptionsFn } from '~/core/edgedb';
 import { HttpMiddleware } from '~/core/http';
 
@@ -44,11 +41,11 @@ export class EdgeDBCurrentUserProvider
    * Connect the session to the options' holder
    */
   intercept(context: ExecutionContext, next: CallHandler) {
-    const type = context.getType<GqlRequestType>();
+    const type = context.getType();
 
     if (type === 'graphql') {
       const { request, session$ } =
-        GqlExecutionContext.create(context).getContext<GqlContextType>();
+        GqlExecutionContext.create(context).getContext();
       if (request) {
         const optionsHolder = this.optionsHolderByRequest.get(request)!;
         session$.subscribe((session) => {

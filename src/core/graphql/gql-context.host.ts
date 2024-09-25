@@ -11,7 +11,6 @@ import {
   NestInterceptor,
   OnModuleDestroy,
 } from '@nestjs/common';
-import { GqlContextType as ContextKey } from '@nestjs/graphql';
 import { AsyncLocalStorage } from 'async_hooks';
 import { GqlContextType as ContextType } from '~/common';
 import { HttpMiddleware as NestMiddleware } from '~/core/http';
@@ -62,7 +61,7 @@ export class GqlContextHostImpl
     if (
       !store.ctx &&
       store.execution &&
-      store.execution.getType<ContextKey>() !== 'graphql'
+      store.execution.getType() !== 'graphql'
     ) {
       throw new NotGraphQLContext(message);
     }

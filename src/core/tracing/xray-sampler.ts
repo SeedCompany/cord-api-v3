@@ -1,10 +1,6 @@
 import { ExecutionContext, Injectable } from '@nestjs/common';
-import {
-  GqlExecutionContext,
-  GqlContextType as GqlExeType,
-} from '@nestjs/graphql';
+import { GqlExecutionContext } from '@nestjs/graphql';
 import XRay from 'aws-xray-sdk-core';
-import { GqlContextType } from '~/common';
 import { Sampler } from './sampler';
 import { Segment } from './tracing.service';
 
@@ -16,9 +12,8 @@ export class XraySampler implements Sampler {
   async shouldTrace(context: ExecutionContext, segment: Segment) {
     // Pretty specific to configuration outside of this module...
     const req =
-      context.getType<GqlExeType>() === 'graphql'
-        ? GqlExecutionContext.create(context).getContext<GqlContextType>()
-            .request
+      context.getType() === 'graphql'
+        ? GqlExecutionContext.create(context).getContext().request
         : context.switchToHttp().getRequest();
 
     if (!req) {
