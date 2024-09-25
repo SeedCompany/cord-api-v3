@@ -10,10 +10,7 @@ import {
 } from '@nestjs/graphql';
 import XRay from 'aws-xray-sdk-core';
 import { GqlContextType } from '~/common';
-import {
-  HttpMiddleware as NestMiddleware,
-  IResponse as Response,
-} from '~/core/http';
+import { HttpMiddleware as NestMiddleware } from '~/core/http';
 import { ConfigService } from '../config/config.service';
 import { Sampler } from './sampler';
 import { TracingService } from './tracing.service';
@@ -107,7 +104,7 @@ export class XRayMiddleware implements NestMiddleware, NestInterceptor {
       context.getType<GqlExeType>() === 'graphql'
         ? GqlExecutionContext.create(context).getContext<GqlContextType>()
             .response
-        : context.switchToHttp().getResponse<Response>();
+        : context.switchToHttp().getResponse();
 
     if (res && root instanceof XRay.Segment) {
       res.setHeader(

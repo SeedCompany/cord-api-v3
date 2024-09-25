@@ -11,7 +11,6 @@ import {
 import { fromEvent, Observable, race } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { GqlContextType, ServiceUnavailableException } from '~/common';
-import { IResponse as Response } from '~/core/http';
 
 /**
  * Throws error when response timeouts.
@@ -22,7 +21,7 @@ export class TimeoutInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const response =
       context.getType<GqlExeType>() !== 'graphql'
-        ? context.switchToHttp().getResponse<Response>()
+        ? context.switchToHttp().getResponse()
         : GqlExecutionContext.create(context).getContext<GqlContextType>()
             .response;
 

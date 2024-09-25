@@ -10,3 +10,11 @@ export type HttpMiddleware = NestMiddleware<Request, Response>;
 
 export { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
 export { CookieOptions } from 'express';
+
+declare module '@nestjs/common/interfaces/features/arguments-host.interface' {
+  export interface HttpArgumentsHost {
+    getRequest(): Request;
+    getResponse(): Response;
+    getNext(): (error?: Error) => void;
+  }
+}
