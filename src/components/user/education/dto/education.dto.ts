@@ -38,7 +38,7 @@ export abstract class SecuredDegree extends SecuredEnum(Degree) {}
 export class Education extends Resource {
   static readonly Props = keysOf<Education>();
   static readonly SecuredProps = keysOf<SecuredProps<Education>>();
-  static readonly Parent = import('../../dto').then((m) => m.User);
+  static readonly Parent = () => import('../../dto').then((m) => m.User);
 
   @Field()
   readonly degree: SecuredDegree;

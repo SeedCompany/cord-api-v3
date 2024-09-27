@@ -1,7 +1,7 @@
 import { ObjectType } from '@nestjs/graphql';
+import { EnumType, makeEnum } from '@seedcompany/nest';
 import { SecuredEnumList } from '~/common/secured-property';
 import type { ResourcesGranter } from '../components/authorization';
-import { EnumType, makeEnum } from './make-enum';
 
 export type Role = EnumType<typeof Role>;
 export const Role = makeEnum({

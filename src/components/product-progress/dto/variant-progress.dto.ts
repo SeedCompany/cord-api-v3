@@ -22,9 +22,10 @@ export class ProgressReportVariantProgress {
   static readonly Props = keysOf<ProgressReportVariantProgress>();
   static readonly SecuredProps =
     keysOf<SecuredProps<ProgressReportVariantProgress>>();
-  static readonly Parent = import(
-    '../../progress-report/dto/progress-report.entity'
-  ).then((m) => m.ProgressReport);
+  static readonly Parent = () =>
+    import('../../progress-report/dto/progress-report.entity').then(
+      (m) => m.ProgressReport,
+    );
 
   static readonly Variants = Variant.createList({
     partner: {

@@ -27,9 +27,8 @@ const variants = Variant.createList({
 export class ProgressReportHighlight extends PromptVariantResponse<HighlightVariant> {
   static Props = keysOf<ProgressReportHighlight>();
   static SecuredProps = keysOf<SecuredProps<ProgressReportHighlight>>();
-  static readonly Parent = import('./progress-report.entity').then(
-    (m) => m.ProgressReport,
-  );
+  static readonly Parent = () =>
+    import('./progress-report.entity').then((m) => m.ProgressReport);
   static Variants = variants;
   static readonly ConfirmThisClassPassesSensitivityToPolicies = true;
 }

@@ -22,7 +22,7 @@ export abstract class ProgressReportVarianceExplanation {
   static Props = keysOf<ProgressReportVarianceExplanation>();
   static SecuredProps =
     keysOf<SecuredProps<ProgressReportVarianceExplanation>>();
-  static readonly Parent = import('../dto').then((m) => m.ProgressReport);
+  static readonly Parent = () => import('../dto').then((m) => m.ProgressReport);
   static readonly ConfirmThisClassPassesSensitivityToPolicies = true;
 
   readonly report: ProgressReport & SetUnsecuredType<LinkTo<'ProgressReport'>>;

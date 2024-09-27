@@ -45,8 +45,7 @@ export abstract class SecuredTags extends SecuredPropertyList<string>(
 export class EthnologueLanguage {
   static readonly Props = keysOf<EthnologueLanguage>();
   static readonly SecuredProps = keysOf<SecuredProps<EthnologueLanguage>>();
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  static readonly Parent = Promise.resolve().then(() => Language);
+  static readonly Parent = async () => Language;
 
   readonly __typename?: 'EthnologueLanguage';
 

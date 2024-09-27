@@ -1,4 +1,4 @@
-import { EnumType, makeEnum } from './make-enum';
+import { EnumType, makeEnum } from '@seedcompany/nest';
 
 export type Order = EnumType<typeof Order>;
 export const Order = makeEnum({

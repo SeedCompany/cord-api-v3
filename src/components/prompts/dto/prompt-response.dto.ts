@@ -57,7 +57,7 @@ export class PromptVariantResponse<
 > extends Resource {
   static Props = keysOf<PromptVariantResponse>();
   static SecuredProps = keysOf<SecuredProps<PromptVariantResponse>>();
-  static readonly Parent = 'dynamic' as 'dynamic' | Promise<any>;
+  static readonly Parent = 'dynamic' as 'dynamic' | (() => Promise<any>);
 
   static Relations = {
     // So the policies can specify
