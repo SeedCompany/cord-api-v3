@@ -1,4 +1,5 @@
 export { Many, many, maybeMany, JsonSet, ArrayItem } from '@seedcompany/common';
+export { makeEnum, MadeEnum, EnumType } from '@seedcompany/nest';
 
 export * from './and-call';
 export * from './temporal';
@@ -22,7 +23,6 @@ export * from './fiscal-year';
 export * from './generate-id';
 export * from './id.arg';
 export { DateField, DateTimeField } from './luxon.graphql';
-export * from './make-enum';
 export * from './map-or-else';
 export * from './order.enum';
 export * from './pagination.input';

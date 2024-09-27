@@ -1,10 +1,10 @@
 import { applyDecorators } from '@nestjs/common';
 import { Field, FieldOptions } from '@nestjs/graphql';
+import { EnumType, makeEnum } from '@seedcompany/nest';
 import { Transform } from 'class-transformer';
 import { uniq } from 'lodash';
 import { rankSens } from '~/core/database/query';
 import { DbSort } from './db-sort.decorator';
-import { EnumType, makeEnum } from './make-enum';
 
 export type Sensitivity = EnumType<typeof Sensitivity>;
 export const Sensitivity = makeEnum({
