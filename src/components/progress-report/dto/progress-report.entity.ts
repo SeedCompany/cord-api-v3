@@ -35,9 +35,8 @@ const Interfaces = IntersectTypes(IPeriodicReport, Resource, Commentable);
 export class ProgressReport extends Interfaces {
   static readonly Props = keysOf<ProgressReport>();
   static readonly SecuredProps = keysOf<SecuredProps<ProgressReport>>();
-  static readonly Parent = import('../../engagement/dto').then(
-    (m) => m.IEngagement,
-  );
+  static readonly Parent = () =>
+    import('../../engagement/dto').then((m) => m.IEngagement);
   static readonly Relations = {
     highlights: [ProgressReportHighlight],
     teamNews: [ProgressReportTeamNews],

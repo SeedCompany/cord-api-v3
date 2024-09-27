@@ -67,7 +67,8 @@ class Engagement extends Interfaces {
   static readonly Relations = {
     ...Commentable.Relations,
   } satisfies ResourceRelationsShape;
-  static readonly Parent = import('../../project/dto').then((m) => m.IProject);
+  static readonly Parent = () =>
+    import('../../project/dto').then((m) => m.IProject);
   static readonly resolve = resolveEngagementType;
 
   declare readonly __typename: DBNames<typeof e.Engagement>;
@@ -157,9 +158,8 @@ export class LanguageEngagement extends Engagement {
     // why is this singular?
     product: [Product],
   } satisfies ResourceRelationsShape;
-  static readonly Parent = import('../../project/dto').then(
-    (m) => m.TranslationProject,
-  );
+  static readonly Parent = () =>
+    import('../../project/dto').then((m) => m.TranslationProject);
 
   declare readonly __typename: DBNames<typeof e.LanguageEngagement>;
 
@@ -198,9 +198,8 @@ export class LanguageEngagement extends Engagement {
 export class InternshipEngagement extends Engagement {
   static readonly Props = keysOf<InternshipEngagement>();
   static readonly SecuredProps = keysOf<SecuredProps<InternshipEngagement>>();
-  static readonly Parent = import('../../project/dto').then(
-    (m) => m.InternshipProject,
-  );
+  static readonly Parent = () =>
+    import('../../project/dto').then((m) => m.InternshipProject);
 
   declare readonly __typename: DBNames<typeof e.InternshipEngagement>;
 

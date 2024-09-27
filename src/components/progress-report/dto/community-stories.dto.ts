@@ -9,9 +9,8 @@ import { ProgressReportHighlight } from './highlights.dto';
 export class ProgressReportCommunityStory extends PromptVariantResponse<CommunityStoryVariant> {
   static Props = keysOf<ProgressReportCommunityStory>();
   static SecuredProps = keysOf<SecuredProps<ProgressReportCommunityStory>>();
-  static readonly Parent = import('./progress-report.entity').then(
-    (m) => m.ProgressReport,
-  );
+  static readonly Parent = () =>
+    import('./progress-report.entity').then((m) => m.ProgressReport);
   static Variants = ProgressReportHighlight.Variants;
   static readonly ConfirmThisClassPassesSensitivityToPolicies = true;
 }

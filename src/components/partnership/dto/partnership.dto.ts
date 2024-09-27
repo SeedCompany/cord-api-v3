@@ -36,7 +36,8 @@ export class Partnership extends Interfaces {
     // why is this here? We have a relation to partner, not org...
     organization: Organization,
   } satisfies ResourceRelationsShape;
-  static readonly Parent = import('../../project/dto').then((m) => m.IProject);
+  static readonly Parent = () =>
+    import('../../project/dto').then((m) => m.IProject);
 
   readonly project: LinkTo<'Project'>;
 

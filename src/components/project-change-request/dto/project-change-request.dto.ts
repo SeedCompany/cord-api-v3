@@ -13,7 +13,8 @@ import { SecuredProjectChangeRequestTypes } from './project-change-request-type.
 export abstract class ProjectChangeRequest extends Changeset {
   static readonly Props = keysOf<ProjectChangeRequest>();
   static readonly SecuredProps = keysOf<SecuredProps<ProjectChangeRequest>>();
-  static readonly Parent = import('../../project/dto').then((m) => m.IProject);
+  static readonly Parent = () =>
+    import('../../project/dto').then((m) => m.IProject);
 
   declare __typename: 'ProjectChangeRequest';
 

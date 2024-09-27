@@ -51,9 +51,8 @@ export const resolveProductType = (
 export class Product extends Producible {
   static readonly Props: string[] = keysOf<Product>();
   static readonly SecuredProps: string[] = keysOf<SecuredProps<Product>>();
-  static readonly Parent = import('../../engagement/dto').then(
-    (m) => m.LanguageEngagement,
-  );
+  static readonly Parent = () =>
+    import('../../engagement/dto').then((m) => m.LanguageEngagement);
 
   readonly engagement: ID;
   readonly project: ID;

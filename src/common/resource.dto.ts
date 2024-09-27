@@ -79,7 +79,7 @@ export type ResourceShape<T> = AbstractClassType<T> & {
    * This means it's _created_ and scoped under this other resource.
    * This _type_ cannot exist without this parent.
    */
-  Parent?: Promise<any> | 'dynamic';
+  Parent?: (() => Promise<any>) | 'dynamic';
 };
 
 export type ResourceRelationsShape = ResourceShape<any>['Relations'];

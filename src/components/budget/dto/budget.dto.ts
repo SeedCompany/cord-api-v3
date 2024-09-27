@@ -33,7 +33,8 @@ export class Budget extends Interfaces {
   static readonly Relations = (() => ({
     records: [BudgetRecord],
   })) satisfies ResourceRelationsShape;
-  static readonly Parent = import('../../project/dto').then((m) => m.IProject);
+  static readonly Parent = () =>
+    import('../../project/dto').then((m) => m.IProject);
 
   @Field(() => IProject)
   declare readonly parent: BaseNode;
