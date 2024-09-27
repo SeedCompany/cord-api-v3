@@ -9,6 +9,7 @@ import {
   merge,
   oncePerProject,
   paginate,
+  requestingUser,
   sortWith,
 } from '~/core/database/query';
 import { engagementFilters } from '../engagement/engagement.repository';
@@ -41,6 +42,7 @@ export class ProgressReportRepository extends DtoRepository<
         relation('in', '', 'engagement'),
         node('project', 'Project'),
       ])
+      .match(requestingUser(session))
       .apply(progressReportFilters(input.filter))
       .apply(
         this.privileges.forUser(session).filterToReadable({
@@ -82,9 +84,12 @@ export const progressReportFilters = filter.define(
     start: filter.dateTimeProp(),
     end: filter.dateTimeProp(),
     status: filter.stringListProp(),
-    engagement: filter.sub(() => engagementFilters)((sub) =>
+    engagement: filter.sub(
+      () => engagementFilters,
+      'requestingUser',
+    )((sub) =>
       sub
-        .with('node as report')
+        .with('node as report, requestingUser')
         .match([
           node('report'),
           relation('in', '', 'report'),
