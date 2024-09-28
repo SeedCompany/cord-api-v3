@@ -12,9 +12,10 @@ import {
   NestFastifyApplication,
 } from '@nestjs/platform-fastify';
 import type { FastifyInstance, HTTPMethods, RouteOptions } from 'fastify';
+import rawBody from 'fastify-raw-body';
 import * as zlib from 'node:zlib';
 import { ConfigService } from '~/core/config/config.service';
-import { RouteConfig, RouteConstraints } from './decorators';
+import { RawBody, RouteConfig, RouteConstraints } from './decorators';
 import type { CookieOptions, CorsOptions, IResponse } from './types';
 
 export type NestHttpApplication = NestFastifyApplication & {
@@ -54,6 +55,9 @@ export class HttpAdapter extends PatchedFastifyAdapter {
     });
     await app.register(cookieParser);
 
+    // Only on routes we've decorated.
+    await app.register(rawBody, { global: false });
+
     app.setGlobalPrefix(config.hostUrl$.value.pathname.slice(1));
 
     config.applyTimeouts(app.getHttpServer(), config.httpTimeouts);
@@ -71,12 +75,20 @@ export class HttpAdapter extends PatchedFastifyAdapter {
 
     const config = RouteConfig.get(handler) ?? {};
     const constraints = RouteConstraints.get(handler) ?? {};
+    const rawBody = RawBody.get(handler);
 
     let version: VersionValue | undefined = (handler as any).version;
     version = version === VERSION_NEUTRAL ? undefined : version;
     if (version) {
       // @ts-expect-error this is what upstream does
       constraints.version = version;
+    }
+
+    // Plugin configured to just add the rawBody property while continuing
+    // to parse the content type normally.
+    // Useful for signed webhook payload validation.
+    if (rawBody && !rawBody.passthrough) {
+      config.rawBody = true;
     }
 
     const route: RouteOptions = {
@@ -86,6 +98,22 @@ export class HttpAdapter extends PatchedFastifyAdapter {
       ...(Object.keys(constraints).length > 0 ? { constraints } : {}),
       ...(Object.keys(config).length > 0 ? { config } : {}),
     };
+
+    if (rawBody?.passthrough) {
+      const { allowContentTypes } = rawBody;
+      const contentTypes = Array.isArray(allowContentTypes)
+        ? allowContentTypes.slice()
+        : ((allowContentTypes ?? '*') as string | RegExp);
+      return this.instance.register(async (child) => {
+        child.removeAllContentTypeParsers();
+        child.addContentTypeParser(
+          contentTypes,
+          { parseAs: 'buffer' },
+          (req, payload, done) => done(null, payload),
+        );
+        child.route(route);
+      });
+    }
     return this.instance.route(route);
   }
 
