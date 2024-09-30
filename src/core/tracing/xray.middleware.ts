@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { GqlExecutionContext } from '@nestjs/graphql';
 import XRay from 'aws-xray-sdk-core';
-import { HttpMiddleware as NestMiddleware } from '~/core/http';
+import { HttpAdapter, HttpMiddleware as NestMiddleware } from '~/core/http';
 import { ConfigService } from '../config/config.service';
 import { Sampler } from './sampler';
 import { TracingService } from './tracing.service';
@@ -17,6 +17,7 @@ export class XRayMiddleware implements NestMiddleware, NestInterceptor {
     private readonly tracing: TracingService,
     private readonly sampler: Sampler,
     private readonly config: ConfigService,
+    private readonly http: HttpAdapter,
   ) {}
 
   /**
@@ -24,15 +25,14 @@ export class XRayMiddleware implements NestMiddleware, NestInterceptor {
    */
   use: NestMiddleware['use'] = (req, res, next) => {
     const traceData = XRay.utils.processTraceData(
-      req.header('x-amzn-trace-id'),
+      req.headers['x-amzn-trace-id'] as string | undefined,
     );
     const root = new XRay.Segment('cord', traceData.root, traceData.parent);
     const reqData = new XRay.middleware.IncomingRequestData(req);
     root.addIncomingRequestData(reqData);
     // Use public DNS as url instead of specific IP
     // @ts-expect-error xray library types suck
-    root.http.request.url =
-      this.config.hostUrl$.value + req.originalUrl.slice(1);
+    root.http.request.url = this.config.hostUrl$.value + req.url.slice(1);
 
     // Add to segment so interceptor can access without having to calculate again.
     Object.defineProperty(reqData, 'traceData', {
@@ -102,7 +102,8 @@ export class XRayMiddleware implements NestMiddleware, NestInterceptor {
         : context.switchToHttp().getResponse();
 
     if (res && root instanceof XRay.Segment) {
-      res.setHeader(
+      this.http.setHeader(
+        res,
         'x-amzn-trace-id',
         `Root=${root.trace_id};Sampled=${sampled ? '1' : '0'}`,
       );
