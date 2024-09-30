@@ -83,6 +83,11 @@ const restrictedImports = [
     path: '@nestjs/common',
     replacement: { importName: 'HttpMiddleware', path: '~/core/http' },
   },
+  {
+    importNames: ['RouteConfig', 'RouteConstraints'],
+    path: '@nestjs/platform-fastify',
+    replacement: { path: '~/core/http' },
+  },
 ];
 
 const namingConvention = [
