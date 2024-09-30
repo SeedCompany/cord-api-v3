@@ -2,14 +2,14 @@ import { GraphQLSchemaHost } from '@nestjs/graphql';
 import { EnhancedResourceMap } from '~/core';
 import { ResourcesHost } from './resources.host';
 
+// Load all files to ensure all resources are registered
+import '../../app.module';
+
 describe('ResourcesHost', () => {
   let host: ResourcesHost;
   let all: EnhancedResourceMap;
 
   beforeAll(async () => {
-    // Load all files to ensure all resources are registered
-    await import('../../app.module');
-
     host = new ResourcesHost(new GraphQLSchemaHost());
     all = host.getEnhancedMap();
   });
