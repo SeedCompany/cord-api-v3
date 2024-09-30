@@ -1,7 +1,6 @@
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import cookieParser from 'cookie-parser';
-import type { CorsOptions, NestHttpApplication } from '~/core/http';
+import type { NestHttpApplication } from '~/core/http';
 import './polyfills';
 
 async function bootstrap() {
@@ -31,12 +30,7 @@ async function bootstrap() {
   );
   const config = app.get(ConfigService);
 
-  app.enableCors(config.cors as CorsOptions); // typecast to undo deep readonly
-  app.use(cookieParser());
-
-  app.setGlobalPrefix(config.hostUrl$.value.pathname.slice(1));
-
-  config.applyTimeouts(app.getHttpServer(), config.httpTimeouts);
+  await app.configure(app, config);
 
   app.enableShutdownHooks();
   await app.listen(config.port, () => {
