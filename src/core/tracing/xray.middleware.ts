@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { GqlExecutionContext } from '@nestjs/graphql';
 import XRay from 'aws-xray-sdk-core';
-import { HttpMiddleware as NestMiddleware } from '~/core/http';
+import { HttpAdapter, HttpMiddleware as NestMiddleware } from '~/core/http';
 import { ConfigService } from '../config/config.service';
 import { Sampler } from './sampler';
 import { TracingService } from './tracing.service';
@@ -17,6 +17,7 @@ export class XRayMiddleware implements NestMiddleware, NestInterceptor {
     private readonly tracing: TracingService,
     private readonly sampler: Sampler,
     private readonly config: ConfigService,
+    private readonly http: HttpAdapter,
   ) {}
 
   /**
@@ -102,7 +103,8 @@ export class XRayMiddleware implements NestMiddleware, NestInterceptor {
         : context.switchToHttp().getResponse();
 
     if (res && root instanceof XRay.Segment) {
-      res.setHeader(
+      this.http.setHeader(
+        res,
         'x-amzn-trace-id',
         `Root=${root.trace_id};Sampled=${sampled ? '1' : '0'}`,
       );

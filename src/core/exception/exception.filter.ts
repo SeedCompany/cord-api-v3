@@ -1,7 +1,7 @@
 import { ArgumentsHost, Catch, HttpStatus, Injectable } from '@nestjs/common';
 import { GqlExceptionFilter } from '@nestjs/graphql';
 import { mapValues } from '@seedcompany/common';
-import { HttpAdapterHost } from '~/core/http';
+import { HttpAdapter } from '~/core/http';
 import { ConfigService } from '../config/config.service';
 import { ILogger, Logger, LogLevel } from '../logger';
 import { ValidationException } from '../validation';
@@ -12,7 +12,7 @@ import { isFromHackAttempt } from './is-from-hack-attempt';
 @Injectable()
 export class ExceptionFilter implements GqlExceptionFilter {
   constructor(
-    private readonly httpAdapterHost: HttpAdapterHost,
+    private readonly http: HttpAdapter,
     @Logger('nest') private readonly logger: ILogger,
     private readonly config: ConfigService,
     private readonly normalizer: ExceptionNormalizer,
@@ -77,9 +77,8 @@ export class ExceptionFilter implements GqlExceptionFilter {
           : ex.stack.split('\n'),
     };
 
-    const { httpAdapter } = this.httpAdapterHost;
     const res = args.switchToHttp().getResponse();
-    httpAdapter.reply(res, out, status);
+    this.http.reply(res, out, status);
   }
 
   logIt(info: ExceptionJson, error: Error) {
