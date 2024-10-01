@@ -7,7 +7,7 @@ import {
   DateInterval,
   DateTimeField,
   DbLabel,
-  ID,
+  DBNames,
   IntersectTypes,
   parentIdMiddleware,
   Resource,
@@ -15,10 +15,10 @@ import {
   Secured,
   SecuredBoolean,
   SecuredDateNullable,
-  SecuredDateTime,
+  SecuredDateTimeNullable,
   SecuredProps,
   SecuredRichTextNullable,
-  SecuredString,
+  SecuredStringNullable,
   Sensitivity,
   SensitivityField,
   UnsecuredDto,
@@ -26,9 +26,8 @@ import {
 import { BaseNode } from '~/core/database/results';
 import { e } from '~/core/edgedb';
 import { LinkTo, RegisterResource } from '~/core/resources';
-import { ScopedRole } from '../../authorization/dto';
 import { ChangesetAware } from '../../changeset/dto';
-import { DefinedFile } from '../../file/dto';
+import { Commentable } from '../../comments/dto';
 import { Product, SecuredMethodologies } from '../../product/dto';
 import {
   InternshipProject,
@@ -47,10 +46,10 @@ export type AnyEngagement = MergeExclusive<
   InternshipEngagement
 >;
 
-const Interfaces = IntersectTypes(Resource, ChangesetAware);
+const Interfaces = IntersectTypes(Resource, ChangesetAware, Commentable);
 
 export const resolveEngagementType = (val: Pick<AnyEngagement, '__typename'>) =>
-  val.__typename === 'LanguageEngagement'
+  val.__typename === 'default::LanguageEngagement'
     ? LanguageEngagement
     : InternshipEngagement;
 
@@ -65,9 +64,14 @@ export const resolveEngagementType = (val: Pick<AnyEngagement, '__typename'>) =>
 class Engagement extends Interfaces {
   static readonly Props: string[] = keysOf<Engagement>();
   static readonly SecuredProps: string[] = keysOf<SecuredProps<Engagement>>();
-  static readonly Parent = import('../../project/dto').then((m) => m.IProject);
+  static readonly Relations = {
+    ...Commentable.Relations,
+  } satisfies ResourceRelationsShape;
+  static readonly Parent = () =>
+    import('../../project/dto').then((m) => m.IProject);
+  static readonly resolve = resolveEngagementType;
 
-  declare readonly __typename: 'LanguageEngagement' | 'InternshipEngagement';
+  declare readonly __typename: DBNames<typeof e.Engagement>;
 
   readonly project: LinkTo<'Project'> & Pick<IProject, 'status' | 'type'>;
 
@@ -80,7 +84,7 @@ class Engagement extends Interfaces {
   @DbLabel('EngagementStatus')
   readonly status: SecuredEngagementStatus;
 
-  readonly ceremony: Secured<ID>;
+  readonly ceremony: Secured<LinkTo<'Ceremony'>>;
 
   @Field({
     description: 'Translation / Growth Plan complete date',
@@ -119,24 +123,20 @@ class Engagement extends Interfaces {
 
   @Field()
   // Convert from date to datetime at migration
-  readonly lastSuspendedAt: SecuredDateTime;
+  readonly lastSuspendedAt: SecuredDateTimeNullable;
 
   @Field()
   // Convert from date to datetime at migration
-  readonly lastReactivatedAt: SecuredDateTime;
+  readonly lastReactivatedAt: SecuredDateTimeNullable;
 
   @Field({
     description: 'The last time the engagement status was modified',
   })
   // Convert from last terminated/completed at migration
-  readonly statusModifiedAt: SecuredDateTime;
+  readonly statusModifiedAt: SecuredDateTimeNullable;
 
   @DateTimeField()
   readonly modifiedAt: DateTime;
-
-  // A list of non-global roles the requesting user has available for this object.
-  // This is just a cache, to prevent extra db lookups within the same request.
-  declare readonly scope: ScopedRole[];
 
   @Field()
   readonly description: SecuredRichTextNullable;
@@ -154,19 +154,19 @@ export class LanguageEngagement extends Engagement {
   static readonly Props = keysOf<LanguageEngagement>();
   static readonly SecuredProps = keysOf<SecuredProps<LanguageEngagement>>();
   static readonly Relations = {
+    ...Engagement.Relations,
     // why is this singular?
     product: [Product],
   } satisfies ResourceRelationsShape;
-  static readonly Parent = import('../../project/dto').then(
-    (m) => m.TranslationProject,
-  );
+  static readonly Parent = () =>
+    import('../../project/dto').then((m) => m.TranslationProject);
 
-  declare readonly __typename: 'LanguageEngagement';
+  declare readonly __typename: DBNames<typeof e.LanguageEngagement>;
 
   @Field(() => TranslationProject)
   declare readonly parent: BaseNode;
 
-  readonly language: Secured<ID>;
+  readonly language: Secured<LinkTo<'Language'>>;
 
   @Field()
   readonly firstScripture: SecuredBoolean;
@@ -183,12 +183,12 @@ export class LanguageEngagement extends Engagement {
   readonly sentPrintingDate: SecuredDateNullable;
 
   @Field()
-  readonly paratextRegistryId: SecuredString;
+  readonly paratextRegistryId: SecuredStringNullable;
 
-  readonly pnp: DefinedFile;
+  readonly pnp: Secured<LinkTo<'File'> | null>;
 
   @Field()
-  readonly historicGoal: SecuredString;
+  readonly historicGoal: SecuredStringNullable;
 }
 
 @RegisterResource({ db: e.InternshipEngagement })
@@ -198,20 +198,19 @@ export class LanguageEngagement extends Engagement {
 export class InternshipEngagement extends Engagement {
   static readonly Props = keysOf<InternshipEngagement>();
   static readonly SecuredProps = keysOf<SecuredProps<InternshipEngagement>>();
-  static readonly Parent = import('../../project/dto').then(
-    (m) => m.InternshipProject,
-  );
+  static readonly Parent = () =>
+    import('../../project/dto').then((m) => m.InternshipProject);
 
-  declare readonly __typename: 'InternshipEngagement';
+  declare readonly __typename: DBNames<typeof e.InternshipEngagement>;
 
   @Field(() => InternshipProject)
   declare readonly parent: BaseNode;
 
-  readonly countryOfOrigin: Secured<ID | null>;
+  readonly countryOfOrigin: Secured<LinkTo<'Location'> | null>;
 
-  readonly intern: Secured<ID>;
+  readonly intern: Secured<LinkTo<'User'>>;
 
-  readonly mentor: Secured<ID | null>;
+  readonly mentor: Secured<LinkTo<'User'> | null>;
 
   @Field()
   @DbLabel('InternPosition')
@@ -221,11 +220,16 @@ export class InternshipEngagement extends Engagement {
   @DbLabel('ProductMethodology')
   readonly methodologies: SecuredMethodologies;
 
-  readonly growthPlan: DefinedFile;
+  readonly growthPlan: Secured<LinkTo<'File'> | null>;
 }
 
 export const engagementRange = (engagement: UnsecuredDto<Engagement>) =>
   DateInterval.tryFrom(engagement.startDate, engagement.endDate);
+
+export const EngagementConcretes = {
+  LanguageEngagement,
+  InternshipEngagement,
+};
 
 declare module '~/core/resources/map' {
   interface ResourceMap {

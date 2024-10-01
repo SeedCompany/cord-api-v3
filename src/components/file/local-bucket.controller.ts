@@ -7,11 +7,11 @@ import {
   Response,
   StreamableFile,
 } from '@nestjs/common';
-import { Request as IRequest, Response as IResponse } from 'express';
 import { DateTime } from 'luxon';
 import { URL } from 'node:url';
 import rawBody from 'raw-body';
 import { InputException } from '~/common';
+import { HttpAdapter, IRequest, IResponse } from '~/core/http';
 import { FileBucket, InvalidSignedUrlException } from './bucket';
 
 /**
@@ -21,7 +21,10 @@ import { FileBucket, InvalidSignedUrlException } from './bucket';
 export class LocalBucketController {
   static path = '/local-bucket';
 
-  constructor(private readonly bucket: FileBucket) {}
+  constructor(
+    private readonly bucket: FileBucket,
+    private readonly http: HttpAdapter,
+  ) {}
 
   @Put()
   async upload(
@@ -72,7 +75,7 @@ export class LocalBucketController {
       'Content-Disposition': out.ContentDisposition,
       'Content-Encoding': out.ContentEncoding,
       'Content-Language': out.ContentLanguage,
-      'Content-Length': out.ContentLength,
+      'Content-Length': String(out.ContentLength),
       'Content-Type': out.ContentType,
       Expires: out.Expires
         ? DateTime.fromJSDate(out.Expires).toHTTP()
@@ -84,7 +87,7 @@ export class LocalBucketController {
     };
     for (const [header, val] of Object.entries(headers)) {
       if (val != null) {
-        res.setHeader(header, val);
+        this.http.setHeader(res, header, val);
       }
     }
 

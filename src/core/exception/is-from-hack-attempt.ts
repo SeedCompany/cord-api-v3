@@ -3,7 +3,6 @@ import {
   // eslint-disable-next-line no-restricted-imports
   NotFoundException as NestjsNotFoundException,
 } from '@nestjs/common';
-import { IncomingMessage } from 'http';
 
 export const isFromHackAttempt = (error: Error, args: ArgumentsHost) => {
   if (
@@ -13,7 +12,7 @@ export const isFromHackAttempt = (error: Error, args: ArgumentsHost) => {
     process.env.NODE_ENV === 'production' &&
     args.getType() === 'http'
   ) {
-    return args.switchToHttp().getRequest<IncomingMessage>();
+    return args.switchToHttp().getRequest();
   }
   return undefined;
 };

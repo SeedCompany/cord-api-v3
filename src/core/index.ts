@@ -2,7 +2,6 @@ export * from './async-local-storage-no-context.exception';
 export * from './logger';
 export { ConfigService } from './config/config.service';
 export * from './core.module';
-export * from './cache';
 export * from './cli';
 export * from './graphql';
 export { splitDb, splitDb2 } from './database';

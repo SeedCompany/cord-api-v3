@@ -8,6 +8,7 @@ import { PartnerRepository } from './partner.repository';
 export class PartnerEdgeDBRepository
   extends RepoFor(Partner, {
     hydrate: (partner) => ({
+      __typename: e.str('Partner'),
       ...partner['*'],
       organization: true,
       pointOfContact: true,

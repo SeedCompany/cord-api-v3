@@ -7,6 +7,7 @@ import { ID, many, Many, ObjectView, ServerException, Session } from '~/common';
 import { BaseNode } from '../database/results';
 import { ILogger, Logger } from '../logger';
 import { ResourceMap } from './map';
+import { ResourcesHost } from './resources.host';
 
 const RESOLVE_BY_ID = 'RESOLVE_BY_ID';
 interface Shape {
@@ -48,6 +49,7 @@ export class ResourceResolver {
 
   constructor(
     private readonly discover: DiscoveryService,
+    private readonly resourcesHost: ResourcesHost,
     private readonly schemaHost: GraphQLSchemaHost,
     @Logger('resource-resolver') private readonly logger: ILogger,
   ) {}
@@ -144,13 +146,19 @@ export class ResourceResolver {
     const names = many(types).map((t) => t.replace(/^Deleted_/, ''));
 
     const schema = this.schemaHost.schema;
-    const resolved = names.filter(
-      (name) => schema.getType(name) instanceof GraphQLObjectType,
-    );
+    const resolved = names
+      .flatMap((name) => {
+        try {
+          return this.resourcesHost.getByDynamicName(name).name;
+        } catch (e) {
+          // Ignore names/`labels` that don't have corresponding resources.
+          return [];
+        }
+      })
+      .filter((name) => schema.getType(name) instanceof GraphQLObjectType);
 
     if (resolved.length === 1) {
-      // This is mostly true...
-      return resolved[0] as keyof ResourceMap;
+      return resolved[0];
     }
 
     const namesStr = names.join(', ');

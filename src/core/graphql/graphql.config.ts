@@ -1,18 +1,15 @@
-import { ContextFunction, PersistedQueryOptions } from '@apollo/server';
+import { ContextFunction } from '@apollo/server';
 import { unwrapResolverError } from '@apollo/server/errors';
 import { ExpressContextFunctionArgument } from '@apollo/server/express4';
 import {
   ApolloServerPluginLandingPageLocalDefault,
   ApolloServerPluginLandingPageProductionDefault,
 } from '@apollo/server/plugin/landingPage/default';
-import {
-  KeyValueCache,
-  KeyValueCacheSetOptions,
-} from '@apollo/utils.keyvaluecache';
 import { ApolloDriverConfig } from '@nestjs/apollo';
 import { Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { GqlOptionsFactory } from '@nestjs/graphql';
+import { CacheService } from '@seedcompany/cache';
 import { mapKeys } from '@seedcompany/common';
 import {
   GraphQLErrorExtensions as ErrorExtensions,
@@ -24,7 +21,6 @@ import {
 import { BehaviorSubject } from 'rxjs';
 import { GqlContextType, JsonSet, ServerException, Session } from '~/common';
 import { getRegisteredScalars } from '~/common/scalars';
-import { CacheService } from '../cache';
 import { ConfigService } from '../config/config.service';
 import { VersionService } from '../config/version.service';
 import { ExceptionFilter } from '../exception/exception.filter';
@@ -83,13 +79,13 @@ export class GraphQLConfig implements GqlOptionsFactory {
       buildSchemaOptions: {
         fieldMiddleware: [this.tracing.fieldMiddleware()],
       },
-      cache: new GraphQLCacheAdapter(this.cache),
-      persistedQueries: ((): PersistedQueryOptions | false => {
-        const config = this.config.graphQL.persistedQueries;
-        const ttl =
-          config.ttl.toMillis() <= 0 ? null : config.ttl.as('seconds');
-        return config.enabled ? { ttl } : false;
-      })(),
+      cache: this.cache.adaptTo.apollo({
+        ttl: this.config.graphQL.persistedQueries.ttl,
+        refreshTtlOnGet: true,
+      }),
+      persistedQueries: this.config.graphQL.persistedQueries.enabled
+        ? {}
+        : false,
       resolvers: {
         ...scalars,
       },
@@ -182,26 +178,3 @@ export const createFakeStubOperation = () => {
     },
   });
 };
-
-class GraphQLCacheAdapter implements KeyValueCache {
-  constructor(
-    private readonly cache: CacheService,
-    private readonly prefix = 'apollo:',
-  ) {}
-
-  async get(key: string): Promise<string | undefined> {
-    return await this.cache.get(this.prefix + key, {
-      refreshTtlOnGet: true,
-    });
-  }
-
-  async set(key: string, value: string, options?: KeyValueCacheSetOptions) {
-    await this.cache.set(this.prefix + key, value, {
-      ttl: options?.ttl ? { seconds: options.ttl } : undefined,
-    });
-  }
-
-  async delete(key: string) {
-    await this.cache.delete(this.prefix + key);
-  }
-}

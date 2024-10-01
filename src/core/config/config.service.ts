@@ -1,12 +1,10 @@
-import { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
 import { csv } from '@seedcompany/common';
 import {
   EmailModuleOptions,
   EmailOptionsFactory,
 } from '@seedcompany/nestjs-email';
-import { CookieOptions } from 'express';
 import type { Server as HttpServer } from 'http';
-import LRUCache from 'lru-cache';
+import { LRUCache } from 'lru-cache';
 import { Duration, DurationLike } from 'luxon';
 import { nanoid } from 'nanoid';
 import { Config as Neo4JDriverConfig } from 'neo4j-driver';
@@ -19,6 +17,7 @@ import { ProgressReportStatus } from '../../components/progress-report/dto/progr
 import type { TransitionName as ProgressReportTransitionName } from '../../components/progress-report/workflow/transitions';
 import { DefaultTimezoneWrapper } from '../email/templates/formatted-date-time';
 import { FrontendUrlWrapper } from '../email/templates/frontend-url';
+import type { CookieOptions, CorsOptions } from '../http';
 import { LogLevel } from '../logger/logger.interface';
 import { EnvironmentService } from './environment.service';
 import { determineRootUser } from './root-user.config';
@@ -51,7 +50,7 @@ export const makeConfig = (env: EnvironmentService) =>
       ttl: env.duration('LRU_CACHE_TTL').optional()?.as('milliseconds'),
       max: env.number('LRU_CACHE_MAX').optional(),
       maxSize: env.number('LRU_CACHE_MAX_SIZE').optional('30MB'),
-    } satisfies LRUCache.Options<string, unknown>;
+    } satisfies LRUCache.Options<string, unknown, unknown>;
 
     httpTimeouts = {
       /** @see HttpServer.keepAliveTimeout */

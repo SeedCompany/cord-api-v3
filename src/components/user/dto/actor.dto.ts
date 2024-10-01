@@ -28,6 +28,10 @@ export class Actor extends DataObject {
   readonly id: ID;
 }
 
+@RegisterResource({
+  db: e.SystemAgent,
+  skipAccessPolicies: true,
+})
 @ObjectType({
   implements: [Actor],
 })
@@ -48,8 +52,10 @@ export class SecuredActor extends SecuredProperty(Actor) {}
 declare module '~/core/resources/map' {
   interface ResourceMap {
     Actor: typeof Actor;
+    SystemAgent: typeof SystemAgent;
   }
   interface ResourceDBMap {
     Actor: typeof e.Actor;
+    SystemAgent: typeof e.SystemAgent;
   }
 }

@@ -3,7 +3,7 @@ import { stripIndent } from 'common-tags';
 import {
   IdField,
   IdOf,
-  IntersectionType as Merge,
+  IntersectTypes as Merge,
   PickType,
   Variant,
   VariantInputField,

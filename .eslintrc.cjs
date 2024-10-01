@@ -44,7 +44,7 @@ const oldRestrictedImports = [
   },
 ];
 
-/** @type import('@seedcompany/eslint-plugin').ImportRestriction[] */
+/** @type {import('@seedcompany/eslint-plugin').ImportRestriction[]} */
 const restrictedImports = [
   // Guard against ts hints trying to insert "src/" paths.
   // It does that with basePath configured which is required for path aliases, even though it's never what we want.
@@ -71,6 +71,22 @@ const restrictedImports = [
   {
     path: ['..', '../..', '../../..'],
     message: 'Not specific enough',
+  },
+  {
+    importNames: 'IntersectionType',
+    path: '@nestjs/graphql',
+    replacement: { importName: 'IntersectTypes', path: '~/common' },
+    message: 'Use our wrapper that allows for varargs & provides members array',
+  },
+  {
+    importNames: 'HttpAdapterHost',
+    path: '@nestjs/core',
+    replacement: { path: '~/core/http' },
+  },
+  {
+    importNames: 'NestMiddleware',
+    path: '@nestjs/common',
+    replacement: { importName: 'HttpMiddleware', path: '~/core/http' },
   },
 ];
 

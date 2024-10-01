@@ -7,11 +7,11 @@ import {
   Int,
   ObjectType,
 } from '@nestjs/graphql';
+import { MadeEnum } from '@seedcompany/nest';
 import { stripIndent } from 'common-tags';
 import { GraphQLBoolean, GraphQLScalarType, GraphQLString } from 'graphql';
 import { isObject } from 'lodash';
 import { Class, ConditionalKeys, ConditionalPick } from 'type-fest';
-import { MadeEnum } from './make-enum';
 import { ISecured } from './secured.interface';
 import { AbstractClassType } from './types';
 

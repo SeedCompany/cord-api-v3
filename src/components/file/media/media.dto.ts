@@ -15,7 +15,7 @@ import {
   ID,
   IdField,
   IdOf,
-  IntersectionType,
+  IntersectTypes,
   NameField,
   SecuredProps,
   ServerException,
@@ -127,8 +127,7 @@ export class Image extends VisualMedia {
 @ObjectType({
   implements: [VisualMedia, TemporalMedia, Media],
 })
-@DbLabel('Video', 'VisualMedia', 'TemporalMedia', 'Media') // IntersectionType blocks label inheritance
-export class Video extends IntersectionType(VisualMedia, TemporalMedia) {
+export class Video extends IntersectTypes(VisualMedia, TemporalMedia) {
   static readonly Props = keysOf<Video>();
   static readonly SecuredProps = keysOf<SecuredProps<Video>>();
 

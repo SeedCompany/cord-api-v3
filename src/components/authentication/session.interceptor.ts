@@ -6,13 +6,8 @@ import {
   Injectable,
   NestInterceptor,
 } from '@nestjs/common';
-import {
-  GqlExecutionContext,
-  GqlContextType as GqlRequestType,
-} from '@nestjs/graphql';
+import { GqlExecutionContext } from '@nestjs/graphql';
 import { csv } from '@seedcompany/common';
-import { Request } from 'express';
-import { GraphQLResolveInfo } from 'graphql';
 import {
   GqlContextType,
   ID,
@@ -25,6 +20,7 @@ import {
   UnauthenticatedException,
 } from '~/common';
 import { ConfigService } from '~/core';
+import { IRequest } from '~/core/http';
 import { rolesForScope } from '../authorization/dto';
 import { AuthenticationService } from './authentication.service';
 
@@ -37,7 +33,7 @@ export class SessionInterceptor implements NestInterceptor {
   ) {}
 
   async intercept(executionContext: ExecutionContext, next: CallHandler) {
-    const type = executionContext.getType<GqlRequestType>();
+    const type = executionContext.getType();
     if (type === 'graphql') {
       await this.handleGql(executionContext);
     } else if (type === 'http') {
@@ -62,8 +58,8 @@ export class SessionInterceptor implements NestInterceptor {
 
   private async handleGql(executionContext: ExecutionContext) {
     const gqlExecutionContext = GqlExecutionContext.create(executionContext);
-    const ctx = gqlExecutionContext.getContext<GqlContextType>();
-    const info = gqlExecutionContext.getInfo<GraphQLResolveInfo>();
+    const ctx = gqlExecutionContext.getContext();
+    const info = gqlExecutionContext.getInfo();
 
     if (!ctx.session$.value && info.fieldName !== 'session') {
       const session = await this.hydrateSession(ctx);
@@ -87,7 +83,7 @@ export class SessionInterceptor implements NestInterceptor {
     );
   }
 
-  private getTokenFromAuthHeader(req: Request | undefined): string | null {
+  private getTokenFromAuthHeader(req: IRequest | undefined): string | null {
     const header = req?.headers?.authorization;
 
     if (!header) {
@@ -100,7 +96,7 @@ export class SessionInterceptor implements NestInterceptor {
     return header.replace('Bearer ', '');
   }
 
-  private getTokenFromCookie(req: Request | undefined): string | null {
+  private getTokenFromCookie(req: IRequest | undefined): string | null {
     return req?.cookies?.[this.config.sessionCookie.name] || null;
   }
 

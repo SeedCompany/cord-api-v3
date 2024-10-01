@@ -73,7 +73,7 @@ export class DateTimeScalar
   }
 
   serialize(value: unknown): string {
-    if (value instanceof DateTime) {
+    if (DateTime.isDateTime(value)) {
       return value.toISO();
     }
     if (typeof value === 'string') {

@@ -199,6 +199,7 @@ export class LanguageRepository extends DtoRepository<
         ])
         .return<{ dto: UnsecuredDto<Language> }>(
           merge('props', 'changedProps', {
+            __typename: '"Language"',
             ethnologue: 'ethProps',
             pinned: 'exists((:User { id: $requestingUser })-[:pinned]->(node))',
             presetInventory: 'presetInventory',

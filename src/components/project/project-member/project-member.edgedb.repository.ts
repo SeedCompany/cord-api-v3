@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ID, isIdLike, PublicOf, Role } from '~/common';
 import { e, RepoFor, ScopeOf } from '~/core/edgedb';
+import { hydrateUser } from '../../user/user.edgedb.repository';
 import {
   CreateProjectMember,
   ProjectMember,
@@ -13,7 +14,7 @@ export class ProjectMemberEdgeDBRepository
   extends RepoFor(ProjectMember, {
     hydrate: (member) => ({
       ...member['*'],
-      user: member.user['*'],
+      user: hydrateUser(member.user),
     }),
     omit: ['create'],
   })

@@ -19,13 +19,13 @@ export class EngagementUpdatedEvent {
     updated: UnsecuredDto<LanguageEngagement>;
     input: UpdateLanguageEngagement;
   } {
-    return this.updated.__typename === 'LanguageEngagement';
+    return LanguageEngagement.resolve(this.updated) === LanguageEngagement;
   }
 
   isInternshipEngagement(): this is EngagementUpdatedEvent & {
     updated: UnsecuredDto<InternshipEngagement>;
     input: UpdateInternshipEngagement;
   } {
-    return this.updated.__typename === 'InternshipEngagement';
+    return LanguageEngagement.resolve(this.updated) === InternshipEngagement;
   }
 }

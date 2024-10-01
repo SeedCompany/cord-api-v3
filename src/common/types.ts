@@ -1,8 +1,9 @@
 import {
-  IntersectionType as BaseIntersectionType,
   OmitType as BaseOmitType,
   PartialType as BasePartialType,
   PickType as BasePickType,
+  // eslint-disable-next-line @seedcompany/no-restricted-imports
+  IntersectionType,
 } from '@nestjs/graphql';
 import { ClassDecoratorFactory } from '@nestjs/graphql/dist/interfaces/class-decorator-factory.interface';
 import { AbstractClass, Class } from 'type-fest';
@@ -73,23 +74,6 @@ export const OmitType = BaseOmitType as <
   keys: readonly K[],
   decorator?: ClassDecoratorFactory,
 ) => Class<Omit<T, (typeof keys)[number]>, Args>;
-
-/**
- * The IntersectionType() function combines two types into one new type (class).
- *
- * This just changes the signature to work with abstract classes.
- *
- * @see https://docs.nestjs.com/graphql/mapped-types#intersection
- */
-export const IntersectionType = BaseIntersectionType as <
-  A,
-  B,
-  Args extends unknown[],
->(
-  classARef: AbstractClass<A, Args>,
-  classBRef: AbstractClass<B>,
-  decorator?: ClassDecoratorFactory,
-) => Class<A & B, Args>;
 
 export function IntersectTypes<A, Args extends unknown[]>(
   type1: AbstractClass<A, Args>,

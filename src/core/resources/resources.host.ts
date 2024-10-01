@@ -4,21 +4,23 @@ import { CachedByArg, mapKeys } from '@seedcompany/common';
 import { isObjectType } from 'graphql';
 import { LazyGetter as Once } from 'lazy-get-decorator';
 import { mapValues } from 'lodash';
-import { ValueOf } from 'type-fest';
 import {
   EnhancedResource,
   InvalidIdForTypeException,
+  Resource,
   ResourceShape,
   ServerException,
 } from '~/common';
+import { e } from '../edgedb/reexports';
 import { ResourceMap } from './map';
 import { __privateDontUseThis } from './resource-map-holder';
 import {
-  AllResourceDBNames,
+  AllResourceNames,
   ResourceName,
   ResourceNameLike,
   ResourceStaticFromName,
 } from './resource-name.types';
+import { RegisterResource } from './resource.decorator';
 
 export type EnhancedResourceMap = {
   [K in keyof ResourceMap]: EnhancedResource<ResourceMap[K]>;
@@ -29,9 +31,21 @@ export type ResourceLike =
   | EnhancedResource<any>
   | ResourceNameLike;
 
+RegisterResource({ db: e.Resource })(Resource);
+declare module '~/core/resources/map' {
+  interface ResourceMap {
+    Resource: typeof Resource;
+  }
+  interface ResourceDBMap {
+    Resource: typeof e.Resource;
+  }
+}
+
 @Injectable()
 export class ResourcesHost {
-  constructor(private readonly gqlSchema: GraphQLSchemaHost) {}
+  constructor(private readonly gqlSchema: GraphQLSchemaHost) {
+    EnhancedResource.resourcesHost = this;
+  }
 
   getMap() {
     // @ts-expect-error Yeah we are assuming each type has been correctly
@@ -53,24 +67,27 @@ export class ResourcesHost {
     return mapValues(map, EnhancedResource.of) as any;
   }
 
-  getByName<K extends keyof ResourceMap>(
-    name: K,
-  ): EnhancedResource<ValueOf<Pick<ResourceMap, K>>> {
+  getByName<Name extends AllResourceNames>(
+    name: Name,
+  ): EnhancedResource<ResourceStaticFromName<ResourceName<Name>>> {
+    if (name.includes('::')) {
+      return this.getByEdgeDB(name) as any;
+    }
     const map = this.getEnhancedMap();
-    const resource = map[name];
+    const resource = map[name as keyof ResourceMap];
     if (!resource) {
       throw new ServerException(
         `Unable to determine resource from ResourceMap for type: ${name}`,
       );
     }
-    return resource;
+    return resource as any;
   }
 
   getByDynamicName(name: ResourceNameLike): EnhancedResource<any> {
     return this.getByName(name as any);
   }
 
-  getByEdgeDB<Name extends ResourceNameLike | AllResourceDBNames>(
+  getByEdgeDB<Name extends ResourceNameLike>(
     name: Name,
   ): EnhancedResource<
     string extends Name
@@ -127,34 +144,8 @@ export class ResourcesHost {
       : EnhancedResource.of(ref);
   }
 
+  @CachedByArg()
   getInterfaces(
-    resource: EnhancedResource<any>,
-  ): ReadonlyArray<EnhancedResource<any>> {
-    // Use interfaces from GQL schema if it's available.
-    // Otherwise, fallback to the interfaces from DTO class hierarchy.
-    // The former doesn't work with CLI.
-    // The latter doesn't work for IntersectionTypes.
-    // Hoping to resolve with https://github.com/nestjs/graphql/pull/2435
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      this.gqlSchema.schema;
-    } catch (e) {
-      return this.getInterfacesFromClassType(resource);
-    }
-    return this.getInterfacesFromGQLSchema(resource);
-  }
-
-  @CachedByArg()
-  private getInterfacesFromClassType(
-    resource: EnhancedResource<any>,
-  ): ReadonlyArray<EnhancedResource<any>> {
-    const map = this.getEnhancedMap();
-    const resSet = new Set<EnhancedResource<any>>(Object.values(map));
-    return [...resource.interfaces].filter((i) => resSet.has(i));
-  }
-
-  @CachedByArg()
-  private getInterfacesFromGQLSchema(
     resource: EnhancedResource<any>,
   ): ReadonlyArray<EnhancedResource<any>> {
     const { schema } = this.gqlSchema;

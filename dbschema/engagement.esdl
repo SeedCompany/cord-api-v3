@@ -1,5 +1,5 @@
 module default {
-  abstract type Engagement extending Project::Child {
+  abstract type Engagement extending Project::Child, Comments::Aware {
     required status: Engagement::Status {
       default := Engagement::Status.InDevelopment;
     }
@@ -24,7 +24,7 @@ module default {
       .<engagement[is Engagement::Ceremony]
     ));
     
-    completedDate: cal::local_date {
+    completeDate: cal::local_date {
       annotation description := "Translation / Growth Plan complete date";
     }
     disbursementCompleteDate: cal::local_date;
@@ -51,7 +51,20 @@ module default {
     property firstScripture := (
       exists .language.firstScriptureEngagement
     );
-    
+
+    trigger denyDuplicateFirstScriptureBasedOnExternal after insert, update for each do ( 
+      assert(
+        not __new__.firstScripture or not exists __new__.language.hasExternalFirstScripture,
+        message := "First scripture has already been marked as having been done externally"
+      )
+    );
+    trigger denyDuplicateFirstScriptureBasedOnOtherEngagement after insert, update for each do (
+      assert( 
+        not exists (select __new__.language.engagements filter .firstScripture),
+        message := "Another engagement has already been marked as having done the first scripture"
+      )
+    );
+
     required lukePartnership: bool {
       default := false;
     };

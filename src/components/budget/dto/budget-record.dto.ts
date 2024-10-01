@@ -29,7 +29,7 @@ const Interfaces = IntersectTypes(Resource, ChangesetAware);
 export class BudgetRecord extends Interfaces {
   static readonly Props = keysOf<BudgetRecord>();
   static readonly SecuredProps = keysOf<SecuredProps<BudgetRecord>>();
-  static readonly Parent = import('./budget.dto').then((m) => m.Budget);
+  static readonly Parent = () => import('./budget.dto').then((m) => m.Budget);
 
   @Field(() => Budget)
   declare readonly parent: BaseNode;

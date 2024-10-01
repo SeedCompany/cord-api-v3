@@ -1,5 +1,13 @@
 module default {
-  type Partner extending Mixin::Postable, Resource, Project::ContextAware, Mixin::Named, Mixin::Pinnable, Mixin::Taggable {
+  type Partner extending
+    Mixin::Postable,
+    Comments::Aware,
+    Resource,
+    Project::ContextAware,
+    Mixin::Named,
+    Mixin::Pinnable,
+    Mixin::Taggable
+  {
     overloaded name {
       constraint exclusive;
     }

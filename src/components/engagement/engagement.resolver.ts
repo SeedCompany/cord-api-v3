@@ -60,7 +60,7 @@ export class EngagementResolver {
     @Loader(EngagementLoader) engagements: LoaderOf<EngagementLoader>,
   ): Promise<Engagement> {
     const engagement = await engagements.load(key);
-    if (engagement.__typename !== 'LanguageEngagement') {
+    if (LanguageEngagement.resolve(engagement) !== LanguageEngagement) {
       throw new InvalidIdForTypeException();
     }
     return engagement;
@@ -104,7 +104,7 @@ export class EngagementResolver {
     @Parent() engagement: Engagement,
     @Loader(CeremonyLoader) ceremonies: LoaderOf<CeremonyLoader>,
   ): Promise<SecuredCeremony> {
-    return await mapSecuredValue(engagement.ceremony, (id) =>
+    return await mapSecuredValue(engagement.ceremony, ({ id }) =>
       ceremonies.load(id),
     );
   }

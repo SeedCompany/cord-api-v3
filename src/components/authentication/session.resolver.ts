@@ -13,6 +13,7 @@ import {
   UnauthenticatedException,
 } from '~/common';
 import { ConfigService, ILogger, Loader, LoaderOf, Logger } from '~/core';
+import { HttpAdapter } from '~/core/http';
 import { Privileges } from '../authorization';
 import { Power } from '../authorization/dto';
 import { UserLoader, UserService } from '../user';
@@ -29,6 +30,7 @@ export class SessionResolver {
     private readonly config: ConfigService,
     private readonly sessionInt: SessionInterceptor,
     private readonly users: UserService,
+    private readonly http: HttpAdapter,
     @Logger('session:resolver') private readonly logger: ILogger,
   ) {}
 
@@ -76,7 +78,7 @@ export class SessionResolver {
           'Cannot use cookie session without a response object',
         );
       }
-      context.response.cookie(name, token, {
+      this.http.setCookie(context.response, name, token, {
         ...options,
         expires: expires
           ? DateTime.local().plus(expires).toJSDate()

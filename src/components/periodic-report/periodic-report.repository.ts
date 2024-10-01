@@ -454,7 +454,10 @@ export const matchCurrentDue =
       ])
       .raw(`WHERE end.value < date()`)
       .with('node, start')
-      .orderBy('start.value', 'desc')
+      .orderBy([
+        ['end.value', 'desc'],
+        ['start.value', 'asc'],
+      ])
       .limit(1);
 
 export const periodicReportSorters = defineSorters(IPeriodicReport, {});

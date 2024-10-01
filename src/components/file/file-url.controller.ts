@@ -9,10 +9,9 @@ import {
   Request,
   Response,
 } from '@nestjs/common';
-import { HttpAdapterHost } from '@nestjs/core';
-import { Request as IRequest } from 'express';
 import { ID } from '~/common';
 import { loggedInSession as verifyLoggedIn } from '~/common/session';
+import { HttpAdapter, IRequest, IResponse } from '~/core/http';
 import { SessionInterceptor } from '../authentication/session.interceptor';
 import { FileService } from './file.service';
 
@@ -24,7 +23,7 @@ export class FileUrlController {
     @Inject(forwardRef(() => FileService))
     private readonly files: FileService & {},
     private readonly sessionHost: SessionInterceptor,
-    private readonly httpAdapterHost: HttpAdapterHost,
+    private readonly http: HttpAdapter,
   ) {}
 
   @Get(':fileId/:fileName?')
@@ -32,7 +31,7 @@ export class FileUrlController {
     @Param('fileId') fileId: ID,
     @Query('download') download: '' | undefined,
     @Request() request: IRequest,
-    @Response() res: unknown,
+    @Response() res: IResponse,
   ) {
     const node = await this.files.getFileNode(fileId);
 
@@ -46,8 +45,7 @@ export class FileUrlController {
     const url = await this.files.getDownloadUrl(node, download != null);
     const cacheControl = this.files.determineCacheHeader(node);
 
-    const { httpAdapter } = this.httpAdapterHost;
-    httpAdapter.setHeader(res, 'Cache-Control', cacheControl);
-    httpAdapter.redirect(res, HttpStatus.FOUND, url);
+    this.http.setHeader(res, 'Cache-Control', cacheControl);
+    this.http.redirect(res, HttpStatus.FOUND, url);
   }
 }

@@ -50,7 +50,7 @@ export const sorting = <TResourceStatic extends ResourceShape<any>>(
  * query.apply(sortWith(userSorters, input))
  */
 export const sortWith = <Field extends string>(
-  config: (input: Sort<Field>) => Sort<Field> & SortMatch<Field>,
+  config: DefinedSorters<Field>,
   input: Sort<Field> & SortInternals,
 ) => {
   const { transformer, matcher, sort, order } = config(input);
@@ -120,7 +120,7 @@ export const sortWith = <Field extends string>(
 export const defineSorters = <TResourceStatic extends ResourceShape<any>>(
   resource: TResourceStatic,
   matchers: SortMatchers<SortFieldOf<TResourceStatic>>,
-) => {
+): DefinedSorters<SortFieldOf<TResourceStatic>> => {
   const fn = ({ sort, order }: Sort<SortFieldOf<TResourceStatic>>) => {
     const transformer = getDbSortTransformer(resource, sort) ?? identity;
     const common = { sort, order, transformer };
@@ -147,6 +147,10 @@ export const defineSorters = <TResourceStatic extends ResourceShape<any>>(
   return fn;
 };
 
+export type DefinedSorters<Field extends string> = ((
+  input: Sort<Field>,
+) => Sort<Field> & SortMatch<Field>) & { matchers: SortMatchers<Field> };
+
 export const propSorter = (prop: string) => (query: Query) =>
   query
     .match([
@@ -164,10 +168,8 @@ export interface SortCol {
 }
 
 // TODO stricter
-type SortFieldOf<TResourceStatic extends ResourceShape<any>> = LiteralUnion<
-  keyof TResourceStatic['prototype'] & string,
-  string
->;
+export type SortFieldOf<TResourceStatic extends ResourceShape<any>> =
+  LiteralUnion<keyof TResourceStatic['prototype'] & string, string>;
 
 type SortMatcher<Field extends string> = (
   query: Query,

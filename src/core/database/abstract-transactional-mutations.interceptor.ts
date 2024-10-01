@@ -4,8 +4,7 @@ import {
   Injectable,
   NestInterceptor,
 } from '@nestjs/common';
-import { GqlContextType, GqlExecutionContext } from '@nestjs/graphql';
-import { GraphQLResolveInfo } from 'graphql';
+import { GqlExecutionContext } from '@nestjs/graphql';
 import { from, lastValueFrom } from 'rxjs';
 import { RollbackManager } from './rollback-manager';
 
@@ -20,12 +19,12 @@ export abstract class TransactionalMutationsInterceptor
   constructor(private readonly rollbacks: RollbackManager) {}
 
   async intercept(context: ExecutionContext, next: CallHandler) {
-    if (context.getType<GqlContextType>() !== 'graphql') {
+    if (context.getType() !== 'graphql') {
       return next.handle();
     }
 
     const ctx = GqlExecutionContext.create(context);
-    const info = ctx.getInfo<GraphQLResolveInfo>();
+    const info = ctx.getInfo();
     if (info.operation.operation !== 'mutation') {
       return next.handle();
     }

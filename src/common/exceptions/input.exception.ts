@@ -1,8 +1,5 @@
 import { ArgumentsHost } from '@nestjs/common';
-import {
-  GqlContextType as ContextKey,
-  GqlExecutionContext,
-} from '@nestjs/graphql';
+import { GqlExecutionContext } from '@nestjs/graphql';
 import { ClientException } from './exception';
 
 export type InputExceptionArgs =
@@ -111,7 +108,7 @@ export class InputException extends ClientException {
   }
 
   static getFlattenInput(context?: ArgumentsHost) {
-    if (!context || context.getType<ContextKey>() !== 'graphql') {
+    if (!context || context.getType() !== 'graphql') {
       return {};
     }
     const gqlContext =
