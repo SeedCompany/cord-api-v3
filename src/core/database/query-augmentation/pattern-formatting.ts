@@ -11,12 +11,14 @@ import {
   Raw,
   Return,
   TermListClause,
+  Where,
   With,
 } from 'cypher-query-builder';
 import type { Term } from 'cypher-query-builder/dist/typings/clauses/term-list-clause';
 import type { Parameter } from 'cypher-query-builder/dist/typings/parameter-bag';
 import { camelCase, isPlainObject } from 'lodash';
 import { isExp } from '../query';
+import { WhereAndList } from '../query/where-and-list';
 
 // Add line breaks for each pattern when there's multiple per statement
 // And ignore empty patterns
@@ -92,6 +94,21 @@ for (const Cls of [Match, Create, Merge]) {
     return origBuild.call(this);
   };
 }
+
+ClauseCollection.prototype.addClause = function addClause(
+  this: ClauseCollection,
+  clause: Clause,
+) {
+  // Merge sibling where clauses into a single where clause
+  if (clause instanceof Where && this.clauses.at(-1) instanceof Where) {
+    const prev = this.clauses.at(-1) as Where;
+    prev.conditions = new WhereAndList([prev.conditions, clause.conditions]);
+    return;
+  }
+
+  clause.useParameterBag(this.parameterBag);
+  this.clauses.push(clause);
+};
 
 // Remove extra line breaks from empty clauses
 ClauseCollection.prototype.build = function build(this: ClauseCollection) {
