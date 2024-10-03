@@ -315,13 +315,11 @@ export const languageFilters = filter.define(() => LanguageFilters, {
   },
   pinned: filter.isPinned,
   ethnologue: filter.sub(() => ethnologueFilters)((sub) =>
-    sub
-      .with('node as lang')
-      .match([
-        node('lang'),
-        relation('out', '', 'ethnologue'),
-        node('node', 'EthnologueLanguage'),
-      ]),
+    sub.match([
+      node('outer'),
+      relation('out', '', 'ethnologue'),
+      node('node', 'EthnologueLanguage'),
+    ]),
   ),
 });
 

@@ -88,13 +88,11 @@ export const progressReportFilters = filter.define(
       () => engagementFilters,
       'requestingUser',
     )((sub) =>
-      sub
-        .with('node as report, requestingUser')
-        .match([
-          node('report'),
-          relation('in', '', 'report'),
-          node('node', 'Engagement'),
-        ]),
+      sub.match([
+        node('outer'),
+        relation('in', '', 'report'),
+        node('node', 'Engagement'),
+      ]),
     ),
   },
 );

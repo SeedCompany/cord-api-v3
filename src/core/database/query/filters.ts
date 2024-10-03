@@ -230,6 +230,7 @@ export const sub =
   <Input extends Record<string, any>>(
     subBuilder: () => (input: Partial<Input>) => (q: Query) => void,
     extraInput?: Many<string>,
+    outerVar = 'outer',
   ) =>
   <
     // TODO this doesn't enforce Input type on Outer property
@@ -238,10 +239,13 @@ export const sub =
   >(
     matchSubNode: (sub: Query) => Query,
   ): Builder<Outer, K> =>
-  ({ key, value, query }) =>
-    query
-      .subQuery(['node', ...many(extraInput ?? [])], (sub) =>
+  ({ key, value, query }) => {
+    const input = [...many(extraInput ?? [])];
+    return query
+      .subQuery((sub) =>
         sub
+          .with(['node', ...input])
+          .with([`node as ${outerVar}`, ...input])
           .apply(matchSubNode)
           .apply(subBuilder()(value))
           .return(`true as ${key}FiltersApplied`)
@@ -251,6 +255,7 @@ export const sub =
           .raw('limit 1'),
       )
       .with('*');
+  };
 
 export const fullText =
   ({

@@ -103,32 +103,26 @@ export const projectFilters = filter.define(() => ProjectFilters, {
             .where({ sensitivity: inArray(value) })
         : query,
   partnerships: filter.sub(() => partnershipFilters)((sub) =>
-    sub
-      .with('node as project')
-      .match([
-        node('project'),
-        relation('out', '', 'partnership', ACTIVE),
-        node('node', 'Partnership'),
-      ]),
+    sub.match([
+      node('outer'),
+      relation('out', '', 'partnership', ACTIVE),
+      node('node', 'Partnership'),
+    ]),
   ),
   primaryPartnership: filter.sub(() => partnershipFilters)((sub) =>
-    sub
-      .with('node as project')
-      .match([
-        node('project'),
-        relation('out', '', 'partnership', ACTIVE),
-        node('node', 'Partnership'),
-        relation('out', '', 'primary', ACTIVE),
-        node('', 'Property', { value: variable('true') }),
-      ]),
+    sub.match([
+      node('outer'),
+      relation('out', '', 'partnership', ACTIVE),
+      node('node', 'Partnership'),
+      relation('out', '', 'primary', ACTIVE),
+      node('', 'Property', { value: variable('true') }),
+    ]),
   ),
   primaryLocation: filter.sub(() => locationFilters)((sub) =>
-    sub
-      .with('node as project')
-      .match([
-        node('project'),
-        relation('out', '', 'primaryLocation', ACTIVE),
-        node('node', 'Location'),
-      ]),
+    sub.match([
+      node('outer'),
+      relation('out', '', 'primaryLocation', ACTIVE),
+      node('node', 'Location'),
+    ]),
   ),
 });

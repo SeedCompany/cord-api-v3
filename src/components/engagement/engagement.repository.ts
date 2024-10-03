@@ -757,31 +757,25 @@ export const engagementFilters = filter.define(() => EngagementFilters, {
     () => projectFilters,
     'requestingUser',
   )((sub) =>
-    sub
-      .with('node as eng, requestingUser')
-      .match([
-        node('eng'),
-        relation('in', '', 'engagement'),
-        node('node', 'Project'),
-      ]),
+    sub.match([
+      node('outer'),
+      relation('in', '', 'engagement'),
+      node('node', 'Project'),
+    ]),
   ),
   language: filter.sub(() => languageFilters)((sub) =>
-    sub
-      .with('node as eng')
-      .match([
-        node('eng'),
-        relation('out', '', 'language'),
-        node('node', 'Language'),
-      ]),
+    sub.match([
+      node('outer'),
+      relation('out', '', 'language'),
+      node('node', 'Language'),
+    ]),
   ),
   intern: filter.sub(() => userFilters)((sub) =>
-    sub
-      .with('node as eng')
-      .match([
-        node('eng'),
-        relation('out', '', 'intern'),
-        node('node', 'User'),
-      ]),
+    sub.match([
+      node('outer'),
+      relation('out', '', 'intern'),
+      node('node', 'User'),
+    ]),
   ),
   startDate: filter.dateTime(({ query }) => {
     query.optionalMatch([

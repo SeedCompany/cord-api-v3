@@ -312,13 +312,11 @@ export const partnerFilters = filters.define(() => PartnerFilters, {
     node('', 'User', { id }),
   ]),
   organization: filter.sub(() => organizationFilters)((sub) =>
-    sub
-      .with('node as partner')
-      .match([
-        node('partner'),
-        relation('out', '', 'organization'),
-        node('node', 'Organization'),
-      ]),
+    sub.match([
+      node('outer'),
+      relation('out', '', 'organization'),
+      node('node', 'Organization'),
+    ]),
   ),
 });
 
