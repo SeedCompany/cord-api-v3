@@ -25,7 +25,7 @@ import { path as pathPattern } from './where-path';
 
 export type Builder<T, K extends keyof T = keyof T> = (
   args: BuilderArgs<T, K>,
-) => Query | null | Record<string, any> | void | ((query: Query) => Query);
+) => Record<string, any> | Query | Nil;
 export interface BuilderArgs<T, K extends keyof T = keyof T> {
   key: K & string;
   value: NonNullable<T[K]>;
@@ -61,7 +61,6 @@ const builder =
     query.comment(type?.name ?? 'Filters');
 
     const conditions = [];
-    const afters: Array<(query: Query) => Query> = [];
     for (const key of Object.keys(builders)) {
       const value = filters[key];
       if (value == null) {
@@ -80,9 +79,6 @@ const builder =
 
     if (conditions.length > 0) {
       query.where(new WhereAndList(conditions));
-    }
-    for (const after of afters) {
-      after(query);
     }
   };
 
