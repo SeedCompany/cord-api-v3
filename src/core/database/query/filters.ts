@@ -54,7 +54,7 @@ export const define =
  * Functions can do nothing, adjust query, return an object to add conditions to
  * the where clause, or return a function which will be called after the where clause.
  */
-export const builder =
+const builder =
   <T extends Record<string, any>>(filters: T, builders: Builders<T>) =>
   (query: Query) => {
     const type = filters.constructor === Object ? null : filters.constructor;

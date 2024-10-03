@@ -190,18 +190,7 @@ export class PeriodicReportRepository extends DtoRepository<
     const result = await this.db
       .query()
       .matchNode('node', 'PeriodicReport')
-      .apply(
-        filter.builder(filters, {
-          parent: filter.pathExists((id) => [
-            node('', 'BaseNode', { id }),
-            relation('out', '', 'report', ACTIVE),
-            node('node'),
-          ]),
-          start: filter.dateTimeProp(),
-          end: filter.dateTimeProp(),
-          type: ({ value }) => ({ node: hasLabel(`${value}Report`) }),
-        }),
-      )
+      .apply(periodicReportFilters(filters))
       .apply(sorting(resource, input))
       .apply(paginate(input, this.hydrate(session)))
       .first();
@@ -459,6 +448,19 @@ export const matchCurrentDue =
         ['start.value', 'asc'],
       ])
       .limit(1);
+
+export const periodicReportFilters = filter.define<
+  Pick<PeriodicReportListInput, 'type' | 'start' | 'end' | 'parent'>
+>(() => undefined as any, {
+  parent: filter.pathExists((id) => [
+    node('', 'BaseNode', { id }),
+    relation('out', '', 'report', ACTIVE),
+    node('node'),
+  ]),
+  start: filter.dateTimeProp(),
+  end: filter.dateTimeProp(),
+  type: ({ value }) => ({ node: hasLabel(`${value}Report`) }),
+});
 
 export const periodicReportSorters = defineSorters(IPeriodicReport, {});
 
