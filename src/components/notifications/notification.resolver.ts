@@ -23,7 +23,7 @@ export class NotificationResolver {
   }
 
   @Mutation(() => Notification)
-  async markNotificationRead(
+  async readNotification(
     @LoggedInSession() session: Session,
     @Args() input: MarkNotificationReadArgs,
   ): Promise<Notification> {
