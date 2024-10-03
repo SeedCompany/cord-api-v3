@@ -20,7 +20,6 @@ import { intersects } from './comparators';
 import { collect } from './cypher-functions';
 import { escapeLuceneSyntax, FullTextIndex } from './full-text';
 import { ACTIVE } from './matching';
-import { WhereAndList } from './where-and-list';
 import { path as pathPattern } from './where-path';
 
 export type Builder<T, K extends keyof T = keyof T> = (
@@ -60,7 +59,6 @@ const builder =
     const type = filters.constructor === Object ? null : filters.constructor;
     query.comment(type?.name ?? 'Filters');
 
-    const conditions = [];
     for (const key of Object.keys(builders)) {
       const value = filters[key];
       if (value == null) {
@@ -70,15 +68,7 @@ const builder =
       if (!res || res instanceof Query) {
         continue;
       }
-      if (isFunction(res)) {
-        afters.push(res);
-        continue;
-      }
-      conditions.push(res);
-    }
-
-    if (conditions.length > 0) {
-      query.where(new WhereAndList(conditions));
+      query.where(res);
     }
   };
 
