@@ -452,6 +452,7 @@ export const matchCurrentDue =
 export const periodicReportFilters = filter.define<
   Pick<PeriodicReportListInput, 'type' | 'start' | 'end' | 'parent'>
 >(() => undefined as any, {
+  type: ({ value }) => ({ node: hasLabel(`${value}Report`) }),
   parent: filter.pathExists((id) => [
     node('', 'BaseNode', { id }),
     relation('out', '', 'report', ACTIVE),
@@ -459,7 +460,6 @@ export const periodicReportFilters = filter.define<
   ]),
   start: filter.dateTimeProp(),
   end: filter.dateTimeProp(),
-  type: ({ value }) => ({ node: hasLabel(`${value}Report`) }),
 });
 
 export const periodicReportSorters = defineSorters(IPeriodicReport, {});

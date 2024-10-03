@@ -280,15 +280,7 @@ export class LanguageRepository extends DtoRepository<
 }
 
 export const languageFilters = filter.define(() => LanguageFilters, {
-  name: filter.fullText({
-    index: () => NameIndex,
-    matchToNode: (q) =>
-      q.match([
-        node('node', 'Language'),
-        relation('out', '', undefined, ACTIVE),
-        node('match'),
-      ]),
-  }),
+  pinned: filter.isPinned,
   sensitivity: filter.stringListProp(),
   leastOfThese: filter.propVal(),
   isSignLanguage: filter.propVal(),
@@ -308,12 +300,15 @@ export const languageFilters = filter.define(() => LanguageFilters, {
     relation('out', '', 'partner', ACTIVE),
     node('', 'Partner', { id }),
   ]),
-  presetInventory: ({ value, query }) => {
-    query.apply(isPresetInventory).with('*');
-    const condition = equals('true', true);
-    return { presetInventory: value ? condition : not(condition) };
-  },
-  pinned: filter.isPinned,
+  name: filter.fullText({
+    index: () => NameIndex,
+    matchToNode: (q) =>
+      q.match([
+        node('node', 'Language'),
+        relation('out', '', undefined, ACTIVE),
+        node('match'),
+      ]),
+  }),
   ethnologue: filter.sub(() => ethnologueFilters)((sub) =>
     sub.match([
       node('outer'),
@@ -321,6 +316,11 @@ export const languageFilters = filter.define(() => LanguageFilters, {
       node('node', 'EthnologueLanguage'),
     ]),
   ),
+  presetInventory: ({ value, query }) => {
+    query.apply(isPresetInventory).with('*');
+    const condition = equals('true', true);
+    return { presetInventory: value ? condition : not(condition) };
+  },
 });
 
 const ethnologueFilters = filter.define(() => EthnologueLanguageFilters, {

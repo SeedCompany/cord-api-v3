@@ -42,6 +42,7 @@ export class ProgressReportRepository extends DtoRepository<
         relation('in', '', 'engagement'),
         node('project', 'Project'),
       ])
+      .logIt()
       .match(requestingUser(session))
       .apply(progressReportFilters(input.filter))
       .apply(

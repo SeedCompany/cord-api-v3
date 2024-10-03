@@ -245,6 +245,11 @@ export class LocationRepository extends DtoRepository(Location) {
 export const locationSorters = defineSorters(Location, {});
 
 export const locationFilters = filter.define(() => LocationFilters, {
+  fundingAccountId: filter.pathExists((id) => [
+    node('node'),
+    relation('out', '', 'fundingAccount', ACTIVE),
+    node('', 'FundingAccount', { id }),
+  ]),
   name: filter.fullText({
     index: () => NameIndex,
     matchToNode: (q) =>
@@ -254,11 +259,6 @@ export const locationFilters = filter.define(() => LocationFilters, {
         node('match'),
       ]),
   }),
-  fundingAccountId: filter.pathExists((id) => [
-    node('node'),
-    relation('out', '', 'fundingAccount', ACTIVE),
-    node('', 'FundingAccount', { id }),
-  ]),
 });
 
 const NameIndex = FullTextIndex({
