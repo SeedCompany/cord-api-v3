@@ -1,4 +1,10 @@
-import { greaterThan, inArray, node, relation } from 'cypher-query-builder';
+import {
+  equals,
+  greaterThan,
+  inArray,
+  node,
+  relation,
+} from 'cypher-query-builder';
 import {
   ACTIVE,
   filter,
@@ -70,19 +76,15 @@ export const projectFilters = filter.define(() => ProjectFilters, {
       ]),
     ],
   }),
-  onlyMultipleEngagements:
-    ({ value, query }) =>
-    () =>
-      value
-        ? query
-            .match([
-              node('node'),
-              relation('out', '', 'engagement', ACTIVE),
-              node('engagement', 'Engagement'),
-            ])
-            .with('node, count(engagement) as engagementCount')
-            .where({ engagementCount: greaterThan(1) })
-        : null,
+  onlyMultipleEngagements: ({ value, query }) =>
+    query
+      .match([
+        node('node'),
+        relation('out', '', 'engagement', ACTIVE),
+        node('engagement', 'Engagement'),
+      ])
+      .with('node, count(engagement) as engagementCount')
+      .where({ engagementCount: value ? greaterThan(1) : equals(1) }),
   name: filter.fullText({
     index: () => ProjectNameIndex,
     matchToNode: (q) =>
@@ -100,15 +102,11 @@ export const projectFilters = filter.define(() => ProjectFilters, {
       node('node', 'Location'),
     ]),
   ),
-  sensitivity:
-    ({ value, query }) =>
-    () =>
-      value
-        ? query
-            .apply(matchProjectSens('node'))
-            .with('*')
-            .where({ sensitivity: inArray(value) })
-        : query,
+  sensitivity: ({ value, query }) =>
+    query
+      .apply(matchProjectSens('node'))
+      .with('*')
+      .where({ sensitivity: inArray(value) }),
   primaryPartnership: filter.sub(() => partnershipFilters)((sub) =>
     sub.match([
       node('outer'),
