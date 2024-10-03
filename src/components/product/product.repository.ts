@@ -587,7 +587,7 @@ export const productFilters = filter.define<
 >(() => undefined as any, {
   engagementId: filter.skip,
   placeholder: filter.isPropNotNull('placeholderDescription'),
-  methodology: filter.propVal(),
+  methodology: filter.stringListProp(),
 });
 
 const ProductCompletionDescriptionIndex = FullTextIndex({
