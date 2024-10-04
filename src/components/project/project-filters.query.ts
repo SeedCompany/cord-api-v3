@@ -1,4 +1,10 @@
-import { greaterThan, inArray, node, relation } from 'cypher-query-builder';
+import {
+  equals,
+  greaterThan,
+  inArray,
+  node,
+  relation,
+} from 'cypher-query-builder';
 import {
   ACTIVE,
   filter,
@@ -12,32 +18,11 @@ import { ProjectFilters } from './dto';
 import { ProjectNameIndex } from './project.repository';
 
 export const projectFilters = filter.define(() => ProjectFilters, {
-  name: filter.fullText({
-    index: () => ProjectNameIndex,
-    matchToNode: (q) =>
-      q.match([
-        node('node', 'Project'),
-        relation('out', '', 'name', ACTIVE),
-        node('match'),
-      ]),
-    minScore: 0.8,
-  }),
   type: filter.stringListBaseNodeProp(),
+  pinned: filter.isPinned,
   status: filter.stringListProp(),
-  onlyMultipleEngagements:
-    ({ value, query }) =>
-    () =>
-      value
-        ? query
-            .match([
-              node('node'),
-              relation('out', '', 'engagement', ACTIVE),
-              node('engagement', 'Engagement'),
-            ])
-            .with('node, count(engagement) as engagementCount')
-            .where({ engagementCount: greaterThan(1) })
-        : null,
   step: filter.stringListProp(),
+  presetInventory: filter.propVal(),
   createdAt: filter.dateTimeBaseNodeProp(),
   modifiedAt: filter.dateTimeProp(),
   mouStart: filter.dateTimeProp(),
@@ -49,21 +34,26 @@ export const projectFilters = filter.define(() => ProjectFilters, {
     relation('in', '', 'member'),
     node('node'),
   ]),
-  isMember: filter.pathExistsWhenTrue([
-    node('requestingUser'),
-    relation('in', '', 'user'),
-    node('', 'ProjectMember'),
-    relation('in', '', 'member'),
+  languageId: filter.pathExists((id) => [
     node('node'),
+    relation('out', '', 'engagement', ACTIVE),
+    node('', 'LanguageEngagement'),
+    relation('out', '', 'language', ACTIVE),
+    node('', 'Language', { id }),
   ]),
-  pinned: filter.isPinned,
-  presetInventory: filter.propVal(),
   partnerId: filter.pathExists((id) => [
     node('node'),
     relation('out', '', 'partnership', ACTIVE),
     node('', 'Partnership'),
     relation('out', '', 'partner', ACTIVE),
     node('', 'Partner', { id }),
+  ]),
+  isMember: filter.pathExistsWhenTrue([
+    node('requestingUser'),
+    relation('in', '', 'user'),
+    node('', 'ProjectMember'),
+    relation('in', '', 'member'),
+    node('node'),
   ]),
   userId: ({ value }) => ({
     userId: [
@@ -86,49 +76,51 @@ export const projectFilters = filter.define(() => ProjectFilters, {
       ]),
     ],
   }),
-  languageId: filter.pathExists((id) => [
-    node('node'),
-    relation('out', '', 'engagement', ACTIVE),
-    node('', 'LanguageEngagement'),
-    relation('out', '', 'language', ACTIVE),
-    node('', 'Language', { id }),
-  ]),
-  sensitivity:
-    ({ value, query }) =>
-    () =>
-      value
-        ? query
-            .apply(matchProjectSens('node'))
-            .with('*')
-            .where({ sensitivity: inArray(value) })
-        : query,
-  partnerships: filter.sub(() => partnershipFilters)((sub) =>
-    sub
-      .with('node as project')
+  onlyMultipleEngagements: ({ value, query }) =>
+    query
       .match([
-        node('project'),
-        relation('out', '', 'partnership', ACTIVE),
-        node('node', 'Partnership'),
+        node('node'),
+        relation('out', '', 'engagement', ACTIVE),
+        node('engagement', 'Engagement'),
+      ])
+      .with('node, count(engagement) as engagementCount')
+      .where({ engagementCount: value ? greaterThan(1) : equals(1) }),
+  name: filter.fullText({
+    index: () => ProjectNameIndex,
+    matchToNode: (q) =>
+      q.match([
+        node('node', 'Project'),
+        relation('out', '', 'name', ACTIVE),
+        node('match'),
       ]),
-  ),
-  primaryPartnership: filter.sub(() => partnershipFilters)((sub) =>
-    sub
-      .with('node as project')
-      .match([
-        node('project'),
-        relation('out', '', 'partnership', ACTIVE),
-        node('node', 'Partnership'),
-        relation('out', '', 'primary', ACTIVE),
-        node('', 'Property', { value: variable('true') }),
-      ]),
-  ),
+    minScore: 0.8,
+  }),
   primaryLocation: filter.sub(() => locationFilters)((sub) =>
-    sub
-      .with('node as project')
-      .match([
-        node('project'),
-        relation('out', '', 'primaryLocation', ACTIVE),
-        node('node', 'Location'),
-      ]),
+    sub.match([
+      node('outer'),
+      relation('out', '', 'primaryLocation', ACTIVE),
+      node('node', 'Location'),
+    ]),
+  ),
+  sensitivity: ({ value, query }) =>
+    query
+      .apply(matchProjectSens('node'))
+      .with('*')
+      .where({ sensitivity: inArray(value) }),
+  primaryPartnership: filter.sub(() => partnershipFilters)((sub) =>
+    sub.match([
+      node('outer'),
+      relation('out', '', 'partnership', ACTIVE),
+      node('node', 'Partnership'),
+      relation('out', '', 'primary', ACTIVE),
+      node('', 'Property', { value: variable('true') }),
+    ]),
+  ),
+  partnerships: filter.sub(() => partnershipFilters)((sub) =>
+    sub.match([
+      node('outer'),
+      relation('out', '', 'partnership', ACTIVE),
+      node('node', 'Partnership'),
+    ]),
   ),
 });

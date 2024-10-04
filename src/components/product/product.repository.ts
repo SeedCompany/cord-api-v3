@@ -54,6 +54,7 @@ import {
   ProducibleType,
   Product,
   ProductCompletionDescriptionSuggestionsInput,
+  ProductFilters,
   ProductListInput,
   ProgressMeasurement,
   UpdateDirectScriptureProduct,
@@ -505,14 +506,10 @@ export class ProductRepository extends CommonRepository {
           ...(approach ? ApproachToMethodologies[approach] : []),
           ...(methodology ? [methodology] : []),
         ];
-        filter.builder(
-          { ...rest, ...(merged.length ? { methodology: merged } : {}) },
-          {
-            engagementId: filter.skip,
-            placeholder: filter.isPropNotNull('placeholderDescription'),
-            methodology: filter.propVal(),
-          },
-        )(q);
+        productFilters({
+          ...rest,
+          ...(merged.length ? { methodology: merged } : {}),
+        })(q);
       })
       .apply(sorting(Product, input))
       .apply(paginate(input, this.hydrate(session)))
@@ -582,6 +579,16 @@ export class ProductRepository extends CommonRepository {
     return this.getConstraintsFor(Product);
   }
 }
+
+export const productFilters = filter.define<
+  Omit<ProductFilters, 'approach' | 'methodology'> & {
+    methodology?: Methodology[];
+  }
+>(() => undefined as any, {
+  engagementId: filter.skip,
+  placeholder: filter.isPropNotNull('placeholderDescription'),
+  methodology: filter.stringListProp(),
+});
 
 const ProductCompletionDescriptionIndex = FullTextIndex({
   indexName: 'ProductCompletionDescription',

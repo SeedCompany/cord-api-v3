@@ -20,12 +20,11 @@ import { intersects } from './comparators';
 import { collect } from './cypher-functions';
 import { escapeLuceneSyntax, FullTextIndex } from './full-text';
 import { ACTIVE } from './matching';
-import { WhereAndList } from './where-and-list';
 import { path as pathPattern } from './where-path';
 
 export type Builder<T, K extends keyof T = keyof T> = (
   args: BuilderArgs<T, K>,
-) => Query | null | Record<string, any> | void | ((query: Query) => Query);
+) => Record<string, any> | Query | Nil;
 export interface BuilderArgs<T, K extends keyof T = keyof T> {
   key: K & string;
   value: NonNullable<T[K]>;
@@ -54,14 +53,12 @@ export const define =
  * Functions can do nothing, adjust query, return an object to add conditions to
  * the where clause, or return a function which will be called after the where clause.
  */
-export const builder =
+const builder =
   <T extends Record<string, any>>(filters: T, builders: Builders<T>) =>
   (query: Query) => {
     const type = filters.constructor === Object ? null : filters.constructor;
     query.comment(type?.name ?? 'Filters');
 
-    const conditions = [];
-    const afters: Array<(query: Query) => Query> = [];
     for (const key of Object.keys(builders)) {
       const value = filters[key];
       if (value == null) {
@@ -71,18 +68,7 @@ export const builder =
       if (!res || res instanceof Query) {
         continue;
       }
-      if (isFunction(res)) {
-        afters.push(res);
-        continue;
-      }
-      conditions.push(res);
-    }
-
-    if (conditions.length > 0) {
-      query.where(new WhereAndList(conditions));
-    }
-    for (const after of afters) {
-      after(query);
+      query.where(res);
     }
   };
 
@@ -244,6 +230,7 @@ export const sub =
   <Input extends Record<string, any>>(
     subBuilder: () => (input: Partial<Input>) => (q: Query) => void,
     extraInput?: Many<string>,
+    outerVar = 'outer',
   ) =>
   <
     // TODO this doesn't enforce Input type on Outer property
@@ -252,10 +239,13 @@ export const sub =
   >(
     matchSubNode: (sub: Query) => Query,
   ): Builder<Outer, K> =>
-  ({ key, value, query }) =>
-    query
-      .subQuery(['node', ...many(extraInput ?? [])], (sub) =>
+  ({ key, value, query }) => {
+    const input = [...many(extraInput ?? [])];
+    return query
+      .subQuery((sub) =>
         sub
+          .with(['node', ...input])
+          .with([`node as ${outerVar}`, ...input])
           .apply(matchSubNode)
           .apply(subBuilder()(value))
           .return(`true as ${key}FiltersApplied`)
@@ -265,6 +255,7 @@ export const sub =
           .raw('limit 1'),
       )
       .with('*');
+  };
 
 export const fullText =
   ({

@@ -261,10 +261,12 @@ export const makeConfig = (env: EnvironmentService) =>
         httpOnly: true,
         // All paths, not just the current one
         path: '/',
-        // Require HTTPS (required for SameSite) (ignored for localhost)
-        secure: true,
-        // Allow 3rd party (other domains)
-        sameSite: 'none',
+        ...(!isDev && {
+          // Require HTTPS (required for SameSite)
+          secure: true,
+          // Allow 3rd party (other domains)
+          sameSite: 'none',
+        }),
       };
     })();
 

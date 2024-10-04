@@ -48,16 +48,7 @@ export class ProgressReportMediaRepository extends DtoRepository<
         relation('out', '', 'child', ACTIVE),
         node('node', this.resource.dbLabel),
       ])
-      .apply(
-        filter.builder(
-          { variants: args.variants },
-          {
-            variants: ({ value }) => ({
-              'node.variant': inArray(value.map((v) => v.key)),
-            }),
-          },
-        ),
-      )
+      .apply(progressReportMediaFilters({ variants: args.variants }))
       .match(requestingUser(session))
       .apply(projectFromProgressReportChild)
       .apply(
@@ -298,3 +289,11 @@ export class ProgressReportMediaRepository extends DtoRepository<
         );
   }
 }
+
+export const progressReportMediaFilters = filter.define<
+  Pick<ListArgs, 'variants'>
+>(() => ListArgs, {
+  variants: ({ value }) => ({
+    'node.variant': inArray(value.map((v) => v.key)),
+  }),
+});
