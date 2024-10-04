@@ -36,7 +36,7 @@ declare module 'graphql/error/GraphQLError' {
 }
 
 @Injectable()
-export class GraphQLConfig implements GqlOptionsFactory {
+export class GraphqlOptions implements GqlOptionsFactory {
   private readonly exceptionNormalizer: ExceptionNormalizer;
   private readonly exceptionFilter: ExceptionFilter;
 
