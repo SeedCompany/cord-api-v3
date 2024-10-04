@@ -42,6 +42,7 @@ export class ProgressReportRepository extends DtoRepository<
         relation('in', '', 'engagement'),
         node('project', 'Project'),
       ])
+      .logIt()
       .match(requestingUser(session))
       .apply(progressReportFilters(input.filter))
       .apply(
@@ -88,13 +89,11 @@ export const progressReportFilters = filter.define(
       () => engagementFilters,
       'requestingUser',
     )((sub) =>
-      sub
-        .with('node as report, requestingUser')
-        .match([
-          node('report'),
-          relation('in', '', 'report'),
-          node('node', 'Engagement'),
-        ]),
+      sub.match([
+        node('outer'),
+        relation('in', '', 'report'),
+        node('node', 'Engagement'),
+      ]),
     ),
   },
 );

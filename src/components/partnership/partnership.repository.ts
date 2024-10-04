@@ -429,13 +429,11 @@ export const partnershipFilters = filter.define(() => PartnershipFilters, {
   projectId: filter.skip,
   types: filter.intersectsProp(),
   partner: filter.sub(() => partnerFilters)((sub) =>
-    sub
-      .with('node as partnership')
-      .match([
-        node('partnership'),
-        relation('out', '', 'partner'),
-        node('node', 'Partner'),
-      ]),
+    sub.match([
+      node('outer'),
+      relation('out', '', 'partner'),
+      node('node', 'Partner'),
+    ]),
   ),
 });
 
