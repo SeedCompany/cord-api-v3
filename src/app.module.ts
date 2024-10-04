@@ -18,6 +18,7 @@ import { FilmModule } from './components/film/film.module';
 import { FundingAccountModule } from './components/funding-account/funding-account.module';
 import { LanguageModule } from './components/language/language.module';
 import { LocationModule } from './components/location/location.module';
+import { NotificationModule } from './components/notifications/notification.module';
 import { OrganizationModule } from './components/organization/organization.module';
 import { PartnerModule } from './components/partner/partner.module';
 import { PartnershipProducingMediumModule } from './components/partnership-producing-medium/partnership-producing-medium.module';
@@ -89,6 +90,7 @@ if (process.env.NODE_ENV !== 'production') {
     ProgressReportModule,
     PromptsModule,
     PnpExtractionResultModule,
+    NotificationModule,
   ],
 })
 export class AppModule {}
