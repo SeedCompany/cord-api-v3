@@ -1,2 +1,6 @@
 export * from './graphql.module';
-export { GqlContextHost, NotGraphQLContext } from './gql-context.host';
+export {
+  GqlContextHost,
+  isGqlContext,
+  NotGraphQLContext,
+} from './gql-context.host';
