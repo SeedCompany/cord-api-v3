@@ -1,4 +1,3 @@
-import { Plugin } from '@nestjs/apollo';
 import {
   CallHandler,
   ExecutionContext,
@@ -13,7 +12,6 @@ import { EdgeDB, OptionsFn } from '~/core/edgedb';
 import { HttpMiddleware } from '~/core/http';
 
 @Injectable()
-@Plugin()
 export class EdgeDBCurrentUserProvider
   implements HttpMiddleware, NestInterceptor
 {
