@@ -3891,12 +3891,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:^20.12.5":
-  version: 20.12.5
-  resolution: "@types/node@npm:20.12.5"
+"@types/node@npm:*, @types/node@npm:^22.7.8":
+  version: 22.7.8
+  resolution: "@types/node@npm:22.7.8"
   dependencies:
-    undici-types: "npm:~5.26.4"
-  checksum: 10c0/2da65516fba98f0417620e42bddbe53e144d4782d69cd37f99df2537c6850b9cfbdb8a017f02c61e9a074bcac84f9f3f221b250474ac8c6b95d507a47e8d53f9
+    undici-types: "npm:~6.19.2"
+  checksum: 10c0/3d3b3a2ec5a57ca4fd37b34dce415620993ca5f87cea2c728ffe73aa31446dbfe19c53171c478447bd7d78011ef4845a46ab2f0dc38e699cc75b3d100a60c690
   languageName: node
   linkType: hard
 
@@ -4180,25 +4180,35 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@whatwg-node/fetch@npm:^0.9.18, @whatwg-node/fetch@npm:^0.9.21":
-  version: 0.9.21
-  resolution: "@whatwg-node/fetch@npm:0.9.21"
+"@whatwg-node/fetch@npm:0.9.22":
+  version: 0.9.22
+  resolution: "@whatwg-node/fetch@npm:0.9.22"
   dependencies:
-    "@whatwg-node/node-fetch": "npm:^0.5.23"
+    "@whatwg-node/node-fetch": "npm:^0.5.27"
     urlpattern-polyfill: "npm:^10.0.0"
-  checksum: 10c0/c0727e32673fa0596aff9786995b308fc92c33290807c72333af2a5c7a7e38ca6e236ec641bb4caded25e30127bee4b9df2e15d47c064970c2f7df58b084ca8d
+  checksum: 10c0/67a8668b2dd491b24a20a03ba23b6463481e209b16e2ffc9444ed9f52fb82de744a6076278499cea60737985204fca44f68dccea7e2af1a5fb68c2721e3bb1a6
   languageName: node
   linkType: hard
 
-"@whatwg-node/node-fetch@npm:^0.5.23":
-  version: 0.5.26
-  resolution: "@whatwg-node/node-fetch@npm:0.5.26"
+"@whatwg-node/fetch@patch:@whatwg-node/fetch@npm%3A0.9.22#~/.yarn/patches/@whatwg-node-fetch-npm-0.9.22-a60314fb39.patch":
+  version: 0.9.22
+  resolution: "@whatwg-node/fetch@patch:@whatwg-node/fetch@npm%3A0.9.22#~/.yarn/patches/@whatwg-node-fetch-npm-0.9.22-a60314fb39.patch::version=0.9.22&hash=a19453"
+  dependencies:
+    "@whatwg-node/node-fetch": "npm:^0.5.27"
+    urlpattern-polyfill: "npm:^10.0.0"
+  checksum: 10c0/95d423aa4449bbaeb01e2784fcd1fc0b064b0d6cc99ded6169f832a763e701647362498813cc03eff98c8620daf6516f42272efd7734e24695e3659bfcdb78af
+  languageName: node
+  linkType: hard
+
+"@whatwg-node/node-fetch@npm:^0.5.27":
+  version: 0.5.27
+  resolution: "@whatwg-node/node-fetch@npm:0.5.27"
   dependencies:
     "@kamilkisiela/fast-url-parser": "npm:^1.1.4"
     busboy: "npm:^1.6.0"
     fast-querystring: "npm:^1.1.1"
     tslib: "npm:^2.6.3"
-  checksum: 10c0/32e7b230e7d1ead507f44b49dfb91bacdef2c89cf7a10b95f2b996e15786fcbfc8dc4b21ef8b56e2fd39bd8491f8a01b216b33d7e30af8291778777811de325e
+  checksum: 10c0/1cd036e1ef36bfc71436a3e7438b180b94c33d7958c02e33540c35d37db19fb598f2ab09f0aef538a3bbc771c32d34c5728a596ffabf8be7961435a80fcb8f62
   languageName: node
   linkType: hard
 
@@ -5623,7 +5633,7 @@ __metadata:
     "@types/jsonwebtoken": "npm:^9.0.4"
     "@types/lodash": "npm:^4.14.200"
     "@types/luxon": "npm:^3.4.2"
-    "@types/node": "npm:^20.12.5"
+    "@types/node": "npm:^22.7.8"
     "@types/prismjs": "npm:^1.26.2"
     "@types/react": "npm:^18.2.33"
     "@types/stack-trace": "npm:^0.0.32"
@@ -5698,6 +5708,7 @@ __metadata:
     type-fest: "npm:^4.15.0"
     typescript: "npm:^5.2.2"
     typescript-transform-paths: "npm:^3.4.6"
+    urlpattern-polyfill: "npm:^10.0.0"
     uuid: "npm:^10.0.0"
     winston: "npm:^3.11.0"
     xlsx: "https://cdn.sheetjs.com/xlsx-0.20.0/xlsx-0.20.0.tgz"
@@ -13318,10 +13329,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"undici-types@npm:~5.26.4":
-  version: 5.26.5
-  resolution: "undici-types@npm:5.26.5"
-  checksum: 10c0/bb673d7876c2d411b6eb6c560e0c571eef4a01c1c19925175d16e3a30c4c428181fb8d7ae802a261f283e4166a0ac435e2f505743aa9e45d893f9a3df017b501
+"undici-types@npm:~6.19.2":
+  version: 6.19.8
+  resolution: "undici-types@npm:6.19.8"
+  checksum: 10c0/078afa5990fba110f6824823ace86073b4638f1d5112ee26e790155f481f2a868cc3e0615505b6f4282bdf74a3d8caad715fd809e870c2bb0704e3ea6082f344
   languageName: node
   linkType: hard
 
