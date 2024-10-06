@@ -4,3 +4,4 @@ export {
   isGqlContext,
   NotGraphQLContext,
 } from './gql-context.host';
+export * from './plugin.decorator';
