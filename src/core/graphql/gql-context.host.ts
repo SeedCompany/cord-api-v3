@@ -103,11 +103,7 @@ export class GqlContextHostImpl
       return {};
     }
     store.ctx = context;
-    return {
-      async didResolveOperation({ operation }) {
-        context.operation = operation!;
-      },
-    };
+    return {};
   }
 
   onModuleDestroy() {
