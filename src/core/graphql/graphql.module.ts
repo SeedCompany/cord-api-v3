@@ -1,9 +1,9 @@
-import { YogaDriver } from '@graphql-yoga/nestjs';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { GraphQLModule as NestGraphqlModule } from '@nestjs/graphql';
 import { HttpAdapterHost } from '~/core/http';
 import { TracingModule } from '../tracing';
+import { Driver } from './driver';
 import { GqlContextHost, GqlContextHostImpl } from './gql-context.host';
 import { GraphqlErrorFormatter } from './graphql-error-formatter';
 import { GraphqlLoggingPlugin } from './graphql-logging.plugin';
@@ -29,7 +29,7 @@ export class GraphqlOptionsModule {}
 @Module({
   imports: [
     NestGraphqlModule.forRootAsync({
-      driver: YogaDriver,
+      driver: Driver,
       useExisting: GraphqlOptions,
       imports: [GraphqlOptionsModule],
     }),
@@ -51,11 +51,5 @@ export class GraphqlModule implements NestModule {
     // Always attach our GQL Context middleware.
     // It has its own logic to handle non-gql requests.
     consumer.apply(this.middleware.use).forRoutes('*');
-
-    // Setup file upload handling
-    const fastify = this.app.httpAdapter.getInstance();
-    fastify.addContentTypeParser('multipart/form-data', (req, payload, done) =>
-      done(null),
-    );
   }
 }
