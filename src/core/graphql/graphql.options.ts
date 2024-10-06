@@ -7,16 +7,21 @@ import { Injectable } from '@nestjs/common';
 import { GqlOptionsFactory } from '@nestjs/graphql';
 import { CacheService } from '@seedcompany/cache';
 import { mapKeys } from '@seedcompany/common';
-import { GraphQLScalarType, OperationDefinitionNode } from 'graphql';
-import { Plugin } from 'graphql-yoga';
+import {
+  DocumentNode,
+  GraphQLScalarType,
+  OperationDefinitionNode,
+} from 'graphql';
+import { Plugin as PluginNoContext } from 'graphql-yoga';
 import { BehaviorSubject } from 'rxjs';
-import { GqlContextType, ServerException, Session } from '~/common';
+import { GqlContextType, Session } from '~/common';
 import { getRegisteredScalars } from '~/common/scalars';
 import { ConfigService } from '../config/config.service';
 import { VersionService } from '../config/version.service';
 import { isGqlContext } from './gql-context.host';
 import { GraphqlTracingPlugin } from './graphql-tracing.plugin';
 
+type Plugin = PluginNoContext<GqlContextType>;
 type ServerContext = YogaDriverServerContext<'fastify'>;
 
 @Injectable()
@@ -54,14 +59,14 @@ export class GraphqlOptions implements GqlOptionsFactory {
       maskedErrors: false, // Errors are formatted in plugin
       sortSchema: true,
       buildSchemaOptions: {
-        // fieldMiddleware: [this.tracing.fieldMiddleware()],
+        fieldMiddleware: [this.tracing.fieldMiddleware()],
       },
       resolvers: {
         ...scalars,
       },
       plugins: [
         this.useAutomaticPersistedQueries(),
-        // more,
+        this.useAddOperationToContext(),
       ],
       fetchAPI: {
         // @whatwg-node/node-fetch polyfill doesn't keep square brackets for ipv6 hostname
@@ -75,17 +80,16 @@ export class GraphqlOptions implements GqlOptionsFactory {
   context = ({
     req: request,
     reply: response,
-  }: ServerContext): GqlContextType => {
+  }: ServerContext): Partial<GqlContextType> => {
     return {
       [isGqlContext.KEY]: true,
       request,
       response,
-      operation: createFakeStubOperation(),
       session$: new BehaviorSubject<Session | undefined>(undefined),
     };
   };
 
-  private useAutomaticPersistedQueries(): Plugin | false {
+  private useAutomaticPersistedQueries(): PluginNoContext | false {
     const { enabled, ttl } = this.config.graphQL.persistedQueries;
     if (!enabled) {
       return false;
@@ -94,13 +98,16 @@ export class GraphqlOptions implements GqlOptionsFactory {
     const store = this.cache.namespace('apq:', { ttl, refreshTtlOnGet: true });
     return useAPQ({ store });
   }
-}
 
-export const createFakeStubOperation = () => {
-  const operation = {} as unknown as OperationDefinitionNode;
-  return new Proxy(operation, {
-    get() {
-      throw new ServerException('GQL operation has not been determined yet');
-    },
-  });
-};
+  private useAddOperationToContext(): Plugin {
+    return {
+      onValidate: ({ params, extendContext }) => {
+        const document: DocumentNode = params.documentAST;
+        const operation = document.definitions.find(
+          (d): d is OperationDefinitionNode => d.kind === 'OperationDefinition',
+        )!;
+        extendContext({ operation });
+      },
+    };
+  }
+}
