@@ -15,7 +15,6 @@ import { getRegisteredScalars } from '~/common/scalars';
 import { ConfigService } from '../config/config.service';
 import { VersionService } from '../config/version.service';
 import { isGqlContext } from './gql-context.host';
-import { GraphqlErrorFormatter } from './graphql-error-formatter';
 import { GraphqlTracingPlugin } from './graphql-tracing.plugin';
 
 type ServerContext = YogaDriverServerContext<'fastify'>;
@@ -27,7 +26,6 @@ export class GraphqlOptions implements GqlOptionsFactory {
     private readonly cache: CacheService,
     private readonly tracing: GraphqlTracingPlugin,
     private readonly versionService: VersionService,
-    private readonly errorFormatter: GraphqlErrorFormatter,
   ) {}
 
   async createGqlOptions(): Promise<DriverConfig> {
@@ -53,6 +51,7 @@ export class GraphqlOptions implements GqlOptionsFactory {
         credentials: 'include',
       },
       context: this.context,
+      maskedErrors: false, // Errors are formatted in plugin
       sortSchema: true,
       buildSchemaOptions: {
         // fieldMiddleware: [this.tracing.fieldMiddleware()],
