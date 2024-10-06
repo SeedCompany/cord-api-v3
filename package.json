@@ -110,6 +110,7 @@
     "sanitize-filename": "^1.6.3",
     "title-case": "^4.3.1",
     "ts-essentials": "^9.4.1",
+    "urlpattern-polyfill": "^10.0.0",
     "uuid": "^10.0.0",
     "winston": "^3.11.0",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.0/xlsx-0.20.0.tgz",
@@ -166,6 +167,7 @@
     "@types/express": "npm:@types/stack-trace@*",
     "@types/express-serve-static-core": "npm:@types/stack-trace@*",
     "@types/koa": "npm:@types/stack-trace@*",
+    "@whatwg-node/fetch": "npm:@whatwg-node/node-fetch@*",
     "subscriptions-transport-ws": "npm:empty-npm-package@*"
   },
   "dependenciesMeta": {

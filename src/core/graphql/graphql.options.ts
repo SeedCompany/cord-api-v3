@@ -14,6 +14,7 @@ import { GqlContextType, ServerException, Session } from '~/common';
 import { getRegisteredScalars } from '~/common/scalars';
 import { ConfigService } from '../config/config.service';
 import { VersionService } from '../config/version.service';
+import { fetchApiForYoga } from './fetch-api';
 import { isGqlContext } from './gql-context.host';
 import { GraphqlErrorFormatter } from './graphql-error-formatter';
 import { GraphqlTracingPlugin } from './graphql-tracing.plugin';
@@ -52,6 +53,7 @@ export class GraphqlOptions implements GqlOptionsFactory {
         defaultEditorToolsVisibility: false,
         credentials: 'include',
       },
+      fetchAPI: fetchApiForYoga,
       context: this.context,
       maskedErrors: {
         maskError: this.errorFormatter.formatError,
