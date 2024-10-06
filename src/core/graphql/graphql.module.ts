@@ -5,6 +5,7 @@ import { GraphQLModule as NestGraphqlModule } from '@nestjs/graphql';
 import createUploadMiddleware from 'graphql-upload/graphqlUploadExpress.mjs';
 import { TracingModule } from '../tracing';
 import { GqlContextHost, GqlContextHostImpl } from './gql-context.host';
+import { GraphqlErrorFormatter } from './graphql-error-formatter';
 import { GraphqlLoggingPlugin } from './graphql-logging.plugin';
 import { GraphqlSessionPlugin } from './graphql-session.plugin';
 import { GraphqlTracingPlugin } from './graphql-tracing.plugin';
@@ -16,6 +17,7 @@ import './types';
   imports: [TracingModule],
   providers: [
     GraphqlOptions,
+    GraphqlErrorFormatter,
     GraphqlLoggingPlugin,
     GraphqlTracingPlugin,
     GraphqlSessionPlugin,
