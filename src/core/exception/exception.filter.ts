@@ -1,6 +1,7 @@
 import { ArgumentsHost, Catch, HttpStatus, Injectable } from '@nestjs/common';
 import { GqlExceptionFilter } from '@nestjs/graphql';
 import { mapValues } from '@seedcompany/common';
+import { GraphQLError } from 'graphql';
 import { HttpAdapter } from '~/core/http';
 import { ConfigService } from '../config/config.service';
 import { ILogger, Logger, LogLevel } from '../logger';
@@ -47,10 +48,9 @@ export class ExceptionFilter implements GqlExceptionFilter {
   }
 
   private respondToGraphQL(ex: ExceptionJson, _args: ArgumentsHost) {
-    const { message, stack, ...extensions } = ex;
-    const out = { message, stack, extensions };
-    // re-throw our result so that Apollo Server picks it up
-    throw Object.assign(new Error(), out);
+    const { message, ...extensions } = ex;
+    // re-throw our result so that the GraphQL Server picks it up
+    throw new GraphQLError(message, { extensions });
   }
 
   private respondToHttp(ex: ExceptionJson, args: ArgumentsHost) {
