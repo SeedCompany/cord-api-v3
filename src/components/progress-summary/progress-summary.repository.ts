@@ -1,8 +1,15 @@
 import { Injectable } from '@nestjs/common';
-import { inArray, node, relation } from 'cypher-query-builder';
+import { mapValues } from '@seedcompany/common';
+import { inArray, node, Query, relation } from 'cypher-query-builder';
 import { ID } from '~/common';
 import { CommonRepository } from '~/core/database';
-import { ACTIVE, listConcat, merge } from '~/core/database/query';
+import {
+  ACTIVE,
+  defineSorters,
+  listConcat,
+  merge,
+  SortCol,
+} from '~/core/database/query';
 import { ProgressReport } from '../progress-report/dto';
 import { FetchedSummaries, ProgressSummary, SummaryPeriod } from './dto';
 
@@ -80,3 +87,11 @@ export class ProgressSummaryRepository extends CommonRepository {
       .run();
   }
 }
+
+export const progressSummarySorters = defineSorters(ProgressSummary, {
+  ...mapValues.fromList(
+    ['variance', 'scheduleStatus'],
+    () => (query: Query) =>
+      query.return<SortCol>('(node.actual - node.planned) as sortValue'),
+  ).asRecord,
+});
