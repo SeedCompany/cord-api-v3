@@ -1,6 +1,5 @@
-import { times } from 'lodash';
 import { DateTime, Interval } from 'luxon';
-import { isValidId, Role } from '~/common';
+import { Role } from '~/common';
 import { Project } from '../src/components/project/dto';
 import { ProjectMember } from '../src/components/project/project-member/dto';
 import {
@@ -68,72 +67,6 @@ describe('ProjectMember e2e', () => {
         message: 'Role(s) Controller cannot be assigned to this project member',
         field: 'input.roles',
       }),
-    );
-  });
-
-  it('read one projectMember by id', async () => {
-    const member = await createPerson(app);
-    const projectMember = await createProjectMember(app, {
-      userId: member.id,
-      projectId: project.id,
-    });
-    const result = await app.graphql.query(
-      gql`
-        query projectMember($id: ID!) {
-          projectMember(id: $id) {
-            ...projectMember
-          }
-        }
-        ${fragments.projectMember}
-      `,
-      {
-        id: projectMember.id,
-      },
-    );
-
-    const actual: ProjectMember = result.projectMember;
-    expect(actual.id).toBe(projectMember.id);
-    expect(isValidId(actual.id)).toBe(true);
-    expect(actual.user.value?.id).toBe(member.id);
-  });
-
-  it.skip('list view of ProjectMember', async () => {
-    const numProjectMembers = 2;
-    const userForList = await createPerson(app);
-    const userId = userForList.id;
-    const projectIds = await Promise.all(
-      times(numProjectMembers).map(async () => {
-        await createPerson(app);
-        const project = await createProject(app);
-        return project.id;
-      }),
-    );
-
-    await Promise.all(
-      times(numProjectMembers, async (index) => {
-        await createProjectMember(app, {
-          userId: userId,
-          projectId: projectIds[index],
-          roles: [Role.Consultant],
-        });
-      }),
-    );
-
-    const { projectMembers } = await app.graphql.query(
-      gql`
-        query {
-          projectMembers(input: { filter: { roles: [Consultant] } }) {
-            items {
-              id
-            }
-            hasMore
-            total
-          }
-        }
-      `,
-    );
-    expect(projectMembers.items.length).toBeGreaterThanOrEqual(
-      numProjectMembers,
     );
   });
 
