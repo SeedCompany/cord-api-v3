@@ -18,6 +18,7 @@ import { CommentRepository } from './comment.repository';
 import {
   Comment,
   Commentable,
+  CommentList,
   CommentListInput,
   CommentThread,
   CommentThreadList,
@@ -177,14 +178,25 @@ export class CommentService {
   }
 
   async listCommentsByThreadId(
-    thread: ID,
+    thread: CommentThread,
     input: CommentListInput,
     session: Session,
-  ) {
-    const results = await this.repo.list(thread, input, session);
+  ): Promise<CommentList> {
+    const perms = await this.getPermissionsFromResource(thread.parent, session);
+
+    // Do check here since we don't filter in the db query.
+    // Will need to be updated with DB switch.
+    if (!perms.can('read')) {
+      return SecuredList.Redacted;
+    }
+
+    const results = await this.repo.list(thread.id, input, session);
+
     return {
       ...results,
       items: results.items.map((dto) => this.secureComment(dto, session)),
+      canRead: true,
+      canCreate: perms.can('create'),
     };
   }
 }

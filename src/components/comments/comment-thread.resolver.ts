@@ -61,11 +61,15 @@ export class CommentThreadResolver {
   })
   async comments(
     @AnonSession() session: Session,
-    @Parent() { id }: CommentThread,
+    @Parent() thread: CommentThread,
     @ListArg(CommentListInput) input: CommentListInput,
     @Loader(CommentLoader) comments: LoaderOf<CommentLoader>,
   ): Promise<CommentList> {
-    const list = await this.service.listCommentsByThreadId(id, input, session);
+    const list = await this.service.listCommentsByThreadId(
+      thread,
+      input,
+      session,
+    );
     comments.primeAll(list.items);
     return list;
   }
