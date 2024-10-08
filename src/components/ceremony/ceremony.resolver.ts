@@ -1,50 +1,11 @@
-import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import {
-  AnonSession,
-  ID,
-  IdArg,
-  ListArg,
-  LoggedInSession,
-  Session,
-} from '~/common';
-import { Loader, LoaderOf } from '~/core';
-import { CeremonyLoader, CeremonyService } from '../ceremony';
-import {
-  Ceremony,
-  CeremonyListInput,
-  CeremonyListOutput,
-  UpdateCeremonyInput,
-  UpdateCeremonyOutput,
-} from './dto';
+import { Args, Mutation, Resolver } from '@nestjs/graphql';
+import { LoggedInSession, Session } from '~/common';
+import { CeremonyService } from '../ceremony';
+import { UpdateCeremonyInput, UpdateCeremonyOutput } from './dto';
 
 @Resolver()
 export class CeremonyResolver {
   constructor(private readonly service: CeremonyService) {}
-
-  @Query(() => Ceremony, {
-    description: 'Look up a ceremony by its ID',
-    deprecationReason: 'Query via engagement instead',
-  })
-  async ceremony(
-    @IdArg() id: ID,
-    @Loader(CeremonyLoader) ceremonies: LoaderOf<CeremonyLoader>,
-  ): Promise<Ceremony> {
-    return await ceremonies.load(id);
-  }
-
-  @Query(() => CeremonyListOutput, {
-    description: 'Look up ceremonies',
-    deprecationReason: 'Query via engagement instead',
-  })
-  async ceremonies(
-    @AnonSession() session: Session,
-    @ListArg(CeremonyListInput) input: CeremonyListInput,
-    @Loader(CeremonyLoader) ceremonies: LoaderOf<CeremonyLoader>,
-  ): Promise<CeremonyListOutput> {
-    const list = await this.service.list(input, session);
-    ceremonies.primeAll(list.items);
-    return list;
-  }
 
   @Mutation(() => UpdateCeremonyOutput, {
     description: 'Update a ceremony',
@@ -56,10 +17,4 @@ export class CeremonyResolver {
     const ceremony = await this.service.update(input, session);
     return { ceremony };
   }
-
-  // Ceremonies are created automatically via engagements
-  // async createCeremony() {}
-
-  // Ceremonies are deleted automatically via engagements
-  // async deleteCeremony() {}
 }
