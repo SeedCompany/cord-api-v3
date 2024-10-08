@@ -5,31 +5,33 @@ import { GraphQLModule as NestGraphqlModule } from '@nestjs/graphql';
 import createUploadMiddleware from 'graphql-upload/graphqlUploadExpress.mjs';
 import { TracingModule } from '../tracing';
 import { GqlContextHost, GqlContextHostImpl } from './gql-context.host';
+import { GraphqlErrorFormatter } from './graphql-error-formatter';
 import { GraphqlLoggingPlugin } from './graphql-logging.plugin';
 import { GraphqlSessionPlugin } from './graphql-session.plugin';
 import { GraphqlTracingPlugin } from './graphql-tracing.plugin';
-import { GraphQLConfig } from './graphql.config';
+import { GraphqlOptions } from './graphql.options';
 
 import './types';
 
 @Module({
   imports: [TracingModule],
   providers: [
-    GraphQLConfig,
+    GraphqlOptions,
+    GraphqlErrorFormatter,
     GraphqlLoggingPlugin,
     GraphqlTracingPlugin,
     GraphqlSessionPlugin,
   ],
-  exports: [GraphQLConfig],
+  exports: [GraphqlOptions],
 })
-export class GraphqlConfigModule {}
+export class GraphqlOptionsModule {}
 
 @Module({
   imports: [
     NestGraphqlModule.forRootAsync({
       driver: ApolloDriver,
-      useExisting: GraphQLConfig,
-      imports: [GraphqlConfigModule],
+      useExisting: GraphqlOptions,
+      imports: [GraphqlOptionsModule],
     }),
   ],
   providers: [
