@@ -6,6 +6,7 @@ import {
   GraphQLFormattedError as FormattedError,
   GraphQLError,
 } from 'graphql';
+import { LazyGetter } from 'lazy-get-decorator';
 import { JsonSet } from '~/common';
 import { ExceptionFilter } from '../exception/exception.filter';
 import { ExceptionNormalizer } from '../exception/exception.normalizer';
@@ -20,14 +21,13 @@ declare module 'graphql' {
 
 @Injectable()
 export class GraphqlErrorFormatter {
-  private readonly normalizer: ExceptionNormalizer;
-  private readonly filter: ExceptionFilter;
+  constructor(private readonly moduleRef: ModuleRef) {}
 
-  constructor(moduleRef: ModuleRef) {
-    [this.normalizer, this.filter] = [
-      moduleRef.get(ExceptionNormalizer, { strict: false }),
-      moduleRef.get(ExceptionFilter, { strict: false }),
-    ];
+  @LazyGetter() private get normalizer() {
+    return this.moduleRef.get(ExceptionNormalizer, { strict: false });
+  }
+  @LazyGetter() private get filter() {
+    return this.moduleRef.get(ExceptionFilter, { strict: false });
   }
 
   formatError = (
