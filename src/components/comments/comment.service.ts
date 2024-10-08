@@ -10,8 +10,8 @@ import {
   UnsecuredDto,
 } from '~/common';
 import { isAdmin } from '~/common/session';
-import { ILogger, Logger, ResourceLoader, ResourcesHost } from '~/core';
-import { BaseNode, isBaseNode, mapListResults } from '~/core/database/results';
+import { ResourceLoader, ResourcesHost } from '~/core';
+import { BaseNode, isBaseNode } from '~/core/database/results';
 import { Privileges } from '../authorization';
 import { CommentRepository } from './comment.repository';
 import {
@@ -34,7 +34,6 @@ export class CommentService {
     private readonly privileges: Privileges,
     private readonly resources: ResourceLoader,
     private readonly resourcesHost: ResourcesHost,
-    @Logger('comment:service') private readonly logger: ILogger,
   ) {}
 
   async create(input: CreateCommentInput, session: Session) {
@@ -102,32 +101,27 @@ export class CommentService {
 
   async readOne(id: ID, session: Session): Promise<Comment> {
     const dto = await this.repo.readOne(id);
-    return await this.secureComment(dto, session);
+    return this.secureComment(dto, session);
   }
 
   async readMany(ids: readonly ID[], session: Session) {
     const comments = await this.repo.readMany(ids);
-    return await Promise.all(
-      comments.map((dto) => this.secureComment(dto, session)),
-    );
+    return comments.map((dto) => this.secureComment(dto, session));
   }
 
-  async secureThread(
+  secureThread(
     thread: UnsecuredDto<CommentThread>,
     session: Session,
-  ): Promise<CommentThread> {
+  ): CommentThread {
     return {
       ...thread,
-      firstComment: await this.secureComment(thread.firstComment, session),
-      latestComment: await this.secureComment(thread.latestComment, session),
+      firstComment: this.secureComment(thread.firstComment, session),
+      latestComment: this.secureComment(thread.latestComment, session),
       canDelete: thread.creator === session.userId || isAdmin(session),
     };
   }
 
-  async secureComment(
-    dto: UnsecuredDto<Comment>,
-    session: Session,
-  ): Promise<Comment> {
+  secureComment(dto: UnsecuredDto<Comment>, session: Session): Comment {
     return this.privileges.for(session, Comment).secure(dto);
   }
 
@@ -167,9 +161,8 @@ export class CommentService {
     const results = await this.repo.threads.list(parent.id, input, session);
 
     return {
-      ...(await mapListResults(results, (dto) =>
-        this.secureThread(dto, session),
-      )),
+      ...results,
+      items: results.items.map((dto) => this.secureThread(dto, session)),
       parent,
     };
   }
@@ -180,9 +173,10 @@ export class CommentService {
     session: Session,
   ) {
     const results = await this.repo.list(thread, input, session);
-    return await mapListResults(results, (dto) =>
-      this.secureComment(dto, session),
-    );
+    return {
+      ...results,
+      items: results.items.map((dto) => this.secureComment(dto, session)),
+    };
   }
 }
 

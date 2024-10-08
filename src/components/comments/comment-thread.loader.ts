@@ -20,7 +20,7 @@ export class CommentThreadLoader extends OrderedNestDataLoader<CommentThread> {
       threads.map(async (thread) => {
         try {
           await this.service.verifyCanView(thread.parent, session);
-          return await this.service.secureThread(thread, session);
+          return this.service.secureThread(thread, session);
         } catch (error) {
           return { key: thread.id, error };
         }
