@@ -8,6 +8,7 @@ import {
 } from '~/common';
 import { EngagementFilters } from '../../engagement/dto';
 import { PeriodicReportListInput } from '../../periodic-report/dto';
+import { ProgressSummaryFilters } from '../../progress-summary/dto';
 import { ProgressReportStatus } from './progress-report-status.enum';
 import { ProgressReport } from './progress-report.entity';
 
@@ -20,6 +21,9 @@ export abstract class ProgressReportFilters extends PickType(
     nullable: true,
   })
   readonly status?: readonly ProgressReportStatus[];
+
+  @FilterField(() => ProgressSummaryFilters)
+  readonly cumulativeSummary?: ProgressSummaryFilters & {};
 
   @FilterField(() => EngagementFilters)
   readonly engagement?: EngagementFilters & {};

@@ -11,9 +11,12 @@ import {
   paginate,
   requestingUser,
   sortWith,
+  variable,
 } from '~/core/database/query';
 import { engagementFilters } from '../engagement/engagement.repository';
 import { progressReportSorters } from '../periodic-report/periodic-report.repository';
+import { SummaryPeriod } from '../progress-summary/dto';
+import { progressSummaryFilters } from '../progress-summary/progress-summary.repository';
 import {
   ProgressReport,
   ProgressReportFilters,
@@ -84,6 +87,18 @@ export const progressReportFilters = filter.define(
     start: filter.dateTimeProp(),
     end: filter.dateTimeProp(),
     status: filter.stringListProp(),
+    cumulativeSummary: filter.sub(() => progressSummaryFilters)((sub) =>
+      sub
+        .optionalMatch([
+          node('outer'),
+          relation('out', '', 'summary', ACTIVE),
+          node('node', 'ProgressSummary', {
+            period: variable(`"${SummaryPeriod.Cumulative}"`),
+          }),
+        ])
+        // needed in conjunction with `optionalMatch`
+        .with('outer, node'),
+    ),
     engagement: filter.sub(
       () => engagementFilters,
       'requestingUser',
