@@ -1,22 +1,30 @@
 import {
-  ApolloServerPluginLandingPageLocalDefault,
-  ApolloServerPluginLandingPageProductionDefault,
-} from '@apollo/server/plugin/landingPage/default';
-import { ApolloFastifyContextFunctionArgument } from '@as-integrations/fastify';
-import { ApolloDriverConfig as DriverConfig } from '@nestjs/apollo';
+  YogaDriverConfig as DriverConfig,
+  YogaDriverServerContext,
+} from '@graphql-yoga/nestjs';
+import { useAPQ } from '@graphql-yoga/plugin-apq';
 import { Injectable } from '@nestjs/common';
 import { GqlOptionsFactory } from '@nestjs/graphql';
 import { CacheService } from '@seedcompany/cache';
 import { mapKeys } from '@seedcompany/common';
-import { GraphQLScalarType, OperationDefinitionNode } from 'graphql';
+import {
+  DocumentNode,
+  GraphQLScalarType,
+  OperationDefinitionNode,
+} from 'graphql';
+import { Plugin as PluginNoContext } from 'graphql-yoga';
 import { BehaviorSubject } from 'rxjs';
-import { GqlContextType, ServerException, Session } from '~/common';
+import { GqlContextType, Session } from '~/common';
 import { getRegisteredScalars } from '~/common/scalars';
 import { ConfigService } from '../config/config.service';
 import { VersionService } from '../config/version.service';
+import { fetchApiForYoga } from './fetch-api';
 import { isGqlContext } from './gql-context.host';
 import { GraphqlErrorFormatter } from './graphql-error-formatter';
 import { GraphqlTracingPlugin } from './graphql-tracing.plugin';
+
+type Plugin = PluginNoContext<GqlContextType>;
+type ServerContext = YogaDriverServerContext<'fastify'>;
 
 @Injectable()
 export class GraphqlOptions implements GqlOptionsFactory {
@@ -45,57 +53,61 @@ export class GraphqlOptions implements GqlOptionsFactory {
     return {
       path: '/graphql/:opName?',
       autoSchemaFile: 'schema.graphql',
+      graphiql: {
+        title: 'CORD API',
+        defaultEditorToolsVisibility: false,
+        credentials: 'include',
+      },
+      fetchAPI: fetchApiForYoga,
       context: this.context,
-      playground: false,
-      introspection: true,
-      formatError: this.errorFormatter.formatError,
-      includeStacktraceInErrorResponses: true,
-      status400ForVariableCoercionErrors: true, // will be default in v5
+      maskedErrors: {
+        maskError: this.errorFormatter.formatError,
+      },
       sortSchema: true,
       buildSchemaOptions: {
         fieldMiddleware: [this.tracing.fieldMiddleware()],
       },
-      cache: this.cache.adaptTo.apollo({
-        ttl: this.config.graphQL.persistedQueries.ttl,
-        refreshTtlOnGet: true,
-      }),
-      persistedQueries: this.config.graphQL.persistedQueries.enabled
-        ? {}
-        : false,
       resolvers: {
         ...scalars,
       },
       plugins: [
-        process.env.APOLLO_GRAPH_REF
-          ? ApolloServerPluginLandingPageProductionDefault({
-              graphRef: process.env.APOLLO_GRAPH_REF,
-              embed: true,
-              includeCookies: true,
-            })
-          : ApolloServerPluginLandingPageLocalDefault({
-              embed: true,
-              includeCookies: true,
-            }),
+        this.useAutomaticPersistedQueries(),
+        this.useAddOperationToContext(),
       ],
     };
   }
 
-  context = (
-    ...[request, response]: ApolloFastifyContextFunctionArgument
-  ): GqlContextType => ({
-    [isGqlContext.KEY]: true,
-    request,
-    response,
-    operation: createFakeStubOperation(),
-    session$: new BehaviorSubject<Session | undefined>(undefined),
-  });
-}
+  context = ({
+    req: request,
+    reply: response,
+  }: ServerContext): Partial<GqlContextType> => {
+    return {
+      [isGqlContext.KEY]: true,
+      request,
+      response,
+      session$: new BehaviorSubject<Session | undefined>(undefined),
+    };
+  };
 
-export const createFakeStubOperation = () => {
-  const operation = {} as unknown as OperationDefinitionNode;
-  return new Proxy(operation, {
-    get() {
-      throw new ServerException('GQL operation has not been determined yet');
-    },
-  });
-};
+  private useAutomaticPersistedQueries(): PluginNoContext | false {
+    const { enabled, ttl } = this.config.graphQL.persistedQueries;
+    if (!enabled) {
+      return false;
+    }
+
+    const store = this.cache.namespace('apq:', { ttl, refreshTtlOnGet: true });
+    return useAPQ({ store });
+  }
+
+  private useAddOperationToContext(): Plugin {
+    return {
+      onValidate: ({ params, extendContext }) => {
+        const document: DocumentNode = params.documentAST;
+        const operation = document.definitions.find(
+          (d): d is OperationDefinitionNode => d.kind === 'OperationDefinition',
+        )!;
+        extendContext({ operation });
+      },
+    };
+  }
+}

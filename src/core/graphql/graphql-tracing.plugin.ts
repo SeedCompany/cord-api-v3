@@ -1,60 +1,60 @@
-import {
-  ApolloServerPlugin as ApolloPlugin,
-  GraphQLRequestExecutionListener as ExecutionListener,
-  GraphQLRequestListener as Listener,
-} from '@apollo/server';
-import { Plugin } from '@nestjs/apollo';
 import { FieldMiddleware } from '@nestjs/graphql';
+import { createHash } from 'crypto';
 import { GraphQLResolveInfo as ResolveInfo, ResponsePath } from 'graphql';
-import { GqlContextType as ContextType } from '~/common';
 import { Segment, TracingService } from '../tracing';
+import { Plugin } from './plugin.decorator';
 
 @Plugin()
-export class GraphqlTracingPlugin implements ApolloPlugin<ContextType> {
+export class GraphqlTracingPlugin {
   constructor(private readonly tracing: TracingService) {}
 
-  async requestDidStart(): Promise<Listener<ContextType>> {
+  onExecute: Plugin['onExecute'] = ({ args }) => {
+    const { operationName, contextValue } = args;
+    const { operation, session$, params } = contextValue;
+
+    let segment: Segment;
+    try {
+      segment = this.tracing.rootSegment;
+    } catch (e) {
+      return {};
+    }
+
+    segment.name =
+      operationName ??
+      (params.query
+        ? createHash('sha256').update(params.query).digest('hex')
+        : undefined);
+    segment.addAnnotation(operation.operation, true);
+
+    // Append operation name to url since all gql requests hit a single http endpoint
+    if (
+      // Check if http middleware is present, confirming this is a root subsegment
+      (segment as any).http?.request &&
+      // Confirm operation caller didn't do it themselves.
+      // They should, but it's not currently required.
+      !(segment as any).http.request.url.endsWith(segment.name)
+    ) {
+      // @ts-expect-error xray library types suck
+      (segment.http.request.url as string) += '/' + segment.name;
+    }
+
     return {
-      executionDidStart: async (
-        reqContext,
-      ): Promise<ExecutionListener<ContextType>> => {
-        let segment: Segment;
-        try {
-          segment = this.tracing.rootSegment;
-        } catch (e) {
-          return {};
-        }
-
-        segment.name = reqContext.operationName ?? reqContext.queryHash;
-        segment.addAnnotation(reqContext.operation.operation, true);
-
-        // Append operation name to url since all gql requests hit a single http endpoint
-        if (
-          // Check if http middleware is present, confirming this is a root subsegment
-          (segment as any).http?.request &&
-          // Confirm operation caller didn't do it themselves.
-          // They should, but it's not currently required.
-          !(segment as any).http.request.url.endsWith(segment.name)
-        ) {
-          // @ts-expect-error xray library types suck
-          (segment.http.request.url as string) += '/' + segment.name;
+      onExecuteDone: () => {
+        const userId = session$.value?.userId;
+        if (userId) {
+          segment.setUser?.(userId);
         }
 
         return {
-          executionDidEnd: async (err) => {
-            const userId = reqContext.contextValue.session$.value?.userId;
-            if (userId) {
-              segment.setUser?.(userId);
-            }
-
-            if (err) {
-              segment.addError(err);
+          onNext: ({ result }) => {
+            for (const error of result.errors ?? []) {
+              segment.addError(error);
             }
           },
         };
       },
     };
-  }
+  };
 
   fieldMiddleware(): FieldMiddleware {
     return ({ info, args }, next) => {

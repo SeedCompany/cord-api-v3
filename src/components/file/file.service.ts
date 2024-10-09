@@ -4,7 +4,7 @@ import {
 } from '@aws-sdk/client-s3';
 import { Injectable } from '@nestjs/common';
 import { bufferFromStream, cleanJoin, Nil } from '@seedcompany/common';
-import { fileTypeFromStream } from 'file-type';
+import { fileTypeFromBuffer } from 'file-type';
 import { intersection } from 'lodash';
 import { Duration } from 'luxon';
 import mime from 'mime';
@@ -297,19 +297,19 @@ export class FileService {
           'A file with this ID already exists. Request an new upload ID.',
         );
       }
-      const file = await uploadingFile;
 
-      let type: string | Nil = file.mimetype;
+      const body = await uploadingFile.arrayBuffer();
+
+      let type: string | Nil = uploadingFile.type;
       type = type === 'application/octet-stream' ? null : type;
-      type ??= (await fileTypeFromStream(file.createReadStream()))?.mime;
+      type ??= (await fileTypeFromBuffer(body))?.mime;
       type ??= mime.getType(name);
       type ??= 'application/octet-stream';
 
       await this.bucket.putObject({
         Key: `temp/${uploadId}`,
         ContentType: type,
-        ContentEncoding: file.encoding,
-        Body: file.createReadStream(),
+        Body: Buffer.from(body),
       });
     }
 
@@ -441,8 +441,7 @@ export class FileService {
       return sanitizeFilename(input.name);
     }
     if (input?.file) {
-      const file = await input.file;
-      const sanitized = sanitizeFilename(file.filename);
+      const sanitized = sanitizeFilename(input.file.name);
       if (sanitized) {
         return sanitized;
       }
