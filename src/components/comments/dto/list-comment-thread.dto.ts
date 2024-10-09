@@ -1,5 +1,5 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import { Order, PaginatedList, SortablePaginationInput } from '~/common';
+import { Order, SecuredList, SortablePaginationInput } from '~/common';
 import { CommentThread } from './comment-thread.dto';
 import { Commentable } from './commentable.dto';
 
@@ -12,7 +12,7 @@ export class CommentThreadListInput extends SortablePaginationInput<
 }) {}
 
 @ObjectType()
-export class CommentThreadList extends PaginatedList(CommentThread) {
+export class CommentThreadList extends SecuredList(CommentThread) {
   @Field()
   readonly parent: Commentable;
 }
