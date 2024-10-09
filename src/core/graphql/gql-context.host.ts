@@ -16,6 +16,10 @@ import { GqlContextType as ContextType } from '~/common';
 import { HttpMiddleware as NestMiddleware } from '~/core/http';
 import { AsyncLocalStorageNoContextException } from '../async-local-storage-no-context.exception';
 
+export const isGqlContext = (object: unknown): object is ContextType =>
+  object != null && typeof object === 'object' && isGqlContext.KEY in object;
+isGqlContext.KEY = Symbol('GqlContext');
+
 /**
  * A service holding the current GraphQL context
  */
