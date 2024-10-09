@@ -5,6 +5,7 @@ import {
   WhereOp,
 } from 'cypher-query-builder';
 import { AnyConditions } from 'cypher-query-builder/dist/typings/clauses/where-utils';
+import { exp, ExpressionInput } from './cypher-expression';
 
 export class WhereAndList extends WhereOp {
   constructor(public conditions: AnyConditions[]) {
@@ -22,5 +23,15 @@ export class WhereAndList extends WhereOp {
     const string = strings.join(' AND ');
     const braces = precedence !== 0 && precedence > newPrecedence;
     return braces ? `(${string})` : string;
+  }
+}
+
+export class WhereExp extends WhereOp {
+  constructor(public exp: ExpressionInput) {
+    super();
+  }
+
+  evaluate() {
+    return exp(this.exp);
   }
 }
