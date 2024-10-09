@@ -1,21 +1,10 @@
-import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import {
-  AnonSession,
-  ID,
-  IdArg,
-  ListArg,
-  LoggedInSession,
-  Session,
-} from '~/common';
-import { Loader, LoaderOf } from '~/core';
-import { ProjectMemberLoader, ProjectMemberService } from '../project-member';
+import { Args, Mutation, Resolver } from '@nestjs/graphql';
+import { ID, IdArg, LoggedInSession, Session } from '~/common';
+import { ProjectMemberService } from '../project-member';
 import {
   CreateProjectMemberInput,
   CreateProjectMemberOutput,
   DeleteProjectMemberOutput,
-  ProjectMember,
-  ProjectMemberListInput,
-  ProjectMemberListOutput,
   UpdateProjectMemberInput,
   UpdateProjectMemberOutput,
 } from './dto';
@@ -33,31 +22,6 @@ export class ProjectMemberResolver {
   ): Promise<CreateProjectMemberOutput> {
     const projectMember = await this.service.create(input, session);
     return { projectMember };
-  }
-
-  @Query(() => ProjectMember, {
-    description: 'Look up a project member by ID',
-    deprecationReason: 'Query via project instead',
-  })
-  async projectMember(
-    @Loader(ProjectMemberLoader) projectMembers: LoaderOf<ProjectMemberLoader>,
-    @IdArg() id: ID,
-  ): Promise<ProjectMember> {
-    return await projectMembers.load(id);
-  }
-
-  @Query(() => ProjectMemberListOutput, {
-    description: 'Look up project members',
-    deprecationReason: 'Query via project instead',
-  })
-  async projectMembers(
-    @AnonSession() session: Session,
-    @ListArg(ProjectMemberListInput) input: ProjectMemberListInput,
-    @Loader(ProjectMemberLoader) projectMembers: LoaderOf<ProjectMemberLoader>,
-  ): Promise<ProjectMemberListOutput> {
-    const list = await this.service.list(input, session);
-    projectMembers.primeAll(list.items);
-    return list;
   }
 
   @Mutation(() => UpdateProjectMemberOutput, {

@@ -1,5 +1,5 @@
-import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import { FilterField, PaginatedList, SortablePaginationInput } from '~/common';
+import { Field, InputType } from '@nestjs/graphql';
+import { FilterField, SortablePaginationInput } from '~/common';
 import { CeremonyType } from './ceremony-type.enum';
 import { Ceremony } from './ceremony.dto';
 
@@ -21,6 +21,3 @@ export class CeremonyListInput extends SortablePaginationInput<
   @FilterField(() => CeremonyFilters)
   readonly filter?: CeremonyFilters;
 }
-
-@ObjectType()
-export class CeremonyListOutput extends PaginatedList(Ceremony) {}
