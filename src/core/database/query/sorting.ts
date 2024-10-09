@@ -171,7 +171,7 @@ export interface SortCol {
 export type SortFieldOf<TResourceStatic extends ResourceShape<any>> =
   LiteralUnion<keyof TResourceStatic['prototype'] & string, string>;
 
-type SortMatcher<Field extends string> = (
+export type SortMatcher<Field extends string> = (
   query: Query,
   input: Sort<Field> & SortInternals,
 ) => Query<SortCol>;
