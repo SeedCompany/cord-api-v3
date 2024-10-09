@@ -1,5 +1,6 @@
 import { sessionFromContext } from '~/common/session';
-import { EventsHandler, GqlContextHost, ResourceLoader } from '~/core';
+import { EventsHandler, ResourceLoader } from '~/core';
+import { GqlContextHost } from '~/core/graphql';
 import { Privileges } from '../../../authorization';
 import { CanUpdateMediaUserMetadataEvent } from '../../../file/media/events/can-update-event';
 import { ProgressReportMedia as ReportMedia } from '../dto';

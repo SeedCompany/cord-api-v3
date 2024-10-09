@@ -1,5 +1,4 @@
 import { ContextFunction } from '@apollo/server';
-import { unwrapResolverError } from '@apollo/server/errors';
 import { ExpressContextFunctionArgument } from '@apollo/server/express4';
 import {
   ApolloServerPluginLandingPageLocalDefault,
@@ -7,51 +6,27 @@ import {
 } from '@apollo/server/plugin/landingPage/default';
 import { ApolloDriverConfig } from '@nestjs/apollo';
 import { Injectable } from '@nestjs/common';
-import { ModuleRef } from '@nestjs/core';
 import { GqlOptionsFactory } from '@nestjs/graphql';
 import { CacheService } from '@seedcompany/cache';
 import { mapKeys } from '@seedcompany/common';
-import {
-  GraphQLErrorExtensions as ErrorExtensions,
-  GraphQLFormattedError as FormattedError,
-  GraphQLError,
-  GraphQLScalarType,
-  OperationDefinitionNode,
-} from 'graphql';
+import { GraphQLScalarType, OperationDefinitionNode } from 'graphql';
 import { BehaviorSubject } from 'rxjs';
-import { GqlContextType, JsonSet, ServerException, Session } from '~/common';
+import { GqlContextType, ServerException, Session } from '~/common';
 import { getRegisteredScalars } from '~/common/scalars';
 import { ConfigService } from '../config/config.service';
 import { VersionService } from '../config/version.service';
-import { ExceptionFilter } from '../exception/exception.filter';
-import { ExceptionNormalizer } from '../exception/exception.normalizer';
+import { GraphqlErrorFormatter } from './graphql-error-formatter';
 import { GraphqlTracingPlugin } from './graphql-tracing.plugin';
 
-declare module 'graphql/error/GraphQLError' {
-  interface GraphQLErrorExtensions {
-    code?: string;
-    codes?: ReadonlySet<string>;
-    stacktrace?: string[];
-  }
-}
-
 @Injectable()
-export class GraphQLConfig implements GqlOptionsFactory {
-  private readonly exceptionNormalizer: ExceptionNormalizer;
-  private readonly exceptionFilter: ExceptionFilter;
-
+export class GraphqlOptions implements GqlOptionsFactory {
   constructor(
     private readonly config: ConfigService,
     private readonly cache: CacheService,
     private readonly tracing: GraphqlTracingPlugin,
     private readonly versionService: VersionService,
-    moduleRef: ModuleRef,
-  ) {
-    [this.exceptionNormalizer, this.exceptionFilter] = [
-      moduleRef.get(ExceptionNormalizer, { strict: false }),
-      moduleRef.get(ExceptionFilter, { strict: false }),
-    ];
-  }
+    private readonly errorFormatter: GraphqlErrorFormatter,
+  ) {}
 
   async createGqlOptions(): Promise<ApolloDriverConfig> {
     // Apply git hash to Apollo Studio.
@@ -72,7 +47,7 @@ export class GraphQLConfig implements GqlOptionsFactory {
       context: this.context,
       playground: false,
       introspection: true,
-      formatError: this.formatError,
+      formatError: this.errorFormatter.formatError,
       includeStacktraceInErrorResponses: true,
       status400ForVariableCoercionErrors: true, // will be default in v5
       sortSchema: true,
@@ -111,63 +86,6 @@ export class GraphQLConfig implements GqlOptionsFactory {
       operation: createFakeStubOperation(),
       session$: new BehaviorSubject<Session | undefined>(undefined),
     });
-
-  formatError = (
-    formatted: FormattedError,
-    error: unknown | /* but probably a */ GraphQLError,
-  ): FormattedError => {
-    const { message, ...extensions } = this.getErrorExtensions(
-      formatted,
-      error,
-    );
-
-    const codes = (extensions.codes ??= new JsonSet(['Server']));
-    delete extensions.code;
-
-    // Schema & validation errors don't have meaningful stack traces, so remove them
-    const worthlessTrace = codes.has('Validation') || codes.has('GraphQL');
-    if (worthlessTrace) {
-      delete extensions.stacktrace;
-    }
-
-    return {
-      message:
-        message && typeof message === 'string' ? message : formatted.message,
-      extensions,
-      locations: formatted.locations,
-      path: formatted.path,
-    };
-  };
-
-  private getErrorExtensions(
-    formatted: FormattedError,
-    error: unknown | /* but probably a */ GraphQLError,
-  ): ErrorExtensions {
-    // ExceptionNormalizer has already been called
-    if (formatted.extensions?.codes instanceof Set) {
-      return { ...formatted.extensions };
-    }
-
-    const original = unwrapResolverError(error);
-    // Safety check
-    if (!(original instanceof Error)) {
-      return { ...formatted.extensions };
-    }
-
-    // Some errors do not go through the global exception filter.
-    // ResolveField() calls is one of them.
-    // Normalized & log here.
-    const normalized = this.exceptionNormalizer.normalize({
-      ex: original,
-      gql: error instanceof GraphQLError ? error : undefined,
-    });
-    this.exceptionFilter.logIt(normalized, original);
-    const { stack, ...extensions } = normalized;
-    return {
-      ...extensions,
-      stacktrace: stack.split('\n'),
-    };
-  }
 }
 
 export const createFakeStubOperation = () => {
