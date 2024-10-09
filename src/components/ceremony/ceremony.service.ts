@@ -10,13 +10,7 @@ import {
 import { HandleIdLookup, ILogger, Logger } from '~/core';
 import { Privileges } from '../authorization';
 import { CeremonyRepository } from './ceremony.repository';
-import {
-  Ceremony,
-  CeremonyListInput,
-  CeremonyListOutput,
-  CreateCeremony,
-  UpdateCeremony,
-} from './dto';
+import { Ceremony, CreateCeremony, UpdateCeremony } from './dto';
 
 @Injectable()
 export class CeremonyService {
@@ -84,16 +78,5 @@ export class CeremonyService {
       });
       throw new ServerException('Failed to delete Ceremony');
     }
-  }
-
-  async list(
-    input: CeremonyListInput,
-    session: Session,
-  ): Promise<CeremonyListOutput> {
-    const results = await this.repo.list(input, session);
-    return {
-      ...results,
-      items: results.items.map((dto) => this.secure(dto, session)),
-    };
   }
 }

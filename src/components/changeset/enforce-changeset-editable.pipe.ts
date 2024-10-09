@@ -1,4 +1,5 @@
-import { Injectable, PipeTransform, Type } from '@nestjs/common';
+import { Inject, Injectable, PipeTransform, Scope, Type } from '@nestjs/common';
+import { CONTEXT } from '@nestjs/graphql';
 import {
   DataLoaderContext,
   DataLoaderStrategy,
@@ -10,7 +11,7 @@ import {
   isIdLike,
   loadManyIgnoreMissingThrowAny,
 } from '~/common';
-import { GqlContextHost, NotGraphQLContext } from '~/core/graphql';
+import { isGqlContext } from '~/core/graphql';
 import { ResourceLoaderRegistry } from '~/core/resources/loader.registry';
 import { Changeset } from './dto';
 import { shouldValidateEditability } from './validate-editability.decorator';
@@ -25,12 +26,12 @@ import { shouldValidateEditability } from './validate-editability.decorator';
  * information easily accessible at that point.
  * Though it could be possible with some work.
  */
-@Injectable()
+@Injectable({ scope: Scope.REQUEST })
 export class EnforceChangesetEditablePipe implements PipeTransform {
   constructor(
-    private readonly contextHost: GqlContextHost,
-    // Cannot use request scoped injection here in global pipes,
-    // So we have to re-create the loader fetching here.
+    // This is only the GQL context if this is a GQL execution context.
+    // If it is http, then it is the request.
+    @Inject(CONTEXT) private readonly context: unknown,
     private readonly loaderRegistry: ResourceLoaderRegistry,
     private readonly loaderContext: DataLoaderContext,
   ) {}
@@ -41,19 +42,8 @@ export class EnforceChangesetEditablePipe implements PipeTransform {
   }
 
   async validateRequest(value: any) {
-    let context;
-
-    try {
-      ({ context } = this.contextHost);
-    } catch (e) {
-      if (e instanceof NotGraphQLContext) {
-        // Nothing to do if not GQL request
-        return;
-      }
-      throw e;
-    }
-
-    if (context.operation.operation !== 'mutation') {
+    const context = isGqlContext(this.context) ? this.context : undefined;
+    if (context?.operation.operation !== 'mutation') {
       return;
     }
 

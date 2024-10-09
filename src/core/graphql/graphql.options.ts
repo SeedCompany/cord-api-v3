@@ -15,6 +15,7 @@ import { GqlContextType, ServerException, Session } from '~/common';
 import { getRegisteredScalars } from '~/common/scalars';
 import { ConfigService } from '../config/config.service';
 import { VersionService } from '../config/version.service';
+import { isGqlContext } from './gql-context.host';
 import { GraphqlErrorFormatter } from './graphql-error-formatter';
 import { GraphqlTracingPlugin } from './graphql-tracing.plugin';
 
@@ -81,6 +82,7 @@ export class GraphqlOptions implements GqlOptionsFactory {
 
   context: ContextFunction<[ExpressContextFunctionArgument], GqlContextType> =
     async ({ req, res }) => ({
+      [isGqlContext.KEY]: true,
       request: req,
       response: res,
       operation: createFakeStubOperation(),

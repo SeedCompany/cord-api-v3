@@ -22,11 +22,8 @@ import { HttpAdapter, HttpAdapterHost } from './http.adapter';
           ]),
         );
         return new Proxy(host, {
-          get(_, key, receiver) {
+          get(_, key) {
             const { httpAdapter } = host;
-            if (key === 'httpAdapter') {
-              return httpAdapter;
-            }
             if (key === 'constructor') {
               return HttpAdapter.constructor;
             }
@@ -36,7 +33,8 @@ import { HttpAdapter, HttpAdapterHost } from './http.adapter';
             if (!httpAdapter) {
               throw new Error('HttpAdapter is not yet available');
             }
-            return Reflect.get(httpAdapter, key, receiver);
+            const val = Reflect.get(httpAdapter, key, httpAdapter);
+            return typeof val === 'function' ? val.bind(httpAdapter) : val;
           },
         });
       },

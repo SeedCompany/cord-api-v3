@@ -1,16 +1,23 @@
 import { Injectable } from '@nestjs/common';
-import { node, relation } from 'cypher-query-builder';
+import { mapEntries } from '@seedcompany/common';
+import { node, not, relation } from 'cypher-query-builder';
 import {
   CreateNodeOptions,
   DefinedSorters,
   defineSorters,
   exp,
+  path,
   QueryFragment,
+  SortCol,
   SortFieldOf,
+  SortMatcher,
   sortWith,
+  variable,
 } from '~/core/database/query';
 import { engagementSorters } from '../engagement/engagement.repository';
 import { MergePeriodicReports } from '../periodic-report/dto';
+import { SummaryPeriod } from '../progress-summary/dto';
+import { progressSummarySorters } from '../progress-summary/progress-summary.repository';
 import { ProgressReport, ProgressReportStatus as Status } from './dto';
 
 @Injectable()
@@ -52,4 +59,37 @@ export const progressReportExtrasSorters: DefinedSorters<
         node('node', 'LanguageEngagement'),
       ])
       .apply(sortWith(engagementSorters, input)),
+  ...mapEntries(
+    [
+      { field: 'cumulativeSummary', period: SummaryPeriod.Cumulative },
+      { field: 'fiscalYearSummary', period: SummaryPeriod.FiscalYearSoFar },
+      { field: 'periodSummary', period: SummaryPeriod.ReportPeriod },
+    ],
+    ({ field, period }) => {
+      const periodVar = { period: variable(`"${period}"`) };
+      const matcher: SortMatcher<string> = (query, input) =>
+        query
+          .with('node as report')
+          .match([
+            node('report'),
+            relation('out', '', 'summary'),
+            node('node', 'ProgressSummary', periodVar),
+          ])
+          .apply(sortWith(progressSummarySorters, input))
+          .union()
+          .with('node')
+          .with('node as report')
+          .where(
+            not(
+              path([
+                node('report'),
+                relation('out', '', 'summary'),
+                node('', 'ProgressSummary', periodVar),
+              ]),
+            ),
+          )
+          .return<SortCol>('null as sortValue');
+      return [`${field}.*`, matcher];
+    },
+  ).asRecord,
 });

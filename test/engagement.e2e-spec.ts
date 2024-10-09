@@ -569,12 +569,20 @@ describe('Engagement e2e', () => {
 
     await registerUser(app, { roles: [Role.FieldOperationsDirector] });
     const date = '2020-05-13';
-    await app.graphql.mutate(
+    const result = await app.graphql.mutate(
       gql`
         mutation updateCeremony($input: UpdateCeremonyInput!) {
           updateCeremony(input: $input) {
             ceremony {
               id
+              planned {
+                value
+              }
+              estimatedDate {
+                value
+                canRead
+                canEdit
+              }
             }
           }
         }
@@ -589,28 +597,8 @@ describe('Engagement e2e', () => {
         },
       },
     );
-    const result = await app.graphql.query(
-      gql`
-        query ceremony($id: ID!) {
-          ceremony(id: $id) {
-            id
-            planned {
-              value
-            }
-            estimatedDate {
-              value
-              canRead
-              canEdit
-            }
-          }
-        }
-      `,
-      {
-        id: languageEngagementRead?.engagement?.ceremony?.value?.id,
-      },
-    );
-    expect(result.ceremony.planned.value).toBeTruthy();
-    expect(result.ceremony.estimatedDate.value).toBe(date);
+    expect(result.updateCeremony.ceremony.planned.value).toBeTruthy();
+    expect(result.updateCeremony.ceremony.estimatedDate.value).toBe(date);
 
     await user.login();
   });
@@ -645,12 +633,20 @@ describe('Engagement e2e', () => {
 
     await registerUser(app, { roles: [Role.FieldOperationsDirector] });
     const date = '2020-05-13';
-    await app.graphql.mutate(
+    const result = await app.graphql.mutate(
       gql`
         mutation updateCeremony($input: UpdateCeremonyInput!) {
           updateCeremony(input: $input) {
             ceremony {
               id
+              planned {
+                value
+              }
+              estimatedDate {
+                value
+                canRead
+                canEdit
+              }
             }
           }
         }
@@ -665,28 +661,8 @@ describe('Engagement e2e', () => {
         },
       },
     );
-    const result = await app.graphql.query(
-      gql`
-        query ceremony($id: ID!) {
-          ceremony(id: $id) {
-            id
-            planned {
-              value
-            }
-            estimatedDate {
-              value
-              canRead
-              canEdit
-            }
-          }
-        }
-      `,
-      {
-        id: internshipEngagementRead?.engagement?.ceremony?.value?.id,
-      },
-    );
-    expect(result.ceremony.planned.value).toBeTruthy();
-    expect(result.ceremony.estimatedDate.value).toBe(date);
+    expect(result.updateCeremony.ceremony.planned.value).toBeTruthy();
+    expect(result.updateCeremony.ceremony.estimatedDate.value).toBe(date);
 
     await user.login();
   });

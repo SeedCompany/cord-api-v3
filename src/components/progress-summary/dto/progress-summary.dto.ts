@@ -13,6 +13,7 @@ import { LinkTo } from '~/core/resources';
 export abstract class ProgressSummary {
   static readonly Props = keysOf<ProgressSummary>();
   static readonly SecuredProps = keysOf<SecuredProps<ProgressSummary>>();
+  static readonly BaseNodeProps = ['planned', 'actual'];
 
   @Field(() => Float)
   planned: number;
