@@ -1,7 +1,9 @@
-import { Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
+import { Info, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
 import {
+  Fields,
   ID,
   IdArg,
+  IsOnly,
   ListArg,
   LoggedInSession,
   Resource,
@@ -31,7 +33,12 @@ export class CommentableResolver {
     @ListArg(CommentThreadListInput) input: CommentThreadListInput,
     @LoggedInSession() session: Session,
     @Loader(CommentThreadLoader) commentThreads: LoaderOf<CommentThreadLoader>,
-  ): Promise<CommentThreadList> {
+    @Info(Fields, IsOnly(['total'])) onlyTotal: boolean,
+  ) {
+    if (onlyTotal) {
+      const total = await this.service.getThreadCount(parent, session);
+      return { total };
+    }
     const list = await this.service.listThreads(parent, input, session);
     commentThreads.primeAll(list.items);
     return list;

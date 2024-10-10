@@ -153,6 +153,18 @@ export class CommentService {
     }
   }
 
+  async getThreadCount(parent: Commentable, session: Session) {
+    const perms = await this.getPermissionsFromResource(parent, session);
+
+    // Do check here since we don't filter in the db query.
+    // Will need to be updated with DB switch.
+    if (!perms.can('read')) {
+      return 0;
+    }
+
+    return await this.repo.threads.count(parent.id);
+  }
+
   async listThreads(
     parent: Commentable,
     input: CommentThreadListInput,
