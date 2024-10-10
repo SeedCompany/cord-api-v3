@@ -98,4 +98,18 @@ export class CommentThreadRepository extends DtoRepository(CommentThread) {
       .first();
     return result!; // result from paginate() will always have 1 row.
   }
+
+  async count(parent: ID) {
+    const result = await this.db
+      .query()
+      .match([
+        node('node', 'CommentThread'),
+        relation('in', '', 'commentThread', ACTIVE),
+        node('', 'BaseNode', { id: parent }),
+      ])
+      .return<{ count: number }>('count(node) as count')
+      .map('count')
+      .first();
+    return result!;
+  }
 }
