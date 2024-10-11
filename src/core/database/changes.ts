@@ -71,7 +71,7 @@ type ChangeOf<Val> = Val extends SetChangeType<any, infer Override>
       | RawChangeOf<UnwrapSecured<Val> & {}>
       | (null extends UnwrapSecured<Val> ? null : never);
 
-type RawChangeOf<Val> = IsFileField<Val> extends true
+export type RawChangeOf<Val> = IsFileField<Val> extends true
   ? CreateDefinedFileVersionInput
   : Val extends LinkTo<infer X>
   ? ID<X>
