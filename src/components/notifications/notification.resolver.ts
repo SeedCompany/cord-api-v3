@@ -1,25 +1,23 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import {
-  ListArg,
-  LoggedInSession,
-  NotImplementedException,
-  Session,
-} from '~/common';
+import { ListArg, LoggedInSession, Session } from '~/common';
 import {
   MarkNotificationReadArgs,
   Notification,
   NotificationList,
   NotificationListInput,
 } from './dto';
+import { NotificationServiceImpl } from './notification.service';
 
 @Resolver()
 export class NotificationResolver {
+  constructor(private readonly service: NotificationServiceImpl) {}
+
   @Query(() => NotificationList)
   async notifications(
     @LoggedInSession() session: Session,
     @ListArg(NotificationListInput) input: NotificationListInput,
   ): Promise<NotificationList> {
-    throw new NotImplementedException().with(input, session);
+    return await this.service.list(input, session);
   }
 
   @Mutation(() => Notification)
@@ -27,6 +25,6 @@ export class NotificationResolver {
     @LoggedInSession() session: Session,
     @Args() input: MarkNotificationReadArgs,
   ): Promise<Notification> {
-    throw new NotImplementedException().with(input, session);
+    return await this.service.markRead(input, session);
   }
 }
