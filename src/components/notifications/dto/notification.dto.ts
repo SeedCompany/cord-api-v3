@@ -1,4 +1,4 @@
-import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
+import { Field, InterfaceType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { Resource, SecuredProps } from '~/common';
 import { LinkTo, RegisterResource } from '~/core/resources';
@@ -15,14 +15,6 @@ export class Notification extends Resource {
 
   @Field(() => Boolean)
   readonly unread: boolean;
-}
-
-@ObjectType({
-  implements: [Notification],
-})
-export class SimpleTextNotification extends Notification {
-  @Field(() => String)
-  readonly content: string;
 }
 
 declare module '~/core/resources/map' {
