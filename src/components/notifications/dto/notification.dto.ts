@@ -11,7 +11,7 @@ export class Notification extends Resource {
   static readonly Props = keysOf<Notification>();
   static readonly SecuredProps = keysOf<SecuredProps<Notification>>();
 
-  readonly owner: LinkTo<'User'>;
+  readonly for: LinkTo<'User'>;
 
   @Field(() => Boolean)
   readonly unread: boolean;

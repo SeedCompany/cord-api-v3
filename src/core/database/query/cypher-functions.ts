@@ -16,6 +16,8 @@ const fn =
 /** Create a function with a name that takes a single argument */
 const fn1 = (name: string) => (arg: ExpressionInput) => fn(name)(arg);
 
+const fn0 = (name: string) => () => fn(name)();
+
 /**
  * Returns a list containing the values returned by an expression.
  * Using this function aggregates data by amalgamating multiple records or
@@ -79,6 +81,7 @@ export const apoc = {
     fromJsonList: fn1('apoc.convert.fromJsonList'),
   },
   create: {
+    uuid: fn0('apoc.create.uuid'),
     setLabels: (node: ExpressionInput, labels: readonly string[]) =>
       procedure('apoc.create.setLabels', ['node'])({ node: exp(node), labels }),
   },
