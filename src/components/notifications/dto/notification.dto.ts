@@ -8,8 +8,8 @@ import { LinkTo, RegisterResource } from '~/core/resources';
   implements: [Resource],
 })
 export class Notification extends Resource {
-  static readonly Props = keysOf<Notification>();
-  static readonly SecuredProps = keysOf<SecuredProps<Notification>>();
+  static readonly Props: string[] = keysOf<Notification>();
+  static readonly SecuredProps: string[] = keysOf<SecuredProps<Notification>>();
 
   readonly for: LinkTo<'User'>;
 
