@@ -76,11 +76,7 @@ export class PostService {
   async delete(id: ID, session: Session): Promise<void> {
     const object = await this.repo.readOne(id, session);
 
-    const perms = await this.getPermissionsFromPostable(
-      object.parent.properties.id,
-      session,
-    );
-    perms.verifyCan('delete');
+    this.privileges.for(session, Post, object).verifyCan('delete');
 
     try {
       await this.repo.deleteNode(object);
