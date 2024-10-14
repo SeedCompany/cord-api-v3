@@ -33,6 +33,7 @@ import { ProductModule } from './components/product/product.module';
 import { ProgressReportModule } from './components/progress-report/progress-report.module';
 import { ProgressSummaryModule } from './components/progress-summary/progress-summary.module';
 import { ProjectChangeRequestModule } from './components/project-change-request/project-change-request.module';
+import { ProjectCommentNotificationModule } from './components/project/project-comment-notification/project-comment.module';
 import { ProjectModule } from './components/project/project.module';
 import { PromptsModule } from './components/prompts/prompts.module';
 import { ScriptureModule } from './components/scripture';
@@ -93,6 +94,7 @@ if (process.env.NODE_ENV !== 'production') {
     PnpExtractionResultModule,
     NotificationModule,
     SimpleTextNotificationModule,
+    ProjectCommentNotificationModule,
   ],
 })
 export class AppModule {}
