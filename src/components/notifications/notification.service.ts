@@ -36,7 +36,20 @@ export abstract class NotificationService {
     input: T extends { Input: infer Input } ? Input : InputOf<T['prototype']>,
   ) {
     const session = sessionFromContext(this.gqlContextHost.context);
-    await this.repo.create(recipients, type, input, session);
+    const { dto, ...rest } = await this.repo.create(
+      recipients,
+      type,
+      input,
+      session,
+    );
+    return {
+      ...rest,
+      notification: this.secure(dto) as T['prototype'],
+    };
+  }
+
+  protected secure(dto: UnsecuredDto<Notification>) {
+    return { ...dto, canDelete: true };
   }
 }
 
@@ -76,10 +89,6 @@ export class NotificationServiceImpl
   async markRead(input: MarkNotificationReadArgs, session: Session) {
     const result = await this.repo.markRead(input, session);
     return this.secure(result);
-  }
-
-  private secure(dto: UnsecuredDto<Notification>) {
-    return { ...dto, canDelete: true };
   }
 
   async onModuleInit() {
