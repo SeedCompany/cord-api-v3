@@ -1,6 +1,6 @@
 import { DiscoveryService } from '@golevelup/nestjs-discovery';
 import { forwardRef, Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { mapEntries } from '@seedcompany/common';
+import { mapEntries, Nil } from '@seedcompany/common';
 import {
   ID,
   ResourceShape,
@@ -30,9 +30,12 @@ export abstract class NotificationService {
   @Inject(GqlContextHost)
   protected readonly gqlContextHost: GqlContextHost;
 
+  /**
+   * If the recipient list is given (not nil), it will override the strategy's recipient resolution.
+   */
   async create<T extends ResourceShape<Notification>>(
     type: T,
-    recipients: ReadonlyArray<ID<'User'>>,
+    recipients: ReadonlyArray<ID<'User'>> | Nil,
     input: T extends { Input: infer Input } ? Input : InputOf<T['prototype']>,
   ) {
     const session = sessionFromContext(this.gqlContextHost.context);

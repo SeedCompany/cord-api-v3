@@ -21,6 +21,14 @@ export abstract class INotificationStrategy<
   TNotification extends Notification,
   TInput = InputOf<TNotification>,
 > {
+  /**
+   * Expected to return rows with a user as `recipient`
+   */
+  // eslint-disable-next-line @seedcompany/no-unused-vars
+  recipientsForNeo4j(input: TInput) {
+    return (query: Query) => query.unwind([], 'recipient').return('recipient');
+  }
+
   saveForNeo4j(input: TInput) {
     return (query: Query) => query.setValues({ node: input }, true);
   }
