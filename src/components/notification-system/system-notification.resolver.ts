@@ -7,6 +7,7 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import { ID, LoggedInSession, Session, UnauthorizedException } from '~/common';
+import { MarkdownScalar } from '~/common/markdown.scalar';
 import { isAdmin } from '~/common/session';
 import { NotificationService } from '../notifications';
 import { SystemNotification } from './system-notification.dto';
@@ -26,7 +27,7 @@ export class SystemNotificationResolver {
 
   @Mutation(() => SystemNotificationCreationOutput)
   async createSystemNotification(
-    @Args('message') message: string,
+    @Args({ name: 'message', type: () => MarkdownScalar }) message: string,
     @LoggedInSession() session: Session,
   ): Promise<SystemNotificationCreationOutput> {
     if (!isAdmin(session)) {
