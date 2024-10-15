@@ -1,5 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { node, Query, relation } from 'cypher-query-builder';
+import { inArray, node, Query, relation } from 'cypher-query-builder';
 import { omit } from 'lodash';
 import { DateTime } from 'luxon';
 import {
@@ -13,6 +13,7 @@ import {
 import { CommonRepository } from '~/core/database';
 import {
   apoc,
+  coalesce,
   createRelationships,
   filter,
   merge,
@@ -44,40 +45,41 @@ export class NotificationRepository extends CommonRepository {
     session: Session,
   ) {
     const extra = omit(input, Notification.Props);
-    const createdAt = DateTime.now();
-    await this.db
+    const res = await this.db
       .query()
-      .match(requestingUser(session))
-      .create([
-        node('source', 'NotificationSource', {
-          id: variable(apoc.create.uuid()),
-          createdAt,
-        }),
-        relation('out', '', 'producer'),
-        node('requestingUser'),
-      ])
-      .with('source')
-      .unwind(recipients.slice(), 'userId')
-      .match(node('for', 'User', { id: variable('userId') }))
       .create(
         node('node', EnhancedResource.of(type).dbLabels, {
           id: variable(apoc.create.uuid()),
-          createdAt,
-          unread: variable('true'),
+          createdAt: DateTime.now(),
           type: this.getType(type),
         }),
       )
-      .with('*')
+      .with('node')
       .apply(this.service.getStrategy(type).saveForNeo4j(extra))
       .with('*')
+      .match(requestingUser(session))
       .apply(
-        createRelationships(Notification, {
-          in: { produced: variable('source') },
-          out: { for: variable('for') },
+        createRelationships(Notification, 'out', {
+          creator: variable('requestingUser'),
         }),
       )
-      .return('node')
-      .run();
+      .subQuery(['node', 'requestingUser'], (sub) =>
+        sub
+          .match(node('recipient', 'User'))
+          .where({ 'recipient.id': inArray(recipients) })
+          .create([
+            node('node'),
+            relation('out', '', 'recipient', { unread: variable('true') }),
+            node('recipient'),
+          ])
+          .return<{ totalRecipients: number }>(
+            'count(recipient) as totalRecipients',
+          ),
+      )
+      .subQuery('node', this.hydrate(session))
+      .return('dto, totalRecipients')
+      .first();
+    return res!;
   }
 
   async markRead({ id, unread }: MarkNotificationReadArgs, session: Session) {
@@ -85,12 +87,12 @@ export class NotificationRepository extends CommonRepository {
       .query()
       .match([
         node('node', 'Notification', { id }),
-        relation('out', '', 'for'),
+        relation('out', 'recipient', 'recipient'),
         requestingUser(session),
       ])
-      .setValues({ node: { unread } }, true)
+      .setValues({ recipient: { unread } }, true)
       .with('node')
-      .apply(this.hydrate())
+      .apply(this.hydrate(session))
       .first();
     if (!result) {
       throw new NotFoundException();
@@ -106,19 +108,19 @@ export class NotificationRepository extends CommonRepository {
         q
           .match([
             node('node', 'Notification'),
-            relation('out', '', 'for'),
+            relation('out', 'recipient', 'recipient'),
             node('requestingUser'),
           ])
           .apply(notificationFilters(input.filter))
           .with('node')
           .orderBy('node.createdAt', 'DESC')
-          .apply(paginate(input, this.hydrate())),
+          .apply(paginate(input, this.hydrate(session))),
       )
       .subQuery('requestingUser', (q) =>
         q
           .match([
-            node('node', 'Notification', { unread: variable('true') }),
-            relation('out', '', 'for'),
+            node('node', 'Notification'),
+            relation('out', '', 'recipient', { unread: variable('true') }),
             node('requestingUser'),
           ])
           .return<{ totalUnread: number }>('count(node) as totalUnread'),
@@ -128,7 +130,7 @@ export class NotificationRepository extends CommonRepository {
     return result!;
   }
 
-  protected hydrate() {
+  protected hydrate(session: Session) {
     return (query: Query) =>
       query
         .subQuery((q) => {
@@ -150,9 +152,15 @@ export class NotificationRepository extends CommonRepository {
             undefined,
           )!;
         })
+        .optionalMatch([
+          node('node'),
+          relation('out', 'recipient', 'recipient'),
+          requestingUser(session),
+        ])
         .return<{ dto: UnsecuredDto<Notification> }>(
           merge('node', 'extra', {
             __typename: 'node.type + "Notification"',
+            unread: coalesce('recipient.unread', false),
           }).as('dto'),
         );
   }
@@ -163,5 +171,5 @@ export class NotificationRepository extends CommonRepository {
 }
 
 const notificationFilters = filter.define(() => NotificationFilters, {
-  unread: ({ value }) => ({ node: { unread: value } }),
+  unread: ({ value }) => ({ recipient: { unread: value } }),
 });
