@@ -2,7 +2,7 @@ import { Field, InterfaceType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { DateTimeField, Resource, SecuredProps } from '~/common';
-import { LinkTo, RegisterResource } from '~/core/resources';
+import { RegisterResource } from '~/core/resources';
 
 @RegisterResource()
 @InterfaceType({
@@ -12,12 +12,15 @@ export class Notification extends Resource {
   static readonly Props: string[] = keysOf<Notification>();
   static readonly SecuredProps: string[] = keysOf<SecuredProps<Notification>>();
 
-  readonly for: LinkTo<'User'>;
-
-  @Field(() => Boolean)
+  @Field(() => Boolean, {
+    description: 'Whether the notification is unread for the requesting user',
+  })
   readonly unread: boolean;
 
-  @DateTimeField({ nullable: true })
+  @DateTimeField({
+    nullable: true,
+    description: 'When the notification was read for the requesting user',
+  })
   readonly readAt: DateTime | null;
 }
 
