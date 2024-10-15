@@ -1,4 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { Nil } from '@seedcompany/common';
 import { inArray, node, Query, relation } from 'cypher-query-builder';
 import { omit } from 'lodash';
 import { DateTime } from 'luxon';
@@ -39,7 +40,7 @@ export class NotificationRepository extends CommonRepository {
   }
 
   async create(
-    recipients: ReadonlyArray<ID<'User'>>,
+    recipients: ReadonlyArray<ID<'User'>> | Nil,
     type: ResourceShape<any>,
     input: Record<string, any>,
     session: Session,
@@ -65,8 +66,15 @@ export class NotificationRepository extends CommonRepository {
       )
       .subQuery(['node', 'requestingUser'], (sub) =>
         sub
-          .match(node('recipient', 'User'))
-          .where({ 'recipient.id': inArray(recipients) })
+          .apply((q) =>
+            recipients == null
+              ? q.subQuery(
+                  this.service.getStrategy(type).recipientsForNeo4j(input),
+                )
+              : q
+                  .match(node('recipient', 'User'))
+                  .where({ 'recipient.id': inArray(recipients) }),
+          )
           .create([
             node('node'),
             relation('out', '', 'recipient', { unread: variable('true') }),
