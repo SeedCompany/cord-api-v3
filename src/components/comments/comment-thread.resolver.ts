@@ -99,6 +99,11 @@ export class CommentThreadResolver {
     return await this.resources.loadByBaseNode(thread.parent);
   }
 
+  @ResolveField(() => Commentable)
+  async container(@Parent() thread: CommentThread) {
+    return await this.resources.loadByBaseNode(thread.parent);
+  }
+
   @ResolveField(() => User)
   async creator(
     @Parent() thread: CommentThread,
