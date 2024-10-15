@@ -1,6 +1,7 @@
 import { Field, InterfaceType } from '@nestjs/graphql';
+import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { Resource, SecuredProps } from '~/common';
+import { DateTimeField, Resource, SecuredProps } from '~/common';
 import { LinkTo, RegisterResource } from '~/core/resources';
 
 @RegisterResource()
@@ -15,6 +16,9 @@ export class Notification extends Resource {
 
   @Field(() => Boolean)
   readonly unread: boolean;
+
+  @DateTimeField({ nullable: true })
+  readonly readAt: DateTime | null;
 }
 
 declare module '~/core/resources/map' {

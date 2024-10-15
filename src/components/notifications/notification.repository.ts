@@ -1,6 +1,13 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { Nil } from '@seedcompany/common';
-import { inArray, node, Query, relation } from 'cypher-query-builder';
+import {
+  inArray,
+  isNull,
+  node,
+  not,
+  Query,
+  relation,
+} from 'cypher-query-builder';
 import { omit } from 'lodash';
 import { DateTime } from 'luxon';
 import {
@@ -14,7 +21,6 @@ import {
 import { CommonRepository } from '~/core/database';
 import {
   apoc,
-  coalesce,
   createRelationships,
   filter,
   merge,
@@ -77,7 +83,7 @@ export class NotificationRepository extends CommonRepository {
           )
           .create([
             node('node'),
-            relation('out', '', 'recipient', { unread: variable('true') }),
+            relation('out', '', 'recipient'),
             node('recipient'),
           ])
           .return<{ totalRecipients: number }>(
@@ -98,7 +104,7 @@ export class NotificationRepository extends CommonRepository {
         relation('out', 'recipient', 'recipient'),
         requestingUser(session),
       ])
-      .setValues({ recipient: { unread } }, true)
+      .setValues({ 'recipient.readAt': unread ? null : DateTime.now() })
       .with('node')
       .apply(this.hydrate(session))
       .first();
@@ -128,9 +134,10 @@ export class NotificationRepository extends CommonRepository {
         q
           .match([
             node('node', 'Notification'),
-            relation('out', '', 'recipient', { unread: variable('true') }),
+            relation('out', 'recipient', 'recipient'),
             node('requestingUser'),
           ])
+          .where({ 'recipient.readAt': isNull() })
           .return<{ totalUnread: number }>('count(node) as totalUnread'),
       )
       .return(['items', 'hasMore', 'total', 'totalUnread'])
@@ -168,7 +175,8 @@ export class NotificationRepository extends CommonRepository {
         .return<{ dto: UnsecuredDto<Notification> }>(
           merge('node', 'extra', {
             __typename: 'node.type + "Notification"',
-            unread: coalesce('recipient.unread', false),
+            unread: 'recipient.readAt is null',
+            readAt: 'recipient.readAt',
           }).as('dto'),
         );
   }
@@ -179,5 +187,7 @@ export class NotificationRepository extends CommonRepository {
 }
 
 const notificationFilters = filter.define(() => NotificationFilters, {
-  unread: ({ value }) => ({ recipient: { unread: value } }),
+  unread: ({ value }) => ({
+    'recipient.readAt': value ? isNull() : not(isNull()),
+  }),
 });
