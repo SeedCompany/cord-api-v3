@@ -18,7 +18,7 @@ import { FilmModule } from './components/film/film.module';
 import { FundingAccountModule } from './components/funding-account/funding-account.module';
 import { LanguageModule } from './components/language/language.module';
 import { LocationModule } from './components/location/location.module';
-import { SimpleTextNotificationModule } from './components/notification-simple-text/simple-text-notification.module';
+import { SystemNotificationModule } from './components/notification-system/system-notification.module';
 import { NotificationModule } from './components/notifications/notification.module';
 import { OrganizationModule } from './components/organization/organization.module';
 import { PartnerModule } from './components/partner/partner.module';
@@ -92,7 +92,7 @@ if (process.env.NODE_ENV !== 'production') {
     PromptsModule,
     PnpExtractionResultModule,
     NotificationModule,
-    SimpleTextNotificationModule,
+    SystemNotificationModule,
   ],
 })
 export class AppModule {}
