@@ -3,7 +3,7 @@ import { CustomScalar } from '@nestjs/graphql';
 import { GraphQLScalarType } from 'graphql';
 import UploadScalar from 'graphql-upload/GraphQLUpload.mjs';
 import { DateScalar, DateTimeScalar } from './luxon.graphql';
-import { InlineMarkdownScalar } from './markdown.scalar';
+import { InlineMarkdownScalar, MarkdownScalar } from './markdown.scalar';
 import { RichTextScalar } from './rich-text.scalar';
 import { UrlScalar } from './url.field';
 
@@ -16,5 +16,6 @@ export const getRegisteredScalars = (): Scalar[] => [
   RichTextScalar,
   UploadScalar,
   UrlScalar,
+  MarkdownScalar,
   InlineMarkdownScalar,
 ];
