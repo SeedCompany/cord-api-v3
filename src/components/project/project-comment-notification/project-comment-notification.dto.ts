@@ -8,8 +8,7 @@ import { Notification } from '../../notifications';
   implements: [Notification],
 })
 export class ProjectCommentNotification extends Notification {
-  static readonly Input: { comment: ID<'Comment'>; project: ID<'Project'> } =
-    undefined as any;
+  static readonly Input: { comment: ID<'Comment'> } = undefined as any;
   static readonly Props = keysOf<ProjectCommentNotification>();
   static readonly SecuredProps =
     keysOf<SecuredProps<ProjectCommentNotification>>();

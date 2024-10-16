@@ -1,14 +1,4 @@
-import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import { ID, IdField } from '~/common';
-
-@InputType()
-export abstract class CreateProjectCommentNotificationInput {
-  @IdField()
-  readonly commentId: ID<'Comment'>;
-
-  @IdField()
-  readonly projectId: ID<'Project'>;
-}
+import { Field, ObjectType } from '@nestjs/graphql';
 
 @ObjectType()
 export abstract class CreateProjectCommentNotificationOutput {
