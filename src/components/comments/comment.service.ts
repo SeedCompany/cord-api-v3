@@ -15,6 +15,8 @@ import { isAdmin } from '~/common/session';
 import { ResourceLoader, ResourcesHost } from '~/core';
 import { BaseNode, isBaseNode } from '~/core/database/results';
 import { Privileges } from '../authorization';
+import { ProjectMemberService } from '../project';
+import { ProjectCommentNotificationService } from '../project/project-comment-notification';
 import { CommentRepository } from './comment.repository';
 import {
   Comment,
@@ -39,6 +41,8 @@ export class CommentService {
     private readonly resources: ResourceLoader,
     private readonly resourcesHost: ResourcesHost,
     private readonly mentionNotificationService: CommentViaMentionNotificationService,
+    private readonly projectMemberService: ProjectMemberService,
+    private readonly projectCommentService: ProjectCommentNotificationService,
   ) {}
 
   async create(input: CreateCommentInput, session: Session) {
@@ -71,6 +75,22 @@ export class CommentService {
 
     const mentionees = this.mentionNotificationService.extract(dto);
     await this.mentionNotificationService.notify(mentionees, dto);
+
+    const members = await this.projectMemberService.list(
+      {
+        ...input,
+        filter: { projectId: input.resourceId },
+        sort: 'createdAt',
+        order: 'ASC',
+        count: 100,
+        page: 1,
+      },
+      session,
+    );
+
+    const memberIds = members.items.map((member) => member.id);
+
+    await this.projectCommentService.notify(memberIds, dto);
 
     return this.secureComment(dto, session);
   }

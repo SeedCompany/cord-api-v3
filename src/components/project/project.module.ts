@@ -5,6 +5,7 @@ import { BudgetModule } from '../budget/budget.module';
 import { EngagementModule } from '../engagement/engagement.module';
 import { FieldRegionModule } from '../field-region/field-region.module';
 import { LocationModule } from '../location/location.module';
+import { NotificationModule } from '../notifications';
 import { OrganizationModule } from '../organization/organization.module';
 import { PartnerModule } from '../partner/partner.module';
 import { PartnershipModule } from '../partnership/partnership.module';
@@ -15,6 +16,7 @@ import { FinancialApproverModule } from './financial-approver/financial-approver
 import * as handlers from './handlers';
 import { InternshipProjectResolver } from './internship-project.resolver';
 import { RenameTranslationToMomentumMigration } from './migrations/rename-translation-to-momentum.migration';
+import { ProjectCommentNotificationService } from './project-comment-notification';
 import { ProjectMemberModule } from './project-member/project-member.module';
 import {
   ConcreteRepos,
@@ -41,6 +43,7 @@ import { ProjectWorkflowModule } from './workflow/project-workflow.module';
     forwardRef(() => AuthorizationModule),
     PartnerModule,
     forwardRef(() => OrganizationModule),
+    forwardRef(() => NotificationModule),
     FinancialApproverModule,
     ProjectWorkflowModule,
   ],
@@ -56,6 +59,7 @@ import { ProjectWorkflowModule } from './workflow/project-workflow.module';
     ProjectLoader,
     ...Object.values(handlers),
     RenameTranslationToMomentumMigration,
+    ProjectCommentNotificationService,
   ],
   exports: [ProjectService, ProjectMemberModule],
 })
