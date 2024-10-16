@@ -3,7 +3,8 @@ import { EnumType, makeEnum } from '~/common';
 export type ScheduleStatus = EnumType<typeof ScheduleStatus>;
 export const ScheduleStatus = makeEnum({
   name: 'ScheduleStatus',
-  values: ['Ahead', 'OnTime', 'Behind'],
+  values: ['Behind', 'OnTime', 'Ahead'],
+  exposeOrder: true,
   extra: (status) => ({
     fromVariance: (variance: number) => {
       if (variance > 1 || variance < -1) {
