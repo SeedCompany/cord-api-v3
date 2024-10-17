@@ -28,7 +28,9 @@ export class NotificationRepository
     super();
   }
 
-  onModuleInit() {
+  async onModuleInit() {
+    await this.service.ready.wait();
+
     (this as any).hydrate = e.shape(e.Notification, (notification) => {
       return Object.assign(
         {
