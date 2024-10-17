@@ -67,6 +67,6 @@ export class LocationEdgeDBRepository
       ...this.applyFilter(obj, input),
       ...this.applyOrderBy(obj, input),
     }));
-    return await this.paginate(all, input);
+    return await this.paginateAndRun(all, input);
   }
 }

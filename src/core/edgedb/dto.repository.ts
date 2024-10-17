@@ -185,7 +185,22 @@ export const RepoFor = <
         : {};
     }
 
-    protected async paginate(
+    protected async paginateAndRun(
+      listOfAllQuery: $expr_Select<
+        $.TypeSet<$.ObjectType<DBName<Root>>, $.Cardinality.Many>
+      >,
+      input: PaginationInput,
+    ): Promise<PaginatedListType<Dto>> {
+      const paginated = this.paginate(listOfAllQuery, input);
+      const query = e.select({
+        ...paginated,
+        items: e.select(paginated.items, this.hydrate),
+      });
+      const result = await this.db.run(query);
+      return result as any;
+    }
+
+    protected paginate(
       listOfAllQuery: $expr_Select<
         $.TypeSet<$.ObjectType<DBName<Root>>, $.Cardinality.Many>
       >,
@@ -195,18 +210,14 @@ export const RepoFor = <
         offset: (input.page - 1) * input.count,
         limit: input.count + 1,
       }));
-      const items = e.select(thisPage, (obj: any) => ({
-        ...this.hydrate(obj),
+      const items = e.select(thisPage, () => ({
         limit: input.count,
       }));
-      const query = e.select({
+      return {
         items: items as any,
         total: e.count(listOfAllQuery),
         hasMore: e.op(e.count(thisPage), '>', input.count),
-      });
-
-      const result = await this.db.run(query);
-      return result as PaginatedListType<Dto>;
+      };
     }
 
     // endregion
@@ -272,7 +283,7 @@ export const RepoFor = <
         ...this.applyFilter(obj, input),
         ...this.applyOrderBy(obj, input),
       }));
-      return await this.paginate(all as any, input);
+      return await this.paginateAndRun(all as any, input);
     }
 
     async create(input: EasyInsertShape<Root>): Promise<Dto> {
