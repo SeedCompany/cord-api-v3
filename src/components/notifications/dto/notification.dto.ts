@@ -1,13 +1,19 @@
 import { Field, InterfaceType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { DateTimeField, Resource, SecuredProps } from '~/common';
+import {
+  DateTimeField,
+  resolveByTypename,
+  Resource,
+  SecuredProps,
+} from '~/common';
 import { e } from '~/core/edgedb';
 import { RegisterResource } from '~/core/resources';
 
 @RegisterResource({ db: e.default.Notification })
 @InterfaceType({
   implements: [Resource],
+  resolveType: resolveByTypename(Notification.name),
 })
 export class Notification extends Resource {
   static readonly Props: string[] = keysOf<Notification>();
@@ -17,6 +23,8 @@ export class Notification extends Resource {
     description: 'Whether the notification is unread for the requesting user',
   })
   readonly unread: boolean;
+
+  declare readonly __typename: string;
 
   @DateTimeField({
     nullable: true,

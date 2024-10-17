@@ -1,4 +1,5 @@
 import { node, Query } from 'cypher-query-builder';
+import { e } from '~/core/edgedb';
 import { INotificationStrategy, NotificationStrategy } from '../notifications';
 import { SystemNotification } from './system-notification.dto';
 
@@ -7,5 +8,21 @@ export class SystemNotificationStrategy extends INotificationStrategy<SystemNoti
   recipientsForNeo4j() {
     return (query: Query) =>
       query.match(node('recipient', 'User')).return('recipient');
+  }
+
+  recipientsForEdgeDB() {
+    return e.User; // all users
+  }
+
+  insertForEdgeDB(input: SystemNotification) {
+    return e.insert(e.Notification.System, {
+      message: input.message,
+    });
+  }
+
+  hydrateExtraForEdgeDB() {
+    return e.is(e.Notification.System, {
+      message: true,
+    });
   }
 }
