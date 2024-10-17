@@ -13,16 +13,4 @@ export class SystemNotificationStrategy extends INotificationStrategy<SystemNoti
   recipientsForEdgeDB() {
     return e.User; // all users
   }
-
-  insertForEdgeDB(input: SystemNotification) {
-    return e.insert(e.Notification.System, {
-      message: input.message,
-    });
-  }
-
-  hydrateExtraForEdgeDB() {
-    return e.is(e.Notification.System, {
-      message: true,
-    });
-  }
 }
