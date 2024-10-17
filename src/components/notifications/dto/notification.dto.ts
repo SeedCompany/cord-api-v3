@@ -2,9 +2,10 @@ import { Field, InterfaceType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { DateTimeField, Resource, SecuredProps } from '~/common';
+import { e } from '~/core/edgedb';
 import { RegisterResource } from '~/core/resources';
 
-@RegisterResource()
+@RegisterResource({ db: e.default.Notification })
 @InterfaceType({
   implements: [Resource],
 })
@@ -28,7 +29,7 @@ declare module '~/core/resources/map' {
   interface ResourceMap {
     Notification: typeof Notification;
   }
-  // interface ResourceDBMap {
-  //   Notification: typeof e.Notification;
-  // }
+  interface ResourceDBMap {
+    Notification: typeof e.default.Notification;
+  }
 }
