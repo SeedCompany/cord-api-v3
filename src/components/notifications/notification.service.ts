@@ -1,6 +1,7 @@
 import { DiscoveryService } from '@golevelup/nestjs-discovery';
 import { forwardRef, Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { mapEntries, Nil } from '@seedcompany/common';
+import Event from 'edgedb/dist/primitives/event.js';
 import {
   ID,
   ResourceShape,
@@ -65,6 +66,7 @@ export class NotificationServiceImpl
     ResourceShape<Notification>,
     INotificationStrategy<Notification>
   >;
+  readonly ready = new ((Event as any).default as typeof Event)();
 
   constructor(private readonly discovery: DiscoveryService) {
     super();
@@ -107,5 +109,6 @@ export class NotificationServiceImpl
       }
       return [meta, instance];
     }).asMap;
+    this.ready.set();
   }
 }
