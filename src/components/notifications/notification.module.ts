@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
-import { NotificationRepository } from './notification.repository';
+import { splitDb } from '~/core';
+import { NotificationRepository as EdgeDBRepository } from './notification.edgedb.repository';
+import { NotificationRepository as Neo4jRepository } from './notification.repository';
 import { NotificationResolver } from './notification.resolver';
 import {
   NotificationService,
@@ -11,7 +13,7 @@ import {
     NotificationResolver,
     { provide: NotificationService, useExisting: NotificationServiceImpl },
     NotificationServiceImpl,
-    NotificationRepository,
+    splitDb(Neo4jRepository, EdgeDBRepository),
   ],
   exports: [NotificationService],
 })
