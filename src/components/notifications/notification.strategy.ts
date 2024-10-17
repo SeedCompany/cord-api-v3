@@ -43,7 +43,19 @@ export abstract class INotificationStrategy<
     return (query: Query) => query.setValues({ node: input }, true);
   }
 
-  abstract insertForEdgeDB(
+  hydrateExtraForNeo4j(outVar: string): QueryFragment | undefined {
+    const _used = outVar;
+    return undefined;
+  }
+}
+
+/* eslint-disable @typescript-eslint/method-signature-style */
+// eslint-disable-next-line @typescript-eslint/naming-convention
+export interface INotificationStrategy<
+  TNotification extends Notification,
+  TInput = InputOf<TNotification>,
+> {
+  insertForEdgeDB?(
     input: TInput,
   ): $.Expression<
     $.TypeSet<
@@ -52,12 +64,7 @@ export abstract class INotificationStrategy<
     >
   >;
 
-  hydrateExtraForNeo4j(outVar: string): QueryFragment | undefined {
-    const _used = outVar;
-    return undefined;
-  }
-
-  abstract hydrateExtraForEdgeDB(): Record<string, any>;
+  hydrateExtraForEdgeDB?(): Record<string, any>;
 }
 
 /* eslint-disable @typescript-eslint/method-signature-style */
