@@ -1,6 +1,5 @@
 import { node, Query, relation } from 'cypher-query-builder';
 import { createRelationships, exp } from '~/core/database/query';
-import { e } from '~/core/edgedb';
 import {
   INotificationStrategy,
   InputOf,
@@ -19,12 +18,6 @@ export class CommentViaMentionNotificationStrategy extends INotificationStrategy
       );
   }
 
-  insertForEdgeDB(input: InputOf<Mentioned>) {
-    return e.insert(e.Notification.CommentMentioned, {
-      comment: e.cast(e.Comments.Comment, e.uuid(input.comment)),
-    });
-  }
-
   hydrateExtraForNeo4j(outVar: string) {
     return (query: Query) =>
       query
@@ -38,11 +31,5 @@ export class CommentViaMentionNotificationStrategy extends INotificationStrategy
             comment: 'comment { .id }',
           }).as(outVar),
         );
-  }
-
-  hydrateExtraForEdgeDB() {
-    return e.is(e.Notification.CommentMentioned, {
-      comment: true,
-    });
   }
 }

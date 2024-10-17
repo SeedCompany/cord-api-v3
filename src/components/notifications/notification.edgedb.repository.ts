@@ -1,7 +1,8 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { Nil } from '@seedcompany/common';
-import { ID, PublicOf, ResourceShape } from '~/common';
+import { mapValues, Nil, setOf } from '@seedcompany/common';
+import { EnhancedResource, ID, PublicOf, ResourceShape } from '~/common';
 import { e, RepoFor, ScopeOf } from '~/core/edgedb';
+import { mapToSetBlock } from '~/core/edgedb/query-util/map-to-set-block';
 import {
   MarkNotificationReadArgs,
   Notification,
@@ -31,17 +32,30 @@ export class NotificationRepository
   async onModuleInit() {
     await this.service.ready.wait();
 
-    (this as any).hydrate = e.shape(e.Notification, (notification) => {
-      return Object.assign(
-        {
-          __typename: notification.__type__.name,
-        },
-        notification['*'],
-        ...[...this.service.strategyMap.values()].flatMap(
-          (strategy) => strategy.hydrateExtraForEdgeDB() ?? [],
-        ),
-      );
-    });
+    const basePointers = setOf(
+      Object.keys(this.resource.db.__element__.__pointers__),
+    );
+    const hydrateConcretes = Object.assign(
+      {},
+      ...[...this.service.strategyMap].flatMap(([type, strategy]) => {
+        if (strategy.hydrateExtraForEdgeDB) {
+          return strategy.hydrateExtraForEdgeDB();
+        }
+        const dbType = EnhancedResource.of(type as typeof Notification).db;
+        const ownPointers = Object.keys(dbType.__element__.__pointers__).filter(
+          (p) => !p.startsWith('<') && !basePointers.has(p),
+        );
+        return e.is(
+          dbType,
+          mapValues.fromList(ownPointers, () => true).asRecord,
+        );
+      }),
+    );
+    (this as any).hydrate = e.shape(e.Notification, (notification) => ({
+      __typename: notification.__type__.name,
+      ...notification['*'],
+      ...hydrateConcretes,
+    }));
   }
 
   async create(
@@ -51,7 +65,10 @@ export class NotificationRepository
   ) {
     const strategy = this.service.getStrategy(type);
 
-    const created = strategy.insertForEdgeDB(input);
+    const dbType = EnhancedResource.of(type as typeof Notification).db;
+    const created =
+      strategy.insertForEdgeDB?.(input) ??
+      e.insert(dbType, mapToSetBlock(dbType, input, false));
 
     const recipientsQuery = recipients
       ? e.cast(e.User, e.cast(e.uuid, e.set(...recipients)))
