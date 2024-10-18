@@ -5,12 +5,12 @@
 import { Parameter, ParameterBag, Pattern } from 'cypher-query-builder';
 
 export class Variable extends Parameter {
-  constructor(variable: string, name = variable) {
-    super(name, variable);
+  constructor(variable: string) {
+    super('variable', String(variable));
   }
 
   toString() {
-    return `${this.value}`;
+    return this.value;
   }
 }
 

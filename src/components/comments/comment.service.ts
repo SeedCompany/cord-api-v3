@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { difference } from 'lodash';
 import {
   ID,
   InvalidIdForTypeException,
@@ -26,6 +27,7 @@ import {
   CreateCommentInput,
   UpdateCommentInput,
 } from './dto';
+import { CommentViaMentionNotificationService } from './mention-notification/comment-via-mention-notification.service';
 
 type CommentableRef = ID | BaseNode | Commentable;
 
@@ -36,6 +38,7 @@ export class CommentService {
     private readonly privileges: Privileges,
     private readonly resources: ResourceLoader,
     private readonly resourcesHost: ResourcesHost,
+    private readonly mentionNotificationService: CommentViaMentionNotificationService,
   ) {}
 
   async create(input: CreateCommentInput, session: Session) {
@@ -45,12 +48,13 @@ export class CommentService {
     );
     perms.verifyCan('create');
 
+    let dto;
     try {
       const result = await this.repo.create(input, session);
       if (!result) {
         throw new ServerException('Failed to create comment');
       }
-      return await this.readOne(result.id, session);
+      dto = await this.repo.readOne(result.id);
     } catch (exception) {
       if (
         input.threadId &&
@@ -64,6 +68,11 @@ export class CommentService {
 
       throw new ServerException('Failed to create comment', exception);
     }
+
+    const mentionees = this.mentionNotificationService.extract(dto);
+    await this.mentionNotificationService.notify(mentionees, dto);
+
+    return this.secureComment(dto, session);
   }
 
   async getPermissionsFromResource(resource: CommentableRef, session: Session) {
@@ -134,7 +143,14 @@ export class CommentService {
     this.privileges.for(session, Comment, object).verifyChanges(changes);
     await this.repo.update(object, changes);
 
-    return await this.readOne(input.id, session);
+    const updated = await this.repo.readOne(object.id);
+
+    const prevMentionees = this.mentionNotificationService.extract(object);
+    const nowMentionees = this.mentionNotificationService.extract(updated);
+    const newMentionees = difference(prevMentionees, nowMentionees);
+    await this.mentionNotificationService.notify(newMentionees, updated);
+
+    return this.secureComment(updated, session);
   }
 
   async delete(id: ID, session: Session): Promise<void> {

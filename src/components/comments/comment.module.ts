@@ -10,11 +10,13 @@ import { CommentResolver } from './comment.resolver';
 import { CommentService } from './comment.service';
 import { CommentableResolver } from './commentable.resolver';
 import { CreateCommentResolver } from './create-comment.resolver';
+import { CommentViaMentionNotificationModule } from './mention-notification/comment-via-mention-notification.module';
 
 @Module({
   imports: [
     forwardRef(() => UserModule),
     forwardRef(() => AuthorizationModule),
+    CommentViaMentionNotificationModule,
   ],
   providers: [
     CreateCommentResolver,
