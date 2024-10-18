@@ -1,4 +1,5 @@
 import {
+  Body,
   Controller,
   Get,
   Headers,
@@ -9,9 +10,8 @@ import {
 } from '@nestjs/common';
 import { DateTime } from 'luxon';
 import { URL } from 'node:url';
-import rawBody from 'raw-body';
 import { InputException } from '~/common';
-import { HttpAdapter, IRequest, IResponse } from '~/core/http';
+import { HttpAdapter, IRequest, IResponse, RawBody } from '~/core/http';
 import { FileBucket, InvalidSignedUrlException } from './bucket';
 
 /**
@@ -27,14 +27,13 @@ export class LocalBucketController {
   ) {}
 
   @Put()
+  @RawBody({ passthrough: true })
   async upload(
     @Headers('content-type') contentType: string,
     @Request() req: IRequest,
+    @Body() contents: Buffer,
   ) {
-    // Chokes on json files because they are parsed with body-parser.
-    // Need to disable it for this path or create a workaround.
-    const contents = await rawBody(req);
-    if (!contents) {
+    if (!contents || !Buffer.isBuffer(contents)) {
       throw new InputException();
     }
 
