@@ -118,6 +118,7 @@
   },
   "devDependencies": {
     "@edgedb/generate": "github:CarsonF/edgedb-js#workspace=@edgedb/generate&head=temp-host",
+    "@graphql-hive/cli": "^0.44.2",
     "@nestjs/cli": "^10.2.1",
     "@nestjs/schematics": "^10.0.3",
     "@nestjs/testing": "^10.2.7",
