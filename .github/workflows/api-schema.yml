@@ -50,6 +50,13 @@ jobs:
           name: head-gql-schema
           path: head
 
+      - name: Check with Hive
+        run: |
+          curl -sSL https://graphql-hive.com/install.sh | sh
+          hive schema:check head/schema.graphql \
+            --registry.accessToken '${{ secrets.HIVE_TOKEN }}' \
+            --github
+
       - name: Show diff in PR comment
         uses: agu-z/gql-diff-action@v2
         with:
