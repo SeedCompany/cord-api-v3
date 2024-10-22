@@ -34,7 +34,7 @@ export abstract class INotificationStrategy<
   recipientsForEdgeDB(
     // eslint-disable-next-line @seedcompany/no-unused-vars
     input: TInput,
-  ): $.Expression<$.TypeSet<typeof e.User.__element__>> {
+  ): $.Expression<$.TypeSet<$.ObjectType<'default::User'>>> {
     // No recipients. Only those explicitly specified in the service create call.
     return e.cast(e.User, e.set());
   }

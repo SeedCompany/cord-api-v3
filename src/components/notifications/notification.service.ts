@@ -40,12 +40,19 @@ export abstract class NotificationService {
     input: T extends { Input: infer Input } ? Input : InputOf<T['prototype']>,
   ) {
     const session = sessionFromContext(this.gqlContextHost.context);
+
     const { dto, ...rest } = await this.repo.create(
       recipients,
       type,
       input,
       session,
     );
+
+    // eslint-disable-next-line no-console
+    console.log('dto', dto);
+    // eslint-disable-next-line no-console
+    console.log('rest', rest);
+
     return {
       ...rest,
       notification: this.secure(dto) as T['prototype'],
@@ -85,6 +92,8 @@ export class NotificationServiceImpl
     session: Session,
   ): Promise<NotificationList> {
     const result = await this.repo.list(input, session);
+    // eslint-disable-next-line no-console
+    console.log('result:', result);
     return {
       ...result,
       items: result.items.map((dto) => this.secure(dto)),

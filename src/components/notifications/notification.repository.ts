@@ -51,6 +51,8 @@ export class NotificationRepository extends CommonRepository {
     input: Record<string, any>,
     session: Session,
   ) {
+    // eslint-disable-next-line no-console
+    console.log('input', input);
     const extra = omit(input, Notification.Props);
     const res = await this.db
       .query()

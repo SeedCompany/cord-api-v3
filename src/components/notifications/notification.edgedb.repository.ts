@@ -77,7 +77,7 @@ export class NotificationRepository
     const insertedRecipients = e.for(recipientsQuery, (user) =>
       e.insert(e.Notification.Recipient, {
         notification: created,
-        user: user,
+        user: user as any,
       }),
     );
 
