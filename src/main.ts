@@ -33,7 +33,7 @@ async function bootstrap() {
   await app.configure(app, config);
 
   app.enableShutdownHooks();
-  await app.listen(config.port, () => {
+  await app.listen(config.port, '0.0.0.0', () => {
     app.get(Logger).log(`Listening at ${config.hostUrl$.value}graphql`);
   });
 }
