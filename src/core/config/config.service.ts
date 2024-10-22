@@ -45,6 +45,9 @@ export const makeConfig = (env: EnvironmentService) =>
         ttl: env.duration('GRAPHQL_PERSISTED_QUERIES_TTL').optional('1w'),
       },
     };
+    hive = {
+      token: env.string('HIVE_TOKEN').optional(),
+    };
 
     lruCache = {
       ttl: env.duration('LRU_CACHE_TTL').optional()?.as('milliseconds'),

@@ -1,3 +1,4 @@
+import { useHive } from '@graphql-hive/yoga';
 import {
   YogaDriverConfig as DriverConfig,
   YogaDriverServerContext,
@@ -65,6 +66,12 @@ export class GraphqlOptions implements GqlOptionsFactory {
         ...scalars,
       },
       plugins: [
+        this.config.hive.token
+          ? useHive({
+              token: this.config.hive.token,
+              usage: true,
+            })
+          : false,
         this.useAutomaticPersistedQueries(),
         this.useAddOperationToContext(),
       ],

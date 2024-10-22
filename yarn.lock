@@ -1846,6 +1846,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@graphql-hive/yoga@npm:^0.38.2":
+  version: 0.38.2
+  resolution: "@graphql-hive/yoga@npm:0.38.2"
+  dependencies:
+    "@graphql-hive/core": "npm:0.8.2"
+    "@graphql-yoga/plugin-persisted-operations": "npm:^3.3.1"
+    tiny-lru: "npm:8.0.2"
+  peerDependencies:
+    graphql: ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
+    graphql-yoga: ^5.0.0
+  checksum: 10c0/4a1f9599fc7dd9df6975122238370e50d5028280d1c1f91a81dc96688dd54672da7902f5934e4d047c46dcc04036989c760810ed205ae854448a6d39578c5017
+  languageName: node
+  linkType: hard
+
 "@graphql-inspector/core@npm:5.1.0-alpha-20231208113249-34700c8a":
   version: 5.1.0-alpha-20231208113249-34700c8a
   resolution: "@graphql-inspector/core@npm:5.1.0-alpha-20231208113249-34700c8a"
@@ -2249,6 +2263,17 @@ __metadata:
     "@graphql-tools/utils": ^10.0.0
     graphql-yoga: ^5.7.0
   checksum: 10c0/969cd630bb163e52469b8b4579d02dfa045a1aad8ac792f7ec9863df3e9d847710023d0e6a6dae017621a772ba9fb190bc81d4569793e1737ef95f875675ce05
+  languageName: node
+  linkType: hard
+
+"@graphql-yoga/plugin-persisted-operations@npm:^3.3.1":
+  version: 3.7.0
+  resolution: "@graphql-yoga/plugin-persisted-operations@npm:3.7.0"
+  peerDependencies:
+    "@graphql-tools/utils": ^10.0.0
+    graphql: ^15.2.0 || ^16.0.0
+    graphql-yoga: ^5.7.0
+  checksum: 10c0/bd536d77b6bdd5a309eeee5bf017f961354c79d50cc62832ad27acddbeb2834e16b4fb12ed752ef9cca2ecb815fd681f4914aae52ff3752d156e7e9ce7e2ff0b
   languageName: node
   linkType: hard
 
@@ -6113,6 +6138,7 @@ __metadata:
     "@ffprobe-installer/ffprobe": "npm:^2.1.2"
     "@golevelup/nestjs-discovery": "npm:^4.0.0"
     "@graphql-hive/cli": "npm:^0.44.2"
+    "@graphql-hive/yoga": "npm:^0.38.2"
     "@graphql-tools/utils": "npm:^10.5.4"
     "@graphql-yoga/nestjs": "npm:^3.7.0"
     "@graphql-yoga/plugin-apq": "npm:^3.7.0"
