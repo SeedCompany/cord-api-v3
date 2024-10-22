@@ -37,11 +37,6 @@ const oldRestrictedImports = [
     importNames: ['Dictionary', 'SafeDictionary'],
     message: 'Use a type with strict keys instead',
   },
-  {
-    name: 'express-serve-static-core',
-    importNames: ['Dictionary'],
-    message: 'Use a type with strict keys instead',
-  },
 ];
 
 /** @type {import('@seedcompany/eslint-plugin').ImportRestriction[]} */
@@ -87,6 +82,11 @@ const restrictedImports = [
     importNames: 'NestMiddleware',
     path: '@nestjs/common',
     replacement: { importName: 'HttpMiddleware', path: '~/core/http' },
+  },
+  {
+    importNames: ['RouteConfig', 'RouteConstraints'],
+    path: '@nestjs/platform-fastify',
+    replacement: { path: '~/core/http' },
   },
 ];
 
