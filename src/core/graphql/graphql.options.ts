@@ -19,6 +19,7 @@ import { GqlContextType, Session } from '~/common';
 import { getRegisteredScalars } from '~/common/scalars';
 import { ConfigService } from '../config/config.service';
 import { VersionService } from '../config/version.service';
+import { apolloExplorer } from './apollo-explorer';
 import { isGqlContext } from './gql-context.host';
 import { GraphqlTracingPlugin } from './graphql-tracing.plugin';
 
@@ -41,6 +42,7 @@ export class GraphqlOptions implements GqlOptionsFactory {
     if (version.hash) {
       process.env.APOLLO_SERVER_USER_VERSION = version.hash;
     }
+    const graphRef = process.env.APOLLO_GRAPH_REF;
 
     const scalars = mapKeys.fromList(
       getRegisteredScalars(),
@@ -52,10 +54,20 @@ export class GraphqlOptions implements GqlOptionsFactory {
       path: '/graphql/:opName?',
       autoSchemaFile: 'schema.graphql',
       graphiql: {
-        title: 'CORD API',
+        title: graphRef ?? 'CORD@local',
         defaultEditorToolsVisibility: false,
         credentials: 'include',
       },
+      renderGraphiQL: () =>
+        apolloExplorer({
+          title: graphRef ?? 'CORD@local',
+          graphRef: graphRef,
+          endpointIsEditable: false,
+          hideCookieToggle: true,
+          initialState: {
+            includeCookies: true,
+          },
+        }),
       context: this.context,
       maskedErrors: false, // Errors are formatted in plugin
       sortSchema: true,
