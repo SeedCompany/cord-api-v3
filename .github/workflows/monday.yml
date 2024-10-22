@@ -1,0 +1,36 @@
+name: Create Monday Ticket on PR Merge
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  create-ticket:
+    if: github.event.pull_request.merged == true  # This makes it only run when a PR is merged
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v2
+
+      - name: Check for existing Monday ticket
+        id: check_monday_ticket
+        run: |
+          MONDAY_BASE_URL="https://seed-company-squad.monday.com"
+          if echo "${{ github.event.pull_request.body }}" | grep -q "$MONDAY_BASE_URL"; then
+            echo "Monday ticket ID found in the PR."
+            echo "ticket_exists=true" >> $GITHUB_ENV
+          else
+            echo "No Monday ticket found."
+            echo "ticket_exists=false" >> $GITHUB_ENV
+
+      - name: Create Monday Ticket
+        if: env.ticket_exists == 'false'
+        run: |
+          curl -X POST https://api.monday.com/v2 \
+          -H "API-Version: 2024-01" \
+          -H "Authorization: ${{ secrets.MONDAY_API_KEY }}" \
+          -H "Content-Type: application/json" \
+          -d '{
+            "query": "mutation { create_item (board_id: 3451697530, item_name: \"PR: ${{ github.event.pull_request.title }}\", column_values: \"{ \\\"columnId\\\": \\\"value\\\" }\" ) { id } }"
+          }'
