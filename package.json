@@ -163,6 +163,7 @@
     "@nestjs/cli/fork-ts-checker-webpack-plugin": "npm:empty-npm-package@*",
     "@nestjs/cli/webpack": "npm:empty-npm-package@*",
     "@nestjs/cli/typescript": "^5.1.6",
+    "@nestjs/graphql/graphql-ws": "^5",
     "@types/express": "npm:@types/stack-trace@*",
     "@types/express-serve-static-core": "npm:@types/stack-trace@*",
     "@types/koa": "npm:@types/stack-trace@*",
