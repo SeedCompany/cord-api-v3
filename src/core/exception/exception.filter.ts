@@ -1,5 +1,10 @@
-import { ArgumentsHost, Catch, HttpStatus, Injectable } from '@nestjs/common';
-import { GqlExceptionFilter } from '@nestjs/graphql';
+import {
+  ArgumentsHost,
+  Catch,
+  HttpStatus,
+  ExceptionFilter as IExceptionFilter,
+  Injectable,
+} from '@nestjs/common';
 import { mapValues } from '@seedcompany/common';
 import { HttpAdapter } from '~/core/http';
 import { ConfigService } from '../config/config.service';
@@ -10,7 +15,7 @@ import { isFromHackAttempt } from './is-from-hack-attempt';
 
 @Catch()
 @Injectable()
-export class ExceptionFilter implements GqlExceptionFilter {
+export class ExceptionFilter implements IExceptionFilter {
   constructor(
     private readonly http: HttpAdapter,
     @Logger('nest') private readonly logger: ILogger,
