@@ -19,6 +19,13 @@ RUN apt-get update \
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.edgedb.com | sh -s -- -y --no-modify-path \
     && mv /root/.local/bin/edgedb /usr/local/bin/edgedb
 
+
+# Apollo Rover CLI
+RUN curl -sSL https://rover.apollo.dev/nix/latest | sh
+
+# GraphQL Hive CLI
+RUN curl -sSL https://graphql-hive.com/install.sh | sh
+
 # Enable yarn via corepack
 RUN corepack enable
 
