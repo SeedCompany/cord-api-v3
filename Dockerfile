@@ -2,7 +2,7 @@ ARG NODE_VERSION=20
 ARG NODE_IMAGE=public.ecr.aws/docker/library/node:${NODE_VERSION}-slim
 ARG EDGEDB_IMAGE=ghcr.io/edgedb/edgedb:5
 
-FROM ${NODE_IMAGE} as base-runtime
+FROM ${NODE_IMAGE} AS base-runtime
 
 # Install these native packages
 RUN apt-get update \
@@ -22,7 +22,7 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.edgedb.com | sh -s -- -y --n
 # Enable yarn via corepack
 RUN corepack enable
 
-FROM ${EDGEDB_IMAGE} as builder
+FROM ${EDGEDB_IMAGE} AS builder
 
 # region Install NodeJS
 ARG NODE_VERSION
@@ -100,7 +100,7 @@ RUN yarn workspaces focus --all --production
 # Remove yarn cache to reduce image size
 RUN yarn cache clean --all
 
-FROM base-runtime as runtime
+FROM base-runtime AS runtime
 
 WORKDIR /opt/cord-api
 
