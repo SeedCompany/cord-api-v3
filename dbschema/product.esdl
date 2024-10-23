@@ -80,6 +80,13 @@ module default {
 }
   
 module Product {
+  type KnownCompletionDescription {
+    required value: str;
+    required methodology: Methodology;
+    required createdAt: datetime;
+    required lastUsedAt: datetime;
+  }
+
   scalar type Medium extending enum<
     Print,
     Web,
