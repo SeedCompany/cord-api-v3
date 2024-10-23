@@ -93,6 +93,9 @@ EOF
 # Build server
 RUN yarn build
 
+# Generate GraphQL schema
+RUN yarn start -- --gen-schema
+
 # Remove non-production files
 RUN rm -rf nest-cli.json tsconfig* test
 # Remove dev dependencies
