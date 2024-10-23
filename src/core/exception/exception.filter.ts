@@ -32,6 +32,7 @@ export class ExceptionFilter implements IExceptionFilter {
     const hack = isFromHackAttempt(exception, args);
     if (hack) {
       hack.raw.destroy();
+      this.http.end(args.switchToHttp().getResponse());
       return;
     }
 
