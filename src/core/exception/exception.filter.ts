@@ -1,5 +1,10 @@
-import { ArgumentsHost, Catch, HttpStatus, Injectable } from '@nestjs/common';
-import { GqlExceptionFilter } from '@nestjs/graphql';
+import {
+  ArgumentsHost,
+  Catch,
+  HttpStatus,
+  ExceptionFilter as IExceptionFilter,
+  Injectable,
+} from '@nestjs/common';
 import { mapValues } from '@seedcompany/common';
 import { HttpAdapter } from '~/core/http';
 import { ConfigService } from '../config/config.service';
@@ -10,7 +15,7 @@ import { isFromHackAttempt } from './is-from-hack-attempt';
 
 @Catch()
 @Injectable()
-export class ExceptionFilter implements GqlExceptionFilter {
+export class ExceptionFilter implements IExceptionFilter {
   constructor(
     private readonly http: HttpAdapter,
     @Logger('nest') private readonly logger: ILogger,
@@ -18,7 +23,7 @@ export class ExceptionFilter implements GqlExceptionFilter {
     private readonly normalizer: ExceptionNormalizer,
   ) {}
 
-  catch(exception: Error, args: ArgumentsHost) {
+  async catch(exception: Error, args: ArgumentsHost) {
     if (exception && (exception as any).type === 'request.aborted') {
       this.logger.warning('Request aborted');
       return;
@@ -43,7 +48,7 @@ export class ExceptionFilter implements GqlExceptionFilter {
     if (args.getType() === 'graphql') {
       this.respondToGraphQL(normalized, args);
     }
-    this.respondToHttp(normalized, args);
+    await this.respondToHttp(normalized, args);
   }
 
   private respondToGraphQL(ex: ExceptionJson, _args: ArgumentsHost) {
@@ -53,7 +58,7 @@ export class ExceptionFilter implements GqlExceptionFilter {
     throw Object.assign(new Error(), out);
   }
 
-  private respondToHttp(ex: ExceptionJson, args: ArgumentsHost) {
+  private async respondToHttp(ex: ExceptionJson, args: ArgumentsHost) {
     const { codes } = ex;
     const status = codes.has('NotFound')
       ? HttpStatus.NOT_FOUND
@@ -78,7 +83,7 @@ export class ExceptionFilter implements GqlExceptionFilter {
     };
 
     const res = args.switchToHttp().getResponse();
-    this.http.reply(res, out, status);
+    await this.http.reply(res, out, status);
   }
 
   logIt(info: ExceptionJson, error: Error) {

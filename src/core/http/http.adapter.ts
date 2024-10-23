@@ -129,17 +129,6 @@ export class HttpAdapter extends PatchedFastifyAdapter {
   }
 
   // @ts-expect-error we don't need to be compatible with base
-  reply(
-    response: IResponse | IResponse['raw'],
-    body: any,
-    statusCode?: number,
-  ) {
-    // Avoid linter wanting us to await sending response.
-    // This method just returns the response instance for fluent interface.
-    void super.reply(response, body, statusCode);
-  }
-
-  // @ts-expect-error we don't need to be compatible with base
   setHeader(response: IResponse, name: string, value: string) {
     // Avoid linter wanting us to await sending response.
     // This method just returns the response instance for fluent interface.
