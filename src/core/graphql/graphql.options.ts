@@ -64,6 +64,12 @@ export class GraphqlOptions implements GqlOptionsFactory {
         this.useAutomaticPersistedQueries(),
         // more,
       ],
+      fetchAPI: {
+        // @whatwg-node/node-fetch polyfill doesn't keep square brackets for ipv6 hostname
+        // Itself is patching a 10-year-old library to provide the polyfill.
+        // IDK why it is even poly-filling, URL is available in Node since v10.
+        URL,
+      },
     };
   }
 
