@@ -1,34 +1,38 @@
 import {
-  ApolloServerPlugin as ApolloPlugin,
-  GraphQLRequestContext as RequestContext,
-  GraphQLRequestListener as RequestListener,
-} from '@apollo/server';
-import { Plugin } from '@nestjs/apollo';
+  OnExecuteEventPayload as OnExecute,
+  OnSubscribeEventPayload as OnSubscribe,
+} from '@envelop/types';
+import { Injectable } from '@nestjs/common';
 import { GqlContextType as ContextType } from '~/common';
 import { maskSecrets } from '~/common/mask-secrets';
 import { ILogger, Logger } from '../logger';
+import { Plugin } from './plugin.decorator';
 
 /**
  * Logging for GraphQL errors that are not handled anywhere else
  * Note: Lots of assumptions here.
  */
 @Plugin()
-export class GraphqlLoggingPlugin implements ApolloPlugin<ContextType> {
+@Injectable()
+export class GraphqlLoggingPlugin {
   constructor(@Logger('graphql') private readonly logger: ILogger) {}
 
-  async requestDidStart(
-    _context: RequestContext<ContextType>,
-  ): Promise<RequestListener<ContextType>> {
-    return {
-      executionDidStart: async ({ operationName, operation, request }) => {
-        if (operationName === 'IntrospectionQuery') {
-          return;
-        }
-        this.logger.info(`Received ${operation.operation}`, {
-          operation: operationName,
-          ...maskSecrets(request.variables ?? {}),
-        });
-      },
-    };
+  onExecute: Plugin['onExecute'] = ({ args }) => {
+    this.logReq(args);
+  };
+
+  onSubscribe: Plugin['onSubscribe'] = ({ args }) => {
+    this.logReq(args);
+  };
+
+  logReq(args: (OnExecute<ContextType> | OnSubscribe<ContextType>)['args']) {
+    const { operationName, variableValues, contextValue } = args;
+    if (operationName === 'IntrospectionQuery') {
+      return;
+    }
+    this.logger.info(`Received ${contextValue.operation.operation}`, {
+      operation: operationName,
+      ...maskSecrets(variableValues ?? {}),
+    });
   }
 }
