@@ -14,13 +14,7 @@ import {
   UnauthorizedException,
   UnsecuredDto,
 } from '~/common';
-import {
-  ConfigService,
-  HandleIdLookup,
-  IEventBus,
-  ILogger,
-  Logger,
-} from '~/core';
+import { HandleIdLookup, IEventBus, ILogger, Logger } from '~/core';
 import { Transactional, UniquenessError } from '~/core/database';
 import { Privileges } from '../authorization';
 import { withoutScope } from '../authorization/dto';
@@ -30,7 +24,6 @@ import { EngagementService } from '../engagement';
 import { EngagementListInput, SecuredEngagementList } from '../engagement/dto';
 import { LocationService } from '../location';
 import { LocationListInput, SecuredLocationList } from '../location/dto';
-import { PartnerService } from '../partner';
 import { PartnershipService } from '../partnership';
 import {
   PartnershipListInput,
@@ -68,7 +61,6 @@ import {
   SecuredProjectMemberList,
 } from './project-member/dto';
 import { ProjectRepository } from './project.repository';
-import { ProjectWorkflowService } from './workflow/project-workflow.service';
 
 @Injectable()
 export class ProjectService {
@@ -81,12 +73,8 @@ export class ProjectService {
     private readonly partnerships: PartnershipService & {},
     @Inject(forwardRef(() => EngagementService))
     private readonly engagementService: EngagementService & {},
-    @Inject(forwardRef(() => PartnerService))
-    private readonly partnerService: PartnerService & {},
-    private readonly config: ConfigService,
     private readonly privileges: Privileges,
     private readonly eventBus: IEventBus,
-    private readonly workflow: ProjectWorkflowService,
     private readonly repo: ProjectRepository,
     private readonly projectChangeRequests: ProjectChangeRequestService,
     @Logger('project:service') private readonly logger: ILogger,
@@ -254,23 +242,10 @@ export class ProjectService {
         'project.sensitivity',
       );
 
-    const { step: changedStep, ...changes } = this.repo.getActualChanges(
-      currentProject,
-      input,
-    );
+    const changes = this.repo.getActualChanges(currentProject, input);
     this.privileges
       .for(session, resolveProjectType(currentProject), currentProject)
       .verifyChanges(changes, { pathPrefix: 'project' });
-
-    let updated = currentProject;
-    if (changedStep) {
-      await this.workflow.executeTransitionLegacy(
-        this.secure(currentProject, session),
-        changedStep,
-        session,
-      );
-      updated = await this.readOneUnsecured(input.id, session, changeset);
-    }
 
     if (changes.primaryLocationId) {
       try {
@@ -303,7 +278,7 @@ export class ProjectService {
       'Field region not found',
     );
 
-    updated = await this.repo.update(updated, changes, changeset);
+    const updated = await this.repo.update(currentProject, changes, changeset);
 
     const event = new ProjectUpdatedEvent(
       updated,
