@@ -17,6 +17,7 @@ import { engagementFilters } from '../engagement/engagement.repository';
 import { progressReportSorters } from '../periodic-report/periodic-report.repository';
 import { SummaryPeriod } from '../progress-summary/dto';
 import { progressSummaryFilters } from '../progress-summary/progress-summary.repository';
+import { projectFilters } from '../project/project-filters.query';
 import {
   ProgressReport,
   ProgressReportFilters,
@@ -87,6 +88,18 @@ export const progressReportFilters = filter.define(
     start: filter.dateTimeProp(),
     end: filter.dateTimeProp(),
     status: filter.stringListProp(),
+    project: filter.sub(
+      () => projectFilters,
+      'requestingUser',
+    )((sub) =>
+      sub.match([
+        node('outer'),
+        relation('in', '', 'report'),
+        node('engagement', 'Engagement'),
+        relation('in', '', 'engagement'),
+        node('node', 'Project'),
+      ]),
+    ),
     cumulativeSummary: filter.sub(() => progressSummaryFilters)((sub) =>
       sub
         .optionalMatch([
