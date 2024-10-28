@@ -24,8 +24,15 @@ export class ExceptionFilter implements IExceptionFilter {
   ) {}
 
   async catch(exception: Error, args: ArgumentsHost) {
-    if (exception && (exception as any).type === 'request.aborted') {
-      this.logger.warning('Request aborted');
+    // Ignore aborted requests
+    if (
+      (exception as any).code === 'ECONNRESET' ||
+      // There is some false positive with @fastify/compress and aborted requests
+      (exception as any).code === 'ERR_STREAM_PREMATURE_CLOSE'
+    ) {
+      if (process.env.NODE_ENV !== 'production') {
+        this.logger.warning('Request aborted');
+      }
       return;
     }
 
