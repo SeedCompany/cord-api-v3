@@ -174,6 +174,23 @@ export class ExceptionNormalizer {
       return { codes: ['GraphQL', 'Server'] };
     }
 
+    // Fastify convention
+    if (
+      'code' in ex &&
+      typeof ex.code === 'string' &&
+      ex.code.startsWith('FST_')
+    ) {
+      const statusCode =
+        'statusCode' in ex && typeof ex.statusCode === 'number'
+          ? ex.statusCode
+          : undefined;
+      const codes = [
+        ex.code,
+        statusCode && statusCode < 500 ? 'Client' : 'Server',
+      ];
+      return { codes };
+    }
+
     // Fallback to generic Error
     return { codes: ['Server'] };
   }
