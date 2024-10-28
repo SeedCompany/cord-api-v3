@@ -1,5 +1,6 @@
 // eslint-disable-next-line no-restricted-imports,@seedcompany/no-restricted-imports
 import * as Nest from '@nestjs/common';
+import * as Fastify from 'fastify';
 import { InputException, ServerException } from '~/common';
 import { ConstraintError } from '../database';
 import { ExceptionNormalizer } from './exception.normalizer';
@@ -9,6 +10,23 @@ describe('ExceptionNormalizer', () => {
   // Simulate over the wire.
   const orig = sut.normalize.bind(sut);
   sut.normalize = (...args) => JSON.parse(JSON.stringify(orig(...args)));
+
+  describe('Fastify', () => {
+    it('Client', () => {
+      const ex = new Fastify.errorCodes.FST_ERR_CTP_BODY_TOO_LARGE();
+      const res = sut.normalize({ ex });
+      expect(res.message).toEqual('Request body is too large');
+      expect(res.code).toEqual('FST_ERR_CTP_BODY_TOO_LARGE');
+      expect(res.codes).toEqual(['FST_ERR_CTP_BODY_TOO_LARGE', 'Client']);
+    });
+    it('Server', () => {
+      const ex = new Fastify.errorCodes.FST_ERR_HOOK_INVALID_TYPE();
+      const res = sut.normalize({ ex });
+      expect(res.message).toEqual('The hook name must be a string');
+      expect(res.code).toEqual('FST_ERR_HOOK_INVALID_TYPE');
+      expect(res.codes).toEqual(['FST_ERR_HOOK_INVALID_TYPE', 'Server']);
+    });
+  });
 
   describe('HttpException', () => {
     it('simple', () => {
