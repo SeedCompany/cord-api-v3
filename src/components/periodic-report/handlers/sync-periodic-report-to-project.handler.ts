@@ -31,10 +31,15 @@ export class SyncPeriodicReportsToProjectDateRange
     });
 
     const project = event.updated;
+
+    const isActive = event.updated.status === 'Active';
+    const wasActive = event.previous.status === 'Active';
+
     const intervals: Intervals = [
-      projectRange(project),
-      projectRange(event.previous),
+      isActive ? projectRange(project) : null,
+      wasActive ? projectRange(event.previous) : null,
     ];
+    const finalReportAt = isActive ? project.mouEnd : null;
 
     const narrativeDiff = this.diffBy(...intervals, 'quarter');
     await this.sync(
@@ -42,7 +47,7 @@ export class SyncPeriodicReportsToProjectDateRange
       project.id,
       ReportType.Narrative,
       narrativeDiff,
-      project.mouEnd?.endOf('quarter'),
+      finalReportAt?.endOf('quarter'),
     );
 
     if (!project.financialReportPeriod) {
@@ -54,7 +59,7 @@ export class SyncPeriodicReportsToProjectDateRange
       project.id,
       ReportType.Financial,
       financialDiff,
-      project.mouEnd?.endOf(financialDiff.interval),
+      finalReportAt?.endOf(financialDiff.interval),
     );
   }
 
