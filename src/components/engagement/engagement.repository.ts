@@ -185,6 +185,7 @@ export class EngagementRepository extends CommonRepository {
             },
             language: 'language { .id }',
             pnp: { id: 'props.pnp' },
+            growthPlan: { id: 'props.growthPlan' },
             ceremony: 'ceremony { .id }',
             intern: 'intern { .id }',
             countryOfOrigin: 'countryOfOrigin { .id }',
