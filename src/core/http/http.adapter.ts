@@ -12,7 +12,18 @@ import {
   FastifyAdapter,
   NestFastifyApplication,
 } from '@nestjs/platform-fastify';
-import type { FastifyInstance, HTTPMethods, RouteOptions } from 'fastify';
+import type {
+  FastifyInstance,
+  FastifyReply,
+  FastifyRequest,
+  HTTPMethods,
+  RawReplyDefaultExpression,
+  RawRequestDefaultExpression,
+  RawServerBase,
+  RawServerDefault,
+  RequestGenericInterface,
+  RouteOptions,
+} from 'fastify';
 import rawBody from 'fastify-raw-body';
 import * as zlib from 'node:zlib';
 import { uniqueDiscoveredMethods } from '~/common/discovery-unique-methods';
@@ -34,8 +45,41 @@ export type NestHttpApplication = NestFastifyApplication & {
 
 export class HttpAdapterHost extends HttpAdapterHostImpl<HttpAdapter> {}
 
+type FastifyRawRequest<TServer extends RawServerBase> =
+  RawRequestDefaultExpression<TServer> & {
+    originalUrl?: string;
+  };
+
 // @ts-expect-error Convert private methods to protected
-class PatchedFastifyAdapter extends FastifyAdapter {
+class PatchedFastifyAdapter<
+  TServer extends RawServerBase = RawServerDefault,
+  TRawRequest extends FastifyRawRequest<TServer> = FastifyRawRequest<TServer>,
+  TRawResponse extends RawReplyDefaultExpression<TServer> = RawReplyDefaultExpression<TServer>,
+  TRequest extends FastifyRequest<
+    RequestGenericInterface,
+    TServer,
+    TRawRequest
+  > = FastifyRequest<RequestGenericInterface, TServer, TRawRequest>,
+  TReply extends FastifyReply<
+    RequestGenericInterface,
+    TServer,
+    TRawRequest,
+    TRawResponse
+  > = FastifyReply<RequestGenericInterface, TServer, TRawRequest, TRawResponse>,
+  TInstance extends FastifyInstance<
+    TServer,
+    TRawRequest,
+    TRawResponse
+  > = FastifyInstance<TServer, TRawRequest, TRawResponse>,
+> extends FastifyAdapter<
+  TServer,
+  TRawRequest,
+  TRawResponse,
+  TRequest,
+  // @ts-expect-error they haven't upgraded to v5 signature yet.
+  TReply,
+  TInstance
+> {
   protected injectRouteOptions(
     routerMethodKey: Uppercase<HTTPMethods>,
     ...args: any[]
