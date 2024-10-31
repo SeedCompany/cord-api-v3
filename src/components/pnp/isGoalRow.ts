@@ -27,7 +27,7 @@ export const isGoalRow = (
 
   if (!rawBook) {
     result?.addProblem({
-      severity: 'Warning',
+      severity: 'Error',
       groups: 'No book name given',
       message: `Ignoring row with no book name \`${bookCell.ref}\` even though there are **${versesToTranslate}** verses to translate \`${versesCell.ref}\``,
       source: cell,

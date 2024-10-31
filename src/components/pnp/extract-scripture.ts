@@ -78,7 +78,7 @@ export const extractScripture = (
   // Otherwise, fallback to unspecified scripture.
   !mismatchError &&
     result.addProblem({
-      severity: 'Warning',
+      severity: 'Notice',
       groups: 'Unspecified scripture reference',
       message: `"${book.name}" \`${bookCell.ref}\` does not a have specified scripture reference (either in the _Books_ or _My Notes_ column)`,
       source: totalVersesCell,
