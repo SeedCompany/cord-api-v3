@@ -15,6 +15,7 @@ import {
 import type { FastifyInstance, HTTPMethods, RouteOptions } from 'fastify';
 import rawBody from 'fastify-raw-body';
 import * as zlib from 'node:zlib';
+import { uniqueDiscoveredMethods } from '~/common/discovery-unique-methods';
 import { ConfigService } from '~/core/config/config.service';
 import {
   GlobalHttpHook,
@@ -73,7 +74,7 @@ export class HttpAdapter extends PatchedFastifyAdapter {
       .get(DiscoveryService)
       .providerMethodsWithMetaAtKey<keyof HttpHooks>(GlobalHttpHook.KEY);
     const fastify = app.getHttpAdapter().getInstance();
-    for (const globalHook of globalHooks) {
+    for (const globalHook of uniqueDiscoveredMethods(globalHooks)) {
       const handler = globalHook.discoveredMethod.handler.bind(
         globalHook.discoveredMethod.parentClass.instance,
       );
