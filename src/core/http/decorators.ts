@@ -6,6 +6,7 @@ import { Many } from '@seedcompany/common';
 import { createMetadataDecorator } from '@seedcompany/nest';
 import { FastifyContextConfig } from 'fastify';
 import type { RouteConstraint } from 'fastify/types/route';
+import { HttpHooks } from './types';
 
 export const RouteConstraints = createMetadataDecorator({
   key: FASTIFY_ROUTE_CONSTRAINTS_METADATA,
@@ -54,3 +55,10 @@ export const RawBody = createMetadataDecorator({
     } = {},
   ) => config,
 });
+
+export const GlobalHttpHook = createMetadataDecorator({
+  types: ['method'],
+  setter: (hook: keyof HttpHooks = 'preHandler') => hook,
+});
+export type GlobalHttpHook<Name extends keyof HttpHooks = 'preHandler'> =
+  HttpHooks[Name];

@@ -1,6 +1,7 @@
 import compression from '@fastify/compress';
 import cookieParser from '@fastify/cookie';
 import cors from '@fastify/cors';
+import { DiscoveryService } from '@golevelup/nestjs-discovery';
 import {
   VERSION_NEUTRAL,
   type VersionValue,
@@ -15,8 +16,13 @@ import type { FastifyInstance, HTTPMethods, RouteOptions } from 'fastify';
 import rawBody from 'fastify-raw-body';
 import * as zlib from 'node:zlib';
 import { ConfigService } from '~/core/config/config.service';
-import { RawBody, RouteConfig, RouteConstraints } from './decorators';
-import type { CookieOptions, CorsOptions, IResponse } from './types';
+import {
+  GlobalHttpHook,
+  RawBody,
+  RouteConfig,
+  RouteConstraints,
+} from './decorators';
+import type { CookieOptions, CorsOptions, HttpHooks, IResponse } from './types';
 
 export type NestHttpApplication = NestFastifyApplication & {
   configure: (
@@ -61,6 +67,18 @@ export class HttpAdapter extends PatchedFastifyAdapter {
     app.setGlobalPrefix(config.hostUrl$.value.pathname.slice(1));
 
     config.applyTimeouts(app.getHttpServer(), config.httpTimeouts);
+
+    // Attach hooks
+    const globalHooks = await app
+      .get(DiscoveryService)
+      .providerMethodsWithMetaAtKey<keyof HttpHooks>(GlobalHttpHook.KEY);
+    const fastify = app.getHttpAdapter().getInstance();
+    for (const globalHook of globalHooks) {
+      const handler = globalHook.discoveredMethod.handler.bind(
+        globalHook.discoveredMethod.parentClass.instance,
+      );
+      fastify.addHook(globalHook.meta, handler);
+    }
   }
 
   protected injectRouteOptions(

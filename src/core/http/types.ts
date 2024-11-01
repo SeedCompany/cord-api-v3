@@ -4,11 +4,19 @@ import type { NestMiddleware } from '@nestjs/common';
 import type {
   FastifyRequest as Request,
   FastifyReply as Response,
+  RouteShorthandOptions,
 } from 'fastify';
 import type { Session } from '~/common';
 
 // Exporting with I prefix to avoid ambiguity with web global types
 export type { Request as IRequest, Response as IResponse };
+
+export type HttpHooks = Required<{
+  [Hook in keyof RouteShorthandOptions as Exclude<
+    Extract<Hook, `${'pre' | 'on'}${string}`>,
+    `${'prefix'}${string}`
+  >]: Exclude<RouteShorthandOptions[Hook], any[]>;
+}>;
 
 export type HttpMiddleware = NestMiddleware<Request['raw'], Response['raw']>;
 
