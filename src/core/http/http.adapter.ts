@@ -135,6 +135,13 @@ export class HttpAdapter extends PatchedFastifyAdapter {
     return this.instance.route(route);
   }
 
+  override registerMiddie() {
+    // no
+  }
+  override createMiddlewareFactory(): never {
+    throw new Error('Express/Connect Middleware should not be used');
+  }
+
   setCookie(
     response: IResponse,
     name: string,
