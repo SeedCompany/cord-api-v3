@@ -9,31 +9,30 @@ import { isUUID } from 'class-validator';
 import { BehaviorSubject, identity } from 'rxjs';
 import { Session } from '~/common';
 import { EdgeDB, OptionsFn } from '~/core/edgedb';
-import { HttpMiddleware } from '~/core/http';
+import { GlobalHttpHook } from '~/core/http';
 
 @Injectable()
-export class EdgeDBCurrentUserProvider
-  implements HttpMiddleware, NestInterceptor
-{
+export class EdgeDBCurrentUserProvider implements NestInterceptor {
   // A map to transfer the options' holder
   // between the creation in middleware and the use in the interceptor.
   private readonly optionsHolderByRequest = new WeakMap<
-    Parameters<HttpMiddleware['use']>[0],
+    Parameters<GlobalHttpHook>[0]['raw'],
     BehaviorSubject<OptionsFn>
   >();
 
   constructor(private readonly edgedb: EdgeDB) {}
 
-  use: HttpMiddleware['use'] = (req, res, next) => {
+  @GlobalHttpHook()
+  onRequest(...[req, _reply, next]: Parameters<GlobalHttpHook>) {
     // Create holder to use later to add current user to globals after it is fetched
     const optionsHolder = new BehaviorSubject<OptionsFn>(identity);
-    this.optionsHolderByRequest.set(req, optionsHolder);
+    this.optionsHolderByRequest.set(req.raw, optionsHolder);
 
     // These options should apply to the entire HTTP/GQL operation.
     // Connect middleware is the only place we get a function which has all of
     // this in scope for the use of an ALS context.
     this.edgedb.usingOptions(optionsHolder, next);
-  };
+  }
 
   /**
    * Connect the session to the options' holder

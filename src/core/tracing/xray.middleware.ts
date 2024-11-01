@@ -6,13 +6,13 @@ import {
 } from '@nestjs/common';
 import { GqlExecutionContext } from '@nestjs/graphql';
 import XRay from 'aws-xray-sdk-core';
-import { HttpAdapter, HttpMiddleware as NestMiddleware } from '~/core/http';
+import { GlobalHttpHook, HttpAdapter } from '~/core/http';
 import { ConfigService } from '../config/config.service';
 import { Sampler } from './sampler';
 import { TracingService } from './tracing.service';
 
 @Injectable()
-export class XRayMiddleware implements NestMiddleware, NestInterceptor {
+export class XRayMiddleware implements NestInterceptor {
   constructor(
     private readonly tracing: TracingService,
     private readonly sampler: Sampler,
@@ -23,12 +23,13 @@ export class XRayMiddleware implements NestMiddleware, NestInterceptor {
   /**
    * Setup root segment for request/response.
    */
-  use: NestMiddleware['use'] = (req, res, next) => {
+  @GlobalHttpHook()
+  onRequest(...[req, res, next]: Parameters<GlobalHttpHook>) {
     const traceData = XRay.utils.processTraceData(
       req.headers['x-amzn-trace-id'] as string | undefined,
     );
     const root = new XRay.Segment('cord', traceData.root, traceData.parent);
-    const reqData = new XRay.middleware.IncomingRequestData(req);
+    const reqData = new XRay.middleware.IncomingRequestData(req.raw);
     root.addIncomingRequestData(reqData);
     // Use public DNS as url instead of specific IP
     // @ts-expect-error xray library types suck
@@ -40,7 +41,7 @@ export class XRayMiddleware implements NestMiddleware, NestInterceptor {
       enumerable: false,
     });
 
-    res.on('finish', () => {
+    res.raw.on('finish', () => {
       const status = res.statusCode.toString();
       if (status.startsWith('4')) {
         root.addErrorFlag();
@@ -57,7 +58,7 @@ export class XRayMiddleware implements NestMiddleware, NestInterceptor {
     });
 
     this.tracing.segmentStorage.run(root, next);
-  };
+  }
 
   /**
    * Determine if segment should be traced/sampled.
