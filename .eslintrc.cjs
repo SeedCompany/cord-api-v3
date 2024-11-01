@@ -79,9 +79,9 @@ const restrictedImports = [
     replacement: { path: '~/core/http' },
   },
   {
-    importNames: 'NestMiddleware',
+    importNames: ['NestMiddleware', 'NestModule'],
     path: '@nestjs/common',
-    replacement: { importName: 'HttpMiddleware', path: '~/core/http' },
+    message: 'Do not use express/connect middleware',
   },
   {
     importNames: ['RouteConfig', 'RouteConstraints'],

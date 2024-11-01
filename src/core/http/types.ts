@@ -1,6 +1,4 @@
 /* eslint-disable @typescript-eslint/method-signature-style */
-// eslint-disable-next-line @seedcompany/no-restricted-imports
-import type { NestMiddleware } from '@nestjs/common';
 import type {
   FastifyRequest as Request,
   FastifyReply as Response,
@@ -17,8 +15,6 @@ export type HttpHooks = Required<{
     `${'prefix'}${string}`
   >]: Exclude<RouteShorthandOptions[Hook], any[]>;
 }>;
-
-export type HttpMiddleware = NestMiddleware<Request['raw'], Response['raw']>;
 
 export { FastifyCorsOptions as CorsOptions } from '@fastify/cors';
 export { SerializeOptions as CookieOptions } from '@fastify/cookie';
