@@ -20,7 +20,7 @@ export class Driver extends YogaDriver<'fastify'> {
     );
     options.plugins = [
       ...(options.plugins ?? []),
-      ...discoveredPlugins.map((cls) => cls.discoveredClass.instance),
+      ...new Set(discoveredPlugins.map((cls) => cls.discoveredClass.instance)),
     ];
 
     await super.start(options);
