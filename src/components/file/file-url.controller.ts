@@ -26,7 +26,7 @@ export class FileUrlController {
     private readonly http: HttpAdapter,
   ) {}
 
-  @Get(':fileId/:fileName?')
+  @Get([':fileId', ':fileId/*'])
   async download(
     @Param('fileId') fileId: ID,
     @Query('download') download: '' | undefined,
