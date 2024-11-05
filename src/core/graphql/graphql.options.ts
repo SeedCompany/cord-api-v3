@@ -1,8 +1,4 @@
 import { useHive } from '@graphql-hive/yoga';
-import {
-  YogaDriverConfig as DriverConfig,
-  YogaDriverServerContext,
-} from '@graphql-yoga/nestjs';
 import { useAPQ } from '@graphql-yoga/plugin-apq';
 import { Injectable } from '@nestjs/common';
 import { GqlOptionsFactory } from '@nestjs/graphql';
@@ -20,11 +16,11 @@ import { getRegisteredScalars } from '~/common/scalars';
 import { ConfigService } from '../config/config.service';
 import { VersionService } from '../config/version.service';
 import { apolloExplorer } from './apollo-explorer';
+import { DriverConfig, ServerContext } from './driver';
 import { isGqlContext } from './gql-context.host';
 import { GraphqlTracingPlugin } from './graphql-tracing.plugin';
 
 type Plugin = PluginNoContext<GqlContextType>;
-type ServerContext = YogaDriverServerContext<'fastify'>;
 
 @Injectable()
 export class GraphqlOptions implements GqlOptionsFactory {
@@ -96,14 +92,10 @@ export class GraphqlOptions implements GqlOptionsFactory {
     };
   }
 
-  context = ({
-    req: request,
-    reply: response,
-  }: ServerContext): Partial<GqlContextType> => {
+  context = ({ req: request }: ServerContext): Partial<GqlContextType> => {
     return {
       [isGqlContext.KEY]: true,
       request,
-      response,
       session$: new BehaviorSubject<Session | undefined>(undefined),
     };
   };

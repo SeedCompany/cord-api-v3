@@ -1958,19 +1958,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-yoga/nestjs@npm:^3.7.0":
-  version: 3.7.0
-  resolution: "@graphql-yoga/nestjs@npm:3.7.0"
-  peerDependencies:
-    "@nestjs/common": ^10.0.0
-    "@nestjs/core": ^10.0.0
-    "@nestjs/graphql": ^12.0.0
-    graphql: ^15.0.0 || ^16.0.0
-    graphql-yoga: ^5.7.0
-  checksum: 10c0/459f524504c276b2ddab6759d3d10ef1762c44f7907ff71c0f930d26fb9076441267ac4f764e4131ed6d08068d02a372990339259c0af49a8400e3ede29318f6
-  languageName: node
-  linkType: hard
-
 "@graphql-yoga/plugin-apq@npm:^3.7.0":
   version: 3.7.0
   resolution: "@graphql-yoga/plugin-apq@npm:3.7.0"
@@ -5663,7 +5650,6 @@ __metadata:
     "@graphql-hive/cli": "npm:^0.44.2"
     "@graphql-hive/yoga": "npm:^0.38.2"
     "@graphql-tools/utils": "npm:^10.5.4"
-    "@graphql-yoga/nestjs": "npm:^3.7.0"
     "@graphql-yoga/plugin-apq": "npm:^3.7.0"
     "@leeoniya/ufuzzy": "npm:^1.0.11"
     "@nestjs/cli": "npm:^10.2.1"
