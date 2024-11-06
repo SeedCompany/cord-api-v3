@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { Nil } from '@seedcompany/common';
 import { oneLine } from 'common-tags';
 import { clamp, round } from 'lodash';
 import {
@@ -41,28 +40,16 @@ export class ProgressSummaryExtractor {
         `,
         source: cells.quarter,
       });
+      return {};
     }
 
     const currentFiscalYear = fiscalYear(date);
     const yearRow = findFiscalYearRow(sheet, currentFiscalYear);
     const quarterCol = sheet.columnForQuarterSummary(fiscalQuarter(date));
     return {
-      reportPeriod: summaryFrom(
-        yearRow,
-        quarterCol,
-        quarterCol,
-        result,
-        'Quarterly',
-        currentFiscalYear,
-      ),
-      fiscalYear: summaryFrom(
-        yearRow,
-        ...sheet.columnsForFiscalYear,
-        result,
-        'Yearly',
-        currentFiscalYear,
-      ),
-      cumulative: findLatestCumulative(yearRow, result, currentFiscalYear),
+      reportPeriod: summaryFrom(yearRow, quarterCol, quarterCol),
+      fiscalYear: summaryFrom(yearRow, ...sheet.columnsForFiscalYear),
+      cumulative: findLatestCumulative(yearRow),
     };
   }
 }
@@ -76,21 +63,11 @@ const findFiscalYearRow = (sheet: ProgressSheet, fiscalYear: number) => {
   throw new Error('Unable to find fiscal year in pnp file');
 };
 
-const findLatestCumulative = (
-  currentYear: Row<ProgressSheet>,
-  result: PnpProgressExtractionResult,
-  currentFiscalYear: number,
-) => {
+const findLatestCumulative = (currentYear: Row<ProgressSheet>) => {
   const { sheet } = currentYear;
   // eslint-disable-next-line no-constant-condition
   while (true) {
-    const summary = summaryFrom(
-      currentYear,
-      ...sheet.columnsForCumulative,
-      result,
-      'Cumulative',
-      currentFiscalYear,
-    );
+    const summary = summaryFrom(currentYear, ...sheet.columnsForCumulative);
     if (summary) {
       return summary;
     }
@@ -105,41 +82,10 @@ const summaryFrom = (
   fiscalYear: Row<ProgressSheet>,
   plannedColumn: Column,
   actualColumn: Column,
-  result: PnpProgressExtractionResult,
-  period: string,
-  currentFiscalYear: number,
-): Progress | null => {
-  const plannedCell = fiscalYear.cell(plannedColumn);
-  const actualCell = fiscalYear.cell(actualColumn);
-  let planned = plannedCell.asNumber;
-  let actual = actualCell.asNumber;
-  if (!planned && +plannedColumn !== +actualColumn) {
-    result.addProblem({
-      severity: 'Error',
-      groups: [
-        'Missing progress summary percents',
-        `The _${period}_ summary percents for _FY${currentFiscalYear}_ is missing`,
-      ],
-      message: `The _${period} Planned_ percent for _FY${currentFiscalYear}_ \`${plannedCell.ref}\` is missing`,
-      source: plannedCell,
-    });
-  }
-  if (!actual) {
-    result.addProblem({
-      severity: 'Error',
-      groups: [
-        'Missing progress summary percents',
-        `The _${period}_ summary percents for _FY${currentFiscalYear}_ is missing`,
-      ],
-      message: `The _${period} Actual_ percent for _FY${currentFiscalYear}_ \`${actualCell.ref}\` is missing`,
-      source: actualCell,
-    });
-  }
-  if (!planned && !actual) {
-    return null;
-  }
-  const normalize = (val: number | Nil) => {
-    if (!val) return 0;
+): Progress => {
+  let planned = fiscalYear.cell(plannedColumn).asNumber ?? 0;
+  let actual = fiscalYear.cell(actualColumn).asNumber ?? 0;
+  const normalize = (val: number) => {
     if (round(val, 4) > 1) {
       // The PnP has the macro option to do calculations as percents or verse equivalents.
       // We need to standardize as percents here.
