@@ -1,7 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { Nil } from '@seedcompany/common';
+import { oneLine } from 'common-tags';
 import { clamp, round } from 'lodash';
-import { CalendarDate, fiscalQuarter, fiscalYear } from '~/common';
+import {
+  CalendarDate,
+  fiscalQuarter,
+  fiscalQuarterLabel,
+  fiscalYear,
+} from '~/common';
 import { Column, Row } from '~/common/xlsx.util';
 import { Downloadable } from '../file/dto';
 import { Pnp, ProgressSheet } from '../pnp';
@@ -17,6 +23,25 @@ export class ProgressSummaryExtractor {
   ) {
     const pnp = await Pnp.fromDownloadable(file);
     const sheet = pnp.progress;
+
+    if (!(sheet.reportingQuarter && date <= sheet.reportingQuarter.end)) {
+      const cells = sheet.reportingQuarterCells;
+      result.addProblem({
+        severity: 'Error',
+        groups: 'Mismatched Reporting Quarter',
+        message: oneLine`
+          The PnP's Reporting Quarter
+            (_${
+              sheet.reportingQuarter
+                ? fiscalQuarterLabel(sheet.reportingQuarter.start)
+                : 'undetermined'
+            }_ \`${cells.quarter.ref}\`/\`${cells.year.ref}\`)
+          needs to be *at least* the quarter of this CORD report
+            (_${fiscalQuarterLabel(date)}_).
+        `,
+        source: cells.quarter,
+      });
+    }
 
     const currentFiscalYear = fiscalYear(date);
     const yearRow = findFiscalYearRow(sheet, currentFiscalYear);

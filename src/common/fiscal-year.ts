@@ -2,6 +2,9 @@ import { range } from 'lodash';
 import { DateTime } from 'luxon';
 import { CalendarDate, DateInterval } from './temporal';
 
+export const fiscalQuarterLabel = (date: CalendarDate) =>
+  `Q${fiscalQuarter(date)} FY${fiscalYear(date)}`;
+
 export const fiscalYear = (dt: DateTime) => dt.year + (dt.month >= 10 ? 1 : 0);
 
 export const fiscalYears = (start?: DateTime, end?: DateTime) =>
@@ -44,3 +47,12 @@ export const fullFiscalQuarter = (
     fiscalQuarterStartDate.endOf('quarter'),
   );
 };
+
+export const isReasonableYear = (year: unknown) =>
+  isInt(year) && year >= 1970 && year <= 3000;
+
+export const isQuarterNumber = (quarter: unknown) =>
+  isInt(quarter) && quarter >= 1 && quarter <= 4;
+
+// Not true for falsy case, thus not built-in, but fine for our cases here.
+const isInt = (x: unknown): x is number => Number.isInteger(x);

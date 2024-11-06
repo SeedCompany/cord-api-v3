@@ -1,4 +1,5 @@
 import { LazyGetter as Once } from 'lazy-get-decorator';
+import { fullFiscalQuarter, isQuarterNumber, isReasonableYear } from '~/common';
 import { Column, Range, Row, Sheet, WorkBook } from '~/common/xlsx.util';
 
 export abstract class ProgressSheet extends Sheet {
@@ -46,6 +47,25 @@ export abstract class ProgressSheet extends Sheet {
 
   get summaryFiscalYears() {
     return this.namedRange('PrcntFinishedYears');
+  }
+
+  /**
+   * This is just an artificial filter.
+   * It can be greater than the quarter we need, and we can still extract data fine.
+   */
+  @Once() get reportingQuarter() {
+    const year = this.reportingQuarterCells.year.asNumber!;
+    const quarterStr = this.reportingQuarterCells.quarter.asString;
+    const quarter = Number(quarterStr?.slice(1));
+    return isReasonableYear(year) && isQuarterNumber(quarter)
+      ? fullFiscalQuarter(quarter, year)
+      : undefined;
+  }
+  @Once() get reportingQuarterCells() {
+    return {
+      quarter: this.namedRange('RptQtr').start,
+      year: this.namedRange('RptYr').start,
+    };
   }
 
   columnForQuarterSummary(fiscalQuarter: number) {
