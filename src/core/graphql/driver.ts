@@ -5,11 +5,15 @@ import {
   GqlModuleOptions,
 } from '@nestjs/graphql';
 import type { RouteOptions as FastifyRoute } from 'fastify';
+import type { ExecutionArgs } from 'graphql';
+import { makeHandler as makeGqlWSHandler } from 'graphql-ws/lib/use/@fastify/websocket';
 import {
   createYoga,
+  type envelop,
   YogaServerInstance,
   YogaServerOptions,
 } from 'graphql-yoga';
+import type { WebSocket } from 'ws';
 import { GqlContextType } from '~/common';
 import { HttpAdapter, IRequest } from '../http';
 import { IResponse } from '../http/types';
@@ -54,7 +58,14 @@ export class Driver extends AbstractDriver<DriverConfig> {
     });
 
     fastify.route({
-      method: ['GET', 'POST', 'OPTIONS'],
+      method: 'GET',
+      url: this.yoga.graphqlEndpoint,
+      handler: this.httpHandler,
+      // Allow this same path to handle websocket upgrade requests.
+      wsHandler: this.makeWsHandler(options),
+    });
+    fastify.route({
+      method: ['POST', 'OPTIONS'],
       url: this.yoga.graphqlEndpoint,
       handler: this.httpHandler,
     });
@@ -75,6 +86,85 @@ export class Driver extends AbstractDriver<DriverConfig> {
       .status(res.status)
       .send(res.body);
   };
+
+  /**
+   * This code ties fastify, yoga, and graphql-ws together.
+   * Execution layers in order:
+   * 1. fastify route (http path matching)
+   * 2. fastify's websocket plugin (http upgrade request & websocket open/close)
+   *    This allows our fastify hooks to be executed.
+   *    And provides a consistent Fastify `Request` type,
+   *    instead of a raw `IncomingMessage`.
+   * 3. `graphql-ws`'s fastify handler (adapts #2 to graphql-ws)
+   * 4. `graphql-ws` (handles specific gql protocol over websockets)
+   * 5. `graphql-yoga` is unwrapped to `envelop`.
+   *    Yoga just wraps `envelop` and handles more of the http layer.
+   *    We really just reference `envelop` hooks with our "Yoga Plugins".
+   *    So this allows our "yoga" plugins to be executed.
+   */
+  private makeWsHandler(options: DriverConfig) {
+    interface WsExecutionArgs extends ExecutionArgs {
+      envelop: ReturnType<ReturnType<typeof envelop>>;
+    }
+
+    // The graphql-ws handler which accepts the fastify websocket/request and
+    // orchestrates the subscription setup & execution.
+    // This forwards to yoga/envelop.
+    // This was adapted from yoga's graphql-ws example.
+    // https://github.com/dotansimha/graphql-yoga/tree/main/examples/graphql-ws
+    const wsHandler = makeGqlWSHandler<
+      Record<string, unknown>,
+      { connection: { socket: WebSocket }; request: IRequest }
+    >({
+      schema: options.schema!,
+      // Custom execute/subscribe functions that really just defer to a
+      // unique envelop (yoga) instance per request.
+      execute: (wsArgs) => {
+        const { envelop, ...args } = wsArgs as WsExecutionArgs;
+        return envelop.execute(args);
+      },
+      subscribe: (wsArgs) => {
+        const { envelop, ...args } = wsArgs as WsExecutionArgs;
+        return envelop.subscribe(args);
+      },
+      // Create a unique envelop/yoga instance for each subscription.
+      // This allows "yoga" plugins that are really just envelop hooks
+      // to be executed.
+      onSubscribe: async (ctx, { payload }) => {
+        const {
+          extra: {
+            request,
+            connection: { socket },
+          },
+        } = ctx;
+        const envelop = this.yoga.getEnveloped({
+          req: request,
+          socket,
+          params: payload, // Same(ish?) shape as YogaInitialContext.params
+        });
+
+        const args: WsExecutionArgs = {
+          schema: envelop.schema,
+          operationName: payload.operationName,
+          document: envelop.parse(payload.query),
+          variableValues: payload.variables,
+          contextValue: await envelop.contextFactory(),
+          // These are needed in our execute()/subscribe() declared above.
+          // Public examples put these functions in the context, but I don't
+          // like exposing that implementation detail to the rest of the app.
+          envelop,
+        };
+
+        const errors = envelop.validate(args.schema, args.document);
+        if (errors.length) {
+          return errors;
+        }
+        return args;
+      },
+    });
+
+    return wsHandler;
+  }
 
   async stop() {
     // noop
