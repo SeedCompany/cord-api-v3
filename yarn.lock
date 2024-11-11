@@ -5893,6 +5893,7 @@ __metadata:
     graphql: "npm:^16.9.0"
     graphql-parse-resolve-info: "npm:^4.14.0"
     graphql-scalars: "npm:^1.22.4"
+    graphql-ws: "npm:^6.0.4"
     graphql-yoga: "npm:^5.13.4"
     human-format: "npm:^1.2.0"
     husky: "npm:^4.3.8"
@@ -8091,7 +8092,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"graphql-ws@npm:6.0.4, graphql-ws@npm:^6.0.3":
+"graphql-ws@npm:6.0.4, graphql-ws@npm:^6.0.3, graphql-ws@npm:^6.0.4":
   version: 6.0.4
   resolution: "graphql-ws@npm:6.0.4"
   peerDependencies:
