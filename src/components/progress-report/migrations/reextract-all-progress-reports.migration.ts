@@ -83,7 +83,7 @@ export class ReextractPnpProgressReportsMigration extends BaseMigration {
   }
 }
 
-async function* createPaginator<T>(
+export async function* createPaginator<T>(
   getPage: (page: number) => Promise<readonly T[]>,
 ) {
   let page = 0;

@@ -8,6 +8,7 @@ import * as lodash from 'lodash';
 import { DateTime, Duration, Interval } from 'luxon';
 import { CalendarDate, DateInterval, many, maybeMany } from '~/common';
 import * as common from '~/common';
+import { doIt } from './doIt';
 import './polyfills';
 
 runRepl({
@@ -28,6 +29,7 @@ runRepl({
     const Resources = app.get(ResourcesHost).getEnhancedMap();
 
     return {
+      doIt: () => doIt(app),
       e,
       DateTime,
       Duration,
