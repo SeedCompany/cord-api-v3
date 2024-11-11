@@ -13,6 +13,7 @@ import {
   type YogaServerInstance,
   type YogaServerOptions,
 } from 'graphql-yoga';
+import { AsyncResource } from 'node:async_hooks';
 import type { WebSocket } from 'ws';
 import { type GqlContextType } from '~/common';
 import { HttpAdapter, type IRequest } from '../http';
@@ -104,7 +105,9 @@ export class Driver extends AbstractDriver<DriverConfig> {
    *    So this allows our "yoga" plugins to be executed.
    */
   private makeWsHandler(options: DriverConfig) {
+    const asyncContextBySocket = new WeakMap<WebSocket, AsyncResource>();
     interface WsExecutionArgs extends ExecutionArgs {
+      socket: WebSocket;
       envelop: ReturnType<ReturnType<typeof envelop>>;
     }
 
@@ -113,7 +116,7 @@ export class Driver extends AbstractDriver<DriverConfig> {
     // This forwards to yoga/envelop.
     // This was adapted from yoga's graphql-ws example.
     // https://github.com/dotansimha/graphql-yoga/tree/main/examples/graphql-ws
-    const wsHandler = makeGqlWSHandler<
+    const fastifyWsHandler = makeGqlWSHandler<
       Record<string, unknown>,
       { socket: WebSocket; request: IRequest }
     >({
@@ -121,12 +124,19 @@ export class Driver extends AbstractDriver<DriverConfig> {
       // Custom execute/subscribe functions that really just defer to a
       // unique envelop (yoga) instance per request.
       execute: (wsArgs) => {
-        const { envelop, ...args } = wsArgs as WsExecutionArgs;
-        return envelop.execute(args);
+        const { envelop, socket, ...args } = wsArgs as WsExecutionArgs;
+        return asyncContextBySocket.get(socket)!.runInAsyncScope(() => {
+          return envelop.execute(args);
+        });
       },
       subscribe: (wsArgs) => {
-        const { envelop, ...args } = wsArgs as WsExecutionArgs;
-        return envelop.subscribe(args);
+        const { envelop, socket, ...args } = wsArgs as WsExecutionArgs;
+        // Because this is called via socket.onmessage, we don't have
+        // the same async context we started with.
+        // Grab and resume it.
+        return asyncContextBySocket.get(socket)!.runInAsyncScope(() => {
+          return envelop.subscribe(args);
+        });
       },
       // Create a unique envelop/yoga instance for each subscription.
       // This allows "yoga" plugins that are really just envelop hooks
@@ -151,6 +161,7 @@ export class Driver extends AbstractDriver<DriverConfig> {
           // Public examples put these functions in the context, but I don't
           // like exposing that implementation detail to the rest of the app.
           envelop,
+          socket,
         };
 
         const errors = envelop.validate(args.schema, args.document);
@@ -161,6 +172,11 @@ export class Driver extends AbstractDriver<DriverConfig> {
       },
     });
 
+    const wsHandler: FastifyRoute['wsHandler'] = function (socket, req) {
+      // Save a reference to the current async context, so we can resume it.
+      asyncContextBySocket.set(socket, new AsyncResource('graphql-ws'));
+      return fastifyWsHandler.call(this, socket, req);
+    };
     return wsHandler;
   }
 
