@@ -1,9 +1,4 @@
-import {
-  MiddlewareConsumer,
-  Module,
-  NestModule,
-  OnModuleInit,
-} from '@nestjs/common';
+import { Module, OnModuleInit } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import XRay from 'aws-xray-sdk-core';
 import { ConfigService } from '../config/config.service';
@@ -24,16 +19,12 @@ import { XRayMiddleware } from './xray.middleware';
   ],
   exports: [TracingService],
 })
-export class TracingModule implements OnModuleInit, NestModule {
+export class TracingModule implements OnModuleInit {
   constructor(
     @Logger('xray') private readonly logger: ILogger,
     private readonly config: ConfigService,
     private readonly version: VersionService,
   ) {}
-
-  configure(consumer: MiddlewareConsumer) {
-    consumer.apply(XRayMiddleware).forRoutes('*');
-  }
 
   async onModuleInit() {
     // Don't use cls-hooked lib. It's old and Node has AsyncLocalStorage now.

@@ -1,15 +1,8 @@
-import { ApolloServerErrorCode as ApolloCode } from '@apollo/server/errors';
 import { ArgumentsHost, Inject, Injectable } from '@nestjs/common';
 // eslint-disable-next-line no-restricted-imports,@seedcompany/no-restricted-imports
 import * as Nest from '@nestjs/common';
 import { GqlExecutionContext } from '@nestjs/graphql';
-import {
-  entries,
-  isNotFalsy,
-  setHas,
-  setOf,
-  simpleSwitch,
-} from '@seedcompany/common';
+import { entries, isNotFalsy, simpleSwitch } from '@seedcompany/common';
 import * as Edge from 'edgedb';
 import * as EdgeDBTags from 'edgedb/dist/errors/tags.js';
 import { GraphQLError } from 'graphql';
@@ -35,9 +28,12 @@ import { normalizeFramePath } from './normalize-frame-path';
 
 interface NormalizeParams {
   ex: Error;
-  /** Errors thrown in Query/Mutation/Controller methods will have this. */
+  /** Errors thrown in Query/Mutation/Controller methods will have this via ExceptionFilter. */
   context?: ArgumentsHost;
-  /** Errors thrown in ResolveField methods will have this. */
+  /**
+   * Errors thrown in ResolveField methods (or other GQL communication problems) will have this.
+   * This is essentially mutatally exclusuve with {@link context}.
+   */
   gql?: GraphQLError;
 }
 
@@ -47,6 +43,16 @@ export interface ExceptionJson {
   code: string;
   codes: ReadonlySet<string>;
   [key: string]: unknown;
+}
+
+/**
+ * Denote normalization has already happened for this error.
+ * So the GQL server can know acturately if needs to normalize or not.
+ */
+export class NormalizedException extends Error {
+  constructor(readonly normalized: ExceptionJson) {
+    super(normalized.message);
+  }
 }
 
 @Injectable()
@@ -159,14 +165,12 @@ export class ExceptionNormalizer {
       };
     }
 
-    // Apollo Errors
     if (ex instanceof GraphQLError) {
-      const codes = this.errorToCodes(ex);
-      const isClient = setHas(
-        apolloErrorCodesThatAreClientProblem,
-        ex.extensions.code!,
-      );
-      return { codes: [codes[0], 'GraphQL', isClient ? 'Client' : 'Server'] };
+      const isClient =
+        (ex.extensions.http?.status ?? 500) < 500 ||
+        // Guessing here. No execution path - client problem.
+        !ex.path;
+      return { codes: ['GraphQL', isClient ? 'Client' : 'Server'] };
     }
 
     // Bad output from API, that doesn't match the schema
@@ -216,7 +220,7 @@ export class ExceptionNormalizer {
       ? this.resources.getByEdgeDB(type).name
       : type;
 
-    if (gql?.path) {
+    if (gql?.path && gql.path.length > 1) {
       // This error was thrown from a field resolver.
       // Because this is not directly from user input, it is a server error.
       // Still make the error nicer.
@@ -328,12 +332,3 @@ export class ExceptionNormalizer {
     return type.name.replace(/(Exception|Error)$/, '');
   }
 }
-
-const apolloErrorCodesThatAreClientProblem = setOf([
-  ApolloCode.GRAPHQL_PARSE_FAILED,
-  ApolloCode.GRAPHQL_VALIDATION_FAILED,
-  ApolloCode.PERSISTED_QUERY_NOT_FOUND,
-  ApolloCode.PERSISTED_QUERY_NOT_SUPPORTED,
-  ApolloCode.BAD_USER_INPUT,
-  ApolloCode.BAD_REQUEST,
-]);

@@ -18,7 +18,6 @@ import {
 } from '~/core';
 import { Privileges } from '../authorization';
 import { CeremonyService } from '../ceremony';
-import { FileService } from '../file';
 import { ProductService } from '../product';
 import { ProductListInput, SecuredProductList } from '../product/dto';
 import { ProjectService } from '../project';
@@ -52,7 +51,6 @@ export class EngagementService {
     @Inject(forwardRef(() => ProductService))
     private readonly products: ProductService & {},
     private readonly config: ConfigService,
-    private readonly files: FileService,
     private readonly engagementRules: EngagementRules,
     private readonly privileges: Privileges,
     @Inject(forwardRef(() => ProjectService))
@@ -209,13 +207,6 @@ export class EngagementService {
     this.privileges
       .for(session, InternshipEngagement, object)
       .verifyChanges(changes, { pathPrefix: 'engagement' });
-
-    await this.files.updateDefinedFile(
-      object.growthPlan,
-      'engagement.growthPlan',
-      changes.growthPlan,
-      session,
-    );
 
     const updated = await this.repo.updateInternship(
       { id: object.id, ...changes },

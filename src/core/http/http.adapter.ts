@@ -1,6 +1,7 @@
 import compression from '@fastify/compress';
 import cookieParser from '@fastify/cookie';
 import cors from '@fastify/cors';
+import { DiscoveryService } from '@golevelup/nestjs-discovery';
 import {
   VERSION_NEUTRAL,
   type VersionValue,
@@ -11,12 +12,29 @@ import {
   FastifyAdapter,
   NestFastifyApplication,
 } from '@nestjs/platform-fastify';
-import type { FastifyInstance, HTTPMethods, RouteOptions } from 'fastify';
+import type {
+  FastifyInstance,
+  FastifyReply,
+  FastifyRequest,
+  HTTPMethods,
+  RawReplyDefaultExpression,
+  RawRequestDefaultExpression,
+  RawServerBase,
+  RawServerDefault,
+  RequestGenericInterface,
+  RouteOptions,
+} from 'fastify';
 import rawBody from 'fastify-raw-body';
 import * as zlib from 'node:zlib';
+import { uniqueDiscoveredMethods } from '~/common/discovery-unique-methods';
 import { ConfigService } from '~/core/config/config.service';
-import { RawBody, RouteConfig, RouteConstraints } from './decorators';
-import type { CookieOptions, CorsOptions, IResponse } from './types';
+import {
+  GlobalHttpHook,
+  RawBody,
+  RouteConfig,
+  RouteConstraints,
+} from './decorators';
+import type { CookieOptions, CorsOptions, HttpHooks, IResponse } from './types';
 
 export type NestHttpApplication = NestFastifyApplication & {
   configure: (
@@ -27,8 +45,41 @@ export type NestHttpApplication = NestFastifyApplication & {
 
 export class HttpAdapterHost extends HttpAdapterHostImpl<HttpAdapter> {}
 
+type FastifyRawRequest<TServer extends RawServerBase> =
+  RawRequestDefaultExpression<TServer> & {
+    originalUrl?: string;
+  };
+
 // @ts-expect-error Convert private methods to protected
-class PatchedFastifyAdapter extends FastifyAdapter {
+class PatchedFastifyAdapter<
+  TServer extends RawServerBase = RawServerDefault,
+  TRawRequest extends FastifyRawRequest<TServer> = FastifyRawRequest<TServer>,
+  TRawResponse extends RawReplyDefaultExpression<TServer> = RawReplyDefaultExpression<TServer>,
+  TRequest extends FastifyRequest<
+    RequestGenericInterface,
+    TServer,
+    TRawRequest
+  > = FastifyRequest<RequestGenericInterface, TServer, TRawRequest>,
+  TReply extends FastifyReply<
+    RequestGenericInterface,
+    TServer,
+    TRawRequest,
+    TRawResponse
+  > = FastifyReply<RequestGenericInterface, TServer, TRawRequest, TRawResponse>,
+  TInstance extends FastifyInstance<
+    TServer,
+    TRawRequest,
+    TRawResponse
+  > = FastifyInstance<TServer, TRawRequest, TRawResponse>,
+> extends FastifyAdapter<
+  TServer,
+  TRawRequest,
+  TRawResponse,
+  TRequest,
+  // @ts-expect-error they haven't upgraded to v5 signature yet.
+  TReply,
+  TInstance
+> {
   protected injectRouteOptions(
     routerMethodKey: Uppercase<HTTPMethods>,
     ...args: any[]
@@ -61,6 +112,18 @@ export class HttpAdapter extends PatchedFastifyAdapter {
     app.setGlobalPrefix(config.hostUrl$.value.pathname.slice(1));
 
     config.applyTimeouts(app.getHttpServer(), config.httpTimeouts);
+
+    // Attach hooks
+    const globalHooks = await app
+      .get(DiscoveryService)
+      .providerMethodsWithMetaAtKey<keyof HttpHooks>(GlobalHttpHook.KEY);
+    const fastify = app.getHttpAdapter().getInstance();
+    for (const globalHook of uniqueDiscoveredMethods(globalHooks)) {
+      const handler = globalHook.discoveredMethod.handler.bind(
+        globalHook.discoveredMethod.parentClass.instance,
+      );
+      fastify.addHook(globalHook.meta, handler);
+    }
   }
 
   protected injectRouteOptions(
@@ -115,6 +178,13 @@ export class HttpAdapter extends PatchedFastifyAdapter {
       });
     }
     return this.instance.route(route);
+  }
+
+  override registerMiddie() {
+    // no
+  }
+  override createMiddlewareFactory(): never {
+    throw new Error('Express/Connect Middleware should not be used');
   }
 
   setCookie(

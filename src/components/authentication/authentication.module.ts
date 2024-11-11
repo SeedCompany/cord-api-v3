@@ -1,10 +1,4 @@
-import {
-  forwardRef,
-  Global,
-  MiddlewareConsumer,
-  Module,
-  NestModule,
-} from '@nestjs/common';
+import { forwardRef, Global, Module } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { splitDb } from '~/core';
 import { AuthorizationModule } from '../authorization/authorization.module';
@@ -54,12 +48,4 @@ import { SessionResolver } from './session.resolver';
     AuthenticationRepository,
   ],
 })
-export class AuthenticationModule implements NestModule {
-  constructor(
-    private readonly currentUserProvider: EdgeDBCurrentUserProvider,
-  ) {}
-
-  configure(consumer: MiddlewareConsumer) {
-    consumer.apply(this.currentUserProvider.use).forRoutes('*');
-  }
-}
+export class AuthenticationModule {}

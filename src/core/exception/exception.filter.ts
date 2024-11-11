@@ -10,7 +10,11 @@ import { HttpAdapter } from '~/core/http';
 import { ConfigService } from '../config/config.service';
 import { ILogger, Logger, LogLevel } from '../logger';
 import { ValidationException } from '../validation';
-import { ExceptionJson, ExceptionNormalizer } from './exception.normalizer';
+import {
+  ExceptionJson,
+  ExceptionNormalizer,
+  NormalizedException,
+} from './exception.normalizer';
 import { isFromHackAttempt } from './is-from-hack-attempt';
 
 @Catch()
@@ -54,16 +58,11 @@ export class ExceptionFilter implements IExceptionFilter {
     this.logIt(normalized, exception);
 
     if (args.getType() === 'graphql') {
-      this.respondToGraphQL(normalized, args);
+      // re-throw our result so that the GraphQL Server picks it up
+      throw new NormalizedException(normalized);
     }
-    await this.respondToHttp(normalized, args);
-  }
 
-  private respondToGraphQL(ex: ExceptionJson, _args: ArgumentsHost) {
-    const { message, stack, ...extensions } = ex;
-    const out = { message, stack, extensions };
-    // re-throw our result so that Apollo Server picks it up
-    throw Object.assign(new Error(), out);
+    await this.respondToHttp(normalized, args);
   }
 
   private async respondToHttp(ex: ExceptionJson, args: ArgumentsHost) {
@@ -101,10 +100,6 @@ export class ExceptionFilter implements IExceptionFilter {
     }
     if (this.config.jest) {
       // Jest will log exceptions, don't duplicate.
-      return;
-    }
-    if (info.code === 'PersistedQueryNotFound') {
-      // This is the normal flow. Tells the client to send full operation to be cached.
       return;
     }
 

@@ -380,15 +380,20 @@ export class EngagementRepository extends CommonRepository {
 
     if (pnp) {
       const engagement = await this.readOne(id, session);
-      if (engagement.pnp) {
-        await this.files.createFileVersion(
-          {
-            ...pnp,
-            parentId: engagement.pnp.id,
-          },
-          session,
+
+      if (!engagement.pnp) {
+        throw new ServerException(
+          'Expected PnP file to be created with the engagement',
         );
       }
+
+      await this.files.createFileVersion(
+        {
+          ...pnp,
+          parentId: engagement.pnp.id,
+        },
+        session,
+      );
     }
 
     if (changes.firstScripture) {
@@ -417,15 +422,20 @@ export class EngagementRepository extends CommonRepository {
 
     if (growthPlan) {
       const engagement = await this.readOne(id, session);
-      if (engagement.growthPlan) {
-        await this.files.createFileVersion(
-          {
-            ...growthPlan,
-            parentId: engagement.growthPlan.id,
-          },
-          session,
+
+      if (!engagement.growthPlan) {
+        throw new ServerException(
+          'Expected Growth Plan file to be created with the engagement',
         );
       }
+
+      await this.files.createFileVersion(
+        {
+          ...growthPlan,
+          parentId: engagement.growthPlan.id,
+        },
+        session,
+      );
     }
 
     if (mentorId !== undefined) {
