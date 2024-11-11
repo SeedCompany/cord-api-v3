@@ -13,6 +13,7 @@ import {
   YogaServerInstance,
   YogaServerOptions,
 } from 'graphql-yoga';
+import { noop } from 'lodash';
 import type { WebSocket } from 'ws';
 import { GqlContextType } from '~/common';
 import { HttpAdapter, IRequest } from '../http';
@@ -112,7 +113,7 @@ export class Driver extends AbstractDriver<DriverConfig> {
     // This forwards to yoga/envelop.
     // This was adapted from yoga's graphql-ws example.
     // https://github.com/dotansimha/graphql-yoga/tree/main/examples/graphql-ws
-    const wsHandler = makeGqlWSHandler<
+    const fastifyWsHandler = makeGqlWSHandler<
       Record<string, unknown>,
       { connection: { socket: WebSocket }; request: IRequest }
     >({
@@ -163,6 +164,18 @@ export class Driver extends AbstractDriver<DriverConfig> {
       },
     });
 
+    const wsHandler: FastifyRoute['wsHandler'] = function (socket, req) {
+      // graphql-ws' fastify adapter still uses v9 of @fastify/websocket
+      // which has the socket wrapped in a SocketStream.
+      // v10+ removed this default wrapping.
+      // This adapts the socket for the usage of the adapter.
+      // The adapter's types are incorrect; they're using our v11 types,
+      // but their source is developed with v9.
+      // They just unwrap the socket out, and add a once('error')
+      // which we can ignore since they add the same handler to socket as well.
+      const connection = { socket, once: noop } as any;
+      return fastifyWsHandler.call(this, connection, req);
+    };
     return wsHandler;
   }
 
