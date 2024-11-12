@@ -34,7 +34,7 @@ export class GraphqlErrorFormatter {
     () =>
     ({ result, setResult }) => {
       if (result.length > 0) {
-        const errors = result.map((error) => this.formatError(error));
+        const errors = result.flatMap((error) => this.formatError(error));
         setResult(errors);
       }
     };
@@ -43,7 +43,9 @@ export class GraphqlErrorFormatter {
     onExecuteDone: (params) =>
       handleStreamOrSingleExecutionResult(params, ({ result, setResult }) => {
         if (result.errors && result.errors.length > 0) {
-          const errors = result.errors.map((error) => this.formatError(error));
+          const errors = result.errors.flatMap((error) =>
+            this.formatError(error),
+          );
           setResult({ ...result, errors });
         }
       }),
@@ -71,20 +73,23 @@ export class GraphqlErrorFormatter {
       this.filter.logIt(normalized, error.originalError ?? error);
     }
 
-    const { message, stack, code: _, ...extensions } = normalized;
-    const { codes } = extensions;
+    // Unwrap AggregateError's errors to flat gql errors
+    return (normalized.aggregatees ?? [normalized]).map((innerEx) => {
+      const { message, stack, code: _, ...extensions } = innerEx;
+      const { codes } = extensions;
 
-    // Schema & validation errors don't have meaningful stack traces, so remove them
-    const worthlessTrace = codes.has('Validation') || codes.has('GraphQL');
-    if (!worthlessTrace) {
-      extensions.stacktrace = stack.split('\n');
-    }
+      // Schema & validation errors don't have meaningful stack traces, so remove them
+      const worthlessTrace = codes.has('Validation') || codes.has('GraphQL');
+      if (!worthlessTrace) {
+        extensions.stacktrace = stack.split('\n');
+      }
 
-    return new GraphQLError(message, {
-      nodes: error.nodes,
-      positions: error.positions,
-      path: error.path,
-      extensions: { ...error.extensions, ...extensions },
+      return new GraphQLError(message, {
+        nodes: error.nodes,
+        positions: error.positions,
+        path: error.path,
+        extensions: { ...error.extensions, ...extensions },
+      });
     });
   };
 }
