@@ -39,6 +39,7 @@ type ExtractedRow = MergeExclusive<
    */
   rowIndex: number;
   steps: ReadonlyArray<{ step: Step; completed?: number | null }>;
+  cell: Cell<ProgressSheet>;
 };
 
 @Injectable()
@@ -100,6 +101,7 @@ const parseProgressRow =
       rowIndex: rowIndex + 1,
       order: index + 1,
       steps,
+      cell,
     };
 
     if (sheet.isOBS()) {
