@@ -26,7 +26,7 @@ export class ReextractPnpProgressReportsMigration extends BaseMigration {
       try {
         const pnp = this.files.asDownloadable(fv);
         const event = new PeriodicReportUploadedEvent(report, pnp, session);
-        await this.eventBus.publish(event);
+        await this.db.conn.runInTransaction(() => this.eventBus.publish(event));
       } catch (e) {
         this.logger.error('Failed to re-extract PnP', {
           report: report.id,
