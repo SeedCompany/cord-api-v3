@@ -1,12 +1,14 @@
 import { mapOf } from '@seedcompany/common';
+import { oneLine } from 'common-tags';
 import { EventsHandler, ILogger, Logger } from '~/core';
 import { ReportType } from '../../periodic-report/dto';
 import { PeriodicReportUploadedEvent } from '../../periodic-report/events';
 import { ProductService } from '../../product';
-import { ProducibleType } from '../../product/dto';
+import { ProducibleType, ProductStep } from '../../product/dto';
 import { isScriptureEqual } from '../../scripture';
 import { ProgressReportVariantProgress as Progress } from '../dto';
 import { ProductProgressService } from '../product-progress.service';
+import { StepNotPlannedException } from '../step-not-planned.exception';
 import { StepProgressExtractor } from '../step-progress-extractor.service';
 
 @EventsHandler(PeriodicReportUploadedEvent)
@@ -62,7 +64,7 @@ export class ExtractPnpProgressHandler {
       if (row.story) {
         const productId = storyProducts.get(row.story);
         if (productId) {
-          return { productId, steps };
+          return { extracted: row, productId, steps };
         }
       }
 
@@ -73,7 +75,7 @@ export class ExtractPnpProgressHandler {
             isScriptureEqual(ref.scriptureRanges, row.scripture),
         );
         if (exactScriptureMatch) {
-          return { productId: exactScriptureMatch.id, steps };
+          return { extracted: row, productId: exactScriptureMatch.id, steps };
         }
 
         const unspecifiedScriptureMatch = scriptureProducts.find(
@@ -81,7 +83,11 @@ export class ExtractPnpProgressHandler {
             ref.book === row.bookName && ref.totalVerses === row.totalVerses,
         );
         if (unspecifiedScriptureMatch) {
-          return { productId: unspecifiedScriptureMatch.id, steps };
+          return {
+            extracted: row,
+            productId: unspecifiedScriptureMatch.id,
+            steps,
+          };
         }
       }
 
@@ -95,16 +101,48 @@ export class ExtractPnpProgressHandler {
 
     // Update progress for report & product
     await Promise.all(
-      updates.map(async (input) => {
-        await this.progress.update(
-          {
-            ...input,
-            reportId: event.report.id,
-            // TODO this seems fine for now as only this variant will upload PnPs.
-            variant: Progress.FallbackVariant,
-          },
-          event.session,
-        );
+      updates.map(async ({ extracted, ...input }) => {
+        try {
+          await this.progress.update(
+            {
+              ...input,
+              reportId: event.report.id,
+              // TODO this seems fine for now as only this variant will upload PnPs.
+              variant: Progress.FallbackVariant,
+            },
+            event.session,
+          );
+        } catch (e) {
+          if (
+            !(
+              e instanceof AggregateError &&
+              e.message === 'Invalid Progress Input'
+            )
+          ) {
+            throw e;
+          }
+          for (const error of e.errors) {
+            if (!(error instanceof StepNotPlannedException)) {
+              continue;
+            }
+            const stepLabel = ProductStep.entry(error.step).label;
+            // kinda. close enough, I think, we give the cell ref as well.
+            const goalLabel = extracted.bookName ?? extracted.story;
+            result.addProblem({
+              severity: 'Error',
+              groups: [
+                'Step is not planned',
+                `_${goalLabel}_ has progress reported on steps that have not been declared to be worked in this engagement`,
+                `_${goalLabel}_ has not declared _${stepLabel}_ \`${extracted.cell.ref}\` as a step that will be worked in this engagement`,
+              ],
+              message: oneLine`
+                Please update the goal in CORD to mark this step as planned
+                or upload an updated PnP file to the "Planning Spreadsheet" on the engagement page.
+              `,
+              source: extracted.cell,
+            });
+          }
+        }
       }),
     );
   }

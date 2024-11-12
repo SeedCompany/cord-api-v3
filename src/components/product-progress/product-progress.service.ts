@@ -165,7 +165,7 @@ export class ProductProgressService {
       return [];
     });
     if (errors.length > 0) {
-      throw new AggregateError(errors);
+      throw new AggregateError(errors, 'Invalid Progress Input');
     }
 
     const progress = await this.repo.update(input);
