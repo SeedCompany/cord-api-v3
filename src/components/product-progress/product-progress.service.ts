@@ -152,17 +152,21 @@ export class ProductProgressService {
       );
     }
 
-    input.steps.forEach((step, index) => {
+    const errors = input.steps.flatMap((step, index) => {
       if (!scope.steps.includes(step.step)) {
-        throw new StepNotPlannedException(input.productId, step.step, index);
+        return new StepNotPlannedException(input.productId, step.step, index);
       }
       if (step.completed && step.completed > scope.progressTarget) {
-        throw new InputException(
+        return new InputException(
           "Completed value cannot exceed product's progress target",
           `steps.${index}.completed`,
         );
       }
+      return [];
     });
+    if (errors.length > 0) {
+      throw new AggregateError(errors);
+    }
 
     const progress = await this.repo.update(input);
     return this.secure(progress, this.privilegesFor(session, scope))!;
