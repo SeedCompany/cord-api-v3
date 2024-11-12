@@ -20,7 +20,7 @@ import {
 import { SetDbType } from '~/core/database';
 import { SetChangeType } from '~/core/database/changes';
 import { e } from '~/core/edgedb';
-import { RegisterResource } from '~/core/resources';
+import { LinkTo, RegisterResource } from '~/core/resources';
 import { DbScriptureReferences } from '../../scripture';
 import {
   ScriptureRangeInput,
@@ -54,8 +54,8 @@ export class Product extends Producible {
   static readonly Parent = () =>
     import('../../engagement/dto').then((m) => m.LanguageEngagement);
 
-  readonly engagement: ID;
-  readonly project: ID;
+  readonly engagement: Secured<LinkTo<'LanguageEngagement'>>;
+  readonly project: Secured<LinkTo<'Project'>>;
 
   @Field()
   @DbLabel('ProductMedium')
