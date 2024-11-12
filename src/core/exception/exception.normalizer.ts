@@ -42,12 +42,14 @@ export interface ExceptionJson {
   stack: string;
   code: string;
   codes: ReadonlySet<string>;
+  /** From {@link AggregateError.errors} */
+  aggregatees?: readonly ExceptionJson[];
   [key: string]: unknown;
 }
 
 /**
  * Denote normalization has already happened for this error.
- * So the GQL server can know acturately if needs to normalize or not.
+ * So the GQL server can know accurately if it needs to normalize or not.
  */
 export class NormalizedException extends Error {
   constructor(readonly normalized: ExceptionJson) {
@@ -129,6 +131,26 @@ export class ExceptionNormalizer {
       return {
         codes: this.errorToCodes(ex),
         message: 'Failed to connect to CORD database',
+      };
+    }
+
+    if (
+      ex instanceof AggregateError &&
+      // not subclassed
+      ex.name === 'AggregateError'
+    ) {
+      const aggregatees = ex.errors.map((e) =>
+        this.normalize({
+          ...params,
+          ex: e,
+        }),
+      );
+      return {
+        aggregatees,
+        // shrug?
+        codes: [
+          aggregatees.every((e) => e.codes.has('Client')) ? 'Client' : 'Server',
+        ],
       };
     }
 

@@ -8,7 +8,7 @@ import { FileVersion } from '../../file/dto';
 import { PeriodicReportUploadedEvent } from '../../periodic-report/events';
 import { ProgressReport } from '../dto';
 
-@Migration('2024-11-11T16:00:04')
+@Migration('2024-11-11T16:00:06')
 export class ReextractPnpProgressReportsMigration extends BaseMigration {
   constructor(
     private readonly eventBus: IEventBus,
@@ -26,7 +26,7 @@ export class ReextractPnpProgressReportsMigration extends BaseMigration {
       try {
         const pnp = this.files.asDownloadable(fv);
         const event = new PeriodicReportUploadedEvent(report, pnp, session);
-        await this.eventBus.publish(event);
+        await this.db.conn.runInTransaction(() => this.eventBus.publish(event));
       } catch (e) {
         this.logger.error('Failed to re-extract PnP', {
           report: report.id,
