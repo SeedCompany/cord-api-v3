@@ -105,6 +105,33 @@ function unknownStepLabels(rows: readonly Row[]) {
   });
 }
 
+function problemCountsByReport(rows: readonly Row[]) {
+  return rows.flatMap((row) => {
+    const { problems, report, language, project, partner } = row;
+
+    const existsInAReportByType = problems.reduce(
+      (countOfType: Record<string, number>, current) => {
+        const type = problemType(current);
+        countOfType[type] = (countOfType[type] ?? 0) + 1;
+        return countOfType;
+      },
+      {},
+    );
+
+    return {
+      quarter: fiscalQuarterLabel(CalendarDate.fromISO(report.start as any)),
+      languageName: language.name,
+      languageUrl: `https://cordfield.com/languages/` + language.id,
+      projectName: project.name,
+      projectUrl: `https://cordfield.com/projects/` + project.id,
+      partnerName: partner.name,
+      partnerUrl: `https://cordfield.com/partners/` + partner.id,
+      reportUrl: `https://cordfield.com/progress-reports/` + report.id,
+      ...existsInAReportByType,
+    };
+  });
+}
+
 export const doIt = async (app: INestApplicationContext) => {
   const rows = await fsCached('problems.json', async () => {
     const db = app.get(DatabaseService);
@@ -120,6 +147,7 @@ export const doIt = async (app: INestApplicationContext) => {
     unknownStepLabelCounts(rows),
   );
   await writeJson('unknown-step-labels.json', unknownStepLabels(rows));
+  await writeJson('problem-counts-by-report.json', problemCountsByReport(rows));
 };
 
 interface Row {
