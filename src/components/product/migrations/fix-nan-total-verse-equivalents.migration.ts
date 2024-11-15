@@ -25,14 +25,14 @@ export class FixNaNTotalVerseEquivalentsMigration extends BaseMigration {
       .map('id')
       .run();
 
-    const products = await this.productService.readManyUnsecured(
+    const products = await this.productService.readMany(
       ids,
       this.fakeAdminSession,
     );
 
     for (const p of products) {
       const correctTotalVerseEquivalent = getTotalVerseEquivalents(
-        ...p.scriptureReferences,
+        ...p.scriptureReferences.value,
       );
 
       if (p.__typename === 'DirectScriptureProduct') {
