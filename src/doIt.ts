@@ -12,7 +12,7 @@ import { greaterEqualTo, node, relation } from 'cypher-query-builder';
 import fs from 'fs/promises';
 import { CalendarDate, fiscalQuarterLabel, UnsecuredDto } from '~/common';
 import { DatabaseService } from '~/core/database';
-import { ACTIVE, matchProps, merge } from '~/core/database/query';
+import { ACTIVE, exp, matchProps, merge } from '~/core/database/query';
 import { Language } from './components/language/dto';
 import type { PnpProblem } from './components/pnp/extraction-result';
 import type { ProgressReport } from './components/progress-report/dto';
@@ -107,7 +107,7 @@ function unknownStepLabels(rows: readonly Row[]) {
 
 function problemCountsByReport(rows: readonly Row[]) {
   return rows.flatMap((row) => {
-    const { problems, report, language, project, partner } = row;
+    const { problems, report, language, project, partner, uploader } = row;
 
     const existsInAReportByType = problems.reduce(
       (countOfType: Record<string, number>, current) => {
@@ -127,6 +127,8 @@ function problemCountsByReport(rows: readonly Row[]) {
       partnerName: partner.name,
       partnerUrl: `https://cordfield.com/partners/` + partner.id,
       reportUrl: `https://cordfield.com/progress-reports/` + report.id,
+      uploaderUrl: `https://cordfield.com/users/` + uploader.id,
+      uploaderName: uploader.name,
       ...existsInAReportByType,
     };
   });
@@ -156,6 +158,7 @@ interface Row {
   language: UnsecuredDto<Pick<Language, 'id' | 'name'>>;
   project: UnsecuredDto<Pick<Project, 'id' | 'name'>>;
   partner: UnsecuredDto<Pick<Project, 'id' | 'name'>>;
+  uploader: { id: string; name: string };
 }
 
 const grabPage = async (db: DatabaseService, page: number) => {
@@ -165,7 +168,7 @@ const grabPage = async (db: DatabaseService, page: number) => {
     .match([
       node('reportNode', 'ProgressReport'),
       relation('out'),
-      node('', 'File'),
+      node('file', 'File'),
       relation('out'),
       node('result', 'PnpExtractionResult'),
     ])
@@ -194,6 +197,37 @@ const grabPage = async (db: DatabaseService, page: number) => {
         node('projectName', 'Property'),
       ],
     ])
+    .subQuery('file', (sub) =>
+      sub
+        .subQuery('file', (sub2) =>
+          sub2
+            .match([
+              node('file', 'FileNode'),
+              relation('in', '', 'parent', ACTIVE),
+              node('version', 'FileVersion'),
+            ])
+            .return('version')
+            .orderBy('version.createdAt', 'DESC')
+            .raw('LIMIT 1'),
+        )
+        .match([
+          node('version'),
+          relation('out', '', 'createdBy', ACTIVE),
+          node('modifiedBy'),
+        ])
+        .apply(
+          matchProps({
+            nodeName: 'modifiedBy',
+            outputVar: 'uploaderProps',
+          }),
+        )
+        .return(
+          exp({
+            id: 'modifiedBy.id',
+            name: 'uploaderProps.realFirstName + " " + uploaderProps.realLastName',
+          }).as('uploader'),
+        ),
+    )
     .subQuery('project', (sub) =>
       sub
         .optionalMatch([
@@ -223,6 +257,7 @@ const grabPage = async (db: DatabaseService, page: number) => {
       merge('language', { name: 'languageName.value' }).as('language'),
       merge('project', { name: 'projectName.value' }).as('project'),
       'report',
+      'uploader',
       'apoc.convert.fromJsonList(result.problems) as problems',
     ])
     .skip(page * 1000)
