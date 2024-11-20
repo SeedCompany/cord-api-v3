@@ -5,6 +5,7 @@ import {
 } from '../../engagement/events';
 import { FileService } from '../../file';
 import { PnpPlanningExtractionResult } from '../../pnp/extraction-result';
+import { PlanningExtractionResultSaver } from '../../pnp/extraction-result/planning-extraction-result-saver';
 import { getAvailableSteps } from '../dto';
 import { PnpProductSyncService } from '../pnp-product-sync.service';
 
@@ -17,6 +18,7 @@ export class ExtractProductsFromPnpHandler
   constructor(
     private readonly syncer: PnpProductSyncService,
     private readonly files: FileService,
+    private readonly planningExtractionResultSaver: PlanningExtractionResultSaver,
   ) {}
 
   async handle(event: SubscribedEvent): Promise<void> {
@@ -55,5 +57,7 @@ export class ExtractProductsFromPnpHandler
       actionableProductRows,
       session: event.session,
     });
+
+    await this.planningExtractionResultSaver.save(file.latestVersionId, result);
   }
 }

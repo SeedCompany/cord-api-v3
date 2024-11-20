@@ -18,7 +18,7 @@ export class PnpExtractionResultLanguageEngagementConnectionResolver {
     if (!fileId) {
       return null;
     }
-    const { result } = await loader.load(fileId);
+    const { result } = await loader.load(fileId.id);
     return result;
   }
 }

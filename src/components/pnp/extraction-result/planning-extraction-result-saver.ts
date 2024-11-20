@@ -4,7 +4,7 @@ import { PnpExtractionResult } from './extraction-result.dto';
 import { PnpExtractionResultRepository } from './pnp-extraction-result.edgedb.repository';
 
 @Injectable()
-export class SavePlanningExtractionResultHandler {
+export class PlanningExtractionResultSaver {
   constructor(private readonly repo: PnpExtractionResultRepository) {}
 
   async save(file: ID<'FileVersion'>, result: PnpExtractionResult) {
