@@ -1,4 +1,4 @@
-import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
+import { Field, InputType, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { many, Many } from '@seedcompany/common';
 import { stripIndent } from 'common-tags';
 import * as uuid from 'uuid';
@@ -40,9 +40,21 @@ export class PnpProblem {
   readonly groups: readonly string[];
 }
 
+@InputType()
+export class PnpExtractionResultFilters {
+  @Field(() => Boolean, {
+    nullable: true,
+    description: 'Filter by hasError',
+  })
+  readonly hasError?: boolean;
+}
+
 @InterfaceType()
 export abstract class PnpExtractionResult {
   constructor(private readonly fileVersionId: ID<'FileVersion'>) {}
+
+  @Field(() => Number)
+  readonly countError: number;
 
   @Field(() => [PnpProblem])
   readonly problems: PnpProblem[] = [];

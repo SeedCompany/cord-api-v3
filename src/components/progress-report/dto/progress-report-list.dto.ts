@@ -8,6 +8,7 @@ import {
 } from '~/common';
 import { EngagementFilters } from '../../engagement/dto';
 import { PeriodicReportListInput } from '../../periodic-report/dto';
+import { PnpExtractionResultFilters } from '../../pnp/extraction-result';
 import { ProgressSummaryFilters } from '../../progress-summary/dto';
 import { ProgressReportStatus } from './progress-report-status.enum';
 import { ProgressReport } from './progress-report.entity';
@@ -27,6 +28,9 @@ export abstract class ProgressReportFilters extends PickType(
 
   @FilterField(() => EngagementFilters)
   readonly engagement?: EngagementFilters & {};
+
+  @FilterField(() => PnpExtractionResultFilters)
+  readonly pnpExtractionResult?: PnpExtractionResultFilters & {};
 }
 
 @InputType()
