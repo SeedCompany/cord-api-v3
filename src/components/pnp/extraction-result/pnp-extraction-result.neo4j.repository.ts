@@ -4,10 +4,22 @@ import { inArray, node, relation } from 'cypher-query-builder';
 import { SetNonNullable } from 'type-fest';
 import { ID, PublicOf } from '~/common';
 import { CommonRepository } from '~/core/database';
-import { apoc, collect, exp, merge, variable } from '~/core/database/query';
+import {
+  apoc,
+  collect,
+  count,
+  defineSorters,
+  exp,
+  filter,
+  merge,
+  SortCol,
+  variable,
+} from '~/core/database/query';
 import {
   PnpExtractionResult,
+  PnpExtractionResultFilters,
   PnpProblemType,
+  PnpProblemSeverity as Severity,
   StoredProblem,
 } from './extraction-result.dto';
 import { PnpExtractionResultRepository } from './pnp-extraction-result.edgedb.repository';
@@ -117,3 +129,25 @@ export class PnpExtractionResultNeo4jRepository
       .run();
   }
 }
+
+export const pnpExtractionResultFilters = filter.define(
+  () => PnpExtractionResultFilters,
+  {
+    hasError: filter.pathExists([
+      node('node'),
+      relation('out', '', 'problem'),
+      node('', { severity: Severity.Error }),
+    ]),
+  },
+);
+
+export const pnpExtractionResultSorters = defineSorters(PnpExtractionResult, {
+  totalErrors: (query) =>
+    query
+      .match([
+        node('node'),
+        relation('out', 'problem', 'problem'),
+        node('type', { severity: Severity.Error }),
+      ])
+      .return<SortCol>(count('problem').as('sortValue')),
+});

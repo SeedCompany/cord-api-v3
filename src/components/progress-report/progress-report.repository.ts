@@ -15,6 +15,7 @@ import {
 } from '~/core/database/query';
 import { engagementFilters } from '../engagement/engagement.repository';
 import { progressReportSorters } from '../periodic-report/periodic-report.repository';
+import { pnpExtractionResultFilters } from '../pnp/extraction-result/pnp-extraction-result.neo4j.repository';
 import { SummaryPeriod } from '../progress-summary/dto';
 import { progressSummaryFilters } from '../progress-summary/progress-summary.repository';
 import {
@@ -107,6 +108,15 @@ export const progressReportFilters = filter.define(
         node('outer'),
         relation('in', '', 'report'),
         node('node', 'Engagement'),
+      ]),
+    ),
+    pnpExtractionResult: filter.sub(() => pnpExtractionResultFilters)((sub) =>
+      sub.match([
+        node('outer'),
+        relation('out', '', 'reportFileNode'),
+        node('file', 'File'),
+        relation('out', '', 'pnpExtractionResult'),
+        node('node', 'PnpExtractionResult'),
       ]),
     ),
   },
