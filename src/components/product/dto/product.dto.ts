@@ -266,6 +266,12 @@ declare module '../dto/producible.dto' {
   }
 }
 
+export const ProductConcretes = {
+  DirectScriptureProduct,
+  DerivativeScriptureProduct,
+  OtherProduct,
+};
+
 declare module '~/core/resources/map' {
   interface ResourceMap {
     Product: typeof Product;
