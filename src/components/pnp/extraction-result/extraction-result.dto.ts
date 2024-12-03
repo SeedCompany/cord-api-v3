@@ -1,8 +1,9 @@
 import { Field, InputType, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { many, Many } from '@seedcompany/common';
 import { stripIndent } from 'common-tags';
+import { keys as keysOf } from 'ts-transformer-keys';
 import * as uuid from 'uuid';
-import { EnumType, ID, IdField, makeEnum } from '~/common';
+import { EnumType, ID, IdField, makeEnum, SecuredProps } from '~/common';
 import { InlineMarkdownScalar } from '~/common/markdown.scalar';
 import { Cell } from '~/common/xlsx.util';
 
@@ -52,6 +53,8 @@ export class PnpExtractionResultFilters {
 @InterfaceType()
 export abstract class PnpExtractionResult {
   constructor(private readonly fileVersionId: ID<'FileVersion'>) {}
+  static readonly Props = keysOf<PnpExtractionResult>();
+  static readonly SecuredProps = keysOf<SecuredProps<PnpExtractionResult>>();
 
   @Field(() => Number)
   readonly countError: number;
@@ -83,6 +86,9 @@ export abstract class PnpExtractionResult {
     });
   }
 }
+
+export { PnpExtractionResult as IPnpExtractionResult };
+
 @ObjectType({ implements: PnpExtractionResult })
 export class PnpPlanningExtractionResult extends PnpExtractionResult {}
 @ObjectType({ implements: PnpExtractionResult })

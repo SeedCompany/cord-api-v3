@@ -4,8 +4,15 @@ import { inArray, node, relation } from 'cypher-query-builder';
 import { SetNonNullable } from 'type-fest';
 import { ID, PublicOf } from '~/common';
 import { CommonRepository } from '~/core/database';
-import { apoc, filter, merge } from '~/core/database/query';
 import {
+  apoc,
+  defineSorters,
+  filter,
+  merge,
+  SortCol,
+} from '~/core/database/query';
+import {
+  IPnpExtractionResult,
   PnpExtractionResult,
   PnpExtractionResultFilters,
   PnpProblemSeverity as Severity,
@@ -79,3 +86,7 @@ export const pnpExtractionResultFilters = filter.define(
     hasError: ({ value, query }) => query.where({ 'result.hasError': value }),
   },
 );
+
+export const pnpExtractionResultSorters = defineSorters(IPnpExtractionResult, {
+  countError: (query) => query.return<SortCol>('node.countError as sortValue'),
+});
