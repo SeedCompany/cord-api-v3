@@ -13,6 +13,7 @@ import fs from 'fs/promises';
 import { CalendarDate, fiscalQuarterLabel, UnsecuredDto } from '~/common';
 import { DatabaseService } from '~/core/database';
 import { ACTIVE, exp, matchProps, merge } from '~/core/database/query';
+import { FieldRegion } from './components/field-region/dto';
 import { Language } from './components/language/dto';
 import type { PnpProblem } from './components/pnp/extraction-result';
 import type { ProgressReport } from './components/progress-report/dto';
@@ -107,7 +108,15 @@ function unknownStepLabels(rows: readonly Row[]) {
 
 function problemCountsByReport(rows: readonly Row[]) {
   return rows.flatMap((row) => {
-    const { problems, report, language, project, partner, uploader } = row;
+    const {
+      problems,
+      report,
+      language,
+      project,
+      partner,
+      uploader,
+      fieldRegion,
+    } = row;
 
     const existsInAReportByType = problems.reduce(
       (countOfType: Record<string, number>, current) => {
@@ -129,6 +138,7 @@ function problemCountsByReport(rows: readonly Row[]) {
       reportUrl: `https://cordfield.com/progress-reports/` + report.id,
       uploaderUrl: `https://cordfield.com/users/` + uploader.id,
       uploaderName: uploader.name,
+      fieldRegion: fieldRegion.name,
       ...existsInAReportByType,
     };
   });
@@ -158,6 +168,7 @@ interface Row {
   language: UnsecuredDto<Pick<Language, 'id' | 'name'>>;
   project: UnsecuredDto<Pick<Project, 'id' | 'name'>>;
   partner: UnsecuredDto<Pick<Project, 'id' | 'name'>>;
+  fieldRegion: UnsecuredDto<Pick<FieldRegion, 'id' | 'name'>>;
   uploader: { id: string; name: string };
 }
 
@@ -196,6 +207,13 @@ const grabPage = async (db: DatabaseService, page: number) => {
         relation('out', '', 'name', ACTIVE),
         node('projectName', 'Property'),
       ],
+    ])
+    .match([
+      node('project'),
+      relation('out', '', 'fieldRegion', ACTIVE),
+      node('fieldRegion', 'FieldRegion'),
+      relation('out', '', 'name', ACTIVE),
+      node('fieldRegionName', 'Property'),
     ])
     .subQuery('file', (sub) =>
       sub
@@ -258,6 +276,7 @@ const grabPage = async (db: DatabaseService, page: number) => {
       merge('project', { name: 'projectName.value' }).as('project'),
       'report',
       'uploader',
+      merge('fieldRegion', { name: 'fieldRegionName.value' }).as('fieldRegion'),
       'apoc.convert.fromJsonList(result.problems) as problems',
     ])
     .skip(page * 1000)
