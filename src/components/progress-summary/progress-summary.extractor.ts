@@ -109,4 +109,5 @@ const MismatchedReportingQuarter = PnpProblemType.register({
           (_${fiscalQuarterLabel(CalendarDate.fromISO(ctx.reportDate))}_).
       `,
     }),
+  wiki: 'https://github.com/SeedCompany/cord-docs/wiki/PnP-Extraction-Validation:-Errors-and-Troubleshooting-Steps#8-mismatched-reporting-quarter',
 });

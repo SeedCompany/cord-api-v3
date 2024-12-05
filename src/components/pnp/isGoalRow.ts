@@ -96,6 +96,7 @@ const InvalidVerseCount = PnpProblemType.register({
       groups: 'The verses to translate exceeds total verses in book',
       message: `Ignoring _${ctx.bookVal}_ because **${ctx.verseVal}** \`${ctx.verseRef}\` verses to translate exceeds the total number of verses in the book`,
     }),
+  wiki: 'https://github.com/SeedCompany/cord-docs/wiki/PnP-Extraction-Validation:-Errors-and-Troubleshooting-Steps#4-the-verses-to-translate-exceeds-total-verses-in-book',
 });
 
 const UnknownBookRef = PnpProblemType.register({
@@ -122,4 +123,5 @@ export const MismatchScriptureAndVerseCount = PnpProblemType.register({
         'Mismatch between the planned scripture in _Books_ column and the number of verses to translate',
       message: `"${ctx.bookVal}" \`${bookRef}\` is **${ctx.actualVerseCount}** verses, but the goal declares **${ctx.declVerseCount}** verses to translate \`${ctx.verseRef}\``,
     }),
+  wiki: 'https://github.com/SeedCompany/cord-docs/wiki/PnP-Extraction-Validation:-Errors-and-Troubleshooting-Steps#2-mismatch-between-the-planned-scripture-in-books-or-scripture-reference-column-and-the-number-of-verses-to-translate',
 });

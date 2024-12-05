@@ -324,4 +324,5 @@ const AmbiguousGoal = PnpProblemType.register({
         The information in \`${ctx.noteRef}\` is insufficient or nonexistent.
       `,
     }),
+  wiki: 'https://github.com/SeedCompany/cord-docs/wiki/PnP-Extraction-Validation:-Errors-and-Troubleshooting-Steps#7-unable-to-distinguish-goal-row-to-goal-in-cord',
 });

@@ -22,6 +22,7 @@ export class PnpProblemType<Context> {
     name,
     severity,
     render,
+    wiki,
   }: Merge<
     PnpProblemType<Context>,
     { id?: UUID | string }
@@ -35,6 +36,7 @@ export class PnpProblemType<Context> {
       name,
       severity,
       render,
+      wiki,
     });
 
     this.types.set(id, type);
@@ -45,6 +47,8 @@ export class PnpProblemType<Context> {
   id: UUID;
   name: string;
   severity: PnpProblemSeverity;
+  wiki?: string;
+
   render: (
     context: Context,
   ) => (baseCtx: {
@@ -80,6 +84,9 @@ export class PnpProblem {
   })
   readonly groups: readonly string[];
 
+  @Field(() => URL, { nullable: true })
+  readonly documentation?: string;
+
   static render(stored: StoredProblem) {
     const type = PnpProblemType.types.get(stored.type);
     if (!type) {
@@ -93,6 +100,7 @@ export class PnpProblem {
       message: rendered.message,
       source: stored.source,
       groups: [sheet, ...many(rendered.groups ?? [])],
+      documentation: type.wiki,
     };
     return Object.assign(new PnpProblem(), props);
   }

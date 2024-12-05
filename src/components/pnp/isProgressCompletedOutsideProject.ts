@@ -85,6 +85,7 @@ const GoalProgressedAfterProject = PnpProblemType.register({
         message: `_${ctx.step}_ for _${ctx.goal}_ \`${source}\` is marked completed on _${ctx.completed}_ which is **after** this project ends`,
       };
     },
+  wiki: 'https://github.com/SeedCompany/cord-docs/wiki/PnP-Extraction-Validation:-Errors-and-Troubleshooting-Steps#6-steps-of-goals-are-marked-complete-after-this-projects-date-range',
 });
 
 const renderCtx = (ctx: {
