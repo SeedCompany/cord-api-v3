@@ -70,7 +70,8 @@ export const extractScripture = (
         noteCell.ref
       }\` is **${totalVersesFromNoteCol}** verses, but the goal declares **${totalVerses}** verses to translate \`${
         totalVersesCell.ref
-      }\``,
+      }\` For more information see the PnP Troubleshooting 
+            <a href="https://github.com/SeedCompany/cord-docs/wiki/PnP-Extraction-Validation:-Errors-and-Troubleshooting-Steps" target="_blank">Guide</a>`,
       source: noteCell,
     });
   }
