@@ -46,7 +46,8 @@ export const isGoalStepPlannedInsideProject = (
         `Step(s) of goal(s) are planned to be complete **after** this project's fiscal years`,
         `Step(s) of _${goalLabel}_ are planned to be complete **after** this project's fiscal years`,
       ],
-      message: `_${stepLabel}_ for _${goalLabel}_ \`${cell.ref}\` is planned to be completed _FY${fiscalYear}_ which is **after** this project's fiscal years`,
+      message: `_${stepLabel}_ for _${goalLabel}_ \`${cell.ref}\` is planned to be completed _FY${fiscalYear}_ which is **after** this project's fiscal years. For more information see the PnP Troubleshooting 
+            <a href="https://github.com/SeedCompany/cord-docs/wiki/PnP-Extraction-Validation:-Errors-and-Troubleshooting-Steps#5-steps-of-goals-are-planned-to-be-complete-after-this-projects-fiscal-years" target="_blank">Guide</a>`,
       source: cell,
     });
   }

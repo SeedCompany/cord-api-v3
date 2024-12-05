@@ -189,8 +189,8 @@ export class PnpProductSyncService {
           groups: 'Unable to distinguish goal row to goal in CORD',
           message: stripIndent`
             _${goalName}_ \`${source.ref}\` is ambiguous with other rows.
-            Please declare the exact scripture reference
-            in the _My Notes_ cell \`${myNoteCell.ref}\`.
+            The information in \`${myNoteCell.ref}\` is insufficient or nonexistent. For more information see the PnP Troubleshooting 
+            <a href="https://github.com/SeedCompany/cord-docs/wiki/PnP-Extraction-Validation:-Errors-and-Troubleshooting-Steps#7-unable-to-distinguish-goal-row-to-goal-in-cord" target="_blank">Guide</a>
           `,
           source,
         });

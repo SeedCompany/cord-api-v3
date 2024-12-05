@@ -44,7 +44,8 @@ export const isGoalRow = (
       result?.addProblem({
         severity: 'Error',
         groups: 'The verses to translate exceeds total verses in book',
-        message: `Ignoring _${maybeBook.name}_ because **${versesToTranslate}** \`${versesCell.ref}\` verses to translate exceeds the total number of verses in the book`,
+        message: `Ignoring _${maybeBook.name}_ because **${versesToTranslate}** \`${versesCell.ref}\` verses to translate exceeds the total number of verses in the book. For more information see the PnP Troubleshooting 
+            <a href="https://github.com/SeedCompany/cord-docs/wiki/PnP-Extraction-Validation:-Errors-and-Troubleshooting-Steps#4-the-verses-to-translate-exceeds-total-verses-in-book" target="_blank">Guide</a>`,
         source: cell,
       });
     return validVerseCount;
@@ -96,7 +97,8 @@ export function addProblemMismatchScriptureAndVerseCount(
       book.ref
     }\` is **${parsedVerseCount}** verses, but the goal declares **${totalVerses.asNumber!}** verses to translate \`${
       totalVerses.ref
-    }\``,
+    }\`. For more information see the PnP Troubleshooting 
+            <a href="https://github.com/SeedCompany/cord-docs/wiki/PnP-Extraction-Validation:-Errors-and-Troubleshooting-Steps#2-mismatch-between-the-planned-scripture-in-books-or-scripture-reference-column-and-the-number-of-verses-to-translate" target="_blank">Guide</a>`,
     source: book,
   });
 }

@@ -36,7 +36,10 @@ export class ProgressSummaryExtractor {
                 : 'undetermined'
             }_ \`${cells.quarter.ref}\`/\`${cells.year.ref}\`)
           needs to be *at least* the quarter of this CORD report
-            (_${fiscalQuarterLabel(date)}_).
+            (_${fiscalQuarterLabel(
+              date,
+            )}_). For more information see the PnP Troubleshooting 
+            <a href="https://github.com/SeedCompany/cord-docs/wiki/PnP-Extraction-Validation:-Errors-and-Troubleshooting-Steps#8-mismatched-reporting-quarter" target="_blank">Guide</a>
         `,
         source: cells.quarter,
       });
