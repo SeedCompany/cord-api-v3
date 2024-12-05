@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { GqlExecutionContext } from '@nestjs/graphql';
 import XRay from 'aws-xray-sdk-core';
+import { Disabled } from '~/common';
 import { GlobalHttpHook, HttpAdapter } from '~/core/http';
 import { ConfigService } from '../config/config.service';
 import { Sampler } from './sampler';
@@ -23,7 +24,7 @@ export class XRayMiddleware implements NestInterceptor {
   /**
    * Setup root segment for request/response.
    */
-  @GlobalHttpHook()
+  @Disabled('XRay tracing is not really helping us')(GlobalHttpHook())
   onRequest(...[req, res, next]: Parameters<GlobalHttpHook>) {
     const traceData = XRay.utils.processTraceData(
       req.headers['x-amzn-trace-id'] as string | undefined,
