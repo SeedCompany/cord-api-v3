@@ -4,13 +4,7 @@ import { inArray, node, relation } from 'cypher-query-builder';
 import { SetNonNullable } from 'type-fest';
 import { ID, PublicOf } from '~/common';
 import { CommonRepository } from '~/core/database';
-import {
-  apoc,
-  defineSorters,
-  filter,
-  merge,
-  SortCol,
-} from '~/core/database/query';
+import { apoc, defineSorters, filter, merge } from '~/core/database/query';
 import {
   PnpExtractionResult,
   PnpExtractionResultFilters,
@@ -86,6 +80,7 @@ export const pnpExtractionResultFilters = filter.define(
   },
 );
 
-export const pnpExtractionResultSorters = defineSorters(PnpExtractionResult, {
-  errorTotal: (query) => query.return<SortCol>('node.countError as sortValue'),
-});
+export const pnpExtractionResultSorters = defineSorters(
+  PnpExtractionResult,
+  {},
+);

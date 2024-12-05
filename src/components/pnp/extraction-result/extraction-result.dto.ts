@@ -57,9 +57,6 @@ export abstract class PnpExtractionResult {
   static readonly SecuredProps = keysOf<SecuredProps<PnpExtractionResult>>();
   static readonly BaseNodeProps = ['countError'];
 
-  @Field(() => Number)
-  readonly errorTotal: number;
-
   @Field(() => [PnpProblem])
   readonly problems: PnpProblem[] = [];
 
