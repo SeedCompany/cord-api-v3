@@ -12,7 +12,6 @@ import {
   SortCol,
 } from '~/core/database/query';
 import {
-  IPnpExtractionResult,
   PnpExtractionResult,
   PnpExtractionResultFilters,
   PnpProblemSeverity as Severity,
@@ -83,10 +82,10 @@ export class PnpExtractionResultNeo4jRepository
 export const pnpExtractionResultFilters = filter.define(
   () => PnpExtractionResultFilters,
   {
-    hasError: ({ value, query }) => query.where({ 'result.hasError': value }),
+    errors: ({ value, query }) => query.where({ 'node.hasError': value }),
   },
 );
 
-export const pnpExtractionResultSorters = defineSorters(IPnpExtractionResult, {
-  countError: (query) => query.return<SortCol>('node.countError as sortValue'),
+export const pnpExtractionResultSorters = defineSorters(PnpExtractionResult, {
+  errorTotal: (query) => query.return<SortCol>('node.countError as sortValue'),
 });

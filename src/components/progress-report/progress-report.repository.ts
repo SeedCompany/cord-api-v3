@@ -116,7 +116,7 @@ export const progressReportFilters = filter.define(
         relation('out', '', 'reportFileNode'),
         node('file', 'File'),
         relation('out', '', 'pnpExtractionResult'),
-        node('result', 'PnpExtractionResult'),
+        node('node', 'PnpExtractionResult'),
       ]),
     ),
   },

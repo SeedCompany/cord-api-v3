@@ -45,9 +45,9 @@ export class PnpProblem {
 export class PnpExtractionResultFilters {
   @Field(() => Boolean, {
     nullable: true,
-    description: 'Filter by hasError',
+    description: 'Only extraction results containing errors',
   })
-  readonly hasError?: boolean;
+  readonly errors?: boolean;
 }
 
 @InterfaceType()
@@ -55,9 +55,10 @@ export abstract class PnpExtractionResult {
   constructor(private readonly fileVersionId: ID<'FileVersion'>) {}
   static readonly Props = keysOf<PnpExtractionResult>();
   static readonly SecuredProps = keysOf<SecuredProps<PnpExtractionResult>>();
+  static readonly BaseNodeProps = ['countError'];
 
   @Field(() => Number)
-  readonly countError: number;
+  readonly errorTotal: number;
 
   @Field(() => [PnpProblem])
   readonly problems: PnpProblem[] = [];
@@ -86,8 +87,6 @@ export abstract class PnpExtractionResult {
     });
   }
 }
-
-export { PnpExtractionResult as IPnpExtractionResult };
 
 @ObjectType({ implements: PnpExtractionResult })
 export class PnpPlanningExtractionResult extends PnpExtractionResult {}
