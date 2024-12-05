@@ -1,8 +1,9 @@
-import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
+import { Field, InputType, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { many, Many } from '@seedcompany/common';
 import { stripIndent } from 'common-tags';
+import { keys as keysOf } from 'ts-transformer-keys';
 import * as uuid from 'uuid';
-import { EnumType, ID, IdField, makeEnum } from '~/common';
+import { EnumType, ID, IdField, makeEnum, SecuredProps } from '~/common';
 import { InlineMarkdownScalar } from '~/common/markdown.scalar';
 import { Cell } from '~/common/xlsx.util';
 
@@ -40,9 +41,21 @@ export class PnpProblem {
   readonly groups: readonly string[];
 }
 
+@InputType()
+export class PnpExtractionResultFilters {
+  @Field(() => Boolean, {
+    nullable: true,
+    description: 'Only extraction results containing errors',
+  })
+  readonly errors?: boolean;
+}
+
 @InterfaceType()
 export abstract class PnpExtractionResult {
   constructor(private readonly fileVersionId: ID<'FileVersion'>) {}
+  static readonly Props = keysOf<PnpExtractionResult>();
+  static readonly SecuredProps = keysOf<SecuredProps<PnpExtractionResult>>();
+  static readonly BaseNodeProps = ['countError'];
 
   @Field(() => [PnpProblem])
   readonly problems: PnpProblem[] = [];
@@ -71,6 +84,7 @@ export abstract class PnpExtractionResult {
     });
   }
 }
+
 @ObjectType({ implements: PnpExtractionResult })
 export class PnpPlanningExtractionResult extends PnpExtractionResult {}
 @ObjectType({ implements: PnpExtractionResult })

@@ -16,6 +16,7 @@ import {
 } from '~/core/database/query';
 import { engagementSorters } from '../engagement/engagement.repository';
 import { MergePeriodicReports } from '../periodic-report/dto';
+import { pnpExtractionResultSorters } from '../pnp/extraction-result/pnp-extraction-result.neo4j.repository';
 import { SummaryPeriod } from '../progress-summary/dto';
 import { progressSummarySorters } from '../progress-summary/progress-summary.repository';
 import { ProgressReport, ProgressReportStatus as Status } from './dto';
@@ -49,6 +50,18 @@ export class ProgressReportExtraForPeriodicInterfaceRepository {
 export const progressReportExtrasSorters: DefinedSorters<
   SortFieldOf<typeof ProgressReport>
 > = defineSorters(ProgressReport, {
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  'pnpExtractionResult.*': (query, input) =>
+    query
+      .with('node as report')
+      .match([
+        node('report'),
+        relation('out', '', 'reportFileNode'),
+        node('file', 'File'),
+        relation('out', '', 'pnpExtractionResult'),
+        node('node', 'PnpExtractionResult'),
+      ])
+      .apply(sortWith(pnpExtractionResultSorters, input)),
   // eslint-disable-next-line @typescript-eslint/naming-convention
   'engagement.*': (query, input) =>
     query

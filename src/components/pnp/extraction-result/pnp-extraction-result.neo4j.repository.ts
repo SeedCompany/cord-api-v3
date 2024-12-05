@@ -4,9 +4,10 @@ import { inArray, node, relation } from 'cypher-query-builder';
 import { SetNonNullable } from 'type-fest';
 import { ID, PublicOf } from '~/common';
 import { CommonRepository } from '~/core/database';
-import { apoc, merge } from '~/core/database/query';
+import { apoc, defineSorters, filter, merge } from '~/core/database/query';
 import {
   PnpExtractionResult,
+  PnpExtractionResultFilters,
   PnpProblemSeverity as Severity,
 } from './extraction-result.dto';
 import { PnpExtractionResultRepository } from './pnp-extraction-result.edgedb.repository';
@@ -71,3 +72,15 @@ export class PnpExtractionResultNeo4jRepository
       .executeAndLogStats();
   }
 }
+
+export const pnpExtractionResultFilters = filter.define(
+  () => PnpExtractionResultFilters,
+  {
+    errors: ({ value, query }) => query.where({ 'node.hasError': value }),
+  },
+);
+
+export const pnpExtractionResultSorters = defineSorters(
+  PnpExtractionResult,
+  {},
+);
