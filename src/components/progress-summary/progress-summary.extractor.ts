@@ -39,7 +39,7 @@ export class ProgressSummaryExtractor {
             (_${fiscalQuarterLabel(
               date,
             )}_). For more information see the PnP Troubleshooting 
-            <a href="https://github.com/SeedCompany/cord-docs/wiki/PnP-Extraction-Validation:-Errors-and-Troubleshooting-Steps#8-mismatched-reporting-quarter" target="_blank">Guide</a>
+            <a href="https://github.com/SeedCompany/cord-docs/wiki/PnP-Extraction-Validation:-Errors-and-Troubleshooting-Steps" target="_blank">Guide</a>
         `,
         source: cells.quarter,
       });

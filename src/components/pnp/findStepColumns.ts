@@ -49,7 +49,7 @@ export function findStepColumns(
         severity: 'Error',
         groups: 'The step header label is non standard',
         message: `"${label}" \`${cell.ref}\` is not a standard step label. For more information see the PnP Troubleshooting 
-            <a href="https://github.com/SeedCompany/cord-docs/wiki/PnP-Extraction-Validation:-Errors-and-Troubleshooting-Steps#3-step-header-label-is-non-standard" target="_blank">Guide</a>`,
+            <a href="https://github.com/SeedCompany/cord-docs/wiki/PnP-Extraction-Validation:-Errors-and-Troubleshooting-Steps" target="_blank">Guide</a>`,
         source: cell,
       });
       return;

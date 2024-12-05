@@ -190,7 +190,7 @@ export class PnpProductSyncService {
           message: stripIndent`
             _${goalName}_ \`${source.ref}\` is ambiguous with other rows.
             The information in \`${myNoteCell.ref}\` is insufficient or nonexistent. For more information see the PnP Troubleshooting 
-            <a href="https://github.com/SeedCompany/cord-docs/wiki/PnP-Extraction-Validation:-Errors-and-Troubleshooting-Steps#7-unable-to-distinguish-goal-row-to-goal-in-cord" target="_blank">Guide</a>
+            <a href="https://github.com/SeedCompany/cord-docs/wiki/PnP-Extraction-Validation:-Errors-and-Troubleshooting-Steps" target="_blank">Guide</a>
           `,
           source,
         });

@@ -45,7 +45,7 @@ export const isGoalRow = (
         severity: 'Error',
         groups: 'The verses to translate exceeds total verses in book',
         message: `Ignoring _${maybeBook.name}_ because **${versesToTranslate}** \`${versesCell.ref}\` verses to translate exceeds the total number of verses in the book. For more information see the PnP Troubleshooting 
-            <a href="https://github.com/SeedCompany/cord-docs/wiki/PnP-Extraction-Validation:-Errors-and-Troubleshooting-Steps#4-the-verses-to-translate-exceeds-total-verses-in-book" target="_blank">Guide</a>`,
+            <a href="https://github.com/SeedCompany/cord-docs/wiki/PnP-Extraction-Validation:-Errors-and-Troubleshooting-Steps" target="_blank">Guide</a>`,
         source: cell,
       });
     return validVerseCount;

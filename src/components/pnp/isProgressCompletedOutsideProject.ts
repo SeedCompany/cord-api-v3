@@ -43,7 +43,7 @@ export const isProgressCompletedOutsideProject = (
         `Step(s) of _${goalLabel}_ are marked complete **after** this project's date range`,
       ],
       message: `_${stepLabel}_ for _${goalLabel}_ \`${cell.ref}\` is marked completed on _${dateLabel}_ which is **after** this project ends. For more information see the PnP Troubleshooting 
-            <a href="https://github.com/SeedCompany/cord-docs/wiki/PnP-Extraction-Validation:-Errors-and-Troubleshooting-Steps#6-steps-of-goals-are-marked-complete-after-this-projects-date-range" target="_blank">Guide</a>`,
+            <a href="https://github.com/SeedCompany/cord-docs/wiki/PnP-Extraction-Validation:-Errors-and-Troubleshooting-Steps" target="_blank">Guide</a>`,
       source: cell,
     });
   }

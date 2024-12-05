@@ -71,7 +71,7 @@ export const extractScripture = (
       }\` is **${totalVersesFromNoteCol}** verses, but the goal declares **${totalVerses}** verses to translate \`${
         totalVersesCell.ref
       }\` For more information see the PnP Troubleshooting 
-            <a href="https://github.com/SeedCompany/cord-docs/wiki/PnP-Extraction-Validation:-Errors-and-Troubleshooting-Steps#1-mismatch-between-the-planned-scripture-in-my-notes-column-and-the-number-of-verses-to-translate" target="_blank">Guide</a>`,
+            <a href="https://github.com/SeedCompany/cord-docs/wiki/PnP-Extraction-Validation:-Errors-and-Troubleshooting-Steps" target="_blank">Guide</a>`,
       source: noteCell,
     });
   }
