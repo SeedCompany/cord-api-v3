@@ -14,11 +14,11 @@ export class PnpExtractionResultLanguageEngagementConnectionResolver {
     @Loader(() => PnpExtractionResultLoader)
     loader: LoaderOf<PnpExtractionResultLoader>,
   ): Promise<PnpPlanningExtractionResult | null> {
-    const fileId = engagement.pnp.value;
-    if (!fileId) {
+    const file = engagement.pnp.value;
+    if (!file) {
       return null;
     }
-    const { result } = await loader.load(fileId.id);
+    const { result } = await loader.load(file.id);
     return result;
   }
 }
