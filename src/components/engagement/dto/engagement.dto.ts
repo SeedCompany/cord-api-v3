@@ -28,6 +28,7 @@ import { e } from '~/core/edgedb';
 import { LinkTo, RegisterResource } from '~/core/resources';
 import { ChangesetAware } from '../../changeset/dto';
 import { Commentable } from '../../comments/dto';
+import { SecuredLanguageMilestone } from '../../language/dto';
 import { Product, SecuredMethodologies } from '../../product/dto';
 import {
   InternshipProject,
@@ -189,6 +190,10 @@ export class LanguageEngagement extends Engagement {
 
   @Field()
   readonly historicGoal: SecuredStringNullable;
+
+  @Field(() => SecuredLanguageMilestone, { nullable: true })
+  @DbLabel('LanguageMilestone')
+  readonly milestoneReached: SecuredLanguageMilestone | null;
 }
 
 @RegisterResource({ db: e.InternshipEngagement })
