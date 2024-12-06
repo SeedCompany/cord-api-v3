@@ -28,7 +28,7 @@ export abstract class PlanningSheet extends Sheet {
   @Once() get projectDateRange(): DateInterval {
     const range = DateInterval.tryFrom(
       this.projectStartDateCell.asDate,
-      this.projectEndDateCell.asDate?.endOf('quarter'),
+      this.projectEndDateCell.asDate?.endOf('month'),
     );
     if (!range) {
       throw new Error('Could not find project date range');
