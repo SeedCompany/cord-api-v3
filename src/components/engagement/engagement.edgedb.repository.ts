@@ -45,6 +45,7 @@ const languageExtraHydrate = {
   paratextRegistryId: true,
   pnp: true,
   historicGoal: true,
+  milestoneReached: true,
 } as const;
 
 const internshipExtraHydrate = {
