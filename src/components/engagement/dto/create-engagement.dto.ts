@@ -6,6 +6,7 @@ import { keys as keysOf } from 'ts-transformer-keys';
 import { CalendarDate, DateField, ID, IdField } from '~/common';
 import { ChangesetIdField } from '../../changeset';
 import { CreateDefinedFileVersionInput } from '../../file/dto';
+import { LanguageMilestone } from '../../language/dto';
 import { ProductMethodology } from '../../product/dto';
 import { InternshipEngagement, LanguageEngagement } from './engagement.dto';
 import { InternshipPosition } from './intern-position.enum';
@@ -70,6 +71,9 @@ export abstract class CreateLanguageEngagement extends CreateEngagement {
 
   @Field({ nullable: true })
   readonly historicGoal?: string;
+
+  @Field(() => LanguageMilestone, { nullable: true })
+  readonly milestoneReached?: LanguageMilestone;
 }
 
 @InputType()
