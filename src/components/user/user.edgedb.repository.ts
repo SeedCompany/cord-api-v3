@@ -46,6 +46,15 @@ export class UserEdgeDBRepository
     return !!result;
   }
 
+  getUserByEmailAddress(email: string) {
+    const query = e.select(e.User, (user) => ({
+      ...this.hydrate(user),
+      filter_single: { email },
+    }));
+
+    return this.db.run(query);
+  }
+
   protected listFilters(user: ScopeOf<typeof e.User>, input: UserListInput) {
     if (!input.filter) return [];
     return [

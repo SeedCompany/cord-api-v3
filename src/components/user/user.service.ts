@@ -333,6 +333,11 @@ export class UserService {
     return !exists;
   }
 
+  async getUserByEmailAddress(email: string, session: Session) {
+    const user = await this.userRepo.getUserByEmailAddress(email, session);
+    return user ? this.secure(user, session) : null;
+  }
+
   async assignOrganizationToUser(request: AssignOrganizationToUser) {
     await this.userRepo.assignOrganizationToUser(request);
   }
