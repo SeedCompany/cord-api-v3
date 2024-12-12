@@ -15,6 +15,7 @@ export const isProgressCompletedOutsideProject = (
   if (!completeDate) {
     return false;
   }
+  // Steps completion dates smallest unit is quarters, so expand project range to that.
   const projectTimeframe =
     pnp.planning.projectDateRange.expandToFull('quarter');
   if (projectTimeframe.contains(completeDate)) {
