@@ -72,7 +72,9 @@ export class SessionResolver {
     const userFromSession = session.anonymous ? undefined : session.userId;
 
     if (browser) {
-      const { name, expires, ...options } = this.config.sessionCookie;
+      const { name, expires, ...options } = this.config.sessionCookie(
+        context.request!,
+      );
       if (!context.response) {
         throw new ServerException(
           'Cannot use cookie session without a response object',
