@@ -176,16 +176,22 @@ export const makeConfig = (env: EnvironmentService) =>
           : database,
         ephemeral: this.jest,
         driverConfig,
+        isLocal: parsed.hostname === 'localhost',
       };
     })();
 
     // Control which database is prioritized, while we migrate.
     databaseEngine = env.string('DATABASE').optional('neo4j').toLowerCase();
 
-    dbIndexesCreate = env.boolean('DB_CREATE_INDEXES').optional(true);
+    dbIndexesCreate = env
+      .boolean('DB_CREATE_INDEXES')
+      .optional(isDev ? this.neo4j.isLocal : true);
     dbAutoMigrate = env
       .boolean('DB_AUTO_MIGRATE')
-      .optional(process.env.NODE_ENV !== 'production' && !this.jest);
+      .optional(isDev && this.neo4j.isLocal && !this.jest);
+    dbRootObjectsSync = env
+      .boolean('DB_ROOT_OBJECTS_SYNC')
+      .optional(isDev ? this.neo4j.isLocal : true);
 
     files = (() => {
       const legacyBucket = env.string('FILES_S3_BUCKET').optional();

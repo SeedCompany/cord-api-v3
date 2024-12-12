@@ -20,6 +20,10 @@ export class AdminService implements OnApplicationBootstrap {
   ) {}
 
   async onApplicationBootstrap(): Promise<void> {
+    if (!this.config.dbRootObjectsSync) {
+      return;
+    }
+
     const finishing = this.repo.finishing(() => this.setupRootObjects());
     // Wait for root object setup when running tests, else just let it run in
     // the background and allow webserver to start.
