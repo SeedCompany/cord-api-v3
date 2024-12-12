@@ -82,7 +82,7 @@ module default {
     }
 
     milestoneReached: Language::Milestone {
-       default := Language::Milestone.None;
+      default := Language::Milestone.Unknown;
     };
     
     # I want ceremony to be automatically created when engagement is created.

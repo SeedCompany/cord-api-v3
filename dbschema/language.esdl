@@ -104,6 +104,7 @@ module default {
 
 module Language {
   scalar type Milestone extending enum<
+    Unknown,
     None,
     OldTestament,
     NewTestament,

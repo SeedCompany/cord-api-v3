@@ -4,7 +4,7 @@ import { EnumType, makeEnum, SecuredEnum } from '~/common';
 export type LanguageMilestone = EnumType<typeof LanguageMilestone>;
 export const LanguageMilestone = makeEnum({
   name: 'LanguageMilestone',
-  values: ['None', 'OldTestament', 'NewTestament', 'FullBible'],
+  values: ['Unknown', 'None', 'OldTestament', 'NewTestament', 'FullBible'],
 });
 
 @ObjectType({
