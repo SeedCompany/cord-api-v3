@@ -191,9 +191,8 @@ export class LanguageEngagement extends Engagement {
   @Field()
   readonly historicGoal: SecuredStringNullable;
 
-  @Field(() => SecuredLanguageMilestone, { nullable: true })
-  @DbLabel('LanguageMilestone')
-  readonly milestoneReached: SecuredLanguageMilestone | null;
+  @Field(() => SecuredLanguageMilestone)
+  readonly milestoneReached: SecuredLanguageMilestone;
 }
 
 @RegisterResource({ db: e.InternshipEngagement })
