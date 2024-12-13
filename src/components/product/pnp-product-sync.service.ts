@@ -7,7 +7,7 @@ import { DateTime } from 'luxon';
 import { ID, Session } from '~/common';
 import { ILogger, Logger } from '~/core';
 import { Downloadable, FileVersion } from '../file/dto';
-import { PnpExtractionResult } from '../pnp/extraction-result';
+import { PnpExtractionResult, PnpProblemType } from '../pnp/extraction-result';
 import { StoryService } from '../story';
 import {
   CreateDerivativeScriptureProduct,
@@ -184,15 +184,9 @@ export class PnpProductSyncService {
       nonExactMatches.forEach(({ source }) => {
         const goalName = source.asString!;
         const myNoteCell = source.sheet.myNote(source.row, false);
-        result.addProblem({
-          severity: 'Error',
-          groups: 'Unable to distinguish goal row to goal in CORD',
-          message: stripIndent`
-            _${goalName}_ \`${source.ref}\` is ambiguous with other rows.
-            Please declare the exact scripture reference
-            in the _My Notes_ cell \`${myNoteCell.ref}\`.
-          `,
-          source,
+        result.addProblem(AmbiguousGoal, source, {
+          goalVal: goalName,
+          noteRef: myNoteCell.ref,
         });
       });
 
@@ -317,3 +311,18 @@ export class PnpProductSyncService {
     return byName as Readonly<typeof byName>;
   }
 }
+
+const AmbiguousGoal = PnpProblemType.register({
+  name: 'AmbiguousGoal',
+  severity: 'Error',
+  render:
+    (ctx: { goalVal: string; noteRef: string }) =>
+    ({ source }) => ({
+      groups: 'Unable to distinguish goal row to goal in CORD',
+      message: stripIndent`
+        _${ctx.goalVal}_ \`${source}\` is ambiguous with other rows.
+        Please declare the exact scripture reference
+        in the _My Notes_ cell \`${ctx.noteRef}\`.
+      `,
+    }),
+});

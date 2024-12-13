@@ -3,6 +3,7 @@ import { oneLine } from 'common-tags';
 import { EventsHandler, ILogger, Logger } from '~/core';
 import { ReportType } from '../../periodic-report/dto';
 import { PeriodicReportUploadedEvent } from '../../periodic-report/events';
+import { PnpProblemType } from '../../pnp/extraction-result';
 import { ProductService } from '../../product';
 import { ProducibleType, ProductStep } from '../../product/dto';
 import { isScriptureEqual } from '../../scripture';
@@ -125,21 +126,11 @@ export class ExtractPnpProgressHandler {
             if (!(error instanceof StepNotPlannedException)) {
               continue;
             }
-            const stepLabel = ProductStep.entry(error.step).label;
             // kinda. close enough, I think, we give the cell ref as well.
             const goalLabel = extracted.bookName ?? extracted.story;
-            result.addProblem({
-              severity: 'Error',
-              groups: [
-                'Step is not planned',
-                `_${goalLabel}_ has progress reported on steps that have not been declared to be worked in this engagement`,
-                `_${goalLabel}_ has not declared _${stepLabel}_ \`${extracted.cell.ref}\` as a step that will be worked in this engagement`,
-              ],
-              message: oneLine`
-                Please update the goal in CORD to mark this step as planned
-                or upload an updated PnP file to the "Planning Spreadsheet" on the engagement page.
-              `,
-              source: extracted.cell,
+            result.addProblem(StepNotPlanned, extracted.cell, {
+              goal: goalLabel,
+              step: error.step,
             });
           }
         }
@@ -147,3 +138,24 @@ export class ExtractPnpProgressHandler {
     );
   }
 }
+
+const StepNotPlanned = PnpProblemType.register({
+  name: 'StepNotPlanned',
+  severity: 'Error',
+  render:
+    (ctx: { goal: string; step: ProductStep }) =>
+    ({ source }) => {
+      const step = ProductStep.entry(ctx.step).label;
+      return {
+        groups: [
+          'Step is not planned',
+          `_${ctx.goal}_ has progress reported on steps that have not been declared to be worked in this engagement`,
+          `_${ctx.goal}_ has not declared _${step}_ \`${source}\` as a step that will be worked in this engagement`,
+        ],
+        message: oneLine`
+          Please update the goal in CORD to mark this step as planned
+          or upload an updated PnP file to the "Planning Spreadsheet" on the engagement page.
+        `,
+      };
+    },
+});
