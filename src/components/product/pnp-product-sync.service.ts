@@ -321,8 +321,7 @@ const AmbiguousGoal = PnpProblemType.register({
       groups: 'Unable to distinguish goal row to goal in CORD',
       message: stripIndent`
         _${ctx.goalVal}_ \`${source}\` is ambiguous with other rows.
-        Please declare the exact scripture reference
-        in the _My Notes_ cell \`${ctx.noteRef}\`.
+        The information in \`${ctx.noteRef}\` is insufficient or nonexistent.
       `,
     }),
 });
