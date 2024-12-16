@@ -112,4 +112,5 @@ const UnspecifiedScriptureReference = PnpProblemType.register({
       groups: 'Unspecified scripture reference',
       message: `"${bookName}" \`${bookRef}\` does not a have specified scripture reference (either in the _Books_ or _My Notes_ column)`,
     }),
+  wiki: 'https://github.com/SeedCompany/cord-docs/wiki/PnP-Extraction-Validation:-Errors-and-Troubleshooting-Steps#1-mismatch-between-the-planned-scripture-in-my-notes-column-and-the-number-of-verses-to-translate',
 });

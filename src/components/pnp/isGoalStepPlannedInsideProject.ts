@@ -77,6 +77,7 @@ const GoalPlannedCompleteAfterProject = PnpProblemType.register({
         message: `_${ctx.step}_ for _${ctx.goal}_ \`${source}\` is planned to be completed _${ctx.fiscalYear}_ which is **after** this project's fiscal years`,
       };
     },
+  wiki: 'https://github.com/SeedCompany/cord-docs/wiki/PnP-Extraction-Validation:-Errors-and-Troubleshooting-Steps#5-steps-of-goals-are-planned-to-be-complete-after-this-projects-fiscal-years',
 });
 
 const renderCtx = (ctx: {

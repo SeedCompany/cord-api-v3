@@ -26,7 +26,7 @@ export class ProgressSummaryExtractor {
     const pnp = await Pnp.fromDownloadable(file);
     const sheet = pnp.progress;
 
-    if (!(sheet.reportingQuarter && date <= sheet.reportingQuarter.end)) {
+    if (!sheet.reportingQuarter?.contains(date)) {
       const cells = sheet.reportingQuarterCells;
       result.addProblem(MismatchedReportingQuarter, cells.quarter, {
         reportDate: date.toISO(),
@@ -97,7 +97,6 @@ const MismatchedReportingQuarter = PnpProblemType.register({
   render:
     (ctx: { reportDate: string; pnpDate?: string; yearRef: string }) =>
     ({ source }) => ({
-      groups: 'Mismatched Reporting Quarter',
       message: oneLine`
         The PnP's Reporting Quarter
           (_${
@@ -105,8 +104,9 @@ const MismatchedReportingQuarter = PnpProblemType.register({
               ? fiscalQuarterLabel(CalendarDate.fromISO(ctx.pnpDate))
               : 'undetermined'
           }_ \`${source}\`/\`${ctx.yearRef}\`)
-        needs to be *at least* the quarter of this CORD report
+        needs to match the quarter of this CORD report
           (_${fiscalQuarterLabel(CalendarDate.fromISO(ctx.reportDate))}_).
       `,
     }),
+  wiki: 'https://github.com/SeedCompany/cord-docs/wiki/PnP-Extraction-Validation:-Errors-and-Troubleshooting-Steps#8-mismatched-reporting-quarter',
 });

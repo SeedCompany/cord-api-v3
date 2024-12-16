@@ -105,8 +105,9 @@ export class PnpExtractionResultNeo4jRepository
   @CachedByArg()
   private async syncTypesOnce() {
     const types = [...PnpProblemType.types.values()].map((type) => ({
-      ...type,
-      render: undefined,
+      id: type.id,
+      name: type.name,
+      severity: type.severity,
     }));
     await this.db
       .query()
