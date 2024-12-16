@@ -3,7 +3,7 @@ import {
   DataLoaderContext,
   DataLoaderStrategy,
 } from '@seedcompany/data-loader';
-import { ConditionalKeys, ValueOf } from 'type-fest';
+import { ConditionalKeys, Merge, ValueOf } from 'type-fest';
 import { ID, Many, ObjectView, ServerException } from '~/common';
 import { BaseNode } from '../database/results';
 import { GqlContextHost } from '../graphql';
@@ -68,13 +68,16 @@ export class ResourceLoader {
     type: TResource,
     id: ID,
     view?: ObjectView,
-  ): Promise<TResource['prototype'] & { __typename: TResourceName }>;
+  ): Promise<Merge<{ __typename: TResourceName }, TResource['prototype']>>;
   async load<TResourceName extends keyof ResourceMap>(
     type: TResourceName,
     id: ID,
     view?: ObjectView,
   ): Promise<
-    ResourceMap[TResourceName]['prototype'] & { __typename: TResourceName }
+    Merge<
+      { __typename: TResourceName },
+      ResourceMap[TResourceName]['prototype']
+    >
   >;
   async load(
     type: Many<keyof ResourceMap | SomeResourceType>,

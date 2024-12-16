@@ -1,8 +1,8 @@
 import { parseScripture, tryParseScripture } from '@seedcompany/scripture';
 import { Row } from '~/common/xlsx.util';
 import { ScriptureRange } from '../scripture/dto';
-import { PnpExtractionResult } from './extraction-result';
-import { addProblemMismatchScriptureAndVerseCount } from './isGoalRow';
+import { PnpExtractionResult, PnpProblemType } from './extraction-result';
+import { MismatchScriptureAndVerseCount } from './isGoalRow';
 import { WrittenScripturePlanningSheet } from './planning-sheet';
 
 export const extractScripture = (
@@ -40,12 +40,12 @@ export const extractScripture = (
     // TODO I think this is a redundant check.
     // I don't think we will ever get here because the row is filtered out with
     // the isGoalRow function.
-    addProblemMismatchScriptureAndVerseCount(
-      result,
-      totalVersesInBookCol,
-      bookCell,
-      totalVersesCell,
-    );
+    result?.addProblem(MismatchScriptureAndVerseCount, bookCell, {
+      bookVal: bookCell.asString!,
+      actualVerseCount: totalVersesInBookCol,
+      declVerseCount: totalVersesCell.asNumber!,
+      verseRef: totalVersesCell.ref,
+    });
   }
 
   // Otherwise, if note column has scripture that matches the total count use it.
@@ -62,26 +62,19 @@ export const extractScripture = (
       };
     }
     mismatchError = true;
-    result.addProblem({
-      severity: 'Error',
-      groups:
-        'Mismatch between the planned scripture in _My Notes_ column and the number of verses to translate',
-      message: `"${noteCell.asString!}" \`${
-        noteCell.ref
-      }\` is **${totalVersesFromNoteCol}** verses, but the goal declares **${totalVerses}** verses to translate \`${
-        totalVersesCell.ref
-      }\``,
-      source: noteCell,
+    result.addProblem(MismatchedVersesToTranslate, noteCell, {
+      noteVal: noteCell.asString!,
+      noteVerseCount: totalVersesFromNoteCol,
+      declVerseCount: totalVerses,
+      declVerseRef: totalVersesCell.ref,
     });
   }
 
   // Otherwise, fallback to unspecified scripture.
   !mismatchError &&
-    result.addProblem({
-      severity: 'Notice',
-      groups: 'Unspecified scripture reference',
-      message: `"${book.name}" \`${bookCell.ref}\` does not a have specified scripture reference (either in the _Books_ or _My Notes_ column)`,
-      source: totalVersesCell,
+    result.addProblem(UnspecifiedScriptureReference, totalVersesCell, {
+      bookName: book.name,
+      bookRef: bookCell.ref,
     });
   return {
     ...common,
@@ -92,3 +85,32 @@ export const extractScripture = (
     },
   };
 };
+
+const MismatchedVersesToTranslate = PnpProblemType.register({
+  name: 'MismatchedVersesToTranslate',
+  severity: 'Error',
+  render:
+    (ctx: {
+      noteVal: string;
+      noteVerseCount: number;
+      declVerseCount: number;
+      declVerseRef: string;
+    }) =>
+    ({ source: noteRef }) => ({
+      groups:
+        'Mismatch between the planned scripture in _My Notes_ column and the number of verses to translate',
+      message: `"${ctx.noteVal}" \`${noteRef}\` is **${ctx.noteVerseCount}** verses, but the goal declares **${ctx.declVerseCount}** verses to translate \`${ctx.declVerseRef}\``,
+    }),
+});
+
+const UnspecifiedScriptureReference = PnpProblemType.register({
+  name: 'UnspecifiedScriptureReference',
+  severity: 'Notice',
+  render:
+    ({ bookName, bookRef }: Record<'bookName' | 'bookRef', string>) =>
+    () => ({
+      groups: 'Unspecified scripture reference',
+      message: `"${bookName}" \`${bookRef}\` does not a have specified scripture reference (either in the _Books_ or _My Notes_ column)`,
+    }),
+  wiki: 'https://github.com/SeedCompany/cord-docs/wiki/PnP-Extraction-Validation:-Errors-and-Troubleshooting-Steps#1-mismatch-between-the-planned-scripture-in-my-notes-column-and-the-number-of-verses-to-translate',
+});

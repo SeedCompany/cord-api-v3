@@ -3,7 +3,7 @@ import levenshtein from 'fastest-levenshtein';
 import { startCase, without } from 'lodash';
 import { Column } from '~/common/xlsx.util';
 import { ProductStep as Step } from '../product/dto';
-import { PnpExtractionResult } from './extraction-result';
+import { PnpExtractionResult, PnpProblemType } from './extraction-result';
 import { PlanningSheet } from './planning-sheet';
 import { ProgressSheet } from './progress-sheet';
 import 'ix/add/iterable-operators/filter.js';
@@ -45,12 +45,7 @@ export function findStepColumns(
       ([_, distance]) => distance,
     )[0]?.[0];
     if (!chosen) {
-      result?.addProblem({
-        severity: 'Error',
-        groups: 'The step header label is non standard',
-        message: `"${label}" \`${cell.ref}\` is not a standard step label`,
-        source: cell,
-      });
+      result?.addProblem(NonStandardStep, cell, { label });
       return;
     }
     matchedColumns[chosen] = column;
@@ -59,3 +54,15 @@ export function findStepColumns(
   });
   return matchedColumns as Record<Step, Column>;
 }
+
+const NonStandardStep = PnpProblemType.register({
+  name: 'NonStandardStep',
+  severity: 'Error',
+  render:
+    ({ label }: Record<'label', string>) =>
+    ({ source }) => ({
+      groups: 'The step header label is non standard',
+      message: `"${label}" \`${source}\` is not a standard step label`,
+    }),
+  wiki: 'https://github.com/SeedCompany/cord-docs/wiki/PnP-Extraction-Validation:-Errors-and-Troubleshooting-Steps#3-step-header-label-is-non-standard',
+});

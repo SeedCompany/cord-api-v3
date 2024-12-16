@@ -101,6 +101,16 @@ module default {
     constraint expression on (__subject__ >= 0);
   }
 }
+
+module Language {
+  scalar type Milestone extending enum<
+    Unknown,
+    None,
+    OldTestament,
+    NewTestament,
+    FullBible,
+  >;
+}
  
 module Ethnologue {
   type Language extending Project::ContextAware {

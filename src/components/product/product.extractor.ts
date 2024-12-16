@@ -3,7 +3,7 @@ import { entries } from '@seedcompany/common';
 import { parseScripture } from '@seedcompany/scripture';
 import { assert } from 'ts-essentials';
 import { MergeExclusive } from 'type-fest';
-import { CalendarDate } from '~/common';
+import { CalendarDate, DateInterval } from '~/common';
 import { Cell, Column, Row } from '~/common/xlsx.util';
 import { Downloadable } from '../file/dto';
 import {
@@ -17,7 +17,11 @@ import {
   stepPlanCompleteDate,
   WrittenScripturePlanningSheet,
 } from '../pnp';
-import { PnpPlanningExtractionResult } from '../pnp/extraction-result';
+import {
+  PnpPlanningExtractionResult,
+  PnpProblemType,
+} from '../pnp/extraction-result';
+import { verifyEngagementDateRangeMatches } from '../pnp/verifyEngagementDateRangeMatches';
 import { ScriptureRange, UnspecifiedScripturePortion } from '../scripture/dto';
 import { ProductStep, ProductStep as Step } from './dto';
 
@@ -25,6 +29,7 @@ import { ProductStep, ProductStep as Step } from './dto';
 export class ProductExtractor {
   async extract(
     file: Downloadable<unknown>,
+    engagementRange: DateInterval | null,
     availableSteps: readonly ProductStep[],
     result: PnpPlanningExtractionResult,
   ): Promise<readonly ExtractedRow[]> {
@@ -38,6 +43,10 @@ export class ProductExtractor {
       availableSteps,
     );
 
+    if (!verifyEngagementDateRangeMatches(sheet, result, engagementRange)) {
+      return [];
+    }
+
     const productRows = sheet.goals
       .walkDown()
       .filter((cell) => isGoalRow(cell, result))
@@ -46,11 +55,7 @@ export class ProductExtractor {
       .toArray();
 
     if (productRows.length === 0) {
-      result.addProblem({
-        severity: 'Error',
-        message: `No goals found`,
-        source: pnp.planning.goals.start,
-      });
+      result.addProblem(NoGoals, pnp.planning.goals.start, {});
     }
 
     // Ignoring for now because not sure how to track progress
@@ -169,3 +174,11 @@ export type ExtractedRow = MergeExclusive<
   note: string | undefined;
   source: Cell<PlanningSheet>;
 };
+
+const NoGoals = PnpProblemType.register({
+  name: 'NoGoals',
+  severity: 'Error',
+  render: () => () => ({
+    message: `No goals found`,
+  }),
+});

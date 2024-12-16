@@ -18,6 +18,7 @@ import * as handlers from './handlers';
 import { InternshipEngagementResolver } from './internship-engagement.resolver';
 import { InternshipPositionResolver } from './internship-position.resolver';
 import { LanguageEngagementResolver } from './language-engagement.resolver';
+import { AddMilestoneReachedMigration } from './migrations/add-milestone-reached.migration';
 import { FixNullMethodologiesMigration } from './migrations/fix-null-methodologies.migration';
 import { EngagementProductConnectionResolver } from './product-connection.resolver';
 
@@ -44,6 +45,7 @@ import { EngagementProductConnectionResolver } from './product-connection.resolv
     EngagementLoader,
     ...Object.values(handlers),
     FixNullMethodologiesMigration,
+    AddMilestoneReachedMigration,
   ],
   exports: [EngagementService, EngagementRepository],
 })
