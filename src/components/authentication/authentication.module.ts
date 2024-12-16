@@ -35,6 +35,7 @@ import { SessionResolver } from './session.resolver';
     RegisterExtraInfoResolver,
     AuthenticationService,
     splitDb(AuthenticationRepository, AuthenticationEdgeDBRepository),
+    { provide: 'AUTHENTICATION', useExisting: AuthenticationService },
     CryptoService,
     SessionInterceptor,
     { provide: APP_INTERCEPTOR, useExisting: SessionInterceptor },
@@ -44,6 +45,7 @@ import { SessionResolver } from './session.resolver';
   exports: [
     SessionInterceptor,
     AuthenticationService,
+    'AUTHENTICATION',
     CryptoService,
     AuthenticationRepository,
   ],
