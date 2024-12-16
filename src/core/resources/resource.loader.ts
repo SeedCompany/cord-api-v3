@@ -5,6 +5,7 @@ import {
 } from '@seedcompany/data-loader';
 import { ConditionalKeys, Merge, ValueOf } from 'type-fest';
 import { ID, Many, ObjectView, ServerException } from '~/common';
+import { ConfigService } from '../config/config.service';
 import { BaseNode } from '../database/results';
 import { GqlContextHost } from '../graphql';
 import { ResourceLoaderRegistry } from './loader.registry';
@@ -41,6 +42,7 @@ export class ResourceLoader {
   constructor(
     private readonly loaderRegistry: ResourceLoaderRegistry,
     private readonly contextHost: GqlContextHost,
+    private readonly config: ConfigService,
     private readonly loaderContext: DataLoaderContext,
     private readonly resourceResolver: ResourceResolver,
   ) {}
@@ -108,7 +110,7 @@ export class ResourceLoader {
   ) {
     return await this.loaderContext.getLoader<T, Key, CachedKey>(
       type,
-      this.contextHost.context,
+      this.config.isCli ? CLI_CONTEXT_ID : this.contextHost.context,
     );
   }
 
@@ -134,3 +136,5 @@ export class ResourceLoader {
     return { resolvedType, ...found };
   }
 }
+
+const CLI_CONTEXT_ID = {};
