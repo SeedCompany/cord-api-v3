@@ -10,7 +10,10 @@ import {
 import { Column, Row } from '~/common/xlsx.util';
 import { Downloadable } from '../file/dto';
 import { Pnp, ProgressSheet } from '../pnp';
-import { PnpProgressExtractionResult } from '../pnp/extraction-result';
+import {
+  PnpProblemType,
+  PnpProgressExtractionResult,
+} from '../pnp/extraction-result';
 import { ProgressSummary as Progress } from './dto';
 
 @Injectable()
@@ -25,20 +28,10 @@ export class ProgressSummaryExtractor {
 
     if (!(sheet.reportingQuarter && date <= sheet.reportingQuarter.end)) {
       const cells = sheet.reportingQuarterCells;
-      result.addProblem({
-        severity: 'Error',
-        groups: 'Mismatched Reporting Quarter',
-        message: oneLine`
-          The PnP's Reporting Quarter
-            (_${
-              sheet.reportingQuarter
-                ? fiscalQuarterLabel(sheet.reportingQuarter.start)
-                : 'undetermined'
-            }_ \`${cells.quarter.ref}\`/\`${cells.year.ref}\`)
-          needs to be *at least* the quarter of this CORD report
-            (_${fiscalQuarterLabel(date)}_).
-        `,
-        source: cells.quarter,
+      result.addProblem(MismatchedReportingQuarter, cells.quarter, {
+        reportDate: date.toISO(),
+        pnpDate: sheet.reportingQuarter?.start.toISO(),
+        yearRef: cells.year.ref,
       });
       return {};
     }
@@ -97,3 +90,23 @@ const summaryFrom = (
   actual = normalize(actual);
   return { planned, actual };
 };
+
+const MismatchedReportingQuarter = PnpProblemType.register({
+  name: 'MismatchedReportingQuarter',
+  severity: 'Error',
+  render:
+    (ctx: { reportDate: string; pnpDate?: string; yearRef: string }) =>
+    ({ source }) => ({
+      groups: 'Mismatched Reporting Quarter',
+      message: oneLine`
+        The PnP's Reporting Quarter
+          (_${
+            ctx.pnpDate
+              ? fiscalQuarterLabel(CalendarDate.fromISO(ctx.pnpDate))
+              : 'undetermined'
+          }_ \`${source}\`/\`${ctx.yearRef}\`)
+        needs to be *at least* the quarter of this CORD report
+          (_${fiscalQuarterLabel(CalendarDate.fromISO(ctx.reportDate))}_).
+      `,
+    }),
+});

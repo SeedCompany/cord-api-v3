@@ -17,7 +17,10 @@ import {
   stepPlanCompleteDate,
   WrittenScripturePlanningSheet,
 } from '../pnp';
-import { PnpPlanningExtractionResult } from '../pnp/extraction-result';
+import {
+  PnpPlanningExtractionResult,
+  PnpProblemType,
+} from '../pnp/extraction-result';
 import { ScriptureRange, UnspecifiedScripturePortion } from '../scripture/dto';
 import { ProductStep, ProductStep as Step } from './dto';
 
@@ -46,11 +49,7 @@ export class ProductExtractor {
       .toArray();
 
     if (productRows.length === 0) {
-      result.addProblem({
-        severity: 'Error',
-        message: `No goals found`,
-        source: pnp.planning.goals.start,
-      });
+      result.addProblem(NoGoals, pnp.planning.goals.start, {});
     }
 
     // Ignoring for now because not sure how to track progress
@@ -169,3 +168,11 @@ export type ExtractedRow = MergeExclusive<
   note: string | undefined;
   source: Cell<PlanningSheet>;
 };
+
+const NoGoals = PnpProblemType.register({
+  name: 'NoGoals',
+  severity: 'Error',
+  render: () => () => ({
+    message: `No goals found`,
+  }),
+});

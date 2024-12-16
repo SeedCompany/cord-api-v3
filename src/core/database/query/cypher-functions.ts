@@ -79,6 +79,7 @@ export const apoc = {
     /** Converts Neo4j node to object/map of the node's properties */
     toMap: fn1('apoc.convert.toMap'),
     fromJsonList: fn1('apoc.convert.fromJsonList'),
+    fromJsonMap: fn1('apoc.convert.fromJsonMap'),
   },
   create: {
     uuid: fn0('apoc.create.uuid'),

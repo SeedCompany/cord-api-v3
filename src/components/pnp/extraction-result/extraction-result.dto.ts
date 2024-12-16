@@ -1,6 +1,8 @@
 import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { many, Many } from '@seedcompany/common';
 import { stripIndent } from 'common-tags';
+import { UUID } from 'node:crypto';
+import { Merge } from 'type-fest';
 import * as uuid from 'uuid';
 import { EnumType, ID, IdField, makeEnum } from '~/common';
 import { InlineMarkdownScalar } from '~/common/markdown.scalar';
@@ -12,10 +14,49 @@ export const PnpProblemSeverity = makeEnum({
   values: ['Error', 'Warning', 'Notice'],
 });
 
+export class PnpProblemType<Context> {
+  static readonly types = new Map<UUID, PnpProblemType<any>>();
+
+  static register<Context>({
+    id: idIn,
+    name,
+    severity,
+    render,
+  }: Merge<
+    PnpProblemType<Context>,
+    { id?: UUID | string }
+  >): PnpProblemType<Context> {
+    const id = (
+      idIn && uuid.validate(idIn) ? idIn : uuid.v5(name, ID_NS)
+    ) as UUID;
+
+    const type = Object.assign(new PnpProblemType<Context>(), {
+      id,
+      name,
+      severity,
+      render,
+    });
+
+    this.types.set(id, type);
+
+    return type;
+  }
+
+  id: UUID;
+  name: string;
+  severity: PnpProblemSeverity;
+  render: (
+    context: Context,
+  ) => (baseCtx: {
+    source: string;
+    sheet: string;
+  }) => Pick<PnpProblemInput, 'message' | 'groups'>;
+}
+
 @ObjectType()
 export class PnpProblem {
   @IdField()
-  readonly id: ID;
+  readonly id: ID & UUID;
 
   @Field(() => PnpProblemSeverity)
   readonly severity: PnpProblemSeverity;
@@ -38,36 +79,57 @@ export class PnpProblem {
     `,
   })
   readonly groups: readonly string[];
+
+  static render(stored: StoredProblem) {
+    const type = PnpProblemType.types.get(stored.type);
+    if (!type) {
+      throw new Error(`Unknown problem type ${stored.type}`);
+    }
+    const [sheet, source] = stored.source.split('!');
+    const rendered = type.render(stored.context)({ sheet, source });
+    const props: PnpProblem = {
+      id: stored.id,
+      severity: type.severity,
+      message: rendered.message,
+      source: stored.source,
+      groups: [sheet, ...many(rendered.groups ?? [])],
+    };
+    return Object.assign(new PnpProblem(), props);
+  }
 }
+
+type PnpProblemInput = Omit<PnpProblem, 'id' | 'groups' | 'source'> & {
+  id?: string;
+  groups?: Many<string>;
+  source?: Cell;
+};
+
+export type StoredProblem = Pick<PnpProblem, 'id'> & {
+  type: UUID;
+  source: string;
+  context: { [x: string]: unknown };
+};
 
 @InterfaceType()
 export abstract class PnpExtractionResult {
   constructor(private readonly fileVersionId: ID<'FileVersion'>) {}
 
-  @Field(() => [PnpProblem])
-  readonly problems: PnpProblem[] = [];
+  readonly problems = new Map<ID, StoredProblem>();
 
-  addProblem(
-    problem: Omit<PnpProblem, 'id' | 'groups' | 'source'> & {
-      id?: string;
-      groups?: Many<string>;
-      source: Cell;
-    },
+  addProblem<Ctx>(
+    type: PnpProblemType<Ctx>,
+    source: Cell,
+    context: Omit<Ctx, 'source'>,
   ) {
-    const id = (problem.id ??
-      uuid.v5(
-        [this.fileVersionId, problem.message, problem.source.fqn].join('\0'),
-        ID_NS,
-      )) as ID;
-
-    // Ignore dupes
-    if (this.problems.some((p) => p.id === id)) return;
-
-    this.problems.push({
-      ...problem,
+    const id = uuid.v5(
+      [this.fileVersionId, type.id, source.fqn].join('\0'),
+      ID_NS,
+    ) as ID & UUID;
+    this.problems.set(id, {
       id,
-      groups: [problem.source.sheet.name, ...many(problem.groups ?? [])],
-      source: problem.source.fqn,
+      type: type.id,
+      source: source.fqn,
+      context,
     });
   }
 }
