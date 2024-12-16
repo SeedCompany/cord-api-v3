@@ -97,7 +97,6 @@ const MismatchedReportingQuarter = PnpProblemType.register({
   render:
     (ctx: { reportDate: string; pnpDate?: string; yearRef: string }) =>
     ({ source }) => ({
-      groups: 'Mismatched Reporting Quarter',
       message: oneLine`
         The PnP's Reporting Quarter
           (_${
