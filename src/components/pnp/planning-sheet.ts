@@ -38,6 +38,13 @@ export abstract class PlanningSheet extends Sheet {
   @Once() get projectFiscalYears(): DateInterval {
     return expandToFullFiscalYears(this.projectDateRange);
   }
+
+  get projectDateCells() {
+    return {
+      start: this.projectStartDateCell,
+      end: this.projectEndDateCell,
+    };
+  }
   protected abstract projectStartDateCell: Cell;
   protected abstract projectEndDateCell: Cell;
 

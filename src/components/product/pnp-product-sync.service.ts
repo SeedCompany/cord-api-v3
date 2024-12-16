@@ -4,8 +4,8 @@ import { labelOfVerseRanges } from '@seedcompany/scripture';
 import { stripIndent } from 'common-tags';
 import { difference, uniq } from 'lodash';
 import { DateTime } from 'luxon';
-import { ID, Session } from '~/common';
-import { ILogger, Logger } from '~/core';
+import { DateInterval, ID, Session } from '~/common';
+import { ILogger, Logger, ResourceLoader } from '~/core';
 import { Downloadable, FileVersion } from '../file/dto';
 import { PnpExtractionResult, PnpProblemType } from '../pnp/extraction-result';
 import { StoryService } from '../story';
@@ -31,6 +31,7 @@ export class PnpProductSyncService {
     private readonly products: ProductService,
     private readonly repo: ProductRepository,
     private readonly stories: StoryService,
+    private readonly resources: ResourceLoader,
     @Logger('product:extractor') private readonly logger: ILogger,
   ) {}
 
@@ -45,9 +46,23 @@ export class PnpProductSyncService {
     pnp: Downloadable<FileVersion>;
     result: PnpExtractionResult;
   }) {
+    const engagement = await this.resources.load(
+      'LanguageEngagement',
+      engagementId,
+    );
+    const engagementRange = DateInterval.tryFrom(
+      engagement.startDate.value,
+      engagement.endDate.value,
+    );
+
     let productRows;
     try {
-      productRows = await this.extractor.extract(pnp, availableSteps, result);
+      productRows = await this.extractor.extract(
+        pnp,
+        engagementRange,
+        availableSteps,
+        result,
+      );
     } catch (e) {
       this.logger.warning(e.message, {
         id: pnp.id,

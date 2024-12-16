@@ -3,7 +3,7 @@ import { entries } from '@seedcompany/common';
 import { parseScripture } from '@seedcompany/scripture';
 import { assert } from 'ts-essentials';
 import { MergeExclusive } from 'type-fest';
-import { CalendarDate } from '~/common';
+import { CalendarDate, DateInterval } from '~/common';
 import { Cell, Column, Row } from '~/common/xlsx.util';
 import { Downloadable } from '../file/dto';
 import {
@@ -21,6 +21,7 @@ import {
   PnpPlanningExtractionResult,
   PnpProblemType,
 } from '../pnp/extraction-result';
+import { verifyEngagementDateRangeMatches } from '../pnp/verifyEngagementDateRangeMatches';
 import { ScriptureRange, UnspecifiedScripturePortion } from '../scripture/dto';
 import { ProductStep, ProductStep as Step } from './dto';
 
@@ -28,6 +29,7 @@ import { ProductStep, ProductStep as Step } from './dto';
 export class ProductExtractor {
   async extract(
     file: Downloadable<unknown>,
+    engagementRange: DateInterval | null,
     availableSteps: readonly ProductStep[],
     result: PnpPlanningExtractionResult,
   ): Promise<readonly ExtractedRow[]> {
@@ -40,6 +42,10 @@ export class ProductExtractor {
       undefined,
       availableSteps,
     );
+
+    if (!verifyEngagementDateRangeMatches(sheet, result, engagementRange)) {
+      return [];
+    }
 
     const productRows = sheet.goals
       .walkDown()
