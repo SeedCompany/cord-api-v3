@@ -1,5 +1,4 @@
 import { mapOf } from '@seedcompany/common';
-import { oneLine } from 'common-tags';
 import { EventsHandler, ILogger, Logger } from '~/core';
 import { ReportType } from '../../periodic-report/dto';
 import { PeriodicReportUploadedEvent } from '../../periodic-report/events';
@@ -150,12 +149,8 @@ const StepNotPlanned = PnpProblemType.register({
         groups: [
           'Step is not planned',
           `_${ctx.goal}_ has progress reported on steps that have not been declared to be worked in this engagement`,
-          `_${ctx.goal}_ has not declared _${step}_ \`${source}\` as a step that will be worked in this engagement`,
         ],
-        message: oneLine`
-          Please update the goal in CORD to mark this step as planned
-          or upload an updated PnP file to the "Planning Spreadsheet" on the engagement page.
-        `,
+        message: `_${ctx.goal}_ has not declared _${step}_ \`${source}\` as a step that will be worked in this engagement`,
       };
     },
 });
