@@ -1,4 +1,5 @@
 import { stripIndent } from 'common-tags';
+import { DateTime } from 'luxon';
 import { DateInterval } from '~/common';
 import {
   PnpPlanningExtractionResult,
@@ -19,10 +20,7 @@ export function verifyEngagementDateRangeMatches(
   }
 
   const matches =
-    engagementRange &&
-    pnpRange &&
-    // PnP only specifies months; allow nuance on our side.
-    engagementRange.expandToFull('month').equals(pnpRange);
+    engagementRange && pnpRange && engagementRange.equals(pnpRange);
 
   if (matches) {
     return true;
@@ -68,12 +66,10 @@ const MismatchedEngagementDateRange = PnpProblemType.register({
         message: stripIndent`
           The PnP's **project dates** (\`${source}\`) are different from what is declared in the CORD Engagement/Project.
 
-          CORD: ${eng.toLocaleString({ month: 'long', year: 'numeric' })}
-          PnP: ${pnp.toLocaleString({ month: 'long', year: 'numeric' })}
+          CORD: ${eng.toLocaleString(DateTime.DATE_MED)}
+          PnP: ${pnp.toLocaleString(DateTime.DATE_MED)}
 
           Please adjust the dates in CORD or the PnP to match and be accurate.
-
-          CORD only requires the month & year to match the PnP since this is as granular as it gets.
 
           If this is a cluster project and this engagement ("language") has started late or ends early,
           that difference can be declared in CORD's _Engagement dates_.
