@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
+import { CachedByArg } from '@seedcompany/common';
 import { EmailService } from '@seedcompany/nestjs-email';
 import JWT from 'jsonwebtoken';
 import { DateTime } from 'luxon';
@@ -179,8 +180,9 @@ export class AuthenticationService {
     return session;
   }
 
+  @CachedByArg()
   lazySessionForRootUser(input?: Partial<Session>) {
-    const promiseOfRootId = this.repo.waitForRootUserId().then((id) => {
+    const promiseOfRootId = this.waitForRootUserIdOnce().then((id) => {
       (session as Writable<Session>).userId = id;
       return id;
     });
@@ -216,6 +218,12 @@ export class AuthenticationService {
       },
     }) as LazySession;
   }
+
+  @CachedByArg()
+  private waitForRootUserIdOnce() {
+    return this.repo.waitForRootUserId();
+  }
+
   async sessionForUser(userId: ID): Promise<Session> {
     const roles = await this.repo.rolesForUser(userId);
     const session: Session = {
