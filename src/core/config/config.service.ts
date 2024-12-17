@@ -86,6 +86,10 @@ export const makeConfig = (env: EnvironmentService) =>
 
     /** Is this a REPL process? */
     isRepl = process.argv.join(' ').includes('repl');
+    /** Is this a console command process? */
+    isConsole = process.argv.join(' ').includes('console');
+    /** Is this a REPL / console command process? */
+    isCli = this.isRepl || this.isConsole;
 
     /** Is this a jest process? */
     jest = Boolean(env.string('JEST_WORKER_ID').optional());

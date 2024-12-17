@@ -8,7 +8,7 @@ import { FileVersion } from '../../file/dto';
 import { PeriodicReportUploadedEvent } from '../../periodic-report/events';
 import { ProgressReport } from '../dto';
 
-@Migration('2024-12-16T13:00:00')
+@Migration('2024-12-16T16:33:00')
 export class ReextractPnpProgressReportsMigration extends BaseMigration {
   constructor(
     private readonly eventBus: IEventBus,
