@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ID, NotImplementedException, PublicOf } from '~/common';
-import { e, RepoFor, ScopeOf } from '~/core/edgedb';
+import { disableAccessPolicies, e, RepoFor, ScopeOf } from '~/core/edgedb';
 import {
   AssignOrganizationToUser,
   RemoveOrganizationFromUser,
@@ -42,7 +42,7 @@ export class UserEdgeDBRepository
     const query = e.select(e.User, () => ({
       filter_single: { email },
     }));
-    const result = await this.db.run(query);
+    const result = await this.db.withOptions(disableAccessPolicies).run(query);
     return !!result;
   }
 
