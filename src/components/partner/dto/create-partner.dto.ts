@@ -11,6 +11,7 @@ import {
   NameField,
 } from '~/common';
 import { FinancialReportingType } from '../../partnership/dto/financial-reporting-type.enum';
+import { ProjectType } from '../../project/dto';
 import { PartnerType } from './partner-type.enum';
 import { Partner } from './partner.dto';
 
@@ -64,6 +65,10 @@ export abstract class CreatePartner {
 
   @DateField({ nullable: true })
   readonly startDate?: CalendarDate;
+
+  @Field(() => [ProjectType], { nullable: true })
+  @Transform(({ value }) => uniq(value))
+  readonly approvedPrograms?: ProjectType[];
 }
 
 @InputType()
