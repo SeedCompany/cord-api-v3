@@ -22,6 +22,7 @@ import {
   matchProps,
   merge,
   paginate,
+  path,
   property,
   requestingUser,
   sortWith,
@@ -241,6 +242,26 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
       .return('email.value')
       .first();
     return !!result;
+  }
+
+  async getUserByEmailAddress(email: string, session: Session) {
+    const query = this.db
+      .query()
+      .matchNode('node', 'User')
+      .where(
+        path([
+          node('node'),
+          relation('out', '', 'email', ACTIVE),
+          node({
+            value: email,
+          }),
+        ]),
+      )
+      .apply(this.privileges.forUser(session).filterToReadable())
+      .apply(this.hydrate(session));
+
+    const result = await query.first();
+    return result?.dto ?? null;
   }
 
   async assignOrganizationToUser({

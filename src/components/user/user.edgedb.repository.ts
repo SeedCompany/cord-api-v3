@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ID, NotImplementedException, PublicOf } from '~/common';
-import { e, RepoFor, ScopeOf } from '~/core/edgedb';
+import { disableAccessPolicies, e, RepoFor, ScopeOf } from '~/core/edgedb';
 import {
   AssignOrganizationToUser,
   RemoveOrganizationFromUser,
@@ -42,8 +42,17 @@ export class UserEdgeDBRepository
     const query = e.select(e.User, () => ({
       filter_single: { email },
     }));
-    const result = await this.db.run(query);
+    const result = await this.db.withOptions(disableAccessPolicies).run(query);
     return !!result;
+  }
+
+  getUserByEmailAddress(email: string) {
+    const query = e.select(e.User, (user) => ({
+      ...this.hydrate(user),
+      filter_single: { email },
+    }));
+
+    return this.db.run(query);
   }
 
   protected listFilters(user: ScopeOf<typeof e.User>, input: UserListInput) {
