@@ -51,6 +51,7 @@ import {
 import { Privileges } from '../authorization';
 import { FileService } from '../file';
 import { FileId } from '../file/dto';
+import { LanguageMilestone } from '../language/dto';
 import {
   languageFilters,
   languageSorters,
@@ -227,6 +228,8 @@ export class EngagementRepository extends CommonRepository {
       statusModifiedAt: undefined,
       lastSuspendedAt: undefined,
       lastReactivatedAt: undefined,
+      milestoneReached: input.milestoneReached || LanguageMilestone.Unknown,
+      usingAIAssistedTranslation: input.usingAIAssistedTranslation || null,
       modifiedAt: DateTime.local(),
       canDelete: true,
     };

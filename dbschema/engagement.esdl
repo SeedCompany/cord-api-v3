@@ -84,7 +84,9 @@ module default {
     milestoneReached: Language::Milestone {
       default := Language::Milestone.Unknown;
     };
-    
+
+    usingAIAssistedTranslation: bool;
+
     # I want ceremony to be automatically created when engagement is created.
     # Using computed & trigger to do this, because properties with default expressions
     # cannot refer to links of inserted object.
