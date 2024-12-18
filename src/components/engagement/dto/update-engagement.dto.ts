@@ -80,6 +80,9 @@ export abstract class UpdateLanguageEngagement extends UpdateEngagement {
 
   @Field(() => LanguageMilestone, { nullable: true })
   readonly milestoneReached?: LanguageMilestone;
+
+  @Field(() => Boolean, { nullable: true })
+  readonly usingAIAssistedTranslation?: boolean | null;
 }
 
 @InputType()

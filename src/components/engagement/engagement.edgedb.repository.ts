@@ -46,6 +46,7 @@ const languageExtraHydrate = {
   pnp: true,
   historicGoal: true,
   milestoneReached: true,
+  usingAIAssistedTranslation: true,
 } as const;
 
 const internshipExtraHydrate = {

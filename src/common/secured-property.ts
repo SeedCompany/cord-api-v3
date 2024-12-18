@@ -277,3 +277,14 @@ export abstract class SecuredFloatNullable extends SecuredProperty<
 export abstract class SecuredBoolean extends SecuredProperty<boolean>(
   GraphQLBoolean,
 ) {}
+
+@ObjectType({
+  description: SecuredProperty.descriptionFor('a boolean or null'),
+})
+export abstract class SecuredBooleanNullable extends SecuredProperty<
+  boolean,
+  boolean,
+  true
+>(GraphQLBoolean, {
+  nullable: true,
+}) {}
