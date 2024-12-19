@@ -78,6 +78,7 @@ export class PartnerRepository extends DtoRepository<
       address: input.address,
       modifiedAt: DateTime.local(),
       canDelete: true,
+      approvedPrograms: input.approvedPrograms,
     };
     const result = await this.db
       .query()

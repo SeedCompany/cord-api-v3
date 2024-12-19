@@ -6,6 +6,7 @@ import { LanguageModule } from '../language/language.module';
 import { OrganizationModule } from '../organization/organization.module';
 import { ProjectModule } from '../project/project.module';
 import { UserModule } from '../user/user.module';
+import { AddPartnerApprovedProgramsMigration } from './migrations/add-partner-approved-programs.migration';
 import { PartnerEdgeDBRepository } from './partner.edgedb.repository';
 import { PartnerLoader } from './partner.loader';
 import { PartnerRepository } from './partner.repository';
@@ -26,6 +27,7 @@ import { PartnerService } from './partner.service';
     PartnerService,
     splitDb(PartnerRepository, PartnerEdgeDBRepository),
     PartnerLoader,
+    AddPartnerApprovedProgramsMigration,
   ],
   exports: [PartnerService],
 })

@@ -21,7 +21,7 @@ import { Commentable } from '../../comments/dto';
 import { SecuredFinancialReportingTypes } from '../../partnership/dto';
 import { Pinnable } from '../../pin/dto';
 import { Postable } from '../../post/dto';
-import { IProject } from '../../project/dto';
+import { IProject, SecuredProjectTypes } from '../../project/dto';
 import { SecuredPartnerTypes } from './partner-type.enum';
 
 const Interfaces = IntersectTypes(Resource, Pinnable, Postable, Commentable);
@@ -84,6 +84,9 @@ export class Partner extends Interfaces {
     description: "Based on the project's sensitivity",
   })
   readonly sensitivity: Sensitivity;
+
+  @Field()
+  readonly approvedPrograms: SecuredProjectTypes;
 }
 
 @ObjectType({

@@ -27,6 +27,7 @@ module default {
     address: str;
     multi types: Partner::Type;
     multi financialReportingTypes: Partnership::FinancialReportingType;
+    multi approvedPrograms: Project::Type;
     
     pointOfContact: User;
     languageOfWiderCommunication: Language;
