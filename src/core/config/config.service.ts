@@ -17,7 +17,7 @@ import { ProgressReportStatus } from '../../components/progress-report/dto/progr
 import type { TransitionName as ProgressReportTransitionName } from '../../components/progress-report/workflow/transitions';
 import { DefaultTimezoneWrapper } from '../email/templates/formatted-date-time';
 import { FrontendUrlWrapper } from '../email/templates/frontend-url';
-import type { CookieOptions, CorsOptions } from '../http';
+import type { CookieOptions, CorsOptions, IRequest } from '../http';
 import { LogLevel } from '../logger/logger.interface';
 import { EnvironmentService } from './environment.service';
 import { determineRootUser } from './root-user.config';
@@ -252,10 +252,9 @@ export const makeConfig = (env: EnvironmentService) =>
       } satisfies CorsOptions;
     })();
 
-    sessionCookie = ((): Merge<
-      CookieOptions,
-      { name: string; expires?: DurationLike }
-    > => {
+    sessionCookie = (
+      req: IRequest,
+    ): Merge<CookieOptions, { name: string; expires?: DurationLike }> => {
       const name = env.string('SESSION_COOKIE_NAME').optional('cordsession');
 
       let domain = env.string('SESSION_COOKIE_DOMAIN').optional();
@@ -264,6 +263,10 @@ export const makeConfig = (env: EnvironmentService) =>
       if (domain && !domain.startsWith('.')) {
         domain = '.' + domain;
       }
+
+      const userAgent = req.headers['user-agent'];
+      const isSafari =
+        userAgent && /^((?!chrome|android).)*safari/i.test(userAgent);
 
       return {
         name,
@@ -274,14 +277,14 @@ export const makeConfig = (env: EnvironmentService) =>
         httpOnly: true,
         // All paths, not just the current one
         path: '/',
-        ...(!isDev && {
+        ...(!(isSafari && isDev) && {
           // Require HTTPS (required for SameSite)
           secure: true,
           // Allow 3rd party (other domains)
           sameSite: 'none',
         }),
       };
-    })();
+    };
 
     xray = {
       daemonAddress: this.jest
