@@ -3,10 +3,8 @@ import {
   CalendarDate,
   DateInterval,
   ID,
-  NotFoundException,
   ObjectView,
   Range,
-  ServerException,
   Session,
   UnsecuredDto,
 } from '~/common';
@@ -44,36 +42,42 @@ export class PeriodicReportService {
     if (input.intervals.length === 0) {
       return;
     }
-    try {
-      const result = await this.repo.merge(input);
-      this.logger.info(`Merged ${input.type.toLowerCase()} reports`, {
-        existing: input.intervals.length - result.length,
-        new: result.length,
-        parent: input.parent,
-        newIntervals: result.map(({ interval }) =>
-          DateInterval.fromObject(interval).toISO(),
-        ),
-      });
-    } catch (exception) {
-      throw new ServerException('Could not create periodic reports', exception);
-    }
+    const result = await this.repo.merge(input);
+    this.logger.info(`Merged ${input.type.toLowerCase()} reports`, {
+      existing: input.intervals.length - result.length,
+      new: result.length,
+      parent: input.parent,
+      newIntervals: result.map(({ interval }) =>
+        DateInterval.fromObject(interval).toISO(),
+      ),
+    });
   }
 
   async update(input: UpdatePeriodicReportInput, session: Session) {
-    const currentRaw = await this.repo.readOne(input.id, session);
-    const current = this.secure(currentRaw, session);
+    const current = await this.repo.readOne(input.id, session);
     const changes = this.repo.getActualChanges(current, input);
     this.privileges
-      .for(session, resolveReportType(current), currentRaw)
+      .for(session, resolveReportType(current), current)
       .verifyChanges(changes);
 
     const { reportFile, ...simpleChanges } = changes;
 
-    const updated = await this.repo.update(current, simpleChanges);
+    const updated = this.secure(
+      await this.repo.update(
+        {
+          id: current.id,
+          start: current.start,
+          end: current.end,
+          ...simpleChanges,
+        },
+        session,
+      ),
+      session,
+    );
 
     if (reportFile) {
       const file = await this.files.updateDefinedFile(
-        current.reportFile,
+        this.secure(current, session).reportFile,
         'file',
         reportFile,
         session,
@@ -96,17 +100,6 @@ export class PeriodicReportService {
     session: Session,
     _view?: ObjectView,
   ): Promise<PeriodicReport> {
-    this.logger.debug(`read one`, {
-      id,
-      userId: session.userId,
-    });
-    if (!id) {
-      throw new NotFoundException(
-        'No periodic report id to search for',
-        'periodicReport.id',
-      );
-    }
-
     const result = await this.repo.readOne(id, session);
     return this.secure(result, session);
   }
@@ -232,10 +225,7 @@ export class PeriodicReportService {
         // no change
         return;
       }
-      await this.repo.update(report, {
-        start: at,
-        end: at,
-      });
+      await this.repo.update({ id: report.id, start: at, end: at }, session);
     } else {
       await this.merge({
         intervals: [{ start: at, end: at }],
