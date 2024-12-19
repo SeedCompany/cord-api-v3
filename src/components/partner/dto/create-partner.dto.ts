@@ -68,7 +68,7 @@ export abstract class CreatePartner {
 
   @Field(() => [ProjectType], { nullable: true })
   @Transform(({ value }) => uniq(value))
-  readonly approvedPrograms?: ProjectType[];
+  readonly approvedPrograms: ProjectType[] = [];
 }
 
 @InputType()
