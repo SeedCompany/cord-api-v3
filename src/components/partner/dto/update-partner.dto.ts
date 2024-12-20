@@ -11,7 +11,7 @@ import {
   NameField,
 } from '~/common';
 import { FinancialReportingType } from '../../partnership/dto';
-import { ProjectType } from '../../project/dto';
+import { ProjectType } from '../../project/dto/project-type.enum';
 import { PartnerType } from './partner-type.enum';
 import { Partner } from './partner.dto';
 
