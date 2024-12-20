@@ -153,4 +153,5 @@ const StepNotPlanned = PnpProblemType.register({
         message: `_${ctx.goal}_ has not declared _${step}_ \`${source}\` as a step that will be worked in this engagement`,
       };
     },
+  wiki: 'https://github.com/SeedCompany/cord-docs/wiki/PnP-Extraction-Validation:-Errors-and-Troubleshooting-Steps#9-step-is-not-planned',
 });
