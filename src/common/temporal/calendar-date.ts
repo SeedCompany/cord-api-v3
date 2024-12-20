@@ -5,6 +5,7 @@ import {
   DateTimeOptions,
   DateTimeUnit,
   DurationLike,
+  FixedOffsetZone,
   LocaleOptions,
   ToISOTimeOptions,
   Zone,
@@ -60,7 +61,12 @@ export class CalendarDate<IsValid extends boolean = DefaultValidity>
   }
 
   static fromJSDate(date: Date, options?: DateTimeJSOptions): CalendarDate {
-    return CalendarDate.fromDateTime(super.fromJSDate(date, options));
+    const d = super
+      .fromJSDate(date, options)
+      // Undo the conversion to the local timezone and restore the original one
+      // This way pulling the year/month/day below ignores timezone differences.
+      .setZone(FixedOffsetZone.instance(date.getTimezoneOffset()));
+    return CalendarDate.local(d.year, d.month, d.day);
   }
 
   static fromMillis(ms: number, options?: DateTimeOptions): CalendarDate {
