@@ -13,6 +13,7 @@ import {
   filter,
   merge,
   SortCol,
+  sortingForEnumIndex,
   variable,
 } from '~/core/database/query';
 import {
@@ -45,16 +46,18 @@ export class PnpExtractionResultNeo4jRepository
         sub
           .match([
             node('result'),
-            relation('out', 'problem', 'problem'),
+            relation('out', 'problemRel', 'problem'),
             node('type'),
           ])
+          .with(
+            merge('problemRel', {
+              type: 'type.id',
+              context: apoc.convert.fromJsonMap('problemRel.context'),
+            }).as('problem'),
+          )
+          .orderBy(String(sortingForEnumIndex(Severity)('problem.severity')))
           .return<{ problems: StoredProblem }>(
-            collect(
-              merge('problem', {
-                type: 'type.id',
-                context: apoc.convert.fromJsonMap('problem.context'),
-              }),
-            ).as('problems'),
+            collect('problem').as('problems'),
           ),
       )
       .return<SetNonNullable<PnpExtractionResultLoadResult>>([

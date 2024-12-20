@@ -129,6 +129,17 @@ export class UserResolver {
     return await this.userService.checkEmail(email);
   }
 
+  @Query(() => User, {
+    description: 'Returns a user for a given email address',
+    nullable: true,
+  })
+  async userByEmail(
+    @LoggedInSession() session: Session,
+    @Args() { email }: CheckEmailArgs,
+  ): Promise<User | null> {
+    return await this.userService.getUserByEmailAddress(email, session);
+  }
+
   @ResolveField(() => SecuredUnavailabilityList)
   async unavailabilities(
     @AnonSession() session: Session,

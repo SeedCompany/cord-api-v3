@@ -14,6 +14,7 @@ import {
   ResourceRelationsShape,
   Secured,
   SecuredBoolean,
+  SecuredBooleanNullable,
   SecuredDateNullable,
   SecuredDateTimeNullable,
   SecuredProps,
@@ -191,8 +192,11 @@ export class LanguageEngagement extends Engagement {
   @Field()
   readonly historicGoal: SecuredStringNullable;
 
-  @Field(() => SecuredLanguageMilestone)
+  @Field()
   readonly milestoneReached: SecuredLanguageMilestone;
+
+  @Field()
+  readonly usingAIAssistedTranslation: SecuredBooleanNullable;
 }
 
 @RegisterResource({ db: e.InternshipEngagement })

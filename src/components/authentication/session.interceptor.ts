@@ -97,7 +97,7 @@ export class SessionInterceptor implements NestInterceptor {
   }
 
   private getTokenFromCookie(req: IRequest | undefined): string | null {
-    return req?.cookies?.[this.config.sessionCookie.name] || null;
+    return req?.cookies?.[this.config.sessionCookie(req).name] || null;
   }
 
   getImpersonateeFromContext(
