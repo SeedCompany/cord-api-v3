@@ -747,7 +747,6 @@ export const engagementFilters = filter.define(() => EngagementFilters, {
         node('mouStart', 'Property'),
       ],
     ]);
-
     return coalesce('startDateOverride.value', 'mouStart.value');
   }),
   endDate: filter.dateTime(({ query }) => {
@@ -765,7 +764,6 @@ export const engagementFilters = filter.define(() => EngagementFilters, {
         node('mouEnd', 'Property'),
       ],
     ]);
-
     return coalesce('endDateOverride.value', 'mouEnd.value');
   }),
   name: filter.fullText({
