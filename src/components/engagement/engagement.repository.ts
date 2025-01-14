@@ -733,7 +733,7 @@ export const engagementFilters = filter.define(() => EngagementFilters, {
     node('', 'Language', { id }),
   ]),
   startDate: filter.dateTime(({ query }) => {
-    query.optionalMatch([
+    query.match([
       [
         node('node'),
         relation('out', '', 'startDateOverride', ACTIVE),
@@ -750,7 +750,7 @@ export const engagementFilters = filter.define(() => EngagementFilters, {
     return coalesce('startDateOverride.value', 'mouStart.value');
   }),
   endDate: filter.dateTime(({ query }) => {
-    query.optionalMatch([
+    query.match([
       [
         node('node'),
         relation('out', '', 'endDateOverride', ACTIVE),
