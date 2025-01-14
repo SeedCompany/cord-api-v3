@@ -77,6 +77,7 @@ export class StepHistoryToWorkflowEventsMigration extends BaseMigration {
           {
             project: fakeProject,
             moduleRef: this.moduleRef,
+            // @ts-expect-error removed from src, but keeping this file for reference for now.
             migrationPrevSteps: prev,
           },
           project,
