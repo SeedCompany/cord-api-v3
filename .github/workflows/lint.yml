@@ -6,6 +6,10 @@ on:
       - master
       - develop
 
+env:
+  EDGEDB_INSTANCE: ${{ secrets.EDGEDB_INSTANCE }}
+  EDGEDB_SECRET_KEY: ${{ secrets.EDGEDB_SECRET_KEY }}
+
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -34,3 +38,7 @@ jobs:
 
       - name: Lint
         run: yarn eslint --ext .ts,.tsx --max-warnings 0 .
+
+      - name: EdgeDB Teardown
+        uses: ./.github/actions/edgedb-teardown
+        if: always()
