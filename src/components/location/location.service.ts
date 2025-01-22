@@ -68,7 +68,10 @@ export class LocationService {
     const changes = this.repo.getActualChanges(location, input);
     this.privileges.for(session, Location, location).verifyChanges(changes);
 
-    const updated = await this.repo.update({ id: input.id, ...changes });
+    const updated = await this.repo.update(
+      { id: input.id, ...changes },
+      session,
+    );
     return this.secure(updated, session);
   }
 

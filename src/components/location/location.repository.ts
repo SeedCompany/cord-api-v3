@@ -89,7 +89,7 @@ export class LocationRepository extends DtoRepository(Location) {
     return dto;
   }
 
-  async update(changes: UpdateLocation) {
+  async update(changes: UpdateLocation, session: Session) {
     const {
       id,
       fundingAccountId,
@@ -107,6 +107,24 @@ export class LocationRepository extends DtoRepository(Location) {
         'FundingAccount',
         id,
         fundingAccountId,
+      );
+    }
+
+    if (mapImage !== undefined) {
+      const location = await this.readOne(id);
+
+      if (!location.mapImage) {
+        throw new ServerException(
+          'Expected map image file to be updated with the location',
+        );
+      }
+
+      await this.files.createFileVersion(
+        {
+          ...mapImage,
+          parentId: location.mapImage.id,
+        },
+        session,
       );
     }
 
