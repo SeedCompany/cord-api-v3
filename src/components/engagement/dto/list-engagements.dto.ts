@@ -9,7 +9,11 @@ import {
   SecuredList,
   SortablePaginationInput,
 } from '~/common';
-import { LanguageFilters } from '../../language/dto';
+import {
+  AIAssistedTranslation,
+  LanguageFilters,
+  LanguageMilestone,
+} from '../../language/dto';
 import { ProjectFilters } from '../../project/dto';
 import { UserFilters } from '../../user/dto';
 import {
@@ -73,6 +77,14 @@ export abstract class EngagementFilters {
   @Type(() => DateFilter)
   @ValidateNested()
   readonly endDate?: DateFilter;
+
+  @Field(() => [LanguageMilestone], {
+    nullable: true,
+  })
+  readonly milestoneReached?: readonly LanguageMilestone[];
+
+  @Field(() => [AIAssistedTranslation], { nullable: true })
+  readonly usingAIAssistedTranslation?: readonly AIAssistedTranslation[];
 }
 
 @InputType()
