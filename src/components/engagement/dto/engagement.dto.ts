@@ -14,7 +14,6 @@ import {
   ResourceRelationsShape,
   Secured,
   SecuredBoolean,
-  SecuredBooleanNullable,
   SecuredDateNullable,
   SecuredDateTimeNullable,
   SecuredProps,
@@ -30,6 +29,7 @@ import { LinkTo, RegisterResource } from '~/core/resources';
 import { ChangesetAware } from '../../changeset/dto';
 import { Commentable } from '../../comments/dto';
 import { SecuredLanguageMilestone } from '../../language/dto';
+import { SecuredAIAssistedTranslation } from '../../language/dto/ai-assisted-translation.enum';
 import { Product, SecuredMethodologies } from '../../product/dto';
 import {
   InternshipProject,
@@ -196,7 +196,7 @@ export class LanguageEngagement extends Engagement {
   readonly milestoneReached: SecuredLanguageMilestone;
 
   @Field()
-  readonly usingAIAssistedTranslation: SecuredBooleanNullable;
+  readonly usingAIAssistedTranslation: SecuredAIAssistedTranslation;
 }
 
 @RegisterResource({ db: e.InternshipEngagement })

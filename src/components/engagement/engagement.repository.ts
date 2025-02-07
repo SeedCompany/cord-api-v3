@@ -52,6 +52,7 @@ import { Privileges } from '../authorization';
 import { FileService } from '../file';
 import { FileId } from '../file/dto';
 import { LanguageMilestone } from '../language/dto';
+import { AIAssistedTranslation } from '../language/dto/ai-assisted-translation.enum';
 import {
   languageFilters,
   languageSorters,
@@ -229,7 +230,8 @@ export class EngagementRepository extends CommonRepository {
       lastSuspendedAt: undefined,
       lastReactivatedAt: undefined,
       milestoneReached: input.milestoneReached || LanguageMilestone.Unknown,
-      usingAIAssistedTranslation: input.usingAIAssistedTranslation || null,
+      usingAIAssistedTranslation:
+        input.usingAIAssistedTranslation || AIAssistedTranslation.Unknown,
       modifiedAt: DateTime.local(),
       canDelete: true,
     };
@@ -825,6 +827,8 @@ export const engagementFilters = filter.define(() => EngagementFilters, {
       node('node', 'User'),
     ]),
   ),
+  milestoneReached: filter.stringListProp(),
+  usingAIAssistedTranslation: filter.stringListProp(),
 });
 
 export const engagementSorters = defineSorters(IEngagement, {
