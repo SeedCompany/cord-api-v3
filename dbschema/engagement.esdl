@@ -81,11 +81,13 @@ module default {
       annotation deprecated := "Legacy data";
     }
 
-    milestoneReached: Language::Milestone {
+    required milestoneReached: Language::Milestone {
       default := Language::Milestone.Unknown;
     };
 
-    usingAIAssistedTranslation: bool;
+    required usingAIAssistedTranslation: Engagement::AIAssistedTranslation {
+      default := Engagement::AIAssistedTranslation.Unknown;
+    };
 
     # I want ceremony to be automatically created when engagement is created.
     # Using computed & trigger to do this, because properties with default expressions
@@ -184,6 +186,15 @@ module Engagement {
     Unapproved,
     Transferred,
     NotRenewed,
+  >;
+
+  scalar type AIAssistedTranslation extending enum<
+    Unknown,
+    None,
+    Drafting,
+    Checking,
+    DraftCheck,
+    Other
   >;
   
   scalar type InternPosition extending enum<

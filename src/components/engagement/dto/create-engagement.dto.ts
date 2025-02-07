@@ -7,6 +7,7 @@ import { CalendarDate, DateField, ID, IdField } from '~/common';
 import { ChangesetIdField } from '../../changeset';
 import { CreateDefinedFileVersionInput } from '../../file/dto';
 import { LanguageMilestone } from '../../language/dto';
+import { AIAssistedTranslation } from '../../language/dto/ai-assisted-translation.enum';
 import { ProductMethodology } from '../../product/dto';
 import { InternshipEngagement, LanguageEngagement } from './engagement.dto';
 import { InternshipPosition } from './intern-position.enum';
@@ -75,8 +76,8 @@ export abstract class CreateLanguageEngagement extends CreateEngagement {
   @Field(() => LanguageMilestone, { nullable: true })
   readonly milestoneReached?: LanguageMilestone;
 
-  @Field(() => Boolean, { nullable: true })
-  readonly usingAIAssistedTranslation?: boolean | null;
+  @Field(() => AIAssistedTranslation, { nullable: true })
+  readonly usingAIAssistedTranslation?: AIAssistedTranslation;
 }
 
 @InputType()
