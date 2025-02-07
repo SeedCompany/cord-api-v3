@@ -191,9 +191,9 @@ module Engagement {
   scalar type AIAssistedTranslation extending enum<
     Unknown,
     None,
-    Drafting,
-    Checking,
-    DraftCheck,
+    Draft,
+    `Check`,
+    DraftAndCheck,
     Other
   >;
   

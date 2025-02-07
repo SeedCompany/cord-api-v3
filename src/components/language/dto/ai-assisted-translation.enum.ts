@@ -4,7 +4,7 @@ import { EnumType, makeEnum, SecuredEnum } from '~/common';
 export type AIAssistedTranslation = EnumType<typeof AIAssistedTranslation>;
 export const AIAssistedTranslation = makeEnum({
   name: 'AIAssistedTranslation',
-  values: ['Unknown', 'None', 'Drafting', 'Checking', 'DraftCheck', 'Other'],
+  values: ['Unknown', 'None', 'Draft', 'Check', 'DraftAndCheck', 'Other'],
   exposeOrder: true,
 });
 
