@@ -827,6 +827,8 @@ export const engagementFilters = filter.define(() => EngagementFilters, {
       node('node', 'User'),
     ]),
   ),
+  milestoneReached: filter.stringListProp(),
+  usingAIAssistedTranslation: filter.stringListProp(),
 });
 
 export const engagementSorters = defineSorters(IEngagement, {
