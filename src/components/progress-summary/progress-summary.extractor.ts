@@ -61,12 +61,12 @@ const findLatestCumulative = (currentYear: Row<ProgressSheet>) => {
   // eslint-disable-next-line no-constant-condition
   while (true) {
     const summary = summaryFrom(currentYear, ...sheet.columnsForCumulative);
-    if (summary) {
+    if (summary.planned > 0 || summary.actual > 0) {
       return summary;
     }
     currentYear = currentYear.move(-1);
     if (currentYear < sheet.summaryFiscalYears.start.row) {
-      return null;
+      return summary;
     }
   }
 };
@@ -75,7 +75,7 @@ const summaryFrom = (
   fiscalYear: Row<ProgressSheet>,
   plannedColumn: Column,
   actualColumn: Column,
-): Progress => {
+) => {
   let planned = fiscalYear.cell(plannedColumn).asNumber ?? 0;
   let actual = fiscalYear.cell(actualColumn).asNumber ?? 0;
   const normalize = (val: number) => {
@@ -88,7 +88,7 @@ const summaryFrom = (
   };
   planned = normalize(planned);
   actual = normalize(actual);
-  return { planned, actual };
+  return { planned, actual } satisfies Progress;
 };
 
 const MismatchedReportingQuarter = PnpProblemType.register({
