@@ -78,9 +78,6 @@ export const momentumProjectsTransitions = () =>
       r.Engagement.when(member).edit.specifically((p) => [
         p.disbursementCompleteDate.read,
       ]),
-      r.LanguageEngagement.specifically((p) => [
-        p.paratextRegistryId.when(member).read,
-      ]),
     ),
     r.EthnologueLanguage.read,
     r.FieldRegion.read,
