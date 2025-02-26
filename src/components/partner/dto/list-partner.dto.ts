@@ -7,6 +7,8 @@ import {
   SortablePaginationInput,
 } from '~/common';
 import { OrganizationFilters } from '../../organization/dto';
+import { FinancialReportingType } from '../../partnership/dto/financial-reporting-type.enum';
+import { PartnerType } from './partner-type.enum';
 import { Partner } from './partner.dto';
 
 @InputType()
@@ -20,8 +22,23 @@ export abstract class PartnerFilters {
   })
   readonly pinned?: boolean;
 
+  @Field({
+    nullable: true,
+  })
+  readonly globalInnovationsClient?: boolean;
+
   @FilterField(() => OrganizationFilters)
   readonly organization?: OrganizationFilters & {};
+
+  @Field(() => [PartnerType], {
+    nullable: true,
+  })
+  readonly types?: PartnerType[];
+
+  @Field(() => [FinancialReportingType], {
+    nullable: true,
+  })
+  readonly financialReportingTypes?: FinancialReportingType[];
 }
 
 @InputType()
