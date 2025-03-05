@@ -1,6 +1,5 @@
 export * from './reexports';
 export { edgeql, EdgeQLArgsOf, EdgeQLReturnOf } from './edgeql';
-export * from './options';
 export type { OptionsFn } from './options.context';
 export * from './edgedb.service';
 export * from './withScope';

@@ -1,4 +1,4 @@
-import { Options } from '../options';
+import { Options } from 'edgedb';
 
 export const disableAccessPolicies = (options: Options) =>
   options.withConfig({

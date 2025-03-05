@@ -1,6 +1,6 @@
 import { Module, OnModuleDestroy } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
-import { ConnectOptions, createClient } from 'edgedb';
+import { ConnectOptions, createClient, Options } from 'edgedb';
 import { IdResolver } from '~/common/validators/short-id.validator';
 import type { ConfigService } from '~/core';
 import { splitDb } from '../database/split-db.provider';
@@ -8,7 +8,6 @@ import { AliasIdResolver } from './alias-id-resolver';
 import { codecs, registerCustomScalarCodecs } from './codecs';
 import { EdgeDBTransactionalMutationsInterceptor } from './edgedb-transactional-mutations.interceptor';
 import { EdgeDB } from './edgedb.service';
-import { Options } from './options';
 import { OptionsContext } from './options.context';
 import { Client } from './reexports';
 import { EdgeDBSchemaAstModule } from './schema-ast/schema-ast.module';

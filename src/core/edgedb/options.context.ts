@@ -1,6 +1,6 @@
 import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import { AsyncLocalStorage } from 'async_hooks';
-import type { Client } from 'edgedb';
+import { type Client, Options } from 'edgedb';
 import {
   BehaviorSubject,
   combineLatest,
@@ -8,7 +8,6 @@ import {
   map,
   Observable,
 } from 'rxjs';
-import { Options } from './options';
 
 export type OptionsFn = (options: Options) => Options;
 

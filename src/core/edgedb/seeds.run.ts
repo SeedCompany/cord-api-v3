@@ -1,13 +1,12 @@
 import { many, MaybeAsync } from '@seedcompany/common';
 import { BaseContext, Command, runExit } from 'clipanion';
-import { Client, createClient, Executor } from 'edgedb';
+import { Client, createClient, Executor, Options } from 'edgedb';
 import type { QueryArgs } from 'edgedb/dist/ifaces';
 import { glob } from 'glob';
 import fs from 'node:fs/promises';
 import { BehaviorSubject } from 'rxjs';
 import { inspect } from 'util';
 import { ID } from '~/common';
-import { Options } from './options';
 import { OptionsContext, OptionsFn } from './options.context';
 import { e } from './reexports';
 
