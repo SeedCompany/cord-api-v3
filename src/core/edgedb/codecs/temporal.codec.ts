@@ -1,4 +1,5 @@
 import { InvalidArgumentError, LocalDate } from 'edgedb';
+import type { CodecContext } from 'edgedb/dist/codecs/context.js';
 import { DateTimeCodec, LocalDateCodec } from 'edgedb/dist/codecs/datetime.js';
 import { ReadBuffer, WriteBuffer } from 'edgedb/dist/primitives/buffer.js';
 import { DateTime } from 'luxon';
@@ -15,9 +16,9 @@ export class LuxonDateTimeCodec extends DateTimeCodec {
   tsType = LuxonDateTimeCodec.info.ts;
   tsModule = LuxonDateTimeCodec.info.path;
 
-  encode(buf: WriteBuffer, object: unknown) {
+  encode(buf: WriteBuffer, object: unknown, ctx: CodecContext) {
     if (object instanceof Date) {
-      super.encode(buf, object);
+      super.encode(buf, object, ctx);
       return;
     }
     if (!(object instanceof DateTime)) {
@@ -25,11 +26,11 @@ export class LuxonDateTimeCodec extends DateTimeCodec {
         `a DateTime instance was expected, got "${String(object)}"`,
       );
     }
-    super.encode(buf, object.toJSDate());
+    super.encode(buf, object.toJSDate(), ctx);
   }
 
-  decode(buf: ReadBuffer) {
-    const date: Date = super.decode(buf);
+  decode(buf: ReadBuffer, ctx: CodecContext) {
+    const date: Date = super.decode(buf, ctx);
     return DateTime.fromJSDate(date) as any;
   }
 }
@@ -44,9 +45,9 @@ export class LuxonCalendarDateCodec extends LocalDateCodec {
   tsType = LuxonCalendarDateCodec.info.ts;
   tsModule = LuxonCalendarDateCodec.info.path;
 
-  encode(buf: WriteBuffer, object: unknown) {
+  encode(buf: WriteBuffer, object: unknown, ctx: CodecContext) {
     if (object instanceof LocalDate) {
-      super.encode(buf, object);
+      super.encode(buf, object, ctx);
       return;
     }
     if (!(object instanceof CalendarDate)) {
@@ -54,11 +55,15 @@ export class LuxonCalendarDateCodec extends LocalDateCodec {
         `a CalendarDate instance was expected, got "${String(object)}"`,
       );
     }
-    super.encode(buf, new LocalDate(object.year, object.month, object.day));
+    super.encode(
+      buf,
+      new LocalDate(object.year, object.month, object.day),
+      ctx,
+    );
   }
 
-  decode(buf: ReadBuffer): CalendarDate {
-    const date: LocalDate = super.decode(buf);
+  decode(buf: ReadBuffer, ctx: CodecContext): CalendarDate {
+    const date: LocalDate = super.decode(buf, ctx);
     return CalendarDate.fromObject({
       year: date.year,
       month: date.month,
