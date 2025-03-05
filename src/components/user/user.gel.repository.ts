@@ -60,6 +60,16 @@ export class UserGelRepository
     return [
       input.filter.pinned != null &&
         e.op(user.pinned, '=', input.filter.pinned),
+      (input.filter.roles?.length ?? 0) > 0 &&
+        e.op(
+          'exists',
+          e.op(
+            user.roles,
+            'intersect',
+            e.cast(e.Role, e.set(...input.filter.roles!)),
+          ),
+        ),
+      // TODO: title fuzzy search
       // More filters here when needed...
     ];
   }
