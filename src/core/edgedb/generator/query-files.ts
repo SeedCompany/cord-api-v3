@@ -3,13 +3,15 @@ import {
   generateFiles,
   stringifyImports,
 } from '@edgedb/generate/dist/queries.js';
-import { $, adapter, Client } from 'edgedb';
+import { $, Client, systemUtils } from 'edgedb';
+import { readFile, writeFile } from 'fs/promises';
+import { join, relative } from 'node:path/posix';
 import { injectHydrators } from './inject-hydrators';
 import { GeneratorParams } from './util';
 
 export async function generateQueryFiles(params: GeneratorParams) {
-  const srcDir = adapter.path.join(params.root.getPath(), 'src');
-  const files = await adapter.walk(srcDir, {
+  const srcDir = join(params.root.getPath(), 'src');
+  const files = await systemUtils.walk(srcDir, {
     match: [/[^/]\.edgeql$/],
   });
   console.log(`Generating files for following queries:`);
@@ -19,9 +21,9 @@ export async function generateQueryFiles(params: GeneratorParams) {
 const generateFilesForQuery =
   ({ client, root, hydrators }: GeneratorParams) =>
   async (path: string) => {
-    const prettyPath = './' + adapter.path.posix.relative(root.getPath(), path);
+    const prettyPath = './' + relative(root.getPath(), path);
     try {
-      const query = await adapter.readFileUtf8(path);
+      const query = await readFile(path, 'utf8');
       if (!query) return;
 
       const injectedQuery = injectHydrators(query, hydrators);
@@ -33,9 +35,10 @@ const generateFilesForQuery =
         types,
       });
       console.log(`   ${prettyPath}`);
-      await adapter.fs.writeFile(
+      await writeFile(
         path + '.ts',
         headerComment + `${stringifyImports(imports)}\n\n${contents}`,
+        'utf8',
       );
     } catch (err) {
       console.log(`Error in file '${prettyPath}': ${String(err)}`);

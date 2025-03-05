@@ -1,6 +1,7 @@
 import { stripIndent } from 'common-tags';
-import { $, adapter } from 'edgedb';
+import { $ } from 'edgedb';
 import { $ as $$ } from 'execa';
+import { relative } from 'node:path/posix';
 import { Node, SyntaxKind, VariableDeclarationKind } from 'ts-morph';
 import { injectHydrators } from './inject-hydrators';
 import { analyzeQuery } from './query-files';
@@ -77,10 +78,7 @@ export async function generateInlineQueries({
     }
     seen.add(query);
 
-    const path = adapter.path.posix.relative(
-      root.getPath(),
-      call.getSourceFile().getFilePath(),
-    );
+    const path = relative(root.getPath(), call.getSourceFile().getFilePath());
     const lineNumber = call.getStartLineNumber();
     const source = `./${path}:${lineNumber}`;
 

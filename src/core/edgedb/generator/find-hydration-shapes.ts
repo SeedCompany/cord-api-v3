@@ -1,7 +1,7 @@
 import { cleanSplit, mapEntries } from '@seedcompany/common';
-import { adapter } from 'edgedb';
 import { $ as $$ } from 'execa';
 import { readFile } from 'fs/promises';
+import { relative } from 'node:path/posix';
 import { Directory, Node, SyntaxKind } from 'ts-morph';
 import { hydratorsNeeded, injectHydrators } from './inject-hydrators';
 import { GeneratorParams, toFqn } from './util';
@@ -128,7 +128,7 @@ async function findInInlineQueries(root: Directory) {
           return [];
         }
 
-        const path = adapter.path.posix.relative(
+        const path = relative(
           root.getPath(),
           call.getSourceFile().getFilePath(),
         );
