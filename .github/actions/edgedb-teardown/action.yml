@@ -1,0 +1,13 @@
+name: Teardown EdgeDB
+runs:
+  using: composite
+  steps:
+    - name: Delete Branch
+      shell: bash
+      run: |
+        echo "Switching to main"
+        edgedb branch switch main
+        echo "Dropping branch $BRANCH"
+        edgedb branch drop $BRANCH --non-interactive
+      env:
+        BRANCH: github_${{ github.event.number }}_${{ env.GITHUB_RUN_ID }}_${{ env.GITHUB_RUN_ATTEMPT }}_${{ env.GITHUB_JOB }}

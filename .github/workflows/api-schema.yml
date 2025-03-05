@@ -7,6 +7,10 @@ on:
       - synchronize
       - labeled
 
+env:
+  EDGEDB_INSTANCE: ${{ secrets.EDGEDB_INSTANCE }}
+  EDGEDB_SECRET_KEY: ${{ secrets.EDGEDB_SECRET_KEY }}
+
 jobs:
   generate:
     name: Generate
@@ -33,6 +37,10 @@ jobs:
         with:
           name: ${{ matrix.ref }}-gql-schema
           path: schema.graphql
+
+      - name: EdgeDB Teardown
+        uses: ./.github/actions/edgedb-teardown
+        if: always()
 
   graphql-diff:
     name: GraphQL Diff

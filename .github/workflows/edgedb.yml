@@ -2,6 +2,10 @@ name: EdgeDB
 on:
   pull_request:
 
+env:
+  EDGEDB_INSTANCE: ${{ secrets.EDGEDB_INSTANCE }}
+  EDGEDB_SECRET_KEY: ${{ secrets.EDGEDB_SECRET_KEY }}
+
 jobs:
   Clean:
     runs-on: ubuntu-latest
@@ -10,11 +14,8 @@ jobs:
       - name: Node Setup & Yarn Install
         uses: ./.github/actions/setup
 
-      - uses: edgedb/setup-edgedb@v1
-
-      - name: Generate EdgeDB TS files
-        shell: bash
-        run: yarn edgedb:gen
+      - name: EdgeDB Setup
+        uses: ./.github/actions/edgedb-setup
 
       - name: Inject Access Policies
         run: yarn console edgedb ap inject
@@ -26,3 +27,7 @@ jobs:
       - name: Validate seed scripts are error free
         run: yarn edgedb:seed
         shell: bash
+
+      - name: EdgeDB Teardown
+        uses: ./.github/actions/edgedb-teardown
+        if: always()
