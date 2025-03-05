@@ -5,6 +5,7 @@ import { ValueOf } from 'type-fest';
 import { ID, NotFoundException, ServerException, Session } from '~/common';
 import { ResourceMap, ResourceResolver, ResourcesHost } from '~/core/resources';
 import { Privileges } from '../authorization';
+import { LanguageService } from '../language';
 import { PartnerService } from '../partner';
 import {
   SearchableMap,
@@ -38,6 +39,10 @@ export class SearchService {
       ...(await this.partners.readOnePartnerByOrgId(...args)),
       __typename: 'Partner',
     }),
+    LanguageByEth: async (...args) => ({
+      ...(await this.languages.readOneByEthId(...args)),
+      __typename: 'Language',
+    }),
   };
   /* eslint-enable @typescript-eslint/naming-convention */
 
@@ -46,6 +51,7 @@ export class SearchService {
     private readonly resourceResolver: ResourceResolver,
     private readonly privileges: Privileges,
     private readonly partners: PartnerService,
+    private readonly languages: LanguageService,
     private readonly repo: SearchRepository,
   ) {}
 
@@ -70,6 +76,7 @@ export class SearchService {
     const resourceTypes = new Set<keyof ResourceMap>(types);
     // Include dependency types for types that have identifiers in sub-resources.
     types.has('Partner') && resourceTypes.add('Organization');
+    types.has('Language') && resourceTypes.add('EthnologueLanguage');
 
     // Search for nodes based on input, only returning their id and "type"
     // which is based on their first valid search label.
@@ -105,6 +112,13 @@ export class SearchService {
                   ]
                 : []),
             ];
+          }
+          if (result.type === 'EthnologueLanguage') {
+            return {
+              type: 'LanguageByEth',
+              id: result.id,
+              matchedProps: ['ethnologue'],
+            } as const;
           }
 
           // This is a sanity/type check.
