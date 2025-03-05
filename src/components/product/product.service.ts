@@ -4,15 +4,14 @@ import { intersection, sumBy, uniq } from 'lodash';
 import {
   ID,
   InputException,
-  NotFoundException,
   ObjectView,
-  ServerException,
   Session,
   UnsecuredDto,
 } from '~/common';
 import { HandleIdLookup, ILogger, Logger, ResourceResolver } from '~/core';
 import { compareNullable, ifDiff, isSame } from '~/core/database/changes';
 import { Privileges } from '../authorization';
+import { EngagementService } from '../engagement';
 import {
   getTotalVerseEquivalents,
   getTotalVerses,
@@ -45,7 +44,7 @@ import {
   UpdateOtherProduct,
   UpdateBaseProduct as UpdateProduct,
 } from './dto';
-import { HydratedProductRow, ProductRepository } from './product.repository';
+import { ProductRepository } from './product.repository';
 
 @Injectable()
 export class ProductService {
@@ -53,6 +52,7 @@ export class ProductService {
     private readonly scriptureRefs: ScriptureReferenceService,
     private readonly privileges: Privileges,
     private readonly repo: ProductRepository,
+    private readonly engagementService: EngagementService,
     private readonly resources: ResourceResolver,
     @Logger('product:service') private readonly logger: ILogger,
   ) {}
@@ -64,19 +64,7 @@ export class ProductService {
       | CreateOtherProduct,
     session: Session,
   ): Promise<AnyProduct> {
-    const engagement = await this.repo.getBaseNode(
-      input.engagementId,
-      'Engagement',
-    );
-    if (!engagement) {
-      this.logger.warning(`Could not find engagement`, {
-        id: input.engagementId,
-      });
-      throw new NotFoundException(
-        'Could not find engagement',
-        'product.engagementId',
-      );
-    }
+    await this.engagementService.readOne(input.engagementId, session);
 
     const otherInput: CreateOtherProduct | undefined =
       'title' in input && input.title !== undefined ? input : undefined;
@@ -90,19 +78,10 @@ export class ProductService {
 
     let producibleType: ProducibleType | undefined = undefined;
     if (derivativeInput) {
-      const producible = await this.repo.getBaseNode(
+      const { producible } = await this.repo.findProducible(
         derivativeInput.produces,
-        'Producible',
       );
-      if (!producible) {
-        this.logger.warning(`Could not find producible node`, {
-          id: derivativeInput.produces,
-        });
-        throw new NotFoundException(
-          'Could not find producible node',
-          'product.produces',
-        );
-      }
+
       producibleType = this.resources.resolveTypeByBaseNode(
         producible,
       ) as ProducibleType;
@@ -142,25 +121,41 @@ export class ProductService {
       Number: input.progressTarget ?? 1,
     });
 
-    const id =
+    const created =
       'title' in input && input.title !== undefined
-        ? await this.repo.createOther({ ...input, progressTarget, steps })
-        : await this.repo.create({
-            ...input,
-            progressTarget,
-            steps,
-            totalVerses,
-            totalVerseEquivalents,
-          });
+        ? await this.repo.createOther(
+            { ...input, progressTarget, steps },
+            session,
+          )
+        : 'produces' in input
+        ? await this.repo.createDerivative(
+            {
+              ...input,
+              progressTarget,
+              steps,
+              totalVerses,
+              totalVerseEquivalents,
+            },
+            session,
+          )
+        : await this.repo.createDirect(
+            {
+              ...input,
+              progressTarget,
+              steps,
+              totalVerses,
+              totalVerseEquivalents,
+            },
+            session,
+          );
 
-    this.logger.debug(`product created`, { id });
-    const created = await this.readOne(id, session);
+    const securedCreated = this.secure(created, session);
 
     this.privileges
-      .for(session, resolveProductType(created), created)
+      .for(session, resolveProductType(securedCreated), securedCreated)
       .verifyCan('create');
 
-    return created;
+    return securedCreated;
   }
 
   @HandleIdLookup([
@@ -173,99 +168,16 @@ export class ProductService {
     session: Session,
     _view?: ObjectView,
   ): Promise<AnyProduct> {
-    const dto = await this.readOneUnsecured(id, session);
+    const dto = await this.repo.readOneUnsecured(id, session);
     return this.secure(dto, session);
-  }
-
-  async readOneUnsecured(
-    id: ID,
-    session: Session,
-  ): Promise<UnsecuredDto<AnyProduct>> {
-    const rows = await this.readManyUnsecured([id], session);
-    const result = rows[0];
-    if (!result) {
-      throw new NotFoundException('Could not find product');
-    }
-    return result;
   }
 
   async readMany(
     ids: readonly ID[],
     session: Session,
   ): Promise<readonly AnyProduct[]> {
-    const rows = await this.readManyUnsecured(ids, session);
+    const rows = await this.repo.readManyUnsecured(ids, session);
     return rows.map((row) => this.secure(row, session));
-  }
-
-  async readManyUnsecured(
-    ids: readonly ID[],
-    session: Session,
-  ): Promise<ReadonlyArray<UnsecuredDto<AnyProduct>>> {
-    const rows = await this.repo.readMany(ids, session);
-    return rows.map((row) => this.mapDbRowToDto(row));
-  }
-
-  private mapDbRowToDto(row: HydratedProductRow): UnsecuredDto<AnyProduct> {
-    const {
-      isOverriding,
-      produces: rawProducible,
-      title,
-      description,
-      ...rawProps
-    } = row;
-    const props = {
-      ...rawProps,
-      mediums: rawProps.mediums ?? [],
-      purposes: rawProps.purposes ?? [],
-      steps: rawProps.steps ?? [],
-      scriptureReferences: this.scriptureRefs.parseList(
-        rawProps.scriptureReferences,
-      ),
-    };
-
-    if (title) {
-      const dto: UnsecuredDto<OtherProduct> = {
-        ...props,
-        title,
-        description,
-        __typename: 'OtherProduct',
-      };
-      return dto;
-    }
-
-    if (!rawProducible) {
-      const dto: UnsecuredDto<DirectScriptureProduct> = {
-        ...props,
-        totalVerses: props.totalVerses ?? 0,
-        totalVerseEquivalents: props.totalVerseEquivalents ?? 0,
-        __typename: 'DirectScriptureProduct',
-      };
-      return dto;
-    }
-
-    const producible = {
-      ...rawProducible,
-      scriptureReferences: this.scriptureRefs.parseList(
-        rawProducible.scriptureReferences,
-      ),
-    };
-
-    const producibleType = this.resources.resolveType(
-      producible.__typename,
-    ) as ProducibleType;
-
-    const dto: UnsecuredDto<DerivativeScriptureProduct> = {
-      ...props,
-      produces: { ...producible, __typename: producibleType },
-      scriptureReferences: !isOverriding
-        ? producible.scriptureReferences
-        : props.scriptureReferences,
-      scriptureReferencesOverride: !isOverriding
-        ? null
-        : props.scriptureReferences,
-      __typename: 'DerivativeScriptureProduct',
-    };
-    return dto;
   }
 
   secure(dto: UnsecuredDto<AnyProduct>, session: Session): AnyProduct {
@@ -278,36 +190,26 @@ export class ProductService {
     currentProduct?: UnsecuredDto<DirectScriptureProduct>,
   ): Promise<DirectScriptureProduct> {
     currentProduct ??= asProductType(DirectScriptureProduct)(
-      await this.readOneUnsecured(input.id, session),
+      await this.repo.readOneUnsecured(input.id, session),
     );
     const changes = this.getDirectProductChanges(input, currentProduct);
 
     this.privileges
       .for(session, DirectScriptureProduct, currentProduct)
       .verifyChanges(changes, { pathPrefix: 'product' });
-    const { scriptureReferences, unspecifiedScripture, ...simpleChanges } =
-      changes;
 
-    await this.scriptureRefs.update(input.id, scriptureReferences);
-
-    // update unspecifiedScripture if it's defined
-    if (unspecifiedScripture !== undefined) {
-      await this.repo.updateUnspecifiedScripture(
-        input.id,
-        unspecifiedScripture,
-      );
-    }
-
+    //TODO - perhaps move this into the repo?
     await this.mergeCompletionDescription(changes, currentProduct);
 
-    const productUpdatedScriptureReferences = asProductType(
-      DirectScriptureProduct,
-    )(await this.readOne(input.id, session));
-
-    return await this.repo.updateProperties(
-      productUpdatedScriptureReferences,
-      simpleChanges,
+    const updated = await this.repo.updateDirectProperties(
+      {
+        id: currentProduct.id,
+        ...changes,
+      },
+      session,
     );
+
+    return asProductType(DirectScriptureProduct)(this.secure(updated, session));
   }
 
   private getDirectProductChanges(
@@ -358,7 +260,7 @@ export class ProductService {
     currentProduct?: UnsecuredDto<DerivativeScriptureProduct>,
   ): Promise<DerivativeScriptureProduct> {
     currentProduct ??= asProductType(DerivativeScriptureProduct)(
-      await this.readOneUnsecured(input.id, session),
+      await this.repo.readOneUnsecured(input.id, session),
     );
 
     const changes = this.getDerivativeProductChanges(input, currentProduct);
@@ -366,37 +268,19 @@ export class ProductService {
       .for(session, DerivativeScriptureProduct, currentProduct)
       .verifyChanges(changes, { pathPrefix: 'product' });
 
-    const { produces, scriptureReferencesOverride, ...simpleChanges } = changes;
-
-    if (produces) {
-      const producible = await this.repo.findProducible(produces);
-
-      if (!producible) {
-        this.logger.warning(`Could not find producible node`, {
-          id: produces,
-        });
-        throw new NotFoundException(
-          'Could not find producible node',
-          'product.produces',
-        );
-      }
-      await this.repo.updateProducible(input, produces);
-    }
-
+    //TODO - perhaps move this into the repo?
     await this.mergeCompletionDescription(changes, currentProduct);
 
-    // update the scripture references (override)
-    await this.scriptureRefs.update(input.id, scriptureReferencesOverride, {
-      isOverriding: true,
-    });
+    const updated = await this.repo.updateDerivativeProperties(
+      {
+        id: currentProduct.id,
+        ...changes,
+      },
+      session,
+    );
 
-    const productUpdatedScriptureReferences = asProductType(
-      DerivativeScriptureProduct,
-    )(await this.readOne(input.id, session));
-
-    return await this.repo.updateDerivativeProperties(
-      productUpdatedScriptureReferences,
-      simpleChanges,
+    return asProductType(DerivativeScriptureProduct)(
+      this.secure(updated, session),
     );
   }
 
@@ -446,8 +330,11 @@ export class ProductService {
     return changes;
   }
 
-  async updateOther(input: UpdateOtherProduct, session: Session) {
-    const currentProduct = await this.readOneUnsecured(input.id, session);
+  async updateOther(
+    input: UpdateOtherProduct,
+    session: Session,
+  ): Promise<OtherProduct> {
+    const currentProduct = await this.repo.readOneUnsecured(input.id, session);
     if (!currentProduct.title) {
       throw new InputException('Product given is not an OtherProduct');
     }
@@ -468,10 +355,12 @@ export class ProductService {
 
     await this.mergeCompletionDescription(changes, currentProduct);
 
-    const currentSecured = asProductType(OtherProduct)(
-      this.secure(currentProduct, session),
+    const updated = await this.repo.updateOther(
+      { id: currentProduct.id, ...changes },
+      session,
     );
-    return await this.repo.updateOther(currentSecured, changes);
+
+    return asProductType(OtherProduct)(this.secure(updated, session));
   }
 
   /**
@@ -559,12 +448,7 @@ export class ProductService {
 
     this.privileges.for(session, Product, object).verifyCan('delete');
 
-    try {
-      await this.repo.deleteNode(object);
-    } catch (exception) {
-      this.logger.error('Failed to delete', { id, exception });
-      throw new ServerException('Failed to delete', exception);
-    }
+    await this.repo.delete(object);
   }
 
   async list(
@@ -572,12 +456,10 @@ export class ProductService {
     session: Session,
   ): Promise<ProductListOutput> {
     // all roles can list, so no need to check canList for now
-    const results = await this.repo.list(input, session);
+    const { items, ...results } = await this.repo.list(input, session);
     return {
       ...results,
-      items: results.items.map((row) =>
-        this.secure(this.mapDbRowToDto(row), session),
-      ),
+      items: items.map((row) => this.secure(row, session)),
     };
   }
 
