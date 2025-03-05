@@ -49,4 +49,10 @@ export class LanguageGelRepository
     const query = e.op('exists', lang.firstScriptureEngagement);
     return await this.db.run(query);
   }
+
+  async readOneByEth(ethnologueId: ID) {
+    const ethnologue = e.cast(e.Ethnologue.Language, e.uuid(ethnologueId));
+    const query = e.select(ethnologue.language, this.hydrate);
+    return await this.db.run(query);
+  }
 }
