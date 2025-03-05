@@ -1257,17 +1257,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@edgedb/generate@github:CarsonF/edgedb-js#workspace=@edgedb/generate&head=temp-host":
-  version: 0.5.5
-  resolution: "@edgedb/generate@https://github.com/CarsonF/edgedb-js.git#workspace=%40edgedb%2Fgenerate&commit=4c238572cae9762323c5ed359f399f6c76c3d2e5"
+"@edgedb/generate@npm:@gel/generate@^0.6.2":
+  version: 0.6.2
+  resolution: "@gel/generate@npm:0.6.2"
   dependencies:
     "@iarna/toml": "npm:^2.2.5"
     debug: "npm:^4.3.4"
   peerDependencies:
-    edgedb: ^1.5.10
+    gel: ^2.0.1
   bin:
     generate: dist/cli.js
-  checksum: 10c0/b6527c8d92b53be49c4d859b2267224f52651eaf53fed5120a3954c6f1b82b6b1cb8afc4e1d99ee936f02be914d944ca69e39d057d618d456090e19d9756c49a
+  checksum: 10c0/a4768fb30ad6a319b461ba70f72045e771e8d4f58d07ef1d5b2920c8f12a33c9ab6d6b3ade8613acafa4a220daa7426b27e1d0549e7875d9116a4d44e3022b80
   languageName: node
   linkType: hard
 
@@ -2796,6 +2796,13 @@ __metadata:
   bin:
     pp: lib/cli.js
   checksum: 10c0/c130cf5f478b37a5439daae69dd149ca5f20f931f81f6462fb842a92143b82850c625624f07e1ba9a39951bb58ba3cb3e008e84fdbde5ff6f7b74fc0de374c4c
+  languageName: node
+  linkType: hard
+
+"@petamoriken/float16@npm:^3.8.7":
+  version: 3.9.1
+  resolution: "@petamoriken/float16@npm:3.9.1"
+  checksum: 10c0/e67ad03b18b7706747be7a5e73fa7ed7b67a69a45bb5a9a200a2e643c915352eac7b38ac6b9afb12883a854ce55f7bd008de066375f3ada7adc6e746b83cf3be
   languageName: node
   linkType: hard
 
@@ -5640,7 +5647,7 @@ __metadata:
   dependencies:
     "@aws-sdk/client-s3": "npm:^3.440.0"
     "@aws-sdk/s3-request-presigner": "npm:^3.440.0"
-    "@edgedb/generate": "github:CarsonF/edgedb-js#workspace=@edgedb/generate&head=temp-host"
+    "@edgedb/generate": "npm:@gel/generate@^0.6.2"
     "@faker-js/faker": "npm:^8.2.0"
     "@fastify/compress": "npm:^8.0.1"
     "@fastify/cookie": "npm:^11.0.1"
@@ -5694,7 +5701,7 @@ __metadata:
     debugger-is-attached: "npm:^1.2.0"
     dotenv: "npm:^16.3.1"
     dotenv-expand: "npm:^10.0.0"
-    edgedb: "npm:^1.6.0-canary.20240827T111834"
+    edgedb: "npm:gel@^2.0.1"
     eslint: "npm:^8.52.0"
     eslint-plugin-no-only-tests: "npm:^3.1.0"
     eslint-plugin-typescript-sort-keys: "npm:^2.3.0"
@@ -6297,18 +6304,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"edgedb@npm:^1.6.0-canary.20240827T111834":
-  version: 1.6.0-canary.20240827T111834
-  resolution: "edgedb@npm:1.6.0-canary.20240827T111834"
+"edgedb@npm:gel@^2.0.1":
+  version: 2.0.1
+  resolution: "gel@npm:2.0.1"
   dependencies:
+    "@petamoriken/float16": "npm:^3.8.7"
     debug: "npm:^4.3.4"
     env-paths: "npm:^3.0.0"
     semver: "npm:^7.6.2"
     shell-quote: "npm:^1.8.1"
     which: "npm:^4.0.0"
   bin:
-    edgedb: dist/cli.mjs
-  checksum: 10c0/9bdf05484f2bbffc398bd6ca75628b056baaa51114bbfecc72382fd593619510ae319adfe15879138a90f64ff52ab9b159a87bed0472e05046a0ab19493f257e
+    gel: dist/cli.mjs
+  checksum: 10c0/9b57281cb8895b0cfb101ebb1159abd696c3cb13627476cc65bfcef15b15d6ea589aee7973f7edf362f0cc21e667903f542f4f9849d926b74e141d65e6216897
   languageName: node
   linkType: hard
 
