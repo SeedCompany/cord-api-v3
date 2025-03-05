@@ -18,6 +18,10 @@ export async function generateQueryBuilder({
       updateIgnoreFile: false,
       target: 'ts',
       forceOverwrite: true,
+      future: {
+        polymorphismAsDiscriminatedUnions: true,
+        strictTypeNames: true,
+      },
     },
     client,
     root: root.getPath(),
