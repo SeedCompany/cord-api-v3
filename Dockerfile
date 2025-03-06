@@ -1,6 +1,6 @@
 ARG NODE_VERSION=20
 ARG NODE_IMAGE=public.ecr.aws/docker/library/node:${NODE_VERSION}-slim
-ARG GEL_IMAGE=ghcr.io/edgedb/edgedb:5
+ARG GEL_IMAGE=ghcr.io/geldata/gel:5
 
 FROM ${NODE_IMAGE} AS base-runtime
 
@@ -16,8 +16,8 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Gel CLI for running migrations during deployment
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.edgedb.com | sh -s -- -y --no-modify-path \
-    && mv /root/.local/bin/edgedb /usr/local/bin/edgedb
+RUN curl --proto '=https' --tlsv1.2 -sSf https://www.geldata.com/sh | sh -s -- -y --no-modify-path \
+    && mv /root/.local/bin/gel /usr/local/bin/gel
 
 
 # Apollo Rover CLI
