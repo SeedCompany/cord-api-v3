@@ -2865,15 +2865,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@seedcompany/common@npm:>0.3 <1, @seedcompany/common@npm:>=0.10.0 <1.0.0, @seedcompany/common@npm:>=0.13.1 <1, @seedcompany/common@npm:>=0.3.0 <1.0.0":
-  version: 0.13.2
-  resolution: "@seedcompany/common@npm:0.13.2"
+"@seedcompany/common@npm:>0.3 <1, @seedcompany/common@npm:>=0.10.0 <1.0.0, @seedcompany/common@npm:>=0.16 <1, @seedcompany/common@npm:>=0.3.0 <1.0.0":
+  version: 0.16.0
+  resolution: "@seedcompany/common@npm:0.16.0"
+  dependencies:
+    type-fest: "npm:^4.37.0"
   peerDependencies:
     luxon: ^3.3.0
   peerDependenciesMeta:
     luxon:
       optional: true
-  checksum: 10c0/fae19f1a6147d754d955a44276a0a5801816d1923f495a45126a985e0c7b4ab102359e2413687d9aef3b2833cb08691e4449acaf87b2aee5f50ed74f2127410e
+  checksum: 10c0/d2c5cd34cad8a3e3c79ecf1a189edacf67dc129fbe8eb60f4620b1b5179d42bafb5269edffdfcb7fa530e2e48ed652ebf33945fb955422207a8bc239d855a79f
   languageName: node
   linkType: hard
 
@@ -5668,7 +5670,7 @@ __metadata:
     "@nestjs/testing": "npm:^10.2.7"
     "@patarapolw/prettyprint": "npm:^1.0.3"
     "@seedcompany/cache": "npm:^2.0.0"
-    "@seedcompany/common": "npm:>=0.13.1 <1"
+    "@seedcompany/common": "npm:>=0.16 <1"
     "@seedcompany/data-loader": "npm:^1.0.0"
     "@seedcompany/eslint-plugin": "npm:^3.4.1"
     "@seedcompany/nest": "npm:^1.1.0"
@@ -13362,10 +13364,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"type-fest@npm:^4.15.0, type-fest@npm:^4.26.1":
-  version: 4.26.1
-  resolution: "type-fest@npm:4.26.1"
-  checksum: 10c0/d2719ff8d380befe8a3c61068f37f28d6fa2849fd140c5d2f0f143099e371da6856aad7c97e56b83329d45bfe504afe9fd936a7cff600cc0d46aa9ffb008d6c6
+"type-fest@npm:^4.15.0, type-fest@npm:^4.26.1, type-fest@npm:^4.37.0":
+  version: 4.37.0
+  resolution: "type-fest@npm:4.37.0"
+  checksum: 10c0/5bad189f66fbe3431e5d36befa08cab6010e56be68b7467530b7ef94c3cf81ef775a8ac3047c8bbda4dd3159929285870357498d7bc1df062714f9c5c3a84926
   languageName: node
   linkType: hard
 

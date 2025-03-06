@@ -1,6 +1,8 @@
 import { Injectable, OnModuleDestroy } from '@nestjs/common';
+import { patchMethod } from '@seedcompany/common';
 import { AsyncLocalStorage } from 'async_hooks';
 import { type Client, Options } from 'edgedb';
+import { BaseRawConnection as Connection } from 'edgedb/dist/baseConn.js';
 import {
   BehaviorSubject,
   combineLatest,
@@ -8,6 +10,7 @@ import {
   map,
   Observable,
 } from 'rxjs';
+import { lazyRef } from '~/common/lazy-ref';
 
 export type OptionsFn = (options: Options) => Options;
 
@@ -100,14 +103,16 @@ export class OptionsContext
 }
 
 /**
- * Returns "an object" that calls the given function every time
- * it's referenced to get the actual object.
+ * We need to explicitly unwrap the lazy proxy here.
+ * This is where the options are serialized for sending to the server.
+ * And this process is cached with identity comparison, so the proxy doesn't work.
  */
-const lazyRef = <T extends object>(getter: () => T): T => {
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-  return new Proxy({} as T, {
-    get(target: T, p: string, receiver: unknown) {
-      return Reflect.get(getter(), p, receiver);
-    },
+{
+  const optionsIndex = 4;
+  patchMethod(Connection.prototype as any, '_encodeParseParams', (encode) => {
+    return (...args) => {
+      const options = lazyRef.unlazy(args[optionsIndex]);
+      return encode(...args.toSpliced(optionsIndex, 1, options));
+    };
   });
-};
+}
