@@ -13,7 +13,7 @@ import {
   SensitivityField,
 } from '~/common';
 import { BaseNode as DbBaseNode } from '~/core/database/results';
-import { e } from '~/core/edgedb';
+import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
 import { ScopedRole } from '../../authorization/dto';
 import { DefinedFile } from '../../file/dto';

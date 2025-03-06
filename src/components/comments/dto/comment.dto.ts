@@ -8,7 +8,7 @@ import {
   SecuredProps,
   SecuredRichText,
 } from '~/common';
-import { e } from '~/core/edgedb';
+import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
 
 @RegisterResource({ db: e.Comments.Comment })

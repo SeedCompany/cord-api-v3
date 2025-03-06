@@ -14,18 +14,18 @@ describe('ResourcesHost', () => {
     all = host.getEnhancedMap();
   });
 
-  describe('By EdgeDB', () => {
+  describe('By Gel', () => {
     it('FQN', () => {
-      const res = host.getByEdgeDB('default::User');
+      const res = host.getByGel('default::User');
       expect(res).toBeDefined();
       expect(res).toBe(all.User);
     });
     it('Implicit default module', () => {
-      const res = host.getByEdgeDB('User');
+      const res = host.getByGel('User');
       expect(res).toBe(all.User);
     });
     it('GQL Name different from FQN', () => {
-      const res = host.getByEdgeDB('Ceremony');
+      const res = host.getByGel('Ceremony');
       expect(res).toBe(all.Ceremony);
     });
   });

@@ -3,7 +3,7 @@ import {
   determineRootUser,
   RootUserAlias,
 } from '~/core/config/root-user.config';
-import type { SeedFn } from '~/core/edgedb/seeds.run';
+import type { SeedFn } from '~/core/gel/seeds.run';
 
 export default (async function ({ e, db, print }) {
   const env = new EnvironmentService();

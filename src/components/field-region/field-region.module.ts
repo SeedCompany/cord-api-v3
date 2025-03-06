@@ -3,7 +3,7 @@ import { splitDb } from '~/core';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { FieldZoneModule } from '../field-zone/field-zone.module';
 import { UserModule } from '../user/user.module';
-import { FieldRegionEdgeDBRepository } from './field-region.edgedb.repository';
+import { FieldRegionGelRepository } from './field-region.gel.repository';
 import { FieldRegionLoader } from './field-region.loader';
 import { FieldRegionRepository } from './field-region.repository';
 import { FieldRegionResolver } from './field-region.resolver';
@@ -18,7 +18,7 @@ import { FieldRegionService } from './field-region.service';
   providers: [
     FieldRegionResolver,
     FieldRegionService,
-    splitDb(FieldRegionRepository, FieldRegionEdgeDBRepository),
+    splitDb(FieldRegionRepository, FieldRegionGelRepository),
     FieldRegionLoader,
   ],
   exports: [FieldRegionService],

@@ -23,7 +23,7 @@ import {
   PnpProblemSeverity as Severity,
   StoredProblem,
 } from './extraction-result.dto';
-import { PnpExtractionResultRepository } from './pnp-extraction-result.edgedb.repository';
+import { PnpExtractionResultRepository } from './pnp-extraction-result.gel.repository';
 import { PnpExtractionResultLoadResult } from './pnp-extraction-result.loader';
 
 @Injectable()

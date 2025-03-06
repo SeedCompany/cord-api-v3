@@ -1,6 +1,6 @@
 ARG NODE_VERSION=20
 ARG NODE_IMAGE=public.ecr.aws/docker/library/node:${NODE_VERSION}-slim
-ARG EDGEDB_IMAGE=ghcr.io/edgedb/edgedb:5
+ARG GEL_IMAGE=ghcr.io/edgedb/edgedb:5
 
 FROM ${NODE_IMAGE} AS base-runtime
 
@@ -15,7 +15,7 @@ RUN apt-get update \
     && apt-get clean -q -y \
     && rm -rf /var/lib/apt/lists/*
 
-# Install EdgeDB CLI for running migrations during deployment
+# Install Gel CLI for running migrations during deployment
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.edgedb.com | sh -s -- -y --no-modify-path \
     && mv /root/.local/bin/edgedb /usr/local/bin/edgedb
 
@@ -29,7 +29,7 @@ RUN curl -sSL https://graphql-hive.com/install.sh | sh
 # Enable yarn via corepack
 RUN corepack enable
 
-FROM ${EDGEDB_IMAGE} AS builder
+FROM ${GEL_IMAGE} AS builder
 
 # region Install NodeJS
 ARG NODE_VERSION
@@ -80,16 +80,16 @@ RUN yarn install --immutable
 COPY ./dbschema /dbschema
 COPY . .
 
-# region Generate EdgeDB TS/JS files
+# region Generate Gel TS/JS files
 RUN <<EOF
 set -e
 
 chown -R edgedb:edgedb /dbschema src
 
-# Hook `yarn edgedb:gen` into edgedb bootstrap.
+# Hook `yarn gel:gen` into gel bootstrap.
 # This allows it to be ran in parallel to the db server running without a daemon
 mkdir -p /edgedb-bootstrap-late.d
-printf "#!/usr/bin/env bash\ncd /source \nyarn edgedb:gen" > /edgedb-bootstrap-late.d/01-generate-js.sh
+printf "#!/usr/bin/env bash\ncd /source \nyarn gel:gen" > /edgedb-bootstrap-late.d/01-generate-js.sh
 chmod +x /edgedb-bootstrap-late.d/01-generate-js.sh
 
 # Bootstrap the db to apply migrations and then generate the TS/JS from that.

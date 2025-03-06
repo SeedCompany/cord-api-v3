@@ -12,7 +12,7 @@ import {
   SensitivityField,
 } from '~/common';
 import { BaseNode } from '~/core/database/results';
-import { e } from '~/core/edgedb';
+import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
 import { ChangesetAware } from '../../changeset/dto';
 import { DefinedFile } from '../../file/dto';

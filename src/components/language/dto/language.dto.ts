@@ -25,7 +25,7 @@ import {
   UnsecuredDto,
 } from '~/common';
 import { SetChangeType } from '~/core/database/changes';
-import { e } from '~/core/edgedb';
+import { e } from '~/core/gel';
 import { LinkTo, RegisterResource } from '~/core/resources';
 import { Commentable } from '../../comments/dto';
 import { Location } from '../../location/dto';

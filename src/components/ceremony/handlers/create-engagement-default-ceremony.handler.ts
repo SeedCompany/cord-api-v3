@@ -25,7 +25,7 @@ export class CreateEngagementDefaultCeremonyHandler
           ? CeremonyType.Dedication
           : CeremonyType.Certification,
     };
-    if (this.config.databaseEngine === 'edgedb') {
+    if (this.config.databaseEngine === 'gel') {
       return;
     }
     const ceremonyId = await this.ceremonies.create(input);

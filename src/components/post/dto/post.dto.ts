@@ -9,7 +9,7 @@ import {
   SecuredString,
 } from '~/common';
 import { BaseNode } from '~/core/database/results';
-import { e } from '~/core/edgedb';
+import { e } from '~/core/gel';
 import { LinkTo, RegisterResource } from '~/core/resources';
 import { PostType } from './post-type.enum';
 import { PostShareability } from './shareability.dto';

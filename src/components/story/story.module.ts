@@ -2,7 +2,7 @@ import { forwardRef, Module } from '@nestjs/common';
 import { splitDb } from '~/core';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { ScriptureModule } from '../scripture';
-import { StoryEdgeDBRepository } from './story.edgedb.repository';
+import { StoryGelRepository } from './story.gel.repository';
 import { StoryLoader } from './story.loader';
 import { StoryRepository } from './story.repository';
 import { StoryResolver } from './story.resolver';
@@ -13,7 +13,7 @@ import { StoryService } from './story.service';
   providers: [
     StoryResolver,
     StoryService,
-    splitDb(StoryRepository, StoryEdgeDBRepository),
+    splitDb(StoryRepository, StoryGelRepository),
     StoryLoader,
   ],
   exports: [StoryService],

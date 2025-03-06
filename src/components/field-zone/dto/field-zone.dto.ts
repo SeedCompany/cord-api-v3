@@ -9,7 +9,7 @@ import {
   SecuredProps,
   SecuredString,
 } from '~/common';
-import { e } from '~/core/edgedb';
+import { e } from '~/core/gel';
 import { LinkTo, RegisterResource } from '~/core/resources';
 
 @RegisterResource({ db: e.FieldZone })

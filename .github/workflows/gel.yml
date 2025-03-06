@@ -1,0 +1,28 @@
+name: Gel
+on:
+  pull_request:
+
+jobs:
+  Clean:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Node Setup & Yarn Install
+        uses: ./.github/actions/setup
+
+      - uses: geldata/setup-gel@v1
+
+      - name: Generate Gel TS files
+        shell: bash
+        run: yarn gel:gen
+
+      - name: Inject Access Policies
+        run: yarn console gel ap inject
+
+      - name: Schema Migrations In Sync
+        run: edgedb migration status
+        if: github.event.pull_request.draft == false
+
+      - name: Validate seed scripts are error free
+        run: yarn gel:seed
+        shell: bash

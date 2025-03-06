@@ -1,0 +1,11 @@
+name: Setup Gel
+description: 'Setup Gel server, migrate schema, generate TS files'
+runs:
+  using: composite
+  steps:
+    - name: Setup Gel
+      uses: geldata/setup-gel@v1
+
+    - name: Generate Gel TS files
+      shell: bash
+      run: yarn gel:gen

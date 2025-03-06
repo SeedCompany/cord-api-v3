@@ -11,7 +11,7 @@ import {
   SetUnsecuredType,
   UnsecuredDto,
 } from '~/common';
-import { e } from '~/core/edgedb';
+import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
 import { SecuredUser, User } from '../../../user/dto';
 

@@ -2,7 +2,7 @@ import { EventsHandler } from '~/core';
 import { PeriodicReportUploadedEvent } from '../../periodic-report/events';
 import { ProductStep } from '../../product/dto';
 import { PnpProductSyncService } from '../../product/pnp-product-sync.service';
-import { PnpExtractionResultRepository } from './pnp-extraction-result.edgedb.repository';
+import { PnpExtractionResultRepository } from './pnp-extraction-result.gel.repository';
 
 @EventsHandler([PeriodicReportUploadedEvent, -1])
 export class SaveProgressExtractionResultHandler {

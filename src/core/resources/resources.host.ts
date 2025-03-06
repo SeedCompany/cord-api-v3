@@ -11,7 +11,7 @@ import {
   ResourceShape,
   ServerException,
 } from '~/common';
-import { e } from '../edgedb/reexports';
+import { e } from '../gel/reexports';
 import { ResourceMap } from './map';
 import { __privateDontUseThis } from './resource-map-holder';
 import {
@@ -71,7 +71,7 @@ export class ResourcesHost {
     name: Name,
   ): EnhancedResource<ResourceStaticFromName<ResourceName<Name>>> {
     if (name.includes('::')) {
-      return this.getByEdgeDB(name) as any;
+      return this.getByGel(name) as any;
     }
     const map = this.getEnhancedMap();
     const resource = map[name as keyof ResourceMap];
@@ -87,7 +87,7 @@ export class ResourcesHost {
     return this.getByName(name as any);
   }
 
-  getByEdgeDB<Name extends ResourceNameLike>(
+  getByGel<Name extends ResourceNameLike>(
     name: Name,
   ): EnhancedResource<
     string extends Name
@@ -106,7 +106,7 @@ export class ResourcesHost {
       return resByName as any;
     }
     throw new ServerException(
-      `Unable to determine resource from ResourceMap for EdgeDB FQN: ${name}`,
+      `Unable to determine resource from ResourceMap for Gel FQN: ${name}`,
     );
   }
 

@@ -1,7 +1,7 @@
 import { DiscoveryService } from '@golevelup/nestjs-discovery';
 import { forwardRef, Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { mapEntries, Nil } from '@seedcompany/common';
-import Event from 'edgedb/dist/primitives/event.js';
+import Event from 'gel/dist/primitives/event.js';
 import {
   ID,
   ResourceShape,

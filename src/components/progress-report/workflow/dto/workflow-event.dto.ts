@@ -10,7 +10,7 @@ import {
   SecuredRichTextNullable,
   SetUnsecuredType,
 } from '~/common';
-import { e } from '~/core/edgedb';
+import { e } from '~/core/gel';
 import { LinkTo, RegisterResource } from '~/core/resources';
 import { ProgressReportStatus } from '../../dto';
 import { InternalTransition } from '../transitions';

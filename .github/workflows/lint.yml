@@ -15,8 +15,8 @@ jobs:
       - name: Node Setup & Yarn Install
         uses: ./.github/actions/setup
 
-      - name: EdgeDB Setup
-        uses: ./.github/actions/edgedb-setup
+      - name: Gel Setup
+        uses: ./.github/actions/gel-setup
 
       - name: Check for no duplicate dependencies
         run: yarn dedupe --check

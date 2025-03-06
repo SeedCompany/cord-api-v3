@@ -118,7 +118,7 @@ const namingConvention = [
     filter: '__typename',
     format: null,
   },
-  // allow exceptions for edgedb query builder
+  // allow exceptions for gel query builder
   {
     selector: 'objectLiteralProperty',
     filter: 'filter_single',
@@ -201,7 +201,7 @@ const config = {
       },
     },
     {
-      files: './src/core/edgedb/generator/*.ts',
+      files: './src/core/gel/generator/*.ts',
       rules: {
         // Scripts can use the console for logging
         'no-console': 'off',

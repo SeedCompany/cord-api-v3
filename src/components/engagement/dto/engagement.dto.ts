@@ -24,7 +24,7 @@ import {
   UnsecuredDto,
 } from '~/common';
 import { BaseNode } from '~/core/database/results';
-import { e } from '~/core/edgedb';
+import { e } from '~/core/gel';
 import { LinkTo, RegisterResource } from '~/core/resources';
 import { ChangesetAware } from '../../changeset/dto';
 import { Commentable } from '../../comments/dto';

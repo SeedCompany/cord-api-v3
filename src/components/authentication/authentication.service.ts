@@ -18,8 +18,8 @@ import {
 } from '~/common';
 import { sessionFromContext } from '~/common/session';
 import { ConfigService, ILogger, Logger } from '~/core';
-import { disableAccessPolicies, EdgeDB } from '~/core/edgedb';
 import { ForgotPassword } from '~/core/email/templates';
+import { disableAccessPolicies, Gel } from '~/core/gel';
 import { Privileges } from '../authorization';
 import { rolesForScope, withoutScope } from '../authorization/dto';
 import { AssignableRoles } from '../authorization/dto/assignable-roles';
@@ -42,7 +42,7 @@ export class AuthenticationService {
     private readonly privileges: Privileges,
     @Logger('authentication:service') private readonly logger: ILogger,
     private readonly repo: AuthenticationRepository,
-    private readonly edgedb: EdgeDB,
+    private readonly gel: Gel,
     private readonly agents: SystemAgentRepository,
     private readonly moduleRef: ModuleRef,
   ) {}
@@ -67,7 +67,7 @@ export class AuthenticationService {
     try {
       const userMod = await import('../user');
       const users = this.moduleRef.get(userMod.UserService, { strict: false });
-      userId = await this.edgedb.usingOptions(
+      userId = await this.gel.usingOptions(
         disableAccessPolicies,
         async () => await users.create(input, session),
       );

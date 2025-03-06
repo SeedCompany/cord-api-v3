@@ -4,7 +4,7 @@ import { AbstractClass, Simplify } from 'type-fest';
 import type { UnwrapSecured } from '~/common';
 import type { RawChangeOf } from '~/core/database/changes';
 import type { QueryFragment } from '~/core/database/query-augmentation/apply';
-import { $, e } from '~/core/edgedb';
+import { $, e } from '~/core/gel';
 import type { Notification } from './dto';
 
 export const NotificationStrategy = createMetadataDecorator({
@@ -31,7 +31,7 @@ export abstract class INotificationStrategy<
     return (query: Query) => query.unwind([], 'recipient').return('recipient');
   }
 
-  recipientsForEdgeDB(
+  recipientsForGel(
     // eslint-disable-next-line @seedcompany/no-unused-vars
     input: TInput,
   ): $.Expression<$.TypeSet<typeof e.User.__element__>> {
@@ -55,7 +55,7 @@ export interface INotificationStrategy<
   TNotification extends Notification,
   TInput = InputOf<TNotification>,
 > {
-  insertForEdgeDB?(
+  insertForGel?(
     input: TInput,
   ): $.Expression<
     $.TypeSet<
@@ -64,5 +64,5 @@ export interface INotificationStrategy<
     >
   >;
 
-  hydrateExtraForEdgeDB?(): Record<string, any>;
+  hydrateExtraForGel?(): Record<string, any>;
 }

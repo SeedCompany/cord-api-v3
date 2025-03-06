@@ -22,7 +22,7 @@ import { RoleCondition } from './role.condition';
  * This is a hot path for us, since our policies are often defined by roles,
  * and multiple policies declare the same conditions.
  * So this helps merge those same conditions across all policies into a single condition, better.
- * Which is an optimization for EdgeDB Access Policies.
+ * Which is an optimization for Gel Access Policies.
  */
 @Optimizer.register()
 export class RoleAndExpUnionOptimizer implements Optimizer {

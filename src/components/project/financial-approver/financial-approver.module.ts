@@ -8,7 +8,7 @@ import { FinancialApproverResolver } from './financial-approver.resolver';
   providers: [
     FinancialApproverResolver,
     splitDb2(FinancialApproverRepository, {
-      edge: FinancialApproverRepository,
+      gel: FinancialApproverRepository,
       neo4j: FinancialApproverNeo4jRepository,
     }),
   ],

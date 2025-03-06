@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { ID, Session } from '~/common';
-import { e, edgeql, RepoFor } from '~/core/edgedb';
+import { e, edgeql, RepoFor } from '~/core/gel';
 import { ProjectStep } from '../dto';
-import { projectRefShape } from '../project.edgedb.repository';
+import { projectRefShape } from '../project.gel.repository';
 import { ExecuteProjectTransitionInput, ProjectWorkflowEvent } from './dto';
 
 @Injectable()
