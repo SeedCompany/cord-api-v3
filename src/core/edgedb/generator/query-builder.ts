@@ -77,24 +77,37 @@ function changeImplicitIDType(qbDir: Directory) {
 }
 
 function updateCastMapsForOurCustomScalars(qbDir: Directory) {
-  const file = qbDir.addSourceFileAtPath('castMaps.ts');
+  const castMaps = qbDir.addSourceFileAtPath('castMaps.ts');
   addCustomScalarImports(
-    file,
+    castMaps,
     [customScalars.get('DateTime')!, customScalars.get('CalendarDate')!],
     1,
     false,
   );
-  const updated = file
-    .getText()
-    // Update Luxon instances to point to correct scalar UUIDs
-    .replace(
-      '(type instanceof Date)',
-      '(type instanceof Date || (type instanceof DateTime && !(type instanceof CalendarDate)))',
-    )
-    .replace(
-      '(type instanceof edgedb.LocalDate)',
-      '(type instanceof edgedb.LocalDate || type instanceof CalendarDate)',
-    );
+
+  /**
+   * `std::datetime` is currently ordered before the `cal::local_date` within
+   * {@link import('@gel/generate/dist/genutil.js').scalarToLiteralMapping}.
+   * This mapping generates this function.
+   * We have to adjust the check here,
+   * since our CalendarDate is also an instanceof DateTime.
+   * Also, adding support for casting the default scalar types as well.
+   *
+   * Reordering the mapping is an option as well,
+   * but that comes with other side effects with typing.
+   * Which is the same problem as I commented below.
+   */
+  replaceText(castMaps.getFunctionOrThrow('literalToTypeSet'), (prev) =>
+    prev
+      .replace(
+        '(type instanceof DateTime)',
+        '(type instanceof DateTime || (type instanceof DateTime && !(type instanceof CalendarDate)) || type instanceof Date)',
+      )
+      .replace(
+        '(type instanceof CalendarDate)',
+        '(type instanceof CalendarDate || type instanceof gel.LocalDate)',
+      ),
+  );
   // Attempting to pick the right type based on shape.
   // This doesn't fix any errors, and currently we are unable to distinguish
   // CalendarDate from DateTime based on shape since they are the same.
@@ -104,7 +117,6 @@ function updateCastMapsForOurCustomScalars(qbDir: Directory) {
   //   '  T extends CalendarDate ? scalarWithConstType<_cal.$local_date, T> :\n' +
   //     '  T extends Date | DateTime ? scalarWithConstType<_std.$datetime, T> :\n',
   // )
-  file.replaceWithText(updated);
 }
 
 function updateEdgeQLRenderingForOurCustomScalars(qbDir: Directory) {
