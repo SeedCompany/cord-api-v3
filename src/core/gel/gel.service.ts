@@ -155,8 +155,11 @@ export class Gel {
           return await executor.query(query, args);
         }
       } catch (e) {
-        // Ignore this call in stack trace. This puts the actual query as the first.
-        e.stack = e.stack!.replace(/^\s+at(?: async)? Gel\.run.+$\n/m, '');
+        // Ignore this call in the stack trace. This puts the actual query as the first.
+        e.stack = e.stack!.replaceAll(
+          /^\s+at .+\/(gel|tracing)\.service.+$\n/gm,
+          '',
+        );
 
         // Don't present abstract repositories as the src block in jest reports
         // for DB execution errors.
