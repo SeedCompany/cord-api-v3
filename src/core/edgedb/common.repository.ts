@@ -55,7 +55,10 @@ export class CommonRepository implements PublicOf<Neo4jCommonRepository> {
         labels: [this.resources.getByEdgeDB(node._typeFQN_).dbLabel],
         properties: {
           id: node.id,
-          createdAt: node.createdAt,
+          // Ignore that this could be missing for objects that aren't audited.
+          // This I don't think is really used programmatically,
+          // so it is only here to fulfill the shape.
+          createdAt: node.createdAt!,
         },
       }),
     );
