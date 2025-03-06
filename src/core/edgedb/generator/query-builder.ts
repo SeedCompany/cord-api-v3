@@ -85,6 +85,12 @@ function updateCastMapsForOurCustomScalars(qbDir: Directory) {
     false,
   );
 
+  // Fix a problem with this type alias.
+  // I'm talking with the team about upstreaming this.
+  replaceText(castMaps.getTypeAliasOrThrow('literalToScalarType'), (prev) =>
+    prev.replace('$.BaseType', 'never'),
+  );
+
   /**
    * `std::datetime` is currently ordered before the `cal::local_date` within
    * {@link import('@gel/generate/dist/genutil.js').scalarToLiteralMapping}.
