@@ -2,8 +2,6 @@
 import { Injectable, Optional } from '@nestjs/common';
 import { $, ConstraintViolationError, Executor, GelError } from 'gel';
 import { QueryArgs } from 'gel/dist/ifaces';
-import { dirname, resolve } from 'path';
-import { fileURLToPath } from 'url';
 import { TraceLayer } from '~/common';
 import { retry, RetryOptions } from '~/common/retry';
 import { TracingService } from '~/core/tracing';
@@ -111,15 +109,10 @@ export class Gel {
   run(query: string, args?: QueryArgs): Promise<unknown>;
 
   async run(query: any, args?: any) {
-    const queryName =
-      new Error().stack
-        ?.split('\n')
-        .slice(2)
-        .find((frm) => frm.includes(projectDir) && !frm.includes('/core/gel/'))
-        ?.split(/\s+/)[2]
-        .replaceAll(/(Gel|Repository)/g, '') ?? 'Query';
+    const queryName = getCurrentQueryName();
+    const traceName = queryName ?? 'Query';
 
-    return await this.tracing.capture(queryName, async (segment) => {
+    return await this.tracing.capture(traceName, async (segment) => {
       // Show this segment separately in the service map
       segment.namespace = 'remote';
       // Help ID the segment as being for a database
@@ -199,6 +192,7 @@ const cardinalityToExecutorMethod = {
   Empty: 'query',
 } satisfies Record<`${$.Cardinality}`, keyof Executor>;
 
-const projectDir = resolve(
-  `${dirname(fileURLToPath(import.meta.url))}/../../..`,
-);
+const getCurrentQueryName = DbTraceLayer.makeGetter(({ cls, method }) => {
+  cls = cls.replaceAll(/(Gel|Repository)/g, '');
+  return `${cls}.${method}`;
+});
