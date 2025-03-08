@@ -182,14 +182,7 @@ export const CypherFactory: FactoryProvider<Connection> = {
     conn.query = () => {
       const q = origCreateQuery();
 
-      let stack = new Error('').stack?.split('\n').slice(2);
-      if (stack?.[0]?.startsWith('    at DatabaseService.query')) {
-        stack = stack.slice(1);
-      }
-      if (!stack) {
-        return q;
-      }
-
+      const stack = new Error();
       (q as any).__stacktrace = stack;
       const queryName = getCurrentQueryName();
       (q as any).name = queryName;
@@ -213,7 +206,7 @@ export const CypherFactory: FactoryProvider<Connection> = {
       q.buildQueryObject = function () {
         const result = origBuild();
         Object.defineProperty(result.params, '__stacktrace', {
-          value: stack?.join('\n'),
+          value: stack,
           enumerable: false,
           configurable: true,
           writable: true,
@@ -287,8 +280,12 @@ const wrapQueryRun = (
           // Stack doesn't matter for connection errors, as it's not caused by
           // the specific DB query.
           e.stack = e.stack.slice(0, stackStart).trim();
-        } else if (typeof parameters?.__stacktrace === 'string' && e.stack) {
-          e.stack = e.stack.slice(0, stackStart) + parameters.__stacktrace;
+        } else if (parameters && parameters.__stacktrace instanceof Error) {
+          let stack = parameters.__stacktrace.stack!.split('\n').slice(2);
+          if (stack[0]?.startsWith('    at DatabaseService.query')) {
+            stack = stack.slice(1);
+          }
+          e.stack = e.stack.slice(0, stackStart) + stack.join('\n');
         }
       }
       jestSkipFileInExceptionSource(e, fileURLToPath(import.meta.url));
