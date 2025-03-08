@@ -1,10 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { CachedByArg } from '@seedcompany/common';
 import { Role } from '~/common';
+import { DbTraceLayer } from '~/core/database';
 import { SystemAgent } from './dto';
 
 @Injectable()
 export abstract class SystemAgentRepository {
+  constructor() {
+    DbTraceLayer.applyToInstance(this);
+  }
+
   @CachedByArg()
   async getAnonymous() {
     return await this.upsertAgent('Anonymous');

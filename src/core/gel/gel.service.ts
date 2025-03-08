@@ -4,6 +4,7 @@ import { $, ConstraintViolationError, Executor, GelError } from 'gel';
 import { QueryArgs } from 'gel/dist/ifaces';
 import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
+import { TraceLayer } from '~/common';
 import { retry, RetryOptions } from '~/common/retry';
 import { TracingService } from '~/core/tracing';
 import { jestSkipFileInExceptionSource } from '../exception';
@@ -13,6 +14,8 @@ import { InlineQueryRuntimeMap } from './generated-client/inline-queries';
 import { ApplyOptions, OptionsContext } from './options.context';
 import { Client } from './reexports';
 import { TransactionContext } from './transaction.context';
+
+export const DbTraceLayer = TraceLayer.as('db');
 
 @Injectable()
 export class Gel {

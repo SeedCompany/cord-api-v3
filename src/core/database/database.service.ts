@@ -13,6 +13,7 @@ import {
   MaybeUnsecuredInstance,
   ResourceShape,
   ServerException,
+  TraceLayer,
   UnwrapSecured,
 } from '~/common';
 import { AbortError, retry, RetryOptions } from '~/common/retry';
@@ -33,6 +34,8 @@ import {
   UpdatePropertyOptions,
   variable,
 } from './query';
+
+export const DbTraceLayer = TraceLayer.as('db');
 
 export interface ServerInfo {
   version: [major: number, minor: number, patch: number];

@@ -14,7 +14,7 @@ import {
   ServerException,
 } from '~/common';
 import { ResourceLike, ResourcesHost } from '../resources';
-import { DatabaseService } from './database.service';
+import { DatabaseService, DbTraceLayer } from './database.service';
 import { createUniqueConstraint } from './indexer';
 import { ACTIVE, deleteBaseNode, updateRelationList } from './query';
 import { BaseNode } from './results';
@@ -26,6 +26,10 @@ import { BaseNode } from './results';
 export class CommonRepository {
   @Inject() protected db: DatabaseService;
   @Inject() protected readonly resources: ResourcesHost;
+
+  constructor() {
+    DbTraceLayer.applyToInstance(this);
+  }
 
   async getBaseNode(
     id: ID,

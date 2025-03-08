@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { ID, ServerException, Session } from '~/common';
-import { DatabaseService, OnIndex } from '~/core/database';
+import { DatabaseService, DbTraceLayer, OnIndex } from '~/core/database';
 import {
   ACTIVE,
   matchUserGloballyScopedRoles,
@@ -19,6 +19,7 @@ interface EmailToken {
 }
 
 @Injectable()
+@DbTraceLayer.applyToClass()
 export class AuthenticationRepository {
   constructor(private readonly db: DatabaseService) {}
 

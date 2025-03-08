@@ -2,10 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { ID, Session } from '~/common';
-import { DatabaseService } from '~/core/database';
+import { DatabaseService, DbTraceLayer } from '~/core/database';
 import { requestingUser } from '~/core/database/query';
 
 @Injectable()
+@DbTraceLayer.applyToClass()
 export class PinRepository {
   constructor(private readonly db: DatabaseService) {}
 
