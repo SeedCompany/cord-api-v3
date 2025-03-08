@@ -14,6 +14,7 @@ import { jestSkipFileInExceptionSource } from '../exception';
 import { ILogger, LoggerToken, LogLevel } from '../logger';
 import { AFTER_MESSAGE } from '../logger/formatters';
 import { TracingService } from '../tracing';
+import { DbTraceLayer } from './database.service';
 import {
   createBetterError,
   isNeo4jError,
@@ -190,12 +191,12 @@ export const CypherFactory: FactoryProvider<Connection> = {
       }
 
       (q as any).__stacktrace = stack;
-      const frame = stack?.[0] ? /at (.+) \(/.exec(stack[0]) : undefined;
-      (q as any).name = frame?.[1].replace('Repository', '');
+      const queryName = getCurrentQueryName();
+      (q as any).name = queryName;
 
       const orig = q.run.bind(q);
       q.run = async () => {
-        return await tracing.capture((q as any).name ?? 'Query', (sub) => {
+        return await tracing.capture(queryName ?? 'Query', (sub) => {
           // Show this segment separately in service map
           sub.namespace = 'remote';
           // Help ID the segment as being for a database
@@ -218,7 +219,7 @@ export const CypherFactory: FactoryProvider<Connection> = {
           writable: true,
         });
         Object.defineProperty(result.params, '__origin', {
-          value: (q as any).name,
+          value: queryName,
           enumerable: false,
           configurable: true,
           writable: true,
@@ -319,3 +320,7 @@ const wrapQueryRun = (
     return result;
   };
 };
+
+const getCurrentQueryName = DbTraceLayer.makeGetter(({ cls, method }) => {
+  return `${cls.replace(/Repository$/, '')}.${method}`;
+});
