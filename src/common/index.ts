@@ -39,6 +39,7 @@ export * from './secured-property';
 export * from './secured-date';
 export * from './secured-mapper';
 export * from './sensitivity.enum';
+export * from './trace-layer';
 export * from './util';
 export { Session, LoggedInSession, AnonSession } from './session';
 export * from './types';
