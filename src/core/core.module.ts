@@ -10,10 +10,10 @@ import { ConfigService } from './config/config.service';
 import { CoreController } from './core.controller';
 import { DataLoaderConfig } from './data-loader/data-loader.config';
 import { DatabaseModule } from './database/database.module';
-import { EdgeDBModule } from './edgedb/edgedb.module';
 import { EventsModule } from './events';
 import { ExceptionFilter } from './exception/exception.filter';
 import { ExceptionNormalizer } from './exception/exception.normalizer';
+import { GelModule } from './gel/gel.module';
 import { GraphqlModule } from './graphql';
 import { HttpModule } from './http';
 import { ResourceModule } from './resources/resource.module';
@@ -33,7 +33,7 @@ import { WaitResolver } from './wait.resolver';
     CliModule,
     DatabaseModule,
     DataLoaderModule.registerAsync({ useClass: DataLoaderConfig }),
-    EdgeDBModule,
+    GelModule,
     EmailModule.forRootAsync({ useExisting: ConfigService }),
     GraphqlModule,
     EventsModule,
@@ -60,7 +60,7 @@ import { WaitResolver } from './wait.resolver';
     GraphqlModule,
     DatabaseModule,
     DataLoaderModule,
-    EdgeDBModule,
+    GelModule,
     EmailModule,
     EventsModule,
     ResourceModule,

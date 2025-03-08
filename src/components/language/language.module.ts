@@ -5,10 +5,10 @@ import { EngagementModule } from '../engagement/engagement.module';
 import { LocationModule } from '../location/location.module';
 import { ProjectModule } from '../project/project.module';
 import { EthnologueLanguageService } from './ethnologue-language';
-import { EthnologueLanguageEdgeDBRepository } from './ethnologue-language/ethnologue-language.edgedb.repository';
+import { EthnologueLanguageGelRepository } from './ethnologue-language/ethnologue-language.gel.repository';
 import { EthnologueLanguageRepository } from './ethnologue-language/ethnologue-language.repository';
 import { InternalFirstScriptureResolver } from './internal-first-scripture.resolver';
-import { LanguageEdgeDBRepository } from './language.edgedb.repository';
+import { LanguageGelRepository } from './language.gel.repository';
 import { LanguageLoader } from './language.loader';
 import { LanguageRepository } from './language.repository';
 import { LanguageResolver } from './language.resolver';
@@ -26,8 +26,8 @@ import { RegistryOfDialectToRegistryOfLanguageVarietiesMigration } from './migra
     LanguageResolver,
     LanguageService,
     EthnologueLanguageService,
-    splitDb(EthnologueLanguageRepository, EthnologueLanguageEdgeDBRepository),
-    splitDb(LanguageRepository, LanguageEdgeDBRepository),
+    splitDb(EthnologueLanguageRepository, EthnologueLanguageGelRepository),
+    splitDb(LanguageRepository, LanguageGelRepository),
     LanguageLoader,
     InternalFirstScriptureResolver,
     RegistryOfDialectToRegistryOfLanguageVarietiesMigration,

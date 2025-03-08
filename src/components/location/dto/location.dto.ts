@@ -13,7 +13,7 @@ import {
   SecuredString,
   SecuredStringNullable,
 } from '~/common';
-import { e } from '~/core/edgedb';
+import { e } from '~/core/gel';
 import { LinkTo, RegisterResource } from '~/core/resources';
 import { LocationType } from './location-type.enum';
 

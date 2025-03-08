@@ -19,7 +19,7 @@ import {
 } from '~/common';
 import { SetDbType } from '~/core/database';
 import { SetChangeType } from '~/core/database/changes';
-import { e } from '~/core/edgedb';
+import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
 import { DbScriptureReferences } from '../../scripture';
 import {

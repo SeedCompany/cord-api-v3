@@ -3,8 +3,8 @@ import { ArgumentsHost, Inject, Injectable } from '@nestjs/common';
 import * as Nest from '@nestjs/common';
 import { GqlExecutionContext } from '@nestjs/graphql';
 import { entries, isNotFalsy, simpleSwitch } from '@seedcompany/common';
-import * as Edge from 'edgedb';
-import * as EdgeDBTags from 'edgedb/dist/errors/tags.js';
+import * as Gel from 'gel';
+import * as GelTags from 'gel/dist/errors/tags.js';
 import { GraphQLError } from 'graphql';
 import addIndent from 'indent-string';
 import { lowerCase, uniq } from 'lodash';
@@ -20,8 +20,8 @@ import {
   ServerException,
 } from '~/common';
 import type { ConfigService } from '~/core';
-import { ExclusivityViolationError } from '~/core/edgedb/errors';
 import * as Neo from '../database/errors';
+import { ExclusivityViolationError } from '../gel/errors';
 import { ResourcesHost } from '../resources/resources.host';
 import { isSrcFrame } from './is-src-frame';
 import { normalizeFramePath } from './normalize-frame-path';
@@ -120,13 +120,13 @@ export class ExceptionNormalizer {
 
     // Again, dig deep here to find connection errors.
     // These would be the root problem that we'd want to expose.
-    const edgeError = exs.find(
-      (e): e is Edge.EdgeDBError => e instanceof Edge.EdgeDBError,
+    const gelError = exs.find(
+      (e): e is Gel.GelError => e instanceof Gel.GelError,
     );
     if (
-      edgeError &&
-      (edgeError instanceof Edge.AvailabilityError ||
-        edgeError instanceof Edge.ClientConnectionError)
+      gelError &&
+      (gelError instanceof Gel.AvailabilityError ||
+        gelError instanceof Gel.ClientConnectionError)
     ) {
       return {
         codes: this.errorToCodes(ex),
@@ -163,7 +163,7 @@ export class ExceptionNormalizer {
 
     if (ex instanceof ExclusivityViolationError) {
       ex = DuplicateException.fromDB(ex, gqlContext);
-    } else if (ex instanceof Edge.EdgeDBError || Neo.isNeo4jError(ex)) {
+    } else if (ex instanceof Gel.GelError || Neo.isNeo4jError(ex)) {
       // Mask actual DB error with a nicer user error message.
       let message = 'Failed';
       if (gqlContext) {
@@ -229,7 +229,7 @@ export class ExceptionNormalizer {
     { ex, gql }: NormalizeParams,
     gqlContext: GqlExecutionContext | undefined,
   ) {
-    if (!(ex instanceof Edge.CardinalityViolationError)) {
+    if (!(ex instanceof Gel.CardinalityViolationError)) {
       return ex;
     }
 
@@ -238,9 +238,7 @@ export class ExceptionNormalizer {
       return ex;
     }
     const [_, type, id] = matched;
-    const typeName = this.resources
-      ? this.resources.getByEdgeDB(type).name
-      : type;
+    const typeName = this.resources ? this.resources.getByGel(type).name : type;
 
     if (gql?.path && gql.path.length > 1) {
       // This error was thrown from a field resolver.
@@ -343,11 +341,11 @@ export class ExceptionNormalizer {
     if (type === Nest.HttpException) {
       return (ex as Nest.HttpException).getStatus() < 500 ? 'Client' : 'Server';
     }
-    if (type === Edge.EdgeDBError) {
+    if (type === Gel.GelError) {
       const transient =
-        ex instanceof Edge.EdgeDBError &&
-        (ex.hasTag(EdgeDBTags.SHOULD_RECONNECT) ||
-          ex.hasTag(EdgeDBTags.SHOULD_RETRY));
+        ex instanceof Gel.GelError &&
+        (ex.hasTag(GelTags.SHOULD_RECONNECT) ||
+          ex.hasTag(GelTags.SHOULD_RETRY));
       return [...(transient ? ['Transient'] : []), 'Database', 'Server'];
     }
 

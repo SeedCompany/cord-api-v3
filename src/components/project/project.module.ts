@@ -16,10 +16,7 @@ import * as handlers from './handlers';
 import { InternshipProjectResolver } from './internship-project.resolver';
 import { RenameTranslationToMomentumMigration } from './migrations/rename-translation-to-momentum.migration';
 import { ProjectMemberModule } from './project-member/project-member.module';
-import {
-  ConcreteRepos,
-  ProjectEdgeDBRepository,
-} from './project.edgedb.repository';
+import { ConcreteRepos, ProjectGelRepository } from './project.gel.repository';
 import { ProjectLoader } from './project.loader';
 import { ProjectRepository } from './project.repository';
 import { ProjectResolver } from './project.resolver';
@@ -51,7 +48,7 @@ import { ProjectWorkflowModule } from './workflow/project-workflow.module';
     ProjectEngagementConnectionResolver,
     ProjectUserConnectionResolver,
     ProjectService,
-    splitDb(ProjectRepository, ProjectEdgeDBRepository),
+    splitDb(ProjectRepository, ProjectGelRepository),
     ...Object.values(ConcreteRepos),
     ProjectLoader,
     ...Object.values(handlers),

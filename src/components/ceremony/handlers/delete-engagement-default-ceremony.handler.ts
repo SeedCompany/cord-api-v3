@@ -12,7 +12,7 @@ export class DetachEngagementRootDirectoryHandler
   ) {}
 
   async handle({ engagement, session }: EngagementWillDeleteEvent) {
-    if (this.config.databaseEngine === 'edgedb') {
+    if (this.config.databaseEngine === 'gel') {
       return;
     }
 

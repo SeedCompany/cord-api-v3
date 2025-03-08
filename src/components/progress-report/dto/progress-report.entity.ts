@@ -12,7 +12,7 @@ import {
 } from '~/common';
 import { sortingForEnumIndex } from '~/core/database/query';
 import { BaseNode } from '~/core/database/results';
-import { e } from '~/core/edgedb';
+import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
 import { Commentable } from '../../comments/dto';
 import { LanguageEngagement } from '../../engagement/dto';

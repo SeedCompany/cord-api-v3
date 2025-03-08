@@ -16,9 +16,9 @@ README*
 !.yarn/plugins
 node_modules
 
-# edgedb generated
-src/core/edgedb/generated-client
-src/core/edgedb/schema.ts
+# gel generated
+src/core/gel/generated-client
+src/core/gel/schema.ts
 src/**/*.edgeql.ts
 
 # Local

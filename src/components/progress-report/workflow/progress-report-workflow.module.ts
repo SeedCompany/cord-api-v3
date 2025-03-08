@@ -6,8 +6,8 @@ import { ProjectModule } from '../../project/project.module';
 import { UserModule } from '../../user/user.module';
 import * as handlers from './handlers';
 import { ProgressReportWorkflowEventLoader } from './progress-report-workflow-event.loader';
-import { ProgressReportWorkflowEdgeDBRepository } from './progress-report-workflow.edgedb.repository';
 import { ProgressReportWorkflowFlowchart } from './progress-report-workflow.flowchart';
+import { ProgressReportWorkflowGelRepository } from './progress-report-workflow.gel.repository';
 import { ProgressReportWorkflowEventGranter } from './progress-report-workflow.granter';
 import { ProgressReportWorkflowRepository } from './progress-report-workflow.repository';
 import { ProgressReportWorkflowService } from './progress-report-workflow.service';
@@ -33,7 +33,7 @@ import { ProgressReportWorkflowEventsResolver } from './resolvers/progress-repor
     ProgressReportWorkflowEventGranter,
     splitDb(
       ProgressReportWorkflowRepository,
-      ProgressReportWorkflowEdgeDBRepository,
+      ProgressReportWorkflowGelRepository,
     ),
     ProgressReportWorkflowFlowchart,
     ...Object.values(handlers),

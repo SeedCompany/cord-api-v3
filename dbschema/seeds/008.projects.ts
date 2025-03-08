@@ -1,6 +1,6 @@
 import { entries, mapValues } from '@seedcompany/common';
-import type { e } from '~/core/edgedb';
-import type { SeedFn } from '~/core/edgedb/seeds.run';
+import type { e } from '~/core/gel';
+import type { SeedFn } from '~/core/gel/seeds.run';
 
 const momentumTranslation: Input[] = [
   {
@@ -131,7 +131,7 @@ export default (async function ({ e, db, print }) {
     const inserted = await query.run(db);
 
     // Update project to reference self for their context (has to be separate query)
-    // https://github.com/edgedb/edgedb/issues/3960
+    // https://github.com/geldata/gel/issues/3960
     const projectRef = e.cast(e.Project, e.uuid(inserted.id));
     const pcQuery = e.update(e.select(projectRef).projectContext, () => ({
       set: { projects: projectRef },

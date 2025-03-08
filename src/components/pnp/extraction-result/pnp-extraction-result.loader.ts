@@ -2,7 +2,7 @@ import { DataLoaderStrategy } from '@seedcompany/data-loader';
 import { ID } from '~/common';
 import { LoaderFactory } from '~/core';
 import { PnpExtractionResult } from './extraction-result.dto';
-import { PnpExtractionResultRepository } from './pnp-extraction-result.edgedb.repository';
+import { PnpExtractionResultRepository } from './pnp-extraction-result.gel.repository';
 
 export interface PnpExtractionResultLoadResult {
   id: ID<'File'>;

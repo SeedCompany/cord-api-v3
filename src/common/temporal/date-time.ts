@@ -10,7 +10,7 @@ declare module 'luxon/src/datetime' {
     toPostgres(this: DateTime): string;
     [inspect.custom](): string;
 
-    // Compatibility with EdgeDB's LocalDate which is a subset of Temporal.PlainDate
+    // Compatibility with Gel's LocalDate which is a subset of Temporal.PlainDate
     get dayOfWeek(): number;
     get dayOfYear(): number;
     get daysInWeek(): number;

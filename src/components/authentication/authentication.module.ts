@@ -3,11 +3,11 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
 import { splitDb } from '~/core';
 import { AuthorizationModule } from '../authorization/authorization.module';
 import { UserModule } from '../user/user.module';
-import { AuthenticationEdgeDBRepository } from './authentication.edgedb.repository';
+import { AuthenticationGelRepository } from './authentication.gel.repository';
 import { AuthenticationRepository } from './authentication.repository';
 import { AuthenticationService } from './authentication.service';
 import { CryptoService } from './crypto.service';
-import { EdgeDBCurrentUserProvider } from './current-user.provider';
+import { GelCurrentUserProvider } from './current-user.provider';
 import {
   LoginExtraInfoResolver,
   RegisterExtraInfoResolver,
@@ -34,13 +34,13 @@ import { SessionResolver } from './session.resolver';
     LoginExtraInfoResolver,
     RegisterExtraInfoResolver,
     AuthenticationService,
-    splitDb(AuthenticationRepository, AuthenticationEdgeDBRepository),
+    splitDb(AuthenticationRepository, AuthenticationGelRepository),
     { provide: 'AUTHENTICATION', useExisting: AuthenticationService },
     CryptoService,
     SessionInterceptor,
     { provide: APP_INTERCEPTOR, useExisting: SessionInterceptor },
-    EdgeDBCurrentUserProvider,
-    { provide: APP_INTERCEPTOR, useExisting: EdgeDBCurrentUserProvider },
+    GelCurrentUserProvider,
+    { provide: APP_INTERCEPTOR, useExisting: GelCurrentUserProvider },
   ],
   exports: [
     SessionInterceptor,

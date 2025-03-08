@@ -4,7 +4,7 @@ import { ProductModule } from '../../product/product.module';
 import { PlanningExtractionResultSaver } from './planning-extraction-result-saver';
 import { PnpExtractionResultLanguageEngagementConnectionResolver } from './pnp-extraction-result-language-engagement-connection.resolver';
 import { PnpExtractionResultProgressReportConnectionResolver } from './pnp-extraction-result-progress-report-connection.resolver';
-import { PnpExtractionResultRepository } from './pnp-extraction-result.edgedb.repository';
+import { PnpExtractionResultRepository } from './pnp-extraction-result.gel.repository';
 import { PnpExtractionResultLoader } from './pnp-extraction-result.loader';
 import { PnpExtractionResultNeo4jRepository } from './pnp-extraction-result.neo4j.repository';
 import { PnpProblemResolver } from './pnp-problem.resolver';
@@ -20,7 +20,7 @@ import { SaveProgressExtractionResultHandler } from './save-progress-extraction-
     PlanningExtractionResultSaver,
     SaveProgressExtractionResultHandler,
     splitDb2(PnpExtractionResultRepository, {
-      edge: PnpExtractionResultRepository,
+      gel: PnpExtractionResultRepository,
       neo4j: PnpExtractionResultNeo4jRepository,
     }),
   ],

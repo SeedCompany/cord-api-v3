@@ -9,17 +9,17 @@ import { AsyncLocalStorage } from 'async_hooks';
 import { isUUID } from 'class-validator';
 import { BehaviorSubject, identity } from 'rxjs';
 import { Session } from '~/common';
-import { EdgeDB, OptionsFn } from '~/core/edgedb';
+import { Gel, OptionsFn } from '~/core/gel';
 import { GlobalHttpHook } from '~/core/http';
 
 /**
- * This sets the currentUser EdgeDB global based on
+ * This sets the currentUser Gel global based on
  * - GQL: {@link GqlContextType.session$} (updates to this will also be carried forward here)
  * - HTTP: {@link IRequest.session}
  */
 @Injectable()
-export class EdgeDBCurrentUserProvider implements NestInterceptor {
-  constructor(private readonly edgedb: EdgeDB) {}
+export class GelCurrentUserProvider implements NestInterceptor {
+  constructor(private readonly gel: Gel) {}
 
   // Storage for the current options' holder layer
   private readonly currentHolder = new AsyncLocalStorage<
@@ -37,9 +37,9 @@ export class EdgeDBCurrentUserProvider implements NestInterceptor {
 
     // Set this holder as the current holder for the current request.
     return this.currentHolder.run(optionsHolder, () =>
-      // Add these options to the EdgeDB options context.
+      // Add these options to the Gel options context.
       // These options should apply to the entire HTTP/GQL operation.
-      this.edgedb.usingOptions(optionsHolder, next),
+      this.gel.usingOptions(optionsHolder, next),
     );
   }
 

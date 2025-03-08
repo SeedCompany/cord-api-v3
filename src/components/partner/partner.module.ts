@@ -7,7 +7,7 @@ import { OrganizationModule } from '../organization/organization.module';
 import { ProjectModule } from '../project/project.module';
 import { UserModule } from '../user/user.module';
 import { AddPartnerApprovedProgramsMigration } from './migrations/add-partner-approved-programs.migration';
-import { PartnerEdgeDBRepository } from './partner.edgedb.repository';
+import { PartnerGelRepository } from './partner.gel.repository';
 import { PartnerLoader } from './partner.loader';
 import { PartnerRepository } from './partner.repository';
 import { PartnerResolver } from './partner.resolver';
@@ -25,7 +25,7 @@ import { PartnerService } from './partner.service';
   providers: [
     PartnerResolver,
     PartnerService,
-    splitDb(PartnerRepository, PartnerEdgeDBRepository),
+    splitDb(PartnerRepository, PartnerGelRepository),
     PartnerLoader,
     AddPartnerApprovedProgramsMigration,
   ],

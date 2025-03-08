@@ -15,8 +15,8 @@ jobs:
       - name: Node Setup & Yarn Install
         uses: ./.github/actions/setup
 
-      - name: EdgeDB Setup
-        uses: ./.github/actions/edgedb-setup
+      - name: Gel Setup
+        uses: ./.github/actions/gel-setup
 
       - name: Tests
         run: yarn test --reporters=github-actions
@@ -49,19 +49,19 @@ jobs:
         shard: [1, 2, 3, 4, 5, 6]
         database:
           - neo4j
-#          - edgedb
+#          - gel
       fail-fast: false
     steps:
       - uses: actions/checkout@v4
       - name: Node Setup & Yarn Install
         uses: ./.github/actions/setup
 
-      - name: EdgeDB Setup
-        uses: ./.github/actions/edgedb-setup
+      - name: Gel Setup
+        uses: ./.github/actions/gel-setup
 
       - name: E2E Tests
         run: yarn test:e2e --shard=${{ matrix.shard }}/6 --reporters=github-actions
         env:
           NEO4J_VERSION: ${{ matrix.neo4j-version }}
           DATABASE: ${{ matrix.database }}
-        continue-on-error: ${{ matrix.database == 'edgedb' }}
+        continue-on-error: ${{ matrix.database == 'gel' }}

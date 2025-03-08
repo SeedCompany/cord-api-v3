@@ -10,7 +10,7 @@ import type {
   ResourceName,
   ResourcesHost,
 } from '~/core';
-import { $, e } from '~/core/edgedb/reexports';
+import { $, e } from '~/core/gel/reexports';
 import { ScopedRole } from '../components/authorization/dto';
 import { CalculatedSymbol } from './calculated.decorator';
 import { DataObject } from './data-object';
@@ -317,11 +317,11 @@ export type DBType<TResourceStatic extends ResourceShape<any>> =
     : never;
 
 /**
- * The name of the EdgeDB type, it could be abstract.
+ * The name of the Gel type, it could be abstract.
  */
 export type DBName<T extends $.TypeSet> = T['__element__']['__name__'];
 /**
- * The name(s) of the concrete EdgeDB types.
+ * The name(s) of the concrete Gel types.
  * If the type is abstract, then it is a string union of the concrete type's names.
  * If the type is concrete, then it is just the name, just as {@link DBName}.
  */

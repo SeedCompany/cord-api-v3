@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { many, Many } from '@seedcompany/common';
-import { e, EdgeDB } from '~/core/edgedb';
+import { e, Gel } from '~/core/gel';
 import { ProjectType } from '../dto';
 import { FinancialApproverInput } from './dto';
 
 @Injectable()
 export class FinancialApproverRepository {
-  constructor(private readonly db: EdgeDB) {}
+  constructor(private readonly db: Gel) {}
 
   async read(types?: Many<ProjectType>) {
     const query = e.select(e.Project.FinancialApprover, (approver) => ({

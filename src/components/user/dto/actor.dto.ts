@@ -11,7 +11,7 @@ import {
   SecuredProps,
 } from '~/common';
 import { RegisterResource } from '~/core';
-import { e } from '~/core/edgedb';
+import { e } from '~/core/gel';
 
 @RegisterResource({
   db: e.Actor,

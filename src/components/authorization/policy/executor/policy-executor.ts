@@ -110,7 +110,7 @@ export class PolicyExecutor {
     return condition;
   }
 
-  forEdgeDB({
+  forGel({
     action,
     resource,
   }: Pick<ResolveParams, 'action' | 'resource'>): Permission {
