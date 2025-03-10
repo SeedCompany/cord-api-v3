@@ -111,8 +111,6 @@ export class Gel {
   run(query: string, args?: QueryArgs): Promise<unknown>;
 
   async run(query: any, args?: any) {
-    const executor = this.childExecutor ?? this.transactionContext.current;
-
     const queryName =
       new Error().stack
         ?.split('\n')
@@ -131,59 +129,65 @@ export class Gel {
         user: this.optionsContext.current.globals.get('currentActorId'),
       };
 
-      try {
-        if (query instanceof TypedEdgeQL) {
-          const found = InlineQueryRuntimeMap.get(query.query);
-          if (!found) {
-            throw new Error(`Query was not found from inline query generation`);
-          }
-          const exeMethod = cardinalityToExecutorMethod[found.cardinality];
+      return await this.doRun(query, args);
+    });
+  }
 
-          // eslint-disable-next-line @typescript-eslint/return-await
-          return await executor[exeMethod](found.query, args);
-        }
+  private async doRun(query: any, args: any) {
+    const executor = this.childExecutor ?? this.transactionContext.current;
 
-        if (query.run) {
-          // eslint-disable-next-line @typescript-eslint/return-await
-          return await query.run(executor, args);
+    try {
+      if (query instanceof TypedEdgeQL) {
+        const found = InlineQueryRuntimeMap.get(query.query);
+        if (!found) {
+          throw new Error(`Query was not found from inline query generation`);
         }
+        const exeMethod = cardinalityToExecutorMethod[found.cardinality];
 
-        if (typeof query === 'function') {
-          // eslint-disable-next-line @typescript-eslint/return-await
-          return await query(executor, args);
-        }
-
-        // For REPL, as this is untyped and assumes many/empty cardinality
-        if (typeof query === 'string') {
-          return await executor.query(query, args);
-        }
-      } catch (e) {
-        // Ignore this call in the stack trace. This puts the actual query as the first.
-        e.stack = e.stack!.replaceAll(
-          /^\s+at .+\/(gel|tracing)\.service.+$\n/gm,
-          '',
-        );
-
-        // Don't present abstract repositories as the src block in jest reports
-        // for DB execution errors.
-        // There shouldn't be anything specific to there to be helpful.
-        // This is a bit of a broad assumption though, so only do for jest and
-        // keep the frame for actual use from users/devs.
-        if (e instanceof GelError) {
-          jestSkipFileInExceptionSource(
-            e,
-            /^\s+at .+src[/|\\]core[/|\\]gel[/|\\].+\.repository\..+$\n/gm,
-          );
-        }
-
-        if (e instanceof ConstraintViolationError) {
-          throw enhanceConstraintError(e);
-        }
-        throw e;
+        // eslint-disable-next-line @typescript-eslint/return-await
+        return await executor[exeMethod](found.query, args);
       }
 
-      throw new Error('Could not figure out how to run given query');
-    });
+      if (query.run) {
+        // eslint-disable-next-line @typescript-eslint/return-await
+        return await query.run(executor, args);
+      }
+
+      if (typeof query === 'function') {
+        // eslint-disable-next-line @typescript-eslint/return-await
+        return await query(executor, args);
+      }
+
+      // For REPL, as this is untyped and assumes many/empty cardinality
+      if (typeof query === 'string') {
+        return await executor.query(query, args);
+      }
+    } catch (e) {
+      // Ignore this call in the stack trace. This puts the actual query as the first.
+      e.stack = e.stack!.replaceAll(
+        /^\s+at .+\/(gel|tracing)\.service.+$\n/gm,
+        '',
+      );
+
+      // Don't present abstract repositories as the src block in jest reports
+      // for DB execution errors.
+      // There shouldn't be anything specific to there to be helpful.
+      // This is a bit of a broad assumption though, so only do for jest and
+      // keep the frame for actual use from users/devs.
+      if (e instanceof GelError) {
+        jestSkipFileInExceptionSource(
+          e,
+          /^\s+at .+src[/|\\]core[/|\\]gel[/|\\].+\.repository\..+$\n/gm,
+        );
+      }
+
+      if (e instanceof ConstraintViolationError) {
+        throw enhanceConstraintError(e);
+      }
+      throw e;
+    }
+
+    throw new Error('Could not figure out how to run given query');
   }
 }
 
