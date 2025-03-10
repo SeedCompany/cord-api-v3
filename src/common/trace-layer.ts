@@ -1,4 +1,5 @@
-import { cacheable, cached, patchMethod } from '@seedcompany/common';
+import { cacheable, cached } from '@seedcompany/common';
+import { patchDecoratedMethod as patchMethod } from '@seedcompany/nest';
 import { AsyncLocalStorage } from 'async_hooks';
 import { AbstractClass } from 'type-fest';
 import { getParentTypes as getHierarchyList } from './parent-types';
