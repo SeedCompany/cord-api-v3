@@ -109,8 +109,8 @@ export class Gel {
   run(query: string, args?: QueryArgs): Promise<unknown>;
 
   async run(query: any, args?: any) {
-    const queryName = getCurrentQueryName();
-    const traceName = queryName ?? 'Query';
+    const queryNames = getCurrentQueryNames();
+    const traceName = queryNames?.xray ?? 'Query';
 
     return await this.tracing.capture(traceName, async (segment) => {
       // Show this segment separately in the service map
@@ -122,7 +122,11 @@ export class Gel {
         user: this.optionsContext.current.globals.get('currentActorId'),
       };
 
-      return await this.doRun(query, args);
+      return await this.usingOptions(
+        (opts) =>
+          opts.tag || !queryNames ? opts : opts.withQueryTag(queryNames.gel),
+        () => this.doRun(query, args),
+      );
     });
   }
 
@@ -192,7 +196,10 @@ const cardinalityToExecutorMethod = {
   Empty: 'query',
 } satisfies Record<`${$.Cardinality}`, keyof Executor>;
 
-const getCurrentQueryName = DbTraceLayer.makeGetter(({ cls, method }) => {
+const getCurrentQueryNames = DbTraceLayer.makeGetter(({ cls, method }) => {
   cls = cls.replaceAll(/(Gel|Repository)/g, '');
-  return `${cls}.${method}`;
+  return {
+    xray: `${cls}.${method}`,
+    gel: `cord/${cls}/${method}`,
+  };
 });
