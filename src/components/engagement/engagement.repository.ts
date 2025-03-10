@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { cleanJoin, mapValues, simpleSwitch } from '@seedcompany/common';
+import { mapValues, simpleSwitch } from '@seedcompany/common';
 import {
   hasLabel,
   inArray,
@@ -41,6 +41,7 @@ import {
   matchProjectSens,
   matchPropsAndProjectSensAndScopedRoles,
   merge,
+  multiPropsAsSortString,
   oncePerProject,
   paginate,
   requestingUser,
@@ -836,13 +837,13 @@ export const engagementSorters = defineSorters(IEngagement, {
     query
       .apply(matchNames)
       .return<SortCol>(
-        multiPropsAsSortString(['projectName', 'languageName', 'dfn', 'dln']),
+        multiPropsAsSortString('projectName', 'languageName', 'dfn', 'dln'),
       ),
   nameProjectLast: (query) =>
     query
       .apply(matchNames)
       .return<SortCol>(
-        multiPropsAsSortString(['languageName', 'dfn', 'dln', 'projectName']),
+        multiPropsAsSortString('languageName', 'dfn', 'dln', 'projectName'),
       ),
   sensitivity: (query) =>
     query
@@ -938,12 +939,6 @@ const matchNames = (query: Query) =>
         node('dln', 'Property'),
       ],
     ]);
-
-const multiPropsAsSortString = (props: string[]) =>
-  cleanJoin(
-    ' + ',
-    props.map((prop) => `coalesce(${prop}.value, "")`),
-  ) + ' as sortValue';
 
 const NameIndex = FullTextIndex({
   indexName: 'EngagementName',
