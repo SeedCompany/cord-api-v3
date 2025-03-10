@@ -1,4 +1,4 @@
-import { entries } from '@seedcompany/common';
+import { cleanJoin, entries } from '@seedcompany/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { identity } from 'rxjs';
 import { LiteralUnion } from 'type-fest';
@@ -26,6 +26,12 @@ export const sortingForEnumIndex =
       [...theEnum.values].map((v) => `"${v}"`),
       variable,
     );
+
+export const multiPropsAsSortString = (...props: string[]) =>
+  cleanJoin(
+    ' + ',
+    props.map((prop) => `coalesce(${prop}.value, "")`),
+  ) + ' as sortValue';
 
 /**
  * Applies sorting to rows given the input.
