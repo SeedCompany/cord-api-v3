@@ -11,21 +11,17 @@ class ScriptureReferenceStartInput extends ScriptureReferenceInput {
 }
 
 class ScriptureReferenceEndInput extends ScriptureReferenceInput {
-  private bookName: string;
-
-  // @ts-expect-error Yes we are clobbering the property definition from the parent.
-  // It's ok for this use case and the parent decorators are still applied.
   get book() {
-    return this.bookName;
+    return super.book;
   }
+  protected set book(name: string) {
+    super.book = name;
 
-  set book(value: string) {
-    this.bookName = value;
     // When the book is set, default the chapter & verse to last.
     // If they are also given on input, then they will just be overridden
     // after this. Also ignoring errors, as the validator reports better.
     try {
-      const book = Book.named(value);
+      const book = Book.named(name);
       (this as Mutable<this>).chapter = book.lastChapter.index;
       (this as Mutable<this>).verse = book.lastChapter.lastVerse.index;
     } catch (e) {

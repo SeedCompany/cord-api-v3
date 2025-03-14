@@ -4,10 +4,11 @@ import {
   labelOfVerseRanges,
   Verse,
 } from '@seedcompany/scripture';
+import { Simplify } from 'type-fest';
 import { $, e } from '~/core/gel';
 import { $expr_Param } from '~/core/gel/generated-client/params';
 import { $expr_PathNode } from '~/core/gel/generated-client/path';
-import { ScriptureRangeInput } from './dto';
+import { ScriptureRangeInput, ScriptureReferenceInput } from './dto';
 
 const verse = e.tuple({
   book: e.str,
@@ -44,11 +45,11 @@ export const value = (input: readonly ScriptureRangeInput[]) => ({
   verses: input.map((verseRange) => ({
     label: labelOfVerseRange(verseRange),
     start: {
-      ...verseRange.start,
+      ...(verseRange.start as Simplify<ScriptureReferenceInput>),
       verseId: Verse.from(verseRange.start).id,
     },
     end: {
-      ...verseRange.end,
+      ...(verseRange.end as Simplify<ScriptureReferenceInput>),
       verseId: Verse.from(verseRange.end).id,
     },
   })),
