@@ -51,6 +51,13 @@ export class GraphqlErrorFormatter {
       }),
   });
 
+  onSubscribe: Plugin['onSubscribe'] = () => ({
+    onSubscribeError: ({ error, setError }) => {
+      const formatted = this.formatError(error);
+      setError(formatted);
+    },
+  });
+
   formatError = (error: unknown) => {
     if (!(error instanceof GraphQLError)) {
       // I don't think this happens.
