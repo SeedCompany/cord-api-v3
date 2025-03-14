@@ -51,6 +51,7 @@ export class Driver extends AbstractDriver<DriverConfig> {
       ...options,
       graphqlEndpoint: options.path,
       logging: false,
+      batching: { limit: 25 },
     });
 
     fastify.route({
