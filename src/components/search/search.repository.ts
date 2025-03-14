@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
+import { Merge } from 'type-fest';
 import { CommonRepository, OnIndex, OnIndexParams } from '~/core/database';
 import {
   ACTIVE,
@@ -7,6 +8,7 @@ import {
   FullTextIndex,
 } from '~/core/database/query';
 import { BaseNode } from '~/core/database/results';
+import type { ResourceMap } from '~/core/resources';
 import { SearchInput } from './dto';
 
 @Injectable()
@@ -20,7 +22,7 @@ export class SearchRepository extends CommonRepository {
    * Search for nodes based on input, only returning their id and "type"
    * which is based on their first valid search label.
    */
-  async search(input: SearchInput) {
+  async search(input: Merge<SearchInput, { type: Array<keyof ResourceMap> }>) {
     const escaped = escapeLuceneSyntax(input.query);
     // Emphasize exact matches but allow fuzzy as well
     const lucene = `"${escaped}"^2 ${escaped}*`;
