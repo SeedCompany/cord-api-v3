@@ -3,13 +3,14 @@ import { node } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { ConfigService } from '../../config/config.service';
 import { ILogger, Logger } from '../../logger';
-import { DatabaseService } from '../database.service';
+import { DatabaseService, DbTraceLayer } from '../database.service';
 import {
   DiscoveredMigration,
   MigrationDiscovery,
 } from './migration-discovery.service';
 
 @Injectable()
+@DbTraceLayer.applyToClass()
 export class MigrationRunner {
   constructor(
     private readonly db: DatabaseService,

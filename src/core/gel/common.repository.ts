@@ -3,7 +3,7 @@ import { EnhancedResource, ID, isIdLike, PublicOf } from '~/common';
 import type { CommonRepository as Neo4jCommonRepository } from '~/core/database';
 import { ResourceLike, ResourcesHost } from '~/core/resources/resources.host';
 import type { BaseNode } from '../database/results';
-import { Gel } from './gel.service';
+import { DbTraceLayer, Gel } from './gel.service';
 import { e } from './reexports';
 
 /**
@@ -13,6 +13,10 @@ import { e } from './reexports';
 export class CommonRepository implements PublicOf<Neo4jCommonRepository> {
   @Inject() protected readonly db: Gel;
   @Inject() protected readonly resources: ResourcesHost;
+
+  constructor() {
+    DbTraceLayer.applyToInstance(this);
+  }
 
   /**
    * Here for compatibility with the Neo4j version.

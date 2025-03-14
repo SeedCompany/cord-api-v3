@@ -2,8 +2,7 @@
 import { Injectable, Optional } from '@nestjs/common';
 import { $, ConstraintViolationError, Executor, GelError } from 'gel';
 import { QueryArgs } from 'gel/dist/ifaces';
-import { dirname, resolve } from 'path';
-import { fileURLToPath } from 'url';
+import { TraceLayer } from '~/common';
 import { retry, RetryOptions } from '~/common/retry';
 import { TracingService } from '~/core/tracing';
 import { jestSkipFileInExceptionSource } from '../exception';
@@ -13,6 +12,8 @@ import { InlineQueryRuntimeMap } from './generated-client/inline-queries';
 import { ApplyOptions, OptionsContext } from './options.context';
 import { Client } from './reexports';
 import { TransactionContext } from './transaction.context';
+
+export const DbTraceLayer = TraceLayer.as('db');
 
 @Injectable()
 export class Gel {
@@ -108,17 +109,10 @@ export class Gel {
   run(query: string, args?: QueryArgs): Promise<unknown>;
 
   async run(query: any, args?: any) {
-    const executor = this.childExecutor ?? this.transactionContext.current;
+    const queryNames = getCurrentQueryNames();
+    const traceName = queryNames?.xray ?? 'Query';
 
-    const queryName =
-      new Error().stack
-        ?.split('\n')
-        .slice(2)
-        .find((frm) => frm.includes(projectDir) && !frm.includes('/core/gel/'))
-        ?.split(/\s+/)[2]
-        .replaceAll(/(Gel|Repository)/g, '') ?? 'Query';
-
-    return await this.tracing.capture(queryName, async (segment) => {
+    return await this.tracing.capture(traceName, async (segment) => {
       // Show this segment separately in the service map
       segment.namespace = 'remote';
       // Help ID the segment as being for a database
@@ -128,59 +122,69 @@ export class Gel {
         user: this.optionsContext.current.globals.get('currentActorId'),
       };
 
-      try {
-        if (query instanceof TypedEdgeQL) {
-          const found = InlineQueryRuntimeMap.get(query.query);
-          if (!found) {
-            throw new Error(`Query was not found from inline query generation`);
-          }
-          const exeMethod = cardinalityToExecutorMethod[found.cardinality];
+      return await this.usingOptions(
+        (opts) =>
+          opts.tag || !queryNames ? opts : opts.withQueryTag(queryNames.gel),
+        () => this.doRun(query, args),
+      );
+    });
+  }
 
-          // eslint-disable-next-line @typescript-eslint/return-await
-          return await executor[exeMethod](found.query, args);
-        }
+  private async doRun(query: any, args: any) {
+    const executor = this.childExecutor ?? this.transactionContext.current;
 
-        if (query.run) {
-          // eslint-disable-next-line @typescript-eslint/return-await
-          return await query.run(executor, args);
+    try {
+      if (query instanceof TypedEdgeQL) {
+        const found = InlineQueryRuntimeMap.get(query.query);
+        if (!found) {
+          throw new Error(`Query was not found from inline query generation`);
         }
+        const exeMethod = cardinalityToExecutorMethod[found.cardinality];
 
-        if (typeof query === 'function') {
-          // eslint-disable-next-line @typescript-eslint/return-await
-          return await query(executor, args);
-        }
-
-        // For REPL, as this is untyped and assumes many/empty cardinality
-        if (typeof query === 'string') {
-          return await executor.query(query, args);
-        }
-      } catch (e) {
-        // Ignore this call in the stack trace. This puts the actual query as the first.
-        e.stack = e.stack!.replaceAll(
-          /^\s+at .+\/(gel|tracing)\.service.+$\n/gm,
-          '',
-        );
-
-        // Don't present abstract repositories as the src block in jest reports
-        // for DB execution errors.
-        // There shouldn't be anything specific to there to be helpful.
-        // This is a bit of a broad assumption though, so only do for jest and
-        // keep the frame for actual use from users/devs.
-        if (e instanceof GelError) {
-          jestSkipFileInExceptionSource(
-            e,
-            /^\s+at .+src[/|\\]core[/|\\]gel[/|\\].+\.repository\..+$\n/gm,
-          );
-        }
-
-        if (e instanceof ConstraintViolationError) {
-          throw enhanceConstraintError(e);
-        }
-        throw e;
+        // eslint-disable-next-line @typescript-eslint/return-await
+        return await executor[exeMethod](found.query, args);
       }
 
-      throw new Error('Could not figure out how to run given query');
-    });
+      if (query.run) {
+        // eslint-disable-next-line @typescript-eslint/return-await
+        return await query.run(executor, args);
+      }
+
+      if (typeof query === 'function') {
+        // eslint-disable-next-line @typescript-eslint/return-await
+        return await query(executor, args);
+      }
+
+      // For REPL, as this is untyped and assumes many/empty cardinality
+      if (typeof query === 'string') {
+        return await executor.query(query, args);
+      }
+    } catch (e) {
+      // Ignore this call in the stack trace. This puts the actual query as the first.
+      e.stack = e.stack!.replaceAll(
+        /^\s+at .+\/(gel|tracing)\.service.+$\n/gm,
+        '',
+      );
+
+      // Don't present abstract repositories as the src block in jest reports
+      // for DB execution errors.
+      // There shouldn't be anything specific to there to be helpful.
+      // This is a bit of a broad assumption though, so only do for jest and
+      // keep the frame for actual use from users/devs.
+      if (e instanceof GelError) {
+        jestSkipFileInExceptionSource(
+          e,
+          /^\s+at .+src[/|\\]core[/|\\]gel[/|\\].+\.repository\..+$\n/gm,
+        );
+      }
+
+      if (e instanceof ConstraintViolationError) {
+        throw enhanceConstraintError(e);
+      }
+      throw e;
+    }
+
+    throw new Error('Could not figure out how to run given query');
   }
 }
 
@@ -192,6 +196,10 @@ const cardinalityToExecutorMethod = {
   Empty: 'query',
 } satisfies Record<`${$.Cardinality}`, keyof Executor>;
 
-const projectDir = resolve(
-  `${dirname(fileURLToPath(import.meta.url))}/../../..`,
-);
+const getCurrentQueryNames = DbTraceLayer.makeGetter(({ cls, method }) => {
+  cls = cls.replaceAll(/(Gel|Repository)/g, '');
+  return {
+    xray: `${cls}.${method}`,
+    gel: `cord/${cls}/${method}`,
+  };
+});

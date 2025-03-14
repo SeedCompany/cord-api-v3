@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { ID, Role } from '~/common';
 import { RootUserAlias } from '~/core/config/root-user.config';
-import { disableAccessPolicies, e, Gel } from '~/core/gel';
+import { DbTraceLayer, disableAccessPolicies, e, Gel } from '~/core/gel';
 import { AuthenticationRepository } from '../authentication/authentication.repository';
 import { SystemAgentRepository } from '../user/system-agent.repository';
 
 @Injectable()
+@DbTraceLayer.applyToClass()
 export class AdminGelRepository {
   private readonly db: Gel;
   constructor(

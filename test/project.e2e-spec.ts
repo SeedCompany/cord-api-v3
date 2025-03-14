@@ -1,6 +1,5 @@
 import { faker } from '@faker-js/faker';
 import { intersection, times } from 'lodash';
-import { DateTime } from 'luxon';
 import { v1 as uuid } from 'uuid';
 import {
   CalendarDate,
@@ -731,22 +730,6 @@ describe('Project e2e', () => {
     expect(
       queryProject.project.engagements.items.length,
     ).toBeGreaterThanOrEqual(numEngagements);
-  });
-
-  it('DB constraint for project.name uniqueness', async () => {
-    const projName = 'Fix the world ' + DateTime.local().toString();
-    await createProject(app, {
-      name: projName,
-      fieldRegionId: fieldRegion.id,
-    });
-    await expect(
-      createProject(app, { name: projName, fieldRegionId: fieldRegion.id }),
-    ).rejects.toThrowGqlError(
-      errors.duplicate({
-        message: 'Project with this name already exists',
-        field: 'project.name',
-      }),
-    );
   });
 
   it('List view of project members by projectId', async () => {

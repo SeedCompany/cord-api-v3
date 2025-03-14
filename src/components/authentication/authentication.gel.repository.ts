@@ -2,11 +2,18 @@ import { Injectable } from '@nestjs/common';
 import { IntegrityError } from 'gel';
 import { ID, PublicOf, ServerException, Session } from '~/common';
 import { RootUserAlias } from '~/core/config/root-user.config';
-import { disableAccessPolicies, e, Gel, withScope } from '~/core/gel';
+import {
+  DbTraceLayer,
+  disableAccessPolicies,
+  e,
+  Gel,
+  withScope,
+} from '~/core/gel';
 import type { AuthenticationRepository } from './authentication.repository';
 import { LoginInput } from './dto';
 
 @Injectable()
+@DbTraceLayer.applyToClass()
 export class AuthenticationGelRepository
   implements PublicOf<AuthenticationRepository>
 {
