@@ -1,5 +1,4 @@
-import { isPlainObject } from '@nestjs/common/utils/shared.utils.js';
-import { mapValues } from '@seedcompany/common';
+import { isPlainObject, mapValues } from '@seedcompany/common';
 
 export const maskSecrets = (
   obj: Record<string, any>,

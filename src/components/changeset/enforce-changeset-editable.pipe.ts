@@ -1,10 +1,10 @@
 import { Inject, Injectable, PipeTransform, Scope, Type } from '@nestjs/common';
 import { CONTEXT } from '@nestjs/graphql';
+import { isPlainObject } from '@seedcompany/common';
 import {
   DataLoaderContext,
   DataLoaderStrategy,
 } from '@seedcompany/data-loader';
-import { isPlainObject } from 'lodash';
 import {
   ID,
   InputException,

@@ -1,5 +1,10 @@
-import { isPlainObject } from '@nestjs/common/utils/shared.utils.js';
-import { isNotFalsy, many, Many, Nil } from '@seedcompany/common';
+import {
+  isNotFalsy,
+  isPlainObject,
+  many,
+  Many,
+  Nil,
+} from '@seedcompany/common';
 import { Clause, Query } from 'cypher-query-builder';
 
 declare module 'cypher-query-builder/dist/typings/query' {
