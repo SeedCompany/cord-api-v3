@@ -7,7 +7,7 @@ import {
   Type,
 } from '@nestjs/common';
 import { CONTEXT } from '@nestjs/graphql';
-import { isPlainObject } from '@seedcompany/common';
+import { hasCtor, isRegularObject } from '@seedcompany/common';
 import {
   DataLoaderContext,
   DataLoaderStrategy,
@@ -80,8 +80,8 @@ export class EnforceChangesetEditablePipe implements PipeTransform {
     }
   }
 
-  findIdsToValidate(value: any) {
-    if (!isInstance(value)) {
+  findIdsToValidate(value: unknown) {
+    if (!isInputClassInstanceLike(value)) {
       return [];
     }
 
@@ -97,5 +97,5 @@ export class EnforceChangesetEditablePipe implements PipeTransform {
   }
 }
 
-const isInstance = (value: any) =>
-  value && typeof value === 'object' && !isPlainObject(value);
+const isInputClassInstanceLike = (value: unknown): value is object =>
+  isRegularObject(value) && hasCtor(value);
