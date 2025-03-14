@@ -36,19 +36,27 @@ setInspectOnClass(Interval, (i: Interval) => ({ stylize }) => {
 const format = (dt: DateTime) =>
   dt.toLocaleString(DateTime.DATETIME_SHORT_WITH_SECONDS);
 
-Interval.prototype.expandToFull = function (
-  this: Interval,
-  unit: DateTimeUnit,
-) {
-  return Interval.fromDateTimes(this.start.startOf(unit), this.end.endOf(unit));
-};
+Object.defineProperty(Interval.prototype, 'expandToFull', {
+  configurable: true,
+  value: function expandToFull(this: Interval, unit: DateTimeUnit) {
+    return Interval.fromDateTimes(
+      this.start.startOf(unit),
+      this.end.endOf(unit),
+    );
+  },
+});
 
-const IntervalStatic = Interval as Mutable<typeof Interval>;
+const IntervalStatic = new Proxy(Interval, {
+  set(target, p, value) {
+    Object.defineProperty(target, p, { value, configurable: true });
+    return true;
+  },
+}) as Mutable<typeof Interval>;
 
-IntervalStatic.compare = (
+IntervalStatic.compare = function compare(
   prev: Interval | null | undefined,
   now: Interval | null | undefined,
-) => {
+) {
   const removals = !prev ? [] : !now ? [prev] : prev.difference(now);
   const additions = !now ? [] : !prev ? [now] : now.difference(prev);
   return { removals, additions };

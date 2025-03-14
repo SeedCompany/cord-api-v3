@@ -19,33 +19,38 @@ declare module 'luxon/src/datetime' {
 }
 /* eslint-enable @typescript-eslint/method-signature-style */
 
-DateTime.prototype.toNeo4JDate = function (this: DateTime) {
-  return new Neo.types.Date(this.year, this.month, this.day);
-};
-
-DateTime.prototype.toNeo4JDateTime = function (this: DateTime) {
-  return new Neo.types.DateTime(
-    this.year,
-    this.month,
-    this.day,
-    this.hour,
-    this.minute,
-    this.second,
-    this.millisecond * 1e6,
-    this.offset * 60,
-    undefined, // Neo4j doesn't recommend timezone names as they are ambiguous
-  );
-};
-
-DateTime.prototype.toPostgres = function (this: DateTime) {
-  return this.toSQL();
-};
-
 setInspectOnClass(DateTime, (dt) => ({ collapsed }) => {
   return collapsed(dt.toLocaleString(DateTime.DATETIME_SHORT_WITH_SECONDS));
 });
 
 Object.defineProperties(DateTime.prototype, {
+  toNeo4JDate: {
+    value: function toNeo4JDate(this: DateTime) {
+      return new Neo.types.Date(this.year, this.month, this.day);
+    },
+  },
+  toNeo4JDateTime: {
+    value: function toNeo4JDateTime(this: DateTime) {
+      return new Neo.types.DateTime(
+        this.year,
+        this.month,
+        this.day,
+        this.hour,
+        this.minute,
+        this.second,
+        this.millisecond * 1e6,
+        this.offset * 60,
+        undefined, // Neo4j doesn't recommend timezone names as they're ambiguous
+      );
+    },
+  },
+  toPostgres: {
+    value: function toPostgres(this: DateTime) {
+      return this.toSQL();
+    },
+  },
+  // These below are for compatibility with Gel's LocalDate
+  // which is a subset of Temporal.PlainDate
   dayOfWeek: {
     get(this: DateTime) {
       return this.weekday;
