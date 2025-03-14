@@ -1,9 +1,13 @@
 import { Field, InterfaceType } from '@nestjs/graphql';
-import { cached, FnLike, mapValues } from '@seedcompany/common';
+import {
+  cached,
+  FnLike,
+  mapValues,
+  setInspectOnClass,
+} from '@seedcompany/common';
 import { LazyGetter as Once } from 'lazy-get-decorator';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { inspect } from 'util';
 import type {
   ResourceDBMap,
   ResourceLike,
@@ -116,10 +120,6 @@ export class EnhancedResource<T extends ResourceShape<any>> {
     }
     const factory = () => new EnhancedResource(resource);
     return cached(EnhancedResource.refs, resource, factory);
-  }
-
-  [inspect.custom]() {
-    return `${this.constructor.name} { ${this.name} }`;
   }
 
   /**
@@ -292,6 +292,9 @@ export class EnhancedResource<T extends ResourceShape<any>> {
     ).asRecord;
   }
 }
+setInspectOnClass(EnhancedResource, (res) => ({ collapsed }) => {
+  return collapsed(res.name, 'Enhanced');
+});
 
 export interface EnhancedRelation<TResourceStatic extends ResourceShape<any>> {
   readonly name: RelKey<TResourceStatic>;

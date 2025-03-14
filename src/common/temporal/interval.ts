@@ -1,12 +1,10 @@
+import { setInspectOnClass } from '@seedcompany/common';
 import { DateTime, DateTimeUnit, Interval } from 'luxon';
 import { Writable as Mutable } from 'type-fest';
-import { inspect } from 'util';
 
 /* eslint-disable @typescript-eslint/method-signature-style */
 declare module 'luxon/src/interval' {
   interface Interval {
-    [inspect.custom](): string;
-
     /**
      * Expand this interval to the full duration unit given
      */
@@ -28,11 +26,15 @@ declare module 'luxon/src/interval' {
 }
 /* eslint-enable @typescript-eslint/method-signature-style */
 
-Interval.prototype[inspect.custom] = function (this: Interval) {
-  const format = (dt: DateTime) =>
-    dt.toLocaleString(DateTime.DATETIME_SHORT_WITH_SECONDS);
-  return `[Interval ${format(this.start)} – ${format(this.end)})`;
-};
+setInspectOnClass(Interval, (i: Interval) => ({ stylize }) => {
+  return (
+    stylize(`[Interval `, 'special') +
+    `${format(i.start)} – ${format(i.end)}` +
+    stylize(`)`, 'special')
+  );
+});
+const format = (dt: DateTime) =>
+  dt.toLocaleString(DateTime.DATETIME_SHORT_WITH_SECONDS);
 
 Interval.prototype.expandToFull = function (
   this: Interval,

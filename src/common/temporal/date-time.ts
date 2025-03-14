@@ -1,6 +1,6 @@
+import { setInspectOnClass } from '@seedcompany/common';
 import { DateTime } from 'luxon';
 import * as Neo from 'neo4j-driver';
-import { inspect } from 'util';
 
 /* eslint-disable @typescript-eslint/method-signature-style */
 declare module 'luxon/src/datetime' {
@@ -8,7 +8,6 @@ declare module 'luxon/src/datetime' {
     toNeo4JDate(this: DateTime): Neo.Date<number>;
     toNeo4JDateTime(this: DateTime): Neo.DateTime<number>;
     toPostgres(this: DateTime): string;
-    [inspect.custom](): string;
 
     // Compatibility with Gel's LocalDate which is a subset of Temporal.PlainDate
     get dayOfWeek(): number;
@@ -42,10 +41,9 @@ DateTime.prototype.toPostgres = function (this: DateTime) {
   return this.toSQL();
 };
 
-DateTime.prototype[inspect.custom] = function (this: DateTime) {
-  const str = this.toLocaleString(DateTime.DATETIME_SHORT_WITH_SECONDS);
-  return `[DateTime] ${str}`;
-};
+setInspectOnClass(DateTime, (dt) => ({ collapsed }) => {
+  return collapsed(dt.toLocaleString(DateTime.DATETIME_SHORT_WITH_SECONDS));
+});
 
 Object.defineProperties(DateTime.prototype, {
   dayOfWeek: {
