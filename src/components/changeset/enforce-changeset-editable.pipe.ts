@@ -1,10 +1,17 @@
-import { Inject, Injectable, PipeTransform, Scope, Type } from '@nestjs/common';
+import {
+  ArgumentMetadata,
+  Inject,
+  Injectable,
+  PipeTransform,
+  Scope,
+  Type,
+} from '@nestjs/common';
 import { CONTEXT } from '@nestjs/graphql';
+import { hasCtor, isRegularObject } from '@seedcompany/common';
 import {
   DataLoaderContext,
   DataLoaderStrategy,
 } from '@seedcompany/data-loader';
-import { isPlainObject } from 'lodash';
 import {
   ID,
   InputException,
@@ -25,6 +32,10 @@ import { shouldValidateEditability } from './validate-editability.decorator';
  * This logic is more suited for a Guard or Interceptor, but we don't have that
  * information easily accessible at that point.
  * Though it could be possible with some work.
+ *
+ * Since this is registered as a global/app pipe,
+ * it is called for every argument of every resolver/controller.
+ * So we want to be careful to do as little work as possible.
  */
 @Injectable({ scope: Scope.REQUEST })
 export class EnforceChangesetEditablePipe implements PipeTransform {
@@ -36,12 +47,17 @@ export class EnforceChangesetEditablePipe implements PipeTransform {
     private readonly loaderContext: DataLoaderContext,
   ) {}
 
-  async transform(value: any) {
-    await this.validateRequest(value);
+  async transform(value: unknown, metadata: ArgumentMetadata) {
+    await this.validateRequest(value, metadata);
     return value;
   }
 
-  async validateRequest(value: any) {
+  async validateRequest(value: unknown, metadata: ArgumentMetadata) {
+    // "body" translates to GQL args
+    if (metadata.type !== 'body') {
+      return;
+    }
+
     const context = isGqlContext(this.context) ? this.context : undefined;
     if (context?.operation.operation !== 'mutation') {
       return;
@@ -64,8 +80,8 @@ export class EnforceChangesetEditablePipe implements PipeTransform {
     }
   }
 
-  findIdsToValidate(value: any) {
-    if (!isInstance(value)) {
+  findIdsToValidate(value: unknown) {
+    if (!isInputClassInstanceLike(value)) {
       return [];
     }
 
@@ -81,5 +97,5 @@ export class EnforceChangesetEditablePipe implements PipeTransform {
   }
 }
 
-const isInstance = (value: any) =>
-  value && typeof value === 'object' && !isPlainObject(value);
+const isInputClassInstanceLike = (value: unknown): value is object =>
+  isRegularObject(value) && hasCtor(value);

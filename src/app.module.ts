@@ -42,6 +42,8 @@ import { TimeZoneModule } from './components/timezone';
 import { UserModule } from './components/user/user.module';
 import { CoreModule, LoggerModule } from './core';
 
+import '@seedcompany/nest/patches';
+
 assert(
   keys<{ foo: string }>().length === 1,
   'Sanity check for key transformer failed',

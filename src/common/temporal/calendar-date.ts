@@ -1,3 +1,4 @@
+import { setInspectOnClass, setToStringTag } from '@seedcompany/common';
 import {
   DateObjectUnits,
   DateTime,
@@ -12,7 +13,6 @@ import {
   ZoneOptions,
 } from 'luxon';
 import type { DefaultValidity, IfValid } from 'luxon/src/_util';
-import { inspect } from 'util';
 import { DateInterval } from './date-interval';
 
 /**
@@ -271,9 +271,9 @@ export class CalendarDate<IsValid extends boolean = DefaultValidity>
   toPostgres() {
     return this.toSQLDate()!;
   }
-
-  [inspect.custom]() {
-    const str = this.toLocaleString(DateTime.DATE_SHORT);
-    return `[Date] ${str}`;
-  }
 }
+
+setInspectOnClass(CalendarDate, (date) => ({ collapsed }) => {
+  return collapsed(date.toLocaleString(DateTime.DATE_SHORT), 'Date');
+});
+setToStringTag(CalendarDate, 'CalendarDate');

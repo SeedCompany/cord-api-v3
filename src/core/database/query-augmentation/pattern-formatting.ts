@@ -1,4 +1,4 @@
-import { isNotFalsy } from '@seedcompany/common';
+import { isNotFalsy, isPlainObject } from '@seedcompany/common';
 import { stripIndent } from 'common-tags';
 import {
   Clause,
@@ -16,7 +16,7 @@ import {
 } from 'cypher-query-builder';
 import type { Term } from 'cypher-query-builder/dist/typings/clauses/term-list-clause';
 import type { Parameter } from 'cypher-query-builder/dist/typings/parameter-bag';
-import { camelCase, isPlainObject } from 'lodash';
+import { camelCase } from 'lodash';
 import { isExp } from '../query';
 import { WhereAndList } from '../query/where-and-list';
 

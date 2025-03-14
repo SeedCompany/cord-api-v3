@@ -1,3 +1,4 @@
+import { setInspectOnClass, setToStringTag } from '@seedcompany/common';
 import {
   DateInput,
   DateTimeOptions,
@@ -9,7 +10,6 @@ import {
   Interval,
   IntervalObject,
 } from 'luxon';
-import { inspect } from 'util';
 import { CalendarDate } from './calendar-date';
 import '@seedcompany/common/temporal/luxon';
 
@@ -176,9 +176,6 @@ export class DateInterval
   toString(): string {
     return `[${this.start.toISO()} – ${this.end.toISO()}]`;
   }
-  [inspect.custom]() {
-    return `[Dates ${this.start.toISO()} – ${this.end.toISO()}]`;
-  }
   expandToFull(unit: DateTimeUnit): DateInterval {
     return DateInterval.fromDateTimes(
       this.start.startOf(unit),
@@ -186,3 +183,11 @@ export class DateInterval
     );
   }
 }
+
+setInspectOnClass(DateInterval, (i) => ({ collapsed }) => {
+  return collapsed(`${format(i.start)} – ${format(i.end)}`, 'Dates');
+});
+const format = (date: CalendarDate) =>
+  date.toLocaleString(CalendarDate.DATE_SHORT);
+
+setToStringTag(DateInterval, 'DateInterval');
