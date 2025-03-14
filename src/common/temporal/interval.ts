@@ -1,4 +1,5 @@
-import { setInspectOnClass } from '@seedcompany/common';
+import { setInspectOnClass, setToStringTag } from '@seedcompany/common';
+import { markSkipClassTransformation } from '@seedcompany/nest';
 import { DateTime, DateTimeUnit, Interval } from 'luxon';
 import { Writable as Mutable } from 'type-fest';
 
@@ -35,6 +36,9 @@ setInspectOnClass(Interval, (i: Interval) => ({ stylize }) => {
 });
 const format = (dt: DateTime) =>
   dt.toLocaleString(DateTime.DATETIME_SHORT_WITH_SECONDS);
+
+setToStringTag(Interval, 'Interval');
+markSkipClassTransformation(Interval);
 
 Object.defineProperty(Interval.prototype, 'expandToFull', {
   configurable: true,

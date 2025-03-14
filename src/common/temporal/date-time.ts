@@ -1,4 +1,5 @@
-import { setInspectOnClass } from '@seedcompany/common';
+import { setInspectOnClass, setToStringTag } from '@seedcompany/common';
+import { markSkipClassTransformation } from '@seedcompany/nest';
 import { DateTime } from 'luxon';
 import * as Neo from 'neo4j-driver';
 
@@ -22,6 +23,8 @@ declare module 'luxon/src/datetime' {
 setInspectOnClass(DateTime, (dt) => ({ collapsed }) => {
   return collapsed(dt.toLocaleString(DateTime.DATETIME_SHORT_WITH_SECONDS));
 });
+setToStringTag(DateTime, 'DateTime');
+markSkipClassTransformation(DateTime);
 
 Object.defineProperties(DateTime.prototype, {
   toNeo4JDate: {

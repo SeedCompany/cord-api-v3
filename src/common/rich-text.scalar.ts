@@ -1,5 +1,7 @@
 import { applyDecorators } from '@nestjs/common';
 import { Field, FieldOptions, ObjectType } from '@nestjs/graphql';
+import { setToStringTag } from '@seedcompany/common';
+import { markSkipClassTransformation } from '@seedcompany/nest';
 import { IsObject } from 'class-validator';
 import { createHash } from 'crypto';
 import { GraphQLScalarType } from 'graphql';
@@ -71,6 +73,8 @@ export class RichTextDocument {
     return isEqual(aBlocks, bBlocks);
   }
 }
+setToStringTag(RichTextDocument, 'RichText');
+markSkipClassTransformation(RichTextDocument);
 
 export const RichTextField = (options?: FieldOptions) =>
   applyDecorators(

@@ -1,4 +1,4 @@
-import { setInspectOnClass } from '@seedcompany/common';
+import { setInspectOnClass, setToStringTag } from '@seedcompany/common';
 import {
   DateInput,
   DateTimeOptions,
@@ -189,3 +189,5 @@ setInspectOnClass(DateInterval, (i) => ({ collapsed }) => {
 });
 const format = (date: CalendarDate) =>
   date.toLocaleString(CalendarDate.DATE_SHORT);
+
+setToStringTag(DateInterval, 'DateInterval');

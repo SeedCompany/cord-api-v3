@@ -1,4 +1,4 @@
-import { setInspectOnClass } from '@seedcompany/common';
+import { setInspectOnClass, setToStringTag } from '@seedcompany/common';
 import {
   DateObjectUnits,
   DateTime,
@@ -276,3 +276,4 @@ export class CalendarDate<IsValid extends boolean = DefaultValidity>
 setInspectOnClass(CalendarDate, (date) => ({ collapsed }) => {
   return collapsed(date.toLocaleString(DateTime.DATE_SHORT), 'Date');
 });
+setToStringTag(CalendarDate, 'CalendarDate');
