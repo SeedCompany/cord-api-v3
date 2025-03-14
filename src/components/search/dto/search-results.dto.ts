@@ -64,6 +64,7 @@ const publicSearchable = {
 // since they are expected to be used only for internal use.
 const privateSearchable = {
   PartnerByOrg: Partner,
+  LanguageByEth: Language,
 } as const;
 
 // Expand this to add more search types, but not result types.

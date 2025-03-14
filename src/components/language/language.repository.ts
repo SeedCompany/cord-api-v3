@@ -12,6 +12,7 @@ import {
   DuplicateException,
   ID,
   labelForView,
+  NotFoundException,
   ObjectView,
   ServerException,
   Session,
@@ -147,6 +148,23 @@ export class LanguageRepository extends DtoRepository<
       .apply(this.hydrate(session, view))
       .map('dto')
       .run();
+  }
+
+  async readOneByEth(ethnologueId: ID, session: Session) {
+    const dto = await this.db
+      .query()
+      .match([
+        node('eth', 'EthnologueLanguage', { id: ethnologueId }),
+        relation('in', '', 'ethnologue', ACTIVE),
+        node('node', 'Language'),
+      ])
+      .apply(this.hydrate(session))
+      .map('dto')
+      .first();
+    if (!dto) {
+      throw new NotFoundException('No Language exists for this Ethnologue id');
+    }
+    return dto;
   }
 
   protected hydrate(session: Session, view?: ObjectView) {

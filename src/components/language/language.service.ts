@@ -65,6 +65,11 @@ export class LanguageService {
     return languages.map((dto) => this.secure(dto, session));
   }
 
+  async readOneByEthId(ethnologueId: ID, session: Session) {
+    const dto = await this.repo.readOneByEth(ethnologueId, session);
+    return this.secure(dto, session);
+  }
+
   private secure(dto: UnsecuredDto<Language>, session: Session) {
     const ethnologue = this.ethnologueLanguageService.secure(
       dto.ethnologue,
