@@ -1,10 +1,11 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="edgedb seed" type="js.build_tools.npm" folderName="EdgeDB">
+  <configuration default="false" name="gel ap inject" type="js.build_tools.npm" folderName="Gel">
     <package-json value="$PROJECT_DIR$/package.json" />
     <command value="run" />
     <scripts>
-      <script value="edgedb:seed" />
+      <script value="console" />
     </scripts>
+    <arguments value="gel ap inject" />
     <node-interpreter value="project" />
     <envs />
     <method v="2" />
