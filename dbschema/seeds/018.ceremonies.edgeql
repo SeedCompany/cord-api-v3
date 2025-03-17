@@ -31,5 +31,5 @@ with
     )
   ),
   modified := (select ceremonies filter .modifiedAt = datetime_of_statement())
-select { `Modified Ceremony: ` := modified.id }
+select { `Modified Ceremonies` := modified.id }
 filter count(modified) > 0;
