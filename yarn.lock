@@ -3118,12 +3118,12 @@ __metadata:
   linkType: hard
 
 "@seedcompany/scripture@npm:>=0.8.0":
-  version: 0.8.1
-  resolution: "@seedcompany/scripture@npm:0.8.1"
+  version: 0.8.2
+  resolution: "@seedcompany/scripture@npm:0.8.2"
   dependencies:
     "@seedcompany/common": "npm:>=0.17 <1.0.0"
     type-fest: "npm:^4.37.0"
-  checksum: 10c0/fc291c76af7efb21d04d57b5b6ca6284cd7c18cc37ca4c6c588b821a8f01f11826e001747ed965e2113e16e572404615de2de5214b164b54708afca28e8a3f88
+  checksum: 10c0/c968465815360fa4f0cf7968c5b0dada3225029d91d6331bab8a58216531d1085d16b2b37a14107cb72dcc464f874265c4a547bc5a1e8627e1b281ee9faad877
   languageName: node
   linkType: hard
 

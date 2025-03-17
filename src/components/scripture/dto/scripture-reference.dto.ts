@@ -17,7 +17,17 @@ export abstract class ScriptureReferenceInput {
     description: 'The Bible book',
   })
   @IsValidBook()
-  readonly book: string;
+  get book(): string {
+    return undefined as any;
+  }
+  protected set book(book: string) {
+    Object.defineProperty(this, 'book', {
+      value: book,
+      writable: true,
+      configurable: true,
+      enumerable: true,
+    });
+  }
 
   @Field(() => Int, {
     description: stripIndent`
