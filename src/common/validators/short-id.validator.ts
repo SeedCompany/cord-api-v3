@@ -1,4 +1,5 @@
 import { ArgumentMetadata, Injectable, PipeTransform } from '@nestjs/common';
+import { cached } from '@seedcompany/common';
 import {
   ValidationArguments,
   ValidationOptions,
@@ -30,12 +31,40 @@ export class IdResolver {
 export class ValidIdConstraint implements ValidatorConstraintInterface {
   constructor(private readonly resolver: IdResolver) {}
 
-  async validate(value: unknown, args: ValidationArguments) {
-    if (isValidId(value)) {
-      (args.object as any)[args.property] = await this.resolver.resolve(value);
+  private readonly resolved = new WeakMap<
+    object,
+    Map<string, Promise<boolean>>
+  >();
+
+  async validate(_value: unknown, args: ValidationArguments) {
+    const value = args.value as unknown;
+    const object = args.object as Record<string, unknown>;
+    const { property } = args;
+
+    if (!Array.isArray(value)) {
+      if (!isValidId(value)) {
+        return false;
+      }
+      object[property] = await this.resolver.resolve(value);
       return true;
     }
-    return false;
+
+    // validate() is called with every item in the array when using the `each` option.
+    // We want to only do this work once for the entire list, though.
+    const alreadyResolved = cached(
+      this.resolved,
+      object,
+      () => new Map<string, Promise<boolean>>(),
+    );
+    return await cached(alreadyResolved, property, async () => {
+      if (!value.every(isValidId)) {
+        return false;
+      }
+      object[property] = await Promise.all(
+        value.map((id) => this.resolver.resolve(id)),
+      );
+      return true;
+    });
   }
 }
 
