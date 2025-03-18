@@ -63,9 +63,12 @@ export class SearchService {
           // are within this `types` filter
           // and those results are the concretes not the interfaces.
           input.type
-            .flatMap((type) =>
-              this.resources.getImplementations(this.resources.enhance(type)),
-            )
+            .flatMap((type) => {
+              const resource = this.resources.enhance(type);
+              const implementations =
+                this.resources.getImplementations(resource);
+              return [resource, ...implementations];
+            })
             .flatMap((type) =>
               setHas(SearchResultTypes, type.name) ? type.name : [],
             ),
