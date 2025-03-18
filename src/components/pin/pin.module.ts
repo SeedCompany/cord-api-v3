@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { splitDb } from '~/core';
-import { PinEdgeDBRepository } from './pin.edgedb.repository';
+import { PinGelRepository } from './pin.gel.repository';
 import { PinRepository } from './pin.repository';
 import { PinResolver } from './pin.resolver';
 import { PinService } from './pin.service';
@@ -9,7 +9,7 @@ import { PinService } from './pin.service';
   providers: [
     PinResolver,
     PinService,
-    splitDb(PinRepository, PinEdgeDBRepository),
+    splitDb(PinRepository, PinGelRepository),
   ],
   exports: [PinService],
 })

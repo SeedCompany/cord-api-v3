@@ -21,10 +21,12 @@ import {
   FullTextIndex,
   matchProps,
   merge,
+  multiPropsAsSortString,
   paginate,
   path,
   property,
   requestingUser,
+  SortCol,
   sortWith,
 } from '~/core/database/query';
 import {
@@ -406,9 +408,25 @@ export const userFilters = filter.define(() => UserFilters, {
     separateQueryForEachWord: true,
     minScore: 0.9,
   }),
+  title: filter.propPartialVal(),
+  roles: filter.stringListProp(),
 });
 
-export const userSorters = defineSorters(User, {});
+export const userSorters = defineSorters(User, {
+  fullName: (query) =>
+    query
+      .match([
+        node('node'),
+        relation('out', '', 'realFirstName', ACTIVE),
+        node('firstName'),
+      ])
+      .match([
+        node('node'),
+        relation('out', '', 'realLastName', ACTIVE),
+        node('lastName'),
+      ])
+      .return<SortCol>(multiPropsAsSortString('firstName', 'lastName')),
+});
 
 const NameIndex = FullTextIndex({
   indexName: 'UserName',

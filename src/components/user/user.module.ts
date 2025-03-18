@@ -14,11 +14,11 @@ import { KnownLanguageRepository } from './known-language.repository';
 import { KnownLanguageResolver } from './known-language.resolver';
 import { AddActorLabelMigration } from './migrations/add-actor-label.migration';
 import { AddUserNameLabelMigration } from './migrations/add-user-name-label.migration';
-import { SystemAgentEdgeDBRepository } from './system-agent.edgedb.repository';
+import { SystemAgentGelRepository } from './system-agent.gel.repository';
 import { SystemAgentNeo4jRepository } from './system-agent.neo4j.repository';
 import { SystemAgentRepository } from './system-agent.repository';
 import { UnavailabilityModule } from './unavailability/unavailability.module';
-import { UserEdgeDBRepository } from './user.edgedb.repository';
+import { UserGelRepository } from './user.gel.repository';
 import { UserLoader } from './user.loader';
 import { UserRepository } from './user.repository';
 import { UserResolver } from './user.resolver';
@@ -43,10 +43,10 @@ import { UserService } from './user.service';
     UserLoader,
     ActorLoader,
     UserService,
-    splitDb(UserRepository, UserEdgeDBRepository),
+    splitDb(UserRepository, UserGelRepository),
     KnownLanguageRepository,
     {
-      ...splitDb(SystemAgentNeo4jRepository, SystemAgentEdgeDBRepository),
+      ...splitDb(SystemAgentNeo4jRepository, SystemAgentGelRepository),
       provide: SystemAgentRepository,
     },
     AddActorLabelMigration,

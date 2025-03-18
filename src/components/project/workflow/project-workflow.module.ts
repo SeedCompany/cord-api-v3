@@ -27,7 +27,7 @@ import { ProjectWorkflowEventsResolver } from './resolvers/project-workflow-even
     ProjectWorkflowEventGranter,
     splitDb2(ProjectWorkflowRepository, {
       neo4j: ProjectWorkflowNeo4jRepository,
-      edge: ProjectWorkflowRepository,
+      gel: ProjectWorkflowRepository,
     }),
     ProjectWorkflowFlowchart,
     ProjectWorkflowNotificationHandler,

@@ -11,7 +11,7 @@ import {
 } from '~/common';
 import { LinkTo } from '~/core';
 import { SetDbType } from '~/core/database';
-import { e } from '~/core/edgedb';
+import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
 import { FileId } from '../../../file/dto';
 import { Media } from '../../../file/media/media.dto';

@@ -1,5 +1,5 @@
 import { EnhancedResource, ResourceShape } from '~/common';
-import type { $ } from '../edgedb';
+import type { $ } from '../gel';
 import { __privateDontUseThis } from './resource-map-holder';
 
 /**

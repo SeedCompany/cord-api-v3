@@ -15,7 +15,7 @@ export class CoreController {
   @Redirect('', HttpStatus.FOUND)
   favicon() {
     return {
-      url: this.config.frontendUrl + '/images/favicon.ico',
+      url: this.config.frontendUrl + '/favicon.ico',
     };
   }
 }

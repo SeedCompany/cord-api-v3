@@ -1,12 +1,11 @@
+import { setInspectOnClass, setToStringTag } from '@seedcompany/common';
+import { markSkipClassTransformation } from '@seedcompany/nest';
 import { DateTime, DateTimeUnit, Interval } from 'luxon';
 import { Writable as Mutable } from 'type-fest';
-import { inspect } from 'util';
 
 /* eslint-disable @typescript-eslint/method-signature-style */
 declare module 'luxon/src/interval' {
   interface Interval {
-    [inspect.custom](): string;
-
     /**
      * Expand this interval to the full duration unit given
      */
@@ -28,25 +27,40 @@ declare module 'luxon/src/interval' {
 }
 /* eslint-enable @typescript-eslint/method-signature-style */
 
-Interval.prototype[inspect.custom] = function (this: Interval) {
-  const format = (dt: DateTime) =>
-    dt.toLocaleString(DateTime.DATETIME_SHORT_WITH_SECONDS);
-  return `[Interval ${format(this.start)} – ${format(this.end)})`;
-};
+setInspectOnClass(Interval, (i: Interval) => ({ stylize }) => {
+  return (
+    stylize(`[Interval `, 'special') +
+    `${format(i.start)} – ${format(i.end)}` +
+    stylize(`)`, 'special')
+  );
+});
+const format = (dt: DateTime) =>
+  dt.toLocaleString(DateTime.DATETIME_SHORT_WITH_SECONDS);
 
-Interval.prototype.expandToFull = function (
-  this: Interval,
-  unit: DateTimeUnit,
-) {
-  return Interval.fromDateTimes(this.start.startOf(unit), this.end.endOf(unit));
-};
+setToStringTag(Interval, 'Interval');
+markSkipClassTransformation(Interval);
 
-const IntervalStatic = Interval as Mutable<typeof Interval>;
+Object.defineProperty(Interval.prototype, 'expandToFull', {
+  configurable: true,
+  value: function expandToFull(this: Interval, unit: DateTimeUnit) {
+    return Interval.fromDateTimes(
+      this.start.startOf(unit),
+      this.end.endOf(unit),
+    );
+  },
+});
 
-IntervalStatic.compare = (
+const IntervalStatic = new Proxy(Interval, {
+  set(target, p, value) {
+    Object.defineProperty(target, p, { value, configurable: true });
+    return true;
+  },
+}) as Mutable<typeof Interval>;
+
+IntervalStatic.compare = function compare(
   prev: Interval | null | undefined,
   now: Interval | null | undefined,
-) => {
+) {
   const removals = !prev ? [] : !now ? [prev] : prev.difference(now);
   const additions = !now ? [] : !prev ? [now] : now.difference(prev);
   return { removals, additions };

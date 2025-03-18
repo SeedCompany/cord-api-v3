@@ -1,16 +1,20 @@
 import { Field, InterfaceType } from '@nestjs/graphql';
-import { cached, FnLike, mapValues } from '@seedcompany/common';
+import {
+  cached,
+  FnLike,
+  mapValues,
+  setInspectOnClass,
+} from '@seedcompany/common';
 import { LazyGetter as Once } from 'lazy-get-decorator';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { inspect } from 'util';
 import type {
   ResourceDBMap,
   ResourceLike,
   ResourceName,
   ResourcesHost,
 } from '~/core';
-import { $, e } from '~/core/edgedb/reexports';
+import { $, e } from '~/core/gel/reexports';
 import { ScopedRole } from '../components/authorization/dto';
 import { CalculatedSymbol } from './calculated.decorator';
 import { DataObject } from './data-object';
@@ -116,10 +120,6 @@ export class EnhancedResource<T extends ResourceShape<any>> {
     }
     const factory = () => new EnhancedResource(resource);
     return cached(EnhancedResource.refs, resource, factory);
-  }
-
-  [inspect.custom]() {
-    return `${this.constructor.name} { ${this.name} }`;
   }
 
   /**
@@ -292,6 +292,9 @@ export class EnhancedResource<T extends ResourceShape<any>> {
     ).asRecord;
   }
 }
+setInspectOnClass(EnhancedResource, (res) => ({ collapsed }) => {
+  return collapsed(res.name, 'Enhanced');
+});
 
 export interface EnhancedRelation<TResourceStatic extends ResourceShape<any>> {
   readonly name: RelKey<TResourceStatic>;
@@ -317,11 +320,11 @@ export type DBType<TResourceStatic extends ResourceShape<any>> =
     : never;
 
 /**
- * The name of the EdgeDB type, it could be abstract.
+ * The name of the Gel type, it could be abstract.
  */
 export type DBName<T extends $.TypeSet> = T['__element__']['__name__'];
 /**
- * The name(s) of the concrete EdgeDB types.
+ * The name(s) of the concrete Gel types.
  * If the type is abstract, then it is a string union of the concrete type's names.
  * If the type is concrete, then it is just the name, just as {@link DBName}.
  */

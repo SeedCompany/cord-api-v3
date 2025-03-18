@@ -18,7 +18,7 @@ runRepl({
   },
   extraContext: async (app) => {
     const { ResourcesHost } = await import('~/core');
-    const { e } = await import('~/core/edgedb');
+    const { e } = await import('~/core/gel');
     const { AuthenticationService } = await import(
       './components/authentication'
     );

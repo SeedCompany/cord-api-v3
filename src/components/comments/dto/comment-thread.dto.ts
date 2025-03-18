@@ -9,7 +9,7 @@ import {
   UnsecuredDto,
 } from '~/common';
 import { BaseNode } from '~/core/database/results';
-import { e } from '~/core/edgedb';
+import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
 import { Comment } from './comment.dto';
 

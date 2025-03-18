@@ -1,4 +1,4 @@
-import type { SeedFn } from '~/core/edgedb/seeds.run';
+import type { SeedFn } from '~/core/gel/seeds.run';
 
 const agents = [
   { name: 'Ghost' },

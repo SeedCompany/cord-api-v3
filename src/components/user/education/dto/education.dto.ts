@@ -10,7 +10,7 @@ import {
   SecuredProps,
   SecuredString,
 } from '~/common';
-import { e } from '~/core/edgedb';
+import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
 
 export type Degree = EnumType<typeof Degree>;

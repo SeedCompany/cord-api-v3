@@ -4,7 +4,7 @@ import { AuthorizationModule } from '../authorization/authorization.module';
 import { FieldRegionModule } from '../field-region/field-region.module';
 import { FileModule } from '../file/file.module';
 import { FundingAccountModule } from '../funding-account/funding-account.module';
-import { LocationEdgeDBRepository } from './location.edgedb.repository';
+import { LocationGelRepository } from './location.gel.repository';
 import { LocationLoader } from './location.loader';
 import { LocationRepository } from './location.repository';
 import { LocationResolver } from './location.resolver';
@@ -21,7 +21,7 @@ import { DefaultMarketingRegionMigration } from './migrations/default-marketing-
   providers: [
     LocationResolver,
     LocationService,
-    splitDb(LocationRepository, LocationEdgeDBRepository),
+    splitDb(LocationRepository, LocationGelRepository),
     LocationLoader,
     DefaultMarketingRegionMigration,
   ],

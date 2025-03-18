@@ -319,6 +319,9 @@ export const partnerFilters = filters.define(() => PartnerFilters, {
       node('node', 'Organization'),
     ]),
   ),
+  types: filter.intersectsProp(),
+  financialReportingTypes: filter.intersectsProp(),
+  globalInnovationsClient: filter.propVal(),
 });
 
 export const partnerSorters = defineSorters(Partner, {

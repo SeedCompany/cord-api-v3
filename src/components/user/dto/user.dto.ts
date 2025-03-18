@@ -13,7 +13,7 @@ import {
   SecuredString,
   SecuredStringNullable,
 } from '~/common';
-import { e } from '~/core/edgedb';
+import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
 import { Commentable } from '../../comments/dto';
 import { Location } from '../../location/dto';

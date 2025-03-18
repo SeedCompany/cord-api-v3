@@ -20,7 +20,7 @@ export class SetDepartmentId implements IEventHandler<SubscribedEvent> {
   ) {}
 
   async handle(event: SubscribedEvent) {
-    if (this.config.databaseEngine === 'edgedb') {
+    if (this.config.databaseEngine === 'gel') {
       return;
     }
 

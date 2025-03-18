@@ -3,7 +3,7 @@ import { keys as keysOf } from 'ts-transformer-keys';
 import { SecuredProps } from '~/common';
 import { MarkdownScalar } from '~/common/markdown.scalar';
 import { RegisterResource } from '~/core';
-import { e } from '~/core/edgedb';
+import { e } from '~/core/gel';
 import { Notification } from '../notifications';
 
 @RegisterResource({ db: e.Notification.System })

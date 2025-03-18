@@ -11,7 +11,7 @@ import {
   UnsecuredDto,
   Variant,
 } from '~/common';
-import { e } from '~/core/edgedb';
+import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
 import { Product, ProductStep } from '../../product/dto';
 import { ProgressReport } from '../../progress-report/dto';

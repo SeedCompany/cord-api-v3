@@ -1,6 +1,6 @@
 import { keys as keysOf } from 'ts-transformer-keys';
 import { SecuredProps, VariantOf } from '~/common';
-import { e } from '~/core/edgedb';
+import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
 import { PromptVariantResponse } from '../../prompts/dto';
 import { ProgressReportHighlight } from './highlights.dto';
