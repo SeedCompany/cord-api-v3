@@ -9,7 +9,7 @@ import path from 'node:path';
 import { BehaviorSubject } from 'rxjs';
 import { inspect } from 'util';
 import { ID } from '~/common';
-import { attributesOf } from './errors';
+import { attributesOf, fixWarningQuerySnippet } from './errors';
 import { OptionsContext, OptionsFn } from './options.context';
 import { e } from './reexports';
 
@@ -131,6 +131,7 @@ function warningHandler(seedFile: string) {
   const file = 'file://' + path.resolve(seedFile);
   return (warnings: GelError[]) => {
     for (const warning of warnings) {
+      fixWarningQuerySnippet(warning);
       const { lineStart, columnStart } = attributesOf(warning);
       const queryOffset = [lineStart, columnStart];
 

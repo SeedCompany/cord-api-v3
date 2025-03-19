@@ -4,7 +4,7 @@ import { GelError } from 'gel';
 import { TraceNames } from '~/common';
 import { ILogger, Logger } from '~/core/logger';
 import { DbTraceLayer } from '../gel.service';
-import { attributesOf, cleanError } from './index';
+import { attributesOf, cleanError, fixWarningQuerySnippet } from './index';
 
 @Injectable()
 export class GelWarningHandler {
@@ -18,6 +18,7 @@ export class GelWarningHandler {
         continue;
       }
 
+      fixWarningQuerySnippet(warning);
       cleanError(warning);
       this.logger.warning({
         message: warning.message,
