@@ -24,6 +24,7 @@ export * from './fiscal-year';
 export * from './generate-id';
 export * from './id.arg';
 export * from './lazy-ref';
+export * from './lazy-record';
 export { DateField, DateTimeField } from './luxon.graphql';
 export * from './map-or-else';
 export * from './order.enum';

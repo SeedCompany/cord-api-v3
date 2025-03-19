@@ -1,8 +1,8 @@
 /**
- * Returns object matching any shape and calls the given functions to calculate
- * property values as needed.
+ * Returns an object matching any shape and calls the given functions
+ * to calculate property values as needed.
  */
-export const createLazyRecord = <T extends object>({
+export const lazyRecord = <T extends object>({
   calculate,
   getKeys,
   base,

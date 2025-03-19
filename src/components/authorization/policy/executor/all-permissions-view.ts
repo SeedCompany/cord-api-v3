@@ -5,6 +5,7 @@ import { PascalCase } from 'type-fest';
 import {
   ChildListsKey,
   ChildSinglesKey,
+  lazyRecord as createLazyRecord,
   EnhancedResource,
   ResourceShape,
   SecuredPropsPlusExtraKey,
@@ -15,7 +16,6 @@ import {
   ChildSingleAction,
   PropAction,
 } from '../actions';
-import { createLazyRecord } from '../lazy-record';
 import { UserEdgePrivileges } from './user-edge-privileges';
 import { UserResourcePrivileges } from './user-resource-privileges';
 
