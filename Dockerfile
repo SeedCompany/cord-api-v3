@@ -1,6 +1,6 @@
 ARG NODE_VERSION=20
 ARG NODE_IMAGE=public.ecr.aws/docker/library/node:${NODE_VERSION}-slim
-ARG GEL_IMAGE=ghcr.io/geldata/gel:5
+ARG GEL_IMAGE=ghcr.io/geldata/gel:6
 
 FROM ${NODE_IMAGE} AS base-runtime
 
@@ -63,11 +63,9 @@ WORKDIR /source
 
 ENV NODE_ENV=development \
     # Ignore creds during this build process
-    EDGEDB_SERVER_SECURITY=insecure_dev_mode \
+    GEL_SERVER_SECURITY=insecure_dev_mode \
     # Don't start/host the db server, just bootstrap & quit.
-    EDGEDB_SERVER_BOOTSTRAP_ONLY=1 \
-    # Temporary until upstream stale default of "edgedb" is resolved
-    EDGEDB_SERVER_DATABASE=main \
+    GEL_SERVER_BOOTSTRAP_ONLY=1 \
     # Don't flood log with cache debug messages
     VERBOSE_YARN_LOG=discard
 
@@ -84,16 +82,14 @@ COPY . .
 RUN <<EOF
 set -e
 
-chown -R edgedb:edgedb /dbschema src
-
 # Hook `yarn gel:gen` into gel bootstrap.
 # This allows it to be ran in parallel to the db server running without a daemon
-mkdir -p /edgedb-bootstrap-late.d
-printf "#!/usr/bin/env bash\ncd /source \nyarn gel:gen" > /edgedb-bootstrap-late.d/01-generate-js.sh
-chmod +x /edgedb-bootstrap-late.d/01-generate-js.sh
+mkdir -p /gel-bootstrap-late.d
+printf "#!/usr/bin/env bash\ncd /source \nyarn gel:gen" > /gel-bootstrap-late.d/01-generate-js.sh
+chmod +x /gel-bootstrap-late.d/01-generate-js.sh
 
 # Bootstrap the db to apply migrations and then generate the TS/JS from that.
-/usr/local/bin/docker-entrypoint.sh edgedb-server
+/usr/local/bin/docker-entrypoint.sh server
 EOF
 # endregion
 

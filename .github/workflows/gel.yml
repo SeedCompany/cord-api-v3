@@ -20,7 +20,7 @@ jobs:
         run: yarn console gel ap inject
 
       - name: Schema Migrations In Sync
-        run: edgedb migration status
+        run: gel migration status
         if: github.event.pull_request.draft == false
 
       - name: Validate seed scripts are error free
