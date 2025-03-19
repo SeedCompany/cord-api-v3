@@ -1,3 +1,5 @@
+import './code-as-hex.patch';
+
 export * from './attributes';
 export * from './clean-error';
 export * from './constraint-violation.error';
