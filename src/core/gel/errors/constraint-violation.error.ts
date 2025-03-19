@@ -1,6 +1,7 @@
 import { ConstraintViolationError } from 'gel';
 import { LiteralUnion } from 'type-fest';
 import type { AllResourceDBNames } from '~/core/resources';
+import { attributesOf } from './attributes';
 import { ExclusivityViolationError } from './exclusivity-violation.error';
 
 declare module 'gel' {
@@ -12,11 +13,7 @@ declare module 'gel' {
 }
 
 export const enhanceConstraintError = (e: ConstraintViolationError) => {
-  // @ts-expect-error it is a private field
-  const attrs: Map<number, Uint8Array> = e._attrs;
-
-  const detail = new TextDecoder('utf8').decode(attrs.get(2 /* details */));
-  const matches = detail.match(
+  const matches = attributesOf(e).details!.match(
     /^violated constraint '(?<constraint>.+)' on property '(?<property>.+)' of object type '(?<fqn>.+)'$/,
   );
   if (!matches) {
