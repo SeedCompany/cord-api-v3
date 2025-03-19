@@ -1,14 +1,19 @@
-import { many, MaybeAsync } from '@seedcompany/common';
+import { clc } from '@nestjs/common/utils/cli-colors.util.js';
+import { cleanJoin, many, MaybeAsync } from '@seedcompany/common';
 import { BaseContext, Command, runExit } from 'clipanion';
-import { Client, createClient, Executor, Options } from 'gel';
+import { Client, createClient, Executor, GelError, Options } from 'gel';
 import type { QueryArgs } from 'gel/dist/ifaces';
 import { glob } from 'glob';
 import fs from 'node:fs/promises';
+import path from 'node:path';
 import { BehaviorSubject } from 'rxjs';
 import { inspect } from 'util';
 import { ID } from '~/common';
+import { attributesOf } from './errors';
 import { OptionsContext, OptionsFn } from './options.context';
 import { e } from './reexports';
+
+Error.stackTraceLimit = Infinity;
 
 type Query = string | QBQuery;
 interface QBQuery {
@@ -82,24 +87,29 @@ class SeedCommand extends Command {
     };
 
     for (const file of files) {
-      if (file.endsWith('.edgeql')) {
-        const query = await fs.readFile(file, 'utf-8');
-        await runAndPrint(query);
-      } else {
-        const script = await import('../../../' + file);
-        const queries = await (script.default as SeedFn)(params);
-        if (!queries) {
-          continue;
-        }
-        const casted =
-          typeof queries === 'string' ||
-          (typeof queries === 'object' && 'run' in queries)
-            ? [queries]
-            : queries;
-        for await (const query of casted) {
-          await runAndPrint(query);
-        }
-      }
+      await optionsContext.usingOptions(
+        (opts) => opts.withWarningHandler(warningHandler(file)),
+        async () => {
+          if (file.endsWith('.edgeql')) {
+            const query = await fs.readFile(file, 'utf-8');
+            await runAndPrint(query);
+          } else {
+            const script = await import('../../../' + file);
+            const queries = await (script.default as SeedFn)(params);
+            if (!queries) {
+              return;
+            }
+            const casted =
+              typeof queries === 'string' ||
+              (typeof queries === 'object' && 'run' in queries)
+                ? [queries]
+                : queries;
+            for await (const query of casted) {
+              await runAndPrint(query);
+            }
+          }
+        },
+      );
     }
 
     return code;
@@ -116,3 +126,32 @@ class SeedCommand extends Command {
   }
 }
 await runExit(SeedCommand);
+
+function warningHandler(seedFile: string) {
+  const file = 'file://' + path.resolve(seedFile);
+  return (warnings: GelError[]) => {
+    for (const warning of warnings) {
+      const { lineStart, columnStart } = attributesOf(warning);
+      const queryOffset = [lineStart, columnStart];
+
+      const tsFrame = warning
+        .stack!.split('\n')
+        .find((frame) => frame.includes(file));
+      const tsStartMatches = tsFrame?.match(/(\d+):(\d+)\)$/);
+      const tsOffset = [
+        Number(tsStartMatches?.[1] ?? 0) || undefined,
+        Number(tsStartMatches?.[2] ?? 0) || undefined,
+      ] as const;
+
+      const src = cleanJoin(':', [
+        file,
+        ...(file.endsWith('.edgeql') ? queryOffset : tsOffset),
+      ]);
+
+      // eslint-disable-next-line no-console
+      console.warn(
+        clc.yellow(`Warning: ${warning.message}\n`) + `  at ${src}\n`,
+      );
+    }
+  };
+}
