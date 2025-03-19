@@ -6,6 +6,7 @@ import type { ConfigService } from '~/core';
 import { splitDb } from '../database/split-db.provider';
 import { AliasIdResolver } from './alias-id-resolver';
 import { codecs, registerCustomScalarCodecs } from './codecs';
+import { GelWarningHandler } from './errors/warning.handler';
 import { GelTransactionalMutationsInterceptor } from './gel-transactional-mutations.interceptor';
 import { Gel } from './gel.service';
 import { OptionsContext } from './options.context';
@@ -20,7 +21,11 @@ import './errors';
   providers: [
     {
       provide: Options,
-      useValue: Options.defaults(),
+      inject: [GelWarningHandler],
+      useFactory: (warningHandler: GelWarningHandler) =>
+        Options.defaults().withWarningHandler(
+          warningHandler.handle.bind(warningHandler),
+        ),
     },
     OptionsContext,
     {
@@ -57,6 +62,7 @@ import './errors';
       useClass: GelTransactionalMutationsInterceptor,
     },
     splitDb(IdResolver, AliasIdResolver),
+    GelWarningHandler,
   ],
   exports: [Gel, Client, IdResolver],
 })
