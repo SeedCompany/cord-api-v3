@@ -302,7 +302,14 @@ export const ProjectWorkflow = defineWorkflow({
   'Request Change To Plan Approval': {
     from: Step.DiscussingChangeToPlan,
     to: Step.PendingChangeToPlanApproval,
-    label: 'Submit for Approval',
+    label: 'Submit for RD Approval',
+    type: Type.Approve,
+    notifiers: [Distros.Extension, Distros.Revision],
+  },
+  'Request Change To Plan Finance Confirmation': {
+    from: Step.DiscussingChangeToPlan,
+    to: Step.PendingChangeToPlanConfirmation,
+    label: 'Submit for Finance Confirmation',
     type: Type.Approve,
     notifiers: [Distros.Extension, Distros.Revision],
   },

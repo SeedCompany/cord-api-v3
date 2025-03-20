@@ -41,6 +41,7 @@ export const projectTransitions = () =>
     'Discuss Terminating Active Project',
     'Finalize Completion',
     'Request Change To Plan Approval',
+    'Request Change To Plan Finance Confirmation',
     'Discuss Suspension out of Change to Plan Discussion',
     'End Change To Plan Discussion',
     'Request Changes for Change To Plan',
