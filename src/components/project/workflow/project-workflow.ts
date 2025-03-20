@@ -321,6 +321,16 @@ export const ProjectWorkflow = defineWorkflow({
     notifiers: [Distros.Extension, Distros.Revision],
   },
 
+  'Retract Change To Plan Approval Request': {
+    from: [
+      Step.PendingChangeToPlanApproval,
+      Step.PendingChangeToPlanConfirmation,
+    ],
+    to: Step.DiscussingChangeToPlan,
+    label: 'Retract Approval Request',
+    type: Type.Neutral,
+  },
+
   'Request Changes for Change To Plan': {
     from: Step.PendingChangeToPlanApproval,
     to: Step.DiscussingChangeToPlan,

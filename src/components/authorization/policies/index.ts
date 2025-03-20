@@ -27,3 +27,4 @@ export * from './by-feature/user-can-edit-self.policy';
 export * from './by-feature/everyone-can-comment.policy';
 export * from './by-feature/user-can-manage-own-comments.policy';
 export * from './by-feature/new-progress-reports-beta.policy';
+export * from './by-feature/project-managers-can-retract-own-change-to-plan-approval';
