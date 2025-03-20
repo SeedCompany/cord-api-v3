@@ -90,6 +90,9 @@ export abstract class CreateProject {
 
   @Field({ nullable: true })
   readonly presetInventory?: boolean;
+
+  @Field({ nullable: true })
+  readonly departmentId?: string;
 }
 
 @InputType()

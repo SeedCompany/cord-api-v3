@@ -173,7 +173,6 @@ export class ProjectRepository extends CommonRepository {
       initialMouEnd: undefined,
       stepChangedAt: now,
       estimatedSubmission: input.estimatedSubmission,
-      departmentId: null,
       tags: input.tags,
       financialReportReceivedAt: input.financialReportReceivedAt,
       financialReportPeriod: input.financialReportPeriod,
