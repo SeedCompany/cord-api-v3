@@ -37,6 +37,12 @@ export abstract class WorkflowTester<
     );
   }
 
+  async transitionByLabel(label: string) {
+    return (await this.freshTransitions()).find(
+      (t) => t.label === label && !t.disabled,
+    );
+  }
+
   async findTransition(iteratee: (transition: Transition) => boolean) {
     const transition = (await this.freshTransitions()).find(iteratee);
     if (!transition) {
