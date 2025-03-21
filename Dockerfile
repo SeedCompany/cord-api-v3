@@ -66,6 +66,8 @@ ENV NODE_ENV=development \
     GEL_SERVER_SECURITY=insecure_dev_mode \
     # Don't start/host the db server, just bootstrap & quit.
     GEL_SERVER_BOOTSTRAP_ONLY=1 \
+    # No need to print temporary generated cert, just clutters log
+    GEL_DOCKER_SHOW_GENERATED_CERT=never \
     # Don't flood log with cache debug messages
     VERBOSE_YARN_LOG=discard
 
