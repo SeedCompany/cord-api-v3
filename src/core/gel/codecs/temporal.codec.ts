@@ -37,7 +37,7 @@ export class LuxonDateTimeCodec extends DateTimeCodec {
 
 export class LuxonCalendarDateCodec extends LocalDateCodec {
   static info: ScalarInfo = {
-    module: 'cal',
+    module: 'std::cal',
     type: 'local_date',
     ts: 'CalendarDate',
     path: '~/common/temporal/calendar-date',
