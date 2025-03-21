@@ -66,8 +66,6 @@ ENV NODE_ENV=development \
     GEL_SERVER_SECURITY=insecure_dev_mode \
     # Don't start/host the db server, just bootstrap & quit.
     GEL_SERVER_BOOTSTRAP_ONLY=1 \
-    # Temporary until upstream stale default of "edgedb" is resolved
-    GEL_SERVER_DATABASE=main \
     # Don't flood log with cache debug messages
     VERBOSE_YARN_LOG=discard
 
