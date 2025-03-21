@@ -1,12 +1,12 @@
 import {
   ChildListsKey,
   ChildSinglesKey,
+  lazyRecord as createLazyRecord,
   EnhancedResource,
   ResourceShape,
 } from '~/common';
 import { ChildListAction, ChildSingleAction } from '../actions';
 import { Condition } from '../conditions';
-import { createLazyRecord } from '../lazy-record';
 import { action, extract, PermGranter } from './perm-granter';
 
 export abstract class ChildRelationshipGranter<

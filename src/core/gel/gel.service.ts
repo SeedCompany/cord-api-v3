@@ -1,13 +1,12 @@
 /* eslint-disable @typescript-eslint/unified-signatures */
 import { Injectable, Optional } from '@nestjs/common';
-import { $, ConstraintViolationError, Executor, GelError } from 'gel';
+import { $, Executor } from 'gel';
 import { QueryArgs } from 'gel/dist/ifaces';
 import { TraceLayer } from '~/common';
 import { retry, RetryOptions } from '~/common/retry';
 import { TracingService } from '~/core/tracing';
-import { jestSkipFileInExceptionSource } from '../exception';
 import { TypedEdgeQL } from './edgeql';
-import { enhanceConstraintError } from './errors';
+import { cleanError } from './errors';
 import { InlineQueryRuntimeMap } from './generated-client/inline-queries';
 import { ApplyOptions, OptionsContext } from './options.context';
 import { Client } from './reexports';
@@ -160,28 +159,7 @@ export class Gel {
         return await executor.query(query, args);
       }
     } catch (e) {
-      // Ignore this call in the stack trace. This puts the actual query as the first.
-      e.stack = e.stack!.replaceAll(
-        /^\s+at .+\/(gel|tracing)\.service.+$\n/gm,
-        '',
-      );
-
-      // Don't present abstract repositories as the src block in jest reports
-      // for DB execution errors.
-      // There shouldn't be anything specific to there to be helpful.
-      // This is a bit of a broad assumption though, so only do for jest and
-      // keep the frame for actual use from users/devs.
-      if (e instanceof GelError) {
-        jestSkipFileInExceptionSource(
-          e,
-          /^\s+at .+src[/|\\]core[/|\\]gel[/|\\].+\.repository\..+$\n/gm,
-        );
-      }
-
-      if (e instanceof ConstraintViolationError) {
-        throw enhanceConstraintError(e);
-      }
-      throw e;
+      throw cleanError(e);
     }
 
     throw new Error('Could not figure out how to run given query');
