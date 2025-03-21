@@ -19,8 +19,10 @@ import _Product from "./modules/Product";
 import _ProgressReport from "./modules/ProgressReport";
 import _Project from "./modules/Project";
 import _User from "./modules/User";
+import _cal from "./modules/cal";
 import _cfg from "./modules/cfg";
 import _default from "./modules/default";
+import _fts from "./modules/fts";
 import _schema from "./modules/schema";
 import _sys from "./modules/sys";
 import _Mixin from "./modules/Mixin";
@@ -31,6 +33,7 @@ import _Media from "./modules/Media";
 import _Notification from "./modules/Notification";
 import _Prompt from "./modules/Prompt";
 import _Scripture from "./modules/Scripture";
+import _math from "./modules/math";
 
 const ExportDefault: typeof _std & 
   Omit<typeof _default, "Media" | "Notification" | "Budget" | "Product" | "Engagement" | "File" | "Project" | "Language" | "Location" | "Organization" | "Partner" | "Partnership" | "Post" | "ProgressReport" | "User"> & 
@@ -50,8 +53,10 @@ const ExportDefault: typeof _std &
   "ProgressReport": typeof _ProgressReport & typeof _default.ProgressReport;
   "Project": typeof _Project & typeof _default.Project;
   "User": typeof _User & typeof _default.User;
+  "cal": typeof _cal;
   "cfg": typeof _cfg;
   "default": typeof _default;
+  "fts": typeof _fts;
   "schema": typeof _schema;
   "sys": typeof _sys;
   "Mixin": typeof _Mixin;
@@ -62,6 +67,7 @@ const ExportDefault: typeof _std &
   "Notification": typeof _Notification & typeof _default.Notification;
   "Prompt": typeof _Prompt;
   "Scripture": typeof _Scripture;
+  "math": typeof _math;
 } = {
   ..._std,
   ..._default,
@@ -81,8 +87,10 @@ const ExportDefault: typeof _std &
   "ProgressReport": Object.freeze({ ..._ProgressReport, ..._default.ProgressReport }),
   "Project": Object.freeze({ ..._Project, ..._default.Project }),
   "User": Object.freeze({ ..._User, ..._default.User }),
+  "cal": _cal,
   "cfg": _cfg,
   "default": _default,
+  "fts": _fts,
   "schema": _schema,
   "sys": _sys,
   "Mixin": _Mixin,
@@ -93,6 +101,7 @@ const ExportDefault: typeof _std &
   "Notification": Object.freeze({ ..._Notification, ..._default.Notification }),
   "Prompt": _Prompt,
   "Scripture": _Scripture,
+  "math": _math,
 };
 const Cardinality = $.Cardinality;
 type Cardinality = $.Cardinality;

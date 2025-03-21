@@ -19,7 +19,7 @@ import type * as _Product from "./Product";
 import type * as _Comments from "./Comments";
 import type * as _Scripture from "./Scripture";
 import type * as _ProgressReportProductProgress from "./ProgressReport/ProductProgress";
-import type * as _stdcal from "./std/cal";
+import type * as _cal from "./cal";
 import type * as _Ethnologue from "./Ethnologue";
 import type * as _Language from "./Language";
 import type * as _Location from "./Location";
@@ -32,10 +32,10 @@ export type $ReportPeriod = {
   "Monthly": $.$expr_Literal<$ReportPeriod>;
   "Quarterly": $.$expr_Literal<$ReportPeriod>;
 } & $.EnumType<"default::ReportPeriod", ["Monthly", "Quarterly"]>;
-const ReportPeriod: $ReportPeriod = $.makeType<$ReportPeriod>(_.spec, "319f651e-01a9-11f0-be44-3f09b040ca6f", _.syntax.literal);
+const ReportPeriod: $ReportPeriod = $.makeType<$ReportPeriod>(_.spec, "07843ad6-0670-11f0-bf67-6906a0eabd78", _.syntax.literal);
 
 export type $RichText = $.ScalarType<"std::json", RichTextDocument>;
-const RichText: $.scalarTypeWithConstructor<_std.$json, never> = $.makeType<$.scalarTypeWithConstructor<_std.$json, never>>(_.spec, "331b23b0-01a9-11f0-a6e9-3571d7a455db", _.syntax.literal);
+const RichText: $.scalarTypeWithConstructor<_std.$json, never> = $.makeType<$.scalarTypeWithConstructor<_std.$json, never>>(_.spec, "088950e2-0670-11f0-b03a-5bf232fcbbd6", _.syntax.literal);
 
 export type $Role = {
   "Administrator": $.$expr_Literal<$Role>;
@@ -61,21 +61,21 @@ export type $Role = {
   "StaffMember": $.$expr_Literal<$Role>;
   "Translator": $.$expr_Literal<$Role>;
 } & $.EnumType<"default::Role", ["Administrator", "BetaTester", "BibleTranslationLiaison", "Consultant", "ConsultantManager", "Controller", "ExperienceOperations", "FieldOperationsDirector", "FieldPartner", "FinancialAnalyst", "Fundraising", "Intern", "LeadFinancialAnalyst", "Leadership", "Liaison", "Marketing", "Mentor", "ProjectManager", "RegionalCommunicationsCoordinator", "RegionalDirector", "StaffMember", "Translator"]>;
-const Role: $Role = $.makeType<$Role>(_.spec, "31964af6-01a9-11f0-ab9e-61d66f8ad16e", _.syntax.literal);
+const Role: $Role = $.makeType<$Role>(_.spec, "077cebdc-0670-11f0-93fb-cfd4070fc689", _.syntax.literal);
 
 export type $Sensitivity = {
   "Low": $.$expr_Literal<$Sensitivity>;
   "Medium": $.$expr_Literal<$Sensitivity>;
   "High": $.$expr_Literal<$Sensitivity>;
 } & $.EnumType<"default::Sensitivity", ["Low", "Medium", "High"]>;
-const Sensitivity: $Sensitivity = $.makeType<$Sensitivity>(_.spec, "319f7630-01a9-11f0-b2ad-c9ed40e4e816", _.syntax.literal);
+const Sensitivity: $Sensitivity = $.makeType<$Sensitivity>(_.spec, "078448be-0670-11f0-9fdc-652e4051b91b", _.syntax.literal);
 
 export type $Sens = {
   "Low": $.$expr_Literal<$Sens>;
   "Medium": $.$expr_Literal<$Sens>;
   "High": $.$expr_Literal<$Sens>;
 } & $.EnumType<"default::Sens", ["Low", "Medium", "High"]>;
-const Sens: $Sens = $.makeType<$Sens>(_.spec, "36927fac-01a9-11f0-902b-2943bc37ce9f", _.syntax.literal);
+const Sens: $Sens = $.makeType<$Sens>(_.spec, "0affd9e0-0670-11f0-a6a9-0b15bc8898e6", _.syntax.literal);
 
 export type $currentRoles = {
   "Administrator": $.$expr_Literal<$currentRoles>;
@@ -101,13 +101,13 @@ export type $currentRoles = {
   "StaffMember": $.$expr_Literal<$currentRoles>;
   "Translator": $.$expr_Literal<$currentRoles>;
 } & $.EnumType<"default::currentRoles", ["Administrator", "BetaTester", "BibleTranslationLiaison", "Consultant", "ConsultantManager", "Controller", "ExperienceOperations", "FieldOperationsDirector", "FieldPartner", "FinancialAnalyst", "Fundraising", "Intern", "LeadFinancialAnalyst", "Leadership", "Liaison", "Marketing", "Mentor", "ProjectManager", "RegionalCommunicationsCoordinator", "RegionalDirector", "StaffMember", "Translator"]>;
-const currentRoles: $currentRoles = $.makeType<$currentRoles>(_.spec, "32dbb7fc-01a9-11f0-98a6-4be43fa9bb21", _.syntax.literal);
+const currentRoles: $currentRoles = $.makeType<$currentRoles>(_.spec, "085ef888-0670-11f0-ae37-e59eb9ccaa00", _.syntax.literal);
 
 export type $nanoid = $.ScalarType<"std::str", ID>;
-const nanoid: $.scalarTypeWithConstructor<_std.$str, never> = $.makeType<$.scalarTypeWithConstructor<_std.$str, never>>(_.spec, "36929622-01a9-11f0-bb9d-23fd3888a2da", _.syntax.literal);
+const nanoid: $.scalarTypeWithConstructor<_std.$str, never> = $.makeType<$.scalarTypeWithConstructor<_std.$str, never>>(_.spec, "0affe872-0670-11f0-8097-77fab8c757db", _.syntax.literal);
 
 export type $population = $.ScalarType<"std::number", number>;
-const population: $.scalarTypeWithConstructor<_std.$number, string> = $.makeType<$.scalarTypeWithConstructor<_std.$number, string>>(_.spec, "32bd25b2-01a9-11f0-b8db-898e065205c9", _.syntax.literal);
+const population: $.scalarTypeWithConstructor<_std.$number, string> = $.makeType<$.scalarTypeWithConstructor<_std.$number, string>>(_.spec, "084b5a26-0670-11f0-833e-7bc963d41028", _.syntax.literal);
 
 export type $ResourceλShape = $.typeutil.flatten<_Mixin.$AuditedλShape & {
   "<container[is Mixin::Embedded]": $.LinkDesc<_Mixin.$Embedded, $.Cardinality.Many, {}, false, false,  false, false>;
@@ -118,7 +118,7 @@ export type $ResourceλShape = $.typeutil.flatten<_Mixin.$AuditedλShape & {
 type $Resource = $.ObjectType<"default::Resource", $ResourceλShape, null, [
   ..._Mixin.$Audited['__exclusives__'],
 ], "Budget::Record" | "Comments::Comment" | "Comments::Thread" | "Engagement::CertificationCeremony" | "Engagement::DedicationCeremony" | "File::Version" | "Product::PartnershipProducingMedium" | "ProgressReport::CommunityStory" | "ProgressReport::Highlight" | "ProgressReport::Media" | "ProgressReport::TeamNews" | "ProgressReport::VarianceExplanation" | "Project::Member" | "User::Education" | "User::Unavailability" | "default::Budget" | "default::DerivativeScriptureProduct" | "default::DirectScriptureProduct" | "default::Directory" | "default::EthnoArt" | "default::FieldRegion" | "default::FieldZone" | "default::File" | "default::Film" | "default::FinancialReport" | "default::FundingAccount" | "default::InternshipEngagement" | "default::InternshipProject" | "default::Language" | "default::LanguageEngagement" | "default::Location" | "default::MomentumTranslationProject" | "default::MultiplicationTranslationProject" | "default::NarrativeReport" | "default::Organization" | "default::OtherProduct" | "default::Partner" | "default::Partnership" | "default::Post" | "default::ProgressReport" | "default::Story" | "default::User" | "default::currentUser">;
-const $Resource = $.makeType<$Resource>(_.spec, "31af2742-01a9-11f0-b914-791d27212413", _.syntax.literal);
+const $Resource = $.makeType<$Resource>(_.spec, "07936e20-0670-11f0-b4ea-e562b502f2c3", _.syntax.literal);
 
 const Resource: $.$expr_PathNode<$.TypeSet<$Resource, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Resource, $.Cardinality.Many), null);
 
@@ -127,15 +127,15 @@ export type $MediaλShape = $.typeutil.flatten<_std.$Object_8ce8c71ee4fa5f73840c
   "altText": $.PropertyDesc<_std.$str, $.Cardinality.AtMostOne, false, false, false, false>;
   "caption": $.PropertyDesc<_std.$str, $.Cardinality.AtMostOne, false, false, false, false>;
   "mimeType": $.PropertyDesc<_std.$str, $.Cardinality.One, false, false, false, false>;
-  "<media[is ProgressReport::Media]": $.LinkDesc<_ProgressReport.$Media, $.Cardinality.Many, {}, false, false,  false, false>;
   "<media[is File]": $.LinkDesc<$File, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<media[is ProgressReport::Media]": $.LinkDesc<_ProgressReport.$Media, $.Cardinality.Many, {}, false, false,  false, false>;
   "<media": $.LinkDesc<$.ObjectType, $.Cardinality.Many, {}, false, false,  false, false>;
 }>;
 type $Media = $.ObjectType<"default::Media", $MediaλShape, null, [
   ..._std.$Object_8ce8c71ee4fa5f73840c22d7eaa58588['__exclusives__'],
   {file: {__element__: _File.$Version, __cardinality__: $.Cardinality.One | $.Cardinality.AtMostOne },},
 ], "Media::Audio" | "Media::Image" | "Media::Video">;
-const $Media = $.makeType<$Media>(_.spec, "47e27442-01a9-11f0-a491-2f0ff02bdf21", _.syntax.literal);
+const $Media = $.makeType<$Media>(_.spec, "1c6b7a36-0670-11f0-afe3-175858dfeebc", _.syntax.literal);
 
 const Media: $.$expr_PathNode<$.TypeSet<$Media, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Media, $.Cardinality.Many), null);
 
@@ -150,7 +150,7 @@ export type $NotificationλShape = $.typeutil.flatten<_Mixin.$AuditedλShape & {
 type $Notification = $.ObjectType<"default::Notification", $NotificationλShape, null, [
   ..._Mixin.$Audited['__exclusives__'],
 ], "Notification::CommentViaMembership" | "Notification::CommentViaMention" | "Notification::System">;
-const $Notification = $.makeType<$Notification>(_.spec, "bb7f29e4-01aa-11f0-8cec-819e51c38fda", _.syntax.literal);
+const $Notification = $.makeType<$Notification>(_.spec, "e98881da-0670-11f0-adb1-f97d51655bec", _.syntax.literal);
 
 const Notification: $.$expr_PathNode<$.TypeSet<$Notification, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Notification, $.Cardinality.Many), null);
 
@@ -160,6 +160,8 @@ export type $ActorλShape = $.typeutil.flatten<_std.$Object_8ce8c71ee4fa5f73840c
   "<modifiedBy[is Mixin::Audited]": $.LinkDesc<_Mixin.$Audited, $.Cardinality.Many, {}, false, false,  false, false>;
   "<modifiedBy[is Resource]": $.LinkDesc<$Resource, $.Cardinality.Many, {}, false, false,  false, false>;
   "<createdBy[is Resource]": $.LinkDesc<$Resource, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<createdBy[is Notification::Comment]": $.LinkDesc<_Notification.$Comment, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<modifiedBy[is Notification::Comment]": $.LinkDesc<_Notification.$Comment, $.Cardinality.Many, {}, false, false,  false, false>;
   "<createdBy[is FundingAccount]": $.LinkDesc<$FundingAccount, $.Cardinality.Many, {}, false, false,  false, false>;
   "<modifiedBy[is FundingAccount]": $.LinkDesc<$FundingAccount, $.Cardinality.Many, {}, false, false,  false, false>;
   "<createdBy[is Location]": $.LinkDesc<$Location, $.Cardinality.Many, {}, false, false,  false, false>;
@@ -237,6 +239,8 @@ export type $ActorλShape = $.typeutil.flatten<_std.$Object_8ce8c71ee4fa5f73840c
   "<modifiedBy[is FieldRegion]": $.LinkDesc<$FieldRegion, $.Cardinality.Many, {}, false, false,  false, false>;
   "<createdBy[is FieldZone]": $.LinkDesc<$FieldZone, $.Cardinality.Many, {}, false, false,  false, false>;
   "<modifiedBy[is FieldZone]": $.LinkDesc<$FieldZone, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<createdBy[is Notification::System]": $.LinkDesc<_Notification.$System, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<modifiedBy[is Notification::System]": $.LinkDesc<_Notification.$System, $.Cardinality.Many, {}, false, false,  false, false>;
   "<modifiedBy[is FinancialReport]": $.LinkDesc<$FinancialReport, $.Cardinality.Many, {}, false, false,  false, false>;
   "<createdBy[is FinancialReport]": $.LinkDesc<$FinancialReport, $.Cardinality.Many, {}, false, false,  false, false>;
   "<modifiedBy[is NarrativeReport]": $.LinkDesc<$NarrativeReport, $.Cardinality.Many, {}, false, false,  false, false>;
@@ -247,46 +251,42 @@ export type $ActorλShape = $.typeutil.flatten<_std.$Object_8ce8c71ee4fa5f73840c
   "<modifiedBy[is Mixin::Postable]": $.LinkDesc<_Mixin.$Postable, $.Cardinality.Many, {}, false, false,  false, false>;
   "<modifiedBy[is Project]": $.LinkDesc<$Project, $.Cardinality.Many, {}, false, false,  false, false>;
   "<createdBy[is Project]": $.LinkDesc<$Project, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<modifiedBy[is InternshipProject]": $.LinkDesc<$InternshipProject, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<createdBy[is InternshipProject]": $.LinkDesc<$InternshipProject, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<modifiedBy[is User]": $.LinkDesc<$User, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<createdBy[is User]": $.LinkDesc<$User, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<createdBy[is Engagement]": $.LinkDesc<$Engagement, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<createdBy[is InternshipEngagement]": $.LinkDesc<$InternshipEngagement, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<modifiedBy[is Engagement]": $.LinkDesc<$Engagement, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<modifiedBy[is InternshipEngagement]": $.LinkDesc<$InternshipEngagement, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<createdBy[is LanguageEngagement]": $.LinkDesc<$LanguageEngagement, $.Cardinality.Many, {}, false, false,  false, false>;
   "<modifiedBy[is TranslationProject]": $.LinkDesc<$TranslationProject, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<modifiedBy[is LanguageEngagement]": $.LinkDesc<$LanguageEngagement, $.Cardinality.Many, {}, false, false,  false, false>;
   "<createdBy[is TranslationProject]": $.LinkDesc<$TranslationProject, $.Cardinality.Many, {}, false, false,  false, false>;
   "<createdBy[is MomentumTranslationProject]": $.LinkDesc<$MomentumTranslationProject, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<modifiedBy[is currentUser]": $.LinkDesc<$currentUser, $.Cardinality.Many, {}, false, false,  false, false>;
   "<modifiedBy[is MomentumTranslationProject]": $.LinkDesc<$MomentumTranslationProject, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<createdBy[is currentUser]": $.LinkDesc<$currentUser, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<modifiedBy[is ProgressReport]": $.LinkDesc<$ProgressReport, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<createdBy[is ProgressReport]": $.LinkDesc<$ProgressReport, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<modifiedBy[is InternshipProject]": $.LinkDesc<$InternshipProject, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<createdBy[is InternshipProject]": $.LinkDesc<$InternshipProject, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<modifiedBy[is Language]": $.LinkDesc<$Language, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<modifiedBy[is Partner]": $.LinkDesc<$Partner, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<createdBy[is Partner]": $.LinkDesc<$Partner, $.Cardinality.Many, {}, false, false,  false, false>;
   "<createdBy[is MultiplicationTranslationProject]": $.LinkDesc<$MultiplicationTranslationProject, $.Cardinality.Many, {}, false, false,  false, false>;
   "<modifiedBy[is MultiplicationTranslationProject]": $.LinkDesc<$MultiplicationTranslationProject, $.Cardinality.Many, {}, false, false,  false, false>;
   "<createdBy[is Comments::Thread]": $.LinkDesc<_Comments.$Thread, $.Cardinality.Many, {}, false, false,  false, false>;
   "<modifiedBy[is Comments::Thread]": $.LinkDesc<_Comments.$Thread, $.Cardinality.Many, {}, false, false,  false, false>;
   "<createdBy[is Comments::Comment]": $.LinkDesc<_Comments.$Comment, $.Cardinality.Many, {}, false, false,  false, false>;
   "<modifiedBy[is Comments::Comment]": $.LinkDesc<_Comments.$Comment, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<modifiedBy[is Language]": $.LinkDesc<$Language, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<modifiedBy[is Partner]": $.LinkDesc<$Partner, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<createdBy[is Language]": $.LinkDesc<$Language, $.Cardinality.Many, {}, false, false,  false, false>;
   "<createdBy[is Post]": $.LinkDesc<$Post, $.Cardinality.Many, {}, false, false,  false, false>;
   "<modifiedBy[is Post]": $.LinkDesc<$Post, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<modifiedBy[is Notification]": $.LinkDesc<$Notification, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<createdBy[is Notification]": $.LinkDesc<$Notification, $.Cardinality.Many, {}, false, false,  false, false>;
   "<modifiedBy[is Notification::CommentViaMembership]": $.LinkDesc<_Notification.$CommentViaMembership, $.Cardinality.Many, {}, false, false,  false, false>;
   "<createdBy[is Notification::CommentViaMembership]": $.LinkDesc<_Notification.$CommentViaMembership, $.Cardinality.Many, {}, false, false,  false, false>;
   "<modifiedBy[is Notification::CommentViaMention]": $.LinkDesc<_Notification.$CommentViaMention, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<modifiedBy[is User]": $.LinkDesc<$User, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<createdBy[is User]": $.LinkDesc<$User, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<createdBy[is Engagement]": $.LinkDesc<$Engagement, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<modifiedBy[is Engagement]": $.LinkDesc<$Engagement, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<modifiedBy[is InternshipEngagement]": $.LinkDesc<$InternshipEngagement, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<modifiedBy[is LanguageEngagement]": $.LinkDesc<$LanguageEngagement, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<createdBy[is InternshipEngagement]": $.LinkDesc<$InternshipEngagement, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<createdBy[is LanguageEngagement]": $.LinkDesc<$LanguageEngagement, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<modifiedBy[is currentUser]": $.LinkDesc<$currentUser, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<createdBy[is currentUser]": $.LinkDesc<$currentUser, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<modifiedBy[is ProgressReport]": $.LinkDesc<$ProgressReport, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<createdBy[is ProgressReport]": $.LinkDesc<$ProgressReport, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<createdBy[is Language]": $.LinkDesc<$Language, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<createdBy[is Partner]": $.LinkDesc<$Partner, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<modifiedBy[is Notification]": $.LinkDesc<$Notification, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<createdBy[is Notification]": $.LinkDesc<$Notification, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<createdBy[is Notification::Comment]": $.LinkDesc<_Notification.$Comment, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<modifiedBy[is Notification::Comment]": $.LinkDesc<_Notification.$Comment, $.Cardinality.Many, {}, false, false,  false, false>;
   "<createdBy[is Notification::CommentViaMention]": $.LinkDesc<_Notification.$CommentViaMention, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<createdBy[is Notification::System]": $.LinkDesc<_Notification.$System, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<modifiedBy[is Notification::System]": $.LinkDesc<_Notification.$System, $.Cardinality.Many, {}, false, false,  false, false>;
   "<createdBy": $.LinkDesc<$.ObjectType, $.Cardinality.Many, {}, false, false,  false, false>;
   "<modifiedBy": $.LinkDesc<$.ObjectType, $.Cardinality.Many, {}, false, false,  false, false>;
   "<who": $.LinkDesc<$.ObjectType, $.Cardinality.Many, {}, false, false,  false, false>;
@@ -294,7 +294,7 @@ export type $ActorλShape = $.typeutil.flatten<_std.$Object_8ce8c71ee4fa5f73840c
 type $Actor = $.ObjectType<"default::Actor", $ActorλShape, null, [
   ..._std.$Object_8ce8c71ee4fa5f73840c22d7eaa58588['__exclusives__'],
 ], "default::SystemAgent" | "default::User" | "default::currentActor" | "default::currentUser">;
-const $Actor = $.makeType<$Actor>(_.spec, "3196641e-01a9-11f0-894f-91f9aee4f5b1", _.syntax.literal);
+const $Actor = $.makeType<$Actor>(_.spec, "077cf758-0670-11f0-b5cb-5bd87f05de86", _.syntax.literal);
 
 const Actor: $.$expr_PathNode<$.TypeSet<$Actor, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Actor, $.Cardinality.Many), null);
 
@@ -306,7 +306,7 @@ type $Alias = $.ObjectType<"default::Alias", $AliasλShape, null, [
   ..._std.$Object_8ce8c71ee4fa5f73840c22d7eaa58588['__exclusives__'],
   {name: {__element__: _std.$str, __cardinality__: $.Cardinality.One | $.Cardinality.AtMostOne },},
 ], "default::Alias">;
-const $Alias = $.makeType<$Alias>(_.spec, "35489b36-01a9-11f0-87de-71353dc92549", _.syntax.literal);
+const $Alias = $.makeType<$Alias>(_.spec, "0a115e5a-0670-11f0-8398-79995f7ccfe1", _.syntax.literal);
 
 const Alias: $.$expr_PathNode<$.TypeSet<$Alias, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Alias, $.Cardinality.Many), null);
 
@@ -320,7 +320,7 @@ export type $BudgetλShape = $.typeutil.flatten<_Project.$ChildλShape & {
 type $Budget = $.ObjectType<"default::Budget", $BudgetλShape, null, [
   ..._Project.$Child['__exclusives__'],
 ], "default::Budget">;
-const $Budget = $.makeType<$Budget>(_.spec, "47b0e6f2-01a9-11f0-afe4-83cfa0fdf0f5", _.syntax.literal);
+const $Budget = $.makeType<$Budget>(_.spec, "1c480e5c-0670-11f0-a940-fd7005aa97c0", _.syntax.literal);
 
 const Budget: $.$expr_PathNode<$.TypeSet<$Budget, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Budget, $.Cardinality.Many), null);
 
@@ -341,7 +341,7 @@ export type $ProductλShape = $.typeutil.flatten<_Engagement.$ChildλShape & {
 type $Product = $.ObjectType<"default::Product", $ProductλShape, null, [
   ..._Engagement.$Child['__exclusives__'],
 ], "default::DerivativeScriptureProduct" | "default::DirectScriptureProduct" | "default::OtherProduct">;
-const $Product = $.makeType<$Product>(_.spec, "493aeab8-01a9-11f0-b8f3-53d2e38e2517", _.syntax.literal);
+const $Product = $.makeType<$Product>(_.spec, "1d849a2e-0670-11f0-bbc6-4d97c46e1d2f", _.syntax.literal);
 
 const Product: $.$expr_PathNode<$.TypeSet<$Product, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Product, $.Cardinality.Many), null);
 
@@ -356,7 +356,7 @@ export type $DerivativeScriptureProductλShape = $.typeutil.flatten<Omit<$Produc
 type $DerivativeScriptureProduct = $.ObjectType<"default::DerivativeScriptureProduct", $DerivativeScriptureProductλShape, null, [
   ...$Product['__exclusives__'],
 ], "default::DerivativeScriptureProduct">;
-const $DerivativeScriptureProduct = $.makeType<$DerivativeScriptureProduct>(_.spec, "4bb7130c-01a9-11f0-bd0a-dfbf1863e5ed", _.syntax.literal);
+const $DerivativeScriptureProduct = $.makeType<$DerivativeScriptureProduct>(_.spec, "1f8dee9c-0670-11f0-b9d1-7951a6cca1f1", _.syntax.literal);
 
 const DerivativeScriptureProduct: $.$expr_PathNode<$.TypeSet<$DerivativeScriptureProduct, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($DerivativeScriptureProduct, $.Cardinality.Many), null);
 
@@ -368,44 +368,44 @@ export type $DirectScriptureProductλShape = $.typeutil.flatten<$ProductλShape 
 type $DirectScriptureProduct = $.ObjectType<"default::DirectScriptureProduct", $DirectScriptureProductλShape, null, [
   ...$Product['__exclusives__'],
 ], "default::DirectScriptureProduct">;
-const $DirectScriptureProduct = $.makeType<$DirectScriptureProduct>(_.spec, "4b974d2e-01a9-11f0-96b8-bfbb85ad360e", _.syntax.literal);
+const $DirectScriptureProduct = $.makeType<$DirectScriptureProduct>(_.spec, "1f763414-0670-11f0-bda6-ddeb60a1aa5b", _.syntax.literal);
 
 const DirectScriptureProduct: $.$expr_PathNode<$.TypeSet<$DirectScriptureProduct, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($DirectScriptureProduct, $.Cardinality.Many), null);
 
 export type $DirectoryλShape = $.typeutil.flatten<_File.$NodeλShape & {
   "totalFiles": $.PropertyDesc<_std.$int32, $.Cardinality.One, false, false, false, true>;
   "<rootDirectory[is Project]": $.LinkDesc<$Project, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<rootDirectory[is InternshipProject]": $.LinkDesc<$InternshipProject, $.Cardinality.Many, {}, false, false,  false, false>;
   "<rootDirectory[is TranslationProject]": $.LinkDesc<$TranslationProject, $.Cardinality.Many, {}, false, false,  false, false>;
   "<rootDirectory[is MomentumTranslationProject]": $.LinkDesc<$MomentumTranslationProject, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<rootDirectory[is InternshipProject]": $.LinkDesc<$InternshipProject, $.Cardinality.Many, {}, false, false,  false, false>;
   "<rootDirectory[is MultiplicationTranslationProject]": $.LinkDesc<$MultiplicationTranslationProject, $.Cardinality.Many, {}, false, false,  false, false>;
   "<rootDirectory": $.LinkDesc<$.ObjectType, $.Cardinality.Many, {}, false, false,  false, false>;
 }>;
 type $Directory = $.ObjectType<"default::Directory", $DirectoryλShape, null, [
   ..._File.$Node['__exclusives__'],
 ], "default::Directory">;
-const $Directory = $.makeType<$Directory>(_.spec, "32a8ebb0-01a9-11f0-a629-699f4afe9285", _.syntax.literal);
+const $Directory = $.makeType<$Directory>(_.spec, "083d607e-0670-11f0-804b-3330c02a2796", _.syntax.literal);
 
 const Directory: $.$expr_PathNode<$.TypeSet<$Directory, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Directory, $.Cardinality.Many), null);
 
 export type $EngagementλShape = $.typeutil.flatten<_Project.$ChildλShape & _Comments.$AwareλShape & {
   "description": $.PropertyDesc<$RichText, $.Cardinality.AtMostOne, false, false, false, false>;
-  "disbursementCompleteDate": $.PropertyDesc<_stdcal.$local_date, $.Cardinality.AtMostOne, false, false, false, false>;
-  "endDateOverride": $.PropertyDesc<_stdcal.$local_date, $.Cardinality.AtMostOne, false, false, false, false>;
-  "endDate": $.PropertyDesc<_stdcal.$local_date, $.Cardinality.AtMostOne, false, true, false, false>;
-  "startDateOverride": $.PropertyDesc<_stdcal.$local_date, $.Cardinality.AtMostOne, false, false, false, false>;
-  "startDate": $.PropertyDesc<_stdcal.$local_date, $.Cardinality.AtMostOne, false, true, false, false>;
+  "disbursementCompleteDate": $.PropertyDesc<_cal.$local_date, $.Cardinality.AtMostOne, false, false, false, false>;
+  "endDateOverride": $.PropertyDesc<_cal.$local_date, $.Cardinality.AtMostOne, false, false, false, false>;
+  "endDate": $.PropertyDesc<_cal.$local_date, $.Cardinality.AtMostOne, false, true, false, false>;
+  "startDateOverride": $.PropertyDesc<_cal.$local_date, $.Cardinality.AtMostOne, false, false, false, false>;
+  "startDate": $.PropertyDesc<_cal.$local_date, $.Cardinality.AtMostOne, false, true, false, false>;
   "status": $.PropertyDesc<_Engagement.$Status, $.Cardinality.One, false, false, false, true>;
   "statusModifiedAt": $.PropertyDesc<_std.$datetime, $.Cardinality.AtMostOne, false, false, false, false>;
-  "initialEndDate": $.PropertyDesc<_stdcal.$local_date, $.Cardinality.AtMostOne, false, false, false, false>;
+  "initialEndDate": $.PropertyDesc<_cal.$local_date, $.Cardinality.AtMostOne, false, false, false, false>;
   "lastReactivatedAt": $.PropertyDesc<_std.$datetime, $.Cardinality.AtMostOne, false, false, false, false>;
   "lastSuspendedAt": $.PropertyDesc<_std.$datetime, $.Cardinality.AtMostOne, false, false, false, false>;
   "ceremony": $.LinkDesc<_Engagement.$Ceremony, $.Cardinality.One, {}, false, true,  false, false>;
-  "completeDate": $.PropertyDesc<_stdcal.$local_date, $.Cardinality.AtMostOne, false, false, false, false>;
+  "completeDate": $.PropertyDesc<_cal.$local_date, $.Cardinality.AtMostOne, false, false, false, false>;
   "<engagement[is Engagement::Child]": $.LinkDesc<_Engagement.$Child, $.Cardinality.Many, {}, false, false,  false, false>;
   "<engagement[is Engagement::Ceremony]": $.LinkDesc<_Engagement.$Ceremony, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<engagement[is Engagement::CertificationCeremony]": $.LinkDesc<_Engagement.$CertificationCeremony, $.Cardinality.Many, {}, false, false,  false, false>;
   "<engagement[is Engagement::DedicationCeremony]": $.LinkDesc<_Engagement.$DedicationCeremony, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<engagement[is Engagement::CertificationCeremony]": $.LinkDesc<_Engagement.$CertificationCeremony, $.Cardinality.Many, {}, false, false,  false, false>;
   "<engagement[is Product::PartnershipProducingMedium]": $.LinkDesc<_Product.$PartnershipProducingMedium, $.Cardinality.Many, {}, false, false,  false, false>;
   "<engagement[is ProgressReport::Child]": $.LinkDesc<_ProgressReport.$Child, $.Cardinality.Many, {}, false, false,  false, false>;
   "<engagement[is ProgressReport::CommunityStory]": $.LinkDesc<_ProgressReport.$CommunityStory, $.Cardinality.Many, {}, false, false,  false, false>;
@@ -423,7 +423,7 @@ type $Engagement = $.ObjectType<"default::Engagement", $EngagementλShape, null,
   ..._Project.$Child['__exclusives__'],
   ..._Comments.$Aware['__exclusives__'],
 ], "default::InternshipEngagement" | "default::LanguageEngagement">;
-const $Engagement = $.makeType<$Engagement>(_.spec, "331b3aa8-01a9-11f0-8fa8-7b7f9eadeb90", _.syntax.literal);
+const $Engagement = $.makeType<$Engagement>(_.spec, "08895c2c-0670-11f0-9fe0-c1830b6dbceb", _.syntax.literal);
 
 const Engagement: $.$expr_PathNode<$.TypeSet<$Engagement, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Engagement, $.Cardinality.Many), null);
 
@@ -438,7 +438,7 @@ type $Producible = $.ObjectType<"default::Producible", $ProducibleλShape, null,
   ..._Mixin.$Named['__exclusives__'],
   {name: {__element__: _std.$str, __cardinality__: $.Cardinality.One | $.Cardinality.AtMostOne },},
 ], "default::EthnoArt" | "default::Film" | "default::Story">;
-const $Producible = $.makeType<$Producible>(_.spec, "4bd41718-01a9-11f0-ab7e-cb3da19212a1", _.syntax.literal);
+const $Producible = $.makeType<$Producible>(_.spec, "1fa1ea14-0670-11f0-85cd-955e83e49678", _.syntax.literal);
 
 const Producible: $.$expr_PathNode<$.TypeSet<$Producible, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Producible, $.Cardinality.Many), null);
 
@@ -447,7 +447,7 @@ export type $EthnoArtλShape = $.typeutil.flatten<$ProducibleλShape & {
 type $EthnoArt = $.ObjectType<"default::EthnoArt", $EthnoArtλShape, null, [
   ...$Producible['__exclusives__'],
 ], "default::EthnoArt">;
-const $EthnoArt = $.makeType<$EthnoArt>(_.spec, "4be0c120-01a9-11f0-973a-2bad9bda859b", _.syntax.literal);
+const $EthnoArt = $.makeType<$EthnoArt>(_.spec, "1fac59d6-0670-11f0-97ce-5d1ed574f5e3", _.syntax.literal);
 
 const EthnoArt: $.$expr_PathNode<$.TypeSet<$EthnoArt, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($EthnoArt, $.Cardinality.Many), null);
 
@@ -460,14 +460,14 @@ export type $FieldRegionλShape = $.typeutil.flatten<$ResourceλShape & Omit<_Mi
   "<fieldRegion[is Project]": $.LinkDesc<$Project, $.Cardinality.Many, {}, false, false,  false, false>;
   "<marketingRegionOverride[is Project]": $.LinkDesc<$Project, $.Cardinality.Many, {}, false, false,  false, false>;
   "<fieldRegions[is Partner]": $.LinkDesc<$Partner, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<marketingRegionOverride[is InternshipProject]": $.LinkDesc<$InternshipProject, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<fieldRegion[is InternshipProject]": $.LinkDesc<$InternshipProject, $.Cardinality.Many, {}, false, false,  false, false>;
   "<marketingRegionOverride[is TranslationProject]": $.LinkDesc<$TranslationProject, $.Cardinality.Many, {}, false, false,  false, false>;
   "<fieldRegion[is TranslationProject]": $.LinkDesc<$TranslationProject, $.Cardinality.Many, {}, false, false,  false, false>;
   "<marketingRegionOverride[is MomentumTranslationProject]": $.LinkDesc<$MomentumTranslationProject, $.Cardinality.Many, {}, false, false,  false, false>;
   "<fieldRegion[is MomentumTranslationProject]": $.LinkDesc<$MomentumTranslationProject, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<marketingRegionOverride[is MultiplicationTranslationProject]": $.LinkDesc<$MultiplicationTranslationProject, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<marketingRegionOverride[is InternshipProject]": $.LinkDesc<$InternshipProject, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<fieldRegion[is InternshipProject]": $.LinkDesc<$InternshipProject, $.Cardinality.Many, {}, false, false,  false, false>;
   "<fieldRegion[is MultiplicationTranslationProject]": $.LinkDesc<$MultiplicationTranslationProject, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<marketingRegionOverride[is MultiplicationTranslationProject]": $.LinkDesc<$MultiplicationTranslationProject, $.Cardinality.Many, {}, false, false,  false, false>;
   "<defaultFieldRegion": $.LinkDesc<$.ObjectType, $.Cardinality.Many, {}, false, false,  false, false>;
   "<fieldRegion": $.LinkDesc<$.ObjectType, $.Cardinality.Many, {}, false, false,  false, false>;
   "<fieldRegions": $.LinkDesc<$.ObjectType, $.Cardinality.Many, {}, false, false,  false, false>;
@@ -478,7 +478,7 @@ type $FieldRegion = $.ObjectType<"default::FieldRegion", $FieldRegionλShape, nu
   ..._Mixin.$Named['__exclusives__'],
   {name: {__element__: _std.$str, __cardinality__: $.Cardinality.One | $.Cardinality.AtMostOne },},
 ], "default::FieldRegion">;
-const $FieldRegion = $.makeType<$FieldRegion>(_.spec, "4cb015e2-01a9-11f0-81a8-8b52e7f42e8a", _.syntax.literal);
+const $FieldRegion = $.makeType<$FieldRegion>(_.spec, "2029bcd2-0670-11f0-9d29-eda584ae910d", _.syntax.literal);
 
 const FieldRegion: $.$expr_PathNode<$.TypeSet<$FieldRegion, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($FieldRegion, $.Cardinality.Many), null);
 
@@ -494,7 +494,7 @@ type $FieldZone = $.ObjectType<"default::FieldZone", $FieldZoneλShape, null, [
   ..._Mixin.$Named['__exclusives__'],
   {name: {__element__: _std.$str, __cardinality__: $.Cardinality.One | $.Cardinality.AtMostOne },},
 ], "default::FieldZone">;
-const $FieldZone = $.makeType<$FieldZone>(_.spec, "4cbc5956-01a9-11f0-a96a-3516a55c1a54", _.syntax.literal);
+const $FieldZone = $.makeType<$FieldZone>(_.spec, "20337fb0-0670-11f0-8bdd-2d53cde54160", _.syntax.literal);
 
 const FieldZone: $.$expr_PathNode<$.TypeSet<$FieldZone, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($FieldZone, $.Cardinality.Many), null);
 
@@ -525,7 +525,7 @@ export type $FileλShape = $.typeutil.flatten<_File.$NodeλShape & {
 type $File = $.ObjectType<"default::File", $FileλShape, null, [
   ..._File.$Node['__exclusives__'],
 ], "default::File">;
-const $File = $.makeType<$File>(_.spec, "32b32968-01a9-11f0-b675-bdb1f606db48", _.syntax.literal);
+const $File = $.makeType<$File>(_.spec, "0844a46a-0670-11f0-ae9d-b1d6c2eeb4db", _.syntax.literal);
 
 const File: $.$expr_PathNode<$.TypeSet<$File, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($File, $.Cardinality.Many), null);
 
@@ -534,23 +534,23 @@ export type $FilmλShape = $.typeutil.flatten<$ProducibleλShape & {
 type $Film = $.ObjectType<"default::Film", $FilmλShape, null, [
   ...$Producible['__exclusives__'],
 ], "default::Film">;
-const $Film = $.makeType<$Film>(_.spec, "4c1055b6-01a9-11f0-bc10-43e7df19266e", _.syntax.literal);
+const $Film = $.makeType<$Film>(_.spec, "1fd544cc-0670-11f0-a757-b1248b0e47d4", _.syntax.literal);
 
 const Film: $.$expr_PathNode<$.TypeSet<$Film, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Film, $.Cardinality.Many), null);
 
 export type $PeriodicReportλShape = $.typeutil.flatten<$ResourceλShape & _Mixin.$EmbeddedλShape & {
   "reportFile": $.LinkDesc<$File, $.Cardinality.AtMostOne, {}, false, false,  false, false>;
-  "period": $.PropertyDesc<$.RangeType<_stdcal.$local_date>, $.Cardinality.One, false, false, false, false>;
-  "end": $.PropertyDesc<_stdcal.$local_date, $.Cardinality.One, false, true, false, false>;
-  "receivedDate": $.PropertyDesc<_stdcal.$local_date, $.Cardinality.AtMostOne, false, false, false, false>;
+  "period": $.PropertyDesc<$.RangeType<_cal.$local_date>, $.Cardinality.One, false, false, false, false>;
+  "end": $.PropertyDesc<_cal.$local_date, $.Cardinality.One, false, true, false, false>;
+  "receivedDate": $.PropertyDesc<_cal.$local_date, $.Cardinality.AtMostOne, false, false, false, false>;
   "skippedReason": $.PropertyDesc<_std.$str, $.Cardinality.AtMostOne, false, false, false, false>;
-  "start": $.PropertyDesc<_stdcal.$local_date, $.Cardinality.AtMostOne, false, true, false, false>;
+  "start": $.PropertyDesc<_cal.$local_date, $.Cardinality.AtMostOne, false, true, false, false>;
 }>;
 type $PeriodicReport = $.ObjectType<"default::PeriodicReport", $PeriodicReportλShape, null, [
   ...$Resource['__exclusives__'],
   ..._Mixin.$Embedded['__exclusives__'],
 ], "default::FinancialReport" | "default::NarrativeReport" | "default::ProgressReport">;
-const $PeriodicReport = $.makeType<$PeriodicReport>(_.spec, "48d6e0fe-01a9-11f0-abc5-5f3f74c7d636", _.syntax.literal);
+const $PeriodicReport = $.makeType<$PeriodicReport>(_.spec, "1d3d1a28-0670-11f0-bb6b-413089c92480", _.syntax.literal);
 
 const PeriodicReport: $.$expr_PathNode<$.TypeSet<$PeriodicReport, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($PeriodicReport, $.Cardinality.Many), null);
 
@@ -561,7 +561,7 @@ type $FinancialReport = $.ObjectType<"default::FinancialReport", $FinancialRepor
   ...$PeriodicReport['__exclusives__'],
   ..._Project.$Child['__exclusives__'],
 ], "default::FinancialReport">;
-const $FinancialReport = $.makeType<$FinancialReport>(_.spec, "4cf964e0-01a9-11f0-9a16-e7f72661ae9b", _.syntax.literal);
+const $FinancialReport = $.makeType<$FinancialReport>(_.spec, "2060e0d6-0670-11f0-a715-bf0ac3659847", _.syntax.literal);
 
 const FinancialReport: $.$expr_PathNode<$.TypeSet<$FinancialReport, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($FinancialReport, $.Cardinality.Many), null);
 
@@ -576,7 +576,7 @@ type $FundingAccount = $.ObjectType<"default::FundingAccount", $FundingAccountλ
   ..._Mixin.$Named['__exclusives__'],
   {name: {__element__: _std.$str, __cardinality__: $.Cardinality.One | $.Cardinality.AtMostOne },},
 ], "default::FundingAccount">;
-const $FundingAccount = $.makeType<$FundingAccount>(_.spec, "32315442-01a9-11f0-9dde-3b5f234fc394", _.syntax.literal);
+const $FundingAccount = $.makeType<$FundingAccount>(_.spec, "07eb47bc-0670-11f0-9ddc-9bde12cd55a4", _.syntax.literal);
 
 const FundingAccount: $.$expr_PathNode<$.TypeSet<$FundingAccount, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($FundingAccount, $.Cardinality.Many), null);
 
@@ -597,7 +597,7 @@ type $InternshipEngagement = $.ObjectType<"default::InternshipEngagement", $Inte
   ...$Engagement['__exclusives__'],
   {project: {__element__: $InternshipProject, __cardinality__: $.Cardinality.One | $.Cardinality.AtMostOne },intern: {__element__: $User, __cardinality__: $.Cardinality.One | $.Cardinality.AtMostOne },},
 ], "default::InternshipEngagement">;
-const $InternshipEngagement = $.makeType<$InternshipEngagement>(_.spec, "333f2e4a-01a9-11f0-a5e5-f3760ad43a72", _.syntax.literal);
+const $InternshipEngagement = $.makeType<$InternshipEngagement>(_.spec, "08a272f2-0670-11f0-a460-21b6c1ee55ae", _.syntax.literal);
 
 const InternshipEngagement: $.$expr_PathNode<$.TypeSet<$InternshipEngagement, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($InternshipEngagement, $.Cardinality.Many), null);
 
@@ -605,12 +605,12 @@ export type $ProjectλShape = $.typeutil.flatten<Omit<_Mixin.$PostableλShape, "
   "step": $.PropertyDesc<_Project.$Step, $.Cardinality.One, false, false, false, true>;
   "status": $.PropertyDesc<_Project.$Status, $.Cardinality.One, false, true, false, false>;
   "ownSensitivity": $.PropertyDesc<$Sensitivity, $.Cardinality.One, false, false, false, true>;
-  "estimatedSubmission": $.PropertyDesc<_stdcal.$local_date, $.Cardinality.AtMostOne, false, false, false, false>;
+  "estimatedSubmission": $.PropertyDesc<_cal.$local_date, $.Cardinality.AtMostOne, false, false, false, false>;
   "financialReportPeriod": $.PropertyDesc<$ReportPeriod, $.Cardinality.AtMostOne, false, false, false, false>;
   "financialReportReceivedAt": $.PropertyDesc<_std.$datetime, $.Cardinality.AtMostOne, false, false, false, false>;
-  "mouEnd": $.PropertyDesc<_stdcal.$local_date, $.Cardinality.AtMostOne, false, false, false, false>;
-  "initialMouEnd": $.PropertyDesc<_stdcal.$local_date, $.Cardinality.AtMostOne, false, false, false, true>;
-  "mouStart": $.PropertyDesc<_stdcal.$local_date, $.Cardinality.AtMostOne, false, false, false, false>;
+  "mouEnd": $.PropertyDesc<_cal.$local_date, $.Cardinality.AtMostOne, false, false, false, false>;
+  "initialMouEnd": $.PropertyDesc<_cal.$local_date, $.Cardinality.AtMostOne, false, false, false, true>;
+  "mouStart": $.PropertyDesc<_cal.$local_date, $.Cardinality.AtMostOne, false, false, false, false>;
   "name": $.PropertyDesc<_std.$str, $.Cardinality.One, true, false, false, false>;
   "type": $.PropertyDesc<_Project.$Type, $.Cardinality.One, false, true, false, false>;
   "projectContext": $.LinkDesc<_Project.$Context, $.Cardinality.One, {}, false, false,  false, true>;
@@ -627,6 +627,7 @@ export type $ProjectλShape = $.typeutil.flatten<Omit<_Mixin.$PostableλShape, "
   "fieldRegion": $.LinkDesc<$FieldRegion, $.Cardinality.AtMostOne, {}, false, false,  false, false>;
   "marketingRegionOverride": $.LinkDesc<$FieldRegion, $.Cardinality.AtMostOne, {}, false, false,  false, false>;
   "partnerships": $.LinkDesc<$Partnership, $.Cardinality.Many, {}, false, true,  false, false>;
+  "<project[is Engagement]": $.LinkDesc<$Engagement, $.Cardinality.Many, {}, false, false,  false, false>;
   "<projects[is Project::Context]": $.LinkDesc<_Project.$Context, $.Cardinality.Many, {}, false, false,  false, false>;
   "<project[is Project::Child]": $.LinkDesc<_Project.$Child, $.Cardinality.Many, {}, false, false,  false, false>;
   "<project[is Engagement::Child]": $.LinkDesc<_Engagement.$Child, $.Cardinality.Many, {}, false, false,  false, false>;
@@ -644,16 +645,15 @@ export type $ProjectλShape = $.typeutil.flatten<Omit<_Mixin.$PostableλShape, "
   "<project[is ProgressReport::Media]": $.LinkDesc<_ProgressReport.$Media, $.Cardinality.Many, {}, false, false,  false, false>;
   "<project[is ProgressReport::TeamNews]": $.LinkDesc<_ProgressReport.$TeamNews, $.Cardinality.Many, {}, false, false,  false, false>;
   "<project[is ProgressReport::VarianceExplanation]": $.LinkDesc<_ProgressReport.$VarianceExplanation, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<project[is DerivativeScriptureProduct]": $.LinkDesc<$DerivativeScriptureProduct, $.Cardinality.Many, {}, false, false,  false, false>;
   "<project[is Product]": $.LinkDesc<$Product, $.Cardinality.Many, {}, false, false,  false, false>;
   "<project[is Project::WorkflowEvent]": $.LinkDesc<_Project.$WorkflowEvent, $.Cardinality.Many, {}, false, false,  false, false>;
   "<project[is DirectScriptureProduct]": $.LinkDesc<$DirectScriptureProduct, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<project[is DerivativeScriptureProduct]": $.LinkDesc<$DerivativeScriptureProduct, $.Cardinality.Many, {}, false, false,  false, false>;
   "<project[is OtherProduct]": $.LinkDesc<$OtherProduct, $.Cardinality.Many, {}, false, false,  false, false>;
   "<project[is FinancialReport]": $.LinkDesc<$FinancialReport, $.Cardinality.Many, {}, false, false,  false, false>;
   "<container[is FinancialReport]": $.LinkDesc<$FinancialReport, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<project[is NarrativeReport]": $.LinkDesc<$NarrativeReport, $.Cardinality.Many, {}, false, false,  false, false>;
   "<container[is NarrativeReport]": $.LinkDesc<$NarrativeReport, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<project[is Engagement]": $.LinkDesc<$Engagement, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<project[is NarrativeReport]": $.LinkDesc<$NarrativeReport, $.Cardinality.Many, {}, false, false,  false, false>;
   "<project[is ProgressReport]": $.LinkDesc<$ProgressReport, $.Cardinality.Many, {}, false, false,  false, false>;
   "<container": $.LinkDesc<$.ObjectType, $.Cardinality.Many, {}, false, false,  false, false>;
   "<project": $.LinkDesc<$.ObjectType, $.Cardinality.Many, {}, false, false,  false, false>;
@@ -670,7 +670,7 @@ type $Project = $.ObjectType<"default::Project", $ProjectλShape, null, [
   {departmentId: {__element__: _std.$str, __cardinality__: $.Cardinality.One | $.Cardinality.AtMostOne },},
   {name: {__element__: _std.$str, __cardinality__: $.Cardinality.One | $.Cardinality.AtMostOne },},
 ], "default::InternshipProject" | "default::MomentumTranslationProject" | "default::MultiplicationTranslationProject">;
-const $Project = $.makeType<$Project>(_.spec, "31b59aa0-01a9-11f0-85ce-93a4adf628e1", _.syntax.literal);
+const $Project = $.makeType<$Project>(_.spec, "07986da8-0670-11f0-9edd-9bf7e775488e", _.syntax.literal);
 
 const Project: $.$expr_PathNode<$.TypeSet<$Project, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Project, $.Cardinality.Many), null);
 
@@ -682,7 +682,7 @@ export type $InternshipProjectλShape = $.typeutil.flatten<Omit<$ProjectλShape,
 type $InternshipProject = $.ObjectType<"default::InternshipProject", $InternshipProjectλShape, null, [
   ...$Project['__exclusives__'],
 ], "default::InternshipProject">;
-const $InternshipProject = $.makeType<$InternshipProject>(_.spec, "31ceb616-01a9-11f0-817a-6de1b87b7c88", _.syntax.literal);
+const $InternshipProject = $.makeType<$InternshipProject>(_.spec, "07aac4c6-0670-11f0-8376-592808f25e91", _.syntax.literal);
 
 const InternshipProject: $.$expr_PathNode<$.TypeSet<$InternshipProject, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($InternshipProject, $.Cardinality.Many), null);
 
@@ -700,7 +700,7 @@ export type $LanguageλShape = $.typeutil.flatten<_Mixin.$PostableλShape & _Com
   "leastOfTheseReason": $.PropertyDesc<_std.$str, $.Cardinality.AtMostOne, false, false, false, false>;
   "registryOfLanguageVarietiesCode": $.PropertyDesc<_std.$str, $.Cardinality.AtMostOne, true, false, false, false>;
   "signLanguageCode": $.PropertyDesc<_std.$str, $.Cardinality.AtMostOne, false, false, false, false>;
-  "sponsorEstimatedEndDate": $.PropertyDesc<_stdcal.$local_date, $.Cardinality.AtMostOne, false, false, false, false>;
+  "sponsorEstimatedEndDate": $.PropertyDesc<_cal.$local_date, $.Cardinality.AtMostOne, false, false, false, false>;
   "ethnologue": $.LinkDesc<_Ethnologue.$Language, $.Cardinality.One, {}, false, true,  false, false>;
   "population": $.PropertyDesc<$population, $.Cardinality.AtMostOne, false, true, false, false>;
   "firstScriptureEngagement": $.LinkDesc<$LanguageEngagement, $.Cardinality.AtMostOne, {}, false, false,  false, false>;
@@ -728,7 +728,7 @@ type $Language = $.ObjectType<"default::Language", $LanguageλShape, null, [
   ..._Mixin.$Taggable['__exclusives__'],
   {registryOfLanguageVarietiesCode: {__element__: _std.$str, __cardinality__: $.Cardinality.One | $.Cardinality.AtMostOne },},
 ], "default::Language">;
-const $Language = $.makeType<$Language>(_.spec, "32bf2d12-01a9-11f0-9c1a-1f4921841c7f", _.syntax.literal);
+const $Language = $.makeType<$Language>(_.spec, "084cbec0-0670-11f0-959f-51e459534a43", _.syntax.literal);
 
 const Language: $.$expr_PathNode<$.TypeSet<$Language, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Language, $.Cardinality.Many), null);
 
@@ -742,7 +742,7 @@ export type $LanguageEngagementλShape = $.typeutil.flatten<Omit<Omit<$Engagemen
   "lukePartnership": $.PropertyDesc<_std.$bool, $.Cardinality.One, false, false, false, true>;
   "openToInvestorVisit": $.PropertyDesc<_std.$bool, $.Cardinality.One, false, false, false, true>;
   "paratextRegistryId": $.PropertyDesc<_std.$str, $.Cardinality.AtMostOne, false, false, false, false>;
-  "sentPrintingDate": $.PropertyDesc<_stdcal.$local_date, $.Cardinality.AtMostOne, false, false, false, false>;
+  "sentPrintingDate": $.PropertyDesc<_cal.$local_date, $.Cardinality.AtMostOne, false, false, false, false>;
   "firstScripture": $.PropertyDesc<_std.$bool, $.Cardinality.One, false, true, false, false>;
   "milestoneReached": $.PropertyDesc<_Language.$Milestone, $.Cardinality.One, false, false, false, true>;
   "usingAIAssistedTranslation": $.PropertyDesc<_Engagement.$AIAssistedTranslation, $.Cardinality.One, false, false, false, true>;
@@ -750,9 +750,9 @@ export type $LanguageEngagementλShape = $.typeutil.flatten<Omit<Omit<$Engagemen
   "<engagements[is Language]": $.LinkDesc<$Language, $.Cardinality.Many, {}, false, false,  false, false>;
   "<engagements[is TranslationProject]": $.LinkDesc<$TranslationProject, $.Cardinality.Many, {}, false, false,  false, false>;
   "<engagements[is MomentumTranslationProject]": $.LinkDesc<$MomentumTranslationProject, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<engagements[is MultiplicationTranslationProject]": $.LinkDesc<$MultiplicationTranslationProject, $.Cardinality.Many, {}, false, false,  false, false>;
   "<container[is ProgressReport]": $.LinkDesc<$ProgressReport, $.Cardinality.Many, {}, false, false,  false, false>;
   "<engagement[is ProgressReport]": $.LinkDesc<$ProgressReport, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<engagements[is MultiplicationTranslationProject]": $.LinkDesc<$MultiplicationTranslationProject, $.Cardinality.Many, {}, false, false,  false, false>;
   "<container": $.LinkDesc<$.ObjectType, $.Cardinality.Many, {}, false, false,  false, false>;
   "<engagement": $.LinkDesc<$.ObjectType, $.Cardinality.Many, {}, false, false,  false, false>;
   "<engagements": $.LinkDesc<$.ObjectType, $.Cardinality.Many, {}, false, false,  false, false>;
@@ -762,7 +762,7 @@ type $LanguageEngagement = $.ObjectType<"default::LanguageEngagement", $Language
   ...$Engagement['__exclusives__'],
   {project: {__element__: $TranslationProject, __cardinality__: $.Cardinality.One | $.Cardinality.AtMostOne },language: {__element__: $Language, __cardinality__: $.Cardinality.One | $.Cardinality.AtMostOne },},
 ], "default::LanguageEngagement">;
-const $LanguageEngagement = $.makeType<$LanguageEngagement>(_.spec, "3446ac00-01a9-11f0-adb5-55aefa1798e2", _.syntax.literal);
+const $LanguageEngagement = $.makeType<$LanguageEngagement>(_.spec, "09660550-0670-11f0-9756-371e5d30fd92", _.syntax.literal);
 
 const LanguageEngagement: $.$expr_PathNode<$.TypeSet<$LanguageEngagement, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($LanguageEngagement, $.Cardinality.Many), null);
 
@@ -783,19 +783,19 @@ export type $LocationλShape = $.typeutil.flatten<$ResourceλShape & Omit<_Mixin
   "<otherLocations[is Project]": $.LinkDesc<$Project, $.Cardinality.Many, {}, false, false,  false, false>;
   "<locations[is Organization]": $.LinkDesc<$Organization, $.Cardinality.Many, {}, false, false,  false, false>;
   "<countries[is Partner]": $.LinkDesc<$Partner, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<otherLocations[is InternshipProject]": $.LinkDesc<$InternshipProject, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<marketingLocation[is InternshipProject]": $.LinkDesc<$InternshipProject, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<primaryLocation[is InternshipProject]": $.LinkDesc<$InternshipProject, $.Cardinality.Many, {}, false, false,  false, false>;
   "<otherLocations[is TranslationProject]": $.LinkDesc<$TranslationProject, $.Cardinality.Many, {}, false, false,  false, false>;
   "<marketingLocation[is TranslationProject]": $.LinkDesc<$TranslationProject, $.Cardinality.Many, {}, false, false,  false, false>;
   "<primaryLocation[is TranslationProject]": $.LinkDesc<$TranslationProject, $.Cardinality.Many, {}, false, false,  false, false>;
   "<otherLocations[is MomentumTranslationProject]": $.LinkDesc<$MomentumTranslationProject, $.Cardinality.Many, {}, false, false,  false, false>;
   "<marketingLocation[is MomentumTranslationProject]": $.LinkDesc<$MomentumTranslationProject, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<locations[is currentUser]": $.LinkDesc<$currentUser, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<marketingLocation[is InternshipProject]": $.LinkDesc<$InternshipProject, $.Cardinality.Many, {}, false, false,  false, false>;
   "<primaryLocation[is MomentumTranslationProject]": $.LinkDesc<$MomentumTranslationProject, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<otherLocations[is InternshipProject]": $.LinkDesc<$InternshipProject, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<primaryLocation[is InternshipProject]": $.LinkDesc<$InternshipProject, $.Cardinality.Many, {}, false, false,  false, false>;
   "<otherLocations[is MultiplicationTranslationProject]": $.LinkDesc<$MultiplicationTranslationProject, $.Cardinality.Many, {}, false, false,  false, false>;
   "<marketingLocation[is MultiplicationTranslationProject]": $.LinkDesc<$MultiplicationTranslationProject, $.Cardinality.Many, {}, false, false,  false, false>;
   "<primaryLocation[is MultiplicationTranslationProject]": $.LinkDesc<$MultiplicationTranslationProject, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<locations[is currentUser]": $.LinkDesc<$currentUser, $.Cardinality.Many, {}, false, false,  false, false>;
   "<countries": $.LinkDesc<$.ObjectType, $.Cardinality.Many, {}, false, false,  false, false>;
   "<countryOfOrigin": $.LinkDesc<$.ObjectType, $.Cardinality.Many, {}, false, false,  false, false>;
   "<defaultMarketingRegion": $.LinkDesc<$.ObjectType, $.Cardinality.Many, {}, false, false,  false, false>;
@@ -810,7 +810,7 @@ type $Location = $.ObjectType<"default::Location", $LocationλShape, null, [
   {name: {__element__: _std.$str, __cardinality__: $.Cardinality.One | $.Cardinality.AtMostOne },},
   {isoAlpha3: {__element__: _Location.$IsoAlpha3Code, __cardinality__: $.Cardinality.One | $.Cardinality.AtMostOne },},
 ], "default::Location">;
-const $Location = $.makeType<$Location>(_.spec, "323f92a0-01a9-11f0-b060-c1a42677bf3d", _.syntax.literal);
+const $Location = $.makeType<$Location>(_.spec, "07f4805c-0670-11f0-be1e-f1ef872f19fb", _.syntax.literal);
 
 const Location: $.$expr_PathNode<$.TypeSet<$Location, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Location, $.Cardinality.Many), null);
 
@@ -825,7 +825,7 @@ export type $TranslationProjectλShape = $.typeutil.flatten<Omit<$ProjectλShape
 type $TranslationProject = $.ObjectType<"default::TranslationProject", $TranslationProjectλShape, null, [
   ...$Project['__exclusives__'],
 ], "default::MomentumTranslationProject" | "default::MultiplicationTranslationProject">;
-const $TranslationProject = $.makeType<$TranslationProject>(_.spec, "31f22baa-01a9-11f0-816d-03997321ee54", _.syntax.literal);
+const $TranslationProject = $.makeType<$TranslationProject>(_.spec, "07bd535c-0670-11f0-a1ab-0d5f865555b9", _.syntax.literal);
 
 const TranslationProject: $.$expr_PathNode<$.TypeSet<$TranslationProject, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($TranslationProject, $.Cardinality.Many), null);
 
@@ -834,7 +834,7 @@ export type $MomentumTranslationProjectλShape = $.typeutil.flatten<$Translation
 type $MomentumTranslationProject = $.ObjectType<"default::MomentumTranslationProject", $MomentumTranslationProjectλShape, null, [
   ...$TranslationProject['__exclusives__'],
 ], "default::MomentumTranslationProject">;
-const $MomentumTranslationProject = $.makeType<$MomentumTranslationProject>(_.spec, "3206f3aa-01a9-11f0-9592-873506ac119f", _.syntax.literal);
+const $MomentumTranslationProject = $.makeType<$MomentumTranslationProject>(_.spec, "07caa912-0670-11f0-8abc-af11265f377c", _.syntax.literal);
 
 const MomentumTranslationProject: $.$expr_PathNode<$.TypeSet<$MomentumTranslationProject, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($MomentumTranslationProject, $.Cardinality.Many), null);
 
@@ -843,7 +843,7 @@ export type $MultiplicationTranslationProjectλShape = $.typeutil.flatten<$Trans
 type $MultiplicationTranslationProject = $.ObjectType<"default::MultiplicationTranslationProject", $MultiplicationTranslationProjectλShape, null, [
   ...$TranslationProject['__exclusives__'],
 ], "default::MultiplicationTranslationProject">;
-const $MultiplicationTranslationProject = $.makeType<$MultiplicationTranslationProject>(_.spec, "321c5d9e-01a9-11f0-881a-c73b32565657", _.syntax.literal);
+const $MultiplicationTranslationProject = $.makeType<$MultiplicationTranslationProject>(_.spec, "07dd60fc-0670-11f0-aa6b-b91a540914f6", _.syntax.literal);
 
 const MultiplicationTranslationProject: $.$expr_PathNode<$.TypeSet<$MultiplicationTranslationProject, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($MultiplicationTranslationProject, $.Cardinality.Many), null);
 
@@ -854,7 +854,7 @@ type $NarrativeReport = $.ObjectType<"default::NarrativeReport", $NarrativeRepor
   ...$PeriodicReport['__exclusives__'],
   ..._Project.$Child['__exclusives__'],
 ], "default::NarrativeReport">;
-const $NarrativeReport = $.makeType<$NarrativeReport>(_.spec, "4d0ec34e-01a9-11f0-8191-bb60fc8c2d16", _.syntax.literal);
+const $NarrativeReport = $.makeType<$NarrativeReport>(_.spec, "20717e6e-0670-11f0-ad74-99004a7dcd66", _.syntax.literal);
 
 const NarrativeReport: $.$expr_PathNode<$.TypeSet<$NarrativeReport, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($NarrativeReport, $.Cardinality.Many), null);
 
@@ -877,7 +877,7 @@ type $Organization = $.ObjectType<"default::Organization", $OrganizationλShape,
   ..._Mixin.$Named['__exclusives__'],
   {name: {__element__: _std.$str, __cardinality__: $.Cardinality.One | $.Cardinality.AtMostOne },},
 ], "default::Organization">;
-const $Organization = $.makeType<$Organization>(_.spec, "47c4b8d0-01a9-11f0-85cc-2f9782370fc9", _.syntax.literal);
+const $Organization = $.makeType<$Organization>(_.spec, "1c5717e4-0670-11f0-a5d8-cdc7639313e8", _.syntax.literal);
 
 const Organization: $.$expr_PathNode<$.TypeSet<$Organization, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Organization, $.Cardinality.Many), null);
 
@@ -888,7 +888,7 @@ export type $OtherProductλShape = $.typeutil.flatten<$ProductλShape & {
 type $OtherProduct = $.ObjectType<"default::OtherProduct", $OtherProductλShape, null, [
   ...$Product['__exclusives__'],
 ], "default::OtherProduct">;
-const $OtherProduct = $.makeType<$OtherProduct>(_.spec, "4c998e8a-01a9-11f0-b330-095a8f641885", _.syntax.literal);
+const $OtherProduct = $.makeType<$OtherProduct>(_.spec, "2018baea-0670-11f0-bef2-0f6c7dcbacb5", _.syntax.literal);
 
 const OtherProduct: $.$expr_PathNode<$.TypeSet<$OtherProduct, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($OtherProduct, $.Cardinality.Many), null);
 
@@ -905,7 +905,7 @@ export type $PartnerλShape = $.typeutil.flatten<_Mixin.$PostableλShape & _Comm
   "financialReportingTypes": $.PropertyDesc<_Partnership.$FinancialReportingType, $.Cardinality.Many, false, false, false, false>;
   "globalInnovationsClient": $.PropertyDesc<_std.$bool, $.Cardinality.One, false, false, false, true>;
   "pmcEntityCode": $.PropertyDesc<_std.$str, $.Cardinality.AtMostOne, false, false, false, false>;
-  "startDate": $.PropertyDesc<_stdcal.$local_date, $.Cardinality.AtMostOne, false, false, false, false>;
+  "startDate": $.PropertyDesc<_cal.$local_date, $.Cardinality.AtMostOne, false, false, false, false>;
   "types": $.PropertyDesc<_Partner.$Type, $.Cardinality.Many, false, false, false, false>;
   "approvedPrograms": $.PropertyDesc<_Project.$Type, $.Cardinality.Many, false, false, false, false>;
   "<partner[is Partnership]": $.LinkDesc<$Partnership, $.Cardinality.Many, {}, false, false,  false, false>;
@@ -922,17 +922,17 @@ type $Partner = $.ObjectType<"default::Partner", $PartnerλShape, null, [
   {organization: {__element__: $Organization, __cardinality__: $.Cardinality.One | $.Cardinality.AtMostOne },},
   {name: {__element__: _std.$str, __cardinality__: $.Cardinality.One | $.Cardinality.AtMostOne },},
 ], "default::Partner">;
-const $Partner = $.makeType<$Partner>(_.spec, "4cdc63b8-01a9-11f0-b5e7-81362da5b32f", _.syntax.literal);
+const $Partner = $.makeType<$Partner>(_.spec, "2049f808-0670-11f0-97ae-bddda2fbabd0", _.syntax.literal);
 
 const Partner: $.$expr_PathNode<$.TypeSet<$Partner, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Partner, $.Cardinality.Many), null);
 
 export type $PartnershipλShape = $.typeutil.flatten<_Project.$ChildλShape & {
   "agreement": $.LinkDesc<$File, $.Cardinality.AtMostOne, {}, false, false,  false, false>;
   "mou": $.LinkDesc<$File, $.Cardinality.AtMostOne, {}, false, false,  false, false>;
-  "mouEndOverride": $.PropertyDesc<_stdcal.$local_date, $.Cardinality.AtMostOne, false, false, false, false>;
-  "mouEnd": $.PropertyDesc<_stdcal.$local_date, $.Cardinality.AtMostOne, false, true, false, false>;
-  "mouStartOverride": $.PropertyDesc<_stdcal.$local_date, $.Cardinality.AtMostOne, false, false, false, false>;
-  "mouStart": $.PropertyDesc<_stdcal.$local_date, $.Cardinality.AtMostOne, false, true, false, false>;
+  "mouEndOverride": $.PropertyDesc<_cal.$local_date, $.Cardinality.AtMostOne, false, false, false, false>;
+  "mouEnd": $.PropertyDesc<_cal.$local_date, $.Cardinality.AtMostOne, false, true, false, false>;
+  "mouStartOverride": $.PropertyDesc<_cal.$local_date, $.Cardinality.AtMostOne, false, false, false, false>;
+  "mouStart": $.PropertyDesc<_cal.$local_date, $.Cardinality.AtMostOne, false, true, false, false>;
   "agreementStatus": $.PropertyDesc<_Partnership.$AgreementStatus, $.Cardinality.One, false, false, false, true>;
   "financialReportingType": $.PropertyDesc<_Partnership.$FinancialReportingType, $.Cardinality.AtMostOne, false, false, false, false>;
   "mouStatus": $.PropertyDesc<_Partnership.$AgreementStatus, $.Cardinality.One, false, false, false, true>;
@@ -942,9 +942,9 @@ export type $PartnershipλShape = $.typeutil.flatten<_Project.$ChildλShape & {
   "organization": $.LinkDesc<$Organization, $.Cardinality.One, {}, false, true,  false, false>;
   "<partnership[is Product::PartnershipProducingMedium]": $.LinkDesc<_Product.$PartnershipProducingMedium, $.Cardinality.Many, {}, false, false,  false, false>;
   "<partnerships[is Project]": $.LinkDesc<$Project, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<partnerships[is InternshipProject]": $.LinkDesc<$InternshipProject, $.Cardinality.Many, {}, false, false,  false, false>;
   "<partnerships[is TranslationProject]": $.LinkDesc<$TranslationProject, $.Cardinality.Many, {}, false, false,  false, false>;
   "<partnerships[is MomentumTranslationProject]": $.LinkDesc<$MomentumTranslationProject, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<partnerships[is InternshipProject]": $.LinkDesc<$InternshipProject, $.Cardinality.Many, {}, false, false,  false, false>;
   "<partnerships[is MultiplicationTranslationProject]": $.LinkDesc<$MultiplicationTranslationProject, $.Cardinality.Many, {}, false, false,  false, false>;
   "<partnership": $.LinkDesc<$.ObjectType, $.Cardinality.Many, {}, false, false,  false, false>;
   "<partnerships": $.LinkDesc<$.ObjectType, $.Cardinality.Many, {}, false, false,  false, false>;
@@ -952,7 +952,7 @@ export type $PartnershipλShape = $.typeutil.flatten<_Project.$ChildλShape & {
 type $Partnership = $.ObjectType<"default::Partnership", $PartnershipλShape, null, [
   ..._Project.$Child['__exclusives__'],
 ], "default::Partnership">;
-const $Partnership = $.makeType<$Partnership>(_.spec, "48055eee-01a9-11f0-9392-892094af7758", _.syntax.literal);
+const $Partnership = $.makeType<$Partnership>(_.spec, "1c877178-0670-11f0-956c-33b119c597dc", _.syntax.literal);
 
 const Partnership: $.$expr_PathNode<$.TypeSet<$Partnership, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Partnership, $.Cardinality.Many), null);
 
@@ -963,21 +963,21 @@ export type $PostλShape = $.typeutil.flatten<$ResourceλShape & Omit<_Mixin.$Em
   "body": $.PropertyDesc<$RichText, $.Cardinality.One, false, false, false, false>;
   "shareability": $.PropertyDesc<_Post.$Shareability, $.Cardinality.One, false, false, false, false>;
   "type": $.PropertyDesc<_Post.$Type, $.Cardinality.One, false, false, false, false>;
+  "<posts[is Language]": $.LinkDesc<$Language, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<posts[is Partner]": $.LinkDesc<$Partner, $.Cardinality.Many, {}, false, false,  false, false>;
   "<posts[is Mixin::Postable]": $.LinkDesc<_Mixin.$Postable, $.Cardinality.Many, {}, false, false,  false, false>;
   "<posts[is Project]": $.LinkDesc<$Project, $.Cardinality.Many, {}, false, false,  false, false>;
   "<posts[is InternshipProject]": $.LinkDesc<$InternshipProject, $.Cardinality.Many, {}, false, false,  false, false>;
   "<posts[is TranslationProject]": $.LinkDesc<$TranslationProject, $.Cardinality.Many, {}, false, false,  false, false>;
   "<posts[is MomentumTranslationProject]": $.LinkDesc<$MomentumTranslationProject, $.Cardinality.Many, {}, false, false,  false, false>;
   "<posts[is MultiplicationTranslationProject]": $.LinkDesc<$MultiplicationTranslationProject, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<posts[is Language]": $.LinkDesc<$Language, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<posts[is Partner]": $.LinkDesc<$Partner, $.Cardinality.Many, {}, false, false,  false, false>;
   "<posts": $.LinkDesc<$.ObjectType, $.Cardinality.Many, {}, false, false,  false, false>;
 }>;
 type $Post = $.ObjectType<"default::Post", $PostλShape, null, [
   ...$Resource['__exclusives__'],
   ..._Mixin.$Embedded['__exclusives__'],
 ], "default::Post">;
-const $Post = $.makeType<$Post>(_.spec, "dc26209a-01a9-11f0-9411-1147acbea426", _.syntax.literal);
+const $Post = $.makeType<$Post>(_.spec, "5b616958-0670-11f0-8302-5f388d6fe751", _.syntax.literal);
 
 const Post: $.$expr_PathNode<$.TypeSet<$Post, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Post, $.Cardinality.Many), null);
 
@@ -990,14 +990,14 @@ export type $ProgressReportλShape = $.typeutil.flatten<Omit<$PeriodicReportλSh
   "workflowEvents": $.LinkDesc<_ProgressReport.$WorkflowEvent, $.Cardinality.Many, {}, false, true,  false, false>;
   "latestEvent": $.LinkDesc<_ProgressReport.$WorkflowEvent, $.Cardinality.AtMostOne, {}, false, true,  false, false>;
   "status": $.PropertyDesc<_ProgressReport.$Status, $.Cardinality.One, false, true, false, false>;
+  "<container[is ProgressReport::Highlight]": $.LinkDesc<_ProgressReport.$Highlight, $.Cardinality.Many, {}, false, false,  false, false>;
   "<report[is ProgressReport::Child]": $.LinkDesc<_ProgressReport.$Child, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<report[is ProgressReport::TeamNews]": $.LinkDesc<_ProgressReport.$TeamNews, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<report[is ProgressReport::Highlight]": $.LinkDesc<_ProgressReport.$Highlight, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<report[is ProgressReport::Media]": $.LinkDesc<_ProgressReport.$Media, $.Cardinality.Many, {}, false, false,  false, false>;
   "<report[is ProgressReport::CommunityStory]": $.LinkDesc<_ProgressReport.$CommunityStory, $.Cardinality.Many, {}, false, false,  false, false>;
   "<report[is ProgressReport::VarianceExplanation]": $.LinkDesc<_ProgressReport.$VarianceExplanation, $.Cardinality.AtMostOne, {}, true, false,  false, false>;
+  "<report[is ProgressReport::Highlight]": $.LinkDesc<_ProgressReport.$Highlight, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<report[is ProgressReport::Media]": $.LinkDesc<_ProgressReport.$Media, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<report[is ProgressReport::TeamNews]": $.LinkDesc<_ProgressReport.$TeamNews, $.Cardinality.Many, {}, false, false,  false, false>;
   "<container[is ProgressReport::CommunityStory]": $.LinkDesc<_ProgressReport.$CommunityStory, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<container[is ProgressReport::Highlight]": $.LinkDesc<_ProgressReport.$Highlight, $.Cardinality.Many, {}, false, false,  false, false>;
   "<container[is ProgressReport::TeamNews]": $.LinkDesc<_ProgressReport.$TeamNews, $.Cardinality.Many, {}, false, false,  false, false>;
   "<report[is ProgressReport::WorkflowEvent]": $.LinkDesc<_ProgressReport.$WorkflowEvent, $.Cardinality.Many, {}, false, false,  false, false>;
   "<report[is ProgressReport::ProductProgress::Step]": $.LinkDesc<_ProgressReportProductProgress.$Step, $.Cardinality.Many, {}, false, false,  false, false>;
@@ -1010,7 +1010,7 @@ type $ProgressReport = $.ObjectType<"default::ProgressReport", $ProgressReportλ
   ..._Engagement.$Child['__exclusives__'],
   ..._Comments.$Aware['__exclusives__'],
 ], "default::ProgressReport">;
-const $ProgressReport = $.makeType<$ProgressReport>(_.spec, "48dff522-01a9-11f0-b3d9-33035e37e460", _.syntax.literal);
+const $ProgressReport = $.makeType<$ProgressReport>(_.spec, "1d45ee28-0670-11f0-9c6a-fb6999b3e0e8", _.syntax.literal);
 
 const ProgressReport: $.$expr_PathNode<$.TypeSet<$ProgressReport, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($ProgressReport, $.Cardinality.Many), null);
 
@@ -1019,7 +1019,7 @@ export type $StoryλShape = $.typeutil.flatten<$ProducibleλShape & {
 type $Story = $.ObjectType<"default::Story", $StoryλShape, null, [
   ...$Producible['__exclusives__'],
 ], "default::Story">;
-const $Story = $.makeType<$Story>(_.spec, "4c269aba-01a9-11f0-8858-0fa8ba5d6fc0", _.syntax.literal);
+const $Story = $.makeType<$Story>(_.spec, "1fe95458-0670-11f0-8821-e5b8a856f46e", _.syntax.literal);
 
 const Story: $.$expr_PathNode<$.TypeSet<$Story, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Story, $.Cardinality.Many), null);
 
@@ -1031,7 +1031,7 @@ type $SystemAgent = $.ObjectType<"default::SystemAgent", $SystemAgentλShape, nu
   ..._Mixin.$Named['__exclusives__'],
   {name: {__element__: _std.$str, __cardinality__: $.Cardinality.One | $.Cardinality.AtMostOne },},
 ], "default::SystemAgent">;
-const $SystemAgent = $.makeType<$SystemAgent>(_.spec, "32d538dc-01a9-11f0-97bd-6fae52b5db6a", _.syntax.literal);
+const $SystemAgent = $.makeType<$SystemAgent>(_.spec, "085ab7be-0670-11f0-80af-6bdc5bd57752", _.syntax.literal);
 
 const SystemAgent: $.$expr_PathNode<$.TypeSet<$SystemAgent, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($SystemAgent, $.Cardinality.Many), null);
 
@@ -1050,6 +1050,7 @@ export type $UserλShape = $.typeutil.flatten<_Comments.$AwareλShape & $Resourc
   "timezone": $.PropertyDesc<_std.$str, $.Cardinality.One, false, false, false, true>;
   "title": $.PropertyDesc<_std.$str, $.Cardinality.AtMostOne, false, false, false, false>;
   "education": $.LinkDesc<_User.$Education, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<user[is Notification::Recipient]": $.LinkDesc<_Notification.$Recipient, $.Cardinality.Many, {}, false, false,  false, false>;
   "<user[is Project::Member]": $.LinkDesc<_Project.$Member, $.Cardinality.Many, {}, false, false,  false, false>;
   "<user[is Auth::Identity]": $.LinkDesc<_Auth.$Identity, $.Cardinality.AtMostOne, {}, true, false,  false, false>;
   "<user[is Auth::Session]": $.LinkDesc<_Auth.$Session, $.Cardinality.Many, {}, false, false,  false, false>;
@@ -1060,7 +1061,6 @@ export type $UserλShape = $.typeutil.flatten<_Comments.$AwareλShape & $Resourc
   "<director[is FieldZone]": $.LinkDesc<$FieldZone, $.Cardinality.Many, {}, false, false,  false, false>;
   "<pointOfContact[is Partner]": $.LinkDesc<$Partner, $.Cardinality.Many, {}, false, false,  false, false>;
   "<who[is ProgressReport::WorkflowEvent]": $.LinkDesc<_ProgressReport.$WorkflowEvent, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<user[is Notification::Recipient]": $.LinkDesc<_Notification.$Recipient, $.Cardinality.Many, {}, false, false,  false, false>;
   "<director": $.LinkDesc<$.ObjectType, $.Cardinality.Many, {}, false, false,  false, false>;
   "<intern": $.LinkDesc<$.ObjectType, $.Cardinality.Many, {}, false, false,  false, false>;
   "<mentor": $.LinkDesc<$.ObjectType, $.Cardinality.Many, {}, false, false,  false, false>;
@@ -1075,7 +1075,7 @@ type $User = $.ObjectType<"default::User", $UserλShape, null, [
   ..._Mixin.$Pinnable['__exclusives__'],
   {email: {__element__: _std.$str, __cardinality__: $.Cardinality.One | $.Cardinality.AtMostOne },},
 ], "default::User" | "default::currentUser">;
-const $User = $.makeType<$User>(_.spec, "3358627a-01a9-11f0-8b3b-dd78ba2cfee1", _.syntax.literal);
+const $User = $.makeType<$User>(_.spec, "08b3c4da-0670-11f0-97ce-2bd5246e5c57", _.syntax.literal);
 
 const User: $.$expr_PathNode<$.TypeSet<$User, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($User, $.Cardinality.Many), null);
 
@@ -1084,7 +1084,7 @@ export type $currentActorλShape = $.typeutil.flatten<$ActorλShape & {
 type $currentActor = $.ObjectType<"default::currentActor", $currentActorλShape, null, [
   ...$Actor['__exclusives__'],
 ], "default::currentActor">;
-const $currentActor = $.makeType<$currentActor>(_.spec, "31991a7e-01a9-11f0-89a3-53a0305acc1e", _.syntax.literal);
+const $currentActor = $.makeType<$currentActor>(_.spec, "077f59d0-0670-11f0-adc2-b1bd32752ccc", _.syntax.literal);
 
 const currentActor: $.$expr_PathNode<$.TypeSet<$currentActor, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($currentActor, $.Cardinality.Many), null);
 
@@ -1093,23 +1093,23 @@ export type $currentUserλShape = $.typeutil.flatten<$UserλShape & {
 type $currentUser = $.ObjectType<"default::currentUser", $currentUserλShape, null, [
   ...$User['__exclusives__'],
 ], "default::currentUser">;
-const $currentUser = $.makeType<$currentUser>(_.spec, "786bda6c-01aa-11f0-8988-554390cbecc0", _.syntax.literal);
+const $currentUser = $.makeType<$currentUser>(_.spec, "08c3a468-0670-11f0-9b87-0d1c53ae4240", _.syntax.literal);
 
 const currentUser: $.$expr_PathNode<$.TypeSet<$currentUser, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($currentUser, $.Cardinality.Many), null);
 
 type date_range_get_upperλFuncExpr<
-  P1 extends $.TypeSet<$.RangeType<_stdcal.$local_date>>,
+  P1 extends $.TypeSet<$.RangeType<_cal.$local_date>>,
 > = $.$expr_Function<
-  _stdcal.$local_date, $.cardutil.paramCardinality<P1>
+  _cal.$local_date, $.cardutil.paramCardinality<P1>
 >;
 function date_range_get_upper<
-  P1 extends $.TypeSet<$.RangeType<_stdcal.$local_date>>,
+  P1 extends $.TypeSet<$.RangeType<_cal.$local_date>>,
 >(
   period: P1,
 ): date_range_get_upperλFuncExpr<P1>;
 function date_range_get_upper(...args: any[]) {
   const {returnType, cardinality, args: positionalArgs, namedArgs} = _.syntax.$resolveOverload('default::date_range_get_upper', args, _.spec, [
-    {args: [{typeId: "c38cc584-72e2-5b3d-a9cc-e8e256c2dd0d", optional: false, setoftype: false, variadic: false}], returnTypeId: "00000000-0000-0000-0000-00000000010c"},
+    {args: [{typeId: "1e76d7c5-b67c-542c-bc8f-238b93ff1726", optional: false, setoftype: false, variadic: false}], returnTypeId: "00000000-0000-0000-0000-00000000010c"},
   ]);
   return _.syntax.$expressionify({
     __kind__: $.ExpressionKind.Function,
@@ -1214,16 +1214,16 @@ const $default__globals: {  currentActor: _.syntax.$expr_Global<
               $.Cardinality.AtMostOne
               >} = {  currentActor: _.syntax.makeGlobal(
               "default::currentActor",
-              $.makeType(_.spec, "31991a7e-01a9-11f0-89a3-53a0305acc1e", _.syntax.literal),
+              $.makeType(_.spec, "077f59d0-0670-11f0-adc2-b1bd32752ccc", _.syntax.literal),
               $.Cardinality.AtMostOne) as any,  currentActorId: _.syntax.makeGlobal(
               "default::currentActorId",
               $.makeType(_.spec, "00000000-0000-0000-0000-000000000100", _.syntax.literal),
               $.Cardinality.AtMostOne) as any,  currentRoles: _.syntax.makeGlobal(
               "default::currentRoles",
-              $.makeType(_.spec, "32dbb7fc-01a9-11f0-98a6-4be43fa9bb21", _.syntax.literal),
+              $.makeType(_.spec, "085ef888-0670-11f0-ae37-e59eb9ccaa00", _.syntax.literal),
               $.Cardinality.Many) as any,  currentUser: _.syntax.makeGlobal(
               "default::currentUser",
-              $.makeType(_.spec, "786bda6c-01aa-11f0-8988-554390cbecc0", _.syntax.literal),
+              $.makeType(_.spec, "08c3a468-0670-11f0-9b87-0d1c53ae4240", _.syntax.literal),
               $.Cardinality.AtMostOne) as any};
 
 

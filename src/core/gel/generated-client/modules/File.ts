@@ -28,17 +28,17 @@ type $Node = $.ObjectType<"File::Node", $NodeλShape, null, [
   ..._default.$Resource['__exclusives__'],
   ..._Mixin.$Named['__exclusives__'],
 ], "File::Version" | "default::Directory" | "default::File">;
-const $Node = $.makeType<$Node>(_.spec, "3290a91a-01a9-11f0-a436-b7d1d64e986a", _.syntax.literal);
+const $Node = $.makeType<$Node>(_.spec, "0826a334-0670-11f0-af13-6d516e47ab6e", _.syntax.literal);
 
 const Node: $.$expr_PathNode<$.TypeSet<$Node, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Node, $.Cardinality.Many), null);
 
 export type $VersionλShape = $.typeutil.flatten<$NodeλShape & {
   "mimeType": $.PropertyDesc<_std.$str, $.Cardinality.One, false, false, false, false>;
   "<latestVersion[is File]": $.LinkDesc<_default.$File, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<file[is Media::Audio]": $.LinkDesc<_Media.$Audio, $.Cardinality.AtMostOne, {}, true, false,  false, false>;
-  "<file[is Media::Visual]": $.LinkDesc<_Media.$Visual, $.Cardinality.AtMostOne, {}, true, false,  false, false>;
   "<file[is Media]": $.LinkDesc<_default.$Media, $.Cardinality.AtMostOne, {}, true, false,  false, false>;
   "<file[is Media::Temporal]": $.LinkDesc<_Media.$Temporal, $.Cardinality.AtMostOne, {}, true, false,  false, false>;
+  "<file[is Media::Audio]": $.LinkDesc<_Media.$Audio, $.Cardinality.AtMostOne, {}, true, false,  false, false>;
+  "<file[is Media::Visual]": $.LinkDesc<_Media.$Visual, $.Cardinality.AtMostOne, {}, true, false,  false, false>;
   "<file[is Media::Image]": $.LinkDesc<_Media.$Image, $.Cardinality.AtMostOne, {}, true, false,  false, false>;
   "<file[is Media::Video]": $.LinkDesc<_Media.$Video, $.Cardinality.AtMostOne, {}, true, false,  false, false>;
   "<file": $.LinkDesc<$.ObjectType, $.Cardinality.Many, {}, false, false,  false, false>;
@@ -47,7 +47,7 @@ export type $VersionλShape = $.typeutil.flatten<$NodeλShape & {
 type $Version = $.ObjectType<"File::Version", $VersionλShape, null, [
   ...$Node['__exclusives__'],
 ], "File::Version">;
-const $Version = $.makeType<$Version>(_.spec, "329f6dba-01a9-11f0-ac74-7330c1d8ac08", _.syntax.literal);
+const $Version = $.makeType<$Version>(_.spec, "0836b88c-0670-11f0-a143-a5a5c5fac9b6", _.syntax.literal);
 
 const Version: $.$expr_PathNode<$.TypeSet<$Version, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Version, $.Cardinality.Many), null);
 

@@ -16,7 +16,7 @@ type $PromptVariantResponse = $.ObjectType<"Prompt::PromptVariantResponse", $Pro
   ..._default.$Resource['__exclusives__'],
   ..._Mixin.$Embedded['__exclusives__'],
 ], "ProgressReport::CommunityStory" | "ProgressReport::Highlight" | "ProgressReport::TeamNews">;
-const $PromptVariantResponse = $.makeType<$PromptVariantResponse>(_.spec, "48316ae8-01a9-11f0-8b58-27bd65cb8916", _.syntax.literal);
+const $PromptVariantResponse = $.makeType<$PromptVariantResponse>(_.spec, "1cb5faac-0670-11f0-ada2-dd63a6c17561", _.syntax.literal);
 
 const PromptVariantResponse: $.$expr_PathNode<$.TypeSet<$PromptVariantResponse, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($PromptVariantResponse, $.Cardinality.Many), null);
 
@@ -25,16 +25,16 @@ export type $VariantResponseλShape = $.typeutil.flatten<_Mixin.$AuditedλShape 
   "variant": $.PropertyDesc<_std.$str, $.Cardinality.One, false, false, false, false>;
   "response": $.PropertyDesc<_default.$RichText, $.Cardinality.AtMostOne, false, false, false, false>;
   "<responses[is Prompt::PromptVariantResponse]": $.LinkDesc<$PromptVariantResponse, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<responses[is ProgressReport::CommunityStory]": $.LinkDesc<_ProgressReport.$CommunityStory, $.Cardinality.Many, {}, false, false,  false, false>;
   "<responses[is ProgressReport::TeamNews]": $.LinkDesc<_ProgressReport.$TeamNews, $.Cardinality.Many, {}, false, false,  false, false>;
   "<responses[is ProgressReport::Highlight]": $.LinkDesc<_ProgressReport.$Highlight, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<responses[is ProgressReport::CommunityStory]": $.LinkDesc<_ProgressReport.$CommunityStory, $.Cardinality.Many, {}, false, false,  false, false>;
   "<responses": $.LinkDesc<$.ObjectType, $.Cardinality.Many, {}, false, false,  false, false>;
 }>;
 type $VariantResponse = $.ObjectType<"Prompt::VariantResponse", $VariantResponseλShape, null, [
   ..._Mixin.$Audited['__exclusives__'],
   {pvr: {__element__: $PromptVariantResponse, __cardinality__: $.Cardinality.One | $.Cardinality.AtMostOne },variant: {__element__: _std.$str, __cardinality__: $.Cardinality.One | $.Cardinality.AtMostOne },},
 ], "Prompt::VariantResponse">;
-const $VariantResponse = $.makeType<$VariantResponse>(_.spec, "49050d58-01a9-11f0-a21b-3b76b83feae6", _.syntax.literal);
+const $VariantResponse = $.makeType<$VariantResponse>(_.spec, "1d6178a0-0670-11f0-8491-778c6c29632f", _.syntax.literal);
 
 const VariantResponse: $.$expr_PathNode<$.TypeSet<$VariantResponse, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($VariantResponse, $.Cardinality.Many), null);
 

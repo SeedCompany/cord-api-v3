@@ -9,7 +9,7 @@ export type $Type = {
   "Technical": $.$expr_Literal<$Type>;
   "Resource": $.$expr_Literal<$Type>;
 } & $.EnumType<"Partner::Type", ["Managing", "Funding", "Impact", "Technical", "Resource"]>;
-const Type: $Type = $.makeType<$Type>(_.spec, "4805262c-01a9-11f0-a209-a920640b7e19", _.syntax.literal);
+const Type: $Type = $.makeType<$Type>(_.spec, "1c87540e-0670-11f0-a9b6-afa486991108", _.syntax.literal);
 
 
 

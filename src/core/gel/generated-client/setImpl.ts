@@ -5,7 +5,7 @@ import * as castMaps from "./castMaps";
 import { $expressionify } from "./path";
 import type { $expr_Set, mergeObjectTypesVariadic, getTypesFromExprs, getTypesFromObjectExprs, getCardsFromExprs, getSharedParentPrimitiveVariadic, LooseTypeSet } from "./set";
 import { getSharedParent } from "./set";
-import type * as _stdcal from "./modules/std/cal";
+import type * as _cal from "./modules/cal";
 import type * as _std from "./modules/std";
 
 type getSetTypeFromExprs<
@@ -20,19 +20,19 @@ function set<
   Expr extends castMaps.orScalarLiteral<$.TypeSet>
 >(expr: Expr): $expr_Set<castMaps.literalToTypeSet<Expr>>;
 function set<
-  Expr extends castMaps.orScalarLiteral<$.TypeSet<_stdcal.$relative_durationλICastableTo>>,
+  Expr extends castMaps.orScalarLiteral<$.TypeSet<_cal.$relative_durationλICastableTo>>,
   Exprs extends [Expr, ...Expr[]]
 >(...exprs: Exprs): $expr_Set<getSetTypeFromExprs<castMaps.mapLiteralToTypeSet<Exprs>>>;
 function set<
-  Expr extends $.TypeSet<$.ArrayType<_stdcal.$relative_durationλICastableTo>>,
+  Expr extends $.TypeSet<$.ArrayType<_cal.$relative_durationλICastableTo>>,
   Exprs extends [Expr, ...Expr[]]
 >(...exprs: Exprs): $expr_Set<getSetTypeFromExprs<Exprs>>;
 function set<
-  Expr extends castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_datetimeλICastableTo>>,
+  Expr extends castMaps.orScalarLiteral<$.TypeSet<_cal.$local_datetimeλICastableTo>>,
   Exprs extends [Expr, ...Expr[]]
 >(...exprs: Exprs): $expr_Set<getSetTypeFromExprs<castMaps.mapLiteralToTypeSet<Exprs>>>;
 function set<
-  Expr extends $.TypeSet<$.ArrayType<_stdcal.$local_datetimeλICastableTo>>,
+  Expr extends $.TypeSet<$.ArrayType<_cal.$local_datetimeλICastableTo>>,
   Exprs extends [Expr, ...Expr[]]
 >(...exprs: Exprs): $expr_Set<getSetTypeFromExprs<Exprs>>;
 function set<

@@ -6,7 +6,7 @@ import type * as _std from "./std";
 import type * as _Project from "./Project";
 import type * as _default from "./default";
 export type $code = $.ScalarType<"std::str", string>;
-const code: $.scalarTypeWithConstructor<_std.$str, never> = $.makeType<$.scalarTypeWithConstructor<_std.$str, never>>(_.spec, "34951228-01a9-11f0-8c26-6dc068bae54b", _.syntax.literal);
+const code: $.scalarTypeWithConstructor<_std.$str, never> = $.makeType<$.scalarTypeWithConstructor<_std.$str, never>>(_.spec, "099cc086-0670-11f0-85ed-49eeca2f1fe3", _.syntax.literal);
 
 export type $LanguageλShape = $.typeutil.flatten<_Project.$ContextAwareλShape & {
   "language": $.LinkDesc<_default.$Language, $.Cardinality.One, {}, true, false,  false, false>;
@@ -23,7 +23,7 @@ type $Language = $.ObjectType<"Ethnologue::Language", $LanguageλShape, null, [
   {code: {__element__: $code, __cardinality__: $.Cardinality.One | $.Cardinality.AtMostOne },},
   {provisionalCode: {__element__: $code, __cardinality__: $.Cardinality.One | $.Cardinality.AtMostOne },},
 ], "Ethnologue::Language">;
-const $Language = $.makeType<$Language>(_.spec, "34958e9c-01a9-11f0-ae74-85ec9b1077bd", _.syntax.literal);
+const $Language = $.makeType<$Language>(_.spec, "099d12c0-0670-11f0-a498-af79267dbc5a", _.syntax.literal);
 
 const Language: $.$expr_PathNode<$.TypeSet<$Language, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Language, $.Cardinality.Many), null);
 

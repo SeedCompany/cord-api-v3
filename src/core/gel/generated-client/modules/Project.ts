@@ -17,7 +17,7 @@ export type $Status = {
   "Completed": $.$expr_Literal<$Status>;
   "DidNotDevelop": $.$expr_Literal<$Status>;
 } & $.EnumType<"Project::Status", ["InDevelopment", "Active", "Terminated", "Completed", "DidNotDevelop"]>;
-const Status: $Status = $.makeType<$Status>(_.spec, "3187927c-01a9-11f0-85dc-6b4f9e490c8d", _.syntax.literal);
+const Status: $Status = $.makeType<$Status>(_.spec, "076f572e-0670-11f0-8230-d7b33a5475f8", _.syntax.literal);
 
 export type $Step = {
   "EarlyConversations": $.$expr_Literal<$Step>;
@@ -49,14 +49,14 @@ export type $Step = {
   "Terminated": $.$expr_Literal<$Step>;
   "Completed": $.$expr_Literal<$Step>;
 } & $.EnumType<"Project::Step", ["EarlyConversations", "PendingConceptApproval", "PrepForConsultantEndorsement", "PendingConsultantEndorsement", "PrepForFinancialEndorsement", "PendingFinancialEndorsement", "FinalizingProposal", "PendingRegionalDirectorApproval", "PendingZoneDirectorApproval", "PendingFinanceConfirmation", "OnHoldFinanceConfirmation", "DidNotDevelop", "Rejected", "Active", "ActiveChangedPlan", "DiscussingChangeToPlan", "PendingChangeToPlanApproval", "PendingChangeToPlanConfirmation", "DiscussingSuspension", "PendingSuspensionApproval", "Suspended", "DiscussingReactivation", "PendingReactivationApproval", "DiscussingTermination", "PendingTerminationApproval", "FinalizingCompletion", "Terminated", "Completed"]>;
-const Step: $Step = $.makeType<$Step>(_.spec, "3187a816-01a9-11f0-ad9e-83dd004e84ec", _.syntax.literal);
+const Step: $Step = $.makeType<$Step>(_.spec, "076f6412-0670-11f0-a6d5-f9bbf9c2c76e", _.syntax.literal);
 
 export type $Type = {
   "MomentumTranslation": $.$expr_Literal<$Type>;
   "MultiplicationTranslation": $.$expr_Literal<$Type>;
   "Internship": $.$expr_Literal<$Type>;
 } & $.EnumType<"Project::Type", ["MomentumTranslation", "MultiplicationTranslation", "Internship"]>;
-const Type: $Type = $.makeType<$Type>(_.spec, "319f5178-01a9-11f0-a1c3-456d3b789e42", _.syntax.literal);
+const Type: $Type = $.makeType<$Type>(_.spec, "07842ffa-0670-11f0-808c-933a2fde9cf5", _.syntax.literal);
 
 export type $ContextAwareλShape = $.typeutil.flatten<_std.$Object_8ce8c71ee4fa5f73840c22d7eaa58588λShape & {
   "ownSensitivity": $.PropertyDesc<_default.$Sensitivity, $.Cardinality.AtMostOne, false, false, false, false>;
@@ -67,7 +67,7 @@ export type $ContextAwareλShape = $.typeutil.flatten<_std.$Object_8ce8c71ee4fa5
 type $ContextAware = $.ObjectType<"Project::ContextAware", $ContextAwareλShape, null, [
   ..._std.$Object_8ce8c71ee4fa5f73840c22d7eaa58588['__exclusives__'],
 ], "Budget::Record" | "Engagement::CertificationCeremony" | "Engagement::DedicationCeremony" | "Ethnologue::Language" | "Product::PartnershipProducingMedium" | "ProgressReport::CommunityStory" | "ProgressReport::Highlight" | "ProgressReport::Media" | "ProgressReport::ProductProgress::Step" | "ProgressReport::TeamNews" | "ProgressReport::VarianceExplanation" | "Project::Member" | "Project::WorkflowEvent" | "default::Budget" | "default::DerivativeScriptureProduct" | "default::DirectScriptureProduct" | "default::FinancialReport" | "default::InternshipEngagement" | "default::InternshipProject" | "default::Language" | "default::LanguageEngagement" | "default::MomentumTranslationProject" | "default::MultiplicationTranslationProject" | "default::NarrativeReport" | "default::Organization" | "default::OtherProduct" | "default::Partner" | "default::Partnership" | "default::ProgressReport">;
-const $ContextAware = $.makeType<$ContextAware>(_.spec, "31adb722-01a9-11f0-820d-872d91ebea06", _.syntax.literal);
+const $ContextAware = $.makeType<$ContextAware>(_.spec, "07928a32-0670-11f0-9489-3760334e8a9b", _.syntax.literal);
 
 const ContextAware: $.$expr_PathNode<$.TypeSet<$ContextAware, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($ContextAware, $.Cardinality.Many), null);
 
@@ -78,18 +78,19 @@ type $Child = $.ObjectType<"Project::Child", $ChildλShape, null, [
   ..._default.$Resource['__exclusives__'],
   ...$ContextAware['__exclusives__'],
 ], "Budget::Record" | "Engagement::CertificationCeremony" | "Engagement::DedicationCeremony" | "Product::PartnershipProducingMedium" | "ProgressReport::CommunityStory" | "ProgressReport::Highlight" | "ProgressReport::Media" | "ProgressReport::TeamNews" | "ProgressReport::VarianceExplanation" | "Project::Member" | "default::Budget" | "default::DerivativeScriptureProduct" | "default::DirectScriptureProduct" | "default::FinancialReport" | "default::InternshipEngagement" | "default::LanguageEngagement" | "default::NarrativeReport" | "default::OtherProduct" | "default::Partnership" | "default::ProgressReport">;
-const $Child = $.makeType<$Child>(_.spec, "32dbce36-01a9-11f0-9667-4d4779941f60", _.syntax.literal);
+const $Child = $.makeType<$Child>(_.spec, "085f0bc0-0670-11f0-bebb-3b9237272521", _.syntax.literal);
 
 const Child: $.$expr_PathNode<$.TypeSet<$Child, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Child, $.Cardinality.Many), null);
 
 export type $ContextλShape = $.typeutil.flatten<_std.$Object_8ce8c71ee4fa5f73840c22d7eaa58588λShape & {
   "projects": $.LinkDesc<_default.$Project, $.Cardinality.Many, {}, false, false,  false, false>;
   "<projectContext[is Project::ContextAware]": $.LinkDesc<$ContextAware, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<projectContext[is Engagement]": $.LinkDesc<_default.$Engagement, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<projectContext[is Engagement::DedicationCeremony]": $.LinkDesc<_Engagement.$DedicationCeremony, $.Cardinality.Many, {}, false, false,  false, false>;
   "<projectContext[is Project::Child]": $.LinkDesc<$Child, $.Cardinality.Many, {}, false, false,  false, false>;
   "<projectContext[is Engagement::Child]": $.LinkDesc<_Engagement.$Child, $.Cardinality.Many, {}, false, false,  false, false>;
   "<projectContext[is Engagement::Ceremony]": $.LinkDesc<_Engagement.$Ceremony, $.Cardinality.Many, {}, false, false,  false, false>;
   "<projectContext[is Engagement::CertificationCeremony]": $.LinkDesc<_Engagement.$CertificationCeremony, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<projectContext[is Engagement::DedicationCeremony]": $.LinkDesc<_Engagement.$DedicationCeremony, $.Cardinality.Many, {}, false, false,  false, false>;
   "<projectContext[is Project::Member]": $.LinkDesc<$Member, $.Cardinality.Many, {}, false, false,  false, false>;
   "<projectContext[is Ethnologue::Language]": $.LinkDesc<_Ethnologue.$Language, $.Cardinality.Many, {}, false, false,  false, false>;
   "<projectContext[is Budget::Record]": $.LinkDesc<_Budget.$Record, $.Cardinality.Many, {}, false, false,  false, false>;
@@ -106,28 +107,27 @@ export type $ContextλShape = $.typeutil.flatten<_std.$Object_8ce8c71ee4fa5f7384
   "<projectContext[is ProgressReport::ProductProgress::Step]": $.LinkDesc<_ProgressReportProductProgress.$Step, $.Cardinality.Many, {}, false, false,  false, false>;
   "<projectContext[is Product]": $.LinkDesc<_default.$Product, $.Cardinality.Many, {}, false, false,  false, false>;
   "<projectContext[is Project::WorkflowEvent]": $.LinkDesc<$WorkflowEvent, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<projectContext[is DirectScriptureProduct]": $.LinkDesc<_default.$DirectScriptureProduct, $.Cardinality.Many, {}, false, false,  false, false>;
   "<projectContext[is DerivativeScriptureProduct]": $.LinkDesc<_default.$DerivativeScriptureProduct, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<projectContext[is LanguageEngagement]": $.LinkDesc<_default.$LanguageEngagement, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<projectContext[is DirectScriptureProduct]": $.LinkDesc<_default.$DirectScriptureProduct, $.Cardinality.Many, {}, false, false,  false, false>;
   "<projectContext[is OtherProduct]": $.LinkDesc<_default.$OtherProduct, $.Cardinality.Many, {}, false, false,  false, false>;
   "<projectContext[is FinancialReport]": $.LinkDesc<_default.$FinancialReport, $.Cardinality.Many, {}, false, false,  false, false>;
   "<projectContext[is NarrativeReport]": $.LinkDesc<_default.$NarrativeReport, $.Cardinality.Many, {}, false, false,  false, false>;
   "<projectContext[is Project]": $.LinkDesc<_default.$Project, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<projectContext[is InternshipProject]": $.LinkDesc<_default.$InternshipProject, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<projectContext[is InternshipEngagement]": $.LinkDesc<_default.$InternshipEngagement, $.Cardinality.Many, {}, false, false,  false, false>;
   "<projectContext[is TranslationProject]": $.LinkDesc<_default.$TranslationProject, $.Cardinality.Many, {}, false, false,  false, false>;
   "<projectContext[is MomentumTranslationProject]": $.LinkDesc<_default.$MomentumTranslationProject, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<projectContext[is MultiplicationTranslationProject]": $.LinkDesc<_default.$MultiplicationTranslationProject, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<projectContext[is Engagement]": $.LinkDesc<_default.$Engagement, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<projectContext[is InternshipEngagement]": $.LinkDesc<_default.$InternshipEngagement, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<projectContext[is LanguageEngagement]": $.LinkDesc<_default.$LanguageEngagement, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<projectContext[is InternshipProject]": $.LinkDesc<_default.$InternshipProject, $.Cardinality.Many, {}, false, false,  false, false>;
   "<projectContext[is ProgressReport]": $.LinkDesc<_default.$ProgressReport, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<projectContext[is Language]": $.LinkDesc<_default.$Language, $.Cardinality.Many, {}, false, false,  false, false>;
   "<projectContext[is Partner]": $.LinkDesc<_default.$Partner, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<projectContext[is MultiplicationTranslationProject]": $.LinkDesc<_default.$MultiplicationTranslationProject, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<projectContext[is Language]": $.LinkDesc<_default.$Language, $.Cardinality.Many, {}, false, false,  false, false>;
   "<projectContext": $.LinkDesc<$.ObjectType, $.Cardinality.Many, {}, false, false,  false, false>;
 }>;
 type $Context = $.ObjectType<"Project::Context", $ContextλShape, null, [
   ..._std.$Object_8ce8c71ee4fa5f73840c22d7eaa58588['__exclusives__'],
 ], "Project::Context">;
-const $Context = $.makeType<$Context>(_.spec, "31dfe710-01a9-11f0-b107-11803f6e14b3", _.syntax.literal);
+const $Context = $.makeType<$Context>(_.spec, "07b6ab60-0670-11f0-a2f4-fbd0f6652b42", _.syntax.literal);
 
 const Context: $.$expr_PathNode<$.TypeSet<$Context, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Context, $.Cardinality.Many), null);
 
@@ -139,7 +139,7 @@ type $FinancialApprover = $.ObjectType<"Project::FinancialApprover", $FinancialA
   ..._std.$Object_8ce8c71ee4fa5f73840c22d7eaa58588['__exclusives__'],
   {user: {__element__: _default.$User, __cardinality__: $.Cardinality.One | $.Cardinality.AtMostOne },},
 ], "Project::FinancialApprover">;
-const $FinancialApprover = $.makeType<$FinancialApprover>(_.spec, "35467d92-01a9-11f0-aec4-49f86c3af85a", _.syntax.literal);
+const $FinancialApprover = $.makeType<$FinancialApprover>(_.spec, "0a1007f8-0670-11f0-ad9d-412ea99bc381", _.syntax.literal);
 
 const FinancialApprover: $.$expr_PathNode<$.TypeSet<$FinancialApprover, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($FinancialApprover, $.Cardinality.Many), null);
 
@@ -147,13 +147,13 @@ export type $MemberλShape = $.typeutil.flatten<$ChildλShape & {
   "user": $.LinkDesc<_default.$User, $.Cardinality.One, {}, false, false,  true, false>;
   "roles": $.PropertyDesc<_default.$Role, $.Cardinality.Many, false, false, false, false>;
   "<members[is Project]": $.LinkDesc<_default.$Project, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<membership[is Project]": $.LinkDesc<_default.$Project, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<members[is InternshipProject]": $.LinkDesc<_default.$InternshipProject, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<membership[is InternshipProject]": $.LinkDesc<_default.$InternshipProject, $.Cardinality.Many, {}, false, false,  false, false>;
   "<members[is TranslationProject]": $.LinkDesc<_default.$TranslationProject, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<membership[is Project]": $.LinkDesc<_default.$Project, $.Cardinality.Many, {}, false, false,  false, false>;
   "<membership[is TranslationProject]": $.LinkDesc<_default.$TranslationProject, $.Cardinality.Many, {}, false, false,  false, false>;
   "<members[is MomentumTranslationProject]": $.LinkDesc<_default.$MomentumTranslationProject, $.Cardinality.Many, {}, false, false,  false, false>;
   "<membership[is MomentumTranslationProject]": $.LinkDesc<_default.$MomentumTranslationProject, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<members[is InternshipProject]": $.LinkDesc<_default.$InternshipProject, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<membership[is InternshipProject]": $.LinkDesc<_default.$InternshipProject, $.Cardinality.Many, {}, false, false,  false, false>;
   "<members[is MultiplicationTranslationProject]": $.LinkDesc<_default.$MultiplicationTranslationProject, $.Cardinality.Many, {}, false, false,  false, false>;
   "<membership[is MultiplicationTranslationProject]": $.LinkDesc<_default.$MultiplicationTranslationProject, $.Cardinality.Many, {}, false, false,  false, false>;
   "<members": $.LinkDesc<$.ObjectType, $.Cardinality.Many, {}, false, false,  false, false>;
@@ -162,7 +162,7 @@ export type $MemberλShape = $.typeutil.flatten<$ChildλShape & {
 type $Member = $.ObjectType<"Project::Member", $MemberλShape, null, [
   ...$Child['__exclusives__'],
 ], "Project::Member">;
-const $Member = $.makeType<$Member>(_.spec, "337ea994-01a9-11f0-b079-490bc249a8ed", _.syntax.literal);
+const $Member = $.makeType<$Member>(_.spec, "08c4596c-0670-11f0-ae24-5d4d872434f0", _.syntax.literal);
 
 const Member: $.$expr_PathNode<$.TypeSet<$Member, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Member, $.Cardinality.Many), null);
 
@@ -175,12 +175,12 @@ export type $WorkflowEventλShape = $.typeutil.flatten<$ContextAwareλShape & {
   "transitionKey": $.PropertyDesc<_std.$uuid, $.Cardinality.AtMostOne, false, false, true, false>;
   "<workflowEvents[is Project]": $.LinkDesc<_default.$Project, $.Cardinality.Many, {}, false, false,  false, false>;
   "<latestWorkflowEvent[is Project]": $.LinkDesc<_default.$Project, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<workflowEvents[is InternshipProject]": $.LinkDesc<_default.$InternshipProject, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<latestWorkflowEvent[is InternshipProject]": $.LinkDesc<_default.$InternshipProject, $.Cardinality.Many, {}, false, false,  false, false>;
   "<workflowEvents[is TranslationProject]": $.LinkDesc<_default.$TranslationProject, $.Cardinality.Many, {}, false, false,  false, false>;
   "<latestWorkflowEvent[is TranslationProject]": $.LinkDesc<_default.$TranslationProject, $.Cardinality.Many, {}, false, false,  false, false>;
   "<workflowEvents[is MomentumTranslationProject]": $.LinkDesc<_default.$MomentumTranslationProject, $.Cardinality.Many, {}, false, false,  false, false>;
   "<latestWorkflowEvent[is MomentumTranslationProject]": $.LinkDesc<_default.$MomentumTranslationProject, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<workflowEvents[is InternshipProject]": $.LinkDesc<_default.$InternshipProject, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<latestWorkflowEvent[is InternshipProject]": $.LinkDesc<_default.$InternshipProject, $.Cardinality.Many, {}, false, false,  false, false>;
   "<workflowEvents[is MultiplicationTranslationProject]": $.LinkDesc<_default.$MultiplicationTranslationProject, $.Cardinality.Many, {}, false, false,  false, false>;
   "<latestWorkflowEvent[is MultiplicationTranslationProject]": $.LinkDesc<_default.$MultiplicationTranslationProject, $.Cardinality.Many, {}, false, false,  false, false>;
   "<latestWorkflowEvent": $.LinkDesc<$.ObjectType, $.Cardinality.Many, {}, false, false,  false, false>;
@@ -189,7 +189,7 @@ export type $WorkflowEventλShape = $.typeutil.flatten<$ContextAwareλShape & {
 type $WorkflowEvent = $.ObjectType<"Project::WorkflowEvent", $WorkflowEventλShape, null, [
   ...$ContextAware['__exclusives__'],
 ], "Project::WorkflowEvent">;
-const $WorkflowEvent = $.makeType<$WorkflowEvent>(_.spec, "4955d350-01a9-11f0-829c-b3a630e5d0fc", _.syntax.literal);
+const $WorkflowEvent = $.makeType<$WorkflowEvent>(_.spec, "1d999cc6-0670-11f0-b2af-b3bba076741b", _.syntax.literal);
 
 const WorkflowEvent: $.$expr_PathNode<$.TypeSet<$WorkflowEvent, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($WorkflowEvent, $.Cardinality.Many), null);
 
@@ -205,7 +205,7 @@ function statusFromStep<
 ): statusFromStepλFuncExpr<P1>;
 function statusFromStep(...args: any[]) {
   const {returnType, cardinality, args: positionalArgs, namedArgs} = _.syntax.$resolveOverload('Project::statusFromStep', args, _.spec, [
-    {args: [{typeId: "3187a816-01a9-11f0-ad9e-83dd004e84ec", optional: false, setoftype: false, variadic: false}], returnTypeId: "3187927c-01a9-11f0-85dc-6b4f9e490c8d"},
+    {args: [{typeId: "076f6412-0670-11f0-a6d5-f9bbf9c2c76e", optional: false, setoftype: false, variadic: false}], returnTypeId: "076f572e-0670-11f0-8230-d7b33a5475f8"},
   ]);
   return _.syntax.$expressionify({
     __kind__: $.ExpressionKind.Function,

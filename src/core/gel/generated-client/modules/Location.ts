@@ -4,7 +4,7 @@ import * as $ from "../reflection";
 import * as _ from "../imports";
 import type * as _std from "./std";
 export type $IsoAlpha3Code = $.ScalarType<"std::str", string>;
-const IsoAlpha3Code: $.scalarTypeWithConstructor<_std.$str, never> = $.makeType<$.scalarTypeWithConstructor<_std.$str, never>>(_.spec, "323efb7e-01a9-11f0-8fa6-85510f2e4f67", _.syntax.literal);
+const IsoAlpha3Code: $.scalarTypeWithConstructor<_std.$str, never> = $.makeType<$.scalarTypeWithConstructor<_std.$str, never>>(_.spec, "07f423b4-0670-11f0-8fff-6d9aea7fe07a", _.syntax.literal);
 
 export type $Type = {
   "Country": $.$expr_Literal<$Type>;
@@ -14,7 +14,7 @@ export type $Type = {
   "State": $.$expr_Literal<$Type>;
   "CrossBorderArea": $.$expr_Literal<$Type>;
 } & $.EnumType<"Location::Type", ["Country", "City", "County", "Region", "State", "CrossBorderArea"]>;
-const Type: $Type = $.makeType<$Type>(_.spec, "323f7cfc-01a9-11f0-8c56-857d25a37ae7", _.syntax.literal);
+const Type: $Type = $.makeType<$Type>(_.spec, "07f4747c-0670-11f0-b3fa-3f3739afa168", _.syntax.literal);
 
 
 

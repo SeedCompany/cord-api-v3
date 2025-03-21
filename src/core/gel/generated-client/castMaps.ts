@@ -7,15 +7,12 @@ import type * as $ from "./reflection";
 import * as literal from "./literal";
 import type * as _std from "./modules/std";
 import type * as _sys from "./modules/sys";
-import type * as _stdpg from "./modules/std/pg";
-import type * as _stdnethttp from "./modules/std/net/http";
-import type * as _stdnet from "./modules/std/net";
-import type * as _stdfts from "./modules/std/fts";
 import type * as _stdenc from "./modules/std/enc";
-import type * as _stdcal from "./modules/std/cal";
 import type * as _schema from "./modules/schema";
+import type * as _fts from "./modules/fts";
 import type * as _default from "./modules/default";
 import type * as _cfg from "./modules/cfg";
+import type * as _cal from "./modules/cal";
 import type * as _User from "./modules/User";
 import type * as _Project from "./modules/Project";
 import type * as _ProgressReport from "./modules/ProgressReport";
@@ -34,38 +31,15 @@ export type scalarAssignableBy<T extends $.ScalarType> =
   T extends _std.$number ? _std.$number : 
   T extends _sys.$VersionStage ? _sys.$VersionStage : 
   T extends _sys.$TransactionIsolation ? _sys.$TransactionIsolation : 
-  T extends _sys.$TransactionDeferrability ? _sys.$TransactionDeferrability : 
-  T extends _sys.$TransactionAccessMode ? _sys.$TransactionAccessMode : 
-  T extends _sys.$QueryType ? _sys.$QueryType : 
-  T extends _sys.$OutputFormat ? _sys.$OutputFormat : 
   T extends _std.$uuid ? _std.$uuid : 
-  T extends _stdpg.$timestamptz ? _stdpg.$timestamptz : 
-  T extends _stdpg.$timestamp ? _stdpg.$timestamp : 
-  T extends _stdpg.$json ? _stdpg.$json : 
-  T extends _stdpg.$interval ? _stdpg.$interval : 
-  T extends _stdpg.$date ? _stdpg.$date : 
-  T extends _stdnethttp.$Method ? _stdnethttp.$Method : 
-  T extends _stdnet.$RequestState ? _stdnet.$RequestState : 
-  T extends _stdnet.$RequestFailureKind ? _stdnet.$RequestFailureKind : 
   T extends _std.$int64 ? _std.$int64 : 
   T extends _std.$int16 ? _std.$int16 : 
-  T extends _stdfts.$document ? _stdfts.$document : 
-  T extends _stdfts.$Weight ? _stdfts.$Weight : 
-  T extends _stdfts.$PGLanguage ? _stdfts.$PGLanguage : 
-  T extends _stdfts.$LuceneLanguage ? _stdfts.$LuceneLanguage : 
-  T extends _stdfts.$Language ? _stdfts.$Language : 
-  T extends _stdfts.$ElasticLanguage ? _stdfts.$ElasticLanguage : 
   T extends _std.$float64 ? _std.$float64 : 
   T extends _std.$float32 ? _std.$float32 : 
   T extends _stdenc.$Base64Alphabet ? _stdenc.$Base64Alphabet : 
   T extends _std.$duration ? _std.$duration : 
   T extends _std.$decimal ? _std.$decimalλIAssignableBy : 
   T extends _std.$datetime ? _std.$datetime : 
-  T extends _stdcal.$relative_duration ? _stdcal.$relative_durationλIAssignableBy : 
-  T extends _stdcal.$local_time ? _stdcal.$local_time : 
-  T extends _stdcal.$local_datetime ? _stdcal.$local_datetimeλIAssignableBy : 
-  T extends _stdcal.$local_date ? _stdcal.$local_date : 
-  T extends _stdcal.$date_duration ? _stdcal.$date_duration : 
   T extends _std.$bytes ? _std.$bytes : 
   T extends _std.$bool ? _std.$bool : 
   T extends _std.$bigint ? _std.$bigint : 
@@ -82,10 +56,15 @@ export type scalarAssignableBy<T extends $.ScalarType> =
   T extends _schema.$ParameterKind ? _schema.$ParameterKind : 
   T extends _schema.$OperatorKind ? _schema.$OperatorKind : 
   T extends _schema.$MigrationGeneratedBy ? _schema.$MigrationGeneratedBy : 
-  T extends _schema.$IndexDeferrability ? _schema.$IndexDeferrability : 
   T extends _schema.$Cardinality ? _schema.$Cardinality : 
   T extends _schema.$AccessPolicyAction ? _schema.$AccessPolicyAction : 
   T extends _schema.$AccessKind ? _schema.$AccessKind : 
+  T extends _fts.$document ? _fts.$document : 
+  T extends _fts.$Weight ? _fts.$Weight : 
+  T extends _fts.$PGLanguage ? _fts.$PGLanguage : 
+  T extends _fts.$LuceneLanguage ? _fts.$LuceneLanguage : 
+  T extends _fts.$Language ? _fts.$Language : 
+  T extends _fts.$ElasticLanguage ? _fts.$ElasticLanguage : 
   T extends _default.$population ? _default.$population : 
   T extends _std.$int32 ? _std.$int32 : 
   T extends _default.$nanoid ? _default.$nanoid : 
@@ -97,12 +76,14 @@ export type scalarAssignableBy<T extends $.ScalarType> =
   T extends _std.$json ? _std.$json : 
   T extends _default.$ReportPeriod ? _default.$ReportPeriod : 
   T extends _cfg.$memory ? _cfg.$memory : 
-  T extends _cfg.$StoreMigrationSDL ? _cfg.$StoreMigrationSDL : 
-  T extends _cfg.$SMTPSecurity ? _cfg.$SMTPSecurity : 
-  T extends _cfg.$QueryStatsOption ? _cfg.$QueryStatsOption : 
   T extends _cfg.$QueryCacheMode ? _cfg.$QueryCacheMode : 
   T extends _cfg.$ConnectionTransport ? _cfg.$ConnectionTransport : 
   T extends _cfg.$AllowBareDDL ? _cfg.$AllowBareDDL : 
+  T extends _cal.$relative_duration ? _cal.$relative_durationλIAssignableBy : 
+  T extends _cal.$local_time ? _cal.$local_time : 
+  T extends _cal.$local_datetime ? _cal.$local_datetimeλIAssignableBy : 
+  T extends _cal.$local_date ? _cal.$local_date : 
+  T extends _cal.$date_duration ? _cal.$date_duration : 
   T extends _User.$Status ? _User.$Status : 
   T extends _User.$Degree ? _User.$Degree : 
   T extends _Project.$Type ? _Project.$Type : 
@@ -138,38 +119,15 @@ export type scalarCastableFrom<T extends $.ScalarType> =
   T extends _std.$number ? _std.$number : 
   T extends _sys.$VersionStage ? _sys.$VersionStage : 
   T extends _sys.$TransactionIsolation ? _sys.$TransactionIsolation : 
-  T extends _sys.$TransactionDeferrability ? _sys.$TransactionDeferrability : 
-  T extends _sys.$TransactionAccessMode ? _sys.$TransactionAccessMode : 
-  T extends _sys.$QueryType ? _sys.$QueryType : 
-  T extends _sys.$OutputFormat ? _sys.$OutputFormat : 
   T extends _std.$uuid ? _std.$uuid : 
-  T extends _stdpg.$timestamptz ? _stdpg.$timestamptz : 
-  T extends _stdpg.$timestamp ? _stdpg.$timestamp : 
-  T extends _stdpg.$json ? _stdpg.$json : 
-  T extends _stdpg.$interval ? _stdpg.$interval : 
-  T extends _stdpg.$date ? _stdpg.$date : 
-  T extends _stdnethttp.$Method ? _stdnethttp.$Method : 
-  T extends _stdnet.$RequestState ? _stdnet.$RequestState : 
-  T extends _stdnet.$RequestFailureKind ? _stdnet.$RequestFailureKind : 
   T extends _std.$int64 ? _std.$int64 : 
   T extends _std.$int16 ? _std.$int16 : 
-  T extends _stdfts.$document ? _stdfts.$document : 
-  T extends _stdfts.$Weight ? _stdfts.$Weight : 
-  T extends _stdfts.$PGLanguage ? _stdfts.$PGLanguage : 
-  T extends _stdfts.$LuceneLanguage ? _stdfts.$LuceneLanguage : 
-  T extends _stdfts.$Language ? _stdfts.$Language : 
-  T extends _stdfts.$ElasticLanguage ? _stdfts.$ElasticLanguage : 
   T extends _std.$float64 ? _std.$float64 : 
   T extends _std.$float32 ? _std.$float32 : 
   T extends _stdenc.$Base64Alphabet ? _stdenc.$Base64Alphabet : 
   T extends _std.$duration ? _std.$duration : 
   T extends _std.$decimal ? _std.$decimalλICastableTo : 
   T extends _std.$datetime ? _std.$datetime : 
-  T extends _stdcal.$relative_duration ? _stdcal.$relative_durationλICastableTo : 
-  T extends _stdcal.$local_time ? _stdcal.$local_time : 
-  T extends _stdcal.$local_datetime ? _stdcal.$local_datetimeλICastableTo : 
-  T extends _stdcal.$local_date ? _stdcal.$local_date : 
-  T extends _stdcal.$date_duration ? _stdcal.$date_duration : 
   T extends _std.$bytes ? _std.$bytes : 
   T extends _std.$bool ? _std.$bool : 
   T extends _std.$bigint ? _std.$bigint : 
@@ -186,10 +144,15 @@ export type scalarCastableFrom<T extends $.ScalarType> =
   T extends _schema.$ParameterKind ? _schema.$ParameterKind : 
   T extends _schema.$OperatorKind ? _schema.$OperatorKind : 
   T extends _schema.$MigrationGeneratedBy ? _schema.$MigrationGeneratedBy : 
-  T extends _schema.$IndexDeferrability ? _schema.$IndexDeferrability : 
   T extends _schema.$Cardinality ? _schema.$Cardinality : 
   T extends _schema.$AccessPolicyAction ? _schema.$AccessPolicyAction : 
   T extends _schema.$AccessKind ? _schema.$AccessKind : 
+  T extends _fts.$document ? _fts.$document : 
+  T extends _fts.$Weight ? _fts.$Weight : 
+  T extends _fts.$PGLanguage ? _fts.$PGLanguage : 
+  T extends _fts.$LuceneLanguage ? _fts.$LuceneLanguage : 
+  T extends _fts.$Language ? _fts.$Language : 
+  T extends _fts.$ElasticLanguage ? _fts.$ElasticLanguage : 
   T extends _default.$population ? _default.$population : 
   T extends _std.$int32 ? _std.$int32 : 
   T extends _default.$nanoid ? _default.$nanoid : 
@@ -201,12 +164,14 @@ export type scalarCastableFrom<T extends $.ScalarType> =
   T extends _std.$json ? _std.$json : 
   T extends _default.$ReportPeriod ? _default.$ReportPeriod : 
   T extends _cfg.$memory ? _cfg.$memory : 
-  T extends _cfg.$StoreMigrationSDL ? _cfg.$StoreMigrationSDL : 
-  T extends _cfg.$SMTPSecurity ? _cfg.$SMTPSecurity : 
-  T extends _cfg.$QueryStatsOption ? _cfg.$QueryStatsOption : 
   T extends _cfg.$QueryCacheMode ? _cfg.$QueryCacheMode : 
   T extends _cfg.$ConnectionTransport ? _cfg.$ConnectionTransport : 
   T extends _cfg.$AllowBareDDL ? _cfg.$AllowBareDDL : 
+  T extends _cal.$relative_duration ? _cal.$relative_durationλICastableTo : 
+  T extends _cal.$local_time ? _cal.$local_time : 
+  T extends _cal.$local_datetime ? _cal.$local_datetimeλICastableTo : 
+  T extends _cal.$local_date ? _cal.$local_date : 
+  T extends _cal.$date_duration ? _cal.$date_duration : 
   T extends _User.$Status ? _User.$Status : 
   T extends _User.$Degree ? _User.$Degree : 
   T extends _Project.$Type ? _Project.$Type : 
@@ -257,80 +222,8 @@ type getSharedParentScalar<A, B> =
     :
     never
   :
-  A extends _sys.$TransactionDeferrability ?
-    B extends _sys.$TransactionDeferrability ?
-    B
-    :
-    never
-  :
-  A extends _sys.$TransactionAccessMode ?
-    B extends _sys.$TransactionAccessMode ?
-    B
-    :
-    never
-  :
-  A extends _sys.$QueryType ?
-    B extends _sys.$QueryType ?
-    B
-    :
-    never
-  :
-  A extends _sys.$OutputFormat ?
-    B extends _sys.$OutputFormat ?
-    B
-    :
-    never
-  :
   A extends _std.$uuid ?
     B extends _std.$uuid ?
-    B
-    :
-    never
-  :
-  A extends _stdpg.$timestamptz ?
-    B extends _stdpg.$timestamptz ?
-    B
-    :
-    never
-  :
-  A extends _stdpg.$timestamp ?
-    B extends _stdpg.$timestamp ?
-    B
-    :
-    never
-  :
-  A extends _stdpg.$json ?
-    B extends _stdpg.$json ?
-    B
-    :
-    never
-  :
-  A extends _stdpg.$interval ?
-    B extends _stdpg.$interval ?
-    B
-    :
-    never
-  :
-  A extends _stdpg.$date ?
-    B extends _stdpg.$date ?
-    B
-    :
-    never
-  :
-  A extends _stdnethttp.$Method ?
-    B extends _stdnethttp.$Method ?
-    B
-    :
-    never
-  :
-  A extends _stdnet.$RequestState ?
-    B extends _stdnet.$RequestState ?
-    B
-    :
-    never
-  :
-  A extends _stdnet.$RequestFailureKind ?
-    B extends _stdnet.$RequestFailureKind ?
     B
     :
     never
@@ -343,42 +236,6 @@ type getSharedParentScalar<A, B> =
   :
   A extends _std.$int16 ?
     B extends _std.$int16 ?
-    B
-    :
-    never
-  :
-  A extends _stdfts.$document ?
-    B extends _stdfts.$document ?
-    B
-    :
-    never
-  :
-  A extends _stdfts.$Weight ?
-    B extends _stdfts.$Weight ?
-    B
-    :
-    never
-  :
-  A extends _stdfts.$PGLanguage ?
-    B extends _stdfts.$PGLanguage ?
-    B
-    :
-    never
-  :
-  A extends _stdfts.$LuceneLanguage ?
-    B extends _stdfts.$LuceneLanguage ?
-    B
-    :
-    never
-  :
-  A extends _stdfts.$Language ?
-    B extends _stdfts.$Language ?
-    B
-    :
-    never
-  :
-  A extends _stdfts.$ElasticLanguage ?
-    B extends _stdfts.$ElasticLanguage ?
     B
     :
     never
@@ -418,48 +275,6 @@ type getSharedParentScalar<A, B> =
   :
   A extends _std.$datetime ?
     B extends _std.$datetime ?
-    B
-    :
-    never
-  :
-  A extends _stdcal.$relative_duration ?
-    B extends _stdcal.$relative_duration ?
-    B
-    :
-    B extends _stdcal.$date_duration ?
-    A
-    :
-    never
-  :
-  A extends _stdcal.$local_time ?
-    B extends _stdcal.$local_time ?
-    B
-    :
-    never
-  :
-  A extends _stdcal.$local_datetime ?
-    B extends _stdcal.$local_datetime ?
-    B
-    :
-    B extends _stdcal.$local_date ?
-    A
-    :
-    never
-  :
-  A extends _stdcal.$local_date ?
-    B extends _stdcal.$local_datetime ?
-    B
-    :
-    B extends _stdcal.$local_date ?
-    B
-    :
-    never
-  :
-  A extends _stdcal.$date_duration ?
-    B extends _stdcal.$relative_duration ?
-    B
-    :
-    B extends _stdcal.$date_duration ?
     B
     :
     never
@@ -563,12 +378,6 @@ type getSharedParentScalar<A, B> =
     :
     never
   :
-  A extends _schema.$IndexDeferrability ?
-    B extends _schema.$IndexDeferrability ?
-    B
-    :
-    never
-  :
   A extends _schema.$Cardinality ?
     B extends _schema.$Cardinality ?
     B
@@ -583,6 +392,42 @@ type getSharedParentScalar<A, B> =
   :
   A extends _schema.$AccessKind ?
     B extends _schema.$AccessKind ?
+    B
+    :
+    never
+  :
+  A extends _fts.$document ?
+    B extends _fts.$document ?
+    B
+    :
+    never
+  :
+  A extends _fts.$Weight ?
+    B extends _fts.$Weight ?
+    B
+    :
+    never
+  :
+  A extends _fts.$PGLanguage ?
+    B extends _fts.$PGLanguage ?
+    B
+    :
+    never
+  :
+  A extends _fts.$LuceneLanguage ?
+    B extends _fts.$LuceneLanguage ?
+    B
+    :
+    never
+  :
+  A extends _fts.$Language ?
+    B extends _fts.$Language ?
+    B
+    :
+    never
+  :
+  A extends _fts.$ElasticLanguage ?
+    B extends _fts.$ElasticLanguage ?
     B
     :
     never
@@ -653,24 +498,6 @@ type getSharedParentScalar<A, B> =
     :
     never
   :
-  A extends _cfg.$StoreMigrationSDL ?
-    B extends _cfg.$StoreMigrationSDL ?
-    B
-    :
-    never
-  :
-  A extends _cfg.$SMTPSecurity ?
-    B extends _cfg.$SMTPSecurity ?
-    B
-    :
-    never
-  :
-  A extends _cfg.$QueryStatsOption ?
-    B extends _cfg.$QueryStatsOption ?
-    B
-    :
-    never
-  :
   A extends _cfg.$QueryCacheMode ?
     B extends _cfg.$QueryCacheMode ?
     B
@@ -685,6 +512,48 @@ type getSharedParentScalar<A, B> =
   :
   A extends _cfg.$AllowBareDDL ?
     B extends _cfg.$AllowBareDDL ?
+    B
+    :
+    never
+  :
+  A extends _cal.$relative_duration ?
+    B extends _cal.$relative_duration ?
+    B
+    :
+    B extends _cal.$date_duration ?
+    A
+    :
+    never
+  :
+  A extends _cal.$local_time ?
+    B extends _cal.$local_time ?
+    B
+    :
+    never
+  :
+  A extends _cal.$local_datetime ?
+    B extends _cal.$local_datetime ?
+    B
+    :
+    B extends _cal.$local_date ?
+    A
+    :
+    never
+  :
+  A extends _cal.$local_date ?
+    B extends _cal.$local_datetime ?
+    B
+    :
+    B extends _cal.$local_date ?
+    B
+    :
+    never
+  :
+  A extends _cal.$date_duration ?
+    B extends _cal.$relative_duration ?
+    B
+    :
+    B extends _cal.$date_duration ?
     B
     :
     never
@@ -886,80 +755,8 @@ function getSharedParentScalar<A extends $.ScalarType, B extends $.ScalarType>(a
     }
     throw new Error(`Types are not castable: ${a.__name__}, ${b.__name__}`);
     }
-  if (a.__name__ === "sys::TransactionDeferrability") {
-    if(b.__name__ === "sys::TransactionDeferrability") {
-      return b;
-    }
-    throw new Error(`Types are not castable: ${a.__name__}, ${b.__name__}`);
-    }
-  if (a.__name__ === "sys::TransactionAccessMode") {
-    if(b.__name__ === "sys::TransactionAccessMode") {
-      return b;
-    }
-    throw new Error(`Types are not castable: ${a.__name__}, ${b.__name__}`);
-    }
-  if (a.__name__ === "sys::QueryType") {
-    if(b.__name__ === "sys::QueryType") {
-      return b;
-    }
-    throw new Error(`Types are not castable: ${a.__name__}, ${b.__name__}`);
-    }
-  if (a.__name__ === "sys::OutputFormat") {
-    if(b.__name__ === "sys::OutputFormat") {
-      return b;
-    }
-    throw new Error(`Types are not castable: ${a.__name__}, ${b.__name__}`);
-    }
   if (a.__name__ === "std::uuid") {
     if(b.__name__ === "std::uuid") {
-      return b;
-    }
-    throw new Error(`Types are not castable: ${a.__name__}, ${b.__name__}`);
-    }
-  if (a.__name__ === "std::pg::timestamptz") {
-    if(b.__name__ === "std::pg::timestamptz") {
-      return b;
-    }
-    throw new Error(`Types are not castable: ${a.__name__}, ${b.__name__}`);
-    }
-  if (a.__name__ === "std::pg::timestamp") {
-    if(b.__name__ === "std::pg::timestamp") {
-      return b;
-    }
-    throw new Error(`Types are not castable: ${a.__name__}, ${b.__name__}`);
-    }
-  if (a.__name__ === "std::pg::json") {
-    if(b.__name__ === "std::pg::json") {
-      return b;
-    }
-    throw new Error(`Types are not castable: ${a.__name__}, ${b.__name__}`);
-    }
-  if (a.__name__ === "std::pg::interval") {
-    if(b.__name__ === "std::pg::interval") {
-      return b;
-    }
-    throw new Error(`Types are not castable: ${a.__name__}, ${b.__name__}`);
-    }
-  if (a.__name__ === "std::pg::date") {
-    if(b.__name__ === "std::pg::date") {
-      return b;
-    }
-    throw new Error(`Types are not castable: ${a.__name__}, ${b.__name__}`);
-    }
-  if (a.__name__ === "std::net::http::Method") {
-    if(b.__name__ === "std::net::http::Method") {
-      return b;
-    }
-    throw new Error(`Types are not castable: ${a.__name__}, ${b.__name__}`);
-    }
-  if (a.__name__ === "std::net::RequestState") {
-    if(b.__name__ === "std::net::RequestState") {
-      return b;
-    }
-    throw new Error(`Types are not castable: ${a.__name__}, ${b.__name__}`);
-    }
-  if (a.__name__ === "std::net::RequestFailureKind") {
-    if(b.__name__ === "std::net::RequestFailureKind") {
       return b;
     }
     throw new Error(`Types are not castable: ${a.__name__}, ${b.__name__}`);
@@ -972,42 +769,6 @@ function getSharedParentScalar<A extends $.ScalarType, B extends $.ScalarType>(a
     }
   if (a.__name__ === "std::int16") {
     if(b.__name__ === "std::int16") {
-      return b;
-    }
-    throw new Error(`Types are not castable: ${a.__name__}, ${b.__name__}`);
-    }
-  if (a.__name__ === "std::fts::document") {
-    if(b.__name__ === "std::fts::document") {
-      return b;
-    }
-    throw new Error(`Types are not castable: ${a.__name__}, ${b.__name__}`);
-    }
-  if (a.__name__ === "std::fts::Weight") {
-    if(b.__name__ === "std::fts::Weight") {
-      return b;
-    }
-    throw new Error(`Types are not castable: ${a.__name__}, ${b.__name__}`);
-    }
-  if (a.__name__ === "std::fts::PGLanguage") {
-    if(b.__name__ === "std::fts::PGLanguage") {
-      return b;
-    }
-    throw new Error(`Types are not castable: ${a.__name__}, ${b.__name__}`);
-    }
-  if (a.__name__ === "std::fts::LuceneLanguage") {
-    if(b.__name__ === "std::fts::LuceneLanguage") {
-      return b;
-    }
-    throw new Error(`Types are not castable: ${a.__name__}, ${b.__name__}`);
-    }
-  if (a.__name__ === "std::fts::Language") {
-    if(b.__name__ === "std::fts::Language") {
-      return b;
-    }
-    throw new Error(`Types are not castable: ${a.__name__}, ${b.__name__}`);
-    }
-  if (a.__name__ === "std::fts::ElasticLanguage") {
-    if(b.__name__ === "std::fts::ElasticLanguage") {
       return b;
     }
     throw new Error(`Types are not castable: ${a.__name__}, ${b.__name__}`);
@@ -1047,48 +808,6 @@ function getSharedParentScalar<A extends $.ScalarType, B extends $.ScalarType>(a
     }
   if (a.__name__ === "std::datetime") {
     if(b.__name__ === "std::datetime") {
-      return b;
-    }
-    throw new Error(`Types are not castable: ${a.__name__}, ${b.__name__}`);
-    }
-  if (a.__name__ === "std::cal::relative_duration") {
-    if(b.__name__ === "std::cal::relative_duration") {
-      return b;
-    }
-    if(b.__name__ === "std::cal::date_duration") {
-      return a;
-    }
-    throw new Error(`Types are not castable: ${a.__name__}, ${b.__name__}`);
-    }
-  if (a.__name__ === "std::cal::local_time") {
-    if(b.__name__ === "std::cal::local_time") {
-      return b;
-    }
-    throw new Error(`Types are not castable: ${a.__name__}, ${b.__name__}`);
-    }
-  if (a.__name__ === "std::cal::local_datetime") {
-    if(b.__name__ === "std::cal::local_datetime") {
-      return b;
-    }
-    if(b.__name__ === "std::cal::local_date") {
-      return a;
-    }
-    throw new Error(`Types are not castable: ${a.__name__}, ${b.__name__}`);
-    }
-  if (a.__name__ === "std::cal::local_date") {
-    if(b.__name__ === "std::cal::local_datetime") {
-      return b;
-    }
-    if(b.__name__ === "std::cal::local_date") {
-      return b;
-    }
-    throw new Error(`Types are not castable: ${a.__name__}, ${b.__name__}`);
-    }
-  if (a.__name__ === "std::cal::date_duration") {
-    if(b.__name__ === "std::cal::relative_duration") {
-      return b;
-    }
-    if(b.__name__ === "std::cal::date_duration") {
       return b;
     }
     throw new Error(`Types are not castable: ${a.__name__}, ${b.__name__}`);
@@ -1192,12 +911,6 @@ function getSharedParentScalar<A extends $.ScalarType, B extends $.ScalarType>(a
     }
     throw new Error(`Types are not castable: ${a.__name__}, ${b.__name__}`);
     }
-  if (a.__name__ === "schema::IndexDeferrability") {
-    if(b.__name__ === "schema::IndexDeferrability") {
-      return b;
-    }
-    throw new Error(`Types are not castable: ${a.__name__}, ${b.__name__}`);
-    }
   if (a.__name__ === "schema::Cardinality") {
     if(b.__name__ === "schema::Cardinality") {
       return b;
@@ -1212,6 +925,42 @@ function getSharedParentScalar<A extends $.ScalarType, B extends $.ScalarType>(a
     }
   if (a.__name__ === "schema::AccessKind") {
     if(b.__name__ === "schema::AccessKind") {
+      return b;
+    }
+    throw new Error(`Types are not castable: ${a.__name__}, ${b.__name__}`);
+    }
+  if (a.__name__ === "fts::document") {
+    if(b.__name__ === "fts::document") {
+      return b;
+    }
+    throw new Error(`Types are not castable: ${a.__name__}, ${b.__name__}`);
+    }
+  if (a.__name__ === "fts::Weight") {
+    if(b.__name__ === "fts::Weight") {
+      return b;
+    }
+    throw new Error(`Types are not castable: ${a.__name__}, ${b.__name__}`);
+    }
+  if (a.__name__ === "fts::PGLanguage") {
+    if(b.__name__ === "fts::PGLanguage") {
+      return b;
+    }
+    throw new Error(`Types are not castable: ${a.__name__}, ${b.__name__}`);
+    }
+  if (a.__name__ === "fts::LuceneLanguage") {
+    if(b.__name__ === "fts::LuceneLanguage") {
+      return b;
+    }
+    throw new Error(`Types are not castable: ${a.__name__}, ${b.__name__}`);
+    }
+  if (a.__name__ === "fts::Language") {
+    if(b.__name__ === "fts::Language") {
+      return b;
+    }
+    throw new Error(`Types are not castable: ${a.__name__}, ${b.__name__}`);
+    }
+  if (a.__name__ === "fts::ElasticLanguage") {
+    if(b.__name__ === "fts::ElasticLanguage") {
       return b;
     }
     throw new Error(`Types are not castable: ${a.__name__}, ${b.__name__}`);
@@ -1282,24 +1031,6 @@ function getSharedParentScalar<A extends $.ScalarType, B extends $.ScalarType>(a
     }
     throw new Error(`Types are not castable: ${a.__name__}, ${b.__name__}`);
     }
-  if (a.__name__ === "cfg::StoreMigrationSDL") {
-    if(b.__name__ === "cfg::StoreMigrationSDL") {
-      return b;
-    }
-    throw new Error(`Types are not castable: ${a.__name__}, ${b.__name__}`);
-    }
-  if (a.__name__ === "cfg::SMTPSecurity") {
-    if(b.__name__ === "cfg::SMTPSecurity") {
-      return b;
-    }
-    throw new Error(`Types are not castable: ${a.__name__}, ${b.__name__}`);
-    }
-  if (a.__name__ === "cfg::QueryStatsOption") {
-    if(b.__name__ === "cfg::QueryStatsOption") {
-      return b;
-    }
-    throw new Error(`Types are not castable: ${a.__name__}, ${b.__name__}`);
-    }
   if (a.__name__ === "cfg::QueryCacheMode") {
     if(b.__name__ === "cfg::QueryCacheMode") {
       return b;
@@ -1314,6 +1045,48 @@ function getSharedParentScalar<A extends $.ScalarType, B extends $.ScalarType>(a
     }
   if (a.__name__ === "cfg::AllowBareDDL") {
     if(b.__name__ === "cfg::AllowBareDDL") {
+      return b;
+    }
+    throw new Error(`Types are not castable: ${a.__name__}, ${b.__name__}`);
+    }
+  if (a.__name__ === "cal::relative_duration") {
+    if(b.__name__ === "cal::relative_duration") {
+      return b;
+    }
+    if(b.__name__ === "cal::date_duration") {
+      return a;
+    }
+    throw new Error(`Types are not castable: ${a.__name__}, ${b.__name__}`);
+    }
+  if (a.__name__ === "cal::local_time") {
+    if(b.__name__ === "cal::local_time") {
+      return b;
+    }
+    throw new Error(`Types are not castable: ${a.__name__}, ${b.__name__}`);
+    }
+  if (a.__name__ === "cal::local_datetime") {
+    if(b.__name__ === "cal::local_datetime") {
+      return b;
+    }
+    if(b.__name__ === "cal::local_date") {
+      return a;
+    }
+    throw new Error(`Types are not castable: ${a.__name__}, ${b.__name__}`);
+    }
+  if (a.__name__ === "cal::local_date") {
+    if(b.__name__ === "cal::local_datetime") {
+      return b;
+    }
+    if(b.__name__ === "cal::local_date") {
+      return b;
+    }
+    throw new Error(`Types are not castable: ${a.__name__}, ${b.__name__}`);
+    }
+  if (a.__name__ === "cal::date_duration") {
+    if(b.__name__ === "cal::relative_duration") {
+      return b;
+    }
+    if(b.__name__ === "cal::date_duration") {
       return b;
     }
     throw new Error(`Types are not castable: ${a.__name__}, ${b.__name__}`);
@@ -1496,8 +1269,8 @@ function getSharedParentScalar<A extends $.ScalarType, B extends $.ScalarType>(a
 }
 
 const implicitCastMap = new Map<string, Set<string>>([
-  ["std::cal::date_duration", new Set(["std::cal::relative_duration"])],
-  ["std::cal::local_date", new Set(["std::cal::local_datetime"])],
+  ["cal::date_duration", new Set(["cal::relative_duration"])],
+  ["cal::local_date", new Set(["cal::local_datetime"])],
   ["std::bigint", new Set(["std::decimal"])],
 ]);
 function isImplicitlyCastableTo(from: string, to: string): boolean {
@@ -1517,15 +1290,15 @@ export type scalarLiterals =
   | gel.ConfigMemory
   | Float32Array
   | gel.LocalDateTime
-  | CalendarDate
+  | gel.LocalDate
   | gel.LocalTime
   | gel.RelativeDuration
   | gel.DateDuration
-  | gel.LocalDate
+  | CalendarDate
   | gel.Range<any> | gel.MultiRange<any>;
 
 type getTsType<T extends $.BaseType> = T extends $.ScalarType
-  ? T extends _std.$json | _std.$decimal | _stdfts.$document | _stdpg.$date | _stdpg.$interval | _stdpg.$json | _stdpg.$timestamp | _stdpg.$timestamptz | _std.$uuid
+  ? T extends _std.$json | _fts.$document | _std.$decimal | _std.$uuid
     ? never
     : T["__tstype__"]
   : T extends $.RangeType
@@ -1555,11 +1328,11 @@ export type literalToScalarType<T extends any> =
   T extends DateTime ? scalarWithConstType<_std.$datetime, T> :
   T extends gel.Duration ? scalarWithConstType<_std.$duration, T> :
   T extends gel.ConfigMemory ? scalarWithConstType<_cfg.$memory, T> :
-  T extends gel.LocalDateTime ? scalarWithConstType<_stdcal.$local_datetime, T> :
-  T extends CalendarDate ? scalarWithConstType<_stdcal.$local_date, T> :
-  T extends gel.LocalTime ? scalarWithConstType<_stdcal.$local_time, T> :
-  T extends gel.RelativeDuration ? scalarWithConstType<_stdcal.$relative_duration, T> :
-  T extends gel.DateDuration ? scalarWithConstType<_stdcal.$date_duration, T> :
+  T extends gel.LocalDateTime ? scalarWithConstType<_cal.$local_datetime, T> :
+  T extends gel.LocalTime ? scalarWithConstType<_cal.$local_time, T> :
+  T extends gel.RelativeDuration ? scalarWithConstType<_cal.$relative_duration, T> :
+  T extends gel.DateDuration ? scalarWithConstType<_cal.$date_duration, T> :
+  T extends CalendarDate ? scalarWithConstType<_cal.$local_date, T> :
   T extends gel.Range<infer E> ? $.RangeType<literalToScalarType<E>> :
   T extends gel.MultiRange<infer E> ? $.MultiRangeType<literalToScalarType<E>> :
   never;
@@ -1605,9 +1378,6 @@ function literalToTypeSet(type: any): $.TypeSet {
   if (type instanceof gel.LocalDateTime) {
     return literal.$getType("00000000-0000-0000-0000-00000000010b")(type);
   }
-  if (type instanceof CalendarDate) {
-    return literal.$getType("00000000-0000-0000-0000-00000000010c")(type);
-  }
   if (type instanceof gel.LocalTime) {
     return literal.$getType("00000000-0000-0000-0000-00000000010d")(type);
   }
@@ -1616,6 +1386,9 @@ function literalToTypeSet(type: any): $.TypeSet {
   }
   if (type instanceof gel.DateDuration) {
     return literal.$getType("00000000-0000-0000-0000-000000000112")(type);
+  }
+  if (type instanceof CalendarDate) {
+    return literal.$getType("00000000-0000-0000-0000-00000000010c")(type);
   }
   throw new Error(`Cannot convert literal '${type}' into scalar type`);
 }

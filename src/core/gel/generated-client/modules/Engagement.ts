@@ -4,7 +4,7 @@ import * as $ from "../reflection";
 import * as _ from "../imports";
 import type * as _Project from "./Project";
 import type * as _default from "./default";
-import type * as _stdcal from "./std/cal";
+import type * as _cal from "./cal";
 import type * as _std from "./std";
 export type $AIAssistedTranslation = {
   "Unknown": $.$expr_Literal<$AIAssistedTranslation>;
@@ -14,7 +14,7 @@ export type $AIAssistedTranslation = {
   "DraftAndCheck": $.$expr_Literal<$AIAssistedTranslation>;
   "Other": $.$expr_Literal<$AIAssistedTranslation>;
 } & $.EnumType<"Engagement::AIAssistedTranslation", ["Unknown", "None", "Draft", "Check", "DraftAndCheck", "Other"]>;
-const AIAssistedTranslation: $AIAssistedTranslation = $.makeType<$AIAssistedTranslation>(_.spec, "c0c6cf10-01aa-11f0-86ce-3b4b57633a12", _.syntax.literal);
+const AIAssistedTranslation: $AIAssistedTranslation = $.makeType<$AIAssistedTranslation>(_.spec, "eeeaaf54-0670-11f0-820f-a5f714233240", _.syntax.literal);
 
 export type $InternPosition = {
   "ConsultantInTraining": $.$expr_Literal<$InternPosition>;
@@ -36,7 +36,7 @@ export type $InternPosition = {
   "ExegeticalFacilitator": $.$expr_Literal<$InternPosition>;
   "TranslationFacilitator": $.$expr_Literal<$InternPosition>;
 } & $.EnumType<"Engagement::InternPosition", ["ConsultantInTraining", "MidLevelQualityAssurance", "LeadershipDevelopment", "Mobilization", "Personnel", "Communication", "Administration", "Technology", "Finance", "LanguageProgramManager", "Literacy", "OralityFacilitator", "ScriptureEngagement", "OtherAttached", "OtherTranslationCapacity", "OtherPartnershipCapacity", "ExegeticalFacilitator", "TranslationFacilitator"]>;
-const InternPosition: $InternPosition = $.makeType<$InternPosition>(_.spec, "331ae8be-01a9-11f0-ac3d-0b40cc2dbafe", _.syntax.literal);
+const InternPosition: $InternPosition = $.makeType<$InternPosition>(_.spec, "088937ba-0670-11f0-9cc4-1bbcf6b2e66c", _.syntax.literal);
 
 export type $Status = {
   "InDevelopment": $.$expr_Literal<$Status>;
@@ -57,7 +57,7 @@ export type $Status = {
   "Transferred": $.$expr_Literal<$Status>;
   "NotRenewed": $.$expr_Literal<$Status>;
 } & $.EnumType<"Engagement::Status", ["InDevelopment", "DidNotDevelop", "Rejected", "Active", "DiscussingTermination", "DiscussingReactivation", "DiscussingChangeToPlan", "DiscussingSuspension", "FinalizingCompletion", "ActiveChangedPlan", "Suspended", "Terminated", "Completed", "Converted", "Unapproved", "Transferred", "NotRenewed"]>;
-const Status: $Status = $.makeType<$Status>(_.spec, "331afd36-01a9-11f0-b238-c9d86e702782", _.syntax.literal);
+const Status: $Status = $.makeType<$Status>(_.spec, "088940b6-0670-11f0-97bd-2df805ea0613", _.syntax.literal);
 
 export type $ChildλShape = $.typeutil.flatten<_Project.$ChildλShape & {
   "engagement": $.LinkDesc<_default.$Engagement, $.Cardinality.One, {}, false, false,  true, false>;
@@ -65,13 +65,13 @@ export type $ChildλShape = $.typeutil.flatten<_Project.$ChildλShape & {
 type $Child = $.ObjectType<"Engagement::Child", $ChildλShape, null, [
   ..._Project.$Child['__exclusives__'],
 ], "Engagement::CertificationCeremony" | "Engagement::DedicationCeremony" | "Product::PartnershipProducingMedium" | "ProgressReport::CommunityStory" | "ProgressReport::Highlight" | "ProgressReport::Media" | "ProgressReport::TeamNews" | "ProgressReport::VarianceExplanation" | "default::DerivativeScriptureProduct" | "default::DirectScriptureProduct" | "default::OtherProduct" | "default::ProgressReport">;
-const $Child = $.makeType<$Child>(_.spec, "32e65d9c-01a9-11f0-9085-ff3ead242910", _.syntax.literal);
+const $Child = $.makeType<$Child>(_.spec, "08665c04-0670-11f0-930a-1fdfaa995689", _.syntax.literal);
 
 const Child: $.$expr_PathNode<$.TypeSet<$Child, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Child, $.Cardinality.Many), null);
 
 export type $CeremonyλShape = $.typeutil.flatten<$ChildλShape & {
-  "actualDate": $.PropertyDesc<_stdcal.$local_date, $.Cardinality.AtMostOne, false, false, false, false>;
-  "estimatedDate": $.PropertyDesc<_stdcal.$local_date, $.Cardinality.AtMostOne, false, false, false, false>;
+  "actualDate": $.PropertyDesc<_cal.$local_date, $.Cardinality.AtMostOne, false, false, false, false>;
+  "estimatedDate": $.PropertyDesc<_cal.$local_date, $.Cardinality.AtMostOne, false, false, false, false>;
   "planned": $.PropertyDesc<_std.$bool, $.Cardinality.One, false, false, false, true>;
   "<ceremony[is Engagement]": $.LinkDesc<_default.$Engagement, $.Cardinality.Many, {}, false, false,  false, false>;
   "<ceremony[is LanguageEngagement]": $.LinkDesc<_default.$LanguageEngagement, $.Cardinality.Many, {}, false, false,  false, false>;
@@ -81,7 +81,7 @@ export type $CeremonyλShape = $.typeutil.flatten<$ChildλShape & {
 type $Ceremony = $.ObjectType<"Engagement::Ceremony", $CeremonyλShape, null, [
   ...$Child['__exclusives__'],
 ], "Engagement::CertificationCeremony" | "Engagement::DedicationCeremony">;
-const $Ceremony = $.makeType<$Ceremony>(_.spec, "32fbb02a-01a9-11f0-99e9-aff81d27a112", _.syntax.literal);
+const $Ceremony = $.makeType<$Ceremony>(_.spec, "086d02e8-0670-11f0-8693-dfdff438ec19", _.syntax.literal);
 
 const Ceremony: $.$expr_PathNode<$.TypeSet<$Ceremony, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Ceremony, $.Cardinality.Many), null);
 
@@ -90,7 +90,7 @@ export type $CertificationCeremonyλShape = $.typeutil.flatten<$CeremonyλShape 
 type $CertificationCeremony = $.ObjectType<"Engagement::CertificationCeremony", $CertificationCeremonyλShape, null, [
   ...$Ceremony['__exclusives__'],
 ], "Engagement::CertificationCeremony">;
-const $CertificationCeremony = $.makeType<$CertificationCeremony>(_.spec, "33065bb0-01a9-11f0-8657-c918bfb568d9", _.syntax.literal);
+const $CertificationCeremony = $.makeType<$CertificationCeremony>(_.spec, "0873fc1a-0670-11f0-99ae-7d13e9895cfc", _.syntax.literal);
 
 const CertificationCeremony: $.$expr_PathNode<$.TypeSet<$CertificationCeremony, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($CertificationCeremony, $.Cardinality.Many), null);
 
@@ -99,7 +99,7 @@ export type $DedicationCeremonyλShape = $.typeutil.flatten<$CeremonyλShape & {
 type $DedicationCeremony = $.ObjectType<"Engagement::DedicationCeremony", $DedicationCeremonyλShape, null, [
   ...$Ceremony['__exclusives__'],
 ], "Engagement::DedicationCeremony">;
-const $DedicationCeremony = $.makeType<$DedicationCeremony>(_.spec, "3310bd76-01a9-11f0-bb7a-070c7d99590f", _.syntax.literal);
+const $DedicationCeremony = $.makeType<$DedicationCeremony>(_.spec, "088233fc-0670-11f0-a10e-9db4c5947419", _.syntax.literal);
 
 const DedicationCeremony: $.$expr_PathNode<$.TypeSet<$DedicationCeremony, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($DedicationCeremony, $.Cardinality.Many), null);
 

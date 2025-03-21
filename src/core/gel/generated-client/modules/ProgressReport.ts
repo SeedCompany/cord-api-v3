@@ -17,7 +17,7 @@ export type $Status = {
   "Approved": $.$expr_Literal<$Status>;
   "Published": $.$expr_Literal<$Status>;
 } & $.EnumType<"ProgressReport::Status", ["NotStarted", "InProgress", "PendingTranslation", "InReview", "Approved", "Published"]>;
-const Status: $Status = $.makeType<$Status>(_.spec, "48d6c22c-01a9-11f0-bcba-e79f9c5aac71", _.syntax.literal);
+const Status: $Status = $.makeType<$Status>(_.spec, "1d3d0dc6-0670-11f0-829e-4f9648f840c6", _.syntax.literal);
 
 export type $ChildλShape = $.typeutil.flatten<_Engagement.$ChildλShape & {
   "report": $.LinkDesc<_default.$ProgressReport, $.Cardinality.One, {}, false, false,  true, false>;
@@ -25,7 +25,7 @@ export type $ChildλShape = $.typeutil.flatten<_Engagement.$ChildλShape & {
 type $Child = $.ObjectType<"ProgressReport::Child", $ChildλShape, null, [
   ..._Engagement.$Child['__exclusives__'],
 ], "ProgressReport::CommunityStory" | "ProgressReport::Highlight" | "ProgressReport::Media" | "ProgressReport::TeamNews" | "ProgressReport::VarianceExplanation">;
-const $Child = $.makeType<$Child>(_.spec, "481ddfc8-01a9-11f0-a83c-4bce4e203e55", _.syntax.literal);
+const $Child = $.makeType<$Child>(_.spec, "1c9a075c-0670-11f0-8739-bd6c9b5d83d1", _.syntax.literal);
 
 const Child: $.$expr_PathNode<$.TypeSet<$Child, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Child, $.Cardinality.Many), null);
 
@@ -38,7 +38,7 @@ type $CommunityStory = $.ObjectType<"ProgressReport::CommunityStory", $Community
   ...$Child['__exclusives__'],
   ..._Prompt.$PromptVariantResponse['__exclusives__'],
 ], "ProgressReport::CommunityStory">;
-const $CommunityStory = $.makeType<$CommunityStory>(_.spec, "48398368-01a9-11f0-98d3-85eb0ee69ea0", _.syntax.literal);
+const $CommunityStory = $.makeType<$CommunityStory>(_.spec, "1cbc7ea4-0670-11f0-bad5-7bca7c14a2a5", _.syntax.literal);
 
 const CommunityStory: $.$expr_PathNode<$.TypeSet<$CommunityStory, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($CommunityStory, $.Cardinality.Many), null);
 
@@ -51,7 +51,7 @@ type $Highlight = $.ObjectType<"ProgressReport::Highlight", $HighlightλShape, n
   ...$Child['__exclusives__'],
   ..._Prompt.$PromptVariantResponse['__exclusives__'],
 ], "ProgressReport::Highlight">;
-const $Highlight = $.makeType<$Highlight>(_.spec, "487a17fc-01a9-11f0-873a-d10bf02423bb", _.syntax.literal);
+const $Highlight = $.makeType<$Highlight>(_.spec, "1ccc5ad6-0670-11f0-a8ac-9f45c13254d8", _.syntax.literal);
 
 const Highlight: $.$expr_PathNode<$.TypeSet<$Highlight, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Highlight, $.Cardinality.Many), null);
 
@@ -66,7 +66,7 @@ type $Media = $.ObjectType<"ProgressReport::Media", $MediaλShape, null, [
   ...$Child['__exclusives__'],
   {variantGroup: {__element__: _ProgressReportMedia.$VariantGroup, __cardinality__: $.Cardinality.One | $.Cardinality.AtMostOne },variant: {__element__: _std.$str, __cardinality__: $.Cardinality.One | $.Cardinality.AtMostOne },},
 ], "ProgressReport::Media">;
-const $Media = $.makeType<$Media>(_.spec, "4891a87c-01a9-11f0-8fd9-5fc867da6d40", _.syntax.literal);
+const $Media = $.makeType<$Media>(_.spec, "1cdea074-0670-11f0-9723-b9d4a567b0dd", _.syntax.literal);
 
 const Media: $.$expr_PathNode<$.TypeSet<$Media, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Media, $.Cardinality.Many), null);
 
@@ -77,7 +77,7 @@ type $TeamNews = $.ObjectType<"ProgressReport::TeamNews", $TeamNewsλShape, null
   ...$Child['__exclusives__'],
   ..._Prompt.$PromptVariantResponse['__exclusives__'],
 ], "ProgressReport::TeamNews">;
-const $TeamNews = $.makeType<$TeamNews>(_.spec, "48ae2b46-01a9-11f0-8061-eb50090c2cda", _.syntax.literal);
+const $TeamNews = $.makeType<$TeamNews>(_.spec, "1d1caf86-0670-11f0-b3d7-8fc7efc994bf", _.syntax.literal);
 
 const TeamNews: $.$expr_PathNode<$.TypeSet<$TeamNews, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($TeamNews, $.Cardinality.Many), null);
 
@@ -92,7 +92,7 @@ type $VarianceExplanation = $.ObjectType<"ProgressReport::VarianceExplanation", 
   ...$Child['__exclusives__'],
   {report: {__element__: _default.$ProgressReport, __cardinality__: $.Cardinality.One | $.Cardinality.AtMostOne },},
 ], "ProgressReport::VarianceExplanation">;
-const $VarianceExplanation = $.makeType<$VarianceExplanation>(_.spec, "48c2888e-01a9-11f0-a6f4-1b2ea85b7d52", _.syntax.literal);
+const $VarianceExplanation = $.makeType<$VarianceExplanation>(_.spec, "1d2d4b8e-0670-11f0-85d7-3bb759bb1db8", _.syntax.literal);
 
 const VarianceExplanation: $.$expr_PathNode<$.TypeSet<$VarianceExplanation, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($VarianceExplanation, $.Cardinality.Many), null);
 
@@ -111,7 +111,7 @@ export type $WorkflowEventλShape = $.typeutil.flatten<_std.$Object_8ce8c71ee4fa
 type $WorkflowEvent = $.ObjectType<"ProgressReport::WorkflowEvent", $WorkflowEventλShape, null, [
   ..._std.$Object_8ce8c71ee4fa5f73840c22d7eaa58588['__exclusives__'],
 ], "ProgressReport::WorkflowEvent">;
-const $WorkflowEvent = $.makeType<$WorkflowEvent>(_.spec, "4915542e-01a9-11f0-8fb6-a9bfc4712815", _.syntax.literal);
+const $WorkflowEvent = $.makeType<$WorkflowEvent>(_.spec, "1d6dd24e-0670-11f0-a3ae-3d19c96e305e", _.syntax.literal);
 
 const WorkflowEvent: $.$expr_PathNode<$.TypeSet<$WorkflowEvent, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($WorkflowEvent, $.Cardinality.Many), null);
 

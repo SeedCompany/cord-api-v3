@@ -10,8 +10,8 @@ export type $CollectionλShape = $.typeutil.flatten<_std.$Object_8ce8c71ee4fa5f7
   "ids": $.PropertyDesc<$.MultiRangeType<_std.$number>, $.Cardinality.One, false, true, false, false>;
   "<scripture[is Product]": $.LinkDesc<_default.$Product, $.Cardinality.Many, {}, false, false,  false, false>;
   "<scripture[is DirectScriptureProduct]": $.LinkDesc<_default.$DirectScriptureProduct, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<scripture[is DerivativeScriptureProduct]": $.LinkDesc<_default.$DerivativeScriptureProduct, $.Cardinality.Many, {}, false, false,  false, false>;
   "<scriptureOverride[is DerivativeScriptureProduct]": $.LinkDesc<_default.$DerivativeScriptureProduct, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<scripture[is DerivativeScriptureProduct]": $.LinkDesc<_default.$DerivativeScriptureProduct, $.Cardinality.Many, {}, false, false,  false, false>;
   "<scripture[is Producible]": $.LinkDesc<_default.$Producible, $.Cardinality.Many, {}, false, false,  false, false>;
   "<scripture[is EthnoArt]": $.LinkDesc<_default.$EthnoArt, $.Cardinality.Many, {}, false, false,  false, false>;
   "<scripture[is Film]": $.LinkDesc<_default.$Film, $.Cardinality.Many, {}, false, false,  false, false>;
@@ -23,7 +23,7 @@ export type $CollectionλShape = $.typeutil.flatten<_std.$Object_8ce8c71ee4fa5f7
 type $Collection = $.ObjectType<"Scripture::Collection", $CollectionλShape, null, [
   ..._std.$Object_8ce8c71ee4fa5f73840c22d7eaa58588['__exclusives__'],
 ], "Scripture::Collection">;
-const $Collection = $.makeType<$Collection>(_.spec, "4b932ad2-01a9-11f0-8e1e-238c25f2b71f", _.syntax.literal);
+const $Collection = $.makeType<$Collection>(_.spec, "1f72cb4e-0670-11f0-a926-d9473b4bf52b", _.syntax.literal);
 
 const Collection: $.$expr_PathNode<$.TypeSet<$Collection, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Collection, $.Cardinality.Many), null);
 
@@ -36,7 +36,7 @@ export type $UnspecifiedPortionλShape = $.typeutil.flatten<_std.$Object_8ce8c71
 type $UnspecifiedPortion = $.ObjectType<"Scripture::UnspecifiedPortion", $UnspecifiedPortionλShape, null, [
   ..._std.$Object_8ce8c71ee4fa5f73840c22d7eaa58588['__exclusives__'],
 ], "Scripture::UnspecifiedPortion">;
-const $UnspecifiedPortion = $.makeType<$UnspecifiedPortion>(_.spec, "4b9498b8-01a9-11f0-9adc-f1a406b551ff", _.syntax.literal);
+const $UnspecifiedPortion = $.makeType<$UnspecifiedPortion>(_.spec, "1f7422c8-0670-11f0-a171-8540639a3b5d", _.syntax.literal);
 
 const UnspecifiedPortion: $.$expr_PathNode<$.TypeSet<$UnspecifiedPortion, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($UnspecifiedPortion, $.Cardinality.Many), null);
 
@@ -46,15 +46,15 @@ export type $VerseλShape = $.typeutil.flatten<_std.$Object_8ce8c71ee4fa5f73840c
   "chapter": $.PropertyDesc<_std.$int16, $.Cardinality.One, false, false, true, false>;
   "verse": $.PropertyDesc<_std.$int16, $.Cardinality.One, false, false, true, false>;
   "label": $.PropertyDesc<_std.$str, $.Cardinality.One, false, true, false, false>;
-  "<end[is Scripture::VerseRange]": $.LinkDesc<$VerseRange, $.Cardinality.Many, {}, false, false,  false, false>;
   "<start[is Scripture::VerseRange]": $.LinkDesc<$VerseRange, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<end[is Scripture::VerseRange]": $.LinkDesc<$VerseRange, $.Cardinality.Many, {}, false, false,  false, false>;
   "<end": $.LinkDesc<$.ObjectType, $.Cardinality.Many, {}, false, false,  false, false>;
   "<start": $.LinkDesc<$.ObjectType, $.Cardinality.Many, {}, false, false,  false, false>;
 }>;
 type $Verse = $.ObjectType<"Scripture::Verse", $VerseλShape, null, [
   ..._std.$Object_8ce8c71ee4fa5f73840c22d7eaa58588['__exclusives__'],
 ], "Scripture::Verse">;
-const $Verse = $.makeType<$Verse>(_.spec, "4c76dbec-01a9-11f0-a82a-e167c402fce3", _.syntax.literal);
+const $Verse = $.makeType<$Verse>(_.spec, "1ffd0c3c-0670-11f0-9d50-c91b86fa12fd", _.syntax.literal);
 
 const Verse: $.$expr_PathNode<$.TypeSet<$Verse, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Verse, $.Cardinality.Many), null);
 
@@ -69,7 +69,7 @@ export type $VerseRangeλShape = $.typeutil.flatten<_std.$Object_8ce8c71ee4fa5f7
 type $VerseRange = $.ObjectType<"Scripture::VerseRange", $VerseRangeλShape, null, [
   ..._std.$Object_8ce8c71ee4fa5f73840c22d7eaa58588['__exclusives__'],
 ], "Scripture::VerseRange">;
-const $VerseRange = $.makeType<$VerseRange>(_.spec, "4c752bf8-01a9-11f0-8104-4b42786d6830", _.syntax.literal);
+const $VerseRange = $.makeType<$VerseRange>(_.spec, "1ffbd330-0670-11f0-9a55-3fe7f7546971", _.syntax.literal);
 
 const VerseRange: $.$expr_PathNode<$.TypeSet<$VerseRange, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($VerseRange, $.Cardinality.Many), null);
 

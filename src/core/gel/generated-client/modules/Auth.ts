@@ -13,7 +13,7 @@ type $EmailToken = $.ObjectType<"Auth::EmailToken", $EmailTokenλShape, null, [
   ..._Mixin.$Timestamped['__exclusives__'],
   {token: {__element__: _std.$str, __cardinality__: $.Cardinality.One | $.Cardinality.AtMostOne },},
 ], "Auth::EmailToken">;
-const $EmailToken = $.makeType<$EmailToken>(_.spec, "353bbc86-01a9-11f0-8c00-6dec7f5c139a", _.syntax.literal);
+const $EmailToken = $.makeType<$EmailToken>(_.spec, "0a08c51a-0670-11f0-8a49-43fe50dd7fe3", _.syntax.literal);
 
 const EmailToken: $.$expr_PathNode<$.TypeSet<$EmailToken, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($EmailToken, $.Cardinality.Many), null);
 
@@ -25,7 +25,7 @@ type $Identity = $.ObjectType<"Auth::Identity", $IdentityλShape, null, [
   ..._std.$Object_8ce8c71ee4fa5f73840c22d7eaa58588['__exclusives__'],
   {user: {__element__: _default.$User, __cardinality__: $.Cardinality.One | $.Cardinality.AtMostOne },},
 ], "Auth::Identity">;
-const $Identity = $.makeType<$Identity>(_.spec, "353e9b68-01a9-11f0-9040-45c99176890c", _.syntax.literal);
+const $Identity = $.makeType<$Identity>(_.spec, "0a0a92dc-0670-11f0-96f5-878b496d24c3", _.syntax.literal);
 
 const Identity: $.$expr_PathNode<$.TypeSet<$Identity, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Identity, $.Cardinality.Many), null);
 
@@ -37,7 +37,7 @@ type $Session = $.ObjectType<"Auth::Session", $SessionλShape, null, [
   ..._Mixin.$Timestamped['__exclusives__'],
   {token: {__element__: _std.$str, __cardinality__: $.Cardinality.One | $.Cardinality.AtMostOne },},
 ], "Auth::Session">;
-const $Session = $.makeType<$Session>(_.spec, "35407b22-01a9-11f0-be38-ff8a37d4f233", _.syntax.literal);
+const $Session = $.makeType<$Session>(_.spec, "0a0c0874-0670-11f0-a676-2521c15134aa", _.syntax.literal);
 
 const Session: $.$expr_PathNode<$.TypeSet<$Session, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Session, $.Cardinality.Many), null);
 

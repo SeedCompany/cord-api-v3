@@ -12,13 +12,13 @@ export type $Period = {
   "FiscalYearSoFar": $.$expr_Literal<$Period>;
   "Cumulative": $.$expr_Literal<$Period>;
 } & $.EnumType<"ProgressReport::ProductProgress::Period", ["ReportPeriod", "FiscalYearSoFar", "Cumulative"]>;
-const Period: $Period = $.makeType<$Period>(_.spec, "49526972-01a9-11f0-bd67-0f8613427013", _.syntax.literal);
+const Period: $Period = $.makeType<$Period>(_.spec, "1d96dd4c-0670-11f0-9929-7b22c9122af0", _.syntax.literal);
 
 export type $Variant = {
   "Official": $.$expr_Literal<$Variant>;
   "Partner": $.$expr_Literal<$Variant>;
 } & $.EnumType<"ProgressReport::ProductProgress::Variant", ["Official", "Partner"]>;
-const Variant: $Variant = $.makeType<$Variant>(_.spec, "492dc360-01a9-11f0-8133-251ff6fd659d", _.syntax.literal);
+const Variant: $Variant = $.makeType<$Variant>(_.spec, "1d7b36f0-0670-11f0-b86d-a16575fdf6d1", _.syntax.literal);
 
 export type $StepλShape = $.typeutil.flatten<_Mixin.$TimestampedλShape & _Project.$ContextAwareλShape & {
   "report": $.LinkDesc<_default.$ProgressReport, $.Cardinality.One, {}, false, false,  false, false>;
@@ -32,7 +32,7 @@ type $Step = $.ObjectType<"ProgressReport::ProductProgress::Step", $StepλShape,
   ..._Project.$ContextAware['__exclusives__'],
   {report: {__element__: _default.$ProgressReport, __cardinality__: $.Cardinality.One | $.Cardinality.AtMostOne },product: {__element__: _default.$Product, __cardinality__: $.Cardinality.One | $.Cardinality.AtMostOne },variant: {__element__: $Variant, __cardinality__: $.Cardinality.One | $.Cardinality.AtMostOne },step: {__element__: _Product.$Step, __cardinality__: $.Cardinality.One | $.Cardinality.AtMostOne },},
 ], "ProgressReport::ProductProgress::Step">;
-const $Step = $.makeType<$Step>(_.spec, "492ddd82-01a9-11f0-80f1-2b1a6246d5f6", _.syntax.literal);
+const $Step = $.makeType<$Step>(_.spec, "1d7b4906-0670-11f0-9962-29e5c65d3739", _.syntax.literal);
 
 const Step: $.$expr_PathNode<$.TypeSet<$Step, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Step, $.Cardinality.Many), null);
 
@@ -46,7 +46,7 @@ type $Summary = $.ObjectType<"ProgressReport::ProductProgress::Summary", $Summar
   ..._std.$Object_8ce8c71ee4fa5f73840c22d7eaa58588['__exclusives__'],
   {report: {__element__: _default.$ProgressReport, __cardinality__: $.Cardinality.One | $.Cardinality.AtMostOne },period: {__element__: $Period, __cardinality__: $.Cardinality.One | $.Cardinality.AtMostOne },},
 ], "ProgressReport::ProductProgress::Summary">;
-const $Summary = $.makeType<$Summary>(_.spec, "49527cdc-01a9-11f0-8022-3fba4c1d1294", _.syntax.literal);
+const $Summary = $.makeType<$Summary>(_.spec, "1d96e7c4-0670-11f0-9613-6b8513002370", _.syntax.literal);
 
 const Summary: $.$expr_PathNode<$.TypeSet<$Summary, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Summary, $.Cardinality.Many), null);
 

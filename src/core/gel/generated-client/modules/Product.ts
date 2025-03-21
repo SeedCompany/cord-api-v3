@@ -14,7 +14,7 @@ export type $Medium = {
   "Video": $.$expr_Literal<$Medium>;
   "Other": $.$expr_Literal<$Medium>;
 } & $.EnumType<"Product::Medium", ["Print", "Web", "EBook", "App", "TrainedStoryTellers", "Audio", "Video", "Other"]>;
-const Medium: $Medium = $.makeType<$Medium>(_.spec, "47f19c24-01a9-11f0-b924-b79ca936e3c6", _.syntax.literal);
+const Medium: $Medium = $.makeType<$Medium>(_.spec, "1c7852e2-0670-11f0-9ed3-81a49e3e2dee", _.syntax.literal);
 
 export type $Methodology = {
   "Paratext": $.$expr_Literal<$Methodology>;
@@ -32,14 +32,14 @@ export type $Methodology = {
   "SignLanguage": $.$expr_Literal<$Methodology>;
   "OtherVisual": $.$expr_Literal<$Methodology>;
 } & $.EnumType<"Product::Methodology", ["Paratext", "OtherWritten", "Render", "Audacity", "AdobeAudition", "OtherOralTranslation", "StoryTogether", "SeedCompanyMethod", "OneStory", "Craft2Tell", "OtherOralStories", "Film", "SignLanguage", "OtherVisual"]>;
-const Methodology: $Methodology = $.makeType<$Methodology>(_.spec, "331b135c-01a9-11f0-a246-c124a392e138", _.syntax.literal);
+const Methodology: $Methodology = $.makeType<$Methodology>(_.spec, "08894908-0670-11f0-a6f4-01cf3515ad50", _.syntax.literal);
 
 export type $ProgressMeasurement = {
   "Number": $.$expr_Literal<$ProgressMeasurement>;
   "Percent": $.$expr_Literal<$ProgressMeasurement>;
   "Boolean": $.$expr_Literal<$ProgressMeasurement>;
 } & $.EnumType<"Product::ProgressMeasurement", ["Number", "Percent", "Boolean"]>;
-const ProgressMeasurement: $ProgressMeasurement = $.makeType<$ProgressMeasurement>(_.spec, "493ab138-01a9-11f0-9d6a-d73bbbac26d3", _.syntax.literal);
+const ProgressMeasurement: $ProgressMeasurement = $.makeType<$ProgressMeasurement>(_.spec, "1d84853e-0670-11f0-a303-591522c7d674", _.syntax.literal);
 
 export type $Purpose = {
   "EvangelismChurchPlanting": $.$expr_Literal<$Purpose>;
@@ -48,7 +48,7 @@ export type $Purpose = {
   "SocialIssues": $.$expr_Literal<$Purpose>;
   "Discipleship": $.$expr_Literal<$Purpose>;
 } & $.EnumType<"Product::Purpose", ["EvangelismChurchPlanting", "ChurchLife", "ChurchMaturity", "SocialIssues", "Discipleship"]>;
-const Purpose: $Purpose = $.makeType<$Purpose>(_.spec, "493acb1e-01a9-11f0-a2ee-ad7758ce78a0", _.syntax.literal);
+const Purpose: $Purpose = $.makeType<$Purpose>(_.spec, "1d848dea-0670-11f0-9863-7368d76744ca", _.syntax.literal);
 
 export type $Step = {
   "ExegesisAndFirstDraft": $.$expr_Literal<$Step>;
@@ -67,7 +67,7 @@ export type $Step = {
   "Translate": $.$expr_Literal<$Step>;
   "Completed": $.$expr_Literal<$Step>;
 } & $.EnumType<"Product::Step", ["ExegesisAndFirstDraft", "TeamCheck", "CommunityTesting", "BackTranslation", "ConsultantCheck", "InternalizationAndDrafting", "PeerRevision", "ConsistencyCheckAndFinalEdits", "Craft", "Test", "Check", "Record", "Develop", "Translate", "Completed"]>;
-const Step: $Step = $.makeType<$Step>(_.spec, "492d9dfe-01a9-11f0-af9d-91a57470bac2", _.syntax.literal);
+const Step: $Step = $.makeType<$Step>(_.spec, "1d7b2dae-0670-11f0-b8ed-09e76eb55e24", _.syntax.literal);
 
 export type $PartnershipProducingMediumλShape = $.typeutil.flatten<_Engagement.$ChildλShape & {
   "medium": $.PropertyDesc<$Medium, $.Cardinality.One, false, false, false, false>;
@@ -76,7 +76,7 @@ export type $PartnershipProducingMediumλShape = $.typeutil.flatten<_Engagement.
 type $PartnershipProducingMedium = $.ObjectType<"Product::PartnershipProducingMedium", $PartnershipProducingMediumλShape, null, [
   ..._Engagement.$Child['__exclusives__'],
 ], "Product::PartnershipProducingMedium">;
-const $PartnershipProducingMedium = $.makeType<$PartnershipProducingMedium>(_.spec, "47f1b4a2-01a9-11f0-8a7a-83fb6a599c2f", _.syntax.literal);
+const $PartnershipProducingMedium = $.makeType<$PartnershipProducingMedium>(_.spec, "1c785f8a-0670-11f0-88f6-2beeb6706f97", _.syntax.literal);
 
 const PartnershipProducingMedium: $.$expr_PathNode<$.TypeSet<$PartnershipProducingMedium, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($PartnershipProducingMedium, $.Cardinality.Many), null);
 

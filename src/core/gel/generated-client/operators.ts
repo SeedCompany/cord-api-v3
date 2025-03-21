@@ -3,7 +3,7 @@
 import * as $ from "./reflection";
 import * as _ from "./imports";
 import type * as _std from "./modules/std";
-import type * as _stdcal from "./modules/std/cal";
+import type * as _cal from "./modules/cal";
 import type * as _cfg from "./modules/cfg";
 const overloadDefs: {
   [opKind in 'Infix' | 'Prefix' | 'Postfix' | 'Ternary']: {
@@ -396,7 +396,7 @@ interface PrefixHomogeneousOperators {
     | { operand: _.castMaps.orScalarLiteral<$.TypeSet<_std.$bigint>> }
     | { operand: _.castMaps.orScalarLiteral<$.TypeSet<_std.$duration>> }
     | { operand: _.castMaps.orScalarLiteral<$.TypeSet<_std.$decimalλICastableTo>> }
-    | { operand: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$relative_durationλICastableTo>> }
+    | { operand: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$relative_durationλICastableTo>> }
   "distinct": 
     | { operand: _.castMaps.orScalarLiteral<$.TypeSet<$.BaseType>> }
 }
@@ -409,8 +409,8 @@ interface InfixBooleanMultiplyOperators {
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<$.EnumType>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<$.EnumType>> }
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$number>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$number>> }
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$bigint>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$bigint>> }
-    | { lhs: $.TypeSet<$.ArrayType<_stdcal.$relative_durationλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_stdcal.$relative_durationλICastableTo>> }
-    | { lhs: $.TypeSet<$.ArrayType<_stdcal.$local_datetimeλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_stdcal.$local_datetimeλICastableTo>> }
+    | { lhs: $.TypeSet<$.ArrayType<_cal.$relative_durationλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_cal.$relative_durationλICastableTo>> }
+    | { lhs: $.TypeSet<$.ArrayType<_cal.$local_datetimeλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_cal.$local_datetimeλICastableTo>> }
     | { lhs: $.TypeSet<$.ArrayType<_std.$decimalλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_std.$decimalλICastableTo>> }
     | { lhs: $.TypeSet<$.ArrayType<$.ObjectType>>; rhs: $.TypeSet<$.ArrayType<$.ObjectType>> }
     | { lhs: $.TypeSet<$.ArrayType<$.AnyTupleType>>; rhs: $.TypeSet<$.ArrayType<$.AnyTupleType>> }
@@ -425,12 +425,12 @@ interface InfixBooleanMultiplyOperators {
     | infixOperandsMultiRangeType<$.TypeSet<$.MultiRangeType<_std.$anypoint>>>
     | { lhs: $.TypeSet<$.ObjectType>; rhs: $.TypeSet<$.ObjectType> }
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cfg.$memory>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cfg.$memory>> }
-    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_date>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_date>> }
-    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_time>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_time>> }
+    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_date>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_date>> }
+    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_time>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_time>> }
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$decimalλICastableTo>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$anyint>> }
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$decimalλICastableTo>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$decimalλICastableTo>> }
-    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_datetimeλICastableTo>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_datetimeλICastableTo>> }
-    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$relative_durationλICastableTo>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$relative_durationλICastableTo>> }
+    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_datetimeλICastableTo>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_datetimeλICastableTo>> }
+    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$relative_durationλICastableTo>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$relative_durationλICastableTo>> }
   "!=": 
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$anyscalar>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$anyscalar>> }
     | { lhs: $.TypeSet<$.AnyTupleType>; rhs: $.TypeSet<$.AnyTupleType> }
@@ -438,8 +438,8 @@ interface InfixBooleanMultiplyOperators {
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<$.EnumType>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<$.EnumType>> }
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$number>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$number>> }
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$bigint>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$bigint>> }
-    | { lhs: $.TypeSet<$.ArrayType<_stdcal.$relative_durationλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_stdcal.$relative_durationλICastableTo>> }
-    | { lhs: $.TypeSet<$.ArrayType<_stdcal.$local_datetimeλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_stdcal.$local_datetimeλICastableTo>> }
+    | { lhs: $.TypeSet<$.ArrayType<_cal.$relative_durationλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_cal.$relative_durationλICastableTo>> }
+    | { lhs: $.TypeSet<$.ArrayType<_cal.$local_datetimeλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_cal.$local_datetimeλICastableTo>> }
     | { lhs: $.TypeSet<$.ArrayType<_std.$decimalλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_std.$decimalλICastableTo>> }
     | { lhs: $.TypeSet<$.ArrayType<$.ObjectType>>; rhs: $.TypeSet<$.ArrayType<$.ObjectType>> }
     | { lhs: $.TypeSet<$.ArrayType<$.AnyTupleType>>; rhs: $.TypeSet<$.ArrayType<$.AnyTupleType>> }
@@ -454,12 +454,12 @@ interface InfixBooleanMultiplyOperators {
     | infixOperandsMultiRangeType<$.TypeSet<$.MultiRangeType<_std.$anypoint>>>
     | { lhs: $.TypeSet<$.ObjectType>; rhs: $.TypeSet<$.ObjectType> }
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cfg.$memory>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cfg.$memory>> }
-    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_date>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_date>> }
-    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_time>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_time>> }
+    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_date>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_date>> }
+    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_time>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_time>> }
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$decimalλICastableTo>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$anyint>> }
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$decimalλICastableTo>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$decimalλICastableTo>> }
-    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_datetimeλICastableTo>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_datetimeλICastableTo>> }
-    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$relative_durationλICastableTo>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$relative_durationλICastableTo>> }
+    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_datetimeλICastableTo>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_datetimeλICastableTo>> }
+    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$relative_durationλICastableTo>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$relative_durationλICastableTo>> }
   ">=": 
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$anyscalar>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$anyscalar>> }
     | { lhs: $.TypeSet<$.AnyTupleType>; rhs: $.TypeSet<$.AnyTupleType> }
@@ -467,8 +467,8 @@ interface InfixBooleanMultiplyOperators {
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<$.EnumType>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<$.EnumType>> }
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$number>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$number>> }
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$bigint>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$bigint>> }
-    | { lhs: $.TypeSet<$.ArrayType<_stdcal.$relative_durationλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_stdcal.$relative_durationλICastableTo>> }
-    | { lhs: $.TypeSet<$.ArrayType<_stdcal.$local_datetimeλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_stdcal.$local_datetimeλICastableTo>> }
+    | { lhs: $.TypeSet<$.ArrayType<_cal.$relative_durationλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_cal.$relative_durationλICastableTo>> }
+    | { lhs: $.TypeSet<$.ArrayType<_cal.$local_datetimeλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_cal.$local_datetimeλICastableTo>> }
     | { lhs: $.TypeSet<$.ArrayType<_std.$decimalλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_std.$decimalλICastableTo>> }
     | { lhs: $.TypeSet<$.ArrayType<$.ObjectType>>; rhs: $.TypeSet<$.ArrayType<$.ObjectType>> }
     | { lhs: $.TypeSet<$.ArrayType<$.AnyTupleType>>; rhs: $.TypeSet<$.ArrayType<$.AnyTupleType>> }
@@ -483,12 +483,12 @@ interface InfixBooleanMultiplyOperators {
     | infixOperandsMultiRangeType<$.TypeSet<$.MultiRangeType<_std.$anypoint>>>
     | { lhs: $.TypeSet<$.ObjectType>; rhs: $.TypeSet<$.ObjectType> }
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cfg.$memory>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cfg.$memory>> }
-    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_date>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_date>> }
-    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_time>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_time>> }
+    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_date>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_date>> }
+    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_time>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_time>> }
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$anyint>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$decimalλICastableTo>> }
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$decimalλICastableTo>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$decimalλICastableTo>> }
-    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_datetimeλICastableTo>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_datetimeλICastableTo>> }
-    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$relative_durationλICastableTo>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$relative_durationλICastableTo>> }
+    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_datetimeλICastableTo>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_datetimeλICastableTo>> }
+    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$relative_durationλICastableTo>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$relative_durationλICastableTo>> }
   ">": 
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$anyscalar>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$anyscalar>> }
     | { lhs: $.TypeSet<$.AnyTupleType>; rhs: $.TypeSet<$.AnyTupleType> }
@@ -496,8 +496,8 @@ interface InfixBooleanMultiplyOperators {
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<$.EnumType>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<$.EnumType>> }
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$number>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$number>> }
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$bigint>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$bigint>> }
-    | { lhs: $.TypeSet<$.ArrayType<_stdcal.$relative_durationλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_stdcal.$relative_durationλICastableTo>> }
-    | { lhs: $.TypeSet<$.ArrayType<_stdcal.$local_datetimeλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_stdcal.$local_datetimeλICastableTo>> }
+    | { lhs: $.TypeSet<$.ArrayType<_cal.$relative_durationλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_cal.$relative_durationλICastableTo>> }
+    | { lhs: $.TypeSet<$.ArrayType<_cal.$local_datetimeλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_cal.$local_datetimeλICastableTo>> }
     | { lhs: $.TypeSet<$.ArrayType<_std.$decimalλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_std.$decimalλICastableTo>> }
     | { lhs: $.TypeSet<$.ArrayType<$.ObjectType>>; rhs: $.TypeSet<$.ArrayType<$.ObjectType>> }
     | { lhs: $.TypeSet<$.ArrayType<$.AnyTupleType>>; rhs: $.TypeSet<$.ArrayType<$.AnyTupleType>> }
@@ -512,12 +512,12 @@ interface InfixBooleanMultiplyOperators {
     | infixOperandsMultiRangeType<$.TypeSet<$.MultiRangeType<_std.$anypoint>>>
     | { lhs: $.TypeSet<$.ObjectType>; rhs: $.TypeSet<$.ObjectType> }
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cfg.$memory>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cfg.$memory>> }
-    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_date>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_date>> }
-    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_time>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_time>> }
+    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_date>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_date>> }
+    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_time>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_time>> }
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$anyint>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$decimalλICastableTo>> }
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$decimalλICastableTo>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$decimalλICastableTo>> }
-    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_datetimeλICastableTo>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_datetimeλICastableTo>> }
-    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$relative_durationλICastableTo>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$relative_durationλICastableTo>> }
+    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_datetimeλICastableTo>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_datetimeλICastableTo>> }
+    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$relative_durationλICastableTo>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$relative_durationλICastableTo>> }
   "<=": 
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$anyscalar>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$anyscalar>> }
     | { lhs: $.TypeSet<$.AnyTupleType>; rhs: $.TypeSet<$.AnyTupleType> }
@@ -525,8 +525,8 @@ interface InfixBooleanMultiplyOperators {
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<$.EnumType>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<$.EnumType>> }
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$number>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$number>> }
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$bigint>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$bigint>> }
-    | { lhs: $.TypeSet<$.ArrayType<_stdcal.$relative_durationλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_stdcal.$relative_durationλICastableTo>> }
-    | { lhs: $.TypeSet<$.ArrayType<_stdcal.$local_datetimeλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_stdcal.$local_datetimeλICastableTo>> }
+    | { lhs: $.TypeSet<$.ArrayType<_cal.$relative_durationλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_cal.$relative_durationλICastableTo>> }
+    | { lhs: $.TypeSet<$.ArrayType<_cal.$local_datetimeλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_cal.$local_datetimeλICastableTo>> }
     | { lhs: $.TypeSet<$.ArrayType<_std.$decimalλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_std.$decimalλICastableTo>> }
     | { lhs: $.TypeSet<$.ArrayType<$.ObjectType>>; rhs: $.TypeSet<$.ArrayType<$.ObjectType>> }
     | { lhs: $.TypeSet<$.ArrayType<$.AnyTupleType>>; rhs: $.TypeSet<$.ArrayType<$.AnyTupleType>> }
@@ -541,12 +541,12 @@ interface InfixBooleanMultiplyOperators {
     | infixOperandsRangeType<$.TypeSet<$.RangeType<_std.$anypoint>>>
     | { lhs: $.TypeSet<$.ObjectType>; rhs: $.TypeSet<$.ObjectType> }
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cfg.$memory>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cfg.$memory>> }
-    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_date>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_date>> }
-    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_time>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_time>> }
+    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_date>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_date>> }
+    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_time>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_time>> }
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$anyint>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$decimalλICastableTo>> }
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$decimalλICastableTo>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$decimalλICastableTo>> }
-    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_datetimeλICastableTo>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_datetimeλICastableTo>> }
-    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$relative_durationλICastableTo>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$relative_durationλICastableTo>> }
+    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_datetimeλICastableTo>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_datetimeλICastableTo>> }
+    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$relative_durationλICastableTo>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$relative_durationλICastableTo>> }
   "<": 
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$anyscalar>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$anyscalar>> }
     | { lhs: $.TypeSet<$.AnyTupleType>; rhs: $.TypeSet<$.AnyTupleType> }
@@ -554,8 +554,8 @@ interface InfixBooleanMultiplyOperators {
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<$.EnumType>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<$.EnumType>> }
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$number>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$number>> }
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$bigint>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$bigint>> }
-    | { lhs: $.TypeSet<$.ArrayType<_stdcal.$relative_durationλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_stdcal.$relative_durationλICastableTo>> }
-    | { lhs: $.TypeSet<$.ArrayType<_stdcal.$local_datetimeλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_stdcal.$local_datetimeλICastableTo>> }
+    | { lhs: $.TypeSet<$.ArrayType<_cal.$relative_durationλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_cal.$relative_durationλICastableTo>> }
+    | { lhs: $.TypeSet<$.ArrayType<_cal.$local_datetimeλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_cal.$local_datetimeλICastableTo>> }
     | { lhs: $.TypeSet<$.ArrayType<_std.$decimalλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_std.$decimalλICastableTo>> }
     | { lhs: $.TypeSet<$.ArrayType<$.ObjectType>>; rhs: $.TypeSet<$.ArrayType<$.ObjectType>> }
     | { lhs: $.TypeSet<$.ArrayType<$.AnyTupleType>>; rhs: $.TypeSet<$.ArrayType<$.AnyTupleType>> }
@@ -570,12 +570,12 @@ interface InfixBooleanMultiplyOperators {
     | infixOperandsRangeType<$.TypeSet<$.RangeType<_std.$anypoint>>>
     | { lhs: $.TypeSet<$.ObjectType>; rhs: $.TypeSet<$.ObjectType> }
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cfg.$memory>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cfg.$memory>> }
-    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_date>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_date>> }
-    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_time>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_time>> }
+    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_date>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_date>> }
+    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_time>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_time>> }
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$anyint>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$decimalλICastableTo>> }
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$decimalλICastableTo>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$decimalλICastableTo>> }
-    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_datetimeλICastableTo>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_datetimeλICastableTo>> }
-    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$relative_durationλICastableTo>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$relative_durationλICastableTo>> }
+    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_datetimeλICastableTo>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_datetimeλICastableTo>> }
+    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$relative_durationλICastableTo>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$relative_durationλICastableTo>> }
   "or": 
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$bool>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$bool>> }
   "and": 
@@ -598,8 +598,8 @@ interface InfixBooleanMultiplyOptionalOperators {
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<$.EnumType>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<$.EnumType>> }
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$number>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$number>> }
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$bigint>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$bigint>> }
-    | { lhs: $.TypeSet<$.ArrayType<_stdcal.$relative_durationλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_stdcal.$relative_durationλICastableTo>> }
-    | { lhs: $.TypeSet<$.ArrayType<_stdcal.$local_datetimeλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_stdcal.$local_datetimeλICastableTo>> }
+    | { lhs: $.TypeSet<$.ArrayType<_cal.$relative_durationλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_cal.$relative_durationλICastableTo>> }
+    | { lhs: $.TypeSet<$.ArrayType<_cal.$local_datetimeλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_cal.$local_datetimeλICastableTo>> }
     | { lhs: $.TypeSet<$.ArrayType<_std.$decimalλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_std.$decimalλICastableTo>> }
     | { lhs: $.TypeSet<$.ArrayType<$.ObjectType>>; rhs: $.TypeSet<$.ArrayType<$.ObjectType>> }
     | { lhs: $.TypeSet<$.ArrayType<$.AnyTupleType>>; rhs: $.TypeSet<$.ArrayType<$.AnyTupleType>> }
@@ -614,12 +614,12 @@ interface InfixBooleanMultiplyOptionalOperators {
     | infixOperandsMultiRangeType<$.TypeSet<$.MultiRangeType<_std.$anypoint>>>
     | { lhs: $.TypeSet<$.ObjectType>; rhs: $.TypeSet<$.ObjectType> }
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cfg.$memory>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cfg.$memory>> }
-    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_date>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_date>> }
-    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_time>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_time>> }
+    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_date>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_date>> }
+    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_time>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_time>> }
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$decimalλICastableTo>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$anyint>> }
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$decimalλICastableTo>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$decimalλICastableTo>> }
-    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_datetimeλICastableTo>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_datetimeλICastableTo>> }
-    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$relative_durationλICastableTo>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$relative_durationλICastableTo>> }
+    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_datetimeλICastableTo>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_datetimeλICastableTo>> }
+    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$relative_durationλICastableTo>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$relative_durationλICastableTo>> }
   "?!=": 
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$anyscalar>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$anyscalar>> }
     | { lhs: $.TypeSet<$.AnyTupleType>; rhs: $.TypeSet<$.AnyTupleType> }
@@ -628,8 +628,8 @@ interface InfixBooleanMultiplyOptionalOperators {
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$number>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$number>> }
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$bigint>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$bigint>> }
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$bytes>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$bytes>> }
-    | { lhs: $.TypeSet<$.ArrayType<_stdcal.$relative_durationλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_stdcal.$relative_durationλICastableTo>> }
-    | { lhs: $.TypeSet<$.ArrayType<_stdcal.$local_datetimeλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_stdcal.$local_datetimeλICastableTo>> }
+    | { lhs: $.TypeSet<$.ArrayType<_cal.$relative_durationλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_cal.$relative_durationλICastableTo>> }
+    | { lhs: $.TypeSet<$.ArrayType<_cal.$local_datetimeλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_cal.$local_datetimeλICastableTo>> }
     | { lhs: $.TypeSet<$.ArrayType<_std.$decimalλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_std.$decimalλICastableTo>> }
     | { lhs: $.TypeSet<$.ArrayType<$.ObjectType>>; rhs: $.TypeSet<$.ArrayType<$.ObjectType>> }
     | { lhs: $.TypeSet<$.ArrayType<$.AnyTupleType>>; rhs: $.TypeSet<$.ArrayType<$.AnyTupleType>> }
@@ -643,31 +643,31 @@ interface InfixBooleanMultiplyOptionalOperators {
     | infixOperandsMultiRangeType<$.TypeSet<$.MultiRangeType<_std.$anypoint>>>
     | { lhs: $.TypeSet<$.ObjectType>; rhs: $.TypeSet<$.ObjectType> }
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cfg.$memory>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cfg.$memory>> }
-    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_date>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_date>> }
-    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_time>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_time>> }
+    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_date>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_date>> }
+    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_time>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_time>> }
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$decimalλICastableTo>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$anyint>> }
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$decimalλICastableTo>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$decimalλICastableTo>> }
-    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_datetimeλICastableTo>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_datetimeλICastableTo>> }
-    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$relative_durationλICastableTo>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$relative_durationλICastableTo>> }
+    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_datetimeλICastableTo>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_datetimeλICastableTo>> }
+    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$relative_durationλICastableTo>>, rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$relative_durationλICastableTo>> }
 }
 
 interface InfixBooleanMultiplyOneOperators {
   "in": 
-    | { lhs: $.TypeSet<_stdcal.$relative_durationλICastableTo>; rhs: $.TypeSet<_stdcal.$relative_durationλICastableTo> }
-    | { lhs: $.TypeSet<_stdcal.$local_datetimeλICastableTo>; rhs: $.TypeSet<_stdcal.$local_datetimeλICastableTo> }
+    | { lhs: $.TypeSet<_cal.$relative_durationλICastableTo>; rhs: $.TypeSet<_cal.$relative_durationλICastableTo> }
+    | { lhs: $.TypeSet<_cal.$local_datetimeλICastableTo>; rhs: $.TypeSet<_cal.$local_datetimeλICastableTo> }
     | { lhs: $.TypeSet<_std.$decimalλICastableTo>; rhs: $.TypeSet<_std.$decimalλICastableTo> }
-    | { lhs: $.TypeSet<$.ArrayType<_stdcal.$relative_durationλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_stdcal.$relative_durationλICastableTo>> }
-    | { lhs: $.TypeSet<$.ArrayType<_stdcal.$local_datetimeλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_stdcal.$local_datetimeλICastableTo>> }
+    | { lhs: $.TypeSet<$.ArrayType<_cal.$relative_durationλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_cal.$relative_durationλICastableTo>> }
+    | { lhs: $.TypeSet<$.ArrayType<_cal.$local_datetimeλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_cal.$local_datetimeλICastableTo>> }
     | { lhs: $.TypeSet<$.ArrayType<_std.$decimalλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_std.$decimalλICastableTo>> }
     | { lhs: $.TypeSet<$.ObjectType>; rhs: $.TypeSet<$.ObjectType> }
     | { lhs: $.TypeSet<$.AnyTupleType>; rhs: $.TypeSet<$.AnyTupleType> }
     | infixOperandsBaseType<_.castMaps.orScalarLiteral<$.TypeSet<$.BaseType>>>
   "not in": 
-    | { lhs: $.TypeSet<_stdcal.$relative_durationλICastableTo>; rhs: $.TypeSet<_stdcal.$relative_durationλICastableTo> }
-    | { lhs: $.TypeSet<_stdcal.$local_datetimeλICastableTo>; rhs: $.TypeSet<_stdcal.$local_datetimeλICastableTo> }
+    | { lhs: $.TypeSet<_cal.$relative_durationλICastableTo>; rhs: $.TypeSet<_cal.$relative_durationλICastableTo> }
+    | { lhs: $.TypeSet<_cal.$local_datetimeλICastableTo>; rhs: $.TypeSet<_cal.$local_datetimeλICastableTo> }
     | { lhs: $.TypeSet<_std.$decimalλICastableTo>; rhs: $.TypeSet<_std.$decimalλICastableTo> }
-    | { lhs: $.TypeSet<$.ArrayType<_stdcal.$relative_durationλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_stdcal.$relative_durationλICastableTo>> }
-    | { lhs: $.TypeSet<$.ArrayType<_stdcal.$local_datetimeλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_stdcal.$local_datetimeλICastableTo>> }
+    | { lhs: $.TypeSet<$.ArrayType<_cal.$relative_durationλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_cal.$relative_durationλICastableTo>> }
+    | { lhs: $.TypeSet<$.ArrayType<_cal.$local_datetimeλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_cal.$local_datetimeλICastableTo>> }
     | { lhs: $.TypeSet<$.ArrayType<_std.$decimalλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_std.$decimalλICastableTo>> }
     | { lhs: $.TypeSet<$.ObjectType>; rhs: $.TypeSet<$.ObjectType> }
     | { lhs: $.TypeSet<$.AnyTupleType>; rhs: $.TypeSet<$.AnyTupleType> }
@@ -680,39 +680,39 @@ interface InfixScalarMultiplyOperators {
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$bigint>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$bigint>> }
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$datetime>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$duration>> }
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$duration>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$duration>> }
-    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_date>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$duration>> }
-    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_date>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$date_duration>> }
-    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_time>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$duration>> }
-    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$date_duration>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$date_duration>> }
-    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$datetime>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$relative_durationλICastableTo>> }
-    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_date>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$relative_durationλICastableTo>> }
-    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_time>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$relative_durationλICastableTo>> }
-    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$duration>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$relative_durationλICastableTo>> }
-    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_datetimeλICastableTo>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$duration>> }
+    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_date>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$duration>> }
+    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_date>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$date_duration>> }
+    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_time>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$duration>> }
+    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$date_duration>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$date_duration>> }
+    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$datetime>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$relative_durationλICastableTo>> }
+    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_date>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$relative_durationλICastableTo>> }
+    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_time>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$relative_durationλICastableTo>> }
+    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$duration>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$relative_durationλICastableTo>> }
+    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_datetimeλICastableTo>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$duration>> }
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$decimalλICastableTo>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$decimalλICastableTo>> }
-    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_datetimeλICastableTo>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$relative_durationλICastableTo>> }
-    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$relative_durationλICastableTo>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$relative_durationλICastableTo>> }
+    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_datetimeλICastableTo>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$relative_durationλICastableTo>> }
+    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$relative_durationλICastableTo>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$relative_durationλICastableTo>> }
   "-": 
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$number>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$number>> }
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$bigint>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$bigint>> }
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$datetime>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$duration>> }
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$datetime>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$datetime>> }
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$duration>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$duration>> }
-    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_date>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$duration>> }
-    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_date>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$date_duration>> }
-    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_date>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_date>> }
-    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_time>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$duration>> }
-    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_time>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_time>> }
-    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$date_duration>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$date_duration>> }
-    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$datetime>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$relative_durationλICastableTo>> }
-    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_date>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$relative_durationλICastableTo>> }
-    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_time>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$relative_durationλICastableTo>> }
-    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$duration>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$relative_durationλICastableTo>> }
-    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_datetimeλICastableTo>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$duration>> }
+    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_date>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$duration>> }
+    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_date>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$date_duration>> }
+    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_date>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_date>> }
+    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_time>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$duration>> }
+    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_time>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_time>> }
+    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$date_duration>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$date_duration>> }
+    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$datetime>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$relative_durationλICastableTo>> }
+    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_date>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$relative_durationλICastableTo>> }
+    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_time>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$relative_durationλICastableTo>> }
+    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$duration>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$relative_durationλICastableTo>> }
+    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_datetimeλICastableTo>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$duration>> }
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$decimalλICastableTo>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$decimalλICastableTo>> }
-    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_datetimeλICastableTo>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$relative_durationλICastableTo>> }
-    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_datetimeλICastableTo>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$local_datetimeλICastableTo>> }
-    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$relative_durationλICastableTo>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_stdcal.$relative_durationλICastableTo>> }
+    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_datetimeλICastableTo>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$relative_durationλICastableTo>> }
+    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_datetimeλICastableTo>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$local_datetimeλICastableTo>> }
+    | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$relative_durationλICastableTo>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_cal.$relative_durationλICastableTo>> }
   "*": 
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$number>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$number>> }
     | { lhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$bigint>>; rhs: _.castMaps.orScalarLiteral<$.TypeSet<_std.$bigint>> }
@@ -740,27 +740,27 @@ interface InfixScalarMultiplyOperators {
 
 interface InfixContainerMultiplyOperators {
   "union": 
-    | { lhs: $.TypeSet<_stdcal.$relative_durationλICastableTo>; rhs: $.TypeSet<_stdcal.$relative_durationλICastableTo> }
-    | { lhs: $.TypeSet<_stdcal.$local_datetimeλICastableTo>; rhs: $.TypeSet<_stdcal.$local_datetimeλICastableTo> }
+    | { lhs: $.TypeSet<_cal.$relative_durationλICastableTo>; rhs: $.TypeSet<_cal.$relative_durationλICastableTo> }
+    | { lhs: $.TypeSet<_cal.$local_datetimeλICastableTo>; rhs: $.TypeSet<_cal.$local_datetimeλICastableTo> }
     | { lhs: $.TypeSet<_std.$decimalλICastableTo>; rhs: $.TypeSet<_std.$decimalλICastableTo> }
-    | { lhs: $.TypeSet<$.ArrayType<_stdcal.$relative_durationλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_stdcal.$relative_durationλICastableTo>> }
-    | { lhs: $.TypeSet<$.ArrayType<_stdcal.$local_datetimeλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_stdcal.$local_datetimeλICastableTo>> }
+    | { lhs: $.TypeSet<$.ArrayType<_cal.$relative_durationλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_cal.$relative_durationλICastableTo>> }
+    | { lhs: $.TypeSet<$.ArrayType<_cal.$local_datetimeλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_cal.$local_datetimeλICastableTo>> }
     | { lhs: $.TypeSet<$.ArrayType<_std.$decimalλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_std.$decimalλICastableTo>> }
     | { lhs: $.TypeSet<$.AnyTupleType>; rhs: $.TypeSet<$.AnyTupleType> }
   "except": 
-    | { lhs: $.TypeSet<_stdcal.$relative_durationλICastableTo>; rhs: $.TypeSet<_stdcal.$relative_durationλICastableTo> }
-    | { lhs: $.TypeSet<_stdcal.$local_datetimeλICastableTo>; rhs: $.TypeSet<_stdcal.$local_datetimeλICastableTo> }
+    | { lhs: $.TypeSet<_cal.$relative_durationλICastableTo>; rhs: $.TypeSet<_cal.$relative_durationλICastableTo> }
+    | { lhs: $.TypeSet<_cal.$local_datetimeλICastableTo>; rhs: $.TypeSet<_cal.$local_datetimeλICastableTo> }
     | { lhs: $.TypeSet<_std.$decimalλICastableTo>; rhs: $.TypeSet<_std.$decimalλICastableTo> }
-    | { lhs: $.TypeSet<$.ArrayType<_stdcal.$relative_durationλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_stdcal.$relative_durationλICastableTo>> }
-    | { lhs: $.TypeSet<$.ArrayType<_stdcal.$local_datetimeλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_stdcal.$local_datetimeλICastableTo>> }
+    | { lhs: $.TypeSet<$.ArrayType<_cal.$relative_durationλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_cal.$relative_durationλICastableTo>> }
+    | { lhs: $.TypeSet<$.ArrayType<_cal.$local_datetimeλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_cal.$local_datetimeλICastableTo>> }
     | { lhs: $.TypeSet<$.ArrayType<_std.$decimalλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_std.$decimalλICastableTo>> }
     | { lhs: $.TypeSet<$.AnyTupleType>; rhs: $.TypeSet<$.AnyTupleType> }
   "intersect": 
-    | { lhs: $.TypeSet<_stdcal.$relative_durationλICastableTo>; rhs: $.TypeSet<_stdcal.$relative_durationλICastableTo> }
-    | { lhs: $.TypeSet<_stdcal.$local_datetimeλICastableTo>; rhs: $.TypeSet<_stdcal.$local_datetimeλICastableTo> }
+    | { lhs: $.TypeSet<_cal.$relative_durationλICastableTo>; rhs: $.TypeSet<_cal.$relative_durationλICastableTo> }
+    | { lhs: $.TypeSet<_cal.$local_datetimeλICastableTo>; rhs: $.TypeSet<_cal.$local_datetimeλICastableTo> }
     | { lhs: $.TypeSet<_std.$decimalλICastableTo>; rhs: $.TypeSet<_std.$decimalλICastableTo> }
-    | { lhs: $.TypeSet<$.ArrayType<_stdcal.$relative_durationλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_stdcal.$relative_durationλICastableTo>> }
-    | { lhs: $.TypeSet<$.ArrayType<_stdcal.$local_datetimeλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_stdcal.$local_datetimeλICastableTo>> }
+    | { lhs: $.TypeSet<$.ArrayType<_cal.$relative_durationλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_cal.$relative_durationλICastableTo>> }
+    | { lhs: $.TypeSet<$.ArrayType<_cal.$local_datetimeλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_cal.$local_datetimeλICastableTo>> }
     | { lhs: $.TypeSet<$.ArrayType<_std.$decimalλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_std.$decimalλICastableTo>> }
     | { lhs: $.TypeSet<$.AnyTupleType>; rhs: $.TypeSet<$.AnyTupleType> }
 }
@@ -785,8 +785,8 @@ interface InfixMultiRangeTypeMultiplyOperators {
 
 interface InfixArrayTypeMultiplyOperators {
   "++": 
-    | { lhs: $.TypeSet<$.ArrayType<_stdcal.$relative_durationλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_stdcal.$relative_durationλICastableTo>> }
-    | { lhs: $.TypeSet<$.ArrayType<_stdcal.$local_datetimeλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_stdcal.$local_datetimeλICastableTo>> }
+    | { lhs: $.TypeSet<$.ArrayType<_cal.$relative_durationλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_cal.$relative_durationλICastableTo>> }
+    | { lhs: $.TypeSet<$.ArrayType<_cal.$local_datetimeλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_cal.$local_datetimeλICastableTo>> }
     | { lhs: $.TypeSet<$.ArrayType<_std.$decimalλICastableTo>>; rhs: $.TypeSet<$.ArrayType<_std.$decimalλICastableTo>> }
     | { lhs: $.TypeSet<$.ArrayType<$.AnyTupleType>>; rhs: $.TypeSet<$.ArrayType<$.AnyTupleType>> }
     | infixOperandsArrayTypeNonArray<$.TypeSet<$.ArrayType<$.NonArrayType>>>
@@ -823,11 +823,11 @@ interface InfixMergeManyOperators {
 
 interface InfixCoalesceContainerOperators {
   "??": 
-    | { lhs: $.TypeSet<_stdcal.$relative_durationλICastableTo>, rhs: $.TypeSet<_stdcal.$relative_durationλICastableTo> }
-    | { lhs: $.TypeSet<_stdcal.$local_datetimeλICastableTo>, rhs: $.TypeSet<_stdcal.$local_datetimeλICastableTo> }
+    | { lhs: $.TypeSet<_cal.$relative_durationλICastableTo>, rhs: $.TypeSet<_cal.$relative_durationλICastableTo> }
+    | { lhs: $.TypeSet<_cal.$local_datetimeλICastableTo>, rhs: $.TypeSet<_cal.$local_datetimeλICastableTo> }
     | { lhs: $.TypeSet<_std.$decimalλICastableTo>, rhs: $.TypeSet<_std.$decimalλICastableTo> }
-    | { lhs: $.TypeSet<$.ArrayType<_stdcal.$relative_durationλICastableTo>>, rhs: $.TypeSet<$.ArrayType<_stdcal.$relative_durationλICastableTo>> }
-    | { lhs: $.TypeSet<$.ArrayType<_stdcal.$local_datetimeλICastableTo>>, rhs: $.TypeSet<$.ArrayType<_stdcal.$local_datetimeλICastableTo>> }
+    | { lhs: $.TypeSet<$.ArrayType<_cal.$relative_durationλICastableTo>>, rhs: $.TypeSet<$.ArrayType<_cal.$relative_durationλICastableTo>> }
+    | { lhs: $.TypeSet<$.ArrayType<_cal.$local_datetimeλICastableTo>>, rhs: $.TypeSet<$.ArrayType<_cal.$local_datetimeλICastableTo>> }
     | { lhs: $.TypeSet<$.ArrayType<_std.$decimalλICastableTo>>, rhs: $.TypeSet<$.ArrayType<_std.$decimalλICastableTo>> }
     | { lhs: $.TypeSet<$.AnyTupleType>, rhs: $.TypeSet<$.AnyTupleType> }
 }
@@ -844,11 +844,11 @@ interface InfixCoalesceObjectOperators {
 
 interface TernaryContainerOperators {
   "if_else": 
-    | { lhs: $.TypeSet<_stdcal.$relative_durationλICastableTo>, rhs: $.TypeSet<_stdcal.$relative_durationλICastableTo> }
-    | { lhs: $.TypeSet<_stdcal.$local_datetimeλICastableTo>, rhs: $.TypeSet<_stdcal.$local_datetimeλICastableTo> }
+    | { lhs: $.TypeSet<_cal.$relative_durationλICastableTo>, rhs: $.TypeSet<_cal.$relative_durationλICastableTo> }
+    | { lhs: $.TypeSet<_cal.$local_datetimeλICastableTo>, rhs: $.TypeSet<_cal.$local_datetimeλICastableTo> }
     | { lhs: $.TypeSet<_std.$decimalλICastableTo>, rhs: $.TypeSet<_std.$decimalλICastableTo> }
-    | { lhs: $.TypeSet<$.ArrayType<_stdcal.$relative_durationλICastableTo>>, rhs: $.TypeSet<$.ArrayType<_stdcal.$relative_durationλICastableTo>> }
-    | { lhs: $.TypeSet<$.ArrayType<_stdcal.$local_datetimeλICastableTo>>, rhs: $.TypeSet<$.ArrayType<_stdcal.$local_datetimeλICastableTo>> }
+    | { lhs: $.TypeSet<$.ArrayType<_cal.$relative_durationλICastableTo>>, rhs: $.TypeSet<$.ArrayType<_cal.$relative_durationλICastableTo>> }
+    | { lhs: $.TypeSet<$.ArrayType<_cal.$local_datetimeλICastableTo>>, rhs: $.TypeSet<$.ArrayType<_cal.$local_datetimeλICastableTo>> }
     | { lhs: $.TypeSet<$.ArrayType<_std.$decimalλICastableTo>>, rhs: $.TypeSet<$.ArrayType<_std.$decimalλICastableTo>> }
     | { lhs: $.TypeSet<$.AnyTupleType>, rhs: $.TypeSet<$.AnyTupleType> }
 }

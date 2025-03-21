@@ -12,13 +12,13 @@ export type $Degree = {
   "Masters": $.$expr_Literal<$Degree>;
   "Doctorate": $.$expr_Literal<$Degree>;
 } & $.EnumType<"User::Degree", ["Primary", "Secondary", "Associates", "Bachelors", "Masters", "Doctorate"]>;
-const Degree: $Degree = $.makeType<$Degree>(_.spec, "3363c41c-01a9-11f0-b50f-2b2d969a1783", _.syntax.literal);
+const Degree: $Degree = $.makeType<$Degree>(_.spec, "08bb45b6-0670-11f0-b009-31bdeb6865c7", _.syntax.literal);
 
 export type $Status = {
   "Active": $.$expr_Literal<$Status>;
   "Disabled": $.$expr_Literal<$Status>;
 } & $.EnumType<"User::Status", ["Active", "Disabled"]>;
-const Status: $Status = $.makeType<$Status>(_.spec, "33584984-01a9-11f0-83d1-651096b353ad", _.syntax.literal);
+const Status: $Status = $.makeType<$Status>(_.spec, "08b3b4ea-0670-11f0-b323-994840dbc670", _.syntax.literal);
 
 export type $EducationλShape = $.typeutil.flatten<_default.$ResourceλShape & {
   "degree": $.PropertyDesc<$Degree, $.Cardinality.One, false, false, false, false>;
@@ -31,7 +31,7 @@ export type $EducationλShape = $.typeutil.flatten<_default.$ResourceλShape & {
 type $Education = $.ObjectType<"User::Education", $EducationλShape, null, [
   ..._default.$Resource['__exclusives__'],
 ], "User::Education">;
-const $Education = $.makeType<$Education>(_.spec, "3363da38-01a9-11f0-8758-ffad04b74a04", _.syntax.literal);
+const $Education = $.makeType<$Education>(_.spec, "08bb5024-0670-11f0-81da-e969081ab764", _.syntax.literal);
 
 const Education: $.$expr_PathNode<$.TypeSet<$Education, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Education, $.Cardinality.Many), null);
 
@@ -47,7 +47,7 @@ export type $UnavailabilityλShape = $.typeutil.flatten<_default.$ResourceλShap
 type $Unavailability = $.ObjectType<"User::Unavailability", $UnavailabilityλShape, null, [
   ..._default.$Resource['__exclusives__'],
 ], "User::Unavailability">;
-const $Unavailability = $.makeType<$Unavailability>(_.spec, "33501c00-01a9-11f0-b521-d1fa2ce4e8d4", _.syntax.literal);
+const $Unavailability = $.makeType<$Unavailability>(_.spec, "08adc5f8-0670-11f0-ace2-b16b2c927985", _.syntax.literal);
 
 const Unavailability: $.$expr_PathNode<$.TypeSet<$Unavailability, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Unavailability, $.Cardinality.Many), null);
 

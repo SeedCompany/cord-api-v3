@@ -11,7 +11,7 @@ export type $VariantGroupλShape = $.typeutil.flatten<_std.$Object_8ce8c71ee4fa5
 type $VariantGroup = $.ObjectType<"ProgressReport::Media::VariantGroup", $VariantGroupλShape, null, [
   ..._std.$Object_8ce8c71ee4fa5f73840c22d7eaa58588['__exclusives__'],
 ], "ProgressReport::Media::VariantGroup">;
-const $VariantGroup = $.makeType<$VariantGroup>(_.spec, "488ed4d0-01a9-11f0-9e8e-8d6c9b0e5c6c", _.syntax.literal);
+const $VariantGroup = $.makeType<$VariantGroup>(_.spec, "1cdc76dc-0670-11f0-b0b9-1b1a3b716348", _.syntax.literal);
 
 const VariantGroup: $.$expr_PathNode<$.TypeSet<$VariantGroup, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($VariantGroup, $.Cardinality.Many), null);
 

@@ -8,14 +8,14 @@ export type $Shareability = {
   "AskToShareExternally": $.$expr_Literal<$Shareability>;
   "External": $.$expr_Literal<$Shareability>;
 } & $.EnumType<"Post::Shareability", ["Membership", "Internal", "AskToShareExternally", "External"]>;
-const Shareability: $Shareability = $.makeType<$Shareability>(_.spec, "dc25f03e-01a9-11f0-b844-c9d631227d51", _.syntax.literal);
+const Shareability: $Shareability = $.makeType<$Shareability>(_.spec, "5b614cd4-0670-11f0-b51a-ad90c84c01eb", _.syntax.literal);
 
 export type $Type = {
   "Note": $.$expr_Literal<$Type>;
   "Story": $.$expr_Literal<$Type>;
   "Prayer": $.$expr_Literal<$Type>;
 } & $.EnumType<"Post::Type", ["Note", "Story", "Prayer"]>;
-const Type: $Type = $.makeType<$Type>(_.spec, "dc260b28-01a9-11f0-9f1d-21159da5de65", _.syntax.literal);
+const Type: $Type = $.makeType<$Type>(_.spec, "5b615bfc-0670-11f0-b547-237319e0b872", _.syntax.literal);
 
 
 

@@ -3,7 +3,6 @@
 import * as $ from "../reflection";
 import * as _ from "../imports";
 import type * as _std from "./std";
-import type * as _sys from "./sys";
 export type $AllowBareDDL = {
   "AlwaysAllow": $.$expr_Literal<$AllowBareDDL>;
   "NeverAllow": $.$expr_Literal<$AllowBareDDL>;
@@ -28,26 +27,6 @@ export type $QueryCacheMode = {
 } & $.EnumType<"cfg::QueryCacheMode", ["InMemory", "RegInline", "PgFunc", "Default"]>;
 const QueryCacheMode: $QueryCacheMode = $.makeType<$QueryCacheMode>(_.spec, "7cb23cda-17b8-575c-9561-05e2e9351897", _.syntax.literal);
 
-export type $QueryStatsOption = {
-  "None": $.$expr_Literal<$QueryStatsOption>;
-  "All": $.$expr_Literal<$QueryStatsOption>;
-} & $.EnumType<"cfg::QueryStatsOption", ["None", "All"]>;
-const QueryStatsOption: $QueryStatsOption = $.makeType<$QueryStatsOption>(_.spec, "258dbe3b-cb49-5713-b9fb-b220c8065c01", _.syntax.literal);
-
-export type $SMTPSecurity = {
-  "PlainText": $.$expr_Literal<$SMTPSecurity>;
-  "TLS": $.$expr_Literal<$SMTPSecurity>;
-  "STARTTLS": $.$expr_Literal<$SMTPSecurity>;
-  "STARTTLSOrPlainText": $.$expr_Literal<$SMTPSecurity>;
-} & $.EnumType<"cfg::SMTPSecurity", ["PlainText", "TLS", "STARTTLS", "STARTTLSOrPlainText"]>;
-const SMTPSecurity: $SMTPSecurity = $.makeType<$SMTPSecurity>(_.spec, "6dc9f7f4-5b6b-5afc-9e5e-57a6b2f15cbc", _.syntax.literal);
-
-export type $StoreMigrationSDL = {
-  "AlwaysStore": $.$expr_Literal<$StoreMigrationSDL>;
-  "NeverStore": $.$expr_Literal<$StoreMigrationSDL>;
-} & $.EnumType<"cfg::StoreMigrationSDL", ["AlwaysStore", "NeverStore"]>;
-const StoreMigrationSDL: $StoreMigrationSDL = $.makeType<$StoreMigrationSDL>(_.spec, "43ce9f9e-00cd-5303-a1b3-fea515a046d8", _.syntax.literal);
-
 export type $memory = $.ScalarType<"cfg::memory", _.gel.ConfigMemory>;
 const memory: $.scalarTypeWithConstructor<$memory, string> = $.makeType<$.scalarTypeWithConstructor<$memory, string>>(_.spec, "00000000-0000-0000-0000-000000000130", _.syntax.literal);
 
@@ -55,7 +34,7 @@ export type $ConfigObjectλShape = $.typeutil.flatten<_std.$BaseObjectλShape & 
 }>;
 type $ConfigObject = $.ObjectType<"cfg::ConfigObject", $ConfigObjectλShape, null, [
   ..._std.$BaseObject['__exclusives__'],
-], "cfg::Auth" | "cfg::DatabaseConfig" | "cfg::BranchConfig" | "cfg::Config" | "cfg::InstanceConfig" | "cfg::JWT" | "cfg::Password" | "cfg::SCRAM" | "cfg::SMTPProviderConfig" | "cfg::Trust" | "cfg::mTLS">;
+], "cfg::Auth" | "cfg::DatabaseConfig" | "cfg::BranchConfig" | "cfg::Config" | "cfg::InstanceConfig" | "cfg::JWT" | "cfg::Password" | "cfg::SCRAM" | "cfg::Trust" | "cfg::mTLS">;
 const $ConfigObject = $.makeType<$ConfigObject>(_.spec, "d408002f-3891-5b9a-b19c-23589a88998b", _.syntax.literal);
 
 const ConfigObject: $.$expr_PathNode<$.TypeSet<$ConfigObject, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($ConfigObject, $.Cardinality.Many), null);
@@ -63,29 +42,19 @@ const ConfigObject: $.$expr_PathNode<$.TypeSet<$ConfigObject, $.Cardinality.Many
 export type $AbstractConfigλShape = $.typeutil.flatten<$ConfigObjectλShape & {
   "extensions": $.LinkDesc<$ExtensionConfig, $.Cardinality.Many, {}, false, true,  false, false>;
   "session_idle_timeout": $.PropertyDesc<_std.$duration, $.Cardinality.One, false, false, false, true>;
-  "default_transaction_isolation": $.PropertyDesc<_sys.$TransactionIsolation, $.Cardinality.One, false, false, false, true>;
-  "default_transaction_access_mode": $.PropertyDesc<_sys.$TransactionAccessMode, $.Cardinality.One, false, false, false, true>;
-  "default_transaction_deferrable": $.PropertyDesc<_sys.$TransactionDeferrability, $.Cardinality.One, false, false, false, true>;
   "session_idle_transaction_timeout": $.PropertyDesc<_std.$duration, $.Cardinality.One, false, false, false, true>;
   "query_execution_timeout": $.PropertyDesc<_std.$duration, $.Cardinality.One, false, false, false, false>;
   "listen_port": $.PropertyDesc<_std.$int32, $.Cardinality.One, false, false, false, true>;
   "listen_addresses": $.PropertyDesc<_std.$str, $.Cardinality.Many, false, false, false, false>;
   "auth": $.LinkDesc<$Auth, $.Cardinality.Many, {}, false, false,  false, false>;
-  "email_providers": $.LinkDesc<$EmailProviderConfig, $.Cardinality.Many, {}, false, false,  false, false>;
-  "current_email_provider_name": $.PropertyDesc<_std.$str, $.Cardinality.AtMostOne, false, false, false, false>;
   "allow_dml_in_functions": $.PropertyDesc<_std.$bool, $.Cardinality.AtMostOne, false, false, false, true>;
   "allow_bare_ddl": $.PropertyDesc<$AllowBareDDL, $.Cardinality.AtMostOne, false, false, false, true>;
-  "store_migration_sdl": $.PropertyDesc<$StoreMigrationSDL, $.Cardinality.AtMostOne, false, false, false, true>;
   "apply_access_policies": $.PropertyDesc<_std.$bool, $.Cardinality.AtMostOne, false, false, false, true>;
-  "apply_access_policies_pg": $.PropertyDesc<_std.$bool, $.Cardinality.AtMostOne, false, false, false, true>;
   "allow_user_specified_id": $.PropertyDesc<_std.$bool, $.Cardinality.AtMostOne, false, false, false, true>;
-  "simple_scoping": $.PropertyDesc<_std.$bool, $.Cardinality.AtMostOne, false, false, false, false>;
-  "warn_old_scoping": $.PropertyDesc<_std.$bool, $.Cardinality.AtMostOne, false, false, false, false>;
   "cors_allow_origins": $.PropertyDesc<_std.$str, $.Cardinality.Many, false, false, false, false>;
   "auto_rebuild_query_cache": $.PropertyDesc<_std.$bool, $.Cardinality.AtMostOne, false, false, false, true>;
   "auto_rebuild_query_cache_timeout": $.PropertyDesc<_std.$duration, $.Cardinality.AtMostOne, false, false, false, true>;
   "query_cache_mode": $.PropertyDesc<$QueryCacheMode, $.Cardinality.AtMostOne, false, false, false, true>;
-  "http_max_connections": $.PropertyDesc<_std.$int64, $.Cardinality.AtMostOne, false, false, false, true>;
   "shared_buffers": $.PropertyDesc<$memory, $.Cardinality.AtMostOne, false, false, false, false>;
   "query_work_mem": $.PropertyDesc<$memory, $.Cardinality.AtMostOne, false, false, false, false>;
   "maintenance_work_mem": $.PropertyDesc<$memory, $.Cardinality.AtMostOne, false, false, false, false>;
@@ -94,7 +63,6 @@ export type $AbstractConfigλShape = $.typeutil.flatten<$ConfigObjectλShape & {
   "default_statistics_target": $.PropertyDesc<_std.$int64, $.Cardinality.AtMostOne, false, false, false, false>;
   "force_database_error": $.PropertyDesc<_std.$str, $.Cardinality.AtMostOne, false, false, false, true>;
   "_pg_prepared_statement_cache_size": $.PropertyDesc<_std.$int16, $.Cardinality.One, false, false, false, true>;
-  "track_query_stats": $.PropertyDesc<$QueryStatsOption, $.Cardinality.AtMostOne, false, false, false, false>;
   "<cfg[is cfg::ExtensionConfig]": $.LinkDesc<$ExtensionConfig, $.Cardinality.AtMostOne, {}, true, false,  false, false>;
   "<cfg": $.LinkDesc<$.ObjectType, $.Cardinality.Many, {}, false, false,  false, false>;
 }>;
@@ -165,23 +133,6 @@ const $Config = $.makeType<$Config>(_.spec, "363133b1-e993-50a0-94d3-aa0472b1a0a
 
 const Config: $.$expr_PathNode<$.TypeSet<$Config, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Config, $.Cardinality.Many), null);
 
-export type $EmailProviderConfigλShape = $.typeutil.flatten<$ConfigObjectλShape & {
-  "name": $.PropertyDesc<_std.$str, $.Cardinality.One, true, false, false, false>;
-  "<email_providers[is cfg::AbstractConfig]": $.LinkDesc<$AbstractConfig, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<email_providers[is cfg::Config]": $.LinkDesc<$Config, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<email_providers[is cfg::InstanceConfig]": $.LinkDesc<$InstanceConfig, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<email_providers[is cfg::DatabaseConfig]": $.LinkDesc<$DatabaseConfig, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<email_providers[is cfg::BranchConfig]": $.LinkDesc<$BranchConfig, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<email_providers": $.LinkDesc<$.ObjectType, $.Cardinality.Many, {}, false, false,  false, false>;
-}>;
-type $EmailProviderConfig = $.ObjectType<"cfg::EmailProviderConfig", $EmailProviderConfigλShape, null, [
-  ...$ConfigObject['__exclusives__'],
-  {name: {__element__: _std.$str, __cardinality__: $.Cardinality.One | $.Cardinality.AtMostOne },},
-], "cfg::SMTPProviderConfig">;
-const $EmailProviderConfig = $.makeType<$EmailProviderConfig>(_.spec, "0caa4e7a-7c52-5cff-aee4-920ede8a569c", _.syntax.literal);
-
-const EmailProviderConfig: $.$expr_PathNode<$.TypeSet<$EmailProviderConfig, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($EmailProviderConfig, $.Cardinality.Many), null);
-
 export type $ExtensionConfigλShape = $.typeutil.flatten<$ConfigObjectλShape & {
   "cfg": $.LinkDesc<$AbstractConfig, $.Cardinality.One, {}, true, false,  false, false>;
   "<extensions[is cfg::AbstractConfig]": $.LinkDesc<$AbstractConfig, $.Cardinality.Many, {}, false, false,  false, false>;
@@ -238,24 +189,6 @@ const $SCRAM = $.makeType<$SCRAM>(_.spec, "ca43bc46-6dd2-55fc-98dc-358978df0f24"
 
 const SCRAM: $.$expr_PathNode<$.TypeSet<$SCRAM, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($SCRAM, $.Cardinality.Many), null);
 
-export type $SMTPProviderConfigλShape = $.typeutil.flatten<$EmailProviderConfigλShape & {
-  "sender": $.PropertyDesc<_std.$str, $.Cardinality.AtMostOne, false, false, false, false>;
-  "host": $.PropertyDesc<_std.$str, $.Cardinality.AtMostOne, false, false, false, false>;
-  "port": $.PropertyDesc<_std.$int32, $.Cardinality.AtMostOne, false, false, false, false>;
-  "username": $.PropertyDesc<_std.$str, $.Cardinality.AtMostOne, false, false, false, false>;
-  "password": $.PropertyDesc<_std.$str, $.Cardinality.AtMostOne, false, false, false, false>;
-  "security": $.PropertyDesc<$SMTPSecurity, $.Cardinality.One, false, false, false, true>;
-  "validate_certs": $.PropertyDesc<_std.$bool, $.Cardinality.One, false, false, false, true>;
-  "timeout_per_email": $.PropertyDesc<_std.$duration, $.Cardinality.One, false, false, false, true>;
-  "timeout_per_attempt": $.PropertyDesc<_std.$duration, $.Cardinality.One, false, false, false, true>;
-}>;
-type $SMTPProviderConfig = $.ObjectType<"cfg::SMTPProviderConfig", $SMTPProviderConfigλShape, null, [
-  ...$EmailProviderConfig['__exclusives__'],
-], "cfg::SMTPProviderConfig">;
-const $SMTPProviderConfig = $.makeType<$SMTPProviderConfig>(_.spec, "519a3483-0198-576f-932d-508587433ec7", _.syntax.literal);
-
-const SMTPProviderConfig: $.$expr_PathNode<$.TypeSet<$SMTPProviderConfig, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($SMTPProviderConfig, $.Cardinality.Many), null);
-
 export type $TrustλShape = $.typeutil.flatten<$AuthMethodλShape & {
 }>;
 type $Trust = $.ObjectType<"cfg::Trust", $TrustλShape, null, [
@@ -307,15 +240,12 @@ function get_config_json(...args: any[]) {
 
 
 
-export { AllowBareDDL, ConnectionTransport, QueryCacheMode, QueryStatsOption, SMTPSecurity, StoreMigrationSDL, memory, $ConfigObject, ConfigObject, $AbstractConfig, AbstractConfig, $Auth, Auth, $AuthMethod, AuthMethod, $DatabaseConfig, DatabaseConfig, $BranchConfig, BranchConfig, $Config, Config, $EmailProviderConfig, EmailProviderConfig, $ExtensionConfig, ExtensionConfig, $InstanceConfig, InstanceConfig, $JWT, JWT, $Password, Password, $SCRAM, SCRAM, $SMTPProviderConfig, SMTPProviderConfig, $Trust, Trust, $mTLS, mTLS };
+export { AllowBareDDL, ConnectionTransport, QueryCacheMode, memory, $ConfigObject, ConfigObject, $AbstractConfig, AbstractConfig, $Auth, Auth, $AuthMethod, AuthMethod, $DatabaseConfig, DatabaseConfig, $BranchConfig, BranchConfig, $Config, Config, $ExtensionConfig, ExtensionConfig, $InstanceConfig, InstanceConfig, $JWT, JWT, $Password, Password, $SCRAM, SCRAM, $Trust, Trust, $mTLS, mTLS };
 
 type __defaultExports = {
   "AllowBareDDL": typeof AllowBareDDL;
   "ConnectionTransport": typeof ConnectionTransport;
   "QueryCacheMode": typeof QueryCacheMode;
-  "QueryStatsOption": typeof QueryStatsOption;
-  "SMTPSecurity": typeof SMTPSecurity;
-  "StoreMigrationSDL": typeof StoreMigrationSDL;
   "memory": typeof memory;
   "ConfigObject": typeof ConfigObject;
   "AbstractConfig": typeof AbstractConfig;
@@ -324,13 +254,11 @@ type __defaultExports = {
   "DatabaseConfig": typeof DatabaseConfig;
   "BranchConfig": typeof BranchConfig;
   "Config": typeof Config;
-  "EmailProviderConfig": typeof EmailProviderConfig;
   "ExtensionConfig": typeof ExtensionConfig;
   "InstanceConfig": typeof InstanceConfig;
   "JWT": typeof JWT;
   "Password": typeof Password;
   "SCRAM": typeof SCRAM;
-  "SMTPProviderConfig": typeof SMTPProviderConfig;
   "Trust": typeof Trust;
   "mTLS": typeof mTLS;
   "get_config_json": typeof get_config_json
@@ -339,9 +267,6 @@ const __defaultExports: __defaultExports = {
   "AllowBareDDL": AllowBareDDL,
   "ConnectionTransport": ConnectionTransport,
   "QueryCacheMode": QueryCacheMode,
-  "QueryStatsOption": QueryStatsOption,
-  "SMTPSecurity": SMTPSecurity,
-  "StoreMigrationSDL": StoreMigrationSDL,
   "memory": memory,
   "ConfigObject": ConfigObject,
   "AbstractConfig": AbstractConfig,
@@ -350,13 +275,11 @@ const __defaultExports: __defaultExports = {
   "DatabaseConfig": DatabaseConfig,
   "BranchConfig": BranchConfig,
   "Config": Config,
-  "EmailProviderConfig": EmailProviderConfig,
   "ExtensionConfig": ExtensionConfig,
   "InstanceConfig": InstanceConfig,
   "JWT": JWT,
   "Password": Password,
   "SCRAM": SCRAM,
-  "SMTPProviderConfig": SMTPProviderConfig,
   "Trust": Trust,
   "mTLS": mTLS,
   "get_config_json": get_config_json

@@ -10,7 +10,7 @@ export type $TemporalλShape = $.typeutil.flatten<_default.$MediaλShape & {
 type $Temporal = $.ObjectType<"Media::Temporal", $TemporalλShape, null, [
   ..._default.$Media['__exclusives__'],
 ], "Media::Audio" | "Media::Video">;
-const $Temporal = $.makeType<$Temporal>(_.spec, "47e4a0f0-01a9-11f0-a62d-4f902835ff33", _.syntax.literal);
+const $Temporal = $.makeType<$Temporal>(_.spec, "1c6d69ae-0670-11f0-a150-fb0856212a44", _.syntax.literal);
 
 const Temporal: $.$expr_PathNode<$.TypeSet<$Temporal, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Temporal, $.Cardinality.Many), null);
 
@@ -19,7 +19,7 @@ export type $AudioλShape = $.typeutil.flatten<$TemporalλShape & {
 type $Audio = $.ObjectType<"Media::Audio", $AudioλShape, null, [
   ...$Temporal['__exclusives__'],
 ], "Media::Audio">;
-const $Audio = $.makeType<$Audio>(_.spec, "47e72a8c-01a9-11f0-8485-438058cef3c7", _.syntax.literal);
+const $Audio = $.makeType<$Audio>(_.spec, "1c6fb164-0670-11f0-93b8-47c7ab565ab9", _.syntax.literal);
 
 const Audio: $.$expr_PathNode<$.TypeSet<$Audio, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Audio, $.Cardinality.Many), null);
 
@@ -29,7 +29,7 @@ export type $VisualλShape = $.typeutil.flatten<_default.$MediaλShape & {
 type $Visual = $.ObjectType<"Media::Visual", $VisualλShape, null, [
   ..._default.$Media['__exclusives__'],
 ], "Media::Image" | "Media::Video">;
-const $Visual = $.makeType<$Visual>(_.spec, "47e9b568-01a9-11f0-841e-81fc6d16cc7e", _.syntax.literal);
+const $Visual = $.makeType<$Visual>(_.spec, "1c71ed62-0670-11f0-b54a-35ca8fd19715", _.syntax.literal);
 
 const Visual: $.$expr_PathNode<$.TypeSet<$Visual, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Visual, $.Cardinality.Many), null);
 
@@ -38,7 +38,7 @@ export type $ImageλShape = $.typeutil.flatten<$VisualλShape & {
 type $Image = $.ObjectType<"Media::Image", $ImageλShape, null, [
   ...$Visual['__exclusives__'],
 ], "Media::Image">;
-const $Image = $.makeType<$Image>(_.spec, "47ec57aa-01a9-11f0-bfad-f7f857884bca", _.syntax.literal);
+const $Image = $.makeType<$Image>(_.spec, "1c73f5b2-0670-11f0-9eb9-49ebb1abd2c4", _.syntax.literal);
 
 const Image: $.$expr_PathNode<$.TypeSet<$Image, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Image, $.Cardinality.Many), null);
 
@@ -48,7 +48,7 @@ type $Video = $.ObjectType<"Media::Video", $VideoλShape, null, [
   ...$Visual['__exclusives__'],
   ...$Temporal['__exclusives__'],
 ], "Media::Video">;
-const $Video = $.makeType<$Video>(_.spec, "47eecdfa-01a9-11f0-868a-990451b9a928", _.syntax.literal);
+const $Video = $.makeType<$Video>(_.spec, "1c75f22c-0670-11f0-a0d4-850890e58842", _.syntax.literal);
 
 const Video: $.$expr_PathNode<$.TypeSet<$Video, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Video, $.Cardinality.Many), null);
 

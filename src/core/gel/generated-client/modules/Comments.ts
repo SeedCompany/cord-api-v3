@@ -13,19 +13,19 @@ export type $AwareλShape = $.typeutil.flatten<Omit<_default.$ResourceλShape, "
 type $Aware = $.ObjectType<"Comments::Aware", $AwareλShape, null, [
   ..._default.$Resource['__exclusives__'],
 ], "default::InternshipEngagement" | "default::InternshipProject" | "default::Language" | "default::LanguageEngagement" | "default::MomentumTranslationProject" | "default::MultiplicationTranslationProject" | "default::Partner" | "default::ProgressReport" | "default::User" | "default::currentUser">;
-const $Aware = $.makeType<$Aware>(_.spec, "adc1b53e-01a9-11f0-8bd9-4f99e1e30da4", _.syntax.literal);
+const $Aware = $.makeType<$Aware>(_.spec, "3571cd28-0670-11f0-8f18-d1586f5f24d7", _.syntax.literal);
 
 const Aware: $.$expr_PathNode<$.TypeSet<$Aware, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Aware, $.Cardinality.Many), null);
 
 export type $CommentλShape = $.typeutil.flatten<_default.$ResourceλShape & {
   "thread": $.LinkDesc<$Thread, $.Cardinality.One, {}, false, false,  false, false>;
   "body": $.PropertyDesc<_default.$RichText, $.Cardinality.One, false, false, false, false>;
+  "<comment[is Notification::Comment]": $.LinkDesc<_Notification.$Comment, $.Cardinality.Many, {}, false, false,  false, false>;
   "<comments[is Comments::Thread]": $.LinkDesc<$Thread, $.Cardinality.Many, {}, false, false,  false, false>;
   "<firstComment[is Comments::Thread]": $.LinkDesc<$Thread, $.Cardinality.Many, {}, false, false,  false, false>;
   "<latestComment[is Comments::Thread]": $.LinkDesc<$Thread, $.Cardinality.Many, {}, false, false,  false, false>;
   "<comment[is Notification::CommentViaMembership]": $.LinkDesc<_Notification.$CommentViaMembership, $.Cardinality.Many, {}, false, false,  false, false>;
   "<comment[is Notification::CommentViaMention]": $.LinkDesc<_Notification.$CommentViaMention, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<comment[is Notification::Comment]": $.LinkDesc<_Notification.$Comment, $.Cardinality.Many, {}, false, false,  false, false>;
   "<comment": $.LinkDesc<$.ObjectType, $.Cardinality.Many, {}, false, false,  false, false>;
   "<comments": $.LinkDesc<$.ObjectType, $.Cardinality.Many, {}, false, false,  false, false>;
   "<firstComment": $.LinkDesc<$.ObjectType, $.Cardinality.Many, {}, false, false,  false, false>;
@@ -34,7 +34,7 @@ export type $CommentλShape = $.typeutil.flatten<_default.$ResourceλShape & {
 type $Comment = $.ObjectType<"Comments::Comment", $CommentλShape, null, [
   ..._default.$Resource['__exclusives__'],
 ], "Comments::Comment">;
-const $Comment = $.makeType<$Comment>(_.spec, "dbce4dc0-01a9-11f0-a0ac-219ae923e02f", _.syntax.literal);
+const $Comment = $.makeType<$Comment>(_.spec, "5a75f540-0670-11f0-a135-6dcb9ff358ab", _.syntax.literal);
 
 const Comment: $.$expr_PathNode<$.TypeSet<$Comment, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Comment, $.Cardinality.Many), null);
 
@@ -43,6 +43,14 @@ export type $ThreadλShape = $.typeutil.flatten<_default.$ResourceλShape & Omit
   "comments": $.LinkDesc<$Comment, $.Cardinality.Many, {}, false, true,  false, false>;
   "firstComment": $.LinkDesc<$Comment, $.Cardinality.AtMostOne, {}, false, true,  false, false>;
   "latestComment": $.LinkDesc<$Comment, $.Cardinality.AtMostOne, {}, false, true,  false, false>;
+  "<commentThreads[is Engagement]": $.LinkDesc<_default.$Engagement, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<commentThreads[is LanguageEngagement]": $.LinkDesc<_default.$LanguageEngagement, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<commentThreads[is InternshipEngagement]": $.LinkDesc<_default.$InternshipEngagement, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<commentThreads[is User]": $.LinkDesc<_default.$User, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<commentThreads[is currentUser]": $.LinkDesc<_default.$currentUser, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<commentThreads[is ProgressReport]": $.LinkDesc<_default.$ProgressReport, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<commentThreads[is Language]": $.LinkDesc<_default.$Language, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<commentThreads[is Partner]": $.LinkDesc<_default.$Partner, $.Cardinality.Many, {}, false, false,  false, false>;
   "<commentThreads[is Comments::Aware]": $.LinkDesc<$Aware, $.Cardinality.Many, {}, false, false,  false, false>;
   "<commentThreads[is Project]": $.LinkDesc<_default.$Project, $.Cardinality.Many, {}, false, false,  false, false>;
   "<commentThreads[is InternshipProject]": $.LinkDesc<_default.$InternshipProject, $.Cardinality.Many, {}, false, false,  false, false>;
@@ -50,14 +58,6 @@ export type $ThreadλShape = $.typeutil.flatten<_default.$ResourceλShape & Omit
   "<commentThreads[is MomentumTranslationProject]": $.LinkDesc<_default.$MomentumTranslationProject, $.Cardinality.Many, {}, false, false,  false, false>;
   "<commentThreads[is MultiplicationTranslationProject]": $.LinkDesc<_default.$MultiplicationTranslationProject, $.Cardinality.Many, {}, false, false,  false, false>;
   "<thread[is Comments::Comment]": $.LinkDesc<$Comment, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<commentThreads[is Engagement]": $.LinkDesc<_default.$Engagement, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<commentThreads[is InternshipEngagement]": $.LinkDesc<_default.$InternshipEngagement, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<commentThreads[is LanguageEngagement]": $.LinkDesc<_default.$LanguageEngagement, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<commentThreads[is User]": $.LinkDesc<_default.$User, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<commentThreads[is currentUser]": $.LinkDesc<_default.$currentUser, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<commentThreads[is ProgressReport]": $.LinkDesc<_default.$ProgressReport, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<commentThreads[is Language]": $.LinkDesc<_default.$Language, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<commentThreads[is Partner]": $.LinkDesc<_default.$Partner, $.Cardinality.Many, {}, false, false,  false, false>;
   "<commentThreads": $.LinkDesc<$.ObjectType, $.Cardinality.Many, {}, false, false,  false, false>;
   "<thread": $.LinkDesc<$.ObjectType, $.Cardinality.Many, {}, false, false,  false, false>;
 }>;
@@ -65,7 +65,7 @@ type $Thread = $.ObjectType<"Comments::Thread", $ThreadλShape, null, [
   ..._default.$Resource['__exclusives__'],
   ..._Mixin.$Embedded['__exclusives__'],
 ], "Comments::Thread">;
-const $Thread = $.makeType<$Thread>(_.spec, "dbb71038-01a9-11f0-aa0c-cfaab0cf396d", _.syntax.literal);
+const $Thread = $.makeType<$Thread>(_.spec, "5a64e69c-0670-11f0-b6aa-714fdb5bad33", _.syntax.literal);
 
 const Thread: $.$expr_PathNode<$.TypeSet<$Thread, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Thread, $.Cardinality.Many), null);
 

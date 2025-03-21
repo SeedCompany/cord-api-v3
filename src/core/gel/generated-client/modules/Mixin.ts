@@ -11,7 +11,7 @@ export type $TimestampedλShape = $.typeutil.flatten<_std.$Object_8ce8c71ee4fa5f
 type $Timestamped = $.ObjectType<"Mixin::Timestamped", $TimestampedλShape, null, [
   ..._std.$Object_8ce8c71ee4fa5f73840c22d7eaa58588['__exclusives__'],
 ], "Auth::EmailToken" | "Auth::Session" | "Budget::Record" | "Comments::Comment" | "Comments::Thread" | "Engagement::CertificationCeremony" | "Engagement::DedicationCeremony" | "File::Version" | "Notification::CommentViaMembership" | "Notification::CommentViaMention" | "Notification::System" | "Product::PartnershipProducingMedium" | "ProgressReport::CommunityStory" | "ProgressReport::Highlight" | "ProgressReport::Media" | "ProgressReport::ProductProgress::Step" | "ProgressReport::TeamNews" | "ProgressReport::VarianceExplanation" | "Project::Member" | "Prompt::VariantResponse" | "User::Education" | "User::Unavailability" | "default::Budget" | "default::DerivativeScriptureProduct" | "default::DirectScriptureProduct" | "default::Directory" | "default::EthnoArt" | "default::FieldRegion" | "default::FieldZone" | "default::File" | "default::Film" | "default::FinancialReport" | "default::FundingAccount" | "default::InternshipEngagement" | "default::InternshipProject" | "default::Language" | "default::LanguageEngagement" | "default::Location" | "default::MomentumTranslationProject" | "default::MultiplicationTranslationProject" | "default::NarrativeReport" | "default::Organization" | "default::OtherProduct" | "default::Partner" | "default::Partnership" | "default::Post" | "default::ProgressReport" | "default::Story" | "default::User" | "default::currentUser">;
-const $Timestamped = $.makeType<$Timestamped>(_.spec, "319ce6f4-01a9-11f0-a37a-3bb59f215990", _.syntax.literal);
+const $Timestamped = $.makeType<$Timestamped>(_.spec, "07826d6e-0670-11f0-a26b-4babcd36cd89", _.syntax.literal);
 
 const Timestamped: $.$expr_PathNode<$.TypeSet<$Timestamped, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Timestamped, $.Cardinality.Many), null);
 
@@ -23,7 +23,7 @@ export type $AuditedλShape = $.typeutil.flatten<$TimestampedλShape & {
 type $Audited = $.ObjectType<"Mixin::Audited", $AuditedλShape, null, [
   ...$Timestamped['__exclusives__'],
 ], "Budget::Record" | "Comments::Comment" | "Comments::Thread" | "Engagement::CertificationCeremony" | "Engagement::DedicationCeremony" | "File::Version" | "Notification::CommentViaMembership" | "Notification::CommentViaMention" | "Notification::System" | "Product::PartnershipProducingMedium" | "ProgressReport::CommunityStory" | "ProgressReport::Highlight" | "ProgressReport::Media" | "ProgressReport::TeamNews" | "ProgressReport::VarianceExplanation" | "Project::Member" | "Prompt::VariantResponse" | "User::Education" | "User::Unavailability" | "default::Budget" | "default::DerivativeScriptureProduct" | "default::DirectScriptureProduct" | "default::Directory" | "default::EthnoArt" | "default::FieldRegion" | "default::FieldZone" | "default::File" | "default::Film" | "default::FinancialReport" | "default::FundingAccount" | "default::InternshipEngagement" | "default::InternshipProject" | "default::Language" | "default::LanguageEngagement" | "default::Location" | "default::MomentumTranslationProject" | "default::MultiplicationTranslationProject" | "default::NarrativeReport" | "default::Organization" | "default::OtherProduct" | "default::Partner" | "default::Partnership" | "default::Post" | "default::ProgressReport" | "default::Story" | "default::User" | "default::currentUser">;
-const $Audited = $.makeType<$Audited>(_.spec, "319f8c6a-01a9-11f0-9cbc-89aa73d0401b", _.syntax.literal);
+const $Audited = $.makeType<$Audited>(_.spec, "07845a02-0670-11f0-9538-eb2bc8ab1eda", _.syntax.literal);
 
 const Audited: $.$expr_PathNode<$.TypeSet<$Audited, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Audited, $.Cardinality.Many), null);
 
@@ -33,7 +33,7 @@ export type $EmbeddedλShape = $.typeutil.flatten<_std.$Object_8ce8c71ee4fa5f738
 type $Embedded = $.ObjectType<"Mixin::Embedded", $EmbeddedλShape, null, [
   ..._std.$Object_8ce8c71ee4fa5f73840c22d7eaa58588['__exclusives__'],
 ], "Comments::Thread" | "ProgressReport::CommunityStory" | "ProgressReport::Highlight" | "ProgressReport::TeamNews" | "default::FinancialReport" | "default::NarrativeReport" | "default::Post" | "default::ProgressReport">;
-const $Embedded = $.makeType<$Embedded>(_.spec, "3542fe2e-01a9-11f0-b700-434a7332f55d", _.syntax.literal);
+const $Embedded = $.makeType<$Embedded>(_.spec, "0a0db57a-0670-11f0-85c0-0f1f7cba9b82", _.syntax.literal);
 
 const Embedded: $.$expr_PathNode<$.TypeSet<$Embedded, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Embedded, $.Cardinality.Many), null);
 
@@ -43,7 +43,7 @@ export type $NamedλShape = $.typeutil.flatten<_std.$Object_8ce8c71ee4fa5f73840c
 type $Named = $.ObjectType<"Mixin::Named", $NamedλShape, null, [
   ..._std.$Object_8ce8c71ee4fa5f73840c22d7eaa58588['__exclusives__'],
 ], "File::Version" | "default::Directory" | "default::EthnoArt" | "default::FieldRegion" | "default::FieldZone" | "default::File" | "default::Film" | "default::FundingAccount" | "default::InternshipProject" | "default::Language" | "default::Location" | "default::MomentumTranslationProject" | "default::MultiplicationTranslationProject" | "default::Organization" | "default::Partner" | "default::Story" | "default::SystemAgent">;
-const $Named = $.makeType<$Named>(_.spec, "31994c42-01a9-11f0-80be-43469fb4b091", _.syntax.literal);
+const $Named = $.makeType<$Named>(_.spec, "077f8446-0670-11f0-ad97-5146d26cd601", _.syntax.literal);
 
 const Named: $.$expr_PathNode<$.TypeSet<$Named, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Named, $.Cardinality.Many), null);
 
@@ -56,7 +56,7 @@ export type $PinnableλShape = $.typeutil.flatten<_std.$Object_8ce8c71ee4fa5f738
 type $Pinnable = $.ObjectType<"Mixin::Pinnable", $PinnableλShape, null, [
   ..._std.$Object_8ce8c71ee4fa5f73840c22d7eaa58588['__exclusives__'],
 ], "default::InternshipProject" | "default::Language" | "default::MomentumTranslationProject" | "default::MultiplicationTranslationProject" | "default::Partner" | "default::User" | "default::currentUser">;
-const $Pinnable = $.makeType<$Pinnable>(_.spec, "31ac8a0a-01a9-11f0-9311-119da8e47b79", _.syntax.literal);
+const $Pinnable = $.makeType<$Pinnable>(_.spec, "0791bbb6-0670-11f0-8564-db371433494d", _.syntax.literal);
 
 const Pinnable: $.$expr_PathNode<$.TypeSet<$Pinnable, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Pinnable, $.Cardinality.Many), null);
 
@@ -68,7 +68,7 @@ export type $PostableλShape = $.typeutil.flatten<Omit<_default.$ResourceλShape
 type $Postable = $.ObjectType<"Mixin::Postable", $PostableλShape, null, [
   ..._default.$Resource['__exclusives__'],
 ], "default::InternshipProject" | "default::Language" | "default::MomentumTranslationProject" | "default::MultiplicationTranslationProject" | "default::Partner">;
-const $Postable = $.makeType<$Postable>(_.spec, "adca01da-01a9-11f0-b152-213c8ae8a2cb", _.syntax.literal);
+const $Postable = $.makeType<$Postable>(_.spec, "3577f72a-0670-11f0-8ed8-396019314550", _.syntax.literal);
 
 const Postable: $.$expr_PathNode<$.TypeSet<$Postable, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Postable, $.Cardinality.Many), null);
 
@@ -78,7 +78,7 @@ export type $TaggableλShape = $.typeutil.flatten<_std.$Object_8ce8c71ee4fa5f738
 type $Taggable = $.ObjectType<"Mixin::Taggable", $TaggableλShape, null, [
   ..._std.$Object_8ce8c71ee4fa5f73840c22d7eaa58588['__exclusives__'],
 ], "default::InternshipProject" | "default::Language" | "default::MomentumTranslationProject" | "default::MultiplicationTranslationProject" | "default::Partner">;
-const $Taggable = $.makeType<$Taggable>(_.spec, "319baa96-01a9-11f0-b16d-81ee7de06a65", _.syntax.literal);
+const $Taggable = $.makeType<$Taggable>(_.spec, "0781866a-0670-11f0-8780-5d169c7b85ef", _.syntax.literal);
 
 const Taggable: $.$expr_PathNode<$.TypeSet<$Taggable, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Taggable, $.Cardinality.Many), null);
 

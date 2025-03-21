@@ -11,7 +11,7 @@ export type $Status = {
   "Superceded": $.$expr_Literal<$Status>;
   "Rejected": $.$expr_Literal<$Status>;
 } & $.EnumType<"Budget::Status", ["Pending", "Current", "Superceded", "Rejected"]>;
-const Status: $Status = $.makeType<$Status>(_.spec, "47b0ce92-01a9-11f0-b0e1-89054f256929", _.syntax.literal);
+const Status: $Status = $.makeType<$Status>(_.spec, "1c480236-0670-11f0-9c78-cf15282db091", _.syntax.literal);
 
 export type $RecordλShape = $.typeutil.flatten<_Project.$ChildλShape & {
   "fiscalYear": $.PropertyDesc<_std.$int16, $.Cardinality.One, false, false, true, false>;
@@ -25,7 +25,7 @@ type $Record = $.ObjectType<"Budget::Record", $RecordλShape, null, [
   ..._Project.$Child['__exclusives__'],
   {budget: {__element__: _default.$Budget, __cardinality__: $.Cardinality.One | $.Cardinality.AtMostOne },fiscalYear: {__element__: _std.$int16, __cardinality__: $.Cardinality.One | $.Cardinality.AtMostOne },organization: {__element__: _default.$Organization, __cardinality__: $.Cardinality.One | $.Cardinality.AtMostOne },},
 ], "Budget::Record">;
-const $Record = $.makeType<$Record>(_.spec, "479e4268-01a9-11f0-a47e-3b1faefd15e6", _.syntax.literal);
+const $Record = $.makeType<$Record>(_.spec, "1c3a40ec-0670-11f0-9fc5-b95a9915100b", _.syntax.literal);
 
 const Record: $.$expr_PathNode<$.TypeSet<$Record, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Record, $.Cardinality.Many), null);
 

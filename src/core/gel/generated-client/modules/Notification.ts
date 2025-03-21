@@ -11,7 +11,7 @@ export type $CommentλShape = $.typeutil.flatten<_default.$NotificationλShape &
 type $Comment = $.ObjectType<"Notification::Comment", $CommentλShape, null, [
   ..._default.$Notification['__exclusives__'],
 ], "Notification::CommentViaMembership" | "Notification::CommentViaMention">;
-const $Comment = $.makeType<$Comment>(_.spec, "bb99df64-01aa-11f0-99c1-8111746cd019", _.syntax.literal);
+const $Comment = $.makeType<$Comment>(_.spec, "e9a05936-0670-11f0-bba8-837e40d091dc", _.syntax.literal);
 
 const Comment: $.$expr_PathNode<$.TypeSet<$Comment, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Comment, $.Cardinality.Many), null);
 
@@ -20,7 +20,7 @@ export type $CommentViaMembershipλShape = $.typeutil.flatten<$CommentλShape & 
 type $CommentViaMembership = $.ObjectType<"Notification::CommentViaMembership", $CommentViaMembershipλShape, null, [
   ...$Comment['__exclusives__'],
 ], "Notification::CommentViaMembership">;
-const $CommentViaMembership = $.makeType<$CommentViaMembership>(_.spec, "bc01d484-01aa-11f0-936c-6b6c0a9eda45", _.syntax.literal);
+const $CommentViaMembership = $.makeType<$CommentViaMembership>(_.spec, "e9fa356e-0670-11f0-a243-f30d8c8ecaf2", _.syntax.literal);
 
 const CommentViaMembership: $.$expr_PathNode<$.TypeSet<$CommentViaMembership, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($CommentViaMembership, $.Cardinality.Many), null);
 
@@ -29,7 +29,7 @@ export type $CommentViaMentionλShape = $.typeutil.flatten<$CommentλShape & {
 type $CommentViaMention = $.ObjectType<"Notification::CommentViaMention", $CommentViaMentionλShape, null, [
   ...$Comment['__exclusives__'],
 ], "Notification::CommentViaMention">;
-const $CommentViaMention = $.makeType<$CommentViaMention>(_.spec, "bc478628-01aa-11f0-b7a2-fd9155ffe5a7", _.syntax.literal);
+const $CommentViaMention = $.makeType<$CommentViaMention>(_.spec, "ea32bab0-0670-11f0-802a-0f6cca839dbb", _.syntax.literal);
 
 const CommentViaMention: $.$expr_PathNode<$.TypeSet<$CommentViaMention, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($CommentViaMention, $.Cardinality.Many), null);
 
@@ -37,23 +37,23 @@ export type $RecipientλShape = $.typeutil.flatten<_std.$Object_8ce8c71ee4fa5f73
   "notification": $.LinkDesc<_default.$Notification, $.Cardinality.One, {}, false, false,  false, false>;
   "user": $.LinkDesc<_default.$User, $.Cardinality.One, {}, false, false,  false, false>;
   "readAt": $.PropertyDesc<_std.$datetime, $.Cardinality.AtMostOne, false, false, false, false>;
+  "<recipients[is Notification]": $.LinkDesc<_default.$Notification, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<recipients[is Notification::Comment]": $.LinkDesc<$Comment, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<currentRecipient[is Notification]": $.LinkDesc<_default.$Notification, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<recipients[is Notification::System]": $.LinkDesc<$System, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<currentRecipient[is Notification::System]": $.LinkDesc<$System, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<currentRecipient[is Notification::Comment]": $.LinkDesc<$Comment, $.Cardinality.Many, {}, false, false,  false, false>;
   "<recipients[is Notification::CommentViaMembership]": $.LinkDesc<$CommentViaMembership, $.Cardinality.Many, {}, false, false,  false, false>;
   "<currentRecipient[is Notification::CommentViaMembership]": $.LinkDesc<$CommentViaMembership, $.Cardinality.Many, {}, false, false,  false, false>;
   "<recipients[is Notification::CommentViaMention]": $.LinkDesc<$CommentViaMention, $.Cardinality.Many, {}, false, false,  false, false>;
   "<currentRecipient[is Notification::CommentViaMention]": $.LinkDesc<$CommentViaMention, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<recipients[is Notification]": $.LinkDesc<_default.$Notification, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<recipients[is Notification::Comment]": $.LinkDesc<$Comment, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<currentRecipient[is Notification]": $.LinkDesc<_default.$Notification, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<currentRecipient[is Notification::Comment]": $.LinkDesc<$Comment, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<recipients[is Notification::System]": $.LinkDesc<$System, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<currentRecipient[is Notification::System]": $.LinkDesc<$System, $.Cardinality.Many, {}, false, false,  false, false>;
   "<currentRecipient": $.LinkDesc<$.ObjectType, $.Cardinality.Many, {}, false, false,  false, false>;
   "<recipients": $.LinkDesc<$.ObjectType, $.Cardinality.Many, {}, false, false,  false, false>;
 }>;
 type $Recipient = $.ObjectType<"Notification::Recipient", $RecipientλShape, null, [
   ..._std.$Object_8ce8c71ee4fa5f73840c22d7eaa58588['__exclusives__'],
 ], "Notification::Recipient">;
-const $Recipient = $.makeType<$Recipient>(_.spec, "bbb5285a-01aa-11f0-a321-211cd9a04bf6", _.syntax.literal);
+const $Recipient = $.makeType<$Recipient>(_.spec, "e9b7751c-0670-11f0-b917-c18b887d793b", _.syntax.literal);
 
 const Recipient: $.$expr_PathNode<$.TypeSet<$Recipient, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Recipient, $.Cardinality.Many), null);
 
@@ -63,7 +63,7 @@ export type $SystemλShape = $.typeutil.flatten<_default.$NotificationλShape & 
 type $System = $.ObjectType<"Notification::System", $SystemλShape, null, [
   ..._default.$Notification['__exclusives__'],
 ], "Notification::System">;
-const $System = $.makeType<$System>(_.spec, "bc8a5eee-01aa-11f0-8063-41f78fb0ae90", _.syntax.literal);
+const $System = $.makeType<$System>(_.spec, "ea6bbf36-0670-11f0-b374-97eaba62fda8", _.syntax.literal);
 
 const System: $.$expr_PathNode<$.TypeSet<$System, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($System, $.Cardinality.Many), null);
 

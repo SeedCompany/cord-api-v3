@@ -5,17 +5,17 @@ import * as _ from "../imports";
 import type * as _std from "./std";
 import type * as _sys from "./sys";
 import type * as _cfg from "./cfg";
-import type * as _stdnethttp from "./std/net/http";
+import type * as _File from "./File";
 import type * as _default from "./default";
 import type * as _Mixin from "./Mixin";
 import type * as _Project from "./Project";
-import type * as _File from "./File";
+import type * as _Notification from "./Notification";
 import type * as _Engagement from "./Engagement";
 import type * as _User from "./User";
-import type * as _Media from "./Media";
 import type * as _Ethnologue from "./Ethnologue";
 import type * as _Auth from "./Auth";
 import type * as _Budget from "./Budget";
+import type * as _Media from "./Media";
 import type * as _Product from "./Product";
 import type * as _ProgressReport from "./ProgressReport";
 import type * as _Prompt from "./Prompt";
@@ -23,7 +23,6 @@ import type * as _ProgressReportMedia from "./ProgressReport/Media";
 import type * as _ProgressReportProductProgress from "./ProgressReport/ProductProgress";
 import type * as _Scripture from "./Scripture";
 import type * as _Comments from "./Comments";
-import type * as _Notification from "./Notification";
 export type $AccessKind = {
   "Select": $.$expr_Literal<$AccessKind>;
   "UpdateRead": $.$expr_Literal<$AccessKind>;
@@ -44,13 +43,6 @@ export type $Cardinality = {
   "Many": $.$expr_Literal<$Cardinality>;
 } & $.EnumType<"schema::Cardinality", ["One", "Many"]>;
 const Cardinality: $Cardinality = $.makeType<$Cardinality>(_.spec, "94abc2f6-2e3e-55fc-8e97-b44ba70a3950", _.syntax.literal);
-
-export type $IndexDeferrability = {
-  "Prohibited": $.$expr_Literal<$IndexDeferrability>;
-  "Permitted": $.$expr_Literal<$IndexDeferrability>;
-  "Required": $.$expr_Literal<$IndexDeferrability>;
-} & $.EnumType<"schema::IndexDeferrability", ["Prohibited", "Permitted", "Required"]>;
-const IndexDeferrability: $IndexDeferrability = $.makeType<$IndexDeferrability>(_.spec, "b31b2d9a-681c-5709-bec5-321897ea5bd6", _.syntax.literal);
 
 export type $MigrationGeneratedBy = {
   "DevMode": $.$expr_Literal<$MigrationGeneratedBy>;
@@ -124,8 +116,7 @@ export type $Volatility = {
   "Immutable": $.$expr_Literal<$Volatility>;
   "Stable": $.$expr_Literal<$Volatility>;
   "Volatile": $.$expr_Literal<$Volatility>;
-  "Modifying": $.$expr_Literal<$Volatility>;
-} & $.EnumType<"schema::Volatility", ["Immutable", "Stable", "Volatile", "Modifying"]>;
+} & $.EnumType<"schema::Volatility", ["Immutable", "Stable", "Volatile"]>;
 const Volatility: $Volatility = $.makeType<$Volatility>(_.spec, "de5b90f2-6e49-5543-991b-28a156c7867f", _.syntax.literal);
 
 export type $Object_32faaa35947553cf88fce68ecf1be4d9λShape = $.typeutil.flatten<_std.$BaseObjectλShape & {
@@ -136,7 +127,7 @@ export type $Object_32faaa35947553cf88fce68ecf1be4d9λShape = $.typeutil.flatten
 }>;
 type $Object_32faaa35947553cf88fce68ecf1be4d9 = $.ObjectType<"schema::Object", $Object_32faaa35947553cf88fce68ecf1be4d9λShape, null, [
   ..._std.$BaseObject['__exclusives__'],
-], "schema::AccessPolicy" | "schema::Alias" | "schema::Annotation" | "schema::Array" | "schema::ArrayExprAlias" | "schema::Cast" | "schema::Constraint" | "schema::Delta" | "schema::Extension" | "schema::Function" | "schema::FutureBehavior" | "schema::Global" | "schema::Index" | "schema::Link" | "schema::Migration" | "schema::Module" | "schema::MultiRange" | "schema::MultiRangeExprAlias" | "schema::ObjectType" | "schema::Operator" | "schema::Parameter" | "schema::Property" | "schema::PseudoType" | "schema::Range" | "schema::RangeExprAlias" | "schema::Rewrite" | "schema::ScalarType" | "schema::Trigger" | "schema::Tuple" | "schema::TupleExprAlias" | "sys::Branch" | "sys::Database" | "sys::ExtensionPackage" | "sys::ExtensionPackageMigration" | "sys::QueryStats" | "sys::Role">;
+], "schema::AccessPolicy" | "schema::Alias" | "schema::Annotation" | "schema::Array" | "schema::ArrayExprAlias" | "schema::Cast" | "schema::Constraint" | "schema::Delta" | "schema::Extension" | "schema::Function" | "schema::FutureBehavior" | "schema::Global" | "schema::Index" | "schema::Link" | "schema::Migration" | "schema::Module" | "schema::MultiRange" | "schema::MultiRangeExprAlias" | "schema::ObjectType" | "schema::Operator" | "schema::Parameter" | "schema::Property" | "schema::PseudoType" | "schema::Range" | "schema::RangeExprAlias" | "schema::Rewrite" | "schema::ScalarType" | "schema::Trigger" | "schema::Tuple" | "schema::TupleExprAlias" | "sys::Database" | "sys::ExtensionPackage" | "sys::Role">;
 const $Object_32faaa35947553cf88fce68ecf1be4d9 = $.makeType<$Object_32faaa35947553cf88fce68ecf1be4d9>(_.spec, "32faaa35-9475-53cf-88fc-e68ecf1be4d9", _.syntax.literal);
 
 const Object_32faaa35947553cf88fce68ecf1be4d9: $.$expr_PathNode<$.TypeSet<$Object_32faaa35947553cf88fce68ecf1be4d9, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($Object_32faaa35947553cf88fce68ecf1be4d9, $.Cardinality.Many), null);
@@ -166,6 +157,7 @@ export type $InheritingObjectλShape = $.typeutil.flatten<$SubclassableObjectλS
   "<ancestors[is schema::InheritingObject]": $.LinkDesc<$InheritingObject, $.Cardinality.Many, {}, false, false,  false, false>;
   "<ancestors[is sys::Role]": $.LinkDesc<_sys.$Role, $.Cardinality.Many, {}, false, false,  false, false>;
   "<bases[is sys::Role]": $.LinkDesc<_sys.$Role, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<bases[is schema::Link]": $.LinkDesc<$Link, $.Cardinality.Many, {}, false, false,  false, false>;
   "<ancestors[is schema::Constraint]": $.LinkDesc<$Constraint, $.Cardinality.Many, {}, false, false,  false, false>;
   "<bases[is schema::Constraint]": $.LinkDesc<$Constraint, $.Cardinality.Many, {}, false, false,  false, false>;
   "<ancestors[is schema::ConsistencySubject]": $.LinkDesc<$ConsistencySubject, $.Cardinality.Many, {}, false, false,  false, false>;
@@ -181,7 +173,6 @@ export type $InheritingObjectλShape = $.typeutil.flatten<$SubclassableObjectλS
   "<ancestors[is schema::Index]": $.LinkDesc<$Index, $.Cardinality.Many, {}, false, false,  false, false>;
   "<bases[is schema::Index]": $.LinkDesc<$Index, $.Cardinality.Many, {}, false, false,  false, false>;
   "<ancestors[is schema::Link]": $.LinkDesc<$Link, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<bases[is schema::Link]": $.LinkDesc<$Link, $.Cardinality.Many, {}, false, false,  false, false>;
   "<bases[is schema::AccessPolicy]": $.LinkDesc<$AccessPolicy, $.Cardinality.Many, {}, false, false,  false, false>;
   "<ancestors[is schema::AccessPolicy]": $.LinkDesc<$AccessPolicy, $.Cardinality.Many, {}, false, false,  false, false>;
   "<bases[is schema::Trigger]": $.LinkDesc<$Trigger, $.Cardinality.Many, {}, false, false,  false, false>;
@@ -207,7 +198,7 @@ export type $AnnotationSubjectλShape = $.typeutil.flatten<$Object_32faaa3594755
 }>;
 type $AnnotationSubject = $.ObjectType<"schema::AnnotationSubject", $AnnotationSubjectλShape, null, [
   ...$Object_32faaa35947553cf88fce68ecf1be4d9['__exclusives__'],
-], "schema::AccessPolicy" | "schema::Alias" | "schema::Annotation" | "schema::Array" | "schema::ArrayExprAlias" | "schema::Cast" | "schema::Constraint" | "schema::Extension" | "schema::Function" | "schema::Global" | "schema::Index" | "schema::Link" | "schema::Migration" | "schema::Module" | "schema::MultiRange" | "schema::MultiRangeExprAlias" | "schema::ObjectType" | "schema::Operator" | "schema::Property" | "schema::PseudoType" | "schema::Range" | "schema::RangeExprAlias" | "schema::Rewrite" | "schema::ScalarType" | "schema::Trigger" | "schema::Tuple" | "schema::TupleExprAlias" | "sys::Branch" | "sys::Database" | "sys::ExtensionPackage" | "sys::ExtensionPackageMigration" | "sys::Role">;
+], "schema::AccessPolicy" | "schema::Alias" | "schema::Annotation" | "schema::Array" | "schema::ArrayExprAlias" | "schema::Cast" | "schema::Constraint" | "schema::Extension" | "schema::Function" | "schema::Global" | "schema::Index" | "schema::Link" | "schema::Migration" | "schema::Module" | "schema::MultiRange" | "schema::MultiRangeExprAlias" | "schema::ObjectType" | "schema::Operator" | "schema::Property" | "schema::PseudoType" | "schema::Range" | "schema::RangeExprAlias" | "schema::Rewrite" | "schema::ScalarType" | "schema::Trigger" | "schema::Tuple" | "schema::TupleExprAlias" | "sys::Database" | "sys::ExtensionPackage" | "sys::Role">;
 const $AnnotationSubject = $.makeType<$AnnotationSubject>(_.spec, "970b2d83-85d8-5a46-a4e8-337d28abc12e", _.syntax.literal);
 
 const AnnotationSubject: $.$expr_PathNode<$.TypeSet<$AnnotationSubject, $.Cardinality.Many>, null> = _.syntax.$PathNode($.$toSet($AnnotationSubject, $.Cardinality.Many), null);
@@ -244,10 +235,8 @@ const Alias: $.$expr_PathNode<$.TypeSet<$Alias, $.Cardinality.Many>, null> = _.s
 export type $AnnotationλShape = $.typeutil.flatten<$InheritingObjectλShape & $AnnotationSubjectλShape & {
   "inheritable": $.PropertyDesc<_std.$bool, $.Cardinality.AtMostOne, false, false, false, false>;
   "<annotations[is schema::AnnotationSubject]": $.LinkDesc<$AnnotationSubject, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<annotations[is sys::Branch]": $.LinkDesc<_sys.$Branch, $.Cardinality.Many, {}, false, false,  false, false>;
   "<annotations[is sys::Database]": $.LinkDesc<_sys.$Database, $.Cardinality.Many, {}, false, false,  false, false>;
   "<annotations[is sys::ExtensionPackage]": $.LinkDesc<_sys.$ExtensionPackage, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<annotations[is sys::ExtensionPackageMigration]": $.LinkDesc<_sys.$ExtensionPackageMigration, $.Cardinality.Many, {}, false, false,  false, false>;
   "<annotations[is sys::Role]": $.LinkDesc<_sys.$Role, $.Cardinality.Many, {}, false, false,  false, false>;
   "<annotations[is schema::Annotation]": $.LinkDesc<$Annotation, $.Cardinality.Many, {}, false, false,  false, false>;
   "<annotations[is schema::Alias]": $.LinkDesc<$Alias, $.Cardinality.Many, {}, false, false,  false, false>;
@@ -504,8 +493,6 @@ const Global: $.$expr_PathNode<$.TypeSet<$Global, $.Cardinality.Many>, null> = _
 export type $IndexλShape = $.typeutil.flatten<$InheritingObjectλShape & $AnnotationSubjectλShape & {
   "expr": $.PropertyDesc<_std.$str, $.Cardinality.AtMostOne, false, false, false, false>;
   "except_expr": $.PropertyDesc<_std.$str, $.Cardinality.AtMostOne, false, false, false, false>;
-  "deferrability": $.PropertyDesc<$IndexDeferrability, $.Cardinality.AtMostOne, false, false, false, false>;
-  "deferred": $.PropertyDesc<_std.$bool, $.Cardinality.AtMostOne, false, false, false, false>;
   "params": $.LinkDesc<$Parameter, $.Cardinality.Many, {
     "@index": $.PropertyDesc<_std.$int64, $.Cardinality.AtMostOne>;
   }, false, false, false, false>;
@@ -594,7 +581,6 @@ const Link: $.$expr_PathNode<$.TypeSet<$Link, $.Cardinality.Many>, null> = _.syn
 export type $MigrationλShape = $.typeutil.flatten<$AnnotationSubjectλShape & $Object_32faaa35947553cf88fce68ecf1be4d9λShape & {
   "parents": $.LinkDesc<$Migration, $.Cardinality.Many, {}, false, false,  false, false>;
   "script": $.PropertyDesc<_std.$str, $.Cardinality.One, false, false, false, false>;
-  "sdl": $.PropertyDesc<_std.$str, $.Cardinality.AtMostOne, false, false, false, false>;
   "message": $.PropertyDesc<_std.$str, $.Cardinality.AtMostOne, false, false, false, false>;
   "generated_by": $.PropertyDesc<$MigrationGeneratedBy, $.Cardinality.AtMostOne, false, false, false, false>;
   "<parents[is schema::Migration]": $.LinkDesc<$Migration, $.Cardinality.Many, {}, false, false,  false, false>;
@@ -660,6 +646,7 @@ export type $ObjectTypeλShape = $.typeutil.flatten<$SourceλShape & Omit<$Consi
   "<__type__[is schema::InheritingObject]": $.LinkDesc<$InheritingObject, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is schema::Delta]": $.LinkDesc<$Delta, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is schema::AnnotationSubject]": $.LinkDesc<$AnnotationSubject, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<__type__[is std::FreeObject]": $.LinkDesc<_std.$FreeObject, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is std::Object]": $.LinkDesc<_std.$Object_8ce8c71ee4fa5f73840c22d7eaa58588, $.Cardinality.Many, {}, false, false,  false, false>;
   "<union_of[is schema::ObjectType]": $.LinkDesc<$ObjectType, $.Cardinality.Many, {}, false, false,  false, false>;
   "<intersection_of[is schema::ObjectType]": $.LinkDesc<$ObjectType, $.Cardinality.Many, {}, false, false,  false, false>;
@@ -668,12 +655,9 @@ export type $ObjectTypeλShape = $.typeutil.flatten<$SourceλShape & Omit<$Consi
   "<__type__[is schema::FutureBehavior]": $.LinkDesc<$FutureBehavior, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is sys::SystemObject]": $.LinkDesc<_sys.$SystemObject, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is sys::ExternalObject]": $.LinkDesc<_sys.$ExternalObject, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<__type__[is sys::Branch]": $.LinkDesc<_sys.$Branch, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is sys::Database]": $.LinkDesc<_sys.$Database, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is sys::ExtensionPackage]": $.LinkDesc<_sys.$ExtensionPackage, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<__type__[is sys::ExtensionPackageMigration]": $.LinkDesc<_sys.$ExtensionPackageMigration, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is sys::Role]": $.LinkDesc<_sys.$Role, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<__type__[is sys::QueryStats]": $.LinkDesc<_sys.$QueryStats, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is cfg::ConfigObject]": $.LinkDesc<_cfg.$ConfigObject, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is cfg::AuthMethod]": $.LinkDesc<_cfg.$AuthMethod, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is cfg::Trust]": $.LinkDesc<_cfg.$Trust, $.Cardinality.Many, {}, false, false,  false, false>;
@@ -682,17 +666,13 @@ export type $ObjectTypeλShape = $.typeutil.flatten<$SourceλShape & Omit<$Consi
   "<__type__[is cfg::Password]": $.LinkDesc<_cfg.$Password, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is cfg::mTLS]": $.LinkDesc<_cfg.$mTLS, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is cfg::Auth]": $.LinkDesc<_cfg.$Auth, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<__type__[is cfg::EmailProviderConfig]": $.LinkDesc<_cfg.$EmailProviderConfig, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<__type__[is cfg::SMTPProviderConfig]": $.LinkDesc<_cfg.$SMTPProviderConfig, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is cfg::AbstractConfig]": $.LinkDesc<_cfg.$AbstractConfig, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is cfg::ExtensionConfig]": $.LinkDesc<_cfg.$ExtensionConfig, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is cfg::Config]": $.LinkDesc<_cfg.$Config, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is cfg::InstanceConfig]": $.LinkDesc<_cfg.$InstanceConfig, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<__type__[is schema::Annotation]": $.LinkDesc<$Annotation, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is cfg::DatabaseConfig]": $.LinkDesc<_cfg.$DatabaseConfig, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is cfg::BranchConfig]": $.LinkDesc<_cfg.$BranchConfig, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<__type__[is std::net::http::Response]": $.LinkDesc<_stdnethttp.$Response, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<__type__[is std::net::http::ScheduledRequest]": $.LinkDesc<_stdnethttp.$ScheduledRequest, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<__type__[is schema::Annotation]": $.LinkDesc<$Annotation, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is schema::Type]": $.LinkDesc<$Type, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is schema::PrimitiveType]": $.LinkDesc<$PrimitiveType, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is schema::CollectionType]": $.LinkDesc<$CollectionType, $.Cardinality.Many, {}, false, false,  false, false>;
@@ -728,6 +708,7 @@ export type $ObjectTypeλShape = $.typeutil.flatten<$SourceλShape & Omit<$Consi
   "<__type__[is schema::Trigger]": $.LinkDesc<$Trigger, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is schema::ObjectType]": $.LinkDesc<$ObjectType, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is schema::Extension]": $.LinkDesc<$Extension, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<__type__[is File::Node]": $.LinkDesc<_File.$Node, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is Actor]": $.LinkDesc<_default.$Actor, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is currentActor]": $.LinkDesc<_default.$currentActor, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is Mixin::Named]": $.LinkDesc<_Mixin.$Named, $.Cardinality.Many, {}, false, false,  false, false>;
@@ -737,13 +718,17 @@ export type $ObjectTypeλShape = $.typeutil.flatten<$SourceλShape & Omit<$Consi
   "<__type__[is Mixin::Pinnable]": $.LinkDesc<_Mixin.$Pinnable, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is Project::ContextAware]": $.LinkDesc<_Project.$ContextAware, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is Resource]": $.LinkDesc<_default.$Resource, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<__type__[is Project]": $.LinkDesc<_default.$Project, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<__type__[is Engagement]": $.LinkDesc<_default.$Engagement, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<__type__[is Notification::Comment]": $.LinkDesc<_Notification.$Comment, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is Project::Context]": $.LinkDesc<_Project.$Context, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<__type__[is Notification::Recipient]": $.LinkDesc<_Notification.$Recipient, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is FundingAccount]": $.LinkDesc<_default.$FundingAccount, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is Location]": $.LinkDesc<_default.$Location, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<__type__[is File::Node]": $.LinkDesc<_File.$Node, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is File::Version]": $.LinkDesc<_File.$Version, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is Directory]": $.LinkDesc<_default.$Directory, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is File]": $.LinkDesc<_default.$File, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<__type__[is Notification::System]": $.LinkDesc<_Notification.$System, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is SystemAgent]": $.LinkDesc<_default.$SystemAgent, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is Project::Child]": $.LinkDesc<_Project.$Child, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is Engagement::Child]": $.LinkDesc<_Engagement.$Child, $.Cardinality.Many, {}, false, false,  false, false>;
@@ -752,8 +737,8 @@ export type $ObjectTypeλShape = $.typeutil.flatten<$SourceλShape & Omit<$Consi
   "<__type__[is Engagement::DedicationCeremony]": $.LinkDesc<_Engagement.$DedicationCeremony, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is User::Unavailability]": $.LinkDesc<_User.$Unavailability, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is User::Education]": $.LinkDesc<_User.$Education, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<__type__[is Media::Visual]": $.LinkDesc<_Media.$Visual, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is Project::Member]": $.LinkDesc<_Project.$Member, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<__type__[is LanguageEngagement]": $.LinkDesc<_default.$LanguageEngagement, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is Ethnologue::Language]": $.LinkDesc<_Ethnologue.$Language, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is Auth::EmailToken]": $.LinkDesc<_Auth.$EmailToken, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is Auth::Identity]": $.LinkDesc<_Auth.$Identity, $.Cardinality.Many, {}, false, false,  false, false>;
@@ -767,6 +752,7 @@ export type $ObjectTypeλShape = $.typeutil.flatten<$SourceλShape & Omit<$Consi
   "<__type__[is Media]": $.LinkDesc<_default.$Media, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is Media::Temporal]": $.LinkDesc<_Media.$Temporal, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is Media::Audio]": $.LinkDesc<_Media.$Audio, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<__type__[is Media::Visual]": $.LinkDesc<_Media.$Visual, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is Media::Image]": $.LinkDesc<_Media.$Image, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is Media::Video]": $.LinkDesc<_Media.$Video, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is Product::PartnershipProducingMedium]": $.LinkDesc<_Product.$PartnershipProducingMedium, $.Cardinality.Many, {}, false, false,  false, false>;
@@ -786,6 +772,7 @@ export type $ObjectTypeλShape = $.typeutil.flatten<$SourceλShape & Omit<$Consi
   "<__type__[is Product]": $.LinkDesc<_default.$Product, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is ProgressReport::ProductProgress::Summary]": $.LinkDesc<_ProgressReportProductProgress.$Summary, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is Project::WorkflowEvent]": $.LinkDesc<_Project.$WorkflowEvent, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<__type__[is InternshipEngagement]": $.LinkDesc<_default.$InternshipEngagement, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is Scripture::Collection]": $.LinkDesc<_Scripture.$Collection, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is Scripture::UnspecifiedPortion]": $.LinkDesc<_Scripture.$UnspecifiedPortion, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is DirectScriptureProduct]": $.LinkDesc<_default.$DirectScriptureProduct, $.Cardinality.Many, {}, false, false,  false, false>;
@@ -803,28 +790,21 @@ export type $ObjectTypeλShape = $.typeutil.flatten<$SourceλShape & Omit<$Consi
   "<__type__[is NarrativeReport]": $.LinkDesc<_default.$NarrativeReport, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is Comments::Aware]": $.LinkDesc<_Comments.$Aware, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is Mixin::Postable]": $.LinkDesc<_Mixin.$Postable, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<__type__[is Project]": $.LinkDesc<_default.$Project, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<__type__[is InternshipProject]": $.LinkDesc<_default.$InternshipProject, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is TranslationProject]": $.LinkDesc<_default.$TranslationProject, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<__type__[is User]": $.LinkDesc<_default.$User, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is MomentumTranslationProject]": $.LinkDesc<_default.$MomentumTranslationProject, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<__type__[is currentUser]": $.LinkDesc<_default.$currentUser, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<__type__[is InternshipProject]": $.LinkDesc<_default.$InternshipProject, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<__type__[is ProgressReport]": $.LinkDesc<_default.$ProgressReport, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is MultiplicationTranslationProject]": $.LinkDesc<_default.$MultiplicationTranslationProject, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is Comments::Thread]": $.LinkDesc<_Comments.$Thread, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is Comments::Comment]": $.LinkDesc<_Comments.$Comment, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is Language]": $.LinkDesc<_default.$Language, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<__type__[is Post]": $.LinkDesc<_default.$Post, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<__type__[is Engagement]": $.LinkDesc<_default.$Engagement, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<__type__[is InternshipEngagement]": $.LinkDesc<_default.$InternshipEngagement, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<__type__[is LanguageEngagement]": $.LinkDesc<_default.$LanguageEngagement, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is Partner]": $.LinkDesc<_default.$Partner, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<__type__[is Notification::CommentViaMembership]": $.LinkDesc<_Notification.$CommentViaMembership, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<__type__[is User]": $.LinkDesc<_default.$User, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<__type__[is Notification::CommentViaMention]": $.LinkDesc<_Notification.$CommentViaMention, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<__type__[is currentUser]": $.LinkDesc<_default.$currentUser, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<__type__[is ProgressReport]": $.LinkDesc<_default.$ProgressReport, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<__type__[is Post]": $.LinkDesc<_default.$Post, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__[is Notification]": $.LinkDesc<_default.$Notification, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<__type__[is Notification::Comment]": $.LinkDesc<_Notification.$Comment, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<__type__[is Notification::Recipient]": $.LinkDesc<_Notification.$Recipient, $.Cardinality.Many, {}, false, false,  false, false>;
-  "<__type__[is Notification::System]": $.LinkDesc<_Notification.$System, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<__type__[is Notification::CommentViaMembership]": $.LinkDesc<_Notification.$CommentViaMembership, $.Cardinality.Many, {}, false, false,  false, false>;
+  "<__type__[is Notification::CommentViaMention]": $.LinkDesc<_Notification.$CommentViaMention, $.Cardinality.Many, {}, false, false,  false, false>;
   "<__type__": $.LinkDesc<$.ObjectType, $.Cardinality.Many, {}, false, false,  false, false>;
   "<intersection_of": $.LinkDesc<$.ObjectType, $.Cardinality.Many, {}, false, false,  false, false>;
   "<subject": $.LinkDesc<$.ObjectType, $.Cardinality.Many, {}, false, false,  false, false>;
@@ -1006,13 +986,12 @@ const TupleExprAlias: $.$expr_PathNode<$.TypeSet<$TupleExprAlias, $.Cardinality.
 
 
 
-export { AccessKind, AccessPolicyAction, Cardinality, IndexDeferrability, MigrationGeneratedBy, OperatorKind, ParameterKind, RewriteKind, SourceDeleteAction, TargetDeleteAction, TriggerKind, TriggerScope, TriggerTiming, TypeModifier, Volatility, $Object_32faaa35947553cf88fce68ecf1be4d9, Object_32faaa35947553cf88fce68ecf1be4d9, $SubclassableObject, SubclassableObject, $InheritingObject, InheritingObject, $AnnotationSubject, AnnotationSubject, $AccessPolicy, AccessPolicy, $Alias, Alias, $Annotation, Annotation, $Type, Type, $PrimitiveType, PrimitiveType, $CollectionType, CollectionType, $Array, Array, $ArrayExprAlias, ArrayExprAlias, $CallableObject, CallableObject, $VolatilitySubject, VolatilitySubject, $Cast, Cast, $ConsistencySubject, ConsistencySubject, $Constraint, Constraint, $Delta, Delta, $Extension, Extension, $Function, Function, $FutureBehavior, FutureBehavior, $Global, Global, $Index, Index, $Pointer, Pointer, $Source, Source, $Link, Link, $Migration, Migration, $Module, Module, $MultiRange, MultiRange, $MultiRangeExprAlias, MultiRangeExprAlias, $ObjectType, ObjectType, $Operator, Operator, $Parameter, Parameter, $Property, Property, $PseudoType, PseudoType, $Range, Range, $RangeExprAlias, RangeExprAlias, $Rewrite, Rewrite, $ScalarType, ScalarType, $Trigger, Trigger, $Tuple, Tuple, $TupleElement, TupleElement, $TupleExprAlias, TupleExprAlias };
+export { AccessKind, AccessPolicyAction, Cardinality, MigrationGeneratedBy, OperatorKind, ParameterKind, RewriteKind, SourceDeleteAction, TargetDeleteAction, TriggerKind, TriggerScope, TriggerTiming, TypeModifier, Volatility, $Object_32faaa35947553cf88fce68ecf1be4d9, Object_32faaa35947553cf88fce68ecf1be4d9, $SubclassableObject, SubclassableObject, $InheritingObject, InheritingObject, $AnnotationSubject, AnnotationSubject, $AccessPolicy, AccessPolicy, $Alias, Alias, $Annotation, Annotation, $Type, Type, $PrimitiveType, PrimitiveType, $CollectionType, CollectionType, $Array, Array, $ArrayExprAlias, ArrayExprAlias, $CallableObject, CallableObject, $VolatilitySubject, VolatilitySubject, $Cast, Cast, $ConsistencySubject, ConsistencySubject, $Constraint, Constraint, $Delta, Delta, $Extension, Extension, $Function, Function, $FutureBehavior, FutureBehavior, $Global, Global, $Index, Index, $Pointer, Pointer, $Source, Source, $Link, Link, $Migration, Migration, $Module, Module, $MultiRange, MultiRange, $MultiRangeExprAlias, MultiRangeExprAlias, $ObjectType, ObjectType, $Operator, Operator, $Parameter, Parameter, $Property, Property, $PseudoType, PseudoType, $Range, Range, $RangeExprAlias, RangeExprAlias, $Rewrite, Rewrite, $ScalarType, ScalarType, $Trigger, Trigger, $Tuple, Tuple, $TupleElement, TupleElement, $TupleExprAlias, TupleExprAlias };
 
 type __defaultExports = {
   "AccessKind": typeof AccessKind;
   "AccessPolicyAction": typeof AccessPolicyAction;
   "Cardinality": typeof Cardinality;
-  "IndexDeferrability": typeof IndexDeferrability;
   "MigrationGeneratedBy": typeof MigrationGeneratedBy;
   "OperatorKind": typeof OperatorKind;
   "ParameterKind": typeof ParameterKind;
@@ -1072,7 +1051,6 @@ const __defaultExports: __defaultExports = {
   "AccessKind": AccessKind,
   "AccessPolicyAction": AccessPolicyAction,
   "Cardinality": Cardinality,
-  "IndexDeferrability": IndexDeferrability,
   "MigrationGeneratedBy": MigrationGeneratedBy,
   "OperatorKind": OperatorKind,
   "ParameterKind": ParameterKind,

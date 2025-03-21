@@ -20,7 +20,7 @@ import type {
   $duration,
   $bool,
 } from "./modules/std";
-import type { $local_date, $local_datetime } from "./modules/std/cal";
+import type { $local_date, $local_datetime } from "./modules/cal";
 import type { literalToScalarType, orScalarLiteral } from "./castMaps";
 import { literalToTypeSet } from "./castMaps";
 import { spec } from "./__spec__";

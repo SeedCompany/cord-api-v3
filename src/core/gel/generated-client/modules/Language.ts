@@ -9,7 +9,7 @@ export type $Milestone = {
   "NewTestament": $.$expr_Literal<$Milestone>;
   "FullBible": $.$expr_Literal<$Milestone>;
 } & $.EnumType<"Language::Milestone", ["Unknown", "None", "OldTestament", "NewTestament", "FullBible"]>;
-const Milestone: $Milestone = $.makeType<$Milestone>(_.spec, "bee4c5a8-01aa-11f0-b1ab-3500c27f4e44", _.syntax.literal);
+const Milestone: $Milestone = $.makeType<$Milestone>(_.spec, "ed3fd3fa-0670-11f0-9c51-8943b988df8e", _.syntax.literal);
 
 
 

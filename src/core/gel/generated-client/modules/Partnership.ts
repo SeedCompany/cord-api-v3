@@ -7,14 +7,14 @@ export type $AgreementStatus = {
   "AwaitingSignature": $.$expr_Literal<$AgreementStatus>;
   "Signed": $.$expr_Literal<$AgreementStatus>;
 } & $.EnumType<"Partnership::AgreementStatus", ["NotAttached", "AwaitingSignature", "Signed"]>;
-const AgreementStatus: $AgreementStatus = $.makeType<$AgreementStatus>(_.spec, "48053a5e-01a9-11f0-8839-732c2e4c0543", _.syntax.literal);
+const AgreementStatus: $AgreementStatus = $.makeType<$AgreementStatus>(_.spec, "1c875d32-0670-11f0-aa04-733ce39f88a6", _.syntax.literal);
 
 export type $FinancialReportingType = {
   "Funded": $.$expr_Literal<$FinancialReportingType>;
   "FieldEngaged": $.$expr_Literal<$FinancialReportingType>;
   "Hybrid": $.$expr_Literal<$FinancialReportingType>;
 } & $.EnumType<"Partnership::FinancialReportingType", ["Funded", "FieldEngaged", "Hybrid"]>;
-const FinancialReportingType: $FinancialReportingType = $.makeType<$FinancialReportingType>(_.spec, "48054b20-01a9-11f0-9ace-094f3cc36330", _.syntax.literal);
+const FinancialReportingType: $FinancialReportingType = $.makeType<$FinancialReportingType>(_.spec, "1c87655c-0670-11f0-8311-7b5c655ec225", _.syntax.literal);
 
 
 
