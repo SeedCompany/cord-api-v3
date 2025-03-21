@@ -86,6 +86,9 @@ set -e
 
 chown -R gel:gel /dbschema src
 
+# Run the migrations in a single transaction, so we don't hit a CLI timeout
+sed -i 's|schema-dir=/dbschema|schema-dir=/dbschema --single-transaction|' /usr/local/bin/docker-entrypoint-funcs.sh
+
 # Hook `yarn gel:gen` into gel bootstrap.
 # This allows it to be ran in parallel to the db server running without a daemon
 mkdir -p /gel-bootstrap-late.d
