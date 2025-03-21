@@ -20,7 +20,7 @@ import { Privileges } from '../authorization';
 import { CeremonyService } from '../ceremony';
 import { ProductService } from '../product';
 import { ProductListInput, SecuredProductList } from '../product/dto';
-import { ProjectService } from '../project';
+import { ProjectLoader, ProjectService } from '../project';
 import { IProject } from '../project/dto';
 import {
   CreateInternshipEngagement,
@@ -107,7 +107,11 @@ export class EngagementService {
   }
 
   private async verifyCreateEngagement(projectId: ID, session: Session) {
-    const project = await this.resources.load(IProject, projectId);
+    const projects = await this.resources.getLoader(ProjectLoader);
+    const projectKey = { id: projectId, view: { active: true } } as const;
+    const project = await projects.load(projectKey);
+    projects.clear(projectKey);
+
     const projectPrivileges = this.privileges.for(session, IProject, {
       ...project,
       project,
