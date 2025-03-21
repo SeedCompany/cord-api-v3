@@ -2,6 +2,7 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { Many } from '@seedcompany/common';
 import {
   DuplicateException,
+  EnhancedResource,
   ID,
   InputException,
   isIdLike,
@@ -14,6 +15,7 @@ import {
   UnauthorizedException,
   UnsecuredDto,
 } from '~/common';
+import { isAdmin } from '~/common/session';
 import {
   ConfigService,
   HandleIdLookup,
@@ -134,6 +136,16 @@ export class ProjectService {
       'marketingRegionOverrideId',
       'Marketing Region Override not found',
     );
+
+    // Only allow admins to specify department IDs
+    if (input.departmentId && !isAdmin(session.impersonator ?? session)) {
+      throw UnauthorizedException.fromPrivileges(
+        'edit',
+        undefined,
+        EnhancedResource.of(IProject),
+        'departmentId',
+      );
+    }
 
     try {
       const { id } = await this.repo.create(input);
