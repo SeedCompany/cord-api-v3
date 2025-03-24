@@ -14,7 +14,6 @@ import * as PM from './project-manager.policy';
     PM.momentumProjectsTransitions,
   ).execute,
   r.ProjectWorkflowEvent.read.transitions(
-    'RD Proposes Multiplication & Approves',
     'Approve Concept',
     'Request Concept Changes',
     'Reject Concept',
