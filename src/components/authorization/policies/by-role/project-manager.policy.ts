@@ -21,6 +21,7 @@ const stepsUntilFinancialEndorsement = takeWhile(
 
 export const projectTransitions = () =>
   ProjectWorkflow.pickNames(
+    // Development
     'Propose Multiplication',
     'Request Concept Approval',
     'End Conversation',
@@ -31,6 +32,11 @@ export const projectTransitions = () =>
     'Re-request Consultant Endorsement',
     'Request Proposal Approval',
     'Re-request Financial Endorsement',
+    // Allow FPM to submit multiplication project proposals to finance
+    // There is only one person, so there is really no external approval needed.
+    'RD Proposes Multiplication & Approves',
+
+    // Active on
     'Discuss Change To Plan',
     'Discuss Terminating Active Project',
     'Finalize Completion',

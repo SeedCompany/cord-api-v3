@@ -22,5 +22,6 @@ module default {
     RegionalDirector,
     StaffMember,
     Translator,
+    MultiplicationFinanceApprover,
   >;
 }

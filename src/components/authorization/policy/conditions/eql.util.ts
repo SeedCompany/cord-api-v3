@@ -18,7 +18,12 @@ export const eqlInLiteralSet = (
 ) => {
   const list = [...items];
   if (list.length === 1) {
-    const expectedStr = castName ? `${castName}.${list[0]}` : `'${list[0]}'`;
+    const isEnum = castName && castName !== castName.toLowerCase();
+    const expectedStr = isEnum
+      ? `${castName}.${list[0]}`
+      : castName
+      ? `<${castName}>'${list[0]}'`
+      : `'${list[0]}'`;
     return `${actual} = ${expectedStr}`;
   }
   return `${actual} in ${eqlLiteralSet(list, castName)}`;

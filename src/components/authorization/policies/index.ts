@@ -13,6 +13,7 @@ export * from './by-role/investor-common.policy';
 export * from './by-role/leadership.policy';
 export * from './by-role/marketing.policy';
 export * from './by-role/mentor.policy';
+export * from './by-role/multiplication-finance-approver';
 export { ProjectManagerPolicy } from './by-role/project-manager.policy';
 export * from './by-role/regional-director.policy';
 export * from './by-role/staff-member.policy';
