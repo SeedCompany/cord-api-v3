@@ -28,11 +28,7 @@ import { Privileges } from '../authorization';
 import { SecuredBudget } from '../budget/dto';
 import { IdsAndView, IdsAndViewArg } from '../changeset/dto';
 import { EngagementLoader } from '../engagement';
-import {
-  EngagementListInput,
-  IEngagement,
-  SecuredEngagementList,
-} from '../engagement/dto';
+import { EngagementListInput, SecuredEngagementList } from '../engagement/dto';
 import { FieldRegionLoader } from '../field-region';
 import { SecuredFieldRegion } from '../field-region/dto';
 import { FileNodeLoader } from '../file';
@@ -229,30 +225,6 @@ export class ProjectResolver {
     );
     engagements.primeAll(list.items);
     return list;
-  }
-
-  @ResolveField(() => IEngagement)
-  async engagement(
-    @AnonSession() session: Session,
-    @Parent() project: Project,
-    @IdArg() engagementId: ID,
-    @Loader(EngagementLoader) engagements: LoaderOf<EngagementLoader>,
-  ): Promise<IEngagement> {
-    this.privileges
-      .for(session, IProject, {
-        ...project,
-        project,
-      } as any)
-      .verifyCan('read', 'engagement');
-
-    const engagement = await engagements.load({
-      id: engagementId,
-      view: { active: true },
-    });
-    if (engagement.project.id !== project.id) {
-      throw new NotFoundException('Engagement could not be found');
-    }
-    return engagement;
   }
 
   @ResolveField(() => SecuredProjectMemberList, {
