@@ -39,6 +39,7 @@ function makeResolver(
       @IdArg() engagementId: ID,
       @Loader(EngagementLoader) engagements: LoaderOf<EngagementLoader>,
     ): Promise<IEngagement> {
+      // Copied from ProjectService.listEngagements
       this.privileges
         .for(session, IProject, {
           ...project,

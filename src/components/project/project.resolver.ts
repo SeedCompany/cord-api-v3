@@ -24,7 +24,6 @@ import {
   Session,
 } from '~/common';
 import { Loader, LoaderOf } from '~/core';
-import { Privileges } from '../authorization';
 import { SecuredBudget } from '../budget/dto';
 import { IdsAndView, IdsAndViewArg } from '../changeset/dto';
 import { EngagementLoader } from '../engagement';
@@ -89,10 +88,7 @@ class ModifyOtherLocationArgs {
 
 @Resolver(IProject)
 export class ProjectResolver {
-  constructor(
-    private readonly projectService: ProjectService,
-    private readonly privileges: Privileges,
-  ) {}
+  constructor(private readonly projectService: ProjectService) {}
 
   @Query(() => IProject, {
     description: 'Look up a project by its ID',
