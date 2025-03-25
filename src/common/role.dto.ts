@@ -24,6 +24,7 @@ export const Role = makeEnum({
     'Liaison',
     'Marketing',
     'Mentor',
+    'MultiplicationFinanceApprover',
     'ProjectManager',
     'RegionalCommunicationsCoordinator',
     'RegionalDirector',

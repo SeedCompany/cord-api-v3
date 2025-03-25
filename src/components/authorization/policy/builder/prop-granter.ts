@@ -1,11 +1,11 @@
 import {
+  lazyRecord as createLazyRecord,
   EnhancedResource,
   ResourceShape,
   SecuredPropsPlusExtraKey,
 } from '~/common';
 import { PropAction } from '../actions';
 import { Condition } from '../conditions';
-import { createLazyRecord } from '../lazy-record';
 import { action, extract, PermGranter } from './perm-granter';
 
 export class PropGranter<
