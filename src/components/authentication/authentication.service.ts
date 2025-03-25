@@ -120,6 +120,12 @@ export class AuthenticationService {
 
     const { iat } = this.decodeJWT(token);
 
+    let ghost;
+    if (impersonatee?.id?.toLowerCase() === 'ghost') {
+      ghost = await this.agents.getGhost();
+      impersonatee.id = undefined;
+    }
+
     const [result, anon] = await Promise.all([
       this.repo.resumeSession(token, impersonatee?.id),
       this.agents.getAnonymous(),
@@ -136,7 +142,7 @@ export class AuthenticationService {
     impersonatee =
       impersonatee && result.userId
         ? {
-            id: impersonatee?.id,
+            id: impersonatee?.id ?? ghost?.id,
             roles: [
               ...(impersonatee.roles ?? []),
               ...(result.impersonateeRoles ?? []),
