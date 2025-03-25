@@ -40,10 +40,12 @@ export class GelAccessPolicyWrapCommand extends ApCommand {
       await execa(gel, this.args, {
         stdio: 'inherit',
       });
+
+      // Only eject if the command is successful.
+      // If unsuccessful, we can run raw gel command next time around.
+      await this.injector.ejectAll(files);
     } catch {
       return 1;
-    } finally {
-      await this.injector.ejectAll(files);
     }
     return;
   }
