@@ -15,6 +15,7 @@ import { FinancialApproverModule } from './financial-approver/financial-approver
 import * as handlers from './handlers';
 import { InternshipProjectResolver } from './internship-project.resolver';
 import { RenameTranslationToMomentumMigration } from './migrations/rename-translation-to-momentum.migration';
+import { ProjectEngagementIdResolvers } from './project-engagement-id.resolver';
 import { ProjectMemberModule } from './project-member/project-member.module';
 import { ConcreteRepos, ProjectGelRepository } from './project.gel.repository';
 import { ProjectLoader } from './project.loader';
@@ -47,6 +48,7 @@ import { ProjectWorkflowModule } from './workflow/project-workflow.module';
     InternshipProjectResolver,
     ProjectEngagementConnectionResolver,
     ProjectUserConnectionResolver,
+    ...ProjectEngagementIdResolvers,
     ProjectService,
     splitDb(ProjectRepository, ProjectGelRepository),
     ...Object.values(ConcreteRepos),
