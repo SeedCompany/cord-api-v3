@@ -123,7 +123,7 @@ export class ProjectWorkflowNeo4jRepository
         stepChangedAt: event.at,
         modifiedAt: event.at,
       },
-      permanentAfter: null,
+      permanentAfter: 0,
     });
 
     return event;
