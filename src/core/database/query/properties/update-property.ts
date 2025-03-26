@@ -1,4 +1,3 @@
-import { Nil } from '@seedcompany/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime, Duration, DurationLikeObject as MyDuration } from 'luxon';
 import {
@@ -38,7 +37,7 @@ export type UpdatePropertyOptions<
     /**
      * The property is permanent after this given duration.
      */
-    permanentAfter?: Variable | DurationIn | Nil;
+    permanentAfter?: Variable | DurationIn;
   };
 
 export interface PropUpdateStat {
@@ -176,14 +175,11 @@ export const determineIfPermanent =
     );
 
 export function permanentAfterAsVar(
-  permanentAfter: Variable | DurationIn | undefined,
+  permanentAfter: Variable | DurationIn,
   query: Query,
 ) {
   if (permanentAfter instanceof Variable) {
     return permanentAfter.toString();
-  }
-  if (permanentAfter == null) {
-    return undefined;
   }
   const asObj = Duration.from(permanentAfter);
   if (asObj.as('milliseconds') === 0) {
