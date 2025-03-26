@@ -77,6 +77,12 @@ export const updateProperty =
     };
     const { nodeName, key, value, now } = resolved;
 
+    const scope = [
+      nodeName,
+      resolved.changeset ? varInExp(resolved.changeset) : '',
+      key instanceof Variable ? varInExp(key) : '',
+      varInExp(value),
+    ];
     query.comment('updateProperty()');
 
     const modifyPermanentProp = (query: Query) =>
@@ -92,7 +98,7 @@ export const updateProperty =
         ]);
 
     if (!permanentAfter) {
-      return query.apply(modifyPermanentProp);
+      return query.subQuery(scope, modifyPermanentProp);
     }
 
     const modifyMutableProp = (query: Query) =>
@@ -114,13 +120,7 @@ export const updateProperty =
       .apply(
         conditionalOn(
           'isPermanent',
-          [
-            nodeName,
-            resolved.changeset ? varInExp(resolved.changeset) : '',
-            key instanceof Variable ? varInExp(key) : '',
-            varInExp(value),
-            'existingProp',
-          ],
+          [...scope, 'existingProp'],
           modifyPermanentProp,
           modifyMutableProp,
         ),
