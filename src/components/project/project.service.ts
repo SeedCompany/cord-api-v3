@@ -1,5 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { Many, setOf } from '@seedcompany/common';
+import { Many } from '@seedcompany/common';
 import {
   DuplicateException,
   EnhancedResource,
@@ -72,15 +72,6 @@ import {
 } from './project-member/dto';
 import { ProjectRepository } from './project.repository';
 import { ProjectWorkflowService } from './workflow/project-workflow.service';
-
-const rolesApplicableToProjectMembership = setOf<Role>([
-  'FinancialAnalyst',
-  'LeadFinancialAnalyst',
-  'Controller',
-  'ProjectManager',
-  'RegionalDirector',
-  'FieldOperationsDirector',
-]);
 
 @Injectable()
 export class ProjectService {
@@ -167,7 +158,7 @@ export class ProjectService {
           userId: session.userId,
           roles: session.roles
             .map(withoutScope)
-            .filter((role) => rolesApplicableToProjectMembership.has(role)),
+            .filter((role) => Role.applicableToProjectMembership.has(role)),
           projectId: project,
         },
         session,
