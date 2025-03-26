@@ -118,7 +118,15 @@ export class UpdateEngagementStatusHandler
     )?.newStatus;
     if (!engagementStatus) return;
 
-    const engagementIds = await this.repo.getOngoingEngagementIds(project.id);
+    const engagementIds = await this.repo.getOngoingEngagementIds(project.id, [
+      // Ignore suspended engagements
+      // unless we're moving from suspended to something else.
+      // This allows the project to transition with the other ongoing engagements.
+      // Suspended is still non-terminal so that a project can't be completed
+      // until the engagement is resolved.
+      // https://github.com/SeedCompany/cord-api-v3/blob/7e8479f030621831834660bb9f762dee8356286b/src/components/project/workflow/project-workflow.ts#L509-L509
+      ...(previousStep !== 'Suspended' ? [EngagementStatus.Suspended] : []),
+    ]);
 
     await this.updateEngagements(
       engagementStatus,
