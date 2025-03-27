@@ -80,7 +80,10 @@ module default {
     
     multi link members := .<project[is Project::Member];
     single link membership := (select .members filter .user = global default::currentUser limit 1);
-    
+
+    multi link approvers := (select Program::Approver filter Project.type in .programs);
+    single link approver := (select .approvers filter .user = global default::currentUser limit 1);
+
 #     multi link engagements := .<project[is Engagement];
     property engagementTotal := count(.<project[is Engagement]);
     
@@ -181,6 +184,10 @@ module Project {
       max(.projectContext.projects.ownSensitivity)
       ?? (.ownSensitivity ?? default::Sensitivity.High);
     required single property isMember := exists .projectContext.projects.membership;
+    required single property isFinancialApprover := exists (
+      select .projectContext.projects.approver
+      filter Business::Group.Finance in .groups
+    );
   }
   
   scalar type Type extending enum<
