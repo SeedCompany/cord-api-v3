@@ -4,8 +4,8 @@ import { TestApp } from './create-app';
 import { createSession } from './create-session';
 import { gql } from './gql-tag';
 
-export async function login(app: TestApp, input: Partial<LoginInput> = {}) {
-  return await app.graphql.mutate(
+export async function login(app: TestApp, input: LoginInput) {
+  const res = await app.graphql.mutate(
     gql`
       mutation login($input: LoginInput!) {
         login(input: $input) {
@@ -17,6 +17,8 @@ export async function login(app: TestApp, input: Partial<LoginInput> = {}) {
     `,
     { input },
   );
+  app.graphql.email = input.email;
+  return res;
 }
 
 export const loginAsAdmin = async (app: TestApp) => {

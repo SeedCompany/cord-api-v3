@@ -37,6 +37,12 @@ export abstract class WorkflowTester<
     );
   }
 
+  async transitionByLabel(label: string) {
+    return (await this.freshTransitions()).find(
+      (t) => t.label === label && !t.disabled,
+    );
+  }
+
   async findTransition(iteratee: (transition: Transition) => boolean) {
     const transition = (await this.freshTransitions()).find(iteratee);
     if (!transition) {
@@ -68,21 +74,24 @@ export abstract class WorkflowTester<
     if (
       this.cachedTransitions &&
       this.cachedTransitions.state === this.state &&
-      this.cachedTransitions.actorId === this.app.graphql.authToken
+      this.cachedTransitions.actorSession === this.app.graphql.authToken &&
+      this.cachedTransitions.actorEmail === this.app.graphql.email
     ) {
       return this.cachedTransitions.transitions;
     }
     const transitions = await this.fetchTransitions();
     this.cachedTransitions = {
       state: this.state,
-      actorId: this.app.graphql.authToken,
+      actorSession: this.app.graphql.authToken,
+      actorEmail: this.app.graphql.email,
       transitions,
     };
     return transitions;
   }
   private cachedTransitions: {
     state: W['state'];
-    actorId: string;
+    actorSession: string;
+    actorEmail?: string;
     transitions: Transition[];
   };
 

@@ -302,7 +302,14 @@ export const ProjectWorkflow = defineWorkflow({
   'Request Change To Plan Approval': {
     from: Step.DiscussingChangeToPlan,
     to: Step.PendingChangeToPlanApproval,
-    label: 'Submit for Approval',
+    label: 'Submit for RD Approval',
+    type: Type.Approve,
+    notifiers: [Distros.Extension, Distros.Revision],
+  },
+  'Request Change To Plan Finance Confirmation': {
+    from: Step.DiscussingChangeToPlan,
+    to: Step.PendingChangeToPlanConfirmation,
+    label: 'Submit for Finance Confirmation',
     type: Type.Approve,
     notifiers: [Distros.Extension, Distros.Revision],
   },
@@ -319,6 +326,16 @@ export const ProjectWorkflow = defineWorkflow({
     label: 'Will Not Change Plan',
     type: Type.Neutral,
     notifiers: [Distros.Extension, Distros.Revision],
+  },
+
+  'Retract Change To Plan Approval Request': {
+    from: [
+      Step.PendingChangeToPlanApproval,
+      Step.PendingChangeToPlanConfirmation,
+    ],
+    to: Step.DiscussingChangeToPlan,
+    label: 'Retract Approval Request',
+    type: Type.Neutral,
   },
 
   'Request Changes for Change To Plan': {
