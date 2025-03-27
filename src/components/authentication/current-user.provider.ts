@@ -11,6 +11,7 @@ import { BehaviorSubject, identity } from 'rxjs';
 import { Session } from '~/common';
 import { Gel, OptionsFn } from '~/core/gel';
 import { GlobalHttpHook } from '~/core/http';
+import { withoutScope } from '../authorization/dto';
 
 /**
  * This sets the currentUser Gel global based on
@@ -78,8 +79,11 @@ export class GelCurrentUserProvider implements NestInterceptor {
     // Once migration is complete this can be removed.
     const currentActorId =
       session?.userId && isUUID(session.userId) ? session.userId : undefined;
+    const impersonatedRoles = session?.impersonatee?.roles.map(withoutScope);
     optionsHolder.next((options) =>
-      currentActorId ? options.withGlobals({ currentActorId }) : options,
+      currentActorId || impersonatedRoles
+        ? options.withGlobals({ currentActorId, impersonatedRoles })
+        : options,
     );
   }
 }

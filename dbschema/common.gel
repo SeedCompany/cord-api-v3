@@ -1,8 +1,9 @@
 module default {
   global currentActorId: uuid;
+  global impersonatedRoles: array<Role>;
   global currentActor := (select Actor filter .id = global currentActorId);
   global currentUser := (select User filter .id = global currentActorId);
-  global currentRoles := (global currentActor).roles;
+  global currentRoles := (global currentActor).roles union array_unpack(global impersonatedRoles);
 
   scalar type ReportPeriod extending enum<Monthly, Quarterly>;
   
