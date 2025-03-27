@@ -1,4 +1,5 @@
 import { ObjectType } from '@nestjs/graphql';
+import { setOf } from '@seedcompany/common';
 import { EnumType, makeEnum } from '@seedcompany/nest';
 import { SecuredEnumList } from '~/common/secured-property';
 import type { ResourcesGranter } from '../components/authorization';
@@ -40,6 +41,15 @@ export const Role = makeEnum({
        */
       assignable: (resources: ResourcesGranter, roles: readonly Role[]) =>
         resources.AssignableRoles.grant(roles),
+
+      applicableToProjectMembership: setOf<Role>([
+        'FinancialAnalyst',
+        'LeadFinancialAnalyst',
+        'Controller',
+        'ProjectManager',
+        'RegionalDirector',
+        'FieldOperationsDirector',
+      ]),
     };
   },
 });

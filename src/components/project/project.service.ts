@@ -9,6 +9,7 @@ import {
   many,
   NotFoundException,
   ObjectView,
+  Role,
   SecuredList,
   ServerException,
   Session,
@@ -155,7 +156,9 @@ export class ProjectService {
       await this.projectMembers.create(
         {
           userId: session.userId,
-          roles: session.roles.map(withoutScope),
+          roles: session.roles
+            .map(withoutScope)
+            .filter((role) => Role.applicableToProjectMembership.has(role)),
           projectId: project,
         },
         session,
