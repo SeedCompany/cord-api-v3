@@ -1,5 +1,6 @@
 import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
+import { MergeExclusive } from 'type-fest';
 import {
   Calculated,
   CalendarDate,
@@ -17,7 +18,13 @@ import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
 import { ScopedRole } from '../../authorization/dto';
 import { DefinedFile } from '../../file/dto';
+import { ProgressReport } from '../../progress-report/dto';
 import { ReportType } from './report-type.enum';
+
+export type AnyReport = MergeExclusive<
+  FinancialReport,
+  MergeExclusive<NarrativeReport, ProgressReport>
+>;
 
 @RegisterResource({ db: e.PeriodicReport })
 @Calculated()
@@ -49,7 +56,7 @@ class PeriodicReport extends Resource {
   @Field()
   readonly skippedReason: SecuredStringNullable;
 
-  readonly reportFile: DefinedFile;
+  readonly reportFile: DefinedFile; //TODO? - Secured<LinkTo<'File'> | null>
 
   @SensitivityField({
     description: "Based on the project's sensitivity",
@@ -91,6 +98,12 @@ export class NarrativeReport extends PeriodicReport {
   description: SecuredProperty.descriptionFor('Secured Periodic Report'),
 })
 export class SecuredPeriodicReport extends SecuredProperty(PeriodicReport) {}
+
+export const ReportConcretes = {
+  Financial: FinancialReport,
+  Narrative: NarrativeReport,
+  Progress: ProgressReport,
+};
 
 declare module '~/core/resources/map' {
   interface ResourceMap {
