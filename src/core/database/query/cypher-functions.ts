@@ -80,6 +80,7 @@ export const apoc = {
   convert: {
     /** Converts Neo4j node to object/map of the node's properties */
     toMap: fn1('apoc.convert.toMap'),
+    toJson: fn1('apoc.convert.toJson'),
     fromJsonList: fn1('apoc.convert.fromJsonList'),
     fromJsonMap: fn1('apoc.convert.fromJsonMap'),
   },
