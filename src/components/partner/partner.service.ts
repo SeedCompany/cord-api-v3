@@ -109,8 +109,18 @@ export class PartnerService {
       };
     }
 
-    const changes = this.repo.getActualChanges(partner, input);
-    this.privileges.for(session, Partner, partner).verifyChanges(changes);
+    const { departmentIdBlock, ...simpleInput } = input;
+    const simpleChanges = this.repo.getActualChanges(partner, simpleInput);
+    const changes = {
+      ...simpleChanges,
+      ...(departmentIdBlock !== undefined && { departmentIdBlock }),
+    };
+
+    const privileges = this.privileges.for(session, Partner, partner);
+    privileges.verifyChanges(simpleChanges);
+    if (changes.departmentIdBlock !== undefined) {
+      privileges.verifyCan('edit', 'departmentIdBlock');
+    }
 
     if (changes.countries) {
       await this.verifyCountries(changes.countries);
