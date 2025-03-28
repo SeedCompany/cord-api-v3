@@ -9,7 +9,6 @@ import {
   collect,
   count,
   defineSorters,
-  exp,
   filter,
   merge,
   SortCol,
@@ -110,7 +109,7 @@ export class PnpExtractionResultNeo4jRepository
         relation('out', '', 'problem', {
           id: variable('problem.id'),
           source: variable('problem.source'),
-          context: variable(exp('apoc.convert.toJson(problem.context)')),
+          context: variable(apoc.convert.toJson('problem.context')),
         }),
         node('type'),
       ])

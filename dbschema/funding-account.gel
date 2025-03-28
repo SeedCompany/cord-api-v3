@@ -7,5 +7,20 @@ module default {
     required accountNumber: int16 {
       constraint expression on (__subject__ >= 0 and __subject__ <= 9);
     }
+
+    required departmentIdBlock: Finance::Department::IdBlock {
+      default := (
+        insert Finance::Department::IdBlock {
+          blocks := multirange([
+            range(
+              .accountNumber * 10000 + 11,
+              (.accountNumber + 1) * 10000
+            )
+          ]),
+          programs := {Project::Type.MomentumTranslation, Project::Type.Internship},
+        }
+      );
+      on source delete delete target;
+    }
   }
 }
