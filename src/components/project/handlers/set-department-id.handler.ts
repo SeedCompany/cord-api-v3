@@ -134,7 +134,14 @@ export class SetDepartmentId implements IEventHandler<SubscribedEvent> {
   }
 
   private async getDepartmentIdBlockId(project: UnsecuredDto<Project>) {
-    if (!project.primaryLocation) {
+    const isMultiplication = project.type === 'MultiplicationTranslation';
+    if (isMultiplication) {
+      if (!project.primaryPartnership) {
+        throw new ClientException(
+          'Project must have a partnership to continue',
+        );
+      }
+    } else if (!project.primaryLocation) {
       throw new ClientException(
         'Project must have a primary location to continue',
       );
@@ -143,13 +150,23 @@ export class SetDepartmentId implements IEventHandler<SubscribedEvent> {
     const block = await this.db
       .query()
       .match(node('project', 'Project', { id: project.id }))
-      .match([
-        node('project'),
-        relation('out', '', 'primaryLocation', ACTIVE),
-        node('', 'Location'),
-        relation('out', '', 'fundingAccount', ACTIVE),
-        node('holder', 'FundingAccount'),
-      ])
+      .match(
+        isMultiplication
+          ? [
+              node('project'),
+              relation('out', '', 'partnership', ACTIVE),
+              node('holder', 'Partnership'),
+              relation('out', '', 'primary', ACTIVE),
+              node('', 'Property', { value: variable('true') }),
+            ]
+          : [
+              node('project'),
+              relation('out', '', 'primaryLocation', ACTIVE),
+              node('', 'Location'),
+              relation('out', '', 'fundingAccount', ACTIVE),
+              node('holder', 'FundingAccount'),
+            ],
+      )
       .match([
         node('holder'),
         relation('out'),
@@ -157,11 +174,16 @@ export class SetDepartmentId implements IEventHandler<SubscribedEvent> {
       ])
       .return<{ id: ID }>('block.id as id')
       .first();
-    if (!block) {
-      throw new ServerException(
-        `Unable to find accountNumber associated with project: ${project.id}`,
+    if (block) {
+      return block;
+    }
+    if (isMultiplication) {
+      throw new ClientException(
+        "Project's primary partner does not have a department ID blocks declared",
       );
     }
-    return block;
+    throw new ServerException(
+      `Unable to find accountNumber associated with project: ${project.id}`,
+    );
   }
 }
