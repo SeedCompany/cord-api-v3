@@ -13,6 +13,9 @@ module default {
     defaultFieldRegion: FieldRegion;
     defaultMarketingRegion: Location;
     mapImage: File;
+
+    access policy CanSelectUpdateReadGeneratedFromAppPoliciesForLocation
+    allow select, update read;
   }
 }
   

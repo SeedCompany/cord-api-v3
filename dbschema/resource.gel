@@ -1,3 +1,16 @@
 module default {
-  abstract type Resource extending Mixin::Audited;
+  abstract type Resource extending Mixin::Audited {
+    access policy CanSelectUpdateReadGeneratedFromAppPoliciesForResource
+    allow select, update read using (
+      exists (<Role>{'Administrator', 'Leadership'} intersect global currentRoles)
+    );
+
+    access policy CanUpdateWriteGeneratedFromAppPoliciesForResource
+    allow update write;
+
+    access policy CanInsertDeleteGeneratedFromAppPoliciesForResource
+    allow insert, delete using (
+      Role.Administrator in global currentRoles
+    );
+  };
 }

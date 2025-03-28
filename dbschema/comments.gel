@@ -10,6 +10,14 @@ module Comments {
     comments := .<thread[is Comment];
     firstComment := (select .comments order by .createdAt asc limit 1);
     latestComment := (select .comments order by .createdAt desc limit 1);
+
+    access policy CanSelectUpdateReadInsertGeneratedFromAppPoliciesForCommentThread
+    allow select, update read, insert;
+
+    access policy CanDeleteGeneratedFromAppPoliciesForCommentThread
+    allow delete using (
+      .isCreator
+    );
   }
 
   type Comment extending default::Resource {
@@ -17,5 +25,13 @@ module Comments {
       on target delete delete source;
     };
     required body: default::RichText;
+
+    access policy CanSelectUpdateReadInsertGeneratedFromAppPoliciesForComment
+    allow select, update read, insert;
+
+    access policy CanDeleteGeneratedFromAppPoliciesForComment
+    allow delete using (
+      .isCreator
+    );
   }
 }

@@ -4,6 +4,11 @@ module default {
     required totalFiles: int32 {
       default := 0;
     };
+
+    access policy CanSelectUpdateReadGeneratedFromAppPoliciesForDirectory
+    allow select, update read using (
+      exists (<Role>{'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller'} intersect global currentRoles)
+    );
   }
   
   # TODO how to front latest version info?

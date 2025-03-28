@@ -26,6 +26,14 @@ module default {
         filter .produces = __new__ and not exists .scriptureOverride
         set { scripture := __new__.scripture }
       );
+
+    access policy CanSelectUpdateReadGeneratedFromAppPoliciesForProducible
+    allow select, update read;
+
+    access policy CanInsertGeneratedFromAppPoliciesForProducible
+    allow insert using (
+      exists (<Role>{'FieldOperationsDirector', 'ProjectManager', 'RegionalDirector'} intersect global currentRoles)
+    );
   }
   
   type EthnoArt extending Producible;

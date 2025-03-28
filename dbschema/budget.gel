@@ -7,6 +7,20 @@ module default {
     universalTemplate: File;
     
     records := .<budget[is Budget::Record];
+
+    access policy CanSelectUpdateReadGeneratedFromAppPoliciesForBudget
+    allow select, update read using (
+      (
+        (
+          Role.ConsultantManager in global currentRoles
+          and (
+            .isMember
+            or .sensitivity <= Sensitivity.Medium
+          )
+        )
+        or exists (<Role>{'FieldOperationsDirector', 'LeadFinancialAnalyst', 'Controller', 'FinancialAnalyst', 'Marketing', 'Fundraising', 'ExperienceOperations', 'ProjectManager', 'RegionalDirector'} intersect global currentRoles)
+      )
+    );
   }
 }
   
@@ -29,6 +43,20 @@ module Budget {
       readonly := true;
       on target delete delete source;
     };
+
+    access policy CanSelectUpdateReadGeneratedFromAppPoliciesForBudgetRecord
+    allow select, update read using (
+      (
+        (
+          default::Role.ConsultantManager in global default::currentRoles
+          and (
+            .isMember
+            or .sensitivity <= default::Sensitivity.Medium
+          )
+        )
+        or exists (<default::Role>{'FieldOperationsDirector', 'LeadFinancialAnalyst', 'Controller', 'FinancialAnalyst', 'Marketing', 'Fundraising', 'ExperienceOperations', 'ProjectManager', 'RegionalDirector'} intersect global default::currentRoles)
+      )
+    );
   }
   
   scalar type Status extending enum<

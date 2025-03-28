@@ -7,5 +7,10 @@ module default {
     required director: User;
     
     fieldRegions := .<fieldZone[is FieldRegion];
+
+    access policy CanSelectUpdateReadGeneratedFromAppPoliciesForFieldZone
+    allow select, update read using (
+      exists (<Role>{'Consultant', 'ConsultantManager', 'FieldPartner', 'FinancialAnalyst', 'LeadFinancialAnalyst', 'Controller', 'Marketing', 'Fundraising', 'ExperienceOperations', 'ProjectManager', 'RegionalDirector', 'FieldOperationsDirector', 'StaffMember'} intersect global currentRoles)
+    );
   }
 }
