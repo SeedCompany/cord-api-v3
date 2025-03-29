@@ -2,7 +2,7 @@ import { trimStart } from 'lodash';
 import { fullFiscalYear } from '~/common';
 import { Cell } from '~/common/xlsx.util';
 import { ProductStep } from '../product/dto';
-import { PnpExtractionResult } from './extraction-result';
+import { PnpExtractionResult, PnpProblemType } from './extraction-result';
 import { PlanningSheet } from './planning-sheet';
 import { Pnp } from './pnp';
 
@@ -16,7 +16,6 @@ export const isGoalStepPlannedInsideProject = (
   result: PnpExtractionResult,
 ) => {
   const fullFY = stepPlanCompleteDate(cell);
-  const fiscalYear = new Date(String(fullFY)).getFullYear();
   const isPlanned =
     !!fullFY && pnp.planning.projectFiscalYears.contains(fullFY);
   if (isPlanned) {
@@ -27,29 +26,15 @@ export const isGoalStepPlannedInsideProject = (
     return false;
   }
   const goalLabel = pnp.planning.goalName(cell.row).asString ?? '';
-  const stepLabel = ProductStep.entry(step).label;
 
-  if (pnp.planning.projectFiscalYears.isAfter(fullFY)) {
-    result.addProblem({
-      severity: 'Notice',
-      groups: [
-        `Step(s) of goal(s) were finished **before** this project's fiscal years`,
-        `Step(s) of _${goalLabel}_ were finished **before** this project's fiscal years`,
-      ],
-      message: `Ignoring _${stepLabel}_ for _${goalLabel}_ \`${cell.ref}\` which was finished _FY${fiscalYear}_ before this project's fiscal years`,
-      source: cell,
-    });
-  } else {
-    result.addProblem({
-      severity: 'Error',
-      groups: [
-        `Step(s) of goal(s) are planned to be complete **after** this project's fiscal years`,
-        `Step(s) of _${goalLabel}_ are planned to be complete **after** this project's fiscal years`,
-      ],
-      message: `_${stepLabel}_ for _${goalLabel}_ \`${cell.ref}\` is planned to be completed _FY${fiscalYear}_ which is **after** this project's fiscal years`,
-      source: cell,
-    });
-  }
+  const type = pnp.planning.projectFiscalYears.isAfter(fullFY)
+    ? GoalPlanAlreadyCompleteBeforeProject
+    : GoalPlannedCompleteAfterProject;
+  result.addProblem(type, cell, {
+    step,
+    goal: goalLabel,
+    fiscalYear: fullFY.year,
+  });
   return false;
 };
 
@@ -58,4 +43,48 @@ export const stepPlanCompleteDate = (cell: Cell<PlanningSheet>) => {
     cell.asNumber ?? (Number(trimStart(cell.asString ?? '', `'`)) || undefined);
   const fullFY = fiscalYear ? fullFiscalYear(fiscalYear) : undefined;
   return fullFY?.end;
+};
+
+const GoalPlanAlreadyCompleteBeforeProject = PnpProblemType.register({
+  name: 'GoalPlanAlreadyCompleteBeforeProject',
+  severity: 'Notice',
+  render:
+    (...raw: Parameters<typeof renderCtx>) =>
+    ({ source }) => {
+      const ctx = renderCtx(...raw);
+      return {
+        groups: [
+          `Step(s) of goal(s) were finished **before** this project's fiscal years`,
+          `Step(s) of _${ctx.goal}_ were finished **before** this project's fiscal years`,
+        ],
+        message: `Ignoring _${ctx.step}_ for _${ctx.goal}_ \`${source}\` which was finished _${ctx.fiscalYear}_ before this project's fiscal years`,
+      };
+    },
+});
+
+const GoalPlannedCompleteAfterProject = PnpProblemType.register({
+  name: 'GoalPlannedCompleteAfterProject',
+  severity: 'Error',
+  render:
+    (...raw: Parameters<typeof renderCtx>) =>
+    ({ source }) => {
+      const ctx = renderCtx(...raw);
+      return {
+        groups: [
+          `Step(s) of goal(s) are planned to be complete **after** this project's fiscal years`,
+          `Step(s) of _${ctx.goal}_ are planned to be complete **after** this project's fiscal years`,
+        ],
+        message: `_${ctx.step}_ for _${ctx.goal}_ \`${source}\` is planned to be completed _${ctx.fiscalYear}_ which is **after** this project's fiscal years`,
+      };
+    },
+  wiki: 'https://github.com/SeedCompany/cord-docs/wiki/PnP-Extraction-Validation:-Errors-and-Troubleshooting-Steps#5-steps-of-goals-are-planned-to-be-complete-after-this-projects-fiscal-years',
+});
+
+const renderCtx = (ctx: {
+  goal: string;
+  step: ProductStep;
+  fiscalYear: number;
+}) => {
+  const step = ProductStep.entry(ctx.step).label;
+  return { ...ctx, step, fiscalYear: `FY${ctx.fiscalYear}` };
 };

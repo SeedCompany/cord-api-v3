@@ -1,7 +1,9 @@
 import { Inject } from '@nestjs/common';
 import { DataLoaderStrategy } from '@seedcompany/data-loader';
-import { ID } from '~/common';
+import { ID, Session } from '~/common';
 import { sessionFromContext } from '~/common/session';
+import type { AuthenticationService } from '../../components/authentication';
+import { ConfigService } from '../config/config.service';
 import { GqlContextHost } from '../graphql';
 
 export abstract class SessionAwareLoaderStrategy<T, Key = ID, CachedKey = Key>
@@ -14,7 +16,17 @@ export abstract class SessionAwareLoaderStrategy<T, Key = ID, CachedKey = Key>
   @Inject(GqlContextHost)
   private readonly contextHost: GqlContextHost;
 
-  get session() {
+  @Inject(ConfigService)
+  private readonly config: ConfigService;
+
+  @Inject('AUTHENTICATION')
+  private readonly auth: AuthenticationService & {};
+
+  get session(): Session {
+    if (this.config.isCli) {
+      return this.auth.lazySessionForRootUser();
+    }
+
     return sessionFromContext(this.contextHost.context);
   }
 }

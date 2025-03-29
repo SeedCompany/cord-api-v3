@@ -7,6 +7,7 @@ import { PnpExtractionResultProgressReportConnectionResolver } from './pnp-extra
 import { PnpExtractionResultRepository } from './pnp-extraction-result.edgedb.repository';
 import { PnpExtractionResultLoader } from './pnp-extraction-result.loader';
 import { PnpExtractionResultNeo4jRepository } from './pnp-extraction-result.neo4j.repository';
+import { PnpProblemResolver } from './pnp-problem.resolver';
 import { SaveProgressExtractionResultHandler } from './save-progress-extraction-result.handler';
 
 @Module({
@@ -14,6 +15,7 @@ import { SaveProgressExtractionResultHandler } from './save-progress-extraction-
   providers: [
     PnpExtractionResultLanguageEngagementConnectionResolver,
     PnpExtractionResultProgressReportConnectionResolver,
+    PnpProblemResolver,
     PnpExtractionResultLoader,
     PlanningExtractionResultSaver,
     SaveProgressExtractionResultHandler,

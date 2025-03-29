@@ -5,6 +5,7 @@ export type LanguageMilestone = EnumType<typeof LanguageMilestone>;
 export const LanguageMilestone = makeEnum({
   name: 'LanguageMilestone',
   values: ['Unknown', 'None', 'OldTestament', 'NewTestament', 'FullBible'],
+  exposeOrder: true,
 });
 
 @ObjectType({

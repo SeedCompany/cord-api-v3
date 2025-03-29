@@ -49,10 +49,6 @@ export abstract class ProgressSheet extends Sheet {
     return this.namedRange('PrcntFinishedYears');
   }
 
-  /**
-   * This is just an artificial filter.
-   * It can be greater than the quarter we need, and we can still extract data fine.
-   */
   @Once() get reportingQuarter() {
     const year = this.reportingQuarterCells.year.asNumber!;
     const quarterStr = this.reportingQuarterCells.quarter.asString;

@@ -2,20 +2,20 @@
   "extends": "@tsconfig/strictest/tsconfig.json",
   "compilerOptions": {
     // Opt in to these settings
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "useDefineForClassFields": true,
+    "experimentalDecorators": false,
+    "emitDecoratorMetadata": false,
+    "useDefineForClassFields": falsd,
 
     // Loosen these strict settings
     // I'm ok treating `foo?: string` == `foo: string | undefined`
-    "exactOptionalPropertyTypes": false,
+    "exactOptionalPropertyTypes": true,
     // IDE shows override methods, I'm not too worried about this.
-    "noImplicitOverride": false,
+    "noImplicitOverride": true,
     // I don't want extra syntax just because the type has dynamic keys.
     // obj.key -> obj['key'] -- no thanks
-    "noPropertyAccessFromIndexSignature": false,
+    "noPropertyAccessFromIndexSignature": true,
     // We use classes for GQL schema declarations, but we don't instantiate them.
-    "strictPropertyInitialization": false,
+    "strictPropertyInitialization": true,
     // I know JS allows throwing anything, so catch(e: unknown) is the "safest."
     // In practice, though, all modern code we use throws Error objects.
     // We also enforce this in our own codebase.
@@ -24,14 +24,14 @@
     "useUnknownInCatchVariables": false,
 
     // Disabling for now, but should be enabled & fixes applied
-    "noFallthroughCasesInSwitch": false,
-    "noUncheckedIndexedAccess": false,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
     // Possibly enable later & fix. Might need if/when switching to non-tsc transpilation.
-    "isolatedModules": false,
+    "isolatedModules": true,
 
     // Handled by ESLint
     "noUnusedLocals": false,
-    "noUnusedParameters": false,
+    "noUnusedParameters": true,
 
     // Transform plugins
     "plugins": [
@@ -55,7 +55,7 @@
     "moduleResolution": "bundler",
     "jsx": "react-jsx",
     "outDir": "./dist",
-    "sourceMap": true,
+    "sourceMap": false,
     "incremental": true,
   },
   "include": ["src", "test", "tools", ".eslintrc.cjs", "jest.config.ts", "dbschema/seeds"],

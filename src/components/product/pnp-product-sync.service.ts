@@ -4,10 +4,10 @@ import { labelOfVerseRanges } from '@seedcompany/scripture';
 import { stripIndent } from 'common-tags';
 import { difference, uniq } from 'lodash';
 import { DateTime } from 'luxon';
-import { ID, Session } from '~/common';
-import { ILogger, Logger } from '~/core';
+import { DateInterval, ID, Session } from '~/common';
+import { ILogger, Logger, ResourceLoader } from '~/core';
 import { Downloadable, FileVersion } from '../file/dto';
-import { PnpExtractionResult } from '../pnp/extraction-result';
+import { PnpExtractionResult, PnpProblemType } from '../pnp/extraction-result';
 import { StoryService } from '../story';
 import {
   CreateDerivativeScriptureProduct,
@@ -31,6 +31,7 @@ export class PnpProductSyncService {
     private readonly products: ProductService,
     private readonly repo: ProductRepository,
     private readonly stories: StoryService,
+    private readonly resources: ResourceLoader,
     @Logger('product:extractor') private readonly logger: ILogger,
   ) {}
 
@@ -45,9 +46,23 @@ export class PnpProductSyncService {
     pnp: Downloadable<FileVersion>;
     result: PnpExtractionResult;
   }) {
+    const engagement = await this.resources.load(
+      'LanguageEngagement',
+      engagementId,
+    );
+    const engagementRange = DateInterval.tryFrom(
+      engagement.startDate.value,
+      engagement.endDate.value,
+    );
+
     let productRows;
     try {
-      productRows = await this.extractor.extract(pnp, availableSteps, result);
+      productRows = await this.extractor.extract(
+        pnp,
+        engagementRange,
+        availableSteps,
+        result,
+      );
     } catch (e) {
       this.logger.warning(e.message, {
         id: pnp.id,
@@ -184,15 +199,9 @@ export class PnpProductSyncService {
       nonExactMatches.forEach(({ source }) => {
         const goalName = source.asString!;
         const myNoteCell = source.sheet.myNote(source.row, false);
-        result.addProblem({
-          severity: 'Error',
-          groups: 'Unable to distinguish goal row to goal in CORD',
-          message: stripIndent`
-            _${goalName}_ \`${source.ref}\` is ambiguous with other rows.
-            Please declare the exact scripture reference
-            in the _My Notes_ cell \`${myNoteCell.ref}\`.
-          `,
-          source,
+        result.addProblem(AmbiguousGoal, source, {
+          goalVal: goalName,
+          noteRef: myNoteCell.ref,
         });
       });
 
@@ -317,3 +326,18 @@ export class PnpProductSyncService {
     return byName as Readonly<typeof byName>;
   }
 }
+
+const AmbiguousGoal = PnpProblemType.register({
+  name: 'AmbiguousGoal',
+  severity: 'Error',
+  render:
+    (ctx: { goalVal: string; noteRef: string }) =>
+    ({ source }) => ({
+      groups: 'Unable to distinguish goal row to goal in CORD',
+      message: stripIndent`
+        _${ctx.goalVal}_ \`${source}\` is ambiguous with other rows.
+        The information in \`${ctx.noteRef}\` is insufficient or nonexistent.
+      `,
+    }),
+  wiki: 'https://github.com/SeedCompany/cord-docs/wiki/PnP-Extraction-Validation:-Errors-and-Troubleshooting-Steps#7-unable-to-distinguish-goal-row-to-goal-in-cord',
+});

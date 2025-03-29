@@ -2,7 +2,8 @@
 /dist
 *.gql
 *.graphql
-
+lib
+*.py
 # edgedb generated
 src/core/edgedb/generated-client
 src/core/edgedb/schema.ts
