@@ -4,7 +4,7 @@
     // Opt in to these settings
     "experimentalDecorators": false,
     "emitDecoratorMetadata": false,
-    "useDefineForClassFields": falsd,
+    "useDefineForClassFields": false,
 
     // Loosen these strict settings
     // I'm ok treating `foo?: string` == `foo: string | undefined`
