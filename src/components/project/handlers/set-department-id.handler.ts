@@ -1,7 +1,8 @@
 import { isNull, node, not, relation } from 'cypher-query-builder';
 import { ClientException, ID, ServerException, UnsecuredDto } from '~/common';
+import { Retry } from '~/common/retry';
 import { ConfigService, EventsHandler, IEventHandler } from '~/core';
-import { DatabaseService } from '~/core/database';
+import { DatabaseService, UniquenessError } from '~/core/database';
 import {
   ACTIVE,
   apoc,
@@ -61,6 +62,11 @@ export class SetDepartmentId implements IEventHandler<SubscribedEvent> {
     };
   }
 
+  @Retry({
+    shouldRetry: (e) => Boolean(e.cause && e.cause instanceof UniquenessError),
+    randomize: true,
+    maxTimeout: '5 secs',
+  })
   private async assignDepartmentIdForProject(
     project: UnsecuredDto<Project>,
     block: { id: ID },
