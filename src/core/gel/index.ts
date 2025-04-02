@@ -3,7 +3,7 @@ export { edgeql, EdgeQLArgsOf, EdgeQLReturnOf } from './edgeql';
 export type { OptionsFn } from './options.context';
 export * from './gel.service';
 export * from './withScope';
-export * from './errors/exclusivity-violation.error';
+export { ExclusivityViolationError } from './errors/constraint-violation.error';
 export * from './common.repository';
 export * from './dto.repository';
 export * from './query-util/disable-access-policies.option';
