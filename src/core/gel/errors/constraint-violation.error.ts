@@ -1,5 +1,6 @@
 import { ConstraintViolationError } from 'gel';
 import { LiteralUnion } from 'type-fest';
+import { ID } from '~/common';
 import type { AllResourceDBNames } from '~/core';
 import { attributesOf } from './attributes';
 
@@ -35,6 +36,14 @@ export class MyConstraintViolationError extends ConstraintViolationError {
   }
 
   static cast(e: ConstraintViolationError) {
+    // @ts-expect-error it is a private field
+    const message: string = e._message;
+
+    const deletion = DeletionPolicyViolationError.parseMaybe(e, message);
+    if (deletion) {
+      return Object.assign(new DeletionPolicyViolationError(e), deletion);
+    }
+
     const matches = attributesOf(e).details!.match(
       /^violated constraint '(?<constraint>.+)' on property '(?<property>.+)' of object type '(?<fqn>.+)'$/,
     );
@@ -60,3 +69,33 @@ export class PointerConstraintViolationError extends MyConstraintViolationError 
   readonly constraint: LiteralUnion<'std::exclusive' | 'std::regexp', string>;
 }
 export class ExclusivityViolationError extends PointerConstraintViolationError {}
+
+export class DeletionPolicyViolationError extends MyConstraintViolationError {
+  readonly source: Readonly<{
+    type: AllResourceDBNames;
+    link: string;
+    id: ID;
+  }>;
+  readonly target: Readonly<{
+    type: AllResourceDBNames;
+    id: ID;
+  }>;
+
+  static parseMaybe(e: ConstraintViolationError, message: string) {
+    if (!message.startsWith('deletion of')) {
+      return null;
+    }
+    const target = message.match(
+      /^deletion of (?<type>.+) \((?<id>.+)\) is prohibited by link target policy$/,
+    )?.groups;
+    const source = attributesOf(e).details!.match(
+      /^Object is still referenced in link (?<link>.+) of (?<type>.+) \((?<id>.+)\)\.$/,
+    )?.groups;
+    if (!target || !source) {
+      throw new Error(`Could not parse deletion policy violation error`, {
+        cause: e,
+      });
+    }
+    return { source, target };
+  }
+}
