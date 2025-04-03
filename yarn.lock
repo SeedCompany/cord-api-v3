@@ -4092,10 +4092,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/retry@npm:0.12.1":
-  version: 0.12.1
-  resolution: "@types/retry@npm:0.12.1"
-  checksum: 10c0/d2d08393973693826fc947fb09596c34bd65863201e2f6d7e9d7a02d504199d6a2bab13eba56f6366ee0fd45434c699a9fdcfff3311e63bf2fad7a4cf34bacfd
+"@types/retry@npm:0.12.2":
+  version: 0.12.2
+  resolution: "@types/retry@npm:0.12.2"
+  checksum: 10c0/07481551a988cc90b423351919928b9ddcd14e3f5591cac3ab950851bb20646e55a10e89141b38bc3093d2056d4df73700b22ff2612976ac86a6367862381884
   languageName: node
   linkType: hard
 
@@ -5907,7 +5907,7 @@ __metadata:
     mime: "npm:beta"
     nanoid: "npm:^4.0.2"
     neo4j-driver: "npm:^5.20.0"
-    p-retry: "npm:^5.1.2"
+    p-retry: "npm:^6.2.1"
     pkg-up: "npm:^4.0.0"
     plur: "npm:^5.1.0"
     prismjs-terminal: "npm:^1.2.3"
@@ -8745,6 +8745,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"is-network-error@npm:^1.0.0":
+  version: 1.1.0
+  resolution: "is-network-error@npm:1.1.0"
+  checksum: 10c0/89eef83c2a4cf43d853145ce175d1cf43183b7a58d48c7a03e7eed4eb395d0934c1f6d101255cdd8c8c2980ab529bfbe5dd9edb24e1c3c28d2b3c814469b5b7d
+  languageName: node
+  linkType: hard
+
 "is-number-object@npm:^1.0.4":
   version: 1.0.7
   resolution: "is-number-object@npm:1.0.7"
@@ -11455,13 +11462,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"p-retry@npm:^5.1.2":
-  version: 5.1.2
-  resolution: "p-retry@npm:5.1.2"
+"p-retry@npm:^6.2.1":
+  version: 6.2.1
+  resolution: "p-retry@npm:6.2.1"
   dependencies:
-    "@types/retry": "npm:0.12.1"
+    "@types/retry": "npm:0.12.2"
+    is-network-error: "npm:^1.0.0"
     retry: "npm:^0.13.1"
-  checksum: 10c0/9017001ebfbe2a08cf45c970106f6953f5c76d1f8d8e9ff81afcbf6c25fe9f0e13499c5ac49b35d114672cf15689a952f4f3287fd1316420eb810a5a99ecf4e7
+  checksum: 10c0/10d014900107da2c7071ad60fffe4951675f09930b7a91681643ea224ae05649c05001d9e78436d902fe8b116d520dd1f60e72e091de097e2640979d56f3fb60
   languageName: node
   linkType: hard
 
