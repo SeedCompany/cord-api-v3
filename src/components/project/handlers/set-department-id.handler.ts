@@ -1,11 +1,20 @@
+import { isNull, node, not, relation } from 'cypher-query-builder';
 import { ClientException, ID, ServerException, UnsecuredDto } from '~/common';
+import { Retry } from '~/common/retry';
 import { ConfigService, EventsHandler, IEventHandler } from '~/core';
-import { DatabaseService } from '~/core/database';
+import { DatabaseService, UniquenessError } from '~/core/database';
+import {
+  ACTIVE,
+  apoc,
+  collect,
+  updateProperty,
+  variable,
+} from '~/core/database/query';
 import {
   Project,
   ProjectStatus,
   ProjectStep,
-  ProjectType,
+  resolveProjectType,
   stepToStatus,
 } from '../dto';
 import { ProjectTransitionedEvent } from '../workflow/events/project-transitioned.event';
@@ -41,86 +50,140 @@ export class SetDepartmentId implements IEventHandler<SubscribedEvent> {
       return;
     }
 
-    if (!event.project.primaryLocation) {
-      throw new ClientException('Primary Location on project must be set');
-    }
+    const block = await this.getDepartmentIdBlockId(event.project);
 
-    try {
-      const departmentId = await this.assignDepartmentIdForProject(
-        event.project,
-      );
-      event.project = {
-        ...event.project,
-        departmentId,
-      };
-    } catch (exception) {
-      throw new ServerException(
-        'Could not set departmentId on project',
-        exception,
-      );
-    }
+    const departmentId = await this.assignDepartmentIdForProject(
+      event.project,
+      block,
+    );
+    event.project = {
+      ...event.project,
+      departmentId,
+    };
   }
 
-  private async assignDepartmentIdForProject(project: UnsecuredDto<Project>) {
-    const info =
-      project.type === ProjectType.MultiplicationTranslation
-        ? {
-            departmentIdPrefix: '8',
-            startingOffset: 201,
-          }
-        : {
-            departmentIdPrefix: await this.getFundingAccountNumber(project),
-            startingOffset: 11,
-          };
-
-    const res = await this.db
+  @Retry({
+    shouldRetry: (e) => Boolean(e.cause && e.cause instanceof UniquenessError),
+    randomize: true,
+    maxTimeout: '5 secs',
+  })
+  private async assignDepartmentIdForProject(
+    project: UnsecuredDto<Project>,
+    block: { id: ID },
+  ) {
+    const query = this.db
       .query()
-      .raw(
-        //TODO: determine if schema update should be applied to allow for transaction locks.
-        `
-        MATCH ()-[:departmentId]-(departmentIdPropertyNode:Property)
-        WHERE departmentIdPropertyNode.value STARTS WITH $departmentIdPrefix
-        WITH collect(distinct(toInteger(right(departmentIdPropertyNode.value, 4)))) as listOfDepartmentIds
-        WITH [n IN range($startingOffset, 9999) WHERE NOT n IN listOfDepartmentIds] as listOfUnusedDepartmentIds
-        WITH apoc.coll.shuffle(listOfUnusedDepartmentIds) AS randomizedIds
-        WITH toString(randomizedIds[0]) AS nextIdBase
-        WITH $departmentIdPrefix + substring("0000", 1, 4 - size(nextIdBase)) + nextIdBase as nextId
-        MATCH (project:Project {id: $projectId})
-        OPTIONAL MATCH (project)-[oldDepartmentIdRelationship:departmentId {active: true}]-(oldDepartmentIdPropertyNode:Property)
-        SET oldDepartmentIdRelationship.active = false
-        WITH coalesce(oldDepartmentIdPropertyNode.value, nextId) as departmentId, project
-        CREATE (project)-[newDepartmentIdRelationship:departmentId { active: true, createdAt: datetime() }]->(:Property { createdAt: datetime(), value: departmentId })
-        RETURN departmentId
-        `,
-        { ...info, projectId: project.id },
+      // Enumerate IDs from the department ID block
+      .subQuery((sub) =>
+        sub
+          .match(node('block', 'DepartmentIdBlock', { id: block.id }))
+          .with(apoc.convert.fromJsonList('block.blocks').as('blocks'))
+          // enumerate all ranges
+          .with(
+            apoc.coll
+              .flatten(['block in blocks | range(block.start, block.end)'])
+              .as('ids'),
+          )
+          // convert numbers to strings and pad to 5 digits with leading zeros
+          .with(
+            `[id in ids |
+              case
+                when id < 10000 then
+                  apoc.text.lpad(toString(id), 5, "0")
+                else toString(id)
+              end
+            ] as ids`,
+          )
+          .return('ids as enumerated'),
       )
-      .asResult<{ departmentId: ID }>()
-      .first();
+      // Get used IDs
+      .subQuery((sub) =>
+        sub
+          .match([
+            node('', 'Project'),
+            relation('out', '', 'departmentId', ACTIVE),
+            node('deptIdNode', 'Property'),
+          ])
+          .where({ 'deptIdNode.value': not(isNull()) })
+          .return(collect('deptIdNode.value').as('used')),
+      )
+      // Distill to available
+      .with('[id in enumerated where not id in used][0] as next')
+      // collapse cardinality to zero if none available
+      .raw('unwind next as nextId')
+
+      .match(node('node', 'Project', { id: project.id }))
+      .apply(
+        updateProperty({
+          resource: resolveProjectType(project),
+          key: 'departmentId',
+          value: variable('nextId'),
+        }),
+      )
+      .return<{ departmentId: string }>('nextId as departmentId, stats');
+    let res;
+    try {
+      res = await query.first();
+    } catch (e) {
+      throw new ServerException("Could not set Project's Department ID", e);
+    }
     if (!res) {
-      throw new ServerException('Unable to assign department ID');
+      throw new ServerException('No department ID is available');
     }
     return res.departmentId;
   }
 
-  private async getFundingAccountNumber(project: UnsecuredDto<Project>) {
-    const res = await this.db
-      .query()
-      .raw(
-        `
-        MATCH (:Project {id: $projectId})-[:primaryLocation {active: true}]
-              -()-[:fundingAccount {active: true}]
-              -()-[:accountNumber {active: true}]-(node:Property)
-        RETURN node.value as prefix
-      `,
-        { projectId: project.id },
-      )
-      .asResult<{ prefix: number }>()
-      .first();
-    if (!res) {
-      throw new ServerException(
-        `Unable to find accountNumber associated with project: ${project.id}`,
+  private async getDepartmentIdBlockId(project: UnsecuredDto<Project>) {
+    const isMultiplication = project.type === 'MultiplicationTranslation';
+    if (isMultiplication) {
+      if (!project.primaryPartnership) {
+        throw new ClientException(
+          'Project must have a partnership to continue',
+        );
+      }
+    } else if (!project.primaryLocation) {
+      throw new ClientException(
+        'Project must have a primary location to continue',
       );
     }
-    return res.prefix.toString();
+
+    const block = await this.db
+      .query()
+      .match(node('project', 'Project', { id: project.id }))
+      .match(
+        isMultiplication
+          ? [
+              node('project'),
+              relation('out', '', 'partnership', ACTIVE),
+              node('holder', 'Partnership'),
+              relation('out', '', 'primary', ACTIVE),
+              node('', 'Property', { value: variable('true') }),
+            ]
+          : [
+              node('project'),
+              relation('out', '', 'primaryLocation', ACTIVE),
+              node('', 'Location'),
+              relation('out', '', 'fundingAccount', ACTIVE),
+              node('holder', 'FundingAccount'),
+            ],
+      )
+      .match([
+        node('holder'),
+        relation('out'),
+        node('block', 'DepartmentIdBlock'),
+      ])
+      .return<{ id: ID }>('block.id as id')
+      .first();
+    if (block) {
+      return block;
+    }
+    if (isMultiplication) {
+      throw new ClientException(
+        "Project's primary partner does not have a department ID blocks declared",
+      );
+    }
+    throw new ServerException(
+      `Unable to find accountNumber associated with project: ${project.id}`,
+    );
   }
 }

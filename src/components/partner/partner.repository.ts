@@ -29,6 +29,7 @@ import {
   requestingUser,
   sortWith,
 } from '~/core/database/query';
+import * as departmentIdBlockUtils from '../finance/department/neo4j.utils';
 import {
   organizationFilters,
   organizationSorters,
@@ -96,6 +97,7 @@ export class PartnerRepository extends DtoRepository<
           languagesOfConsulting: ['Language', input.languagesOfConsulting],
         }),
       )
+      .apply(departmentIdBlockUtils.createMaybe(input.departmentIdBlock))
       .return<{ id: ID }>('node.id as id')
       .first();
     if (!result) {
@@ -113,6 +115,7 @@ export class PartnerRepository extends DtoRepository<
       fieldRegions,
       countries,
       languagesOfConsulting,
+      departmentIdBlock,
       ...simpleChanges
     } = changes;
 
@@ -176,6 +179,15 @@ export class PartnerRepository extends DtoRepository<
           ? e.withField('partner.languagesOfConsulting')
           : e;
       }
+    }
+
+    if (departmentIdBlock !== undefined) {
+      await this.db
+        .query()
+        .match(node('node', 'Partner', { id }))
+        .apply(departmentIdBlockUtils.set(departmentIdBlock))
+        .return('*')
+        .run();
     }
 
     return await this.readOne(id, session);
@@ -259,6 +271,7 @@ export class PartnerRepository extends DtoRepository<
           relation('out', '', 'languageOfWiderCommunication', ACTIVE),
           node('languageOfWiderCommunication', 'Language'),
         ])
+        .apply(departmentIdBlockUtils.hydrate())
         .return<{ dto: UnsecuredDto<Partner> }>(
           merge('props', {
             __typename: '"Partner"',
@@ -270,6 +283,7 @@ export class PartnerRepository extends DtoRepository<
             fieldRegions: 'fieldRegions',
             countries: 'countries',
             languagesOfConsulting: 'languagesOfConsulting',
+            departmentIdBlock: 'departmentIdBlock',
             scope: 'scopedRoles',
             pinned: 'exists((:User { id: $requestingUser })-[:pinned]->(node))',
           }).as('dto'),

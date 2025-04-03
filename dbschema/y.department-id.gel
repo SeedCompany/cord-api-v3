@@ -1,0 +1,61 @@
+module Finance::Department {
+  type IdBlock {
+    required range: multirange<int64>;
+
+    multi programs: Project::Type {
+      annotation description := "Effectively static, but here to to facilitate metrics.";
+    }
+
+    nextAvailable := min((
+      select enumerateIds(.range)
+      except default::Project.departmentId
+    ));
+
+    total := totalIds([__source__]);
+    remaining := remainingIds([__source__]);
+
+    trigger assertValidBlocks after insert, update for each do (
+      with
+        blocksMultirange := assert_exists(
+          __new__.range,
+          message := "Finance::Department::IdBlock.range should be declared"
+        ),
+        blocks := assert_exists(
+          multirange_unpack(blocksMultirange),
+          message := "Finance::Department::IdBlock.range should have some ranges declared"
+        ),
+      for block in blocks union (
+        assert(
+          (
+            assert_exists(range_get_lower(block), message := "Finance::Department::IdBlock.range should have start points declared")
+            union
+            assert_exists(range_get_upper(block), message := "Finance::Department::IdBlock.range should have end points declared")
+          ) > 0,
+          message := "Finance::Department::IdBlock numbers should be positive"
+        )
+      )
+    );
+  }
+
+  function totalIds(blocks: array<IdBlock>) -> int64 using (
+    count(enumerateIds(array_unpack(blocks).range))
+  );
+
+  # Remaining IDs for multiplication projects
+  # with blocks := (
+  #   select Finance::Department::IdBlock
+  #   filter Project::Type.MultiplicationTranslation in .programs
+  # )
+  # select Finance::Department::remainingIds(array_agg(blocks))
+  function remainingIds(blocks: array<IdBlock>) -> int64 using (
+    count((
+      select enumerateIds(array_unpack(blocks).range)
+      except default::Project.departmentId
+    ))
+  );
+
+  function enumerateIds(block: multirange<int64>) -> set of str using (
+    with ids := range_unpack(multirange_unpack(block)),
+    select if ids < 10000 then str_pad_start(<str>ids, 5, '0') else <str>ids
+  );
+}

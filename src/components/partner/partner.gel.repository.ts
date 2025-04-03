@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { ID, PublicOf } from '~/common';
 import { e, RepoFor } from '~/core/gel';
-import { CreatePartner, Partner } from './dto';
+import * as departmentIdBlock from '../finance/department/gel.utils';
+import { CreatePartner, Partner, UpdatePartner } from './dto';
 import { PartnerRepository } from './partner.repository';
 
 @Injectable()
@@ -16,8 +17,9 @@ export class PartnerGelRepository
       fieldRegions: true,
       countries: true,
       languagesOfConsulting: true,
+      departmentIdBlock: departmentIdBlock.hydrate,
     }),
-    omit: ['create'],
+    omit: ['create', 'update'],
   })
   implements PublicOf<PartnerRepository>
 {
@@ -26,9 +28,21 @@ export class PartnerGelRepository
     const organization = e.cast(e.Organization, e.uuid(organizationId));
     return await this.defaults.create({
       ...rest,
+      departmentIdBlock: departmentIdBlock.insertMaybe(input.departmentIdBlock),
       organization,
       name: organization.name,
       projectContext: organization.projectContext,
+    });
+  }
+
+  async update(input: UpdatePartner) {
+    const partner = e.cast(e.Partner, e.uuid(input.id));
+    return await this.defaults.update({
+      ...input,
+      departmentIdBlock: departmentIdBlock.setMaybe(
+        partner.departmentIdBlock,
+        input.departmentIdBlock,
+      ),
     });
   }
 

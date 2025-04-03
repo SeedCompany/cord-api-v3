@@ -93,7 +93,7 @@
     "mime": "beta",
     "nanoid": "^4.0.2",
     "neo4j-driver": "^5.20.0",
-    "p-retry": "^5.1.2",
+    "p-retry": "^6.2.1",
     "pkg-up": "^4.0.0",
     "plur": "^5.1.0",
     "prismjs-terminal": "^1.2.3",
