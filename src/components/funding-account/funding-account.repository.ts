@@ -1,16 +1,18 @@
 import { Injectable } from '@nestjs/common';
-import { node, Query } from 'cypher-query-builder';
+import { node, Query, relation } from 'cypher-query-builder';
 import { ID, Session, UnsecuredDto } from '~/common';
 import { DtoRepository } from '~/core/database';
 import {
+  ACTIVE,
+  apoc,
   createNode,
   matchProps,
   merge,
   paginate,
   requestingUser,
   sorting,
+  variable,
 } from '~/core/database/query';
-import * as departmentIdBlockUtils from '../finance/department/neo4j.utils';
 import { ProjectType as Program } from '../project/dto/project-type.enum';
 import {
   CreateFundingAccount,
@@ -19,13 +21,12 @@ import {
   UpdateFundingAccount,
 } from './dto';
 
-const blockOfAccount = (accountNumber: number) =>
-  [
-    {
-      start: accountNumber * 10000 + 11,
-      end: (accountNumber + 1) * 10000 - 1,
-    },
-  ] as const;
+const blockOfAccount = (accountNumber: number) => [
+  {
+    start: accountNumber * 10000 + 11,
+    end: (accountNumber + 1) * 10000 - 1,
+  },
+];
 
 @Injectable()
 export class FundingAccountRepository extends DtoRepository(FundingAccount) {
@@ -38,12 +39,17 @@ export class FundingAccountRepository extends DtoRepository(FundingAccount) {
     const query = this.db
       .query()
       .apply(await createNode(FundingAccount, { initialProps }))
-      .apply(
-        departmentIdBlockUtils.create({
-          blocks: blockOfAccount(input.accountNumber),
+      .create([
+        node('node'),
+        relation('out', '', 'departmentIdBlock', ACTIVE),
+        node('', 'DepartmentIdBlock', {
+          id: variable(apoc.create.uuid()),
+          blocks: variable(
+            apoc.convert.toJson(blockOfAccount(input.accountNumber)),
+          ),
           programs: [Program.MomentumTranslation, Program.Internship],
         }),
-      )
+      ])
       .return<{ id: ID }>('node.id as id');
 
     return await query.first();
@@ -56,13 +62,14 @@ export class FundingAccountRepository extends DtoRepository(FundingAccount) {
     if (accountNumber) {
       await this.db
         .query()
-        .match(node('node', 'FundingAccount', { id }))
-        .apply(
-          departmentIdBlockUtils.upsert({
-            blocks: blockOfAccount(accountNumber),
-          }),
-        )
-        .return('*')
+        .match([
+          node('node', 'FundingAccount', { id }),
+          relation('out', '', 'departmentIdBlock'),
+          node('block', 'DepartmentIdBlock'),
+        ])
+        .setVariables({
+          'block.blocks': apoc.convert.toJson(blockOfAccount(accountNumber)),
+        })
         .run();
     }
     return await this.readOne(id);
@@ -72,10 +79,16 @@ export class FundingAccountRepository extends DtoRepository(FundingAccount) {
     return (query: Query) =>
       query
         .apply(matchProps())
-        .apply(departmentIdBlockUtils.hydrate())
+        .match([
+          node('node'),
+          relation('out', '', 'departmentIdBlock'),
+          node('departmentIdBlock', 'DepartmentIdBlock'),
+        ])
         .return<{ dto: UnsecuredDto<FundingAccount> }>(
           merge('props', {
-            departmentIdBlock: 'departmentIdBlock',
+            departmentIdBlock: merge('departmentIdBlock', {
+              blocks: apoc.convert.fromJsonList('departmentIdBlock.blocks'),
+            }),
           }).as('dto'),
         );
   }
