@@ -22,10 +22,13 @@ export class PartnerGelRepository
   implements PublicOf<PartnerRepository>
 {
   async create(input: CreatePartner) {
-    const organization = e.cast(e.Organization, e.uuid(input.organizationId));
+    const { organizationId, ...rest } = input;
+    const organization = e.cast(e.Organization, e.uuid(organizationId));
     return await this.defaults.create({
+      ...rest,
+      organization,
       name: organization.name,
-      ...input,
+      projectContext: organization.projectContext,
     });
   }
 
