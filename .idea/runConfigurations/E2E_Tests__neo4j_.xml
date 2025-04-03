@@ -4,7 +4,7 @@
     <node-options value="--experimental-vm-modules" />
     <jest-package value="$PROJECT_DIR$/node_modules/jest" />
     <working-dir value="$PROJECT_DIR$" />
-    <jest-options value="-i --roots test --testRegex '\\.e2e-spec\\.ts$'" />
+    <jest-options value="--selectProjects E2E" />
     <envs />
     <scope-kind value="ALL" />
     <method v="2" />
