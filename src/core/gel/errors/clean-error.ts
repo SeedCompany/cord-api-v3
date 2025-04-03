@@ -1,6 +1,6 @@
 import { ConstraintViolationError, GelError } from 'gel';
 import { jestSkipFileInExceptionSource } from '../../exception';
-import { enhanceConstraintError } from './constraint-violation.error';
+import { MyConstraintViolationError } from './constraint-violation.error';
 
 export const cleanError = (e: Error) => {
   // Ignore tracing & our Gel service wrappers in the stack trace.
@@ -20,7 +20,7 @@ export const cleanError = (e: Error) => {
   }
 
   if (e instanceof ConstraintViolationError) {
-    return enhanceConstraintError(e);
+    return MyConstraintViolationError.cast(e);
   }
   return e;
 };
