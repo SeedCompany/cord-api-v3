@@ -280,9 +280,8 @@ export class PartnershipRepository extends DtoRepository<
         .query()
         .optionalMatch(node('partner', 'Partner', { id: partnerId }))
         .optionalMatch(node('project', 'Project', { id: projectId }))
-        .subQuery((sub) =>
+        .subQuery(['project', 'partner'], (sub) =>
           sub
-            .with('project, partner')
             .optionalMatch([
               node('project'),
               relation('out', '', 'partnership', ACTIVE),
@@ -295,7 +294,6 @@ export class PartnershipRepository extends DtoRepository<
               changeset
                 ? q
                     .union()
-                    .with('project, partner')
                     .match([node('changeset', 'Changeset', { id: changeset })])
                     .optionalMatch([
                       node('project'),

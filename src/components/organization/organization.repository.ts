@@ -91,9 +91,8 @@ export class OrganizationRepository extends DtoRepository<
           'collect(project) as projList',
           'keys(apoc.coll.frequenciesAsMap(apoc.coll.flatten(collect(scopedRoles)))) as scopedRoles',
         ])
-        .subQuery((sub) =>
+        .subQuery('projList', (sub) =>
           sub
-            .with('projList')
             .raw('UNWIND projList as project')
             .apply(matchProjectSens())
             .with('sensitivity')
@@ -101,7 +100,6 @@ export class OrganizationRepository extends DtoRepository<
             .raw('LIMIT 1')
             .return('sensitivity')
             .union()
-            .with('projList')
             .with('projList')
             .raw('WHERE size(projList) = 0')
             .return(`'High' as sensitivity`),
