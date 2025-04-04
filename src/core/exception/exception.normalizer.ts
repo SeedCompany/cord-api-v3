@@ -163,6 +163,7 @@ export class ExceptionNormalizer {
 
     if (ex instanceof ExclusivityViolationError) {
       ex = DuplicateException.fromDB(ex, gqlContext);
+      // TODO Neo4j UniquenessError could be moved here too - currently manually in service files
     } else if (ex instanceof Gel.GelError || Neo.isNeo4jError(ex)) {
       // Mask actual DB error with a nicer user error message.
       let message = 'Failed';
@@ -347,6 +348,17 @@ export class ExceptionNormalizer {
         (ex.hasTag(GelTags.SHOULD_RECONNECT) ||
           ex.hasTag(GelTags.SHOULD_RETRY));
       return [...(transient ? ['Transient'] : []), 'Database', 'Server'];
+    }
+    if (Neo.isNeo4jError(ex)) {
+      return [
+        (ex.code === 'N/A' ? '' : ex.code)
+          .split('.')
+          .at(-1)!
+          .replaceAll(/(Error|Failed)/g, ''),
+        ex.classification === 'TRANSIENT_ERROR' && 'Transient',
+        'Database',
+        'Server',
+      ].filter(isNotFalsy);
     }
 
     return type.name.replace(/(Exception|Error)$/, '');

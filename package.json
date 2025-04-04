@@ -92,7 +92,7 @@
     "luxon": "^3.5.0",
     "mime": "beta",
     "nanoid": "^4.0.2",
-    "neo4j-driver": "^5.20.0",
+    "neo4j-driver": "^5.28.1",
     "p-retry": "^6.2.1",
     "pkg-up": "^4.0.0",
     "plur": "^5.1.0",
@@ -151,9 +151,7 @@
     "typescript-transform-paths": "^3.4.6"
   },
   "resolutions": {
-    "cypher-query-builder/neo4j-driver": "^5.9.0",
-    "neo4j-driver-bolt-connection@npm:5.20.0": "patch:neo4j-driver-bolt-connection@npm%3A5.20.0#~/.yarn/patches/neo4j-driver-bolt-connection-npm-5.20.0-1f7809f435.patch",
-    "neo4j-driver-core@npm:5.20.0": "patch:neo4j-driver-core@npm%3A5.20.0#~/.yarn/patches/neo4j-driver-core-npm-5.20.0-99216f6938.patch",
+    "cypher-query-builder/neo4j-driver": "^5",
     "@nestjs/cli/fork-ts-checker-webpack-plugin": "npm:empty-npm-package@*",
     "@nestjs/cli/webpack": "npm:empty-npm-package@*",
     "@nestjs/cli/typescript": "^5.1.6",
