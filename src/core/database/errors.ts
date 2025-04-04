@@ -83,6 +83,7 @@ export class UniquenessError extends ConstraintError {
   readonly label: string;
   readonly property: string;
   readonly value: string;
+  readonly constraint: ReturnType<typeof parseConstraint>;
 
   static [Symbol.hasInstance](object: unknown) {
     return (
@@ -92,6 +93,7 @@ export class UniquenessError extends ConstraintError {
   }
 
   static enhance(e: Neo4jError) {
+    nonEnumerable(e, 'diagnosticRecord', 'retriable');
     const info = getUniqueFailureInfo(e);
     return logProps(Object.assign(e, info), {
       level: LogLevel.WARNING,
@@ -144,19 +146,61 @@ const cast = (e: Neo4jError): Neo4jError => {
   return e;
 };
 
-const uniqueMsgRegex =
-  /^Node\((\d+)\) already exists with label `(\w+)` and property `(.+)` = '(.+)'$/;
 const getUniqueFailureInfo = (e: Neo4jError) => {
-  const matches = uniqueMsgRegex.exec(e.message);
-  if (!matches) {
+  const uniq = parseUniquenessMessage(e);
+  const constraint = parseConstraint(e);
+  if (!uniq) {
     throw new Error(
       'Could not determine uniqueness info from error. Are you sure this is a uniqueness constraint failure?',
+      { cause: e },
     );
   }
+
+  // Handle what appears to be a regression where the error message is
+  // "...already exists with label `Label[30]` and property `PropertyKey[1]` = ..."
+  // Not sure what indexes those correspond to - maybe a global label list & the property index on constraint?
+  // Work around this by using our naming convention for unique constraints.
+  // https://github.com/SeedCompany/cord-api-v3/blob/f363f89c278d099cf76a1f7d3f08edd9578bf2be/src/core/database/common.repository.ts#L180
+  if (constraint) {
+    const constraintNameParts = constraint.name.split('_');
+    uniq.label = uniq.label.startsWith('Label[')
+      ? constraintNameParts[0]
+      : uniq.label;
+    uniq.property = uniq.property.startsWith('PropertyKey[')
+      ? constraintNameParts[1]
+      : uniq.property;
+  }
+
+  return { ...uniq, constraint };
+};
+
+const parseUniquenessMessage = (e: Neo4jError) => {
+  const exp =
+    /Node\((?<node>\d+)\) already exists with label `(?<label>.+)` and property `(?<prop>.+)` = '(?<value>.+)'/;
+  const matches = exp.exec(e.message)?.groups;
+  if (!matches) {
+    return null;
+  }
   return {
-    node: Number(matches[1]),
-    label: matches[2],
-    property: matches[3],
-    value: matches[4],
+    node: Number(matches.node),
+    label: matches.label,
+    property: matches.prop,
+    value: matches.value,
+  };
+};
+
+const parseConstraint = (e: Neo4jError) => {
+  const exp =
+    /Constraint\(\s*id=(?<id>\d+), name='(?<name>\w+)', type='(?<type>\w+)', schema=(?<schema>\(.+\)), ownedIndex=(?<ownedIndex>\d+)\s*\)/;
+  const matches = exp.exec(e.message)?.groups;
+  if (!matches) {
+    return null;
+  }
+  return {
+    id: Number(matches.id),
+    name: matches.name,
+    type: matches.type,
+    schema: matches.schema,
+    ownedIndex: Number(matches.ownedIndex),
   };
 };
