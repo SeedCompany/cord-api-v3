@@ -8,3 +8,4 @@ export * from './common.repository';
 export * from './dto.repository';
 export * from './query-util/disable-access-policies.option';
 export * from './query-util/cast-to-enum';
+export * from '../database/transaction-retry.informer';
