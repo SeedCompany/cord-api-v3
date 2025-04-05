@@ -24,6 +24,7 @@ import { highlight } from './highlight-cypher.util';
 import { ParameterTransformer } from './parameter-transformer.service';
 // eslint-disable-next-line import/no-duplicates
 import { Neo4jTransaction as Transaction } from './transaction';
+import { TransactionRetryInformer } from './transaction-retry.informer';
 import { MyTransformer } from './transformer';
 // eslint-disable-next-line import/no-duplicates
 import './transaction'; // import our transaction augmentation
@@ -55,6 +56,7 @@ export type PatchedConnection = Merge<
     transformer: MyTransformer;
     open: boolean;
     driver: Driver;
+    retryInformer: TransactionRetryInformer;
   }
 >;
 
@@ -64,6 +66,7 @@ export const CypherFactory: FactoryProvider<Connection> = {
     config: ConfigService,
     tracing: TracingService,
     parameterTransformer: ParameterTransformer,
+    retryInformer: TransactionRetryInformer,
     logger: ILogger,
     driverLogger: ILogger,
   ) => {
@@ -125,6 +128,8 @@ export const CypherFactory: FactoryProvider<Connection> = {
       driverConstructor,
       driverConfig: resolvedDriverConfig,
     });
+
+    conn.retryInformer = retryInformer;
 
     // Holder for the current transaction using native async storage context.
     conn.transactionStorage = new AsyncLocalStorage();
@@ -235,6 +240,7 @@ export const CypherFactory: FactoryProvider<Connection> = {
     ConfigService,
     TracingService,
     ParameterTransformer,
+    TransactionRetryInformer,
     LoggerToken('database:query'),
     LoggerToken('database:driver'),
   ],
