@@ -269,6 +269,19 @@ export class ProjectService {
         'project.sensitivity',
       );
 
+    // Only allow admins to specify department IDs
+    if (
+      input.departmentId !== undefined &&
+      !isAdmin(session.impersonator ?? session)
+    ) {
+      throw UnauthorizedException.fromPrivileges(
+        'edit',
+        undefined,
+        EnhancedResource.of(IProject),
+        'departmentId',
+      );
+    }
+
     const { step: changedStep, ...changes } = this.repo.getActualChanges(
       currentProject,
       input,
