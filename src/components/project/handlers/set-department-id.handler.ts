@@ -1,7 +1,11 @@
 import { isNull, node, not, relation } from 'cypher-query-builder';
 import { ClientException, ID, ServerException, UnsecuredDto } from '~/common';
 import { ConfigService, EventsHandler, IEventHandler } from '~/core';
-import { DatabaseService } from '~/core/database';
+import {
+  DatabaseService,
+  TransactionRetryInformer,
+  UniquenessError,
+} from '~/core/database';
 import {
   ACTIVE,
   apoc,
@@ -25,6 +29,7 @@ export class SetDepartmentId implements IEventHandler<SubscribedEvent> {
   constructor(
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
+    private readonly retryInformer: TransactionRetryInformer,
   ) {}
 
   async handle(event: SubscribedEvent) {
@@ -119,6 +124,9 @@ export class SetDepartmentId implements IEventHandler<SubscribedEvent> {
     try {
       res = await query.first();
     } catch (e) {
+      if (e instanceof UniquenessError && e.label === 'DepartmentId') {
+        this.retryInformer.markForRetry(e);
+      }
       throw new ServerException("Could not set Project's Department ID", e);
     }
     if (!res) {
