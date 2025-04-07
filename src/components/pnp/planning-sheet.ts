@@ -1,5 +1,5 @@
 import { LazyGetter as Once } from 'lazy-get-decorator';
-import { DateInterval, expandToFullFiscalYears } from '~/common';
+import { CalendarDate, DateInterval, expandToFullFiscalYears } from '~/common';
 import { Cell, Column, Range, Row, Sheet, WorkBook } from '~/common/xlsx.util';
 
 export abstract class PlanningSheet extends Sheet {
@@ -20,7 +20,9 @@ export abstract class PlanningSheet extends Sheet {
   }
 
   @Once() get revision() {
-    return this.revisionCell.asDate;
+    return (
+      this.revisionCell.asDate ?? CalendarDate.fromMillis(0).plus({ day: 1 })
+    );
   }
   protected abstract revisionCell: Cell;
 
@@ -59,12 +61,16 @@ export abstract class PlanningSheet extends Sheet {
     return goal;
   }
 
+  @Once() protected get goalColumn() {
+    return this.column('Q');
+  }
+
   get goals(): Range<PlanningSheet> {
     return this.range(this.goalsStart, this.goalsEnd);
   }
-  protected goalsStart = this.cell('Q', 23);
+  protected goalsStart = this.cell(this.goalColumn, 23);
   @Once() protected get goalsEnd() {
-    return this.sheetRange.end.row.cell('Q');
+    return this.sheetRange.end.row.cell(this.goalColumn);
   }
 
   myNote(goalRow: Row, fallback = true) {
@@ -87,8 +93,14 @@ export class WrittenScripturePlanningSheet extends PlanningSheet {
   protected myNotesColumn = this.column('AI');
   protected myNotesFallbackCell = this.cell('AI16');
 
+  @Once() protected get goalColumn() {
+    return this.revision > CalendarDate.local(2025, 2, 24)
+      ? this.column('P')
+      : this.column('Q');
+  }
+
   bookName(goalRow: Row) {
-    return this.cell('Q', goalRow);
+    return this.cell(this.goalColumn, goalRow);
   }
 
   @Once() get goalsEnd() {
@@ -113,7 +125,7 @@ export class OralStoryingPlanningSheet extends PlanningSheet {
   protected myNotesFallbackCell = undefined;
 
   storyName(goalRow: Row) {
-    return this.cell('Q', goalRow);
+    return this.cell(this.goalColumn, goalRow);
   }
   scriptureReference(goalRow: Row) {
     return this.cell('R', goalRow).asString;

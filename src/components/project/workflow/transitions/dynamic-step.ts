@@ -6,6 +6,7 @@ import { ProjectWorkflowRepository } from '../project-workflow.repository';
 
 export interface ResolveParams {
   project: MaybeSecured<Project>;
+  previousStep?: Step;
   moduleRef: ModuleRef;
   migrationPrevSteps?: ProjectStep[];
 }

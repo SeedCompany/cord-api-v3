@@ -36,9 +36,10 @@ export class ApplyFinalizedChangesetToProject
           changeset.applied ? commitChangesetProps() : rejectChangesetProps(),
         )
         // Apply pending budget records
-        .subQuery(['node', 'changeset'], (sub) =>
+        .subQuery((sub) =>
           sub
             .comment('Apply pending budget records')
+            .with('node, changeset')
             .match([
               node('node'),
               relation('out', '', 'budget', ACTIVE),

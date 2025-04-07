@@ -135,16 +135,19 @@ export class FileRepository extends CommonRepository {
   hydrate() {
     return (query: Query) =>
       query
-        .subQuery('node', (sub) =>
+        .subQuery((sub) =>
           sub
+            .with('node')
             .with('node')
             .where({ node: hasLabel(FileNodeType.File) })
             .apply(this.hydrateFile())
             .union()
             .with('node')
+            .with('node')
             .where({ node: hasLabel(FileNodeType.FileVersion) })
             .apply(this.hydrateFileVersion())
             .union()
+            .with('node')
             .with('node')
             .where({ node: hasLabel(FileNodeType.Directory) })
             .apply(this.hydrateDirectory()),
