@@ -9,6 +9,7 @@ import {
   many,
   NotFoundException,
   ObjectView,
+  Role,
   SecuredList,
   ServerException,
   Session,
@@ -155,7 +156,9 @@ export class ProjectService {
       await this.projectMembers.create(
         {
           userId: session.userId,
-          roles: session.roles.map(withoutScope),
+          roles: session.roles
+            .map(withoutScope)
+            .filter((role) => Role.applicableToProjectMembership.has(role)),
           projectId: project,
         },
         session,
@@ -265,6 +268,19 @@ export class ProjectService {
         'Can only set sensitivity on Internship Projects',
         'project.sensitivity',
       );
+
+    // Only allow admins to specify department IDs
+    if (
+      input.departmentId !== undefined &&
+      !isAdmin(session.impersonator ?? session)
+    ) {
+      throw UnauthorizedException.fromPrivileges(
+        'edit',
+        undefined,
+        EnhancedResource.of(IProject),
+        'departmentId',
+      );
+    }
 
     const { step: changedStep, ...changes } = this.repo.getActualChanges(
       currentProject,

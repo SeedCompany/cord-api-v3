@@ -18,6 +18,7 @@ import {
 import { e } from '~/core/gel';
 import { LinkTo, RegisterResource } from '~/core/resources';
 import { Commentable } from '../../comments/dto';
+import { SecuredFinanceDepartmentIdBlockNullable } from '../../finance/department/dto/id-blocks.dto';
 import { SecuredFinancialReportingTypes } from '../../partnership/dto';
 import { Pinnable } from '../../pin/dto';
 import { Postable } from '../../post/dto';
@@ -87,6 +88,9 @@ export class Partner extends Interfaces {
 
   @Field()
   readonly approvedPrograms: SecuredProjectTypes;
+
+  @Field()
+  readonly departmentIdBlock: SecuredFinanceDepartmentIdBlockNullable;
 }
 
 @ObjectType({

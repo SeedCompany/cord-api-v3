@@ -60,6 +60,8 @@ export const merge = (...expressions: ExpressionInput[]) => {
   return fn('apoc.map.mergeList')(expressions);
 };
 
+export const randomUUID = fn0('randomUUID');
+
 export const apoc = {
   map: {
     /**
@@ -78,11 +80,12 @@ export const apoc = {
   convert: {
     /** Converts Neo4j node to object/map of the node's properties */
     toMap: fn1('apoc.convert.toMap'),
+    toJson: fn1('apoc.convert.toJson'),
     fromJsonList: fn1('apoc.convert.fromJsonList'),
     fromJsonMap: fn1('apoc.convert.fromJsonMap'),
   },
   create: {
-    uuid: fn0('apoc.create.uuid'),
+    uuid: randomUUID,
     setLabels: (node: ExpressionInput, labels: readonly string[]) =>
       procedure('apoc.create.setLabels', ['node'])({ node: exp(node), labels }),
   },

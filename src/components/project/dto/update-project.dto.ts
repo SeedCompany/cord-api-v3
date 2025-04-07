@@ -87,6 +87,9 @@ export abstract class UpdateProject {
 
   @Field({ nullable: true })
   readonly presetInventory?: boolean;
+
+  @Field(() => String, { nullable: true })
+  readonly departmentId?: string | null;
 }
 
 @InputType()

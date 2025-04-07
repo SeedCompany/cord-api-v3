@@ -1,4 +1,3 @@
-import { Nil } from '@seedcompany/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime, Duration, DurationLikeObject as MyDuration } from 'luxon';
 import {
@@ -38,7 +37,7 @@ export type UpdatePropertyOptions<
     /**
      * The property is permanent after this given duration.
      */
-    permanentAfter?: Variable | DurationIn | Nil;
+    permanentAfter?: Variable | DurationIn;
   };
 
 export interface PropUpdateStat {
@@ -78,6 +77,12 @@ export const updateProperty =
     };
     const { nodeName, key, value, now } = resolved;
 
+    const scope = [
+      nodeName,
+      resolved.changeset ? varInExp(resolved.changeset) : '',
+      key instanceof Variable ? varInExp(key) : '',
+      varInExp(value),
+    ];
     query.comment('updateProperty()');
 
     const modifyPermanentProp = (query: Query) =>
@@ -93,7 +98,7 @@ export const updateProperty =
         ]);
 
     if (!permanentAfter) {
-      return query.apply(modifyPermanentProp);
+      return query.subQuery(scope, modifyPermanentProp);
     }
 
     const modifyMutableProp = (query: Query) =>
@@ -115,13 +120,7 @@ export const updateProperty =
       .apply(
         conditionalOn(
           'isPermanent',
-          [
-            nodeName,
-            resolved.changeset ? varInExp(resolved.changeset) : '',
-            key instanceof Variable ? varInExp(key) : '',
-            varInExp(value),
-            'existingProp',
-          ],
+          [...scope, 'existingProp'],
           modifyPermanentProp,
           modifyMutableProp,
         ),
@@ -176,14 +175,11 @@ export const determineIfPermanent =
     );
 
 export function permanentAfterAsVar(
-  permanentAfter: Variable | DurationIn | undefined,
+  permanentAfter: Variable | DurationIn,
   query: Query,
 ) {
   if (permanentAfter instanceof Variable) {
     return permanentAfter.toString();
-  }
-  if (permanentAfter == null) {
-    return undefined;
   }
   const asObj = Duration.from(permanentAfter);
   if (asObj.as('milliseconds') === 0) {
@@ -201,15 +197,13 @@ export const conditionalOn = <R>(
 ): QueryFragment<unknown, R> => {
   const imports = [...new Set([conditionVar, ...scope])];
   return (query) =>
-    query.subQuery((sub) =>
+    query.subQuery(imports, (sub) =>
       sub
-        .with(imports)
         .with(imports)
         .raw(`WHERE ${conditionVar}`)
         .apply(trueQuery)
 
         .union()
-        .with(imports)
         .with(imports)
         .raw(`WHERE NOT ${conditionVar}`)
         .apply(falseQuery),

@@ -277,9 +277,8 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
         [node('user', 'User', { id: userId })],
         [node('org', 'Organization', { id: orgId })],
       ])
-      .subQuery((sub) =>
+      .subQuery(['user', 'org'], (sub) =>
         sub
-          .with('user, org')
           .match([
             node('user'),
             relation('out', 'oldRel', 'organization', ACTIVE),
@@ -292,9 +291,8 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
       )
       .apply((q) => {
         if (primary) {
-          q.subQuery((sub) =>
+          q.subQuery(['user', 'org'], (sub) =>
             sub
-              .with('user, org')
               .match([
                 node('user'),
                 relation('out', 'oldRel', 'primaryOrganization', {

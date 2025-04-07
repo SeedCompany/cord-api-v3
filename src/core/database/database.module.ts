@@ -10,6 +10,7 @@ import { IndexerModule } from './indexer/indexer.module';
 import { MigrationModule } from './migration/migration.module';
 import { ParameterTransformer } from './parameter-transformer.service';
 import { RollbackManager } from './rollback-manager';
+import { TransactionRetryInformer } from './transaction-retry.informer';
 import { Neo4jTransactionalMutationsInterceptor as TransactionalMutationsInterceptor } from './transactional-mutations.interceptor';
 
 @Module({
@@ -20,8 +21,15 @@ import { Neo4jTransactionalMutationsInterceptor as TransactionalMutationsInterce
     ParameterTransformer,
     { provide: APP_INTERCEPTOR, useClass: TransactionalMutationsInterceptor },
     RollbackManager,
+    TransactionRetryInformer,
   ],
-  exports: [CypherFactory, DatabaseService, IndexerModule, RollbackManager],
+  exports: [
+    CypherFactory,
+    DatabaseService,
+    IndexerModule,
+    RollbackManager,
+    TransactionRetryInformer,
+  ],
 })
 export class DatabaseModule implements OnApplicationShutdown {
   constructor(

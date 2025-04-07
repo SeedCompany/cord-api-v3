@@ -15,6 +15,7 @@ import { FieldRegionModule } from './components/field-region/field-region.module
 import { FieldZoneModule } from './components/field-zone/field-zone.module';
 import { FileModule } from './components/file/file.module';
 import { FilmModule } from './components/film/film.module';
+import { FinanceDepartmentModule } from './components/finance/department/finance-department.module';
 import { FundingAccountModule } from './components/funding-account/funding-account.module';
 import { LanguageModule } from './components/language/language.module';
 import { LocationModule } from './components/location/location.module';
@@ -95,6 +96,7 @@ if (process.env.NODE_ENV !== 'production') {
     PnpExtractionResultModule,
     NotificationModule,
     SystemNotificationModule,
+    FinanceDepartmentModule,
   ],
 })
 export class AppModule {}

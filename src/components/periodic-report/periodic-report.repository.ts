@@ -380,14 +380,12 @@ export class PeriodicReportRepository extends DtoRepository<
   protected hydrate(session: Session) {
     return (query: Query) =>
       query
-        .subQuery((sub) =>
+        .subQuery('node', (sub) =>
           sub
-            .with('node')
             .with('node')
             .where({ node: hasLabel('ProgressReport') })
             .apply(this.progressRepo.extraHydrate())
             .union()
-            .with('node')
             .with('node')
             .where({ node: not(hasLabel('ProgressReport')) })
             .return('{} as extra'),
@@ -401,7 +399,6 @@ export class PeriodicReportRepository extends DtoRepository<
             ])
             .return('project')
             .union()
-            .with('node')
             .match([
               node('node'),
               relation('in', '', 'report', ACTIVE),

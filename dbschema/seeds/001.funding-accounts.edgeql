@@ -8,10 +8,20 @@ with fundingAccounts := (
     ("Pacific", 7)
   }
   union (
-    (select FundingAccount filter .name = fa.0) ??
-    (insert FundingAccount {
+    (select FundingAccount filter .name = fa.0) ?? (
+    with
+      account := fa.1,
+      idBlock := range(account * 10000 + 11, (account + 1) * 10000)
+    insert FundingAccount {
       name := fa.0,
-      accountNumber := fa.1
+      accountNumber := account,
+      # There's a bug that the first FundingAccount insert will fail to apply this default
+      departmentIdBlock := (
+        insert Finance::Department::IdBlock {
+          range := multirange([idBlock]),
+          programs := {Project::Type.MomentumTranslation, Project::Type.Internship},
+        }
+      ),
     })
   )
 ),

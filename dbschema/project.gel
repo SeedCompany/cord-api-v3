@@ -29,25 +29,27 @@ module default {
           .status <= Project::Status.Active and
           .step >= Project::Step.PendingFinanceConfirmation
         ) then ((
-          with
-            info := (
-              if __subject__ is MultiplicationTranslationProject
-                then (prefix := 8, startingOffset := 201)
-              else (
-                  prefix := (
-                    assert_exists(
-                      __subject__.primaryLocation.fundingAccount,
-                      message := "Project must have a primary location"
-                    ).accountNumber
-                  ),
-                  startingOffset := 11
-                )
-              ),
-            select min(
-              <str>range_unpack(range(info.prefix * 10000 + info.startingOffset, info.prefix * 10000 + 9999))
-              except detached Project.departmentId
+          with block := (
+            if __subject__ is MultiplicationTranslationProject then (
+              assert_exists(
+                assert_exists(
+                  (select __subject__.partnerships filter .primary).partner,
+                  message := "Project must have a primary partnership"
+                ).departmentIdBlock,
+                message := "Available Department IDs have not been declared"
+              )
+            ) else (
+              assert_exists(
+                assert_exists(
+                  __subject__.primaryLocation,
+                  message := "Project must have a primary location"
+                ).fundingAccount,
+                message := "Project's primary location must have a funding account"
+              ).departmentIdBlock
             )
-          )) else .departmentId
+          )
+          select assert_exists(block.nextAvailable, message := "No department ID is available")
+        )) else .departmentId
       );
     };
 

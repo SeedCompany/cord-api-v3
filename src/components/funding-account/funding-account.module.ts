@@ -6,6 +6,7 @@ import { FundingAccountLoader } from './funding-account.loader';
 import { FundingAccountRepository } from './funding-account.repository';
 import { FundingAccountResolver } from './funding-account.resolver';
 import { FundingAccountService } from './funding-account.service';
+import { FundingAccountAddDeptIdBlockMigration } from './migrations/funding-account-add-dept-id-block.migration';
 
 @Module({
   imports: [forwardRef(() => AuthorizationModule)],
@@ -14,6 +15,7 @@ import { FundingAccountService } from './funding-account.service';
     FundingAccountService,
     splitDb(FundingAccountRepository, FundingAccountGelRepository),
     FundingAccountLoader,
+    FundingAccountAddDeptIdBlockMigration,
   ],
   exports: [FundingAccountService],
 })

@@ -10,6 +10,7 @@ import {
   IsId,
   NameField,
 } from '~/common';
+import { FinanceDepartmentIdBlockInput } from '../../finance/department/dto/id-blocks.input';
 import { FinancialReportingType } from '../../partnership/dto/financial-reporting-type.enum';
 import { ProjectType } from '../../project/dto/project-type.enum';
 import { PartnerType } from './partner-type.enum';
@@ -69,6 +70,11 @@ export abstract class CreatePartner {
   @Field(() => [ProjectType], { nullable: true })
   @Transform(({ value }) => uniq(value))
   readonly approvedPrograms?: ProjectType[] = [];
+
+  @Field({ nullable: true })
+  @ValidateNested()
+  @Type(() => FinanceDepartmentIdBlockInput)
+  readonly departmentIdBlock?: FinanceDepartmentIdBlockInput;
 }
 
 @InputType()

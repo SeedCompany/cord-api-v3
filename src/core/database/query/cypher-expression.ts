@@ -31,11 +31,10 @@ export const exp = (exp: ExpressionInput): CypherExpression => {
         if (p === CypherExp) {
           return true;
         }
-        if (
-          p === Symbol.toPrimitive ||
-          p === Symbol.toStringTag ||
-          p === 'toString'
-        ) {
+        if (p === Symbol.toStringTag) {
+          return 'String';
+        }
+        if (p === Symbol.toPrimitive || p === 'toString') {
           return () => expression;
         }
         throw new ServerException('Something went wrong');

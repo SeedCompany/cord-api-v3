@@ -105,7 +105,7 @@ class Project extends Interfaces {
   readonly name: SecuredString;
 
   @Field({
-    description: 'The legacy department ID',
+    description: "The ID for Finance's departments",
   })
   @DbUnique('DepartmentId')
   readonly departmentId: SecuredStringNullable;

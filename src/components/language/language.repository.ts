@@ -186,9 +186,8 @@ export class LanguageRepository extends DtoRepository<
         .apply(matchProps())
         .apply(matchChangesetAndChangedProps(view?.changeset))
         // get lowest sensitivity across all projects associated with each language.
-        .subQuery((sub) =>
+        .subQuery(['projList', 'props'], (sub) =>
           sub
-            .with('projList')
             .raw('UNWIND projList as project')
             .apply(matchProjectSens())
             .with('sensitivity')
@@ -196,7 +195,6 @@ export class LanguageRepository extends DtoRepository<
             .raw('LIMIT 1')
             .return('sensitivity as effectiveSensitivity')
             .union()
-            .with('projList, props')
             .with('projList, props')
             .raw('WHERE size(projList) = 0')
             .return(`props.sensitivity as effectiveSensitivity`),

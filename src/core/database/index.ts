@@ -8,4 +8,5 @@ export * from './indexer';
 export * from './migration';
 export * from './db-type';
 export * from './rollback-manager';
+export * from './transaction-retry.informer';
 export * from './split-db.provider';

@@ -43,6 +43,11 @@ module default {
     multi countries: Location;
 
     startDate: cal::local_date;
+
+    departmentIdBlock: Finance::Department::IdBlock {
+      on source delete delete target;
+      on target delete allow;
+    };
   }
 }
   

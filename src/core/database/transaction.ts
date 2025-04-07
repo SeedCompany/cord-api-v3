@@ -123,6 +123,11 @@ Connection.prototype.runInTransaction = async function withTransaction<R>(
           const maybeRetryableError = getCauseList(error).find(isNeo4jError);
           if (maybeRetryableError) {
             errorMap.set(maybeRetryableError, error);
+            const override =
+              this.retryInformer.shouldRetry(maybeRetryableError);
+            if (override != null) {
+              maybeRetryableError.retriable = override;
+            }
             throw maybeRetryableError;
           }
           throw error;

@@ -382,7 +382,7 @@ export class EngagementRepository extends CommonRepository {
     session: Session,
     changeset?: ID,
   ) {
-    const { id, pnp, ...simpleChanges } = changes;
+    const { id, pnp, status, ...simpleChanges } = changes;
 
     if (pnp) {
       const engagement = await this.readOne(id, session);
@@ -413,6 +413,16 @@ export class EngagementRepository extends CommonRepository {
       changeset,
     });
 
+    if (status) {
+      await this.db.updateProperties({
+        type: LanguageEngagement,
+        object: { id },
+        changes: { status },
+        changeset,
+        permanentAfter: 0,
+      });
+    }
+
     return await this.readOne(id, session);
   }
 
@@ -423,8 +433,14 @@ export class EngagementRepository extends CommonRepository {
     session: Session,
     changeset?: ID,
   ) {
-    const { id, mentorId, countryOfOriginId, growthPlan, ...simpleChanges } =
-      changes;
+    const {
+      id,
+      mentorId,
+      countryOfOriginId,
+      growthPlan,
+      status,
+      ...simpleChanges
+    } = changes;
 
     if (growthPlan) {
       const engagement = await this.readOne(id, session);
@@ -463,6 +479,16 @@ export class EngagementRepository extends CommonRepository {
       changes: simpleChanges,
       changeset,
     });
+
+    if (status) {
+      await this.db.updateProperties({
+        type: InternshipEngagement,
+        object: { id },
+        changes: { status },
+        changeset,
+        permanentAfter: 0,
+      });
+    }
 
     return await this.readOne(id, session);
   }
@@ -878,7 +904,6 @@ export const engagementSorters = defineSorters(IEngagement, {
       .apply(sortWith(languageSorters, input))
       // Use null for all internship engagements
       .union()
-      .with('node')
       .with('node as eng')
       .raw('where eng:InternshipEngagement')
       .return<SortCol>('null as sortValue'),
@@ -903,7 +928,6 @@ export const engagementSorters = defineSorters(IEngagement, {
           .raw('where size(reports) = 0')
           .return('null as sortValue')
           .union()
-          .with('reports')
           .with('reports')
           .raw('where size(reports) <> 0')
           .raw('unwind reports as node')

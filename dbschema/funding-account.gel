@@ -7,5 +7,19 @@ module default {
     required accountNumber: int16 {
       constraint expression on (__subject__ >= 0 and __subject__ <= 9);
     }
+
+    required departmentIdBlock: Finance::Department::IdBlock {
+      default := (
+        with
+          account := assert_exists(.accountNumber, message := "FundingAccount number is required"),
+          block := range(account * 10000 + 11, (account + 1) * 10000),
+          blocks := multirange([block]),
+        insert Finance::Department::IdBlock {
+          range := blocks,
+          programs := {Project::Type.MomentumTranslation, Project::Type.Internship},
+        }
+      );
+      on source delete delete target;
+    }
   }
 }

@@ -29,6 +29,7 @@ import {
   requestingUser,
   sortWith,
 } from '~/core/database/query';
+import * as departmentIdBlockUtils from '../finance/department/neo4j.utils';
 import {
   organizationFilters,
   organizationSorters,
@@ -96,6 +97,7 @@ export class PartnerRepository extends DtoRepository<
           languagesOfConsulting: ['Language', input.languagesOfConsulting],
         }),
       )
+      .apply(departmentIdBlockUtils.createMaybe(input.departmentIdBlock))
       .return<{ id: ID }>('node.id as id')
       .first();
     if (!result) {
@@ -113,6 +115,7 @@ export class PartnerRepository extends DtoRepository<
       fieldRegions,
       countries,
       languagesOfConsulting,
+      departmentIdBlock,
       ...simpleChanges
     } = changes;
 
@@ -178,6 +181,15 @@ export class PartnerRepository extends DtoRepository<
       }
     }
 
+    if (departmentIdBlock !== undefined) {
+      await this.db
+        .query()
+        .match(node('node', 'Partner', { id }))
+        .apply(departmentIdBlockUtils.set(departmentIdBlock))
+        .return('*')
+        .run();
+    }
+
     return await this.readOne(id, session);
   }
 
@@ -197,9 +209,8 @@ export class PartnerRepository extends DtoRepository<
           'collect(project) as projList',
           'keys(apoc.coll.frequenciesAsMap(apoc.coll.flatten(collect(scopedRoles)))) as scopedRoles',
         ])
-        .subQuery((sub) =>
+        .subQuery('projList', (sub) =>
           sub
-            .with('projList')
             .raw('UNWIND projList as project')
             .apply(matchProjectSens())
             .with('sensitivity')
@@ -207,7 +218,6 @@ export class PartnerRepository extends DtoRepository<
             .raw('LIMIT 1')
             .return('sensitivity')
             .union()
-            .with('projList')
             .with('projList')
             .raw('WHERE size(projList) = 0')
             .return(`'High' as sensitivity`),
@@ -259,6 +269,7 @@ export class PartnerRepository extends DtoRepository<
           relation('out', '', 'languageOfWiderCommunication', ACTIVE),
           node('languageOfWiderCommunication', 'Language'),
         ])
+        .apply(departmentIdBlockUtils.hydrate())
         .return<{ dto: UnsecuredDto<Partner> }>(
           merge('props', {
             __typename: '"Partner"',
@@ -270,6 +281,7 @@ export class PartnerRepository extends DtoRepository<
             fieldRegions: 'fieldRegions',
             countries: 'countries',
             languagesOfConsulting: 'languagesOfConsulting',
+            departmentIdBlock: 'departmentIdBlock',
             scope: 'scopedRoles',
             pinned: 'exists((:User { id: $requestingUser })-[:pinned]->(node))',
           }).as('dto'),

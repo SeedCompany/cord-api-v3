@@ -1,10 +1,5 @@
 import { Cardinality } from 'gel/dist/reflection';
-import {
-  ConditionalPick,
-  MergeExclusive,
-  RequireExactlyOne,
-  StringKeyOf,
-} from 'type-fest';
+import { ConditionalPick, RequireExactlyOne, StringKeyOf } from 'type-fest';
 import { ID } from '~/common';
 import { AllResourceDBNames } from '~/core';
 import {
@@ -30,17 +25,15 @@ type RawInsertShape<Root extends $.ObjectTypeSet> =
         $.stripNonInsertables<
           $.stripBacklinks<Root['__element__']['__pointers__']>
         >
-      > extends infer Shape
-    ? Shape extends $.ObjectTypePointers
-      ? $.typeutil.addQuestionMarks<
-          InsertPointerValues<ConditionalPick<Shape, $.PropertyDesc>>
-        > &
-          AddIdSuffixOptionForInsert<
-            $.typeutil.addQuestionMarks<
-              InsertPointerValues<ConditionalPick<Shape, $.LinkDesc>>
-            >
+      > extends infer Shape extends $.ObjectTypePointers
+    ? $.typeutil.addQuestionMarks<
+        InsertPointerValues<ConditionalPick<Shape, $.PropertyDesc>>
+      > &
+        AddIdSuffixOption<
+          $.typeutil.addQuestionMarks<
+            InsertPointerValues<ConditionalPick<Shape, $.LinkDesc>>
           >
-      : never
+        >
     : never;
 
 type RawUpdateShape<Root extends $.ObjectTypeSet> = $.typeutil.stripNever<
@@ -48,7 +41,7 @@ type RawUpdateShape<Root extends $.ObjectTypeSet> = $.typeutil.stripNever<
 > extends infer Shape
   ? Shape extends $.ObjectTypePointers
     ? UpdatePointerValues<ConditionalPick<Shape, $.PropertyDesc>> &
-        AddIdSuffixOptionForUpdate<
+        AddIdSuffixOption<
           UpdatePointerValues<ConditionalPick<Shape, $.LinkDesc>>
         >
     : never
@@ -70,14 +63,7 @@ type UpdatePointerValues<Shape extends $.ObjectTypePointers> = {
     | AddNullability<Shape[k]>;
 };
 
-type AddIdSuffixOptionForInsert<Links extends Record<string, any>> = {
-  [K in StringKeyOf<Links>]: MergeExclusive<
-    $.typeutil.addQuestionMarks<Record<`${K}Id`, Links[K]>>,
-    $.typeutil.addQuestionMarks<Record<K, Links[K]>>
-  >;
-}[StringKeyOf<Links>];
-
-type AddIdSuffixOptionForUpdate<Links extends Record<string, any>> = {
+type AddIdSuffixOption<Links extends Record<string, any>> = {
   // cannot figure out how to get exclusive keys here to work.
   [K in StringKeyOf<Links>]: Partial<Record<K | `${K}Id`, Links[K]>>;
 }[StringKeyOf<Links>];

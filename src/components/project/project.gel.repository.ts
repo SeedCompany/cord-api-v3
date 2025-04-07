@@ -4,7 +4,13 @@ import { LazyGetter } from 'lazy-get-decorator';
 import { ID, PublicOf, SortablePaginationInput, UnsecuredDto } from '~/common';
 import { grabInstances } from '~/common/instance-maps';
 import { ChangesOf } from '~/core/database/changes';
-import { e, RepoFor, ScopeOf } from '~/core/gel';
+import {
+  e,
+  ExclusivityViolationError,
+  RepoFor,
+  ScopeOf,
+  TransactionRetryInformer,
+} from '~/core/gel';
 import {
   ProjectConcretes as ConcreteTypes,
   CreateProject,
@@ -63,7 +69,10 @@ export class ProjectGelRepository
   extends RepoFor(IProject, { hydrate, omit: ['create', 'update'] })
   implements PublicOf<Neo4jRepository>
 {
-  constructor(private readonly moduleRef: ModuleRef) {
+  constructor(
+    private readonly moduleRef: ModuleRef,
+    private readonly retryInformer: TransactionRetryInformer,
+  ) {
     super();
   }
 
@@ -85,10 +94,21 @@ export class ProjectGelRepository
     existing: UnsecuredDto<Project>,
     changes: ChangesOf<Project, UpdateProject>,
   ) {
-    return await this.defaults.update({
-      id: existing.id,
-      ...changes,
-    });
+    try {
+      return await this.defaults.update({
+        id: existing.id,
+        ...changes,
+      });
+    } catch (e) {
+      if (
+        e instanceof ExclusivityViolationError &&
+        e.objectFQN.endsWith('Project') &&
+        e.property === 'departmentId'
+      ) {
+        this.retryInformer.markForRetry(e);
+      }
+      throw e;
+    }
   }
 
   async getPrimaryOrganizationName(id: ID) {

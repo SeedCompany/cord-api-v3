@@ -155,7 +155,10 @@ export class EngagementService {
   ): Promise<LanguageEngagement> {
     const view: ObjectView = viewOfChangeset(changeset);
 
-    if (input.status) {
+    const previous = await this.repo.readOne(input.id, session, view);
+    const object = this.secure(previous, session) as LanguageEngagement;
+
+    if (input.status && input.status !== previous.status) {
       await this.engagementRules.verifyStatusChange(
         input.id,
         session,
@@ -163,9 +166,6 @@ export class EngagementService {
         changeset,
       );
     }
-
-    const previous = await this.repo.readOne(input.id, session, view);
-    const object = this.secure(previous, session) as LanguageEngagement;
 
     const { methodology: _, ...maybeChanges } = input;
     const changes = this.repo.getActualLanguageChanges(object, maybeChanges);
@@ -195,7 +195,10 @@ export class EngagementService {
   ): Promise<InternshipEngagement> {
     const view: ObjectView = viewOfChangeset(changeset);
 
-    if (input.status) {
+    const previous = await this.repo.readOne(input.id, session, view);
+    const object = this.secure(previous, session) as InternshipEngagement;
+
+    if (input.status && input.status !== previous.status) {
       await this.engagementRules.verifyStatusChange(
         input.id,
         session,
@@ -203,9 +206,6 @@ export class EngagementService {
         changeset,
       );
     }
-
-    const previous = await this.repo.readOne(input.id, session, view);
-    const object = this.secure(previous, session) as InternshipEngagement;
 
     const changes = this.repo.getActualInternshipChanges(object, input);
     this.privileges
