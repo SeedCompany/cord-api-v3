@@ -1,5 +1,6 @@
 import { defineContext, defineWorkflow } from '../../workflow/define-workflow';
 import { TransitionType as Type } from '../../workflow/dto';
+import { Notifier } from '../../workflow/transitions/notifiers';
 import { ProjectStep as Step } from '../dto';
 import { ProjectWorkflowEvent } from './dto';
 import {
@@ -336,6 +337,22 @@ export const ProjectWorkflow = defineWorkflow({
     to: Step.DiscussingChangeToPlan,
     label: 'Retract Approval Request',
     type: Type.Neutral,
+    notifiers: [
+      {
+        description: 'RD / Financial Approvers',
+        resolve: async (params): Promise<Notifier[]> => {
+          const { transitionByName } = ProjectWorkflow;
+          const symmetricTransition =
+            params.previousStep === Step.PendingChangeToPlanApproval
+              ? transitionByName('Request Change To Plan Approval')
+              : transitionByName('Approve Change To Plan');
+          const resolved = await Promise.all(
+            symmetricTransition.notifiers.map((n) => n.resolve(params)),
+          );
+          return resolved.flat();
+        },
+      },
+    ],
   },
 
   'Request Changes for Change To Plan': {
