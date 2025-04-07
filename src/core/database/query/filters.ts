@@ -242,9 +242,8 @@ export const sub =
   ({ key, value, query }) => {
     const input = [...many(extraInput ?? [])];
     return query
-      .subQuery((sub) =>
+      .subQuery(['node', ...input], (sub) =>
         sub
-          .with(['node', ...input])
           .with([`node as ${outerVar}`, ...input])
           .apply(matchSubNode)
           .apply(subBuilder()(value))
