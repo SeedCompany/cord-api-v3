@@ -197,13 +197,15 @@ export const conditionalOn = <R>(
 ): QueryFragment<unknown, R> => {
   const imports = [...new Set([conditionVar, ...scope])];
   return (query) =>
-    query.subQuery(imports, (sub) =>
+    query.subQuery((sub) =>
       sub
+        .with(imports)
         .with(imports)
         .raw(`WHERE ${conditionVar}`)
         .apply(trueQuery)
 
         .union()
+        .with(imports)
         .with(imports)
         .raw(`WHERE NOT ${conditionVar}`)
         .apply(falseQuery),

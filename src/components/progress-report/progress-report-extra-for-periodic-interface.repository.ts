@@ -90,6 +90,7 @@ export const progressReportExtrasSorters: DefinedSorters<
           ])
           .apply(sortWith(progressSummarySorters, input))
           .union()
+          .with('node')
           .with('node as report')
           .where(
             not(

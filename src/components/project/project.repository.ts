@@ -373,6 +373,7 @@ export const projectSorters = defineSorters(IProject, {
       .match(getPath())
       .apply(sortWith(locationSorters, input))
       .union()
+      .with('node')
       .with('node as project')
       .where(not(path(getPath(true))))
       .return<SortCol>('null as sortValue');
@@ -391,6 +392,7 @@ export const projectSorters = defineSorters(IProject, {
       .match(getPath())
       .apply(sortWith(partnershipSorters, input))
       .union()
+      .with('node')
       .with('node as project')
       .where(not(path(getPath(true))))
       .return<SortCol>('null as sortValue');
