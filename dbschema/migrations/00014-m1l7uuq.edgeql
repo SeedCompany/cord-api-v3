@@ -1,5 +1,5 @@
 CREATE MIGRATION m1l7uuqm3my5klng3a2m6wqoswaq63h6jb63gvioafpj2t5yffxduq
-  ONTO m1pytxnqwlhqituog3zrfnocc7khycj3b6rcf6rkm6ek3cnhh4esqa
+    ONTO m1pytxnqwlhqituog3zrfnocc7khycj3b6rcf6rkm6ek3cnhh4esqa
 {
   ALTER SCALAR TYPE default::Role EXTENDING enum<Administrator, BetaTester, BibleTranslationLiaison, Consultant, ConsultantManager, Controller, ExperienceOperations, FieldOperationsDirector, FieldPartner, FinancialAnalyst, Fundraising, Intern, LeadFinancialAnalyst, Leadership, Liaison, Marketing, Mentor, ProjectManager, RegionalCommunicationsCoordinator, RegionalDirector, StaffMember, Translator, MultiplicationFinanceApprover>;
   ALTER TYPE Project::WorkflowEvent {

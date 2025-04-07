@@ -23,6 +23,7 @@ export interface GraphQLTestClient {
     variables?: TVars,
   ) => GqlResult<TData>;
   authToken: string;
+  email?: string;
 }
 
 export const createGraphqlClient = async (
@@ -33,6 +34,7 @@ export const createGraphqlClient = async (
   app.get(ConfigService).hostUrl$.next(new URL(url) as URL & string);
 
   let authToken = '';
+  let email: string | undefined = undefined;
 
   const execute = <TData = AnyObject, TVars = AnyObject>(
     doc: DocumentNode | string,
@@ -72,6 +74,12 @@ export const createGraphqlClient = async (
     },
     set authToken(token: string) {
       authToken = token;
+    },
+    get email() {
+      return email;
+    },
+    set email(next: string | undefined) {
+      email = next;
     },
   };
 };

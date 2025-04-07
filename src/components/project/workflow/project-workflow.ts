@@ -1,5 +1,6 @@
 import { defineContext, defineWorkflow } from '../../workflow/define-workflow';
 import { TransitionType as Type } from '../../workflow/dto';
+import { Notifier } from '../../workflow/transitions/notifiers';
 import { ProjectStep as Step } from '../dto';
 import { ProjectWorkflowEvent } from './dto';
 import {
@@ -302,7 +303,14 @@ export const ProjectWorkflow = defineWorkflow({
   'Request Change To Plan Approval': {
     from: Step.DiscussingChangeToPlan,
     to: Step.PendingChangeToPlanApproval,
-    label: 'Submit for Approval',
+    label: 'Submit for RD Approval',
+    type: Type.Approve,
+    notifiers: [Distros.Extension, Distros.Revision],
+  },
+  'Request Change To Plan Finance Confirmation': {
+    from: Step.DiscussingChangeToPlan,
+    to: Step.PendingChangeToPlanConfirmation,
+    label: 'Submit for Finance Confirmation',
     type: Type.Approve,
     notifiers: [Distros.Extension, Distros.Revision],
   },
@@ -319,6 +327,32 @@ export const ProjectWorkflow = defineWorkflow({
     label: 'Will Not Change Plan',
     type: Type.Neutral,
     notifiers: [Distros.Extension, Distros.Revision],
+  },
+
+  'Retract Change To Plan Approval Request': {
+    from: [
+      Step.PendingChangeToPlanApproval,
+      Step.PendingChangeToPlanConfirmation,
+    ],
+    to: Step.DiscussingChangeToPlan,
+    label: 'Retract Approval Request',
+    type: Type.Neutral,
+    notifiers: [
+      {
+        description: 'RD / Financial Approvers',
+        resolve: async (params): Promise<Notifier[]> => {
+          const { transitionByName } = ProjectWorkflow;
+          const symmetricTransition =
+            params.previousStep === Step.PendingChangeToPlanApproval
+              ? transitionByName('Request Change To Plan Approval')
+              : transitionByName('Approve Change To Plan');
+          const resolved = await Promise.all(
+            symmetricTransition.notifiers.map((n) => n.resolve(params)),
+          );
+          return resolved.flat();
+        },
+      },
+    ],
   },
 
   'Request Changes for Change To Plan': {

@@ -43,7 +43,11 @@ export class ProjectWorkflowNotificationHandler
     // TODO on bypass: keep notifying members? add anyone else?
     const notifiers = transition?.notifiers ?? [];
 
-    const params = { project: event.project, moduleRef: this.moduleRef };
+    const params = {
+      project: event.project,
+      previousStep,
+      moduleRef: this.moduleRef,
+    };
     const notifyees = (
       await Promise.all(notifiers.map((notifier) => notifier.resolve(params)))
     )

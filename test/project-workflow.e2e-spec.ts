@@ -293,12 +293,21 @@ describe('Project-Workflow e2e', () => {
       await project.executeByLabel('Discuss Change to Plan');
       expect(project.state).toBe(ProjectStep.DiscussingChangeToPlan);
 
-      await project.executeByLabel('Submit for Approval');
+      await project.executeByLabel('Submit for RD Approval');
       expect(project.state).toBe(ProjectStep.PendingChangeToPlanApproval);
+
+      await project.executeByLabel('Retract Approval Request');
+      expect(project.state).toBe(ProjectStep.DiscussingChangeToPlan);
+      await project.executeByLabel('Submit for RD Approval');
 
       await fieldOpsDirector.login();
       await project.executeByLabel('Approve Change to Plan');
       expect(project.state).toBe(ProjectStep.PendingChangeToPlanConfirmation);
+
+      await projectManager.login();
+      expect(
+        await project.transitionByLabel('Retract Approval Request'),
+      ).toBeTruthy();
 
       await controller.login();
       await project.executeByLabel('Approve Change to Plan');
