@@ -155,11 +155,14 @@ export class SetDepartmentId implements IEventHandler<SubscribedEvent> {
       .match(
         isMultiplication
           ? [
-              node('project'),
-              relation('out', '', 'partnership', ACTIVE),
-              node('holder', 'Partnership'),
-              relation('out', '', 'primary', ACTIVE),
-              node('', 'Property', { value: variable('true') }),
+              [
+                node('project'),
+                relation('out', '', 'partnership', ACTIVE),
+                node('partnership', 'Partnership'),
+                relation('out', '', 'primary', ACTIVE),
+                node('', 'Property', { value: variable('true') }),
+              ],
+              [node('partnership'), relation('out'), node('holder', 'Partner')],
             ]
           : [
               node('project'),
