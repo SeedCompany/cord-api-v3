@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { inArray, node, not, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
+  DuplicateException,
   ID,
   NotFoundException,
   Sensitivity,
@@ -10,7 +11,7 @@ import {
   UnsecuredDto,
 } from '~/common';
 import { ConfigService } from '~/core';
-import { CommonRepository, OnIndex } from '~/core/database';
+import { CommonRepository, OnIndex, UniquenessError } from '~/core/database';
 import { ChangesOf, getChanges } from '~/core/database/changes';
 import {
   ACTIVE,
@@ -182,7 +183,7 @@ export class ProjectRepository extends CommonRepository {
       canDelete: true,
     };
 
-    const result = await this.db
+    const query = this.db
       .query()
       .apply(
         await createNode(resolveProjectType({ type }), {
@@ -200,8 +201,21 @@ export class ProjectRepository extends CommonRepository {
           owningOrganization: ['Organization', this.config.defaultOrg.id],
         }),
       )
-      .return<{ id: ID }>('node.id as id')
-      .first();
+      .return<{ id: ID }>('node.id as id');
+    let result;
+    try {
+      result = await query.first();
+    } catch (e) {
+      if (e instanceof UniquenessError && e.label === 'ProjectName') {
+        throw Object.assign(
+          new DuplicateException(
+            'project.name',
+            'Project with this name already exists',
+          ),
+          { value: e.value },
+        );
+      }
+    }
     if (!result) {
       throw new ServerException('Failed to create project');
     }
