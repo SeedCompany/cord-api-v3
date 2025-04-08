@@ -141,7 +141,12 @@ export const defineSorters = <TResourceStatic extends ResourceShape<any>>(
     ) ?? [null, null];
     if (matchedPrefix && subCustom) {
       const subField = sort.slice(matchedPrefix.length - 1);
-      return { ...common, matcher: subCustom, sort: subField };
+      const matcher: SortMatcher<string> = (query, input) =>
+        query
+          .with('node as outer')
+          .subQuery('outer', (sub) => sub.apply((q) => subCustom(q, input)))
+          .return('sortValue');
+      return { ...common, matcher, sort: subField };
     }
 
     const baseNodeProps = resource.BaseNodeProps ?? Resource.Props;

@@ -380,9 +380,8 @@ export const languageSorters = defineSorters(Language, {
   // eslint-disable-next-line @typescript-eslint/naming-convention
   'ethnologue.*': (query, input) =>
     query
-      .with('node as lang')
       .match([
-        node('lang'),
+        node('outer'),
         relation('out', '', 'ethnologue'),
         node('node', 'EthnologueLanguage'),
       ])

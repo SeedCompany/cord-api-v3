@@ -439,9 +439,8 @@ export const partnershipSorters = defineSorters(Partnership, {
   // eslint-disable-next-line @typescript-eslint/naming-convention
   'partner.*': (query, input) =>
     query
-      .with('node as partnership')
       .match([
-        node('partnership'),
+        node('outer'),
         relation('out', '', 'partner'),
         node('node', 'Partner'),
       ])

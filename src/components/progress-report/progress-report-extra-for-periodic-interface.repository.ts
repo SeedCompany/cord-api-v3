@@ -53,9 +53,8 @@ export const progressReportExtrasSorters: DefinedSorters<
   // eslint-disable-next-line @typescript-eslint/naming-convention
   'pnpExtractionResult.*': (query, input) =>
     query
-      .with('node as report')
       .match([
-        node('report'),
+        node('outer'),
         relation('out', '', 'reportFileNode'),
         node('file', 'File'),
         relation('out', '', 'pnpExtractionResult'),
@@ -65,9 +64,8 @@ export const progressReportExtrasSorters: DefinedSorters<
   // eslint-disable-next-line @typescript-eslint/naming-convention
   'engagement.*': (query, input) =>
     query
-      .with('node as report')
       .match([
-        node('report'),
+        node('outer'),
         relation('in', '', 'report'),
         node('node', 'LanguageEngagement'),
       ])
@@ -81,26 +79,27 @@ export const progressReportExtrasSorters: DefinedSorters<
     ({ field, period }) => {
       const periodVar = { period: variable(`"${period}"`) };
       const matcher: SortMatcher<string> = (query, input) =>
-        query
-          .with('node as report')
-          .match([
-            node('report'),
-            relation('out', '', 'summary'),
-            node('node', 'ProgressSummary', periodVar),
-          ])
-          .apply(sortWith(progressSummarySorters, input))
-          .union()
-          .with('node as report')
-          .where(
-            not(
-              path([
-                node('report'),
-                relation('out', '', 'summary'),
-                node('', 'ProgressSummary', periodVar),
-              ]),
-            ),
-          )
-          .return<SortCol>('null as sortValue');
+        query.with('node as report').subQuery('report', (sub) =>
+          sub
+            .match([
+              node('report'),
+              relation('out', '', 'summary'),
+              node('node', 'ProgressSummary', periodVar),
+            ])
+            .apply(sortWith(progressSummarySorters, input))
+            .union()
+            .with('node as report')
+            .where(
+              not(
+                path([
+                  node('report'),
+                  relation('out', '', 'summary'),
+                  node('', 'ProgressSummary', periodVar),
+                ]),
+              ),
+            )
+            .return<SortCol>('null as sortValue'),
+        );
       return [`${field}.*`, matcher];
     },
   ).asRecord,
