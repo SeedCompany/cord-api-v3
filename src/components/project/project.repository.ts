@@ -215,6 +215,15 @@ export class ProjectRepository extends CommonRepository {
           { value: e.value },
         );
       }
+      if (e instanceof UniquenessError && e.label === 'DepartmentId') {
+        throw Object.assign(
+          new DuplicateException(
+            'project.departmentId',
+            'Another Project with this Department ID already exists',
+          ),
+          { value: e.value },
+        );
+      }
     }
     if (!result) {
       throw new ServerException('Failed to create project');
@@ -235,12 +244,26 @@ export class ProjectRepository extends CommonRepository {
       ...simpleChanges
     } = changes;
 
-    let result = await this.db.updateProperties({
-      type: resolveProjectType({ type: existing.type }),
-      object: existing,
-      changes: simpleChanges,
-      changeset,
-    });
+    let result;
+    try {
+      result = await this.db.updateProperties({
+        type: resolveProjectType({ type: existing.type }),
+        object: existing,
+        changes: simpleChanges,
+        changeset,
+      });
+    } catch (e) {
+      if (e instanceof UniquenessError && e.label === 'DepartmentId') {
+        throw Object.assign(
+          new DuplicateException(
+            'project.departmentId',
+            'Another Project with this Department ID already exists',
+          ),
+          { value: e.value },
+        );
+      }
+      throw e;
+    }
 
     if (primaryLocationId !== undefined) {
       await this.updateRelation(
