@@ -245,13 +245,17 @@ export const sub =
       .subQuery(['node', ...input], (sub) =>
         sub
           .with([`node as ${outerVar}`, ...input])
-          .apply(matchSubNode)
-          .apply(subBuilder()(value))
-          .return(`true as ${key}FiltersApplied`)
-          // Prevent filter from increasing cardinality above 1.
-          // This happens with `1-Many` relationships matched in `matchSubNode`.
-          // Note they are allowed to reduce cardinality to 0.
-          .raw('limit 1'),
+          .subQuery([...outerVar, ...input], (sub2) =>
+            sub2
+              .apply(matchSubNode)
+              .apply(subBuilder()(value))
+              .return(`true as ${key}FiltersApplied`)
+              // Prevent filter from increasing cardinality above 1.
+              // This happens with `1-Many` relationships matched in `matchSubNode`.
+              // Note they are allowed to reduce cardinality to 0.
+              .raw('limit 1'),
+          )
+          .return(`${key}FiltersApplied`),
       )
       .with('*');
   };
