@@ -65,10 +65,12 @@ export abstract class PlanningSheet extends Sheet {
     return this.column('Q');
   }
 
-  get goals(): Range<PlanningSheet> {
+  @Once() get goals(): Range<PlanningSheet> {
     return this.range(this.goalsStart, this.goalsEnd);
   }
-  protected goalsStart = this.cell(this.goalColumn, 23);
+  @Once() protected get goalsStart() {
+    return this.cell(this.goalColumn, 23);
+  }
   @Once() protected get goalsEnd() {
     return this.sheetRange.end.row.cell(this.goalColumn);
   }
