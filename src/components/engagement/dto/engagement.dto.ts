@@ -75,7 +75,8 @@ class Engagement extends Interfaces {
 
   declare readonly __typename: DBNames<typeof e.Engagement>;
 
-  readonly project: LinkTo<'Project'> & Pick<IProject, 'status' | 'type'>;
+  readonly project: LinkTo<'Project'> &
+    Pick<UnsecuredDto<IProject>, 'status' | 'step' | 'type'>;
 
   @Field(() => IProject)
   declare readonly parent: BaseNode;
