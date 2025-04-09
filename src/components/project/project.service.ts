@@ -1,7 +1,7 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { Many } from '@seedcompany/common';
 import {
-  DuplicateException,
+  ClientException,
   EnhancedResource,
   ID,
   InputException,
@@ -24,7 +24,7 @@ import {
   ILogger,
   Logger,
 } from '~/core';
-import { Transactional, UniquenessError } from '~/core/database';
+import { Transactional } from '~/core/database';
 import { Privileges } from '../authorization';
 import { withoutScope } from '../authorization/dto';
 import { BudgetService } from '../budget';
@@ -176,16 +176,7 @@ export class ProjectService {
 
       return event.project;
     } catch (e) {
-      if (e instanceof UniquenessError && e.label === 'ProjectName') {
-        throw new DuplicateException(
-          'project.name',
-          'Project with this name already exists',
-        );
-      }
-      if (
-        e instanceof NotFoundException ||
-        e instanceof UnauthorizedException
-      ) {
+      if (e instanceof ClientException) {
         throw e;
       }
       throw new ServerException(`Could not create project`, e);
