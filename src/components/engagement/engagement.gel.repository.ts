@@ -22,6 +22,7 @@ const baseHydrate = e.shape(e.Engagement, (engagement) => ({
   project: {
     id: true,
     status: true,
+    step: true,
     type: true,
   },
   parent: e.tuple({

@@ -167,9 +167,12 @@ export class EngagementRepository extends CommonRepository {
           node('mouEnd'),
         ])
         .match([
-          node('project'),
-          relation('out', '', 'status', ACTIVE),
-          node('status'),
+          [
+            node('project'),
+            relation('out', '', 'status', ACTIVE),
+            node('status'),
+          ],
+          [node('project'), relation('out', '', 'step', ACTIVE), node('step')],
         ])
         .return<{ dto: UnsecuredDto<Engagement> }>(
           merge('props', 'changedProps', {
@@ -185,6 +188,7 @@ export class EngagementRepository extends CommonRepository {
               id: 'project.id',
               type: 'project.type',
               status: 'status.value',
+              step: 'step.value',
             },
             language: 'language { .id }',
             pnp: { id: 'props.pnp' },
