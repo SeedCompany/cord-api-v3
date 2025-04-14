@@ -57,6 +57,6 @@ partnerships := (
   )
 ),
 
-new := (select partnerships filter .createdAt = datetime_of_statement())
+new := (select partnerships filter .createdAt = datetime_of_transaction())
 select { `Added Partnerships` := new.partner.name ++ ' ' ++ new.project.name }
 filter count(new) > 0;

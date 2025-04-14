@@ -48,6 +48,6 @@ with
       }
     )
   ),
-  modified := (select users filter .modifiedAt = datetime_of_statement())
+  modified := (select users filter .modifiedAt = datetime_of_transaction())
 select {`Modified Users` := modified.realFirstName ++ ' ' ++ modified.realLastName}
 filter count(modified) > 0;

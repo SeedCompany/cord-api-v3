@@ -61,7 +61,7 @@ with
       )
     )
   ),
-  new := (select newMembers filter .createdAt = datetime_of_statement())
+  new := (select newMembers filter .createdAt = datetime_of_transaction())
 select { `Added Project Members: Member -> Project`
   := new.user.realFirstName ++ ' ' ++ new.user.realLastName ++ ' -> ' ++ new.project.name }
 filter count(new) > 0;
