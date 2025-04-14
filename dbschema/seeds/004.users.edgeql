@@ -172,6 +172,6 @@ with
       })
     )
   ),
-  new := (select users filter .createdAt = datetime_of_statement())
+  new := (select users filter .createdAt = datetime_of_transaction())
 select { `Added Users` := new.realFirstName ++ ' ' ++ new.realLastName }
 filter count(new) > 0;

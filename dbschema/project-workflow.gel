@@ -10,7 +10,7 @@ module Project {
     };
     required at: datetime {
       readonly := true;
-      default := datetime_of_statement();
+      default := datetime_of_transaction();
     };
     transitionKey: uuid {
       readonly := true;

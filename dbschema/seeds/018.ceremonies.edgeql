@@ -30,6 +30,6 @@ with
       }
     )
   ),
-  modified := (select ceremonies filter .modifiedAt = datetime_of_statement())
+  modified := (select ceremonies filter .modifiedAt = datetime_of_transaction())
 select { `Modified Ceremonies` := modified.id }
 filter count(modified) > 0;
