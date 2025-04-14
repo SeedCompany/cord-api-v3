@@ -97,14 +97,11 @@ export const CypherFactory: FactoryProvider<Connection> = {
       } else if (
         (level === LogLevel.WARNING &&
           message.includes('Failed to connect to server')) ||
-        (level === LogLevel.ERROR &&
-          message.includes(
-            'experienced a fatal error {"code":"ServiceUnavailable","name":"Neo4jError"}',
-          ))
+        (level === LogLevel.ERROR && message.includes('"retriable":true'))
       ) {
-        // Change connection failure messages to debug.
-        // Connection failures are thrown so they will get logged
-        // in exception handling (if they are not handled, i.e. retries/transactions).
+        // Change retriable failure messages to debug.
+        // These errors, like connection failures, will ultimately be thrown
+        // (and logged that way) after retries are exhausted.
         // Otherwise, these are misleading as they aren't actual problems.
         driverLogger.log(LogLevel.DEBUG, message);
       } else {
