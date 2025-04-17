@@ -9,11 +9,13 @@ import {
   relation,
 } from 'cypher-query-builder';
 import {
+  CreationFailed,
   DuplicateException,
   ID,
   labelForView,
   NotFoundException,
   ObjectView,
+  ReadAfterCreationFailed,
   ServerException,
   Session,
   UnsecuredDto,
@@ -118,14 +120,18 @@ export class LanguageRepository extends DtoRepository<
         );
       }
 
-      throw new ServerException('Could not create language', e);
+      throw new CreationFailed(Language, { cause: e });
     }
 
     if (!result) {
-      throw new ServerException('Failed to create language');
+      throw new CreationFailed(Language);
     }
 
-    return await this.readOne(result.id, session);
+    return await this.readOne(result.id, session).catch((e) => {
+      throw e instanceof NotFoundException
+        ? new ReadAfterCreationFailed(Language)
+        : e;
+    });
   }
 
   async update(

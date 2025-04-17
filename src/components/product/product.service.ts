@@ -6,6 +6,7 @@ import {
   InputException,
   NotFoundException,
   ObjectView,
+  ReadAfterCreationFailed,
   ServerException,
   Session,
   UnsecuredDto,
@@ -154,7 +155,11 @@ export class ProductService {
           });
 
     this.logger.debug(`product created`, { id });
-    const created = await this.readOne(id, session);
+    const created = await this.readOne(id, session).catch((e) => {
+      throw e instanceof NotFoundException
+        ? new ReadAfterCreationFailed(Product)
+        : e;
+    });
 
     this.privileges
       .for(session, resolveProductType(created), created)

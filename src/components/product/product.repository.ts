@@ -10,13 +10,7 @@ import {
 } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import { Except, Merge } from 'type-fest';
-import {
-  getDbClassLabels,
-  ID,
-  Range,
-  ServerException,
-  Session,
-} from '~/common';
+import { CreationFailed, getDbClassLabels, ID, Range, Session } from '~/common';
 import { CommonRepository, DbTypeOf, OnIndex } from '~/core/database';
 import { DbChanges, getChanges } from '~/core/database/changes';
 import {
@@ -359,7 +353,7 @@ export class ProductRepository extends CommonRepository {
       .return<{ id: ID }>('node.id as id');
     const result = await query.first();
     if (!result) {
-      throw new ServerException('Failed to create product');
+      throw new CreationFailed(Product);
     }
     return result.id;
   }
@@ -395,7 +389,7 @@ export class ProductRepository extends CommonRepository {
       .return<{ id: ID }>('node.id as id');
     const result = await query.first();
     if (!result) {
-      throw new ServerException('Failed to create product');
+      throw new CreationFailed(OtherProduct);
     }
     return result.id;
   }

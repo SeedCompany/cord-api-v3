@@ -2,9 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
+  CreationFailed,
   DuplicateException,
   generateId,
   ID,
+  NotFoundException,
+  ReadAfterCreationFailed,
   ServerException,
   Session,
   UnsecuredDto,
@@ -70,10 +73,14 @@ export class LocationRepository extends DtoRepository(Location) {
 
     const result = await query.first();
     if (!result) {
-      throw new ServerException('Failed to create location');
+      throw new CreationFailed(Location);
     }
 
-    const dto = await this.readOne(result.id);
+    const dto = await this.readOne(result.id).catch((e) => {
+      throw e instanceof NotFoundException
+        ? new ReadAfterCreationFailed(Location)
+        : e;
+    });
 
     await this.files.createDefinedFile(
       mapImageId,

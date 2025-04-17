@@ -1,10 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { Query } from 'cypher-query-builder';
 import {
+  CreationFailed,
   DuplicateException,
   ID,
+  NotFoundException,
   PaginatedListType,
-  ServerException,
+  ReadAfterCreationFailed,
   Session,
   UnsecuredDto,
 } from '~/common';
@@ -55,7 +57,7 @@ export class EthnoArtRepository extends DtoRepository(EthnoArt) {
       .first();
 
     if (!result) {
-      throw new ServerException('Failed to create ethno art');
+      throw new CreationFailed(EthnoArt);
     }
 
     await this.scriptureRefsService.create(
@@ -64,7 +66,11 @@ export class EthnoArtRepository extends DtoRepository(EthnoArt) {
       session,
     );
 
-    return await this.readOne(result.id);
+    return await this.readOne(result.id).catch((e) => {
+      throw e instanceof NotFoundException
+        ? new ReadAfterCreationFailed(EthnoArt)
+        : e;
+    });
   }
 
   async update(input: UpdateEthnoArt) {

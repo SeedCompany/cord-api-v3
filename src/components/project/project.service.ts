@@ -2,6 +2,7 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { Many } from '@seedcompany/common';
 import {
   ClientException,
+  CreationFailed,
   EnhancedResource,
   ID,
   InputException,
@@ -9,6 +10,7 @@ import {
   many,
   NotFoundException,
   ObjectView,
+  ReadAfterCreationFailed,
   Role,
   SecuredList,
   ServerException,
@@ -150,7 +152,11 @@ export class ProjectService {
 
     try {
       const { id } = await this.repo.create(input);
-      const project = await this.readOneUnsecured(id, session);
+      const project = await this.readOneUnsecured(id, session).catch((e) => {
+        throw e instanceof NotFoundException
+          ? new ReadAfterCreationFailed(IProject)
+          : e;
+      });
 
       // Add creator to the project team with their global roles
       await this.projectMembers.create(
@@ -179,7 +185,7 @@ export class ProjectService {
       if (e instanceof ClientException) {
         throw e;
       }
-      throw new ServerException(`Could not create project`, e);
+      throw new CreationFailed(IProject, { cause: e });
     }
   }
 

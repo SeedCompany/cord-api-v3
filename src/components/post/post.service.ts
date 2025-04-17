@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import {
+  CreationFailed,
   ID,
   InputException,
   InvalidIdForTypeException,
@@ -46,7 +47,7 @@ export class PostService {
     try {
       const result = await this.repo.create(input, session);
       if (!result) {
-        throw new ServerException('Failed to create post');
+        throw new CreationFailed(Post);
       }
 
       return this.secure(result.dto, session);
@@ -59,7 +60,7 @@ export class PostService {
         throw new InputException('parentId is invalid', 'post.parentId');
       }
 
-      throw new ServerException('Failed to create post', exception);
+      throw new CreationFailed(Post, { cause: exception });
     }
   }
 

@@ -2,11 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { inArray, node, Query, relation } from 'cypher-query-builder';
 import { pickBy } from 'lodash';
 import {
+  CreationFailed,
   ID,
   labelForView,
   NotFoundException,
   ObjectView,
-  ServerException,
   Session,
   UnsecuredDto,
   viewOfChangeset,
@@ -64,7 +64,7 @@ export class BudgetRepository extends DtoRepository<
       .first();
 
     if (!result) {
-      throw new ServerException('Failed to create budget');
+      throw new CreationFailed(Budget);
     }
 
     return result.id;

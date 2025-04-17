@@ -3,10 +3,12 @@ import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   CalendarDate,
+  CreationFailed,
   DuplicateException,
   ID,
   InputException,
-  ServerException,
+  NotFoundException,
+  ReadAfterCreationFailed,
   Session,
   UnsecuredDto,
 } from '~/common';
@@ -101,10 +103,14 @@ export class PartnerRepository extends DtoRepository<
       .return<{ id: ID }>('node.id as id')
       .first();
     if (!result) {
-      throw new ServerException('Failed to create partner');
+      throw new CreationFailed(Partner);
     }
 
-    return await this.readOne(result.id, session);
+    return await this.readOne(result.id, session).catch((e) => {
+      throw e instanceof NotFoundException
+        ? new ReadAfterCreationFailed(Partner)
+        : e;
+    });
   }
 
   async update(changes: UpdatePartner, session: Session) {

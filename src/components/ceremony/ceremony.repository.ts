@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
-import { ID, ServerException, Session, UnsecuredDto } from '~/common';
+import { CreationFailed, ID, Session, UnsecuredDto } from '~/common';
 import { DtoRepository } from '~/core/database';
 import {
   ACTIVE,
@@ -38,7 +38,7 @@ export class CeremonyRepository extends DtoRepository<
       .first();
 
     if (!result) {
-      throw new ServerException('failed to create a ceremony');
+      throw new CreationFailed(Ceremony);
     }
     return result;
   }

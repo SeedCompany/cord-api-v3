@@ -1,10 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { Query } from 'cypher-query-builder';
 import {
+  CreationFailed,
   DuplicateException,
   ID,
+  NotFoundException,
   PaginatedListType,
-  ServerException,
+  ReadAfterCreationFailed,
   Session,
   UnsecuredDto,
 } from '~/common';
@@ -50,7 +52,7 @@ export class FilmRepository extends DtoRepository(Film) {
       .first();
 
     if (!result) {
-      throw new ServerException('failed to create a film');
+      throw new CreationFailed(Film);
     }
 
     await this.scriptureRefsService.create(
@@ -59,7 +61,11 @@ export class FilmRepository extends DtoRepository(Film) {
       session,
     );
 
-    return await this.readOne(result.id);
+    return await this.readOne(result.id).catch((e) => {
+      throw e instanceof NotFoundException
+        ? new ReadAfterCreationFailed(Film)
+        : e;
+    });
   }
 
   async update(input: UpdateFilm) {

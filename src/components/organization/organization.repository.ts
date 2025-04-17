@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import {
+  CreationFailed,
   DuplicateException,
   ID,
-  ServerException,
+  NotFoundException,
+  ReadAfterCreationFailed,
   Session,
   UnsecuredDto,
 } from '~/common';
@@ -61,10 +63,14 @@ export class OrganizationRepository extends DtoRepository<
 
     const result = await query.first();
     if (!result) {
-      throw new ServerException('Failed to create organization');
+      throw new CreationFailed(Organization);
     }
 
-    return await this.readOne(result.id, session);
+    return await this.readOne(result.id, session).catch((e) => {
+      throw e instanceof NotFoundException
+        ? new ReadAfterCreationFailed(Organization)
+        : e;
+    });
   }
 
   async update(changes: UpdateOrganization, session: Session) {

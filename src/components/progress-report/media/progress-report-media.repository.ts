@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { inArray, node, not, Query, relation } from 'cypher-query-builder';
 import {
+  CreationFailed,
   generateId,
   ID,
   IdOf,
   InputException,
   NotFoundException,
-  ServerException,
   Session,
 } from '~/common';
 import { DbTypeOf, DtoRepository } from '~/core/database';
@@ -214,7 +214,7 @@ export class ProgressReportMediaRepository extends DtoRepository<
       );
     }
 
-    throw new ServerException('Failed to create report media');
+    throw new CreationFailed(ReportMedia);
   }
 
   async update({ id, category }: UpdateMedia) {
