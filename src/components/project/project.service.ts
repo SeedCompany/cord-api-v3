@@ -1,6 +1,7 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { Many } from '@seedcompany/common';
 import {
+  CalendarDate,
   ClientException,
   CreationFailed,
   EnhancedResource,
@@ -10,6 +11,8 @@ import {
   many,
   NotFoundException,
   ObjectView,
+  Range,
+  RangeException,
   ReadAfterCreationFailed,
   Role,
   SecuredList,
@@ -27,6 +30,7 @@ import {
   Logger,
 } from '~/core';
 import { Transactional } from '~/core/database';
+import { AnyChangesOf } from '~/core/database/changes';
 import { Privileges } from '../authorization';
 import { withoutScope } from '../authorization/dto';
 import { BudgetService } from '../budget';
@@ -101,6 +105,7 @@ export class ProjectService {
     input: CreateProject,
     session: Session,
   ): Promise<UnsecuredDto<Project>> {
+    ProjectDateRangeException.throwIfInvalid(input);
     if (input.type !== ProjectType.Internship && input.sensitivity) {
       throw new InputException(
         'Can only set sensitivity on Internship Projects',
@@ -289,6 +294,8 @@ export class ProjectService {
     if (!changedStep && Object.keys(changes).length === 0) {
       return await this.readOneUnsecured(input.id, session, changeset);
     }
+
+    ProjectDateRangeException.throwIfInvalid(currentProject, changes);
 
     let updated = currentProject;
     if (changedStep) {
@@ -609,5 +616,25 @@ export class ProjectService {
         );
       }),
     );
+  }
+}
+
+class ProjectDateRangeException extends RangeException {
+  static throwIfInvalid(
+    current: Partial<Pick<UnsecuredDto<Project>, 'mouStart' | 'mouEnd'>>,
+    changes: AnyChangesOf<Project> = {},
+  ) {
+    const start =
+      changes.mouStart !== undefined ? changes.mouStart : current.mouStart;
+    const end = changes.mouEnd !== undefined ? changes.mouEnd : current.mouEnd;
+    if (start && end && start > end) {
+      const field = changes.mouEnd ? 'project.mouEnd' : 'project.mouStart';
+      throw new ProjectDateRangeException({ start, end }, field);
+    }
+  }
+
+  constructor(readonly value: Range<CalendarDate>, readonly field: string) {
+    const message = "Project's MOU start date must be before the MOU end date";
+    super({ message, field });
   }
 }
