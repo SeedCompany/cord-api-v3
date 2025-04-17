@@ -107,6 +107,12 @@ export abstract class UpdateLanguage {
   @Field({ nullable: true })
   readonly hasExternalFirstScripture?: boolean;
 
+  @Field({ nullable: true })
+  readonly isLanguageOfWiderCommunication?: boolean;
+
+  @Field({ nullable: true })
+  readonly isLanguageOfReporting?: boolean;
+
   @Field(() => [String], { nullable: true })
   @Transform(({ value }) => uniq(value))
   readonly tags?: string[];

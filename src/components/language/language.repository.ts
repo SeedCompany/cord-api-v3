@@ -81,6 +81,8 @@ export class LanguageRepository extends DtoRepository<
       signLanguageCode: input.signLanguageCode,
       sponsorEstimatedEndDate: input.sponsorEstimatedEndDate,
       hasExternalFirstScripture: input.hasExternalFirstScripture,
+      isLanguageOfReporting: input.isLanguageOfReporting,
+      isLanguageOfWiderCommunication: input.isLanguageOfWiderCommunication,
       tags: input.tags,
       canDelete: true,
     };
@@ -302,6 +304,8 @@ export const languageFilters = filter.define(() => LanguageFilters, {
   sensitivity: filter.stringListProp(),
   leastOfThese: filter.propVal(),
   isSignLanguage: filter.propVal(),
+  isLanguageOfReporting: filter.propVal(),
+  isLanguageOfWiderCommunication: filter.propVal(),
   isDialect: filter.propVal(),
   registryOfDialectsCode: filter.propPartialVal(
     'registryOfLanguageVarietiesCode',

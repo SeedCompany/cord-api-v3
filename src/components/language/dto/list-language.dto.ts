@@ -60,6 +60,16 @@ export abstract class LanguageFilters {
 
   @Field({
     nullable: true,
+  })
+  readonly isLanguageOfWiderCommunication?: boolean;
+
+  @Field({
+    nullable: true,
+  })
+  readonly isLanguageOfReporting?: boolean;
+
+  @Field({
+    nullable: true,
     description: 'Only languages that are (not) in the "Preset Inventory"',
   })
   readonly presetInventory?: boolean;

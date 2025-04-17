@@ -101,6 +101,12 @@ export abstract class CreateLanguage {
   @Field({ nullable: true })
   readonly hasExternalFirstScripture?: boolean = false;
 
+  @Field({ nullable: true })
+  readonly isLanguageOfWiderCommunication?: boolean = false;
+
+  @Field({ nullable: true })
+  readonly isLanguageOfReporting?: boolean = false;
+
   @Field(() => [String], { nullable: true })
   @Transform(({ value }) => uniq(value))
   readonly tags?: string[] = [];

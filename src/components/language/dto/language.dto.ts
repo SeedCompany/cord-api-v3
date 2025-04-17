@@ -169,6 +169,12 @@ export class Language extends Interfaces {
   @Field()
   readonly hasExternalFirstScripture: SecuredBoolean;
 
+  @Field()
+  readonly isLanguageOfWiderCommunication: SecuredBoolean;
+
+  @Field()
+  readonly isLanguageOfReporting: SecuredBoolean;
+
   // Internal First Scripture == true via this engagement
   readonly firstScriptureEngagement?: LinkTo<'LanguageEngagement'> | null;
 
