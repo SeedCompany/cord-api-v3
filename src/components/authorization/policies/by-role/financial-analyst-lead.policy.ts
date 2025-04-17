@@ -6,7 +6,13 @@ import * as FA from './financial-analyst.policy';
   r.Budget.edit,
   r.BudgetRecord.edit,
   r.Engagement.specifically(
-    (p) => p.many('disbursementCompleteDate', 'status').edit,
+    (p) =>
+      p.many(
+        'disbursementCompleteDate',
+        'startDateOverride',
+        'endDateOverride',
+        'status',
+      ).edit,
   ),
   r.Language.read.specifically((c) => [
     c.locations.whenAny(member, sensMediumOrLower).read,
