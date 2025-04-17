@@ -188,9 +188,8 @@ export class BudgetRepository extends DtoRepository<
     const result = await this.db
       .query()
       .apply(this.currentBudgetForProject(projectId, changeset))
-      .subQuery((sub) =>
+      .subQuery(['project', 'budget'], (sub) =>
         sub
-          .with('project, budget')
           .apply(this.records.recordsOfBudget({ view }))
           .apply(this.records.hydrate({ session, view }))
           .return('collect(dto) as records'),

@@ -53,18 +53,22 @@ export class CommentThreadRepository extends DtoRepository(CommentThread) {
         .subQuery('node', (sub) =>
           sub
             .with('node as thread')
-            .match([
-              node('thread'),
-              relation('out', '', 'comment', ACTIVE),
-              node('comment', 'Comment'),
-            ])
-            .with('comment')
-            .orderBy('comment.createdAt')
-            .with('collect(comment) as comments')
-            .with('[comments[0], comments[-1]] as comments')
-            .raw('unwind comments as node')
-            .subQuery('node', this.comments.hydrate())
-            .return('collect(dto) as comments'),
+            .subQuery('thread', (sub2) =>
+              sub2
+                .match([
+                  node('thread'),
+                  relation('out', '', 'comment', ACTIVE),
+                  node('comment', 'Comment'),
+                ])
+                .with('comment')
+                .orderBy('comment.createdAt')
+                .with('collect(comment) as comments')
+                .with('[comments[0], comments[-1]] as comments')
+                .raw('unwind comments as node')
+                .subQuery('node', this.comments.hydrate())
+                .return('collect(dto) as comments'),
+            )
+            .return('comments'),
         )
         .return<{ dto: UnsecuredDto<CommentThread> }>(
           merge('node', {

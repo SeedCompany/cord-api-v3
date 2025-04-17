@@ -7,16 +7,14 @@ import { SubClauseCollection } from './SubClauseCollection';
 declare module 'cypher-query-builder/dist/typings/query' {
   interface Query<Result = unknown> {
     /**
-     * Creates a sub-query clause (`CALL { ... }`) and calls the given function
+     * Creates a sub-query clause (`CALL (...) { ... }`) and calls the given function
      * to define it.
      *
      * @example
-     * .unwind([0, 1, 2], 'x')
      * .subQuery((sub) => sub
-     *   .with('x')
-     *   .return('x * 10 as y')
+     *   .match(node('user', 'User', { id }))
+     *   .return('user')
      * )
-     * .return(['x', 'y'])
      *
      * @example
      * .unwind([0, 1, 2], 'x')
@@ -42,26 +40,35 @@ Query.prototype.subQuery = function subQuery(
     | ((query: Query) => void),
   maybeSub?: (query: Query) => void,
 ) {
-  const subClause = new SubQueryClause();
-  const subQ = withParent(subClause.asQuery(), this);
-  if (typeof subOrImport === 'function') {
-    subOrImport(subQ);
-  } else {
-    const imports = setOf(
-      many(subOrImport)
+  const importsRaw = typeof subOrImport === 'function' ? [] : subOrImport!;
+  const sub = typeof subOrImport === 'function' ? subOrImport : maybeSub!;
+
+  const imports = [
+    ...setOf(
+      many(importsRaw)
         .flatMap((val) => (val instanceof Variable ? varInExp(val) : val))
         .filter(isNotFalsy),
-    );
-    subQ.with([...imports]);
-    maybeSub!(subQ);
-  }
+    ),
+  ];
+
+  const subClause = new SubQueryClause(imports);
+  const subQ = withParent(subClause.asQuery(), this);
+  sub(subQ);
 
   return this.continueChainClause(subClause);
 };
 
 class SubQueryClause extends SubClauseCollection {
+  constructor(readonly scope: string[]) {
+    super();
+  }
+
   build() {
-    return this.wrapBuild('CALL { ', ' }', super.build());
+    return this.wrapBuild(
+      `CALL (${this.scope.join(', ')}) { `,
+      ' }',
+      super.build(),
+    );
   }
 }
 

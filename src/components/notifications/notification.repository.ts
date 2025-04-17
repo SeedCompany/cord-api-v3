@@ -148,14 +148,13 @@ export class NotificationRepository extends CommonRepository {
   protected hydrate(session: Session) {
     return (query: Query) =>
       query
-        .subQuery((q) => {
+        .subQuery('node', (q) => {
           const concreteHydrates = [...this.service.strategyMap].map(
             ([dtoCls, strategy]) =>
               (q: Query) => {
                 const type = this.getType(dtoCls);
                 const hydrate = strategy.hydrateExtraForNeo4j('extra');
                 return q
-                  .with('node')
                   .with('node')
                   .where({ 'node.type': type })
                   .apply(hydrate ?? ((q) => q.return('{} as extra')));

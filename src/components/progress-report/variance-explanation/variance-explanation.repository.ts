@@ -39,12 +39,10 @@ export class ProgressReportVarianceExplanationRepository extends DtoRepository(
       reasons: [],
       comments: null,
     };
-    const ctx = ['report', 'node'];
     return (query: Query) =>
       query
-        .subQuery((sub) =>
+        .subQuery(['report', 'node'], (sub) =>
           sub
-            .with(ctx)
             .apply(matchProps({ optional: true, excludeBaseProps: true }))
             .return<{ dto: UnsecuredDto<VarianceExplanation> }>(
               merge(defaults, 'props').as('dto'),

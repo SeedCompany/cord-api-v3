@@ -22,30 +22,31 @@ export const matchPropsAndProjectSensAndScopedRoles =
   <R>(query: Query<R>) =>
     query.comment`
       matchPropsAndProjectSensAndScopedRoles()
-    `.subQuery((sub) =>
-      sub
-        .with([
-          'node',
-          'project',
-          ...(session instanceof Variable ? [session.name] : []),
-        ])
-        .apply(matchProjectSens('project'))
-        .apply(
-          matchProps(
-            propsOptions?.view?.deleted
-              ? propsOptions
-              : { ...propsOptions, view: { active: true } },
-          ),
-        )
-        .apply((q) =>
-          !session ? q : q.apply(matchProjectScopedRoles({ session })),
-        )
-        .return([
-          merge(propsOptions?.outputVar ?? 'props', {
-            sensitivity: 'sensitivity',
-            scope: session ? `scopedRoles` : null,
-          }).as(propsOptions?.outputVar ?? 'props'),
-        ]),
+    `.subQuery(
+      [
+        'node',
+        'project',
+        ...(session instanceof Variable ? [session.name] : []),
+      ],
+      (sub) =>
+        sub
+          .apply(matchProjectSens('project'))
+          .apply(
+            matchProps(
+              propsOptions?.view?.deleted
+                ? propsOptions
+                : { ...propsOptions, view: { active: true } },
+            ),
+          )
+          .apply((q) =>
+            !session ? q : q.apply(matchProjectScopedRoles({ session })),
+          )
+          .return([
+            merge(propsOptions?.outputVar ?? 'props', {
+              sensitivity: 'sensitivity',
+              scope: session ? `scopedRoles` : null,
+            }).as(propsOptions?.outputVar ?? 'props'),
+          ]),
     );
 
 export const matchProjectScopedRoles =
@@ -94,7 +95,6 @@ export const matchProjectScopedRoles =
           )
           .union()
           .with('project')
-          .with('project')
           .raw('WHERE project IS NULL')
           .return(`[] as ${outputVar}`),
     );
@@ -105,9 +105,8 @@ export const matchProjectSens =
     output: Output = 'sensitivity' as Output,
   ) =>
   <R>(query: Query<R>) =>
-    query.comment`matchProjectSens()`.subQuery((sub) =>
+    query.comment`matchProjectSens()`.subQuery(projectVar, (sub) =>
       sub
-        .with(projectVar) // import
         .with(projectVar) // needed for where clause
         .raw(
           `WHERE ${projectVar} IS NOT NULL AND ${projectVar}.type = "${ProjectType.Internship}"`,
@@ -119,7 +118,6 @@ export const matchProjectSens =
         ])
         .return(`projSens.value as ${output}`)
         .union()
-        .with(projectVar) // import
         .with(projectVar) // needed for where clause
         .raw(
           `WHERE ${projectVar} IS NOT NULL AND ${projectVar}.type <> "${ProjectType.Internship}"`,
@@ -143,7 +141,6 @@ export const matchProjectSens =
         // https://neo4j.com/developer/kb/conditional-cypher-execution/#_the_subquery_must_return_a_row_for_the_outer_query_to_continue
         .union()
         .with(projectVar)
-        .with(projectVar)
         .raw(`WHERE ${projectVar} IS NULL`)
         // TODO this doesn't work for languages without projects. They should use their own sensitivity not High.
         .return<Record<Output, Sensitivity>>(`"High" as ${output}`),
@@ -155,24 +152,25 @@ export const matchUserGloballyScopedRoles =
     outputVar = 'globalRoles' as Output,
   ) =>
   <R>(query: Query<R>) =>
-    query.comment('matchUserGloballyScopedRoles()').subQuery((sub) =>
-      sub
-        .with(userVar)
-        .match([
-          node(userVar),
-          relation('out', '', 'roles', ACTIVE),
-          node('role', 'Property'),
-        ])
-        .return<{ [K in Output]: readonly GlobalScopedRole[] }>(
-          reduce(
-            'scopedRoles',
-            [],
-            apoc.coll.flatten(collect('role.value')),
-            'role',
-            listConcat('scopedRoles', [`"global:" + role`]),
-          ).as(outputVar),
-        ),
-    );
+    query
+      .comment('matchUserGloballyScopedRoles()')
+      .subQuery(userVar, (sub) =>
+        sub
+          .match([
+            node(userVar),
+            relation('out', '', 'roles', ACTIVE),
+            node('role', 'Property'),
+          ])
+          .return<{ [K in Output]: readonly GlobalScopedRole[] }>(
+            reduce(
+              'scopedRoles',
+              [],
+              apoc.coll.flatten(collect('role.value')),
+              'role',
+              listConcat('scopedRoles', [`"global:" + role`]),
+            ).as(outputVar),
+          ),
+      );
 
 // group by project so inner logic doesn't run multiple times for a single project
 export const oncePerProject =

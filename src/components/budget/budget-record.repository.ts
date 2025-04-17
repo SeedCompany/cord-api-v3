@@ -155,9 +155,8 @@ export class BudgetRecordRepository extends DtoRepository<
     view,
   }: BudgetRecordHydrateArgs) {
     return (query: Query) =>
-      query.subQuery((sub) =>
+      query.subQuery([recordVar, projectVar], (sub) =>
         sub
-          .with([recordVar, projectVar]) // import
           // rename to constant, only apply if making a change otherwise cypher breaks
           .apply((q) =>
             recordVar !== 'node' || projectVar !== 'project'
@@ -199,9 +198,8 @@ export class BudgetRecordRepository extends DtoRepository<
     outputVar?: string;
   }) {
     return (query: Query) =>
-      query.subQuery((sub) =>
+      query.subQuery(budgetVar, (sub) =>
         sub
-          .with(budgetVar)
           .match([
             node(budgetVar),
             relation('out', '', 'record', ACTIVE),

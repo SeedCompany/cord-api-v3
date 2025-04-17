@@ -209,9 +209,8 @@ export class PartnerRepository extends DtoRepository<
           'collect(project) as projList',
           'keys(apoc.coll.frequenciesAsMap(apoc.coll.flatten(collect(scopedRoles)))) as scopedRoles',
         ])
-        .subQuery((sub) =>
+        .subQuery('projList', (sub) =>
           sub
-            .with('projList')
             .raw('UNWIND projList as project')
             .apply(matchProjectSens())
             .with('sensitivity')
@@ -219,7 +218,6 @@ export class PartnerRepository extends DtoRepository<
             .raw('LIMIT 1')
             .return('sensitivity')
             .union()
-            .with('projList')
             .with('projList')
             .raw('WHERE size(projList) = 0')
             .return(`'High' as sensitivity`),
@@ -352,9 +350,8 @@ export const partnerSorters = defineSorters(Partner, {
   // eslint-disable-next-line @typescript-eslint/naming-convention
   'organization.*': (query, input) =>
     query
-      .with('node as partner')
       .match([
-        node('partner'),
+        node('outer'),
         relation('out', '', 'organization'),
         node('node', 'Organization'),
       ])
