@@ -2,12 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { Node, node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
+  CreationFailed,
   DuplicateException,
   ID,
   isIdLike,
   NotFoundException,
   Role,
-  ServerException,
   Session,
   UnsecuredDto,
 } from '~/common';
@@ -107,7 +107,7 @@ export class ProjectMemberRepository extends DtoRepository<
       .map('dto')
       .first();
     if (!created) {
-      throw new ServerException('Failed to create project member');
+      throw new CreationFailed(ProjectMember);
     }
     return created;
   }

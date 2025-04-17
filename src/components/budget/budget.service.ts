@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import {
+  CreationFailed,
   DuplicateException,
   generateId,
   ID,
@@ -78,7 +79,7 @@ export class BudgetService {
         userId: session.userId,
         exception,
       });
-      throw new ServerException('Could not create budget', exception);
+      throw new CreationFailed(Budget, { cause: exception });
     }
   }
 
@@ -119,7 +120,7 @@ export class BudgetService {
         userId: session.userId,
         exception,
       });
-      throw new ServerException('Could not create Budget Record', exception);
+      throw new CreationFailed(BudgetRecord, { cause: exception });
     }
   }
 

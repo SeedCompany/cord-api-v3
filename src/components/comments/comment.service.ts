@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { difference } from 'lodash';
 import {
+  CreationFailed,
   ID,
   InvalidIdForTypeException,
   isIdLike,
@@ -52,7 +53,7 @@ export class CommentService {
     try {
       const result = await this.repo.create(input, session);
       if (!result) {
-        throw new ServerException('Failed to create comment');
+        throw new CreationFailed(Comment);
       }
       dto = await this.repo.readOne(result.id);
     } catch (exception) {
@@ -66,7 +67,7 @@ export class CommentService {
         );
       }
 
-      throw new ServerException('Failed to create comment', exception);
+      throw new CreationFailed(Comment, { cause: exception });
     }
 
     const mentionees = this.mentionNotificationService.extract(dto);

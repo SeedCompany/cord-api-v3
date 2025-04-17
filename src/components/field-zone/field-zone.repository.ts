@@ -2,10 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
+  CreationFailed,
   DuplicateException,
   ID,
   SecuredList,
-  ServerException,
   Session,
   UnsecuredDto,
 } from '~/common';
@@ -55,7 +55,7 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
 
     const result = await query.first();
     if (!result) {
-      throw new ServerException('failed to create field zone');
+      throw new CreationFailed(FieldZone);
     }
 
     return await this.readOne(result.id);

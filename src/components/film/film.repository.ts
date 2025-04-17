@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { Query } from 'cypher-query-builder';
 import {
+  CreationFailed,
   DuplicateException,
   ID,
   PaginatedListType,
-  ServerException,
   Session,
   UnsecuredDto,
 } from '~/common';
@@ -50,7 +50,7 @@ export class FilmRepository extends DtoRepository(Film) {
       .first();
 
     if (!result) {
-      throw new ServerException('failed to create a film');
+      throw new CreationFailed(Film);
     }
 
     await this.scriptureRefsService.create(

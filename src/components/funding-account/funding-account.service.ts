@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import {
+  CreationFailed,
   DuplicateException,
   ID,
   NotFoundException,
@@ -45,7 +46,7 @@ export class FundingAccountService {
       const result = await this.repo.create(input);
 
       if (!result) {
-        throw new ServerException('Failed to create funding account');
+        throw new CreationFailed(FundingAccount);
       }
 
       this.logger.info(`funding account created`, { id: result.id });
@@ -56,7 +57,7 @@ export class FundingAccountService {
         exception: err,
         userId: session.userId,
       });
-      throw new ServerException('Could not create funding account');
+      throw new CreationFailed(FundingAccount, { cause: err });
     }
   }
 

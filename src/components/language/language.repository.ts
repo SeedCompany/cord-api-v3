@@ -9,6 +9,7 @@ import {
   relation,
 } from 'cypher-query-builder';
 import {
+  CreationFailed,
   DuplicateException,
   ID,
   labelForView,
@@ -118,11 +119,11 @@ export class LanguageRepository extends DtoRepository<
         );
       }
 
-      throw new ServerException('Could not create language', e);
+      throw new CreationFailed(Language, { cause: e });
     }
 
     if (!result) {
-      throw new ServerException('Failed to create language');
+      throw new CreationFailed(Language);
     }
 
     return await this.readOne(result.id, session);

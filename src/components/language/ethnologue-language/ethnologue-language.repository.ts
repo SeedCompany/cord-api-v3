@@ -1,6 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { simpleSwitch } from '@seedcompany/common';
-import { DuplicateException, ID, ServerException } from '~/common';
+import {
+  CreationFailed,
+  DuplicateException,
+  ID,
+  ServerException,
+} from '~/common';
 import { DtoRepository, UniquenessError } from '~/core/database';
 import { createNode } from '~/core/database/query';
 import {
@@ -44,11 +49,11 @@ export class EthnologueLanguageRepository extends DtoRepository(
         );
       }
 
-      throw new ServerException('Could not create ethnologue language', e);
+      throw new CreationFailed(EthnologueLanguage, { cause: e });
     }
 
     if (!result) {
-      throw new ServerException('Failed to create ethnologue language');
+      throw new CreationFailed(EthnologueLanguage);
     }
 
     return await this.readOne(result.id);

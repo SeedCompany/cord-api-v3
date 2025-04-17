@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
 import {
+  CreationFailed,
   DuplicateException,
   ID,
   SecuredList,
-  ServerException,
   Session,
   UnsecuredDto,
 } from '~/common';
@@ -55,7 +55,7 @@ export class FieldRegionRepository extends DtoRepository(FieldRegion) {
 
     const result = await query.first();
     if (!result) {
-      throw new ServerException('failed to create field region');
+      throw new CreationFailed(FieldRegion);
     }
 
     return await this.readOne(result.id);

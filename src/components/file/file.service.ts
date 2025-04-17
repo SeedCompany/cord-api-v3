@@ -11,6 +11,7 @@ import mime from 'mime';
 import sanitizeFilename from 'sanitize-filename';
 import { Readable } from 'stream';
 import {
+  CreationFailed,
   DuplicateException,
   DurationIn,
   generateId,
@@ -325,7 +326,7 @@ export class FileService {
       if (tempUpload.reason instanceof NotFoundException) {
         throw new NotFoundException('Could not find upload', 'uploadId');
       }
-      throw new ServerException('Unable to create file version');
+      throw new CreationFailed(FileVersion);
     } else if (
       tempUpload.status === 'fulfilled' &&
       existingUpload.status === 'fulfilled'
@@ -336,7 +337,7 @@ export class FileService {
           'uploadId',
         );
       }
-      throw new ServerException('Unable to create file version');
+      throw new CreationFailed(FileVersion);
     } else if (
       tempUpload.status === 'rejected' &&
       existingUpload.status === 'fulfilled'

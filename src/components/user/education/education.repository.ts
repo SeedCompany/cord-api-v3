@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { ID, NotFoundException, ServerException } from '~/common';
+import { CreationFailed, ID, NotFoundException } from '~/common';
 import { DtoRepository } from '~/core/database';
 import {
   ACTIVE,
@@ -37,7 +37,7 @@ export class EducationRepository extends DtoRepository(Education) {
 
     const result = await query.first();
     if (!result) {
-      throw new ServerException('failed to create education');
+      throw new CreationFailed(Education);
     }
     return await this.readOne(result.id);
   }

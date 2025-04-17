@@ -2,6 +2,7 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { Many } from '@seedcompany/common';
 import {
   ClientException,
+  CreationFailed,
   EnhancedResource,
   ID,
   InputException,
@@ -179,7 +180,7 @@ export class ProjectService {
       if (e instanceof ClientException) {
         throw e;
       }
-      throw new ServerException(`Could not create project`, e);
+      throw new CreationFailed(IProject, { cause: e });
     }
   }
 

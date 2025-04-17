@@ -1,5 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import {
+  CreationFailed,
   ID,
   InputException,
   ObjectView,
@@ -104,7 +105,7 @@ export class PartnershipService {
       if (exception instanceof InputException) {
         throw exception;
       }
-      throw new ServerException('Failed to create partnership', exception);
+      throw new CreationFailed(Partnership, { cause: exception });
     }
   }
 

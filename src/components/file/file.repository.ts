@@ -13,7 +13,13 @@ import {
 import { Direction } from 'cypher-query-builder/dist/typings/clauses/order-by';
 import { AnyConditions } from 'cypher-query-builder/dist/typings/clauses/where-utils';
 import { DateTime } from 'luxon';
-import { ID, NotFoundException, ServerException, Session } from '~/common';
+import {
+  CreationFailed,
+  ID,
+  NotFoundException,
+  ServerException,
+  Session,
+} from '~/common';
 import { ILogger, LinkTo, Logger } from '~/core';
 import { CommonRepository, OnIndex } from '~/core/database';
 import {
@@ -382,7 +388,7 @@ export class FileRepository extends CommonRepository {
 
     const result = await createFile.first();
     if (!result) {
-      throw new ServerException('Failed to create directory');
+      throw new CreationFailed(Directory);
     }
     return result.id;
   }
@@ -418,7 +424,7 @@ export class FileRepository extends CommonRepository {
 
     const result = await query.first();
     if (!result) {
-      throw new ServerException('Failed to create directory');
+      throw new CreationFailed(Directory);
     }
     return result.id;
   }
@@ -465,7 +471,7 @@ export class FileRepository extends CommonRepository {
 
     const result = await createFile.first();
     if (!result) {
-      throw new ServerException('Failed to create file');
+      throw new CreationFailed(File);
     }
     return result.id;
   }
@@ -504,7 +510,7 @@ export class FileRepository extends CommonRepository {
 
     const result = await createFile.first();
     if (!result) {
-      throw new ServerException('Failed to create file version');
+      throw new CreationFailed(FileVersion);
     }
     return result.dto as FileVersion;
   }

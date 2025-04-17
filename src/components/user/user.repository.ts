@@ -3,6 +3,7 @@ import { inArray, node, Query, relation } from 'cypher-query-builder';
 import { difference } from 'lodash';
 import { DateTime } from 'luxon';
 import {
+  CreationFailed,
   DuplicateException,
   ID,
   Role,
@@ -104,10 +105,10 @@ export class UserRepository extends DtoRepository<typeof User, [Session | ID]>(
           e,
         );
       }
-      throw new ServerException('Failed to create user', e);
+      throw new CreationFailed(User, { cause: e });
     }
     if (!result) {
-      throw new ServerException('Failed to create user');
+      throw new CreationFailed(User);
     }
     return result;
   }

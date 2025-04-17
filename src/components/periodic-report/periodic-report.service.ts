@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import {
   CalendarDate,
+  CreationFailed,
   DateInterval,
   ID,
   NotFoundException,
   ObjectView,
   Range,
-  ServerException,
   Session,
   UnsecuredDto,
 } from '~/common';
@@ -55,7 +55,8 @@ export class PeriodicReportService {
         ),
       });
     } catch (exception) {
-      throw new ServerException('Could not create periodic reports', exception);
+      const Report = resolveReportType({ type: input.type });
+      throw new CreationFailed(Report);
     }
   }
 

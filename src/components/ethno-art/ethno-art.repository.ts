@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { Query } from 'cypher-query-builder';
 import {
+  CreationFailed,
   DuplicateException,
   ID,
   PaginatedListType,
-  ServerException,
   Session,
   UnsecuredDto,
 } from '~/common';
@@ -55,7 +55,7 @@ export class EthnoArtRepository extends DtoRepository(EthnoArt) {
       .first();
 
     if (!result) {
-      throw new ServerException('Failed to create ethno art');
+      throw new CreationFailed(EthnoArt);
     }
 
     await this.scriptureRefsService.create(

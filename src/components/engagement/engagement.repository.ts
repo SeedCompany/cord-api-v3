@@ -12,6 +12,7 @@ import { difference, pickBy, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { MergeExclusive } from 'type-fest';
 import {
+  CreationFailed,
   DuplicateException,
   generateId,
   ID,
@@ -268,7 +269,7 @@ export class EngagementRepository extends CommonRepository {
 
     const result = await query.first();
     if (!result) {
-      throw new ServerException('Could not create Language Engagement');
+      throw new CreationFailed(LanguageEngagement);
     }
 
     await this.files.createDefinedFile(
@@ -359,7 +360,7 @@ export class EngagementRepository extends CommonRepository {
         );
       }
 
-      throw new ServerException('Could not create Internship Engagement');
+      throw new CreationFailed(InternshipEngagement);
     }
 
     await this.files.createDefinedFile(

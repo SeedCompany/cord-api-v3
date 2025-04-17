@@ -3,13 +3,13 @@ import { Node, node, Query, relation } from 'cypher-query-builder';
 import { pickBy } from 'lodash';
 import { DateTime } from 'luxon';
 import {
+  CreationFailed,
   DuplicateException,
   generateId,
   ID,
   labelForView,
   NotFoundException,
   ObjectView,
-  ServerException,
   Session,
   UnsecuredDto,
   viewOfChangeset,
@@ -93,7 +93,7 @@ export class PartnershipRepository extends DtoRepository<
       .return<{ id: ID }>('node.id as id')
       .first();
     if (!result) {
-      throw new ServerException('Failed to create partnership');
+      throw new CreationFailed(Partnership);
     }
 
     await this.files.createDefinedFile(
