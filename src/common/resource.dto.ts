@@ -107,6 +107,9 @@ export class EnhancedResource<T extends ResourceShape<any>> {
   >();
 
   static resolve(ref: ResourceLike) {
+    if (ref && typeof ref !== 'string') {
+      return EnhancedResource.of(ref);
+    }
     if (!EnhancedResource.resourcesHost) {
       throw new ServerException('Cannot resolve without ResourcesHost');
     }
