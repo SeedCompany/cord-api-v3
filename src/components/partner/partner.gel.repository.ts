@@ -14,6 +14,7 @@ export class PartnerGelRepository
       organization: true,
       pointOfContact: true,
       languageOfWiderCommunication: true,
+      languageOfReporting: true,
       fieldRegions: true,
       countries: true,
       languagesOfConsulting: true,
