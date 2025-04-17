@@ -5,6 +5,8 @@ import {
   CreationFailed,
   DuplicateException,
   ID,
+  NotFoundException,
+  ReadAfterCreationFailed,
   SecuredList,
   Session,
   UnsecuredDto,
@@ -58,7 +60,11 @@ export class FieldZoneRepository extends DtoRepository(FieldZone) {
       throw new CreationFailed(FieldZone);
     }
 
-    return await this.readOne(result.id);
+    return await this.readOne(result.id).catch((e) => {
+      throw e instanceof NotFoundException
+        ? new ReadAfterCreationFailed(FieldZone)
+        : e;
+    });
   }
 
   protected hydrate() {

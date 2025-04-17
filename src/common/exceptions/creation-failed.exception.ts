@@ -13,3 +13,16 @@ export class CreationFailed extends ServerException {
     this.resource = res;
   }
 }
+
+export class ReadAfterCreationFailed extends CreationFailed {
+  constructor(
+    resource: ResourceLike,
+    options?: { message?: string; cause?: Error },
+  ) {
+    const res = EnhancedResource.resolve(resource);
+    super(res, {
+      message: `Failed to retrieve ${res.name} after creation`,
+      ...options,
+    });
+  }
+}

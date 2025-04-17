@@ -1,6 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { CreationFailed, ID, NotFoundException } from '~/common';
+import {
+  CreationFailed,
+  ID,
+  NotFoundException,
+  ReadAfterCreationFailed,
+} from '~/common';
 import { DtoRepository } from '~/core/database';
 import {
   ACTIVE,
@@ -39,7 +44,11 @@ export class EducationRepository extends DtoRepository(Education) {
     if (!result) {
       throw new CreationFailed(Education);
     }
-    return await this.readOne(result.id);
+    return await this.readOne(result.id).catch((e) => {
+      throw e instanceof NotFoundException
+        ? new ReadAfterCreationFailed(Education)
+        : e;
+    });
   }
 
   async getUserIdByEducation(id: ID) {

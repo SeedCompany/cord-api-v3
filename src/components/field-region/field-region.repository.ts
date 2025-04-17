@@ -4,6 +4,8 @@ import {
   CreationFailed,
   DuplicateException,
   ID,
+  NotFoundException,
+  ReadAfterCreationFailed,
   SecuredList,
   Session,
   UnsecuredDto,
@@ -58,7 +60,11 @@ export class FieldRegionRepository extends DtoRepository(FieldRegion) {
       throw new CreationFailed(FieldRegion);
     }
 
-    return await this.readOne(result.id);
+    return await this.readOne(result.id).catch((e) => {
+      throw e instanceof NotFoundException
+        ? new ReadAfterCreationFailed(FieldRegion)
+        : e;
+    });
   }
 
   async update(changes: UpdateFieldRegion) {

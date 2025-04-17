@@ -4,6 +4,8 @@ import {
   CreationFailed,
   DuplicateException,
   ID,
+  NotFoundException,
+  ReadAfterCreationFailed,
   Session,
   UnsecuredDto,
 } from '~/common';
@@ -64,7 +66,11 @@ export class OrganizationRepository extends DtoRepository<
       throw new CreationFailed(Organization);
     }
 
-    return await this.readOne(result.id, session);
+    return await this.readOne(result.id, session).catch((e) => {
+      throw e instanceof NotFoundException
+        ? new ReadAfterCreationFailed(Organization)
+        : e;
+    });
   }
 
   async update(changes: UpdateOrganization, session: Session) {

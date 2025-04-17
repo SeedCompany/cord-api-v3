@@ -6,6 +6,8 @@ import {
   DuplicateException,
   generateId,
   ID,
+  NotFoundException,
+  ReadAfterCreationFailed,
   ServerException,
   Session,
   UnsecuredDto,
@@ -74,7 +76,11 @@ export class LocationRepository extends DtoRepository(Location) {
       throw new CreationFailed(Location);
     }
 
-    const dto = await this.readOne(result.id);
+    const dto = await this.readOne(result.id).catch((e) => {
+      throw e instanceof NotFoundException
+        ? new ReadAfterCreationFailed(Location)
+        : e;
+    });
 
     await this.files.createDefinedFile(
       mapImageId,

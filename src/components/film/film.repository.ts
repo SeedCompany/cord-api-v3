@@ -4,7 +4,9 @@ import {
   CreationFailed,
   DuplicateException,
   ID,
+  NotFoundException,
   PaginatedListType,
+  ReadAfterCreationFailed,
   Session,
   UnsecuredDto,
 } from '~/common';
@@ -59,7 +61,11 @@ export class FilmRepository extends DtoRepository(Film) {
       session,
     );
 
-    return await this.readOne(result.id);
+    return await this.readOne(result.id).catch((e) => {
+      throw e instanceof NotFoundException
+        ? new ReadAfterCreationFailed(Film)
+        : e;
+    });
   }
 
   async update(input: UpdateFilm) {

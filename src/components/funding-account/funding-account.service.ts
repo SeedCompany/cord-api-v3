@@ -5,6 +5,7 @@ import {
   ID,
   NotFoundException,
   ObjectView,
+  ReadAfterCreationFailed,
   SecuredList,
   ServerException,
   Session,
@@ -51,7 +52,11 @@ export class FundingAccountService {
 
       this.logger.info(`funding account created`, { id: result.id });
 
-      return await this.readOne(result.id, session);
+      return await this.readOne(result.id, session).catch((e) => {
+        throw e instanceof NotFoundException
+          ? new ReadAfterCreationFailed(FundingAccount)
+          : e;
+      });
     } catch (err) {
       this.logger.error('Could not create funding account for user', {
         exception: err,

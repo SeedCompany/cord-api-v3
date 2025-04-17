@@ -20,6 +20,7 @@ import {
   labelForView,
   NotFoundException,
   ObjectView,
+  ReadAfterCreationFailed,
   ServerException,
   Session,
   typenameForView,
@@ -286,7 +287,11 @@ export class EngagementRepository extends CommonRepository {
       result.id,
       session,
       viewOfChangeset(changeset),
-    )) as UnsecuredDto<LanguageEngagement>;
+    ).catch((e) => {
+      throw e instanceof NotFoundException
+        ? new ReadAfterCreationFailed(LanguageEngagement)
+        : e;
+    })) as UnsecuredDto<LanguageEngagement>;
   }
 
   async createInternshipEngagement(
@@ -377,7 +382,11 @@ export class EngagementRepository extends CommonRepository {
       result.id,
       session,
       viewOfChangeset(changeset),
-    )) as UnsecuredDto<InternshipEngagement>;
+    ).catch((e) => {
+      throw e instanceof NotFoundException
+        ? new ReadAfterCreationFailed(InternshipEngagement)
+        : e;
+    })) as UnsecuredDto<InternshipEngagement>;
   }
 
   getActualLanguageChanges = getChanges(LanguageEngagement);

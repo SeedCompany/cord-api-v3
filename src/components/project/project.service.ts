@@ -10,6 +10,7 @@ import {
   many,
   NotFoundException,
   ObjectView,
+  ReadAfterCreationFailed,
   Role,
   SecuredList,
   ServerException,
@@ -151,7 +152,11 @@ export class ProjectService {
 
     try {
       const { id } = await this.repo.create(input);
-      const project = await this.readOneUnsecured(id, session);
+      const project = await this.readOneUnsecured(id, session).catch((e) => {
+        throw e instanceof NotFoundException
+          ? new ReadAfterCreationFailed(IProject)
+          : e;
+      });
 
       // Add creator to the project team with their global roles
       await this.projectMembers.create(

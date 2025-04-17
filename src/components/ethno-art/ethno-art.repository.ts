@@ -4,7 +4,9 @@ import {
   CreationFailed,
   DuplicateException,
   ID,
+  NotFoundException,
   PaginatedListType,
+  ReadAfterCreationFailed,
   Session,
   UnsecuredDto,
 } from '~/common';
@@ -64,7 +66,11 @@ export class EthnoArtRepository extends DtoRepository(EthnoArt) {
       session,
     );
 
-    return await this.readOne(result.id);
+    return await this.readOne(result.id).catch((e) => {
+      throw e instanceof NotFoundException
+        ? new ReadAfterCreationFailed(EthnoArt)
+        : e;
+    });
   }
 
   async update(input: UpdateEthnoArt) {

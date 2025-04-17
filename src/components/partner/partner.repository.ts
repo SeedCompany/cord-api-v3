@@ -7,6 +7,8 @@ import {
   DuplicateException,
   ID,
   InputException,
+  NotFoundException,
+  ReadAfterCreationFailed,
   Session,
   UnsecuredDto,
 } from '~/common';
@@ -104,7 +106,11 @@ export class PartnerRepository extends DtoRepository<
       throw new CreationFailed(Partner);
     }
 
-    return await this.readOne(result.id, session);
+    return await this.readOne(result.id, session).catch((e) => {
+      throw e instanceof NotFoundException
+        ? new ReadAfterCreationFailed(Partner)
+        : e;
+    });
   }
 
   async update(changes: UpdatePartner, session: Session) {

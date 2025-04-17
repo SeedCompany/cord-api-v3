@@ -15,6 +15,7 @@ import {
   labelForView,
   NotFoundException,
   ObjectView,
+  ReadAfterCreationFailed,
   ServerException,
   Session,
   UnsecuredDto,
@@ -126,7 +127,11 @@ export class LanguageRepository extends DtoRepository<
       throw new CreationFailed(Language);
     }
 
-    return await this.readOne(result.id, session);
+    return await this.readOne(result.id, session).catch((e) => {
+      throw e instanceof NotFoundException
+        ? new ReadAfterCreationFailed(Language)
+        : e;
+    });
   }
 
   async update(

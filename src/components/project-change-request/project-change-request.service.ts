@@ -2,7 +2,9 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import {
   ID,
   InputException,
+  NotFoundException,
   ObjectView,
+  ReadAfterCreationFailed,
   ServerException,
   Session,
   UnsecuredDto,
@@ -52,7 +54,11 @@ export class ProjectChangeRequestService {
 
     const id = await this.repo.create(input);
 
-    return await this.readOne(id, session);
+    return await this.readOne(id, session).catch((e) => {
+      throw e instanceof NotFoundException
+        ? new ReadAfterCreationFailed(ProjectChangeRequest)
+        : e;
+    });
   }
 
   @HandleIdLookup(ProjectChangeRequest)

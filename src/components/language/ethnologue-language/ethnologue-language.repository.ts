@@ -4,6 +4,8 @@ import {
   CreationFailed,
   DuplicateException,
   ID,
+  NotFoundException,
+  ReadAfterCreationFailed,
   ServerException,
 } from '~/common';
 import { DtoRepository, UniquenessError } from '~/core/database';
@@ -56,7 +58,11 @@ export class EthnologueLanguageRepository extends DtoRepository(
       throw new CreationFailed(EthnologueLanguage);
     }
 
-    return await this.readOne(result.id);
+    return await this.readOne(result.id).catch((e) => {
+      throw e instanceof NotFoundException
+        ? new ReadAfterCreationFailed(EthnologueLanguage)
+        : e;
+    });
   }
 
   async update(changes: UpdateEthnologueLanguage & { id: ID }) {
