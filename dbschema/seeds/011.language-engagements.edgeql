@@ -51,6 +51,6 @@ with
       )
     )
   ),
-  new := (select engagements filter .createdAt = datetime_of_statement())
+  new := (select engagements filter .createdAt = datetime_of_transaction())
 select { `Added Language Engagements: Language -> Project` := new.language.name ++ ' -> ' ++ new.project.name }
 filter count(new) > 0;

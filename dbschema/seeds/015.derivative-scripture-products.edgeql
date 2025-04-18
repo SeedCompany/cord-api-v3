@@ -167,7 +167,7 @@ products := (
   )
 ),
 
-new := (select products filter .createdAt = datetime_of_statement())
+new := (select products filter .createdAt = datetime_of_transaction())
 select {
   `Added Derivative Scripture Products` :=
     new.project.name ++ ': ' ++ new.produces.name

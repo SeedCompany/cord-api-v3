@@ -98,6 +98,6 @@ products := (
   )
 ),
 
-new := (select products filter .createdAt = datetime_of_statement())
+new := (select products filter .createdAt = datetime_of_transaction())
 select { `Added Other Products` := new.project.name ++ ': ' ++ new.title }
 filter count(new) > 0;

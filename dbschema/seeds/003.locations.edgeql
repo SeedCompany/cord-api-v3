@@ -1616,6 +1616,6 @@ with
       })
     )
   ),
-  new := (select locations filter .createdAt = datetime_of_statement())
+  new := (select locations filter .createdAt = datetime_of_transaction())
 select { `Added Locations` := (count(new), array_agg(new.name)[:10] ++ if count(new) > 10 then ['...'] else []) }
 filter count(new) > 0;

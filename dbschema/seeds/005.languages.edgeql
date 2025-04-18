@@ -91,6 +91,6 @@ with
       select languageEntity)
     )
   ),
-  new := (select languages filter .createdAt = datetime_of_statement())
+  new := (select languages filter .createdAt = datetime_of_transaction())
 select { `Added Languages` := new.name }
 filter count(new) > 0;

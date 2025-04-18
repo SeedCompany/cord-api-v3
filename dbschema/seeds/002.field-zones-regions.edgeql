@@ -14,7 +14,7 @@ with
       })
     )
   ),
-  new := (select zones filter .createdAt = datetime_of_statement())
+  new := (select zones filter .createdAt = datetime_of_transaction())
 select { `Added Field Zones` := new.name }
 filter count(new) > 0;
 with
@@ -45,6 +45,6 @@ with
       )
     )
   ),
-  new := (select regions filter .createdAt = datetime_of_statement())
+  new := (select regions filter .createdAt = datetime_of_transaction())
 select { `Added Field Regions` := new.name }
 filter count(new) > 0;
