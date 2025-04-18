@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { node, Query, relation } from 'cypher-query-builder';
-import { ID, ServerException, Session, UnsecuredDto } from '~/common';
+import { CreationFailed, ID, Session, UnsecuredDto } from '~/common';
 import { DtoRepository } from '~/core/database';
 import {
   ACTIVE,
@@ -45,7 +45,7 @@ export class ProjectChangeRequestRepository extends DtoRepository<
       .return<{ id: ID }>('node.id as id')
       .first();
     if (!result) {
-      throw new ServerException('Failed to create project change request');
+      throw new CreationFailed(ProjectChangeRequest);
     }
     return result.id;
   }

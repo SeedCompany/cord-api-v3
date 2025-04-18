@@ -1,6 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { ID, NotFoundException, ServerException } from '~/common';
+import {
+  CreationFailed,
+  ID,
+  NotFoundException,
+  ReadAfterCreationFailed,
+} from '~/common';
 import { DtoRepository } from '~/core/database';
 import {
   ACTIVE,
@@ -35,9 +40,13 @@ export class UnavailabilityRepository extends DtoRepository(Unavailability) {
       .return<{ id: ID }>('node.id as id');
     const result = await query.first();
     if (!result) {
-      throw new ServerException('Could not create unavailability');
+      throw new CreationFailed(Unavailability);
     }
-    return await this.readOne(result.id);
+    return await this.readOne(result.id).catch((e) => {
+      throw e instanceof NotFoundException
+        ? new ReadAfterCreationFailed(Unavailability)
+        : e;
+    });
   }
 
   async update(changes: UpdateUnavailability) {

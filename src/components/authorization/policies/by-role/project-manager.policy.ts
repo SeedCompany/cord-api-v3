@@ -2,7 +2,6 @@ import { takeWhile } from 'lodash';
 import { ProjectStep } from '../../../project/dto';
 import { ProjectWorkflow } from '../../../project/workflow/project-workflow';
 import {
-  action,
   field,
   inherit,
   member,
@@ -144,11 +143,14 @@ export const momentumProjectsTransitions = () =>
       r.ProjectWorkflowEvent.isTransitions(momentumProjectsTransitions),
     ).execute,
     r.Project.read.create
-      .when(member)
-      .edit.specifically((p) => [
+      // eslint-disable-next-line prettier/prettier
+      .when(member).edit //
+      .or.specifically((p) => [
         p
           .many('rootDirectory', 'otherLocations', 'primaryLocation')
-          .edit.whenAny(member, sensMediumOrLower).read,
+          // eslint-disable-next-line prettier/prettier
+          .whenAny(member, sensMediumOrLower).read //
+          .when(member).edit,
         p
           .many('mouStart', 'mouEnd')
           .read //
@@ -157,8 +159,7 @@ export const momentumProjectsTransitions = () =>
             field('status', 'InDevelopment'),
             // Only allow until financial endorsement
             // field('step', stepsUntilFinancialEndorsement),
-          )
-          [action]('edit'),
+          ).edit,
       ])
       .children((c) => c.posts.read.create),
     r.ProjectMember.read.when(member).edit.create.delete,

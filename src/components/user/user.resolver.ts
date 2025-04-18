@@ -15,6 +15,8 @@ import {
   IdField,
   ListArg,
   LoggedInSession,
+  NotFoundException,
+  ReadAfterCreationFailed,
   Session,
 } from '~/common';
 import { Loader, LoaderOf } from '~/core';
@@ -221,7 +223,11 @@ export class UserResolver {
     @Args('input') { person: input }: CreatePersonInput,
   ): Promise<CreatePersonOutput> {
     const userId = await this.userService.create(input, session);
-    const user = await this.userService.readOne(userId, session);
+    const user = await this.userService.readOne(userId, session).catch((e) => {
+      throw e instanceof NotFoundException
+        ? new ReadAfterCreationFailed(User)
+        : e;
+    });
     return { user };
   }
 

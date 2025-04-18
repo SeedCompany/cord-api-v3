@@ -4,6 +4,7 @@ import {
   FnLike,
   mapValues,
   setInspectOnClass,
+  setToJson,
 } from '@seedcompany/common';
 import { LazyGetter as Once } from 'lazy-get-decorator';
 import { DateTime } from 'luxon';
@@ -106,6 +107,9 @@ export class EnhancedResource<T extends ResourceShape<any>> {
   >();
 
   static resolve(ref: ResourceLike) {
+    if (ref && typeof ref !== 'string') {
+      return EnhancedResource.of(ref);
+    }
     if (!EnhancedResource.resourcesHost) {
       throw new ServerException('Cannot resolve without ResourcesHost');
     }
@@ -295,6 +299,7 @@ export class EnhancedResource<T extends ResourceShape<any>> {
 setInspectOnClass(EnhancedResource, (res) => ({ collapsed }) => {
   return collapsed(res.name, 'Enhanced');
 });
+setToJson(EnhancedResource, (res) => ({ name: res.name }));
 
 export interface EnhancedRelation<TResourceStatic extends ResourceShape<any>> {
   readonly name: RelKey<TResourceStatic>;

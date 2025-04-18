@@ -12,6 +12,7 @@ import { difference, pickBy, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
 import { MergeExclusive } from 'type-fest';
 import {
+  CreationFailed,
   DuplicateException,
   generateId,
   ID,
@@ -19,6 +20,7 @@ import {
   labelForView,
   NotFoundException,
   ObjectView,
+  ReadAfterCreationFailed,
   ServerException,
   Session,
   typenameForView,
@@ -268,7 +270,7 @@ export class EngagementRepository extends CommonRepository {
 
     const result = await query.first();
     if (!result) {
-      throw new ServerException('Could not create Language Engagement');
+      throw new CreationFailed(LanguageEngagement);
     }
 
     await this.files.createDefinedFile(
@@ -285,7 +287,11 @@ export class EngagementRepository extends CommonRepository {
       result.id,
       session,
       viewOfChangeset(changeset),
-    )) as UnsecuredDto<LanguageEngagement>;
+    ).catch((e) => {
+      throw e instanceof NotFoundException
+        ? new ReadAfterCreationFailed(LanguageEngagement)
+        : e;
+    })) as UnsecuredDto<LanguageEngagement>;
   }
 
   async createInternshipEngagement(
@@ -359,7 +365,7 @@ export class EngagementRepository extends CommonRepository {
         );
       }
 
-      throw new ServerException('Could not create Internship Engagement');
+      throw new CreationFailed(InternshipEngagement);
     }
 
     await this.files.createDefinedFile(
@@ -376,7 +382,11 @@ export class EngagementRepository extends CommonRepository {
       result.id,
       session,
       viewOfChangeset(changeset),
-    )) as UnsecuredDto<InternshipEngagement>;
+    ).catch((e) => {
+      throw e instanceof NotFoundException
+        ? new ReadAfterCreationFailed(InternshipEngagement)
+        : e;
+    })) as UnsecuredDto<InternshipEngagement>;
   }
 
   getActualLanguageChanges = getChanges(LanguageEngagement);

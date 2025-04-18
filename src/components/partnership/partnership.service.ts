@@ -1,8 +1,11 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import {
+  CreationFailed,
   ID,
   InputException,
+  NotFoundException,
   ObjectView,
+  ReadAfterCreationFailed,
   ServerException,
   Session,
   UnsecuredDto,
@@ -89,7 +92,11 @@ export class PartnershipService {
         result.id,
         session,
         viewOfChangeset(changeset),
-      );
+      ).catch((e) => {
+        throw e instanceof NotFoundException
+          ? new ReadAfterCreationFailed(Partnership)
+          : e;
+      });
 
       this.privileges
         .for(session, Partnership, partnership)
@@ -104,7 +111,7 @@ export class PartnershipService {
       if (exception instanceof InputException) {
         throw exception;
       }
-      throw new ServerException('Failed to create partnership', exception);
+      throw new CreationFailed(Partnership, { cause: exception });
     }
   }
 

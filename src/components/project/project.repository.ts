@@ -2,11 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { inArray, node, not, Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
+  CreationFailed,
   DuplicateException,
   ID,
   NotFoundException,
   Sensitivity,
-  ServerException,
   Session,
   UnsecuredDto,
 } from '~/common';
@@ -183,10 +183,11 @@ export class ProjectRepository extends CommonRepository {
       canDelete: true,
     };
 
+    const Project = resolveProjectType({ type });
     const query = this.db
       .query()
       .apply(
-        await createNode(resolveProjectType({ type }), {
+        await createNode(Project, {
           initialProps,
           baseNodeProps: { type },
         }),
@@ -226,7 +227,7 @@ export class ProjectRepository extends CommonRepository {
       }
     }
     if (!result) {
-      throw new ServerException('Failed to create project');
+      throw new CreationFailed(Project);
     }
     return result;
   }
