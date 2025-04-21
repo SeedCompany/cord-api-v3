@@ -27,7 +27,12 @@ export const projectTransitions = () =>
     r.Education.read,
     inherit(
       r.Engagement.when(member).specifically((p) => [
-        p.many('disbursementCompleteDate', 'status').edit,
+        p.many(
+          'disbursementCompleteDate',
+          'startDateOverride',
+          'endDateOverride',
+          'status',
+        ).edit,
       ]),
       r.LanguageEngagement.specifically((p) => p.paratextRegistryId.none),
     ),
