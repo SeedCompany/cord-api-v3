@@ -81,6 +81,12 @@ class Engagement extends Interfaces {
   @Field(() => IProject)
   declare readonly parent: BaseNode;
 
+  readonly label: Readonly<{
+    project: string;
+    language: string | null;
+    intern: string | null;
+  }>;
+
   @Field(() => SecuredEngagementStatus, {
     middleware: [parentIdMiddleware],
   })

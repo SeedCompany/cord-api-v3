@@ -34,6 +34,7 @@ export class ValidateEngDateOverridesOnProjectChangeHandlerSetLastStatusDate
       >((eng) => {
         const common = {
           id: eng.id,
+          label: (eng.label.language ?? eng.label.intern)!,
         } as const;
         const { startDateOverride: start, endDateOverride: end } = eng;
         return [
@@ -73,6 +74,7 @@ class EngagementDateOverrideConflictException extends RangeException {
     readonly engagements: NonEmptyArray<
       Readonly<{
         id: ID<'Engagement'>;
+        label: string;
         point: 'start' | 'end';
         date: CalendarDate;
       }>
@@ -85,7 +87,7 @@ class EngagementDateOverrideConflictException extends RangeException {
       ...engagements.map((eng) => {
         const pointStr = eng.point === 'start' ? 'Start' : 'End';
         const dateStr = eng.date.toISO();
-        return `  - ${pointStr} date of ${eng.id} is ${dateStr}`;
+        return `  - ${pointStr} date of ${eng.label} is ${dateStr}`;
       }),
     ].join('\n');
     super({ message });

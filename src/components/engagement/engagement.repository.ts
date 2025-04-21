@@ -49,6 +49,7 @@ import {
   requestingUser,
   SortCol,
   sortWith,
+  textJoinMaybe,
   whereNotDeletedInChangeset,
 } from '~/core/database/query';
 import { Privileges } from '../authorization';
@@ -168,6 +169,7 @@ export class EngagementRepository extends CommonRepository {
           relation('out', '', 'mouEnd', ACTIVE),
           node('mouEnd'),
         ])
+        .apply(matchNames)
         .match([
           [
             node('project'),
@@ -193,6 +195,11 @@ export class EngagementRepository extends CommonRepository {
               step: 'step.value',
             },
             language: 'language { .id }',
+            label: {
+              project: 'projectName.value',
+              language: 'languageName.value',
+              intern: textJoinMaybe(['dfn.value', 'dln.value']),
+            },
             pnp: { id: 'props.pnp' },
             growthPlan: { id: 'props.growthPlan' },
             ceremony: 'ceremony { .id }',

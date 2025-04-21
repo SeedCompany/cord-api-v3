@@ -89,6 +89,26 @@ export const apoc = {
     setLabels: (node: ExpressionInput, labels: readonly string[]) =>
       procedure('apoc.create.setLabels', ['node'])({ node: exp(node), labels }),
   },
+  text: {
+    /**
+     * @see https://neo4j.com/docs/apoc/current/overview/apoc.text/apoc.text.join/
+     */
+    join: (list: ExpressionInput, delimiter: string) =>
+      fn('apoc.text.join')(list, delimiter),
+  },
+};
+
+export const cleanTextList = (list: ExpressionInput) =>
+  exp(`[x IN ${exp(list)} WHERE x IS NOT NULL AND trim(x) <> '' | trim(x)]`);
+
+export const textJoinMaybe = (items: ExpressionInput, delimiter = ' ') => {
+  const cleaned = cleanTextList(items);
+  return exp(
+    `CASE WHEN size(${cleaned}) = 0 THEN null ELSE ${apoc.text.join(
+      `${cleaned}`,
+      `"${delimiter}"`,
+    )} END`,
+  );
 };
 
 /**
