@@ -65,6 +65,8 @@ export class Partner extends Interfaces {
 
   readonly languageOfWiderCommunication: Secured<LinkTo<'Language'> | null>;
 
+  readonly languageOfReporting: Secured<LinkTo<'Language'> | null>;
+
   readonly fieldRegions: Required<
     Secured<ReadonlyArray<LinkTo<'FieldRegion'>>>
   >;
