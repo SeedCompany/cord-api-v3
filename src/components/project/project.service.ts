@@ -286,6 +286,9 @@ export class ProjectService {
     this.privileges
       .for(session, resolveProjectType(currentProject), currentProject)
       .verifyChanges(changes, { pathPrefix: 'project' });
+    if (!changedStep && Object.keys(changes).length === 0) {
+      return await this.readOneUnsecured(input.id, session, changeset);
+    }
 
     let updated = currentProject;
     if (changedStep) {
