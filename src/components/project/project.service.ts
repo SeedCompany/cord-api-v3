@@ -336,7 +336,7 @@ export class ProjectService {
     const event = new ProjectUpdatedEvent(
       updated,
       currentProject,
-      input,
+      { id: updated.id, ...changes },
       session,
     );
     await this.eventBus.publish(event);

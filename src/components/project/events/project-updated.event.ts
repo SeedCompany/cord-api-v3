@@ -5,7 +5,7 @@ export class ProjectUpdatedEvent {
   constructor(
     public updated: UnsecuredDto<Project>,
     readonly previous: UnsecuredDto<Project>,
-    readonly updates: UpdateProject,
+    readonly changes: UpdateProject,
     readonly session: Session,
   ) {}
 }
