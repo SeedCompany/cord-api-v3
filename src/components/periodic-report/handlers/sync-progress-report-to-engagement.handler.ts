@@ -51,6 +51,15 @@ export class SyncProgressReportToEngagementDateRange
     }
 
     if (
+      event instanceof ProjectUpdatedEvent &&
+      event.changes.mouStart === undefined &&
+      event.changes.mouEnd === undefined
+    ) {
+      // Project dates haven't changed, so do nothing.
+      return;
+    }
+
+    if (
       (event instanceof EngagementCreatedEvent && event.engagement.changeset) ||
       (event instanceof EngagementUpdatedEvent && event.updated.changeset)
     ) {
