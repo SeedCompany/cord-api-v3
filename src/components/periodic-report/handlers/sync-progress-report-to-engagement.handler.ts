@@ -58,6 +58,14 @@ export class SyncProgressReportToEngagementDateRange
       // Project dates haven't changed, so do nothing.
       return;
     }
+    if (
+      event instanceof EngagementUpdatedEvent &&
+      event.input.startDateOverride === undefined &&
+      event.input.endDateOverride === undefined
+    ) {
+      // Engagement dates haven't changed, so do nothing.
+      return;
+    }
 
     if (
       (event instanceof EngagementCreatedEvent && event.engagement.changeset) ||
