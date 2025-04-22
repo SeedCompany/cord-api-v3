@@ -167,7 +167,7 @@ export class EngagementService {
       );
     }
 
-    const { methodology: _, ...maybeChanges } = input;
+    const { methodology, ...maybeChanges } = input;
     const changes = this.repo.getActualLanguageChanges(object, maybeChanges);
     this.privileges
       .for(session, LanguageEngagement, object)
@@ -182,7 +182,12 @@ export class EngagementService {
       changeset,
     );
 
-    const event = new EngagementUpdatedEvent(updated, previous, input, session);
+    const event = new EngagementUpdatedEvent(
+      updated,
+      previous,
+      { id: object.id, methodology, ...changes },
+      session,
+    );
     if (Object.keys(changes).length > 0) {
       await this.eventBus.publish(event);
     }
@@ -220,7 +225,12 @@ export class EngagementService {
       changeset,
     );
 
-    const event = new EngagementUpdatedEvent(updated, previous, input, session);
+    const event = new EngagementUpdatedEvent(
+      updated,
+      previous,
+      { id: object.id, ...changes },
+      session,
+    );
     if (Object.keys(changes).length > 0) {
       await this.eventBus.publish(event);
     }
