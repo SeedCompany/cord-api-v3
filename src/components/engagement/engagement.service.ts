@@ -183,7 +183,9 @@ export class EngagementService {
     );
 
     const event = new EngagementUpdatedEvent(updated, previous, input, session);
-    await this.eventBus.publish(event);
+    if (Object.keys(changes).length > 0) {
+      await this.eventBus.publish(event);
+    }
 
     return this.secure(event.updated, session) as LanguageEngagement;
   }
@@ -219,7 +221,9 @@ export class EngagementService {
     );
 
     const event = new EngagementUpdatedEvent(updated, previous, input, session);
-    await this.eventBus.publish(event);
+    if (Object.keys(changes).length > 0) {
+      await this.eventBus.publish(event);
+    }
 
     return this.secure(event.updated, session) as InternshipEngagement;
   }
