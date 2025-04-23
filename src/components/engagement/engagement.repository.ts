@@ -444,7 +444,10 @@ export class EngagementRepository extends CommonRepository {
       });
     }
 
-    return await this.readOne(id, session);
+    return (await this.readOne(
+      id,
+      session,
+    )) as UnsecuredDto<LanguageEngagement>;
   }
 
   getActualInternshipChanges = getChanges(InternshipEngagement);
@@ -511,7 +514,10 @@ export class EngagementRepository extends CommonRepository {
       });
     }
 
-    return await this.readOne(id, session);
+    return (await this.readOne(
+      id,
+      session,
+    )) as UnsecuredDto<InternshipEngagement>;
   }
 
   async list(input: EngagementListInput, session: Session, changeset?: ID) {
