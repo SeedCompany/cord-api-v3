@@ -63,19 +63,51 @@ const languageHydrate = e.shape(e.LanguageEngagement, (le) => ({
   ...baseHydrate(le),
   __typename: le.__type__.name,
   ...languageExtraHydrate,
+  label: e.select({
+    project: le.project.name,
+    language: le.language.name,
+    intern: e.cast(e.str, e.set()),
+  }),
 }));
 
 const internshipHydrate = e.shape(e.InternshipEngagement, (ie) => ({
   ...baseHydrate(ie),
   __typename: ie.__type__.name,
   ...internshipExtraHydrate,
+  label: e.select({
+    project: ie.project.name,
+    language: e.cast(e.str, e.set()),
+    intern: e.array_join_maybe(
+      e.array([ie.intern.displayFirstName, ie.intern.displayLastName]),
+      ' ',
+    ),
+  }),
 }));
 
-const hydrate = e.shape(e.Engagement, (engagement) => ({
-  ...baseHydrate(engagement),
-  ...e.is(e.LanguageEngagement, languageExtraHydrate),
-  ...e.is(e.InternshipEngagement, internshipExtraHydrate),
-}));
+const hydrate = e.shape(e.Engagement, (engagement) => {
+  const langEng = e.select(e.LanguageEngagement, () => ({
+    filter_single: { id: engagement.id },
+  }));
+  const internEng = e.select(e.InternshipEngagement, () => ({
+    filter_single: { id: engagement.id },
+  }));
+  return {
+    ...baseHydrate(engagement),
+    ...e.is(e.LanguageEngagement, languageExtraHydrate),
+    ...e.is(e.InternshipEngagement, internshipExtraHydrate),
+    label: e.select({
+      project: engagement.project.name,
+      language: langEng.language.name,
+      intern: e.array_join_maybe(
+        e.array([
+          internEng.intern.displayFirstName,
+          internEng.intern.displayLastName,
+        ]),
+        ' ',
+      ),
+    }),
+  };
+});
 
 export const ConcreteRepos = {
   LanguageEngagement: class LanguageEngagementRepository extends RepoFor(

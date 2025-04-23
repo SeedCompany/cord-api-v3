@@ -18,7 +18,12 @@ module default {
        )
     )
   );
-  
+
+  function array_join_maybe(array: array<str>, delimiter: str) -> optional str using (
+    with joined := array_join(array, delimiter)
+    select if joined = "" then <str>{} else joined
+  );
+
   scalar type nanoid extending str;
   
   scalar type RichText extending json;
