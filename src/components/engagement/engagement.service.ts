@@ -94,16 +94,10 @@ export class EngagementService {
     this.verifyCreationStatus(input.status);
     EngagementDateRangeException.throwIfInvalid(input);
 
-    const { id } = await this.repo.createInternshipEngagement(
+    const engagement = await this.repo.createInternshipEngagement(
       input,
       session,
       changeset,
-    );
-
-    const engagement = await this.repo.readOne(
-      id,
-      session,
-      viewOfChangeset(changeset),
     );
 
     const event = new EngagementCreatedEvent(engagement, input, session);
