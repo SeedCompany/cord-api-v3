@@ -14,6 +14,7 @@ import {
   Range,
   RangeException,
   ReadAfterCreationFailed,
+  RequiredWhen,
   Role,
   SecuredList,
   ServerException,
@@ -162,6 +163,8 @@ export class ProjectService {
           ? new ReadAfterCreationFailed(IProject)
           : e;
       });
+
+      RequiredWhen.verify(IProject, project);
 
       // Add creator to the project team with their global roles
       await this.projectMembers.create(
@@ -339,6 +342,8 @@ export class ProjectService {
     );
 
     updated = await this.repo.update(updated, changes, changeset);
+
+    RequiredWhen.verify(IProject, updated);
 
     const event = new ProjectUpdatedEvent(
       updated,

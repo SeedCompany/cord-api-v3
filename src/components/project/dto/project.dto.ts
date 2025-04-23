@@ -14,6 +14,7 @@ import {
   IntersectTypes,
   NameField,
   parentIdMiddleware,
+  RequiredWhen,
   Resource,
   ResourceRelationsShape,
   Secured,
@@ -69,6 +70,12 @@ export const resolveProjectType = (val: Pick<AnyProject, 'type'>) => {
   }
   return type;
 };
+
+const RequiredWhenNotInDev = RequiredWhen(() => Project)({
+  description: 'the project is not in development',
+  isEnabled: ({ status }) =>
+    status !== 'InDevelopment' && status !== 'DidNotDevelop',
+});
 
 @RegisterResource({ db: e.Project })
 @InterfaceType({
@@ -126,6 +133,7 @@ class Project extends Interfaces {
 
   readonly primaryPartnership: Secured<LinkTo<'Partnership'> | null>;
 
+  @RequiredWhenNotInDev()
   readonly primaryLocation: Secured<LinkTo<'Location'> | null>;
 
   readonly marketingLocation: Secured<LinkTo<'Location'> | null>;
@@ -136,9 +144,11 @@ class Project extends Interfaces {
   readonly owningOrganization: Secured<LinkTo<'Organization'> | null>;
 
   @Field()
+  @RequiredWhenNotInDev()
   readonly mouStart: SecuredDateNullable;
 
   @Field()
+  @RequiredWhenNotInDev()
   readonly mouEnd: SecuredDateNullable;
 
   @Field()
@@ -183,9 +193,13 @@ class Project extends Interfaces {
   readonly presetInventory: SecuredBoolean;
 
   /**
-   * Optimization for {@see ProjectResolver.engagements}.
+   * Optimization for {@link ProjectResolver.engagements}.
    * This doesn't account for changesets or item filters.
    */
+  @RequiredWhenNotInDev({
+    field: 'engagements',
+    isMissing: (project) => project.engagementTotal === 0,
+  })
   readonly engagementTotal: number;
 }
 
