@@ -10,6 +10,7 @@ import {
   DBNames,
   IntersectTypes,
   parentIdMiddleware,
+  RequiredWhen,
   Resource,
   ResourceRelationsShape,
   Secured,
@@ -54,6 +55,12 @@ export const resolveEngagementType = (val: Pick<AnyEngagement, '__typename'>) =>
   val.__typename === 'default::LanguageEngagement'
     ? LanguageEngagement
     : InternshipEngagement;
+
+const RequiredWhenNotInDev = RequiredWhen(() => Engagement)({
+  description: 'the engagement is not in development',
+  isEnabled: ({ status }) =>
+    status !== 'InDevelopment' && status !== 'DidNotDevelop',
+});
 
 @RegisterResource({ db: e.Engagement })
 @InterfaceType({
@@ -221,14 +228,17 @@ export class InternshipEngagement extends Engagement {
   @Field(() => InternshipProject)
   declare readonly parent: BaseNode;
 
+  @RequiredWhenNotInDev()
   readonly countryOfOrigin: Secured<LinkTo<'Location'> | null>;
 
   readonly intern: Secured<LinkTo<'User'>>;
 
+  @RequiredWhenNotInDev()
   readonly mentor: Secured<LinkTo<'User'> | null>;
 
   @Field()
   @DbLabel('InternPosition')
+  @RequiredWhenNotInDev()
   readonly position: SecuredInternPosition;
 
   @Field()
