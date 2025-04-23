@@ -70,9 +70,17 @@ export class SyncBudgetRecordsToFundingPartners
       // Partnership was not funding, so do nothing.
       return;
     }
+    if (
+      event instanceof ProjectUpdatedEvent &&
+      event.changes.mouStart === undefined &&
+      event.changes.mouEnd === undefined
+    ) {
+      // Project dates haven't changed, so do nothing.
+      return;
+    }
 
-    const projectId = await this.determineProjectId(event);
-    const changeset = await this.determineChangeset(event);
+    const projectId = this.determineProjectId(event);
+    const changeset = this.determineChangeset(event);
 
     // Fetch budget & only continue if it is pending
     const budget = await this.budgetRepo.listRecordsForSync(
@@ -88,7 +96,7 @@ export class SyncBudgetRecordsToFundingPartners
     }
   }
 
-  private async determineProjectId(event: SubscribedEvent) {
+  private determineProjectId(event: SubscribedEvent) {
     if (event instanceof ProjectUpdatedEvent) {
       return event.updated.id;
     }
@@ -98,7 +106,7 @@ export class SyncBudgetRecordsToFundingPartners
     return event.partnership.project.id;
   }
 
-  private async determineChangeset(event: SubscribedEvent) {
+  private determineChangeset(event: SubscribedEvent) {
     if (event instanceof ProjectUpdatedEvent) {
       return event.updated.changeset;
     }
