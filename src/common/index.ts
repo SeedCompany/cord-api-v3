@@ -50,6 +50,7 @@ export * from './email-field';
 export * from './id-field';
 export * from './url.field';
 export * from './object-view';
+export * from './required-when';
 export {
   RichTextField,
   RichTextDocument,

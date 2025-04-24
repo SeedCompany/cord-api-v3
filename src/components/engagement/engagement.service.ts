@@ -6,6 +6,7 @@ import {
   ObjectView,
   Range,
   RangeException,
+  RequiredWhen,
   SecuredList,
   Session,
   UnsecuredDto,
@@ -79,6 +80,8 @@ export class EngagementService {
       changeset,
     );
 
+    RequiredWhen.verify(LanguageEngagement, engagement);
+
     const event = new EngagementCreatedEvent(engagement, input, session);
     await this.eventBus.publish(event);
 
@@ -94,17 +97,13 @@ export class EngagementService {
     this.verifyCreationStatus(input.status);
     EngagementDateRangeException.throwIfInvalid(input);
 
-    const { id } = await this.repo.createInternshipEngagement(
+    const engagement = await this.repo.createInternshipEngagement(
       input,
       session,
       changeset,
     );
 
-    const engagement = await this.repo.readOne(
-      id,
-      session,
-      viewOfChangeset(changeset),
-    );
+    RequiredWhen.verify(InternshipEngagement, engagement);
 
     const event = new EngagementCreatedEvent(engagement, input, session);
     await this.eventBus.publish(event);
@@ -189,6 +188,8 @@ export class EngagementService {
       changeset,
     );
 
+    RequiredWhen.verify(LanguageEngagement, updated);
+
     const event = new EngagementUpdatedEvent(
       updated,
       previous,
@@ -232,6 +233,8 @@ export class EngagementService {
       session,
       changeset,
     );
+
+    RequiredWhen.verify(InternshipEngagement, updated);
 
     const event = new EngagementUpdatedEvent(
       updated,
