@@ -3,6 +3,7 @@ import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import {
   DateFilter,
+  DateTimeFilter,
   FilterField,
   ID,
   PaginatedList,
@@ -49,6 +50,13 @@ export abstract class PartnerFilters {
   @Type(() => DateFilter)
   @ValidateNested()
   readonly startDate?: DateFilter;
+
+  @Field({
+    nullable: true,
+  })
+  @Type(() => DateTimeFilter)
+  @ValidateNested()
+  readonly createdAt?: DateTimeFilter;
 }
 
 @InputType()

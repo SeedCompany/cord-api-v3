@@ -343,6 +343,7 @@ export const partnerFilters = filters.define(() => PartnerFilters, {
   financialReportingTypes: filter.intersectsProp(),
   globalInnovationsClient: filter.propVal(),
   startDate: filter.dateTimeProp(),
+  createdAt: filter.dateTimeBaseNodeProp(),
 });
 
 export const partnerSorters = defineSorters(Partner, {
