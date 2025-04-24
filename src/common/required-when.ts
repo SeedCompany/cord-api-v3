@@ -46,16 +46,14 @@ RequiredWhen.verify = <TResourceStatic extends ResourceShape<any>>(
   obj: UnsecuredDto<TResourceStatic['prototype']>,
 ) => {
   const res = EnhancedResource.of(resource);
-  const props = [...res.props];
-  const missing = props.flatMap((prop: string) => {
+  const missing = [...res.props].flatMap((prop: string) => {
     const condition = RequiredWhenMetadata.get(resource, prop);
-    return condition?.isEnabled(obj) && (condition.isMissing ?? isNil)(obj)
-      ? [
-          {
-            field: condition.field ?? prop,
-            description: condition.description,
-          },
-        ]
+    return condition?.isEnabled(obj) &&
+      (condition.isMissing?.(obj) ?? obj[prop] == null)
+      ? {
+          field: condition.field ?? prop,
+          description: condition.description,
+        }
       : [];
   });
   if (missing.length > 0) {
@@ -83,5 +81,3 @@ export class MissingRequiredFieldsException extends InputException {
     super(message);
   }
 }
-
-const isNil = (x: unknown): x is null | undefined => x == null;
