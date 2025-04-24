@@ -1,10 +1,13 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import {
+  CalendarDate,
   CreationFailed,
   ID,
   InputException,
   NotFoundException,
   ObjectView,
+  Range,
+  RangeException,
   ReadAfterCreationFailed,
   ServerException,
   Session,
@@ -18,6 +21,7 @@ import {
   Logger,
   ResourceLoader,
 } from '~/core';
+import { AnyChangesOf } from '~/core/database/changes';
 import { Privileges } from '../authorization';
 import { FileService } from '../file';
 import { PartnerService } from '../partner';
@@ -60,6 +64,8 @@ export class PartnershipService {
     changeset?: ID,
   ): Promise<Partnership> {
     const { projectId, partnerId } = input;
+
+    PartnershipDateRangeException.throwIfInvalid(input);
 
     const isFirstPartnership = await this.repo.isFirstPartnership(
       projectId,
@@ -190,6 +196,8 @@ export class PartnershipService {
     this.privileges.for(session, Partnership, object).verifyChanges(changes);
     const { mou, agreement, ...simpleChanges } = changes;
 
+    PartnershipDateRangeException.throwIfInvalid(existing, changes);
+
     if (changes.primary) {
       await this.repo.removePrimaryFromOtherPartnerships(input.id);
     }
@@ -295,5 +303,36 @@ export class PartnershipService {
         'partnership.financialReportingType',
       );
     }
+  }
+}
+
+class PartnershipDateRangeException extends RangeException {
+  static throwIfInvalid(
+    current: Partial<
+      Pick<UnsecuredDto<Partnership>, 'mouStartOverride' | 'mouEndOverride'>
+    >,
+    changes: AnyChangesOf<Partnership> = {},
+  ) {
+    const start =
+      changes.mouStartOverride !== undefined
+        ? changes.mouStartOverride
+        : current.mouStartOverride;
+    const end =
+      changes.mouEndOverride !== undefined
+        ? changes.mouEndOverride
+        : current.mouEndOverride;
+    if (start && end && start > end) {
+      const field =
+        changes.mouEndOverride !== undefined
+          ? 'partnership.mouEndOverride'
+          : 'partnership.mouStartOverride';
+      throw new PartnershipDateRangeException({ start, end }, field);
+    }
+  }
+
+  constructor(readonly value: Range<CalendarDate>, readonly field: string) {
+    const message =
+      "Partnership's MOU start date must be before the MOU end date";
+    super({ message, field });
   }
 }
