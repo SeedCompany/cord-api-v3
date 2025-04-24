@@ -1528,9 +1528,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@gel/generate@npm:^0.6.2":
-  version: 0.6.2
-  resolution: "@gel/generate@npm:0.6.2"
+"@gel/generate@npm:^0.7.0-canary.20250422T080308":
+  version: 0.7.0-canary.20250422T080308
+  resolution: "@gel/generate@npm:0.7.0-canary.20250422T080308"
   dependencies:
     "@iarna/toml": "npm:^2.2.5"
     debug: "npm:^4.3.4"
@@ -1538,7 +1538,7 @@ __metadata:
     gel: ^2.0.1
   bin:
     generate: dist/cli.js
-  checksum: 10c0/a4768fb30ad6a319b461ba70f72045e771e8d4f58d07ef1d5b2920c8f12a33c9ab6d6b3ade8613acafa4a220daa7426b27e1d0549e7875d9116a4d44e3022b80
+  checksum: 10c0/070760570543d85408bf9a9aaaa7e337c647ada49e7a160caafc848d3d2715a6908da2511276f21b0195608957f605831c1bb35b1057c171c0dae75a0f50ae10
   languageName: node
   linkType: hard
 
@@ -5824,7 +5824,7 @@ __metadata:
     "@fastify/cookie": "npm:^11.0.1"
     "@fastify/cors": "npm:^10.0.1"
     "@ffprobe-installer/ffprobe": "npm:^2.1.2"
-    "@gel/generate": "npm:^0.6.2"
+    "@gel/generate": "npm:^0.7.0-canary.20250422T080308"
     "@golevelup/nestjs-discovery": "npm:^4.0.0"
     "@graphql-hive/cli": "npm:^0.44.2"
     "@graphql-hive/yoga": "npm:^0.38.2"
@@ -7701,8 +7701,8 @@ __metadata:
   linkType: hard
 
 "gel@npm:^2.1.0-canary.20250319T143140":
-  version: 2.1.0-canary.20250319T143140
-  resolution: "gel@npm:2.1.0-canary.20250319T143140"
+  version: 2.1.0-canary.20250422T080253
+  resolution: "gel@npm:2.1.0-canary.20250422T080253"
   dependencies:
     "@petamoriken/float16": "npm:^3.8.7"
     debug: "npm:^4.3.4"
@@ -7712,7 +7712,7 @@ __metadata:
     which: "npm:^4.0.0"
   bin:
     gel: dist/cli.mjs
-  checksum: 10c0/4425dc7bef310741530feee8ccc1e0d38e303f913dad59da7ae07f72fb3b111e1f6e89dd33c26c9ab25ea19f36e23afcf91374aea997f9d82d5b1e97097f1361
+  checksum: 10c0/0c84271eaeb6636180a356ea2569a51d7a92e6a7fe660fb1ba9eabed15d71e6ca6a89007d668d4d4c08d188d1e629711304802f41e02ba504c041e51ef7253cf
   languageName: node
   linkType: hard
 

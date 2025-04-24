@@ -61,7 +61,7 @@ function fixCustomScalarsImports(qbDir: Directory) {
     (s) => s.module,
   )) {
     const moduleFile = qbDir.addSourceFileAtPath(
-      `modules/${scalars[0]!.module}.ts`,
+      `modules/${scalars[0]!.module.replaceAll(/::/g, '/')}.ts`,
     );
     addCustomScalarImports(moduleFile, scalars);
   }

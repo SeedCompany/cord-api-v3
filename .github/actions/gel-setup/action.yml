@@ -3,8 +3,18 @@ description: 'Setup Gel server, migrate schema, generate TS files'
 runs:
   using: composite
   steps:
-    - name: Setup Gel
+    - name: Install Gel CLI
       uses: geldata/setup-gel@v1
+      with:
+        server-version: none
+
+    - name: Initialize Gel Project
+      shell: bash
+      run: gel project init --no-migrations --non-interactive
+
+    - name: Migrate Gel Schema
+      shell: bash
+      run: gel migrate --single-transaction
 
     - name: Generate Gel TS files
       shell: bash
