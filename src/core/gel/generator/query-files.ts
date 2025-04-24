@@ -46,7 +46,12 @@ const generateFilesForQuery =
  * Same thing as what upstream function does, just with readonly on the output type.
  */
 export async function analyzeQuery(client: Client, query: string) {
-  const { cardinality, in: inCodec, out: outCodec } = await client.parse(query);
+  const {
+    in: inCodec,
+    out: outCodec,
+    cardinality,
+    capabilities,
+  } = await client.describe(query);
   const args = $.generateTSTypeFromCodec(inCodec, $.Cardinality.One, {
     readonly: true,
     optionalNulls: true,
@@ -59,6 +64,7 @@ export async function analyzeQuery(client: Client, query: string) {
     result: result.type,
     args: args.type,
     cardinality,
+    capabilities,
     query,
     importMap: args.imports.merge(result.imports),
   };

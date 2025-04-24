@@ -7,6 +7,7 @@ import { OrganizationModule } from '../organization/organization.module';
 import { ProjectModule } from '../project/project.module';
 import { UserModule } from '../user/user.module';
 import { AddPartnerApprovedProgramsMigration } from './migrations/add-partner-approved-programs.migration';
+import { AddPartnerStartDateMigration } from './migrations/add-partner-start-date.migration';
 import { PartnerGelRepository } from './partner.gel.repository';
 import { PartnerLoader } from './partner.loader';
 import { PartnerRepository } from './partner.repository';
@@ -28,6 +29,7 @@ import { PartnerService } from './partner.service';
     splitDb(PartnerRepository, PartnerGelRepository),
     PartnerLoader,
     AddPartnerApprovedProgramsMigration,
+    AddPartnerStartDateMigration,
   ],
   exports: [PartnerService],
 })

@@ -113,7 +113,7 @@
     "yaml": "^2.3.3"
   },
   "devDependencies": {
-    "@gel/generate": "^0.6.2",
+    "@gel/generate": "^0.7.0-canary.20250422T080308",
     "@graphql-hive/cli": "^0.44.2",
     "@nestjs/cli": "^10.2.1",
     "@nestjs/schematics": "^10.0.3",
