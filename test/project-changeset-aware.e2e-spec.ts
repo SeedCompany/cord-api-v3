@@ -58,8 +58,8 @@ const activeProject = async (app: TestApp) => {
     return [location, fieldRegion];
   });
   const project = await createProject(app, {
-    mouStart: undefined,
-    mouEnd: undefined,
+    mouStart: CalendarDate.local(2020),
+    mouEnd: CalendarDate.local(2021),
     primaryLocationId: location.id,
     fieldRegionId: fieldRegion.id,
   });
@@ -174,8 +174,8 @@ describe('Project Changeset Aware e2e', () => {
 
     // Query project without changeset
     let result = await readProject(app, project.id);
-    expect(result.project.mouStart.value).toBeNull();
-    expect(result.project.mouEnd.value).toBeNull();
+    expect(result.project.mouStart.value).toBe('2020-01-01');
+    expect(result.project.mouEnd.value).toBe('2021-01-01');
 
     // Query project with changeset
     result = await readProject(app, project.id, changeset.id);
