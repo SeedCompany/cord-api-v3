@@ -584,7 +584,7 @@ export class EngagementRepository extends CommonRepository {
         relation('out', '', 'engagement', ACTIVE),
         node('engagement'),
         relation('out', '', 'status', ACTIVE),
-        node('sn', 'Property'),
+        node('sn'),
       ])
       .where({
         sn: {
@@ -685,7 +685,7 @@ export class EngagementRepository extends CommonRepository {
       .match([
         node('language'),
         relation('out', '', 'hasExternalFirstScripture', ACTIVE),
-        node('', 'Property', { value: true }),
+        node({ value: true }),
       ])
       .return('language')
       .first();
@@ -703,7 +703,7 @@ export class EngagementRepository extends CommonRepository {
         relation('in', '', 'language', ACTIVE),
         node('otherLanguageEngagements', 'LanguageEngagement'),
         relation('out', '', 'firstScripture', ACTIVE),
-        node('', 'Property', { value: true }),
+        node({ value: true }),
       ])
       .return('otherLanguageEngagements')
       .first();
@@ -793,14 +793,14 @@ export const engagementFilters = filter.define(() => EngagementFilters, {
       [
         node('node'),
         relation('out', '', 'startDateOverride', ACTIVE),
-        node('startDateOverride', 'Property'),
+        node('startDateOverride'),
       ],
       [
         node('node'),
         relation('in', '', 'engagement'),
         node('project', 'Project'),
         relation('out', '', 'mouStart', ACTIVE),
-        node('mouStart', 'Property'),
+        node('mouStart'),
       ],
     ]);
     return coalesce('startDateOverride.value', 'mouStart.value');
@@ -810,14 +810,14 @@ export const engagementFilters = filter.define(() => EngagementFilters, {
       [
         node('node'),
         relation('out', '', 'endDateOverride', ACTIVE),
-        node('endDateOverride', 'Property'),
+        node('endDateOverride'),
       ],
       [
         node('node'),
         relation('in', '', 'engagement'),
         node('project', 'Project'),
         relation('out', '', 'mouEnd', ACTIVE),
-        node('mouEnd', 'Property'),
+        node('mouEnd'),
       ],
     ]);
     return coalesce('endDateOverride.value', 'mouEnd.value');
@@ -910,7 +910,7 @@ export const engagementSorters = defineSorters(IEngagement, {
         .optionalMatch([
           node('node'),
           relation('out', '', `${field}Override`, ACTIVE),
-          node('override', 'Property'),
+          node('override'),
         ])
         .optionalMatch([
           node('node'),
@@ -970,26 +970,26 @@ const matchNames = (query: Query) =>
     .match([
       node('project'),
       relation('out', '', 'name', ACTIVE),
-      node('projectName', 'Property'),
+      node('projectName'),
     ])
     .optionalMatch([
       node('node'),
       relation('out', '', 'language'),
       node('', 'Language'),
       relation('out', '', 'name', ACTIVE),
-      node('languageName', 'Property'),
+      node('languageName'),
     ])
     .optionalMatch([
       [node('node'), relation('out', '', 'intern'), node('intern', 'User')],
       [
         node('intern'),
         relation('out', '', 'displayFirstName', ACTIVE),
-        node('dfn', 'Property'),
+        node('dfn'),
       ],
       [
         node('intern'),
         relation('out', '', 'displayLastName', ACTIVE),
-        node('dln', 'Property'),
+        node('dln'),
       ],
     ]);
 
