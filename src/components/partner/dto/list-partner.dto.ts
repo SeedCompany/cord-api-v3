@@ -1,5 +1,9 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
+import { Type } from 'class-transformer';
+import { ValidateNested } from 'class-validator';
 import {
+  DateFilter,
+  DateTimeFilter,
   FilterField,
   ID,
   PaginatedList,
@@ -39,6 +43,20 @@ export abstract class PartnerFilters {
     nullable: true,
   })
   readonly financialReportingTypes?: FinancialReportingType[];
+
+  @Field({
+    nullable: true,
+  })
+  @Type(() => DateFilter)
+  @ValidateNested()
+  readonly startDate?: DateFilter;
+
+  @Field({
+    nullable: true,
+  })
+  @Type(() => DateTimeFilter)
+  @ValidateNested()
+  readonly createdAt?: DateTimeFilter;
 }
 
 @InputType()

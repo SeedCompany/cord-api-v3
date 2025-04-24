@@ -1,8 +1,12 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import {
+  CalendarDate,
   ID,
   InputException,
   ObjectView,
+  Range,
+  RangeException,
+  RequiredWhen,
   SecuredList,
   Session,
   UnsecuredDto,
@@ -16,6 +20,7 @@ import {
   Logger,
   ResourceLoader,
 } from '~/core';
+import { AnyChangesOf } from '~/core/database/changes';
 import { Privileges } from '../authorization';
 import { CeremonyService } from '../ceremony';
 import { ProductService } from '../product';
@@ -67,12 +72,15 @@ export class EngagementService {
   ): Promise<LanguageEngagement> {
     await this.verifyCreateEngagement(input.projectId, session);
     this.verifyCreationStatus(input.status);
+    EngagementDateRangeException.throwIfInvalid(input);
 
     const engagement = await this.repo.createLanguageEngagement(
       input,
       session,
       changeset,
     );
+
+    RequiredWhen.verify(LanguageEngagement, engagement);
 
     const event = new EngagementCreatedEvent(engagement, input, session);
     await this.eventBus.publish(event);
@@ -87,18 +95,15 @@ export class EngagementService {
   ): Promise<InternshipEngagement> {
     await this.verifyCreateEngagement(input.projectId, session);
     this.verifyCreationStatus(input.status);
+    EngagementDateRangeException.throwIfInvalid(input);
 
-    const { id } = await this.repo.createInternshipEngagement(
+    const engagement = await this.repo.createInternshipEngagement(
       input,
       session,
       changeset,
     );
 
-    const engagement = await this.repo.readOne(
-      id,
-      session,
-      viewOfChangeset(changeset),
-    );
+    RequiredWhen.verify(InternshipEngagement, engagement);
 
     const event = new EngagementCreatedEvent(engagement, input, session);
     await this.eventBus.publish(event);
@@ -167,11 +172,12 @@ export class EngagementService {
       );
     }
 
-    const { methodology: _, ...maybeChanges } = input;
+    const { methodology, ...maybeChanges } = input;
     const changes = this.repo.getActualLanguageChanges(object, maybeChanges);
     this.privileges
       .for(session, LanguageEngagement, object)
       .verifyChanges(changes);
+    EngagementDateRangeException.throwIfInvalid(previous, changes);
 
     const updated = await this.repo.updateLanguage(
       {
@@ -182,8 +188,17 @@ export class EngagementService {
       changeset,
     );
 
-    const event = new EngagementUpdatedEvent(updated, previous, input, session);
-    await this.eventBus.publish(event);
+    RequiredWhen.verify(LanguageEngagement, updated);
+
+    const event = new EngagementUpdatedEvent(
+      updated,
+      previous,
+      { id: object.id, methodology, ...changes },
+      session,
+    );
+    if (Object.keys(changes).length > 0) {
+      await this.eventBus.publish(event);
+    }
 
     return this.secure(event.updated, session) as LanguageEngagement;
   }
@@ -211,6 +226,7 @@ export class EngagementService {
     this.privileges
       .for(session, InternshipEngagement, object)
       .verifyChanges(changes, { pathPrefix: 'engagement' });
+    EngagementDateRangeException.throwIfInvalid(previous, changes);
 
     const updated = await this.repo.updateInternship(
       { id: object.id, ...changes },
@@ -218,8 +234,17 @@ export class EngagementService {
       changeset,
     );
 
-    const event = new EngagementUpdatedEvent(updated, previous, input, session);
-    await this.eventBus.publish(event);
+    RequiredWhen.verify(InternshipEngagement, updated);
+
+    const event = new EngagementUpdatedEvent(
+      updated,
+      previous,
+      { id: object.id, ...changes },
+      session,
+    );
+    if (Object.keys(changes).length > 0) {
+      await this.eventBus.publish(event);
+    }
 
     return this.secure(event.updated, session) as InternshipEngagement;
   }
@@ -294,5 +319,35 @@ export class EngagementService {
   async hasOngoing(projectId: ID, excludes: EngagementStatus[] = []) {
     const ids = await this.repo.getOngoingEngagementIds(projectId, excludes);
     return ids.length > 0;
+  }
+}
+
+class EngagementDateRangeException extends RangeException {
+  static throwIfInvalid(
+    current: Partial<
+      Pick<UnsecuredDto<Engagement>, 'startDateOverride' | 'endDateOverride'>
+    >,
+    changes: AnyChangesOf<Engagement> = {},
+  ) {
+    const start =
+      changes.startDateOverride !== undefined
+        ? changes.startDateOverride
+        : current.startDateOverride;
+    const end =
+      changes.endDateOverride !== undefined
+        ? changes.endDateOverride
+        : current.endDateOverride;
+    if (start && end && start > end) {
+      const field =
+        changes.endDateOverride !== undefined
+          ? 'engagement.endDateOverride'
+          : 'engagement.startDateOverride';
+      throw new EngagementDateRangeException({ start, end }, field);
+    }
+  }
+
+  constructor(readonly value: Range<CalendarDate>, readonly field: string) {
+    const message = "Engagement's start date must be before the end date";
+    super({ message, field });
   }
 }

@@ -1,6 +1,7 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { Many } from '@seedcompany/common';
 import {
+  CalendarDate,
   ClientException,
   CreationFailed,
   EnhancedResource,
@@ -10,7 +11,10 @@ import {
   many,
   NotFoundException,
   ObjectView,
+  Range,
+  RangeException,
   ReadAfterCreationFailed,
+  RequiredWhen,
   Role,
   SecuredList,
   ServerException,
@@ -27,6 +31,7 @@ import {
   Logger,
 } from '~/core';
 import { Transactional } from '~/core/database';
+import { AnyChangesOf } from '~/core/database/changes';
 import { Privileges } from '../authorization';
 import { withoutScope } from '../authorization/dto';
 import { BudgetService } from '../budget';
@@ -101,6 +106,7 @@ export class ProjectService {
     input: CreateProject,
     session: Session,
   ): Promise<UnsecuredDto<Project>> {
+    ProjectDateRangeException.throwIfInvalid(input);
     if (input.type !== ProjectType.Internship && input.sensitivity) {
       throw new InputException(
         'Can only set sensitivity on Internship Projects',
@@ -157,6 +163,8 @@ export class ProjectService {
           ? new ReadAfterCreationFailed(IProject)
           : e;
       });
+
+      RequiredWhen.verify(IProject, project);
 
       // Add creator to the project team with their global roles
       await this.projectMembers.create(
@@ -286,6 +294,11 @@ export class ProjectService {
     this.privileges
       .for(session, resolveProjectType(currentProject), currentProject)
       .verifyChanges(changes, { pathPrefix: 'project' });
+    if (!changedStep && Object.keys(changes).length === 0) {
+      return await this.readOneUnsecured(input.id, session, changeset);
+    }
+
+    ProjectDateRangeException.throwIfInvalid(currentProject, changes);
 
     let updated = currentProject;
     if (changedStep) {
@@ -330,10 +343,12 @@ export class ProjectService {
 
     updated = await this.repo.update(updated, changes, changeset);
 
+    RequiredWhen.verify(IProject, updated);
+
     const event = new ProjectUpdatedEvent(
       updated,
       currentProject,
-      input,
+      { id: updated.id, ...changes },
       session,
     );
     await this.eventBus.publish(event);
@@ -606,5 +621,25 @@ export class ProjectService {
         );
       }),
     );
+  }
+}
+
+class ProjectDateRangeException extends RangeException {
+  static throwIfInvalid(
+    current: Partial<Pick<UnsecuredDto<Project>, 'mouStart' | 'mouEnd'>>,
+    changes: AnyChangesOf<Project> = {},
+  ) {
+    const start =
+      changes.mouStart !== undefined ? changes.mouStart : current.mouStart;
+    const end = changes.mouEnd !== undefined ? changes.mouEnd : current.mouEnd;
+    if (start && end && start > end) {
+      const field = changes.mouEnd ? 'project.mouEnd' : 'project.mouStart';
+      throw new ProjectDateRangeException({ start, end }, field);
+    }
+  }
+
+  constructor(readonly value: Range<CalendarDate>, readonly field: string) {
+    const message = "Project's MOU start date must be before the MOU end date";
+    super({ message, field });
   }
 }

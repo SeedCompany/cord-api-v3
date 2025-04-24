@@ -3,6 +3,7 @@ import { ModuleRef } from '@nestjs/core';
 import {
   ID,
   MaybeSecured,
+  RequiredWhen,
   Session,
   UnsecuredDto,
   unwrapSecured,
@@ -12,7 +13,7 @@ import {
   findTransition,
   WorkflowService,
 } from '../../workflow/workflow.service';
-import { Project, ProjectStep } from '../dto';
+import { IProject, Project, ProjectStep } from '../dto';
 import { ProjectService } from '../project.service';
 import {
   ExecuteProjectTransitionInput,
@@ -95,6 +96,8 @@ export class ProjectWorkflowService extends WorkflowService(
     );
 
     const updated = await this.projects.readOneUnsecured(projectId, session);
+
+    RequiredWhen.verify(IProject, updated);
 
     const event = new ProjectTransitionedEvent(
       updated,

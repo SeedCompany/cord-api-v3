@@ -1,10 +1,13 @@
 /* eslint-disable @seedcompany/no-unused-vars */
 
+import { FnLike } from '@seedcompany/common';
+
 type Decorator =
   | ClassDecorator
   | PropertyDecorator
   | MethodDecorator
-  | ParameterDecorator;
+  | ParameterDecorator
+  | FnLike;
 
 /**
  * Mark the decorator is disabled and give a reason why.

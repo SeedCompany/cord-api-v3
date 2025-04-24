@@ -6,7 +6,7 @@ import * as fs from 'fs/promises';
 // eslint-disable-next-line no-restricted-imports
 import * as lodash from 'lodash';
 import { DateTime, Duration, Interval } from 'luxon';
-import { CalendarDate, DateInterval, many, maybeMany } from '~/common';
+import { CalendarDate, DateInterval } from '~/common';
 import * as common from '~/common';
 import './polyfills';
 
@@ -34,8 +34,8 @@ runRepl({
       Interval,
       CalendarDate,
       DateInterval,
-      many,
-      maybeMany,
+      now: DateTime.now,
+      today: CalendarDate.now,
       common: { ...commonLib, ...common },
       scripture,
       ...lodash.pick(scripture, 'Book', 'Chapter', 'Verse'),
