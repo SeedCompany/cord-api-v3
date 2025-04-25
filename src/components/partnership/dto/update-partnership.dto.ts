@@ -32,10 +32,10 @@ export abstract class UpdatePartnership {
   readonly mouStatus?: PartnershipAgreementStatus;
 
   @DateField({ nullable: true })
-  readonly mouStartOverride?: CalendarDate;
+  readonly mouStartOverride?: CalendarDate | null;
 
   @DateField({ nullable: true })
-  readonly mouEndOverride?: CalendarDate;
+  readonly mouEndOverride?: CalendarDate | null;
 
   @Field(() => [PartnerType], { nullable: true })
   @Transform(({ value }) => uniq(value))

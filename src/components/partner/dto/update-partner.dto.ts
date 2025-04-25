@@ -22,7 +22,7 @@ export abstract class UpdatePartner {
   readonly id: ID;
 
   @IdField({ nullable: true })
-  readonly pointOfContactId?: ID | null;
+  readonly pointOfContactId?: ID<'User'> | null;
 
   @Field(() => [PartnerType], { nullable: true })
   @Transform(({ value }) => uniq(value))
@@ -32,11 +32,11 @@ export abstract class UpdatePartner {
   @Transform(({ value }) => uniq(value))
   readonly financialReportingTypes?: readonly FinancialReportingType[];
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @Matches(/^[A-Z]{3}$/, {
     message: 'Must be 3 uppercase letters',
   })
-  readonly pmcEntityCode?: string;
+  readonly pmcEntityCode?: string | null;
 
   @Field({ nullable: true })
   readonly globalInnovationsClient?: boolean;
@@ -45,7 +45,7 @@ export abstract class UpdatePartner {
   readonly active?: boolean;
 
   @NameField({ nullable: true })
-  readonly address?: string;
+  readonly address?: string | null;
 
   @IdField({ nullable: true })
   readonly languageOfWiderCommunicationId?: ID<'Language'> | null;

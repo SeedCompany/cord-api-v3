@@ -17,8 +17,8 @@ export abstract class UpdateOrganization {
   @NameField({ nullable: true })
   readonly acronym?: string | null;
 
-  @Field({ nullable: true })
-  readonly address?: string;
+  @Field(() => String, { nullable: true })
+  readonly address?: string | null;
 
   @Field(() => [OrganizationType], { nullable: true })
   readonly types?: readonly OrganizationType[];
