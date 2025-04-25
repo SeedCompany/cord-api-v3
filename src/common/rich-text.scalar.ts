@@ -1,5 +1,5 @@
 import { applyDecorators } from '@nestjs/common';
-import { Field, FieldOptions, ObjectType } from '@nestjs/graphql';
+import { ObjectType } from '@nestjs/graphql';
 import { setToStringTag } from '@seedcompany/common';
 import { markSkipClassTransformation } from '@seedcompany/nest';
 import { IsObject } from 'class-validator';
@@ -9,7 +9,7 @@ import { GraphQLJSONObject } from 'graphql-scalars';
 import { isEqual } from 'lodash';
 import { JsonObject } from 'type-fest';
 import { SecuredProperty } from '~/common/secured-property';
-import { Transform } from './transform.decorator';
+import { OptionalField, OptionalFieldOptions } from './optional-field';
 
 function hashId(name: string) {
   return createHash('shake256', { outputLength: 5 }).update(name).digest('hex');
@@ -76,11 +76,14 @@ export class RichTextDocument {
 setToStringTag(RichTextDocument, 'RichText');
 markSkipClassTransformation(RichTextDocument);
 
-export const RichTextField = (options?: FieldOptions) =>
+export const RichTextField = (options?: OptionalFieldOptions) =>
   applyDecorators(
-    Field(() => RichTextScalar, options),
-    IsObject(),
-    Transform(({ value }) => RichTextDocument.fromMaybe(value)),
+    OptionalField(() => RichTextScalar, {
+      optional: false,
+      ...options,
+      transform: RichTextDocument.fromMaybe,
+    }),
+    IsObject(), // TODO validate empty blocks becomes null becomes validation error
   );
 
 /** @internal */

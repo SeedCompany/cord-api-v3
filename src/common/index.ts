@@ -27,6 +27,7 @@ export * from './lazy-ref';
 export * from './lazy-record';
 export { DateField, DateTimeField } from './luxon.graphql';
 export * from './map-or-else';
+export * from './optional-field';
 export * from './order.enum';
 export * from './pagination.input';
 export * from './pagination-list';

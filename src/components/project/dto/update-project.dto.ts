@@ -11,6 +11,7 @@ import {
   IdField,
   IdOf,
   NameField,
+  OptionalField,
   Sensitivity,
   SensitivityField,
 } from '~/common';
@@ -25,7 +26,7 @@ export abstract class UpdateProject {
   @IdField()
   readonly id: ID;
 
-  @NameField({ nullable: true })
+  @NameField({ optional: true })
   readonly name?: string;
 
   @IdField({
@@ -63,15 +64,14 @@ export abstract class UpdateProject {
   @DateField({ nullable: true })
   readonly estimatedSubmission?: CalendarDate | null;
 
-  @Field(() => ProjectStep, {
-    nullable: true,
+  @OptionalField(() => ProjectStep, {
     deprecationReason: 'Use `transitionProject` mutation instead',
   })
   readonly step?: ProjectStep;
 
   @SensitivityField({
     description: 'Update only available to internship projects',
-    nullable: true,
+    optional: true,
   })
   readonly sensitivity?: Sensitivity;
 
@@ -85,7 +85,7 @@ export abstract class UpdateProject {
   @Field(() => ReportPeriod, { nullable: true })
   readonly financialReportPeriod?: ReportPeriod | null;
 
-  @Field({ nullable: true })
+  @OptionalField()
   readonly presetInventory?: boolean;
 
   @Field(() => String, { nullable: true })

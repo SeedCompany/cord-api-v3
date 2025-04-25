@@ -1,9 +1,10 @@
 import { applyDecorators } from '@nestjs/common';
-import { CustomScalar, Field, FieldOptions, Scalar } from '@nestjs/graphql';
+import { CustomScalar, Scalar } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { Kind, ValueNode } from 'graphql';
 import { DateTime, Settings } from 'luxon';
 import { InputException } from './exceptions';
+import { OptionalField, OptionalFieldOptions } from './optional-field';
 import { CalendarDate } from './temporal';
 import { Transform } from './transform.decorator';
 import { ValidateBy } from './validators/validateBy';
@@ -24,9 +25,12 @@ const IsIsoDate = () =>
     },
   });
 
-export const DateTimeField = (options?: FieldOptions) =>
+export const DateTimeField = (options?: OptionalFieldOptions) =>
   applyDecorators(
-    Field(() => DateTime, options),
+    OptionalField(() => DateTime, {
+      optional: false,
+      ...options,
+    }),
     Transform(
       ({ value }) => {
         try {
@@ -43,9 +47,12 @@ export const DateTimeField = (options?: FieldOptions) =>
     IsIsoDate(),
   );
 
-export const DateField = (options?: FieldOptions) =>
+export const DateField = (options?: OptionalFieldOptions) =>
   applyDecorators(
-    Field(() => CalendarDate, options),
+    OptionalField(() => CalendarDate, {
+      optional: false,
+      ...options,
+    }),
     Transform(
       ({ value }) => {
         try {

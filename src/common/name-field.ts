@@ -7,9 +7,24 @@ import { MinLength } from 'class-validator';
 import { DbSort } from './db-sort.decorator';
 import { Transform } from './transform.decorator';
 
-export const NameField = (options: FieldOptions = {}) =>
+type NameFieldParams = FieldOptions & {
+  /**
+   * If true, values can be omitted/undefined or null.
+   * This will override `optional` if truthy.
+   */
+  nullable?: true;
+  /**
+   * If true, values can be omitted/undefined but not null.
+   */
+  optional?: true;
+};
+
+export const NameField = (options: NameFieldParams = {}) =>
   applyDecorators(
-    InferredTypeOrStringField(options),
+    InferredTypeOrStringField({
+      ...options,
+      nullable: options.optional ?? options.nullable,
+    }),
     Transform(({ value }) => {
       if (value === undefined) {
         return undefined;
@@ -18,14 +33,16 @@ export const NameField = (options: FieldOptions = {}) =>
         // Treat null & empty strings as null
         return value?.trim() || null;
       }
+      if (options.optional && value === null) {
+        // Treat null as an omitted value
+        return undefined;
+      }
       // Null & empty string treated as MinLength validation error
       return value?.trim() ?? '';
     }),
     DbSort((value) => `apoc.text.clean(${value})`),
     // Using this instead of @IsNotEmpty, as this allows nulls.
-    MinLength(1, {
-      message: 'Cannot be empty',
-    }),
+    MinLength(1, { message: 'Cannot be empty' }),
   );
 
 /**

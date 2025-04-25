@@ -9,18 +9,18 @@ export abstract class UpdateFieldRegion {
   @IdField()
   readonly id: ID;
 
-  @NameField({ nullable: true })
+  @NameField({ optional: true })
   readonly name?: string;
 
   @IdField({
     description: 'The zone ID that the region will be associated with',
-    nullable: true,
+    optional: true,
   })
   readonly fieldZoneId?: ID;
 
   @IdField({
     description: 'A user ID that will be the director of the region',
-    nullable: true,
+    optional: true,
   })
   readonly directorId?: ID;
 }

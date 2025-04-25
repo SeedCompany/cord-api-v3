@@ -1,16 +1,20 @@
 import { applyDecorators } from '@nestjs/common';
-import { Field, FieldOptions, ID as IDType } from '@nestjs/graphql';
+import { ID as IDType } from '@nestjs/graphql';
 import { ValidationOptions } from 'class-validator';
 import { IsAny, IsNever, Tagged } from 'type-fest';
 import type { ResourceName, ResourceNameLike } from '~/core';
+import { OptionalField, OptionalFieldOptions } from './optional-field';
 import { IsId } from './validators';
 
 export const IdField = ({
   validation,
   ...options
-}: FieldOptions & { validation?: ValidationOptions } = {}) =>
+}: OptionalFieldOptions & { validation?: ValidationOptions } = {}) =>
   applyDecorators(
-    Field(() => IDType, options),
+    OptionalField(() => IDType, {
+      optional: false,
+      ...options,
+    }),
     IsId(validation),
   );
 

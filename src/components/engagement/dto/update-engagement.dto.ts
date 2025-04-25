@@ -7,6 +7,7 @@ import {
   DateField,
   ID,
   IdField,
+  OptionalField,
   RichTextDocument,
   RichTextField,
 } from '~/common';
@@ -40,7 +41,7 @@ export abstract class UpdateEngagement {
 
   readonly initialEndDate?: CalendarDate | null;
 
-  @Field(() => EngagementStatus, { nullable: true })
+  @OptionalField(() => EngagementStatus)
   readonly status?: EngagementStatus;
 
   @RichTextField({ nullable: true })
@@ -79,10 +80,10 @@ export abstract class UpdateLanguageEngagement extends UpdateEngagement {
   @Field(() => String, { nullable: true })
   readonly historicGoal?: string | null;
 
-  @Field(() => LanguageMilestone, { nullable: true })
+  @OptionalField(() => LanguageMilestone)
   readonly milestoneReached?: LanguageMilestone;
 
-  @Field(() => AIAssistedTranslation, { nullable: true })
+  @OptionalField(() => AIAssistedTranslation)
   readonly usingAIAssistedTranslation?: AIAssistedTranslation;
 }
 

@@ -1,7 +1,13 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { ID, IdField, ISO31661Alpha3, NameField } from '~/common';
+import {
+  ID,
+  IdField,
+  ISO31661Alpha3,
+  NameField,
+  OptionalField,
+} from '~/common';
 import { Transform } from '~/common/transform.decorator';
 import { CreateDefinedFileVersionInput } from '../../file/dto';
 import { LocationType } from './location-type.enum';
@@ -12,10 +18,10 @@ export abstract class UpdateLocation {
   @IdField()
   readonly id: ID;
 
-  @NameField({ nullable: true })
+  @NameField({ optional: true })
   readonly name?: string;
 
-  @Field(() => LocationType, { nullable: true })
+  @OptionalField(() => LocationType)
   readonly type?: LocationType;
 
   @Field(() => String, {

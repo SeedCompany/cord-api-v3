@@ -1,7 +1,7 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { ID, IdField } from '~/common';
+import { ID, IdField, NameField, OptionalField } from '~/common';
 import { ProjectChangeRequestStatus } from './project-change-request-status.enum';
 import { ProjectChangeRequestType } from './project-change-request-type.enum';
 import { ProjectChangeRequest } from './project-change-request.dto';
@@ -11,13 +11,13 @@ export abstract class UpdateProjectChangeRequest {
   @IdField()
   readonly id: ID;
 
-  @Field(() => [ProjectChangeRequestType], { nullable: true })
+  @OptionalField(() => [ProjectChangeRequestType])
   readonly types?: [ProjectChangeRequestType];
 
-  @Field(() => String, { nullable: true })
+  @NameField({ optional: true })
   readonly summary?: string;
 
-  @Field(() => ProjectChangeRequestStatus, { nullable: true })
+  @OptionalField(() => ProjectChangeRequestStatus)
   readonly status?: ProjectChangeRequestStatus;
 }
 
