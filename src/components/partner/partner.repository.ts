@@ -94,6 +94,7 @@ export class PartnerRepository extends DtoRepository<
             'Language',
             input.languageOfWiderCommunicationId,
           ],
+          languageOfReporting: ['Language', input.languageOfReportingId],
           fieldRegions: ['FieldRegion', input.fieldRegions],
           countries: ['Location', input.countries],
           languagesOfConsulting: ['Language', input.languagesOfConsulting],
@@ -118,6 +119,7 @@ export class PartnerRepository extends DtoRepository<
       id,
       pointOfContactId,
       languageOfWiderCommunicationId,
+      languageOfReportingId,
       fieldRegions,
       countries,
       languagesOfConsulting,
@@ -142,6 +144,15 @@ export class PartnerRepository extends DtoRepository<
         'Language',
         changes.id,
         languageOfWiderCommunicationId,
+      );
+    }
+
+    if (languageOfReportingId) {
+      await this.updateRelation(
+        'languageOfReporting',
+        'Language',
+        changes.id,
+        languageOfReportingId,
       );
     }
 
@@ -277,6 +288,11 @@ export class PartnerRepository extends DtoRepository<
           relation('out', '', 'languageOfWiderCommunication', ACTIVE),
           node('languageOfWiderCommunication', 'Language'),
         ])
+        .optionalMatch([
+          node('node'),
+          relation('out', '', 'languageOfReporting', ACTIVE),
+          node('languageOfReporting', 'Language'),
+        ])
         .apply(departmentIdBlockUtils.hydrate())
         .return<{ dto: UnsecuredDto<Partner> }>(
           merge('props', {
@@ -286,6 +302,7 @@ export class PartnerRepository extends DtoRepository<
             pointOfContact: 'pointOfContact { .id }',
             languageOfWiderCommunication:
               'languageOfWiderCommunication { .id }',
+            languageOfReporting: 'languageOfReporting { .id }',
             fieldRegions: 'fieldRegions',
             countries: 'countries',
             languagesOfConsulting: 'languagesOfConsulting',
