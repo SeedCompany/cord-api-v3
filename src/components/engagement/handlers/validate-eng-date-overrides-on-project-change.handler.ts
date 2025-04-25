@@ -6,7 +6,7 @@ import { ProjectUpdatedEvent } from '../../project/events';
 import { EngagementService } from '../engagement.service';
 
 @EventsHandler(ProjectUpdatedEvent)
-export class ValidateEngDateOverridesOnProjectChangeHandlerSetLastStatusDate
+export class ValidateEngDateOverridesOnProjectChangeHandler
   implements IEventHandler<ProjectUpdatedEvent>
 {
   constructor(private readonly engagements: EngagementService) {}
