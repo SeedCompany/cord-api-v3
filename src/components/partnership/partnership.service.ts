@@ -144,6 +144,10 @@ export class PartnershipService {
     }));
   }
 
+  async listAllByProjectId(projectId: ID, session: Session) {
+    return await this.repo.listAllByProjectId(projectId, session);
+  }
+
   secure(dto: UnsecuredDto<Partnership>, session: Session) {
     return this.privileges.for(session, Partnership).secure(dto);
   }
