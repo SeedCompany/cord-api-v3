@@ -1,4 +1,5 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
+import { NonEmptyArray } from '@seedcompany/common';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { ID, IdField, ListField, NameField, OptionalField } from '~/common';
@@ -11,8 +12,8 @@ export abstract class UpdateProjectChangeRequest {
   @IdField()
   readonly id: ID;
 
-  @ListField(() => ProjectChangeRequestType, { optional: true })
-  readonly types?: readonly ProjectChangeRequestType[];
+  @ListField(() => ProjectChangeRequestType, { optional: true, empty: 'deny' })
+  readonly types?: NonEmptyArray<ProjectChangeRequestType>;
 
   @NameField({ optional: true })
   readonly summary?: string;

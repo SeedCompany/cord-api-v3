@@ -1,7 +1,13 @@
 import { applyDecorators } from '@nestjs/common';
+import { ArrayNotEmpty } from 'class-validator';
 import { OptionalField, OptionalFieldOptions } from './optional-field';
 
-export type ListFieldOptions = OptionalFieldOptions;
+export type ListFieldOptions = OptionalFieldOptions & {
+  /**
+   * How should empty lists be handled?
+   */
+  empty?: 'allow' | 'omit' | 'deny';
+};
 
 export const ListField = (typeFn: () => any, options: ListFieldOptions) =>
   applyDecorators(
@@ -9,8 +15,10 @@ export const ListField = (typeFn: () => any, options: ListFieldOptions) =>
       optional: false,
       ...options,
       transform: (value) => {
-        const deduped = value ? [...new Set(value)] : value;
-        return options.transform ? options.transform(deduped) : value;
+        let out = value ? [...new Set(value)] : value;
+        out = options.empty === 'omit' && out.length === 0 ? undefined : out;
+        return options.transform ? options.transform(out) : out;
       },
     }),
+    ...(options.empty === 'deny' ? [ArrayNotEmpty()] : []),
   );
