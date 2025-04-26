@@ -4,7 +4,7 @@ import {
   ID,
   PaginatedList,
   SecuredList,
-  SensitivitiesFilter,
+  SensitivitiesFilterField,
   Sensitivity,
   SortablePaginationInput,
 } from '~/common';
@@ -35,11 +35,7 @@ export abstract class LanguageFilters {
   })
   readonly name?: string;
 
-  @Field(() => [Sensitivity], {
-    description: 'Only languages with these sensitivities',
-    nullable: true,
-  })
-  @SensitivitiesFilter()
+  @SensitivitiesFilterField()
   readonly sensitivity?: Sensitivity[];
 
   @Field({

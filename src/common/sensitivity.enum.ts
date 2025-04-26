@@ -1,9 +1,8 @@
 import { applyDecorators } from '@nestjs/common';
 import { EnumType, makeEnum } from '@seedcompany/nest';
-import { Transform } from 'class-transformer';
-import { uniq } from 'lodash';
 import { rankSens } from '~/core/database/query';
 import { DbSort } from './db-sort.decorator';
+import { ListField, ListFieldOptions } from './list-field';
 import { OptionalField, OptionalFieldOptions } from './optional-field';
 
 export type Sensitivity = EnumType<typeof Sensitivity>;
@@ -22,8 +21,13 @@ export const SensitivityField = (options?: OptionalFieldOptions) =>
     DbSort(rankSens),
   );
 
-export const SensitivitiesFilter = () =>
-  Transform(({ value }) => {
-    const sens = uniq(value);
-    return sens.length > 0 && sens.length < 3 ? sens : undefined;
+export const SensitivitiesFilterField = (options?: ListFieldOptions) =>
+  ListField(() => Sensitivity, {
+    description: 'Only these sensitivities',
+    ...options,
+    optional: true,
+    empty: 'omit',
+    transform: (value) =>
+      // If given all options, there is no need to filter
+      !value || value.length === Sensitivity.values.size ? undefined : value,
   });
