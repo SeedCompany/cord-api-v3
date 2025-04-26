@@ -1,19 +1,22 @@
-import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import { FilterField, PaginatedList, SortablePaginationInput } from '~/common';
+import { InputType, ObjectType } from '@nestjs/graphql';
+import {
+  FilterField,
+  OptionalField,
+  PaginatedList,
+  SortablePaginationInput,
+} from '~/common';
 import { FileNodeType } from './file-node-type.enum';
 import { Directory, File, FileNode, IFileNode } from './node';
 
 @InputType()
 export abstract class FileFilters {
-  @Field({
+  @OptionalField({
     description: 'Only file nodes matching this name',
-    nullable: true,
   })
   readonly name?: string;
 
-  @Field(() => FileNodeType, {
+  @OptionalField(() => FileNodeType, {
     description: 'Only file nodes matching this type',
-    nullable: true,
   })
   readonly type?: FileNodeType;
 }

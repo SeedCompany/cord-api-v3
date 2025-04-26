@@ -1,7 +1,8 @@
-import { Field, InputType, ObjectType } from '@nestjs/graphql';
+import { InputType, ObjectType } from '@nestjs/graphql';
 import {
   FilterField,
   ID,
+  ListField,
   PaginatedList,
   Role,
   SecuredList,
@@ -11,11 +12,12 @@ import { ProjectMember } from './project-member.dto';
 
 @InputType()
 export abstract class ProjectMemberFilters {
-  @Field(() => [Role], {
+  @ListField(() => Role, {
     description: 'Only members with these roles',
-    nullable: true,
+    optional: true,
+    empty: 'omit',
   })
-  readonly roles?: Role[];
+  readonly roles?: readonly Role[];
 
   readonly projectId?: ID;
 }

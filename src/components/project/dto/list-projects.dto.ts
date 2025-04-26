@@ -1,4 +1,4 @@
-import { Field, InputType, ObjectType } from '@nestjs/graphql';
+import { InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import {
@@ -6,6 +6,8 @@ import {
   DateTimeFilter,
   FilterField,
   ID,
+  ListField,
+  OptionalField,
   PaginatedList,
   SecuredList,
   SensitivitiesFilterField,
@@ -26,90 +28,80 @@ import {
 
 @InputType()
 export abstract class ProjectFilters {
-  @Field({
-    nullable: true,
-  })
+  @OptionalField()
   readonly name?: string;
 
-  @Field(() => [ProjectType], {
+  @ListField(() => ProjectType, {
     description: 'Only projects of these types',
-    nullable: true,
+    optional: true,
+    empty: 'omit',
   })
   readonly type?: ProjectType[];
 
   @SensitivitiesFilterField()
-  readonly sensitivity?: Sensitivity[];
+  readonly sensitivity?: readonly Sensitivity[];
 
-  @Field(() => [ProjectStatus], {
+  @ListField(() => ProjectStatus, {
     description: 'Only projects matching these statuses',
-    nullable: true,
+    optional: true,
+    empty: 'omit',
   })
-  readonly status?: ProjectStatus[];
+  readonly status?: readonly ProjectStatus[];
 
-  @Field(() => [ProjectStep], {
+  @ListField(() => ProjectStep, {
     description: 'Only projects matching these steps',
-    nullable: true,
+    optional: true,
+    empty: 'omit',
   })
   readonly step?: ProjectStep[];
 
-  @Field({
+  @OptionalField({
     description:
       'Only projects that are pinned/unpinned by the requesting user',
-    nullable: true,
   })
   readonly pinned?: boolean;
 
-  @Field({
-    nullable: true,
+  @OptionalField({
     description: 'Only projects created within this time range',
   })
   @Type(() => DateTimeFilter)
   @ValidateNested()
   readonly createdAt?: DateTimeFilter;
 
-  @Field({
-    nullable: true,
+  @OptionalField({
     description: 'Only projects modified within this time range',
   })
   @Type(() => DateTimeFilter)
   @ValidateNested()
   readonly modifiedAt?: DateTimeFilter;
 
-  @Field({
-    nullable: true,
-  })
+  @OptionalField()
   @Type(() => DateFilter)
   @ValidateNested()
   readonly mouStart?: DateFilter;
 
-  @Field({
-    nullable: true,
-  })
+  @OptionalField()
   @Type(() => DateFilter)
   @ValidateNested()
   readonly mouEnd?: DateFilter;
 
-  @Field({
-    nullable: true,
+  @OptionalField({
     description: 'only mine',
     deprecationReason: 'Use `isMember` instead.',
   })
   readonly mine?: boolean;
 
-  @Field({
-    nullable: true,
+  @OptionalField({
     description: 'Only projects that the requesting user is a member of',
   })
   readonly isMember?: boolean;
 
-  @Field({
-    nullable: true,
+  @OptionalField({
     description: 'Filter for projects with two or more engagements.',
   })
   readonly onlyMultipleEngagements?: boolean;
 
-  @Field({
-    nullable: true,
+  @OptionalField({
     description: 'Only projects that are (not) in the "Preset Inventory"',
   })
   readonly presetInventory?: boolean;

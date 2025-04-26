@@ -1,12 +1,16 @@
 import { Field, InputType, Int, ObjectType } from '@nestjs/graphql';
-import { FilterField, PaginatedList, PaginationInput } from '~/common';
+import {
+  FilterField,
+  OptionalField,
+  PaginatedList,
+  PaginationInput,
+} from '~/common';
 import { Notification } from './notification.dto';
 
 @InputType()
 export abstract class NotificationFilters {
-  @Field(() => Boolean, {
+  @OptionalField(() => Boolean, {
     description: 'Only read/unread notifications',
-    nullable: true,
   })
   readonly unread?: boolean;
 }
