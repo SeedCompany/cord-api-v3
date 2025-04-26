@@ -1,13 +1,13 @@
 import { Field, ID as IDType, InputType, ObjectType } from '@nestjs/graphql';
-import { Transform, Type } from 'class-transformer';
+import { Type } from 'class-transformer';
 import { Matches, ValidateNested } from 'class-validator';
-import { uniq } from 'lodash';
 import {
   CalendarDate,
   DateField,
   ID,
   IdField,
   IsId,
+  ListField,
   NameField,
 } from '~/common';
 import { FinanceDepartmentIdBlockInput } from '../../finance/department/dto/id-blocks.input';
@@ -24,12 +24,10 @@ export abstract class UpdatePartner {
   @IdField({ nullable: true })
   readonly pointOfContactId?: ID<'User'> | null;
 
-  @Field(() => [PartnerType], { nullable: true })
-  @Transform(({ value }) => uniq(value))
+  @ListField(() => PartnerType, { optional: true })
   readonly types?: readonly PartnerType[];
 
-  @Field(() => [FinancialReportingType], { nullable: true })
-  @Transform(({ value }) => uniq(value))
+  @ListField(() => FinancialReportingType, { optional: true })
   readonly financialReportingTypes?: readonly FinancialReportingType[];
 
   @Field(() => String, { nullable: true })
@@ -50,26 +48,23 @@ export abstract class UpdatePartner {
   @IdField({ nullable: true })
   readonly languageOfWiderCommunicationId?: ID<'Language'> | null;
 
-  @Field(() => [IDType], { nullable: true })
+  @ListField(() => IDType, { optional: true })
   @IsId({ each: true })
-  @Transform(({ value }) => (value ? uniq(value) : undefined))
   readonly countries?: ReadonlyArray<ID<'Location'>>;
 
-  @Field(() => [IDType], { nullable: true })
+  @ListField(() => IDType, { optional: true })
   @IsId({ each: true })
-  @Transform(({ value }) => (value ? uniq(value) : undefined))
   readonly fieldRegions?: ReadonlyArray<ID<'FieldRegion'>>;
 
-  @Field(() => [IDType], { name: 'languagesOfConsulting', nullable: true })
-  @Transform(({ value }) => (value ? uniq(value) : undefined))
+  @ListField(() => IDType, { optional: true })
+  @IsId({ each: true })
   readonly languagesOfConsulting?: ReadonlyArray<ID<'Language'>>;
 
   @DateField({ nullable: true })
   readonly startDate?: CalendarDate | null;
 
-  @Field(() => [ProjectType], { nullable: true })
-  @Transform(({ value }) => uniq(value))
-  readonly approvedPrograms?: ProjectType[];
+  @ListField(() => ProjectType, { optional: true })
+  readonly approvedPrograms?: readonly ProjectType[];
 
   @Field(() => FinanceDepartmentIdBlockInput, { nullable: true })
   @ValidateNested()

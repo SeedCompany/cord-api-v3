@@ -1,12 +1,12 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import { Transform, Type } from 'class-transformer';
+import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { uniq } from 'lodash';
 import {
   EmailField,
   ID,
   IdField,
   IsIanaTimezone,
+  ListField,
   NameField,
   OptionalField,
   Role,
@@ -47,8 +47,7 @@ export abstract class UpdateUser {
   @OptionalField(() => UserStatus)
   readonly status?: UserStatus;
 
-  @Field(() => [Role], { nullable: true })
-  @Transform(({ value }) => uniq(value))
+  @ListField(() => Role, { optional: true })
   readonly roles?: readonly Role[];
 
   @Field(() => String, { nullable: true })

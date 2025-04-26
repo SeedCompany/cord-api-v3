@@ -1,7 +1,7 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { ID, IdField, OptionalField, Role } from '~/common';
+import { ID, IdField, ListField, Role } from '~/common';
 import { ProjectMember } from './project-member.dto';
 
 @InputType()
@@ -9,7 +9,7 @@ export abstract class UpdateProjectMember {
   @IdField()
   readonly id: ID;
 
-  @OptionalField(() => [Role])
+  @ListField(() => Role, { optional: true })
   readonly roles?: readonly Role[];
 }
 

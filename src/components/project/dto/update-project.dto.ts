@@ -1,7 +1,6 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import { Transform, Type } from 'class-transformer';
+import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { uniq } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   CalendarDate,
@@ -10,6 +9,7 @@ import {
   ID,
   IdField,
   IdOf,
+  ListField,
   NameField,
   OptionalField,
   Sensitivity,
@@ -75,8 +75,7 @@ export abstract class UpdateProject {
   })
   readonly sensitivity?: Sensitivity;
 
-  @Field(() => [String], { nullable: true })
-  @Transform(({ value }) => uniq(value))
+  @ListField(() => String, { optional: true })
   readonly tags?: readonly string[];
 
   @DateTimeField({ nullable: true })
