@@ -9,6 +9,7 @@ import { GraphQLJSONObject } from 'graphql-scalars';
 import { isEqual } from 'lodash';
 import { JsonObject } from 'type-fest';
 import { SecuredProperty } from '~/common/secured-property';
+import { InputException } from './exceptions/input.exception';
 import { OptionalField, OptionalFieldOptions } from './optional-field';
 
 function hashId(name: string) {
@@ -81,9 +82,26 @@ export const RichTextField = (options?: OptionalFieldOptions) =>
     OptionalField(() => RichTextScalar, {
       optional: false,
       ...options,
-      transform: RichTextDocument.fromMaybe,
+      transform: (value) => {
+        const doc = RichTextDocument.fromMaybe(value);
+        if (doc) {
+          return doc;
+        }
+        if (options?.nullable) {
+          return null;
+        }
+        if (options?.optional) {
+          return undefined;
+        }
+        // Should never _really_ get here.
+        // UI should understand & send null instead of an empty document.
+        // Would prefer this to be done with validators.
+        // But I believe this needs to `null`s to be validated.
+        // skipMissingProperties -> skipUndefinedProperties
+        throw new InputException('RichText must be given');
+      },
     }),
-    IsObject(), // TODO validate empty blocks becomes null becomes validation error
+    IsObject(),
   );
 
 /** @internal */
