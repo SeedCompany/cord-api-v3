@@ -70,5 +70,5 @@ export class DateOverrideConflictException extends RangeException {
   }
 }
 
-const asNonEmpty = <T>(items: readonly T[]) =>
+export const asNonEmpty = <T>(items: readonly T[]) =>
   items.length === 0 ? undefined : (items as NonEmptyArray<T>);
