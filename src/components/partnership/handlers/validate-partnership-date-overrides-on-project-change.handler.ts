@@ -1,5 +1,7 @@
-import { DateOverrideConflictException } from '~/common';
-import { EventsHandler, IEventHandler } from '~/core';
+import { mapEntries } from '@seedcompany/common';
+import { asNonEmpty, DateOverrideConflictException } from '~/common';
+import { EventsHandler, IEventHandler, ResourceLoader } from '~/core';
+import { OrganizationLoader } from '../../organization';
 import { ProjectUpdatedEvent } from '../../project/events';
 import { PartnershipService } from '../partnership.service';
 
@@ -7,7 +9,10 @@ import { PartnershipService } from '../partnership.service';
 export class ValidatePartnershipDateOverridesOnProjectChangeHandler
   implements IEventHandler<ProjectUpdatedEvent>
 {
-  constructor(private readonly partnerships: PartnershipService) {}
+  constructor(
+    private readonly partnerships: PartnershipService,
+    private readonly resources: ResourceLoader,
+  ) {}
 
   async handle(event: ProjectUpdatedEvent) {
     const { updated: project, changes, session } = event;
@@ -26,12 +31,31 @@ export class ValidatePartnershipDateOverridesOnProjectChangeHandler
       partnerships.map((partnership) => ({
         __typename: 'Partnership',
         id: partnership.id,
-        label: partnership.id, // TODO
+        label: partnership.id,
         start: partnership.mouStartOverride,
         end: partnership.mouEndOverride,
       })),
     );
     if (!conflicts) return;
+    const orgLoader = await this.resources.getLoader(OrganizationLoader);
+    const partnershipToOrg = mapEntries(partnerships, (p) => [
+      p.id,
+      p.organization.id,
+    ]).asRecord;
+    const orgs = await orgLoader.loadMany(
+      conflicts.map((conflict) => partnershipToOrg[conflict.id]),
+    );
+    const conflictsWithLabels = conflicts.map((conflict, index) => {
+      const org = orgs[index];
+      if (org instanceof Error) {
+        // Shouldn't happen
+        return conflict;
+      }
+      return {
+        ...conflict,
+        label: org.name.value ?? conflict.id,
+      };
+    });
     throw new DateOverrideConflictException(
       {
         __typename: event.resource.name,
@@ -40,7 +64,7 @@ export class ValidatePartnershipDateOverridesOnProjectChangeHandler
       },
       canonical,
       ['A partnership', 'Some partnerships'],
-      conflicts,
+      asNonEmpty(conflictsWithLabels)!,
     );
   }
 }
