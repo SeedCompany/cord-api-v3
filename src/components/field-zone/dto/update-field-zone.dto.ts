@@ -9,12 +9,12 @@ export abstract class UpdateFieldZone {
   @IdField()
   readonly id: ID;
 
-  @NameField({ nullable: true })
+  @NameField({ optional: true })
   readonly name?: string;
 
   @IdField({
     description: 'A user ID that will be the director of the zone',
-    nullable: true,
+    optional: true,
   })
   readonly directorId?: ID;
 }

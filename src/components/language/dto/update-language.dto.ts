@@ -1,5 +1,5 @@
 import { Field, InputType, Int, ObjectType } from '@nestjs/graphql';
-import { Transform, Type } from 'class-transformer';
+import { Type } from 'class-transformer';
 import {
   IsAlpha,
   IsLowercase,
@@ -8,13 +8,14 @@ import {
   Matches,
   ValidateNested,
 } from 'class-validator';
-import { uniq } from 'lodash';
 import {
   CalendarDate,
   DateField,
   ID,
   IdField,
+  ListField,
   NameField,
+  OptionalField,
   Sensitivity,
   SensitivityField,
 } from '~/common';
@@ -49,16 +50,16 @@ export abstract class UpdateLanguage {
   @IdField()
   readonly id: ID;
 
-  @NameField({ nullable: true })
+  @NameField({ optional: true })
   readonly name?: string;
 
-  @NameField({ nullable: true })
+  @NameField({ optional: true })
   readonly displayName?: string;
 
   @NameField({ nullable: true })
   readonly displayNamePronunciation?: string | null;
 
-  @Field({ nullable: true })
+  @OptionalField()
   readonly isDialect?: boolean;
 
   @Field({ nullable: true })
@@ -83,13 +84,13 @@ export abstract class UpdateLanguage {
   @IsNumberString()
   readonly registryOfLanguageVarietiesCode?: string | null;
 
-  @Field({ nullable: true })
+  @OptionalField()
   readonly leastOfThese?: boolean;
 
   @NameField({ nullable: true })
   readonly leastOfTheseReason?: string | null;
 
-  @Field({ nullable: true })
+  @OptionalField()
   readonly isSignLanguage?: boolean;
 
   @NameField({ nullable: true })
@@ -98,18 +99,17 @@ export abstract class UpdateLanguage {
   })
   readonly signLanguageCode?: string | null;
 
-  @SensitivityField({ nullable: true })
+  @SensitivityField({ optional: true })
   readonly sensitivity?: Sensitivity;
 
   @DateField({ nullable: true })
   readonly sponsorEstimatedEndDate?: CalendarDate | null;
 
-  @Field({ nullable: true })
+  @OptionalField()
   readonly hasExternalFirstScripture?: boolean;
 
-  @Field(() => [String], { nullable: true })
-  @Transform(({ value }) => uniq(value))
-  readonly tags?: string[];
+  @ListField(() => String, { optional: true })
+  readonly tags?: readonly string[];
 }
 
 @InputType()

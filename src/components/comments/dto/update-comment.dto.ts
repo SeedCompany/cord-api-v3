@@ -7,7 +7,7 @@ export abstract class UpdateCommentInput {
   @IdField()
   readonly id: ID;
 
-  @RichTextField({ nullable: true })
+  @RichTextField({ optional: true })
   readonly body?: RichTextDocument;
 }
 

@@ -1,7 +1,7 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { ID, IdField, NameField } from '~/common';
+import { ID, IdField, NameField, OptionalField } from '~/common';
 import { OrganizationReach } from './organization-reach.dto';
 import { OrganizationType } from './organization-type.dto';
 import { Organization } from './organization.dto';
@@ -11,19 +11,19 @@ export abstract class UpdateOrganization {
   @IdField()
   readonly id: ID;
 
-  @NameField({ nullable: true })
+  @NameField({ optional: true })
   readonly name?: string;
 
   @NameField({ nullable: true })
   readonly acronym?: string | null;
 
-  @Field({ nullable: true })
-  readonly address?: string;
+  @Field(() => String, { nullable: true })
+  readonly address?: string | null;
 
-  @Field(() => [OrganizationType], { nullable: true })
+  @OptionalField(() => [OrganizationType])
   readonly types?: readonly OrganizationType[];
 
-  @Field(() => [OrganizationReach], { nullable: true })
+  @OptionalField(() => [OrganizationReach])
   readonly reach?: readonly OrganizationReach[];
 }
 

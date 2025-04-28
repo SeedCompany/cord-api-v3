@@ -1,4 +1,4 @@
-import { Field, InputType, ObjectType } from '@nestjs/graphql';
+import { InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import {
@@ -6,6 +6,8 @@ import {
   DateTimeFilter,
   FilterField,
   ID,
+  ListField,
+  OptionalField,
   PaginatedList,
   SecuredList,
   SortablePaginationInput,
@@ -19,41 +21,36 @@ import { Partner } from './partner.dto';
 export abstract class PartnerFilters {
   readonly userId?: ID;
 
-  @Field({
+  @OptionalField({
     description:
       'Only partners that are pinned/unpinned by the requesting user',
-    nullable: true,
   })
   readonly pinned?: boolean;
 
-  @Field({
-    nullable: true,
-  })
+  @OptionalField()
   readonly globalInnovationsClient?: boolean;
 
   @FilterField(() => OrganizationFilters)
   readonly organization?: OrganizationFilters & {};
 
-  @Field(() => [PartnerType], {
-    nullable: true,
+  @ListField(() => PartnerType, {
+    optional: true,
+    empty: 'omit',
   })
-  readonly types?: PartnerType[];
+  readonly types?: readonly PartnerType[];
 
-  @Field(() => [FinancialReportingType], {
-    nullable: true,
+  @ListField(() => FinancialReportingType, {
+    optional: true,
+    empty: 'omit',
   })
-  readonly financialReportingTypes?: FinancialReportingType[];
+  readonly financialReportingTypes?: readonly FinancialReportingType[];
 
-  @Field({
-    nullable: true,
-  })
+  @OptionalField()
   @Type(() => DateFilter)
   @ValidateNested()
   readonly startDate?: DateFilter;
 
-  @Field({
-    nullable: true,
-  })
+  @OptionalField()
   @Type(() => DateTimeFilter)
   @ValidateNested()
   readonly createdAt?: DateTimeFilter;

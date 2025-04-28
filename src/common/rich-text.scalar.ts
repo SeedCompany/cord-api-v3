@@ -1,5 +1,5 @@
 import { applyDecorators } from '@nestjs/common';
-import { Field, FieldOptions, ObjectType } from '@nestjs/graphql';
+import { ObjectType } from '@nestjs/graphql';
 import { setToStringTag } from '@seedcompany/common';
 import { markSkipClassTransformation } from '@seedcompany/nest';
 import { IsObject } from 'class-validator';
@@ -9,7 +9,8 @@ import { GraphQLJSONObject } from 'graphql-scalars';
 import { isEqual } from 'lodash';
 import { JsonObject } from 'type-fest';
 import { SecuredProperty } from '~/common/secured-property';
-import { Transform } from './transform.decorator';
+import { InputException } from './exceptions/input.exception';
+import { OptionalField, OptionalFieldOptions } from './optional-field';
 
 function hashId(name: string) {
   return createHash('shake256', { outputLength: 5 }).update(name).digest('hex');
@@ -76,11 +77,31 @@ export class RichTextDocument {
 setToStringTag(RichTextDocument, 'RichText');
 markSkipClassTransformation(RichTextDocument);
 
-export const RichTextField = (options?: FieldOptions) =>
+export const RichTextField = (options?: OptionalFieldOptions) =>
   applyDecorators(
-    Field(() => RichTextScalar, options),
+    OptionalField(() => RichTextScalar, {
+      optional: false,
+      ...options,
+      transform: (value) => {
+        const doc = RichTextDocument.fromMaybe(value);
+        if (doc) {
+          return doc;
+        }
+        if (options?.nullable) {
+          return null;
+        }
+        if (options?.optional) {
+          return undefined;
+        }
+        // Should never _really_ get here.
+        // UI should understand & send null instead of an empty document.
+        // Would prefer this to be done with validators.
+        // But I believe this needs to `null`s to be validated.
+        // skipMissingProperties -> skipUndefinedProperties
+        throw new InputException('RichText must be given');
+      },
+    }),
     IsObject(),
-    Transform(({ value }) => RichTextDocument.fromMaybe(value)),
   );
 
 /** @internal */

@@ -18,11 +18,11 @@ export abstract class UpdatePeriodicReportInput {
   readonly reportFile?: CreateDefinedFileVersionInput;
 
   @DateField({ nullable: true })
-  readonly receivedDate?: CalendarDate;
+  readonly receivedDate?: CalendarDate | null;
 
-  @Field({
+  @Field(() => String, {
     description: 'Why this report is skipped',
     nullable: true,
   })
-  readonly skippedReason?: string;
+  readonly skippedReason?: string | null;
 }

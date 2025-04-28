@@ -1,9 +1,8 @@
-import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import { Transform } from 'class-transformer';
-import { uniq } from 'lodash';
+import { InputType, ObjectType } from '@nestjs/graphql';
 import {
   FilterField,
   ID,
+  ListField,
   PaginatedList,
   SecuredList,
   SortablePaginationInput,
@@ -18,12 +17,12 @@ export abstract class PartnershipFilters {
   @FilterField(() => PartnerFilters)
   readonly partner?: PartnerFilters & {};
 
-  @Field(() => [PartnerType], { nullable: true })
-  @Transform(({ value }) => {
-    const types = uniq(value);
-    return types.length > 0 && types.length < PartnerType.values.size
-      ? types
-      : undefined;
+  @ListField(() => PartnerType, {
+    optional: true,
+    empty: 'omit',
+    transform: (value) =>
+      // If given all options, there is no need to filter
+      !value || value.length === PartnerType.values.size ? undefined : value,
   })
   readonly types?: readonly PartnerType[];
 }

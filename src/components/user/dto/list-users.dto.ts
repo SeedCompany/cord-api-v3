@@ -1,6 +1,8 @@
-import { Field, InputType, ObjectType } from '@nestjs/graphql';
+import { InputType, ObjectType } from '@nestjs/graphql';
 import {
   FilterField,
+  ListField,
+  OptionalField,
   PaginatedList,
   Role,
   SortablePaginationInput,
@@ -9,24 +11,20 @@ import { User } from './user.dto';
 
 @InputType()
 export abstract class UserFilters {
-  @Field({
-    nullable: true,
-  })
+  @OptionalField()
   readonly name?: string;
 
-  @Field({
-    nullable: true,
-  })
+  @OptionalField()
   readonly title?: string;
 
-  @Field(() => [Role], {
-    nullable: true,
+  @ListField(() => Role, {
+    optional: true,
+    empty: 'omit',
   })
   readonly roles?: Role[];
 
-  @Field({
+  @OptionalField({
     description: 'Only users that are pinned/unpinned by the requesting user',
-    nullable: true,
   })
   readonly pinned?: boolean;
 }

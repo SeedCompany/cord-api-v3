@@ -1,7 +1,7 @@
 import { Field, InputType, Int, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { Max, Min, ValidateNested } from 'class-validator';
-import { ID, IdField, NameField } from '~/common';
+import { ID, IdField, NameField, OptionalField } from '~/common';
 import { FundingAccount } from './funding-account.dto';
 
 @InputType()
@@ -9,10 +9,10 @@ export abstract class UpdateFundingAccount {
   @IdField()
   readonly id: ID;
 
-  @NameField({ nullable: true })
+  @NameField({ optional: true })
   readonly name?: string;
 
-  @Field(() => Int, { nullable: true })
+  @OptionalField(() => Int)
   @Min(0)
   @Max(9)
   readonly accountNumber?: number;

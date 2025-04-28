@@ -49,6 +49,14 @@ export class PartnershipGelRepository
       ),
   );
 
+  async listAllByProjectId(project: ID) {
+    return await this.db.run(this.listAllByProjectIdQuery, { project });
+  }
+  private readonly listAllByProjectIdQuery = e.params(
+    { project: e.uuid },
+    ($) => e.select(e.cast(e.Project, $.project).partnerships, this.hydrate),
+  );
+
   async isFirstPartnership(projectId: ID) {
     const project = e.cast(e.Project, e.uuid(projectId));
     const query = e.op('not', e.op('exists', project.partnerships));

@@ -5,7 +5,14 @@ import { UUID } from 'node:crypto';
 import { keys as keysOf } from 'ts-transformer-keys';
 import { Merge } from 'type-fest';
 import * as uuid from 'uuid';
-import { EnumType, ID, IdField, makeEnum, SecuredProps } from '~/common';
+import {
+  EnumType,
+  ID,
+  IdField,
+  makeEnum,
+  OptionalField,
+  SecuredProps,
+} from '~/common';
 import { InlineMarkdownScalar } from '~/common/markdown.scalar';
 import { Cell } from '~/common/xlsx.util';
 
@@ -121,8 +128,7 @@ export type StoredProblem = Pick<PnpProblem, 'id'> & {
 
 @InputType()
 export class PnpExtractionResultFilters {
-  @Field(() => Boolean, {
-    nullable: true,
+  @OptionalField(() => Boolean, {
     description: 'Only extraction results containing errors',
   })
   readonly hasError?: boolean;
