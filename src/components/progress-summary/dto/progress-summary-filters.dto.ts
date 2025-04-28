@@ -1,10 +1,11 @@
-import { Field, InputType } from '@nestjs/graphql';
+import { InputType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
+import { ListField } from '~/common';
 import { ScheduleStatus } from './schedule-status.enum';
 
 @InputType()
 export abstract class ProgressSummaryFilters {
-  @Field(() => [ScheduleStatus], {
+  @ListField(() => ScheduleStatus, {
     nullable: 'itemsAndList',
     description: stripIndent`
       Filter by schedule status.

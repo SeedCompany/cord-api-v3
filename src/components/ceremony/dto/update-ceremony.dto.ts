@@ -13,10 +13,10 @@ export abstract class UpdateCeremony {
   readonly planned?: boolean;
 
   @DateField({ nullable: true })
-  readonly estimatedDate?: CalendarDate;
+  readonly estimatedDate?: CalendarDate | null;
 
   @DateField({ nullable: true })
-  readonly actualDate?: CalendarDate;
+  readonly actualDate?: CalendarDate | null;
 }
 
 @InputType()

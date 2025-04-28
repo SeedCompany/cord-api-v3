@@ -46,7 +46,7 @@ export abstract class UpdateDerivativeScriptureProduct extends IntersectTypes(
   ]),
 ) {
   @IdField({
-    nullable: true,
+    optional: true,
     description: stripIndent`
       An ID of a \`Producible\` object to change to.
     `,
@@ -59,7 +59,7 @@ export abstract class UpdateDerivativeScriptureProduct extends IntersectTypes(
 
 @InputType()
 export abstract class UpdateOtherProduct extends UpdateBaseProduct {
-  @NameField({ nullable: true })
+  @NameField({ optional: true })
   readonly title?: string;
 
   @Field(() => String, { nullable: true })

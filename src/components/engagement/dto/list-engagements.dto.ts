@@ -1,10 +1,12 @@
-import { Field, InputType, ObjectType } from '@nestjs/graphql';
+import { InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import {
   DateFilter,
   FilterField,
   ID,
+  ListField,
+  OptionalField,
   PaginatedList,
   SecuredList,
   SortablePaginationInput,
@@ -26,21 +28,20 @@ import { EngagementStatus } from './status.enum';
 
 @InputType()
 export abstract class EngagementFilters {
-  @Field({
+  @OptionalField({
     description: 'Only engagements matching this type',
-    nullable: true,
   })
   readonly type?: 'language' | 'internship';
 
-  @Field({
-    nullable: true,
+  @OptionalField({
     description:
       'Only engagements whose project or engaged entity (language / user) name match',
   })
   readonly name?: string;
 
-  @Field(() => [EngagementStatus], {
-    nullable: true,
+  @ListField(() => EngagementStatus, {
+    optional: true,
+    empty: 'omit',
   })
   readonly status?: readonly EngagementStatus[];
 
@@ -48,8 +49,7 @@ export abstract class EngagementFilters {
   @FilterField(() => ProjectFilters)
   readonly project?: ProjectFilters & {};
 
-  @Field({
-    nullable: true,
+  @OptionalField({
     description:
       'Only engagements whose engaged entity (language / user) name match',
   })
@@ -64,26 +64,26 @@ export abstract class EngagementFilters {
 
   readonly partnerId?: ID<'Partner'>;
 
-  @Field({
-    nullable: true,
-  })
+  @OptionalField()
   @Type(() => DateFilter)
   @ValidateNested()
   readonly startDate?: DateFilter;
 
-  @Field({
-    nullable: true,
-  })
+  @OptionalField()
   @Type(() => DateFilter)
   @ValidateNested()
   readonly endDate?: DateFilter;
 
-  @Field(() => [LanguageMilestone], {
-    nullable: true,
+  @ListField(() => LanguageMilestone, {
+    optional: true,
+    empty: 'omit',
   })
   readonly milestoneReached?: readonly LanguageMilestone[];
 
-  @Field(() => [AIAssistedTranslation], { nullable: true })
+  @ListField(() => AIAssistedTranslation, {
+    optional: true,
+    empty: 'omit',
+  })
   readonly usingAIAssistedTranslation?: readonly AIAssistedTranslation[];
 }
 

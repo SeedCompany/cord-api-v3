@@ -1,13 +1,14 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import { Transform, Type } from 'class-transformer';
+import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { uniq } from 'lodash';
 import {
   EmailField,
   ID,
   IdField,
   IsIanaTimezone,
+  ListField,
   NameField,
+  OptionalField,
   Role,
 } from '~/common';
 import { UserStatus } from './user-status.enum';
@@ -21,33 +22,32 @@ export abstract class UpdateUser {
   @EmailField({ nullable: true })
   readonly email?: string | null;
 
-  @NameField({ nullable: true })
+  @NameField({ optional: true })
   readonly realFirstName?: string;
 
-  @NameField({ nullable: true })
+  @NameField({ optional: true })
   readonly realLastName?: string;
 
-  @NameField({ nullable: true })
+  @NameField({ optional: true })
   readonly displayFirstName?: string;
 
-  @NameField({ nullable: true })
+  @NameField({ optional: true })
   readonly displayLastName?: string;
 
   @Field(() => String, { nullable: true })
   readonly phone?: string | null;
 
-  @Field({ nullable: true })
+  @OptionalField()
   @IsIanaTimezone()
   readonly timezone?: string;
 
   @Field(() => String, { nullable: true })
   readonly about?: string | null;
 
-  @Field(() => UserStatus, { nullable: true })
+  @OptionalField(() => UserStatus)
   readonly status?: UserStatus;
 
-  @Field(() => [Role], { nullable: true })
-  @Transform(({ value }) => uniq(value))
+  @ListField(() => Role, { optional: true })
   readonly roles?: readonly Role[];
 
   @Field(() => String, { nullable: true })

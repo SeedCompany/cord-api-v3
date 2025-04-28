@@ -10,7 +10,7 @@ export abstract class UpdateFilm {
   @IdField()
   readonly id: ID;
 
-  @NameField({ nullable: true })
+  @NameField({ optional: true })
   readonly name?: string;
 
   @ScriptureField({ nullable: true })

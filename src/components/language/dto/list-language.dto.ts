@@ -1,10 +1,11 @@
-import { Field, InputType, ObjectType } from '@nestjs/graphql';
+import { InputType, ObjectType } from '@nestjs/graphql';
 import {
   FilterField,
   ID,
+  OptionalField,
   PaginatedList,
   SecuredList,
-  SensitivitiesFilter,
+  SensitivitiesFilterField,
   Sensitivity,
   SortablePaginationInput,
 } from '~/common';
@@ -12,72 +13,52 @@ import { Language } from './language.dto';
 
 @InputType()
 export abstract class EthnologueLanguageFilters {
-  @Field({
-    nullable: true,
-  })
+  @OptionalField()
   readonly code?: string;
 
-  @Field({
-    nullable: true,
-  })
+  @OptionalField()
   readonly provisionalCode?: string;
 
-  @Field({
-    nullable: true,
-  })
+  @OptionalField()
   readonly name?: string;
 }
 
 @InputType()
 export abstract class LanguageFilters {
-  @Field({
-    nullable: true,
-  })
+  @OptionalField()
   readonly name?: string;
 
-  @Field(() => [Sensitivity], {
-    description: 'Only languages with these sensitivities',
-    nullable: true,
-  })
-  @SensitivitiesFilter()
+  @SensitivitiesFilterField()
   readonly sensitivity?: Sensitivity[];
 
-  @Field({
-    nullable: true,
+  @OptionalField({
     description: 'Is a Least Of These partnership',
   })
   readonly leastOfThese?: boolean;
 
-  @Field({
-    nullable: true,
-  })
+  @OptionalField()
   readonly isDialect?: boolean;
 
-  @Field({
-    nullable: true,
-  })
+  @OptionalField()
   readonly isSignLanguage?: boolean;
 
-  @Field({
-    nullable: true,
+  @OptionalField({
     description: 'Only languages that are (not) in the "Preset Inventory"',
   })
   readonly presetInventory?: boolean;
 
-  @Field({
+  @OptionalField({
     description:
       'Only languages that are pinned/unpinned by the requesting user',
-    nullable: true,
   })
   readonly pinned?: boolean;
 
-  @Field({
-    nullable: true,
+  @OptionalField({
     deprecationReason: 'Use `registryOfLanguageVarietiesCode` instead',
   })
   readonly registryOfDialectsCode?: string;
 
-  @Field({ nullable: true })
+  @OptionalField()
   readonly registryOfLanguageVarietiesCode?: string;
 
   readonly partnerId?: ID;

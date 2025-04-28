@@ -1,8 +1,9 @@
-import { Field, InputType, ObjectType } from '@nestjs/graphql';
+import { InputType, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import {
   FilterField,
   ID,
+  OptionalField,
   PaginatedList,
   SecuredList,
   SortablePaginationInput,
@@ -13,24 +14,21 @@ import { AnyProduct, Product } from './product.dto';
 
 @InputType()
 export abstract class ProductFilters {
-  @Field(() => ProductApproach, {
+  @OptionalField(() => ProductApproach, {
     description: 'Only products matching this approach',
-    nullable: true,
   })
   readonly approach?: ProductApproach;
 
-  @Field(() => ProductMethodology, {
+  @OptionalField(() => ProductMethodology, {
     description: 'Only products matching this methodology',
-    nullable: true,
   })
   readonly methodology?: ProductMethodology;
 
-  @Field({
+  @OptionalField({
     description: stripIndent`
       Only products that are (or not) placeholders.
       This is based on the \`placeholderDescription\` field.
     `,
-    nullable: true,
   })
   readonly placeholder?: boolean;
 
