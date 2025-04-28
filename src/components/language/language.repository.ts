@@ -24,6 +24,7 @@ import { DtoRepository, OnIndex, UniquenessError } from '~/core/database';
 import {
   ACTIVE,
   any,
+  coalesce,
   collect,
   createNode,
   createRelationships,
@@ -398,6 +399,23 @@ export const languageSorters = defineSorters(Language, {
   ['registryOfDialectsCode' as any]: propSorter(
     'registryOfLanguageVarietiesCode',
   ),
+  population: (query) =>
+    query
+      .match([
+        node('node'),
+        relation('out', '', 'populationOverride', ACTIVE),
+        node('override'),
+      ])
+      .match([
+        node('node'),
+        relation('out', '', 'ethnologue'),
+        node('', 'EthnologueLanguage'),
+        relation('out', '', 'population', ACTIVE),
+        node('canonical'),
+      ])
+      .return<{ sortValue: unknown }>(
+        coalesce('override.value', 'canonical.value').as('sortValue'),
+      ),
 });
 
 const ethnologueSorters = defineSorters(EthnologueLanguage, {});
