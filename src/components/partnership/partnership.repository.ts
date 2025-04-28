@@ -183,6 +183,19 @@ export class PartnershipRepository extends DtoRepository<
       .run();
   }
 
+  async listAllByProjectId(projectId: ID, session: Session) {
+    return await this.db
+      .query()
+      .match([
+        node('project', 'Project', { id: projectId }),
+        relation('out', '', 'partnership', ACTIVE),
+        node('node', 'Partnership'),
+      ])
+      .apply(this.hydrate(session))
+      .map('dto')
+      .run();
+  }
+
   protected override hydrate(session: Session, view?: ObjectView) {
     return (query: Query) =>
       query

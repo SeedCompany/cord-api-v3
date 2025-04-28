@@ -1,13 +1,13 @@
-import { DateOverrideConflictException, EnhancedResource } from '~/common';
+import { DateOverrideConflictException } from '~/common';
 import { EventsHandler, IEventHandler } from '~/core';
 import { ProjectUpdatedEvent } from '../../project/events';
-import { EngagementService } from '../engagement.service';
+import { PartnershipService } from '../partnership.service';
 
 @EventsHandler(ProjectUpdatedEvent)
-export class ValidateEngDateOverridesOnProjectChangeHandler
+export class ValidatePartnershipDateOverridesOnProjectChangeHandler
   implements IEventHandler<ProjectUpdatedEvent>
 {
-  constructor(private readonly engagements: EngagementService) {}
+  constructor(private readonly partnerships: PartnershipService) {}
 
   async handle(event: ProjectUpdatedEvent) {
     const { updated: project, changes, session } = event;
@@ -16,19 +16,19 @@ export class ValidateEngDateOverridesOnProjectChangeHandler
       return;
     }
 
-    const engagements = await this.engagements.listAllByProjectId(
+    const canonical = { start: project.mouStart, end: project.mouEnd };
+    const partnerships = await this.partnerships.listAllByProjectId(
       project.id,
       session,
     );
-    const canonical = { start: project.mouStart, end: project.mouEnd };
     const conflicts = DateOverrideConflictException.findConflicts(
       canonical,
-      engagements.map((eng) => ({
-        __typename: EnhancedResource.resolve(eng.__typename).name,
-        id: eng.id,
-        label: (eng.label.language ?? eng.label.intern)!,
-        start: eng.startDateOverride,
-        end: eng.endDateOverride,
+      partnerships.map((partnership) => ({
+        __typename: 'Partnership',
+        id: partnership.id,
+        label: partnership.id, // TODO
+        start: partnership.mouStartOverride,
+        end: partnership.mouEndOverride,
       })),
     );
     if (!conflicts) return;
@@ -39,7 +39,7 @@ export class ValidateEngDateOverridesOnProjectChangeHandler
         name: project.name,
       },
       canonical,
-      ['An engagement', 'Some engagements'],
+      ['A partnership', 'Some partnerships'],
       conflicts,
     );
   }
