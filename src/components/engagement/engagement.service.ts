@@ -7,6 +7,7 @@ import {
   Range,
   RangeException,
   RequiredWhen,
+  ResourceShape,
   SecuredList,
   Session,
   UnsecuredDto,
@@ -149,8 +150,12 @@ export class EngagementService {
     return engagements.map((dto) => this.secure(dto, session));
   }
 
-  secure(dto: UnsecuredDto<Engagement>, session: Session): Engagement {
-    return this.privileges.for(session, resolveEngagementType(dto)).secure(dto);
+  private secure<E extends Engagement>(
+    dto: UnsecuredDto<E>,
+    session: Session,
+  ): E {
+    const res = resolveEngagementType(dto) as unknown as ResourceShape<E>;
+    return this.privileges.for(session, res).secure(dto);
   }
 
   async updateLanguageEngagement(
@@ -160,8 +165,12 @@ export class EngagementService {
   ): Promise<LanguageEngagement> {
     const view: ObjectView = viewOfChangeset(changeset);
 
-    const previous = await this.repo.readOne(input.id, session, view);
-    const object = this.secure(previous, session) as LanguageEngagement;
+    const previous = (await this.repo.readOne(
+      input.id,
+      session,
+      view,
+    )) as UnsecuredDto<LanguageEngagement>;
+    const object = this.secure(previous, session);
 
     if (input.status && input.status !== previous.status) {
       await this.engagementRules.verifyStatusChange(
@@ -210,8 +219,12 @@ export class EngagementService {
   ): Promise<InternshipEngagement> {
     const view: ObjectView = viewOfChangeset(changeset);
 
-    const previous = await this.repo.readOne(input.id, session, view);
-    const object = this.secure(previous, session) as InternshipEngagement;
+    const previous = (await this.repo.readOne(
+      input.id,
+      session,
+      view,
+    )) as UnsecuredDto<InternshipEngagement>;
+    const object = this.secure(previous, session);
 
     if (input.status && input.status !== previous.status) {
       await this.engagementRules.verifyStatusChange(
