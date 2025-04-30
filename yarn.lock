@@ -4114,9 +4114,9 @@ __metadata:
   linkType: hard
 
 "@types/luxon@npm:^3.2.0, @types/luxon@npm:^3.4.2":
-  version: 3.4.2
-  resolution: "@types/luxon@npm:3.4.2"
-  checksum: 10c0/d835467de3daf7e17ba78b50bb5a14efd94272439ca067990d71332a54b311544459c69623eddd243b511b28d70194c9591a9ee8cf9c038962c965f991affd7e
+  version: 3.6.2
+  resolution: "@types/luxon@npm:3.6.2"
+  checksum: 10c0/7572ee52b3d3e9dd10464b90561a728b90f34b9a257751cc3ce23762693dd1d14fa98b7f103e2efe2c6f49033331f91de5681ffd65cca88618cefe555be326db
   languageName: node
   linkType: hard
 
@@ -5838,7 +5838,7 @@ __metadata:
     "@types/jest": "npm:^29.5.7"
     "@types/jsonwebtoken": "npm:^9.0.4"
     "@types/lodash": "npm:^4.14.200"
-    "@types/luxon": "npm:^3.4.2"
+    "@types/luxon": "npm:^3.6.2"
     "@types/node": "npm:^22.7.8"
     "@types/prismjs": "npm:^1.26.2"
     "@types/react": "npm:^18.2.33"
@@ -5916,6 +5916,7 @@ __metadata:
     typescript-transform-paths: "npm:^3.4.6"
     urlpattern-polyfill: "npm:^10.0.0"
     uuid: "npm:^10.0.0"
+    validator: "npm:^13.15.0"
     winston: "npm:^3.11.0"
     xlsx: "https://cdn.sheetjs.com/xlsx-0.20.0/xlsx-0.20.0.tgz"
     xregexp: "npm:^5.1.1"
@@ -9975,9 +9976,9 @@ __metadata:
   linkType: hard
 
 "luxon@npm:^3.3.0, luxon@npm:^3.5.0":
-  version: 3.5.0
-  resolution: "luxon@npm:3.5.0"
-  checksum: 10c0/335789bba95077db831ef99894edadeb23023b3eb2137a1b56acd0d290082b691cf793143d69e30bc069ec95f0b49f36419f48e951c68014f19ffe12045e3494
+  version: 3.6.1
+  resolution: "luxon@npm:3.6.1"
+  checksum: 10c0/906d57a9dc4d1de9383f2e9223e378c298607c1b4d17b6657b836a3cd120feb1c1de3b5d06d846a3417e1ca764de8476e8c23b3cd4083b5cdb870adcb06a99d5
   languageName: node
   linkType: hard
 
