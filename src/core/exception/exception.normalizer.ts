@@ -342,6 +342,9 @@ export class ExceptionNormalizer {
     if (type === Nest.HttpException) {
       return (ex as Nest.HttpException).getStatus() < 500 ? 'Client' : 'Server';
     }
+    if (type === Nest.IntrinsicException) {
+      return [];
+    }
     if (type === Gel.GelError) {
       const transient =
         ex instanceof Gel.GelError &&
