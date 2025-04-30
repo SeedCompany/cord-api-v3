@@ -7,6 +7,7 @@ import {
   Range,
   RangeException,
   RequiredWhen,
+  ResourceShape,
   SecuredList,
   Session,
   UnsecuredDto,
@@ -149,8 +150,12 @@ export class EngagementService {
     return engagements.map((dto) => this.secure(dto, session));
   }
 
-  secure(dto: UnsecuredDto<Engagement>, session: Session): Engagement {
-    return this.privileges.for(session, resolveEngagementType(dto)).secure(dto);
+  private secure<E extends Engagement>(
+    dto: UnsecuredDto<E>,
+    session: Session,
+  ): E {
+    const res = resolveEngagementType(dto) as unknown as ResourceShape<E>;
+    return this.privileges.for(session, res).secure(dto);
   }
 
   async updateLanguageEngagement(
@@ -160,20 +165,23 @@ export class EngagementService {
   ): Promise<LanguageEngagement> {
     const view: ObjectView = viewOfChangeset(changeset);
 
-    const previous = await this.repo.readOne(input.id, session, view);
-    const object = this.secure(previous, session) as LanguageEngagement;
-
-    if (input.status && input.status !== previous.status) {
-      await this.engagementRules.verifyStatusChange(
-        input.id,
-        session,
-        input.status,
-        changeset,
-      );
-    }
+    const previous = (await this.repo.readOne(
+      input.id,
+      session,
+      view,
+    )) as UnsecuredDto<LanguageEngagement>;
+    const object = this.secure(previous, session);
 
     const { methodology, ...maybeChanges } = input;
     const changes = this.repo.getActualLanguageChanges(object, maybeChanges);
+    if (changes.status) {
+      await this.engagementRules.verifyStatusChange(
+        input.id,
+        session,
+        changes.status,
+        changeset,
+      );
+    }
     this.privileges
       .for(session, LanguageEngagement, object)
       .verifyChanges(changes);
@@ -188,7 +196,14 @@ export class EngagementService {
       changeset,
     );
 
-    RequiredWhen.verify(LanguageEngagement, updated);
+    const prevMissing = RequiredWhen.calc(LanguageEngagement, previous);
+    const nowMissing = RequiredWhen.calc(LanguageEngagement, updated);
+    if (
+      nowMissing &&
+      (!prevMissing || nowMissing.missing.length >= prevMissing.missing.length)
+    ) {
+      throw nowMissing;
+    }
 
     const event = new EngagementUpdatedEvent(
       updated,
@@ -210,19 +225,22 @@ export class EngagementService {
   ): Promise<InternshipEngagement> {
     const view: ObjectView = viewOfChangeset(changeset);
 
-    const previous = await this.repo.readOne(input.id, session, view);
-    const object = this.secure(previous, session) as InternshipEngagement;
+    const previous = (await this.repo.readOne(
+      input.id,
+      session,
+      view,
+    )) as UnsecuredDto<InternshipEngagement>;
+    const object = this.secure(previous, session);
 
-    if (input.status && input.status !== previous.status) {
+    const changes = this.repo.getActualInternshipChanges(object, input);
+    if (changes.status) {
       await this.engagementRules.verifyStatusChange(
         input.id,
         session,
-        input.status,
+        changes.status,
         changeset,
       );
     }
-
-    const changes = this.repo.getActualInternshipChanges(object, input);
     this.privileges
       .for(session, InternshipEngagement, object)
       .verifyChanges(changes, { pathPrefix: 'engagement' });
@@ -234,7 +252,14 @@ export class EngagementService {
       changeset,
     );
 
-    RequiredWhen.verify(InternshipEngagement, updated);
+    const prevMissing = RequiredWhen.calc(InternshipEngagement, previous);
+    const nowMissing = RequiredWhen.calc(InternshipEngagement, updated);
+    if (
+      nowMissing &&
+      (!prevMissing || nowMissing.missing.length >= prevMissing.missing.length)
+    ) {
+      throw nowMissing;
+    }
 
     const event = new EngagementUpdatedEvent(
       updated,
