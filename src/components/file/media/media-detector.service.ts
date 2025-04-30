@@ -4,7 +4,7 @@ import { CachedByArg as Once } from '@seedcompany/common';
 import { $, execa } from 'execa';
 import { FFProbeResult } from 'ffprobe';
 import { imageSize } from 'image-size';
-import { ISize as ImageSize } from 'image-size/dist/types/interface';
+import type { ISize as ImageSize } from 'image-size/types/interface';
 import { Except } from 'type-fest';
 import { retry } from '~/common/retry';
 import { ILogger, Logger } from '~/core';
