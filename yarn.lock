@@ -5907,6 +5907,7 @@ __metadata:
     mime: "npm:beta"
     nanoid: "npm:^4.0.2"
     neo4j-driver: "npm:^5.28.1"
+    npm-check-updates: "npm:^18.0.1"
     p-retry: "npm:^6.2.1"
     pkg-up: "npm:^4.0.0"
     plur: "npm:^5.1.0"
@@ -11104,6 +11105,16 @@ __metadata:
   version: 8.0.1
   resolution: "normalize-url@npm:8.0.1"
   checksum: 10c0/eb439231c4b84430f187530e6fdac605c5048ef4ec556447a10c00a91fc69b52d8d8298d9d608e68d3e0f7dc2d812d3455edf425e0f215993667c3183bcab1ef
+  languageName: node
+  linkType: hard
+
+"npm-check-updates@npm:^18.0.1":
+  version: 18.0.1
+  resolution: "npm-check-updates@npm:18.0.1"
+  bin:
+    ncu: build/cli.js
+    npm-check-updates: build/cli.js
+  checksum: 10c0/0f4f8c26e8a51a413ee724fe76f0860bd360e0c096a52e928916ef6fe3ff0c2ea0f346ca8d291a43f46a269d05450e2a879fed8aa11871f73970d5f9dfdd162a
   languageName: node
   linkType: hard
 
