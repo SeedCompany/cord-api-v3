@@ -157,6 +157,7 @@
     "@nestjs/cli/webpack": "npm:empty-npm-package@*",
     "@nestjs/cli/typescript": "~5.2.2",
     "@whatwg-node/fetch": "patch:@whatwg-node/fetch@npm%3A0.9.22#~/.yarn/patches/@whatwg-node-fetch-npm-0.9.22-a60314fb39.patch",
+    "logform": "2.6.1",
     "process-warning": "^5",
     "secure-json-parse": "^4",
     "subscriptions-transport-ws": "npm:empty-npm-package@*"
