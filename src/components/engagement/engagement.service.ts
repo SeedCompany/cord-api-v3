@@ -172,17 +172,16 @@ export class EngagementService {
     )) as UnsecuredDto<LanguageEngagement>;
     const object = this.secure(previous, session);
 
-    if (input.status && input.status !== previous.status) {
+    const { methodology, ...maybeChanges } = input;
+    const changes = this.repo.getActualLanguageChanges(object, maybeChanges);
+    if (changes.status) {
       await this.engagementRules.verifyStatusChange(
         input.id,
         session,
-        input.status,
+        changes.status,
         changeset,
       );
     }
-
-    const { methodology, ...maybeChanges } = input;
-    const changes = this.repo.getActualLanguageChanges(object, maybeChanges);
     this.privileges
       .for(session, LanguageEngagement, object)
       .verifyChanges(changes);
@@ -226,16 +225,15 @@ export class EngagementService {
     )) as UnsecuredDto<InternshipEngagement>;
     const object = this.secure(previous, session);
 
-    if (input.status && input.status !== previous.status) {
+    const changes = this.repo.getActualInternshipChanges(object, input);
+    if (changes.status) {
       await this.engagementRules.verifyStatusChange(
         input.id,
         session,
-        input.status,
+        changes.status,
         changeset,
       );
     }
-
-    const changes = this.repo.getActualInternshipChanges(object, input);
     this.privileges
       .for(session, InternshipEngagement, object)
       .verifyChanges(changes, { pathPrefix: 'engagement' });
