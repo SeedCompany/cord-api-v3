@@ -343,7 +343,14 @@ export class ProjectService {
 
     updated = await this.repo.update(updated, changes, changeset);
 
-    RequiredWhen.verify(IProject, updated);
+    const prevMissing = RequiredWhen.calc(IProject, currentProject);
+    const nowMissing = RequiredWhen.calc(IProject, updated);
+    if (
+      nowMissing &&
+      (!prevMissing || nowMissing.missing.length >= prevMissing.missing.length)
+    ) {
+      throw nowMissing;
+    }
 
     const event = new ProjectUpdatedEvent(
       updated,
