@@ -1,9 +1,7 @@
 import { OnModuleInit } from '@nestjs/common';
 import { execaCommand as command } from 'execa';
-import { promises as fs } from 'fs';
 import { LazyGetter } from 'lazy-get-decorator';
-import { pkgUp } from 'pkg-up';
-import { PackageJson } from 'type-fest';
+import { readPackageUp } from 'read-package-up';
 import { ILogger, Logger } from '../logger';
 import { ConfigService } from './config.service';
 import { EnvironmentService } from './environment.service';
@@ -63,14 +61,12 @@ export class VersionService implements OnModuleInit {
   }
 
   private async fromPackageJson() {
-    const packageJson = await pkgUp();
-    if (!packageJson) {
+    const res = await readPackageUp();
+    if (!res) {
       return undefined;
     }
     try {
-      const str = await fs.readFile(packageJson, { encoding: 'utf8' });
-      const json: PackageJson = JSON.parse(str);
-      return json.version;
+      return res.packageJson.version;
     } catch (e) {
       return undefined;
     }
