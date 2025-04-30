@@ -1,5 +1,5 @@
 import { isEmail, ValidationOptions } from 'class-validator';
-import ValidatorJS from 'validator';
+import * as ValidatorJS from 'validator';
 import { ValidateBy } from './validateBy';
 
 export const IsEmail = (
