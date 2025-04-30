@@ -196,7 +196,14 @@ export class EngagementService {
       changeset,
     );
 
-    RequiredWhen.verify(LanguageEngagement, updated);
+    const prevMissing = RequiredWhen.calc(LanguageEngagement, previous);
+    const nowMissing = RequiredWhen.calc(LanguageEngagement, updated);
+    if (
+      nowMissing &&
+      (!prevMissing || nowMissing.missing.length >= prevMissing.missing.length)
+    ) {
+      throw nowMissing;
+    }
 
     const event = new EngagementUpdatedEvent(
       updated,
@@ -245,7 +252,14 @@ export class EngagementService {
       changeset,
     );
 
-    RequiredWhen.verify(InternshipEngagement, updated);
+    const prevMissing = RequiredWhen.calc(InternshipEngagement, previous);
+    const nowMissing = RequiredWhen.calc(InternshipEngagement, updated);
+    if (
+      nowMissing &&
+      (!prevMissing || nowMissing.missing.length >= prevMissing.missing.length)
+    ) {
+      throw nowMissing;
+    }
 
     const event = new EngagementUpdatedEvent(
       updated,

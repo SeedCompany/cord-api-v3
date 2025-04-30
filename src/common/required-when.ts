@@ -41,23 +41,37 @@ export const RequiredWhen =
       ...fieldOptions,
     });
 
-RequiredWhen.verify = <TResourceStatic extends ResourceShape<any>>(
+RequiredWhen.calc = <TResourceStatic extends ResourceShape<any>>(
   resource: TResourceStatic,
   obj: UnsecuredDto<TResourceStatic['prototype']>,
 ) => {
   const res = EnhancedResource.of(resource);
-  const missing = [...res.props].flatMap((prop: string) => {
+  const conditions = [...res.props].flatMap((prop: string) => {
     const condition = RequiredWhenMetadata.get(resource, prop);
-    return condition?.isEnabled(obj) &&
-      (condition.isMissing?.(obj) ?? obj[prop] == null)
+    return condition ? { ...condition, field: prop } : [];
+  });
+  const missing = conditions.flatMap((condition) => {
+    return condition.isEnabled(obj) &&
+      (condition.isMissing?.(obj) ?? obj[condition.field] == null)
       ? {
-          field: condition.field ?? prop,
+          field: condition.field,
           description: condition.description,
         }
       : [];
   });
   if (missing.length > 0) {
-    throw new MissingRequiredFieldsException(res, { id: obj.id }, missing);
+    return new MissingRequiredFieldsException(res, { id: obj.id }, missing);
+  }
+  return undefined;
+};
+
+RequiredWhen.verify = <TResourceStatic extends ResourceShape<any>>(
+  resource: TResourceStatic,
+  obj: UnsecuredDto<TResourceStatic['prototype']>,
+) => {
+  const ex = RequiredWhen.calc(resource, obj);
+  if (ex) {
+    throw ex;
   }
 };
 
