@@ -1,5 +1,5 @@
 import { OnModuleInit } from '@nestjs/common';
-import { execaCommand as command } from 'execa';
+import { $ } from 'execa';
 import { LazyGetter } from 'lazy-get-decorator';
 import { readPackageUp } from 'read-package-up';
 import { ILogger, Logger } from '../logger';
@@ -40,7 +40,7 @@ export class VersionService implements OnModuleInit {
       return env;
     }
     try {
-      const res = await command('git symbolic-ref -q --short HEAD');
+      const res = await $`git symbolic-ref -q --short HEAD`;
       return res.stdout;
     } catch (e) {
       return undefined;
@@ -53,7 +53,7 @@ export class VersionService implements OnModuleInit {
       return env;
     }
     try {
-      const res = await command('git rev-parse -q --short HEAD');
+      const res = await $`git rev-parse -q --short HEAD`;
       return res.stdout;
     } catch (e) {
       return undefined;
