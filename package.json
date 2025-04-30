@@ -148,14 +148,14 @@
     "ts-patch": "^3.0.2",
     "ts-transformer-keys": "^0.4.4",
     "type-fest": "^4.15.0",
-    "typescript": "^5.2.2",
+    "typescript": "~5.2.2",
     "typescript-transform-paths": "^3.4.6"
   },
   "resolutions": {
     "cypher-query-builder/neo4j-driver": "^5",
     "@nestjs/cli/fork-ts-checker-webpack-plugin": "npm:empty-npm-package@*",
     "@nestjs/cli/webpack": "npm:empty-npm-package@*",
-    "@nestjs/cli/typescript": "^5.1.6",
+    "@nestjs/cli/typescript": "~5.2.2",
     "@whatwg-node/fetch": "patch:@whatwg-node/fetch@npm%3A0.9.22#~/.yarn/patches/@whatwg-node-fetch-npm-0.9.22-a60314fb39.patch",
     "process-warning": "^5",
     "secure-json-parse": "^4",
