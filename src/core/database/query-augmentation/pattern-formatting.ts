@@ -20,10 +20,9 @@ import { camelCase } from 'lodash';
 import { isExp } from '../query';
 import { WhereAndList } from '../query/where-and-list';
 
-// Add line breaks for each pattern when there's multiple per statement
+// Add line breaks for each pattern when there is multiple per statement
 // And ignore empty patterns
 PatternClause.prototype.build = function build() {
-  // @ts-expect-error private but we are using it
   const patternStrings = this.patterns.map((pattern) =>
     pattern.reduce((str: string, clause: Clause) => str + clause.build(), ''),
   );
