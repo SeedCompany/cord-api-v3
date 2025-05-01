@@ -15,12 +15,12 @@ export class PartnershipGelRepository
       partner: true,
       mou: true,
       agreement: true,
-      parent: e.tuple({
+      parent: e.select({
         identity: partnership.project.id,
         labels: e.array_agg(
           e.set(partnership.project.__type__.name.slice(9, null)),
         ),
-        properties: e.tuple({
+        properties: e.select({
           id: partnership.project.id,
           createdAt: partnership.project.createdAt,
         }),
