@@ -53,7 +53,7 @@ export const createAllPermissionsView = <
           propPerms[compatMap.backward[action]] = perm;
           return perm;
         },
-      }),
+      }) as any,
   });
 
 export type AllPermissionsOfEdgeView<TAction extends string> = Record<
