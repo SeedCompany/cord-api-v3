@@ -197,11 +197,12 @@ class Project extends Interfaces {
    * Optimization for {@link ProjectResolver.engagements}.
    * This doesn't account for changesets or item filters.
    */
-  @Disabled(`
-    I'm not convinced this wont have unintended consequences.
-    it is still handled with the workflow condition currently and deletes are
-    restricted, so this is a super edge case effectively.
-  `)(
+  @Disabled(
+    `
+      I'm not convinced this wont have unintended consequences.
+      it is still handled with the workflow condition currently and deletes are
+      restricted, so this is a super edge case effectively.
+    `,
     RequiredWhenNotInDev({
       field: 'engagements',
       isMissing: (project) => project.engagementTotal === 0,
