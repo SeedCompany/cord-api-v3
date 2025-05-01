@@ -1,11 +1,14 @@
 import { Injectable, OnModuleDestroy } from '@nestjs/common';
+import { isObjectLike } from '@seedcompany/common';
 import { AsyncLocalStorage } from 'async_hooks';
 import { GqlContextType as ContextType } from '~/common';
 import { AsyncLocalStorageNoContextException } from '../async-local-storage-no-context.exception';
 import { Plugin } from './plugin.decorator';
 
+export const ifGqlContext = (object: unknown): ContextType | undefined =>
+  isGqlContext(object) ? object : undefined;
 export const isGqlContext = (object: unknown): object is ContextType =>
-  object != null && typeof object === 'object' && isGqlContext.KEY in object;
+  isObjectLike(object) && isGqlContext.KEY in object;
 isGqlContext.KEY = Symbol('GqlContext');
 
 /**
@@ -16,12 +19,21 @@ export abstract class GqlContextHost {
    * The current GraphQL context
    */
   readonly context: ContextType;
+
+  /**
+   * The current GraphQL context
+   */
+  readonly contextMaybe: ContextType | undefined;
 }
 
 @Injectable()
 @Plugin()
 export class GqlContextHostImpl implements GqlContextHost, OnModuleDestroy {
   als = new AsyncLocalStorage<ContextType>();
+
+  get contextMaybe() {
+    return this.als.getStore();
+  }
 
   get context() {
     const context = this.als.getStore();

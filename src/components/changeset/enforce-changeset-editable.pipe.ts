@@ -1,12 +1,9 @@
 import {
   ArgumentMetadata,
-  Inject,
   Injectable,
   PipeTransform,
-  Scope,
   Type,
 } from '@nestjs/common';
-import { CONTEXT } from '@nestjs/graphql';
 import { hasCtor, isRegularObject } from '@seedcompany/common';
 import {
   DataLoaderContext,
@@ -18,7 +15,7 @@ import {
   isIdLike,
   loadManyIgnoreMissingThrowAny,
 } from '~/common';
-import { isGqlContext } from '~/core/graphql';
+import { GqlContextHost, ifGqlContext } from '~/core/graphql';
 import { ResourceLoaderRegistry } from '~/core/resources/loader.registry';
 import { Changeset } from './dto';
 import { shouldValidateEditability } from './validate-editability.decorator';
@@ -37,12 +34,10 @@ import { shouldValidateEditability } from './validate-editability.decorator';
  * it is called for every argument of every resolver/controller.
  * So we want to be careful to do as little work as possible.
  */
-@Injectable({ scope: Scope.REQUEST })
+@Injectable()
 export class EnforceChangesetEditablePipe implements PipeTransform {
   constructor(
-    // This is only the GQL context if this is a GQL execution context.
-    // If it is http, then it is the request.
-    @Inject(CONTEXT) private readonly context: unknown,
+    private readonly gqlContextHost: GqlContextHost,
     private readonly loaderRegistry: ResourceLoaderRegistry,
     private readonly loaderContext: DataLoaderContext,
   ) {}
@@ -58,7 +53,7 @@ export class EnforceChangesetEditablePipe implements PipeTransform {
       return;
     }
 
-    const context = isGqlContext(this.context) ? this.context : undefined;
+    const context = ifGqlContext(this.gqlContextHost.contextMaybe);
     if (context?.operation.operation !== 'mutation') {
       return;
     }
