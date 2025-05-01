@@ -148,7 +148,7 @@
     "ts-patch": "^3.0.2",
     "ts-transformer-keys": "^0.4.4",
     "type-fest": "^4.15.0",
-    "typescript": "~5.2.2",
+    "typescript": "~5.8.3",
     "typescript-transform-paths": "^3.4.6"
   },
   "resolutions": {
@@ -158,7 +158,7 @@
     "@nestjs/cli/fork-ts-checker-webpack-plugin": "npm:empty-npm-package@*",
     "@nestjs/cli/glob": "^11",
     "@nestjs/cli/webpack": "npm:empty-npm-package@*",
-    "@nestjs/cli/typescript": "~5.2.2",
+    "@nestjs/cli/typescript": "~5.8.3",
     "@whatwg-node/fetch@npm:^0.10.0": "patch:@whatwg-node/fetch@npm%3A0.10.6#~/.yarn/patches/@whatwg-node-fetch-npm-0.10.6-bca79028fb.patch",
     "@whatwg-node/fetch@npm:^0.10.1": "patch:@whatwg-node/fetch@npm%3A0.10.6#~/.yarn/patches/@whatwg-node-fetch-npm-0.10.6-bca79028fb.patch",
     "@whatwg-node/fetch@npm:^0.10.4": "patch:@whatwg-node/fetch@npm%3A0.10.6#~/.yarn/patches/@whatwg-node-fetch-npm-0.10.6-bca79028fb.patch",
