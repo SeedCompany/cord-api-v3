@@ -153,6 +153,8 @@
   },
   "resolutions": {
     "cypher-query-builder/neo4j-driver": "^5",
+    "@angular-devkit/core": "^19.2",
+    "@angular-devkit/schematics": "^19.2",
     "@nestjs/cli/fork-ts-checker-webpack-plugin": "npm:empty-npm-package@*",
     "@nestjs/cli/webpack": "npm:empty-npm-package@*",
     "@nestjs/cli/typescript": "~5.2.2",
