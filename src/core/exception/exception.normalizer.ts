@@ -189,8 +189,21 @@ export class ExceptionNormalizer {
     }
 
     if (ex instanceof GraphQLError) {
+      if (ex.extensions.code === 'GRAPHQL_VALIDATION_FAILED') {
+        return { codes: ['Validation', 'GraphQL', 'Client'] };
+      }
+      if (ex.extensions.code === 'GRAPHQL_PARSE_FAILED') {
+        return { codes: ['Parse', 'GraphQL', 'Client'] };
+      }
+      if (ex.extensions.code === 'OPERATION_RESOLUTION_FAILURE') {
+        return { codes: ['OperationResolution', 'GraphQL', 'Client'] };
+      }
+      const status = (ex.extensions as any).http?.status ?? 500;
+      if (status === 413 && ex.message.startsWith('Batching is limited')) {
+        return { codes: ['BatchLimit', 'GraphQL', 'Client'] };
+      }
       const isClient =
-        (ex.extensions.http?.status ?? 500) < 500 ||
+        status < 500 ||
         // Guessing here. No execution path - client problem.
         !ex.path;
       return { codes: ['GraphQL', isClient ? 'Client' : 'Server'] };
