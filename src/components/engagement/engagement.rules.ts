@@ -55,6 +55,7 @@ export class EngagementRules {
             Role.RegionalDirector,
             Role.FieldOperationsDirector,
             Role.Controller,
+            Role.MultiplicationFinanceApprover,
           ],
           transitions: [
             {
