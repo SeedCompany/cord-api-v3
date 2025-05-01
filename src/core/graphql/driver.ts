@@ -78,16 +78,11 @@ export class Driver extends AbstractDriver<DriverConfig> {
     );
   }
 
-  httpHandler: FastifyRoute['handler'] = async (req, reply) => {
-    const res = await this.yoga.handleNodeRequestAndResponse(req, reply, {
+  httpHandler: FastifyRoute['handler'] = (req, reply) =>
+    this.yoga.handleNodeRequestAndResponse(req, reply, {
       req,
       response: reply,
     });
-    return await reply
-      .headers(Object.fromEntries(res.headers))
-      .status(res.status)
-      .send(res.body);
-  };
 
   /**
    * This code ties fastify, yoga, and graphql-ws together.
