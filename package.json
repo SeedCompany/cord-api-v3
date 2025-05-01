@@ -162,6 +162,7 @@
     "@whatwg-node/fetch@npm:^0.10.6": "patch:@whatwg-node/fetch@npm%3A0.10.6#~/.yarn/patches/@whatwg-node-fetch-npm-0.10.6-bca79028fb.patch",
     "logform": "2.6.1",
     "process-warning": "^5",
+    "rxjs": "^7.8",
     "secure-json-parse": "^4",
     "subscriptions-transport-ws": "npm:empty-npm-package@*"
   },
