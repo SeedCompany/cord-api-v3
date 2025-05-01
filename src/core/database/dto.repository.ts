@@ -3,8 +3,8 @@ import { inArray, Query } from 'cypher-query-builder';
 import { LazyGetter as Once } from 'lazy-get-decorator';
 import { lowerCase } from 'lodash';
 import {
+  DbUnique,
   EnhancedResource,
-  getDbPropertyUnique,
   ID,
   NotFoundException,
   ResourceShape,
@@ -66,7 +66,7 @@ export const DtoRepository = <
     }
     @Once() private get uniqueLabel() {
       const labels = resource.Props.flatMap(
-        (p) => getDbPropertyUnique(resource, p) ?? [],
+        (p) => DbUnique.get(resource, p) ?? [],
       );
       if (labels.length === 0) {
         return new ServerException(
