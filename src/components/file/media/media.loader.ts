@@ -1,7 +1,7 @@
-import { DataLoaderStrategy } from '@seedcompany/data-loader';
-import { ID } from '~/common';
+import { type DataLoaderStrategy } from '@seedcompany/data-loader';
+import { type ID } from '~/common';
 import { LoaderFactory } from '~/core/resources';
-import { AnyMedia, Media } from './media.dto';
+import { type AnyMedia, Media } from './media.dto';
 import { MediaRepository } from './media.repository';
 
 @LoaderFactory(() => Media)

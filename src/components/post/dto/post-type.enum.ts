@@ -1,4 +1,4 @@
-import { EnumType, makeEnum } from '~/common';
+import { type EnumType, makeEnum } from '~/common';
 
 export type PostType = EnumType<typeof PostType>;
 export const PostType = makeEnum({

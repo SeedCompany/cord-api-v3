@@ -1,14 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { stripIndent } from 'common-tags';
-import { node, Query, relation } from 'cypher-query-builder';
+import { node, type Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   generateId,
   getDbClassLabels,
-  ID,
+  type ID,
   NotFoundException,
-  Session,
-  Variant,
+  type Session,
+  type Variant,
 } from '~/common';
 import { DatabaseService } from '~/core/database';
 import {
@@ -23,15 +23,15 @@ import {
 } from '~/core/database/query';
 import { PeriodicReportService } from '../periodic-report';
 import { ReportType } from '../periodic-report/dto';
-import { ProductStep } from '../product/dto';
+import { type ProductStep } from '../product/dto';
 import {
   ProductProgress,
-  ProductProgressInput,
-  ProgressVariant,
-  ProgressVariantByProductInput,
-  ProgressVariantByReportInput,
+  type ProductProgressInput,
+  type ProgressVariant,
+  type ProgressVariantByProductInput,
+  type ProgressVariantByReportInput,
   StepProgress,
-  UnsecuredProductProgress,
+  type UnsecuredProductProgress,
 } from './dto';
 
 @Injectable()

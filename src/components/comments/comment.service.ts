@@ -2,31 +2,31 @@ import { Injectable } from '@nestjs/common';
 import { difference } from 'lodash';
 import {
   CreationFailed,
-  ID,
+  type ID,
   InvalidIdForTypeException,
   isIdLike,
   NotFoundException,
   Resource,
   SecuredList,
   ServerException,
-  Session,
-  UnsecuredDto,
+  type Session,
+  type UnsecuredDto,
 } from '~/common';
 import { isAdmin } from '~/common/session';
 import { ResourceLoader, ResourcesHost } from '~/core';
-import { BaseNode, isBaseNode } from '~/core/database/results';
+import { type BaseNode, isBaseNode } from '~/core/database/results';
 import { Privileges } from '../authorization';
 import { CommentRepository } from './comment.repository';
 import {
   Comment,
   Commentable,
-  CommentList,
-  CommentListInput,
-  CommentThread,
-  CommentThreadList,
-  CommentThreadListInput,
-  CreateCommentInput,
-  UpdateCommentInput,
+  type CommentList,
+  type CommentListInput,
+  type CommentThread,
+  type CommentThreadList,
+  type CommentThreadListInput,
+  type CreateCommentInput,
+  type UpdateCommentInput,
 } from './dto';
 import { CommentViaMentionNotificationService } from './mention-notification/comment-via-mention-notification.service';
 

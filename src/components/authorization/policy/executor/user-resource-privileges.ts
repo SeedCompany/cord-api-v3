@@ -2,34 +2,34 @@ import { cleanJoin, mapValues } from '@seedcompany/common';
 import { LazyGetter as Once } from 'lazy-get-decorator';
 import { startCase } from 'lodash';
 import {
-  ChildListsKey,
-  ChildSinglesKey,
+  type ChildListsKey,
+  type ChildSinglesKey,
   EnhancedResource,
-  ResourceShape,
-  SecuredPropsPlusExtraKey,
-  SecuredResource,
-  SecuredResourceKey,
-  Session,
+  type ResourceShape,
+  type SecuredPropsPlusExtraKey,
+  type SecuredResource,
+  type SecuredResourceKey,
+  type Session,
   UnauthorizedException,
-  UnsecuredDto,
+  type UnsecuredDto,
 } from '~/common';
-import { AnyChangesOf, isRelation } from '~/core/database/changes';
+import { type AnyChangesOf, isRelation } from '~/core/database/changes';
 import {
-  AnyAction,
-  ChildListAction,
-  ChildSingleAction,
-  PropAction,
-  ResourceAction,
+  type AnyAction,
+  type ChildListAction,
+  type ChildSingleAction,
+  type PropAction,
+  type ResourceAction,
 } from '../actions';
-import { ResourceObjectContext } from '../object.type';
+import { type ResourceObjectContext } from '../object.type';
 import {
-  AllPermissionsView,
+  type AllPermissionsView,
   createAllPermissionsView,
 } from './all-permissions-view';
 import {
-  FilterOptions,
-  PolicyExecutor,
-  ResolveParams,
+  type FilterOptions,
+  type PolicyExecutor,
+  type ResolveParams,
 } from './policy-executor';
 import { UserEdgePrivileges } from './user-edge-privileges';
 

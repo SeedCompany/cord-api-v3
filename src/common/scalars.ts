@@ -1,6 +1,6 @@
-import { Type } from '@nestjs/common';
-import { CustomScalar } from '@nestjs/graphql';
-import { GraphQLScalarType } from 'graphql';
+import { type Type } from '@nestjs/common';
+import { type CustomScalar } from '@nestjs/graphql';
+import { type GraphQLScalarType } from 'graphql';
 import { FileUploadScalar } from './file-upload.scalar';
 import { DateScalar, DateTimeScalar } from './luxon.graphql';
 import { InlineMarkdownScalar, MarkdownScalar } from './markdown.scalar';

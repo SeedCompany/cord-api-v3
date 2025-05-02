@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import Prism, { TokenObject } from 'prismjs';
+import Prism, { type TokenObject } from 'prismjs';
 import { highlight as cliHighlight } from 'prismjs-terminal';
 import loadLanguages from 'prismjs/components/index.js';
 

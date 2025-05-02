@@ -5,7 +5,7 @@ import { uniq } from 'lodash';
 import {
   CalendarDate,
   DateField,
-  ID,
+  type ID,
   IdField,
   IsId,
   NameField,

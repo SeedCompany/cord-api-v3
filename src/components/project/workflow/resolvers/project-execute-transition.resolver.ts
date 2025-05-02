@@ -1,6 +1,6 @@
 import { Args, Mutation, Resolver } from '@nestjs/graphql';
-import { LoggedInSession, Session } from '~/common';
-import { IProject, Project } from '../../dto';
+import { LoggedInSession, type Session } from '~/common';
+import { IProject, type Project } from '../../dto';
 import { ExecuteProjectTransitionInput } from '../dto';
 import { ProjectWorkflowService } from '../project-workflow.service';
 

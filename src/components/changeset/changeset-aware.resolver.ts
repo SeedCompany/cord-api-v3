@@ -1,6 +1,12 @@
 import { Info, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { Fields, IsOnlyId, LoggedInSession, Resource, Session } from '~/common';
+import {
+  Fields,
+  IsOnlyId,
+  LoggedInSession,
+  Resource,
+  type Session,
+} from '~/common';
 import { ResourceLoader, ResourceResolver } from '~/core';
 import { ChangesetResolver } from './changeset.resolver';
 import { Changeset, ChangesetAware, ChangesetDiff } from './dto';

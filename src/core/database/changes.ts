@@ -1,21 +1,21 @@
 import { entries } from '@seedcompany/common';
 import { difference, omit, pickBy } from 'lodash';
 import { DateTime } from 'luxon';
-import { ConditionalKeys, IsAny } from 'type-fest';
+import type { ConditionalKeys, IsAny } from 'type-fest';
 import {
   EnhancedResource,
-  ID,
-  MaybeSecured,
-  MaybeUnsecuredInstance,
+  type ID,
+  type MaybeSecured,
+  type MaybeUnsecuredInstance,
   Resource,
-  ResourceShape,
+  type ResourceShape,
   unwrapSecured,
-  UnwrapSecured,
+  type UnwrapSecured,
 } from '~/common';
-import { LinkTo } from '~/core';
-import { CreateDefinedFileVersionInput } from '../../components/file/dto';
-import { Variable } from './query';
-import { NativeDbValue } from './results';
+import { type LinkTo } from '~/core';
+import { type CreateDefinedFileVersionInput } from '../../components/file/dto';
+import { type Variable } from './query';
+import { type NativeDbValue } from './results';
 
 /**
  * Specify this on a property to override the key & value type for ChangesOf on

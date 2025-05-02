@@ -1,10 +1,10 @@
 import { createHash } from 'crypto';
-import { node, Query, relation } from 'cypher-query-builder';
-import { RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
-import { Maybe as Nullable } from 'graphql/jsutils/Maybe';
+import { node, type Query, relation } from 'cypher-query-builder';
+import { type RelationDirection } from 'cypher-query-builder/dist/typings/clauses/relation-pattern';
+import { type Maybe as Nullable } from 'graphql/jsutils/Maybe';
 import { DateTime } from 'luxon';
-import { EnhancedResource, ID, many, ResourceShape } from '~/common';
-import { ResourceMap } from '~/core';
+import { EnhancedResource, type ID, many, type ResourceShape } from '~/common';
+import { type ResourceMap } from '~/core';
 import { Variable } from '../query-augmentation/condition-variables';
 
 type RelationshipDefinition = Record<

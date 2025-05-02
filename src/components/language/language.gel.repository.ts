@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { ID, PublicOf } from '~/common';
+import { type ID, type PublicOf } from '~/common';
 import { e, RepoFor } from '~/core/gel';
-import { CreateLanguage, Language } from './dto';
-import { LanguageRepository } from './language.repository';
+import { type CreateLanguage, Language } from './dto';
+import { type LanguageRepository } from './language.repository';
 
 @Injectable()
 export class LanguageGelRepository

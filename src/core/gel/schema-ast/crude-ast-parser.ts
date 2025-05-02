@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Nil } from '@seedcompany/common';
+import { type Nil } from '@seedcompany/common';
 import XRegExp from 'xregexp';
 import { SchemaModule, SchemaNode, SchemaType } from './ast-nodes';
 import { Position } from './position';

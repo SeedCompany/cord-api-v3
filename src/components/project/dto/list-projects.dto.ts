@@ -5,13 +5,13 @@ import {
   DateFilter,
   DateTimeFilter,
   FilterField,
-  ID,
+  type ID,
   ListField,
   OptionalField,
   PaginatedList,
   SecuredList,
   SensitivitiesFilterField,
-  Sensitivity,
+  type Sensitivity,
   SortablePaginationInput,
 } from '~/common';
 import { LocationFilters } from '../../location/dto';
@@ -22,7 +22,7 @@ import { ProjectType } from './project-type.enum';
 import {
   InternshipProject,
   IProject,
-  Project,
+  type Project,
   TranslationProject,
 } from './project.dto';
 

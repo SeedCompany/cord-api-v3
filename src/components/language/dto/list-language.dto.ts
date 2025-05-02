@@ -1,12 +1,12 @@
 import { InputType, ObjectType } from '@nestjs/graphql';
 import {
   FilterField,
-  ID,
+  type ID,
   OptionalField,
   PaginatedList,
   SecuredList,
   SensitivitiesFilterField,
-  Sensitivity,
+  type Sensitivity,
   SortablePaginationInput,
 } from '~/common';
 import { Language } from './language.dto';

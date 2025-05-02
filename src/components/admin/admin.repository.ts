@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { DateTime } from 'luxon';
-import { ID, Resource } from '~/common';
+import { type DateTime } from 'luxon';
+import { type ID, Resource } from '~/common';
 import { CommonRepository, OnIndex } from '~/core/database';
 import { ACTIVE } from '~/core/database/query';
 

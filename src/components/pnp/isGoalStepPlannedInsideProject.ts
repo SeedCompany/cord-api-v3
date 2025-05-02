@@ -1,10 +1,10 @@
 import { trimStart } from 'lodash';
 import { fullFiscalYear } from '~/common';
-import { Cell } from '~/common/xlsx.util';
+import { type Cell } from '~/common/xlsx.util';
 import { ProductStep } from '../product/dto';
-import { PnpExtractionResult, PnpProblemType } from './extraction-result';
-import { PlanningSheet } from './planning-sheet';
-import { Pnp } from './pnp';
+import { type PnpExtractionResult, PnpProblemType } from './extraction-result';
+import { type PlanningSheet } from './planning-sheet';
+import { type Pnp } from './pnp';
 
 /**
  * Does step reference a fiscal year within the project

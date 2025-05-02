@@ -1,4 +1,4 @@
-import { HydratorMap } from './find-hydration-shapes';
+import { type HydratorMap } from './find-hydration-shapes';
 import { toFqn } from './util';
 
 export const injectHydrators = (query: string, map: HydratorMap) => {

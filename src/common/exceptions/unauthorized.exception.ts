@@ -1,7 +1,7 @@
 import { lowerCase } from 'lodash';
 import pluralize from 'plur';
-import { EnhancedResource } from '../resource.dto';
-import { InputException, InputExceptionArgs } from './input.exception';
+import { type EnhancedResource } from '../resource.dto';
+import { InputException, type InputExceptionArgs } from './input.exception';
 
 /**
  * The requester has insufficient permission to do this operation.

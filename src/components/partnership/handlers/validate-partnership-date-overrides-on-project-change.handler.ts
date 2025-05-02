@@ -1,6 +1,6 @@
 import { mapEntries } from '@seedcompany/common';
 import { asNonEmpty, DateOverrideConflictException } from '~/common';
-import { EventsHandler, IEventHandler, ResourceLoader } from '~/core';
+import { EventsHandler, type IEventHandler, ResourceLoader } from '~/core';
 import { OrganizationLoader } from '../../organization';
 import { ProjectUpdatedEvent } from '../../project/events';
 import { PartnershipService } from '../partnership.service';

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { glob } from 'glob';
 import addIndent from 'indent-string';
-import { EnhancedResource } from '~/common';
+import { type EnhancedResource } from '~/common';
 import { ResourcesHost } from '~/core/resources';
 import { GelAccessPolicyGenerator } from '../../../components/authorization/policy/gel-access-policy.generator';
 import { SchemaType } from './ast-nodes';

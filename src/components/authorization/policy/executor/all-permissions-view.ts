@@ -1,23 +1,23 @@
 import { mapValues } from '@seedcompany/common';
-import { EnumType, makeEnum } from '@seedcompany/nest';
+import { type EnumType, makeEnum } from '@seedcompany/nest';
 import { startCase } from 'lodash';
-import { PascalCase } from 'type-fest';
+import { type PascalCase } from 'type-fest';
 import {
-  ChildListsKey,
-  ChildSinglesKey,
+  type ChildListsKey,
+  type ChildSinglesKey,
   lazyRecord as createLazyRecord,
-  EnhancedResource,
-  ResourceShape,
-  SecuredPropsPlusExtraKey,
+  type EnhancedResource,
+  type ResourceShape,
+  type SecuredPropsPlusExtraKey,
 } from '~/common';
 import {
   AnyAction,
-  ChildListAction,
-  ChildSingleAction,
-  PropAction,
+  type ChildListAction,
+  type ChildSingleAction,
+  type PropAction,
 } from '../actions';
-import { UserEdgePrivileges } from './user-edge-privileges';
-import { UserResourcePrivileges } from './user-resource-privileges';
+import { type UserEdgePrivileges } from './user-edge-privileges';
+import { type UserResourcePrivileges } from './user-resource-privileges';
 
 export type AllPermissionsView<TResourceStatic extends ResourceShape<any>> =
   Record<

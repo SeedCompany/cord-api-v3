@@ -6,8 +6,14 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { ID, IdArg, LoggedInSession, mapSecuredValue, Session } from '~/common';
-import { Loader, LoaderOf } from '~/core';
+import {
+  type ID,
+  IdArg,
+  LoggedInSession,
+  mapSecuredValue,
+  type Session,
+} from '~/common';
+import { Loader, type LoaderOf } from '~/core';
 import { PostLoader, PostService } from '../post';
 import { UserLoader } from '../user';
 import { SecuredUser } from '../user/dto';

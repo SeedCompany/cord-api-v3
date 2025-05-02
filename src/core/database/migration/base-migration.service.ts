@@ -3,13 +3,13 @@ import { node, not, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   EnhancedResource,
-  ID,
-  MaybeUnsecuredInstance,
-  ResourceShape,
-  Session,
-  UnwrapSecured,
+  type ID,
+  type MaybeUnsecuredInstance,
+  type ResourceShape,
+  type Session,
+  type UnwrapSecured,
 } from '~/common';
-import { DbChanges } from '~/core/database/changes';
+import { type DbChanges } from '~/core/database/changes';
 import { ACTIVE, path } from '~/core/database/query';
 import { ILogger, Logger } from '../../logger';
 import { DatabaseService } from '../database.service';

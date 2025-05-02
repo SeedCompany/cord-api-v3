@@ -1,16 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import { node, Query, relation } from 'cypher-query-builder';
+import { node, type Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   CalendarDate,
   CreationFailed,
   DuplicateException,
-  ID,
+  type ID,
   InputException,
   NotFoundException,
   ReadAfterCreationFailed,
-  Session,
-  UnsecuredDto,
+  type Session,
+  type UnsecuredDto,
 } from '~/common';
 import { DtoRepository } from '~/core/database';
 import {
@@ -37,11 +37,11 @@ import {
   organizationSorters,
 } from '../organization/organization.repository';
 import {
-  CreatePartner,
+  type CreatePartner,
   Partner,
   PartnerFilters,
-  PartnerListInput,
-  UpdatePartner,
+  type PartnerListInput,
+  type UpdatePartner,
 } from './dto';
 
 @Injectable()

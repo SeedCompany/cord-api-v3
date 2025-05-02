@@ -1,12 +1,12 @@
-import { MergeExclusive } from 'type-fest';
+import { type MergeExclusive } from 'type-fest';
 import {
-  EnhancedResource,
-  ID,
-  MaybeUnsecuredInstance,
-  ResourceShape,
+  type EnhancedResource,
+  type ID,
+  type MaybeUnsecuredInstance,
+  type ResourceShape,
 } from '~/common';
-import { DbChanges } from '../../changes';
-import { Variable } from '../index';
+import { type DbChanges } from '../../changes';
+import { type Variable } from '../index';
 
 export type CommonPropertyOptions<
   TResourceStatic extends ResourceShape<any>,

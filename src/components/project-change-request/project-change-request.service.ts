@@ -1,13 +1,13 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import {
-  ID,
+  type ID,
   InputException,
   NotFoundException,
-  ObjectView,
+  type ObjectView,
   ReadAfterCreationFailed,
   ServerException,
-  Session,
-  UnsecuredDto,
+  type Session,
+  type UnsecuredDto,
 } from '~/common';
 import { HandleIdLookup, IEventBus, ILogger, Logger } from '~/core';
 import { DatabaseService } from '~/core/database';
@@ -17,12 +17,12 @@ import { ChangesetFinalizingEvent } from '../changeset';
 import { ProjectService } from '../project';
 import { ProjectStatus } from '../project/dto';
 import {
-  CreateProjectChangeRequest,
+  type CreateProjectChangeRequest,
   ProjectChangeRequest,
-  ProjectChangeRequestListInput,
-  ProjectChangeRequestListOutput,
+  type ProjectChangeRequestListInput,
+  type ProjectChangeRequestListOutput,
   ProjectChangeRequestStatus as Status,
-  UpdateProjectChangeRequest,
+  type UpdateProjectChangeRequest,
 } from './dto';
 import { ProjectChangeRequestApprovedEvent } from './events';
 import { ProjectChangeRequestRepository } from './project-change-request.repository';

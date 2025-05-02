@@ -2,7 +2,7 @@ import { Field, InputType, Int, ObjectType } from '@nestjs/graphql';
 import { Min } from 'class-validator';
 import { DateTime } from 'luxon';
 import {
-  ID,
+  type ID,
   IdField,
   Resource,
   RichTextDocument,

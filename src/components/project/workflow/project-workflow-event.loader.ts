@@ -1,4 +1,4 @@
-import { ID } from '~/common';
+import { type ID } from '~/common';
 import { LoaderFactory, SessionAwareLoaderStrategy } from '~/core';
 import { ProjectWorkflowEvent as WorkflowEvent } from './dto';
 import { ProjectWorkflowService } from './project-workflow.service';

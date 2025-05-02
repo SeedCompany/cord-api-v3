@@ -1,16 +1,22 @@
 import { clc } from '@nestjs/common/utils/cli-colors.util.js';
-import { cleanJoin, many, MaybeAsync } from '@seedcompany/common';
-import { BaseContext, Command, runExit } from 'clipanion';
-import { Client, createClient, Executor, GelError, Options } from 'gel';
+import { cleanJoin, many, type MaybeAsync } from '@seedcompany/common';
+import { type BaseContext, Command, runExit } from 'clipanion';
+import {
+  type Client,
+  createClient,
+  type Executor,
+  type GelError,
+  Options,
+} from 'gel';
 import type { QueryArgs } from 'gel/dist/ifaces';
 import { glob } from 'glob';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { BehaviorSubject } from 'rxjs';
 import { inspect } from 'util';
-import { ID } from '~/common';
+import { type ID } from '~/common';
 import { attributesOf, fixWarningQuerySnippet } from './errors';
-import { OptionsContext, OptionsFn } from './options.context';
+import { OptionsContext, type OptionsFn } from './options.context';
 import { e } from './reexports';
 
 Error.stackTraceLimit = Infinity;

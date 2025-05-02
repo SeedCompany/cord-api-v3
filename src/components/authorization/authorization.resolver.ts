@@ -1,5 +1,5 @@
 import { Query, Resolver } from '@nestjs/graphql';
-import { AnonSession, Session } from '~/common';
+import { AnonSession, type Session } from '~/common';
 import { Power } from './dto';
 import { Privileges } from './policy';
 

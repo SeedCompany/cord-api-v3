@@ -2,13 +2,13 @@ import { Args, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import {
   AnonSession,
-  ID,
+  type ID,
   IdArg,
   ListArg,
   LoggedInSession,
-  Session,
+  type Session,
 } from '~/common';
-import { Loader, LoaderOf, ResourceLoader } from '~/core';
+import { Loader, type LoaderOf, ResourceLoader } from '~/core';
 import { UserLoader } from '../user';
 import { User } from '../user/dto';
 import { CommentThreadLoader } from './comment-thread.loader';

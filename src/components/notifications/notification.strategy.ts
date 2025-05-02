@@ -1,10 +1,10 @@
 import { createMetadataDecorator } from '@seedcompany/nest';
-import { Query } from 'cypher-query-builder';
-import { AbstractClass, Simplify } from 'type-fest';
+import { type Query } from 'cypher-query-builder';
+import type { AbstractClass, Simplify } from 'type-fest';
 import type { UnwrapSecured } from '~/common';
 import type { RawChangeOf } from '~/core/database/changes';
 import type { QueryFragment } from '~/core/database/query-augmentation/apply';
-import { $, e } from '~/core/gel';
+import { type $, e } from '~/core/gel';
 import type { Notification } from './dto';
 
 export const NotificationStrategy = createMetadataDecorator({

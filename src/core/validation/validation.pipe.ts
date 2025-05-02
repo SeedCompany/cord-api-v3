@@ -3,7 +3,7 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
-import { useContainer, ValidatorOptions } from 'class-validator';
+import { useContainer, type ValidatorOptions } from 'class-validator';
 import { ValidationException } from './validation.exception';
 
 @Injectable()

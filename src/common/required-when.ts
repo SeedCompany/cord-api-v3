@@ -1,9 +1,9 @@
 import { groupBy } from '@seedcompany/common';
 import { createMetadataDecorator } from '@seedcompany/nest';
 import { InputException } from './exceptions';
-import { ID } from './id-field';
-import { EnhancedResource, ResourceShape } from './resource.dto';
-import { UnsecuredDto } from './secured-property';
+import { type ID } from './id-field';
+import { EnhancedResource, type ResourceShape } from './resource.dto';
+import { type UnsecuredDto } from './secured-property';
 
 const RequiredWhenMetadata = createMetadataDecorator({
   types: ['property'],

@@ -1,7 +1,7 @@
 import { faker } from '@faker-js/faker';
 import { times } from 'lodash';
 import { isValidId } from '~/common';
-import { FieldZone } from '../src/components/field-zone/dto';
+import { type FieldZone } from '../src/components/field-zone/dto';
 import {
   createPerson,
   createSession,
@@ -9,9 +9,9 @@ import {
   createZone,
   gql,
   loginAsAdmin,
-  TestApp,
+  type TestApp,
 } from './utility';
-import { fragments, RawUser } from './utility/fragments';
+import { fragments, type RawUser } from './utility/fragments';
 
 describe('Field Zone e2e', () => {
   let app: TestApp;

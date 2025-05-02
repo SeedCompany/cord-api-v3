@@ -1,7 +1,7 @@
 import {
-  ILogger,
-  LogEntry,
-  LogEntryContext,
+  type ILogger,
+  type LogEntry,
+  type LogEntryContext,
   LogLevel,
 } from './logger.interface';
 

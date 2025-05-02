@@ -4,24 +4,24 @@ import { startCase, times } from 'lodash';
 import {
   DateTime,
   Duration,
-  DurationObjectUnits as DurationObject,
+  type DurationObjectUnits as DurationObject,
   Settings,
 } from 'luxon';
-import { ID, Role } from '~/common';
+import { type ID, Role } from '~/common';
 import { DatabaseService } from '~/core/database';
-import { FileBucket, LocalBucket } from '../src/components/file/bucket';
+import { FileBucket, type LocalBucket } from '../src/components/file/bucket';
 import {
-  Directory,
+  type Directory,
   FileNodeType,
-  RequestUploadOutput,
+  type RequestUploadOutput,
 } from '../src/components/file/dto';
-import { User } from '../src/components/user/dto';
+import { type User } from '../src/components/user/dto';
 import {
   createFileVersion,
   createSession,
   createTestApp,
   errors,
-  FakeFile,
+  type FakeFile,
   generateFakeFile,
   getFileNode,
   getFileNodeChildren,
@@ -29,7 +29,7 @@ import {
   registerUser,
   requestFileUpload,
   runInIsolatedSession,
-  TestApp,
+  type TestApp,
   uploadFileContents,
 } from './utility';
 import {
@@ -37,10 +37,10 @@ import {
   createRootDirectory,
 } from './utility/create-directory';
 import {
-  RawDirectory,
-  RawFile,
-  RawFileNode,
-  RawFileVersion,
+  type RawDirectory,
+  type RawFile,
+  type RawFileNode,
+  type RawFileVersion,
 } from './utility/fragments';
 
 export async function uploadFile(

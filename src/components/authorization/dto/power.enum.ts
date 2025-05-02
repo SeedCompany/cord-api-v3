@@ -1,4 +1,4 @@
-import { EnumType, makeEnum } from '~/common';
+import { type EnumType, makeEnum } from '~/common';
 
 export type Power = EnumType<typeof Power>;
 export const Power = makeEnum({

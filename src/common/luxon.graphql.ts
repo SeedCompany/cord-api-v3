@@ -1,10 +1,10 @@
 import { applyDecorators } from '@nestjs/common';
-import { CustomScalar, Scalar } from '@nestjs/graphql';
+import { type CustomScalar, Scalar } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { Kind, ValueNode } from 'graphql';
+import { Kind, type ValueNode } from 'graphql';
 import { DateTime, Settings } from 'luxon';
 import { InputException } from './exceptions';
-import { OptionalField, OptionalFieldOptions } from './optional-field';
+import { OptionalField, type OptionalFieldOptions } from './optional-field';
 import { CalendarDate } from './temporal';
 import { Transform } from './transform.decorator';
 import { ValidateBy } from './validators/validateBy';

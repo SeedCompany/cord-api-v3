@@ -1,9 +1,9 @@
-import { Merge } from 'type-fest';
-import { ID, Many } from '~/common';
-import { WorkflowTransition as PublicTransition } from '../dto/workflow-transition.dto';
-import { TransitionCondition } from './conditions';
-import { DynamicState } from './dynamic-state';
-import { TransitionNotifier } from './notifiers';
+import { type Merge } from 'type-fest';
+import { type ID, type Many } from '~/common';
+import { type WorkflowTransition as PublicTransition } from '../dto/workflow-transition.dto';
+import { type TransitionCondition } from './conditions';
+import { type DynamicState } from './dynamic-state';
+import { type TransitionNotifier } from './notifiers';
 
 export type TransitionInput<State extends string, Context> = Merge<
   ReturnType<typeof PublicTransition<State>>['prototype'],

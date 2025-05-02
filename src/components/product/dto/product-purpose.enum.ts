@@ -1,5 +1,5 @@
 import { ObjectType } from '@nestjs/graphql';
-import { EnumType, makeEnum, SecuredEnumList } from '~/common';
+import { type EnumType, makeEnum, SecuredEnumList } from '~/common';
 
 /**
  * Why is this translation happening?

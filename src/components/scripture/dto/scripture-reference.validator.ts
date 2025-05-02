@@ -1,11 +1,11 @@
 import { applyDecorators } from '@nestjs/common';
 import { Book, Chapter } from '@seedcompany/scripture';
-import { ValidationArguments } from 'class-validator';
-import { Merge } from 'type-fest';
+import { type ValidationArguments } from 'class-validator';
+import type { Merge } from 'type-fest';
 import { createValidationDecorator } from '~/common/validators/validateBy';
 import { NormalizeBook } from './book.transformer';
-import { ScriptureReference } from './scripture-reference.dto';
-import { UnspecifiedScripturePortionInput } from './unspecified-scripture-portion.dto';
+import { type ScriptureReference } from './scripture-reference.dto';
+import { type UnspecifiedScripturePortionInput } from './unspecified-scripture-portion.dto';
 
 // We assume this is only used on the ScriptureReference object
 type ValidationArgs = Merge<

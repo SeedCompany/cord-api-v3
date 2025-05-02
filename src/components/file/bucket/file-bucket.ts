@@ -1,22 +1,26 @@
-import {
+import type {
   GetObjectOutput as AwsGetObjectOutput,
   PutObjectCommandInput as AwsPutObjectCommandInput,
   HeadObjectOutput,
 } from '@aws-sdk/client-s3';
-import { RequestPresigningArguments } from '@aws-sdk/types';
-import { Type } from '@nestjs/common';
-import { MaybeAsync } from '@seedcompany/common';
-import { Command } from '@smithy/smithy-client';
-import { NodeJsRuntimeStreamingBlobPayloadInputTypes } from '@smithy/types/dist-types/streaming-payload/streaming-blob-payload-input-types';
-import { Readable } from 'stream';
-import {
+import { type RequestPresigningArguments } from '@aws-sdk/types';
+import { type Type } from '@nestjs/common';
+import { type MaybeAsync } from '@seedcompany/common';
+import { type Command } from '@smithy/smithy-client';
+import { type NodeJsRuntimeStreamingBlobPayloadInputTypes } from '@smithy/types/dist-types/streaming-payload/streaming-blob-payload-input-types';
+import { type Readable } from 'stream';
+import type {
   Except,
   LiteralUnion,
   Merge,
   SetNonNullable,
   SetRequired,
 } from 'type-fest';
-import { DurationIn, InputException, InputExceptionArgs } from '~/common';
+import {
+  type DurationIn,
+  InputException,
+  type InputExceptionArgs,
+} from '~/common';
 
 // Limit body to only `Readable` which is always the case for Nodejs execution.
 export type GetObjectOutput = Merge<AwsGetObjectOutput, { Body: Readable }>;

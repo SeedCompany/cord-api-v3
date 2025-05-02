@@ -1,26 +1,26 @@
 import { Injectable } from '@nestjs/common';
 import { entries, mapKeys } from '@seedcompany/common';
-import { Connection, node, Query, relation } from 'cypher-query-builder';
+import { Connection, node, type Query, relation } from 'cypher-query-builder';
 import { LazyGetter } from 'lazy-get-decorator';
 import { pickBy, startCase } from 'lodash';
 import { Duration } from 'luxon';
 import { defer, firstValueFrom, shareReplay, takeUntil } from 'rxjs';
 import {
   DuplicateException,
-  ID,
+  type ID,
   isIdLike,
   isSecured,
-  MaybeUnsecuredInstance,
-  ResourceShape,
+  type MaybeUnsecuredInstance,
+  type ResourceShape,
   ServerException,
   TraceLayer,
-  UnwrapSecured,
+  type UnwrapSecured,
 } from '~/common';
-import { AbortError, retry, RetryOptions } from '~/common/retry';
+import { AbortError, retry, type RetryOptions } from '~/common/retry';
 import { ConfigService } from '../config/config.service';
 import { ILogger, Logger } from '../logger';
 import { ShutdownHook } from '../shutdown.hook';
-import { DbChanges } from './changes';
+import { type DbChanges } from './changes';
 import {
   createBetterError,
   ServiceUnavailableError,
@@ -31,7 +31,7 @@ import {
   deleteBaseNode,
   exp,
   updateProperty,
-  UpdatePropertyOptions,
+  type UpdatePropertyOptions,
   variable,
 } from './query';
 

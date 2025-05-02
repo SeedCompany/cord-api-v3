@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Session } from '~/common';
+import { type Session } from '~/common';
 import { PromptVariantResponseRepository } from '../../prompts/prompt-variant-response.repository';
 import { ProgressReport } from '../dto';
 import { ProgressReportCommunityStory as CommunityStory } from '../dto/community-stories.dto';

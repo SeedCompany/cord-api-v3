@@ -1,7 +1,7 @@
-import { DataLoader } from '@seedcompany/data-loader';
+import { type DataLoader } from '@seedcompany/data-loader';
 import { NotFoundException } from './exceptions';
-import { ID } from './id-field';
-import { Secured, UnwrapSecured } from './secured-property';
+import { type ID } from './id-field';
+import { type Secured, type UnwrapSecured } from './secured-property';
 
 /**
  * Map a secured value to something else.

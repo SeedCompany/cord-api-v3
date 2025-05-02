@@ -1,4 +1,4 @@
-import { File, FileVersion } from '../dto';
+import type { File, FileVersion } from '../dto';
 
 /**
  * Emitted as the last step of the file upload process.

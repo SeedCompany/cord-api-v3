@@ -1,7 +1,12 @@
 import { InterfaceType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { ID, IdField, ResourceRelationsShape, SecuredProps } from '~/common';
+import {
+  type ID,
+  IdField,
+  type ResourceRelationsShape,
+  type SecuredProps,
+} from '~/common';
 import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
 import { Post } from './post.dto';

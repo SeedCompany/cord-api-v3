@@ -1,4 +1,4 @@
-import { Options } from 'gel';
+import { type Options } from 'gel';
 
 export const disableAccessPolicies = (options: Options) =>
   options.withConfig({

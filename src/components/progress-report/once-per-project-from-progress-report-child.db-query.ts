@@ -1,6 +1,6 @@
 import { node, relation } from 'cypher-query-builder';
 import { oncePerProject } from '~/core/database/query';
-import { QueryFragment } from '~/core/database/query-augmentation/apply';
+import { type QueryFragment } from '~/core/database/query-augmentation/apply';
 
 /**
  * Fetch project node from a ProgressReport child.

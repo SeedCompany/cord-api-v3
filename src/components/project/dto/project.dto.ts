@@ -3,7 +3,7 @@ import { simpleSwitch } from '@seedcompany/common';
 import { stripIndent } from 'common-tags';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { MergeExclusive } from 'type-fest';
+import { type MergeExclusive } from 'type-fest';
 import {
   Calculated,
   DateInterval,
@@ -17,23 +17,23 @@ import {
   parentIdMiddleware,
   RequiredWhen,
   Resource,
-  ResourceRelationsShape,
-  Secured,
+  type ResourceRelationsShape,
+  type Secured,
   SecuredBoolean,
   SecuredDateNullable,
   SecuredDateTime,
   SecuredDateTimeNullable,
-  SecuredProps,
+  type SecuredProps,
   SecuredString,
   SecuredStringNullable,
   Sensitivity,
   SensitivityField,
   ServerException,
-  UnsecuredDto,
+  type UnsecuredDto,
 } from '~/common';
 import { sortingForEnumIndex } from '~/core/database/query';
 import { e } from '~/core/gel';
-import { LinkTo, RegisterResource } from '~/core/resources';
+import { type LinkTo, RegisterResource } from '~/core/resources';
 import { Budget } from '../../budget/dto';
 import { ChangesetAware } from '../../changeset/dto';
 import { Commentable } from '../../comments/dto';
@@ -213,7 +213,7 @@ class Project extends Interfaces {
 
 // class name has to match schema name for interface resolvers to work.
 // export as different names to maintain compatibility with our codebase.
-export { Project as IProject, AnyProject as Project };
+export { Project as IProject, type AnyProject as Project };
 
 @RegisterResource({ db: e.TranslationProject })
 @InterfaceType({

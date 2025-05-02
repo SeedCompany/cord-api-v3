@@ -4,22 +4,22 @@ import { v1 as uuid } from 'uuid';
 import {
   CalendarDate,
   generateId,
-  ID,
+  type ID,
   isIdLike,
   Order,
-  PaginatedListType,
+  type PaginatedListType,
   Role,
   Sensitivity,
 } from '~/common';
 import { BudgetStatus } from '../src/components/budget/dto';
-import { FieldRegion } from '../src/components/field-region/dto';
-import { Location } from '../src/components/location/dto';
+import { type FieldRegion } from '../src/components/field-region/dto';
+import { type Location } from '../src/components/location/dto';
 import { PartnerType } from '../src/components/partner/dto';
-import { CreatePartnership } from '../src/components/partnership/dto';
+import { type CreatePartnership } from '../src/components/partnership/dto';
 import {
-  CreateProject,
-  Project,
-  ProjectListInput,
+  type CreateProject,
+  type Project,
+  type ProjectListInput,
   ProjectType,
 } from '../src/components/project/dto';
 import {
@@ -42,11 +42,11 @@ import {
   errors,
   fragments,
   gql,
-  Raw,
+  type Raw,
   registerUser,
   runAsAdmin,
-  TestApp,
-  TestUser,
+  type TestApp,
+  type TestUser,
 } from './utility';
 import { forceProjectTo } from './utility/transition-project';
 

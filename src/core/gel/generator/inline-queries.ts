@@ -5,7 +5,7 @@ import { relative } from 'node:path/posix';
 import { Node, SyntaxKind, VariableDeclarationKind } from 'ts-morph';
 import { injectHydrators } from './inject-hydrators';
 import { analyzeQuery } from './query-files';
-import { GeneratorParams } from './util';
+import { type GeneratorParams } from './util';
 
 export async function generateInlineQueries({
   client,

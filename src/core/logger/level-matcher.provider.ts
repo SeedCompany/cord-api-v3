@@ -1,11 +1,11 @@
-import { Provider } from '@nestjs/common';
+import { type Provider } from '@nestjs/common';
 import { mapEntries } from '@seedcompany/common';
 import { promises as fs } from 'fs';
 import { pickBy } from 'lodash';
 import { parse } from 'yaml';
 import { ConfigService } from '../config/config.service';
 import { LevelMatcher } from './level-matcher';
-import { LogLevel } from './logger.interface';
+import { type LogLevel } from './logger.interface';
 
 export const LevelMatcherProvider: Provider<Promise<LevelMatcher>> = {
   provide: LevelMatcher,

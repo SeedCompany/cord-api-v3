@@ -1,5 +1,5 @@
-import { Session, UnsecuredDto } from '~/common';
-import { Changeset } from '../dto';
+import { type Session, type UnsecuredDto } from '~/common';
+import { type Changeset } from '../dto';
 
 /**
  * This changeset is in the process of becoming finalized.

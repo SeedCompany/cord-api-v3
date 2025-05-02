@@ -12,18 +12,18 @@ import { keys as keysOf } from 'ts-transformer-keys';
 import {
   DataObject,
   DbLabel,
-  ID,
+  type ID,
   IdField,
-  IdOf,
+  type IdOf,
   IntersectTypes,
   NameField,
-  SecuredProps,
+  type SecuredProps,
   ServerException,
 } from '~/common';
-import { BaseNode } from '~/core/database/results';
+import { type BaseNode } from '~/core/database/results';
 import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
-import { FileVersion } from '../dto';
+import { type FileVersion } from '../dto';
 
 export type AnyMedia = Image | Video | Audio;
 

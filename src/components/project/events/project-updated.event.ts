@@ -1,5 +1,5 @@
-import { EnhancedResource, Session, UnsecuredDto } from '~/common';
-import { Project, resolveProjectType, UpdateProject } from '../dto';
+import { EnhancedResource, type Session, type UnsecuredDto } from '~/common';
+import { type Project, resolveProjectType, type UpdateProject } from '../dto';
 
 export class ProjectUpdatedEvent {
   readonly resource: EnhancedResource<ReturnType<typeof resolveProjectType>>;

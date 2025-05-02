@@ -1,9 +1,14 @@
 import { applyDecorators } from '@nestjs/common';
-import { CustomScalar, Field, FieldOptions, Scalar } from '@nestjs/graphql';
+import {
+  type CustomScalar,
+  Field,
+  type FieldOptions,
+  Scalar,
+} from '@nestjs/graphql';
 import { IsUrl } from 'class-validator';
-import { GraphQLError, Kind, ValueNode } from 'graphql';
+import { GraphQLError, Kind, type ValueNode } from 'graphql';
 import { URL } from 'url';
-import * as ValidatorJS from 'validator';
+import type * as ValidatorJS from 'validator';
 
 export const UrlField = ({
   url,

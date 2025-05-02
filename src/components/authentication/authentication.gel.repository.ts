@@ -1,6 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { IntegrityError } from 'gel';
-import { ID, PublicOf, ServerException, Session } from '~/common';
+import {
+  type ID,
+  type PublicOf,
+  ServerException,
+  type Session,
+} from '~/common';
 import { RootUserAlias } from '~/core/config/root-user.config';
 import {
   DbTraceLayer,
@@ -10,7 +15,7 @@ import {
   withScope,
 } from '~/core/gel';
 import type { AuthenticationRepository } from './authentication.repository';
-import { LoginInput } from './dto';
+import { type LoginInput } from './dto';
 
 @Injectable()
 @DbTraceLayer.applyToClass()

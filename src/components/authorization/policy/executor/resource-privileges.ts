@@ -1,15 +1,19 @@
 import {
-  ChildListsKey,
-  ChildSinglesKey,
-  EnhancedResource,
-  ResourceShape,
-  SecuredPropsPlusExtraKey,
-  Session,
+  type ChildListsKey,
+  type ChildSinglesKey,
+  type EnhancedResource,
+  type ResourceShape,
+  type SecuredPropsPlusExtraKey,
+  type Session,
 } from '~/common';
-import { ChildListAction, ChildSingleAction, PropAction } from '../actions';
-import { ResourceObjectContext } from '../object.type';
+import {
+  type ChildListAction,
+  type ChildSingleAction,
+  type PropAction,
+} from '../actions';
+import { type ResourceObjectContext } from '../object.type';
 import { EdgePrivileges } from './edge-privileges';
-import { PolicyExecutor } from './policy-executor';
+import { type PolicyExecutor } from './policy-executor';
 import { UserResourcePrivileges } from './user-resource-privileges';
 
 export class ResourcePrivileges<TResourceStatic extends ResourceShape<any>> {

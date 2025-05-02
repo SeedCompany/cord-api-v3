@@ -1,4 +1,4 @@
-import { isNotFalsy, many, Many, setOf } from '@seedcompany/common';
+import { isNotFalsy, many, type Many, setOf } from '@seedcompany/common';
 import { Query } from 'cypher-query-builder';
 import { Variable } from './condition-variables';
 import { withParent } from './root';

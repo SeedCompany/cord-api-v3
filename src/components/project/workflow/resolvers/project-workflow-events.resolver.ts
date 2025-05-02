@@ -1,6 +1,6 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { AnonSession, Session } from '~/common';
-import { IProject, Project } from '../../dto';
+import { AnonSession, type Session } from '~/common';
+import { IProject, type Project } from '../../dto';
 import { ProjectWorkflowEvent as WorkflowEvent } from '../dto';
 import { ProjectWorkflowService } from '../project-workflow.service';
 

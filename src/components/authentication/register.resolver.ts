@@ -7,8 +7,8 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { AnonSession, GqlContextType, Session } from '~/common';
-import { Loader, LoaderOf } from '~/core';
+import { AnonSession, type GqlContextType, type Session } from '~/common';
+import { Loader, type LoaderOf } from '~/core';
 import { Privileges } from '../authorization';
 import { Power } from '../authorization/dto';
 import { UserLoader } from '../user';

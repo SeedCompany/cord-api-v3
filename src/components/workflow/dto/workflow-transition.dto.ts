@@ -1,6 +1,12 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { EnumType, ID, IdField, MadeEnum, makeEnum } from '~/common';
+import {
+  type EnumType,
+  type ID,
+  IdField,
+  type MadeEnum,
+  makeEnum,
+} from '~/common';
 
 export type TransitionType = EnumType<typeof TransitionType>;
 export const TransitionType = makeEnum({

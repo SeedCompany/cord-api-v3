@@ -1,24 +1,24 @@
 import { ModuleRef } from '@nestjs/core';
 import { asyncPool } from '@seedcompany/common';
 import { EmailService } from '@seedcompany/nestjs-email';
-import { UnsecuredDto } from '~/common';
+import { type UnsecuredDto } from '~/common';
 import {
   ConfigService,
   EventsHandler,
-  IEventHandler,
+  type IEventHandler,
   ILogger,
   Logger,
 } from '~/core';
 import {
   ProjectStepChanged,
-  ProjectStepChangedProps,
+  type ProjectStepChangedProps,
 } from '~/core/email/templates/project-step-changed.template';
 import { AuthenticationService } from '../../../authentication';
 import { ProjectService } from '../../../project';
 import { UserService } from '../../../user';
-import { User } from '../../../user/dto';
-import { Notifier } from '../../../workflow/transitions/notifiers';
-import { Project, ProjectStep } from '../../dto';
+import { type User } from '../../../user/dto';
+import { type Notifier } from '../../../workflow/transitions/notifiers';
+import { type Project, type ProjectStep } from '../../dto';
 import { ProjectTransitionedEvent } from '../events/project-transitioned.event';
 
 @EventsHandler(ProjectTransitionedEvent)

@@ -1,23 +1,23 @@
 import { Injectable } from '@nestjs/common';
 import {
   generateId,
-  IdOf,
+  type IdOf,
   NotImplementedException,
-  Session,
-  UnsecuredDto,
+  type Session,
+  type UnsecuredDto,
 } from '~/common';
 import { ResourceLoader } from '~/core';
-import { DbTypeOf } from '~/core/database';
+import { type DbTypeOf } from '~/core/database';
 import { Privileges, withVariant } from '../../authorization';
 import { FileService } from '../../file';
 import { MediaService } from '../../file/media/media.service';
 import { ProgressReport as Report } from '../dto';
 import {
-  ProgressReportMediaListInput as ListArgs,
+  type ProgressReportMediaListInput as ListArgs,
   ProgressReportMedia as ReportMedia,
-  ProgressReportMediaList as ReportMediaList,
-  UpdateProgressReportMedia as UpdateMedia,
-  UploadProgressReportMedia as UploadMedia,
+  type ProgressReportMediaList as ReportMediaList,
+  type UpdateProgressReportMedia as UpdateMedia,
+  type UploadProgressReportMedia as UploadMedia,
 } from './dto';
 import { ProgressReportMediaLoader } from './progress-report-media.loader';
 import { ProgressReportMediaRepository } from './progress-report-media.repository';

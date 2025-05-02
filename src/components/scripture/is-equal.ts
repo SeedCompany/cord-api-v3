@@ -1,6 +1,10 @@
-import { mergeVerseRanges, Range, Verse } from '@seedcompany/scripture';
+import {
+  mergeVerseRanges,
+  type Range,
+  type Verse,
+} from '@seedcompany/scripture';
 import { differenceWith } from 'lodash';
-import { ScriptureRange } from './dto';
+import { type ScriptureRange } from './dto';
 
 export const isScriptureEqual = (
   a: readonly ScriptureRange[],

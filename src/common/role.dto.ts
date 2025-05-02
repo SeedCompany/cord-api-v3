@@ -1,6 +1,6 @@
 import { ObjectType } from '@nestjs/graphql';
 import { setOf } from '@seedcompany/common';
-import { EnumType, makeEnum } from '@seedcompany/nest';
+import { type EnumType, makeEnum } from '@seedcompany/nest';
 import { SecuredEnumList } from '~/common/secured-property';
 import type { ResourcesGranter } from '../components/authorization';
 

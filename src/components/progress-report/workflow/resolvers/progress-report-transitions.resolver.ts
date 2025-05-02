@@ -1,6 +1,10 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { AnonSession, ParentIdMiddlewareAdditions, Session } from '~/common';
+import {
+  AnonSession,
+  type ParentIdMiddlewareAdditions,
+  type Session,
+} from '~/common';
 import { SecuredProgressReportStatus } from '../../dto';
 import { ProgressReportWorkflowTransition } from '../dto/workflow-transition.dto';
 import { ProgressReportWorkflowService } from '../progress-report-workflow.service';

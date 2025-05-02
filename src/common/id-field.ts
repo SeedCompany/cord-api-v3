@@ -1,9 +1,9 @@
 import { applyDecorators } from '@nestjs/common';
 import { ID as IDType } from '@nestjs/graphql';
-import { ValidationOptions } from 'class-validator';
-import { IsAny, IsNever, Tagged } from 'type-fest';
+import { type ValidationOptions } from 'class-validator';
+import type { IsAny, IsNever, Tagged } from 'type-fest';
 import type { ResourceName, ResourceNameLike } from '~/core';
-import { OptionalField, OptionalFieldOptions } from './optional-field';
+import { OptionalField, type OptionalFieldOptions } from './optional-field';
 import { IsId } from './validators';
 
 export const IdField = ({

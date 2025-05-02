@@ -1,7 +1,7 @@
 import { Field, InterfaceType } from '@nestjs/graphql';
 import {
   cached,
-  FnLike,
+  type FnLike,
   mapValues,
   setInspectOnClass,
   setToJson,
@@ -15,18 +15,18 @@ import type {
   ResourceName,
   ResourcesHost,
 } from '~/core';
-import { $, e } from '~/core/gel/reexports';
-import { ScopedRole } from '../components/authorization/dto';
+import { type $, type e } from '~/core/gel/reexports';
+import { type ScopedRole } from '../components/authorization/dto';
 import { CalculatedSymbol } from './calculated.decorator';
 import { DataObject } from './data-object';
 import { DbLabel } from './db-label.decorator';
 import { getDbClassLabels, getDbPropertyLabels } from './db-label.helpers';
 import { ServerException } from './exceptions';
-import { ID, IdField } from './id-field';
+import { type ID, IdField } from './id-field';
 import { DateTimeField } from './luxon.graphql';
 import { getParentTypes } from './parent-types';
-import { MaybeSecured, SecuredProps } from './secured-property';
-import { AbstractClassType } from './types';
+import { type MaybeSecured, type SecuredProps } from './secured-property';
+import { type AbstractClassType } from './types';
 
 const hasTypename = (value: unknown): value is { __typename: string } =>
   value != null &&

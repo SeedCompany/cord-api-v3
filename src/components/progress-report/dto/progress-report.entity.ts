@@ -6,17 +6,17 @@ import {
   IntersectTypes,
   parentIdMiddleware,
   Resource,
-  ResourceRelationsShape,
+  type ResourceRelationsShape,
   SecuredProperty,
-  SecuredProps,
+  type SecuredProps,
 } from '~/common';
 import { sortingForEnumIndex } from '~/core/database/query';
-import { BaseNode } from '~/core/database/results';
+import { type BaseNode } from '~/core/database/results';
 import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
 import { Commentable } from '../../comments/dto';
 import { LanguageEngagement } from '../../engagement/dto';
-import { DefinedFile } from '../../file/dto';
+import { type DefinedFile } from '../../file/dto';
 import { IPeriodicReport } from '../../periodic-report/dto/periodic-report.dto';
 import { ProgressReportCommunityStory } from './community-stories.dto';
 import { ProgressReportHighlight } from './highlights.dto';

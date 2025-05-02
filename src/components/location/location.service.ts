@@ -1,23 +1,23 @@
 import { Injectable } from '@nestjs/common';
 import {
-  ID,
-  ObjectView,
-  ResourceShape,
+  type ID,
+  type ObjectView,
+  type ResourceShape,
   SecuredList,
   ServerException,
-  Session,
-  UnsecuredDto,
+  type Session,
+  type UnsecuredDto,
 } from '~/common';
 import { HandleIdLookup, ILogger, Logger } from '~/core';
-import { Privileges, UserEdgePrivileges } from '../authorization';
-import { PropAction } from '../authorization/policy/actions';
+import { Privileges, type UserEdgePrivileges } from '../authorization';
+import { type PropAction } from '../authorization/policy/actions';
 import {
-  CreateLocation,
+  type CreateLocation,
   Location,
-  LocationListInput,
-  LocationListOutput,
-  SecuredLocationList,
-  UpdateLocation,
+  type LocationListInput,
+  type LocationListOutput,
+  type SecuredLocationList,
+  type UpdateLocation,
 } from './dto';
 import { LocationRepository } from './location.repository';
 

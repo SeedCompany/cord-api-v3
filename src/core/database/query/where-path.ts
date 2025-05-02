@@ -1,6 +1,6 @@
 import { Merge } from 'cypher-query-builder';
-import { PatternCollection } from 'cypher-query-builder/dist/typings/clauses/pattern-clause';
-import { Comparator } from 'cypher-query-builder/dist/typings/clauses/where-comparators';
+import { type PatternCollection } from 'cypher-query-builder/dist/typings/clauses/pattern-clause';
+import { type Comparator } from 'cypher-query-builder/dist/typings/clauses/where-comparators';
 
 /**
  * A path condition for a WHERE clause.

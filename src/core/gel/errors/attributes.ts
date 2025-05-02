@@ -1,5 +1,5 @@
 import { cacheable, setOf } from '@seedcompany/common';
-import { GelError } from 'gel';
+import { type GelError } from 'gel';
 import { ErrorAttr } from 'gel/dist/errors/base.js';
 import { lazyRecord } from '~/common/lazy-record';
 

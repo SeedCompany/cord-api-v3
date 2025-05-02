@@ -12,9 +12,9 @@ import {
   login,
   logout,
   registerUser,
-  TestApp,
+  type TestApp,
 } from './utility';
-import { RawUser } from './utility/fragments';
+import { type RawUser } from './utility/fragments';
 
 describe('Authentication e2e', () => {
   let app: TestApp;

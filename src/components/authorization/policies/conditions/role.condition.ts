@@ -1,12 +1,12 @@
 import { inspect } from 'util';
-import { Role } from '~/common';
+import { type Role } from '~/common';
 import { withoutScope } from '../../dto';
 import {
-  AsEdgeQLParams,
-  Condition,
+  type AsEdgeQLParams,
+  type Condition,
   eqlDoesIntersect,
   fqnRelativeTo,
-  IsAllowedParams,
+  type IsAllowedParams,
 } from '../../policy/conditions';
 
 export class RoleCondition implements Condition {

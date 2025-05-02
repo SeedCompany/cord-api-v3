@@ -1,8 +1,8 @@
 import { createUnionType } from '@nestjs/graphql';
 import { entries, setOf, simpleSwitch } from '@seedcompany/common';
 import { uniq } from 'lodash';
-import { EnumType, makeEnum } from '~/common';
-import { ResourceMap } from '~/core';
+import { type EnumType, makeEnum } from '~/common';
+import { type ResourceMap } from '~/core';
 import { EthnoArt } from '../../ethno-art/dto';
 import { FieldRegion } from '../../field-region/dto';
 import { FieldZone } from '../../field-zone/dto';

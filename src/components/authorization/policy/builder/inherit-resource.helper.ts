@@ -1,5 +1,5 @@
-import { ValueOf } from 'type-fest';
-import { ResourcesGranter } from '../granters';
+import { type ValueOf } from 'type-fest';
+import { type ResourcesGranter } from '../granters';
 import { withOther } from './resource-granter';
 
 type Granter = ValueOf<ResourcesGranter>;

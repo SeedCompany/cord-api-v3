@@ -88,6 +88,11 @@ const restrictedImports = [
     path: '@nestjs/platform-fastify',
     replacement: { path: '~/core/http' },
   },
+  {
+    path: 'type-fest',
+    kind: 'value',
+    message: 'Be sure to specify the `type` modifier',
+  },
 ];
 
 const namingConvention = [
@@ -161,24 +166,20 @@ const namingConvention = [
 /** @type {import('@typescript-eslint/utils').TSESLint.Linter.Config} */
 const config = {
   root: true,
-  plugins: [
-    '@seedcompany',
-    'typescript-sort-keys',
-    'no-only-tests',
-  ],
+  plugins: ['@seedcompany', 'typescript-sort-keys', 'no-only-tests'],
   extends: ['plugin:@seedcompany/nestjs'],
   rules: {
     'no-console': 'error',
     'no-only-tests/no-only-tests': 'error',
     '@typescript-eslint/naming-convention': ['warn', ...namingConvention],
-    'no-restricted-imports': ['error', { 'paths': oldRestrictedImports }],
+    'no-restricted-imports': ['error', { paths: oldRestrictedImports }],
     '@seedcompany/no-restricted-imports': ['error', ...restrictedImports],
     'no-restricted-syntax': [
       'error',
       ...baseConfig.rules['no-restricted-syntax']?.slice(1),
       {
         selector: 'NewExpression[callee.name="Logger"]',
-        'message': `
+        message: `
         Inject a logger instead
 
         constructor(
@@ -186,6 +187,14 @@ const config = {
         ) {}
         `,
       },
+    ],
+    '@typescript-eslint/consistent-type-imports': [
+      'error',
+      { fixStyle: 'inline-type-imports' },
+    ],
+    '@typescript-eslint/consistent-type-exports': [
+      'error',
+      { fixMixedExportsWithInlineTypeSpecifier: true },
     ],
     // TODO Enable this and fix errors (both types & logic changes will be needed)
     '@typescript-eslint/no-unnecessary-condition': 'off',

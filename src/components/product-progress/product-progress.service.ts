@@ -1,36 +1,36 @@
 import { Injectable } from '@nestjs/common';
 import { mapEntries } from '@seedcompany/common';
 import {
-  ID,
+  type ID,
   InputException,
   isIdLike,
   NotFoundException,
-  Session,
+  type Session,
   UnauthorizedException,
-  Variant,
+  type Variant,
 } from '~/common';
 import {
-  HasScope,
-  HasSensitivity,
+  type HasScope,
+  type HasSensitivity,
   Privileges,
-  UserResourcePrivileges,
+  type UserResourcePrivileges,
   withVariant,
 } from '../authorization';
-import { Product } from '../product/dto';
+import { type Product } from '../product/dto';
 import type { ProgressReport } from '../progress-report/dto';
 import {
-  ProductProgress,
-  ProductProgressInput,
-  ProgressVariantByProductInput,
-  ProgressVariantByProductOutput,
-  ProgressVariantByReportInput,
-  ProgressVariantByReportOutput,
+  type ProductProgress,
+  type ProductProgressInput,
+  type ProgressVariantByProductInput,
+  type ProgressVariantByProductOutput,
+  type ProgressVariantByReportInput,
+  type ProgressVariantByReportOutput,
   StepProgress,
-  UnsecuredProductProgress,
+  type UnsecuredProductProgress,
 } from './dto';
 import {
   ProgressReportVariantProgress as Progress,
-  ProgressVariant,
+  type ProgressVariant,
 } from './dto/variant-progress.dto';
 import { ProductProgressRepository } from './product-progress.repository';
 import { StepNotPlannedException } from './step-not-planned.exception';

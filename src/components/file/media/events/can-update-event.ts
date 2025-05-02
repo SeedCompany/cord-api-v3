@@ -2,7 +2,7 @@ import { Inject, Injectable, Optional, Scope } from '@nestjs/common';
 import { CachedByArg as Once } from '@seedcompany/common';
 import { PollVoter } from '~/common';
 import { ResourceResolver, ResourcesHost } from '~/core';
-import { AnyMedia, MediaUserMetadata } from '../media.dto';
+import { type AnyMedia, MediaUserMetadata } from '../media.dto';
 
 /**
  * An attempt to update the media metadata.

@@ -1,11 +1,11 @@
-import { Type } from '@nestjs/common';
+import { type Type } from '@nestjs/common';
 import { nanoid } from 'nanoid';
-import { ID } from '~/common';
+import { type ID } from '~/common';
 import {
   EVENT_METADATA,
-  EventHandlerMetadata,
+  type EventHandlerMetadata,
   EVENTS_HANDLER_METADATA,
-  Priority,
+  type Priority,
 } from './constants';
 
 /**

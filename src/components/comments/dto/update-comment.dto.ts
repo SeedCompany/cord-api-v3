@@ -1,5 +1,5 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import { ID, IdField, RichTextDocument, RichTextField } from '~/common';
+import { type ID, IdField, RichTextDocument, RichTextField } from '~/common';
 import { Comment } from './comment.dto';
 
 @InputType()

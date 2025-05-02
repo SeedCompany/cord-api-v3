@@ -1,5 +1,5 @@
-import { DateTime, Settings, Zone } from 'luxon';
-import { createContext, ReactElement, useContext } from 'react';
+import { DateTime, Settings, type Zone } from 'luxon';
+import { createContext, type ReactElement, useContext } from 'react';
 
 type ZoneLike = string | Zone;
 

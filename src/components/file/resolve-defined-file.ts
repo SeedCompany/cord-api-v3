@@ -1,14 +1,14 @@
-import { LoaderOf } from '@seedcompany/data-loader';
+import { type LoaderOf } from '@seedcompany/data-loader';
 import {
   isIdLike,
   mapSecuredValue,
   NotFoundException,
-  Secured,
+  type Secured,
   ServerException,
 } from '~/common';
-import { LinkTo } from '~/core';
-import { FileId, isFile, SecuredFile } from './dto';
-import { FileNodeLoader } from './file-node.loader';
+import { type LinkTo } from '~/core';
+import { type FileId, isFile, type SecuredFile } from './dto';
+import { type FileNodeLoader } from './file-node.loader';
 
 export async function resolveDefinedFile(
   loader: LoaderOf<FileNodeLoader>,

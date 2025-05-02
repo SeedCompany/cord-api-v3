@@ -1,11 +1,11 @@
-import { PipeTransform, Type } from '@nestjs/common';
-import { Args, ArgsOptions, Field, InputType, Int } from '@nestjs/graphql';
+import { type PipeTransform, type Type } from '@nestjs/common';
+import { Args, type ArgsOptions, Field, InputType, Int } from '@nestjs/graphql';
 import { setHas } from '@seedcompany/common';
 import { Matches, Max, Min } from 'class-validator';
 import { stripIndent } from 'common-tags';
 import { DataObject } from './data-object';
 import { Order } from './order.enum';
-import { AbstractClassType } from './types';
+import { type AbstractClassType } from './types';
 
 @InputType({
   isAbstract: true,

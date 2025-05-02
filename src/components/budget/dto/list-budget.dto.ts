@@ -3,7 +3,7 @@ import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import {
   FilterField,
-  ID,
+  type ID,
   PaginatedList,
   SecuredList,
   SortablePaginationInput,

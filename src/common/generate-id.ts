@@ -1,5 +1,5 @@
 import { customAlphabet } from 'nanoid';
-import { ID } from './id-field';
+import { type ID } from './id-field';
 
 // 100 IDs / hour = 1k years to have 1% probability of a single collision
 // https://zelark.github.io/nano-id-cc/

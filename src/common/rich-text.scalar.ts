@@ -7,10 +7,10 @@ import { createHash } from 'crypto';
 import { GraphQLScalarType } from 'graphql';
 import { GraphQLJSONObject } from 'graphql-scalars';
 import { isEqual } from 'lodash';
-import { JsonObject } from 'type-fest';
+import type { JsonObject } from 'type-fest';
 import { SecuredProperty } from '~/common/secured-property';
 import { InputException } from './exceptions/input.exception';
-import { OptionalField, OptionalFieldOptions } from './optional-field';
+import { OptionalField, type OptionalFieldOptions } from './optional-field';
 
 function hashId(name: string) {
   return createHash('shake256', { outputLength: 5 }).update(name).digest('hex');

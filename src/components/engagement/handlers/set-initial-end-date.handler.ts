@@ -2,7 +2,7 @@ import { ServerException } from '~/common';
 import {
   ConfigService,
   EventsHandler,
-  IEventHandler,
+  type IEventHandler,
   ILogger,
   Logger,
 } from '~/core';

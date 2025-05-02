@@ -1,7 +1,7 @@
 import { setInspectOnClass, setToStringTag } from '@seedcompany/common';
 import { markSkipClassTransformation } from '@seedcompany/nest';
-import { DateTime, DateTimeUnit, Interval } from 'luxon';
-import { Writable as Mutable } from 'type-fest';
+import { DateTime, type DateTimeUnit, Interval } from 'luxon';
+import type { Writable as Mutable } from 'type-fest';
 
 /* eslint-disable @typescript-eslint/method-signature-style */
 declare module 'luxon/src/interval' {

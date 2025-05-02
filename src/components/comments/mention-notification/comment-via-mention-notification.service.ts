@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { ID, UnsecuredDto } from '~/common';
+import { type ID, type UnsecuredDto } from '~/common';
 import { NotificationService } from '../../notifications';
-import { Comment } from '../dto';
+import { type Comment } from '../dto';
 import { CommentViaMentionNotification } from './comment-via-mention-notification.dto';
 
 @Injectable()

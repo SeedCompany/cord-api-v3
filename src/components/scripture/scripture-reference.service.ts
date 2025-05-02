@@ -1,9 +1,9 @@
 import { sortBy } from '@seedcompany/common';
-import { ID, Session } from '~/common';
+import { type ID, type Session } from '~/common';
 import { ILogger, Logger } from '~/core';
-import { ScriptureRange, ScriptureRangeInput } from './dto';
+import { ScriptureRange, type ScriptureRangeInput } from './dto';
 import {
-  DbScriptureReferences,
+  type DbScriptureReferences,
   ScriptureReferenceRepository,
 } from './scripture-reference.repository';
 

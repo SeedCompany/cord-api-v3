@@ -1,8 +1,8 @@
-import { node, Query, relation } from 'cypher-query-builder';
+import { node, type Query, relation } from 'cypher-query-builder';
 import { createRelationships, exp } from '~/core/database/query';
 import {
   INotificationStrategy,
-  InputOf,
+  type InputOf,
   NotificationStrategy,
 } from '../../notifications';
 import { CommentViaMentionNotification } from './comment-via-mention-notification.dto';

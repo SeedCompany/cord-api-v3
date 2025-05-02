@@ -1,13 +1,13 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import {
-  AbstractClassType,
+  type AbstractClassType,
   AnonSession,
-  ID,
+  type ID,
   IdArg,
   NotFoundException,
-  Session,
+  type Session,
 } from '~/common';
-import { Loader, LoaderOf } from '~/core';
+import { Loader, type LoaderOf } from '~/core';
 import { Privileges } from '../authorization';
 import { EngagementLoader } from '../engagement';
 import {
@@ -20,7 +20,7 @@ import {
   IProject,
   MomentumTranslationProject,
   MultiplicationTranslationProject,
-  Project,
+  type Project,
   TranslationProject,
 } from './dto';
 

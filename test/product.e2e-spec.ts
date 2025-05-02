@@ -1,18 +1,18 @@
 import { times } from 'lodash';
-import { Merge } from 'type-fest';
-import { Role, Secured } from '~/common';
-import { Film } from '../src/components/film/dto';
+import { type Merge } from 'type-fest';
+import { Role, type Secured } from '~/common';
+import { type Film } from '../src/components/film/dto';
 import {
-  AnyProduct,
-  DerivativeScriptureProduct as InternalDerivativeScriptureProduct,
-  Producible,
+  type AnyProduct,
+  type DerivativeScriptureProduct as InternalDerivativeScriptureProduct,
+  type Producible,
   ProducibleType,
   ProductMedium,
   ProductMethodology,
   ProductPurpose,
 } from '../src/components/product/dto';
 import { ScriptureRange } from '../src/components/scripture/dto';
-import { Story } from '../src/components/story/dto';
+import { type Story } from '../src/components/story/dto';
 import {
   createDerivativeProduct,
   createDirectProduct,
@@ -25,9 +25,12 @@ import {
   fragments,
   gql,
   registerUser,
-  TestApp,
+  type TestApp,
 } from './utility';
-import { RawLanguageEngagement, RawProduct } from './utility/fragments';
+import {
+  type RawLanguageEngagement,
+  type RawProduct,
+} from './utility/fragments';
 
 // Shape for public API
 type DerivativeScriptureProduct = Merge<

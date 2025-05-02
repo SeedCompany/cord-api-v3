@@ -1,14 +1,14 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { GraphQLScalarType } from 'graphql';
-import { Class } from 'type-fest';
+import { type GraphQLScalarType } from 'graphql';
+import type { Class } from 'type-fest';
 import {
-  ListOptions,
+  type ListOptions,
   PaginatedList,
-  PaginatedListType,
+  type PaginatedListType,
 } from './pagination-list';
 import { ISecured } from './secured.interface';
-import { AbstractClassType } from './types';
+import { type AbstractClassType } from './types';
 
 export type SecuredListType<T> = PaginatedListType<T> & {
   readonly canRead: boolean;

@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { many, Many } from '@seedcompany/common';
+import { many, type Many } from '@seedcompany/common';
 import { e, Gel } from '~/core/gel';
-import { ProjectType } from '../dto';
-import { FinancialApproverInput } from './dto';
+import { type ProjectType } from '../dto';
+import { type FinancialApproverInput } from './dto';
 
 @Injectable()
 export class FinancialApproverRepository {

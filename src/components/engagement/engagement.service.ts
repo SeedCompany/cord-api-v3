@@ -1,16 +1,16 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import {
-  CalendarDate,
-  ID,
+  type CalendarDate,
+  type ID,
   InputException,
-  ObjectView,
-  Range,
+  type ObjectView,
+  type Range,
   RangeException,
   RequiredWhen,
-  ResourceShape,
+  type ResourceShape,
   SecuredList,
-  Session,
-  UnsecuredDto,
+  type Session,
+  type UnsecuredDto,
   viewOfChangeset,
 } from '~/common';
 import {
@@ -21,25 +21,25 @@ import {
   Logger,
   ResourceLoader,
 } from '~/core';
-import { AnyChangesOf } from '~/core/database/changes';
+import { type AnyChangesOf } from '~/core/database/changes';
 import { Privileges } from '../authorization';
 import { CeremonyService } from '../ceremony';
 import { ProductService } from '../product';
-import { ProductListInput, SecuredProductList } from '../product/dto';
+import { type ProductListInput, type SecuredProductList } from '../product/dto';
 import { ProjectLoader, ProjectService } from '../project';
 import { IProject } from '../project/dto';
 import {
-  CreateInternshipEngagement,
-  CreateLanguageEngagement,
-  Engagement,
-  EngagementListInput,
-  EngagementListOutput,
+  type CreateInternshipEngagement,
+  type CreateLanguageEngagement,
+  type Engagement,
+  type EngagementListInput,
+  type EngagementListOutput,
   EngagementStatus,
   InternshipEngagement,
   LanguageEngagement,
   resolveEngagementType,
-  UpdateInternshipEngagement,
-  UpdateLanguageEngagement,
+  type UpdateInternshipEngagement,
+  type UpdateLanguageEngagement,
 } from './dto';
 import { EngagementRepository } from './engagement.repository';
 import { EngagementRules } from './engagement.rules';

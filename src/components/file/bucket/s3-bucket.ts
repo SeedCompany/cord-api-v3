@@ -1,8 +1,8 @@
-import { NoSuchKey, S3 } from '@aws-sdk/client-s3';
+import { NoSuchKey, type S3 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { Type } from '@nestjs/common';
+import { type Type } from '@nestjs/common';
 import { bufferFromStream } from '@seedcompany/common';
-import { Command } from '@smithy/smithy-client';
+import { type Command } from '@smithy/smithy-client';
 import got from 'got';
 import { Duration } from 'luxon';
 import { join } from 'path/posix';
@@ -11,8 +11,8 @@ import { NotFoundException } from '~/common';
 import {
   FileBucket,
   InvalidSignedUrlException,
-  PutObjectInput,
-  SignedOp,
+  type PutObjectInput,
+  type SignedOp,
 } from './file-bucket';
 
 /**

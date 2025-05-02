@@ -1,7 +1,7 @@
 import { stripIndent } from 'common-tags';
-import { DateTime } from 'luxon';
-import { RequireExactlyOne } from 'type-fest';
-import { ID } from './id-field';
+import { type DateTime } from 'luxon';
+import { type RequireExactlyOne } from 'type-fest';
+import { type ID } from './id-field';
 
 interface ObjectViewTypeMap {
   active: true;

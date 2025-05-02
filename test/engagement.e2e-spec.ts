@@ -1,23 +1,23 @@
 import { faker } from '@faker-js/faker';
 import { some } from 'lodash';
 import { DateTime, Interval } from 'luxon';
-import { generateId, ID, Role } from '~/common';
+import { generateId, type ID, Role } from '~/common';
 import {
-  CreateInternshipEngagement,
+  type CreateInternshipEngagement,
   EngagementStatus,
-  InternshipEngagement,
+  type InternshipEngagement,
   InternshipPosition,
-  LanguageEngagement,
+  type LanguageEngagement,
 } from '../src/components/engagement/dto';
-import { Language } from '../src/components/language/dto';
-import { Location } from '../src/components/location/dto';
+import { type Language } from '../src/components/language/dto';
+import { type Location } from '../src/components/location/dto';
 import { ProductMethodology } from '../src/components/product/dto';
 import {
-  Project,
+  type Project,
   ProjectStep,
   ProjectType,
 } from '../src/components/project/dto';
-import { User } from '../src/components/user/dto';
+import { type User } from '../src/components/user/dto';
 import {
   createDirectProduct,
   createFundingAccount,
@@ -34,12 +34,12 @@ import {
   fragments,
   getUserFromSession,
   gql,
-  Raw,
+  type Raw,
   registerUser,
   requestFileUpload,
   runAsAdmin,
-  TestApp,
-  TestUser,
+  type TestApp,
+  type TestUser,
   uploadFileContents,
 } from './utility';
 import {

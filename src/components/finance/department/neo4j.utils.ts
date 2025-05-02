@@ -1,7 +1,7 @@
-import { Nil } from '@seedcompany/common';
-import { node, Pattern, Query, relation } from 'cypher-query-builder';
+import { type Nil } from '@seedcompany/common';
+import { node, type Pattern, type Query, relation } from 'cypher-query-builder';
 import { ACTIVE, apoc, collect, merge, variable } from '~/core/database/query';
-import { FinanceDepartmentIdBlockInput as Input } from './dto/id-blocks.input';
+import { type FinanceDepartmentIdBlockInput as Input } from './dto/id-blocks.input';
 
 const defaultRel = [
   node('node'),

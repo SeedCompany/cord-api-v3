@@ -1,4 +1,4 @@
-import { TestApp } from './create-app';
+import { type TestApp } from './create-app';
 import { gql } from './gql-tag';
 
 export async function logout(app: TestApp) {

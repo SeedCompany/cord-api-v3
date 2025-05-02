@@ -1,21 +1,24 @@
 import { Injectable } from '@nestjs/common';
 import {
-  ID,
-  ObjectView,
+  type ID,
+  type ObjectView,
   ServerException,
-  Session,
-  UnsecuredDto,
+  type Session,
+  type UnsecuredDto,
 } from '~/common';
 import { HandleIdLookup } from '~/core';
 import { Privileges } from '../authorization';
 import { LocationService } from '../location';
-import { LocationListInput, SecuredLocationList } from '../location/dto';
 import {
-  CreateOrganization,
+  type LocationListInput,
+  type SecuredLocationList,
+} from '../location/dto';
+import {
+  type CreateOrganization,
   Organization,
-  OrganizationListInput,
-  OrganizationListOutput,
-  UpdateOrganization,
+  type OrganizationListInput,
+  type OrganizationListOutput,
+  type UpdateOrganization,
 } from './dto';
 import { OrganizationRepository } from './organization.repository';
 

@@ -5,7 +5,7 @@ import {
   DateFilter,
   DateTimeFilter,
   FilterField,
-  ID,
+  type ID,
   ListField,
   OptionalField,
   PaginatedList,

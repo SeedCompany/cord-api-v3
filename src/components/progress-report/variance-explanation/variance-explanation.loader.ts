@@ -1,7 +1,11 @@
-import { ID } from '~/common';
-import { LoaderFactory, LoaderOptionsOf, OrderedNestDataLoader } from '~/core';
-import { ProgressReport } from '../dto';
-import { ProgressReportVarianceExplanation as VarianceExplanation } from './variance-explanation.dto';
+import { type ID } from '~/common';
+import {
+  LoaderFactory,
+  type LoaderOptionsOf,
+  OrderedNestDataLoader,
+} from '~/core';
+import { type ProgressReport } from '../dto';
+import { type ProgressReportVarianceExplanation as VarianceExplanation } from './variance-explanation.dto';
 import { ProgressReportVarianceExplanationService } from './variance-explanation.service';
 
 @LoaderFactory()

@@ -1,15 +1,15 @@
 import { Injectable } from '@nestjs/common';
-import { node, Query, relation } from 'cypher-query-builder';
+import { node, type Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   CreationFailed,
   DuplicateException,
-  ID,
+  type ID,
   NotFoundException,
   ReadAfterCreationFailed,
   SecuredList,
-  Session,
-  UnsecuredDto,
+  type Session,
+  type UnsecuredDto,
 } from '~/common';
 import { DtoRepository } from '~/core/database';
 import {
@@ -23,10 +23,10 @@ import {
   sorting,
 } from '~/core/database/query';
 import {
-  CreateFieldZone,
+  type CreateFieldZone,
   FieldZone,
-  FieldZoneListInput,
-  UpdateFieldZone,
+  type FieldZoneListInput,
+  type UpdateFieldZone,
 } from './dto';
 
 @Injectable()

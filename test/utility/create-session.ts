@@ -1,5 +1,5 @@
-import { User } from '../../src/components/user/dto';
-import { TestApp } from './create-app';
+import { type User } from '../../src/components/user/dto';
+import { type TestApp } from './create-app';
 import { gql } from './gql-tag';
 
 export async function createSession(app: TestApp): Promise<string> {

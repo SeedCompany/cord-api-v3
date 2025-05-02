@@ -1,5 +1,5 @@
-import { node, Query } from 'cypher-query-builder';
-import { ID } from '~/common';
+import { node, type Query } from 'cypher-query-builder';
+import { type ID } from '~/common';
 import { matchProps } from './matching';
 
 export const matchChangesetAndChangedProps =

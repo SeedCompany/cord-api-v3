@@ -2,10 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { entries } from '@seedcompany/common';
 import { uniqBy } from 'lodash';
 import {
-  ID,
+  type ID,
   InputException,
   SecuredList,
-  Session,
+  type Session,
   UnauthorizedException,
 } from '~/common';
 import { ResourceResolver } from '~/core';
@@ -13,8 +13,8 @@ import { Privileges } from '../authorization';
 import { LanguageEngagement } from '../engagement/dto';
 import { IProject } from '../project/dto';
 import {
-  PartnershipProducingMediumInput,
-  SecuredPartnershipsProducingMediums,
+  type PartnershipProducingMediumInput,
+  type SecuredPartnershipsProducingMediums,
 } from './dto/partnership-producing-medium.dto';
 import { PartnershipProducingMediumRepository } from './partnership-producing-medium.repository';
 

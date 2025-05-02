@@ -1,9 +1,9 @@
 import { parseScripture, tryParseScripture } from '@seedcompany/scripture';
-import { Row } from '~/common/xlsx.util';
+import { type Row } from '~/common/xlsx.util';
 import { ScriptureRange } from '../scripture/dto';
-import { PnpExtractionResult, PnpProblemType } from './extraction-result';
+import { type PnpExtractionResult, PnpProblemType } from './extraction-result';
 import { MismatchScriptureAndVerseCount } from './isGoalRow';
-import { WrittenScripturePlanningSheet } from './planning-sheet';
+import { type WrittenScripturePlanningSheet } from './planning-sheet';
 
 export const extractScripture = (
   row: Row<WrittenScripturePlanningSheet>,

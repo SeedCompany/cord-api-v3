@@ -1,19 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import {
-  ID,
-  ObjectView,
+  type ID,
+  type ObjectView,
   ServerException,
-  Session,
-  UnsecuredDto,
+  type Session,
+  type UnsecuredDto,
 } from '~/common';
 import { HandleIdLookup, ILogger, Logger } from '~/core';
 import { Privileges } from '../authorization';
 import {
-  CreateFieldRegion,
+  type CreateFieldRegion,
   FieldRegion,
-  FieldRegionListInput,
-  FieldRegionListOutput,
-  UpdateFieldRegion,
+  type FieldRegionListInput,
+  type FieldRegionListOutput,
+  type UpdateFieldRegion,
 } from './dto';
 import { FieldRegionRepository } from './field-region.repository';
 

@@ -1,4 +1,4 @@
-import { OnModuleInit } from '@nestjs/common';
+import { type OnModuleInit } from '@nestjs/common';
 import { $ } from 'execa';
 import { LazyGetter } from 'lazy-get-decorator';
 import { readPackageUp } from 'read-package-up';

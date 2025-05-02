@@ -1,4 +1,4 @@
-import { ValidationOptions } from 'class-validator';
+import { type ValidationOptions } from 'class-validator';
 import { ValidateBy } from './validateBy';
 
 export const IsIanaTimezone = (

@@ -1,5 +1,5 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { ListArg, LoggedInSession, Session } from '~/common';
+import { ListArg, LoggedInSession, type Session } from '~/common';
 import {
   MarkNotificationReadArgs,
   Notification,

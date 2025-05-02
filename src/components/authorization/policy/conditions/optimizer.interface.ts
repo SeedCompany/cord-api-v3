@@ -1,5 +1,10 @@
-import { applyDecorators, Injectable, SetMetadata, Type } from '@nestjs/common';
-import { Condition } from './condition.interface';
+import {
+  applyDecorators,
+  Injectable,
+  SetMetadata,
+  type Type,
+} from '@nestjs/common';
+import { type Condition } from './condition.interface';
 
 export abstract class Optimizer {
   static register = () => (cls: Type<Optimizer>) =>

@@ -1,5 +1,5 @@
-import { DateTime } from 'luxon';
-import { ID, IdOf } from '~/common';
+import { type DateTime } from 'luxon';
+import { type ID, type IdOf } from '~/common';
 
 export type Raw<T> = T extends DateTime
   ? string

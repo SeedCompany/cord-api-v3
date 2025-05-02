@@ -1,6 +1,6 @@
 import { nonEnumerable } from '@seedcompany/common';
 import { Neo4jError } from 'neo4j-driver';
-import { LogEntry, LogLevel } from '../logger';
+import { type LogEntry, LogLevel } from '../logger';
 
 const defaultCode = 'N/A' as const;
 

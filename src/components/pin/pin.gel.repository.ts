@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { ID, PublicOf } from '~/common';
+import { type ID, type PublicOf } from '~/common';
 import { CommonRepository, e } from '~/core/gel';
-import { PinRepository } from './pin.repository';
+import { type PinRepository } from './pin.repository';
 
 @Injectable()
 export class PinGelRepository

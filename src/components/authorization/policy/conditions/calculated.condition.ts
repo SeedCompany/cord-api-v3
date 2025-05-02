@@ -1,6 +1,6 @@
 import { inspect } from 'util';
 import { ServerException } from '~/common';
-import { Condition } from './condition.interface';
+import { type Condition } from './condition.interface';
 
 export class CalculatedCondition implements Condition {
   static readonly instance = new CalculatedCondition();

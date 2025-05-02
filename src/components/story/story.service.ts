@@ -1,21 +1,21 @@
 import { Injectable } from '@nestjs/common';
 import {
-  ID,
-  ObjectView,
+  type ID,
+  type ObjectView,
   ServerException,
-  Session,
-  UnsecuredDto,
+  type Session,
+  type UnsecuredDto,
 } from '~/common';
 import { HandleIdLookup } from '~/core';
 import { ifDiff } from '~/core/database/changes';
 import { Privileges } from '../authorization';
 import { isScriptureEqual } from '../scripture';
 import {
-  CreateStory,
+  type CreateStory,
   Story,
-  StoryListInput,
-  StoryListOutput,
-  UpdateStory,
+  type StoryListInput,
+  type StoryListOutput,
+  type UpdateStory,
 } from './dto';
 import { StoryRepository } from './story.repository';
 

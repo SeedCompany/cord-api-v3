@@ -1,8 +1,8 @@
-import { Session, UnsecuredDto } from '~/common';
+import { type Session, type UnsecuredDto } from '~/common';
 import {
-  CreateInternshipEngagement,
-  CreateLanguageEngagement,
-  Engagement,
+  type CreateInternshipEngagement,
+  type CreateLanguageEngagement,
+  type Engagement,
   InternshipEngagement,
   LanguageEngagement,
 } from '../dto';

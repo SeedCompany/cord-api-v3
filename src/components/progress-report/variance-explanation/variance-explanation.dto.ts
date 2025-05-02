@@ -2,18 +2,18 @@ import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { ArrayMaxSize, IsIn } from 'class-validator';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
-  ID,
+  type ID,
   IdField,
-  RichTextDocument,
+  type RichTextDocument,
   RichTextField,
-  SecuredProps,
+  type SecuredProps,
   SecuredRichTextNullable,
   SecuredStringList,
-  SetUnsecuredType,
+  type SetUnsecuredType,
 } from '~/common';
 import { e } from '~/core/gel';
-import { LinkTo, RegisterResource } from '~/core/resources';
-import { ProgressReport } from '../dto';
+import { type LinkTo, RegisterResource } from '~/core/resources';
+import { type ProgressReport } from '../dto';
 import { ProgressReportVarianceExplanationReasonOptions as ReasonOptions } from './reason-options';
 
 @RegisterResource({ db: e.ProgressReport.VarianceExplanation })

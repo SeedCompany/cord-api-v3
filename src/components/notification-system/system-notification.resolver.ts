@@ -6,7 +6,7 @@ import {
   ObjectType,
   Resolver,
 } from '@nestjs/graphql';
-import { LoggedInSession, Session, UnauthorizedException } from '~/common';
+import { LoggedInSession, type Session, UnauthorizedException } from '~/common';
 import { MarkdownScalar } from '~/common/markdown.scalar';
 import { isAdmin } from '~/common/session';
 import { NotificationService } from '../notifications';

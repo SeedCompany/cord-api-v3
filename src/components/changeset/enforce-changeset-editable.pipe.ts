@@ -1,23 +1,23 @@
 import {
-  ArgumentMetadata,
+  type ArgumentMetadata,
   Injectable,
-  PipeTransform,
-  Type,
+  type PipeTransform,
+  type Type,
 } from '@nestjs/common';
 import { hasCtor, isRegularObject } from '@seedcompany/common';
 import {
   DataLoaderContext,
-  DataLoaderStrategy,
+  type DataLoaderStrategy,
 } from '@seedcompany/data-loader';
 import {
-  ID,
+  type ID,
   InputException,
   isIdLike,
   loadManyIgnoreMissingThrowAny,
 } from '~/common';
 import { GqlContextHost, ifGqlContext } from '~/core/graphql';
 import { ResourceLoaderRegistry } from '~/core/resources/loader.registry';
-import { Changeset } from './dto';
+import { type Changeset } from './dto';
 import { shouldValidateEditability } from './validate-editability.decorator';
 
 /**

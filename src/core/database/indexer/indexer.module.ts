@@ -1,15 +1,15 @@
 import {
-  DiscoveredMethodWithMeta,
+  type DiscoveredMethodWithMeta,
   DiscoveryModule,
   DiscoveryService,
 } from '@golevelup/nestjs-discovery';
-import { Module, OnModuleInit } from '@nestjs/common';
+import { Module, type OnModuleInit } from '@nestjs/common';
 import { groupToMapBy } from '@seedcompany/common';
 import { many } from '~/common';
 import { ConfigService } from '../../config/config.service';
 import { ILogger, Logger } from '../../logger';
-import { DatabaseService, ServerInfo } from '../database.service';
-import { IndexMode } from './create-indexes.decorator';
+import { DatabaseService, type ServerInfo } from '../database.service';
+import { type IndexMode } from './create-indexes.decorator';
 import { DB_INDEX_KEY } from './indexer.constants';
 
 @Module({

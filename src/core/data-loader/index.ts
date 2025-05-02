@@ -1,8 +1,8 @@
 export {
-  DataLoaderOptions,
+  type DataLoaderOptions,
   Loader,
-  DataLoaderStrategy,
-  LoaderOf,
+  type DataLoaderStrategy,
+  type LoaderOf,
 } from '@seedcompany/data-loader';
 
 export * from './options.type';

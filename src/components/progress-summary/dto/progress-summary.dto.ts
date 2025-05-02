@@ -1,8 +1,8 @@
 import { Field, Float, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { SecuredProps } from '~/common';
-import { LinkTo } from '~/core/resources';
+import { type SecuredProps } from '~/common';
+import { type LinkTo } from '~/core/resources';
 
 @ObjectType({
   description: stripIndent`

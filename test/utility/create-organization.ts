@@ -1,12 +1,12 @@
 import { faker } from '@faker-js/faker';
 import {
-  CreateOrganization,
-  Organization,
+  type CreateOrganization,
+  type Organization,
 } from '../../src/components/organization/dto';
-import { TestApp } from './create-app';
+import { type TestApp } from './create-app';
 import { fragments } from './fragments';
 import { gql } from './gql-tag';
-import { Raw } from './raw.type';
+import { type Raw } from './raw.type';
 
 export async function createOrganization(
   app: TestApp,

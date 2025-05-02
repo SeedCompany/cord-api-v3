@@ -1,6 +1,10 @@
-import { ID } from '~/common';
-import { LoaderFactory, LoaderOptionsOf, OrderedNestDataLoader } from '~/core';
-import { FetchedSummaries } from './dto';
+import { type ID } from '~/common';
+import {
+  LoaderFactory,
+  type LoaderOptionsOf,
+  OrderedNestDataLoader,
+} from '~/core';
+import { type FetchedSummaries } from './dto';
 import { ProgressSummaryRepository } from './progress-summary.repository';
 
 @LoaderFactory()

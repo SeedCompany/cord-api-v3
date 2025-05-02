@@ -2,9 +2,9 @@ import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import {
-  CalendarDate,
+  type CalendarDate,
   DateField,
-  ID,
+  type ID,
   IdField,
   ListField,
   OptionalField,

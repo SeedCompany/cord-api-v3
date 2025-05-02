@@ -1,6 +1,6 @@
 import { Readable } from 'stream';
 import { NotFoundException } from '~/common';
-import { FakeAwsFile, LocalBucket } from './local-bucket';
+import { type FakeAwsFile, LocalBucket } from './local-bucket';
 
 /**
  * A bucket that uses the current memory to store everything

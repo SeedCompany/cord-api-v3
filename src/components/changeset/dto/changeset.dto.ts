@@ -1,6 +1,6 @@
 import { Field, InterfaceType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { Resource, SecuredProps } from '~/common';
+import { Resource, type SecuredProps } from '~/common';
 import { RegisterResource } from '~/core/resources';
 
 @RegisterResource()

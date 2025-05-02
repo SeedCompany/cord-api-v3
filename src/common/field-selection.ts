@@ -1,14 +1,14 @@
-import { GraphQLResolveInfo as ResolveInfo } from 'graphql';
+import { type GraphQLResolveInfo as ResolveInfo } from 'graphql';
 import {
   parseResolveInfo,
-  ResolveTree,
+  type ResolveTree,
   simplifyParsedResolveInfoFragmentWithType,
 } from 'graphql-parse-resolve-info';
 import { LazyGetter } from 'lazy-get-decorator';
 import { difference } from 'lodash';
-import { LiteralUnion } from 'type-fest';
-import { ResourceMap } from '~/core';
-import { AbstractClassType } from './types';
+import { type LiteralUnion } from 'type-fest';
+import { type ResourceMap } from '~/core';
+import { type AbstractClassType } from './types';
 
 /**
  * A helper to query the fields selected of a GraphQL operation.

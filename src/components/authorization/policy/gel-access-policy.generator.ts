@@ -3,9 +3,9 @@ import { cleanJoin, entries, groupBy, mapEntries } from '@seedcompany/common';
 import { stripIndent } from 'common-tags';
 import addIndent from 'indent-string';
 import { startCase } from 'lodash';
-import { ResourceAction } from './actions';
-import { Permission } from './builder/perm-granter';
-import { AsEdgeQLParams, Condition } from './conditions';
+import { type ResourceAction } from './actions';
+import { type Permission } from './builder/perm-granter';
+import { type AsEdgeQLParams, Condition } from './conditions';
 import { PolicyExecutor } from './executor/policy-executor';
 
 @Injectable()

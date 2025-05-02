@@ -1,7 +1,7 @@
 import { faker } from '@faker-js/faker';
 import { times } from 'lodash';
 import { isValidId } from '~/common';
-import { UpdateLanguage } from '../src/components/language/dto';
+import { type UpdateLanguage } from '../src/components/language/dto';
 import {
   createLanguage,
   createLanguageEngagement,
@@ -12,7 +12,7 @@ import {
   errors,
   gql,
   loginAsAdmin,
-  TestApp,
+  type TestApp,
 } from './utility';
 import { fragments } from './utility/fragments';
 

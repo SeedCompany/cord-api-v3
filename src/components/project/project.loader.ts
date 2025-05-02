@@ -1,11 +1,11 @@
-import { ID, ObjectView } from '~/common';
+import { type ID, type ObjectView } from '~/common';
 import { LoaderFactory, ObjectViewAwareLoader } from '~/core';
 import {
   InternshipProject,
   IProject,
   MomentumTranslationProject,
   MultiplicationTranslationProject,
-  Project,
+  type Project,
   TranslationProject,
 } from './dto';
 import { ProjectService } from './project.service';

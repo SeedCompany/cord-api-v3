@@ -11,7 +11,7 @@ import { stripIndent } from 'common-tags';
 import {
   AnonSession,
   firstLettersOfWords,
-  ID,
+  type ID,
   IdArg,
   IdField,
   ListArg,
@@ -19,11 +19,11 @@ import {
   SecuredDate,
   SecuredIntNullable,
   SecuredStringNullable,
-  Session,
+  type Session,
   viewOfChangeset,
 } from '~/common';
-import { Loader, LoaderOf } from '~/core';
-import { IdsAndView, IdsAndViewArg } from '../changeset/dto';
+import { Loader, type LoaderOf } from '~/core';
+import { type IdsAndView, IdsAndViewArg } from '../changeset/dto';
 import { EngagementLoader } from '../engagement';
 import { EngagementListInput, SecuredEngagementList } from '../engagement/dto';
 import { LocationLoader } from '../location';
@@ -31,15 +31,15 @@ import { LocationListInput, SecuredLocationList } from '../location/dto';
 import { ProjectLoader } from '../project';
 import {
   ProjectListInput,
-  SecuredProjectList,
+  type SecuredProjectList,
   SecuredTranslationProjectList,
 } from '../project/dto';
 import {
   CreateLanguageInput,
   CreateLanguageOutput,
   DeleteLanguageOutput,
-  ExternalFirstScripture,
-  InternalFirstScripture,
+  type ExternalFirstScripture,
+  type InternalFirstScripture,
   Language,
   LanguageListInput,
   LanguageListOutput,

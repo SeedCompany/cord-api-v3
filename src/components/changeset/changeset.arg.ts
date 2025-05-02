@@ -1,13 +1,13 @@
 import {
-  ArgumentMetadata,
+  type ArgumentMetadata,
   Injectable,
-  PipeTransform,
+  type PipeTransform,
   Scope,
 } from '@nestjs/common';
-import { Args, ArgsOptions, ID as IDType } from '@nestjs/graphql';
+import { Args, type ArgsOptions, ID as IDType } from '@nestjs/graphql';
 import { Resolver } from '@nestjs/graphql/dist/enums/resolver.enum.js';
 import { RESOLVER_TYPE_METADATA as TypeKey } from '@nestjs/graphql/dist/graphql.constants.js';
-import { ID, InputException, ServerException } from '~/common';
+import { type ID, InputException, ServerException } from '~/common';
 import { createAugmentedMetadataPipe } from '~/common/augmented-metadata.pipe';
 import { ValidateIdPipe } from '~/common/validators/short-id.validator';
 import { ResourceLoader } from '~/core/resources';

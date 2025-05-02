@@ -1,6 +1,11 @@
 import { isNull, node, not, relation } from 'cypher-query-builder';
-import { ClientException, ID, ServerException, UnsecuredDto } from '~/common';
-import { ConfigService, EventsHandler, IEventHandler } from '~/core';
+import {
+  ClientException,
+  type ID,
+  ServerException,
+  type UnsecuredDto,
+} from '~/common';
+import { ConfigService, EventsHandler, type IEventHandler } from '~/core';
 import {
   DatabaseService,
   TransactionRetryInformer,
@@ -14,7 +19,7 @@ import {
   variable,
 } from '~/core/database/query';
 import {
-  Project,
+  type Project,
   ProjectStatus,
   ProjectStep,
   resolveProjectType,

@@ -1,14 +1,14 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
-  ID,
+  type ID,
   Resource,
-  ResourceRelationsShape,
-  SecuredProps,
-  SetUnsecuredType,
-  UnsecuredDto,
+  type ResourceRelationsShape,
+  type SecuredProps,
+  type SetUnsecuredType,
+  type UnsecuredDto,
 } from '~/common';
-import { BaseNode } from '~/core/database/results';
+import { type BaseNode } from '~/core/database/results';
 import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
 import { Comment } from './comment.dto';

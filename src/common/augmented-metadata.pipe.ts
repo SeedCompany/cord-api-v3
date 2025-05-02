@@ -1,4 +1,4 @@
-import { ArgumentMetadata, PipeTransform } from '@nestjs/common';
+import { type ArgumentMetadata, type PipeTransform } from '@nestjs/common';
 import { ServerException } from './exceptions';
 
 const key = Symbol('AugmentedMetadata');

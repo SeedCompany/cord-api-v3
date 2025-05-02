@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { mapEntries } from '@seedcompany/common';
-import { ID, PublicOf } from '~/common';
+import { type ID, type PublicOf } from '~/common';
 import { CommonRepository, e } from '~/core/gel';
-import { ProgressReport } from '../progress-report/dto';
-import { ProgressSummary, SummaryPeriod } from './dto';
-import { ProgressSummaryRepository } from './progress-summary.repository';
+import { type ProgressReport } from '../progress-report/dto';
+import { type ProgressSummary, SummaryPeriod } from './dto';
+import { type ProgressSummaryRepository } from './progress-summary.repository';
 
 const { Period, Summary } = e.ProgressReport.ProductProgress;
 

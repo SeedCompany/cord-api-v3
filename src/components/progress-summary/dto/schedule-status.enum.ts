@@ -1,4 +1,4 @@
-import { EnumType, makeEnum } from '~/common';
+import { type EnumType, makeEnum } from '~/common';
 
 export type ScheduleStatus = EnumType<typeof ScheduleStatus>;
 export const ScheduleStatus = makeEnum({

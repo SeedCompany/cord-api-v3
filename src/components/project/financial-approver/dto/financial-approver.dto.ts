@@ -1,9 +1,14 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { ID, IdField, SecuredProps, UnsecuredDto } from '~/common';
-import { LinkTo, RegisterResource } from '~/core';
+import {
+  type ID,
+  IdField,
+  type SecuredProps,
+  type UnsecuredDto,
+} from '~/common';
+import { type LinkTo, RegisterResource } from '~/core';
 import { e } from '~/core/gel';
-import { User } from '../../../user/dto';
+import { type User } from '../../../user/dto';
 import { ProjectType } from '../../dto';
 
 @RegisterResource({

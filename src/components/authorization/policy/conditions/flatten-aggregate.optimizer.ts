@@ -1,5 +1,5 @@
 import { AndConditions, OrConditions } from './aggregate.condition';
-import { Condition } from './condition.interface';
+import { type Condition } from './condition.interface';
 import { Optimizer } from './optimizer.interface';
 
 @Optimizer.register()

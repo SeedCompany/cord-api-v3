@@ -1,20 +1,20 @@
-import { node, Query, relation } from 'cypher-query-builder';
+import { node, type Query, relation } from 'cypher-query-builder';
 import { LazyGetter as Once } from 'lazy-get-decorator';
 import { DateTime } from 'luxon';
 import {
-  ChildListsKey,
-  EnhancedResource,
-  ID,
+  type ChildListsKey,
+  type EnhancedResource,
+  type ID,
   Order,
-  PaginatedListType,
-  ResourceShape,
-  Session,
-  UnsecuredDto,
-  VariantList,
-  VariantOf,
+  type PaginatedListType,
+  type ResourceShape,
+  type Session,
+  type UnsecuredDto,
+  type VariantList,
+  type VariantOf,
 } from '~/common';
 import { DtoRepository } from '~/core/database';
-import { DbTypeOf } from '~/core/database/db-type';
+import { type DbTypeOf } from '~/core/database/db-type';
 import { privileges } from '~/core/database/dto.repository';
 import {
   ACTIVE,
@@ -24,7 +24,7 @@ import {
   merge,
   paginate,
   prefixNodeLabelsWithDeleted,
-  QueryFragment,
+  type QueryFragment,
   requestingUser,
   sorting,
   updateProperty,
@@ -35,13 +35,13 @@ import {
   determineIfPermanent,
   permanentAfterAsVar,
 } from '~/core/database/query/properties/update-property';
-import { EdgePrivileges } from '../authorization';
-import { ChildListAction } from '../authorization/policy/actions';
+import { type EdgePrivileges } from '../authorization';
+import { type ChildListAction } from '../authorization/policy/actions';
 import {
-  ChangePrompt,
-  ChoosePrompt,
-  PromptVariantResponse,
-  UpdatePromptVariantResponse,
+  type ChangePrompt,
+  type ChoosePrompt,
+  type PromptVariantResponse,
+  type UpdatePromptVariantResponse,
   VariantResponse,
 } from './dto';
 

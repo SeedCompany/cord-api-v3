@@ -1,6 +1,6 @@
 import { Inject } from '@nestjs/common';
 import { Connection } from 'cypher-query-builder';
-import { TransactionOptions } from './transaction';
+import { type TransactionOptions } from './transaction';
 
 type AsyncFn = (...args: any[]) => Promise<any>;
 

@@ -1,6 +1,6 @@
-import { Merge } from 'type-fest';
-import { ResourceMap } from '~/core/resources';
-import { DefaultResourceGranter } from './builder/resource-granter';
+import { type Merge } from 'type-fest';
+import { type ResourceMap } from '~/core/resources';
+import { type DefaultResourceGranter } from './builder/resource-granter';
 
 export type ResourcesGranter = Merge<
   {

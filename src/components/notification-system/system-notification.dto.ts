@@ -1,6 +1,6 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { SecuredProps } from '~/common';
+import { type SecuredProps } from '~/common';
 import { MarkdownScalar } from '~/common/markdown.scalar';
 import { RegisterResource } from '~/core';
 import { e } from '~/core/gel';

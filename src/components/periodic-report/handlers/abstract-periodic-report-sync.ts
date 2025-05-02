@@ -1,7 +1,13 @@
-import { DateTimeUnit } from 'luxon';
-import { CalendarDate, DateInterval, ID, Range, Session } from '~/common';
-import { ReportType } from '../dto';
-import { PeriodicReportService } from '../periodic-report.service';
+import { type DateTimeUnit } from 'luxon';
+import {
+  type CalendarDate,
+  DateInterval,
+  type ID,
+  type Range,
+  type Session,
+} from '~/common';
+import { type ReportType } from '../dto';
+import { type PeriodicReportService } from '../periodic-report.service';
 
 export type Intervals = [
   updated: DateInterval | null,

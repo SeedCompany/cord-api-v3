@@ -1,5 +1,5 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { AnonSession, Session, Variant } from '~/common';
+import { AnonSession, type Session, Variant } from '~/common';
 import { Privileges, withVariant } from '../../../authorization';
 import {
   AvailableProgressReportMediaVariant as AvailableVariant,

@@ -4,7 +4,7 @@ import { ValidateNested } from 'class-validator';
 import {
   DateFilter,
   FilterField,
-  ID,
+  type ID,
   ListField,
   OptionalField,
   PaginatedList,
@@ -19,7 +19,7 @@ import {
 import { ProjectFilters } from '../../project/dto';
 import { UserFilters } from '../../user/dto';
 import {
-  Engagement,
+  type Engagement,
   IEngagement,
   InternshipEngagement,
   LanguageEngagement,

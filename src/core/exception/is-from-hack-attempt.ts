@@ -1,5 +1,5 @@
 import {
-  ArgumentsHost,
+  type ArgumentsHost,
   // eslint-disable-next-line no-restricted-imports
   NotFoundException as NestjsNotFoundException,
 } from '@nestjs/common';

@@ -1,10 +1,10 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import { DateField, DateTimeField } from './luxon.graphql';
-import { Secured } from './secured-property';
+import { type Secured } from './secured-property';
 import { ISecured } from './secured.interface';
 import { CalendarDate } from './temporal';
-import { Range } from './types';
+import { type Range } from './types';
 
 @ObjectType({ implements: [ISecured] })
 export abstract class SecuredDateTime implements ISecured, Secured<DateTime> {

@@ -1,12 +1,12 @@
-import { CalendarDate, ID, isValidId } from '~/common';
+import { CalendarDate, type ID, isValidId } from '~/common';
 import { PartnerType } from '../../src/components/partner/dto';
 import {
-  CreatePartnership,
+  type CreatePartnership,
   FinancialReportingType,
-  Partnership,
+  type Partnership,
   PartnershipAgreementStatus,
 } from '../../src/components/partnership/dto';
-import { TestApp } from './create-app';
+import { type TestApp } from './create-app';
 import { createPartner } from './create-partner';
 import { createProject } from './create-project';
 import { fragments } from './fragments';

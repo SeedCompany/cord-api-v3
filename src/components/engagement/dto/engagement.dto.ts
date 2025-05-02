@@ -1,32 +1,32 @@
 import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { MergeExclusive } from 'type-fest';
+import { type MergeExclusive } from 'type-fest';
 import {
   Calculated,
   DateInterval,
   DateTimeField,
   DbLabel,
-  DBNames,
+  type DBNames,
   IntersectTypes,
   parentIdMiddleware,
   RequiredWhen,
   Resource,
-  ResourceRelationsShape,
-  Secured,
+  type ResourceRelationsShape,
+  type Secured,
   SecuredBoolean,
   SecuredDateNullable,
   SecuredDateTimeNullable,
-  SecuredProps,
+  type SecuredProps,
   SecuredRichTextNullable,
   SecuredStringNullable,
   Sensitivity,
   SensitivityField,
-  UnsecuredDto,
+  type UnsecuredDto,
 } from '~/common';
-import { BaseNode } from '~/core/database/results';
+import { type BaseNode } from '~/core/database/results';
 import { e } from '~/core/gel';
-import { LinkTo, RegisterResource } from '~/core/resources';
+import { type LinkTo, RegisterResource } from '~/core/resources';
 import { ChangesetAware } from '../../changeset/dto';
 import { Commentable } from '../../comments/dto';
 import { SecuredLanguageMilestone } from '../../language/dto';
@@ -160,7 +160,7 @@ class Engagement extends Interfaces {
 
 // class name has to match schema name for interface resolvers to work.
 // export as different names to maintain compatibility with our codebase.
-export { Engagement as IEngagement, AnyEngagement as Engagement };
+export { Engagement as IEngagement, type AnyEngagement as Engagement };
 
 @RegisterResource({ db: e.LanguageEngagement })
 @ObjectType({

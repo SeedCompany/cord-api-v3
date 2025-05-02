@@ -2,7 +2,7 @@ import { InputType, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import {
   FilterField,
-  ID,
+  type ID,
   OptionalField,
   PaginatedList,
   SecuredList,
@@ -10,7 +10,7 @@ import {
 } from '~/common';
 import { ProductApproach } from './product-approach.enum';
 import { ProductMethodology } from './product-methodology.enum';
-import { AnyProduct, Product } from './product.dto';
+import { type AnyProduct, Product } from './product.dto';
 
 @InputType()
 export abstract class ProductFilters {

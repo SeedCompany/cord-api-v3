@@ -22,3 +22,6 @@ bfed26416fb0bd22aa9437145b081ea4216b9816
 
 # EdgeDB -> Gel
 e7bc70f5598d83b7a49306f1726d3bcb45cc9956
+
+# Verbatim module syntax enabled / strict type modifiers
+2ac61585bc2a9fb187ddcf50eb3b3c178581d5b7

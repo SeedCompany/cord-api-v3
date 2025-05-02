@@ -1,10 +1,10 @@
 import { InvalidArgumentError, LocalDate } from 'gel';
 import type { CodecContext } from 'gel/dist/codecs/context.js';
 import { DateTimeCodec, LocalDateCodec } from 'gel/dist/codecs/datetime.js';
-import { ReadBuffer, WriteBuffer } from 'gel/dist/primitives/buffer.js';
+import type { ReadBuffer, WriteBuffer } from 'gel/dist/primitives/buffer.js';
 import { DateTime } from 'luxon';
 import { CalendarDate } from '~/common/temporal';
-import { ScalarInfo } from './type.util';
+import type { ScalarInfo } from './type.util';
 
 export class LuxonDateTimeCodec extends DateTimeCodec {
   static info: ScalarInfo = {

@@ -2,13 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { Args, Mutation, Query } from '@nestjs/graphql';
 import {
   AnonSession,
-  ID,
+  type ID,
   IdArg,
   ListArg,
   LoggedInSession,
-  Session,
+  type Session,
 } from '~/common';
-import { Loader, LoaderOf } from '~/core';
+import { Loader, type LoaderOf } from '~/core';
 import { EducationLoader, EducationService } from '../education';
 import {
   CreateEducationInput,

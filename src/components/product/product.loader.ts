@@ -1,11 +1,11 @@
-import { ID } from '~/common';
+import { type ID } from '~/common';
 import {
   LoaderFactory,
   OrderedNestDataLoader,
-  OrderedNestDataLoaderOptions,
+  type OrderedNestDataLoaderOptions,
 } from '~/core';
 import {
-  AnyProduct,
+  type AnyProduct,
   DerivativeScriptureProduct,
   DirectScriptureProduct,
   OtherProduct,

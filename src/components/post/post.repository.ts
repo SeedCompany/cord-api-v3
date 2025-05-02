@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { inArray, node, Query, relation } from 'cypher-query-builder';
+import { inArray, node, type Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { ID, Session, UnsecuredDto } from '~/common';
-import { DbTypeOf, DtoRepository } from '~/core/database';
-import { ChangesOf } from '~/core/database/changes';
+import { type ID, type Session, type UnsecuredDto } from '~/common';
+import { type DbTypeOf, DtoRepository } from '~/core/database';
+import { type ChangesOf } from '~/core/database/changes';
 import {
   ACTIVE,
   createNode,
@@ -13,8 +13,8 @@ import {
   paginate,
   sorting,
 } from '~/core/database/query';
-import { CreatePost, Post, UpdatePost } from './dto';
-import { PostListInput } from './dto/list-posts.dto';
+import { type CreatePost, Post, type UpdatePost } from './dto';
+import { type PostListInput } from './dto/list-posts.dto';
 import { PostShareability } from './dto/shareability.dto';
 
 @Injectable()

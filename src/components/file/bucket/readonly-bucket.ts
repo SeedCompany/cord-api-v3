@@ -1,6 +1,6 @@
-import { Type } from '@nestjs/common';
-import { Command } from '@smithy/smithy-client';
-import { FileBucket, SignedOp } from './file-bucket';
+import { type Type } from '@nestjs/common';
+import { type Command } from '@smithy/smithy-client';
+import { FileBucket, type SignedOp } from './file-bucket';
 
 export class ReadonlyBucket extends FileBucket {
   constructor(private readonly source: FileBucket) {

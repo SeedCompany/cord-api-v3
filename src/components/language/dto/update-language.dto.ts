@@ -9,9 +9,9 @@ import {
   ValidateNested,
 } from 'class-validator';
 import {
-  CalendarDate,
+  type CalendarDate,
   DateField,
-  ID,
+  type ID,
   IdField,
   ListField,
   NameField,

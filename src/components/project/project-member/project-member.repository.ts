@@ -1,15 +1,15 @@
 import { Injectable } from '@nestjs/common';
-import { Node, node, Query, relation } from 'cypher-query-builder';
+import { type Node, node, type Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   CreationFailed,
   DuplicateException,
-  ID,
+  type ID,
   isIdLike,
   NotFoundException,
-  Role,
-  Session,
-  UnsecuredDto,
+  type Role,
+  type Session,
+  type UnsecuredDto,
 } from '~/common';
 import { DtoRepository } from '~/core/database';
 import {
@@ -25,10 +25,10 @@ import {
 } from '~/core/database/query';
 import { UserRepository } from '../../user/user.repository';
 import {
-  CreateProjectMember,
+  type CreateProjectMember,
   ProjectMember,
-  ProjectMemberListInput,
-  UpdateProjectMember,
+  type ProjectMemberListInput,
+  type UpdateProjectMember,
 } from './dto';
 
 @Injectable()

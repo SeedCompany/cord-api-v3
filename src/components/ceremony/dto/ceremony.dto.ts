@@ -6,7 +6,7 @@ import {
   SecuredBoolean,
   SecuredDateNullable,
   SecuredProperty,
-  SecuredProps,
+  type SecuredProps,
   Sensitivity,
   SensitivityField,
 } from '~/common';

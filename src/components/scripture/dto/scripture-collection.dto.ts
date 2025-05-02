@@ -1,5 +1,5 @@
 import { ObjectType } from '@nestjs/graphql';
-import { Range, Verse } from '@seedcompany/scripture';
+import { type Range, type Verse } from '@seedcompany/scripture';
 
 @ObjectType()
 export class ScriptureCollection {

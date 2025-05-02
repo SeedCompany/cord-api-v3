@@ -1,6 +1,6 @@
 import { CalendarDate, Role } from '~/common';
-import { Language } from '../src/components/language/dto';
-import { Location } from '../src/components/location/dto';
+import { type Language } from '../src/components/language/dto';
+import { type Location } from '../src/components/location/dto';
 import { PartnerType } from '../src/components/partner/dto';
 import {
   ProjectStatus,
@@ -25,8 +25,8 @@ import {
   gql,
   registerUser,
   runAsAdmin,
-  TestApp,
-  TestUser,
+  type TestApp,
+  type TestUser,
   updateProject,
 } from './utility';
 import { ProjectWorkflowTester } from './utility/workflow.tester';

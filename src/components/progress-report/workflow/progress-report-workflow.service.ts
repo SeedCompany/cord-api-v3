@@ -1,20 +1,23 @@
 import { Injectable } from '@nestjs/common';
 import {
-  ID,
+  type ID,
   many,
-  RichTextDocument,
-  Session,
+  type RichTextDocument,
+  type Session,
   UnauthorizedException,
-  UnsecuredDto,
+  type UnsecuredDto,
 } from '~/common';
 import { IEventBus } from '~/core';
 import { Privileges } from '../../authorization';
-import { ProgressReport, ProgressReportStatus as Status } from '../dto';
-import { ExecuteProgressReportTransitionInput } from './dto/execute-progress-report-transition.input';
+import {
+  type ProgressReport,
+  type ProgressReportStatus as Status,
+} from '../dto';
+import { type ExecuteProgressReportTransitionInput } from './dto/execute-progress-report-transition.input';
 import { ProgressReportWorkflowEvent as WorkflowEvent } from './dto/workflow-event.dto';
 import { WorkflowUpdatedEvent } from './events/workflow-updated.event';
 import { ProgressReportWorkflowRepository } from './progress-report-workflow.repository';
-import { InternalTransition, Transitions } from './transitions';
+import { type InternalTransition, Transitions } from './transitions';
 
 @Injectable()
 export class ProgressReportWorkflowService {

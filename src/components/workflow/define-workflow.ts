@@ -1,16 +1,16 @@
 import { entries, many, setOf } from '@seedcompany/common';
 import * as uuid from 'uuid';
 import {
-  EnumType,
-  ID,
-  MadeEnum,
-  Many,
+  type EnumType,
+  type ID,
+  type MadeEnum,
+  type Many,
   maybeMany,
   NotFoundException,
-  ResourceShape,
+  type ResourceShape,
 } from '~/common';
-import { WorkflowEvent } from './dto';
-import { InternalTransition, TransitionInput } from './transitions/types';
+import { type WorkflowEvent } from './dto';
+import type { InternalTransition, TransitionInput } from './transitions/types';
 
 export const defineWorkflow =
   <

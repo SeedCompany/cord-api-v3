@@ -1,15 +1,15 @@
 import { Injectable } from '@nestjs/common';
-import { inArray, node, Query, relation } from 'cypher-query-builder';
+import { inArray, node, type Query, relation } from 'cypher-query-builder';
 import { difference } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   CreationFailed,
   DuplicateException,
-  ID,
-  Role,
+  type ID,
+  type Role,
   ServerException,
-  Session,
-  UnsecuredDto,
+  type Session,
+  type UnsecuredDto,
 } from '~/common';
 import { DtoRepository, OnIndex, UniquenessError } from '~/core/database';
 import {
@@ -27,18 +27,18 @@ import {
   path,
   property,
   requestingUser,
-  SortCol,
+  type SortCol,
   sortWith,
 } from '~/core/database/query';
 import {
-  AssignOrganizationToUser,
-  CreatePerson,
-  RemoveOrganizationFromUser,
-  SystemAgent,
-  UpdateUser,
+  type AssignOrganizationToUser,
+  type CreatePerson,
+  type RemoveOrganizationFromUser,
+  type SystemAgent,
+  type UpdateUser,
   User,
   UserFilters,
-  UserListInput,
+  type UserListInput,
 } from './dto';
 
 @Injectable()

@@ -1,16 +1,16 @@
-import { Inject, Injectable, Type } from '@nestjs/common';
+import { Inject, Injectable, type Type } from '@nestjs/common';
 import {
   DataLoaderContext,
-  DataLoaderStrategy,
+  type DataLoaderStrategy,
 } from '@seedcompany/data-loader';
-import { ConditionalKeys, Merge, ValueOf } from 'type-fest';
-import { ID, Many, ObjectView, ServerException } from '~/common';
+import type { ConditionalKeys, Merge, ValueOf } from 'type-fest';
+import { type ID, type Many, type ObjectView, ServerException } from '~/common';
 import type { AuthenticationService } from '../../components/authentication';
 import { ConfigService } from '../config/config.service';
-import { BaseNode } from '../database/results';
+import { type BaseNode } from '../database/results';
 import { GqlContextHost } from '../graphql';
 import { ResourceLoaderRegistry } from './loader.registry';
-import { ResourceMap } from './map';
+import { type ResourceMap } from './map';
 import { ResourceResolver } from './resource-resolver.service';
 
 type SomeResourceType = ValueOf<ResourceMap>;

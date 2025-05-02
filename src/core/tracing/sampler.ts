@@ -1,5 +1,5 @@
-import { ExecutionContext } from '@nestjs/common';
-import { Segment } from './tracing.service';
+import { type ExecutionContext } from '@nestjs/common';
+import { type Segment } from './tracing.service';
 
 export abstract class Sampler {
   /**

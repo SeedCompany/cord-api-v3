@@ -1,4 +1,4 @@
-import { GelError } from 'gel';
+import { type GelError } from 'gel';
 import { ErrorAttr as Attr } from 'gel/dist/errors/base.js';
 
 /**

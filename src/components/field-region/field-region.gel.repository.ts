@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { PublicOf } from '~/common';
+import { type PublicOf } from '~/common';
 import { RepoFor } from '~/core/gel';
 import { FieldRegion } from './dto';
-import { FieldRegionRepository } from './field-region.repository';
+import { type FieldRegionRepository } from './field-region.repository';
 
 @Injectable()
 export class FieldRegionGelRepository

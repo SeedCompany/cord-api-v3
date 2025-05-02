@@ -1,6 +1,6 @@
 import { Field, InputType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { ID, IdField, RichTextDocument, RichTextField } from '~/common';
+import { type ID, IdField, RichTextDocument, RichTextField } from '~/common';
 import { ProgressReportStatus } from '../../dto';
 
 @InputType()

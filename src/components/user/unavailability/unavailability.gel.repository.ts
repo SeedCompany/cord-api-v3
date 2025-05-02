@@ -1,14 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { Range } from 'gel';
-import { ID, PublicOf } from '~/common';
-import { e, RepoFor, ScopeOf } from '~/core/gel';
+import { type ID, type PublicOf } from '~/common';
+import { e, RepoFor, type ScopeOf } from '~/core/gel';
 import {
-  CreateUnavailability,
+  type CreateUnavailability,
   Unavailability,
-  UnavailabilityListInput,
-  UpdateUnavailability,
+  type UnavailabilityListInput,
+  type UpdateUnavailability,
 } from './dto';
-import { UnavailabilityRepository } from './unavailability.repository';
+import { type UnavailabilityRepository } from './unavailability.repository';
 
 @Injectable()
 export class UnavailabilityGelRepository

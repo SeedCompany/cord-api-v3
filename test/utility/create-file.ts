@@ -1,15 +1,15 @@
 import { faker } from '@faker-js/faker';
 import got from 'got';
-import { MarkOptional } from 'ts-essentials';
-import { ID } from '~/common';
-import {
+import type { MarkOptional } from 'ts-essentials';
+import { type ID } from '~/common';
+import type {
   CreateFileVersionInput,
   FileListInput,
   RequestUploadOutput,
 } from '../../src/components/file/dto';
 import { mimeTypes } from '../../src/components/file/mimeTypes';
-import { TestApp } from './create-app';
-import { RawFile, RawFileNode, RawFileNodeChildren } from './fragments';
+import { type TestApp } from './create-app';
+import type { RawFile, RawFileNode, RawFileNodeChildren } from './fragments';
 import * as fragments from './fragments';
 import { gql } from './gql-tag';
 

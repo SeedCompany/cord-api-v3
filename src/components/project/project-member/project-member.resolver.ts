@@ -1,5 +1,5 @@
 import { Args, Mutation, Resolver } from '@nestjs/graphql';
-import { ID, IdArg, LoggedInSession, Session } from '~/common';
+import { type ID, IdArg, LoggedInSession, type Session } from '~/common';
 import { ProjectMemberService } from '../project-member';
 import {
   CreateProjectMemberInput,

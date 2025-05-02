@@ -10,7 +10,7 @@ import {
 } from 'class-validator';
 import { uniq } from 'lodash';
 import {
-  CalendarDate,
+  type CalendarDate,
   DateField,
   NameField,
   Sensitivity,

@@ -1,10 +1,10 @@
 import { entries, mapValues } from '@seedcompany/common';
-import { EnumType, makeEnum } from '@seedcompany/nest';
+import { type EnumType, makeEnum } from '@seedcompany/nest';
 import { createHash } from 'crypto';
-import { ID, Many, maybeMany, Role } from '~/common';
+import { type ID, type Many, maybeMany, type Role } from '~/common';
 import { TransitionType as Type } from '../../workflow/dto/workflow-transition.dto';
 import { ProgressReportStatus as Status } from '../dto/progress-report-status.enum';
-import { ProgressReportWorkflowTransition as PublicTransition } from './dto/workflow-transition.dto';
+import { type ProgressReportWorkflowTransition as PublicTransition } from './dto/workflow-transition.dto';
 
 // This also controls the order shown in the UI.
 // Therefore, these should generally flow down.

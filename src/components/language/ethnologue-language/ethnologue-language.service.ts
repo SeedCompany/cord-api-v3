@@ -1,10 +1,15 @@
 import { Injectable } from '@nestjs/common';
-import { ID, Sensitivity, Session, UnsecuredDto } from '~/common';
+import {
+  type ID,
+  type Sensitivity,
+  type Session,
+  type UnsecuredDto,
+} from '~/common';
 import { Privileges, withEffectiveSensitivity } from '../../authorization';
 import {
-  CreateEthnologueLanguage,
+  type CreateEthnologueLanguage,
   EthnologueLanguage,
-  UpdateEthnologueLanguage,
+  type UpdateEthnologueLanguage,
 } from '../dto';
 import { EthnologueLanguageRepository } from './ethnologue-language.repository';
 

@@ -1,5 +1,8 @@
-import { EventsHandler, IEventHandler } from '~/core';
-import { ProjectCreatedEvent, ProjectDeletedEvent } from '../../project/events';
+import { EventsHandler, type IEventHandler } from '~/core';
+import {
+  type ProjectCreatedEvent,
+  ProjectDeletedEvent,
+} from '../../project/events';
 
 @EventsHandler(ProjectDeletedEvent)
 export class DetachProjectRootDirectoryHandler

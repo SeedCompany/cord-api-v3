@@ -1,6 +1,6 @@
-import { node, Query, relation } from 'cypher-query-builder';
+import { node, type Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { ID } from '~/common';
+import { type ID } from '~/common';
 import { exp, variable, Variable } from '../index';
 
 export interface UpdateRelationListOptions {

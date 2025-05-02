@@ -1,15 +1,20 @@
 import { DiscoveryService } from '@golevelup/nestjs-discovery';
-import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
-import { FnLike, groupToMapBy, mapValues, sortBy } from '@seedcompany/common';
+import { Injectable, type OnApplicationBootstrap } from '@nestjs/common';
+import {
+  type FnLike,
+  groupToMapBy,
+  mapValues,
+  sortBy,
+} from '@seedcompany/common';
 import { stripIndent } from 'common-tags';
-import { ID, ServerException } from '~/common';
+import { type ID, ServerException } from '~/common';
 import { ILogger, Logger } from '../logger';
 import {
   EVENT_METADATA,
-  EventHandlerMetadata,
+  type EventHandlerMetadata,
   EVENTS_HANDLER_METADATA,
 } from './constants';
-import { IEventHandler } from './event-handler.decorator';
+import { type IEventHandler } from './event-handler.decorator';
 
 /**
  * An event bus for internal use.

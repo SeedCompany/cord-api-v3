@@ -8,7 +8,7 @@ import { identity, pickBy } from 'lodash';
 import { Duration } from 'luxon';
 import { URL } from 'node:url';
 import { join } from 'path';
-import { DurationIn } from '~/common';
+import { type DurationIn } from '~/common';
 import { Logger } from '../logger/logger.decorator';
 import type { ILogger } from '../logger/logger.interface';
 

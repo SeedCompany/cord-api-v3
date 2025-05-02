@@ -2,7 +2,7 @@ import { entries } from '@seedcompany/common';
 import { stripIndent } from 'common-tags';
 import { Clause } from 'cypher-query-builder';
 import { DateTime, Duration } from 'luxon';
-import { Integer, types as neo } from 'neo4j-driver';
+import { type Integer, types as neo } from 'neo4j-driver';
 import { CalendarDate } from '~/common';
 
 /**

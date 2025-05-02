@@ -1,6 +1,6 @@
 import { isNotFalsy, type NonEmptyArray } from '@seedcompany/common';
 import type { ID } from '../id-field';
-import { CalendarDate } from '../temporal';
+import { type CalendarDate } from '../temporal';
 import type { Range } from '../types';
 import { RangeException } from './range.exception';
 

@@ -1,9 +1,9 @@
 import { applyDecorators } from '@nestjs/common';
-import { Field, FieldOptions } from '@nestjs/graphql';
+import { Field, type FieldOptions } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { Constructor, HasRequiredKeys } from 'type-fest';
-import { AbstractClassType } from './types';
+import type { Constructor, HasRequiredKeys } from 'type-fest';
+import { type AbstractClassType } from './types';
 
 /**
  * A field that is a filter object probably for input on a list query.

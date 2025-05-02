@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ID, Role } from '~/common';
+import { type ID, Role } from '~/common';
 import { RootUserAlias } from '~/core/config/root-user.config';
 import { DbTraceLayer, disableAccessPolicies, e, Gel } from '~/core/gel';
 import { AuthenticationRepository } from '../authentication/authentication.repository';

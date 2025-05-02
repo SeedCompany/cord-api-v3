@@ -1,4 +1,4 @@
-import { MaybeUnsecuredInstance, ResourceShape } from '~/common';
+import { type MaybeUnsecuredInstance, type ResourceShape } from '~/common';
 
 /**
  * An instance of a resource for use in executing policy conditions.

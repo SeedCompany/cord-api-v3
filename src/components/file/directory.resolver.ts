@@ -9,13 +9,13 @@ import {
 import { stripIndent } from 'common-tags';
 import {
   AnonSession,
-  ID,
+  type ID,
   IdArg,
   ListArg,
   LoggedInSession,
-  Session,
+  type Session,
 } from '~/common';
-import { Loader, LoaderOf } from '~/core';
+import { Loader, type LoaderOf } from '~/core';
 import { UserLoader } from '../user';
 import { User } from '../user/dto';
 import {
@@ -25,7 +25,7 @@ import {
   File,
   FileListInput,
   FileListOutput,
-  FileNode,
+  type FileNode,
 } from './dto';
 import { FileNodeLoader } from './file-node.loader';
 import { FileService } from './file.service';

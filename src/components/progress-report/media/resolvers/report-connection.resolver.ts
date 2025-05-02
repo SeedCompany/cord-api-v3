@@ -1,12 +1,12 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import {
   AnonSession,
-  IdOf,
+  type IdOf,
   ListArg,
   NotFoundException,
-  Session,
+  type Session,
 } from '~/common';
-import { Loader, LoaderOf } from '~/core';
+import { Loader, type LoaderOf } from '~/core';
 import { ProgressReport } from '../../dto';
 import {
   ProgressReportMediaListInput as ListArgs,

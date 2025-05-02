@@ -1,6 +1,6 @@
 import { applyDecorators } from '@nestjs/common';
 import { ArrayNotEmpty } from 'class-validator';
-import { OptionalField, OptionalFieldOptions } from './optional-field';
+import { OptionalField, type OptionalFieldOptions } from './optional-field';
 
 export type ListFieldOptions = OptionalFieldOptions & {
   /**

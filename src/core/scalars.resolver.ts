@@ -1,4 +1,4 @@
-import { Provider, Type } from '@nestjs/common';
+import { type Provider, type Type } from '@nestjs/common';
 import { Query, Resolver } from '@nestjs/graphql';
 import {
   SCALAR_NAME_METADATA,

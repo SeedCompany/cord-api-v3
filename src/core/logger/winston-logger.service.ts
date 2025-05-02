@@ -1,10 +1,10 @@
-import { Injectable, OnModuleDestroy } from '@nestjs/common';
-import { Format } from 'logform';
-import { config, createLogger, Logger as WinstonLogger } from 'winston';
-import * as Transport from 'winston-transport';
+import { Injectable, type OnModuleDestroy } from '@nestjs/common';
+import { type Format } from 'logform';
+import { config, createLogger, type Logger as WinstonLogger } from 'winston';
+import type * as Transport from 'winston-transport';
 import { AbstractLogger } from './abstract-logger';
 import { LevelMatcher } from './level-matcher';
-import { getNameFromEntry, LogEntry, LogLevel } from './logger.interface';
+import { getNameFromEntry, type LogEntry, LogLevel } from './logger.interface';
 
 export class LoggerOptions {
   format: Format;

@@ -1,6 +1,6 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { setOf } from '@seedcompany/common';
-import { EnumType, makeEnum, SecuredEnum } from '~/common';
+import { type EnumType, makeEnum, SecuredEnum } from '~/common';
 
 export type EngagementStatus = EnumType<typeof EngagementStatus>;
 export const EngagementStatus = makeEnum({

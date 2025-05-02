@@ -1,5 +1,5 @@
 import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
-import { ID, SecuredProperty } from '~/common';
+import { type ID, SecuredProperty } from '~/common';
 
 @InterfaceType({
   resolveType: (obj: FirstScripture) =>

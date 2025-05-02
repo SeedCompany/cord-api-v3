@@ -1,8 +1,8 @@
 import { Args, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { simpleSwitch } from '@seedcompany/common';
 import { stripIndent } from 'common-tags';
-import { ID, mapSecuredValue, SecuredFloatNullable } from '~/common';
-import { Loader, LoaderOf } from '~/core';
+import { type ID, mapSecuredValue, SecuredFloatNullable } from '~/common';
+import { Loader, type LoaderOf } from '~/core';
 import { ProductLoader } from '../product';
 import { ProgressFormat, StepProgress } from './dto';
 

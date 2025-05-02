@@ -6,14 +6,14 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import { clamp } from 'lodash';
-import { AnonSession, LoggedInSession, Session } from '~/common';
-import { Loader, LoaderOf } from '~/core';
+import { AnonSession, LoggedInSession, type Session } from '~/common';
+import { Loader, type LoaderOf } from '~/core';
 import { ScheduleStatus } from '../../progress-summary/dto';
 import { ProgressSummaryLoader } from '../../progress-summary/progress-summary.loader';
 import { ProgressReport } from '../dto';
 import { ProgressReportVarianceExplanationReasonOptions as ReasonOptions } from './reason-options';
 import {
-  ProgressReportVarianceExplanation,
+  type ProgressReportVarianceExplanation,
   ProgressReportVarianceExplanationInput,
   ProgressReportVarianceExplanation as VarianceExplanation,
 } from './variance-explanation.dto';

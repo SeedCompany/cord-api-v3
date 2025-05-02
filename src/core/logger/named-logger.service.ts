@@ -1,6 +1,6 @@
 import { Injectable, Scope } from '@nestjs/common';
 import { AbstractLogger } from './abstract-logger';
-import { ILogger, LogEntry, LoggerName } from './logger.interface';
+import { ILogger, type LogEntry, LoggerName } from './logger.interface';
 
 /**
  * This is the logger that will be injected everywhere in app code.

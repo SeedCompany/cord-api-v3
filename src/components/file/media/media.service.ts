@@ -1,19 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
-import { RequireAtLeastOne } from 'type-fest';
+import type { RequireAtLeastOne } from 'type-fest';
 import {
   createAndInject,
-  IdOf,
+  type IdOf,
   NotFoundException,
   Poll,
   ServerException,
   UnauthorizedException,
 } from '~/common';
 import { IEventBus } from '~/core';
-import { FileVersion } from '../dto';
+import { type FileVersion } from '../dto';
 import { CanUpdateMediaUserMetadataEvent } from './events/can-update-event';
 import { MediaDetector } from './media-detector.service';
-import { AnyMedia, MediaUserMetadata } from './media.dto';
+import { type AnyMedia, type MediaUserMetadata } from './media.dto';
 import { MediaRepository } from './media.repository';
 
 @Injectable()

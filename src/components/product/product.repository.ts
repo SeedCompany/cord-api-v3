@@ -5,14 +5,20 @@ import {
   isNull,
   node,
   not,
-  Query,
+  type Query,
   relation,
 } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { Except, Merge } from 'type-fest';
-import { CreationFailed, getDbClassLabels, ID, Range, Session } from '~/common';
-import { CommonRepository, DbTypeOf, OnIndex } from '~/core/database';
-import { DbChanges, getChanges } from '~/core/database/changes';
+import { type Except, type Merge } from 'type-fest';
+import {
+  CreationFailed,
+  getDbClassLabels,
+  type ID,
+  type Range,
+  type Session,
+} from '~/common';
+import { CommonRepository, type DbTypeOf, OnIndex } from '~/core/database';
+import { type DbChanges, getChanges } from '~/core/database/changes';
 import {
   ACTIVE,
   collect,
@@ -31,27 +37,27 @@ import {
 import { ScriptureReferenceRepository } from '../scripture';
 import {
   ScriptureRange,
-  ScriptureRangeInput,
-  UnspecifiedScripturePortion,
-  UnspecifiedScripturePortionInput,
+  type ScriptureRangeInput,
+  type UnspecifiedScripturePortion,
+  type UnspecifiedScripturePortionInput,
 } from '../scripture/dto';
 import {
   ApproachToMethodologies,
-  CreateDerivativeScriptureProduct,
-  CreateDirectScriptureProduct,
-  CreateOtherProduct,
+  type CreateDerivativeScriptureProduct,
+  type CreateDirectScriptureProduct,
+  type CreateOtherProduct,
   DerivativeScriptureProduct,
   DirectScriptureProduct,
-  ProductMethodology as Methodology,
+  type ProductMethodology as Methodology,
   OtherProduct,
-  Producible,
-  ProducibleType,
+  type Producible,
+  type ProducibleType,
   Product,
-  ProductCompletionDescriptionSuggestionsInput,
-  ProductFilters,
-  ProductListInput,
+  type ProductCompletionDescriptionSuggestionsInput,
+  type ProductFilters,
+  type ProductListInput,
   ProgressMeasurement,
-  UpdateDirectScriptureProduct,
+  type UpdateDirectScriptureProduct,
 } from './dto';
 
 export type HydratedProductRow = Merge<

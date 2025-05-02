@@ -3,12 +3,12 @@ import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { DateTime } from 'luxon';
 import {
-  CalendarDate,
+  type CalendarDate,
   DateField,
   DateTimeField,
-  ID,
+  type ID,
   IdField,
-  IdOf,
+  type IdOf,
   ListField,
   NameField,
   OptionalField,
@@ -16,10 +16,10 @@ import {
   SensitivityField,
 } from '~/common';
 import { ChangesetIdField } from '../../changeset';
-import { Location } from '../../location/dto';
+import { type Location } from '../../location/dto';
 import { ReportPeriod } from '../../periodic-report/dto';
 import { ProjectStep } from './project-step.enum';
-import { IProject, Project } from './project.dto';
+import { IProject, type Project } from './project.dto';
 
 @InputType()
 export abstract class UpdateProject {
