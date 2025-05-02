@@ -18,7 +18,6 @@ import { RawUser } from './utility/fragments';
 describe('Region e2e', () => {
   let app: TestApp;
   let director: RawUser;
-  let newDirector: RawUser;
   let fieldZone: FieldZone;
 
   beforeAll(async () => {
@@ -162,7 +161,7 @@ describe('Region e2e', () => {
     });
 
     const newZone = await createZone(app, {
-      directorId: newDirector.id,
+      directorId: director.id,
     });
 
     const result = await app.graphql.mutate(
@@ -201,6 +200,10 @@ describe('Region e2e', () => {
   // This test should be updated with refactoring of location service for zone
   it.skip('update region`s director', async () => {
     const fieldRegion = await createRegion(app, { directorId: director.id });
+
+    const newDirector = await createPerson(app, {
+      roles: [Role.FieldOperationsDirector, Role.ProjectManager],
+    });
 
     const result = await app.graphql.mutate(
       gql`

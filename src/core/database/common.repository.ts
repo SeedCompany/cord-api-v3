@@ -3,9 +3,9 @@ import { setOf } from '@seedcompany/common';
 import { inArray, node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
+  DbUnique,
   EnhancedResource,
   getDbClassLabels,
-  getDbPropertyUnique,
   ID,
   InputException,
   isIdLike,
@@ -175,7 +175,7 @@ export class CommonRepository {
         ? [createUniqueConstraint(getDbClassLabels(resource)[0], 'id')]
         : []),
       ...resource.Props.flatMap((prop) => {
-        const label = getDbPropertyUnique(resource, prop);
+        const label = DbUnique.get(resource, prop);
         return label
           ? createUniqueConstraint(label, 'value', `${resource.name}_${prop}`)
           : [];

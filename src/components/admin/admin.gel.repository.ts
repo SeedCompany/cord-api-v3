@@ -29,7 +29,8 @@ export class AdminGelRepository {
     const rootAlias = e.select(e.Alias, () => ({
       filter_single: { name: RootUserAlias },
     }));
-    const rootUser = e.select(rootAlias.target.is(e.User), (u) => ({
+    const rootUser = e.select(e.User, (u) => ({
+      filter: e.op(u, '=', rootAlias.target),
       id: true,
       email: true,
       hash: u['<user[is Auth::Identity]'].passwordHash,

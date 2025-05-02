@@ -25,10 +25,10 @@ const baseHydrate = e.shape(e.Engagement, (engagement) => ({
     step: true,
     type: true,
   },
-  parent: e.tuple({
+  parent: e.select({
     identity: engagement.project.id,
     labels: e.array_agg(e.set(engagement.project.__type__.name.slice(9, null))),
-    properties: e.tuple({
+    properties: e.select({
       id: engagement.project.id,
       createdAt: engagement.project.createdAt,
     }),

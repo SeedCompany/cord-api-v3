@@ -1,27 +1,21 @@
+import { createMetadataDecorator } from '@seedcompany/nest';
 import { startCase } from 'lodash';
 import { DbLabel } from './db-label.decorator';
-import { AbstractClassType } from './types';
-
-const DbUniqueSymbol = Symbol('DbUnique');
 
 /**
- * This property value should have a unique constraint in database.
- * The property node needs a unique label, which can be given or will based on
+ * This property value should have a unique constraint in the neo4j database.
+ * The property node needs a unique label, which can be given or will be based on
  * the resource & property name.
  */
-export const DbUnique =
-  (label?: string): PropertyDecorator =>
-  (target, propertyKey) => {
-    if (typeof propertyKey === 'symbol') {
-      throw new Error('DbUnique() cannot be used on symbol properties');
-    }
-    label ??= target.constructor.name + startCase(propertyKey);
-    Reflect.defineMetadata(DbUniqueSymbol, label, target, propertyKey);
-    DbLabel(label)(target, propertyKey);
-  };
+export const DbUnique = (label?: string) => (target: object, key: string) => {
+  label ??= target.constructor.name + startCase(key);
+  DbUniqueInner(label)(target, key);
+  DbLabel(label)(target, key);
+};
 
-export const getDbPropertyUnique = (
-  type: AbstractClassType<unknown>,
-  property: string,
-): string | undefined =>
-  Reflect.getMetadata(DbUniqueSymbol, type.prototype, property);
+const DbUniqueInner = createMetadataDecorator({
+  types: ['property'],
+  setter: (label?: string) => label,
+});
+
+DbUnique.get = DbUniqueInner.get;
