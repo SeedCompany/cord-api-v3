@@ -41,7 +41,7 @@ export class UpdateProjectBudgetStatusHandler
       session,
     );
 
-    const budget = budgets.items.find((b) => b.status === change![0]);
+    const budget = budgets.items.find((b) => b.status === change[0]);
     if (!budget) {
       return;
     }
