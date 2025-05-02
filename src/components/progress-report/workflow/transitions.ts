@@ -1,4 +1,5 @@
-import { mapValues } from '@seedcompany/common';
+import { entries, mapValues } from '@seedcompany/common';
+import { EnumType, makeEnum } from '@seedcompany/nest';
 import { createHash } from 'crypto';
 import { ID, Many, maybeMany, Role } from '~/common';
 import { TransitionType as Type } from '../../workflow/dto';
@@ -90,7 +91,8 @@ type TransitionInput = Omit<PublicTransition, 'id'> & {
   };
 };
 
-export type TransitionName = keyof typeof Transitions;
+export type TransitionName = EnumType<typeof TransitionName>;
+export const TransitionName = makeEnum(entries(Transitions).map(([k]) => k));
 
 export interface InternalTransition extends PublicTransition {
   id: ID;

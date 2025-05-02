@@ -9,12 +9,11 @@ import { Duration, DurationLike } from 'luxon';
 import { nanoid } from 'nanoid';
 import { Config as Neo4JDriverConfig } from 'neo4j-driver';
 import { BehaviorSubject } from 'rxjs';
-import { keys as keysOf } from 'ts-transformer-keys';
 import { Class, Merge, ReadonlyDeep } from 'type-fest';
 import { ID } from '~/common';
 import { parseUri } from '../../components/file/bucket/parse-uri';
 import { ProgressReportStatus } from '../../components/progress-report/dto/progress-report-status.enum';
-import type { TransitionName as ProgressReportTransitionName } from '../../components/progress-report/workflow/transitions';
+import { TransitionName as ProgressReportTransitionName } from '../../components/progress-report/workflow/transitions';
 import { DefaultTimezoneWrapper } from '../email/templates/formatted-date-time';
 import { FrontendUrlWrapper } from '../email/templates/frontend-url';
 import type { CookieOptions, CorsOptions, IRequest } from '../http';
@@ -133,7 +132,7 @@ export const makeConfig = (env: EnvironmentService) =>
       notifyExtraEmails: {
         forTransitions: env
           .map('PROGRESS_REPORT_EMAILS_FOR_TRANSITIONS', {
-            parseKey: keysOf<Record<ProgressReportTransitionName, ''>>(),
+            parseKey: ProgressReportTransitionName,
             parseValue: csv,
           })
           .optional({}),
