@@ -27,7 +27,12 @@ import {
   SecuredScriptureRangesOverride,
   SecuredUnspecifiedScripturePortion,
 } from '../../scripture/dto';
-import { Producible, ProducibleRef, SecuredProducible } from './producible.dto';
+import {
+  Producible,
+  ProducibleRef,
+  ProducibleTypeEntries,
+  SecuredProducible,
+} from './producible.dto';
 import { SecuredProductMediums } from './product-medium.enum';
 import { SecuredMethodology } from './product-methodology.enum';
 import { SecuredProductPurposes } from './product-purpose.enum';
@@ -261,6 +266,9 @@ export const asProductType =
     return product as any;
   };
 
+ProducibleTypeEntries.add('DirectScriptureProduct');
+ProducibleTypeEntries.add('DerivativeScriptureProduct');
+ProducibleTypeEntries.add('OtherProduct');
 declare module '../dto/producible.dto' {
   interface ProducibleTypeEntries {
     DirectScriptureProduct: true;

@@ -9,8 +9,9 @@ import {
 } from '~/common';
 import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
-import { Producible } from '../../product/dto';
+import { Producible, ProducibleTypeEntries } from '../../product/dto';
 
+ProducibleTypeEntries.add('Story');
 declare module '../../product/dto/producible.dto' {
   interface ProducibleTypeEntries {
     Story: true;

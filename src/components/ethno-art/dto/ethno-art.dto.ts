@@ -9,8 +9,12 @@ import {
 } from '~/common';
 import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
-import { Producible } from '../../product/dto/producible.dto';
+import {
+  Producible,
+  ProducibleTypeEntries,
+} from '../../product/dto/producible.dto';
 
+ProducibleTypeEntries.add('EthnoArt');
 declare module '../../product/dto/producible.dto' {
   interface ProducibleTypeEntries {
     EthnoArt: true;
