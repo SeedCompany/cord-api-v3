@@ -10,7 +10,7 @@ export class ProgressReportCommunityStory extends PromptVariantResponse<Communit
   static Props = keysOf<ProgressReportCommunityStory>();
   static SecuredProps = keysOf<SecuredProps<ProgressReportCommunityStory>>();
   static readonly Parent = () =>
-    import('./progress-report.entity').then((m) => m.ProgressReport);
+    import('./progress-report.dto').then((m) => m.ProgressReport);
   static Variants = ProgressReportHighlight.Variants;
   static readonly ConfirmThisClassPassesSensitivityToPolicies = true;
 }
