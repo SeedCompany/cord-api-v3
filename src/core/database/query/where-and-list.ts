@@ -1,11 +1,10 @@
-import {
-  type ParameterBag,
-  Precedence,
-  stringCons,
-  WhereOp,
-} from 'cypher-query-builder';
+import { type ParameterBag, stringCons, WhereOp } from 'cypher-query-builder';
 import { type AnyConditions } from 'cypher-query-builder/dist/typings/clauses/where-utils';
+import type { ValueOf } from 'type-fest';
 import { exp, type ExpressionInput } from './cypher-expression';
+
+type Precedence = ValueOf<typeof Precedence>;
+const Precedence = { None: 0, Or: 1, Xor: 2, And: 3, Not: 4 } as const;
 
 export class WhereAndList extends WhereOp {
   constructor(public conditions: AnyConditions[]) {
