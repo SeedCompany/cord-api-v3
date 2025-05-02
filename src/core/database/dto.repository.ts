@@ -65,8 +65,8 @@ export const DtoRepository = <
       return !exists;
     }
     @Once() private get uniqueLabel() {
-      const labels = resource.Props.flatMap(
-        (p) => DbUnique.get(resource, p) ?? [],
+      const labels = [...this.resource.props].flatMap(
+        (p: string) => DbUnique.get(resource, p) ?? [],
       );
       if (labels.length === 0) {
         return new ServerException(

@@ -12,6 +12,7 @@ import {
   DbSort,
   DbUnique,
   Disabled,
+  EnhancedResource,
   IntersectTypes,
   NameField,
   parentIdMiddleware,
@@ -86,7 +87,10 @@ const RequiredWhenNotInDev = RequiredWhen(() => Project)({
 class Project extends Interfaces {
   static readonly Props: string[] = keysOf<Project>();
   static readonly SecuredProps: string[] = keysOf<SecuredProps<Project>>();
-  static readonly BaseNodeProps = [...Resource.Props, 'type'];
+  static readonly BaseNodeProps = [
+    ...EnhancedResource.of(Resource).props,
+    'type',
+  ];
   static readonly Relations = () =>
     ({
       rootDirectory: Directory,

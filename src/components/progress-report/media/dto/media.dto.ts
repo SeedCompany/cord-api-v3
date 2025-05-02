@@ -2,6 +2,7 @@ import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { setOf } from '@seedcompany/common';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
+  EnhancedResource,
   IdField,
   type IdOf,
   Resource,
@@ -27,7 +28,12 @@ export type VariantGroup = IdOf<'ProgressReportMediaVariantGroup'>;
 export class ProgressReportMedia extends Resource {
   static Props = keysOf<ProgressReportMedia>();
   static SecuredProps = keysOf<SecuredProps<ProgressReportMedia>>();
-  static BaseNodeProps = [...Resource.Props, 'category', 'creator', 'variant'];
+  static BaseNodeProps = [
+    ...EnhancedResource.of(Resource).props,
+    'category',
+    'creator',
+    'variant',
+  ];
   static readonly Parent = () =>
     import('../../dto/progress-report.dto').then((m) => m.ProgressReport);
   static readonly ConfirmThisClassPassesSensitivityToPolicies = true;

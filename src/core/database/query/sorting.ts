@@ -3,6 +3,7 @@ import { node, type Query, relation } from 'cypher-query-builder';
 import { identity } from 'rxjs';
 import { type LiteralUnion } from 'type-fest';
 import {
+  EnhancedResource,
   type MadeEnum,
   type Order,
   Resource,
@@ -146,8 +147,10 @@ export const defineSorters = <TResourceStatic extends ResourceShape<any>>(
       return { ...common, matcher: subCustom, sort: subField };
     }
 
-    const baseNodeProps = resource.BaseNodeProps ?? Resource.Props;
-    const isBaseNodeProp = baseNodeProps.includes(sort);
+    const baseNodeProps = new Set(
+      resource.BaseNodeProps ?? EnhancedResource.of(Resource).props,
+    );
+    const isBaseNodeProp = baseNodeProps.has(sort);
     const matcher = (isBaseNodeProp ? basePropSorter : propSorter)(sort);
     return { ...common, matcher };
   };

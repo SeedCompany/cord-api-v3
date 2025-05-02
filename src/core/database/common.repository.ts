@@ -169,12 +169,10 @@ export class CommonRepository {
   }
 
   protected getConstraintsFor(resource: ResourceShape<any>) {
-    const { dbLabel } = EnhancedResource.of(resource);
+    const { dbLabel, props } = EnhancedResource.of(resource);
     return [
-      ...(resource.Props.includes('id')
-        ? [createUniqueConstraint(dbLabel, 'id')]
-        : []),
-      ...resource.Props.flatMap((prop) => {
+      ...(props.has('id') ? [createUniqueConstraint(dbLabel, 'id')] : []),
+      ...[...props].flatMap((prop) => {
         const label = DbUnique.get(resource, prop);
         return label
           ? createUniqueConstraint(label, 'value', `${resource.name}_${prop}`)
