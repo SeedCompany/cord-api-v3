@@ -5,17 +5,17 @@ import {
   DbLabel,
   IntersectTypes,
   Resource,
-  ResourceRelationsShape,
+  type ResourceRelationsShape,
   SecuredProperty,
-  SecuredProps,
+  type SecuredProps,
   Sensitivity,
   SensitivityField,
 } from '~/common';
-import { BaseNode } from '~/core/database/results';
+import { type BaseNode } from '~/core/database/results';
 import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
 import { ChangesetAware } from '../../changeset/dto';
-import { DefinedFile } from '../../file/dto';
+import { type DefinedFile } from '../../file/dto';
 import { IProject } from '../../project/dto';
 import { BudgetRecord } from './budget-record.dto';
 import { BudgetStatus } from './budget-status.enum';

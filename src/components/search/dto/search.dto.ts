@@ -1,6 +1,10 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { PaginationInput } from '~/common';
-import { GqlSearchType, SearchResult, SearchType } from './search-results.dto';
+import {
+  GqlSearchType,
+  SearchResult,
+  type SearchType,
+} from './search-results.dto';
 
 @InputType()
 export class SearchInput extends PaginationInput {

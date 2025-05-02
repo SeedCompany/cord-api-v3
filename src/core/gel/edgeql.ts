@@ -1,5 +1,5 @@
 import { stripIndent } from 'common-tags';
-import { InlineQueryMap as QueryMap } from './generated-client/inline-queries';
+import { type InlineQueryMap as QueryMap } from './generated-client/inline-queries';
 
 export const edgeql = <const Query extends string>(
   query: Query,

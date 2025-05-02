@@ -10,13 +10,13 @@ import {
 import { HttpAdapterHost as HttpAdapterHostImpl } from '@nestjs/core';
 import {
   FastifyAdapter,
-  NestFastifyApplication,
+  type NestFastifyApplication,
 } from '@nestjs/platform-fastify';
 import type { FastifyInstance, HTTPMethods, RouteOptions } from 'fastify';
 import rawBody from 'fastify-raw-body';
 import * as zlib from 'node:zlib';
 import { uniqueDiscoveredMethods } from '~/common/discovery-unique-methods';
-import { ConfigService } from '~/core/config/config.service';
+import { type ConfigService } from '~/core/config/config.service';
 import {
   GlobalHttpHook,
   RawBody,

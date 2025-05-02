@@ -1,10 +1,10 @@
 import { groupBy } from '@seedcompany/common';
 import { node } from 'cypher-query-builder';
 import { uniq } from 'lodash';
-import { ID } from '~/common';
+import { type ID } from '~/common';
 import { BaseMigration, Migration } from '~/core/database';
 import { updateProperty, variable } from '~/core/database/query';
-import { ProductMedium as Medium, Product } from '../dto';
+import { type ProductMedium as Medium, Product } from '../dto';
 import { ProductService } from '../product.service';
 
 @Migration('2024-07-01T09:00:00')

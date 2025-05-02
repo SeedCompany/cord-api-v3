@@ -1,16 +1,16 @@
 import { csv } from '@seedcompany/common';
-import {
+import type {
   EmailModuleOptions,
   EmailOptionsFactory,
 } from '@seedcompany/nestjs-email';
 import type { Server as HttpServer } from 'http';
-import { LRUCache } from 'lru-cache';
-import { Duration, DurationLike } from 'luxon';
+import { type LRUCache } from 'lru-cache';
+import { Duration, type DurationLike } from 'luxon';
 import { nanoid } from 'nanoid';
-import { Config as Neo4JDriverConfig } from 'neo4j-driver';
+import { type Config as Neo4JDriverConfig } from 'neo4j-driver';
 import { BehaviorSubject } from 'rxjs';
-import { Class, Merge, ReadonlyDeep } from 'type-fest';
-import { ID } from '~/common';
+import type { Class, Merge, ReadonlyDeep } from 'type-fest';
+import { type ID } from '~/common';
 import { parseUri } from '../../components/file/bucket/parse-uri';
 import { ProgressReportStatus } from '../../components/progress-report/dto/progress-report-status.enum';
 import { TransitionName as ProgressReportTransitionName } from '../../components/progress-report/workflow/transitions';
@@ -18,7 +18,7 @@ import { DefaultTimezoneWrapper } from '../email/templates/formatted-date-time';
 import { FrontendUrlWrapper } from '../email/templates/frontend-url';
 import type { CookieOptions, CorsOptions, IRequest } from '../http';
 import { LogLevel } from '../logger/logger.interface';
-import { EnvironmentService } from './environment.service';
+import { type EnvironmentService } from './environment.service';
 import { determineRootUser } from './root-user.config';
 
 const dur = Duration.from;

@@ -1,4 +1,4 @@
-import { ID, ObjectView } from '~/common';
+import { type ID, type ObjectView } from '~/common';
 import { LoaderFactory, ObjectViewAwareLoader } from '~/core';
 import { BudgetService } from './budget.service';
 import { Budget } from './dto';

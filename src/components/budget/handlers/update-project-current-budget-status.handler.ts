@@ -1,4 +1,4 @@
-import { EventsHandler, IEventHandler } from '~/core';
+import { EventsHandler, type IEventHandler } from '~/core';
 import { ProjectStatus, stepToStatus } from '../../project/dto';
 import { ProjectTransitionedEvent } from '../../project/workflow/events/project-transitioned.event';
 import { BudgetService } from '../budget.service';

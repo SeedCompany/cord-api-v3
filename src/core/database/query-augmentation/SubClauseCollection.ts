@@ -1,4 +1,4 @@
-import { Clause, ClauseCollection, Query } from 'cypher-query-builder';
+import { type Clause, ClauseCollection, Query } from 'cypher-query-builder';
 import type { ParameterBag } from 'cypher-query-builder/dist/typings/parameter-bag';
 
 export class SubClauseCollection extends ClauseCollection {

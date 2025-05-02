@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { AbstractLogger } from './abstract-logger';
-import { ILogger, LogEntry } from './logger.interface';
+import { type ILogger, type LogEntry } from './logger.interface';
 
 /**
  * Implementation of our Logger that forwards to another logger.

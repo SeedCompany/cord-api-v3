@@ -1,7 +1,7 @@
 import { faker } from '@faker-js/faker';
 import { times } from 'lodash';
 import { isValidId, Role } from '~/common';
-import { Film } from '../src/components/film/dto';
+import { type Film } from '../src/components/film/dto';
 import { ScriptureRange } from '../src/components/scripture/dto';
 import {
   createFilm,
@@ -10,7 +10,7 @@ import {
   fragments,
   gql,
   registerUser,
-  TestApp,
+  type TestApp,
 } from './utility';
 
 describe('Film e2e', () => {

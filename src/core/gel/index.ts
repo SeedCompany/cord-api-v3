@@ -1,5 +1,5 @@
 export * from './reexports';
-export { edgeql, EdgeQLArgsOf, EdgeQLReturnOf } from './edgeql';
+export { edgeql, type EdgeQLArgsOf, type EdgeQLReturnOf } from './edgeql';
 export type { OptionsFn } from './options.context';
 export * from './gel.service';
 export * from './withScope';

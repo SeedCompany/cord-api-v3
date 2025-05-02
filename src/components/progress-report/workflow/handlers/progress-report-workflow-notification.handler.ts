@@ -1,16 +1,16 @@
 import { entries, mapEntries } from '@seedcompany/common';
 import { EmailService } from '@seedcompany/nestjs-email';
-import { RequireExactlyOne } from 'type-fest';
-import { ID, Role, UnsecuredDto } from '~/common';
+import { type RequireExactlyOne } from 'type-fest';
+import { type ID, Role, type UnsecuredDto } from '~/common';
 import {
   ConfigService,
   EventsHandler,
-  IEventHandler,
+  type IEventHandler,
   ILogger,
   Logger,
 } from '~/core';
 import {
-  ProgressReportStatusChangedProps as EmailReportStatusNotification,
+  type ProgressReportStatusChangedProps as EmailReportStatusNotification,
   ProgressReportStatusChanged,
 } from '~/core/email/templates/progress-report-status-changed.template';
 import { AuthenticationService } from '../../../authentication';
@@ -18,12 +18,12 @@ import { LanguageService } from '../../../language';
 import { PeriodicReportService } from '../../../periodic-report';
 import { ProjectService } from '../../../project';
 import { UserService } from '../../../user';
-import { ProgressReportStatus as Status } from '../../dto';
-import { ProgressReportWorkflowEvent } from '../dto/workflow-event.dto';
+import { type ProgressReportStatus as Status } from '../../dto';
+import { type ProgressReportWorkflowEvent } from '../dto/workflow-event.dto';
 import { WorkflowUpdatedEvent } from '../events/workflow-updated.event';
 import { ProgressReportWorkflowRepository } from '../progress-report-workflow.repository';
 import { ProgressReportWorkflowService } from '../progress-report-workflow.service';
-import { InternalTransition } from '../transitions';
+import { type InternalTransition } from '../transitions';
 
 const rolesToAlwaysNotify = [
   Role.ProjectManager,

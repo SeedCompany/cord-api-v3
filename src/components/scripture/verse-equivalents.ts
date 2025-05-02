@@ -1,13 +1,13 @@
 import {
   Book,
   mergeVerseRanges,
-  Verse,
-  VerseLike,
+  type Verse,
+  type VerseLike,
 } from '@seedcompany/scripture';
 import { sum } from 'lodash';
-import { Range } from '~/common';
+import { type Range } from '~/common';
 import { difficultyFactorOfBook } from './book-difficulty-factor';
-import { ScriptureRange, UnspecifiedScripturePortion } from './dto';
+import { ScriptureRange, type UnspecifiedScripturePortion } from './dto';
 
 export const getTotalVerseEquivalents = (
   ...refs: ReadonlyArray<Range<VerseLike>>

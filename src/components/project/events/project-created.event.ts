@@ -1,5 +1,5 @@
-import { Session, UnsecuredDto } from '~/common';
-import { Project } from '../dto';
+import { type Session, type UnsecuredDto } from '~/common';
+import { type Project } from '../dto';
 
 export class ProjectCreatedEvent {
   constructor(

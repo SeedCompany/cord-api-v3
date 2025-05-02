@@ -5,31 +5,37 @@ import {
   groupBy,
   isNotFalsy,
   many,
-  Many,
+  type Many,
   mapValues,
-  Nil,
+  type Nil,
   setOf,
   sortBy,
 } from '@seedcompany/common';
-import { Chalk, ChalkInstance } from 'chalk';
+import { Chalk, type ChalkInstance } from 'chalk';
 import Table from 'cli-table3';
 import { Command, Option } from 'clipanion';
 import { startCase } from 'lodash';
 import { DateTime } from 'luxon';
 import fs from 'node:fs/promises';
-import { LiteralUnion } from 'type-fest';
+import { type LiteralUnion } from 'type-fest';
 import { inspect } from 'util';
 import xlsx from 'xlsx';
-import { EnhancedResource, firstOr, ID, Role, Session } from '~/common';
+import {
+  type EnhancedResource,
+  firstOr,
+  type ID,
+  Role,
+  type Session,
+} from '~/common';
 import { searchCamelCase } from '~/common/search-camel-case';
-import { InjectableCommand, ResourceLike, ResourcesHost } from '~/core';
+import { InjectableCommand, type ResourceLike, ResourcesHost } from '~/core';
 import {
   ChildListAction,
   ChildSingleAction,
   PropAction,
   ResourceAction,
 } from '../actions';
-import { Permission } from '../builder/perm-granter';
+import { type Permission } from '../builder/perm-granter';
 import { CalculatedCondition } from '../conditions';
 import { PolicyExecutor } from './policy-executor';
 

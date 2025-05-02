@@ -1,16 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import { Query } from 'cypher-query-builder';
+import { type Query } from 'cypher-query-builder';
 import {
   CreationFailed,
   DuplicateException,
-  ID,
+  type ID,
   NotFoundException,
-  PaginatedListType,
+  type PaginatedListType,
   ReadAfterCreationFailed,
-  Session,
-  UnsecuredDto,
+  type Session,
+  type UnsecuredDto,
 } from '~/common';
-import { DbTypeOf, DtoRepository } from '~/core/database';
+import { type DbTypeOf, DtoRepository } from '~/core/database';
 import {
   createNode,
   matchProps,
@@ -22,7 +22,12 @@ import {
   ScriptureReferenceRepository,
   ScriptureReferenceService,
 } from '../scripture';
-import { CreateStory, Story, StoryListInput, UpdateStory } from './dto';
+import {
+  type CreateStory,
+  Story,
+  type StoryListInput,
+  type UpdateStory,
+} from './dto';
 
 @Injectable()
 export class StoryRepository extends DtoRepository(Story) {

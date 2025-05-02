@@ -1,6 +1,6 @@
 import { applyDecorators } from '@nestjs/common';
-import { Field, FieldOptions } from '@nestjs/graphql';
-import { NullableList } from '@nestjs/graphql/dist/interfaces/base-type-options.interface';
+import { Field, type FieldOptions } from '@nestjs/graphql';
+import { type NullableList } from '@nestjs/graphql/dist/interfaces/base-type-options.interface';
 import { Transform } from 'class-transformer';
 
 export type OptionalFieldOptions = FieldOptions & {

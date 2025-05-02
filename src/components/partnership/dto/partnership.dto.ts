@@ -4,18 +4,18 @@ import {
   Calculated,
   IntersectTypes,
   Resource,
-  ResourceRelationsShape,
-  Secured,
+  type ResourceRelationsShape,
+  type Secured,
   SecuredBoolean,
   SecuredDateNullable,
   SecuredProperty,
-  SecuredProps,
+  type SecuredProps,
   Sensitivity,
   SensitivityField,
 } from '~/common';
-import { BaseNode } from '~/core/database/results';
+import { type BaseNode } from '~/core/database/results';
 import { e } from '~/core/gel';
-import { LinkTo, RegisterResource } from '~/core/resources';
+import { type LinkTo, RegisterResource } from '~/core/resources';
 import { ChangesetAware } from '../../changeset/dto';
 import { Organization } from '../../organization/dto';
 import { SecuredPartnerTypes } from '../../partner/dto';

@@ -3,7 +3,7 @@ import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import {
   EmailField,
-  ID,
+  type ID,
   IdField,
   IsIanaTimezone,
   ListField,

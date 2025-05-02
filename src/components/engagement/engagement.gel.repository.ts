@@ -1,20 +1,20 @@
-import { Injectable, Type } from '@nestjs/common';
+import { Injectable, type Type } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { LazyGetter } from 'lazy-get-decorator';
 import { difference } from 'lodash';
-import { ID, PublicOf } from '~/common';
+import { type ID, type PublicOf } from '~/common';
 import { grabInstances } from '~/common/instance-maps';
 import { e, RepoFor } from '~/core/gel';
 import {
   EngagementConcretes as ConcreteTypes,
-  CreateInternshipEngagement,
-  CreateLanguageEngagement,
+  type CreateInternshipEngagement,
+  type CreateLanguageEngagement,
   IEngagement,
   EngagementStatus as Status,
-  UpdateInternshipEngagement,
-  UpdateLanguageEngagement,
+  type UpdateInternshipEngagement,
+  type UpdateLanguageEngagement,
 } from './dto';
-import { EngagementRepository } from './engagement.repository';
+import { type EngagementRepository } from './engagement.repository';
 
 const baseHydrate = e.shape(e.Engagement, (engagement) => ({
   ...engagement['*'],

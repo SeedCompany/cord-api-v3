@@ -1,5 +1,5 @@
-import { DataLoaderOptions } from '@seedcompany/data-loader';
-import { ID } from '~/common';
+import { type DataLoaderOptions } from '@seedcompany/data-loader';
+import { type ID } from '~/common';
 import { SessionAwareLoaderStrategy } from './session-aware-loader.strategy';
 
 /**

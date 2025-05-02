@@ -3,13 +3,14 @@ import { Iterable } from 'ix';
 import { LazyGetter as Once } from 'lazy-get-decorator';
 import { assert } from 'ts-essentials';
 import {
-  CellAddress,
-  Range as LibRange,
-  WorkBook as LibWorkBook,
+  type CellAddress,
+  type CellObject,
+  type Range as LibRange,
+  type WorkBook as LibWorkBook,
   read,
   utils,
+  type WorkSheet,
 } from 'xlsx';
-import type { CellObject, WorkSheet } from 'xlsx';
 import { CalendarDate } from './temporal';
 
 export class WorkBook {

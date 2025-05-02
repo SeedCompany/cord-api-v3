@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { UnsecuredDto } from '~/common';
+import { type UnsecuredDto } from '~/common';
 import { withEffectiveSensitivity, withScope } from '../../authorization';
-import { Prompt } from '../../prompts/dto';
+import { type Prompt } from '../../prompts/dto';
 import { PromptVariantResponseListService } from '../../prompts/prompt-variant-response.service';
-import { ProgressReport } from '../dto';
-import { ProgressReportHighlight as Highlight } from '../dto/highlights.dto';
+import { type ProgressReport } from '../dto';
+import { type ProgressReportHighlight as Highlight } from '../dto/highlights.dto';
 import { ProgressReportHighlightsRepository } from './progress-report-highlights.repository';
 
 @Injectable()

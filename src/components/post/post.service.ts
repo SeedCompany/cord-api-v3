@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import {
   CreationFailed,
-  ID,
+  type ID,
   InputException,
   InvalidIdForTypeException,
   isIdLike,
@@ -9,14 +9,14 @@ import {
   Resource,
   SecuredList,
   ServerException,
-  Session,
-  UnsecuredDto,
+  type Session,
+  type UnsecuredDto,
 } from '~/common';
 import { ILogger, Logger, ResourceLoader, ResourcesHost } from '~/core';
-import { BaseNode, isBaseNode } from '~/core/database/results';
+import { type BaseNode, isBaseNode } from '~/core/database/results';
 import { Privileges } from '../authorization';
-import { CreatePost, Post, Postable, UpdatePost } from './dto';
-import { PostListInput, SecuredPostList } from './dto/list-posts.dto';
+import { type CreatePost, Post, Postable, type UpdatePost } from './dto';
+import { type PostListInput, type SecuredPostList } from './dto/list-posts.dto';
 import { PostRepository } from './post.repository';
 
 type ConcretePostable = Postable & { __typename: string };

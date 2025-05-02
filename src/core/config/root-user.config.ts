@@ -1,6 +1,6 @@
 import { v5 as uuidV5 } from 'uuid';
 import type { ID } from '~/common';
-import { EnvironmentService } from './environment.service';
+import { type EnvironmentService } from './environment.service';
 
 const isDev = process.env.NODE_ENV === 'development';
 

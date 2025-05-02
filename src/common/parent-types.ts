@@ -1,5 +1,5 @@
 import { cmpBy } from '@seedcompany/common';
-import { AbstractClassType, IntersectTypes } from './types';
+import { type AbstractClassType, type IntersectTypes } from './types';
 
 /**
  * Returns a list of all the parent class types including the given one.

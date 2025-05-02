@@ -2,8 +2,8 @@ import {
   isNotFalsy,
   isPlainObject,
   many,
-  Many,
-  Nil,
+  type Many,
+  type Nil,
 } from '@seedcompany/common';
 import { Clause, Query } from 'cypher-query-builder';
 

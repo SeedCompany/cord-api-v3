@@ -8,13 +8,13 @@ import {
   EnhancedResource,
   InvalidIdForTypeException,
   Resource,
-  ResourceShape,
+  type ResourceShape,
   ServerException,
 } from '~/common';
 import { e } from '../gel/reexports';
-import { ResourceMap } from './map';
+import type { ResourceMap } from './map';
 import { __privateDontUseThis } from './resource-map-holder';
-import {
+import type {
   AllResourceNames,
   ResourceName,
   ResourceNameLike,

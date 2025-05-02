@@ -1,8 +1,8 @@
 import {
-  LoggerService as INestLogger,
+  type LoggerService as INestLogger,
   Injectable,
   Logger as NestLogger,
-  OnModuleInit,
+  type OnModuleInit,
 } from '@nestjs/common';
 import { ILogger, LoggerName } from './logger.interface';
 

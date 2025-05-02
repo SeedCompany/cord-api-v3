@@ -1,7 +1,7 @@
-import { DiscoveryService } from '@golevelup/nestjs-discovery';
+import { type DiscoveryService } from '@golevelup/nestjs-discovery';
 import { SetMetadata } from '@nestjs/common';
-import { EnhancedResource, Many, ResourceShape } from '~/common';
-import { ResourceGranter } from './resource-granter';
+import { type EnhancedResource, type Many, type ResourceShape } from '~/common';
+import { type ResourceGranter } from './resource-granter';
 
 /**
  * Declare custom granter for resource(s).

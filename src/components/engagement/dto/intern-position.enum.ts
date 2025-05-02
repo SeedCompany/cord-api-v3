@@ -1,6 +1,6 @@
 import { ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { EnumType, makeEnum, SecuredEnum } from '~/common';
+import { type EnumType, makeEnum, SecuredEnum } from '~/common';
 
 export type InternshipDomain = EnumType<typeof InternshipDomain>;
 export const InternshipDomain = makeEnum({

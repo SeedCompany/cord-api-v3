@@ -1,7 +1,7 @@
 import { DateTime, Interval } from 'luxon';
 import { Role } from '~/common';
-import { Project } from '../src/components/project/dto';
-import { ProjectMember } from '../src/components/project/project-member/dto';
+import { type Project } from '../src/components/project/dto';
+import { type ProjectMember } from '../src/components/project/project-member/dto';
 import {
   createPerson,
   createProject,
@@ -11,10 +11,10 @@ import {
   errors,
   fragments,
   gql,
-  Raw,
+  type Raw,
   registerUser,
   runAsAdmin,
-  TestApp,
+  type TestApp,
 } from './utility';
 
 describe('ProjectMember e2e', () => {

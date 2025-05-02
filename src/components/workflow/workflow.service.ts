@@ -1,11 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { Nil } from '@seedcompany/common';
-import { ID, Session, UnauthorizedException } from '~/common';
+import { type Nil } from '@seedcompany/common';
+import { type ID, type Session, UnauthorizedException } from '~/common';
 import { Privileges } from '../authorization';
 import { MissingContextException } from '../authorization/policy/conditions';
-import { Workflow } from './define-workflow';
+import { type Workflow } from './define-workflow';
 import {
-  ExecuteTransitionInput as ExecuteTransitionInputFn,
+  type ExecuteTransitionInput as ExecuteTransitionInputFn,
   SerializedWorkflow,
 } from './dto';
 import { transitionPermissionSerializer } from './permission.serializer';

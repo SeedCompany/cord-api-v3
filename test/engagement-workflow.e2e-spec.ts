@@ -13,7 +13,7 @@ import {
   getCurrentEngagementStatus,
   registerUser,
   runAsAdmin,
-  TestApp,
+  type TestApp,
   updateProject,
 } from './utility';
 import {

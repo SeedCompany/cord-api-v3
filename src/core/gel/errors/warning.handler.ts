@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { cached } from '@seedcompany/common';
-import { GelError } from 'gel';
-import { TraceNames } from '~/common';
+import { type GelError } from 'gel';
+import { type TraceNames } from '~/common';
 import { ILogger, Logger } from '~/core/logger';
 import { DbTraceLayer } from '../gel.service';
 import { attributesOf, cleanError, fixWarningQuerySnippet } from './index';

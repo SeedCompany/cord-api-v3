@@ -2,17 +2,17 @@ import { DiscoveryService } from '@golevelup/nestjs-discovery';
 import { Injectable } from '@nestjs/common';
 import {
   AbstractGraphQLDriver as AbstractDriver,
-  GqlModuleOptions,
+  type GqlModuleOptions,
 } from '@nestjs/graphql';
 import type { RouteOptions as FastifyRoute } from 'fastify';
 import {
   createYoga,
-  YogaServerInstance,
-  YogaServerOptions,
+  type YogaServerInstance,
+  type YogaServerOptions,
 } from 'graphql-yoga';
-import { GqlContextType } from '~/common';
-import { HttpAdapter, IRequest } from '../http';
-import { IResponse } from '../http/types';
+import { type GqlContextType } from '~/common';
+import { HttpAdapter, type IRequest } from '../http';
+import { type IResponse } from '../http/types';
 import { Plugin } from './plugin.decorator';
 
 export interface ServerContext {

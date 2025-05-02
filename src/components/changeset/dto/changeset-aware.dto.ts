@@ -1,7 +1,7 @@
 import { Field, InterfaceType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { ID, IdField } from '~/common';
-import { BaseNode } from '~/core/database/results';
+import { type ID, IdField } from '~/common';
+import { type BaseNode } from '~/core/database/results';
 import { Changeset } from './changeset.dto';
 
 @InterfaceType({

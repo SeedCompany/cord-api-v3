@@ -1,6 +1,6 @@
 import { Inject } from '@nestjs/common';
-import { DataLoaderStrategy } from '@seedcompany/data-loader';
-import { ID, Session } from '~/common';
+import { type DataLoaderStrategy } from '@seedcompany/data-loader';
+import { type ID, type Session } from '~/common';
 import { sessionFromContext } from '~/common/session';
 import type { AuthenticationService } from '../../components/authentication';
 import { ConfigService } from '../config/config.service';

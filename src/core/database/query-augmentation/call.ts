@@ -1,6 +1,6 @@
 import { entries } from '@seedcompany/common';
 import { Clause, Query } from 'cypher-query-builder';
-import { Parameter } from 'cypher-query-builder/dist/typings/parameter-bag';
+import { type Parameter } from 'cypher-query-builder/dist/typings/parameter-bag';
 import { isExp, variable } from '../query';
 import type { YieldTerms } from './yield';
 

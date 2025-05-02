@@ -1,8 +1,8 @@
-import { MergeExclusive, RequireAtLeastOne } from 'type-fest';
-import { ID, Session, UnsecuredDto } from '~/common';
-import { EventsHandler, IEventHandler } from '~/core';
+import type { MergeExclusive, RequireAtLeastOne } from 'type-fest';
+import { type ID, type Session, type UnsecuredDto } from '~/common';
+import { EventsHandler, type IEventHandler } from '~/core';
 import {
-  Project,
+  type Project,
   ProjectStatus,
   ProjectStep,
   ProjectType,

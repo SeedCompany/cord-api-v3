@@ -6,19 +6,19 @@ import {
   lessEqualTo,
   node,
   not,
-  Query,
+  type Query,
   relation,
 } from 'cypher-query-builder';
 import {
-  CalendarDate,
+  type CalendarDate,
   generateId,
-  ID,
-  Range,
-  Session,
-  UnsecuredDto,
+  type ID,
+  type Range,
+  type Session,
+  type UnsecuredDto,
 } from '~/common';
 import { DtoRepository } from '~/core/database';
-import { ChangesOf } from '~/core/database/changes';
+import { type ChangesOf } from '~/core/database/changes';
 import {
   ACTIVE,
   createNode,
@@ -31,7 +31,7 @@ import {
   paginate,
   sorting,
   variable,
-  Variable,
+  type Variable,
 } from '~/core/database/query';
 import { File } from '../file/dto';
 import {
@@ -44,12 +44,12 @@ import {
 } from '../progress-report/progress-report-extra-for-periodic-interface.repository';
 import {
   IPeriodicReport,
-  MergePeriodicReports,
-  PeriodicReport,
-  PeriodicReportListInput,
+  type MergePeriodicReports,
+  type PeriodicReport,
+  type PeriodicReportListInput,
   ReportType,
   resolveReportType,
-  UpdatePeriodicReportInput,
+  type UpdatePeriodicReportInput,
 } from './dto';
 
 @Injectable()

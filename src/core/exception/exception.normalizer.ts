@@ -1,4 +1,4 @@
-import { ArgumentsHost, Inject, Injectable } from '@nestjs/common';
+import { type ArgumentsHost, Inject, Injectable } from '@nestjs/common';
 // eslint-disable-next-line no-restricted-imports,@seedcompany/no-restricted-imports
 import * as Nest from '@nestjs/common';
 import { GqlExecutionContext } from '@nestjs/graphql';
@@ -9,7 +9,7 @@ import { GraphQLError } from 'graphql';
 import addIndent from 'indent-string';
 import { lowerCase, uniq } from 'lodash';
 import {
-  AbstractClassType,
+  type AbstractClassType,
   DuplicateException,
   Exception,
   getCauseList,
@@ -60,7 +60,7 @@ export class NormalizedException extends Error {
 @Injectable()
 export class ExceptionNormalizer {
   constructor(
-    @Inject('CONFIG') private readonly config?: ConfigService,
+    @Inject('CONFIG') private readonly config?: ConfigService & {},
     private readonly resources?: ResourcesHost,
   ) {}
 

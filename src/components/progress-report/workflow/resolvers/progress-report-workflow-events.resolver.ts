@@ -1,5 +1,5 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { AnonSession, Session } from '~/common';
+import { AnonSession, type Session } from '~/common';
 import { ProgressReport } from '../../dto';
 import { ProgressReportWorkflowEvent as WorkflowEvent } from '../dto/workflow-event.dto';
 import { ProgressReportWorkflowService } from '../progress-report-workflow.service';

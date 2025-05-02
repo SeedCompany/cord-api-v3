@@ -1,11 +1,11 @@
-import { groupBy, isNotNil, Nil } from '@seedcompany/common';
-import { Query } from 'cypher-query-builder';
+import { groupBy, isNotNil, type Nil } from '@seedcompany/common';
+import { type Query } from 'cypher-query-builder';
 import addIndent from 'indent-string';
-import { Class, Constructor } from 'type-fest';
-import { inspect, InspectOptionsStylized } from 'util';
-import { ResourceShape } from '~/common';
-import { Policy } from '../policy.factory';
-import {
+import { type Class, type Constructor } from 'type-fest';
+import { inspect, type InspectOptionsStylized } from 'util';
+import { type ResourceShape } from '~/common';
+import { type Policy } from '../policy.factory';
+import type {
   AsCypherParams,
   AsEdgeQLParams,
   Condition,

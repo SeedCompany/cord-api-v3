@@ -1,4 +1,4 @@
-import { Injectable, OnModuleDestroy } from '@nestjs/common';
+import { Injectable, type OnModuleDestroy } from '@nestjs/common';
 import { patchMethod } from '@seedcompany/common';
 import { AsyncLocalStorage } from 'async_hooks';
 import { type Client, Options } from 'gel';
@@ -8,7 +8,7 @@ import {
   combineLatest,
   identity,
   map,
-  Observable,
+  type Observable,
 } from 'rxjs';
 import { lazyRef } from '~/common/lazy-ref';
 

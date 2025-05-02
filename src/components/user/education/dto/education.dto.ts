@@ -1,13 +1,13 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
-  EnumType,
+  type EnumType,
   makeEnum,
   NameField,
   Resource,
   SecuredEnum,
   SecuredProperty,
-  SecuredProps,
+  type SecuredProps,
   SecuredString,
 } from '~/common';
 import { e } from '~/core/gel';

@@ -1,6 +1,6 @@
 import { runInterfacesGenerator } from '@gel/generate/dist/interfaces.js';
 import { customScalars } from './scalars';
-import { addCustomScalarImports, GeneratorParams } from './util';
+import { addCustomScalarImports, type GeneratorParams } from './util';
 
 export async function generateSchema({
   client,

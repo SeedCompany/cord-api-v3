@@ -1,22 +1,22 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { Nil } from '@seedcompany/common';
+import { type Nil } from '@seedcompany/common';
 import {
   inArray,
   isNull,
   node,
   not,
-  Query,
+  type Query,
   relation,
 } from 'cypher-query-builder';
 import { omit } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   EnhancedResource,
-  ID,
+  type ID,
   NotFoundException,
-  ResourceShape,
-  Session,
-  UnsecuredDto,
+  type ResourceShape,
+  type Session,
+  type UnsecuredDto,
 } from '~/common';
 import { CommonRepository } from '~/core/database';
 import {
@@ -29,10 +29,10 @@ import {
   variable,
 } from '~/core/database/query';
 import {
-  MarkNotificationReadArgs,
+  type MarkNotificationReadArgs,
   Notification,
   NotificationFilters,
-  NotificationListInput,
+  type NotificationListInput,
 } from './dto';
 import { NotificationServiceImpl } from './notification.service';
 

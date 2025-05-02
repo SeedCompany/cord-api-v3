@@ -1,4 +1,4 @@
-import { OnApplicationShutdown, Provider } from '@nestjs/common';
+import { type OnApplicationShutdown, type Provider } from '@nestjs/common';
 import { Observable, Subject } from 'rxjs';
 
 export class ShutdownHook extends Observable<void> {}

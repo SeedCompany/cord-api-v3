@@ -1,7 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { EnhancedResource, ID, isIdLike, PublicOf } from '~/common';
+import { EnhancedResource, type ID, isIdLike, type PublicOf } from '~/common';
 import type { CommonRepository as Neo4jCommonRepository } from '~/core/database';
-import { ResourceLike, ResourcesHost } from '~/core/resources/resources.host';
+import {
+  type ResourceLike,
+  ResourcesHost,
+} from '~/core/resources/resources.host';
 import type { BaseNode } from '../database/results';
 import { DbTraceLayer, Gel } from './gel.service';
 import { e } from './reexports';

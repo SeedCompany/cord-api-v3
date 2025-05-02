@@ -1,7 +1,7 @@
 import { groupBy } from '@seedcompany/common';
-import { DataLoaderOptions } from '@seedcompany/data-loader';
-import { ID, ObjectView, viewOfChangeset } from '~/common';
-import { ChangesetAware } from '../../components/changeset/dto';
+import { type DataLoaderOptions } from '@seedcompany/data-loader';
+import { type ID, type ObjectView, viewOfChangeset } from '~/common';
+import { type ChangesetAware } from '../../components/changeset/dto';
 import { SessionAwareLoaderStrategy } from './session-aware-loader.strategy';
 
 interface Key {

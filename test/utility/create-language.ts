@@ -1,11 +1,11 @@
 import { faker } from '@faker-js/faker';
 import { CalendarDate, generateId, isValidId } from '~/common';
 import {
-  CreateEthnologueLanguage,
-  CreateLanguage,
-  Language,
+  type CreateEthnologueLanguage,
+  type CreateLanguage,
+  type Language,
 } from '../../src/components/language/dto';
-import { TestApp } from './create-app';
+import { type TestApp } from './create-app';
 import { fragments } from './fragments';
 import { gql } from './gql-tag';
 

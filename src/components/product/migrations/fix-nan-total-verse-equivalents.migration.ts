@@ -1,5 +1,5 @@
 import { node, relation } from 'cypher-query-builder';
-import { ID } from '~/common';
+import { type ID } from '~/common';
 import { BaseMigration, Migration } from '~/core/database';
 import { ACTIVE } from '~/core/database/query';
 import { getTotalVerseEquivalents } from '../../scripture';

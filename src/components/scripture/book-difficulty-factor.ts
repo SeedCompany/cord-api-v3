@@ -1,5 +1,5 @@
-import { Book } from '@seedcompany/scripture';
-import { BookDifficulty } from './dto';
+import { type Book } from '@seedcompany/scripture';
+import { type BookDifficulty } from './dto';
 
 export const difficultyFactorOfBook = (book: Book): number =>
   factorMap[difficultyOfBook(book)] ?? 0;

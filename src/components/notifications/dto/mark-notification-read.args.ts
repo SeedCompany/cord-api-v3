@@ -1,5 +1,5 @@
 import { ArgsType, Field } from '@nestjs/graphql';
-import { ID, IdField } from '~/common';
+import { type ID, IdField } from '~/common';
 
 @ArgsType()
 export abstract class MarkNotificationReadArgs {

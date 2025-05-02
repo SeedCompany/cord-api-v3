@@ -1,6 +1,6 @@
 import { ResolveField, Resolver } from '@nestjs/graphql';
 import { mapValues } from '@seedcompany/common';
-import { AbstractClassType, AnonSession, Session } from '~/common';
+import { type AbstractClassType, AnonSession, type Session } from '~/common';
 import { Privileges } from '../authorization';
 import { BetaFeatures } from '../authorization/dto/beta-features';
 import { LoginOutput, RegisterOutput, SessionOutput } from './dto';

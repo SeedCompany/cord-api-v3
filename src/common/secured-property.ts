@@ -1,19 +1,19 @@
-import { Type } from '@nestjs/common';
+import { type Type } from '@nestjs/common';
 import {
   Field,
-  FieldOptions,
+  type FieldOptions,
   Float,
-  GqlTypeReference,
+  type GqlTypeReference,
   Int,
   ObjectType,
 } from '@nestjs/graphql';
-import { MadeEnum } from '@seedcompany/nest';
+import { type MadeEnum } from '@seedcompany/nest';
 import { stripIndent } from 'common-tags';
-import { GraphQLBoolean, GraphQLScalarType, GraphQLString } from 'graphql';
+import { GraphQLBoolean, type GraphQLScalarType, GraphQLString } from 'graphql';
 import { isObject } from 'lodash';
-import { Class, ConditionalKeys, ConditionalPick } from 'type-fest';
+import type { Class, ConditionalKeys, ConditionalPick } from 'type-fest';
 import { ISecured } from './secured.interface';
-import { AbstractClassType } from './types';
+import type { AbstractClassType } from './types';
 
 export interface Secured<T> {
   readonly value?: T;

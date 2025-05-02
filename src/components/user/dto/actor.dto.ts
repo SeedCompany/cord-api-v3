@@ -2,13 +2,13 @@ import { InterfaceType, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
   DataObject,
-  ID,
+  type ID,
   IdField,
   NameField,
   resolveByTypename,
-  Role,
+  type Role,
   SecuredProperty,
-  SecuredProps,
+  type SecuredProps,
 } from '~/common';
 import { RegisterResource } from '~/core';
 import { e } from '~/core/gel';

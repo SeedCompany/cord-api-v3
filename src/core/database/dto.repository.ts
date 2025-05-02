@@ -1,21 +1,21 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { inArray, Query } from 'cypher-query-builder';
+import { inArray, type Query } from 'cypher-query-builder';
 import { LazyGetter as Once } from 'lazy-get-decorator';
 import { lowerCase } from 'lodash';
 import {
   DbUnique,
   EnhancedResource,
-  ID,
+  type ID,
   NotFoundException,
-  ResourceShape,
+  type ResourceShape,
   ServerException,
-  UnsecuredDto,
+  type UnsecuredDto,
 } from '~/common';
 import { Privileges } from '../../components/authorization';
-import { ResourceLike } from '../resources';
-import { DbChanges, getChanges } from './changes';
+import { type ResourceLike } from '../resources';
+import { type DbChanges, getChanges } from './changes';
 import { CommonRepository } from './common.repository';
-import { DbTypeOf } from './db-type';
+import { type DbTypeOf } from './db-type';
 import { OnIndex } from './indexer';
 import { matchProps } from './query';
 

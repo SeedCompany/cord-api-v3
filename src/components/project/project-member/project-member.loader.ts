@@ -1,4 +1,4 @@
-import { ID } from '~/common';
+import { type ID } from '~/common';
 import { LoaderFactory, OrderedNestDataLoader } from '~/core';
 import { ProjectMember } from './dto';
 import { ProjectMemberService } from './project-member.service';

@@ -1,6 +1,6 @@
-import { ValidationError } from '@nestjs/common';
+import { type ValidationError } from '@nestjs/common';
 import { entries } from '@seedcompany/common';
-import { SetRequired } from 'type-fest';
+import type { SetRequired } from 'type-fest';
 import { fileURLToPath } from 'url';
 import { ClientException } from '~/common/exceptions';
 import { jestSkipFileInExceptionSource } from '../exception';

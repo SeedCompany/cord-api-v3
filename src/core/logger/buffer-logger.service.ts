@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { AbstractLogger } from './abstract-logger';
-import { ILogger, LogEntry } from './logger.interface';
+import type { ILogger, LogEntry } from './logger.interface';
 
 /**
  * Implementation of our Logger that stores log messages in array.

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { ID } from '~/common';
-import { PnpExtractionResult } from './extraction-result.dto';
+import { type ID } from '~/common';
+import { type PnpExtractionResult } from './extraction-result.dto';
 import { PnpExtractionResultRepository } from './pnp-extraction-result.gel.repository';
 
 @Injectable()

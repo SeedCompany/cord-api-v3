@@ -1,5 +1,5 @@
 import { DateOverrideConflictException, EnhancedResource } from '~/common';
-import { EventsHandler, IEventHandler } from '~/core';
+import { EventsHandler, type IEventHandler } from '~/core';
 import { ProjectUpdatedEvent } from '../../project/events';
 import { EngagementService } from '../engagement.service';
 

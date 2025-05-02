@@ -1,20 +1,20 @@
-import { Merge } from 'type-fest';
+import { type Merge } from 'type-fest';
 import {
   CalendarDate,
-  IdOf,
+  type IdOf,
   isIdLike,
-  PaginatedListType,
-  Variant,
+  type PaginatedListType,
+  type Variant,
 } from '~/common';
-import { CreateLanguageEngagement } from '../src/components/engagement/dto';
-import { Media } from '../src/components/file/media/media.dto';
-import { Language } from '../src/components/language/dto';
-import { ProgressReport } from '../src/components/progress-report/dto';
+import { type CreateLanguageEngagement } from '../src/components/engagement/dto';
+import { type Media } from '../src/components/file/media/media.dto';
+import { type Language } from '../src/components/language/dto';
+import { type ProgressReport } from '../src/components/progress-report/dto';
 import {
-  MediaVariant,
-  ProgressReportMedia,
-  UpdateProgressReportMedia,
-  UploadProgressReportMedia,
+  type MediaVariant,
+  type ProgressReportMedia,
+  type UpdateProgressReportMedia,
+  type UploadProgressReportMedia,
 } from '../src/components/progress-report/media/dto';
 import {
   createLanguage,
@@ -24,16 +24,16 @@ import {
   fragments,
   generateFakeFile,
   gql,
-  Raw,
+  type Raw,
   registerUser,
   requestFileUpload,
   runAsAdmin,
   runInIsolatedSession,
-  TestApp,
-  TestUser,
+  type TestApp,
+  type TestUser,
   uploadFileContents,
 } from './utility';
-import { RawProject } from './utility/fragments';
+import { type RawProject } from './utility/fragments';
 
 describe('ProgressReport Media e2e', () => {
   let app: TestApp;

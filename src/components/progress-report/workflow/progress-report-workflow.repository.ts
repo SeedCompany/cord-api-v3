@@ -1,14 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import { inArray, node, Query, relation } from 'cypher-query-builder';
-import { SetRequired } from 'type-fest';
+import { inArray, node, type Query, relation } from 'cypher-query-builder';
+import { type SetRequired } from 'type-fest';
 import {
-  ID,
+  type ID,
   NotFoundException,
   Order,
-  Role,
+  type Role,
   ServerException,
-  Session,
-  UnsecuredDto,
+  type Session,
+  type UnsecuredDto,
 } from '~/common';
 import { DtoRepository } from '~/core/database';
 import {
@@ -19,8 +19,8 @@ import {
   requestingUser,
   sorting,
 } from '~/core/database/query';
-import { ProgressReport, ProgressReportStatus as Status } from '../dto';
-import { ExecuteProgressReportTransitionInput } from './dto/execute-progress-report-transition.input';
+import { ProgressReport, type ProgressReportStatus as Status } from '../dto';
+import { type ExecuteProgressReportTransitionInput } from './dto/execute-progress-report-transition.input';
 import { ProgressReportWorkflowEvent as WorkflowEvent } from './dto/workflow-event.dto';
 
 @Injectable()

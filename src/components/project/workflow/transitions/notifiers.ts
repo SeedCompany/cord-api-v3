@@ -1,9 +1,9 @@
 import { Role } from '~/common';
 import { ConfigService } from '~/core';
-import { TransitionNotifier } from '../../../workflow/transitions/notifiers';
+import { type TransitionNotifier } from '../../../workflow/transitions/notifiers';
 import { FinancialApproverRepository } from '../../financial-approver';
 import { ProjectMemberRepository } from '../../project-member/project-member.repository';
-import { ResolveParams } from './dynamic-step';
+import { type ResolveParams } from './dynamic-step';
 
 type Notifier = TransitionNotifier<ResolveParams>;
 

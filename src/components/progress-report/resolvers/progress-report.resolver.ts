@@ -1,6 +1,6 @@
 import { Query, Resolver } from '@nestjs/graphql';
-import { AnonSession, ListArg, Session } from '~/common';
-import { Loader, LoaderOf } from '~/core';
+import { AnonSession, ListArg, type Session } from '~/common';
+import { Loader, type LoaderOf } from '~/core';
 import { PeriodicReportLoader as ReportLoader } from '../../periodic-report';
 import {
   ProgressReport,

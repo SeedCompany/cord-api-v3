@@ -1,4 +1,10 @@
-import { cleanSplit, entries, many, Many, Nil } from '@seedcompany/common';
+import {
+  cleanSplit,
+  entries,
+  many,
+  type Many,
+  type Nil,
+} from '@seedcompany/common';
 import {
   comparisions,
   greaterThan,
@@ -10,15 +16,15 @@ import {
   regexp,
   relation,
 } from 'cypher-query-builder';
-import { PatternCollection } from 'cypher-query-builder/dist/typings/clauses/pattern-clause';
-import { Comparator } from 'cypher-query-builder/dist/typings/clauses/where-comparators';
+import { type PatternCollection } from 'cypher-query-builder/dist/typings/clauses/pattern-clause';
+import { type Comparator } from 'cypher-query-builder/dist/typings/clauses/where-comparators';
 import { identity, isFunction } from 'lodash';
-import { AbstractClass, ConditionalKeys } from 'type-fest';
-import { DateTimeFilter } from '~/common';
+import type { AbstractClass, ConditionalKeys } from 'type-fest';
+import { type DateTimeFilter } from '~/common';
 import { variable } from '../query-augmentation/condition-variables';
 import { intersects } from './comparators';
 import { collect } from './cypher-functions';
-import { escapeLuceneSyntax, FullTextIndex } from './full-text';
+import { escapeLuceneSyntax, type FullTextIndex } from './full-text';
 import { ACTIVE } from './matching';
 import { path as pathPattern } from './where-path';
 

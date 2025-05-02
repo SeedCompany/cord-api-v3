@@ -1,11 +1,11 @@
 import { delay, mapEntries } from '@seedcompany/common';
-import { $, Client } from 'gel';
+import { $, type Client } from 'gel';
 import { INVALID_CODEC } from 'gel/dist/codecs/codecs.js';
 import { KNOWN_TYPENAMES } from 'gel/dist/codecs/consts.js';
 import type Event from 'gel/dist/primitives/event.js';
-import LRU from 'gel/dist/primitives/lru.js';
+import type LRU from 'gel/dist/primitives/lru.js';
 import { retry } from '~/common/retry';
-import { ScalarCodecClass } from './type.util';
+import { type ScalarCodecClass } from './type.util';
 
 export const registerCustomScalarCodecs = async (
   client: Client,

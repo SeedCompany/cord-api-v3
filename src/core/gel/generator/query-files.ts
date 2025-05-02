@@ -1,10 +1,10 @@
 import { headerComment } from '@gel/generate/dist/genutil.js';
 import { generateFiles, stringifyImports } from '@gel/generate/dist/queries.js';
 import { readFile, writeFile } from 'fs/promises';
-import { $, Client, systemUtils } from 'gel';
+import { $, type Client, systemUtils } from 'gel';
 import { join, relative } from 'node:path/posix';
 import { injectHydrators } from './inject-hydrators';
-import { GeneratorParams } from './util';
+import { type GeneratorParams } from './util';
 
 export async function generateQueryFiles(params: GeneratorParams) {
   const srcDir = join(params.root.getPath(), 'src');

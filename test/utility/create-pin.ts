@@ -1,5 +1,5 @@
-import { ID } from '~/common';
-import { TestApp } from './create-app';
+import { type ID } from '~/common';
+import { type TestApp } from './create-app';
 import { gql } from './gql-tag';
 
 export async function createPin(app: TestApp, id: ID, pinned?: boolean) {

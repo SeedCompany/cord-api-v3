@@ -6,18 +6,18 @@ import {
   DbUnique,
   EnhancedResource,
   getDbClassLabels,
-  ID,
+  type ID,
   InputException,
   isIdLike,
   NotFoundException,
-  ResourceShape,
+  type ResourceShape,
   ServerException,
 } from '~/common';
-import { ResourceLike, ResourcesHost } from '../resources';
+import { type ResourceLike, ResourcesHost } from '../resources';
 import { DatabaseService, DbTraceLayer } from './database.service';
 import { createUniqueConstraint } from './indexer';
 import { ACTIVE, deleteBaseNode, updateRelationList } from './query';
-import { BaseNode } from './results';
+import { type BaseNode } from './results';
 
 /**
  * This provides a few methods out of the box.

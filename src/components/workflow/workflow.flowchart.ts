@@ -9,8 +9,8 @@ import {
 import open from 'open';
 import * as uuid from 'uuid';
 import { deflateSync as deflate } from 'zlib';
-import { Workflow } from './define-workflow';
-import { DynamicState } from './transitions/dynamic-state';
+import { type Workflow } from './define-workflow';
+import { type DynamicState } from './transitions/dynamic-state';
 
 export const WorkflowFlowchart = <W extends Workflow>(workflow: () => W) => {
   abstract class WorkflowFlowchartClass {

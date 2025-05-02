@@ -7,11 +7,11 @@ import {
   Text,
 } from '@seedcompany/nestjs-email/templates';
 import {
-  Project,
+  type Project,
   ProjectStep as Step,
   ProjectType as Type,
 } from '../../../components/project/dto';
-import { User } from '../../../components/user/dto';
+import { type User } from '../../../components/user/dto';
 import { EmailTemplate, Heading } from './base';
 import { FormattedDateTime } from './formatted-date-time';
 import { useFrontendUrl } from './frontend-url';

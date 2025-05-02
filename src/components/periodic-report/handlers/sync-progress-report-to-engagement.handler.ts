@@ -1,7 +1,7 @@
-import { DateInterval, UnsecuredDto } from '~/common';
-import { EventsHandler, IEventHandler, ILogger, Logger } from '~/core';
+import { DateInterval, type UnsecuredDto } from '~/common';
+import { EventsHandler, type IEventHandler, ILogger, Logger } from '~/core';
 import { EngagementService } from '../../engagement';
-import { Engagement, engagementRange } from '../../engagement/dto';
+import { type Engagement, engagementRange } from '../../engagement/dto';
 import {
   EngagementCreatedEvent,
   EngagementUpdatedEvent,
@@ -11,7 +11,7 @@ import { ReportType } from '../dto';
 import { PeriodicReportService } from '../periodic-report.service';
 import {
   AbstractPeriodicReportSync,
-  Intervals,
+  type Intervals,
 } from './abstract-periodic-report-sync';
 
 type SubscribedEvent =

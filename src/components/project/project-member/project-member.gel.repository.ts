@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { ID, isIdLike, PublicOf, Role } from '~/common';
-import { e, RepoFor, ScopeOf } from '~/core/gel';
+import { type ID, isIdLike, type PublicOf, type Role } from '~/common';
+import { e, RepoFor, type ScopeOf } from '~/core/gel';
 import { hydrateUser } from '../../user/user.gel.repository';
 import {
-  CreateProjectMember,
+  type CreateProjectMember,
   ProjectMember,
-  ProjectMemberListInput,
+  type ProjectMemberListInput,
 } from './dto';
-import { ProjectMemberRepository as Neo4jRepository } from './project-member.repository';
+import { type ProjectMemberRepository as Neo4jRepository } from './project-member.repository';
 
 @Injectable()
 export class ProjectMemberGelRepository

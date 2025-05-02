@@ -1,10 +1,14 @@
 /* eslint-disable @typescript-eslint/method-signature-style */
-import { Many } from '@seedcompany/common';
-import { Query } from 'cypher-query-builder';
-import { inspect, InspectOptionsStylized } from 'util';
-import { EnhancedResource, ResourceShape, Session } from '~/common';
-import { ResourceObjectContext } from '../object.type';
-import { Policy } from '../policy.factory';
+import { type Many } from '@seedcompany/common';
+import { type Query } from 'cypher-query-builder';
+import { inspect, type InspectOptionsStylized } from 'util';
+import {
+  type EnhancedResource,
+  type ResourceShape,
+  type Session,
+} from '~/common';
+import { type ResourceObjectContext } from '../object.type';
+import { type Policy } from '../policy.factory';
 
 export interface IsAllowedParams<TResourceStatic extends ResourceShape<any>> {
   /**

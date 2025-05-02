@@ -1,6 +1,6 @@
 import { applyDecorators } from '@nestjs/common';
-import { FieldOptions, TypeMetadataStorage } from '@nestjs/graphql';
-import { ReturnTypeFunc } from '@nestjs/graphql/dist/interfaces/return-type-func.interface';
+import { type FieldOptions, TypeMetadataStorage } from '@nestjs/graphql';
+import { type ReturnTypeFunc } from '@nestjs/graphql/dist/interfaces/return-type-func.interface';
 import { LazyMetadataStorage } from '@nestjs/graphql/dist/schema-builder/storages/lazy-metadata.storage.js';
 import { reflectTypeFromMetadata } from '@nestjs/graphql/dist/utils/reflection.utilts.js';
 import { MinLength } from 'class-validator';

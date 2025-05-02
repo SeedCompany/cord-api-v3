@@ -4,25 +4,25 @@ import {
   ObjectType,
   registerEnumType,
 } from '@nestjs/graphql';
-import { MadeEnum } from '@seedcompany/nest';
+import { type MadeEnum } from '@seedcompany/nest';
 import { stripIndent } from 'common-tags';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
-  EnumType,
+  type EnumType,
   lazyRef,
   makeEnum,
   Resource,
   SecuredProperty,
-  SecuredProps,
-  UnsecuredDto,
+  type SecuredProps,
+  type UnsecuredDto,
 } from '~/common';
-import { SetDbType } from '~/core/database';
-import { SetChangeType } from '~/core/database/changes';
+import { type SetDbType } from '~/core/database';
+import { type SetChangeType } from '~/core/database/changes';
 import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
-import { DbScriptureReferences } from '../../scripture';
+import { type DbScriptureReferences } from '../../scripture';
 import {
-  ScriptureRangeInput,
+  type ScriptureRangeInput,
   SecuredScriptureRanges,
 } from '../../scripture/dto';
 

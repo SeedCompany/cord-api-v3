@@ -1,5 +1,5 @@
 import { mapValues } from '@seedcompany/common';
-import { Calculated, ResourceRelationsShape, Role } from '~/common';
+import { Calculated, type ResourceRelationsShape, Role } from '~/common';
 import { RegisterResource } from '~/core/resources';
 
 /**

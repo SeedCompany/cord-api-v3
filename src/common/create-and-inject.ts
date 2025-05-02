@@ -1,6 +1,6 @@
-import { ModuleRef } from '@nestjs/core';
+import { type ModuleRef } from '@nestjs/core';
 import { pickBy } from 'lodash';
-import { Class } from 'type-fest';
+import { type Class } from 'type-fest';
 
 /**
  * A helper to create an instance of a class and inject dependencies.

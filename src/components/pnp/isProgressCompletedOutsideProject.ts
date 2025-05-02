@@ -4,11 +4,11 @@ import {
   fiscalYear,
   fullFiscalQuarter,
 } from '~/common';
-import { Cell } from '~/common/xlsx.util';
+import { type Cell } from '~/common/xlsx.util';
 import { ProductStep } from '../product/dto';
-import { PnpExtractionResult, PnpProblemType } from './extraction-result';
-import { Pnp } from './pnp';
-import { ProgressSheet } from './progress-sheet';
+import { type PnpExtractionResult, PnpProblemType } from './extraction-result';
+import { type Pnp } from './pnp';
+import { type ProgressSheet } from './progress-sheet';
 
 export const isProgressCompletedOutsideProject = (
   pnp: Pnp,

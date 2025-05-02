@@ -1,22 +1,22 @@
 import { useHive } from '@graphql-hive/yoga';
 import { useAPQ } from '@graphql-yoga/plugin-apq';
 import { Injectable } from '@nestjs/common';
-import { GqlOptionsFactory } from '@nestjs/graphql';
+import { type GqlOptionsFactory } from '@nestjs/graphql';
 import { CacheService } from '@seedcompany/cache';
 import { mapKeys } from '@seedcompany/common';
 import {
-  DocumentNode,
+  type DocumentNode,
   GraphQLScalarType,
-  OperationDefinitionNode,
+  type OperationDefinitionNode,
 } from 'graphql';
-import { Plugin as PluginNoContext } from 'graphql-yoga';
+import { type Plugin as PluginNoContext } from 'graphql-yoga';
 import { BehaviorSubject } from 'rxjs';
-import { GqlContextType, Session } from '~/common';
+import { type GqlContextType, type Session } from '~/common';
 import { getRegisteredScalars } from '~/common/scalars';
 import { ConfigService } from '../config/config.service';
 import { VersionService } from '../config/version.service';
 import { apolloExplorer } from './apollo-explorer';
-import { DriverConfig, ServerContext } from './driver';
+import { type DriverConfig, type ServerContext } from './driver';
 import { isGqlContext } from './gql-context.host';
 import { GraphqlTracingPlugin } from './graphql-tracing.plugin';
 

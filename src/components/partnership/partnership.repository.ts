@@ -1,17 +1,17 @@
 import { Injectable } from '@nestjs/common';
-import { Node, node, Query, relation } from 'cypher-query-builder';
+import { type Node, node, type Query, relation } from 'cypher-query-builder';
 import { pickBy } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   CreationFailed,
   DuplicateException,
   generateId,
-  ID,
+  type ID,
   labelForView,
   NotFoundException,
-  ObjectView,
-  Session,
-  UnsecuredDto,
+  type ObjectView,
+  type Session,
+  type UnsecuredDto,
   viewOfChangeset,
 } from '~/common';
 import { DtoRepository } from '~/core/database';
@@ -35,15 +35,15 @@ import {
   whereNotDeletedInChangeset,
 } from '~/core/database/query';
 import { FileService } from '../file';
-import { FileId } from '../file/dto';
+import { type FileId } from '../file/dto';
 import { partnerFilters, partnerSorters } from '../partner/partner.repository';
 import {
-  CreatePartnership,
+  type CreatePartnership,
   Partnership,
   PartnershipAgreementStatus,
   PartnershipFilters,
-  PartnershipListInput,
-  UpdatePartnership,
+  type PartnershipListInput,
+  type UpdatePartnership,
 } from './dto';
 import type { PartnershipByProjectAndPartnerInput } from './partnership-by-project-and-partner.loader';
 

@@ -1,23 +1,23 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { DateTime } from 'luxon';
+import { type DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { Merge } from 'type-fest';
+import { type Merge } from 'type-fest';
 import {
-  ID,
+  type ID,
   SecuredFloatNullable,
-  SecuredProps,
-  SetUnsecuredType,
-  UnsecuredDto,
+  type SecuredProps,
+  type SetUnsecuredType,
+  type UnsecuredDto,
   Variant,
 } from '~/common';
 import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
-import { Product, ProductStep } from '../../product/dto';
-import { ProgressReport } from '../../progress-report/dto';
+import { type Product, ProductStep } from '../../product/dto';
+import { type ProgressReport } from '../../progress-report/dto';
 import {
   ProgressReportVariantProgress,
-  ProgressVariant,
+  type ProgressVariant,
 } from './variant-progress.dto';
 
 export interface ProgressVariantByProductInput {

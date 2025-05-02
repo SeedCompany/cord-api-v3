@@ -1,6 +1,6 @@
-import { Merge } from 'type-fest';
-import { $str } from '../generated-client/modules/std';
-import { BaseType } from '../generated-client/typesystem';
+import { type Merge } from 'type-fest';
+import { type $str } from '../generated-client/modules/std';
+import { type BaseType } from '../generated-client/typesystem';
 
 /**
  * This is an unsafe helper to assert that the given str expression

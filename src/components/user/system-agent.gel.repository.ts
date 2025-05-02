@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Role } from '~/common';
+import { type Role } from '~/common';
 import { disableAccessPolicies, edgeql, Gel } from '~/core/gel';
 import { SystemAgentRepository } from './system-agent.repository';
 

@@ -1,4 +1,4 @@
-import { ConfigService, EventsHandler, IEventHandler } from '~/core';
+import { ConfigService, EventsHandler, type IEventHandler } from '~/core';
 import { EngagementWillDeleteEvent } from '../../engagement/events';
 import { CeremonyService } from '../ceremony.service';
 

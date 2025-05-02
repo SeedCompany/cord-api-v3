@@ -3,7 +3,7 @@ import { simpleSwitch } from '@seedcompany/common';
 import {
   CreationFailed,
   DuplicateException,
-  ID,
+  type ID,
   NotFoundException,
   ReadAfterCreationFailed,
   ServerException,
@@ -11,9 +11,9 @@ import {
 import { DtoRepository, UniquenessError } from '~/core/database';
 import { createNode } from '~/core/database/query';
 import {
-  CreateEthnologueLanguage,
+  type CreateEthnologueLanguage,
   EthnologueLanguage,
-  UpdateEthnologueLanguage,
+  type UpdateEthnologueLanguage,
 } from '../dto';
 
 @Injectable()

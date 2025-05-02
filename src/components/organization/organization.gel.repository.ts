@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { PublicOf } from '~/common';
+import { type PublicOf } from '~/common';
 import { e, RepoFor } from '~/core/gel';
-import { CreateOrganization, Organization } from './dto';
-import { OrganizationRepository } from './organization.repository';
+import { type CreateOrganization, Organization } from './dto';
+import { type OrganizationRepository } from './organization.repository';
 
 @Injectable()
 export class OrganizationGelRepository

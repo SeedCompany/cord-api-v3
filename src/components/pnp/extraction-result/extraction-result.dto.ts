@@ -1,20 +1,20 @@
 import { Field, InputType, InterfaceType, ObjectType } from '@nestjs/graphql';
-import { many, Many } from '@seedcompany/common';
+import { many, type Many } from '@seedcompany/common';
 import { stripIndent } from 'common-tags';
-import { UUID } from 'node:crypto';
+import { type UUID } from 'node:crypto';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { Merge } from 'type-fest';
+import { type Merge } from 'type-fest';
 import * as uuid from 'uuid';
 import {
-  EnumType,
-  ID,
+  type EnumType,
+  type ID,
   IdField,
   makeEnum,
   OptionalField,
-  SecuredProps,
+  type SecuredProps,
 } from '~/common';
 import { InlineMarkdownScalar } from '~/common/markdown.scalar';
-import { Cell } from '~/common/xlsx.util';
+import { type Cell } from '~/common/xlsx.util';
 
 export type PnpProblemSeverity = EnumType<typeof PnpProblemSeverity>;
 export const PnpProblemSeverity = makeEnum({

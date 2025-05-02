@@ -1,7 +1,7 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import {
-  ID,
+  type ID,
   IdField,
   IntersectTypes,
   NameField,
@@ -13,7 +13,7 @@ import {
   CreateDerivativeScriptureProduct,
   CreateDirectScriptureProduct,
 } from './create-product.dto';
-import { AnyProduct, Product } from './product.dto';
+import { type AnyProduct, Product } from './product.dto';
 
 @InputType()
 export abstract class UpdateBaseProduct extends OmitType(CreateBaseProduct, [

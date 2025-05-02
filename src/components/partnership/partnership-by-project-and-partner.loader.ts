@@ -1,10 +1,10 @@
-import { ID } from '~/common';
+import { type ID } from '~/common';
 import {
   LoaderFactory,
-  LoaderOptionsOf,
+  type LoaderOptionsOf,
   SessionAwareLoaderStrategy,
 } from '~/core';
-import { Partnership } from './dto';
+import { type Partnership } from './dto';
 import { PartnershipService } from './partnership.service';
 
 export interface PartnershipByProjectAndPartnerInput {

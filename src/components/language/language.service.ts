@@ -2,28 +2,35 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { isNotFalsy, setHas, setOf } from '@seedcompany/common';
 import {
   CalendarDate,
-  ID,
+  type ID,
   InputException,
-  ObjectView,
-  SecuredDate,
+  type ObjectView,
+  type SecuredDate,
   ServerException,
-  Session,
-  UnsecuredDto,
+  type Session,
+  type UnsecuredDto,
 } from '~/common';
 import { HandleIdLookup, ILogger, Logger } from '~/core';
 import { Privileges } from '../authorization';
 import { EngagementService } from '../engagement';
-import { EngagementListInput, EngagementStatus } from '../engagement/dto';
+import { type EngagementListInput, EngagementStatus } from '../engagement/dto';
 import { LocationService } from '../location';
-import { LocationListInput, SecuredLocationList } from '../location/dto';
-import { ProjectService } from '../project';
-import { IProject, ProjectListInput, SecuredProjectList } from '../project/dto';
 import {
-  CreateLanguage,
+  type LocationListInput,
+  type SecuredLocationList,
+} from '../location/dto';
+import { ProjectService } from '../project';
+import {
+  IProject,
+  type ProjectListInput,
+  type SecuredProjectList,
+} from '../project/dto';
+import {
+  type CreateLanguage,
   Language,
-  LanguageListInput,
-  LanguageListOutput,
-  UpdateLanguage,
+  type LanguageListInput,
+  type LanguageListOutput,
+  type UpdateLanguage,
 } from './dto';
 import { EthnologueLanguageService } from './ethnologue-language';
 import { LanguageRepository } from './language.repository';

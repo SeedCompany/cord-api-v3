@@ -2,14 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { mapEntries, simpleSwitch } from '@seedcompany/common';
 import { intersection, sumBy, uniq } from 'lodash';
 import {
-  ID,
+  type ID,
   InputException,
   NotFoundException,
-  ObjectView,
+  type ObjectView,
   ReadAfterCreationFailed,
   ServerException,
-  Session,
-  UnsecuredDto,
+  type Session,
+  type UnsecuredDto,
 } from '~/common';
 import { HandleIdLookup, ILogger, Logger, ResourceResolver } from '~/core';
 import { compareNullable, ifDiff, isSame } from '~/core/database/changes';
@@ -23,11 +23,11 @@ import {
 } from '../scripture';
 import { ScriptureRange, UnspecifiedScripturePortion } from '../scripture/dto';
 import {
-  AnyProduct,
+  type AnyProduct,
   asProductType,
-  CreateDerivativeScriptureProduct,
-  CreateDirectScriptureProduct,
-  CreateOtherProduct,
+  type CreateDerivativeScriptureProduct,
+  type CreateDirectScriptureProduct,
+  type CreateOtherProduct,
   DerivativeScriptureProduct,
   DirectScriptureProduct,
   getAvailableSteps,
@@ -35,18 +35,21 @@ import {
   OtherProduct,
   ProducibleType,
   Product,
-  ProductApproach,
-  ProductCompletionDescriptionSuggestionsInput,
-  ProductListInput,
-  ProductListOutput,
-  ProductMethodology,
+  type ProductApproach,
+  type ProductCompletionDescriptionSuggestionsInput,
+  type ProductListInput,
+  type ProductListOutput,
+  type ProductMethodology,
   resolveProductType,
-  UpdateDerivativeScriptureProduct,
-  UpdateDirectScriptureProduct,
-  UpdateOtherProduct,
-  UpdateBaseProduct as UpdateProduct,
+  type UpdateDerivativeScriptureProduct,
+  type UpdateDirectScriptureProduct,
+  type UpdateOtherProduct,
+  type UpdateBaseProduct as UpdateProduct,
 } from './dto';
-import { HydratedProductRow, ProductRepository } from './product.repository';
+import {
+  type HydratedProductRow,
+  ProductRepository,
+} from './product.repository';
 
 @Injectable()
 export class ProductService {

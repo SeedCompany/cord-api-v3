@@ -1,9 +1,9 @@
 import { applyDecorators } from '@nestjs/common';
-import { EnumType, makeEnum } from '@seedcompany/nest';
+import { type EnumType, makeEnum } from '@seedcompany/nest';
 import { rankSens } from '~/core/database/query';
 import { DbSort } from './db-sort.decorator';
-import { ListField, ListFieldOptions } from './list-field';
-import { OptionalField, OptionalFieldOptions } from './optional-field';
+import { ListField, type ListFieldOptions } from './list-field';
+import { OptionalField, type OptionalFieldOptions } from './optional-field';
 
 export type Sensitivity = EnumType<typeof Sensitivity>;
 export const Sensitivity = makeEnum({

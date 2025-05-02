@@ -5,18 +5,18 @@ import {
   DateTimeField,
   IntersectTypes,
   Resource,
-  ResourceRelationsShape,
-  Secured,
+  type ResourceRelationsShape,
+  type Secured,
   SecuredBoolean,
   SecuredDateNullable,
   SecuredProperty,
-  SecuredProps,
+  type SecuredProps,
   SecuredStringNullable,
   Sensitivity,
   SensitivityField,
 } from '~/common';
 import { e } from '~/core/gel';
-import { LinkTo, RegisterResource } from '~/core/resources';
+import { type LinkTo, RegisterResource } from '~/core/resources';
 import { Commentable } from '../../comments/dto';
 import { SecuredFinanceDepartmentIdBlockNullable } from '../../finance/department/dto/id-blocks.dto';
 import { SecuredFinancialReportingTypes } from '../../partnership/dto';

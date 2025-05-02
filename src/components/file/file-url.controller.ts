@@ -9,9 +9,9 @@ import {
   Request,
   Response,
 } from '@nestjs/common';
-import { ID } from '~/common';
+import { type ID } from '~/common';
 import { loggedInSession as verifyLoggedIn } from '~/common/session';
-import { HttpAdapter, IRequest, IResponse } from '~/core/http';
+import { HttpAdapter, type IRequest, type IResponse } from '~/core/http';
 import { SessionInterceptor } from '../authentication/session.interceptor';
 import { FileService } from './file.service';
 

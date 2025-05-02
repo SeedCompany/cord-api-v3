@@ -1,5 +1,9 @@
-import { Query } from 'cypher-query-builder';
-import { ID, PaginatedListType, PaginationInput } from '~/common';
+import { type Query } from 'cypher-query-builder';
+import {
+  type ID,
+  type PaginatedListType,
+  type PaginationInput,
+} from '~/common';
 import { collect } from './cypher-functions';
 
 /**

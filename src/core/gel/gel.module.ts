@@ -1,6 +1,6 @@
-import { Module, OnModuleDestroy } from '@nestjs/common';
+import { Module, type OnModuleDestroy } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
-import { ConnectOptions, createClient, Options } from 'gel';
+import { type ConnectOptions, createClient, Options } from 'gel';
 import { IdResolver } from '~/common/validators/short-id.validator';
 import type { ConfigService } from '~/core';
 import { splitDb } from '../database/split-db.provider';

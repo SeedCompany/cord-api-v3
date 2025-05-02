@@ -1,9 +1,9 @@
 import { faker } from '@faker-js/faker';
 import { generateId, isValidId, Role } from '~/common';
-import { RegisterInput } from '../../src/components/authentication/dto';
-import { User, UserStatus } from '../../src/components/user/dto';
-import { TestApp } from './create-app';
-import { fragments, RawUser } from './fragments';
+import { type RegisterInput } from '../../src/components/authentication/dto';
+import { type User, UserStatus } from '../../src/components/user/dto';
+import { type TestApp } from './create-app';
+import { fragments, type RawUser } from './fragments';
 import { gql } from './gql-tag';
 import { login, runAsAdmin, runInIsolatedSession } from './login';
 

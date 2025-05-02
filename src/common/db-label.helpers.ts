@@ -1,5 +1,5 @@
 import { uniq } from 'lodash';
-import { AbstractClass } from 'type-fest';
+import type { AbstractClass } from 'type-fest';
 import { DbLabelSymbol } from './db-label.decorator';
 import { getParentTypes } from './parent-types';
 import { isResourceClass } from './resource.dto';

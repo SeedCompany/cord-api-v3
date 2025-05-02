@@ -4,7 +4,7 @@ import { LruStore } from '@seedcompany/cache/stores/lru';
 import { RedisStore } from '@seedcompany/cache/stores/redis';
 import Redis from 'ioredis';
 import { ConfigService } from '../config/config.service';
-import { ILogger, LoggerToken } from '../logger';
+import { type ILogger, LoggerToken } from '../logger';
 
 @Module({
   imports: [

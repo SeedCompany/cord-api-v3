@@ -1,5 +1,5 @@
 import { range } from 'lodash';
-import { DateTime } from 'luxon';
+import { type DateTime } from 'luxon';
 import { CalendarDate, DateInterval } from './temporal';
 
 export const fiscalQuarterLabel = (date: CalendarDate) =>

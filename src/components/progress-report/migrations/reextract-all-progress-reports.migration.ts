@@ -4,9 +4,9 @@ import { IEventBus } from '~/core';
 import { BaseMigration, Migration } from '~/core/database';
 import { ACTIVE, matchProps, merge } from '~/core/database/query';
 import { FileService } from '../../file';
-import { FileVersion } from '../../file/dto';
+import { type FileVersion } from '../../file/dto';
 import { PeriodicReportUploadedEvent } from '../../periodic-report/events';
-import { ProgressReport } from '../dto';
+import { type ProgressReport } from '../dto';
 
 @Migration('2025-01-06T09:00:00')
 export class ReextractPnpProgressReportsMigration extends BaseMigration {

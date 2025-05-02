@@ -1,6 +1,6 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { FileUpload, FileUploadScalar, ID, IdField } from '~/common';
+import { type FileUpload, FileUploadScalar, type ID, IdField } from '~/common';
 import { MediaUserMetadata } from '../media/media.dto';
 
 @ObjectType()

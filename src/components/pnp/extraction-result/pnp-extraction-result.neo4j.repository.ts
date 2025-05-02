@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { CachedByArg, mapKeys } from '@seedcompany/common';
 import { inArray, node, relation } from 'cypher-query-builder';
-import { SetNonNullable } from 'type-fest';
-import { ID, PublicOf } from '~/common';
+import type { SetNonNullable } from 'type-fest';
+import { type ID, type PublicOf } from '~/common';
 import { CommonRepository } from '~/core/database';
 import {
   apoc,
@@ -11,7 +11,7 @@ import {
   defineSorters,
   filter,
   merge,
-  SortCol,
+  type SortCol,
   sortingForEnumIndex,
   variable,
 } from '~/core/database/query';
@@ -20,10 +20,10 @@ import {
   PnpExtractionResultFilters,
   PnpProblemType,
   PnpProblemSeverity as Severity,
-  StoredProblem,
+  type StoredProblem,
 } from './extraction-result.dto';
-import { PnpExtractionResultRepository } from './pnp-extraction-result.gel.repository';
-import { PnpExtractionResultLoadResult } from './pnp-extraction-result.loader';
+import { type PnpExtractionResultRepository } from './pnp-extraction-result.gel.repository';
+import { type PnpExtractionResultLoadResult } from './pnp-extraction-result.loader';
 
 @Injectable()
 export class PnpExtractionResultNeo4jRepository

@@ -1,11 +1,15 @@
-import { node, Query, relation } from 'cypher-query-builder';
+import { node, type Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { ID, MaybeUnsecuredInstance, ResourceShape } from '~/common';
-import { DbChanges } from '../../changes';
+import {
+  type ID,
+  type MaybeUnsecuredInstance,
+  type ResourceShape,
+} from '~/common';
+import { type DbChanges } from '../../changes';
 import { prefixNodeLabelsWithDeleted } from '../deletes';
 import { ACTIVE, Variable, variable as varRef } from '../index';
 import { maybeWhereAnd } from '../maybe-where-and';
-import { CommonPropertyOptions } from './common-property-options';
+import { type CommonPropertyOptions } from './common-property-options';
 
 export type DeactivatePropertyOptions<
   TResourceStatic extends ResourceShape<any>,

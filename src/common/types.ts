@@ -5,8 +5,8 @@ import {
   // eslint-disable-next-line @seedcompany/no-restricted-imports
   IntersectionType,
 } from '@nestjs/graphql';
-import { ClassDecoratorFactory } from '@nestjs/graphql/dist/interfaces/class-decorator-factory.interface';
-import { AbstractClass, Class } from 'type-fest';
+import type { ClassDecoratorFactory } from '@nestjs/graphql/dist/interfaces/class-decorator-factory.interface';
+import type { AbstractClass, Class } from 'type-fest';
 import { NotImplementedException } from './exceptions';
 
 /**

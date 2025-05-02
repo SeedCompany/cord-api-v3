@@ -1,4 +1,4 @@
-import { EnumType, makeEnum } from '@seedcompany/nest';
+import { type EnumType, makeEnum } from '@seedcompany/nest';
 
 /**
  * Valid actions for resources

@@ -1,6 +1,6 @@
-import { ValueOf } from 'type-fest';
-import { ResourceAction } from '../actions';
-import { ResourcesGranter } from '../granters';
+import { type ValueOf } from 'type-fest';
+import { type ResourceAction } from '../actions';
+import { type ResourcesGranter } from '../granters';
 import { asNormalized } from './as-normalized.helper';
 import { action } from './perm-granter';
 

@@ -1,5 +1,10 @@
 import { ObjectType } from '@nestjs/graphql';
-import { EnumType, makeEnum, SecuredEnum, SecuredEnumList } from '~/common';
+import {
+  type EnumType,
+  makeEnum,
+  SecuredEnum,
+  SecuredEnumList,
+} from '~/common';
 
 export type ProjectType = EnumType<typeof ProjectType>;
 export const ProjectType = makeEnum({

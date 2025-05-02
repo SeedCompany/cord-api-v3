@@ -1,6 +1,11 @@
 import { ObjectType } from '@nestjs/graphql';
 import { invertBy } from 'lodash';
-import { EnumType, makeEnum, SecuredEnum, SecuredEnumList } from '~/common';
+import {
+  type EnumType,
+  makeEnum,
+  SecuredEnum,
+  SecuredEnumList,
+} from '~/common';
 import { ProductApproach as Approach } from './product-approach.enum';
 
 /**

@@ -1,15 +1,15 @@
-import { Query } from 'cypher-query-builder';
-import { inspect, InspectOptionsStylized } from 'util';
-import { ID, Many } from '~/common';
+import { type Query } from 'cypher-query-builder';
+import { inspect, type InspectOptionsStylized } from 'util';
+import { type ID, type Many } from '~/common';
 import { ResourceGranter } from '../authorization';
 import { action } from '../authorization/policy/builder/perm-granter';
-import { PropsGranterFn } from '../authorization/policy/builder/resource-granter';
+import { type PropsGranterFn } from '../authorization/policy/builder/resource-granter';
 import {
-  Condition,
+  type Condition,
   eqlInLiteralSet,
-  IsAllowedParams,
+  type IsAllowedParams,
 } from '../authorization/policy/conditions';
-import { Workflow } from './define-workflow';
+import { type Workflow } from './define-workflow';
 
 export function WorkflowEventGranter<
   W extends Workflow,

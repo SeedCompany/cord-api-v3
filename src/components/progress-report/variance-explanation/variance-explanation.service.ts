@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { mapKeys } from '@seedcompany/common';
-import { InputException, NotFoundException, Session } from '~/common';
+import { InputException, NotFoundException, type Session } from '~/common';
 import { ResourceLoader } from '~/core';
 import { Privileges } from '../../authorization';
 import { ProgressReport } from '../dto';
 import { ProgressReportVarianceExplanationReasonOptions as ReasonOptions } from './reason-options';
 import {
   ProgressReportVarianceExplanation as VarianceExplanation,
-  ProgressReportVarianceExplanationInput as VarianceExplanationInput,
+  type ProgressReportVarianceExplanationInput as VarianceExplanationInput,
 } from './variance-explanation.dto';
 import { ProgressReportVarianceExplanationRepository } from './variance-explanation.repository';
 

@@ -1,6 +1,6 @@
 import { ArgsType, Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { ID, IdField, SecuredProps } from '~/common';
+import { type ID, IdField, type SecuredProps } from '~/common';
 import { LanguageProficiency } from './language-proficiency.enum';
 
 @ObjectType()

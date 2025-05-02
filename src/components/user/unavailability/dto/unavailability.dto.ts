@@ -3,7 +3,7 @@ import { keys as keysOf } from 'ts-transformer-keys';
 import {
   Resource,
   SecuredDateTime,
-  SecuredProps,
+  type SecuredProps,
   SecuredString,
 } from '~/common';
 import { e } from '~/core/gel';

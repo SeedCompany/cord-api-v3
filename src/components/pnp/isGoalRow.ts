@@ -1,9 +1,14 @@
-import { Book, parseScripture, Range, Verse } from '@seedcompany/scripture';
-import { Cell } from '~/common/xlsx.util';
+import {
+  Book,
+  parseScripture,
+  type Range,
+  type Verse,
+} from '@seedcompany/scripture';
+import { type Cell } from '~/common/xlsx.util';
 import { ScriptureRange } from '../scripture/dto';
-import { PnpExtractionResult, PnpProblemType } from './extraction-result';
-import { PlanningSheet } from './planning-sheet';
-import { ProgressSheet } from './progress-sheet';
+import { type PnpExtractionResult, PnpProblemType } from './extraction-result';
+import { type PlanningSheet } from './planning-sheet';
+import { type ProgressSheet } from './progress-sheet';
 
 export const isGoalRow = (
   cell: Cell<PlanningSheet | ProgressSheet>,

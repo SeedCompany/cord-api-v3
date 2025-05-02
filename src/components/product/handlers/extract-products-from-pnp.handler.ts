@@ -1,4 +1,4 @@
-import { EventsHandler, IEventHandler } from '~/core';
+import { EventsHandler, type IEventHandler } from '~/core';
 import {
   EngagementCreatedEvent,
   EngagementUpdatedEvent,

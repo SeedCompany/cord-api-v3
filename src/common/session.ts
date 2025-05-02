@@ -1,18 +1,18 @@
 import {
   createParamDecorator,
-  ExecutionContext,
-  PipeTransform,
-  Type,
+  type ExecutionContext,
+  type PipeTransform,
+  type Type,
 } from '@nestjs/common';
 import { CONTROLLER_WATERMARK } from '@nestjs/common/constants.js';
 import { Context } from '@nestjs/graphql';
 import { uniq } from 'lodash';
-import { DateTime } from 'luxon';
+import { type DateTime } from 'luxon';
 import { NoSessionException } from '../components/authentication/no-session.exception';
-import { ScopedRole } from '../components/authorization/dto';
-import { GqlContextType } from './context.type';
+import { type ScopedRole } from '../components/authorization/dto';
+import { type GqlContextType } from './context.type';
 import { UnauthenticatedException } from './exceptions';
-import { ID } from './id-field';
+import { type ID } from './id-field';
 
 export interface Session {
   readonly token: string;

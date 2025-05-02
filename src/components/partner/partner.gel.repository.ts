@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { ID, PublicOf } from '~/common';
+import { type ID, type PublicOf } from '~/common';
 import { e, RepoFor } from '~/core/gel';
 import * as departmentIdBlock from '../finance/department/gel.utils';
-import { CreatePartner, Partner, UpdatePartner } from './dto';
-import { PartnerRepository } from './partner.repository';
+import { type CreatePartner, Partner, type UpdatePartner } from './dto';
+import { type PartnerRepository } from './partner.repository';
 
 @Injectable()
 export class PartnerGelRepository

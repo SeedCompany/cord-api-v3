@@ -1,10 +1,10 @@
-import { Type } from '@nestjs/common';
+import { type Type } from '@nestjs/common';
 import {
   registerDecorator,
-  ValidationOptions,
-  ValidatorConstraintInterface,
+  type ValidationOptions,
+  type ValidatorConstraintInterface,
 } from 'class-validator';
-import { MergeExclusive } from 'type-fest';
+import type { MergeExclusive } from 'type-fest';
 
 export type ValidateByOptions =
   | MergeExclusive<

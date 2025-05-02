@@ -1,19 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import {
-  ID,
-  ObjectView,
+  type ID,
+  type ObjectView,
   ServerException,
-  Session,
-  UnsecuredDto,
+  type Session,
+  type UnsecuredDto,
 } from '~/common';
 import { HandleIdLookup, ILogger, Logger } from '~/core';
 import { Privileges } from '../authorization';
 import {
-  CreateFieldZone,
+  type CreateFieldZone,
   FieldZone,
-  FieldZoneListInput,
-  FieldZoneListOutput,
-  UpdateFieldZone,
+  type FieldZoneListInput,
+  type FieldZoneListOutput,
+  type UpdateFieldZone,
 } from './dto';
 import { FieldZoneRepository } from './field-zone.repository';
 

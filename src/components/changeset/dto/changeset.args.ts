@@ -1,6 +1,6 @@
-import { Injectable, PipeTransform } from '@nestjs/common';
+import { Injectable, type PipeTransform } from '@nestjs/common';
 import { Args, ArgsType } from '@nestjs/graphql';
-import { ID, IdField, ObjectView } from '~/common';
+import { type ID, IdField, type ObjectView } from '~/common';
 import { ValidationPipe } from '~/core/validation';
 
 /**

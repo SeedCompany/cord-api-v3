@@ -3,10 +3,10 @@ import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { first, intersection } from 'lodash';
 import {
-  ID,
+  type ID,
   Role,
   ServerException,
-  Session,
+  type Session,
   UnauthorizedException,
 } from '~/common';
 import { ILogger, Logger } from '~/core';
@@ -16,7 +16,7 @@ import { withoutScope } from '../authorization/dto';
 import { ProjectStep } from '../project/dto';
 import {
   EngagementStatus,
-  EngagementStatusTransition,
+  type EngagementStatusTransition,
   EngagementTransitionType,
 } from './dto';
 

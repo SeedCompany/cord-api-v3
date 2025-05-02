@@ -1,15 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { Merge } from 'type-fest';
-import { CommonRepository, OnIndex, OnIndexParams } from '~/core/database';
+import { type Merge } from 'type-fest';
+import { CommonRepository, OnIndex, type OnIndexParams } from '~/core/database';
 import {
   ACTIVE,
   escapeLuceneSyntax,
   FullTextIndex,
 } from '~/core/database/query';
-import { BaseNode } from '~/core/database/results';
+import { type BaseNode } from '~/core/database/results';
 import type { ResourceMap } from '~/core/resources';
-import { SearchInput } from './dto';
+import { type SearchInput } from './dto';
 
 @Injectable()
 export class SearchRepository extends CommonRepository {

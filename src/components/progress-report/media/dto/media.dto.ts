@@ -3,19 +3,19 @@ import { setOf } from '@seedcompany/common';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
   IdField,
-  IdOf,
+  type IdOf,
   Resource,
-  SecuredProps,
+  type SecuredProps,
   Variant,
-  VariantOf,
+  type VariantOf,
 } from '~/common';
-import { LinkTo } from '~/core';
-import { SetDbType } from '~/core/database';
+import { type LinkTo } from '~/core';
+import { type SetDbType } from '~/core/database';
 import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
-import { FileId } from '../../../file/dto';
-import { Media } from '../../../file/media/media.dto';
-import { ProgressReport } from '../../dto';
+import { type FileId } from '../../../file/dto';
+import { type Media } from '../../../file/media/media.dto';
+import { type ProgressReport } from '../../dto';
 import { ProgressReportHighlight } from '../../dto/highlights.dto';
 import { MediaCategory } from '../media-category.enum';
 

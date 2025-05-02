@@ -1,13 +1,13 @@
 import { faker } from '@faker-js/faker';
 import { DateTime } from 'luxon';
-import { ID, isValidId } from '~/common';
+import { type ID, isValidId } from '~/common';
 import {
-  CreateInternshipEngagement,
-  CreateLanguageEngagement,
+  type CreateInternshipEngagement,
+  type CreateLanguageEngagement,
   InternshipPosition,
 } from '../../src/components/engagement/dto';
 import { ProductMethodology } from '../../src/components/product/dto';
-import { TestApp } from './create-app';
+import { type TestApp } from './create-app';
 import { createLanguage } from './create-language';
 import { createLocation } from './create-location';
 import { createPerson } from './create-person';
@@ -15,8 +15,8 @@ import { createProject } from './create-project';
 import { getUserFromSession } from './create-session';
 import {
   fragments,
-  RawInternshipEngagement,
-  RawLanguageEngagement,
+  type RawInternshipEngagement,
+  type RawLanguageEngagement,
 } from './fragments';
 import { gql } from './gql-tag';
 import { runAsAdmin } from './login';

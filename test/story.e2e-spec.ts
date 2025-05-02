@@ -2,7 +2,7 @@ import { faker } from '@faker-js/faker';
 import { times } from 'lodash';
 import { isValidId, Role } from '~/common';
 import { ScriptureRange } from '../src/components/scripture/dto';
-import { Story } from '../src/components/story/dto';
+import { type Story } from '../src/components/story/dto';
 import {
   createSession,
   createStory,
@@ -10,7 +10,7 @@ import {
   fragments,
   gql,
   registerUser,
-  TestApp,
+  type TestApp,
 } from './utility';
 
 describe('Story e2e', () => {

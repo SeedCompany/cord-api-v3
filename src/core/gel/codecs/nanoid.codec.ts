@@ -1,5 +1,5 @@
 import { StrCodec } from 'gel/dist/codecs/text.js';
-import { ScalarInfo } from './type.util';
+import { type ScalarInfo } from './type.util';
 
 export class NanoIDCodec extends StrCodec {
   static info: ScalarInfo = {

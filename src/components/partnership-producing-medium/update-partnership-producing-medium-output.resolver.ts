@@ -1,7 +1,7 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { Loader, LoaderOf } from '~/core';
+import { Loader, type LoaderOf } from '~/core';
 import { EngagementLoader } from '../engagement';
-import { Engagement, LanguageEngagement } from '../engagement/dto';
+import { type Engagement, LanguageEngagement } from '../engagement/dto';
 import { UpdatePartnershipProducingMediumOutput } from './dto/partnership-producing-medium.dto';
 
 @Resolver(UpdatePartnershipProducingMediumOutput)

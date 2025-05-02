@@ -7,7 +7,7 @@ import {
   fragments,
   gql,
   registerUser,
-  TestApp,
+  type TestApp,
 } from './utility';
 
 describe('Pin e2e', () => {

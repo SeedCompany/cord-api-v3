@@ -1,4 +1,4 @@
-import { Role } from '~/common';
+import { type Role } from '~/common';
 
 export type ProjectScope = 'project';
 export type GlobalScope = 'global';

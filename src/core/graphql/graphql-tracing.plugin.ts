@@ -1,7 +1,10 @@
-import { FieldMiddleware } from '@nestjs/graphql';
+import { type FieldMiddleware } from '@nestjs/graphql';
 import { createHash } from 'crypto';
-import { GraphQLResolveInfo as ResolveInfo, ResponsePath } from 'graphql';
-import { Segment, TracingService } from '../tracing';
+import {
+  type GraphQLResolveInfo as ResolveInfo,
+  type ResponsePath,
+} from 'graphql';
+import { type Segment, TracingService } from '../tracing';
 import { Plugin } from './plugin.decorator';
 
 @Plugin()

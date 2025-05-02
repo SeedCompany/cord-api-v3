@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { ID, PublicOf, ServerException } from '~/common';
+import { type ID, type PublicOf, ServerException } from '~/common';
 import { e, RepoFor } from '~/core/gel';
-import { Location, LocationListInput } from './dto';
-import { LocationRepository } from './location.repository';
+import { Location, type LocationListInput } from './dto';
+import { type LocationRepository } from './location.repository';
 
 @Injectable()
 export class LocationGelRepository

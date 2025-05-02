@@ -1,5 +1,5 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { Loader, LoaderOf } from '~/core';
+import { Loader, type LoaderOf } from '~/core';
 import { CommentLoader } from '../comment.loader';
 import { Comment } from '../dto';
 import { CommentViaMentionNotification as Notification } from './comment-via-mention-notification.dto';

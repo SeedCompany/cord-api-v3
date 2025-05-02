@@ -12,11 +12,11 @@ import {
   LoggedInSession,
   mapSecuredValue,
   SecuredDateRange,
-  Session,
+  type Session,
   viewOfChangeset,
 } from '~/common';
-import { Loader, LoaderOf } from '~/core';
-import { ChangesetIds, IdsAndView, IdsAndViewArg } from '../changeset/dto';
+import { Loader, type LoaderOf } from '~/core';
+import { ChangesetIds, type IdsAndView, IdsAndViewArg } from '../changeset/dto';
 import { FileNodeLoader, resolveDefinedFile } from '../file';
 import { SecuredFile } from '../file/dto';
 import { PartnerLoader } from '../partner';

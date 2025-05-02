@@ -5,10 +5,16 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { AnonSession, IdArg, IdOf, LoggedInSession, Session } from '~/common';
-import { Loader, LoaderOf } from '~/core';
+import {
+  AnonSession,
+  IdArg,
+  type IdOf,
+  LoggedInSession,
+  type Session,
+} from '~/common';
+import { Loader, type LoaderOf } from '~/core';
 import { PeriodicReportLoader } from '../../periodic-report';
-import { PeriodicReport } from '../../periodic-report/dto';
+import { type PeriodicReport } from '../../periodic-report/dto';
 import {
   ChangePrompt,
   ChoosePrompt,
@@ -17,7 +23,7 @@ import {
   UpdatePromptVariantResponse,
 } from '../../prompts/dto';
 import { ProgressReport } from '../dto';
-import { TeamNewsVariant } from '../dto/team-news.dto';
+import { type TeamNewsVariant } from '../dto/team-news.dto';
 import { ProgressReportTeamNewsService } from './progress-report-team-news.service';
 
 @Resolver(ProgressReport)

@@ -2,15 +2,15 @@ import npmFfprobe from '@ffprobe-installer/ffprobe';
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { CachedByArg as Once } from '@seedcompany/common';
 import { $, execa } from 'execa';
-import { FFProbeResult } from 'ffprobe';
+import { type FFProbeResult } from 'ffprobe';
 import { imageSize } from 'image-size';
 import type { ISize as ImageSize } from 'image-size/types/interface';
-import { Except } from 'type-fest';
+import type { Except } from 'type-fest';
 import { retry } from '~/common/retry';
 import { ILogger, Logger } from '~/core';
-import { FileVersion } from '../dto';
+import { type FileVersion } from '../dto';
 import { FileService } from '../file.service';
-import { AnyMedia, Media } from './media.dto';
+import { type AnyMedia, type Media } from './media.dto';
 
 @Injectable()
 export class MediaDetector {

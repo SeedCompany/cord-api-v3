@@ -1,4 +1,4 @@
-import { ID } from '~/common';
+import { type ID } from '~/common';
 import { LoaderFactory, OrderedNestDataLoader } from '~/core';
 import { Story } from './dto';
 import { StoryService } from './story.service';

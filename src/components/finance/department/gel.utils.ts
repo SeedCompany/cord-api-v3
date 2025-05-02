@@ -1,6 +1,6 @@
-import { Nil } from '@seedcompany/common';
-import { $, e } from '~/core/gel';
-import { FinanceDepartmentIdBlockInput as Input } from './dto/id-blocks.input';
+import { type Nil } from '@seedcompany/common';
+import { type $, e } from '~/core/gel';
+import { type FinanceDepartmentIdBlockInput as Input } from './dto/id-blocks.input';
 
 export const hydrate = e.shape(e.Finance.Department.IdBlock, (block) => ({
   id: true,

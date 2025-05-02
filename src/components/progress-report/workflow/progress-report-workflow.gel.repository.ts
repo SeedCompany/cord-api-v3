@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { SetRequired } from 'type-fest';
-import { ID, PublicOf } from '~/common';
+import { type SetRequired } from 'type-fest';
+import { type ID, type PublicOf } from '~/common';
 import { e, edgeql, RepoFor } from '~/core/gel';
-import { ProgressReportStatus as Status } from '../dto';
-import { ExecuteProgressReportTransitionInput } from './dto/execute-progress-report-transition.input';
+import { type ProgressReportStatus as Status } from '../dto';
+import { type ExecuteProgressReportTransitionInput } from './dto/execute-progress-report-transition.input';
 import { ProgressReportWorkflowEvent } from './dto/workflow-event.dto';
-import { ProgressReportWorkflowRepository } from './progress-report-workflow.repository';
+import { type ProgressReportWorkflowRepository } from './progress-report-workflow.repository';
 
 @Injectable()
 export class ProgressReportWorkflowGelRepository

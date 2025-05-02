@@ -1,11 +1,11 @@
 import { sortBy } from '@seedcompany/common';
 import levenshtein from 'fastest-levenshtein';
 import { startCase, without } from 'lodash';
-import { Column } from '~/common/xlsx.util';
+import { type Column } from '~/common/xlsx.util';
 import { ProductStep as Step } from '../product/dto';
-import { PnpExtractionResult, PnpProblemType } from './extraction-result';
-import { PlanningSheet } from './planning-sheet';
-import { ProgressSheet } from './progress-sheet';
+import { type PnpExtractionResult, PnpProblemType } from './extraction-result';
+import { type PlanningSheet } from './planning-sheet';
+import { type ProgressSheet } from './progress-sheet';
 import 'ix/add/iterable-operators/filter.js';
 import 'ix/add/iterable-operators/map.js';
 import 'ix/add/iterable-operators/toarray.js';

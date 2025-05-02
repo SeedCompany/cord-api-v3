@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
-import { ID, NotFoundException } from '~/common';
+import { type ID, NotFoundException } from '~/common';
 import { ILogger, Logger } from '~/core';
 import { CommonRepository } from '~/core/database';
 import { ACTIVE, apoc, collect, merge, variable } from '~/core/database/query';
-import { ProductMedium } from '../product/dto';
-import { PartnershipProducingMediumInput } from './dto/partnership-producing-medium.dto';
+import { type ProductMedium } from '../product/dto';
+import { type PartnershipProducingMediumInput } from './dto/partnership-producing-medium.dto';
 
 @Injectable()
 export class PartnershipProducingMediumRepository extends CommonRepository {

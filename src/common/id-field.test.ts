@@ -1,7 +1,7 @@
 /* eslint-disable @seedcompany/no-unused-vars */
 import { test } from '@jest/globals';
 import type { User } from '../components/user/dto';
-import { ID } from './id-field';
+import { type ID } from './id-field';
 
 test('only types here', () => undefined);
 

@@ -1,14 +1,14 @@
-import { Nil } from '@seedcompany/common';
+import { type Nil } from '@seedcompany/common';
 import {
   labelOfVerseRange,
   labelOfVerseRanges,
   Verse,
 } from '@seedcompany/scripture';
-import { Simplify } from 'type-fest';
-import { $, e } from '~/core/gel';
-import { $expr_Param } from '~/core/gel/generated-client/params';
-import { $expr_PathNode } from '~/core/gel/generated-client/path';
-import { ScriptureRangeInput, ScriptureReferenceInput } from './dto';
+import type { Simplify } from 'type-fest';
+import { type $, e } from '~/core/gel';
+import { type $expr_Param } from '~/core/gel/generated-client/params';
+import { type $expr_PathNode } from '~/core/gel/generated-client/path';
+import { type ScriptureRangeInput, type ScriptureReferenceInput } from './dto';
 
 const verse = e.tuple({
   book: e.str,

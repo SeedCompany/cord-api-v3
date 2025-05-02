@@ -1,22 +1,26 @@
 import {
-  DiscoveredClassWithMeta,
+  type DiscoveredClassWithMeta,
   DiscoveryService,
 } from '@golevelup/nestjs-discovery';
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, type OnModuleInit } from '@nestjs/common';
 import { entries, mapEntries, mapValues } from '@seedcompany/common';
 import { pick, startCase } from 'lodash';
-import { DeepWritable, Writable } from 'ts-essentials';
-import { EnhancedResource, many, Role } from '~/common';
+import { type DeepWritable, type Writable } from 'ts-essentials';
+import { type EnhancedResource, many, type Role } from '~/common';
 import { ResourcesHost } from '~/core/resources';
 import { Power } from '../dto';
 import { ChildListAction, ChildSingleAction } from './actions';
-import { extract, Permission, Permissions } from './builder/perm-granter';
+import {
+  extract,
+  type Permission,
+  type Permissions,
+} from './builder/perm-granter';
 import {
   POLICY_METADATA_KEY,
-  PolicyMetadata,
+  type PolicyMetadata,
 } from './builder/policy.decorator';
 import { all, any, Condition } from './conditions';
-import { ResourcesGranter } from './granters';
+import { type ResourcesGranter } from './granters';
 import { GrantersFactory } from './granters.factory';
 
 interface ResourceGrants {

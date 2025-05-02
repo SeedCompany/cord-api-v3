@@ -1,4 +1,4 @@
-import { createContext, ReactElement, useContext } from 'react';
+import { createContext, type ReactElement, useContext } from 'react';
 import { ServerException } from '~/common/exceptions';
 
 const FrontendUrlContext = createContext<string | undefined>(undefined);

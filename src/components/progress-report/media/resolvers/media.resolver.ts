@@ -5,8 +5,14 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { AnonSession, IdArg, IdOf, LoggedInSession, Session } from '~/common';
-import { Loader, LoaderOf } from '~/core';
+import {
+  AnonSession,
+  IdArg,
+  type IdOf,
+  LoggedInSession,
+  type Session,
+} from '~/common';
+import { Loader, type LoaderOf } from '~/core';
 import { Privileges } from '../../../authorization';
 import { Media } from '../../../file/media/media.dto';
 import { MediaLoader } from '../../../file/media/media.loader';

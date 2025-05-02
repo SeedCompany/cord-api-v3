@@ -3,16 +3,16 @@ import { UnreachableCaseError } from 'ts-essentials';
 import {
   DuplicateException,
   fiscalYears,
-  ID,
-  Secured,
-  Session,
+  type ID,
+  type Secured,
+  type Session,
   UnauthorizedException,
-  UnsecuredDto,
+  type UnsecuredDto,
 } from '~/common';
-import { EventsHandler, IEventHandler, ILogger, Logger } from '~/core';
+import { EventsHandler, type IEventHandler, ILogger, Logger } from '~/core';
 import { PartnerType } from '../../partner/dto';
 import { PartnershipService } from '../../partnership';
-import { Partnership } from '../../partnership/dto';
+import { type Partnership } from '../../partnership/dto';
 import {
   PartnershipCreatedEvent,
   PartnershipUpdatedEvent,
@@ -21,7 +21,7 @@ import {
 import { ProjectUpdatedEvent } from '../../project/events';
 import { BudgetRepository } from '../budget.repository';
 import { BudgetService } from '../budget.service';
-import { Budget, BudgetRecord } from '../dto';
+import { type Budget, type BudgetRecord } from '../dto';
 
 type PartialBudget = UnsecuredDto<Pick<Budget, 'id' | 'status'>> & {
   records: ReadonlyArray<UnsecuredDto<BudgetRecord>>;

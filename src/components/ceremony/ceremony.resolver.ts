@@ -1,5 +1,5 @@
 import { Args, Mutation, Resolver } from '@nestjs/graphql';
-import { LoggedInSession, Session } from '~/common';
+import { LoggedInSession, type Session } from '~/common';
 import { CeremonyService } from '../ceremony';
 import { UpdateCeremonyInput, UpdateCeremonyOutput } from './dto';
 

@@ -1,10 +1,16 @@
-import { entries, isNotNil, many, Many, mapKeys } from '@seedcompany/common';
-import { Query } from 'cypher-query-builder';
+import {
+  entries,
+  isNotNil,
+  many,
+  type Many,
+  mapKeys,
+} from '@seedcompany/common';
+import { type Query } from 'cypher-query-builder';
 import { pickBy } from 'lodash';
-import { LiteralUnion } from 'type-fest';
+import { type LiteralUnion } from 'type-fest';
 import { procedure } from '../query-augmentation/call';
-import { Variable } from '../query-augmentation/condition-variables';
-import { CypherExpression, exp, isExp } from './cypher-expression';
+import { type Variable } from '../query-augmentation/condition-variables';
+import { type CypherExpression, exp, isExp } from './cypher-expression';
 import { db } from './cypher-functions';
 
 export type FullTextIndex = ReturnType<typeof FullTextIndex>;

@@ -8,16 +8,16 @@ import {
 } from '@nestjs/graphql';
 import {
   AnonSession,
-  ID,
+  type ID,
   IdArg,
   ListArg,
   loadManyIgnoreMissingThrowAny,
   loadSecuredIds,
   LoggedInSession,
   mapSecuredValue,
-  Session,
+  type Session,
 } from '~/common';
-import { Loader, LoaderOf } from '~/core';
+import { Loader, type LoaderOf } from '~/core';
 import { EngagementLoader } from '../engagement';
 import { EngagementListInput, EngagementListOutput } from '../engagement/dto';
 import { FieldRegionLoader } from '../field-region';

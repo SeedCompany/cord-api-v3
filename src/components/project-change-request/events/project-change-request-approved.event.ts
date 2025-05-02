@@ -1,5 +1,5 @@
-import { Session, UnsecuredDto } from '~/common';
-import { ProjectChangeRequest } from '../dto';
+import { type Session, type UnsecuredDto } from '~/common';
+import { type ProjectChangeRequest } from '../dto';
 
 export class ProjectChangeRequestApprovedEvent {
   constructor(

@@ -1,9 +1,12 @@
 import { faker } from '@faker-js/faker';
 import { CalendarDate, isValidId } from '~/common';
-import { CreateProject, ProjectType } from '../../src/components/project/dto';
-import { TestApp } from './create-app';
+import {
+  type CreateProject,
+  ProjectType,
+} from '../../src/components/project/dto';
+import { type TestApp } from './create-app';
 import { createRegion } from './create-region';
-import { fragments, RawProject } from './fragments';
+import { fragments, type RawProject } from './fragments';
 import { gql } from './gql-tag';
 import { runAsAdmin } from './login';
 

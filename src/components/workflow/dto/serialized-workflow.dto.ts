@@ -2,9 +2,9 @@ import { createUnionType, Field, ObjectType } from '@nestjs/graphql';
 import { cacheable } from '@seedcompany/common';
 import { stripIndent } from 'common-tags';
 import * as uuid from 'uuid';
-import { DataObject, ID, IdField, Role } from '~/common';
-import { Workflow } from '../define-workflow';
-import { DynamicState } from '../transitions/dynamic-state';
+import { DataObject, type ID, IdField, Role } from '~/common';
+import { type Workflow } from '../define-workflow';
+import { type DynamicState } from '../transitions/dynamic-state';
 import { TransitionType } from './workflow-transition.dto';
 
 @ObjectType('WorkflowState')

@@ -1,6 +1,6 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { mapSecuredValue, Resource } from '~/common';
-import { Loader, LoaderOf, ResourceLoader } from '~/core';
+import { Loader, type LoaderOf, ResourceLoader } from '~/core';
 import { UserLoader } from '../user';
 import { SecuredUser } from '../user/dto';
 import { PromptResponse, PromptVariantResponse, VariantResponse } from './dto';

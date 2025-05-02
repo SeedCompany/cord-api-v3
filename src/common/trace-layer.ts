@@ -1,7 +1,7 @@
 import { cacheable, cached } from '@seedcompany/common';
 import { patchDecoratedMethod as patchMethod } from '@seedcompany/nest';
 import { AsyncLocalStorage } from 'async_hooks';
-import { AbstractClass } from 'type-fest';
+import type { AbstractClass } from 'type-fest';
 import { getParentTypes as getHierarchyList } from './parent-types';
 
 export type TraceNames = Readonly<{

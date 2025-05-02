@@ -4,13 +4,13 @@ import { keys as keysOf } from 'ts-transformer-keys';
 import {
   DateTimeField,
   Resource,
-  Secured,
-  SecuredProps,
+  type Secured,
+  type SecuredProps,
   SecuredString,
 } from '~/common';
-import { BaseNode } from '~/core/database/results';
+import { type BaseNode } from '~/core/database/results';
 import { e } from '~/core/gel';
-import { LinkTo, RegisterResource } from '~/core/resources';
+import { type LinkTo, RegisterResource } from '~/core/resources';
 import { PostType } from './post-type.enum';
 import { PostShareability } from './shareability.dto';
 

@@ -1,5 +1,5 @@
 export { Policy } from './builder/policy.decorator';
-export { ResourcesGranter } from './granters';
+export type { ResourcesGranter } from './granters';
 export { Granter } from './builder/granter.decorator';
 export {
   ResourceGranter,
@@ -14,7 +14,7 @@ export * from './executor/edge-privileges';
 export * from './executor/user-privileges';
 export * from './executor/user-resource-privileges';
 export * from './executor/user-edge-privileges';
-export {
+export type {
   AllPermissionsView,
   AllPermissionsOfEdgeView,
 } from './executor/all-permissions-view';

@@ -1,11 +1,11 @@
 import { Field, Int, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { GraphQLScalarType } from 'graphql';
+import { type GraphQLScalarType } from 'graphql';
 import { lowerCase } from 'lodash';
-import { Class } from 'type-fest';
+import { type Class } from 'type-fest';
 import { DataObject } from './data-object';
 import { IPaginatedList } from './list.interface';
-import { AbstractClassType } from './types';
+import { type AbstractClassType } from './types';
 
 export interface ListOptions {
   itemsDescription?: string;

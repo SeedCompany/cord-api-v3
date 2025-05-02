@@ -1,6 +1,6 @@
 import { ConstraintViolationError } from 'gel';
-import { LiteralUnion } from 'type-fest';
-import { ID } from '~/common';
+import type { LiteralUnion } from 'type-fest';
+import { type ID } from '~/common';
 import type { AllResourceDBNames } from '~/core';
 import { attributesOf } from './attributes';
 

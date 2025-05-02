@@ -1,6 +1,6 @@
-import { ConditionalKeys, IsAny, LiteralUnion, ValueOf } from 'type-fest';
-import { DBName, ResourceShape } from '~/common';
-import { ResourceDBMap, ResourceMap } from './map';
+import type { ConditionalKeys, IsAny, LiteralUnion, ValueOf } from 'type-fest';
+import type { DBName, ResourceShape } from '~/common';
+import type { ResourceDBMap, ResourceMap } from './map';
 
 export type AllResourceAppNames = keyof ResourceMap;
 export type AllResourceDBNames = DBName<ValueOf<ResourceDBMap>>;

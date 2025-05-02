@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { node } from 'cypher-query-builder';
-import { ID, Role } from '~/common';
+import { type ID, type Role } from '~/common';
 import { DatabaseService } from '~/core/database';
 import { SystemAgentRepository } from './system-agent.repository';
 

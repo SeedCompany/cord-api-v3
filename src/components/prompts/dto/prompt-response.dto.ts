@@ -3,24 +3,24 @@ import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
   DbLabel,
-  ID,
+  type ID,
   IdField,
-  IdOf,
+  type IdOf,
   Resource,
-  ResourceRelationsShape,
-  RichTextDocument,
+  type ResourceRelationsShape,
+  type RichTextDocument,
   RichTextField,
-  Secured,
-  SecuredProps,
+  type Secured,
+  type SecuredProps,
   SecuredRichText,
   SecuredRichTextNullable,
-  SetUnsecuredType,
-  UnsecuredDto,
+  type SetUnsecuredType,
+  type UnsecuredDto,
   Variant,
 } from '~/common';
-import { LinkTo, LinkToUnknown } from '~/core';
-import { BaseNode } from '~/core/database/results';
-import { Prompt, SecuredPrompt } from './prompt.dto';
+import { type LinkTo, type LinkToUnknown } from '~/core';
+import { type BaseNode } from '~/core/database/results';
+import { type Prompt, SecuredPrompt } from './prompt.dto';
 
 @ObjectType()
 export class PromptResponse extends Resource {

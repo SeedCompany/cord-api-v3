@@ -1,8 +1,8 @@
 import { ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { SecuredProps } from '~/common';
+import { type SecuredProps } from '~/common';
 import { e } from '~/core/gel';
-import { LinkTo, RegisterResource } from '~/core/resources';
+import { type LinkTo, RegisterResource } from '~/core/resources';
 import { Notification } from '../../notifications';
 
 @RegisterResource({ db: e.Notification.CommentViaMention })

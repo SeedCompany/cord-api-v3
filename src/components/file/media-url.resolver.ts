@@ -1,5 +1,5 @@
 import { Parent, Resolver } from '@nestjs/graphql';
-import { Loader, LoaderOf } from '@seedcompany/data-loader';
+import { Loader, type LoaderOf } from '@seedcompany/data-loader';
 import { FileNodeLoader } from './file-node.loader';
 import * as FileUrl from './file-url.resolver-util';
 import { FileService } from './file.service';

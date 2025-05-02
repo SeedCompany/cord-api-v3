@@ -14,15 +14,15 @@ import { startCase } from 'lodash';
 import {
   AnonSession,
   Fields,
-  ID,
+  type ID,
   IdArg,
   IsOnlyId,
   ListArg,
   LoggedInSession,
-  Session,
+  type Session,
 } from '~/common';
-import { Loader, LoaderOf } from '~/core';
-import { IdsAndView, IdsAndViewArg } from '../changeset/dto';
+import { Loader, type LoaderOf } from '~/core';
+import { type IdsAndView, IdsAndViewArg } from '../changeset/dto';
 import { ProductLoader, ProductService } from '../product';
 import {
   AvailableStepsOptions,
@@ -36,7 +36,7 @@ import {
 import { ProjectLoader } from '../project';
 import { TranslationProject } from '../project/dto';
 import {
-  AnyProduct,
+  type AnyProduct,
   CreateOtherProduct,
   CreateProductOutput,
   DeleteProductOutput,

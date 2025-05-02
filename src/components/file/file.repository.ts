@@ -7,20 +7,20 @@ import {
   isNull,
   node,
   not,
-  Query,
+  type Query,
   relation,
 } from 'cypher-query-builder';
-import { Direction } from 'cypher-query-builder/dist/typings/clauses/order-by';
-import { AnyConditions } from 'cypher-query-builder/dist/typings/clauses/where-utils';
+import { type Direction } from 'cypher-query-builder/dist/typings/clauses/order-by';
+import { type AnyConditions } from 'cypher-query-builder/dist/typings/clauses/where-utils';
 import { DateTime } from 'luxon';
 import {
   CreationFailed,
-  ID,
+  type ID,
   NotFoundException,
   ServerException,
-  Session,
+  type Session,
 } from '~/common';
-import { ILogger, LinkTo, Logger } from '~/core';
+import { ILogger, type LinkTo, Logger } from '~/core';
 import { CommonRepository, OnIndex } from '~/core/database';
 import {
   ACTIVE,
@@ -33,12 +33,12 @@ import {
   sorting,
   variable,
 } from '~/core/database/query';
-import { BaseNode } from '~/core/database/results';
+import { type BaseNode } from '~/core/database/results';
 import {
   Directory,
   File,
   FileListInput,
-  FileNode,
+  type FileNode,
   FileNodeType,
   FileVersion,
   IFileNode,

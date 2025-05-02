@@ -1,7 +1,7 @@
 import { isNotFalsy, isPlainObject } from '@seedcompany/common';
 import { stripIndent } from 'common-tags';
 import {
-  Clause,
+  type Clause,
   ClauseCollection,
   Create,
   Match,

@@ -1,6 +1,6 @@
 import { defineContext, defineWorkflow } from '../../workflow/define-workflow';
 import { TransitionType as Type } from '../../workflow/dto';
-import { Notifier } from '../../workflow/transitions/notifiers';
+import { type Notifier } from '../../workflow/transitions/notifiers';
 import { ProjectStep as Step } from '../dto';
 import { ProjectWorkflowEvent } from './dto';
 import {
@@ -11,7 +11,7 @@ import {
 import {
   BackTo,
   BackToActive,
-  ResolveParams,
+  type ResolveParams,
 } from './transitions/dynamic-step';
 import {
   ApprovalFromEarlyConversationsRequiresEngagements,

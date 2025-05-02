@@ -1,10 +1,10 @@
 import { generateQueryBuilder as runQueryBuilderGenerator } from '@gel/generate/dist/edgeql-js.js';
-import { groupBy, many, Many } from '@seedcompany/common';
+import { groupBy, many, type Many } from '@seedcompany/common';
 import type { ts } from '@ts-morph/common';
-import { Directory, Node } from 'ts-morph';
+import { type Directory, type Node } from 'ts-morph';
 import { codecs } from '../codecs';
 import { customScalars } from './scalars';
-import { addCustomScalarImports, GeneratorParams } from './util';
+import { addCustomScalarImports, type GeneratorParams } from './util';
 
 export async function generateQueryBuilder({
   client,

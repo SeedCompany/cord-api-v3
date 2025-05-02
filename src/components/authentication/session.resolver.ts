@@ -8,11 +8,11 @@ import {
 } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import {
-  GqlContextType,
+  type GqlContextType,
   ServerException,
   UnauthenticatedException,
 } from '~/common';
-import { ConfigService, ILogger, Loader, LoaderOf, Logger } from '~/core';
+import { ConfigService, ILogger, Loader, type LoaderOf, Logger } from '~/core';
 import { HttpAdapter } from '~/core/http';
 import { Privileges } from '../authorization';
 import { Power } from '../authorization/dto';

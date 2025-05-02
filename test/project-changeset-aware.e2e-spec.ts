@@ -15,7 +15,7 @@ import {
   gql,
   registerUser,
   runAsAdmin,
-  TestApp,
+  type TestApp,
 } from './utility';
 import { fragments } from './utility/fragments';
 import {

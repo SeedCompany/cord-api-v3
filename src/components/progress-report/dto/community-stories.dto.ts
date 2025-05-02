@@ -1,5 +1,5 @@
 import { keys as keysOf } from 'ts-transformer-keys';
-import { SecuredProps, VariantOf } from '~/common';
+import { type SecuredProps, type VariantOf } from '~/common';
 import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
 import { PromptVariantResponse } from '../../prompts/dto';

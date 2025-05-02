@@ -1,4 +1,4 @@
-import { ValidationOptions } from 'class-validator';
+import { type ValidationOptions } from 'class-validator';
 import { whereAlpha3 } from 'iso-3166-1';
 import { ValidateBy } from './validateBy';
 

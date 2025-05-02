@@ -1,9 +1,9 @@
 import { Connection } from 'cypher-query-builder';
-import { Duration, DurationLike } from 'luxon';
-import { Transaction as NeoTransaction } from 'neo4j-driver';
+import { Duration, type DurationLike } from 'luxon';
+import { type Transaction as NeoTransaction } from 'neo4j-driver';
 import { getCauseList, ServerException } from '~/common';
-import { ILogger } from '../logger';
-import { PatchedConnection } from './cypher.factory';
+import { type ILogger } from '../logger';
+import { type PatchedConnection } from './cypher.factory';
 import { isNeo4jError } from './errors';
 
 export type Neo4jTransaction = NeoTransaction & { queryLogger?: ILogger };

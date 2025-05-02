@@ -10,10 +10,10 @@ import {
   CalendarDate,
   DateField,
   ListArg,
-  Session,
+  type Session,
 } from '~/common';
-import { Loader, LoaderOf } from '~/core';
-import { Engagement, LanguageEngagement } from '../../engagement/dto';
+import { Loader, type LoaderOf } from '~/core';
+import { type Engagement, LanguageEngagement } from '../../engagement/dto';
 import {
   PeriodicReportLoader,
   PeriodicReportService,

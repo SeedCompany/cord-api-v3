@@ -1,10 +1,10 @@
 import { mapEntries } from '@seedcompany/common';
 import { node, relation } from 'cypher-query-builder';
-import { ValueOf } from 'type-fest';
-import { ID, IdOf } from '~/common';
+import { type ValueOf } from 'type-fest';
+import { type ID, type IdOf } from '~/common';
 import { BaseMigration, Migration } from '~/core/database';
 import { ACTIVE } from '~/core/database/query';
-import { Location } from '../dto';
+import { type Location } from '../dto';
 import { LocationService } from '../location.service';
 
 @Migration('2024-01-16T11:00:00')

@@ -1,5 +1,5 @@
 import { applyDecorators } from '@nestjs/common';
-import { Field, FieldOptions, ID as IDType } from '@nestjs/graphql';
+import { Field, type FieldOptions, ID as IDType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { ValidateEditability } from './validate-editability.decorator';
 

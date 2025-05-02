@@ -1,6 +1,6 @@
 import { node, relation } from 'cypher-query-builder';
-import { ID, ServerException } from '~/common';
-import { EventsHandler, IEventHandler, ILogger, Logger } from '~/core';
+import { type ID, ServerException } from '~/common';
+import { EventsHandler, type IEventHandler, ILogger, Logger } from '~/core';
 import { DatabaseService } from '~/core/database';
 import { ACTIVE, deleteBaseNode, INACTIVE } from '~/core/database/query';
 import {

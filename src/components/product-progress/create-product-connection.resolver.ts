@@ -1,5 +1,5 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { LoggedInSession, Session, Variant } from '~/common';
+import { LoggedInSession, type Session, Variant } from '~/common';
 import { CreateProductOutput } from '../product/dto';
 import { ProductProgressService } from './product-progress.service';
 

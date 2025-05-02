@@ -1,6 +1,10 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { AnonSession, ParentIdMiddlewareAdditions, Session } from '~/common';
+import {
+  AnonSession,
+  type ParentIdMiddlewareAdditions,
+  type Session,
+} from '~/common';
 import { EngagementStatusTransition, SecuredEngagementStatus } from './dto';
 import { EngagementRules } from './engagement.rules';
 

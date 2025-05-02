@@ -1,5 +1,5 @@
 import { createUnionType } from '@nestjs/graphql';
-import { EnumType, makeEnum } from '~/common';
+import { type EnumType, makeEnum } from '~/common';
 import { ProjectStep } from './project-step.enum';
 
 export type ProjectStatus = EnumType<typeof ProjectStatus>;

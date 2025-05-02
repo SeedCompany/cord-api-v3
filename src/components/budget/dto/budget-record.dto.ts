@@ -2,21 +2,21 @@ import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
   Calculated,
-  ID,
+  type ID,
   IntersectTypes,
   Resource,
-  Secured,
+  type Secured,
   SecuredFloatNullable,
   SecuredInt,
-  SecuredProps,
+  type SecuredProps,
   Sensitivity,
   SensitivityField,
 } from '~/common';
-import { BaseNode } from '~/core/database/results';
+import { type BaseNode } from '~/core/database/results';
 import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
 import { ChangesetAware } from '../../changeset/dto';
-import { BudgetStatus } from './budget-status.enum';
+import { type BudgetStatus } from './budget-status.enum';
 import { Budget } from './budget.dto';
 
 const Interfaces = IntersectTypes(Resource, ChangesetAware);

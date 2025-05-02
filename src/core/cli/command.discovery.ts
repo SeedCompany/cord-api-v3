@@ -1,5 +1,5 @@
 import {
-  DiscoveredModule,
+  type DiscoveredModule,
   DiscoveryService,
 } from '@golevelup/nestjs-discovery';
 import { Injectable } from '@nestjs/common';

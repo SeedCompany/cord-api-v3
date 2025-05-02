@@ -17,7 +17,7 @@ import {
   Title,
   Wrapper,
 } from '@seedcompany/nestjs-email/templates';
-import { ComponentProps, ReactElement, ReactNode } from 'react';
+import type { ComponentProps, ReactElement, ReactNode } from 'react';
 import { useFrontendUrl } from './frontend-url';
 
 export const EmailTemplate = ({

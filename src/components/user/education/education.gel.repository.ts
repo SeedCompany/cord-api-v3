@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { ID, PublicOf } from '~/common';
+import { type ID, type PublicOf } from '~/common';
 import { e, RepoFor } from '~/core/gel';
 import { Education } from './dto';
-import { EducationRepository } from './education.repository';
+import { type EducationRepository } from './education.repository';
 
 @Injectable()
 export class EducationGelRepository

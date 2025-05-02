@@ -3,18 +3,18 @@ import { Transform, Type } from 'class-transformer';
 import { IsPositive, ValidateNested } from 'class-validator';
 import { stripIndent } from 'common-tags';
 import { uniq } from 'lodash';
-import { DateTime } from 'luxon';
-import { ID, IdField, NameField } from '~/common';
+import { type DateTime } from 'luxon';
+import { type ID, IdField, NameField } from '~/common';
 import {
   ScriptureField,
-  ScriptureRangeInput,
+  type ScriptureRangeInput,
   UnspecifiedScripturePortionInput,
 } from '../../scripture/dto';
 import { ProductMedium } from './product-medium.enum';
 import { ProductMethodology } from './product-methodology.enum';
 import { ProductPurpose } from './product-purpose.enum';
 import { ProductStep as Step } from './product-step.enum';
-import { AnyProduct, Product } from './product.dto';
+import { type AnyProduct, Product } from './product.dto';
 import { ProgressMeasurement } from './progress-measurement.enum';
 
 @InputType({

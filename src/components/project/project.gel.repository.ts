@@ -1,25 +1,30 @@
-import { Injectable, Type } from '@nestjs/common';
+import { Injectable, type Type } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { LazyGetter } from 'lazy-get-decorator';
-import { ID, PublicOf, SortablePaginationInput, UnsecuredDto } from '~/common';
+import {
+  type ID,
+  type PublicOf,
+  type SortablePaginationInput,
+  type UnsecuredDto,
+} from '~/common';
 import { grabInstances } from '~/common/instance-maps';
-import { ChangesOf } from '~/core/database/changes';
+import { type ChangesOf } from '~/core/database/changes';
 import {
   e,
   ExclusivityViolationError,
   RepoFor,
-  ScopeOf,
+  type ScopeOf,
   TransactionRetryInformer,
 } from '~/core/gel';
 import {
   ProjectConcretes as ConcreteTypes,
-  CreateProject,
+  type CreateProject,
   IProject,
-  Project,
-  ProjectListInput,
-  UpdateProject,
+  type Project,
+  type ProjectListInput,
+  type UpdateProject,
 } from './dto';
-import { ProjectRepository as Neo4jRepository } from './project.repository';
+import { type ProjectRepository as Neo4jRepository } from './project.repository';
 
 export const projectRefShape = e.shape(e.Project, () => ({
   id: true,

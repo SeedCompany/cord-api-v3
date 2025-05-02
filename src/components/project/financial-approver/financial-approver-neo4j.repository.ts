@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { many, Many } from '@seedcompany/common';
-import { node, Query, relation } from 'cypher-query-builder';
-import { PublicOf, ServerException } from '~/common';
+import { many, type Many } from '@seedcompany/common';
+import { node, type Query, relation } from 'cypher-query-builder';
+import { type PublicOf, ServerException } from '~/common';
 import { CommonRepository } from '~/core/database';
 import { ACTIVE, merge } from '~/core/database/query';
-import { ProjectType } from '../dto/project-type.enum';
-import { FinancialApprover, FinancialApproverInput } from './dto';
-import { FinancialApproverRepository } from './financial-approver.repository';
+import { type ProjectType } from '../dto/project-type.enum';
+import { type FinancialApprover, type FinancialApproverInput } from './dto';
+import { type FinancialApproverRepository } from './financial-approver.repository';
 
 @Injectable()
 export class FinancialApproverNeo4jRepository

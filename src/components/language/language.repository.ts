@@ -5,20 +5,20 @@ import {
   inArray,
   node,
   not,
-  Query,
+  type Query,
   relation,
 } from 'cypher-query-builder';
 import {
   CreationFailed,
   DuplicateException,
-  ID,
+  type ID,
   labelForView,
   NotFoundException,
-  ObjectView,
+  type ObjectView,
   ReadAfterCreationFailed,
   ServerException,
-  Session,
-  UnsecuredDto,
+  type Session,
+  type UnsecuredDto,
 } from '~/common';
 import { DtoRepository, OnIndex, UniquenessError } from '~/core/database';
 import {
@@ -47,13 +47,13 @@ import {
 } from '~/core/database/query';
 import { ProjectStatus } from '../project/dto';
 import {
-  CreateLanguage,
+  type CreateLanguage,
   EthnologueLanguage,
   EthnologueLanguageFilters,
   Language,
   LanguageFilters,
-  LanguageListInput,
-  UpdateLanguage,
+  type LanguageListInput,
+  type UpdateLanguage,
 } from './dto';
 import { EthnologueLanguageService } from './ethnologue-language';
 

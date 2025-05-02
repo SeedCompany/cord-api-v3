@@ -1,12 +1,12 @@
 import { isValidId } from '~/common';
 import {
-  CreateDerivativeScriptureProduct,
+  type CreateDerivativeScriptureProduct,
   ProductMedium,
   ProductMethodology,
   ProductPurpose,
 } from '../../src/components/product/dto';
-import { TestApp } from './create-app';
-import { fragments, RawProduct } from './fragments';
+import { type TestApp } from './create-app';
+import { fragments, type RawProduct } from './fragments';
 import { gql } from './gql-tag';
 
 export async function createDerivativeProduct(

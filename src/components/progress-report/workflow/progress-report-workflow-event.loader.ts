@@ -1,4 +1,4 @@
-import { ID } from '~/common';
+import { type ID } from '~/common';
 import { LoaderFactory, OrderedNestDataLoader } from '~/core';
 import { ProgressReportWorkflowEvent as WorkflowEvent } from './dto/workflow-event.dto';
 import { ProgressReportWorkflowService } from './progress-report-workflow.service';

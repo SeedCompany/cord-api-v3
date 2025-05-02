@@ -1,4 +1,4 @@
-import { ID } from '~/common';
+import { type ID } from '~/common';
 import { LoaderFactory, OrderedNestDataLoader } from '~/core';
 import { Film } from './dto';
 import { FilmService } from './film.service';

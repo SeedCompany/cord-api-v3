@@ -1,7 +1,7 @@
 import { faker } from '@faker-js/faker';
 import { times } from 'lodash';
 import { isValidId, Role } from '~/common';
-import { FundingAccount } from '../src/components/funding-account/dto';
+import { type FundingAccount } from '../src/components/funding-account/dto';
 import {
   createFundingAccount,
   createSession,
@@ -10,7 +10,7 @@ import {
   gql,
   registerUser,
   runAsAdmin,
-  TestApp,
+  type TestApp,
 } from './utility';
 
 describe('FundingAccount e2e', () => {

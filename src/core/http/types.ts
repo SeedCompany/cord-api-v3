@@ -16,8 +16,8 @@ export type HttpHooks = Required<{
   >]: Exclude<RouteShorthandOptions[Hook], any[]>;
 }>;
 
-export { FastifyCorsOptions as CorsOptions } from '@fastify/cors';
-export { SerializeOptions as CookieOptions } from '@fastify/cookie';
+export type { FastifyCorsOptions as CorsOptions } from '@fastify/cors';
+export type { SerializeOptions as CookieOptions } from '@fastify/cookie';
 
 declare module 'fastify' {
   export interface FastifyRequest {

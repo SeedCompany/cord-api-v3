@@ -2,7 +2,7 @@ import { faker } from '@faker-js/faker';
 import { sortBy } from '@seedcompany/common';
 import { times } from 'lodash';
 import { generateId, isValidId, Role } from '~/common';
-import { Organization } from '../src/components/organization/dto';
+import { type Organization } from '../src/components/organization/dto';
 import {
   createOrganization,
   createSession,
@@ -11,7 +11,7 @@ import {
   fragments,
   gql,
   registerUser,
-  TestApp,
+  type TestApp,
 } from './utility';
 
 describe('Organization e2e', () => {

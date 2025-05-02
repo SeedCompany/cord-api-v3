@@ -1,13 +1,17 @@
-import { Cardinality } from 'gel/dist/reflection';
-import { ConditionalPick, RequireExactlyOne, StringKeyOf } from 'type-fest';
-import { ID } from '~/common';
-import { AllResourceDBNames } from '~/core';
-import {
+import { type Cardinality } from 'gel/dist/reflection';
+import type {
+  ConditionalPick,
+  RequireExactlyOne,
+  StringKeyOf,
+} from 'type-fest';
+import { type ID } from '~/common';
+import { type AllResourceDBNames } from '~/core';
+import type {
   pointerToAssignmentExpression,
   setToAssignmentExpression,
 } from '../generated-client/casting';
-import { pointerIsOptional } from '../generated-client/insert';
-import { $ } from '../reexports';
+import type { pointerIsOptional } from '../generated-client/insert';
+import { type $ } from '../reexports';
 
 export type EasyInsertShape<Root extends $.ObjectTypeSet> = $.typeutil.flatten<
   RawInsertShape<Root>

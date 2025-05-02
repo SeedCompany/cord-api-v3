@@ -1,13 +1,18 @@
 import { Injectable } from '@nestjs/common';
-import { ID, ObjectView, Session, UnsecuredDto } from '~/common';
+import {
+  type ID,
+  type ObjectView,
+  type Session,
+  type UnsecuredDto,
+} from '~/common';
 import { HandleIdLookup } from '~/core';
 import { Privileges } from '../../authorization';
 import {
-  CreateUnavailability,
+  type CreateUnavailability,
   Unavailability,
-  UnavailabilityListInput,
-  UnavailabilityListOutput,
-  UpdateUnavailability,
+  type UnavailabilityListInput,
+  type UnavailabilityListOutput,
+  type UpdateUnavailability,
 } from './dto';
 import { UnavailabilityRepository } from './unavailability.repository';
 

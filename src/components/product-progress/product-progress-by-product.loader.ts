@@ -1,7 +1,11 @@
-import { LoaderFactory, LoaderOptionsOf, OrderedNestDataLoader } from '~/core';
 import {
-  ProgressVariantByProductInput,
-  ProgressVariantByProductOutput,
+  LoaderFactory,
+  type LoaderOptionsOf,
+  OrderedNestDataLoader,
+} from '~/core';
+import {
+  type ProgressVariantByProductInput,
+  type ProgressVariantByProductOutput,
 } from './dto';
 import { ProductProgressService } from './product-progress.service';
 

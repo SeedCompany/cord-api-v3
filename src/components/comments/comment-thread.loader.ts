@@ -1,4 +1,4 @@
-import { ID } from '~/common';
+import { type ID } from '~/common';
 import { LoaderFactory, OrderedNestDataLoader } from '~/core';
 import { CommentRepository } from './comment.repository';
 import { CommentService } from './comment.service';

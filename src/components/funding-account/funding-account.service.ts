@@ -2,24 +2,24 @@ import { Injectable } from '@nestjs/common';
 import {
   CreationFailed,
   DuplicateException,
-  ID,
+  type ID,
   NotFoundException,
-  ObjectView,
+  type ObjectView,
   ReadAfterCreationFailed,
   SecuredList,
   ServerException,
-  Session,
-  UnsecuredDto,
+  type Session,
+  type UnsecuredDto,
 } from '~/common';
 import { HandleIdLookup, ILogger, Logger } from '~/core';
 import { mapListResults } from '~/core/database/results';
 import { Privileges } from '../authorization';
 import {
-  CreateFundingAccount,
+  type CreateFundingAccount,
   FundingAccount,
-  FundingAccountListInput,
-  FundingAccountListOutput,
-  UpdateFundingAccount,
+  type FundingAccountListInput,
+  type FundingAccountListOutput,
+  type UpdateFundingAccount,
 } from './dto';
 import { FundingAccountRepository } from './funding-account.repository';
 

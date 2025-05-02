@@ -1,11 +1,11 @@
 import {
-  ParameterBag,
+  type ParameterBag,
   Precedence,
   stringCons,
   WhereOp,
 } from 'cypher-query-builder';
-import { AnyConditions } from 'cypher-query-builder/dist/typings/clauses/where-utils';
-import { exp, ExpressionInput } from './cypher-expression';
+import { type AnyConditions } from 'cypher-query-builder/dist/typings/clauses/where-utils';
+import { exp, type ExpressionInput } from './cypher-expression';
 
 export class WhereAndList extends WhereOp {
   constructor(public conditions: AnyConditions[]) {

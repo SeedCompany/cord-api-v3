@@ -1,4 +1,4 @@
-import { Promisable } from 'type-fest';
+import { type Promisable } from 'type-fest';
 
 export interface DynamicState<State extends string, Params> {
   description: string;

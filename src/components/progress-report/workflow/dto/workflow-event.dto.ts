@@ -3,17 +3,17 @@ import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
   DateTimeField,
-  ID,
+  type ID,
   IdField,
-  Secured,
-  SecuredProps,
+  type Secured,
+  type SecuredProps,
   SecuredRichTextNullable,
-  SetUnsecuredType,
+  type SetUnsecuredType,
 } from '~/common';
 import { e } from '~/core/gel';
-import { LinkTo, RegisterResource } from '~/core/resources';
+import { type LinkTo, RegisterResource } from '~/core/resources';
 import { ProgressReportStatus } from '../../dto';
-import { InternalTransition } from '../transitions';
+import { type InternalTransition } from '../transitions';
 import { ProgressReportWorkflowTransition as PublicTransition } from './workflow-transition.dto';
 
 @RegisterResource({ db: e.ProgressReport.WorkflowEvent })

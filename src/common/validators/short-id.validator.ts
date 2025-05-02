@@ -1,14 +1,18 @@
-import { ArgumentMetadata, Injectable, PipeTransform } from '@nestjs/common';
+import {
+  type ArgumentMetadata,
+  Injectable,
+  type PipeTransform,
+} from '@nestjs/common';
 import { cached } from '@seedcompany/common';
 import {
-  ValidationArguments,
-  ValidationOptions,
+  type ValidationArguments,
+  type ValidationOptions,
   ValidatorConstraint,
-  ValidatorConstraintInterface,
+  type ValidatorConstraintInterface,
 } from 'class-validator';
 import { ValidationException } from '~/core/validation';
 import { isValidId } from '../generate-id';
-import { ID } from '../id-field';
+import { type ID } from '../id-field';
 import { ValidateBy } from './validateBy';
 
 export const IsId = (validationOptions?: ValidationOptions) =>

@@ -1,10 +1,10 @@
 import { ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { SecuredProps } from '~/common';
+import { type SecuredProps } from '~/common';
 import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
 import { WorkflowEvent } from '../../../workflow/dto';
-import { IProject, ProjectStep } from '../../dto';
+import { type IProject, ProjectStep } from '../../dto';
 import { ProjectWorkflowTransition } from './workflow-transition.dto';
 
 @RegisterResource({ db: e.Project.WorkflowEvent })

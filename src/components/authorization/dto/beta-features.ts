@@ -1,6 +1,6 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { Calculated, ResourceRelationsShape } from '~/common';
+import { Calculated, type ResourceRelationsShape } from '~/common';
 import { RegisterResource } from '~/core/resources';
 import { Granter, ResourceGranter } from '../policy';
 

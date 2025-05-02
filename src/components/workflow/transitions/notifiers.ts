@@ -1,6 +1,6 @@
-import { Many } from '@seedcompany/common';
-import { MergeExclusive, Promisable } from 'type-fest';
-import { ID } from '~/common';
+import { type Many } from '@seedcompany/common';
+import type { MergeExclusive, Promisable } from 'type-fest';
+import { type ID } from '~/common';
 
 export interface TransitionNotifier<Params> {
   description: string;

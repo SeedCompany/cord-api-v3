@@ -1,23 +1,26 @@
-import { Except, Merge, MergeExclusive } from 'type-fest';
-import { ID, Secured } from '~/common';
+import { type Except, type Merge, type MergeExclusive } from 'type-fest';
+import { type ID, type Secured } from '~/common';
 import {
-  IEngagement,
-  InternshipEngagement,
-  LanguageEngagement,
+  type IEngagement,
+  type InternshipEngagement,
+  type LanguageEngagement,
 } from '../../src/components/engagement/dto';
 import {
-  File,
-  FileListOutput,
-  FileVersion,
-  IFileNode,
-  SecuredFile,
+  type File,
+  type FileListOutput,
+  type FileVersion,
+  type IFileNode,
+  type SecuredFile,
 } from '../../src/components/file/dto';
-import { SecuredLanguage } from '../../src/components/language/dto';
-import { Product, ProductApproach } from '../../src/components/product/dto';
-import { Project } from '../../src/components/project/dto';
-import { User } from '../../src/components/user/dto';
+import { type SecuredLanguage } from '../../src/components/language/dto';
+import {
+  type Product,
+  type ProductApproach,
+} from '../../src/components/product/dto';
+import { type Project } from '../../src/components/project/dto';
+import { type User } from '../../src/components/user/dto';
 import { gql } from './gql-tag';
-import { Raw } from './raw.type';
+import { type Raw } from './raw.type';
 
 export const org = gql`
   fragment org on Organization {

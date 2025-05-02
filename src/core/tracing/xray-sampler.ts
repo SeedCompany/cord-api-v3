@@ -1,8 +1,8 @@
-import { ExecutionContext, Injectable } from '@nestjs/common';
+import { type ExecutionContext, Injectable } from '@nestjs/common';
 import { GqlExecutionContext } from '@nestjs/graphql';
 import XRay from 'aws-xray-sdk-core';
-import { Sampler } from './sampler';
-import { Segment } from './tracing.service';
+import { type Sampler } from './sampler';
+import { type Segment } from './tracing.service';
 
 /**
  * Sampling provided by X-Ray library/service.

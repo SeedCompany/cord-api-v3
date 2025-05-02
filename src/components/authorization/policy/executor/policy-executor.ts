@@ -1,18 +1,18 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { CachedByArg } from '@seedcompany/common';
 import { identity, intersection } from 'lodash';
-import { EnhancedResource, Session } from '~/common';
-import { QueryFragment } from '~/core/database/query';
+import { type EnhancedResource, type Session } from '~/common';
+import { type QueryFragment } from '~/core/database/query';
 import { withoutScope } from '../../dto';
 import { RoleCondition } from '../../policies/conditions/role.condition';
-import { Permission } from '../builder/perm-granter';
+import { type Permission } from '../builder/perm-granter';
 import {
   AggregateConditions,
   all,
   AndConditions,
   any,
   CalculatedCondition,
-  Condition,
+  type Condition,
   OrConditions,
 } from '../conditions';
 import { visitCondition } from '../conditions/condition-visitor';

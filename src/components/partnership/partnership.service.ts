@@ -1,17 +1,17 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import {
-  CalendarDate,
+  type CalendarDate,
   CreationFailed,
-  ID,
+  type ID,
   InputException,
   NotFoundException,
-  ObjectView,
-  Range,
+  type ObjectView,
+  type Range,
   RangeException,
   ReadAfterCreationFailed,
   ServerException,
-  Session,
-  UnsecuredDto,
+  type Session,
+  type UnsecuredDto,
   viewOfChangeset,
 } from '~/common';
 import {
@@ -21,19 +21,19 @@ import {
   Logger,
   ResourceLoader,
 } from '~/core';
-import { AnyChangesOf } from '~/core/database/changes';
+import { type AnyChangesOf } from '~/core/database/changes';
 import { Privileges } from '../authorization';
 import { FileService } from '../file';
 import { PartnerService } from '../partner';
-import { Partner, PartnerType } from '../partner/dto';
+import { type Partner, PartnerType } from '../partner/dto';
 import { ProjectService } from '../project';
 import {
-  CreatePartnership,
-  FinancialReportingType,
+  type CreatePartnership,
+  type FinancialReportingType,
   Partnership,
   PartnershipListInput,
-  PartnershipListOutput,
-  UpdatePartnership,
+  type PartnershipListOutput,
+  type UpdatePartnership,
 } from './dto';
 import {
   PartnershipCreatedEvent,

@@ -1,5 +1,5 @@
 import { InputType } from '@nestjs/graphql';
-import { ID, IdField } from '~/common';
+import { type ID, IdField } from '~/common';
 import { ExecuteTransitionInput } from '../../../workflow/dto';
 import { ProjectStep } from '../../dto';
 

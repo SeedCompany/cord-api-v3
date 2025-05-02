@@ -1,18 +1,18 @@
 import { Injectable } from '@nestjs/common';
-import { inArray, node, not, Query, relation } from 'cypher-query-builder';
+import { inArray, node, not, type Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   CreationFailed,
   DuplicateException,
-  ID,
+  type ID,
   NotFoundException,
   Sensitivity,
-  Session,
-  UnsecuredDto,
+  type Session,
+  type UnsecuredDto,
 } from '~/common';
 import { ConfigService } from '~/core';
 import { CommonRepository, OnIndex, UniquenessError } from '~/core/database';
-import { ChangesOf, getChanges } from '~/core/database/changes';
+import { type ChangesOf, getChanges } from '~/core/database/changes';
 import {
   ACTIVE,
   createNode,
@@ -26,7 +26,7 @@ import {
   paginate,
   path,
   requestingUser,
-  SortCol,
+  type SortCol,
   sortWith,
   variable,
 } from '~/core/database/query';
@@ -34,14 +34,14 @@ import { Privileges } from '../authorization';
 import { locationSorters } from '../location/location.repository';
 import { partnershipSorters } from '../partnership/partnership.repository';
 import {
-  CreateProject,
+  type CreateProject,
   IProject,
-  Project,
-  ProjectListInput,
+  type Project,
+  type ProjectListInput,
   ProjectStep,
   resolveProjectType,
   stepToStatus,
-  UpdateProject,
+  type UpdateProject,
 } from './dto';
 import { projectFilters } from './project-filters.query';
 

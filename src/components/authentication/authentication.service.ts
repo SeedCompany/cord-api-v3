@@ -4,15 +4,15 @@ import { CachedByArg } from '@seedcompany/common';
 import { EmailService } from '@seedcompany/nestjs-email';
 import JWT from 'jsonwebtoken';
 import { DateTime } from 'luxon';
-import { Writable } from 'ts-essentials';
+import type { Writable } from 'ts-essentials';
 import {
   DuplicateException,
-  GqlContextType,
-  ID,
+  type GqlContextType,
+  type ID,
   InputException,
-  Role,
+  type Role,
   ServerException,
-  Session,
+  type Session,
   UnauthenticatedException,
   UnauthorizedException,
 } from '~/common';
@@ -26,7 +26,7 @@ import { AssignableRoles } from '../authorization/dto/assignable-roles';
 import { SystemAgentRepository } from '../user/system-agent.repository';
 import { AuthenticationRepository } from './authentication.repository';
 import { CryptoService } from './crypto.service';
-import { LoginInput, RegisterInput, ResetPasswordInput } from './dto';
+import type { LoginInput, RegisterInput, ResetPasswordInput } from './dto';
 import { NoSessionException } from './no-session.exception';
 
 interface JwtPayload {

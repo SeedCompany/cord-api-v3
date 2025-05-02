@@ -1,14 +1,14 @@
-import { Query } from 'cypher-query-builder';
+import { type Query } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   EnhancedResource,
-  ID,
-  MaybeUnsecuredInstance,
-  ResourceShape,
+  type ID,
+  type MaybeUnsecuredInstance,
+  type ResourceShape,
 } from '~/common';
-import { DbChanges } from '../../changes';
-import { apoc, collect, merge, Variable, variable } from '../index';
-import { PropUpdateStat, updateProperty } from './update-property';
+import { type DbChanges } from '../../changes';
+import { apoc, collect, merge, type Variable, variable } from '../index';
+import { type PropUpdateStat, updateProperty } from './update-property';
 
 export interface UpdatePropertiesOptions<
   TResourceStatic extends ResourceShape<any>,

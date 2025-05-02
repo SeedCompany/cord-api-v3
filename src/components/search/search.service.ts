@@ -1,17 +1,26 @@
 import { Injectable } from '@nestjs/common';
 import { isNotNil, setHas, setOf } from '@seedcompany/common';
 import { uniqBy } from 'lodash';
-import { ValueOf } from 'type-fest';
-import { ID, NotFoundException, ServerException, Session } from '~/common';
-import { ResourceMap, ResourceResolver, ResourcesHost } from '~/core/resources';
+import type { ValueOf } from 'type-fest';
+import {
+  type ID,
+  NotFoundException,
+  ServerException,
+  type Session,
+} from '~/common';
+import {
+  type ResourceMap,
+  ResourceResolver,
+  ResourcesHost,
+} from '~/core/resources';
 import { Privileges } from '../authorization';
 import { LanguageService } from '../language';
 import { PartnerService } from '../partner';
 import {
-  SearchableMap,
-  SearchInput,
-  SearchOutput,
-  SearchResult,
+  type SearchableMap,
+  type SearchInput,
+  type SearchOutput,
+  type SearchResult,
   SearchResultTypes,
 } from './dto';
 import { SearchRepository } from './search.repository';
