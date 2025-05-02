@@ -3,7 +3,7 @@ import { CustomScalar, Field, FieldOptions, Scalar } from '@nestjs/graphql';
 import { IsUrl } from 'class-validator';
 import { GraphQLError, Kind, ValueNode } from 'graphql';
 import { URL } from 'url';
-import ValidatorJS from 'validator';
+import * as ValidatorJS from 'validator';
 
 export const UrlField = ({
   url,

@@ -1,5 +1,5 @@
 diff --git a/dist/index.d.ts b/dist/index.d.ts
-index d16ddf2f4e30e75c5b04044af34e8286b2e8b0a5..9f56feb61efa75a40c815fd56f11642719d41737 100644
+index f55c0838ebf3aee24ec547d21ec67dc709ab7c8f..b6606e35b73f3c985f18fe66e924ec2218e35a7b 100644
 --- a/dist/index.d.ts
 +++ b/dist/index.d.ts
 @@ -1,5 +1,3 @@

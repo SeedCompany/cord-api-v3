@@ -55,7 +55,7 @@ export interface IEventHandler<T> {
 
 const getOrDefineEventId = (event: Type): ID => {
   if (!Reflect.hasMetadata(EVENT_METADATA, event)) {
-    const id = nanoid() as ID;
+    const id: ID = nanoid();
     Reflect.defineMetadata(EVENT_METADATA, { id }, event);
     return id;
   }

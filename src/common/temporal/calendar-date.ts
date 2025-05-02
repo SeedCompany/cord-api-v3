@@ -1,4 +1,8 @@
-import { setInspectOnClass, setToStringTag } from '@seedcompany/common';
+import {
+  type NonEmptyArray,
+  setInspectOnClass,
+  setToStringTag,
+} from '@seedcompany/common';
 import {
   DateObjectUnits,
   DateTime,
@@ -160,13 +164,19 @@ export class CalendarDate<IsValid extends boolean = DefaultValidity>
   static max(): undefined;
   static max(...dateTimes: DateTime[]): CalendarDate;
   static max(...dateTimes: DateTime[]): CalendarDate | undefined {
-    return CalendarDate.fromDateTime(super.max(...dateTimes));
+    if (dateTimes.length === 0) return undefined;
+    return CalendarDate.fromDateTime(
+      super.max(...(dateTimes as unknown as NonEmptyArray<DateTime>)),
+    );
   }
 
   static min(): undefined;
   static min(...dateTimes: DateTime[]): CalendarDate;
   static min(...dateTimes: DateTime[]): CalendarDate | undefined {
-    return CalendarDate.fromDateTime(super.min(...dateTimes));
+    if (dateTimes.length === 0) return undefined;
+    return CalendarDate.fromDateTime(
+      super.min(...(dateTimes as unknown as NonEmptyArray<DateTime>)),
+    );
   }
 
   static utc(

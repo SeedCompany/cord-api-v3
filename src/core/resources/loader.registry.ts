@@ -72,6 +72,9 @@ export class ResourceLoaderRegistry implements OnModuleInit {
       .flatMap((nestModule) => [...nestModule.providers.values()])
       .filter((provider) => provider.scope === Scope.REQUEST)
       .flatMap((provider) => {
+        if (!provider.metatype) {
+          return [];
+        }
         const metadata = Reflect.getMetadata(
           LOADER_OF_RESOURCE,
           provider.metatype,
