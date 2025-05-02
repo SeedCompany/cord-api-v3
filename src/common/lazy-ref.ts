@@ -23,6 +23,9 @@ export const lazyRef = <T extends object>(getter: () => T): T => {
     getPrototypeOf() {
       return Reflect.getPrototypeOf(getter());
     },
+    getOwnPropertyDescriptor(target: T, p: string | symbol) {
+      return Object.getOwnPropertyDescriptor(getter(), p);
+    },
   });
 };
 

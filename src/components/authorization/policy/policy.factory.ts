@@ -6,7 +6,6 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { entries, mapEntries, mapValues } from '@seedcompany/common';
 import { pick, startCase } from 'lodash';
 import { DeepWritable, Writable } from 'ts-essentials';
-import { keys as keysOf } from 'ts-transformer-keys';
 import { EnhancedResource, many, Role } from '~/common';
 import { ResourcesHost } from '~/core/resources';
 import { Power } from '../dto';
@@ -314,13 +313,11 @@ export class PolicyFactory implements OnModuleInit {
           continue;
         }
 
-        const childActions = rel.list
-          ? keysOf<Record<ChildListAction, any>>()
-          : keysOf<Record<ChildSingleAction, any>>();
+        const childActions = rel.list ? ChildListAction : ChildSingleAction;
 
         this.mergePermissions(
           (childRelations[rel.name] ??= {}),
-          pick(grants.get(type)!.objectLevel, childActions),
+          pick(grants.get(type)!.objectLevel, [...childActions]),
         );
       }
     }
