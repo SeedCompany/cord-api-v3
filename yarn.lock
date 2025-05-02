@@ -3062,9 +3062,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@seedcompany/common@npm:>0.3 <1, @seedcompany/common@npm:>=0.17 <1, @seedcompany/common@npm:>=0.17 <1.0.0, @seedcompany/common@npm:>=0.3.0 <1.0.0":
-  version: 0.18.1
-  resolution: "@seedcompany/common@npm:0.18.1"
+"@seedcompany/common@npm:>0.3 <1, @seedcompany/common@npm:>=0.17 <1, @seedcompany/common@npm:>=0.17 <1.0.0, @seedcompany/common@npm:>=0.19.1 <1, @seedcompany/common@npm:>=0.3.0 <1.0.0":
+  version: 0.19.1
+  resolution: "@seedcompany/common@npm:0.19.1"
   dependencies:
     type-fest: "npm:^4.37.0"
   peerDependencies:
@@ -3072,7 +3072,7 @@ __metadata:
   peerDependenciesMeta:
     luxon:
       optional: true
-  checksum: 10c0/54f1cdd5cf5b818ee6a8f1a3ca4e8379e26c2011abe132105cb117f3c207e47e316b8e3dab21e8eec682b56a7a08a20d60b6512b1ab35591a9e708a6703ea472
+  checksum: 10c0/d34e8591273ee4be08201b7a43c66240677027b155902e2558c8ed6d80274306d785b3675d3ecd68b6da2aa8adc831c23c71f62caa947e267573844abc3f92d8
   languageName: node
   linkType: hard
 
@@ -3127,9 +3127,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@seedcompany/nest@npm:^1.4.0":
-  version: 1.5.0
-  resolution: "@seedcompany/nest@npm:1.5.0"
+"@seedcompany/nest@npm:^1.6.1":
+  version: 1.6.1
+  resolution: "@seedcompany/nest@npm:1.6.1"
   dependencies:
     "@nestjs/common": "npm:^10 || ^11"
     "@nestjs/core": "npm:^10 || ^11"
@@ -3146,7 +3146,7 @@ __metadata:
     "@nestjs/graphql": ^12 || ^13
     class-transformer: ^0.5.1
     reflect-metadata: ^0.1.12 || ^0.2.0
-  checksum: 10c0/80a1a6a4fab8a3ab39ceae617b26f082fddefd06db9b5f8ac33bfd2c61fd16160ac3fedb7c079d73e47a943b2670167676ad0cac848a3b4c4762ee6fdfc4f576
+  checksum: 10c0/ea820ab6a0fb245f36a6bc50f9c80f675488d1c46e4151ec38eb6cc10574e3a10bc8844c410ee9169fb5aae1e4ed3a95779c20404ae341f0f0c41ae5a4f20cdf
   languageName: node
   linkType: hard
 
@@ -5823,10 +5823,10 @@ __metadata:
     "@nestjs/testing": "npm:^11.1.0"
     "@patarapolw/prettyprint": "npm:^1.0.3"
     "@seedcompany/cache": "npm:^3.0.2"
-    "@seedcompany/common": "npm:>=0.17 <1"
+    "@seedcompany/common": "npm:>=0.19.1 <1"
     "@seedcompany/data-loader": "npm:^2.0.1"
     "@seedcompany/eslint-plugin": "npm:^3.4.1"
-    "@seedcompany/nest": "npm:^1.4.0"
+    "@seedcompany/nest": "npm:^1.6.1"
     "@seedcompany/nestjs-email": "npm:^4.1.1"
     "@seedcompany/scripture": "npm:>=0.8.0"
     "@tsconfig/strictest": "npm:^2.0.2"

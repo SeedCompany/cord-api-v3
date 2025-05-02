@@ -17,7 +17,6 @@ import { Command, Option } from 'clipanion';
 import { startCase } from 'lodash';
 import { DateTime } from 'luxon';
 import fs from 'node:fs/promises';
-import { keys as keysOf } from 'ts-transformer-keys';
 import { LiteralUnion } from 'type-fest';
 import { inspect } from 'util';
 import xlsx from 'xlsx';
@@ -188,16 +187,14 @@ export class PolicyDumper {
         role,
         resource,
         edge: undefined,
-        ...mapValues.fromList(
-          keysOf<Record<ResourceAction, boolean>>(),
-          (action) => resolve(action),
-        ).asRecord,
+        ...mapValues.fromList(ResourceAction, (action) => resolve(action))
+          .asRecord,
       },
       ...(options.props !== false
         ? ([
-            [resource.securedPropsPlusExtra, keysOf<Record<PropAction, ''>>()],
-            [resource.childSingleKeys, keysOf<Record<ChildSingleAction, ''>>()],
-            [resource.childListKeys, keysOf<Record<ChildListAction, ''>>()],
+            [resource.securedPropsPlusExtra, PropAction],
+            [resource.childSingleKeys, ChildSingleAction],
+            [resource.childListKeys, ChildListAction],
           ] as const)
         : []
       ).flatMap(([set, actions]) =>
