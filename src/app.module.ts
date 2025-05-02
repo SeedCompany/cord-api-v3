@@ -1,7 +1,5 @@
 import { Module } from '@nestjs/common';
 import process from 'node:process';
-import { assert } from 'ts-essentials';
-import { keys } from 'ts-transformer-keys';
 import { AdminModule } from './components/admin/admin.module';
 import { AuthenticationModule } from './components/authentication/authentication.module';
 import { AuthorizationModule } from './components/authorization/authorization.module';
@@ -44,11 +42,6 @@ import { UserModule } from './components/user/user.module';
 import { CoreModule, LoggerModule } from './core';
 
 import '@seedcompany/nest/patches';
-
-assert(
-  keys<{ foo: string }>().length === 1,
-  'Sanity check for key transformer failed',
-);
 
 if (process.env.NODE_ENV !== 'production') {
   Error.stackTraceLimit = Infinity;
