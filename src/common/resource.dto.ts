@@ -77,8 +77,8 @@ export abstract class Resource extends DataObject {
 type Thunk<T> = T | (() => T);
 
 export type ResourceShape<T> = AbstractClassType<T> & {
-  Props: string[];
-  SecuredProps: string[];
+  Props?: string[];
+  SecuredProps?: string[];
   // An optional list of props that exist on the BaseNode in the DB.
   // Default should probably be considered the props on Resource class.
   BaseNodeProps?: string[];
@@ -195,12 +195,24 @@ export class EnhancedResource<T extends ResourceShape<any>> {
 
   @Once()
   get props(): ReadonlySet<keyof T['prototype'] & string> {
-    return new Set<keyof T['prototype'] & string>(this.type.Props as any);
+    const props = this.type.Props;
+    if (!props) {
+      throw new Error(
+        `${this.name} has not been decorated with @RegisterResource`,
+      );
+    }
+    return new Set<keyof T['prototype'] & string>(props);
   }
 
   @Once()
   get securedProps(): ReadonlySet<SecuredResourceKey<T, false>> {
-    return new Set<SecuredResourceKey<T, false>>(this.type.SecuredProps as any);
+    const props = this.type.SecuredProps;
+    if (!props) {
+      throw new Error(
+        `${this.name} has not been decorated with @RegisterResource`,
+      );
+    }
+    return new Set<SecuredResourceKey<T, false>>(props as any);
   }
 
   @Once()
