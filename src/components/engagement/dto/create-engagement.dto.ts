@@ -1,9 +1,9 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
+import { entries } from '@seedcompany/common';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { stripIndent } from 'common-tags';
-import { keys as keysOf } from 'ts-transformer-keys';
-import { CalendarDate, DateField, ID, IdField } from '~/common';
+import { CalendarDate, DataObject, DateField, ID, IdField } from '~/common';
 import { ChangesetIdField } from '../../changeset';
 import { CreateDefinedFileVersionInput } from '../../file/dto';
 import { LanguageMilestone } from '../../language/dto';
@@ -16,7 +16,7 @@ import { EngagementStatus } from './status.enum';
 @InputType({
   isAbstract: true,
 })
-export abstract class CreateEngagement {
+export abstract class CreateEngagement extends DataObject {
   @IdField()
   readonly projectId: ID;
 
@@ -37,8 +37,11 @@ export abstract class CreateEngagement {
 }
 
 @InputType()
-export abstract class CreateLanguageEngagement extends CreateEngagement {
-  static readonly Props = keysOf<CreateLanguageEngagement>();
+export class CreateLanguageEngagement extends CreateEngagement {
+  // Warning: this only works if not doing inheritance type mapping
+  static readonly Props = entries(
+    CreateLanguageEngagement.defaultValue(CreateLanguageEngagement),
+  ).map(([k]) => k);
 
   @IdField()
   readonly languageId: ID;
@@ -81,8 +84,11 @@ export abstract class CreateLanguageEngagement extends CreateEngagement {
 }
 
 @InputType()
-export abstract class CreateInternshipEngagement extends CreateEngagement {
-  static readonly Props = keysOf<CreateInternshipEngagement>();
+export class CreateInternshipEngagement extends CreateEngagement {
+  // Warning: this only works if not doing inheritance type mapping
+  static readonly Props = entries(
+    CreateInternshipEngagement.defaultValue(CreateInternshipEngagement),
+  ).map(([k]) => k);
 
   @IdField()
   readonly internId: ID;
