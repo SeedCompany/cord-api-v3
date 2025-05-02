@@ -1,5 +1,4 @@
 import { Field, ObjectType } from '@nestjs/graphql';
-import { keys as keysOf } from 'ts-transformer-keys';
 import {
   Calculated,
   DbSort,
@@ -8,7 +7,6 @@ import {
   Resource,
   type ResourceRelationsShape,
   SecuredProperty,
-  type SecuredProps,
 } from '~/common';
 import { sortingForEnumIndex } from '~/core/database/query';
 import { type BaseNode } from '~/core/database/results';
@@ -33,8 +31,6 @@ const Interfaces = IntersectTypes(IPeriodicReport, Resource, Commentable);
   implements: Interfaces.members,
 })
 export class ProgressReport extends Interfaces {
-  static readonly Props = keysOf<ProgressReport>();
-  static readonly SecuredProps = keysOf<SecuredProps<ProgressReport>>();
   static readonly Parent = () =>
     import('../../engagement/dto').then((m) => m.IEngagement);
   static readonly Relations = {

@@ -1,12 +1,10 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
-import { keys as keysOf } from 'ts-transformer-keys';
 import {
   DateTimeField,
   type ID,
   IdField,
   type Secured,
-  type SecuredProps,
   SecuredRichTextNullable,
   type SetUnsecuredType,
 } from '~/common';
@@ -19,9 +17,6 @@ import { ProgressReportWorkflowTransition as PublicTransition } from './workflow
 @RegisterResource({ db: e.ProgressReport.WorkflowEvent })
 @ObjectType()
 export abstract class ProgressReportWorkflowEvent {
-  static readonly Props = keysOf<ProgressReportWorkflowEvent>();
-  static readonly SecuredProps =
-    keysOf<SecuredProps<ProgressReportWorkflowEvent>>();
   static readonly BaseNodeProps = ['id', 'createdAt', 'status', 'transition'];
 
   @IdField()

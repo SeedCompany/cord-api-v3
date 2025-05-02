@@ -10,8 +10,7 @@ import { Transform, Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { stripIndent } from 'common-tags';
 import { random, sumBy, times } from 'lodash';
-import { keys as keysOf } from 'ts-transformer-keys';
-import { type Range, SecuredPropertyList, type SecuredProps } from '~/common';
+import { type Range, SecuredPropertyList } from '~/common';
 import { IsValidOrder } from './scripture-range.validator';
 import {
   ScriptureReference,
@@ -71,9 +70,6 @@ export abstract class ScriptureRangeInput {
   description,
 })
 export abstract class ScriptureRange implements Range<ScriptureReference> {
-  static readonly Props = keysOf<ScriptureRange>();
-  static readonly SecuredProps = keysOf<SecuredProps<ScriptureRange>>();
-
   @Field({
     description: 'The starting point',
   })

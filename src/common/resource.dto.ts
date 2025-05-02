@@ -10,7 +10,6 @@ import {
 import { createMetadataDecorator } from '@seedcompany/nest';
 import { LazyGetter as Once } from 'lazy-get-decorator';
 import { DateTime } from 'luxon';
-import { keys as keysOf } from 'ts-transformer-keys';
 import type {
   ResourceDBMap,
   ResourceLike,
@@ -53,9 +52,6 @@ export const resolveByTypename =
 })
 @DbLabel('BaseNode')
 export abstract class Resource extends DataObject {
-  static readonly Props: string[] = keysOf<Resource>();
-  static readonly SecuredProps: string[] = [];
-
   readonly __typename?: string;
 
   @IdField()

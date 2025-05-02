@@ -1,10 +1,8 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
-import { keys as keysOf } from 'ts-transformer-keys';
 import {
   DateTimeField,
   Resource,
-  type SecuredProps,
   SecuredRoles,
   Sensitivity,
   SensitivityField,
@@ -20,8 +18,6 @@ import { SecuredUser, type User } from '../../../user/dto';
   implements: [Resource],
 })
 export class ProjectMember extends Resource {
-  static readonly Props = keysOf<ProjectMember>();
-  static readonly SecuredProps = keysOf<SecuredProps<ProjectMember>>();
   static readonly Parent = () => import('../../dto').then((m) => m.IProject);
 
   @Field(() => SecuredUser)

@@ -1,6 +1,4 @@
 import { ObjectType } from '@nestjs/graphql';
-import { keys as keysOf } from 'ts-transformer-keys';
-import { type SecuredProps } from '~/common';
 import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
 import { WorkflowEvent } from '../../../workflow/dto';
@@ -13,8 +11,6 @@ export abstract class ProjectWorkflowEvent extends WorkflowEvent(
   ProjectStep,
   ProjectWorkflowTransition,
 ) {
-  static readonly Props = keysOf<ProjectWorkflowEvent>();
-  static readonly SecuredProps = keysOf<SecuredProps<ProjectWorkflowEvent>>();
   static readonly BaseNodeProps = WorkflowEvent.BaseNodeProps;
   static readonly ConfirmThisClassPassesSensitivityToPolicies = true;
 
