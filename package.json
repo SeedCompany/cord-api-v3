@@ -163,6 +163,7 @@
     "@whatwg-node/fetch@npm:^0.10.1": "patch:@whatwg-node/fetch@npm%3A0.10.6#~/.yarn/patches/@whatwg-node-fetch-npm-0.10.6-bca79028fb.patch",
     "@whatwg-node/fetch@npm:^0.10.4": "patch:@whatwg-node/fetch@npm%3A0.10.6#~/.yarn/patches/@whatwg-node-fetch-npm-0.10.6-bca79028fb.patch",
     "@whatwg-node/fetch@npm:^0.10.6": "patch:@whatwg-node/fetch@npm%3A0.10.6#~/.yarn/patches/@whatwg-node-fetch-npm-0.10.6-bca79028fb.patch",
+    "html-minifier": "npm:html-minifier-terser@7.2.0",
     "logform": "2.6.1",
     "process-warning": "^5",
     "rxjs": "^7.8",
