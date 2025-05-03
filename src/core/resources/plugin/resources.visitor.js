@@ -4,21 +4,27 @@ import * as ts from 'typescript';
 const securedKeys = ['value', 'canRead', 'canEdit'];
 
 export class ResourceVisitor {
-  constructor(readonly = false) {
-    this.readonly = readonly;
+  key = '@cord/resources';
+  /** @type {Record<string, string>} */
+  typeImports = {};
+
+  collect() {
+    return {};
   }
 
   /**
-   * @param sf {ts.SourceFile}
-   * @param ctx {ts.TransformationContext}
    * @param program {ts.Program}
+   * @param sf {ts.SourceFile}
+   * @param [ctx] {ts.TransformationContext}
    * @returns {ts.Node}
    */
-  visit(sf, ctx, program) {
+  visit(program, sf, ctx) {
     if (!sf.fileName.endsWith('dto.ts')) {
       return sf;
     }
-    const { factory } = ctx;
+
+    const readonly = !ctx;
+    const factory = ctx?.factory ?? ts.factory;
     /**
      * @param node {ts.Node}
      * @returns {ts.Node}
@@ -33,7 +39,7 @@ export class ResourceVisitor {
         return this.enhanceDtoClass(node, program, factory);
       }
 
-      if (this.readonly) {
+      if (readonly) {
         ts.forEachChild(node, visitNode);
       } else {
         return ts.visitEachChild(node, visitNode, ctx);
@@ -110,29 +116,5 @@ export class ResourceVisitor {
       classNode.heritageClauses,
       newMembers,
     );
-  }
-}
-
-export class ResourceReadonlyVisitor {
-  key = '@cord/resources';
-  visitor = new ResourceVisitor(true);
-
-  get typeImports() {
-    return {};
-  }
-
-  /**
-   * @param program {ts.Program}
-   * @param sf {ts.SourceFile}
-   * @returns {ts.Node}
-   */
-  visit(program, sf) {
-    /** @type {*} */
-    const factoryHost = { factory: ts.factory };
-    return this.visitor.visit(sf, factoryHost, program);
-  }
-
-  collect() {
-    return {};
   }
 }

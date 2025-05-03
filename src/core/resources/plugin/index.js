@@ -1,8 +1,5 @@
 /** @import ts from 'typescript'; */
-import {
-  ResourceReadonlyVisitor,
-  ResourceVisitor,
-} from './resources.visitor.js';
+import { ResourceVisitor } from './resources.visitor.js';
 
 const visitor = new ResourceVisitor();
 
@@ -17,16 +14,12 @@ export default function (program) {
 }
 
 // For Nest CLI
-export { ResourceReadonlyVisitor as ReadonlyVisitor };
+export { ResourceVisitor as ReadonlyVisitor };
 /**
  * @param _ {*}
  * @param program {ts.Program}
  * @returns {(ctx: ts.TransformationContext) => (sf: ts.SourceFile) => ts.Node}
  */
-export const before = (_, program) => {
-  return (ctx) => {
-    return (sf) => {
-      return visitor.visit(sf, ctx, program);
-    };
-  };
+export const before = (_, program) => (ctx) => (sf) => {
+  return visitor.visit(program, sf, ctx);
 };
