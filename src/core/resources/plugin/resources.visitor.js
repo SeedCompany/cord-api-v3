@@ -1,18 +1,29 @@
-import type { ReadonlyVisitor } from '@nestjs/cli/lib/compiler/interfaces/readonly-visitor.interface';
 import { hasDecorators } from '@nestjs/graphql/dist/plugin/utils/ast-utils.js';
 import * as ts from 'typescript';
 
 const securedKeys = ['value', 'canRead', 'canEdit'];
 
 export class ResourceVisitor {
-  constructor(readonly readonly = false) {}
+  constructor(readonly = false) {
+    this.readonly = readonly;
+  }
 
-  visit(sf: ts.SourceFile, ctx: ts.TransformationContext, program: ts.Program) {
+  /**
+   * @param sf {ts.SourceFile}
+   * @param ctx {ts.TransformationContext}
+   * @param program {ts.Program}
+   * @returns {ts.Node}
+   */
+  visit(sf, ctx, program) {
     if (!sf.fileName.endsWith('dto.ts')) {
       return sf;
     }
     const { factory } = ctx;
-    const visitNode = (node: ts.Node): ts.Node => {
+    /**
+     * @param node {ts.Node}
+     * @returns {ts.Node}
+     */
+    const visitNode = (node) => {
       const decorators =
         (ts.canHaveDecorators(node) && ts.getDecorators(node)) || [];
       if (
@@ -32,11 +43,13 @@ export class ResourceVisitor {
     return ts.visitNode(sf, visitNode);
   }
 
-  private enhanceDtoClass(
-    classNode: ts.ClassDeclaration,
-    program: ts.Program,
-    factory: ts.NodeFactory,
-  ) {
+  /**
+   * @param classNode {ts.ClassDeclaration}
+   * @param program {ts.Program}
+   * @param factory {ts.NodeFactory}
+   * @returns {ts.ClassDeclaration}
+   */
+  enhanceDtoClass(classNode, program, factory) {
     const typeChecker = program.getTypeChecker();
 
     const classProps = typeChecker
@@ -61,11 +74,13 @@ export class ResourceVisitor {
     ]);
   }
 
-  private createStaticPropArray(
-    factory: ts.NodeFactory,
-    name: string,
-    members: ts.Symbol[],
-  ) {
+  /**
+   * @param factory {ts.NodeFactory}
+   * @param name {string}
+   * @param members {ts.Symbol[]}
+   * @returns {ts.PropertyDeclaration}
+   */
+  createStaticPropArray(factory, name, members) {
     return factory.createPropertyDeclaration(
       [
         factory.createModifier(ts.SyntaxKind.StaticKeyword),
@@ -80,11 +95,13 @@ export class ResourceVisitor {
     );
   }
 
-  private updateClassMembers(
-    factory: ts.NodeFactory,
-    classNode: ts.ClassDeclaration,
-    newMembers: readonly ts.ClassElement[],
-  ) {
+  /**
+   * @param factory {ts.NodeFactory}
+   * @param classNode {ts.ClassDeclaration}
+   * @param newMembers {readonly ts.ClassElement[]}
+   * @returns {ts.ClassDeclaration}
+   */
+  updateClassMembers(factory, classNode, newMembers) {
     return factory.updateClassDeclaration(
       classNode,
       classNode.modifiers,
@@ -96,16 +113,22 @@ export class ResourceVisitor {
   }
 }
 
-export class ResourceReadonlyVisitor implements ReadonlyVisitor {
-  readonly key = '@cord/resources';
-  private readonly visitor = new ResourceVisitor(true);
+export class ResourceReadonlyVisitor {
+  key = '@cord/resources';
+  visitor = new ResourceVisitor(true);
 
   get typeImports() {
     return {};
   }
 
-  visit(program: ts.Program, sf: ts.SourceFile) {
-    const factoryHost = { factory: ts.factory } as any;
+  /**
+   * @param program {ts.Program}
+   * @param sf {ts.SourceFile}
+   * @returns {ts.Node}
+   */
+  visit(program, sf) {
+    /** @type {*} */
+    const factoryHost = { factory: ts.factory };
     return this.visitor.visit(sf, factoryHost, program);
   }
 

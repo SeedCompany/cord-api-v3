@@ -36,7 +36,7 @@
     // Transform plugins
     "plugins": [
       { "transform": "typescript-transform-paths" },
-      { "transform": "./src/core/resources/plugin/index.cts" },
+      { "transform": "./src/core/resources/plugin/index.js" },
     ],
 
     // Path resolution
