@@ -100,7 +100,9 @@ class SeedCommand extends Command {
             const query = await fs.readFile(file, 'utf-8');
             await runAndPrint(query);
           } else {
-            const script = await import('../../../' + file);
+            const script = await import(
+              '../../../' + file.replace('.ts', '.js')
+            );
             const queries = await (script.default as SeedFn)(params);
             if (!queries) {
               return;
