@@ -59,8 +59,6 @@ corepack enable
 EOF
 # endregion
 
-WORKDIR /source
-
 ENV NODE_ENV=development \
     # Ignore creds during this build process
     GEL_SERVER_SECURITY=insecure_dev_mode \
@@ -71,34 +69,32 @@ ENV NODE_ENV=development \
     # Don't flood log with cache debug messages
     VERBOSE_YARN_LOG=discard
 
-# Install dependencies (in separate docker layer from app code)
-COPY .yarn .yarn
-COPY package.json yarn.lock .yarnrc.yml ./
-RUN yarn install --immutable
-
-# Copy in application code
-COPY ./dbschema /dbschema
-COPY . .
-
-# region Generate Gel TS/JS files
-RUN <<EOF
-set -e
-
-chown -R gel:gel /dbschema src
-
 # Run the migrations in a single transaction, so we don't hit a CLI timeout
-sed -i 's|schema-dir=/dbschema|schema-dir=/dbschema --single-transaction|' /usr/local/bin/docker-entrypoint-funcs.sh
+RUN sed -i 's|schema-dir=/dbschema|schema-dir=/dbschema --single-transaction|' /usr/local/bin/docker-entrypoint-funcs.sh
 
 # Hook `yarn gel:gen` into gel bootstrap.
 # This allows it to be ran in parallel to the db server running without a daemon
+RUN <<EOF
+set -e
 mkdir -p /gel-bootstrap-late.d
 printf "#!/usr/bin/env bash\ncd /source \nyarn gel:gen\n" > /gel-bootstrap-late.d/01-generate-js.sh
 chmod +x /gel-bootstrap-late.d/01-generate-js.sh
+EOF
+
+USER gel
+WORKDIR /source
+
+# Install dependencies (in separate docker layer from app code)
+COPY --chown=gel:gel .yarn .yarn
+COPY --chown=gel:gel package.json yarn.lock .yarnrc.yml ./
+RUN yarn install --immutable
+
+# Copy in application code
+COPY --chown=gel:gel ./dbschema /dbschema
+COPY --chown=gel:gel . .
 
 # Bootstrap the db to apply migrations and then generate the TS/JS from that.
-/usr/local/bin/docker-entrypoint.sh server
-EOF
-# endregion
+RUN /usr/local/bin/docker-entrypoint.sh server
 
 # Build server
 RUN yarn build
