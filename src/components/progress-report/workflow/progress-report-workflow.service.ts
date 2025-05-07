@@ -88,6 +88,7 @@ export class ProgressReportWorkflowService {
       currentStatus,
       next,
       unsecuredEvent,
+      session,
     );
     await this.eventBus.publish(event);
   }
