@@ -20,7 +20,6 @@ import { type ScopedRole } from '../components/authorization/dto';
 import { CalculatedSymbol } from './calculated.decorator';
 import { DataObject } from './data-object';
 import { DbLabel } from './db-label.decorator';
-import { getDbClassLabels, getDbPropertyLabels } from './db-label.helpers';
 import { ServerException } from './exceptions';
 import { type ID, IdField } from './id-field';
 import { DateTimeField } from './luxon.graphql';
@@ -282,7 +281,14 @@ export class EnhancedResource<T extends ResourceShape<any>> {
 
   @Once()
   get dbLabels() {
-    return getDbClassLabels(this.type);
+    const labels = getParentTypes(this.type).flatMap((cls) => {
+      if (!isResourceClass(cls)) {
+        return [];
+      }
+      const declared = DbLabel.getOwn(cls);
+      return declared ? [...declared] : [cls.name];
+    });
+    return [...new Set([...labels, 'BaseNode'])];
   }
   get dbLabel() {
     return this.dbLabels[0];
@@ -291,9 +297,10 @@ export class EnhancedResource<T extends ResourceShape<any>> {
   get dbPropLabels(): {
     readonly [K in keyof T['prototype'] & string]?: readonly string[];
   } {
-    return mapValues.fromList(this.props, (prop) =>
-      getDbPropertyLabels(this.type, prop),
-    ).asRecord;
+    return mapValues.fromList(this.props, (prop) => {
+      const declared = DbLabel.get(this.type, prop as unknown as string);
+      return [...new Set([...(declared ?? []), 'Property'])];
+    }).asRecord;
   }
 }
 setInspectOnClass(EnhancedResource, (res) => ({ collapsed }) => {
