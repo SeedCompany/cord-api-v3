@@ -161,14 +161,20 @@ export class EnhancedResource<T extends ResourceShape<any>> {
   }
 
   /**
-   * An semi-ordered set of interfaces the resource.
+   * A semi-ordered set of interfaces the resource.
    */
   @Once()
   get interfaces(): ReadonlySet<EnhancedResource<any>> {
     return new Set(
-      getParentTypes(this.type)
-        .slice(1) // not self
-        .filter(isResourceClass)
+      getParentTypes(this.type, [])
+        .filter(
+          (cls): cls is ResourceShape<any> =>
+            // Is declared as interface. i.e. avoids DataObject.
+            GqlClassType.get(cls) === 'interface' &&
+            // Avoid intersected classes.
+            // getParentTypes will give us the intersect-ees directly.
+            !cls.name.startsWith('Intersection'),
+        )
         .map(EnhancedResource.of),
     );
   }
