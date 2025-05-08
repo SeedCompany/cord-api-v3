@@ -337,11 +337,6 @@ export interface EnhancedRelation<TResourceStatic extends ResourceShape<any>> {
   readonly resource?: EnhancedResource<any>;
 }
 
-export const isResourceClass = <T>(
-  cls: AbstractClassType<T>,
-): cls is ResourceShape<T> =>
-  'Props' in cls && Array.isArray(cls.Props) && cls.Props.length > 0;
-
 export type DBType<TResourceStatic extends ResourceShape<any>> =
   ResourceShape<any> extends TResourceStatic
     ? typeof e.Resource // short-circuit non-specific types
