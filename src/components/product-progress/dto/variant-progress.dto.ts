@@ -23,7 +23,7 @@ export class ProgressReportVariantProgress {
   static readonly SecuredProps =
     keysOf<SecuredProps<ProgressReportVariantProgress>>();
   static readonly Parent = () =>
-    import('../../progress-report/dto/progress-report.entity').then(
+    import('../../progress-report/dto/progress-report.dto').then(
       (m) => m.ProgressReport,
     );
 

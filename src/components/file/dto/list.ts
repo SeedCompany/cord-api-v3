@@ -6,7 +6,12 @@ import {
   SortablePaginationInput,
 } from '~/common';
 import { FileNodeType } from './file-node-type.enum';
-import { type Directory, type File, type FileNode, IFileNode } from './node';
+import {
+  type Directory,
+  type File,
+  type FileNode,
+  IFileNode,
+} from './file.dto';
 
 @InputType()
 export abstract class FileFilters {

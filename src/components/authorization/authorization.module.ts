@@ -1,7 +1,7 @@
 import { Global, Module } from '@nestjs/common';
 import { AssignableRolesGranter } from './assignable-roles.granter';
 import { AuthorizationResolver } from './authorization.resolver';
-import { BetaFeaturesGranter } from './dto/beta-features';
+import { BetaFeaturesGranter } from './dto/beta-features.dto';
 import * as Policies from './policies';
 import { PolicyModule } from './policy/policy.module';
 

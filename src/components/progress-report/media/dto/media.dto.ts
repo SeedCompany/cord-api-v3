@@ -29,7 +29,7 @@ export class ProgressReportMedia extends Resource {
   static SecuredProps = keysOf<SecuredProps<ProgressReportMedia>>();
   static BaseNodeProps = [...Resource.Props, 'category', 'creator', 'variant'];
   static readonly Parent = () =>
-    import('../../dto/progress-report.entity').then((m) => m.ProgressReport);
+    import('../../dto/progress-report.dto').then((m) => m.ProgressReport);
   static readonly ConfirmThisClassPassesSensitivityToPolicies = true;
 
   static Variants = ProgressReportHighlight.Variants;

@@ -11,7 +11,7 @@ import { PeriodicReportListInput } from '../../periodic-report/dto';
 import { PnpExtractionResultFilters } from '../../pnp/extraction-result';
 import { ProgressSummaryFilters } from '../../progress-summary/dto';
 import { ProgressReportStatus } from './progress-report-status.enum';
-import { ProgressReport } from './progress-report.entity';
+import { ProgressReport } from './progress-report.dto';
 
 @InputType()
 export abstract class ProgressReportFilters extends PickType(
