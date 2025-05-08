@@ -252,8 +252,9 @@ export class EnhancedResource<T extends ResourceShape<any>> {
         const type: ResourceShape<any> | undefined = list
           ? rawType[0]!
           : rawType;
-        const resource: EnhancedResource<any> | undefined =
-          type && isResourceClass(type) ? EnhancedResource.of(type) : undefined;
+        const resource: EnhancedResource<any> | undefined = type?.prototype
+          ? EnhancedResource.of(type)
+          : undefined;
         const rel: EnhancedRelation<T> = { name, list, type, resource };
         return [name, rel];
       }),
