@@ -128,20 +128,22 @@ export const matchProjectSens =
         .raw(
           `WHERE ${projectVar} IS NOT NULL AND ${projectVar}.type <> "${ProjectType.Internship}"`,
         )
-        .optionalMatch([
-          node(projectVar),
-          relation('out', '', 'engagement', ACTIVE),
-          node('', 'LanguageEngagement'),
-          relation('out', '', 'language', ACTIVE),
-          node('', 'Language'),
-          relation('out', '', 'sensitivity', ACTIVE),
-          node('langSens', 'Property'),
-        ])
-        .with('*')
-        .orderBy(rankSens('langSens.value'), 'DESC')
-        // Prevent single row with project from expanding to more here via multiple engagement matches
-        .raw('LIMIT 1')
-        .return(coalesce('langSens.value', '"High"').as(output))
+        .subQuery(projectVar, (sub2) =>
+          sub2
+            .match([
+              node(projectVar),
+              relation('out', '', 'engagement', ACTIVE),
+              node('', 'LanguageEngagement'),
+              relation('out', '', 'language', ACTIVE),
+              node('', 'Language'),
+              relation('out', '', 'sensitivity', ACTIVE),
+              node('langSens', 'Property'),
+            ])
+            .with('*')
+            .orderBy(rankSens('langSens.value'), 'DESC')
+            .return(collect('langSens.value').as('sensitivities')),
+        )
+        .return(coalesce('sensitivities[0]', '"High"').as(output))
         // If the cardinality of this subquery is zero, no rows will be returned at all.
         // So, if no projects are matched (optional matching), we still need to have a cardinality > 0 in order to continue
         // https://neo4j.com/developer/kb/conditional-cypher-execution/#_the_subquery_must_return_a_row_for_the_outer_query_to_continue
