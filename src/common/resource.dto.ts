@@ -1,4 +1,5 @@
-import { Field, InterfaceType } from '@nestjs/graphql';
+import { CLASS_TYPE_METADATA, Field, InterfaceType } from '@nestjs/graphql';
+import { type ClassType as ClassTypeVal } from '@nestjs/graphql/dist/enums/class-type.enum.js';
 import {
   cached,
   type FnLike,
@@ -6,6 +7,7 @@ import {
   setInspectOnClass,
   setToJson,
 } from '@seedcompany/common';
+import { createMetadataDecorator } from '@seedcompany/nest';
 import { LazyGetter as Once } from 'lazy-get-decorator';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
@@ -26,6 +28,11 @@ import { DateTimeField } from './luxon.graphql';
 import { getParentTypes } from './parent-types';
 import { type MaybeSecured, type SecuredProps } from './secured-property';
 import { type AbstractClassType } from './types';
+
+const GqlClassType = createMetadataDecorator({
+  key: CLASS_TYPE_METADATA,
+  setter: (type: ClassTypeVal) => type,
+});
 
 const hasTypename = (value: unknown): value is { __typename: string } =>
   value != null &&
@@ -282,7 +289,13 @@ export class EnhancedResource<T extends ResourceShape<any>> {
   @Once()
   get dbLabels() {
     const labels = getParentTypes(this.type).flatMap((cls) => {
-      if (!isResourceClass(cls)) {
+      if (
+        // Is declared as some gql object. i.e. avoids DataObject.
+        !GqlClassType.get(cls) ||
+        // Avoid intersected classes.
+        // getParentTypes will give us the intersect-ees directly.
+        cls.name.startsWith('Intersection')
+      ) {
         return [];
       }
       const declared = DbLabel.getOwn(cls);
