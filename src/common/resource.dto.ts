@@ -161,14 +161,20 @@ export class EnhancedResource<T extends ResourceShape<any>> {
   }
 
   /**
-   * An semi-ordered set of interfaces the resource.
+   * A semi-ordered set of interfaces the resource.
    */
   @Once()
   get interfaces(): ReadonlySet<EnhancedResource<any>> {
     return new Set(
-      getParentTypes(this.type)
-        .slice(1) // not self
-        .filter(isResourceClass)
+      getParentTypes(this.type, [])
+        .filter(
+          (cls): cls is ResourceShape<any> =>
+            // Is declared as interface. i.e. avoids DataObject.
+            GqlClassType.get(cls) === 'interface' &&
+            // Avoid intersected classes.
+            // getParentTypes will give us the intersect-ees directly.
+            !cls.name.startsWith('Intersection'),
+        )
         .map(EnhancedResource.of),
     );
   }
@@ -246,8 +252,9 @@ export class EnhancedResource<T extends ResourceShape<any>> {
         const type: ResourceShape<any> | undefined = list
           ? rawType[0]!
           : rawType;
-        const resource: EnhancedResource<any> | undefined =
-          type && isResourceClass(type) ? EnhancedResource.of(type) : undefined;
+        const resource: EnhancedResource<any> | undefined = type?.prototype
+          ? EnhancedResource.of(type)
+          : undefined;
         const rel: EnhancedRelation<T> = { name, list, type, resource };
         return [name, rel];
       }),
@@ -329,11 +336,6 @@ export interface EnhancedRelation<TResourceStatic extends ResourceShape<any>> {
   /** Enhanced resource of type, if type is resource */
   readonly resource?: EnhancedResource<any>;
 }
-
-export const isResourceClass = <T>(
-  cls: AbstractClassType<T>,
-): cls is ResourceShape<T> =>
-  'Props' in cls && Array.isArray(cls.Props) && cls.Props.length > 0;
 
 export type DBType<TResourceStatic extends ResourceShape<any>> =
   ResourceShape<any> extends TResourceStatic
