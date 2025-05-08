@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { mapValues } from '@seedcompany/common';
 import { inArray, node, not, type Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
@@ -391,14 +392,20 @@ export const projectSorters = defineSorters(IProject, {
     query
       .apply(matchProjectSens('node', 'sortValue'))
       .return<SortCol>('sortValue'),
-  engagements: (query) =>
-    query
-      .match([
-        node('node'),
-        relation('out', '', 'engagement'),
-        node('engagement', 'LanguageEngagement'),
-      ])
-      .return<SortCol>('count(engagement) as sortValue'),
+  ...mapValues.fromList(
+    [
+      'engagements', // probably "deprecated"
+      'engagements.total',
+    ],
+    () => (query: Query) =>
+      query
+        .match([
+          node('node'),
+          relation('out', '', 'engagement'),
+          node('engagement', 'LanguageEngagement'),
+        ])
+        .return<SortCol>('count(engagement) as sortValue'),
+  ).asRecord,
   // eslint-disable-next-line @typescript-eslint/naming-convention
   'primaryLocation.*': (query, input) => {
     const getPath = (anon = false) => [
