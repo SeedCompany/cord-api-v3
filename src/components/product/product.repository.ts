@@ -12,7 +12,7 @@ import { DateTime } from 'luxon';
 import { type Except, type Merge } from 'type-fest';
 import {
   CreationFailed,
-  getDbClassLabels,
+  EnhancedResource,
   type ID,
   type Range,
   type Session,
@@ -36,7 +36,7 @@ import {
 } from '~/core/database/query';
 import { ScriptureReferenceRepository } from '../scripture';
 import {
-  ScriptureRange,
+  ScriptureRange as RawScriptureRange,
   type ScriptureRangeInput,
   type UnspecifiedScripturePortion,
   type UnspecifiedScripturePortionInput,
@@ -59,6 +59,8 @@ import {
   ProgressMeasurement,
   type UpdateDirectScriptureProduct,
 } from './dto';
+
+const ScriptureRange = EnhancedResource.of(RawScriptureRange);
 
 export type HydratedProductRow = Merge<
   Omit<
@@ -109,7 +111,7 @@ export class ProductRepository extends CommonRepository {
           .match([
             node('node'),
             relation('out', '', 'scriptureReferences', ACTIVE),
-            node('scriptureRanges', 'ScriptureRange'),
+            node('scriptureRanges', ScriptureRange.dbLabel),
           ])
           .return(
             collect('scriptureRanges { .start, .end }').as('scriptureRanges'),
@@ -332,8 +334,8 @@ export class ProductRepository extends CommonRepository {
             [
               node('node'),
               relation('out', '', label, ACTIVE),
-              node('', getDbClassLabels(ScriptureRange), {
-                ...ScriptureRange.fromReferences(range),
+              node('', ScriptureRange.dbLabels, {
+                ...ScriptureRange.type.fromReferences(range),
                 createdAt,
               }),
             ];
