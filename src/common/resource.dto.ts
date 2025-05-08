@@ -1,4 +1,5 @@
-import { Field, InterfaceType } from '@nestjs/graphql';
+import { CLASS_TYPE_METADATA, Field, InterfaceType } from '@nestjs/graphql';
+import { type ClassType as ClassTypeVal } from '@nestjs/graphql/dist/enums/class-type.enum.js';
 import {
   cached,
   type FnLike,
@@ -6,6 +7,7 @@ import {
   setInspectOnClass,
   setToJson,
 } from '@seedcompany/common';
+import { createMetadataDecorator } from '@seedcompany/nest';
 import { LazyGetter as Once } from 'lazy-get-decorator';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
@@ -20,13 +22,17 @@ import { type ScopedRole } from '../components/authorization/dto';
 import { CalculatedSymbol } from './calculated.decorator';
 import { DataObject } from './data-object';
 import { DbLabel } from './db-label.decorator';
-import { getDbClassLabels, getDbPropertyLabels } from './db-label.helpers';
 import { ServerException } from './exceptions';
 import { type ID, IdField } from './id-field';
 import { DateTimeField } from './luxon.graphql';
 import { getParentTypes } from './parent-types';
 import { type MaybeSecured, type SecuredProps } from './secured-property';
 import { type AbstractClassType } from './types';
+
+const GqlClassType = createMetadataDecorator({
+  key: CLASS_TYPE_METADATA,
+  setter: (type: ClassTypeVal) => type,
+});
 
 const hasTypename = (value: unknown): value is { __typename: string } =>
   value != null &&
@@ -282,7 +288,20 @@ export class EnhancedResource<T extends ResourceShape<any>> {
 
   @Once()
   get dbLabels() {
-    return getDbClassLabels(this.type);
+    const labels = getParentTypes(this.type).flatMap((cls) => {
+      if (
+        // Is declared as some gql object. i.e. avoids DataObject.
+        !GqlClassType.get(cls) ||
+        // Avoid intersected classes.
+        // getParentTypes will give us the intersect-ees directly.
+        cls.name.startsWith('Intersection')
+      ) {
+        return [];
+      }
+      const declared = DbLabel.getOwn(cls);
+      return declared ? [...declared] : [cls.name];
+    });
+    return [...new Set([...labels, 'BaseNode'])];
   }
   get dbLabel() {
     return this.dbLabels[0];
@@ -291,9 +310,10 @@ export class EnhancedResource<T extends ResourceShape<any>> {
   get dbPropLabels(): {
     readonly [K in keyof T['prototype'] & string]?: readonly string[];
   } {
-    return mapValues.fromList(this.props, (prop) =>
-      getDbPropertyLabels(this.type, prop),
-    ).asRecord;
+    return mapValues.fromList(this.props, (prop) => {
+      const declared = DbLabel.get(this.type, prop as unknown as string);
+      return [...new Set([...(declared ?? []), 'Property'])];
+    }).asRecord;
   }
 }
 setInspectOnClass(EnhancedResource, (res) => ({ collapsed }) => {

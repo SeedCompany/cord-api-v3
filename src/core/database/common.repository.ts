@@ -5,7 +5,6 @@ import { DateTime } from 'luxon';
 import {
   DbUnique,
   EnhancedResource,
-  getDbClassLabels,
   type ID,
   InputException,
   isIdLike,
@@ -170,9 +169,10 @@ export class CommonRepository {
   }
 
   protected getConstraintsFor(resource: ResourceShape<any>) {
+    const { dbLabel } = EnhancedResource.of(resource);
     return [
       ...(resource.Props.includes('id')
-        ? [createUniqueConstraint(getDbClassLabels(resource)[0], 'id')]
+        ? [createUniqueConstraint(dbLabel, 'id')]
         : []),
       ...resource.Props.flatMap((prop) => {
         const label = DbUnique.get(resource, prop);

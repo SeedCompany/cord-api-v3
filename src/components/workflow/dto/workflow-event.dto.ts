@@ -2,6 +2,7 @@ import { Field, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import {
   DateTimeField,
+  DbLabel,
   type ID,
   IdField,
   type MadeEnum,
@@ -18,6 +19,7 @@ export function WorkflowEvent<State extends string>(
   transitionType: ReturnType<typeof WorkflowTransition>,
 ) {
   @ObjectType({ isAbstract: true })
+  @DbLabel('WorkflowEvent')
   abstract class WorkflowEventClass {
     @IdField()
     readonly id: ID;
