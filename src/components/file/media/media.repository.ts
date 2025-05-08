@@ -84,6 +84,8 @@ export class MediaRepository extends CommonRepository {
     const res = input.__typename
       ? EnhancedResource.of(resolveMedia(input as AnyMedia))
       : undefined;
+    const metadata = EnhancedResource.of(MediaUserMetadata);
+
     const tempId = await generateId();
     const query = this.db
       .query()
@@ -147,7 +149,7 @@ export class MediaRepository extends CommonRepository {
           node: String(
             apoc.map.submap(
               apoc.map.merge('node', 'prevMedia'),
-              MediaUserMetadata.Props.map((k) => `'${k}'`),
+              [...metadata.props].map((k) => `'${k}'`),
               [],
               false,
             ),

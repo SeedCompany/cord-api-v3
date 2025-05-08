@@ -129,7 +129,8 @@ export const getChanges =
       Record<Exclude<keyof Changes, keyof AnyChangesOf<TResource>>, never>,
   ): ChangesOf<TResource, Changes> => {
     const res = EnhancedResource.of(resource);
-    const actual = pickBy(omit(changes, Resource.Props), (change, prop) => {
+    const baseImmutable = [...EnhancedResource.of(Resource).props];
+    const actual = pickBy(omit(changes, baseImmutable), (change, prop) => {
       if (change === undefined) {
         return false;
       }
@@ -159,7 +160,7 @@ export const getChanges =
 
     if (
       Object.keys(actual).length > 0 &&
-      resource.Props.includes('modifiedAt') &&
+      res.props.has('modifiedAt') &&
       !(actual as any).modifiedAt
     ) {
       return {

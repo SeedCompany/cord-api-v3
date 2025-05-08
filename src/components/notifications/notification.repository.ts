@@ -51,7 +51,7 @@ export class NotificationRepository extends CommonRepository {
     input: Record<string, any>,
     session: Session,
   ) {
-    const extra = omit(input, Notification.Props);
+    const extra = omit(input, [...EnhancedResource.of(Notification).props]);
     const res = await this.db
       .query()
       .create(

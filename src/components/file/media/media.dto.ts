@@ -41,6 +41,7 @@ export const resolveMedia = (val: Pick<AnyMedia, '__typename'>) => {
 @DbLabel(null)
 export class MediaUserMetadata extends DataObject {
   static readonly Props: string[] = keysOf<MediaUserMetadata>();
+  static readonly SecuredProps: string[] = [];
 
   @NameField({
     description: stripIndent`
