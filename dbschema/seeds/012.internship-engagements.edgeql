@@ -56,6 +56,6 @@ with
       )
     )
   ),
-  new := (select engagements filter .createdAt = datetime_of_statement())
+  new := (select engagements filter .createdAt = datetime_of_transaction())
 select { `Added Internship Engagements: Intern -> Project` := new.intern.realFirstName ++ ' ' ++ new.intern.realLastName ++ ' -> ' ++ new.project.name }
 filter count(new) > 0;

@@ -4,16 +4,16 @@ module default {
       default := Engagement::Status.InDevelopment;
     }
     statusModifiedAt: datetime {
-      rewrite update using (datetime_of_statement() if .status != __old__.status else .statusModifiedAt);
+      rewrite update using (datetime_of_transaction() if .status != __old__.status else .statusModifiedAt);
     }
     lastSuspendedAt: datetime {
-      rewrite update using (datetime_of_statement()
+      rewrite update using (datetime_of_transaction()
         if .status != __old__.status
             and .status = Engagement::Status.Suspended
         else .lastSuspendedAt);
     }
     lastReactivatedAt: datetime {
-      rewrite update using (datetime_of_statement()
+      rewrite update using (datetime_of_transaction()
         if .status != __old__.status
           and .status = Engagement::Status.Active
           and __old__.status = Engagement::Status.Suspended
@@ -95,8 +95,8 @@ module default {
     # Aka a default expression cannot pass the project for the engagement through to the ceremony.
     trigger connectDedicationCeremony after insert for each do (
       insert Engagement::DedicationCeremony {
-        createdAt := datetime_of_statement(),
-        modifiedAt := datetime_of_statement(),
+        createdAt := datetime_of_transaction(),
+        modifiedAt := datetime_of_transaction(),
         createdBy := assert_exists(global currentActor),
         modifiedBy := assert_exists(global currentActor),
         engagement := __new__,
@@ -149,8 +149,8 @@ module default {
     
     trigger connectCertificationCeremony after insert for each do (
       insert Engagement::CertificationCeremony {
-        createdAt := datetime_of_statement(),
-        modifiedAt := datetime_of_statement(),
+        createdAt := datetime_of_transaction(),
+        modifiedAt := datetime_of_transaction(),
         createdBy := assert_exists(global currentActor),
         modifiedBy := assert_exists(global currentActor),
         engagement := __new__,

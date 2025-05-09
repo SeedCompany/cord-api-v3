@@ -120,6 +120,6 @@ with
       })
     )
   ),
-  new := (select organizations filter .createdAt = datetime_of_statement())
+  new := (select organizations filter .createdAt = datetime_of_transaction())
 select { `Added Organizations` := new.name }
 filter count(new) > 0;

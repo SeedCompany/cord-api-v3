@@ -79,7 +79,7 @@ module ProgressReport {
     };
     required at: datetime {
       readonly := true;
-      default := datetime_of_statement();
+      default := datetime_of_transaction();
     };
     transitionId: default::nanoid {
       readonly := true;
