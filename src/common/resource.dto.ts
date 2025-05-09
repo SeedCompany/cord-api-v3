@@ -194,7 +194,7 @@ export class EnhancedResource<T extends ResourceShape<any>> {
     const props = this.type.Props;
     if (!props) {
       throw new Error(
-        `${this.name} has not been decorated with @RegisterResource`,
+        `${this.name} has no props declared. Decorate with @RegisterResource or a GraphQL type decorator.`,
       );
     }
     return new Set<keyof T['prototype'] & string>(props);
@@ -205,7 +205,7 @@ export class EnhancedResource<T extends ResourceShape<any>> {
     const props = this.type.SecuredProps;
     if (!props) {
       throw new Error(
-        `${this.name} has not been decorated with @RegisterResource`,
+        `${this.name} has no props declared. Decorate with @RegisterResource or a GraphQL type decorator.`,
       );
     }
     return new Set<SecuredResourceKey<T, false>>(props as any);

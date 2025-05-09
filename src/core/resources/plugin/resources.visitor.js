@@ -34,7 +34,13 @@ export class ResourceVisitor {
         (ts.canHaveDecorators(node) && ts.getDecorators(node)) || [];
       if (
         ts.isClassDeclaration(node) &&
-        hasDecorators(decorators, ['RegisterResource'])
+        hasDecorators(decorators, [
+          'RegisterResource',
+          'ObjectType',
+          'InterfaceType',
+          'InputType',
+          'ArgsType',
+        ])
       ) {
         return this.enhanceDtoClass(node, program, factory);
       }
