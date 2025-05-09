@@ -60,7 +60,7 @@ module default {
     );
     trigger denyDuplicateFirstScriptureBasedOnOtherEngagement after insert, update for each do (
       assert( 
-        not exists (select __new__.language.engagements filter .firstScripture),
+        not exists (select __new__.language.engagements filter assert_single(.firstScripture)),
         message := "Another engagement has already been marked as having done the first scripture"
       )
     );

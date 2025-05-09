@@ -43,11 +43,11 @@ with
       set {
         pins += (
           select Mixin::Pinnable
-          filter [is Mixin::Named].name = <str>json_array_unpack(user['pinnables'])
+          filter [is Mixin::Named].name in <str>json_array_unpack(user['pinnables'])
         )
       }
     )
   ),
   modified := (select users filter .modifiedAt = datetime_of_transaction())
-select {`Modified Users` := modified.realFirstName ++ ' ' ++ modified.realLastName}
+select {`Added Pins to Users` := modified.realFirstName ++ ' ' ++ modified.realLastName}
 filter count(modified) > 0;
