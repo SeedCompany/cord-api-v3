@@ -8,7 +8,6 @@ export interface ResolveParams {
   project: MaybeSecured<Project>;
   previousStep?: Step;
   moduleRef: ModuleRef;
-  migrationPrevSteps?: ProjectStep[];
 }
 
 export const BackTo = (
@@ -16,10 +15,7 @@ export const BackTo = (
 ): DynamicState<Step, ResolveParams> => ({
   description: 'Back',
   relatedStates: steps,
-  async resolve({ project, moduleRef, migrationPrevSteps }) {
-    if (migrationPrevSteps) {
-      return migrationPrevSteps.find((s) => steps.includes(s)) ?? steps[0];
-    }
+  async resolve({ project, moduleRef }) {
     const repo = moduleRef.get(ProjectWorkflowRepository);
     const found = await repo.mostRecentStep(project.id, steps);
     return found ?? steps[0] ?? ProjectStep.EarlyConversations;
