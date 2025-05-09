@@ -6,9 +6,6 @@ import { ProductStep as Step } from '../product/dto';
 import { type PnpExtractionResult, PnpProblemType } from './extraction-result';
 import { type PlanningSheet } from './planning-sheet';
 import { type ProgressSheet } from './progress-sheet';
-import 'ix/add/iterable-operators/filter.js';
-import 'ix/add/iterable-operators/map.js';
-import 'ix/add/iterable-operators/toarray.js';
 
 /**
  * Fuzzy match available steps to their column address.
