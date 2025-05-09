@@ -1,11 +1,11 @@
 import {
-  CallHandler,
-  ExecutionContext,
+  type CallHandler,
+  type ExecutionContext,
   Injectable,
-  NestInterceptor,
+  type NestInterceptor,
 } from '@nestjs/common';
 import { GqlExecutionContext } from '@nestjs/graphql';
-import { fromEvent, Observable, race } from 'rxjs';
+import { fromEvent, type Observable, race } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ServiceUnavailableException } from '~/common';
 

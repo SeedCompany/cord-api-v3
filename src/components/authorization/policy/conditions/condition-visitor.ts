@@ -1,5 +1,5 @@
 import { AggregateConditions } from './aggregate.condition';
-import { Condition } from './condition.interface';
+import { type Condition } from './condition.interface';
 
 export const visitCondition = (
   condition: Condition,

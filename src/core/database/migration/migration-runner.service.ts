@@ -5,7 +5,7 @@ import { ConfigService } from '../../config/config.service';
 import { ILogger, Logger } from '../../logger';
 import { DatabaseService, DbTraceLayer } from '../database.service';
 import {
-  DiscoveredMigration,
+  type DiscoveredMigration,
   MigrationDiscovery,
 } from './migration-discovery.service';
 

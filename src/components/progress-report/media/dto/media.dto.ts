@@ -2,20 +2,21 @@ import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { setOf } from '@seedcompany/common';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
+  EnhancedResource,
   IdField,
-  IdOf,
+  type IdOf,
   Resource,
-  SecuredProps,
+  type SecuredProps,
   Variant,
-  VariantOf,
+  type VariantOf,
 } from '~/common';
-import { LinkTo } from '~/core';
-import { SetDbType } from '~/core/database';
+import { type LinkTo } from '~/core';
+import { type SetDbType } from '~/core/database';
 import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
-import { FileId } from '../../../file/dto';
-import { Media } from '../../../file/media/media.dto';
-import { ProgressReport } from '../../dto';
+import { type FileId } from '../../../file/dto';
+import { type Media } from '../../../file/media/media.dto';
+import { type ProgressReport } from '../../dto';
 import { ProgressReportHighlight } from '../../dto/highlights.dto';
 import { MediaCategory } from '../media-category.enum';
 
@@ -27,9 +28,14 @@ export type VariantGroup = IdOf<'ProgressReportMediaVariantGroup'>;
 export class ProgressReportMedia extends Resource {
   static Props = keysOf<ProgressReportMedia>();
   static SecuredProps = keysOf<SecuredProps<ProgressReportMedia>>();
-  static BaseNodeProps = [...Resource.Props, 'category', 'creator', 'variant'];
+  static BaseNodeProps = [
+    ...EnhancedResource.of(Resource).props,
+    'category',
+    'creator',
+    'variant',
+  ];
   static readonly Parent = () =>
-    import('../../dto/progress-report.entity').then((m) => m.ProgressReport);
+    import('../../dto/progress-report.dto').then((m) => m.ProgressReport);
   static readonly ConfirmThisClassPassesSensitivityToPolicies = true;
 
   static Variants = ProgressReportHighlight.Variants;

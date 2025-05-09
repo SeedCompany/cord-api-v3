@@ -1,16 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import { inArray, node, or, Query, relation } from 'cypher-query-builder';
-import { Except, RequireAtLeastOne } from 'type-fest';
+import { inArray, node, or, type Query, relation } from 'cypher-query-builder';
+import type { Except, RequireAtLeastOne } from 'type-fest';
 import {
   EnhancedResource,
   generateId,
-  ID,
+  type ID,
   NotFoundException,
   ServerException,
 } from '~/common';
 import { CommonRepository } from '~/core/database';
 import { ACTIVE, apoc, merge } from '~/core/database/query';
-import { AnyMedia, MediaUserMetadata, resolveMedia } from './media.dto';
+import { type AnyMedia, MediaUserMetadata, resolveMedia } from './media.dto';
 
 @Injectable()
 export class MediaRepository extends CommonRepository {
@@ -84,6 +84,8 @@ export class MediaRepository extends CommonRepository {
     const res = input.__typename
       ? EnhancedResource.of(resolveMedia(input as AnyMedia))
       : undefined;
+    const metadata = EnhancedResource.of(MediaUserMetadata);
+
     const tempId = await generateId();
     const query = this.db
       .query()
@@ -147,7 +149,7 @@ export class MediaRepository extends CommonRepository {
           node: String(
             apoc.map.submap(
               apoc.map.merge('node', 'prevMedia'),
-              MediaUserMetadata.Props.map((k) => `'${k}'`),
+              [...metadata.props].map((k) => `'${k}'`),
               [],
               false,
             ),

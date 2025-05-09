@@ -1,5 +1,5 @@
 import { keys as keysOf } from 'ts-transformer-keys';
-import { Role, SecuredProps, Variant, VariantOf } from '~/common';
+import { Role, type SecuredProps, Variant, type VariantOf } from '~/common';
 import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
 import { PromptVariantResponse } from '../../prompts/dto';
@@ -28,7 +28,7 @@ export class ProgressReportHighlight extends PromptVariantResponse<HighlightVari
   static Props = keysOf<ProgressReportHighlight>();
   static SecuredProps = keysOf<SecuredProps<ProgressReportHighlight>>();
   static readonly Parent = () =>
-    import('./progress-report.entity').then((m) => m.ProgressReport);
+    import('./progress-report.dto').then((m) => m.ProgressReport);
   static Variants = variants;
   static readonly ConfirmThisClassPassesSensitivityToPolicies = true;
 }

@@ -1,7 +1,7 @@
 import { InputType } from '@nestjs/graphql';
 import { FilterField, OptionalField, SortablePaginationInput } from '~/common';
 import { CeremonyType } from './ceremony-type.enum';
-import { Ceremony } from './ceremony.dto';
+import { type Ceremony } from './ceremony.dto';
 
 @InputType()
 export abstract class CeremonyFilters {

@@ -1,7 +1,7 @@
-import { ModuleRef } from '@nestjs/core';
-import { MaybeSecured } from '~/common';
-import { DynamicState } from '../../../workflow/transitions/dynamic-state';
-import { Project, ProjectStep, ProjectStep as Step } from '../../dto';
+import { type ModuleRef } from '@nestjs/core';
+import { type MaybeSecured } from '~/common';
+import { type DynamicState } from '../../../workflow/transitions/dynamic-state';
+import { type Project, ProjectStep, ProjectStep as Step } from '../../dto';
 import { ProjectWorkflowRepository } from '../project-workflow.repository';
 
 export interface ResolveParams {

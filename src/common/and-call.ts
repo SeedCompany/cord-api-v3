@@ -1,6 +1,6 @@
-import { FnLike } from '@seedcompany/common';
+import { type FnLike } from '@seedcompany/common';
 import { isPromise } from 'node:util/types';
-import { ConditionalKeys } from 'type-fest';
+import { type ConditionalKeys } from 'type-fest';
 
 export const andCall = <
   T,

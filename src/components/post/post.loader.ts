@@ -1,6 +1,6 @@
-import { ID } from '~/common';
+import { type ID } from '~/common';
 import { LoaderFactory, SessionAwareLoaderStrategy } from '~/core';
-import { Post } from './dto';
+import { type Post } from './dto';
 import { PostRepository } from './post.repository';
 import { PostService } from './post.service';
 

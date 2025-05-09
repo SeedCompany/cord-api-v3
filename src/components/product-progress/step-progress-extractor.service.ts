@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { entries } from '@seedcompany/common';
 import { assert } from 'ts-essentials';
-import { MergeExclusive } from 'type-fest';
-import { Cell, Column, Row } from '~/common/xlsx.util';
-import { Downloadable } from '../file/dto';
+import type { MergeExclusive } from 'type-fest';
+import type { Cell, Column, Row } from '~/common/xlsx.util';
+import type { Downloadable } from '../file/dto';
 import {
   extractScripture,
   findStepColumns,
@@ -11,13 +11,13 @@ import {
   isGoalStepPlannedInsideProject,
   isProgressCompletedOutsideProject,
   Pnp,
-  ProgressSheet,
-  WrittenScripturePlanningSheet,
+  type ProgressSheet,
+  type WrittenScripturePlanningSheet,
 } from '../pnp';
-import { PnpProgressExtractionResult } from '../pnp/extraction-result';
-import { ProductStep as Step } from '../product/dto';
-import { ScriptureRange } from '../scripture/dto';
-import { StepProgressInput } from './dto';
+import { type PnpProgressExtractionResult } from '../pnp/extraction-result';
+import { type ProductStep as Step } from '../product/dto';
+import { type ScriptureRange } from '../scripture/dto';
+import { type StepProgressInput } from './dto';
 
 type ExtractedRow = MergeExclusive<
   {

@@ -1,26 +1,26 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { Many } from '@seedcompany/common';
+import { type Many } from '@seedcompany/common';
 import {
-  CalendarDate,
+  type CalendarDate,
   ClientException,
   CreationFailed,
   EnhancedResource,
-  ID,
+  type ID,
   InputException,
   isIdLike,
   many,
   NotFoundException,
-  ObjectView,
-  Range,
+  type ObjectView,
+  type Range,
   RangeException,
   ReadAfterCreationFailed,
   RequiredWhen,
   Role,
   SecuredList,
   ServerException,
-  Session,
+  type Session,
   UnauthorizedException,
-  UnsecuredDto,
+  type UnsecuredDto,
 } from '~/common';
 import { isAdmin } from '~/common/session';
 import {
@@ -31,39 +31,45 @@ import {
   Logger,
 } from '~/core';
 import { Transactional } from '~/core/database';
-import { AnyChangesOf } from '~/core/database/changes';
+import { type AnyChangesOf } from '~/core/database/changes';
 import { Privileges } from '../authorization';
 import { withoutScope } from '../authorization/dto';
 import { BudgetService } from '../budget';
-import { BudgetStatus, SecuredBudget } from '../budget/dto';
+import { BudgetStatus, type SecuredBudget } from '../budget/dto';
 import { EngagementService } from '../engagement';
-import { EngagementListInput, SecuredEngagementList } from '../engagement/dto';
+import {
+  type EngagementListInput,
+  type SecuredEngagementList,
+} from '../engagement/dto';
 import { LocationService } from '../location';
-import { LocationListInput, SecuredLocationList } from '../location/dto';
+import {
+  type LocationListInput,
+  type SecuredLocationList,
+} from '../location/dto';
 import { PartnerService } from '../partner';
 import { PartnershipService } from '../partnership';
 import {
-  PartnershipListInput,
-  SecuredPartnershipList,
+  type PartnershipListInput,
+  type SecuredPartnershipList,
 } from '../partnership/dto';
 import { ProjectChangeRequestService } from '../project-change-request';
 import {
-  ProjectChangeRequestListInput,
-  SecuredProjectChangeRequestList,
+  type ProjectChangeRequestListInput,
+  type SecuredProjectChangeRequestList,
 } from '../project-change-request/dto';
 import { User } from '../user/dto';
 import {
-  CreateProject,
+  type CreateProject,
   InternshipProject,
   IProject,
   MomentumTranslationProject,
   MultiplicationTranslationProject,
-  Project,
-  ProjectListInput,
+  type Project,
+  type ProjectListInput,
   ProjectStatus,
   ProjectType,
   resolveProjectType,
-  SecuredProjectList,
+  type SecuredProjectList,
   TranslationProject,
   UpdateProject,
 } from './dto';
@@ -74,8 +80,8 @@ import {
 } from './events';
 import { ProjectMemberService } from './project-member';
 import {
-  ProjectMemberListInput,
-  SecuredProjectMemberList,
+  type ProjectMemberListInput,
+  type SecuredProjectMemberList,
 } from './project-member/dto';
 import { ProjectRepository } from './project.repository';
 import { ProjectWorkflowService } from './workflow/project-workflow.service';

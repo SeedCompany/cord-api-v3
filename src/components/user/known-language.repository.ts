@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { ID } from '~/common';
+import { type ID } from '~/common';
 import { DtoRepository } from '~/core/database';
 import { ACTIVE } from '~/core/database/query';
-import { KnownLanguage, ModifyKnownLanguageArgs } from './dto';
+import { KnownLanguage, type ModifyKnownLanguageArgs } from './dto';
 
 @Injectable()
 export class KnownLanguageRepository extends DtoRepository(KnownLanguage) {

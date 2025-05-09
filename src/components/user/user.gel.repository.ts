@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { ID, NotImplementedException, PublicOf } from '~/common';
-import { disableAccessPolicies, e, RepoFor, ScopeOf } from '~/core/gel';
+import { type ID, NotImplementedException, type PublicOf } from '~/common';
+import { disableAccessPolicies, e, RepoFor, type ScopeOf } from '~/core/gel';
 import {
-  AssignOrganizationToUser,
-  RemoveOrganizationFromUser,
+  type AssignOrganizationToUser,
+  type RemoveOrganizationFromUser,
   User,
-  UserListInput,
+  type UserListInput,
 } from './dto';
 import type { UserRepository } from './user.repository';
 

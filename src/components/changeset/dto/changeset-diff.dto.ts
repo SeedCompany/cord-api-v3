@@ -1,8 +1,8 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { ValueOf } from 'type-fest';
+import { type ValueOf } from 'type-fest';
 import { Resource } from '~/common';
-import { ResourceMap } from '~/core';
+import { type ResourceMap } from '~/core';
 
 type SomeResource = ValueOf<ResourceMap>['prototype'];
 

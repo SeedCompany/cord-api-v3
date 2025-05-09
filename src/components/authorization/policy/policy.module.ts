@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { CoreModule } from '~/core';
 import { RoleAndExpUnionOptimizer } from '../policies/conditions/role-and-exp-union.optimizer';
 import { VariantAndExpUnionOptimizer } from '../policies/conditions/variant-and-exp-union.optimizer';
 import { FlattenAggregateOptimizer } from './conditions/flatten-aggregate.optimizer';
@@ -11,6 +12,7 @@ import { GrantersFactory } from './granters.factory';
 import { PolicyFactory } from './policy.factory';
 
 @Module({
+  imports: [CoreModule],
   providers: [
     GrantersFactory,
     PolicyFactory,

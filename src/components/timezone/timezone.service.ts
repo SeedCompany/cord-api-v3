@@ -2,7 +2,7 @@ import { Resolver } from '@nestjs/graphql';
 import { mapValues } from '@seedcompany/common';
 import { mkdir, readFile, writeFile } from 'fs/promises';
 import got from 'got';
-import { IanaCountry, TimeZone } from './timezone.dto';
+import { type IanaCountry, type TimeZone } from './timezone.dto';
 
 interface TzJson {
   countries: Record<string, TzCountryJson>;

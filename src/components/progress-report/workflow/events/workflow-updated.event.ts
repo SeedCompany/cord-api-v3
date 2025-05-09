@@ -1,7 +1,7 @@
-import { ID, UnsecuredDto } from '~/common';
-import { ProgressReportStatus as Status } from '../../dto';
-import { ProgressReportWorkflowEvent as WorkflowEvent } from '../dto/workflow-event.dto';
-import { InternalTransition } from '../transitions';
+import { type ID, type UnsecuredDto } from '~/common';
+import { type ProgressReportStatus as Status } from '../../dto';
+import { type ProgressReportWorkflowEvent as WorkflowEvent } from '../dto/workflow-event.dto';
+import { type InternalTransition } from '../transitions';
 
 export class WorkflowUpdatedEvent {
   constructor(

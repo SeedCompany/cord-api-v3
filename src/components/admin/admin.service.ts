@@ -1,4 +1,4 @@
-import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
+import { Injectable, type OnApplicationBootstrap } from '@nestjs/common';
 import { DateTime } from 'luxon';
 import { Role, ServerException } from '~/common';
 import { ConfigService } from '~/core/config/config.service';

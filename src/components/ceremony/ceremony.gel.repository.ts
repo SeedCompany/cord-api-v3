@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { NotImplementedException, PublicOf } from '~/common';
+import { NotImplementedException, type PublicOf } from '~/common';
 import { castToEnum, RepoFor } from '~/core/gel';
-import { CeremonyRepository } from './ceremony.repository';
+import { type CeremonyRepository } from './ceremony.repository';
 import { Ceremony, CeremonyType } from './dto';
 
 @Injectable()

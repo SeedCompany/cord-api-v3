@@ -1,10 +1,10 @@
-import { Session, UnsecuredDto } from '~/common';
+import { type Session, type UnsecuredDto } from '~/common';
 import {
-  Engagement,
+  type Engagement,
   InternshipEngagement,
   LanguageEngagement,
-  UpdateInternshipEngagement,
-  UpdateLanguageEngagement,
+  type UpdateInternshipEngagement,
+  type UpdateLanguageEngagement,
 } from '../dto';
 
 export class EngagementUpdatedEvent {

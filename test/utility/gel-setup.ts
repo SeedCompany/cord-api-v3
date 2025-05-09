@@ -1,4 +1,4 @@
-import { Client, ConnectOptions, createClient } from 'gel';
+import { type Client, type ConnectOptions, createClient } from 'gel';
 import { DateTime } from 'luxon';
 
 export const ephemeralGel = async () => {

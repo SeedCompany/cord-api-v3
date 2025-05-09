@@ -1,4 +1,4 @@
-import { UnwrapSecured } from '~/common';
+import { type UnwrapSecured } from '~/common';
 
 /**
  * Specify this on a property to override the key & value type for DbTypeOf on

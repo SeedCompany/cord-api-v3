@@ -3,12 +3,12 @@ import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { stripIndent } from 'common-tags';
 import {
-  CalendarDate,
+  type CalendarDate,
   DateField,
-  ID,
+  type ID,
   IdField,
   OptionalField,
-  RichTextDocument,
+  type RichTextDocument,
   RichTextField,
 } from '~/common';
 import { ChangesetIdField } from '../../changeset';

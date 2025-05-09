@@ -1,7 +1,7 @@
-import { Client } from 'gel';
-import { Directory, SourceFile } from 'ts-morph';
-import { ScalarInfo } from '../codecs';
-import { HydratorMap } from './find-hydration-shapes';
+import { type Client } from 'gel';
+import { type Directory, type SourceFile } from 'ts-morph';
+import { type ScalarInfo } from '../codecs';
+import { type HydratorMap } from './find-hydration-shapes';
 
 export interface GeneratorParams {
   client: Client;

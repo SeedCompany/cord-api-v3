@@ -1,7 +1,7 @@
 import { InputType, ObjectType } from '@nestjs/graphql';
 import {
   FilterField,
-  ID,
+  type ID,
   ListField,
   PaginatedList,
   SecuredList,

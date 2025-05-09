@@ -8,11 +8,11 @@ import {
   or,
   relation,
 } from 'cypher-query-builder';
-import { ID, NotFoundException } from '~/common';
+import { type ID, NotFoundException } from '~/common';
 import { DtoRepository } from '~/core/database';
 import { ACTIVE, path, variable } from '~/core/database/query';
-import { BaseNode } from '~/core/database/results';
-import { Changeset, ChangesetDiff } from './dto';
+import { type BaseNode } from '~/core/database/results';
+import { Changeset, type ChangesetDiff } from './dto';
 
 @Injectable()
 export class ChangesetRepository extends DtoRepository(Changeset) {

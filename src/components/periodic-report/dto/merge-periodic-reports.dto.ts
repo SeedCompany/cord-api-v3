@@ -1,5 +1,5 @@
 import { simpleSwitch } from '@seedcompany/common';
-import { MergeExclusive } from 'type-fest';
+import { type MergeExclusive } from 'type-fest';
 import { ServerException } from '~/common';
 import { ProgressReport } from '../../progress-report/dto';
 import { FinancialReport, NarrativeReport } from './periodic-report.dto';

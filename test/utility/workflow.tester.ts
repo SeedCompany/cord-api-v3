@@ -1,14 +1,14 @@
 import { fileURLToPath } from 'url';
-import { ID, UnauthorizedException } from '~/common';
+import { type ID, UnauthorizedException } from '~/common';
 import { jestSkipFileInExceptionSource } from '~/core/exception';
-import { ExecuteProjectTransitionInput } from '../../src/components/project/workflow/dto';
-import { ProjectWorkflow } from '../../src/components/project/workflow/project-workflow';
-import { Workflow } from '../../src/components/workflow/define-workflow';
+import { type ExecuteProjectTransitionInput } from '../../src/components/project/workflow/dto';
+import { type ProjectWorkflow } from '../../src/components/project/workflow/project-workflow';
+import { type Workflow } from '../../src/components/workflow/define-workflow';
 import {
-  ExecuteTransitionInput,
-  WorkflowTransition,
+  type ExecuteTransitionInput,
+  type WorkflowTransition,
 } from '../../src/components/workflow/dto';
-import { TestApp } from './create-app';
+import { type TestApp } from './create-app';
 import { getProjectTransitions, transitionProject } from './transition-project';
 
 const filepath = fileURLToPath(import.meta.url);

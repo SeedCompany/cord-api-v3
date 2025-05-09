@@ -1,7 +1,7 @@
 import { EngagementService } from '../../../engagement';
 import { EngagementStatus } from '../../../engagement/dto';
-import { TransitionCondition } from '../../../workflow/transitions/conditions';
-import { ResolveParams } from './dynamic-step';
+import { type TransitionCondition } from '../../../workflow/transitions/conditions';
+import { type ResolveParams } from './dynamic-step';
 
 type Condition = TransitionCondition<ResolveParams>;
 

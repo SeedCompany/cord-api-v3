@@ -1,13 +1,18 @@
 import { Injectable } from '@nestjs/common';
-import { ID, ObjectView, Session, UnsecuredDto } from '~/common';
+import {
+  type ID,
+  type ObjectView,
+  type Session,
+  type UnsecuredDto,
+} from '~/common';
 import { HandleIdLookup, ILogger, Logger } from '~/core';
 import { Privileges } from '../../authorization';
 import {
-  CreateEducation,
+  type CreateEducation,
   Education,
-  EducationListInput,
-  EducationListOutput,
-  UpdateEducation,
+  type EducationListInput,
+  type EducationListOutput,
+  type UpdateEducation,
 } from './dto';
 import { EducationRepository } from './education.repository';
 

@@ -1,4 +1,4 @@
-import { AbstractClassType } from './types';
+import { type AbstractClassType } from './types';
 
 /**
  * A helper class to try to enforce proper usage of data objects.

@@ -1,7 +1,7 @@
-import { OperationDefinitionNode } from 'graphql';
-import { BehaviorSubject } from 'rxjs';
+import { type OperationDefinitionNode } from 'graphql';
+import { type BehaviorSubject } from 'rxjs';
 import type { IRequest, IResponse } from '~/core/http';
-import { Session } from './session';
+import { type Session } from './session';
 
 /**
  * The type for graphql @Context() decorator

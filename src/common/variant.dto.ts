@@ -1,11 +1,11 @@
 import { applyDecorators } from '@nestjs/common';
-import { Field, FieldOptions, ObjectType } from '@nestjs/graphql';
+import { Field, type FieldOptions, ObjectType } from '@nestjs/graphql';
 import { entries } from '@seedcompany/common';
 import { Transform } from 'class-transformer';
 import { IsIn } from 'class-validator';
 import { stripIndent } from 'common-tags';
 import { GraphQLID as IDType } from 'graphql';
-import { ResourceShape } from '~/common/resource.dto';
+import { type ResourceShape } from '~/common/resource.dto';
 import { InputException } from './exceptions';
 import { IdField } from './id-field';
 import { Role } from './role.dto';

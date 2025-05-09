@@ -1,26 +1,31 @@
 import { DiscoveryService } from '@golevelup/nestjs-discovery';
-import { forwardRef, Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { mapEntries, Nil } from '@seedcompany/common';
+import {
+  forwardRef,
+  Inject,
+  Injectable,
+  type OnModuleInit,
+} from '@nestjs/common';
+import { mapEntries, type Nil } from '@seedcompany/common';
 import Event from 'gel/dist/primitives/event.js';
 import {
-  ID,
-  ResourceShape,
+  type ID,
+  type ResourceShape,
   ServerException,
-  Session,
-  UnsecuredDto,
+  type Session,
+  type UnsecuredDto,
 } from '~/common';
 import { sessionFromContext } from '~/common/session';
 import { GqlContextHost } from '~/core/graphql';
 import {
-  MarkNotificationReadArgs,
-  Notification,
-  NotificationList,
-  NotificationListInput,
+  type MarkNotificationReadArgs,
+  type Notification,
+  type NotificationList,
+  type NotificationListInput,
 } from './dto';
 import { NotificationRepository } from './notification.repository';
 import {
   INotificationStrategy,
-  InputOf,
+  type InputOf,
   NotificationStrategy,
 } from './notification.strategy';
 

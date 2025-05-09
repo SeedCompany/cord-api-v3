@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { DataLoaderOptions } from '@seedcompany/data-loader';
+import { type DataLoaderOptions } from '@seedcompany/data-loader';
 import { NotFoundException } from '~/common';
 import { ConfigService } from '../config/config.service';
 

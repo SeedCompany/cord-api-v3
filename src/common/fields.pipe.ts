@@ -1,4 +1,4 @@
-import { PipeTransform } from '@nestjs/common';
+import { type PipeTransform } from '@nestjs/common';
 import type { ChangesetAware } from '../components/changeset/dto';
 import { FieldSelection, isOnlyGivenKeys } from './field-selection';
 import type { Resource } from './resource.dto';

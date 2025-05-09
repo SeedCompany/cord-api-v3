@@ -1,5 +1,5 @@
 import { ObjectType } from '@nestjs/graphql';
-import { EnumType, makeEnum, SecuredEnumList } from '~/common';
+import { type EnumType, makeEnum, SecuredEnumList } from '~/common';
 
 export type ProductStep = EnumType<typeof ProductStep>;
 export const ProductStep = makeEnum({

@@ -1,11 +1,11 @@
 import { Field, InterfaceType } from '@nestjs/graphql';
-import { DateTime } from 'luxon';
+import { type DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
   DateTimeField,
   resolveByTypename,
   Resource,
-  SecuredProps,
+  type SecuredProps,
 } from '~/common';
 import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';

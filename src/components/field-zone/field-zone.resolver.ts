@@ -8,14 +8,14 @@ import {
 } from '@nestjs/graphql';
 import {
   AnonSession,
-  ID,
+  type ID,
   IdArg,
   ListArg,
   LoggedInSession,
   mapSecuredValue,
-  Session,
+  type Session,
 } from '~/common';
-import { Loader, LoaderOf } from '~/core';
+import { Loader, type LoaderOf } from '~/core';
 import { UserLoader } from '../user';
 import { SecuredUser } from '../user/dto';
 import {

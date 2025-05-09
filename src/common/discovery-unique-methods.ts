@@ -1,4 +1,4 @@
-import { DiscoveredMethodWithMeta } from '@golevelup/nestjs-discovery';
+import { type DiscoveredMethodWithMeta } from '@golevelup/nestjs-discovery';
 
 export const uniqueDiscoveredMethods = <T>(
   methods: Array<DiscoveredMethodWithMeta<T>>,

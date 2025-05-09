@@ -1,8 +1,8 @@
 import { Field, InputType } from '@nestjs/graphql';
-import { csv, NonEmptyArray } from '@seedcompany/common';
+import { csv, type NonEmptyArray } from '@seedcompany/common';
 import { mapRange } from '@seedcompany/scripture';
 import { Transform } from 'class-transformer';
-import { Range as MutableRange } from '~/common';
+import { type Range as MutableRange } from '~/common';
 import { ValidateBy } from '~/common/validators/validateBy';
 import { ProjectType as Program } from '../../../project/dto/project-type.enum';
 

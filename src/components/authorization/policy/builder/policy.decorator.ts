@@ -1,6 +1,6 @@
 import { SetMetadata } from '@nestjs/common';
-import { ValueOf } from 'type-fest';
-import { Many, Role } from '~/common';
+import type { ValueOf } from 'type-fest';
+import { type Many, type Role } from '~/common';
 import type { ResourcesGranter } from '../granters';
 
 type ResourceGranterFn = (

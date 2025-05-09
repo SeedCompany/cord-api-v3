@@ -1,5 +1,5 @@
 import { cleanJoin } from '@seedcompany/common';
-import { User } from './dto';
+import { type User } from './dto';
 
 export const fullName = (
   user: Partial<

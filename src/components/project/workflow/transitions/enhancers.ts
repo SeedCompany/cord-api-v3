@@ -1,7 +1,7 @@
-import { TransitionEnhancer } from '../../../workflow/define-workflow';
-import { ProjectStep as Step } from '../../dto';
+import { type TransitionEnhancer } from '../../../workflow/define-workflow';
+import { type ProjectStep as Step } from '../../dto';
 import { HasEngagement } from './conditions';
-import { ResolveParams } from './dynamic-step';
+import { type ResolveParams } from './dynamic-step';
 import { TeamMembers } from './notifiers';
 
 type Enhancer = TransitionEnhancer<Step, ResolveParams>;

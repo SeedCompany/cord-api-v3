@@ -1,8 +1,8 @@
 import {
-  ArgumentsHost,
+  type ArgumentsHost,
   Catch,
   HttpStatus,
-  ExceptionFilter as IExceptionFilter,
+  type ExceptionFilter as IExceptionFilter,
   Injectable,
 } from '@nestjs/common';
 import { mapValues } from '@seedcompany/common';
@@ -11,7 +11,7 @@ import { ConfigService } from '../config/config.service';
 import { ILogger, Logger, LogLevel } from '../logger';
 import { ValidationException } from '../validation';
 import {
-  ExceptionJson,
+  type ExceptionJson,
   ExceptionNormalizer,
   NormalizedException,
 } from './exception.normalizer';

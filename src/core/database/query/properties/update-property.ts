@@ -1,27 +1,31 @@
-import { node, Query, relation } from 'cypher-query-builder';
-import { DateTime, Duration, DurationLikeObject as MyDuration } from 'luxon';
+import { node, type Query, relation } from 'cypher-query-builder';
 import {
-  DurationIn,
-  ID,
-  MaybeUnsecuredInstance,
-  ResourceShape,
+  DateTime,
+  Duration,
+  type DurationLikeObject as MyDuration,
+} from 'luxon';
+import {
+  type DurationIn,
+  type ID,
+  type MaybeUnsecuredInstance,
+  type ResourceShape,
 } from '~/common';
-import { DbChanges } from '../../changes';
+import { type DbChanges } from '../../changes';
 import { varInExp } from '../../query-augmentation/subquery';
 import {
   ACTIVE,
   coalesce,
   exp,
   INACTIVE,
-  QueryFragment,
+  type QueryFragment,
   variable,
   Variable,
 } from '../index';
 import { maybeWhereAnd } from '../maybe-where-and';
-import { createProperty, CreatePropertyOptions } from './create-property';
+import { createProperty, type CreatePropertyOptions } from './create-property';
 import {
   deactivateProperty,
-  DeactivatePropertyOptions,
+  type DeactivatePropertyOptions,
 } from './deactivate-property';
 
 export const defaultPermanentAfter: MyDuration = { minutes: 30 };

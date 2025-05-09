@@ -1,14 +1,14 @@
 import { sample, times } from 'lodash';
 import { v1 as uuid } from 'uuid';
-import { CalendarDate, ID, Role } from '~/common';
+import { CalendarDate, type ID, Role } from '~/common';
 import { PartnerType } from '../src/components/partner/dto';
 import {
   FinancialReportingType,
-  Partnership,
+  type Partnership,
   PartnershipAgreementStatus,
-  UpdatePartnershipInput,
+  type UpdatePartnershipInput,
 } from '../src/components/partnership/dto';
-import { Project } from '../src/components/project/dto';
+import { type Project } from '../src/components/project/dto';
 import {
   createPartner,
   createPartnership,
@@ -18,9 +18,9 @@ import {
   errors,
   fragments,
   gql,
-  Raw,
+  type Raw,
   registerUser,
-  TestApp,
+  type TestApp,
 } from './utility';
 
 describe('Partnership e2e', () => {

@@ -1,13 +1,13 @@
-import { HeadObjectOutput } from '@aws-sdk/client-s3';
-import { Type } from '@nestjs/common';
-import { Command } from '@smithy/smithy-client';
+import { type HeadObjectOutput } from '@aws-sdk/client-s3';
+import { type Type } from '@nestjs/common';
+import { type Command } from '@smithy/smithy-client';
 import { NotFoundException } from '~/common';
 import {
   FileBucket,
-  GetObjectOutput,
+  type GetObjectOutput,
   InvalidSignedUrlException,
-  PutObjectInput,
-  SignedOp,
+  type PutObjectInput,
+  type SignedOp,
 } from './file-bucket';
 
 /**

@@ -1,4 +1,4 @@
-import { FieldMiddleware } from '@nestjs/graphql';
+import { type FieldMiddleware } from '@nestjs/graphql';
 import { isObject } from 'lodash';
 import { ServerException } from './exceptions';
 import type { ID } from './id-field';

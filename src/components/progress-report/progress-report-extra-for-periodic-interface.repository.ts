@@ -2,20 +2,20 @@ import { Injectable } from '@nestjs/common';
 import { mapEntries } from '@seedcompany/common';
 import { node, not, relation } from 'cypher-query-builder';
 import {
-  CreateNodeOptions,
-  DefinedSorters,
+  type CreateNodeOptions,
+  type DefinedSorters,
   defineSorters,
   exp,
   path,
-  QueryFragment,
-  SortCol,
-  SortFieldOf,
-  SortMatcher,
+  type QueryFragment,
+  type SortCol,
+  type SortFieldOf,
+  type SortMatcher,
   sortWith,
   variable,
 } from '~/core/database/query';
 import { engagementSorters } from '../engagement/engagement.repository';
-import { MergePeriodicReports } from '../periodic-report/dto';
+import { type MergePeriodicReports } from '../periodic-report/dto';
 import { pnpExtractionResultSorters } from '../pnp/extraction-result/pnp-extraction-result.neo4j.repository';
 import { SummaryPeriod } from '../progress-summary/dto';
 import { progressSummarySorters } from '../progress-summary/progress-summary.repository';

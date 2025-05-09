@@ -13,7 +13,7 @@ import {
   gql,
   registerUser,
   runAsAdmin,
-  TestApp,
+  type TestApp,
 } from './utility';
 
 describe('Partner e2e', () => {

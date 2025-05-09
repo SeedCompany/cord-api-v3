@@ -1,10 +1,10 @@
 import { Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
-import { Loader, LoaderOf } from '@seedcompany/data-loader';
+import { Loader, type LoaderOf } from '@seedcompany/data-loader';
 import { stripIndent } from 'common-tags';
 import {
   AnonSession,
-  ParentIdMiddlewareAdditions,
-  Session,
+  type ParentIdMiddlewareAdditions,
+  type Session,
   viewOfChangeset,
 } from '~/common';
 import { SerializedWorkflow } from '../../../workflow/dto';

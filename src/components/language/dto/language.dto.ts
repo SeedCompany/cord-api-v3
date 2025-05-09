@@ -6,32 +6,32 @@ import {
   Calculated,
   DbLabel,
   DbUnique,
-  ID,
+  type ID,
   IntersectTypes,
   NameField,
   Resource,
-  ResourceRelationsShape,
+  type ResourceRelationsShape,
   SecuredBoolean,
   SecuredDateNullable,
   SecuredIntNullable,
   SecuredProperty,
   SecuredPropertyList,
-  SecuredProps,
+  type SecuredProps,
   SecuredString,
   SecuredStringNullable,
   Sensitivity,
   SensitivityField,
-  SetUnsecuredType,
-  UnsecuredDto,
+  type SetUnsecuredType,
+  type UnsecuredDto,
 } from '~/common';
-import { SetChangeType } from '~/core/database/changes';
+import { type SetChangeType } from '~/core/database/changes';
 import { e } from '~/core/gel';
-import { LinkTo, RegisterResource } from '~/core/resources';
+import { type LinkTo, RegisterResource } from '~/core/resources';
 import { Commentable } from '../../comments/dto';
 import { Location } from '../../location/dto';
 import { Pinnable } from '../../pin/dto';
 import { Postable } from '../../post/dto';
-import { UpdateEthnologueLanguage } from './update-language.dto';
+import { type UpdateEthnologueLanguage } from './update-language.dto';
 
 @ObjectType({
   description: SecuredPropertyList.descriptionFor('tags'),

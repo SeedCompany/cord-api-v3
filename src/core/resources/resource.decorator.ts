@@ -1,4 +1,4 @@
-import { EnhancedResource, ResourceShape } from '~/common';
+import { EnhancedResource, type ResourceShape } from '~/common';
 import type { $ } from '../gel';
 import { __privateDontUseThis } from './resource-map-holder';
 

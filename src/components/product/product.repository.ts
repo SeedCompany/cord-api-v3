@@ -5,14 +5,20 @@ import {
   isNull,
   node,
   not,
-  Query,
+  type Query,
   relation,
 } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { Except, Merge } from 'type-fest';
-import { CreationFailed, getDbClassLabels, ID, Range, Session } from '~/common';
-import { CommonRepository, DbTypeOf, OnIndex } from '~/core/database';
-import { DbChanges, getChanges } from '~/core/database/changes';
+import { type Except, type Merge } from 'type-fest';
+import {
+  CreationFailed,
+  EnhancedResource,
+  type ID,
+  type Range,
+  type Session,
+} from '~/common';
+import { CommonRepository, type DbTypeOf, OnIndex } from '~/core/database';
+import { type DbChanges, getChanges } from '~/core/database/changes';
 import {
   ACTIVE,
   collect,
@@ -30,29 +36,31 @@ import {
 } from '~/core/database/query';
 import { ScriptureReferenceRepository } from '../scripture';
 import {
-  ScriptureRange,
-  ScriptureRangeInput,
-  UnspecifiedScripturePortion,
-  UnspecifiedScripturePortionInput,
+  ScriptureRange as RawScriptureRange,
+  type ScriptureRangeInput,
+  type UnspecifiedScripturePortion,
+  type UnspecifiedScripturePortionInput,
 } from '../scripture/dto';
 import {
   ApproachToMethodologies,
-  CreateDerivativeScriptureProduct,
-  CreateDirectScriptureProduct,
-  CreateOtherProduct,
+  type CreateDerivativeScriptureProduct,
+  type CreateDirectScriptureProduct,
+  type CreateOtherProduct,
   DerivativeScriptureProduct,
   DirectScriptureProduct,
-  ProductMethodology as Methodology,
+  type ProductMethodology as Methodology,
   OtherProduct,
-  Producible,
-  ProducibleType,
+  type Producible,
+  type ProducibleType,
   Product,
-  ProductCompletionDescriptionSuggestionsInput,
-  ProductFilters,
-  ProductListInput,
+  type ProductCompletionDescriptionSuggestionsInput,
+  type ProductFilters,
+  type ProductListInput,
   ProgressMeasurement,
-  UpdateDirectScriptureProduct,
+  type UpdateDirectScriptureProduct,
 } from './dto';
+
+const ScriptureRange = EnhancedResource.of(RawScriptureRange);
 
 export type HydratedProductRow = Merge<
   Omit<
@@ -103,7 +111,7 @@ export class ProductRepository extends CommonRepository {
           .match([
             node('node'),
             relation('out', '', 'scriptureReferences', ACTIVE),
-            node('scriptureRanges', 'ScriptureRange'),
+            node('scriptureRanges', ScriptureRange.dbLabel),
           ])
           .return(
             collect('scriptureRanges { .start, .end }').as('scriptureRanges'),
@@ -326,8 +334,8 @@ export class ProductRepository extends CommonRepository {
             [
               node('node'),
               relation('out', '', label, ACTIVE),
-              node('', getDbClassLabels(ScriptureRange), {
-                ...ScriptureRange.fromReferences(range),
+              node('', ScriptureRange.dbLabels, {
+                ...ScriptureRange.type.fromReferences(range),
                 createdAt,
               }),
             ];

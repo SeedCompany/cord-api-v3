@@ -1,5 +1,5 @@
 import { procedure } from '../query-augmentation/call';
-import { exp, ExpressionInput } from './cypher-expression';
+import { exp, type ExpressionInput } from './cypher-expression';
 import { IndexFullTextQueryNodes } from './full-text';
 
 /** Create a function with a name that takes a variable number of arguments */

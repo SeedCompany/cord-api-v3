@@ -1,10 +1,10 @@
 import {
-  DataLoaderOptions,
-  DataLoaderStrategy,
+  type DataLoaderOptions,
+  type DataLoaderStrategy,
 } from '@seedcompany/data-loader';
-import { ID } from '~/common';
+import { type ID } from '~/common';
 import { LoaderFactory } from '~/core/resources';
-import { AnyMedia } from './media.dto';
+import { type AnyMedia } from './media.dto';
 import { MediaRepository } from './media.repository';
 
 @LoaderFactory()

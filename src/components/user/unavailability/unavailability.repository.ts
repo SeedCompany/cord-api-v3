@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { node, relation } from 'cypher-query-builder';
 import {
   CreationFailed,
-  ID,
+  type ID,
   NotFoundException,
   ReadAfterCreationFailed,
 } from '~/common';
@@ -15,10 +15,10 @@ import {
   sorting,
 } from '~/core/database/query';
 import {
-  CreateUnavailability,
+  type CreateUnavailability,
   Unavailability,
-  UnavailabilityListInput,
-  UpdateUnavailability,
+  type UnavailabilityListInput,
+  type UpdateUnavailability,
 } from './dto';
 
 @Injectable()

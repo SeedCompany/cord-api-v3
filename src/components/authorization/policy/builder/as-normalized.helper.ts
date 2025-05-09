@@ -1,6 +1,6 @@
-import { ValueOf } from 'type-fest';
-import { ResourcesGranter } from '../granters';
-import { ResourceGranter } from './resource-granter';
+import { type ValueOf } from 'type-fest';
+import { type ResourcesGranter } from '../granters';
+import { type ResourceGranter } from './resource-granter';
 
 /**
  * A helper to execute actions on a granter with the "normalized" / base class type.

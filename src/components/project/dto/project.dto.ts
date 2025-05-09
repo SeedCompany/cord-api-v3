@@ -3,7 +3,7 @@ import { simpleSwitch } from '@seedcompany/common';
 import { stripIndent } from 'common-tags';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { MergeExclusive } from 'type-fest';
+import { type MergeExclusive } from 'type-fest';
 import {
   Calculated,
   DateInterval,
@@ -12,28 +12,29 @@ import {
   DbSort,
   DbUnique,
   Disabled,
+  EnhancedResource,
   IntersectTypes,
   NameField,
   parentIdMiddleware,
   RequiredWhen,
   Resource,
-  ResourceRelationsShape,
-  Secured,
+  type ResourceRelationsShape,
+  type Secured,
   SecuredBoolean,
   SecuredDateNullable,
   SecuredDateTime,
   SecuredDateTimeNullable,
-  SecuredProps,
+  type SecuredProps,
   SecuredString,
   SecuredStringNullable,
   Sensitivity,
   SensitivityField,
   ServerException,
-  UnsecuredDto,
+  type UnsecuredDto,
 } from '~/common';
 import { sortingForEnumIndex } from '~/core/database/query';
 import { e } from '~/core/gel';
-import { LinkTo, RegisterResource } from '~/core/resources';
+import { type LinkTo, RegisterResource } from '~/core/resources';
 import { Budget } from '../../budget/dto';
 import { ChangesetAware } from '../../changeset/dto';
 import { Commentable } from '../../comments/dto';
@@ -86,7 +87,10 @@ const RequiredWhenNotInDev = RequiredWhen(() => Project)({
 class Project extends Interfaces {
   static readonly Props: string[] = keysOf<Project>();
   static readonly SecuredProps: string[] = keysOf<SecuredProps<Project>>();
-  static readonly BaseNodeProps = [...Resource.Props, 'type'];
+  static readonly BaseNodeProps = [
+    ...EnhancedResource.of(Resource).props,
+    'type',
+  ];
   static readonly Relations = () =>
     ({
       rootDirectory: Directory,
@@ -197,11 +201,12 @@ class Project extends Interfaces {
    * Optimization for {@link ProjectResolver.engagements}.
    * This doesn't account for changesets or item filters.
    */
-  @Disabled(`
-    I'm not convinced this wont have unintended consequences.
-    it is still handled with the workflow condition currently and deletes are
-    restricted, so this is a super edge case effectively.
-  `)(
+  @Disabled(
+    `
+      I'm not convinced this wont have unintended consequences.
+      it is still handled with the workflow condition currently and deletes are
+      restricted, so this is a super edge case effectively.
+    `,
     RequiredWhenNotInDev({
       field: 'engagements',
       isMissing: (project) => project.engagementTotal === 0,
@@ -212,7 +217,7 @@ class Project extends Interfaces {
 
 // class name has to match schema name for interface resolvers to work.
 // export as different names to maintain compatibility with our codebase.
-export { Project as IProject, AnyProject as Project };
+export { Project as IProject, type AnyProject as Project };
 
 @RegisterResource({ db: e.TranslationProject })
 @InterfaceType({

@@ -1,6 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { node, Query, relation } from 'cypher-query-builder';
-import { CreationFailed, ID, Session, UnsecuredDto } from '~/common';
+import { node, type Query, relation } from 'cypher-query-builder';
+import {
+  CreationFailed,
+  type ID,
+  type Session,
+  type UnsecuredDto,
+} from '~/common';
 import { DtoRepository } from '~/core/database';
 import {
   ACTIVE,
@@ -13,9 +18,9 @@ import {
 } from '~/core/database/query';
 import {
   Ceremony,
-  CeremonyListInput,
-  CreateCeremony,
-  UpdateCeremony,
+  type CeremonyListInput,
+  type CreateCeremony,
+  type UpdateCeremony,
 } from './dto';
 
 @Injectable()

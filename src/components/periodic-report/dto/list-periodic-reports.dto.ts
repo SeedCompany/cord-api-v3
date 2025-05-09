@@ -4,12 +4,12 @@ import { ValidateNested } from 'class-validator';
 import { stripIndent } from 'common-tags';
 import {
   DateFilter,
-  ID,
+  type ID,
   PaginatedList,
   SecuredList,
   SortablePaginationInput,
 } from '~/common';
-import { PeriodicReport } from './merge-periodic-reports.dto';
+import { type PeriodicReport } from './merge-periodic-reports.dto';
 import { IPeriodicReport } from './periodic-report.dto';
 import { ReportType } from './report-type.enum';
 

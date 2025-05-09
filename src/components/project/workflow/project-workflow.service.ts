@@ -1,11 +1,11 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import {
-  ID,
-  MaybeSecured,
+  type ID,
+  type MaybeSecured,
   RequiredWhen,
-  Session,
-  UnsecuredDto,
+  type Session,
+  type UnsecuredDto,
   unwrapSecured,
 } from '~/common';
 import { IEventBus } from '~/core';
@@ -13,10 +13,10 @@ import {
   findTransition,
   WorkflowService,
 } from '../../workflow/workflow.service';
-import { IProject, Project, ProjectStep } from '../dto';
+import { IProject, type Project, type ProjectStep } from '../dto';
 import { ProjectService } from '../project.service';
 import {
-  ExecuteProjectTransitionInput,
+  type ExecuteProjectTransitionInput,
   ProjectWorkflowEvent as WorkflowEvent,
 } from './dto';
 import { ProjectTransitionedEvent } from './events/project-transitioned.event';

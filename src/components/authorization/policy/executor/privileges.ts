@@ -1,14 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import {
-  ChildListsKey,
-  ChildSinglesKey,
+  type ChildListsKey,
+  type ChildSinglesKey,
   EnhancedResource,
-  ResourceShape,
-  SecuredPropsPlusExtraKey,
-  Session,
+  type ResourceShape,
+  type SecuredPropsPlusExtraKey,
+  type Session,
 } from '~/common';
-import { ChildListAction, ChildSingleAction, PropAction } from '../actions';
-import { ResourceObjectContext } from '../object.type';
+import {
+  type ChildListAction,
+  type ChildSingleAction,
+  type PropAction,
+} from '../actions';
+import { type ResourceObjectContext } from '../object.type';
 import { EdgePrivileges } from './edge-privileges';
 import { PolicyExecutor } from './policy-executor';
 import { ResourcePrivileges } from './resource-privileges';

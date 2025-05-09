@@ -1,4 +1,8 @@
-import { Inject, Injectable, OnApplicationBootstrap } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  type OnApplicationBootstrap,
+} from '@nestjs/common';
 import { ConfigService } from '~/core/config/config.service';
 import { ILogger, Logger } from '~/core/logger';
 import { CryptoService } from '../authentication/crypto.service';

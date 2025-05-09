@@ -1,5 +1,5 @@
 import { S3 } from '@aws-sdk/client-s3';
-import { FactoryProvider } from '@nestjs/common';
+import { type FactoryProvider } from '@nestjs/common';
 import { resolve } from 'path';
 import { map } from 'rxjs/operators';
 import { withAddedPath } from '~/common/url.util';
@@ -11,7 +11,7 @@ import {
   MemoryBucket,
   S3Bucket,
 } from './bucket';
-import { ParsedBucketUri } from './bucket/parse-uri';
+import { type ParsedBucketUri } from './bucket/parse-uri';
 import { ReadonlyBucket } from './bucket/readonly-bucket';
 import { LocalBucketController } from './local-bucket.controller';
 

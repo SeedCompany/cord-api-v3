@@ -9,7 +9,7 @@ import {
   DefaultResourceGranter,
   ResourceGranter,
 } from './builder/resource-granter';
-import { ResourcesGranter } from './granters';
+import { type ResourcesGranter } from './granters';
 
 @Injectable()
 export class GrantersFactory {

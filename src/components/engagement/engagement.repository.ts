@@ -4,27 +4,27 @@ import {
   hasLabel,
   inArray,
   node,
-  Node,
-  Query,
+  type Node,
+  type Query,
   relation,
 } from 'cypher-query-builder';
 import { difference, pickBy, upperFirst } from 'lodash';
 import { DateTime } from 'luxon';
-import { MergeExclusive } from 'type-fest';
+import { type MergeExclusive } from 'type-fest';
 import {
   CreationFailed,
   DuplicateException,
   generateId,
-  ID,
+  type ID,
   InputException,
   labelForView,
   NotFoundException,
-  ObjectView,
+  type ObjectView,
   ReadAfterCreationFailed,
   ServerException,
-  Session,
+  type Session,
   typenameForView,
-  UnsecuredDto,
+  type UnsecuredDto,
   viewOfChangeset,
 } from '~/common';
 import { CommonRepository, OnIndex } from '~/core/database';
@@ -47,14 +47,14 @@ import {
   oncePerProject,
   paginate,
   requestingUser,
-  SortCol,
+  type SortCol,
   sortWith,
   textJoinMaybe,
   whereNotDeletedInChangeset,
 } from '~/core/database/query';
 import { Privileges } from '../authorization';
 import { FileService } from '../file';
-import { FileId } from '../file/dto';
+import { type FileId } from '../file/dto';
 import { LanguageMilestone } from '../language/dto';
 import { AIAssistedTranslation } from '../language/dto/ai-assisted-translation.enum';
 import {
@@ -74,15 +74,15 @@ import { User } from '../user/dto';
 import {
   CreateInternshipEngagement,
   CreateLanguageEngagement,
-  Engagement,
+  type Engagement,
   EngagementFilters,
-  EngagementListInput,
+  type EngagementListInput,
   EngagementStatus,
   IEngagement,
   InternshipEngagement,
   LanguageEngagement,
-  UpdateInternshipEngagement,
-  UpdateLanguageEngagement,
+  type UpdateInternshipEngagement,
+  type UpdateLanguageEngagement,
 } from './dto';
 
 export type LanguageOrEngagementId = MergeExclusive<

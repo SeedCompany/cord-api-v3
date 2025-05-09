@@ -1,19 +1,19 @@
 import { Logger } from '@nestjs/common';
-import { Query } from 'cypher-query-builder';
-import { inspect, InspectOptionsStylized } from 'util';
+import { type Query } from 'cypher-query-builder';
+import { inspect, type InspectOptionsStylized } from 'util';
 import {
-  ID,
+  type ID,
   isIdLike,
-  MaybeSecured,
-  MaybeSecuredProp,
-  ResourceShape,
+  type MaybeSecured,
+  type MaybeSecuredProp,
+  type ResourceShape,
   unwrapSecured,
 } from '~/common';
 import { type LinkTo } from '~/core/resources';
 import {
-  AsCypherParams,
-  Condition,
-  IsAllowedParams,
+  type AsCypherParams,
+  type Condition,
+  type IsAllowedParams,
   MissingContextException,
 } from '../../policy/conditions';
 

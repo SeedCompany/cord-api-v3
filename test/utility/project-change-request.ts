@@ -1,11 +1,11 @@
 import { faker } from '@faker-js/faker';
-import { ID, isValidId } from '~/common';
+import { type ID, isValidId } from '~/common';
 import {
-  CreateProjectChangeRequest,
-  ProjectChangeRequest,
+  type CreateProjectChangeRequest,
+  type ProjectChangeRequest,
   ProjectChangeRequestType,
 } from '../../src/components/project-change-request/dto';
-import { TestApp } from './create-app';
+import { type TestApp } from './create-app';
 import { fragments } from './fragments';
 import { gql } from './gql-tag';
 

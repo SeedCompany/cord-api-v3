@@ -2,11 +2,11 @@ import { faker } from '@faker-js/faker';
 import { upperFirst } from 'lodash';
 import { isValidId } from '~/common';
 import {
-  CreateEducation,
+  type CreateEducation,
   Degree,
-  Education,
+  type Education,
 } from '../../src/components/user/education/dto';
-import { TestApp } from './create-app';
+import { type TestApp } from './create-app';
 import { fragments } from './fragments';
 import { gql } from './gql-tag';
 

@@ -1,7 +1,7 @@
 import { faker } from '@faker-js/faker';
 import { times } from 'lodash';
-import { generateId, IdOf, isValidId } from '~/common';
-import { Location } from '../src/components/location/dto';
+import { generateId, type IdOf, isValidId } from '~/common';
+import { type Location } from '../src/components/location/dto';
 import {
   createFundingAccount,
   createLocation,
@@ -11,7 +11,7 @@ import {
   fragments,
   gql,
   loginAsAdmin,
-  TestApp,
+  type TestApp,
 } from './utility';
 
 describe('Location e2e', () => {

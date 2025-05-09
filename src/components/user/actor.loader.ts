@@ -1,4 +1,4 @@
-import { ID } from '~/common';
+import { type ID } from '~/common';
 import { LoaderFactory, SessionAwareLoaderStrategy } from '~/core';
 import { Actor } from './dto';
 import { UserService } from './user.service';

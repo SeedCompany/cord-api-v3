@@ -1,6 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { node, Query, relation } from 'cypher-query-builder';
-import { ID, Session, UnsecuredDto } from '~/common';
+import { node, type Query, relation } from 'cypher-query-builder';
+import { type ID, type Session, type UnsecuredDto } from '~/common';
 import { DtoRepository } from '~/core/database';
 import {
   ACTIVE,
@@ -12,7 +12,7 @@ import {
   sorting,
 } from '~/core/database/query';
 import { CommentRepository } from './comment.repository';
-import { CommentThread, CommentThreadListInput } from './dto';
+import { CommentThread, type CommentThreadListInput } from './dto';
 
 @Injectable()
 export class CommentThreadRepository extends DtoRepository(CommentThread) {

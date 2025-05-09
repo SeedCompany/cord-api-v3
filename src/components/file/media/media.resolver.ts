@@ -5,11 +5,11 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { Loader, LoaderOf } from '@seedcompany/data-loader';
-import { ID, IdArg } from '~/common';
+import { Loader, type LoaderOf } from '@seedcompany/data-loader';
+import { type ID, IdArg } from '~/common';
 import { FileVersion } from '../dto';
 import { FileNodeLoader } from '../file-node.loader';
-import { AnyMedia, Media, MediaUserMetadata } from './media.dto';
+import { type AnyMedia, Media, MediaUserMetadata } from './media.dto';
 import { MediaService } from './media.service';
 
 @Resolver(() => Media)

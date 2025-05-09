@@ -1,14 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { stripIndent } from 'common-tags';
-import { node, Query, relation } from 'cypher-query-builder';
+import { node, type Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
+  EnhancedResource,
   generateId,
-  getDbClassLabels,
-  ID,
+  type ID,
   NotFoundException,
-  Session,
-  Variant,
+  type Session,
+  type Variant,
 } from '~/common';
 import { DatabaseService } from '~/core/database';
 import {
@@ -23,16 +23,19 @@ import {
 } from '~/core/database/query';
 import { PeriodicReportService } from '../periodic-report';
 import { ReportType } from '../periodic-report/dto';
-import { ProductStep } from '../product/dto';
+import { type ProductStep } from '../product/dto';
 import {
-  ProductProgress,
-  ProductProgressInput,
-  ProgressVariant,
-  ProgressVariantByProductInput,
-  ProgressVariantByReportInput,
-  StepProgress,
-  UnsecuredProductProgress,
+  type ProductProgressInput,
+  type ProgressVariant,
+  type ProgressVariantByProductInput,
+  type ProgressVariantByReportInput,
+  ProductProgress as RawProductProgress,
+  StepProgress as RawStepProgress,
+  type UnsecuredProductProgress,
 } from './dto';
+
+const ProductProgress = EnhancedResource.of(RawProductProgress);
+const StepProgress = EnhancedResource.of(RawStepProgress);
 
 @Injectable()
 export class ProductProgressRepository {
@@ -169,7 +172,7 @@ export class ProductProgressRepository {
         .optionalMatch([
           node('report'),
           relation('out', '', 'progress', ACTIVE),
-          node('progress', 'ProductProgress', {
+          node('progress', ProductProgress.dbLabel, {
             variant: variable('variant'),
           }),
           relation('in', '', 'progress', ACTIVE),
@@ -191,7 +194,7 @@ export class ProductProgressRepository {
                 .match([
                   node('progress'),
                   relation('out', '', 'step', ACTIVE),
-                  node('stepNode', 'StepProgress'),
+                  node('stepNode', StepProgress.dbLabel),
                 ])
                 .apply(matchProps({ nodeName: 'stepNode', outputVar: 'step' }))
                 .return(collect('step').as('steps')),
@@ -249,7 +252,7 @@ export class ProductProgressRepository {
           .merge([
             node('product'),
             relation('out', 'productProgressRel', 'progress', ACTIVE),
-            node('progress', 'ProductProgress', {
+            node('progress', ProductProgress.dbLabel, {
               variant: variable('variant'),
             }),
             relation('in', 'reportProgressRel', 'progress', ACTIVE),
@@ -258,7 +261,7 @@ export class ProductProgressRepository {
           .onCreate.set(
             {
               labels: {
-                progress: getDbClassLabels(ProductProgress),
+                progress: ProductProgress.dbLabels,
               },
               values: {
                 progress: { id: tempProgressId, createdAt },
@@ -282,14 +285,14 @@ export class ProductProgressRepository {
               .merge([
                 node('progress'),
                 relation('out', 'progressStepRel', 'step', ACTIVE),
-                node('stepNode', 'StepProgress', {
+                node('stepNode', StepProgress.dbLabel, {
                   step: variable('stepInput.step'),
                 }),
               ])
               .onCreate.set(
                 {
                   labels: {
-                    stepNode: getDbClassLabels(StepProgress),
+                    stepNode: StepProgress.dbLabels,
                   },
                   values: {
                     stepNode: { createdAt },

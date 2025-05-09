@@ -1,15 +1,15 @@
 import {
-  CallHandler,
-  ExecutionContext,
+  type CallHandler,
+  type ExecutionContext,
   Injectable,
-  NestInterceptor,
+  type NestInterceptor,
 } from '@nestjs/common';
 import { GqlExecutionContext } from '@nestjs/graphql';
 import { AsyncLocalStorage } from 'async_hooks';
 import { isUUID } from 'class-validator';
 import { BehaviorSubject, identity } from 'rxjs';
-import { Session } from '~/common';
-import { Gel, OptionsFn } from '~/core/gel';
+import { type Session } from '~/common';
+import { Gel, type OptionsFn } from '~/core/gel';
 import { GlobalHttpHook } from '~/core/http';
 
 /**

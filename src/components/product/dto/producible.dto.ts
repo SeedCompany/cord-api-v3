@@ -1,21 +1,28 @@
-import { Field, InterfaceType, ObjectType } from '@nestjs/graphql';
+import {
+  Field,
+  InterfaceType,
+  ObjectType,
+  registerEnumType,
+} from '@nestjs/graphql';
+import { type MadeEnum } from '@seedcompany/nest';
 import { stripIndent } from 'common-tags';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
-  EnumType,
+  type EnumType,
+  lazyRef,
   makeEnum,
   Resource,
   SecuredProperty,
-  SecuredProps,
-  UnsecuredDto,
+  type SecuredProps,
+  type UnsecuredDto,
 } from '~/common';
-import { SetDbType } from '~/core/database';
-import { SetChangeType } from '~/core/database/changes';
+import { type SetDbType } from '~/core/database';
+import { type SetChangeType } from '~/core/database/changes';
 import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
-import { DbScriptureReferences } from '../../scripture';
+import { type DbScriptureReferences } from '../../scripture';
 import {
-  ScriptureRangeInput,
+  type ScriptureRangeInput,
   SecuredScriptureRanges,
 } from '../../scripture/dto';
 
@@ -39,15 +46,21 @@ export abstract class Producible extends Resource {
     SetChangeType<'scriptureReferences', readonly ScriptureRangeInput[]>;
 }
 
-export type ProducibleType = EnumType<typeof ProducibleType>;
-export const ProducibleType = makeEnum({
-  name: 'ProducibleType',
-  values: keysOf<ProducibleTypeEntries>(),
-});
-
 // Augment this with each implementation of Producible via declaration merging
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface ProducibleTypeEntries {}
+export const ProducibleTypeEntries = new Set<string>();
+
+export type ProducibleType = EnumType<typeof ProducibleType>;
+export const ProducibleType = lazyRef(
+  (): MadeEnum<keyof ProducibleTypeEntries> =>
+    (realProducibleType ??= makeEnum({
+      values: ProducibleTypeEntries as Iterable<keyof ProducibleTypeEntries>,
+    })),
+);
+let realProducibleType: MadeEnum<keyof ProducibleTypeEntries> | undefined;
+// Register proxy eagerly to GQL schema
+registerEnumType(ProducibleType, { name: 'ProducibleType' });
 
 export type ProducibleRef = UnsecuredDto<Producible> & {
   __typename: ProducibleType;

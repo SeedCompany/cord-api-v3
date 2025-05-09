@@ -1,8 +1,8 @@
 import {
-  DataLoaderOptions as BaseOptions,
-  DataLoaderStrategy,
+  type DataLoaderOptions as BaseOptions,
+  type DataLoaderStrategy,
 } from '@seedcompany/data-loader';
-import { ID } from '~/common';
+import { type ID } from '~/common';
 
 /**
  * @deprecated

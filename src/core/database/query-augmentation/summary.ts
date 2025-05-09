@@ -1,7 +1,7 @@
 import { Logger } from '@nestjs/common';
 import { Connection, Query } from 'cypher-query-builder';
-import { ResultSummary } from 'neo4j-driver';
-import { Stats } from 'neo4j-driver-core';
+import { type ResultSummary } from 'neo4j-driver';
+import { type Stats } from 'neo4j-driver-core';
 
 declare module 'cypher-query-builder/dist/typings/connection' {
   interface Connection {

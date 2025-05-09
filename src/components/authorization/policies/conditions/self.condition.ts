@@ -1,12 +1,12 @@
-import { Query } from 'cypher-query-builder';
-import { inspect, InspectOptionsStylized } from 'util';
-import { User } from '../../../user/dto';
+import { type Query } from 'cypher-query-builder';
+import { inspect, type InspectOptionsStylized } from 'util';
+import { type User } from '../../../user/dto';
 import {
-  AsCypherParams,
-  AsEdgeQLParams,
-  Condition,
+  type AsCypherParams,
+  type AsEdgeQLParams,
+  type Condition,
   fqnRelativeTo,
-  IsAllowedParams,
+  type IsAllowedParams,
   MissingContextException,
 } from '../../policy/conditions';
 

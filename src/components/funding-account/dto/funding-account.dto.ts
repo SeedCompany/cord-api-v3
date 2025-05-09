@@ -7,7 +7,7 @@ import {
   Resource,
   SecuredInt,
   SecuredProperty,
-  SecuredProps,
+  type SecuredProps,
   SecuredString,
 } from '~/common';
 import { e } from '~/core/gel';

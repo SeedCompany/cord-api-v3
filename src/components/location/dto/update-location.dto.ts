@@ -2,7 +2,7 @@ import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import {
-  ID,
+  type ID,
   IdField,
   ISO31661Alpha3,
   NameField,

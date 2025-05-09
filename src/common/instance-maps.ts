@@ -1,7 +1,7 @@
-import { Type } from '@nestjs/common';
-import { ModuleRef } from '@nestjs/core';
+import { type Type } from '@nestjs/common';
+import { type ModuleRef } from '@nestjs/core';
 import { mapValues } from '@seedcompany/common';
-import { Simplify } from 'type-fest';
+import { type Simplify } from 'type-fest';
 
 export type InstanceMapOf<T extends Record<string, Type>> = Simplify<{
   [K in keyof T]: InstanceType<T[K]>;

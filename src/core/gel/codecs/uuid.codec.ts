@@ -1,5 +1,5 @@
 import { UUIDCodec } from 'gel/dist/codecs/uuid.js';
-import { ScalarInfo } from './type.util';
+import { type ScalarInfo } from './type.util';
 
 export class OurUUIDCodec extends UUIDCodec {
   static info: ScalarInfo = {

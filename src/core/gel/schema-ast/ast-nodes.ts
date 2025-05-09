@@ -1,6 +1,6 @@
-import { FnLike } from '@seedcompany/common';
-import { ConditionalExcept, Except } from 'type-fest';
-import { Position } from './position';
+import { type FnLike } from '@seedcompany/common';
+import type { ConditionalExcept, Except } from 'type-fest';
+import { type Position } from './position';
 import type { SchemaFile } from './schema-file';
 
 export class SchemaNode {

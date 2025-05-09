@@ -1,5 +1,5 @@
 import { Field, ObjectType } from '@nestjs/graphql';
-import { ID, IdField, SecuredProperty } from '~/common';
+import { type ID, IdField, SecuredProperty } from '~/common';
 import { ProjectType as Program } from '../../../project/dto/project-type.enum';
 import { FinanceDepartmentIdBlockInput } from './id-blocks.input';
 

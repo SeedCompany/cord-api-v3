@@ -1,15 +1,15 @@
 import {
   Injectable,
-  OnModuleInit,
+  type OnModuleInit,
   Scope,
   SetMetadata,
-  Type,
+  type Type,
 } from '@nestjs/common';
 import { ModulesContainer } from '@nestjs/core';
-import { DataLoaderStrategy } from '@seedcompany/data-loader';
-import { ValueOf } from 'type-fest';
-import { many, Many } from '~/common';
-import { ResourceMap } from '~/core';
+import { type DataLoaderStrategy } from '@seedcompany/data-loader';
+import type { ValueOf } from 'type-fest';
+import { many, type Many } from '~/common';
+import { type ResourceMap } from '~/core';
 import { ObjectViewAwareLoader } from '../data-loader';
 
 type SomeResource = ValueOf<ResourceMap>;
@@ -72,6 +72,9 @@ export class ResourceLoaderRegistry implements OnModuleInit {
       .flatMap((nestModule) => [...nestModule.providers.values()])
       .filter((provider) => provider.scope === Scope.REQUEST)
       .flatMap((provider) => {
+        if (!provider.metatype) {
+          return [];
+        }
         const metadata = Reflect.getMetadata(
           LOADER_OF_RESOURCE,
           provider.metatype,

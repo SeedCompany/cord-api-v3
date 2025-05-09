@@ -2,22 +2,24 @@ import { Field, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
 import {
   DateTimeField,
-  ID,
+  DbLabel,
+  type ID,
   IdField,
-  MadeEnum,
-  Secured,
+  type MadeEnum,
+  type Secured,
   SecuredRichTextNullable,
-  SetUnsecuredType,
+  type SetUnsecuredType,
 } from '~/common';
-import { LinkTo } from '~/core/resources';
+import { type LinkTo } from '~/core/resources';
 import type { InternalTransition } from '../transitions';
-import { WorkflowTransition } from './workflow-transition.dto';
+import { type WorkflowTransition } from './workflow-transition.dto';
 
 export function WorkflowEvent<State extends string>(
   state: MadeEnum<State>,
   transitionType: ReturnType<typeof WorkflowTransition>,
 ) {
   @ObjectType({ isAbstract: true })
+  @DbLabel('WorkflowEvent')
   abstract class WorkflowEventClass {
     @IdField()
     readonly id: ID;

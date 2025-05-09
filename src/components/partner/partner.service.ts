@@ -1,32 +1,39 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import {
-  ID,
+  type ID,
   InputException,
   loadManyIgnoreMissingThrowAny,
   NotFoundException,
-  ObjectView,
+  type ObjectView,
   ServerException,
-  Session,
-  UnsecuredDto,
+  type Session,
+  type UnsecuredDto,
 } from '~/common';
 import { HandleIdLookup, ResourceLoader } from '~/core';
 import { Privileges } from '../authorization';
 import { EngagementService } from '../engagement';
-import { EngagementListInput } from '../engagement/dto';
+import { type EngagementListInput } from '../engagement/dto';
 import { LanguageService } from '../language';
-import { LanguageListInput, SecuredLanguageList } from '../language/dto';
-import { LocationLoader } from '../location';
-import { Location, LocationType } from '../location/dto';
-import { FinancialReportingType } from '../partnership/dto';
-import { ProjectService } from '../project';
-import { IProject, ProjectListInput, SecuredProjectList } from '../project/dto';
 import {
-  CreatePartner,
+  type LanguageListInput,
+  type SecuredLanguageList,
+} from '../language/dto';
+import { LocationLoader } from '../location';
+import { type Location, LocationType } from '../location/dto';
+import { type FinancialReportingType } from '../partnership/dto';
+import { ProjectService } from '../project';
+import {
+  IProject,
+  type ProjectListInput,
+  type SecuredProjectList,
+} from '../project/dto';
+import {
+  type CreatePartner,
   Partner,
-  PartnerListInput,
-  PartnerListOutput,
+  type PartnerListInput,
+  type PartnerListOutput,
   PartnerType,
-  UpdatePartner,
+  type UpdatePartner,
 } from './dto';
 import { PartnerRepository } from './partner.repository';
 

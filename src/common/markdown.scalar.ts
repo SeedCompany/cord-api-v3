@@ -1,5 +1,5 @@
-import { CustomScalar, Scalar } from '@nestjs/graphql';
-import { GraphQLError, Kind, ValueNode } from 'graphql';
+import { type CustomScalar, Scalar } from '@nestjs/graphql';
+import { GraphQLError, Kind, type ValueNode } from 'graphql';
 
 @Scalar('Markdown')
 export class MarkdownScalar implements CustomScalar<string, string | null> {

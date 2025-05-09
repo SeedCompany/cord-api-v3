@@ -1,5 +1,5 @@
-import { ValidationArguments } from 'class-validator';
-import { Merge } from 'type-fest';
+import { type ValidationArguments } from 'class-validator';
+import { type Merge } from 'type-fest';
 import { createValidationDecorator } from '~/common/validators/validateBy';
 import { ScriptureRange } from './scripture-range.dto';
 

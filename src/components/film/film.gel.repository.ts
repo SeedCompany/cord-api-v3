@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { PublicOf, UnsecuredDto } from '~/common';
+import { type PublicOf, type UnsecuredDto } from '~/common';
 import { e, RepoFor } from '~/core/gel';
 import * as scripture from '../scripture/gel.utils';
-import { CreateFilm, Film, UpdateFilm } from './dto';
-import { FilmRepository } from './film.repository';
+import { type CreateFilm, Film, type UpdateFilm } from './dto';
+import { type FilmRepository } from './film.repository';
 
 @Injectable()
 export class FilmGelRepository

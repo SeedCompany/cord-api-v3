@@ -1,14 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import { node, Query, relation } from 'cypher-query-builder';
+import { node, type Query, relation } from 'cypher-query-builder';
 import {
   CreationFailed,
   DuplicateException,
-  ID,
+  type ID,
   NotFoundException,
   ReadAfterCreationFailed,
   SecuredList,
-  Session,
-  UnsecuredDto,
+  type Session,
+  type UnsecuredDto,
 } from '~/common';
 import { DtoRepository } from '~/core/database';
 import {
@@ -22,10 +22,10 @@ import {
   sorting,
 } from '~/core/database/query';
 import {
-  CreateFieldRegion,
+  type CreateFieldRegion,
   FieldRegion,
-  FieldRegionListInput,
-  UpdateFieldRegion,
+  type FieldRegionListInput,
+  type UpdateFieldRegion,
 } from './dto';
 
 @Injectable()

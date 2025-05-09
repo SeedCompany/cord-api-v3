@@ -1,8 +1,8 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import { NonEmptyArray } from '@seedcompany/common';
+import { type NonEmptyArray } from '@seedcompany/common';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { ID, IdField, ListField, NameField } from '~/common';
+import { type ID, IdField, ListField, NameField } from '~/common';
 import { ProjectChangeRequestType } from './project-change-request-type.enum';
 import { ProjectChangeRequest } from './project-change-request.dto';
 

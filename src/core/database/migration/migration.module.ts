@@ -1,5 +1,5 @@
 import { DiscoveryModule } from '@golevelup/nestjs-discovery';
-import { Module, OnModuleInit } from '@nestjs/common';
+import { Module, type OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '../../config/config.service';
 import { DatabaseService } from '../database.service';
 import { MigrationDiscovery } from './migration-discovery.service';

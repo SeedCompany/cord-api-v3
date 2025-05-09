@@ -1,9 +1,9 @@
 import { InvalidArgumentError } from 'gel';
 import type { CodecContext } from 'gel/dist/codecs/context.js';
 import { JSONCodec } from 'gel/dist/codecs/json.js';
-import { ReadBuffer, WriteBuffer } from 'gel/dist/primitives/buffer.js';
+import type { ReadBuffer, WriteBuffer } from 'gel/dist/primitives/buffer.js';
 import { RichTextDocument } from '~/common/rich-text.scalar';
-import { ScalarInfo } from './type.util';
+import { type ScalarInfo } from './type.util';
 
 export class RichTextCodec extends JSONCodec {
   static info: ScalarInfo = {

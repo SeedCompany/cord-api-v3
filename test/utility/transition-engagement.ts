@@ -1,11 +1,11 @@
-import { ID } from '~/common';
+import { type ID } from '~/common';
 import {
   EngagementStatus,
-  InternshipEngagement,
-  LanguageEngagement,
+  type InternshipEngagement,
+  type LanguageEngagement,
 } from '../../src/components/engagement/dto';
 import { ProjectStep } from '../../src/components/project/dto';
-import { TestApp } from './create-app';
+import { type TestApp } from './create-app';
 import { getCurrentEngagementStatus } from './create-engagement';
 import { createFundingAccount } from './create-funding-account';
 import { createLocation } from './create-location';

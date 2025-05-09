@@ -2,13 +2,13 @@ import { faker } from '@faker-js/faker';
 import { Test } from '@nestjs/testing';
 import { andCall } from '~/common';
 import { ConfigService } from '~/core';
-import { HttpAdapter, NestHttpApplication } from '~/core/http';
+import { HttpAdapter, type NestHttpApplication } from '~/core/http';
 import { LogLevel } from '~/core/logger';
 import { LevelMatcher } from '~/core/logger/level-matcher';
 import { AppModule } from '../../src/app.module';
 import {
   createGraphqlClient,
-  GraphQLTestClient,
+  type GraphQLTestClient,
 } from './create-graphql-client';
 import { ephemeralGel } from './gel-setup';
 

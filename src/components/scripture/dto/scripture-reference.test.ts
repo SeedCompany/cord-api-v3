@@ -1,4 +1,4 @@
-import { validate, ValidationError } from 'class-validator';
+import { validate, type ValidationError } from 'class-validator';
 import { ScriptureReferenceInput } from './scripture-reference.dto';
 import 'reflect-metadata';
 

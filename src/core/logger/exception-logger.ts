@@ -1,6 +1,6 @@
-import { ExceptionHandler as NestExceptionHandler } from '@nestjs/core/errors/exception-handler.js';
+import { type ExceptionHandler as NestExceptionHandler } from '@nestjs/core/errors/exception-handler.js';
 import { ExceptionsZone } from '@nestjs/core/errors/exceptions-zone.js';
-import { ILogger } from './logger.interface';
+import { type ILogger } from './logger.interface';
 
 /**
  * Replace the Nest exception handler with the ability to swap the logger

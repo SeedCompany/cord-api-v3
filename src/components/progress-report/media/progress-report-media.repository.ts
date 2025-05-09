@@ -1,15 +1,15 @@
 import { Injectable } from '@nestjs/common';
-import { inArray, node, not, Query, relation } from 'cypher-query-builder';
+import { inArray, node, not, type Query, relation } from 'cypher-query-builder';
 import {
   CreationFailed,
   generateId,
-  ID,
-  IdOf,
+  type ID,
+  type IdOf,
   InputException,
   NotFoundException,
-  Session,
+  type Session,
 } from '~/common';
-import { DbTypeOf, DtoRepository } from '~/core/database';
+import { type DbTypeOf, DtoRepository } from '~/core/database';
 import {
   ACTIVE,
   createNode,
@@ -26,13 +26,13 @@ import {
   sorting,
   variable,
 } from '~/core/database/query';
-import { ProgressReport as Report } from '../dto';
+import { type ProgressReport as Report } from '../dto';
 import { projectFromProgressReportChild } from '../once-per-project-from-progress-report-child.db-query';
 import {
   ProgressReportMediaListInput as ListArgs,
   ProgressReportMedia as ReportMedia,
-  UpdateProgressReportMedia as UpdateMedia,
-  UploadProgressReportMedia as UploadMedia,
+  type UpdateProgressReportMedia as UpdateMedia,
+  type UploadProgressReportMedia as UploadMedia,
 } from './dto';
 
 @Injectable()

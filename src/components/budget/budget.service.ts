@@ -3,34 +3,34 @@ import {
   CreationFailed,
   DuplicateException,
   generateId,
-  ID,
+  type ID,
   InputException,
-  ObjectView,
+  type ObjectView,
   Order,
   ServerException,
-  Session,
+  type Session,
   viewOfChangeset,
 } from '~/common';
 import { HandleIdLookup, ILogger, Logger, ResourceResolver } from '~/core';
 import { mapListResults } from '~/core/database/results';
 import { Privileges } from '../authorization';
 import { FileService } from '../file';
-import { FileId } from '../file/dto';
+import { type FileId } from '../file/dto';
 import { ProjectChangeRequest } from '../project-change-request/dto';
 import { BudgetRecordRepository } from './budget-record.repository';
 import { BudgetRepository } from './budget.repository';
 import {
   Budget,
   BudgetListInput,
-  BudgetListOutput,
+  type BudgetListOutput,
   BudgetRecord,
-  BudgetRecordListInput,
-  BudgetRecordListOutput,
+  type BudgetRecordListInput,
+  type BudgetRecordListOutput,
   BudgetStatus,
-  CreateBudget,
-  CreateBudgetRecord,
-  UpdateBudget,
-  UpdateBudgetRecord,
+  type CreateBudget,
+  type CreateBudgetRecord,
+  type UpdateBudget,
+  type UpdateBudgetRecord,
 } from './dto';
 
 @Injectable()

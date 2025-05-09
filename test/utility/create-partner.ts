@@ -1,11 +1,11 @@
 import { faker } from '@faker-js/faker';
 import {
-  CreatePartner,
-  Partner,
+  type CreatePartner,
+  type Partner,
   PartnerType,
 } from '../../src/components/partner/dto';
 import { FinancialReportingType } from '../../src/components/partnership/dto';
-import { TestApp } from './create-app';
+import { type TestApp } from './create-app';
 import { createOrganization } from './create-organization';
 import { createPerson } from './create-person';
 import { fragments } from './fragments';

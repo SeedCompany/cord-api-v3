@@ -3,9 +3,9 @@ import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
 import {
   DateTimeField,
-  ID,
+  type ID,
   Resource,
-  SecuredProps,
+  type SecuredProps,
   SecuredRichText,
 } from '~/common';
 import { e } from '~/core/gel';

@@ -5,16 +5,16 @@ import {
   Text,
 } from '@seedcompany/nestjs-email/templates';
 import { fiscalQuarter, fiscalYear } from '~/common';
-import { Language } from '../../../components/language/dto';
-import { PeriodicReport } from '../../../components/periodic-report/dto';
+import { type Language } from '../../../components/language/dto';
+import { type PeriodicReport } from '../../../components/periodic-report/dto';
 import { ProgressReportStatus } from '../../../components/progress-report/dto';
-import { ProgressReportWorkflowEvent } from '../../../components/progress-report/workflow/dto/workflow-event.dto';
-import { Project } from '../../../components/project/dto';
-import { User } from '../../../components/user/dto';
+import { type ProgressReportWorkflowEvent } from '../../../components/progress-report/workflow/dto/workflow-event.dto';
+import { type Project } from '../../../components/project/dto';
+import { type User } from '../../../components/user/dto';
 import { EmailTemplate, Heading } from './base';
 import { FormattedDateTime } from './formatted-date-time';
 import { useFrontendUrl } from './frontend-url';
-import { UserRef, UserRefProps } from './user-ref';
+import { UserRef, type UserRefProps } from './user-ref';
 
 export interface ProgressReportStatusChangedProps {
   changedBy: UserRefProps;

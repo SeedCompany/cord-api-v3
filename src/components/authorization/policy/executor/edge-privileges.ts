@@ -1,6 +1,6 @@
-import { EnhancedResource, ResourceShape, Session } from '~/common';
-import { ResourceObjectContext } from '../object.type';
-import { PolicyExecutor } from './policy-executor';
+import { EnhancedResource, type ResourceShape, type Session } from '~/common';
+import { type ResourceObjectContext } from '../object.type';
+import { type PolicyExecutor } from './policy-executor';
 import { UserEdgePrivileges } from './user-edge-privileges';
 
 export class EdgePrivileges<

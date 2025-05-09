@@ -1,7 +1,7 @@
-import { Injectable, OnModuleDestroy } from '@nestjs/common';
+import { Injectable, type OnModuleDestroy } from '@nestjs/common';
 import { patchMethod } from '@seedcompany/common';
 import { AsyncLocalStorage } from 'async_hooks';
-import { Executor, GelError, SHOULD_RETRY } from 'gel';
+import { type Executor, GelError, SHOULD_RETRY } from 'gel';
 import { getCauseList } from '~/common';
 import { TransactionRetryInformer } from '../database/transaction-retry.informer';
 import { Client } from './reexports';

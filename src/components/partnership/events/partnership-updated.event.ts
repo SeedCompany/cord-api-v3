@@ -1,5 +1,5 @@
-import { Session } from '~/common';
-import { Partnership, UpdatePartnership } from '../dto';
+import { type Session } from '~/common';
+import { type Partnership, type UpdatePartnership } from '../dto';
 
 export class PartnershipUpdatedEvent {
   constructor(

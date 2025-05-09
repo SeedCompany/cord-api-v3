@@ -1,6 +1,6 @@
 import { SetMetadata } from '@nestjs/common';
-import { ILogger } from '../../logger';
-import { DatabaseService, ServerInfo } from '../database.service';
+import { type ILogger } from '../../logger';
+import { type DatabaseService, type ServerInfo } from '../database.service';
 import { DB_INDEX_KEY } from './indexer.constants';
 
 export type IndexMode = 'write' | 'schema';

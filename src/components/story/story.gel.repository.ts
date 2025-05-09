@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { PublicOf, UnsecuredDto } from '~/common';
+import { type PublicOf, type UnsecuredDto } from '~/common';
 import { e, RepoFor } from '~/core/gel';
 import * as scripture from '../scripture/gel.utils';
-import { CreateStory, Story, UpdateStory } from './dto';
-import { StoryRepository } from './story.repository';
+import { type CreateStory, Story, type UpdateStory } from './dto';
+import { type StoryRepository } from './story.repository';
 
 @Injectable()
 export class StoryGelRepository

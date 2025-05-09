@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { CachedByArg } from '@seedcompany/common';
-import { Role } from '~/common';
+import { type Role } from '~/common';
 import { DbTraceLayer } from '~/core/database';
-import { SystemAgent } from './dto';
+import { type SystemAgent } from './dto';
 
 @Injectable()
 export abstract class SystemAgentRepository {

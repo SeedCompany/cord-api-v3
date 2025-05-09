@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { PublicOf, UnsecuredDto } from '~/common';
+import { type PublicOf, type UnsecuredDto } from '~/common';
 import { e, RepoFor } from '~/core/gel';
 import * as scripture from '../scripture/gel.utils';
-import { CreateEthnoArt, EthnoArt, UpdateEthnoArt } from './dto';
-import { EthnoArtRepository } from './ethno-art.repository';
+import { type CreateEthnoArt, EthnoArt, type UpdateEthnoArt } from './dto';
+import { type EthnoArtRepository } from './ethno-art.repository';
 
 @Injectable()
 export class EthnoArtGelRepository

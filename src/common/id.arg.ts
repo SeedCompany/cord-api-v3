@@ -1,5 +1,5 @@
-import { PipeTransform, Type } from '@nestjs/common';
-import { Args, ArgsOptions, ID as IdType } from '@nestjs/graphql';
+import { type PipeTransform, type Type } from '@nestjs/common';
+import { Args, type ArgsOptions, ID as IdType } from '@nestjs/graphql';
 import { ValidateIdPipe } from './validators/short-id.validator';
 
 export const IdArg = (

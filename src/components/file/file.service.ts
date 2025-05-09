@@ -3,7 +3,7 @@ import {
   PutObjectCommand as PutObject,
 } from '@aws-sdk/client-s3';
 import { Injectable } from '@nestjs/common';
-import { bufferFromStream, cleanJoin, Nil } from '@seedcompany/common';
+import { bufferFromStream, cleanJoin, type Nil } from '@seedcompany/common';
 import { fileTypeFromBuffer } from 'file-type';
 import { intersection } from 'lodash';
 import { Duration } from 'luxon';
@@ -13,39 +13,39 @@ import { Readable } from 'stream';
 import {
   CreationFailed,
   DuplicateException,
-  DurationIn,
+  type DurationIn,
   generateId,
-  ID,
+  type ID,
   InputException,
   isIdLike,
   NotFoundException,
-  Secured,
+  type Secured,
   ServerException,
-  Session,
+  type Session,
   UnauthorizedException,
 } from '~/common';
 import { withAddedPath } from '~/common/url.util';
-import { ConfigService, IEventBus, ILogger, LinkTo, Logger } from '~/core';
+import { ConfigService, IEventBus, ILogger, type LinkTo, Logger } from '~/core';
 import { RollbackManager } from '~/core/database';
 import { FileBucket } from './bucket';
 import {
-  CreateDefinedFileVersionInput,
-  CreateFileVersionInput,
-  Directory,
-  Downloadable,
-  File,
-  FileId,
-  FileListInput,
-  FileListOutput,
-  FileNode,
+  type CreateDefinedFileVersionInput,
+  type CreateFileVersionInput,
+  type Directory,
+  type Downloadable,
+  type File,
+  type FileId,
+  type FileListInput,
+  type FileListOutput,
+  type FileNode,
   FileNodeType,
   FileVersion,
   isDirectory,
   isFile,
   isFileVersion,
-  MoveFileInput,
-  RenameFileInput,
-  RequestUploadOutput,
+  type MoveFileInput,
+  type RenameFileInput,
+  type RequestUploadOutput,
 } from './dto';
 import { AfterFileUploadEvent } from './events/after-file-upload.event';
 import { FileUrlController as FileUrl } from './file-url.controller';

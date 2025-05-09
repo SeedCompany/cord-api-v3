@@ -1,5 +1,5 @@
 import { UnauthorizedException } from '~/common';
-import { Power } from './dto';
+import { type Power } from './dto';
 
 export class MissingPowerException extends UnauthorizedException {
   constructor(

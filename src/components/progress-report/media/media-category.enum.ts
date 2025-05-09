@@ -1,4 +1,4 @@
-import { EnumType, makeEnum } from '~/common';
+import { type EnumType, makeEnum } from '~/common';
 
 export type MediaCategory = EnumType<typeof MediaCategory>;
 export const MediaCategory = makeEnum({

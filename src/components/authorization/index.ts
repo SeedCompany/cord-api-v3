@@ -1,9 +1,9 @@
 export * from './policy';
 export {
-  HasCreator,
-  HasScope,
-  HasSensitivity,
-  HasVariant,
+  type HasCreator,
+  type HasScope,
+  type HasSensitivity,
+  type HasVariant,
   withEffectiveSensitivity,
   withMembershipRoles,
   withScope,

@@ -1,5 +1,5 @@
 import { stripIndent } from 'common-tags';
-import { EnumType, makeEnum } from '~/common';
+import { type EnumType, makeEnum } from '~/common';
 
 export type ProgressFormat = EnumType<typeof ProgressFormat>;
 export const ProgressFormat = makeEnum({

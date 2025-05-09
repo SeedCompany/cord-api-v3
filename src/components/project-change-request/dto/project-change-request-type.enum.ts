@@ -1,5 +1,5 @@
 import { ObjectType } from '@nestjs/graphql';
-import { EnumType, makeEnum, SecuredEnumList } from '~/common';
+import { type EnumType, makeEnum, SecuredEnumList } from '~/common';
 
 export type ProjectChangeRequestType = EnumType<
   typeof ProjectChangeRequestType

@@ -1,13 +1,17 @@
 import { groupBy } from '@seedcompany/common';
-import { Query } from 'cypher-query-builder';
+import { type Query } from 'cypher-query-builder';
 import { get, startCase } from 'lodash';
-import { Get, Paths } from 'type-fest';
-import { inspect, InspectOptionsStylized } from 'util';
-import { ResourceShape, unwrapSecured, UnwrapSecured } from '~/common';
+import type { Get, Paths } from 'type-fest';
+import { inspect, type InspectOptionsStylized } from 'util';
 import {
-  Condition,
+  type ResourceShape,
+  unwrapSecured,
+  type UnwrapSecured,
+} from '~/common';
+import {
+  type Condition,
   eqlInLiteralSet,
-  IsAllowedParams,
+  type IsAllowedParams,
   MissingContextException,
 } from '../../policy/conditions';
 

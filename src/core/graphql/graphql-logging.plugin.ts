@@ -1,9 +1,9 @@
-import {
+import type {
   OnExecuteEventPayload as OnExecute,
   OnSubscribeEventPayload as OnSubscribe,
 } from '@envelop/types';
 import { Injectable } from '@nestjs/common';
-import { GqlContextType as ContextType } from '~/common';
+import { type GqlContextType as ContextType } from '~/common';
 import { maskSecrets } from '~/common/mask-secrets';
 import { ILogger, Logger } from '../logger';
 import { Plugin } from './plugin.decorator';

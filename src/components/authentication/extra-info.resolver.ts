@@ -1,8 +1,13 @@
 import { ResolveField, Resolver } from '@nestjs/graphql';
 import { mapValues } from '@seedcompany/common';
-import { AbstractClassType, AnonSession, Session } from '~/common';
+import {
+  type AbstractClassType,
+  AnonSession,
+  EnhancedResource,
+  type Session,
+} from '~/common';
 import { Privileges } from '../authorization';
-import { BetaFeatures } from '../authorization/dto/beta-features';
+import { BetaFeatures } from '../authorization/dto/beta-features.dto';
 import { LoginOutput, RegisterOutput, SessionOutput } from './dto';
 
 function AuthExtraInfoResolver(concreteClass: AbstractClassType<any>) {
@@ -13,7 +18,8 @@ function AuthExtraInfoResolver(concreteClass: AbstractClassType<any>) {
     @ResolveField(() => BetaFeatures)
     betaFeatures(@AnonSession() session: Session): BetaFeatures {
       const privileges = this.privileges.for(session, BetaFeatures);
-      return mapValues.fromList(BetaFeatures.Props, (prop) =>
+      const { props } = EnhancedResource.of(BetaFeatures);
+      return mapValues.fromList([...props], (prop) =>
         privileges.can('edit', prop),
       ).asRecord;
     }

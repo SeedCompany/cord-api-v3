@@ -1,5 +1,5 @@
 import { Args, Float, Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { ArgsOptions } from '@nestjs/graphql/dist/decorators/args.decorator';
+import { type ArgsOptions } from '@nestjs/graphql/dist/decorators/args.decorator';
 import { simpleSwitch } from '@seedcompany/common';
 import { stripIndent } from 'common-tags';
 import { clamp } from 'lodash';

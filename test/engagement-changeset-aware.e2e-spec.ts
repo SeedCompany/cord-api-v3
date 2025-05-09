@@ -1,6 +1,6 @@
-import { CalendarDate, ID, Role } from '~/common';
+import { CalendarDate, type ID, Role } from '~/common';
 import { EngagementStatus } from '../src/components/engagement/dto';
-import { Language } from '../src/components/language/dto';
+import { type Language } from '../src/components/language/dto';
 import { ProjectChangeRequestType } from '../src/components/project-change-request/dto';
 import {
   approveProjectChangeRequest,
@@ -17,7 +17,7 @@ import {
   gql,
   registerUser,
   runAsAdmin,
-  TestApp,
+  type TestApp,
   updateProject,
 } from './utility';
 import { fragments } from './utility/fragments';

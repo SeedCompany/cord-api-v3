@@ -2,32 +2,37 @@ import { Field, Float, Int, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { startCase } from 'lodash';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { MergeExclusive } from 'type-fest';
+import { type MergeExclusive } from 'type-fest';
 import {
   DbLabel,
-  ID,
-  Secured,
+  type ID,
+  type Secured,
   SecuredBoolean,
   SecuredFloat,
-  SecuredProps,
+  type SecuredProps,
   SecuredString,
   SecuredStringNullable,
   Sensitivity,
   SensitivityField,
   ServerException,
-  UnsecuredDto,
+  type UnsecuredDto,
 } from '~/common';
-import { SetDbType } from '~/core/database';
-import { SetChangeType } from '~/core/database/changes';
+import { type SetDbType } from '~/core/database';
+import { type SetChangeType } from '~/core/database/changes';
 import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
-import { DbScriptureReferences } from '../../scripture';
+import { type DbScriptureReferences } from '../../scripture';
 import {
-  ScriptureRangeInput,
+  type ScriptureRangeInput,
   SecuredScriptureRangesOverride,
   SecuredUnspecifiedScripturePortion,
 } from '../../scripture/dto';
-import { Producible, ProducibleRef, SecuredProducible } from './producible.dto';
+import {
+  Producible,
+  type ProducibleRef,
+  ProducibleTypeEntries,
+  SecuredProducible,
+} from './producible.dto';
 import { SecuredProductMediums } from './product-medium.enum';
 import { SecuredMethodology } from './product-methodology.enum';
 import { SecuredProductPurposes } from './product-purpose.enum';
@@ -261,6 +266,9 @@ export const asProductType =
     return product as any;
   };
 
+ProducibleTypeEntries.add('DirectScriptureProduct');
+ProducibleTypeEntries.add('DerivativeScriptureProduct');
+ProducibleTypeEntries.add('OtherProduct');
 declare module '../dto/producible.dto' {
   interface ProducibleTypeEntries {
     DirectScriptureProduct: true;

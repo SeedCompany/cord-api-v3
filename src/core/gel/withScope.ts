@@ -1,9 +1,9 @@
-import { Role } from '~/common';
+import { type Role } from '~/common';
 import type { AuthScope } from '../../components/authorization/dto';
 import e from './generated-client';
-import { orScalarLiteral } from './generated-client/castMaps';
-import { $str } from './generated-client/modules/std';
-import * as $ from './generated-client/reflection';
+import { type orScalarLiteral } from './generated-client/castMaps';
+import { type $str } from './generated-client/modules/std';
+import type * as $ from './generated-client/reflection';
 
 /**
  * Prefixes scope given to roles given.

@@ -3,8 +3,8 @@ import { keys as keysOf } from 'ts-transformer-keys';
 import {
   resolveByTypename,
   Resource,
-  ResourceRelationsShape,
-  SecuredProps,
+  type ResourceRelationsShape,
+  type SecuredProps,
 } from '~/common';
 import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';

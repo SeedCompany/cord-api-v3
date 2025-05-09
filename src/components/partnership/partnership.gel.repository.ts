@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { ID, PublicOf } from '~/common';
+import { type ID, type PublicOf } from '~/common';
 import { e, RepoFor } from '~/core/gel';
 import { Partnership } from './dto';
 import type { PartnershipByProjectAndPartnerInput } from './partnership-by-project-and-partner.loader';
-import { PartnershipRepository } from './partnership.repository';
+import { type PartnershipRepository } from './partnership.repository';
 
 @Injectable()
 export class PartnershipGelRepository
@@ -15,12 +15,12 @@ export class PartnershipGelRepository
       partner: true,
       mou: true,
       agreement: true,
-      parent: e.tuple({
+      parent: e.select({
         identity: partnership.project.id,
         labels: e.array_agg(
           e.set(partnership.project.__type__.name.slice(9, null)),
         ),
-        properties: e.tuple({
+        properties: e.select({
           id: partnership.project.id,
           createdAt: partnership.project.createdAt,
         }),
@@ -37,16 +37,17 @@ export class PartnershipGelRepository
   private readonly readManyByProjectAndPartnerQuery = e.params(
     { input: e.array(e.tuple({ project: e.uuid, partner: e.uuid })) },
     ({ input }) =>
-      e.for(e.array_unpack(input), ({ project, partner }) =>
-        e.select(e.Partnership, (partnership) => ({
-          ...this.hydrate(partnership),
-          filter: e.op(
-            e.op(partnership.project, '=', e.cast(e.Project, project)),
-            'and',
-            e.op(partnership.partner, '=', e.cast(e.Partner, partner)),
-          ),
-        })),
-      ),
+      e.select(e.Partnership, (partnership) => ({
+        ...this.hydrate(partnership),
+        filter: e.op(
+          e.tuple({
+            project: partnership.project.id,
+            partner: partnership.partner.id,
+          }),
+          'in',
+          e.array_unpack(input),
+        ),
+      })),
   );
 
   async listAllByProjectId(project: ID) {

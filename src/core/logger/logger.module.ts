@@ -1,9 +1,9 @@
 import {
-  DynamicModule,
+  type DynamicModule,
   Global,
   Module,
   Logger as NestLogger,
-  Provider,
+  type Provider,
 } from '@nestjs/common';
 import { memoize } from 'lodash';
 import { createLogger, format, transports } from 'winston';

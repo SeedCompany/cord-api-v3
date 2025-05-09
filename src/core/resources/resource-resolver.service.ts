@@ -2,11 +2,18 @@ import { DiscoveryService } from '@golevelup/nestjs-discovery';
 import { Injectable, SetMetadata } from '@nestjs/common';
 import { GraphQLSchemaHost } from '@nestjs/graphql';
 import { GraphQLObjectType } from 'graphql';
-import { ValueOf } from 'type-fest';
-import { ID, many, Many, ObjectView, ServerException, Session } from '~/common';
-import { BaseNode } from '../database/results';
+import type { ValueOf } from 'type-fest';
+import {
+  type ID,
+  many,
+  type Many,
+  type ObjectView,
+  ServerException,
+  type Session,
+} from '~/common';
+import { type BaseNode } from '../database/results';
 import { ILogger, Logger } from '../logger';
-import { ResourceMap } from './map';
+import { type ResourceMap } from './map';
 import { ResourcesHost } from './resources.host';
 
 const RESOLVE_BY_ID = 'RESOLVE_BY_ID';

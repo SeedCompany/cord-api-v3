@@ -10,14 +10,14 @@ import {
 import {
   AnonSession,
   firstLettersOfWords,
-  ID,
+  type ID,
   IdArg,
   IdField,
   ListArg,
   LoggedInSession,
-  Session,
+  type Session,
 } from '~/common';
-import { Loader, LoaderOf } from '~/core';
+import { Loader, type LoaderOf } from '~/core';
 import { LocationLoader } from '../location';
 import { LocationListInput, SecuredLocationList } from '../location/dto';
 import { OrganizationLoader, OrganizationService } from '../organization';

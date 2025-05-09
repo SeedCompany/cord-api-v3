@@ -1,7 +1,7 @@
 import { createMetadataDecorator } from '@seedcompany/nest';
-import { Plugin as PluginNoContext } from 'graphql-yoga';
-import { GqlContextType } from '~/common';
-import { ServerContext } from './driver';
+import { type Plugin as PluginNoContext } from 'graphql-yoga';
+import { type GqlContextType } from '~/common';
+import { type ServerContext } from './driver';
 
 export const Plugin = createMetadataDecorator({
   types: ['class'],

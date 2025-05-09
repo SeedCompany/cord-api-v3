@@ -1,11 +1,11 @@
-import { Type } from '@nestjs/common';
+import { type Type } from '@nestjs/common';
 import { nanoid } from 'nanoid';
-import { ID } from '~/common';
+import { type ID } from '~/common';
 import {
   EVENT_METADATA,
-  EventHandlerMetadata,
+  type EventHandlerMetadata,
   EVENTS_HANDLER_METADATA,
-  Priority,
+  type Priority,
 } from './constants';
 
 /**
@@ -55,7 +55,7 @@ export interface IEventHandler<T> {
 
 const getOrDefineEventId = (event: Type): ID => {
   if (!Reflect.hasMetadata(EVENT_METADATA, event)) {
-    const id = nanoid() as ID;
+    const id: ID = nanoid();
     Reflect.defineMetadata(EVENT_METADATA, { id }, event);
     return id;
   }

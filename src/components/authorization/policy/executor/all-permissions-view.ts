@@ -1,23 +1,23 @@
 import { mapValues } from '@seedcompany/common';
+import { type EnumType, makeEnum } from '@seedcompany/nest';
 import { startCase } from 'lodash';
-import { keys as keysOf } from 'ts-transformer-keys';
-import { PascalCase } from 'type-fest';
+import { type PascalCase } from 'type-fest';
 import {
-  ChildListsKey,
-  ChildSinglesKey,
+  type ChildListsKey,
+  type ChildSinglesKey,
   lazyRecord as createLazyRecord,
-  EnhancedResource,
-  ResourceShape,
-  SecuredPropsPlusExtraKey,
+  type EnhancedResource,
+  type ResourceShape,
+  type SecuredPropsPlusExtraKey,
 } from '~/common';
 import {
   AnyAction,
-  ChildListAction,
-  ChildSingleAction,
-  PropAction,
+  type ChildListAction,
+  type ChildSingleAction,
+  type PropAction,
 } from '../actions';
-import { UserEdgePrivileges } from './user-edge-privileges';
-import { UserResourcePrivileges } from './user-resource-privileges';
+import { type UserEdgePrivileges } from './user-edge-privileges';
+import { type UserResourcePrivileges } from './user-resource-privileges';
 
 export type AllPermissionsView<TResourceStatic extends ResourceShape<any>> =
   Record<
@@ -40,7 +40,7 @@ export const createAllPermissionsView = <
     getKeys: () => [...resource.securedPropsPlusExtra, ...resource.childKeys],
     calculate: (propName) =>
       createLazyRecord<Record<CompatAction, boolean>>({
-        getKeys: () => keysOf<Record<CompatAction, boolean>>(),
+        getKeys: () => CompatAction.values,
         calculate: (actionInput, propPerms) => {
           const action =
             actionInput === 'canEdit' &&
@@ -53,7 +53,7 @@ export const createAllPermissionsView = <
           propPerms[compatMap.backward[action]] = perm;
           return perm;
         },
-      }),
+      }) as any,
   });
 
 export type AllPermissionsOfEdgeView<TAction extends string> = Record<
@@ -74,12 +74,19 @@ export const createAllPermissionsOfEdgeView = <
     calculate: (action) => privileges.can(action),
   });
 
-type CompatAction = AnyAction | `can${PascalCase<AnyAction>}`;
+const asLegacyAction = (action: AnyAction) =>
+  `can${startCase(action)}` as `can${PascalCase<AnyAction>}`;
+
+type CompatAction = EnumType<typeof CompatAction>;
+const CompatAction = makeEnum([
+  ...AnyAction,
+  ...[...AnyAction].map(asLegacyAction),
+]);
 
 const compatMap = {
   forward: {
     ...mapValues.fromList(
-      keysOf<Record<CompatAction, boolean>>(),
+      CompatAction,
       (action) =>
         (action.startsWith('can')
           ? action.slice(3).toLowerCase()
@@ -87,9 +94,6 @@ const compatMap = {
     ).asRecord,
   },
   backward: {
-    ...mapValues.fromList(
-      keysOf<Record<AnyAction, boolean>>(),
-      (action) => `can${startCase(action)}` as CompatAction,
-    ).asRecord,
+    ...mapValues.fromList(AnyAction, asLegacyAction).asRecord,
   },
 };

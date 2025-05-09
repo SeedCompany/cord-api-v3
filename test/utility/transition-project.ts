@@ -1,10 +1,10 @@
-import { ID } from '~/common';
-import { IProject, ProjectStep } from '../../src/components/project/dto';
+import { type ID } from '~/common';
+import { type IProject, ProjectStep } from '../../src/components/project/dto';
 import {
-  ExecuteProjectTransitionInput,
-  ProjectWorkflowTransition,
+  type ExecuteProjectTransitionInput,
+  type ProjectWorkflowTransition,
 } from '../../src/components/project/workflow/dto';
-import { TestApp } from './create-app';
+import { type TestApp } from './create-app';
 import { gql } from './gql-tag';
 import { runAsAdmin } from './login';
 

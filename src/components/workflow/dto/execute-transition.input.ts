@@ -1,9 +1,9 @@
 import { Field, InputType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import {
-  ID,
+  type ID,
   IdField,
-  MadeEnum,
+  type MadeEnum,
   RichTextDocument,
   RichTextField,
 } from '~/common';

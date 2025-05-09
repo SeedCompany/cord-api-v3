@@ -1,4 +1,4 @@
-import { ID, NotFoundException, ObjectView } from '~/common';
+import { type ID, NotFoundException, type ObjectView } from '~/common';
 import { LoaderFactory, ObjectViewAwareLoader } from '~/core';
 import { BudgetService } from './budget.service';
 import { BudgetRecord } from './dto';

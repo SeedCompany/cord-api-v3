@@ -2,8 +2,8 @@ import { DiscoveryService } from '@golevelup/nestjs-discovery';
 import { Injectable } from '@nestjs/common';
 import { sortBy } from '@seedcompany/common';
 import { startCase } from 'lodash';
-import { DateTime } from 'luxon';
-import { BaseMigration } from './base-migration.service';
+import { type DateTime } from 'luxon';
+import { type BaseMigration } from './base-migration.service';
 import { DB_MIGRATION_KEY } from './migration.decorator';
 
 @Injectable()

@@ -1,10 +1,10 @@
 import { setOf } from '@seedcompany/common';
 import { DateTime } from 'luxon';
-import { ID, Role, Session } from '~/common';
-import { Privileges, UserResourcePrivileges } from '../authorization';
+import { type ID, Role, type Session } from '~/common';
+import { type Privileges, type UserResourcePrivileges } from '../authorization';
 import { Condition } from '../authorization/policy/conditions';
-import { Workflow } from './define-workflow';
-import { SerializedWorkflowTransitionPermission as SerializedTransitionPermission } from './dto/serialized-workflow.dto';
+import { type Workflow } from './define-workflow';
+import { type SerializedWorkflowTransitionPermission as SerializedTransitionPermission } from './dto/serialized-workflow.dto';
 import { TransitionCondition } from './workflow.granter';
 
 export const transitionPermissionSerializer =

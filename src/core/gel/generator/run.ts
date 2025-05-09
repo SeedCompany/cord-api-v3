@@ -8,7 +8,7 @@ import { generateInlineQueries } from './inline-queries';
 import { generateQueryBuilder } from './query-builder';
 import { generateQueryFiles } from './query-files';
 import { setTsTypesFromOurScalarCodecs } from './scalars';
-import { GeneratorParams } from './util';
+import { type GeneratorParams } from './util';
 
 (async () => {
   const project = new Project({

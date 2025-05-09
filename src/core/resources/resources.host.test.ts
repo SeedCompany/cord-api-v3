@@ -1,5 +1,5 @@
 import { GraphQLSchemaHost } from '@nestjs/graphql';
-import { EnhancedResourceMap } from '~/core';
+import { type EnhancedResourceMap } from '~/core';
 import { ResourcesHost } from './resources.host';
 
 // Load all files to ensure all resources are registered

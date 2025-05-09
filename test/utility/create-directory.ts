@@ -1,11 +1,11 @@
 import { faker } from '@faker-js/faker';
 import { startCase } from 'lodash';
-import { ID } from '~/common';
+import { type ID } from '~/common';
 import { loggedInSession } from '~/common/session';
 import { AuthenticationService } from '../../src/components/authentication';
 import { FileService } from '../../src/components/file';
-import { TestApp } from './create-app';
-import { fileNode, RawDirectory } from './fragments';
+import { type TestApp } from './create-app';
+import { fileNode, type RawDirectory } from './fragments';
 import { gql } from './gql-tag';
 
 export async function createRootDirectory(app: TestApp, name?: string) {

@@ -1,6 +1,6 @@
 import { ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { EnumType, makeEnum, SecuredEnumList } from '~/common';
+import { type EnumType, makeEnum, SecuredEnumList } from '~/common';
 
 /**
  * How the product is delivered.

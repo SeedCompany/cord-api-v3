@@ -2,9 +2,9 @@ import { cleanSplit, mapEntries } from '@seedcompany/common';
 import { $ as $$ } from 'execa';
 import { readFile } from 'fs/promises';
 import { relative } from 'node:path/posix';
-import { Directory, Node, SyntaxKind } from 'ts-morph';
+import { type Directory, Node, SyntaxKind } from 'ts-morph';
 import { hydratorsNeeded, injectHydrators } from './inject-hydrators';
-import { GeneratorParams, toFqn } from './util';
+import { type GeneratorParams, toFqn } from './util';
 
 interface Hydrator {
   fqn: string;

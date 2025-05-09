@@ -1,8 +1,8 @@
 import { faker } from '@faker-js/faker';
 import { generateId, isValidId } from '~/common';
-import { CreatePerson } from '../../src/components/user/dto';
-import { TestApp } from './create-app';
-import { fragments, RawUser } from './fragments';
+import { type CreatePerson } from '../../src/components/user/dto';
+import { type TestApp } from './create-app';
+import { fragments, type RawUser } from './fragments';
 import { gql } from './gql-tag';
 
 export async function createPerson(

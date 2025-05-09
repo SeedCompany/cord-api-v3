@@ -1,16 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import {
-  ID,
+  type ID,
   InputException,
-  ObjectView,
+  type ObjectView,
   ServerException,
-  Session,
-  UnsecuredDto,
+  type Session,
+  type UnsecuredDto,
 } from '~/common';
 import { HandleIdLookup, ILogger, Logger } from '~/core';
 import { Privileges } from '../authorization';
 import { CeremonyRepository } from './ceremony.repository';
-import { Ceremony, CreateCeremony, UpdateCeremony } from './dto';
+import { Ceremony, type CreateCeremony, type UpdateCeremony } from './dto';
 
 @Injectable()
 export class CeremonyService {

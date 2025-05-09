@@ -1,9 +1,9 @@
 import { DiscoveryService } from '@golevelup/nestjs-discovery';
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, type OnModuleInit } from '@nestjs/common';
 import {
   AggregateConditions,
   AndConditions,
-  Condition,
+  type Condition,
   Optimizer,
   OrConditions,
 } from '../conditions';

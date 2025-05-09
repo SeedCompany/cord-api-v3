@@ -3,21 +3,20 @@ import { setOf } from '@seedcompany/common';
 import { inArray, node, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
+  DbUnique,
   EnhancedResource,
-  getDbClassLabels,
-  getDbPropertyUnique,
-  ID,
+  type ID,
   InputException,
   isIdLike,
   NotFoundException,
-  ResourceShape,
+  type ResourceShape,
   ServerException,
 } from '~/common';
-import { ResourceLike, ResourcesHost } from '../resources';
+import { type ResourceLike, ResourcesHost } from '../resources';
 import { DatabaseService, DbTraceLayer } from './database.service';
 import { createUniqueConstraint } from './indexer';
 import { ACTIVE, deleteBaseNode, updateRelationList } from './query';
-import { BaseNode } from './results';
+import { type BaseNode } from './results';
 
 /**
  * This provides a few methods out of the box.
@@ -170,12 +169,11 @@ export class CommonRepository {
   }
 
   protected getConstraintsFor(resource: ResourceShape<any>) {
+    const { dbLabel, props } = EnhancedResource.of(resource);
     return [
-      ...(resource.Props.includes('id')
-        ? [createUniqueConstraint(getDbClassLabels(resource)[0], 'id')]
-        : []),
-      ...resource.Props.flatMap((prop) => {
-        const label = getDbPropertyUnique(resource, prop);
+      ...(props.has('id') ? [createUniqueConstraint(dbLabel, 'id')] : []),
+      ...[...props].flatMap((prop) => {
+        const label = DbUnique.get(resource, prop);
         return label
           ? createUniqueConstraint(label, 'value', `${resource.name}_${prop}`)
           : [];

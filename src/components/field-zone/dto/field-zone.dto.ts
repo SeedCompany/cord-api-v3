@@ -4,13 +4,13 @@ import {
   DbUnique,
   NameField,
   Resource,
-  Secured,
+  type Secured,
   SecuredProperty,
-  SecuredProps,
+  type SecuredProps,
   SecuredString,
 } from '~/common';
 import { e } from '~/core/gel';
-import { LinkTo, RegisterResource } from '~/core/resources';
+import { type LinkTo, RegisterResource } from '~/core/resources';
 
 @RegisterResource({ db: e.FieldZone })
 @ObjectType({

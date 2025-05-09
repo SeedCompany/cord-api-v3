@@ -1,21 +1,21 @@
 import { Injectable } from '@nestjs/common';
 import {
-  ID,
-  ObjectView,
+  type ID,
+  type ObjectView,
   ServerException,
-  Session,
-  UnsecuredDto,
+  type Session,
+  type UnsecuredDto,
 } from '~/common';
 import { HandleIdLookup } from '~/core';
 import { ifDiff } from '~/core/database/changes';
 import { Privileges } from '../authorization';
 import { isScriptureEqual } from '../scripture';
 import {
-  CreateEthnoArt,
+  type CreateEthnoArt,
   EthnoArt,
-  EthnoArtListInput,
-  EthnoArtListOutput,
-  UpdateEthnoArt,
+  type EthnoArtListInput,
+  type EthnoArtListOutput,
+  type UpdateEthnoArt,
 } from './dto';
 import { EthnoArtRepository } from './ethno-art.repository';
 

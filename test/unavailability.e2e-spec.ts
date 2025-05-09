@@ -1,15 +1,15 @@
 import { faker } from '@faker-js/faker';
 import { times } from 'lodash';
 import { isValidId, Role } from '~/common';
-import { User } from '../src/components/user/dto';
-import { Unavailability } from '../src/components/user/unavailability/dto';
+import { type User } from '../src/components/user/dto';
+import { type Unavailability } from '../src/components/user/unavailability/dto';
 import {
   createSession,
   createTestApp,
   createUnavailability,
   gql,
   registerUser,
-  TestApp,
+  type TestApp,
 } from './utility';
 import { fragments } from './utility/fragments';
 

@@ -1,31 +1,31 @@
 import { Injectable } from '@nestjs/common';
 import {
-  CalendarDate,
+  type CalendarDate,
   CreationFailed,
   DateInterval,
-  ID,
+  type ID,
   NotFoundException,
-  ObjectView,
-  Range,
-  Session,
-  UnsecuredDto,
+  type ObjectView,
+  type Range,
+  type Session,
+  type UnsecuredDto,
 } from '~/common';
 import { HandleIdLookup, IEventBus, ILogger, Logger } from '~/core';
-import { Variable } from '~/core/database/query';
+import { type Variable } from '~/core/database/query';
 import { Privileges } from '../authorization';
 import { FileService } from '../file';
 import { ProgressReport } from '../progress-report/dto';
 import {
   FinancialReport,
-  MergePeriodicReports,
+  type MergePeriodicReports,
   NarrativeReport,
-  PeriodicReport,
-  PeriodicReportListInput,
-  PeriodicReportTypeMap,
-  ReportType,
+  type PeriodicReport,
+  type PeriodicReportListInput,
+  type PeriodicReportTypeMap,
+  type ReportType,
   resolveReportType,
-  SecuredPeriodicReportList,
-  UpdatePeriodicReportInput,
+  type SecuredPeriodicReportList,
+  type UpdatePeriodicReportInput,
 } from './dto';
 import { PeriodicReportUploadedEvent } from './events';
 import { PeriodicReportRepository } from './periodic-report.repository';

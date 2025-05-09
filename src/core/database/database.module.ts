@@ -1,4 +1,4 @@
-import { Module, OnApplicationShutdown } from '@nestjs/common';
+import { Module, type OnApplicationShutdown } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { Connection } from 'cypher-query-builder';
 import { ConfigModule } from '../config/config.module';

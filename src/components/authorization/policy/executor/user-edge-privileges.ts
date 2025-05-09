@@ -1,19 +1,19 @@
 import { LazyGetter as Once } from 'lazy-get-decorator';
 import {
   EnhancedResource,
-  ResourceShape,
-  Session,
+  type ResourceShape,
+  type Session,
   UnauthorizedException,
 } from '~/common';
-import { ResourceObjectContext } from '../object.type';
+import { type ResourceObjectContext } from '../object.type';
 import {
-  AllPermissionsOfEdgeView,
+  type AllPermissionsOfEdgeView,
   createAllPermissionsOfEdgeView,
 } from './all-permissions-view';
 import {
-  FilterOptions,
-  PolicyExecutor,
-  ResolveParams,
+  type FilterOptions,
+  type PolicyExecutor,
+  type ResolveParams,
 } from './policy-executor';
 
 export class UserEdgePrivileges<

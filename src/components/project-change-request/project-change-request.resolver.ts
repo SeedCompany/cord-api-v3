@@ -5,10 +5,10 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { ID, IdArg, LoggedInSession, Session } from '~/common';
-import { Loader, LoaderOf } from '~/core';
+import { type ID, IdArg, LoggedInSession, type Session } from '~/common';
+import { Loader, type LoaderOf } from '~/core';
 import { ProjectLoader } from '../project';
-import { IProject, Project } from '../project/dto';
+import { IProject, type Project } from '../project/dto';
 import {
   CreateProjectChangeRequestInput,
   CreateProjectChangeRequestOutput,

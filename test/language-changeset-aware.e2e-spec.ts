@@ -12,7 +12,7 @@ import {
   createTestApp,
   gql,
   loginAsAdmin,
-  TestApp,
+  type TestApp,
 } from './utility';
 import { fragments } from './utility/fragments';
 import { forceProjectTo } from './utility/transition-project';

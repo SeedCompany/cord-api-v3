@@ -1,14 +1,14 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { CachedByArg } from '@seedcompany/common';
 import {
-  ID,
-  ObjectView,
+  type ID,
+  type ObjectView,
   Role,
   SecuredList,
   ServerException,
-  Session,
+  type Session,
   UnauthorizedException,
-  UnsecuredDto,
+  type UnsecuredDto,
 } from '~/common';
 import { HandleIdLookup, ILogger, Logger } from '~/core';
 import { Transactional } from '~/core/database';
@@ -16,32 +16,38 @@ import { property } from '~/core/database/query';
 import { Privileges } from '../authorization';
 import { AssignableRoles } from '../authorization/dto/assignable-roles';
 import { LocationService } from '../location';
-import { LocationListInput, SecuredLocationList } from '../location/dto';
+import {
+  type LocationListInput,
+  type SecuredLocationList,
+} from '../location/dto';
 import { OrganizationService } from '../organization';
 import {
-  OrganizationListInput,
-  SecuredOrganizationList,
+  type OrganizationListInput,
+  type SecuredOrganizationList,
 } from '../organization/dto';
 import { PartnerService } from '../partner';
-import { PartnerListInput, SecuredPartnerList } from '../partner/dto';
+import { type PartnerListInput, type SecuredPartnerList } from '../partner/dto';
 import {
-  AssignOrganizationToUser,
-  CreatePerson,
-  ModifyKnownLanguageArgs,
-  RemoveOrganizationFromUser,
-  SystemAgent,
+  type AssignOrganizationToUser,
+  type CreatePerson,
+  type ModifyKnownLanguageArgs,
+  type RemoveOrganizationFromUser,
+  type SystemAgent,
   UpdateUser,
   User,
-  UserListInput,
-  UserListOutput,
+  type UserListInput,
+  type UserListOutput,
 } from './dto';
 import { EducationService } from './education';
-import { EducationListInput, SecuredEducationList } from './education/dto';
+import {
+  type EducationListInput,
+  type SecuredEducationList,
+} from './education/dto';
 import { KnownLanguageRepository } from './known-language.repository';
 import { UnavailabilityService } from './unavailability';
 import {
-  SecuredUnavailabilityList,
-  UnavailabilityListInput,
+  type SecuredUnavailabilityList,
+  type UnavailabilityListInput,
 } from './unavailability/dto';
 import { UserRepository } from './user.repository';
 

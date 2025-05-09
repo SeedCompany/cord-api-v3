@@ -1,11 +1,13 @@
-import { Field, InterfaceType } from '@nestjs/graphql';
+import { CLASS_TYPE_METADATA, Field, InterfaceType } from '@nestjs/graphql';
+import { type ClassType as ClassTypeVal } from '@nestjs/graphql/dist/enums/class-type.enum.js';
 import {
   cached,
-  FnLike,
+  type FnLike,
   mapValues,
   setInspectOnClass,
   setToJson,
 } from '@seedcompany/common';
+import { createMetadataDecorator } from '@seedcompany/nest';
 import { LazyGetter as Once } from 'lazy-get-decorator';
 import { DateTime } from 'luxon';
 import { keys as keysOf } from 'ts-transformer-keys';
@@ -15,18 +17,22 @@ import type {
   ResourceName,
   ResourcesHost,
 } from '~/core';
-import { $, e } from '~/core/gel/reexports';
-import { ScopedRole } from '../components/authorization/dto';
+import { type $, type e } from '~/core/gel/reexports';
+import { type ScopedRole } from '../components/authorization/dto';
 import { CalculatedSymbol } from './calculated.decorator';
 import { DataObject } from './data-object';
 import { DbLabel } from './db-label.decorator';
-import { getDbClassLabels, getDbPropertyLabels } from './db-label.helpers';
 import { ServerException } from './exceptions';
-import { ID, IdField } from './id-field';
+import { type ID, IdField } from './id-field';
 import { DateTimeField } from './luxon.graphql';
 import { getParentTypes } from './parent-types';
-import { MaybeSecured, SecuredProps } from './secured-property';
-import { AbstractClassType } from './types';
+import { type MaybeSecured, type SecuredProps } from './secured-property';
+import { type AbstractClassType } from './types';
+
+const GqlClassType = createMetadataDecorator({
+  key: CLASS_TYPE_METADATA,
+  setter: (type: ClassTypeVal) => type,
+});
 
 const hasTypename = (value: unknown): value is { __typename: string } =>
   value != null &&
@@ -155,14 +161,20 @@ export class EnhancedResource<T extends ResourceShape<any>> {
   }
 
   /**
-   * An semi-ordered set of interfaces the resource.
+   * A semi-ordered set of interfaces the resource.
    */
   @Once()
   get interfaces(): ReadonlySet<EnhancedResource<any>> {
     return new Set(
-      getParentTypes(this.type)
-        .slice(1) // not self
-        .filter(isResourceClass)
+      getParentTypes(this.type, [])
+        .filter(
+          (cls): cls is ResourceShape<any> =>
+            // Is declared as interface. i.e. avoids DataObject.
+            GqlClassType.get(cls) === 'interface' &&
+            // Avoid intersected classes.
+            // getParentTypes will give us the intersect-ees directly.
+            !cls.name.startsWith('Intersection'),
+        )
         .map(EnhancedResource.of),
     );
   }
@@ -240,8 +252,9 @@ export class EnhancedResource<T extends ResourceShape<any>> {
         const type: ResourceShape<any> | undefined = list
           ? rawType[0]!
           : rawType;
-        const resource: EnhancedResource<any> | undefined =
-          type && isResourceClass(type) ? EnhancedResource.of(type) : undefined;
+        const resource: EnhancedResource<any> | undefined = type?.prototype
+          ? EnhancedResource.of(type)
+          : undefined;
         const rel: EnhancedRelation<T> = { name, list, type, resource };
         return [name, rel];
       }),
@@ -282,7 +295,20 @@ export class EnhancedResource<T extends ResourceShape<any>> {
 
   @Once()
   get dbLabels() {
-    return getDbClassLabels(this.type);
+    const labels = getParentTypes(this.type).flatMap((cls) => {
+      if (
+        // Is declared as some gql object. i.e. avoids DataObject.
+        !GqlClassType.get(cls) ||
+        // Avoid intersected classes.
+        // getParentTypes will give us the intersect-ees directly.
+        cls.name.startsWith('Intersection')
+      ) {
+        return [];
+      }
+      const declared = DbLabel.getOwn(cls);
+      return declared ? [...declared] : [cls.name];
+    });
+    return [...new Set([...labels, 'BaseNode'])];
   }
   get dbLabel() {
     return this.dbLabels[0];
@@ -291,9 +317,10 @@ export class EnhancedResource<T extends ResourceShape<any>> {
   get dbPropLabels(): {
     readonly [K in keyof T['prototype'] & string]?: readonly string[];
   } {
-    return mapValues.fromList(this.props, (prop) =>
-      getDbPropertyLabels(this.type, prop),
-    ).asRecord;
+    return mapValues.fromList(this.props, (prop) => {
+      const declared = DbLabel.get(this.type, prop as unknown as string);
+      return [...new Set([...(declared ?? []), 'Property'])];
+    }).asRecord;
   }
 }
 setInspectOnClass(EnhancedResource, (res) => ({ collapsed }) => {
@@ -309,11 +336,6 @@ export interface EnhancedRelation<TResourceStatic extends ResourceShape<any>> {
   /** Enhanced resource of type, if type is resource */
   readonly resource?: EnhancedResource<any>;
 }
-
-export const isResourceClass = <T>(
-  cls: AbstractClassType<T>,
-): cls is ResourceShape<T> =>
-  'Props' in cls && Array.isArray(cls.Props) && cls.Props.length > 0;
 
 export type DBType<TResourceStatic extends ResourceShape<any>> =
   ResourceShape<any> extends TResourceStatic

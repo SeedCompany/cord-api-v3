@@ -1,4 +1,4 @@
-import { InputException, InputExceptionArgs } from './input.exception';
+import { InputException, type InputExceptionArgs } from './input.exception';
 
 /**
  * Something asked for or referenced has cannot be found.

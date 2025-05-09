@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { Session, UnsecuredDto } from '~/common';
+import { type Session, type UnsecuredDto } from '~/common';
 import { Privileges } from '../authorization';
-import { ProgressReport, ProgressReportListInput } from './dto';
+import { ProgressReport, type ProgressReportListInput } from './dto';
 import { ProgressReportRepository } from './progress-report.repository';
 
 @Injectable()

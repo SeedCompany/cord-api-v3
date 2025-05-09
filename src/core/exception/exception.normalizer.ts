@@ -1,4 +1,4 @@
-import { ArgumentsHost, Inject, Injectable } from '@nestjs/common';
+import { type ArgumentsHost, Inject, Injectable } from '@nestjs/common';
 // eslint-disable-next-line no-restricted-imports,@seedcompany/no-restricted-imports
 import * as Nest from '@nestjs/common';
 import { GqlExecutionContext } from '@nestjs/graphql';
@@ -9,7 +9,7 @@ import { GraphQLError } from 'graphql';
 import addIndent from 'indent-string';
 import { lowerCase, uniq } from 'lodash';
 import {
-  AbstractClassType,
+  type AbstractClassType,
   DuplicateException,
   Exception,
   getCauseList,
@@ -60,7 +60,7 @@ export class NormalizedException extends Error {
 @Injectable()
 export class ExceptionNormalizer {
   constructor(
-    @Inject('CONFIG') private readonly config?: ConfigService,
+    @Inject('CONFIG') private readonly config?: ConfigService & {},
     private readonly resources?: ResourcesHost,
   ) {}
 
@@ -189,8 +189,21 @@ export class ExceptionNormalizer {
     }
 
     if (ex instanceof GraphQLError) {
+      if (ex.extensions.code === 'GRAPHQL_VALIDATION_FAILED') {
+        return { codes: ['Validation', 'GraphQL', 'Client'] };
+      }
+      if (ex.extensions.code === 'GRAPHQL_PARSE_FAILED') {
+        return { codes: ['Parse', 'GraphQL', 'Client'] };
+      }
+      if (ex.extensions.code === 'OPERATION_RESOLUTION_FAILURE') {
+        return { codes: ['OperationResolution', 'GraphQL', 'Client'] };
+      }
+      const status = (ex.extensions as any).http?.status ?? 500;
+      if (status === 413 && ex.message.startsWith('Batching is limited')) {
+        return { codes: ['BatchLimit', 'GraphQL', 'Client'] };
+      }
       const isClient =
-        (ex.extensions.http?.status ?? 500) < 500 ||
+        status < 500 ||
         // Guessing here. No execution path - client problem.
         !ex.path;
       return { codes: ['GraphQL', isClient ? 'Client' : 'Server'] };
@@ -341,6 +354,9 @@ export class ExceptionNormalizer {
     }
     if (type === Nest.HttpException) {
       return (ex as Nest.HttpException).getStatus() < 500 ? 'Client' : 'Server';
+    }
+    if (type === Nest.IntrinsicException) {
+      return [];
     }
     if (type === Gel.GelError) {
       const transient =

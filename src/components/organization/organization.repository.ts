@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { node, Query, relation } from 'cypher-query-builder';
+import { node, type Query, relation } from 'cypher-query-builder';
 import {
   CreationFailed,
   DuplicateException,
-  ID,
+  type ID,
   NotFoundException,
   ReadAfterCreationFailed,
-  Session,
-  UnsecuredDto,
+  type Session,
+  type UnsecuredDto,
 } from '~/common';
 import { DtoRepository, OnIndex } from '~/core/database';
 import {
@@ -27,11 +27,11 @@ import {
   sortWith,
 } from '~/core/database/query';
 import {
-  CreateOrganization,
+  type CreateOrganization,
   Organization,
   OrganizationFilters,
-  OrganizationListInput,
-  UpdateOrganization,
+  type OrganizationListInput,
+  type UpdateOrganization,
 } from './dto';
 
 @Injectable()

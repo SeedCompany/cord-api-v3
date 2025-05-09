@@ -1,15 +1,15 @@
 import { Info, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
 import {
   Fields,
-  ID,
+  type ID,
   IdArg,
   IsOnly,
   ListArg,
   LoggedInSession,
-  Resource,
-  Session,
+  type Resource,
+  type Session,
 } from '~/common';
-import { Loader, LoaderOf } from '~/core';
+import { Loader, type LoaderOf } from '~/core';
 import { CommentThreadLoader } from './comment-thread.loader';
 import { CommentService } from './comment.service';
 import { Commentable, CommentThreadList, CommentThreadListInput } from './dto';

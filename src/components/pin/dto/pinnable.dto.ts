@@ -1,9 +1,12 @@
 import { Field, InterfaceType } from '@nestjs/graphql';
-import { ID, IdField } from '~/common';
+import { DbLabel, type ID, IdField } from '~/common';
 
 @InterfaceType({
   description: 'An item that can be pinned',
 })
+// Maintaining previous functionality.
+// This could be removed (and data migrated) to query it.
+@DbLabel(null)
 export class Pinnable {
   @IdField()
   readonly id: ID;

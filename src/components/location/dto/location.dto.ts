@@ -5,16 +5,16 @@ import {
   DbUnique,
   NameField,
   Resource,
-  Secured,
+  type Secured,
   SecuredEnum,
   SecuredProperty,
   SecuredPropertyList,
-  SecuredProps,
+  type SecuredProps,
   SecuredString,
   SecuredStringNullable,
 } from '~/common';
 import { e } from '~/core/gel';
-import { LinkTo, RegisterResource } from '~/core/resources';
+import { type LinkTo, RegisterResource } from '~/core/resources';
 import { LocationType } from './location-type.enum';
 
 @ObjectType({

@@ -1,14 +1,14 @@
 /* eslint-disable @typescript-eslint/unified-signatures */
 import { Injectable, Optional } from '@nestjs/common';
-import { $, Executor } from 'gel';
-import { QueryArgs } from 'gel/dist/ifaces';
+import { type $, type Executor } from 'gel';
+import { type QueryArgs } from 'gel/dist/ifaces';
 import { TraceLayer } from '~/common';
-import { retry, RetryOptions } from '~/common/retry';
+import { retry, type RetryOptions } from '~/common/retry';
 import { TracingService } from '~/core/tracing';
 import { TypedEdgeQL } from './edgeql';
 import { cleanError } from './errors';
 import { InlineQueryRuntimeMap } from './generated-client/inline-queries';
-import { ApplyOptions, OptionsContext } from './options.context';
+import { type ApplyOptions, OptionsContext } from './options.context';
 import { Client } from './reexports';
 import { TransactionContext } from './transaction.context';
 

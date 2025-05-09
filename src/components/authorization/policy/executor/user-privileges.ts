@@ -1,16 +1,20 @@
 import {
-  ChildListsKey,
-  ChildSinglesKey,
-  EnhancedResource,
-  ResourceShape,
-  SecuredPropsPlusExtraKey,
-  Session,
+  type ChildListsKey,
+  type ChildSinglesKey,
+  type EnhancedResource,
+  type ResourceShape,
+  type SecuredPropsPlusExtraKey,
+  type Session,
 } from '~/common';
-import { Power } from '../../dto';
+import { type Power } from '../../dto';
 import { MissingPowerException } from '../../missing-power.exception';
-import { ChildListAction, ChildSingleAction, PropAction } from '../actions';
-import { ResourceObjectContext } from '../object.type';
-import { PolicyExecutor } from './policy-executor';
+import {
+  type ChildListAction,
+  type ChildSingleAction,
+  type PropAction,
+} from '../actions';
+import { type ResourceObjectContext } from '../object.type';
+import { type PolicyExecutor } from './policy-executor';
 import { UserEdgePrivileges } from './user-edge-privileges';
 import { UserResourcePrivileges } from './user-resource-privileges';
 

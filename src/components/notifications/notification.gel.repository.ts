@@ -1,14 +1,19 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { mapValues, Nil, setOf } from '@seedcompany/common';
-import { EnhancedResource, ID, PublicOf, ResourceShape } from '~/common';
-import { e, RepoFor, ScopeOf } from '~/core/gel';
+import { mapValues, type Nil, setOf } from '@seedcompany/common';
+import {
+  EnhancedResource,
+  type ID,
+  type PublicOf,
+  type ResourceShape,
+} from '~/common';
+import { e, RepoFor, type ScopeOf } from '~/core/gel';
 import { mapToSetBlock } from '~/core/gel/query-util/map-to-set-block';
 import {
-  MarkNotificationReadArgs,
+  type MarkNotificationReadArgs,
   Notification,
-  NotificationListInput,
+  type NotificationListInput,
 } from './dto';
-import { NotificationRepository as Neo4jRepository } from './notification.repository';
+import { type NotificationRepository as Neo4jRepository } from './notification.repository';
 import { NotificationServiceImpl } from './notification.service';
 
 @Injectable()

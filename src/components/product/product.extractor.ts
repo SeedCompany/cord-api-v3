@@ -2,28 +2,31 @@ import { Injectable } from '@nestjs/common';
 import { entries } from '@seedcompany/common';
 import { parseScripture } from '@seedcompany/scripture';
 import { assert } from 'ts-essentials';
-import { MergeExclusive } from 'type-fest';
-import { CalendarDate, DateInterval } from '~/common';
-import { Cell, Column, Row } from '~/common/xlsx.util';
-import { Downloadable } from '../file/dto';
+import { type MergeExclusive } from 'type-fest';
+import { type CalendarDate, type DateInterval } from '~/common';
+import { type Cell, type Column, type Row } from '~/common/xlsx.util';
+import { type Downloadable } from '../file/dto';
 import {
   extractScripture,
   findStepColumns,
   isGoalRow,
   isGoalStepPlannedInsideProject,
   isProgressCompletedOutsideProject,
-  PlanningSheet,
+  type PlanningSheet,
   Pnp,
   stepPlanCompleteDate,
-  WrittenScripturePlanningSheet,
+  type WrittenScripturePlanningSheet,
 } from '../pnp';
 import {
-  PnpPlanningExtractionResult,
+  type PnpPlanningExtractionResult,
   PnpProblemType,
 } from '../pnp/extraction-result';
 import { verifyEngagementDateRangeMatches } from '../pnp/verifyEngagementDateRangeMatches';
-import { ScriptureRange, UnspecifiedScripturePortion } from '../scripture/dto';
-import { ProductStep, ProductStep as Step } from './dto';
+import {
+  ScriptureRange,
+  type UnspecifiedScripturePortion,
+} from '../scripture/dto';
+import { type ProductStep, type ProductStep as Step } from './dto';
 
 @Injectable()
 export class ProductExtractor {

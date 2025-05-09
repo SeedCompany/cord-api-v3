@@ -1,15 +1,15 @@
-import { INestApplication } from '@nestjs/common';
+import { type INestApplication } from '@nestjs/common';
 import got from 'got';
 import {
-  DocumentNode,
-  FormattedExecutionResult,
-  GraphQLFormattedError,
+  type DocumentNode,
+  type FormattedExecutionResult,
+  type GraphQLFormattedError,
   print,
 } from 'graphql';
-import { Merge } from 'type-fest';
+import { type Merge } from 'type-fest';
 import { ConfigService } from '~/core';
 // eslint-disable-next-line import/no-duplicates
-import { ErrorExpectations } from './expect-gql-error';
+import { type ErrorExpectations } from './expect-gql-error';
 // eslint-disable-next-line import/no-duplicates -- ensures runtime execution
 import './expect-gql-error';
 

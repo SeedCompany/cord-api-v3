@@ -1,12 +1,15 @@
 import { cleanJoin, entries } from '@seedcompany/common';
-import { node, Query, relation } from 'cypher-query-builder';
+import { node, type Query, relation } from 'cypher-query-builder';
 import { identity } from 'rxjs';
-import { LiteralUnion } from 'type-fest';
-import { MadeEnum, Order, Resource, ResourceShape } from '~/common';
+import { type LiteralUnion } from 'type-fest';
 import {
-  getDbSortTransformer,
-  SortTransformer,
-} from '~/common/db-sort.decorator';
+  EnhancedResource,
+  type MadeEnum,
+  type Order,
+  Resource,
+  type ResourceShape,
+} from '~/common';
+import { DbSort, type SortTransformer } from '~/common/db-sort.decorator';
 import { apoc } from './cypher-functions';
 import { ACTIVE } from './matching';
 
@@ -128,7 +131,7 @@ export const defineSorters = <TResourceStatic extends ResourceShape<any>>(
   matchers: SortMatchers<SortFieldOf<TResourceStatic>>,
 ): DefinedSorters<SortFieldOf<TResourceStatic>> => {
   const fn = ({ sort, order }: Sort<SortFieldOf<TResourceStatic>>) => {
-    const transformer = getDbSortTransformer(resource, sort) ?? identity;
+    const transformer = DbSort.get(resource, sort as string) ?? identity;
     const common = { sort, order, transformer };
 
     const exactCustom = matchers[sort];
@@ -144,8 +147,10 @@ export const defineSorters = <TResourceStatic extends ResourceShape<any>>(
       return { ...common, matcher: subCustom, sort: subField };
     }
 
-    const baseNodeProps = resource.BaseNodeProps ?? Resource.Props;
-    const isBaseNodeProp = baseNodeProps.includes(sort);
+    const baseNodeProps = new Set(
+      resource.BaseNodeProps ?? EnhancedResource.of(Resource).props,
+    );
+    const isBaseNodeProp = baseNodeProps.has(sort);
     const matcher = (isBaseNodeProp ? basePropSorter : propSorter)(sort);
     return { ...common, matcher };
   };

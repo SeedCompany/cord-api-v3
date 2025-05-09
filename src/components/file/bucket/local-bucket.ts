@@ -2,21 +2,21 @@ import {
   GetObjectCommand as GetObject,
   PutObjectCommand as PutObject,
 } from '@aws-sdk/client-s3';
-import { Type } from '@nestjs/common';
+import { type Type } from '@nestjs/common';
 import { bufferFromStream } from '@seedcompany/common';
-import { Command } from '@smithy/smithy-client';
+import { type Command } from '@smithy/smithy-client';
 import { pickBy } from 'lodash';
 import { DateTime, Duration } from 'luxon';
 import { URL } from 'node:url';
-import { firstValueFrom, Observable } from 'rxjs';
+import { firstValueFrom, type Observable } from 'rxjs';
 import { Readable } from 'stream';
 import { assert } from 'ts-essentials';
 import {
   FileBucket,
-  GetObjectOutput,
+  type GetObjectOutput,
   InvalidSignedUrlException,
-  PutObjectInput,
-  SignedOp,
+  type PutObjectInput,
+  type SignedOp,
 } from './file-bucket';
 
 export interface LocalBucketOptions {

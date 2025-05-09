@@ -4,19 +4,19 @@ import {
   Calculated,
   CalendarDate,
   Resource,
-  ResourceShape,
+  type ResourceShape,
   SecuredDateNullable,
   SecuredProperty,
-  SecuredProps,
+  type SecuredProps,
   SecuredStringNullable,
   Sensitivity,
   SensitivityField,
 } from '~/common';
-import { BaseNode as DbBaseNode } from '~/core/database/results';
+import { type BaseNode as DbBaseNode } from '~/core/database/results';
 import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
-import { ScopedRole } from '../../authorization/dto';
-import { DefinedFile } from '../../file/dto';
+import { type ScopedRole } from '../../authorization/dto';
+import { type DefinedFile } from '../../file/dto';
 import { ReportType } from './report-type.enum';
 
 @RegisterResource({ db: e.PeriodicReport })

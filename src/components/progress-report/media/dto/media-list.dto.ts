@@ -5,8 +5,8 @@ import {
   Variant,
   VariantInputField,
 } from '~/common';
-import { ProgressReport } from '../../dto';
-import { MediaVariant, ProgressReportMedia } from './media.dto';
+import { type ProgressReport } from '../../dto';
+import { type MediaVariant, ProgressReportMedia } from './media.dto';
 
 @InputType()
 export class ProgressReportMediaListInput extends SortablePaginationInput<

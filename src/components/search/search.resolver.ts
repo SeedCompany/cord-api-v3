@@ -1,5 +1,5 @@
 import { Query, Resolver } from '@nestjs/graphql';
-import { AnonSession, ListArg, Session } from '~/common';
+import { AnonSession, ListArg, type Session } from '~/common';
 import { SearchInput, SearchOutput } from './dto';
 import { SearchService } from './search.service';
 

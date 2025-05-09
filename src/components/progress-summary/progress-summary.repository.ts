@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { cleanJoin, isNotFalsy, mapValues, setOf } from '@seedcompany/common';
-import { inArray, node, Query, relation } from 'cypher-query-builder';
-import { ID } from '~/common';
+import { inArray, node, type Query, relation } from 'cypher-query-builder';
+import { type ID } from '~/common';
 import { CommonRepository } from '~/core/database';
 import {
   ACTIVE,
@@ -9,15 +9,15 @@ import {
   filter,
   listConcat,
   merge,
-  SortCol,
+  type SortCol,
 } from '~/core/database/query';
 import { WhereExp } from '~/core/database/query/where-and-list';
-import { ProgressReport } from '../progress-report/dto';
+import { type ProgressReport } from '../progress-report/dto';
 import {
-  FetchedSummaries,
+  type FetchedSummaries,
   ProgressSummary,
   ProgressSummaryFilters,
-  SummaryPeriod,
+  type SummaryPeriod,
 } from './dto';
 
 @Injectable()

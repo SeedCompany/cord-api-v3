@@ -1,4 +1,4 @@
-import { ArgumentsHost } from '@nestjs/common';
+import { type ArgumentsHost } from '@nestjs/common';
 import { lowerCase, upperFirst } from 'lodash';
 import type { ExclusivityViolationError } from '~/core/gel';
 import { InputException } from './input.exception';

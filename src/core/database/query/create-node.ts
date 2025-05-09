@@ -1,16 +1,16 @@
 import { entries } from '@seedcompany/common';
-import { node, Query, relation } from 'cypher-query-builder';
+import { node, type Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
 import {
   EnhancedResource,
   generateId,
-  ID,
-  Resource,
-  ResourceShape,
-  UnsecuredDto,
+  type ID,
+  type Resource,
+  type ResourceShape,
+  type UnsecuredDto,
 } from '~/common';
-import { LinkTo } from '~/core';
-import { FileId } from '../../../components/file/dto';
+import { type LinkTo } from '~/core';
+import { type FileId } from '../../../components/file/dto';
 import { Variable } from '../query-augmentation/condition-variables';
 
 export interface CreateNodeOptions<TResourceStatic extends ResourceShape<any>> {

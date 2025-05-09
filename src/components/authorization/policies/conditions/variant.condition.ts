@@ -1,11 +1,16 @@
-import { Query } from 'cypher-query-builder';
-import { inspect, InspectOptionsStylized } from 'util';
-import { Many, ResourceShape, Variant, VariantOf } from '~/common';
+import { type Query } from 'cypher-query-builder';
+import { inspect, type InspectOptionsStylized } from 'util';
 import {
-  AsCypherParams,
-  Condition,
+  type Many,
+  type ResourceShape,
+  type Variant,
+  type VariantOf,
+} from '~/common';
+import {
+  type AsCypherParams,
+  type Condition,
   eqlInLiteralSet,
-  IsAllowedParams,
+  type IsAllowedParams,
   MissingContextException,
 } from '../../policy/conditions';
 

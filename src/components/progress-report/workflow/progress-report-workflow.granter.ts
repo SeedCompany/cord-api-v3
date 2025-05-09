@@ -1,18 +1,18 @@
 import { entries } from '@seedcompany/common';
-import { Query } from 'cypher-query-builder';
-import { inspect, InspectOptionsStylized } from 'util';
-import { ID, isIdLike, Many } from '~/common';
+import { type Query } from 'cypher-query-builder';
+import { inspect, type InspectOptionsStylized } from 'util';
+import { type ID, isIdLike, type Many } from '~/common';
 import { Granter, ResourceGranter } from '../../authorization';
 import { action } from '../../authorization/policy/builder/perm-granter';
-import { PropsGranterFn } from '../../authorization/policy/builder/resource-granter';
+import { type PropsGranterFn } from '../../authorization/policy/builder/resource-granter';
 import {
-  Condition,
+  type Condition,
   eqlInLiteralSet,
-  IsAllowedParams,
+  type IsAllowedParams,
 } from '../../authorization/policy/conditions';
-import { ProgressReportStatus } from '../dto';
+import { type ProgressReportStatus } from '../dto';
 import { ProgressReportWorkflowEvent as Event } from './dto/workflow-event.dto';
-import { TransitionName, Transitions } from './transitions';
+import { type TransitionName, Transitions } from './transitions';
 
 // As string literal so policies don't have to import enum
 type Status = `${ProgressReportStatus}`;

@@ -1,6 +1,6 @@
 import { mapValues } from '@seedcompany/common';
-import { ResourceShape } from '~/common';
-import { all, any, Condition } from '../conditions';
+import { type ResourceShape } from '~/common';
+import { all, any, type Condition } from '../conditions';
 
 export type Permissions<TAction extends string> = {
   readonly [A in TAction]?: Permission;

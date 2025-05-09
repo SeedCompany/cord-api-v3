@@ -3,36 +3,36 @@ import {
   entries,
   isNotFalsy,
   many,
-  Many,
+  type Many,
   mapKeys,
-  Nil,
+  type Nil,
   setOf,
 } from '@seedcompany/common';
 import { LazyGetter as Once } from 'lazy-get-decorator';
 import { lowerCase } from 'lodash';
-import { AbstractClass } from 'type-fest';
+import { type AbstractClass } from 'type-fest';
 import {
   ClientException,
-  DBName,
+  type DBName,
   EnhancedResource,
-  EnumType,
-  DBType as GetDBType,
-  ID,
+  type EnumType,
+  type DBType as GetDBType,
+  type ID,
   isSortablePaginationInput,
   makeEnum,
   NotFoundException,
-  PaginatedListType,
-  PaginationInput,
-  ResourceShape,
-  SortablePaginationInput,
+  type PaginatedListType,
+  type PaginationInput,
+  type ResourceShape,
+  type SortablePaginationInput,
 } from '~/common';
-import { ResourceLike } from '~/core';
+import { type ResourceLike } from '~/core';
 import { Privileges } from '../../components/authorization';
 import { getChanges } from '../database/changes';
 import { privileges } from '../database/dto.repository';
 import { CommonRepository } from './common.repository';
 import type { $linkPropify } from './generated-client/path';
-import {
+import type {
   $expr_Select,
   normaliseShape,
   objectTypeToSelectShape,
@@ -40,10 +40,13 @@ import {
   SelectFilterExpression,
   SelectModifiers,
 } from './generated-client/select';
-import { UpdateShape } from './generated-client/update';
-import { EasyInsertShape, EasyUpdateShape } from './query-util/easy-insert';
+import { type UpdateShape } from './generated-client/update';
+import type {
+  EasyInsertShape,
+  EasyUpdateShape,
+} from './query-util/easy-insert';
 import { mapToSetBlock } from './query-util/map-to-set-block';
-import { $, e } from './reexports';
+import { type $, e } from './reexports';
 
 /**
  * A repository for a simple DTO. This provides a few methods out of the box.

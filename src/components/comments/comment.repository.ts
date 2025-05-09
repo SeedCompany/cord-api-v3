@@ -1,9 +1,9 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { node, Query, relation } from 'cypher-query-builder';
+import { node, type Query, relation } from 'cypher-query-builder';
 import { DateTime } from 'luxon';
-import { ID, Session, UnsecuredDto } from '~/common';
+import { type ID, type Session, type UnsecuredDto } from '~/common';
 import { DtoRepository } from '~/core/database';
-import { ChangesOf } from '~/core/database/changes';
+import { type ChangesOf } from '~/core/database/changes';
 import {
   ACTIVE,
   createNode,
@@ -18,9 +18,9 @@ import {
 import { CommentThreadRepository } from './comment-thread.repository';
 import {
   Comment,
-  CommentListInput,
-  CreateCommentInput,
-  UpdateCommentInput,
+  type CommentListInput,
+  type CreateCommentInput,
+  type UpdateCommentInput,
 } from './dto';
 
 @Injectable()

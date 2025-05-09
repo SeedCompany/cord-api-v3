@@ -1,7 +1,7 @@
-import { ID, ObjectView } from '~/common';
+import { type ID, type ObjectView } from '~/common';
 import { LoaderFactory, ObjectViewAwareLoader } from '~/core';
 import {
-  Engagement,
+  type Engagement,
   IEngagement,
   InternshipEngagement,
   LanguageEngagement,

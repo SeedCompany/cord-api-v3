@@ -1,4 +1,4 @@
-import { EventsHandler, IEventHandler } from '~/core';
+import { EventsHandler, type IEventHandler } from '~/core';
 import { ProjectStatus, stepToStatus } from '../../project/dto';
 import { ProjectTransitionedEvent } from '../../project/workflow/events/project-transitioned.event';
 import { BudgetService } from '../budget.service';
@@ -41,7 +41,7 @@ export class UpdateProjectBudgetStatusHandler
       session,
     );
 
-    const budget = budgets.items.find((b) => b.status === change![0]);
+    const budget = budgets.items.find((b) => b.status === change[0]);
     if (!budget) {
       return;
     }

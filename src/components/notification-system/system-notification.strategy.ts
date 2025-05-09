@@ -1,4 +1,4 @@
-import { node, Query } from 'cypher-query-builder';
+import { node, type Query } from 'cypher-query-builder';
 import { e } from '~/core/gel';
 import { INotificationStrategy, NotificationStrategy } from '../notifications';
 import { SystemNotification } from './system-notification.dto';

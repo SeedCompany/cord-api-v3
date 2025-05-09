@@ -1,4 +1,4 @@
-import { FactoryProvider } from '@nestjs/common/interfaces';
+import { type FactoryProvider } from '@nestjs/common/interfaces';
 import { csv } from '@seedcompany/common';
 import { AsyncLocalStorage } from 'async_hooks';
 import { stripIndent } from 'common-tags';
@@ -6,12 +6,12 @@ import { Connection } from 'cypher-query-builder';
 import type { Driver, Config as DriverConfig, Session } from 'neo4j-driver';
 import type { LoggerFunction } from 'neo4j-driver-core/types/types';
 import type QueryRunner from 'neo4j-driver/types/query-runner';
-import { Merge } from 'type-fest';
+import { type Merge } from 'type-fest';
 import { fileURLToPath } from 'url';
 import { dropSecrets } from '~/common/mask-secrets';
 import { ConfigService } from '../config/config.service';
 import { jestSkipFileInExceptionSource } from '../exception';
-import { ILogger, LoggerToken, LogLevel } from '../logger';
+import { type ILogger, LoggerToken, LogLevel } from '../logger';
 import { AFTER_MESSAGE } from '../logger/formatters';
 import { TracingService } from '../tracing';
 import { DbTraceLayer } from './database.service';
@@ -23,7 +23,7 @@ import {
 import { highlight } from './highlight-cypher.util';
 import { ParameterTransformer } from './parameter-transformer.service';
 // eslint-disable-next-line import/no-duplicates
-import { Neo4jTransaction as Transaction } from './transaction';
+import { type Neo4jTransaction as Transaction } from './transaction';
 import { TransactionRetryInformer } from './transaction-retry.informer';
 import { MyTransformer } from './transformer';
 // eslint-disable-next-line import/no-duplicates

@@ -2,7 +2,7 @@ import { applyDecorators } from '@nestjs/common';
 import { Book } from '@seedcompany/scripture';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { Writable as Mutable } from 'type-fest';
+import type { Writable as Mutable } from 'type-fest';
 import { ScriptureReferenceInput } from './scripture-reference.dto';
 
 class ScriptureReferenceStartInput extends ScriptureReferenceInput {

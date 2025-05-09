@@ -1,12 +1,12 @@
 import { faker } from '@faker-js/faker';
 import { times } from 'lodash';
 import { firstLettersOfWords, isValidId } from '~/common';
-import { Organization } from '../src/components/organization/dto';
-import { SecuredTimeZone } from '../src/components/timezone/timezone.dto';
+import { type Organization } from '../src/components/organization/dto';
+import { type SecuredTimeZone } from '../src/components/timezone/timezone.dto';
 import {
-  UpdateUser,
-  UpdateUserInput,
-  User,
+  type UpdateUser,
+  type UpdateUserInput,
+  type User,
   UserStatus,
 } from '../src/components/user/dto';
 import {
@@ -22,12 +22,12 @@ import {
   gql,
   login,
   loginAsAdmin,
-  Raw,
+  type Raw,
   registerUser,
   runInIsolatedSession,
-  TestApp,
+  type TestApp,
 } from './utility';
-import { RawUser } from './utility/fragments';
+import { type RawUser } from './utility/fragments';
 
 describe('User e2e', () => {
   let app: TestApp;

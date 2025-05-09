@@ -1,21 +1,21 @@
 import { Injectable } from '@nestjs/common';
 import {
-  ID,
-  ObjectView,
+  type ID,
+  type ObjectView,
   ServerException,
-  Session,
-  UnsecuredDto,
+  type Session,
+  type UnsecuredDto,
 } from '~/common';
 import { HandleIdLookup } from '~/core';
 import { ifDiff } from '~/core/database/changes';
 import { Privileges } from '../authorization';
 import { isScriptureEqual } from '../scripture';
 import {
-  CreateFilm,
+  type CreateFilm,
   Film,
-  FilmListInput,
-  FilmListOutput,
-  UpdateFilm,
+  type FilmListInput,
+  type FilmListOutput,
+  type UpdateFilm,
 } from './dto';
 import { FilmRepository } from './film.repository';
 

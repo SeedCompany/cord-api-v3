@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { node, Query, relation } from 'cypher-query-builder';
-import { Session, UnsecuredDto } from '~/common';
+import { node, type Query, relation } from 'cypher-query-builder';
+import { type Session, type UnsecuredDto } from '~/common';
 import { DtoRepository } from '~/core/database';
 import {
   ACTIVE,
@@ -21,7 +21,7 @@ import { progressSummaryFilters } from '../progress-summary/progress-summary.rep
 import {
   ProgressReport,
   ProgressReportFilters,
-  ProgressReportListInput,
+  type ProgressReportListInput,
 } from './dto';
 import { ProgressReportExtraForPeriodicInterfaceRepository } from './progress-report-extra-for-periodic-interface.repository';
 

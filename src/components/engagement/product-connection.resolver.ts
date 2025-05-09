@@ -1,6 +1,6 @@
 import { Info, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { Fields, IsOnlyId } from '~/common';
-import { Loader, LoaderOf } from '~/core';
+import { Loader, type LoaderOf } from '~/core';
 import { Product } from '../product/dto';
 import { LanguageEngagement } from './dto';
 import { EngagementLoader } from './engagement.loader';

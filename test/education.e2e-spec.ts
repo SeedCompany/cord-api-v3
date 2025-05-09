@@ -1,15 +1,15 @@
 import { faker } from '@faker-js/faker';
 import { times } from 'lodash';
 import { isValidId, Role } from '~/common';
-import { User } from '../src/components/user/dto';
-import { Education } from '../src/components/user/education/dto';
+import { type User } from '../src/components/user/dto';
+import { type Education } from '../src/components/user/education/dto';
 import {
   createEducation,
   createSession,
   createTestApp,
   gql,
   registerUser,
-  TestApp,
+  type TestApp,
 } from './utility';
 import { fragments } from './utility/fragments';
 

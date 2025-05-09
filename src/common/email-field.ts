@@ -1,5 +1,5 @@
 import { applyDecorators } from '@nestjs/common';
-import { Field, FieldOptions } from '@nestjs/graphql';
+import { Field, type FieldOptions } from '@nestjs/graphql';
 import { Transform } from './transform.decorator';
 import { IsEmail } from './validators';
 

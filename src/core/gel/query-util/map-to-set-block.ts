@@ -1,6 +1,6 @@
 import { many, mapEntries } from '@seedcompany/common';
 import { ServerException } from '~/common';
-import { $, e } from '../reexports';
+import { type $, e } from '../reexports';
 
 export const mapToSetBlock = (
   type: $.$expr_PathNode,

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { node, Query, relation } from 'cypher-query-builder';
-import { ID, Session, UnsecuredDto } from '~/common';
+import { node, type Query, relation } from 'cypher-query-builder';
+import { type ID, type Session, type UnsecuredDto } from '~/common';
 import { DtoRepository } from '~/core/database';
 import {
   ACTIVE,
@@ -15,10 +15,10 @@ import {
 } from '~/core/database/query';
 import { ProjectType as Program } from '../project/dto/project-type.enum';
 import {
-  CreateFundingAccount,
+  type CreateFundingAccount,
   FundingAccount,
-  FundingAccountListInput,
-  UpdateFundingAccount,
+  type FundingAccountListInput,
+  type UpdateFundingAccount,
 } from './dto';
 
 const blockOfAccount = (accountNumber: number) => [

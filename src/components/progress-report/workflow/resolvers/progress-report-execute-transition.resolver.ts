@@ -1,5 +1,5 @@
 import { Args, Mutation, Resolver } from '@nestjs/graphql';
-import { LoggedInSession, Session } from '~/common';
+import { LoggedInSession, type Session } from '~/common';
 import { ResourceLoader } from '~/core';
 import { ProgressReport } from '../../dto';
 import { ExecuteProgressReportTransitionInput } from '../dto/execute-progress-report-transition.input';

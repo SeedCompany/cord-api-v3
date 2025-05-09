@@ -1,6 +1,6 @@
-import { ID } from '~/common';
+import { type ID } from '~/common';
 import { LoaderFactory, OrderedNestDataLoader } from '~/core';
-import { Directory, File, FileNode, FileVersion } from './dto';
+import { Directory, File, type FileNode, FileVersion } from './dto';
 import { FileService } from './file.service';
 
 @LoaderFactory(() => [Directory, File, FileVersion])

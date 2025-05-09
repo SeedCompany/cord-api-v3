@@ -1,5 +1,5 @@
 import { isNotFalsy } from '@seedcompany/common';
-import { Query } from 'cypher-query-builder';
+import { type Query } from 'cypher-query-builder';
 
 export const maybeWhereAnd =
   (...comparisons: Array<string | null | undefined | false>) =>

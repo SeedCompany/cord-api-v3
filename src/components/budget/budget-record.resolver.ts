@@ -5,8 +5,8 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { LoggedInSession, mapSecuredValue, Session } from '~/common';
-import { Loader, LoaderOf } from '~/core';
+import { LoggedInSession, mapSecuredValue, type Session } from '~/common';
+import { Loader, type LoaderOf } from '~/core';
 import { OrganizationLoader } from '../organization';
 import { SecuredOrganization } from '../organization/dto';
 import { BudgetService } from './budget.service';

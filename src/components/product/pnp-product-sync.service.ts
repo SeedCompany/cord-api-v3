@@ -4,23 +4,26 @@ import { labelOfVerseRanges } from '@seedcompany/scripture';
 import { stripIndent } from 'common-tags';
 import { difference, uniq } from 'lodash';
 import { DateTime } from 'luxon';
-import { DateInterval, ID, Session } from '~/common';
+import { DateInterval, type ID, type Session } from '~/common';
 import { ILogger, Logger, ResourceLoader } from '~/core';
-import { Downloadable, FileVersion } from '../file/dto';
-import { PnpExtractionResult, PnpProblemType } from '../pnp/extraction-result';
+import { type Downloadable, type FileVersion } from '../file/dto';
+import {
+  type PnpExtractionResult,
+  PnpProblemType,
+} from '../pnp/extraction-result';
 import { StoryService } from '../story';
 import {
-  CreateDerivativeScriptureProduct,
-  CreateDirectScriptureProduct,
+  type CreateDerivativeScriptureProduct,
+  type CreateDirectScriptureProduct,
   DerivativeScriptureProduct,
   ProducibleType,
-  ProductMethodology,
-  ProductStep,
+  type ProductMethodology,
+  type ProductStep,
   ProgressMeasurement,
-  UpdateDerivativeScriptureProduct,
-  UpdateDirectScriptureProduct,
+  type UpdateDerivativeScriptureProduct,
+  type UpdateDirectScriptureProduct,
 } from './dto';
-import { ExtractedRow, ProductExtractor } from './product.extractor';
+import { type ExtractedRow, ProductExtractor } from './product.extractor';
 import { ProductRepository } from './product.repository';
 import { ProductService } from './product.service';
 

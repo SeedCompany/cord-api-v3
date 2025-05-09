@@ -2,23 +2,23 @@ import { Field, Int, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { simpleSwitch } from '@seedcompany/common';
 import { stripIndent } from 'common-tags';
 import { DateTime } from 'luxon';
-import { Readable } from 'stream';
+import { type Readable } from 'stream';
 import { keys as keysOf } from 'ts-transformer-keys';
-import { MergeExclusive } from 'type-fest';
+import { type MergeExclusive } from 'type-fest';
 import {
   DateTimeField,
   DbLabel,
-  ID,
-  IdOf,
+  type ID,
+  type IdOf,
   InputException,
   NameField,
   Resource,
-  Secured,
+  type Secured,
   SecuredProperty,
-  SecuredProps,
+  type SecuredProps,
   ServerException,
 } from '~/common';
-import { BaseNode } from '~/core/database/results';
+import { type BaseNode } from '~/core/database/results';
 import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
 import { FileNodeType } from './file-node-type.enum';
@@ -82,7 +82,7 @@ abstract class FileNode extends Resource {
 
 // class name has to match schema name for interface resolvers to work.
 // export as different names to maintain compatibility with our codebase.
-export { FileNode as IFileNode, AnyFileNode as FileNode };
+export { FileNode as IFileNode, type AnyFileNode as FileNode };
 
 @ObjectType({
   isAbstract: true,

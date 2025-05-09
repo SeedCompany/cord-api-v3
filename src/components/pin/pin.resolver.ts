@@ -1,13 +1,13 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import {
-  ID,
+  type ID,
   IdArg,
   ListArg,
   LoggedInSession,
   NotImplementedException,
-  Session,
+  type Session,
 } from '~/common';
-import { PinnedListInput, PinnedListOutput } from './dto';
+import { PinnedListInput, type PinnedListOutput } from './dto';
 import { PinService } from './pin.service';
 
 @Resolver()

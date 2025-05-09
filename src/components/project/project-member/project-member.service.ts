@@ -1,27 +1,27 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { MaybeAsync } from '@seedcompany/common';
+import { type MaybeAsync } from '@seedcompany/common';
 import { difference } from 'lodash';
 import {
-  ID,
+  type ID,
   InputException,
   NotFoundException,
-  ObjectView,
-  Role,
+  type ObjectView,
+  type Role,
   ServerException,
-  Session,
+  type Session,
   UnauthorizedException,
-  UnsecuredDto,
+  type UnsecuredDto,
 } from '~/common';
 import { HandleIdLookup, ResourceLoader } from '~/core';
 import { Privileges } from '../../authorization';
 import { UserService } from '../../user';
-import { User } from '../../user/dto';
+import { type User } from '../../user/dto';
 import {
-  CreateProjectMember,
+  type CreateProjectMember,
   ProjectMember,
-  ProjectMemberListInput,
-  ProjectMemberListOutput,
-  UpdateProjectMember,
+  type ProjectMemberListInput,
+  type ProjectMemberListOutput,
+  type UpdateProjectMember,
 } from './dto';
 import { ProjectMemberRepository } from './project-member.repository';
 

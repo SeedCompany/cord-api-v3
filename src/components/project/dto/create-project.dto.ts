@@ -7,19 +7,19 @@ import {
   CalendarDate,
   DateField,
   DateTimeField,
-  ID,
+  type ID,
   IdField,
-  IdOf,
+  type IdOf,
   IsId,
   NameField,
   Sensitivity,
   SensitivityField,
 } from '~/common';
-import { Location } from '../../location/dto';
+import { type Location } from '../../location/dto';
 import { ReportPeriod } from '../../periodic-report/dto';
 import { ProjectStep } from './project-step.enum';
 import { ProjectType } from './project-type.enum';
-import { IProject, Project } from './project.dto';
+import { IProject, type Project } from './project.dto';
 
 @InputType()
 export abstract class CreateProject {

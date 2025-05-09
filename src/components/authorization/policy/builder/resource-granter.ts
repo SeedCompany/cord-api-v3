@@ -1,11 +1,16 @@
-import { EnhancedResource, many, Many, ResourceShape } from '~/common';
-import { ResourceAction } from '../actions';
+import {
+  type EnhancedResource,
+  many,
+  type Many,
+  type ResourceShape,
+} from '~/common';
+import { type ResourceAction } from '../actions';
 import {
   ChildRelationshipGranter,
-  ChildRelationshipsGranter,
+  type ChildRelationshipsGranter,
 } from './child-relationship-granter';
 import { action, extract, PermGranter } from './perm-granter';
-import { PropGranter, PropsGranter } from './prop-granter';
+import { PropGranter, type PropsGranter } from './prop-granter';
 
 export const withOther = Symbol('ResourceGranter.withOther');
 

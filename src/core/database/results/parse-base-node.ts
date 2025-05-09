@@ -1,6 +1,6 @@
 import type { Node } from 'cypher-query-builder';
-import { DateTime } from 'luxon';
-import { ID, isIdLike } from '~/common';
+import { type DateTime } from 'luxon';
+import { type ID, isIdLike } from '~/common';
 
 export interface BaseNode {
   identity: string;

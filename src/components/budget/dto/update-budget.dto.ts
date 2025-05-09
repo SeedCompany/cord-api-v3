@@ -1,11 +1,11 @@
 import { Field, Float, InputType, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { ID, IdField } from '~/common';
+import { type ID, IdField } from '~/common';
 import { ChangesetIdField } from '../../changeset';
 import { CreateDefinedFileVersionInput } from '../../file/dto';
 import { BudgetRecord } from './budget-record.dto';
-import { BudgetStatus } from './budget-status.enum';
+import { type BudgetStatus } from './budget-status.enum';
 import { Budget } from './budget.dto';
 
 @InputType()

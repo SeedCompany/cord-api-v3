@@ -1,6 +1,12 @@
 import { LazyGetter as Once } from 'lazy-get-decorator';
 import { fullFiscalQuarter, isQuarterNumber, isReasonableYear } from '~/common';
-import { Column, Range, Row, Sheet, WorkBook } from '~/common/xlsx.util';
+import {
+  type Column,
+  type Range,
+  type Row,
+  Sheet,
+  type WorkBook,
+} from '~/common/xlsx.util';
 
 export abstract class ProgressSheet extends Sheet {
   static register(book: WorkBook) {

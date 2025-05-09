@@ -1,6 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { inArray, node, Query, relation } from 'cypher-query-builder';
-import { ID, Order, PublicOf, Session, UnsecuredDto } from '~/common';
+import { inArray, node, type Query, relation } from 'cypher-query-builder';
+import {
+  type ID,
+  Order,
+  type PublicOf,
+  type Session,
+  type UnsecuredDto,
+} from '~/common';
 import { DtoRepository } from '~/core/database';
 import {
   ACTIVE,
@@ -11,12 +17,12 @@ import {
   requestingUser,
   sorting,
 } from '~/core/database/query';
-import { IProject, ProjectStep, stepToStatus } from '../dto';
+import { IProject, type ProjectStep, stepToStatus } from '../dto';
 import {
-  ExecuteProjectTransitionInput,
+  type ExecuteProjectTransitionInput,
   ProjectWorkflowEvent as WorkflowEvent,
 } from './dto';
-import { ProjectWorkflowRepository } from './project-workflow.repository';
+import { type ProjectWorkflowRepository } from './project-workflow.repository';
 
 @Injectable()
 export class ProjectWorkflowNeo4jRepository

@@ -1,16 +1,16 @@
-import { Query } from 'cypher-query-builder';
+import { type Query } from 'cypher-query-builder';
 import { intersection } from 'lodash';
-import { inspect, InspectOptionsStylized } from 'util';
-import { ResourceShape, Role } from '~/common';
+import { inspect, type InspectOptionsStylized } from 'util';
+import { type ResourceShape, type Role } from '~/common';
 import { matchProjectScopedRoles, variable } from '~/core/database/query';
-import { rolesForScope, ScopedRole, splitScope } from '../../dto/role.dto';
+import { rolesForScope, type ScopedRole, splitScope } from '../../dto/role.dto';
 import {
-  AsCypherParams,
-  AsEdgeQLParams,
-  Condition,
+  type AsCypherParams,
+  type AsEdgeQLParams,
+  type Condition,
   eqlDoesIntersect,
   fqnRelativeTo,
-  IsAllowedParams,
+  type IsAllowedParams,
   MissingContextException,
 } from '../../policy/conditions';
 

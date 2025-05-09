@@ -2,10 +2,10 @@ import { stripIndent } from 'common-tags';
 import { DateTime } from 'luxon';
 import { DateInterval } from '~/common';
 import {
-  PnpPlanningExtractionResult,
+  type PnpPlanningExtractionResult,
   PnpProblemType,
 } from './extraction-result';
-import { PlanningSheet } from './planning-sheet';
+import { type PlanningSheet } from './planning-sheet';
 
 export function verifyEngagementDateRangeMatches(
   sheet: PlanningSheet,
