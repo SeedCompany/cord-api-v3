@@ -1,133 +1,164 @@
-import { Head, Section, Text } from '@seedcompany/nestjs-email/templates';
+import {
+  Column,
+  Text as Head,
+  Section,
+  Text,
+} from '@seedcompany/nestjs-email/templates';
+import type { Verse } from '@seedcompany/scripture';
+import type { Range } from '~/common';
 import { type Engagement } from '../../../components/engagement/dto';
 import { type Language } from '../../../components/language/dto';
+import { type Project } from '../../../components/project/dto';
 import { type User } from '../../../components/user/dto';
 import { EmailTemplate } from './base';
 import { useFrontendUrl } from './frontend-url';
+import { LanguageRef } from './user-ref';
 
 export interface GoalCompletedProps {
-  recipient: Pick<
-    User,
-    'email' | 'displayFirstName' | 'displayLastName' | 'timezone'
-  >;
+  recipient: User;
+  project: Pick<Project, 'id' | 'name'>;
   engagement: Pick<Engagement, 'id'>;
   language: Pick<Language, 'id' | 'name' | 'ethnologue'>;
-  products: Array<{
-    id: string;
-    name: string;
-  }>;
+  completedBooks: ReadonlyArray<Range<Verse>>;
 }
 
 export function GoalCompleted({
-  recipient,
   language,
-  products,
+  project,
+  completedBooks,
   engagement,
 }: GoalCompletedProps) {
-  const engagementUrl = useFrontendUrl(`/engagements/${engagement.id}`);
   const languageName = language.name.value;
-  const title = `Next Steps for Uploading ${languageName || 'Language'}`;
-
   return (
-    <EmailTemplate title={title}>
-      Dear {recipient.displayFirstName.value},
+    <EmailTemplate title={`${languageName || 'Language'} needs a DBL upload`}>
       <Section>
-        <Text>
-          I’m reaching out regarding the{' '}
-          <a href={engagementUrl}>{languageName}</a> project{' '}
-          {language.ethnologue.name.value}, which has recently indicated
-          reaching All Access goals. Our records identify you as the Field
-          Project Manager (FPM), and we’d like to confirm the next steps for
-          uploading the text to the Digital Bible Library (DBL).
-        </Text>
-        {products.map((product) => (
-          <Text>{product.name}</Text>
-        ))}
-        <Text>
-          To move forward, we need a few details from you. Please have your
-          field partner complete this short form to provide the necessary
-          information indicated below:
-        </Text>
+        <Column>
+          <Text>
+            <LanguageRef {...language} /> has recently indicated reaching some
+            All Access goals via{' '}
+            <a href={useFrontendUrl(`/engagements/${engagement.id}`)}>
+              {project.name.value ?? 'Some Project'}
+            </a>
+            .
+          </Text>
+          <Text>
+            Books:{' '}
+            {completedBooks.map((range) => range.start.book.name).join(', ')}
+          </Text>
+        </Column>
       </Section>
       <Section>
-        <Head>✅ First Step: Who will upload the Scripture to the DBL?</Head>
-        <Text>
-          1. If someone is already responsible for uploading to the DBL, please
-          let us know on the form so we can update our records and avoid
-          unnecessary follow-ups.
-        </Text>
-        <Text>
-          2. If you need Seed Company to upload it to the DBL, we will need
-          additional information.
-        </Text>
+        <Column>
+          <Text>
+            Our records identify you as the Field Project Manager (FPM), and
+            we’d like to confirm the next steps for uploading the text to the
+            Digital Bible Library (DBL).
+          </Text>
+          <Text>
+            To move forward, we need a few details from you. Please have your
+            field partner complete this short form to provide the necessary
+            information indicated below:
+          </Text>
+        </Column>
       </Section>
       <Section>
-        <Head>✅ If Seed Company uploads to the DBL, please provide:</Head>
-        <Text>
-          🔹 Copyright Holder & Licensing – Who will hold the copyright for this
-          text in DBL?
-        </Text>
-        <Text>
-          The copyright holder can be the field partner or Seed Company if
-          needed.
-        </Text>
-        <Text>
-          We also need to confirm the licensing options you prefer for
-          distribution. More details on these options are included in the
-          attached information sheet.
-        </Text>
+        <Column>
+          <Head>✅ First Step: Who will upload the Scripture to the DBL?</Head>
+          <Text>
+            1. If someone is already responsible for uploading to the DBL,
+            please let us know on the form so we can update our records and
+            avoid unnecessary follow-ups.
+          </Text>
+          <Text>
+            2. If you need Seed Company to upload it to the DBL, we will need
+            additional information.
+          </Text>
+        </Column>
       </Section>
       <Section>
-        <Text>
-          🔹 Error-Free Text in Paratext – The text must pass Basic Checks in
-          Paratext without errors.
-        </Text>
-        <Text>
-          A quick way to verify is by printing the text to PDF format using
-          PTXPrint (learn here). Besides, our Investors love to see your
-          progress and this is a great way to share it with them! 😊
-        </Text>
-        <Text>If errors appear, they must be fixed before we can proceed.</Text>
+        <Column>
+          <Head>✅ If Seed Company uploads to the DBL, please provide:</Head>
+          <Text>
+            🔹 Copyright Holder & Licensing – Who will hold the copyright for
+            this text in DBL?
+          </Text>
+          <Text>
+            The copyright holder can be the field partner or Seed Company if
+            needed.
+          </Text>
+          <Text>
+            We also need to confirm the licensing options you prefer for
+            distribution. More details on these options are included in the
+            attached information sheet.
+          </Text>
+        </Column>
       </Section>
       <Section>
-        <Text>
-          🔹 Paratext Project Access – We need access to the project in
-          Paratext.
-        </Text>
-        <Text>
-          Please add SC DBL Admin to the project with the Consultant/Archivist
-          role.
-        </Text>
-        <Text>
-          This permission level is required for us to complete the upload.
-        </Text>
+        <Column>
+          <Text>
+            🔹 Error-Free Text in Paratext – The text must pass Basic Checks in
+            Paratext without errors.
+          </Text>
+          <Text>
+            A quick way to verify is by printing the text to PDF format using
+            PTXPrint (learn here). Besides, our Investors love to see your
+            progress and this is a great way to share it with them! 😊
+          </Text>
+          <Text>
+            If errors appear, they must be fixed before we can proceed.
+          </Text>
+        </Column>
       </Section>
       <Section>
-        <Text>
-          🔹 Books Ready for Upload – Please confirm which books are ready for
-          DBL.
-        </Text>
-        <Text>
-          We can upload an entire testament or individual books that have
-          completed consultant checking.
-        </Text>
+        <Column>
+          <Text>
+            🔹 Paratext Project Access – We need access to the project in
+            Paratext.
+          </Text>
+          <Text>
+            Please add SC DBL Admin to the project with the Consultant/Archivist
+            role.
+          </Text>
+          <Text>
+            This permission level is required for us to complete the upload.
+          </Text>
+        </Column>
       </Section>
       <Section>
-        <Head>
-          🔗{' '}
-          <a href="https://forms.monday.com/forms/7c34605cdaedd9f47918540a0761d821?r=use1">
-            Seed Company DBL Publication Request Form
-          </a>
-        </Head>
+        <Column>
+          <Text>
+            🔹 Books Ready for Upload – Please confirm which books are ready for
+            DBL.
+          </Text>
+          <Text>
+            We can upload an entire testament or individual books that have
+            completed consultant checking.
+          </Text>
+        </Column>
       </Section>
       <Section>
-        <Text>
-          All of this information can be entered in the form linked above (with
-          yellow highlight). Please review the attached information sheet for
-          additional details about the DBL, the process, and licensing options.
-        </Text>
-        <Text>Let me know if you have any questions—I’m happy to assist!</Text>
-        <Text>Best regards, Darcie</Text>
+        <Column>
+          <Head>
+            🔗{' '}
+            <a href="https://forms.monday.com/forms/7c34605cdaedd9f47918540a0761d821?r=use1">
+              Seed Company DBL Publication Request Form
+            </a>
+          </Head>
+        </Column>
+      </Section>
+      <Section>
+        <Column>
+          <Text>
+            All of this information can be entered in the form linked above
+            (with yellow highlight). Please review the attached information
+            sheet for additional details about the DBL, the process, and
+            licensing options.
+          </Text>
+          <Text>
+            Let me know if you have any questions—I’m happy to assist!
+          </Text>
+          <Text>Best regards, Darcie</Text>
+        </Column>
       </Section>
     </EmailTemplate>
   );

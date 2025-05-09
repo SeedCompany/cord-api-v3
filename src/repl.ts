@@ -1,14 +1,21 @@
 import * as commonLib from '@seedcompany/common';
 import { runRepl } from '@seedcompany/nest';
+import { EmailService } from '@seedcompany/nestjs-email';
+import { Book } from '@seedcompany/scripture';
 import * as scripture from '@seedcompany/scripture';
 import { readFileSync } from 'fs';
 import * as fs from 'fs/promises';
 // eslint-disable-next-line no-restricted-imports
 import * as lodash from 'lodash';
 import { DateTime, Duration, Interval } from 'luxon';
-import { CalendarDate, DateInterval } from '~/common';
+import { type DeepPartial } from 'ts-essentials';
+import { CalendarDate, DateInterval, type ID } from '~/common';
 import * as common from '~/common';
 import './polyfills';
+import {
+  GoalCompleted,
+  type GoalCompletedProps,
+} from '~/core/email/templates/product-consultant-checked.template';
 
 runRepl({
   module: () => import('./app.module').then((m) => m.AppModule),
@@ -47,6 +54,25 @@ runRepl({
       sessionFor: session.withRoles,
       Resources,
       loadPnp: (filepath: string) => Pnp.fromBuffer(readFileSync(filepath)),
+      doIt: async () => {
+        await app.get(EmailService).send('', GoalCompleted, {
+          engagement: { id: 'eng' as ID },
+          project: { id: 'proj' as ID, name: { value: 'English 1' } },
+          language: {
+            id: 'eng' as ID,
+            name: { value: 'English' },
+            ethnologue: {
+              code: { value: 'eng' },
+            },
+          },
+          recipient: {},
+          completedBooks: [
+            Book.named('Matthew').full,
+            Book.named('Luke').full,
+            Book.named('Acts').full,
+          ],
+        } satisfies DeepPartial<GoalCompletedProps> as any);
+      },
     };
   },
 });

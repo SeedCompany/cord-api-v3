@@ -3084,8 +3084,8 @@ __metadata:
   linkType: hard
 
 "@seedcompany/common@npm:>0.3 <1, @seedcompany/common@npm:>=0.17 <1, @seedcompany/common@npm:>=0.17 <1.0.0, @seedcompany/common@npm:>=0.19.1 <1, @seedcompany/common@npm:>=0.3.0 <1.0.0":
-  version: 0.19.1
-  resolution: "@seedcompany/common@npm:0.19.1"
+  version: 0.19.2
+  resolution: "@seedcompany/common@npm:0.19.2"
   dependencies:
     type-fest: "npm:^4.37.0"
   peerDependencies:
@@ -3093,7 +3093,7 @@ __metadata:
   peerDependenciesMeta:
     luxon:
       optional: true
-  checksum: 10c0/d34e8591273ee4be08201b7a43c66240677027b155902e2558c8ed6d80274306d785b3675d3ecd68b6da2aa8adc831c23c71f62caa947e267573844abc3f92d8
+  checksum: 10c0/a66e92ba97d3912b7bf77d7f131d3ae1c07d167d19eff8553e60985663faa7ac46fa681e4b4f73587e04277e63ab96239b95789ed4e5a35452f3d7afdb1d6bf1
   languageName: node
   linkType: hard
 
@@ -3149,8 +3149,8 @@ __metadata:
   linkType: hard
 
 "@seedcompany/nest@npm:^1.6.1":
-  version: 1.6.1
-  resolution: "@seedcompany/nest@npm:1.6.1"
+  version: 1.8.0
+  resolution: "@seedcompany/nest@npm:1.8.0"
   dependencies:
     "@nestjs/common": "npm:^10 || ^11"
     "@nestjs/core": "npm:^10 || ^11"
@@ -3167,7 +3167,7 @@ __metadata:
     "@nestjs/graphql": ^12 || ^13
     class-transformer: ^0.5.1
     reflect-metadata: ^0.1.12 || ^0.2.0
-  checksum: 10c0/ea820ab6a0fb245f36a6bc50f9c80f675488d1c46e4151ec38eb6cc10574e3a10bc8844c410ee9169fb5aae1e4ed3a95779c20404ae341f0f0c41ae5a4f20cdf
+  checksum: 10c0/89869ca09f16602d920bc1c2303e479116d87f04da61034042ddcf1d6a5b456d7e824b393fb752693cf04a73f87bf707f371da14cdf5134b9075aacb9154b3b5
   languageName: node
   linkType: hard
 
