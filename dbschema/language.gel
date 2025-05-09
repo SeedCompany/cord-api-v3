@@ -87,7 +87,7 @@ module default {
       select LanguageEngagement filter __source__ = .language
     );
     projects := (
-      select TranslationProject filter __source__ = .languages
+      select TranslationProject filter __source__ in .languages
     );
     overloaded link projectContext: Project::Context {
       default := (insert Project::Context);
