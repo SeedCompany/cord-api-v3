@@ -3194,12 +3194,12 @@ __metadata:
   linkType: hard
 
 "@seedcompany/scripture@npm:>=0.8.0":
-  version: 0.9.0
-  resolution: "@seedcompany/scripture@npm:0.9.0"
+  version: 0.9.1
+  resolution: "@seedcompany/scripture@npm:0.9.1"
   dependencies:
     "@seedcompany/common": "npm:>=0.17 <1.0.0"
     type-fest: "npm:^4.37.0"
-  checksum: 10c0/667893ab528d5723c97ee42d5eb74318209bc2157361f4b9b806c29a67dfa32f09a66cfb5477ec76485574c56d2fc1b44217888f47712d3876edf7a5f65142a1
+  checksum: 10c0/04a55612fbf1c2c075acdf7c5812357b48da8dc60bc93a8635aeaa6dacbb89c7112761c5be975250c841c1b42ce44d21e5925e3b4c765e24d9601af335323348
   languageName: node
   linkType: hard
 
