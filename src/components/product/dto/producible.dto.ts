@@ -6,14 +6,12 @@ import {
 } from '@nestjs/graphql';
 import { type MadeEnum } from '@seedcompany/nest';
 import { stripIndent } from 'common-tags';
-import { keys as keysOf } from 'ts-transformer-keys';
 import {
   type EnumType,
   lazyRef,
   makeEnum,
   Resource,
   SecuredProperty,
-  type SecuredProps,
   type UnsecuredDto,
 } from '~/common';
 import { type SetDbType } from '~/core/database';
@@ -37,9 +35,6 @@ import {
   implements: [Resource],
 })
 export abstract class Producible extends Resource {
-  static readonly Props: string[] = keysOf<Producible>();
-  static readonly SecuredProps: string[] = keysOf<SecuredProps<Producible>>();
-
   @Field(() => SecuredScriptureRanges)
   readonly scriptureReferences: SecuredScriptureRanges &
     SetDbType<DbScriptureReferences | readonly ScriptureRangeInput[]> &

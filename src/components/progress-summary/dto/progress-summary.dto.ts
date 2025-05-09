@@ -1,7 +1,5 @@
 import { Field, Float, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { keys as keysOf } from 'ts-transformer-keys';
-import { type SecuredProps } from '~/common';
 import { type LinkTo } from '~/core/resources';
 
 @ObjectType({
@@ -11,8 +9,6 @@ import { type LinkTo } from '~/core/resources';
   `,
 })
 export abstract class ProgressSummary {
-  static readonly Props = keysOf<ProgressSummary>();
-  static readonly SecuredProps = keysOf<SecuredProps<ProgressSummary>>();
   static readonly BaseNodeProps = ['planned', 'actual'];
 
   @Field(() => Float)

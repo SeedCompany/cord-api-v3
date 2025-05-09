@@ -1,8 +1,6 @@
 import { ArgsType, Field, InputType, ObjectType } from '@nestjs/graphql';
-import { keys as keysOf } from 'ts-transformer-keys';
 import {
   Role,
-  type SecuredProps,
   type SetUnsecuredType,
   Variant,
   VariantInputField,
@@ -19,9 +17,6 @@ export type ProgressVariant = VariantOf<typeof ProgressReportVariantProgress>;
 @RegisterResource()
 @ObjectType()
 export class ProgressReportVariantProgress {
-  static readonly Props = keysOf<ProgressReportVariantProgress>();
-  static readonly SecuredProps =
-    keysOf<SecuredProps<ProgressReportVariantProgress>>();
   static readonly Parent = () =>
     import('../../progress-report/dto/progress-report.dto').then(
       (m) => m.ProgressReport,

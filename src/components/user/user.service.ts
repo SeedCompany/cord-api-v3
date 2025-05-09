@@ -14,7 +14,7 @@ import { HandleIdLookup, ILogger, Logger } from '~/core';
 import { Transactional } from '~/core/database';
 import { property } from '~/core/database/query';
 import { Privileges } from '../authorization';
-import { AssignableRoles } from '../authorization/dto/assignable-roles';
+import { AssignableRoles } from '../authorization/dto/assignable-roles.dto';
 import { LocationService } from '../location';
 import {
   type LocationListInput,

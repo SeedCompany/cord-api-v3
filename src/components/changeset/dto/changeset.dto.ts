@@ -1,6 +1,5 @@
 import { Field, InterfaceType } from '@nestjs/graphql';
-import { keys as keysOf } from 'ts-transformer-keys';
-import { Resource, type SecuredProps } from '~/common';
+import { Resource } from '~/common';
 import { RegisterResource } from '~/core/resources';
 
 @RegisterResource()
@@ -9,8 +8,6 @@ import { RegisterResource } from '~/core/resources';
   resolveType: (obj: Changeset) => obj.__typename,
 })
 export class Changeset extends Resource {
-  static readonly Props: string[] = keysOf<Changeset>();
-  static readonly SecuredProps: string[] = keysOf<SecuredProps<Changeset>>();
   declare __typename: string;
 
   @Field({

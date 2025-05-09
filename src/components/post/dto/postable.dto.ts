@@ -1,12 +1,6 @@
 import { InterfaceType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { keys as keysOf } from 'ts-transformer-keys';
-import {
-  type ID,
-  IdField,
-  type ResourceRelationsShape,
-  type SecuredProps,
-} from '~/common';
+import { type ID, IdField, type ResourceRelationsShape } from '~/common';
 import { e } from '~/core/gel';
 import { RegisterResource } from '~/core/resources';
 import { Post } from './post.dto';
@@ -18,8 +12,6 @@ import { Post } from './post.dto';
   `,
 })
 export abstract class Postable {
-  static readonly Props: string[] = keysOf<Postable>();
-  static readonly SecuredProps: string[] = keysOf<SecuredProps<Postable>>();
   static readonly Relations = {
     posts: [Post],
   } satisfies ResourceRelationsShape;

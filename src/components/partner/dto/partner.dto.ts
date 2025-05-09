@@ -1,6 +1,5 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
-import { keys as keysOf } from 'ts-transformer-keys';
 import {
   DateTimeField,
   IntersectTypes,
@@ -10,7 +9,6 @@ import {
   SecuredBoolean,
   SecuredDateNullable,
   SecuredProperty,
-  type SecuredProps,
   SecuredStringNullable,
   Sensitivity,
   SensitivityField,
@@ -32,8 +30,6 @@ const Interfaces = IntersectTypes(Resource, Pinnable, Postable, Commentable);
   implements: Interfaces.members,
 })
 export class Partner extends Interfaces {
-  static readonly Props = keysOf<Partner>();
-  static readonly SecuredProps = keysOf<SecuredProps<Partner>>();
   static readonly Relations = () =>
     ({
       projects: [IProject],

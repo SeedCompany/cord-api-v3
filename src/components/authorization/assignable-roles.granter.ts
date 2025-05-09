@@ -1,5 +1,5 @@
 import { type Role } from '~/common';
-import { AssignableRoles } from './dto/assignable-roles';
+import { AssignableRoles } from './dto/assignable-roles.dto';
 import { Granter, ResourceGranter } from './policy';
 
 @Granter(AssignableRoles)

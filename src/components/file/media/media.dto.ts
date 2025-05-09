@@ -8,7 +8,6 @@ import {
 } from '@nestjs/graphql';
 import { simpleSwitch } from '@seedcompany/common';
 import { stripIndent } from 'common-tags';
-import { keys as keysOf } from 'ts-transformer-keys';
 import {
   DataObject,
   DbLabel,
@@ -17,7 +16,6 @@ import {
   type IdOf,
   IntersectTypes,
   NameField,
-  type SecuredProps,
   ServerException,
 } from '~/common';
 import { type BaseNode } from '~/core/database/results';
@@ -40,9 +38,6 @@ export const resolveMedia = (val: Pick<AnyMedia, '__typename'>) => {
 @ObjectType({ isAbstract: true })
 @DbLabel(null)
 export class MediaUserMetadata extends DataObject {
-  static readonly Props: string[] = keysOf<MediaUserMetadata>();
-  static readonly SecuredProps: string[] = [];
-
   @NameField({
     description: stripIndent`
       A description of this media for accessibility, especially for screen readers.
@@ -73,9 +68,6 @@ export class MediaUserMetadata extends DataObject {
 })
 @RegisterResource({ db: e.Media })
 export class Media extends MediaUserMetadata {
-  static readonly Props: string[] = keysOf<Media>();
-  static readonly SecuredProps: string[] = keysOf<SecuredProps<Media>>();
-
   declare __typename: unknown;
 
   @IdField()
@@ -119,9 +111,6 @@ export class TemporalMedia extends Media {
   implements: [VisualMedia, Media],
 })
 export class Image extends VisualMedia {
-  static readonly Props = keysOf<Image>();
-  static readonly SecuredProps = keysOf<SecuredProps<Image>>();
-
   declare __typename: 'Image';
 }
 
@@ -129,9 +118,6 @@ export class Image extends VisualMedia {
   implements: [VisualMedia, TemporalMedia, Media],
 })
 export class Video extends IntersectTypes(VisualMedia, TemporalMedia) {
-  static readonly Props = keysOf<Video>();
-  static readonly SecuredProps = keysOf<SecuredProps<Video>>();
-
   declare __typename: 'Video';
 }
 
@@ -139,9 +125,6 @@ export class Video extends IntersectTypes(VisualMedia, TemporalMedia) {
   implements: [TemporalMedia, Media],
 })
 export class Audio extends TemporalMedia {
-  static readonly Props = keysOf<Audio>();
-  static readonly SecuredProps = keysOf<SecuredProps<Audio>>();
-
   declare __typename: 'Audio';
 }
 

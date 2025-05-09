@@ -1,12 +1,10 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { ArrayMaxSize, IsIn } from 'class-validator';
-import { keys as keysOf } from 'ts-transformer-keys';
 import {
   type ID,
   IdField,
   type RichTextDocument,
   RichTextField,
-  type SecuredProps,
   SecuredRichTextNullable,
   SecuredStringList,
   type SetUnsecuredType,
@@ -19,9 +17,6 @@ import { ProgressReportVarianceExplanationReasonOptions as ReasonOptions } from 
 @RegisterResource({ db: e.ProgressReport.VarianceExplanation })
 @ObjectType()
 export abstract class ProgressReportVarianceExplanation {
-  static Props = keysOf<ProgressReportVarianceExplanation>();
-  static SecuredProps =
-    keysOf<SecuredProps<ProgressReportVarianceExplanation>>();
   static readonly Parent = () => import('../dto').then((m) => m.ProgressReport);
   static readonly ConfirmThisClassPassesSensitivityToPolicies = true;
 

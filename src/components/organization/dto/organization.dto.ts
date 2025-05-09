@@ -1,12 +1,10 @@
 import { Field, ObjectType } from '@nestjs/graphql';
-import { keys as keysOf } from 'ts-transformer-keys';
 import {
   DbUnique,
   NameField,
   Resource,
   type ResourceRelationsShape,
   SecuredProperty,
-  type SecuredProps,
   SecuredString,
   SecuredStringNullable,
   Sensitivity,
@@ -23,8 +21,6 @@ import { SecuredOrganizationTypes } from './organization-type.dto';
   implements: Resource,
 })
 export class Organization extends Resource {
-  static readonly Props = keysOf<Organization>();
-  static readonly SecuredProps = keysOf<SecuredProps<Organization>>();
   static readonly Relations = {
     locations: [Location],
   } satisfies ResourceRelationsShape;

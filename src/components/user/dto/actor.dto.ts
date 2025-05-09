@@ -1,5 +1,4 @@
 import { InterfaceType, ObjectType } from '@nestjs/graphql';
-import { keys as keysOf } from 'ts-transformer-keys';
 import {
   DataObject,
   type ID,
@@ -8,7 +7,6 @@ import {
   resolveByTypename,
   type Role,
   SecuredProperty,
-  type SecuredProps,
 } from '~/common';
 import { RegisterResource } from '~/core';
 import { e } from '~/core/gel';
@@ -21,9 +19,6 @@ import { e } from '~/core/gel';
   resolveType: resolveByTypename(Actor.name),
 })
 export class Actor extends DataObject {
-  static readonly Props: string[] = keysOf<Actor>();
-  static readonly SecuredProps: string[] = keysOf<SecuredProps<Actor>>();
-
   @IdField()
   readonly id: ID;
 }

@@ -1,5 +1,4 @@
 import { Field, ObjectType } from '@nestjs/graphql';
-import { keys as keysOf } from 'ts-transformer-keys';
 import { Calculated, type ResourceRelationsShape } from '~/common';
 import { RegisterResource } from '~/core/resources';
 import { Granter, ResourceGranter } from '../policy';
@@ -10,9 +9,6 @@ import { Granter, ResourceGranter } from '../policy';
 @Calculated()
 @ObjectType()
 export class BetaFeatures {
-  static readonly Props = keysOf<BetaFeatures>();
-  static readonly SecuredProps = [];
-
   // Declaring as relations as well so privileges can use.
   static readonly Relations = {
     projectChangeRequests: undefined,

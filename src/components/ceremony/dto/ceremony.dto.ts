@@ -1,12 +1,10 @@
 import { Field, ObjectType } from '@nestjs/graphql';
-import { keys as keysOf } from 'ts-transformer-keys';
 import {
   Calculated,
   Resource,
   SecuredBoolean,
   SecuredDateNullable,
   SecuredProperty,
-  type SecuredProps,
   Sensitivity,
   SensitivityField,
 } from '~/common';
@@ -20,8 +18,6 @@ import { CeremonyType } from './ceremony-type.enum';
   implements: [Resource],
 })
 export class Ceremony extends Resource {
-  static readonly Props = keysOf<Ceremony>();
-  static readonly SecuredProps = keysOf<SecuredProps<Ceremony>>();
   static readonly Parent = () =>
     import('../../engagement/dto').then((m) => m.IEngagement);
 

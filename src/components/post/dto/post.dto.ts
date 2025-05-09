@@ -1,13 +1,6 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { DateTime } from 'luxon';
-import { keys as keysOf } from 'ts-transformer-keys';
-import {
-  DateTimeField,
-  Resource,
-  type Secured,
-  type SecuredProps,
-  SecuredString,
-} from '~/common';
+import { DateTimeField, Resource, type Secured, SecuredString } from '~/common';
 import { type BaseNode } from '~/core/database/results';
 import { e } from '~/core/gel';
 import { type LinkTo, RegisterResource } from '~/core/resources';
@@ -19,8 +12,6 @@ import { PostShareability } from './shareability.dto';
   implements: [Resource],
 })
 export class Post extends Resource {
-  static readonly Props = keysOf<Post>();
-  static readonly SecuredProps = keysOf<SecuredProps<Post>>();
   static readonly Parent = 'dynamic';
 
   readonly parent: BaseNode;

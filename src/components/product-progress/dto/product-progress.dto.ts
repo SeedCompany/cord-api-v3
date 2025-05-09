@@ -1,12 +1,10 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
 import { type DateTime } from 'luxon';
-import { keys as keysOf } from 'ts-transformer-keys';
 import { type Merge } from 'type-fest';
 import {
   type ID,
   SecuredFloatNullable,
-  type SecuredProps,
   type SetUnsecuredType,
   type UnsecuredDto,
   Variant,
@@ -44,9 +42,6 @@ export interface ProgressVariantByReportOutput
   description: 'The progress of a product for a given report',
 })
 export class ProductProgress {
-  static readonly Props = keysOf<ProductProgress>();
-  static readonly SecuredProps = keysOf<SecuredProps<ProductProgress>>();
-
   // Both of these only exist if progress has been reported for the product/report pair.
   // This object is really just a container/grouping of StepProgress nodes.
   // I have these here to show that they can exist in the DB, but they are private to the API.
@@ -92,8 +87,6 @@ export type UnsecuredProductProgress = Merge<
   description: `The progress of a product's step for a given report`,
 })
 export class StepProgress {
-  static readonly Props = keysOf<StepProgress>();
-  static readonly SecuredProps = keysOf<SecuredProps<StepProgress>>();
   static readonly Parent = () =>
     import('../../progress-report/dto').then(
       (m) => m.ProgressReport, // technically ProgressReport & Product

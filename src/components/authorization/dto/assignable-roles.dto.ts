@@ -17,8 +17,6 @@ import { RegisterResource } from '~/core/resources';
 @RegisterResource()
 @Calculated()
 export class AssignableRoles {
-  static Props = [];
-  static SecuredProps = [];
   static Relations = mapValues.fromList(Role, () => undefined)
     .asRecord satisfies ResourceRelationsShape;
 }

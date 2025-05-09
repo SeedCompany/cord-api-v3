@@ -5916,7 +5916,6 @@ __metadata:
     ts-morph: "npm:^25.0.1"
     ts-node: "npm:^10.9.1"
     ts-patch: "npm:^3.0.2"
-    ts-transformer-keys: "npm:^0.4.4"
     type-fest: "npm:^4.15.0"
     typescript: "npm:~5.8.3"
     typescript-transform-paths: "npm:^3.4.6"
@@ -13575,15 +13574,6 @@ __metadata:
     ts-patch: bin/ts-patch.js
     tspc: bin/tspc.js
   checksum: 10c0/41abfa08ea70755f44f39c32b8906479cddf66f163ea37bdd8b543dcda548ec6cc3d7b6f53371161fbfaa9ff48e4fbb0d5839f46f425f7058f7710253e607c20
-  languageName: node
-  linkType: hard
-
-"ts-transformer-keys@npm:^0.4.4":
-  version: 0.4.4
-  resolution: "ts-transformer-keys@npm:0.4.4"
-  peerDependencies:
-    typescript: ">=2.4.1"
-  checksum: 10c0/f0910b146c0bb41e4b01cdfaa74a241720978dc3ee4ae98b534a5d7ecb6867b80f98e0cf459d10fc9ab3084b66e8ae69a71658ba10fdd08b2f534c515c536cbe
   languageName: node
   linkType: hard
 

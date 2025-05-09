@@ -1,5 +1,4 @@
 import { Field, ObjectType } from '@nestjs/graphql';
-import { keys as keysOf } from 'ts-transformer-keys';
 import {
   Calculated,
   IntersectTypes,
@@ -9,7 +8,6 @@ import {
   SecuredBoolean,
   SecuredDateNullable,
   SecuredProperty,
-  type SecuredProps,
   Sensitivity,
   SensitivityField,
 } from '~/common';
@@ -30,8 +28,6 @@ const Interfaces = IntersectTypes(Resource, ChangesetAware);
   implements: Interfaces.members,
 })
 export class Partnership extends Interfaces {
-  static readonly Props = keysOf<Partnership>();
-  static readonly SecuredProps = keysOf<SecuredProps<Partnership>>();
   static readonly Relations = {
     // why is this here? We have a relation to partner, not org...
     organization: Organization,

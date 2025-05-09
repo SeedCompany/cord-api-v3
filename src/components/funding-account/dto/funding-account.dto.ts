@@ -1,5 +1,4 @@
 import { Field, ObjectType } from '@nestjs/graphql';
-import { keys as keysOf } from 'ts-transformer-keys';
 import {
   DbLabel,
   DbUnique,
@@ -7,7 +6,6 @@ import {
   Resource,
   SecuredInt,
   SecuredProperty,
-  type SecuredProps,
   SecuredString,
 } from '~/common';
 import { e } from '~/core/gel';
@@ -18,9 +16,6 @@ import { RegisterResource } from '~/core/resources';
   implements: [Resource],
 })
 export class FundingAccount extends Resource {
-  static readonly Props = keysOf<FundingAccount>();
-  static readonly SecuredProps = keysOf<SecuredProps<FundingAccount>>();
-
   @NameField()
   @DbUnique()
   readonly name: SecuredString;
