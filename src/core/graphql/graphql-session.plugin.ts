@@ -9,4 +9,11 @@ export class GraphqlSessionPlugin {
       args.contextValue.session$.complete();
     },
   });
+  onSubscribe: Plugin['onSubscribe'] = () => ({
+    onSubscribeResult: ({ args }) => ({
+      onEnd: () => {
+        args.contextValue.session$.complete();
+      },
+    }),
+  });
 }

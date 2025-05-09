@@ -52,6 +52,17 @@ export class GqlContextHostImpl implements GqlContextHost, OnModuleDestroy {
     });
   };
 
+  onSubscribe: Plugin['onSubscribe'] = ({
+    subscribeFn,
+    setSubscribeFn,
+    args,
+  }) => {
+    const ctx = args.contextValue;
+    setSubscribeFn((...args) => {
+      return this.als.run(ctx, subscribeFn, ...args);
+    });
+  };
+
   onModuleDestroy() {
     this.als.disable();
   }
