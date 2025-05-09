@@ -37,7 +37,7 @@
     "@fastify/cors": "^11.0.1",
     "@fastify/websocket": "^11.0.2",
     "@ffprobe-installer/ffprobe": "^2.1.2",
-    "@golevelup/nestjs-discovery": "^4.0.0",
+    "@golevelup/nestjs-discovery": "^5.0.0",
     "@graphql-hive/yoga": ">=0.41.0",
     "@graphql-tools/utils": "^10.5.4",
     "@graphql-yoga/plugin-apq": "^3.7.0",
