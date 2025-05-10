@@ -8,7 +8,6 @@ import { AuthenticationGelRepository } from './authentication.gel.repository';
 import { AuthenticationRepository } from './authentication.repository';
 import { AuthenticationService } from './authentication.service';
 import { CryptoService } from './crypto.service';
-import { GelCurrentUserProvider } from './current-user.provider';
 import {
   LoginExtraInfoResolver,
   RegisterExtraInfoResolver,
@@ -41,8 +40,6 @@ import { SessionResolver } from './session.resolver';
     CryptoService,
     SessionInterceptor,
     { provide: APP_INTERCEPTOR, useExisting: SessionInterceptor },
-    GelCurrentUserProvider,
-    { provide: APP_INTERCEPTOR, useExisting: GelCurrentUserProvider },
     { provide: SessionHost, useClass: SessionHostImpl },
     SessionPipe,
   ],
