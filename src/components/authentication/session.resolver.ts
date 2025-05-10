@@ -20,6 +20,7 @@ import { UserLoader, UserService } from '../user';
 import { User } from '../user/dto';
 import { AuthenticationService } from './authentication.service';
 import { SessionOutput } from './dto';
+import { SessionHost } from './session.host';
 import { SessionInterceptor } from './session.interceptor';
 
 @Resolver(SessionOutput)
@@ -29,6 +30,7 @@ export class SessionResolver {
     private readonly privileges: Privileges,
     private readonly config: ConfigService,
     private readonly sessionInt: SessionInterceptor,
+    private readonly sessionHost: SessionHost,
     private readonly users: UserService,
     private readonly http: HttpAdapter,
     @Logger('session:resolver') private readonly logger: ILogger,
@@ -67,7 +69,7 @@ export class SessionResolver {
       session = await this.authentication.resumeSession(token, impersonatee);
     }
     // Set for data loaders invoked later in operation
-    context.session$.next(session);
+    this.sessionHost.current$.next(session);
 
     const userFromSession = session.anonymous ? undefined : session.userId;
 

@@ -1,13 +1,12 @@
 import {
   Args,
-  Context,
   Mutation,
   Parent,
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
 import { stripIndent } from 'common-tags';
-import { AnonSession, type GqlContextType, type Session } from '~/common';
+import { AnonSession, type Session } from '~/common';
 import { Loader, type LoaderOf } from '~/core';
 import { Privileges } from '../authorization';
 import { Power } from '../authorization/dto';
@@ -32,11 +31,10 @@ export class RegisterResolver {
   async register(
     @Args('input') input: RegisterInput,
     @AnonSession() session: Session,
-    @Context() context: GqlContextType,
   ): Promise<RegisterOutput> {
     const user = await this.authentication.register(input, session);
     await this.authentication.login(input, session);
-    await this.authentication.updateSession(context);
+    await this.authentication.refreshCurrentSession();
     return { user };
   }
 
