@@ -230,6 +230,14 @@ export class AuthenticationService {
     return this.repo.waitForRootUserId();
   }
 
+  async asUser<R>(
+    userId: ID<'User'>,
+    fn: (session: Session) => Promise<R>,
+  ): Promise<R> {
+    const session = await this.sessionForUser(userId);
+    return await this.sessionHost.withSession(session, () => fn(session));
+  }
+
   async sessionForUser(userId: ID): Promise<Session> {
     const roles = await this.repo.rolesForUser(userId);
     const session: Session = {

@@ -104,30 +104,31 @@ export class ProjectWorkflowNotificationHandler
     primaryPartnerName: string | null,
   ): Promise<ProjectStepChangedProps> {
     const recipientId = notifier.id ?? this.config.rootUser.id;
-    const recipientSession = await this.auth.sessionForUser(recipientId);
-    const recipient = notifier.id
-      ? await this.users.readOne(recipientId, recipientSession)
-      : ({
-          email: { value: notifier.email, canRead: true, canEdit: false },
-          displayFirstName: {
-            value: notifier.email!.split('@')[0],
-            canRead: true,
-            canEdit: false,
-          },
-          displayLastName: { value: '', canRead: true, canEdit: false },
-          timezone: {
-            value: this.config.defaultTimeZone,
-            canRead: true,
-            canEdit: false,
-          },
-        } satisfies ProjectStepChangedProps['recipient']);
+    return await this.auth.asUser(recipientId, async (recipientSession) => {
+      const recipient = notifier.id
+        ? await this.users.readOne(recipientId, recipientSession)
+        : ({
+            email: { value: notifier.email, canRead: true, canEdit: false },
+            displayFirstName: {
+              value: notifier.email!.split('@')[0],
+              canRead: true,
+              canEdit: false,
+            },
+            displayLastName: { value: '', canRead: true, canEdit: false },
+            timezone: {
+              value: this.config.defaultTimeZone,
+              canRead: true,
+              canEdit: false,
+            },
+          } satisfies ProjectStepChangedProps['recipient']);
 
-    return {
-      recipient,
-      changedBy: this.users.secure(changedBy, recipientSession),
-      project: this.projects.secure(project, recipientSession),
-      previousStep,
-      primaryPartnerName,
-    };
+      return {
+        recipient,
+        changedBy: this.users.secure(changedBy, recipientSession),
+        project: this.projects.secure(project, recipientSession),
+        previousStep,
+        primaryPartnerName,
+      };
+    });
   }
 }
