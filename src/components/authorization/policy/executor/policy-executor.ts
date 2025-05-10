@@ -3,6 +3,7 @@ import { CachedByArg } from '@seedcompany/common';
 import { identity, intersection } from 'lodash';
 import { type EnhancedResource, type Session } from '~/common';
 import { type QueryFragment } from '~/core/database/query';
+import { SessionHost } from '../../../authentication/session.host';
 import { withoutScope } from '../../dto';
 import { RoleCondition } from '../../policies/conditions/role.condition';
 import { type Permission } from '../builder/perm-granter';
@@ -21,7 +22,7 @@ import { ConditionOptimizer } from './condition-optimizer';
 
 export interface ResolveParams {
   action: string;
-  session: Session;
+  session?: Session;
   resource: EnhancedResource<any>;
   prop?: string;
   calculatedAsCondition?: boolean;
@@ -39,6 +40,7 @@ export interface FilterOptions {
 @Injectable()
 export class PolicyExecutor {
   constructor(
+    private readonly sessionHost: SessionHost,
     private readonly policyFactory: PolicyFactory,
     @Inject(forwardRef(() => ConditionOptimizer))
     private readonly conditionOptimizer: ConditionOptimizer & {},
@@ -46,7 +48,6 @@ export class PolicyExecutor {
 
   resolve({
     action,
-    session,
     resource,
     prop,
     calculatedAsCondition,
@@ -63,6 +64,7 @@ export class PolicyExecutor {
       }
     }
 
+    const session = this.sessionHost.current;
     const policies = this.getPolicies(session);
     const isChildRelation = prop && resource.childKeys.has(prop);
 
@@ -185,7 +187,7 @@ export class PolicyExecutor {
 
       const other = {
         resource: params.resource,
-        session: params.session,
+        session: this.sessionHost.current,
       };
       return query
         .comment("Loading policy condition's context")
