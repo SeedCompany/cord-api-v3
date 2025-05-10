@@ -16,6 +16,7 @@ import {
 import { LoginResolver } from './login.resolver';
 import { PasswordResolver } from './password.resolver';
 import { RegisterResolver } from './register.resolver';
+import { SessionHost, SessionHostImpl } from './session.host';
 import { SessionInterceptor } from './session.interceptor';
 import { SessionResolver } from './session.resolver';
 
@@ -41,8 +42,10 @@ import { SessionResolver } from './session.resolver';
     { provide: APP_INTERCEPTOR, useExisting: SessionInterceptor },
     GelCurrentUserProvider,
     { provide: APP_INTERCEPTOR, useExisting: GelCurrentUserProvider },
+    { provide: SessionHost, useClass: SessionHostImpl },
   ],
   exports: [
+    SessionHost,
     SessionInterceptor,
     AuthenticationService,
     'AUTHENTICATION',
